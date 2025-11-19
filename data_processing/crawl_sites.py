@@ -20,11 +20,11 @@ from crawl4ai.deep_crawling.filters import (
 
 def _archive_old_files(date_str, filename, source_dir):
     """Moves old files from crawled, extracted, and processed directories to an archive."""
-    archive_base_dir = "archived"
+    archive_base_dir = "../event_data/archived"
     dirs_to_check = {
-        "crawled": ".md",
-        "extracted": ".md",
-        "processed": ".json"
+        "../event_data/crawled": ".md",
+        "../event_data/extracted": ".md",
+        "../event_data/processed": ".json"
     }
 
     # Create archive structure: archived/YYYYMMDD/crawled/, etc.
@@ -62,7 +62,7 @@ async def crawl_website(crawler, website_info):
     current_date = datetime.now()
     crawl_frequency = website_info.get("crawl_frequency", 7)  # Default to 7 days
 
-    output_dir = "crawled"
+    output_dir = "../event_data/crawled"
     os.makedirs(output_dir, exist_ok=True)
 
     # Check for existing files in dated subdirectories and skip if a recent one is found
@@ -174,7 +174,7 @@ async def main():
         java_script_enabled=True,
         text_mode=True,
     )
-    with open('websites.json', 'r') as f:
+    with open('data/websites.json', 'r') as f:
         websites = json.load(f)
     async with AsyncWebCrawler(config=browser_config) as crawler:
         for website in websites:

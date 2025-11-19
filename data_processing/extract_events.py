@@ -141,7 +141,7 @@ async def process_and_save_events(page_content, url, name, notes, source_filenam
             date_str = datetime.now().strftime('%Y%m%d')
 
         # Create the 'extracted/YYYYMMDD' directory structure
-        output_dir = "extracted"
+        output_dir = "../event_data/extracted"
         dated_output_dir = os.path.join(output_dir, date_str)
         os.makedirs(dated_output_dir, exist_ok=True)
 
@@ -157,7 +157,7 @@ async def process_and_save_events(page_content, url, name, notes, source_filenam
         print(f"Error saving file for {source_filename}: {e}")
 
 async def main():
-    crawled_dir = 'crawled'
+    crawled_dir = '../event_data/crawled'
     if not os.path.isdir(crawled_dir):
         print(f"Error: Directory '{crawled_dir}' not found.")
         return
@@ -168,7 +168,7 @@ async def main():
     async def process_file(date_str, filename):
         async with semaphore:
             # Check if the output file already exists in the 'extracted/YYYYMMDD' directory
-            output_dir = "extracted"
+            output_dir = "../event_data/extracted"
             filename_without_date = re.sub(r'^\d{8}_', '', filename)
             output_filename = os.path.join(output_dir, date_str, filename_without_date)
             if os.path.exists(output_filename):
