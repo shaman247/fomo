@@ -104,8 +104,8 @@ def _deduplicate_events(events):
     return unique_events
 
 def main():
-    processed_dir = 'processed'
-    output_dir = os.path.join('public_html', 'data')
+    processed_dir = '../event_data/processed'
+    output_dir = os.path.join('../public_html', 'data')
 
     # Output filenames for initial and full datasets
     events_init_filename = os.path.join(output_dir, 'events.init.json')
@@ -113,7 +113,7 @@ def main():
     events_full_filename = os.path.join(output_dir, 'events.full.json')
     locations_full_filename = os.path.join(output_dir, 'locations.full.json')
 
-    source_locations_filename = 'locations.json'
+    source_locations_filename = 'data/locations.json'
 
     # Bounding box for the "init" set (NYC area)
     # Centered around 40.71799, -73.98712
