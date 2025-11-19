@@ -10,26 +10,36 @@ It works by visiting the websites of parks, museums, music venues, etc., identif
 
 ### Main Directories
 
-- **`/public_html/`** Website files served to users
-  - `/public_html/data/` Event and location data files
-  - Frontend HTML, CSS, and JavaScript files
+<details>
+<summary><strong><code>/public_html/</code></strong> Website files served to users</summary>
 
-- **`/data_processing/`** Python scripts for data processing pipeline
-  - `crawl_sites.py` Crawls event websites and saves content to markdown
-  - `extract_events.py` Uses Gemini AI to extract structured event data from crawled content
-  - `process_responses.py` Processes extracted events, enriches with location data, creates short names
-  - `export_events.py` Deduplicates events and exports to public_html/data/ for the website
-  - `process_locations.py` Processes location data from raw format
-  - `/data_processing/data/` Configuration and reference data
-    - `websites.json` List of websites to crawl with crawl settings
-    - `locations.json` Processed location data with coordinates and tags
-    - `tags.json` Tag rewriting rules and filters
+- `/public_html/data/` Event and location data files (events.init.json, events.full.json, locations.init.json, locations.full.json)
+- Frontend HTML, CSS, and JavaScript files
+</details>
 
-- **`/event_data/`** Intermediate data generated during processing (not included in repository)
-  - `/event_data/crawled/` Raw markdown content from websites (organized by date YYYYMMDD/)
-  - `/event_data/extracted/` Structured event tables extracted by Gemini (organized by date)
-  - `/event_data/processed/` Processed event JSON files with enriched data (organized by date)
-  - `/event_data/archived/` Old versions of files moved during re-crawling
+<details>
+<summary><strong><code>/data_processing/</code></strong> Python scripts for data processing pipeline</summary>
+
+- `crawl_sites.py` Crawls event websites and saves content to markdown
+- `extract_events.py` Uses Gemini AI to extract structured event data from crawled content
+  - Requires `GEMINI_API_KEY` environment variable (set in `.env` file)
+- `process_responses.py` Processes extracted events, enriches with location data, creates short names
+- `export_events.py` Deduplicates events and exports to public_html/data/ for the website
+- `process_locations.py` Processes location data from raw format
+- `/data_processing/data/` Configuration and reference data
+  - `websites.json` List of websites to crawl with crawl settings
+  - `locations.json` Processed location data with coordinates and tags
+  - `tags.json` Tag rewriting rules and filters
+</details>
+
+<details>
+<summary><strong><code>/event_data/</code></strong> Intermediate data generated during processing (not included in repository)</summary>
+
+- `/event_data/crawled/` Raw markdown content from websites (organized by date YYYYMMDD/)
+- `/event_data/extracted/` Structured event tables extracted by Gemini (organized by date)
+- `/event_data/processed/` Processed event JSON files with enriched data (organized by date)
+- `/event_data/archived/` Old versions of files moved during re-crawling
+</details>
 
 ### Data Pipeline Flow
 
