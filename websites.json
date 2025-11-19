@@ -1,0 +1,4916 @@
+[
+  {
+    "name": "NYC Events",
+    "urls": [
+      "https://www.nyc.gov/main/events/?"
+    ],
+    "crawl_frequency": 4,
+    "selector": "[id^=\\\"loadmore-btn-\\\"]",
+    "num_clicks": 60
+  },
+  {
+    "name": "NYC Parks",
+    "urls": [
+      "https://www.nycgovparks.org/events/",
+      "https://www.nycgovparks.org/events/p2",
+      "https://www.nycgovparks.org/events/p3",
+      "https://www.nycgovparks.org/events/p4",
+      "https://www.nycgovparks.org/events/p5",
+      "https://www.nycgovparks.org/events/p6",
+      "https://www.nycgovparks.org/events/p7",
+      "https://www.nycgovparks.org/events/p8",
+      "https://www.nycgovparks.org/events/p9",
+      "https://www.nycgovparks.org/events/p10"
+    ],
+    "crawl_frequency": 4
+  },
+  {
+    "name": "New York Public Library",
+    "urls": [
+      "https://www.nypl.org/events/calendar",
+      "https://www.nypl.org/events/calendar?page=2",
+      "https://www.nypl.org/events/calendar?page=3",
+      "https://www.nypl.org/events/calendar?page=4",
+      "https://www.nypl.org/events/calendar?page=5",
+      "https://www.nypl.org/events/calendar?page=6",
+      "https://www.nypl.org/events/calendar?page=7",
+      "https://www.nypl.org/events/calendar?page=8"
+    ]
+  },
+  {
+    "name": "Brooklyn Public Library",
+    "urls": [
+      "https://discover.bklynlibrary.org/?event=true"
+    ],
+    "keywords": "node",
+    "crawl_frequency": 4
+  },
+  {
+    "name": "Oculus",
+    "urls": [
+      "https://www.explorewtc.com/en/local/things-to-do/events.html"
+    ],
+    "keywords": "events"
+  },
+  {
+    "name": "Barzakh Cafe",
+    "urls": [
+      "https://www.viewcy.com/o/barzakhcafe?tab=events"
+    ]
+  },
+  {
+    "name": "The Green-Wood Cemetery",
+    "urls": [
+      "https://www.green-wood.com/calendar/month/"
+    ]
+  },
+  {
+    "name": "The Bell House",
+    "urls": [
+      "https://www.thebellhouseny.com/shows"
+    ],
+    "crawl_frequency": 14
+  },
+  {
+    "name": "Irving Plaza",
+    "urls": [
+      "https://www.irvingplaza.com/shows"
+    ],
+    "crawl_frequency": 14
+  },
+  {
+    "name": "Brooklyn Paramount",
+    "urls": [
+      "https://www.brooklynparamount.com/shows"
+    ],
+    "crawl_frequency": 14
+  },
+  {
+    "name": "Little Island",
+    "urls": [
+      "https://littleisland.org/2025season/"
+    ],
+    "keywords": "event"
+  },
+  {
+    "name": "Brooklyn Academy of Music (BAM)",
+    "urls": [
+      "https://www.bam.org/#Calendar"
+    ],
+    "keywords": "bam"
+  },
+  {
+    "name": "Brooklyn Botanic Garden",
+    "urls": [
+      "https://www.bbg.org/visit/calendar"
+    ],
+    "keywords": "/event/"
+  },
+  {
+    "name": "Coney Island",
+    "urls": [
+      "https://www.coneyisland.com/event"
+    ],
+    "keywords": "/event/"
+  },
+  {
+    "name": "The High Line",
+    "urls": [
+      "https://www.thehighline.org/events/?pages_loaded=5"
+    ],
+    "keywords": "events"
+  },
+  {
+    "name": "Battery Park City",
+    "urls": [
+      "https://bpca.ny.gov/news/events/"
+    ]
+  },
+  {
+    "name": "The Comedy Cellar",
+    "urls": [
+      "https://www.comedycellar.com/"
+    ]
+  },
+  {
+    "name": "Swiss Institute",
+    "urls": [
+      "https://www.swissinstitute.net/events/"
+    ],
+    "max_pages": 5
+  },
+  {
+    "name": "Peoples Improv Theater",
+    "urls": [
+      "https://thepit-nyc.com/calendar/"
+    ],
+    "keywords": "events",
+    "max_pages": 10
+  },
+  {
+    "name": "Circle In The Square Theatre",
+    "urls": [
+      "https://www.circlesquaretheatre.com/events/"
+    ],
+    "keywords": "events",
+    "max_pages": 5
+  },
+  {
+    "name": "The Django",
+    "urls": [
+      "https://www.thedjangonyc.com/events/"
+    ],
+    "keywords": "events"
+  },
+  {
+    "name": "Broadway Comedy Club",
+    "urls": [
+      "https://www.broadwaycomedyclub.com/"
+    ],
+    "keywords": "shows"
+  },
+  {
+    "name": "Zinc Bar",
+    "urls": [
+      "https://www.zincbar.com/calendar/"
+    ],
+    "keywords": "events"
+  },
+  {
+    "name": "The Africa Center",
+    "urls": [
+      "https://theafricacenter.org/programs"
+    ],
+    "keywords": "event-detail",
+    "max_pages": 10
+  },
+  {
+    "name": "Film at Lincoln Center",
+    "urls": [
+      "https://www.filmlinc.org/"
+    ],
+    "keywords": "films"
+  },
+  {
+    "name": "Death of Classical",
+    "urls": [
+      "https://www.deathofclassical.com/events"
+    ],
+    "keywords": "concerts",
+    "max_pages": 10
+  },
+  {
+    "name": "Nitehawk Cinema (Prospect Park)",
+    "urls": [
+      "https://nitehawkcinema.com/prospectpark/coming-soon-2/"
+    ],
+    "keywords": "prospectpark/movies",
+    "crawl_frequency": 4,
+    "max_pages": 10
+  },
+  {
+    "name": "Freddy's Bar",
+    "urls": [
+      "https://www.freddysbar.com/events"
+    ],
+    "keywords": "events"
+  },
+  {
+    "name": "Stage 42",
+    "urls": [
+      "https://www.newvictory.org/tickets-and-events/"
+    ],
+    "keywords": "tickets-and-events"
+  },
+  {
+    "name": "Knitting Factory at Baker Falls",
+    "urls": [
+      "https://www.knittingfactory.com/calendar/"
+    ],
+    "keywords": "tm-event"
+  },
+  {
+    "name": "Nitehawk Cinema (Williamsburg)",
+    "urls": [
+      "https://nitehawkcinema.com/williamsburg/coming-soon/"
+    ],
+    "keywords": "williamsburg/",
+    "crawl_frequency": 4,
+    "max_pages": 10
+  },
+  {
+    "name": "Roxy Cinema",
+    "urls": [
+      "https://www.roxycinemanewyork.com/upcoming-events/"
+    ],
+    "max_pages": 10
+  },
+  {
+    "name": "The Magnet Theater",
+    "urls": [
+      "https://magnettheater.com/calendar/month/"
+    ],
+    "keywords": "show",
+    "max_pages": 20
+  },
+  {
+    "name": "Wonderville",
+    "urls": [
+      "https://www.wonderville.nyc/events"
+    ]
+  },
+  {
+    "name": "54 Below",
+    "urls": [
+      "https://54below.org/calendar/"
+    ],
+    "keywords": "events",
+    "max_pages": 20
+  },
+  {
+    "name": "Brooklyn Bowl",
+    "urls": [
+      "https://www.brooklynbowl.com/brooklyn/shows/all"
+    ]
+  },
+  {
+    "name": "Queens United Int'l Party",
+    "urls": [
+      "https://quipmusic.com/"
+    ],
+    "crawl_frequency": 90
+  },
+  {
+    "name": "Little Moon Bakehouse Popup",
+    "urls": [
+      "https://littlemoonbakehouse.com/pages/nyc-pop-up-schedule"
+    ],
+    "crawl_frequency": 90
+  },
+  {
+    "name": "Climate Week NYC",
+    "urls": [
+      "https://www.climateweeknyc.org/event-search?field_event_dates=All&field_event_format=11&field_featured=All&search_api_fulltext=&type=Public&page=0"
+    ],
+    "keywords": "/events/",
+    "crawl_frequency": 330,
+    "selector": "body > div.dialog-off-canvas-main-canvas > div > main > div > div.views-element-container > div > ul > li > a",
+    "num_clicks": 60,
+    "max_pages": 700
+  },
+  {
+    "name": "Forbidden Planet NYC",
+    "urls": [
+      "https://www.forbiddenplanetnyc.com/category/forbidden-planet-nyc-events-signings/"
+    ],
+    "disabled": true
+  },
+  {
+    "name": "Performance Space New York",
+    "urls": [
+      "https://performancespacenewyork.org/series/25-26-season/"
+    ],
+    "keywords": "/shows/"
+  },
+  {
+    "name": "Calabar Gallery",
+    "urls": [
+      "https://www.eventbrite.com/o/calabar-gallery-29238403099"
+    ],
+    "keywords": "/e/",
+    "max_pages": 5
+  },
+  {
+    "name": "Merchant's House Museum",
+    "urls": [
+      "https://merchantshouse.org/calendar/"
+    ]
+  },
+  {
+    "name": "Onassis ONX",
+    "urls": [
+      "https://www.onx.studio/onx-public-programs"
+    ],
+    "keywords": "/onx-programming/",
+    "max_pages": 5
+  },
+  {
+    "name": "The Gutter",
+    "urls": [
+      "https://www.gutterbarbowl.com/spareroom"
+    ],
+    "keywords": "/spareroom/"
+  },
+  {
+    "name": "New York Insight Meditation Center",
+    "urls": [
+      "https://www.nyimc.org/events/list/"
+    ]
+  },
+  {
+    "name": "The Noble Maritime Collection",
+    "urls": [
+      "https://noblemaritime.org/events"
+    ]
+  },
+  {
+    "name": "The Owl Music Parlor",
+    "urls": [
+      "https://theowl.nyc/calendar/"
+    ]
+  },
+  {
+    "name": "The Grolier Club",
+    "urls": [
+      "https://www.grolierclub.org/Default.aspx?p=DynamicModule&pageid=384827&ssid=322448&vnf=1",
+      "https://www.grolierclub.org/Default.aspx?p=DynamicModule&pageid=384828&ssid=322449&vnf=1",
+      "https://www.grolierclub.org/default.aspx?p=.NET_Calendar&noReset=yes&mtab=true&ssid=322423&qfilter=&startdate=&title=Public+Calendar&subtitle=&showfilter=&chgs=&view=l5"
+    ]
+  },
+  {
+    "name": "Film Forum",
+    "urls": [
+      "https://filmforum.org/events"
+    ],
+    "keywords": "events/event"
+  },
+  {
+    "name": "Mood Ring",
+    "urls": [
+      "https://www.moodringnyc.club/events"
+    ]
+  },
+  {
+    "name": "La MaMa Experimental Theatre Club",
+    "urls": [
+      "https://www.lamama.org/"
+    ]
+  },
+  {
+    "name": "Industry City",
+    "urls": [
+      "https://industrycity.com/events/"
+    ],
+    "keywords": "/event/"
+  },
+  {
+    "name": "Smoke Jazz Club",
+    "urls": [
+      "https://tickets.smokejazz.com/"
+    ]
+  },
+  {
+    "name": "The Jazz Gallery",
+    "urls": [
+      "https://www.jazzgallery.org/calendar"
+    ]
+  },
+  {
+    "name": "SoRA",
+    "urls": [
+      "https://www.schoolofattention.org/events"
+    ],
+    "keywords": "/events/",
+    "crawl_frequency": 14
+  },
+  {
+    "name": "Snug Harbor Cultural Center",
+    "urls": [
+      "https://snug-harbor.org/upcoming-events-calendar/action~agenda/request_format~html/",
+      "https://snug-harbor.org/upcoming-events-calendar/action~agenda/page_offset~1/request_format~html/",
+      "https://snug-harbor.org/upcoming-events-calendar/action~agenda/page_offset~2/request_format~html/",
+      "https://snug-harbor.org/upcoming-events-calendar/action~agenda/page_offset~3/request_format~html/",
+      "https://snug-harbor.org/upcoming-events-calendar/action~agenda/page_offset~4/request_format~html/",
+      "https://snug-harbor.org/upcoming-events-calendar/action~agenda/page_offset~5/request_format~html/",
+      "https://snug-harbor.org/upcoming-events-calendar/action~agenda/page_offset~6/request_format~html/",
+      "https://snug-harbor.org/upcoming-events-calendar/action~agenda/page_offset~7/request_format~html/",
+      "https://snug-harbor.org/upcoming-events-calendar/action~agenda/page_offset~8/request_format~html/",
+      "https://snug-harbor.org/upcoming-events-calendar/action~agenda/page_offset~9/request_format~html/"
+    ]
+  },
+  {
+    "name": "Avant Gardner",
+    "urls": [
+      "https://www.avant-gardner.com/"
+    ]
+  },
+  {
+    "name": "Brooklyn Grange",
+    "urls": [
+      "https://www.brooklyngrangefarm.com/upcoming-events"
+    ],
+    "keywords": "/upcoming-events/"
+  },
+  {
+    "name": "Brooklyn Comedy Collective",
+    "urls": [
+      "https://www.brooklyncc.com/show-schedule"
+    ],
+    "crawl_frequency": 7
+  },
+  {
+    "name": "Silo",
+    "urls": [
+      "https://www.silobrooklyn.com/events"
+    ],
+    "keywords": "link.dice.fm"
+  },
+  {
+    "name": "Museum of Modern Art (MoMA)",
+    "urls": [
+      "https://www.moma.org/calendar/"
+    ],
+    "keywords": "/calendar/events"
+  },
+  {
+    "name": "Quad Cinema",
+    "urls": [
+      "https://quadcinema.com/all/"
+    ]
+  },
+  {
+    "name": "The Iridium",
+    "urls": [
+      "https://theiridium.com/events"
+    ],
+    "keywords": "/events/",
+    "max_pages": 20
+  },
+  {
+    "name": "Dizzy's Club",
+    "urls": [
+      "https://jazz.org/dizzys"
+    ],
+    "keywords": "ticketing.jazz.org",
+    "max_pages": 20
+  },
+  {
+    "name": "Brooklyn Brainery",
+    "urls": [
+      "https://brooklynbrainery.com/courses"
+    ],
+    "keywords": "/courses/"
+  },
+  {
+    "name": "Blue Note Jazz Club",
+    "urls": [
+      "https://www.bluenotejazz.com/nyc/"
+    ]
+  },
+  {
+    "name": "Chelsea Market",
+    "urls": [
+      "https://www.chelseamarket.com/events"
+    ],
+    "keywords": "/events-all/"
+  },
+  {
+    "name": "Fraunces Tavern Museum",
+    "urls": [
+      "https://www.frauncestavernmuseum.org/events-calendar"
+    ]
+  },
+  {
+    "name": "The Morgan Library & Museum",
+    "urls": [
+      "https://www.themorgan.org/calendar",
+      "https://www.themorgan.org/exhibitions/upcoming"
+    ],
+    "keywords": "/programs/"
+  },
+  {
+    "name": "Essex Market",
+    "urls": [
+      "https://www.essexmarket.nyc/events"
+    ]
+  },
+  {
+    "name": "White Eagle Hall",
+    "urls": [
+      "https://whiteeaglehalljc.com/calendar/"
+    ]
+  },
+  {
+    "name": "Delight Factory",
+    "urls": [
+      "https://www.delightfactorynyc.com/events"
+    ],
+    "keywords": "/events/"
+  },
+  {
+    "name": "BPL Presents",
+    "urls": [
+      "https://www.bklynlibrary.org/bpl-presents/events"
+    ]
+  },
+  {
+    "name": "Elsewhere",
+    "urls": [
+      "https://www.elsewhere.club/events"
+    ]
+  },
+  {
+    "name": "Tibet House US",
+    "urls": [
+      "https://shop.thus.org/collections/programs-events"
+    ],
+    "keywords": "/products/"
+  },
+  {
+    "name": "Dixon Place",
+    "urls": [
+      "https://dixonplace.org/category/all-events/"
+    ],
+    "keywords": "/performances/"
+  },
+  {
+    "name": "Frigid New York",
+    "urls": [
+      "https://tickets.frigid.nyc/"
+    ]
+  },
+  {
+    "name": "Tea Arts & Culture",
+    "urls": [
+      "https://teaartsculture.org/events"
+    ],
+    "keywords": "/events/"
+  },
+  {
+    "name": "SOUK Yoga",
+    "urls": [
+      "https://soukstudio.com/workshops"
+    ]
+  },
+  {
+    "name": "Center for Fiction",
+    "urls": [
+      "https://centerforfiction.org/calendar/"
+    ],
+    "keywords": "/event/"
+  },
+  {
+    "name": "Fort Tryon Park",
+    "urls": [
+      "https://www.forttryonparktrust.org/events/list",
+      "https://www.forttryonparktrust.org/events/list/page/2/",
+      "https://www.forttryonparktrust.org/events/list/page/3/",
+      "https://www.forttryonparktrust.org/events/list/page/4/",
+      "https://www.forttryonparktrust.org/events/list/page/5/"
+    ]
+  },
+  {
+    "name": "Lewis Latimer House",
+    "urls": [
+      "https://www.lewislatimerhouse.org/events"
+    ],
+    "keywords": "/events/"
+  },
+  {
+    "name": "National Sawdust",
+    "urls": [
+      "https://www.nationalsawdust.org/performances"
+    ],
+    "keywords": "/event/"
+  },
+  {
+    "name": "The American Irish Historical Society",
+    "urls": [
+      "https://aihsny.org/events-2"
+    ]
+  },
+  {
+    "name": "The Clemente Center",
+    "urls": [
+      "https://www.theclementecenter.org/calendar"
+    ],
+    "keywords": "/calendar/"
+  },
+  {
+    "name": "Public Records",
+    "urls": [
+      "https://dice.fm/venue/public-records-w2qg"
+    ],
+    "keywords": "/event/"
+  },
+  {
+    "name": "ShapeShifter Lab",
+    "urls": [
+      "https://shapeshifterplus.org/events/"
+    ]
+  },
+  {
+    "name": "Sounds of Brazil (SOB's)",
+    "urls": [
+      "https://sobs.com/calendar/"
+    ],
+    "keywords": "/events/"
+  },
+  {
+    "name": "Sugar Hill Children's Museum of Art & Storytelling",
+    "urls": [
+      "https://www.sugarhillmuseum.org/calendar",
+      "https://www.sugarhillmuseum.org/readingseries"
+    ]
+  },
+  {
+    "name": "Drom",
+    "urls": [
+      "https://dromnyc.com/events/"
+    ]
+  },
+  {
+    "name": "Starr Bar",
+    "urls": [
+      "https://www.starrbar.com/events"
+    ]
+  },
+  {
+    "name": "Greenlight Bookstore",
+    "urls": [
+      "https://greenlightbookstore.com/events"
+    ]
+  },
+  {
+    "name": "The Tank",
+    "urls": [
+      "https://thetanknyc.org/tankcalendar"
+    ],
+    "keywords": "/calendar-1/"
+  },
+  {
+    "name": "Downtown Alliance",
+    "urls": [
+      "https://downtownny.com/cooking-at-home/"
+    ]
+  },
+  {
+    "name": "Pier 17",
+    "urls": [
+      "https://www.pier17ny.com/concerts/"
+    ]
+  },
+  {
+    "name": "Humanitix",
+    "urls": [
+      "https://humanitix.com/us/search?locationQuery=Brooklyn&lat=40.6521&lng=-74.0018&plId=ChIJCSF8lBZEwokRhngABHRcdoI&page=0&dates=thisWeek%2B240",
+      "https://humanitix.com/us/search?locationQuery=New+York&lat=40.7127753&lng=-74.0059728&plId=ChIJOwg_06VPwokRYv534QaPC8g&dates=thisWeek%2B240&page=0"
+    ],
+    "keywords": "events.humantix.com",
+    "max_pages": 80
+  },
+  {
+    "name": "The Strand",
+    "urls": [
+      "https://www.strandbooks.com/events.html?product_list_limit=36"
+    ],
+    "keywords": "/event9"
+  },
+  {
+    "name": "Smorgasburg",
+    "urls": [
+      "https://www.smorgasburg.com/new-events"
+    ]
+  },
+  {
+    "name": "New Victory Theater",
+    "urls": [
+      "https://www.newvictory.org/tickets-and-events/"
+    ]
+  },
+  {
+    "name": "Pioneer Works",
+    "urls": [
+      "https://pioneerworks.org/calendar"
+    ],
+    "keywords": "/programs"
+  },
+  {
+    "name": "St. Mazie Bar & Supper Club",
+    "urls": [
+      "https://www.stmazie.com/jazz-bar-restaurant/"
+    ]
+  },
+  {
+    "name": "Rodney's",
+    "urls": [
+      "https://rodneysnewyorkcomedyclub.com/shows/"
+    ],
+    "keywords": "/shows/",
+    "selector": "[id^=\\\"#load_more\\\"]",
+    "num_clicks": 2
+  },
+  {
+    "name": "McNally Jackson",
+    "urls": [
+      "https://www.mcnallyjackson.com/coming-events",
+      "https://www.mcnallyjackson.com/book-clubs",
+      "https://www.mcnallyjackson.com/seminars"
+    ]
+  },
+  {
+    "name": "New York Botanical Garden",
+    "urls": [
+      "https://www.nybg.org/whats-on/"
+    ],
+    "keywords": "/event/"
+  },
+  {
+    "name": "NYBG month view",
+    "urls": [
+      "https://www.nybg.org/whats-on/month-view/"
+    ],
+    "keywords": "/event/"
+  },
+  {
+    "name": "Time Out Market New York",
+    "urls": [
+      "https://www.timeout.com/time-out-market-new-york/things-to-do/shows-events"
+    ]
+  },
+  {
+    "name": "David H. Koch Theater",
+    "urls": [
+      "https://www.nycballet.com/season-and-tickets/calendar"
+    ],
+    "keywords": "/season-and-tickets/"
+  },
+  {
+    "name": "New York Comedy Club",
+    "urls": [
+      "https://newyorkcomedyclub.com/"
+    ]
+  },
+  {
+    "name": "Brooklyn Org",
+    "urls": [
+      "https://brooklyn.org/news-and-events/"
+    ],
+    "keywords": "/event/"
+  },
+  {
+    "name": "Bowery Ballroom",
+    "urls": [
+      "https://www.boweryballroom.com/"
+    ]
+  },
+  {
+    "name": "Mercury Lounge",
+    "urls": [
+      "https://mercuryeastpresents.com/mercurylounge/"
+    ]
+  },
+  {
+    "name": "Smalls Jazz Club",
+    "urls": [
+      "https://www.smallslive.com/"
+    ]
+  },
+  {
+    "name": "The Metropolitan Museum of Art",
+    "urls": [
+      "https://www.metmuseum.org/events?location=theMetFifthAvenue"
+    ],
+    "selector": "body > main > section.sub-section_wrapper__Aq_AX.events-and-tours-app_loadMoreSection__jZQU1 > div > button",
+    "num_clicks": 10
+  },
+  {
+    "name": "The Met Cloisters",
+    "urls": [
+      "https://www.metmuseum.org/events?location=theMetCloisters"
+    ]
+  },
+  {
+    "name": "The DL",
+    "urls": [
+      "https://www.thedl-nyc.com/upcomingevents"
+    ]
+  },
+  {
+    "name": "The Noguchi Museum",
+    "urls": [
+      "https://www.noguchi.org/museum/calendar/"
+    ]
+  },
+  {
+    "name": "The Stand NYC",
+    "urls": [
+      "https://thestandnyc.com/shows"
+    ],
+    "keywords": "https://thestandnyc.com/shows, https://thestandnyc.com/shows/P20, https://thestandnyc.com/shows/P40, https://thestandnyc.com/shows/P60, https://thestandnyc.com/shows/P80, https://thestandnyc.com/shows/P100"
+  },
+  {
+    "name": "Brooklyn Public Library University Open Air",
+    "urls": [
+      "https://www.bklynlibrary.org/university-open-air"
+    ]
+  },
+  {
+    "name": "BRIC Celebrate Brooklyn!",
+    "urls": [
+      "https://bricartsmedia.org/celebrate-brooklyn/"
+    ],
+    "disabled": true
+  },
+  {
+    "name": "Hudson Yards",
+    "urls": [
+      "https://www.hudsonyardsnewyork.com/see-do/events",
+      "https://www.hudsonyardsnewyork.com/see-do/events?page=1",
+      "https://www.hudsonyardsnewyork.com/see-do/events?page=2"
+    ]
+  },
+  {
+    "name": "Lehman Center for the Performing Arts",
+    "urls": [
+      "https://www.lehmancenter.org/events"
+    ],
+    "keywords": "/events/"
+  },
+  {
+    "name": "Spectacle Theater",
+    "urls": [
+      "https://withfriends.events/o/spectacle/upcoming/"
+    ],
+    "keywords": "/event/"
+  },
+  {
+    "name": "Staten Island Museum",
+    "urls": [
+      "https://www.statenislandmuseum.org/events/"
+    ],
+    "keywords": "/event/"
+  },
+  {
+    "name": "Another World",
+    "urls": [
+      "https://anotherworld.nyc/#calendar"
+    ]
+  },
+  {
+    "name": "Queens Botanical Garden",
+    "urls": [
+      "https://queensbotanical.org/calendar/list/"
+    ]
+  },
+  {
+    "name": "The Delancey",
+    "urls": [
+      "https://www.thedelancey.com/events"
+    ]
+  },
+  {
+    "name": "Brooklyn Community Pride Center",
+    "urls": [
+      "https://www.lgbtbrooklyn.org/calendar"
+    ],
+    "selector": "#wix-events-widget > div > div > div > button",
+    "num_clicks": 10
+  },
+  {
+    "name": "Abrons Arts Center",
+    "urls": [
+      "https://www.abronsartscenter.org/calendar"
+    ],
+    "keywords": "/programs/"
+  },
+  {
+    "name": "Gold Sounds",
+    "urls": [
+      "https://dice.fm/venue/gold-sounds-y3qr"
+    ],
+    "keywords": "/event/"
+  },
+  {
+    "name": "Grand Bazaar NYC",
+    "urls": [
+      "https://grandbazaarnyc.org/events/"
+    ]
+  },
+  {
+    "name": "Music Hall of Williamsburg",
+    "urls": [
+      "https://www.musichallofwilliamsburg.com/calendar/"
+    ]
+  },
+  {
+    "name": "The Stone",
+    "urls": [
+      "http://thestonenyc.com/calendar.php"
+    ]
+  },
+  {
+    "name": "Whitney Museum of American Art",
+    "urls": [
+      "https://whitney.org/events/"
+    ],
+    "keywords": "/events/"
+  },
+  {
+    "name": "HERE Arts Center",
+    "urls": [
+      "https://here.org/shows/"
+    ],
+    "keywords": "/shows/"
+  },
+  {
+    "name": "IFC Center",
+    "urls": [
+      "https://www.ifccenter.com/special-events/"
+    ],
+    "keywords": "/films/"
+  },
+  {
+    "name": "Oceana Theater",
+    "urls": [
+      "https://www.oceanatheater.com/"
+    ],
+    "keywords": "?event="
+  },
+  {
+    "name": "The Center for Jewish History",
+    "urls": [
+      "https://programs.cjh.org/"
+    ]
+  },
+  {
+    "name": "Wave Hill",
+    "urls": [
+      "https://www.wavehill.org/calendar",
+      "https://www.wavehill.org/calendar/page/2?date=all",
+      "https://www.wavehill.org/calendar/page/3?date=all",
+      "https://www.wavehill.org/calendar/page/4?date=all"
+    ]
+  },
+  {
+    "name": "Union Hall",
+    "urls": [
+      "https://unionhallny.com/calendar"
+    ]
+  },
+  {
+    "name": "Open Arts Studio",
+    "urls": [
+      "https://www.openartsstudio.org/classes"
+    ]
+  },
+  {
+    "name": "Barclays Center",
+    "urls": [
+      "https://www.barclayscenter.com/events"
+    ]
+  },
+  {
+    "name": "Birdland Jazz Club",
+    "urls": [
+      "https://birdlandjazz.com/",
+      "https://www.birdlandjazz.com/page/2/",
+      "https://www.birdlandjazz.com/page/3/",
+      "https://www.birdlandjazz.com/page/4/",
+      "https://www.birdlandjazz.com/page/5/",
+      "https://www.birdlandjazz.com/page/6/",
+      "https://www.birdlandjazz.com/page/7/"
+    ]
+  },
+  {
+    "name": "Columbia University Lenfest Center for the Arts",
+    "urls": [
+      "https://www.lenfest.arts.columbia.edu/calendar"
+    ]
+  },
+  {
+    "name": "Rizzoli Bookstore",
+    "urls": [
+      "https://www.rizzolibookstore.com/events",
+      "https://www.rizzolibookstore.com/upcoming-events?page=1"
+    ]
+  },
+  {
+    "name": "The Brick Theater",
+    "urls": [
+      "https://www.bricktheater.com/events/list/"
+    ],
+    "keywords": "/event/"
+  },
+  {
+    "name": "South Street Seaport Museum",
+    "urls": [
+      "https://southstreetseaportmuseum.org/calendar/"
+    ],
+    "keywords": "%7D"
+  },
+  {
+    "name": "Le Poisson Rouge",
+    "urls": [
+      "https://lpr.com/"
+    ],
+    "keywords": "/lpr_events/"
+  },
+  {
+    "name": "NYU Tisch School of the Arts",
+    "urls": [
+      "https://tisch.nyu.edu/grad-acting/events"
+    ],
+    "keywords": "/events/"
+  },
+  {
+    "name": "NYU Game Center",
+    "urls": [
+      "https://www.eventbrite.com/o/nyu-game-center-4299111589"
+    ],
+    "keywords": "/e/"
+  },
+  {
+    "name": "Symphony Space",
+    "urls": [
+      "https://www.symphonyspace.org/events?resetGenre=1&eventDate=Any+Time&am"
+    ],
+    "keywords": "/events/",
+    "max_pages": 30
+  },
+  {
+    "name": "The Jamaica Center for Arts and Learning (JCAL)",
+    "urls": [
+      "https://jcal.org/events-tickets"
+    ]
+  },
+  {
+    "name": "Center for Brooklyn History",
+    "urls": [
+      "https://www.bklynlibrary.org/cbh/attend/upcoming-programs"
+    ],
+    "selector": "div.sk_eventbrite_collection_eventss_load_more_btn_container > button",
+    "num_clicks": 10
+  },
+  {
+    "name": "Queens Museum",
+    "urls": [
+      "https://queensmuseum.org/calendar/?sort=date&filter=all"
+    ],
+    "keywords": "/event/",
+    "max_pages": 20
+  },
+  {
+    "name": "The Gene Frankel Theatre",
+    "urls": [
+      "http://www.genefrankeltheatre.com/"
+    ]
+  },
+  {
+    "name": "The Sheen Center for Thought & Culture",
+    "urls": [
+      "https://www.sheencenter.org/events/all"
+    ],
+    "keywords": "/events/detail/"
+  },
+  {
+    "name": "BRIC House",
+    "urls": [
+      "https://bricartsmedia.org/events/calendar/"
+    ],
+    "keywords": "/event/"
+  },
+  {
+    "name": "Community Bookstore",
+    "urls": [
+      "https://www.communitybookstore.net/events"
+    ]
+  },
+  {
+    "name": "Rubin Museum",
+    "urls": [
+      "https://rubinmuseum.org/projects-exhibitions/exhibitions/"
+    ],
+    "keywords": "/exhibitions/",
+    "max_pages": 5
+  },
+  {
+    "name": "Powerhouse Arts",
+    "urls": [
+      "https://powerhousearts.org/events/"
+    ],
+    "keywords": "/event/"
+  },
+  {
+    "name": "Powerhouse Arts Festival",
+    "urls": [
+      "https://festival.powerhousearts.org/"
+    ]
+  },
+  {
+    "name": "Brooklyn Bridge Park",
+    "urls": [
+      "https://brooklynbridgepark.org/events/",
+      "https://brooklynbridgepark.org/events/list/page/2/",
+      "https://brooklynbridgepark.org/events/list/page/3/"
+    ],
+    "keywords": "/event/"
+  },
+  {
+    "name": "International Center of Photography (ICP)",
+    "urls": [
+      "https://www.icp.org/events",
+      "https://www.icp.org/events?page=1"
+    ],
+    "keywords": "/event/"
+  },
+  {
+    "name": "Jamaica Center for Arts & Learning",
+    "urls": [
+      "https://jcal.org/events-tickets"
+    ]
+  },
+  {
+    "name": "National Black Theatre",
+    "urls": [
+      "https://nationalblacktheatre.org/season/2025-2026-nbt-season/"
+    ],
+    "keywords": "/production/"
+  },
+  {
+    "name": "New York Live Arts",
+    "urls": [
+      "https://newyorklivearts.org/calendar/"
+    ],
+    "keywords": "/event/"
+  },
+  {
+    "name": "NYU Skirball Center for the Performing Arts",
+    "urls": [
+      "https://nyuskirball.org/events/"
+    ],
+    "keywords": "/events/"
+  },
+  {
+    "name": "Black Forest Brooklyn",
+    "urls": [
+      "https://www.blackforestbrooklyn.com/oktoberfest"
+    ]
+  },
+  {
+    "name": "Poster House",
+    "urls": [
+      "https://posterhouse.org/calendar/"
+    ],
+    "keywords": "/event/"
+  },
+  {
+    "name": "The Rooftop at Pier 17",
+    "urls": [
+      "https://rooftopatpier17.com/"
+    ],
+    "keywords": "/events/"
+  },
+  {
+    "name": "Prospect Park Events",
+    "urls": [
+      "https://www.prospectpark.org/events/",
+      "https://www.prospectpark.org/events/list/page/2/",
+      "https://www.prospectpark.org/events/list/page/3/",
+      "https://www.prospectpark.org/events/list/page/4/",
+      "https://www.prospectpark.org/events/list/page/5/"
+    ],
+    "keywords": "/events/"
+  },
+  {
+    "name": "Queens Public Library",
+    "urls": [
+      "https://www.queenslibrary.org/calendar?searchField=%2A&category=calendar&fromlink=calendar&searchFilter="
+    ],
+    "selector": "#loadMore > span",
+    "num_clicks": 20
+  },
+  {
+    "name": "230 Fifth",
+    "urls": [
+      "https://230-fifth.com/upcoming-events/"
+    ],
+    "keywords": "/events/"
+  },
+  {
+    "name": "Brooklyn Children's Museum",
+    "urls": [
+      "https://www.brooklynkids.org/events/",
+      "https://www.brooklynkids.org/events/page/2/",
+      "https://www.brooklynkids.org/events/page/3/",
+      "https://www.brooklynkids.org/events/page/4/",
+      "https://www.brooklynkids.org/events/page/5/"
+    ]
+  },
+  {
+    "name": "Trinity Church",
+    "urls": [
+      "https://trinitychurchnyc.org/music-events/whats-on/season",
+      "https://trinitychurchnyc.org/music-events/whats-on/season?page=1",
+      "https://trinitychurchnyc.org/music-events/whats-on/trinity-talks"
+    ]
+  },
+  {
+    "name": "Ornithology Jazz Club",
+    "urls": [
+      "https://www.ornithologyjazzclub.com/events"
+    ]
+  },
+  {
+    "name": "Radio City Music Hall",
+    "urls": [
+      "https://www.msg.com/radio-city-music-hall"
+    ]
+  },
+  {
+    "name": "The Bronx Museum of the Arts",
+    "urls": [
+      "https://www.bronxmuseum.org/events/"
+    ],
+    "keywords": "/event/"
+  },
+  {
+    "name": "Brooklyn Steel",
+    "urls": [
+      "https://www.bowerypresents.com/venues/brooklyn-steel"
+    ],
+    "selector": "body > div.venue > div.wrapper.venue > div > div.show-list > div.row.show-more > div > a",
+    "num_clicks": 2
+  },
+  {
+    "name": "Caveat",
+    "urls": [
+      "https://www.caveat.nyc/"
+    ],
+    "keywords": "/events/",
+    "selector": "#root > div > div.MuiBox-root.css-14dezvc > div.MuiBox-root.css-1tkvife > div.MuiBox-root.css-1xaekgw > div > div.MuiGrid-root.MuiGrid-item.MuiGrid-grid-xs-12.css-15j76c0 > div > button",
+    "num_clicks": 2
+  },
+  {
+    "name": "Classic Stage Company",
+    "urls": [
+      "https://www.classicstage.org/calendar"
+    ],
+    "keywords": "#buy-now"
+  },
+  {
+    "name": "Domino Park",
+    "urls": [
+      "https://www.dominopark.com/events"
+    ],
+    "keywords": "/events/"
+  },
+  {
+    "name": "LunÀtico",
+    "urls": [
+      "https://www.barlunatico.com/music"
+    ]
+  },
+  {
+    "name": "Museum of Chinese in America (MOCA)",
+    "urls": [
+      "https://www.mocanyc.org/calendar/category/open-to-general-public/"
+    ],
+    "keywords": "/event/"
+  },
+  {
+    "name": "Museum of Jewish Heritage",
+    "urls": [
+      "https://mjhnyc.org/current-events/?event_attendance_types[]=in-person&event_status=upcoming&pagenum=1&",
+      "https://mjhnyc.org/current-events/?event_attendance_types[]=in-person&event_status=upcoming&pagenum=2&"
+    ]
+  },
+  {
+    "name": "Museum of the City of New York",
+    "urls": [
+      "https://www.mcny.org/events?page=0",
+      "https://www.mcny.org/events?page=1",
+      "https://www.mcny.org/events?page=2",
+      "https://www.mcny.org/events?page=3"
+    ]
+  },
+  {
+    "name": "New York Society for Ethical Culture, Adler Hall",
+    "urls": [
+      "https://ethical.nyc/events/",
+      "https://ethical.nyc/events/list/page/2/",
+      "https://ethical.nyc/events/list/page/3/",
+      "https://ethical.nyc/events/list/page/4/"
+    ]
+  },
+  {
+    "name": "Roulette",
+    "urls": [
+      "https://roulette.org/calendar/",
+      "https://roulette.org/calendar/page/2/",
+      "https://roulette.org/calendar/page/3/"
+    ]
+  },
+  {
+    "name": "Scandinavia House",
+    "urls": [
+      "https://www.scandinaviahouse.org/events/",
+      "https://www.scandinaviahouse.org/events/list/page/2/",
+      "https://www.scandinaviahouse.org/events/list/page/3/"
+    ]
+  },
+  {
+    "name": "St. Bartholomew's Church (Great Music)",
+    "urls": [
+      "https://www.mmpaf.org/2025-26"
+    ]
+  },
+  {
+    "name": "Terminal 5",
+    "urls": [
+      "https://www.terminal5nyc.com/"
+    ]
+  },
+  {
+    "name": "The Chocolate Factory Theater",
+    "urls": [
+      "https://chocolatefactorytheater.org/events/"
+    ]
+  },
+  {
+    "name": "The City Reliquary",
+    "urls": [
+      "https://withfriends.events/o/the_city_reliquary/upcoming/"
+    ]
+  },
+  {
+    "name": "The Drawing Center",
+    "urls": [
+      "https://drawingcenter.org/programs"
+    ]
+  },
+  {
+    "name": "Theater Row",
+    "urls": [
+      "https://theatrerow.org/"
+    ],
+    "keywords": "/shows/"
+  },
+  {
+    "name": "Apollo Theater",
+    "urls": [
+      "https://www.apollotheater.org/"
+    ]
+  },
+  {
+    "name": "Taste Buds Kitchen",
+    "urls": [
+      "https://tastebudskitchen.com/nyc/",
+      "https://tastebudskitchen.com/nyc/adult-cooking-classes/"
+    ]
+  },
+  {
+    "name": "City Parks Foundation Summer Stage",
+    "urls": [
+      "https://cityparksfoundation.org/summerstage/"
+    ],
+    "keywords": "/events/"
+  },
+  {
+    "name": "The Moth",
+    "urls": [
+      "https://themoth.org/events/results?eventLocations=65&typesOfEvents=&eventDate="
+    ]
+  },
+  {
+    "name": "Jazz at Lincoln Center",
+    "urls": [
+      "https://jazz.org/concerts-events/25-26-season-concerts/"
+    ],
+    "keywords": "/concert/"
+  },
+  {
+    "name": "The Seaport (Pier 17)",
+    "urls": [
+      "https://theseaport.nyc/",
+      "https://theseaport.nyc/neighborhood-events/"
+    ]
+  },
+  {
+    "name": "Albertine",
+    "urls": [
+      "https://www.albertine.com/events/"
+    ]
+  },
+  {
+    "name": "Austrian Cultural Forum New York",
+    "urls": [
+      "https://acfny.org/events/"
+    ],
+    "keywords": "/event/"
+  },
+  {
+    "name": "Billie Holiday Theatre",
+    "urls": [
+      "https://thebillieholiday.org/shows-and-events/"
+    ]
+  },
+  {
+    "name": "Littlefield",
+    "urls": [
+      "https://littlefieldnyc.com/all-shows/"
+    ]
+  },
+  {
+    "name": "The Hispanic Society Museum",
+    "urls": [
+      "https://hispanicsociety.org/program/concert-series/",
+      "https://hispanicsociety.org/program/other-event/"
+    ],
+    "keywords": "/concert-series/, /other-event/",
+    "max_pages": 12
+  },
+  {
+    "name": "Historic Richmond Town",
+    "urls": [
+      "https://www.historicrichmondtown.org/events"
+    ],
+    "keywords": "/events/",
+    "max_pages": 15
+  },
+  {
+    "name": "Village Vanguard",
+    "urls": [
+      "https://villagevanguard.com/"
+    ]
+  },
+  {
+    "name": "Alice Austen House Museum",
+    "urls": [
+      "https://aliceausten.org/events"
+    ],
+    "keywords": "/events/"
+  },
+  {
+    "name": "Bryant Park",
+    "urls": [
+      "https://bryantpark.org/calendar/week"
+    ],
+    "keywords": "/event/",
+    "crawl_frequency": 7
+  },
+  {
+    "name": "China Institute",
+    "urls": [
+      "https://chinainstitute.org/upcoming-events/"
+    ],
+    "keywords": "/event/",
+    "max_pages": 10
+  },
+  {
+    "name": "Kaufman Music Center",
+    "urls": [
+      "https://www.kaufmanmusiccenter.org/mch/"
+    ],
+    "keywords": "/event/",
+    "max_pages": 10
+  },
+  {
+    "name": "Parklife",
+    "urls": [
+      "https://parklifebk.com/events/"
+    ],
+    "keywords": "/event/"
+  },
+  {
+    "name": "The Joyce Theater",
+    "urls": [
+      "https://www.joyce.org/performances"
+    ]
+  },
+  {
+    "name": "Triskelion Arts",
+    "urls": [
+      "https://www.triskelionarts.org/fall-2025-performances"
+    ],
+    "keywords": "/fall-2025-performances/"
+  },
+  {
+    "name": "Brooklyn Society for Ethical Culture",
+    "urls": [
+      "https://bsec.org/calendar-2/"
+    ],
+    "selector": "#mec_skin_4691 > div.mec-load-more-wrap > div",
+    "num_clicks": 4
+  },
+  {
+    "name": "Prospect Park Yoga",
+    "urls": [
+      "https://www.eventbrite.com/o/prospect-park-yoga-86139403333"
+    ],
+    "keywords": "/e/",
+    "max_pages": 10
+  },
+  {
+    "name": "A.R.T./New York Theatres",
+    "urls": [
+      "https://www.art-newyork.org/show-calendar"
+    ]
+  },
+  {
+    "name": "AKC Museum of the Dog",
+    "urls": [
+      "https://museumofthedog.org/calendar-list/"
+    ]
+  },
+  {
+    "name": "Intrepid Sea, Air & Space Museum",
+    "urls": [
+      "https://intrepidmuseum.org/events/calendar"
+    ],
+    "selector": "#node-68 > div > div:nth-child(1) > div > div > div:nth-child(2) > div > div > div > section > ul > li > a",
+    "num_clicks": 2
+  },
+  {
+    "name": "Murray's Cheese",
+    "urls": [
+      "https://classes.murrayscheese.com/location/murrays-cheese-in-person-events-141392852881"
+    ]
+  },
+  {
+    "name": "Queens Night Market",
+    "urls": [
+      "https://queensnightmarket.com/"
+    ]
+  },
+  {
+    "name": "The Mysterious Bookshop",
+    "urls": [
+      "https://www.mysteriousbookshop.com/pages/upcoming-live-virtual-events-at-the-mysterious-bookshop"
+    ]
+  },
+  {
+    "name": "Park Avenue Armory",
+    "urls": [
+      "https://www.armoryonpark.org/programs_events/2025_Season"
+    ]
+  },
+  {
+    "name": "The Kitchen",
+    "urls": [
+      "https://thekitchen.org/calendar/"
+    ]
+  },
+  {
+    "name": "The New York Aquarium",
+    "urls": [
+      "https://nyaquarium.com/things-to-do/events"
+    ]
+  },
+  {
+    "name": "Arts Gowanus",
+    "urls": [
+      "https://www.artsgowanus.org/"
+    ]
+  },
+  {
+    "name": "Battery Dance Festival",
+    "urls": [
+      "https://batterydance.org/battery-dance-festival/"
+    ],
+    "crawl_frequency": 300
+  },
+  {
+    "name": "Cooper Hewitt, Smithsonian Design Museum",
+    "urls": [
+      "https://www.cooperhewitt.org/events/",
+      "https://www.cooperhewitt.org/events/page/2/"
+    ]
+  },
+  {
+    "name": "Pregones/Puerto Rican Traveling Theater",
+    "urls": [
+      "https://pregonesprtt.org/events/"
+    ]
+  },
+  {
+    "name": "TV Eye",
+    "urls": [
+      "https://tveyenyc.com/calendar/",
+      "https://tveyenyc.com/calendar/?list1page=2",
+      "https://tveyenyc.com/calendar/?list1page=3",
+      "https://tveyenyc.com/calendar/?list1page=4"
+    ]
+  },
+  {
+    "name": "Brooklyn Navy Yard",
+    "urls": [
+      "https://www.brooklynnavyyard.org/events-exhibitions/"
+    ]
+  },
+  {
+    "name": "Leslie-Lohman Museum of Art",
+    "urls": [
+      "https://www.leslielohman.org/"
+    ],
+    "keywords": "/exhibitions/",
+    "max_pages": 4
+  },
+  {
+    "name": "Museum of Illustration at the Society of Illustrators",
+    "urls": [
+      "https://societyillustrators.org/events/",
+      "https://societyillustrators.org/events/list/page/2/"
+    ]
+  },
+  {
+    "name": "Manhattan Theatre Club",
+    "urls": [
+      "https://www.manhattantheatreclub.com/our-season/calendar/"
+    ],
+    "keywords": "/shows/",
+    "max_pages": 5
+  },
+  {
+    "name": "FAD Market",
+    "urls": [
+      "https://fadmarket.co/aboutus",
+      "https://fadmarket.co/"
+    ]
+  },
+  {
+    "name": "Atlantic Theater Company",
+    "urls": [
+      "https://atlantictheater.org/2526-season/"
+    ],
+    "keywords": "/production/",
+    "max_pages": 5
+  },
+  {
+    "name": "Baryshnikov Arts Center (BAC)",
+    "urls": [
+      "https://baryshnikovarts.org/nyc-shows-events/"
+    ]
+  },
+  {
+    "name": "Goethe-Institut New York",
+    "urls": [
+      "https://www.goethe.de/ins/us/en/sta/ney/ver.cfm"
+    ]
+  },
+  {
+    "name": "Madison Square Park",
+    "urls": [
+      "https://madisonsquarepark.org/community/calendar/"
+    ]
+  },
+  {
+    "name": "Sultan Room",
+    "urls": [
+      "https://www.songkick.com/venues/4421107-sultan-room/calendar"
+    ]
+  },
+  {
+    "name": "The Skyscraper Museum",
+    "urls": [
+      "https://skyscraper.org/programs/"
+    ]
+  },
+  {
+    "name": "The Studio Museum in Harlem",
+    "urls": [
+      "https://studiomuseum.org/events"
+    ],
+    "keywords": "/events/",
+    "max_pages": 5
+  },
+  {
+    "name": "House of Yes",
+    "urls": [
+      "https://houseofyes.org/calendar/"
+    ],
+    "keywords": "shotgun.live/events/",
+    "max_pages": 10
+  },
+  {
+    "name": "The Flea Theater",
+    "urls": [
+      "https://theflea.org/calendar"
+    ]
+  },
+  {
+    "name": "The Green Room 42",
+    "urls": [
+      "https://thegreenroom42.venuetix.com/"
+    ]
+  },
+  {
+    "name": "The Met Opera",
+    "urls": [
+      "https://www.metopera.org/season/events/"
+    ],
+    "keywords": "/season/",
+    "max_pages": 5
+  },
+  {
+    "name": "59E59 Theaters",
+    "urls": [
+      "https://www.59e59.org/shows/calendar-listing/"
+    ]
+  },
+  {
+    "name": "Circus Academy New York",
+    "urls": [
+      "https://www.circusacademy.com/shows"
+    ]
+  },
+  {
+    "name": "Hunter’s Point South Park",
+    "urls": [
+      "https://www.hunterspointparks.org/calendar"
+    ],
+    "keywords": "/events/",
+    "max_pages": 10
+  },
+  {
+    "name": "Time's Up",
+    "urls": [
+      "https://times-up.org/calendar/"
+    ],
+    "keywords": "/calendar/",
+    "max_pages": 15
+  },
+  {
+    "name": "Museum of Reclaimed Urban Space",
+    "urls": [
+      "https://morusnyc.org/event-calendar-one/"
+    ]
+  },
+  {
+    "name": "St. Ann's Warehouse",
+    "urls": [
+      "https://www.stannswarehouse.org/current-season/"
+    ],
+    "keywords": "/show/",
+    "max_pages": 5
+  },
+  {
+    "name": "The Jewish Museum",
+    "urls": [
+      "https://thejewishmuseum.org/calendar"
+    ],
+    "keywords": "/program/"
+  },
+  {
+    "name": "Central Park",
+    "urls": [
+      "https://www.centralparknyc.org/activities?category=events",
+      "https://www.centralparknyc.org/calendar"
+    ],
+    "keywords": "/activities/",
+    "max_pages": 40
+  },
+  {
+    "name": "Signature Theatre Company",
+    "urls": [
+      "https://signaturetheatre.org/productions/"
+    ],
+    "keywords": "/show/",
+    "max_pages": 2
+  },
+  {
+    "name": "Soho Rep",
+    "urls": [
+      "https://sohorep.org/next/"
+    ],
+    "keywords": "/shows/",
+    "max_pages": 10
+  },
+  {
+    "name": "Calendar – Rooftop Films",
+    "urls": [
+      "https://rooftopfilms.com/calendar/"
+    ],
+    "keywords": "/event/",
+    "max_pages": 5
+  },
+  {
+    "name": "Data Society",
+    "urls": [
+      "https://datasociety.net/events/understanding-ai"
+    ],
+    "keywords": "showclix.com",
+    "max_pages": 5
+  },
+  {
+    "name": "Anthology Film Archives",
+    "urls": [
+      "https://www.anthologyfilmarchives.org/film_screenings/calendar?view=list&"
+    ]
+  },
+  {
+    "name": "Camp Friendship",
+    "urls": [
+      "https://www.brooklyncontra.org/dance-schedule?view=calendar"
+    ],
+    "keywords": "/dance-schedule/",
+    "max_pages": 10
+  },
+  {
+    "name": "El Museo del Barrio",
+    "urls": [
+      "https://www.elmuseo.org/events/"
+    ]
+  },
+  {
+    "name": "Fort Hamilton Army Base",
+    "urls": [
+      "https://hamilton.armymwr.com/categories/community-events"
+    ]
+  },
+  {
+    "name": "The Bushwick Starr",
+    "urls": [
+      "https://www.thebushwickstarr.org/current-season"
+    ]
+  },
+  {
+    "name": "The Louis Armstrong House Museum",
+    "urls": [
+      "https://www.louisarmstronghouse.org/events/"
+    ],
+    "keywords": "/event-details/",
+    "max_pages": 10
+  },
+  {
+    "name": "Theatre for a New Audience",
+    "urls": [
+      "https://www.tfana.org/current-season/"
+    ],
+    "keywords": "/events/",
+    "max_pages": 6
+  },
+  {
+    "name": "Washington Square Music Festival",
+    "urls": [
+      "https://www.ws-mf.org/event-list"
+    ]
+  },
+  {
+    "name": "Gagosian",
+    "urls": [
+      "https://gagosian.com/exhibitions/?as_list"
+    ],
+    "keywords": "/exhibitions/202",
+    "crawl_frequency": 4,
+    "max_pages": 10
+  },
+  {
+    "name": "Fosun Plaza",
+    "urls": [
+      "https://downtownny.com/dinearound/",
+      "https://downtownny.com/community-food-festival/",
+      "https://downtownny.com/cooking-at-home/",
+      "https://downtownny.com/lunch-box/"
+    ]
+  },
+  {
+    "name": "Gibney Dance",
+    "urls": [
+      "https://gibneydance.org/calendar/"
+    ],
+    "keywords": "/event/",
+    "max_pages": 5
+  },
+  {
+    "name": "Madison Square Garden",
+    "urls": [
+      "https://www.msg.com/calendar?venues=KovZpZA7AAEA"
+    ],
+    "keywords": "/events-tickets/"
+  },
+  {
+    "name": "Mount Vernon Hotel Museum & Garden",
+    "urls": [
+      "https://mvhm.org/events/month/"
+    ]
+  },
+  {
+    "name": "The Lilac Preservation Project",
+    "urls": [
+      "https://www.lilacpreservationproject.org/exhibitions"
+    ]
+  },
+  {
+    "name": "The McKittrick Hotel",
+    "urls": [
+      "https://mckittrickhotel.com/calendar/"
+    ]
+  },
+  {
+    "name": "The New York Academy of Medicine",
+    "urls": [
+      "https://www.nyam.org/events/"
+    ],
+    "keywords": "/events/event/"
+  },
+  {
+    "name": "Harlem Week",
+    "urls": [
+      "https://harlemweek.com/events/list/"
+    ]
+  },
+  {
+    "name": "Coney Island Amphitheater",
+    "urls": [
+      "https://seasideparkconeyisland.com/calendar"
+    ],
+    "keywords": "/events/amphitheater/"
+  },
+  {
+    "name": "Dyckman Farmhouse Museum",
+    "urls": [
+      "https://dyckmanfarmhouse.org/events/"
+    ]
+  },
+  {
+    "name": "Trans-Pecos",
+    "urls": [
+      "https://www.thetranspecos.com/#/events"
+    ]
+  },
+  {
+    "name": "Waterfront Museum",
+    "urls": [
+      "https://waterfrontmuseum.org/barge-events/#upcoming"
+    ],
+    "keywords": "/event/",
+    "max_pages": 10
+  },
+  {
+    "name": "WORD Bookstore",
+    "urls": [
+      "https://www.wordbookstores.com/events"
+    ],
+    "keywords": "/event/",
+    "max_pages": 5
+  },
+  {
+    "name": "Ars Nova",
+    "urls": [
+      "https://arsnovanyc.com/upcoming-events/"
+    ],
+    "keywords": "/events/",
+    "max_pages": 5
+  },
+  {
+    "name": "Drunk Shakespeare",
+    "urls": [
+      "https://a.drunkshakespeare.com/nyc/",
+      "https://brasstix.com/pmt/calendar.php?Show=Drunk%20Shakespeare&_gl=1*1bbray8*_gcl_au*MTg4MDczNzEuMTc1ODA2MjY0NA..*_ga*MTQ1MDA5ODI5OS4xNzU4MDYyNjQ0*_ga_GCBWRTW2TM*czE3NTgwNjI2NDQkbzEkZzAkdDE3NTgwNjI2NDYkajU4JGwwJGgw"
+    ]
+  },
+  {
+    "name": "Bindlestiff Family Cirkus",
+    "urls": [
+      "https://bindlestiff.org/events/"
+    ],
+    "keywords": "/event/",
+    "max_pages": 5
+  },
+  {
+    "name": "BetaNYC",
+    "urls": [
+      "https://www.beta.nyc/events/"
+    ],
+    "keywords": "/event/",
+    "max_pages": 10
+  },
+  {
+    "name": "Flux Factory",
+    "urls": [
+      "https://www.fluxfactory.org/events/list/"
+    ]
+  },
+  {
+    "name": "Irish Repertory Theatre",
+    "urls": [
+      "https://irishrep.org/explore/whats-coming-up-at-irish-rep/"
+    ],
+    "keywords": "/show/",
+    "max_pages": 5
+  },
+  {
+    "name": "King Manor Museum",
+    "urls": [
+      "https://www.kingmanor.org/calendar"
+    ],
+    "keywords": "/calendar/",
+    "max_pages": 5
+  },
+  {
+    "name": "Kings Theatre",
+    "urls": [
+      "https://www.kingstheatre.com/events"
+    ],
+    "selector": "#main-content > div > div.MuiGrid-root.MuiGrid-container.MuiGrid-direction-xs-row.mui-185p9kr > div > div.MuiStack-root.mui-dhg1gp > button",
+    "num_clicks": 2
+  },
+  {
+    "name": "The Drama Book Shop",
+    "urls": [
+      "https://www.eventbrite.com/o/drama-book-shop-52007752603"
+    ]
+  },
+  {
+    "name": "A.I.R. Gallery",
+    "urls": [
+      "https://www.airgallery.org/events"
+    ],
+    "keywords": "/events-1/"
+  },
+  {
+    "name": "Atelier Sucré",
+    "urls": [
+      "https://www.ateliersucreny.com/new-york-workshops"
+    ]
+  },
+  {
+    "name": "Beacon Theatre",
+    "urls": [
+      "https://www.msg.com/beacon-theatre/calendar"
+    ],
+    "keywords": "/events-tickets/"
+  },
+  {
+    "name": "Bluestockings Cooperative Bookstore",
+    "urls": [
+      "https://www.eventbrite.com/o/bluestockings-bookstore-19793422824"
+    ],
+    "keywords": "/e/",
+    "max_pages": 5
+  },
+  {
+    "name": "Brooklyn Museum",
+    "urls": [
+      "https://www.brooklynmuseum.org/calendar"
+    ],
+    "keywords": "/programs/",
+    "selector": "body > div > div > main > div.max-w-container.mx-auto > div > div.max-w-container.mx-auto.px-lg.pt-\\[160px\\].scroll-pt-\\[160px\\].sm\\:pt-\\[199px\\].sm\\:scroll-pt-\\[199px\\].lg\\:pt-\\[207px\\].lg\\:scroll-pt-\\[207px\\].space-y-lg > div:nth-child(3) > div > div.flex.justify-center > button",
+    "num_clicks": 2
+  },
+  {
+    "name": "Café Carlyle",
+    "urls": [
+      "https://www.rosewoodhotels.com/en/the-carlyle-new-york/experiences/cafe-carlyle"
+    ]
+  },
+  {
+    "name": "Delia's Lounge & Restaurant",
+    "urls": [
+      "https://www.deliaslounge.com/live-music-events-copy"
+    ],
+    "keywords": "/new-events-2/"
+  },
+  {
+    "name": "Forest Hills Stadium",
+    "urls": [
+      "https://www.foresthillsstadium.com/calendar/"
+    ],
+    "keywords": "/events/"
+  },
+  {
+    "name": "General Grant National Memorial",
+    "urls": [
+      "https://www.nps.gov/gegr/planyourvisit/calendar.htm"
+    ]
+  },
+  {
+    "name": "Ginger's Bar",
+    "urls": [
+      "https://linktr.ee/Gingersbar"
+    ]
+  },
+  {
+    "name": "Governors Island",
+    "urls": [
+      "https://www.govisland.com/things-to-do/events"
+    ],
+    "keywords": "/events/"
+  },
+  {
+    "name": "Harlem Stage",
+    "urls": [
+      "https://harlemstage.org/events/"
+    ],
+    "keywords": "/events/"
+  },
+  {
+    "name": "Home Cooking New York",
+    "urls": [
+      "https://homecookingny.com/manhattan/",
+      "https://occ.sn/vbtwjdxk"
+    ]
+  },
+  {
+    "name": "Irish Arts Center",
+    "urls": [
+      "https://irishartscenter.org/whats-on/"
+    ],
+    "keywords": "/event/"
+  },
+  {
+    "name": "Isola Brooklyn",
+    "urls": [
+      "https://www.eventbrite.com/o/isola-brooklyn-105758425841"
+    ],
+    "keywords": "/e/"
+  },
+  {
+    "name": "Italian Cultural Institute of New York",
+    "urls": [
+      "https://iicnewyork.esteri.it/en/gli_eventi/"
+    ],
+    "keywords": "/gli_eventi/"
+  },
+  {
+    "name": "Japan Society",
+    "urls": [
+      "https://japansociety.org/events/"
+    ],
+    "keywords": "/events/"
+  },
+  {
+    "name": "Leroy's Place",
+    "urls": [
+      "https://leroysplace.com/events/list/"
+    ],
+    "keywords": "/event/",
+    "max_pages": 10
+  },
+  {
+    "name": "Mabou Mines",
+    "urls": [
+      "https://maboumines.vbotickets.com/events"
+    ],
+    "keywords": "/event.asp"
+  },
+  {
+    "name": "Miller Theatre at Columbia University",
+    "urls": [
+      "https://www.millertheatre.com/events",
+      "https://www.millertheatre.com/events?page=2"
+    ],
+    "keywords": "/events/"
+  },
+  {
+    "name": "MoMA PS1",
+    "urls": [
+      "https://www.momaps1.org/en/calendar"
+    ]
+  },
+  {
+    "name": "Museum at Eldridge Street",
+    "urls": [
+      "https://www.eldridgestreet.org/events/"
+    ]
+  },
+  {
+    "name": "New World Stages",
+    "urls": [
+      "https://www.newworldstages.com/"
+    ],
+    "keywords": "telecharge.com",
+    "max_pages": 10
+  },
+  {
+    "name": "New York City Center",
+    "urls": [
+      "https://www.nycitycenter.org/calendar/"
+    ],
+    "keywords": "/pdps/"
+  },
+  {
+    "name": "New York City Fire Museum",
+    "urls": [
+      "https://www.nycfiremuseum.org/events"
+    ]
+  },
+  {
+    "name": "New York Transit Museum",
+    "urls": [
+      "https://www.nytransitmuseum.org/programs/"
+    ],
+    "keywords": "/program/",
+    "max_pages": 15
+  },
+  {
+    "name": "Nuyorican Poets Cafe",
+    "urls": [
+      "https://www.nuyorican.org/types-of-events",
+      "https://nuyorican.org/calendar/"
+    ]
+  },
+  {
+    "name": "Old Stone House",
+    "urls": [
+      "https://theoldstonehouse.org/events/"
+    ]
+  },
+  {
+    "name": "Pianos",
+    "urls": [
+      "https://pianosnyc.com/shows"
+    ]
+  },
+  {
+    "name": "Pine Box Rock Shop",
+    "urls": [
+      "https://www-pineboxrockshop-com.filesusr.com/html/9fc77b_df324c0b7a34e2bd1aaf55954b3f8cd5.html"
+    ]
+  },
+  {
+    "name": "St. George Theatre",
+    "urls": [
+      "https://stgeorgetheatre.com/events/"
+    ],
+    "keywords": "/events/"
+  },
+  {
+    "name": "The Frick Collection",
+    "urls": [
+      "https://www.frick.org/calendar"
+    ]
+  },
+  {
+    "name": "The Town Hall",
+    "urls": [
+      "https://www.thetownhall.org/events"
+    ]
+  },
+  {
+    "name": "Theater for the New City",
+    "urls": [
+      "https://theaterforthenewcity.net/whats-playing/",
+      "https://ci.ovationtix.com/35441"
+    ]
+  },
+  {
+    "name": "UCB Theatre",
+    "urls": [
+      "https://ucbcomedy.com/shows/new-york/"
+    ]
+  },
+  {
+    "name": "Union Pool",
+    "urls": [
+      "https://www.union-pool.com/calendar"
+    ]
+  },
+  {
+    "name": "Angelika New York",
+    "urls": [
+      "https://angelikafilmcenter.com/nyc/now-playing"
+    ],
+    "keywords": "/details/",
+    "max_pages": 50
+  },
+  {
+    "name": "Village East By Angelika",
+    "urls": [
+      "https://angelikafilmcenter.com/villageeast/now-playing"
+    ],
+    "keywords": "/details/",
+    "max_pages": 50
+  },
+  {
+    "name": "Cinema 123 By Angelika",
+    "urls": [
+      "https://angelikafilmcenter.com/cinemas123/now-playing"
+    ],
+    "keywords": "/details/",
+    "max_pages": 50
+  },
+  {
+    "name": "Webster Hall",
+    "urls": [
+      "https://www.websterhall.com/shows/"
+    ],
+    "keywords": "/events/detail"
+  },
+  {
+    "name": "Carnegie Hall",
+    "urls": [
+      "https://www.carnegiehall.org/Events"
+    ],
+    "keywords": "/calendar/202",
+    "selector": "#ch-event-list-container > div.ch-events-list__more.text-center > a",
+    "num_clicks": 2
+  },
+  {
+    "name": "Broadway Tickets",
+    "urls": [
+      "https://www.telecharge.com/AllEvents"
+    ],
+    "keywords": "-Tickets",
+    "max_pages": 50
+  },
+  {
+    "name": "New York Classical Theatre",
+    "urls": [
+      "https://nyclassical.org/",
+      "https://nyclassical.org/vino-verse",
+      "https://nyclassical.org/hecuba-polyxena"
+    ]
+  },
+  {
+    "name": "CocuSocial",
+    "urls": [
+      "https://cocusocial.com/cooking-classes/NYC"
+    ],
+    "keywords": "/newevent/",
+    "disabled": true
+  },
+  {
+    "name": "The Tenth Annual Brooklyn Queens Brewery Express",
+    "urls": [
+      "https://runsignup.com/Race/NY/Bushwick/BQBEHALFMARATHON"
+    ]
+  },
+  {
+    "name": "NY Parks",
+    "urls": [
+      "https://parks.ny.gov/events/event-results.aspx?lct=0&r=12"
+    ]
+  },
+  {
+    "name": "Museum of Reclaimed Urban Space",
+    "urls": [
+      "https://www.eventbrite.com/o/museum-of-reclaimed-urban-space-18102992064"
+    ],
+    "keywords": "/e/",
+    "max_pages": 10
+  },
+  {
+    "name": "Comedic X",
+    "urls": [
+      "https://www.eventbrite.com/o/comedic-x-93684169573"
+    ],
+    "keywords": "/e/",
+    "max_pages": 2
+  },
+  {
+    "name": "Prospect Park Alliance",
+    "urls": [
+      "https://www.eventbrite.com/o/prospect-park-alliance-8513706675"
+    ],
+    "keywords": "/e/",
+    "max_pages": 5
+  },
+  {
+    "name": "WNYC",
+    "urls": [
+      "https://www.wnyc.org/events/"
+    ]
+  },
+  {
+    "name": "Keepsake House",
+    "urls": [
+      "https://www.keepsakehouse.com/calendar"
+    ],
+    "keywords": "/community-shows/",
+    "max_pages": 5
+  },
+  {
+    "name": "Atolye",
+    "urls": [
+      "https://atolyenyc.com/events"
+    ],
+    "disabled": true
+  },
+  {
+    "name": "Harlem Rose Garden",
+    "urls": [
+      "https://www.instagram.com/p/DOduzwUjs6D/"
+    ]
+  },
+  {
+    "name": "ZeroSpace",
+    "urls": [
+      "https://luma.com/zerospace?k=c"
+    ]
+  },
+  {
+    "name": "Bowery Electric",
+    "urls": [
+      "https://www.theboweryelectric.com/calendar/"
+    ]
+  },
+  {
+    "name": "City Winery New York City",
+    "urls": [
+      "https://citywinery.com/new-york-city/events"
+    ],
+    "selector": "#page > astro-island:nth-child(2) > section > aside > div.flex.justify-center.items-center.my-16 > button",
+    "num_clicks": 2
+  },
+  {
+    "name": "Flushing Town Hall",
+    "urls": [
+      "https://www.flushingtownhall.org/events"
+    ],
+    "selector": "#loadMoreBtn",
+    "num_clicks": 5
+  },
+  {
+    "name": "Jalopy Theatre",
+    "urls": [
+      "https://jalopytheatre.netlify.app/performances"
+    ],
+    "keywords": "viewcy.com/event"
+  },
+  {
+    "name": "The Bitter End",
+    "urls": [
+      "https://bitterend.com/#/events"
+    ]
+  },
+  {
+    "name": "The Ukrainian Museum",
+    "urls": [
+      "https://www.theukrainianmuseum.org/umevents/"
+    ]
+  },
+  {
+    "name": "9/11 Memorial & Museum",
+    "urls": [
+      "https://www.911memorial.org/programs"
+    ]
+  },
+  {
+    "name": "92nd Street Y (92NY)",
+    "urls": [
+      "https://www.92ny.org/whats-on/events?refinementList%5B57_dd_OnlineInPersonLocation%5D%5B0%5D=In-Person"
+    ],
+    "keywords": "/event/, /class/"
+  },
+  {
+    "name": "American Museum of Natural History",
+    "urls": [
+      "https://www.amnh.org/calendar"
+    ],
+    "keywords": "/calendar/"
+  },
+  {
+    "name": "Arlene's Grocery",
+    "urls": [
+      "https://www.arlenesgrocerynyc.com/upcoming-events"
+    ]
+  },
+  {
+    "name": "Arsenal Gallery, Central Park",
+    "urls": [
+      "https://www.nycgovparks.org/art-and-antiquities/arsenal-gallery"
+    ]
+  },
+  {
+    "name": "Asia Society and Museum",
+    "urls": [
+      "https://asiasociety.org/new-york/events"
+    ]
+  },
+  {
+    "name": "Baby's All Right",
+    "urls": [
+      "https://wl.eventim.us/BabysAllRightBrooklyn"
+    ],
+    "keywords": "wl.eventim.us/event/"
+  },
+  {
+    "name": "Barbès",
+    "urls": [
+      "https://viewcyembed.com/barbes",
+      "https://www.barbesbrooklyn.com/events"
+    ]
+  },
+  {
+    "name": "Barnes & Noble (Union Square)",
+    "urls": [
+      "https://stores.barnesandnoble.com/store/2675"
+    ],
+    "keywords": "/event/"
+  },
+  {
+    "name": "Books Are Magic",
+    "urls": [
+      "https://www.booksaremagic.net/events"
+    ]
+  },
+  {
+    "name": "NYC Community Gardens",
+    "urls": [
+      "https://www.nycgovparks.org/events/community-gardens",
+      "https://www.nycgovparks.org/events/community-gardens/p2"
+    ]
+  },
+  {
+    "name": "Cafe Wha?",
+    "urls": [
+      "https://www.cafewha.com/calendar"
+    ]
+  },
+  {
+    "name": "CUNY Graduate Center",
+    "urls": [
+      "https://www.gc.cuny.edu/events?audience=34&"
+    ],
+    "crawl_frequency": 3
+  },
+  {
+    "name": "Gotham Comedy Club",
+    "urls": [
+      "https://www.gothamcomedyclub.com/calendar"
+    ],
+    "keywords": "/comics/",
+    "crawl_frequency": 5
+  },
+  {
+    "name": "Housing Works Bookstore",
+    "urls": [
+      "https://housingworks.org/events"
+    ],
+    "keywords": "/events/",
+    "max_pages": 20
+  },
+  {
+    "name": "Hudson River Park",
+    "urls": [
+      "https://hudsonriverpark.org/events/"
+    ],
+    "keywords": "/events/event/"
+  },
+  {
+    "name": "Joe's Pub",
+    "urls": [
+      "https://publictheater.org/calendar/"
+    ],
+    "keywords": "/2"
+  },
+  {
+    "name": "Leland Eating and Drinking House",
+    "urls": [
+      "https://www.lelandbrooklyn.com/events"
+    ]
+  },
+  {
+    "name": "Museum of the Moving Image",
+    "urls": [
+      "https://movingimage.org/events/list/?tribe_filterbar_category_custom%5B0%5D=253&tribe_filterbar_category_custom%5B1%5D=230",
+      "https://movingimage.org/events/list/page/2/?tribe_filterbar_category_custom%5B0%5D=253&tribe_filterbar_category_custom%5B1%5D=230",
+      "https://movingimage.org/events/list/page/3/?tribe_filterbar_category_custom%5B0%5D=253&tribe_filterbar_category_custom%5B1%5D=230"
+    ]
+  },
+  {
+    "name": "New Museum",
+    "urls": [
+      "https://www.newmuseum.org/calendar"
+    ]
+  },
+  {
+    "name": "New York Hall of Science",
+    "urls": [
+      "https://nysci.org/nysci-events"
+    ],
+    "selector": "#loadMore",
+    "num_clicks": 1
+  },
+  {
+    "name": "New York Studio School",
+    "urls": [
+      "https://nyss.org/exhibitions/",
+      "https://nyss.org/lectures/",
+      "https://nyss.org/special-events/"
+    ],
+    "keywords": "/lectures/"
+  },
+  {
+    "name": "New-York Historical Society",
+    "urls": [
+      "https://www.nyhistory.org/calendar"
+    ]
+  },
+  {
+    "name": "Nowadays",
+    "urls": [
+      "https://ra.co/clubs/105873"
+    ],
+    "keywords": "/events/",
+    "max_pages": 10
+  },
+  {
+    "name": "P&T Knitwear",
+    "urls": [
+      "https://www.ptknitwear.com/events"
+    ]
+  },
+  {
+    "name": "Poets House, Elizabeth Kray Hall",
+    "urls": [
+      "https://poetshouse.org/programs-events/upcoming-events/",
+      "https://poetshouse.org/events/list/page/2/?hide_subsequent_recurrences=1"
+    ]
+  },
+  {
+    "name": "Polygon Brooklyn",
+    "urls": [
+      "https://www.instagram.com/polygonbk/?hl=en"
+    ]
+  },
+  {
+    "name": "Repertorio Español",
+    "urls": [
+      "https://repertorio.nyc/performances"
+    ],
+    "keywords": "/show/",
+    "max_pages": 15
+  },
+  {
+    "name": "Rockefeller Center",
+    "urls": [
+      "https://www.rockefellercenter.com/events/"
+    ],
+    "keywords": "/events/",
+    "max_pages": 10
+  },
+  {
+    "name": "Saint Vitus Bar",
+    "urls": [
+      "https://www.saintvitusbar.com/events"
+    ]
+  },
+  {
+    "name": "Solomon R. Guggenheim Museum",
+    "urls": [
+      "https://www.guggenheim.org/calendar"
+    ],
+    "selector": "#content > div > button",
+    "num_clicks": 4
+  },
+  {
+    "name": "The Brooklyn Monarch",
+    "urls": [
+      "https://www.thebrooklynmonarch.com/shows"
+    ]
+  },
+  {
+    "name": "The Shed",
+    "urls": [
+      "https://www.theshed.org/program"
+    ],
+    "keywords": "/program/",
+    "max_pages": 10
+  },
+  {
+    "name": "The Space at Irondale",
+    "urls": [
+      "https://www.irondale.org/on-stage"
+    ]
+  },
+  {
+    "name": "The Tenement Museum",
+    "urls": [
+      "https://www.tenement.org/events/"
+    ],
+    "keywords": "/events/",
+    "max_pages": 15
+  },
+  {
+    "name": "GrowNYC",
+    "urls": [
+      "https://www.grownyc.org/files/gmkt/map.pdf"
+    ]
+  },
+  {
+    "name": "James Suckling",
+    "urls": [
+      "https://www.jamessuckling.com/events/"
+    ]
+  },
+  {
+    "name": "RA (Electronic Music)",
+    "urls": [
+      "https://ra.co/events/us/newyorkcity"
+    ],
+    "keywords": "/events/"
+  },
+  {
+    "name": "Eventbrite",
+    "urls": [
+      "https://www.eventbrite.com/d/ny--new-york/events/"
+    ]
+  },
+  {
+    "name": "Summer on the Hudson",
+    "urls": [
+      "https://www.nycgovparks.org/events/summer_on_the_hudson",
+      "https://www.nycgovparks.org/events/summer_on_the_hudson/p2"
+    ]
+  },
+  {
+    "name": "The New York Historical",
+    "urls": [
+      "https://www.nyhistory.org/programs/upcoming",
+      "https://www.nyhistory.org/exhibitions/current"
+    ]
+  },
+  {
+    "name": "New York Philharmonic",
+    "urls": [
+      "https://www.nyphil.org/concerts-tickets/"
+    ],
+    "keywords": "/2526/",
+    "selector": "#page-content > main > div.calendar__inner > div.calendar__list > div.calendar-list > div.calendar-list__actions > button:nth-child(1)",
+    "num_clicks": 1,
+    "max_pages": 15
+  },
+  {
+    "name": "Park Slope Windsor Terrace Artists",
+    "urls": [
+      "https://www.artspswt.com/"
+    ],
+    "keywords": "/2025/",
+    "max_pages": 25
+  },
+  {
+    "name": "BrookLAN",
+    "urls": [
+      "https://www.brooklan.com/tournaments"
+    ],
+    "keywords": "/event-details/"
+  },
+  {
+    "name": "Knockdown Center",
+    "urls": [
+      "https://www.knockdown.center/upcoming"
+    ]
+  },
+  {
+    "name": "Manhattan Community Board 1",
+    "urls": [
+      "https://www.nyc.gov/site/manhattancb1/meetings/committee-agendas.page"
+    ]
+  },
+  {
+    "name": "Manhattan Community Board 2",
+    "urls": [
+      "https://cbmanhattan.cityofnewyork.us/cb2/calendar/"
+    ]
+  },
+  {
+    "name": "Manhattan Community Board 3",
+    "urls": [
+      "https://www.nyc.gov/site/manhattancb3/calendar/calendar.page"
+    ]
+  },
+  {
+    "name": "Manhattan Community Board 4",
+    "urls": [
+      "https://cbmanhattan.cityofnewyork.us/cb4/events/"
+    ]
+  },
+  {
+    "name": "Manhattan Community Board 5",
+    "urls": [
+      "https://cb5.org/events/"
+    ]
+  },
+  {
+    "name": "Manhattan Community Board 6",
+    "urls": [
+      "https://cbsix.org/meetings-calendar/"
+    ]
+  },
+  {
+    "name": "Manhattan Community Board 7",
+    "urls": [
+      "https://www.mcb7.org/"
+    ]
+  },
+  {
+    "name": "Manhattan Community Board 8",
+    "urls": [
+      "https://www.cb8m.com/",
+      "https://www.cb8m.com/calendar/"
+    ]
+  },
+  {
+    "name": "Manhattan Community Board 9",
+    "urls": [
+      "https://www.cb9m.org/cal_events"
+    ]
+  },
+  {
+    "name": "Manhattan Community Board 10",
+    "urls": [
+      "https://cbmanhattan.cityofnewyork.us/cb10/events/"
+    ]
+  },
+  {
+    "name": "Manhattan Community Board 11",
+    "urls": [
+      "https://airtable.com/appedcOCWGdk7kppK/shrqydjSZPVrdEQ0o/tblNt0o4xr7gTHHoY"
+    ]
+  },
+  {
+    "name": "Manhattan Community Board 12",
+    "urls": [
+      "https://cbmanhattan.cityofnewyork.us/cb12/meetings/calendar-and-agendas/"
+    ]
+  },
+  {
+    "name": "Manhattan Borough President",
+    "urls": [
+      "resources/events/"
+    ]
+  },
+  {
+    "name": "Brooklyn Borough President",
+    "urls": [
+      "https://www.brooklynbp.nyc.gov/events/list/"
+    ]
+  },
+  {
+    "name": "Brooklyn Community Board 1",
+    "urls": [
+      "https://www.nyc.gov/site/brooklyncb1/calendar/calendar.page"
+    ]
+  },
+  {
+    "name": "Brooklyn Community Board 2",
+    "urls": [
+      "https://cbbrooklyn.cityofnewyork.us/cb2/calendar/"
+    ]
+  },
+  {
+    "name": "Brooklyn Community Board 3",
+    "urls": [
+      "https://www.nyc.gov/site/brooklyncb3/calendar/calendar.page"
+    ]
+  },
+  {
+    "name": "Brooklyn Community Board 4",
+    "urls": [
+      "https://www.nyc.gov/site/brooklyncb4/calendar/calendar.page"
+    ]
+  },
+  {
+    "name": "Brooklyn Community Board 5",
+    "urls": [
+      "https://www.brooklyncb5.org/meetings/calendar/"
+    ]
+  },
+  {
+    "name": "Brooklyn Community Board 6",
+    "urls": [
+      "https://brooklyncb6.cityofnewyork.us/calendar/"
+    ]
+  },
+  {
+    "name": "Brooklyn Community Board 7",
+    "urls": [
+      "https://www.nyc.gov/site/brooklyncb7/calendar/calendar.page"
+    ]
+  },
+  {
+    "name": "Brooklyn Community Board 8",
+    "urls": [
+      "https://www.brooklyncb8.org/meetings/"
+    ]
+  },
+  {
+    "name": "Brooklyn Community Board 9",
+    "urls": [
+      "https://www.nyc.gov/site/brooklyncb9/calendar/calendar.page"
+    ]
+  },
+  {
+    "name": "Brooklyn Community Board 10",
+    "urls": [
+      "https://cbbrooklyn.cityofnewyork.us/cb10/calendar/"
+    ]
+  },
+  {
+    "name": "Brooklyn Community Board 11",
+    "urls": [
+      "https://www.brooklyncb11.org/calendar/"
+    ]
+  },
+  {
+    "name": "Brooklyn Community Board 12",
+    "urls": [
+      "https://www.nyc.gov/site/brooklyncb12/calendar/calendar.page"
+    ]
+  },
+  {
+    "name": "Brooklyn Community Board 13",
+    "urls": [
+      "https://www.nyc.gov/site/brooklyncb13/newsletters/newsletters.page"
+    ]
+  },
+  {
+    "name": "Brooklyn Community Board 14",
+    "urls": [
+      "https://cb14brooklyn.com/meetings/"
+    ]
+  },
+  {
+    "name": "Brooklyn Community Board 15",
+    "urls": [
+      "https://www.nyc.gov/site/brooklyncb15/calendar/calendar.page"
+    ]
+  },
+  {
+    "name": "Brooklyn Community Board 16",
+    "urls": [
+      "https://www.nyc.gov/site/brooklyncb16/about/calendar.page"
+    ]
+  },
+  {
+    "name": "Brooklyn Community Board 17",
+    "urls": [
+      "https://cbbrooklyn.cityofnewyork.us/cb17/calendar/"
+    ]
+  },
+  {
+    "name": "Brooklyn Community Board 18",
+    "urls": [
+      "https://www.nyc.gov/site/brooklyncb18/meetings/calendar.page"
+    ]
+  },
+  {
+    "name": "Queens Borough President",
+    "urls": [
+      "https://docs.google.com/forms/d/1rW9-1I66kFFvYALAH6cahS3laS4bjuI9Pm-TjpPr69o/viewform?pli=1&pli=1&fbzx=-73583407890008864&pli=1&edit_requested=true"
+    ]
+  },
+  {
+    "name": "Queens Community Board 1",
+    "urls": [
+      "https://www.nyc.gov/site/queenscb1/calendar/calendar.page"
+    ]
+  },
+  {
+    "name": "Queens Community Board 2",
+    "urls": [
+      "https://www.nyc.gov/site/queenscb2/calendar/calendar.page"
+    ]
+  },
+  {
+    "name": "Queens Community Board 3",
+    "urls": [
+      "https://queenscb3.cityofnewyork.us/"
+    ]
+  },
+  {
+    "name": "Queens Community Board 4",
+    "urls": [
+      "https://www.nyc.gov/site/queenscb4/meetings/meetings.page"
+    ]
+  },
+  {
+    "name": "Queens Community Board 5",
+    "urls": [
+      "https://www.nyc.gov/site/queenscb5/calendar/calendar.page"
+    ]
+  },
+  {
+    "name": "Queens Community Board 6",
+    "urls": [
+      "https://www.nyc.gov/site/queenscb6/calendar/calendar.page"
+    ]
+  },
+  {
+    "name": "Queens Community Board 7",
+    "urls": [
+      "https://www.nyc.gov/site/queenscb7/meetings/meetings.page"
+    ]
+  },
+  {
+    "name": "Queens Community Board 8",
+    "urls": [
+      "https://www.nyc.gov/site/queenscb8/calendar/calendar.page"
+    ]
+  },
+  {
+    "name": "Queens Community Board 9",
+    "urls": [
+      "https://www.nyc.gov/site/queenscb9/calendar/calendar.page"
+    ]
+  },
+  {
+    "name": "Queens Community Board 10",
+    "urls": [
+      "https://www.nyc.gov/html/qnscb10/html/meeting/meeting-calendar.shtml"
+    ]
+  },
+  {
+    "name": "Queens Community Board 11",
+    "urls": [
+      "https://www.nyc.gov/site/queenscb11/meetings/meetings.page"
+    ]
+  },
+  {
+    "name": "Queens Community Board 12",
+    "urls": [
+      "https://www.nyc.gov/site/queenscb12/calendar/calendar.page"
+    ]
+  },
+  {
+    "name": "Queens Community Board 13",
+    "urls": [
+      "https://www.nyc.gov/site/queenscb13/calendar/calendar.page"
+    ]
+  },
+  {
+    "name": "Queens Community Board 14",
+    "urls": [
+      "https://www.nyc.gov/site/queenscb14/calendar/calendar.page"
+    ]
+  },
+  {
+    "name": "Bronx Community Board 1",
+    "urls": [
+      "https://www.nyc.gov/site/bronxcb1/index.page"
+    ]
+  },
+  {
+    "name": "Bronx Community Board 2",
+    "urls": [
+      "https://www.nyc.gov/site/bronxcb2/calendar/calendar.page"
+    ]
+  },
+  {
+    "name": "Bronx Community Board 3",
+    "urls": [
+      "https://www.nyc.gov/site/bronxcb3/calendar/calendar.page"
+    ]
+  },
+  {
+    "name": "Bronx Community Board 4",
+    "urls": [
+      "https://cbbronx.cityofnewyork.us/cb8/calendar/"
+    ]
+  },
+  {
+    "name": "Bronx Community Board 5",
+    "urls": [
+      "https://www.nyc.gov/site/bronxcb5/calendar/calendar.page"
+    ]
+  },
+  {
+    "name": "Bronx Community Board 6",
+    "urls": [
+      "https://cbbronx.cityofnewyork.us/cb6/calendar/"
+    ]
+  },
+  {
+    "name": "Bronx Community Board 7",
+    "urls": [
+      "https://www.nyc.gov/site/bronxcb7/calendar/calendar.page"
+    ]
+  },
+  {
+    "name": "Bronx Community Board 8",
+    "urls": [
+      "https://cbbronx.cityofnewyork.us/cb8/calendar/"
+    ]
+  },
+  {
+    "name": "Bronx Community Board 9",
+    "urls": [
+      "https://www.nyc.gov/site/bronxcb9/calendar/calendar.page"
+    ]
+  },
+  {
+    "name": "Bronx Community Board 10",
+    "urls": [
+      "https://www.nyc.gov/site/bronxcb10/calendar/calendar.page"
+    ]
+  },
+  {
+    "name": "Bronx Community Board 11",
+    "urls": [
+      "https://www.nyc.gov/site/bronxcb11/meetings/calendar.page"
+    ]
+  },
+  {
+    "name": "Bronx Community Board 12",
+    "urls": [
+      "https://www.nyc.gov/site/bronxcb12/calendar/calendar.page"
+    ]
+  },
+  {
+    "name": "Staten Island Community Board 1",
+    "urls": [
+      "https://www.nyc.gov/site/statenislandcb1/meetings/meetings.page"
+    ]
+  },
+  {
+    "name": "Staten Island Community Board 2",
+    "urls": [
+      "https://www.nyc.gov/site/statenislandcb2/meetings/calendar.page"
+    ]
+  },
+  {
+    "name": "Staten Island Community Board 3",
+    "urls": [
+      "https://www.nyc.gov/site/statenislandcb3/index.page"
+    ]
+  },
+  {
+    "name": "Westchester County Board of Legislators",
+    "urls": [
+      "https://www.westchesterlegislators.com/calendars"
+    ]
+  },
+  {
+    "name": "Yonkers",
+    "urls": [
+      "https://www.yonkersny.gov/calendar.aspx"
+    ]
+  },
+  {
+    "name": "Gallery 198",
+    "urls": [
+      "https://tickets.dgt.technology/events"
+    ]
+  },
+  {
+    "name": "Parkside Lounge",
+    "urls": [
+      "https://www.parksidelounge.nyc/calendar"
+    ],
+    "keywords": "/calendar/",
+    "max_pages": 10
+  },
+  {
+    "name": "Drawing Room",
+    "urls": [
+      "https://luma.com/drawingroom"
+    ]
+  },
+  {
+    "name": "Xanadu Roller Arts",
+    "urls": [
+      "https://www.xanadu.nyc/cal"
+    ]
+  },
+  {
+    "name": "Park Slope Civic Council",
+    "urls": [
+      "https://parkslopeciviccouncil.org/events-calendar/list/"
+    ],
+    "keywords": "/event/",
+    "max_pages": 10
+  },
+  {
+    "name": "SoHo Playhouse",
+    "urls": [
+      "https://www.sohoplayhouse.com/see-a-show",
+      "https://www.sohoplayhouse.com/open-mics"
+    ],
+    "keywords": "/see-a-show/",
+    "max_pages": 10
+  },
+  {
+    "name": "EWG Popup",
+    "urls": [
+      "https://www.ewg.org/verifiedevents/popup/"
+    ]
+  },
+  {
+    "name": "Oculus PIT Pop-up",
+    "urls": [
+      "https://nycpitpopup.org/about/"
+    ],
+    "crawl_frequency": 300
+  },
+  {
+    "name": "NJ Transit",
+    "urls": [
+      "https://www.njtransit.com/press-releases/nj-transit-celebrate-railroad-history-meet-our-rail-fleet-event"
+    ],
+    "crawl_frequency": 300
+  },
+  {
+    "name": "WikiConference",
+    "urls": [
+      "https://wikiconference.org/wiki/2025/Main_Page"
+    ]
+  },
+  {
+    "name": "Queens County Farm Museum",
+    "urls": [
+      "https://www.queensfarm.org/events-calendar/month/"
+    ]
+  },
+  {
+    "name": "Randall's Island",
+    "urls": [
+      "https://randallsisland.org/events/list/",
+      "https://randallsisland.org/events/list/page/2/"
+    ],
+    "keywords": "/events/",
+    "max_pages": 20
+  },
+  {
+    "name": "Park Avenue Armory",
+    "urls": [
+      "https://www.armoryonpark.org/programs_events/2025_Season"
+    ]
+  },
+  {
+    "name": "Civic Hall",
+    "urls": [
+      "https://www.civichall.org/events"
+    ],
+    "keywords": "/event/",
+    "max_pages": 10
+  },
+  {
+    "name": "Coney Island Maker Faire",
+    "urls": [
+      "https://coneyisland.makerfaire.com/"
+    ]
+  },
+  {
+    "name": "BSidesNYC",
+    "urls": [
+      "https://bsidesnyc.org/"
+    ]
+  },
+  {
+    "name": "Vineyard Theatre",
+    "urls": [
+      "https://vineyardtheatre.org/showsevents/"
+    ],
+    "keywords": "/shows/",
+    "max_pages": 5
+  },
+  {
+    "name": "The Blanc",
+    "urls": [
+      "https://www.theblanc.art/exhibitions"
+    ],
+    "keywords": "/eap/",
+    "max_pages": 3
+  },
+  {
+    "name": "The Battery",
+    "urls": [
+      "https://www.eventbrite.com/o/the-battery-conservancy-tbc-10642878272"
+    ],
+    "keywords": "/e/",
+    "max_pages": 10
+  },
+  {
+    "name": "Newfest",
+    "urls": [
+      "https://newfest.org/events/?_filter_sort=title"
+    ],
+    "keywords": "/events/"
+  },
+  {
+    "name": "Shopify",
+    "urls": [
+      "https://shopifyny.com/#events"
+    ],
+    "keywords": "events.shopifyny.com/",
+    "max_pages": 5
+  },
+  {
+    "name": "Honk NYC",
+    "urls": [
+      "https://www.honknyc.com/honk-nyc-2023-festival-schedule-1",
+      "https://www.honknyc.com/rubulad-blowout-25",
+      "https://www.honknyc.com/honk-the-east-village-25-cultural",
+      "https://www.honknyc.com/east-village-nublu",
+      "https://www.honknyc.com/opening-night-2025",
+      "https://www.honknyc.com/honk-community-jam-w-frank",
+      "https://www.honknyc.com/honk-toberfest",
+      "https://www.honknyc.com/teach-in-25",
+      "https://www.honknyc.com/honk-the-vote-25",
+      "https://www.honknyc.com/honk-upper-west-side"
+    ]
+  },
+  {
+    "name": "Columbus Ave Open Streets",
+    "urls": [
+      "https://www.columbusavenuebid.org/openstreets/"
+    ]
+  },
+  {
+    "name": "Open House New York",
+    "urls": [
+      "https://ohny.org/calendar/"
+    ],
+    "keywords": "/activity/",
+    "max_pages": 10
+  },
+  {
+    "name": "BioBAT Art Space",
+    "urls": [
+      "https://www.biobatartspace.com/events"
+    ]
+  },
+  {
+    "name": "Brooklyn Army Terminal",
+    "urls": [
+      "https://brooklynarmyterminal.com/events"
+    ]
+  },
+  {
+    "name": "Carroll Hall",
+    "urls": [
+      "https://www.carrollhall.com/events-calendar"
+    ],
+    "keywords": "/events-calendar/",
+    "max_pages": 10
+  },
+  {
+    "name": "The Church of the Transfiguration",
+    "urls": [
+      "https://www.littlechurch.org/newsevents"
+    ],
+    "keywords": "/newsevents/",
+    "max_pages": 5
+  },
+  {
+    "name": "MADE Bush Terminal",
+    "urls": [
+      "https://madebushterminal.nyc/made-events"
+    ]
+  },
+  {
+    "name": "Climate Cafe NYC",
+    "urls": [
+      "https://luma.com/climatecafe"
+    ]
+  },
+  {
+    "name": "Turnstile Tours",
+    "urls": [
+      "https://fareharbor.com/embeds/book/turnstiletours/items/?flow=42986",
+      "https://fareharbor.com/embeds/book/turnstiletours/items/?flow=42958"
+    ],
+    "keywords": "/items/",
+    "max_pages": 10
+  },
+  {
+    "name": "Wikimedia NYC",
+    "urls": [
+      "https://en.wikipedia.org/wiki/Wikipedia:Meetup/NYC"
+    ]
+  },
+  {
+    "name": "The Latinx Project at NYU",
+    "urls": [
+      "https://www.latinxproject.nyu.edu/events"
+    ],
+    "keywords": "/2025-26/",
+    "max_pages": 15
+  },
+  {
+    "name": "Grey Art Museum",
+    "urls": [
+      "https://greyartmuseum.nyu.edu/exhibitions/current-exhibitions/",
+      "https://greyartmuseum.nyu.edu/programs/"
+    ],
+    "keywords": "/exhibition/, /program/",
+    "max_pages": 10
+  },
+  {
+    "name": "The Municipal Art Society of New York",
+    "urls": [
+      "https://www.mas.org/events/?view=cal"
+    ],
+    "keywords": "/events/"
+  },
+  {
+    "name": "Bowery Boys Walking Tours",
+    "urls": [
+      "https://www.boweryboyswalks.com/upcoming-tours/"
+    ],
+    "keywords": "/walking-tours/",
+    "max_pages": 10
+  },
+  {
+    "name": "Young Ethels",
+    "urls": [
+      "https://www.youngethels.com/events"
+    ]
+  },
+  {
+    "name": "Perelman Arts Center",
+    "urls": [
+      "https://pacnyc.org/whats-on-all/",
+      "https://pacnyc.org/whats-on-all/page/2/",
+      "https://pacnyc.org/whats-on-all/page/3/"
+    ],
+    "keywords": "/whats-on/",
+    "max_pages": 30
+  },
+  {
+    "name": "LIC Community Boathouse",
+    "urls": [
+      "https://www.liccb.org/calendar"
+    ]
+  },
+  {
+    "name": "Bayside Historical Society",
+    "urls": [
+      "https://www.baysidehistorical.org/events"
+    ],
+    "keywords": "/events-1/",
+    "max_pages": 15
+  },
+  {
+    "name": "Bike New York",
+    "urls": [
+      "https://www.bike.nyc/calendar/"
+    ],
+    "keywords": "/events/",
+    "max_pages": 10
+  },
+  {
+    "name": "Book Club for the Book Hoes",
+    "urls": [
+      "https://www.eventbrite.com/o/book-club-for-the-book-hoes-52255937823"
+    ],
+    "keywords": "/e/",
+    "max_pages": 10
+  },
+  {
+    "name": "General Society",
+    "urls": [
+      "https://generalsociety.org/lecture-schedule/"
+    ]
+  },
+  {
+    "name": "Brickworks Design Studio",
+    "urls": [
+      "https://www.glengery.com/events?location[949]=949&field_date_and_time_value=1"
+    ],
+    "keywords": "/node/",
+    "max_pages": 5
+  },
+  {
+    "name": "Center for Book Arts",
+    "urls": [
+      "https://shop.centerforbookarts.org/collections/workshops",
+      "https://centerforbookarts.org/exhibitions",
+      "https://shop.centerforbookarts.org/collections/events"
+    ],
+    "keywords": "/products/, /exhibitions/",
+    "max_pages": 30
+  },
+  {
+    "name": "Hindu Temple Society of North America",
+    "urls": [
+      "https://nyganeshtemple.org/calendar/"
+    ],
+    "keywords": "/calendar/",
+    "max_pages": 40
+  },
+  {
+    "name": "Horological Society of New York",
+    "urls": [
+      "https://hs-ny.org/schedule"
+    ],
+    "keywords": "/schedule/",
+    "max_pages": 3
+  },
+  {
+    "name": "Inspiration Point"
+  },
+  {
+    "name": "Kehila Kedosha Janina Synagogue and Museum",
+    "urls": [
+      "https://www.kkjsm.org/announcements",
+      "https://www.kkjsm.org/greek-jewish-festival",
+      "https://www.kkjsm.org/public-lectures-and-film-screenings"
+    ]
+  },
+  {
+    "name": "Kings County Distillery",
+    "urls": [
+      "https://www.kingscountydistillery.com/pages/tours"
+    ]
+  },
+  {
+    "name": "Kingsland Wildflowers",
+    "urls": [
+      "https://www.kingslandwildflowers.com/events-1"
+    ]
+  },
+  {
+    "name": "La Bodega Studios"
+  },
+  {
+    "name": "The Lotus Garden",
+    "urls": [
+      "https://thelotusgarden.org/calendar/"
+    ]
+  },
+  {
+    "name": "IATI Theater",
+    "urls": [
+      "https://www.iatitheater.org/calendar",
+      "https://www.iatitheater.org/about"
+    ],
+    "keywords": "/shows/",
+    "max_pages": 5
+  },
+  {
+    "name": "ABC No Rio",
+    "urls": [
+      "https://www.abcnorio.org/event_listing/"
+    ],
+    "keywords": "/events/",
+    "max_pages": 5
+  },
+  {
+    "name": "Art Loisaida Foundation"
+  },
+  {
+    "name": "LxNY",
+    "urls": [
+      "https://www.lxnyarts.org/calendar"
+    ],
+    "keywords": "/calendar/",
+    "max_pages": 40
+  },
+  {
+    "name": "Tin Pan Alley American Popular Music Project",
+    "urls": [
+      "https://www.tinpanalley.nyc/upcoming-events"
+    ]
+  },
+  {
+    "name": "MakerSpace NYC",
+    "urls": [
+      "https://www.eventbrite.com/o/makerspace-nyc-18615337552"
+    ],
+    "keywords": "/e/",
+    "max_pages": 10
+  },
+  {
+    "name": "Manhattan Neighborhood Network",
+    "urls": [
+      "https://www.mnn.org/events"
+    ],
+    "keywords": "/events/",
+    "max_pages": 5
+  },
+  {
+    "name": "Marble Collegiate Church",
+    "urls": [
+      "https://www.marblechurch.org/calendar"
+    ]
+  },
+  {
+    "name": "PortSide",
+    "urls": [
+      "https://portsidenewyork.org/calendar?view=calendar"
+    ]
+  },
+  {
+    "name": "Maspeth Squash",
+    "urls": [
+      "https://maspethsquash.com/events-1"
+    ]
+  },
+  {
+    "name": "Materials for the Arts",
+    "urls": [
+      "https://www.materialsforthearts.org/upcoming-events/"
+    ],
+    "keywords": "/event/",
+    "max_pages": 10
+  },
+  {
+    "name": "Mmuseumm",
+    "urls": [
+      "https://www.mmuseumm.com/"
+    ],
+    "max_pages": 5
+  },
+  {
+    "name": "Mont Sec House"
+  },
+  {
+    "name": "Morbid Anatomy",
+    "urls": [
+      "https://www.morbidanatomy.org/events"
+    ],
+    "keywords": "/events-tickets/",
+    "max_pages": 30
+  },
+  {
+    "name": "MoCADA",
+    "urls": [
+      "https://mocada.org/#visit-mocada"
+    ],
+    "keywords": "/#",
+    "max_pages": 10
+  },
+  {
+    "name": "National Academy of Design",
+    "urls": [
+      "https://nationalacademy.org/calendar"
+    ],
+    "keywords": "/calendar/",
+    "max_pages": 10
+  },
+  {
+    "name": "Naumburg Orchestral Concerts",
+    "urls": [
+      "https://naumburgconcerts.org/upcoming"
+    ],
+    "keywords": "/upcoming/",
+    "max_pages": 10
+  },
+  {
+    "name": "Naval Cemetery Landscape",
+    "urls": [
+      "https://www.brooklyngreenway.org/greenway-events/"
+    ],
+    "keywords": "/greenway-event/",
+    "max_pages": 10
+  },
+  {
+    "name": "New York Marble Cemetery"
+  },
+  {
+    "name": "New York Sign Museum",
+    "urls": [
+      "https://www.eventbrite.com/o/new-york-sign-museum-99490052241"
+    ],
+    "keywords": "/e/",
+    "max_pages": 20
+  },
+  {
+    "name": "NYC Department of Records and Information Services (DORIS)",
+    "urls": [
+      "https://www.nyc.gov/site/records/exhibits-education/events.page",
+      "https://www.nyc.gov/site/records/exhibits-education/exhibits.page"
+    ]
+  },
+  {
+    "name": "Olmsted-Beil House",
+    "urls": [
+      "https://olmstedbeilhouse.org/"
+    ],
+    "keywords": "/event/",
+    "max_pages": 10
+  },
+  {
+    "name": "Pratt Institute Sculpture Park"
+  },
+  {
+    "name": "Pratt Institute",
+    "urls": [
+      "https://www.pratt.edu/events/",
+      "https://www.pratt.edu/events/?live_global_search_events%5Bpage%5D=2"
+    ],
+    "keywords": "/events/",
+    "max_pages": 40
+  },
+  {
+    "name": "Prime Produce",
+    "urls": [
+      "https://www.primeproduce.coop/calendar"
+    ],
+    "keywords": "/event/",
+    "max_pages": 10
+  },
+  {
+    "name": "Print Center",
+    "urls": [
+      "https://www.printcenternewyork.org/public-programs",
+      "https://www.printcenternewyork.org/exhibitions"
+    ]
+  },
+  {
+    "name": "Prison Ship Martyrs' Monument"
+  },
+  {
+    "name": "RC Gross Foundation",
+    "urls": [
+      "https://www.rcgrossfoundation.org/events",
+      "https://www.rcgrossfoundation.org/exhibitions"
+    ]
+  },
+  {
+    "name": "Rocking the Boat",
+    "urls": [
+      "https://rockingtheboat.org/public-programs/free"
+    ]
+  },
+  {
+    "name": "Sail Central Park",
+    "urls": [
+      "https://sailcentralpark.com/"
+    ]
+  },
+  {
+    "name": "Planted Culture Market",
+    "urls": [
+      "https://plantedculturemarket.com/"
+    ],
+    "keywords": "/e/",
+    "max_pages": 5
+  },
+  {
+    "name": "Socrates Sculpture Park",
+    "urls": [
+      "https://socratessculpturepark.org/programs/all/"
+    ],
+    "keywords": "/program/, /programevent/",
+    "max_pages": 20
+  },
+  {
+    "name": "Saint Nicholas Miracle Garden",
+    "urls": [
+      "https://stnicholasmiraclegarden.org/events",
+      "https://calendar.google.com/calendar/embed?src=stnickgarden%40gmail.com&ctz=America%2FNew_York"
+    ]
+  },
+  {
+    "name": "Saint Peter's Church",
+    "urls": [
+      "https://www.saintpeters.org/events"
+    ]
+  },
+  {
+    "name": "Second Presbyterian Church"
+  },
+  {
+    "name": "Secret Riso Club",
+    "urls": [
+      "https://secretrisoclub.com/Calendar"
+    ]
+  },
+  {
+    "name": "St. Paul and St. Andrew United Methodist Church",
+    "urls": [
+      "https://stpaulandstandrew.org/calendar/"
+    ],
+    "keywords": "/event/",
+    "max_pages": 20
+  },
+  {
+    "name": "Amateur Astronomer's Association",
+    "urls": [
+      "https://aaa.org/events/list/",
+      "https://aaa.org/events/list/page/2"
+    ],
+    "keywords": "/event/",
+    "max_pages": 20
+  },
+  {
+    "name": "Riverside Park Conservancy",
+    "urls": [
+      "https://riversideparknyc.org/events/list/"
+    ]
+  },
+  {
+    "name": "SUMMIT One Vanderbilt",
+    "urls": [
+      "https://summitov.com/things-to-do/"
+    ]
+  },
+  {
+    "name": "The Evergreens Cemetery",
+    "urls": [
+      "https://www.theevergreenscemetery.org/upcoming-events"
+    ]
+  },
+  {
+    "name": "STREB",
+    "urls": [
+      "https://streb.org/programs/#calendar"
+    ]
+  },
+  {
+    "name": "Street Lab",
+    "urls": [
+      "https://www.streetlab.org/events/"
+    ]
+  },
+  {
+    "name": "Sunset Park Open Studios",
+    "urls": [
+      "https://sunsetparkopenstudios.org/"
+    ]
+  },
+  {
+    "name": "Sure We Can",
+    "urls": [
+      "https://www.surewecan.org/calendar"
+    ],
+    "keywords": "/events/",
+    "max_pages": 10
+  },
+  {
+    "name": "Swedish Cottage Marionette Theatre",
+    "urls": [
+      "https://cityparksfoundation.org/swedish-cottage-marionette-theatre/"
+    ]
+  },
+  {
+    "name": "Streicker Cultural Center",
+    "urls": [
+      "https://streicker.nyc/events"
+    ],
+    "keywords": "/events/",
+    "max_pages": 30
+  },
+  {
+    "name": "Queens Historical Society",
+    "urls": [
+      "https://queenshistoricalsociety.org/events/"
+    ],
+    "keywords": "/events/",
+    "max_pages": 30
+  },
+  {
+    "name": "Theodore Roosevelt Birthplace"
+  },
+  {
+    "name": "Goddard Riverside",
+    "urls": [
+      "https://goddard.org/bash/",
+      "https://goddard.org/goddardgold/",
+      "https://goddard.org/goodneighborawards/",
+      "https://goddard.org/book-giveaway/",
+      "https://goddard.org/bookchats/",
+      "https://goddard.org/bookprizes/",
+      "https://goddard.org/holiday/",
+      "https://goddard.org/musicalevenings/"
+    ]
+  },
+  {
+    "name": "Tzu Chi Center",
+    "urls": [
+      "https://tzuchicenter.org/events"
+    ],
+    "keywords": "/events/",
+    "max_pages": 15
+  },
+  {
+    "name": "UrbanGlass",
+    "urls": [
+      "https://urbanglass.org/events"
+    ],
+    "keywords": "/events/detail/",
+    "max_pages": 20
+  },
+  {
+    "name": "Bronx Historical Society",
+    "urls": [
+      "https://bronxhistoricalsociety.org/"
+    ]
+  },
+  {
+    "name": "Van Alen Institute",
+    "urls": [
+      "https://www.vanalen.org/events/"
+    ],
+    "keywords": "/events/",
+    "max_pages": 5
+  },
+  {
+    "name": "Vander Ende Onderdonk House",
+    "urls": [
+      "https://onderdonkhouse.org/events"
+    ]
+  },
+  {
+    "name": "Vanderbilt University",
+    "urls": [
+      "https://www.vanderbilt.edu/chancellor/initiatives-and-outreach/growth/new-york-city-events/"
+    ]
+  },
+  {
+    "name": "Village Community Boathouse",
+    "urls": [
+      "https://villagecommunityboathouse.org/calendar",
+      "https://calendar.google.com/calendar/embed?src=villagecommunityboathouse40%40gmail.com&ctz=America%2FNew_York"
+    ]
+  },
+  {
+    "name": "Voelker Orth Museum",
+    "urls": [
+      "https://www.vomuseum.org/events"
+    ]
+  },
+  {
+    "name": "Westbeth Artists Housing",
+    "urls": [
+      "https://westbeth.org/events/",
+      "https://westbeth.org/events/list/page/2/?hide_subsequent_recurrences=1"
+    ],
+    "keywords": "/event/",
+    "max_pages": 25
+  },
+  {
+    "name": "Williamsburg Biannual"
+  },
+  {
+    "name": "Windscape Brooklyn",
+    "urls": [
+      "https://windscapebrooklyn.com/events/"
+    ]
+  },
+  {
+    "name": "Montefiore Einstein",
+    "urls": [
+      "https://events.montefioreeinstein.org/"
+    ],
+    "keywords": "/event/",
+    "max_pages": 30
+  },
+  {
+    "name": "Brooklyn Conservatory of Music",
+    "urls": [
+      "https://bkcm.org/events/"
+    ],
+    "keywords": "/?p=",
+    "max_pages": 20
+  },
+  {
+    "name": "Culture Lab LIC",
+    "urls": [
+      "https://www.culturelablic.org/calendar",
+      "https://www.eventbrite.com/o/culture-lab-lic-30080755578"
+    ],
+    "keywords": "/e/",
+    "max_pages": 20
+  },
+  {
+    "name": "College of Staten Island",
+    "urls": [
+      "https://www.csi.cuny.edu/event-listing?page=0",
+      "https://www.csi.cuny.edu/event-listing?page=1",
+      "https://www.csi.cuny.edu/event-listing?page=2"
+    ]
+  },
+  {
+    "name": "The Living Museum",
+    "urls": [
+      "https://thelivingmuseum.org/videolinks/"
+    ]
+  },
+  {
+    "name": "Nicholas Roerich Museum",
+    "urls": [
+      "https://www.roerich.org/museum-events.php"
+    ]
+  },
+  {
+    "name": "Calicho Art"
+  },
+  {
+    "name": "NYU Brooklyn",
+    "urls": [
+      "https://www.nyu.edu/life/campus-resources/370-jay-street/news---press.html"
+    ],
+    "keywords": "/events/",
+    "max_pages": 5
+  },
+  {
+    "name": "Downtown Brooklyn Partnership",
+    "urls": [
+      "https://www.downtownbrooklyn.com/events/"
+    ]
+  },
+  {
+    "name": "Advance Masonic Temple",
+    "urls": [
+      "https://www.astoriamasons.org/events"
+    ]
+  },
+  {
+    "name": "NYC Bird Alliance",
+    "urls": [
+      "https://nycbirdalliance.org/events-birding/programs-and-events"
+    ]
+  },
+  {
+    "name": "Bronx Music Hall",
+    "urls": [
+      "https://bronxmusichall.org/"
+    ]
+  },
+  {
+    "name": "Brotherhood Sister Sol",
+    "urls": [
+      "https://brotherhood-sistersol.org/events/"
+    ],
+    "keywords": "/events/",
+    "max_pages": 20
+  },
+  {
+    "name": "Four Freedoms Park Conservancy",
+    "urls": [
+      "https://www.fdrfourfreedomspark.org/visit/events-calendar/"
+    ],
+    "keywords": "/event/",
+    "max_pages": 5
+  },
+  {
+    "name": "Cornell Tech",
+    "urls": [
+      "https://tech.cornell.edu/events?open_to=public",
+      "https://tech.cornell.edu/admissions/admissions-events/"
+    ],
+    "keywords": "/events/, /register/",
+    "max_pages": 20
+  },
+  {
+    "name": "Transitional Services for New York, Inc.",
+    "urls": [
+      "https://www.tsiny.org/events/"
+    ]
+  },
+  {
+    "name": "NYU Events",
+    "urls": [
+      "https://events.nyu.edu/all/categories/Open%20to%20the%20Public"
+    ],
+    "selector": "#lw_cal_body > p > a",
+    "num_clicks": 5
+  },
+  {
+    "name": "NYC DSA",
+    "urls": [
+      "https://calendar.socialists.nyc/"
+    ]
+  },
+  {
+    "name": "Museum of Arts and Design",
+    "urls": [
+      "https://madmuseum.org/calendar?t=All"
+    ]
+  },
+  {
+    "name": "Brooklyn Bird Club",
+    "urls": [
+      "https://brooklynbirdclub.org/events/list/"
+    ],
+    "keywords": "/event/",
+    "max_pages": 15
+  },
+  {
+    "name": "DSNY",
+    "urls": [
+      "https://www.nyc.gov/site/dsny/what-we-do/programs/safe-disposal-events.page",
+      "https://www.nyc.gov/site/dsny/what-we-do/programs/community-reuse-recycling-events.page"
+    ],
+    "keywords": "/calendar/",
+    "max_pages": 30
+  },
+  {
+    "name": "Carnegie Hill Neighbors",
+    "urls": [
+      "https://www.carnegiehillneighbors.org/events"
+    ]
+  },
+  {
+    "name": "Church of the Intercession"
+  },
+  {
+    "name": "Sunnyside Gardens Park",
+    "urls": [
+      "https://sunnysidegardenspark.org/events"
+    ]
+  },
+  {
+    "name": "Daryl Roth Theatre",
+    "urls": [
+      "https://www.darylroththeatre.com/#shows"
+    ],
+    "keywords": "telecharge.com/",
+    "max_pages": 5
+  },
+  {
+    "name": "Lincoln Center Theater",
+    "urls": [
+      "https://www.lct.org/shows/"
+    ],
+    "keywords": "/shows/",
+    "max_pages": 15
+  },
+  {
+    "name": "Deep Space Gallery",
+    "urls": [
+      "https://www.deepspacejc.com/about"
+    ]
+  },
+  {
+    "name": "Liberty Science Center",
+    "urls": [
+      "https://lsc.org/"
+    ],
+    "keywords": "/explore/",
+    "max_pages": 15
+  },
+  {
+    "name": "MORA Museum of International Art",
+    "urls": [
+      "https://www.moramuseum.org/events"
+    ]
+  },
+  {
+    "name": "Novado Gallery",
+    "urls": [
+      "https://www.novadogallery.com/gallery-events"
+    ]
+  },
+  {
+    "name": "Barsky Gallery",
+    "urls": [
+      "https://www.barskygallery.com/exhibition-and-events"
+    ]
+  },
+  {
+    "name": "Mana Contemporary",
+    "urls": [
+      "https://www.manacontemporary.com/"
+    ],
+    "keywords": "/event/",
+    "max_pages": 5
+  },
+  {
+    "name": "Guttenberg Arts",
+    "urls": [
+      "https://www.guttenbergarts.org/savethedate"
+    ]
+  },
+  {
+    "name": "Queens Community House",
+    "urls": [
+      "https://qchnyc.org/events"
+    ]
+  },
+  {
+    "name": "Tenri Cultural Institute",
+    "urls": [
+      "https://www.tenri.org/general/events.shtml"
+    ],
+    "keywords": "/e/",
+    "max_pages": 10
+  },
+  {
+    "name": "Wet Ink Ensemble",
+    "urls": [
+      "https://www.wetink.org/events/"
+    ]
+  },
+  {
+    "name": "The Art Mob",
+    "urls": [
+      "https://artmob.org/next-concerts/"
+    ]
+  },
+  {
+    "name": "Gotham Park",
+    "urls": [
+      "https://gothampark.org/calendar-of-events"
+    ],
+    "selector": "span > div > div > div > div.x-el.x-el-div.c2-1.c2-2.c2-9.c2-a.c2-b.c2-c.c2-d.c2-e.c2-f.c2-g.c2-3.c2-4.c2-k.c2-l.c2-m.c2-n.c2-5.c2-6.c2-7.c2-8 > div > span > span",
+    "num_clicks": 3
+  },
+  {
+    "name": "Brooklyn Expo Center",
+    "urls": [
+      "https://brooklynexpocenter.com/calendar-of-events/"
+    ]
+  },
+  {
+    "name": "Fifth Avenue Presbyterian Church",
+    "urls": [
+      "https://www.fapc.org/events",
+      "https://www.fapc.org/events/P10"
+    ],
+    "keywords": "/event/",
+    "max_pages": 25
+  },
+  {
+    "name": "Jamaica Bay-Rockaway Parks Conservancy",
+    "urls": [
+      "https://www.jbrpc.org/events"
+    ]
+  },
+  {
+    "name": "Waterfront Alliance",
+    "urls": [
+      "https://waterfrontalliance.org/waterfront-events/",
+      "https://waterfrontalliance.org/waterfront-events/page/2/"
+    ]
+  },
+  {
+    "name": "National Lighthouse Museum",
+    "urls": [
+      "https://lighthousemuseum.org/events/"
+    ],
+    "keywords": "/event/"
+  },
+  {
+    "name": "Marine Park Alliance",
+    "urls": [
+      "https://www.marineparkalliance.org/events/"
+    ]
+  },
+  {
+    "name": "Freshkills Park Alliance",
+    "urls": [
+      "https://freshkillspark.org/calendar",
+      "https://www.eventbrite.com/o/freshkills-park-5968578623"
+    ],
+    "keywords": "/e/",
+    "max_pages": 5
+  },
+  {
+    "name": "Native Plant Society of Staten Island",
+    "urls": [
+      "https://nativeplantsocietyofstatenisland.org/upcoming-events/"
+    ]
+  },
+  {
+    "name": "Cinema on the Sound",
+    "urls": [
+      "https://www.threads.com/@cinemaonthesound"
+    ]
+  },
+  {
+    "name": "DCTV Firehouse",
+    "urls": [
+      "https://www.dctvny.org/s/firehousecinema",
+      "https://www.dctvny.org/s/firehousecinema/film-event/new-releases"
+    ]
+  },
+  {
+    "name": "E-Flux Screening Room",
+    "urls": [
+      "https://www.e-flux.com/film/screening-room"
+    ],
+    "keywords": "/events/",
+    "max_pages": 30
+  },
+  {
+    "name": "Film Noir Cinema",
+    "urls": [
+      "https://www.filmnoircinema.com/",
+      "https://www.filmnoircinema.com/program"
+    ]
+  },
+  {
+    "name": "The Film-Maker's Co-op",
+    "urls": [
+      "https://film-makerscoop.com/screenings"
+    ]
+  },
+  {
+    "name": "Light Industry",
+    "urls": [
+      "https://www.lightindustry.org/calendar/"
+    ]
+  },
+  {
+    "name": "Low Cinema",
+    "urls": [
+      "https://lowcinema.com/tickets"
+    ],
+    "keywords": "/tickets/p/",
+    "max_pages": 10
+  },
+  {
+    "name": "Maysles Documentary Center",
+    "urls": [
+      "https://www.maysles.org/calendar",
+      "https://www.maysles.org/mayslesseries"
+    ],
+    "keywords": "/calendar/"
+  },
+  {
+    "name": "Stuart Cinema & Cafe",
+    "urls": [
+      "https://www.stuartcinema.com/",
+      "https://www.stuartcinema.com/coming-soon"
+    ],
+    "keywords": "/movie/",
+    "max_pages": 30
+  },
+  {
+    "name": "Bronx County Historical Society",
+    "urls": [
+      "https://bronxhistoricalsociety.org/home#exhibits"
+    ]
+  },
+  {
+    "name": "The Culture Lab",
+    "urls": [
+      "https://thhm.org/about/culture-lab/"
+    ]
+  },
+  {
+    "name": "Bronx Poetry House"
+  },
+  {
+    "name": "Boone Avenue Walls",
+    "urls": [
+      "https://www.booneavenuewalls.org/"
+    ],
+    "keywords": "shop.beyonk.com",
+    "max_pages": 5
+  },
+  {
+    "name": "The Hip Hop Museum",
+    "urls": [
+      "https://thhm.org/"
+    ]
+  },
+  {
+    "name": "Fifth Avenue Committee (FAC)",
+    "urls": [
+      "https://fifthave.org/upcoming-events/"
+    ],
+    "keywords": "/event/"
+  },
+  {
+    "name": "Fulton Fish Market Cooperative",
+    "urls": [
+      "https://fultonfishcooperative.com/visitor-information/"
+    ]
+  },
+  {
+    "name": "Hamilton Grange National Memorial"
+  },
+  {
+    "name": "The Poetry Society of New York",
+    "urls": [
+      "https://withfriends.events/o/the_poetry_society_of_new_york",
+      "https://poetrysocietyny.org/events",
+      "https://www.eventbrite.com/o/the-poetry-society-of-new-york-6373273797"
+    ],
+    "keywords": "/events/, /e/",
+    "max_pages": 40
+  },
+  {
+    "name": "Blank Forms",
+    "keywords": "/events/"
+  },
+  {
+    "name": "NYC H20",
+    "urls": [
+      "https://nych2o.org/our-events",
+      "https://www.eventbrite.com/o/nyc-h2o-438306820"
+    ],
+    "keywords": "/events/, /e/",
+    "max_pages": 5
+  },
+  {
+    "name": "Psychedelic Sangha",
+    "urls": [
+      "https://withfriends.events/o/psychedelic_sangha_and_dharma_art_productions/upcoming/?location=STATE%3A%3ANew%2520York"
+    ],
+    "keywords": "/event/",
+    "max_pages": 5
+  },
+  {
+    "name": "The Cooper Union",
+    "urls": [
+      "https://cooper.edu/events-and-exhibitions/events"
+    ],
+    "keywords": "/events/",
+    "max_pages": 10
+  },
+  {
+    "name": "Judson Memorial Church",
+    "urls": [
+      "https://www.judson.org/calendar"
+    ]
+  },
+  {
+    "name": "The Peoples' Voice Cafe",
+    "urls": [
+      "http://peoplesvoicecafe.org"
+    ]
+  },
+  {
+    "name": "Cloud City",
+    "urls": [
+      "https://www.cloudcity.nyc/"
+    ],
+    "keywords": "/event/",
+    "max_pages": 5
+  },
+  {
+    "name": "New Ear",
+    "urls": [
+      "https://new-ear.org/"
+    ],
+    "keywords": "/2025/",
+    "max_pages": 15
+  },
+  {
+    "name": "Footlight Underground",
+    "urls": [
+      "https://withfriends.events/o/footlight-underground-at-the-windjammer/upcoming/?location=STATE%3A%3ANew%2520York"
+    ]
+  },
+  {
+    "name": "Giorno Poetry Systems",
+    "urls": [
+      "https://giornopoetrysystems.org/222-bowery/future",
+      "https://giornopoetrysystems.org/222-bowery/222-tuesdays",
+      "https://giornopoetrysystems.org/222-bowery/retreats"
+    ],
+    "keywords": "/222-bowery/",
+    "max_pages": 20
+  },
+  {
+    "name": "Hunts Point Enslaved African Burial Ground",
+    "urls": [
+      "https://hpsbg.weebly.com/"
+    ]
+  },
+  {
+    "name": "Ridgewood Commons"
+  },
+  {
+    "name": "SVA Theatre",
+    "urls": [
+      "https://svatheatre.com/calendar/"
+    ],
+    "keywords": "/events/",
+    "max_pages": 10
+  },
+  {
+    "name": "Roosevelt House Public Policy Institute at Hunter College",
+    "urls": [
+      "https://www.roosevelthouse.hunter.cuny.edu/p-cubed/p-cubed-events/"
+    ],
+    "keywords": "/events/",
+    "max_pages": 5
+  },
+  {
+    "name": "DOC NYC",
+    "urls": [
+      "https://www.docnyc.net/program/"
+    ],
+    "keywords": "/film/",
+    "crawl_frequency": 90,
+    "max_pages": 30
+  },
+  {
+    "name": "The New School",
+    "urls": [
+      "https://events.newschool.edu/?filters=general_public"
+    ],
+    "selector": "body > main > div:nth-child(3) > div.columns.large-16.medium-16.xlarge-10 > div > div > section > div > div > a",
+    "num_clicks": 2
+  },
+  {
+    "name": "School of Visual Arts",
+    "urls": [
+      "https://sva.edu/events"
+    ],
+    "keywords": "/events/",
+    "max_pages": 40
+  },
+  {
+    "name": "Staller Center",
+    "urls": [
+      "https://www.stallercenter.com/Calendar.php"
+    ]
+  },
+  {
+    "name": "The Ripped Bodice",
+    "urls": [
+      "https://www.therippedbodice.com/brooklyn-events"
+    ]
+  },
+  {
+    "name": "The Flying Fox Tavern",
+    "urls": [
+      "https://www.flyingfoxtavern.com/events"
+    ],
+    "keywords": "/event-details",
+    "max_pages": 5
+  },
+  {
+    "name": "Liz's Book Bar",
+    "urls": [
+      "https://www.lizsbookbar.com/events"
+    ]
+  },
+  {
+    "name": "NYC Quakers",
+    "urls": [
+      "https://nycquakers.org/events"
+    ],
+    "keywords": "/events/",
+    "selector": "#load-more-oob",
+    "num_clicks": 5,
+    "max_pages": 50
+  },
+  {
+    "name": "Eastern Queens Alliance",
+    "urls": [
+      "https://easternqueensalliance.org/calendar/"
+    ],
+    "keywords": "/events/",
+    "max_pages": 5
+  },
+  {
+    "name": "Fabrik Tribeca",
+    "urls": [
+      "https://www.joinfabrik.com/gatherings?type=Fabrik-hosted&location=New+York"
+    ]
+  },
+  {
+    "name": "Fabrik DUMBO",
+    "urls": [
+      "https://www.joinfabrik.com/gatherings?type=Fabrik-hosted&location=Dumbo"
+    ]
+  },
+  {
+    "name": "Disruptve Studio",
+    "urls": [
+      "https://disruptve.framer.website/publics"
+    ],
+    "keywords": "/publics/",
+    "max_pages": 5
+  },
+  {
+    "name": "YA-YA Network"
+  },
+  {
+    "name": "Empire Stores",
+    "urls": [
+      "https://www.empirestoresdumbo.com/whats-on",
+      "https://www.empirestoresdumbo.com/whats-on?5380bb85_page=2"
+    ],
+    "keywords": "/events/",
+    "max_pages": 10
+  },
+  {
+    "name": "The Invisible Dog",
+    "urls": [
+      "https://www.theinvisibledog.org/all"
+    ],
+    "keywords": "/all/",
+    "max_pages": 5
+  },
+  {
+    "name": "St. Paul and St. Agnes"
+  },
+  {
+    "name": "Queens World Film Festival",
+    "urls": [
+      "https://queensworldfilmfestival.org/festival-schedule/"
+    ]
+  },
+  {
+    "name": "Bronx House"
+  },
+  {
+    "name": "Jewish Association Serving the Aging",
+    "keywords": "/events/",
+    "max_pages": 10
+  },
+  {
+    "name": "Cornell AAP",
+    "urls": [
+      "https://aap.cornell.edu/news-events/events?departments%5B0%5D=&types%5B0%5D=&locations%5B0%5D=4&audiences%5B0%5D=&degrees%5B0%5D=&year="
+    ],
+    "keywords": "/news-events/",
+    "max_pages": 5
+  },
+  {
+    "name": "Catch the Feels",
+    "urls": [
+      "https://catchthefeels.co/nyc/"
+    ],
+    "keywords": "/e/",
+    "max_pages": 10
+  },
+  {
+    "name": "National Black Pre-Law Conference",
+    "urls": [
+      "https://blackprelawconference.org/"
+    ]
+  },
+  {
+    "name": "BRIC",
+    "urls": [
+      "https://bricartsmedia.org/events/calendar/",
+      "https://bricartsmedia.org/events/"
+    ],
+    "keywords": "/event/, /class/ "
+  },
+  {
+    "name": "Columbia Maison Française",
+    "urls": [
+      "https://maisonfrancaise.columbia.edu/content/events"
+    ]
+  },
+  {
+    "name": "Music for a While",
+    "urls": [
+      "https://musicforawhile.nyc/#events"
+    ]
+  },
+  {
+    "name": "Amadeus Nightclub",
+    "urls": [
+      "https://clubamadeus.com/"
+    ]
+  },
+  {
+    "name": "Boris & Horton",
+    "urls": [
+      "https://www.borisandhorton.com/events-muJ3R"
+    ]
+  },
+  {
+    "name": "Broadway Spirits",
+    "urls": [
+      "https://www.broadwayspirits.com/pages/broadway-spirits-events"
+    ]
+  },
+  {
+    "name": "Rosehill Rooftop"
+  },
+  {
+    "name": "Sugar Mouse",
+    "urls": [
+      "https://www.sugarmousenyc.com/"
+    ]
+  },
+  {
+    "name": "Salsa Con Fuego",
+    "urls": [
+      "https://salsaconfuego.com/events/"
+    ]
+  },
+  {
+    "name": "International House"
+  },
+  {
+    "name": "Alligator Lounge",
+    "urls": [
+      "https://www.alligatorloungebrooklyn.com/events"
+    ],
+    "keywords": "/e/",
+    "max_pages": 5
+  },
+  {
+    "name": "St. Joseph's University",
+    "urls": [
+      "https://www.sjny.edu/about/news-events/events",
+      "https://www.sjny.edu/about/news-events/events/P10",
+      "https://www.sjny.edu/about/news-events/events/P20",
+      "https://www.sjny.edu/about/news-events/events/P30"
+    ]
+  },
+  {
+    "name": "Freelancers Hub",
+    "urls": [
+      "https://freelancersunion.org/hub/"
+    ]
+  },
+  {
+    "name": "Ciao Evento",
+    "urls": [
+      "https://www.ciaoevento.com/public-events/"
+    ],
+    "keywords": "/e/"
+  },
+  {
+    "name": "Metropolitan Pavilion"
+  },
+  {
+    "name": "100 Sutton",
+    "urls": [
+      "https://100sutton.com/upcoming-events/"
+    ],
+    "crawl_frequency": 60
+  },
+  {
+    "name": "Sprout Society",
+    "urls": [
+      "https://sproutsociety.org/schedule/"
+    ],
+    "crawl_frequency": 60
+  },
+  {
+    "name": "Apollo's"
+  },
+  {
+    "name": "Movement Harlem",
+    "urls": [
+      "https://movementgyms.com/harlem/events/"
+    ]
+  },
+  {
+    "name": "Movement Gowanus",
+    "urls": [
+      "https://movementgyms.com/gowanus/events/"
+    ]
+  },
+  {
+    "name": "Movement LIC",
+    "urls": [
+      "https://movementgyms.com/lic/events/"
+    ]
+  },
+  {
+    "name": "Greenwich Street Tavern"
+  },
+  {
+    "name": "Harbor NYC Rooftop",
+    "urls": [
+      "https://www.harbornewyorkcity.com/harbor-nyc-events-tickets"
+    ]
+  },
+  {
+    "name": "Terrace on the Park"
+  },
+  {
+    "name": "Other Half Brewing Company (Centre St)",
+    "urls": [
+      "https://otherhalfbrewing.com/events/?fwp_event_location=centre-street"
+    ],
+    "keywords": "/event/",
+    "max_pages": 5
+  },
+  {
+    "name": "Other Half Brewing Company (Domino Park)",
+    "urls": [
+      "https://otherhalfbrewing.com/events/?fwp_event_location=domino-park"
+    ],
+    "keywords": "/event/",
+    "max_pages": 5
+  },
+  {
+    "name": "Other Half Brewing Company (Rockefeller Center)",
+    "urls": [
+      "https://otherhalfbrewing.com/events/?fwp_event_location=rockefeller-center"
+    ],
+    "keywords": "/event/",
+    "max_pages": 5
+  },
+  {
+    "name": "Brooklyn Book Bodega",
+    "urls": [
+      "https://www.brooklynbookbodega.org/inpersonevents"
+    ]
+  },
+  {
+    "name": "SantaCon NYC",
+    "urls": [
+      "https://santacon.nyc/"
+    ]
+  },
+  {
+    "name": "Civic Tech'ish NYC",
+    "urls": [
+      "https://luma.com/civic-techish"
+    ]
+  },
+  {
+    "name": "The Speakeasy UWS",
+    "urls": [
+      "https://www.thespeakeasyuws.com/schedule"
+    ]
+  },
+  {
+    "name": "Open Source Gallery",
+    "urls": [
+      "https://open-source-gallery.org/calendar/"
+    ],
+    "crawl_frequency": 8
+  },
+  {
+    "name": "Transportation Alternatives",
+    "urls": [
+      "https://transalt.org/events"
+    ],
+    "crawl_frequency": 8
+  },
+  {
+    "name": "The Bollinger Forum",
+    "urls": [
+      "https://theforum.columbia.edu/events"
+    ],
+    "keywords": "/events/",
+    "crawl_frequency": 8,
+    "max_pages": 10
+  },
+  {
+    "name": "Columbia University",
+    "urls": [
+      "https://events.columbia.edu/feeder/main/eventsFeed.do?f=y&sort=dtstart.utc:asc&fexpr=(((vpath=%22/public/aliases/Audience/Public%22)))%20and%20(categories.href=%22/public/.bedework/categories/org/UniversityEvents%22)%20and%20(entity_type=%22event%22%7Centity_type=%22todo%22)&skinName=list-rss&count=200"
+    ],
+    "crawl_frequency": 8
+  },
+  {
+    "name": "Columbia SPS",
+    "urls": [
+      "https://sps.columbia.edu/events?loc=All&type=66&program=All&date[min]=Today"
+    ],
+    "keywords": "/events/",
+    "crawl_frequency": 8,
+    "max_pages": 20
+  },
+  {
+    "name": "OpenPlans",
+    "urls": [
+      "https://www.openplans.org/events"
+    ],
+    "keywords": "/events/",
+    "crawl_frequency": 8,
+    "max_pages": 5
+  },
+  {
+    "name": "Daya Bushwick",
+    "urls": [
+      "https://www.dayayogastudio.com/events-2-1"
+    ],
+    "crawl_frequency": 8
+  },
+  {
+    "name": "Daya Ridgewood",
+    "urls": [
+      "https://www.dayayogastudio.com/studio-events"
+    ],
+    "crawl_frequency": 8
+  },
+  {
+    "name": "Roundabout Theatre Company",
+    "urls": [
+      "https://www.roundabouttheatre.org/"
+    ],
+    "keywords": "/get-tickets/",
+    "crawl_frequency": 8,
+    "max_pages": 5
+  },
+  {
+    "name": "Principles GI Coffee House",
+    "urls": [
+      "https://principlesbk.nyc/upcoming-events"
+    ],
+    "crawl_frequency": 8
+  },
+  {
+    "name": "Soft Butch",
+    "urls": [
+      "https://www.softbutchbedstuy.com/events-community"
+    ],
+    "crawl_frequency": 8
+  }
+]
