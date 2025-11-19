@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fomo NYC</title>
+    <link rel="icon" href="images/torch.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+    <link rel="preconnect" href="https://rsms.me/">
+    <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" crossorigin="anonymous">
+</head>
+<body>
+    <div id="app-container">
+        <div id="filter-panel" class="tags-collapsed">
+            <div id="loading-container">
+                <p class="loading-message">Loading... please wait 🧘</p>
+            </div>
+            <div id="filter-container" class="initially-hidden">
+                <div>
+                    <div id="logo-menu-wrapper">
+                        <button id="logo-container" class="initially-hidden" aria-label="Open menu" aria-haspopup="true" aria-expanded="false">
+                            <img src="images/torch.svg" alt="Fomo NYC Logo" id="logo">
+                        </button>
+                        <div id="logo-menu" class="logo-menu-hidden" role="menu" aria-label="Logo menu">
+                            <button type="button" id="settings-btn" role="menuitem">⚙️ Settings</button>
+                            <button type="button" id="share-view-btn" role="menuitem">🔗 Share this view</button>
+                            <a href="about.html" target="_blank" role="menuitem">🗽 About fomo.nyc</a>
+                        </div>
+                    </div>
+                    <div class="filter-group" id="omni-search-filter">
+                        <label for="omni-search-input" class="visually-hidden">Search places, events, tags</label>
+                        <div class="search-input-container">
+                            <input type="text" id="omni-search-input" placeholder="Search places, events, tags..." autocomplete="off" aria-label="Search places, events, tags">
+                            <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 0 24 24" width="18px" fill="currentColor" aria-hidden="true"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                        </div>
+                    </div>
+                    <div class="filter-group" id="date-filter-container">
+                        <label for="date-picker" class="visually-hidden">Select date range</label>
+                        <div class="date-picker-container">
+                            <input type="text" id="date-picker" placeholder="Select date range..." aria-label="Select date range">
+                            <span id="date-picker-sizer" aria-hidden="true"></span>
+                            <svg class="calendar-icon" xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 0 24 24" width="18px" fill="currentColor" aria-hidden="true"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V9h14v11zM7 11h5v5H7v-5z"/></svg>
+                        </div>
+                    </div>
+                </div>
+                <div id="selected-tags-display"></div>
+            </div>
+            <div id="tags-wrapper" class="initially-hidden">
+                <div id="results-container" role="list" aria-label="Search results"></div>
+            </div>
+            
+            <button id="toggle-tags-btn" class="initially-hidden collapsed" aria-label="Toggle Tag Filters" title="Toggle Tag Filters">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="18 15 12 9 6 15"></polyline></svg>
+            </button>
+        </div>
+
+        <div id="map-container">
+            <div id="map-wrapper">
+                <div id="map" role="application" aria-label="Interactive map of NYC events"></div>
+            </div>
+            <button id="toggle-panel-btn" class="initially-hidden" aria-label="Toggle Panel" title="Toggle Panel">☰</button>
+        </div>
+    </div>
+
+    <!-- Welcome Modal -->
+    <div id="welcome-modal" class="modal" role="dialog" aria-labelledby="welcome-modal-title" aria-modal="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <img src="images/logo.svg" alt="Fomo NYC Logo" class="modal-logo">
+                <button id="welcome-close-btn" class="modal-close-btn" aria-label="Close welcome">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Welcome! <strong>fomo.nyc</strong> is a free, community-built interactive map of upcoming events in the NYC area.</p>
+
+                <p style="margin-top: 20px;">
+                    <a href="about.html" target="_blank" style="color: var(--accent-color); text-decoration: none; font-weight: 500;">Learn more →</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast-notification" class="toast-notification" role="status" aria-live="polite"></div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal" role="dialog" aria-labelledby="settings-modal-title" aria-modal="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="settings-modal-title">Settings</h2>
+                <button id="settings-close-btn" class="modal-close-btn" aria-label="Close settings">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="setting-group">
+                    <label class="setting-group-label">Theme</label>
+                    <div class="setting-options">
+                        <label class="setting-option">
+                            <input type="radio" name="theme" value="dark" checked>
+                            <span>Dark</span>
+                        </label>
+                        <label class="setting-option">
+                            <input type="radio" name="theme" value="light">
+                            <span>Light</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="setting-group">
+                    <label class="setting-group-label">Icons</label>
+                    <div class="setting-options">
+                        <label class="setting-option">
+                            <input type="radio" name="emoji-font" value="system" checked>
+                            <span><span class="emoji-preview emoji-preview-system">🎺</span> Default</span>
+                        </label>
+                        <label class="setting-option">
+                            <input type="radio" name="emoji-font" value="noto">
+                            <span><img src="images/trumpet.svg" alt="🎺" class="emoji-preview-noto" width="20" height="20"> Noto</span>
+                        </label>
+                    </div>
+                    <span id="emoji-font-status" class="setting-status"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <link rel="stylesheet" href="style.css">
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr" crossorigin="anonymous"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/urlParams.js"></script>
+    <script src="js/tagFilterUI.js"></script>
+    <script src="js/dataManager.js"></script>
+    <script src="js/uiManager.js"></script>
+    <script src="js/mapManager.js"></script>
+    <script src="js/script.js"></script>
+</body>
+</html>

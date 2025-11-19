@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About - Fomo NYC</title>
+    <link rel="icon" href="torch.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://rsms.me/">
+    <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+    <style>
+        :root {
+            font-family: Inter, sans-serif;
+            font-feature-settings: 'liga' 1, 'calt' 1;
+
+            --primary-bg: #111;
+            --primary-text: #eee;
+            --secondary-text: #bfbfbf;
+            --accent-color: #74b3a5;
+            --accent-hover: #bcf4e8;
+        }
+
+        @supports (font-variation-settings: normal) {
+            :root { font-family: InterVariable, sans-serif; }
+        }
+
+        body {
+            font-family: var(--font-family);
+            margin: 0;
+            padding: 40px 20px;
+            background-color: var(--primary-bg);
+            color: var(--primary-text);
+            line-height: 1.6;
+            letter-spacing: -0.02em;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: var(--accent-color);
+            margin-top: 40px;
+            margin-bottom: 20px;
+        }
+
+        p {
+            color: var(--secondary-text);
+            margin-bottom: 15px;
+        }
+
+        a {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        a:hover {
+            color: var(--accent-hover);
+            text-decoration: underline;
+        }
+
+        ul {
+            color: var(--secondary-text);
+            margin-bottom: 20px;
+            list-style: none;
+            padding-left: 0;
+        }
+
+        ul ul {
+            padding-left: 26px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        h2 {
+            color: var(--accent-color);
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .logo {
+            display: block;
+            width: 120px;
+            height: auto;
+            margin: 0 0 30px 0;
+        }
+
+        .obfuscated-email, .obfuscated-link {
+            cursor: pointer;
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // XOR decode function
+            function xorDecode(encoded, key) {
+                var decoded = '';
+                for (var i = 0; i < encoded.length; i++) {
+                    decoded += String.fromCharCode(encoded[i] ^ key.charCodeAt(i % key.length));
+                }
+                return decoded;
+            }
+
+            // Decode obfuscated email addresses
+            document.querySelectorAll('.obfuscated-email').forEach(function(el) {
+                var data = el.getAttribute('data-contact');
+                var key = el.getAttribute('data-key');
+                var codes = data.split(',').map(function(x) { return parseInt(x); });
+                var email = xorDecode(codes, key);
+
+                // Create mailto link
+                var link = document.createElement('a');
+                link.href = 'mailto:' + email;
+                link.textContent = email;
+
+                el.parentNode.replaceChild(link, el);
+            });
+
+            // Decode obfuscated links
+            document.querySelectorAll('.obfuscated-link').forEach(function(el) {
+                var urlData = el.getAttribute('data-contact');
+                var urlKey = el.getAttribute('data-key');
+                var displayText = el.textContent;
+
+                var urlCodes = urlData.split(',').map(function(x) { return parseInt(x); });
+                var url = xorDecode(urlCodes, urlKey);
+
+                // Create link
+                var link = document.createElement('a');
+                link.href = url;
+                link.textContent = displayText;
+                link.target = '_blank';
+
+                el.parentNode.replaceChild(link, el);
+            });
+        });
+    </script>
+</head>
+<body>
+    <a href="https://fomo.nyc" target="_blank"><img src="images/logo.svg" alt="Fomo NYC Logo" class="logo"></a>
+
+    <p><a href="https://fomo.nyc" target="_blank">fomo.nyc</a> is a free, community-built interactive map of upcoming events in the NYC area.</p>
+
+    <p>It works by visiting the websites of parks, museums, music venues, etc., identifying any upcoming events, and displaying them on a map. My hope is that this becomes a useful resource for people to find events they are interested in and to engage with their local communities.</p>
+
+    <h2>How you can help</h2>
+    <ul>
+        <li>📢 <strong>Share with your friends</strong>
+        </li>
+        <li>📍 <strong>Add events and places you know</strong>
+            <ul>
+                <li>For now, email <span class="obfuscated-email" data-contact="15,28,5,14,114,86,93,88,9,65,3,22,81" data-key="fomo2025"></span> with additions and edits <em>(direct submission from website coming soon!)</em></li>
+            </ul>
+        </li>
+        <li>🫱🏾‍🫲🏼 <strong>Stay in touch</strong>
+            <ul>
+                <li>This website is in active development, so keep visiting for regular updates!</li>
+                <li>You can reach me by email at <span class="obfuscated-email" data-contact="15,28,5,14,114,86,93,88,9,65,3,22,81" data-key="fomo2025"></span>. There is also a <span class="obfuscated-link" data-contact="6,13,23,66,67,8,26,65,29,10,65,83,93,71,10,87,4,85,31,106,91,88,14,43,87,87,88,99,24" data-key="nyc2025">Discord server</span> you can join <em>(don't be shy! the server is empty now, but I hope it will become a useful communication channel in the future)</em>
+                </li>
+            </ul>
+        </li>
+    </ul>
+
+    <h2>Acknowledgements</h2>
+    <ul>
+        <li>🌱 Map library: <a href="https://leafletjs.com/" target="_blank">Leaflet</a></li>
+        <li>🗺️ Maps © <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors, © <a href="https://carto.com/attributions" target="_blank">CARTO</a></li>
+        <li>📅 Date picker: <a href="https://flatpickr.js.org/" target="_blank">Flatpickr</a></li>
+        <li>🔠 Fonts: <a href="https://rsms.me/inter/" target="_blank">Inter</a>, <a href="https://fonts.google.com/noto/specimen/Noto+Color+Emoji" target="_blank">Noto Color Emoji</a></li>
+        <li>🚀 This project uses <a href="https://github.com/unclecode/crawl4ai" target="_blank">Crawl4AI</a> for web data extraction.</li>
+        <li>🤖 <a href="https://gemini.google.com">Gemini</a> and <a href="https://claude.ai">Claude</a> for data processing and vibe coding</li>
+        <li>💖 <em>All the amazing, creative, hard-working people who make the city shine with their light!</em> 🗽</li>
+    </ul>
+</body>
+</html>
