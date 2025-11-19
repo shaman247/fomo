@@ -11,12 +11,25 @@
         :root {
             font-family: Inter, sans-serif;
             font-feature-settings: 'liga' 1, 'calt' 1;
+        }
 
+        /* Dark theme (default) */
+        :root,
+        :root[data-theme="dark"] {
             --primary-bg: #111;
             --primary-text: #eee;
             --secondary-text: #bfbfbf;
             --accent-color: #74b3a5;
             --accent-hover: #bcf4e8;
+        }
+
+        /* Light theme */
+        :root[data-theme="light"] {
+            --primary-bg: #ebe7df;
+            --primary-text: #222;
+            --secondary-text: #555;
+            --accent-color: #2d7a6a;
+            --accent-hover: #1f5a4d;
         }
 
         @supports (font-variation-settings: normal) {
@@ -91,6 +104,12 @@
         }
     </style>
     <script>
+        // Apply theme immediately (before DOMContentLoaded) to prevent flash
+        (function() {
+            var savedTheme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+
         document.addEventListener('DOMContentLoaded', function() {
             // XOR decode function
             function xorDecode(encoded, key) {
@@ -157,6 +176,10 @@
                 <li>This website is in active development, so keep visiting for regular updates!</li>
                 <li>You can reach me by email at <span class="obfuscated-email" data-contact="15,28,5,14,114,86,93,88,9,65,3,22,81" data-key="fomo2025"></span>. There is also a <span class="obfuscated-link" data-contact="6,13,23,66,67,8,26,65,29,10,65,83,93,71,10,87,4,85,31,106,91,88,14,43,87,87,88,99,24" data-key="nyc2025">Discord server</span> you can join <em>(don't be shy! the server is empty now, but I hope it will become a useful communication channel in the future)</em>
                 </li>
+            </ul>
+        </li>
+        <li>🛠️ <strong>See the source code</strong>
+            <ul>The code for this project is at <a href="https://github.com/shaman247/fomo" target="_blank">github.com/shaman247/fomo</a>. Contributions and feedback welcome!
             </ul>
         </li>
     </ul>
