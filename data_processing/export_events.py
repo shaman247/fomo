@@ -2,6 +2,9 @@ import os
 import json
 from datetime import datetime, timedelta
 
+# Get the directory where this script is located
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+
 def _is_event_in_date_range(event, current_date, future_limit_date):
     """
     Checks if any occurrence of an event falls within the desired date range.
@@ -104,8 +107,8 @@ def _deduplicate_events(events):
     return unique_events
 
 def main():
-    processed_dir = '../event_data/processed'
-    output_dir = os.path.join('../public_html', 'data')
+    processed_dir = os.path.join(SCRIPT_DIR, '..', 'event_data', 'processed')
+    output_dir = os.path.join(SCRIPT_DIR, '..', 'public_html', 'data')
 
     # Output filenames for initial and full datasets
     events_init_filename = os.path.join(output_dir, 'events.init.json')
@@ -113,7 +116,7 @@ def main():
     events_full_filename = os.path.join(output_dir, 'events.full.json')
     locations_full_filename = os.path.join(output_dir, 'locations.full.json')
 
-    source_locations_filename = 'data/locations.json'
+    source_locations_filename = os.path.join(SCRIPT_DIR, 'data', 'locations.json')
 
     # Bounding box for the "init" set (NYC area)
     # Centered around 40.71799, -73.98712

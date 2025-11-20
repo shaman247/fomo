@@ -5,6 +5,9 @@ from datetime import datetime, timedelta
 import time
 import regex
 
+# Get the directory where this script is located
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+
 def find_first_emoji(text: str) -> str:
     """
     Finds the first emoji in a string.
@@ -367,7 +370,7 @@ def _normalize_location_name(name):
 def _build_locations_map():
     """Loads location data and builds a map for lat/lng enrichment."""
     locations_map = {}
-    with open('data/locations.json', 'r', encoding='utf-8') as f:
+    with open(os.path.join(SCRIPT_DIR, 'data', 'locations.json'), 'r', encoding='utf-8') as f:
         locations_data = json.load(f)
         for loc in locations_data:
             location_info = {
@@ -537,7 +540,7 @@ def process_response(gemini_response_text, source_filename, locations_map):
     future_limit_date = (datetime.now() + timedelta(days=90)).date()
 
     try:
-        with open('data/tags.json', 'r', encoding='utf-8') as f:
+        with open(os.path.join(SCRIPT_DIR, 'data', 'tags.json'), 'r', encoding='utf-8') as f:
             tag_rules = json.load(f)
     except (FileNotFoundError, json.JSONDecodeError):
         tag_rules = {'remove': []}
@@ -553,7 +556,7 @@ def process_response(gemini_response_text, source_filename, locations_map):
         else:
             date_str = datetime.now().strftime('%Y%m%d')
 
-        output_dir = "../event_data/processed"
+        output_dir = os.path.join(SCRIPT_DIR, "..", "event_data", "processed")
         dated_output_dir = os.path.join(output_dir, date_str)
         os.makedirs(dated_output_dir, exist_ok=True)
 
@@ -664,7 +667,7 @@ def process_response(gemini_response_text, source_filename, locations_map):
     else:
         date_str = datetime.now().strftime('%Y%m%d')
 
-    output_dir = "../event_data/processed"
+    output_dir = os.path.join(SCRIPT_DIR, "..", "event_data", "processed")
     dated_output_dir = os.path.join(output_dir, date_str)
     os.makedirs(dated_output_dir, exist_ok=True)
 
@@ -676,7 +679,7 @@ def process_response(gemini_response_text, source_filename, locations_map):
     #print(f"Successfully processed and saved {len(events)} events to '{output_filename}'.")
 
 def main():
-    extracted_dir = '../event_data/extracted'
+    extracted_dir = os.path.join(SCRIPT_DIR, '..', 'event_data', 'extracted')
     if not os.path.isdir(extracted_dir):
         print(f"Error: Directory '{extracted_dir}' not found.")
         return
@@ -698,7 +701,7 @@ def main():
         for filename in os.listdir(date_path):
             if filename.endswith(".md"):
                 # Check if the output JSON file already exists in processed/YYYYMMDD/
-                output_dir = "../event_data/processed"
+                output_dir = os.path.join(SCRIPT_DIR, "..", "event_data", "processed")
                 output_filename = os.path.join(output_dir, date_subdir, os.path.splitext(filename)[0] + ".json")
                 if os.path.exists(output_filename):
                     # print(f"Skipping {filename} as output file '{output_filename}' already exists.")
