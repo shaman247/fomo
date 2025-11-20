@@ -6,6 +6,9 @@ from datetime import datetime
 from dotenv import load_dotenv
 import google.generativeai as genai
 
+# Get the directory where this script is located
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+
 load_dotenv()  # Load environment variables from .env file
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
@@ -98,8 +101,7 @@ async def process_and_save_events(page_content, url, name, notes, source_filenam
 
     # Call Gemini with the prompt and print the output
     genai.configure(api_key=GEMINI_API_KEY)
-    model = genai.GenerativeModel('gemini-2.5-pro')
-    #model = genai.GenerativeModel('gemini-2.5-flash-lite')
+    model = genai.GenerativeModel('gemini-2.5-flash-lite')
 
     if chunks:
         for i, chunk in enumerate(chunks):
@@ -141,7 +143,7 @@ async def process_and_save_events(page_content, url, name, notes, source_filenam
             date_str = datetime.now().strftime('%Y%m%d')
 
         # Create the 'extracted/YYYYMMDD' directory structure
-        output_dir = "../event_data/extracted"
+        output_dir = os.path.join(SCRIPT_DIR, "..", "event_data", "extracted")
         dated_output_dir = os.path.join(output_dir, date_str)
         os.makedirs(dated_output_dir, exist_ok=True)
 
@@ -157,7 +159,7 @@ async def process_and_save_events(page_content, url, name, notes, source_filenam
         print(f"Error saving file for {source_filename}: {e}")
 
 async def main():
-    crawled_dir = '../event_data/crawled'
+    crawled_dir = os.path.join(SCRIPT_DIR, '..', 'event_data', 'crawled')
     if not os.path.isdir(crawled_dir):
         print(f"Error: Directory '{crawled_dir}' not found.")
         return
@@ -168,7 +170,7 @@ async def main():
     async def process_file(date_str, filename):
         async with semaphore:
             # Check if the output file already exists in the 'extracted/YYYYMMDD' directory
-            output_dir = "../event_data/extracted"
+            output_dir = os.path.join(SCRIPT_DIR, "..", "event_data", "extracted")
             filename_without_date = re.sub(r'^\d{8}_', '', filename)
             output_filename = os.path.join(output_dir, date_str, filename_without_date)
             if os.path.exists(output_filename):

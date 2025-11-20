@@ -18,26 +18,29 @@ from crawl4ai.deep_crawling.filters import (
     SEOFilter,
 )
 
-def _archive_old_files(date_str, filename, source_dir):
+# Get the directory where this script is located
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+def _archive_old_files(date_str, filename):
     """Moves old files from crawled, extracted, and processed directories to an archive."""
-    archive_base_dir = "../event_data/archived"
+    archive_base_dir = os.path.join(SCRIPT_DIR, "..", "event_data", "archived")
     dirs_to_check = {
-        "../event_data/crawled": ".md",
-        "../event_data/extracted": ".md",
-        "../event_data/processed": ".json"
+        os.path.join(SCRIPT_DIR, "..", "event_data", "crawled"): ".md",
+        os.path.join(SCRIPT_DIR, "..", "event_data", "extracted"): ".md",
+        os.path.join(SCRIPT_DIR, "..", "event_data", "processed"): ".json"
     }
 
     # Create archive structure: archived/YYYYMMDD/crawled/, etc.
     archive_date_dir = os.path.join(archive_base_dir, date_str)
     for dir_name in dirs_to_check:
-        os.makedirs(os.path.join(archive_date_dir, dir_name), exist_ok=True)
+        os.makedirs(os.path.join(archive_date_dir, os.path.basename(dir_name)), exist_ok=True)
 
     for dir_name, extension in dirs_to_check.items():
         # Old file is in: crawled/YYYYMMDD/filename.md
         old_file_path = os.path.join(dir_name, date_str, f"{filename}{extension}")
         if os.path.exists(old_file_path):
             # Archive to: archived/YYYYMMDD/crawled/filename.md
-            archive_path = os.path.join(archive_date_dir, dir_name, f"{filename}{extension}")
+            archive_path = os.path.join(archive_date_dir, os.path.basename(dir_name), f"{filename}{extension}")
             print(f"  - Archiving old file: {old_file_path} to {archive_path}")
             os.rename(old_file_path, archive_path)
 
@@ -62,7 +65,7 @@ async def crawl_website(crawler, website_info):
     current_date = datetime.now()
     crawl_frequency = website_info.get("crawl_frequency", 7)  # Default to 7 days
 
-    output_dir = "../event_data/crawled"
+    output_dir = os.path.join(SCRIPT_DIR, "..", "event_data", "crawled")
     os.makedirs(output_dir, exist_ok=True)
 
     # Check for existing files in dated subdirectories and skip if a recent one is found
@@ -83,7 +86,7 @@ async def crawl_website(crawler, website_info):
                     return
                 else:
                     # File is old, so we'll archive it before re-crawling.
-                    _archive_old_files(date_str, safe_filename_pattern, output_dir)
+                    _archive_old_files(date_str, safe_filename_pattern)
             except (ValueError, IndexError):
                 # Ignore files with malformed names
                 continue
@@ -174,7 +177,7 @@ async def main():
         java_script_enabled=True,
         text_mode=True,
     )
-    with open('data/websites.json', 'r') as f:
+    with open(os.path.join(SCRIPT_DIR, 'data', 'websites.json'), 'r') as f:
         websites = json.load(f)
     async with AsyncWebCrawler(config=browser_config) as crawler:
         for website in websites:
