@@ -294,16 +294,24 @@ const UIManager = {
 
         const descriptionP = document.createElement('p');
         descriptionP.innerHTML = Utils.formatAndSanitize(event.description);
-        if (event.url && Utils.isValidUrl(event.url)) {
+
+        // Handle both new urls array and legacy url field
+        const urls = event.urls || (event.url ? [event.url] : []);
+        if (urls && urls.length > 0) {
             const linkIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>`;
-            const urlLink = document.createElement('a');
-            urlLink.href = event.url;
-            urlLink.target = '_blank';
-            urlLink.rel = 'noopener noreferrer';
-            urlLink.className = 'popup-external-link';
-            urlLink.title = 'More Info (opens in new tab)';
-            urlLink.innerHTML = ` ${linkIconSvg}`;
-            descriptionP.appendChild(urlLink);
+
+            urls.forEach((url) => {
+                if (url && Utils.isValidUrl(url)) {
+                    const urlLink = document.createElement('a');
+                    urlLink.href = url;
+                    urlLink.target = '_blank';
+                    urlLink.rel = 'noopener noreferrer';
+                    urlLink.className = 'popup-external-link';
+                    urlLink.title = 'More Info (opens in new tab)';
+                    urlLink.innerHTML = `  ${linkIconSvg} `;
+                    descriptionP.appendChild(urlLink);
+                }
+            });
         }
         eventDetailContainer.appendChild(descriptionP);
 

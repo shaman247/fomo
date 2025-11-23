@@ -6,6 +6,99 @@ const TagFilterUI = (() => {
         FORBIDDEN: 'forbidden'
     };
 
+    const SECTION_VIEW_STATE = {
+        COLLAPSED: 'collapsed',   // Show limited results based on thresholds
+        DEFAULT: 'default',       // Hide isVisible=false items
+        EXPANDED: 'expanded'      // Show all items including isVisible=false
+    };
+
+    // Target number of lines when collapsed
+    const TARGET_COLLAPSED_LINES = {
+        small: 2,  // Mobile/small windows
+        large: 5   // Desktop/large windows
+    };
+
+    // Function to determine if window is small (mobile-like)
+    function isSmallWindow() {
+        return window.innerWidth < 768; // Standard mobile breakpoint
+    }
+
+    // Calculate how many items fit in target number of lines
+    // This is called during rendering with actual DOM elements
+    function calculateCollapseThreshold(sectionWrapper, items) {
+        if (items.length === 0) return 3; // Fallback
+
+        const targetLines = isSmallWindow() ? TARGET_COLLAPSED_LINES.small : TARGET_COLLAPSED_LINES.large;
+
+        // Temporarily add items to measure their height
+        const tempContainer = document.createElement('div');
+        tempContainer.style.cssText = 'position: absolute; visibility: hidden; width: ' + sectionWrapper.offsetWidth + 'px;';
+        tempContainer.className = sectionWrapper.className;
+
+        document.body.appendChild(tempContainer);
+
+        // Clone and add the icon button (it takes up horizontal space in the flexbox)
+        const iconButton = sectionWrapper.querySelector('.section-icon-button');
+        if (iconButton) {
+            const tempIconButton = iconButton.cloneNode(true);
+            tempContainer.appendChild(tempIconButton);
+        }
+
+        let count = 0;
+        const lineHeight = 32; // Approximate line height for tag buttons with padding/margin
+        const maxHeight = lineHeight * targetLines;
+
+        // Create a temporary show more button to account for its space
+        const tempShowMoreButton = document.createElement('button');
+        tempShowMoreButton.className = 'tag-button state-cycle-button';
+        tempShowMoreButton.textContent = '+';
+
+        // Add items one by one until we exceed the target height
+        for (let i = 0; i < items.length; i++) {
+            const testElement = items[i].cloneNode(true);
+            tempContainer.appendChild(testElement);
+
+            // Add the show more button to simulate the actual layout with the button
+            tempContainer.appendChild(tempShowMoreButton);
+
+            const heightWithButton = tempContainer.offsetHeight;
+
+            // Remove the button for the next iteration
+            tempContainer.removeChild(tempShowMoreButton);
+
+            // Check if adding this item plus the button would exceed our target
+            if (heightWithButton > maxHeight && count > 0) {
+                // Remove the last item we just added since it causes overflow
+                tempContainer.removeChild(testElement);
+                break;
+            }
+
+            currentHeight = heightWithButton;
+            count++;
+        }
+
+        document.body.removeChild(tempContainer);
+
+        // Return at least 1, and cap at items.length
+        return Math.max(1, Math.min(count, items.length));
+    }
+
+    // Get initial collapse threshold estimate (used before rendering)
+    function getEstimatedCollapseThreshold(sectionKey) {
+        // Rough estimates based on typical item sizes
+        const targetLines = isSmallWindow() ? TARGET_COLLAPSED_LINES.small : TARGET_COLLAPSED_LINES.large;
+
+        // Estimate items per line based on section type
+        const estimatedItemsPerLine = {
+            locations: isSmallWindow() ? 1.5 : 3,  // Locations tend to be longer
+            events: isSmallWindow() ? 1.2 : 2.5,   // Events can be long
+            tags: isSmallWindow() ? 2.5 : 5        // Tags are typically shorter
+        };
+
+        const itemsPerLine = estimatedItemsPerLine[sectionKey] || 2;
+        return Math.max(1, Math.floor(targetLines * itemsPerLine));
+    }
+
     const state = {
         allAvailableTags: [],
         tagConfigBgColors: [],
@@ -23,11 +116,74 @@ const TagFilterUI = (() => {
         assignColorToTag: null,
         unassignColorFromTag: null,
         sectionOrder: ['locations', 'events', 'tags'], // Track section display order
+        sectionViewStates: { // Track view state for each section
+            locations: SECTION_VIEW_STATE.DEFAULT,
+            events: SECTION_VIEW_STATE.DEFAULT,
+            tags: SECTION_VIEW_STATE.DEFAULT
+        },
+        lastSearchResults: [], // Cache last search results for re-rendering
+        lastSearchTerm: ''
     };
     const providers = {
         getSelectedLocationKey: () => null,
     };
     let performSearchCallback = () => {};
+
+    // Helper function to re-render while keeping a reference element in the same visual position
+    // Takes the element to track (button or section wrapper) as a reference point
+    function reRenderWithElementPositionPreserved(referenceElement) {
+        if (!state.resultsContainerDOM || !referenceElement) return;
+
+        // Get the section key to find the corresponding element after re-render
+        const sectionWrapper = referenceElement.closest('[data-section-key]');
+        const sectionKey = sectionWrapper?.dataset.sectionKey;
+        if (!sectionKey) return;
+
+        // Determine what type of element to track
+        let isSection = referenceElement.classList.contains('search-results-section');
+        let buttonClass = null;
+        if (!isSection) {
+            if (referenceElement.classList.contains('section-icon-button')) {
+                buttonClass = 'section-icon-button';
+            } else if (referenceElement.classList.contains('show-more-button')) {
+                buttonClass = 'show-more-button';
+            } else if (referenceElement.classList.contains('show-fewer-button')) {
+                buttonClass = 'show-fewer-button';
+            }
+        }
+
+        // Save the current scroll position and viewport position of element
+        const scrollTopBefore = state.resultsContainerDOM.scrollTop;
+        const containerRect = state.resultsContainerDOM.getBoundingClientRect();
+        const elementRect = referenceElement.getBoundingClientRect();
+        const elementOffsetFromContainerTop = elementRect.top - containerRect.top;
+
+        // Re-render with cached results (this will reset scrollTop to 0)
+        renderFilters(state.lastSearchResults, state.lastSearchTerm);
+
+        // Find the corresponding element in the newly rendered DOM
+        let newElement;
+        if (isSection) {
+            newElement = state.resultsContainerDOM.querySelector(
+                `[data-section-key="${sectionKey}"]`
+            );
+        } else if (buttonClass) {
+            newElement = state.resultsContainerDOM.querySelector(
+                `[data-section-key="${sectionKey}"] .${buttonClass}`
+            );
+        }
+
+        if (newElement) {
+            // Calculate where we need to scroll to keep the element in the same position
+            // Element's position in the container (relative to container's scrollable content)
+            const newElementRect = newElement.getBoundingClientRect();
+            const newContainerRect = state.resultsContainerDOM.getBoundingClientRect();
+            const newElementOffsetFromContainerTop = newElementRect.top - newContainerRect.top;
+
+            // Adjust scroll so the element appears at the same offset from container top
+            state.resultsContainerDOM.scrollTop = newElementOffsetFromContainerTop - elementOffsetFromContainerTop;
+        }
+    }
 
     function init(config) {
         Object.assign(state, config);
@@ -261,8 +417,6 @@ const TagFilterUI = (() => {
     }
 
     function createSearchResultButton(result) {
-        const selectedLocationKey = providers.getSelectedLocationKey();
-
         if (result.type === 'tag') {
             // For tags, create the interactive button and apply non-visible styling if needed
             const button = createInteractiveTagButton(result.ref);
@@ -480,6 +634,10 @@ const TagFilterUI = (() => {
     function renderFilters(searchResults = [], searchTerm = '') {
         state.searchTerm = searchTerm;
 
+        // Cache the search results for re-rendering
+        state.lastSearchResults = searchResults;
+        state.lastSearchTerm = searchTerm;
+
         if (!state.resultsContainerDOM) return;
 
         // Clear the single results container
@@ -494,11 +652,31 @@ const TagFilterUI = (() => {
                 tags: []
             };
 
+            // Track hidden items separately for each section
+            const hiddenResults = {
+                locations: [],
+                events: [],
+                tags: []
+            };
+
+            // Filter results: only show isVisible=false items if there's a non-empty search term or toggle is on
+            const hasSearchTerm = searchTerm && searchTerm.trim().length > 0;
+
             searchResults.forEach(result => {
                 const type = result.type;
-                if (type === 'location') groupedResults.locations.push(result);
-                else if (type === 'event') groupedResults.events.push(result);
-                else if (type === 'tag') groupedResults.tags.push(result);
+
+                // Separate visible and hidden items
+                if (result.isVisible === false && !hasSearchTerm) {
+                    // Hidden items go to separate array
+                    if (type === 'location') hiddenResults.locations.push(result);
+                    else if (type === 'event') hiddenResults.events.push(result);
+                    else if (type === 'tag') hiddenResults.tags.push(result);
+                } else {
+                    // Visible items go to main array
+                    if (type === 'location') groupedResults.locations.push(result);
+                    else if (type === 'event') groupedResults.events.push(result);
+                    else if (type === 'tag') groupedResults.tags.push(result);
+                }
             });
 
             // Sort locations, prioritizing the selected one, then by score
@@ -509,108 +687,230 @@ const TagFilterUI = (() => {
                 if (isASelected !== isBSelected) return isASelected ? -1 : 1;
                 return (b.score || 0) - (a.score || 0);
             });
+            hiddenResults.locations.sort((a, b) => (b.score || 0) - (a.score || 0));
+
             groupedResults.events.sort((a, b) => (b.score || 0) - (a.score || 0));
+            hiddenResults.events.sort((a, b) => (b.score || 0) - (a.score || 0));
 
             // Filter out selected/required/forbidden tags from search results, then sort
             groupedResults.tags = groupedResults.tags.filter(result => {
                 const tagState = state.tagStates[result.ref] || TAG_STATE.UNSELECTED;
                 return tagState === TAG_STATE.UNSELECTED;
             });
+            hiddenResults.tags = hiddenResults.tags.filter(result => {
+                const tagState = state.tagStates[result.ref] || TAG_STATE.UNSELECTED;
+                return tagState === TAG_STATE.UNSELECTED;
+            });
 
             groupedResults.tags.sort((a, b) => (b.score || 0) - (a.score || 0));
+            hiddenResults.tags.sort((a, b) => (b.score || 0) - (a.score || 0));
 
-            const renderSection = (results, sectionTitle, sectionIcon, sectionKey) => {
-                if (results.length === 0) return;
+            const renderSection = (results, hiddenItems, sectionTitle, sectionIcon, sectionKey) => {
+                const hasHiddenItems = hiddenItems && hiddenItems.length > 0;
+                const viewState = state.sectionViewStates[sectionKey];
 
-                // Create wrapper for section (contains header and results inline)
+                // Start with estimated threshold
+                let collapseThreshold = getEstimatedCollapseThreshold(sectionKey);
+
+                // Skip section if there are no visible results and no hidden items
+                if (results.length === 0 && !hasHiddenItems) return;
+
+                // Create wrapper for section (contains results inline)
                 const sectionWrapper = document.createElement('div');
                 sectionWrapper.className = 'search-results-section';
                 sectionWrapper.dataset.sectionKey = sectionKey;
 
-                // Create section header (icon only)
-                const header = document.createElement('h4');
-                header.className = 'result-group-title';
-                header.innerHTML = `<span class="angle-quotes">&laquo;</span> ${sectionIcon} <span class="angle-quotes">&raquo;</span>`;
-                header.dataset.sectionKey = sectionKey;
-                header.setAttribute('aria-label', sectionTitle);
-                header.setAttribute('title', sectionTitle);
+                // Add toggle button at the beginning (always shown)
+                const toggleButton = document.createElement('button');
+                toggleButton.className = 'tag-button state-unselected toggle-hidden-button section-icon-button';
 
-                // Add click handler to reorder sections
-                header.addEventListener('click', () => {
-                    const currentIndex = state.sectionOrder.indexOf(sectionKey);
+                // Add state indicator symbol (same for all sections)
+                const stateSymbol = (viewState === SECTION_VIEW_STATE.COLLAPSED) ? '▶' : '▼';
 
-                    if (currentIndex === 0) {
-                        // If already at the top, move to the bottom
-                        state.sectionOrder.splice(currentIndex, 1);
-                        state.sectionOrder.push(sectionKey);
-                    } else {
-                        // Otherwise, move to the top
-                        state.sectionOrder.splice(currentIndex, 1);
-                        state.sectionOrder.unshift(sectionKey);
+                toggleButton.innerHTML = `${sectionIcon}<span class="state-indicator">${stateSymbol}</span>`;
+
+                // Set simple aria-label and title
+                toggleButton.setAttribute('aria-label', sectionTitle);
+                toggleButton.setAttribute('title', sectionTitle);
+
+                // Add visual indicator class for state
+                toggleButton.classList.add(`view-state-${viewState}`);
+
+                toggleButton.addEventListener('click', (e) => {
+                    e.stopPropagation();
+
+                    // Toggle between DEFAULT and COLLAPSED
+                    const currentState = state.sectionViewStates[sectionKey];
+                    if (currentState === SECTION_VIEW_STATE.COLLAPSED) {
+                        state.sectionViewStates[sectionKey] = SECTION_VIEW_STATE.DEFAULT;
+                    } else { // DEFAULT or EXPANDED -> go to COLLAPSED
+                        state.sectionViewStates[sectionKey] = SECTION_VIEW_STATE.COLLAPSED;
                     }
 
-                    // Re-render with current search term
-                    performSearchCallback(state.searchTerm);
+                    // Re-render while keeping this button in the same position
+                    reRenderWithElementPositionPreserved(toggleButton);
                 });
 
-                sectionWrapper.appendChild(header);
+                toggleButton.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
 
-                // Add result buttons inline
-                results.forEach(result => {
-                    const resultElement = createSearchResultButton(result);
+                    // Dismiss section - move to bottom
+                    const currentIndex = state.sectionOrder.indexOf(sectionKey);
+                    if (currentIndex === -1) return; // Safety check
+
+                    state.sectionOrder.splice(currentIndex, 1);
+                    state.sectionOrder.push(sectionKey);
+
+                    // Re-render immediately
+                    renderFilters(state.lastSearchResults, state.lastSearchTerm);
+                });
+
+                sectionWrapper.appendChild(toggleButton);
+
+                // For collapsed state, we need to measure actual items to determine threshold
+                // Create visible result elements
+                const visibleItemElements = results.map(result => createSearchResultButton(result));
+
+                // Create all items (visible + hidden) for measurement purposes
+                const allItems = [...results, ...(hiddenItems || [])];
+                const allItemElements = allItems.map(result => createSearchResultButton(result));
+
+                // Determine which results to show based on view state
+                let resultsToShow = [];
+
+                if (viewState === SECTION_VIEW_STATE.COLLAPSED) {
+                    // Calculate actual threshold based on rendered size using visible items
+                    // Temporarily append section to measure (if not already in DOM)
+                    const wasInDOM = sectionWrapper.parentNode !== null;
+                    if (!wasInDOM) {
+                        state.resultsContainerDOM.appendChild(sectionWrapper);
+                    }
+
+                    // Calculate threshold based on actual measurements of visible items only
+                    const measuredThreshold = calculateCollapseThreshold(sectionWrapper, visibleItemElements);
+                    collapseThreshold = measuredThreshold;
+
+                    // Show only visible items up to the threshold
+                    resultsToShow = visibleItemElements.slice(0, collapseThreshold);
+                } else if (viewState === SECTION_VIEW_STATE.DEFAULT) {
+                    // Show only visible results
+                    resultsToShow = visibleItemElements;
+                } else { // EXPANDED
+                    // Show all results including hidden
+                    resultsToShow = allItemElements;
+                }
+
+                // Add result buttons
+                resultsToShow.forEach(resultElement => {
                     sectionWrapper.appendChild(resultElement);
                 });
 
+                // Add show more button (+)
+                // Only show if there are more items to display
+                let showMoreButton = false;
+
+                if (viewState === SECTION_VIEW_STATE.COLLAPSED) {
+                    // Show button if there are more visible results beyond the threshold OR if there are hidden items
+                    showMoreButton = results.length > collapseThreshold || hasHiddenItems;
+                } else if (viewState === SECTION_VIEW_STATE.DEFAULT) {
+                    // Show button if there are hidden items
+                    showMoreButton = hasHiddenItems;
+                }
+
+                if (showMoreButton) {
+                    const btn = document.createElement('button');
+                    btn.className = 'tag-button state-unselected state-cycle-button show-more-button';
+                    btn.textContent = '+';
+
+                    const label = `Show more ${sectionTitle.toLowerCase()}`;
+                    btn.setAttribute('title', label);
+                    btn.setAttribute('aria-label', label);
+
+                    btn.classList.add(`view-state-${viewState}`);
+
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const currentState = state.sectionViewStates[sectionKey];
+                        if (currentState === SECTION_VIEW_STATE.COLLAPSED) {
+                            // Check if all visible items are already shown
+                            if (results.length <= collapseThreshold && hasHiddenItems) {
+                                // Skip DEFAULT and go directly to EXPANDED
+                                state.sectionViewStates[sectionKey] = SECTION_VIEW_STATE.EXPANDED;
+                            } else {
+                                // Go to DEFAULT to show remaining visible items
+                                state.sectionViewStates[sectionKey] = SECTION_VIEW_STATE.DEFAULT;
+                            }
+                        } else if (currentState === SECTION_VIEW_STATE.DEFAULT) {
+                            state.sectionViewStates[sectionKey] = SECTION_VIEW_STATE.EXPANDED;
+                        }
+                        // Re-render while keeping the section top in the same position
+                        reRenderWithElementPositionPreserved(sectionWrapper);
+                    });
+
+                    sectionWrapper.appendChild(btn);
+                }
+
+                // Add show fewer button (-)
+                // Only show if clicking it would result in fewer items
+                let showFewerButton = false;
+
+                if (viewState === SECTION_VIEW_STATE.DEFAULT) {
+                    // Show button if there are more visible results than threshold
+                    showFewerButton = results.length > collapseThreshold;
+                } else if (viewState === SECTION_VIEW_STATE.EXPANDED) {
+                    // Show button if there are hidden items (collapsing would hide them)
+                    showFewerButton = hasHiddenItems;
+                }
+
+                if (showFewerButton) {
+                    const btn = document.createElement('button');
+                    btn.className = 'tag-button state-unselected state-cycle-button show-fewer-button';
+                    btn.textContent = '−';
+
+                    const label = `Show fewer ${sectionTitle.toLowerCase()}`;
+                    btn.setAttribute('title', label);
+                    btn.setAttribute('aria-label', label);
+
+                    btn.classList.add(`view-state-${viewState}`);
+
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const currentState = state.sectionViewStates[sectionKey];
+                        if (currentState === SECTION_VIEW_STATE.DEFAULT) {
+                            state.sectionViewStates[sectionKey] = SECTION_VIEW_STATE.COLLAPSED;
+                        } else if (currentState === SECTION_VIEW_STATE.EXPANDED) {
+                            state.sectionViewStates[sectionKey] = SECTION_VIEW_STATE.DEFAULT;
+                        }
+                        // Re-render while keeping this button in the same position
+                        reRenderWithElementPositionPreserved(btn);
+                    });
+
+                    sectionWrapper.appendChild(btn);
+                }
+
                 state.resultsContainerDOM.appendChild(sectionWrapper);
             };
-
-            function addDragToScroll(element) {
-                let isDown = false;
-                let startX;
-                let scrollLeft;
-
-                element.addEventListener('mousedown', (e) => {
-                    isDown = true;
-                    element.style.cursor = 'grabbing';
-                    startX = e.pageX - element.offsetLeft;
-                    scrollLeft = element.scrollLeft;
-                });
-
-                element.addEventListener('mouseleave', () => {
-                    isDown = false;
-                    element.style.cursor = 'grab';
-                });
-
-                element.addEventListener('mouseup', () => {
-                    isDown = false;
-                    element.style.cursor = 'grab';
-                });
-
-                element.addEventListener('mousemove', (e) => {
-                    if (!isDown) return;
-                    e.preventDefault();
-                    const x = e.pageX - element.offsetLeft;
-                    const walk = (x - startX) * 2; // Scroll speed multiplier
-                    element.scrollLeft = scrollLeft - walk;
-                });
-            }
 
             // Define section metadata
             const sections = {
                 locations: {
                     title: 'Places',
                     icon: '<svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 0 24 24" width="18px" fill="currentColor" aria-hidden="true"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>',
-                    results: groupedResults.locations.slice(0, 100)
+                    results: groupedResults.locations.slice(0, 100),
+                    hidden: hiddenResults.locations.slice(0, 100)
                 },
                 events: {
                     title: 'Events',
                     icon: '<svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 0 24 24" width="18px" fill="currentColor" aria-hidden="true"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7v-5z"/></svg>',
-                    results: groupedResults.events.slice(0, 100)
+                    results: groupedResults.events.slice(0, 100),
+                    hidden: hiddenResults.events.slice(0, 100)
                 },
                 tags: {
                     title: 'Tags',
                     icon: '<svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 0 24 24" width="18px" fill="currentColor" aria-hidden="true"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58s1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41s-.23-1.06-.59-1.42zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z"/></svg>',
-                    results: groupedResults.tags.slice(0, 100)
+                    results: groupedResults.tags.slice(0, 100),
+                    hidden: hiddenResults.tags.slice(0, 100)
                 }
             };
 
@@ -618,7 +918,7 @@ const TagFilterUI = (() => {
             state.sectionOrder.forEach(sectionKey => {
                 const section = sections[sectionKey];
                 if (section) {
-                    renderSection(section.results, section.title, section.icon, sectionKey);
+                    renderSection(section.results, section.hidden, section.title, section.icon, sectionKey);
                 }
             });
 
