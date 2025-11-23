@@ -10,7 +10,7 @@ The `run_pipeline.py` script orchestrates the following steps in order:
 2. **Extract Events** (`extract_events.py`) - Uses Gemini AI to extract structured event data from crawled content
 3. **Process Responses** (`process_responses.py`) - Enriches event data with location coordinates and additional metadata
 4. **Export Events** (`export_events.py`) - Deduplicates and exports events to JSON files
-5. **Upload to FTP** - Uploads the exported JSON files to a configured FTP server
+5. **Upload Data** (`upload_data.py`) - Uploads the exported JSON files to a configured FTP server
 
 ## Setup
 
@@ -42,7 +42,7 @@ FTP_REMOTE_DIR="data"  # Optional: remote directory path
 
 ### Run the Complete Pipeline
 
-To run all steps in sequence and upload to FTP:
+To run all steps in sequence and upload data:
 
 ```bash
 python run_pipeline.py
@@ -64,6 +64,9 @@ python process_responses.py
 
 # Step 4: Export events
 python export_events.py
+
+# Step 5: Upload data
+python upload_data.py
 ```
 
 ## Directory Structure
@@ -75,6 +78,7 @@ pipeline/
 ├── extract_events.py        # AI-powered event extraction
 ├── process_responses.py     # Data enrichment and processing
 ├── export_events.py         # Event deduplication and export
+├── upload_data.py           # Data upload to server
 ├── data/
 │   ├── websites.json        # Configuration for sites to crawl
 │   ├── locations.json       # Location database for enrichment
@@ -94,22 +98,22 @@ pipeline/
 └── locations.full.json     # Locations for full events
 ```
 
-## FTP Upload Details
+## Data Upload Details
 
 The pipeline uploads the following files from `public_html/data/`:
-- `events.init.json`
-- `locations.init.json`
-- `events.full.json`
-- `locations.full.json`
+- `events*.json` (events.init.json, events.full.json)
+- `locations*.json` (locations.init.json, locations.full.json)
 
-### FTP Options
+Note: Other files like `tags.json` are not uploaded as they change infrequently.
+
+### Upload Options
 
 - **Standard FTP**: Default, uses plain FTP connection
-- **FTPS (FTP over TLS)**: To use encrypted connection, modify `run_pipeline.py` and set `use_tls=True` in the `upload_to_ftp()` call
+- **FTPS (FTP over TLS)**: To use encrypted connection, modify `run_pipeline.py` and set `use_tls=True` in the `upload_data.main()` call
 
 ## Troubleshooting
 
-### FTP Upload Issues
+### Data Upload Issues
 
 - **Connection Refused**: Check that FTP_HOST is correct and the server is accessible
 - **Authentication Failed**: Verify FTP_USER and FTP_PASSWORD are correct

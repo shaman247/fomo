@@ -1,3 +1,23 @@
+"""
+Event Export Script
+
+This script exports processed events to JSON files for the website.
+It creates two sets of files with different filtering criteria:
+- init files: Core NYC area, 7-day window (for fast initial load)
+- full files: Extended area, 90-day window (for comprehensive view)
+
+Features:
+- Date range filtering (removes past events, limits future events)
+- Geographic filtering (NYC area with configurable bounds)
+- Deduplication based on location, name similarity, and date
+- Separate location files with unique venues
+- Maintains relationship between events and locations via location_id
+
+Configuration:
+- Input: event_data/processed/YYYYMMDD/*.json
+- Output: public_html/data/events.{init|full}.json, locations.{init|full}.json
+"""
+
 import os
 import json
 from datetime import datetime, timedelta
@@ -40,19 +60,45 @@ def _is_event_in_date_range(event, current_date, future_limit_date):
 def _deduplicate_events(events):
     """
     Deduplicates events based on lat, lng, and first start date.
-    Two events are considered duplicates if one's name is a substring of the other
-    (ignoring punctuation and capitalization) and they share the same location and start date.
+    Two events are considered duplicates if their normalized names are very similar
+    (ignoring punctuation, underscores, and capitalization) and they share the same
+    location and start date.
     Keeps the event with the shorter name (more concise) and, as a tiebreaker, the longest description.
     """
     import re
     from collections import defaultdict
 
     def normalize_name(name):
-        """Remove punctuation and whitespace, convert to lowercase for comparison."""
-        # Remove punctuation
-        no_punct = re.sub(r'[^\w\s]', '', name.strip().lower())
-        # Remove all whitespace to handle variations like "Pop-Up" vs "Pop Up"
-        return re.sub(r'\s+', '', no_punct)
+        """Remove punctuation, underscores, and whitespace; convert to lowercase for comparison."""
+        # Remove underscores specifically (common in event titles)
+        no_underscores = name.replace('_', '')
+        # Remove all punctuation except spaces
+        no_punct = re.sub(r'[^\w\s]', '', no_underscores.strip().lower())
+        # Collapse multiple spaces into single space and strip
+        normalized = re.sub(r'\s+', ' ', no_punct).strip()
+        return normalized
+
+    def are_names_similar(name1, name2):
+        """
+        Check if two event names are similar enough to be considered duplicates.
+        Uses a more lenient approach that handles:
+        - Different punctuation (e.g., "_in the space between_" vs "in the space between")
+        - Prefix matching for festivals/series (e.g., "Broke People Play Festival: X" vs "X")
+        """
+        norm1 = normalize_name(name1)
+        norm2 = normalize_name(name2)
+
+        # Exact match after normalization
+        if norm1 == norm2:
+            return True
+
+        # Check if one is a substring of the other (for prefix/suffix variations)
+        # But require at least 5 characters to avoid false positives
+        if len(norm1) >= 5 and len(norm2) >= 5:
+            if norm1 in norm2 or norm2 in norm1:
+                return True
+
+        return False
 
     # Group events by (lat, lng, start_date) for efficient comparison
     grouped_events = defaultdict(list)
@@ -79,23 +125,31 @@ def _deduplicate_events(events):
         # Deduplicate within this group
         group_unique = []
         for event in group:
-            event_name_normalized = normalize_name(event['name'])
-
             # Check if this event is a duplicate of any existing event in this group
             is_duplicate = False
             for i, existing_event in enumerate(group_unique):
-                existing_name_normalized = normalize_name(existing_event['name'])
-
-                # Check if one name is a substring of the other (normalized)
-                if event_name_normalized in existing_name_normalized or existing_name_normalized in event_name_normalized:
+                # Check if names are similar enough to be considered duplicates
+                if are_names_similar(event['name'], existing_event['name']):
                     is_duplicate = True
+
+                    # Merge URLs from both events
+                    event_urls = event.get('urls', [])
+                    existing_urls = existing_event.get('urls', [])
+                    merged_urls = list(existing_urls)  # Start with existing URLs
+                    for url in event_urls:
+                        if url and url not in merged_urls:
+                            merged_urls.append(url)
 
                     # Keep the event with the shorter name (more concise)
                     # If names are the same length, keep the one with longer description
                     if (len(event['name']) < len(existing_event['name']) or
                         (len(event['name']) == len(existing_event['name']) and
                          len(event.get('description', '')) > len(existing_event.get('description', '')))):
+                        event['urls'] = merged_urls
                         group_unique[i] = event
+                    else:
+                        existing_event['urls'] = merged_urls
+                        group_unique[i] = existing_event
                     break
 
             if not is_duplicate:
@@ -149,6 +203,12 @@ def main():
                             has_lat = event.get('lat') is not None
                             has_lng = event.get('lng') is not None
                             if has_lat and has_lng and _is_event_in_date_range(event, current_date, future_limit_date):
+                                # Normalize url field to urls list
+                                if 'url' in event and 'urls' not in event:
+                                    url = event.pop('url').strip()
+                                    event['urls'] = [url] if url else []
+                                elif 'urls' not in event:
+                                    event['urls'] = []
                                 all_events.append(event)
                 except (json.JSONDecodeError, IOError) as e:
                     print(f"Warning: Could not process file '{filename}'. Error: {e}")
