@@ -407,41 +407,6 @@ a:focus-visible,
     scrollbar-width: none;
 }
 
-.result-group-title {
-    font-family: var(--font-family);
-    font-size: 0.85em;
-    color: var(--accent-color);
-    margin: 0;
-    padding: 4px 6px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    user-select: none;
-    transition: color 0.2s ease, border-color 0.2s ease;
-    border-radius: 4px;
-    vertical-align: middle;
-    border: 1px solid var(--border-color);
-}
-
-.result-group-title .angle-quotes {
-    color: var(--primary-text);
-}
-
-.result-group-title svg {
-    transition: fill 0.2s ease;
-    display: block;
-}
-
-.result-group-title:hover {
-    color: var(--accent-hover);
-    background-color: color-mix(in srgb, var(--accent-color) 10%, transparent);
-}
-
-.result-group-title:hover svg {
-    fill: var(--accent-hover);
-}
-
 #results-container::-webkit-scrollbar,
 #filter-panel::-webkit-scrollbar,
 .popup-events-list::-webkit-scrollbar {
@@ -609,6 +574,29 @@ a:focus-visible,
     color: var(--secondary-text);
 }
 
+/* Section control buttons */
+.tag-button.section-icon-button,
+.tag-button.state-cycle-button {
+    background-color: color-mix(in srgb, var(--accent-color) 30%, var(--tertiary-bg));
+    color: var(--primary-text);
+    border: 0px solid color-mix(in srgb, var(--accent-color) 40%, transparent);
+}
+
+.tag-button.section-icon-button:hover,
+.tag-button.state-cycle-button:hover {
+    background-color: color-mix(in srgb, var(--accent-color) 50%, var(--tertiary-bg));
+    color: var(--primary-text);
+    border-color: color-mix(in srgb, var(--accent-color) 60%, transparent);
+}
+
+/* State indicator symbol within icon button */
+.tag-button.section-icon-button .state-indicator {
+    margin-left: 3px;
+    font-size: 0.7em;
+    opacity: 0.8;
+    vertical-align: middle;
+}
+
 /* Remove popup fade-in animation */
 .leaflet-fade-anim .leaflet-popup {
     transition: none;
@@ -769,6 +757,7 @@ a:focus-visible,
 
 .popup-external-link {
     display: inline-block;
+    padding: 0 4px;
 }
 
 .popup-external-link svg {
