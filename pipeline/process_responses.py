@@ -1,8 +1,28 @@
+"""
+Response Processing Script
+
+This script processes extracted event data from markdown tables and enriches
+them with location coordinates and additional metadata.
+
+Key features:
+- Parses markdown tables from Gemini AI extraction
+- Sanitizes text (removes HTML, entities, normalizes whitespace)
+- Enriches events with location data (coordinates, neighborhoods)
+- Creates short names for events (removes redundant location info)
+- Processes and normalizes tags
+- Handles emoji extraction and validation
+- Generates unique event IDs
+
+Configuration:
+- Input: event_data/extracted/YYYYMMDD/*.md
+- Output: event_data/processed/YYYYMMDD/*.json
+- Reference data: data/locations.json, data/tags.json
+"""
+
 import os
 import re
 import json
 from datetime import datetime, timedelta
-import time
 import regex
 
 # Get the directory where this script is located
@@ -27,19 +47,17 @@ def find_first_emoji(text: str) -> str:
     # - Regional indicator symbols (flags) - two consecutive RI characters
     # - Variation selectors (\uFE0F, \uFE0E)
     # - Skin tone modifiers (\p{Emoji_Modifier})
-    # - Zero-width joiners (\u200D) for compound emojis
+    # - Zero-width joiners (\u200D) for compound emojis (rainbow flag, families, etc.)
     # - Keycap sequences (\u20E3)
     # - Tag sequences (\p{Emoji_Component})
     emoji_pattern = regex.compile(
         r'(?:\p{Regional_Indicator}{2})'  # Flag emojis (two regional indicators)
         r'|'
-        r'\p{Emoji_Presentation}'
+        r'\p{Emoji}'
         r'[\uFE0E\uFE0F]?'  # Variation selectors
         r'[\u20E3]?'  # Keycap combining enclosing
         r'(?:\p{Emoji_Modifier})?'  # Skin tone modifiers
-        r'(?:\u200D\p{Emoji_Presentation}[\uFE0E\uFE0F]?(?:\p{Emoji_Modifier})?)*'  # ZWJ sequences
-        r'|'
-        r'\p{Emoji}[\uFE0E\uFE0F]'  # Emoji with required variation selector
+        r'(?:\u200D\p{Emoji}[\uFE0E\uFE0F]?(?:\p{Emoji_Modifier})?)*'  # ZWJ sequences
     )
     match = emoji_pattern.search(text)
 
@@ -219,6 +237,43 @@ def _standardize_time(time_str):
 
 def _group_event_occurrences(rows):
     """Groups event rows by name and consolidates their occurrences."""
+
+    def normalize_name_for_grouping(name):
+        """Normalize event name for fuzzy matching (similar to export_events.py logic)."""
+        if not name:
+            return ""
+        # Remove underscores specifically (common in event titles)
+        no_underscores = name.replace('_', '')
+        # Remove all punctuation except spaces
+        no_punct = re.sub(r'[^\w\s]', '', no_underscores.strip().lower())
+        # Collapse multiple spaces into single space and strip
+        normalized = re.sub(r'\s+', ' ', no_punct).strip()
+        return normalized
+
+    def find_matching_group_key(event_name, grouped_events):
+        """Find an existing group key that matches the event name, or return the event name itself."""
+        normalized_event = normalize_name_for_grouping(event_name)
+
+        # First check for exact match
+        if event_name in grouped_events:
+            return event_name
+
+        # Then check for normalized match
+        for existing_key in grouped_events.keys():
+            normalized_existing = normalize_name_for_grouping(existing_key)
+
+            # Exact match after normalization
+            if normalized_event == normalized_existing:
+                return existing_key
+
+            # Substring match (for prefix/suffix variations), with minimum length requirement
+            if len(normalized_event) >= 5 and len(normalized_existing) >= 5:
+                if normalized_event in normalized_existing or normalized_existing in normalized_event:
+                    return existing_key
+
+        # No match found, return the original name
+        return event_name
+
     grouped_events = {}
     for row_dict in rows:
         event_name = row_dict.get('name')
@@ -239,7 +294,7 @@ def _group_event_occurrences(rows):
                 original_name = event_name
                 event_name = event_name.title()
                 # Normalize apostrophes: convert curly apostrophes to straight apostrophes
-                event_name = event_name.replace('’', "'").replace('‘', "'")
+                event_name = event_name.replace(''', "'").replace(''', "'")
                 # Fix possessive 'S after apostrophe (e.g., "Baker'S" -> "Baker's")
                 # Handle both straight and curly apostrophes in case normalization missed any
                 event_name = re.sub(r"['']S\b", "'s", event_name)
@@ -277,21 +332,38 @@ def _group_event_occurrences(rows):
             end_time
         ]
 
-        if event_name not in grouped_events:
+        # Find matching group key (handles fuzzy matching)
+        group_key = find_matching_group_key(event_name, grouped_events)
+
+        if group_key not in grouped_events:
             # Create a new entry, removing date/time fields
-            base_event = {k: v for k, v in row_dict.items() if k not in ['start_date', 'start_time', 'end_date', 'end_time', 'sublocation']}
+            base_event = {k: v for k, v in row_dict.items() if k not in ['start_date', 'start_time', 'end_date', 'end_time', 'sublocation', 'url']}
             base_event['occurrences'] = []
             # Only add sublocation if it's not empty or 'N/A'
             sublocation = row_dict.get('sublocation', '').strip()
             if sublocation and sublocation.upper() != 'N/A':
                 base_event['sublocation'] = row_dict['sublocation']
 
-            grouped_events[event_name] = base_event
-        
+            # Initialize urls list with the first URL
+            url = row_dict.get('url', '').strip()
+            base_event['urls'] = [url] if url else []
+
+            grouped_events[group_key] = base_event
+        else:
+            # If we're merging events, prefer the shorter name (less likely to have extra punctuation)
+            existing_name = grouped_events[group_key]['name']
+            if len(event_name) < len(existing_name):
+                grouped_events[group_key]['name'] = event_name
+
+            # Add URL if it's new and not empty
+            url = row_dict.get('url', '').strip()
+            if url and url not in grouped_events[group_key]['urls']:
+                grouped_events[group_key]['urls'].append(url)
+
         # Check if the occurrence is already listed to avoid duplicates
-        if occurrence not in grouped_events[event_name]['occurrences']:
-            grouped_events[event_name]['occurrences'].append(occurrence)
-            
+        if occurrence not in grouped_events[group_key]['occurrences']:
+            grouped_events[group_key]['occurrences'].append(occurrence)
+
     return list(grouped_events.values())
 
 def _filter_by_date(row_dict, current_date, future_limit_date):
