@@ -18,15 +18,16 @@ It works by visiting the websites of parks, museums, music venues, etc., identif
 </details>
 
 <details>
-<summary><strong><code>/pipeline/</code></strong> Python scripts for data processing pipeline</summary>
+<summary><strong><code>/data_processing/</code></strong> Python scripts for data processing pipeline</summary>
 
 - `crawl_sites.py` Crawls event websites and saves content to markdown
 - `extract_events.py` Uses Gemini AI to extract structured event data from crawled content
   - Requires `GEMINI_API_KEY` environment variable (set in `.env` file)
 - `process_responses.py` Processes extracted events, enriches with location data, creates short names
 - `export_events.py` Deduplicates events and exports to public_html/data/ for the website
+- `upload_data.py` Uploads exported data files to server
 - `process_locations.py` Processes location data from raw format
-- `/pipeline/data/` Configuration and reference data
+- `/data_processing/data/` Configuration and reference data
   - `websites.json` List of websites to crawl with crawl settings
   - `locations.json` Processed location data with coordinates and tags
   - `tags.json` Tag rewriting rules and filters
@@ -67,4 +68,3 @@ It works by visiting the websites of parks, museums, music venues, etc., identif
 - 🚀 This project uses [Crawl4AI](https://github.com/unclecode/crawl4ai) for web data extraction
 - 🤖 [Gemini](https://gemini.google.com) and [Claude](https://claude.ai) for data processing and vibe coding
 - 💖 *All the amazing, creative, hard-working people who make the city shine with their light!* 🗽
-
