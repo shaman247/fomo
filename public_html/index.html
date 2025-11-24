@@ -125,12 +125,37 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr" crossorigin="anonymous"></script>
-    <script src="js/utils.js"></script>
-    <script src="js/urlParams.js"></script>
-    <script src="js/tagFilterUI.js"></script>
-    <script src="js/dataManager.js"></script>
-    <script src="js/uiManager.js"></script>
-    <script src="js/mapManager.js"></script>
+
+    <!-- Core -->
+    <script src="js/core/constants.js"></script>
+    <script src="js/core/utils.js"></script>
+    <script src="js/core/urlParams.js"></script>
+
+    <!-- Tags/Search -->
+    <script src="js/tags/tagColorManager.js"></script>
+    <script src="js/tags/searchManager.js"></script>
+    <script src="js/tags/tagStateManager.js"></script>
+    <script src="js/tags/sectionRenderer.js"></script>
+    <script src="js/tags/gestureHandler.js"></script>
+    <script src="js/tags/tagFilterUI.js"></script>
+
+    <!-- Data -->
+    <script src="js/data/filterManager.js"></script>
+    <script src="js/data/dataManager.js"></script>
+
+    <!-- UI -->
+    <script src="js/ui/modalManager.js"></script>
+    <script src="js/ui/toastNotifier.js"></script>
+    <script src="js/ui/uiManager.js"></script>
+    <script src="js/ui/emojiManager.js"></script>
+    <script src="js/ui/themeManager.js"></script>
+
+    <!-- Map -->
+    <script src="js/map/mapManager.js"></script>
+    <script src="js/map/viewportManager.js"></script>
+    <script src="js/map/markerController.js"></script>
+
+    <!-- Main Application -->
     <script src="js/script.js"></script>
 </body>
 </html>
