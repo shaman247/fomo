@@ -1,0 +1,105 @@
+/*
+ * ============================================================================
+ * Map and Marker Styles
+ * ============================================================================
+ *
+ * Leaflet map integration and customization:
+ * - Map canvas with tile pre-loading for smooth panning
+ * - Custom emoji markers with hardware acceleration
+ * - Leaflet controls (attribution, tooltips, zoom)
+ *
+ * Performance: Uses transform3d and will-change for GPU acceleration
+ * Mobile behavior: Hides zoom controls (pinch gestures used instead)
+ */
+
+#map {
+    /*
+     * Oversized map canvas (150% width/height) pre-loads surrounding tiles.
+     * This makes panning and zooming feel smoother as tiles are already rendered.
+     * The container's overflow:hidden crops to the visible area.
+     */
+    position: absolute;
+    top: -25%;
+    left: -25%;
+    width: 150%;
+    height: 150%;
+    background-color: var(--map-bg);
+    will-change: transform;
+    transform: translate3d(0, 0, 0);
+}
+
+.custom-marker-icon {
+    background: none;
+    border: none;
+    will-change: transform;
+    transform: translate3d(0, 0, 0);
+}
+
+.marker-emoji {
+    position: absolute;
+    top: 11px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 24px;
+    line-height: 1;
+    pointer-events: none;
+    text-align: center;
+    width: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    will-change: transform;
+    backface-visibility: hidden;
+    -webkit-font-smoothing: subpixel-antialiased;
+}
+
+/* === Leaflet Control Customization === */
+/* Override Leaflet's default styles to match app theme */
+.leaflet-control-attribution {
+    background: var(--attribution-bg) !important;
+    color: var(--secondary-text) !important;
+}
+
+.leaflet-control-attribution a {
+    color: var(--accent-color) !important;
+}
+
+.leaflet-tooltip {
+    background-color: var(--primary-bg) !important;
+    border: 0;
+    color: var(--primary-text) !important;
+    padding: 4px 8px !important;
+    border-radius: 4px !important;
+    box-shadow: var(--tooltip-shadow) !important;
+    font-size: 1.2em !important;
+    font-weight: bold;
+    will-change: transform;
+    transform: translate3d(0, 0, 0);
+}
+
+.leaflet-control-zoom {
+    border: 1px solid var(--border-color);
+    box-shadow: var(--zoom-shadow);
+}
+
+.leaflet-bar a,
+.leaflet-bar a:hover {
+    background-color: var(--tertiary-bg);
+    color: var(--primary-text);
+}
+
+.leaflet-bar a:hover {
+    background-color: var(--tertiary-hover-bg);
+}
+
+.leaflet-bar a:last-child {
+    border-bottom: none;
+}
+
+/* === Mobile Responsive Styles === */
+/* Hide zoom buttons on mobile - users can pinch to zoom */
+@media (max-width: 768px) {
+    .leaflet-control-zoom {
+        display: none;
+    }
+}

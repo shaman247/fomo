@@ -1,0 +1,119 @@
+/*
+ * CSS Variables and Theme Configuration
+ *
+ * This file defines all color tokens, shadows, and theme values used throughout
+ * the application. It supports both dark (default) and light themes via the
+ * data-theme attribute on the root element.
+ *
+ * Usage: var(--variable-name)
+ * Toggle theme: <html data-theme="light">
+ */
+
+:root {
+    /* === Typography === */
+    --font-family: Inter, sans-serif;
+
+    /* === Base Colors (Dark Theme) === */
+    /* Background layers - from darkest to lightest */
+    --primary-bg: #111;           /* Main background, map */
+    --secondary-bg: #222;         /* Panels, cards, modals */
+    --tertiary-bg: #373737;       /* Buttons, inputs (default state) */
+    --tertiary-hover-bg: #666;    /* Buttons, inputs (hover state) */
+
+    /* Text colors - primary is most important, secondary is muted */
+    --primary-text: #ddd;         /* Headings, important text */
+    --secondary-text: #bfbfbf;    /* Body text, labels, less important */
+
+    /* Accent colors - for interactive elements and highlights */
+    --accent-color: #74b3a5;      /* Primary accent (teal green) */
+    --accent-hover: #bcf4e8;      /* Hover state for accent elements */
+
+    /* Borders and dividers */
+    --border-color: #444;
+
+    /* Special purpose colors */
+    --attribution-bg: rgba(0, 0, 0, 0.7);
+    --reset-text-shadow: 1px 1px 2px black;
+    --map-bg: #111;
+    --marker-stroke: #333;
+
+    /* === Tag Button Colors === */
+    /* Selected/active tags use a red/pink color to stand out */
+    --tag-selected-bg: #c8535b;       /* Background for selected tags */
+    --tag-selected-text: white;       /* Text color for selected tags */
+    --tag-text-shadow: 0 0 2px #000;  /* Shadow for better readability */
+    --tag-required-glow: white;       /* Glow effect for required tags */
+
+    /* === Popup Detail Colors === */
+    /* Details/summary elements use distinct colors for open/closed states */
+    --summary-closed: #c8535b;        /* Closed details (red) */
+    --summary-open: #f1c160;          /* Open details (yellow) */
+    --summary-closed-hover: #ff858b;  /* Hover state for closed */
+    --summary-open-hover: #fff2a7;    /* Hover state for open */
+
+    /* === Popup Controls === */
+    --popup-close-hover: #ff8a80;     /* Close button hover color */
+
+    /* === Calendar Colors === */
+    /* Flatpickr date picker text colors */
+    --calendar-day-hover-text: #fff;
+    --calendar-day-selected-text: #fff;
+    --calendar-day-today-hover-text: #fff;
+
+    /* === Shadows and Elevation === */
+    /* Box shadows provide depth and hierarchy */
+    --shadow-dark: rgba(0, 0, 0, 0.4);
+    --shadow-medium: rgba(0, 0, 0, 0.3);
+    --mobile-panel-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    --toggle-btn-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    --tooltip-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    --zoom-shadow: 0 1px 5px rgba(0, 0, 0, 0.4);
+    --popup-shadow: 0 3px 15px rgba(0, 0, 0, 0.4);
+    --toggle-panel-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+/*
+ * === Light Theme Overrides ===
+ *
+ * Only the variables that differ from the dark theme need to be redefined.
+ * Activated by setting data-theme="light" on the <html> element.
+ */
+:root[data-theme="light"] {
+    /* Inverted backgrounds - light instead of dark */
+    --primary-bg: #f5f2eb;           /* Warm off-white */
+    --secondary-bg: #ebe7df;         /* Slightly darker warm gray */
+    --tertiary-bg: #d3cbbd;          /* Taupe for buttons/inputs */
+    --tertiary-hover-bg: #bbb4a5;    /* Darker taupe on hover */
+
+    /* Inverted text - dark instead of light */
+    --primary-text: #201c18;         /* Near black for headings */
+    --secondary-text: #403c39;       /* Dark gray for body text */
+
+    /* Map background matches theme */
+    --map-bg: #d4cfc0;               /* Light warm gray */
+
+    /* Adjusted accent colors for light background */
+    --accent-color: #70a892;         /* Darker teal green */
+    --accent-hover: #47ad8b;         /* Even darker on hover */
+
+    /* Borders are lighter in light theme */
+    --border-color: #c0bfba;
+
+    /* Tag colors adjusted for light theme */
+    --tag-selected-text: black;      /* Dark text instead of white */
+    --tag-text-shadow: none;         /* No shadow needed on light bg */
+
+    /* Summary colors adjusted for light theme contrast */
+    --summary-closed: #9d474c;       /* Darker red */
+    --summary-open: #785e1d;         /* Darker yellow */
+    --summary-closed-hover: #900a11; /* Deep red */
+    --summary-open-hover: #8b6400;   /* Deep yellow */
+}
+
+/*
+ * Light theme: Adjust marker visibility
+ * Emoji markers need brightness adjustment to show up well on light backgrounds
+ */
+:root[data-theme="light"] .custom-marker-icon svg {
+    filter: brightness(1.6) contrast(0.6);
+}

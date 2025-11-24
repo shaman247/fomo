@@ -1,0 +1,407 @@
+/*
+ * ============================================================================
+ * Filter Panel and Controls
+ * ============================================================================
+ *
+ * The left sidebar containing:
+ * - Logo and dropdown menu
+ * - Search inputs (omni-search, date picker)
+ * - Tag filters with multiple states
+ * - Results display and organization
+ * - Flatpickr calendar styling
+ *
+ * Mobile behavior: Full-width collapsible panel at top of screen
+ */
+
+#filter-panel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: min(500px, max(350px, 40%));
+
+    padding: 26px 26px 26px 35px;
+    background-color: color-mix(in srgb, var(--primary-bg) 75%, transparent);
+    backdrop-filter: blur(5px);
+    border: 1px solid var(--border-color);
+    border-radius: 18px;
+    box-sizing: border-box;
+    margin-top: 10px;
+    margin-left: 10px;
+
+    padding: 10px 5px;
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 20px);
+    overflow: hidden;
+    box-sizing: border-box;
+    z-index: 1000;
+}
+
+#logo-menu-wrapper {
+    position: relative;
+    flex-shrink: 0;
+}
+
+#logo-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 0px;
+    padding: 4px 8px 4px 6px;
+    background-color: transparent;
+    border: 0px solid var(--tertiary-bg);
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#logo-container:hover {
+    background-color: var(--tertiary-bg);
+    border-color: var(--tertiary-hover-bg);
+}
+
+#logo {
+    height: 28px;
+    display: block;
+    pointer-events: none;
+}
+
+#logo-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 5px;
+    background-color: var(--secondary-bg);
+    border-radius: 4px;
+    box-shadow: var(--popup-shadow);
+    min-width: 180px;
+    z-index: 1001;
+    overflow: hidden;
+}
+
+#logo-menu.logo-menu-hidden {
+    display: none;
+}
+
+#logo-menu a,
+#logo-menu button {
+    display: block;
+    width: 100%;
+    padding: 10px 15px;
+    text-decoration: none;
+    color: var(--primary-text);
+    background: none;
+    border: none;
+    text-align: left;
+    font-family: var(--font-family);
+    font-size: 0.95em;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+#logo-menu a:hover,
+#logo-menu button:hover {
+    background-color: var(--tertiary-bg);
+}
+
+#logo-menu a:focus-visible,
+#logo-menu button:focus-visible {
+    background-color: var(--tertiary-bg);
+    outline: 2px solid var(--accent-color);
+    outline-offset: -2px;
+}
+
+#filter-panel > * {
+    transition: opacity 0.15s ease-out;
+    min-width: 0;
+}
+
+#filter-panel.collapsed {
+    width: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+#filter-panel.collapsed > * {
+    opacity: 0;
+}
+
+.panel-header h2 {
+    font-family: var(--font-family);
+    color: var(--accent-color);
+    margin-top: 0;
+    text-align: center;
+    font-weight: 500;
+    font-size: 1.8em;
+}
+
+.filter-group {
+    margin-bottom: 2px;
+    flex-shrink: 0;
+}
+
+#tag-search-filter,
+#omni-search-filter {
+    flex-grow: 1; /* Allow omnibar to take available space */
+}
+
+.filter-group label {
+    font-family: var(--font-family);
+    font-weight: 500;
+    display: block;
+    margin-bottom: 8px;
+    color: var(--secondary-text);
+    font-size: 0.95em;
+}
+
+#filter-container {
+    display: flex;
+    flex-direction: column;
+    padding-left: 5px;
+    padding-right: 5px;
+    margin-bottom: 5px;
+    gap: 5px;
+    flex-shrink: 0;
+}
+
+#filter-container > div:first-child {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+#selected-tags-display {
+    display: none;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 0px 0;
+}
+
+#date-filter-container {
+    display: flex;
+    justify-content: flex-start;
+    margin-bottom: 0;
+}
+
+.date-picker-container {
+    position: relative;
+}
+
+#tags-wrapper {
+    position: relative;
+    flex-grow: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    overflow: hidden;
+}
+
+.search-results-section {
+    display: flex;
+    height: auto;
+    flex-wrap: wrap;
+    gap: 4px;
+    background-color: transparent;
+    flex-shrink: 0;
+    border: 0px solid var(--border-color);
+    border-radius: 8px;
+    padding: 2px;
+    margin-bottom: 12px;
+}
+
+.results-list {
+    padding: 6px;
+}
+
+.calendar-icon,
+.location-icon,
+.search-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: var(--accent-color);
+}
+
+.date-picker-container:hover .calendar-icon,
+.geotag-picker-container:hover .location-icon,
+.search-input-container:hover .search-icon {
+    color: var(--accent-hover);
+}
+
+#date-picker-sizer {
+    position: absolute;
+    visibility: hidden;
+    height: auto;
+    width: auto;
+    white-space: nowrap;
+    font-family: var(--font-family);
+    font-size: 0.95em;
+    padding-left: 35px;
+    padding-right: 6px;
+}
+
+#date-picker,
+#geotag-search-input,
+#omni-search-input {
+    padding: 6px 6px 6px 36px;
+    background-color: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--secondary-text);
+    border-radius: 8px;
+    box-sizing: border-box;
+    font-family: var(--font-family);
+    font-size: 0.9em;
+    margin-bottom: 0;
+    text-align: left;
+    line-height: 1.2;
+    letter-spacing: -0.03em;
+}
+
+#date-picker {
+    cursor: pointer;
+}
+
+#omni-search-input {
+    cursor: text;
+    flex: 1;
+    min-width: 40px; /* Ensure icon is always visible (35px padding + 5px) */
+}
+
+#omni-search-filter {
+    min-width: 0; /* Allow the search filter group to shrink */
+    flex: 1; /* Allow it to grow and shrink */
+}
+
+.search-input-container {
+    display: flex;
+    min-width: 0;
+    position: relative;
+}
+
+#date-filter-container {
+    flex-shrink: 0; /* Prevent date picker from shrinking */
+}
+
+/* === Flatpickr Calendar Styling === */
+/* Third-party date picker component - customized to match app theme */
+.flatpickr-calendar {
+    background: var(--secondary-bg);
+    border-radius: 4px;
+    box-shadow: var(--popup-shadow);
+    border: 0;
+    color: var(--primary-text);
+}
+
+.flatpickr-months .flatpickr-month {
+    color: var(--accent-color);
+    fill: var(--accent-color);
+}
+
+.flatpickr-months .flatpickr-prev-month svg,
+.flatpickr-months .flatpickr-next-month svg {
+    fill: var(--accent-color);
+}
+
+.flatpickr-months .flatpickr-prev-month:hover svg,
+.flatpickr-months .flatpickr-next-month:hover svg {
+    fill: var(--accent-hover);
+}
+
+span.flatpickr-day {
+    color: var(--primary-text);
+}
+
+span.flatpickr-day:hover,
+span.flatpickr-day.prevMonthDay:hover,
+span.flatpickr-day.nextMonthDay:hover {
+    background: var(--accent-hover);
+    border-color: var(--accent-hover);
+    color: var(--calendar-day-hover-text);
+}
+
+span.flatpickr-day.selected,
+span.flatpickr-day.startRange,
+span.flatpickr-day.endRange {
+    background: var(--accent-color);
+    border-color: var(--accent-color);
+    color: var(--calendar-day-selected-text);
+}
+
+span.flatpickr-day.inRange,
+span.flatpickr-day.prevMonthDay.inRange,
+span.flatpickr-day.nextMonthDay.inRange {
+    background: var(--tertiary-bg);
+    border-color: var(--tertiary-bg);
+    box-shadow: -5px 0 0 var(--tertiary-bg), 5px 0 0 var(--tertiary-bg);
+}
+
+span.flatpickr-day.today {
+    border-color: var(--accent-hover);
+}
+
+span.flatpickr-day.today:hover {
+    background: var(--accent-hover);
+    color: var(--calendar-day-today-hover-text);
+}
+
+.flatpickr-current-month input.cur-year,
+.flatpickr-current-month input.cur-year[disabled],
+.flatpickr-current-month span.cur-month {
+    color: var(--accent-color);
+    pointer-events: none;
+}
+
+.numInputWrapper span.arrowUp,
+.numInputWrapper span.arrowDown {
+    display: none;
+}
+
+span.flatpickr-weekday {
+    color: var(--accent-color);
+    font-weight: bold;
+}
+
+/* === Mobile Responsive Styles === */
+/* On mobile, the panel becomes a full-width collapsible header */
+@media (max-width: 768px) {
+    #filter-panel {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: calc(100vw - 0px);
+        border-radius: 4px;
+        height: auto;
+        max-height: 40vh;
+        overflow-y: auto;
+        margin: 0px;
+        padding: 2px;
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+        display: flex;
+        flex-direction: column;
+        z-index: 1000;
+        transition: max-height 0.3s ease;
+    }
+
+    #filter-panel.tags-collapsed {
+        max-height: 20vh;
+    }
+
+    #filter-container {
+        padding: 0;
+        margin-bottom: 5px;
+    }
+
+    .panel-header h2 {
+        font-size: 1.5em;
+        margin-bottom: 10px;
+    }
+
+    .filter-group {
+        margin-bottom: 0px;
+    }
+
+}

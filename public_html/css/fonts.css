@@ -1,0 +1,61 @@
+/*
+ * ============================================================================
+ * Font Definitions and Typography
+ * ============================================================================
+ *
+ * Configures the font stack for the application:
+ * - Inter/InterVariable as the primary UI font
+ * - Noto Color Emoji for consistent emoji rendering (debug mode only)
+ * - Fallback to system sans-serif fonts
+ *
+ * Variable font support is detected via @supports and used when available.
+ */
+
+/* === Emoji Font (Optional) === */
+/* Loaded only when debug mode is enabled via .use-noto-emoji class */
+/* Provides consistent emoji rendering across platforms */
+@font-face {
+    font-family: 'Noto Color Emoji';
+    src: url('../fonts/NotoColorEmoji-Regular.ttf') format('truetype');
+    font-display: swap;
+}
+
+:root {
+    font-family: Inter, sans-serif;
+    font-feature-settings: 'liga' 1, 'calt' 1; /* fix for Chrome */
+}
+
+@supports (font-variation-settings: normal) {
+    :root { font-family: InterVariable, sans-serif; }
+}
+
+/* Apply Noto Color Emoji when debug mode is enabled */
+body.use-noto-emoji,
+body.use-noto-emoji * {
+    font-family: Inter, 'Noto Color Emoji', sans-serif !important;
+}
+
+@supports (font-variation-settings: normal) {
+    body.use-noto-emoji,
+    body.use-noto-emoji * {
+        font-family: InterVariable, 'Noto Color Emoji', sans-serif !important;
+    }
+}
+
+/* Specifically target emoji elements */
+body.use-noto-emoji .marker-emoji,
+body.use-noto-emoji .popup-header-emoji,
+body.use-noto-emoji .popup-event-emoji {
+    font-family: 'Noto Color Emoji', sans-serif !important;
+}
+
+/* Exclude system emoji preview from Noto font */
+body.use-noto-emoji .emoji-preview-system {
+    font-family: Inter, sans-serif !important;
+}
+
+@supports (font-variation-settings: normal) {
+    body.use-noto-emoji .emoji-preview-system {
+        font-family: InterVariable, sans-serif !important;
+    }
+}

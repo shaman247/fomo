@@ -1,0 +1,136 @@
+/*
+ * ============================================================================
+ * Tag Button Component
+ * ============================================================================
+ *
+ * Interactive tag buttons with multiple states:
+ * - unselected: Default state (gray)
+ * - selected: User clicked to filter (red)
+ * - required: Must match (red with glow)
+ * - forbidden: Excluded from results (strikethrough)
+ * - non-visible: Filtered out but shown (dimmed)
+ *
+ * Also includes section control buttons and state cycle buttons.
+ */
+
+.tag-tags-container {
+    display: flex;
+    height: auto;
+    flex-wrap: wrap;
+    gap: 4px;
+    background-color: transparent;
+    flex-shrink: 0;
+}
+
+.popup-tags-container {
+    margin-top: 4px;
+    margin-bottom: 4px;
+    gap: 2px;
+}
+
+.tag-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.89em;
+    font-weight: 400;
+    font-family: var(--font-family);
+    cursor: pointer;
+    border: 0;
+    overflow: hidden;
+    text-align: center;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+}
+
+.tag-button .result-type {
+    font-size: 0.8em;
+    color: var(--secondary-text);
+    margin-left: 6px;
+}
+
+.tag-button.state-unselected {
+    background-color: color-mix(in srgb, var(--tertiary-bg) 80%, transparent);
+    color: var(--secondary-text);
+}
+
+.tag-button.state-unselected:hover {
+    background-color: var(--tertiary-hover-bg);
+    color: var(--primary-text);
+}
+
+.tag-button.state-selected,
+.tag-button.state-required {
+    background-color: var(--tag-selected-bg);
+    color: var(--tag-selected-text);
+    font-weight: 400;
+    text-shadow: var(--tag-text-shadow);
+}
+
+.tag-button.state-required {
+    border: 2px solid var(--primary-bg);
+    filter: drop-shadow(0 0 3px var(--tag-required-glow));
+}
+
+.tag-button.state-forbidden {
+    text-decoration: line-through;
+    border: 1px solid transparent;
+    padding: 3px 9px;
+    background-color: transparent;
+    color: var(--secondary-text);
+}
+
+.tag-button.state-forbidden {
+    text-decoration: line-through;
+}
+
+.tag-button.state-forbidden:hover {
+    text-decoration: line-through;
+    border: 1px solid var(--tertiary-bg);
+    padding: 3px 9px;
+    color: var(--secondary-text);
+}
+
+/* === Non-Visible Results === */
+/* Items that don't match current filters but are still shown (dimmed) */
+.tag-button.non-visible-location,
+.tag-button.non-visible-event,
+.tag-button.non-visible-tag {
+    opacity: 0.9;
+    background-color: color-mix(in srgb, var(--tertiary-bg) 50%, transparent);
+    color: color-mix(in srgb, var(--secondary-text) 70%, transparent);
+}
+
+.tag-button.non-visible-location:hover,
+.tag-button.non-visible-event:hover,
+.tag-button.non-visible-tag:hover {
+    opacity: 1.0;
+    background-color: color-mix(in srgb, var(--tertiary-bg) 70%, transparent);
+    color: var(--secondary-text);
+}
+
+/* === Section Control Buttons === */
+/* Special buttons for section actions (collapse/expand, state cycling) */
+.tag-button.section-icon-button,
+.tag-button.state-cycle-button {
+    background-color: color-mix(in srgb, var(--accent-color) 30%, var(--tertiary-bg));
+    color: var(--primary-text);
+    border: 0px solid color-mix(in srgb, var(--accent-color) 40%, transparent);
+}
+
+.tag-button.section-icon-button:hover,
+.tag-button.state-cycle-button:hover {
+    background-color: color-mix(in srgb, var(--accent-color) 50%, var(--tertiary-bg));
+    color: var(--primary-text);
+    border-color: color-mix(in srgb, var(--accent-color) 60%, transparent);
+}
+
+/* State indicator symbol within icon button */
+.tag-button.section-icon-button .state-indicator {
+    margin-left: 3px;
+    font-size: 0.7em;
+    opacity: 0.8;
+    vertical-align: middle;
+}
