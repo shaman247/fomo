@@ -100,29 +100,6 @@ const UIManager = (() => {
     // ========================================
 
     /**
-     * Initializes event listeners for UI components
-     * @param {Object} elements - DOM element references
-     * @param {Object} callbacks - Callback functions
-     */
-    function initEventListeners(elements, callbacks = {}) {
-        const tagsWrapper = document.getElementById('tags-wrapper');
-        if (elements.toggleTagsBtn && tagsWrapper) {
-            if (window.innerWidth <= Constants.UI.MOBILE_BREAKPOINT) {
-                tagsWrapper.classList.add('collapsed');
-                elements.toggleTagsBtn.classList.add('collapsed');
-            }
-            elements.toggleTagsBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const willBeCollapsed = !tagsWrapper.classList.contains('collapsed');
-                tagsWrapper.classList.toggle('collapsed');
-
-                // Toggle class on button for arrow rotation
-                elements.toggleTagsBtn.classList.toggle('collapsed', willBeCollapsed);
-            });
-        }
-    }
-
-    /**
      * Initializes the logo menu with dropdown functionality
      * @param {Object} callbacks - Callback functions
      */
@@ -434,7 +411,6 @@ const UIManager = (() => {
         resizeDatePickerInput,
 
         // Event listeners
-        initEventListeners,
         initLogoMenu,
 
         // Popup content
