@@ -198,6 +198,116 @@ const Utils = (() => {
         return codePoints.every(cp => cp >= 0x1F1E6 && cp <= 0x1F1FF);
     }
 
+    /**
+     * Gets the display name for an item (event or location)
+     * Uses short_name if available, otherwise uses the full name
+     * Truncates long names to 40 characters
+     * @param {Object} item - Item with name or short_name property
+     * @returns {string} Display name
+     */
+    function getDisplayName(item) {
+        if (!item) return '';
+
+        // Use short_name if available, otherwise use the full name
+        let nameToDisplay = item.short_name || item.name || '';
+
+        // Truncate long names
+        if (nameToDisplay.length > 40) {
+            nameToDisplay = nameToDisplay.substring(0, 35) + '…';
+        }
+
+        return nameToDisplay;
+    }
+
+    /**
+     * Creates a debounced function that delays invoking func until after wait milliseconds
+     * @param {Function} func - Function to debounce
+     * @param {number} wait - Delay in milliseconds
+     * @returns {Function} Debounced function
+     */
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+    /**
+     * Creates a throttled function that only invokes func at most once per every wait milliseconds
+     * @param {Function} func - Function to throttle
+     * @param {number} wait - Delay in milliseconds
+     * @returns {Function} Throttled function
+     */
+    function throttle(func, wait) {
+        let inThrottle;
+        return function executedFunction(...args) {
+            if (!inThrottle) {
+                func.apply(this, args);
+                inThrottle = true;
+                setTimeout(() => inThrottle = false, wait);
+            }
+        };
+    }
+
+    /**
+     * Safe localStorage wrapper with error handling
+     */
+    const SafeStorage = {
+        /**
+         * Safely get an item from localStorage
+         * @param {string} key - Storage key
+         * @returns {string|null} Value or null if error/not found
+         */
+        getItem(key) {
+            try {
+                return localStorage.getItem(key);
+            } catch (error) {
+                console.warn(`Failed to read from localStorage (key: ${key}):`, error);
+                return null;
+            }
+        },
+
+        /**
+         * Safely set an item in localStorage
+         * @param {string} key - Storage key
+         * @param {string} value - Value to store
+         * @returns {boolean} True if successful, false otherwise
+         */
+        setItem(key, value) {
+            try {
+                localStorage.setItem(key, value);
+                return true;
+            } catch (error) {
+                if (error.name === 'QuotaExceededError') {
+                    console.error('localStorage quota exceeded. Cannot save preferences.');
+                } else {
+                    console.error(`Failed to write to localStorage (key: ${key}):`, error);
+                }
+                return false;
+            }
+        },
+
+        /**
+         * Safely remove an item from localStorage
+         * @param {string} key - Storage key
+         * @returns {boolean} True if successful, false otherwise
+         */
+        removeItem(key) {
+            try {
+                localStorage.removeItem(key);
+                return true;
+            } catch (error) {
+                console.warn(`Failed to remove from localStorage (key: ${key}):`, error);
+                return false;
+            }
+        }
+    };
+
     return {
         escapeHtml,
         decodeHtml,
@@ -208,5 +318,9 @@ const Utils = (() => {
         parseDateInNewYork,
         isWindows,
         isCountryFlagEmoji,
+        getDisplayName,
+        debounce,
+        throttle,
+        SafeStorage,
     };
 })();
