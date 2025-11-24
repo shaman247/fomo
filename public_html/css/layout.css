@@ -1,0 +1,193 @@
+/*
+ * ============================================================================
+ * Base Layout and Structure
+ * ============================================================================
+ *
+ * Core application layout including:
+ * - Body and container setup
+ * - Accessibility focus indicators
+ * - Map container positioning
+ * - Results container and scrolling
+ * - Tab navigation
+ * - Loading states and animations
+ *
+ * Mobile behavior: Touch-friendly scrolling and collapsible controls
+ */
+
+body {
+    font-family: var(--font-family);
+    margin: 0;
+    padding: 0;
+    background-color: var(--primary-bg);
+    color: var(--primary-text);
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    letter-spacing: -0.02em;
+}
+
+/* Focus indicators for accessibility */
+*:focus-visible {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
+}
+
+button:focus-visible,
+input:focus-visible,
+a:focus-visible,
+.tag-button:focus-visible {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
+}
+
+#app-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+#map-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    flex-grow: 1;
+    position: relative;
+    overflow: hidden; /* Hide the parts of the map that extend beyond the container */
+}
+
+/* New wrapper to contain the scaled map */
+#map-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+#results-container {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    min-height: 0;
+    box-sizing: border-box;
+    padding: 0px;
+    background-color: transparent;
+    border-radius: 4px;
+    overflow-y: auto;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+#results-container::-webkit-scrollbar,
+#filter-panel::-webkit-scrollbar,
+.popup-events-list::-webkit-scrollbar {
+    display: none;
+}
+
+#expand-filter-panel-button {
+    display: none;
+}
+
+.tab-link {
+    padding: 8px 4px;
+    background-color: var(--primary-bg);
+    color: var(--secondary-text);
+    border: none;
+    border-left: 3px solid transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-family);
+    font-size: 0.9em;
+    text-transform: uppercase;
+}
+
+.tab-link.active {
+    color: var(--primary-text);
+    border-left-color: var(--accent-color);
+    background-color: var(--secondary-bg);
+}
+
+.tab-link svg {
+    color: var(--accent-color);
+}
+
+.tab-link.active svg {
+    color: var(--primary-text);
+}
+
+.tab-link:not(.active):hover {
+    color: var(--primary-text);
+}
+
+.tab-link:not(.active):hover svg {
+    fill: var(--accent-hover);
+}
+
+.loading-message {
+    text-align: center;
+    padding: 20px;
+    animation: pulse-text 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-text {
+    0% { color: var(--secondary-text); }
+    50% { color: var(--primary-text); }
+    100% { color: var(--secondary-text); }
+}
+
+.initially-hidden {
+    visibility: hidden;
+    opacity: 0;
+    transition: visibility 0s 0.5s, opacity 0.5s ease-in-out;
+}
+
+/* === Mobile Responsive Styles === */
+/* Touch-optimized scrolling and toggle button */
+@media (max-width: 768px) {
+    #app-container {
+        position: relative;
+    }
+
+    #map-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100vh;
+    }
+
+    #expand-filter-panel-button {
+        display: flex;
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        z-index: 1002;
+        background-color: var(--accent-color);
+        color: var(--primary-bg);
+        border: none;
+        border-radius: 8px;
+        width: 30px;
+        height: 30px;
+        cursor: pointer;
+        box-shadow: var(--toggle-btn-shadow);
+        align-items: center;
+        justify-content: center;
+    }
+
+    #expand-filter-panel-button:hover {
+        background-color: var(--accent-hover);
+    }
+
+    #expand-filter-panel-button svg {
+        stroke: var(--primary-bg);
+        stroke-width: 3;
+    }
+
+    #expand-filter-panel-button.collapsed svg {
+        transform: rotate(180deg);
+    }
+}

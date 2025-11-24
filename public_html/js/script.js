@@ -134,7 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
          * @property {HTMLElement} dateFilterContainer - Container for date filter
          * @property {HTMLElement} filterContainer - Main filter container
          * @property {HTMLElement} omniSearchFilter - Omni search filter container
-         * @property {HTMLElement} toggleTagsBtn - Button to toggle tag panel on mobile
+         * @property {HTMLElement} expandFilterPanelButton - Button to expand/collapse filter panel on mobile
          * @property {HTMLElement} filterPanel - Filter panel element
          * @property {HTMLElement} omniSearchInput - Search input element
          * @property {HTMLElement} selectedTagsDisplay - Display for selected tags
@@ -146,7 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
             dateFilterContainer: document.getElementById('date-filter-container'),
             filterContainer: document.getElementById('filter-container'),
             omniSearchFilter: document.getElementById('omni-search-filter'),
-            toggleTagsBtn: document.getElementById('toggle-tags-btn'),
+            expandFilterPanelButton: document.getElementById('expand-filter-panel-button'),
             filterPanel: document.getElementById('filter-panel'),
             omniSearchInput: document.getElementById('omni-search-input'),
             selectedTagsDisplay: document.getElementById('selected-tags-display'),
@@ -247,12 +247,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
             this.initOmniSearch();
-            UIManager.initEventListeners(this.elements, {
-                onToggleCollapse: () => {
-                    const currentTerm = this.elements.omniSearchInput.value.toLowerCase();
-                    this.performSearch(currentTerm);
-                }
-            });
             UIManager.initLogoMenu({
                 onShareView: () => this.shareCurrentView()
             });
@@ -282,12 +276,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (logoContainer) logoContainer.classList.remove('initially-hidden');
             this.elements.filterContainer.classList.remove('initially-hidden');
             tagsWrapper.classList.remove('initially-hidden');
-            this.elements.toggleTagsBtn.classList.remove('initially-hidden');
+            this.elements.expandFilterPanelButton.classList.remove('initially-hidden');
 
             // Set up toggle tags button for mobile
-            this.elements.toggleTagsBtn.addEventListener('click', () => {
+            this.elements.expandFilterPanelButton.addEventListener('click', () => {
                 this.elements.filterPanel.classList.toggle('tags-collapsed');
-                this.elements.toggleTagsBtn.classList.toggle('collapsed');
+                this.elements.expandFilterPanelButton.classList.toggle('collapsed');
             });
         },
 
@@ -429,7 +423,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Auto-expand panel on mobile when user enters search term
                 if (searchTerm && window.innerWidth <= Constants.UI.MOBILE_BREAKPOINT) {
                     this.elements.filterPanel.classList.remove('tags-collapsed');
-                    this.elements.toggleTagsBtn.classList.remove('collapsed');
+                    this.elements.expandFilterPanelButton.classList.remove('collapsed');
                 }
             });
 

@@ -1,0 +1,35 @@
+/*
+ * ============================================================================
+ * Main CSS Entry Point - Events Application
+ * ============================================================================
+ *
+ * This file imports all modular CSS files in the correct dependency order.
+ * This is the only CSS file referenced by index.html.
+ *
+ * Import Order Rationale:
+ * 1. Variables must come first - all other files depend on CSS custom properties
+ * 2. Fonts define typography that layout and components use
+ * 3. Layout establishes base structure before components are styled
+ * 4. Components are independent and can be loaded in any order
+ *
+ * See README.md in this directory for full documentation.
+ */
+
+/* === Foundation === */
+/* Variables define the design system tokens (colors, shadows, etc.) */
+@import './variables.css';
+
+/* Font loading and typography configuration */
+@import './fonts.css';
+
+/* Base layout structure and global element styles */
+@import './layout.css';
+
+/* === Components === */
+/* Each component file is self-contained with its own mobile styles */
+
+@import './filter-panel.css';  /* Left sidebar with filters and search */
+@import './tags.css';          /* Tag button component and states */
+@import './map.css';           /* Leaflet map, markers, and controls */
+@import './popups.css';        /* Location popups with event details */
+@import './modals.css';        /* Dialogs, settings, and notifications */

@@ -71,8 +71,8 @@ const SectionRenderer = (() => {
         // Section state
         sectionOrder: ['locations', 'events', 'tags'],
         sectionViewStates: {
-            locations: SECTION_VIEW_STATE.DEFAULT,
-            events: SECTION_VIEW_STATE.DEFAULT,
+            locations: SECTION_VIEW_STATE.COLLAPSED,
+            events: SECTION_VIEW_STATE.COLLAPSED,
             tags: SECTION_VIEW_STATE.DEFAULT
         },
 
@@ -292,7 +292,7 @@ const SectionRenderer = (() => {
                 state.onSectionReorder(state.sectionOrder);
             }
 
-            renderFilters(state.lastSearchResults, state.lastSearchTerm);
+            renderFilters(state.lastSearchResults.groupedResults, state.lastSearchResults.hiddenResults, state.lastSearchTerm);
         });
 
         return toggleButton;
@@ -498,15 +498,13 @@ const SectionRenderer = (() => {
      * Initializes the SectionRenderer module
      * @param {Object} config - Configuration object
      * @param {HTMLElement} config.resultsContainerDOM - Container for search results
-     * @param {Array<string>} config.sectionOrder - Reference to section order array
-     * @param {Object} config.sectionViewStates - Reference to section view states
+     * @param {Array<string>} config.sectionOrder - Reference to section order array (shared with parent for reordering)
      * @param {Function} config.createSearchResultButton - Callback to create result buttons
      * @param {Function} config.onSectionReorder - Callback when sections are reordered
      */
     function init(config) {
         state.resultsContainerDOM = config.resultsContainerDOM;
         state.sectionOrder = config.sectionOrder;
-        state.sectionViewStates = config.sectionViewStates;
         state.createSearchResultButton = config.createSearchResultButton;
         state.onSectionReorder = config.onSectionReorder;
     }
