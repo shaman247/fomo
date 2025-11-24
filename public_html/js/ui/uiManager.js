@@ -1,7 +1,46 @@
-const UIManager = {
-    initDatePicker: function(elements, config, state, callbacks) {
+/**
+ * UIManager Module
+ *
+ * Manages UI components and event listeners for the application.
+ * Coordinates date picker, filter panel interactions, and popup content creation.
+ *
+ * Note: Modal and toast functionality has been extracted to ModalManager and ToastNotifier modules.
+ *
+ * @module UIManager
+ */
+const UIManager = (() => {
+    // ========================================
+    // DATE PICKER
+    // ========================================
+
+    /**
+     * Destroys the Flatpickr instance to prevent memory leaks
+     * @param {Object} state - Application state containing datePickerInstance
+     */
+    function destroyDatePicker(state) {
+        if (state.datePickerInstance) {
+            try {
+                state.datePickerInstance.destroy();
+            } catch (error) {
+                console.warn('Failed to destroy Flatpickr instance:', error);
+            }
+            state.datePickerInstance = null;
+        }
+    }
+
+    /**
+     * Initializes the date picker with Flatpickr
+     * @param {Object} elements - DOM element references
+     * @param {Object} config - Application configuration
+     * @param {Object} state - Application state
+     * @param {Object} callbacks - Callback functions
+     */
+    function initDatePicker(elements, config, state, callbacks) {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
+
+        // Destroy existing instance to prevent memory leaks
+        destroyDatePicker(state);
 
         // Check for URL parameters for start and end dates
         const urlParams = state.urlParams || {};
@@ -28,12 +67,12 @@ const UIManager = {
             minDate: config.START_DATE,
             maxDate: config.END_DATE,
             monthSelectorType: "static",
-            onReady: (selectedDates, dateStr, instance) => this.resizeDatePickerInput(instance, elements),
+            onReady: (selectedDates, dateStr, instance) => resizeDatePickerInput(instance, elements),
             onClose: (selectedDates, dateStr, instance) => {
                 if (selectedDates.length === 2) {
                     callbacks.onDatePickerClose(selectedDates);
                 }
-                this.resizeDatePickerInput(instance, elements);
+                resizeDatePickerInput(instance, elements);
             }
         });
 
@@ -41,12 +80,34 @@ const UIManager = {
         if (initialSelectedDates.length === 2) {
             callbacks.onDatePickerClose(initialSelectedDates);
         }
-    },
+    }
 
-    initEventListeners: function(elements, callbacks = {}) {
+    /**
+     * Resizes the date picker input to fit its content
+     * @param {Object} instance - Flatpickr instance
+     * @param {Object} elements - DOM element references
+     */
+    function resizeDatePickerInput(instance, elements) {
+        const input = instance.input;
+        const sizer = elements.datePickerSizer;
+        if (!sizer || !input) return;
+        sizer.textContent = input.value || input.placeholder;
+        input.style.width = `${sizer.offsetWidth + 5}px`;
+    }
+
+    // ========================================
+    // EVENT LISTENERS
+    // ========================================
+
+    /**
+     * Initializes event listeners for UI components
+     * @param {Object} elements - DOM element references
+     * @param {Object} callbacks - Callback functions
+     */
+    function initEventListeners(elements, callbacks = {}) {
         const tagsWrapper = document.getElementById('tags-wrapper');
         if (elements.toggleTagsBtn && tagsWrapper) {
-            if (window.innerWidth <= 768) {
+            if (window.innerWidth <= Constants.UI.MOBILE_BREAKPOINT) {
                 tagsWrapper.classList.add('collapsed');
                 elements.toggleTagsBtn.classList.add('collapsed');
             }
@@ -59,9 +120,13 @@ const UIManager = {
                 elements.toggleTagsBtn.classList.toggle('collapsed', willBeCollapsed);
             });
         }
-    },
+    }
 
-    initLogoMenu: function(callbacks = {}) {
+    /**
+     * Initializes the logo menu with dropdown functionality
+     * @param {Object} callbacks - Callback functions
+     */
+    function initLogoMenu(callbacks = {}) {
         const logoContainer = document.getElementById('logo-container');
         const logoMenu = document.getElementById('logo-menu');
         const settingsBtn = document.getElementById('settings-btn');
@@ -99,7 +164,7 @@ const UIManager = {
             settingsBtn.addEventListener('click', () => {
                 logoMenu.classList.add('logo-menu-hidden');
                 logoContainer.setAttribute('aria-expanded', 'false');
-                this.openSettingsModal();
+                ModalManager.openSettingsModal();
             });
         }
 
@@ -111,30 +176,43 @@ const UIManager = {
                 logoContainer.setAttribute('aria-expanded', 'false');
             });
         }
-    },
+    }
 
-    resizeDatePickerInput: function(instance, elements) {
-        const input = instance.input;
-        const sizer = elements.datePickerSizer;
-        if (!sizer || !input) return;
-        sizer.textContent = input.value || input.placeholder;
-        input.style.width = `${sizer.offsetWidth + 5}px`;
-    },
+    // ========================================
+    // POPUP CONTENT CREATION
+    // ========================================
 
-    createLocationPopupContent: function(locationInfo, eventsAtLocation, activeFilters, geotagsSet, filterFunctions, forceDisplayEventId = null, selectedStartDate = null) {
+    /**
+     * Creates popup content for a location marker
+     * @param {Object} locationInfo - Location information
+     * @param {Array} eventsAtLocation - Events at this location
+     * @param {Object} activeFilters - Active filter states
+     * @param {Set} geotagsSet - Set of geotags
+     * @param {Object} filterFunctions - Filter function callbacks
+     * @param {string|null} forceDisplayEventId - Event ID to force display
+     * @param {Date|null} selectedStartDate - Currently selected start date
+     * @returns {HTMLElement} Popup content container
+     */
+    function createLocationPopupContent(locationInfo, eventsAtLocation, activeFilters, geotagsSet, filterFunctions, forceDisplayEventId = null, selectedStartDate = null) {
         const popupContainer = document.createElement('div');
         popupContainer.className = 'leaflet-popup-content';
 
         if (locationInfo) {
-            popupContainer.appendChild(this.createPopupHeader(locationInfo, geotagsSet));
+            popupContainer.appendChild(createPopupHeader(locationInfo, geotagsSet));
         }
 
-        popupContainer.appendChild(this.createEventsList(eventsAtLocation, activeFilters, locationInfo, filterFunctions, forceDisplayEventId, selectedStartDate));
+        popupContainer.appendChild(createEventsList(eventsAtLocation, activeFilters, locationInfo, filterFunctions, forceDisplayEventId, selectedStartDate));
 
         return popupContainer;
-    },
+    }
 
-    createPopupHeader: function (locationInfo, geotagsSet = new Set()) {
+    /**
+     * Creates the header section of a popup
+     * @param {Object} locationInfo - Location information
+     * @param {Set} geotagsSet - Set of geotags
+     * @returns {HTMLElement} Header wrapper element
+     */
+    function createPopupHeader(locationInfo, geotagsSet = new Set()) {
         const headerWrapper = document.createElement('div');
         headerWrapper.className = 'popup-header';
 
@@ -166,9 +244,19 @@ const UIManager = {
 
         headerWrapper.appendChild(textWrapper);
         return headerWrapper;
-    },
+    }
 
-    createEventsList: function(eventsAtLocation, activeFilters, locationInfo, filterFunctions, forceDisplayEventId = null, selectedStartDate = null) {
+    /**
+     * Creates the events list section of a popup
+     * @param {Array} eventsAtLocation - Events at this location
+     * @param {Object} activeFilters - Active filter states
+     * @param {Object} locationInfo - Location information
+     * @param {Object} filterFunctions - Filter function callbacks
+     * @param {string|null} forceDisplayEventId - Event ID to force display
+     * @param {Date|null} selectedStartDate - Currently selected start date
+     * @returns {HTMLElement} Events list wrapper element
+     */
+    function createEventsList(eventsAtLocation, activeFilters, locationInfo, filterFunctions, forceDisplayEventId = null, selectedStartDate = null) {
         const eventsListWrapper = document.createElement('div');
         eventsListWrapper.className = 'popup-events-list';
 
@@ -275,15 +363,20 @@ const UIManager = {
 
             details.appendChild(summary);
 
-            details.appendChild(this.createEventDetail(event));
+            details.appendChild(createEventDetail(event));
             eventsListWrapper.appendChild(details);
             isFirstEvent = false;
         });
 
         return eventsListWrapper;
-    },
+    }
 
-    createEventDetail: function(event) {
+    /**
+     * Creates the detail section for a single event
+     * @param {Object} event - Event object
+     * @returns {HTMLElement} Event detail container element
+     */
+    function createEventDetail(event) {
         const eventDetailContainer = document.createElement('div');
         eventDetailContainer.className = 'popup-event-detail';
 
@@ -328,174 +421,26 @@ const UIManager = {
         }
 
         return eventDetailContainer;
-    },
-
-    initSettingsModal: function(callbacks = {}) {
-        const modal = document.getElementById('settings-modal');
-        const closeBtn = document.getElementById('settings-close-btn');
-        const emojiFontRadios = document.querySelectorAll('input[name="emoji-font"]');
-        const themeRadios = document.querySelectorAll('input[name="theme"]');
-
-        if (!modal || !closeBtn || emojiFontRadios.length === 0 || themeRadios.length === 0) return;
-
-        // Load current settings
-        const savedEmojiFont = localStorage.getItem('emojiFont') || 'system';
-        const savedTheme = localStorage.getItem('theme') || 'dark';
-
-        // Set the correct radio buttons based on saved settings
-        emojiFontRadios.forEach(radio => {
-            radio.checked = radio.value === savedEmojiFont;
-        });
-        themeRadios.forEach(radio => {
-            radio.checked = radio.value === savedTheme;
-        });
-
-        // Close modal when clicking close button
-        closeBtn.addEventListener('click', () => {
-            this.closeSettingsModal();
-        });
-
-        // Close modal when clicking outside
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                this.closeSettingsModal();
-            }
-        });
-
-        // Handle emoji font change
-        emojiFontRadios.forEach(radio => {
-            radio.addEventListener('change', (e) => {
-                const emojiFont = e.target.value;
-                localStorage.setItem('emojiFont', emojiFont);
-                if (callbacks.onEmojiFontChange) {
-                    callbacks.onEmojiFontChange(emojiFont);
-                }
-            });
-        });
-
-        // Handle theme change
-        themeRadios.forEach(radio => {
-            radio.addEventListener('change', (e) => {
-                const theme = e.target.value;
-                localStorage.setItem('theme', theme);
-                if (callbacks.onThemeChange) {
-                    callbacks.onThemeChange(theme);
-                }
-            });
-        });
-
-        // Close modal on Escape key
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && modal.classList.contains('show')) {
-                this.closeSettingsModal();
-            }
-        });
-    },
-
-    openSettingsModal: function() {
-        const modal = document.getElementById('settings-modal');
-        if (modal) {
-            modal.classList.add('show');
-            // Focus the first input for accessibility
-            const firstInput = modal.querySelector('select');
-            if (firstInput) {
-                setTimeout(() => firstInput.focus(), 100);
-            }
-        }
-    },
-
-    closeSettingsModal: function() {
-        const modal = document.getElementById('settings-modal');
-        if (modal) {
-            modal.classList.remove('show');
-        }
-    },
-
-    initWelcomeModal: function() {
-        const modal = document.getElementById('welcome-modal');
-        const closeBtn = document.getElementById('welcome-close-btn');
-
-        if (!modal || !closeBtn) return;
-
-        // Close modal when clicking close button
-        closeBtn.addEventListener('click', () => {
-            this.closeWelcomeModal();
-        });
-
-        // Close modal when clicking outside
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                this.closeWelcomeModal();
-            }
-        });
-
-        // Close modal on Escape key
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && modal.classList.contains('show')) {
-                this.closeWelcomeModal();
-            }
-        });
-    },
-
-    showWelcomeModalIfFirstVisit: function() {
-        // Check if user has visited before
-        const hasVisitedBefore = localStorage.getItem('hasVisitedBefore');
-
-        if (!hasVisitedBefore) {
-            // Mark that user has now visited
-            localStorage.setItem('hasVisitedBefore', 'true');
-
-            // Show the welcome modal after a short delay to let the page load
-            setTimeout(() => {
-                this.openWelcomeModal();
-            }, 50);
-        }
-    },
-
-    openWelcomeModal: function() {
-        const modal = document.getElementById('welcome-modal');
-        if (modal) {
-            modal.classList.add('show');
-        }
-    },
-
-    closeWelcomeModal: function() {
-        const modal = document.getElementById('welcome-modal');
-        if (modal) {
-            modal.classList.remove('show');
-        }
-    },
-
-    /**
-     * Show a toast notification message
-     * @param {string} message - The message to display
-     * @param {string} type - Type of toast: 'success', 'error', or 'info' (default)
-     * @param {number} duration - Duration in ms (default 3000)
-     */
-    showToast: function(message, type = 'info', duration = 3000) {
-        const toast = document.getElementById('toast-notification');
-        if (!toast) return;
-
-        // Clear any existing timeout
-        if (this._toastTimeout) {
-            clearTimeout(this._toastTimeout);
-        }
-
-        // Set message and type
-        toast.textContent = message;
-        toast.className = 'toast-notification';
-        if (type === 'success' || type === 'error') {
-            toast.classList.add(type);
-        }
-
-        // Show toast
-        setTimeout(() => {
-            toast.classList.add('show');
-        }, 10);
-
-        // Auto-hide after duration
-        this._toastTimeout = setTimeout(() => {
-            toast.classList.remove('show');
-        }, duration);
     }
-};
+
+    // ========================================
+    // EXPORTS
+    // ========================================
+
+    return {
+        // Date picker
+        destroyDatePicker,
+        initDatePicker,
+        resizeDatePickerInput,
+
+        // Event listeners
+        initEventListeners,
+        initLogoMenu,
+
+        // Popup content
+        createLocationPopupContent,
+        createPopupHeader,
+        createEventsList,
+        createEventDetail
+    };
+})();
