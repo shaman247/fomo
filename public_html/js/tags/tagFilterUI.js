@@ -47,12 +47,7 @@ const TagFilterUI = (() => {
         unassignColorFromTag: null,
 
         // Section management (managed by SectionRenderer)
-        sectionOrder: ['locations', 'events', 'tags'],
-        sectionViewStates: {
-            locations: null, // Will be set to SECTION_VIEW_STATE.DEFAULT
-            events: null,
-            tags: null
-        }
+        sectionOrder: ['locations', 'events', 'tags']
     };
 
     /**
@@ -163,14 +158,6 @@ const TagFilterUI = (() => {
             state.searchInputDOM.addEventListener('keydown', handleSearchKeydown);
         }
 
-        // Initialize section view states
-        const SECTION_VIEW_STATE = SectionRenderer.getSectionViewState();
-        state.sectionViewStates = {
-            locations: SECTION_VIEW_STATE.DEFAULT,
-            events: SECTION_VIEW_STATE.DEFAULT,
-            tags: SECTION_VIEW_STATE.DEFAULT
-        };
-
         // Initialize TagStateManager
         TagStateManager.init({
             tagStates: state.tagStates,
@@ -185,7 +172,6 @@ const TagFilterUI = (() => {
         SectionRenderer.init({
             resultsContainerDOM: state.resultsContainerDOM,
             sectionOrder: state.sectionOrder,
-            sectionViewStates: state.sectionViewStates,
             createSearchResultButton: (result) => TagStateManager.createSearchResultButton(result, state.onSearchResultClick),
             onSectionReorder: (newOrder) => {
                 state.sectionOrder = newOrder;
