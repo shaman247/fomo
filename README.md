@@ -13,12 +13,12 @@ It works by visiting the websites of parks, museums, music venues, etc., identif
 <details>
 <summary><strong><code>/public_html/</code></strong> Website files served to users</summary>
 
-- `/public_html/data/` Event and location data files (events.init.json, events.full.json, locations.init.json, locations.full.json)
+- `/public_html/data/` Event and location data files
 - Frontend HTML, CSS, and JavaScript files
 </details>
 
 <details>
-<summary><strong><code>/data_processing/</code></strong> Python scripts for data processing pipeline</summary>
+<summary><strong><code>/pipeline/</code></strong> Python scripts for data processing pipeline</summary>
 
 - `crawl_sites.py` Crawls event websites and saves content to markdown
 - `extract_events.py` Uses Gemini AI to extract structured event data from crawled content
@@ -27,7 +27,7 @@ It works by visiting the websites of parks, museums, music venues, etc., identif
 - `export_events.py` Deduplicates events and exports to public_html/data/ for the website
 - `upload_data.py` Uploads exported data files to server
 - `process_locations.py` Processes location data from raw format
-- `/data_processing/data/` Configuration and reference data
+- `/pipeline/data/` Configuration and reference data
   - `websites.json` List of websites to crawl with crawl settings
   - `locations.json` Processed location data with coordinates and tags
   - `tags.json` Tag rewriting rules and filters
@@ -48,6 +48,7 @@ It works by visiting the websites of parks, museums, music venues, etc., identif
 2. **Extract** (`extract_events.py`) → Crawled markdown → `event_data/extracted/YYYYMMDD/*.md` (structured tables)
 3. **Process** (`process_responses.py`) → Extracted tables → `event_data/processed/YYYYMMDD/*.json` (enriched events)
 4. **Export** (`export_events.py`) → Processed events → `public_html/data/*.json` (website data)
+5. **Upload** (`upload_data.py`) → Upload event and location data to FTP server
 
 ## How You Can Help
 
