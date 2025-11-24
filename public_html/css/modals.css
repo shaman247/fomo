@@ -1,0 +1,273 @@
+/*
+ * ============================================================================
+ * Modal and Dialog Styles
+ * ============================================================================
+ *
+ * Modal dialogs and notifications:
+ * - Settings modal with radio options
+ * - Welcome modal with info and links
+ * - Toast notifications for user feedback
+ *
+ * Features:
+ * - Backdrop blur for depth
+ * - Slide-in animation
+ * - Keyboard accessible
+ *
+ * Mobile behavior: Toast notifications adjust size and position
+ */
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(3px);
+    align-items: center;
+    justify-content: center;
+}
+
+.modal.show {
+    display: flex;
+}
+
+.modal-content {
+    background-color: var(--secondary-bg);
+    border-radius: 8px;
+    box-shadow: var(--popup-shadow);
+    width: 90%;
+    max-width: 450px;
+    max-height: 80vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    animation: modal-slide-in 0.2s ease-out;
+}
+
+@keyframes modal-slide-in {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal-logo {
+    display: block;
+    width: 120px;
+    height: auto;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 20px 0px 20px;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-family: var(--font-family);
+    font-size: 1.5em;
+    font-weight: 500;
+    color: var(--primary-text);
+}
+
+.modal-close-btn {
+    background: none;
+    border: none;
+    font-size: 32px;
+    line-height: 1;
+    color: var(--secondary-text);
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.modal-close-btn:hover {
+    background-color: var(--tertiary-bg);
+    color: var(--popup-close-hover);
+}
+
+.modal-body {
+    padding: 16px;
+    overflow-y: auto;
+}
+
+.setting-group {
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.setting-group:last-child {
+    margin-bottom: 0;
+}
+
+.setting-group-label {
+    font-family: var(--font-family);
+    font-weight: 500;
+    font-size: 0.95em;
+    color: var(--primary-text);
+    flex-shrink: 0;
+    min-width: 90px;
+}
+
+.setting-options {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    flex: 1;
+}
+
+.setting-option {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-family: var(--font-family);
+    font-size: 0.95em;
+    color: var(--primary-text);
+}
+
+.setting-option input[type="radio"] {
+    margin: 0 2px 0 0;
+    cursor: pointer;
+    width: 18px;
+    height: 18px;
+    accent-color: var(--accent-color);
+}
+
+.setting-option input[type="radio"]:focus-visible {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
+}
+
+.setting-option span {
+    flex: 1;
+}
+
+.emoji-preview {
+    display: inline-block;
+    font-size: 1.1em;
+    vertical-align: middle;
+}
+
+.emoji-preview-noto {
+    vertical-align: middle;
+    display: inline-block;
+}
+
+.setting-status {
+    font-size: 0.85em;
+    color: var(--secondary-text);
+    font-style: italic;
+    margin-left: auto;
+    white-space: nowrap;
+}
+
+.setting-status.loading {
+    color: var(--accent-color);
+}
+
+.setting-status.loaded {
+    color: var(--accent-hover);
+}
+
+/* === Welcome Modal Specific Styles === */
+/* Content formatting for the welcome/about modal */
+#welcome-modal .modal-body p {
+    color: var(--primary-text);
+    line-height: 1.6;
+    margin-bottom: 15px;
+}
+
+#welcome-modal .modal-body h3 {
+    color: var(--accent-color);
+    font-family: var(--font-family);
+    font-size: 1.1em;
+    font-weight: 500;
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+#welcome-modal .modal-body ul {
+    padding-left: 20px;
+    margin-bottom: 15px;
+}
+
+#welcome-modal .modal-body li {
+    color: var(--primary-text);
+    line-height: 1.6;
+    margin-bottom: 8px;
+}
+
+#welcome-modal .modal-body a {
+    color: var(--accent-color);
+}
+
+#welcome-modal .modal-body a:hover {
+    color: var(--accent-hover);
+    text-decoration: underline;
+}
+
+/* === Toast Notification System === */
+/* Temporary notifications that slide up from bottom of screen */
+.toast-notification {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--secondary-bg);
+    color: var(--primary-text);
+    padding: 16px 24px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px var(--shadow-dark);
+    z-index: 10000;
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    pointer-events: none;
+    max-width: 90%;
+    text-align: center;
+    font-size: 14px;
+    border: 1px solid var(--border-color);
+}
+
+.toast-notification.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
+}
+
+.toast-notification.success {
+    background: linear-gradient(135deg, #2d5016 0%, #1a3d0f 100%);
+    border-color: var(--accent-color);
+}
+
+.toast-notification.error {
+    background: linear-gradient(135deg, #5c1a1a 0%, #3d0f0f 100%);
+    border-color: #ff6b6b;
+}
+
+/* === Mobile Responsive Styles === */
+/* Adjust toast notification sizing for mobile screens */
+@media (max-width: 768px) {
+    .toast-notification {
+        bottom: 20px;
+        max-width: calc(100% - 40px);
+        font-size: 13px;
+        padding: 14px 20px;
+    }
+}

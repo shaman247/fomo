@@ -1,0 +1,233 @@
+/*
+ * ============================================================================
+ * Popup and Leaflet Popup Styles
+ * ============================================================================
+ *
+ * Location marker popups displayed when clicking map markers:
+ * - Location header with emoji and address
+ * - Event list with collapsible details
+ * - Tags and metadata
+ * - External links
+ *
+ * Mobile behavior: Responsive sizing to fit viewport
+ */
+
+/* === Popup Performance === */
+/* Disable fade-in animation for instant display */
+.leaflet-fade-anim .leaflet-popup {
+    transition: none;
+}
+
+.leaflet-popup-tip {
+    display: none;
+}
+
+.leaflet-popup-content-wrapper {
+    background: color-mix(in srgb, var(--secondary-bg) 90%, transparent);
+    backdrop-filter: blur(7px);
+    color: var(--primary-text);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    min-width: 350px;
+    width: 420px;
+    max-width: 450px;
+    font-family: var(--font-family);
+    will-change: transform;
+    transform: translate3d(0, 0, 0);
+}
+
+.leaflet-popup-content {
+    font-size: 1.1em;
+    font-weight: 400;
+    line-height: 1.1;
+    margin: 0 !important;
+    color: var(--primary-text);
+    max-height: 450px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    width: auto !important;
+}
+
+.leaflet-popup-content p {
+    margin: 3px 0;
+    color: var(--primary-text);
+}
+
+.leaflet-popup-content details p {
+    margin: 2px 4px;
+    font-size: 0.95em;
+}
+
+.leaflet-popup-content details {
+    border-bottom: 0;
+    margin-bottom: 5px;
+    padding-bottom: 0px;
+}
+
+.leaflet-popup-content details:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.leaflet-popup-content summary {
+    font-family: var(--font-family);
+    cursor: pointer;
+    font-weight: 500;
+    padding: 2px 0;
+    color: var(--summary-closed);
+    outline: none;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 1.1em;
+}
+
+.leaflet-popup-content details[open] > summary {
+    color: var(--summary-open);
+}
+
+.leaflet-popup-content details:not([open]) > summary:hover {
+    color: var(--summary-closed-hover);
+    opacity: 1;
+}
+
+.leaflet-popup-content details[open] > summary:hover {
+    color: var(--summary-open-hover);
+    opacity: 1;
+}
+
+.leaflet-popup-content a {
+    color: var(--accent-color);
+    text-decoration: none;
+}
+
+.leaflet-popup-content a:hover {
+    text-decoration: underline;
+    color: var(--accent-hover);
+}
+
+.popup-header {
+    padding: 10px 0 0 0;
+    flex-shrink: 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+
+    font-family: var(--font-family);
+    font-weight: 500;
+    font-size: 1.3em;
+    padding-bottom: 8px;
+}
+
+.popup-header-location {
+    padding-left: 4px;
+}
+
+.popup-header p {
+    margin: 0;
+}
+
+.popup-header .popup-header-address {
+    color: var(--secondary-text);
+}
+
+.popup-header-emoji {
+    padding: 4px;
+    font-size: 2em;
+    line-height: 1;
+}
+
+.popup-header-text p {
+    line-height: 1.1;
+    margin-bottom: 0px;
+}
+
+.popup-header .tag-button {
+    font-size: 0.8rem; /* Use rem to base font size on the root, not the parent */
+    font-weight: 400; /* Reset font-weight as it might be inherited */
+}
+
+.popup-events-list {
+    padding: 8px 12px 12px;
+    overflow-y: auto;
+    flex-grow: 1;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    will-change: scroll-position;
+    transform: translate3d(0, 0, 0);
+}
+
+.popup-events-list details + details {
+    margin-top: 5px;
+    padding-top: 5px;
+    letter-spacing: -0.02em;
+}
+
+.popup-event-emoji {
+    font-size: 1.15em;
+    line-height: 1;
+    margin-right: 4px;
+}
+
+.popup-external-link {
+    display: inline-block;
+    padding: 0 4px;
+}
+
+.popup-external-link svg {
+    width: 1.1em;
+    height: 1.1em;
+    vertical-align: -0.15em;
+}
+
+.popup-external-link:hover {
+    text-decoration: none;
+}
+
+.leaflet-popup-close-button {
+    color: var(--primary-text) !important;
+    padding: 8px 8px 0 0 !important;
+    width: 36px !important;
+    height: 36px !important;
+    padding: 0 !important;
+    top: 0 !important;
+    right: 0 !important;
+    font-size: 24px !important;
+    line-height: 30px !important;
+    text-align: center;
+    border-radius: 0 8px 0 0;
+}
+
+.leaflet-popup-close-button:hover {
+    color: var(--popup-close-hover) !important;
+}
+
+.popup-event-datetime, .popup-event-location, .popup-event-sublocation {
+    color: var(--secondary-text) !important;
+    font-size: 0.9em !important;
+    font-style: italic !important;
+    margin-bottom: 4px !important;
+    margin-top: 1px !important;
+}
+
+/* === Mobile Responsive Styles === */
+/* Adjust popup sizing for smaller screens */
+@media (max-width: 768px) {
+    .leaflet-popup-content-wrapper {
+        /* On smaller screens, allow the popup to be narrower. */
+        min-width: 300px;
+        /* Ensure the popup doesn't exceed the viewport width. */
+        max-width: 90vw;
+    }
+
+    .leaflet-popup-content {
+        max-height: 450px;
+    }
+
+    .popup-events-list {
+        padding: 0px 12px 12px;
+    }
+}
