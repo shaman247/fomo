@@ -169,8 +169,14 @@ def _create_short_name(name):
 
     return short_name
 
-def _process_tags(row_dict, tag_rules):
-    """Processes the 'hashtags' string into a list of 'tags'."""
+def _process_tags(row_dict, tag_rules, extra_tags=None):
+    """Processes the 'hashtags' string into a list of 'tags'.
+
+    Args:
+        row_dict: Dictionary containing event data
+        tag_rules: Tag processing rules (rewrite, exclude)
+        extra_tags: Optional list of tags to add first (takes precedence in deduplication)
+    """
     if 'hashtags' in row_dict:
         hashtag_string = row_dict.pop('hashtags')  # Remove old 'hashtags' field
         rewrite_rules = tag_rules.get('rewrite', {})
@@ -178,9 +184,17 @@ def _process_tags(row_dict, tag_rules):
 
         # Split by '#' and filter out empty strings
         raw_tags = [tag.strip().rstrip(',') for tag in hashtag_string.split('#') if tag.strip()]
-        
+
         processed_tags = []
         seen_tags = set()
+
+        # Add extra_tags first (if provided) so they take precedence in deduplication
+        if extra_tags:
+            for tag in extra_tags:
+                tag_normalized = tag.lower().replace(" ", "")
+                if tag_normalized not in exclude_list and tag_normalized not in seen_tags:
+                    processed_tags.append(tag)
+                    seen_tags.add(tag_normalized)
         for tag in raw_tags:
             # Add spaces before capital letters in camelCase tags, then strip
             # This regex handles acronyms like 'NYC' and numbers like '10K' correctly.
@@ -440,8 +454,19 @@ def _normalize_location_name(name):
     return " ".join(normalized.split())
 
 def _build_locations_map():
-    """Loads location data and builds a map for lat/lng enrichment."""
-    locations_map = {}
+    """Loads location data and builds tiered maps for lat/lng enrichment.
+
+    Returns a dict with three priority tiers:
+    - 'names': Primary location names (highest priority)
+    - 'alternate_names': Alternate names for locations
+    - 'short_names': Short names for locations (lowest priority before fallback)
+    """
+    locations_map = {
+        'names': {},
+        'alternate_names': {},
+        'short_names': {}
+    }
+
     with open(os.path.join(SCRIPT_DIR, 'data', 'locations.json'), 'r', encoding='utf-8') as f:
         locations_data = json.load(f)
         for loc in locations_data:
@@ -451,22 +476,74 @@ def _build_locations_map():
                 'emoji': loc.get('emoji')
             }
 
-            def add_to_map_if_valid(key, value):
-                """Adds key-value to map if key is at least 5 chars long."""
-                if key and len(key) >= 5:
-                    locations_map[key] = value
+            def add_to_tier_if_valid(tier, key, value):
+                """Adds key-value to the specified tier if key is at least 3 chars long."""
+                if key and len(key) >= 3:
+                    tier[key] = value
 
-            # Process main name and its normalized version
+            # Process main name and its normalized version (priority 1)
             main_name = loc.get('name', '')
-            add_to_map_if_valid(main_name.lower(), location_info)
-            add_to_map_if_valid(_normalize_location_name(main_name), location_info)
+            add_to_tier_if_valid(locations_map['names'], main_name.lower(), location_info)
+            add_to_tier_if_valid(locations_map['names'], _normalize_location_name(main_name), location_info)
 
-            # Process alternate names and their normalized versions
+            # Process alternate names and their normalized versions (priority 2)
             for alt_name in loc.get('alternate_names', []):
-                add_to_map_if_valid(alt_name.lower(), location_info)
-                add_to_map_if_valid(_normalize_location_name(alt_name), location_info)
+                add_to_tier_if_valid(locations_map['alternate_names'], alt_name.lower(), location_info)
+                add_to_tier_if_valid(locations_map['alternate_names'], _normalize_location_name(alt_name), location_info)
+
+            # Process short name and its normalized version (priority 3)
+            short_name = loc.get('short_name', '')
+            if short_name:
+                add_to_tier_if_valid(locations_map['short_names'], short_name.lower(), location_info)
+                add_to_tier_if_valid(locations_map['short_names'], _normalize_location_name(short_name), location_info)
 
     return locations_map
+
+def _build_websites_map():
+    """Loads website data and builds a map for URL-to-extra_tags mapping."""
+    websites_map = {}
+    with open(os.path.join(SCRIPT_DIR, 'data', 'websites.json'), 'r', encoding='utf-8') as f:
+        websites_data = json.load(f)
+        for website in websites_data:
+            extra_tags = website.get('extra_tags', [])
+            if extra_tags:
+                for url in website.get('urls', []):
+                    # Normalize URL by removing trailing slashes and converting to lowercase
+                    normalized_url = url.rstrip('/').lower()
+                    websites_map[normalized_url] = extra_tags
+    return websites_map
+
+def _get_source_url_from_crawled_file(source_filename):
+    """
+    Reads the source URL from the first line of the corresponding crawled file.
+
+    Args:
+        source_filename: Filename in format 'YYYYMMDD_sitename.md'
+
+    Returns:
+        The source URL as a string, or None if not found.
+    """
+    # Extract date and site name from source_filename
+    match = re.match(r'(\d{8})_(.+)\.md', source_filename)
+    if not match:
+        return None
+
+    date_str = match.group(1)
+    site_name = match.group(2)
+
+    # Construct path to crawled file
+    crawled_file_path = os.path.join(SCRIPT_DIR, '..', 'event_data', 'crawled', date_str, f"{site_name}.md")
+
+    # Read first line if file exists
+    if os.path.exists(crawled_file_path):
+        try:
+            with open(crawled_file_path, 'r', encoding='utf-8') as f:
+                first_line = f.readline().strip()
+                return first_line
+        except Exception:
+            pass
+
+    return None
 
 def _calculate_levenshtein_ratio(s1, s2):
     """Calculates the Levenshtein distance ratio between two strings."""
@@ -498,8 +575,12 @@ def _get_location_coords(location_name_raw, sublocation_name_raw, source_site_na
     """
     Finds the best matching latitude and longitude for an event.
 
-    It prioritizes the longest, most specific match from the event's location/sublocation,
-    then checks the event name itself, and falls back to matching against the source site name.
+    Priority order:
+    1. Match the name of a location (exact match in 'names' tier)
+    2. Match an alternate name of a location (exact match in 'alternate_names' tier)
+    3. Match a short name of a location (exact match in 'short_names' tier)
+    4. Fuzzy matching across all tiers (prefix/suffix/Levenshtein)
+    5. Match the name of the source site (fallback)
 
     Returns:
         A dictionary containing location info (lat, lng, emoji) or None if no match is found.
@@ -509,89 +590,114 @@ def _get_location_coords(location_name_raw, sublocation_name_raw, source_site_na
     normalized_event_name = _normalize_location_name(event_name_raw)
     full_normalized_event_loc = f"{normalized_event_location} {normalized_event_sublocation}".strip()
 
-    if len(full_normalized_event_loc) > 5:
-        # Prioritize an exact match first.
-        if full_normalized_event_loc in locations_map:
-            return locations_map.get(full_normalized_event_loc)
-        if normalized_event_location in locations_map:
-            return locations_map.get(normalized_event_location)
+    # Build list of search keys to try
+    search_keys = []
+    if len(full_normalized_event_loc) > 3:
+        search_keys.append(full_normalized_event_loc)
+    if len(normalized_event_location) > 3:
+        search_keys.append(normalized_event_location)
+    if len(normalized_event_name) > 3:
+        search_keys.append(normalized_event_name)
 
-    # Check if the event name itself matches a location
-    if len(normalized_event_name) > 5 and normalized_event_name in locations_map:
-        return locations_map.get(normalized_event_name)
+    # Priority 1: Exact match in 'names' tier (primary location names)
+    names_map = locations_map.get('names', {})
+    for search_key in search_keys:
+        if search_key in names_map:
+            return names_map.get(search_key)
 
-    # If no exact match, find the best partial match
-    best_match_key = None
+    # Priority 2: Exact match in 'alternate_names' tier
+    alternate_names_map = locations_map.get('alternate_names', {})
+    for search_key in search_keys:
+        if search_key in alternate_names_map:
+            return alternate_names_map.get(search_key)
+
+    # Priority 3: Exact match in 'short_names' tier
+    short_names_map = locations_map.get('short_names', {})
+    for search_key in search_keys:
+        if search_key in short_names_map:
+            return short_names_map.get(search_key)
+
+    # Priority 4: Fuzzy matching across all tiers (prefix/suffix/Levenshtein)
+    # Combine all tiers for fuzzy matching, but process in priority order
+    all_tiers = [
+        ('names', names_map),
+        ('alternate_names', alternate_names_map),
+        ('short_names', short_names_map)
+    ]
+
+    best_match_result = None
+    best_score = -1
+    best_tier_priority = 999  # Lower is better
+
+    if len(full_normalized_event_loc) > 3 or len(normalized_event_name) > 3:
+        for tier_priority, (_, tier_map) in enumerate(all_tiers):
+            for key in tier_map:
+                if not key.strip():
+                    continue
+
+                # Matching conditions
+                is_exact_match = (key == normalized_event_location)
+                is_exact_name_match = (len(normalized_event_name) > 3 and key == normalized_event_name)
+                is_key_a_prefix = (len(key) > 3 and full_normalized_event_loc.startswith(key))
+                is_key_a_suffix = (len(key) > 3 and full_normalized_event_loc.endswith(key))
+                is_key_in_event_loc = (len(key) > 3 and key in full_normalized_event_loc)
+                is_event_loc_in_key = (len(normalized_event_location) > 3 and normalized_event_location and normalized_event_location in key)
+                is_event_subloc_in_key = (len(normalized_event_sublocation) > 3 and normalized_event_sublocation and normalized_event_sublocation in key)
+
+                # Pre-filter to find potential matches before running expensive calculations
+                if is_exact_match or is_exact_name_match or is_key_a_prefix or is_key_a_suffix or is_key_in_event_loc or is_event_loc_in_key or is_event_subloc_in_key:
+                    # Exact name match gets highest priority (perfect score)
+                    if is_exact_name_match:
+                        score = 1.0
+                    # If the canonical name is a prefix or suffix of the event location, it's a very strong signal.
+                    elif is_key_a_prefix or is_key_a_suffix:
+                        score = 0.9 + (len(key) / len(full_normalized_event_loc)) * 0.09
+                    else:
+                        # Calculate score based on Levenshtein distance ratio
+                        score = max(_calculate_levenshtein_ratio(normalized_event_location, key),
+                                    _calculate_levenshtein_ratio(full_normalized_event_loc, key),
+                                    _calculate_levenshtein_ratio(normalized_event_name, key) if len(normalized_event_name) > 3 else 0)
+
+                    # Match if score is above threshold
+                    # Prefer higher tier priority (lower number) for equal scores
+                    if score >= 0.85:
+                        if score > best_score or (score == best_score and tier_priority < best_tier_priority):
+                            best_score = score
+                            best_tier_priority = tier_priority
+                            best_match_result = tier_map.get(key)
+
+    if best_match_result:
+        return best_match_result
+
+    # Priority 5: Fall back to checking the source site name
+    normalized_source_site = _normalize_location_name(source_site_name)
     best_score = -1
 
-    potential_matches = []
-
-    if len(full_normalized_event_loc) > 5 or len(normalized_event_name) > 5:
-        # Find the best match from the event's location/sublocation strings.
-        for key in locations_map:
-            if not key.strip():
-                continue
-
-            # Matching conditions
-            is_exact_match = (key == normalized_event_location) # full_normalized_event_loc already checked
-            is_exact_name_match = (len(normalized_event_name) > 5 and key == normalized_event_name)
-            is_key_a_prefix = (len(key) > 5 and full_normalized_event_loc.startswith(key))
-            is_key_a_suffix = (len(key) > 5 and full_normalized_event_loc.endswith(key))
-            is_key_in_event_loc = (len(key) > 5 and key in full_normalized_event_loc)
-            is_event_loc_in_key = (len(normalized_event_location) > 5 and normalized_event_location and normalized_event_location in key)
-            is_event_subloc_in_key = (len(normalized_event_sublocation) > 5 and normalized_event_sublocation and normalized_event_sublocation in key)
-
-            # Pre-filter to find potential matches before running expensive calculations
-            if is_exact_match or is_exact_name_match or is_key_a_prefix or is_key_a_suffix or is_key_in_event_loc or is_event_loc_in_key or is_event_subloc_in_key:
-                potential_matches.append(key)
-
-                # Exact name match gets highest priority (perfect score)
-                if is_exact_name_match:
-                    score = 1.0
-                # If the canonical name is a prefix or suffix of the event location, it's a very strong signal.
-                # Give it a high score to prioritize it, but slightly less than a perfect match.
-                elif is_key_a_prefix or is_key_a_suffix:
-                    # Score based on the length of the prefix/suffix to favor the longest, most specific match.
-                    # We normalize it by the length of the event string and scale it to be high (e.g., in the 0.9-0.99 range)
-                    # This ensures it's always higher than a Levenshtein score but still allows for ranking among prefixes/suffixes.
-                    score = 0.9 + (len(key) / len(full_normalized_event_loc)) * 0.09
-                else:
-                    # Otherwise, calculate score based on Levenshtein distance ratio
-                    score = max(_calculate_levenshtein_ratio(normalized_event_location, key),
-                                _calculate_levenshtein_ratio(full_normalized_event_loc, key),
-                                _calculate_levenshtein_ratio(normalized_event_name, key) if len(normalized_event_name) > 5 else 0)
-
-                # Match if score is above threshold and better than the current best
-                if score >= 0.85 and score > best_score: # Using a higher threshold for Levenshtein
-                    best_score = score
-                    best_match_key = key
-
-    # If no match, fall back to checking the source site name.
-    if not best_match_key:
-        normalized_source_site = _normalize_location_name(source_site_name)
-        for key in locations_map:
+    for tier_priority, (_, tier_map) in enumerate(all_tiers):
+        for key in tier_map:
             score = _calculate_levenshtein_ratio(normalized_source_site, _normalize_location_name(key))
-            if score >= 0.85 and score > best_score:
-                #print(f"  - Matched location via fallback to source: '{normalized_source_site}' ({key}) for event at '{full_normalized_event_loc}'")
-                best_score = score
-                best_match_key = key
+            if score >= 0.85:
+                if score > best_score or (score == best_score and tier_priority < best_tier_priority):
+                    best_score = score
+                    best_tier_priority = tier_priority
+                    best_match_result = tier_map.get(key)
 
-    if best_match_key:
-        #if len(potential_matches) > 1 and best_score < 1.0: # Don't log for perfect-scoring but non-exact matches
-        #    print(f"  - Multiple location matches for '{full_normalized_event_loc}': {potential_matches}. Selected best match: '{best_match_key}'")
-        return locations_map.get(best_match_key)
+    if best_match_result:
+        return best_match_result
 
-    # If still no match, log it and return None.
-    unmapped_location_str = f"'{location_name_raw}'"
-    if sublocation_name_raw:
-        unmapped_location_str += f" / '{sublocation_name_raw}'"
-    #print(f"  - Could not map location: {unmapped_location_str} (for site '{source_site_name}')")
+    # If still no match, return None.
     return None
 
-def process_response(gemini_response_text, source_filename, locations_map):
+def process_response(gemini_response_text, source_filename, locations_map, websites_map):
     """
     Processes the text response from Gemini, parses the Markdown table,
     enriches it with location data, and saves it as a JSON file.
+
+    Args:
+        gemini_response_text: The markdown table text from Gemini
+        source_filename: Filename in format 'YYYYMMDD_sitename.md'
+        locations_map: Map of location names to coordinates
+        websites_map: Map of URLs to extra_tags
     """
 
     if not gemini_response_text or not gemini_response_text.strip():
@@ -680,7 +786,16 @@ def process_response(gemini_response_text, source_filename, locations_map):
         if not _filter_by_date(row_dict, current_date, future_limit_date):
             continue
 
-        processed_row = _process_tags(row_dict, tag_rules)
+        # Get extra_tags from website configuration before processing hashtags
+        # This allows extra_tags to take precedence in deduplication
+        source_url = _get_source_url_from_crawled_file(source_filename)
+        extra_tags_list = []
+        if source_url and websites_map:
+            # Normalize the source URL for matching
+            normalized_source_url = source_url.rstrip('/').lower()
+            extra_tags_list = websites_map.get(normalized_source_url, [])
+
+        processed_row = _process_tags(row_dict, tag_rules, extra_tags=extra_tags_list)
 
         # Check for online/virtual events and add tag if necessary
         location_name_raw_check = processed_row.get('location', '').lower()
@@ -759,10 +874,19 @@ def main():
     # Load location data once. Exit if it fails.
     try:
         locations_map = _build_locations_map()
-        print(f"Successfully loaded {len(locations_map)} location entries.")
+        total_entries = sum(len(tier) for tier in locations_map.values())
+        print(f"Successfully loaded {total_entries} location entries ({len(locations_map['names'])} names, {len(locations_map['alternate_names'])} alternate, {len(locations_map['short_names'])} short).")
     except (FileNotFoundError, json.JSONDecodeError) as e:
         print(f"Error: Could not load or parse 'locations.json'. Exiting. Error: {e}")
         return
+
+    # Load website data for extra_tags mapping
+    try:
+        websites_map = _build_websites_map()
+        print(f"Successfully loaded {len(websites_map)} website entries with extra_tags.")
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        print(f"Warning: Could not load or parse 'websites.json'. Continuing without extra_tags. Error: {e}")
+        websites_map = {}
 
     # Iterate through dated subdirectories
     for date_subdir in os.listdir(extracted_dir):
@@ -785,7 +909,7 @@ def main():
                 print(f"--- Processing {source_filename_with_date} ---")
                 with open(file_path, 'r', encoding='utf-8') as f:
                     content = f.read()
-                process_response(content, source_filename_with_date, locations_map)
+                process_response(content, source_filename_with_date, locations_map, websites_map)
 
 if __name__ == "__main__":
     main()
