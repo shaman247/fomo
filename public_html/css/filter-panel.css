@@ -177,6 +177,22 @@
     padding: 0px 0;
 }
 
+/* Implicit/related tags in selected tags display */
+#selected-tags-display .state-implicit {
+    opacity: 0.7;
+}
+
+#selected-tags-display .state-implicit:hover {
+    opacity: 1;
+}
+
+/* Add/remove related tags buttons */
+#selected-tags-display .add-related-tags-button,
+#selected-tags-display .remove-related-tags-button {
+    min-width: 28px;
+    padding: 2px 8px;
+}
+
 #date-filter-container {
     display: flex;
     justify-content: flex-start;

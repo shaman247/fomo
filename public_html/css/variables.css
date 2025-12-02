@@ -27,6 +27,8 @@
     /* Accent colors - for interactive elements and highlights */
     --accent-color: #74b3a5;      /* Primary accent (teal green) */
     --accent-hover: #bcf4e8;      /* Hover state for accent elements */
+    --secondary-accent-color: #e693e2;  /* Secondary accent (pink) */
+    --secondary-accent-hover: #ffaaf5;  /* Hover state for secondary accent */
 
     /* Borders and dividers */
     --border-color: #444;
@@ -95,6 +97,8 @@
     /* Adjusted accent colors for light background */
     --accent-color: #70a892;         /* Darker teal green */
     --accent-hover: #47ad8b;         /* Even darker on hover */
+    --secondary-accent-color: #d76fd1;  /* Darker pink */
+    --secondary-accent-hover: #ca57d7;  /* Even darker on hover */
 
     /* Borders are lighter in light theme */
     --border-color: #c0bfba;
