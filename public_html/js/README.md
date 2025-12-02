@@ -29,11 +29,13 @@ js/
 - **viewportManager.js** - Calculate visible center accounting for filter panel overlay
 
 ### Tags/Search (`tags/`)
-- **tagFilterUI.js** - Orchestrates tag filtering UI (main coordinator)
+- **filterPanelUI.js** - Orchestrates filter panel UI (locations, events, tags)
 - **tagStateManager.js** - Manage tag filter states (selected/required/forbidden)
 - **tagColorManager.js** - Assign colors to selected tags from theme palette
+- **selectedTagsDisplay.js** - Selected tags display with related tags toggle
 - **searchManager.js** - Search locations/events/tags with proximity scoring
 - **sectionRenderer.js** - Render collapsible search result sections
+- **relatedTagsManager.js** - Related tag relationships and weights
 - **gestureHandler.js** - Swipe gestures for section reordering
 
 ### UI (`ui/`)
