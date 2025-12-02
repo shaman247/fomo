@@ -753,14 +753,8 @@
     "urls": [
       "https://www.nybg.org/whats-on/"
     ],
-    "keywords": "/event/"
-  },
-  {
-    "name": "NYBG month view",
-    "urls": [
-      "https://www.nybg.org/whats-on/month-view/"
-    ],
-    "keywords": "/event/"
+    "keywords": "/event/",
+    "max_pages": 50
   },
   {
     "name": "Time Out Market New York",
@@ -2788,42 +2782,70 @@
     "name": "Manhattan Community Board 1",
     "urls": [
       "https://www.nyc.gov/site/manhattancb1/meetings/committee-agendas.page"
+    ],
+    "extra_tags": [
+      "Manhattan CB1",
+      "Community Board"
     ]
   },
   {
     "name": "Manhattan Community Board 2",
     "urls": [
       "https://cbmanhattan.cityofnewyork.us/cb2/calendar/"
+    ],
+    "extra_tags": [
+      "Manhattan CB2",
+      "Community Board"
     ]
   },
   {
     "name": "Manhattan Community Board 3",
     "urls": [
       "https://www.nyc.gov/site/manhattancb3/calendar/calendar.page"
+    ],
+    "extra_tags": [
+      "Manhattan CB3",
+      "Community Board"
     ]
   },
   {
     "name": "Manhattan Community Board 4",
     "urls": [
       "https://cbmanhattan.cityofnewyork.us/cb4/events/"
+    ],
+    "extra_tags": [
+      "Manhattan CB4",
+      "Community Board"
     ]
   },
   {
     "name": "Manhattan Community Board 5",
     "urls": [
       "https://cb5.org/events/"
+    ],
+    "extra_tags": [
+      "Manhattan CB5",
+      "Community Board"
     ]
   },
   {
     "name": "Manhattan Community Board 6",
     "urls": [
       "https://cbsix.org/meetings-calendar/"
+    ],
+    "extra_tags": [
+      "Manhattan CB6",
+      "Community Board"
     ]
   },
   {
     "name": "Manhattan Community Board 7",
     "urls": [
       "https://www.mcb7.org/"
+    ],
+    "extra_tags": [
+      "Manhattan CB7",
+      "Community Board"
     ]
   },
   {
@@ -2831,30 +2853,50 @@
     "urls": [
       "https://www.cb8m.com/",
       "https://www.cb8m.com/calendar/"
+    ],
+    "extra_tags": [
+      "Manhattan CB8",
+      "Community Board"
     ]
   },
   {
     "name": "Manhattan Community Board 9",
     "urls": [
       "https://www.cb9m.org/cal_events"
+    ],
+    "extra_tags": [
+      "Manhattan CB9",
+      "Community Board"
     ]
   },
   {
     "name": "Manhattan Community Board 10",
     "urls": [
       "https://cbmanhattan.cityofnewyork.us/cb10/events/"
+    ],
+    "extra_tags": [
+      "Manhattan CB10",
+      "Community Board"
     ]
   },
   {
     "name": "Manhattan Community Board 11",
     "urls": [
       "https://airtable.com/appedcOCWGdk7kppK/shrqydjSZPVrdEQ0o/tblNt0o4xr7gTHHoY"
+    ],
+    "extra_tags": [
+      "Manhattan CB11",
+      "Community Board"
     ]
   },
   {
     "name": "Manhattan Community Board 12",
     "urls": [
       "https://cbmanhattan.cityofnewyork.us/cb12/meetings/calendar-and-agendas/"
+    ],
+    "extra_tags": [
+      "Manhattan CB12",
+      "Community Board"
     ]
   },
   {
@@ -2873,108 +2915,182 @@
     "name": "Brooklyn Community Board 1",
     "urls": [
       "https://www.nyc.gov/site/brooklyncb1/calendar/calendar.page"
+    ],
+    "extra_tags": [
+      "Brooklyn CB1",
+      "Community Board"
     ]
   },
   {
     "name": "Brooklyn Community Board 2",
     "urls": [
       "https://cbbrooklyn.cityofnewyork.us/cb2/calendar/"
+    ],
+    "extra_tags": [
+      "Brooklyn CB2",
+      "Community Board"
     ]
   },
   {
     "name": "Brooklyn Community Board 3",
     "urls": [
       "https://www.nyc.gov/site/brooklyncb3/calendar/calendar.page"
+    ],
+    "extra_tags": [
+      "Brooklyn CB3",
+      "Community Board"
     ]
   },
   {
     "name": "Brooklyn Community Board 4",
     "urls": [
       "https://www.nyc.gov/site/brooklyncb4/calendar/calendar.page"
+    ],
+    "extra_tags": [
+      "Brooklyn CB4",
+      "Community Board"
     ]
   },
   {
     "name": "Brooklyn Community Board 5",
     "urls": [
       "https://www.brooklyncb5.org/meetings/calendar/"
+    ],
+    "extra_tags": [
+      "Brooklyn CB5",
+      "Community Board"
     ]
   },
   {
     "name": "Brooklyn Community Board 6",
     "urls": [
-      "https://brooklyncb6.cityofnewyork.us/calendar/"
+      "https://brooklyncb6.cityofnewyork.us/events/",
+      "https://brooklyncb6.cityofnewyork.us/events/list/page/2/"
+    ],
+    "keywords": "/event/",
+    "extra_tags": [
+      "Brooklyn CB6",
+      "Community Board"
     ]
   },
   {
     "name": "Brooklyn Community Board 7",
     "urls": [
       "https://www.nyc.gov/site/brooklyncb7/calendar/calendar.page"
+    ],
+    "extra_tags": [
+      "Brooklyn CB7",
+      "Community Board"
     ]
   },
   {
     "name": "Brooklyn Community Board 8",
     "urls": [
       "https://www.brooklyncb8.org/meetings/"
+    ],
+    "extra_tags": [
+      "Brooklyn CB8",
+      "Community Board"
     ]
   },
   {
     "name": "Brooklyn Community Board 9",
     "urls": [
       "https://www.nyc.gov/site/brooklyncb9/calendar/calendar.page"
+    ],
+    "extra_tags": [
+      "Brooklyn CB9",
+      "Community Board"
     ]
   },
   {
     "name": "Brooklyn Community Board 10",
     "urls": [
       "https://cbbrooklyn.cityofnewyork.us/cb10/calendar/"
+    ],
+    "extra_tags": [
+      "Brooklyn CB10",
+      "Community Board"
     ]
   },
   {
     "name": "Brooklyn Community Board 11",
     "urls": [
       "https://www.brooklyncb11.org/calendar/"
+    ],
+    "extra_tags": [
+      "Brooklyn CB11",
+      "Community Board"
     ]
   },
   {
     "name": "Brooklyn Community Board 12",
     "urls": [
       "https://www.nyc.gov/site/brooklyncb12/calendar/calendar.page"
+    ],
+    "extra_tags": [
+      "Brooklyn CB12",
+      "Community Board"
     ]
   },
   {
     "name": "Brooklyn Community Board 13",
     "urls": [
       "https://www.nyc.gov/site/brooklyncb13/newsletters/newsletters.page"
+    ],
+    "extra_tags": [
+      "Brooklyn CB13",
+      "Community Board"
     ]
   },
   {
     "name": "Brooklyn Community Board 14",
     "urls": [
       "https://cb14brooklyn.com/meetings/"
+    ],
+    "extra_tags": [
+      "Brooklyn CB14",
+      "Community Board"
     ]
   },
   {
     "name": "Brooklyn Community Board 15",
     "urls": [
       "https://www.nyc.gov/site/brooklyncb15/calendar/calendar.page"
+    ],
+    "extra_tags": [
+      "Brooklyn CB15",
+      "Community Board"
     ]
   },
   {
     "name": "Brooklyn Community Board 16",
     "urls": [
       "https://www.nyc.gov/site/brooklyncb16/about/calendar.page"
+    ],
+    "extra_tags": [
+      "Brooklyn CB16",
+      "Community Board"
     ]
   },
   {
     "name": "Brooklyn Community Board 17",
     "urls": [
       "https://cbbrooklyn.cityofnewyork.us/cb17/calendar/"
+    ],
+    "extra_tags": [
+      "Brooklyn CB17",
+      "Community Board"
     ]
   },
   {
     "name": "Brooklyn Community Board 18",
     "urls": [
       "https://www.nyc.gov/site/brooklyncb18/meetings/calendar.page"
+    ],
+    "extra_tags": [
+      "Brooklyn CB18",
+      "Community Board"
     ]
   },
   {
@@ -2987,174 +3103,290 @@
     "name": "Queens Community Board 1",
     "urls": [
       "https://www.nyc.gov/site/queenscb1/calendar/calendar.page"
+    ],
+    "extra_tags": [
+      "Queens CB1",
+      "Community Board"
     ]
   },
   {
     "name": "Queens Community Board 2",
     "urls": [
       "https://www.nyc.gov/site/queenscb2/calendar/calendar.page"
+    ],
+    "extra_tags": [
+      "Queens CB2",
+      "Community Board"
     ]
   },
   {
     "name": "Queens Community Board 3",
     "urls": [
       "https://queenscb3.cityofnewyork.us/"
+    ],
+    "extra_tags": [
+      "Queens CB3",
+      "Community Board"
     ]
   },
   {
     "name": "Queens Community Board 4",
     "urls": [
       "https://www.nyc.gov/site/queenscb4/meetings/meetings.page"
+    ],
+    "extra_tags": [
+      "Queens CB4",
+      "Community Board"
     ]
   },
   {
     "name": "Queens Community Board 5",
     "urls": [
       "https://www.nyc.gov/site/queenscb5/calendar/calendar.page"
+    ],
+    "extra_tags": [
+      "Queens CB5",
+      "Community Board"
     ]
   },
   {
     "name": "Queens Community Board 6",
     "urls": [
       "https://www.nyc.gov/site/queenscb6/calendar/calendar.page"
+    ],
+    "extra_tags": [
+      "Queens CB6",
+      "Community Board"
     ]
   },
   {
     "name": "Queens Community Board 7",
     "urls": [
       "https://www.nyc.gov/site/queenscb7/meetings/meetings.page"
+    ],
+    "extra_tags": [
+      "Queens CB7",
+      "Community Board"
     ]
   },
   {
     "name": "Queens Community Board 8",
     "urls": [
       "https://www.nyc.gov/site/queenscb8/calendar/calendar.page"
+    ],
+    "extra_tags": [
+      "Queens CB8",
+      "Community Board"
     ]
   },
   {
     "name": "Queens Community Board 9",
     "urls": [
       "https://www.nyc.gov/site/queenscb9/calendar/calendar.page"
+    ],
+    "extra_tags": [
+      "Queens CB9",
+      "Community Board"
     ]
   },
   {
     "name": "Queens Community Board 10",
     "urls": [
       "https://www.nyc.gov/html/qnscb10/html/meeting/meeting-calendar.shtml"
+    ],
+    "extra_tags": [
+      "Queens CB10",
+      "Community Board"
     ]
   },
   {
     "name": "Queens Community Board 11",
     "urls": [
       "https://www.nyc.gov/site/queenscb11/meetings/meetings.page"
+    ],
+    "extra_tags": [
+      "Queens CB11",
+      "Community Board"
     ]
   },
   {
     "name": "Queens Community Board 12",
     "urls": [
       "https://www.nyc.gov/site/queenscb12/calendar/calendar.page"
+    ],
+    "extra_tags": [
+      "Queens CB12",
+      "Community Board"
     ]
   },
   {
     "name": "Queens Community Board 13",
     "urls": [
       "https://www.nyc.gov/site/queenscb13/calendar/calendar.page"
+    ],
+    "extra_tags": [
+      "Queens CB13",
+      "Community Board"
     ]
   },
   {
     "name": "Queens Community Board 14",
     "urls": [
       "https://www.nyc.gov/site/queenscb14/calendar/calendar.page"
+    ],
+    "extra_tags": [
+      "Queens CB14",
+      "Community Board"
     ]
   },
   {
     "name": "Bronx Community Board 1",
     "urls": [
       "https://www.nyc.gov/site/bronxcb1/index.page"
+    ],
+    "extra_tags": [
+      "Bronx CB1",
+      "Community Board"
     ]
   },
   {
     "name": "Bronx Community Board 2",
     "urls": [
       "https://www.nyc.gov/site/bronxcb2/calendar/calendar.page"
+    ],
+    "extra_tags": [
+      "Bronx CB2",
+      "Community Board"
     ]
   },
   {
     "name": "Bronx Community Board 3",
     "urls": [
       "https://www.nyc.gov/site/bronxcb3/calendar/calendar.page"
+    ],
+    "extra_tags": [
+      "Bronx CB3",
+      "Community Board"
     ]
   },
   {
     "name": "Bronx Community Board 4",
     "urls": [
       "https://cbbronx.cityofnewyork.us/cb8/calendar/"
+    ],
+    "extra_tags": [
+      "Bronx CB4",
+      "Community Board"
     ]
   },
   {
     "name": "Bronx Community Board 5",
     "urls": [
       "https://www.nyc.gov/site/bronxcb5/calendar/calendar.page"
+    ],
+    "extra_tags": [
+      "Bronx CB5",
+      "Community Board"
     ]
   },
   {
     "name": "Bronx Community Board 6",
     "urls": [
       "https://cbbronx.cityofnewyork.us/cb6/calendar/"
+    ],
+    "extra_tags": [
+      "Bronx CB6",
+      "Community Board"
     ]
   },
   {
     "name": "Bronx Community Board 7",
     "urls": [
       "https://www.nyc.gov/site/bronxcb7/calendar/calendar.page"
+    ],
+    "extra_tags": [
+      "Bronx CB7",
+      "Community Board"
     ]
   },
   {
     "name": "Bronx Community Board 8",
     "urls": [
       "https://cbbronx.cityofnewyork.us/cb8/calendar/"
+    ],
+    "extra_tags": [
+      "Bronx CB8",
+      "Community Board"
     ]
   },
   {
     "name": "Bronx Community Board 9",
     "urls": [
       "https://www.nyc.gov/site/bronxcb9/calendar/calendar.page"
+    ],
+    "extra_tags": [
+      "Bronx CB9",
+      "Community Board"
     ]
   },
   {
     "name": "Bronx Community Board 10",
     "urls": [
       "https://www.nyc.gov/site/bronxcb10/calendar/calendar.page"
+    ],
+    "extra_tags": [
+      "Bronx CB10",
+      "Community Board"
     ]
   },
   {
     "name": "Bronx Community Board 11",
     "urls": [
       "https://www.nyc.gov/site/bronxcb11/meetings/calendar.page"
+    ],
+    "extra_tags": [
+      "Bronx CB11",
+      "Community Board"
     ]
   },
   {
     "name": "Bronx Community Board 12",
     "urls": [
       "https://www.nyc.gov/site/bronxcb12/calendar/calendar.page"
+    ],
+    "extra_tags": [
+      "Bronx CB12",
+      "Community Board"
     ]
   },
   {
     "name": "Staten Island Community Board 1",
     "urls": [
       "https://www.nyc.gov/site/statenislandcb1/meetings/meetings.page"
+    ],
+    "extra_tags": [
+      "Staten Island CB1",
+      "Community Board"
     ]
   },
   {
     "name": "Staten Island Community Board 2",
     "urls": [
       "https://www.nyc.gov/site/statenislandcb2/meetings/calendar.page"
+    ],
+    "extra_tags": [
+      "Staten Island CB2",
+      "Community Board"
     ]
   },
   {
     "name": "Staten Island Community Board 3",
     "urls": [
       "https://www.nyc.gov/site/statenislandcb3/index.page"
+    ],
+    "extra_tags": [
+      "Staten Island CB3",
+      "Community Board"
     ]
   },
   {
@@ -3693,8 +3925,11 @@
     "name": "NYC Department of Records and Information Services (DORIS)",
     "urls": [
       "https://www.nyc.gov/site/records/exhibits-education/events.page",
-      "https://www.nyc.gov/site/records/exhibits-education/exhibits.page"
-    ]
+      "https://www.nyc.gov/site/records/exhibits-education/exhibits.page",
+      "https://www.eventbrite.com/o/the-new-york-city-department-of-records-and-information-servicesmunicipal-archives-14989457827#events"
+    ],
+    "keywords": "/e/",
+    "max_pages": 5
   },
   {
     "name": "Olmsted-Beil House",
@@ -4832,15 +5067,13 @@
     "name": "Open Source Gallery",
     "urls": [
       "https://open-source-gallery.org/calendar/"
-    ],
-    "crawl_frequency": 8
+    ]
   },
   {
     "name": "Transportation Alternatives",
     "urls": [
       "https://transalt.org/events"
-    ],
-    "crawl_frequency": 8
+    ]
   },
   {
     "name": "The Bollinger Forum",
@@ -4848,15 +5081,13 @@
       "https://theforum.columbia.edu/events"
     ],
     "keywords": "/events/",
-    "crawl_frequency": 8,
     "max_pages": 10
   },
   {
     "name": "Columbia University",
     "urls": [
       "https://events.columbia.edu/feeder/main/eventsFeed.do?f=y&sort=dtstart.utc:asc&fexpr=(((vpath=%22/public/aliases/Audience/Public%22)))%20and%20(categories.href=%22/public/.bedework/categories/org/UniversityEvents%22)%20and%20(entity_type=%22event%22%7Centity_type=%22todo%22)&skinName=list-rss&count=200"
-    ],
-    "crawl_frequency": 8
+    ]
   },
   {
     "name": "Columbia SPS",
@@ -4864,7 +5095,6 @@
       "https://sps.columbia.edu/events?loc=All&type=66&program=All&date[min]=Today"
     ],
     "keywords": "/events/",
-    "crawl_frequency": 8,
     "max_pages": 20
   },
   {
@@ -4873,22 +5103,19 @@
       "https://www.openplans.org/events"
     ],
     "keywords": "/events/",
-    "crawl_frequency": 8,
     "max_pages": 5
   },
   {
     "name": "Daya Bushwick",
     "urls": [
       "https://www.dayayogastudio.com/events-2-1"
-    ],
-    "crawl_frequency": 8
+    ]
   },
   {
     "name": "Daya Ridgewood",
     "urls": [
       "https://www.dayayogastudio.com/studio-events"
-    ],
-    "crawl_frequency": 8
+    ]
   },
   {
     "name": "Roundabout Theatre Company",
@@ -4896,21 +5123,217 @@
       "https://www.roundabouttheatre.org/"
     ],
     "keywords": "/get-tickets/",
-    "crawl_frequency": 8,
     "max_pages": 5
   },
   {
     "name": "Principles GI Coffee House",
     "urls": [
       "https://principlesbk.nyc/upcoming-events"
-    ],
-    "crawl_frequency": 8
+    ]
   },
   {
     "name": "Soft Butch",
     "urls": [
       "https://www.softbutchbedstuy.com/events-community"
+    ]
+  },
+  {
+    "name": "NYC Resistor",
+    "urls": [
+      "https://www.nycresistor.com/calendar/",
+      "https://www.eventbrite.com/o/nyc-resistor-52408308"
     ],
-    "crawl_frequency": 8
+    "keywords": "/e/",
+    "max_pages": 20
+  },
+  {
+    "name": "r/nycmeetups",
+    "urls": [
+      "https://www.reddit.com/r/nycmeetups/rising/"
+    ],
+    "keywords": "/comments/",
+    "max_pages": 20
+  },
+  {
+    "name": "Betaworks",
+    "urls": [
+      "https://www.betaworks.com/"
+    ],
+    "keywords": "/event/",
+    "max_pages": 5
+  },
+  {
+    "name": "Brooklyn Spark",
+    "urls": [
+      "https://brooklynspark.com/events"
+    ],
+    "keywords": "/events/",
+    "max_pages": 20
+  },
+  {
+    "name": "City Point",
+    "urls": [
+      "https://www.citypointbrooklyn.com/bklyn-events"
+    ]
+  },
+  {
+    "name": "DeKalb Market Hall"
+  },
+  {
+    "name": "Somethin' Else"
+  },
+  {
+    "name": "Sound + Fury Brewery and Kitchen"
+  },
+  {
+    "name": "The Urbane Arts Club",
+    "urls": [
+      "https://www.urbanebrooklyn.com/upcoming-events"
+    ],
+    "keywords": "/event-",
+    "max_pages": 5
+  },
+  {
+    "name": "Prohibition Productions",
+    "urls": [
+      "https://www.prohibitionproductions.com/events"
+    ],
+    "keywords": "/calendar",
+    "max_pages": 10
+  },
+  {
+    "name": "You Should Be Dancing...!",
+    "urls": [
+      "https://www.youshouldbedancing.nyc/events",
+      "https://www.youshouldbedancing.nyc/workshops"
+    ],
+    "keywords": "/events/",
+    "max_pages": 5
+  },
+  {
+    "name": "Foxtail"
+  },
+  {
+    "name": "Arlo SoHo"
+  },
+  {
+    "name": "Somewhere Nowhere",
+    "urls": [
+      "https://www.somewherenowherenyc.com/events"
+    ],
+    "keywords": "/events/",
+    "selector": "#w-tabs-0-data-w-tab-0",
+    "max_pages": 10
+  },
+  {
+    "name": "Ditmas Lit",
+    "urls": [
+      "https://www.ditmaslit.com/upcoming"
+    ]
+  },
+  {
+    "name": "Lectures on Tap NYC",
+    "urls": [
+      "https://lecturesontap.com/nyc"
+    ],
+    "keywords": "/cc/, /e/",
+    "max_pages": 30
+  },
+  {
+    "name": "Rooftop Cinema Club",
+    "urls": [
+      "https://rooftopcinemaclub.com/new-york/venue/midtown/"
+    ],
+    "disabled": true
+  },
+  {
+    "name": "Gals About Town",
+    "urls": [
+      "https://galsabouttown.nyc/",
+      "https://www.eventbrite.com/o/gals-about-town-69590466033"
+    ],
+    "keywords": "/e/",
+    "max_pages": 5
+  },
+  {
+    "name": "CHiPS",
+    "urls": [
+      "https://volunteer.chipsonline.org/"
+    ],
+    "keywords": "/opportunities/",
+    "max_pages": 10
+  },
+  {
+    "name": "651 ARTS",
+    "urls": [
+      "https://www.651arts.org/"
+    ],
+    "keywords": "https://www.651arts.org/",
+    "max_pages": 30
+  },
+  {
+    "name": "Sacred Hearts & St. Stephen"
+  },
+  {
+    "name": "CCNY Theatre",
+    "urls": [
+      "https://www.ccny.cuny.edu/theatre/current-season"
+    ],
+    "keywords": "our.show"
+  },
+  {
+    "name": "City College Center for the Arts",
+    "urls": [
+      "https://citycollegecenterforthearts.org/events/"
+    ]
+  },
+  {
+    "name": "Woodside on the Move",
+    "urls": [
+      "https://www.woodsideonthemove.org/attend-an-event"
+    ],
+    "keywords": "/attend-an-event/"
+  },
+  {
+    "name": "Conference House",
+    "urls": [
+      "https://conferencehouse.org/events/"
+    ]
+  },
+  {
+    "name": "CCCADI",
+    "urls": [
+      "https://www.cccadi.org/events"
+    ]
+  },
+  {
+    "name": "Othership",
+    "urls": [
+      "https://www.othership.us/events"
+    ],
+    "keywords": "/schedule",
+    "max_pages": 5
+  },
+  {
+    "name": "Sparrow's Nest Studio",
+    "urls": [
+      "https://sparrowsneststudio.com/pages/event-calendar"
+    ],
+    "keywords": "calendar.google.com",
+    "max_pages": 10
+  },
+  {
+    "name": "Joyface"
+  },
+  {
+    "name": "Mingles Ultra Lounge"
+  },
+  {
+    "name": "HB Studio",
+    "urls": [
+      "https://www.hbstudio.org/calendar/category/productions-readings/",
+      "https://www.hbstudio.org/calendar/category/hb-public-conversations/",
+      ""
+    ]
   }
 ]
