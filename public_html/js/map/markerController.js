@@ -109,8 +109,8 @@ const MarkerController = (() => {
             }
 
             // Enforce marker display limit
-            if (visibleLocationCount >= state.config.MARKER_DISPLAY_LIMIT) {
-                console.warn(`Marker display limit (${state.config.MARKER_DISPLAY_LIMIT}) reached.`);
+            if (visibleLocationCount >= Constants.UI.MAX_MARKERS) {
+                console.warn(`Marker display limit (${Constants.UI.MAX_MARKERS}) reached.`);
                 break;
             }
 
@@ -268,6 +268,50 @@ const MarkerController = (() => {
         state.setForceDisplayEventId = config.setForceDisplayEventId;
     }
 
+    /**
+     * Fly to a location on the map and open its popup
+     * Creates a temporary marker if one doesn't exist at that location
+     *
+     * @param {number} lat - Latitude
+     * @param {number} lng - Longitude
+     * @param {string|null} [eventIdToForce=null] - Event ID to force display in popup
+     */
+    function flyToLocationAndOpenPopup(lat, lng, eventIdToForce = null) {
+        if (state.setForceDisplayEventId) {
+            state.setForceDisplayEventId(eventIdToForce);
+        }
+
+        const markersLayer = state.appState.markersLayer;
+        const locationsByLatLng = state.appState.locationsByLatLng;
+
+        // Find or create the marker first, then open its popup
+        let markerFound = false;
+        markersLayer.eachLayer(marker => {
+            const markerLatLng = marker.getLatLng();
+            if (markerLatLng.lat === lat && markerLatLng.lng === lng) {
+                marker.openPopup();
+                markerFound = true;
+            }
+        });
+
+        if (!markerFound) {
+            // If no marker was found (e.g., it was filtered out), create it temporarily
+            const locationKey = `${lat},${lng}`;
+            const locationInfo = locationsByLatLng[locationKey];
+            if (!locationInfo) {
+                console.error("No location info found for", locationKey);
+                return;
+            }
+
+            const customIcon = MapManager.createMarkerIcon(locationInfo);
+            const popupContentCallback = createPopupContentCallback(locationKey);
+            const newMarker = MapManager.addMarkerToMap([lat, lng], customIcon, locationInfo.name, popupContentCallback);
+            if (newMarker) {
+                newMarker.openPopup();
+            }
+        }
+    }
+
     // ========================================
     // EXPORTS
     // ========================================
@@ -281,6 +325,9 @@ const MarkerController = (() => {
         updateOpenPopupContent,
         findOpenPopup,
         hasMatchingEvents,
-        createPopupContentCallback
+        createPopupContentCallback,
+
+        // Navigation
+        flyToLocationAndOpenPopup
     };
 })();
