@@ -56,7 +56,7 @@ const UIManager = (() => {
         if (urlParams.end && urlParams.end instanceof Date) {
             finalDefaultEndDate = urlParams.end;
         } else {
-            const defaultEndDate = new Date(today.getTime() + (6 * config.ONE_DAY_IN_MS));
+            const defaultEndDate = new Date(today.getTime() + (6 * Constants.TIME.ONE_DAY_MS));
             finalDefaultEndDate = defaultEndDate > config.END_DATE ? config.END_DATE : defaultEndDate;
         }
 
@@ -211,7 +211,7 @@ const UIManager = (() => {
             const tagsContainer = document.createElement('div');
             tagsContainer.className = 'tag-tags-container popup-tags-container';
             displayTags.forEach(tag => {
-                const tagButton = TagFilterUI.createInteractiveTagButton(tag);
+                const tagButton = FilterPanelUI.createInteractiveTagButton(tag);
                 if (tagButton) {
                     tagsContainer.appendChild(tagButton);
                 }
@@ -244,11 +244,17 @@ const UIManager = (() => {
             return eventsListWrapper;
         }
 
+        // Get all selected tags (explicit, required, and implicit)
         const selectedTags = Object.entries(activeFilters.tagStates)
+            .filter(([, state]) => (state === 'selected' || state === 'required' || state === 'implicit'))
+            .map(([tag]) => tag);
+
+        // Get only explicitly selected tags (for determining if filters are active)
+        const explicitlySelectedTags = Object.entries(activeFilters.tagStates)
             .filter(([, state]) => (state === 'selected' || state === 'required'))
             .map(([tag]) => tag);
 
-        const hasActiveTagFilters = selectedTags.length > 0;
+        const hasActiveTagFilters = explicitlySelectedTags.length > 0;
         const hasForbiddenTags = Object.entries(activeFilters.tagStates).some(([, state]) => state === 'forbidden');
         const hasAnyTagFilter = hasActiveTagFilters || hasForbiddenTags;
 
@@ -389,7 +395,7 @@ const UIManager = (() => {
             const tagsContainer = document.createElement('div');
             tagsContainer.className = 'tag-tags-container popup-tags-container';
             event.tags.forEach(tag => {
-                const tagButton = TagFilterUI.createInteractiveTagButton(tag);
+                const tagButton = FilterPanelUI.createInteractiveTagButton(tag);
                 if (tagButton) {
                     tagsContainer.appendChild(tagButton);
                 }
