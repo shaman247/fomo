@@ -289,9 +289,41 @@ const URLParams = (() => {
         return `${year}-${month}-${day}`;
     }
 
+    /**
+     * Generate a shareable URL with the given parameters
+     * @param {Object} params - Parameters to include in the URL
+     * @param {number} params.lat - Latitude
+     * @param {number} params.lng - Longitude
+     * @param {number} params.zoom - Zoom level
+     * @param {Date} [params.start] - Start date
+     * @param {Date} [params.end] - End date
+     * @param {Array<string>} [params.tags] - Selected tags
+     * @returns {string} The shareable URL
+     */
+    function generateShareUrl(params) {
+        const baseUrl = window.location.origin + window.location.pathname;
+        const urlParams = new URLSearchParams();
+
+        urlParams.set('lat', params.lat.toFixed(5));
+        urlParams.set('lng', params.lng.toFixed(5));
+        urlParams.set('zoom', params.zoom.toString());
+
+        if (params.start && params.end) {
+            urlParams.set('start', formatDate(params.start));
+            urlParams.set('end', formatDate(params.end));
+        }
+
+        if (params.tags && params.tags.length > 0) {
+            urlParams.set('tags', params.tags.join(','));
+        }
+
+        return `${baseUrl}?${urlParams.toString()}`;
+    }
+
     return {
         parse,
         update,
-        formatDate
+        formatDate,
+        generateShareUrl
     };
 })();
