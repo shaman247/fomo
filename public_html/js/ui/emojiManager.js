@@ -57,7 +57,6 @@ const EmojiManager = (() => {
             const loadFont = () => {
                 document.fonts.load('1em "Noto Color Emoji"').then(() => {
                     forceEmojiRerender();
-                    console.log('Noto Color Emoji font loaded and applied');
 
                     // Show success status briefly, then hide
                     if (statusElement) {
@@ -70,7 +69,6 @@ const EmojiManager = (() => {
                     }
                 }).catch(() => {
                     setTimeout(() => forceEmojiRerender(), Constants.UI.EMOJI_RERENDER_DELAY_MS);
-                    console.log('Noto Color Emoji font applied (with fallback)');
 
                     // Clear status on error
                     if (statusElement) {
@@ -135,16 +133,13 @@ const EmojiManager = (() => {
         if (state.currentFont !== 'noto') {
             document.body.classList.add('use-noto-emoji');
             state.currentFont = 'noto';
-            console.log('Noto Color Emoji font enabled - loading...');
 
             // Force re-render of all emoji elements after font loads
             if (document.fonts) {
                 document.fonts.load('1em "Noto Color Emoji"').then(() => {
                     forceEmojiRerender();
-                    console.log('Noto Color Emoji font loaded and applied');
                 }).catch(() => {
                     setTimeout(() => forceEmojiRerender(), Constants.UI.EMOJI_RERENDER_DELAY_MS);
-                    console.log('Noto Color Emoji font applied (with fallback)');
                 });
             } else {
                 setTimeout(() => forceEmojiRerender(), Constants.UI.EMOJI_RERENDER_DELAY_MS);

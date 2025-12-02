@@ -303,6 +303,133 @@ const ViewportManager = (() => {
     }
 
     // ========================================
+    // POPUP POSITIONING
+    // ========================================
+
+    /**
+     * Calculates the pan offset needed to fit a popup within the visible bounds
+     * Returns the X and Y pixel offsets to pan the map by
+     *
+     * @param {L.Map} map - Leaflet map instance
+     * @param {L.LatLng} popupLatLng - The lat/lng position of the popup anchor
+     * @param {number} popupHeight - Height of the popup element in pixels
+     * @param {number} popupWidth - Width of the popup element in pixels
+     * @returns {Object|null} Object with panX and panY offsets, or null if no pan needed
+     */
+    function calculatePopupPanOffset(map, popupLatLng, popupHeight, popupWidth) {
+        const debugRectBounds = state.debugRectBounds;
+        if (!debugRectBounds) return null;
+
+        // Get current popup position in container point coordinates
+        const popupPoint = map.latLngToContainerPoint(popupLatLng);
+        const popupTop = popupPoint.y - popupHeight;
+        const popupBottom = popupPoint.y;
+        const popupLeft = popupPoint.x - popupWidth / 2;
+        const popupRight = popupPoint.x + popupWidth / 2;
+
+        // Calculate if we need to pan (vertical and horizontal)
+        let panX = 0;
+        let panY = 0;
+
+        // Check vertical bounds
+        if (popupTop < debugRectBounds.top) {
+            panY = debugRectBounds.top - popupTop;
+        } else if (popupBottom > debugRectBounds.bottom) {
+            panY = debugRectBounds.bottom - popupBottom;
+        }
+
+        // Check horizontal bounds
+        if (popupLeft < debugRectBounds.left) {
+            panX = debugRectBounds.left - popupLeft;
+        } else if (popupRight > debugRectBounds.right) {
+            panX = debugRectBounds.right - popupRight;
+        }
+
+        if (panX === 0 && panY === 0) {
+            return null;
+        }
+
+        return { panX, panY };
+    }
+
+    // ========================================
+    // DEBUG OVERLAY
+    // ========================================
+
+    /**
+     * Updates the debug visualization overlay on the map
+     * Shows viewport bounds rectangle and visible center marker
+     *
+     * @param {L.Map} map - Leaflet map instance
+     * @param {L.LayerGroup} debugLayer - Layer group for debug visualization
+     * @param {boolean} debugMode - Whether debug mode is enabled
+     */
+    function updateDebugOverlay(map, debugLayer, debugMode) {
+        // Clear existing debug overlays
+        if (debugLayer) {
+            debugLayer.clearLayers();
+        }
+
+        if (!debugMode || !state.debugRectBounds || !state.visibleCenter) {
+            return;
+        }
+
+        // Convert container point coordinates to lat/lng for the rectangle
+        const topLeft = map.containerPointToLatLng(
+            L.point(state.debugRectBounds.left, state.debugRectBounds.top)
+        );
+        const bottomRight = map.containerPointToLatLng(
+            L.point(state.debugRectBounds.right, state.debugRectBounds.bottom)
+        );
+
+        // Draw the 90% inset bounds rectangle
+        L.rectangle(
+            [topLeft, bottomRight],
+            {
+                color: '#ff0000',
+                weight: 2,
+                fill: false,
+                dashArray: '5, 5'
+            }
+        ).addTo(debugLayer);
+
+        // Draw a marker at the visible center
+        L.circleMarker(state.visibleCenter, {
+            color: '#00ff00',
+            fillColor: '#00ff00',
+            fillOpacity: 0.8,
+            radius: 8
+        }).addTo(debugLayer);
+
+        // Add a crosshair at the center
+        const crosshairSize = 20; // pixels
+        const centerPoint = map.latLngToContainerPoint(state.visibleCenter);
+
+        const crosshairH1 = map.containerPointToLatLng(
+            L.point(centerPoint.x - crosshairSize, centerPoint.y)
+        );
+        const crosshairH2 = map.containerPointToLatLng(
+            L.point(centerPoint.x + crosshairSize, centerPoint.y)
+        );
+        const crosshairV1 = map.containerPointToLatLng(
+            L.point(centerPoint.x, centerPoint.y - crosshairSize)
+        );
+        const crosshairV2 = map.containerPointToLatLng(
+            L.point(centerPoint.x, centerPoint.y + crosshairSize)
+        );
+
+        L.polyline([crosshairH1, crosshairH2], {
+            color: '#00ff00',
+            weight: 2
+        }).addTo(debugLayer);
+
+        L.polyline([crosshairV1, crosshairV2], {
+            color: '#00ff00',
+            weight: 2
+        }).addTo(debugLayer);
+    }
+
+    // ========================================
     // EXPORTS
     // ========================================
 
@@ -330,6 +457,12 @@ const ViewportManager = (() => {
         adjustMapToVisibleCenter,
 
         // Combined update
-        updateViewportCalculations
+        updateViewportCalculations,
+
+        // Popup positioning
+        calculatePopupPanOffset,
+
+        // Debug
+        updateDebugOverlay
     };
 })();

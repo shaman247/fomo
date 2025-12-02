@@ -17,7 +17,6 @@ document.addEventListener('DOMContentLoaded', () => {
          * @property {L.LayerGroup|null} debugLayer - Layer for debug visualization
          * @property {boolean} debugMode - Debug mode toggle state
          * @property {L.LatLng|null} visibleCenter - Visible center accounting for filter panel
-         * @property {Object|null} debugRectBounds - Debug rectangle bounds for popup positioning
          * @property {Object} locationDistances - Map of locationKey -> distance from center
          * @property {Array} allEvents - All loaded events
          * @property {Object} eventsById - Event lookup by ID
@@ -48,7 +47,6 @@ document.addEventListener('DOMContentLoaded', () => {
             debugLayer: null,
             debugMode: false,
             visibleCenter: null,
-            debugRectBounds: null,
             locationDistances: {}, // Map of locationKey -> distance from center
             allEvents: [],
             eventsById: {},
@@ -83,7 +81,6 @@ document.addEventListener('DOMContentLoaded', () => {
          * @property {string} TAG_CONFIG_URL - URL for tag configuration
          * @property {Date} START_DATE - Default start date for date range
          * @property {Date} END_DATE - Default end date for date range
-         * @property {number} ONE_DAY_IN_MS - Milliseconds in one day
          * @property {Array<string>} TAG_COLOR_PALETTE_DARK - Color palette for dark theme
          * @property {Array<string>} TAG_COLOR_PALETTE_LIGHT - Color palette for light theme
          * @property {Array<number>} MAP_INITIAL_VIEW - Initial map center [lat, lng]
@@ -92,7 +89,6 @@ document.addEventListener('DOMContentLoaded', () => {
          * @property {string} MAP_TILE_URL_LIGHT - Tile URL for light theme map
          * @property {string} MAP_ATTRIBUTION - Map attribution text
          * @property {number} MAP_MAX_ZOOM - Maximum zoom level
-         * @property {number} MARKER_DISPLAY_LIMIT - Maximum markers to display
          */
         config: {
             EVENT_INIT_URL: 'data/events.init.json',
@@ -100,10 +96,10 @@ document.addEventListener('DOMContentLoaded', () => {
             EVENT_FULL_URL: 'data/events.full.json',
             LOCATIONS_FULL_URL: 'data/locations.full.json',
             TAG_CONFIG_URL: 'data/tags.json',
+            RELATED_TAGS_URL: 'data/related_tags.json',
 
             START_DATE: new Date(2025, 7, 1),
             END_DATE: new Date(2026, 0, 31),
-            ONE_DAY_IN_MS: 24 * 60 * 60 * 1000,
             TAG_COLOR_PALETTE_DARK: [
                 '#b03540', '#3d8578', '#c07030', '#3d70a0', '#5da035',
                 '#a04570', '#7da030', '#3d5ca8', '#b58030', '#3d7580', '#a03d78',
@@ -121,8 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
             MAP_TILE_URL_DARK: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
             MAP_TILE_URL_LIGHT: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}{r}.png',
             MAP_ATTRIBUTION: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
-            MAP_MAX_ZOOM: 20,
-            MARKER_DISPLAY_LIMIT: 1000
+            MAP_MAX_ZOOM: 20
         },
 
         /**
@@ -192,8 +187,25 @@ document.addEventListener('DOMContentLoaded', () => {
             // Initialize TagColorManager with color palettes
             TagColorManager.init({
                 darkPalette: this.config.TAG_COLOR_PALETTE_DARK,
-                lightPalette: this.config.TAG_COLOR_PALETTE_LIGHT
+                lightPalette: this.config.TAG_COLOR_PALETTE_LIGHT,
+                onImplicitTagsChanged: (addedTags, removedTags) => {
+                    // Update tag states for added/removed implicit tags
+                    if (SelectedTagsDisplay.isIncludingRelatedTags()) {
+                        addedTags.forEach(tag => FilterPanelUI.setTagState(tag, 'implicit'));
+                        removedTags.forEach(tag => FilterPanelUI.setTagState(tag, 'unselected'));
+                        // Update visuals for all tag buttons
+                        FilterPanelUI.updateAllTagVisuals();
+                    }
+                }
             });
+
+            // Initialize RelatedTagsManager with related tags data
+            await RelatedTagsManager.init({
+                relatedTagsUrl: this.config.RELATED_TAGS_URL
+            });
+
+            // Connect TagColorManager with RelatedTagsManager for related tag lookups
+            TagColorManager.setRelatedTagsCallback((tag) => RelatedTagsManager.getRelatedTags(tag));
 
             DataManager.processInitialData(initEventData, initLocationData, this.state, this.config);
             DataManager.calculateTagFrequencies(this.state);
@@ -216,7 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
             this.initMap();
             this.initViewportManager();
             this.initMarkerController();
-            this.initTagFilterUI();
+            this.initFilterPanelUI();
         },
 
         /**
@@ -229,8 +241,8 @@ document.addEventListener('DOMContentLoaded', () => {
             // Apply URL parameter tag selections before date picker init
             // This ensures tags are selected when the date picker triggers initial filtering
             if (urlParams.tags && urlParams.tags.length > 0) {
-                TagFilterUI.selectTags(urlParams.tags, (tag) => TagColorManager.assignColorToTag(tag));
-                this.updateSelectedTagsDisplay();
+                FilterPanelUI.selectTags(urlParams.tags, (tag) => TagColorManager.assignColorToTag(tag));
+                SelectedTagsDisplay.render();
             }
 
             UIManager.initDatePicker(this.elements, this.config, this.state, {
@@ -246,7 +258,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     this.updateFilteredEventList();
                 }
             });
-            this.initOmniSearch();
+            FilterPanelUI.initOmniSearch({
+                filterPanelDOM: this.elements.filterPanel,
+                expandFilterPanelButtonDOM: this.elements.expandFilterPanelButton,
+                onSpecialSearchTerm: (term) => this.handleSpecialSearchTerms(term)
+            });
             UIManager.initLogoMenu({
                 onShareView: () => this.shareCurrentView()
             });
@@ -306,13 +322,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 DataManager.processTagHierarchy(this.state, this.config);
 
                 this.updateFilteredEventList(); // This will re-filter by date/location and rebuild tag index
-                this.initTagFilterUI();
+                this.initFilterPanelUI();
 
                 // Re-apply URL parameter tag selections after re-initializing tag filter UI
                 // This preserves the tags selected from URL parameters during Phase 2 full data load
                 if (urlParams.tags && urlParams.tags.length > 0) {
-                    TagFilterUI.selectTags(urlParams.tags, (tag) => TagColorManager.assignColorToTag(tag));
-                    this.updateSelectedTagsDisplay();
+                    FilterPanelUI.selectTags(urlParams.tags, (tag) => TagColorManager.assignColorToTag(tag));
+                    SelectedTagsDisplay.render();
                 }
 
                 // Re-render with the full dataset, applying current filters.
@@ -395,47 +411,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 onThemeChange: (theme) => {
                     // Reassign colors for selected tags with new theme palette
                     TagColorManager.reassignTagColors();
-                    this.updateSelectedTagsDisplay();
+                    SelectedTagsDisplay.render();
                 }
-            });
-        },
-
-        /**
-         * Initialize the omni search functionality
-         * Sets up debounced search, special term handling, and auto-expand on mobile
-         * @memberof App
-         */
-        initOmniSearch() {
-            // Debounce search to improve performance (executes after user stops typing)
-            const debouncedSearch = Utils.debounce((searchTerm) => {
-                this.performSearch(searchTerm);
-            }, Constants.TIME.SEARCH_DEBOUNCE_MS);
-
-            this.elements.omniSearchInput.addEventListener('input', (e) => {
-                const searchTerm = e.target.value.toLowerCase();
-
-                // Handle special terms immediately (no debounce)
-                this.handleSpecialSearchTerms(searchTerm);
-
-                // Debounce regular search
-                debouncedSearch(searchTerm);
-
-                // Auto-expand panel on mobile when user enters search term
-                if (searchTerm && window.innerWidth <= Constants.UI.MOBILE_BREAKPOINT) {
-                    this.elements.filterPanel.classList.remove('tags-collapsed');
-                    this.elements.expandFilterPanelButton.classList.remove('collapsed');
-                }
-            });
-
-            this.elements.omniSearchInput.addEventListener('focus', (e) => {
-                const searchTerm = e.target.value.toLowerCase();
-                if (searchTerm) {
-                    this.performSearch(searchTerm);
-                }
-            });
-
-            document.addEventListener('click', (e) => {
-                // This could be used to hide results, but with integrated display it's not needed.
             });
         },
 
@@ -450,7 +427,6 @@ document.addEventListener('DOMContentLoaded', () => {
             // Toggle debug mode if search term is exactly "debug"
             if (term === 'debug') {
                 this.state.debugMode = !this.state.debugMode;
-                console.log('Debug Mode:', this.state.debugMode ? 'ENABLED' : 'DISABLED');
                 this.updateDebugOverlay();
             }
             // Toggle Noto emoji font if search term is exactly "noto"
@@ -462,18 +438,6 @@ document.addEventListener('DOMContentLoaded', () => {
         },
 
         /**
-         * Get display name for an item (location, event, or tag)
-         * Delegates to Utils.getDisplayName for consistent naming
-         * @memberof App
-         * @param {Object} item - The item to get a display name for
-         * @returns {string} The display name
-         */
-        getDisplayName(item) {
-            // Delegate to Utils.getDisplayName
-            return Utils.getDisplayName(item);
-        },
-
-        /**
          * Perform search across locations, events, and tags
          * Uses SearchManager for scoring and TagFilterUI for rendering
          * @memberof App
@@ -481,12 +445,15 @@ document.addEventListener('DOMContentLoaded', () => {
          */
         performSearch(term) {
             // Use SearchManager to perform the search
-            const dynamicFrequencies = TagFilterUI.getDynamicFrequencies();
-            const selectedTagsWithColors = TagColorManager.getSelectedTagsWithColors();
+            const dynamicFrequencies = FilterPanelUI.getDynamicFrequencies();
+
+            // Get selected tags with colors from SelectedTagsDisplay (respects include related tags setting)
+            const selectedTagsWithColors = SelectedTagsDisplay.getEffectiveSelectedTagsWithColors();
+
             const results = SearchManager.search(term, dynamicFrequencies, selectedTagsWithColors);
 
-            // Render results using TagFilterUI
-            TagFilterUI.render(results, term);
+            // Render results using TagFilterUI, passing debug mode state
+            FilterPanelUI.render(results, term, this.state.debugMode);
         },
 
         /**
@@ -507,48 +474,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (!event || !event.locationKey) return;
                     [lat, lng] = event.locationKey.split(',').map(Number);
                 }
-                this.flyToLocationAndOpenPopup(lat, lng, result.type === 'event' ? result.ref : null);
-            }
-
-        },
-
-        /**
-         * Fly to a location on the map and open its popup
-         * Creates a temporary marker if one doesn't exist
-         * @memberof App
-         * @param {number} lat - Latitude
-         * @param {number} lng - Longitude
-         * @param {string|null} [eventIdToForce=null] - Event ID to force display in popup
-         */
-        flyToLocationAndOpenPopup(lat, lng, eventIdToForce = null) {
-            this.state.forceDisplayEventId = eventIdToForce;
-
-            // Find or create the marker first, then open its popup
-            // The popup opening will trigger the automatic pan to make it visible
-            let markerFound = false;
-            this.state.markersLayer.eachLayer(marker => {
-                const markerLatLng = marker.getLatLng();
-                if (markerLatLng.lat === lat && markerLatLng.lng === lng) {
-                    marker.openPopup();
-                    markerFound = true;
-                }
-            });
-
-            if (!markerFound) {
-                // If no marker was found (e.g., it was filtered out), create it temporarily.
-                const locationKey = `${lat},${lng}`;
-                const locationInfo = this.state.locationsByLatLng[locationKey];
-                if (!locationInfo) {
-                    console.error("No location info found for", locationKey);
-                    return;
-                }
-
-                const customIcon = MapManager.createMarkerIcon(locationInfo);
-                const popupContentCallback = MarkerController.createPopupContentCallback(locationKey);
-                const newMarker = MapManager.addMarkerToMap([lat, lng], customIcon, locationInfo.name, popupContentCallback);
-                if (newMarker) {
-                    newMarker.openPopup();
-                }
+                MarkerController.flyToLocationAndOpenPopup(lat, lng, result.type === 'event' ? result.ref : null);
             }
         },
 
@@ -575,26 +501,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 this.state.allEventsFilteredByDateAndLocation = events;
             }
-            this.updateEventsByLatLngInDateRange();
+            DataManager.groupEventsByLatLngInDateRange(this.state);
             DataManager.buildTagIndex(this.state, this.state.allEventsFilteredByDateAndLocation);
             this.filterAndDisplayEvents();
-        },
-
-        /**
-         * Update the events grouped by location for the current date range
-         * Rebuilds the eventsByLatLngInDateRange lookup from filtered events
-         * @memberof App
-         */
-        updateEventsByLatLngInDateRange() {
-            this.state.eventsByLatLngInDateRange = {}; // Reset first
-            this.state.allEventsFilteredByDateAndLocation.forEach(event => {
-                if (event.locationKey) {
-                    if (!this.state.eventsByLatLngInDateRange[event.locationKey]) {
-                        this.state.eventsByLatLngInDateRange[event.locationKey] = [];
-                    }
-                    this.state.eventsByLatLngInDateRange[event.locationKey].push(event);
-                }
-            });
         },
 
         /**
@@ -650,45 +559,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     this.state.selectedLocationKey = locationKey;
 
-                    // Pan to ensure popup fits within the visible area (90% debug rectangle)
+                    // Pan to ensure popup fits within the visible area (90% bounds)
                     // Wait for popup to render so we can measure its actual height
                     setTimeout(() => {
                         const popup = e.popup;
                         const popupElement = popup.getElement();
-                        const debugRectBounds = ViewportManager.getDebugRectBounds();
-                        if (!popupElement || !debugRectBounds) return;
+                        if (!popupElement) return;
 
-                        const popupHeight = popupElement.offsetHeight;
-                        const popupWidth = popupElement.offsetWidth;
+                        const panOffset = ViewportManager.calculatePopupPanOffset(
+                            this.state.map,
+                            latLng,
+                            popupElement.offsetHeight,
+                            popupElement.offsetWidth
+                        );
 
-                        // Get current popup position in container point coordinates
-                        const popupPoint = this.state.map.latLngToContainerPoint(latLng);
-                        const popupTop = popupPoint.y - popupHeight;
-                        const popupBottom = popupPoint.y;
-                        const popupLeft = popupPoint.x - popupWidth / 2;
-                        const popupRight = popupPoint.x + popupWidth / 2;
-
-                        // Calculate if we need to pan (vertical and horizontal)
-                        let panX = 0;
-                        let panY = 0;
-
-                        // Check vertical bounds
-                        if (popupTop < debugRectBounds.top) {
-                            panY = debugRectBounds.top - popupTop;
-                        } else if (popupBottom > debugRectBounds.bottom) {
-                            panY = debugRectBounds.bottom - popupBottom;
-                        }
-
-                        // Check horizontal bounds
-                        if (popupLeft < debugRectBounds.left) {
-                            panX = debugRectBounds.left - popupLeft;
-                        } else if (popupRight > debugRectBounds.right) {
-                            panX = debugRectBounds.right - popupRight;
-                        }
-
-                        if (panX !== 0 || panY !== 0) {
-                            // Use panBy for relative adjustment instead of panTo
-                            this.state.map.panBy([-panX, -panY], { animate: true, duration: 0.2 });
+                        if (panOffset) {
+                            this.state.map.panBy([-panOffset.panX, -panOffset.panY], { animate: true, duration: 0.2 });
                         }
                     }, 50);
 
@@ -762,7 +648,7 @@ document.addEventListener('DOMContentLoaded', () => {
             MarkerController.init({
                 appState: this.state,
                 config: this.config,
-                getTagStates: () => TagFilterUI.getTagStates(),
+                getTagStates: () => FilterPanelUI.getTagStates(),
                 getSelectedDates: () => this.state.datePickerInstance.selectedDates,
                 getForceDisplayEventId: () => this.state.forceDisplayEventId,
                 setForceDisplayEventId: (id) => { this.state.forceDisplayEventId = id; }
@@ -770,11 +656,11 @@ document.addEventListener('DOMContentLoaded', () => {
         },
 
         /**
-         * Initialize tag filtering and search UI
-         * Sets up SearchManager, FilterManager, and TagFilterUI with callbacks
+         * Initialize the filter panel UI and search functionality
+         * Sets up SearchManager, FilterManager, and FilterPanelUI with callbacks
          * @memberof App
          */
-        initTagFilterUI() {
+        initFilterPanelUI() {
             // Initialize SearchManager
             SearchManager.init({
                 appState: this.state
@@ -786,13 +672,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 config: this.config
             });
 
-            TagFilterUI.init({
+            FilterPanelUI.init({
                 allAvailableTags: this.state.allAvailableTags,
                 tagConfigBgColors: this.state.tagConfig.bgcolors,
                 initialGlobalFrequencies: this.state.tagFrequencies,
                 resultsContainerDOM: this.elements.resultsContainer,
                 onFilterChangeCallback: () => {
-                    this.updateSelectedTagsDisplay();
+                    SelectedTagsDisplay.render();
                     this.filterAndDisplayEvents();
                 },
                 onSearchResultClick: (result) => this.handleSearchResultClick(result),
@@ -802,9 +688,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 getTagColor: (tag) => TagColorManager.getTagColor(tag),
                 assignColorToTag: (tag) => TagColorManager.assignColorToTag(tag),
                 unassignColorFromTag: (tag) => TagColorManager.unassignColorFromTag(tag),
+                isImplicitlySelected: (tag) => TagColorManager.isImplicitlySelected(tag),
             });
-            TagFilterUI.setAppProviders({ getSelectedLocationKey: () => this.state.selectedLocationKey });
-            TagFilterUI.render([]); // Render with empty results initially
+            FilterPanelUI.setAppProviders({ getSelectedLocationKey: () => this.state.selectedLocationKey });
+            FilterPanelUI.render([]); // Render with empty results initially
+
+            // Initialize SelectedTagsDisplay
+            SelectedTagsDisplay.init({
+                containerDOM: this.elements.selectedTagsDisplay,
+                getSelectedTagsWithColors: () => TagColorManager.getSelectedTagsWithColors(),
+                createInteractiveTagButton: (tag) => FilterPanelUI.createInteractiveTagButton(tag),
+                setTagState: (tag, state) => FilterPanelUI.setTagState(tag, state),
+                onRelatedTagsToggle: () => {
+                    this.filterAndDisplayEvents();
+                }
+            });
         },
 
         /**
@@ -829,12 +727,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            const currentTagStates = TagFilterUI.getTagStates();
+            const currentTagStates = FilterPanelUI.getTagStates();
+
+            // Get selected tags from SelectedTagsDisplay (respects include related tags setting)
+            const selectedTags = SelectedTagsDisplay.getEffectiveSelectedTags();
 
             // Use FilterManager to filter events by tags
             const allMatchingEventsFlatList = FilterManager.filterEventsByTags(
                 currentTagStates,
-                this.state.allEventsFilteredByDateAndLocation
+                this.state.allEventsFilteredByDateAndLocation,
+                selectedTags
             );
 
             // Store the computed lists in the state for use by other functions like search
@@ -854,7 +756,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Display markers on map
             MarkerController.displayEventsOnMap(filteredLocations, openMarker);
-            TagFilterUI.updateView(allMatchingEventsFlatList);
+            FilterPanelUI.updateView(allMatchingEventsFlatList);
         },
 
         /**
@@ -876,7 +778,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Update state with calculated values
             this.state.visibleCenter = viewportData.visibleCenter;
-            this.state.debugRectBounds = viewportData.debugRectBounds;
             this.state.locationDistances = viewportData.locationDistances;
 
             // Use FilterManager to filter by viewport
@@ -893,99 +794,16 @@ document.addEventListener('DOMContentLoaded', () => {
         },
 
         /**
-         * Update the display of selected tags with interactive buttons
-         * Shows/hides the selected tags display area based on selection state
-         * @memberof App
-         */
-        updateSelectedTagsDisplay() {
-            if (!this.elements.selectedTagsDisplay) return;
-
-            // Get selected tags from TagColorManager
-            const selectedTags = TagColorManager.getSelectedTags();
-
-            if (selectedTags.length === 0) {
-                this.elements.selectedTagsDisplay.innerHTML = '';
-                this.elements.selectedTagsDisplay.style.display = 'none';
-                return;
-            }
-
-            this.elements.selectedTagsDisplay.style.display = 'flex';
-            this.elements.selectedTagsDisplay.innerHTML = '';
-
-            selectedTags.forEach(tag => {
-                const tagButton = TagFilterUI.createInteractiveTagButton(tag);
-                this.elements.selectedTagsDisplay.appendChild(tagButton);
-            });
-        },
-
-        /**
          * Update debug visualization overlay
-         * Shows viewport bounds rectangle and visible center marker
+         * Delegates to ViewportManager for rendering
          * @memberof App
          */
         updateDebugOverlay() {
-            // Clear existing debug overlays
-            if (this.state.debugLayer) {
-                this.state.debugLayer.clearLayers();
-            }
-
-            if (!this.state.debugMode || !this.state.debugRectBounds || !this.state.visibleCenter) {
-                return;
-            }
-
-            // Convert container point coordinates to lat/lng for the rectangle
-            const topLeft = this.state.map.containerPointToLatLng(
-                L.point(this.state.debugRectBounds.left, this.state.debugRectBounds.top)
+            ViewportManager.updateDebugOverlay(
+                this.state.map,
+                this.state.debugLayer,
+                this.state.debugMode
             );
-            const bottomRight = this.state.map.containerPointToLatLng(
-                L.point(this.state.debugRectBounds.right, this.state.debugRectBounds.bottom)
-            );
-
-            // Draw the 90% inset bounds rectangle
-            L.rectangle(
-                [topLeft, bottomRight],
-                {
-                    color: '#ff0000',
-                    weight: 2,
-                    fill: false,
-                    dashArray: '5, 5'
-                }
-            ).addTo(this.state.debugLayer);
-
-            // Draw a marker at the visible center
-            L.circleMarker(this.state.visibleCenter, {
-                color: '#00ff00',
-                fillColor: '#00ff00',
-                fillOpacity: 0.8,
-                radius: 8
-            }).addTo(this.state.debugLayer);
-
-            // Add a crosshair at the center
-            const crosshairSize = 20; // pixels
-            const centerPoint = this.state.map.latLngToContainerPoint(this.state.visibleCenter);
-
-            const crosshairH1 = this.state.map.containerPointToLatLng(
-                L.point(centerPoint.x - crosshairSize, centerPoint.y)
-            );
-            const crosshairH2 = this.state.map.containerPointToLatLng(
-                L.point(centerPoint.x + crosshairSize, centerPoint.y)
-            );
-            const crosshairV1 = this.state.map.containerPointToLatLng(
-                L.point(centerPoint.x, centerPoint.y - crosshairSize)
-            );
-            const crosshairV2 = this.state.map.containerPointToLatLng(
-                L.point(centerPoint.x, centerPoint.y + crosshairSize)
-            );
-
-            L.polyline([crosshairH1, crosshairH2], {
-                color: '#00ff00',
-                weight: 2
-            }).addTo(this.state.debugLayer);
-
-            L.polyline([crosshairV1, crosshairV2], {
-                color: '#00ff00',
-                weight: 2
-            }).addTo(this.state.debugLayer);
         },
 
         /**
@@ -1001,7 +819,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const selectedDates = this.state.datePickerInstance?.selectedDates || [];
 
                 // Get selected tags
-                const tagStates = TagFilterUI.getTagStates();
+                const tagStates = FilterPanelUI.getTagStates();
                 const selectedTags = Object.entries(tagStates)
                     .filter(([, state]) => state === 'selected')
                     .map(([tag]) => tag);
@@ -1022,24 +840,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     params.tags = selectedTags;
                 }
 
-                // Generate the shareable URL
-                const baseUrl = window.location.origin + window.location.pathname;
-                const urlParams = new URLSearchParams();
-
-                urlParams.set('lat', params.lat.toFixed(5));
-                urlParams.set('lng', params.lng.toFixed(5));
-                urlParams.set('zoom', params.zoom.toString());
-
-                if (params.start && params.end) {
-                    urlParams.set('start', URLParams.formatDate(params.start));
-                    urlParams.set('end', URLParams.formatDate(params.end));
-                }
-
-                if (params.tags && params.tags.length > 0) {
-                    urlParams.set('tags', params.tags.join(','));
-                }
-
-                const shareUrl = `${baseUrl}?${urlParams.toString()}`;
+                // Generate the shareable URL using URLParams module
+                const shareUrl = URLParams.generateShareUrl(params);
 
                 // Copy to clipboard
                 navigator.clipboard.writeText(shareUrl).then(() => {
