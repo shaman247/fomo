@@ -150,6 +150,16 @@
     font-weight: 400; /* Reset font-weight as it might be inherited */
 }
 
+/* Implicit tag styling in popups */
+.leaflet-popup-content-wrapper .tag-button.state-implicit {
+    background-color: color-mix(in srgb, var(--secondary-accent-color) 25%, var(--tertiary-bg));
+    color: var(--primary-text);
+}
+
+.leaflet-popup-content-wrapper .tag-button.state-implicit:hover {
+    background-color: color-mix(in srgb, var(--secondary-accent-hover) 35%, var(--tertiary-bg));
+}
+
 .popup-events-list {
     padding: 8px 12px 12px;
     overflow-y: auto;

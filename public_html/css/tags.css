@@ -134,3 +134,24 @@
     opacity: 0.8;
     vertical-align: middle;
 }
+
+/* === Implicit Tags (Related Tags) === */
+/* Tags that are implicitly selected through related tags system */
+.tag-button.state-implicit {
+    background-color: color-mix(in srgb, var(--secondary-accent-color) 25%, var(--tertiary-bg));
+    color: var(--primary-text);
+}
+
+.tag-button.state-implicit:hover {
+    background-color: color-mix(in srgb, var(--secondary-accent-hover) 35%, var(--tertiary-bg));
+}
+
+/* Active related tags toggle button */
+.tag-button.related-tags-active {
+    background-color: color-mix(in srgb, var(--secondary-accent-color) 40%, var(--tertiary-bg));
+    color: var(--primary-text);
+}
+
+.tag-button.related-tags-active:hover {
+    background-color: color-mix(in srgb, var(--secondary-accent-hover) 55%, var(--tertiary-bg));
+}
