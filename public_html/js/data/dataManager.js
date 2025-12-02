@@ -178,7 +178,6 @@ const DataManager = (() => {
         });
 
         rebuildEventLookups(state);
-        console.log("Total unique events processed:", state.allEvents.length);
     }
 
     /**
@@ -302,7 +301,6 @@ const DataManager = (() => {
 
         state.allEvents.push(...newEvents);
         rebuildEventLookups(state);
-        console.log("Full dataset loaded. Total unique events:", state.allEvents.length);
     }
 
     // ========================================
@@ -409,6 +407,23 @@ const DataManager = (() => {
         state.allAvailableTags = Array.from(allUniqueTagsSet).sort();
     }
 
+    /**
+     * Groups events by location key for events in the current date range
+     * Rebuilds the eventsByLatLngInDateRange lookup from filtered events
+     * @param {Object} state - Application state (will be modified)
+     */
+    function groupEventsByLatLngInDateRange(state) {
+        state.eventsByLatLngInDateRange = {};
+        state.allEventsFilteredByDateAndLocation.forEach(event => {
+            if (event.locationKey) {
+                if (!state.eventsByLatLngInDateRange[event.locationKey]) {
+                    state.eventsByLatLngInDateRange[event.locationKey] = [];
+                }
+                state.eventsByLatLngInDateRange[event.locationKey].push(event);
+            }
+        });
+    }
+
     // ========================================
     // EXPORTS
     // ========================================
@@ -425,6 +440,7 @@ const DataManager = (() => {
         rebuildEventLookups,
         buildTagIndex,
         calculateTagFrequencies,
-        processTagHierarchy
+        processTagHierarchy,
+        groupEventsByLatLngInDateRange
     };
 })();

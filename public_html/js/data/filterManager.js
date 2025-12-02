@@ -109,7 +109,7 @@ const FilterManager = (() => {
     function isEventMatchingTagFilters(event, tagStates) {
         // Extract tag categories
         const selectedTags = Object.entries(tagStates)
-            .filter(([, state]) => state === 'selected')
+            .filter(([, state]) => state === 'selected' || state === 'implicit')
             .map(([tag]) => tag);
 
         const requiredTags = Object.entries(tagStates)
@@ -149,11 +149,13 @@ const FilterManager = (() => {
      * Filters events by tag states using tag index for performance
      * @param {Object} tagStates - Tag states object {tagName: state}
      * @param {Array} baseEvents - Events to filter (already filtered by date/location)
+     * @param {Array<string>} [enrichedSelectedTags] - Optional array of selected tags including related tags
      * @returns {Array} Events matching tag filters
      */
-    function filterEventsByTags(tagStates, baseEvents) {
-        const selectedTags = Object.entries(tagStates)
-            .filter(([, state]) => state === 'selected')
+    function filterEventsByTags(tagStates, baseEvents, enrichedSelectedTags = null) {
+        // Use enriched tags if provided, otherwise extract from tagStates (including implicit)
+        const selectedTags = enrichedSelectedTags || Object.entries(tagStates)
+            .filter(([, state]) => state === 'selected' || state === 'implicit')
             .map(([tag]) => tag);
 
         const requiredTags = Object.entries(tagStates)
@@ -187,7 +189,7 @@ const FilterManager = (() => {
                 .map(id => state.appState.eventsById[id])
                 .filter(Boolean);
         }
-        // Selected tags: use union of tag indexes
+        // Selected tags: use union of tag indexes (including related tags!)
         else if (selectedTags.length > 0) {
             const matchingEventIds = new Set();
 
