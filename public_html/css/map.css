@@ -23,9 +23,25 @@
     left: -25%;
     width: 150%;
     height: 150%;
-    background-color: var(--map-bg);
+    /* Vertical gradient in desaturated blues - visible through transparent water */
+    background: linear-gradient(
+        to bottom,
+        #468297 0%,
+        #384f62 25%,
+        #1c2a38 100%
+    );
     will-change: transform;
     transform: translate3d(0, 0, 0);
+}
+
+/* Light theme uses lighter desaturated blue gradient */
+:root[data-theme="light"] #map {
+    background: linear-gradient(
+        to bottom,
+        #c0dcec 0%,
+        #8ac6da 75%,
+        #6596b3 100%
+    );
 }
 
 .custom-marker-icon {
@@ -102,4 +118,19 @@
     .leaflet-control-zoom {
         display: none;
     }
+}
+
+/* === MapLibre GL Integration === */
+/* Ensure MapLibre canvas is behind Leaflet markers */
+.maplibregl-map {
+    position: absolute !important;
+}
+
+.maplibregl-canvas {
+    position: absolute !important;
+}
+
+/* Fix for MapLibre canvas container sizing */
+.leaflet-maplibregl-layer {
+    z-index: 0;
 }

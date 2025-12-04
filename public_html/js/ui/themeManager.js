@@ -66,7 +66,7 @@ const ThemeManager = (() => {
     }
 
     /**
-     * Applies theme change including map tile updates and callbacks
+     * Applies theme change including map style updates and callbacks
      * This is the main method called when user changes theme in settings
      *
      * @param {string} theme - Theme to apply ('dark' or 'light')
@@ -75,12 +75,16 @@ const ThemeManager = (() => {
         // Update theme in DOM and localStorage
         setTheme(theme, null, null);
 
-        // Update map tiles based on theme
-        if (state.appState && state.appState.tileLayer) {
-            const tileUrl = theme === 'dark'
-                ? state.config.MAP_TILE_URL_DARK
-                : state.config.MAP_TILE_URL_LIGHT;
-            state.appState.tileLayer.setUrl(tileUrl);
+        // Update MapLibre style based on theme
+        if (state.appState && state.appState.maplibreLayer) {
+            const styleUrl = theme === 'dark'
+                ? state.config.MAP_STYLE_DARK
+                : state.config.MAP_STYLE_LIGHT;
+            // Get the underlying MapLibre GL map and set the new style
+            const glMap = state.appState.maplibreLayer.getMaplibreMap();
+            if (glMap) {
+                glMap.setStyle(styleUrl);
+            }
         }
 
         // Call optional callback for additional theme change handling
@@ -99,16 +103,16 @@ const ThemeManager = (() => {
     }
 
     /**
-     * Gets the tile URL for the current theme
-     * Used during map initialization to load correct tiles
+     * Gets the MapLibre style URL for the current theme
+     * Used during map initialization to load correct style
      *
-     * @returns {string} Tile URL for current theme
+     * @returns {string} Style URL for current theme
      */
-    function getTileUrlForCurrentTheme() {
+    function getStyleUrlForCurrentTheme() {
         const currentTheme = getCurrentTheme();
         return currentTheme === 'dark'
-            ? state.config.MAP_TILE_URL_DARK
-            : state.config.MAP_TILE_URL_LIGHT;
+            ? state.config.MAP_STYLE_DARK
+            : state.config.MAP_STYLE_LIGHT;
     }
 
     // ========================================
@@ -169,7 +173,7 @@ const ThemeManager = (() => {
         // Theme management
         setTheme,
         applyThemeChange,
-        getTileUrlForCurrentTheme,
+        getStyleUrlForCurrentTheme,
 
         // Query functions
         getCurrentTheme,

@@ -1,0 +1,61 @@
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Claude Code and IDE
+.claude/
+.vscode/
+CLAUDE.md
+
+# Python cache and compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+pipeline/__pycache__/
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+nul
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# FTP credentials backup
+.ftpconfig
+
+# Crawled data
+event_data/

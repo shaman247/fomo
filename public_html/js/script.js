@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
          * Application state object
          * @type {Object}
          * @property {L.Map|null} map - Leaflet map instance
-         * @property {L.TileLayer|null} tileLayer - Map tile layer
+         * @property {Object|null} maplibreLayer - MapLibre GL base layer
          * @property {L.LayerGroup|null} markersLayer - Layer containing all markers
          * @property {L.LayerGroup|null} debugLayer - Layer for debug visualization
          * @property {boolean} debugMode - Debug mode toggle state
@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
          */
         state: {
             map: null,
-            tileLayer: null,
+            maplibreLayer: null,
             markersLayer: null,
             debugLayer: null,
             debugMode: false,
@@ -114,9 +114,9 @@ document.addEventListener('DOMContentLoaded', () => {
             ],
             MAP_INITIAL_VIEW: [40.71799, -73.98712],
             MAP_INITIAL_ZOOM: 14,
-            MAP_TILE_URL_DARK: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-            MAP_TILE_URL_LIGHT: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}{r}.png',
-            MAP_ATTRIBUTION: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
+            MAP_STYLE_DARK: 'data/map-style-dark.json?v=5',
+            MAP_STYLE_LIGHT: 'data/map-style-light.json?v=5',
+            MAP_ATTRIBUTION: '© <a href="https://protomaps.com">Protomaps</a> © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
             MAP_MAX_ZOOM: 20
         },
 
@@ -532,14 +532,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
             L.control.zoom({ position: 'topright' }).addTo(this.state.map);
 
-            // Get tile URL for current theme
-            const tileUrl = ThemeManager.getTileUrlForCurrentTheme();
+            // Get MapLibre style URL for current theme
+            const styleUrl = ThemeManager.getStyleUrlForCurrentTheme();
 
-            this.state.tileLayer = L.tileLayer(tileUrl, {
-                attribution: this.config.MAP_ATTRIBUTION,
-                maxZoom: this.config.MAP_MAX_ZOOM,
-                updateWhenIdle: true,
-                keepBuffer: 12
+            // Add MapLibre GL layer as the base map
+            this.state.maplibreLayer = L.maplibreGL({
+                style: styleUrl,
+                attribution: this.config.MAP_ATTRIBUTION
             }).addTo(this.state.map);
 
             const { markersLayer } = MapManager.init(this.state.map, {}, this.state.tagConfig.bgcolors);
