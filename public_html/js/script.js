@@ -11,12 +11,10 @@ document.addEventListener('DOMContentLoaded', () => {
         /**
          * Application state object
          * @type {Object}
-         * @property {L.Map|null} map - Leaflet map instance
-         * @property {Object|null} maplibreLayer - MapLibre GL base layer
-         * @property {L.LayerGroup|null} markersLayer - Layer containing all markers
-         * @property {L.LayerGroup|null} debugLayer - Layer for debug visualization
+         * @property {maplibregl.Map|null} map - MapLibre map instance
+         * @property {HTMLElement|null} debugContainer - Container for debug visualization
          * @property {boolean} debugMode - Debug mode toggle state
-         * @property {L.LatLng|null} visibleCenter - Visible center accounting for filter panel
+         * @property {Object|null} visibleCenter - Visible center accounting for filter panel
          * @property {Object} locationDistances - Map of locationKey -> distance from center
          * @property {Array} allEvents - All loaded events
          * @property {Object} eventsById - Event lookup by ID
@@ -42,9 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
          */
         state: {
             map: null,
-            maplibreLayer: null,
-            markersLayer: null,
-            debugLayer: null,
+            debugContainer: null,
             debugMode: false,
             visibleCenter: null,
             locationDistances: {}, // Map of locationKey -> distance from center
@@ -509,7 +505,7 @@ document.addEventListener('DOMContentLoaded', () => {
         },
 
         /**
-         * Initialize the Leaflet map with tiles, controls, and event handlers
+         * Initialize the MapLibre GL map with tiles, controls, and event handlers
          * Sets up map layers, markers, and interactive behaviors
          * @memberof App
          */
@@ -523,61 +519,105 @@ document.addEventListener('DOMContentLoaded', () => {
                 ? urlParams.zoom
                 : this.config.MAP_INITIAL_ZOOM;
 
-            this.state.map = L.map('map', {
-                zoomControl: false,
-                inertia: true,
-                inertiaDeceleration: 30000,
-            })
-                .setView(initialView, initialZoom);
-
-            L.control.zoom({ position: 'topright' }).addTo(this.state.map);
-
             // Get MapLibre style URL for current theme
             const styleUrl = ThemeManager.getStyleUrlForCurrentTheme();
 
-            // Add MapLibre GL layer as the base map
-            this.state.maplibreLayer = L.maplibreGL({
+            // Create native MapLibre GL map
+            this.state.map = new maplibregl.Map({
+                container: 'map',
                 style: styleUrl,
-                attribution: this.config.MAP_ATTRIBUTION
-            }).addTo(this.state.map);
+                center: [initialView[1], initialView[0]], // MapLibre uses [lng, lat]
+                zoom: initialZoom,
+                maxZoom: this.config.MAP_MAX_ZOOM,
+                attributionControl: false,
+                dragPan: false // Disable initially, re-enable without inertia below
+            });
 
-            const { markersLayer } = MapManager.init(this.state.map, {}, this.state.tagConfig.bgcolors);
-            this.state.markersLayer = markersLayer;
+            // Re-enable drag pan without inertia (momentum after releasing)
+            this.state.map.dragPan.enable({
+                maxSpeed: 0
+            });
 
-            // Initialize debug layer
-            this.state.debugLayer = L.layerGroup().addTo(this.state.map);
+            // Attribution is displayed in about.html instead of on the map
 
-            // Adjust the initial view so the visible center (accounting for filter panel)
-            // ends up at the desired initial view coordinates (from URL params or default)
-            const desiredVisibleCenter = L.latLng(initialView);
-            ViewportManager.adjustMapToVisibleCenter(this.state.map, desiredVisibleCenter, false);
+            // Add zoom control (navigation control)
+            const navControl = new maplibregl.NavigationControl({
+                showCompass: true,
+                showZoom: true,
+                visualizePitch: true
+            });
+            this.state.map.addControl(navControl, 'top-right');
 
+            // Override the compass click to use a faster reset animation
+            // The compass button resets bearing and pitch to 0
+            const compassButton = document.querySelector('.maplibregl-ctrl-compass');
+            if (compassButton) {
+                compassButton.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    this.state.map.easeTo({
+                        bearing: 0,
+                        pitch: 0,
+                        duration: 150
+                    });
+                }, true); // Use capture to intercept before MapLibre's handler
+            }
+
+            // Initialize MapManager with the MapLibre map
+            MapManager.init(this.state.map, {}, this.state.tagConfig.bgcolors);
+
+            // Create debug container for DOM-based debug overlay
+            const mapContainer = this.state.map.getContainer();
+            this.state.debugContainer = document.createElement('div');
+            this.state.debugContainer.id = 'debug-overlay';
+            this.state.debugContainer.style.position = 'absolute';
+            this.state.debugContainer.style.top = '0';
+            this.state.debugContainer.style.left = '0';
+            this.state.debugContainer.style.width = '100%';
+            this.state.debugContainer.style.height = '100%';
+            this.state.debugContainer.style.pointerEvents = 'none';
+            this.state.debugContainer.style.zIndex = '1000';
+            mapContainer.appendChild(this.state.debugContainer);
+
+            // Wait for map to load before adjusting view
+            this.state.map.on('load', () => {
+                // Adjust the initial view so the visible center (accounting for filter panel)
+                // ends up at the desired initial view coordinates (from URL params or default)
+                const desiredVisibleCenter = { lat: initialView[0], lng: initialView[1] };
+                ViewportManager.adjustMapToVisibleCenter(this.state.map, desiredVisibleCenter, false);
+            });
+
+            // Handle popup open events (custom event fired by MapManager)
             this.state.map.on('popupopen', (e) => {
-                const marker = e.popup._source;
-                if (marker) {
-                    const latLng = marker.getLatLng();
-                    const locationKey = `${latLng.lat},${latLng.lng}`;
-
+                const { marker, locationKey, popup } = e;
+                if (marker && locationKey) {
                     this.state.selectedLocationKey = locationKey;
 
                     // Pan to ensure popup fits within the visible area (90% bounds)
-                    // Wait for popup to render so we can measure its actual height
-                    setTimeout(() => {
-                        const popup = e.popup;
+                    // Wait for popup to render so we can measure its actual dimensions
+                    // Use requestAnimationFrame to ensure DOM has updated
+                    requestAnimationFrame(() => {
                         const popupElement = popup.getElement();
                         if (!popupElement) return;
 
+                        // Get the actual popup content element for accurate width measurement
+                        // MapLibre popup structure: .maplibregl-popup > .maplibregl-popup-content
+                        const contentElement = popupElement.querySelector('.maplibregl-popup-content');
+                        const actualWidth = contentElement ? contentElement.offsetWidth : popupElement.offsetWidth;
+                        const actualHeight = contentElement ? contentElement.offsetHeight : popupElement.offsetHeight;
+
+                        const lngLat = marker.getLngLat();
                         const panOffset = ViewportManager.calculatePopupPanOffset(
                             this.state.map,
-                            latLng,
-                            popupElement.offsetHeight,
-                            popupElement.offsetWidth
+                            lngLat,
+                            actualHeight,
+                            actualWidth
                         );
 
                         if (panOffset) {
-                            this.state.map.panBy([-panOffset.panX, -panOffset.panY], { animate: true, duration: 0.2 });
+                            this.state.map.panBy([-panOffset.panX, -panOffset.panY], { animate: true, duration: 100 });
                         }
-                    }, 50);
+                    });
 
                     // Re-run search to update the UI with the selected location
                     const currentTerm = this.elements.omniSearchInput.value.toLowerCase();
@@ -594,12 +634,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.updateDebugOverlay();
             });
 
+            // Handle popup close events (custom event fired by MapManager)
             this.state.map.on('popupclose', (e) => {
-                const closedPopup = e.popup;
-                const marker = closedPopup._source;
-                if (!marker) return;
-
-                const locationKey = `${marker.getLatLng().lat},${marker.getLatLng().lng}`;
+                const { marker, locationKey } = e;
+                if (!marker || !locationKey) return;
 
                 if (this.state.selectedLocationKey === locationKey) {
                     this.state.selectedLocationKey = null;
@@ -813,7 +851,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateDebugOverlay() {
             ViewportManager.updateDebugOverlay(
                 this.state.map,
-                this.state.debugLayer,
+                this.state.debugContainer,
                 this.state.debugMode
             );
         },

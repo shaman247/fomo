@@ -3,26 +3,21 @@
  * Map and Marker Styles
  * ============================================================================
  *
- * Leaflet map integration and customization:
- * - Map canvas with tile pre-loading for smooth panning
+ * MapLibre GL map integration and customization:
+ * - Map canvas with gradient background for transparent water
  * - Custom emoji markers with hardware acceleration
- * - Leaflet controls (attribution, tooltips, zoom)
+ * - MapLibre controls (attribution, navigation, tooltips)
  *
  * Performance: Uses transform3d and will-change for GPU acceleration
  * Mobile behavior: Hides zoom controls (pinch gestures used instead)
  */
 
 #map {
-    /*
-     * Oversized map canvas (150% width/height) pre-loads surrounding tiles.
-     * This makes panning and zooming feel smoother as tiles are already rendered.
-     * The container's overflow:hidden crops to the visible area.
-     */
     position: absolute;
-    top: -25%;
-    left: -25%;
-    width: 150%;
-    height: 150%;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     /* Vertical gradient in desaturated blues - visible through transparent water */
     background: linear-gradient(
         to bottom,
@@ -30,8 +25,6 @@
         #384f62 25%,
         #1c2a38 100%
     );
-    will-change: transform;
-    transform: translate3d(0, 0, 0);
 }
 
 /* Light theme uses lighter desaturated blue gradient */
@@ -69,68 +62,78 @@
     -webkit-font-smoothing: subpixel-antialiased;
 }
 
-/* === Leaflet Control Customization === */
-/* Override Leaflet's default styles to match app theme */
-.leaflet-control-attribution {
+/* === MapLibre Control Customization === */
+/* Override MapLibre's default styles to match app theme */
+.maplibregl-ctrl-attrib {
     background: var(--attribution-bg) !important;
     color: var(--secondary-text) !important;
 }
 
-.leaflet-control-attribution a {
+.maplibregl-ctrl-attrib a {
     color: var(--accent-color) !important;
 }
 
-.leaflet-tooltip {
-    background-color: var(--primary-bg) !important;
+/* Custom tooltip (shown on marker hover) */
+.maplibre-tooltip {
+    position: absolute;
+    background-color: var(--primary-bg);
     border: 0;
-    color: var(--primary-text) !important;
-    padding: 4px 8px !important;
-    border-radius: 4px !important;
-    box-shadow: var(--tooltip-shadow) !important;
-    font-size: 1.2em !important;
-    font-weight: bold;
-    will-change: transform;
-    transform: translate3d(0, 0, 0);
-}
-
-.leaflet-control-zoom {
-    border: 1px solid var(--border-color);
-    box-shadow: var(--zoom-shadow);
-}
-
-.leaflet-bar a,
-.leaflet-bar a:hover {
-    background-color: var(--tertiary-bg);
     color: var(--primary-text);
+    padding: 4px 8px;
+    border-radius: 4px;
+    box-shadow: var(--tooltip-shadow);
+    font-size: 1.2em;
+    font-weight: bold;
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 10;
 }
 
-.leaflet-bar a:hover {
+/* Navigation control (zoom buttons + compass) */
+/* Styled to match filter panel: semi-transparent background with blur */
+.maplibregl-ctrl-group {
+    background-color: color-mix(in srgb, var(--primary-bg) 75%, transparent) !important;
+    backdrop-filter: blur(5px);
+    border: 1px solid var(--border-color) !important;
+    border-radius: 12px !important;
+    box-shadow: none;
+    overflow: hidden;
+}
+
+.maplibregl-ctrl-group button {
+    background-color: transparent;
+    color: var(--primary-text);
+    width: 36px;
+    height: 36px;
+}
+
+.maplibregl-ctrl-group button:hover {
     background-color: var(--tertiary-hover-bg);
 }
 
-.leaflet-bar a:last-child {
-    border-bottom: none;
+.maplibregl-ctrl-group button + button {
+    border-top: 1px solid var(--border-color);
+}
+
+/* Navigation control icons */
+.maplibregl-ctrl-group button .maplibregl-ctrl-icon {
+    filter: var(--icon-filter, none);
+}
+
+/* Dark theme icon filter to invert icons */
+:root[data-theme="dark"] .maplibregl-ctrl-group button .maplibregl-ctrl-icon {
+    filter: invert(1);
+}
+
+/* Compass styling */
+.maplibregl-ctrl-compass {
+    display: block;
 }
 
 /* === Mobile Responsive Styles === */
-/* Hide zoom buttons on mobile - users can pinch to zoom */
+/* Hide zoom/navigation controls on mobile - users can pinch to zoom */
 @media (max-width: 768px) {
-    .leaflet-control-zoom {
+    .maplibregl-ctrl-top-right .maplibregl-ctrl-group {
         display: none;
     }
-}
-
-/* === MapLibre GL Integration === */
-/* Ensure MapLibre canvas is behind Leaflet markers */
-.maplibregl-map {
-    position: absolute !important;
-}
-
-.maplibregl-canvas {
-    position: absolute !important;
-}
-
-/* Fix for MapLibre canvas container sizing */
-.leaflet-maplibregl-layer {
-    z-index: 0;
 }

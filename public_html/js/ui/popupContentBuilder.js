@@ -285,7 +285,7 @@ const PopupContentBuilder = (() => {
      */
     function createLocationPopupContent(locationInfo, eventsAtLocation, activeFilters, geotagsSet, filterFunctions, forceDisplayEventId = null, selectedStartDate = null) {
         const popupContainer = document.createElement('div');
-        popupContainer.className = 'leaflet-popup-content';
+        popupContainer.className = 'maplibre-popup-content';
 
         if (locationInfo) {
             popupContainer.appendChild(createPopupHeader(locationInfo, geotagsSet));

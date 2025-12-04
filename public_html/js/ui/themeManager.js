@@ -76,15 +76,12 @@ const ThemeManager = (() => {
         setTheme(theme, null, null);
 
         // Update MapLibre style based on theme
-        if (state.appState && state.appState.maplibreLayer) {
+        if (state.appState && state.appState.map) {
             const styleUrl = theme === 'dark'
                 ? state.config.MAP_STYLE_DARK
                 : state.config.MAP_STYLE_LIGHT;
-            // Get the underlying MapLibre GL map and set the new style
-            const glMap = state.appState.maplibreLayer.getMaplibreMap();
-            if (glMap) {
-                glMap.setStyle(styleUrl);
-            }
+            // Set the new style directly on the MapLibre map
+            state.appState.map.setStyle(styleUrl);
         }
 
         // Call optional callback for additional theme change handling
