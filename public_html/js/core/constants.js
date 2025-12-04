@@ -17,7 +17,7 @@ const Constants = (() => {
         THIRTY_DAYS_MS: 30 * 24 * 60 * 60 * 1000,
 
         // Debounce/Throttle delays (in milliseconds)
-        SEARCH_DEBOUNCE_MS: 200,
+        SEARCH_DEBOUNCE_MS: 100,
         MAP_MOVE_THROTTLE_MS: 250,
         RESIZE_THROTTLE_MS: 150
     };

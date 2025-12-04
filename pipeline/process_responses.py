@@ -85,13 +85,16 @@ def _sanitize_text(text):
         '&apos;': "'",
         '&ndash;': '–',
         '&mdash;': '—',
-        '&rsquo;': ''',
-        '&lsquo;': ''',
+        '&rsquo;': "'",
+        '&lsquo;': "'",
         '&rdquo;': '"',
         '&ldquo;': '"',
     }
     for entity, char in html_entities.items():
         text = text.replace(entity, char)
+
+    # Normalize curly apostrophes to straight apostrophes
+    text = text.replace(''', "'").replace(''', "'")
 
     # Replace newline, carriage return, and tab characters with spaces
     text = text.replace('\n', ' ').replace('\r', ' ').replace('\t', ' ')
@@ -249,8 +252,13 @@ def _standardize_time(time_str):
     normalized_time = normalized_time.replace(':00', '')
     return normalized_time
 
-def _group_event_occurrences(rows):
-    """Groups event rows by name and consolidates their occurrences."""
+def _group_event_occurrences(rows, source_url=None):
+    """Groups event rows by name and consolidates their occurrences.
+
+    Args:
+        rows: List of event row dictionaries
+        source_url: Optional source URL from the crawled file to add to event URLs
+    """
 
     def normalize_name_for_grouping(name):
         """Normalize event name for fuzzy matching (similar to export_events.py logic)."""
@@ -307,14 +315,11 @@ def _group_event_occurrences(rows):
             if (num_upper / num_alpha) > 0.5:
                 original_name = event_name
                 event_name = event_name.title()
-                # Normalize apostrophes: convert curly apostrophes to straight apostrophes
-                event_name = event_name.replace(''', "'").replace(''', "'")
                 # Fix possessive 'S after apostrophe (e.g., "Baker'S" -> "Baker's")
-                # Handle both straight and curly apostrophes in case normalization missed any
-                event_name = re.sub(r"['']S\b", "'s", event_name)
+                event_name = re.sub(r"'S\b", "'s", event_name)
                 # Fix contractions like "Wouldn'T", "Didn'T", "I'D", etc.
-                event_name = re.sub(r"['']T\b", "'t", event_name)
-                event_name = re.sub(r"['']D\b", "'d", event_name)
+                event_name = re.sub(r"'T\b", "'t", event_name)
+                event_name = re.sub(r"'D\b", "'d", event_name)
                 # Lowercase common connecting words (e.g., "Foo And Bar" -> "Foo and Bar")
                 event_name = re.sub(r'(?<!^)\b(A|And|Of|The|Or|In|At|On|For|To|With|From|By)\b', lambda m: m.group(1).lower(), event_name)
                 # Lowercase "W/" shorthand (e.g., "W/" -> "w/")
@@ -358,9 +363,14 @@ def _group_event_occurrences(rows):
             if sublocation and sublocation.upper() != 'N/A':
                 base_event['sublocation'] = row_dict['sublocation']
 
-            # Initialize urls list with the first URL
+            # Initialize urls list with the source URL first (if provided), then the event-specific URL
+            urls = []
+            if source_url:
+                urls.append(source_url)
             url = row_dict.get('url', '').strip()
-            base_event['urls'] = [url] if url else []
+            if url and url not in urls:
+                urls.append(url)
+            base_event['urls'] = urls
 
             grouped_events[group_key] = base_event
         else:
@@ -688,7 +698,7 @@ def _get_location_coords(location_name_raw, sublocation_name_raw, source_site_na
     # If still no match, return None.
     return None
 
-def process_response(gemini_response_text, source_filename, locations_map, websites_map):
+def process_response(gemini_response_text, source_filename, locations_map, websites_map, source_url=None):
     """
     Processes the text response from Gemini, parses the Markdown table,
     enriches it with location data, and saves it as a JSON file.
@@ -698,6 +708,7 @@ def process_response(gemini_response_text, source_filename, locations_map, websi
         source_filename: Filename in format 'YYYYMMDD_sitename.md'
         locations_map: Map of location names to coordinates
         websites_map: Map of URLs to extra_tags
+        source_url: Optional source URL from the crawled file to add to event URLs
     """
 
     if not gemini_response_text or not gemini_response_text.strip():
@@ -706,14 +717,14 @@ def process_response(gemini_response_text, source_filename, locations_map, websi
     lines = gemini_response_text.strip().split('\n')
     expected_headers = ['name', 'location', 'sublocation', 'start_date', 'start_time', 'end_date', 'end_time', 'description', 'url', 'hashtags', 'emoji']
     headers = [h.strip() for h in lines[0].strip().strip('|').split('|')]
-    
+
     if headers != expected_headers:
         #print(f"Error: Headers in {source_filename} do not match the expected format.")
         #print(f"Expected: {expected_headers}")
         #print(f"Found:    {headers}")
         #print(f"Attempting parsing anyway...")
         headers = expected_headers
-    
+
     current_date = datetime.now().date()
     future_limit_date = (datetime.now() + timedelta(days=90)).date()
 
@@ -722,6 +733,10 @@ def process_response(gemini_response_text, source_filename, locations_map, websi
             tag_rules = json.load(f)
     except (FileNotFoundError, json.JSONDecodeError):
         tag_rules = {'remove': []}
+
+    # If source_url not provided, fetch it from the crawled file
+    if source_url is None:
+        source_url = _get_source_url_from_crawled_file(source_filename)
 
     parsed_rows = []
 
@@ -788,7 +803,6 @@ def process_response(gemini_response_text, source_filename, locations_map, websi
 
         # Get extra_tags from website configuration before processing hashtags
         # This allows extra_tags to take precedence in deduplication
-        source_url = _get_source_url_from_crawled_file(source_filename)
         extra_tags_list = []
         if source_url and websites_map:
             # Normalize the source URL for matching
@@ -840,7 +854,7 @@ def process_response(gemini_response_text, source_filename, locations_map, websi
 
         parsed_rows.append(processed_row)
 
-    events = _group_event_occurrences(parsed_rows)
+    events = _group_event_occurrences(parsed_rows, source_url)
 
     # Create short_name for each event after capitalization normalization
     for event in events:
@@ -909,7 +923,9 @@ def main():
                 print(f"--- Processing {source_filename_with_date} ---")
                 with open(file_path, 'r', encoding='utf-8') as f:
                     content = f.read()
-                process_response(content, source_filename_with_date, locations_map, websites_map)
+                # Get the source URL from the crawled file to add to event URLs
+                source_url = _get_source_url_from_crawled_file(source_filename_with_date)
+                process_response(content, source_filename_with_date, locations_map, websites_map, source_url)
 
 if __name__ == "__main__":
     main()

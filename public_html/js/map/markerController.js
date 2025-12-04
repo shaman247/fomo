@@ -26,11 +26,9 @@ const MarkerController = (() => {
         appState: null,
         config: null,
 
-        // Callbacks (injected during init)
-        getTagStates: null,
-        getSelectedDates: null,
-        getForceDisplayEventId: null,
-        setForceDisplayEventId: null
+        // Provider objects (injected during init)
+        filterProvider: null,   // { getTagStates, getSelectedDates }
+        eventProvider: null     // { getForceDisplayEventId, setForceDisplayEventId }
     };
 
     // ========================================
@@ -46,11 +44,11 @@ const MarkerController = (() => {
      */
     function createPopupContentCallback(locationKey) {
         return () => {
-            const selectedDates = state.getSelectedDates();
+            const selectedDates = state.filterProvider.getSelectedDates();
             const currentPopupFilters = {
                 sliderStartDate: selectedDates[0],
                 sliderEndDate: selectedDates[1],
-                tagStates: state.getTagStates()
+                tagStates: state.filterProvider.getTagStates()
             };
 
             const eventsAtLocationInDateRange = state.appState.eventsByLatLngInDateRange[locationKey] || [];
@@ -60,7 +58,7 @@ const MarkerController = (() => {
 
             // Handle forced display event (e.g., from search)
             let eventsToDisplay = eventsAtLocationInDateRange;
-            const forceDisplayEventId = state.getForceDisplayEventId();
+            const forceDisplayEventId = state.eventProvider.getForceDisplayEventId();
             if (forceDisplayEventId) {
                 const isForcedEventPresent = eventsToDisplay.some(e => e.id === forceDisplayEventId);
                 if (!isForcedEventPresent) {
@@ -138,7 +136,7 @@ const MarkerController = (() => {
             const newMarker = MapManager.addMarkerToMap([lat, lng], customIcon, locationName, popupContentCallback);
 
             // Auto-open popup if this location contains the forced display event
-            const forceDisplayEventId = state.getForceDisplayEventId();
+            const forceDisplayEventId = state.eventProvider.getForceDisplayEventId();
             if (forceDisplayEventId && newMarker) {
                 if (eventsAtLocation.some(e => e.id === forceDisplayEventId)) {
                     newMarker.openPopup();
@@ -162,11 +160,11 @@ const MarkerController = (() => {
         const locationInfo = state.appState.locationsByLatLng[locationKey];
         const eventsAtLocationInDateRange = state.appState.eventsByLatLngInDateRange[locationKey] || [];
 
-        const selectedDates = state.getSelectedDates();
+        const selectedDates = state.filterProvider.getSelectedDates();
         const currentPopupFilters = {
             sliderStartDate: selectedDates[0],
             sliderEndDate: selectedDates[1],
-            tagStates: state.getTagStates()
+            tagStates: state.filterProvider.getTagStates()
         };
 
         const filterFunctions = {
@@ -175,7 +173,7 @@ const MarkerController = (() => {
 
         // Handle forced display event
         let eventsToDisplay = eventsAtLocationInDateRange;
-        const forceDisplayEventId = state.getForceDisplayEventId();
+        const forceDisplayEventId = state.eventProvider.getForceDisplayEventId();
         if (forceDisplayEventId) {
             const isForcedEventPresent = eventsToDisplay.some(e => e.id === forceDisplayEventId);
             if (!isForcedEventPresent) {
@@ -199,7 +197,7 @@ const MarkerController = (() => {
         openPopup.setContent(newContent);
 
         // Clear forced display after updating
-        state.setForceDisplayEventId(null);
+        state.eventProvider.setForceDisplayEventId(null);
 
         return true;
     }
@@ -237,7 +235,7 @@ const MarkerController = (() => {
      */
     function hasMatchingEvents(locationKey) {
         const eventsAtLocation = state.appState.eventsByLatLngInDateRange[locationKey] || [];
-        const currentTagStates = state.getTagStates();
+        const currentTagStates = state.filterProvider.getTagStates();
 
         return eventsAtLocation.some(event =>
             FilterManager.isEventMatchingTagFilters(event, currentTagStates)
@@ -254,18 +252,18 @@ const MarkerController = (() => {
      * @param {Object} config - Configuration object
      * @param {Object} config.appState - Reference to app state
      * @param {Object} config.config - App configuration
-     * @param {Function} config.getTagStates - Function to get current tag states
-     * @param {Function} config.getSelectedDates - Function to get selected date range
-     * @param {Function} config.getForceDisplayEventId - Function to get forced display event ID
-     * @param {Function} config.setForceDisplayEventId - Function to set forced display event ID
+     * @param {Object} config.filterProvider - Provider for filter-related state
+     * @param {Function} config.filterProvider.getTagStates - Function to get current tag states
+     * @param {Function} config.filterProvider.getSelectedDates - Function to get selected date range
+     * @param {Object} config.eventProvider - Provider for event-related state
+     * @param {Function} config.eventProvider.getForceDisplayEventId - Function to get forced display event ID
+     * @param {Function} config.eventProvider.setForceDisplayEventId - Function to set forced display event ID
      */
     function init(config) {
         state.appState = config.appState;
         state.config = config.config;
-        state.getTagStates = config.getTagStates;
-        state.getSelectedDates = config.getSelectedDates;
-        state.getForceDisplayEventId = config.getForceDisplayEventId;
-        state.setForceDisplayEventId = config.setForceDisplayEventId;
+        state.filterProvider = config.filterProvider;
+        state.eventProvider = config.eventProvider;
     }
 
     /**
@@ -277,8 +275,8 @@ const MarkerController = (() => {
      * @param {string|null} [eventIdToForce=null] - Event ID to force display in popup
      */
     function flyToLocationAndOpenPopup(lat, lng, eventIdToForce = null) {
-        if (state.setForceDisplayEventId) {
-            state.setForceDisplayEventId(eventIdToForce);
+        if (state.eventProvider && state.eventProvider.setForceDisplayEventId) {
+            state.eventProvider.setForceDisplayEventId(eventIdToForce);
         }
 
         const markersLayer = state.appState.markersLayer;

@@ -211,6 +211,7 @@ document.addEventListener('DOMContentLoaded', () => {
             DataManager.calculateTagFrequencies(this.state);
             DataManager.processTagHierarchy(this.state, this.config);
             DataManager.buildTagIndex(this.state);
+            DataManager.buildSearchIndex(this.state);
         },
 
         /**
@@ -320,6 +321,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 DataManager.processFullData(fullEventData, fullLocationData, this.state, this.config);
                 DataManager.calculateTagFrequencies(this.state);
                 DataManager.processTagHierarchy(this.state, this.config);
+                DataManager.buildSearchIndex(this.state);
 
                 this.updateFilteredEventList(); // This will re-filter by date/location and rebuild tag index
                 this.initFilterPanelUI();
@@ -644,14 +646,18 @@ document.addEventListener('DOMContentLoaded', () => {
          * @memberof App
          */
         initMarkerController() {
-            // Initialize MarkerController
+            // Initialize MarkerController with provider objects
             MarkerController.init({
                 appState: this.state,
                 config: this.config,
-                getTagStates: () => FilterPanelUI.getTagStates(),
-                getSelectedDates: () => this.state.datePickerInstance.selectedDates,
-                getForceDisplayEventId: () => this.state.forceDisplayEventId,
-                setForceDisplayEventId: (id) => { this.state.forceDisplayEventId = id; }
+                filterProvider: {
+                    getTagStates: () => FilterPanelUI.getTagStates(),
+                    getSelectedDates: () => this.state.datePickerInstance.selectedDates
+                },
+                eventProvider: {
+                    getForceDisplayEventId: () => this.state.forceDisplayEventId,
+                    setForceDisplayEventId: (id) => { this.state.forceDisplayEventId = id; }
+                }
             });
         },
 
@@ -685,13 +691,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 defaultMarkerColor: this.config.DEFAULT_MARKER_COLOR_DARK,
                 performSearch: (term) => this.performSearch(term),
                 getSearchTerm: () => this.elements.omniSearchInput.value.toLowerCase(),
-                getTagColor: (tag) => TagColorManager.getTagColor(tag),
-                assignColorToTag: (tag) => TagColorManager.assignColorToTag(tag),
-                unassignColorFromTag: (tag) => TagColorManager.unassignColorFromTag(tag),
-                isImplicitlySelected: (tag) => TagColorManager.isImplicitlySelected(tag),
+                colorProvider: {
+                    getTagColor: (tag) => TagColorManager.getTagColor(tag),
+                    assignColorToTag: (tag) => TagColorManager.assignColorToTag(tag),
+                    unassignColorFromTag: (tag) => TagColorManager.unassignColorFromTag(tag),
+                    isImplicitlySelected: (tag) => TagColorManager.isImplicitlySelected(tag)
+                }
             });
             FilterPanelUI.setAppProviders({ getSelectedLocationKey: () => this.state.selectedLocationKey });
             FilterPanelUI.render([]); // Render with empty results initially
+
+            // Initialize PopupContentBuilder for creating marker popups
+            PopupContentBuilder.init({
+                createInteractiveTagButton: (tag) => FilterPanelUI.createInteractiveTagButton(tag)
+            });
 
             // Initialize SelectedTagsDisplay
             SelectedTagsDisplay.init({

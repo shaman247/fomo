@@ -326,6 +326,55 @@ const DataManager = (() => {
     }
 
     /**
+     * Builds search index with normalized text for accent/case-insensitive search
+     * @param {Object} state - Application state
+     */
+    function buildSearchIndex(state) {
+        state.searchIndex = {
+            events: new Map(),      // eventId -> normalized searchable text
+            locations: new Map(),   // locationKey -> normalized searchable text
+            tags: new Map()         // tag -> normalized tag
+        };
+
+        // Index events
+        state.allEvents.forEach(event => {
+            const searchableFields = [
+                event.name,
+                event.short_name,
+                event.description,
+                event.location,
+                event.sublocation
+            ].filter(Boolean);
+
+            const normalizedText = searchableFields
+                .map(field => Utils.normalizeForSearch(field))
+                .join(' ');
+
+            state.searchIndex.events.set(event.id, normalizedText);
+        });
+
+        // Index locations
+        Object.entries(state.locationsByLatLng).forEach(([key, location]) => {
+            const searchableFields = [
+                location.name,
+                location.short_name,
+                ...(location.tags || [])
+            ].filter(Boolean);
+
+            const normalizedText = searchableFields
+                .map(field => Utils.normalizeForSearch(field))
+                .join(' ');
+
+            state.searchIndex.locations.set(key, normalizedText);
+        });
+
+        // Index tags
+        state.allAvailableTags.forEach(tag => {
+            state.searchIndex.tags.set(tag, Utils.normalizeForSearch(tag));
+        });
+    }
+
+    /**
      * Builds tag index for efficient tag-based lookups
      * @param {Object} state - Application state
      * @param {Array} events - Events to index (optional, defaults to all events)
@@ -438,6 +487,7 @@ const DataManager = (() => {
         isEventInAppDateRange,
         appendEventData,
         rebuildEventLookups,
+        buildSearchIndex,
         buildTagIndex,
         calculateTagFrequencies,
         processTagHierarchy,
