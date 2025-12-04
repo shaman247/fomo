@@ -6,6 +6,7 @@
     <title>Fomo NYC</title>
     <link rel="icon" href="images/torch.svg" type="image/svg+xml">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" crossorigin=""/>
     <link rel="preconnect" href="https://rsms.me/">
     <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" crossorigin="anonymous">
@@ -121,6 +122,8 @@
     <link rel="stylesheet" href="css/index.css">
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js" crossorigin=""></script>
+    <script src="https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.0.22/leaflet-maplibre-gl.js" crossorigin=""></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr" crossorigin="anonymous"></script>
 
     <!-- Core -->
@@ -128,23 +131,25 @@
     <script src="js/core/utils.js"></script>
     <script src="js/core/urlParams.js"></script>
 
-    <!-- Tags/Search -->
-    <script src="js/tags/tagColorManager.js"></script>
-    <script src="js/tags/relatedTagsManager.js"></script>
-    <script src="js/tags/searchManager.js"></script>
-    <script src="js/tags/tagStateManager.js"></script>
-    <script src="js/tags/sectionRenderer.js"></script>
-    <script src="js/tags/gestureHandler.js"></script>
-    <script src="js/tags/filterPanelUI.js"></script>
-    <script src="js/tags/selectedTagsDisplay.js"></script>
-
     <!-- Data -->
     <script src="js/data/filterManager.js"></script>
     <script src="js/data/dataManager.js"></script>
+    <script src="js/data/searchManager.js"></script>
+
+    <!-- Tags -->
+    <script src="js/tags/tagColorManager.js"></script>
+    <script src="js/tags/relatedTagsManager.js"></script>
+    <script src="js/tags/tagStateManager.js"></script>
+    <script src="js/tags/sectionRenderer.js"></script>
+    <script src="js/tags/searchController.js"></script>
+    <script src="js/tags/filterPanelUI.js"></script>
+    <script src="js/tags/selectedTagsDisplay.js"></script>
 
     <!-- UI -->
     <script src="js/ui/modalManager.js"></script>
     <script src="js/ui/toastNotifier.js"></script>
+    <script src="js/ui/gestureHandler.js"></script>
+    <script src="js/ui/popupContentBuilder.js"></script>
     <script src="js/ui/uiManager.js"></script>
     <script src="js/ui/emojiManager.js"></script>
     <script src="js/ui/themeManager.js"></script>
