@@ -5,6 +5,7 @@
  * - TagStateManager: Manages tag states and button creation
  * - SectionRenderer: Renders collapsible search result sections
  * - GestureHandler: Handles swipe gestures for section reordering
+ * - SearchController: Handles search input and special terms
  *
  * This module acts as the main coordinator for the filter panel which displays
  * search results across locations, events, and tags.
@@ -35,31 +36,18 @@ const FilterPanelUI = (() => {
         // Tag states (managed by TagStateManager)
         tagStates: {},
 
-        // Search
-        searchInputDOM: null,
+        // Search state (SearchController handles input events)
         searchTerm: '',
         lastSearchResults: [],
         lastSearchTerm: '',
         onSearchResultClick: null,
         getSearchTerm: null,
 
-        // Color management callbacks
-        getTagColor: null,
-        assignColorToTag: null,
-        unassignColorFromTag: null,
-
-        // Related tags callback
-        isImplicitlySelected: null,
+        // Provider objects
+        colorProvider: null,  // { getTagColor, assignColorToTag, unassignColorFromTag, isImplicitlySelected }
 
         // Section management (managed by SectionRenderer)
-        sectionOrder: ['locations', 'events', 'tags'],
-
-        // Mobile filter panel elements (for auto-expand)
-        filterPanelDOM: null,
-        expandFilterPanelButtonDOM: null,
-
-        // Special search terms handler
-        onSpecialSearchTerm: null
+        sectionOrder: ['locations', 'events', 'tags']
     };
 
     /**
@@ -75,30 +63,17 @@ const FilterPanelUI = (() => {
     let performSearchCallback = () => {};
 
     // ========================================
-    // SEARCH HANDLING
+    // SEARCH HANDLING (delegated to SearchController)
     // ========================================
 
     /**
-     * Handles keydown events in the search input
-     * @param {KeyboardEvent} e - Keyboard event
-     */
-    function handleSearchKeydown(e) {
-        if (e.key === 'Escape') {
-            clearSearch(state.searchInputDOM.value);
-        }
-    }
-
-    /**
      * Clears the search input and results
-     * @param {string} currentTerm - Current search term
+     * Delegates to SearchController for input clearing
      */
-    function clearSearch(currentTerm) {
-        if (state.searchInputDOM) {
-            state.searchInputDOM.value = '';
-        }
-        state.searchTerm = currentTerm || '';
-        render([]);
-        state.searchInputDOM.blur();
+    function clearSearch() {
+        SearchController.clearSearch();
+        state.searchTerm = '';
+        renderFilters([]);
     }
 
     // ========================================
@@ -144,9 +119,30 @@ const FilterPanelUI = (() => {
     /**
      * Initializes the FilterPanelUI module
      * @param {Object} config - Configuration object
+     * @param {Array} config.allAvailableTags - All available tags
+     * @param {Array} config.tagConfigBgColors - Background colors for tags
+     * @param {Object} config.initialGlobalFrequencies - Initial tag frequencies
+     * @param {HTMLElement} config.resultsContainerDOM - Container for search results
+     * @param {Function} config.onFilterChangeCallback - Callback when filters change
+     * @param {Function} config.onSearchResultClick - Callback when search result clicked
+     * @param {string} config.defaultMarkerColor - Default marker color
+     * @param {Function} config.performSearch - Function to perform search
+     * @param {Function} config.getSearchTerm - Function to get current search term
+     * @param {Object} config.colorProvider - Provider for tag color operations
+     * @param {Function} config.colorProvider.getTagColor - Get tag color
+     * @param {Function} config.colorProvider.assignColorToTag - Assign color to tag
+     * @param {Function} config.colorProvider.unassignColorFromTag - Unassign color from tag
+     * @param {Function} config.colorProvider.isImplicitlySelected - Check if tag is implicitly selected
      */
     function init(config) {
-        Object.assign(state, config);
+        // Extract provider and assign rest to state
+        state.colorProvider = config.colorProvider || null;
+        state.allAvailableTags = config.allAvailableTags || [];
+        state.tagConfigBgColors = config.tagConfigBgColors || [];
+        state.resultsContainerDOM = config.resultsContainerDOM;
+        state.onFilterChangeCallback = config.onFilterChangeCallback;
+        state.onSearchResultClick = config.onSearchResultClick;
+        state.defaultMarkerColor = config.defaultMarkerColor;
         state.initialGlobalFrequencies = { ...config.initialGlobalFrequencies };
         state.currentDynamicFrequencies = { ...config.initialGlobalFrequencies };
 
@@ -166,22 +162,17 @@ const FilterPanelUI = (() => {
         }
 
         performSearchCallback = config.performSearch || performSearchCallback;
-        state.searchInputDOM = document.getElementById('omni-search-input');
 
-        if (state.searchInputDOM) {
-            state.searchInputDOM.addEventListener('keydown', handleSearchKeydown);
-        }
-
-        // Initialize TagStateManager
+        // Initialize TagStateManager with provider objects
         TagStateManager.init({
             tagStates: state.tagStates,
-            getTagColor: state.getTagColor,
-            assignColorToTag: state.assignColorToTag,
-            unassignColorFromTag: state.unassignColorFromTag,
+            colorProvider: state.colorProvider,
+            relatedTagsProvider: {
+                isImplicitlySelected: state.colorProvider?.isImplicitlySelected,
+                isIncludingRelatedTags: () => SelectedTagsDisplay.isIncludingRelatedTags()
+            },
             onFilterChangeCallback: state.onFilterChangeCallback,
-            defaultMarkerColor: state.defaultMarkerColor,
-            isImplicitlySelected: state.isImplicitlySelected,
-            isIncludingRelatedTags: () => SelectedTagsDisplay.isIncludingRelatedTags()
+            defaultMarkerColor: state.defaultMarkerColor
         });
 
         // Initialize SectionRenderer
@@ -318,65 +309,24 @@ const FilterPanelUI = (() => {
     }
 
     // ========================================
-    // OMNI SEARCH INITIALIZATION
+    // SEARCH INITIALIZATION
     // ========================================
 
     /**
-     * Initialize the omni search functionality
-     * Sets up debounced search, special term handling, and auto-expand on mobile
+     * Initialize the search input functionality
+     * Delegates to SearchController for input handling
      * @param {Object} config - Configuration object
      * @param {HTMLElement} config.filterPanelDOM - Filter panel element (for mobile auto-expand)
      * @param {HTMLElement} config.expandFilterPanelButtonDOM - Expand button element (for mobile)
      * @param {Function} config.onSpecialSearchTerm - Callback for special search terms (debug, noto)
      */
     function initOmniSearch(config) {
-        if (config.filterPanelDOM) {
-            state.filterPanelDOM = config.filterPanelDOM;
-        }
-        if (config.expandFilterPanelButtonDOM) {
-            state.expandFilterPanelButtonDOM = config.expandFilterPanelButtonDOM;
-        }
-        if (config.onSpecialSearchTerm) {
-            state.onSpecialSearchTerm = config.onSpecialSearchTerm;
-        }
-
-        if (!state.searchInputDOM) {
-            console.error("FilterPanelUI: searchInputDOM is not initialized. Call init() first.");
-            return;
-        }
-
-        // Debounce search to improve performance (executes after user stops typing)
-        const debouncedSearch = Utils.debounce((searchTerm) => {
-            performSearchCallback(searchTerm);
-        }, Constants.TIME.SEARCH_DEBOUNCE_MS);
-
-        state.searchInputDOM.addEventListener('input', (e) => {
-            const searchTerm = e.target.value.toLowerCase();
-
-            // Handle special terms immediately (no debounce)
-            if (state.onSpecialSearchTerm) {
-                state.onSpecialSearchTerm(searchTerm);
-            }
-
-            // Debounce regular search
-            debouncedSearch(searchTerm);
-
-            // Auto-expand panel on mobile when user enters search term
-            if (searchTerm && window.innerWidth <= Constants.UI.MOBILE_BREAKPOINT) {
-                if (state.filterPanelDOM) {
-                    state.filterPanelDOM.classList.remove('tags-collapsed');
-                }
-                if (state.expandFilterPanelButtonDOM) {
-                    state.expandFilterPanelButtonDOM.classList.remove('collapsed');
-                }
-            }
-        });
-
-        state.searchInputDOM.addEventListener('focus', (e) => {
-            const searchTerm = e.target.value.toLowerCase();
-            if (searchTerm) {
-                performSearchCallback(searchTerm);
-            }
+        // Delegate to SearchController
+        SearchController.init({
+            filterPanelDOM: config.filterPanelDOM,
+            expandFilterPanelButtonDOM: config.expandFilterPanelButtonDOM,
+            onSpecialSearchTerm: config.onSpecialSearchTerm,
+            performSearchCallback: performSearchCallback
         });
     }
 

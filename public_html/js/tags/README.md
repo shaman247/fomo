@@ -412,55 +412,6 @@ Calculation:
   Total Score:   27.4
 ```
 
----
-
-## Visual Representation
-
-### Tag Button Styling
-
-#### State: `unselected`
-- **Background**: Gray (`var(--tertiary-bg)` with opacity)
-- **Text**: Secondary text color
-- **Border**: None
-- **Hover**: Slightly brighter background
-
-#### State: `selected`
-- **Background**: Red (`var(--tag-selected-bg)`)
-- **Text**: White/Black (theme dependent)
-- **Border**: None
-- **Color**: Assigned from color palette
-- **Shadow**: Text shadow for contrast
-
-#### State: `required`
-- **Background**: Red (same as selected)
-- **Text**: White/Black (theme dependent)
-- **Border**: 2px solid with glow effect
-- **Color**: Assigned from color palette
-- **Effect**: Drop shadow glow
-
-#### State: `forbidden`
-- **Background**: Transparent
-- **Text**: Strikethrough
-- **Border**: 1px solid on hover
-- **Style**: Muted appearance
-
-#### State: `related` (Implicit)
-- **Background**: Semi-transparent red (50% mix)
-- **Text**: White/Black (theme dependent)
-- **Border**: 1px dashed red
-- **Opacity**: 0.85 (increases to 1.0 on hover)
-- **Visual Cue**: Dashed border indicates implicit selection
-
-### Debug Mode
-
-When debug mode is enabled (`state.debugMode = true`):
-- Tag buttons show score values: `Tag Name [15.3]`
-- Format: `[score.toFixed(1)]`
-- Style: Smaller font, reduced opacity
-- Location: Inline after tag name
-
----
-
 ## Data Flow
 
 ### 1. Tag Selection Flow

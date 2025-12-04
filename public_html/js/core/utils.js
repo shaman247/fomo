@@ -199,6 +199,21 @@ const Utils = (() => {
     }
 
     /**
+     * Normalizes text for accent-insensitive, case-insensitive search.
+     * Decomposes accented characters and removes diacritical marks.
+     * @param {string} text - Text to normalize
+     * @returns {string} Normalized lowercase text without accents
+     */
+    function normalizeForSearch(text) {
+        if (!text) return '';
+        return text
+            .normalize('NFD')                    // Decompose accents (é → e + combining accent)
+            .replace(/[\u0300-\u036f]/g, '')     // Remove combining diacritical marks
+            .replace(/['']/g, "'")               // Normalize curly apostrophes to straight
+            .toLowerCase();
+    }
+
+    /**
      * Gets the display name for an item (event or location)
      * Uses short_name if available, otherwise uses the full name
      * Truncates long names to 40 characters
@@ -318,6 +333,7 @@ const Utils = (() => {
         parseDateInNewYork,
         isWindows,
         isCountryFlagEmoji,
+        normalizeForSearch,
         getDisplayName,
         debounce,
         throttle,

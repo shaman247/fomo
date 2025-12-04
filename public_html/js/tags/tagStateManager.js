@@ -41,13 +41,12 @@ const TagStateManager = (() => {
         // Tag states tracking
         tagStates: {},
 
+        // Provider objects
+        colorProvider: null,    // { getTagColor, assignColorToTag, unassignColorFromTag }
+        relatedTagsProvider: null, // { isImplicitlySelected, isIncludingRelatedTags }
+
         // Callbacks
-        getTagColor: null,
-        assignColorToTag: null,
-        unassignColorFromTag: null,
         onFilterChangeCallback: null,
-        isImplicitlySelected: null, // Callback to check if tag is implicitly selected via relations
-        isIncludingRelatedTags: null, // Callback to check if related tags toggle is enabled
 
         // Configuration
         defaultMarkerColor: null
@@ -109,12 +108,12 @@ const TagStateManager = (() => {
         const isNowUnselected = newState === TAG_STATE.UNSELECTED || newState === TAG_STATE.IMPLICIT;
 
         if (wasUnselected && isNowActive) {
-            if (state.assignColorToTag) {
-                state.assignColorToTag(tag);
+            if (state.colorProvider && state.colorProvider.assignColorToTag) {
+                state.colorProvider.assignColorToTag(tag);
             }
         } else if (wasActive && isNowUnselected) {
-            if (state.unassignColorFromTag) {
-                state.unassignColorFromTag(tag);
+            if (state.colorProvider && state.colorProvider.unassignColorFromTag) {
+                state.colorProvider.unassignColorFromTag(tag);
             }
         }
     }
@@ -130,7 +129,7 @@ const TagStateManager = (() => {
      */
     function updateTagVisuals(buttonElement, tagValue) {
         const tagState = state.tagStates[tagValue] || TAG_STATE.UNSELECTED;
-        const tagColor = state.getTagColor ? state.getTagColor(tagValue) : null;
+        const tagColor = state.colorProvider && state.colorProvider.getTagColor ? state.colorProvider.getTagColor(tagValue) : null;
         const colorToUse = tagColor || state.defaultMarkerColor;
 
         buttonElement.className = 'tag-button';
@@ -393,23 +392,22 @@ const TagStateManager = (() => {
      * Initializes the TagStateManager module
      * @param {Object} config - Configuration object
      * @param {Object} config.tagStates - Reference to tag states object
-     * @param {Function} config.getTagColor - Callback to get tag color
-     * @param {Function} config.assignColorToTag - Callback to assign color
-     * @param {Function} config.unassignColorFromTag - Callback to unassign color
+     * @param {Object} config.colorProvider - Provider for tag color operations
+     * @param {Function} config.colorProvider.getTagColor - Get tag color
+     * @param {Function} config.colorProvider.assignColorToTag - Assign color to tag
+     * @param {Function} config.colorProvider.unassignColorFromTag - Unassign color from tag
+     * @param {Object} [config.relatedTagsProvider] - Provider for related tags operations
+     * @param {Function} [config.relatedTagsProvider.isImplicitlySelected] - Check if tag is implicitly selected
+     * @param {Function} [config.relatedTagsProvider.isIncludingRelatedTags] - Check if related tags are included
      * @param {Function} config.onFilterChangeCallback - Callback when filters change
      * @param {string} config.defaultMarkerColor - Default marker color
-     * @param {Function} config.isImplicitlySelected - Callback to check if tag is implicitly selected
-     * @param {Function} config.isIncludingRelatedTags - Callback to check if related tags are included
      */
     function init(config) {
         state.tagStates = config.tagStates;
-        state.getTagColor = config.getTagColor;
-        state.assignColorToTag = config.assignColorToTag;
-        state.unassignColorFromTag = config.unassignColorFromTag;
+        state.colorProvider = config.colorProvider || null;
+        state.relatedTagsProvider = config.relatedTagsProvider || null;
         state.onFilterChangeCallback = config.onFilterChangeCallback;
         state.defaultMarkerColor = config.defaultMarkerColor;
-        state.isImplicitlySelected = config.isImplicitlySelected || null;
-        state.isIncludingRelatedTags = config.isIncludingRelatedTags || null;
     }
 
     /**
