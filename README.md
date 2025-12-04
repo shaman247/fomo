@@ -62,8 +62,8 @@ It works by visiting the websites of parks, museums, music venues, etc., identif
 
 ## Acknowledgements
 
-- 🌱 Map library: [Leaflet](https://leafletjs.com/)
-- 🗺️ Maps © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors, © [CARTO](https://carto.com/attributions)
+- 🧭 Map library: [MapLibre GL JS](https://maplibre.org/)
+- 🗺️ Map tiles: © [Protomaps](https://protomaps.com), © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors
 - 📅 Date picker: [Flatpickr](https://flatpickr.js.org/)
 - 🔠 Fonts: [Inter](https://rsms.me/inter/), [Noto Color Emoji](https://fonts.google.com/noto/specimen/Noto+Color+Emoji)
 - 🚀 This project uses [Crawl4AI](https://github.com/unclecode/crawl4ai) for web data extraction
