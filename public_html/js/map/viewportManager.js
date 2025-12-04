@@ -32,6 +32,31 @@ const ViewportManager = (() => {
     };
 
     // ========================================
+    // HELPER FUNCTIONS
+    // ========================================
+
+    /**
+     * Calculate distance between two lat/lng points using Haversine formula
+     * @param {Object} point1 - First point {lat, lng}
+     * @param {Object} point2 - Second point {lat, lng}
+     * @returns {number} Distance in meters
+     */
+    function calculateDistance(point1, point2) {
+        const R = 6371000; // Earth's radius in meters
+        const lat1 = point1.lat * Math.PI / 180;
+        const lat2 = point2.lat * Math.PI / 180;
+        const deltaLat = (point2.lat - point1.lat) * Math.PI / 180;
+        const deltaLng = (point2.lng - point1.lng) * Math.PI / 180;
+
+        const a = Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
+            Math.cos(lat1) * Math.cos(lat2) *
+            Math.sin(deltaLng / 2) * Math.sin(deltaLng / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+        return R * c;
+    }
+
+    // ========================================
     // FILTER PANEL DIMENSIONS
     // ========================================
 
@@ -75,34 +100,35 @@ const ViewportManager = (() => {
      * The visible center is offset from the map center based on panel dimensions
      * Returns a point that is 80% of the way between map center and edge of visible area
      *
-     * @param {L.Map} map - Leaflet map instance
+     * @param {maplibregl.Map} map - MapLibre map instance
      * @param {boolean} [isInitialLoad=false] - Whether this is during initial load
-     * @returns {L.LatLng|null} Visible center coordinates or null if map not ready
+     * @returns {Object|null} Visible center coordinates {lat, lng} or null if map not ready
      */
     function calculateVisibleCenter(map, isInitialLoad = false) {
         if (!map) return null;
 
         const center = map.getCenter();
-        const centerPoint = map.latLngToContainerPoint(center);
+        const container = map.getContainer();
+        const centerPoint = map.project(center);
 
         // Get filter panel dimensions
         const { filterPanelWidth, filterPanelHeight } = getFilterPanelDimensions(isInitialLoad);
 
         // Calculate the visible center (80% of the way between map center and edge of visible area)
-        const visibleCenterPoint = L.point(
-            centerPoint.x + filterPanelWidth * 0.4,
-            centerPoint.y + filterPanelHeight * 0.4
-        );
+        const visibleCenterPoint = {
+            x: centerPoint.x + filterPanelWidth * 0.4,
+            y: centerPoint.y + filterPanelHeight * 0.4
+        };
 
-        const visibleCenter = map.containerPointToLatLng(visibleCenterPoint);
-        state.visibleCenter = visibleCenter;
+        const visibleCenter = map.unproject([visibleCenterPoint.x, visibleCenterPoint.y]);
+        state.visibleCenter = { lat: visibleCenter.lat, lng: visibleCenter.lng };
 
-        return visibleCenter;
+        return state.visibleCenter;
     }
 
     /**
      * Gets the currently cached visible center
-     * @returns {L.LatLng|null} Cached visible center or null
+     * @returns {Object|null} Cached visible center {lat, lng} or null
      */
     function getVisibleCenter() {
         return state.visibleCenter;
@@ -113,58 +139,105 @@ const ViewportManager = (() => {
     // ========================================
 
     /**
+     * Check if a point is inside a quadrilateral using ray casting algorithm
+     * @param {Object} point - Point to check {lat, lng}
+     * @param {Array} quad - Array of 4 corner points [{lat, lng}, ...]
+     * @returns {boolean} True if point is inside the quadrilateral
+     */
+    function isPointInQuadrilateral(point, quad) {
+        const x = point.lng;
+        const y = point.lat;
+        let inside = false;
+
+        for (let i = 0, j = quad.length - 1; i < quad.length; j = i++) {
+            const xi = quad[i].lng, yi = quad[i].lat;
+            const xj = quad[j].lng, yj = quad[j].lat;
+
+            if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
+                inside = !inside;
+            }
+        }
+
+        return inside;
+    }
+
+    /**
      * Calculates viewport bounds and debug rectangle for popup positioning
-     * The map container is 150% size, so getSize() returns enlarged size
-     * We need 2/3 of that to get the actual visible area (100% / 150% = 2/3)
+     * For rotated/pitched maps, uses a quadrilateral for accurate visibility checks
      *
-     * @param {L.Map} map - Leaflet map instance
+     * @param {maplibregl.Map} map - MapLibre map instance
      * @param {boolean} [isInitialLoad=false] - Whether this is during initial load
      * @returns {Object} Object with bounds, debugRectBounds, visibleCenter
      */
     function calculateViewportBounds(map, isInitialLoad = false) {
         if (!map) return null;
 
-        // Calculate bounds based on the actual visible viewport
-        const containerSize = map.getSize();
-        const viewportWidth = containerSize.x * (2/3);
-        const viewportHeight = containerSize.y * (2/3);
+        const container = map.getContainer();
+        const viewportWidth = container.offsetWidth;
+        const viewportHeight = container.offsetHeight;
 
         // Get filter panel dimensions
         const { filterPanelWidth, filterPanelHeight } = getFilterPanelDimensions(isInitialLoad);
 
-        const center = map.getCenter();
-        const centerPoint = map.latLngToContainerPoint(center);
-
-        // Calculate the corners of the actual visible viewport
-        const topLeft = L.point(
-            centerPoint.x - viewportWidth / 2 + filterPanelWidth,
-            centerPoint.y - viewportHeight / 2 + filterPanelHeight
-        );
-        const bottomRight = L.point(
-            centerPoint.x + viewportWidth / 2,
-            centerPoint.y + viewportHeight / 2
-        );
+        // Calculate the corners of the actual visible viewport in pixels
+        const topLeftPx = { x: filterPanelWidth, y: filterPanelHeight };
+        const topRightPx = { x: viewportWidth, y: filterPanelHeight };
+        const bottomRightPx = { x: viewportWidth, y: viewportHeight };
+        const bottomLeftPx = { x: filterPanelWidth, y: viewportHeight };
 
         // Calculate visible center
         const visibleCenter = calculateVisibleCenter(map, isInitialLoad);
 
-        // Calculate lat/lng bounds
-        const southWest = map.containerPointToLatLng(L.point(topLeft.x, bottomRight.y));
-        const northEast = map.containerPointToLatLng(L.point(bottomRight.x, topLeft.y));
-        const bounds = L.latLngBounds(southWest, northEast);
+        // Get lat/lng for all four corners (handles rotation and pitch)
+        const topLeft = map.unproject([topLeftPx.x, topLeftPx.y]);
+        const topRight = map.unproject([topRightPx.x, topRightPx.y]);
+        const bottomRight = map.unproject([bottomRightPx.x, bottomRightPx.y]);
+        const bottomLeft = map.unproject([bottomLeftPx.x, bottomLeftPx.y]);
 
-        // Calculate 90% inset bounds for popup positioning
+        // Create quadrilateral array for point-in-polygon check
+        const quadrilateral = [
+            { lat: topLeft.lat, lng: topLeft.lng },
+            { lat: topRight.lat, lng: topRight.lng },
+            { lat: bottomRight.lat, lng: bottomRight.lng },
+            { lat: bottomLeft.lat, lng: bottomLeft.lng }
+        ];
+
+        // Create bounds object with quadrilateral-based contains check
+        const bounds = {
+            // These are approximate for compatibility - use the actual corners for precision
+            getSouthWest: () => ({
+                lat: Math.min(topLeft.lat, topRight.lat, bottomRight.lat, bottomLeft.lat),
+                lng: Math.min(topLeft.lng, topRight.lng, bottomRight.lng, bottomLeft.lng)
+            }),
+            getNorthEast: () => ({
+                lat: Math.max(topLeft.lat, topRight.lat, bottomRight.lat, bottomLeft.lat),
+                lng: Math.max(topLeft.lng, topRight.lng, bottomRight.lng, bottomLeft.lng)
+            }),
+            // Use quadrilateral check for accurate visibility with rotation/pitch
+            contains: (point) => {
+                const lat = Array.isArray(point) ? point[0] : point.lat;
+                const lng = Array.isArray(point) ? point[1] : point.lng;
+                return isPointInQuadrilateral({ lat, lng }, quadrilateral);
+            },
+            // Expose the quadrilateral for debugging
+            getQuadrilateral: () => quadrilateral
+        };
+
+        // Calculate 90% inset bounds for popup positioning (in screen pixels - still a rectangle)
         const inset = 0.05; // 5% inset on each side = 90% of bounds
-        const insetTopLeft = L.point(
-            topLeft.x + (viewportWidth - filterPanelWidth) * inset,
-            topLeft.y + (viewportHeight - filterPanelHeight) * inset
-        );
-        const insetBottomRight = L.point(
-            bottomRight.x - viewportWidth * inset,
-            bottomRight.y - (viewportHeight - filterPanelHeight) * inset
-        );
+        const effectiveWidth = viewportWidth - filterPanelWidth;
+        const effectiveHeight = viewportHeight - filterPanelHeight;
 
-        // Store debug rectangle bounds (in container point coordinates)
+        const insetTopLeft = {
+            x: topLeftPx.x + effectiveWidth * inset,
+            y: topLeftPx.y + effectiveHeight * inset
+        };
+        const insetBottomRight = {
+            x: bottomRightPx.x - effectiveWidth * inset,
+            y: bottomRightPx.y - effectiveHeight * inset
+        };
+
+        // Store debug rectangle bounds (in pixel coordinates)
         const debugRectBounds = {
             top: insetTopLeft.y,
             bottom: insetBottomRight.y,
@@ -198,7 +271,7 @@ const ViewportManager = (() => {
      * Calculates and caches distances from visible center to all locations
      * Precomputed distances are used for efficient proximity-based search scoring
      *
-     * @param {L.LatLng} visibleCenter - The visible center point
+     * @param {Object} visibleCenter - The visible center point {lat, lng}
      * @param {Object} locationsByLatLng - Map of locationKey to location info
      * @returns {Object} Map of locationKey to distance in meters
      */
@@ -209,7 +282,7 @@ const ViewportManager = (() => {
 
         for (const locationKey in locationsByLatLng) {
             const [lat, lng] = locationKey.split(',').map(Number);
-            distances[locationKey] = visibleCenter.distanceTo([lat, lng]);
+            distances[locationKey] = calculateDistance(visibleCenter, { lat, lng });
         }
 
         state.locationDistances = distances;
@@ -241,8 +314,8 @@ const ViewportManager = (() => {
      * Adjusts the map view so the visible center (accounting for filter panel)
      * ends up at the desired target coordinates
      *
-     * @param {L.Map} map - Leaflet map instance
-     * @param {L.LatLng} desiredVisibleCenter - Desired visible center coordinates
+     * @param {maplibregl.Map} map - MapLibre map instance
+     * @param {Object} desiredVisibleCenter - Desired visible center {lat, lng}
      * @param {boolean} [animate=false] - Whether to animate the pan
      */
     function adjustMapToVisibleCenter(map, desiredVisibleCenter, animate = false) {
@@ -257,12 +330,16 @@ const ViewportManager = (() => {
         const offsetLng = desiredVisibleCenter.lng - currentVisibleCenter.lng;
 
         // Apply the offset to the map center
-        const adjustedMapCenter = L.latLng(
-            currentCenter.lat + offsetLat,
-            currentCenter.lng + offsetLng
-        );
+        const adjustedMapCenter = {
+            lat: currentCenter.lat + offsetLat,
+            lng: currentCenter.lng + offsetLng
+        };
 
-        map.panTo(adjustedMapCenter, { animate });
+        if (animate) {
+            map.panTo([adjustedMapCenter.lng, adjustedMapCenter.lat]);
+        } else {
+            map.jumpTo({ center: [adjustedMapCenter.lng, adjustedMapCenter.lat] });
+        }
     }
 
     // ========================================
@@ -282,7 +359,7 @@ const ViewportManager = (() => {
      * Updates all viewport-related calculations
      * Call this after map moves or filter panel size changes
      *
-     * @param {L.Map} map - Leaflet map instance
+     * @param {maplibregl.Map} map - MapLibre map instance
      * @param {Object} locationsByLatLng - Map of locationKey to location info
      * @param {boolean} [isInitialLoad=false] - Whether this is during initial load
      * @returns {Object} Object with bounds, debugRectBounds, visibleCenter, locationDistances
@@ -310,39 +387,49 @@ const ViewportManager = (() => {
      * Calculates the pan offset needed to fit a popup within the visible bounds
      * Returns the X and Y pixel offsets to pan the map by
      *
-     * @param {L.Map} map - Leaflet map instance
-     * @param {L.LatLng} popupLatLng - The lat/lng position of the popup anchor
+     * @param {maplibregl.Map} map - MapLibre map instance
+     * @param {Object} popupLngLat - The lng/lat position of the popup anchor (marker position)
      * @param {number} popupHeight - Height of the popup element in pixels
      * @param {number} popupWidth - Width of the popup element in pixels
      * @returns {Object|null} Object with panX and panY offsets, or null if no pan needed
      */
-    function calculatePopupPanOffset(map, popupLatLng, popupHeight, popupWidth) {
+    function calculatePopupPanOffset(map, popupLngLat, popupHeight, popupWidth) {
         const debugRectBounds = state.debugRectBounds;
         if (!debugRectBounds) return null;
 
-        // Get current popup position in container point coordinates
-        const popupPoint = map.latLngToContainerPoint(popupLatLng);
-        const popupTop = popupPoint.y - popupHeight;
-        const popupBottom = popupPoint.y;
-        const popupLeft = popupPoint.x - popupWidth / 2;
-        const popupRight = popupPoint.x + popupWidth / 2;
+        // Get marker position in pixel coordinates
+        const markerPoint = map.project(popupLngLat);
+
+        // The popup has an offset of [0, -55] from the marker (see mapManager.js)
+        // and anchor is 'bottom', so the popup bottom is at markerPoint.y - 55
+        const popupOffset = 55;
+        const popupBottom = markerPoint.y - popupOffset;
+        const popupTop = popupBottom - popupHeight;
+        const popupLeft = markerPoint.x - popupWidth / 2;
+        const popupRight = markerPoint.x + popupWidth / 2;
+
+        // Add some padding for visual comfort
+        const padding = 10;
 
         // Calculate if we need to pan (vertical and horizontal)
         let panX = 0;
         let panY = 0;
 
         // Check vertical bounds
-        if (popupTop < debugRectBounds.top) {
-            panY = debugRectBounds.top - popupTop;
-        } else if (popupBottom > debugRectBounds.bottom) {
-            panY = debugRectBounds.bottom - popupBottom;
+        // Use the more restrictive bound: either debugRectBounds.top or absolute screen top (0)
+        // This handles pitched maps where markers near horizon could cause popup to go off-screen
+        const effectiveTop = Math.max(debugRectBounds.top, 0);
+        if (popupTop < effectiveTop + padding) {
+            panY = (effectiveTop + padding) - popupTop;
+        } else if (popupBottom > debugRectBounds.bottom - padding) {
+            panY = (debugRectBounds.bottom - padding) - popupBottom;
         }
 
         // Check horizontal bounds
-        if (popupLeft < debugRectBounds.left) {
-            panX = debugRectBounds.left - popupLeft;
-        } else if (popupRight > debugRectBounds.right) {
-            panX = debugRectBounds.right - popupRight;
+        if (popupLeft < debugRectBounds.left + padding) {
+            panX = (debugRectBounds.left + padding) - popupLeft;
+        } else if (popupRight > debugRectBounds.right - padding) {
+            panX = (debugRectBounds.right - padding) - popupRight;
         }
 
         if (panX === 0 && panY === 0) {
@@ -359,74 +446,72 @@ const ViewportManager = (() => {
     /**
      * Updates the debug visualization overlay on the map
      * Shows viewport bounds rectangle and visible center marker
+     * Note: For MapLibre, we use DOM elements for debug visualization
      *
-     * @param {L.Map} map - Leaflet map instance
-     * @param {L.LayerGroup} debugLayer - Layer group for debug visualization
+     * @param {maplibregl.Map} map - MapLibre map instance
+     * @param {HTMLElement} debugContainer - Container element for debug visualization
      * @param {boolean} debugMode - Whether debug mode is enabled
      */
-    function updateDebugOverlay(map, debugLayer, debugMode) {
+    function updateDebugOverlay(map, debugContainer, debugMode) {
         // Clear existing debug overlays
-        if (debugLayer) {
-            debugLayer.clearLayers();
+        if (debugContainer) {
+            debugContainer.innerHTML = '';
         }
 
-        if (!debugMode || !state.debugRectBounds || !state.visibleCenter) {
+        if (!debugMode || !state.debugRectBounds || !state.visibleCenter || !debugContainer) {
             return;
         }
 
-        // Convert container point coordinates to lat/lng for the rectangle
-        const topLeft = map.containerPointToLatLng(
-            L.point(state.debugRectBounds.left, state.debugRectBounds.top)
-        );
-        const bottomRight = map.containerPointToLatLng(
-            L.point(state.debugRectBounds.right, state.debugRectBounds.bottom)
-        );
+        const bounds = state.debugRectBounds;
 
-        // Draw the 90% inset bounds rectangle
-        L.rectangle(
-            [topLeft, bottomRight],
-            {
-                color: '#ff0000',
-                weight: 2,
-                fill: false,
-                dashArray: '5, 5'
-            }
-        ).addTo(debugLayer);
+        // Create debug rectangle using CSS
+        const rect = document.createElement('div');
+        rect.style.position = 'absolute';
+        rect.style.left = `${bounds.left}px`;
+        rect.style.top = `${bounds.top}px`;
+        rect.style.width = `${bounds.right - bounds.left}px`;
+        rect.style.height = `${bounds.bottom - bounds.top}px`;
+        rect.style.border = '2px dashed #ff0000';
+        rect.style.pointerEvents = 'none';
+        rect.style.zIndex = '1000';
+        debugContainer.appendChild(rect);
 
-        // Draw a marker at the visible center
-        L.circleMarker(state.visibleCenter, {
-            color: '#00ff00',
-            fillColor: '#00ff00',
-            fillOpacity: 0.8,
-            radius: 8
-        }).addTo(debugLayer);
+        // Create visible center marker
+        const centerPoint = map.project([state.visibleCenter.lng, state.visibleCenter.lat]);
+        const centerMarker = document.createElement('div');
+        centerMarker.style.position = 'absolute';
+        centerMarker.style.left = `${centerPoint.x - 8}px`;
+        centerMarker.style.top = `${centerPoint.y - 8}px`;
+        centerMarker.style.width = '16px';
+        centerMarker.style.height = '16px';
+        centerMarker.style.backgroundColor = '#00ff00';
+        centerMarker.style.borderRadius = '50%';
+        centerMarker.style.pointerEvents = 'none';
+        centerMarker.style.zIndex = '1000';
+        debugContainer.appendChild(centerMarker);
 
-        // Add a crosshair at the center
-        const crosshairSize = 20; // pixels
-        const centerPoint = map.latLngToContainerPoint(state.visibleCenter);
+        // Create crosshair
+        const crosshairH = document.createElement('div');
+        crosshairH.style.position = 'absolute';
+        crosshairH.style.left = `${centerPoint.x - 20}px`;
+        crosshairH.style.top = `${centerPoint.y - 1}px`;
+        crosshairH.style.width = '40px';
+        crosshairH.style.height = '2px';
+        crosshairH.style.backgroundColor = '#00ff00';
+        crosshairH.style.pointerEvents = 'none';
+        crosshairH.style.zIndex = '1000';
+        debugContainer.appendChild(crosshairH);
 
-        const crosshairH1 = map.containerPointToLatLng(
-            L.point(centerPoint.x - crosshairSize, centerPoint.y)
-        );
-        const crosshairH2 = map.containerPointToLatLng(
-            L.point(centerPoint.x + crosshairSize, centerPoint.y)
-        );
-        const crosshairV1 = map.containerPointToLatLng(
-            L.point(centerPoint.x, centerPoint.y - crosshairSize)
-        );
-        const crosshairV2 = map.containerPointToLatLng(
-            L.point(centerPoint.x, centerPoint.y + crosshairSize)
-        );
-
-        L.polyline([crosshairH1, crosshairH2], {
-            color: '#00ff00',
-            weight: 2
-        }).addTo(debugLayer);
-
-        L.polyline([crosshairV1, crosshairV2], {
-            color: '#00ff00',
-            weight: 2
-        }).addTo(debugLayer);
+        const crosshairV = document.createElement('div');
+        crosshairV.style.position = 'absolute';
+        crosshairV.style.left = `${centerPoint.x - 1}px`;
+        crosshairV.style.top = `${centerPoint.y - 20}px`;
+        crosshairV.style.width = '2px';
+        crosshairV.style.height = '40px';
+        crosshairV.style.backgroundColor = '#00ff00';
+        crosshairV.style.pointerEvents = 'none';
+        crosshairV.style.zIndex = '1000';
+        debugContainer.appendChild(crosshairV);
     }
 
     // ========================================

@@ -1,6 +1,6 @@
 /*
  * ============================================================================
- * Popup and Leaflet Popup Styles
+ * Popup and MapLibre Popup Styles
  * ============================================================================
  *
  * Location marker popups displayed when clicking map markers:
@@ -12,17 +12,19 @@
  * Mobile behavior: Responsive sizing to fit viewport
  */
 
-/* === Popup Performance === */
+/* === MapLibre Popup Performance === */
 /* Disable fade-in animation for instant display */
-.leaflet-fade-anim .leaflet-popup {
-    transition: none;
+/* Ensure popup appears above navigation controls (which have z-index 2) */
+.maplibregl-popup {
+    transition: none !important;
+    z-index: 10 !important;
 }
 
-.leaflet-popup-tip {
+.maplibregl-popup-tip {
     display: none;
 }
 
-.leaflet-popup-content-wrapper {
+.maplibregl-popup-content {
     background: color-mix(in srgb, var(--secondary-bg) 90%, transparent);
     backdrop-filter: blur(7px);
     color: var(--primary-text);
@@ -34,9 +36,10 @@
     font-family: var(--font-family);
     will-change: transform;
     transform: translate3d(0, 0, 0);
+    padding: 0;
 }
 
-.leaflet-popup-content {
+.maplibre-popup-content {
     font-size: 1.1em;
     font-weight: 400;
     line-height: 1.1;
@@ -49,29 +52,29 @@
     width: auto !important;
 }
 
-.leaflet-popup-content p {
+.maplibre-popup-content p {
     margin: 3px 0;
     color: var(--primary-text);
 }
 
-.leaflet-popup-content details p {
+.maplibre-popup-content details p {
     margin: 2px 4px;
     font-size: 0.95em;
 }
 
-.leaflet-popup-content details {
+.maplibre-popup-content details {
     border-bottom: 0;
     margin-bottom: 5px;
     padding-bottom: 0px;
 }
 
-.leaflet-popup-content details:last-child {
+.maplibre-popup-content details:last-child {
     border-bottom: none;
     margin-bottom: 0;
     padding-bottom: 0;
 }
 
-.leaflet-popup-content summary {
+.maplibre-popup-content summary {
     font-family: var(--font-family);
     cursor: pointer;
     font-weight: 500;
@@ -85,26 +88,26 @@
     font-size: 1.1em;
 }
 
-.leaflet-popup-content details[open] > summary {
+.maplibre-popup-content details[open] > summary {
     color: var(--summary-open);
 }
 
-.leaflet-popup-content details:not([open]) > summary:hover {
+.maplibre-popup-content details:not([open]) > summary:hover {
     color: var(--summary-closed-hover);
     opacity: 1;
 }
 
-.leaflet-popup-content details[open] > summary:hover {
+.maplibre-popup-content details[open] > summary:hover {
     color: var(--summary-open-hover);
     opacity: 1;
 }
 
-.leaflet-popup-content a {
+.maplibre-popup-content a {
     color: var(--accent-color);
     text-decoration: none;
 }
 
-.leaflet-popup-content a:hover {
+.maplibre-popup-content a:hover {
     text-decoration: underline;
     color: var(--accent-hover);
 }
@@ -151,12 +154,12 @@
 }
 
 /* Implicit tag styling in popups */
-.leaflet-popup-content-wrapper .tag-button.state-implicit {
+.maplibregl-popup-content .tag-button.state-implicit {
     background-color: color-mix(in srgb, var(--secondary-accent-color) 25%, var(--tertiary-bg));
     color: var(--primary-text);
 }
 
-.leaflet-popup-content-wrapper .tag-button.state-implicit:hover {
+.maplibregl-popup-content .tag-button.state-implicit:hover {
     background-color: color-mix(in srgb, var(--secondary-accent-hover) 35%, var(--tertiary-bg));
 }
 
@@ -197,9 +200,9 @@
     text-decoration: none;
 }
 
-.leaflet-popup-close-button {
+/* MapLibre popup close button styling */
+.maplibregl-popup-close-button {
     color: var(--primary-text) !important;
-    padding: 8px 8px 0 0 !important;
     width: 36px !important;
     height: 36px !important;
     padding: 0 !important;
@@ -209,10 +212,13 @@
     line-height: 30px !important;
     text-align: center;
     border-radius: 0 8px 0 0;
+    background: transparent;
+    border: none;
 }
 
-.leaflet-popup-close-button:hover {
+.maplibregl-popup-close-button:hover {
     color: var(--popup-close-hover) !important;
+    background: transparent;
 }
 
 .popup-event-datetime, .popup-event-location, .popup-event-sublocation {
@@ -226,14 +232,14 @@
 /* === Mobile Responsive Styles === */
 /* Adjust popup sizing for smaller screens */
 @media (max-width: 768px) {
-    .leaflet-popup-content-wrapper {
+    .maplibregl-popup-content {
         /* On smaller screens, allow the popup to be narrower. */
         min-width: 300px;
         /* Ensure the popup doesn't exceed the viewport width. */
         max-width: 90vw;
     }
 
-    .leaflet-popup-content {
+    .maplibre-popup-content {
         max-height: 450px;
     }
 

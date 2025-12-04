@@ -88,13 +88,15 @@ const MarkerController = (() => {
      * Enforces marker display limit
      *
      * @param {Object} locationsToDisplay - Object mapping locationKey to array of events
-     * @param {L.Marker} [markerToKeep=null] - Marker to preserve (e.g., one with open popup)
+     * @param {maplibregl.Marker} [markerToKeep=null] - Marker to preserve (e.g., one with open popup)
      */
     function displayEventsOnMap(locationsToDisplay, markerToKeep = null) {
         let openMarkerLocationKey = null;
         if (markerToKeep) {
-            const latLng = markerToKeep.getLatLng();
-            openMarkerLocationKey = `${latLng.lat},${latLng.lng}`;
+            const markerObj = MapManager.getMarkerObject(markerToKeep);
+            if (markerObj) {
+                openMarkerLocationKey = markerObj.locationKey;
+            }
         }
 
         MapManager.clearMarkers(markerToKeep);
@@ -125,21 +127,27 @@ const MarkerController = (() => {
             const locationInfo = state.appState.locationsByLatLng[locationKey];
             if (!locationInfo) continue;
 
-            // Create marker icon
+            // Create marker icon element
             const locationName = locationInfo.name;
-            const customIcon = MapManager.createMarkerIcon(locationInfo);
+            const customIconElement = MapManager.createMarkerIcon(locationInfo);
 
             // Create popup content callback
             const popupContentCallback = createPopupContentCallback(locationKey);
 
-            // Add marker to map
-            const newMarker = MapManager.addMarkerToMap([lat, lng], customIcon, locationName, popupContentCallback);
+            // Add marker to map (MapLibre uses [lng, lat] order)
+            const newMarker = MapManager.addMarkerToMap(
+                [lng, lat],
+                customIconElement,
+                locationName,
+                popupContentCallback,
+                locationKey
+            );
 
             // Auto-open popup if this location contains the forced display event
             const forceDisplayEventId = state.eventProvider.getForceDisplayEventId();
             if (forceDisplayEventId && newMarker) {
                 if (eventsAtLocation.some(e => e.id === forceDisplayEventId)) {
-                    newMarker.openPopup();
+                    MapManager.openMarkerPopup(newMarker);
                 }
             }
         }
@@ -149,14 +157,19 @@ const MarkerController = (() => {
      * Updates the content of an open popup with current filters
      * Used when filters change while a popup is open
      *
-     * @param {L.Popup} openPopup - The open popup to update
+     * @param {maplibregl.Popup} openPopup - The open popup to update
      * @returns {boolean} True if popup was updated, false otherwise
      */
     function updateOpenPopupContent(openPopup) {
         if (!openPopup) return false;
 
-        const popupLatLng = openPopup.getLatLng();
-        const locationKey = `${popupLatLng.lat},${popupLatLng.lng}`;
+        const marker = MapManager.getCurrentPopupMarker();
+        if (!marker) return false;
+
+        const markerObj = MapManager.getMarkerObject(marker);
+        if (!markerObj) return false;
+
+        const locationKey = markerObj.locationKey;
         const locationInfo = state.appState.locationsByLatLng[locationKey];
         const eventsAtLocationInDateRange = state.appState.eventsByLatLngInDateRange[locationKey] || [];
 
@@ -194,7 +207,15 @@ const MarkerController = (() => {
             selectedDates[0]
         );
 
-        openPopup.setContent(newContent);
+        // Update popup content
+        const wrapper = document.createElement('div');
+        wrapper.className = 'maplibre-popup-content';
+        if (newContent instanceof HTMLElement) {
+            wrapper.appendChild(newContent);
+        } else {
+            wrapper.innerHTML = newContent;
+        }
+        openPopup.setDOMContent(wrapper);
 
         // Clear forced display after updating
         state.eventProvider.setForceDisplayEventId(null);
@@ -203,27 +224,15 @@ const MarkerController = (() => {
     }
 
     /**
-     * Finds the currently open popup marker if any
+     * Finds the currently open popup and marker if any
      *
-     * @param {L.Map} map - Leaflet map instance
      * @returns {Object|null} Object with {popup, marker} or null if no popup is open
      */
-    function findOpenPopup(map) {
-        if (!map) return null;
+    function findOpenPopup() {
+        const popup = MapManager.getCurrentPopup();
+        const marker = MapManager.getCurrentPopupMarker();
 
-        let openPopup = null;
-        let openMarker = null;
-
-        map.eachLayer(layer => {
-            if (layer instanceof L.Popup && map.hasLayer(layer)) {
-                openPopup = layer;
-                if (layer._source) {
-                    openMarker = layer._source;
-                }
-            }
-        });
-
-        return openPopup ? { popup: openPopup, marker: openMarker } : null;
+        return popup ? { popup, marker } : null;
     }
 
     /**
@@ -279,34 +288,58 @@ const MarkerController = (() => {
             state.eventProvider.setForceDisplayEventId(eventIdToForce);
         }
 
-        const markersLayer = state.appState.markersLayer;
         const locationsByLatLng = state.appState.locationsByLatLng;
+        const map = MapManager.getMap();
 
-        // Find or create the marker first, then open its popup
-        let markerFound = false;
-        markersLayer.eachLayer(marker => {
-            const markerLatLng = marker.getLatLng();
-            if (markerLatLng.lat === lat && markerLatLng.lng === lng) {
-                marker.openPopup();
-                markerFound = true;
-            }
-        });
+        // Fly to the location first
+        if (map) {
+            map.flyTo({
+                center: [lng, lat],
+                zoom: Math.max(map.getZoom(), 15),
+                duration: 500
+            });
+        }
 
-        if (!markerFound) {
-            // If no marker was found (e.g., it was filtered out), create it temporarily
-            const locationKey = `${lat},${lng}`;
-            const locationInfo = locationsByLatLng[locationKey];
-            if (!locationInfo) {
-                console.error("No location info found for", locationKey);
-                return;
-            }
+        // Function to find and open marker popup
+        const openMarkerAtLocation = () => {
+            let markerFound = false;
+            MapManager.eachMarker(markerObj => {
+                const markerLngLat = markerObj.marker.getLngLat();
+                if (markerLngLat.lat === lat && markerLngLat.lng === lng) {
+                    MapManager.openMarkerPopup(markerObj.marker);
+                    markerFound = true;
+                }
+            });
 
-            const customIcon = MapManager.createMarkerIcon(locationInfo);
-            const popupContentCallback = createPopupContentCallback(locationKey);
-            const newMarker = MapManager.addMarkerToMap([lat, lng], customIcon, locationInfo.name, popupContentCallback);
-            if (newMarker) {
-                newMarker.openPopup();
+            if (!markerFound) {
+                // If no marker was found (e.g., it was filtered out), create it temporarily
+                const locationKey = `${lat},${lng}`;
+                const locationInfo = locationsByLatLng[locationKey];
+                if (!locationInfo) {
+                    console.error("No location info found for", locationKey);
+                    return;
+                }
+
+                const customIconElement = MapManager.createMarkerIcon(locationInfo);
+                const popupContentCallback = createPopupContentCallback(locationKey);
+                const newMarker = MapManager.addMarkerToMap(
+                    [lng, lat],
+                    customIconElement,
+                    locationInfo.name,
+                    popupContentCallback,
+                    locationKey
+                );
+                if (newMarker) {
+                    MapManager.openMarkerPopup(newMarker);
+                }
             }
+        };
+
+        // Open marker popup after fly animation completes
+        if (map) {
+            map.once('moveend', openMarkerAtLocation);
+        } else {
+            openMarkerAtLocation();
         }
     }
 
