@@ -37,7 +37,7 @@
     --attribution-bg: rgba(0, 0, 0, 0.7);
     --reset-text-shadow: 1px 1px 2px black;
     --map-bg: #111;
-    --marker-stroke: #333;
+    --marker-stroke: #666;
 
     /* === Tag Button Colors === */
     /* Selected/active tags use a red/pink color to stand out */

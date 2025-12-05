@@ -14,10 +14,10 @@
 
 /* === MapLibre Popup Performance === */
 /* Disable fade-in animation for instant display */
-/* Ensure popup appears above navigation controls (which have z-index 2) */
+/* Ensure popup appears above all markers (which have dynamic z-index based on screen position) */
 .maplibregl-popup {
     transition: none !important;
-    z-index: 10 !important;
+    z-index: 10000 !important;
 }
 
 .maplibregl-popup-tip {
@@ -30,8 +30,9 @@
     color: var(--primary-text);
     border-radius: 8px;
     border: 1px solid var(--border-color);
-    min-width: 350px;
-    width: 420px;
+    /* Auto width with constraints for consistent centering on marker */
+    width: auto;
+    min-width: 420px;
     max-width: 450px;
     font-family: var(--font-family);
     will-change: transform;
@@ -233,10 +234,10 @@
 /* Adjust popup sizing for smaller screens */
 @media (max-width: 768px) {
     .maplibregl-popup-content {
-        /* On smaller screens, allow the popup to be narrower. */
-        min-width: 300px;
-        /* Ensure the popup doesn't exceed the viewport width. */
+        /* Use most of viewport width on mobile, centered on marker */
+        min-width: min(380px, 85vw);
         max-width: 90vw;
+        width: auto;
     }
 
     .maplibre-popup-content {

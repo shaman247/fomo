@@ -411,6 +411,9 @@ const ViewportManager = (() => {
         // Add some padding for visual comfort
         const padding = 10;
 
+        // Check if we're in mobile layout (filter panel on top, not left)
+        const isMobileLayout = window.innerWidth <= Constants.UI.MOBILE_BREAKPOINT;
+
         // Calculate if we need to pan (vertical and horizontal)
         let panX = 0;
         let panY = 0;
@@ -426,10 +429,18 @@ const ViewportManager = (() => {
         }
 
         // Check horizontal bounds
-        if (popupLeft < debugRectBounds.left + padding) {
-            panX = (debugRectBounds.left + padding) - popupLeft;
-        } else if (popupRight > debugRectBounds.right - padding) {
-            panX = (debugRectBounds.right - padding) - popupRight;
+        if (isMobileLayout) {
+            // On mobile, center the popup horizontally in the viewport
+            const viewportCenterX = window.innerWidth / 2;
+            const popupCenterX = markerPoint.x; // Popup is centered on marker
+            panX = viewportCenterX - popupCenterX;
+        } else {
+            // On desktop, just ensure popup is within bounds
+            if (popupLeft < debugRectBounds.left + padding) {
+                panX = (debugRectBounds.left + padding) - popupLeft;
+            } else if (popupRight > debugRectBounds.right - padding) {
+                panX = (debugRectBounds.right - padding) - popupRight;
+            }
         }
 
         if (panX === 0 && panY === 0) {
