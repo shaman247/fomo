@@ -99,13 +99,8 @@ const MapManager = (() => {
 
         const el = document.createElement('div');
         el.className = 'custom-marker-icon';
-        el.innerHTML = `
-            <svg width=45 height=60 viewBox="0 0 28 35" xmlns="http://www.w3.org/2000/svg" class="marker-svg">
-                <g transform="translate(0, 1)">
-                    <path d="M14 0C7.37258 0 2 5.37258 2 12C2 21.056 14 32 14 32C14 32 26 21.056 26 12C26 5.37258 20.6274 0 14 0Z" fill="${markerColor}" stroke="var(--marker-stroke)" stroke-width="0.5"/>
-                </g>
-            </svg>
-            <div class="marker-emoji">${emoji}</div>`;
+        el.style.setProperty('--marker-color', markerColor);
+        el.innerHTML = `<div class="marker-emoji">${emoji}</div>`;
 
         return el;
     }
@@ -134,10 +129,10 @@ const MapManager = (() => {
     function addMarkerToMap(lngLat, iconElement, tooltipText, popupContentCallback, locationKey) {
         if (!state.mapInstance) return;
 
-        // Create the marker with anchor at bottom center of the pin
+        // Create the marker with anchor at center of the circle
         const marker = new maplibregl.Marker({
             element: iconElement,
-            anchor: 'bottom'
+            anchor: 'center'
         })
             .setLngLat(lngLat)
             .addTo(state.mapInstance);
@@ -151,7 +146,7 @@ const MapManager = (() => {
             closeOnClick: false,
             maxWidth: '340px',
             anchor: 'bottom',
-            offset: [0, -55] // Offset up from marker
+            offset: [0, -26] // Offset up from center of circle marker
         });
 
         // Store marker info
@@ -178,7 +173,7 @@ const MapManager = (() => {
                 }
             }
 
-            // Position and show tooltip
+            // Position and show tooltip below the marker
             const markerEl = marker.getElement();
             const rect = markerEl.getBoundingClientRect();
             const mapContainer = state.mapInstance.getContainer();
@@ -186,8 +181,8 @@ const MapManager = (() => {
 
             tooltipEl.style.position = 'absolute';
             tooltipEl.style.left = `${rect.left - mapRect.left + rect.width / 2}px`;
-            tooltipEl.style.top = `${rect.top - mapRect.top - 10}px`;
-            tooltipEl.style.transform = 'translate(-50%, -100%)';
+            tooltipEl.style.top = `${rect.bottom - mapRect.top + 6}px`;
+            tooltipEl.style.transform = 'translateX(-50%)';
 
             mapContainer.appendChild(tooltipEl);
             state.openTooltipMarker = marker;
@@ -228,12 +223,20 @@ const MapManager = (() => {
                 wrapper.innerHTML = content;
             }
 
+            // Remove active class from previous marker
+            if (state.currentPopupMarker) {
+                state.currentPopupMarker.getElement().classList.remove('active');
+            }
+
             popup.setLngLat(lngLat)
                 .setDOMContent(wrapper)
                 .addTo(state.mapInstance);
 
             state.currentPopup = popup;
             state.currentPopupMarker = marker;
+
+            // Add active class to current marker
+            iconElement.classList.add('active');
 
             // Dispatch custom event for popup open
             state.mapInstance.fire('popupopen', { popup, marker, locationKey });
@@ -244,6 +247,12 @@ const MapManager = (() => {
             if (state.currentPopup === popup) {
                 const closedMarker = state.currentPopupMarker;
                 const closedLocationKey = markerObj.locationKey;
+
+                // Remove active class from marker
+                if (closedMarker) {
+                    closedMarker.getElement().classList.remove('active');
+                }
+
                 state.currentPopup = null;
                 state.currentPopupMarker = null;
 
@@ -332,6 +341,33 @@ const MapManager = (() => {
     }
 
     /**
+     * Update z-index of all markers based on screen Y position
+     * Markers closer to bottom of screen get higher z-index
+     */
+    function updateMarkerZIndices() {
+        if (!state.mapInstance) return;
+
+        state.markers.forEach(markerObj => {
+            const screenPos = state.mapInstance.project(markerObj.lngLat);
+            // Higher Y = closer to bottom = higher z-index
+            const zIndex = Math.round(screenPos.y);
+            markerObj.marker.getElement().style.zIndex = zIndex;
+        });
+    }
+
+    /**
+     * Start listening for map movements to update marker z-indices
+     */
+    function enableZIndexUpdates() {
+        if (!state.mapInstance) return;
+
+        // Update on any map movement (pan, zoom, rotate, pitch)
+        state.mapInstance.on('move', updateMarkerZIndices);
+        // Initial update
+        updateMarkerZIndices();
+    }
+
+    /**
      * Public API for MapManager
      * @public
      */
@@ -347,6 +383,8 @@ const MapManager = (() => {
         getCurrentPopupMarker,
         getMarkerObject,
         getMap,
-        eachMarker
+        eachMarker,
+        updateMarkerZIndices,
+        enableZIndexUpdates
     };
 })();

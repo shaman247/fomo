@@ -289,57 +289,39 @@ const MarkerController = (() => {
         }
 
         const locationsByLatLng = state.appState.locationsByLatLng;
-        const map = MapManager.getMap();
 
-        // Fly to the location first
-        if (map) {
-            map.flyTo({
-                center: [lng, lat],
-                zoom: Math.max(map.getZoom(), 15),
-                duration: 500
-            });
-        }
-
-        // Function to find and open marker popup
-        const openMarkerAtLocation = () => {
-            let markerFound = false;
-            MapManager.eachMarker(markerObj => {
-                const markerLngLat = markerObj.marker.getLngLat();
-                if (markerLngLat.lat === lat && markerLngLat.lng === lng) {
-                    MapManager.openMarkerPopup(markerObj.marker);
-                    markerFound = true;
-                }
-            });
-
-            if (!markerFound) {
-                // If no marker was found (e.g., it was filtered out), create it temporarily
-                const locationKey = `${lat},${lng}`;
-                const locationInfo = locationsByLatLng[locationKey];
-                if (!locationInfo) {
-                    console.error("No location info found for", locationKey);
-                    return;
-                }
-
-                const customIconElement = MapManager.createMarkerIcon(locationInfo);
-                const popupContentCallback = createPopupContentCallback(locationKey);
-                const newMarker = MapManager.addMarkerToMap(
-                    [lng, lat],
-                    customIconElement,
-                    locationInfo.name,
-                    popupContentCallback,
-                    locationKey
-                );
-                if (newMarker) {
-                    MapManager.openMarkerPopup(newMarker);
-                }
+        // Find and open marker popup directly
+        // Our popup positioning logic in script.js will handle any necessary panning
+        let markerFound = false;
+        MapManager.eachMarker(markerObj => {
+            const markerLngLat = markerObj.marker.getLngLat();
+            if (markerLngLat.lat === lat && markerLngLat.lng === lng) {
+                MapManager.openMarkerPopup(markerObj.marker);
+                markerFound = true;
             }
-        };
+        });
 
-        // Open marker popup after fly animation completes
-        if (map) {
-            map.once('moveend', openMarkerAtLocation);
-        } else {
-            openMarkerAtLocation();
+        if (!markerFound) {
+            // If no marker was found (e.g., it was filtered out), create it temporarily
+            const locationKey = `${lat},${lng}`;
+            const locationInfo = locationsByLatLng[locationKey];
+            if (!locationInfo) {
+                console.error("No location info found for", locationKey);
+                return;
+            }
+
+            const customIconElement = MapManager.createMarkerIcon(locationInfo);
+            const popupContentCallback = createPopupContentCallback(locationKey);
+            const newMarker = MapManager.addMarkerToMap(
+                [lng, lat],
+                customIconElement,
+                locationInfo.name,
+                popupContentCallback,
+                locationKey
+            );
+            if (newMarker) {
+                MapManager.openMarkerPopup(newMarker);
+            }
         }
     }
 

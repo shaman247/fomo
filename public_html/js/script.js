@@ -565,6 +565,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Initialize MapManager with the MapLibre map
             MapManager.init(this.state.map, {}, this.state.tagConfig.bgcolors);
+            MapManager.enableZIndexUpdates();
 
             // Create debug container for DOM-based debug overlay
             const mapContainer = this.state.map.getContainer();

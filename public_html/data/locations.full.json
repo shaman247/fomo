@@ -651,26 +651,6 @@
     "emoji": "🥕"
   },
   {
-    "name": "Bedford Library",
-    "tags": [
-      "Library",
-      "Brooklyn Public Library",
-      "Bed-Stuy",
-      "Bedford-Stuyvesant",
-      "Brooklyn"
-    ],
-    "alternate_names": [
-      "Bedford Library Learning Center",
-      "Brooklyn Public Library - Bedford Branch",
-      "Brooklyn Public Library - Bedford",
-      "BPL Bedford",
-      "Brooklyn Public Library at Bedford"
-    ],
-    "lat": 40.68184,
-    "lng": -73.95619,
-    "emoji": "📖"
-  },
-  {
     "name": "Belasco Theatre",
     "tags": [
       "Theater",
@@ -802,24 +782,6 @@
     "lng": -73.93467,
     "emoji": "🏳️‍🌈",
     "alt_emoji": "🥂"
-  },
-  {
-    "name": "BPL Park Slope",
-    "tags": [
-      "Library",
-      "Brooklyn Public Library",
-      "Park Slope",
-      "Brooklyn"
-    ],
-    "alternate_names": [
-      "Brooklyn Public Library - Park Slope",
-      "Brooklyn Public Library - Park Slope Branch",
-      "Park Slope Library",
-      "Brooklyn Public Library at Park Slope"
-    ],
-    "lat": 40.66822,
-    "lng": -73.98345,
-    "emoji": "🏛️"
   },
   {
     "name": "Brick Aux",
@@ -1253,24 +1215,6 @@
     "emoji": "🌳"
   },
   {
-    "name": "Brower Park Library",
-    "tags": [
-      "Library",
-      "Brooklyn Public Library",
-      "Crown Heights",
-      "Brooklyn"
-    ],
-    "alternate_names": [
-      "Brooklyn Public Library - Brower Park Branch",
-      "Brooklyn Public Library - Brower Park",
-      "BPL Brower Park",
-      "Brooklyn Public Library at Brower Park"
-    ],
-    "lat": 40.67443,
-    "lng": -73.94437,
-    "emoji": "📖"
-  },
-  {
     "name": "Brownsville Heritage House",
     "tags": [
       "Museum",
@@ -1593,19 +1537,6 @@
     "emoji": "⛪"
   },
   {
-    "name": "Church of the Intercession",
-    "tags": [
-      "Church",
-      "Episcopal",
-      "Washington Heights",
-      "Hamilton Heights",
-      "Manhattan"
-    ],
-    "lat": 40.83219,
-    "lng": -73.94499,
-    "emoji": "⛪"
-  },
-  {
     "name": "Cinema 123 by Angelika",
     "tags": [
       "Cinema",
@@ -1881,23 +1812,17 @@
     "emoji": "📖"
   },
   {
-    "name": "Cortelyou Library",
+    "name": "Cortelyou Greenmarket",
     "tags": [
-      "Library",
-      "Brooklyn Public Library",
+      "Greenmarket",
       "Ditmas Park",
+      "Farmers Market",
       "Flatbush",
       "Brooklyn"
     ],
-    "alternate_names": [
-      "Brooklyn Public Library - Cortelyou Branch",
-      "Brooklyn Public Library - Cortelyou",
-      "BPL Cortelyou",
-      "Brooklyn Public Library at Cortelyou"
-    ],
-    "lat": 40.6408,
-    "lng": -73.96595,
-    "emoji": "📖"
+    "lat": 40.64076,
+    "lng": -73.9658,
+    "emoji": "🥕"
   },
   {
     "name": "Countee Cullen Library",
@@ -2034,24 +1959,6 @@
     "emoji": "🌳"
   },
   {
-    "name": "DeKalb Library",
-    "tags": [
-      "Library",
-      "Brooklyn Public Library",
-      "Bushwick",
-      "Brooklyn"
-    ],
-    "alternate_names": [
-      "Brooklyn Public Library - DeKalb Branch",
-      "Brooklyn Public Library - DeKalb",
-      "BPL DeKalb",
-      "Brooklyn Public Library at DeKalb"
-    ],
-    "lat": 40.69489,
-    "lng": -73.92834,
-    "emoji": "📖"
-  },
-  {
     "name": "Delia's Lounge & Restaurant",
     "tags": [
       "Restaurant",
@@ -2147,36 +2054,6 @@
     "lat": 40.67223,
     "lng": -73.98386,
     "emoji": "🥕"
-  },
-  {
-    "name": "DSK Brooklyn",
-    "tags": [
-      "Beer Garden",
-      "German",
-      "Fort Greene",
-      "Brooklyn"
-    ],
-    "lat": 40.68577,
-    "lng": -73.97354,
-    "emoji": "🍺"
-  },
-  {
-    "name": "Dyker Library",
-    "tags": [
-      "Library",
-      "Brooklyn Public Library",
-      "Dyker Heights",
-      "Brooklyn"
-    ],
-    "alternate_names": [
-      "Brooklyn Public Library - Dyker Branch",
-      "Brooklyn Public Library - Dyker",
-      "BPL Dyker",
-      "Brooklyn Public Library at Dyker"
-    ],
-    "lat": 40.61635,
-    "lng": -74.01197,
-    "emoji": "📖"
   },
   {
     "name": "East Elmhurst Library",
@@ -2292,6 +2169,19 @@
     "emoji": "🎵"
   },
   {
+    "name": "Fabrik Dumbo",
+    "tags": [
+      "Coworking",
+      "Office",
+      "Design",
+      "DUMBO",
+      "Brooklyn"
+    ],
+    "lat": 40.70401,
+    "lng": -73.98668,
+    "emoji": "🏢"
+  },
+  {
     "name": "Fabrik Tribeca",
     "tags": [
       "Coworking",
@@ -2324,26 +2214,6 @@
     ],
     "lat": 40.60434,
     "lng": -73.75248,
-    "emoji": "📖"
-  },
-  {
-    "name": "Far Rockaway Teen Library Library",
-    "tags": [
-      "Library",
-      "Teens",
-      "Queens Public Library",
-      "Rockaways",
-      "Far Rockaway",
-      "Queens"
-    ],
-    "alternate_names": [
-      "Queens Public Library at Far Rockaway Teen Library",
-      "Queens Public Library - Far Rockaway Teen Library Branch",
-      "Queens Public Library - Far Rockaway Teen Library",
-      "QPL Far Rockaway Teen Library"
-    ],
-    "lat": 40.60237,
-    "lng": -73.75355,
     "emoji": "📖"
   },
   {
@@ -2907,25 +2777,6 @@
     "lat": 40.68619,
     "lng": -73.97463,
     "emoji": "📚"
-  },
-  {
-    "name": "Greenpoint Library",
-    "tags": [
-      "Library",
-      "Brooklyn Public Library",
-      "Greenpoint",
-      "Green Building",
-      "Brooklyn"
-    ],
-    "alternate_names": [
-      "BPL Greenpoint",
-      "Brooklyn Public Library - Greenpoint Branch",
-      "Brooklyn Public Library - Greenpoint",
-      "Brooklyn Public Library at Greenpoint"
-    ],
-    "lat": 40.72604,
-    "lng": -73.95076,
-    "emoji": "📖"
   },
   {
     "name": "Greenwich Village",
@@ -3912,6 +3763,18 @@
     "emoji": "🛠️"
   },
   {
+    "name": "Mana Contemporary",
+    "tags": [
+      "Art",
+      "Contemporary Art",
+      "Jersey City",
+      "New Jersey"
+    ],
+    "lat": 40.73697,
+    "lng": -74.06892,
+    "emoji": "🎨"
+  },
+  {
     "name": "Manhattan Borough President's Office",
     "tags": [
       "Government",
@@ -4202,24 +4065,6 @@
     "lat": 40.77271,
     "lng": -73.98391,
     "emoji": "🎭"
-  },
-  {
-    "name": "Middle Village Library",
-    "tags": [
-      "Library",
-      "Queens Public Library",
-      "Middle Village",
-      "Queens"
-    ],
-    "alternate_names": [
-      "Queens Public Library at Middle Village",
-      "Queens Public Library - Middle Village Branch",
-      "Queens Public Library - Middle Village",
-      "QPL Middle Village"
-    ],
-    "lat": 40.71293,
-    "lng": -73.88089,
-    "emoji": "📖"
   },
   {
     "name": "Midtown Manhattan",
@@ -4620,18 +4465,6 @@
     "emoji": "🎭"
   },
   {
-    "name": "Nelson A. Rockefeller Park",
-    "tags": [
-      "Park",
-      "Waterfront",
-      "Battery Park City",
-      "Manhattan"
-    ],
-    "lat": 40.71626,
-    "lng": -74.01676,
-    "emoji": "🌳"
-  },
-  {
     "name": "New Amsterdam Theatre",
     "tags": [
       "Theater",
@@ -4983,24 +4816,6 @@
     "lat": 40.7673,
     "lng": -73.96563,
     "emoji": "🏛️"
-  },
-  {
-    "name": "Park Slope Library",
-    "tags": [
-      "Library",
-      "Brooklyn Public Library",
-      "Park Slope",
-      "Brooklyn"
-    ],
-    "alternate_names": [
-      "Brooklyn Public Library - Park Slope Branch",
-      "Brooklyn Public Library - Park Slope",
-      "BPL Park Slope",
-      "Brooklyn Public Library at Park Slope"
-    ],
-    "lat": 40.66822,
-    "lng": -73.98345,
-    "emoji": "📖"
   },
   {
     "name": "Parklife",
@@ -5678,19 +5493,6 @@
     "emoji": "🏙️"
   },
   {
-    "name": "Rockefeller Park",
-    "tags": [
-      "Park",
-      "Waterfront",
-      "Battery Park City",
-      "Playground",
-      "Manhattan"
-    ],
-    "lat": 40.71626,
-    "lng": -74.01676,
-    "emoji": "🌳"
-  },
-  {
     "name": "Rodney's",
     "tags": [
       "Comedy Club",
@@ -6111,24 +5913,6 @@
     "emoji": "📖"
   },
   {
-    "name": "South Jamaica Library",
-    "tags": [
-      "Library",
-      "Queens Public Library",
-      "Jamaica",
-      "Queens"
-    ],
-    "alternate_names": [
-      "Queens Public Library at South Jamaica",
-      "Queens Public Library - South Jamaica Branch",
-      "Queens Public Library - South Jamaica",
-      "QPL South Jamaica"
-    ],
-    "lat": 40.6957,
-    "lng": -73.7902,
-    "emoji": "📖"
-  },
-  {
     "name": "Special Waste Drop-Off - Bronx",
     "short_name": "Special Waste Drop-Off",
     "tags": [
@@ -6527,25 +6311,6 @@
     "emoji": "🌳"
   },
   {
-    "name": "Sunset Park Library",
-    "tags": [
-      "Library",
-      "Brooklyn Public Library",
-      "Sunset Park",
-      "Chinese Collection",
-      "Brooklyn"
-    ],
-    "alternate_names": [
-      "Brooklyn Public Library - Sunset Park Branch",
-      "Brooklyn Public Library - Sunset Park",
-      "BPL Sunset Park",
-      "Brooklyn Public Library at Sunset Park"
-    ],
-    "lat": 40.65036,
-    "lng": -74.00808,
-    "emoji": "📖"
-  },
-  {
     "name": "Sure We Can",
     "tags": [
       "Nonprofit",
@@ -6795,22 +6560,6 @@
     "lat": 40.75496,
     "lng": -73.9908,
     "emoji": "📚"
-  },
-  {
-    "name": "The General Society of Mechanics & Tradesmen of the City of New York",
-    "short_name": "General Society",
-    "tags": [
-      "Organization",
-      "Library",
-      "Historic Building",
-      "Education",
-      "Midtown",
-      "Manhattan"
-    ],
-    "lat": 40.75521,
-    "lng": -73.98121,
-    "emoji": "📚",
-    "alt_emoji": "🏛️"
   },
   {
     "name": "The Green-Wood Cemetery",
@@ -7403,18 +7152,6 @@
     "emoji": "🏢"
   },
   {
-    "name": "Washington Square Park",
-    "tags": [
-      "Park",
-      "Arch",
-      "Greenwich Village",
-      "Manhattan"
-    ],
-    "lat": 40.73088,
-    "lng": -73.99733,
-    "emoji": "🌳"
-  },
-  {
     "name": "Waterfront Alliance",
     "tags": [
       "Office",
@@ -7585,24 +7322,6 @@
     ],
     "lat": 40.73448,
     "lng": -73.75571,
-    "emoji": "📖"
-  },
-  {
-    "name": "Windsor Terrace Library",
-    "tags": [
-      "Library",
-      "Brooklyn Public Library",
-      "Windsor Terrace",
-      "Brooklyn"
-    ],
-    "alternate_names": [
-      "Brooklyn Public Library - Windsor Terrace Branch",
-      "Brooklyn Public Library - Windsor Terrace",
-      "BPL Windsor Terrace",
-      "Brooklyn Public Library at Windsor Terrace"
-    ],
-    "lat": 40.64873,
-    "lng": -73.97677,
     "emoji": "📖"
   },
   {
@@ -8000,20 +7719,6 @@
     "emoji": "🏙️"
   },
   {
-    "name": "Principles GI Coffee House",
-    "tags": [
-      "Cafe",
-      "Vegan",
-      "Community",
-      "Coffee",
-      "Gowanus",
-      "Brooklyn"
-    ],
-    "lat": 40.67248,
-    "lng": -73.99266,
-    "emoji": "☕"
-  },
-  {
     "name": "The Bollinger Forum (Columbia University)",
     "short_name": "Columbia University",
     "tags": [
@@ -8407,23 +8112,6 @@
     "lat": 40.62474,
     "lng": -73.90593,
     "emoji": "🌳"
-  },
-  {
-    "name": "Central Park Zoo",
-    "tags": [
-      "Zoo",
-      "Animals",
-      "Family",
-      "Central Park",
-      "Manhattan"
-    ],
-    "alternate_names": [
-      "GreenThumb Office"
-    ],
-    "lat": 40.76771,
-    "lng": -73.97199,
-    "emoji": "🐒",
-    "alt_emoji": "🦁"
   },
   {
     "name": "Ewen Park",

@@ -70,7 +70,7 @@
       "source-layer": "roads",
       "filter": ["==", "kind", "highway"],
       "paint": {
-        "line-color": "#484848",
+        "line-color": "#3a3a3a",
         "line-width": [
           "interpolate", ["exponential", 1.5], ["zoom"],
           5, 1,
@@ -87,7 +87,7 @@
       "source-layer": "roads",
       "filter": ["==", "kind", "major_road"],
       "paint": {
-        "line-color": "#3a3a3a",
+        "line-color": "#2f2f2f",
         "line-width": [
           "interpolate", ["exponential", 1.5], ["zoom"],
           7, 0.3,
@@ -105,7 +105,7 @@
       "filter": ["==", "kind", "minor_road"],
       "minzoom": 12,
       "paint": {
-        "line-color": "#2d2d2d",
+        "line-color": "#2c2c2c",
         "line-width": [
           "interpolate", ["exponential", 1.5], ["zoom"],
           12, 0.5,

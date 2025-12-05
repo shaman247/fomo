@@ -281,24 +281,6 @@
     "alt_emoji": "🌳"
   },
   {
-    "name": "Brooklyn Heights Library",
-    "tags": [
-      "Library",
-      "Brooklyn Public Library",
-      "Brooklyn Heights",
-      "Brooklyn"
-    ],
-    "alternate_names": [
-      "Brooklyn Public Library - Brooklyn Heights Branch",
-      "Brooklyn Public Library - Brooklyn Heights",
-      "BPL Brooklyn Heights",
-      "Brooklyn Public Library at Brooklyn Heights"
-    ],
-    "lat": 40.69565,
-    "lng": -73.9913,
-    "emoji": "📖"
-  },
-  {
     "name": "Brooklyn Navy Yard",
     "tags": [
       "Historic Site",
@@ -650,6 +632,19 @@
     "emoji": "🏙️"
   },
   {
+    "name": "DR2 Theatre",
+    "tags": [
+      "Theater",
+      "Off Broadway",
+      "Union Square",
+      "Gramercy",
+      "Manhattan"
+    ],
+    "lat": 40.73518,
+    "lng": -73.98925,
+    "emoji": "🎭"
+  },
+  {
     "name": "Drom",
     "tags": [
       "Venue",
@@ -715,19 +710,6 @@
     "lat": 40.718,
     "lng": -73.98819,
     "emoji": "🎪"
-  },
-  {
-    "name": "Fabrik Dumbo",
-    "tags": [
-      "Coworking",
-      "Office",
-      "Design",
-      "DUMBO",
-      "Brooklyn"
-    ],
-    "lat": 40.70401,
-    "lng": -73.98668,
-    "emoji": "🏢"
   },
   {
     "name": "Fort Greene Park",
@@ -1396,23 +1378,6 @@
     "alt_emoji": "🏛️"
   },
   {
-    "name": "Museum of Reclaimed Urban Space",
-    "tags": [
-      "Museum",
-      "Activism",
-      "Community Gardens",
-      "East Village",
-      "Manhattan"
-    ],
-    "alternate_names": [
-      "Museum of Reclaimed Urban Space (MoRUS)"
-    ],
-    "lat": 40.72577,
-    "lng": -73.97795,
-    "emoji": "🪴",
-    "alt_emoji": "🏛️"
-  },
-  {
     "name": "Music Hall of Williamsburg",
     "tags": [
       "Venue",
@@ -1529,23 +1494,6 @@
     "emoji": "🎨"
   },
   {
-    "name": "New York Transit Museum",
-    "short_name": "NY Transit Museum",
-    "tags": [
-      "Museum",
-      "Transit",
-      "Subway",
-      "History",
-      "Transportation",
-      "Downtown Brooklyn",
-      "Brooklyn"
-    ],
-    "lat": 40.69057,
-    "lng": -73.99007,
-    "emoji": "🚇",
-    "alt_emoji": "🏛️"
-  },
-  {
     "name": "Nitehawk Cinema (Williamsburg)",
     "short_name": "Nitehawk Cinema",
     "tags": [
@@ -1594,6 +1542,25 @@
     "alt_emoji": "🏛️"
   },
   {
+    "name": "NYC-DSA Office",
+    "tags": [
+      "Office",
+      "Organization",
+      "Nonprofit",
+      "Activism",
+      "LES",
+      "Lower East Side",
+      "Manhattan"
+    ],
+    "alternate_names": [
+      "NYC DSA"
+    ],
+    "lat": 40.71384,
+    "lng": -73.98883,
+    "emoji": "🌹",
+    "alt_emoji": "🏢"
+  },
+  {
     "name": "NYU Brooklyn",
     "tags": [
       "University",
@@ -1612,25 +1579,6 @@
     "lat": 40.69315,
     "lng": -73.98745,
     "emoji": "🎓"
-  },
-  {
-    "name": "NYU Latinx Project",
-    "tags": [
-      "Cultural Center",
-      "Organization",
-      "University",
-      "NYU",
-      "Latinx",
-      "NoHo",
-      "Manhattan"
-    ],
-    "alternate_names": [
-      "The Latinx Project At Nyu"
-    ],
-    "lat": 40.72795,
-    "lng": -73.99153,
-    "emoji": "🌎",
-    "alt_emoji": "🏛️"
   },
   {
     "name": "Old Cathedral Outdoor Market",
@@ -2951,6 +2899,18 @@
     "lng": -73.98748,
     "emoji": "🎓",
     "alt_emoji": "🎭"
+  },
+  {
+    "name": "Washington Square Park",
+    "tags": [
+      "Park",
+      "Arch",
+      "Greenwich Village",
+      "Manhattan"
+    ],
+    "lat": 40.73088,
+    "lng": -73.99733,
+    "emoji": "🌳"
   },
   {
     "name": "Webster Hall",
