@@ -230,8 +230,8 @@ const FilterManager = (() => {
      * Also calculates tag frequencies for visible events with proximity weighting
      *
      * @param {Array} events - Events to filter
-     * @param {Object} bounds - Leaflet LatLngBounds object
-     * @param {Object} visibleCenter - Leaflet LatLng object for visible center (used as fallback)
+     * @param {Object} bounds - Bounds object with contains() method
+     * @param {Object} visibleCenter - Visible center coordinates {lat, lng}
      * @param {Object} [locationDistances=null] - Pre-calculated distances from ViewportManager
      * @returns {Object} Object with visibleEvents, visibleLocationKeys, and visibleTagFrequencies
      */
@@ -250,8 +250,27 @@ const FilterManager = (() => {
 
                     // Calculate tag frequencies with proximity weighting
                     if (event.tags) {
-                        // Use pre-calculated distance if available, otherwise calculate on the fly
-                        const distance = locationDistances?.[event.locationKey] ?? visibleCenter.distanceTo([lat, lng]);
+                        // Use pre-calculated distance if available, otherwise calculate on the fly using Haversine
+                        let distance;
+                        if (locationDistances?.[event.locationKey] !== undefined) {
+                            distance = locationDistances[event.locationKey];
+                        } else if (visibleCenter) {
+                            // Calculate distance using Haversine formula
+                            const R = 6371000; // Earth's radius in meters
+                            const lat1 = visibleCenter.lat * Math.PI / 180;
+                            const lat2 = lat * Math.PI / 180;
+                            const deltaLat = (lat - visibleCenter.lat) * Math.PI / 180;
+                            const deltaLng = (lng - visibleCenter.lng) * Math.PI / 180;
+
+                            const a = Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
+                                Math.cos(lat1) * Math.cos(lat2) *
+                                Math.sin(deltaLng / 2) * Math.sin(deltaLng / 2);
+                            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+                            distance = R * c;
+                        } else {
+                            distance = 0;
+                        }
                         // Max bonus of 1 for being at the center, decreasing to 0 at max proximity distance
                         const proximityWeight = Math.max(0, 1 - distance / Constants.DISTANCE.MAX_PROXIMITY_METERS);
 
@@ -318,8 +337,8 @@ const FilterManager = (() => {
      * @param {Date} params.startDate - Start date
      * @param {Date} params.endDate - End date
      * @param {Object} params.tagStates - Tag states object
-     * @param {Object} [params.bounds] - Leaflet bounds for viewport filtering
-     * @param {Object} [params.visibleCenter] - Leaflet LatLng for visible center
+     * @param {Object} [params.bounds] - Bounds object for viewport filtering
+     * @param {Object} [params.visibleCenter] - Visible center coordinates {lat, lng}
      * @returns {Object} Filtered results with various subsets
      */
     function applyFilters(params) {

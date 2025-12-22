@@ -174,7 +174,7 @@ async def process_and_save_events(page_content, url, name, notes, source_filenam
 
     # Configure Gemini AI
     genai.configure(api_key=GEMINI_API_KEY)
-    model = genai.GenerativeModel('gemini-2.5-flash-lite')
+    model = genai.GenerativeModel('gemini-3-flash-preview')
 
     # Process each chunk
     if chunks:

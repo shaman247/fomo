@@ -2072,7 +2072,8 @@
       "https://www.eventbrite.com/o/bluestockings-bookstore-19793422824"
     ],
     "keywords": "/e/",
-    "max_pages": 5
+    "max_pages": 5,
+    "disabled": true
   },
   {
     "name": "Brooklyn Museum",
@@ -2626,10 +2627,11 @@
   {
     "name": "Nowadays",
     "urls": [
-      "https://ra.co/clubs/105873"
+      "https://ra.co/clubs/105873/events"
     ],
     "keywords": "/events/",
-    "max_pages": 10
+    "max_pages": 10,
+    "disabled": true
   },
   {
     "name": "P&T Knitwear",
@@ -2725,7 +2727,8 @@
     "urls": [
       "https://ra.co/events/us/newyorkcity"
     ],
-    "keywords": "/events/"
+    "keywords": "/events/",
+    "disabled": true
   },
   {
     "name": "Eventbrite",
@@ -3631,8 +3634,11 @@
   {
     "name": "Wikimedia NYC",
     "urls": [
-      "https://en.wikipedia.org/wiki/Wikipedia:Meetup/NYC"
-    ]
+      "https://en.wikipedia.org/wiki/Wikipedia:Meetup/NYC",
+      "https://www.eventbrite.com/o/wikimedia-nyc-35701633213"
+    ],
+    "keywords": "/e/",
+    "max_pages": 5
   },
   {
     "name": "The Latinx Project at NYU",
@@ -4269,8 +4275,10 @@
   {
     "name": "NYC Bird Alliance",
     "urls": [
-      "https://nycbirdalliance.org/events-birding/programs-and-events"
-    ]
+      "https://nycbirdalliance.app.neoncrm.com/np/clients/nycbirdalliance/publicaccess/eventCalendarBig.jsp"
+    ],
+    "keywords": "event.jsp?event=",
+    "max_pages": 20
   },
   {
     "name": "Bronx Music Hall",
@@ -5269,6 +5277,7 @@
       "https://www.651arts.org/"
     ],
     "keywords": "https://www.651arts.org/",
+    "crawl_frequency": 12,
     "max_pages": 30
   },
   {
@@ -5319,7 +5328,7 @@
     "urls": [
       "https://sparrowsneststudio.com/pages/event-calendar"
     ],
-    "keywords": "calendar.google.com",
+    "keywords": "/calendar/u/",
     "max_pages": 10
   },
   {
@@ -5335,5 +5344,183 @@
       "https://www.hbstudio.org/calendar/category/hb-public-conversations/",
       ""
     ]
+  },
+  {
+    "name": "CultureHub",
+    "urls": [
+      "https://www.culturehub.org/events"
+    ],
+    "keywords": "/events/",
+    "max_pages": 10
+  },
+  {
+    "name": "Harlem One Stop",
+    "urls": [
+      "https://www.harlemonestop.com/comingsoon/"
+    ],
+    "keywords": "/event/",
+    "max_pages": 50
+  },
+  {
+    "name": "American Legion Post 398"
+  },
+  {
+    "name": "Northern Manhattan Arts Alliance",
+    "urls": [
+      "https://www.nomaanyc.org/community-events/"
+    ],
+    "keywords": "/events/",
+    "selector": "#mec_skin_6618 > div.mec-load-more-wrap > div",
+    "num_clicks": 2,
+    "max_pages": 50
+  },
+  {
+    "name": "Patrick's Place",
+    "urls": [
+      "https://www.patricksplaceharlem.com/events"
+    ],
+    "keywords": "/e/",
+    "max_pages": 10
+  },
+  {
+    "name": "Morris-Jumel Mansion",
+    "urls": [
+      "https://morrisjumel.org/programs-events/"
+    ],
+    "keywords": "/events/, /programs/",
+    "max_pages": 20
+  },
+  {
+    "name": "Word Up Community Bookshop",
+    "urls": [
+      "https://www.wordupbooks.com/events"
+    ],
+    "keywords": "/event/",
+    "max_pages": 30
+  },
+  {
+    "name": "Children's Art Carnival",
+    "urls": [
+      "https://childrensartcarnival.org/events/"
+    ],
+    "keywords": "/event/",
+    "max_pages": 20
+  },
+  {
+    "name": "Adam Clayton Powell, Jr. State Office Building",
+    "urls": [
+      "https://ogs.ny.gov/plaza-events-harlem"
+    ],
+    "keywords": "/event/",
+    "max_pages": 5
+  },
+  {
+    "name": "El Barrio’s Artspace PS109"
+  },
+  {
+    "name": "Alianza Dominicana Cultural Center"
+  },
+  {
+    "name": "Silicon Harlem"
+  },
+  {
+    "name": "Harlem School of the Arts ",
+    "urls": [
+      "https://hsanyc.org/category/events/"
+    ],
+    "keywords": ".org/hsa",
+    "max_pages": 5
+  },
+  {
+    "name": "Freedom Hall",
+    "urls": [
+      "https://socialism.com/events/category/new-york-city/"
+    ],
+    "keywords": "/event/",
+    "max_pages": 5
+  },
+  {
+    "name": "Gadson Gallery",
+    "urls": [
+      "https://www.thegadsongallery.com/events-calendar"
+    ],
+    "keywords": "/events-calendar/",
+    "max_pages": 10
+  },
+  {
+    "name": "Comedy in Harlem",
+    "urls": [
+      "https://www.comedyinharlem.com/events"
+    ]
+  },
+  {
+    "name": "Big Reuse",
+    "urls": [
+      "https://bigreuse.org/pages/events",
+      "https://www.eventbrite.com/o/20004425576"
+    ]
+  },
+  {
+    "name": "The Second City",
+    "urls": [
+      "https://www.secondcity.com/nyc-calendar"
+    ]
+  },
+  {
+    "name": "Second Stage Theater",
+    "urls": [
+      "https://cart.2st.com/events"
+    ],
+    "keywords": "cart.2st.com/",
+    "max_pages": 1
+  },
+  {
+    "name": "Variety Boys and Girls Club of Queens"
+  },
+  {
+    "name": "PlantxChange",
+    "urls": [
+      "https://www.plantxchangenyc.com/"
+    ]
+  },
+  {
+    "name": "Smiling Hogshead Ranch",
+    "urls": [
+      "https://calendar.google.com/calendar/embed?src=smilinghogsheadranch%40gmail.com&ctz=America%2FNew_York"
+    ]
+  },
+  {
+    "name": "The Shops at Columbus Circle",
+    "urls": [
+      "https://www.theshopsatcolumbuscircle.com/events/"
+    ],
+    "keywords": "/events/",
+    "max_pages": 20
+  },
+  {
+    "name": "Animation Nights New York",
+    "urls": [
+      "https://www.animationnights.com/upcoming-screening-events/"
+    ]
+  },
+  {
+    "name": "Q.E.D.",
+    "urls": [
+      "https://qedastoria.com/apps/events/calendar"
+    ]
+  },
+  {
+    "name": "Dungeons n' Drafts",
+    "urls": [
+      "https://dungeonsndrafts.com/areaEvents/GsKz2MvyKDLZeXp02y81"
+    ]
+  },
+  {
+    "name": "Bar Freda",
+    "urls": [
+      "https://www.barfreda.com/events#/events"
+    ],
+    "keywords": "/events/",
+    "max_pages": 30
   }
 ]

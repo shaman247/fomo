@@ -19,7 +19,7 @@
 .modal {
     display: none;
     position: fixed;
-    z-index: 2000;
+    z-index: var(--z-modal);
     left: 0;
     top: 0;
     width: 100%;
@@ -235,7 +235,7 @@
     padding: 16px 24px;
     border-radius: 8px;
     box-shadow: 0 4px 12px var(--shadow-dark);
-    z-index: 10000;
+    z-index: var(--z-modal);
     opacity: 0;
     transition: opacity 0.3s ease, transform 0.3s ease;
     pointer-events: none;

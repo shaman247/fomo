@@ -57,6 +57,33 @@ const ViewportManager = (() => {
     }
 
     // ========================================
+    // TILE BUFFER CONFIGURATION
+    // ========================================
+
+    /**
+     * The map renders at an enlarged size with offset to buffer tiles beyond the viewport.
+     * This ratio represents how much larger the map container is relative to the viewport.
+     * A ratio of 2.0 means 200% size (50% buffer on each side).
+     * Must match the CSS values in layout.css (#map-wrapper).
+     */
+    const TILE_BUFFER_RATIO = 2.0;
+
+    /**
+     * Gets the offset in pixels caused by the tile buffer
+     * The map container is centered by offsetting it by 50% of viewport in each direction
+     * @returns {Object} Object with offsetX and offsetY in pixels
+     */
+    function getTileBufferOffset() {
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        const bufferOffset = (TILE_BUFFER_RATIO - 1) / 2; // 0.5 for ratio of 2.0
+        return {
+            offsetX: viewportWidth * bufferOffset,
+            offsetY: viewportHeight * bufferOffset
+        };
+    }
+
+    // ========================================
     // FILTER PANEL DIMENSIONS
     // ========================================
 
@@ -107,17 +134,28 @@ const ViewportManager = (() => {
     function calculateVisibleCenter(map, isInitialLoad = false) {
         if (!map) return null;
 
-        const center = map.getCenter();
-        const container = map.getContainer();
-        const centerPoint = map.project(center);
+        // Get the tile buffer offset to convert viewport coords to map container coords
+        const { offsetX, offsetY } = getTileBufferOffset();
 
         // Get filter panel dimensions
         const { filterPanelWidth, filterPanelHeight } = getFilterPanelDimensions(isInitialLoad);
 
-        // Calculate the visible center (80% of the way between map center and edge of visible area)
+        // Get actual viewport dimensions
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+
+        // Calculate the center of the debug rectangle (90% inset bounds)
+        // This matches the debugRectBounds calculation in calculateViewportBounds
+        const inset = 0.05; // 5% inset on each side = 90% of bounds
+        const effectiveWidth = viewportWidth - filterPanelWidth;
+        const effectiveHeight = viewportHeight - filterPanelHeight;
+
+        // The debug rectangle spans from (filterPanelWidth + inset, filterPanelHeight + inset)
+        // to (viewportWidth - inset, viewportHeight - inset)
+        // Its center is the midpoint of these bounds
         const visibleCenterPoint = {
-            x: centerPoint.x + filterPanelWidth * 0.4,
-            y: centerPoint.y + filterPanelHeight * 0.4
+            x: offsetX + filterPanelWidth + effectiveWidth * inset + (effectiveWidth * (1 - 2 * inset)) / 2,
+            y: offsetY + filterPanelHeight + effectiveHeight * inset + (effectiveHeight * (1 - 2 * inset)) / 2
         };
 
         const visibleCenter = map.unproject([visibleCenterPoint.x, visibleCenterPoint.y]);
@@ -172,18 +210,22 @@ const ViewportManager = (() => {
     function calculateViewportBounds(map, isInitialLoad = false) {
         if (!map) return null;
 
-        const container = map.getContainer();
-        const viewportWidth = container.offsetWidth;
-        const viewportHeight = container.offsetHeight;
+        // Get actual viewport dimensions (not the enlarged map container)
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+
+        // Get the tile buffer offset to convert viewport coords to map container coords
+        const { offsetX, offsetY } = getTileBufferOffset();
 
         // Get filter panel dimensions
         const { filterPanelWidth, filterPanelHeight } = getFilterPanelDimensions(isInitialLoad);
 
-        // Calculate the corners of the actual visible viewport in pixels
-        const topLeftPx = { x: filterPanelWidth, y: filterPanelHeight };
-        const topRightPx = { x: viewportWidth, y: filterPanelHeight };
-        const bottomRightPx = { x: viewportWidth, y: viewportHeight };
-        const bottomLeftPx = { x: filterPanelWidth, y: viewportHeight };
+        // Calculate the corners of the actual visible viewport in map container pixel coordinates
+        // Add buffer offset because the map container is shifted by -50vw, -50vh
+        const topLeftPx = { x: filterPanelWidth + offsetX, y: filterPanelHeight + offsetY };
+        const topRightPx = { x: viewportWidth + offsetX, y: filterPanelHeight + offsetY };
+        const bottomRightPx = { x: viewportWidth + offsetX, y: viewportHeight + offsetY };
+        const bottomLeftPx = { x: filterPanelWidth + offsetX, y: viewportHeight + offsetY };
 
         // Calculate visible center
         const visibleCenter = calculateVisibleCenter(map, isInitialLoad);
@@ -397,45 +439,59 @@ const ViewportManager = (() => {
         const debugRectBounds = state.debugRectBounds;
         if (!debugRectBounds) return null;
 
-        // Get marker position in pixel coordinates
+        // Get marker position in map container pixel coordinates
         const markerPoint = map.project(popupLngLat);
 
-        // The popup has an offset of [0, -55] from the marker (see mapManager.js)
-        // and anchor is 'bottom', so the popup bottom is at markerPoint.y - 55
-        const popupOffset = 55;
-        const popupBottom = markerPoint.y - popupOffset;
-        const popupTop = popupBottom - popupHeight;
-        const popupLeft = markerPoint.x - popupWidth / 2;
-        const popupRight = markerPoint.x + popupWidth / 2;
-
-        // Add some padding for visual comfort
-        const padding = 10;
+        // Get tile buffer offset
+        const { offsetX, offsetY } = getTileBufferOffset();
 
         // Check if we're in mobile layout (filter panel on top, not left)
         const isMobileLayout = window.innerWidth <= Constants.UI.MOBILE_BREAKPOINT;
+
+        // Add some padding for visual comfort
+        const padding = 10;
 
         // Calculate if we need to pan (vertical and horizontal)
         let panX = 0;
         let panY = 0;
 
-        // Check vertical bounds
-        // Use the more restrictive bound: either debugRectBounds.top or absolute screen top (0)
-        // This handles pitched maps where markers near horizon could cause popup to go off-screen
-        const effectiveTop = Math.max(debugRectBounds.top, 0);
-        if (popupTop < effectiveTop + padding) {
-            panY = (effectiveTop + padding) - popupTop;
-        } else if (popupBottom > debugRectBounds.bottom - padding) {
-            panY = (debugRectBounds.bottom - padding) - popupBottom;
-        }
-
-        // Check horizontal bounds
         if (isMobileLayout) {
-            // On mobile, center the popup horizontally in the viewport
-            const viewportCenterX = window.innerWidth / 2;
-            const popupCenterX = markerPoint.x; // Popup is centered on marker
-            panX = viewportCenterX - popupCenterX;
+            // On mobile, popup is centered on the marker (anchor: 'center')
+            // Pan so the marker is at the center of the visible area
+            const { filterPanelHeight } = getFilterPanelDimensions();
+            const viewportHeight = window.innerHeight;
+            const viewportWidth = window.innerWidth;
+
+            // Calculate the center of the visible area in map container coordinates
+            // Add buffer offset since markerPoint is in map container space
+            const visibleAreaCenterX = offsetX + viewportWidth / 2;
+            const visibleAreaCenterY = offsetY + filterPanelHeight + (viewportHeight - filterPanelHeight) / 2;
+
+            // Pan to center the marker in the visible area
+            // Note: panBy in script.js negates these values, so we use (center - marker)
+            // to get the correct direction
+            panX = visibleAreaCenterX - markerPoint.x;
+            panY = visibleAreaCenterY - markerPoint.y;
         } else {
-            // On desktop, just ensure popup is within bounds
+            // On desktop, popup appears above the marker (anchor: 'bottom')
+            // The popup has an offset of [0, -26] from the marker
+            const popupOffset = 26;
+            const popupBottom = markerPoint.y - popupOffset;
+            const popupTop = popupBottom - popupHeight;
+            const popupLeft = markerPoint.x - popupWidth / 2;
+            const popupRight = markerPoint.x + popupWidth / 2;
+
+            // Check vertical bounds
+            // Use the more restrictive bound: either debugRectBounds.top or absolute screen top (0)
+            // This handles pitched maps where markers near horizon could cause popup to go off-screen
+            const effectiveTop = Math.max(debugRectBounds.top, 0);
+            if (popupTop < effectiveTop + padding) {
+                panY = (effectiveTop + padding) - popupTop;
+            } else if (popupBottom > debugRectBounds.bottom - padding) {
+                panY = (debugRectBounds.bottom - padding) - popupBottom;
+            }
+
+            // Check horizontal bounds - ensure popup is within bounds
             if (popupLeft < debugRectBounds.left + padding) {
                 panX = (debugRectBounds.left + padding) - popupLeft;
             } else if (popupRight > debugRectBounds.right - padding) {

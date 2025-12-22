@@ -1,6 +1,6 @@
 /**
  * MapManager - Manages MapLibre GL map markers and their styling
- * Handles marker creation, icon generation, tooltips, and popups
+ * Handles marker creation, icon generation, labels, and popups
  * @module MapManager
  */
 const MapManager = (() => {
@@ -10,10 +10,9 @@ const MapManager = (() => {
      */
     const state = {
         mapInstance: null,
-        markers: [],           // Array of {marker, popup, tooltip, locationKey}
+        markers: [],           // Array of {marker, popup, locationKey}
         tagColorsRef: null,
         markerColorsRef: null,
-        openTooltipMarker: null,
         currentPopup: null,
         currentPopupMarker: null
     };
@@ -50,9 +49,6 @@ const MapManager = (() => {
         });
 
         markersToRemove.forEach(markerObj => {
-            if (markerObj.tooltip) {
-                markerObj.tooltip.remove();
-            }
             if (markerObj.popup && markerObj.popup !== state.currentPopup) {
                 markerObj.popup.remove();
             }
@@ -88,45 +84,35 @@ const MapManager = (() => {
 
     /**
      * Create a custom HTML element for a map marker
-     * Generates an SVG pin with an emoji overlay
+     * Generates an SVG pin with an emoji overlay and optional label
      * @param {Object} locationInfo - Location information object
      * @param {string} locationInfo.emoji - Emoji to display on the marker
+     * @param {string} locationInfo.short_name - Short name for the label
      * @returns {HTMLElement} DOM element for the marker
      */
     function createMarkerIcon(locationInfo) {
         const markerColor = getMarkerColor(locationInfo);
         const emoji = locationInfo.emoji;
+        const shortName = locationInfo.short_name || locationInfo.name || '';
 
         const el = document.createElement('div');
         el.className = 'custom-marker-icon';
         el.style.setProperty('--marker-color', markerColor);
-        el.innerHTML = `<div class="marker-emoji">${emoji}</div>`;
+        el.innerHTML = `<div class="marker-emoji">${emoji}</div><div class="marker-label">${shortName}</div>`;
 
         return el;
     }
 
     /**
-     * Create a tooltip element for showing on hover
-     * @param {string} text - Tooltip text
-     * @returns {HTMLElement} Tooltip DOM element
-     */
-    function createTooltipElement(text) {
-        const tooltip = document.createElement('div');
-        tooltip.className = 'maplibre-tooltip';
-        tooltip.textContent = text;
-        return tooltip;
-    }
-
-    /**
-     * Add a marker to the map with tooltip and popup
+     * Add a marker to the map with label and popup
      * @param {Array<number>} lngLat - Marker coordinates [lng, lat] (MapLibre uses lng,lat order)
      * @param {HTMLElement} iconElement - Marker icon DOM element
-     * @param {string} tooltipText - Text to display in tooltip
+     * @param {string} _unused - Unused parameter (kept for API compatibility)
      * @param {Function} popupContentCallback - Function that returns popup content
      * @param {string} locationKey - Location key for reference
      * @returns {maplibregl.Marker|undefined} The created marker, or undefined if map not initialized
      */
-    function addMarkerToMap(lngLat, iconElement, tooltipText, popupContentCallback, locationKey) {
+    function addMarkerToMap(lngLat, iconElement, _unused, popupContentCallback, locationKey) {
         if (!state.mapInstance) return;
 
         // Create the marker with anchor at center of the circle
@@ -137,74 +123,33 @@ const MapManager = (() => {
             .setLngLat(lngLat)
             .addTo(state.mapInstance);
 
-        // Create tooltip (shown on hover)
-        const tooltipEl = createTooltipElement(tooltipText);
-
-        // Create popup (shown on click)
-        const popup = new maplibregl.Popup({
-            closeButton: true,
-            closeOnClick: false,
-            maxWidth: '340px',
-            anchor: 'bottom',
-            offset: [0, -26] // Offset up from center of circle marker
-        });
-
-        // Store marker info
+        // Store marker info (popup will be created dynamically when opened)
         const markerObj = {
             marker,
-            popup,
-            tooltipEl,
+            popup: null,
             locationKey,
             popupContentCallback,
             lngLat
         };
         state.markers.push(markerObj);
 
-        // Handle hover for tooltip
+        // Handle hover for label
         iconElement.addEventListener('mouseenter', () => {
-            // Don't show tooltip if popup is open for this marker
+            // Don't highlight if popup is open for this marker
             if (state.currentPopupMarker === marker) return;
 
-            // Close any other open tooltip
-            if (state.openTooltipMarker && state.openTooltipMarker !== marker) {
-                const prevMarkerObj = state.markers.find(m => m.marker === state.openTooltipMarker);
-                if (prevMarkerObj && prevMarkerObj.tooltipEl.parentNode) {
-                    prevMarkerObj.tooltipEl.remove();
-                }
-            }
-
-            // Position and show tooltip below the marker
-            const markerEl = marker.getElement();
-            const rect = markerEl.getBoundingClientRect();
-            const mapContainer = state.mapInstance.getContainer();
-            const mapRect = mapContainer.getBoundingClientRect();
-
-            tooltipEl.style.position = 'absolute';
-            tooltipEl.style.left = `${rect.left - mapRect.left + rect.width / 2}px`;
-            tooltipEl.style.top = `${rect.bottom - mapRect.top + 6}px`;
-            tooltipEl.style.transform = 'translateX(-50%)';
-
-            mapContainer.appendChild(tooltipEl);
-            state.openTooltipMarker = marker;
+            // Show label on hover with full opacity and high z-index
+            iconElement.classList.add('hovered');
         });
 
         iconElement.addEventListener('mouseleave', () => {
-            if (tooltipEl.parentNode) {
-                tooltipEl.remove();
-            }
-            if (state.openTooltipMarker === marker) {
-                state.openTooltipMarker = null;
-            }
+            // Remove hover state from label
+            iconElement.classList.remove('hovered');
         });
 
         // Handle click for popup
         iconElement.addEventListener('click', (e) => {
             e.stopPropagation();
-
-            // Remove tooltip if showing
-            if (tooltipEl.parentNode) {
-                tooltipEl.remove();
-            }
 
             // Close any existing popup
             if (state.currentPopup) {
@@ -228,9 +173,46 @@ const MapManager = (() => {
                 state.currentPopupMarker.getElement().classList.remove('active');
             }
 
+            // Create popup dynamically based on current screen size
+            // On mobile: center popup on marker; on desktop: popup above marker
+            const isMobile = window.innerWidth <= Constants.UI.MOBILE_BREAKPOINT;
+            const popup = new maplibregl.Popup({
+                closeButton: true,
+                closeOnClick: true,
+                maxWidth: 'none',
+                anchor: isMobile ? 'center' : 'bottom',
+                offset: isMobile ? [0, 0] : [0, -26]
+            });
+
+            // Handle popup close
+            popup.on('close', () => {
+                if (state.currentPopup === popup) {
+                    const closedMarker = state.currentPopupMarker;
+                    const closedLocationKey = markerObj.locationKey;
+
+                    // Remove active class from marker
+                    if (closedMarker) {
+                        closedMarker.getElement().classList.remove('active');
+                    }
+
+                    state.currentPopup = null;
+                    state.currentPopupMarker = null;
+
+                    // Dispatch custom event for popup close
+                    state.mapInstance.fire('popupclose', {
+                        popup,
+                        marker: closedMarker,
+                        locationKey: closedLocationKey
+                    });
+                }
+            });
+
             popup.setLngLat(lngLat)
                 .setDOMContent(wrapper)
                 .addTo(state.mapInstance);
+
+            // Update markerObj reference
+            markerObj.popup = popup;
 
             state.currentPopup = popup;
             state.currentPopupMarker = marker;
@@ -240,29 +222,6 @@ const MapManager = (() => {
 
             // Dispatch custom event for popup open
             state.mapInstance.fire('popupopen', { popup, marker, locationKey });
-        });
-
-        // Handle popup close
-        popup.on('close', () => {
-            if (state.currentPopup === popup) {
-                const closedMarker = state.currentPopupMarker;
-                const closedLocationKey = markerObj.locationKey;
-
-                // Remove active class from marker
-                if (closedMarker) {
-                    closedMarker.getElement().classList.remove('active');
-                }
-
-                state.currentPopup = null;
-                state.currentPopupMarker = null;
-
-                // Dispatch custom event for popup close
-                state.mapInstance.fire('popupclose', {
-                    popup,
-                    marker: closedMarker,
-                    locationKey: closedLocationKey
-                });
-            }
         });
 
         return marker;
@@ -276,9 +235,6 @@ const MapManager = (() => {
         const index = state.markers.findIndex(m => m.marker === marker);
         if (index > -1) {
             const markerObj = state.markers[index];
-            if (markerObj.tooltipEl && markerObj.tooltipEl.parentNode) {
-                markerObj.tooltipEl.remove();
-            }
             if (markerObj.popup) {
                 markerObj.popup.remove();
             }
@@ -341,30 +297,293 @@ const MapManager = (() => {
     }
 
     /**
+     * Check if two rectangles overlap
+     * @param {Object} rect1 - First rectangle {left, right, top, bottom}
+     * @param {Object} rect2 - Second rectangle {left, right, top, bottom}
+     * @returns {boolean} True if rectangles overlap
+     */
+    function rectsOverlap(rect1, rect2) {
+        return !(rect1.right < rect2.left ||
+                 rect1.left > rect2.right ||
+                 rect1.bottom < rect2.top ||
+                 rect1.top > rect2.bottom);
+    }
+
+    /**
+     * Update label visibility for all markers based on distance from screen center
+     * Shows a limited number of labels, prioritizing those closest to the visible center
+     * Labels are hidden if they would overlap with any marker or other visible label
+     * No labels are shown if there are more than MAX_MARKERS_FOR_LABELS markers visible
+     */
+    /**
+     * Check if a point is within the debug rect bounds
+     * @param {number} x - X coordinate in screen space
+     * @param {number} y - Y coordinate in screen space
+     * @param {Object} bounds - Debug rect bounds {left, right, top, bottom}
+     * @returns {boolean} True if point is within bounds
+     */
+    function isPointInDebugRect(x, y, bounds) {
+        if (!bounds) return true; // If no bounds, assume visible
+        return x >= bounds.left && x <= bounds.right &&
+               y >= bounds.top && y <= bounds.bottom;
+    }
+
+    function updateLabelVisibility() {
+        if (!state.mapInstance) return;
+
+        const markers = state.markers;
+        if (markers.length === 0) return;
+
+        // Get debug rect bounds for visibility check
+        const debugRectBounds = ViewportManager.getDebugRectBounds();
+
+        // Determine max markers for labels based on screen size
+        const isMobile = window.innerWidth <= Constants.UI.MOBILE_BREAKPOINT;
+        const maxMarkersForLabels = isMobile
+            ? (Constants.UI.MAX_MARKERS_FOR_LABELS_MOBILE || 20)
+            : (Constants.UI.MAX_MARKERS_FOR_LABELS_DESKTOP || 60);
+        let visibleMarkerCount = 0;
+        for (const markerObj of markers) {
+            const screenPos = state.mapInstance.project(markerObj.lngLat);
+            if (isPointInDebugRect(screenPos.x, screenPos.y, debugRectBounds)) {
+                visibleMarkerCount++;
+                if (visibleMarkerCount > maxMarkersForLabels) break;
+            }
+        }
+
+        // Hide all labels if too many markers are visible within debug rect
+        if (visibleMarkerCount > maxMarkersForLabels) {
+            markers.forEach(markerObj => {
+                const labelEl = markerObj.marker.getElement().querySelector('.marker-label');
+                if (labelEl) {
+                    labelEl.classList.add('hidden');
+                }
+            });
+            return;
+        }
+
+        // Determine max labels based on screen size
+        const maxLabels = isMobile
+            ? (Constants.UI.MAX_LABELS_MOBILE || 5)
+            : (Constants.UI.MAX_LABELS_DESKTOP || 10);
+
+        // Get visible center from ViewportManager (accounts for filter panel)
+        const visibleCenter = ViewportManager.getVisibleCenter();
+        const visibleCenterScreen = visibleCenter
+            ? state.mapInstance.project([visibleCenter.lng, visibleCenter.lat])
+            : null;
+
+        // Marker icon dimensions (from CSS: 54px x 54px)
+        const markerSize = 54;
+        const markerRadius = markerSize / 2;
+
+        // First, hide labels for markers outside the debug rect bounds
+        markers.forEach(markerObj => {
+            const screenPos = state.mapInstance.project(markerObj.lngLat);
+            if (!isPointInDebugRect(screenPos.x, screenPos.y, debugRectBounds)) {
+                const labelEl = markerObj.marker.getElement().querySelector('.marker-label');
+                if (labelEl) {
+                    labelEl.classList.add('hidden');
+                }
+            }
+        });
+
+        // Filter to only markers within debug rect bounds for label visibility calculation
+        const visibleMarkers = markers.filter(markerObj => {
+            const screenPos = state.mapInstance.project(markerObj.lngLat);
+            return isPointInDebugRect(screenPos.x, screenPos.y, debugRectBounds);
+        });
+
+        // Get screen positions for visible markers with distance from center
+        const markerScreenPositions = visibleMarkers.map(markerObj => {
+            const screenPos = state.mapInstance.project(markerObj.lngLat);
+
+            // Calculate distance from visible center
+            let distanceFromCenter = 0;
+            if (visibleCenterScreen) {
+                const dx = screenPos.x - visibleCenterScreen.x;
+                const dy = screenPos.y - visibleCenterScreen.y;
+                distanceFromCenter = Math.sqrt(dx * dx + dy * dy);
+            }
+
+            // Get label element and measure its dimensions
+            const labelEl = markerObj.marker.getElement().querySelector('.marker-label');
+            let labelWidth = 0;
+            let labelHeight = 0;
+            if (labelEl) {
+                // Temporarily show to measure
+                const wasHidden = labelEl.classList.contains('hidden');
+                labelEl.classList.remove('hidden');
+                labelWidth = labelEl.offsetWidth;
+                labelHeight = labelEl.offsetHeight;
+                if (wasHidden) {
+                    labelEl.classList.add('hidden');
+                }
+            }
+
+            // Calculate marker bounding box (centered on screen position)
+            const markerRect = {
+                left: screenPos.x - markerRadius,
+                right: screenPos.x + markerRadius,
+                top: screenPos.y - markerRadius,
+                bottom: screenPos.y + markerRadius
+            };
+
+            // Calculate label bounding box (to the right of marker, vertically centered)
+            // Label starts at marker right edge minus some overlap (margin-left: -6px in CSS)
+            const labelOffset = -6;
+            const labelRect = {
+                left: screenPos.x + markerRadius + labelOffset,
+                right: screenPos.x + markerRadius + labelOffset + labelWidth,
+                top: screenPos.y - labelHeight / 2,
+                bottom: screenPos.y + labelHeight / 2
+            };
+
+            return {
+                markerObj,
+                x: screenPos.x,
+                y: screenPos.y,
+                distanceFromCenter,
+                markerRect,
+                labelRect,
+                labelEl
+            };
+        });
+
+        // Sort by distance from center (closest first)
+        markerScreenPositions.sort((a, b) => a.distanceFromCenter - b.distanceFromCenter);
+
+        // Track shown label bounding boxes
+        const shownLabelRects = [];
+        let labelsShownCount = 0;
+
+        // First pass: hide all labels
+        markerScreenPositions.forEach(pos => {
+            if (pos.labelEl) {
+                pos.labelEl.classList.add('hidden');
+            }
+        });
+
+        // Second pass: show labels that don't overlap with other labels
+        // Always show the first label (closest to center), regardless of overlap
+        for (let i = 0; i < markerScreenPositions.length; i++) {
+            const pos = markerScreenPositions[i];
+            if (labelsShownCount >= maxLabels) break;
+            if (!pos.labelEl) continue;
+
+            // Always show the first (closest to center) label
+            const isFirstLabel = labelsShownCount === 0;
+
+            if (!isFirstLabel) {
+                // Check if label overlaps with any already-shown label
+                let overlapsLabel = false;
+                for (const shownRect of shownLabelRects) {
+                    if (rectsOverlap(pos.labelRect, shownRect)) {
+                        overlapsLabel = true;
+                        break;
+                    }
+                }
+
+                if (overlapsLabel) continue;
+            }
+
+            // Show this label
+            pos.labelEl.classList.remove('hidden');
+            shownLabelRects.push(pos.labelRect);
+            labelsShownCount++;
+        }
+    }
+
+    /**
      * Update z-index of all markers based on screen Y position
      * Markers closer to bottom of screen get higher z-index
+     * Max z-index is capped to stay below popups (--z-popup: 400)
      */
     function updateMarkerZIndices() {
         if (!state.mapInstance) return;
 
+        const maxZIndex = 399; // Must stay below popup z-index (400)
+        // Use actual viewport height, not enlarged map container height
+        const viewportHeight = window.innerHeight;
+        // The map container is offset by 50% of viewport, so visible Y range is
+        // from offsetY (top of viewport) to offsetY + viewportHeight (bottom)
+        const offsetY = viewportHeight * 0.5; // Buffer offset (must match CSS)
+
         state.markers.forEach(markerObj => {
             const screenPos = state.mapInstance.project(markerObj.lngLat);
-            // Higher Y = closer to bottom = higher z-index
-            const zIndex = Math.round(screenPos.y);
+            // Normalize Y position relative to visible viewport
+            const normalizedY = (screenPos.y - offsetY) / viewportHeight;
+            // Higher Y = closer to bottom = higher z-index, scaled to max
+            const zIndex = Math.round(Math.max(0, Math.min(1, normalizedY)) * maxZIndex);
             markerObj.marker.getElement().style.zIndex = zIndex;
         });
     }
 
     /**
-     * Start listening for map movements to update marker z-indices
+     * Start listening for map movements to update marker z-indices and label visibility
+     * Uses 'moveend' instead of 'move' to avoid performance issues during panning
      */
     function enableZIndexUpdates() {
         if (!state.mapInstance) return;
 
-        // Update on any map movement (pan, zoom, rotate, pitch)
-        state.mapInstance.on('move', updateMarkerZIndices);
+        // Update only after map movement ends (not during pan/zoom)
+        // This significantly improves panning performance on mobile
+        state.mapInstance.on('moveend', () => {
+            updateMarkerZIndices();
+            updateLabelVisibility();
+        });
         // Initial update
         updateMarkerZIndices();
+        updateLabelVisibility();
+    }
+
+    /**
+     * Get the current map bounds with an optional buffer
+     * Uses the map's native getBounds() and expands it proportionally in lat/lng space
+     * @param {number} [bufferRatio=0.5] - Buffer as a ratio of viewport size (0.5 = 50% buffer on each side)
+     * @returns {Object|null} Bounds object with north/south/east/west, or null if map not ready
+     */
+    function getBufferedBounds(bufferRatio = 0.5) {
+        if (!state.mapInstance) return null;
+
+        const bounds = state.mapInstance.getBounds();
+        const ne = bounds.getNorthEast();
+        const sw = bounds.getSouthWest();
+
+        const latRange = ne.lat - sw.lat;
+        const lngRange = ne.lng - sw.lng;
+
+        const latBuffer = latRange * bufferRatio;
+        const lngBuffer = lngRange * bufferRatio;
+
+        return {
+            north: ne.lat + latBuffer,
+            south: sw.lat - latBuffer,
+            east: ne.lng + lngBuffer,
+            west: sw.lng - lngBuffer
+        };
+    }
+
+    /**
+     * Check if a coordinate is within given bounds
+     * @param {number} lat - Latitude
+     * @param {number} lng - Longitude
+     * @param {Object} bounds - Bounds object with north, south, east, west
+     * @returns {boolean} True if coordinate is within bounds
+     */
+    function isInBounds(lat, lng, bounds) {
+        return lat <= bounds.north &&
+               lat >= bounds.south &&
+               lng <= bounds.east &&
+               lng >= bounds.west;
+    }
+
+    /**
+     * Get count of current markers
+     * @returns {number} Number of markers currently on the map
+     */
+    function getMarkerCount() {
+        return state.markers.length;
     }
 
     /**
@@ -385,6 +604,10 @@ const MapManager = (() => {
         getMap,
         eachMarker,
         updateMarkerZIndices,
-        enableZIndexUpdates
+        updateLabelVisibility,
+        enableZIndexUpdates,
+        getBufferedBounds,
+        isInBounds,
+        getMarkerCount
     };
 })();

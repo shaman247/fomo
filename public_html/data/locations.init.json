@@ -18,62 +18,6 @@
     "alt_emoji": "🥂"
   },
   {
-    "name": "51 Bergen Street",
-    "tags": [
-      "Popup",
-      "Shop",
-      "Cobble Hill",
-      "Brooklyn"
-    ],
-    "lat": 40.68727,
-    "lng": -73.99116,
-    "emoji": "🛍️"
-  },
-  {
-    "name": "9/11 Memorial & Museum",
-    "tags": [
-      "Museum",
-      "Memorial",
-      "History",
-      "Financial District",
-      "Manhattan"
-    ],
-    "lat": 40.71158,
-    "lng": -74.01334,
-    "emoji": "🕊️",
-    "alt_emoji": "🏛️"
-  },
-  {
-    "name": "ABC No Rio",
-    "tags": [
-      "Art Space",
-      "Community Center",
-      "Activism",
-      "Punk",
-      "Zines",
-      "LES",
-      "Lower East Side",
-      "Manhattan"
-    ],
-    "lat": 40.71916,
-    "lng": -73.98626,
-    "emoji": "🤘",
-    "alt_emoji": "🎨"
-  },
-  {
-    "name": "Abrons Arts Center",
-    "tags": [
-      "Arts Center",
-      "Performing Arts",
-      "Visual Arts",
-      "Lower East Side",
-      "Manhattan"
-    ],
-    "lat": 40.71533,
-    "lng": -73.98379,
-    "emoji": "🎭"
-  },
-  {
     "name": "Angelika Film Center & Cafe",
     "short_name": "Angelika Film Center",
     "tags": [
@@ -92,44 +36,21 @@
     "emoji": "🎥"
   },
   {
-    "name": "Anthology Film Archives",
+    "name": "Atlantic Theater Company",
     "tags": [
-      "Cinema",
-      "Independent Film",
-      "Avant Garde",
-      "Film Archive",
-      "East Village",
+      "Theater",
+      "Off Broadway",
+      "New Plays",
+      "Chelsea",
       "Manhattan"
     ],
-    "lat": 40.72469,
-    "lng": -73.99017,
-    "emoji": "🎥"
-  },
-  {
-    "name": "Arlene's Grocery",
-    "tags": [
-      "Venue",
-      "Music",
-      "Rock",
-      "Karaoke",
-      "Lower East Side",
-      "Manhattan"
+    "alternate_names": [
+      "Linda Gross Theater",
+      "Atlantic Stage 2"
     ],
-    "lat": 40.72128,
-    "lng": -73.98837,
-    "emoji": "🎵"
-  },
-  {
-    "name": "Asser Levy Recreation Center",
-    "tags": [
-      "Recreation Center",
-      "Kips Bay",
-      "Manhattan"
-    ],
-    "lat": 40.73616,
-    "lng": -73.97566,
-    "emoji": "🏋🏽",
-    "alt_emoji": "🏛️"
+    "lat": 40.74398,
+    "lng": -74.00145,
+    "emoji": "🎭"
   },
   {
     "name": "Baby's All Right",
@@ -146,78 +67,6 @@
     "alt_emoji": "🎵"
   },
   {
-    "name": "Bargemusic",
-    "tags": [
-      "Classical Music",
-      "Music Venue",
-      "Waterfront",
-      "Brooklyn Heights",
-      "Brooklyn"
-    ],
-    "lat": 40.69573,
-    "lng": -73.99916,
-    "emoji": "🎻",
-    "alt_emoji": "🎵"
-  },
-  {
-    "name": "Barnes & Noble (Union Square)",
-    "short_name": "Barnes & Noble",
-    "tags": [
-      "Bookstore",
-      "Union Square",
-      "Gramercy",
-      "Manhattan"
-    ],
-    "lat": 40.73697,
-    "lng": -73.98972,
-    "emoji": "📚"
-  },
-  {
-    "name": "Blue Note Jazz Club",
-    "tags": [
-      "Jazz Club",
-      "Music",
-      "Jazz",
-      "Greenwich Village",
-      "Manhattan"
-    ],
-    "alternate_names": [
-      "Blue Note New York"
-    ],
-    "lat": 40.73091,
-    "lng": -74.00066,
-    "emoji": "🎷"
-  },
-  {
-    "name": "Bluestockings Cooperative Bookstore",
-    "short_name": "Bluestockings",
-    "tags": [
-      "Bookstore",
-      "Independent",
-      "Queer",
-      "Feminist",
-      "Lower East Side",
-      "Manhattan"
-    ],
-    "alternate_names": [
-      "Blue Stockings Cooperative Bookstore"
-    ],
-    "lat": 40.71893,
-    "lng": -73.98592,
-    "emoji": "📚"
-  },
-  {
-    "name": "Bowery",
-    "tags": [
-      "Neighborhood",
-      "East Village",
-      "Manhattan"
-    ],
-    "lat": 40.72526,
-    "lng": -73.99035,
-    "emoji": "🏙️"
-  },
-  {
     "name": "Bowery Poetry Club",
     "tags": [
       "Poetry",
@@ -229,26 +78,6 @@
     "lat": 40.72494,
     "lng": -73.99275,
     "emoji": "🎤"
-  },
-  {
-    "name": "BRIC",
-    "tags": [
-      "Cultural Center",
-      "Media",
-      "Art",
-      "Performing Arts",
-      "Fort Greene",
-      "Brooklyn"
-    ],
-    "alternate_names": [
-      "BRIC Celebrate Brooklyn",
-      "BRIC Arts Media",
-      "BRIC House"
-    ],
-    "lat": 40.68835,
-    "lng": -73.97919,
-    "emoji": "📺",
-    "alt_emoji": "🏛️"
   },
   {
     "name": "Brooklyn Bridge Park",
@@ -294,20 +123,6 @@
     "emoji": "⚓"
   },
   {
-    "name": "Brooklyn Paramount",
-    "tags": [
-      "Venue",
-      "Music",
-      "Concerts",
-      "Historic Theater",
-      "Fort Greene",
-      "Brooklyn"
-    ],
-    "lat": 40.69008,
-    "lng": -73.98107,
-    "emoji": "🎵"
-  },
-  {
     "name": "Brooklyn Quaker Meeting House",
     "short_name": "Brooklyn Meetinghouse",
     "tags": [
@@ -326,18 +141,6 @@
     "emoji": "🏛️"
   },
   {
-    "name": "Brooklyn Storehouse",
-    "tags": [
-      "Venue",
-      "Warehouse",
-      "Navy Yard",
-      "Brooklyn"
-    ],
-    "lat": 40.70281,
-    "lng": -73.96965,
-    "emoji": "🏭"
-  },
-  {
     "name": "Caveat",
     "tags": [
       "Venue",
@@ -350,84 +153,6 @@
     "lat": 40.72074,
     "lng": -73.98443,
     "emoji": "💡"
-  },
-  {
-    "name": "Center for Brooklyn History",
-    "tags": [
-      "Museum",
-      "History",
-      "Archive",
-      "Brooklyn Heights",
-      "Brooklyn"
-    ],
-    "lat": 40.6948,
-    "lng": -73.99242,
-    "emoji": "🏛️"
-  },
-  {
-    "name": "Center for Brooklyn History",
-    "tags": [
-      "Library",
-      "Archive",
-      "Museum",
-      "Brooklyn History",
-      "Brooklyn Heights",
-      "Brooklyn"
-    ],
-    "lat": 40.6948,
-    "lng": -73.99242,
-    "emoji": "📚",
-    "alt_emoji": "🏛️"
-  },
-  {
-    "name": "Center for Fiction",
-    "tags": [
-      "Literary Center",
-      "Books",
-      "Bookstore",
-      "Writing",
-      "Fort Greene",
-      "Brooklyn"
-    ],
-    "lat": 40.68694,
-    "lng": -73.97852,
-    "emoji": "📚"
-  },
-  {
-    "name": "Center for Jewish History",
-    "tags": [
-      "Museum",
-      "Jewish History",
-      "Archive",
-      "Lectures",
-      "Chelsea",
-      "Manhattan"
-    ],
-    "alternate_names": [
-      "Center for Jewish History"
-    ],
-    "lat": 40.7381,
-    "lng": -73.99375,
-    "emoji": "🏛️"
-  },
-  {
-    "name": "Chatham Square Library",
-    "tags": [
-      "Library",
-      "NYPL",
-      "Chinatown",
-      "Chinese Collection",
-      "Manhattan"
-    ],
-    "alternate_names": [
-      "New York Public Library - Chatham Square Branch",
-      "New York Public Library - Chatham Square",
-      "NYPL Chatham Square",
-      "New York Public Library at Chatham Square"
-    ],
-    "lat": 40.71333,
-    "lng": -73.9965,
-    "emoji": "📖"
   },
   {
     "name": "Chelsea Market",
@@ -458,34 +183,6 @@
     "emoji": "🎪"
   },
   {
-    "name": "Chelsea Recreation Center",
-    "tags": [
-      "Recreation Center",
-      "Pool",
-      "Gym",
-      "Chelsea",
-      "Manhattan"
-    ],
-    "lat": 40.74827,
-    "lng": -74.00206,
-    "emoji": "🏋🏽"
-  },
-  {
-    "name": "China Institute",
-    "tags": [
-      "Cultural Center",
-      "Chinese Culture",
-      "Art",
-      "Classes",
-      "Financial District",
-      "Manhattan"
-    ],
-    "lat": 40.70843,
-    "lng": -74.01473,
-    "emoji": "🐉",
-    "alt_emoji": "🏛️"
-  },
-  {
     "name": "Chinatown",
     "tags": [
       "Neighborhood",
@@ -497,23 +194,21 @@
     "emoji": "🏙️"
   },
   {
-    "name": "City Tech",
-    "short_name": "City Tech",
+    "name": "City Winery",
     "tags": [
-      "University",
-      "CUNY",
-      "Tech",
-      "Downtown Brooklyn",
-      "Brooklyn"
+      "Venue",
+      "Music",
+      "Wine",
+      "Restaurant",
+      "Chelsea",
+      "Manhattan"
     ],
     "alternate_names": [
-      "City Tech",
-      "The Theater at City Tech",
-      "New York City College of Technology"
+      "City Winery New York City"
     ],
-    "lat": 40.69543,
-    "lng": -73.98751,
-    "emoji": "🎓"
+    "lat": 40.74309,
+    "lng": -74.00912,
+    "emoji": "🍷"
   },
   {
     "name": "Classic Stage Company",
@@ -529,33 +224,6 @@
     "emoji": "🎭"
   },
   {
-    "name": "Cloud City",
-    "tags": [
-      "Venue",
-      "Art Space",
-      "Performing Arts",
-      "Williamsburg",
-      "Brooklyn"
-    ],
-    "lat": 40.71618,
-    "lng": -73.96312,
-    "emoji": "☁️",
-    "alt_emoji": "🎭"
-  },
-  {
-    "name": "CUNY Graduate Center",
-    "tags": [
-      "University",
-      "Lectures",
-      "Public Events",
-      "Midtown",
-      "Manhattan"
-    ],
-    "lat": 40.74865,
-    "lng": -73.98401,
-    "emoji": "🎓"
-  },
-  {
     "name": "Daryl Roth Theatre",
     "tags": [
       "Theater",
@@ -566,33 +234,6 @@
     ],
     "lat": 40.73541,
     "lng": -73.98963,
-    "emoji": "🎭"
-  },
-  {
-    "name": "DCTV Firehouse",
-    "tags": [
-      "Cinema",
-      "Film",
-      "Documentary",
-      "Chinatown",
-      "Manhattan"
-    ],
-    "lat": 40.71735,
-    "lng": -74.00124,
-    "emoji": "🎬"
-  },
-  {
-    "name": "Dixon Place",
-    "tags": [
-      "Theater",
-      "Experimental",
-      "Performance Art",
-      "Off Off Broadway",
-      "Lower East Side",
-      "Manhattan"
-    ],
-    "lat": 40.72059,
-    "lng": -73.9928,
     "emoji": "🎭"
   },
   {
@@ -609,18 +250,6 @@
     "emoji": "🌳"
   },
   {
-    "name": "Down to Earth Chelsea Farmers Market",
-    "short_name": "Down to Earth",
-    "tags": [
-      "Farmers Market",
-      "Chelsea",
-      "Manhattan"
-    ],
-    "lat": 40.74605,
-    "lng": -74.00016,
-    "emoji": "🥕"
-  },
-  {
     "name": "Downtown Manhattan",
     "tags": [
       "Neighborhood",
@@ -630,19 +259,6 @@
     "lat": 40.72086,
     "lng": -74.00067,
     "emoji": "🏙️"
-  },
-  {
-    "name": "DR2 Theatre",
-    "tags": [
-      "Theater",
-      "Off Broadway",
-      "Union Square",
-      "Gramercy",
-      "Manhattan"
-    ],
-    "lat": 40.73518,
-    "lng": -73.98925,
-    "emoji": "🎭"
   },
   {
     "name": "Drom",
@@ -658,88 +274,18 @@
     "emoji": "🎵"
   },
   {
-    "name": "East River Waterfront Esplanade",
+    "name": "Film Forum",
     "tags": [
-      "Park",
-      "Waterfront",
-      "Biking",
-      "Financial District",
+      "Cinema",
+      "Independent Film",
+      "Repertory",
+      "Documentary",
+      "SoHo",
       "Manhattan"
     ],
-    "lat": 40.7057,
-    "lng": -74.0042,
-    "emoji": "🌳"
-  },
-  {
-    "name": "Empire Stores",
-    "tags": [
-      "Shopping",
-      "Food Hall",
-      "Waterfront",
-      "DUMBO",
-      "Brooklyn"
-    ],
-    "lat": 40.70338,
-    "lng": -73.9916,
-    "emoji": "🛍️",
-    "alt_emoji": "🏢"
-  },
-  {
-    "name": "Environmental Education Center",
-    "tags": [
-      "Education Center",
-      "Environment",
-      "Brooklyn Bridge Park",
-      "Kids",
-      "Dumbo",
-      "Brooklyn"
-    ],
-    "lat": 40.70403,
-    "lng": -73.9894,
-    "emoji": "🌳"
-  },
-  {
-    "name": "Essex Market",
-    "tags": [
-      "Market",
-      "Food Hall",
-      "History",
-      "Lower East Side",
-      "Manhattan"
-    ],
-    "lat": 40.718,
-    "lng": -73.98819,
-    "emoji": "🎪"
-  },
-  {
-    "name": "Fort Greene Park",
-    "tags": [
-      "Park",
-      "Historic",
-      "Fort Greene",
-      "Monument",
-      "Brooklyn"
-    ],
-    "lat": 40.69143,
-    "lng": -73.97525,
-    "emoji": "🌳"
-  },
-  {
-    "name": "Fraunces Tavern Museum",
-    "tags": [
-      "Museum",
-      "History",
-      "Revolutionary War",
-      "Tavern",
-      "Financial District",
-      "Manhattan"
-    ],
-    "alternate_names": [
-      "Fraunces Tavern® Museum"
-    ],
-    "lat": 40.70342,
-    "lng": -74.01136,
-    "emoji": "🏛️"
+    "lat": 40.72841,
+    "lng": -74.00433,
+    "emoji": "🎥"
   },
   {
     "name": "Gibney Dance",
@@ -799,50 +345,6 @@
     "emoji": "🎤"
   },
   {
-    "name": "Grey Art Museum",
-    "tags": [
-      "Museum",
-      "Art",
-      "University",
-      "NYU",
-      "East Village",
-      "NoHo",
-      "Manhattan"
-    ],
-    "lat": 40.72787,
-    "lng": -73.9916,
-    "emoji": "🎨",
-    "alt_emoji": "🏛️"
-  },
-  {
-    "name": "Hamilton Fish Recreation Center",
-    "tags": [
-      "Recreation Center",
-      "Pool",
-      "Gym",
-      "Lower East Side",
-      "Manhattan"
-    ],
-    "lat": 40.71995,
-    "lng": -73.98149,
-    "emoji": "🏋🏽"
-  },
-  {
-    "name": "HERE Arts Center",
-    "tags": [
-      "Arts Center",
-      "Experimental",
-      "Theater",
-      "Puppetry",
-      "SoHo",
-      "Manhattan"
-    ],
-    "lat": 40.72503,
-    "lng": -74.00502,
-    "emoji": "🎭",
-    "alt_emoji": "🎨"
-  },
-  {
     "name": "Home Cooking New York",
     "tags": [
       "School",
@@ -870,30 +372,17 @@
     "emoji": "📚"
   },
   {
-    "name": "Hudson Guild Fulton Community Center",
-    "short_name": "Hudson Guild",
+    "name": "Hunter's Point South Park",
     "tags": [
-      "Community Center",
-      "Chelsea",
-      "Social Services",
-      "Manhattan"
+      "Park",
+      "Waterfront",
+      "Manhattan View",
+      "Long Island City",
+      "Queens"
     ],
-    "lat": 40.74333,
-    "lng": -74.00411,
-    "emoji": "🫱🏾‍🫲🏼"
-  },
-  {
-    "name": "IATI Theater",
-    "tags": [
-      "Theater",
-      "Latinx",
-      "Performing Arts",
-      "East Village",
-      "Manhattan"
-    ],
-    "lat": 40.72654,
-    "lng": -73.99059,
-    "emoji": "🎭"
+    "lat": 40.74229,
+    "lng": -73.96068,
+    "emoji": "🌳"
   },
   {
     "name": "IFC Center",
@@ -924,20 +413,6 @@
     "lat": 40.71806,
     "lng": -73.98864,
     "emoji": "📷"
-  },
-  {
-    "name": "Irving Plaza",
-    "tags": [
-      "Venue",
-      "Music",
-      "Concerts",
-      "Rock",
-      "Gramercy",
-      "Manhattan"
-    ],
-    "lat": 40.73493,
-    "lng": -73.98845,
-    "emoji": "🎵"
   },
   {
     "name": "Joe's Pub",
@@ -1037,21 +512,6 @@
     "emoji": "🎭"
   },
   {
-    "name": "La Plaza Cultural",
-    "tags": [
-      "Community Garden",
-      "Green Space",
-      "East Village",
-      "Manhattan"
-    ],
-    "alternate_names": [
-      "La Plaza Community Garden"
-    ],
-    "lat": 40.72528,
-    "lng": -73.97843,
-    "emoji": "🌺"
-  },
-  {
     "name": "Le Poisson Rouge (LPR)",
     "short_name": "Le Poisson Rouge",
     "tags": [
@@ -1099,20 +559,6 @@
     "emoji": "🗿"
   },
   {
-    "name": "Loisaida Center",
-    "tags": [
-      "Community Center",
-      "Loisaida",
-      "Lower East Side",
-      "East Village",
-      "Manhattan"
-    ],
-    "lat": 40.7251,
-    "lng": -73.97958,
-    "emoji": "🫱🏾‍🫲🏼",
-    "alt_emoji": "❤️"
-  },
-  {
     "name": "Lower Manhattan",
     "tags": [
       "Neighborhood",
@@ -1124,68 +570,10 @@
     "emoji": "🏙️"
   },
   {
-    "name": "Madison Square Park",
-    "tags": [
-      "Park",
-      "Flatiron",
-      "Public Art",
-      "Shake Shack",
-      "Flatiron District",
-      "Manhattan"
-    ],
-    "lat": 40.7422,
-    "lng": -73.988,
-    "emoji": "🌳"
-  },
-  {
-    "name": "Magnet Theater",
-    "tags": [
-      "Comedy Club",
-      "Improv",
-      "Comedy",
-      "Classes",
-      "Chelsea",
-      "Manhattan"
-    ],
-    "lat": 40.74873,
-    "lng": -73.99542,
-    "emoji": "🎭"
-  },
-  {
-    "name": "Manhattan Community Board 1",
-    "short_name": "Manhattan CB1",
-    "tags": [
-      "Government",
-      "Community Board",
-      "Civic",
-      "Civic Center",
-      "Manhattan"
-    ],
-    "lat": 40.71293,
-    "lng": -74.00375,
-    "emoji": "🏛️",
-    "alt_emoji": "🏢"
-  },
-  {
-    "name": "Manhattan Community Board 3",
-    "short_name": "Manhattan CB3",
-    "tags": [
-      "Government",
-      "Community Board",
-      "Civic",
-      "East Village",
-      "Manhattan"
-    ],
-    "lat": 40.72702,
-    "lng": -73.99085,
-    "emoji": "🏛️",
-    "alt_emoji": "🏢"
-  },
-  {
     "name": "Marble Collegiate Church",
     "tags": [
       "Church",
-      "Nomad",
+      "NoMad",
       "Midtown",
       "Manhattan"
     ],
@@ -1200,77 +588,13 @@
       "Church",
       "Historic Building",
       "Landmark",
-      "No Mad",
+      "NoMad",
       "Midtown",
       "Manhattan"
     ],
     "lat": 40.74559,
     "lng": -73.9869,
     "emoji": "⛪"
-  },
-  {
-    "name": "McNally Jackson (Seaport)",
-    "short_name": "McNally Jackson",
-    "tags": [
-      "Bookstore",
-      "Independent",
-      "Seaport",
-      "Financial District",
-      "Manhattan"
-    ],
-    "alternate_names": [
-      "McNally Jackson",
-      "Seaport"
-    ],
-    "lat": 40.70642,
-    "lng": -74.00354,
-    "emoji": "📚"
-  },
-  {
-    "name": "McNally Jackson (SoHo)",
-    "short_name": "McNally Jackson",
-    "tags": [
-      "Bookstore",
-      "Independent",
-      "SoHo",
-      "Manhattan"
-    ],
-    "alternate_names": [
-      "McNally Jackson",
-      "SoHo"
-    ],
-    "lat": 40.72542,
-    "lng": -74.00069,
-    "emoji": "📚"
-  },
-  {
-    "name": "McNally Jackson (Williamsburg)",
-    "short_name": "McNally Jackson",
-    "tags": [
-      "Bookstore",
-      "Independent",
-      "Williamsburg",
-      "Brooklyn"
-    ],
-    "alternate_names": [
-      "McNally Jackson",
-      "Williamsburg"
-    ],
-    "lat": 40.71766,
-    "lng": -73.96209,
-    "emoji": "📚"
-  },
-  {
-    "name": "McNally Jackson Downtown Brooklyn",
-    "short_name": "McNally Jackson",
-    "tags": [
-      "Bookstore",
-      "Downtown Brooklyn",
-      "Brooklyn"
-    ],
-    "lat": 40.69099,
-    "lng": -73.98292,
-    "emoji": "📚"
   },
   {
     "name": "Merchant's House Museum",
@@ -1298,50 +622,6 @@
     "emoji": "🏛️"
   },
   {
-    "name": "Mercury Lounge",
-    "tags": [
-      "Venue",
-      "Music",
-      "Indie",
-      "Rock",
-      "Lower East Side",
-      "Manhattan"
-    ],
-    "lat": 40.72217,
-    "lng": -73.98675,
-    "emoji": "🎸"
-  },
-  {
-    "name": "Mezzrow",
-    "tags": [
-      "Jazz Club",
-      "Music",
-      "Jazz",
-      "Greenwich Village",
-      "West Village",
-      "Manhattan"
-    ],
-    "lat": 40.7346,
-    "lng": -74.00192,
-    "emoji": "🎷"
-  },
-  {
-    "name": "Mmuseumm",
-    "tags": [
-      "Museum",
-      "Quirky",
-      "Tiny",
-      "Contemporary",
-      "Tribeca",
-      "Chinatown",
-      "Manhattan"
-    ],
-    "lat": 40.71747,
-    "lng": -74.00271,
-    "emoji": "🔍",
-    "alt_emoji": "🏛️"
-  },
-  {
     "name": "Murray's Cheese",
     "tags": [
       "Shop",
@@ -1359,80 +639,34 @@
     "emoji": "🧀"
   },
   {
-    "name": "Museum of Chinese in America",
+    "name": "Museum at Eldridge Street",
     "tags": [
       "Museum",
+      "Synagogue",
       "History",
-      "Culture",
-      "Chinese American",
       "Chinatown",
-      "SoHo",
+      "Manhattan"
+    ],
+    "lat": 40.71475,
+    "lng": -73.99356,
+    "emoji": "🕍"
+  },
+  {
+    "name": "Museum of Reclaimed Urban Space",
+    "tags": [
+      "Museum",
+      "Activism",
+      "Community Gardens",
+      "East Village",
       "Manhattan"
     ],
     "alternate_names": [
-      "MOCA"
+      "Museum of Reclaimed Urban Space (MoRUS)"
     ],
-    "lat": 40.71938,
-    "lng": -73.99905,
-    "emoji": "🐉",
+    "lat": 40.72577,
+    "lng": -73.97795,
+    "emoji": "🪴",
     "alt_emoji": "🏛️"
-  },
-  {
-    "name": "Music Hall of Williamsburg",
-    "tags": [
-      "Venue",
-      "Music",
-      "Indie",
-      "Rock",
-      "Williamsburg",
-      "Brooklyn"
-    ],
-    "lat": 40.71915,
-    "lng": -73.96175,
-    "emoji": "🎵"
-  },
-  {
-    "name": "National Sawdust",
-    "tags": [
-      "Venue",
-      "New Music",
-      "Experimental",
-      "Williamsburg",
-      "Brooklyn"
-    ],
-    "lat": 40.71895,
-    "lng": -73.96132,
-    "emoji": "🎵"
-  },
-  {
-    "name": "Naval Cemetery Landscape",
-    "tags": [
-      "Park",
-      "Public Space",
-      "Meadow",
-      "Historic",
-      "Nature",
-      "Navy Yard",
-      "Brooklyn"
-    ],
-    "lat": 40.69928,
-    "lng": -73.96439,
-    "emoji": "🦋",
-    "alt_emoji": "🌳"
-  },
-  {
-    "name": "New Museum",
-    "tags": [
-      "Museum",
-      "Contemporary Art",
-      "New Art",
-      "Bowery",
-      "Lower East Side",
-      "Manhattan"
-    ],
-    "lat": 40.72234,
-    "lng": -73.99289,
-    "emoji": "🎨"
   },
   {
     "name": "New York Comedy Club",
@@ -1494,6 +728,23 @@
     "emoji": "🎨"
   },
   {
+    "name": "New York Transit Museum",
+    "short_name": "NY Transit Museum",
+    "tags": [
+      "Museum",
+      "Transit",
+      "Subway",
+      "History",
+      "Transportation",
+      "Downtown Brooklyn",
+      "Brooklyn"
+    ],
+    "lat": 40.69057,
+    "lng": -73.99007,
+    "emoji": "🚇",
+    "alt_emoji": "🏛️"
+  },
+  {
     "name": "Nitehawk Cinema (Williamsburg)",
     "short_name": "Nitehawk Cinema",
     "tags": [
@@ -1525,42 +776,6 @@
     "emoji": "✍🏼"
   },
   {
-    "name": "NYC Department of Records and Information Services (DORIS)",
-    "short_name": "DORIS",
-    "tags": [
-      "Archive",
-      "Government",
-      "Civic Building",
-      "History",
-      "Records",
-      "Civic Center",
-      "Manhattan"
-    ],
-    "lat": 40.71361,
-    "lng": -74.00436,
-    "emoji": "📜",
-    "alt_emoji": "🏛️"
-  },
-  {
-    "name": "NYC-DSA Office",
-    "tags": [
-      "Office",
-      "Organization",
-      "Nonprofit",
-      "Activism",
-      "LES",
-      "Lower East Side",
-      "Manhattan"
-    ],
-    "alternate_names": [
-      "NYC DSA"
-    ],
-    "lat": 40.71384,
-    "lng": -73.98883,
-    "emoji": "🌹",
-    "alt_emoji": "🏢"
-  },
-  {
     "name": "NYU Brooklyn",
     "tags": [
       "University",
@@ -1581,17 +796,6 @@
     "emoji": "🎓"
   },
   {
-    "name": "Old Cathedral Outdoor Market",
-    "tags": [
-      "Market",
-      "Nolita",
-      "Manhattan"
-    ],
-    "lat": 40.72365,
-    "lng": -73.99543,
-    "emoji": "🛍️"
-  },
-  {
     "name": "Open Arts Studio",
     "tags": [
       "Art Studio",
@@ -1607,20 +811,6 @@
     "lat": 40.70276,
     "lng": -73.98683,
     "emoji": "💃🏻"
-  },
-  {
-    "name": "P&T Knitwear",
-    "tags": [
-      "Bookstore",
-      "Independent",
-      "Cafe",
-      "Lower East Side",
-      "Manhattan"
-    ],
-    "lat": 40.72193,
-    "lng": -73.98816,
-    "emoji": "🧶",
-    "alt_emoji": "📚"
   },
   {
     "name": "Parkside Lounge",
@@ -1648,20 +838,6 @@
     "lng": -73.98356,
     "emoji": "🎭",
     "alt_emoji": "🏢"
-  },
-  {
-    "name": "Performance Space New York",
-    "tags": [
-      "Theater",
-      "Performance Art",
-      "Experimental",
-      "Avant Garde",
-      "East Village",
-      "Manhattan"
-    ],
-    "lat": 40.72834,
-    "lng": -73.98454,
-    "emoji": "🎭"
   },
   {
     "name": "Pianos",
@@ -1697,109 +873,6 @@
     "emoji": "⚓"
   },
   {
-    "name": "Pompeii Flea Market",
-    "tags": [
-      "Flea Market",
-      "West Village",
-      "Manhattan"
-    ],
-    "lat": 40.73023,
-    "lng": -74.00684,
-    "emoji": "🛍️"
-  },
-  {
-    "name": "Poster House",
-    "tags": [
-      "Museum",
-      "Posters",
-      "Design",
-      "Art",
-      "Chelsea",
-      "Manhattan"
-    ],
-    "lat": 40.74359,
-    "lng": -73.99333,
-    "emoji": "🏛️"
-  },
-  {
-    "name": "Poster House",
-    "tags": [
-      "Museum",
-      "Posters",
-      "Design",
-      "Chelsea",
-      "Manhattan"
-    ],
-    "lat": 40.74359,
-    "lng": -73.99333,
-    "emoji": "🖼️",
-    "alt_emoji": "🏛️"
-  },
-  {
-    "name": "Poster House",
-    "short_name": "119 W 23rd St, New York, NY 10011",
-    "tags": [
-      "Museum",
-      "Design",
-      "Posters",
-      "Graphic Design",
-      "Chelsea",
-      "Manhattan"
-    ],
-    "lat": 40.74359,
-    "lng": -73.99333,
-    "emoji": "🖼️",
-    "alt_emoji": "🏛️"
-  },
-  {
-    "name": "Pratt Institute (Brooklyn campus)",
-    "short_name": "Pratt",
-    "tags": [
-      "University",
-      "Art School",
-      "Design",
-      "Clinton Hill",
-      "Brooklyn"
-    ],
-    "alternate_names": [
-      "Rubelle & Norman Schafler Gallery",
-      "Schafler Gallery"
-    ],
-    "lat": 40.69138,
-    "lng": -73.96299,
-    "emoji": "🎓"
-  },
-  {
-    "name": "Pratt Institute (Manhattan campus)",
-    "short_name": "Pratt",
-    "tags": [
-      "University",
-      "Art School",
-      "Design",
-      "Chelsea",
-      "West Village",
-      "Manhattan"
-    ],
-    "lat": 40.73805,
-    "lng": -73.99903,
-    "emoji": "🎓"
-  },
-  {
-    "name": "Prison Ship Martyrs' Monument",
-    "tags": [
-      "Monument",
-      "Memorial",
-      "History",
-      "Revolutionary War",
-      "Fort Greene",
-      "Brooklyn"
-    ],
-    "lat": 40.69179,
-    "lng": -73.97553,
-    "emoji": "🕊️",
-    "alt_emoji": "🏛️"
-  },
-  {
     "name": "Quad Cinema",
     "tags": [
       "Cinema",
@@ -1826,22 +899,6 @@
     "emoji": "🌈"
   },
   {
-    "name": "Renee & Chaim Gross Foundation",
-    "short_name": "RC Gross Foundation",
-    "tags": [
-      "Museum",
-      "Historic House",
-      "Sculpture",
-      "Art",
-      "Greenwich Village",
-      "Manhattan"
-    ],
-    "lat": 40.72851,
-    "lng": -73.99892,
-    "emoji": "🗿",
-    "alt_emoji": "🏛️"
-  },
-  {
     "name": "Repertorio Español",
     "tags": [
       "Theater",
@@ -1854,32 +911,6 @@
     "lat": 40.74169,
     "lng": -73.98258,
     "emoji": "🎭"
-  },
-  {
-    "name": "Rizzoli Bookstore",
-    "tags": [
-      "Bookstore",
-      "Independent",
-      "Art Books",
-      "Design",
-      "Flatiron District",
-      "Manhattan"
-    ],
-    "lat": 40.74357,
-    "lng": -73.98918,
-    "emoji": "📚"
-  },
-  {
-    "name": "Roxy Cinema",
-    "tags": [
-      "Cinema",
-      "Independent Film",
-      "Tribeca",
-      "Manhattan"
-    ],
-    "lat": 40.71938,
-    "lng": -74.00485,
-    "emoji": "🎥"
   },
   {
     "name": "Saint Paul's Roman Catholic Church",
@@ -1953,50 +984,37 @@
     "emoji": "💃🏻"
   },
   {
-    "name": "SOUK Yoga Studio",
-    "short_name": "Souk Yoga",
+    "name": "Sound + Fury Brewery and Kitchen",
     "tags": [
-      "Yoga Studio",
-      "Yoga",
-      "Wellness",
-      "Classes",
-      "Midtown",
+      "Brewery",
+      "Craft Beer",
+      "Restaurant",
+      "Taproom",
+      "Downtown Brooklyn",
+      "Brooklyn"
+    ],
+    "lat": 40.69166,
+    "lng": -73.98604,
+    "emoji": "🍺"
+  },
+  {
+    "name": "Sounds of Brazil (SOB's)",
+    "short_name": "Sounds of Brazil",
+    "tags": [
+      "Venue",
+      "Music",
+      "World Music",
+      "Latin",
+      "SoHo",
       "Manhattan"
     ],
     "alternate_names": [
-      "Souk Yoga",
-      "Souk Studio"
+      "SOB's",
+      "SOBs"
     ],
-    "lat": 40.74468,
-    "lng": -73.98937,
-    "emoji": "🧘🏾"
-  },
-  {
-    "name": "South Street Seaport Museum",
-    "tags": [
-      "Museum",
-      "Maritime",
-      "History",
-      "Tall Ships",
-      "Financial District",
-      "Manhattan"
-    ],
-    "lat": 40.70664,
-    "lng": -74.00367,
-    "emoji": "🚢"
-  },
-  {
-    "name": "Special Waste Drop-Off - Manhattan",
-    "short_name": "Special Waste Drop-Off",
-    "tags": [
-      "Recycling",
-      "Waste Disposal",
-      "Two Bridges",
-      "Manhattan"
-    ],
-    "lat": 40.71056,
-    "lng": -73.99231,
-    "emoji": "♻️"
+    "lat": 40.72845,
+    "lng": -74.00513,
+    "emoji": "🎵"
   },
   {
     "name": "Spectacle Theater",
@@ -2016,116 +1034,21 @@
     "emoji": "🎥"
   },
   {
-    "name": "St. Ann's Warehouse",
+    "name": "Tenri Cultural Institute",
     "tags": [
-      "Theater",
-      "Off Broadway",
-      "Avant Garde",
-      "DUMBO",
-      "Brooklyn"
-    ],
-    "lat": 40.70377,
-    "lng": -73.99283,
-    "emoji": "🎭"
-  },
-  {
-    "name": "St. Ann's Warehouse",
-    "tags": [
-      "Theater",
-      "DUMBO",
-      "Brooklyn"
-    ],
-    "lat": 40.70377,
-    "lng": -73.99283,
-    "emoji": "🎭"
-  },
-  {
-    "name": "St. Anthony's Market",
-    "tags": [
-      "Market",
-      "SoHo",
+      "Cultural Center",
+      "Japanese",
+      "Art Gallery",
+      "Japanese School",
+      "Greenwich Village",
       "Manhattan"
     ],
     "alternate_names": [
-      "St. Anthony Flea Market"
+      "Tenri Gallery"
     ],
-    "lat": 40.72775,
-    "lng": -74.00185,
-    "emoji": "🛍️"
-  },
-  {
-    "name": "St. Paul's Chapel",
-    "tags": [
-      "Chapel",
-      "History",
-      "9/11 Memorial",
-      "Financial District",
-      "Manhattan"
-    ],
-    "alternate_names": [
-      "Music at St. Paul's Chapel"
-    ],
-    "lat": 40.71133,
-    "lng": -74.00918,
-    "emoji": "⛪"
-  },
-  {
-    "name": "Stuart Cinema & Cafe",
-    "tags": [
-      "Cinema",
-      "Film",
-      "Indie Film",
-      "Cafe",
-      "Greenpoint",
-      "Brooklyn"
-    ],
-    "lat": 40.7292,
-    "lng": -73.9594,
-    "emoji": "🎬"
-  },
-  {
-    "name": "Stuyvesant Square",
-    "tags": [
-      "Park",
-      "Gramercy",
-      "Historic",
-      "Fountain",
-      "Manhattan"
-    ],
-    "lat": 40.73395,
-    "lng": -73.9841,
-    "emoji": "🌳"
-  },
-  {
-    "name": "SVA Theatre",
-    "tags": [
-      "Theater",
-      "Film",
-      "Screening",
-      "Lecture Hall",
-      "SVA",
-      "Chelsea",
-      "Manhattan"
-    ],
-    "alternate_names": [
-      "Newfest"
-    ],
-    "lat": 40.74604,
-    "lng": -73.99969,
-    "emoji": "🎨",
-    "alt_emoji": "🎬"
-  },
-  {
-    "name": "Tenement Museum",
-    "tags": [
-      "Museum",
-      "History",
-      "Lower East Side",
-      "Manhattan"
-    ],
-    "lat": 40.71882,
-    "lng": -73.99009,
-    "emoji": "🏘️",
+    "lat": 40.73638,
+    "lng": -73.99609,
+    "emoji": "🏯",
     "alt_emoji": "🏛️"
   },
   {
@@ -2147,21 +1070,6 @@
     "alt_emoji": "🎵"
   },
   {
-    "name": "The Bowery Ballroom",
-    "tags": [
-      "Venue",
-      "Music",
-      "Indie",
-      "Rock",
-      "Lower East Side",
-      "Manhattan"
-    ],
-    "lat": 40.72041,
-    "lng": -73.99336,
-    "emoji": "🎸",
-    "alt_emoji": "🎵"
-  },
-  {
     "name": "The Bowery Electric",
     "tags": [
       "Venue",
@@ -2175,19 +1083,6 @@
     "lng": -73.9918,
     "emoji": "🎸",
     "alt_emoji": "🎵"
-  },
-  {
-    "name": "The Center for Fiction",
-    "tags": [
-      "Literary Center",
-      "Books",
-      "Bookstore",
-      "Fort Greene",
-      "Brooklyn"
-    ],
-    "lat": 40.68694,
-    "lng": -73.97852,
-    "emoji": "📚"
   },
   {
     "name": "The Church of the Transfiguration",
@@ -2217,20 +1112,6 @@
     "lat": 40.7302,
     "lng": -74.00056,
     "emoji": "🎤"
-  },
-  {
-    "name": "The Cooper Union",
-    "tags": [
-      "University",
-      "Lectures",
-      "Art School",
-      "Historic",
-      "NoHo",
-      "Manhattan"
-    ],
-    "lat": 40.72808,
-    "lng": -73.99161,
-    "emoji": "🎓"
   },
   {
     "name": "The Delancey",
@@ -2304,36 +1185,6 @@
     "alt_emoji": "🏛️"
   },
   {
-    "name": "The Film-Makers' Cooperative",
-    "tags": [
-      "Archive",
-      "Organization",
-      "Film",
-      "Nonprofit",
-      "Midtown",
-      "Manhattan"
-    ],
-    "alternate_names": [
-      "The Film-Maker's Co-op"
-    ],
-    "lat": 40.74539,
-    "lng": -73.98215,
-    "emoji": "🎬"
-  },
-  {
-    "name": "The Flea Theater",
-    "tags": [
-      "Theater",
-      "Off Off Broadway",
-      "Experimental",
-      "Tribeca",
-      "Manhattan"
-    ],
-    "lat": 40.71608,
-    "lng": -74.0059,
-    "emoji": "🎭"
-  },
-  {
     "name": "The Gene Frankel Theatre",
     "tags": [
       "Theater",
@@ -2347,21 +1198,6 @@
     "emoji": "🎭"
   },
   {
-    "name": "The Greene Space",
-    "tags": [
-      "Venue",
-      "Radio",
-      "Live Broadcast",
-      "Talks",
-      "SoHo",
-      "Manhattan"
-    ],
-    "lat": 40.72699,
-    "lng": -74.00513,
-    "emoji": "📻",
-    "alt_emoji": "🏢"
-  },
-  {
     "name": "The High Line",
     "tags": [
       "Park",
@@ -2373,20 +1209,6 @@
     "lat": 40.74799,
     "lng": -74.00476,
     "emoji": "🌳"
-  },
-  {
-    "name": "The Jazz Gallery",
-    "tags": [
-      "Jazz Club",
-      "Music",
-      "Jazz",
-      "Emerging Artists",
-      "Midtown",
-      "Manhattan"
-    ],
-    "lat": 40.74457,
-    "lng": -73.98863,
-    "emoji": "🎷"
   },
   {
     "name": "The Joyce Theater",
@@ -2403,20 +1225,17 @@
     "emoji": "💃🏻"
   },
   {
-    "name": "The Magnet Theater",
+    "name": "The Kitchen",
     "tags": [
-      "Comedy Club",
-      "Improv",
-      "Comedy",
-      "Classes",
+      "Arts Center",
+      "Experimental",
+      "Performance Art",
+      "Video Art",
       "Chelsea",
       "Manhattan"
     ],
-    "alternate_names": [
-      "Magnet Theater"
-    ],
-    "lat": 40.74873,
-    "lng": -73.99542,
+    "lat": 40.74533,
+    "lng": -74.00692,
     "emoji": "🎭"
   },
   {
@@ -2434,51 +1253,6 @@
     "lat": 40.74923,
     "lng": -73.9814,
     "emoji": "🏛️"
-  },
-  {
-    "name": "The Mysterious Bookshop",
-    "tags": [
-      "Bookstore",
-      "Mystery",
-      "Crime",
-      "Specialty",
-      "Tribeca",
-      "Manhattan"
-    ],
-    "alternate_names": [
-      "Mysterious Bookshop"
-    ],
-    "lat": 40.71492,
-    "lng": -74.00921,
-    "emoji": "📚"
-  },
-  {
-    "name": "The National Arts Club",
-    "tags": [
-      "Club",
-      "Private Club",
-      "Art",
-      "Historic Building",
-      "Gramercy",
-      "Manhattan"
-    ],
-    "lat": 40.73766,
-    "lng": -73.98675,
-    "emoji": "🎨",
-    "alt_emoji": "🏛️"
-  },
-  {
-    "name": "The New School",
-    "tags": [
-      "University",
-      "Art School",
-      "Design",
-      "Greenwich Village",
-      "Manhattan"
-    ],
-    "lat": 40.73549,
-    "lng": -73.99714,
-    "emoji": "🎓"
   },
   {
     "name": "The Oculus",
@@ -2518,72 +1292,6 @@
     "emoji": "🎭"
   },
   {
-    "name": "The Peoples' Voice Cafe",
-    "tags": [
-      "Venue",
-      "Music",
-      "Folk Music",
-      "Nonprofit",
-      "Greenwich Village",
-      "Manhattan"
-    ],
-    "lat": 40.72998,
-    "lng": -73.99853,
-    "emoji": "🎵"
-  },
-  {
-    "name": "The Renee and Chaim Gross Foundation",
-    "short_name": "The Gross Foundation",
-    "tags": [
-      "Museum",
-      "Historic House",
-      "Sculpture",
-      "Art",
-      "Greenwich Village",
-      "Manhattan"
-    ],
-    "lat": 40.72851,
-    "lng": -73.99892,
-    "emoji": "🗿",
-    "alt_emoji": "🏛️"
-  },
-  {
-    "name": "The Seaport",
-    "tags": [
-      "Neighborhood",
-      "Historic",
-      "Shopping",
-      "Waterfront",
-      "Financial District",
-      "Manhattan"
-    ],
-    "alternate_names": [
-      "The Seaport (Pier 17)"
-    ],
-    "lat": 40.70648,
-    "lng": -74.00328,
-    "emoji": "⚓"
-  },
-  {
-    "name": "The Sheen Center for Thought & Culture",
-    "short_name": "The Sheen Center",
-    "tags": [
-      "Arts Center",
-      "Theater",
-      "Talks",
-      "Culture",
-      "NoHo",
-      "Manhattan"
-    ],
-    "alternate_names": [
-      "Sheen Center for Thought & Culture",
-      "The Sheen Center"
-    ],
-    "lat": 40.72546,
-    "lng": -73.9934,
-    "emoji": "🏛️"
-  },
-  {
     "name": "The Stand NYC",
     "short_name": "The Stand",
     "tags": [
@@ -2601,99 +1309,6 @@
     "lat": 40.73534,
     "lng": -73.98848,
     "emoji": "🎤"
-  },
-  {
-    "name": "The Stone",
-    "tags": [
-      "Venue",
-      "Experimental",
-      "Avant Garde",
-      "New Music",
-      "East Village",
-      "Manhattan"
-    ],
-    "lat": 40.72948,
-    "lng": -73.98649,
-    "emoji": "🗿",
-    "alt_emoji": "🎵"
-  },
-  {
-    "name": "The Stonewall Inn",
-    "tags": [
-      "Bar",
-      "Historic",
-      "LGBTQ",
-      "National Landmark",
-      "West Village",
-      "Manhattan"
-    ],
-    "lat": 40.73383,
-    "lng": -74.00216,
-    "emoji": "🏳️‍🌈",
-    "alt_emoji": "🥂"
-  },
-  {
-    "name": "The Strother School of Radical Attention",
-    "tags": [
-      "School",
-      "Workshops",
-      "Philosophy",
-      "Dumbo",
-      "Brooklyn"
-    ],
-    "alternate_names": [
-      "SoRA",
-      "SoRA Sanctuary"
-    ],
-    "lat": 40.70286,
-    "lng": -73.98939,
-    "emoji": "💭",
-    "alt_emoji": "🫱🏾‍🫲🏼"
-  },
-  {
-    "name": "The Tenement Museum",
-    "tags": [
-      "Museum",
-      "History",
-      "Immigration",
-      "Tours",
-      "Lower East Side",
-      "Manhattan"
-    ],
-    "alternate_names": [
-      "Tenement Museum"
-    ],
-    "lat": 40.71882,
-    "lng": -73.99009,
-    "emoji": "🏛️"
-  },
-  {
-    "name": "Theater for the New City",
-    "tags": [
-      "Theater",
-      "Off Off Broadway",
-      "New Plays",
-      "Political Theater",
-      "East Village",
-      "Manhattan"
-    ],
-    "lat": 40.72863,
-    "lng": -73.98486,
-    "emoji": "🎭"
-  },
-  {
-    "name": "Tibet House US",
-    "tags": [
-      "Cultural Center",
-      "Tibetan Culture",
-      "Art",
-      "Spirituality",
-      "Chelsea",
-      "Manhattan"
-    ],
-    "lat": 40.73709,
-    "lng": -73.99469,
-    "emoji": "🏛️"
   },
   {
     "name": "Time Out Market",
@@ -2727,50 +1342,6 @@
     "lat": 40.72878,
     "lng": -73.97692,
     "emoji": "🚲"
-  },
-  {
-    "name": "Tompkins Square Library",
-    "tags": [
-      "Library",
-      "NYPL",
-      "East Village",
-      "Manhattan"
-    ],
-    "alternate_names": [
-      "New York Public Library - Tompkins Square Branch",
-      "New York Public Library - Tompkins Square",
-      "NYPL Tompkins Square",
-      "New York Public Library at Tompkins Square"
-    ],
-    "lat": 40.72732,
-    "lng": -73.98038,
-    "emoji": "📖"
-  },
-  {
-    "name": "Tribeca",
-    "tags": [
-      "Neighborhood",
-      "Tribeca",
-      "Manhattan"
-    ],
-    "alternate_names": [
-      "Lower West Side"
-    ],
-    "lat": 40.71627,
-    "lng": -74.00863,
-    "emoji": "🏙️"
-  },
-  {
-    "name": "Trinity Church",
-    "tags": [
-      "Church",
-      "Historic",
-      "Financial District",
-      "Manhattan"
-    ],
-    "lat": 40.70789,
-    "lng": -74.01179,
-    "emoji": "⛪"
   },
   {
     "name": "Under St. Marks Theater",
@@ -2870,37 +1441,6 @@
     "emoji": "🎷"
   },
   {
-    "name": "Vineyard Theatre",
-    "tags": [
-      "Theater",
-      "Off Broadway",
-      "New Plays",
-      "Union Square",
-      "Gramercy",
-      "Manhattan"
-    ],
-    "lat": 40.7348,
-    "lng": -73.98876,
-    "emoji": "🍇",
-    "alt_emoji": "🎭"
-  },
-  {
-    "name": "Voorhees Theatre (City Tech)",
-    "short_name": "Voorhees Theatre",
-    "tags": [
-      "Theater",
-      "Venue",
-      "University",
-      "CUNY",
-      "Downtown Brooklyn",
-      "Brooklyn"
-    ],
-    "lat": 40.69887,
-    "lng": -73.98748,
-    "emoji": "🎓",
-    "alt_emoji": "🎭"
-  },
-  {
     "name": "Washington Square Park",
     "tags": [
       "Park",
@@ -2911,20 +1451,6 @@
     "lat": 40.73088,
     "lng": -73.99733,
     "emoji": "🌳"
-  },
-  {
-    "name": "Webster Hall",
-    "tags": [
-      "Venue",
-      "Music",
-      "Concerts",
-      "Historic",
-      "East Village",
-      "Manhattan"
-    ],
-    "lat": 40.73182,
-    "lng": -73.9891,
-    "emoji": "🎵"
   },
   {
     "name": "Westbeth Artists Housing",
@@ -2974,20 +1500,6 @@
     "emoji": "🎷"
   },
   {
-    "name": "120 Walker St",
-    "tags": [
-      "Office Building",
-      "Coworking",
-      "Tribeca",
-      "Chinatown",
-      "Manhattan"
-    ],
-    "lat": 40.71756,
-    "lng": -73.99979,
-    "emoji": "🧑🏽‍💻",
-    "alt_emoji": "💼"
-  },
-  {
     "name": "Boris & Horton",
     "tags": [
       "Cafe",
@@ -3006,21 +1518,6 @@
     "alt_emoji": "☕"
   },
   {
-    "name": "Broadway Spirits",
-    "tags": [
-      "Liquor Store",
-      "Wine",
-      "Spirits",
-      "Retail",
-      "Tribeca",
-      "Manhattan"
-    ],
-    "lat": 40.71505,
-    "lng": -74.00578,
-    "emoji": "🍷",
-    "alt_emoji": "🛍️"
-  },
-  {
     "name": "Sugar Mouse",
     "tags": [
       "Event Space",
@@ -3036,23 +1533,6 @@
     "lat": 40.73085,
     "lng": -73.98869,
     "emoji": "🎉"
-  },
-  {
-    "name": "St. Joseph’s University (Brooklyn)",
-    "short_name": "St. Joseph's University",
-    "tags": [
-      "University",
-      "College",
-      "Clinton Hill",
-      "Brooklyn"
-    ],
-    "alternate_names": [
-      "St. Joseph's University"
-    ],
-    "lat": 40.69056,
-    "lng": -73.9677,
-    "emoji": "🎓",
-    "alt_emoji": "🏛️"
   },
   {
     "name": "Ciao Evento",
@@ -3090,25 +1570,6 @@
     "emoji": "🍻"
   },
   {
-    "name": "Brooklyn Book Bodega",
-    "tags": [
-      "Non Profit",
-      "Community",
-      "Books",
-      "Literacy",
-      "Brooklyn Navy Yard",
-      "Navy Yard",
-      "Brooklyn"
-    ],
-    "alternate_names": [
-      "141 Flushing Ave Suite 606"
-    ],
-    "lat": 40.69809,
-    "lng": -73.97102,
-    "emoji": "📚",
-    "alt_emoji": "🫱🏾‍🫲🏼"
-  },
-  {
     "name": "Transportation Alternatives",
     "tags": [
       "Nonprofit",
@@ -3125,36 +1586,17 @@
     "alt_emoji": "🏢"
   },
   {
-    "name": "Betaworks",
+    "name": "Sound + Fury Brewery",
     "tags": [
-      "Event Space",
-      "Venue",
-      "Technology",
-      "Startups",
-      "West Village",
-      "Manhattan"
-    ],
-    "lat": 40.74022,
-    "lng": -74.00743,
-    "emoji": "🧑🏽‍💻"
-  },
-  {
-    "name": "Fogo de Chão",
-    "tags": [
+      "Brewery",
+      "Craft Beer",
       "Restaurant",
-      "Steakhouse",
-      "Brazilian",
-      "City Point",
       "Downtown Brooklyn",
       "Brooklyn"
     ],
-    "alternate_names": [
-      "Fogo de Chão Brazilian Steakhouse City Point BKLYN",
-      "Fogo de Chão Brazilian Steakhouse"
-    ],
-    "lat": 40.69134,
-    "lng": -73.98251,
-    "emoji": "🍽️"
+    "lat": 40.69166,
+    "lng": -73.98604,
+    "emoji": "🍺"
   },
   {
     "name": "Somewhere Nowhere",
@@ -3203,85 +1645,34 @@
     "emoji": "🏨"
   },
   {
-    "name": "You Should Be Dancing...!",
+    "name": "Ace Hotel Brooklyn",
+    "short_name": "Ace Hotel",
     "tags": [
-      "Dance School",
-      "Social Dance",
-      "Classes",
-      "No Mad",
-      "Midtown",
-      "Manhattan"
+      "Hotel",
+      "Bar",
+      "Event Space",
+      "Boerum Hill",
+      "Brooklyn"
     ],
-    "alternate_names": [
-      "You Should Be Dancing...! Dance Center"
-    ],
-    "lat": 40.7446,
-    "lng": -73.99046,
-    "emoji": "💃🏻"
+    "lat": 40.68784,
+    "lng": -73.98373,
+    "emoji": "🏨"
   },
   {
-    "name": "City Point Brooklyn",
-    "short_name": "City Point",
+    "name": "The Second City",
     "tags": [
-      "Mall",
-      "Shopping",
-      "Food Hall",
-      "Cinema",
-      "Downtown Brooklyn",
+      "Comedy",
+      "Improv",
+      "Williamsburg",
+      "Classes",
       "Brooklyn"
     ],
     "alternate_names": [
-      "City Point BKLYN"
+      "The Second City New York",
+      "Blackbox Theater"
     ],
-    "lat": 40.69094,
-    "lng": -73.98306,
-    "emoji": "🛍️"
-  },
-  {
-    "name": "The Municipal Art Society of New York",
-    "short_name": "Municipal Art Society",
-    "tags": [
-      "Organization",
-      "Nonprofit",
-      "Architecture",
-      "Urban Planning",
-      "Financial District",
-      "Manhattan"
-    ],
-    "alternate_names": [
-      "The Municipal Art Society of NY"
-    ],
-    "lat": 40.71029,
-    "lng": -74.00509,
-    "emoji": "🏢"
-  },
-  {
-    "name": "Pratt Manhattan Gallery",
-    "tags": [
-      "Art Gallery",
-      "University",
-      "Design",
-      "Chelsea",
-      "West Village",
-      "Manhattan"
-    ],
-    "lat": 40.73805,
-    "lng": -73.99903,
-    "emoji": "🎨",
-    "alt_emoji": "🏛️"
-  },
-  {
-    "name": "Joyface",
-    "tags": [
-      "Bar",
-      "Disco",
-      "70s Vibe",
-      "East Village",
-      "Manhattan"
-    ],
-    "lat": 40.72386,
-    "lng": -73.97875,
-    "emoji": "🪩",
-    "alt_emoji": "🍸"
+    "lat": 40.72077,
+    "lng": -73.95998,
+    "emoji": "🎭"
   }
 ]
