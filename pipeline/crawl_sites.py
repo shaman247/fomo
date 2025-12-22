@@ -223,9 +223,9 @@ async def main():
     # Configure browser for crawling
     browser_config = BrowserConfig(
         headless=False,           # Set to True to run without UI
-        enable_stealth=True,      # Avoid bot detection
+        #enable_stealth=True,      # Avoid bot detection
         java_script_enabled=True, # Required for dynamic content
-        text_mode=True,           # Optimize for text extraction
+        #text_mode=True,           # Optimize for text extraction
     )
 
     # Load website configurations

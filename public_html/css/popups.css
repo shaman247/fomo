@@ -14,10 +14,10 @@
 
 /* === MapLibre Popup Performance === */
 /* Disable fade-in animation for instant display */
-/* Ensure popup appears above all markers (which have dynamic z-index based on screen position) */
+/* Popup appears above markers but below filter panel and controls */
 .maplibregl-popup {
     transition: none !important;
-    z-index: 10000 !important;
+    z-index: var(--z-popup) !important;
 }
 
 .maplibregl-popup-tip {
@@ -25,15 +25,12 @@
 }
 
 .maplibregl-popup-content {
-    background: color-mix(in srgb, var(--secondary-bg) 90%, transparent);
-    backdrop-filter: blur(7px);
+    background: color-mix(in srgb, var(--secondary-bg) 80%, transparent);
+    backdrop-filter: blur(5px);
     color: var(--primary-text);
     border-radius: 8px;
     border: 1px solid var(--border-color);
-    /* Auto width with constraints for consistent centering on marker */
-    width: auto;
-    min-width: 420px;
-    max-width: 450px;
+    width: 400px;
     font-family: var(--font-family);
     will-change: transform;
     transform: translate3d(0, 0, 0);
@@ -154,6 +151,11 @@
     font-weight: 400; /* Reset font-weight as it might be inherited */
 }
 
+/* Remove focus outline from tag buttons in popups */
+.maplibregl-popup-content .tag-button:focus {
+    outline: none;
+}
+
 /* Implicit tag styling in popups */
 .maplibregl-popup-content .tag-button.state-implicit {
     background-color: color-mix(in srgb, var(--secondary-accent-color) 25%, var(--tertiary-bg));
@@ -201,25 +203,9 @@
     text-decoration: none;
 }
 
-/* MapLibre popup close button styling */
+/* Hide MapLibre popup close button - user can click outside to close */
 .maplibregl-popup-close-button {
-    color: var(--primary-text) !important;
-    width: 36px !important;
-    height: 36px !important;
-    padding: 0 !important;
-    top: 0 !important;
-    right: 0 !important;
-    font-size: 24px !important;
-    line-height: 30px !important;
-    text-align: center;
-    border-radius: 0 8px 0 0;
-    background: transparent;
-    border: none;
-}
-
-.maplibregl-popup-close-button:hover {
-    color: var(--popup-close-hover) !important;
-    background: transparent;
+    display: none !important;
 }
 
 .popup-event-datetime, .popup-event-location, .popup-event-sublocation {
@@ -234,14 +220,10 @@
 /* Adjust popup sizing for smaller screens */
 @media (max-width: 768px) {
     .maplibregl-popup-content {
-        /* Use most of viewport width on mobile, centered on marker */
-        min-width: min(380px, 85vw);
-        max-width: 90vw;
-        width: auto;
-    }
-
-    .maplibre-popup-content {
-        max-height: 450px;
+        /* Fixed width on mobile for consistent centering with anchor: center */
+        width: max(400px, 85vw);
+        min-width: unset;
+        max-width: unset;
     }
 
     .popup-events-list {

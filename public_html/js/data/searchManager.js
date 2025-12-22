@@ -90,7 +90,7 @@ const SearchManager = (() => {
         }
 
         // Convert distance to a score bonus
-        return Math.max(0, SCORE_WEIGHTS.MAX_TEMPORAL_BONUS * (1 - distanceFromReference / TIME_CONSTANTS.THIRTY_DAYS_MS));
+        return 0;//Math.max(0, SCORE_WEIGHTS.MAX_TEMPORAL_BONUS * (1 - distanceFromReference / TIME_CONSTANTS.THIRTY_DAYS_MS));
     }
 
     /**

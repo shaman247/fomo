@@ -20,8 +20,8 @@
     width: min(500px, max(350px, 40%));
 
     padding: 26px 26px 26px 35px;
-    background-color: color-mix(in srgb, var(--primary-bg) 75%, transparent);
-    backdrop-filter: blur(5px);
+    background-color: color-mix(in srgb, var(--primary-bg) 80%, transparent);
+    backdrop-filter: blur(3px);
     border: 1px solid var(--border-color);
     border-radius: 18px;
     box-sizing: border-box;
@@ -34,7 +34,7 @@
     height: calc(100vh - 20px);
     overflow: hidden;
     box-sizing: border-box;
-    z-index: 1000;
+    z-index: var(--z-panel);
 }
 
 #logo-menu-wrapper {
@@ -74,7 +74,7 @@
     border-radius: 4px;
     box-shadow: var(--popup-shadow);
     min-width: 180px;
-    z-index: 1001;
+    z-index: var(--z-panel-menu);
     overflow: hidden;
 }
 
@@ -330,6 +330,16 @@ span.flatpickr-day {
     color: var(--primary-text);
 }
 
+span.flatpickr-day.flatpickr-disabled,
+span.flatpickr-day.prevMonthDay {
+    color: var(--secondary-text);
+    opacity: 0.5;
+}
+span.flatpickr-day.nextMonthDay {
+    color: var(--secondary-text);
+    opacity: 0.8;
+}
+
 span.flatpickr-day:hover,
 span.flatpickr-day.prevMonthDay:hover,
 span.flatpickr-day.nextMonthDay:hover {
@@ -398,12 +408,16 @@ span.flatpickr-weekday {
         scrollbar-width: none;
         display: flex;
         flex-direction: column;
-        z-index: 1000;
+        z-index: var(--z-panel);
         transition: max-height 0.3s ease;
     }
 
     #filter-panel.tags-collapsed {
         max-height: 20vh;
+    }
+
+    #filter-panel.no-transition {
+        transition: none;
     }
 
     #filter-container {

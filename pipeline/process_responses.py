@@ -316,10 +316,11 @@ def _group_event_occurrences(rows, source_url=None):
                 original_name = event_name
                 event_name = event_name.title()
                 # Fix possessive 'S after apostrophe (e.g., "Baker'S" -> "Baker's")
-                event_name = re.sub(r"'S\b", "'s", event_name)
+                # Match both straight (') and curly (') apostrophes
+                event_name = re.sub(r"['']S\b", "'s", event_name)
                 # Fix contractions like "Wouldn'T", "Didn'T", "I'D", etc.
-                event_name = re.sub(r"'T\b", "'t", event_name)
-                event_name = re.sub(r"'D\b", "'d", event_name)
+                event_name = re.sub(r"['']T\b", "'t", event_name)
+                event_name = re.sub(r"['']D\b", "'d", event_name)
                 # Lowercase common connecting words (e.g., "Foo And Bar" -> "Foo and Bar")
                 event_name = re.sub(r'(?<!^)\b(A|And|Of|The|Or|In|At|On|For|To|With|From|By)\b', lambda m: m.group(1).lower(), event_name)
                 # Lowercase "W/" shorthand (e.g., "W/" -> "w/")

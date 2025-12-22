@@ -28,7 +28,12 @@ const MarkerController = (() => {
 
         // Provider objects (injected during init)
         filterProvider: null,   // { getTagStates, getSelectedDates }
-        eventProvider: null     // { getForceDisplayEventId, setForceDisplayEventId }
+        eventProvider: null,    // { getForceDisplayEventId, setForceDisplayEventId }
+
+        // Viewport culling state
+        allFilteredLocations: {},  // All locations that pass filters (may not all have markers)
+        viewportUpdatePending: false,  // Debounce flag for viewport updates
+        lastViewportBounds: null  // Last bounds used for marker rendering
     };
 
     // ========================================
@@ -83,14 +88,60 @@ const MarkerController = (() => {
     }
 
     /**
+     * Creates a marker for a location and adds it to the map
+     * @param {string} locationKey - Location key in "lat,lng" format
+     * @param {Array} eventsAtLocation - Events at this location
+     * @returns {maplibregl.Marker|null} The created marker or null
+     * @private
+     */
+    function createMarkerForLocation(locationKey, eventsAtLocation) {
+        // Parse location coordinates
+        const [lat, lng] = locationKey.split(',').map(Number);
+        if (lat === 0 && lng === 0) return null;
+
+        // Get location info
+        const locationInfo = state.appState.locationsByLatLng[locationKey];
+        if (!locationInfo) return null;
+
+        // Create marker icon element
+        const locationName = locationInfo.name;
+        const customIconElement = MapManager.createMarkerIcon(locationInfo);
+
+        // Create popup content callback
+        const popupContentCallback = createPopupContentCallback(locationKey);
+
+        // Add marker to map (MapLibre uses [lng, lat] order)
+        const newMarker = MapManager.addMarkerToMap(
+            [lng, lat],
+            customIconElement,
+            locationName,
+            popupContentCallback,
+            locationKey
+        );
+
+        // Auto-open popup if this location contains the forced display event
+        const forceDisplayEventId = state.eventProvider.getForceDisplayEventId();
+        if (forceDisplayEventId && newMarker) {
+            if (eventsAtLocation.some(e => e.id === forceDisplayEventId)) {
+                MapManager.openMarkerPopup(newMarker);
+            }
+        }
+
+        return newMarker;
+    }
+
+    /**
      * Displays markers for locations with matching events
-     * Clears existing markers (except markerToKeep) and creates new ones
-     * Enforces marker display limit
+     * Uses viewport-based culling to only render markers within the visible area
+     * This significantly improves panning performance with many markers
      *
      * @param {Object} locationsToDisplay - Object mapping locationKey to array of events
      * @param {maplibregl.Marker} [markerToKeep=null] - Marker to preserve (e.g., one with open popup)
      */
     function displayEventsOnMap(locationsToDisplay, markerToKeep = null) {
+        // Store all filtered locations for viewport-based updates
+        state.allFilteredLocations = locationsToDisplay;
+
         let openMarkerLocationKey = null;
         if (markerToKeep) {
             const markerObj = MapManager.getMarkerObject(markerToKeep);
@@ -100,6 +151,11 @@ const MarkerController = (() => {
         }
 
         MapManager.clearMarkers(markerToKeep);
+
+        // Get buffered viewport bounds for smoother panning
+        const bounds = MapManager.getBufferedBounds(0.5);
+        state.lastViewportBounds = bounds;
+
         let visibleLocationCount = markerToKeep ? 1 : 0;
 
         for (const locationKey in locationsToDisplay) {
@@ -117,39 +173,110 @@ const MarkerController = (() => {
             const eventsAtLocation = locationsToDisplay[locationKey];
             if (eventsAtLocation.length === 0) continue;
 
-            visibleLocationCount++;
-
-            // Parse location coordinates
+            // Parse location coordinates for viewport check
             const [lat, lng] = locationKey.split(',').map(Number);
             if (lat === 0 && lng === 0) continue;
 
-            // Get location info
-            const locationInfo = state.appState.locationsByLatLng[locationKey];
-            if (!locationInfo) continue;
-
-            // Create marker icon element
-            const locationName = locationInfo.name;
-            const customIconElement = MapManager.createMarkerIcon(locationInfo);
-
-            // Create popup content callback
-            const popupContentCallback = createPopupContentCallback(locationKey);
-
-            // Add marker to map (MapLibre uses [lng, lat] order)
-            const newMarker = MapManager.addMarkerToMap(
-                [lng, lat],
-                customIconElement,
-                locationName,
-                popupContentCallback,
-                locationKey
-            );
-
-            // Auto-open popup if this location contains the forced display event
-            const forceDisplayEventId = state.eventProvider.getForceDisplayEventId();
-            if (forceDisplayEventId && newMarker) {
-                if (eventsAtLocation.some(e => e.id === forceDisplayEventId)) {
-                    MapManager.openMarkerPopup(newMarker);
-                }
+            // Skip locations outside the buffered viewport
+            if (bounds && !MapManager.isInBounds(lat, lng, bounds)) {
+                continue;
             }
+
+            visibleLocationCount++;
+
+            createMarkerForLocation(locationKey, eventsAtLocation);
+        }
+
+        // Update label visibility based on marker density
+        MapManager.updateLabelVisibility();
+    }
+
+    /**
+     * Updates markers based on current viewport
+     * Called on map move/zoom to add markers entering viewport and remove those leaving
+     * Uses debouncing to prevent excessive updates during rapid panning
+     */
+    function updateMarkersForViewport() {
+        // Skip if no filtered locations or update already pending
+        if (!state.allFilteredLocations || Object.keys(state.allFilteredLocations).length === 0) {
+            return;
+        }
+
+        // Get current buffered bounds
+        const bounds = MapManager.getBufferedBounds(0.5);
+        if (!bounds) return;
+
+        // Track which location keys currently have markers
+        const existingMarkerKeys = new Set();
+        MapManager.eachMarker(markerObj => {
+            existingMarkerKeys.add(markerObj.locationKey);
+        });
+
+        // Find the open popup marker's location key (if any)
+        let openMarkerLocationKey = null;
+        const openMarker = MapManager.getCurrentPopupMarker();
+        if (openMarker) {
+            const markerObj = MapManager.getMarkerObject(openMarker);
+            if (markerObj) {
+                openMarkerLocationKey = markerObj.locationKey;
+            }
+        }
+
+        // Collect markers to remove (outside viewport, except open popup)
+        const markersToRemove = [];
+        MapManager.eachMarker(markerObj => {
+            // Never remove the marker with open popup
+            if (markerObj.locationKey === openMarkerLocationKey) return;
+
+            const [lat, lng] = markerObj.locationKey.split(',').map(Number);
+            // Use a larger buffer for removal to prevent flickering
+            const removeBounds = MapManager.getBufferedBounds(1.0);
+            if (removeBounds && !MapManager.isInBounds(lat, lng, removeBounds)) {
+                markersToRemove.push(markerObj.marker);
+            }
+        });
+
+        // Remove markers outside viewport
+        markersToRemove.forEach(marker => {
+            MapManager.removeMarker(marker);
+        });
+
+        // Update existing marker keys after removal
+        existingMarkerKeys.clear();
+        MapManager.eachMarker(markerObj => {
+            existingMarkerKeys.add(markerObj.locationKey);
+        });
+
+        // Add markers for locations now in viewport
+        let addedCount = 0;
+        const currentMarkerCount = MapManager.getMarkerCount();
+        const maxToAdd = Constants.UI.MAX_MARKERS - currentMarkerCount;
+
+        for (const locationKey in state.allFilteredLocations) {
+            // Skip if already has a marker
+            if (existingMarkerKeys.has(locationKey)) continue;
+
+            // Enforce marker limit
+            if (addedCount >= maxToAdd) break;
+
+            const eventsAtLocation = state.allFilteredLocations[locationKey];
+            if (eventsAtLocation.length === 0) continue;
+
+            const [lat, lng] = locationKey.split(',').map(Number);
+            if (lat === 0 && lng === 0) continue;
+
+            // Only add if within viewport bounds
+            if (MapManager.isInBounds(lat, lng, bounds)) {
+                createMarkerForLocation(locationKey, eventsAtLocation);
+                addedCount++;
+            }
+        }
+
+        state.lastViewportBounds = bounds;
+
+        // Update label visibility if markers were added or removed
+        if (addedCount > 0 || markersToRemove.length > 0) {
+            MapManager.updateLabelVisibility();
         }
     }
 
@@ -335,6 +462,7 @@ const MarkerController = (() => {
 
         // Marker management
         displayEventsOnMap,
+        updateMarkersForViewport,
         updateOpenPopupContent,
         findOpenPopup,
         hasMatchingEvents,

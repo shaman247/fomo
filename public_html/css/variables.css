@@ -15,7 +15,7 @@
 
     /* === Base Colors (Dark Theme) === */
     /* Background layers - from darkest to lightest */
-    --primary-bg: #111;           /* Main background, map */
+    --primary-bg: #171717;           /* Main background, map */
     --secondary-bg: #222;         /* Panels, cards, modals */
     --tertiary-bg: #373737;       /* Buttons, inputs (default state) */
     --tertiary-hover-bg: #666;    /* Buttons, inputs (hover state) */
@@ -31,13 +31,15 @@
     --secondary-accent-hover: #ffaaf5;  /* Hover state for secondary accent */
 
     /* Borders and dividers */
-    --border-color: #444;
+    --border-color: #555;
 
     /* Special purpose colors */
     --attribution-bg: rgba(0, 0, 0, 0.7);
     --reset-text-shadow: 1px 1px 2px black;
     --map-bg: #111;
     --marker-stroke: #666;
+    --marker-label-color: #bbb;
+    --marker-label-hover-color: #ddd;
 
     /* === Tag Button Colors === */
     /* Selected/active tags use a red/pink color to stand out */
@@ -53,14 +55,20 @@
     --summary-closed-hover: #ff858b;  /* Hover state for closed */
     --summary-open-hover: #fff2a7;    /* Hover state for open */
 
-    /* === Popup Controls === */
-    --popup-close-hover: #ff8a80;     /* Close button hover color */
-
     /* === Calendar Colors === */
     /* Flatpickr date picker text colors */
     --calendar-day-hover-text: #fff;
     --calendar-day-selected-text: #fff;
     --calendar-day-today-hover-text: #fff;
+
+    /* === Z-Index Layers === */
+    /* Stacking order from top to bottom: modal > panel > controls > popup > hovered markers > markers */
+    --z-modal: 2000;           /* Settings modal, welcome modal */
+    --z-panel: 1000;           /* Filter panel */
+    --z-panel-menu: 1001;      /* Logo menu, dropdowns within panel */
+    --z-popup: 600;            /* Map location popups (above hovered markers at 500) */
+    --z-controls: 500;         /* Map zoom controls, navigation */
+    --z-tooltip: 300;          /* Marker tooltips on hover */
 
     /* === Shadows and Elevation === */
     /* Box shadows provide depth and hierarchy */
@@ -90,6 +98,9 @@
     /* Inverted text - dark instead of light */
     --primary-text: #201c18;         /* Near black for headings */
     --secondary-text: #403c39;       /* Dark gray for body text */
+
+    --marker-label-color: #666;
+    --marker-label-hover-color: #333;
 
     /* Map background matches theme */
     --map-bg: #d4cfc0;               /* Light warm gray */

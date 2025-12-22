@@ -57,13 +57,15 @@ a:focus-visible,
     overflow: hidden; /* Hide the parts of the map that extend beyond the container */
 }
 
-/* New wrapper to contain the scaled map */
+/* New wrapper to contain the oversized map for tile buffering */
 #map-wrapper {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    /* Offset by -50% of viewport to center the oversized map */
+    top: -50vh;
+    left: -50vw;
+    /* Make wrapper 200% of viewport to provide 50% buffer on each side */
+    width: 200vw;
+    height: 200vh;
 }
 
 #results-container {
@@ -165,7 +167,7 @@ a:focus-visible,
         position: absolute;
         bottom: 10px;
         right: 10px;
-        z-index: 1002;
+        z-index: var(--z-panel-menu);
         background-color: var(--accent-color);
         color: var(--primary-bg);
         border: none;

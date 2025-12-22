@@ -10,7 +10,7 @@ const URLParams = (() => {
         LNG_MIN: -180,
         LNG_MAX: 180,
 
-        // Zoom bounds (Leaflet standard)
+        // Zoom bounds (MapLibre standard)
         ZOOM_MIN: 1,
         ZOOM_MAX: 20,
 

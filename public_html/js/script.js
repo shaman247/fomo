@@ -94,8 +94,8 @@ document.addEventListener('DOMContentLoaded', () => {
             TAG_CONFIG_URL: 'data/tags.json',
             RELATED_TAGS_URL: 'data/related_tags.json',
 
-            START_DATE: new Date(2025, 7, 1),
-            END_DATE: new Date(2026, 0, 31),
+            START_DATE: new Date(new Date().setHours(0, 0, 0, 0)),
+            END_DATE: new Date(new Date().setHours(0, 0, 0, 0) + 90 * 24 * 60 * 60 * 1000),
             TAG_COLOR_PALETTE_DARK: [
                 '#b03540', '#3d8578', '#c07030', '#3d70a0', '#5da035',
                 '#a04570', '#7da030', '#3d5ca8', '#b58030', '#3d7580', '#a03d78',
@@ -601,6 +601,40 @@ document.addEventListener('DOMContentLoaded', () => {
                         const popupElement = popup.getElement();
                         if (!popupElement) return;
 
+                        // Helper function to update popup max-height and re-center on mobile
+                        const updatePopupForFilterPanelChange = (shouldPan = false) => {
+                            const isMobile = window.innerWidth <= Constants.UI.MOBILE_BREAKPOINT;
+                            if (isMobile) {
+                                // Re-pan to center the marker in the new visible area first
+                                if (shouldPan) {
+                                    const lngLat = marker.getLngLat();
+                                    const panOffset = ViewportManager.calculatePopupPanOffset(
+                                        this.state.map,
+                                        lngLat,
+                                        0, // height not needed for mobile centering
+                                        0  // width not needed for mobile centering
+                                    );
+                                    if (panOffset) {
+                                        this.state.map.panBy([-panOffset.panX, -panOffset.panY], { animate: false });
+                                    }
+                                }
+
+                                // Then update the popup max-height
+                                const { filterPanelHeight } = ViewportManager.getFilterPanelDimensions();
+                                const viewportHeight = window.innerHeight;
+                                const visibleAreaHeight = viewportHeight - filterPanelHeight;
+                                const maxPopupHeight = Math.floor(visibleAreaHeight * 0.85);
+
+                                const innerContent = popupElement.querySelector('.maplibre-popup-content');
+                                if (innerContent) {
+                                    innerContent.style.maxHeight = `${maxPopupHeight}px`;
+                                }
+                            }
+                        };
+
+                        // Initial max-height calculation (no pan needed, will pan below)
+                        updatePopupForFilterPanelChange(false);
+
                         // Get the actual popup content element for accurate width measurement
                         // MapLibre popup structure: .maplibregl-popup > .maplibregl-popup-content
                         const contentElement = popupElement.querySelector('.maplibregl-popup-content');
@@ -628,6 +662,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             this.state.map.on('moveend', () => {
                 this.updateVisibleItems();
+                // Update markers for new viewport (adds/removes markers based on visibility)
+                MarkerController.updateMarkersForViewport();
                 // Re-run the search to update scores based on map visibility, even if the search term is empty.
                 const currentTerm = this.elements.omniSearchInput.value.toLowerCase();
                 this.performSearch(currentTerm);
