@@ -40,8 +40,8 @@
 }
 
 .custom-marker-icon {
-    width: 54px;
-    height: 54px;
+    width: 65px;
+    height: 65px;
     background: none;
     border: none;
     border-radius: 50%;
@@ -49,7 +49,7 @@
     transform: translate3d(0, 0, 0);
     cursor: pointer;
     box-sizing: border-box;
-    border: 2.5px solid transparent;
+    border: 3px solid transparent;
     transition: border-color 0.15s ease;
 }
 
@@ -64,7 +64,7 @@
 .marker-emoji {
     width: 100%;
     height: 100%;
-    font-size: 28px;
+    font-size: 32px;
     line-height: 1;
     pointer-events: none;
     text-align: center;
@@ -82,11 +82,11 @@
     left: 100%;
     top: 50%;
     transform: translateY(-50%);
-    margin-left: -6px;
+    margin-left: -7px;
     padding: 0;
     background: none;
     color: var(--marker-label-color);
-    font-size: 1.05em;
+    font-size: 1.2em;
     font-weight: 600;
     white-space: nowrap;
     cursor: pointer;
@@ -95,7 +95,7 @@
         1px -1px 2px var(--primary-bg),
         -1px 1px 2px var(--primary-bg),
         1px 1px 2px var(--primary-bg),
-        0 0 4px var(--primary-bg);
+        0 0 5px var(--primary-bg);
     opacity: 1.0;
     transition: opacity 0.2s ease;
     font-family: var(--font-family);
@@ -119,19 +119,19 @@
     opacity: 1 !important;
     pointer-events: auto !important;
     font-weight: 600;
-    font-size: 1.2em;
+    font-size: 1.44em;
     color: var(--marker-label-hover-color);
     text-shadow:
         -1px -1px 2px var(--primary-bg),
         1px -1px 2px var(--primary-bg),
         -1px 1px 2px var(--primary-bg),
         1px 1px 2px var(--primary-bg),
-        0 0 4px var(--primary-bg),
-        -2px -2px 4px var(--primary-bg),
-        2px -2px 4px var(--primary-bg),
-        -2px 2px 4px var(--primary-bg),
-        2px 2px 4px var(--primary-bg),
-        0 0 8px var(--primary-bg);
+        0 0 5px var(--primary-bg),
+        -2px -2px 5px var(--primary-bg),
+        2px -2px 5px var(--primary-bg),
+        -2px 2px 5px var(--primary-bg),
+        2px 2px 5px var(--primary-bg),
+        0 0 10px var(--primary-bg);
 }
 
 /* === MapLibre Control Customization === */
@@ -159,7 +159,7 @@
     background-color: color-mix(in srgb, var(--primary-bg) 75%, transparent) !important;
     backdrop-filter: blur(5px);
     border: 1px solid var(--border-color) !important;
-    border-radius: 12px !important;
+    border-radius: 14px !important;
     box-shadow: none;
     overflow: hidden;
 }
@@ -167,8 +167,8 @@
 .maplibregl-ctrl-group button {
     background-color: transparent;
     color: var(--primary-text);
-    width: 36px;
-    height: 36px;
+    width: 35px;
+    height: 35px;
 }
 
 .maplibregl-ctrl-group button:hover {
@@ -199,15 +199,33 @@
    Controls need to be offset back into the visible viewport area. */
 .maplibregl-ctrl-top-right {
     /* Offset from the enlarged container edge into the visible viewport */
-    /* 50vw brings it to viewport edge, then 10px for standard MapLibre margin */
-    right: calc(50vw + 10px) !important;
-    top: calc(50vh + 10px) !important;
+    /* 50vw brings it to viewport edge, then 12px for standard MapLibre margin */
+    right: calc(50vw + 12px) !important;
+    top: calc(50vh + 12px) !important;
 }
 
 /* === Mobile Responsive Styles === */
-/* Move zoom/navigation controls to bottom-left on mobile, laid out horizontally */
+/* Scale down markers and hide zoom controls on mobile (85% of desktop) */
 @media (max-width: 768px) {
     .maplibregl-ctrl-top-right .maplibregl-ctrl-group {
         display: none;
+    }
+
+    .custom-marker-icon {
+        width: 55px;
+        height: 55px;
+    }
+
+    .marker-emoji {
+        font-size: 29px;
+    }
+
+    .marker-label {
+        font-size: 1.07em;
+    }
+
+    .custom-marker-icon.hovered .marker-label,
+    .custom-marker-icon.active .marker-label {
+        font-size: 1.22em;
     }
 }

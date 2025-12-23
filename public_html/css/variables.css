@@ -31,7 +31,7 @@
     --secondary-accent-hover: #ffaaf5;  /* Hover state for secondary accent */
 
     /* Borders and dividers */
-    --border-color: #555;
+    --border-color: #666;
 
     /* Special purpose colors */
     --attribution-bg: rgba(0, 0, 0, 0.7);
@@ -131,4 +131,14 @@
  */
 :root[data-theme="light"] .custom-marker-icon svg {
     filter: brightness(1.6) contrast(0.6);
+}
+
+/*
+ * === Mobile Responsive Base ===
+ * Scale down the UI on mobile devices (85% of desktop size)
+ */
+@media (max-width: 768px) {
+    html {
+        font-size: 85%;
+    }
 }

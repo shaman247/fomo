@@ -17,21 +17,21 @@
     position: fixed;
     top: 0;
     left: 0;
-    width: min(500px, max(350px, 40%));
+    width: min(600px, max(420px, 40%));
 
-    padding: 26px 26px 26px 35px;
+    padding: 31px 31px 31px 42px;
     background-color: color-mix(in srgb, var(--primary-bg) 80%, transparent);
     backdrop-filter: blur(3px);
     border: 1px solid var(--border-color);
-    border-radius: 18px;
+    border-radius: 22px;
     box-sizing: border-box;
-    margin-top: 10px;
-    margin-left: 10px;
+    margin-top: 12px;
+    margin-left: 12px;
 
-    padding: 10px 5px;
+    padding: 12px 6px;
     display: flex;
     flex-direction: column;
-    height: calc(100vh - 20px);
+    height: calc(100vh - 24px);
     overflow: hidden;
     box-sizing: border-box;
     z-index: var(--z-panel);
@@ -47,10 +47,10 @@
     align-items: center;
     justify-content: center;
     margin-top: 0px;
-    padding: 4px 8px 4px 6px;
+    padding: 5px 10px 5px 7px;
     background-color: transparent;
     border: 0px solid var(--tertiary-bg);
-    border-radius: 4px;
+    border-radius: 5px;
     cursor: pointer;
 }
 
@@ -60,7 +60,7 @@
 }
 
 #logo {
-    height: 28px;
+    height: 34px;
     display: block;
     pointer-events: none;
 }
@@ -69,11 +69,11 @@
     position: absolute;
     top: 100%;
     left: 0;
-    margin-top: 5px;
+    margin-top: 6px;
     background-color: var(--secondary-bg);
-    border-radius: 4px;
+    border-radius: 5px;
     box-shadow: var(--popup-shadow);
-    min-width: 180px;
+    min-width: 216px;
     z-index: var(--z-panel-menu);
     overflow: hidden;
 }
@@ -86,14 +86,14 @@
 #logo-menu button {
     display: block;
     width: 100%;
-    padding: 10px 15px;
+    padding: 12px 18px;
     text-decoration: none;
     color: var(--primary-text);
     background: none;
     border: none;
     text-align: left;
     font-family: var(--font-family);
-    font-size: 0.95em;
+    font-size: 1.14em;
     cursor: pointer;
     transition: background-color 0.2s ease;
 }
@@ -131,7 +131,7 @@
     margin-top: 0;
     text-align: center;
     font-weight: 500;
-    font-size: 1.8em;
+    font-size: 2.16em;
 }
 
 .filter-group {
@@ -148,18 +148,18 @@
     font-family: var(--font-family);
     font-weight: 500;
     display: block;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
     color: var(--secondary-text);
-    font-size: 0.95em;
+    font-size: 1.14em;
 }
 
 #filter-container {
     display: flex;
     flex-direction: column;
-    padding-left: 5px;
-    padding-right: 5px;
-    margin-bottom: 5px;
-    gap: 5px;
+    padding-left: 6px;
+    padding-right: 6px;
+    margin-bottom: 6px;
+    gap: 6px;
     flex-shrink: 0;
 }
 
@@ -167,13 +167,13 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
 }
 
 #selected-tags-display {
     display: none;
     flex-wrap: wrap;
-    gap: 4px;
+    gap: 5px;
     padding: 0px 0;
 }
 
@@ -189,8 +189,8 @@
 /* Add/remove related tags buttons */
 #selected-tags-display .add-related-tags-button,
 #selected-tags-display .remove-related-tags-button {
-    min-width: 28px;
-    padding: 2px 8px;
+    min-width: 34px;
+    padding: 2px 10px;
 }
 
 #date-filter-container {
@@ -209,7 +209,7 @@
     min-height: 0;
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 6px;
     overflow: hidden;
 }
 
@@ -217,24 +217,24 @@
     display: flex;
     height: auto;
     flex-wrap: wrap;
-    gap: 4px;
+    gap: 5px;
     background-color: transparent;
     flex-shrink: 0;
     border: 0px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: 10px;
     padding: 2px;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
 }
 
 .results-list {
-    padding: 6px;
+    padding: 7px;
 }
 
 .calendar-icon,
 .location-icon,
 .search-icon {
     position: absolute;
-    left: 10px;
+    left: 12px;
     top: 50%;
     transform: translateY(-50%);
     pointer-events: none;
@@ -254,22 +254,22 @@
     width: auto;
     white-space: nowrap;
     font-family: var(--font-family);
-    font-size: 0.95em;
-    padding-left: 35px;
-    padding-right: 6px;
+    font-size: 1.14em;
+    padding-left: 42px;
+    padding-right: 7px;
 }
 
 #date-picker,
 #geotag-search-input,
 #omni-search-input {
-    padding: 6px 6px 6px 36px;
+    padding: 6px 6px 6px 33px;
     background-color: transparent;
     border: 1px solid var(--border-color);
     color: var(--secondary-text);
-    border-radius: 8px;
+    border-radius: 10px;
     box-sizing: border-box;
     font-family: var(--font-family);
-    font-size: 0.9em;
+    font-size: 1.08em;
     margin-bottom: 0;
     text-align: left;
     line-height: 1.2;
@@ -283,7 +283,7 @@
 #omni-search-input {
     cursor: text;
     flex: 1;
-    min-width: 40px; /* Ensure icon is always visible (35px padding + 5px) */
+    min-width: 48px; /* Ensure icon is always visible (43px padding + 5px) */
 }
 
 #omni-search-filter {
@@ -305,10 +305,11 @@
 /* Third-party date picker component - customized to match app theme */
 .flatpickr-calendar {
     background: var(--secondary-bg);
-    border-radius: 4px;
+    border-radius: 5px;
     box-shadow: var(--popup-shadow);
     border: 0;
     color: var(--primary-text);
+    font-size: 1.1em;
 }
 
 .flatpickr-months .flatpickr-month {
@@ -391,7 +392,7 @@ span.flatpickr-weekday {
 }
 
 /* === Mobile Responsive Styles === */
-/* On mobile, the panel becomes a full-width collapsible header */
+/* On mobile, the panel becomes a full-width collapsible header (85% of desktop sizes) */
 @media (max-width: 768px) {
     #filter-panel {
         position: fixed;
@@ -420,9 +421,14 @@ span.flatpickr-weekday {
         transition: none;
     }
 
+    #logo {
+        height: 29px;
+    }
+
     #filter-container {
         padding: 0;
-        margin-bottom: 5px;
+        margin-bottom: 4px;
+        gap: 5px;
     }
 
     .panel-header h2 {
@@ -434,4 +440,20 @@ span.flatpickr-weekday {
         margin-bottom: 0px;
     }
 
+    #date-picker,
+    #geotag-search-input,
+    #omni-search-input {
+        padding: 5px 5px 5px 28px;
+        font-size: 0.92em;
+    }
+
+    .calendar-icon,
+    .location-icon,
+    .search-icon {
+        left: 10px;
+    }
+
+    .flatpickr-calendar {
+        font-size: 1em;
+    }
 }

@@ -93,17 +93,17 @@ a:focus-visible,
 }
 
 .tab-link {
-    padding: 8px 4px;
+    padding: 10px 5px;
     background-color: var(--primary-bg);
     color: var(--secondary-text);
     border: none;
-    border-left: 3px solid transparent;
+    border-left: 4px solid transparent;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     font-family: var(--font-family);
-    font-size: 0.9em;
+    font-size: 1.08em;
     text-transform: uppercase;
 }
 
@@ -131,7 +131,7 @@ a:focus-visible,
 
 .loading-message {
     text-align: center;
-    padding: 20px;
+    padding: 24px;
     animation: pulse-text 1.5s ease-in-out infinite;
 }
 
@@ -165,15 +165,15 @@ a:focus-visible,
     #expand-filter-panel-button {
         display: flex;
         position: absolute;
-        bottom: 10px;
-        right: 10px;
+        bottom: 12px;
+        right: 12px;
         z-index: var(--z-panel-menu);
         background-color: var(--accent-color);
         color: var(--primary-bg);
         border: none;
-        border-radius: 8px;
-        width: 30px;
-        height: 30px;
+        border-radius: 10px;
+        width: 36px;
+        height: 36px;
         cursor: pointer;
         box-shadow: var(--toggle-btn-shadow);
         align-items: center;
@@ -191,5 +191,14 @@ a:focus-visible,
 
     #expand-filter-panel-button.collapsed svg {
         transform: rotate(180deg);
+    }
+
+    .tab-link {
+        padding: 8px 4px;
+        font-size: 0.92em;
+    }
+
+    .loading-message {
+        padding: 20px;
     }
 }
