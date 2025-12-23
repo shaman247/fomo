@@ -25,6 +25,7 @@
                         <div id="logo-menu" class="logo-menu-hidden" role="menu" aria-label="Logo menu">
                             <button type="button" id="settings-btn" role="menuitem">⚙️ Settings</button>
                             <button type="button" id="share-view-btn" role="menuitem">🔗 Share this view</button>
+                            <button type="button" id="feedback-btn" role="menuitem">💬 Submit feedback</button>
                             <a href="about.html" target="_blank" role="menuitem">🗽 About fomo.nyc</a>
                         </div>
                     </div>
@@ -76,6 +77,25 @@
     <!-- Toast Notification -->
     <div id="toast-notification" class="toast-notification" role="status" aria-live="polite"></div>
 
+    <!-- Feedback Modal -->
+    <div id="feedback-modal" class="modal" role="dialog" aria-labelledby="feedback-modal-title" aria-modal="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="feedback-modal-title">Submit Feedback</h2>
+                <button id="feedback-close-btn" class="modal-close-btn" aria-label="Close feedback">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="feedback-description">Help improve <strong>fomo.nyc</strong>! 💖 <br> Share your thoughts, report issues, or suggest new features 🗽</p>
+                <textarea id="feedback-message" placeholder="Enter your feedback here..." rows="6" maxlength="10000" aria-label="Feedback message"></textarea>
+                <div class="feedback-footer">
+                    <span id="feedback-char-count" class="feedback-char-count">0 / 10000</span>
+                    <button id="feedback-submit-btn" class="feedback-submit-btn" disabled>Submit</button>
+                </div>
+                <div id="feedback-status" class="feedback-status" aria-live="polite"></div>
+            </div>
+        </div>
+    </div>
+
     <!-- Settings Modal -->
     <div id="settings-modal" class="modal" role="dialog" aria-labelledby="settings-modal-title" aria-modal="true">
         <div class="modal-content">
@@ -110,6 +130,16 @@
                         </label>
                     </div>
                     <span id="emoji-font-status" class="setting-status"></span>
+                </div>
+                <div class="setting-group">
+                    <label class="setting-group-label">Location</label>
+                    <div class="setting-options">
+                        <label class="setting-option">
+                            <input type="checkbox" id="use-location-toggle" name="use-location">
+                            <span>Center map on my location</span>
+                        </label>
+                    </div>
+                    <span id="location-status" class="setting-status"></span>
                 </div>
             </div>
         </div>
@@ -146,6 +176,7 @@
     <script src="js/ui/uiManager.js"></script>
     <script src="js/ui/emojiManager.js"></script>
     <script src="js/ui/themeManager.js"></script>
+    <script src="js/ui/feedbackManager.js"></script>
 
     <!-- Map -->
     <script src="js/map/mapManager.js"></script>

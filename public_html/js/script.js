@@ -108,8 +108,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 '#a8d085', '#c88598', '#e09075', '#85a0d8', '#75c0b0', '#e89075',
                 '#9585e0', '#e0b085', '#8dc090', '#c88590', '#859098', '#a8b075'
             ],
-            MAP_INITIAL_VIEW: [40.71799, -73.98712],
-            MAP_INITIAL_ZOOM: 14,
+            MAP_INITIAL_VIEW: [40.70424, -73.97086],
+            MAP_INITIAL_ZOOM: 12,
+            MAP_USER_LOCATION_ZOOM: 14,
+            // NYC area bounds for geolocation validation
+            NYC_BOUNDS: {
+                latMin: 40.49,
+                latMax: 40.92,
+                lngMin: -74.26,
+                lngMax: -73.70
+            },
             MAP_STYLE_DARK: 'data/map-style-dark.json?v=5',
             MAP_STYLE_LIGHT: 'data/map-style-light.json?v=5',
             MAP_ATTRIBUTION: '© <a href="https://protomaps.com">Protomaps</a> © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
@@ -214,13 +222,19 @@ document.addEventListener('DOMContentLoaded', () => {
          * Initialize all core modules (emoji, theme, map, viewport, etc.)
          * @memberof App
          * @private
+         * @async
          */
-        _initializeModules() {
+        async _initializeModules() {
             // Initialize emoji font and theme before map
             this.initEmojiManager();
             EmojiManager.initEmojiFont();
             this.initThemeManager();
             ThemeManager.initTheme();
+
+            // Only request location if user has enabled the setting
+            if (ModalManager.isLocationEnabled()) {
+                this.state.userLocation = await this.getUserLocation();
+            }
 
             this.initMap();
             this.initViewportManager();
@@ -270,9 +284,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 onThemeChange: (theme) => {
                     ThemeManager.applyThemeChange(theme);
+                },
+                onLocationToggle: (enabled) => {
+                    this.handleLocationToggle(enabled);
                 }
             });
             ModalManager.initWelcomeModal();
+            FeedbackManager.init();
         },
 
         /**
@@ -364,7 +382,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // --- Phase 1: Load Initial Data ---
             try {
                 await this._loadInitialData();
-                this._initializeModules();
+                await this._initializeModules();
                 this._setupUIComponents(urlParams);
                 this.filterAndDisplayEvents();
                 this._showMainUI();
@@ -505,19 +523,105 @@ document.addEventListener('DOMContentLoaded', () => {
         },
 
         /**
+         * Check if coordinates are within NYC bounds
+         * @param {number} lat - Latitude
+         * @param {number} lng - Longitude
+         * @returns {boolean} True if within NYC bounds
+         * @memberof App
+         */
+        isWithinNYC(lat, lng) {
+            const bounds = this.config.NYC_BOUNDS;
+            return lat >= bounds.latMin && lat <= bounds.latMax &&
+                   lng >= bounds.lngMin && lng <= bounds.lngMax;
+        },
+
+        /**
+         * Get user's current location via Geolocation API
+         * Returns null if geolocation is unavailable, denied, or location is outside NYC
+         * @returns {Promise<{lat: number, lng: number}|null>}
+         * @memberof App
+         */
+        async getUserLocation() {
+            if (!navigator.geolocation) {
+                return null;
+            }
+
+            try {
+                const position = await new Promise((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(resolve, reject, {
+                        enableHighAccuracy: false,
+                        timeout: 5000,
+                        maximumAge: 300000 // Cache for 5 minutes
+                    });
+                });
+
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+
+                // Only use location if within NYC area
+                if (this.isWithinNYC(lat, lng)) {
+                    return { lat, lng };
+                }
+                return null;
+            } catch (error) {
+                // Geolocation denied or failed - silently fall back to default
+                return null;
+            }
+        },
+
+        /**
+         * Handle location toggle change from settings
+         * Requests geolocation when enabled and recenters the map
+         * @param {boolean} enabled - Whether location is enabled
+         * @memberof App
+         */
+        async handleLocationToggle(enabled) {
+            if (enabled) {
+                ModalManager.setLocationStatus('Locating...', 'loading');
+                const location = await this.getUserLocation();
+
+                if (location) {
+                    this.state.userLocation = location;
+                    // Recenter map to user's location
+                    this.state.map.flyTo({
+                        center: [location.lng, location.lat],
+                        zoom: this.config.MAP_USER_LOCATION_ZOOM,
+                        duration: 1000
+                    });
+                    ModalManager.setLocationStatus('', '');
+                } else {
+                    // Location denied or outside NYC
+                    ModalManager.setLocationStatus('Not available', '');
+                }
+            } else {
+                this.state.userLocation = null;
+                ModalManager.setLocationStatus('', '');
+            }
+        },
+
+        /**
          * Initialize the MapLibre GL map with tiles, controls, and event handlers
          * Sets up map layers, markers, and interactive behaviors
          * @memberof App
          */
         initMap() {
-            // Use URL parameters for initial map view if provided
+            // Determine initial view: URL params > user location > default
             const urlParams = this.state.urlParams || {};
-            const initialView = (urlParams.lat !== undefined && urlParams.lng !== undefined)
-                ? [urlParams.lat, urlParams.lng]
-                : this.config.MAP_INITIAL_VIEW;
-            const initialZoom = urlParams.zoom !== undefined
-                ? urlParams.zoom
-                : this.config.MAP_INITIAL_ZOOM;
+            let initialView, initialZoom;
+
+            if (urlParams.lat !== undefined && urlParams.lng !== undefined) {
+                // URL parameters take highest priority
+                initialView = [urlParams.lat, urlParams.lng];
+                initialZoom = urlParams.zoom !== undefined ? urlParams.zoom : this.config.MAP_INITIAL_ZOOM;
+            } else if (this.state.userLocation) {
+                // User location (if within NYC) takes second priority
+                initialView = [this.state.userLocation.lat, this.state.userLocation.lng];
+                initialZoom = this.config.MAP_USER_LOCATION_ZOOM;
+            } else {
+                // Fall back to default
+                initialView = this.config.MAP_INITIAL_VIEW;
+                initialZoom = this.config.MAP_INITIAL_ZOOM;
+            }
 
             // Get MapLibre style URL for current theme
             const styleUrl = ThemeManager.getStyleUrlForCurrentTheme();

@@ -28,22 +28,23 @@
     background: color-mix(in srgb, var(--secondary-bg) 80%, transparent);
     backdrop-filter: blur(5px);
     color: var(--primary-text);
-    border-radius: 8px;
+    border-radius: 10px;
     border: 1px solid var(--border-color);
-    width: 400px;
+    width: 480px;
     font-family: var(--font-family);
     will-change: transform;
     transform: translate3d(0, 0, 0);
     padding: 0;
+    /* Base font size for all popup content - scaled up 20% from default 16px */
+    font-size: 19px;
 }
 
 .maplibre-popup-content {
-    font-size: 1.1em;
     font-weight: 400;
     line-height: 1.1;
     margin: 0 !important;
     color: var(--primary-text);
-    max-height: 450px;
+    max-height: 540px;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -51,18 +52,18 @@
 }
 
 .maplibre-popup-content p {
-    margin: 3px 0;
+    margin: 4px 0;
     color: var(--primary-text);
 }
 
 .maplibre-popup-content details p {
-    margin: 2px 4px;
-    font-size: 0.95em;
+    margin: 2px 5px;
+    font-size: 0.85em;
 }
 
 .maplibre-popup-content details {
     border-bottom: 0;
-    margin-bottom: 5px;
+    margin-bottom: 6px;
     padding-bottom: 0px;
 }
 
@@ -83,7 +84,7 @@
     display: flex;
     align-items: center;
     gap: 2px;
-    font-size: 1.1em;
+    font-size: 1.0em;
 }
 
 .maplibre-popup-content details[open] > summary {
@@ -111,20 +112,19 @@
 }
 
 .popup-header {
-    padding: 10px 0 0 0;
+    padding: 12px 0 8px 0;
     flex-shrink: 0;
     display: flex;
     align-items: flex-start;
     gap: 0;
 
     font-family: var(--font-family);
-    font-weight: 500;
-    font-size: 1.3em;
-    padding-bottom: 8px;
 }
 
 .popup-header-location {
-    padding-left: 4px;
+    padding-left: 5px;
+    font-size: 1.1em;
+    font-weight: 500;
 }
 
 .popup-header p {
@@ -136,7 +136,7 @@
 }
 
 .popup-header-emoji {
-    padding: 4px;
+    padding: 5px;
     font-size: 2em;
     line-height: 1;
 }
@@ -146,9 +146,10 @@
     margin-bottom: 0px;
 }
 
-.popup-header .tag-button {
-    font-size: 0.8rem; /* Use rem to base font size on the root, not the parent */
-    font-weight: 400; /* Reset font-weight as it might be inherited */
+/* Tag buttons in popups - consistent sizing regardless of parent font-size */
+.maplibregl-popup-content .tag-button {
+    font-size: 0.85em;
+    font-weight: 400;
 }
 
 /* Remove focus outline from tag buttons in popups */
@@ -167,7 +168,7 @@
 }
 
 .popup-events-list {
-    padding: 8px 12px 12px;
+    padding: 10px;
     overflow-y: auto;
     flex-grow: 1;
     -ms-overflow-style: none;
@@ -177,20 +178,20 @@
 }
 
 .popup-events-list details + details {
-    margin-top: 5px;
-    padding-top: 5px;
+    margin-top: 6px;
+    padding-top: 6px;
     letter-spacing: -0.02em;
 }
 
 .popup-event-emoji {
-    font-size: 1.15em;
+    font-size: 1.1em;
     line-height: 1;
-    margin-right: 4px;
+    margin-right: 5px;
 }
 
 .popup-external-link {
     display: inline-block;
-    padding: 0 4px;
+    padding: 0 5px;
 }
 
 .popup-external-link svg {
@@ -212,18 +213,20 @@
     color: var(--secondary-text) !important;
     font-size: 0.9em !important;
     font-style: italic !important;
-    margin-bottom: 4px !important;
+    margin-bottom: 5px !important;
     margin-top: 1px !important;
 }
 
 /* === Mobile Responsive Styles === */
-/* Adjust popup sizing for smaller screens */
+/* Adjust popup sizing for smaller screens (85% of desktop) */
 @media (max-width: 768px) {
     .maplibregl-popup-content {
         /* Fixed width on mobile for consistent centering with anchor: center */
         width: max(400px, 85vw);
         min-width: unset;
         max-width: unset;
+        /* Scale down base font size for mobile (19px * 0.85 ≈ 16px) */
+        font-size: 16px;
     }
 
     .popup-events-list {

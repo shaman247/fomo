@@ -57,5 +57,8 @@ logs/
 # FTP credentials backup
 .ftpconfig
 
+# PHP config with database credentials
+public_html/api/config.php
+
 # Crawled data
 event_data/
