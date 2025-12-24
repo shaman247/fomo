@@ -60,5 +60,9 @@ logs/
 # PHP config with database credentials
 public_html/api/config.php
 
+# SSH private keys
+scripts/id_rsa_sync
+*.pem
+
 # Crawled data
 event_data/

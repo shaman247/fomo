@@ -10,6 +10,18 @@
  * Response: { "success": true } or { "success": false, "error": "..." }
  */
 
+// Set response headers first (before any output)
+header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type');
+
+// Handle preflight requests immediately
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
+
 // Load database configuration
 $configPath = __DIR__ . '/config.php';
 if (!file_exists($configPath)) {
@@ -18,18 +30,6 @@ if (!file_exists($configPath)) {
     exit;
 }
 require_once $configPath;
-
-// Set response headers
-header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
-
-// Handle preflight requests
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit;
-}
 
 // Only allow POST requests
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
