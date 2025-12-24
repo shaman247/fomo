@@ -132,17 +132,24 @@ def _create_short_name(name):
         short_name = re.sub(pattern, '', short_name, flags=re.IGNORECASE)
 
     # Remove main title before colon if there's a subtitle (e.g., "Film Night: Movie Name" -> "Movie Name")
-    # Only apply if the title is longer than 40 characters
+    # Only apply if the title is longer than 40 characters and the colon isn't part of a time (e.g., "3:00pm")
     if len(short_name) > 40 and ':' in short_name:
-        parts = short_name.split(':', 1)
-        # Only use the subtitle if it's substantial (more than 3 chars after stripping)
-        if len(parts[1].strip()) > 3:
-            short_name = parts[1].strip()
+        # Find the first colon and check if it's part of a time pattern
+        colon_idx = short_name.index(':')
+        before_colon = short_name[:colon_idx]
+        after_colon = short_name[colon_idx+1:]
+        # Skip if colon appears to be part of a time (digit before and digit after)
+        is_time_colon = (before_colon and before_colon[-1].isdigit() and
+                         after_colon and after_colon[0].isdigit())
+        if not is_time_colon:
+            parts = short_name.split(':', 1)
+            # Only use the subtitle if it's substantial (more than 3 chars after stripping)
+            if len(parts[1].strip()) > 3:
+                short_name = parts[1].strip()
 
-    # Remove text after " – " (en dash with spaces) or " - " (hyphen with spaces)
-    # Only apply if the title is longer than 40 characters
-    if len(short_name) > 40:
-        short_name = re.sub(r'\s+[–\-]\s+.*$', '', short_name)
+    # Remove content after dash if it looks like metadata (contains year, "at [venue]", etc.)
+    # but preserve meaningful content like "Session 2"
+    short_name = re.sub(r'\s+[-–]\s+.*\b(?:20\d{2}|at\s+\w).*$', '', short_name, flags=re.IGNORECASE)
 
     # Remove parenthetical details: (Early Show), (6:30), (Ages 3-5), etc.
     short_name = re.sub(r'\s*\([^)]*\)', '', short_name)
@@ -165,7 +172,29 @@ def _create_short_name(name):
     short_name = re.sub(r'\s+in\s+NYC\s*[-–].*$', '', short_name)
 
     # Remove date ranges at the end: " - Tuesday, October 21 - Sunday, October 26"
-    short_name = re.sub(r'\s*[-–]\s*(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday),?\s+.*$', '', short_name)
+    # Only match if day name is followed by comma or month (to avoid matching "- Wed 7:30 PM" which loses session info)
+    short_name = re.sub(r'\s*[-–]\s*(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday),\s+.*$', '', short_name)
+
+    # Remove date/time patterns (order matters - try more specific patterns first)
+    months = r'(?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Oct|Nov|Dec)'
+
+    # Remove inline date+time patterns like "December 28th Tour 3:00pm" -> "Tour"
+    # This handles cases where date appears mid-string followed by text and time
+    short_name = re.sub(rf'\s+{months}\s+\d{{1,2}}(?:st|nd|rd|th)?\s+(.+?)\s+\d{{1,2}}:\d{{2}}\s*(?:am|pm|AM|PM)?$', r' \1', short_name, flags=re.IGNORECASE)
+
+    # Remove trailing date patterns like "December 28th", "Jan 5", "October 21st" (with optional time)
+    short_name = re.sub(rf'\s+{months}\s+\d{{1,2}}(?:st|nd|rd|th)?(?:\s+\d{{1,2}}:\d{{2}}\s*(?:am|pm|AM|PM)?)?$', '', short_name, flags=re.IGNORECASE)
+
+    # Remove trailing day + time patterns like "- Wed - 6:30PM - Jan" or "- Wed 7:30 PM"
+    # Must come before standalone time removal to preserve content between dashes
+    days_short = r'(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)'
+    # Pattern handles: "- Wed", "- Wed 7:30 PM", "- Wed - 6:30PM", "- Wed - 6:30PM - Jan"
+    short_name = re.sub(rf'\s*[-–]\s*{days_short}(?:\s+\d{{1,2}}:\d{{2}}\s*(?:am|pm)|\s*[-–]\s*\d{{1,2}}:\d{{2}}\s*(?:am|pm))?(?:\s*[-–]\s*{months})?$', '', short_name, flags=re.IGNORECASE)
+
+    # Remove trailing time patterns like "3:00pm", "10:30 AM", "7pm"
+    # Only strip times that have am/pm indicator (to preserve times like "In Bed by 1:00")
+    short_name = re.sub(r'\s+\d{1,2}:\d{2}\s*(?:am|pm)$', '', short_name, flags=re.IGNORECASE)
+    short_name = re.sub(r'\s+\d{1,2}\s*(?:am|pm)$', '', short_name, flags=re.IGNORECASE)
 
     # Normalize multiple spaces and strip
     short_name = re.sub(r'\s+', ' ', short_name).strip()
@@ -232,6 +261,10 @@ def _process_tags(row_dict, tag_rules, extra_tags=None):
 
             # Fix ampersand capitalization (e.g., "Q&a" -> "Q&A", "R&b" -> "R&B")
             final_tag = re.sub(r'\b([A-Z])&([a-z])\b', lambda m: m.group(1) + '&' + m.group(2).upper(), final_tag)
+
+            # Remove "NYC" from beginning or end of tags (e.g., "NYC Comedy" -> "Comedy", "Jazz NYC" -> "Jazz")
+            final_tag = re.sub(r'^NYC\s+', '', final_tag, flags=re.IGNORECASE)
+            final_tag = re.sub(r'\s+NYC$', '', final_tag, flags=re.IGNORECASE)
 
             # Check for exclusion (case-insensitive and space-insensitive)
             final_tag_lookup = final_tag.lower().replace(" ", "")

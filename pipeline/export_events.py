@@ -173,10 +173,10 @@ def main():
     source_locations_filename = os.path.join(SCRIPT_DIR, 'data', 'locations.json')
 
     # Bounding box for the "init" set (NYC area)
-    # Centered around 40.71799, -73.98712
+    # Centered around 40.70424, -73.97086
     # (lat_min, lat_max), (lng_min, lng_max)
-    INIT_LAT_RANGE = (40.686695, 40.749285)
-    INIT_LNG_RANGE = (-74.014855, -73.959385)
+    INIT_LAT_RANGE = (40.672945, 40.735535)
+    INIT_LNG_RANGE = (-73.998595, -73.943125)
     INIT_DAYS_AHEAD = 7
 
     if not os.path.isdir(processed_dir) or not os.path.exists(source_locations_filename):
