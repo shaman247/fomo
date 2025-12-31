@@ -1,0 +1,179 @@
+"""
+Event export module.
+
+Exports events from the database to JSON files for the website.
+"""
+
+import json
+import os
+from datetime import datetime, timedelta
+
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Bounding box for the "init" set (NYC core area)
+INIT_LAT_RANGE = (40.672945, 40.735535)
+INIT_LNG_RANGE = (-73.998595, -73.943125)
+
+
+def get_active_locations(events, all_locations):
+    """Get locations that have events at their coordinates."""
+    active_coords = set(
+        (round(event['lat'], 5), round(event['lng'], 5))
+        for event in events if event.get('lat') and event.get('lng')
+    )
+    return [
+        loc for loc in all_locations
+        if loc.get('lat') is not None and loc.get('lng') is not None
+        and (round(loc['lat'], 5), round(loc['lng'], 5)) in active_coords
+    ]
+
+
+def export_events(cursor):
+    """
+    Export events from the events table to JSON files for the website.
+
+    Creates:
+    - events.init.json (core NYC area, 7-day window)
+    - events.full.json (extended area and time range)
+    - locations.init.json (locations for init events)
+    - locations.full.json (locations for full events)
+    """
+    output_dir = os.path.join(SCRIPT_DIR, '..', 'public_html', 'data')
+    os.makedirs(output_dir, exist_ok=True)
+
+    current_date = datetime.now().date()
+    future_limit_date = (datetime.now() + timedelta(days=90)).date()
+    init_limit_date = (datetime.now() + timedelta(days=7)).date()
+
+    # Get all events with their occurrences
+    cursor.execute("""
+        SELECT e.id, e.name, e.short_name, e.description, e.emoji,
+               e.location_name, e.sublocation, e.lat, e.lng,
+               l.name as matched_location_name
+        FROM events e
+        LEFT JOIN locations l ON e.location_id = l.id
+        WHERE e.lat IS NOT NULL AND e.lng IS NOT NULL
+    """)
+
+    all_events = []
+    for row in cursor.fetchall():
+        event_id = row[0]
+
+        # Get occurrences
+        cursor.execute("""
+            SELECT start_date, start_time, end_date, end_time
+            FROM event_occurrences
+            WHERE event_id = %s
+            ORDER BY start_date, start_time
+        """, (event_id,))
+        occurrences = []
+        has_valid_occurrence = False
+        for occ in cursor.fetchall():
+            start_date = occ[0]
+            end_date = occ[2] if occ[2] else start_date
+            # Check if occurrence is within date range
+            if start_date and start_date <= future_limit_date and end_date >= current_date:
+                has_valid_occurrence = True
+            occurrences.append([
+                str(occ[0]) if occ[0] else None,
+                occ[1],
+                str(occ[2]) if occ[2] else None,
+                occ[3]
+            ])
+
+        if not has_valid_occurrence:
+            continue
+
+        # Get URLs
+        cursor.execute("""
+            SELECT url FROM event_urls WHERE event_id = %s ORDER BY sort_order
+        """, (event_id,))
+        urls = [r[0] for r in cursor.fetchall()]
+
+        # Get tags
+        cursor.execute("""
+            SELECT t.name FROM event_tags et JOIN tags t ON et.tag_id = t.id WHERE et.event_id = %s
+        """, (event_id,))
+        tags = [r[0] for r in cursor.fetchall()]
+
+        event = {
+            'name': row[1],
+            'location': row[9] or row[5],  # matched_location_name or location_name
+            'description': row[3],
+            'emoji': row[4],
+            'tags': tags,
+            'lat': float(row[7]) if row[7] else None,
+            'lng': float(row[8]) if row[8] else None,
+            'occurrences': occurrences,
+            'urls': urls,
+        }
+        if row[2]:  # short_name
+            event['short_name'] = row[2]
+
+        all_events.append(event)
+
+    # Sort by first occurrence date
+    all_events.sort(key=lambda e: e.get('occurrences', [[None]])[0][0] or '9999-99-99')
+
+    # Split into init and full sets
+    init_events = []
+    full_events = []
+
+    for event in all_events:
+        lat = event.get('lat')
+        lng = event.get('lng')
+        is_in_bbox = (lat is not None and lng is not None and
+                      INIT_LAT_RANGE[0] <= lat <= INIT_LAT_RANGE[1] and
+                      INIT_LNG_RANGE[0] <= lng <= INIT_LNG_RANGE[1])
+
+        first_occurrence_start_str = event.get('occurrences', [[None]])[0][0]
+        is_in_init_timeframe = False
+        if first_occurrence_start_str:
+            try:
+                start_date = datetime.strptime(first_occurrence_start_str, '%Y-%m-%d').date()
+                if start_date < init_limit_date:
+                    is_in_init_timeframe = True
+            except (ValueError, TypeError):
+                pass
+
+        if is_in_bbox and is_in_init_timeframe:
+            init_events.append(event)
+        else:
+            full_events.append(event)
+
+    # Load source locations for location files
+    source_locations_filename = os.path.join(SCRIPT_DIR, 'data', 'locations.json')
+    try:
+        with open(source_locations_filename, 'r', encoding='utf-8') as f:
+            all_locations = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        all_locations = []
+
+    init_locations = get_active_locations(init_events, all_locations)
+    init_location_coords = set(
+        (round(loc['lat'], 5), round(loc['lng'], 5)) for loc in init_locations
+    )
+    full_locations = [
+        loc for loc in get_active_locations(full_events, all_locations)
+        if (round(loc['lat'], 5), round(loc['lng'], 5)) not in init_location_coords
+    ]
+
+    # Write output files
+    with open(os.path.join(output_dir, 'events.init.json'), 'w', encoding='utf-8') as f:
+        json.dump(init_events, f, indent=2, ensure_ascii=False)
+    with open(os.path.join(output_dir, 'locations.init.json'), 'w', encoding='utf-8') as f:
+        json.dump(init_locations, f, indent=2, ensure_ascii=False)
+    with open(os.path.join(output_dir, 'events.full.json'), 'w', encoding='utf-8') as f:
+        json.dump(full_events, f, indent=2, ensure_ascii=False)
+    with open(os.path.join(output_dir, 'locations.full.json'), 'w', encoding='utf-8') as f:
+        json.dump(full_locations, f, indent=2, ensure_ascii=False)
+
+    print(f"  Exported {len(init_events)} init events, {len(full_events)} full events")
+    print(f"  Exported {len(init_locations)} init locations, {len(full_locations)} full locations")
+
+    return {
+        'init_events': len(init_events),
+        'full_events': len(full_events),
+        'init_locations': len(init_locations),
+        'full_locations': len(full_locations)
+    }

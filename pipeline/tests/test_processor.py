@@ -1,7 +1,13 @@
-"""Tests for process_responses.py"""
+"""Tests for processor.py text utilities."""
 
 import unittest
-from process_responses import _create_short_name
+import sys
+import os
+
+# Add parent directory to path for imports
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from processor import create_short_name
 
 # Test cases: (input, expected_output, description)
 SHORT_NAME_TEST_CASES = [
@@ -48,17 +54,17 @@ SHORT_NAME_TEST_CASES = [
 
 
 class TestCreateShortName(unittest.TestCase):
-    """Tests for the _create_short_name function."""
+    """Tests for the create_short_name function."""
 
     def test_short_name_cases(self):
         """Test all short name transformation cases."""
         for input_str, expected in SHORT_NAME_TEST_CASES:
             with self.subTest(input=input_str):
-                self.assertEqual(_create_short_name(input_str), expected)
+                self.assertEqual(create_short_name(input_str), expected)
 
     def test_none_input(self):
         """None input should return None."""
-        self.assertIsNone(_create_short_name(None))
+        self.assertIsNone(create_short_name(None))
 
 
 if __name__ == "__main__":

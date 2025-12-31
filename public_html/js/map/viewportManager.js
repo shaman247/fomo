@@ -63,20 +63,20 @@ const ViewportManager = (() => {
     /**
      * The map renders at an enlarged size with offset to buffer tiles beyond the viewport.
      * This ratio represents how much larger the map container is relative to the viewport.
-     * A ratio of 2.0 means 200% size (50% buffer on each side).
+     * A ratio of 1.4 means 140% size (20% buffer on each side).
      * Must match the CSS values in layout.css (#map-wrapper).
      */
-    const TILE_BUFFER_RATIO = 2.0;
+    const TILE_BUFFER_RATIO = 1.4;
 
     /**
      * Gets the offset in pixels caused by the tile buffer
-     * The map container is centered by offsetting it by 50% of viewport in each direction
+     * The map container is centered by offsetting it by 20% of viewport in each direction
      * @returns {Object} Object with offsetX and offsetY in pixels
      */
     function getTileBufferOffset() {
         const viewportWidth = window.innerWidth;
         const viewportHeight = window.innerHeight;
-        const bufferOffset = (TILE_BUFFER_RATIO - 1) / 2; // 0.5 for ratio of 2.0
+        const bufferOffset = (TILE_BUFFER_RATIO - 1) / 2; // 0.2 for ratio of 1.4
         return {
             offsetX: viewportWidth * bufferOffset,
             offsetY: viewportHeight * bufferOffset

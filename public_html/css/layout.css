@@ -60,12 +60,12 @@ a:focus-visible,
 /* New wrapper to contain the oversized map for tile buffering */
 #map-wrapper {
     position: absolute;
-    /* Offset by -50% of viewport to center the oversized map */
-    top: -50vh;
-    left: -50vw;
-    /* Make wrapper 200% of viewport to provide 50% buffer on each side */
-    width: 200vw;
-    height: 200vh;
+    /* Offset by -20% of viewport to center the oversized map */
+    top: -20vh;
+    left: -20vw;
+    /* Make wrapper 140% of viewport to provide 20% buffer on each side */
+    width: 140vw;
+    height: 140vh;
 }
 
 #results-container {

@@ -23,7 +23,7 @@
       "source": "protomaps",
       "source-layer": "earth",
       "paint": {
-        "fill-color": "#1a1a1a"
+        "fill-color": "#1d1d1d"
       }
     },
     {
@@ -42,25 +42,33 @@
       "source-layer": "landuse",
       "filter": ["any",
         ["==", "kind", "park"],
-        ["==", "kind", "nature_reserve"],
         ["==", "kind", "forest"]
       ],
       "paint": {
-        "fill-color": "#1f3d1f"
+        "fill-color": "#1d331d"
       }
     },
     {
-      "id": "landuse-other",
+      "id": "landuse-cemetery",
       "type": "fill",
       "source": "protomaps",
       "source-layer": "landuse",
-      "filter": ["all",
-        ["!=", "kind", "park"],
-        ["!=", "kind", "nature_reserve"],
-        ["!=", "kind", "forest"]
+      "filter": ["any",
+        ["==", "kind", "cemetery"],
+        ["==", "kind", "golf_course"]
       ],
       "paint": {
-        "fill-color": "#1e1e1e"
+        "fill-color": "#1a261a"
+      }
+    },
+    {
+      "id": "landuse-beach",
+      "type": "fill",
+      "source": "protomaps",
+      "source-layer": "landuse",
+      "filter": ["==", "kind", "beach"],
+      "paint": {
+        "fill-color": "#3d3526"
       }
     },
     {
@@ -70,7 +78,7 @@
       "source-layer": "roads",
       "filter": ["==", "kind", "highway"],
       "paint": {
-        "line-color": "#3a3a3a",
+        "line-color": "#363636",
         "line-width": [
           "interpolate", ["exponential", 1.5], ["zoom"],
           5, 1,
@@ -149,11 +157,11 @@
         "text-max-angle": 30
       },
       "paint": {
-        "text-color": "#888888",
+        "text-color": "#777",
         "text-halo-color": "#1a1a1a",
         "text-halo-width": 2
       }
-    },
+    },    
     {
       "id": "place-labels-neighborhood",
       "type": "symbol",
@@ -174,7 +182,7 @@
         "text-letter-spacing": 0.1
       },
       "paint": {
-        "text-color": "#666666",
+        "text-color": "#888",
         "text-halo-color": "#1a1a1a",
         "text-halo-width": 2
       }

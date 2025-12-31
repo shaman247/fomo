@@ -23,7 +23,7 @@
       "source": "protomaps",
       "source-layer": "earth",
       "paint": {
-        "fill-color": "#f5f5f5"
+        "fill-color": "#e8e8e8"
       }
     },
     {
@@ -42,25 +42,33 @@
       "source-layer": "landuse",
       "filter": ["any",
         ["==", "kind", "park"],
-        ["==", "kind", "nature_reserve"],
         ["==", "kind", "forest"]
       ],
       "paint": {
-        "fill-color": "#c8e6c8"
+        "fill-color": "#b8d8b8"
       }
     },
     {
-      "id": "landuse-other",
+      "id": "landuse-cemetery",
       "type": "fill",
       "source": "protomaps",
       "source-layer": "landuse",
-      "filter": ["all",
-        ["!=", "kind", "park"],
-        ["!=", "kind", "nature_reserve"],
-        ["!=", "kind", "forest"]
+      "filter": ["any",
+        ["==", "kind", "cemetery"],
+        ["==", "kind", "golf_course"]
       ],
       "paint": {
-        "fill-color": "#eeeeee"
+        "fill-color": "#cdc"
+      }
+    },
+    {
+      "id": "landuse-beach",
+      "type": "fill",
+      "source": "protomaps",
+      "source-layer": "landuse",
+      "filter": ["==", "kind", "beach"],
+      "paint": {
+        "fill-color": "#f5e6c8"
       }
     },
     {
@@ -70,7 +78,7 @@
       "source-layer": "roads",
       "filter": ["==", "kind", "highway"],
       "paint": {
-        "line-color": "#d0d0d0",
+        "line-color": "#b8b8b8",
         "line-width": [
           "interpolate", ["exponential", 1.5], ["zoom"],
           5, 1.5,
@@ -87,7 +95,7 @@
       "source-layer": "roads",
       "filter": ["==", "kind", "highway"],
       "paint": {
-        "line-color": "#ffffff",
+        "line-color": "#f5f5f5",
         "line-width": [
           "interpolate", ["exponential", 1.5], ["zoom"],
           5, 1,
@@ -104,7 +112,7 @@
       "source-layer": "roads",
       "filter": ["==", "kind", "major_road"],
       "paint": {
-        "line-color": "#ffffff",
+        "line-color": "#f5f5f5",
         "line-width": [
           "interpolate", ["exponential", 1.5], ["zoom"],
           7, 0.3,
@@ -122,7 +130,7 @@
       "filter": ["==", "kind", "minor_road"],
       "minzoom": 12,
       "paint": {
-        "line-color": "#ffffff",
+        "line-color": "#f5f5f5",
         "line-width": [
           "interpolate", ["exponential", 1.5], ["zoom"],
           12, 0.5,
@@ -138,7 +146,7 @@
       "source-layer": "buildings",
       "minzoom": 13,
       "paint": {
-        "fill-color": "#e0e0e0",
+        "fill-color": "#d0d0d0",
         "fill-opacity": [
           "interpolate", ["linear"], ["zoom"],
           13, 0,
@@ -166,8 +174,8 @@
         "text-max-angle": 30
       },
       "paint": {
-        "text-color": "#555555",
-        "text-halo-color": "#ffffff",
+        "text-color": "#444444",
+        "text-halo-color": "#f0f0f0",
         "text-halo-width": 2
       }
     },
@@ -191,8 +199,8 @@
         "text-letter-spacing": 0.1
       },
       "paint": {
-        "text-color": "#777777",
-        "text-halo-color": "#ffffff",
+        "text-color": "#555555",
+        "text-halo-color": "#f0f0f0",
         "text-halo-width": 2
       }
     }
