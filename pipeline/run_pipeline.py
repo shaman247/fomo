@@ -1,88 +1,268 @@
 """
 Event Processing Pipeline
 
-This script orchestrates the complete event processing workflow:
-1. Crawl websites for event information
-2. Extract events using Gemini AI
-3. Process responses and enrich with location data
-4. Export events to JSON files
-5. Upload exported JSON files to server
+Orchestrates the complete event processing workflow:
 
-Configuration:
-- FTP credentials should be set in .env file:
-  FTP_HOST, FTP_USER, FTP_PASSWORD, FTP_REMOTE_DIR (optional)
+1. Crawl - Query websites table, crawl due sites, store in crawl_results
+2. Extract - Use Gemini AI to extract structured event data
+3. Process - Parse responses, enrich with location data, store in crawl_events
+4. Merge - Deduplicate crawl_events into final events table
+5. Export - Generate JSON files from events table for website
+6. Upload - Push JSON files to FTP server
+
+Usage:
+    python run_pipeline.py
 """
 
 import asyncio
-import os
 import sys
+from datetime import datetime
 
-# Get the directory where this script is located
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+from crawl4ai import AsyncWebCrawler
 
-# Add the script directory to Python path for imports
-sys.path.insert(0, SCRIPT_DIR)
-
-# Import the main functions from each processing script
-import crawl_sites
-import extract_events
-import process_responses
-import export_events
-import upload_data
+import db
+import crawler
+import extractor
+import processor
+import merger
+import exporter
+import uploader
 
 
 async def run_pipeline():
-    """
-    Execute the complete event processing pipeline.
-
-    Orchestrates all 5 steps in sequence:
-    1. Crawl websites for event content
-    2. Extract events using Gemini AI
-    3. Process and enrich event data
-    4. Export to JSON files for website
-    5. Upload to server via FTP
-
-    Returns:
-        bool: True if all steps complete successfully, False otherwise
-    """
+    """Execute the complete event processing pipeline."""
     print(f"{'='*60}")
     print("EVENT PROCESSING PIPELINE")
     print(f"{'='*60}\n")
 
+    # Connect to database
+    connection = db.create_connection()
+    if not connection:
+        print("Failed to connect to database")
+        return False
+
+    cursor = connection.cursor()
+
     try:
-        # STEP 1: Crawl websites for raw content
+        # Check for incomplete crawl results first
         print(f"{'='*60}")
-        print("STEP 1: Crawling Websites")
+        print("STEP 0: Checking for Incomplete Crawl Results")
         print(f"{'='*60}")
-        await crawl_sites.main()
-        print("\n✓ Crawling completed\n")
 
-        # STEP 2: Extract structured event data using AI
-        print(f"{'='*60}")
-        print("STEP 2: Extracting Events with Gemini AI")
-        print(f"{'='*60}")
-        await extract_events.main()
-        print("\n✓ Event extraction completed\n")
+        incomplete_results = db.get_incomplete_crawl_results(cursor)
+        incomplete_crawled = [r for r in incomplete_results if r['status'] == 'crawled']
+        incomplete_extracted = [r for r in incomplete_results if r['status'] == 'extracted']
 
-        # STEP 3: Process responses and enrich with location data
-        print(f"{'='*60}")
-        print("STEP 3: Processing Responses")
-        print(f"{'='*60}")
-        process_responses.main()
-        print("\n✓ Response processing completed\n")
+        # Count retries vs incomplete
+        retry_crawled = [r for r in incomplete_crawled if r.get('original_status') == 'failed']
+        retry_extracted = [r for r in incomplete_extracted if r.get('original_status') == 'failed']
 
-        # STEP 4: Export events and locations to JSON
+        if incomplete_results:
+            print(f"Found {len(incomplete_results)} crawl result(s) to process:")
+            if incomplete_crawled:
+                retry_count = len(retry_crawled)
+                incomplete_count = len(incomplete_crawled) - retry_count
+                status_parts = []
+                if incomplete_count:
+                    status_parts.append(f"{incomplete_count} incomplete")
+                if retry_count:
+                    status_parts.append(f"{retry_count} failed retries")
+                print(f"  - {len(incomplete_crawled)} need extraction ({', '.join(status_parts)})")
+                for r in incomplete_crawled:
+                    suffix = " [retry]" if r.get('original_status') == 'failed' else ""
+                    print(f"      {r['name']} (run: {r['run_date']}){suffix}")
+            if incomplete_extracted:
+                retry_count = len(retry_extracted)
+                incomplete_count = len(incomplete_extracted) - retry_count
+                status_parts = []
+                if incomplete_count:
+                    status_parts.append(f"{incomplete_count} incomplete")
+                if retry_count:
+                    status_parts.append(f"{retry_count} failed retries")
+                print(f"  - {len(incomplete_extracted)} need processing ({', '.join(status_parts)})")
+                for r in incomplete_extracted:
+                    suffix = " [retry]" if r.get('original_status') == 'failed' else ""
+                    print(f"      {r['name']} (run: {r['run_date']}){suffix}")
+        else:
+            print("No incomplete crawl results found.")
+
+        # STEP 1: Get websites due for crawling
+        print(f"\n{'='*60}")
+        print("STEP 1: Finding Websites Due for Crawling")
         print(f"{'='*60}")
-        print("STEP 4: Exporting Events to JSON")
+
+        websites = db.get_websites_due_for_crawling(cursor)
+        print(f"Found {len(websites)} website(s) due for crawling")
+
+        # Check if there's any work to do
+        has_work = len(websites) > 0 or len(incomplete_results) > 0
+
+        if not has_work:
+            print("\nNo websites need crawling and no incomplete results to process.")
+            print("Pipeline completed (no work to do).")
+            return True
+
+        for w in websites:
+            print(f"  - {w['name']} ({len(w['urls'])} URL(s))")
+
+        # Create crawl run
+        run_date = datetime.now().date()
+        run_date_str = run_date.strftime('%Y%m%d')
+        crawl_run_id = db.get_or_create_crawl_run(cursor, connection, run_date)
+        print(f"\nCrawl run ID: {crawl_run_id} ({run_date_str})")
+
+        # STEP 2: Crawl websites
+        print(f"\n{'='*60}")
+        print("STEP 2: Crawling Websites")
         print(f"{'='*60}")
-        export_events.main()
+
+        browser_config = crawler.get_browser_config()
+
+        crawl_results = []
+        async with AsyncWebCrawler(config=browser_config) as web_crawler:
+            for website in websites:
+                result_id = await crawler.crawl_website(
+                    web_crawler, website, cursor, connection, crawl_run_id
+                )
+                if result_id:
+                    crawl_results.append((result_id, website))
+
+        print(f"\n✓ Crawled {len(crawl_results)} website(s)\n")
+
+        # STEP 3: Extract events using Gemini AI
+        print(f"{'='*60}")
+        print("STEP 3: Extracting Events with Gemini AI")
+        print(f"{'='*60}")
+
+        extracted_results = []
+
+        # Build list of all items to extract
+        extraction_queue = []
+
+        # Add incomplete 'crawled' results from previous runs
+        for r in incomplete_crawled:
+            extraction_queue.append({
+                'crawl_result_id': r['crawl_result_id'],
+                'name': r['name'],
+                'notes': r.get('notes', ''),
+                'run_date': r.get('run_date'),
+                'source': 'incomplete'
+            })
+
+        # Add newly crawled results
+        for crawl_result_id, website in crawl_results:
+            extraction_queue.append({
+                'crawl_result_id': crawl_result_id,
+                'name': website['name'],
+                'notes': website.get('notes', ''),
+                'run_date': None,
+                'source': 'new',
+                'website': website
+            })
+
+        if extraction_queue:
+            print(f"\n  Extracting events from {len(extraction_queue)} website(s) in parallel (batch size: 10)...")
+
+            # Process in batches of 10
+            batch_size = 10
+            for batch_start in range(0, len(extraction_queue), batch_size):
+                batch = extraction_queue[batch_start:batch_start + batch_size]
+                batch_num = (batch_start // batch_size) + 1
+                total_batches = (len(extraction_queue) + batch_size - 1) // batch_size
+
+                print(f"\n  Batch {batch_num}/{total_batches}: {', '.join(item['name'][:20] for item in batch)}")
+
+                # Create extraction tasks for this batch
+                async def extract_item(item):
+                    success = await extractor.extract_events(
+                        cursor, connection, item['crawl_result_id'],
+                        item['name'], item['notes']
+                    )
+                    return (item, success)
+
+                # Run batch in parallel
+                results = await asyncio.gather(*[extract_item(item) for item in batch])
+
+                # Collect successful results
+                for item, success in results:
+                    if success:
+                        if item['source'] == 'incomplete':
+                            extracted_results.append((item['crawl_result_id'], {
+                                'name': item['name'],
+                                'notes': item['notes'],
+                                'run_date': item['run_date']
+                            }))
+                        else:
+                            extracted_results.append((item['crawl_result_id'], item['website']))
+
+        print(f"\n✓ Extracted events from {len(extracted_results)} website(s)\n")
+
+        # STEP 4: Process responses
+        print(f"{'='*60}")
+        print("STEP 4: Processing Responses")
+        print(f"{'='*60}")
+
+        total_events = 0
+
+        # First, process incomplete 'extracted' results from previous runs
+        if incomplete_extracted:
+            print(f"\n  Processing {len(incomplete_extracted)} incomplete 'extracted' result(s)...")
+            for r in incomplete_extracted:
+                print(f"  Processing {r['name']} (from {r['run_date']})...")
+                # Use the run date from the original crawl
+                original_run_date_str = r['run_date'].strftime('%Y%m%d')
+                event_count = processor.process_events(
+                    cursor, connection, r['crawl_result_id'],
+                    r['name'], original_run_date_str
+                )
+                total_events += event_count
+                print(f"    - {event_count} events processed")
+
+        # Then process newly extracted results
+        for crawl_result_id, website in extracted_results:
+            print(f"  Processing {website['name']}...")
+            # Use the run date from the website dict if available (for resumed crawls)
+            website_run_date = website.get('run_date')
+            if website_run_date:
+                result_run_date_str = website_run_date.strftime('%Y%m%d')
+            else:
+                result_run_date_str = run_date_str
+            event_count = processor.process_events(
+                cursor, connection, crawl_result_id,
+                website['name'], result_run_date_str
+            )
+            total_events += event_count
+            print(f"    - {event_count} events processed")
+
+        print(f"\n✓ Processed {total_events} total events\n")
+
+        # Mark crawl run as completed
+        db.complete_crawl_run(cursor, connection, crawl_run_id)
+
+        # STEP 5: Merge crawl_events into final events table
+        print(f"{'='*60}")
+        print("STEP 5: Merging Crawl Events to Final Events Table")
+        print(f"{'='*60}")
+
+        new_events, merged_events = merger.merge_crawl_events(cursor, connection)
+        print(f"\n✓ Merged events ({new_events} new, {merged_events} merged)\n")
+
+        # STEP 6: Export to JSON from events table
+        print(f"{'='*60}")
+        print("STEP 6: Exporting Events to JSON")
+        print(f"{'='*60}")
+
+        print("  Exporting events from database to JSON...")
+        exporter.export_events(cursor)
+
         print("\n✓ Event export completed\n")
 
-        # STEP 5: Upload data files to server
+        # STEP 7: Upload data files
         print(f"{'='*60}")
-        print("STEP 5: Uploading Data")
+        print("STEP 7: Uploading Data")
         print(f"{'='*60}")
-        success = upload_data.main(use_tls=False)
+
+        success = uploader.upload(use_tls=False)
 
         if success:
             print("\n✓ Data upload completed\n")
@@ -93,6 +273,17 @@ async def run_pipeline():
         print(f"{'='*60}")
         print("PIPELINE COMPLETED SUCCESSFULLY")
         print(f"{'='*60}\n")
+
+        # Show summary
+        print("Summary:")
+        print(f"  - Websites crawled: {len(crawl_results)}")
+        if incomplete_crawled:
+            print(f"  - Resumed extractions: {len(incomplete_crawled)}")
+        if incomplete_extracted:
+            print(f"  - Resumed processing: {len(incomplete_extracted)}")
+        print(f"  - Events extracted: {len(extracted_results)}")
+        print(f"  - Total events processed: {total_events}")
+
         return True
 
     except KeyboardInterrupt:
@@ -103,11 +294,11 @@ async def run_pipeline():
         import traceback
         traceback.print_exc()
         return False
+    finally:
+        cursor.close()
+        connection.close()
 
 
 if __name__ == "__main__":
-    # Run the async pipeline
     success = asyncio.run(run_pipeline())
-
-    # Exit with appropriate code
     sys.exit(0 if success else 1)

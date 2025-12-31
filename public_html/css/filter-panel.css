@@ -40,6 +40,7 @@
 #logo-menu-wrapper {
     position: relative;
     flex-shrink: 0;
+    z-index: var(--z-panel-menu);
 }
 
 #logo-container {
@@ -399,14 +400,13 @@ span.flatpickr-weekday {
         top: 0;
         left: 0;
         width: calc(100vw - 0px);
-        border-radius: 4px;
+        border: 0px;
+        border-radius: 0px;
         height: auto;
         max-height: 40vh;
-        overflow-y: auto;
+        overflow: visible;
         margin: 0px;
         padding: 2px;
-        -ms-overflow-style: none;
-        scrollbar-width: none;
         display: flex;
         flex-direction: column;
         z-index: var(--z-panel);
@@ -415,6 +415,28 @@ span.flatpickr-weekday {
 
     #filter-panel.tags-collapsed {
         max-height: 20vh;
+    }
+
+    #logo-menu-wrapper {
+        position: static;
+    }
+
+    #logo-menu {
+        position: fixed;
+        top: auto;
+        left: 2px;
+        margin-top: 0;
+    }
+
+    #tags-wrapper {
+        overflow-y: auto;
+        max-height: calc(40vh - 80px);
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
+    #filter-panel.tags-collapsed #tags-wrapper {
+        max-height: calc(20vh - 80px);
     }
 
     #filter-panel.no-transition {
@@ -443,8 +465,7 @@ span.flatpickr-weekday {
     #date-picker,
     #geotag-search-input,
     #omni-search-input {
-        padding: 5px 5px 5px 28px;
-        font-size: 0.92em;
+        padding: 5px 5px 5px 32px;
     }
 
     .calendar-icon,

@@ -64,5 +64,5 @@ public_html/api/config.php
 scripts/id_rsa_sync
 *.pem
 
-# Crawled data
-event_data/
+# Database backups
+database/backups/

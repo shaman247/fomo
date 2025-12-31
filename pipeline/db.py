@@ -1,0 +1,354 @@
+"""
+Database operations for the event processing pipeline.
+
+Handles all database connections and CRUD operations for:
+- Crawl runs and results
+- Websites and their crawl status
+- Crawl events (raw extracted data)
+"""
+
+import os
+import sys
+
+try:
+    import mysql.connector
+    from mysql.connector import Error
+except ImportError:
+    print("Error: mysql-connector-python is required.")
+    print("Install it with: pip install mysql-connector-python")
+    sys.exit(1)
+
+
+# Database Configuration
+DB_CONFIG = {
+    'local': {
+        'host': 'localhost',
+        'database': 'fomo',
+        'user': 'root',
+        'password': ''
+    },
+    'production': {
+        'host': 'localhost',
+        'database': 'fomoowsq_fomo',
+        'user': 'fomoowsq_root',
+        'password': 'REDACTED_DB_PASSWORD'
+    }
+}
+
+
+def get_db_config():
+    """Get database config based on environment."""
+    env = os.environ.get('FOMO_ENV', 'local')
+    if env not in DB_CONFIG:
+        env = 'local'
+    return DB_CONFIG[env]
+
+
+def create_connection():
+    """Create database connection."""
+    config = get_db_config()
+    try:
+        return mysql.connector.connect(
+            host=config['host'],
+            database=config['database'],
+            user=config['user'],
+            password=config['password']
+        )
+    except Error as e:
+        print(f"Error connecting to database: {e}")
+        return None
+
+
+def get_websites_due_for_crawling(cursor):
+    """
+    Get websites that are due for crawling based on crawl_frequency.
+
+    Returns websites where:
+    - disabled = FALSE
+    - last_crawled_at is NULL, OR
+    - NOW() - last_crawled_at > crawl_frequency days
+    """
+    cursor.execute("""
+        SELECT w.id, w.name, w.crawl_frequency, w.selector, w.num_clicks,
+               w.keywords, w.max_pages, w.notes,
+               GROUP_CONCAT(wu.url ORDER BY wu.sort_order SEPARATOR '|||') as urls
+        FROM websites w
+        LEFT JOIN website_urls wu ON w.id = wu.website_id
+        WHERE w.disabled = FALSE
+          AND (w.last_crawled_at IS NULL
+               OR DATEDIFF(NOW(), w.last_crawled_at) >= COALESCE(w.crawl_frequency, 7))
+        GROUP BY w.id
+        HAVING urls IS NOT NULL
+        ORDER BY w.last_crawled_at ASC
+    """)
+
+    websites = []
+    for row in cursor.fetchall():
+        website = {
+            'id': row[0],
+            'name': row[1],
+            'crawl_frequency': row[2] or 7,
+            'selector': row[3],
+            'num_clicks': row[4] or 2,
+            'keywords': row[5],
+            'max_pages': row[6] or 30,
+            'notes': row[7],
+            'urls': row[8].split('|||') if row[8] else []
+        }
+        websites.append(website)
+
+    return websites
+
+
+def get_or_create_crawl_run(cursor, connection, run_date):
+    """Get or create a crawl run for the given date."""
+    cursor.execute("SELECT id FROM crawl_runs WHERE run_date = %s", (run_date,))
+    result = cursor.fetchone()
+    if result:
+        return result[0]
+
+    cursor.execute(
+        "INSERT INTO crawl_runs (run_date, status, started_at) VALUES (%s, 'running', NOW())",
+        (run_date,)
+    )
+    connection.commit()
+    return cursor.lastrowid
+
+
+def create_crawl_result(cursor, connection, crawl_run_id, website_id, filename):
+    """Create a new crawl result record."""
+    cursor.execute(
+        """INSERT INTO crawl_results (crawl_run_id, website_id, filename, status, created_at)
+           VALUES (%s, %s, %s, 'pending', NOW())
+           ON DUPLICATE KEY UPDATE status = 'pending'""",
+        (crawl_run_id, website_id, filename)
+    )
+    connection.commit()
+
+    cursor.execute(
+        "SELECT id FROM crawl_results WHERE crawl_run_id = %s AND filename = %s",
+        (crawl_run_id, filename)
+    )
+    return cursor.fetchone()[0]
+
+
+def update_crawl_result(cursor, connection, crawl_result_id, status, **kwargs):
+    """
+    Generic update function for crawl results.
+
+    Args:
+        cursor: Database cursor
+        connection: Database connection
+        crawl_result_id: ID of the crawl result to update
+        status: New status value
+        **kwargs: Additional fields to update (content, event_count, error_message)
+    """
+    updates = ["status = %s"]
+    params = [status]
+
+    # Map status to timestamp field
+    timestamp_map = {
+        'crawled': 'crawled_at',
+        'extracted': 'extracted_at',
+        'processed': 'processed_at'
+    }
+    if status in timestamp_map:
+        updates.append(f"{timestamp_map[status]} = NOW()")
+
+    # Handle optional fields
+    if 'content' in kwargs:
+        if status == 'crawled':
+            updates.append("crawled_content = %s")
+        elif status == 'extracted':
+            updates.append("extracted_content = %s")
+        params.append(kwargs['content'])
+
+    if 'event_count' in kwargs:
+        updates.append("event_count = %s")
+        params.append(kwargs['event_count'])
+
+    if 'error_message' in kwargs:
+        updates.append("error_message = %s")
+        error_msg = kwargs['error_message']
+        params.append(error_msg[:65535] if error_msg else None)
+
+    params.append(crawl_result_id)
+
+    cursor.execute(
+        f"UPDATE crawl_results SET {', '.join(updates)} WHERE id = %s",
+        tuple(params)
+    )
+    connection.commit()
+
+
+def update_crawl_result_crawled(cursor, connection, crawl_result_id, content):
+    """Update crawl result with crawled content."""
+    update_crawl_result(cursor, connection, crawl_result_id, 'crawled', content=content)
+
+
+def update_crawl_result_extracted(cursor, connection, crawl_result_id, content):
+    """Update crawl result with extracted content."""
+    update_crawl_result(cursor, connection, crawl_result_id, 'extracted', content=content)
+
+
+def update_crawl_result_processed(cursor, connection, crawl_result_id, event_count):
+    """Update crawl result as processed."""
+    update_crawl_result(cursor, connection, crawl_result_id, 'processed', event_count=event_count)
+
+
+def update_crawl_result_failed(cursor, connection, crawl_result_id, error_message):
+    """Update crawl result as failed."""
+    update_crawl_result(cursor, connection, crawl_result_id, 'failed', error_message=error_message)
+
+
+def update_website_last_crawled(cursor, connection, website_id):
+    """Update the last_crawled_at timestamp for a website."""
+    cursor.execute(
+        "UPDATE websites SET last_crawled_at = NOW() WHERE id = %s",
+        (website_id,)
+    )
+    connection.commit()
+
+
+def complete_crawl_run(cursor, connection, crawl_run_id):
+    """Mark a crawl run as completed."""
+    cursor.execute(
+        "UPDATE crawl_runs SET status = 'completed', completed_at = NOW() WHERE id = %s",
+        (crawl_run_id,)
+    )
+    connection.commit()
+
+
+def get_incomplete_crawl_results(cursor):
+    """
+    Get crawl results that need reprocessing.
+
+    Returns results that are:
+    - In 'crawled' status (need extraction)
+    - In 'extracted' status (need processing)
+    - In 'failed' status but have crawled_content (extraction failed, can retry)
+
+    Returns results from any crawl run, not just today's.
+    """
+    cursor.execute("""
+        SELECT cr.id, cr.status, cr.website_id, cr.crawl_run_id,
+               w.name, w.notes, crun.run_date,
+               CASE
+                   WHEN cr.status = 'failed' AND cr.crawled_content IS NOT NULL
+                        AND cr.extracted_content IS NULL THEN 'crawled'
+                   WHEN cr.status = 'failed' AND cr.extracted_content IS NOT NULL THEN 'extracted'
+                   ELSE cr.status
+               END as effective_status
+        FROM crawl_results cr
+        JOIN websites w ON cr.website_id = w.id
+        JOIN crawl_runs crun ON cr.crawl_run_id = crun.id
+        WHERE w.disabled = FALSE
+          AND (
+              cr.status IN ('crawled', 'extracted')
+              OR (cr.status = 'failed' AND cr.crawled_content IS NOT NULL)
+          )
+        ORDER BY cr.status, crun.run_date DESC
+    """)
+
+    results = []
+    for row in cursor.fetchall():
+        results.append({
+            'crawl_result_id': row[0],
+            'status': row[7],  # Use effective_status for processing
+            'original_status': row[1],
+            'website_id': row[2],
+            'crawl_run_id': row[3],
+            'name': row[4],
+            'notes': row[5],
+            'run_date': row[6]
+        })
+
+    return results
+
+
+def get_crawled_content(cursor, crawl_result_id):
+    """Get crawled content for a crawl result."""
+    cursor.execute(
+        "SELECT crawled_content FROM crawl_results WHERE id = %s",
+        (crawl_result_id,)
+    )
+    result = cursor.fetchone()
+    return result[0] if result else None
+
+
+def get_extracted_content(cursor, crawl_result_id):
+    """Get extracted content and website_id for a crawl result."""
+    cursor.execute(
+        "SELECT extracted_content, website_id FROM crawl_results WHERE id = %s",
+        (crawl_result_id,)
+    )
+    result = cursor.fetchone()
+    return (result[0], result[1]) if result else (None, None)
+
+
+def get_all_locations(cursor):
+    """
+    Get all locations with their alternate names for location matching.
+
+    Returns a list of dicts with: id, name, short_name, lat, lng, emoji, alternate_names
+    """
+    # Get all locations
+    cursor.execute("""
+        SELECT id, name, short_name, lat, lng, emoji
+        FROM locations
+        WHERE lat IS NOT NULL AND lng IS NOT NULL
+    """)
+
+    locations = {}
+    for row in cursor.fetchall():
+        locations[row[0]] = {
+            'id': row[0],
+            'name': row[1],
+            'short_name': row[2],
+            'lat': float(row[3]) if row[3] else None,
+            'lng': float(row[4]) if row[4] else None,
+            'emoji': row[5],
+            'alternate_names': []
+        }
+
+    # Get all alternate names
+    cursor.execute("""
+        SELECT location_id, alternate_name
+        FROM location_alternate_names
+    """)
+
+    for row in cursor.fetchall():
+        location_id = row[0]
+        if location_id in locations:
+            locations[location_id]['alternate_names'].append(row[1])
+
+    return list(locations.values())
+
+
+def get_tag_rules(cursor):
+    """
+    Get tag processing rules from the database.
+
+    Returns a dict with:
+    - 'rewrite': dict mapping pattern -> replacement
+    - 'exclude': list of patterns to filter out
+    - 'remove': list of patterns that indicate event should be skipped
+    """
+    rules = {'rewrite': {}, 'exclude': [], 'remove': []}
+
+    cursor.execute("""
+        SELECT rule_type, pattern, replacement
+        FROM tag_rules
+        ORDER BY rule_type, pattern
+    """)
+
+    for row in cursor.fetchall():
+        rule_type, pattern, replacement = row
+        if rule_type == 'rewrite':
+            rules['rewrite'][pattern] = replacement
+        elif rule_type == 'exclude':
+            rules['exclude'].append(pattern)
+        elif rule_type == 'remove':
+            rules['remove'].append(pattern)
+
+    return rules

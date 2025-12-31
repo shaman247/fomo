@@ -1,134 +1,157 @@
 # Event Processing Pipeline
 
-This directory contains scripts for processing event data through a complete pipeline.
+Scripts for crawling event websites, extracting structured data, and exporting to JSON.
 
 ## Pipeline Overview
 
-The `run_pipeline.py` script orchestrates the following steps in order:
+The `run_pipeline.py` script orchestrates the following steps:
 
-1. **Crawl Sites** (`crawl_sites.py`) - Crawls configured websites to collect event information
-2. **Extract Events** (`extract_events.py`) - Uses Gemini AI to extract structured event data from crawled content
-3. **Process Responses** (`process_responses.py`) - Enriches event data with location coordinates and additional metadata
-4. **Export Events** (`export_events.py`) - Deduplicates and exports events to JSON files
-5. **Upload Data** (`upload_data.py`) - Uploads the exported JSON files to a configured FTP server
+1. **Crawl** - Query `websites` table for sites due for crawling, store content in `crawl_results`
+2. **Extract** - Use Gemini AI to extract structured event data from crawled content
+3. **Process** - Parse markdown tables, enrich with location data, store in `crawl_events`
+4. **Merge** - Deduplicate crawl_events into final `events` table
+5. **Export** - Generate JSON files from events table for the website
+6. **Upload** - Push JSON files to FTP server
+
+## Module Structure
+
+```
+pipeline/
+├── run_pipeline.py      # Main orchestrator
+├── db.py                # Database connection and operations
+├── crawler.py           # Web crawling with Crawl4AI
+├── extractor.py         # Gemini AI event extraction
+├── processor.py         # Markdown parsing, text utilities, and enrichment
+├── merger.py            # Event deduplication
+├── exporter.py          # JSON export
+├── uploader.py          # FTP upload
+└── tests/
+    └── test_processor.py
+```
+
+## Database Schema
+
+```
+websites              - Sites to crawl
+crawl_runs            - Pipeline execution records
+crawl_results         - Crawled/extracted content per run
+crawl_events          - Raw extracted events
+crawl_event_occurrences
+crawl_event_tags
+
+events                - Final deduplicated events (source of truth)
+event_occurrences
+event_urls
+event_tags
+event_sources         - Links events to contributing crawl_events
+
+locations             - Venue database
+tags                  - Normalized tag names
+tag_rules             - Tag rewrite/exclude/remove rules
+```
 
 ## Setup
 
 ### Prerequisites
 
-- Python 3.8 or higher
-- Required Python packages (install with `pip install -r requirements.txt`):
+- Python 3.8+
+- MariaDB/MySQL
+- Required packages:
   - `crawl4ai`
   - `google-generativeai`
+  - `mysql-connector-python`
   - `python-dotenv`
   - `regex`
 
 ### Configuration
 
-Configure the following environment variables in `.env`:
+Create a `.env` file:
 
 ```env
-# Gemini AI API Key (required for event extraction)
-GEMINI_API_KEY="your-gemini-api-key"
+FOMO_ENV=local
 
-# FTP Configuration (required for uploading)
+# Gemini AI
+GEMINI_API_KEY="your-api-key"
+GEMINI_MODEL="gemini-3-flash-preview"
+GEMINI_TIMEOUT=120
+
+# FTP Upload
 FTP_HOST="your-ftp-server.com"
 FTP_USER="your-username"
 FTP_PASSWORD="your-password"
-FTP_REMOTE_DIR="data"  # Optional: remote directory path
+FTP_REMOTE_DIR="data"
 ```
+
+Database credentials are in `db.py` based on `FOMO_ENV`.
 
 ## Usage
 
-### Run the Complete Pipeline
-
-To run all steps in sequence and upload data:
+### Run Complete Pipeline
 
 ```bash
 python run_pipeline.py
 ```
 
-### Run Individual Steps
+### Run Individual Modules
 
-You can also run each script individually:
+```python
+import db
+import exporter
 
-```bash
-# Step 1: Crawl websites
-python crawl_sites.py
+connection = db.create_connection()
+cursor = connection.cursor()
 
-# Step 2: Extract events
-python extract_events.py
+# Export events to JSON
+exporter.export_events(cursor)
 
-# Step 3: Process responses
-python process_responses.py
-
-# Step 4: Export events
-python export_events.py
-
-# Step 5: Upload data
-python upload_data.py
+cursor.close()
+connection.close()
 ```
 
-## Directory Structure
+## Data Flow
 
 ```
-pipeline/
-├── run_pipeline.py          # Main pipeline orchestration script
-├── crawl_sites.py           # Website crawler
-├── extract_events.py        # AI-powered event extraction
-├── process_responses.py     # Data enrichment and processing
-├── export_events.py         # Event deduplication and export
-├── upload_data.py           # Data upload to server
-├── data/
-│   ├── websites.json        # Configuration for sites to crawl
-│   ├── locations.json       # Location database for enrichment
-│   └── tags.json           # Tag processing rules
-└── README.md               # This file
-
-../event_data/
-├── crawled/                # Raw crawled content (markdown)
-├── extracted/              # AI-extracted event tables (markdown)
-├── processed/              # Processed event data (JSON)
-└── archived/               # Archived old files
-
-../public_html/data/
-├── events.init.json        # Initial event set (NYC core area, 7 days)
-├── locations.init.json     # Locations for initial events
-├── events.full.json        # Full event set (all areas, 90 days)
-└── locations.full.json     # Locations for full events
+websites table
+     ↓
+[Crawl] → crawl_results.crawled_content
+     ↓
+[Extract] → crawl_results.extracted_content
+     ↓
+[Process] → crawl_events + occurrences + tags
+     ↓
+[Merge] → events + occurrences + urls + tags + sources
+     ↓
+[Export] → events.init.json, events.full.json
+     ↓
+[Upload] → FTP server
 ```
 
-## Data Upload Details
+## Deduplication
 
-The pipeline uploads the following files from `public_html/data/`:
-- `events*.json` (events.init.json, events.full.json)
-- `locations*.json` (locations.init.json, locations.full.json)
+Events are deduplicated by:
+- **Location**: Same lat/lng (rounded to 5 decimals)
+- **Date**: Same first occurrence start date
+- **Name**: Similar after normalization (punctuation/case removed)
 
-Note: Other files like `tags.json` are not uploaded as they change infrequently.
+Duplicates are merged: URLs combined, shorter name kept, sources tracked.
 
-### Upload Options
+## Output Files
 
-- **Standard FTP**: Default, uses plain FTP connection
-- **FTPS (FTP over TLS)**: To use encrypted connection, modify `run_pipeline.py` and set `use_tls=True` in the `upload_data.main()` call
+- `events.init.json` - Core NYC area, 7-day window
+- `events.full.json` - Extended area, 90-day window
+- `locations.init.json` - Locations for init events
+- `locations.full.json` - Locations for full events
 
 ## Troubleshooting
 
-### Data Upload Issues
+### Database Issues
+- Check MariaDB is running
+- Verify credentials in `db.py`
 
-- **Connection Refused**: Check that FTP_HOST is correct and the server is accessible
-- **Authentication Failed**: Verify FTP_USER and FTP_PASSWORD are correct
-- **Directory Not Found**: The script will attempt to create the remote directory if it doesn't exist
-- **Use FTPS**: If your server requires TLS/SSL, set `use_tls=True` in the upload function
+### Extraction Issues
+- Ensure `GEMINI_API_KEY` is set
+- Check API quota/limits
 
-### Pipeline Errors
-
-- **Missing API Key**: Ensure GEMINI_API_KEY is set in `.env`
-- **Import Errors**: Install required packages with `pip install -r requirements.txt`
-- **File Not Found**: Ensure the pipeline is run from the `pipeline` directory
-
-## Notes
-
-- The pipeline includes deduplication logic to prevent duplicate events
-- Events are filtered to only include those in the NYC area
-- Date filtering excludes past events and events more than 90 days in the future
-- Old crawled data is automatically archived before re-crawling
+### Upload Issues
+- Verify FTP credentials
+- Use `use_tls=True` if server requires SSL

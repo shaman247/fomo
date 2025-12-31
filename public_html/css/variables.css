@@ -90,20 +90,20 @@
  */
 :root[data-theme="light"] {
     /* Inverted backgrounds - light instead of dark */
-    --primary-bg: #f5f2eb;           /* Warm off-white */
-    --secondary-bg: #ebe7df;         /* Slightly darker warm gray */
-    --tertiary-bg: #d3cbbd;          /* Taupe for buttons/inputs */
-    --tertiary-hover-bg: #bbb4a5;    /* Darker taupe on hover */
+    --primary-bg: #f0f0f0;           /* Neutral light gray */
+    --secondary-bg: #e5e5e5;         /* Slightly darker gray */
+    --tertiary-bg: #cccccc;          /* Medium gray for buttons/inputs */
+    --tertiary-hover-bg: #b3b3b3;    /* Darker gray on hover */
 
     /* Inverted text - dark instead of light */
-    --primary-text: #201c18;         /* Near black for headings */
-    --secondary-text: #403c39;       /* Dark gray for body text */
+    --primary-text: #1a1a1a;         /* Near black for headings */
+    --secondary-text: #333;       /* Dark gray for body text */
 
-    --marker-label-color: #666;
-    --marker-label-hover-color: #333;
+    --marker-label-color: #333;
+    --marker-label-hover-color: #111;
 
     /* Map background matches theme */
-    --map-bg: #d4cfc0;               /* Light warm gray */
+    --map-bg: #c8c8c8;               /* Neutral gray */
 
     /* Adjusted accent colors for light background */
     --accent-color: #70a892;         /* Darker teal green */
@@ -112,7 +112,7 @@
     --secondary-accent-hover: #ca57d7;  /* Even darker on hover */
 
     /* Borders are lighter in light theme */
-    --border-color: #c0bfba;
+    --border-color: #b0b0b0;
 
     /* Tag colors adjusted for light theme */
     --tag-selected-text: black;      /* Dark text instead of white */
@@ -140,5 +140,13 @@
 @media (max-width: 768px) {
     html {
         font-size: 85%;
+    }
+}
+
+/* === Variable Font Support === */
+/* Override font-family to use InterVariable when variable fonts are supported */
+@supports (font-variation-settings: normal) {
+    :root {
+        --font-family: InterVariable, sans-serif;
     }
 }

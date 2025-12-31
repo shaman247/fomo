@@ -21,9 +21,9 @@
     /* Vertical gradient in desaturated blues - visible through transparent water */
     background: linear-gradient(
         to bottom,
-        #468297 0%,
-        #384f62 25%,
-        #1c2a38 100%
+        #5c7892 0%,
+        #2e3d4b 25%,
+        #232e38 100%
     );
     /* Prevent pointer events on the buffered (invisible) portions of the map */
     pointer-events: auto;
@@ -33,9 +33,9 @@
 :root[data-theme="light"] #map {
     background: linear-gradient(
         to bottom,
-        #c0dcec 0%,
-        #8ac6da 75%,
-        #6596b3 100%
+        #c6f1ff 0%,
+        #ace1f3 25%,
+        #8ec6d8 100%
     );
 }
 
@@ -82,12 +82,12 @@
     left: 100%;
     top: 50%;
     transform: translateY(-50%);
-    margin-left: -7px;
+    margin-left: -9px;
     padding: 0;
     background: none;
     color: var(--marker-label-color);
     font-size: 1.2em;
-    font-weight: 600;
+    font-weight: 550;
     white-space: nowrap;
     cursor: pointer;
     text-shadow:
@@ -118,8 +118,8 @@
 .custom-marker-icon.active .marker-label {
     opacity: 1 !important;
     pointer-events: auto !important;
-    font-weight: 600;
-    font-size: 1.44em;
+    font-weight: 650;
+    font-size: 1.38em;
     color: var(--marker-label-hover-color);
     text-shadow:
         -1px -1px 2px var(--primary-bg),
@@ -195,13 +195,13 @@
 }
 
 /* === Tile Buffer Compensation === */
-/* The map renders at 200% size with 50% offset for tile buffering.
+/* The map renders at 140% size with 20% offset for tile buffering.
    Controls need to be offset back into the visible viewport area. */
 .maplibregl-ctrl-top-right {
     /* Offset from the enlarged container edge into the visible viewport */
-    /* 50vw brings it to viewport edge, then 12px for standard MapLibre margin */
-    right: calc(50vw + 12px) !important;
-    top: calc(50vh + 12px) !important;
+    /* 20vw brings it to viewport edge, then 12px for standard MapLibre margin */
+    right: calc(20vw + 12px) !important;
+    top: calc(20vh + 12px) !important;
 }
 
 /* === Mobile Responsive Styles === */
@@ -217,11 +217,11 @@
     }
 
     .marker-emoji {
-        font-size: 29px;
+        font-size: 32px;
     }
 
     .marker-label {
-        font-size: 1.07em;
+        font-size: 1.1em;
     }
 
     .custom-marker-icon.hovered .marker-label,
