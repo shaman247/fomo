@@ -141,13 +141,38 @@ def export_events(cursor):
         else:
             full_events.append(event)
 
-    # Load source locations for location files
-    source_locations_filename = os.path.join(SCRIPT_DIR, 'data', 'locations.json')
-    try:
-        with open(source_locations_filename, 'r', encoding='utf-8') as f:
-            all_locations = json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        all_locations = []
+    # Load locations from database
+    cursor.execute("""
+        SELECT id, name, lat, lng, emoji, alt_emoji, address
+        FROM locations
+        WHERE lat IS NOT NULL AND lng IS NOT NULL
+    """)
+    all_locations = []
+    for row in cursor.fetchall():
+        location_id = row[0]
+
+        # Get tags for this location
+        cursor.execute("""
+            SELECT t.name FROM location_tags lt
+            JOIN tags t ON lt.tag_id = t.id
+            WHERE lt.location_id = %s
+        """, (location_id,))
+        tags = [r[0] for r in cursor.fetchall()]
+
+        loc = {
+            'name': row[1],
+            'lat': float(row[2]),
+            'lng': float(row[3]),
+        }
+        if tags:
+            loc['tags'] = tags
+        if row[4]:
+            loc['emoji'] = row[4]
+        if row[5]:
+            loc['alt_emoji'] = row[5]
+        if row[6]:
+            loc['address'] = row[6]
+        all_locations.append(loc)
 
     init_locations = get_active_locations(init_events, all_locations)
     init_location_coords = set(

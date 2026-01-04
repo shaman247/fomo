@@ -63,18 +63,15 @@ const SectionRenderer = (() => {
 
     /**
      * Module state
+     * Note: sectionOrder and sectionViewStates are set via init() from FilterPanelUI
      */
     const state = {
         // DOM elements
         resultsContainerDOM: null,
 
-        // Section state
-        sectionOrder: ['locations', 'events', 'tags'],
-        sectionViewStates: {
-            locations: SECTION_VIEW_STATE.COLLAPSED,
-            events: SECTION_VIEW_STATE.COLLAPSED,
-            tags: SECTION_VIEW_STATE.DEFAULT
-        },
+        // Section state - set via init() based on device type
+        sectionOrder: [],
+        sectionViewStates: {},
 
         // Search state
         searchTerm: '',
@@ -498,13 +495,15 @@ const SectionRenderer = (() => {
      * Initializes the SectionRenderer module
      * @param {Object} config - Configuration object
      * @param {HTMLElement} config.resultsContainerDOM - Container for search results
-     * @param {Array<string>} config.sectionOrder - Reference to section order array (shared with parent for reordering)
+     * @param {Array<string>} config.sectionOrder - Section order array
+     * @param {Object} config.sectionViewStates - Initial view states for each section
      * @param {Function} config.createSearchResultButton - Callback to create result buttons
      * @param {Function} config.onSectionReorder - Callback when sections are reordered
      */
     function init(config) {
         state.resultsContainerDOM = config.resultsContainerDOM;
         state.sectionOrder = config.sectionOrder;
+        state.sectionViewStates = config.sectionViewStates;
         state.createSearchResultButton = config.createSearchResultButton;
         state.onSectionReorder = config.onSectionReorder;
     }

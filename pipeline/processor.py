@@ -1,7 +1,7 @@
 """
 Event Processing Module
 
-Parses extracted markdown tables, enriches with location data, and stores in database.
+Parses extracted JSON events, enriches with location data, and stores in database.
 
 Key features:
 - Sanitizes text (removes HTML, entities, normalizes whitespace)
@@ -9,11 +9,10 @@ Key features:
 - Creates short names for events (removes redundant location info)
 - Processes and normalizes tags (using rules from tag_rules table)
 - Handles emoji extraction and validation
-- Groups event occurrences
+- Supports both JSON (structured output) and legacy markdown table formats
 """
 
 import json
-import os
 import re
 from datetime import datetime, timedelta
 
@@ -21,8 +20,6 @@ import regex
 
 import db
 from crawler import create_safe_filename
-
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Blocked emoji characters that render poorly
 BLOCKED_EMOJI = {'⬜', '□', '◻', '⬛', '■', '▪', '▫', '◼', '◾', '◽', '◿', '▢', '▣', '▤', '▥', '▦', '▧', '▨', '▩'}
@@ -150,15 +147,20 @@ def create_short_name(name):
 # =============================================================================
 
 def process_tags(row_dict, tag_rules, extra_tags=None):
-    """Processes the 'hashtags' string into a list of 'tags'."""
+    """Processes the 'hashtags' field (string or list) into a list of 'tags'."""
     if 'hashtags' not in row_dict:
         return row_dict
 
-    hashtag_string = row_dict.pop('hashtags')
+    hashtags_field = row_dict.pop('hashtags')
     rewrite_rules = tag_rules.get('rewrite', {})
     exclude_list = set(tag_rules.get('exclude', []))
 
-    raw_tags = [tag.strip().rstrip(',') for tag in hashtag_string.split('#') if tag.strip()]
+    # Handle both list (JSON) and string (markdown) formats
+    if isinstance(hashtags_field, list):
+        raw_tags = [tag.strip() for tag in hashtags_field if tag.strip()]
+    else:
+        raw_tags = [tag.strip().rstrip(',') for tag in hashtags_field.split('#') if tag.strip()]
+
     processed_tags = []
     seen_tags = set()
 
@@ -351,6 +353,22 @@ def group_event_occurrences(rows, source_url=None):
         if occurrence not in grouped_events[group_key]['occurrences']:
             grouped_events[group_key]['occurrences'].append(occurrence)
 
+    # Post-process: detect and clear "run end dates"
+    # If multiple occurrences have the same end_date but different start_dates,
+    # the end_date is likely the show's run end date, not each occurrence's end
+    for event in grouped_events.values():
+        occurrences = event.get('occurrences', [])
+        if len(occurrences) > 3:
+            # Check if all occurrences have the same non-empty end_date
+            end_dates = [occ[2] for occ in occurrences if len(occ) > 2 and occ[2]]
+            start_dates = [occ[0] for occ in occurrences if occ[0]]
+            if end_dates and len(set(end_dates)) == 1 and len(set(start_dates)) > 3:
+                # Same end_date for many different start_dates = run end date
+                # Clear the end_date from all occurrences
+                for occ in occurrences:
+                    if len(occ) > 2:
+                        occ[2] = ''
+
     return list(grouped_events.values())
 
 
@@ -412,49 +430,163 @@ def _calculate_levenshtein_ratio(s1, s2):
     return (len(s1) + len(s2) - distance) / (len(s1) + len(s2))
 
 
+def _normalize_street_address(address_str):
+    """Normalize a street address for matching.
+
+    Handles common abbreviations: Ave/Avenue, St/Street, Blvd/Boulevard, etc.
+    E.g., "347 Davis Avenue" -> "347 davis ave"
+    """
+    if not address_str:
+        return None
+
+    addr = address_str.lower().strip()
+
+    # Common street type abbreviations (normalize to short form)
+    replacements = [
+        ('avenue', 'ave'),
+        ('street', 'st'),
+        ('boulevard', 'blvd'),
+        ('drive', 'dr'),
+        ('road', 'rd'),
+        ('place', 'pl'),
+        ('court', 'ct'),
+        ('lane', 'ln'),
+        ('parkway', 'pkwy'),
+        ('highway', 'hwy'),
+        ('east', 'e'),
+        ('west', 'w'),
+        ('north', 'n'),
+        ('south', 's'),
+    ]
+    for long_form, short_form in replacements:
+        # Replace as whole word (with word boundaries)
+        addr = re.sub(r'\b' + long_form + r'\b', short_form, addr)
+
+    return addr if len(addr) >= 5 else None
+
+
+def _extract_street_address(full_address):
+    """Extract just the street number and name from a full address.
+
+    E.g., "347 Davis Ave, Staten Island, NY 10310, USA" -> "347 davis ave"
+    """
+    if not full_address:
+        return None
+    # Take everything before the first comma (or the whole thing if no comma)
+    street_part = full_address.split(',')[0].strip()
+    if not street_part or len(street_part) < 5:
+        return None
+    return _normalize_street_address(street_part)
+
+
 def build_locations_map(cursor):
-    """Query locations table and build tiered maps for lat/lng enrichment."""
-    locations_map = {'names': {}, 'alternate_names': {}, 'short_names': {}}
+    """Query locations table and build tiered maps for lat/lng enrichment.
+
+    Returns a dict with:
+    - 'names': main location names -> info (for unique) or list (for ambiguous)
+    - 'alternate_names': global alternate names (not website-scoped)
+    - 'short_names': short names
+    - 'addresses': street addresses (number + street name portion)
+    - 'website_scoped': dict mapping website_id -> {normalized_name -> info}
+    """
+    locations_map = {
+        'names': {},
+        'alternate_names': {},
+        'short_names': {},
+        'addresses': {},
+        'website_scoped': {},
+    }
 
     locations_data = db.get_all_locations(cursor)
 
-    def add_if_valid(tier, key, value):
-        if key and len(key) >= 3:
-            tier[key] = value
+    def add_with_duplicates(tier, key, full_info):
+        """Add to tier, tracking multiple locations with same name."""
+        if not key or len(key) < 3:
+            return
+        if key not in tier:
+            tier[key] = full_info
+        elif isinstance(tier[key], list):
+            # Already have multiple candidates
+            tier[key].append(full_info)
+        else:
+            # Convert single to list of candidates
+            tier[key] = [tier[key], full_info]
 
     for loc in locations_data:
+        # Full info for location matching
+        full_info = {
+            'id': loc.get('id'),
+            'name': loc.get('name'),
+            'address': loc.get('address'),
+            'lat': loc.get('lat'),
+            'lng': loc.get('lng'),
+            'emoji': loc.get('emoji')
+        }
+        # Simple info for backward compatibility
         info = {'lat': loc.get('lat'), 'lng': loc.get('lng'), 'emoji': loc.get('emoji')}
 
         main_name = loc.get('name', '')
-        add_if_valid(locations_map['names'], main_name.lower(), info)
-        add_if_valid(locations_map['names'], _normalize_location_name(main_name), info)
+        normalized_main = _normalize_location_name(main_name)
 
+        # For names tier, track multiple locations with same name
+        add_with_duplicates(locations_map['names'], main_name.lower(), full_info)
+        if normalized_main != main_name.lower():
+            add_with_duplicates(locations_map['names'], normalized_main, full_info)
+
+        # Global alternate names (no website_id) - simple info only
         for alt_name in loc.get('alternate_names', []):
-            add_if_valid(locations_map['alternate_names'], alt_name.lower(), info)
-            add_if_valid(locations_map['alternate_names'], _normalize_location_name(alt_name), info)
+            if alt_name and len(alt_name) >= 3:
+                locations_map['alternate_names'][alt_name.lower()] = info
+                normalized_alt = _normalize_location_name(alt_name)
+                if normalized_alt and len(normalized_alt) >= 3:
+                    locations_map['alternate_names'][normalized_alt] = info
 
         short_name = loc.get('short_name', '')
-        if short_name:
-            add_if_valid(locations_map['short_names'], short_name.lower(), info)
-            add_if_valid(locations_map['short_names'], _normalize_location_name(short_name), info)
+        if short_name and len(short_name) >= 3:
+            locations_map['short_names'][short_name.lower()] = info
+            normalized_short = _normalize_location_name(short_name)
+            if normalized_short and len(normalized_short) >= 3:
+                locations_map['short_names'][normalized_short] = info
+
+        # Website-scoped alternate names
+        for website_id, scoped_names in loc.get('website_scoped_names', {}).items():
+            if website_id not in locations_map['website_scoped']:
+                locations_map['website_scoped'][website_id] = {}
+            for alt_name in scoped_names:
+                if alt_name and len(alt_name) >= 3:
+                    locations_map['website_scoped'][website_id][alt_name.lower()] = info
+                    normalized_alt = _normalize_location_name(alt_name)
+                    if normalized_alt and len(normalized_alt) >= 3:
+                        locations_map['website_scoped'][website_id][normalized_alt] = info
+
+        # Index by street address (e.g., "347 davis ave" from "347 Davis Ave, Staten Island, NY")
+        address = loc.get('address', '')
+        street_address = _extract_street_address(address)
+        if street_address:
+            locations_map['addresses'][street_address] = info
 
     return locations_map
 
 
-def build_websites_map():
-    """Loads website data and builds a map for URL-to-extra_tags mapping."""
-    websites_map = {}
-    with open(os.path.join(SCRIPT_DIR, 'data', 'websites.json'), 'r', encoding='utf-8') as f:
-        for website in json.load(f):
-            extra_tags = website.get('extra_tags', [])
-            if extra_tags:
-                for url in website.get('urls', []):
-                    websites_map[url.rstrip('/').lower()] = extra_tags
-    return websites_map
+def build_websites_map(cursor):
+    """Builds a map for URL-to-extra_tags mapping from the database."""
+    return db.get_websites_with_tags(cursor)
 
 
-def get_location_coords(location_name_raw, sublocation_name_raw, source_site_name, event_name_raw, locations_map):
-    """Finds the best matching latitude and longitude for an event."""
+def get_location_coords(location_name_raw, sublocation_name_raw, source_site_name, event_name_raw, locations_map, website_id=None):
+    """Finds the best matching latitude and longitude for an event.
+
+    Args:
+        location_name_raw: The location name from the event
+        sublocation_name_raw: The sublocation name from the event
+        source_site_name: The source website name
+        event_name_raw: The event name
+        locations_map: The locations map from build_locations_map()
+        website_id: Optional website ID for website-scoped alternate name matching
+
+    Returns:
+        Dict with lat, lng, emoji keys, or None if no match found.
+    """
     normalized_loc = _normalize_location_name(location_name_raw)
     normalized_subloc = _normalize_location_name(sublocation_name_raw)
     normalized_name = _normalize_location_name(event_name_raw)
@@ -468,19 +600,54 @@ def get_location_coords(location_name_raw, sublocation_name_raw, source_site_nam
     if len(normalized_name) > 3:
         search_keys.append(normalized_name)
 
-    # Priority 1-3: Exact matches in each tier
+    def make_result(info):
+        """Helper to construct result dict."""
+        return {
+            'lat': info.get('lat'),
+            'lng': info.get('lng'),
+            'emoji': info.get('emoji'),
+        }
+
+    def get_first(match):
+        """Get first item if list, otherwise return as-is."""
+        return match[0] if isinstance(match, list) else match
+
+    # Step 1: Website-scoped alternate names (highest priority, most specific)
+    if website_id and website_id in locations_map.get('website_scoped', {}):
+        website_tier = locations_map['website_scoped'][website_id]
+        for key in search_keys:
+            if key in website_tier:
+                return make_result(website_tier[key])
+
+    # Step 2: Exact matches in global tiers (names, alternate_names, short_names)
     for tier_name in ['names', 'alternate_names', 'short_names']:
         tier = locations_map.get(tier_name, {})
         for key in search_keys:
             if key in tier:
-                return tier[key]
+                return make_result(get_first(tier[key]))
 
-    # Priority 4: Fuzzy matching
+    # Step 3: Address matching (e.g., "347 Davis Ave" matches location at that address)
+    addresses_tier = locations_map.get('addresses', {})
+    for key in search_keys:
+        normalized_addr = _normalize_street_address(key)
+        if normalized_addr and normalized_addr in addresses_tier:
+            return make_result(addresses_tier[normalized_addr])
+
+    # Step 4: Prefix matching (e.g., "Devocíon" matches "Devocíon (Williamsburg)")
+    for key in search_keys:
+        if len(key) >= 5:
+            for loc_key, match in locations_map.get('names', {}).items():
+                if loc_key.startswith(key + ' ') or loc_key.startswith(key + '('):
+                    return make_result(get_first(match))
+
+    # Step 5: Fuzzy matching across all tiers
     all_tiers = [
         (0, locations_map.get('names', {})),
         (1, locations_map.get('alternate_names', {})),
         (2, locations_map.get('short_names', {}))
     ]
+    if website_id and website_id in locations_map.get('website_scoped', {}):
+        all_tiers.insert(0, (-1, locations_map['website_scoped'][website_id]))
 
     best_result, best_score, best_priority = None, -1, 999
 
@@ -511,22 +678,29 @@ def get_location_coords(location_name_raw, sublocation_name_raw, source_site_nam
                         )
 
                     if score >= 0.85 and (score > best_score or (score == best_score and priority < best_priority)):
-                        best_score, best_priority, best_result = score, priority, tier[key]
+                        best_score, best_priority = score, priority
+                        best_result = get_first(tier[key])
 
     if best_result:
-        return best_result
+        return make_result(best_result)
 
-    # Priority 5: Source site fallback
+    # Step 6: Source site fallback (match website name to location)
     normalized_site = _normalize_location_name(source_site_name)
-    best_score = -1
+    best_score, best_result = -1, None
 
     for priority, tier in all_tiers:
         for key in tier:
+            match = tier[key]
+            if isinstance(match, list):
+                continue
             score = _calculate_levenshtein_ratio(normalized_site, _normalize_location_name(key))
             if score >= 0.85 and (score > best_score or (score == best_score and priority < best_priority)):
-                best_score, best_priority, best_result = score, priority, tier[key]
+                best_score, best_priority, best_result = score, priority, match
 
-    return best_result
+    if best_result:
+        return make_result(best_result)
+
+    return None
 
 
 # =============================================================================
@@ -543,52 +717,59 @@ def extract_url_from_content(content):
 
 
 # =============================================================================
-# Main Processing Function
+# Parsing Functions
 # =============================================================================
 
-def process_events(cursor, connection, crawl_result_id, website_name, run_date_str):
-    """
-    Process extracted events and store in crawl_events table.
+def _parse_json_events(extracted_content):
+    """Parse JSON structured output into list of row dicts with occurrences expanded."""
+    try:
+        data = json.loads(extracted_content)
+        events = data.get('events', [])
+    except json.JSONDecodeError:
+        return None  # Not valid JSON, try markdown fallback
 
-    Returns:
-        Number of events processed
-    """
-    extracted_content, website_id = db.get_extracted_content(cursor, crawl_result_id)
-    if not extracted_content:
-        print("    - No extracted content found")
-        return 0
+    rows = []
+    for event in events:
+        # Each occurrence becomes a separate row (matching legacy behavior)
+        occurrences = event.get('occurrences', [])
+        if not occurrences:
+            continue
 
-    crawled_content = db.get_crawled_content(cursor, crawl_result_id)
-    source_url, _ = extract_url_from_content(crawled_content) if crawled_content else (None, None)
+        for occ in occurrences:
+            row = {
+                'name': event.get('name', ''),
+                'location': event.get('location', ''),
+                'sublocation': event.get('sublocation') or '',
+                'start_date': occ.get('start_date', ''),
+                'start_time': occ.get('start_time') or '',
+                'end_date': occ.get('end_date') or '',
+                'end_time': occ.get('end_time') or '',
+                'description': event.get('description', ''),
+                'url': event.get('url') or '',
+                'hashtags': event.get('hashtags', []),  # Keep as list
+                'emoji': event.get('emoji', ''),
+            }
+            rows.append(row)
 
-    locations_map = build_locations_map(cursor)
-    websites_map = build_websites_map()
+    return rows
 
-    safe_filename = create_safe_filename(website_name)
 
-    # Parse markdown table
+def _parse_markdown_table(extracted_content):
+    """Parse legacy markdown table format into list of row dicts."""
     lines = extracted_content.strip().split('\n')
     expected_headers = ['name', 'location', 'sublocation', 'start_date', 'start_time',
                         'end_date', 'end_time', 'description', 'url', 'hashtags', 'emoji']
 
     if len(lines) < 2:
-        db.update_crawl_result_processed(cursor, connection, crawl_result_id, 0)
-        return 0
+        return []
 
     headers = [h.strip() for h in lines[0].strip().strip('|').split('|')]
     if headers != expected_headers:
         headers = expected_headers
 
-    current_date = datetime.now().date()
-    future_limit_date = (datetime.now() + timedelta(days=90)).date()
-
-    # Get tag rules from database
-    tag_rules = db.get_tag_rules(cursor)
-
-    parsed_rows = []
-
+    rows = []
     for line in lines[2:]:
-        if not line.strip() or line.strip().startswith('|---'):
+        if not line.strip() or line.strip().startswith('|---') or line.strip().startswith('| :---'):
             continue
 
         values = [v.strip() for v in re.split(r'\s*\|\s*', line.strip().strip('|'))]
@@ -606,7 +787,56 @@ def process_events(cursor, connection, crawl_result_id, website_name, run_date_s
                 continue
 
         row_dict = dict(zip(headers, values))
+        rows.append(row_dict)
 
+    return rows
+
+
+# =============================================================================
+# Main Processing Function
+# =============================================================================
+
+def process_events(cursor, connection, crawl_result_id, website_name, run_date_str):
+    """
+    Process extracted events and store in crawl_events table.
+
+    Supports both JSON (structured output) and legacy markdown table formats.
+
+    Returns:
+        Number of events processed
+    """
+    extracted_content, website_id = db.get_extracted_content(cursor, crawl_result_id)
+    if not extracted_content:
+        print("    - No extracted content found")
+        return 0
+
+    crawled_content = db.get_crawled_content(cursor, crawl_result_id)
+    source_url, _ = extract_url_from_content(crawled_content) if crawled_content else (None, None)
+
+    locations_map = build_locations_map(cursor)
+    websites_map = build_websites_map(cursor)
+
+    safe_filename = create_safe_filename(website_name)
+
+    # Try JSON first, fall back to markdown
+    parsed_rows = _parse_json_events(extracted_content)
+    if parsed_rows is None:
+        # Fallback to markdown parsing
+        parsed_rows = _parse_markdown_table(extracted_content)
+
+    if not parsed_rows:
+        db.update_crawl_result_processed(cursor, connection, crawl_result_id, 0)
+        return 0
+
+    current_date = datetime.now().date()
+    future_limit_date = (datetime.now() + timedelta(days=90)).date()
+
+    # Get tag rules from database
+    tag_rules = db.get_tag_rules(cursor)
+
+    processed_rows = []
+
+    for row_dict in parsed_rows:
         # Sanitize fields
         for field in ['name', 'description', 'location', 'sublocation']:
             if field in row_dict:
@@ -638,7 +868,8 @@ def process_events(cursor, connection, crawl_result_id, website_name, run_date_s
             processed_row.get('sublocation', '').strip(),
             safe_filename.replace('_', ' ').lower(),
             processed_row.get('name', '').strip(),
-            locations_map
+            locations_map,
+            website_id=website_id
         )
 
         if location_info:
@@ -652,10 +883,10 @@ def process_events(cursor, connection, crawl_result_id, website_name, run_date_s
         elif location_info and location_info.get('emoji'):
             processed_row['emoji'] = location_info['emoji']
 
-        parsed_rows.append(processed_row)
+        processed_rows.append(processed_row)
 
     # Group occurrences and create short names
-    events = group_event_occurrences(parsed_rows, source_url)
+    events = group_event_occurrences(processed_rows, source_url)
     for event in events:
         if 'name' in event:
             event['short_name'] = create_short_name(event['name'])

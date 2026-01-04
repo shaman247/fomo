@@ -227,6 +227,20 @@
     text-decoration: underline;
 }
 
+#welcome-modal .modal-body a.external-link {
+    text-decoration: none;
+}
+
+#welcome-modal .modal-body a.external-link:hover {
+    text-decoration: none;
+}
+
+#welcome-modal .modal-body a.external-link svg {
+    width: 1.1em;
+    height: 1.1em;
+    vertical-align: -0.15em;
+}
+
 /* === Feedback Modal Styles === */
 #feedback-modal .modal-body {
     display: flex;

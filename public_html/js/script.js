@@ -289,7 +289,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     this.handleLocationToggle(enabled);
                 }
             });
-            ModalManager.initWelcomeModal();
+            // Note: Welcome modal is initialized earlier in init() so it can be closed during loading
             FeedbackManager.init();
         },
 
@@ -376,14 +376,25 @@ document.addEventListener('DOMContentLoaded', () => {
             // Parse URL parameters
             const urlParams = this._parseAndCleanUrlParams();
 
+            // Initialize welcome modal early so it can be closed during loading
+            ModalManager.initWelcomeModal();
+
             // Show welcome modal for first-time visitors
             ModalManager.showWelcomeModalIfFirstVisit();
+
+            // Yield to allow modal event handlers to be registered before heavy work
+            await new Promise(resolve => setTimeout(resolve, 0));
 
             // --- Phase 1: Load Initial Data ---
             try {
                 await this._loadInitialData();
                 await this._initializeModules();
                 this._setupUIComponents(urlParams);
+
+                // Wait for map tiles to load before showing markers
+                // This prevents markers from appearing over a blank/ocean background
+                await this.state.mapLoadPromise;
+
                 this.filterAndDisplayEvents();
                 this._showMainUI();
 
@@ -684,12 +695,22 @@ document.addEventListener('DOMContentLoaded', () => {
             this.state.debugContainer.style.zIndex = '1000';
             mapContainer.appendChild(this.state.debugContainer);
 
-            // Wait for map to load before adjusting view
-            this.state.map.on('load', () => {
-                // Adjust the initial view so the visible center (accounting for filter panel)
-                // ends up at the desired initial view coordinates (from URL params or default)
-                const desiredVisibleCenter = { lat: initialView[0], lng: initialView[1] };
-                ViewportManager.adjustMapToVisibleCenter(this.state.map, desiredVisibleCenter, false);
+            // Create a promise that resolves when map tiles are loaded
+            this.state.mapLoadPromise = new Promise((resolve) => {
+                this.state.map.on('load', () => {
+                    // Adjust the initial view so the visible center (accounting for filter panel)
+                    // ends up at the desired initial view coordinates (from URL params or default)
+                    const desiredVisibleCenter = { lat: initialView[0], lng: initialView[1] };
+                    ViewportManager.adjustMapToVisibleCenter(this.state.map, desiredVisibleCenter, false);
+
+                    // Fade in the map container
+                    const mapContainerEl = document.getElementById('map-container');
+                    if (mapContainerEl) {
+                        mapContainerEl.classList.add('map-loaded');
+                    }
+
+                    resolve();
+                });
             });
 
             // Handle popup open events (custom event fired by MapManager)

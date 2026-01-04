@@ -101,25 +101,18 @@ function formatBytes($bytes) {
     return round($bytes / 1048576, 1) . ' MB';
 }
 
-$daysAgo = $website['last_crawled_at']
-    ? (new DateTime($website['last_crawled_at']))->diff(new DateTime())->days
-    : null;
 ?>
 
 <div class="detail-section">
     <h3>Configuration</h3>
     <dl class="detail-grid">
         <dt>ID</dt><dd><?= $website['id'] ?></dd>
-        <dt>Frequency</dt><dd><?= $website['crawl_frequency'] ?: 7 ?> days</dd>
+        <?php if ($website['base_url']): ?>
+        <dt>Website</dt><dd><a href="<?= h($website['base_url']) ?>" target="_blank" style="color:var(--accent-color);text-decoration:none"><?= h($website['base_url']) ?></a></dd>
+        <?php endif; ?>
+        <dt>Frequency</dt><dd><?= $website['crawl_frequency'] ? $website['crawl_frequency'] . ' days' : 'Default' ?></dd>
         <dt>Last Crawl</dt>
-        <dd>
-            <?php if ($daysAgo !== null): ?>
-                <?= $daysAgo === 0 ? 'Today' : ($daysAgo === 1 ? 'Yesterday' : $daysAgo . ' days ago') ?>
-                <span style="color:var(--secondary-text)">(<?= date('M j, Y', strtotime($website['last_crawled_at'])) ?>)</span>
-            <?php else: ?>
-                Never
-            <?php endif; ?>
-        </dd>
+        <dd><?= $website['last_crawled_at'] ? date('M j, Y', strtotime($website['last_crawled_at'])) : 'Never' ?></dd>
         <dt>Disabled</dt><dd><?= $website['disabled'] ? 'Yes' : 'No' ?></dd>
         <?php if ($website['selector']): ?>
         <dt>Selector</dt><dd><code class="config-value"><?= h($website['selector']) ?></code></dd>
@@ -148,10 +141,10 @@ $daysAgo = $website['last_crawled_at']
 <?php if (!empty($locations)): ?>
 <div class="detail-section">
     <h3>Locations (<?= count($locations) ?>)</h3>
-    <ul class="url-list">
+    <ul class="item-list">
         <?php foreach ($locations as $loc): ?>
         <li>
-            <?= h($loc['name']) ?>
+            <a href="javascript:void(0)" onclick="openDetail('locations', <?= $loc['id'] ?>, '<?= h(addslashes($loc['name'])) ?>')"><?= h($loc['name']) ?></a>
             <?php if ($loc['lat'] && $loc['lng']): ?>
             <span style="color:var(--secondary-text);font-size:11px">(<?= round($loc['lat'], 4) ?>, <?= round($loc['lng'], 4) ?>)</span>
             <?php endif; ?>

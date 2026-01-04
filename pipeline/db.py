@@ -290,11 +290,13 @@ def get_all_locations(cursor):
     """
     Get all locations with their alternate names for location matching.
 
-    Returns a list of dicts with: id, name, short_name, lat, lng, emoji, alternate_names
+    Returns a list of dicts with: id, name, short_name, address, lat, lng, emoji, alternate_names, website_scoped_names
+    - alternate_names: list of global alternate names (no website_id)
+    - website_scoped_names: dict mapping website_id -> list of alternate names
     """
     # Get all locations
     cursor.execute("""
-        SELECT id, name, short_name, lat, lng, emoji
+        SELECT id, name, short_name, address, lat, lng, emoji
         FROM locations
         WHERE lat IS NOT NULL AND lng IS NOT NULL
     """)
@@ -305,22 +307,33 @@ def get_all_locations(cursor):
             'id': row[0],
             'name': row[1],
             'short_name': row[2],
-            'lat': float(row[3]) if row[3] else None,
-            'lng': float(row[4]) if row[4] else None,
-            'emoji': row[5],
-            'alternate_names': []
+            'address': row[3],
+            'lat': float(row[4]) if row[4] else None,
+            'lng': float(row[5]) if row[5] else None,
+            'emoji': row[6],
+            'alternate_names': [],
+            'website_scoped_names': {}
         }
 
-    # Get all alternate names
+    # Get all alternate names (both global and website-scoped)
     cursor.execute("""
-        SELECT location_id, alternate_name
+        SELECT location_id, alternate_name, website_id
         FROM location_alternate_names
     """)
 
     for row in cursor.fetchall():
         location_id = row[0]
+        alternate_name = row[1]
+        website_id = row[2]
         if location_id in locations:
-            locations[location_id]['alternate_names'].append(row[1])
+            if website_id is None:
+                # Global alternate name
+                locations[location_id]['alternate_names'].append(alternate_name)
+            else:
+                # Website-scoped alternate name
+                if website_id not in locations[location_id]['website_scoped_names']:
+                    locations[location_id]['website_scoped_names'][website_id] = []
+                locations[location_id]['website_scoped_names'][website_id].append(alternate_name)
 
     return list(locations.values())
 
@@ -352,3 +365,30 @@ def get_tag_rules(cursor):
             rules['remove'].append(pattern)
 
     return rules
+
+
+def get_websites_with_tags(cursor):
+    """
+    Get all websites with their URLs and extra tags.
+
+    Returns a dict mapping URL (lowercase, no trailing slash) to list of extra tags.
+    """
+    cursor.execute("""
+        SELECT wu.url, wt.tag
+        FROM website_urls wu
+        JOIN websites w ON wu.website_id = w.id
+        LEFT JOIN website_tags wt ON w.id = wt.website_id
+        WHERE w.disabled = FALSE
+        ORDER BY wu.website_id, wu.sort_order
+    """)
+
+    websites_map = {}
+    for row in cursor.fetchall():
+        url, tag = row
+        normalized_url = url.rstrip('/').lower()
+        if normalized_url not in websites_map:
+            websites_map[normalized_url] = []
+        if tag:
+            websites_map[normalized_url].append(tag)
+
+    return websites_map

@@ -149,7 +149,7 @@ function formatShortDate($date) {
     <h3>Location</h3>
     <dl class="detail-grid">
         <?php if ($event['loc_name']): ?>
-        <dt>Venue</dt><dd><?= $event['loc_emoji'] ?? '' ?> <?= h($event['loc_name']) ?></dd>
+        <dt>Venue</dt><dd><?= $event['loc_emoji'] ?? '' ?> <a href="javascript:void(0)" onclick="openDetail('locations', <?= $event['loc_id'] ?>, '<?= h(addslashes($event['loc_name'])) ?>')" class="event-link"><?= h($event['loc_name']) ?></a></dd>
         <?php if ($event['address']): ?>
         <dt>Address</dt><dd style="white-space:normal"><?= h($event['address']) ?></dd>
         <?php endif; ?>
@@ -169,9 +169,10 @@ function formatShortDate($date) {
     <h3>Tags (<?= count($tags) ?>)</h3>
     <div style="display:flex;flex-wrap:wrap;gap:4px">
         <?php foreach ($tags as $tag): ?>
-        <span style="background:var(--tertiary-bg);padding:2px 8px;border-radius:3px;font-size:11px">
+        <a href="javascript:void(0)" onclick="openDetail('tags', '<?= h(addslashes($tag)) ?>', '<?= h(addslashes($tag)) ?>')"
+           style="background:var(--tertiary-bg);padding:2px 8px;border-radius:6px;font-size:11px;text-decoration:none;color:inherit">
             <?= h($tag) ?>
-        </span>
+        </a>
         <?php endforeach; ?>
     </div>
 </div>
@@ -203,7 +204,7 @@ function formatShortDate($date) {
 <div class="detail-section">
     <h3>Primary Source</h3>
     <dl class="detail-grid">
-        <dt>Website</dt><dd><?= h($event['website_name']) ?></dd>
+        <dt>Website</dt><dd><a href="javascript:void(0)" onclick="openDetail('websites', <?= $event['website_id'] ?>, '<?= h(addslashes($event['website_name'])) ?>')" class="event-link"><?= h($event['website_name']) ?></a></dd>
     </dl>
 </div>
 <?php endif; ?>
@@ -216,7 +217,7 @@ function formatShortDate($date) {
         <li style="padding:6px 0;border-bottom:1px solid var(--border-color)">
             <div style="display:flex;align-items:center;gap:6px">
                 <?php if ($src['is_primary']): ?>
-                <span style="background:var(--accent-color);color:#000;padding:1px 5px;border-radius:3px;font-size:9px;font-weight:600">PRIMARY</span>
+                <span style="background:var(--accent-color);color:#000;padding:1px 5px;border-radius:6px;font-size:9px;font-weight:600">PRIMARY</span>
                 <?php endif; ?>
                 <span style="color:var(--secondary-text)">#<?= $src['id'] ?></span>
                 <?php if ($src['emoji']): ?>

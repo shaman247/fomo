@@ -34,12 +34,13 @@ Set the `FOMO_ENV` environment variable to switch environments:
 │  locations  │────<│ website_locations│>────│   websites   │
 └─────────────┘     └─────────────────┘     └──────────────┘
        │                                            │
-       │ 1:N                                   1:N  │
+       │ 1:N                                   1:N  │ 1:N
        ▼                                            ▼
 ┌─────────────────────┐                    ┌──────────────┐
 │location_alternate_  │                    │ website_urls │
-│      names          │                    └──────────────┘
-└─────────────────────┘
+│      names          │                    ├──────────────┤
+└─────────────────────┘                    │ website_tags │
+                                           └──────────────┘
        │
        │                    ┌──────────┐
        │                    │  events  │───────────────────┐
@@ -150,6 +151,17 @@ Many-to-many relationship between websites and locations.
 | `id` | INT UNSIGNED | Auto-increment primary key |
 | `website_id` | INT UNSIGNED | Foreign key to websites |
 | `location_id` | INT UNSIGNED | Foreign key to locations |
+
+### `website_tags`
+Extra tags to apply to all events from a website (e.g., Community Board tags).
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | INT UNSIGNED | Auto-increment primary key |
+| `website_id` | INT UNSIGNED | Foreign key to websites |
+| `tag` | VARCHAR(100) | Tag to apply to events |
+
+These tags are automatically added to every event extracted from the website during processing.
 
 ### `events`
 Individual events.
@@ -327,6 +339,69 @@ User feedback submitted via the website.
 | `page_url` | VARCHAR(500) | Page URL where feedback was submitted |
 | `created_at` | TIMESTAMP | Record creation time |
 
+### `users`
+Optional user accounts for tracking edits (authentication is optional).
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | INT UNSIGNED | Auto-increment primary key |
+| `email` | VARCHAR(255) | User email (unique) |
+| `display_name` | VARCHAR(100) | Display name |
+| `password_hash` | VARCHAR(255) | Bcrypt password hash |
+| `is_admin` | BOOLEAN | Admin flag |
+| `created_at` | TIMESTAMP | Account creation time |
+| `last_login_at` | TIMESTAMP | Last login time |
+
+### `edits`
+Immutable edit log for tracking all changes to core tables. Used for sync and audit.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | INT UNSIGNED | Auto-increment primary key |
+| `edit_uuid` | CHAR(36) | UUID for global uniqueness across databases |
+| `table_name` | VARCHAR(50) | Table that was edited |
+| `record_id` | INT UNSIGNED | ID of the edited record |
+| `field_name` | VARCHAR(100) | Field name (NULL for INSERT/DELETE) |
+| `action` | ENUM | INSERT, UPDATE, or DELETE |
+| `old_value` | TEXT | Previous value (NULL for INSERT) |
+| `new_value` | TEXT | New value (NULL for DELETE) |
+| `source` | ENUM | Origin: local, website, or crawl |
+| `user_id` | INT UNSIGNED | Foreign key to users (NULL if anonymous) |
+| `editor_ip` | VARCHAR(45) | IP address for anonymous edits |
+| `editor_user_agent` | VARCHAR(500) | Browser user agent |
+| `editor_info` | VARCHAR(500) | Additional context (e.g., "crawl_run:123") |
+| `created_at` | TIMESTAMP | When edit was created |
+| `applied_at` | TIMESTAMP | When edit was applied (NULL if pending) |
+
+### `sync_state`
+Tracks sync progress between local and production databases.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | INT UNSIGNED | Auto-increment primary key |
+| `source` | ENUM | Which database: local or website |
+| `last_synced_edit_id` | INT UNSIGNED | Last edit ID synced from this source |
+| `last_sync_at` | TIMESTAMP | When last sync occurred |
+
+### `conflicts`
+Pending conflicts for manual review during sync.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | INT UNSIGNED | Auto-increment primary key |
+| `local_edit_id` | INT UNSIGNED | Foreign key to local edit |
+| `website_edit_id` | INT UNSIGNED | Foreign key to website edit |
+| `table_name` | VARCHAR(50) | Table with conflict |
+| `record_id` | INT UNSIGNED | Record with conflict |
+| `field_name` | VARCHAR(100) | Field with conflict |
+| `local_value` | TEXT | Value from local database |
+| `website_value` | TEXT | Value from website |
+| `status` | ENUM | pending, resolved_local, resolved_website, resolved_merged |
+| `resolved_value` | TEXT | Final resolved value |
+| `resolved_by` | INT UNSIGNED | Foreign key to user who resolved |
+| `resolved_at` | TIMESTAMP | When conflict was resolved |
+| `created_at` | TIMESTAMP | When conflict was detected |
+
 ## Setup
 
 ### 1. Start XAMPP
@@ -441,4 +516,91 @@ LEFT JOIN event_tags et ON t.id = et.tag_id
 GROUP BY t.id, t.name
 HAVING location_count > 0 AND event_count > 0
 ORDER BY location_count + event_count DESC;
+
+-- Get recent edits
+SELECT e.table_name, e.record_id, e.action, e.field_name, e.source, e.created_at
+FROM edits e
+ORDER BY e.created_at DESC
+LIMIT 20;
+
+-- Get edit history for a specific record
+SELECT e.action, e.field_name, e.old_value, e.new_value, e.source, e.created_at
+FROM edits e
+WHERE e.table_name = 'locations' AND e.record_id = 123
+ORDER BY e.created_at DESC;
+
+-- Get pending sync conflicts
+SELECT c.table_name, c.record_id, c.field_name, c.local_value, c.website_value
+FROM conflicts c
+WHERE c.status = 'pending';
 ```
+
+## Bidirectional Sync
+
+The database supports bidirectional sync between local and production, with edit history and conflict resolution.
+
+### How It Works
+
+1. **Edit Logging**: All changes to core tables are logged in the `edits` table with a UUID
+2. **Sync Protocol**: The `sync_bidirectional.py` script exchanges edit logs between databases
+3. **Conflict Detection**: When the same field is edited in both databases, a conflict is created
+4. **Manual Resolution**: Conflicts are reviewed and resolved via the admin UI
+
+### Sync Commands
+
+```bash
+# Full bidirectional sync
+python scripts/sync_bidirectional.py
+
+# Preview what would be synced (dry run)
+python scripts/sync_bidirectional.py --dry-run
+
+# Only pull edits from production
+python scripts/sync_bidirectional.py --pull-only
+
+# Only push local edits to production
+python scripts/sync_bidirectional.py --push-only
+
+# Show sync status
+python scripts/sync_bidirectional.py --status
+```
+
+### Environment Variables
+
+Add to `.env` for sync:
+
+```
+PROD_API_URL=https://fomo.nyc/api
+SYNC_API_KEY=your-secret-key
+```
+
+### Edit Logger (Python)
+
+Use the edit logger to track changes in Python code:
+
+```python
+from database.edit_logger import EditLogger
+
+# Create logger
+logger = EditLogger(cursor, connection, source='local', editor_info='manual')
+
+# Log an insert
+logger.log_insert('locations', new_id, {'name': 'Central Park', 'lat': 40.785})
+
+# Log an update
+logger.log_update('locations', 123, 'name', 'Old Name', 'New Name')
+
+# Log a delete
+logger.log_delete('locations', 123, {'name': 'Central Park', ...})
+
+# Get edits since ID
+edits = logger.get_edits_since(100, source='website')
+```
+
+### Tracked Tables
+
+The following tables have their edits logged:
+- `locations`, `location_alternate_names`, `location_tags`
+- `websites`, `website_urls`, `website_locations`, `website_tags`
+- `events`, `event_occurrences`, `event_urls`, `event_tags`
+- `tags`, `tag_rules`

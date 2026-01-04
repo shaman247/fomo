@@ -5,24 +5,25 @@
  * Shared database connection for all admin pages.
  */
 
-$env = getenv('FOMO_ENV') ?: 'local';
+// Auto-detect environment by hostname
+$isLocal = in_array($_SERVER['HTTP_HOST'] ?? '', ['localhost', '127.0.0.1'])
+        || strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost:') === 0;
 
-$db_configs = [
-    'local' => [
+if ($isLocal) {
+    $config = [
         'host' => 'localhost',
         'database' => 'fomo',
         'user' => 'root',
         'password' => ''
-    ],
-    'production' => [
+    ];
+} else {
+    $config = [
         'host' => 'localhost',
         'database' => 'fomoowsq_fomo',
         'user' => 'fomoowsq_root',
         'password' => 'REDACTED_DB_PASSWORD'
-    ]
-];
-
-$config = $db_configs[$env] ?? $db_configs['local'];
+    ];
+}
 
 try {
     $pdo = new PDO(
@@ -42,7 +43,10 @@ function h($str) {
 
 function daysAgo($date) {
     if (!$date) return null;
-    return (new DateTime($date))->diff(new DateTime())->days;
+    // Compare calendar dates, not datetimes, to avoid timezone/time-of-day issues
+    $then = (new DateTime($date))->setTime(0, 0, 0);
+    $now = (new DateTime())->setTime(0, 0, 0);
+    return $then->diff($now)->days;
 }
 
 function formatBytes($bytes) {
@@ -75,20 +79,19 @@ function renderPagination($pagination, $shown_count) {
         return '<span class="muted">' . number_format($shown_count) . ' shown</span>';
     }
 
-    $params = $_GET;
     $html = '<div class="pagination">';
     $html .= '<span class="muted">' . number_format($shown_count) . ' of ' . number_format($pagination['total']) . '</span>';
 
     if ($pagination['has_prev']) {
-        $params['page'] = $pagination['current_page'] - 1;
-        $html .= ' <a href="?' . http_build_query($params) . '" class="page-link">&laquo; Prev</a>';
+        $prev_page = $pagination['current_page'] - 1;
+        $html .= ' <a href="javascript:void(0)" onclick="goToPage(' . $prev_page . ')" class="page-link">&laquo; Prev</a>';
     }
 
     $html .= ' <span class="page-info">Page ' . $pagination['current_page'] . ' of ' . $pagination['total_pages'] . '</span>';
 
     if ($pagination['has_next']) {
-        $params['page'] = $pagination['current_page'] + 1;
-        $html .= ' <a href="?' . http_build_query($params) . '" class="page-link">Next &raquo;</a>';
+        $next_page = $pagination['current_page'] + 1;
+        $html .= ' <a href="javascript:void(0)" onclick="goToPage(' . $next_page . ')" class="page-link">Next &raquo;</a>';
     }
 
     $html .= '</div>';

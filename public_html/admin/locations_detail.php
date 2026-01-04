@@ -44,17 +44,14 @@ $websites = $pdo->prepare("
 $websites->execute([$location_id]);
 $websites = $websites->fetchAll(PDO::FETCH_ASSOC);
 
-// Get recent events at this location
+// Get upcoming events at this location
 $events = $pdo->prepare("
-    SELECT ce.id, ce.name, ceo.start_date, ceo.start_time
-    FROM crawl_events ce
-    JOIN crawl_results cr ON ce.crawl_result_id = cr.id
-    JOIN website_locations wl ON cr.website_id = wl.website_id
-    LEFT JOIN crawl_event_occurrences ceo ON ce.id = ceo.crawl_event_id
-    WHERE wl.location_id = ?
-    AND cr.status = 'processed'
-    AND ceo.start_date >= CURDATE()
-    ORDER BY ceo.start_date, ceo.start_time
+    SELECT e.id, e.name, eo.start_date, eo.start_time
+    FROM events e
+    JOIN event_occurrences eo ON e.id = eo.event_id
+    WHERE e.location_id = ?
+    AND eo.start_date >= CURDATE()
+    ORDER BY eo.start_date, eo.start_time
     LIMIT 15
 ");
 $events->execute([$location_id]);
@@ -62,14 +59,12 @@ $events = $events->fetchAll(PDO::FETCH_ASSOC);
 
 // Get popular tags at this location
 $tags = $pdo->prepare("
-    SELECT cet.tag, COUNT(*) as count
-    FROM crawl_event_tags cet
-    JOIN crawl_events ce ON cet.crawl_event_id = ce.id
-    JOIN crawl_results cr ON ce.crawl_result_id = cr.id
-    JOIN website_locations wl ON cr.website_id = wl.website_id
-    WHERE wl.location_id = ?
-    AND cr.status = 'processed'
-    GROUP BY cet.tag
+    SELECT t.name as tag, COUNT(*) as count
+    FROM event_tags et
+    JOIN events e ON et.event_id = e.id
+    JOIN tags t ON et.tag_id = t.id
+    WHERE e.location_id = ?
+    GROUP BY t.id, t.name
     ORDER BY count DESC
     LIMIT 10
 ");
@@ -109,7 +104,7 @@ $tags = $tags->fetchAll(PDO::FETCH_ASSOC);
     <ul class="item-list">
         <?php foreach ($websites as $w): ?>
         <li>
-            <?= h($w['name']) ?>
+            <a href="javascript:void(0)" onclick="openDetail('websites', <?= $w['id'] ?>, '<?= h(addslashes($w['name'])) ?>')"><?= h($w['name']) ?></a>
             <?php if ($w['disabled']): ?>
                 <span style="color:var(--secondary-text);font-size:10px">(disabled)</span>
             <?php endif; ?>
@@ -127,9 +122,10 @@ $tags = $tags->fetchAll(PDO::FETCH_ASSOC);
     <h3>Popular Tags</h3>
     <div style="display:flex;flex-wrap:wrap;gap:4px">
         <?php foreach ($tags as $tag): ?>
-        <span style="background:var(--tertiary-bg);padding:2px 8px;border-radius:3px;font-size:11px">
+        <a href="javascript:void(0)" onclick="openDetail('tags', '<?= h(addslashes($tag['tag'])) ?>', '<?= h(addslashes($tag['tag'])) ?>')"
+           style="background:var(--tertiary-bg);padding:2px 8px;border-radius:3px;font-size:11px;text-decoration:none;color:inherit">
             <?= h($tag['tag']) ?> <span style="color:var(--secondary-text)">(<?= $tag['count'] ?>)</span>
-        </span>
+        </a>
         <?php endforeach; ?>
     </div>
 </div>
@@ -141,7 +137,7 @@ $tags = $tags->fetchAll(PDO::FETCH_ASSOC);
     <ul class="event-list">
         <?php foreach ($events as $e): ?>
         <li>
-            <div><?= h($e['name']) ?></div>
+            <div><a href="javascript:void(0)" onclick="openDetail('events', <?= $e['id'] ?>, '<?= h(addslashes($e['name'])) ?>')" class="event-link"><?= h($e['name']) ?></a></div>
             <div class="date">
                 <?= date('M j', strtotime($e['start_date'])) ?>
                 <?= $e['start_time'] ? date('g:ia', strtotime($e['start_time'])) : '' ?>

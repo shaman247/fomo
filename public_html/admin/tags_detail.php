@@ -18,16 +18,16 @@ $tag = $_GET['tag'];
 // Get tag statistics
 $stats = $pdo->prepare("
     SELECT
-        COUNT(DISTINCT cet.crawl_event_id) as event_count,
-        COUNT(DISTINCT cr.website_id) as website_count,
-        MIN(ceo.start_date) as first_event,
-        MAX(ceo.start_date) as last_event,
-        SUM(CASE WHEN ceo.start_date >= CURDATE() THEN 1 ELSE 0 END) as upcoming_count
-    FROM crawl_event_tags cet
-    JOIN crawl_events ce ON cet.crawl_event_id = ce.id
-    JOIN crawl_results cr ON ce.crawl_result_id = cr.id
-    LEFT JOIN crawl_event_occurrences ceo ON ce.id = ceo.crawl_event_id
-    WHERE cet.tag = ? AND cr.status = 'processed'
+        COUNT(DISTINCT et.event_id) as event_count,
+        COUNT(DISTINCT e.website_id) as website_count,
+        MIN(eo.start_date) as first_event,
+        MAX(eo.start_date) as last_event,
+        SUM(CASE WHEN eo.start_date >= CURDATE() THEN 1 ELSE 0 END) as upcoming_count
+    FROM tags t
+    JOIN event_tags et ON t.id = et.tag_id
+    JOIN events e ON et.event_id = e.id
+    LEFT JOIN event_occurrences eo ON e.id = eo.event_id
+    WHERE t.name = ?
 ");
 $stats->execute([$tag]);
 $stats = $stats->fetch(PDO::FETCH_ASSOC);
@@ -39,12 +39,12 @@ if (!$stats || $stats['event_count'] == 0) {
 
 // Get websites using this tag
 $websites = $pdo->prepare("
-    SELECT w.id, w.name, COUNT(DISTINCT ce.id) as event_count
+    SELECT w.id, w.name, COUNT(DISTINCT e.id) as event_count
     FROM websites w
-    JOIN crawl_results cr ON w.id = cr.website_id
-    JOIN crawl_events ce ON cr.id = ce.crawl_result_id
-    JOIN crawl_event_tags cet ON ce.id = cet.crawl_event_id
-    WHERE cet.tag = ? AND cr.status = 'processed'
+    JOIN events e ON w.id = e.website_id
+    JOIN event_tags et ON e.id = et.event_id
+    JOIN tags t ON et.tag_id = t.id
+    WHERE t.name = ?
     GROUP BY w.id, w.name
     ORDER BY event_count DESC
     LIMIT 10
@@ -54,13 +54,12 @@ $websites = $websites->fetchAll(PDO::FETCH_ASSOC);
 
 // Get locations using this tag
 $locations = $pdo->prepare("
-    SELECT l.id, l.name, COUNT(DISTINCT ce.id) as event_count
+    SELECT l.id, l.name, COUNT(DISTINCT e.id) as event_count
     FROM locations l
-    JOIN website_locations wl ON l.id = wl.location_id
-    JOIN crawl_results cr ON wl.website_id = cr.website_id
-    JOIN crawl_events ce ON cr.id = ce.crawl_result_id
-    JOIN crawl_event_tags cet ON ce.id = cet.crawl_event_id
-    WHERE cet.tag = ? AND cr.status = 'processed'
+    JOIN events e ON l.id = e.location_id
+    JOIN event_tags et ON e.id = et.event_id
+    JOIN tags t ON et.tag_id = t.id
+    WHERE t.name = ?
     GROUP BY l.id, l.name
     ORDER BY event_count DESC
     LIMIT 10
@@ -70,11 +69,13 @@ $locations = $locations->fetchAll(PDO::FETCH_ASSOC);
 
 // Get related tags (co-occurring tags)
 $related = $pdo->prepare("
-    SELECT cet2.tag, COUNT(*) as count
-    FROM crawl_event_tags cet1
-    JOIN crawl_event_tags cet2 ON cet1.crawl_event_id = cet2.crawl_event_id
-    WHERE cet1.tag = ? AND cet2.tag != ?
-    GROUP BY cet2.tag
+    SELECT t2.name as tag, COUNT(*) as count
+    FROM event_tags et1
+    JOIN tags t1 ON et1.tag_id = t1.id
+    JOIN event_tags et2 ON et1.event_id = et2.event_id
+    JOIN tags t2 ON et2.tag_id = t2.id
+    WHERE t1.name = ? AND t2.name != ?
+    GROUP BY t2.id, t2.name
     ORDER BY count DESC
     LIMIT 10
 ");
@@ -83,17 +84,15 @@ $related = $related->fetchAll(PDO::FETCH_ASSOC);
 
 // Get upcoming events with this tag
 $events = $pdo->prepare("
-    SELECT ce.id, ce.name, ceo.start_date, ceo.start_time, l.name as location_name
-    FROM crawl_events ce
-    JOIN crawl_results cr ON ce.crawl_result_id = cr.id
-    JOIN crawl_event_tags cet ON ce.id = cet.crawl_event_id
-    LEFT JOIN crawl_event_occurrences ceo ON ce.id = ceo.crawl_event_id
-    LEFT JOIN website_locations wl ON cr.website_id = wl.website_id
-    LEFT JOIN locations l ON wl.location_id = l.id
-    WHERE cet.tag = ?
-    AND cr.status = 'processed'
-    AND ceo.start_date >= CURDATE()
-    ORDER BY ceo.start_date, ceo.start_time
+    SELECT e.id, e.name, eo.start_date, eo.start_time, l.name as location_name
+    FROM events e
+    JOIN event_tags et ON e.id = et.event_id
+    JOIN tags t ON et.tag_id = t.id
+    LEFT JOIN event_occurrences eo ON e.id = eo.event_id
+    LEFT JOIN locations l ON e.location_id = l.id
+    WHERE t.name = ?
+    AND eo.start_date >= CURDATE()
+    ORDER BY eo.start_date, eo.start_time
     LIMIT 15
 ");
 $events->execute([$tag]);
@@ -117,7 +116,7 @@ $events = $events->fetchAll(PDO::FETCH_ASSOC);
     <ul class="item-list">
         <?php foreach ($websites as $w): ?>
         <li>
-            <?= h($w['name']) ?>
+            <a href="javascript:void(0)" onclick="openDetail('websites', <?= $w['id'] ?>, '<?= h(addslashes($w['name'])) ?>')"><?= h($w['name']) ?></a>
             <span style="color:var(--secondary-text);font-size:11px">(<?= $w['event_count'] ?> events)</span>
         </li>
         <?php endforeach; ?>
@@ -131,7 +130,7 @@ $events = $events->fetchAll(PDO::FETCH_ASSOC);
     <ul class="item-list">
         <?php foreach ($locations as $l): ?>
         <li>
-            <?= h($l['name']) ?>
+            <a href="javascript:void(0)" onclick="openDetail('locations', <?= $l['id'] ?>, '<?= h(addslashes($l['name'])) ?>')"><?= h($l['name']) ?></a>
             <span style="color:var(--secondary-text);font-size:11px">(<?= $l['event_count'] ?> events)</span>
         </li>
         <?php endforeach; ?>
@@ -144,9 +143,10 @@ $events = $events->fetchAll(PDO::FETCH_ASSOC);
     <h3>Related Tags</h3>
     <div style="display:flex;flex-wrap:wrap;gap:4px">
         <?php foreach ($related as $r): ?>
-        <span style="background:var(--tertiary-bg);padding:2px 8px;border-radius:3px;font-size:11px">
+        <a href="javascript:void(0)" onclick="openDetail('tags', '<?= h(addslashes($r['tag'])) ?>', '<?= h(addslashes($r['tag'])) ?>')"
+           style="background:var(--tertiary-bg);padding:2px 8px;border-radius:3px;font-size:11px;text-decoration:none;color:inherit">
             <?= h($r['tag']) ?> <span style="color:var(--secondary-text)">(<?= $r['count'] ?>)</span>
-        </span>
+        </a>
         <?php endforeach; ?>
     </div>
 </div>
@@ -158,7 +158,7 @@ $events = $events->fetchAll(PDO::FETCH_ASSOC);
     <ul class="event-list">
         <?php foreach ($events as $e): ?>
         <li>
-            <div><?= h($e['name']) ?></div>
+            <div><a href="javascript:void(0)" onclick="openDetail('events', <?= $e['id'] ?>, '<?= h(addslashes($e['name'])) ?>')" class="event-link"><?= h($e['name']) ?></a></div>
             <div class="date">
                 <?= date('M j', strtotime($e['start_date'])) ?>
                 <?= $e['start_time'] ? date('g:ia', strtotime($e['start_time'])) : '' ?>
