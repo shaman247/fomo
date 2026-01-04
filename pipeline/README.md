@@ -4,11 +4,11 @@ Scripts for crawling event websites, extracting structured data, and exporting t
 
 ## Pipeline Overview
 
-The `run_pipeline.py` script orchestrates the following steps:
+The `main.py` script orchestrates the following steps:
 
 1. **Crawl** - Query `websites` table for sites due for crawling, store content in `crawl_results`
 2. **Extract** - Use Gemini AI to extract structured event data from crawled content
-3. **Process** - Parse markdown tables, enrich with location data, store in `crawl_events`
+3. **Process** - Parse extracted events, enrich with location data, store in `crawl_events`
 4. **Merge** - Deduplicate crawl_events into final `events` table
 5. **Export** - Generate JSON files from events table for the website
 6. **Upload** - Push JSON files to FTP server
@@ -17,7 +17,7 @@ The `run_pipeline.py` script orchestrates the following steps:
 
 ```
 pipeline/
-├── run_pipeline.py      # Main orchestrator
+├── main.py              # Main orchestrator
 ├── db.py                # Database connection and operations
 ├── crawler.py           # Web crawling with Crawl4AI
 ├── extractor.py         # Gemini AI event extraction
@@ -89,7 +89,7 @@ Database credentials are in `db.py` based on `FOMO_ENV`.
 ### Run Complete Pipeline
 
 ```bash
-python run_pipeline.py
+python main.py
 ```
 
 ### Run Individual Modules

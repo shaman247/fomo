@@ -48,6 +48,7 @@ CREATE TABLE IF NOT EXISTS location_alternate_names (
 CREATE TABLE IF NOT EXISTS websites (
     id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
+    base_url VARCHAR(500) DEFAULT NULL COMMENT 'Main website URL (informational, not crawled)',
     crawl_frequency INT UNSIGNED DEFAULT NULL COMMENT 'Days between crawls',
     selector VARCHAR(500) DEFAULT NULL COMMENT 'CSS selector for click-to-load',
     num_clicks INT UNSIGNED DEFAULT NULL COMMENT 'Number of clicks for pagination',
@@ -86,6 +87,17 @@ CREATE TABLE IF NOT EXISTS website_locations (
     INDEX idx_location (location_id),
     FOREIGN KEY (website_id) REFERENCES websites(id) ON DELETE CASCADE,
     FOREIGN KEY (location_id) REFERENCES locations(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Website extra tags (tags to apply to all events from this website)
+CREATE TABLE IF NOT EXISTS website_tags (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    website_id INT UNSIGNED NOT NULL,
+    tag VARCHAR(100) NOT NULL,
+
+    UNIQUE KEY unique_website_tag (website_id, tag),
+    INDEX idx_website (website_id),
+    FOREIGN KEY (website_id) REFERENCES websites(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================================
@@ -317,4 +329,86 @@ CREATE TABLE IF NOT EXISTS feedback (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     INDEX idx_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================================
+-- USER ACCOUNTS (Optional authentication)
+-- ============================================================================
+
+-- Users table - optional accounts for tracking edits
+CREATE TABLE IF NOT EXISTS users (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL,
+    display_name VARCHAR(100) DEFAULT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    is_admin BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_login_at TIMESTAMP NULL,
+
+    UNIQUE KEY unique_email (email),
+    INDEX idx_email (email)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================================
+-- EDIT HISTORY & SYNC
+-- ============================================================================
+
+-- Immutable edit log - tracks all changes to core tables
+CREATE TABLE IF NOT EXISTS edits (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    edit_uuid CHAR(36) NOT NULL COMMENT 'UUID for global uniqueness across databases',
+    table_name VARCHAR(50) NOT NULL COMMENT 'Table that was edited',
+    record_id INT UNSIGNED NOT NULL COMMENT 'ID of the edited record',
+    field_name VARCHAR(100) DEFAULT NULL COMMENT 'NULL for INSERT/DELETE, field name for UPDATE',
+    action ENUM('INSERT', 'UPDATE', 'DELETE') NOT NULL,
+    old_value TEXT DEFAULT NULL COMMENT 'Previous value (NULL for INSERT)',
+    new_value TEXT DEFAULT NULL COMMENT 'New value (NULL for DELETE)',
+    source ENUM('local', 'website', 'crawl') NOT NULL COMMENT 'Where edit originated',
+    user_id INT UNSIGNED DEFAULT NULL COMMENT 'User who made the edit (NULL if anonymous)',
+    editor_ip VARCHAR(45) DEFAULT NULL COMMENT 'IP address for anonymous edits',
+    editor_user_agent VARCHAR(500) DEFAULT NULL COMMENT 'Browser user agent',
+    editor_info VARCHAR(500) DEFAULT NULL COMMENT 'Additional context (e.g., crawl_run:123)',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    applied_at TIMESTAMP NULL COMMENT 'When edit was applied (NULL if pending)',
+
+    UNIQUE KEY unique_edit_uuid (edit_uuid),
+    INDEX idx_table_record (table_name, record_id),
+    INDEX idx_source (source),
+    INDEX idx_created (created_at),
+    INDEX idx_user (user_id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Sync state - tracks sync progress between local and production
+CREATE TABLE IF NOT EXISTS sync_state (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    source ENUM('local', 'website') NOT NULL COMMENT 'Which database this tracks',
+    last_synced_edit_id INT UNSIGNED DEFAULT NULL COMMENT 'Last edit ID synced FROM this source',
+    last_sync_at TIMESTAMP NULL,
+
+    UNIQUE KEY unique_source (source)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Conflicts - pending conflicts for manual review
+CREATE TABLE IF NOT EXISTS conflicts (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    local_edit_id INT UNSIGNED NOT NULL,
+    website_edit_id INT UNSIGNED NOT NULL,
+    table_name VARCHAR(50) NOT NULL,
+    record_id INT UNSIGNED NOT NULL,
+    field_name VARCHAR(100) DEFAULT NULL,
+    local_value TEXT DEFAULT NULL,
+    website_value TEXT DEFAULT NULL,
+    status ENUM('pending', 'resolved_local', 'resolved_website', 'resolved_merged') DEFAULT 'pending',
+    resolved_value TEXT DEFAULT NULL,
+    resolved_by INT UNSIGNED DEFAULT NULL COMMENT 'User who resolved the conflict',
+    resolved_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    INDEX idx_status (status),
+    INDEX idx_table_record (table_name, record_id),
+    INDEX idx_created (created_at),
+    FOREIGN KEY (local_edit_id) REFERENCES edits(id) ON DELETE CASCADE,
+    FOREIGN KEY (website_edit_id) REFERENCES edits(id) ON DELETE CASCADE,
+    FOREIGN KEY (resolved_by) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

@@ -4,10 +4,11 @@ Web crawling module for the event processing pipeline.
 Uses Crawl4AI to crawl event websites and store content in the database.
 """
 
+from crawl4ai import CacheMode
 import db
 
 try:
-    from crawl4ai import AsyncWebCrawler, BrowserConfig, CrawlerRunConfig
+    from crawl4ai import BrowserConfig, CrawlerRunConfig
     from crawl4ai.markdown_generation_strategy import DefaultMarkdownGenerator
     from crawl4ai.content_filter_strategy import PruningContentFilter
     from crawl4ai.deep_crawling import BestFirstCrawlingStrategy
@@ -83,6 +84,10 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
 
         # Configure crawler
         crawler_config = CrawlerRunConfig(
+            word_count_threshold=10,
+            excluded_tags=['form', 'header'],
+            process_iframes=True,
+            cache_mode=CacheMode.ENABLED,
             js_code=js_code,
             remove_overlay_elements=True,
             delay_before_return_html=3,
@@ -139,4 +144,6 @@ def get_browser_config():
     return BrowserConfig(
         headless=False,
         java_script_enabled=True,
+        text_mode=True,
+        light_mode=True
     )

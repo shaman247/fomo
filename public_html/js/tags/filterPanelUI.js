@@ -46,9 +46,57 @@ const FilterPanelUI = (() => {
         // Provider objects
         colorProvider: null,  // { getTagColor, assignColorToTag, unassignColorFromTag, isImplicitlySelected }
 
-        // Section management (managed by SectionRenderer)
-        sectionOrder: ['locations', 'events', 'tags']
+        // Section management - determined at init time based on device type
+        sectionOrder: null,
+        sectionViewStates: null
     };
+
+    /**
+     * Determines if the current window is mobile-sized
+     * @returns {boolean} True if window width is at or below mobile breakpoint
+     */
+    function isMobileLayout() {
+        const breakpoint = (typeof Constants !== 'undefined' && Constants.UI && Constants.UI.MOBILE_BREAKPOINT)
+            ? Constants.UI.MOBILE_BREAKPOINT
+            : 768;
+        return window.innerWidth <= breakpoint;
+    }
+
+    /**
+     * Gets the default section order based on device type
+     * Desktop: locations, events, tags
+     * Mobile: tags, events, locations
+     * @returns {Array<string>} Section order array
+     */
+    function getDefaultSectionOrder() {
+        return isMobileLayout()
+            ? ['tags', 'events', 'locations']
+            : ['locations', 'events', 'tags'];
+    }
+
+    /**
+     * Gets the default section view states based on device type
+     * Desktop: tags expanded, others collapsed
+     * Mobile: all sections collapsed
+     * @returns {Object} Section view states
+     */
+    function getDefaultSectionViewStates() {
+        const COLLAPSED = 'collapsed';
+        const DEFAULT = 'default';
+
+        if (isMobileLayout()) {
+            return {
+                locations: COLLAPSED,
+                events: COLLAPSED,
+                tags: COLLAPSED
+            };
+        }
+        return {
+            locations: COLLAPSED,
+            events: COLLAPSED,
+            tags: DEFAULT
+        };
+    }
 
     /**
      * Provider functions from parent application
@@ -150,6 +198,12 @@ const FilterPanelUI = (() => {
             state.getSearchTerm = config.getSearchTerm;
         }
 
+        // Initialize section order and view states based on device type (only on first init)
+        if (!state.sectionOrder) {
+            state.sectionOrder = getDefaultSectionOrder();
+            state.sectionViewStates = getDefaultSectionViewStates();
+        }
+
         // Initialize tag states
         const TAG_STATE = TagStateManager.getTagStateConstants();
         state.allAvailableTags.forEach(tag => {
@@ -179,6 +233,7 @@ const FilterPanelUI = (() => {
         SectionRenderer.init({
             resultsContainerDOM: state.resultsContainerDOM,
             sectionOrder: state.sectionOrder,
+            sectionViewStates: state.sectionViewStates,
             createSearchResultButton: (result) => TagStateManager.createSearchResultButton(result, state.onSearchResultClick, state.debugMode),
             onSectionReorder: (newOrder) => {
                 state.sectionOrder = newOrder;

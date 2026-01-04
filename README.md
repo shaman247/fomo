@@ -20,35 +20,36 @@ It works by visiting the websites of parks, museums, music venues, etc., identif
 <details>
 <summary><strong><code>/pipeline/</code></strong> Python scripts for data processing pipeline</summary>
 
-- `crawl_sites.py` Crawls event websites and saves content to markdown
-- `extract_events.py` Uses Gemini AI to extract structured event data from crawled content
+- `main.py` Main entry point - orchestrates the complete workflow
+- `crawler.py` Crawls websites using Crawl4AI, stores content in database
+- `extractor.py` Uses Gemini AI to extract structured event data
   - Requires `GEMINI_API_KEY` environment variable (set in `.env` file)
-- `process_responses.py` Processes extracted events, enriches with location data, creates short names
-- `export_events.py` Deduplicates events and exports to public_html/data/ for the website
-- `upload_data.py` Uploads exported data files to server
-- `process_locations.py` Processes location data from raw format
-- `/pipeline/data/` Configuration and reference data
-  - `websites.json` List of websites to crawl with crawl settings
-  - `locations.json` Processed location data with coordinates and tags
-  - `tags.json` Tag rewriting rules and filters
+- `processor.py` Parses extracted data, enriches with location coordinates
+- `merger.py` Deduplicates events into final events table
+- `exporter.py` Generates JSON files for the website
+- `uploader.py` Uploads data files to FTP server
+- `db.py` Database operations (CRUD for crawl runs, results, events)
 </details>
 
 <details>
-<summary><strong><code>/event_data/</code></strong> Intermediate data generated during processing (not included in repository)</summary>
+<summary><strong><code>/database/</code></strong> Database schema and setup scripts</summary>
 
-- `/event_data/crawled/` Raw markdown content from websites (organized by date YYYYMMDD/)
-- `/event_data/extracted/` Structured event tables extracted by Gemini (organized by date)
-- `/event_data/processed/` Processed event JSON files with enriched data (organized by date)
-- `/event_data/archived/` Old versions of files moved during re-crawling
+- `schema.sql` Complete database schema
+- `setup.py` Creates empty database tables
+- `migrate_schema.py` Applies schema changes to existing database
+- `/database/backups/` Database backup files
 </details>
 
 ### Data Pipeline Flow
 
-1. **Crawl** (`crawl_sites.py`) → Websites → `event_data/crawled/YYYYMMDD/*.md`
-2. **Extract** (`extract_events.py`) → Crawled markdown → `event_data/extracted/YYYYMMDD/*.md` (structured tables)
-3. **Process** (`process_responses.py`) → Extracted tables → `event_data/processed/YYYYMMDD/*.json` (enriched events)
-4. **Export** (`export_events.py`) → Processed events → `public_html/data/*.json` (website data)
-5. **Upload** (`upload_data.py`) → Upload event and location data to FTP server
+All data flows through the database (`crawl_runs` → `crawl_results` → `crawl_events` → `events`):
+
+1. **Crawl** → Query `websites` table for due sites, crawl and store in `crawl_results.crawled_content`
+2. **Extract** → Use Gemini AI to extract structured tables, store in `crawl_results.extracted_content`
+3. **Process** → Parse tables, enrich with location data from `locations`, store in `crawl_events`
+4. **Merge** → Deduplicate `crawl_events` into final `events` table
+5. **Export** → Generate `public_html/data/*.json` from `events` table
+6. **Upload** → Push JSON files to FTP server
 
 ## How You Can Help
 
@@ -59,6 +60,40 @@ It works by visiting the websites of parks, museums, music venues, etc., identif
 - **🫱🏾‍🫲🏼 Stay in touch**
   - This website is in active development, so keep visiting for regular updates!
   - You can reach out by email or join the [Discord server](https://discord.gg/Xn6wHegjVv)
+
+## Database
+
+The project uses a MariaDB/MySQL database to store locations, websites, and crawl data.
+
+### Initial Setup
+
+New developers should restore from a database backup rather than starting with an empty database:
+
+```bash
+# 1. Create the database
+mysql -u root -e "CREATE DATABASE fomo CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
+
+# 2. Restore from backup
+mysql -u root fomo < database/backups/fomo_backup_YYYYMMDD.sql
+```
+
+### Creating Backups
+
+```bash
+# Windows (XAMPP)
+"C:/xampp/mysql/bin/mysqldump.exe" -u root fomo > database/backups/fomo_backup_YYYYMMDD.sql
+
+# Linux/Mac
+mysqldump -u root fomo > database/backups/fomo_backup_YYYYMMDD.sql
+```
+
+### Schema Updates
+
+If the schema has changed since your backup, run migrations:
+
+```bash
+python database/migrate_schema.py
+```
 
 ## Acknowledgements
 

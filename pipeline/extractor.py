@@ -1,14 +1,17 @@
 """
-Event extraction module using Gemini AI.
+Event extraction module using Gemini AI with Structured Outputs.
 
-Extracts structured event data from crawled website content.
+Extracts structured event data from crawled website content using JSON schema.
 """
 
 import asyncio
+import json
 import os
 from datetime import datetime
+from typing import Optional
 
 from dotenv import load_dotenv
+from pydantic import BaseModel, Field
 
 import db
 
@@ -17,7 +20,7 @@ load_dotenv()
 try:
     from google import genai
     GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
-    GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3-flash-preview")
+    GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash-preview-05-20")
     GEMINI_TIMEOUT = int(os.environ.get("GEMINI_TIMEOUT", "120"))
     if GEMINI_API_KEY:
         genai_client = genai.Client(api_key=GEMINI_API_KEY)
@@ -32,6 +35,61 @@ except ImportError:
     GEMINI_TIMEOUT = 120
 
 
+# =============================================================================
+# Pydantic Schema for Structured Output
+# =============================================================================
+
+class EventOccurrence(BaseModel):
+    """Schema for a single occurrence (date/time) of an event."""
+    start_date: str = Field(description="The date of this occurrence in YYYY-MM-DD format")
+    start_time: Optional[str] = Field(
+        default=None,
+        description="The start time (e.g., 4:00 PM)"
+    )
+    end_date: Optional[str] = Field(
+        default=None,
+        description="The end date if different from start_date, in YYYY-MM-DD format"
+    )
+    end_time: Optional[str] = Field(
+        default=None,
+        description="The end time (e.g., 7:00 PM)"
+    )
+
+
+class Event(BaseModel):
+    """Schema for a single event extracted from website content."""
+    name: str = Field(description="The name of the event")
+    location: str = Field(description="The name of the venue where the event is being held")
+    sublocation: Optional[str] = Field(
+        default=None,
+        description="Optional location within the venue (e.g., rooftop, 5th floor)"
+    )
+    occurrences: list[EventOccurrence] = Field(
+        description="List of date/time occurrences for this event. Include ALL specific dates if the event repeats."
+    )
+    description: str = Field(description="A 1-3 sentence description of the event")
+    url: Optional[str] = Field(
+        default=None,
+        description="URL for the specific event, if available"
+    )
+    hashtags: list[str] = Field(
+        description="4-7 CamelCase tags describing the event (e.g., Comedy, LatinJazz, Outdoor)"
+    )
+    emoji: str = Field(description="A single emoji that represents the event")
+
+
+class EventList(BaseModel):
+    """Schema for a list of events extracted from website content."""
+    events: list[Event] = Field(
+        default_factory=list,
+        description="List of upcoming events found in the content"
+    )
+
+
+# =============================================================================
+# Extraction Functions
+# =============================================================================
+
 def extract_url_from_content(content):
     """Extract URL from first line of content if present."""
     if content and content.startswith('http'):
@@ -43,38 +101,37 @@ def extract_url_from_content(content):
 
 def get_prompt(url, page_content, current_date_string, name, notes):
     """Generate the AI prompt for event extraction."""
-    note_section = f"Note: {notes}" if notes else ""
-    return f'''Today's date is {current_date_string}. We are assembling a database of upcoming events in New York City. To accomplish this, we are inspecting websites for details about upcoming events. Currently, we are looking at {name} ({url}). Based on the text content retrieved from the website {url}, please identify and list any upcoming events. If possible, include dates, times, locations, and descriptions (1-2 sentences) for each event. Format your output as a Markdown table with the following header:
+    note_section = f"\n\nNote: {notes}" if notes else ""
+    return f'''Today's date is {current_date_string}. We are assembling a database of upcoming events in New York City. Currently, we are inspecting {name} ({url}).
 
-  | name | location | sublocation | start_date | start_time | end_date | end_time | description | url | hashtags | emoji |
+Based on the website content below, extract all upcoming events. For each event, provide:
+- name: The event name
+- location: The venue name
+- sublocation: Optional location within the venue (rooftop, 5th floor, etc.)
+- occurrences: An array of date/time objects. IMPORTANT: For recurring events (e.g., "every Wednesday" or "Jan 11, 18, 25"), list EACH specific date as a separate occurrence within the next 3 months. Each occurrence has:
+  - start_date: Date in YYYY-MM-DD format
+  - start_time: Time like "4:00 PM" (optional)
+  - end_date: End date if different from start (optional)
+  - end_time: End time (optional)
+- description: 1-3 sentence description
+- url: Specific event URL if available
+- hashtags: 4-7 CamelCase tags (e.g., ["Comedy", "Music", "Outdoor", "LatinJazz"]). Include a mix of high-level and granular tags. Avoid location-specific or NYC-redundant tags.
+- emoji: A single emoji representing the event
 
-  Some pointers about these fields:
+Rules:
+- Only include events in the NYC area within the next 3 months
+- Ignore unrelated event sections ("Hot Events", "Similar events", etc.)
+- For recurring events, expand ALL individual dates into the occurrences array
+- If no events are found, return an empty events list{note_section}
 
-- "name" is the name of the event
-- "location" is the name of the venue where the event is being held
-- "sublocation" is optional and can be used to specify locations within the venue (e.g., rooftop, 5th floor, etc.)
-- "start_date" is the date of the event in YYYY-MM-DD format.
-- "start_time" is the time of the event (e.g., 4:00 PM)
-- "end_date" and "end_time" are optional
-- "description" should be 1-3 sentences.
-- "url" should be a url for the specific event, if available. Otherwise, use {url}.
-- "hashtags" are a set of 4-7 CamelCase tags to describe the event. Include a mix of high-level tags (e.g., #Comedy, #Music, #Outdoor) and more granular tags (e.g., #LatinJazz, #Ceramics, #Vegan). Avoid tags that reference a specific location or neighborhood, or that redundantly reference NYC (e.g., "#MusicNYC" should just be "#Music").
-- "emoji" is a single emoji that describes the event.
+Website content:
 
-Only include events that take place in the NYC area within the next 3 months. If the website content includes a section of unrelated events ("Hot Events", "Similar events", "Other events you may like", etc.), ignore those events.
-
-Output rows for any events that are present in the content below, which has been retrieved from the website. If no events were successfully retrieved, output an empty header. Only include events that take place in the NYC area. If an event has multiple dates or times, output a separate row for each instance.
-
-{note_section}
-
-Here is the content:
-
- {page_content}'''
+{page_content}'''
 
 
 async def extract_events(cursor, connection, crawl_result_id, website_name, notes=""):
     """
-    Extract events from crawled content using Gemini AI.
+    Extract events from crawled content using Gemini AI with structured outputs.
 
     Args:
         cursor: Database cursor
@@ -107,12 +164,16 @@ async def extract_events(cursor, connection, crawl_result_id, website_name, note
     try:
         prompt = get_prompt(url, content_to_process, current_date_string, website_name, notes)
 
-        # Call Gemini API with timeout
+        # Call Gemini API with structured output
         try:
             response = await asyncio.wait_for(
                 genai_client.aio.models.generate_content(
                     model=GEMINI_MODEL,
-                    contents=prompt
+                    contents=prompt,
+                    config={
+                        "response_mime_type": "application/json",
+                        "response_schema": EventList,
+                    }
                 ),
                 timeout=GEMINI_TIMEOUT
             )
@@ -123,12 +184,24 @@ async def extract_events(cursor, connection, crawl_result_id, website_name, note
 
         # Handle empty responses
         if not response_text or not response_text.strip():
-            response_text = '''| name | location | sublocation | start_date | start_time | end_date | end_time | description | url | hashtags | emoji |
-|---|---|---|---|---|---|---|---|---|---|---|'''
+            response_text = '{"events": []}'
+
+        # Validate JSON
+        try:
+            parsed = json.loads(response_text)
+            event_count = len(parsed.get('events', []))
+            occurrence_count = sum(
+                len(e.get('occurrences', [])) for e in parsed.get('events', [])
+            )
+        except json.JSONDecodeError:
+            # If somehow invalid JSON, wrap in empty structure
+            response_text = '{"events": []}'
+            event_count = 0
+            occurrence_count = 0
 
         # Store extracted content in database
         db.update_crawl_result_extracted(cursor, connection, crawl_result_id, response_text)
-        print(f"    - Extracted {len(response_text)} characters")
+        print(f"    - Extracted {event_count} events with {occurrence_count} occurrences")
         return True
 
     except Exception as e:

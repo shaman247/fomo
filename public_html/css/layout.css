@@ -55,6 +55,12 @@ a:focus-visible,
     flex-grow: 1;
     position: relative;
     overflow: hidden; /* Hide the parts of the map that extend beyond the container */
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+#map-container.map-loaded {
+    opacity: 1;
 }
 
 /* New wrapper to contain the oversized map for tile buffering */

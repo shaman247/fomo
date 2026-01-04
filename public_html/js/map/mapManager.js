@@ -310,128 +310,48 @@ const MapManager = (() => {
     }
 
     /**
-     * Update label visibility for all markers based on distance from screen center
-     * Shows a limited number of labels, prioritizing those closest to the visible center
-     * Labels are hidden if they would overlap with any marker or other visible label
-     * No labels are shown if there are more than MAX_MARKERS_FOR_LABELS markers visible
+     * Update label visibility for all markers based on local density.
+     * Labels are shown for markers in sparse areas and hidden in dense clusters.
+     * Uses a spatial grid for efficient O(n) density calculation.
      */
-    /**
-     * Check if a point is within the debug rect bounds
-     * @param {number} x - X coordinate in screen space
-     * @param {number} y - Y coordinate in screen space
-     * @param {Object} bounds - Debug rect bounds {left, right, top, bottom}
-     * @returns {boolean} True if point is within bounds
-     */
-    function isPointInDebugRect(x, y, bounds) {
-        if (!bounds) return true; // If no bounds, assume visible
-        return x >= bounds.left && x <= bounds.right &&
-               y >= bounds.top && y <= bounds.bottom;
-    }
-
     function updateLabelVisibility() {
         if (!state.mapInstance) return;
 
         const markers = state.markers;
         if (markers.length === 0) return;
 
-        // Get debug rect bounds for visibility check
-        const debugRectBounds = ViewportManager.getDebugRectBounds();
-
-        // Determine max markers for labels based on screen size
+        // Local density settings for label visibility
         const isMobile = window.innerWidth <= Constants.UI.MOBILE_BREAKPOINT;
-        const maxMarkersForLabels = isMobile
-            ? (Constants.UI.MAX_MARKERS_FOR_LABELS_MOBILE || 20)
-            : (Constants.UI.MAX_MARKERS_FOR_LABELS_DESKTOP || 60);
-        let visibleMarkerCount = 0;
-        for (const markerObj of markers) {
-            const screenPos = state.mapInstance.project(markerObj.lngLat);
-            if (isPointInDebugRect(screenPos.x, screenPos.y, debugRectBounds)) {
-                visibleMarkerCount++;
-                if (visibleMarkerCount > maxMarkersForLabels) break;
-            }
-        }
-
-        // Hide all labels if too many markers are visible within debug rect
-        if (visibleMarkerCount > maxMarkersForLabels) {
-            markers.forEach(markerObj => {
-                const labelEl = markerObj.marker.getElement().querySelector('.marker-label');
-                if (labelEl) {
-                    labelEl.classList.add('hidden');
-                }
-            });
-            return;
-        }
-
-        // Determine max labels based on screen size
-        const maxLabels = isMobile
-            ? (Constants.UI.MAX_LABELS_MOBILE || 5)
-            : (Constants.UI.MAX_LABELS_DESKTOP || 10);
-
-        // Get visible center from ViewportManager (accounts for filter panel)
-        const visibleCenter = ViewportManager.getVisibleCenter();
-        const visibleCenterScreen = visibleCenter
-            ? state.mapInstance.project([visibleCenter.lng, visibleCenter.lat])
-            : null;
+        // Radius in pixels to check for nearby markers when calculating local density
+        const densityRadius = isMobile ? 150 : 200;
+        // Max nearby markers before we consider an area "too dense" for labels
+        const maxLocalDensity = isMobile ? 4 : 6;
 
         // Marker icon dimensions (from CSS: 54px x 54px)
         const markerSize = 54;
         const markerRadius = markerSize / 2;
+        const labelOffset = -6; // margin-left in CSS
 
-        // First, hide labels for markers outside the debug rect bounds
-        markers.forEach(markerObj => {
+        // Get screen positions for all markers
+        const markerScreenPositions = markers.map(markerObj => {
             const screenPos = state.mapInstance.project(markerObj.lngLat);
-            if (!isPointInDebugRect(screenPos.x, screenPos.y, debugRectBounds)) {
-                const labelEl = markerObj.marker.getElement().querySelector('.marker-label');
-                if (labelEl) {
-                    labelEl.classList.add('hidden');
-                }
-            }
-        });
-
-        // Filter to only markers within debug rect bounds for label visibility calculation
-        const visibleMarkers = markers.filter(markerObj => {
-            const screenPos = state.mapInstance.project(markerObj.lngLat);
-            return isPointInDebugRect(screenPos.x, screenPos.y, debugRectBounds);
-        });
-
-        // Get screen positions for visible markers with distance from center
-        const markerScreenPositions = visibleMarkers.map(markerObj => {
-            const screenPos = state.mapInstance.project(markerObj.lngLat);
-
-            // Calculate distance from visible center
-            let distanceFromCenter = 0;
-            if (visibleCenterScreen) {
-                const dx = screenPos.x - visibleCenterScreen.x;
-                const dy = screenPos.y - visibleCenterScreen.y;
-                distanceFromCenter = Math.sqrt(dx * dx + dy * dy);
-            }
-
-            // Get label element and measure its dimensions
             const labelEl = markerObj.marker.getElement().querySelector('.marker-label');
+
+            // Measure label dimensions
+            // Temporarily make visible for measurement, then restore
             let labelWidth = 0;
             let labelHeight = 0;
             if (labelEl) {
-                // Temporarily show to measure
-                const wasHidden = labelEl.classList.contains('hidden');
-                labelEl.classList.remove('hidden');
+                const wasVisible = labelEl.classList.contains('visible');
+                labelEl.classList.add('visible');
                 labelWidth = labelEl.offsetWidth;
                 labelHeight = labelEl.offsetHeight;
-                if (wasHidden) {
-                    labelEl.classList.add('hidden');
+                if (!wasVisible) {
+                    labelEl.classList.remove('visible');
                 }
             }
 
-            // Calculate marker bounding box (centered on screen position)
-            const markerRect = {
-                left: screenPos.x - markerRadius,
-                right: screenPos.x + markerRadius,
-                top: screenPos.y - markerRadius,
-                bottom: screenPos.y + markerRadius
-            };
-
-            // Calculate label bounding box (to the right of marker, vertically centered)
-            // Label starts at marker right edge minus some overlap (margin-left: -6px in CSS)
-            const labelOffset = -6;
+            // Calculate label bounding box
             const labelRect = {
                 left: screenPos.x + markerRadius + labelOffset,
                 right: screenPos.x + markerRadius + labelOffset + labelWidth,
@@ -443,54 +363,86 @@ const MapManager = (() => {
                 markerObj,
                 x: screenPos.x,
                 y: screenPos.y,
-                distanceFromCenter,
-                markerRect,
                 labelRect,
                 labelEl
             };
         });
 
-        // Sort by distance from center (closest first)
-        markerScreenPositions.sort((a, b) => a.distanceFromCenter - b.distanceFromCenter);
+        // Build spatial grid for efficient local density calculation
+        // Grid cell size equals density radius for O(1) neighbor lookup
+        const cellSize = densityRadius;
+        const grid = new Map();
 
-        // Track shown label bounding boxes
-        const shownLabelRects = [];
-        let labelsShownCount = 0;
-
-        // First pass: hide all labels
-        markerScreenPositions.forEach(pos => {
-            if (pos.labelEl) {
-                pos.labelEl.classList.add('hidden');
+        for (const pos of markerScreenPositions) {
+            const cellX = Math.floor(pos.x / cellSize);
+            const cellY = Math.floor(pos.y / cellSize);
+            const cellKey = `${cellX},${cellY}`;
+            if (!grid.has(cellKey)) {
+                grid.set(cellKey, []);
             }
-        });
+            grid.get(cellKey).push(pos);
+        }
 
-        // Second pass: show labels that don't overlap with other labels
-        // Always show the first label (closest to center), regardless of overlap
-        for (let i = 0; i < markerScreenPositions.length; i++) {
-            const pos = markerScreenPositions[i];
-            if (labelsShownCount >= maxLabels) break;
-            if (!pos.labelEl) continue;
+        // Calculate local density for each marker (count of neighbors within radius)
+        // Only need to check adjacent cells due to grid cell size
+        const densityRadiusSq = densityRadius * densityRadius;
+        for (const pos of markerScreenPositions) {
+            const cellX = Math.floor(pos.x / cellSize);
+            const cellY = Math.floor(pos.y / cellSize);
+            let neighborCount = 0;
 
-            // Always show the first (closest to center) label
-            const isFirstLabel = labelsShownCount === 0;
+            // Check 3x3 grid of cells around this marker
+            for (let dx = -1; dx <= 1; dx++) {
+                for (let dy = -1; dy <= 1; dy++) {
+                    const neighborKey = `${cellX + dx},${cellY + dy}`;
+                    const cellMarkers = grid.get(neighborKey);
+                    if (!cellMarkers) continue;
 
-            if (!isFirstLabel) {
-                // Check if label overlaps with any already-shown label
-                let overlapsLabel = false;
-                for (const shownRect of shownLabelRects) {
-                    if (rectsOverlap(pos.labelRect, shownRect)) {
-                        overlapsLabel = true;
-                        break;
+                    for (const other of cellMarkers) {
+                        if (other === pos) continue;
+                        const distSq = (pos.x - other.x) ** 2 + (pos.y - other.y) ** 2;
+                        if (distSq <= densityRadiusSq) {
+                            neighborCount++;
+                        }
                     }
                 }
-
-                if (overlapsLabel) continue;
             }
+            pos.localDensity = neighborCount;
+        }
+
+        // Sort by local density (lowest first - sparse areas get priority)
+        markerScreenPositions.sort((a, b) => a.localDensity - b.localDensity);
+
+        // Track shown label bounding boxes for overlap detection
+        const shownLabelRects = [];
+
+        // First pass: hide all labels
+        for (const pos of markerScreenPositions) {
+            if (pos.labelEl) {
+                pos.labelEl.classList.remove('visible');
+            }
+        }
+
+        // Second pass: show labels in sparse areas that don't overlap
+        for (const pos of markerScreenPositions) {
+            if (!pos.labelEl) continue;
+
+            // Skip if local density is too high
+            if (pos.localDensity > maxLocalDensity) continue;
+
+            // Check if label overlaps with any already-shown label
+            let overlapsLabel = false;
+            for (const shownRect of shownLabelRects) {
+                if (rectsOverlap(pos.labelRect, shownRect)) {
+                    overlapsLabel = true;
+                    break;
+                }
+            }
+            if (overlapsLabel) continue;
 
             // Show this label
-            pos.labelEl.classList.remove('hidden');
+            pos.labelEl.classList.add('visible');
             shownLabelRects.push(pos.labelRect);
-            labelsShownCount++;
         }
     }
 
