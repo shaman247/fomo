@@ -1,33 +1,5 @@
 [
   {
-    "name": "Joseph Marioni: Artist’s Choice",
-    "location": "New York Studio School",
-    "description": "The New York Studio School presents Joseph Marioni: Artist’s Choice, a works on paper retrospective curated by Karen Wilkin. It features over thirty works on paper that trace the evolution of a painter’s half-century engagement with color, surface, and perception.",
-    "emoji": "🎨",
-    "tags": [
-      "Contemporary Art",
-      "Painting",
-      "Art Exhibition",
-      "Color",
-      "Artist Retrospective"
-    ],
-    "lat": 40.73246,
-    "lng": -73.99723,
-    "occurrences": [
-      [
-        "2025-11-14",
-        null,
-        "2026-01-05",
-        null
-      ]
-    ],
-    "urls": [
-      "https://nyss.org/exhibition/joseph-marioni-artists-choice/",
-      "https://nyss.org/exhibitions/"
-    ],
-    "short_name": "Joseph Marioni: Artist’s Choice"
-  },
-  {
     "name": "UrbanSparkle 2025",
     "location": "UrbanGlass",
     "description": "An annual exhibition and holiday sale featuring unique glass jewelry from artists like Deirdre Maine and Everett Hoffman.",
@@ -208,46 +180,6 @@
       "https://www.ciaoevento.com/public-events/"
     ],
     "short_name": "Filled Pasta Making!"
-  },
-  {
-    "name": "Concern for Quaker Living (CQL) Working Group Meeting",
-    "location": "Brooklyn Quaker Meeting House",
-    "description": "Concern for Quaker Living (CQL) helps our meetings to welcome and nurture a caring community of Friends in all stages of life, particularly the oldest Friends. This working group meeting focuses on community support and Quaker values.",
-    "emoji": "🏡",
-    "tags": [
-      "Community",
-      "Quaker Living",
-      "Support",
-      "Working Group"
-    ],
-    "lat": 40.69002,
-    "lng": -73.98949,
-    "occurrences": [
-      [
-        "2025-12-08",
-        "06pm",
-        null,
-        "08pm"
-      ],
-      [
-        "2025-12-22",
-        "06pm",
-        null,
-        "08pm"
-      ],
-      [
-        "2026-01-05",
-        "06pm",
-        null,
-        "08pm"
-      ]
-    ],
-    "urls": [
-      "https://nycquakers.org/events/concern-for-quaker-living-cql-working-group-meeting/2025/12/08",
-      "https://nycquakers.org/events/concern-for-quaker-living-cql-working-group-meeting/2025/12/22",
-      "https://nycquakers.org/events/concern-for-quaker-living-cql-working-group-meeting/2026/01/05"
-    ],
-    "short_name": "Concern for Quaker Living Working Group Meeting"
   },
   {
     "name": "Friendly Co-working at Brooklyn Meeting",
@@ -2312,80 +2244,6 @@
     "short_name": "Public Craft Night"
   },
   {
-    "name": "Beauty Bites",
-    "location": "Theater for the New City",
-    "description": "Neighborhood people are disappearing from this certain location, and no one knows why.",
-    "emoji": "🎭",
-    "tags": [
-      "Cabaret",
-      "Theater",
-      "Experimental",
-      "Mystery",
-      "Drama",
-      "Stage",
-      "Mystery Theater",
-      "Local Artists",
-      "New Work",
-      "Suspense"
-    ],
-    "lat": 40.72863,
-    "lng": -73.98486,
-    "occurrences": [
-      [
-        "2025-12-25",
-        "8pm",
-        null,
-        null
-      ],
-      [
-        "2025-12-26",
-        "8pm",
-        null,
-        null
-      ],
-      [
-        "2025-12-27",
-        "8pm",
-        null,
-        null
-      ],
-      [
-        "2025-12-28",
-        "3pm",
-        null,
-        null
-      ],
-      [
-        "2026-01-01",
-        "8pm",
-        null,
-        null
-      ],
-      [
-        "2026-01-02",
-        "8pm",
-        null,
-        null
-      ],
-      [
-        "2026-01-03",
-        "8pm",
-        null,
-        null
-      ],
-      [
-        "2026-01-04",
-        "3pm",
-        null,
-        null
-      ]
-    ],
-    "urls": [
-      "https://theaterforthenewcity.net/whats-playing/"
-    ],
-    "short_name": "Beauty Bites"
-  },
-  {
     "name": "Whiskey Tasting Class",
     "location": "Kings County Distillery",
     "description": "Learn how to nose, taste, and evaluate whiskey like a pro during this expert-led session covering production and barrel aging. The class includes a flight of five premium hand-crafted whiskeys.",
@@ -2598,74 +2456,6 @@
     "short_name": "Whiskey Tasting Class"
   },
   {
-    "name": "Museum Highlights Tour",
-    "location": "New York Transit Museum",
-    "description": "Join an informative and engaging tour that illustrates some of the highlights of the subway station museum home.",
-    "emoji": "🚂",
-    "tags": [
-      "History",
-      "Culture",
-      "Guided Tour",
-      "Transit History",
-      "Museum Tour",
-      "Vintage Train",
-      "Brooklyn Museum",
-      "Educational",
-      "NYC Transit"
-    ],
-    "lat": 40.69057,
-    "lng": -73.99007,
-    "occurrences": [
-      [
-        "2025-12-26",
-        "1:15pm",
-        null,
-        "2:15pm"
-      ],
-      [
-        "2025-12-27",
-        "1:15pm",
-        null,
-        "2:15pm"
-      ],
-      [
-        "2025-12-28",
-        "1:15pm",
-        null,
-        "2:15pm"
-      ],
-      [
-        "2026-01-02",
-        "1:15pm",
-        null,
-        "2:15pm"
-      ],
-      [
-        "2026-01-03",
-        "1:15pm",
-        null,
-        "2:15pm"
-      ],
-      [
-        "2026-01-04",
-        "1:15pm",
-        null,
-        "2:15pm"
-      ]
-    ],
-    "urls": [
-      "https://www.nytransitmuseum.org/programs/",
-      "https://www.nytransitmuseum.org/program/highlights/",
-      "https://www.nytransitmuseum.org/program/museum-highlights-tour/2025-12-27/",
-      "https://www.nytransitmuseum.org/program/museum-highlights-tour/2025-12-28/",
-      "https://www.nytransitmuseum.org/program/museum-highlights-tour-2/",
-      "https://www.nytransitmuseum.org/program/museum-highlights-tour/2026-01-03/",
-      "https://www.nytransitmuseum.org/program/museum-highlights-tour/2026-01-04/",
-      "https://www.downtownbrooklyn.com/events/"
-    ],
-    "short_name": "Museum Highlights Tour"
-  },
-  {
     "name": "A Christmas Carol, Oy! Hanukkah, Merry Kwanzaa, Happy Ramadan",
     "location": "Theater for the New City",
     "description": "This toy-puppet theater extravaganza is a new take on Charles Dickens' classic with Old World accents and New World inclusiveness.",
@@ -2757,74 +2547,6 @@
       "https://theaterforthenewcity.net/whats-playing/"
     ],
     "short_name": "A Christmas Carol, Oy! Hanukkah, Merry Kwanzaa, Happy Ramadan"
-  },
-  {
-    "name": "Holiday Pop-Up Bar",
-    "location": "Boris & Horton",
-    "description": "Visit this festive dog-friendly pop-up bar featuring over-the-top holiday cocktails, mocktails, and plenty of twinkle lights. The evening features joyful seasonal tunes and a laptop-free environment for you and your fur-friends.",
-    "emoji": "🍸",
-    "tags": [
-      "Cocktails",
-      "Dog Friendly",
-      "Winter Season",
-      "Festive Vibes",
-      "Holiday Pop Up",
-      "Mocktails",
-      "Holiday",
-      "Festive",
-      "Winter Vibes",
-      "Pop Up Bar"
-    ],
-    "lat": 40.72929,
-    "lng": -73.98146,
-    "occurrences": [
-      [
-        "2025-12-26",
-        "6pm",
-        null,
-        "11pm"
-      ],
-      [
-        "2025-12-27",
-        "6pm",
-        null,
-        "11pm"
-      ],
-      [
-        "2025-12-28",
-        "6pm",
-        null,
-        "11pm"
-      ],
-      [
-        "2026-01-01",
-        "6pm",
-        null,
-        "11pm"
-      ],
-      [
-        "2026-01-02",
-        "6pm",
-        null,
-        "11pm"
-      ],
-      [
-        "2026-01-03",
-        "6pm",
-        null,
-        "11pm"
-      ],
-      [
-        "2026-01-04",
-        "6pm",
-        null,
-        "11pm"
-      ]
-    ],
-    "urls": [
-      "https://www.borisandhorton.com/events-muJ3R"
-    ],
-    "short_name": "Holiday Pop-Up Bar"
   },
   {
     "name": "Marty Supreme",
@@ -4018,34 +3740,6 @@
     "short_name": "Past, Present & Future"
   },
   {
-    "name": "44",
-    "location": "Daryl Roth Theatre",
-    "description": "A satirical R&B musical comedy telling the story of Barack Obama's presidency as Joe Biden \"kinda sorta\" remembers it. The show features Broadway-caliber singing and sophisticated satire.",
-    "emoji": "🇺🇸",
-    "tags": [
-      "Off Broadway",
-      "Comedy",
-      "Musical",
-      "Satire",
-      "Politics",
-      "R&B"
-    ],
-    "lat": 40.73541,
-    "lng": -73.98963,
-    "occurrences": [
-      [
-        "2025-12-26",
-        "7pm",
-        "2026-01-04",
-        null
-      ]
-    ],
-    "urls": [
-      "https://www.darylroththeatre.com/#shows"
-    ],
-    "short_name": "44"
-  },
-  {
     "name": "Pen Pals",
     "location": "Daryl Roth Theatre",
     "description": "This play tells the story of two women who have been best friends for fifty years through letters, featuring Melissa Gilbert and Veanne Cox. Five percent of ticket sales are donated to Susan G. Komen for breast cancer research.",
@@ -4336,33 +4030,6 @@
     "short_name": "The Circle"
   },
   {
-    "name": "A Jolly Holiday: Christmas Traditions from New Amsterdam",
-    "location": "Merchant's House Museum",
-    "description": "This exhibition explores how many modern holiday traditions, like Santa Claus and New Year’s calling, originated from New York's early Dutch founders. Visitors can view 19th-century gifts and holiday decorations displayed throughout the Tredwell home.",
-    "emoji": "🍪",
-    "tags": [
-      "Dutch History",
-      "Holiday Traditions",
-      "Museum Exhibition",
-      "Colonial Heritage",
-      "Old New York"
-    ],
-    "lat": 40.72767,
-    "lng": -73.99234,
-    "occurrences": [
-      [
-        "2025-12-26",
-        null,
-        "2026-01-04",
-        null
-      ]
-    ],
-    "urls": [
-      "https://merchantshouse.org/calendar/"
-    ],
-    "short_name": "Christmas Traditions from New Amsterdam"
-  },
-  {
     "name": "Friday Nights",
     "location": "The DL",
     "description": "Experience one of NYC's premier rooftop nightlife events featuring three floors of music and dancing. Guests can enjoy French dining and a dynamic atmosphere with optional bottle service.",
@@ -4543,69 +4210,6 @@
       "https://thestandnyc.com/shows/show/12203/2026-01-24-190000-the-stand-presents"
     ],
     "short_name": "The Stand Presents"
-  },
-  {
-    "name": "The Story of Sal B and Barbranne: A Mob Fantasia (Cyrano Redux)",
-    "location": "Theater for the New City",
-    "description": "A mob-themed fantasia that reimagines the classic story of Cyrano de Bergerac through a gritty new lens.",
-    "emoji": "🕶️",
-    "tags": [
-      "Arts",
-      "New Play",
-      "Mob Drama",
-      "Futuristic Theater",
-      "Sci Fi Drama",
-      "Military Crime",
-      "Cyrano Redux",
-      "Experimental Theater",
-      "Mob Story",
-      "Fantasia",
-      "Live Drama"
-    ],
-    "lat": 40.72863,
-    "lng": -73.98486,
-    "occurrences": [
-      [
-        "2025-12-26",
-        "8pm",
-        null,
-        null
-      ],
-      [
-        "2025-12-27",
-        "8pm",
-        null,
-        null
-      ],
-      [
-        "2025-12-28",
-        "3pm",
-        null,
-        null
-      ],
-      [
-        "2026-01-02",
-        "",
-        "2026-01-04",
-        ""
-      ],
-      [
-        "2026-01-03",
-        "8pm",
-        null,
-        null
-      ],
-      [
-        "2026-01-04",
-        "3pm",
-        null,
-        null
-      ]
-    ],
-    "urls": [
-      "https://theaterforthenewcity.net/whats-playing/"
-    ],
-    "short_name": "A Mob Fantasia"
   },
   {
     "name": "Evento x Bucketlisters Cooking Party!",
@@ -5436,41 +5040,6 @@
       "https://www.eventbrite.com/e/eventos-pizza-making-dance-party-tickets-1761686605059"
     ],
     "short_name": "Pizza Making Dance Party!"
-  },
-  {
-    "name": "Sunday Worship",
-    "location": "Saint Paul's Roman Catholic Church",
-    "description": "Join the congregation in the sanctuary or online for a joyful, inspiring, and thought-provoking celebration of life and faith. This inclusive service welcomes everyone to gather in community.",
-    "emoji": "⛪",
-    "tags": [
-      "Sunday Service",
-      "Worship",
-      "Interfaith Community",
-      "Inclusive Church",
-      "Spiritual Gathering"
-    ],
-    "lat": 40.6875,
-    "lng": -73.9936,
-    "occurrences": [
-      [
-        "2025-12-28",
-        "11am",
-        null,
-        "12pm"
-      ],
-      [
-        "2026-01-04",
-        "11am",
-        null,
-        "12pm"
-      ]
-    ],
-    "urls": [
-      "https://stpaulandstandrew.org/calendar/",
-      "https://stpaulandstandrew.org/event/sunday-worship-w-communion-2/2026-01-04/",
-      "https://stpaulandstandrew.org/event/sunday-worship-5/2025-12-28/"
-    ],
-    "short_name": "Sunday Worship"
   },
   {
     "name": "Tarot 101: Learn How to Do Tarot Readings",
@@ -6772,7 +6341,8 @@
       "https://www.alligatorloungebrooklyn.com/events",
       "https://www.eventbrite.com/e/hot-100-bingo-alligator-lounge-tickets-1081159700769?aff=erelpanelorg",
       "https://www.eventbrite.com/e/hot-100-bingo-alligator-lounge-tickets-1977599809265?aff=erelpanelorg",
-      "https://www.eventbrite.com/e/hot-100-bingo-alligator-lounge-tickets-1977599810268?aff=erelpanelorg"
+      "https://www.eventbrite.com/e/hot-100-bingo-alligator-lounge-tickets-1977599810268?aff=erelpanelorg",
+      "https://www.eventbrite.com/d/ny--new-york/events/"
     ],
     "short_name": "HOT 100 Bingo"
   },
@@ -7292,75 +6862,6 @@
     "short_name": "Contact Improvisation"
   },
   {
-    "name": "44",
-    "location": "Daryl Roth Theatre",
-    "description": "This satirical R&B musical comedy tells the story of Barack Obama's presidency as Joe Biden somewhat remembers it.",
-    "emoji": "🗳️",
-    "tags": [
-      "Off Broadway",
-      "Comedy",
-      "Theatre",
-      "Musical",
-      "Satire",
-      "Politics",
-      "R&B",
-      "Political Satire",
-      "Obama"
-    ],
-    "lat": 40.73541,
-    "lng": -73.98963,
-    "occurrences": [
-      [
-        "2025-12-31",
-        "7pm",
-        null,
-        ""
-      ],
-      [
-        "2026-01-01",
-        "7pm",
-        null,
-        ""
-      ],
-      [
-        "2026-01-02",
-        "2pm",
-        null,
-        ""
-      ],
-      [
-        "2026-01-02",
-        "8pm",
-        null,
-        ""
-      ],
-      [
-        "2026-01-03",
-        "2pm",
-        null,
-        ""
-      ],
-      [
-        "2026-01-03",
-        "7:30pm",
-        null,
-        ""
-      ],
-      [
-        "2026-01-04",
-        "2pm",
-        null,
-        ""
-      ]
-    ],
-    "urls": [
-      "https://www.telecharge.com/AllEvents",
-      "https://www.darylroththeatre.com/#shows",
-      "https://www.telecharge.com/44-Tickets"
-    ],
-    "short_name": "44"
-  },
-  {
     "name": "Soul Records Laboratory",
     "location": "Time Out Market",
     "description": "Join Soul in the Horn for \"Soul Records Laboratory,\" a weekly music series featuring up-and-coming DJs. Dance to electrifying jams with views of the NYC skyline while enjoying cocktails and food.",
@@ -7633,64 +7134,6 @@
       "https://publictheater.org/productions/season/2526/antigone-this-play-i-read-in-high-school/"
     ],
     "short_name": "Antigone"
-  },
-  {
-    "name": "Pen Pals",
-    "location": "Daryl Roth Theatre",
-    "description": "A moving play about two friends from different countries who maintain a deep connection through letters over fifty years. The production features a rotating cast of renowned actors.",
-    "emoji": "✉️",
-    "tags": [
-      "Off Broadway",
-      "Drama",
-      "Pen Pals",
-      "Friendship",
-      "New York Theatre",
-      "Rotating Cast"
-    ],
-    "lat": 40.73541,
-    "lng": -73.98963,
-    "occurrences": [
-      [
-        "2025-12-31",
-        "7pm",
-        null,
-        ""
-      ],
-      [
-        "2026-01-01",
-        "7pm",
-        null,
-        ""
-      ],
-      [
-        "2026-01-02",
-        "7pm",
-        null,
-        ""
-      ],
-      [
-        "2026-01-03",
-        "3pm",
-        null,
-        ""
-      ],
-      [
-        "2026-01-03",
-        "7pm",
-        null,
-        ""
-      ],
-      [
-        "2026-01-04",
-        "3pm",
-        null,
-        ""
-      ]
-    ],
-    "urls": [
-      "https://www.darylroththeatre.com/#shows"
-    ],
-    "short_name": "Pen Pals"
   },
   {
     "name": "Contact Improvisation",
@@ -8196,56 +7639,6 @@
     ],
     "urls": [
       "https://www.arlenesgrocerynyc.com/upcoming-events"
-    ]
-  },
-  {
-    "name": "Destiny Mata _Lower East Side Yearbook: A Living Archive_",
-    "location": "Abrons Arts Center",
-    "description": "An opening reception for Destiny Mata's photographic exhibition exploring the Lower East Side Yearbook, a collection of photographs about public housing residents and community memory.",
-    "emoji": "📸",
-    "tags": [
-      "Lower East Side",
-      "Photography",
-      "Art Exhibition",
-      "Urban Life",
-      "Community Archive"
-    ],
-    "lat": 40.71533,
-    "lng": -73.98379,
-    "occurrences": [
-      [
-        "2025-12-31",
-        "10am",
-        null,
-        "10pm"
-      ],
-      [
-        "2026-01-01",
-        "10am",
-        null,
-        "10pm"
-      ],
-      [
-        "2026-01-02",
-        "10am",
-        null,
-        "10pm"
-      ],
-      [
-        "2026-01-03",
-        "10am",
-        null,
-        "10pm"
-      ],
-      [
-        "2026-01-04",
-        "10am",
-        null,
-        "10pm"
-      ]
-    ],
-    "urls": [
-      "https://www.abronsartscenter.org/programs/les-yearbook"
     ]
   },
   {
@@ -9797,47 +9190,6 @@
     "short_name": "Karaoke Tremendous"
   },
   {
-    "name": "Frozen",
-    "location": "Nitehawk Cinema (Williamsburg)",
-    "description": "A Disney animated classic where the power of family is the strongest magic of all.",
-    "emoji": "❄️",
-    "tags": [
-      "Cinema",
-      "Family",
-      "Disney",
-      "Animation",
-      "Frozen"
-    ],
-    "lat": 40.71597,
-    "lng": -73.96258,
-    "occurrences": [
-      [
-        "2026-01-02",
-        "12pm",
-        null,
-        null
-      ],
-      [
-        "2026-01-03",
-        null,
-        null,
-        null
-      ],
-      [
-        "2026-01-04",
-        null,
-        null,
-        null
-      ]
-    ],
-    "urls": [
-      "https://nitehawkcinema.com/williamsburg/coming-soon/",
-      "https://nitehawkcinema.com/williamsburg/purchase/20992585/",
-      "https://nitehawkcinema.com/williamsburg/movies/frozen/"
-    ],
-    "short_name": "Frozen"
-  },
-  {
     "name": "Open Hours",
     "location": "Old Stone House",
     "description": "Come visit the Old Stone House during our public Open Hours to explore the historic site.",
@@ -10094,38 +9446,6 @@
     "short_name": "Friday Night Vibes"
   },
   {
-    "name": "Artwork by Hannah Robinett",
-    "location": "The Sheen Center for Thought & Culture",
-    "description": "This exhibition features conceptual artwork by Hannah Robinett, a Brooklyn-based artist working in various media including screenprinting, drawing, painting, and murals. Her work explores spirituality, beauty, and personal experiences.",
-    "emoji": "🎨",
-    "tags": [
-      "Contemporary Art",
-      "Mixed Media",
-      "Brooklyn Artist",
-      "Gallery Show",
-      "Art And Spirituality"
-    ],
-    "lat": 40.72546,
-    "lng": -73.9934,
-    "occurrences": [
-      [
-        "2026-01-02",
-        "10am",
-        null,
-        ""
-      ],
-      [
-        "2026-01-05",
-        "5pm",
-        null,
-        ""
-      ]
-    ],
-    "urls": [
-      "https://www.sheencenter.org/events/detail/hannah-robinett"
-    ]
-  },
-  {
     "name": "Standing Slightly Outside: Franklin Furnace, 1976—2026",
     "location": "Brooklyn Academy of Music (BAM)",
     "description": "A gallery show marks the 50th anniversary of Franklin Furnace, a vital New York arts space and archive.",
@@ -10152,34 +9472,6 @@
       "https://www.bam.org/#Calendar"
     ],
     "short_name": "Franklin Furnace, 1976—2026"
-  },
-  {
-    "name": "A Jolly Holiday: Christmas Traditions from New Amsterdam",
-    "location": "Merchant's House Museum",
-    "description": "Discover how Dutch traditions like Santa Claus and New Year's Day calling persisted into the 19th-century Tredwell household.",
-    "emoji": "🎄",
-    "tags": [
-      "History",
-      "Exhibition",
-      "Holiday Traditions",
-      "19th Century",
-      "Christmas",
-      "Dutch Heritage"
-    ],
-    "lat": 40.72767,
-    "lng": -73.99234,
-    "occurrences": [
-      [
-        "2026-01-02",
-        "",
-        "2026-01-04",
-        ""
-      ]
-    ],
-    "urls": [
-      "https://merchantshouse.org/calendar/"
-    ],
-    "short_name": "Christmas Traditions from New Amsterdam"
   },
   {
     "name": "The Stand Presents",
@@ -10554,41 +9846,6 @@
     "short_name": "DSA Running Club - Queens Run2Canvass- Diana for AD36"
   },
   {
-    "name": "Nyc-Dsa 101",
-    "location": "NYC-DSA Office",
-    "description": "New to NYC-DSA or maybe just socialist-curious? Learn about the organization's structure, goals, and how you can get involved in local struggles.",
-    "emoji": "🎓",
-    "tags": [
-      "Community",
-      "Activism",
-      "Education",
-      "Training",
-      "Socialism"
-    ],
-    "lat": 40.71384,
-    "lng": -73.98883,
-    "occurrences": [
-      [
-        "2026-01-03",
-        "11am",
-        null,
-        null
-      ],
-      [
-        "2026-01-04",
-        null,
-        null,
-        null
-      ]
-    ],
-    "urls": [
-      "https://calendar.socialists.nyc/",
-      "https://actionnetwork.org/events/nyc-dsa-101-105",
-      "https://actionnetwork.org/events/dsa-101-111"
-    ],
-    "short_name": "Nyc-Dsa 101"
-  },
-  {
     "name": "Wake Up & Dance with Suzi Shelton",
     "location": "ShapeShifter Lab",
     "description": "Award-winning children's musician Suzi Shelton leads a joyful concert series for young dancers and their families.",
@@ -10841,110 +10098,6 @@
     "short_name": "Spotlight Saturdays: Noise Complaint"
   },
   {
-    "name": "Hook",
-    "location": "Nitehawk Cinema (Williamsburg)",
-    "description": "Steven Spielberg's imaginative take on what might happen if Peter Pan grew up.",
-    "emoji": "🏴‍☠️",
-    "tags": [
-      "Family",
-      "Adventure",
-      "Fantasy",
-      "Classic",
-      "Peter Pan"
-    ],
-    "lat": 40.71597,
-    "lng": -73.96258,
-    "occurrences": [
-      [
-        "2026-01-03",
-        null,
-        null,
-        null
-      ],
-      [
-        "2026-01-03",
-        "11am",
-        null,
-        null
-      ],
-      [
-        "2026-01-04",
-        null,
-        null,
-        null
-      ],
-      [
-        "2026-01-04",
-        "11am",
-        null,
-        null
-      ]
-    ],
-    "urls": [
-      "https://nitehawkcinema.com/williamsburg/coming-soon/",
-      "https://nitehawkcinema.com/williamsburg/movies/hook/"
-    ],
-    "short_name": "Hook"
-  },
-  {
-    "name": "Face/Off",
-    "location": "Nitehawk Cinema (Williamsburg)",
-    "description": "An FBI agent assumes his criminal rival's identity in this John Woo action masterpiece.",
-    "emoji": "👺",
-    "tags": [
-      "Sci-fi",
-      "Action",
-      "John Woo",
-      "Nic Cage",
-      "35mm"
-    ],
-    "lat": 40.71597,
-    "lng": -73.96258,
-    "occurrences": [
-      [
-        "2026-01-03",
-        null,
-        null,
-        null
-      ],
-      [
-        "2026-01-03",
-        "11:15am",
-        null,
-        null
-      ],
-      [
-        "2026-01-04",
-        null,
-        null,
-        null
-      ],
-      [
-        "2026-01-04",
-        "11:15am",
-        null,
-        null
-      ],
-      [
-        "2026-01-05",
-        null,
-        null,
-        null
-      ],
-      [
-        "2026-01-05",
-        "9:15pm",
-        null,
-        null
-      ]
-    ],
-    "urls": [
-      "https://nitehawkcinema.com/williamsburg/coming-soon/",
-      "https://nitehawkcinema.com/williamsburg/movies/faceoff/"
-    ],
-    "short_name": "Face/Off"
-  },
-  {
     "name": "McGolrick Bird Club",
     "location": "Msgr. McGolrick Park",
     "description": "Participate in a weekly year-round birding walk through McGolrick Park. Meet at the Russell and Driggs entrance to spot local avian residents.",
@@ -11015,37 +10168,6 @@
       "https://www.timeout.com/time-out-market-new-york/things-to-do/shows-events"
     ],
     "short_name": "Noise Complaint"
-  },
-  {
-    "name": "Peter Pan",
-    "location": "Nitehawk Cinema (Williamsburg)",
-    "description": "What if Peter Pan grew up?",
-    "emoji": "🧚",
-    "tags": [
-      "Family",
-      "Adventure",
-      "Fantasy"
-    ],
-    "lat": 40.71597,
-    "lng": -73.96258,
-    "occurrences": [
-      [
-        "2026-01-03",
-        "",
-        null,
-        ""
-      ],
-      [
-        "2026-01-04",
-        "",
-        null,
-        ""
-      ]
-    ],
-    "urls": [
-      "https://nitehawkcinema.com/williamsburg/coming-soon/"
-    ],
-    "short_name": "Peter Pan"
   },
   {
     "name": "Arlene's Grocery Presents: Indie Band Night",
@@ -11324,66 +10446,6 @@
       "https://www.caveat.nyc/"
     ],
     "short_name": "Tom D's Big New York Show"
-  },
-  {
-    "name": "Bottomless Brunch at Time Out Market",
-    "location": "Empire Stores",
-    "description": "Enjoy a weekend brunch featuring three hours of unlimited mimosas or bellinis and a TOM card to spend on your favorite market concessions. The event includes savory dishes and iconic views of the city.",
-    "emoji": "🥂",
-    "tags": [
-      "Cocktails",
-      "Family",
-      "Brunch",
-      "Foodie",
-      "Bottomless Mimosas"
-    ],
-    "lat": 40.70338,
-    "lng": -73.9916,
-    "occurrences": [
-      [
-        "2026-01-03",
-        "12pm",
-        null,
-        "3pm"
-      ],
-      [
-        "2026-01-04",
-        "12pm",
-        null,
-        "3pm"
-      ]
-    ],
-    "urls": [
-      "https://www.empirestoresdumbo.com/whats-on"
-    ],
-    "short_name": "Bottomless Brunch"
-  },
-  {
-    "name": "Spotlight Saturdays: Dulce A Sweet Latin Party",
-    "location": "Empire Stores",
-    "description": "Dance to electrifying Latin beats from DJ Loko and special guests on the vibrant rooftop dance floor. The evening includes specialty cocktails and breathtaking views of the city skyline.",
-    "emoji": "💃",
-    "tags": [
-      "Rooftop",
-      "Cocktails",
-      "Dance",
-      "Nightlife",
-      "Latin Music"
-    ],
-    "lat": 40.70338,
-    "lng": -73.9916,
-    "occurrences": [
-      [
-        "2026-01-03",
-        "10pm",
-        "2026-01-04",
-        "1am"
-      ]
-    ],
-    "urls": [
-      "https://www.empirestoresdumbo.com/whats-on"
-    ],
-    "short_name": "Dulce A Sweet Latin Party"
   },
   {
     "name": "Distillery Tour",
@@ -11849,61 +10911,6 @@
     "short_name": "Distillery Tour"
   },
   {
-    "name": "Femmes Book Club",
-    "location": "Everything's Jake NYC Bar & Lounge",
-    "description": "A book club for femme-presenting readers discussing \"BITTER SWEET\" by Hattie Williams and other contemporary fiction featuring badass characters.",
-    "emoji": "👩‍🦰",
-    "tags": [
-      "Contemporary Fiction",
-      "Book Club",
-      "Femme Lead",
-      "Literary Event",
-      "Womens Stories"
-    ],
-    "lat": 40.7342,
-    "lng": -73.9917,
-    "occurrences": [
-      [
-        "2026-01-04",
-        "4pm",
-        null,
-        "5:30pm"
-      ]
-    ],
-    "urls": [
-      "https://www.eventbrite.com/o/book-club-for-the-book-hoes-52255937823"
-    ],
-    "short_name": "Femmes Book Club"
-  },
-  {
-    "name": "Intro to TouchDesigner",
-    "location": "NYC Resistor",
-    "description": "Learn the underlying logic and workflows of TouchDesigner to start creating interactive and immersive generative media. This beginner-friendly class covers node-based programming and the six operator families.",
-    "emoji": "💻",
-    "tags": [
-      "Workshop",
-      "Digital Art",
-      "Creative Coding",
-      "Touch Designer",
-      "Generative Art",
-      "Visuals"
-    ],
-    "lat": 40.68361,
-    "lng": -73.98167,
-    "occurrences": [
-      [
-        "2026-01-04",
-        "3pm",
-        null,
-        "7:30pm"
-      ]
-    ],
-    "urls": [
-      "https://www.nycresistor.com/calendar/"
-    ],
-    "short_name": "Intro to TouchDesigner"
-  },
-  {
     "name": "Brooklyn Navy Yard: World War II Tour",
     "location": "Brooklyn Navy Yard",
     "description": "Explore the history of the Navy Yard during its peak production years in World War II. This walking tour visits historical sites and shares stories of the sailors and workers who served there.",
@@ -11944,251 +10951,6 @@
     "short_name": "Brooklyn Navy Yard: World War II Tour"
   },
   {
-    "name": "Used To Be Young (Miley x Adele)",
-    "location": "Judson Memorial Church",
-    "description": "A musical performance blending the iconic sounds of Miley Cyrus and Adele in a historic setting.",
-    "emoji": "🎵",
-    "tags": [
-      "Music",
-      "Performance",
-      "Concert",
-      "Singing",
-      "Pop Music",
-      "Choir"
-    ],
-    "lat": 40.73022,
-    "lng": -73.99838,
-    "occurrences": [
-      [
-        "2026-01-04",
-        "2:30pm",
-        null,
-        ""
-      ]
-    ],
-    "urls": [
-      "https://www.eventbrite.com/d/ny--new-york/events/"
-    ],
-    "short_name": "Used To Be Young"
-  },
-  {
-    "name": "Gotham Writers Workshop: Humor Writing",
-    "location": "P&T Knitwear",
-    "description": "Gotham President Alexander Steele teaches the hallmarks of humorous prose and comedic techniques to turn sentences into smiles.",
-    "emoji": "📝",
-    "tags": [
-      "Workshop",
-      "Creative Writing",
-      "Writing Workshop",
-      "Humor Writing",
-      "Comedy Writing"
-    ],
-    "lat": 40.72193,
-    "lng": -73.98816,
-    "occurrences": [
-      [
-        "2026-01-04",
-        "3pm",
-        null,
-        "4pm"
-      ]
-    ],
-    "urls": [
-      "https://www.ptknitwear.com/events"
-    ],
-    "short_name": "Gotham Writers Workshop: Humor Writing"
-  },
-  {
-    "name": "Brooklyn Nets vs. Denver Nuggets Kids Day",
-    "location": "Barclays Center",
-    "description": "The Brooklyn Nets take on the Denver Nuggets for a special Kids Day event. Enjoy special pricing on concession stand favorites.",
-    "emoji": "🏀",
-    "tags": [
-      "Brooklyn Nets",
-      "Family",
-      "Basketball",
-      "NBA",
-      "Kids Day"
-    ],
-    "lat": 40.68266,
-    "lng": -73.97528,
-    "occurrences": [
-      [
-        "2026-01-04",
-        "",
-        null,
-        ""
-      ]
-    ],
-    "urls": [
-      "https://www.barclayscenter.com/events",
-      "https://www.barclayscenter.com/events/detail/brooklyn-nets-vs-denver-nuggets-20260104",
-      "https://www.barclayscenter.com/events/detail/brooklyn-nets-vs-denver-nuggets-20260104%20"
-    ],
-    "short_name": "Brooklyn Nets vs. Denver Nuggets Kids Day"
-  },
-  {
-    "name": "DCBday – Celebrating the Music of David Berman",
-    "location": "The Bowery Ballroom",
-    "description": "A special tribute night honoring the musical legacy of the late David Berman of Silver Jews and Purple Mountains.",
-    "emoji": "🎸",
-    "tags": [
-      "Music",
-      "Indie Rock",
-      "Tribute Concert",
-      "David Berman",
-      "Silver Jews"
-    ],
-    "lat": 40.72041,
-    "lng": -73.99336,
-    "occurrences": [
-      [
-        "2026-01-04",
-        "7pm",
-        null,
-        ""
-      ]
-    ],
-    "urls": [
-      "https://www.boweryballroom.com/"
-    ],
-    "short_name": "DCBday – Celebrating the Music of David Berman"
-  },
-  {
-    "name": "Needle Felted Pineapples and Plants",
-    "location": "Brooklyn Brainery",
-    "description": "Use needle felting techniques to sculpt three-dimensional pineapples, cacti, or other tropical plants. Your finished creation will be placed in a mini flower pot to serve as a decoration or pincushion.",
-    "emoji": "🍍",
-    "tags": [
-      "DIY",
-      "Fiber Arts",
-      "Handmade",
-      "Needle Felting",
-      "Soft Sculpture"
-    ],
-    "lat": 40.6749,
-    "lng": -73.96696,
-    "occurrences": [
-      [
-        "2026-01-04",
-        "11am",
-        null,
-        "1pm"
-      ]
-    ],
-    "urls": [
-      "https://brooklynbrainery.com/courses"
-    ],
-    "short_name": "Needle Felted Pineapples and Plants"
-  },
-  {
-    "name": "Collage Affirmations",
-    "location": "Brooklyn Brainery",
-    "description": "Unleash your creativity using magazines and vintage ephemera to create a unique collage featuring a chosen affirmation. This workshop blends artistic expression with self-care and goal manifestation.",
-    "emoji": "✂️",
-    "tags": [
-      "Self Care",
-      "Mixed Media",
-      "Collage Art",
-      "Affirmations",
-      "Creative Journaling"
-    ],
-    "lat": 40.6749,
-    "lng": -73.96696,
-    "occurrences": [
-      [
-        "2026-01-04",
-        "1:30pm",
-        null,
-        "3:30pm"
-      ]
-    ],
-    "urls": [
-      "https://brooklynbrainery.com/courses"
-    ],
-    "short_name": "Collage Affirmations"
-  },
-  {
-    "name": "The Power of In-Person Interaction",
-    "location": "Brooklyn Society for Ethical Culture",
-    "description": "This session explores the sociological and ethical importance of physical social connection in an increasingly digital world. Join the discussion on how face-to-face interactions build stronger communities.",
-    "emoji": "🤝",
-    "tags": [
-      "Ethical Culture",
-      "Sociology",
-      "Humanism",
-      "Communication"
-    ],
-    "lat": 40.67533,
-    "lng": -73.98402,
-    "occurrences": [
-      [
-        "2026-01-04",
-        "12:30pm",
-        null,
-        "2pm"
-      ]
-    ],
-    "urls": [
-      "https://bsec.org/calendar-2/"
-    ],
-    "short_name": "The Power of In-Person Interaction"
-  },
-  {
-    "name": "Brooklyn Music Lab: Winterfest Day 3",
-    "location": "Drom",
-    "description": "An all-ages emerging artists showcase curated by Jack McShane featuring Pop, Rock, R&B, Soul, and Jazz.",
-    "emoji": "🎤",
-    "tags": [
-      "Rock",
-      "Emerging Artists",
-      "R&B",
-      "Pop",
-      "Winterfest"
-    ],
-    "lat": 40.72532,
-    "lng": -73.98431,
-    "occurrences": [
-      [
-        "2026-01-04",
-        "4pm",
-        null,
-        ""
-      ]
-    ],
-    "urls": [
-      "https://dromnyc.com/events/"
-    ],
-    "short_name": "Brooklyn Music Lab: Winterfest Day 3"
-  },
-  {
-    "name": "Brooklyn Music Lab: Emerging Artists Showcase",
-    "location": "Drom",
-    "description": "The evening installment of the Brooklyn Music Lab showcase featuring rising talents in various genres.",
-    "emoji": "🎸",
-    "tags": [
-      "Music",
-      "Jazz",
-      "Showcase",
-      "Soul Music",
-      "Music Lab"
-    ],
-    "lat": 40.72532,
-    "lng": -73.98431,
-    "occurrences": [
-      [
-        "2026-01-04",
-        "7pm",
-        null,
-        ""
-      ]
-    ],
-    "urls": [
-      "https://dromnyc.com/events/"
-    ],
-    "short_name": "Emerging Artists Showcase"
-  },
-  {
     "name": "Falling Out - A New Musical (Preview)",
     "location": "Under St. Marks Theater",
     "description": "A world premiere musical by Josee Klein following the intersection of a melancholic transplant and a musician in a downtown bar. The story explores heartbreak and redemption through original songwriting and discordant harmony.",
@@ -12221,86 +10983,6 @@
       "https://tickets.frigid.nyc/"
     ],
     "short_name": "Falling Out - A New Musical"
-  },
-  {
-    "name": "Bellcave, Jemi, Big Blind",
-    "location": "Knitting Factory at Baker Falls",
-    "description": "An evening of rock and alternative music featuring Bellcave, Jemi, and Big Blind.",
-    "emoji": "🎸",
-    "tags": [
-      "Indie Music",
-      "Live Show",
-      "Rock Music",
-      "Alternative"
-    ],
-    "lat": 40.72586,
-    "lng": -73.98402,
-    "occurrences": [
-      [
-        "2026-01-04",
-        "7pm",
-        null,
-        ""
-      ]
-    ],
-    "urls": [
-      "https://www.knittingfactory.com/calendar/"
-    ],
-    "short_name": "Bellcave, Jemi, Big Blind"
-  },
-  {
-    "name": "Guided House Tour: Healthcare in Tredwell Times",
-    "location": "Merchant's House Museum",
-    "description": "This afternoon tour examines the diseases and medical treatments common in 19th-century New York, including outbreaks of cholera and typhoid. The program also covers medical care within the Tredwell family and advancements spurred by the Civil War.",
-    "emoji": "🩺",
-    "tags": [
-      "Medical History",
-      "Guided Tour",
-      "Public Health",
-      "19th Century",
-      "Civil War Medicine"
-    ],
-    "lat": 40.72767,
-    "lng": -73.99234,
-    "occurrences": [
-      [
-        "2026-01-04",
-        "3pm",
-        null,
-        ""
-      ]
-    ],
-    "urls": [
-      "https://merchantshouse.org/calendar/"
-    ],
-    "short_name": "Healthcare in Tredwell Times"
-  },
-  {
-    "name": "Self-Defense & Awareness",
-    "location": "NYC-DSA Office",
-    "description": "Participate in a self-defense and situational awareness workshop designed specifically for organizers. Build confidence and safety skills within a supportive community setting.",
-    "emoji": "🛡️",
-    "tags": [
-      "Community",
-      "Training",
-      "Safety",
-      "Self Defense",
-      "Organizing"
-    ],
-    "lat": 40.71384,
-    "lng": -73.98883,
-    "occurrences": [
-      [
-        "2026-01-04",
-        "",
-        null,
-        ""
-      ]
-    ],
-    "urls": [
-      "https://calendar.socialists.nyc/"
-    ],
-    "short_name": "Self-Defense & Awareness"
   },
   {
     "name": "Silent Vigil for Peace and Non-Violence",
@@ -12369,113 +11051,6 @@
     "short_name": "Children of the Stones"
   },
   {
-    "name": "The Duchess",
-    "location": "Union Hall",
-    "description": "A comedy showcase featuring Charlie Flynn, Richie Raymond, and a variety of funny guests.",
-    "emoji": "👸",
-    "tags": [
-      "Comedy",
-      "Stand-up",
-      "Performance",
-      "The Duchess"
-    ],
-    "lat": 40.67607,
-    "lng": -73.98008,
-    "occurrences": [
-      [
-        "2026-01-04",
-        "",
-        null,
-        ""
-      ]
-    ],
-    "urls": [
-      "https://unionhallny.com/calendar"
-    ],
-    "short_name": "The Duchess"
-  },
-  {
-    "name": "Beatnik Greenwich Village: Walking Tour",
-    "location": "Isola Brooklyn",
-    "description": "An outdoor walking tour exploring the history and culture of the Beatniks in Greenwich Village. Walk through the iconic haunts of NYC's coolest generation.",
-    "emoji": "🕶️",
-    "tags": [
-      "History",
-      "Greenwich Village",
-      "Walking Tour",
-      "Beatniks",
-      "Culture Tour"
-    ],
-    "lat": 40.71423,
-    "lng": -73.95583,
-    "occurrences": [
-      [
-        "2026-01-04",
-        "2pm",
-        null,
-        ""
-      ]
-    ],
-    "urls": [
-      "https://www.eventbrite.com/o/isola-brooklyn-105758425841"
-    ],
-    "short_name": "Beatnik Greenwich Village: Walking Tour"
-  },
-  {
-    "name": "Sunday School",
-    "location": "Saint Paul's Roman Catholic Church",
-    "description": "Sunday School for preschool and elementary aged children begins in the sanctuary with the full congregation for the Message For All Ages. The curriculum follows the lectionary to unite the community in growth.",
-    "emoji": "🏫",
-    "tags": [
-      "Religious Education",
-      "Faith Formation",
-      "Sunday School",
-      "Childrens Ministry",
-      "Youth Education"
-    ],
-    "lat": 40.6875,
-    "lng": -73.9936,
-    "occurrences": [
-      [
-        "2026-01-04",
-        "11am",
-        null,
-        "12pm"
-      ]
-    ],
-    "urls": [
-      "https://stpaulandstandrew.org/calendar/"
-    ],
-    "short_name": "Sunday School"
-  },
-  {
-    "name": "The Telephone Show",
-    "location": "Upright Citizens Brigade Theatre",
-    "description": "Improv teams are formed in real-time by comedians calling each other to assemble a cast on the spot.",
-    "emoji": "☎️",
-    "tags": [
-      "Improv",
-      "Live Theater",
-      "Show",
-      "Experimental Comedy",
-      "Telephone Game"
-    ],
-    "lat": 40.7325,
-    "lng": -73.98567,
-    "occurrences": [
-      [
-        "2026-01-04",
-        "8pm",
-        null,
-        ""
-      ]
-    ],
-    "urls": [
-      "https://ucbcomedy.com/shows/new-york/"
-    ],
-    "short_name": "The Telephone Show"
-  },
-  {
     "name": "The Diversity Jam",
     "location": "Upright Citizens Brigade Theatre",
     "description": "An improv jam for diverse performers in the community. Students of all levels are welcome and it is FREE! A free improv jam celebrating historically underrepresented individuals in our community. All levels of improv experience are welcome. You can come…",
@@ -12505,32 +11080,6 @@
       "https://ucbcomedy.com/shows/new-york/"
     ],
     "short_name": "The Diversity Jam"
-  },
-  {
-    "name": "Theatre: the Improvised Play, Live and Livestreamed!",
-    "location": "Upright Citizens Brigade Theatre",
-    "description": "An improvised play by eight of NYC’s top actors (who also happen to do improv)! COME WITNESS NYC’S ONLY IMPROVISED PLAY! The children of Meisner, Adler, Strasberg, Atlantic, and any expensive acting/conservatory come together for one night to give…",
-    "emoji": "🎭",
-    "tags": [
-      "Theater",
-      "Comedy",
-      "Acting",
-      "Improvised Play"
-    ],
-    "lat": 40.7325,
-    "lng": -73.98567,
-    "occurrences": [
-      [
-        "2026-01-04",
-        "8:30pm",
-        null,
-        ""
-      ]
-    ],
-    "urls": [
-      "https://ucbcomedy.com/shows/new-york/"
-    ],
-    "short_name": "the Improvised Play, Live and Livestreamed!"
   },
   {
     "name": "Quaker Meeting for Worship",
@@ -12610,32 +11159,6 @@
       "https://nycquakers.org/events"
     ],
     "short_name": "Quaker Meeting for Worship"
-  },
-  {
-    "name": "Silent Vigil for Peace and Non-Violence",
-    "location": "Fifteenth Street Meetinghouse",
-    "description": "Join Friends (Quakers) at this silent vigil for peace and nonviolence at 1:00 pm on the first Sunday of the month at the Washington Square Arch.",
-    "emoji": "🕊️",
-    "tags": [
-      "Community",
-      "Activism",
-      "Peace",
-      "Vigil"
-    ],
-    "lat": 40.7346,
-    "lng": -73.9836,
-    "occurrences": [
-      [
-        "2026-01-04",
-        "1pm",
-        null,
-        "2pmet"
-      ]
-    ],
-    "urls": [
-      "https://nycquakers.org/events"
-    ],
-    "short_name": "Silent Vigil for Peace and Non-Violence"
   },
   {
     "name": "The Fat Cats Youth Orchestra",
@@ -12826,94 +11349,6 @@
       "https://movementgyms.com/gowanus/events/"
     ],
     "short_name": "Laru Beya Collective"
-  },
-  {
-    "name": "Silent Vigil for Peace and Non-Violence",
-    "location": "Fifteenth Street Meetinghouse",
-    "description": "Join Friends (Quakers) at this silent vigil for peace and nonviolence at 1:00 pm on the first Sunday of the month at the Washington Square Arch.",
-    "emoji": "🕊️",
-    "tags": [
-      "Community",
-      "Activism",
-      "Peace",
-      "Non Violence",
-      "Vigil",
-      "Quakerism"
-    ],
-    "lat": 40.7346,
-    "lng": -73.9836,
-    "occurrences": [
-      [
-        "2026-01-04",
-        "1pm",
-        null,
-        "2pm"
-      ]
-    ],
-    "urls": [
-      "https://nycquakers.org/events"
-    ],
-    "short_name": "Silent Vigil for Peace and Non-Violence"
-  },
-  {
-    "name": "Silent Vigil for Peace and Non-Violence",
-    "location": "Fifteenth Street Meetinghouse",
-    "description": "Join Friends (Quakers) at this silent vigil for peace and nonviolence at 1:00 pm on the first Sunday of the month at the Washington Square Arch. It's a time for quiet reflection and a collective aspiration for a more peaceful world.",
-    "emoji": "🕊️",
-    "tags": [
-      "Community",
-      "Peace",
-      "Spiritual",
-      "Non Violence",
-      "Vigil"
-    ],
-    "lat": 40.7346,
-    "lng": -73.9836,
-    "occurrences": [
-      [
-        "2026-01-04",
-        "01pm",
-        null,
-        ""
-      ]
-    ],
-    "urls": [
-      "https://nycquakers.org/events/silent-vigil-for-peace-and-non-violence/2025/12/07"
-    ],
-    "short_name": "Silent Vigil for Peace and Non-Violence"
-  },
-  {
-    "name": "Silent Vigil for Peace and Non-Violence",
-    "location": "Fifteenth Street Meetinghouse",
-    "description": "Join Friends (Quakers) at this silent vigil for peace and nonviolence on the first Sunday of the month at the Washington Square Arch.",
-    "emoji": "☮️",
-    "tags": [
-      "Community",
-      "Activism",
-      "Peace",
-      "Non Violence",
-      "Vigil"
-    ],
-    "lat": 40.7346,
-    "lng": -73.9836,
-    "occurrences": [
-      [
-        "2026-01-04",
-        "01pm",
-        null,
-        ""
-      ],
-      [
-        "2026-01-04",
-        "1pm",
-        null,
-        "2pm"
-      ]
-    ],
-    "urls": [
-      "https://nycquakers.org/events/silent-vigil-for-peace-and-non-violence/2025/12/07"
-    ],
-    "short_name": "Silent Vigil for Peace and Non-Violence"
   },
   {
     "name": "Sublimate w/ Ena & DJ Rum",
@@ -13210,82 +11645,6 @@
     "short_name": "Debbie Brukman's FAMJAM"
   },
   {
-    "name": "Silent Vigil for Peace and Non-Violence",
-    "location": "Fifteenth Street Meetinghouse",
-    "description": "Join Friends (Quakers) at this silent vigil for peace and nonviolence at 1:00 pm on the first Sunday of the month at the Washington Square Arch.",
-    "emoji": "🕊️",
-    "tags": [
-      "Activism",
-      "Peace",
-      "Non Violence",
-      "Vigil"
-    ],
-    "lat": 40.7346,
-    "lng": -73.9836,
-    "occurrences": [
-      [
-        "2026-01-04",
-        "1pm",
-        null,
-        "2pm"
-      ]
-    ],
-    "urls": [
-      "https://nycquakers.org/events/silent-vigil-for-peace-and-non-violence/2025/12/07"
-    ],
-    "short_name": "Silent Vigil for Peace and Non-Violence"
-  },
-  {
-    "name": "Sunday Platform",
-    "location": "Brooklyn Society for Ethical Culture",
-    "description": "Hosted by the Brooklyn Society for Ethical Culture. NYSEC will not be hosting an in-person watch party for this ASP. If you would like to attend live at BSEC, please...",
-    "emoji": "🗣️",
-    "tags": [
-      "Community",
-      "Ethical Culture",
-      "Discussion"
-    ],
-    "lat": 40.67533,
-    "lng": -73.98402,
-    "occurrences": [
-      [
-        "2026-01-04",
-        "10:30am",
-        null,
-        ""
-      ]
-    ],
-    "urls": [
-      "https://ethical.nyc/events/"
-    ],
-    "short_name": "Sunday Platform"
-  },
-  {
-    "name": "Miss Mississippi Comedy Presents: Cheap Christmas Trash",
-    "location": "The Bell House",
-    "description": "A comedy show presented by Miss Mississippi Comedy, titled \"Cheap Christmas Trash\". This suggests a humorous and possibly campy holiday-themed event.",
-    "emoji": "🎁",
-    "tags": [
-      "Comedy",
-      "Holiday",
-      "Camp"
-    ],
-    "lat": 40.67354,
-    "lng": -73.99158,
-    "occurrences": [
-      [
-        "2026-01-04",
-        "7pm",
-        null,
-        ""
-      ]
-    ],
-    "urls": [
-      "https://www.ticketmaster.com/miss-mississippi-comedy-presents-cheap-christmas-brooklyn-new-york-01-04-2026/event/30006370FEA08D25"
-    ],
-    "short_name": "Cheap Christmas Trash"
-  },
-  {
     "name": "Greenmarket",
     "location": "Domino Park",
     "description": "Organized by GrowNYC, this Sunday staple features local farmers and producers offering a variety of fruits, vegetables, flowers, plants, and more.",
@@ -13386,60 +11745,6 @@
     ]
   },
   {
-    "name": "InspiredWordNYC Presents – 1st and 3rd Sundays Open Mic",
-    "location": "Brooklyn Music Kitchen",
-    "description": "A long-running open mic series welcoming musicians, poets, and comedians to the stage. This event provides a platform for local talent in a supportive, high-energy environment.",
-    "emoji": "🎙️",
-    "tags": [
-      "Comedy",
-      "Poetry",
-      "Spoken Word",
-      "Open Mic",
-      "Acoustic Music",
-      "Creative Community"
-    ],
-    "lat": 40.69264,
-    "lng": -73.96949,
-    "occurrences": [
-      [
-        "2026-01-04",
-        "3pm",
-        null,
-        "7pm"
-      ]
-    ],
-    "urls": [
-      "https://brooklynmusickitchen.com"
-    ],
-    "short_name": "InspiredWordNYC Presents – 1st and 3rd Sundays Open Mic"
-  },
-  {
-    "name": "‘Spaghetti & Marshmallows’ – Rev. Micah C. Ma Preaching",
-    "location": "First Unitarian Congregational Society",
-    "description": "Rev. Micah C. Ma will be preaching. The service is titled ‘Spaghetti & Marshmallows’.",
-    "emoji": "🍝",
-    "tags": [
-      "Religious Service",
-      "Unitarian Universalist",
-      "Spaghetti",
-      "Marshmallows"
-    ],
-    "lat": 40.69533,
-    "lng": -73.99279,
-    "occurrences": [
-      [
-        "2026-01-04",
-        "11am",
-        null,
-        ""
-      ]
-    ],
-    "urls": [
-      "https://fuub.org"
-    ],
-    "short_name": "‘Spaghetti & Marshmallows’ – Rev. Micah C. Ma Preaching"
-  },
-  {
     "name": "Falling Out-A New Musical (Preview)",
     "location": "Under St. Marks Theater",
     "description": "A new musical by Josee Klein where a melancholic transplant and a musician collide in a downtown music bar. Together they create a discordant harmony to uncover truths and reshape their lives.",
@@ -13508,197 +11813,6 @@
     "short_name": "Free One Hour Outdoor Yoga in La Plaza"
   },
   {
-    "name": "Coffee with Comrades in West Harlem",
-    "location": "NYC-DSA Office",
-    "description": "A casual social gathering for members and the socialist-curious to meet and chat in West Harlem.",
-    "emoji": "☕",
-    "tags": [
-      "Community",
-      "Networking",
-      "Socialism",
-      "Social",
-      "West Harlem"
-    ],
-    "lat": 40.71384,
-    "lng": -73.98883,
-    "occurrences": [
-      [
-        "2026-01-04",
-        "",
-        null,
-        ""
-      ]
-    ],
-    "urls": [
-      "https://calendar.socialists.nyc/"
-    ],
-    "short_name": "Coffee"
-  },
-  {
-    "name": "Live Music Sundays at Time Out Market",
-    "location": "Empire Stores",
-    "description": "Experience live musical performances from a rotating lineup of artists every Sunday afternoon. It is the perfect soundtrack for dining and taking in the market's waterfront views.",
-    "emoji": "🎸",
-    "tags": [
-      "Music",
-      "Family",
-      "Food",
-      "Sunday Funday",
-      "Drinks"
-    ],
-    "lat": 40.70338,
-    "lng": -73.9916,
-    "occurrences": [
-      [
-        "2026-01-04",
-        "2pm",
-        null,
-        "5pm"
-      ]
-    ],
-    "urls": [
-      "https://www.empirestoresdumbo.com/whats-on"
-    ],
-    "short_name": "Live Music Sundays"
-  },
-  {
-    "name": "Murder, They Read Book Club",
-    "location": "Moxy NYC East Village",
-    "description": "Join fellow readers to dissect murder mysteries and thrillers, currently discussing \"THE ONCE AND FUTURE ME\" by Melissa Pace.",
-    "emoji": "🔪",
-    "tags": [
-      "Mystery",
-      "Thriller",
-      "True Crime",
-      "Book Club",
-      "Suspense"
-    ],
-    "lat": 40.7316,
-    "lng": -73.98951,
-    "occurrences": [
-      [
-        "2026-01-05",
-        "6:30pm",
-        null,
-        "8pm"
-      ]
-    ],
-    "urls": [
-      "https://www.eventbrite.com/o/book-club-for-the-book-hoes-52255937823"
-    ],
-    "short_name": "Murder, They Read Book Club"
-  },
-  {
-    "name": "Lectures on Tap - \"Reducing the Cost of US Transit\"",
-    "location": "Carroll Gardens",
-    "description": "An expert discussion on the economic and political factors influencing the high cost of public transportation infrastructure in the United States.",
-    "emoji": "🚆",
-    "tags": [
-      "Urban Planning",
-      "Infrastructure",
-      "Politics",
-      "Public Transit",
-      "Economics"
-    ],
-    "lat": 40.68054,
-    "lng": -73.99466,
-    "occurrences": [
-      [
-        "2026-01-05",
-        "6:30pm",
-        null,
-        ""
-      ]
-    ],
-    "urls": [
-      "https://lecturesontap.com/nyc"
-    ],
-    "short_name": "Lectures on Tap - \"Reducing the Cost of US Transit\""
-  },
-  {
-    "name": "Lectures on Tap - \"Reducing the Cost of US Transit\"",
-    "location": "Carroll Gardens",
-    "description": "An expert discussion on the economic and political factors influencing the high cost of public transportation infrastructure in the United States.",
-    "emoji": "🚆",
-    "tags": [
-      "Urban Planning",
-      "Infrastructure",
-      "Politics",
-      "Public Transit",
-      "Economics"
-    ],
-    "lat": 40.68054,
-    "lng": -73.99466,
-    "occurrences": [
-      [
-        "2026-01-05",
-        "6:30pm",
-        null,
-        ""
-      ]
-    ],
-    "urls": [
-      "https://lecturesontap.com/nyc"
-    ],
-    "short_name": "Lectures on Tap - \"Reducing the Cost of US Transit\""
-  },
-  {
-    "name": "CB6 Committee Meeting – Business & Licenses Committee",
-    "location": "Carroll Gardens Pop-Up Library",
-    "description": "A committee meeting of Brooklyn Community Board 6 to discuss business and licensing issues. The agenda for this meeting is to be determined.",
-    "emoji": "🤝",
-    "tags": [
-      "Community Board",
-      "Urban Planning",
-      "Brooklyn CB6",
-      "Civic Engagement",
-      "Local Government",
-      "Business Licenses"
-    ],
-    "lat": 40.68613,
-    "lng": -73.99476,
-    "occurrences": [
-      [
-        "2026-01-05",
-        "6:30pm",
-        null,
-        "7:30pm"
-      ]
-    ],
-    "urls": [
-      "https://brooklyncb6.cityofnewyork.us/events/"
-    ],
-    "short_name": "CB6 Committee Meeting – Business & Licenses Committee"
-  },
-  {
-    "name": "Bodyweight Interval Training",
-    "location": "McCarren Play Center",
-    "description": "Bodyweight Interval Training is an energetic yet low impact exercise class that will get your muscles moving.",
-    "emoji": "🏃",
-    "tags": [
-      "Fitness",
-      "Cardio",
-      "Bodyweight",
-      "Interval Training",
-      "McCarren Park"
-    ],
-    "lat": 40.72013,
-    "lng": -73.94999,
-    "occurrences": [
-      [
-        "2026-01-05",
-        "6:30pm",
-        null,
-        "7:30pm"
-      ]
-    ],
-    "urls": [
-      "https://www.nyc.gov/main/events/?",
-      "https://www.nycgovparks.org/events/"
-    ],
-    "short_name": "Bodyweight Interval Training"
-  },
-  {
     "name": "New York City One-Shot: Wild East Brewing",
     "location": "Wild East Brewing",
     "description": "Join a Dungeons & Dragons 5th Edition one-shot adventure where all materials, including pre-made character sheets, are provided. Players of all experience levels are welcome to learn and play in a social setting.",
@@ -13744,147 +11858,6 @@
       "https://dungeonsndrafts.com/areaEvents/GsKz2MvyKDLZeXp02y81"
     ],
     "short_name": "Wild East Brewing"
-  },
-  {
-    "name": "WWE Monday Night RAW",
-    "location": "Barclays Center",
-    "description": "WWE Monday Night RAW returns to Brooklyn featuring World Heavyweight Champion CM Punk vs. Bron Breaker.",
-    "emoji": "🤼",
-    "tags": [
-      "Live Entertainment",
-      "Wrestling",
-      "WWE",
-      "Monday Night Raw",
-      "Pro Wrestling"
-    ],
-    "lat": 40.68266,
-    "lng": -73.97528,
-    "occurrences": [
-      [
-        "2026-01-05",
-        "",
-        null,
-        ""
-      ]
-    ],
-    "urls": [
-      "https://www.barclayscenter.com/events",
-      "https://www.barclayscenter.com/events/detail/wwe-monday-night-raw-2026",
-      "https://www.barclayscenter.com/events/detail/wwe-monday-night-raw-2026%20"
-    ],
-    "short_name": "WWE Monday Night RAW"
-  },
-  {
-    "name": "Cyanotype After Dark",
-    "location": "Brooklyn Brainery",
-    "description": "Experiment with blueprinting by using grow lights to create beautiful blue-hued photograms on pre-sensitized paper. This hands-on session focuses on creating images from nature and household objects.",
-    "emoji": "📸",
-    "tags": [
-      "Printmaking",
-      "Art Workshop",
-      "Cyanotype",
-      "Alternative Photography",
-      "Blueprints"
-    ],
-    "lat": 40.6749,
-    "lng": -73.96696,
-    "occurrences": [
-      [
-        "2026-01-05",
-        "6pm",
-        null,
-        "7:30pm"
-      ]
-    ],
-    "urls": [
-      "https://brooklynbrainery.com/courses"
-    ],
-    "short_name": "Cyanotype After Dark"
-  },
-  {
-    "name": "NOTNORTH, Believe in Ghost!, MONTE, Magdala",
-    "location": "Mercury Lounge",
-    "description": "Catch a live performance by NOTNORTH along with Believe in Ghost!, MONTE, and Magdala.",
-    "emoji": "🥁",
-    "tags": [
-      "Music",
-      "Concert",
-      "Emerging Artists",
-      "Indie Rock",
-      "Alternative"
-    ],
-    "lat": 40.72217,
-    "lng": -73.98675,
-    "occurrences": [
-      [
-        "2026-01-05",
-        "6pm",
-        null,
-        ""
-      ]
-    ],
-    "urls": [
-      "https://mercuryeastpresents.com/mercurylounge/"
-    ],
-    "short_name": "NOTNORTH, Believe in Ghost!, MONTE, Magdala"
-  },
-  {
-    "name": "CQL Book Group: Spiritual Transformation",
-    "location": "Brooklyn Quaker Meeting House",
-    "description": "Consideration of spiritual texts focusing on the theme of spiritual transformation, currently discussing Sheila Keane's \"Prayer: Beginning Again.\"",
-    "emoji": "📖",
-    "tags": [
-      "Quaker",
-      "Spiritual Growth",
-      "Theology",
-      "Discussion Group",
-      "Book Club"
-    ],
-    "lat": 40.69002,
-    "lng": -73.98949,
-    "occurrences": [
-      [
-        "2026-01-05",
-        "6pm",
-        null,
-        "7pm"
-      ]
-    ],
-    "urls": [
-      "https://nycquakers.org/events",
-      "https://nycquakers.org/events/cql-book-group-spiritual-transformation-2/2026/01/05",
-      "https://nycquakers.org/events/cql-book-group-spiritual-transformation-2/2025/12/01"
-    ],
-    "short_name": "CQL Book Group: Spiritual Transformation"
-  },
-  {
-    "name": "New York University Women’s Basketball vs Skidmore College",
-    "location": "New York University (NYU)",
-    "description": "The NYU women's team takes the court for a matchup against Skidmore College.",
-    "emoji": "🏀",
-    "tags": [
-      "Basketball",
-      "NYU Violets",
-      "NCAA",
-      "College Sports",
-      "Womens Basketball"
-    ],
-    "lat": 40.72951,
-    "lng": -73.99646,
-    "occurrences": [
-      [
-        "2026-01-05",
-        "2pm",
-        null,
-        "4pm"
-      ]
-    ],
-    "urls": [
-      "https://events.nyu.edu/all/categories/Open%20to%20the%20Public",
-      "https://gonyuathletics.com/calendar.aspx?game_id=13629&sport_id=11",
-      "https://gonyu athletics.com/calendar.aspx?game_id=13629&sport_id=11"
-    ],
-    "short_name": "New York University Women’s Basketball vs Skidmore College"
   },
   {
     "name": "First Mondays: Readings of New Works In Progress",
@@ -13961,33 +11934,6 @@
     "short_name": "Monsters"
   },
   {
-    "name": "Illuminated Interpretations",
-    "location": "The Sheen Center for Thought & Culture",
-    "description": "Conceptual artist Hannah Robinett presents a series of artworks inspired by the Book of Hours. The exhibition explores phrases, spirituality, and beauty through various media.",
-    "emoji": "🎨",
-    "tags": [
-      "Visual Arts",
-      "Spirituality",
-      "Art Exhibit",
-      "Brooklyn Artist",
-      "Gallery Show"
-    ],
-    "lat": 40.72546,
-    "lng": -73.9934,
-    "occurrences": [
-      [
-        "2026-01-05",
-        "5pm",
-        null,
-        ""
-      ]
-    ],
-    "urls": [
-      "https://www.sheencenter.org/events/all"
-    ],
-    "short_name": "Illuminated Interpretations"
-  },
-  {
     "name": "Frankenstein's Baby",
     "location": "Union Hall",
     "description": "A comedy variety show featuring Jeff Hiller, Maddy Kelly, and Nat Towsen.",
@@ -14058,33 +12004,6 @@
       "https://angelikafilmcenter.com/nyc/now-playing"
     ],
     "short_name": "All That's Left of You"
-  },
-  {
-    "name": "Living Radio",
-    "location": "Under St. Marks Theater",
-    "description": "A unique live theater experience that combines radio-style performance with modern staging.",
-    "emoji": "🎭",
-    "tags": [
-      "Off Off Broadway",
-      "Performance Art",
-      "Live Theater",
-      "Manhattan Arts",
-      "Radio Play"
-    ],
-    "lat": 40.72729,
-    "lng": -73.98497,
-    "occurrences": [
-      [
-        "2026-01-05",
-        "7pm",
-        null,
-        ""
-      ]
-    ],
-    "urls": [
-      "https://www.nycresistor.com/calendar/"
-    ],
-    "short_name": "Living Radio"
   },
   {
     "name": "Handwriting the Constitution",
@@ -14183,189 +12102,6 @@
       "https://www.dominopark.com/events"
     ],
     "short_name": "Winter Workshops"
-  },
-  {
-    "name": "First Day of Session let's go! Pass NYHA",
-    "location": "NYC-DSA Office",
-    "description": "Mobilizing for the first day of the legislative session to demand the passage of the New York Health Act.",
-    "emoji": "🏛️",
-    "tags": [
-      "NYHA",
-      "Healthcare Is a Right",
-      "Socialist Action",
-      "Albany",
-      "Healthcare Justice"
-    ],
-    "lat": 40.71384,
-    "lng": -73.98883,
-    "occurrences": [
-      [
-        "2026-01-05",
-        "",
-        null,
-        ""
-      ]
-    ],
-    "urls": [
-      "https://calendar.socialists.nyc/"
-    ],
-    "short_name": "First Day of Session let's go! Pass NYHA"
-  },
-  {
-    "name": "Socialist Feminist January General Meeting",
-    "location": "NYC-DSA Office",
-    "description": "The first general meeting of the year for the NYC-DSA Socialist Feminist working group.",
-    "emoji": "🌹",
-    "tags": [
-      "General Meeting",
-      "Socialist Feminism",
-      "Gender Justice",
-      "Political Organizing"
-    ],
-    "lat": 40.71384,
-    "lng": -73.98883,
-    "occurrences": [
-      [
-        "2026-01-05",
-        "",
-        null,
-        ""
-      ]
-    ],
-    "urls": [
-      "https://calendar.socialists.nyc/"
-    ],
-    "short_name": "Socialist Feminist January General Meeting"
-  },
-  {
-    "name": "ZOO",
-    "location": "Spectacle Theater",
-    "description": "A provocative morning film screening at Spectacle Theater in the heart of Brooklyn.",
-    "emoji": "🐘",
-    "tags": [
-      "Indie Film",
-      "Microcinema",
-      "Brooklyn Arts",
-      "Arthouse",
-      "Morning Screening"
-    ],
-    "lat": 40.71254,
-    "lng": -73.96284,
-    "occurrences": [
-      [
-        "2026-01-05",
-        "10am",
-        null,
-        ""
-      ]
-    ],
-    "urls": [
-      "https://withfriends.events/o/spectacle/upcoming/"
-    ],
-    "short_name": "ZOO"
-  },
-  {
-    "name": "Rumpleteaser Musical Improv, Live and LIVESTREAMED!",
-    "location": "Upright Citizens Brigade Theatre",
-    "description": "Every show we get a suggestion and create a brand new musical on the spot, from the dance to the music to the lyrics! Rumpleteaser is a musical improv team that has been performing at UCB and across the…",
-    "emoji": "🎶",
-    "tags": [
-      "Improv",
-      "Musical Improv",
-      "Comedy Musical"
-    ],
-    "lat": 40.7325,
-    "lng": -73.98567,
-    "occurrences": [
-      [
-        "2026-01-05",
-        "7pm",
-        null,
-        ""
-      ]
-    ],
-    "urls": [
-      "https://ucbcomedy.com/shows/new-york/"
-    ],
-    "short_name": "Rumpleteaser Musical Improv, Live and LIVESTREAMED!"
-  },
-  {
-    "name": "Queer Window: LGBTQ+ Sketch Comedy",
-    "location": "Caveat",
-    "description": "A sketch comedy show featuring LGBTQ+ performers and content.",
-    "emoji": "😂",
-    "tags": [
-      "Comedy",
-      "LGBTQ",
-      "Performance",
-      "Sketch Comedy"
-    ],
-    "lat": 40.72074,
-    "lng": -73.98443,
-    "occurrences": [
-      [
-        "2026-01-05",
-        "9:30pm",
-        null,
-        ""
-      ]
-    ],
-    "urls": [
-      "https://catchthefeels.co/nyc/"
-    ],
-    "short_name": "Queer Window: LGBTQ+ Sketch Comedy"
-  },
-  {
-    "name": "Comedy Hour",
-    "location": "Arlene's Grocery",
-    "description": "Arlenes Grocery presents another installment of its popular comedy night, featuring a lineup of funny individuals ready to entertain. Prepare for a night of laughter.",
-    "emoji": "😂",
-    "tags": [
-      "Comedy",
-      "Stand-up",
-      "Live Comedy",
-      "Humor"
-    ],
-    "lat": 40.72128,
-    "lng": -73.98837,
-    "occurrences": [
-      [
-        "2026-01-05",
-        "7pm",
-        null,
-        ""
-      ]
-    ],
-    "urls": [
-      "https://www.arlenesgrocerynyc.com/upcoming-events"
-    ],
-    "short_name": "Comedy Hour"
-  },
-  {
-    "name": "Debbie Brukman Community Music",
-    "location": "ShapeShifter Lab",
-    "description": "Debbie Brukman leads a community music session focused on engagement, singing, and wiggling along in a fun, interactive experience.",
-    "emoji": "🪕",
-    "tags": [
-      "Interactive",
-      "Family",
-      "Community Music",
-      "Sing Along"
-    ],
-    "lat": 40.67497,
-    "lng": -73.97601,
-    "occurrences": [
-      [
-        "2026-01-05",
-        "",
-        null,
-        ""
-      ]
-    ],
-    "urls": [
-      "https://shapeshifterplus.org/events/"
-    ],
-    "short_name": "Debbie Brukman Community Music"
   },
   {
     "name": "Sombra 5 Mile Mondays",
@@ -14467,33 +12203,6 @@
     "short_name": "Queer Spirit"
   },
   {
-    "name": "Short(er) Slavic Novels Book Club: Love and Garbage",
-    "location": "McNally Jackson Downtown Brooklyn",
-    "description": "A book club for Slavic novels under 300 pages. This month, the group discusses Ivan Klima's poignant novel, _Love and Garbage_.",
-    "emoji": "📖",
-    "tags": [
-      "Book Club",
-      "Literary",
-      "Slavic Literature",
-      "Czech Literature",
-      "Contemporary Classic"
-    ],
-    "lat": 40.69099,
-    "lng": -73.98292,
-    "occurrences": [
-      [
-        "2026-01-05",
-        "",
-        null,
-        ""
-      ]
-    ],
-    "urls": [
-      "https://www.mcnallyjackson.com/shorter-slavic-novels-book-club-arya-15"
-    ],
-    "short_name": "Love and Garbage"
-  },
-  {
     "name": "Handmade Pasta Mondays",
     "location": "Leland Eating and Drinking House",
     "description": "Indulge in rotating handmade pasta specials that are only available on Mondays. Don't miss this limited special!",
@@ -14544,60 +12253,6 @@
       "https://www.lelandbrooklyn.com/events"
     ],
     "short_name": "Handmade Pasta Mondays"
-  },
-  {
-    "name": "NYU Women’s Basketball vs Skidmore College",
-    "location": "New York University (NYU)",
-    "description": "The NYU Violets women's basketball team takes on Skidmore College.",
-    "emoji": "🏀",
-    "tags": [
-      "Sports",
-      "NYU",
-      "Basketball",
-      "College Sports",
-      "Womens Sports"
-    ],
-    "lat": 40.72951,
-    "lng": -73.99646,
-    "occurrences": [
-      [
-        "2026-01-05",
-        "2pm",
-        null,
-        "4pm"
-      ]
-    ],
-    "urls": [
-      "https://gonyuathletics.com/calendar.aspx?game_id=13629&sport_id=11"
-    ],
-    "short_name": "NYU Women’s Basketball vs Skidmore College"
-  },
-  {
-    "name": "Musical Mondays",
-    "location": "Village East by Angelika",
-    "description": "Join us the first Monday of each month at 7pm to relive iconic classic musicals on the big screen!",
-    "emoji": "🎶",
-    "tags": [
-      "Cinema",
-      "Film",
-      "Musical",
-      "Classic Film",
-      "Sing Along"
-    ],
-    "lat": 40.73096,
-    "lng": -73.98621,
-    "occurrences": [
-      [
-        "2026-01-05",
-        "7pm",
-        null,
-        ""
-      ]
-    ],
-    "urls": [
-      "https://angelikafilmcenter.com/villageeast/now-playing"
-    ],
-    "short_name": "Musical Mondays"
   },
   {
     "name": "Spare Time Comedy Open Mic",
@@ -14690,34 +12345,6 @@
     "short_name": "Gutter Jam"
   },
   {
-    "name": "InspiredWordNYC Presents – Monday Open Mic",
-    "location": "Brooklyn Music Kitchen",
-    "description": "A weekly open mic event featuring a mix of music, poetry, and comedy. Performers can showcase their work on a professional stage with high-quality sound.",
-    "emoji": "🎭",
-    "tags": [
-      "Music",
-      "Performance",
-      "Poetry Slam",
-      "Comedy Night",
-      "Monday Night",
-      "Open Mic"
-    ],
-    "lat": 40.69264,
-    "lng": -73.96949,
-    "occurrences": [
-      [
-        "2026-01-05",
-        "7pm",
-        null,
-        "11pm"
-      ]
-    ],
-    "urls": [
-      "https://brooklynmusickitchen.com"
-    ],
-    "short_name": "InspiredWordNYC Presents – Monday Open Mic"
-  },
-  {
     "name": "Short(er) Slavic Novels Book Club",
     "location": "McNally Jackson Downtown Brooklyn",
     "description": "A discussion of Ivan Klima's poignant Czech novel set in Prague, Love and Garbage.",
@@ -14760,151 +12387,6 @@
       "https://www.mcnallyjackson.com/shorter-slavic-novels-book-club-arya-14"
     ],
     "short_name": "Short Slavic Novels Book Club"
-  },
-  {
-    "name": "The Stand Presents: Matthew Broussard, Harry Settel, Peter James Fowler, & More!",
-    "location": "The Stand NYC",
-    "description": "Kick off your week with a Monday night showcase featuring Matthew Broussard and Harry Settel.",
-    "emoji": "🎤",
-    "tags": [
-      "Comedy Club",
-      "Stand-up",
-      "Nightlife",
-      "Live Show",
-      "Entertainment",
-      "Monday Comedy"
-    ],
-    "lat": 40.73534,
-    "lng": -73.98848,
-    "occurrences": [
-      [
-        "2026-01-05",
-        "7pm",
-        null,
-        ""
-      ]
-    ],
-    "urls": [
-      "https://thestandnyc.com/shows"
-    ],
-    "short_name": "Matthew Broussard, Harry Settel, Peter James Fowler, & More!"
-  },
-  {
-    "name": "The Legion Of Skanks Podcast Live",
-    "location": "The Stand NYC",
-    "description": "A live recording of the hit podcast featuring Big Jay Oakerson, Dave Smith, and Luis J. Gomez.",
-    "emoji": "🎙️",
-    "tags": [
-      "Comedy",
-      "Performance",
-      "Nightlife",
-      "Legion of Skanks",
-      "Podcast Live",
-      "Adult Humor"
-    ],
-    "lat": 40.73534,
-    "lng": -73.98848,
-    "occurrences": [
-      [
-        "2026-01-05",
-        "8pm",
-        null,
-        ""
-      ]
-    ],
-    "urls": [
-      "https://thestandnyc.com/shows"
-    ],
-    "short_name": "The Legion Of Skanks Podcast Live"
-  },
-  {
-    "name": "Frantic! Free Show",
-    "location": "The Stand NYC",
-    "description": "A high-energy free comedy showcase featuring Matthew Broussard, Carolina Montesquieu, and more.",
-    "emoji": "🎤",
-    "tags": [
-      "Comedy",
-      "Stand-up",
-      "Free Events",
-      "Nightlife",
-      "Live Show",
-      "Budget Friendly"
-    ],
-    "lat": 40.73534,
-    "lng": -73.98848,
-    "occurrences": [
-      [
-        "2026-01-05",
-        "9pm",
-        null,
-        ""
-      ]
-    ],
-    "urls": [
-      "https://thestandnyc.com/shows"
-    ],
-    "short_name": "Frantic! Free Show"
-  },
-  {
-    "name": "Lectures on Tap: Reducing the Cost of US Transit",
-    "location": "Liz's Book Bar",
-    "description": "Civil engineer Chetan Sharma explores the reasons behind high transit construction costs in the US and how to align them with international standards.",
-    "emoji": "🚆",
-    "tags": [
-      "Sustainability",
-      "Urban Planning",
-      "Lecture",
-      "Public Transit",
-      "Civil Engineering"
-    ],
-    "lat": 40.68122,
-    "lng": -73.99408,
-    "occurrences": [
-      [
-        "2026-01-05",
-        "6:30pm",
-        null,
-        "8:30pm"
-      ]
-    ],
-    "urls": [
-      "https://www.lizsbookbar.com/events"
-    ],
-    "short_name": "Reducing the Cost of US Transit"
-  },
-  {
-    "name": "Food Rescue Pickup (Brooklyn Bread)",
-    "location": "Brooklyn Bread",
-    "description": "Rescue surplus food from Brooklyn Bread's Carroll Gardens location to help stock the CHiPS food pantry and soup kitchen.",
-    "emoji": "🥯",
-    "tags": [
-      "Sustainability",
-      "Volunteer",
-      "Food Rescue",
-      "Hunger Relief",
-      "Community Service",
-      "Social Good"
-    ],
-    "lat": 40.68016,
-    "lng": -73.99715,
-    "occurrences": [
-      [
-        "2026-01-05",
-        "3:55pm",
-        null,
-        "4:55pm"
-      ],
-      [
-        "2026-01-05",
-        "5:45pm",
-        null,
-        "6:45pm"
-      ]
-    ],
-    "urls": [
-      "https://volunteer.chipsonline.org/"
-    ],
-    "short_name": "Food Rescue Pickup"
   },
   {
     "name": "Dungeons n' Drafts: Wild East Brewing",
@@ -16357,7 +13839,8 @@
       ]
     ],
     "urls": [
-      "https://publictheater.org/performances-jp/2025/g/generation-women/"
+      "https://publictheater.org/performances-jp/2025/g/generation-women/",
+      "https://publictheater.org/calendar/"
     ],
     "short_name": "Generation Women: Reset"
   },
@@ -16856,6 +14339,62 @@
       "https://calendar.socialists.nyc/"
     ],
     "short_name": "Democratize New York - January Meeting"
+  },
+  {
+    "name": "CB3 Civic & Public Safety Committee Meeting",
+    "location": "Brooklyn Community Board 3",
+    "description": "A public meeting held by the Civic & Public Safety Committee of Brooklyn Community Board 3 to discuss neighborhood safety and civic affairs.",
+    "emoji": "🚔",
+    "tags": [
+      "Community Board",
+      "Civic Engagement",
+      "Local Government",
+      "Public Safety",
+      "Public Meeting",
+      "Brooklyn CB3"
+    ],
+    "lat": 40.67997,
+    "lng": -73.94657,
+    "occurrences": [
+      [
+        "2026-01-06",
+        "6:30pm",
+        null,
+        "8pm"
+      ]
+    ],
+    "urls": [
+      "https://www.nyc.gov/site/brooklyncb3/calendar/calendar.page"
+    ],
+    "short_name": "CB3 Civic & Public Safety Committee Meeting"
+  },
+  {
+    "name": "Parks, Youth & Education (PYE)",
+    "location": "Brower Park Library",
+    "description": "A committee meeting focused on local parks, youth programming, and educational initiatives within the community district.",
+    "emoji": "🌳",
+    "tags": [
+      "Education",
+      "Community Board",
+      "Civic Engagement",
+      "Youth Services",
+      "Brooklyn CB8",
+      "Urban Parks"
+    ],
+    "lat": 40.67443,
+    "lng": -73.94437,
+    "occurrences": [
+      [
+        "2026-01-06",
+        "6pm",
+        null,
+        "7pm"
+      ]
+    ],
+    "urls": [
+      "https://www.brooklyncb8.org/meetings/"
+    ],
+    "short_name": "Parks, Youth & Education"
   },
   {
     "name": "Ben Markovits: The Rest of Our Lives w/ Isaac Fitzgerald",
@@ -18800,7 +16339,8 @@
       ]
     ],
     "urls": [
-      "https://publictheater.org/performances-jp/2026/a/anna-roisman-triple-threat/"
+      "https://publictheater.org/performances-jp/2026/a/anna-roisman-triple-threat/",
+      "https://publictheater.org/calendar/"
     ]
   },
   {
@@ -19161,6 +16701,119 @@
       "https://www.downtownbrooklyn.com/events/"
     ],
     "short_name": "Sound + Fury Trivia Nights"
+  },
+  {
+    "name": "Mike Birbiglia & J. Hope Stein: Jokes and Poems",
+    "location": "Joe's Pub",
+    "description": "Acclaimed comedian Mike Birbiglia and poet J. Hope Stein join forces for an intimate evening of shared humor and verse. The real-life married couple presents a collaborative show featuring special guests and a mix of literary and stand-up performance.",
+    "emoji": "🖋️",
+    "tags": [
+      "Comedy",
+      "Poetry",
+      "Stand-up",
+      "Literary Arts",
+      "Vocal Music"
+    ],
+    "lat": 40.72897,
+    "lng": -73.99175,
+    "occurrences": [
+      [
+        "2026-01-07",
+        "7pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://publictheater.org/calendar/"
+    ],
+    "short_name": "Jokes and Poems"
+  },
+  {
+    "name": "Parks & Waterfront – Rich Caccappolo, Chair",
+    "location": "Manhattan Community Board 2",
+    "description": "This committee meeting addresses issues related to local parks, open spaces, and waterfront developments in the community.",
+    "emoji": "🌳",
+    "tags": [
+      "Waterfront",
+      "Environment",
+      "Community Board",
+      "Parks and Rec",
+      "Community Planning",
+      "Manhattan CB2"
+    ],
+    "lat": 40.72767,
+    "lng": -73.99761,
+    "occurrences": [
+      [
+        "2026-01-07",
+        "6:30pm",
+        null,
+        "9:30pm"
+      ]
+    ],
+    "urls": [
+      "https://cbmanhattan.cityofnewyork.us/cb2/calendar/"
+    ],
+    "short_name": "Parks & Waterfront – Rich Caccappolo, Chair"
+  },
+  {
+    "name": "SLA Review & DCA Committee Meeting",
+    "location": "Swinging Sixties Older Adult Center",
+    "description": "This committee meeting reviews applications for liquor licenses and consumer-related permits within the community district. It serves as a public forum for residents to discuss new or renewing establishment applications.",
+    "emoji": "🍷",
+    "tags": [
+      "Community Board",
+      "Brooklyn CB1",
+      "Local Governance",
+      "Small Business",
+      "Liquor License",
+      "Consumer Affairs",
+      "Community Meeting"
+    ],
+    "lat": 40.71315,
+    "lng": -73.94557,
+    "occurrences": [
+      [
+        "2026-01-07",
+        "6:30pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://www.nyc.gov/site/brooklyncb1/calendar/calendar.page"
+    ],
+    "short_name": "SLA Review & DCA Committee Meeting"
+  },
+  {
+    "name": "CB3 Parks, Arts & Culture Committee Meeting",
+    "location": "Brooklyn Community Board 3",
+    "description": "A committee meeting focused on the development of local parks and the promotion of arts and cultural initiatives in the community.",
+    "emoji": "🌳",
+    "tags": [
+      "Community Board",
+      "Arts and Culture",
+      "Parks and Rec",
+      "Public Meeting",
+      "Community Planning",
+      "Urban Parks",
+      "Brooklyn CB3"
+    ],
+    "lat": 40.67997,
+    "lng": -73.94657,
+    "occurrences": [
+      [
+        "2026-01-07",
+        "6pm",
+        null,
+        "7:30pm"
+      ]
+    ],
+    "urls": [
+      "https://www.nyc.gov/site/brooklyncb3/calendar/calendar.page"
+    ],
+    "short_name": "CB3 Parks, Arts & Culture Committee Meeting"
   },
   {
     "name": "Everything Yes, Shubh Saran",
@@ -21782,6 +19435,90 @@
     "short_name": "Tax The Rich: Albany 101"
   },
   {
+    "name": "Blkbok",
+    "location": "Joe's Pub",
+    "description": "Piano prodigy BLKBOK performs a high-energy set that bridges the gap between pop culture and neo-classical music. His performance is designed to illuminate awareness and encourage dialogue through a unique blend of keyboard mastery and modern influences.",
+    "emoji": "🎹",
+    "tags": [
+      "Contemporary Classical",
+      "Live Concert",
+      "Instrumental Music",
+      "Piano Prodigy",
+      "Neo Classical"
+    ],
+    "lat": 40.72897,
+    "lng": -73.99175,
+    "occurrences": [
+      [
+        "2026-01-08",
+        "7pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://publictheater.org/calendar/"
+    ],
+    "short_name": "Blkbok"
+  },
+  {
+    "name": "Christian Sands Trio / Gabrielle Cavassa",
+    "location": "Joe's Pub",
+    "description": "Five-time Grammy nominee Christian Sands brings his mastery of jazz language to the stage alongside Blue Note vocalist Gabrielle Cavassa. The trio explores a broad vocabulary of swing, bebop, and progressive jazz structures.",
+    "emoji": "🎷",
+    "tags": [
+      "Music",
+      "Jazz",
+      "Piano Trio",
+      "Vocal Jazz",
+      "Blue Note"
+    ],
+    "lat": 40.72897,
+    "lng": -73.99175,
+    "occurrences": [
+      [
+        "2026-01-08",
+        "9:30pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://publictheater.org/calendar/"
+    ],
+    "short_name": "Christian Sands Trio / Gabrielle Cavassa"
+  },
+  {
+    "name": "Landmarks & Land Use Committee Meeting: 46 Nelson LLC Zoning Application",
+    "location": "Carroll Gardens Pop-Up Library",
+    "description": "A public hearing regarding a zoning map and text amendment application by 46 Nelson LLC to facilitate the development of a new 7-story mixed-use building. The project at 46 Nelson Street is proposed to contain 108 dwelling units along with commercial space.",
+    "emoji": "🏗️",
+    "tags": [
+      "Community Board",
+      "Urban Planning",
+      "Brooklyn CB6",
+      "Land Use",
+      "Zoning",
+      "Public Hearing",
+      "Real Estate",
+      "Housing Development"
+    ],
+    "lat": 40.68613,
+    "lng": -73.99476,
+    "occurrences": [
+      [
+        "2026-01-08",
+        "",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://brooklyncb6.cityofnewyork.us/events/"
+    ],
+    "short_name": "46 Nelson LLC Zoning Application"
+  },
+  {
     "name": "Mining the Archives: Behind-the-Scenes Tour",
     "location": "New York Transit Museum",
     "description": "Go behind-the-scenes of the Museum's vast collections to see photographs, drawings, and artifacts that explore transit technology and design. Learn how archivists preserve and process historical materials.",
@@ -23550,6 +21287,113 @@
       "https://events.montefioreeinstein.org/"
     ],
     "short_name": "Neuroscience WIP: Cooke & Siebels"
+  },
+  {
+    "name": "Elizabeth Bougerol / Charles Yang",
+    "location": "Joe's Pub",
+    "description": "Hot Sardines vocalist Elizabeth Bougerol performs an evening of jazz classics alongside Grammy-winning violinist Charles Yang. The show celebrates the 'smorgasbord of life' through a fusion of rock-star charisma and 21st-century jazz interpretations.",
+    "emoji": "🎻",
+    "tags": [
+      "Jazz",
+      "Vocal Performance",
+      "Violin",
+      "Contemporary Jazz",
+      "Classical Fusion"
+    ],
+    "lat": 40.72897,
+    "lng": -73.99175,
+    "occurrences": [
+      [
+        "2026-01-09",
+        "6:30pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://publictheater.org/calendar/"
+    ],
+    "short_name": "Elizabeth Bougerol / Charles Yang"
+  },
+  {
+    "name": "Ana Popovic / Ethan Lipton & His Orchestra / Kyshona",
+    "location": "Joe's Pub",
+    "description": "A triple-bill performance featuring blues-rock guitarist Ana Popovic, the theatrical jazz-folk of Ethan Lipton, and the soulful healing songs of Kyshona. The night showcases a diverse intersection of blues, dance music, and therapeutic songwriting.",
+    "emoji": "🎸",
+    "tags": [
+      "Singer Songwriter",
+      "Soul Music",
+      "Blues Rock",
+      "Jazz Folk",
+      "Variety Concert"
+    ],
+    "lat": 40.72897,
+    "lng": -73.99175,
+    "occurrences": [
+      [
+        "2026-01-09",
+        "9:30pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://publictheater.org/calendar/"
+    ],
+    "short_name": "Ana Popovic / Ethan Lipton & His Orchestra / Kyshona"
+  },
+  {
+    "name": "NYSS Alumni Debut",
+    "location": "New York Studio School",
+    "description": "An evening showcase featuring the debut of work by alumni from the New York Studio School community.",
+    "emoji": "🎨",
+    "tags": [
+      "Contemporary Art",
+      "Visual Arts",
+      "Emerging Artists",
+      "Fine Art",
+      "Group Show",
+      "Alumni Art"
+    ],
+    "lat": 40.73246,
+    "lng": -73.99723,
+    "occurrences": [
+      [
+        "2026-01-09",
+        "6pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://nyss.org/exhibitions/"
+    ],
+    "short_name": "NYSS Alumni Debut"
+  },
+  {
+    "name": "SLOW JAMS NYC - Late Night Slow Jams & RnB Party in Brooklyn",
+    "location": "Littlefield",
+    "description": "A Brooklyn dance party dedicated to late-night slow jams and R&B favorites.",
+    "emoji": "🎶",
+    "tags": [
+      "Dance Party",
+      "Rn B Music",
+      "Slow Jams"
+    ],
+    "lat": 40.67843,
+    "lng": -73.98331,
+    "occurrences": [
+      [
+        "2026-01-09",
+        "11pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://www.eventbrite.com/d/ny--new-york/events/"
+    ],
+    "short_name": "SLOW JAMS NYC - Late Night Slow Jams & RnB Party in Brooklyn"
   },
   {
     "name": "Benefit Show @ P.I.T (Topaz, Rudy Stoned, Childless, London Plane)",
@@ -26225,5 +24069,3110 @@
       "https://giornopoetrysystems.org/222-bowery/future"
     ],
     "short_name": "Monthly Meditation Retreat"
+  },
+  {
+    "name": "Las Cafeteras",
+    "location": "Joe's Pub",
+    "description": "East Los Angeles group Las Cafeteras remixes roots music using Afro-Mexican rhythms, electronic beats, and powerful rhymes. Their performance serves as a sonic explosion of community stories and global fusion.",
+    "emoji": "🥁",
+    "tags": [
+      "Music",
+      "Roots Music",
+      "Global Beats",
+      "Afro Mexican",
+      "Chicano Art"
+    ],
+    "lat": 40.72897,
+    "lng": -73.99175,
+    "occurrences": [
+      [
+        "2026-01-10",
+        "9:30pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://publictheater.org/calendar/"
+    ],
+    "short_name": "Las Cafeteras"
+  },
+  {
+    "name": "Austra",
+    "location": "Baby's All Right",
+    "description": "Electronic music project Austra performs a 21+ show in Brooklyn. Doors open at 6:30 PM.",
+    "emoji": "🎹",
+    "tags": [
+      "Music",
+      "Indie Music",
+      "Electronic Music",
+      "Synth Pop",
+      "Austra"
+    ],
+    "lat": 40.71013,
+    "lng": -73.96349,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "7pm",
+        null,
+        ""
+      ],
+      [
+        "2026-01-12",
+        "7pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://wl.eventim.us/BabysAllRightBrooklyn"
+    ],
+    "short_name": "Austra"
+  },
+  {
+    "name": "Eric Reprid",
+    "location": "Baby's All Right",
+    "description": "Canadian artist Eric Reprid performs an 18+ late show at Baby's All Right.",
+    "emoji": "🎤",
+    "tags": [
+      "Performance",
+      "Hip Hop",
+      "Concert",
+      "Rap Music",
+      "Eric Reprid"
+    ],
+    "lat": 40.71013,
+    "lng": -73.96349,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "10pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://wl.eventim.us/BabysAllRightBrooklyn"
+    ],
+    "short_name": "Eric Reprid"
+  },
+  {
+    "name": "The Lasting Legend of Luqman",
+    "location": "The Bowery Electric",
+    "description": "An afternoon gathering and musical tribute dedicated to the enduring legacy and memory of Luqman. Join the community for a special performance and reflection.",
+    "emoji": "🕊️",
+    "tags": [
+      "Community",
+      "Music",
+      "Memorial",
+      "Performance",
+      "Tribute"
+    ],
+    "lat": 40.72575,
+    "lng": -73.9918,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "2pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://www.theboweryelectric.com/calendar/"
+    ],
+    "short_name": "The Lasting Legend of Luqman"
+  },
+  {
+    "name": "Transit Tots",
+    "location": "New York Transit Museum",
+    "description": "This early morning program for families with children ages 18 months to 3 years features story-time and crafts. It is designed to engage the youngest transportation fans through imaginative play.",
+    "emoji": "👶",
+    "tags": [
+      "Family Fun",
+      "Toddler Activities",
+      "Early Learning",
+      "Subway Fun",
+      "Creative Play"
+    ],
+    "lat": 40.69057,
+    "lng": -73.99007,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "9:30am",
+        null,
+        "10:30am"
+      ],
+      [
+        "2026-01-18",
+        "11:30am",
+        null,
+        "12:30pm"
+      ],
+      [
+        "2026-01-18",
+        "9:30am",
+        null,
+        "10:30am"
+      ],
+      [
+        "2026-01-25",
+        "9:30am",
+        null,
+        "10:30am"
+      ],
+      [
+        "2026-02-01",
+        "11:30am",
+        null,
+        "12:30pm"
+      ],
+      [
+        "2026-02-01",
+        "9:30am",
+        null,
+        "10:30am"
+      ],
+      [
+        "2026-02-08",
+        "9:30am",
+        null,
+        "10:30am"
+      ]
+    ],
+    "urls": [
+      "https://www.nytransitmuseum.org/programs/"
+    ],
+    "short_name": "Transit Tots"
+  },
+  {
+    "name": "Movers and Makers: Family Tour and Workshop",
+    "location": "New York Transit Museum",
+    "description": "This monthly family workshop series includes a tour of select exhibitions followed by a hands-on art project. The program is designed for families with children ages 5 to 14.",
+    "emoji": "🎨",
+    "tags": [
+      "Makerspace",
+      "Family Workshop",
+      "Transit Art",
+      "Hands on Learning",
+      "Brooklyn Families"
+    ],
+    "lat": 40.69057,
+    "lng": -73.99007,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "2pm",
+        null,
+        "3:30pm"
+      ]
+    ],
+    "urls": [
+      "https://www.nytransitmuseum.org/programs/"
+    ],
+    "short_name": "Family Tour and Workshop"
+  },
+  {
+    "name": "Stereo Mandrax (FREE w/ RSVP): Danny Arakaki + Bad Trips + Ka Baird x Joanna Mattrey x Qasim Naqvi",
+    "location": "Pianos",
+    "description": "A special free showcase featuring a collaborative and experimental lineup. Performers include Danny Arakaki, Bad Trips, and a unique trio consisting of Ka Baird, Joanna Mattrey, and Qasim Naqvi.",
+    "emoji": "🌀",
+    "tags": [
+      "Music",
+      "Avant Garde",
+      "Free",
+      "Experimental Music",
+      "Collaborative Art"
+    ],
+    "lat": 40.72105,
+    "lng": -73.98773,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "7pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://pianosnyc.com/shows"
+    ],
+    "short_name": "Danny Arakaki + Bad Trips + Ka Baird x Joanna Mattrey x Qasim Naqvi"
+  },
+  {
+    "name": "Gotham Writers Workshop: Memoir Writing",
+    "location": "P&T Knitwear",
+    "description": "Author Cullen Thomas walks participants through techniques for bringing personal life stories to the page with narrative finesse.",
+    "emoji": "✍️",
+    "tags": [
+      "Creative Writing",
+      "Writing Workshop",
+      "Memoir Writing",
+      "Life Stories",
+      "Autobiography"
+    ],
+    "lat": 40.72193,
+    "lng": -73.98816,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "3pm",
+        null,
+        "4pm"
+      ]
+    ],
+    "urls": [
+      "https://www.ptknitwear.com/events"
+    ],
+    "short_name": "Gotham Writers Workshop: Memoir Writing"
+  },
+  {
+    "name": "Get Going with Nat Heitmann",
+    "location": "Brooklyn Comedy Collective",
+    "description": "A solo character show for anyone tired of staying home and ready to pack up and get going.",
+    "emoji": "🎒",
+    "tags": [
+      "Theater",
+      "Comedy",
+      "Performance",
+      "Character Comedy",
+      "Solo Show"
+    ],
+    "lat": 40.70772,
+    "lng": -73.94362,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "7pm",
+        null,
+        "8:15pm"
+      ]
+    ],
+    "urls": [
+      "https://www.brooklyncc.com/show-schedule"
+    ],
+    "short_name": "Get Going"
+  },
+  {
+    "name": "Rainbow Riot",
+    "location": "Brooklyn Comedy Collective",
+    "description": "A comedy celebration focusing on the joys of Blackness and Queerness.",
+    "emoji": "🌈",
+    "tags": [
+      "Comedy",
+      "Live Show",
+      "Black Comedy",
+      "Inclusion",
+      "Queer Comedy"
+    ],
+    "lat": 40.70772,
+    "lng": -73.94362,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "8:30pm",
+        null,
+        "9:45pm"
+      ]
+    ],
+    "urls": [
+      "https://www.brooklyncc.com/show-schedule"
+    ],
+    "short_name": "Rainbow Riot"
+  },
+  {
+    "name": "Faculty Lounge",
+    "location": "Brooklyn Comedy Collective",
+    "description": "A stand-up show brought to you by the beloved BCC stand-up faculty.",
+    "emoji": "🛋️",
+    "tags": [
+      "Comedy",
+      "Stand-up",
+      "Deep Space",
+      "BCC Faculty",
+      "Live Stand Up"
+    ],
+    "lat": 40.70772,
+    "lng": -73.94362,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "8:30pm",
+        null,
+        "9:45pm"
+      ],
+      [
+        "2026-01-18",
+        "8:30pm",
+        null,
+        "9:45pm"
+      ],
+      [
+        "2026-01-25",
+        "8:30pm",
+        null,
+        "9:45pm"
+      ]
+    ],
+    "urls": [
+      "https://www.brooklyncc.com/show-schedule",
+      "https://www.alligatorloungebrooklyn.com/events"
+    ],
+    "short_name": "Faculty Lounge"
+  },
+  {
+    "name": "Suzuki Prospective Family Orientation – January 11",
+    "location": "Brooklyn Conservatory of Music",
+    "description": "This required in-person orientation is the first step for families planning to enroll in the Brooklyn Conservatory of Music’s Suzuki Program. The session features a presentation by the program director followed by a Q&A session.",
+    "emoji": "🎻",
+    "tags": [
+      "Classical Music",
+      "Music School",
+      "Music Education",
+      "Violin",
+      "Parenting",
+      "Suzuki Method"
+    ],
+    "lat": 40.67596,
+    "lng": -73.97471,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "5:45pm",
+        null,
+        "7:15pm"
+      ]
+    ],
+    "urls": [
+      "https://bkcm.org/events/",
+      "https://bkcm.org/?p=24502"
+    ],
+    "short_name": "Suzuki Prospective Family Orientation –"
+  },
+  {
+    "name": "Come Back to Earth: Mac Miller Tribute",
+    "location": "Brooklyn Bowl",
+    "description": "A heartfelt live tribute performance celebrating the music and memory of Mac Miller.",
+    "emoji": "🕊️",
+    "tags": [
+      "Music",
+      "Tribute Concert",
+      "Mac Miller Tribute",
+      "Hip Hop Tribute",
+      "Music Memories"
+    ],
+    "lat": 40.72189,
+    "lng": -73.95738,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "8pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://www.brooklynbowl.com/brooklyn/shows/all",
+      "https://www.brooklynbowl.com/brooklyn/events/detail/come-back-to-earth-mac-miller-tribute-k7vgfbudnldc0"
+    ],
+    "short_name": "Come Back to Earth: Mac Miller Tribute"
+  },
+  {
+    "name": "From Brooklyn to Palestine: Militarism, Colonialism, and the Navy Yard",
+    "location": "Brooklyn Society for Ethical Culture",
+    "description": "A presentation examining the historical and political connections between Brooklyn's Navy Yard and international issues of militarism. The event focuses on the intersection of local history and global human rights.",
+    "emoji": "🇵🇸",
+    "tags": [
+      "History",
+      "Politics",
+      "Lecture",
+      "Human Rights",
+      "Colonialism"
+    ],
+    "lat": 40.67533,
+    "lng": -73.98402,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "12:30pm",
+        null,
+        "2pm"
+      ]
+    ],
+    "urls": [
+      "https://bsec.org/calendar-2/"
+    ],
+    "short_name": "Militarism, Colonialism, and the Navy Yard"
+  },
+  {
+    "name": "Community E-Waste and Textile Event - Union Square",
+    "location": "Union Square",
+    "description": "NYC residents can drop off electronics and household fabrics like towels and curtains for recycling.",
+    "emoji": "♻️",
+    "tags": [
+      "Sustainability",
+      "Recycling",
+      "Electronics",
+      "Zero Waste",
+      "Eco Friendly",
+      "Textile Recycling"
+    ],
+    "lat": 40.73548,
+    "lng": -73.98989,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "10am",
+        null,
+        "2pm"
+      ]
+    ],
+    "urls": [
+      "https://www.nyc.gov/site/dsny/what-we-do/programs/safe-disposal-events.page"
+    ],
+    "short_name": "Community E-Waste and Textile Event - Union Square"
+  },
+  {
+    "name": "gobbinjr",
+    "location": "Knitting Factory at Baker Falls",
+    "description": "An indie pop performance featuring the unique songwriting of gobbinjr.",
+    "emoji": "🎈",
+    "tags": [
+      "Music",
+      "Singer Songwriter",
+      "Alternative",
+      "Indie Pop"
+    ],
+    "lat": 40.72586,
+    "lng": -73.98402,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "7pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://www.knittingfactory.com/calendar/"
+    ],
+    "short_name": "gobbinjr"
+  },
+  {
+    "name": "Major Moment with Iara",
+    "location": "Littlefield",
+    "description": "Boston-based pop metal band Major Moment brings an intense and cinematic sound to the stage with support from IARA.",
+    "emoji": "🎸",
+    "tags": [
+      "Music",
+      "Concert",
+      "Alternative Rock",
+      "Pop Metal"
+    ],
+    "lat": 40.67843,
+    "lng": -73.98331,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "7pm",
+        null,
+        "10pm"
+      ]
+    ],
+    "urls": [
+      "https://littlefieldnyc.com/all-shows/"
+    ],
+    "short_name": "Major Moment"
+  },
+  {
+    "name": "Junhee – Into the Ocean",
+    "location": "Music Hall of Williamsburg",
+    "description": "Korean artist Junhee brings the \"Into the Ocean\" US Tour to Brooklyn for an all-ages performance. Expect an evening of soulful melodies and captivating stage presence.",
+    "emoji": "🌊",
+    "tags": [
+      "Music",
+      "Concert",
+      "Korean Music",
+      "Indie Pop",
+      "Junhee",
+      "Into the Ocean Tour"
+    ],
+    "lat": 40.71915,
+    "lng": -73.96175,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "07pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://www.musichallofwilliamsburg.com/calendar/"
+    ],
+    "short_name": "Junhee – Into the Ocean"
+  },
+  {
+    "name": "The Closties Variety Hour",
+    "location": "Triskelion Arts",
+    "description": "Kashia Kancey presents a variety hour performance as part of the Independent Works series.",
+    "emoji": "🎭",
+    "tags": [
+      "Comedy",
+      "Performance Art",
+      "Modern Dance",
+      "Variety Show",
+      "Independent Art"
+    ],
+    "lat": 40.72702,
+    "lng": -73.95658,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "",
+        "2026-01-12",
+        ""
+      ],
+      [
+        "2026-01-11",
+        "2pm",
+        null,
+        ""
+      ],
+      [
+        "2026-01-11",
+        "7:30pm",
+        null,
+        ""
+      ],
+      [
+        "2026-01-12",
+        "7:30pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://newyorklivearts.org/calendar/"
+    ],
+    "short_name": "The Closties Variety Hour"
+  },
+  {
+    "name": "Monthly Bible Study at 15th Street Meeting",
+    "location": "Fifteenth Street Meetinghouse",
+    "description": "In-person Bible study welcoming all points of view in the spirit of worship sharing.",
+    "emoji": "📜",
+    "tags": [
+      "Quaker",
+      "Spirituality",
+      "Bible Study",
+      "Theology",
+      "Discussion Group"
+    ],
+    "lat": 40.7346,
+    "lng": -73.9836,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "11am",
+        null,
+        "12pm"
+      ]
+    ],
+    "urls": [
+      "https://nycquakers.org/events"
+    ],
+    "short_name": "Monthly Bible Study"
+  },
+  {
+    "name": "Quakerism 101",
+    "location": "Brooklyn Quaker Meeting House",
+    "description": "A monthly discussion about different aspects of Quaker faith, practice, and history.",
+    "emoji": "🏫",
+    "tags": [
+      "History",
+      "Quaker",
+      "Education",
+      "Faith",
+      "Religious Education"
+    ],
+    "lat": 40.69002,
+    "lng": -73.98949,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "",
+        null,
+        ""
+      ],
+      [
+        "2026-01-11",
+        "1pm",
+        null,
+        "2pm"
+      ]
+    ],
+    "urls": [
+      "https://nycquakers.org/events"
+    ],
+    "short_name": "Quakerism 101"
+  },
+  {
+    "name": "Faithfulness Groups Workshop",
+    "location": "Brooklyn Quaker Meeting House",
+    "description": "An introduction to the practice of faithfulness groups, which help participants discern divine guidance and provide mutual spiritual support.",
+    "emoji": "🛠️",
+    "tags": [
+      "Workshop",
+      "Quaker",
+      "Spiritual Growth",
+      "Mutual Aid",
+      "Discernment"
+    ],
+    "lat": 40.69002,
+    "lng": -73.98949,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "1:30pm",
+        null,
+        "2:30pm"
+      ]
+    ],
+    "urls": [
+      "https://nycquakers.org/events",
+      "https://nycquakers.org/events/faithfulness-groups-workshop-2/"
+    ],
+    "short_name": "Faithfulness Groups Workshop"
+  },
+  {
+    "name": "Diva Diva: Physical Therapy, Shaun J. Wright, Charlene",
+    "location": "Public Records",
+    "description": "A high-energy Sunday session focused on club sounds and vibrant dancefloor energy.",
+    "emoji": "💃",
+    "tags": [
+      "Electronic",
+      "Dancing",
+      "DJ",
+      "Club Music",
+      "Sunday Party"
+    ],
+    "lat": 40.68227,
+    "lng": -73.9864,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "4pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://dice.fm/venue/public-records-w2qg"
+    ],
+    "short_name": "Physical Therapy, Shaun J. Wright, Charlene"
+  },
+  {
+    "name": "LayeRhythm: Music and Dance",
+    "location": "Public Records",
+    "description": "A collaborative showcase where freestyle dancers and a live band engage in improvisational performance.",
+    "emoji": "🕺",
+    "tags": [
+      "Music",
+      "Performance Art",
+      "Street Dance",
+      "Live Improvisation",
+      "Dance Culture"
+    ],
+    "lat": 40.68227,
+    "lng": -73.9864,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "7pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://dice.fm/venue/public-records-w2qg"
+    ],
+    "short_name": "LayeRhythm: Music and Dance"
+  },
+  {
+    "name": "The Big Niko & GiGi Puppet Singalong",
+    "location": "ShapeShifter Lab",
+    "description": "Nikolai Moderbacher creates a family-friendly experience blending live music and interactive puppetry for young children.",
+    "emoji": "🧸",
+    "tags": [
+      "Puppetry",
+      "Family Event",
+      "Kids Music",
+      "Early Childhood",
+      "Interactive Performance"
+    ],
+    "lat": 40.67497,
+    "lng": -73.97601,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://shapeshifterplus.org/events/"
+    ],
+    "short_name": "The Big Niko & GiGi Puppet Singalong"
+  },
+  {
+    "name": "Schneider Concerts Presents: Dana Kelley, January Preconcert Talk",
+    "location": "The New School",
+    "description": "Violist Dana Kelley explores works being performed during the Schneider Concerts 2025-2026 season. This pre-concert talk provides in-depth context for the afternoon performance.",
+    "emoji": "🗣️",
+    "tags": [
+      "Classical Music",
+      "Music Education",
+      "Chamber Music",
+      "Viola",
+      "Music Theory",
+      "Pre Concert Talk"
+    ],
+    "lat": 40.73549,
+    "lng": -73.99714,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "12:30pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://events.newschool.edu/?filters=general_public",
+      "https://event.newschool.edu/schneider-kelleytalk-january"
+    ],
+    "short_name": "Dana Kelley, January Preconcert Talk"
+  },
+  {
+    "name": "Schneider Concerts Presents: Ulysses Quartet",
+    "location": "The New School",
+    "description": "The Ulysses Quartet celebrates 10 years after their New York debut with a program of Debussy and Mendelssohn. The concert includes a world premiere of Tina Davidson's \"Just Before Light.\"",
+    "emoji": "🎼",
+    "tags": [
+      "Music",
+      "String Quartet",
+      "Chamber Music",
+      "World Premiere",
+      "Modern Classical",
+      "Classical Performance"
+    ],
+    "lat": 40.73549,
+    "lng": -73.99714,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "2pm",
+        null,
+        ""
+      ],
+      [
+        "2026-03-22",
+        "2pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://events.newschool.edu/?filters=general_public",
+      "https://event.newschool.edu/schneiderconcerts-ulysses"
+    ],
+    "short_name": "Ulysses Quartet"
+  },
+  {
+    "name": "An Evening with Jeff Dye",
+    "location": "The Stand NYC",
+    "description": "A special headlining performance by nationally touring comedian Jeff Dye in the main room.",
+    "emoji": "🎤",
+    "tags": [
+      "Comedy",
+      "Stand-up",
+      "Main Room",
+      "Headliner",
+      "Live Tour",
+      "Jeff Dye"
+    ],
+    "lat": 40.73534,
+    "lng": -73.98848,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "8pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://thestandnyc.com/shows"
+    ],
+    "short_name": "An Evening"
+  },
+  {
+    "name": "Steve Martin Presents",
+    "location": "Union Hall",
+    "description": "A comedy showcase featuring a curated lineup of rising stand-up talent.",
+    "emoji": "🎭",
+    "tags": [
+      "Comedy",
+      "Stand-up",
+      "Showcase",
+      "Live Comedy"
+    ],
+    "lat": 40.67607,
+    "lng": -73.98008,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "",
+        null,
+        ""
+      ],
+      [
+        "2026-01-25",
+        "",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://unionhallny.com/calendar"
+    ],
+    "short_name": "Steve Martin Presents"
+  },
+  {
+    "name": "NYC HERizons Breakfast Fundraiser",
+    "location": "Isola Brooklyn",
+    "description": "A morning community event to support the HERizons fundraiser. Enjoy breakfast while contributing to a great cause in the Bronx.",
+    "emoji": "🥞",
+    "tags": [
+      "Community Event",
+      "Fundraiser",
+      "Breakfast",
+      "Bronx Events",
+      "Charity"
+    ],
+    "lat": 40.71423,
+    "lng": -73.95583,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "8am",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://www.eventbrite.com/o/isola-brooklyn-105758425841"
+    ],
+    "short_name": "NYC HERizons Breakfast Fundraiser"
+  },
+  {
+    "name": "Sunday Musicians Open Mic",
+    "location": "Isola Brooklyn",
+    "description": "An open mic night specifically for musicians hosted by Braden Palmer. Showcase your talent or enjoy local live music in a unique Brooklyn tasting room.",
+    "emoji": "🎸",
+    "tags": [
+      "Music",
+      "Tasting Room",
+      "Acoustic",
+      "Open Mic",
+      "Musicians"
+    ],
+    "lat": 40.71423,
+    "lng": -73.95583,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "5pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://www.eventbrite.com/o/isola-brooklyn-105758425841"
+    ],
+    "short_name": "Sunday Musicians Open Mic"
+  },
+  {
+    "name": "Nyc Wjf Jazz Talks",
+    "location": "651 ARTS",
+    "description": "An insightful discussion featuring artists exploring themes of witness and resistance through jazz.",
+    "emoji": "🎺",
+    "tags": [
+      "Brooklyn Arts",
+      "Winter Jazzfest",
+      "Music History",
+      "Jazz Talks",
+      "Cultural Dialogue"
+    ],
+    "lat": 40.68655,
+    "lng": -73.97849,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "3pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://www.nycresistor.com/calendar/"
+    ],
+    "short_name": "Nyc Wjf Jazz Talks"
+  },
+  {
+    "name": "Real Young + Lazy Horse *Winterlong Residency*",
+    "location": "Union Pool",
+    "description": "Real Young and Lazy Horse take the stage for their Winterlong Residency series. Enjoy a Sunday night dedicated to collaborative and local musical projects.",
+    "emoji": "🐎",
+    "tags": [
+      "Music",
+      "Residency",
+      "Indie Rock",
+      "Winter Series"
+    ],
+    "lat": 40.71497,
+    "lng": -73.95145,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "7pm",
+        null,
+        ""
+      ],
+      [
+        "2026-02-01",
+        "7pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://www.union-pool.com/calendar"
+    ],
+    "short_name": "Real Young + Lazy Horse *Winterlong Residency*"
+  },
+  {
+    "name": "Community E-Waste and Textile Recycling Event - Union Square",
+    "location": "Union Square",
+    "description": "Bring unwanted electronics and clothing to the North Plaza of Union Square for proper recycling and disposal. Ensure all personal data is erased from devices before drop-off.",
+    "emoji": "👕",
+    "tags": [
+      "Sustainability",
+      "Recycling",
+      "Zero Waste",
+      "Textile Recycling",
+      "Electronics Recycling"
+    ],
+    "lat": 40.73548,
+    "lng": -73.98989,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "10am",
+        null,
+        "2pm"
+      ]
+    ],
+    "urls": [
+      "https://www.nyc.gov/site/dsny/what-we-do/programs/safe-disposal-events.page"
+    ],
+    "short_name": "Community E-Waste and Textile Recycling Event"
+  },
+  {
+    "name": "Monthly Bible Study at 15th Street Meeting",
+    "location": "Fifteenth Street Meetinghouse",
+    "description": "An in-person study session listening to the Bible in the spirit of worship sharing; no experience necessary.",
+    "emoji": "📖",
+    "tags": [
+      "Quaker",
+      "Spirituality",
+      "Bible Study",
+      "In Person"
+    ],
+    "lat": 40.7346,
+    "lng": -73.9836,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "11am",
+        null,
+        "12pm"
+      ]
+    ],
+    "urls": [
+      "https://nycquakers.org/events"
+    ],
+    "short_name": "Monthly Bible Study"
+  },
+  {
+    "name": "Connor and Yvette Work It Out",
+    "location": "The Bell House",
+    "description": "Connor Ratliff and Yvette Nicole Brown bring their unique comedic chemistry to the stage.",
+    "emoji": "👫",
+    "tags": [
+      "Comedy",
+      "Performance",
+      "Entertainment",
+      "Brooklyn Comedy",
+      "Duo"
+    ],
+    "lat": 40.67354,
+    "lng": -73.99158,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "7:30pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://www.thebellhouseny.com/shows"
+    ],
+    "short_name": "Connor and Yvette Work It Out"
+  },
+  {
+    "name": "Sentimental Value",
+    "location": "Angelika Film Center & Cafe",
+    "description": "This film, winner of the Cannes Film Festival Grand Prize, is praised as potentially the best movie of the year.",
+    "emoji": "⭐",
+    "tags": [
+      "Festival",
+      "Drama",
+      "Movie"
+    ],
+    "lat": 40.72591,
+    "lng": -73.99717,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "01pm",
+        null,
+        ""
+      ],
+      [
+        "2026-01-11",
+        "04pm",
+        null,
+        ""
+      ],
+      [
+        "2026-01-11",
+        "07:05pm",
+        null,
+        ""
+      ],
+      [
+        "2026-01-11",
+        "09:45pm",
+        null,
+        ""
+      ],
+      [
+        "2026-01-11",
+        "10am",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://angelikafilmcenter.com/nyc/now-playing"
+    ],
+    "short_name": "Sentimental Value"
+  },
+  {
+    "name": "Lets Fucking Go!!: An Indie Improv Show & Jam",
+    "location": "Upright Citizens Brigade Theatre",
+    "description": "A bi-weekly improv show where you can bring your own improv team to perform, with a jam after!! Let's Fucking Go!! Want to bring your team? We’re looking for teams from all levels of experience - A practice group that's…",
+    "emoji": "🔥",
+    "tags": [
+      "Comedy",
+      "Improv Jam",
+      "Indie Improv"
+    ],
+    "lat": 40.7325,
+    "lng": -73.98567,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "6:30pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://ucbcomedy.com/shows/new-york/"
+    ],
+    "short_name": "An Indie Improv Show & Jam"
+  },
+  {
+    "name": "Improv With My Friends From Work",
+    "location": "Upright Citizens Brigade Theatre",
+    "description": "Improv With My Friends From Work – w/ Cast and Writers From SNL Ceara Jane O’Sullivan (SNL) hosts this long-form improv show with cast and writers from Saturday Night Live. We might read rejected sketches, we’ll definitely do improv, and…",
+    "emoji": "🤝",
+    "tags": [
+      "Comedy",
+      "Improv",
+      "SNL"
+    ],
+    "lat": 40.7325,
+    "lng": -73.98567,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "8:30pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://ucbcomedy.com/shows/new-york/"
+    ],
+    "short_name": "Improv"
+  },
+  {
+    "name": "BYOT (“Bring Your Own Thing”)",
+    "location": "Upright Citizens Brigade Theatre",
+    "description": "An inclusive mic for all comedic formats and all comedic performers! BYOT (“Bring Your Own Thing”) is UCB’s open mic that welcomes everyone in the comedy community (that means you!) to “bring your own thing,” whatever that may be!…",
+    "emoji": "🎤",
+    "tags": [
+      "Comedy",
+      "Stand-up",
+      "Improv",
+      "Open Mic"
+    ],
+    "lat": 40.7325,
+    "lng": -73.98567,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "9pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://ucbcomedy.com/shows/new-york/"
+    ],
+    "short_name": "BYOT"
+  },
+  {
+    "name": "Lama Laia Leads a Retreat - Dharma Teaching and Meditation Practice",
+    "location": "Bowery",
+    "description": "Lama Laia Pema Tsultrim leads a day of Dharma teaching, conversation, and group meditation. Everyone is welcome regardless of funds or previous experience.",
+    "emoji": "🧘",
+    "tags": [
+      "Meditation",
+      "Mindfulness",
+      "Dharma",
+      "Buddhism",
+      "Retreat"
+    ],
+    "lat": 40.72526,
+    "lng": -73.99035,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "10am",
+        null,
+        "4pm"
+      ]
+    ],
+    "urls": [
+      "https://giornopoetrysystems.org/222-bowery/future"
+    ],
+    "short_name": "Lama Laia Leads a Retreat"
+  },
+  {
+    "name": "Red Sprouts Training For Comrade Grownups (In-Person)",
+    "location": "NYC-DSA Office",
+    "description": "An in-person training session for \"Red Sprouts\" aimed at adults.",
+    "emoji": "🌱",
+    "tags": [
+      "Community",
+      "Education",
+      "Training"
+    ],
+    "lat": 40.71384,
+    "lng": -73.98883,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://calendar.socialists.nyc/"
+    ],
+    "short_name": "Red Sprouts Training For Comrade Grownups"
+  },
+  {
+    "name": "Monthly Bible Study at 15th Street Meeting",
+    "location": "Fifteenth Street Meetinghouse",
+    "description": "You are invited to in-person Bible study at 15th Street Meeting. We welcome all points of view, and listen to each other in the spirit of worship sharing.",
+    "emoji": "📖",
+    "tags": [
+      "Community",
+      "Bible Study",
+      "Spiritual Enrichment"
+    ],
+    "lat": 40.7346,
+    "lng": -73.9836,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "11am",
+        null,
+        "12pm"
+      ]
+    ],
+    "urls": [
+      "https://nycquakers.org/events"
+    ],
+    "short_name": "Monthly Bible Study"
+  },
+  {
+    "name": "Diva Diva: Physical Therapy, Shaun J. Wright, Lysis, Bumper",
+    "location": "Public Records",
+    "description": "Join \"Diva Diva\" for an afternoon of vibrant music with sets from Physical Therapy, Shaun J. Wright, Lysis, and Bumper. A perfect way to spend your Sunday.",
+    "emoji": "💖",
+    "tags": [
+      "Party",
+      "DJ",
+      "House Music",
+      "Sunday Vibes",
+      "Vibrant"
+    ],
+    "lat": 40.68227,
+    "lng": -73.9864,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "4pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://dice.fm/venue/public-records-w2qg",
+      "https://www.silobrooklyn.com/events"
+    ],
+    "short_name": "Physical Therapy, Shaun J. Wright, Lysis, Bumper"
+  },
+  {
+    "name": "Wake Up & Dance with Suzi Shelton",
+    "location": "ShapeShifter Lab",
+    "description": "Music concert for kids with storytime, music time and dancing!",
+    "emoji": "🕺",
+    "tags": [
+      "Dance",
+      "Kids Music",
+      "Storytime",
+      "Family Fun"
+    ],
+    "lat": 40.67497,
+    "lng": -73.97601,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "10am",
+        null,
+        ""
+      ],
+      [
+        "2026-02-01",
+        "10am",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://shapeshifterplus.org/events/"
+    ],
+    "short_name": "Wake Up & Dance"
+  },
+  {
+    "name": "Two-man opera: Franz Schubert's Winterreise",
+    "location": "ShapeShifter Lab",
+    "description": "Franz Schubert's Winterreise has captivated audiences since 1828. Darren Chase sings his own English translation of the work, creating a direct connection to the music.",
+    "emoji": "🎤",
+    "tags": [
+      "Opera",
+      "Classical Music",
+      "Performance",
+      "Art Song"
+    ],
+    "lat": 40.67497,
+    "lng": -73.97601,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://shapeshifterplus.org/events/"
+    ],
+    "short_name": "Franz Schubert's Winterreise"
+  },
+  {
+    "name": "Monthly Bible Study at 15th Street Meeting",
+    "location": "Fifteenth Street Meetinghouse",
+    "description": "You are invited to join 15th Street Meeting's Bible study group in person. We meet once a month, at 11:00 am on the 2nd Sunday of each month. We welcome all points of view, and listen to each other in the spirit of worship sharing.",
+    "emoji": "📜",
+    "tags": [
+      "Community",
+      "Bible Study",
+      "Learning",
+      "In Person",
+      "Quakerism",
+      "Worship Sharing"
+    ],
+    "lat": 40.7346,
+    "lng": -73.9836,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "11am",
+        null,
+        "12pm"
+      ]
+    ],
+    "urls": [
+      "https://nycquakers.org/events"
+    ],
+    "short_name": "Monthly Bible Study"
+  },
+  {
+    "name": "Dan Pugach Big Band feat. Nicole Zuraitis APAP Showcase",
+    "location": "Drom",
+    "description": "Join us for the GRAMMY-winning Dan Pugach Big Band featuring GRAMMY-winning vocalist Nicole Zuraitis for an unforgettable night of innovative big band jazz.",
+    "emoji": "🎺",
+    "tags": [
+      "Music",
+      "Jazz",
+      "Vocal Jazz",
+      "Big Band"
+    ],
+    "lat": 40.72532,
+    "lng": -73.98431,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "6pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://dromnyc.com/events/",
+      "https://dromnyc.com/event/dan-pugach-big-band-feat-nicole-zuraitis-apap-showcase/"
+    ],
+    "short_name": "Dan Pugach Big Band feat. Nicole Zuraitis APAP Showcase"
+  },
+  {
+    "name": "Blues Night",
+    "location": "Arlene's Grocery",
+    "description": "Immerse yourself in the soulful sounds of blues music. Local artists will deliver authentic performances that capture the heart of the genre.",
+    "emoji": "🎵",
+    "tags": [
+      "Music",
+      "Concert",
+      "Blues",
+      "Soulful"
+    ],
+    "lat": 40.72128,
+    "lng": -73.98837,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "7pm",
+        null,
+        ""
+      ],
+      [
+        "2026-01-23",
+        "7pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://www.arlenesgrocerynyc.com/upcoming-events"
+    ],
+    "short_name": "Blues Night"
+  },
+  {
+    "name": "Lama Laia Leads a Retreat",
+    "location": "Giorno Poetry Systems",
+    "description": "A day-long Buddhist retreat led by Lama Laia, featuring a Dharma Teaching and Group Meditation. This event provides an opportunity to learn and practice Buddhist principles.",
+    "emoji": "🧘",
+    "tags": [
+      "Meditation",
+      "Spiritual",
+      "Dharma",
+      "Buddhism",
+      "Retreat"
+    ],
+    "lat": 40.72214,
+    "lng": -73.9937,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "10am",
+        null,
+        "4pm"
+      ]
+    ],
+    "urls": [
+      "https://www.padmasambhava.org/event-details-registration/pbc-new-york-city-in-person-event-with-lama-laia-saturday-january-11-10-00-am-4-00-pm"
+    ],
+    "short_name": "Lama Laia Leads a Retreat"
+  },
+  {
+    "name": "PBC New York City In-Person Event with Lama Laia",
+    "location": "Bowery",
+    "description": "Lama Laia leads a retreat with a Dharma Talk from 10 AM to 12 PM, followed by Group Meditation from 2 PM to 4 PM. The event aims to impart tranquility and joy, encouraging mindfulness, compassion, and wisdom.",
+    "emoji": "🧘",
+    "tags": [
+      "Meditation",
+      "Dharma",
+      "Buddhism",
+      "Retreat"
+    ],
+    "lat": 40.72526,
+    "lng": -73.99035,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "10am",
+        null,
+        "4pm"
+      ]
+    ],
+    "urls": [
+      "https://www.padmasambhava.org/event-details-registration/pbc-new-york-city-in-person-event-with-lama-laia-saturday-january-11-10-00-am-4-00-pm"
+    ],
+    "short_name": "PBC New York City In-Person Event"
+  },
+  {
+    "name": "Debbie Brukman Family Concert",
+    "location": "ShapeShifter Lab",
+    "description": "A fun community music event for families. Come sing and wiggle along with Debbie Brukman.",
+    "emoji": "👨‍👩‍👧‍👦",
+    "tags": [
+      "Community",
+      "Music",
+      "Kids",
+      "Family Fun",
+      "Singalong"
+    ],
+    "lat": 40.67497,
+    "lng": -73.97601,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://shapeshifterplus.org/events/"
+    ],
+    "short_name": "Debbie Brukman Family Concert"
+  },
+  {
+    "name": "Sunday Epics",
+    "location": "Village East by Angelika",
+    "description": "Experience stunning epics on the silver screen the 2nd Sunday of every month!",
+    "emoji": "⚔️",
+    "tags": [
+      "Cinema",
+      "Film",
+      "Adventure",
+      "Classic Film",
+      "Epic Film"
+    ],
+    "lat": 40.73096,
+    "lng": -73.98621,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://angelikafilmcenter.com/villageeast/now-playing"
+    ],
+    "short_name": "Sunday Epics"
+  },
+  {
+    "name": "The Rock and Roll Playhouse: Music of David Bowie",
+    "location": "Brooklyn Bowl",
+    "description": "A special \"Bowie Birthday Bash\" designed for kids to enjoy the music of the Starman.",
+    "emoji": "🧒",
+    "tags": [
+      "Family",
+      "Rock and Roll Playhouse",
+      "Tribute Band",
+      "Kids Music",
+      "Tribute",
+      "David Bowie",
+      "Birthday Bash",
+      "Bowie for Kids",
+      "Family Music",
+      "Bowie",
+      "Music for Kids"
+    ],
+    "lat": 40.72189,
+    "lng": -73.95738,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "12pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://www.brooklynbowl.com/brooklyn/shows/all",
+      "https://www.brooklynbowl.com/brooklyn/events/detail/the-rock-and-roll-playhouse-plays-music-of-david-bowie-more-for-kids-k7vgfbulszndj"
+    ],
+    "short_name": "Music of David Bowie"
+  },
+  {
+    "name": "VIP Bowling Lane Add On - Come Back to Earth",
+    "location": "Brooklyn Bowl",
+    "description": "Reserve a lane during this special tribute to the artistry of Mac Miller.",
+    "emoji": "🎳",
+    "tags": [
+      "Bowling",
+      "Hip Hop",
+      "Nightlife",
+      "Tribute",
+      "VIP Experience"
+    ],
+    "lat": 40.72189,
+    "lng": -73.95738,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "8pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://www.brooklynbowl.com/brooklyn/shows/all"
+    ],
+    "short_name": "VIP Bowling Lane Add On - Come Back to Earth"
+  },
+  {
+    "name": "Debbie Brukman Family Jam",
+    "location": "ShapeShifter Lab",
+    "description": "Debbie Brukman leads a family-friendly musical jam session focused on community engagement. Kids and parents are invited to sing, wiggle, and have fun together.",
+    "emoji": "👧",
+    "tags": [
+      "Community",
+      "Kids Music",
+      "Family Fun",
+      "Sing Along",
+      "Music for Kids"
+    ],
+    "lat": 40.67497,
+    "lng": -73.97601,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://shapeshifterplus.org/events/"
+    ],
+    "short_name": "Debbie Brukman Family Jam"
+  },
+  {
+    "name": "Organizing 101",
+    "location": "NYC-DSA Office",
+    "description": "A foundational training session teaching the core skills and principles of effective community organizing.",
+    "emoji": "📋",
+    "tags": [
+      "Activism",
+      "Training",
+      "Socialism",
+      "Skill Building",
+      "Organizing"
+    ],
+    "lat": 40.71384,
+    "lng": -73.98883,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://calendar.socialists.nyc/"
+    ],
+    "short_name": "Organizing 101"
+  },
+  {
+    "name": "Hybrid Court Watching Training",
+    "location": "NYC-DSA Office",
+    "description": "Learn how to observe and document court proceedings to hold the legal system accountable.",
+    "emoji": "⚖️",
+    "tags": [
+      "Activism",
+      "Training",
+      "Criminal Justice",
+      "Accountability",
+      "Legal Reform"
+    ],
+    "lat": 40.71384,
+    "lng": -73.98883,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://calendar.socialists.nyc/"
+    ],
+    "short_name": "Hybrid Court Watching Training"
+  },
+  {
+    "name": "Community E-Waste and Textile Event - Union Square",
+    "location": "Union Square",
+    "description": "Join DSNY at the North Plaza for a free e-waste and textile recycling event. This collection accepts a wide range of electronics and unsoiled fabrics to ensure they are properly recycled or refurbished.",
+    "emoji": "🏙️",
+    "tags": [
+      "Recycling",
+      "Sustainable Living",
+      "Textile Reuse",
+      "Eco Care",
+      "Urban Environment"
+    ],
+    "lat": 40.73548,
+    "lng": -73.98989,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "10am",
+        null,
+        "2pm"
+      ]
+    ],
+    "urls": [
+      "https://www.nyc.gov/site/dsny/what-we-do/programs/safe-disposal-events.page"
+    ],
+    "short_name": "Community E-Waste and Textile Event - Union Square"
+  },
+  {
+    "name": "Monthly Bible Study at 15th Street Meeting",
+    "location": "Fifteenth Street Meetinghouse",
+    "description": "An in-person Bible study welcoming all points of view in the spirit of worship sharing.",
+    "emoji": "📜",
+    "tags": [
+      "Community",
+      "Quaker",
+      "Religion",
+      "Bible Study",
+      "Theology",
+      "Worship Sharing"
+    ],
+    "lat": 40.7346,
+    "lng": -73.9836,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "11am",
+        null,
+        "12pm"
+      ]
+    ],
+    "urls": [
+      "https://nycquakers.org/events"
+    ],
+    "short_name": "Monthly Bible Study"
+  },
+  {
+    "name": "Pamela Sneed: A Tribute to Big Mama Thornton",
+    "location": "Joe's Pub",
+    "description": "Conceived by poet Pamela Sneed, this cabaret performance celebrates the legacy of Willie Mae 'Big Mama' Thornton, a Black woman founder of rock and roll. The show uses music and monologues to seek restorative justice for Thornton's musical contributions.",
+    "emoji": "🎤",
+    "tags": [
+      "Cabaret",
+      "Black History",
+      "Poetry",
+      "Rock and Roll",
+      "Restorative Justice"
+    ],
+    "lat": 40.72897,
+    "lng": -73.99175,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "6pm",
+        null,
+        ""
+      ],
+      [
+        "2026-01-16",
+        "7pm",
+        null,
+        ""
+      ],
+      [
+        "2026-01-17",
+        "7pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://publictheater.org/calendar/"
+    ],
+    "short_name": "A Tribute to Big Mama Thornton"
+  },
+  {
+    "name": "Jesse Harris",
+    "location": "Joe's Pub",
+    "description": "Grammy-winning songwriter Jesse Harris presents his new orchestral album 'If You Believed In Me' in its entirety. Accompanied by a string quartet and small group, the performance highlights intricate arrangements and heartfelt songwriting.",
+    "emoji": "🎼",
+    "tags": [
+      "Singer Songwriter",
+      "Live Concert",
+      "Acoustic Music",
+      "Grammy Winner",
+      "Orchestral Pop"
+    ],
+    "lat": 40.72897,
+    "lng": -73.99175,
+    "occurrences": [
+      [
+        "2026-01-11",
+        "8:30pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://publictheater.org/calendar/"
+    ],
+    "short_name": "Jesse Harris"
+  },
+  {
+    "name": "SLA Licensing & Outdoor Dining Committee",
+    "location": "Manhattan Community Board 3",
+    "description": "This hybrid meeting reviews several liquor license applications and alterations for local establishments, as well as outdoor dining permits under the Dining Out NYC program.",
+    "emoji": "🍴",
+    "tags": [
+      "Community Board",
+      "Local Government",
+      "Hospitality",
+      "Small Business",
+      "Manhattan CB3",
+      "Liquor License",
+      "Outdoor Dining"
+    ],
+    "lat": 40.72702,
+    "lng": -73.99085,
+    "occurrences": [
+      [
+        "2026-01-12",
+        "6:30pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://www.nyc.gov/site/manhattancb3/calendar/calendar.page"
+    ],
+    "short_name": "SLA Licensing & Outdoor Dining Committee"
+  },
+  {
+    "name": "Mini Studio Production",
+    "location": "BRIC",
+    "description": "Learn the fundamentals of mini-studio production including video switchers, chroma-key, and microphone setup.",
+    "emoji": "📺",
+    "tags": [
+      "Studio Production",
+      "TV Production",
+      "Media Certification",
+      "Brooklyn Media",
+      "Video Tech"
+    ],
+    "lat": 40.68835,
+    "lng": -73.97919,
+    "occurrences": [
+      [
+        "2026-01-12",
+        "2pm",
+        null,
+        "5pm"
+      ],
+      [
+        "2026-01-14",
+        "2pm",
+        null,
+        "5pm"
+      ]
+    ],
+    "urls": [
+      "https://bricartsmedia.org/events/calendar/"
+    ],
+    "short_name": "Mini Studio Production"
+  },
+  {
+    "name": "Alternatives to Adobe",
+    "location": "BRIC",
+    "description": "Introduction to free and low-cost software alternatives for graphic design, animation, video, and audio editing.",
+    "emoji": "🎨",
+    "tags": [
+      "Graphic Design",
+      "Virtual",
+      "Creative Tech",
+      "Video Editing",
+      "Free Classes",
+      "Software Alternatives"
+    ],
+    "lat": 40.68835,
+    "lng": -73.97919,
+    "occurrences": [
+      [
+        "2026-01-12",
+        "6pm",
+        null,
+        "8pm"
+      ],
+      [
+        "2026-02-17",
+        "11am",
+        null,
+        "1pm"
+      ],
+      [
+        "2026-03-07",
+        "11am",
+        null,
+        "1pm"
+      ]
+    ],
+    "urls": [
+      "https://bricartsmedia.org/events/calendar/"
+    ],
+    "short_name": "Alternatives to Adobe"
+  },
+  {
+    "name": "Photoshop Essentials",
+    "location": "BRIC",
+    "description": "Learn to use Adobe Photoshop for photo enhancement, typography, and graphic design in this beginner-friendly course.",
+    "emoji": "🖌️",
+    "tags": [
+      "Visual Arts",
+      "Photography",
+      "Digital Art",
+      "Graphic Design",
+      "Photo Editing",
+      "Photoshop",
+      "Adobe Creative Cloud"
+    ],
+    "lat": 40.68835,
+    "lng": -73.97919,
+    "occurrences": [
+      [
+        "2026-01-12",
+        "2pm",
+        null,
+        "5pm"
+      ],
+      [
+        "2026-01-26",
+        "2pm",
+        null,
+        "5pm"
+      ],
+      [
+        "2026-02-02",
+        "2pm",
+        null,
+        "5pm"
+      ],
+      [
+        "2026-02-09",
+        "2pm",
+        null,
+        "5pm"
+      ],
+      [
+        "2026-02-26",
+        "2pm",
+        null,
+        "5pm"
+      ],
+      [
+        "2026-03-05",
+        "2pm",
+        null,
+        "5pm"
+      ],
+      [
+        "2026-03-12",
+        "2pm",
+        null,
+        "5pm"
+      ],
+      [
+        "2026-03-19",
+        "2pm",
+        null,
+        "5pm"
+      ]
+    ],
+    "urls": [
+      "https://bricartsmedia.org/events/calendar/"
+    ],
+    "short_name": "Photoshop Essentials"
+  },
+  {
+    "name": "Member Monday",
+    "location": "Brooklyn Children's Museum",
+    "description": "Members are invited to enjoy exclusive access to the Museum and meet some of BCM's live animal friends.",
+    "emoji": "🎖️",
+    "tags": [
+      "Family",
+      "Museum Members",
+      "Early Access",
+      "Live Animals",
+      "Animal Education"
+    ],
+    "lat": 40.67446,
+    "lng": -73.94399,
+    "occurrences": [
+      [
+        "2026-01-12",
+        "10am",
+        null,
+        "1pm"
+      ]
+    ],
+    "urls": [
+      "https://www.brooklynkids.org/events/"
+    ],
+    "short_name": "Member Monday"
+  },
+  {
+    "name": "Ukrainian Malanka Party",
+    "location": "Drom",
+    "description": "Celebrate the Ukrainian New Year with DJ Oleg Skrypka and Sam Gøødy featuring global beats.",
+    "emoji": "🥟",
+    "tags": [
+      "East Village",
+      "Global Beats",
+      "Ukrainian Music",
+      "Malanka",
+      "New Year Party"
+    ],
+    "lat": 40.72532,
+    "lng": -73.98431,
+    "occurrences": [
+      [
+        "2026-01-12",
+        "7pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://dromnyc.com/events/",
+      "https://dromnyc.com/event/ukrainian-malanka-party/"
+    ],
+    "short_name": "Ukrainian Malanka Party"
+  },
+  {
+    "name": "Sloth Shop",
+    "location": "Parkside Lounge",
+    "description": "An evening of performance and creative sharing hosted at the Parkside Lounge. This event provides a platform for artists to showcase their latest work in a relaxed environment.",
+    "emoji": "🦥",
+    "tags": [
+      "Comedy",
+      "Creative",
+      "Performance",
+      "Nightlife",
+      "Showcase"
+    ],
+    "lat": 40.72102,
+    "lng": -73.98324,
+    "occurrences": [
+      [
+        "2026-01-12",
+        "6pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://humanitix.com/us/search?locationQuery=Brooklyn&lat=40.6521&lng=-74.0018&plId=ChIJCSF8lBZEwokRhngABHRcdoI&page=0&dates=thisWeek%2B240",
+      "https://www.parksidelounge.nyc/calendar"
+    ],
+    "short_name": "Sloth Shop"
+  },
+  {
+    "name": "Fall Exhibitions Closing Day",
+    "location": "International Center of Photography (ICP)",
+    "description": "The final opportunity for visitors to view the Fall exhibitions before they close. It marks the conclusion of the current seasonal cycle of photography displays.",
+    "emoji": "🏁",
+    "tags": [
+      "Visual Arts",
+      "Photography",
+      "Exhibition",
+      "Museum Event",
+      "Art History",
+      "Final Call"
+    ],
+    "lat": 40.71806,
+    "lng": -73.98864,
+    "occurrences": [
+      [
+        "2026-01-12",
+        "10:30am",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://www.icp.org/events",
+      "https://www.icp.org/events/fall-exhibitions-closing-day"
+    ],
+    "short_name": "Fall Exhibitions Closing Day"
+  },
+  {
+    "name": "Queer Spirit",
+    "location": "Judson Memorial Church",
+    "description": "A collective offering for expansive possibility led by Rev. Micah Bucey and Community Minister Elæ Moss Benedetto.",
+    "emoji": "✨",
+    "tags": [
+      "Community",
+      "LGBTQ",
+      "Spirituality",
+      "Inclusion",
+      "Queer Spirituality"
+    ],
+    "lat": 40.73022,
+    "lng": -73.99838,
+    "occurrences": [
+      [
+        "2026-01-12",
+        "7pm",
+        null,
+        "8pm"
+      ]
+    ],
+    "urls": [
+      "https://www.judson.org/calendar"
+    ],
+    "short_name": "Queer Spirit"
+  },
+  {
+    "name": "Movement Research",
+    "location": "Judson Memorial Church",
+    "description": "A free forum for experimentation and emerging ideas featuring works-in-progress by diverse movement artists.",
+    "emoji": "💃",
+    "tags": [
+      "Dance",
+      "Free",
+      "Performance Art",
+      "Experimental Dance",
+      "Movement Research"
+    ],
+    "lat": 40.73022,
+    "lng": -73.99838,
+    "occurrences": [
+      [
+        "2026-01-12",
+        "7pm",
+        null,
+        "10pm"
+      ],
+      [
+        "2026-01-26",
+        "7pm",
+        null,
+        "10pm"
+      ]
+    ],
+    "urls": [
+      "https://www.judson.org/calendar"
+    ],
+    "short_name": "Movement Research"
+  },
+  {
+    "name": "rocknite.ny",
+    "location": "Knitting Factory at Baker Falls",
+    "description": "A dedicated rock music night on Avenue A for late-night enthusiasts.",
+    "emoji": "🤘",
+    "tags": [
+      "Nightlife",
+      "Rock Music",
+      "Club Night",
+      "Rock Nite"
+    ],
+    "lat": 40.72586,
+    "lng": -73.98402,
+    "occurrences": [
+      [
+        "2026-01-12",
+        "10pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://www.knittingfactory.com/calendar/"
+    ],
+    "short_name": "rocknite.ny"
+  },
+  {
+    "name": "Vladimir Nabokov Book Club with Arya",
+    "location": "McNally Jackson Downtown Brooklyn",
+    "description": "The group begins a chronological journey through Vladimir Nabokov's work, starting with his first novel, \"Mary.\" The discussion will examine the author's precise prose and emotional depth.",
+    "emoji": "🦋",
+    "tags": [
+      "Classic Literature",
+      "Fiction",
+      "Book Club",
+      "Nabokov",
+      "Russian Authors"
+    ],
+    "lat": 40.69099,
+    "lng": -73.98292,
+    "occurrences": [
+      [
+        "2026-01-12",
+        "7pm",
+        null,
+        ""
+      ],
+      [
+        "2026-02-09",
+        "7pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://www.mcnallyjackson.com/coming-events",
+      "https://www.mcnallyjackson.com/vladimir-nabokov-book-club-arya"
+    ],
+    "short_name": "Vladimir Nabokov Book Club"
+  },
+  {
+    "name": "Unusual Appetites Book Club",
+    "location": "McNally Jackson (Williamsburg)",
+    "description": "This month the club discusses Donna Tartt's psychological thriller \"The Secret History.\" The club explores themes of desire and what happens when people are told they want \"too much.\"",
+    "emoji": "🍎",
+    "tags": [
+      "Williamsburg",
+      "Thriller",
+      "Book Club",
+      "Literary Fiction",
+      "Dark Academia",
+      "Perfume",
+      "Horror Fiction"
+    ],
+    "lat": 40.71766,
+    "lng": -73.96209,
+    "occurrences": [
+      [
+        "2026-01-12",
+        "7pm",
+        null,
+        ""
+      ],
+      [
+        "2026-02-09",
+        "7pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://www.mcnallyjackson.com/coming-events",
+      "https://www.mcnallyjackson.com/unusual-appetites-book-club-melanie-quinn-18"
+    ],
+    "short_name": "Unusual Appetites Book Club"
+  },
+  {
+    "name": "Concern for Quaker Living (CQL) Meeting",
+    "location": "Brooklyn Quaker Meeting House",
+    "description": "Working group focused on community wellness, housing feasibility, and nurturing a caring community for NYC Friends in all stages of life.",
+    "emoji": "📋",
+    "tags": [
+      "Quaker",
+      "Housing",
+      "Community Wellness",
+      "Senior Support",
+      "Community Care"
+    ],
+    "lat": 40.69002,
+    "lng": -73.98949,
+    "occurrences": [
+      [
+        "2026-01-12",
+        "6pm",
+        null,
+        "8pm"
+      ],
+      [
+        "2026-01-26",
+        "6pm",
+        null,
+        "7pm"
+      ]
+    ],
+    "urls": [
+      "https://nycquakers.org/events"
+    ],
+    "short_name": "Concern for Quaker Living Meeting"
+  },
+  {
+    "name": "Women’s Worship Sharing",
+    "location": "Fifteenth Street Meetinghouse",
+    "description": "Silent worship focused on a query where women speak out of the silence.",
+    "emoji": "🕯️",
+    "tags": [
+      "Quaker",
+      "Worship",
+      "Reflection",
+      "Spiritual",
+      "Women"
+    ],
+    "lat": 40.7346,
+    "lng": -73.9836,
+    "occurrences": [
+      [
+        "2026-01-12",
+        "",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://nycquakers.org/events"
+    ],
+    "short_name": "Women’s Worship Sharing"
+  },
+  {
+    "name": "Gelsey Bell: mɔɹnɪŋ [morning//mourning] in Concert",
+    "location": "Roulette",
+    "description": "An experimental music-theatre work tracing the weeks, months, years, and millennia that follow humanity's disappearance from the Earth.",
+    "emoji": "🎭",
+    "tags": [
+      "Avant Garde",
+      "Performance",
+      "Contemporary Music",
+      "Experimental Music",
+      "Music Theatre"
+    ],
+    "lat": 40.68562,
+    "lng": -73.98077,
+    "occurrences": [
+      [
+        "2026-01-12",
+        "8pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://roulette.org/calendar/",
+      "https://roulette.org/event/gelsey-bell-m%c9%94%c9%b9n%c9%aan-morning-mourning/"
+    ],
+    "short_name": "mɔɹnɪŋ [morning//mourning] in Concert"
+  },
+  {
+    "name": "M2duO: Tango and Reimagined Japanese Oldies",
+    "location": "ShapeShifter Lab",
+    "description": "Violinist Machiko Ozawa and pianist Makia Matsumura perform a program blending Argentine tango with Japanese melodies.",
+    "emoji": "🎻",
+    "tags": [
+      "Music",
+      "Japanese Music",
+      "Tango",
+      "Violin Piano Duo",
+      "International Fusion"
+    ],
+    "lat": 40.67497,
+    "lng": -73.97601,
+    "occurrences": [
+      [
+        "2026-01-12",
+        "",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://shapeshifterplus.org/events/"
+    ],
+    "short_name": "Tango and Reimagined Japanese Oldies"
+  },
+  {
+    "name": "Phoebe Robinson: New Stuff.",
+    "location": "Union Hall",
+    "description": "Phoebe Robinson tests out brand new comedy material with friends Adam Pally and Damien Lemon.",
+    "emoji": "🎙️",
+    "tags": [
+      "Comedy",
+      "Stand-up",
+      "Performance",
+      "New Material",
+      "Phoebe Robinson"
+    ],
+    "lat": 40.67607,
+    "lng": -73.98008,
+    "occurrences": [
+      [
+        "2026-01-12",
+        "",
+        null,
+        ""
+      ],
+      [
+        "2026-01-15",
+        "",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://unionhallny.com/calendar"
+    ],
+    "short_name": "Phoebe Robinson: New Stuff."
+  },
+  {
+    "name": "T3",
+    "location": "The Bowery Electric",
+    "description": "A live showcase featuring the sounds of T3 in an intimate venue setting.",
+    "emoji": "🎤",
+    "tags": [
+      "Music",
+      "Nightlife",
+      "Live Show",
+      "T 3"
+    ],
+    "lat": 40.72575,
+    "lng": -73.9918,
+    "occurrences": [
+      [
+        "2026-01-12",
+        "8pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://www.theboweryelectric.com/calendar/",
+      "https://www.theboweryelectric.com/tm-event/t-3/"
+    ],
+    "short_name": "T3"
+  },
+  {
+    "name": "Heated Comedy: Stand-Up Comedy Show",
+    "location": "Isola Brooklyn",
+    "description": "A free stand-up comedy show in a unique bar and flower shop setting. Experience Brooklyn's vibrant comedy scene in an intimate environment.",
+    "emoji": "🍺",
+    "tags": [
+      "Comedy",
+      "Free",
+      "Stand-up",
+      "Sycamore Bar",
+      "Flower Shop"
+    ],
+    "lat": 40.71423,
+    "lng": -73.95583,
+    "occurrences": [
+      [
+        "2026-01-12",
+        "8:30pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://www.eventbrite.com/o/isola-brooklyn-105758425841"
+    ],
+    "short_name": "Heated Comedy: Stand-Up Comedy Show"
+  },
+  {
+    "name": "Vladimir Nabokov Book Club: Mary",
+    "location": "McNally Jackson Downtown Brooklyn",
+    "description": "The beginning of a chronological journey through Nabokov's oeuvre, starting with his first novel, \"Mary.\"",
+    "emoji": "🦋",
+    "tags": [
+      "Classic Literature",
+      "Book Club",
+      "Literary Analysis",
+      "Nabokov"
+    ],
+    "lat": 40.69099,
+    "lng": -73.98292,
+    "occurrences": [
+      [
+        "2026-01-12",
+        "7pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://www.mcnallyjackson.com/coming-events"
+    ],
+    "short_name": "Vladimir Nabokov Book Club: Mary"
+  },
+  {
+    "name": "Ray Bonneville",
+    "location": "Mercury Lounge",
+    "description": "Blues-influenced Americana singer-songwriter Ray Bonneville performs an intimate live set.",
+    "emoji": "🤠",
+    "tags": [
+      "Music",
+      "Folk",
+      "Blues",
+      "Americana",
+      "Songwriter"
+    ],
+    "lat": 40.72217,
+    "lng": -73.98675,
+    "occurrences": [
+      [
+        "2026-01-12",
+        "6pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://mercuryeastpresents.com/mercurylounge/"
+    ],
+    "short_name": "Ray Bonneville"
+  },
+  {
+    "name": "Women’s Worship Sharing",
+    "location": "Fifteenth Street Meetinghouse",
+    "description": "Silent worship focused on a specific query, where participants speak out of the silence.",
+    "emoji": "👩",
+    "tags": [
+      "Quaker",
+      "Spirituality",
+      "Worship",
+      "Women"
+    ],
+    "lat": 40.7346,
+    "lng": -73.9836,
+    "occurrences": [
+      [
+        "2026-01-12",
+        "",
+        null,
+        ""
+      ],
+      [
+        "2026-01-12",
+        "7pm",
+        null,
+        "8:30pm"
+      ]
+    ],
+    "urls": [
+      "https://nycquakers.org/events"
+    ],
+    "short_name": "Women’s Worship Sharing"
+  },
+  {
+    "name": "M2duO: High-Energy Tango",
+    "location": "ShapeShifter Lab",
+    "description": "Violinist Machiko Ozawa and pianist Makia Matsumura debut a program blending Argentine tango, reimagined Japanese oldies, and original songs.",
+    "emoji": "🎻",
+    "tags": [
+      "World Music",
+      "Piano",
+      "Violin",
+      "Fusion Music",
+      "Tango"
+    ],
+    "lat": 40.67497,
+    "lng": -73.97601,
+    "occurrences": [
+      [
+        "2026-01-12",
+        "",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://shapeshifterplus.org/events/"
+    ],
+    "short_name": "M2duO: High-Energy Tango"
+  },
+  {
+    "name": "Maude Night: the Best of Ponyboy & 11:11, Live and Livestreamed!",
+    "location": "Upright Citizens Brigade Theatre",
+    "description": "Maude Night boasts brand new material by UCB’s house sketch teams every month. Come see top-notch sketch comedy featuring two teams of UCB’s finest writers and performers. —— Featuring: Ponyboy & 11:11 —- Complete List of Maude Teams 11:11 WRITERS:…",
+    "emoji": "🎭",
+    "tags": [
+      "Sketch Comedy",
+      "Maude Night",
+      "Comedy Teams"
+    ],
+    "lat": 40.7325,
+    "lng": -73.98567,
+    "occurrences": [
+      [
+        "2026-01-12",
+        "7pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://ucbcomedy.com/shows/new-york/",
+      "https://ucbcomedy.com/show/maude-night-ponyboy-1111-live-and-livestreamed-01-12-2026/"
+    ],
+    "short_name": "the Best of Ponyboy & 11:11, Live and Livestreamed!"
+  },
+  {
+    "name": "Stand Up Comedy Show",
+    "location": "Upright Citizens Brigade Theatre",
+    "description": "A stand up comedy show with James Austin Johnson and Neel Ghosh and Wally Baram and Dave Ross featuring some of NYC's best comedians. Full lineup: TBA — In-person tickets are $15 All sales are final. The show starts at…",
+    "emoji": "🎤",
+    "tags": [
+      "Stand-up",
+      "Comedy Show"
+    ],
+    "lat": 40.7325,
+    "lng": -73.98567,
+    "occurrences": [
+      [
+        "2026-01-12",
+        "10pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://ucbcomedy.com/shows/new-york/"
+    ],
+    "short_name": "Stand Up Comedy Show"
+  },
+  {
+    "name": "Women’s Worship Sharing",
+    "location": "Fifteenth Street Meetinghouse",
+    "description": "Women's worship sharing — silent worship focused on a query. Friends speak out of the silence. Offered through 15th Street Meeting.",
+    "emoji": "🧘‍♀️",
+    "tags": [
+      "Community",
+      "Worship",
+      "Spiritual Enrichment",
+      "Womens Group"
+    ],
+    "lat": 40.7346,
+    "lng": -73.9836,
+    "occurrences": [
+      [
+        "2026-01-12",
+        "",
+        null,
+        ""
+      ],
+      [
+        "2026-01-12",
+        "7pm",
+        null,
+        "8:30pmet"
+      ]
+    ],
+    "urls": [
+      "https://nycquakers.org/events"
+    ],
+    "short_name": "Women’s Worship Sharing"
+  },
+  {
+    "name": "Tribute to Classic Rock",
+    "location": "Arlene's Grocery",
+    "description": "A celebration of legendary classic rock bands with live performances of their most beloved hits. Get ready to rock out.",
+    "emoji": "🎸",
+    "tags": [
+      "Music",
+      "Concert",
+      "Classic Rock",
+      "Tribute Show"
+    ],
+    "lat": 40.72128,
+    "lng": -73.98837,
+    "occurrences": [
+      [
+        "2026-01-12",
+        "7pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://www.arlenesgrocerynyc.com/upcoming-events"
+    ],
+    "short_name": "Tribute to Classic Rock"
+  },
+  {
+    "name": "Village East in 35MM",
+    "location": "Village East by Angelika",
+    "description": "Experience the best classics in their authentic form: in 35MM on the big screen! This series runs on the 2nd Monday of each month.",
+    "emoji": "📽️",
+    "tags": [
+      "Classic Film",
+      "Movie Night",
+      "35mm",
+      "Vintage Film",
+      "Film on Film",
+      "Analog Cinema"
+    ],
+    "lat": 40.73096,
+    "lng": -73.98621,
+    "occurrences": [
+      [
+        "2026-01-12",
+        "",
+        null,
+        ""
+      ],
+      [
+        "2026-02-09",
+        "",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://angelikafilmcenter.com/villageeast/signature-programming",
+      "https://angelikafilmcenter.com/villageeast/now-playing"
+    ],
+    "short_name": "Village East in 35MM"
+  },
+  {
+    "name": "Ukrainian Malanka Party",
+    "location": "Drom",
+    "description": "Celebrate Ukrainian New Year with DJ Oleg Skrypka and Sam Gøødy for a high-energy night of music, dance, and global beats.",
+    "emoji": "🌻",
+    "tags": [
+      "DJ",
+      "Dance Party",
+      "Holiday",
+      "New Year",
+      "Ukrainian"
+    ],
+    "lat": 40.72532,
+    "lng": -73.98431,
+    "occurrences": [
+      [
+        "2026-01-12",
+        "7pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://dromnyc.com/event/ukrainian-malanka-party/"
+    ],
+    "short_name": "Ukrainian Malanka Party"
+  },
+  {
+    "name": "Ukrainian Malanka Party",
+    "location": "Drom",
+    "description": "Celebrate Ukrainian New Year with DJ Oleg Skrypka and Sam Gøødy — a high-energy night of music, dance, and global beats!",
+    "emoji": "🇺🇦",
+    "tags": [
+      "Dance Party",
+      "New Year",
+      "Global Beats",
+      "Ukrainian Music",
+      "DJ Night"
+    ],
+    "lat": 40.72532,
+    "lng": -73.98431,
+    "occurrences": [
+      [
+        "2026-01-12",
+        "7pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://dromnyc.com/event/ukrainian-malanka-party/"
+    ],
+    "short_name": "Ukrainian Malanka Party"
+  },
+  {
+    "name": "Ukrainian Malanka Party",
+    "location": "Drom",
+    "description": "Celebrate Ukrainian New Year with DJ Oleg Skrypka and Sam Gøødy — a high-energy night of music, dance, and global beats!",
+    "emoji": "🇺🇦",
+    "tags": [
+      "World Music",
+      "DJ",
+      "Ukrainian Culture",
+      "Dance Party",
+      "New Year"
+    ],
+    "lat": 40.72532,
+    "lng": -73.98431,
+    "occurrences": [
+      [
+        "2026-01-12",
+        "7pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://dromnyc.com/event/ukrainian-malanka-party/"
+    ],
+    "short_name": "Ukrainian Malanka Party"
+  },
+  {
+    "name": "Giddy Up! Improv! Music! Ponies on Peacock!",
+    "location": "The Bell House",
+    "description": "A high-energy variety show combining improvisational comedy, live music, and thematic tributes to the Peacock streaming service.",
+    "emoji": "🐎",
+    "tags": [
+      "Music",
+      "Comedy",
+      "Improv",
+      "Variety Show",
+      "Peacock TV"
+    ],
+    "lat": 40.67354,
+    "lng": -73.99158,
+    "occurrences": [
+      [
+        "2026-01-12",
+        "8pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://www.thebellhouseny.com/shows"
+    ],
+    "short_name": "Giddy Up! Improv! Music! Ponies on Peacock!"
+  },
+  {
+    "name": "The Nightlighters",
+    "location": "Center for Fiction",
+    "description": "A members-only reading group meeting to discuss selected literary works in a social setting.",
+    "emoji": "🕯️",
+    "tags": [
+      "Literature",
+      "Members Only",
+      "Book Club",
+      "Literary Community",
+      "Reading Group"
+    ],
+    "lat": 40.68694,
+    "lng": -73.97852,
+    "occurrences": [
+      [
+        "2026-01-12",
+        "6pm",
+        null,
+        "7:30pm"
+      ]
+    ],
+    "urls": [
+      "https://centerforfiction.org/calendar/"
+    ],
+    "short_name": "The Nightlighters"
+  },
+  {
+    "name": "Writing a Coming-of-Age Novel with August Thompson",
+    "location": "Center for Fiction",
+    "description": "August Thompson leads a workshop focused on the specific challenges and tropes of the Bildungsroman genre and character arcs.",
+    "emoji": "🌱",
+    "tags": [
+      "Creative Writing",
+      "Coming of Age",
+      "Novel Writing",
+      "Fiction Workshop",
+      "Character Arc"
+    ],
+    "lat": 40.68694,
+    "lng": -73.97852,
+    "occurrences": [
+      [
+        "2026-01-12",
+        "6pm",
+        null,
+        "8pm"
+      ],
+      [
+        "2026-01-19",
+        "6pm",
+        null,
+        "8pm"
+      ],
+      [
+        "2026-01-26",
+        "6pm",
+        null,
+        "8pm"
+      ]
+    ],
+    "urls": [
+      "https://centerforfiction.org/calendar/"
+    ],
+    "short_name": "Writing a Coming-of-Age Novel"
+  },
+  {
+    "name": "M2duO: 25th Anniversary Program",
+    "location": "ShapeShifter Lab",
+    "description": "Violinist Machiko Ozawa and pianist Makia Matsumura celebrate 25 years of collaboration. Their program blends Argentine tango, reimagined Japanese oldies, and original songs.",
+    "emoji": "🎻",
+    "tags": [
+      "World Music",
+      "Piano",
+      "Violin",
+      "Fusion",
+      "Tango"
+    ],
+    "lat": 40.67497,
+    "lng": -73.97601,
+    "occurrences": [
+      [
+        "2026-01-12",
+        "",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://shapeshifterplus.org/events/"
+    ],
+    "short_name": "M2duO: 25th Anniversary Program"
+  },
+  {
+    "name": "Women’s Worship Sharing",
+    "location": "Fifteenth Street Meetinghouse",
+    "description": "Silent worship focused on a specific query where Friends speak out of the silence, offered through 15th Street Meeting.",
+    "emoji": "🕯️",
+    "tags": [
+      "Community",
+      "Quaker",
+      "Meditation",
+      "Spirituality",
+      "Worship",
+      "Women"
+    ],
+    "lat": 40.7346,
+    "lng": -73.9836,
+    "occurrences": [
+      [
+        "2026-01-12",
+        "",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://nycquakers.org/events"
+    ],
+    "short_name": "Women’s Worship Sharing"
+  },
+  {
+    "name": "Dungeons n' Drafts: Radegast Hall & Biergarten",
+    "location": "Radegast Hall & Biergarten",
+    "description": "Join a social Dungeons & Dragons 5th Edition one-shot adventure where everything needed to play is provided. Beginners and experts alike are welcome to jump into the game at this local venue.",
+    "emoji": "🎲",
+    "tags": [
+      "Gaming",
+      "Dungeons and Dragons",
+      "Social Gaming",
+      "Tabletop RPG",
+      "Beginner Friendly",
+      "Drafts and Dragons",
+      "Fantasy Adventure"
+    ],
+    "lat": 40.71666,
+    "lng": -73.96145,
+    "occurrences": [
+      [
+        "2026-01-12",
+        "6:30pm",
+        null,
+        "10pm"
+      ],
+      [
+        "2026-02-09",
+        "6:30pm",
+        null,
+        "10pm"
+      ],
+      [
+        "2026-03-09",
+        "6:30pm",
+        null,
+        "10pm"
+      ]
+    ],
+    "urls": [
+      "https://dungeonsndrafts.com/areaEvents/GsKz2MvyKDLZeXp02y81"
+    ],
+    "short_name": "Radegast Hall & Biergarten"
+  },
+  {
+    "name": "Irene Diaz",
+    "location": "Joe's Pub",
+    "description": "Singer-songwriter Irene Diaz brings her powerful vocals and soulful Chicano-influenced melodies to Joe's Pub. Her sound blends elements of folk and soul into intimate and expansive musical narratives.",
+    "emoji": "📻",
+    "tags": [
+      "Music",
+      "Singer Songwriter",
+      "Soul Music",
+      "Latino Culture",
+      "Chicano Folk"
+    ],
+    "lat": 40.72897,
+    "lng": -73.99175,
+    "occurrences": [
+      [
+        "2026-01-12",
+        "9:30pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://publictheater.org/calendar/"
+    ],
+    "short_name": "Irene Diaz"
+  },
+  {
+    "name": "The Wooster Group/Eric Berryman: Get Your Ass in the Water and Swim Like Me",
+    "location": "Joe's Pub",
+    "description": "Part of the Under the Radar Festival, this performance features Eric Berryman performing 'toasts,' or bawdy poems from the Black-American oral tradition. Based on a 1976 LP, the show explores fantastical stories of street heroes with live drum accompaniment.",
+    "emoji": "🌊",
+    "tags": [
+      "Black History",
+      "Performance Art",
+      "Oral Tradition",
+      "Theatrical",
+      "Live Drums"
+    ],
+    "lat": 40.72897,
+    "lng": -73.99175,
+    "occurrences": [
+      [
+        "2026-01-12",
+        "7pm",
+        null,
+        ""
+      ],
+      [
+        "2026-01-13",
+        "9:30pm",
+        null,
+        ""
+      ]
+    ],
+    "urls": [
+      "https://publictheater.org/calendar/"
+    ],
+    "short_name": "Get Your Ass in the Water and Swim Like Me"
+  },
+  {
+    "name": "Cannabis Licensing – Mar Fitzgerald, Chair",
+    "location": "Manhattan Community Board 2",
+    "description": "A committee meeting dedicated to reviewing retail cannabis license applications and related regulations in the district.",
+    "emoji": "🌿",
+    "tags": [
+      "Community Board",
+      "Public Policy",
+      "Small Business",
+      "Community Safety",
+      "Manhattan CB2",
+      "Cannabis Licensing"
+    ],
+    "lat": 40.72767,
+    "lng": -73.99761,
+    "occurrences": [
+      [
+        "2026-01-12",
+        "6:30pm",
+        null,
+        "9pm"
+      ]
+    ],
+    "urls": [
+      "https://cbmanhattan.cityofnewyork.us/cb2/calendar/"
+    ],
+    "short_name": "Cannabis Licensing – Mar Fitzgerald, Chair"
+  },
+  {
+    "name": "CB3 Landmarks & Preservation Committee Meeting",
+    "location": "Brooklyn Community Board 3",
+    "description": "Meeting to discuss landmark designations and historic preservation projects within the Brooklyn Community Board 3 district.",
+    "emoji": "🏛️",
+    "tags": [
+      "Architecture",
+      "Historic Preservation",
+      "Community Board",
+      "Urban Planning",
+      "Landmarks",
+      "Public Meeting",
+      "Brooklyn CB3"
+    ],
+    "lat": 40.67997,
+    "lng": -73.94657,
+    "occurrences": [
+      [
+        "2026-01-12",
+        "6:30pm",
+        null,
+        "8pm"
+      ]
+    ],
+    "urls": [
+      "https://www.nyc.gov/site/brooklyncb3/calendar/calendar.page"
+    ],
+    "short_name": "CB3 Landmarks & Preservation Committee Meeting"
   }
 ]

@@ -90,6 +90,20 @@
     "address": "502 W 53rd St, New York, NY 10019, USA"
   },
   {
+    "name": "Abrons Arts Center",
+    "lat": 40.71533,
+    "lng": -73.98379,
+    "tags": [
+      "Manhattan",
+      "Performing Arts",
+      "Lower East Side",
+      "Arts Center",
+      "Visual Arts"
+    ],
+    "emoji": "🎭",
+    "address": "466 Grand St, New York, NY 10002, USA"
+  },
+  {
     "name": "Albertine",
     "lat": 40.77672,
     "lng": -73.96372,
@@ -132,19 +146,6 @@
     "address": "219 W 49th St, New York, NY 10019, USA"
   },
   {
-    "name": "Amboy Street Garden",
-    "lat": 40.66536,
-    "lng": -73.91383,
-    "tags": [
-      "Brownsville",
-      "Brooklyn",
-      "Community Garden",
-      "Green Space"
-    ],
-    "emoji": "🌱",
-    "address": "Amboy Street Garden, 208 Amboy St, Brooklyn, NY 11212, USA"
-  },
-  {
     "name": "American Museum of Natural History",
     "lat": 40.78132,
     "lng": -73.97399,
@@ -158,7 +159,8 @@
     ],
     "emoji": "🦕",
     "alt_emoji": "🏛️",
-    "address": "200 Central Prk W, New York, NY 10024, USA"
+    "address": "200 Central Prk W, New York, NY 10024, USA",
+    "short_name": "Museum of Natural History"
   },
   {
     "name": "Apollo Theater",
@@ -173,6 +175,23 @@
     ],
     "emoji": "🎵",
     "address": "253 W 125th St, New York, NY 10027, USA"
+  },
+  {
+    "name": "Art & Architecture Collection",
+    "lat": 40.75318,
+    "lng": -73.98225,
+    "tags": [
+      "Manhattan",
+      "Library",
+      "NYPL",
+      "Midtown",
+      "Architecture",
+      "Art",
+      "Research",
+      "Humanities"
+    ],
+    "emoji": "📖",
+    "address": "476 5th Ave, New York, NY 10018, USA"
   },
   {
     "name": "Art and Artifacts Division",
@@ -202,7 +221,8 @@
       "Culture"
     ],
     "emoji": "🏛️",
-    "address": "725 Park Ave, New York, NY 10021, USA"
+    "address": "725 Park Ave, New York, NY 10021, USA",
+    "short_name": "Asia Society"
   },
   {
     "name": "Astoria Park",
@@ -272,7 +292,8 @@
       "Austrian Culture"
     ],
     "emoji": "🏛️",
-    "address": "11 E 52nd St, New York, NY 10022, USA"
+    "address": "11 E 52nd St, New York, NY 10022, USA",
+    "short_name": "Austrian Cultural Forum"
   },
   {
     "name": "BAM Strong",
@@ -315,7 +336,8 @@
       "Union Square"
     ],
     "emoji": "📚",
-    "address": "33 E 17th St, New York, NY 10003, USA"
+    "address": "33 E 17th St, New York, NY 10003, USA",
+    "short_name": "Barnes & Noble"
   },
   {
     "name": "Barzakh Cafe",
@@ -475,7 +497,8 @@
       "Pride"
     ],
     "emoji": "🏳️‍🌈",
-    "address": "1561 Bedford Ave, Brooklyn, NY 11225, USA"
+    "address": "1561 Bedford Ave, Brooklyn, NY 11225, USA",
+    "short_name": "Brooklyn Pride Center"
   },
   {
     "name": "Brooklyn Grange at Sunset Park",
@@ -489,7 +512,8 @@
       "Urban Farming"
     ],
     "emoji": "🥕",
-    "address": "Parking lot, 850 3rd Ave, Brooklyn, NY 11232, USA"
+    "address": "Parking lot, 850 3rd Ave, Brooklyn, NY 11232, USA",
+    "short_name": "Brooklyn Grange"
   },
   {
     "name": "Brooklyn Museum",
@@ -536,7 +560,8 @@
       "Literacy"
     ],
     "emoji": "📖",
-    "address": "10 Grand Army Plz, Brooklyn, NY 11238, USA"
+    "address": "10 Grand Army Plz, Brooklyn, NY 11238, USA",
+    "short_name": "Central Library"
   },
   {
     "name": "Brooklyn Steel",
@@ -620,7 +645,8 @@
       "African Art"
     ],
     "emoji": "🎨",
-    "address": "39 W 119th St, New York, NY 10026, USA"
+    "address": "39 W 119th St, New York, NY 10026, USA",
+    "short_name": "Calabar Gallery"
   },
   {
     "name": "Camp Friendship",
@@ -650,6 +676,24 @@
     ],
     "emoji": "🌳",
     "address": "Canarsie Park, Seaview Ave &, Remsen Ave, Brooklyn, NY 11236, USA"
+  },
+  {
+    "name": "Carl H. Pforzheimer Collection of Shelley and His Circle",
+    "lat": 40.75318,
+    "lng": -73.98225,
+    "tags": [
+      "Manhattan",
+      "Library",
+      "NYPL",
+      "Midtown",
+      "Literature",
+      "Research",
+      "Special Collection",
+      "Humanities"
+    ],
+    "emoji": "📖",
+    "address": "476 5th Ave, New York, NY 10018, USA",
+    "short_name": "Pforzheimer Collection"
   },
   {
     "name": "Carnegie Hall",
@@ -750,7 +794,8 @@
       "Business"
     ],
     "emoji": "📖",
-    "address": "455 5th Ave, New York, NY 10016, USA"
+    "address": "455 5th Ave, New York, NY 10016, USA",
+    "short_name": "Children's Center"
   },
   {
     "name": "China Institute",
@@ -866,7 +911,8 @@
       "Columbia University"
     ],
     "emoji": "🎓",
-    "address": "615 W 129th St, New York, NY 10027, USA"
+    "address": "615 W 129th St, New York, NY 10027, USA",
+    "short_name": "Lenfest Center for the Arts"
   },
   {
     "name": "Community Bookstore",
@@ -907,7 +953,8 @@
       "Gym"
     ],
     "emoji": "🏋🏽",
-    "address": "348 E 54th St, New York, NY 10022, USA"
+    "address": "348 E 54th St, New York, NY 10022, USA",
+    "short_name": "Motley Recreation Center"
   },
   {
     "name": "Cooper Hewitt, Smithsonian Design Museum",
@@ -922,7 +969,8 @@
       "Museum Mile"
     ],
     "emoji": "💡",
-    "address": "2 E 91st St, New York, NY 10128, USA"
+    "address": "2 E 91st St, New York, NY 10128, USA",
+    "short_name": "Cooper Hewitt"
   },
   {
     "name": "Corona Library",
@@ -1006,7 +1054,8 @@
       "NY Philharmonic"
     ],
     "emoji": "🎼",
-    "address": "10 Lincoln Center Plaza, New York, NY 10023, USA"
+    "address": "10 Lincoln Center Plaza, New York, NY 10023, USA",
+    "short_name": "Lincoln Center"
   },
   {
     "name": "David H. Koch Theater",
@@ -1021,7 +1070,8 @@
       "Lincoln Center"
     ],
     "emoji": "💃🏻",
-    "address": "20 Lincoln Center Plaza, New York, NY 10023, USA"
+    "address": "20 Lincoln Center Plaza, New York, NY 10023, USA",
+    "short_name": "Lincoln Center"
   },
   {
     "name": "Delight Factory",
@@ -1037,6 +1087,23 @@
     "address": "303 Saratoga Ave, Brooklyn, NY 11233, USA"
   },
   {
+    "name": "DeWitt Wallace Periodical Room",
+    "lat": 40.75318,
+    "lng": -73.98225,
+    "tags": [
+      "Manhattan",
+      "Library",
+      "NYPL",
+      "Midtown",
+      "Research",
+      "Periodicals",
+      "Magazines",
+      "Humanities"
+    ],
+    "emoji": "📖",
+    "address": "476 5th Ave, New York, NY 10018, USA"
+  },
+  {
     "name": "District Office, 215 West 125th Street, 4th Floor",
     "lat": 40.8097,
     "lng": -73.94891,
@@ -1048,7 +1115,8 @@
       "Community Board"
     ],
     "emoji": "🏛️",
-    "address": "215 W 125th St 4th floor, New York, NY 10027, USA"
+    "address": "215 W 125th St 4th floor, New York, NY 10027, USA",
+    "short_name": "District Office"
   },
   {
     "name": "Dizzy's Club",
@@ -1066,17 +1134,21 @@
     "address": "10 Columbus Cir, New York, NY 10019, USA"
   },
   {
-    "name": "Eastchester Library",
-    "lat": 40.87013,
-    "lng": -73.84501,
+    "name": "Dorot Jewish Division",
+    "lat": 40.75318,
+    "lng": -73.98225,
     "tags": [
+      "Manhattan",
       "Library",
       "NYPL",
-      "Bronx",
-      "Baychester"
+      "Midtown",
+      "Research",
+      "Special Collection",
+      "Jewish History",
+      "Humanities"
     ],
     "emoji": "📖",
-    "address": "1385 E Gun Hill Rd, Bronx, NY 10469, USA"
+    "address": "476 5th Ave, New York, NY 10018, USA"
   },
   {
     "name": "El Museo del Barrio",
@@ -1271,19 +1343,37 @@
     "address": "Freshkills Park, Freshkills Park, Staten Island, NY 10314, USA"
   },
   {
-    "name": "Gertrude Ederle Recreation Center",
-    "lat": 40.77154,
-    "lng": -73.98868,
+    "name": "General Research Division",
+    "lat": 40.75318,
+    "lng": -73.98225,
     "tags": [
       "Manhattan",
-      "Recreation Center",
-      "Upper West Side",
-      "Pool",
-      "Gym",
-      "Swimming"
+      "Library",
+      "NYPL",
+      "Midtown",
+      "Research",
+      "Reading Room",
+      "Humanities"
     ],
-    "emoji": "🏋🏽",
-    "address": "232 W 60th St, New York, NY 10023, USA"
+    "emoji": "📖",
+    "address": "476 5th Ave, New York, NY 10018, USA"
+  },
+  {
+    "name": "George Arents Collection",
+    "lat": 40.75318,
+    "lng": -73.98225,
+    "tags": [
+      "Manhattan",
+      "Library",
+      "NYPL",
+      "Midtown",
+      "Research",
+      "Special Collection",
+      "Rare Books",
+      "Humanities"
+    ],
+    "emoji": "📖",
+    "address": "476 5th Ave, New York, NY 10018, USA"
   },
   {
     "name": "Ginger's Bar",
@@ -1400,6 +1490,24 @@
     "address": "128 Pitt St, New York, NY 10002, USA"
   },
   {
+    "name": "Henry W. and Albert A. Berg Collection",
+    "lat": 40.75318,
+    "lng": -73.98225,
+    "tags": [
+      "Manhattan",
+      "Library",
+      "NYPL",
+      "Midtown",
+      "Literature",
+      "Research",
+      "Special Collection",
+      "Humanities"
+    ],
+    "emoji": "📖",
+    "address": "476 5th Ave, New York, NY 10018, USA",
+    "short_name": "The Berg Collection"
+  },
+  {
     "name": "Her-King Alagantic Community Garden",
     "lat": 40.67948,
     "lng": -73.94983,
@@ -1411,7 +1519,8 @@
       "Gardening"
     ],
     "emoji": "🌺",
-    "address": "106 Herkimer St, Brooklyn, NY 11216, USA"
+    "address": "106 Herkimer St, Brooklyn, NY 11216, USA",
+    "short_name": "Her-King Alagantic Garden"
   },
   {
     "name": "Herbert Von King Park",
@@ -1511,7 +1620,8 @@
       "Bushwick"
     ],
     "emoji": "👵🏽",
-    "address": "230 Linden St, Brooklyn, NY 11221, USA"
+    "address": "230 Linden St, Brooklyn, NY 11221, USA",
+    "short_name": "Hope Gardens Center"
   },
   {
     "name": "House of Yes",
@@ -1526,6 +1636,21 @@
     ],
     "emoji": "🎪",
     "address": "2 Wyckoff Ave, Brooklyn, NY 11237, USA"
+  },
+  {
+    "name": "Hudson River Park",
+    "lat": 40.72939,
+    "lng": -74.01186,
+    "tags": [
+      "Manhattan",
+      "West Village",
+      "Park",
+      "Waterfront",
+      "Piers",
+      "Biking"
+    ],
+    "emoji": "🌳",
+    "address": "Hudson River Park Trust, 353 West St, New York, NY 10014, USA"
   },
   {
     "name": "Hunter's Point South Park",
@@ -1583,7 +1708,8 @@
       "Aircraft Carrier"
     ],
     "emoji": "✈️",
-    "address": "Pier 86 at Hudson River Park, New York, NY 10036, USA"
+    "address": "Pier 86 at Hudson River Park, New York, NY 10036, USA",
+    "short_name": "ISCP"
   },
   {
     "name": "Inwood Hill Park",
@@ -1615,6 +1741,24 @@
     "address": "726 11th Ave, New York, NY 10019, USA"
   },
   {
+    "name": "Irma and Paul Milstein Division",
+    "lat": 40.75318,
+    "lng": -73.98225,
+    "tags": [
+      "Manhattan",
+      "Library",
+      "NYPL",
+      "Midtown",
+      "History",
+      "Research",
+      "Genealogy",
+      "Humanities"
+    ],
+    "emoji": "📖",
+    "address": "476 5th Ave, New York, NY 10018, USA",
+    "short_name": "Milstein Division"
+  },
+  {
     "name": "Irving Plaza",
     "lat": 40.73493,
     "lng": -73.98845,
@@ -1641,7 +1785,8 @@
       "Language Classes"
     ],
     "emoji": "🏛️",
-    "address": "686 Park Ave, New York, NY 10065, USA"
+    "address": "686 Park Ave, New York, NY 10065, USA",
+    "short_name": "Italian Cultural Institute"
   },
   {
     "name": "Jackson Heights Library",
@@ -1684,7 +1829,9 @@
       "Jamaica"
     ],
     "emoji": "🎨",
-    "address": "161-04 Jamaica Ave, Jamaica, NY 11432, USA"
+    "address": "161-04 Jamaica Ave, Jamaica, NY 11432, USA",
+    "short_name": "Jamaica Center for Arts and Learning",
+    "very_short_name": "JCAL"
   },
   {
     "name": "Jamaica Performing Arts Center (JPAC)",
@@ -1698,7 +1845,9 @@
       "Historic Theater"
     ],
     "emoji": "🎭",
-    "address": "153-10 Jamaica Ave, Jamaica, NY 11432, USA"
+    "address": "153-10 Jamaica Ave, Jamaica, NY 11432, USA",
+    "short_name": "Jamaica Performing Arts Center",
+    "very_short_name": "JPAC"
   },
   {
     "name": "Japan Society",
@@ -1743,7 +1892,8 @@
       "Schomburg Center"
     ],
     "emoji": "📖",
-    "address": "515 Malcolm X Blvd, New York, NY 10037, USA"
+    "address": "515 Malcolm X Blvd, New York, NY 10037, USA",
+    "short_name": "Hutson Division"
   },
   {
     "name": "Kaufman Music Center",
@@ -1819,7 +1969,9 @@
     ],
     "emoji": "🐠",
     "alt_emoji": "🎵",
-    "address": "158 Bleecker St, New York, NY 10012, USA"
+    "address": "158 Bleecker St, New York, NY 10012, USA",
+    "short_name": "Le Poisson Rouge",
+    "very_short_name": "LPR"
   },
   {
     "name": "Lehman Center for the Performing Arts",
@@ -1832,7 +1984,8 @@
       "Kingsbridge"
     ],
     "emoji": "🎵",
-    "address": "250 Bedford Park Blvd W, Bronx, NY 10468, USA"
+    "address": "250 Bedford Park Blvd W, Bronx, NY 10468, USA",
+    "short_name": "Lehman Center"
   },
   {
     "name": "Leslie-Lohman Museum of Art",
@@ -1936,7 +2089,8 @@
     ],
     "emoji": "🏛️",
     "alt_emoji": "🏢",
-    "address": "North, 1 Centre St # 2202, New York, NY 10007, USA"
+    "address": "North, 1 Centre St # 2202, New York, NY 10007, USA",
+    "short_name": "Manhattan CB1"
   },
   {
     "name": "Manhattan Community Board 4",
@@ -1951,7 +2105,8 @@
     ],
     "emoji": "🏛️",
     "alt_emoji": "🏢",
-    "address": "424 W 33rd St #580, New York, NY 10001, USA"
+    "address": "424 W 33rd St #580, New York, NY 10001, USA",
+    "short_name": "Manhattan CB4"
   },
   {
     "name": "Manhattan Community Board 6",
@@ -1966,7 +2121,42 @@
     ],
     "emoji": "🏛️",
     "alt_emoji": "🏢",
-    "address": "211 E 43rd St STE 1404, New York, NY 10017, USA"
+    "address": "211 E 43rd St STE 1404, New York, NY 10017, USA",
+    "short_name": "Manhattan CB6"
+  },
+  {
+    "name": "Manhattan Community Board 8",
+    "lat": 40.76295,
+    "lng": -73.9693,
+    "tags": [
+      "Government",
+      "Civic",
+      "Manhattan",
+      "Upper East Side",
+      "Community Board"
+    ],
+    "emoji": "🏛️",
+    "alt_emoji": "🏢",
+    "address": "505 Park Ave #620, New York, NY 10022, USA",
+    "short_name": "Manhattan CB8"
+  },
+  {
+    "name": "Manuscripts and Archives Division",
+    "lat": 40.75318,
+    "lng": -73.98225,
+    "tags": [
+      "Manhattan",
+      "Library",
+      "NYPL",
+      "Midtown",
+      "Research",
+      "Archives",
+      "Manuscripts",
+      "Humanities"
+    ],
+    "emoji": "📜",
+    "alt_emoji": "📖",
+    "address": "476 5th Ave, New York, NY 10018, USA"
   },
   {
     "name": "Manuscripts, Archives and Rare Books Division",
@@ -2026,7 +2216,8 @@
       "Seaport"
     ],
     "emoji": "📚",
-    "address": "4 Fulton St, New York, NY 10038, USA"
+    "address": "4 Fulton St, New York, NY 10038, USA",
+    "short_name": "McNally Jackson"
   },
   {
     "name": "McNally Jackson (SoHo)",
@@ -2039,7 +2230,23 @@
       "Independent"
     ],
     "emoji": "📚",
-    "address": "134 Prince St, New York, NY 10012, USA"
+    "address": "134 Prince St, New York, NY 10012, USA",
+    "short_name": "McNally Jackson"
+  },
+  {
+    "name": "Merchant's House Museum",
+    "lat": 40.72767,
+    "lng": -73.99234,
+    "tags": [
+      "Manhattan",
+      "Historic House",
+      "Museum",
+      "History",
+      "NoHo",
+      "Haunted"
+    ],
+    "emoji": "🏛️",
+    "address": "29 E 4th St, New York, NY 10003, USA"
   },
   {
     "name": "Metropolitan Opera House",
@@ -2083,7 +2290,8 @@
     ],
     "emoji": "🎓",
     "alt_emoji": "🎵",
-    "address": "2960 Broadway, New York, NY 10027, USA"
+    "address": "2960 Broadway, New York, NY 10027, USA",
+    "short_name": "Miller Theatre"
   },
   {
     "name": "Mood Ring",
@@ -2158,7 +2366,8 @@
     ],
     "emoji": "✏️",
     "alt_emoji": "🏛️",
-    "address": "128 E 63rd St, New York, NY 10065, USA"
+    "address": "128 E 63rd St, New York, NY 10065, USA",
+    "short_name": "Society of Illustrators"
   },
   {
     "name": "Museum of Modern Art (MoMA)",
@@ -2173,7 +2382,9 @@
     ],
     "emoji": "🖼️",
     "alt_emoji": "🏛️",
-    "address": "11 W 53rd St, New York, NY 10019, USA"
+    "address": "11 W 53rd St, New York, NY 10019, USA",
+    "short_name": "Museum of Modern Art",
+    "very_short_name": "MoMA"
   },
   {
     "name": "Museum of the City of New York",
@@ -2188,7 +2399,8 @@
     ],
     "emoji": "🗽",
     "alt_emoji": "🏛️",
-    "address": "1220 5th Ave, New York, NY 10029, USA"
+    "address": "1220 5th Ave, New York, NY 10029, USA",
+    "very_short_name": "MCNY"
   },
   {
     "name": "Museum of the Moving Image",
@@ -2203,7 +2415,8 @@
       "TV"
     ],
     "emoji": "🎥",
-    "address": "36-01 35th Ave, Queens, NY 11106, USA"
+    "address": "36-01 35th Ave, Queens, NY 11106, USA",
+    "very_short_name": "MoMI"
   },
   {
     "name": "Neil Simon Theatre",
@@ -2218,21 +2431,6 @@
     ],
     "emoji": "🎭",
     "address": "250 W 52nd St, New York, NY 10019, USA"
-  },
-  {
-    "name": "New Amsterdam Theatre",
-    "lat": 40.75609,
-    "lng": -73.98779,
-    "tags": [
-      "Manhattan",
-      "Broadway",
-      "Theater",
-      "Musicals",
-      "Theater District",
-      "Disney"
-    ],
-    "emoji": "🎭",
-    "address": "214 W 42nd St, New York, NY 10036, USA"
   },
   {
     "name": "New Victory Theater",
@@ -2274,21 +2472,8 @@
       "Musical Theater"
     ],
     "emoji": "💃🏻",
-    "address": "131 W 55th St, New York, NY 10019, USA"
-  },
-  {
-    "name": "New York Comedy Club",
-    "lat": 40.73903,
-    "lng": -73.98074,
-    "tags": [
-      "Manhattan",
-      "Comedy",
-      "Kips Bay",
-      "Comedy Club",
-      "Stand-up"
-    ],
-    "emoji": "🎤",
-    "address": "241 E 24th St, New York, NY 10010, USA"
+    "address": "131 W 55th St, New York, NY 10019, USA",
+    "short_name": "NY City Center"
   },
   {
     "name": "New York Hall of Science",
@@ -2304,7 +2489,8 @@
       "Flushing Meadows Corona Park"
     ],
     "emoji": "🧪",
-    "address": "47-01 111th St, Corona, NY 11368, USA"
+    "address": "47-01 111th St, Corona, NY 11368, USA",
+    "short_name": "NY Hall of Science"
   },
   {
     "name": "New York Historical Society",
@@ -2319,7 +2505,8 @@
       "NYC History"
     ],
     "emoji": "🏛️",
-    "address": "170 Central Prk W, New York, NY 10024, USA"
+    "address": "170 Central Prk W, New York, NY 10024, USA",
+    "short_name": "NY Historical Society"
   },
   {
     "name": "New York Insight Meditation Center",
@@ -2333,7 +2520,8 @@
       "Mindfulness"
     ],
     "emoji": "🧘🏾",
-    "address": "115 W 29th St 12th floor, New York, NY 10001, USA"
+    "address": "115 W 29th St 12th floor, New York, NY 10001, USA",
+    "short_name": "NY Insight Meditation Center"
   },
   {
     "name": "New York Live Arts",
@@ -2347,7 +2535,25 @@
       "Dance Center"
     ],
     "emoji": "💃🏻",
-    "address": "219 W 19th St, New York, NY 10011, USA"
+    "address": "219 W 19th St, New York, NY 10011, USA",
+    "short_name": "NY Live Arts"
+  },
+  {
+    "name": "New York Public Library - Stephen A. Schwarzman Building",
+    "lat": 40.75318,
+    "lng": -73.98225,
+    "tags": [
+      "Manhattan",
+      "Library",
+      "NYPL",
+      "Midtown",
+      "Landmark",
+      "Research",
+      "Humanities"
+    ],
+    "emoji": "🏛️",
+    "address": "476 5th Ave, New York, NY 10018, USA",
+    "short_name": "NYPL - Schwarzman Building"
   },
   {
     "name": "New York Society for Ethical Culture",
@@ -2361,7 +2567,8 @@
       "Ethical Culture"
     ],
     "emoji": "🫱🏾‍🫲🏼",
-    "address": "2 W 64th St, New York, NY 10023, USA"
+    "address": "2 W 64th St, New York, NY 10023, USA",
+    "short_name": "NY Society for Ethical Culture"
   },
   {
     "name": "Nitehawk Cinema (Prospect Park)",
@@ -2376,7 +2583,24 @@
       "Dine in"
     ],
     "emoji": "🎥",
-    "address": "188 Prospect Park W, Brooklyn, NY 11215, USA"
+    "address": "188 Prospect Park W, Brooklyn, NY 11215, USA",
+    "short_name": "Nitehawk Cinema",
+    "very_short_name": "Nitehawk"
+  },
+  {
+    "name": "Northwell Greenwich Village Hospital",
+    "lat": 40.7378,
+    "lng": -74.00091,
+    "tags": [
+      "Manhattan",
+      "West Village",
+      "Hospital",
+      "Medical",
+      "Healthcare"
+    ],
+    "emoji": "🏥",
+    "address": "30 7th Ave, New York, NY 10011, USA",
+    "short_name": "Northwell Hospital"
   },
   {
     "name": "Nowadays",
@@ -2462,7 +2686,8 @@
       "Bushwick"
     ],
     "emoji": "🎷",
-    "address": "6 Suydam St, Brooklyn, NY 11221, USA"
+    "address": "6 Suydam St, Brooklyn, NY 11221, USA",
+    "very_short_name": "Ornithology"
   },
   {
     "name": "Ozone Park Library",
@@ -2535,6 +2760,39 @@
     ],
     "emoji": "📖",
     "address": "515 Malcolm X Blvd, New York, NY 10037, USA"
+  },
+  {
+    "name": "Photography Collection",
+    "lat": 40.75318,
+    "lng": -73.98225,
+    "tags": [
+      "Manhattan",
+      "Library",
+      "NYPL",
+      "Midtown",
+      "Photography",
+      "Research",
+      "Humanities"
+    ],
+    "emoji": "📖",
+    "address": "476 5th Ave, New York, NY 10018, USA"
+  },
+  {
+    "name": "Picture Collection",
+    "lat": 40.75318,
+    "lng": -73.98225,
+    "tags": [
+      "Manhattan",
+      "Library",
+      "NYPL",
+      "Midtown",
+      "Research",
+      "Special Collection",
+      "Pictures",
+      "Humanities"
+    ],
+    "emoji": "📖",
+    "address": "476 5th Ave Room 119, New York, NY 10018, USA"
   },
   {
     "name": "Pier 17",
@@ -2636,7 +2894,8 @@
       "Puerto Rican"
     ],
     "emoji": "🎭",
-    "address": "575 Walton Ave, Bronx, NY 10451, USA"
+    "address": "575 Walton Ave, Bronx, NY 10451, USA",
+    "short_name": "Pregones/PRTT"
   },
   {
     "name": "Pregones/Puerto Rican Traveling Theater (Manhattan)",
@@ -2651,7 +2910,25 @@
       "Puerto Rican"
     ],
     "emoji": "🎭",
-    "address": "304 W 47th St, New York, NY 10036, USA"
+    "address": "304 W 47th St, New York, NY 10036, USA",
+    "short_name": "Pregones/PRTT"
+  },
+  {
+    "name": "Print Collection",
+    "lat": 40.75318,
+    "lng": -73.98225,
+    "tags": [
+      "Manhattan",
+      "Library",
+      "NYPL",
+      "Midtown",
+      "Art",
+      "Research",
+      "Prints",
+      "Humanities"
+    ],
+    "emoji": "📖",
+    "address": "476 5th Ave, New York, NY 10018, USA"
   },
   {
     "name": "Prospect Park",
@@ -2749,7 +3026,25 @@
       "Randall's Island"
     ],
     "emoji": "🌳",
-    "address": "Randall's Island Park, 20 Randalls Is Park, New York, NY 10035, USA"
+    "address": "Randall's Island Park, 20 Randalls Is Park, New York, NY 10035, USA",
+    "short_name": "Randall's Island"
+  },
+  {
+    "name": "Rare Book Division",
+    "lat": 40.75318,
+    "lng": -73.98225,
+    "tags": [
+      "Manhattan",
+      "Library",
+      "NYPL",
+      "Midtown",
+      "Research",
+      "Special Collection",
+      "Rare Books",
+      "Humanities"
+    ],
+    "emoji": "📖",
+    "address": "476 5th Ave, New York, NY 10018, USA"
   },
   {
     "name": "Repertorio Español",
@@ -2826,21 +3121,6 @@
     "address": "1118 1st Ave, New York, NY 10065, USA"
   },
   {
-    "name": "Roulette",
-    "lat": 40.68562,
-    "lng": -73.98077,
-    "tags": [
-      "Brooklyn",
-      "Venue",
-      "Avant Garde",
-      "Boerum Hill",
-      "Experimental",
-      "New Music"
-    ],
-    "emoji": "🎵",
-    "address": "509 Atlantic Ave, Brooklyn, NY 11217, USA"
-  },
-  {
     "name": "Roxy Cinema",
     "lat": 40.71938,
     "lng": -74.00485,
@@ -2854,7 +3134,8 @@
       "Jazz"
     ],
     "emoji": "🎥",
-    "address": "2 6th Ave, New York, NY 10013, USA"
+    "address": "2 6th Ave, New York, NY 10013, USA",
+    "very_short_name": "Roxy"
   },
   {
     "name": "Samuel J. Friedman Theatre",
@@ -2897,20 +3178,8 @@
       "Research"
     ],
     "emoji": "📖",
-    "address": "515 Malcolm X Blvd, New York, NY 10037, USA"
-  },
-  {
-    "name": "Seasons of Vision Garden",
-    "lat": 40.67878,
-    "lng": -73.92721,
-    "tags": [
-      "Brooklyn",
-      "Community Garden",
-      "Bed-Stuy",
-      "Bedford-Stuyvesant"
-    ],
-    "emoji": "🌱",
-    "address": "Seasons of Vision Garden, 9-11 Rochester Ave, Brooklyn, NY 11233, USA"
+    "address": "515 Malcolm X Blvd, New York, NY 10037, USA",
+    "short_name": "Schomburg Center"
   },
   {
     "name": "Sheepshead Bay Library",
@@ -3029,7 +3298,9 @@
     ],
     "emoji": "🌀",
     "alt_emoji": "🏛️",
-    "address": "1071 5th Ave, New York, NY 10128, USA"
+    "address": "1071 5th Ave, New York, NY 10128, USA",
+    "short_name": "Guggenheim Museum",
+    "very_short_name": "Guggenheim"
   },
   {
     "name": "Somewhere Nowhere",
@@ -3047,20 +3318,6 @@
     "address": "112 W 25th St Floor 38 & 39, New York, NY 10001, USA"
   },
   {
-    "name": "Sorrentino Recreation Center",
-    "lat": 40.6025,
-    "lng": -73.75136,
-    "tags": [
-      "Recreation Center",
-      "Queens",
-      "Pool",
-      "Far Rockaway",
-      "Gym"
-    ],
-    "emoji": "🏋🏽",
-    "address": "18-48 Cornaga Ave, Far Rockaway, NY 11691, USA"
-  },
-  {
     "name": "SOUK Yoga Studio",
     "lat": 40.74468,
     "lng": -73.98937,
@@ -3073,7 +3330,8 @@
       "Yoga Studio"
     ],
     "emoji": "🧘🏾",
-    "address": "12 W 27th St 2nd floor, New York, NY 10001, USA"
+    "address": "12 W 27th St 2nd floor, New York, NY 10001, USA",
+    "short_name": "Souk Yoga"
   },
   {
     "name": "Sounds of Brazil (SOB's)",
@@ -3088,7 +3346,9 @@
       "Latin"
     ],
     "emoji": "🎵",
-    "address": "204 Varick St, New York, NY 10014, USA"
+    "address": "204 Varick St, New York, NY 10014, USA",
+    "short_name": "Sounds of Brazil",
+    "very_short_name": "SOB's"
   },
   {
     "name": "South Street Seaport Museum",
@@ -3104,6 +3364,23 @@
     ],
     "emoji": "🚢",
     "address": "12 Fulton St, New York, NY 10038, USA"
+  },
+  {
+    "name": "Spencer Collection",
+    "lat": 40.75318,
+    "lng": -73.98225,
+    "tags": [
+      "Manhattan",
+      "Library",
+      "NYPL",
+      "Midtown",
+      "Research",
+      "Special Collection",
+      "Book Arts",
+      "Humanities"
+    ],
+    "emoji": "📖",
+    "address": "476 5th Ave, New York, NY 10018, USA"
   },
   {
     "name": "St. Bartholomew's Church",
@@ -3177,20 +3454,6 @@
     "address": "422 W 42nd St, New York, NY 10036, USA"
   },
   {
-    "name": "Starr Bar",
-    "lat": 40.70499,
-    "lng": -73.9229,
-    "tags": [
-      "Community",
-      "Brooklyn",
-      "Bar",
-      "Activism",
-      "Bushwick"
-    ],
-    "emoji": "🥂",
-    "address": "214 Starr St, Brooklyn, NY 11237, USA"
-  },
-  {
     "name": "Starrett-Lehigh Building",
     "lat": 40.75158,
     "lng": -74.00658,
@@ -3256,7 +3519,8 @@
       "Kids"
     ],
     "emoji": "🏛️",
-    "address": "898 St Nicholas Ave, New York, NY 10032, USA"
+    "address": "898 St Nicholas Ave, New York, NY 10032, USA",
+    "short_name": "Sugar Hill Children's Museum"
   },
   {
     "name": "Sultan Room",
@@ -3376,22 +3640,6 @@
     "emoji": "🎸",
     "alt_emoji": "🎵",
     "address": "147 Bleecker St, New York, NY 10012, USA"
-  },
-  {
-    "name": "The Bowery Electric",
-    "lat": 40.72575,
-    "lng": -73.9918,
-    "tags": [
-      "Manhattan",
-      "Music",
-      "Venue",
-      "East Village",
-      "Rock",
-      "DJ"
-    ],
-    "emoji": "🎸",
-    "alt_emoji": "🎵",
-    "address": "327 Bowery, New York, NY 10003, USA"
   },
   {
     "name": "The Bushwick Starr",
@@ -3525,7 +3773,8 @@
     ],
     "emoji": "🪦",
     "alt_emoji": "🌳",
-    "address": "25th St, Brooklyn, NY 11232, USA"
+    "address": "25th St, Brooklyn, NY 11232, USA",
+    "short_name": "Green-Wood Cemetery"
   },
   {
     "name": "The Grolier Club",
@@ -3692,6 +3941,24 @@
     "address": "1000 5th Ave, New York, NY 10028, USA"
   },
   {
+    "name": "The Miriam and Ira D. Wallach Division of Art, Prints and Photographs",
+    "lat": 40.75318,
+    "lng": -73.98225,
+    "tags": [
+      "Manhattan",
+      "Library",
+      "NYPL",
+      "Midtown",
+      "Art",
+      "Photography",
+      "Research",
+      "Humanities"
+    ],
+    "emoji": "📖",
+    "address": "476 5th Ave, New York, NY 10018, USA",
+    "short_name": "The Wallach Division"
+  },
+  {
     "name": "The Morgan Library & Museum",
     "lat": 40.74923,
     "lng": -73.9814,
@@ -3776,7 +4043,9 @@
       "Sketch"
     ],
     "emoji": "🎭",
-    "address": "154 W 29th St, New York, NY 10001, USA"
+    "address": "154 W 29th St, New York, NY 10001, USA",
+    "short_name": "Peoples Improv Theater",
+    "very_short_name": "PIT"
   },
   {
     "name": "The Ruby Theatre",
@@ -3863,6 +4132,21 @@
     ],
     "emoji": "🎭",
     "address": "312 W 36th St., New York, NY 10018, USA"
+  },
+  {
+    "name": "The Tenement Museum",
+    "lat": 40.71882,
+    "lng": -73.99009,
+    "tags": [
+      "Manhattan",
+      "Museum",
+      "History",
+      "Lower East Side",
+      "Immigration",
+      "Tours"
+    ],
+    "emoji": "🏛️",
+    "address": "103 Orchard St, New York, NY 10002, USA"
   },
   {
     "name": "The Town Hall",
@@ -4012,20 +4296,6 @@
     "address": "89 Broadway, New York, NY 10006, USA"
   },
   {
-    "name": "Triskelion Arts",
-    "lat": 40.72702,
-    "lng": -73.95658,
-    "tags": [
-      "Brooklyn",
-      "Dance",
-      "Greenpoint",
-      "Dance Center",
-      "Performance"
-    ],
-    "emoji": "💃🏻",
-    "address": "106 Calyer St, Brooklyn, NY 11222, USA"
-  },
-  {
     "name": "TV Eye",
     "lat": 40.69785,
     "lng": -73.90522,
@@ -4040,21 +4310,6 @@
     "address": "16-47 Weirfield St, Ridgewood, NY 11385, USA"
   },
   {
-    "name": "Van Cortlandt Park",
-    "lat": 40.89714,
-    "lng": -73.88609,
-    "tags": [
-      "Bronx",
-      "Historic",
-      "Park",
-      "Nature",
-      "Golf Course",
-      "Van Cortlandt Park"
-    ],
-    "emoji": "🌳",
-    "address": "Van Cortlandt Park, Broadway and Van, Cortlandt Park South, Bronx, NY 10471, USA"
-  },
-  {
     "name": "Vanderbilt Hall at Grand Central Terminal",
     "lat": 40.75336,
     "lng": -73.9768,
@@ -4067,6 +4322,22 @@
     ],
     "emoji": "🏢",
     "address": "Grand Central Terminal, 89 E 42nd St, New York, NY 10017, USA"
+  },
+  {
+    "name": "Vartan Gregorian Center for Research in the Humanities",
+    "lat": 40.75318,
+    "lng": -73.98225,
+    "tags": [
+      "Manhattan",
+      "Library",
+      "NYPL",
+      "Midtown",
+      "Research",
+      "Humanities"
+    ],
+    "emoji": "📖",
+    "address": "476 5th Ave, New York, NY 10018, USA",
+    "short_name": "Gregorian Center"
   },
   {
     "name": "Village Vanguard",
@@ -4096,6 +4367,24 @@
     ],
     "emoji": "🎭",
     "address": "245 W 52nd Street, New York, NY 10019"
+  },
+  {
+    "name": "NYPL Visitor Center",
+    "lat": 40.75318,
+    "lng": -73.98225,
+    "tags": [
+      "Manhattan",
+      "Library",
+      "NYPL",
+      "Midtown",
+      "Research",
+      "Visitor Center",
+      "Tours",
+      "Information",
+      "Humanities"
+    ],
+    "emoji": "📖",
+    "address": "476 5th Ave, New York, NY 10018, USA"
   },
   {
     "name": "Washington Heights Library",
@@ -4193,7 +4482,8 @@
       "Meatpacking District"
     ],
     "emoji": "🎨",
-    "address": "99 Gansevoort St, New York, NY 10014, USA"
+    "address": "99 Gansevoort St, New York, NY 10014, USA",
+    "short_name": "Whitney Museum"
   },
   {
     "name": "Wolfe's Pond Park",
@@ -4352,7 +4642,8 @@
       "Movie Theater"
     ],
     "emoji": "🎥",
-    "address": "1001 3rd Ave, New York, NY 10022, USA"
+    "address": "1001 3rd Ave, New York, NY 10022, USA",
+    "short_name": "Cinema 123"
   },
   {
     "name": "Congregation Beth Elohim",
@@ -4403,7 +4694,8 @@
       "Fort Greene"
     ],
     "emoji": "🎭",
-    "address": "262 Ashland Pl, Brooklyn, NY 11217, USA"
+    "address": "262 Ashland Pl, Brooklyn, NY 11217, USA",
+    "very_short_name": "Polonsky Center"
   },
   {
     "name": "SoHo Playhouse",
@@ -4444,7 +4736,8 @@
       "Bushwick"
     ],
     "emoji": "😂",
-    "address": "10 Cooper St, Brooklyn, NY 11207, USA"
+    "address": "10 Cooper St, Brooklyn, NY 11207, USA",
+    "short_name": "The Tiny Cupboard"
   },
   {
     "name": "Purgatory",
@@ -4457,21 +4750,6 @@
     ],
     "emoji": "🎵",
     "address": "675 Central Ave, Brooklyn, NY 11207, USA"
-  },
-  {
-    "name": "Footlight Presents",
-    "lat": 40.70911,
-    "lng": -73.90698,
-    "tags": [
-      "Bar",
-      "Queens",
-      "Music",
-      "Venue",
-      "Performance Space",
-      "Ridgewood"
-    ],
-    "emoji": "🎭",
-    "address": "5-52 Grandview Ave, Ridgewood, NY 11385, USA"
   },
   {
     "name": "Kids Fun House",
@@ -4583,20 +4861,6 @@
     "address": "158 Buffalo Ave, Brooklyn, NY 11213, USA"
   },
   {
-    "name": "Compound Art & Sound Gallery",
-    "lat": 40.67747,
-    "lng": -74.01844,
-    "tags": [
-      "Brooklyn",
-      "Art Gallery",
-      "Music",
-      "Red Hook"
-    ],
-    "emoji": "🎵",
-    "alt_emoji": "🎨",
-    "address": "185 Van Dyke St, Brooklyn, NY 11231, USA"
-  },
-  {
     "name": "A.I.R.",
     "lat": 40.70384,
     "lng": -73.98708,
@@ -4689,7 +4953,9 @@
     ],
     "emoji": "🪶",
     "alt_emoji": "🏛️",
-    "address": "1 Bowling Green, New York, NY 10004, USA"
+    "address": "1 Bowling Green, New York, NY 10004, USA",
+    "short_name": "Museum of the American Indian",
+    "very_short_name": "NMAI"
   },
   {
     "name": "Bethel Gospel Assembly",
@@ -4716,22 +4982,9 @@
     ],
     "emoji": "🌺",
     "alt_emoji": "🌳",
-    "address": "New York Botanical Garden, 2900 Southern Blvd, Bronx, NY 10458, USA"
-  },
-  {
-    "name": "Hudson River Museum",
-    "lat": 40.95404,
-    "lng": -73.89617,
-    "tags": [
-      "Museum",
-      "History",
-      "Art",
-      "Science",
-      "Yonkers",
-      "Westchester"
-    ],
-    "emoji": "🏛️",
-    "address": "511 Warburton Ave, Yonkers, NY 10701, USA"
+    "address": "New York Botanical Garden, 2900 Southern Blvd, Bronx, NY 10458, USA",
+    "short_name": "NY Botanical Garden",
+    "very_short_name": "NYBG"
   },
   {
     "name": "Nicholas Roerich Museum",
@@ -4745,7 +4998,8 @@
     ],
     "emoji": "🎨",
     "alt_emoji": "🏛️",
-    "address": "319 W 107th St, New York, NY 10025, USA"
+    "address": "319 W 107th St, New York, NY 10025, USA",
+    "short_name": "Roerich Museum"
   },
   {
     "name": "The Fund for Park Avenue",
@@ -4815,7 +5069,8 @@
     ],
     "emoji": "✨",
     "alt_emoji": "🎨",
-    "address": "61 Chelsea Piers, New York, NY 10011, USA"
+    "address": "61 Chelsea Piers, New York, NY 10011, USA",
+    "short_name": "Arte Museum"
   },
   {
     "name": "Jackie Robinson Museum",
@@ -4910,7 +5165,8 @@
       "Waste Disposal"
     ],
     "emoji": "♻️",
-    "address": "800 Food Center Dr, Bronx, NY 10474, USA"
+    "address": "800 Food Center Dr, Bronx, NY 10474, USA",
+    "short_name": "Special Waste Drop-Off"
   },
   {
     "name": "East Harlem Neighborhood Health Action Center",
@@ -4964,19 +5220,6 @@
     ],
     "emoji": "💃🏻",
     "address": "21 Snyder Ave, Brooklyn, NY 11226, USA"
-  },
-  {
-    "name": "Asser Levy Recreation Center",
-    "lat": 40.73616,
-    "lng": -73.97566,
-    "tags": [
-      "Manhattan",
-      "Recreation Center",
-      "Kips Bay"
-    ],
-    "emoji": "🏋🏽",
-    "alt_emoji": "🏛️",
-    "address": "392 Asser Levy Pl, New York, NY 10010, USA"
   },
   {
     "name": "East River Waterfront Esplanade",
@@ -5168,7 +5411,8 @@
       "Religious Site"
     ],
     "emoji": "🕉️",
-    "address": "45-57 Bowne St, Flushing, NY 11355, USA"
+    "address": "45-57 Bowne St, Flushing, NY 11355, USA",
+    "short_name": "Hindu Temple Society"
   },
   {
     "name": "Historic Richmond Town",
@@ -5213,7 +5457,8 @@
       "Makerspace"
     ],
     "emoji": "🛠️",
-    "address": "Brooklyn Army Terminal, 140 58th St building b unit 1c, Brooklyn, NY 11220, USA"
+    "address": "Brooklyn Army Terminal, 140 58th St building b unit 1c, Brooklyn, NY 11220, USA",
+    "short_name": "MakerSpace"
   },
   {
     "name": "Manhattan Neighborhood Network",
@@ -5229,7 +5474,8 @@
       "TV Studio"
     ],
     "emoji": "📺",
-    "address": "509 W 38th St, New York, NY 10018, USA"
+    "address": "509 W 38th St, New York, NY 10018, USA",
+    "short_name": "MNN"
   },
   {
     "name": "Materials for the Arts",
@@ -5281,7 +5527,8 @@
     ],
     "emoji": "💀",
     "alt_emoji": "📚",
-    "address": "254 36th St 2nd floor, C248, Brooklyn, NY 11232, USA"
+    "address": "254 36th St 2nd floor, C248, Brooklyn, NY 11232, USA",
+    "short_name": "Morbid Anatomy"
   },
   {
     "name": "National Academy of Design",
@@ -5313,7 +5560,8 @@
     ],
     "emoji": "🪧",
     "alt_emoji": "🏛️",
-    "address": "2465 Atlantic Ave, Brooklyn, NY 11207, USA"
+    "address": "2465 Atlantic Ave, Brooklyn, NY 11207, USA",
+    "short_name": "NY Sign Museum"
   },
   {
     "name": "NYC Department of Records and Information Services (DORIS)",
@@ -5330,7 +5578,8 @@
     ],
     "emoji": "📜",
     "alt_emoji": "🏛️",
-    "address": "31 Chambers St #103, New York, NY 10007, USA"
+    "address": "31 Chambers St #103, New York, NY 10007, USA",
+    "short_name": "DORIS"
   },
   {
     "name": "Print Center New York",
@@ -5345,7 +5594,8 @@
     ],
     "emoji": "🎨",
     "alt_emoji": "🏛️",
-    "address": "535 W 24 St, New York, NY 10011, USA"
+    "address": "535 W 24 St, New York, NY 10011, USA",
+    "short_name": "Print Center"
   },
   {
     "name": "Renee & Chaim Gross Foundation",
@@ -5361,7 +5611,8 @@
     ],
     "emoji": "🗿",
     "alt_emoji": "🏛️",
-    "address": "526 LaGuardia Pl, New York, NY 10012, USA"
+    "address": "526 LaGuardia Pl, New York, NY 10012, USA",
+    "short_name": "RC Gross Foundation"
   },
   {
     "name": "Saint Peter's Church",
@@ -5374,7 +5625,8 @@
       "Lutheran"
     ],
     "emoji": "⛪",
-    "address": "619 Lexington Ave, New York, NY 10022, USA"
+    "address": "619 Lexington Ave, New York, NY 10022, USA",
+    "short_name": "St. Peter's Church"
   },
   {
     "name": "Secret Riso Club",
@@ -5406,7 +5658,8 @@
       "Methodist"
     ],
     "emoji": "⛪",
-    "address": "Upper West Side, New York, NY, USA"
+    "address": "Upper West Side, New York, NY, USA",
+    "short_name": "St. Paul & St. Andrew Church"
   },
   {
     "name": "Streicker Cultural Center",
@@ -5483,7 +5736,8 @@
     ],
     "emoji": "🧘🏾",
     "alt_emoji": "🫱🏾‍🫲🏼",
-    "address": "229 E 60th St, New York, NY 10022, USA"
+    "address": "229 E 60th St, New York, NY 10022, USA",
+    "short_name": "Tzu Chi Center"
   },
   {
     "name": "Valentine-Varian House",
@@ -5544,7 +5798,8 @@
     ],
     "emoji": "🎨",
     "alt_emoji": "🏢",
-    "address": "55 Bethune St, New York, NY 10014, USA"
+    "address": "55 Bethune St, New York, NY 10014, USA",
+    "short_name": "Westbeth"
   },
   {
     "name": "WindScape Brooklyn",
@@ -5611,7 +5866,8 @@
     ],
     "emoji": "🌎",
     "alt_emoji": "🏛️",
-    "address": "20 Cooper Sq 4th Floor, New York, NY 10003, USA"
+    "address": "20 Cooper Sq 4th Floor, New York, NY 10003, USA",
+    "very_short_name": "NYU"
   },
   {
     "name": "City Tech",
@@ -5625,7 +5881,8 @@
       "Tech"
     ],
     "emoji": "🎓",
-    "address": "300 Jay St, Brooklyn, NY 11201, USA"
+    "address": "300 Jay St, Brooklyn, NY 11201, USA",
+    "short_name": "City Tech"
   },
   {
     "name": "Poster House",
@@ -5641,7 +5898,8 @@
     ],
     "emoji": "🖼️",
     "alt_emoji": "🏛️",
-    "address": "119 W 23 St, New York, NY 10011, USA"
+    "address": "119 W 23 St, New York, NY 10011, USA",
+    "short_name": "119 W 23rd St, New York, NY 10011"
   },
   {
     "name": "The Brant Foundation",
@@ -5768,7 +6026,8 @@
     ],
     "emoji": "🐉",
     "alt_emoji": "🏛️",
-    "address": "215 Centre St, New York, NY 10013, USA"
+    "address": "215 Centre St, New York, NY 10013, USA",
+    "very_short_name": "MOCA"
   },
   {
     "name": "Museum of Jewish Heritage",
@@ -5967,7 +6226,8 @@
       "Waste Disposal"
     ],
     "emoji": "🐟",
-    "address": "800 Food Center Dr, Bronx, NY 10474, USA"
+    "address": "800 Food Center Dr, Bronx, NY 10474, USA",
+    "short_name": "Fulton Fish Market"
   },
   {
     "name": "Pelham Fritz Recreation Center",
@@ -6015,21 +6275,6 @@
     "address": "Greenbelt Nature Center, 700 Rockland Ave, Staten Island, NY 10314, USA"
   },
   {
-    "name": "Bartow Community Center",
-    "lat": 40.87045,
-    "lng": -73.82911,
-    "tags": [
-      "Event Space",
-      "Bronx",
-      "Community Center",
-      "Older Adult Center",
-      "Co-op City"
-    ],
-    "emoji": "👵🏼",
-    "alt_emoji": "🫱🏾‍🫲🏼",
-    "address": "2049 Bartow Ave, Bronx, NY 10475, USA"
-  },
-  {
     "name": "Long Island University (LIU)",
     "lat": 40.69027,
     "lng": -73.98095,
@@ -6041,7 +6286,9 @@
       "LIU"
     ],
     "emoji": "🎓",
-    "address": "1 University Plz, Brooklyn, NY 11201, USA"
+    "address": "1 University Plz, Brooklyn, NY 11201, USA",
+    "short_name": "Long Island University",
+    "very_short_name": "LIU"
   },
   {
     "name": "Albee Square",
@@ -6326,21 +6573,8 @@
       "Public Policy"
     ],
     "emoji": "🏛️",
-    "address": "47-49 E 65th St, New York, NY 10065, USA"
-  },
-  {
-    "name": "The New School",
-    "lat": 40.73549,
-    "lng": -73.99714,
-    "tags": [
-      "Manhattan",
-      "Design",
-      "Greenwich Village",
-      "University",
-      "Art School"
-    ],
-    "emoji": "🎓",
-    "address": "66 W 12th St, New York, NY 10011, USA"
+    "address": "47-49 E 65th St, New York, NY 10065, USA",
+    "short_name": "Roosevelt House"
   },
   {
     "name": "School of Visual Arts",
@@ -6387,7 +6621,8 @@
       "Stony Brook"
     ],
     "emoji": "🎭",
-    "address": "100 Nicolls Rd, Stony Brook University, NY 11794, USA"
+    "address": "100 Nicolls Rd, Stony Brook University, NY 11794, USA",
+    "short_name": "Staller Center"
   },
   {
     "name": "The Flying Fox Tavern",
@@ -6489,18 +6724,6 @@
     "address": "Tribeca, New York, NY, USA"
   },
   {
-    "name": "Bowery",
-    "lat": 40.72526,
-    "lng": -73.99035,
-    "tags": [
-      "Manhattan",
-      "East Village",
-      "Neighborhood"
-    ],
-    "emoji": "📍",
-    "address": "Bowery, New York, NY, USA"
-  },
-  {
     "name": "Grand Central Station",
     "lat": 40.75336,
     "lng": -73.9768,
@@ -6573,21 +6796,8 @@
     ],
     "emoji": "🏛️",
     "alt_emoji": "🏢",
-    "address": "435 Graham Ave, Brooklyn, NY 11211, USA"
-  },
-  {
-    "name": "Swinging Sixties Older Adult Center",
-    "lat": 40.71315,
-    "lng": -73.94557,
-    "tags": [
-      "Brooklyn",
-      "Community Center",
-      "Williamsburg",
-      "Older Adult Center"
-    ],
-    "emoji": "👵🏼",
-    "alt_emoji": "🫱🏾‍🫲🏼",
-    "address": "211 Ainslie St, Brooklyn, NY 11211, USA"
+    "address": "435 Graham Ave, Brooklyn, NY 11211, USA",
+    "short_name": "Brooklyn CB1"
   },
   {
     "name": "Brooklyn Community Board 14",
@@ -6602,7 +6812,8 @@
     ],
     "emoji": "🏛️",
     "alt_emoji": "🏢",
-    "address": "810 East 16th Street, Brooklyn, NY 11230, USA"
+    "address": "810 East 16th Street, Brooklyn, NY 11230, USA",
+    "short_name": "Brooklyn CB14"
   },
   {
     "name": "Brooklyn Community Board 16",
@@ -6617,7 +6828,8 @@
     ],
     "emoji": "🏛️",
     "alt_emoji": "🏢",
-    "address": "444 Thomas S Boyland St #103, Brooklyn, NY 11212, USA"
+    "address": "444 Thomas S Boyland St #103, Brooklyn, NY 11212, USA",
+    "short_name": "Brooklyn CB16"
   },
   {
     "name": "Brooklyn Community Board 18",
@@ -6632,7 +6844,8 @@
     ],
     "emoji": "🏛️",
     "alt_emoji": "🏢",
-    "address": "1097 Bergen Ave, Brooklyn, NY 11234, USA"
+    "address": "1097 Bergen Ave, Brooklyn, NY 11234, USA",
+    "short_name": "Brooklyn CB18"
   },
   {
     "name": "Brooklyn Community Board 4",
@@ -6647,7 +6860,24 @@
     ],
     "emoji": "🏛️",
     "alt_emoji": "🏢",
-    "address": "1420 Bushwick Ave rm 370, Brooklyn, NY 11207, USA"
+    "address": "1420 Bushwick Ave rm 370, Brooklyn, NY 11207, USA",
+    "short_name": "Brooklyn CB4"
+  },
+  {
+    "name": "Brooklyn Community Board 17",
+    "lat": 40.63672,
+    "lng": -73.93725,
+    "tags": [
+      "Government",
+      "Community",
+      "Brooklyn",
+      "Office",
+      "East Flatbush"
+    ],
+    "emoji": "🏛️",
+    "alt_emoji": "🏢",
+    "address": "4112 Farragut Rd, Brooklyn, NY 11210, USA",
+    "short_name": "Brooklyn CB17"
   },
   {
     "name": "Mt. Ollie Baptist Church",
@@ -6677,7 +6907,8 @@
     ],
     "emoji": "🏛️",
     "alt_emoji": "🏢",
-    "address": "4201 4th Ave, Brooklyn, NY 11232, USA"
+    "address": "4201 4th Ave, Brooklyn, NY 11232, USA",
+    "short_name": "Brooklyn CB7"
   },
   {
     "name": "Brooklyn Community Board 9",
@@ -6692,7 +6923,8 @@
     ],
     "emoji": "🏛️",
     "alt_emoji": "🏢",
-    "address": "890 Nostrand Ave, Brooklyn, NY 11225, USA"
+    "address": "890 Nostrand Ave, Brooklyn, NY 11225, USA",
+    "short_name": "Brooklyn CB9"
   },
   {
     "name": "Assembly District 44 Office",
@@ -6707,7 +6939,8 @@
     ],
     "emoji": "🏛️",
     "alt_emoji": "🏢",
-    "address": "416 7th Ave, Brooklyn, NY 11215, USA"
+    "address": "416 7th Ave, Brooklyn, NY 11215, USA",
+    "short_name": "District Office"
   },
   {
     "name": "Queens Community Board 1",
@@ -6722,7 +6955,24 @@
     ],
     "emoji": "🏛️",
     "alt_emoji": "🏢",
-    "address": "45-02 Ditmars Blvd # 1025, Astoria, NY 11105, USA"
+    "address": "45-02 Ditmars Blvd # 1025, Astoria, NY 11105, USA",
+    "short_name": "Queens CB1"
+  },
+  {
+    "name": "Queens Community Board 2",
+    "lat": 40.7438,
+    "lng": -73.91507,
+    "tags": [
+      "Government",
+      "Community",
+      "Queens",
+      "Office",
+      "Sunnyside"
+    ],
+    "emoji": "🏛️",
+    "alt_emoji": "🏢",
+    "address": "43-22 50th St Apt 2b, Woodside, NY 11377, USA",
+    "short_name": "Queens CB2"
   },
   {
     "name": "Queens Community Board 3",
@@ -6737,7 +6987,8 @@
     ],
     "emoji": "🏛️",
     "alt_emoji": "🏢",
-    "address": "82-11 37th Ave #606, Flushing, NY 11372, USA"
+    "address": "82-11 37th Ave #606, Flushing, NY 11372, USA",
+    "short_name": "Queens CB3"
   },
   {
     "name": "Queens Community Board 4",
@@ -6752,7 +7003,8 @@
     ],
     "emoji": "🏛️",
     "alt_emoji": "🏢",
-    "address": "46-11 104th St, Corona, NY 11368, USA"
+    "address": "46-11 104th St, Corona, NY 11368, USA",
+    "short_name": "Queens CB4"
   },
   {
     "name": "Queens Community Board 5",
@@ -6767,7 +7019,24 @@
     ],
     "emoji": "🏛️",
     "alt_emoji": "🏢",
-    "address": "61-23 Myrtle Ave, Flushing, NY 11385, USA"
+    "address": "61-23 Myrtle Ave, Flushing, NY 11385, USA",
+    "short_name": "Queens CB5"
+  },
+  {
+    "name": "Queens Community Board 6",
+    "lat": 40.71026,
+    "lng": -73.84884,
+    "tags": [
+      "Government",
+      "Community",
+      "Queens",
+      "Office",
+      "Forest Hills"
+    ],
+    "emoji": "🏛️",
+    "alt_emoji": "🏢",
+    "address": "104-01 Metropolitan Ave, Forest Hills, NY 11375, USA",
+    "short_name": "Queens CB6"
   },
   {
     "name": "Queens Community Board 7",
@@ -6782,7 +7051,8 @@
     ],
     "emoji": "🏛️",
     "alt_emoji": "🏢",
-    "address": "30-50 Whitestone Expy #205, College Point, Queens, Flushing, NY 11354, USA"
+    "address": "30-50 Whitestone Expy #205, College Point, Queens, Flushing, NY 11354, USA",
+    "short_name": "Queens CB7"
   },
   {
     "name": "Queens Community Board 8",
@@ -6797,7 +7067,8 @@
     ],
     "emoji": "🏛️",
     "alt_emoji": "🏢",
-    "address": "197-15 Hillside Ave., Hollis, NY 11423, USA"
+    "address": "197-15 Hillside Ave., Hollis, NY 11423, USA",
+    "short_name": "Queens CB8"
   },
   {
     "name": "Queens Community Board 10",
@@ -6812,7 +7083,24 @@
     ],
     "emoji": "🏛️",
     "alt_emoji": "🏢",
-    "address": "115-01 Lefferts Blvd, South Ozone Park, NY 11420, USA"
+    "address": "115-01 Lefferts Blvd, South Ozone Park, NY 11420, USA",
+    "short_name": "Queens CB10"
+  },
+  {
+    "name": "Queens Community Board 11",
+    "lat": 40.77045,
+    "lng": -73.73364,
+    "tags": [
+      "Government",
+      "Community",
+      "Queens",
+      "Office",
+      "Little Neck"
+    ],
+    "emoji": "🏛️",
+    "alt_emoji": "🏢",
+    "address": "46-21 Little Neck Pkwy, Flushing, NY 11362, USA",
+    "short_name": "Queens CB11"
   },
   {
     "name": "Queens Community Board 13",
@@ -6827,7 +7115,60 @@
     ],
     "emoji": "🏛️",
     "alt_emoji": "🏢",
-    "address": "219-41 Jamaica Ave, Queens Village, NY 11428, USA"
+    "address": "219-41 Jamaica Ave, Queens Village, NY 11428, USA",
+    "short_name": "Queens CB13"
+  },
+  {
+    "name": "Brooklyn Community Board 10",
+    "lat": 40.62441,
+    "lng": -74.02435,
+    "tags": [
+      "Government",
+      "Community",
+      "Brooklyn",
+      "Office",
+      "Bay Ridge",
+      "Community Board"
+    ],
+    "emoji": "🏛️",
+    "alt_emoji": "🏢",
+    "address": "8119 5th Ave, Brooklyn, NY 11209, USA",
+    "short_name": "Brooklyn CB10"
+  },
+  {
+    "name": "Brooklyn Community Board 11",
+    "lat": 40.59812,
+    "lng": -73.99701,
+    "tags": [
+      "Government",
+      "Community",
+      "Brooklyn",
+      "Office",
+      "Bensonhurst",
+      "Gravesend",
+      "Community Board"
+    ],
+    "emoji": "🏛️",
+    "alt_emoji": "🏢",
+    "address": "2214 Bath Ave, Brooklyn, NY 11214, USA",
+    "short_name": "Brooklyn CB11"
+  },
+  {
+    "name": "Brooklyn Community Board 2",
+    "lat": 40.69353,
+    "lng": -73.98765,
+    "tags": [
+      "Government",
+      "Community",
+      "Brooklyn",
+      "Downtown Brooklyn",
+      "Office",
+      "Community Board"
+    ],
+    "emoji": "🏛️",
+    "alt_emoji": "🏢",
+    "address": "350 Jay St 8th Floor, Brooklyn, NY 11201, USA",
+    "short_name": "Brooklyn CB2"
   },
   {
     "name": "Brooklyn Community Board 8",
@@ -6843,7 +7184,8 @@
     ],
     "emoji": "🏛️",
     "alt_emoji": "🏢",
-    "address": "1291 St Marks Ave, Brooklyn, NY 11213, USA"
+    "address": "1291 St Marks Ave, Brooklyn, NY 11213, USA",
+    "short_name": "Brooklyn CB8"
   },
   {
     "name": "Manhattan Community Board 10",
@@ -6858,7 +7200,40 @@
     ],
     "emoji": "🏛️",
     "alt_emoji": "🏢",
-    "address": "215 W 125th St 4th floor, New York, NY 10027, USA"
+    "address": "215 W 125th St 4th floor, New York, NY 10027, USA",
+    "short_name": "Manhattan CB10"
+  },
+  {
+    "name": "Manhattan Community Board 12",
+    "lat": 40.83919,
+    "lng": -73.93962,
+    "tags": [
+      "Government",
+      "Civic",
+      "Manhattan",
+      "Washington Heights",
+      "Community Board"
+    ],
+    "emoji": "🏛️",
+    "alt_emoji": "🏢",
+    "address": "530 W 166th St #1, New York, NY 10032, USA",
+    "short_name": "Manhattan CB12"
+  },
+  {
+    "name": "Manhattan Community Board 5",
+    "lat": 40.75144,
+    "lng": -73.99068,
+    "tags": [
+      "Government",
+      "Civic",
+      "Manhattan",
+      "Midtown",
+      "Community Board"
+    ],
+    "emoji": "🏛️",
+    "alt_emoji": "🏢",
+    "address": "450 7th Ave #2109, New York, NY 10123, USA",
+    "short_name": "Manhattan CB5"
   },
   {
     "name": "Manhattan Community Board 7",
@@ -6873,7 +7248,8 @@
     ],
     "emoji": "🏛️",
     "alt_emoji": "🏢",
-    "address": "250 W 87th St # 2, New York, NY 10024, USA"
+    "address": "250 W 87th St # 2, New York, NY 10024, USA",
+    "short_name": "Manhattan CB7"
   },
   {
     "name": "Bronx Community Board 12",
@@ -6889,7 +7265,25 @@
     ],
     "emoji": "🏛️",
     "alt_emoji": "🏢",
-    "address": "4101 White Plains Rd, Bronx, NY 10466, USA"
+    "address": "4101 White Plains Rd, Bronx, NY 10466, USA",
+    "short_name": "Bronx CB12"
+  },
+  {
+    "name": "Bronx Community Board 2",
+    "lat": 40.82112,
+    "lng": -73.8921,
+    "tags": [
+      "Government",
+      "Community",
+      "Bronx",
+      "Longwood",
+      "Office",
+      "Community Board"
+    ],
+    "emoji": "🏛️",
+    "alt_emoji": "🏢",
+    "address": "1029 E 163rd St #202, Bronx, NY 10459, USA",
+    "short_name": "Bronx CB2"
   },
   {
     "name": "Bronx Community Board 4",
@@ -6905,7 +7299,8 @@
     ],
     "emoji": "🏛️",
     "alt_emoji": "🏢",
-    "address": "1650 Selwyn Ave # 11A, Bronx, NY 10457, USA"
+    "address": "1650 Selwyn Ave # 11A, Bronx, NY 10457, USA",
+    "short_name": "Bronx CB4"
   },
   {
     "name": "Bronx Community Board 5",
@@ -6921,7 +7316,8 @@
     ],
     "emoji": "🏛️",
     "alt_emoji": "🏢",
-    "address": "Loew Hall, 2155 University Ave, Bronx, NY 10453, USA"
+    "address": "Loew Hall, 2155 University Ave, Bronx, NY 10453, USA",
+    "short_name": "Bronx CB5"
   },
   {
     "name": "Bronx Community Board 6",
@@ -6937,7 +7333,8 @@
     ],
     "emoji": "🏛️",
     "alt_emoji": "🏢",
-    "address": "1932 Arthur Avenue, Room 403-A, 1932 Arthur Ave Rm. 403-A, Bronx, NY 10457, USA"
+    "address": "1932 Arthur Avenue, Room 403-A, 1932 Arthur Ave Rm. 403-A, Bronx, NY 10457, USA",
+    "short_name": "Bronx CB6"
   },
   {
     "name": "Bronx Community Board 8",
@@ -6954,7 +7351,25 @@
     ],
     "emoji": "🏛️",
     "alt_emoji": "🏢",
-    "address": "5676 Riverdale Ave # 100, Bronx, NY 10471, USA"
+    "address": "5676 Riverdale Ave # 100, Bronx, NY 10471, USA",
+    "short_name": "Bronx CB8"
+  },
+  {
+    "name": "Bronx Community Board 9",
+    "lat": 40.82345,
+    "lng": -73.85707,
+    "tags": [
+      "Government",
+      "Community",
+      "Bronx",
+      "Office",
+      "Unionport",
+      "Community Board"
+    ],
+    "emoji": "🏛️",
+    "alt_emoji": "🏢",
+    "address": "1967 Turnbull Ave # 7, Bronx, NY 10473, USA",
+    "short_name": "Bronx CB9"
   },
   {
     "name": "Gensler Family AAP NYC Center",
@@ -6973,7 +7388,8 @@
     ],
     "emoji": "🎓",
     "alt_emoji": "🏛️",
-    "address": "26 Broadway, New York, NY 10004, USA"
+    "address": "26 Broadway, New York, NY 10004, USA",
+    "short_name": "Cornell AAP"
   },
   {
     "name": "120 Walker St",
@@ -7038,7 +7454,8 @@
     ],
     "emoji": "🪩",
     "alt_emoji": "🎵",
-    "address": "79-51 Albion Ave, Elmhurst, NY 11373, USA"
+    "address": "79-51 Albion Ave, Elmhurst, NY 11373, USA",
+    "very_short_name": "Amadeus"
   },
   {
     "name": "Broadway Spirits",
@@ -7089,6 +7506,21 @@
     "address": "241 37th St Suite A326, Brooklyn, NY 11232, USA"
   },
   {
+    "name": "Metropolitan Pavilion",
+    "lat": 40.74043,
+    "lng": -73.99603,
+    "tags": [
+      "Manhattan",
+      "Event Space",
+      "Weddings",
+      "Venue",
+      "Chelsea",
+      "Gallery"
+    ],
+    "emoji": "🎉",
+    "address": "125 W 18th St, New York, NY 10011, USA"
+  },
+  {
     "name": "Movement Harlem",
     "lat": 40.80958,
     "lng": -73.95026,
@@ -7131,7 +7563,8 @@
       "Beer"
     ],
     "emoji": "🍻",
-    "address": "195 Centre St, Brooklyn, NY 11231, USA"
+    "address": "195 Centre St, Brooklyn, NY 11231, USA",
+    "short_name": "Other Half Brewing"
   },
   {
     "name": "Brooklyn Book Bodega",
@@ -7170,18 +7603,6 @@
     "address": "1561 Bedford Ave, Brooklyn, NY 11225, USA"
   },
   {
-    "name": "Long Island City",
-    "lat": 40.74468,
-    "lng": -73.94854,
-    "tags": [
-      "Long Island City",
-      "Queens",
-      "Neighborhood"
-    ],
-    "emoji": "📍",
-    "address": "Long Island City, Queens, NY, USA"
-  },
-  {
     "name": "Brooklyn (exact location unspecified)",
     "lat": 40.65288,
     "lng": -73.95949,
@@ -7192,7 +7613,8 @@
       "Kings County"
     ],
     "emoji": "📍",
-    "address": "Kings County, Brooklyn, NY, USA"
+    "address": "Kings County, Brooklyn, NY, USA",
+    "short_name": "Brooklyn"
   },
   {
     "name": "Queens (exact location unspecified)",
@@ -7205,7 +7627,8 @@
       "Queens County"
     ],
     "emoji": "📍",
-    "address": "Queens, NY, USA"
+    "address": "Queens, NY, USA",
+    "short_name": "Queens"
   },
   {
     "name": "Staten Island (exact location unspecified)",
@@ -7218,7 +7641,8 @@
       "Borough"
     ],
     "emoji": "📍",
-    "address": "Staten Island, NY, USA"
+    "address": "Staten Island, NY, USA",
+    "short_name": "Staten Island"
   },
   {
     "name": "Bronx (exact location unspecified)",
@@ -7231,7 +7655,8 @@
       "Van Nest"
     ],
     "emoji": "📍",
-    "address": "Bronx, NY, USA"
+    "address": "Bronx, NY, USA",
+    "short_name": "Bronx"
   },
   {
     "name": "Transportation Alternatives",
@@ -7266,7 +7691,9 @@
     ],
     "emoji": "🎓",
     "alt_emoji": "🏛️",
-    "address": "W 125 St/Broadway, New York, NY 10027, USA"
+    "address": "W 125 St/Broadway, New York, NY 10027, USA",
+    "short_name": "Columbia University",
+    "very_short_name": "Columbia"
   },
   {
     "name": "Columbia University",
@@ -7282,7 +7709,9 @@
     ],
     "emoji": "🎓",
     "alt_emoji": "🏛️",
-    "address": "2920 Broadway, New York, NY 10027, USA"
+    "address": "2920 Broadway, New York, NY 10027, USA",
+    "short_name": "Columbia University",
+    "very_short_name": "Columbia"
   },
   {
     "name": "American Geographical Society",
@@ -7315,7 +7744,8 @@
       "Yoga Studio"
     ],
     "emoji": "🧘🏾",
-    "address": "149 Irving Ave, Brooklyn, NY 11237, USA"
+    "address": "149 Irving Ave, Brooklyn, NY 11237, USA",
+    "short_name": "Daya Yoga"
   },
   {
     "name": "Daya Ridgewood",
@@ -7329,7 +7759,8 @@
       "Yoga Studio"
     ],
     "emoji": "🧘🏾",
-    "address": "10-19 Seneca Ave, Ridgewood, NY 11385, USA"
+    "address": "10-19 Seneca Ave, Ridgewood, NY 11385, USA",
+    "short_name": "Daya Yoga"
   },
   {
     "name": "St. Paul's Episcopal Church",
@@ -7342,7 +7773,8 @@
       "Episcopal"
     ],
     "emoji": "⛪",
-    "address": "199 Carroll St, Brooklyn, NY 11231, USA"
+    "address": "199 Carroll St, Brooklyn, NY 11231, USA",
+    "short_name": "St. Paul's Church"
   },
   {
     "name": "Laura Pels Theatre",
@@ -7445,22 +7877,6 @@
     "address": "121 6th Ave # 6, New York, NY 10013, USA"
   },
   {
-    "name": "Colson Patisserie",
-    "lat": 40.65641,
-    "lng": -74.0075,
-    "tags": [
-      "Brooklyn",
-      "Sunset Park",
-      "French",
-      "Cafe",
-      "Bakery",
-      "Industry City",
-      "Patisserie"
-    ],
-    "emoji": "🥐",
-    "address": "253 36th St, Brooklyn, NY 11232, USA"
-  },
-  {
     "name": "Roca de Seguridad Church",
     "lat": 40.66849,
     "lng": -73.99331,
@@ -7472,7 +7888,8 @@
       "Religious Site"
     ],
     "emoji": "⛪",
-    "address": "Brooklyn, NY 11215, USA"
+    "address": "Brooklyn, NY 11215, USA",
+    "short_name": "Roca de Seguridad"
   },
   {
     "name": "City Point Brooklyn",
@@ -7489,24 +7906,8 @@
       "Mall"
     ],
     "emoji": "🛍️",
-    "address": "445 Albee Square W, Brooklyn, NY 11201, USA"
-  },
-  {
-    "name": "651 ARTS",
-    "lat": 40.68655,
-    "lng": -73.97849,
-    "tags": [
-      "Brooklyn",
-      "Performing Arts",
-      "Arts Center",
-      "Cultural Center",
-      "BAM",
-      "Fort Greene",
-      "Performance",
-      "African Diaspora"
-    ],
-    "emoji": "🎭",
-    "address": "10 Lafayette Ave, Brooklyn, NY 11217, USA"
+    "address": "445 Albee Square W, Brooklyn, NY 11201, USA",
+    "short_name": "City Point"
   },
   {
     "name": "Aaron Davis Hall",
@@ -7572,21 +7973,6 @@
     "address": "Hart Island, Bronx, NY, USA"
   },
   {
-    "name": "Highbridge Park",
-    "lat": 40.85376,
-    "lng": -73.92575,
-    "tags": [
-      "Manhattan",
-      "Washington Heights",
-      "Historic",
-      "Park",
-      "Tower",
-      "Bridge"
-    ],
-    "emoji": "🌳",
-    "address": "Highbridge Park, W 190th St &, Amsterdam Ave, New York, NY 10040, USA"
-  },
-  {
     "name": "Caribbean Cultural Center African Diaspora Institute (CCCADI)",
     "lat": 40.8045,
     "lng": -73.93811,
@@ -7599,24 +7985,9 @@
       "African Diaspora"
     ],
     "emoji": "🏛️",
-    "address": "120 E 125th St, New York, NY 10035, USA"
-  },
-  {
-    "name": "High Bridge",
-    "lat": 40.84233,
-    "lng": -73.9301,
-    "tags": [
-      "Manhattan",
-      "Washington Heights",
-      "Bronx",
-      "Historic",
-      "Walkway",
-      "View",
-      "Highbridge",
-      "Bridge"
-    ],
-    "emoji": "🌉",
-    "address": "The High Bridge, Harlem River Dr, New York, NY 10033, USA"
+    "address": "120 E 125th St, New York, NY 10035, USA",
+    "short_name": "Caribbean Cultural Center African Diaspora Institute",
+    "very_short_name": "CCCADI"
   },
   {
     "name": "Ridgewood Reservoir",
@@ -7709,7 +8080,24 @@
       "Thrift Store"
     ],
     "emoji": "📚",
-    "address": "876 Riverside Dr, New York, NY 10032, USA"
+    "address": "876 Riverside Dr, New York, NY 10032, USA",
+    "short_name": "Recirculation"
+  },
+  {
+    "name": "Adam Clayton Powell, Jr. State Office Building",
+    "lat": 40.80916,
+    "lng": -73.94733,
+    "tags": [
+      "Government",
+      "Manhattan",
+      "Harlem",
+      "Office Building",
+      "Landmark",
+      "Architecture"
+    ],
+    "emoji": "🏢",
+    "address": "Adam Clayton Powell Jr. State Office Building, New York, NY 10027, USA",
+    "short_name": "Adam Clayton Powell Building"
   },
   {
     "name": "Freedom Hall",
@@ -7801,7 +8189,8 @@
       "Reuse Center"
     ],
     "emoji": "♻️",
-    "address": "378 Troutman St, Brooklyn, NY 11237, USA"
+    "address": "378 Troutman St, Brooklyn, NY 11237, USA",
+    "short_name": "Big Reuse"
   },
   {
     "name": "The Shops at Columbus Circle",
@@ -7923,7 +8312,8 @@
     ],
     "emoji": "🎸",
     "alt_emoji": "🎵",
-    "address": "8-01 Seneca Ave # 801, Ridgewood, NY 11385, USA"
+    "address": "8-01 Seneca Ave # 801, Ridgewood, NY 11385, USA",
+    "short_name": "Freda"
   },
   {
     "name": "All Night Skate",
@@ -7970,7 +8360,8 @@
       "Gastropub"
     ],
     "emoji": "🍔",
-    "address": "66-75 Selfridge St, Forest Hills, NY 11375, USA"
+    "address": "66-75 Selfridge St, Forest Hills, NY 11375, USA",
+    "short_name": "The Local"
   },
   {
     "name": "Brewer's Row Beer Bar & Bottle Shop",
@@ -7987,7 +8378,8 @@
       "Bottle Shop"
     ],
     "emoji": "🍺",
-    "address": "228 7th Ave, Brooklyn, NY 11215, USA"
+    "address": "228 7th Ave, Brooklyn, NY 11215, USA",
+    "short_name": "Brewer's Row"
   },
   {
     "name": "Comedy in Harlem",
@@ -8034,7 +8426,8 @@
     ],
     "emoji": "⚓",
     "alt_emoji": "🏛️",
-    "address": "6 Pennyfield Ave, Bronx, NY 10465, USA"
+    "address": "6 Pennyfield Ave, Bronx, NY 10465, USA",
+    "short_name": "Maritime Industry Museum"
   },
   {
     "name": "Montefiore Einstein",
@@ -8268,6 +8661,18 @@
     "address": "Lafayette St & E 4th St, New York, NY 10003"
   },
   {
+    "name": "Carroll Gardens",
+    "lat": 40.68054,
+    "lng": -73.99466,
+    "tags": [
+      "Brooklyn",
+      "Carroll Gardens",
+      "Neighborhood"
+    ],
+    "emoji": "📍",
+    "address": "Smith St & Carroll St, Brooklyn, NY 11231"
+  },
+  {
     "name": "Gowanus",
     "lat": 40.67505,
     "lng": -73.98796,
@@ -8326,18 +8731,6 @@
     ],
     "emoji": "📍",
     "address": "Lexington Ave & E 72nd St, New York, NY 10021"
-  },
-  {
-    "name": "Union Square",
-    "lat": 40.73548,
-    "lng": -73.98989,
-    "tags": [
-      "Manhattan",
-      "Gramercy",
-      "Neighborhood"
-    ],
-    "emoji": "📍",
-    "address": "Union Sq E, New York, NY 10003"
   },
   {
     "name": "Knights of Columbus Hall",
@@ -8477,19 +8870,6 @@
     "address": "243 W 47th St, New York, NY 10036"
   },
   {
-    "name": "Lunt-Fontanne Theatre",
-    "lat": 40.75922,
-    "lng": -73.98604,
-    "tags": [
-      "Manhattan",
-      "Broadway",
-      "Theater",
-      "Theater District"
-    ],
-    "emoji": "🎭",
-    "address": "205 W 46th St, New York, NY 10036"
-  },
-  {
     "name": "Richard Rodgers Theatre",
     "lat": 40.75909,
     "lng": -73.98654,
@@ -8539,5 +8919,17 @@
     ],
     "emoji": "🫱🏾‍🫲🏼",
     "address": "176 9th Ave, New York, NY 10011"
+  },
+  {
+    "name": "Interchurch Center",
+    "lat": 40.812,
+    "lng": -73.9633,
+    "tags": [
+      "Manhattan",
+      "Church",
+      "Morningside Heights"
+    ],
+    "emoji": "🏛️",
+    "address": "475 Riverside Dr, New York, NY 10115, USA"
   }
 ]

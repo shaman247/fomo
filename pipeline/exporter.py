@@ -143,7 +143,7 @@ def export_events(cursor):
 
     # Load locations from database
     cursor.execute("""
-        SELECT id, name, lat, lng, emoji, alt_emoji, address
+        SELECT id, name, lat, lng, emoji, alt_emoji, address, short_name, very_short_name
         FROM locations
         WHERE lat IS NOT NULL AND lng IS NOT NULL
     """)
@@ -172,6 +172,10 @@ def export_events(cursor):
             loc['alt_emoji'] = row[5]
         if row[6]:
             loc['address'] = row[6]
+        if row[7]:
+            loc['short_name'] = row[7]
+        if row[8]:
+            loc['very_short_name'] = row[8]
         all_locations.append(loc)
 
     init_locations = get_active_locations(init_events, all_locations)
