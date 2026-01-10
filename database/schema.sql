@@ -56,6 +56,7 @@ CREATE TABLE IF NOT EXISTS websites (
     max_pages INT UNSIGNED DEFAULT 30 COMMENT 'Max pages for deep crawl',
     notes TEXT DEFAULT NULL,
     disabled BOOLEAN DEFAULT FALSE COMMENT 'If true, skip this website during crawling',
+    force_crawl BOOLEAN DEFAULT FALSE COMMENT 'If true, crawl this website on next run regardless of frequency',
     last_crawled_at TIMESTAMP NULL COMMENT 'When this website was last crawled',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

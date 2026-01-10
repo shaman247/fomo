@@ -277,6 +277,24 @@ tr.selected { background: #2a3a35; }
     margin-bottom: 10px;
     letter-spacing: 0.6px;
 }
+details.detail-section summary {
+    cursor: pointer;
+    list-style: none;
+}
+details.detail-section summary::-webkit-details-marker { display: none; }
+details.detail-section summary h3 {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+details.detail-section summary h3::before {
+    content: '▶';
+    font-size: 10px;
+    transition: transform 0.2s;
+}
+details.detail-section[open] summary h3::before {
+    transform: rotate(90deg);
+}
 .detail-grid {
     display: grid;
     grid-template-columns: 120px 1fr;

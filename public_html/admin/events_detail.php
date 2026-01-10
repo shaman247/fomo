@@ -124,8 +124,8 @@ function formatShortDate($date) {
 </div>
 
 <?php if (count($occurrences) > 0): ?>
-<div class="detail-section">
-    <h3>Dates (<?= count($occurrences) ?>)</h3>
+<details class="detail-section" open>
+    <summary><h3>Dates (<?= count($occurrences) ?>)</h3></summary>
     <ul style="list-style:none;font-size:12px;max-height:150px;overflow-y:auto">
         <?php foreach ($occurrences as $occ): ?>
         <li style="padding:4px 0;border-bottom:1px solid var(--border-color)">
@@ -142,7 +142,7 @@ function formatShortDate($date) {
         </li>
         <?php endforeach; ?>
     </ul>
-</div>
+</details>
 <?php endif; ?>
 
 <div class="detail-section">
@@ -165,8 +165,8 @@ function formatShortDate($date) {
 </div>
 
 <?php if (!empty($tags)): ?>
-<div class="detail-section">
-    <h3>Tags (<?= count($tags) ?>)</h3>
+<details class="detail-section" open>
+    <summary><h3>Tags (<?= count($tags) ?>)</h3></summary>
     <div style="display:flex;flex-wrap:wrap;gap:4px">
         <?php foreach ($tags as $tag): ?>
         <a href="javascript:void(0)" onclick="openDetail('tags', '<?= h(addslashes($tag)) ?>', '<?= h(addslashes($tag)) ?>')"
@@ -175,7 +175,7 @@ function formatShortDate($date) {
         </a>
         <?php endforeach; ?>
     </div>
-</div>
+</details>
 <?php endif; ?>
 
 <?php if ($event['description']): ?>
@@ -186,8 +186,8 @@ function formatShortDate($date) {
 <?php endif; ?>
 
 <?php if (!empty($urls)): ?>
-<div class="detail-section">
-    <h3>Links (<?= count($urls) ?>)</h3>
+<details class="detail-section" open>
+    <summary><h3>Links (<?= count($urls) ?>)</h3></summary>
     <ul style="list-style:none;font-size:12px">
         <?php foreach ($urls as $url): ?>
         <li style="padding:3px 0">
@@ -197,7 +197,7 @@ function formatShortDate($date) {
         </li>
         <?php endforeach; ?>
     </ul>
-</div>
+</details>
 <?php endif; ?>
 
 <?php if ($event['website_name']): ?>
@@ -210,8 +210,8 @@ function formatShortDate($date) {
 <?php endif; ?>
 
 <?php if (!empty($sources)): ?>
-<div class="detail-section">
-    <h3>Contributing Crawl Events (<?= count($sources) ?>)</h3>
+<details class="detail-section" open>
+    <summary><h3>Contributing Crawl Events (<?= count($sources) ?>)</h3></summary>
     <ul style="list-style:none;font-size:12px;max-height:200px;overflow-y:auto">
         <?php foreach ($sources as $src): ?>
         <li style="padding:6px 0;border-bottom:1px solid var(--border-color)">
@@ -242,7 +242,7 @@ function formatShortDate($date) {
         </li>
         <?php endforeach; ?>
     </ul>
-</div>
+</details>
 <?php endif; ?>
 
 <div class="detail-section">

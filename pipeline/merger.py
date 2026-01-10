@@ -393,10 +393,16 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None):
             # Merge with existing event
             # Add URL if not already present
             if url:
+                # Check if URL already exists for this event to avoid duplicates
                 cursor.execute(
-                    "INSERT IGNORE INTO event_urls (event_id, url, sort_order) VALUES (%s, %s, 99)",
+                    "SELECT id FROM event_urls WHERE event_id = %s AND url = %s LIMIT 1",
                     (matched_event_id, url[:2000])
                 )
+                if not cursor.fetchone():
+                    cursor.execute(
+                        "INSERT INTO event_urls (event_id, url, sort_order) VALUES (%s, %s, 99)",
+                        (matched_event_id, url[:2000])
+                    )
 
             # Update location_id if not already set (in case location was added after event)
             if lat is not None and lng is not None:

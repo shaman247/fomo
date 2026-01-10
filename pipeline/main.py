@@ -11,9 +11,13 @@ Orchestrates the complete event processing workflow:
 6. Upload - Push JSON files to FTP server
 
 Usage:
-    python main.py
+    python main.py                     # Process all websites due for crawling
+    python main.py --ids 941           # Process specific website ID(s)
+    python main.py --ids 941,942,943   # Process multiple website IDs
+    python main.py --limit 5           # Only crawl first 5 websites due
 """
 
+import argparse
 import asyncio
 import sys
 from datetime import datetime
@@ -29,10 +33,18 @@ import exporter
 import uploader
 
 
-async def run_pipeline():
-    """Execute the complete event processing pipeline."""
+async def run_pipeline(website_ids=None, limit=None):
+    """Execute the complete event processing pipeline.
+
+    Args:
+        website_ids: Optional list of website IDs to process. If None, processes
+                     all websites due for crawling based on crawl_frequency.
+        limit: Optional maximum number of websites to crawl.
+    """
     print(f"{'='*60}")
     print("EVENT PROCESSING PIPELINE")
+    if website_ids:
+        print(f"  Filtering to website IDs: {', '.join(map(str, website_ids))}")
     print(f"{'='*60}\n")
 
     # Connect to database
@@ -91,8 +103,14 @@ async def run_pipeline():
         print("STEP 1: Finding Websites Due for Crawling")
         print(f"{'='*60}")
 
-        websites = db.get_websites_due_for_crawling(cursor)
-        print(f"Found {len(websites)} website(s) due for crawling")
+        websites = db.get_websites_due_for_crawling(cursor, website_ids)
+        if limit and len(websites) > limit:
+            print(f"Found {len(websites)} website(s) due, limiting to {limit}")
+            websites = websites[:limit]
+        elif website_ids:
+            print(f"Found {len(websites)} website(s) matching specified IDs")
+        else:
+            print(f"Found {len(websites)} website(s) due for crawling")
 
         # Check if there's any work to do
         has_work = len(websites) > 0 or len(incomplete_results) > 0
@@ -213,9 +231,15 @@ async def run_pipeline():
                     except asyncio.QueueEmpty:
                         break
 
+                    # Each worker gets its own connection to see latest committed data
+                    conn = db.create_connection()
+                    if not conn:
+                        extract_queue.task_done()
+                        continue
+                    cur = conn.cursor(buffered=True)
                     try:
                         success = await extractor.extract_events(
-                            cursor, connection, item['crawl_result_id'],
+                            cur, conn, item['crawl_result_id'],
                             item['name'], item['notes']
                         )
                         if success:
@@ -230,6 +254,8 @@ async def run_pipeline():
                     except Exception as e:
                         print(f"    - Error extracting {item['name']}: {e}")
                     finally:
+                        cur.close()
+                        conn.close()
                         extract_queue.task_done()
                 return results
 
@@ -246,6 +272,15 @@ async def run_pipeline():
         print(f"{'='*60}")
         print("STEP 4: Processing Responses")
         print(f"{'='*60}")
+
+        # Refresh connection to see data committed by extract workers
+        cursor.close()
+        connection.close()
+        connection = db.create_connection()
+        if not connection:
+            print("Failed to reconnect to database")
+            return False
+        cursor = connection.cursor(buffered=True)
 
         total_events = 0
 
@@ -344,6 +379,38 @@ async def run_pipeline():
         connection.close()
 
 
+def parse_args():
+    """Parse command line arguments."""
+    parser = argparse.ArgumentParser(
+        description='Event Processing Pipeline',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  python main.py                     # Process all websites due for crawling
+  python main.py --ids 941           # Process specific website ID
+  python main.py --ids 941,942,943   # Process multiple website IDs
+  python main.py --limit 5           # Only crawl first 5 websites due
+        """
+    )
+    parser.add_argument(
+        '--ids',
+        type=str,
+        help='Comma-separated list of website IDs to process (ignores crawl_frequency)'
+    )
+    parser.add_argument(
+        '--limit', '-n',
+        type=int,
+        help='Maximum number of websites to crawl'
+    )
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
-    success = asyncio.run(run_pipeline())
+    args = parse_args()
+
+    website_ids = None
+    if args.ids:
+        website_ids = [int(id.strip()) for id in args.ids.split(',')]
+
+    success = asyncio.run(run_pipeline(website_ids, args.limit))
     sys.exit(0 if success else 1)

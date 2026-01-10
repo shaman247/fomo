@@ -71,9 +71,14 @@ LOCAL_DB = {
     'password': '',
 }
 
-# Path to mysql executables (XAMPP on Windows)
-MYSQL_PATH = os.getenv('MYSQL_PATH', r'C:\xampp\mysql\bin\mysql.exe')
-MYSQLDUMP_PATH = os.getenv('MYSQLDUMP_PATH', r'C:\xampp\mysql\bin\mysqldump.exe')
+# Path to mysql executables (detect platform)
+import platform
+if platform.system() == 'Darwin':  # macOS
+    MYSQL_PATH = os.getenv('MYSQL_PATH', '/Applications/XAMPP/xamppfiles/bin/mysql')
+    MYSQLDUMP_PATH = os.getenv('MYSQLDUMP_PATH', '/Applications/XAMPP/xamppfiles/bin/mysqldump')
+else:  # Windows
+    MYSQL_PATH = os.getenv('MYSQL_PATH', r'C:\xampp\mysql\bin\mysql.exe')
+    MYSQLDUMP_PATH = os.getenv('MYSQLDUMP_PATH', r'C:\xampp\mysql\bin\mysqldump.exe')
 
 # Tables to sync (order matters for foreign key constraints)
 SYNC_TABLES = [
@@ -139,18 +144,23 @@ def get_ssh_opts():
     return ssh_opts
 
 
-def dump_local_tables(tables, create_tables=False):
-    """Dump specified tables from local database to a temp file."""
+def dump_local_tables(tables, create_tables=False, full_sync=False):
+    """Dump specified tables from local database to a temp file.
+
+    Args:
+        tables: List of table names to dump
+        create_tables: Include CREATE TABLE statements
+        full_sync: If True, delete all data from tables first (makes local the source of truth)
+    """
     print(f"Dumping {len(tables)} tables from local database...")
 
     tables_str = ' '.join(tables)
     temp_file = PROJECT_ROOT / 'scripts' / 'temp_sync.sql'
 
     # Build mysqldump options
-    # --replace: generate REPLACE INTO statements (handles existing rows)
     # --no-create-info: skip CREATE TABLE (unless --create-tables is used)
     # Write directly to file to avoid encoding issues with large dumps
-    opts = '--replace'
+    opts = ''
     if not create_tables:
         opts += ' --no-create-info'
 
@@ -178,6 +188,22 @@ def dump_local_tables(tables, create_tables=False):
     if not temp_file.exists() or temp_file.stat().st_size == 0:
         print("Warning: No data returned from dump")
         return None
+
+    # If full_sync, prepend DELETE statements to clear tables first
+    # Delete in reverse order to respect foreign key constraints
+    if full_sync:
+        print("Adding DELETE statements for full sync...")
+        delete_statements = ["SET FOREIGN_KEY_CHECKS=0;"]
+        for table in reversed(tables):
+            delete_statements.append(f"DELETE FROM `{table}`;")
+        delete_statements.append("SET FOREIGN_KEY_CHECKS=1;")
+        delete_sql = "\n".join(delete_statements) + "\n\n"
+
+        # Read existing dump and prepend delete statements
+        with open(temp_file, 'r', encoding='utf-8', errors='replace') as f:
+            dump_content = f.read()
+        with open(temp_file, 'w', encoding='utf-8') as f:
+            f.write(delete_sql + dump_content)
 
     size_mb = temp_file.stat().st_size / (1024 * 1024)
     print(f"Dump complete: {size_mb:.1f} MB")
@@ -267,6 +293,8 @@ def main():
                         help='Include CREATE TABLE statements (for new tables)')
     parser.add_argument('--include-crawl', action='store_true',
                         help='Include crawl_* tables (large, ~780k rows)')
+    parser.add_argument('--full-sync', action='store_true',
+                        help='Delete all data from tables before inserting (makes local the source of truth)')
     args = parser.parse_args()
 
     # Validate configuration
@@ -294,10 +322,12 @@ def main():
             tables.extend(CRAWL_TABLES)
 
     print(f"Tables to sync: {', '.join(tables)}")
-    if args.create_tables:
-        print("Mode: CREATE + REPLACE (will create tables if missing)")
+    if args.full_sync:
+        print("Mode: FULL SYNC (will DELETE all data first, local becomes source of truth)")
+    elif args.create_tables:
+        print("Mode: CREATE + INSERT (will create tables if missing)")
     else:
-        print("Mode: REPLACE only (tables must exist)")
+        print("Mode: INSERT only (will add/update rows but not delete)")
     print()
 
     # Show row counts
@@ -320,7 +350,7 @@ def main():
     print()
 
     # Dump local tables to temp file
-    dump_file = dump_local_tables(tables, create_tables=args.create_tables)
+    dump_file = dump_local_tables(tables, create_tables=args.create_tables, full_sync=args.full_sync)
     if dump_file is None:
         sys.exit(1)
 

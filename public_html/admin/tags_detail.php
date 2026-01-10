@@ -111,8 +111,8 @@ $events = $events->fetchAll(PDO::FETCH_ASSOC);
 </div>
 
 <?php if (!empty($websites)): ?>
-<div class="detail-section">
-    <h3>Top Sources</h3>
+<details class="detail-section" open>
+    <summary><h3>Top Sources (<?= count($websites) ?>)</h3></summary>
     <ul class="item-list">
         <?php foreach ($websites as $w): ?>
         <li>
@@ -121,12 +121,12 @@ $events = $events->fetchAll(PDO::FETCH_ASSOC);
         </li>
         <?php endforeach; ?>
     </ul>
-</div>
+</details>
 <?php endif; ?>
 
 <?php if (!empty($locations)): ?>
-<div class="detail-section">
-    <h3>Top Locations</h3>
+<details class="detail-section" open>
+    <summary><h3>Top Locations (<?= count($locations) ?>)</h3></summary>
     <ul class="item-list">
         <?php foreach ($locations as $l): ?>
         <li>
@@ -135,12 +135,12 @@ $events = $events->fetchAll(PDO::FETCH_ASSOC);
         </li>
         <?php endforeach; ?>
     </ul>
-</div>
+</details>
 <?php endif; ?>
 
 <?php if (!empty($related)): ?>
-<div class="detail-section">
-    <h3>Related Tags</h3>
+<details class="detail-section" open>
+    <summary><h3>Related Tags (<?= count($related) ?>)</h3></summary>
     <div style="display:flex;flex-wrap:wrap;gap:4px">
         <?php foreach ($related as $r): ?>
         <a href="javascript:void(0)" onclick="openDetail('tags', '<?= h(addslashes($r['tag'])) ?>', '<?= h(addslashes($r['tag'])) ?>')"
@@ -149,12 +149,12 @@ $events = $events->fetchAll(PDO::FETCH_ASSOC);
         </a>
         <?php endforeach; ?>
     </div>
-</div>
+</details>
 <?php endif; ?>
 
 <?php if (!empty($events)): ?>
-<div class="detail-section">
-    <h3>Upcoming Events</h3>
+<details class="detail-section" open>
+    <summary><h3>Upcoming Events (<?= count($events) ?>)</h3></summary>
     <ul class="event-list">
         <?php foreach ($events as $e): ?>
         <li>
@@ -169,7 +169,7 @@ $events = $events->fetchAll(PDO::FETCH_ASSOC);
         </li>
         <?php endforeach; ?>
     </ul>
-</div>
+</details>
 <?php else: ?>
 <div class="detail-section">
     <p style="color:var(--secondary-text);font-size:12px">No upcoming events with this tag</p>

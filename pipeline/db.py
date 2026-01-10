@@ -59,28 +59,49 @@ def create_connection():
         return None
 
 
-def get_websites_due_for_crawling(cursor):
+def get_websites_due_for_crawling(cursor, website_ids=None):
     """
     Get websites that are due for crawling based on crawl_frequency.
+
+    Args:
+        cursor: Database cursor
+        website_ids: Optional list of website IDs to filter by. If provided,
+                     only these websites are returned (ignoring crawl_frequency).
 
     Returns websites where:
     - disabled = FALSE
     - last_crawled_at is NULL, OR
     - NOW() - last_crawled_at > crawl_frequency days
     """
-    cursor.execute("""
-        SELECT w.id, w.name, w.crawl_frequency, w.selector, w.num_clicks,
-               w.keywords, w.max_pages, w.notes,
-               GROUP_CONCAT(wu.url ORDER BY wu.sort_order SEPARATOR '|||') as urls
-        FROM websites w
-        LEFT JOIN website_urls wu ON w.id = wu.website_id
-        WHERE w.disabled = FALSE
-          AND (w.last_crawled_at IS NULL
-               OR DATEDIFF(NOW(), w.last_crawled_at) >= COALESCE(w.crawl_frequency, 7))
-        GROUP BY w.id
-        HAVING urls IS NOT NULL
-        ORDER BY w.last_crawled_at ASC
-    """)
+    if website_ids:
+        # When specific IDs are provided, ignore crawl_frequency
+        placeholders = ','.join(['%s'] * len(website_ids))
+        cursor.execute(f"""
+            SELECT w.id, w.name, w.crawl_frequency, w.selector, w.num_clicks,
+                   w.keywords, w.max_pages, w.notes,
+                   GROUP_CONCAT(wu.url ORDER BY wu.sort_order SEPARATOR '|||') as urls
+            FROM websites w
+            LEFT JOIN website_urls wu ON w.id = wu.website_id
+            WHERE w.id IN ({placeholders})
+            GROUP BY w.id
+            HAVING urls IS NOT NULL
+            ORDER BY w.id ASC
+        """, website_ids)
+    else:
+        cursor.execute("""
+            SELECT w.id, w.name, w.crawl_frequency, w.selector, w.num_clicks,
+                   w.keywords, w.max_pages, w.notes,
+                   GROUP_CONCAT(wu.url ORDER BY wu.sort_order SEPARATOR '|||') as urls
+            FROM websites w
+            LEFT JOIN website_urls wu ON w.id = wu.website_id
+            WHERE w.disabled = FALSE
+              AND (w.force_crawl = TRUE
+                   OR w.last_crawled_at IS NULL
+                   OR DATEDIFF(NOW(), w.last_crawled_at) >= COALESCE(w.crawl_frequency, 7))
+            GROUP BY w.id
+            HAVING urls IS NOT NULL
+            ORDER BY w.force_crawl DESC, w.last_crawled_at ASC
+        """)
 
     websites = []
     for row in cursor.fetchall():
@@ -202,9 +223,9 @@ def update_crawl_result_failed(cursor, connection, crawl_result_id, error_messag
 
 
 def update_website_last_crawled(cursor, connection, website_id):
-    """Update the last_crawled_at timestamp for a website."""
+    """Update the last_crawled_at timestamp for a website and reset force_crawl flag."""
     cursor.execute(
-        "UPDATE websites SET last_crawled_at = NOW() WHERE id = %s",
+        "UPDATE websites SET last_crawled_at = NOW(), force_crawl = FALSE WHERE id = %s",
         (website_id,)
     )
     connection.commit()

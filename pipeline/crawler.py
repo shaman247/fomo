@@ -83,19 +83,21 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
             deep_crawl_strategy = BestFirstCrawlingStrategy(max_depth=0)
 
         # Configure crawler
+        # Note: Don't exclude 'form' as some sites wrap content in forms (e.g., Park Slope Parents calendar)
         crawler_config = CrawlerRunConfig(
-            word_count_threshold=10,
-            excluded_tags=['form', 'header'],
+            word_count_threshold=5,
+            excluded_tags=['header'],
             process_iframes=True,
-            cache_mode=CacheMode.ENABLED,
+            cache_mode=CacheMode.BYPASS,  # Don't use cache for fresh content
             js_code=js_code,
             remove_overlay_elements=True,
-            delay_before_return_html=3,
+            delay_before_return_html=5,  # Wait longer for JS to render
             scan_full_page=True,
+            page_timeout=60000,
             deep_crawl_strategy=deep_crawl_strategy,
             markdown_generator=DefaultMarkdownGenerator(
                 content_filter=PruningContentFilter(
-                    threshold=0.48, threshold_type="fixed", min_word_threshold=0
+                    threshold=0.25, threshold_type="fixed", min_word_threshold=0
                 ),
                 options={"ignore_links": False},
             ),
@@ -107,11 +109,23 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
         for url in urls:
             print(f"    - Processing {url}")
             url_content = ""
+            page_count = 0
 
             for result in await crawler.arun(url=url, config=crawler_config):
-                if result and result.markdown and result.markdown.fit_markdown:
-                    url_content += result.markdown.fit_markdown + "\n\n"
+                page_count += 1
+                if result and result.markdown:
+                    # Use fit_markdown if available, otherwise fall back to raw_markdown
+                    fit_len = len(result.markdown.fit_markdown) if result.markdown.fit_markdown else 0
+                    raw_len = len(result.markdown.raw_markdown) if result.markdown.raw_markdown else 0
+                    content = result.markdown.fit_markdown
+                    if not content or len(content) < 500:
+                        # fit_markdown too small, use raw_markdown
+                        content = result.markdown.raw_markdown
+                    if content:
+                        url_content += content + "\n\n"
+                    print(f"      Page {page_count}: fit={fit_len}, raw={raw_len}, using={len(content) if content else 0}")
 
+            print(f"    - Crawled {page_count} page(s), {len(url_content)} chars total")
             if url_content:
                 combined_markdown += url + "\n" + url_content
 
@@ -142,8 +156,8 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
 def get_browser_config():
     """Get the browser configuration for crawling."""
     return BrowserConfig(
-        headless=False,
+        headless=True,
         java_script_enabled=True,
-        text_mode=True,
-        light_mode=True
+        text_mode=False,  # Keep full content for JS-rendered pages
+        light_mode=False
     )
