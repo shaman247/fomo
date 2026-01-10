@@ -6,6 +6,7 @@
  */
 
 header('Content-Type: text/html; charset=utf-8');
+require_once 'db_config.php';
 
 if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
     echo '<p style="color:#c8535b">Invalid website ID</p>';
@@ -13,38 +14,6 @@ if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
 }
 
 $website_id = (int) $_GET['id'];
-
-// Database configuration
-$env = getenv('FOMO_ENV') ?: 'local';
-
-$db_configs = [
-    'local' => [
-        'host' => 'localhost',
-        'database' => 'fomo',
-        'user' => 'root',
-        'password' => ''
-    ],
-    'production' => [
-        'host' => 'localhost',
-        'database' => 'fomoowsq_fomo',
-        'user' => 'fomoowsq_root',
-        'password' => 'REDACTED_DB_PASSWORD'
-    ]
-];
-
-$config = $db_configs[$env] ?? $db_configs['local'];
-
-try {
-    $pdo = new PDO(
-        "mysql:host={$config['host']};dbname={$config['database']};charset=utf8mb4",
-        $config['user'],
-        $config['password'],
-        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
-    );
-} catch (PDOException $e) {
-    echo '<p style="color:#c8535b">Database error</p>';
-    exit;
-}
 
 // Get website details
 $stmt = $pdo->prepare("
@@ -92,15 +61,6 @@ $crawl_history = $pdo->prepare("
 $crawl_history->execute([$website_id]);
 $crawl_history = $crawl_history->fetchAll(PDO::FETCH_ASSOC);
 
-// Helper
-function h($str) { return htmlspecialchars($str ?? '', ENT_QUOTES, 'UTF-8'); }
-function formatBytes($bytes) {
-    if (!$bytes) return '-';
-    if ($bytes < 1024) return $bytes . ' B';
-    if ($bytes < 1048576) return round($bytes / 1024, 1) . ' KB';
-    return round($bytes / 1048576, 1) . ' MB';
-}
-
 ?>
 
 <div class="detail-section">
@@ -128,19 +88,19 @@ function formatBytes($bytes) {
 </div>
 
 <?php if (!empty($urls)): ?>
-<div class="detail-section">
-    <h3>URLs (<?= count($urls) ?>)</h3>
+<details class="detail-section" open>
+    <summary><h3>URLs (<?= count($urls) ?>)</h3></summary>
     <ul class="url-list">
         <?php foreach ($urls as $url): ?>
         <li><a href="<?= h($url['url']) ?>" target="_blank"><?= h($url['url']) ?></a></li>
         <?php endforeach; ?>
     </ul>
-</div>
+</details>
 <?php endif; ?>
 
 <?php if (!empty($locations)): ?>
-<div class="detail-section">
-    <h3>Locations (<?= count($locations) ?>)</h3>
+<details class="detail-section" open>
+    <summary><h3>Locations (<?= count($locations) ?>)</h3></summary>
     <ul class="item-list">
         <?php foreach ($locations as $loc): ?>
         <li>
@@ -151,7 +111,7 @@ function formatBytes($bytes) {
         </li>
         <?php endforeach; ?>
     </ul>
-</div>
+</details>
 <?php endif; ?>
 
 <?php if ($website['keywords']): ?>
@@ -169,8 +129,8 @@ function formatBytes($bytes) {
 <?php endif; ?>
 
 <?php if (!empty($crawl_history)): ?>
-<div class="detail-section">
-    <h3>Crawl History</h3>
+<details class="detail-section" open>
+    <summary><h3>Crawl History (<?= count($crawl_history) ?>)</h3></summary>
     <div class="crawl-history">
         <?php foreach ($crawl_history as $crawl): ?>
         <div class="crawl-item">
@@ -195,5 +155,5 @@ function formatBytes($bytes) {
         <?php endif; ?>
         <?php endforeach; ?>
     </div>
-</div>
+</details>
 <?php endif; ?>

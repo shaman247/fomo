@@ -29,6 +29,16 @@ if (!$location) {
     exit;
 }
 
+// Get alternate names
+$alternateNames = $pdo->prepare("
+    SELECT alternate_name
+    FROM location_alternate_names
+    WHERE location_id = ?
+    ORDER BY alternate_name
+");
+$alternateNames->execute([$location_id]);
+$alternateNames = $alternateNames->fetchAll(PDO::FETCH_COLUMN);
+
 // Get linked websites
 $websites = $pdo->prepare("
     SELECT w.id, w.name, w.disabled,
@@ -57,8 +67,19 @@ $events = $pdo->prepare("
 $events->execute([$location_id]);
 $events = $events->fetchAll(PDO::FETCH_ASSOC);
 
-// Get popular tags at this location
-$tags = $pdo->prepare("
+// Get location's own tags
+$locationTags = $pdo->prepare("
+    SELECT t.id, t.name
+    FROM location_tags lt
+    JOIN tags t ON lt.tag_id = t.id
+    WHERE lt.location_id = ?
+    ORDER BY t.name
+");
+$locationTags->execute([$location_id]);
+$locationTags = $locationTags->fetchAll(PDO::FETCH_ASSOC);
+
+// Get tags from events at this location
+$eventTags = $pdo->prepare("
     SELECT t.name as tag, COUNT(*) as count
     FROM event_tags et
     JOIN events e ON et.event_id = e.id
@@ -66,10 +87,21 @@ $tags = $pdo->prepare("
     WHERE e.location_id = ?
     GROUP BY t.id, t.name
     ORDER BY count DESC
-    LIMIT 10
 ");
-$tags->execute([$location_id]);
-$tags = $tags->fetchAll(PDO::FETCH_ASSOC);
+$eventTags->execute([$location_id]);
+$eventTags = $eventTags->fetchAll(PDO::FETCH_ASSOC);
+
+// Get websites that provide events at this location
+$eventWebsites = $pdo->prepare("
+    SELECT w.id, w.name, COUNT(*) as count
+    FROM events e
+    JOIN websites w ON e.website_id = w.id
+    WHERE e.location_id = ?
+    GROUP BY w.id, w.name
+    ORDER BY count DESC
+");
+$eventWebsites->execute([$location_id]);
+$eventWebsites = $eventWebsites->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <div class="detail-section">
@@ -77,6 +109,15 @@ $tags = $tags->fetchAll(PDO::FETCH_ASSOC);
     <dl class="detail-grid">
         <dt>ID</dt><dd><?= $location['id'] ?></dd>
         <dt>Name</dt><dd><?= h($location['name']) ?></dd>
+        <?php if ($location['short_name']): ?>
+        <dt>Short Name</dt><dd><?= h($location['short_name']) ?></dd>
+        <?php endif; ?>
+        <?php if ($location['very_short_name']): ?>
+        <dt>Very Short</dt><dd><?= h($location['very_short_name']) ?></dd>
+        <?php endif; ?>
+        <?php if (!empty($alternateNames)): ?>
+        <dt>Alt Names</dt><dd><?= h(implode(', ', $alternateNames)) ?></dd>
+        <?php endif; ?>
         <?php if ($location['emoji']): ?>
         <dt>Emoji</dt><dd><?= $location['emoji'] ?></dd>
         <?php endif; ?>
@@ -98,9 +139,9 @@ $tags = $tags->fetchAll(PDO::FETCH_ASSOC);
     </dl>
 </div>
 
-<?php if (!empty($websites)): ?>
-<div class="detail-section">
-    <h3>Linked Websites (<?= count($websites) ?>)</h3>
+<details class="detail-section" open>
+    <summary><h3>Linked Websites (<?= count($websites) ?>)</h3></summary>
+    <?php if (!empty($websites)): ?>
     <ul class="item-list">
         <?php foreach ($websites as $w): ?>
         <li>
@@ -114,26 +155,56 @@ $tags = $tags->fetchAll(PDO::FETCH_ASSOC);
         </li>
         <?php endforeach; ?>
     </ul>
-</div>
+    <?php else: ?>
+    <p style="color:var(--secondary-text);font-size:12px">None</p>
+    <?php endif; ?>
+</details>
+
+<?php if (!empty($locationTags)): ?>
+<details class="detail-section" open>
+    <summary><h3>Location Tags (<?= count($locationTags) ?>)</h3></summary>
+    <div style="display:flex;flex-wrap:wrap;gap:4px">
+        <?php foreach ($locationTags as $tag): ?>
+        <a href="javascript:void(0)" onclick="openDetail('tags', '<?= h(addslashes($tag['name'])) ?>', '<?= h(addslashes($tag['name'])) ?>')"
+           style="background:var(--tertiary-bg);padding:3px 10px;border-radius:3px;font-size:13px;text-decoration:none;color:inherit">
+            <?= h($tag['name']) ?>
+        </a>
+        <?php endforeach; ?>
+    </div>
+</details>
 <?php endif; ?>
 
-<?php if (!empty($tags)): ?>
-<div class="detail-section">
-    <h3>Popular Tags</h3>
+<?php if (!empty($eventTags)): ?>
+<details class="detail-section" open>
+    <summary><h3>Event Tags (<?= count($eventTags) ?>)</h3></summary>
     <div style="display:flex;flex-wrap:wrap;gap:4px">
-        <?php foreach ($tags as $tag): ?>
+        <?php foreach ($eventTags as $tag): ?>
         <a href="javascript:void(0)" onclick="openDetail('tags', '<?= h(addslashes($tag['tag'])) ?>', '<?= h(addslashes($tag['tag'])) ?>')"
-           style="background:var(--tertiary-bg);padding:2px 8px;border-radius:3px;font-size:11px;text-decoration:none;color:inherit">
+           style="background:var(--tertiary-bg);padding:3px 10px;border-radius:3px;font-size:13px;text-decoration:none;color:inherit">
             <?= h($tag['tag']) ?> <span style="color:var(--secondary-text)">(<?= $tag['count'] ?>)</span>
         </a>
         <?php endforeach; ?>
     </div>
-</div>
+</details>
+<?php endif; ?>
+
+<?php if (!empty($eventWebsites)): ?>
+<details class="detail-section" open>
+    <summary><h3>Event Websites (<?= count($eventWebsites) ?>)</h3></summary>
+    <div style="display:flex;flex-wrap:wrap;gap:4px">
+        <?php foreach ($eventWebsites as $w): ?>
+        <a href="javascript:void(0)" onclick="openDetail('websites', <?= $w['id'] ?>, '<?= h(addslashes($w['name'])) ?>')"
+           style="background:var(--tertiary-bg);padding:3px 10px;border-radius:3px;font-size:13px;text-decoration:none;color:inherit">
+            <?= h($w['name']) ?> <span style="color:var(--secondary-text)">(<?= $w['count'] ?>)</span>
+        </a>
+        <?php endforeach; ?>
+    </div>
+</details>
 <?php endif; ?>
 
 <?php if (!empty($events)): ?>
-<div class="detail-section">
-    <h3>Upcoming Events</h3>
+<details class="detail-section" open>
+    <summary><h3>Upcoming Events (<?= count($events) ?>)</h3></summary>
     <ul class="event-list">
         <?php foreach ($events as $e): ?>
         <li>
@@ -145,7 +216,7 @@ $tags = $tags->fetchAll(PDO::FETCH_ASSOC);
         </li>
         <?php endforeach; ?>
     </ul>
-</div>
+</details>
 <?php elseif (empty($websites)): ?>
 <div class="detail-section">
     <p style="color:var(--secondary-text);font-size:12px">No websites linked to this location</p>
