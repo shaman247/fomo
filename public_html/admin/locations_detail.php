@@ -54,18 +54,42 @@ $websites = $pdo->prepare("
 $websites->execute([$location_id]);
 $websites = $websites->fetchAll(PDO::FETCH_ASSOC);
 
-// Get upcoming events at this location
+// Get upcoming events at this location (non-archived)
 $events = $pdo->prepare("
-    SELECT e.id, e.name, eo.start_date, eo.start_time
+    SELECT e.id, e.name, e.archived,
+           GROUP_CONCAT(
+               CONCAT(eo.start_date, '|', COALESCE(eo.start_time, ''))
+               ORDER BY eo.start_date, eo.start_time
+               SEPARATOR ';;'
+           ) as occurrences
     FROM events e
     JOIN event_occurrences eo ON e.id = eo.event_id
     WHERE e.location_id = ?
+    AND e.archived = 0
     AND eo.start_date >= CURDATE()
-    ORDER BY eo.start_date, eo.start_time
-    LIMIT 15
+    GROUP BY e.id, e.name, e.archived
+    ORDER BY MIN(eo.start_date), MIN(eo.start_time)
 ");
 $events->execute([$location_id]);
 $events = $events->fetchAll(PDO::FETCH_ASSOC);
+
+// Get archived events at this location
+$archivedEvents = $pdo->prepare("
+    SELECT e.id, e.name, e.archived,
+           GROUP_CONCAT(
+               CONCAT(eo.start_date, '|', COALESCE(eo.start_time, ''))
+               ORDER BY eo.start_date, eo.start_time
+               SEPARATOR ';;'
+           ) as occurrences
+    FROM events e
+    JOIN event_occurrences eo ON e.id = eo.event_id
+    WHERE e.location_id = ?
+    AND e.archived = 1
+    GROUP BY e.id, e.name, e.archived
+    ORDER BY MIN(eo.start_date) DESC, MIN(eo.start_time) DESC
+");
+$archivedEvents->execute([$location_id]);
+$archivedEvents = $archivedEvents->fetchAll(PDO::FETCH_ASSOC);
 
 // Get location's own tags
 $locationTags = $pdo->prepare("
@@ -208,10 +232,23 @@ $eventWebsites = $eventWebsites->fetchAll(PDO::FETCH_ASSOC);
     <ul class="event-list">
         <?php foreach ($events as $e): ?>
         <li>
-            <div><a href="javascript:void(0)" onclick="openDetail('events', <?= $e['id'] ?>, '<?= h(addslashes($e['name'])) ?>')" class="event-link"><?= h($e['name']) ?></a></div>
+            <div>
+                <a href="javascript:void(0)" onclick="openDetail('events', <?= $e['id'] ?>, '<?= h(addslashes($e['name'])) ?>')" class="event-link"><?= h($e['name']) ?></a>
+            </div>
             <div class="date">
-                <?= date('M j', strtotime($e['start_date'])) ?>
-                <?= $e['start_time'] ? date('g:ia', strtotime($e['start_time'])) : '' ?>
+                <?php
+                $occurrences = explode(';;', $e['occurrences']);
+                $occurrenceTexts = [];
+                foreach ($occurrences as $occ) {
+                    list($date, $time) = explode('|', $occ);
+                    $text = date('M j', strtotime($date));
+                    if ($time) {
+                        $text .= ' ' . date('g:ia', strtotime($time));
+                    }
+                    $occurrenceTexts[] = $text;
+                }
+                echo implode(', ', $occurrenceTexts);
+                ?>
             </div>
         </li>
         <?php endforeach; ?>
@@ -225,4 +262,35 @@ $eventWebsites = $eventWebsites->fetchAll(PDO::FETCH_ASSOC);
 <div class="detail-section">
     <p style="color:var(--secondary-text);font-size:12px">No upcoming events</p>
 </div>
+<?php endif; ?>
+
+<?php if (!empty($archivedEvents)): ?>
+<details class="detail-section">
+    <summary><h3>Archived Events (<?= count($archivedEvents) ?>)</h3></summary>
+    <ul class="event-list">
+        <?php foreach ($archivedEvents as $e): ?>
+        <li>
+            <div>
+                <a href="javascript:void(0)" onclick="openDetail('events', <?= $e['id'] ?>, '<?= h(addslashes($e['name'])) ?>')" class="event-link"><?= h($e['name']) ?></a>
+                <span style="color:var(--secondary-text);font-size:10px">(archived)</span>
+            </div>
+            <div class="date">
+                <?php
+                $occurrences = explode(';;', $e['occurrences']);
+                $occurrenceTexts = [];
+                foreach ($occurrences as $occ) {
+                    list($date, $time) = explode('|', $occ);
+                    $text = date('M j', strtotime($date));
+                    if ($time) {
+                        $text .= ' ' . date('g:ia', strtotime($time));
+                    }
+                    $occurrenceTexts[] = $text;
+                }
+                echo implode(', ', $occurrenceTexts);
+                ?>
+            </div>
+        </li>
+        <?php endforeach; ?>
+    </ul>
+</details>
 <?php endif; ?>

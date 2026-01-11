@@ -48,7 +48,19 @@ const FilterManager = (() => {
 
         // Check if any occurrence overlaps with the date range
         for (const occurrence of event.occurrences) {
-            if (occurrence.start <= endFilter && occurrence.end >= startFilter) {
+            // Apply early morning cutoff: if an event ends before 5 AM AND
+            // the end date is after the start date (indicating overnight event),
+            // treat it as ending on the previous day for filtering purposes
+            let effectiveEnd = occurrence.end;
+            if (occurrence.end.getHours() < Constants.TIME.EARLY_MORNING_CUTOFF_HOUR &&
+                occurrence.end.getDate() !== occurrence.start.getDate()) {
+                // Create a new date set to the end of the previous day
+                effectiveEnd = new Date(occurrence.end);
+                effectiveEnd.setDate(effectiveEnd.getDate() - 1);
+                effectiveEnd.setHours(23, 59, 59, 999);
+            }
+
+            if (occurrence.start <= endFilter && effectiveEnd >= startFilter) {
                 return true;
             }
         }
@@ -78,7 +90,19 @@ const FilterManager = (() => {
 
             // Find occurrences that overlap with the date range
             const matchingOccurrences = event.occurrences.filter(occurrence => {
-                return occurrence.start <= endFilter && occurrence.end >= startFilter;
+                // Apply early morning cutoff: if an event ends before 5 AM AND
+                // the end date is after the start date (indicating overnight event),
+                // treat it as ending on the previous day for filtering purposes
+                let effectiveEnd = occurrence.end;
+                if (occurrence.end.getHours() < Constants.TIME.EARLY_MORNING_CUTOFF_HOUR &&
+                    occurrence.end.getDate() !== occurrence.start.getDate()) {
+                    // Create a new date set to the end of the previous day
+                    effectiveEnd = new Date(occurrence.end);
+                    effectiveEnd.setDate(effectiveEnd.getDate() - 1);
+                    effectiveEnd.setHours(23, 59, 59, 999);
+                }
+
+                return occurrence.start <= endFilter && effectiveEnd >= startFilter;
             });
 
             if (matchingOccurrences.length > 0) {

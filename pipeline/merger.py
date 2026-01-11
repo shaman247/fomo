@@ -2,6 +2,7 @@
 Event deduplication and merging module.
 
 Merges crawl_events into the final events table with deduplication.
+Archives outdated events that are no longer found in recent crawls.
 Logs all changes to the edits table for sync tracking.
 """
 
@@ -10,6 +11,8 @@ import sys
 import unicodedata
 from datetime import datetime, timedelta
 from pathlib import Path
+
+import db
 
 # Add database module to path for edit logger
 sys.path.insert(0, str(Path(__file__).parent.parent / 'database'))
@@ -235,12 +238,18 @@ def are_names_similar(name1, name2):
 def merge_crawl_events(cursor, connection, crawl_run_id=None):
     """
     Merge new crawl_events into the final events table with deduplication.
+    Archives outdated events that are no longer found in recent crawls.
 
     Deduplication logic:
     - Events are considered duplicates if they share the same lat/lng, similar name,
       and have an overlapping occurrence date.
     - For duplicates, we merge URLs and keep the shorter name / longer description.
     - Links to crawl_events are tracked in event_sources table.
+
+    Archiving logic:
+    - After merging, archives events from processed websites where ALL source websites
+      have newer crawls that don't include the event.
+    - Multi-source events are only archived when ALL sources stop listing them.
 
     Args:
         cursor: Database cursor
@@ -526,4 +535,44 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None):
 
     connection.commit()
     print(f"  Added {new_events_count} new events, merged {merged_count} duplicates")
+
+    # Archive outdated events after merging
+    # Get unique website IDs from the crawl events we just processed
+    if new_crawl_events:
+        crawl_event_ids = [row[0] for row in new_crawl_events]
+        placeholders = ','.join(['%s'] * len(crawl_event_ids))
+        cursor.execute(f"""
+            SELECT DISTINCT cr.website_id
+            FROM crawl_events ce
+            JOIN crawl_results cr ON ce.crawl_result_id = cr.id
+            JOIN event_sources es ON ce.id = es.crawl_event_id
+            WHERE ce.id IN ({placeholders})
+        """, crawl_event_ids)
+
+        website_ids = [row[0] for row in cursor.fetchall()]
+        total_archived = 0
+        total_upcoming_flagged = 0
+
+        for website_id in website_ids:
+            archived_count, upcoming_events = db.archive_outdated_events(cursor, connection, website_id)
+            if archived_count > 0:
+                # Get website name for logging
+                cursor.execute("SELECT name FROM websites WHERE id = %s", (website_id,))
+                result = cursor.fetchone()
+                website_name = result[0] if result else f"ID {website_id}"
+                print(f"  Archived {archived_count} outdated event(s) from {website_name}")
+                total_archived += archived_count
+
+                # Log warnings for upcoming events (rare - may indicate crawl issues)
+                if upcoming_events:
+                    print(f"    ⚠️  WARNING: {len(upcoming_events)} upcoming event(s) archived (may indicate crawl failure):")
+                    for event_id, name, next_occ in upcoming_events:
+                        print(f"        - Event {event_id}: {name} (next: {next_occ})")
+                    total_upcoming_flagged += len(upcoming_events)
+
+        if total_archived > 0:
+            print(f"  Total archived: {total_archived}")
+        if total_upcoming_flagged > 0:
+            print(f"  ⚠️  Total upcoming events archived: {total_upcoming_flagged} (review recommended)")
+
     return new_events_count, merged_count

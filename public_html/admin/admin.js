@@ -329,22 +329,49 @@ function applyFilter(rows, filters) {
     const filter = filters.find(f => f.value === State.activeFilter);
     if (!filter || !filter.match) return rows;
 
-    const { field, op, value } = filter.match;
+    const { field, op, value, and } = filter.match;
 
     return rows.filter(row => {
+        // Check primary condition
         const rowVal = row[field];
+        let matches = false;
         switch (op) {
             case '=':
-                return rowVal === value;
+                matches = rowVal === value;
+                break;
             case '!=':
-                return rowVal !== value;
+                matches = rowVal !== value;
+                break;
             case 'in':
-                return Array.isArray(value) && value.includes(rowVal);
+                matches = Array.isArray(value) && value.includes(rowVal);
+                break;
             case 'not_in':
-                return Array.isArray(value) && !value.includes(rowVal);
+                matches = Array.isArray(value) && !value.includes(rowVal);
+                break;
             default:
-                return true;
+                matches = true;
         }
+
+        // Check AND condition if present
+        if (matches && and) {
+            const andRowVal = row[and.field];
+            switch (and.op) {
+                case '=':
+                    matches = andRowVal === and.value;
+                    break;
+                case '!=':
+                    matches = andRowVal !== and.value;
+                    break;
+                case 'in':
+                    matches = Array.isArray(and.value) && and.value.includes(andRowVal);
+                    break;
+                case 'not_in':
+                    matches = Array.isArray(and.value) && !and.value.includes(andRowVal);
+                    break;
+            }
+        }
+
+        return matches;
     });
 }
 
