@@ -16,6 +16,10 @@ const Constants = (() => {
         FIVE_DAYS_MS: 5 * 24 * 60 * 60 * 1000,
         THIRTY_DAYS_MS: 30 * 24 * 60 * 60 * 1000,
 
+        // Early morning cutoff for event end times (hour in 24h format)
+        // Events ending before this hour are treated as ending the previous day
+        EARLY_MORNING_CUTOFF_HOUR: 5,
+
         // Debounce/Throttle delays (in milliseconds)
         SEARCH_DEBOUNCE_MS: 100,
         MAP_MOVE_THROTTLE_MS: 250,

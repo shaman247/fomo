@@ -120,6 +120,15 @@ function formatShortDate($date) {
         <?php if ($event['sublocation']): ?>
         <dt>Sublocation</dt><dd><?= h($event['sublocation']) ?></dd>
         <?php endif; ?>
+        <dt>Status</dt>
+        <dd>
+            <?php if ($event['archived']): ?>
+                <span style="color:#c8535b;font-weight:bold">⚠️ Archived</span>
+                <span style="color:var(--secondary-text);font-size:11px">(hidden from public site)</span>
+            <?php else: ?>
+                <span style="color:#4CAF50">✓ Active</span>
+            <?php endif; ?>
+        </dd>
     </dl>
 </div>
 

@@ -87,6 +87,16 @@ class EventList(BaseModel):
 
 
 # =============================================================================
+# Constants
+# =============================================================================
+
+# Minimum content size (in bytes) required for extraction.
+# Crawls with less content than this are likely failed crawls (e.g., JS-rendered
+# pages that didn't load) and would cause the LLM to hallucinate events.
+MIN_CONTENT_SIZE = 500
+
+
+# =============================================================================
 # Extraction Functions
 # =============================================================================
 
@@ -99,11 +109,24 @@ def extract_url_from_content(content):
     return None, content
 
 
-def get_prompt(url, page_content, current_date_string, name, notes):
+def get_prompt(url, page_content, current_date_string, name, notes, existing_events=None):
     """Generate the AI prompt for event extraction."""
     note_section = f"\n\nNote: {notes}" if notes else ""
-    return f'''Today's date is {current_date_string}. We are assembling a database of upcoming events in New York City. Currently, we are inspecting {name} ({url}).
 
+    # Format existing events as JSON for prompt
+    existing_events_section = ""
+    if existing_events:
+        existing_events_json = json.dumps(existing_events, indent=2)
+        existing_events_section = f"""
+EXISTING EVENTS IN DATABASE:
+The following upcoming events from this website are already in our database. If you see these events in the new content and the details are still accurate, you may return them with details unchanged. This ensures consistency across crawls. Only create a new event if it's genuinely different, or update the event if key details have changed:
+
+{existing_events_json}
+
+"""
+
+    return f'''Today's date is {current_date_string}. We are assembling a database of upcoming events in New York City. Currently, we are inspecting {name} ({url}).
+{existing_events_section}
 Based on the website content below, extract all upcoming events. For each event, provide:
 - name: The event name
 - location: The venue name
@@ -122,6 +145,7 @@ Rules:
 - Only include events in the NYC area within the next 3 months
 - Ignore unrelated event sections ("Hot Events", "Similar events", etc.)
 - For recurring events, expand ALL individual dates into the occurrences array
+- For consistency, if an event matches one in EXISTING EVENTS above, use the same details to avoid creating duplicates
 - If no events are found, return an empty events list{note_section}
 
 Website content:
@@ -153,6 +177,31 @@ async def extract_events(cursor, connection, crawl_result_id, website_name, note
         print("    - No crawled content found")
         return False
 
+    # Check for minimum content size to prevent hallucinations
+    # When crawled content is too small (e.g., just a URL), the LLM will
+    # hallucinate plausible-sounding events based on the venue name
+    content_size = len(page_content)
+    if content_size < MIN_CONTENT_SIZE:
+        error_msg = f"Crawled content too small ({content_size} bytes < {MIN_CONTENT_SIZE} minimum) - likely failed crawl, skipping to prevent hallucinations"
+        print(f"    - {error_msg}")
+        db.update_crawl_result_failed(cursor, connection, crawl_result_id, error_msg)
+        return False
+
+    # Get website_id for this crawl result
+    cursor.execute(
+        "SELECT website_id FROM crawl_results WHERE id = %s",
+        (crawl_result_id,)
+    )
+    result = cursor.fetchone()
+    website_id = result[0] if result else None
+
+    # Get existing upcoming events from this website
+    existing_events = []
+    if website_id:
+        existing_events = db.get_existing_upcoming_events(cursor, website_id)
+        if existing_events:
+            print(f"    - Found {len(existing_events)} existing upcoming events to include in prompt")
+
     current_date_string = datetime.now().strftime('%Y-%m-%d')
 
     # Extract URL from first line if present
@@ -162,7 +211,7 @@ async def extract_events(cursor, connection, crawl_result_id, website_name, note
     print(f"    - Extracting events using {GEMINI_MODEL} ({len(content_to_process)} chars)...")
 
     try:
-        prompt = get_prompt(url, content_to_process, current_date_string, website_name, notes)
+        prompt = get_prompt(url, content_to_process, current_date_string, website_name, notes, existing_events)
 
         # Call Gemini API with structured output
         try:

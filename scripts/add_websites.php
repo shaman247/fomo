@@ -16,7 +16,7 @@
 // EDIT THIS ARRAY TO ADD NEW WEBSITES
 // ============================================================================
 $new_websites = [
-    // Park Slope Parents added 2026-01-07
+    // Websites added on 2026-01-11 - see git history
 ];
 
 // ============================================================================

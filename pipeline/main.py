@@ -7,8 +7,9 @@ Orchestrates the complete event processing workflow:
 2. Extract - Use Gemini AI to extract structured event data
 3. Process - Parse responses, enrich with location data, store in crawl_events
 4. Merge - Deduplicate crawl_events into final events table
-5. Export - Generate JSON files from events table for website
-6. Upload - Push JSON files to FTP server
+5. Archive - Hide events no longer found in recent crawls
+6. Export - Generate JSON files from events table for website
+7. Upload - Push JSON files to FTP server
 
 Usage:
     python main.py                     # Process all websites due for crawling
@@ -134,52 +135,73 @@ async def run_pipeline(website_ids=None, limit=None):
         print("STEP 2: Crawling Websites")
         print(f"{'='*60}")
 
-        browser_config = crawler.get_browser_config()
+        # Group websites by browser settings (text_mode, light_mode)
+        # These are browser-level settings, so websites with different settings
+        # need separate browser instances
+        def get_browser_key(w):
+            # None means use default (True for both), explicit False means disabled
+            text_mode = w.get('text_mode') if w.get('text_mode') is not None else True
+            light_mode = w.get('light_mode') if w.get('light_mode') is not None else True
+            return (text_mode, light_mode)
+
+        website_batches = {}
+        for website in websites:
+            key = get_browser_key(website)
+            if key not in website_batches:
+                website_batches[key] = []
+            website_batches[key].append(website)
 
         crawl_results = []
-        async with AsyncWebCrawler(config=browser_config) as web_crawler:
-            # Worker pool pattern: maintain N concurrent crawlers at all times
-            num_workers = 12
-            queue = asyncio.Queue()
 
-            # Fill the queue with all websites
-            for website in websites:
-                await queue.put(website)
+        for (text_mode, light_mode), batch_websites in website_batches.items():
+            if len(website_batches) > 1:
+                print(f"\n  Batch: text_mode={text_mode}, light_mode={light_mode} ({len(batch_websites)} sites)")
 
-            async def worker():
-                """Worker that continuously pulls from queue until empty."""
-                results = []
-                while True:
-                    try:
-                        website = queue.get_nowait()
-                    except asyncio.QueueEmpty:
-                        break
+            browser_config = crawler.get_browser_config(text_mode=text_mode, light_mode=light_mode)
 
-                    conn = db.create_connection()
-                    if not conn:
-                        queue.task_done()
-                        continue
-                    cur = conn.cursor(buffered=True)
-                    try:
-                        result_id = await crawler.crawl_website(
-                            web_crawler, website, cur, conn, crawl_run_id
-                        )
-                        if result_id:
-                            results.append((result_id, website))
-                    except Exception as e:
-                        print(f"    - Error crawling {website['name']}: {e}")
-                    finally:
-                        cur.close()
-                        conn.close()
-                        queue.task_done()
-                return results
+            async with AsyncWebCrawler(config=browser_config) as web_crawler:
+                # Worker pool pattern: maintain N concurrent crawlers at all times
+                num_workers = 6
+                queue = asyncio.Queue()
 
-            # Start N workers and wait for all to complete
-            worker_results = await asyncio.gather(*[worker() for _ in range(num_workers)])
+                # Fill the queue with batch websites
+                for website in batch_websites:
+                    await queue.put(website)
 
-            # Flatten results from all workers
-            for results in worker_results:
-                crawl_results.extend(results)
+                async def worker():
+                    """Worker that continuously pulls from queue until empty."""
+                    results = []
+                    while True:
+                        try:
+                            website = queue.get_nowait()
+                        except asyncio.QueueEmpty:
+                            break
+
+                        conn = db.create_connection()
+                        if not conn:
+                            queue.task_done()
+                            continue
+                        cur = conn.cursor(buffered=True)
+                        try:
+                            result_id = await crawler.crawl_website(
+                                web_crawler, website, cur, conn, crawl_run_id
+                            )
+                            if result_id:
+                                results.append((result_id, website))
+                        except Exception as e:
+                            print(f"    - Error crawling {website['name']}: {e}")
+                        finally:
+                            cur.close()
+                            conn.close()
+                            queue.task_done()
+                    return results
+
+                # Start N workers and wait for all to complete
+                worker_results = await asyncio.gather(*[worker() for _ in range(num_workers)])
+
+                # Flatten results from all workers
+                for results in worker_results:
+                    crawl_results.extend(results)
 
         print(f"\n✓ Crawled {len(crawl_results)} website(s)\n")
 
@@ -319,9 +341,9 @@ async def run_pipeline(website_ids=None, limit=None):
         # Mark crawl run as completed
         db.complete_crawl_run(cursor, connection, crawl_run_id)
 
-        # STEP 5: Merge crawl_events into final events table
+        # STEP 5: Merge crawl_events into final events table and archive outdated events
         print(f"{'='*60}")
-        print("STEP 5: Merging Crawl Events to Final Events Table")
+        print("STEP 5: Merging Crawl Events and Archiving Outdated Events")
         print(f"{'='*60}")
 
         new_events, merged_events = merger.merge_crawl_events(cursor, connection)
