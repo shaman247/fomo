@@ -81,7 +81,7 @@ def get_websites_due_for_crawling(cursor, website_ids=None):
                    w.keywords, w.max_pages, w.notes,
                    w.delay_before_return_html, w.content_filter_threshold, w.scan_full_page,
                    w.remove_overlay_elements, w.javascript_enabled, w.text_mode, w.light_mode,
-                   w.scroll_delay, w.crawl_timeout,
+                   w.use_stealth, w.scroll_delay, w.crawl_timeout,
                    GROUP_CONCAT(wu.url ORDER BY wu.sort_order SEPARATOR '|||') as urls
             FROM websites w
             LEFT JOIN website_urls wu ON w.id = wu.website_id
@@ -96,7 +96,7 @@ def get_websites_due_for_crawling(cursor, website_ids=None):
                    w.keywords, w.max_pages, w.notes,
                    w.delay_before_return_html, w.content_filter_threshold, w.scan_full_page,
                    w.remove_overlay_elements, w.javascript_enabled, w.text_mode, w.light_mode,
-                   w.scroll_delay, w.crawl_timeout,
+                   w.use_stealth, w.scroll_delay, w.crawl_timeout,
                    GROUP_CONCAT(wu.url ORDER BY wu.sort_order SEPARATOR '|||') as urls
             FROM websites w
             LEFT JOIN website_urls wu ON w.id = wu.website_id
@@ -127,9 +127,10 @@ def get_websites_due_for_crawling(cursor, website_ids=None):
             'javascript_enabled': row[12],
             'text_mode': row[13],
             'light_mode': row[14],
-            'scroll_delay': float(row[15]) if row[15] is not None else None,
-            'crawl_timeout': row[16],
-            'urls': row[17].split('|||') if row[17] else []
+            'use_stealth': row[15],
+            'scroll_delay': float(row[16]) if row[16] is not None else None,
+            'crawl_timeout': row[17],
+            'urls': row[18].split('|||') if row[18] else []
         }
         websites.append(website)
 

@@ -271,11 +271,12 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None):
     # Get crawl_events that haven't been linked to any final event yet
     cursor.execute("""
         SELECT ce.id, ce.name, ce.short_name, ce.description, ce.emoji,
-               ce.location_name, ce.sublocation, ce.lat, ce.lng, ce.url,
-               cr.website_id
+               ce.location_name, ce.sublocation, ce.location_id, ce.url,
+               cr.website_id, l.lat, l.lng
         FROM crawl_events ce
         JOIN crawl_results cr ON ce.crawl_result_id = cr.id
         LEFT JOIN event_sources es ON ce.id = es.crawl_event_id
+        LEFT JOIN locations l ON ce.location_id = l.id
         WHERE cr.status = 'processed'
           AND es.id IS NULL
     """)
@@ -287,26 +288,34 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None):
         return 0, 0
 
     # Build lookups of existing events for deduplication:
-    # 1. By (lat, lng) for events with coordinates
-    # 2. By normalized location_name for events without coordinates (fallback)
+    # 1. By location_id for events with matched locations
+    # 2. By normalized location_name for events without location_id (fallback)
     # Only load events that have at least one recent/future occurrence (optimization for large datasets)
     # Use 10-day buffer to catch recurring events that may not have next occurrence posted yet
     recent_cutoff = (datetime.now() - timedelta(days=10)).date()
     cursor.execute("""
-        SELECT DISTINCT e.id, e.name, e.lat, e.lng, e.location_name
+        SELECT DISTINCT e.id, e.name, e.location_id, l.lat, l.lng, e.location_name
         FROM events e
         JOIN event_occurrences eo ON e.id = eo.event_id
+        LEFT JOIN locations l ON e.location_id = l.id
         WHERE eo.start_date >= %s
     """, (recent_cutoff,))
     existing_events_by_coords = {}  # key: (lat, lng) -> list of {id, name}
+    existing_events_by_location_id = {}  # key: location_id -> list of {id, name}
     existing_events_by_location = {}  # key: normalized location_name -> list of {id, name}
     event_ids_with_future = set()
     for row in cursor.fetchall():
-        event_id, name, lat, lng, location_name = row
+        event_id, name, location_id, lat, lng, location_name = row
         event_ids_with_future.add(event_id)
         event_entry = {'id': event_id, 'name': name}
 
-        # Index by coordinates if available
+        # Index by location_id if available (primary matching method)
+        if location_id is not None:
+            if location_id not in existing_events_by_location_id:
+                existing_events_by_location_id[location_id] = []
+            existing_events_by_location_id[location_id].append(event_entry)
+
+        # Index by coordinates if available (for legacy compatibility)
         if lat is not None and lng is not None:
             key = (round(float(lat), 5), round(float(lng), 5))
             if key not in existing_events_by_coords:
@@ -341,7 +350,7 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None):
     merged_count = 0
 
     for ce_row in new_crawl_events:
-        ce_id, name, short_name, description, emoji, location_name, sublocation, lat, lng, url, website_id = ce_row
+        ce_id, name, short_name, description, emoji, location_name, sublocation, location_id, url, website_id, lat, lng = ce_row
 
         if not name:
             continue
@@ -376,8 +385,17 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None):
         # Check for duplicate in existing events (same location + overlapping dates + similar name)
         matched_event_id = None
 
-        # Try matching by coordinates first (most precise)
-        if lat is not None and lng is not None:
+        # Try matching by location_id first (most precise and reliable)
+        if location_id is not None and location_id in existing_events_by_location_id:
+            for existing in existing_events_by_location_id[location_id]:
+                existing_dates = event_dates.get(existing['id'], set())
+                if crawl_event_dates & existing_dates:  # intersection
+                    if are_names_similar(name, existing['name']):
+                        matched_event_id = existing['id']
+                        break
+
+        # Fallback: match by coordinates if no location_id match found
+        if matched_event_id is None and lat is not None and lng is not None:
             key = (round(float(lat), 5), round(float(lng), 5))
             if key in existing_events_by_coords:
                 for existing in existing_events_by_coords[key]:
@@ -387,7 +405,7 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None):
                             matched_event_id = existing['id']
                             break
 
-        # Fallback: match by location_name if no coordinate match found
+        # Second fallback: match by location_name if still no match found
         if matched_event_id is None and location_name:
             loc_key = normalize_name_for_dedup(location_name)
             if loc_key and len(loc_key) >= 3 and loc_key in existing_events_by_location:
@@ -414,15 +432,11 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None):
                     )
 
             # Update location_id if not already set (in case location was added after event)
-            if lat is not None and lng is not None:
-                cursor.execute("""
-                    UPDATE events SET location_id = (
-                        SELECT id FROM locations
-                        WHERE ROUND(lat, 5) = ROUND(%s, 5) AND ROUND(lng, 5) = ROUND(%s, 5)
-                        LIMIT 1
-                    )
-                    WHERE id = %s AND location_id IS NULL
-                """, (lat, lng, matched_event_id))
+            if location_id:
+                cursor.execute("SELECT location_id FROM events WHERE id = %s", (matched_event_id,))
+                current_location_id = cursor.fetchone()[0] if cursor.rowcount > 0 else None
+                if not current_location_id:
+                    cursor.execute("UPDATE events SET location_id = %s WHERE id = %s", (location_id, matched_event_id))
 
             # Link crawl_event to existing event
             cursor.execute(
@@ -435,17 +449,16 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None):
             # Create new event
             cursor.execute("""
                 INSERT INTO events (name, short_name, description, emoji, location_id, location_name,
-                                   sublocation, lat, lng, website_id)
-                VALUES (%s, %s, %s, %s, NULL, %s, %s, %s, %s, %s)
+                                   sublocation, website_id)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             """, (
                 name[:500],
                 short_name[:255] if short_name else None,
                 description,
                 emoji[:10] if emoji else None,
+                location_id,
                 location_name[:255] if location_name else None,
                 sublocation[:255] if sublocation else None,
-                lat,
-                lng,
                 website_id
             ))
             new_event_id = cursor.lastrowid
@@ -457,24 +470,11 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None):
                     'short_name': short_name[:255] if short_name else None,
                     'description': description,
                     'emoji': emoji[:10] if emoji else None,
+                    'location_id': location_id,
                     'location_name': location_name[:255] if location_name else None,
                     'sublocation': sublocation[:255] if sublocation else None,
-                    'lat': lat,
-                    'lng': lng,
                     'website_id': website_id
                 })
-
-            # Try to match location_id from locations table
-            if lat is not None and lng is not None:
-                cursor.execute("""
-                    SELECT id FROM locations
-                    WHERE ROUND(lat, 5) = ROUND(%s, 5) AND ROUND(lng, 5) = ROUND(%s, 5)
-                    LIMIT 1
-                """, (lat, lng))
-                loc_match = cursor.fetchone()
-                if loc_match:
-                    cursor.execute("UPDATE events SET location_id = %s WHERE id = %s",
-                                 (loc_match[0], new_event_id))
 
             # Add occurrences
             for i, occ in enumerate(valid_occurrences):

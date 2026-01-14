@@ -16,7 +16,7 @@
 // EDIT THIS ARRAY TO ADD NEW WEBSITES
 // ============================================================================
 $new_websites = [
-    // Websites added on 2026-01-11 - see git history
+    // Websites added on 2026-01-13 - see git history
 ];
 
 // ============================================================================
@@ -78,6 +78,7 @@ ID Sync (Production):
 Example website entry:
   [
       'name' => 'Blue Note',
+      'description' => 'Legendary jazz club...',  // Optional: organization description
       'base_url' => 'https://www.bluenotejazz.com/',  // Root domain (optional)
       'urls' => ['https://www.bluenotejazz.com/nyc/schedule'],  // Crawl URLs (optional)
       'crawl_frequency' => 4,      // Days between crawls (optional)
@@ -225,11 +226,12 @@ function get_location_id_ssh($config, $name) {
 }
 
 function insert_website_pdo($pdo, $site) {
-    $sql = "INSERT INTO websites (name, base_url, crawl_frequency, selector, keywords, max_pages, notes)
-            VALUES (:name, :base_url, :crawl_frequency, :selector, :keywords, :max_pages, :notes)";
+    $sql = "INSERT INTO websites (name, description, base_url, crawl_frequency, selector, keywords, max_pages, notes)
+            VALUES (:name, :description, :base_url, :crawl_frequency, :selector, :keywords, :max_pages, :notes)";
     $stmt = $pdo->prepare($sql);
     $stmt->execute([
         ':name' => $site['name'],
+        ':description' => $site['description'] ?? null,
         ':base_url' => $site['base_url'] ?? null,
         ':crawl_frequency' => $site['crawl_frequency'] ?? null,
         ':selector' => $site['selector'] ?? null,
@@ -244,9 +246,10 @@ function insert_website_ssh($config, $site, $explicit_id = null) {
     if ($explicit_id !== null) {
         // Insert with explicit ID to match local database
         $sql = sprintf(
-            "INSERT INTO websites (id, name, base_url, crawl_frequency, selector, keywords, max_pages, notes) VALUES (%d, %s, %s, %s, %s, %s, %s, %s); SELECT LAST_INSERT_ID();",
+            "INSERT INTO websites (id, name, description, base_url, crawl_frequency, selector, keywords, max_pages, notes) VALUES (%d, %s, %s, %s, %s, %s, %s, %s, %s); SELECT LAST_INSERT_ID();",
             intval($explicit_id),
             escape_sql($site['name']),
+            escape_sql($site['description'] ?? null),
             escape_sql($site['base_url'] ?? null),
             $site['crawl_frequency'] ?? 'NULL',
             escape_sql($site['selector'] ?? null),
@@ -256,8 +259,9 @@ function insert_website_ssh($config, $site, $explicit_id = null) {
         );
     } else {
         $sql = sprintf(
-            "INSERT INTO websites (name, base_url, crawl_frequency, selector, keywords, max_pages, notes) VALUES (%s, %s, %s, %s, %s, %s, %s); SELECT LAST_INSERT_ID();",
+            "INSERT INTO websites (name, description, base_url, crawl_frequency, selector, keywords, max_pages, notes) VALUES (%s, %s, %s, %s, %s, %s, %s, %s); SELECT LAST_INSERT_ID();",
             escape_sql($site['name']),
+            escape_sql($site['description'] ?? null),
             escape_sql($site['base_url'] ?? null),
             $site['crawl_frequency'] ?? 'NULL',
             escape_sql($site['selector'] ?? null),
