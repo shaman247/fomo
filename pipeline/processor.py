@@ -533,20 +533,20 @@ def build_locations_map(cursor):
         if normalized_main != main_name.lower():
             add_with_duplicates(locations_map['names'], normalized_main, full_info)
 
-        # Global alternate names (no website_id) - simple info only
+        # Global alternate names (no website_id) - use full_info to include id
         for alt_name in loc.get('alternate_names', []):
             if alt_name and len(alt_name) >= 3:
-                locations_map['alternate_names'][alt_name.lower()] = info
+                locations_map['alternate_names'][alt_name.lower()] = full_info
                 normalized_alt = _normalize_location_name(alt_name)
                 if normalized_alt and len(normalized_alt) >= 3:
-                    locations_map['alternate_names'][normalized_alt] = info
+                    locations_map['alternate_names'][normalized_alt] = full_info
 
         short_name = loc.get('short_name', '')
         if short_name and len(short_name) >= 3:
-            locations_map['short_names'][short_name.lower()] = info
+            locations_map['short_names'][short_name.lower()] = full_info
             normalized_short = _normalize_location_name(short_name)
             if normalized_short and len(normalized_short) >= 3:
-                locations_map['short_names'][normalized_short] = info
+                locations_map['short_names'][normalized_short] = full_info
 
         # Website-scoped alternate names
         for website_id, scoped_names in loc.get('website_scoped_names', {}).items():
@@ -554,10 +554,10 @@ def build_locations_map(cursor):
                 locations_map['website_scoped'][website_id] = {}
             for alt_name in scoped_names:
                 if alt_name and len(alt_name) >= 3:
-                    locations_map['website_scoped'][website_id][alt_name.lower()] = info
+                    locations_map['website_scoped'][website_id][alt_name.lower()] = full_info
                     normalized_alt = _normalize_location_name(alt_name)
                     if normalized_alt and len(normalized_alt) >= 3:
-                        locations_map['website_scoped'][website_id][normalized_alt] = info
+                        locations_map['website_scoped'][website_id][normalized_alt] = full_info
 
         # Index by street address (e.g., "347 davis ave" from "347 Davis Ave, Staten Island, NY")
         address = loc.get('address', '')
@@ -573,8 +573,8 @@ def build_websites_map(cursor):
     return db.get_websites_with_tags(cursor)
 
 
-def get_location_coords(location_name_raw, sublocation_name_raw, source_site_name, event_name_raw, locations_map, website_id=None):
-    """Finds the best matching latitude and longitude for an event.
+def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, event_name_raw, locations_map, website_id=None):
+    """Finds the best matching location ID for an event.
 
     Args:
         location_name_raw: The location name from the event
@@ -585,7 +585,7 @@ def get_location_coords(location_name_raw, sublocation_name_raw, source_site_nam
         website_id: Optional website ID for website-scoped alternate name matching
 
     Returns:
-        Dict with lat, lng, emoji keys, or None if no match found.
+        Dict with id, emoji keys, or None if no match found.
     """
     normalized_loc = _normalize_location_name(location_name_raw)
     normalized_subloc = _normalize_location_name(sublocation_name_raw)
@@ -603,8 +603,7 @@ def get_location_coords(location_name_raw, sublocation_name_raw, source_site_nam
     def make_result(info):
         """Helper to construct result dict."""
         return {
-            'lat': info.get('lat'),
-            'lng': info.get('lng'),
+            'id': info.get('id'),
             'emoji': info.get('emoji'),
         }
 
@@ -862,8 +861,8 @@ def process_events(cursor, connection, crawl_result_id, website_name, run_date_s
         if not filter_by_tag(processed_row, tag_rules):
             continue
 
-        # Enrich with coordinates
-        location_info = get_location_coords(
+        # Enrich with location ID
+        location_info = get_location_id(
             processed_row.get('location', '').strip(),
             processed_row.get('sublocation', '').strip(),
             safe_filename.replace('_', ' ').lower(),
@@ -873,8 +872,7 @@ def process_events(cursor, connection, crawl_result_id, website_name, run_date_s
         )
 
         if location_info:
-            processed_row['lat'] = location_info.get('lat')
-            processed_row['lng'] = location_info.get('lng')
+            processed_row['location_id'] = location_info.get('id')
 
         # Process emoji
         first_emoji = find_first_emoji(processed_row.get('emoji', ''))
@@ -900,8 +898,8 @@ def process_events(cursor, connection, crawl_result_id, website_name, run_date_s
         cursor.execute(
             """INSERT INTO crawl_events
                (crawl_result_id, name, short_name, description, emoji,
-                location_name, sublocation, lat, lng, url, raw_data)
-               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                location_name, sublocation, location_id, url, raw_data)
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
             (
                 crawl_result_id,
                 event_data.get('name', '')[:500],
@@ -910,8 +908,7 @@ def process_events(cursor, connection, crawl_result_id, website_name, run_date_s
                 event_data.get('emoji', '')[:10] if event_data.get('emoji') else None,
                 event_data.get('location', '')[:255] if event_data.get('location') else None,
                 event_data.get('sublocation', '')[:255] if event_data.get('sublocation') else None,
-                event_data.get('lat'),
-                event_data.get('lng'),
+                event_data.get('location_id'),
                 (event_data.get('urls', [None])[0])[:2000] if event_data.get('urls') else None,
                 json.dumps(event_data)
             )

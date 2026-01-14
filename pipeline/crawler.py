@@ -99,7 +99,7 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
             do_scan_full_page = True
         do_remove_overlays = website.get('remove_overlay_elements')
         if do_remove_overlays is None:
-            do_remove_overlays = True
+            do_remove_overlays = False
         scroll_delay = website.get('scroll_delay') or 0.2
         crawl_timeout = website.get('crawl_timeout') or DEFAULT_CRAWL_TIMEOUT
 
@@ -228,7 +228,7 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
         return None
 
 
-def get_browser_config(javascript_enabled=True, text_mode=True, light_mode=True):
+def get_browser_config(javascript_enabled=True, text_mode=True, light_mode=True, use_stealth=False):
     """
     Get the browser configuration for crawling.
 
@@ -237,13 +237,29 @@ def get_browser_config(javascript_enabled=True, text_mode=True, light_mode=True)
                            Set to False for sites that freeze during JS execution.
         text_mode: If True, disables images for faster text-only crawls (default: True).
         light_mode: If True, uses minimal browser features for speed (default: True).
+        use_stealth: If True, uses undetected browser mode to bypass bot detection (default: False).
+                    Required for sites like Resident Advisor that have verification pages.
 
     Note: These are browser-level settings. All websites crawled with this
           config will share the same settings.
     """
-    return BrowserConfig(
-        headless=False,
-        java_script_enabled=javascript_enabled,
-        text_mode=text_mode,
-        light_mode=light_mode
-    )
+    if use_stealth:
+        # Use undetected browser mode with stealth features for bot detection bypass
+        return BrowserConfig(
+            headless=False,
+            java_script_enabled=javascript_enabled,
+            text_mode=text_mode,
+            light_mode=light_mode,
+            use_managed_browser=True,
+            enable_stealth=True,
+            user_agent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+            extra_args=['--disable-blink-features=AutomationControlled']
+        )
+    else:
+        # Standard browser mode
+        return BrowserConfig(
+            headless=False,
+            java_script_enabled=javascript_enabled,
+            text_mode=text_mode,
+            light_mode=light_mode
+        )

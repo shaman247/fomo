@@ -135,14 +135,15 @@ async def run_pipeline(website_ids=None, limit=None):
         print("STEP 2: Crawling Websites")
         print(f"{'='*60}")
 
-        # Group websites by browser settings (text_mode, light_mode)
+        # Group websites by browser settings (text_mode, light_mode, use_stealth)
         # These are browser-level settings, so websites with different settings
         # need separate browser instances
         def get_browser_key(w):
-            # None means use default (True for both), explicit False means disabled
+            # None means use default (True for text/light, False for stealth), explicit values override
             text_mode = w.get('text_mode') if w.get('text_mode') is not None else True
             light_mode = w.get('light_mode') if w.get('light_mode') is not None else True
-            return (text_mode, light_mode)
+            use_stealth = w.get('use_stealth') if w.get('use_stealth') is not None else False
+            return (text_mode, light_mode, use_stealth)
 
         website_batches = {}
         for website in websites:
@@ -153,11 +154,12 @@ async def run_pipeline(website_ids=None, limit=None):
 
         crawl_results = []
 
-        for (text_mode, light_mode), batch_websites in website_batches.items():
+        for (text_mode, light_mode, use_stealth), batch_websites in website_batches.items():
             if len(website_batches) > 1:
-                print(f"\n  Batch: text_mode={text_mode}, light_mode={light_mode} ({len(batch_websites)} sites)")
+                stealth_str = ", stealth=True" if use_stealth else ""
+                print(f"\n  Batch: text_mode={text_mode}, light_mode={light_mode}{stealth_str} ({len(batch_websites)} sites)")
 
-            browser_config = crawler.get_browser_config(text_mode=text_mode, light_mode=light_mode)
+            browser_config = crawler.get_browser_config(text_mode=text_mode, light_mode=light_mode, use_stealth=use_stealth)
 
             async with AsyncWebCrawler(config=browser_config) as web_crawler:
                 # Worker pool pattern: maintain N concurrent crawlers at all times

@@ -46,13 +46,15 @@ def export_events(cursor):
     init_limit_date = (datetime.now() + timedelta(days=7)).date()
 
     # Get all events with their occurrences (exclude archived events)
+    # Events must have a location with coordinates to be exported
     cursor.execute("""
         SELECT e.id, e.name, e.short_name, e.description, e.emoji,
-               e.location_name, e.sublocation, e.lat, e.lng,
-               l.name as matched_location_name
+               e.location_name, e.sublocation,
+               l.name as matched_location_name,
+               l.lat, l.lng
         FROM events e
-        LEFT JOIN locations l ON e.location_id = l.id
-        WHERE e.lat IS NOT NULL AND e.lng IS NOT NULL
+        JOIN locations l ON e.location_id = l.id
+        WHERE l.lat IS NOT NULL AND l.lng IS NOT NULL
           AND e.archived = FALSE
     """)
 
@@ -97,14 +99,22 @@ def export_events(cursor):
         """, (event_id,))
         tags = [r[0] for r in cursor.fetchall()]
 
+        # Use location coordinates (events no longer have their own coordinates)
+        lat = float(row[8]) if row[8] is not None else None
+        lng = float(row[9]) if row[9] is not None else None
+
+        # Skip events without coordinates (shouldn't happen due to JOIN, but safety check)
+        if lat is None or lng is None:
+            continue
+
         event = {
             'name': row[1],
-            'location': row[9] or row[5],  # matched_location_name or location_name
+            'location': row[7] or row[5],  # matched_location_name or location_name
             'description': row[3],
             'emoji': row[4],
             'tags': tags,
-            'lat': float(row[7]) if row[7] else None,
-            'lng': float(row[8]) if row[8] else None,
+            'lat': lat,
+            'lng': lng,
             'occurrences': occurrences,
             'urls': urls,
         }

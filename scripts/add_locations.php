@@ -16,7 +16,7 @@
 // EDIT THIS ARRAY TO ADD NEW LOCATIONS
 // ============================================================================
 $new_locations = [
-    // Locations added on 2026-01-11 - see git history
+    // Locations added on 2026-01-13 - see git history
 ];
 
 // ============================================================================
@@ -72,6 +72,7 @@ Example location entry:
   [
       'name' => 'The Blue Note',
       'short_name' => 'Blue Note',        // Optional: shorter display name
+      'description' => 'Legendary jazz club...',  // Optional: venue description
       'address' => '131 W 3rd St, New York, NY 10012',
       'lat' => 40.7308,
       'lng' => -74.0005,
@@ -79,6 +80,9 @@ Example location entry:
       'alt_emoji' => '🎵',                // Optional: alternative emoji
       'tags' => ['Jazz', 'Live Music', 'Manhattan', 'Greenwich Village'],  // Optional
   ]
+
+Note: Instagram handles are stored separately in the instagram_accounts table.
+Use location_instagram junction table to link locations to Instagram accounts.
 
 HELP;
     exit(0);
@@ -189,13 +193,14 @@ function check_exists_ssh($config, $name) {
 }
 
 function insert_location_pdo($pdo, $loc) {
-    $sql = "INSERT INTO locations (name, short_name, very_short_name, address, lat, lng, emoji, alt_emoji)
-            VALUES (:name, :short_name, :very_short_name, :address, :lat, :lng, :emoji, :alt_emoji)";
+    $sql = "INSERT INTO locations (name, short_name, very_short_name, description, address, lat, lng, emoji, alt_emoji)
+            VALUES (:name, :short_name, :very_short_name, :description, :address, :lat, :lng, :emoji, :alt_emoji)";
     $stmt = $pdo->prepare($sql);
     $stmt->execute([
         ':name' => $loc['name'],
         ':short_name' => $loc['short_name'] ?? null,
         ':very_short_name' => $loc['very_short_name'] ?? null,
+        ':description' => $loc['description'] ?? null,
         ':address' => $loc['address'] ?? null,
         ':lat' => $loc['lat'],
         ':lng' => $loc['lng'],
@@ -207,10 +212,11 @@ function insert_location_pdo($pdo, $loc) {
 
 function insert_location_ssh($config, $loc) {
     $sql = sprintf(
-        "INSERT INTO locations (name, short_name, very_short_name, address, lat, lng, emoji, alt_emoji) VALUES (%s, %s, %s, %s, %s, %s, %s, %s); SELECT LAST_INSERT_ID();",
+        "INSERT INTO locations (name, short_name, very_short_name, description, address, lat, lng, emoji, alt_emoji) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s); SELECT LAST_INSERT_ID();",
         escape_sql($loc['name']),
         escape_sql($loc['short_name'] ?? null),
         escape_sql($loc['very_short_name'] ?? null),
+        escape_sql($loc['description'] ?? null),
         escape_sql($loc['address'] ?? null),
         $loc['lat'],
         $loc['lng'],
