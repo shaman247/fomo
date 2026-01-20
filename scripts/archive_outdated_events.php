@@ -22,6 +22,22 @@
 // ============================================================================
 // DATABASE CONFIGURATION
 // ============================================================================
+
+// Load .env file
+function load_env($path) {
+    if (!file_exists($path)) return;
+    $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        if (strpos(trim($line), '#') === 0) continue;
+        if (strpos($line, '=') === false) continue;
+        list($name, $value) = explode('=', $line, 2);
+        $name = trim($name);
+        $value = trim($value, " \t\n\r\0\x0B\"'");
+        if (!getenv($name)) putenv("$name=$value");
+    }
+}
+load_env(__DIR__ . '/../.env');
+
 $config = [
     'local' => [
         'host' => 'localhost',
@@ -32,13 +48,13 @@ $config = [
     ],
     'production' => [
         'via_ssh' => true,
-        'ssh_host' => '69.57.162.203',
-        'ssh_port' => 21098,
-        'ssh_user' => 'fomoowsq',
-        'ssh_key' => __DIR__ . '/id_rsa_sync',
-        'dbname' => 'fomoowsq_fomo',
-        'user' => 'fomoowsq_root',
-        'password' => 'REDACTED_DB_PASSWORD',
+        'ssh_host' => getenv('SSH_HOST') ?: '69.57.162.203',
+        'ssh_port' => getenv('SSH_PORT') ?: 21098,
+        'ssh_user' => getenv('SSH_USER') ?: 'fomoowsq',
+        'ssh_key' => __DIR__ . '/' . (getenv('SSH_KEY') ?: 'id_rsa_sync'),
+        'dbname' => getenv('PROD_DB_NAME') ?: die("Error: PROD_DB_NAME not set in .env\n"),
+        'user' => getenv('PROD_DB_USER') ?: die("Error: PROD_DB_USER not set in .env\n"),
+        'password' => getenv('PROD_DB_PASS') ?: die("Error: PROD_DB_PASS not set in .env\n"),
     ],
 ];
 
