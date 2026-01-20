@@ -204,6 +204,8 @@
     /* 20vw brings it to viewport edge, then 12px for standard MapLibre margin */
     right: calc(20vw + 12px) !important;
     top: calc(20vh + 12px) !important;
+    top: calc(20dvh + 12px) !important;
+    top: calc(var(--app-height, 100dvh) * 0.2 + 12px) !important;
 }
 
 /* === Mobile Responsive Styles === */

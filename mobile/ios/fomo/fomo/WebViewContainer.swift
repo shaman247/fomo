@@ -2,20 +2,18 @@ import SwiftUI
 import WebKit
 
 struct WebViewContainer: View {
-    @State private var isLoading = true
+    @State private var isFirstLoad = true
     @State private var error: Error?
-    @State private var canGoBack = false
 
     var body: some View {
         ZStack {
             FomoWebView(
-                isLoading: $isLoading,
-                error: $error,
-                canGoBack: $canGoBack
+                isFirstLoad: $isFirstLoad,
+                error: $error
             )
 
-            // Loading overlay (only on initial load)
-            if isLoading && error == nil {
+            // Loading overlay (only on first load)
+            if isFirstLoad && error == nil {
                 VStack(spacing: 16) {
                     ProgressView()
                         .scaleEffect(1.5)
@@ -56,29 +54,39 @@ struct WebViewContainer: View {
 // MARK: - WKWebView Wrapper
 
 struct FomoWebView: UIViewRepresentable {
-    @Binding var isLoading: Bool
+    @Binding var isFirstLoad: Bool
     @Binding var error: Error?
-    @Binding var canGoBack: Bool
 
     private let fomoURL = URL(string: "https://fomo.nyc")!
 
     func makeUIView(context: Context) -> WKWebView {
         let configuration = WKWebViewConfiguration()
         configuration.allowsInlineMediaPlayback = true
-
-        // Enable geolocation
         configuration.preferences.isElementFullscreenEnabled = true
+
+        // Performance optimizations
+        configuration.suppressesIncrementalRendering = false  // Render as content loads
+        configuration.allowsAirPlayForMediaPlayback = false   // Disable unused features
+
+        // Share process pool across instances for better memory management
+        configuration.processPool = WKProcessPool()
 
         let webView = WKWebView(frame: .zero, configuration: configuration)
         webView.navigationDelegate = context.coordinator
         webView.uiDelegate = context.coordinator
         webView.allowsBackForwardNavigationGestures = true
-        webView.scrollView.bounces = true
+
+        // GPU/rendering optimizations
+        webView.isOpaque = true                               // Enables compositing optimizations
+        webView.scrollView.bounces = false                    // Reduce compositing overhead
         webView.scrollView.contentInsetAdjustmentBehavior = .automatic
 
         // Prevent zoom but allow scrolling
         webView.scrollView.maximumZoomScale = 1.0
         webView.scrollView.minimumZoomScale = 1.0
+
+        // Reduce unnecessary redraws
+        webView.scrollView.decelerationRate = .normal
 
         // Set mobile viewport
         webView.customUserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1 FomoApp/1.0"
@@ -106,6 +114,8 @@ struct FomoWebView: UIViewRepresentable {
         Coordinator(self)
     }
 
+    // MARK: - Coordinator
+
     class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate {
         var parent: FomoWebView
 
@@ -115,24 +125,33 @@ struct FomoWebView: UIViewRepresentable {
 
         // MARK: - WKNavigationDelegate
 
-        func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
-            parent.isLoading = true
+        func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) {
+            DispatchQueue.main.async {
+                self.parent.isFirstLoad = false
+            }
         }
 
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-            parent.isLoading = false
-            parent.error = nil
-            parent.canGoBack = webView.canGoBack
+            DispatchQueue.main.async {
+                self.parent.isFirstLoad = false
+                self.parent.error = nil
+            }
         }
 
         func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
-            parent.isLoading = false
-            parent.error = error
+            DispatchQueue.main.async {
+                if self.parent.isFirstLoad {
+                    self.parent.error = error
+                }
+            }
         }
 
         func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
-            parent.isLoading = false
-            parent.error = error
+            DispatchQueue.main.async {
+                if self.parent.isFirstLoad {
+                    self.parent.error = error
+                }
+            }
         }
 
         func webView(
@@ -163,7 +182,23 @@ struct FomoWebView: UIViewRepresentable {
 
         // MARK: - WKUIDelegate
 
-        // Handle JavaScript alerts
+        func webView(
+            _ webView: WKWebView,
+            createWebViewWith configuration: WKWebViewConfiguration,
+            for navigationAction: WKNavigationAction,
+            windowFeatures: WKWindowFeatures
+        ) -> WKWebView? {
+            guard let url = navigationAction.request.url else { return nil }
+
+            if url.host?.contains("fomo.nyc") == true {
+                webView.load(navigationAction.request)
+            } else {
+                UIApplication.shared.open(url)
+            }
+
+            return nil
+        }
+
         func webView(
             _ webView: WKWebView,
             runJavaScriptAlertPanelWithMessage message: String,
@@ -183,7 +218,6 @@ struct FomoWebView: UIViewRepresentable {
             }
         }
 
-        // Handle location permission requests (passed to system)
         func webView(
             _ webView: WKWebView,
             requestMediaCapturePermissionFor origin: WKSecurityOrigin,

@@ -5,9 +5,13 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
+import android.view.View
+import android.util.Log
+import android.webkit.ConsoleMessage
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
+import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.ComponentActivity
@@ -91,7 +95,9 @@ fun FomoWebViewScreen(
     Box(modifier = Modifier.fillMaxSize()) {
         // WebView with SwipeRefresh
         FomoWebView(
-            url = "https://fomo.nyc",
+            // TODO: Change back to "https://fomo.nyc" for production
+            // 10.0.2.2 is Android emulator's alias for host machine's localhost
+            url = "http://10.0.2.2/fomo/public_html/index.html",
             onWebViewCreated = { webView ->
                 webViewInstance = webView
                 onWebViewCreated(webView)
@@ -192,6 +198,9 @@ fun FomoWebView(
             SwipeRefreshLayout(ctx).apply {
                 // Create WebView
                 val webView = WebView(ctx).apply {
+                    // Enable hardware acceleration for WebGL (MapLibre maps)
+                    setLayerType(View.LAYER_TYPE_HARDWARE, null)
+
                     settings.apply {
                         javaScriptEnabled = true
                         domStorageEnabled = true
@@ -202,6 +211,14 @@ fun FomoWebView(
                         loadWithOverviewMode = true
                         useWideViewPort = true
                         userAgentString = "$userAgentString FomoApp/1.0"
+
+                        // Required for proper CSS rendering (fixed positioning, modals)
+                        @Suppress("DEPRECATION")
+                        mixedContentMode = WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
+
+                        // Enable modern web features
+                        mediaPlaybackRequiresUserGesture = false
+                        javaScriptCanOpenWindowsAutomatically = true
                     }
 
                     webViewClient = object : WebViewClient() {
@@ -215,6 +232,60 @@ fun FomoWebView(
                             onPageFinished()
                             // Stop swipe refresh animation
                             (parent as? SwipeRefreshLayout)?.isRefreshing = false
+
+                            // Fix viewport height for Android WebView
+                            // 100vh is unreliable in WebViews - set --app-height CSS variable
+                            view?.evaluateJavascript("""
+                                (function() {
+                                    function setAppHeight() {
+                                        var vh = window.innerHeight;
+                                        console.log('DEBUG: Setting --app-height to ' + vh + 'px');
+                                        document.documentElement.style.setProperty('--app-height', vh + 'px');
+
+                                        // Debug: check filter panel
+                                        var filterPanel = document.getElementById('filter-panel');
+                                        if (filterPanel) {
+                                            var style = window.getComputedStyle(filterPanel);
+                                            var rect = filterPanel.getBoundingClientRect();
+                                            console.log('DEBUG: filter-panel rect: ' + JSON.stringify({
+                                                width: rect.width,
+                                                height: rect.height,
+                                                top: rect.top,
+                                                left: rect.left
+                                            }));
+                                            console.log('DEBUG: filter-panel computed: ' +
+                                                'height=' + style.height +
+                                                ', maxHeight=' + style.maxHeight +
+                                                ', display=' + style.display +
+                                                ', visibility=' + style.visibility +
+                                                ', opacity=' + style.opacity);
+                                        } else {
+                                            console.log('DEBUG: filter-panel NOT FOUND');
+                                        }
+
+                                        // Debug: check map
+                                        var map = document.getElementById('map');
+                                        if (map) {
+                                            var mapRect = map.getBoundingClientRect();
+                                            console.log('DEBUG: map rect: ' + JSON.stringify({
+                                                width: mapRect.width,
+                                                height: mapRect.height
+                                            }));
+                                        }
+                                    }
+
+                                    // Run immediately and on resize
+                                    setAppHeight();
+                                    window.addEventListener('resize', setAppHeight);
+
+                                    // Run again after delays to catch late layout changes
+                                    setTimeout(setAppHeight, 100);
+                                    setTimeout(setAppHeight, 500);
+                                    setTimeout(setAppHeight, 1000);
+
+                                    return 'Viewport fix applied';
+                                })();
+                            """.trimIndent(), null)
                         }
 
                         override fun onReceivedError(
@@ -250,7 +321,12 @@ fun FomoWebView(
                         }
                     }
 
-                    webChromeClient = WebChromeClient()
+                    webChromeClient = object : WebChromeClient() {
+                        override fun onConsoleMessage(consoleMessage: ConsoleMessage?): Boolean {
+                            Log.d("FomoWebView", "${consoleMessage?.messageLevel()}: ${consoleMessage?.message()} [${consoleMessage?.sourceId()}:${consoleMessage?.lineNumber()}]")
+                            return true
+                        }
+                    }
 
                     // Load the URL
                     loadUrl(url)
@@ -259,10 +335,8 @@ fun FomoWebView(
                 addView(webView)
                 onWebViewCreated(webView)
 
-                // Setup pull-to-refresh
-                setOnRefreshListener {
-                    webView.reload()
-                }
+                // Disable pull-to-refresh (can interfere with map scrolling)
+                isEnabled = false
             }
         },
         modifier = modifier

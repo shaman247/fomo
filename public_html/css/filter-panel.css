@@ -32,6 +32,8 @@
     display: flex;
     flex-direction: column;
     height: calc(100vh - 24px);
+    height: calc(100dvh - 24px);
+    height: calc(var(--app-height, 100dvh) - 24px);
     overflow: hidden;
     box-sizing: border-box;
     z-index: var(--z-panel);
@@ -404,6 +406,8 @@ span.flatpickr-weekday {
         border-radius: 0px;
         height: auto;
         max-height: 40vh;
+        max-height: 40dvh;
+        max-height: calc(var(--app-height, 100dvh) * 0.4);
         overflow: visible;
         margin: 0px;
         padding: 2px;
@@ -415,6 +419,8 @@ span.flatpickr-weekday {
 
     #filter-panel.tags-collapsed {
         max-height: 20vh;
+        max-height: 20dvh;
+        max-height: calc(var(--app-height, 100dvh) * 0.2);
     }
 
     #logo-menu-wrapper {
@@ -431,12 +437,16 @@ span.flatpickr-weekday {
     #tags-wrapper {
         overflow-y: auto;
         max-height: calc(40vh - 80px);
+        max-height: calc(40dvh - 80px);
+        max-height: calc(var(--app-height, 100dvh) * 0.4 - 80px);
         -ms-overflow-style: none;
         scrollbar-width: none;
     }
 
     #filter-panel.tags-collapsed #tags-wrapper {
         max-height: calc(20vh - 80px);
+        max-height: calc(20dvh - 80px);
+        max-height: calc(var(--app-height, 100dvh) * 0.2 - 80px);
     }
 
     #filter-panel.no-transition {
