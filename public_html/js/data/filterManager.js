@@ -28,6 +28,53 @@ const FilterManager = (() => {
     // ========================================
 
     /**
+     * Gets the effective end date for filtering, applying early morning cutoff.
+     * For overnight events ending before 5 AM, treats them as ending on the previous day.
+     * @param {Object} occurrence - Occurrence with start and end dates
+     * @returns {Date} The effective end date for filtering
+     */
+    function getEffectiveEndDate(occurrence) {
+        const isOvernightEvent = occurrence.end.getDate() !== occurrence.start.getDate();
+        const endsBeforeCutoff = occurrence.end.getHours() < Constants.TIME.EARLY_MORNING_CUTOFF_HOUR;
+
+        if (isOvernightEvent && endsBeforeCutoff) {
+            const effectiveEnd = new Date(occurrence.end);
+            effectiveEnd.setDate(effectiveEnd.getDate() - 1);
+            effectiveEnd.setHours(23, 59, 59, 999);
+            return effectiveEnd;
+        }
+        return occurrence.end;
+    }
+
+    /**
+     * Normalizes date filter parameters, applying defaults and setting end-of-day for endDate
+     * @param {Date} startDate - Start date (may be null/invalid)
+     * @param {Date} endDate - End date (may be null/invalid)
+     * @returns {Object} Object with startFilter and endFilter dates
+     */
+    function normalizeDateFilters(startDate, endDate) {
+        const startFilter = (startDate instanceof Date && !isNaN(startDate)) ? startDate : state.config.START_DATE;
+        let endFilter = (endDate instanceof Date && !isNaN(endDate)) ? endDate : state.config.END_DATE;
+
+        endFilter = new Date(endFilter);
+        endFilter.setHours(23, 59, 59, 999);
+
+        return { startFilter, endFilter };
+    }
+
+    /**
+     * Checks if an occurrence overlaps with a date range
+     * @param {Object} occurrence - Occurrence with start and end dates
+     * @param {Date} startFilter - Start of date range
+     * @param {Date} endFilter - End of date range
+     * @returns {boolean} True if occurrence overlaps with range
+     */
+    function occurrenceOverlapsRange(occurrence, startFilter, endFilter) {
+        const effectiveEnd = getEffectiveEndDate(occurrence);
+        return occurrence.start <= endFilter && effectiveEnd >= startFilter;
+    }
+
+    /**
      * Checks if an event occurs within a given date range
      * @param {Object} event - Event object with occurrences
      * @param {Date} startDate - Start of date range
@@ -39,33 +86,11 @@ const FilterManager = (() => {
             return false;
         }
 
-        const startFilter = (startDate instanceof Date && !isNaN(startDate)) ? startDate : state.config.START_DATE;
-        let endFilter = (endDate instanceof Date && !isNaN(endDate)) ? endDate : state.config.END_DATE;
+        const { startFilter, endFilter } = normalizeDateFilters(startDate, endDate);
 
-        // Set end filter to end of day
-        endFilter = new Date(endFilter);
-        endFilter.setHours(23, 59, 59, 999);
-
-        // Check if any occurrence overlaps with the date range
-        for (const occurrence of event.occurrences) {
-            // Apply early morning cutoff: if an event ends before 5 AM AND
-            // the end date is after the start date (indicating overnight event),
-            // treat it as ending on the previous day for filtering purposes
-            let effectiveEnd = occurrence.end;
-            if (occurrence.end.getHours() < Constants.TIME.EARLY_MORNING_CUTOFF_HOUR &&
-                occurrence.end.getDate() !== occurrence.start.getDate()) {
-                // Create a new date set to the end of the previous day
-                effectiveEnd = new Date(occurrence.end);
-                effectiveEnd.setDate(effectiveEnd.getDate() - 1);
-                effectiveEnd.setHours(23, 59, 59, 999);
-            }
-
-            if (occurrence.start <= endFilter && effectiveEnd >= startFilter) {
-                return true;
-            }
-        }
-
-        return false;
+        return event.occurrences.some(occurrence =>
+            occurrenceOverlapsRange(occurrence, startFilter, endFilter)
+        );
     }
 
     /**
@@ -75,12 +100,7 @@ const FilterManager = (() => {
      * @returns {Array} Filtered events with matching_occurrences property
      */
     function filterEventsByDateRange(startDate, endDate) {
-        const startFilter = (startDate instanceof Date && !isNaN(startDate)) ? startDate : state.config.START_DATE;
-        let endFilter = (endDate instanceof Date && !isNaN(endDate)) ? endDate : state.config.END_DATE;
-
-        endFilter = new Date(endFilter);
-        endFilter.setHours(23, 59, 59, 999);
-
+        const { startFilter, endFilter } = normalizeDateFilters(startDate, endDate);
         const filteredEvents = [];
 
         for (const event of state.appState.allEvents) {
@@ -88,30 +108,15 @@ const FilterManager = (() => {
                 continue;
             }
 
-            // Find occurrences that overlap with the date range
-            const matchingOccurrences = event.occurrences.filter(occurrence => {
-                // Apply early morning cutoff: if an event ends before 5 AM AND
-                // the end date is after the start date (indicating overnight event),
-                // treat it as ending on the previous day for filtering purposes
-                let effectiveEnd = occurrence.end;
-                if (occurrence.end.getHours() < Constants.TIME.EARLY_MORNING_CUTOFF_HOUR &&
-                    occurrence.end.getDate() !== occurrence.start.getDate()) {
-                    // Create a new date set to the end of the previous day
-                    effectiveEnd = new Date(occurrence.end);
-                    effectiveEnd.setDate(effectiveEnd.getDate() - 1);
-                    effectiveEnd.setHours(23, 59, 59, 999);
-                }
-
-                return occurrence.start <= endFilter && effectiveEnd >= startFilter;
-            });
+            const matchingOccurrences = event.occurrences.filter(occurrence =>
+                occurrenceOverlapsRange(occurrence, startFilter, endFilter)
+            );
 
             if (matchingOccurrences.length > 0) {
-                // Create new event object with matching occurrences
-                const eventWithMatchingOccurrences = {
+                filteredEvents.push({
                     ...event,
                     matching_occurrences: matchingOccurrences
-                };
-                filteredEvents.push(eventWithMatchingOccurrences);
+                });
             }
         }
 
@@ -274,24 +279,12 @@ const FilterManager = (() => {
 
                     // Calculate tag frequencies with proximity weighting
                     if (event.tags) {
-                        // Use pre-calculated distance if available, otherwise calculate on the fly using Haversine
+                        // Use pre-calculated distance if available, otherwise calculate on the fly
                         let distance;
                         if (locationDistances?.[event.locationKey] !== undefined) {
                             distance = locationDistances[event.locationKey];
                         } else if (visibleCenter) {
-                            // Calculate distance using Haversine formula
-                            const R = 6371000; // Earth's radius in meters
-                            const lat1 = visibleCenter.lat * Math.PI / 180;
-                            const lat2 = lat * Math.PI / 180;
-                            const deltaLat = (lat - visibleCenter.lat) * Math.PI / 180;
-                            const deltaLng = (lng - visibleCenter.lng) * Math.PI / 180;
-
-                            const a = Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
-                                Math.cos(lat1) * Math.cos(lat2) *
-                                Math.sin(deltaLng / 2) * Math.sin(deltaLng / 2);
-                            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-                            distance = R * c;
+                            distance = Utils.calculateHaversineDistance(visibleCenter, { lat, lng });
                         } else {
                             distance = 0;
                         }

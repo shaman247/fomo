@@ -31,6 +31,36 @@ set_exception_handler(function($e) {
 require_once 'db_config.php';
 
 // ============================================================================
+// POST ACTIONS
+// ============================================================================
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $input = json_decode(file_get_contents('php://input'), true);
+    $action = $input['action'] ?? '';
+
+    switch ($action) {
+        case 'toggle_suppressed':
+            $eventId = (int)($input['event_id'] ?? 0);
+            $suppressed = (int)($input['suppressed'] ?? 0);
+
+            if ($eventId <= 0) {
+                echo json_encode(['success' => false, 'error' => 'Invalid event ID']);
+                exit;
+            }
+
+            $stmt = $pdo->prepare("UPDATE events SET suppressed = ? WHERE id = ?");
+            $stmt->execute([$suppressed, $eventId]);
+
+            echo json_encode(['success' => true, 'event_id' => $eventId, 'suppressed' => $suppressed]);
+            exit;
+
+        default:
+            echo json_encode(['success' => false, 'error' => 'Unknown action']);
+            exit;
+    }
+}
+
+// ============================================================================
 // DATA FETCH FUNCTIONS
 // ============================================================================
 
@@ -161,7 +191,7 @@ function getEvents($pdo) {
     $query = "
         SELECT
             e.id, e.name, e.emoji, e.location_id, e.location_name as event_location_name,
-            e.website_id, e.archived,
+            e.website_id, e.archived, e.suppressed,
             MIN(CASE WHEN eo.start_date >= CURDATE() THEN eo.start_date END) as next_date,
             MIN(eo.start_date) as start_date,
             (SELECT eo3.start_time FROM event_occurrences eo3 WHERE eo3.event_id = e.id AND eo3.start_date = MIN(CASE WHEN eo.start_date >= CURDATE() THEN eo.start_date END) LIMIT 1) as start_time,
@@ -172,7 +202,7 @@ function getEvents($pdo) {
         LEFT JOIN event_occurrences eo ON e.id = eo.event_id
         LEFT JOIN websites w ON e.website_id = w.id
         LEFT JOIN locations l ON e.location_id = l.id
-        GROUP BY e.id, e.name, e.emoji, e.location_id, e.location_name, e.website_id, e.archived, w.name, l.name
+        GROUP BY e.id, e.name, e.emoji, e.location_id, e.location_name, e.website_id, e.archived, e.suppressed, w.name, l.name
         ORDER BY MIN(CASE WHEN eo.start_date >= CURDATE() THEN eo.start_date END) ASC, MIN(eo.start_date) ASC
     ";
 
@@ -188,6 +218,7 @@ function getEvents($pdo) {
         $row['website_id'] = $row['website_id'] ? (int)$row['website_id'] : null;
         $row['occurrence_count'] = (int)$row['occurrence_count'];
         $row['archived'] = (bool)$row['archived'];
+        $row['suppressed'] = (bool)$row['suppressed'];
 
         // Use next_date for display and filtering (next occurrence from today onward)
         // Fall back to start_date for past events
@@ -217,11 +248,12 @@ function getEvents($pdo) {
 function getEventFilters($pdo) {
     $stats = $pdo->query("
         SELECT
-            (SELECT COUNT(*) FROM events WHERE archived = FALSE) as total_active,
+            (SELECT COUNT(*) FROM events WHERE archived = FALSE AND suppressed = FALSE) as total_active,
             (SELECT COUNT(*) FROM events WHERE archived = TRUE) as total_archived,
-            (SELECT COUNT(DISTINCT e.id) FROM events e JOIN event_occurrences eo ON e.id = eo.event_id WHERE e.archived = FALSE AND eo.start_date >= CURDATE()) as upcoming,
-            (SELECT COUNT(DISTINCT e.id) FROM events e JOIN event_occurrences eo ON e.id = eo.event_id WHERE e.archived = FALSE AND eo.start_date = CURDATE()) as today,
-            (SELECT COUNT(DISTINCT e.id) FROM events e JOIN event_occurrences eo ON e.id = eo.event_id WHERE e.archived = FALSE AND eo.start_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)) as week
+            (SELECT COUNT(*) FROM events WHERE suppressed = TRUE) as total_suppressed,
+            (SELECT COUNT(DISTINCT e.id) FROM events e JOIN event_occurrences eo ON e.id = eo.event_id WHERE e.archived = FALSE AND e.suppressed = FALSE AND eo.start_date >= CURDATE()) as upcoming,
+            (SELECT COUNT(DISTINCT e.id) FROM events e JOIN event_occurrences eo ON e.id = eo.event_id WHERE e.archived = FALSE AND e.suppressed = FALSE AND eo.start_date = CURDATE()) as today,
+            (SELECT COUNT(DISTINCT e.id) FROM events e JOIN event_occurrences eo ON e.id = eo.event_id WHERE e.archived = FALSE AND e.suppressed = FALSE AND eo.start_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)) as week
     ")->fetch(PDO::FETCH_ASSOC);
 
     return [
@@ -233,6 +265,8 @@ function getEventFilters($pdo) {
          'match' => ['field' => 'period', 'op' => 'in', 'value' => ['today', 'week'], 'and' => ['field' => 'archived', 'op' => '=', 'value' => false]]],
         ['key' => 'period', 'value' => 'all', 'label' => 'all active', 'count' => (int)$stats['total_active'],
          'match' => ['field' => 'archived', 'op' => '=', 'value' => false]],
+        ['key' => 'suppressed', 'value' => 'suppressed', 'label' => 'suppressed', 'count' => (int)$stats['total_suppressed'],
+         'match' => ['field' => 'suppressed', 'op' => '=', 'value' => true]],
         ['key' => 'archived', 'value' => 'archived', 'label' => 'archived', 'count' => (int)$stats['total_archived'],
          'match' => ['field' => 'archived', 'op' => '=', 'value' => true]],
     ];

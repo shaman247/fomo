@@ -249,6 +249,7 @@ def _standardize_time(time_str):
     normalized = time_str.lower().replace(' ', '').replace('.', '')
     if normalized == 'allday':
         return ''
+    # Remove :00 suffix (e.g., '6:00pm' -> '6pm')
     return normalized.replace(':00', '')
 
 

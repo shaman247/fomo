@@ -9,7 +9,7 @@ header('Content-Type: text/html; charset=utf-8');
 require_once 'db_config.php';
 
 if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
-    echo '<p style="color:#c8535b">Invalid location ID</p>';
+    echo '<p class="error-inline">Invalid location ID</p>';
     exit;
 }
 
@@ -25,7 +25,7 @@ $stmt->execute([$location_id]);
 $location = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$location) {
-    echo '<p style="color:#c8535b">Location not found</p>';
+    echo '<p class="error-inline">Location not found</p>';
     exit;
 }
 
@@ -152,16 +152,23 @@ $eventWebsites = $eventWebsites->fetchAll(PDO::FETCH_ASSOC);
         <dt>Coordinates</dt>
         <dd>
             <a href="https://www.google.com/maps?q=<?= $location['lat'] ?>,<?= $location['lng'] ?>"
-               target="_blank" style="color:var(--accent-color);text-decoration:none">
+               target="_blank" class="event-link">
                 <?= round($location['lat'], 5) ?>, <?= round($location['lng'], 5) ?>
             </a>
         </dd>
         <?php else: ?>
-        <dt>Coordinates</dt><dd style="color:var(--warning)">Not set</dd>
+        <dt>Coordinates</dt><dd class="text-warning">Not set</dd>
         <?php endif; ?>
-        <dt>Created</dt><dd style="color:var(--secondary-text)"><?= date('M j, Y', strtotime($location['created_at'])) ?></dd>
+        <dt>Created</dt><dd class="muted"><?= formatShortDate($location['created_at']) ?></dd>
     </dl>
 </div>
+
+<?php if ($location['description']): ?>
+<div class="detail-section">
+    <h3>Description</h3>
+    <p class="detail-description"><?= h($location['description']) ?></p>
+</div>
+<?php endif; ?>
 
 <details class="detail-section" open>
     <summary><h3>Linked Websites (<?= count($websites) ?>)</h3></summary>
@@ -169,30 +176,23 @@ $eventWebsites = $eventWebsites->fetchAll(PDO::FETCH_ASSOC);
     <ul class="item-list">
         <?php foreach ($websites as $w): ?>
         <li>
-            <a href="javascript:void(0)" onclick="openDetail('websites', <?= $w['id'] ?>, '<?= h(addslashes($w['name'])) ?>')"><?= h($w['name']) ?></a>
-            <?php if ($w['disabled']): ?>
-                <span style="color:var(--secondary-text);font-size:10px">(disabled)</span>
-            <?php endif; ?>
-            <?php if ($w['latest_status'] === 'failed'): ?>
-                <span style="color:var(--danger);font-size:10px">(failed)</span>
-            <?php endif; ?>
+            <?= detailLink('websites', $w['id'], $w['name']) ?>
+            <?php if ($w['disabled']): ?><span class="text-muted-xs">(disabled)</span><?php endif; ?>
+            <?php if ($w['latest_status'] === 'failed'): ?><span class="text-muted-xs error-inline">(failed)</span><?php endif; ?>
         </li>
         <?php endforeach; ?>
     </ul>
     <?php else: ?>
-    <p style="color:var(--secondary-text);font-size:12px">None</p>
+    <p class="empty-state">None</p>
     <?php endif; ?>
 </details>
 
 <?php if (!empty($locationTags)): ?>
 <details class="detail-section" open>
     <summary><h3>Location Tags (<?= count($locationTags) ?>)</h3></summary>
-    <div style="display:flex;flex-wrap:wrap;gap:4px">
+    <div class="tag-container">
         <?php foreach ($locationTags as $tag): ?>
-        <a href="javascript:void(0)" onclick="openDetail('tags', '<?= h(addslashes($tag['name'])) ?>', '<?= h(addslashes($tag['name'])) ?>')"
-           style="background:var(--tertiary-bg);padding:3px 10px;border-radius:3px;font-size:13px;text-decoration:none;color:inherit">
-            <?= h($tag['name']) ?>
-        </a>
+        <?= detailLink('tags', $tag['name'], $tag['name'], null, 'tag-link') ?>
         <?php endforeach; ?>
     </div>
 </details>
@@ -201,12 +201,9 @@ $eventWebsites = $eventWebsites->fetchAll(PDO::FETCH_ASSOC);
 <?php if (!empty($eventTags)): ?>
 <details class="detail-section" open>
     <summary><h3>Event Tags (<?= count($eventTags) ?>)</h3></summary>
-    <div style="display:flex;flex-wrap:wrap;gap:4px">
+    <div class="tag-container">
         <?php foreach ($eventTags as $tag): ?>
-        <a href="javascript:void(0)" onclick="openDetail('tags', '<?= h(addslashes($tag['tag'])) ?>', '<?= h(addslashes($tag['tag'])) ?>')"
-           style="background:var(--tertiary-bg);padding:3px 10px;border-radius:3px;font-size:13px;text-decoration:none;color:inherit">
-            <?= h($tag['tag']) ?> <span style="color:var(--secondary-text)">(<?= $tag['count'] ?>)</span>
-        </a>
+        <?= detailLink('tags', $tag['tag'], $tag['tag'], h($tag['tag']) . ' <span class="muted">(' . $tag['count'] . ')</span>', 'tag-link') ?>
         <?php endforeach; ?>
     </div>
 </details>
@@ -215,12 +212,9 @@ $eventWebsites = $eventWebsites->fetchAll(PDO::FETCH_ASSOC);
 <?php if (!empty($eventWebsites)): ?>
 <details class="detail-section" open>
     <summary><h3>Event Websites (<?= count($eventWebsites) ?>)</h3></summary>
-    <div style="display:flex;flex-wrap:wrap;gap:4px">
+    <div class="tag-container">
         <?php foreach ($eventWebsites as $w): ?>
-        <a href="javascript:void(0)" onclick="openDetail('websites', <?= $w['id'] ?>, '<?= h(addslashes($w['name'])) ?>')"
-           style="background:var(--tertiary-bg);padding:3px 10px;border-radius:3px;font-size:13px;text-decoration:none;color:inherit">
-            <?= h($w['name']) ?> <span style="color:var(--secondary-text)">(<?= $w['count'] ?>)</span>
-        </a>
+        <?= detailLink('websites', $w['id'], $w['name'], h($w['name']) . ' <span class="muted">(' . $w['count'] . ')</span>', 'tag-link') ?>
         <?php endforeach; ?>
     </div>
 </details>
@@ -232,35 +226,19 @@ $eventWebsites = $eventWebsites->fetchAll(PDO::FETCH_ASSOC);
     <ul class="event-list">
         <?php foreach ($events as $e): ?>
         <li>
-            <div>
-                <a href="javascript:void(0)" onclick="openDetail('events', <?= $e['id'] ?>, '<?= h(addslashes($e['name'])) ?>')" class="event-link"><?= h($e['name']) ?></a>
-            </div>
-            <div class="date">
-                <?php
-                $occurrences = explode(';;', $e['occurrences']);
-                $occurrenceTexts = [];
-                foreach ($occurrences as $occ) {
-                    list($date, $time) = explode('|', $occ);
-                    $text = date('M j', strtotime($date));
-                    if ($time) {
-                        $text .= ' ' . date('g:ia', strtotime($time));
-                    }
-                    $occurrenceTexts[] = $text;
-                }
-                echo implode(', ', $occurrenceTexts);
-                ?>
-            </div>
+            <div><?= detailLink('events', $e['id'], $e['name'], null, 'event-link') ?></div>
+            <div class="date"><?= formatOccurrences($e['occurrences']) ?></div>
         </li>
         <?php endforeach; ?>
     </ul>
 </details>
 <?php elseif (empty($websites)): ?>
 <div class="detail-section">
-    <p style="color:var(--secondary-text);font-size:12px">No websites linked to this location</p>
+    <p class="empty-state">No websites linked to this location</p>
 </div>
 <?php else: ?>
 <div class="detail-section">
-    <p style="color:var(--secondary-text);font-size:12px">No upcoming events</p>
+    <p class="empty-state">No upcoming events</p>
 </div>
 <?php endif; ?>
 
@@ -271,24 +249,10 @@ $eventWebsites = $eventWebsites->fetchAll(PDO::FETCH_ASSOC);
         <?php foreach ($archivedEvents as $e): ?>
         <li>
             <div>
-                <a href="javascript:void(0)" onclick="openDetail('events', <?= $e['id'] ?>, '<?= h(addslashes($e['name'])) ?>')" class="event-link"><?= h($e['name']) ?></a>
-                <span style="color:var(--secondary-text);font-size:10px">(archived)</span>
+                <?= detailLink('events', $e['id'], $e['name'], null, 'event-link') ?>
+                <span class="text-muted-xs">(archived)</span>
             </div>
-            <div class="date">
-                <?php
-                $occurrences = explode(';;', $e['occurrences']);
-                $occurrenceTexts = [];
-                foreach ($occurrences as $occ) {
-                    list($date, $time) = explode('|', $occ);
-                    $text = date('M j', strtotime($date));
-                    if ($time) {
-                        $text .= ' ' . date('g:ia', strtotime($time));
-                    }
-                    $occurrenceTexts[] = $text;
-                }
-                echo implode(', ', $occurrenceTexts);
-                ?>
-            </div>
+            <div class="date"><?= formatOccurrences($e['occurrences']) ?></div>
         </li>
         <?php endforeach; ?>
     </ul>

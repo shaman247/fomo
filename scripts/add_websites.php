@@ -16,7 +16,7 @@
 // EDIT THIS ARRAY TO ADD NEW WEBSITES
 // ============================================================================
 $new_websites = [
-    // Websites added on 2026-01-13 - see git history
+    // Websites added on 2026-01-19 - see git history
 ];
 
 // ============================================================================

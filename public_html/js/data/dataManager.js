@@ -116,66 +116,84 @@ const DataManager = (() => {
     }
 
     /**
+     * Transforms a raw event into a structured event object
+     * @param {Object} rawEvent - Raw event from data source
+     * @param {number} eventId - ID to assign to the event
+     * @param {Object} state - Application state (for location lookups)
+     * @param {Object} config - Application configuration
+     * @param {boolean} isWindows - Whether running on Windows
+     * @returns {Object|null} Processed event or null if invalid
+     */
+    function transformRawEvent(rawEvent, eventId, state, config, isWindows) {
+        const { lat, lng, tags, occurrences: occurrencesJson, ...restOfEvent } = rawEvent;
+
+        // Decode HTML entities in text fields
+        ['name', 'location', 'sublocation'].forEach(field => {
+            if (restOfEvent[field]) {
+                restOfEvent[field] = Utils.decodeHtml(restOfEvent[field]);
+            }
+        });
+
+        // Validate required fields
+        if (!restOfEvent.name || lat == null || lng == null || lat === '' || lng === '') {
+            return null;
+        }
+
+        // Clear invalid location/sublocation values
+        ['location', 'sublocation'].forEach(field => {
+            if (restOfEvent[field] && (restOfEvent[field].startsWith('None') || restOfEvent[field].startsWith('N/A'))) {
+                restOfEvent[field] = '';
+            }
+        });
+
+        // Parse occurrences
+        let parsedOccurrences;
+        try {
+            parsedOccurrences = parseOccurrences(occurrencesJson);
+        } catch (e) {
+            console.warn(`Could not parse occurrences for event "${rawEvent.name}":`, occurrencesJson, e);
+            return null;
+        }
+
+        // Filter by date range
+        if (!isEventInAppDateRange(parsedOccurrences, config)) {
+            return null;
+        }
+
+        const locationKey = `${lat},${lng}`;
+
+        // On Windows, replace country flag emojis with location emoji
+        let emoji = restOfEvent.emoji;
+        if (isWindows && Utils.isCountryFlagEmoji(emoji)) {
+            const location = state.locationsByLatLng[locationKey];
+            if (location?.emoji) {
+                emoji = location.emoji;
+            }
+        }
+
+        return {
+            id: eventId,
+            ...restOfEvent,
+            emoji,
+            latitude: lat,
+            longitude: lng,
+            locationKey,
+            tags,
+            occurrences: parsedOccurrences
+        };
+    }
+
+    /**
      * Processes event data into structured format
      * @param {Array} eventData - Array of raw event objects
      * @param {Object} state - Application state
      * @param {Object} config - Application configuration
      */
     function processEventData(eventData, state, config) {
-        let windows = Utils.isWindows();
-        state.allEvents = eventData.flatMap((rawEvent, index) => {
-            const { lat, lng, tags, occurrences: occurrencesJson, ...restOfEvent } = rawEvent;
-
-            ['name', 'location', 'sublocation'].forEach(field => {
-                if (restOfEvent[field]) {
-                    restOfEvent[field] = Utils.decodeHtml(restOfEvent[field]);
-                }
-            });
-
-            if (!restOfEvent.name || lat == null || lng == null || lat === '' || lng === '') {
-                return [];
-            }
-
-            ['location', 'sublocation'].forEach(field => {
-                if (restOfEvent[field] && (restOfEvent[field].startsWith('None') || restOfEvent[field].startsWith('N/A'))) {
-                    restOfEvent[field] = '';
-                }
-            });
-
-            let parsedOccurrences;
-            try {
-                parsedOccurrences = parseOccurrences(occurrencesJson);
-            } catch (e) {
-                console.warn(`Could not parse occurrences for event "${rawEvent.name}":`, occurrencesJson, e);
-                return [];
-            }
-
-            if (!isEventInAppDateRange(parsedOccurrences, config)) {
-                return [];
-            }
-
-            const locationKey = `${lat},${lng}`;
-
-            // On Windows, replace country flag emojis with location emoji
-            let emoji = restOfEvent.emoji;
-            if (windows && Utils.isCountryFlagEmoji(emoji)) {
-                const location = state.locationsByLatLng[locationKey];
-                if (location?.emoji) {
-                    emoji = location.emoji;
-                }
-            }
-
-            return [{
-                id: index,
-                ...restOfEvent,
-                emoji: emoji,
-                latitude: lat,
-                longitude: lng,
-                locationKey: locationKey,
-                tags: tags,
-                occurrences: parsedOccurrences
-            }];
-        });
+        const isWindows = Utils.isWindows();
+        state.allEvents = eventData
+            .map((rawEvent, index) => transformRawEvent(rawEvent, index, state, config, isWindows))
+            .filter(Boolean);
 
         rebuildEventLookups(state);
     }
@@ -251,53 +269,11 @@ const DataManager = (() => {
      */
     function appendEventData(newEventData, state, config) {
         const initialEventCount = state.allEvents.length;
+        const isWindows = Utils.isWindows();
 
-        const newEvents = newEventData.flatMap((rawEvent, index) => {
-            const { lat, lng, tags, occurrences: occurrencesJson, ...restOfEvent } = rawEvent;
-
-            ['name', 'location', 'sublocation'].forEach(field => {
-                if (restOfEvent[field]) {
-                    restOfEvent[field] = Utils.decodeHtml(restOfEvent[field]);
-                }
-            });
-
-            if (!restOfEvent.name || lat == null || lng == null || lat === '' || lng === '') {
-                return [];
-            }
-
-            ['location', 'sublocation'].forEach(field => {
-                if (restOfEvent[field] && (restOfEvent[field].startsWith('None') || restOfEvent[field].startsWith('N/A'))) {
-                    restOfEvent[field] = '';
-                }
-            });
-
-            const parsedOccurrences = parseOccurrences(occurrencesJson);
-            if (!isEventInAppDateRange(parsedOccurrences, config)) {
-                return [];
-            }
-
-            const locationKey = `${lat},${lng}`;
-
-            // On Windows, replace country flag emojis with location emoji
-            let emoji = restOfEvent.emoji;
-            if (Utils.isWindows() && Utils.isCountryFlagEmoji(emoji)) {
-                const location = state.locationsByLatLng[locationKey];
-                if (location?.emoji) {
-                    emoji = location.emoji;
-                }
-            }
-
-            return [{
-                id: initialEventCount + index, // Ensure unique IDs
-                ...restOfEvent,
-                emoji: emoji,
-                latitude: lat,
-                longitude: lng,
-                locationKey: locationKey,
-                tags: tags,
-                occurrences: parsedOccurrences
-            }];
-        });
+        const newEvents = newEventData
+            .map((rawEvent, index) => transformRawEvent(rawEvent, initialEventCount + index, state, config, isWindows))
+            .filter(Boolean);
 
         state.allEvents.push(...newEvents);
         rebuildEventLookups(state);

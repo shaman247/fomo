@@ -68,29 +68,14 @@ const SearchManager = (() => {
 
     /**
      * Calculates temporal bonus based on event timing relative to reference date
-     * @param {Object} event - Event object with occurrences
-     * @param {number} referenceDate - Reference timestamp (usually selected date)
-     * @returns {number} Temporal bonus score
+     * Currently disabled - returns 0. Kept for potential future use.
+     * @param {Object} _event - Event object with occurrences (unused)
+     * @param {number} _referenceDate - Reference timestamp (unused)
+     * @returns {number} Always returns 0
      */
-    function calculateTemporalBonus(event, referenceDate) {
-        if (referenceDate <= 0 || !event.occurrences || event.occurrences.length === 0) {
-            return 0;
-        }
-
-        const startTime = event.occurrences[0].start?.getTime() || 0;
-        const endTime = event.occurrences[0].end?.getTime() || startTime;
-
-        // Check if event is happening on the reference date
-        const isOngoingOnReferenceDate = startTime <= referenceDate && endTime >= referenceDate;
-
-        // Calculate distance from reference date with boost for ongoing events
-        let distanceFromReference = Math.abs(startTime - referenceDate);
-        if (isOngoingOnReferenceDate) {
-            distanceFromReference = Math.max(0, distanceFromReference - TIME_CONSTANTS.FIVE_DAYS_MS);
-        }
-
-        // Convert distance to a score bonus
-        return 0;//Math.max(0, SCORE_WEIGHTS.MAX_TEMPORAL_BONUS * (1 - distanceFromReference / TIME_CONSTANTS.THIRTY_DAYS_MS));
+    function calculateTemporalBonus(_event, _referenceDate) {
+        // Temporal scoring is currently disabled
+        return 0;
     }
 
     /**

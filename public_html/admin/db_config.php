@@ -97,3 +97,38 @@ function renderPagination($pagination, $shown_count) {
     $html .= '</div>';
     return $html;
 }
+
+// Detail page helper functions
+
+function formatShortDate($date) {
+    return $date ? date('M j, Y', strtotime($date)) : '-';
+}
+
+function formatDateOnly($date) {
+    return $date ? date('M j', strtotime($date)) : '-';
+}
+
+function formatTime($time) {
+    return $time ? date('g:ia', strtotime($time)) : '';
+}
+
+function detailLink($type, $id, $name, $text = null, $class = '') {
+    $escapedName = h(addslashes($name));
+    $displayText = $text ?? h($name);
+    $classAttr = $class ? " class=\"$class\"" : '';
+    return "<a href=\"javascript:void(0)\" onclick=\"openDetail('$type', " . (is_numeric($id) ? $id : "'$id'") . ", '$escapedName')\"$classAttr>$displayText</a>";
+}
+
+function formatOccurrences($occurrencesStr) {
+    $occurrences = explode(';;', $occurrencesStr);
+    $texts = [];
+    foreach ($occurrences as $occ) {
+        list($date, $time) = explode('|', $occ);
+        $text = formatDateOnly($date);
+        if ($time) {
+            $text .= ' ' . formatTime($time);
+        }
+        $texts[] = $text;
+    }
+    return implode(', ', $texts);
+}

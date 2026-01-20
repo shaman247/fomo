@@ -45,6 +45,23 @@ const Utils = (() => {
         return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     }
 
+    // Shared date/time formatting options
+    const DATE_OPTIONS = { month: 'short', day: 'numeric' };
+    const TIME_OPTIONS = { hour: 'numeric', minute: 'numeric', hour12: true };
+
+    /**
+     * Formats a time string in compact form (e.g., "7pm" instead of "7:00 PM")
+     * @param {Date} date - Date object to format time from
+     * @returns {string} Formatted time string
+     */
+    function formatTimeCompact(date) {
+        return date.toLocaleTimeString('en-US', TIME_OPTIONS)
+            .replace(':00', '')
+            .replace(' AM', 'am')
+            .replace(' PM', 'pm')
+            .replace(' ', '');
+    }
+
     function formatEventDateTimeCompactly(event) {
         const occurrencesToDisplay = event.matching_occurrences || event.occurrences;
         if (!event || !Array.isArray(occurrencesToDisplay) || occurrencesToDisplay.length === 0) {
@@ -64,48 +81,39 @@ const Utils = (() => {
             return "Date/Time N/A";
         }
 
-        const optionsDate = { month: 'short', day: 'numeric' };
-        const optionsTime = { hour: 'numeric', minute: 'numeric', hour12: true };
-
         const hasStartTime = originalStartTime && originalStartTime.trim() !== '';
         const hasEndTime = originalEndTime && originalEndTime.trim() !== '';
 
-        const formatTime = (date) => date.toLocaleTimeString('en-US', optionsTime).replace(':00', '').replace(' AM', 'am').replace(' PM', 'pm').replace(' ', '');
-
-        const startDateStr = start.toLocaleDateString('en-US', optionsDate);
-        const endDateStr = end.toLocaleDateString('en-US', optionsDate);
-
+        const startDateStr = start.toLocaleDateString('en-US', DATE_OPTIONS);
+        const endDateStr = end.toLocaleDateString('en-US', DATE_OPTIONS);
         const isSameDay = start.toDateString() === end.toDateString();
 
-        let startTimeStr = hasStartTime ? formatTime(start) : '';
-        let endTimeStr = hasEndTime ? formatTime(end) : '';
+        const startTimeStr = hasStartTime ? formatTimeCompact(start) : '';
+        const endTimeStr = hasEndTime ? formatTimeCompact(end) : '';
 
         if (isSameDay) {
             if (startTimeStr && endTimeStr && startTimeStr !== endTimeStr) {
                 return `${startDateStr}, ${startTimeStr}–${endTimeStr}`;
-            } else if (startTimeStr) {
-                return `${startDateStr}, ${startTimeStr}`;
-            } else {
-                return startDateStr;
             }
-        } else {
-            let finalString = `${startDateStr}`;
             if (startTimeStr) {
-                finalString += `, ${startTimeStr}`;
+                return `${startDateStr}, ${startTimeStr}`;
             }
-            finalString += ` – ${endDateStr}`;
-            if (endTimeStr) {
-                finalString += `, ${endTimeStr}`;
-            }
-            return finalString;
+            return startDateStr;
         }
+
+        let result = startDateStr;
+        if (startTimeStr) {
+            result += `, ${startTimeStr}`;
+        }
+        result += ` – ${endDateStr}`;
+        if (endTimeStr) {
+            result += `, ${endTimeStr}`;
+        }
+        return result;
     }
 
     function formatMultipleOccurrences(occurrences) {
         const dateGroups = {};
-        const optionsDate = { month: 'short', day: 'numeric' };
-        const optionsTime = { hour: 'numeric', minute: 'numeric', hour12: true };
-        const formatTime = (date) => date.toLocaleTimeString('en-US', optionsTime).replace(':00', '').replace(' AM', 'am').replace(' PM', 'pm').replace(' ', '');
 
         occurrences.forEach(occurrence => {
             const { start, end, originalStartTime, originalEndTime } = occurrence;
@@ -113,7 +121,7 @@ const Utils = (() => {
 
             const dateKey = start.toISOString().split('T')[0];
             if (!dateGroups[dateKey]) {
-                dateGroups[dateKey] = { displayDate: start.toLocaleDateString('en-US', optionsDate), times: new Set() };
+                dateGroups[dateKey] = { displayDate: start.toLocaleDateString('en-US', DATE_OPTIONS), times: new Set() };
             }
 
             const hasStartTime = originalStartTime && originalStartTime.trim() !== '';
@@ -122,11 +130,11 @@ const Utils = (() => {
 
             let timeStr = '';
             if (hasStartTime && hasEndTime && isSameDay) {
-                const startTime = formatTime(start);
-                const endTime = formatTime(end);
+                const startTime = formatTimeCompact(start);
+                const endTime = formatTimeCompact(end);
                 timeStr = (startTime !== endTime) ? `${startTime}–${endTime}` : startTime;
             } else if (hasStartTime) {
-                timeStr = formatTime(start);
+                timeStr = formatTimeCompact(start);
             }
 
             if (timeStr) {
@@ -270,6 +278,27 @@ const Utils = (() => {
     }
 
     /**
+     * Calculates distance between two lat/lng points using Haversine formula
+     * @param {Object} point1 - First point {lat, lng}
+     * @param {Object} point2 - Second point {lat, lng}
+     * @returns {number} Distance in meters
+     */
+    function calculateHaversineDistance(point1, point2) {
+        const R = 6371000; // Earth's radius in meters
+        const lat1 = point1.lat * Math.PI / 180;
+        const lat2 = point2.lat * Math.PI / 180;
+        const deltaLat = (point2.lat - point1.lat) * Math.PI / 180;
+        const deltaLng = (point2.lng - point1.lng) * Math.PI / 180;
+
+        const a = Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
+            Math.cos(lat1) * Math.cos(lat2) *
+            Math.sin(deltaLng / 2) * Math.sin(deltaLng / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+        return R * c;
+    }
+
+    /**
      * Safe localStorage wrapper with error handling
      */
     const SafeStorage = {
@@ -337,6 +366,7 @@ const Utils = (() => {
         getDisplayName,
         debounce,
         throttle,
+        calculateHaversineDistance,
         SafeStorage,
     };
 })();

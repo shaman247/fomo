@@ -66,36 +66,26 @@ async def run_pipeline(website_ids=None, limit=None):
         incomplete_crawled = [r for r in incomplete_results if r['status'] == 'crawled']
         incomplete_extracted = [r for r in incomplete_results if r['status'] == 'extracted']
 
-        # Count retries vs incomplete
-        retry_crawled = [r for r in incomplete_crawled if r.get('original_status') == 'failed']
-        retry_extracted = [r for r in incomplete_extracted if r.get('original_status') == 'failed']
+        def print_incomplete_status(results, action_needed):
+            """Print status summary for a list of incomplete results."""
+            retry_count = sum(1 for r in results if r.get('original_status') == 'failed')
+            incomplete_count = len(results) - retry_count
+            status_parts = []
+            if incomplete_count:
+                status_parts.append(f"{incomplete_count} incomplete")
+            if retry_count:
+                status_parts.append(f"{retry_count} failed retries")
+            print(f"  - {len(results)} need {action_needed} ({', '.join(status_parts)})")
+            for r in results:
+                suffix = " [retry]" if r.get('original_status') == 'failed' else ""
+                print(f"      {r['name']} (run: {r['run_date']}){suffix}")
 
         if incomplete_results:
             print(f"Found {len(incomplete_results)} crawl result(s) to process:")
             if incomplete_crawled:
-                retry_count = len(retry_crawled)
-                incomplete_count = len(incomplete_crawled) - retry_count
-                status_parts = []
-                if incomplete_count:
-                    status_parts.append(f"{incomplete_count} incomplete")
-                if retry_count:
-                    status_parts.append(f"{retry_count} failed retries")
-                print(f"  - {len(incomplete_crawled)} need extraction ({', '.join(status_parts)})")
-                for r in incomplete_crawled:
-                    suffix = " [retry]" if r.get('original_status') == 'failed' else ""
-                    print(f"      {r['name']} (run: {r['run_date']}){suffix}")
+                print_incomplete_status(incomplete_crawled, "extraction")
             if incomplete_extracted:
-                retry_count = len(retry_extracted)
-                incomplete_count = len(incomplete_extracted) - retry_count
-                status_parts = []
-                if incomplete_count:
-                    status_parts.append(f"{incomplete_count} incomplete")
-                if retry_count:
-                    status_parts.append(f"{retry_count} failed retries")
-                print(f"  - {len(incomplete_extracted)} need processing ({', '.join(status_parts)})")
-                for r in incomplete_extracted:
-                    suffix = " [retry]" if r.get('original_status') == 'failed' else ""
-                    print(f"      {r['name']} (run: {r['run_date']}){suffix}")
+                print_incomplete_status(incomplete_extracted, "processing")
         else:
             print("No incomplete crawl results found.")
 
@@ -135,22 +125,23 @@ async def run_pipeline(website_ids=None, limit=None):
         print("STEP 2: Crawling Websites")
         print(f"{'='*60}")
 
+        # Number of concurrent workers for crawling and extraction
+        num_workers = 6
+
         # Group websites by browser settings (text_mode, light_mode, use_stealth)
         # These are browser-level settings, so websites with different settings
         # need separate browser instances
         def get_browser_key(w):
-            # None means use default (True for text/light, False for stealth), explicit values override
-            text_mode = w.get('text_mode') if w.get('text_mode') is not None else True
-            light_mode = w.get('light_mode') if w.get('light_mode') is not None else True
-            use_stealth = w.get('use_stealth') if w.get('use_stealth') is not None else False
+            # Use defaults when value is None: True for text/light, False for stealth
+            text_mode = w['text_mode'] if w.get('text_mode') is not None else True
+            light_mode = w['light_mode'] if w.get('light_mode') is not None else True
+            use_stealth = w['use_stealth'] if w.get('use_stealth') is not None else False
             return (text_mode, light_mode, use_stealth)
 
         website_batches = {}
         for website in websites:
             key = get_browser_key(website)
-            if key not in website_batches:
-                website_batches[key] = []
-            website_batches[key].append(website)
+            website_batches.setdefault(key, []).append(website)
 
         crawl_results = []
 
@@ -163,7 +154,6 @@ async def run_pipeline(website_ids=None, limit=None):
 
             async with AsyncWebCrawler(config=browser_config) as web_crawler:
                 # Worker pool pattern: maintain N concurrent crawlers at all times
-                num_workers = 6
                 queue = asyncio.Queue()
 
                 # Fill the queue with batch websites
@@ -417,7 +407,7 @@ Examples:
         """
     )
     parser.add_argument(
-        '--ids',
+        '--ids', '--website-ids',
         type=str,
         help='Comma-separated list of website IDs to process (ignores crawl_frequency)'
     )
