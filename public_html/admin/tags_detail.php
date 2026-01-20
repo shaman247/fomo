@@ -9,7 +9,7 @@ header('Content-Type: text/html; charset=utf-8');
 require_once 'db_config.php';
 
 if (!isset($_GET['tag']) || empty($_GET['tag'])) {
-    echo '<p style="color:#c8535b">Invalid tag</p>';
+    echo '<p class="error-inline">Invalid tag</p>';
     exit;
 }
 
@@ -33,7 +33,7 @@ $stats->execute([$tag]);
 $stats = $stats->fetch(PDO::FETCH_ASSOC);
 
 if (!$stats || $stats['event_count'] == 0) {
-    echo '<p style="color:#c8535b">Tag not found</p>';
+    echo '<p class="error-inline">Tag not found</p>';
     exit;
 }
 
@@ -103,10 +103,10 @@ $events = $events->fetchAll(PDO::FETCH_ASSOC);
     <h3>Statistics</h3>
     <dl class="detail-grid">
         <dt>Total Events</dt><dd><?= number_format($stats['event_count']) ?></dd>
-        <dt>Upcoming</dt><dd style="color:var(--accent-color)"><?= $stats['upcoming_count'] ?></dd>
+        <dt>Upcoming</dt><dd class="text-success"><?= $stats['upcoming_count'] ?></dd>
         <dt>Sources</dt><dd><?= $stats['website_count'] ?></dd>
-        <dt>First Seen</dt><dd style="color:var(--secondary-text)"><?= $stats['first_event'] ? date('M j, Y', strtotime($stats['first_event'])) : '-' ?></dd>
-        <dt>Last Event</dt><dd style="color:var(--secondary-text)"><?= $stats['last_event'] ? date('M j, Y', strtotime($stats['last_event'])) : '-' ?></dd>
+        <dt>First Seen</dt><dd class="muted"><?= formatShortDate($stats['first_event']) ?></dd>
+        <dt>Last Event</dt><dd class="muted"><?= formatShortDate($stats['last_event']) ?></dd>
     </dl>
 </div>
 
@@ -116,8 +116,8 @@ $events = $events->fetchAll(PDO::FETCH_ASSOC);
     <ul class="item-list">
         <?php foreach ($websites as $w): ?>
         <li>
-            <a href="javascript:void(0)" onclick="openDetail('websites', <?= $w['id'] ?>, '<?= h(addslashes($w['name'])) ?>')"><?= h($w['name']) ?></a>
-            <span style="color:var(--secondary-text);font-size:11px">(<?= $w['event_count'] ?> events)</span>
+            <?= detailLink('websites', $w['id'], $w['name']) ?>
+            <span class="text-muted-sm">(<?= $w['event_count'] ?> events)</span>
         </li>
         <?php endforeach; ?>
     </ul>
@@ -130,8 +130,8 @@ $events = $events->fetchAll(PDO::FETCH_ASSOC);
     <ul class="item-list">
         <?php foreach ($locations as $l): ?>
         <li>
-            <a href="javascript:void(0)" onclick="openDetail('locations', <?= $l['id'] ?>, '<?= h(addslashes($l['name'])) ?>')"><?= h($l['name']) ?></a>
-            <span style="color:var(--secondary-text);font-size:11px">(<?= $l['event_count'] ?> events)</span>
+            <?= detailLink('locations', $l['id'], $l['name']) ?>
+            <span class="text-muted-sm">(<?= $l['event_count'] ?> events)</span>
         </li>
         <?php endforeach; ?>
     </ul>
@@ -141,12 +141,9 @@ $events = $events->fetchAll(PDO::FETCH_ASSOC);
 <?php if (!empty($related)): ?>
 <details class="detail-section" open>
     <summary><h3>Related Tags (<?= count($related) ?>)</h3></summary>
-    <div style="display:flex;flex-wrap:wrap;gap:4px">
+    <div class="tag-container">
         <?php foreach ($related as $r): ?>
-        <a href="javascript:void(0)" onclick="openDetail('tags', '<?= h(addslashes($r['tag'])) ?>', '<?= h(addslashes($r['tag'])) ?>')"
-           style="background:var(--tertiary-bg);padding:2px 8px;border-radius:3px;font-size:11px;text-decoration:none;color:inherit">
-            <?= h($r['tag']) ?> <span style="color:var(--secondary-text)">(<?= $r['count'] ?>)</span>
-        </a>
+        <?= detailLink('tags', $r['tag'], $r['tag'], h($r['tag']) . ' <span class="muted">(' . $r['count'] . ')</span>', 'tag-link-sm') ?>
         <?php endforeach; ?>
     </div>
 </details>
@@ -158,12 +155,12 @@ $events = $events->fetchAll(PDO::FETCH_ASSOC);
     <ul class="event-list">
         <?php foreach ($events as $e): ?>
         <li>
-            <div><a href="javascript:void(0)" onclick="openDetail('events', <?= $e['id'] ?>, '<?= h(addslashes($e['name'])) ?>')" class="event-link"><?= h($e['name']) ?></a></div>
+            <div><?= detailLink('events', $e['id'], $e['name'], null, 'event-link') ?></div>
             <div class="date">
-                <?= date('M j', strtotime($e['start_date'])) ?>
-                <?= $e['start_time'] ? date('g:ia', strtotime($e['start_time'])) : '' ?>
+                <?= formatDateOnly($e['start_date']) ?>
+                <?= formatTime($e['start_time']) ?>
                 <?php if ($e['location_name']): ?>
-                    <span style="color:var(--secondary-text)">@ <?= h($e['location_name']) ?></span>
+                    <span class="muted">@ <?= h($e['location_name']) ?></span>
                 <?php endif; ?>
             </div>
         </li>
@@ -172,6 +169,6 @@ $events = $events->fetchAll(PDO::FETCH_ASSOC);
 </details>
 <?php else: ?>
 <div class="detail-section">
-    <p style="color:var(--secondary-text);font-size:12px">No upcoming events with this tag</p>
+    <p class="empty-state">No upcoming events with this tag</p>
 </div>
 <?php endif; ?>

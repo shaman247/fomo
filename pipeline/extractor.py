@@ -14,6 +14,7 @@ from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 
 import db
+from processor import extract_url_from_content
 
 load_dotenv()
 
@@ -99,15 +100,6 @@ MIN_CONTENT_SIZE = 500
 # =============================================================================
 # Extraction Functions
 # =============================================================================
-
-def extract_url_from_content(content):
-    """Extract URL from first line of content if present."""
-    if content and content.startswith('http'):
-        first_newline = content.find('\n')
-        if first_newline != -1:
-            return content[:first_newline].strip(), content[first_newline + 1:]
-    return None, content
-
 
 def get_prompt(url, page_content, current_date_string, name, notes, existing_events=None):
     """Generate the AI prompt for event extraction."""
@@ -232,7 +224,7 @@ async def extract_events(cursor, connection, crawl_result_id, website_name, note
             raise Exception(f"Gemini API timeout after {GEMINI_TIMEOUT} seconds")
 
         # Handle empty responses
-        if not response_text or not response_text.strip():
+        if not response_text.strip():
             response_text = '{"events": []}'
 
         # Validate JSON

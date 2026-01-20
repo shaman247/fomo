@@ -45,7 +45,7 @@ def export_events(cursor):
     future_limit_date = (datetime.now() + timedelta(days=90)).date()
     init_limit_date = (datetime.now() + timedelta(days=7)).date()
 
-    # Get all events with their occurrences (exclude archived events)
+    # Get all events with their occurrences (exclude archived and suppressed events)
     # Events must have a location with coordinates to be exported
     cursor.execute("""
         SELECT e.id, e.name, e.short_name, e.description, e.emoji,
@@ -56,6 +56,7 @@ def export_events(cursor):
         JOIN locations l ON e.location_id = l.id
         WHERE l.lat IS NOT NULL AND l.lng IS NOT NULL
           AND e.archived = FALSE
+          AND e.suppressed = FALSE
     """)
 
     all_events = []

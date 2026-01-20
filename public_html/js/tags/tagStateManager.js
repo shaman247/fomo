@@ -223,46 +223,26 @@ const TagStateManager = (() => {
     }
 
     /**
-     * Creates a tag element for the tag cloud (non-search context)
+     * Notifies filter change if callback is set
+     */
+    function notifyFilterChange() {
+        if (state.onFilterChangeCallback) {
+            state.onFilterChangeCallback();
+        }
+    }
+
+    /**
+     * Creates a tag button element with click handlers that notify on filter changes
+     * Used both in tag clouds and search results
      * @param {string} tag - Tag name
      * @returns {HTMLElement} Tag button element
      */
     function createTagElement(tag) {
-        return createTagButtonWithHandlers(
-            tag,
-            () => {
-                if (state.onFilterChangeCallback) {
-                    state.onFilterChangeCallback();
-                }
-            },
-            () => {
-                if (state.onFilterChangeCallback) {
-                    state.onFilterChangeCallback();
-                }
-            }
-        );
+        return createTagButtonWithHandlers(tag, notifyFilterChange, notifyFilterChange);
     }
 
-    /**
-     * Creates an interactive tag button for search results
-     * @param {string} tag - Tag name
-     * @returns {HTMLElement} Interactive tag button element
-     */
-    function createInteractiveTagButton(tag) {
-        return createTagButtonWithHandlers(
-            tag,
-            (e) => {
-                if (state.onFilterChangeCallback) {
-                    state.onFilterChangeCallback();
-                }
-            },
-            (e) => {
-                if (state.onFilterChangeCallback) {
-                    state.onFilterChangeCallback();
-                }
-            }
-        );
-    }
+    // Alias for backwards compatibility
+    const createInteractiveTagButton = createTagElement;
 
     /**
      * Creates a button for a search result (location, event, or tag)

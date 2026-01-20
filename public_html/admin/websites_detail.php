@@ -9,7 +9,7 @@ header('Content-Type: text/html; charset=utf-8');
 require_once 'db_config.php';
 
 if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
-    echo '<p style="color:#c8535b">Invalid website ID</p>';
+    echo '<p class="error-inline">Invalid website ID</p>';
     exit;
 }
 
@@ -26,7 +26,7 @@ $stmt->execute([$website_id]);
 $website = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$website) {
-    echo '<p style="color:#c8535b">Website not found</p>';
+    echo '<p class="error-inline">Website not found</p>';
     exit;
 }
 
@@ -68,11 +68,11 @@ $crawl_history = $crawl_history->fetchAll(PDO::FETCH_ASSOC);
     <dl class="detail-grid">
         <dt>ID</dt><dd><?= $website['id'] ?></dd>
         <?php if ($website['base_url']): ?>
-        <dt>Website</dt><dd><a href="<?= h($website['base_url']) ?>" target="_blank" style="color:var(--accent-color);text-decoration:none"><?= h($website['base_url']) ?></a></dd>
+        <dt>Website</dt><dd><a href="<?= h($website['base_url']) ?>" target="_blank" class="event-link"><?= h($website['base_url']) ?></a></dd>
         <?php endif; ?>
         <dt>Frequency</dt><dd><?= $website['crawl_frequency'] ? $website['crawl_frequency'] . ' days' : 'Default' ?></dd>
         <dt>Last Crawl</dt>
-        <dd><?= $website['last_crawled_at'] ? date('M j, Y', strtotime($website['last_crawled_at'])) : 'Never' ?></dd>
+        <dd><?= $website['last_crawled_at'] ? formatShortDate($website['last_crawled_at']) : 'Never' ?></dd>
         <dt>Disabled</dt><dd><?= $website['disabled'] ? 'Yes' : 'No' ?></dd>
         <?php if ($website['selector']): ?>
         <dt>Selector</dt><dd><code class="config-value"><?= h($website['selector']) ?></code></dd>
@@ -83,7 +83,7 @@ $crawl_history = $crawl_history->fetchAll(PDO::FETCH_ASSOC);
         <?php if ($website['max_pages']): ?>
         <dt>Max Pages</dt><dd><?= $website['max_pages'] ?></dd>
         <?php endif; ?>
-        <dt>Created</dt><dd style="color:var(--secondary-text)"><?= date('M j, Y', strtotime($website['created_at'])) ?></dd>
+        <dt>Created</dt><dd class="muted"><?= formatShortDate($website['created_at']) ?></dd>
     </dl>
 </div>
 
@@ -104,14 +104,21 @@ $crawl_history = $crawl_history->fetchAll(PDO::FETCH_ASSOC);
     <ul class="item-list">
         <?php foreach ($locations as $loc): ?>
         <li>
-            <a href="javascript:void(0)" onclick="openDetail('locations', <?= $loc['id'] ?>, '<?= h(addslashes($loc['name'])) ?>')"><?= h($loc['name']) ?></a>
+            <?= detailLink('locations', $loc['id'], $loc['name']) ?>
             <?php if ($loc['lat'] && $loc['lng']): ?>
-            <span style="color:var(--secondary-text);font-size:11px">(<?= round($loc['lat'], 4) ?>, <?= round($loc['lng'], 4) ?>)</span>
+            <span class="text-muted-sm">(<?= round($loc['lat'], 4) ?>, <?= round($loc['lng'], 4) ?>)</span>
             <?php endif; ?>
         </li>
         <?php endforeach; ?>
     </ul>
 </details>
+<?php endif; ?>
+
+<?php if ($website['description']): ?>
+<div class="detail-section">
+    <h3>Description</h3>
+    <p class="detail-description"><?= h($website['description']) ?></p>
+</div>
 <?php endif; ?>
 
 <?php if ($website['keywords']): ?>
@@ -124,7 +131,7 @@ $crawl_history = $crawl_history->fetchAll(PDO::FETCH_ASSOC);
 <?php if ($website['notes']): ?>
 <div class="detail-section">
     <h3>Notes</h3>
-    <p style="font-size:12px;white-space:pre-wrap"><?= h($website['notes']) ?></p>
+    <p class="detail-description"><?= h($website['notes']) ?></p>
 </div>
 <?php endif; ?>
 
@@ -146,12 +153,10 @@ $crawl_history = $crawl_history->fetchAll(PDO::FETCH_ASSOC);
             ?>
             <span class="badge badge-<?= $badge_class ?>"><?= ucfirst($crawl['status']) ?></span>
             <span class="events"><?= $crawl['event_count'] !== null ? $crawl['event_count'] . ' events' : '-' ?></span>
-            <span style="color:var(--secondary-text);font-size:11px">
-                <?= formatBytes($crawl['content_size']) ?>
-            </span>
+            <span class="text-muted-sm"><?= formatBytes($crawl['content_size']) ?></span>
         </div>
         <?php if ($crawl['status'] === 'failed' && $crawl['error_message']): ?>
-        <div class="error-msg" style="margin:-4px 0 8px 80px;font-size:10px"><?= h(substr($crawl['error_message'], 0, 300)) ?></div>
+        <div class="error-msg-inline"><?= h(substr($crawl['error_message'], 0, 300)) ?></div>
         <?php endif; ?>
         <?php endforeach; ?>
     </div>

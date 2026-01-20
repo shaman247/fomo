@@ -10,7 +10,7 @@ header('Content-Type: text/html; charset=utf-8');
 require_once 'db_config.php';
 
 if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
-    echo '<p style="color:#c8535b">Invalid event ID</p>';
+    echo '<p class="error-inline">Invalid event ID</p>';
     exit;
 }
 
@@ -34,7 +34,7 @@ $stmt->execute([$event_id]);
 $event = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$event) {
-    echo '<p style="color:#c8535b">Event not found</p>';
+    echo '<p class="error-inline">Event not found</p>';
     exit;
 }
 
@@ -89,28 +89,13 @@ $sources = $pdo->prepare("
 $sources->execute([$event_id]);
 $sources = $sources->fetchAll(PDO::FETCH_ASSOC);
 
-// Format date/time
-function formatDateTime($date, $time) {
-    if (!$date) return '-';
-    $dt = new DateTime($date);
-    $result = $dt->format('l, F j, Y');
-    if ($time) {
-        $result .= ' at ' . htmlspecialchars($time);
-    }
-    return $result;
-}
-
-function formatShortDate($date) {
-    if (!$date) return '-';
-    return date('M j, Y', strtotime($date));
-}
 ?>
 
 <div class="detail-section">
     <h3>Event Details</h3>
     <dl class="detail-grid">
         <dt>ID</dt><dd><?= $event['id'] ?></dd>
-        <dt>Name</dt><dd style="white-space:normal"><?= h($event['name']) ?></dd>
+        <dt>Name</dt><dd class="text-wrap"><?= h($event['name']) ?></dd>
         <?php if ($event['short_name']): ?>
         <dt>Short Name</dt><dd><?= h($event['short_name']) ?></dd>
         <?php endif; ?>
@@ -123,11 +108,25 @@ function formatShortDate($date) {
         <dt>Status</dt>
         <dd>
             <?php if ($event['archived']): ?>
-                <span style="color:#c8535b;font-weight:bold">⚠️ Archived</span>
-                <span style="color:var(--secondary-text);font-size:11px">(hidden from public site)</span>
+                <span class="status-archived">⚠️ Archived</span>
+                <span class="text-muted-sm">(hidden from public site)</span>
+            <?php elseif ($event['suppressed']): ?>
+                <span class="status-archived">🙈 Suppressed</span>
+                <span class="text-muted-sm">(routine offering, hidden from public site)</span>
             <?php else: ?>
-                <span style="color:#4CAF50">✓ Active</span>
+                <span class="status-active">✓ Active</span>
             <?php endif; ?>
+        </dd>
+        <dt>Suppressed</dt>
+        <dd>
+            <label class="toggle-switch">
+                <input type="checkbox"
+                       data-action="toggle-suppressed"
+                       data-event-id="<?= $event['id'] ?>"
+                       <?= $event['suppressed'] ? 'checked' : '' ?>>
+                <span class="toggle-slider"></span>
+            </label>
+            <span class="text-muted-sm">Hide routine commercial offerings (brunch, happy hour without programming)</span>
         </dd>
     </dl>
 </div>
@@ -135,18 +134,18 @@ function formatShortDate($date) {
 <?php if (count($occurrences) > 0): ?>
 <details class="detail-section" open>
     <summary><h3>Dates (<?= count($occurrences) ?>)</h3></summary>
-    <ul style="list-style:none;font-size:12px;max-height:150px;overflow-y:auto">
+    <ul class="scroll-list scroll-sm">
         <?php foreach ($occurrences as $occ): ?>
-        <li style="padding:4px 0;border-bottom:1px solid var(--border-color)">
+        <li>
             <strong><?= formatShortDate($occ['start_date']) ?></strong>
             <?php if ($occ['start_time']): ?>
-                <span style="color:var(--secondary-text)">at <?= h($occ['start_time']) ?></span>
+                <span class="muted">at <?= h($occ['start_time']) ?></span>
             <?php endif; ?>
             <?php if ($occ['end_date'] && $occ['end_date'] !== $occ['start_date']): ?>
-                <span style="color:var(--secondary-text)">- <?= formatShortDate($occ['end_date']) ?></span>
+                <span class="muted">- <?= formatShortDate($occ['end_date']) ?></span>
             <?php endif; ?>
             <?php if ($occ['end_time']): ?>
-                <span style="color:var(--secondary-text)">to <?= h($occ['end_time']) ?></span>
+                <span class="muted">to <?= h($occ['end_time']) ?></span>
             <?php endif; ?>
         </li>
         <?php endforeach; ?>
@@ -158,17 +157,17 @@ function formatShortDate($date) {
     <h3>Location</h3>
     <dl class="detail-grid">
         <?php if ($event['loc_name']): ?>
-        <dt>Venue</dt><dd><?= $event['loc_emoji'] ?? '' ?> <a href="javascript:void(0)" onclick="openDetail('locations', <?= $event['loc_id'] ?>, '<?= h(addslashes($event['loc_name'])) ?>')" class="event-link"><?= h($event['loc_name']) ?></a></dd>
+        <dt>Venue</dt><dd><?= $event['loc_emoji'] ?? '' ?> <?= detailLink('locations', $event['loc_id'], $event['loc_name'], null, 'event-link') ?></dd>
         <?php if ($event['address']): ?>
-        <dt>Address</dt><dd style="white-space:normal"><?= h($event['address']) ?></dd>
+        <dt>Address</dt><dd class="text-wrap"><?= h($event['address']) ?></dd>
         <?php endif; ?>
         <?php elseif ($event['location_name']): ?>
-        <dt>Venue</dt><dd style="color:var(--warning)"><?= h($event['location_name']) ?> <span style="font-size:10px">(unmatched)</span></dd>
+        <dt>Venue</dt><dd class="text-warning"><?= h($event['location_name']) ?> <span class="text-muted-xs">(unmatched)</span></dd>
         <?php else: ?>
-        <dt>Venue</dt><dd style="color:var(--secondary-text)">Not specified</dd>
+        <dt>Venue</dt><dd class="muted">Not specified</dd>
         <?php endif; ?>
         <?php if ($event['lat'] && $event['lng']): ?>
-        <dt>Coordinates</dt><dd style="font-family:monospace;font-size:11px"><?= round($event['lat'], 5) ?>, <?= round($event['lng'], 5) ?></dd>
+        <dt>Coordinates</dt><dd class="coords-sm"><?= round($event['lat'], 5) ?>, <?= round($event['lng'], 5) ?></dd>
         <?php endif; ?>
     </dl>
 </div>
@@ -176,12 +175,9 @@ function formatShortDate($date) {
 <?php if (!empty($tags)): ?>
 <details class="detail-section" open>
     <summary><h3>Tags (<?= count($tags) ?>)</h3></summary>
-    <div style="display:flex;flex-wrap:wrap;gap:4px">
+    <div class="tag-container">
         <?php foreach ($tags as $tag): ?>
-        <a href="javascript:void(0)" onclick="openDetail('tags', '<?= h(addslashes($tag)) ?>', '<?= h(addslashes($tag)) ?>')"
-           style="background:var(--tertiary-bg);padding:2px 8px;border-radius:6px;font-size:11px;text-decoration:none;color:inherit">
-            <?= h($tag) ?>
-        </a>
+        <?= detailLink('tags', $tag, $tag, null, 'tag-link-sm') ?>
         <?php endforeach; ?>
     </div>
 </details>
@@ -190,17 +186,17 @@ function formatShortDate($date) {
 <?php if ($event['description']): ?>
 <div class="detail-section">
     <h3>Description</h3>
-    <p style="font-size:12px;white-space:pre-wrap;line-height:1.5;max-height:200px;overflow-y:auto"><?= h($event['description']) ?></p>
+    <p class="detail-description scrollable"><?= h($event['description']) ?></p>
 </div>
 <?php endif; ?>
 
 <?php if (!empty($urls)): ?>
 <details class="detail-section" open>
     <summary><h3>Links (<?= count($urls) ?>)</h3></summary>
-    <ul style="list-style:none;font-size:12px">
+    <ul class="scroll-list tight">
         <?php foreach ($urls as $url): ?>
-        <li style="padding:3px 0">
-            <a href="<?= h($url) ?>" target="_blank" class="event-link" style="word-break:break-all">
+        <li>
+            <a href="<?= h($url) ?>" target="_blank" class="event-link text-break">
                 <?= h($url) ?>
             </a>
         </li>
@@ -213,7 +209,7 @@ function formatShortDate($date) {
 <div class="detail-section">
     <h3>Primary Source</h3>
     <dl class="detail-grid">
-        <dt>Website</dt><dd><a href="javascript:void(0)" onclick="openDetail('websites', <?= $event['website_id'] ?>, '<?= h(addslashes($event['website_name'])) ?>')" class="event-link"><?= h($event['website_name']) ?></a></dd>
+        <dt>Website</dt><dd><?= detailLink('websites', $event['website_id'], $event['website_name'], null, 'event-link') ?></dd>
     </dl>
 </div>
 <?php endif; ?>
@@ -221,20 +217,20 @@ function formatShortDate($date) {
 <?php if (!empty($sources)): ?>
 <details class="detail-section" open>
     <summary><h3>Contributing Crawl Events (<?= count($sources) ?>)</h3></summary>
-    <ul style="list-style:none;font-size:12px;max-height:200px;overflow-y:auto">
+    <ul class="scroll-list scroll-md loose">
         <?php foreach ($sources as $src): ?>
-        <li style="padding:6px 0;border-bottom:1px solid var(--border-color)">
-            <div style="display:flex;align-items:center;gap:6px">
+        <li>
+            <div class="source-header">
                 <?php if ($src['is_primary']): ?>
-                <span style="background:var(--accent-color);color:#000;padding:1px 5px;border-radius:6px;font-size:9px;font-weight:600">PRIMARY</span>
+                <span class="badge-primary">PRIMARY</span>
                 <?php endif; ?>
-                <span style="color:var(--secondary-text)">#<?= $src['id'] ?></span>
+                <span class="muted">#<?= $src['id'] ?></span>
                 <?php if ($src['emoji']): ?>
                 <span><?= $src['emoji'] ?></span>
                 <?php endif; ?>
             </div>
-            <div style="margin-top:3px;white-space:normal"><?= h($src['name']) ?></div>
-            <div style="margin-top:3px;color:var(--secondary-text);font-size:11px">
+            <div class="source-content"><?= h($src['name']) ?></div>
+            <div class="source-meta">
                 <?= h($src['website_name'] ?? 'Unknown source') ?>
                 &bull; Crawled <?= formatShortDate($src['run_date']) ?>
                 <?php if ($src['start_date']): ?>
@@ -242,8 +238,8 @@ function formatShortDate($date) {
                 <?php endif; ?>
             </div>
             <?php if ($src['url']): ?>
-            <div style="margin-top:3px">
-                <a href="<?= h($src['url']) ?>" target="_blank" class="event-link" style="font-size:11px;word-break:break-all">
+            <div class="source-link">
+                <a href="<?= h($src['url']) ?>" target="_blank" class="event-link">
                     <?= h(strlen($src['url']) > 60 ? substr($src['url'], 0, 60) . '...' : $src['url']) ?>
                 </a>
             </div>
@@ -257,7 +253,7 @@ function formatShortDate($date) {
 <div class="detail-section">
     <h3>Metadata</h3>
     <dl class="detail-grid">
-        <dt>Created</dt><dd style="color:var(--secondary-text)"><?= date('M j, Y g:ia', strtotime($event['created_at'])) ?></dd>
-        <dt>Updated</dt><dd style="color:var(--secondary-text)"><?= date('M j, Y g:ia', strtotime($event['updated_at'])) ?></dd>
+        <dt>Created</dt><dd class="muted"><?= date('M j, Y g:ia', strtotime($event['created_at'])) ?></dd>
+        <dt>Updated</dt><dd class="muted"><?= date('M j, Y g:ia', strtotime($event['updated_at'])) ?></dd>
     </dl>
 </div>

@@ -94,12 +94,8 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
         # Get per-website crawl settings (with defaults)
         delay_seconds = website.get('delay_before_return_html') or 5
         filter_threshold = website.get('content_filter_threshold')
-        do_scan_full_page = website.get('scan_full_page')
-        if do_scan_full_page is None:
-            do_scan_full_page = True
-        do_remove_overlays = website.get('remove_overlay_elements')
-        if do_remove_overlays is None:
-            do_remove_overlays = False
+        scan_full_page = website.get('scan_full_page', True)
+        remove_overlays = website.get('remove_overlay_elements', False)
         scroll_delay = website.get('scroll_delay') or 0.2
         crawl_timeout = website.get('crawl_timeout') or DEFAULT_CRAWL_TIMEOUT
 
@@ -126,9 +122,9 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
             process_iframes=True,
             cache_mode=CacheMode.BYPASS,  # Don't use cache for fresh content
             js_code=js_code,
-            remove_overlay_elements=do_remove_overlays,
+            remove_overlay_elements=remove_overlays,
             delay_before_return_html=delay_seconds,
-            scan_full_page=do_scan_full_page,
+            scan_full_page=scan_full_page,
             scroll_delay=scroll_delay,
             page_timeout=60000,
             ignore_body_visibility=True,  # Don't skip invisible body elements

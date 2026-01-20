@@ -139,7 +139,7 @@ function renderTab(tab) {
     // Apply filters, search, and sort
     let rows = [...data];
     rows = applyFilter(rows, meta.filters);
-    rows = applySearch(rows, meta.columns);
+    rows = applySearch(rows);
     rows = applySort(rows);
 
     // Render toolbar
@@ -375,21 +375,15 @@ function applyFilter(rows, filters) {
     });
 }
 
-function applySearch(rows, columns) {
+function applySearch(rows) {
     if (!State.searchQuery) return rows;
 
     const query = State.searchQuery.toLowerCase();
-    const searchableKeys = columns
-        .filter(c => c.key === 'name' || c.key === 'tag' || c.key === 'address' || c.key === 'locations')
-        .map(c => c.key);
-
-    // Always search in name field
-    if (!searchableKeys.includes('name')) searchableKeys.push('name');
 
     return rows.filter(row => {
-        for (const key of searchableKeys) {
+        for (const key in row) {
             const val = row[key];
-            if (val && String(val).toLowerCase().includes(query)) {
+            if (typeof val === 'string' && val.toLowerCase().includes(query)) {
                 return true;
             }
         }
@@ -654,6 +648,45 @@ document.addEventListener('keydown', e => {
         } else if ((e.altKey && e.key === 'ArrowRight') || (e.metaKey && e.key === ']')) {
             e.preventDefault();
             detailGoForward();
+        }
+    }
+});
+
+// ============================================================================
+// DETAIL PANEL ACTIONS (toggle switches, etc.)
+// ============================================================================
+
+document.addEventListener('change', async e => {
+    const toggle = e.target.closest('[data-action="toggle-suppressed"]');
+    if (toggle) {
+        const eventId = toggle.dataset.eventId;
+        const suppressed = toggle.checked ? 1 : 0;
+
+        try {
+            const response = await fetch('api.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'toggle_suppressed',
+                    event_id: eventId,
+                    suppressed: suppressed
+                })
+            });
+            const result = await response.json();
+            if (!result.success) {
+                throw new Error(result.error || 'Failed to update');
+            }
+            // Update local data if loaded
+            if (AdminData.events) {
+                const event = AdminData.events.find(e => e.id === parseInt(eventId));
+                if (event) {
+                    event.suppressed = suppressed;
+                }
+            }
+        } catch (err) {
+            console.error('Failed to toggle suppressed:', err);
+            toggle.checked = !toggle.checked; // Revert on error
+            alert('Failed to update: ' + err.message);
         }
     }
 });

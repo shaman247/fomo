@@ -186,7 +186,6 @@ const PopupContentBuilder = (() => {
 
         // Pre-calculate sort-related properties to avoid re-computation inside the sort function.
         const referenceDate = selectedStartDate ? selectedStartDate.getTime() : (activeFilters.sliderStartDate ? activeFilters.sliderStartDate.getTime() : 0);
-        const FIVE_DAYS_IN_MS = 5 * 24 * 60 * 60 * 1000;
 
         const eventsWithSortData = eventsToProcess.map(event => {
             const isMatchingTags = filterFunctions.isEventMatchingTagFilters(event, activeFilters.tagStates);
@@ -203,7 +202,7 @@ const PopupContentBuilder = (() => {
             // Calculate distance with a 5-day boost for ongoing events
             let distanceFromReference = Math.abs(startTime - referenceDate);
             if (isOngoingOnReferenceDate) {
-                distanceFromReference = Math.max(0, distanceFromReference - FIVE_DAYS_IN_MS);
+                distanceFromReference = Math.max(0, distanceFromReference - Constants.TIME.FIVE_DAYS_MS);
             }
 
             return {

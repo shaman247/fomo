@@ -199,9 +199,8 @@ const UIManager = (() => {
 
         // Popup content (delegated to PopupContentBuilder)
         createLocationPopupContent,
-        createPopupHeader: (locationInfo, geotagsSet) => PopupContentBuilder.createPopupHeader(locationInfo, geotagsSet),
-        createEventsList: (eventsAtLocation, activeFilters, locationInfo, filterFunctions, forceDisplayEventId, selectedStartDate) =>
-            PopupContentBuilder.createEventsList(eventsAtLocation, activeFilters, locationInfo, filterFunctions, forceDisplayEventId, selectedStartDate),
-        createEventDetail: (event) => PopupContentBuilder.createEventDetail(event)
+        createPopupHeader: PopupContentBuilder.createPopupHeader,
+        createEventsList: PopupContentBuilder.createEventsList,
+        createEventDetail: PopupContentBuilder.createEventDetail
     };
 })();
