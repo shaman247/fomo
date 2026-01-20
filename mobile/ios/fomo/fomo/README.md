@@ -8,7 +8,6 @@ This app uses a WKWebView to load the fomo.nyc website directly:
 
 - **Identical experience** to the mobile website
 - **Automatic updates** - website changes appear immediately
-- **Minimal maintenance** - just two Swift files
 - **Extensible** - native features can be added later
 
 ## Requirements
@@ -32,14 +31,13 @@ This app uses a WKWebView to load the fomo.nyc website directly:
    - Storage: None
 5. Save to: `mobile/ios/`
 
-### 2. Replace Generated Files
+### 2. Add Source Files
 
 1. In Xcode's project navigator, delete:
    - `ContentView.swift` (move to trash)
-   - `FomoApp.swift` (move to trash)
 
 2. Drag these files into the project navigator:
-   - `FomoApp.swift`
+   - `FomoApp.swift` (replace existing)
    - `WebViewContainer.swift`
 
 3. When prompted, check "Copy items if needed"
@@ -53,10 +51,9 @@ This app uses a WKWebView to load the fomo.nyc website directly:
 ## Files
 
 ```
-mobile/ios/
-├── README.md
-├── FomoApp.swift           # App entry point
-└── WebViewContainer.swift  # WKWebView wrapper
+fomo/
+├── FomoApp.swift          # App entry point
+└── WebViewContainer.swift # WKWebView wrapper
 ```
 
 ## Features
@@ -66,12 +63,11 @@ mobile/ios/
 - [x] Error handling with retry
 - [x] External links open in Safari
 - [x] Swipe-back navigation gesture
-- [x] Geolocation support
 
 ## Future Enhancements
 
-- [ ] Offline mode (cache HTML/JSON)
 - [ ] Push notifications
 - [ ] Share extension
 - [ ] Home screen widget
 - [ ] App Clips
+- [ ] Offline caching

@@ -41,6 +41,8 @@
     width: 90%;
     max-width: 540px;
     max-height: 80vh;
+    max-height: 80dvh;
+    max-height: calc(var(--app-height, 100dvh) * 0.8);
     overflow: hidden;
     display: flex;
     flex-direction: column;

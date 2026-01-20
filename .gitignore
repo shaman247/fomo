@@ -66,3 +66,92 @@ scripts/id_rsa_sync
 
 # Database backups
 database/backups/
+
+# ===================
+# iOS / Xcode
+# ===================
+
+# Build generated
+mobile/ios/**/build/
+mobile/ios/**/DerivedData/
+
+# Xcode user-specific files
+*.xcuserstate
+*.xcuserdatad/
+xcuserdata/
+
+# Xcode workspaces (auto-generated)
+*.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist
+
+# CocoaPods
+mobile/ios/**/Pods/
+mobile/ios/**/Podfile.lock
+
+# Carthage
+mobile/ios/**/Carthage/Build/
+mobile/ios/**/Carthage/Checkouts/
+
+# Swift Package Manager
+mobile/ios/**/.build/
+mobile/ios/**/Package.resolved
+
+# fastlane
+mobile/ios/**/fastlane/report.xml
+mobile/ios/**/fastlane/Preview.html
+mobile/ios/**/fastlane/screenshots/
+mobile/ios/**/fastlane/test_output/
+
+# Code coverage
+*.gcno
+*.gcda
+
+# Playgrounds
+timeline.xctimeline
+playground.xcworkspace
+
+# Archives
+*.xcarchive
+
+# ===================
+# Android
+# ===================
+
+# Gradle
+mobile/android/.gradle/
+mobile/android/**/build/
+!mobile/android/gradle/wrapper/gradle-wrapper.jar
+
+# Local configuration (contains SDK path)
+mobile/android/local.properties
+
+# Android Studio / IntelliJ IDEA
+mobile/android/.idea/caches/
+mobile/android/.idea/libraries/
+mobile/android/.idea/modules.xml
+mobile/android/.idea/workspace.xml
+mobile/android/.idea/navEditor.xml
+mobile/android/.idea/assetWizardSettings.xml
+mobile/android/.idea/*.iml
+*.iml
+
+# Keystore files (signing credentials)
+mobile/android/*.jks
+mobile/android/*.keystore
+mobile/android/keystore.properties
+
+# APK/AAB outputs
+*.apk
+*.aab
+
+# NDK
+mobile/android/**/obj/
+mobile/android/**/.cxx/
+
+# Proguard
+mobile/android/**/proguard/
+
+# Lint
+mobile/android/**/lint-results*
+
+# Android profiling
+*.hprof
