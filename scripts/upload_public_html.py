@@ -4,14 +4,21 @@ Public HTML Upload Script
 This script uploads HTML, CSS, and JavaScript files from the public_html directory to an FTP server.
 Images and fonts directories are excluded.
 
+Smart Upload:
+- Tracks file modification times in upload_state.json
+- Only uploads files that have changed since the last upload
+- Use --force to upload all files regardless of state
+
 Configuration:
 - FTP credentials should be set in .env file:
   FTP_HOST, PUBLIC_HTML_FTP_USER, FTP_PASSWORD, FTP_REMOTE_DIR (optional)
 
 Usage:
-    python upload_public_html.py
+    python upload_public_html.py          # Upload only changed files
+    python upload_public_html.py --force  # Upload all files
 """
 
+import json
 import os
 import sys
 from ftplib import FTP, FTP_TLS
@@ -21,6 +28,29 @@ from dotenv import load_dotenv
 
 # Get the directory where this script is located
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+STATE_FILE = os.path.join(SCRIPT_DIR, 'upload_state.json')
+
+
+def load_upload_state():
+    """Load the previous upload state from JSON file."""
+    if os.path.exists(STATE_FILE):
+        try:
+            with open(STATE_FILE, 'r') as f:
+                return json.load(f)
+        except (json.JSONDecodeError, IOError):
+            return {}
+    return {}
+
+
+def save_upload_state(state):
+    """Save the upload state to JSON file."""
+    with open(STATE_FILE, 'w') as f:
+        json.dump(state, f, indent=2, sort_keys=True)
+
+
+def get_file_mtime(file_path):
+    """Get file modification time as a float timestamp."""
+    return os.path.getmtime(file_path)
 
 
 def ensure_remote_directory(ftp, remote_path):
@@ -49,7 +79,8 @@ def ensure_remote_directory(ftp, remote_path):
                 print(f"  Warning: Could not create directory '{current_path}': {e}")
 
 
-def upload_directory(ftp, local_dir, remote_dir, root_exclude_dirs=None, exclude_files=None, is_root=True):
+def upload_directory(ftp, local_dir, remote_dir, root_exclude_dirs=None, exclude_files=None,
+                     is_root=True, previous_state=None, new_state=None, force=False):
     """
     Recursively upload directory contents to FTP server.
 
@@ -60,16 +91,24 @@ def upload_directory(ftp, local_dir, remote_dir, root_exclude_dirs=None, exclude
         root_exclude_dirs: Set of directory names to exclude at root level only
         exclude_files: Set of relative file paths to exclude (e.g., 'data/events.full.json')
         is_root: Whether this is the root directory level
+        previous_state: Dict of file paths to previous modification times
+        new_state: Dict to populate with current file modification times
+        force: If True, upload all files regardless of modification time
 
     Returns:
-        tuple: (uploaded_count, total_count)
+        tuple: (uploaded_count, skipped_count, total_count)
     """
     if root_exclude_dirs is None:
         root_exclude_dirs = set()
     if exclude_files is None:
         exclude_files = set()
+    if previous_state is None:
+        previous_state = {}
+    if new_state is None:
+        new_state = {}
 
     uploaded_count = 0
+    skipped_count = 0
     total_count = 0
 
     local_path = Path(local_dir)
@@ -98,8 +137,23 @@ def upload_directory(ftp, local_dir, remote_dir, root_exclude_dirs=None, exclude
 
         total_count += 1
 
+        # Get current modification time
+        current_mtime = get_file_mtime(item)
+        previous_mtime = previous_state.get(remote_file_path)
+
+        # Store the current mtime in new state
+        new_state[remote_file_path] = current_mtime
+
+        # Check if file has changed
+        if not force and previous_mtime is not None and current_mtime == previous_mtime:
+            skipped_count += 1
+            continue
+
         try:
-            print(f"  - Uploading {remote_file_path}...", end=' ', flush=True)
+            status = "(new)" if previous_mtime is None else "(modified)"
+            if force and previous_mtime is not None and current_mtime == previous_mtime:
+                status = "(forced)"
+            print(f"  - Uploading {remote_file_path} {status}...", end=' ', flush=True)
 
             with open(item, 'rb') as file:
                 ftp.storbinary(f'STOR {filename}', file)
@@ -133,8 +187,12 @@ def upload_directory(ftp, local_dir, remote_dir, root_exclude_dirs=None, exclude
                 print(f"    Warning: Could not create directory '{new_remote_dir}': {e}")
 
         # Upload subdirectory contents (not root level anymore)
-        sub_uploaded, sub_total = upload_directory(ftp, item, new_remote_dir, root_exclude_dirs, exclude_files, is_root=False)
+        sub_uploaded, sub_skipped, sub_total = upload_directory(
+            ftp, item, new_remote_dir, root_exclude_dirs, exclude_files,
+            is_root=False, previous_state=previous_state, new_state=new_state, force=force
+        )
         uploaded_count += sub_uploaded
+        skipped_count += sub_skipped
         total_count += sub_total
 
         # Change back to current directory after processing subdirectory
@@ -144,10 +202,10 @@ def upload_directory(ftp, local_dir, remote_dir, root_exclude_dirs=None, exclude
             except Exception as e:
                 print(f"  Warning: Could not change back to directory '{remote_dir}': {e}")
 
-    return uploaded_count, total_count
+    return uploaded_count, skipped_count, total_count
 
 
-def main(remote_dir=None, use_tls=False):
+def main(remote_dir=None, use_tls=False, force=False):
     """
     Upload public_html content to FTP server.
 
@@ -171,6 +229,7 @@ def main(remote_dir=None, use_tls=False):
     Args:
         remote_dir: Remote directory on FTP server (optional)
         use_tls: Whether to use FTPS (FTP over TLS) instead of plain FTP
+        force: If True, upload all files regardless of modification time
 
     Returns:
         bool: True if upload was successful, False otherwise
@@ -189,6 +248,17 @@ def main(remote_dir=None, use_tls=False):
         print("\nError: FTP credentials not found in .env file.")
         print("Please set FTP_HOST, PUBLIC_HTML_FTP_USER, and FTP_PASSWORD in your .env file.")
         return False
+
+    # Load previous upload state
+    previous_state = load_upload_state()
+    new_state = {}
+
+    if force:
+        print("Force mode: uploading all files regardless of changes")
+    elif previous_state:
+        print(f"Found previous upload state with {len(previous_state)} files tracked")
+    else:
+        print("No previous upload state found, will upload all files")
 
     try:
         print(f"Connecting to FTP server: {ftp_host}")
@@ -232,16 +302,23 @@ def main(remote_dir=None, use_tls=False):
         }
 
         # Upload directory contents
-        uploaded_count, total_count = upload_directory(
+        uploaded_count, skipped_count, total_count = upload_directory(
             ftp,
             local_dir,
             ftp_remote_dir,
             root_exclude_dirs,
             exclude_files,
-            is_root=True
+            is_root=True,
+            previous_state=previous_state,
+            new_state=new_state,
+            force=force
         )
 
-        print(f"\nSuccessfully uploaded {uploaded_count}/{total_count} files")
+        print(f"\nUploaded {uploaded_count} files, skipped {skipped_count} unchanged files ({total_count} total)")
+
+        # Save the new state
+        save_upload_state(new_state)
+        print(f"Saved upload state to {STATE_FILE}")
 
         # Close FTP connection
         ftp.quit()
@@ -253,5 +330,27 @@ def main(remote_dir=None, use_tls=False):
 
 
 if __name__ == "__main__":
-    success = main()
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description="Upload public_html files to FTP server (smart upload - only changed files)"
+    )
+    parser.add_argument(
+        '--force', '-f',
+        action='store_true',
+        help='Force upload all files, ignoring modification times'
+    )
+    parser.add_argument(
+        '--tls',
+        action='store_true',
+        help='Use FTPS (FTP over TLS) instead of plain FTP'
+    )
+    parser.add_argument(
+        '--remote-dir',
+        help='Remote directory on FTP server (overrides FTP_REMOTE_DIR env var)'
+    )
+
+    args = parser.parse_args()
+
+    success = main(remote_dir=args.remote_dir, use_tls=args.tls, force=args.force)
     sys.exit(0 if success else 1)

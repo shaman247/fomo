@@ -15,9 +15,7 @@
 // ============================================================================
 // EDIT THIS ARRAY TO ADD NEW LOCATIONS
 // ============================================================================
-$new_locations = [
-    // Locations added on 2026-01-19 - Yonkers Animal Shelter (ID 2901) - see git history
-];
+$new_locations = [];
 
 // ============================================================================
 // DATABASE CONFIGURATION

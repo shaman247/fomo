@@ -70,6 +70,7 @@ def get_websites_due_for_crawling(cursor, website_ids=None):
 
     Returns websites where:
     - disabled = FALSE
+    - crawl_after is NULL or in the past
     - last_crawled_at is NULL, OR
     - NOW() - last_crawled_at > crawl_frequency days
     """
@@ -101,6 +102,7 @@ def get_websites_due_for_crawling(cursor, website_ids=None):
             FROM websites w
             LEFT JOIN website_urls wu ON w.id = wu.website_id
             WHERE w.disabled = FALSE
+              AND (w.crawl_after IS NULL OR w.crawl_after <= CURDATE())
               AND (w.force_crawl = TRUE
                    OR w.last_crawled_at IS NULL
                    OR DATEDIFF(NOW(), w.last_crawled_at) >= COALESCE(w.crawl_frequency, 7))

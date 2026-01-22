@@ -15,9 +15,7 @@
 // ============================================================================
 // EDIT THIS ARRAY TO ADD NEW WEBSITES
 // ============================================================================
-$new_websites = [
-    // Websites added on 2026-01-19 - see git history
-];
+$new_websites = [];
 
 // ============================================================================
 // DATABASE CONFIGURATION
@@ -98,6 +96,7 @@ Example website entry:
       'base_url' => 'https://www.bluenotejazz.com/',  // Root domain (optional)
       'urls' => ['https://www.bluenotejazz.com/nyc/schedule'],  // Crawl URLs (optional)
       'crawl_frequency' => 4,      // Days between crawls (optional)
+      'crawl_after' => '2026-06-01', // Don't crawl until this date (optional, for seasonal events)
       'keywords' => '&event_id=',  // URL keywords to follow (optional)
       'max_pages' => 50,           // Max pages to crawl (optional)
       'location' => 'Blue Note',   // Links to existing location (optional)
@@ -242,14 +241,15 @@ function get_location_id_ssh($config, $name) {
 }
 
 function insert_website_pdo($pdo, $site) {
-    $sql = "INSERT INTO websites (name, description, base_url, crawl_frequency, selector, keywords, max_pages, notes)
-            VALUES (:name, :description, :base_url, :crawl_frequency, :selector, :keywords, :max_pages, :notes)";
+    $sql = "INSERT INTO websites (name, description, base_url, crawl_frequency, crawl_after, selector, keywords, max_pages, notes)
+            VALUES (:name, :description, :base_url, :crawl_frequency, :crawl_after, :selector, :keywords, :max_pages, :notes)";
     $stmt = $pdo->prepare($sql);
     $stmt->execute([
         ':name' => $site['name'],
         ':description' => $site['description'] ?? null,
         ':base_url' => $site['base_url'] ?? null,
         ':crawl_frequency' => $site['crawl_frequency'] ?? null,
+        ':crawl_after' => $site['crawl_after'] ?? null,
         ':selector' => $site['selector'] ?? null,
         ':keywords' => $site['keywords'] ?? null,
         ':max_pages' => $site['max_pages'] ?? null,
@@ -259,15 +259,17 @@ function insert_website_pdo($pdo, $site) {
 }
 
 function insert_website_ssh($config, $site, $explicit_id = null) {
+    $crawl_after = isset($site['crawl_after']) ? escape_sql($site['crawl_after']) : 'NULL';
     if ($explicit_id !== null) {
         // Insert with explicit ID to match local database
         $sql = sprintf(
-            "INSERT INTO websites (id, name, description, base_url, crawl_frequency, selector, keywords, max_pages, notes) VALUES (%d, %s, %s, %s, %s, %s, %s, %s, %s); SELECT LAST_INSERT_ID();",
+            "INSERT INTO websites (id, name, description, base_url, crawl_frequency, crawl_after, selector, keywords, max_pages, notes) VALUES (%d, %s, %s, %s, %s, %s, %s, %s, %s, %s); SELECT LAST_INSERT_ID();",
             intval($explicit_id),
             escape_sql($site['name']),
             escape_sql($site['description'] ?? null),
             escape_sql($site['base_url'] ?? null),
             $site['crawl_frequency'] ?? 'NULL',
+            $crawl_after,
             escape_sql($site['selector'] ?? null),
             escape_sql($site['keywords'] ?? null),
             $site['max_pages'] ?? 'NULL',
@@ -275,11 +277,12 @@ function insert_website_ssh($config, $site, $explicit_id = null) {
         );
     } else {
         $sql = sprintf(
-            "INSERT INTO websites (name, description, base_url, crawl_frequency, selector, keywords, max_pages, notes) VALUES (%s, %s, %s, %s, %s, %s, %s, %s); SELECT LAST_INSERT_ID();",
+            "INSERT INTO websites (name, description, base_url, crawl_frequency, crawl_after, selector, keywords, max_pages, notes) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s); SELECT LAST_INSERT_ID();",
             escape_sql($site['name']),
             escape_sql($site['description'] ?? null),
             escape_sql($site['base_url'] ?? null),
             $site['crawl_frequency'] ?? 'NULL',
+            $crawl_after,
             escape_sql($site['selector'] ?? null),
             escape_sql($site['keywords'] ?? null),
             $site['max_pages'] ?? 'NULL',
@@ -437,6 +440,9 @@ foreach ($new_websites as $site) {
         }
         if (!empty($site['crawl_frequency'])) {
             echo "            Crawl frequency: every {$site['crawl_frequency']} days\n";
+        }
+        if (!empty($site['crawl_after'])) {
+            echo "            Crawl after: {$site['crawl_after']}\n";
         }
         if (!empty($site['max_pages'])) {
             echo "            Max pages: {$site['max_pages']}\n";

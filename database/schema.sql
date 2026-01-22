@@ -65,6 +65,7 @@ CREATE TABLE IF NOT EXISTS websites (
     crawl_timeout INT UNSIGNED DEFAULT NULL COMMENT 'Timeout in seconds for entire crawl operation (default: 120)',
     notes TEXT DEFAULT NULL,
     disabled BOOLEAN DEFAULT FALSE COMMENT 'If true, skip this website during crawling',
+    crawl_after DATE DEFAULT NULL COMMENT 'Do not crawl until this date (for seasonal events)',
     force_crawl BOOLEAN DEFAULT FALSE COMMENT 'If true, crawl this website on next run regardless of frequency',
     last_crawled_at TIMESTAMP NULL COMMENT 'When this website was last crawled',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

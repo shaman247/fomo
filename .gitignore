@@ -57,6 +57,9 @@ logs/
 # FTP credentials backup
 .ftpconfig
 
+# Upload state tracking
+scripts/upload_state.json
+
 # PHP config with database credentials
 public_html/api/config.php
 
