@@ -1,4 +1,14 @@
 /**
+ * Detect Android app and add body class for app-specific styling
+ * Must run before DOMContentLoaded to apply styles early
+ */
+(function() {
+    if (navigator.userAgent.includes('FomoApp')) {
+        document.documentElement.classList.add('fomo-android-app');
+    }
+})();
+
+/**
  * Main application entry point - initializes the events mapping application
  * Coordinates all modules and manages application state
  */
@@ -65,6 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
             lastSelectedDates: [],
             selectedLocationKey: null,
             isInitialLoad: true, // Track if we're in initial load phase
+            _moveendSearchTimeout: null, // Debounce timer for search on moveend
         },
 
         /**
@@ -789,9 +800,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.updateVisibleItems();
                 // Update markers for new viewport (adds/removes markers based on visibility)
                 MarkerController.updateMarkersForViewport();
-                // Re-run the search to update scores based on map visibility, even if the search term is empty.
-                const currentTerm = this.elements.omniSearchInput.value.toLowerCase();
-                this.performSearch(currentTerm);
+                // Update z-indices and label visibility in a single projection pass
+                MapManager.updateMarkerVisuals();
+                // Debounce search rescoring — secondary to visual map updates
+                clearTimeout(this._moveendSearchTimeout);
+                this._moveendSearchTimeout = setTimeout(() => {
+                    const currentTerm = this.elements.omniSearchInput.value.toLowerCase();
+                    this.performSearch(currentTerm);
+                }, 150);
                 // Update debug overlay if debug mode is enabled
                 this.updateDebugOverlay();
             });
@@ -968,6 +984,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Display markers on map
             MarkerController.displayEventsOnMap(filteredLocations, openMarker);
+            MapManager.updateMarkerVisuals();
             FilterPanelUI.updateView(allMatchingEventsFlatList);
         },
 

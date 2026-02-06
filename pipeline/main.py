@@ -225,7 +225,9 @@ async def run_pipeline(website_ids=None, limit=None):
                 'notes': website.get('notes', ''),
                 'run_date': None,
                 'source': 'new',
-                'website': website
+                'website': website,
+                'use_vision': website.get('process_images') == 1,
+                'base_url': website.get('base_url', '')
             })
 
         if extraction_queue:
@@ -254,7 +256,9 @@ async def run_pipeline(website_ids=None, limit=None):
                     try:
                         success = await extractor.extract_events(
                             cur, conn, item['crawl_result_id'],
-                            item['name'], item['notes']
+                            item['name'], item['notes'],
+                            use_vision=item.get('use_vision', False),
+                            base_url=item.get('base_url', '')
                         )
                         if success:
                             if item['source'] == 'incomplete':

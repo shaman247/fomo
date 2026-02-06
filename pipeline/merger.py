@@ -30,7 +30,9 @@ def normalize_name_for_dedup(name):
     ascii_name = ''.join(c for c in nfkd if not unicodedata.combining(c))
 
     no_underscores = ascii_name.replace('_', '')
-    no_punct = re.sub(r'[^\w\s]', '', no_underscores.strip().lower())
+    # Replace punctuation with spaces (not just remove) to avoid word concatenation
+    # e.g., "Alice/Bob" should become "Alice Bob", not "AliceBob"
+    no_punct = re.sub(r'[^\w\s]', ' ', no_underscores.strip().lower())
     normalized = re.sub(r'\s+', ' ', no_punct).strip()
     return normalized
 
@@ -42,6 +44,18 @@ def stem_word(word):
         'dinner': 'dine',
         'dining': 'dine',
         'diner': 'dine',
+        # Day abbreviations -> full names
+        'mon': 'monday',
+        'tue': 'tuesday',
+        'tues': 'tuesday',
+        'wed': 'wednesday',
+        'weds': 'wednesday',
+        'thu': 'thursday',
+        'thur': 'thursday',
+        'thurs': 'thursday',
+        'fri': 'friday',
+        'sat': 'saturday',
+        'sun': 'sunday',
     }
     if word in semantic_equivalents:
         return semantic_equivalents[word]
@@ -63,13 +77,53 @@ def stem_word(word):
 
 
 def get_significant_words(name, stem=False):
-    """Get significant words (3+ chars) from normalized name."""
+    """Get significant words (3+ chars) from normalized name, excluding stop words and years."""
+    # Stop words that don't contribute to event identity
+    stop_words = {'the', 'and', 'for', 'with', 'from', 'into', 'your'}
+
     norm = normalize_name_for_dedup(name)
     words = norm.split()
-    result = set(w for w in words if len(w) >= 3)
+
+    def is_year(w):
+        """Check if word is a 4-digit year (2000-2099)."""
+        return len(w) == 4 and w.isdigit() and w.startswith('20')
+
+    result = set(w for w in words if len(w) >= 3 and w not in stop_words and not is_year(w))
     if stem:
         result = set(stem_word(w) for w in result)
     return result
+
+
+def strip_common_prefixes(name):
+    """
+    Strip common prefixes that don't change event identity.
+
+    Handles:
+    - Bracketed prefixes: [member-only], [free], [sold out], [virtual], etc.
+    - Known event program prefixes: FIDO (Prospect Park dog events), etc.
+
+    Examples:
+    - "[member-only] Sewing Machines: Basic Use & Safety" -> "Sewing Machines: Basic Use & Safety"
+    - "FIDO Coffee Bark" -> "Coffee Bark"
+    - "[FREE] Jazz in the Park" -> "Jazz in the Park"
+    """
+    result = name.strip()
+
+    # Remove bracketed prefixes at the start (e.g., [member-only], [free], [virtual])
+    result = re.sub(r'^\s*\[[^\]]+\]\s*', '', result)
+
+    # Known single-word prefixes that indicate event programs/series but not event identity
+    # These are typically added by venues to categorize events
+    known_prefixes = [
+        'FIDO',      # Prospect Park "Friends In Dog Ownership" events
+    ]
+
+    for prefix in known_prefixes:
+        # Match prefix followed by space at start of string (case-insensitive)
+        pattern = rf'^{re.escape(prefix)}\s+'
+        result = re.sub(pattern, '', result, flags=re.IGNORECASE)
+
+    return result.strip()
 
 
 def extract_core_title(name):
@@ -80,7 +134,12 @@ def extract_core_title(name):
     - "Manhattan Theatre Club Presents The Monsters" -> "The Monsters"
     - "The Monsters: a Sibling Love Story" -> "The Monsters"
     - "Lincoln Center Presents: Jazz at Midnight" -> "Jazz at Midnight"
+    - "[member-only] Sewing Class" -> "Sewing Class"
+    - "FIDO Coffee Bark" -> "Coffee Bark"
     """
+    # First strip common prefixes
+    result = strip_common_prefixes(name)
+
     # Common presenter patterns to remove
     presenter_patterns = [
         r'^.+?\s+presents?\s*:?\s*',       # "X Presents: " or "X Present "
@@ -88,7 +147,6 @@ def extract_core_title(name):
         r'^hosted\s+by\s+.+?:\s*',         # "Hosted by X: " (requires colon)
     ]
 
-    result = name
     for pattern in presenter_patterns:
         result = re.sub(pattern, '', result, flags=re.IGNORECASE)
 
@@ -168,10 +226,11 @@ def are_names_similar(name1, name2):
 
     Uses multiple strategies:
     1. Exact match after normalization (removing accents, punctuation, etc.)
-    2. Substring matching for prefix/suffix variations
-    3. Core title extraction (removing "X Presents" prefixes and subtitles)
-    4. Word-based matching (subset or 70%+ Jaccard similarity)
-    5. Stemmed word matching to handle variations like residency/residence
+    2. Match after stripping common prefixes (FIDO, [member-only], etc.)
+    3. Substring matching for prefix/suffix variations
+    4. Core title extraction (removing "X Presents" prefixes and subtitles)
+    5. Word-based matching (subset or 70%+ Jaccard similarity)
+    6. Stemmed word matching to handle variations like residency/residence
 
     Also checks for false positives (events that look similar but are distinct).
     """
@@ -186,21 +245,50 @@ def are_names_similar(name1, name2):
     if norm1 == norm2:
         return True
 
+    # Check if names match after stripping common prefixes (e.g., FIDO, [member-only])
+    stripped1 = normalize_name_for_dedup(strip_common_prefixes(name1))
+    stripped2 = normalize_name_for_dedup(strip_common_prefixes(name2))
+    if stripped1 == stripped2:
+        return True
+
     # Check if one is a substring of the other (for prefix/suffix variations)
     if len(norm1) >= 5 and len(norm2) >= 5:
         if norm1 in norm2 or norm2 in norm1:
             return True
 
+    # Also check substring after stripping prefixes
+    if len(stripped1) >= 5 and len(stripped2) >= 5:
+        if stripped1 in stripped2 or stripped2 in stripped1:
+            return True
+
     # Try comparing core titles (removing presenter prefixes and subtitles)
     core1 = extract_core_title(name1)
     core2 = extract_core_title(name2)
+    skip_core_title_match = False
     if core1 and core2:
         norm_core1 = normalize_name_for_dedup(core1)
         norm_core2 = normalize_name_for_dedup(core2)
         # If core titles match exactly or one contains the other
         if norm_core1 == norm_core2:
-            return True
-        if len(norm_core1) >= 5 and len(norm_core2) >= 5:
+            # But if both have colons (series:episode format), the series name alone
+            # isn't enough - require subtitles to be similar too
+            # e.g., "Backstage Pass: Duran Duran" vs "Backstage Pass: Arctic Monkeys" should NOT match
+            if ':' in name1 and ':' in name2:
+                subtitle1 = name1.split(':', 1)[1].strip()
+                subtitle2 = name2.split(':', 1)[1].strip()
+                if subtitle1 and subtitle2:
+                    norm_sub1 = normalize_name_for_dedup(subtitle1)
+                    norm_sub2 = normalize_name_for_dedup(subtitle2)
+                    # Subtitles must match or one contains the other
+                    if norm_sub1 == norm_sub2 or norm_sub1 in norm_sub2 or norm_sub2 in norm_sub1:
+                        return True
+                    # Subtitles don't match - skip core title matching entirely
+                    skip_core_title_match = True
+                else:
+                    return True
+            else:
+                return True
+        if not skip_core_title_match and len(norm_core1) >= 5 and len(norm_core2) >= 5:
             if norm_core1 in norm_core2 or norm_core2 in norm_core1:
                 return True
 
@@ -230,6 +318,12 @@ def are_names_similar(name1, name2):
         intersection = stemmed1 & stemmed2
         union = stemmed1 | stemmed2
         if len(intersection) / len(union) >= 0.7:
+            return True
+
+        # Asymmetric containment: if 75%+ of the shorter name's words appear in the longer
+        # Handles cases like "Jam Session" matching "TUES 8pm Jam Session. House band: ..."
+        shorter, longer = (stemmed1, stemmed2) if len(stemmed1) <= len(stemmed2) else (stemmed2, stemmed1)
+        if len(shorter) >= 2 and len(intersection) / len(shorter) >= 0.75:
             return True
 
     return False
@@ -418,6 +512,12 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None):
 
         if matched_event_id:
             # Merge with existing event
+            # Un-archive event if it was previously archived (event found in new crawl)
+            cursor.execute(
+                "UPDATE events SET archived = FALSE WHERE id = %s AND archived = TRUE",
+                (matched_event_id,)
+            )
+
             # Add URL if not already present
             if url:
                 # Check if URL already exists for this event to avoid duplicates
@@ -434,7 +534,8 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None):
             # Update location_id if not already set (in case location was added after event)
             if location_id:
                 cursor.execute("SELECT location_id FROM events WHERE id = %s", (matched_event_id,))
-                current_location_id = cursor.fetchone()[0] if cursor.rowcount > 0 else None
+                result = cursor.fetchone()
+                current_location_id = result[0] if result else None
                 if not current_location_id:
                     cursor.execute("UPDATE events SET location_id = %s WHERE id = %s", (location_id, matched_event_id))
 

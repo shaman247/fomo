@@ -6,10 +6,10 @@ Exports local tables and imports them to the production server.
 This is the opposite of sync_feedback.py - it pushes data UP to production.
 
 Tables synced (source of truth lives locally):
-- locations, location_tags, location_alternate_names
-- websites, website_locations, website_tags, website_urls
+- locations, location_tags, location_alternate_names, location_instagram
+- websites, website_locations, website_tags, website_urls, website_instagram
 - events, event_occurrences, event_tags, event_urls, event_sources
-- tags, tag_rules
+- tags, tag_rules, instagram_accounts
 - crawl_runs, crawl_results, crawl_events, crawl_event_occurrences, crawl_event_tags
 
 Tables NOT synced (production is source of truth):
@@ -85,17 +85,20 @@ SYNC_TABLES = [
     # Core reference tables first
     'tags',
     'tag_rules',
+    'instagram_accounts',
     # User accounts (for edit tracking)
     'users',
     # Locations
     'locations',
     'location_tags',
     'location_alternate_names',
+    'location_instagram',
     # Websites
     'websites',
     'website_locations',
     'website_tags',
     'website_urls',
+    'website_instagram',
     # Events (depend on locations, websites, tags)
     'events',
     'event_occurrences',

@@ -95,9 +95,7 @@ fun FomoWebViewScreen(
     Box(modifier = Modifier.fillMaxSize()) {
         // WebView with SwipeRefresh
         FomoWebView(
-            // TODO: Change back to "https://fomo.nyc" for production
-            // 10.0.2.2 is Android emulator's alias for host machine's localhost
-            url = "http://10.0.2.2/fomo/public_html/index.html",
+            url = BuildConfig.BASE_URL,
             onWebViewCreated = { webView ->
                 webViewInstance = webView
                 onWebViewCreated(webView)
@@ -233,14 +231,27 @@ fun FomoWebView(
                             // Stop swipe refresh animation
                             (parent as? SwipeRefreshLayout)?.isRefreshing = false
 
+                            // Get status bar height for safe area inset
+                            val statusBarHeight = view?.rootWindowInsets?.let { insets ->
+                                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                                    insets.getInsets(android.view.WindowInsets.Type.statusBars()).top
+                                } else {
+                                    @Suppress("DEPRECATION")
+                                    insets.systemWindowInsetTop
+                                }
+                            } ?: 0
+
                             // Fix viewport height for Android WebView
                             // 100vh is unreliable in WebViews - set --app-height CSS variable
+                            // Also set --safe-area-top for status bar padding
                             view?.evaluateJavascript("""
                                 (function() {
+                                    var safeAreaTop = $statusBarHeight;
                                     function setAppHeight() {
                                         var vh = window.innerHeight;
-                                        console.log('DEBUG: Setting --app-height to ' + vh + 'px');
+                                        console.log('DEBUG: Setting --app-height to ' + vh + 'px, --safe-area-top to ' + safeAreaTop + 'px');
                                         document.documentElement.style.setProperty('--app-height', vh + 'px');
+                                        document.documentElement.style.setProperty('--safe-area-top', safeAreaTop + 'px');
 
                                         // Debug: check filter panel
                                         var filterPanel = document.getElementById('filter-panel');
@@ -306,8 +317,9 @@ fun FomoWebView(
                         ): Boolean {
                             val requestUrl = request?.url?.toString() ?: return false
 
-                            // Allow fomo.nyc navigation within WebView
-                            if (requestUrl.contains("fomo.nyc")) {
+                            // Allow fomo.nyc and local dev server navigation within WebView
+                            val baseUrl = BuildConfig.BASE_URL
+                            if (requestUrl.contains("fomo.nyc") || requestUrl.startsWith(baseUrl)) {
                                 return false
                             }
 

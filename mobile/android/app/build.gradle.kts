@@ -20,7 +20,13 @@ extensions.configure<ApplicationExtension> {
     }
 
     buildTypes {
+        getByName("debug") {
+            // For local testing: use your machine's local IP for physical device testing
+            // Use 10.0.2.2 instead if testing on Android emulator
+            buildConfigField("String", "BASE_URL", "\"http://192.168.1.186/fomo/public_html\"")
+        }
         getByName("release") {
+            buildConfigField("String", "BASE_URL", "\"https://fomo.nyc\"")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
@@ -37,6 +43,7 @@ extensions.configure<ApplicationExtension> {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 

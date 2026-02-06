@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS locations (
     short_name VARCHAR(100) DEFAULT NULL COMMENT 'Display name for map labels and buttons',
     very_short_name VARCHAR(50) DEFAULT NULL COMMENT 'Abbreviated name when space is limited',
     address VARCHAR(500),
+    description TEXT DEFAULT NULL,
     lat DECIMAL(10, 6),
     lng DECIMAL(10, 6),
     emoji VARCHAR(10),
@@ -34,10 +35,13 @@ CREATE TABLE IF NOT EXISTS location_alternate_names (
     id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     location_id INT UNSIGNED NOT NULL,
     alternate_name VARCHAR(255) NOT NULL,
+    website_id INT UNSIGNED DEFAULT NULL COMMENT 'Scope to specific website (NULL = global)',
 
     INDEX idx_location (location_id),
     INDEX idx_alt_name (alternate_name),
-    FOREIGN KEY (location_id) REFERENCES locations(id) ON DELETE CASCADE
+    INDEX idx_website_id (website_id),
+    FOREIGN KEY (location_id) REFERENCES locations(id) ON DELETE CASCADE,
+    FOREIGN KEY (website_id) REFERENCES websites(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================================
@@ -48,21 +52,14 @@ CREATE TABLE IF NOT EXISTS location_alternate_names (
 CREATE TABLE IF NOT EXISTS websites (
     id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
+    description TEXT DEFAULT NULL,
     base_url VARCHAR(500) DEFAULT NULL COMMENT 'Main website URL (informational, not crawled)',
     crawl_frequency INT UNSIGNED DEFAULT NULL COMMENT 'Days between crawls',
     selector VARCHAR(500) DEFAULT NULL COMMENT 'CSS selector for click-to-load',
     num_clicks INT UNSIGNED DEFAULT NULL COMMENT 'Number of clicks for pagination',
+    js_code TEXT DEFAULT NULL COMMENT 'JavaScript code to execute before crawling',
     keywords VARCHAR(255) DEFAULT NULL COMMENT 'URL filter keywords',
     max_pages INT UNSIGNED DEFAULT 30 COMMENT 'Max pages for deep crawl',
-    delay_before_return_html INT UNSIGNED DEFAULT NULL COMMENT 'Seconds to wait for JS to render (default: 5)',
-    content_filter_threshold DECIMAL(3,2) DEFAULT NULL COMMENT 'Pruning filter threshold 0-1 (NULL disables filter)',
-    scan_full_page TINYINT(1) DEFAULT NULL COMMENT 'Scroll full page before capture (default: true)',
-    remove_overlay_elements TINYINT(1) DEFAULT NULL COMMENT 'Remove popup/overlay elements (default: true)',
-    javascript_enabled TINYINT(1) DEFAULT NULL COMMENT 'Enable JavaScript execution (default: true)',
-    text_mode TINYINT(1) DEFAULT NULL COMMENT 'Disable images for text-only crawl (default: true)',
-    light_mode TINYINT(1) DEFAULT NULL COMMENT 'Use minimal browser features (default: true)',
-    scroll_delay DECIMAL(3,2) DEFAULT NULL COMMENT 'Seconds to pause between scroll steps (default: 0.2)',
-    crawl_timeout INT UNSIGNED DEFAULT NULL COMMENT 'Timeout in seconds for entire crawl operation (default: 120)',
     notes TEXT DEFAULT NULL,
     disabled BOOLEAN DEFAULT FALSE COMMENT 'If true, skip this website during crawling',
     crawl_after DATE DEFAULT NULL COMMENT 'Do not crawl until this date (for seasonal events)',
@@ -70,6 +67,16 @@ CREATE TABLE IF NOT EXISTS websites (
     last_crawled_at TIMESTAMP NULL COMMENT 'When this website was last crawled',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    delay_before_return_html INT UNSIGNED DEFAULT NULL COMMENT 'Seconds to wait for JS to render (default: 5)',
+    content_filter_threshold DECIMAL(3,2) DEFAULT NULL COMMENT 'Pruning filter threshold 0-1 (NULL disables filter)',
+    scan_full_page TINYINT(1) DEFAULT NULL COMMENT 'Scroll full page before capture (default: true)',
+    remove_overlay_elements TINYINT(1) DEFAULT NULL COMMENT 'Remove popup/overlay elements (default: true)',
+    javascript_enabled TINYINT(1) DEFAULT NULL COMMENT 'Enable JavaScript execution (default: true)',
+    text_mode TINYINT(1) DEFAULT NULL COMMENT 'Disable images for text-only crawl (default: false)',
+    light_mode TINYINT(1) DEFAULT NULL COMMENT 'Use minimal browser features (default: true)',
+    use_stealth TINYINT(1) DEFAULT NULL COMMENT 'Use stealth mode to avoid detection',
+    scroll_delay DECIMAL(3,2) DEFAULT NULL COMMENT 'Seconds to pause between scroll steps (default: 0.2)',
+    crawl_timeout INT UNSIGNED DEFAULT NULL COMMENT 'Timeout in seconds for entire crawl operation (default: 120)',
 
     INDEX idx_name (name),
     INDEX idx_last_crawled (last_crawled_at),
@@ -81,6 +88,7 @@ CREATE TABLE IF NOT EXISTS website_urls (
     id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     website_id INT UNSIGNED NOT NULL,
     url VARCHAR(2000) NOT NULL,
+    js_code TEXT DEFAULT NULL COMMENT 'JavaScript code to execute for this specific URL',
     sort_order INT UNSIGNED DEFAULT 0,
 
     INDEX idx_website (website_id),
@@ -112,6 +120,42 @@ CREATE TABLE IF NOT EXISTS website_tags (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================================
+-- INSTAGRAM
+-- ============================================================================
+
+-- Instagram accounts - stores Instagram handles for locations and websites
+CREATE TABLE IF NOT EXISTS instagram_accounts (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    handle VARCHAR(100) NOT NULL,
+    name VARCHAR(255) DEFAULT NULL,
+    description VARCHAR(500) DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    UNIQUE KEY unique_handle (handle)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Location-Instagram relationship (many-to-many)
+CREATE TABLE IF NOT EXISTS location_instagram (
+    location_id INT UNSIGNED NOT NULL,
+    instagram_id INT UNSIGNED NOT NULL,
+
+    PRIMARY KEY (location_id, instagram_id),
+    FOREIGN KEY (location_id) REFERENCES locations(id) ON DELETE CASCADE,
+    FOREIGN KEY (instagram_id) REFERENCES instagram_accounts(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Website-Instagram relationship (many-to-many)
+CREATE TABLE IF NOT EXISTS website_instagram (
+    website_id INT UNSIGNED NOT NULL,
+    instagram_id INT UNSIGNED NOT NULL,
+
+    PRIMARY KEY (website_id, instagram_id),
+    FOREIGN KEY (website_id) REFERENCES websites(id) ON DELETE CASCADE,
+    FOREIGN KEY (instagram_id) REFERENCES instagram_accounts(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================================
 -- EVENTS
 -- ============================================================================
 
@@ -125,16 +169,18 @@ CREATE TABLE IF NOT EXISTS events (
     location_id INT UNSIGNED DEFAULT NULL,
     location_name VARCHAR(255) DEFAULT NULL COMMENT 'Original location name from source',
     sublocation VARCHAR(255) DEFAULT NULL COMMENT 'Room, floor, etc.',
-    lat DECIMAL(10, 6),
-    lng DECIMAL(10, 6),
     website_id INT UNSIGNED DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    archived TINYINT(1) DEFAULT 0 COMMENT 'If true, event is archived (no future occurrences)',
+    suppressed TINYINT(1) DEFAULT 0 COMMENT 'If true, event is hidden from display',
+    reviewed TINYINT(1) DEFAULT 0 COMMENT 'If true, event has been reviewed for suppression',
 
     INDEX idx_name (name(255)),
     INDEX idx_location (location_id),
     INDEX idx_website (website_id),
-    INDEX idx_coords (lat, lng),
+    INDEX idx_archived (archived),
+    INDEX idx_reviewed (reviewed),
     FOREIGN KEY (location_id) REFERENCES locations(id) ON DELETE SET NULL,
     FOREIGN KEY (website_id) REFERENCES websites(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -257,15 +303,17 @@ CREATE TABLE IF NOT EXISTS crawl_events (
     emoji VARCHAR(10),
     location_name VARCHAR(255) DEFAULT NULL COMMENT 'Raw location name from crawl',
     sublocation VARCHAR(255) DEFAULT NULL,
-    lat DECIMAL(10, 6),
-    lng DECIMAL(10, 6),
+    location_id INT UNSIGNED DEFAULT NULL COMMENT 'Matched location from database',
     url VARCHAR(2000) DEFAULT NULL COMMENT 'Primary event URL',
     raw_data JSON DEFAULT NULL COMMENT 'Full JSON object from crawl',
+    content_hash CHAR(64) DEFAULT NULL COMMENT 'SHA-256 hash for deduplication',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     INDEX idx_crawl_result (crawl_result_id),
     INDEX idx_name (name(255)),
+    INDEX idx_content_hash (content_hash),
     INDEX idx_location_name (location_name),
+    INDEX idx_location_id (location_id),
     FOREIGN KEY (crawl_result_id) REFERENCES crawl_results(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -422,4 +470,25 @@ CREATE TABLE IF NOT EXISTS conflicts (
     FOREIGN KEY (local_edit_id) REFERENCES edits(id) ON DELETE CASCADE,
     FOREIGN KEY (website_edit_id) REFERENCES edits(id) ON DELETE CASCADE,
     FOREIGN KEY (resolved_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================================
+-- GRANTEES (NYSCA Grant Recipients)
+-- ============================================================================
+
+-- Grantees table - NYSCA grant recipients for potential website additions
+CREATE TABLE IF NOT EXISTS grantees (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL COMMENT 'Organization name from NYSCA grant list',
+    area VARCHAR(100) DEFAULT NULL COMMENT 'NY region (e.g., New York City, Long Island)',
+    website_id INT UNSIGNED DEFAULT NULL COMMENT 'Linked website if added to our database',
+    exclusion_reason VARCHAR(500) DEFAULT NULL COMMENT 'Why website was not added (if applicable)',
+    notes TEXT DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    UNIQUE KEY unique_name (name),
+    INDEX idx_area (area),
+    INDEX idx_website (website_id),
+    FOREIGN KEY (website_id) REFERENCES websites(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

@@ -294,10 +294,13 @@ def group_event_occurrences(rows, source_url=None):
         if alpha_chars and len(event_name) > 5:
             num_upper = sum(1 for char in alpha_chars if char.isupper())
             if (num_upper / len(alpha_chars)) > 0.5:
+                # Find two-letter acronyms before title casing (excluding common words)
+                common_words = {'OF', 'OR', 'IN', 'AT', 'ON', 'TO', 'BY', 'AN', 'AS', 'IF', 'SO', 'UP', 'WE', 'NO', 'BE', 'DO', 'GO', 'HE', 'IT', 'ME', 'MY', 'US'}
+                two_letter_acronyms = {m for m in re.findall(r'\b([A-Z]{2})\b', event_name) if m not in common_words}
+
                 event_name = event_name.title()
-                event_name = re.sub(r"['']S\b", "'s", event_name)
-                event_name = re.sub(r"['']T\b", "'t", event_name)
-                event_name = re.sub(r"['']D\b", "'d", event_name)
+                # Lowercase any letter after apostrophe at word boundary (handles 's, 't, 'd, 've, 'll, etc.)
+                event_name = re.sub(r"[''ʼ]([A-Z])\b", lambda m: "'" + m.group(1).lower(), event_name)
                 event_name = re.sub(r'(?<!^)\b(A|And|Of|The|Or|In|At|On|For|To|With|From|By)\b',
                                    lambda m: m.group(1).lower(), event_name)
                 event_name = re.sub(r'\bW/', r'w/', event_name)
@@ -308,6 +311,9 @@ def group_event_occurrences(rows, source_url=None):
                                    lambda m: m.group(1) + m.group(2).lower(), event_name)
                 event_name = re.sub(r'\b([BCDFGHJKLMNPQRSTVWXYZ])([bcdfghjklmnpqrstvwxyz])\b',
                                    lambda m: m.group(0).upper(), event_name)
+                # Restore two-letter acronyms that contained vowels
+                for acronym in two_letter_acronyms:
+                    event_name = re.sub(r'\b' + acronym.title() + r'\b', acronym, event_name)
                 row_dict['name'] = event_name
 
         start_date = row_dict.get('start_date', '')
@@ -333,12 +339,13 @@ def group_event_occurrences(rows, source_url=None):
             if sublocation and sublocation.upper() != 'N/A':
                 base_event['sublocation'] = sublocation
 
+            # Prefer event-specific URL over source_url (which is often generic)
             urls = []
-            if source_url:
-                urls.append(source_url)
             url = row_dict.get('url', '').strip()
-            if url and url not in urls:
+            if url:
                 urls.append(url)
+            if source_url and source_url not in urls:
+                urls.append(source_url)
             base_event['urls'] = urls
 
             grouped_events[group_key] = base_event
@@ -593,11 +600,15 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
     normalized_name = _normalize_location_name(event_name_raw)
     full_loc = f"{normalized_loc} {normalized_subloc}".strip()
 
-    search_keys = []
+    # Location-only keys (for prefix matching where event names cause false positives)
+    location_keys = []
     if len(full_loc) > 3:
-        search_keys.append(full_loc)
-    if len(normalized_loc) > 3:
-        search_keys.append(normalized_loc)
+        location_keys.append(full_loc)
+    if len(normalized_loc) > 3 and normalized_loc not in location_keys:
+        location_keys.append(normalized_loc)
+
+    # All search keys including event name (for exact and fuzzy matching)
+    search_keys = location_keys.copy()
     if len(normalized_name) > 3:
         search_keys.append(normalized_name)
 
@@ -634,7 +645,8 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
             return make_result(addresses_tier[normalized_addr])
 
     # Step 4: Prefix matching (e.g., "Devocíon" matches "Devocíon (Williamsburg)")
-    for key in search_keys:
+    # Only use location_keys here to avoid matching event names to unrelated locations
+    for key in location_keys:
         if len(key) >= 5:
             for loc_key, match in locations_map.get('names', {}).items():
                 if loc_key.startswith(key + ' ') or loc_key.startswith(key + '('):

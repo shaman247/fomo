@@ -411,10 +411,19 @@ span.flatpickr-weekday {
         overflow: visible;
         margin: 0px;
         padding: 2px;
+        /* Add safe area padding for devices with notches/status bars (Android app, iOS) */
+        /* Uses CSS variable --safe-area-top injected by Android app, or env() fallback */
+        padding-top: max(2px, var(--safe-area-top, env(safe-area-inset-top, 0px)));
         display: flex;
         flex-direction: column;
         z-index: var(--z-panel);
         transition: max-height 0.3s ease;
+    }
+
+    /* Fallback for Android app if CSS variables aren't injected */
+    .fomo-android-app #filter-panel {
+        /* Use 36px as reasonable default for Android status bar (typically 24-48dp) */
+        padding-top: max(2px, var(--safe-area-top, 36px));
     }
 
     #filter-panel.tags-collapsed {

@@ -48,7 +48,7 @@ const Constants = (() => {
         MOBILE_BREAKPOINT: 768,
 
         // Marker limits
-        MAX_MARKERS: 1000,
+        MAX_MARKERS: 300,
 
         // Marker label visibility thresholds
         // Maximum visible markers before hiding all labels

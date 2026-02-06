@@ -59,6 +59,17 @@ def create_connection():
         return None
 
 
+def _parse_url_data(url_string):
+    """Parse URL data from concatenated format 'url:::js_code|||url:::js_code|||...'"""
+    urls = []
+    for item in url_string.split('|||'):
+        parts = item.split(':::', 1)
+        url = parts[0]
+        js_code = parts[1] if len(parts) > 1 and parts[1] else None
+        urls.append({'url': url, 'js_code': js_code})
+    return urls
+
+
 def get_websites_due_for_crawling(cursor, website_ids=None):
     """
     Get websites that are due for crawling based on crawl_frequency.
@@ -82,8 +93,8 @@ def get_websites_due_for_crawling(cursor, website_ids=None):
                    w.keywords, w.max_pages, w.notes,
                    w.delay_before_return_html, w.content_filter_threshold, w.scan_full_page,
                    w.remove_overlay_elements, w.javascript_enabled, w.text_mode, w.light_mode,
-                   w.use_stealth, w.scroll_delay, w.crawl_timeout,
-                   GROUP_CONCAT(wu.url ORDER BY wu.sort_order SEPARATOR '|||') as urls
+                   w.use_stealth, w.scroll_delay, w.crawl_timeout, w.process_images, w.base_url,
+                   GROUP_CONCAT(CONCAT(wu.url, ':::', IFNULL(wu.js_code, '')) ORDER BY wu.sort_order SEPARATOR '|||') as urls
             FROM websites w
             LEFT JOIN website_urls wu ON w.id = wu.website_id
             WHERE w.id IN ({placeholders})
@@ -97,8 +108,8 @@ def get_websites_due_for_crawling(cursor, website_ids=None):
                    w.keywords, w.max_pages, w.notes,
                    w.delay_before_return_html, w.content_filter_threshold, w.scan_full_page,
                    w.remove_overlay_elements, w.javascript_enabled, w.text_mode, w.light_mode,
-                   w.use_stealth, w.scroll_delay, w.crawl_timeout,
-                   GROUP_CONCAT(wu.url ORDER BY wu.sort_order SEPARATOR '|||') as urls
+                   w.use_stealth, w.scroll_delay, w.crawl_timeout, w.process_images, w.base_url,
+                   GROUP_CONCAT(CONCAT(wu.url, ':::', IFNULL(wu.js_code, '')) ORDER BY wu.sort_order SEPARATOR '|||') as urls
             FROM websites w
             LEFT JOIN website_urls wu ON w.id = wu.website_id
             WHERE w.disabled = FALSE
@@ -132,7 +143,9 @@ def get_websites_due_for_crawling(cursor, website_ids=None):
             'use_stealth': row[15],
             'scroll_delay': float(row[16]) if row[16] is not None else None,
             'crawl_timeout': row[17],
-            'urls': row[18].split('|||') if row[18] else []
+            'process_images': row[18],
+            'base_url': row[19],
+            'urls': _parse_url_data(row[20]) if row[20] else []
         }
         websites.append(website)
 

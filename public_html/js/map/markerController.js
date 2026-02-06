@@ -187,8 +187,6 @@ const MarkerController = (() => {
             createMarkerForLocation(locationKey, eventsAtLocation);
         }
 
-        // Update label visibility based on marker density
-        MapManager.updateLabelVisibility();
     }
 
     /**
@@ -273,11 +271,6 @@ const MarkerController = (() => {
         }
 
         state.lastViewportBounds = bounds;
-
-        // Update label visibility if markers were added or removed
-        if (addedCount > 0 || markersToRemove.length > 0) {
-            MapManager.updateLabelVisibility();
-        }
     }
 
     /**

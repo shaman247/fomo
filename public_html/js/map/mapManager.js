@@ -129,9 +129,20 @@ const MapManager = (() => {
             popup: null,
             locationKey,
             popupContentCallback,
-            lngLat
+            lngLat,
+            labelWidth: 0,
+            labelHeight: 0
         };
         state.markers.push(markerObj);
+
+        // Cache label dimensions to avoid layout thrashing in updateMarkerVisuals
+        const labelEl = iconElement.querySelector('.marker-label');
+        if (labelEl) {
+            labelEl.classList.add('visible');
+            markerObj.labelWidth = labelEl.offsetWidth;
+            markerObj.labelHeight = labelEl.offsetHeight;
+            labelEl.classList.remove('visible');
+        }
 
         // Handle hover for label
         iconElement.addEventListener('mouseenter', () => {
@@ -310,48 +321,49 @@ const MapManager = (() => {
     }
 
     /**
-     * Update label visibility for all markers based on local density.
-     * Labels are shown for markers in sparse areas and hidden in dense clusters.
-     * Uses a spatial grid for efficient O(n) density calculation.
+     * Combined update for marker z-indices and label visibility.
+     * Projects all marker positions once and uses the results for both operations,
+     * avoiding redundant map.project() calls. Uses cached label dimensions to
+     * avoid layout thrashing from DOM measurement.
      */
-    function updateLabelVisibility() {
+    function updateMarkerVisuals() {
         if (!state.mapInstance) return;
 
         const markers = state.markers;
         if (markers.length === 0) return;
 
-        // Local density settings for label visibility
+        // --- Shared: Project all marker positions once ---
+        const projected = markers.map(markerObj => ({
+            markerObj,
+            screenPos: state.mapInstance.project(markerObj.lngLat)
+        }));
+
+        // --- Z-Index Update ---
+        const maxZIndex = 399; // Must stay below popup z-index (400)
+        const viewportHeight = window.innerHeight;
+        const offsetY = viewportHeight * 0.5; // Buffer offset (must match CSS)
+
+        for (const { markerObj, screenPos } of projected) {
+            const normalizedY = (screenPos.y - offsetY) / viewportHeight;
+            const zIndex = Math.round(Math.max(0, Math.min(1, normalizedY)) * maxZIndex);
+            markerObj.marker.getElement().style.zIndex = zIndex;
+        }
+
+        // --- Label Visibility ---
         const isMobile = window.innerWidth <= Constants.UI.MOBILE_BREAKPOINT;
-        // Radius in pixels to check for nearby markers when calculating local density
         const densityRadius = isMobile ? 150 : 200;
-        // Max nearby markers before we consider an area "too dense" for labels
         const maxLocalDensity = isMobile ? 4 : 6;
 
-        // Marker icon dimensions (from CSS: 54px x 54px)
         const markerSize = 54;
         const markerRadius = markerSize / 2;
         const labelOffset = -6; // margin-left in CSS
 
-        // Get screen positions for all markers
-        const markerScreenPositions = markers.map(markerObj => {
-            const screenPos = state.mapInstance.project(markerObj.lngLat);
+        // Build screen positions with cached label dimensions (no DOM reads)
+        const markerScreenPositions = projected.map(({ markerObj, screenPos }) => {
             const labelEl = markerObj.marker.getElement().querySelector('.marker-label');
+            const labelWidth = markerObj.labelWidth || 0;
+            const labelHeight = markerObj.labelHeight || 0;
 
-            // Measure label dimensions
-            // Temporarily make visible for measurement, then restore
-            let labelWidth = 0;
-            let labelHeight = 0;
-            if (labelEl) {
-                const wasVisible = labelEl.classList.contains('visible');
-                labelEl.classList.add('visible');
-                labelWidth = labelEl.offsetWidth;
-                labelHeight = labelEl.offsetHeight;
-                if (!wasVisible) {
-                    labelEl.classList.remove('visible');
-                }
-            }
-
-            // Calculate label bounding box
             const labelRect = {
                 left: screenPos.x + markerRadius + labelOffset,
                 right: screenPos.x + markerRadius + labelOffset + labelWidth,
@@ -369,7 +381,6 @@ const MapManager = (() => {
         });
 
         // Build spatial grid for efficient local density calculation
-        // Grid cell size equals density radius for O(1) neighbor lookup
         const cellSize = densityRadius;
         const grid = new Map();
 
@@ -383,15 +394,13 @@ const MapManager = (() => {
             grid.get(cellKey).push(pos);
         }
 
-        // Calculate local density for each marker (count of neighbors within radius)
-        // Only need to check adjacent cells due to grid cell size
+        // Calculate local density for each marker
         const densityRadiusSq = densityRadius * densityRadius;
         for (const pos of markerScreenPositions) {
             const cellX = Math.floor(pos.x / cellSize);
             const cellY = Math.floor(pos.y / cellSize);
             let neighborCount = 0;
 
-            // Check 3x3 grid of cells around this marker
             for (let dx = -1; dx <= 1; dx++) {
                 for (let dy = -1; dy <= 1; dy++) {
                     const neighborKey = `${cellX + dx},${cellY + dy}`;
@@ -413,7 +422,6 @@ const MapManager = (() => {
         // Sort by local density (lowest first - sparse areas get priority)
         markerScreenPositions.sort((a, b) => a.localDensity - b.localDensity);
 
-        // Track shown label bounding boxes for overlap detection
         const shownLabelRects = [];
 
         // First pass: hide all labels
@@ -427,10 +435,8 @@ const MapManager = (() => {
         for (const pos of markerScreenPositions) {
             if (!pos.labelEl) continue;
 
-            // Skip if local density is too high
             if (pos.localDensity > maxLocalDensity) continue;
 
-            // Check if label overlaps with any already-shown label
             let overlapsLabel = false;
             for (const shownRect of shownLabelRects) {
                 if (rectsOverlap(pos.labelRect, shownRect)) {
@@ -440,53 +446,42 @@ const MapManager = (() => {
             }
             if (overlapsLabel) continue;
 
-            // Show this label
             pos.labelEl.classList.add('visible');
             shownLabelRects.push(pos.labelRect);
         }
     }
 
     /**
-     * Update z-index of all markers based on screen Y position
-     * Markers closer to bottom of screen get higher z-index
-     * Max z-index is capped to stay below popups (--z-popup: 400)
+     * Re-measure and cache label dimensions for all markers.
+     * Called on window resize to handle CSS breakpoint changes.
      */
-    function updateMarkerZIndices() {
-        if (!state.mapInstance) return;
-
-        const maxZIndex = 399; // Must stay below popup z-index (400)
-        // Use actual viewport height, not enlarged map container height
-        const viewportHeight = window.innerHeight;
-        // The map container is offset by 50% of viewport, so visible Y range is
-        // from offsetY (top of viewport) to offsetY + viewportHeight (bottom)
-        const offsetY = viewportHeight * 0.5; // Buffer offset (must match CSS)
-
+    function invalidateLabelDimensionCache() {
         state.markers.forEach(markerObj => {
-            const screenPos = state.mapInstance.project(markerObj.lngLat);
-            // Normalize Y position relative to visible viewport
-            const normalizedY = (screenPos.y - offsetY) / viewportHeight;
-            // Higher Y = closer to bottom = higher z-index, scaled to max
-            const zIndex = Math.round(Math.max(0, Math.min(1, normalizedY)) * maxZIndex);
-            markerObj.marker.getElement().style.zIndex = zIndex;
+            const labelEl = markerObj.marker.getElement().querySelector('.marker-label');
+            if (labelEl) {
+                labelEl.classList.add('visible');
+                markerObj.labelWidth = labelEl.offsetWidth;
+                markerObj.labelHeight = labelEl.offsetHeight;
+                labelEl.classList.remove('visible');
+            }
         });
     }
 
     /**
-     * Start listening for map movements to update marker z-indices and label visibility
-     * Uses 'moveend' instead of 'move' to avoid performance issues during panning
+     * Initialize marker visual updates and resize handling.
+     * The moveend listener for ongoing updates is managed by script.js
+     * to avoid redundant calls.
      */
     function enableZIndexUpdates() {
         if (!state.mapInstance) return;
 
-        // Update only after map movement ends (not during pan/zoom)
-        // This significantly improves panning performance on mobile
-        state.mapInstance.on('moveend', () => {
-            updateMarkerZIndices();
-            updateLabelVisibility();
-        });
+        // Invalidate cached label dimensions on resize (handles CSS breakpoint changes)
+        window.addEventListener('resize', Utils.throttle(() => {
+            invalidateLabelDimensionCache();
+        }, 500));
+
         // Initial update
-        updateMarkerZIndices();
-        updateLabelVisibility();
+        updateMarkerVisuals();
     }
 
     /**
@@ -555,8 +550,7 @@ const MapManager = (() => {
         getMarkerObject,
         getMap,
         eachMarker,
-        updateMarkerZIndices,
-        updateLabelVisibility,
+        updateMarkerVisuals,
         enableZIndexUpdates,
         getBufferedBounds,
         isInBounds,

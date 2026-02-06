@@ -9,7 +9,7 @@ from crawl4ai import CacheMode
 import db
 
 # Default timeout for crawl operations (in seconds)
-DEFAULT_CRAWL_TIMEOUT = 120
+DEFAULT_CRAWL_TIMEOUT = 180
 
 # Minimum content size (in bytes) to consider a crawl successful.
 # Crawls with less content than this are likely failed (e.g., JS-rendered
@@ -68,13 +68,13 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
 
     try:
         # Generate JavaScript code for dynamic content loading
-        selector = website.get('selector')
-        num_clicks = website.get('num_clicks', 2)
-
-        if selector and num_clicks:
-            js_code = f"for (let i = 0; i < {num_clicks}; i++) {{await new Promise(resolve => setTimeout(resolve, 1000)); document.querySelector('{selector}').click();}}"
-        else:
-            js_code = ""
+        # Use custom js_code from database if set, otherwise generate from selector/num_clicks
+        js_code = website.get('js_code') or ""
+        if not js_code:
+            selector = website.get('selector')
+            num_clicks = website.get('num_clicks', 2)
+            if selector and num_clicks:
+                js_code = f"for (let i = 0; i < {num_clicks}; i++) {{await new Promise(resolve => setTimeout(resolve, 1000)); document.querySelector('{selector}').click();}}"
 
         # Configure deep crawling strategy based on keywords
         keywords = website.get('keywords')
@@ -116,9 +116,10 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
 
         # Configure crawler
         # Note: Don't exclude 'form' as some sites wrap content in forms (e.g., Park Slope Parents calendar)
+        # Note: Don't exclude 'header' as some sites use <header> inside articles for event titles (e.g., Prospect Park)
         crawler_config = CrawlerRunConfig(
             word_count_threshold=5,
-            excluded_tags=['header'],
+            excluded_tags=[],
             process_iframes=True,
             cache_mode=CacheMode.BYPASS,  # Don't use cache for fresh content
             js_code=js_code,
@@ -127,6 +128,7 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
             scan_full_page=scan_full_page,
             scroll_delay=scroll_delay,
             page_timeout=60000,
+            wait_until='domcontentloaded',  # Use domcontentloaded instead of networkidle for faster/more reliable JS navigation
             ignore_body_visibility=True,  # Don't skip invisible body elements
             deep_crawl_strategy=deep_crawl_strategy,
             markdown_generator=md_generator,
@@ -138,12 +140,41 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
         async def crawl_urls():
             """Inner function to crawl all URLs, can be wrapped with timeout."""
             nonlocal combined_markdown
-            for url in urls:
+            for url_data in urls:
+                # Handle both dict format (with js_code) and string format (legacy)
+                if isinstance(url_data, dict):
+                    url = url_data['url']
+                    url_js_code = url_data.get('js_code')
+                else:
+                    url = url_data
+                    url_js_code = None
+
+                # Use per-URL js_code if set, otherwise use website-level config
+                if url_js_code:
+                    url_config = CrawlerRunConfig(
+                        word_count_threshold=5,
+                        excluded_tags=[],
+                        process_iframes=True,
+                        cache_mode=CacheMode.BYPASS,
+                        js_code=url_js_code,
+                        remove_overlay_elements=remove_overlays,
+                        delay_before_return_html=delay_seconds,
+                        scan_full_page=scan_full_page,
+                        scroll_delay=scroll_delay,
+                        page_timeout=60000,
+                        wait_until='domcontentloaded',
+                        ignore_body_visibility=True,
+                        deep_crawl_strategy=deep_crawl_strategy,
+                        markdown_generator=md_generator,
+                    )
+                else:
+                    url_config = crawler_config
+
                 print(f"    - Processing {url}")
                 url_content = ""
                 page_count = 0
 
-                for result in await crawler.arun(url=url, config=crawler_config):
+                for result in await crawler.arun(url=url, config=url_config):
                     page_count += 1
                     # Debug: show what we received
                     html_len = len(result.html) if result and result.html else 0
