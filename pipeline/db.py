@@ -7,6 +7,7 @@ Handles all database connections and CRUD operations for:
 - Crawl events (raw extracted data)
 """
 
+import json
 import os
 import sys
 
@@ -90,7 +91,7 @@ def get_websites_due_for_crawling(cursor, website_ids=None):
         placeholders = ','.join(['%s'] * len(website_ids))
         cursor.execute(f"""
             SELECT w.id, w.name, w.crawl_frequency, w.selector, w.num_clicks,
-                   w.keywords, w.max_pages, w.notes,
+                   w.keywords, w.max_pages, w.max_batches, w.notes,
                    w.delay_before_return_html, w.content_filter_threshold, w.scan_full_page,
                    w.remove_overlay_elements, w.javascript_enabled, w.text_mode, w.light_mode,
                    w.use_stealth, w.scroll_delay, w.crawl_timeout, w.process_images, w.base_url,
@@ -105,7 +106,7 @@ def get_websites_due_for_crawling(cursor, website_ids=None):
     else:
         cursor.execute("""
             SELECT w.id, w.name, w.crawl_frequency, w.selector, w.num_clicks,
-                   w.keywords, w.max_pages, w.notes,
+                   w.keywords, w.max_pages, w.max_batches, w.notes,
                    w.delay_before_return_html, w.content_filter_threshold, w.scan_full_page,
                    w.remove_overlay_elements, w.javascript_enabled, w.text_mode, w.light_mode,
                    w.use_stealth, w.scroll_delay, w.crawl_timeout, w.process_images, w.base_url,
@@ -132,20 +133,21 @@ def get_websites_due_for_crawling(cursor, website_ids=None):
             'num_clicks': row[4] or 2,
             'keywords': row[5],
             'max_pages': row[6] or 30,
-            'notes': row[7],
-            'delay_before_return_html': row[8],
-            'content_filter_threshold': row[9],
-            'scan_full_page': row[10],
-            'remove_overlay_elements': row[11],
-            'javascript_enabled': row[12],
-            'text_mode': row[13],
-            'light_mode': row[14],
-            'use_stealth': row[15],
-            'scroll_delay': float(row[16]) if row[16] is not None else None,
-            'crawl_timeout': row[17],
-            'process_images': row[18],
-            'base_url': row[19],
-            'urls': _parse_url_data(row[20]) if row[20] else []
+            'max_batches': row[7],
+            'notes': row[8],
+            'delay_before_return_html': row[9],
+            'content_filter_threshold': row[10],
+            'scan_full_page': row[11],
+            'remove_overlay_elements': row[12],
+            'javascript_enabled': row[13],
+            'text_mode': row[14],
+            'light_mode': row[15],
+            'use_stealth': row[16],
+            'scroll_delay': float(row[17]) if row[17] is not None else None,
+            'crawl_timeout': row[18],
+            'process_images': row[19],
+            'base_url': row[20],
+            'urls': _parse_url_data(row[21]) if row[21] else []
         }
         websites.append(website)
 
@@ -366,7 +368,6 @@ def get_existing_upcoming_events(cursor, website_id):
 
     events = []
     for row in cursor.fetchall():
-        import json
         event = {
             'id': row[0],
             'name': row[1],
@@ -406,95 +407,65 @@ def archive_outdated_events(cursor, connection, website_id):
     Returns:
         Number of events archived
     """
-    # First, get list of events that will be archived to check for upcoming ones
-    cursor.execute("""
+    # Shared WHERE clause for identifying events to archive.
+    # An event qualifies when:
+    # 1. It has a source from the website we just crawled
+    # 2. No source website's latest crawl still references it
+    # 3. At least one source website has been successfully crawled
+    archive_where = """
+        e.archived = FALSE
+          AND EXISTS (
+              SELECT 1
+              FROM event_sources es
+              JOIN crawl_events ce ON es.crawl_event_id = ce.id
+              JOIN crawl_results cr ON ce.crawl_result_id = cr.id
+              WHERE es.event_id = e.id
+                AND cr.website_id = %s
+          )
+          AND NOT EXISTS (
+              SELECT 1
+              FROM event_sources es
+              JOIN crawl_events ce ON es.crawl_event_id = ce.id
+              JOIN crawl_results cr ON ce.crawl_result_id = cr.id
+              WHERE es.event_id = e.id
+                AND cr.processed_at = (
+                    SELECT MAX(cr2.processed_at)
+                    FROM crawl_results cr2
+                    WHERE cr2.website_id = cr.website_id
+                      AND cr2.status IN ('processed', 'extracted')
+                      AND cr2.processed_at IS NOT NULL
+                )
+          )
+          AND EXISTS (
+              SELECT 1
+              FROM event_sources es
+              JOIN crawl_events ce ON es.crawl_event_id = ce.id
+              JOIN crawl_results cr ON ce.crawl_result_id = cr.id
+              WHERE es.event_id = e.id
+                AND cr.status IN ('processed', 'extracted')
+                AND cr.processed_at IS NOT NULL
+          )
+    """
+
+    # First, identify events that will be archived to check for upcoming ones
+    cursor.execute(f"""
         SELECT e.id, e.name,
                (SELECT MIN(eo.start_date)
                 FROM event_occurrences eo
                 WHERE eo.event_id = e.id
                   AND eo.start_date >= CURDATE()) as next_occurrence
         FROM events e
-        WHERE e.archived = FALSE
-          -- Event has at least one source from the website we just crawled
-          AND EXISTS (
-              SELECT 1
-              FROM event_sources es
-              JOIN crawl_events ce ON es.crawl_event_id = ce.id
-              JOIN crawl_results cr ON ce.crawl_result_id = cr.id
-              WHERE es.event_id = e.id
-                AND cr.website_id = %s
-          )
-          -- For EVERY website that references this event, check if event is missing from latest crawl
-          AND NOT EXISTS (
-              SELECT 1
-              FROM event_sources es
-              JOIN crawl_events ce ON es.crawl_event_id = ce.id
-              JOIN crawl_results cr ON ce.crawl_result_id = cr.id
-              WHERE es.event_id = e.id
-                -- This source is from the latest crawl of its website
-                AND cr.processed_at = (
-                    SELECT MAX(cr2.processed_at)
-                    FROM crawl_results cr2
-                    WHERE cr2.website_id = cr.website_id
-                      AND cr2.status IN ('processed', 'extracted')
-                      AND cr2.processed_at IS NOT NULL
-                )
-          )
-          -- At least one source website has been successfully crawled
-          AND EXISTS (
-              SELECT 1
-              FROM event_sources es
-              JOIN crawl_events ce ON es.crawl_event_id = ce.id
-              JOIN crawl_results cr ON ce.crawl_result_id = cr.id
-              WHERE es.event_id = e.id
-                AND cr.status IN ('processed', 'extracted')
-                AND cr.processed_at IS NOT NULL
-          )
+        WHERE {archive_where}
     """, (website_id,))
 
     events_to_archive = cursor.fetchall()
     upcoming_events = [(event_id, name, next_occ) for event_id, name, next_occ in events_to_archive if next_occ]
 
-    # Now perform the actual archiving
-    cursor.execute("""
+    # Perform the actual archiving
+    cursor.execute(f"""
         UPDATE events e
         SET archived = TRUE
-        WHERE e.archived = FALSE
-          -- Event has at least one source from the website we just crawled
-          AND EXISTS (
-              SELECT 1
-              FROM event_sources es
-              JOIN crawl_events ce ON es.crawl_event_id = ce.id
-              JOIN crawl_results cr ON ce.crawl_result_id = cr.id
-              WHERE es.event_id = e.id
-                AND cr.website_id = %s
-          )
-          -- For EVERY website that references this event, check if event is missing from latest crawl
-          AND NOT EXISTS (
-              SELECT 1
-              FROM event_sources es
-              JOIN crawl_events ce ON es.crawl_event_id = ce.id
-              JOIN crawl_results cr ON ce.crawl_result_id = cr.id
-              WHERE es.event_id = e.id
-                -- This source is from the latest crawl of its website
-                AND cr.processed_at = (
-                    SELECT MAX(cr2.processed_at)
-                    FROM crawl_results cr2
-                    WHERE cr2.website_id = cr.website_id
-                      AND cr2.status IN ('processed', 'extracted')
-                      AND cr2.processed_at IS NOT NULL
-                )
-          )
-          -- At least one source website has been successfully crawled
-          AND EXISTS (
-              SELECT 1
-              FROM event_sources es
-              JOIN crawl_events ce ON es.crawl_event_id = ce.id
-              JOIN crawl_results cr ON ce.crawl_result_id = cr.id
-              WHERE es.event_id = e.id
-                AND cr.status IN ('processed', 'extracted')
-                AND cr.processed_at IS NOT NULL
-          )
+        WHERE {archive_where}
     """, (website_id,))
 
     archived_count = cursor.rowcount
@@ -549,18 +520,12 @@ def get_all_locations(cursor):
     """)
 
     for row in cursor.fetchall():
-        location_id = row[0]
-        alternate_name = row[1]
-        website_id = row[2]
+        location_id, alternate_name, website_id = row
         if location_id in locations:
             if website_id is None:
-                # Global alternate name
                 locations[location_id]['alternate_names'].append(alternate_name)
             else:
-                # Website-scoped alternate name
-                if website_id not in locations[location_id]['website_scoped_names']:
-                    locations[location_id]['website_scoped_names'][website_id] = []
-                locations[location_id]['website_scoped_names'][website_id].append(alternate_name)
+                locations[location_id]['website_scoped_names'].setdefault(website_id, []).append(alternate_name)
 
     return list(locations.values())
 

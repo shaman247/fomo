@@ -5,6 +5,7 @@ Uses Crawl4AI to crawl event websites and store content in the database.
 """
 
 import asyncio
+from datetime import datetime, timedelta
 from crawl4ai import CacheMode
 import db
 
@@ -26,6 +27,30 @@ except ImportError:
     print("Error: crawl4ai is required.")
     print("Install it with: pip install crawl4ai")
     raise
+
+
+def resolve_url_templates(url):
+    """Resolve date template placeholders in URLs.
+
+    Supported placeholders:
+        {{month}}           - current month name, lowercase (e.g. "february")
+        {{year}}            - current year (e.g. "2026")
+        {{next_month}}      - next month name, lowercase
+        {{next_month_year}} - year of the next month (handles Dec→Jan rollover)
+    """
+    if '{{' not in url:
+        return url
+    now = datetime.now()
+    next_month_date = (now.replace(day=1) + timedelta(days=32)).replace(day=1)
+    replacements = {
+        '{{month}}': now.strftime('%B').lower(),
+        '{{year}}': str(now.year),
+        '{{next_month}}': next_month_date.strftime('%B').lower(),
+        '{{next_month_year}}': str(next_month_date.year),
+    }
+    for placeholder, value in replacements.items():
+        url = url.replace(placeholder, value)
+    return url
 
 
 def create_safe_filename(name, extension=None):
@@ -143,10 +168,10 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
             for url_data in urls:
                 # Handle both dict format (with js_code) and string format (legacy)
                 if isinstance(url_data, dict):
-                    url = url_data['url']
+                    url = resolve_url_templates(url_data['url'])
                     url_js_code = url_data.get('js_code')
                 else:
-                    url = url_data
+                    url = resolve_url_templates(url_data)
                     url_js_code = None
 
                 # Use per-URL js_code if set, otherwise use website-level config

@@ -164,7 +164,7 @@ Tags can be in one of four explicit states, plus one implicit state:
 Automatically include semantically related tags when a tag is selected, with configurable weights for scoring.
 
 ### Configuration File
-**Location**: `public_html/data/related_tags.json`
+**Location**: `src/data/related_tags.json`
 
 **Format**:
 ```json
@@ -510,7 +510,7 @@ Visual: Mark "Contemporary Art" and "Digital Art" with .state-related class
 
 ### Related Tags JSON
 
-**File**: `public_html/data/related_tags.json`
+**File**: `src/data/related_tags.json`
 
 **Structure**:
 ```json

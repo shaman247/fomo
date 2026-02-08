@@ -1,559 +1,626 @@
 /**
- * MapManager - Manages MapLibre GL map markers and their styling
- * Handles marker creation, icon generation, labels, and popups
+ * MapManager - WebGL Symbol Layer based marker rendering
+ * Uses MapLibre native layers instead of DOM markers for GPU-accelerated performance
  * @module MapManager
  */
 const MapManager = (() => {
-    /**
-     * Internal state for MapManager
-     * @private
-     */
     const state = {
         mapInstance: null,
-        markers: [],           // Array of {marker, popup, locationKey}
-        tagColorsRef: null,
         markerColorsRef: null,
+
+        // Popup state
         currentPopup: null,
-        currentPopupMarker: null
+        currentPopupLocationKey: null,
+
+        // Feature state tracking
+        hoveredFeatureId: null,
+        activeFeatureId: null,
+
+        // Bidirectional lookups between locationKey and feature ID
+        locationKeyToFeatureId: new Map(),
+        featureIdToLocationKey: new Map(),
+
+        // Emoji image tracking
+        emojiImagesLoaded: new Set(),
+
+        // Cache for restoring after style.load (theme change)
+        sourceDataCache: null,
+        layersAdded: false,
+
+        // Popup content callbacks by locationKey
+        popupContentCallbacks: new Map()
     };
 
-    /**
-     * Initialize MapManager with map instance and color references
-     * @param {maplibregl.Map} mapInstance - MapLibre map instance
-     * @param {Object} tagColors - Tag to color mapping (currently unused)
-     * @param {Object} markerColors - Emoji to marker color mapping
-     * @returns {Object} Object containing markers array reference
-     */
-    function init(mapInstance, tagColors, markerColors) {
-        state.mapInstance = mapInstance;
-        state.tagColorsRef = tagColors;
-        state.markerColorsRef = markerColors || {};
-        state.markers = [];
+    // ========================================
+    // INITIALIZATION
+    // ========================================
 
-        return { markers: state.markers };
+    function init(mapInstance, _tagColors, markerColors) {
+        state.mapInstance = mapInstance;
+        state.markerColorsRef = markerColors || {};
+
+        // Ensure source/layers exist whenever the map becomes idle.
+        // Covers both initial load and style changes (theme switch destroys
+        // custom sources/layers; idle fires after the new style is fully ready).
+        mapInstance.on('idle', _ensureLayers);
+
+        // Try immediate setup if style is already loaded
+        if (mapInstance.isStyleLoaded()) {
+            _addSourceAndLayers();
+        }
     }
 
+    // ========================================
+    // SOURCE AND LAYERS
+    // ========================================
+
     /**
-     * Clear all markers from the map, optionally sparing one marker
-     * Useful for updating markers while preserving an open popup
-     * @param {Object|null} [markerToSpare=null] - Marker object to keep on the map
+     * Called on map idle — re-creates source/layers if they were destroyed
+     * by setStyle() (theme change). No-op if layers already exist.
      */
-    function clearMarkers(markerToSpare = null) {
-        const markersToRemove = [];
+    function _ensureLayers() {
+        const map = state.mapInstance;
+        if (!map || !map.isStyleLoaded()) return;
+        if (map.getSource('markers')) return; // Already set up
 
-        state.markers.forEach(markerObj => {
-            if (markerToSpare && markerObj.marker === markerToSpare) {
-                return; // Keep this marker
-            }
-            markersToRemove.push(markerObj);
+        state.layersAdded = false;
+        state.emojiImagesLoaded.clear();
+        _addSourceAndLayers();
+        if (state.sourceDataCache) {
+            _restoreAfterStyleChange();
+        }
+    }
+
+    function _addSourceAndLayers() {
+        const map = state.mapInstance;
+        if (!map || state.layersAdded) return;
+
+        // Add GeoJSON source with auto-generated numeric IDs for feature-state
+        map.addSource('markers', {
+            type: 'geojson',
+            data: { type: 'FeatureCollection', features: [] },
+            generateId: true
         });
 
-        markersToRemove.forEach(markerObj => {
-            if (markerObj.popup && markerObj.popup !== state.currentPopup) {
-                markerObj.popup.remove();
+        // Layer 1: Combined emoji icons + text labels (bottom)
+        map.addLayer({
+            id: 'marker-symbols',
+            type: 'symbol',
+            source: 'markers',
+            layout: {
+                'icon-image': ['get', 'emojiImageId'],
+                'icon-size': _getIconSize(),
+                'icon-allow-overlap': true,
+                'icon-ignore-placement': false,
+                'icon-padding': 20,
+                'text-field': ['get', 'shortName'],
+                'text-font': ['Inter SemiBold'],
+                'text-size': _getLabelSize(),
+                'text-anchor': 'left',
+                'text-justify': 'left',
+                'text-offset': [1.4, -0.15],
+                'text-max-width': 50,
+                'text-allow-overlap': false,
+                'text-optional': true,
+                'text-ignore-placement': false,
+                'text-padding': 3,
+                'text-letter-spacing': -0.03,
+                'symbol-sort-key': ['get', 'sortKey']
+            },
+            paint: {
+                'text-color': _getLabelColor(),
+                'text-halo-color': _getHaloColor(),
+                'text-halo-width': 2,
+                'text-halo-blur': 1
             }
-            markerObj.marker.remove();
         });
 
-        // Update markers array to only keep spared marker
-        if (markerToSpare) {
-            state.markers = state.markers.filter(m => m.marker === markerToSpare);
+        // Layer 2: Highlight circle (colored ring on hover/active, above all emojis)
+        map.addLayer({
+            id: 'marker-highlight',
+            type: 'circle',
+            source: 'markers',
+            paint: {
+                'circle-radius': _getMarkerRadius(),
+                'circle-color': 'transparent',
+                'circle-stroke-width': [
+                    'case',
+                    ['boolean', ['feature-state', 'active'], false], 4,
+                    ['boolean', ['feature-state', 'hover'], false], 4,
+                    0
+                ],
+                'circle-stroke-color': ['get', 'color']
+            }
+        });
+
+        // Layer 3: Hover — emoji + label, always visible, shown only for hovered feature
+        map.addLayer({
+            id: 'marker-symbols-hover',
+            type: 'symbol',
+            source: 'markers',
+            filter: ['==', ['id'], -1], // hidden by default
+            layout: {
+                'icon-image': ['get', 'emojiImageId'],
+                'icon-size': _getIconSize(),
+                'icon-allow-overlap': true,
+                'icon-ignore-placement': true,
+                'text-field': ['get', 'shortName'],
+                'text-font': ['Inter SemiBold'],
+                'text-size': _getLabelSize(),
+                'text-anchor': 'left',
+                'text-justify': 'left',
+                'text-offset': [1.4, -0.15],
+                'text-max-width': 50,
+                'text-allow-overlap': true,
+                'text-ignore-placement': true,
+                'text-letter-spacing': -0.03,
+                'symbol-sort-key': ['get', 'sortKey']
+            },
+            paint: {
+                'text-color': _getHoverLabelColor(),
+                'text-halo-color': _getHaloColor(),
+                'text-halo-width': 2.5,
+                'text-halo-blur': 0.5
+            }
+        });
+
+        state.layersAdded = true;
+    }
+
+    function _getMarkerRadius() {
+        return window.innerWidth <= 768 ? 20 : 24;
+    }
+
+    function _getIconSize() {
+        return window.innerWidth <= 768 ? 0.55 : 0.7;
+    }
+
+    function _getLabelSize() {
+        return window.innerWidth <= 768 ? 13 : 14.5;
+    }
+
+    function _getLabelColor() {
+        const theme = document.documentElement.getAttribute('data-theme') || 'dark';
+        return theme === 'dark' ? '#ccc' : '#333';
+    }
+
+    function _getHoverLabelColor() {
+        const theme = document.documentElement.getAttribute('data-theme') || 'dark';
+        return theme === 'dark' ? '#fff' : '#000';
+    }
+
+    function _getHaloColor() {
+        const theme = document.documentElement.getAttribute('data-theme') || 'dark';
+        return theme === 'dark' ? '#171717' : '#f0f0f0';
+    }
+
+    // ========================================
+    // EMOJI IMAGE RENDERING
+    // ========================================
+
+    function _addEmojiImage(emoji) {
+        const map = state.mapInstance;
+        const imageId = `emoji-${emoji}`;
+        if (state.emojiImagesLoaded.has(imageId) || map.hasImage(imageId)) {
+            state.emojiImagesLoaded.add(imageId);
+            return;
+        }
+
+        const size = 64;
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const canvasSize = size * dpr;
+
+        const canvas = document.createElement('canvas');
+        canvas.width = canvasSize;
+        canvas.height = canvasSize;
+        const ctx = canvas.getContext('2d');
+
+        // Use Noto font if active
+        const isNoto = document.body.classList.contains('use-noto-emoji');
+        const fontFamily = isNoto ? '"Noto Color Emoji"' : 'serif';
+        ctx.font = `${canvasSize * 0.72}px ${fontFamily}`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(emoji, canvasSize / 2, canvasSize / 2);
+
+        const imageData = ctx.getImageData(0, 0, canvasSize, canvasSize);
+
+        map.addImage(imageId, imageData, { pixelRatio: dpr });
+        state.emojiImagesLoaded.add(imageId);
+    }
+
+    function loadEmojiImages(locationsByLatLng) {
+        if (!state.mapInstance) return;
+        const uniqueEmojis = new Set();
+        for (const key in locationsByLatLng) {
+            const loc = locationsByLatLng[key];
+            if (loc && loc.emoji) uniqueEmojis.add(loc.emoji);
+        }
+        uniqueEmojis.forEach(emoji => _addEmojiImage(emoji));
+    }
+
+    function reloadEmojiImages(locationsByLatLng) {
+        if (!state.mapInstance) return;
+        // Remove all existing emoji images and reload
+        state.emojiImagesLoaded.forEach(imageId => {
+            if (state.mapInstance.hasImage(imageId)) {
+                state.mapInstance.removeImage(imageId);
+            }
+        });
+        state.emojiImagesLoaded.clear();
+        loadEmojiImages(locationsByLatLng);
+
+        // Trigger a source data refresh to pick up new images
+        if (state.sourceDataCache) {
+            const source = state.mapInstance.getSource('markers');
+            if (source) {
+                source.setData(state.sourceDataCache);
+            }
+        }
+    }
+
+    // ========================================
+    // MARKER DATA MANAGEMENT
+    // ========================================
+
+    function updateMarkerData(filteredLocations, locationsByLatLng, popupContentCallbacks) {
+        const map = state.mapInstance;
+        if (!map) return;
+
+        // Store callbacks
+        state.popupContentCallbacks = popupContentCallbacks;
+
+        // Build GeoJSON features
+        const features = [];
+        state.locationKeyToFeatureId.clear();
+        state.featureIdToLocationKey.clear();
+
+        let featureIndex = 0;
+        for (const locationKey in filteredLocations) {
+            const events = filteredLocations[locationKey];
+            if (events.length === 0) continue;
+
+            const [lat, lng] = locationKey.split(',').map(Number);
+            if (lat === 0 && lng === 0) continue;
+
+            const locationInfo = locationsByLatLng[locationKey];
+            if (!locationInfo) continue;
+
+            // Ensure emoji image exists
+            if (locationInfo.emoji) {
+                _addEmojiImage(locationInfo.emoji);
+            }
+
+            const color = getMarkerColor(locationInfo);
+            const shortName = locationInfo.short_name || locationInfo.name || '';
+
+            features.push({
+                type: 'Feature',
+                geometry: {
+                    type: 'Point',
+                    coordinates: [lng, lat]
+                },
+                properties: {
+                    locationKey,
+                    shortName,
+                    emojiImageId: `emoji-${locationInfo.emoji || '📍'}`,
+                    color,
+                    sortKey: -lat // Southern markers render on top (higher visual priority)
+                }
+            });
+
+            state.locationKeyToFeatureId.set(locationKey, featureIndex);
+            state.featureIdToLocationKey.set(featureIndex, locationKey);
+            featureIndex++;
+        }
+
+        const geojson = { type: 'FeatureCollection', features };
+        state.sourceDataCache = geojson;
+
+        const source = map.getSource('markers');
+        if (source) {
+            source.setData(geojson);
+        }
+
+        // Re-apply active state if popup is open
+        if (state.currentPopupLocationKey) {
+            const fid = state.locationKeyToFeatureId.get(state.currentPopupLocationKey);
+            if (fid !== undefined) {
+                state.activeFeatureId = fid;
+                map.setFeatureState({ source: 'markers', id: fid }, { active: true });
+            }
+        }
+    }
+
+    function _restoreAfterStyleChange() {
+        const map = state.mapInstance;
+        if (!map || !state.sourceDataCache) return;
+
+        // Reload emoji images
+        const uniqueEmojis = new Set();
+        state.sourceDataCache.features.forEach(f => {
+            const eid = f.properties.emojiImageId;
+            if (eid) {
+                const emoji = eid.replace('emoji-', '');
+                uniqueEmojis.add(emoji);
+            }
+        });
+        uniqueEmojis.forEach(emoji => _addEmojiImage(emoji));
+
+        // Restore data
+        const source = map.getSource('markers');
+        if (source) {
+            source.setData(state.sourceDataCache);
+        }
+
+        // Rebuild lookup maps
+        state.locationKeyToFeatureId.clear();
+        state.featureIdToLocationKey.clear();
+        state.sourceDataCache.features.forEach((f, i) => {
+            state.locationKeyToFeatureId.set(f.properties.locationKey, i);
+            state.featureIdToLocationKey.set(i, f.properties.locationKey);
+        });
+
+        // Restore active state
+        if (state.currentPopupLocationKey) {
+            const fid = state.locationKeyToFeatureId.get(state.currentPopupLocationKey);
+            if (fid !== undefined) {
+                state.activeFeatureId = fid;
+                map.setFeatureState({ source: 'markers', id: fid }, { active: true });
+            }
+        }
+        _updateHoverFilter();
+
+        // Update theme colors
+        updateThemeColors();
+    }
+
+    // ========================================
+    // INTERACTIONS
+    // ========================================
+
+    /**
+     * Updates the marker-symbols-hover filter to show the hovered and/or active feature.
+     * Called whenever hover or active state changes.
+     */
+    function _updateHoverFilter() {
+        const map = state.mapInstance;
+        if (!map || !map.getLayer('marker-symbols-hover')) return;
+
+        const ids = new Set();
+        if (state.hoveredFeatureId !== null) ids.add(state.hoveredFeatureId);
+        if (state.activeFeatureId !== null) ids.add(state.activeFeatureId);
+
+        if (ids.size === 0) {
+            map.setFilter('marker-symbols-hover', ['==', ['id'], -1]);
+        } else if (ids.size === 1) {
+            map.setFilter('marker-symbols-hover', ['==', ['id'], [...ids][0]]);
         } else {
-            state.markers = [];
+            map.setFilter('marker-symbols-hover', ['in', ['id'], ['literal', [...ids]]]);
         }
     }
 
     /**
-     * Get the marker color based on location's emoji
-     * Falls back to default gray color if no matching color found
-     * @param {Object} locationInfo - Location information object
-     * @param {string} locationInfo.emoji - Location's emoji character
-     * @returns {string} Hex color code for the marker
+     * When icon-padding causes overlapping hit areas, MapLibre returns
+     * features sorted by symbol-sort-key — not by proximity to the cursor.
+     * This picks the feature whose geometry is closest to the event point.
      */
+    function _closestFeature(e) {
+        const features = e.features;
+        if (!features || features.length === 0) return null;
+        if (features.length === 1) return features[0];
+
+        const pt = e.lngLat;
+        let best = features[0];
+        let bestDist = Infinity;
+        for (const f of features) {
+            const coords = f.geometry.coordinates;
+            const dx = coords[0] - pt.lng;
+            const dy = coords[1] - pt.lat;
+            const d = dx * dx + dy * dy;
+            if (d < bestDist) { bestDist = d; best = f; }
+        }
+        return best;
+    }
+
+    function setupMarkerInteractions() {
+        const map = state.mapInstance;
+        if (!map) return;
+
+        // Hover handlers — use mousemove (not mouseenter) so that when
+        // markers overlap, moving between them updates the hovered feature
+        // immediately rather than staying stuck on the first one entered.
+        map.on('mousemove', 'marker-symbols', (e) => {
+            map.getCanvas().style.cursor = 'pointer';
+            const feature = _closestFeature(e);
+            if (feature) {
+                const fid = feature.id;
+                if (fid === state.hoveredFeatureId) return; // same feature, no-op
+                if (state.hoveredFeatureId !== null) {
+                    map.setFeatureState({ source: 'markers', id: state.hoveredFeatureId }, { hover: false });
+                }
+                state.hoveredFeatureId = fid;
+                map.setFeatureState({ source: 'markers', id: fid }, { hover: true });
+                _updateHoverFilter();
+            }
+        });
+
+        map.on('mouseleave', 'marker-symbols', () => {
+            map.getCanvas().style.cursor = '';
+            if (state.hoveredFeatureId !== null) {
+                map.setFeatureState({ source: 'markers', id: state.hoveredFeatureId }, { hover: false });
+                state.hoveredFeatureId = null;
+                _updateHoverFilter();
+            }
+        });
+
+        // Click: open popup for the closest marker to the click point
+        map.on('click', 'marker-symbols', (e) => {
+            const feature = _closestFeature(e);
+            if (feature) {
+                const locationKey = feature.properties.locationKey;
+                _openPopupForLocation(locationKey, e.lngLat);
+            }
+        });
+    }
+
+    function _openPopupForLocation(locationKey, lngLat) {
+        const map = state.mapInstance;
+        if (!map) return;
+
+        // Close existing popup
+        if (state.currentPopup) {
+            state.currentPopup.remove();
+            // The close handler will clean up state
+        }
+
+        // Get popup content
+        const callback = state.popupContentCallbacks.get(locationKey);
+        if (!callback) return;
+
+        const content = callback();
+
+        // Create wrapper
+        const wrapper = document.createElement('div');
+        wrapper.className = 'maplibre-popup-content';
+        if (content instanceof HTMLElement) {
+            wrapper.appendChild(content);
+        } else {
+            wrapper.innerHTML = content;
+        }
+
+        // Clear previous active state
+        if (state.activeFeatureId !== null) {
+            map.setFeatureState({ source: 'markers', id: state.activeFeatureId }, { active: false });
+        }
+
+        // Set new active state
+        const fid = state.locationKeyToFeatureId.get(locationKey);
+        if (fid !== undefined) {
+            state.activeFeatureId = fid;
+            map.setFeatureState({ source: 'markers', id: fid }, { active: true });
+        }
+        _updateHoverFilter();
+
+        // Create popup
+        const isMobile = window.innerWidth <= Constants.UI.MOBILE_BREAKPOINT;
+        const popup = new maplibregl.Popup({
+            closeButton: true,
+            closeOnClick: true,
+            maxWidth: 'none',
+            anchor: isMobile ? 'center' : 'bottom',
+            offset: isMobile ? [0, 0] : [0, -26]
+        });
+
+        // Handle popup close
+        popup.on('close', () => {
+            if (state.currentPopup === popup) {
+                const closedLocationKey = state.currentPopupLocationKey;
+
+                // Clear active state
+                if (state.activeFeatureId !== null) {
+                    map.setFeatureState({ source: 'markers', id: state.activeFeatureId }, { active: false });
+                    state.activeFeatureId = null;
+                }
+
+                state.currentPopup = null;
+                state.currentPopupLocationKey = null;
+                _updateHoverFilter();
+
+                map.fire('popupclose', {
+                    popup,
+                    locationKey: closedLocationKey,
+                    lngLat
+                });
+            }
+        });
+
+        popup.setLngLat([lngLat.lng, lngLat.lat])
+            .setDOMContent(wrapper)
+            .addTo(map);
+
+        state.currentPopup = popup;
+        state.currentPopupLocationKey = locationKey;
+
+        map.fire('popupopen', {
+            popup,
+            locationKey,
+            lngLat
+        });
+    }
+
+    // ========================================
+    // PUBLIC POPUP API
+    // ========================================
+
+    function openPopupAtCoordinates(locationKey, lngLat) {
+        _openPopupForLocation(locationKey, { lng: lngLat[0], lat: lngLat[1] });
+    }
+
+    function registerPopupCallback(locationKey, callback) {
+        state.popupContentCallbacks.set(locationKey, callback);
+    }
+
+    function getCurrentPopup() {
+        return state.currentPopup;
+    }
+
+    function getCurrentPopupLocationKey() {
+        return state.currentPopupLocationKey;
+    }
+
+    // ========================================
+    // THEME
+    // ========================================
+
+    function updateThemeColors() {
+        const map = state.mapInstance;
+        if (!map || !map.getLayer('marker-symbols')) return;
+
+        map.setPaintProperty('marker-symbols', 'text-color', _getLabelColor());
+        map.setPaintProperty('marker-symbols', 'text-halo-color', _getHaloColor());
+
+        if (map.getLayer('marker-symbols-hover')) {
+            map.setPaintProperty('marker-symbols-hover', 'text-color', _getHoverLabelColor());
+            map.setPaintProperty('marker-symbols-hover', 'text-halo-color', _getHaloColor());
+        }
+    }
+
+    // ========================================
+    // UTILITY
+    // ========================================
+
     function getMarkerColor(locationInfo) {
         if (locationInfo) {
             const emoji = locationInfo.emoji;
             const colors = state.markerColorsRef;
-
-            if (colors[emoji]) {
+            if (colors && colors[emoji]) {
                 return colors[emoji];
             }
         }
         return '#444';
     }
 
-    /**
-     * Create a custom HTML element for a map marker
-     * Generates an SVG pin with an emoji overlay and optional label
-     * @param {Object} locationInfo - Location information object
-     * @param {string} locationInfo.emoji - Emoji to display on the marker
-     * @param {string} locationInfo.short_name - Short name for the label
-     * @returns {HTMLElement} DOM element for the marker
-     */
-    function createMarkerIcon(locationInfo) {
-        const markerColor = getMarkerColor(locationInfo);
-        const emoji = locationInfo.emoji;
-        const shortName = locationInfo.short_name || locationInfo.name || '';
-
-        const el = document.createElement('div');
-        el.className = 'custom-marker-icon';
-        el.style.setProperty('--marker-color', markerColor);
-        el.innerHTML = `<div class="marker-emoji">${emoji}</div><div class="marker-label">${shortName}</div>`;
-
-        return el;
-    }
-
-    /**
-     * Add a marker to the map with label and popup
-     * @param {Array<number>} lngLat - Marker coordinates [lng, lat] (MapLibre uses lng,lat order)
-     * @param {HTMLElement} iconElement - Marker icon DOM element
-     * @param {string} _unused - Unused parameter (kept for API compatibility)
-     * @param {Function} popupContentCallback - Function that returns popup content
-     * @param {string} locationKey - Location key for reference
-     * @returns {maplibregl.Marker|undefined} The created marker, or undefined if map not initialized
-     */
-    function addMarkerToMap(lngLat, iconElement, _unused, popupContentCallback, locationKey) {
-        if (!state.mapInstance) return;
-
-        // Create the marker with anchor at center of the circle
-        const marker = new maplibregl.Marker({
-            element: iconElement,
-            anchor: 'center'
-        })
-            .setLngLat(lngLat)
-            .addTo(state.mapInstance);
-
-        // Store marker info (popup will be created dynamically when opened)
-        const markerObj = {
-            marker,
-            popup: null,
-            locationKey,
-            popupContentCallback,
-            lngLat,
-            labelWidth: 0,
-            labelHeight: 0
-        };
-        state.markers.push(markerObj);
-
-        // Cache label dimensions to avoid layout thrashing in updateMarkerVisuals
-        const labelEl = iconElement.querySelector('.marker-label');
-        if (labelEl) {
-            labelEl.classList.add('visible');
-            markerObj.labelWidth = labelEl.offsetWidth;
-            markerObj.labelHeight = labelEl.offsetHeight;
-            labelEl.classList.remove('visible');
-        }
-
-        // Handle hover for label
-        iconElement.addEventListener('mouseenter', () => {
-            // Don't highlight if popup is open for this marker
-            if (state.currentPopupMarker === marker) return;
-
-            // Show label on hover with full opacity and high z-index
-            iconElement.classList.add('hovered');
-        });
-
-        iconElement.addEventListener('mouseleave', () => {
-            // Remove hover state from label
-            iconElement.classList.remove('hovered');
-        });
-
-        // Handle click for popup
-        iconElement.addEventListener('click', (e) => {
-            e.stopPropagation();
-
-            // Close any existing popup
-            if (state.currentPopup) {
-                state.currentPopup.remove();
-            }
-
-            // Generate popup content
-            const content = popupContentCallback();
-
-            // Create wrapper div for popup content
-            const wrapper = document.createElement('div');
-            wrapper.className = 'maplibre-popup-content';
-            if (content instanceof HTMLElement) {
-                wrapper.appendChild(content);
-            } else {
-                wrapper.innerHTML = content;
-            }
-
-            // Remove active class from previous marker
-            if (state.currentPopupMarker) {
-                state.currentPopupMarker.getElement().classList.remove('active');
-            }
-
-            // Create popup dynamically based on current screen size
-            // On mobile: center popup on marker; on desktop: popup above marker
-            const isMobile = window.innerWidth <= Constants.UI.MOBILE_BREAKPOINT;
-            const popup = new maplibregl.Popup({
-                closeButton: true,
-                closeOnClick: true,
-                maxWidth: 'none',
-                anchor: isMobile ? 'center' : 'bottom',
-                offset: isMobile ? [0, 0] : [0, -26]
-            });
-
-            // Handle popup close
-            popup.on('close', () => {
-                if (state.currentPopup === popup) {
-                    const closedMarker = state.currentPopupMarker;
-                    const closedLocationKey = markerObj.locationKey;
-
-                    // Remove active class from marker
-                    if (closedMarker) {
-                        closedMarker.getElement().classList.remove('active');
-                    }
-
-                    state.currentPopup = null;
-                    state.currentPopupMarker = null;
-
-                    // Dispatch custom event for popup close
-                    state.mapInstance.fire('popupclose', {
-                        popup,
-                        marker: closedMarker,
-                        locationKey: closedLocationKey
-                    });
-                }
-            });
-
-            popup.setLngLat(lngLat)
-                .setDOMContent(wrapper)
-                .addTo(state.mapInstance);
-
-            // Update markerObj reference
-            markerObj.popup = popup;
-
-            state.currentPopup = popup;
-            state.currentPopupMarker = marker;
-
-            // Add active class to current marker
-            iconElement.classList.add('active');
-
-            // Dispatch custom event for popup open
-            state.mapInstance.fire('popupopen', { popup, marker, locationKey });
-        });
-
-        return marker;
-    }
-
-    /**
-     * Remove a marker from the map
-     * @param {maplibregl.Marker} marker - The marker to remove
-     */
-    function removeMarker(marker) {
-        const index = state.markers.findIndex(m => m.marker === marker);
-        if (index > -1) {
-            const markerObj = state.markers[index];
-            if (markerObj.popup) {
-                markerObj.popup.remove();
-            }
-            marker.remove();
-            state.markers.splice(index, 1);
-        }
-    }
-
-    /**
-     * Open popup for a specific marker
-     * @param {maplibregl.Marker} marker - The marker to open popup for
-     */
-    function openMarkerPopup(marker) {
-        const markerObj = state.markers.find(m => m.marker === marker);
-        if (markerObj) {
-            // Trigger click on marker element to open popup
-            markerObj.marker.getElement().click();
-        }
-    }
-
-    /**
-     * Get the current open popup
-     * @returns {maplibregl.Popup|null} The currently open popup or null
-     */
-    function getCurrentPopup() {
-        return state.currentPopup;
-    }
-
-    /**
-     * Get the marker associated with the current open popup
-     * @returns {maplibregl.Marker|null} The marker with open popup or null
-     */
-    function getCurrentPopupMarker() {
-        return state.currentPopupMarker;
-    }
-
-    /**
-     * Get marker object by marker instance
-     * @param {maplibregl.Marker} marker - The marker instance
-     * @returns {Object|null} The marker object or null
-     */
-    function getMarkerObject(marker) {
-        return state.markers.find(m => m.marker === marker) || null;
-    }
-
-    /**
-     * Get the map instance
-     * @returns {maplibregl.Map|null} The map instance
-     */
     function getMap() {
         return state.mapInstance;
     }
 
-    /**
-     * Iterate over all markers
-     * @param {Function} callback - Callback function(markerObj)
-     */
-    function eachMarker(callback) {
-        state.markers.forEach(callback);
-    }
+    // ========================================
+    // PUBLIC API
+    // ========================================
 
-    /**
-     * Check if two rectangles overlap
-     * @param {Object} rect1 - First rectangle {left, right, top, bottom}
-     * @param {Object} rect2 - Second rectangle {left, right, top, bottom}
-     * @returns {boolean} True if rectangles overlap
-     */
-    function rectsOverlap(rect1, rect2) {
-        return !(rect1.right < rect2.left ||
-                 rect1.left > rect2.right ||
-                 rect1.bottom < rect2.top ||
-                 rect1.top > rect2.bottom);
-    }
-
-    /**
-     * Combined update for marker z-indices and label visibility.
-     * Projects all marker positions once and uses the results for both operations,
-     * avoiding redundant map.project() calls. Uses cached label dimensions to
-     * avoid layout thrashing from DOM measurement.
-     */
-    function updateMarkerVisuals() {
-        if (!state.mapInstance) return;
-
-        const markers = state.markers;
-        if (markers.length === 0) return;
-
-        // --- Shared: Project all marker positions once ---
-        const projected = markers.map(markerObj => ({
-            markerObj,
-            screenPos: state.mapInstance.project(markerObj.lngLat)
-        }));
-
-        // --- Z-Index Update ---
-        const maxZIndex = 399; // Must stay below popup z-index (400)
-        const viewportHeight = window.innerHeight;
-        const offsetY = viewportHeight * 0.5; // Buffer offset (must match CSS)
-
-        for (const { markerObj, screenPos } of projected) {
-            const normalizedY = (screenPos.y - offsetY) / viewportHeight;
-            const zIndex = Math.round(Math.max(0, Math.min(1, normalizedY)) * maxZIndex);
-            markerObj.marker.getElement().style.zIndex = zIndex;
-        }
-
-        // --- Label Visibility ---
-        const isMobile = window.innerWidth <= Constants.UI.MOBILE_BREAKPOINT;
-        const densityRadius = isMobile ? 150 : 200;
-        const maxLocalDensity = isMobile ? 4 : 6;
-
-        const markerSize = 54;
-        const markerRadius = markerSize / 2;
-        const labelOffset = -6; // margin-left in CSS
-
-        // Build screen positions with cached label dimensions (no DOM reads)
-        const markerScreenPositions = projected.map(({ markerObj, screenPos }) => {
-            const labelEl = markerObj.marker.getElement().querySelector('.marker-label');
-            const labelWidth = markerObj.labelWidth || 0;
-            const labelHeight = markerObj.labelHeight || 0;
-
-            const labelRect = {
-                left: screenPos.x + markerRadius + labelOffset,
-                right: screenPos.x + markerRadius + labelOffset + labelWidth,
-                top: screenPos.y - labelHeight / 2,
-                bottom: screenPos.y + labelHeight / 2
-            };
-
-            return {
-                markerObj,
-                x: screenPos.x,
-                y: screenPos.y,
-                labelRect,
-                labelEl
-            };
-        });
-
-        // Build spatial grid for efficient local density calculation
-        const cellSize = densityRadius;
-        const grid = new Map();
-
-        for (const pos of markerScreenPositions) {
-            const cellX = Math.floor(pos.x / cellSize);
-            const cellY = Math.floor(pos.y / cellSize);
-            const cellKey = `${cellX},${cellY}`;
-            if (!grid.has(cellKey)) {
-                grid.set(cellKey, []);
-            }
-            grid.get(cellKey).push(pos);
-        }
-
-        // Calculate local density for each marker
-        const densityRadiusSq = densityRadius * densityRadius;
-        for (const pos of markerScreenPositions) {
-            const cellX = Math.floor(pos.x / cellSize);
-            const cellY = Math.floor(pos.y / cellSize);
-            let neighborCount = 0;
-
-            for (let dx = -1; dx <= 1; dx++) {
-                for (let dy = -1; dy <= 1; dy++) {
-                    const neighborKey = `${cellX + dx},${cellY + dy}`;
-                    const cellMarkers = grid.get(neighborKey);
-                    if (!cellMarkers) continue;
-
-                    for (const other of cellMarkers) {
-                        if (other === pos) continue;
-                        const distSq = (pos.x - other.x) ** 2 + (pos.y - other.y) ** 2;
-                        if (distSq <= densityRadiusSq) {
-                            neighborCount++;
-                        }
-                    }
-                }
-            }
-            pos.localDensity = neighborCount;
-        }
-
-        // Sort by local density (lowest first - sparse areas get priority)
-        markerScreenPositions.sort((a, b) => a.localDensity - b.localDensity);
-
-        const shownLabelRects = [];
-
-        // First pass: hide all labels
-        for (const pos of markerScreenPositions) {
-            if (pos.labelEl) {
-                pos.labelEl.classList.remove('visible');
-            }
-        }
-
-        // Second pass: show labels in sparse areas that don't overlap
-        for (const pos of markerScreenPositions) {
-            if (!pos.labelEl) continue;
-
-            if (pos.localDensity > maxLocalDensity) continue;
-
-            let overlapsLabel = false;
-            for (const shownRect of shownLabelRects) {
-                if (rectsOverlap(pos.labelRect, shownRect)) {
-                    overlapsLabel = true;
-                    break;
-                }
-            }
-            if (overlapsLabel) continue;
-
-            pos.labelEl.classList.add('visible');
-            shownLabelRects.push(pos.labelRect);
-        }
-    }
-
-    /**
-     * Re-measure and cache label dimensions for all markers.
-     * Called on window resize to handle CSS breakpoint changes.
-     */
-    function invalidateLabelDimensionCache() {
-        state.markers.forEach(markerObj => {
-            const labelEl = markerObj.marker.getElement().querySelector('.marker-label');
-            if (labelEl) {
-                labelEl.classList.add('visible');
-                markerObj.labelWidth = labelEl.offsetWidth;
-                markerObj.labelHeight = labelEl.offsetHeight;
-                labelEl.classList.remove('visible');
-            }
-        });
-    }
-
-    /**
-     * Initialize marker visual updates and resize handling.
-     * The moveend listener for ongoing updates is managed by script.js
-     * to avoid redundant calls.
-     */
-    function enableZIndexUpdates() {
-        if (!state.mapInstance) return;
-
-        // Invalidate cached label dimensions on resize (handles CSS breakpoint changes)
-        window.addEventListener('resize', Utils.throttle(() => {
-            invalidateLabelDimensionCache();
-        }, 500));
-
-        // Initial update
-        updateMarkerVisuals();
-    }
-
-    /**
-     * Get the current map bounds with an optional buffer
-     * Uses the map's native getBounds() and expands it proportionally in lat/lng space
-     * @param {number} [bufferRatio=0.5] - Buffer as a ratio of viewport size (0.5 = 50% buffer on each side)
-     * @returns {Object|null} Bounds object with north/south/east/west, or null if map not ready
-     */
-    function getBufferedBounds(bufferRatio = 0.5) {
-        if (!state.mapInstance) return null;
-
-        const bounds = state.mapInstance.getBounds();
-        const ne = bounds.getNorthEast();
-        const sw = bounds.getSouthWest();
-
-        const latRange = ne.lat - sw.lat;
-        const lngRange = ne.lng - sw.lng;
-
-        const latBuffer = latRange * bufferRatio;
-        const lngBuffer = lngRange * bufferRatio;
-
-        return {
-            north: ne.lat + latBuffer,
-            south: sw.lat - latBuffer,
-            east: ne.lng + lngBuffer,
-            west: sw.lng - lngBuffer
-        };
-    }
-
-    /**
-     * Check if a coordinate is within given bounds
-     * @param {number} lat - Latitude
-     * @param {number} lng - Longitude
-     * @param {Object} bounds - Bounds object with north, south, east, west
-     * @returns {boolean} True if coordinate is within bounds
-     */
-    function isInBounds(lat, lng, bounds) {
-        return lat <= bounds.north &&
-               lat >= bounds.south &&
-               lng <= bounds.east &&
-               lng >= bounds.west;
-    }
-
-    /**
-     * Get count of current markers
-     * @returns {number} Number of markers currently on the map
-     */
-    function getMarkerCount() {
-        return state.markers.length;
-    }
-
-    /**
-     * Public API for MapManager
-     * @public
-     */
     return {
         init,
-        clearMarkers,
         getMarkerColor,
-        createMarkerIcon,
-        addMarkerToMap,
-        removeMarker,
-        openMarkerPopup,
-        getCurrentPopup,
-        getCurrentPopupMarker,
-        getMarkerObject,
         getMap,
-        eachMarker,
-        updateMarkerVisuals,
-        enableZIndexUpdates,
-        getBufferedBounds,
-        isInBounds,
-        getMarkerCount
+        getCurrentPopup,
+        getCurrentPopupLocationKey,
+        loadEmojiImages,
+        reloadEmojiImages,
+        updateMarkerData,
+        setupMarkerInteractions,
+        openPopupAtCoordinates,
+        registerPopupCallback,
+        updateThemeColors
     };
 })();

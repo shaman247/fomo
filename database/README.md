@@ -15,7 +15,7 @@ pip install mysql-connector-python
 
 ## Database Configuration
 
-The database uses the same credentials as the PHP API (`public_html/api/config.php`):
+The database uses the same credentials as the PHP API (`src/api/config.php`):
 
 | Environment | Database | User | Host |
 |-------------|----------|------|------|

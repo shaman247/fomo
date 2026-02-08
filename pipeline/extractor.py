@@ -158,11 +158,22 @@ EVENTS_PER_CHUNK = 50
 # Batch size for enrichment (second pass)
 ENRICHMENT_BATCH_SIZE = 30
 
+# Default maximum number of enrichment batches for large pages
+# Limits API cost by capping how many events get enriched
+# Can be overridden per-website via the max_batches column
+DEFAULT_MAX_BATCHES = 3
+
 # Timeout per chunk (seconds) - increased for large pages that can't be chunked
 CHUNK_TIMEOUT = 300
 
 # Maximum characters per chunk when falling back to character-based chunking
 MAX_CHUNK_CHARS = 30000
+
+# Hard limit on total content size before extraction (characters).
+# Pages exceeding this will be truncated. 120K chars ≈ 4 chunks of 30K,
+# which is plenty for any events page. Prevents runaway extraction on
+# pages with huge archives (e.g., years of past events).
+MAX_CONTENT_CHARS = 120000
 
 # Maximum number of images to process for vision extraction
 MAX_VISION_IMAGES = 10
@@ -265,7 +276,7 @@ async def download_and_encode_image(url, max_dimension=MAX_IMAGE_DIMENSION):
             b64_data = base64.standard_b64encode(img_data).decode('utf-8')
             return b64_data, mime_type
 
-    except Exception as e:
+    except Exception:
         return None, None
 
 
@@ -516,39 +527,17 @@ def count_event_markers(content):
 def estimate_event_count(content):
     """
     Estimate the number of events on a page using pattern matching.
-
-    Looks for common event indicators like dates, "View Event" links, etc.
-    Returns a rough estimate to decide whether to use two-pass extraction.
+    Returns a rough estimate to decide whether to use chunked extraction.
     """
-    # Count date patterns (Month Day format)
-    date_patterns = len(re.findall(
+    date_count = len(re.findall(
         r'(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2}',
         content, re.IGNORECASE
     ))
-
-    # Count "View Event" or similar links
     view_event_count = len(re.findall(r'View\s+Event|View\s+Details|More\s+Info', content, re.IGNORECASE))
-
-    # Count event URL patterns
     event_url_count = len(re.findall(r'/events?/[^/\s"\']+', content))
 
-    # Return the maximum of these indicators
-    return max(date_patterns // 2, view_event_count, event_url_count // 2)
-
-
-def get_simple_prompt(url, page_content, current_date_string, name, notes):
-    """Generate a simplified prompt for first-pass extraction on large pages."""
-    note_section = f"\n\nIMPORTANT: {notes}" if notes else ""
-
-    return f'''Today's date is {current_date_string}. Extract ALL events from this NYC venue page.
-
-For each event provide: name, location (venue name), occurrences (array of start_date in YYYY-MM-DD, start_time, end_time), and url if available.
-{note_section}
-IMPORTANT: Extract EVERY event - do not skip or summarize. There may be 100+ events.
-
-Website content:
-
-{page_content}'''
+    # Dates may appear 2x per event (heading + details), so halve them
+    return max(date_count // 2, view_event_count, event_url_count // 2)
 
 
 def get_enrichment_prompt(event_names, venue_name):
@@ -590,16 +579,14 @@ async def enrich_events_batch(event_names, venue_name):
             timeout=GEMINI_TIMEOUT
         )
         result = json.loads(response.text.strip())
-        # Convert list to dict for easy lookup
-        enrichments = {}
-        for item in result.get('enrichments', []):
-            name = item.get('name', '')
-            enrichments[name] = {
+        return {
+            item.get('name', ''): {
                 'description': item.get('description', ''),
                 'hashtags': item.get('hashtags', []),
                 'emoji': item.get('emoji', '📅')
             }
-        return enrichments
+            for item in result.get('enrichments', [])
+        }
     except Exception as e:
         print(f"    - Enrichment batch error: {e}")
         return {}
@@ -643,7 +630,7 @@ Website content:
         return []
 
 
-async def extract_large_page(url, content, current_date_string, name, notes):
+async def extract_large_page(url, content, current_date_string, name, notes, max_batches=None):
     """
     Chunked extraction for large pages.
 
@@ -652,15 +639,27 @@ async def extract_large_page(url, content, current_date_string, name, notes):
     3. Enrich all events with descriptions/hashtags/emoji in batches
     4. Combine and return results
 
+    Args:
+        max_batches: Maximum enrichment batches. None uses DEFAULT_MAX_BATCHES.
+
     Returns the combined result as a JSON string.
     """
+    if max_batches is None:
+        max_batches = DEFAULT_MAX_BATCHES
+    max_events = max_batches * ENRICHMENT_BATCH_SIZE
+
     # Split content into chunks using smart chunking
     chunks, chunk_method = chunk_content(content, EVENTS_PER_CHUNK, MAX_CHUNK_CHARS)
     print(f"    - Split into {len(chunks)} chunks using {chunk_method}-based chunking")
 
     # Extract events from each chunk
     all_simple_events = []
+    skipped_chunks = 0
     for i, chunk in enumerate(chunks):
+        # Stop extracting chunks once we have enough events for max_batches
+        if len(all_simple_events) >= max_events:
+            skipped_chunks = len(chunks) - i
+            break
         chunk_events = count_event_markers(chunk)
         print(f"    - Processing chunk {i + 1}/{len(chunks)} (~{chunk_events} events, {len(chunk)} chars)...")
         events = await extract_chunk(chunk, current_date_string, notes)
@@ -673,15 +672,26 @@ async def extract_large_page(url, content, current_date_string, name, notes):
     if not all_simple_events:
         return '{"events": []}'
 
+    if skipped_chunks > 0:
+        print(f"    - Skipped {skipped_chunks} remaining chunk(s) (already have {len(all_simple_events)} events)")
+
     print(f"    - Total from chunks: {len(all_simple_events)} events")
+
+    # Cap events at max_batches to limit API cost
+    total_batches_needed = -(-len(all_simple_events) // ENRICHMENT_BATCH_SIZE)  # ceiling division
+    if total_batches_needed > max_batches:
+        print(f"    - WARNING: {len(all_simple_events)} events would need {total_batches_needed} batches, capping at {max_batches} ({max_events} events). "
+              f"Set max_batches in websites table to override.")
+        all_simple_events = all_simple_events[:max_events]
 
     # Enrich events with descriptions/hashtags/emoji in batches
     event_names = [e['name'] for e in all_simple_events]
+    num_batches = -(-len(event_names) // ENRICHMENT_BATCH_SIZE)
     all_enrichments = {}
 
     for i in range(0, len(event_names), ENRICHMENT_BATCH_SIZE):
         batch = event_names[i:i + ENRICHMENT_BATCH_SIZE]
-        print(f"    - Enriching batch {i // ENRICHMENT_BATCH_SIZE + 1} ({len(batch)} events)...")
+        print(f"    - Enriching batch {i // ENRICHMENT_BATCH_SIZE + 1}/{num_batches} ({len(batch)} events)...")
         enrichments = await enrich_events_batch(batch, name)
         all_enrichments.update(enrichments)
 
@@ -750,7 +760,7 @@ Website content:
 
 
 async def extract_events(cursor, connection, crawl_result_id, website_name, notes="",
-                         use_vision=False, base_url=""):
+                         use_vision=False, base_url="", max_batches=None):
     """
     Extract events from crawled content using Gemini AI with structured outputs.
 
@@ -807,56 +817,52 @@ async def extract_events(cursor, connection, crawl_result_id, website_name, note
     url, content_to_process = extract_url_from_content(page_content)
     url = url or ""
 
+    # Hard limit on content size to prevent runaway extraction
+    if len(content_to_process) > MAX_CONTENT_CHARS:
+        print(f"    - Content too large ({len(content_to_process)} chars), truncating to {MAX_CONTENT_CHARS}")
+        content_to_process = content_to_process[:MAX_CONTENT_CHARS]
+
     # Decide extraction approach
+    estimated_events = 0
+    use_two_pass = False
     if use_vision:
-        # Vision-based extraction for image-heavy pages
         print(f"    - Using vision extraction for {website_name} ({len(content_to_process)} chars)...")
     else:
-        # Estimate event count to decide text extraction approach
         estimated_events = estimate_event_count(content_to_process)
-        use_two_pass = estimated_events > LARGE_PAGE_THRESHOLD
+        use_two_pass = estimated_events > LARGE_PAGE_THRESHOLD or len(content_to_process) > MAX_CHUNK_CHARS * 2
 
         if use_two_pass:
-            print(f"    - Large page detected (~{estimated_events} events), using chunked extraction...")
+            print(f"    - Large page detected (~{estimated_events} events, {len(content_to_process)} chars), using chunked extraction...")
         else:
             print(f"    - Extracting events using {GEMINI_MODEL} ({len(content_to_process)} chars)...")
 
     try:
         if use_vision:
-            # Vision-based extraction - analyze images in the content
             response_text = await extract_with_vision(
                 url, content_to_process, current_date_string, website_name, notes,
                 base_url=base_url or url
             )
         elif use_two_pass:
-            # Two-pass extraction for large pages
             response_text = await extract_large_page(
-                url, content_to_process, current_date_string, website_name, notes
+                url, content_to_process, current_date_string, website_name, notes,
+                max_batches=max_batches
             )
         else:
-            # Standard single-pass extraction for smaller pages
             prompt = get_prompt(url, content_to_process, current_date_string, website_name, notes, existing_events)
+            response = await asyncio.wait_for(
+                genai_client.aio.models.generate_content(
+                    model=GEMINI_MODEL,
+                    contents=prompt,
+                    config={
+                        "response_mime_type": "application/json",
+                        "response_schema": EventList,
+                    }
+                ),
+                timeout=GEMINI_TIMEOUT
+            )
+            response_text = response.text.strip()
 
-            # Call Gemini API with structured output
-            try:
-                response = await asyncio.wait_for(
-                    genai_client.aio.models.generate_content(
-                        model=GEMINI_MODEL,
-                        contents=prompt,
-                        config={
-                            "response_mime_type": "application/json",
-                            "response_schema": EventList,
-                        }
-                    ),
-                    timeout=GEMINI_TIMEOUT
-                )
-                response_text = response.text.strip()
-            except asyncio.TimeoutError:
-                print(f"    - Timeout after {GEMINI_TIMEOUT}s")
-                raise Exception(f"Gemini API timeout after {GEMINI_TIMEOUT} seconds")
-
-        # Handle empty responses
-        if not response_text.strip():
+        if not response_text or not response_text.strip():
             response_text = '{"events": []}'
 
         # Validate JSON
@@ -867,23 +873,14 @@ async def extract_events(cursor, connection, crawl_result_id, website_name, note
                 len(e.get('occurrences', [])) for e in parsed.get('events', [])
             )
         except json.JSONDecodeError:
-            # If somehow invalid JSON, wrap in empty structure
             response_text = '{"events": []}'
             event_count = 0
             occurrence_count = 0
 
-        # Store extracted content in database
         db.update_crawl_result_extracted(cursor, connection, crawl_result_id, response_text)
         print(f"    - Extracted {event_count} events with {occurrence_count} occurrences")
         return True
 
-    except asyncio.TimeoutError:
-        error_msg = f"Timeout after {GEMINI_TIMEOUT} seconds"
-        print(f"    - Extraction error: {error_msg}")
-        db.update_crawl_result_failed(
-            cursor, connection, crawl_result_id, f"Extraction failed: {error_msg}"
-        )
-        return False
     except Exception as e:
         error_msg = str(e) or type(e).__name__
         print(f"    - Extraction error: {error_msg}")

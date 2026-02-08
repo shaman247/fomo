@@ -38,7 +38,7 @@ def export_events(cursor):
     - locations.init.json (locations for init events)
     - locations.full.json (locations for full events)
     """
-    output_dir = os.path.join(SCRIPT_DIR, '..', 'public_html', 'data')
+    output_dir = os.path.join(SCRIPT_DIR, '..', 'src', 'data')
     os.makedirs(output_dir, exist_ok=True)
 
     current_date = datetime.now().date()
@@ -71,21 +71,19 @@ def export_events(cursor):
             ORDER BY start_date, start_time
         """, (event_id,))
         occurrences = []
-        has_valid_occurrence = False
         for occ in cursor.fetchall():
             start_date = occ[0]
             end_date = occ[2] if occ[2] else start_date
-            # Check if occurrence is within date range
+            # Only include occurrences within the active date range
             if start_date and start_date <= future_limit_date and end_date >= current_date:
-                has_valid_occurrence = True
-            occurrences.append([
-                str(occ[0]) if occ[0] else None,
-                occ[1],
-                str(occ[2]) if occ[2] else None,
-                occ[3]
-            ])
+                occurrences.append([
+                    str(occ[0]) if occ[0] else None,
+                    occ[1],
+                    str(occ[2]) if occ[2] else None,
+                    occ[3]
+                ])
 
-        if not has_valid_occurrence:
+        if not occurrences:
             continue
 
         # Get URLs
@@ -199,15 +197,15 @@ def export_events(cursor):
         if (round(loc['lat'], 5), round(loc['lng'], 5)) not in init_location_coords
     ]
 
-    # Write output files
-    with open(os.path.join(output_dir, 'events.init.json'), 'w', encoding='utf-8') as f:
-        json.dump(init_events, f, indent=2, ensure_ascii=False)
-    with open(os.path.join(output_dir, 'locations.init.json'), 'w', encoding='utf-8') as f:
-        json.dump(init_locations, f, indent=2, ensure_ascii=False)
-    with open(os.path.join(output_dir, 'events.full.json'), 'w', encoding='utf-8') as f:
-        json.dump(full_events, f, indent=2, ensure_ascii=False)
-    with open(os.path.join(output_dir, 'locations.full.json'), 'w', encoding='utf-8') as f:
-        json.dump(full_locations, f, indent=2, ensure_ascii=False)
+    # Write output files (compact JSON — no whitespace)
+    for filename, data in [
+        ('events.init.json', init_events),
+        ('locations.init.json', init_locations),
+        ('events.full.json', full_events),
+        ('locations.full.json', full_locations),
+    ]:
+        with open(os.path.join(output_dir, filename), 'w', encoding='utf-8') as f:
+            json.dump(data, f, separators=(',', ':'), ensure_ascii=False)
 
     print(f"  Exported {len(init_events)} init events, {len(full_events)} full events")
     print(f"  Exported {len(init_locations)} init locations, {len(full_locations)} full locations")

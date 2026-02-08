@@ -38,8 +38,6 @@
     --reset-text-shadow: 1px 1px 2px black;
     --map-bg: #111;
     --marker-stroke: #666;
-    --marker-label-color: #bbb;
-    --marker-label-hover-color: #ddd;
 
     /* === Tag Button Colors === */
     /* Selected/active tags use a red/pink color to stand out */
@@ -99,9 +97,6 @@
     --primary-text: #1a1a1a;         /* Near black for headings */
     --secondary-text: #333;       /* Dark gray for body text */
 
-    --marker-label-color: #333;
-    --marker-label-hover-color: #111;
-
     /* Map background matches theme */
     --map-bg: #c8c8c8;               /* Neutral gray */
 
@@ -123,14 +118,6 @@
     --summary-open: #785e1d;         /* Darker yellow */
     --summary-closed-hover: #900a11; /* Deep red */
     --summary-open-hover: #8b6400;   /* Deep yellow */
-}
-
-/*
- * Light theme: Adjust marker visibility
- * Emoji markers need brightness adjustment to show up well on light backgrounds
- */
-:root[data-theme="light"] .custom-marker-icon svg {
-    filter: brightness(1.6) contrast(0.6);
 }
 
 /*

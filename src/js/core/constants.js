@@ -47,17 +47,6 @@ const Constants = (() => {
         // Responsive breakpoints (in pixels)
         MOBILE_BREAKPOINT: 768,
 
-        // Marker limits
-        MAX_MARKERS: 300,
-
-        // Marker label visibility thresholds
-        // Maximum visible markers before hiding all labels
-        MAX_MARKERS_FOR_LABELS_MOBILE: 20,
-        MAX_MARKERS_FOR_LABELS_DESKTOP: 50,
-        // Maximum number of labels to show on screen
-        MAX_LABELS_MOBILE: 20,
-        MAX_LABELS_DESKTOP: 50,
-
         // Line height for text calculations (in pixels)
         LINE_HEIGHT_PX: 32,
 

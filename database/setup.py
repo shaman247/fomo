@@ -26,7 +26,7 @@ except ImportError:
     sys.exit(1)
 
 
-# Configuration - matches public_html/api/config.php
+# Configuration - matches src/api/config.php
 DB_CONFIG = {
     'local': {
         'host': 'localhost',

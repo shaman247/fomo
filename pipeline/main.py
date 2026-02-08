@@ -132,11 +132,12 @@ async def run_pipeline(website_ids=None, limit=None):
         # These are browser-level settings, so websites with different settings
         # need separate browser instances
         def get_browser_key(w):
-            # Use defaults when value is None: True for text/light, False for stealth
-            text_mode = w['text_mode'] if w.get('text_mode') is not None else True
-            light_mode = w['light_mode'] if w.get('light_mode') is not None else True
-            use_stealth = w['use_stealth'] if w.get('use_stealth') is not None else False
-            return (text_mode, light_mode, use_stealth)
+            """Group key from browser-level settings (defaults: text=True, light=True, stealth=False)."""
+            return (
+                w.get('text_mode') if w.get('text_mode') is not None else True,
+                w.get('light_mode') if w.get('light_mode') is not None else True,
+                w.get('use_stealth') if w.get('use_stealth') is not None else False,
+            )
 
         website_batches = {}
         for website in websites:
@@ -227,7 +228,8 @@ async def run_pipeline(website_ids=None, limit=None):
                 'source': 'new',
                 'website': website,
                 'use_vision': website.get('process_images') == 1,
-                'base_url': website.get('base_url', '')
+                'base_url': website.get('base_url', ''),
+                'max_batches': website.get('max_batches')
             })
 
         if extraction_queue:
@@ -258,7 +260,8 @@ async def run_pipeline(website_ids=None, limit=None):
                             cur, conn, item['crawl_result_id'],
                             item['name'], item['notes'],
                             use_vision=item.get('use_vision', False),
-                            base_url=item.get('base_url', '')
+                            base_url=item.get('base_url', ''),
+                            max_batches=item.get('max_batches')
                         )
                         if success:
                             if item['source'] == 'incomplete':
@@ -319,12 +322,8 @@ async def run_pipeline(website_ids=None, limit=None):
         # Then process newly extracted results
         for crawl_result_id, website in extracted_results:
             print(f"  Processing {website['name']}...")
-            # Use the run date from the website dict if available (for resumed crawls)
             website_run_date = website.get('run_date')
-            if website_run_date:
-                result_run_date_str = website_run_date.strftime('%Y%m%d')
-            else:
-                result_run_date_str = run_date_str
+            result_run_date_str = website_run_date.strftime('%Y%m%d') if website_run_date else run_date_str
             event_count = processor.process_events(
                 cursor, connection, crawl_result_id,
                 website['name'], result_run_date_str

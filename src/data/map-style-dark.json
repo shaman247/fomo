@@ -8,7 +8,7 @@
       "attribution": "<a href=\"https://protomaps.com\">Protomaps</a> © <a href=\"https://openstreetmap.org\">OpenStreetMap</a>"
     }
   },
-  "glyphs": "https://fonts.openmaptiles.org/{fontstack}/{range}.pbf",
+  "glyphs": "fonts/glyphs/{fontstack}/{range}.pbf",
   "layers": [
     {
       "id": "background",
@@ -147,7 +147,7 @@
       "layout": {
         "symbol-placement": "line",
         "text-field": ["get", "name"],
-        "text-font": ["Open Sans Regular"],
+        "text-font": ["Inter Regular"],
         "text-size": [
           "interpolate", ["linear"], ["zoom"],
           11, 9,
@@ -171,7 +171,7 @@
       "minzoom": 12,
       "layout": {
         "text-field": ["get", "name"],
-        "text-font": ["Open Sans Semibold"],
+        "text-font": ["Inter SemiBold"],
         "text-size": [
           "interpolate", ["linear"], ["zoom"],
           12, 10,

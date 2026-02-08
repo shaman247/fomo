@@ -43,7 +43,6 @@ body.use-noto-emoji * {
 }
 
 /* Specifically target emoji elements */
-body.use-noto-emoji .marker-emoji,
 body.use-noto-emoji .popup-header-emoji,
 body.use-noto-emoji .popup-event-emoji {
     font-family: 'Noto Color Emoji', sans-serif !important;

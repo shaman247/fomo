@@ -1,13 +1,14 @@
 """
-Public HTML Upload Script
+Upload Script
 
-This script uploads HTML, CSS, and JavaScript files from the public_html directory to an FTP server.
-Images and fonts directories are excluded.
+Uploads the dist/ build output to the server's public_html/ directory via FTP.
 
 Smart Upload:
-- Tracks file modification times in upload_state.json
-- Only uploads files that have changed since the last upload
+- Tracks file content hashes in upload_state.json
+- Only uploads files whose content has changed since the last upload
 - Use --force to upload all files regardless of state
+
+Prerequisite: Run `npm run build` first to generate dist/
 
 Configuration:
 - FTP credentials should be set in .env file:
@@ -18,6 +19,7 @@ Usage:
     python upload_public_html.py --force  # Upload all files
 """
 
+import hashlib
 import json
 import os
 import sys
@@ -31,26 +33,13 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 STATE_FILE = os.path.join(SCRIPT_DIR, 'upload_state.json')
 
 
-def load_upload_state():
-    """Load the previous upload state from JSON file."""
-    if os.path.exists(STATE_FILE):
-        try:
-            with open(STATE_FILE, 'r') as f:
-                return json.load(f)
-        except (json.JSONDecodeError, IOError):
-            return {}
-    return {}
-
-
-def save_upload_state(state):
-    """Save the upload state to JSON file."""
-    with open(STATE_FILE, 'w') as f:
-        json.dump(state, f, indent=2, sort_keys=True)
-
-
-def get_file_mtime(file_path):
-    """Get file modification time as a float timestamp."""
-    return os.path.getmtime(file_path)
+def get_file_hash(file_path):
+    """Get MD5 hash of file contents."""
+    h = hashlib.md5()
+    with open(file_path, 'rb') as f:
+        for chunk in iter(lambda: f.read(8192), b''):
+            h.update(chunk)
+    return h.hexdigest()
 
 
 def ensure_remote_directory(ftp, remote_path):
@@ -79,29 +68,24 @@ def ensure_remote_directory(ftp, remote_path):
                 print(f"  Warning: Could not create directory '{current_path}': {e}")
 
 
-def upload_directory(ftp, local_dir, remote_dir, root_exclude_dirs=None, exclude_files=None,
-                     is_root=True, previous_state=None, new_state=None, force=False):
+def upload_directory(ftp, local_dir, remote_dir, is_root=True,
+                     previous_state=None, new_state=None, force=False):
     """
     Recursively upload directory contents to FTP server.
+    Skips symlinks (dev mode artifacts).
 
     Args:
         ftp: FTP connection object
         local_dir: Local directory path
         remote_dir: Remote directory path
-        root_exclude_dirs: Set of directory names to exclude at root level only
-        exclude_files: Set of relative file paths to exclude (e.g., 'data/events.full.json')
         is_root: Whether this is the root directory level
-        previous_state: Dict of file paths to previous modification times
-        new_state: Dict to populate with current file modification times
-        force: If True, upload all files regardless of modification time
+        previous_state: Dict of file paths to previous content hashes
+        new_state: Dict to populate with current content hashes
+        force: If True, upload all files regardless of content
 
     Returns:
         tuple: (uploaded_count, skipped_count, total_count)
     """
-    if root_exclude_dirs is None:
-        root_exclude_dirs = set()
-    if exclude_files is None:
-        exclude_files = set()
     if previous_state is None:
         previous_state = {}
     if new_state is None:
@@ -113,6 +97,10 @@ def upload_directory(ftp, local_dir, remote_dir, root_exclude_dirs=None, exclude
 
     local_path = Path(local_dir)
 
+    # Skip symlinks (dev mode artifacts)
+    if local_path.is_symlink():
+        return 0, 0, 0
+
     # Ensure we're in the correct remote directory for this level
     if remote_dir:
         try:
@@ -123,35 +111,30 @@ def upload_directory(ftp, local_dir, remote_dir, root_exclude_dirs=None, exclude
     # Separate files and directories
     items = sorted(local_path.iterdir())
     files = [item for item in items if item.is_file()]
-    directories = [item for item in items if item.is_dir()]
+    directories = [item for item in items if item.is_dir() and not item.is_symlink()]
 
     # Upload files first (before any directory changes)
     for item in files:
         filename = item.name
         remote_file_path = f"{remote_dir}/{filename}" if remote_dir else filename
 
-        # Check if this file should be excluded
-        if remote_file_path in exclude_files:
-            print(f"  Skipping excluded file: {remote_file_path}")
-            continue
-
         total_count += 1
 
-        # Get current modification time
-        current_mtime = get_file_mtime(item)
-        previous_mtime = previous_state.get(remote_file_path)
+        # Get current content hash
+        current_hash = get_file_hash(item)
+        previous_hash = previous_state.get(remote_file_path)
 
-        # Store the current mtime in new state
-        new_state[remote_file_path] = current_mtime
+        # Store the current hash in new state
+        new_state[remote_file_path] = current_hash
 
         # Check if file has changed
-        if not force and previous_mtime is not None and current_mtime == previous_mtime:
+        if not force and previous_hash is not None and current_hash == previous_hash:
             skipped_count += 1
             continue
 
         try:
-            status = "(new)" if previous_mtime is None else "(modified)"
-            if force and previous_mtime is not None and current_mtime == previous_mtime:
+            status = "(new)" if previous_hash is None else "(modified)"
+            if force and previous_hash is not None and current_hash == previous_hash:
                 status = "(forced)"
             print(f"  - Uploading {remote_file_path} {status}...", end=' ', flush=True)
 
@@ -166,11 +149,6 @@ def upload_directory(ftp, local_dir, remote_dir, root_exclude_dirs=None, exclude
 
     # Then process subdirectories
     for item in directories:
-        # Skip excluded directories (only at root level)
-        if is_root and item.name in root_exclude_dirs:
-            print(f"  Skipping excluded directory: {item.name}/")
-            continue
-
         subdir_name = item.name
         new_remote_dir = f"{remote_dir}/{subdir_name}" if remote_dir else subdir_name
 
@@ -186,9 +164,9 @@ def upload_directory(ftp, local_dir, remote_dir, root_exclude_dirs=None, exclude
             except Exception as e:
                 print(f"    Warning: Could not create directory '{new_remote_dir}': {e}")
 
-        # Upload subdirectory contents (not root level anymore)
+        # Upload subdirectory contents
         sub_uploaded, sub_skipped, sub_total = upload_directory(
-            ftp, item, new_remote_dir, root_exclude_dirs, exclude_files,
+            ftp, item, new_remote_dir,
             is_root=False, previous_state=previous_state, new_state=new_state, force=force
         )
         uploaded_count += sub_uploaded
@@ -207,24 +185,7 @@ def upload_directory(ftp, local_dir, remote_dir, root_exclude_dirs=None, exclude
 
 def main(remote_dir=None, use_tls=False, force=False):
     """
-    Upload public_html content to FTP server.
-
-    Uploads files from:
-    - public_html/ (root files)
-    - public_html/api/
-    - public_html/css/
-    - public_html/js/ (including js/data/)
-    - public_html/data/ (excluding event/location JSON files)
-
-    Excludes (at root level only):
-    - public_html/images/
-    - public_html/fonts/
-
-    Excludes (specific files):
-    - public_html/data/events.full.json
-    - public_html/data/events.init.json
-    - public_html/data/locations.full.json
-    - public_html/data/locations.init.json
+    Upload dist/ contents to the server's public_html/ directory via FTP.
 
     Args:
         remote_dir: Remote directory on FTP server (optional)
@@ -236,8 +197,7 @@ def main(remote_dir=None, use_tls=False, force=False):
     """
     load_dotenv()
 
-    # Local directory containing the public_html files
-    local_dir = os.path.join(SCRIPT_DIR, '..', 'public_html')
+    local_dir = os.path.join(SCRIPT_DIR, '..', 'dist')
 
     ftp_host = os.getenv('FTP_HOST')
     ftp_user = os.getenv('PUBLIC_HTML_FTP_USER')
@@ -250,11 +210,17 @@ def main(remote_dir=None, use_tls=False, force=False):
         return False
 
     # Load previous upload state
-    previous_state = load_upload_state()
+    previous_state = {}
+    if os.path.exists(STATE_FILE):
+        try:
+            with open(STATE_FILE, 'r') as f:
+                previous_state = json.load(f)
+        except (json.JSONDecodeError, IOError):
+            pass
     new_state = {}
 
     if force:
-        print("Force mode: uploading all files regardless of changes")
+        print("Force mode: uploading all files")
     elif previous_state:
         print(f"Found previous upload state with {len(previous_state)} files tracked")
     else:
@@ -280,34 +246,20 @@ def main(remote_dir=None, use_tls=False, force=False):
             ftp.cwd(f"/{ftp_remote_dir}")
             print(f"Changed to remote directory: {ftp_remote_dir}")
 
-        # Check if local directory exists
+        # Check if dist/ directory exists
         local_path = Path(local_dir)
         if not local_path.exists():
-            print(f"Error: Local directory '{local_dir}' does not exist.")
+            print("Error: dist/ directory does not exist.")
+            print("Hint: Run 'npm run build' first to generate the dist/ directory.")
             return False
 
         print(f"\nUploading files from: {local_dir}")
-        print("Excluding: images/, fonts/ (at root only)")
-        print("Excluding: data/events.*.json, data/locations.*.json")
-
-        # Directories to exclude at root level only
-        root_exclude_dirs = {'images', 'fonts'}
-
-        # Specific files to exclude (relative paths from public_html)
-        exclude_files = {
-            'data/events.full.json',
-            'data/events.init.json',
-            'data/locations.full.json',
-            'data/locations.init.json',
-        }
 
         # Upload directory contents
         uploaded_count, skipped_count, total_count = upload_directory(
             ftp,
             local_dir,
             ftp_remote_dir,
-            root_exclude_dirs,
-            exclude_files,
             is_root=True,
             previous_state=previous_state,
             new_state=new_state,
@@ -317,7 +269,8 @@ def main(remote_dir=None, use_tls=False, force=False):
         print(f"\nUploaded {uploaded_count} files, skipped {skipped_count} unchanged files ({total_count} total)")
 
         # Save the new state
-        save_upload_state(new_state)
+        with open(STATE_FILE, 'w') as f:
+            json.dump(new_state, f, indent=2, sort_keys=True)
         print(f"Saved upload state to {STATE_FILE}")
 
         # Close FTP connection
@@ -333,12 +286,12 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(
-        description="Upload public_html files to FTP server (smart upload - only changed files)"
+        description="Upload dist/ build output to FTP server (smart upload - only changed files)"
     )
     parser.add_argument(
         '--force', '-f',
         action='store_true',
-        help='Force upload all files, ignoring modification times'
+        help='Force upload all files, ignoring content hashes'
     )
     parser.add_argument(
         '--tls',

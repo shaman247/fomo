@@ -16,7 +16,7 @@
 // EDIT THIS ARRAY TO ADD NEW WEBSITES
 // ============================================================================
 $new_websites = [
-    // NYC Pride Hockey Alliance added 2026-02-05 - see git history
+    // The Canvas NYC (ID 2653) - added 2026-02-07
 ];
 
 // ============================================================================

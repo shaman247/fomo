@@ -129,8 +129,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 lngMin: -74.26,
                 lngMax: -73.70
             },
-            MAP_STYLE_DARK: 'data/map-style-dark.json?v=5',
-            MAP_STYLE_LIGHT: 'data/map-style-light.json?v=5',
+            MAP_STYLE_DARK: 'data/map-style-dark.json?v=7',
+            MAP_STYLE_LIGHT: 'data/map-style-light.json?v=7',
             MAP_ATTRIBUTION: '© <a href="https://protomaps.com">Protomaps</a> © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
             MAP_MAX_ZOOM: 20
         },
@@ -214,13 +214,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
-            // Initialize RelatedTagsManager with related tags data
-            await RelatedTagsManager.init({
-                relatedTagsUrl: this.config.RELATED_TAGS_URL
-            });
-
-            // Connect TagColorManager with RelatedTagsManager for related tag lookups
-            TagColorManager.setRelatedTagsCallback((tag) => RelatedTagsManager.getRelatedTags(tag));
+            // RelatedTagsManager is deferred to Phase 2 (loaded in _loadFullData)
+            // TagColorManager works without it — getRelatedTags() returns [] until loaded
 
             DataManager.processInitialData(initEventData, initLocationData, this.state, this.config);
             DataManager.calculateTagFrequencies(this.state);
@@ -337,9 +332,15 @@ document.addEventListener('DOMContentLoaded', () => {
          */
         async _loadFullData(urlParams) {
             try {
+                // Load full dataset and related tags in parallel
                 const [fullEventData, fullLocationData] = await Promise.all([
                     DataManager.fetchData(this.config.EVENT_FULL_URL),
-                    DataManager.fetchData(this.config.LOCATIONS_FULL_URL)
+                    DataManager.fetchData(this.config.LOCATIONS_FULL_URL),
+                    // Related tags deferred from Phase 1 — load in background
+                    RelatedTagsManager.init({ relatedTagsUrl: this.config.RELATED_TAGS_URL })
+                        .then(() => TagColorManager.setRelatedTagsCallback(
+                            (tag) => RelatedTagsManager.getRelatedTags(tag)
+                        ))
                 ]);
 
                 // Merge and process the full dataset
@@ -347,6 +348,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 DataManager.calculateTagFrequencies(this.state);
                 DataManager.processTagHierarchy(this.state, this.config);
                 DataManager.buildSearchIndex(this.state);
+
+                // Load emoji images for any new locations from the full dataset
+                MapManager.loadEmojiImages(this.state.locationsByLatLng);
 
                 this.updateFilteredEventList(); // This will re-filter by date/location and rebuild tag index
                 this.initFilterPanelUI();
@@ -691,7 +695,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Initialize MapManager with the MapLibre map
             MapManager.init(this.state.map, {}, this.state.tagConfig.bgcolors);
-            MapManager.enableZIndexUpdates();
 
             // Create debug container for DOM-based debug overlay
             const mapContainer = this.state.map.getContainer();
@@ -714,6 +717,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     const desiredVisibleCenter = { lat: initialView[0], lng: initialView[1] };
                     ViewportManager.adjustMapToVisibleCenter(this.state.map, desiredVisibleCenter, false);
 
+                    // Load emoji images and set up WebGL marker interactions
+                    MapManager.loadEmojiImages(this.state.locationsByLatLng);
+                    MapManager.setupMarkerInteractions();
+
                     // Fade in the map container
                     const mapContainerEl = document.getElementById('map-container');
                     if (mapContainerEl) {
@@ -726,8 +733,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Handle popup open events (custom event fired by MapManager)
             this.state.map.on('popupopen', (e) => {
-                const { marker, locationKey, popup } = e;
-                if (marker && locationKey) {
+                const { locationKey, popup, lngLat } = e;
+                if (locationKey) {
                     this.state.selectedLocationKey = locationKey;
 
                     // Pan to ensure popup fits within the visible area (90% bounds)
@@ -743,7 +750,6 @@ document.addEventListener('DOMContentLoaded', () => {
                             if (isMobile) {
                                 // Re-pan to center the marker in the new visible area first
                                 if (shouldPan) {
-                                    const lngLat = marker.getLngLat();
                                     const panOffset = ViewportManager.calculatePopupPanOffset(
                                         this.state.map,
                                         lngLat,
@@ -773,11 +779,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
                         // Get the actual popup content element for accurate width measurement
                         // MapLibre popup structure: .maplibregl-popup > .maplibregl-popup-content
-                        const contentElement = popupElement.querySelector('.maplibregl-popup-content');
+                        const contentElement = popupElement.querySelector('.maplibre-popup-content');
                         const actualWidth = contentElement ? contentElement.offsetWidth : popupElement.offsetWidth;
                         const actualHeight = contentElement ? contentElement.offsetHeight : popupElement.offsetHeight;
 
-                        const lngLat = marker.getLngLat();
                         const panOffset = ViewportManager.calculatePopupPanOffset(
                             this.state.map,
                             lngLat,
@@ -798,10 +803,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             this.state.map.on('moveend', () => {
                 this.updateVisibleItems();
-                // Update markers for new viewport (adds/removes markers based on visibility)
-                MarkerController.updateMarkersForViewport();
-                // Update z-indices and label visibility in a single projection pass
-                MapManager.updateMarkerVisuals();
                 // Debounce search rescoring — secondary to visual map updates
                 clearTimeout(this._moveendSearchTimeout);
                 this._moveendSearchTimeout = setTimeout(() => {
@@ -814,19 +815,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Handle popup close events (custom event fired by MapManager)
             this.state.map.on('popupclose', (e) => {
-                const { marker, locationKey } = e;
-                if (!marker || !locationKey) return;
+                const { locationKey } = e;
+                if (!locationKey) return;
 
                 if (this.state.selectedLocationKey === locationKey) {
                     this.state.selectedLocationKey = null;
                     // Re-run search to update the UI and remove the selected location
                     const currentTerm = this.elements.omniSearchInput.value.toLowerCase();
                     this.performSearch(currentTerm);
-                }
-
-                // Remove marker if no matching events at this location
-                if (!MarkerController.hasMatchingEvents(locationKey)) {
-                    MapManager.removeMarker(marker);
                 }
             });
         },
@@ -946,9 +942,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // Find any open popup
-            const openPopupInfo = MarkerController.findOpenPopup(this.state.map);
+            const openPopupInfo = MarkerController.findOpenPopup();
             const openPopup = openPopupInfo?.popup;
-            const openMarker = openPopupInfo?.marker;
 
             const selectedDates = this.state.datePickerInstance.selectedDates;
             if (selectedDates.length < 2) {
@@ -983,8 +978,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // Display markers on map
-            MarkerController.displayEventsOnMap(filteredLocations, openMarker);
-            MapManager.updateMarkerVisuals();
+            MarkerController.displayEventsOnMap(filteredLocations);
             FilterPanelUI.updateView(allMatchingEventsFlatList);
         },
 

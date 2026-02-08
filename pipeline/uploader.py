@@ -30,7 +30,7 @@ def upload(remote_dir=None, use_tls=False):
     load_dotenv()
 
     # Local directory containing the data files
-    local_dir = os.path.join(SCRIPT_DIR, '..', 'public_html', 'data')
+    local_dir = os.path.join(SCRIPT_DIR, '..', 'src', 'data')
 
     ftp_host = os.getenv('FTP_HOST')
     ftp_user = os.getenv('FTP_USER')

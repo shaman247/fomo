@@ -14,38 +14,47 @@ __pycache__/
 *$py.class
 *.so
 .Python
-pipeline/__pycache__/
+
+# Node modules
+node_modules/
 
 # Virtual environments
 venv/
 env/
 ENV/
-env.bak/
-venv.bak/
 
-# Distribution / packaging
-build/
+# Build output
 dist/
-*.egg-info/
-.eggs/
 
-# Jupyter Notebook
-.ipynb_checkpoints
+# Generated data (pipeline output, regenerated on each run)
+src/data/events.*.json
+src/data/locations.*.json
 
-# Testing
-.pytest_cache/
-.coverage
-htmlcov/
+# Generated glyph fonts (built from TTFs via build_pbf_glyphs)
+src/fonts/glyphs/
+
+# Upload state tracking
+scripts/upload_state.json
+
+# PHP config with database credentials
+src/api/config.php
+
+# SSH private keys
+scripts/id_rsa_sync
+*.pem
+
+# Database backups
+database/backups/
+
+# Playwright MCP screenshots
+.playwright-mcp/
 
 # OS files
 .DS_Store
 Thumbs.db
-desktop.ini
-nul
 
 # Logs
 *.log
-logs/
 
 # Temporary files
 *.tmp
@@ -56,19 +65,6 @@ logs/
 
 # FTP credentials backup
 .ftpconfig
-
-# Upload state tracking
-scripts/upload_state.json
-
-# PHP config with database credentials
-public_html/api/config.php
-
-# SSH private keys
-scripts/id_rsa_sync
-*.pem
-
-# Database backups
-database/backups/
 
 # ===================
 # iOS / Xcode

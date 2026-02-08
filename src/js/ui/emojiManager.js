@@ -162,31 +162,18 @@ const EmojiManager = (() => {
      * Optimized to batch DOM operations and minimize forced reflows
      */
     function forceEmojiRerender() {
-        const emojiElements = document.querySelectorAll('.marker-emoji, .popup-header-emoji, .popup-event-emoji');
+        const emojiElements = document.querySelectorAll('.popup-header-emoji, .popup-event-emoji');
 
-        if (emojiElements.length === 0) return;
-
-        // Batch DOM operations to prevent forced reflows
-        // Phase 1: Collect original display values (batch read)
-        const originalDisplays = Array.from(emojiElements).map(elem => elem.style.display);
-
-        // Phase 2: Hide all elements (batch write)
-        emojiElements.forEach(elem => {
-            elem.style.display = 'none';
-        });
-
-        // Force a single reflow by reading layout property once
-        void emojiElements[0].offsetHeight;
-
-        // Phase 3: Restore all display values (batch write)
-        emojiElements.forEach((elem, index) => {
-            elem.style.display = originalDisplays[index] || '';
-        });
-
-        // Also refresh all markers on the map by re-rendering them
-        if (state.appState && state.appState.markersLayer) {
-            refreshMapMarkers();
+        if (emojiElements.length > 0) {
+            // Batch DOM operations to prevent forced reflows
+            const originalDisplays = Array.from(emojiElements).map(elem => elem.style.display);
+            emojiElements.forEach(elem => { elem.style.display = 'none'; });
+            void emojiElements[0].offsetHeight;
+            emojiElements.forEach((elem, index) => { elem.style.display = originalDisplays[index] || ''; });
         }
+
+        // Reload WebGL emoji images for map markers
+        refreshMapMarkers();
     }
 
     /**
@@ -194,27 +181,8 @@ const EmojiManager = (() => {
      * Used to update emoji display in markers after font change
      */
     function refreshMapMarkers() {
-        if (!state.appState || !state.appState.markersLayer) return;
-
-        // Get all visible markers and their data
-        const markersToRefresh = [];
-        state.appState.markersLayer.eachLayer(marker => {
-            const latLng = marker.getLatLng();
-            const locationKey = `${latLng.lat},${latLng.lng}`;
-            markersToRefresh.push({
-                marker: marker,
-                locationKey: locationKey
-            });
-        });
-
-        // Refresh each marker icon to force emoji re-render
-        markersToRefresh.forEach(({marker, locationKey}) => {
-            const locationInfo = state.appState.locationsByLatLng[locationKey];
-            if (locationInfo) {
-                const newIcon = MapManager.createMarkerIcon(locationInfo);
-                marker.setIcon(newIcon);
-            }
-        });
+        if (!state.appState || !state.appState.locationsByLatLng) return;
+        MapManager.reloadEmojiImages(state.appState.locationsByLatLng);
     }
 
     // ========================================

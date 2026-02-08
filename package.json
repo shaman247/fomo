@@ -1,0 +1,13 @@
+{
+  "private": true,
+  "scripts": {
+    "dev": "node build.js --dev --watch",
+    "build": "node build.js"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0"
+  },
+  "dependencies": {
+    "flatpickr": "^4.6.13"
+  }
+}
