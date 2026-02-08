@@ -16,7 +16,7 @@
 // EDIT THIS ARRAY TO ADD NEW LOCATIONS
 // ============================================================================
 $new_locations = [
-    // The Canvas NYC (ID 3738) - added 2026-02-07
+    // Interference Archive, People's Forum, Topos Bookstore, Topos Too, Rodeo - added 2026-02-07
 ];
 
 /*

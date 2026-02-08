@@ -125,63 +125,75 @@ const SearchManager = (() => {
      * @param {Set} visibleLocationKeys - Set of currently visible location keys
      * @returns {Map} Map of location results
      */
+    /**
+     * Scores a location and creates a result object
+     */
+    function scoreLocation(key, location, isVisible, isMatching, selectedTagsWithWeights) {
+        let score = 1;
+
+        if (isMatching) {
+            score += SCORE_WEIGHTS.MATCHING_BOOST;
+        }
+
+        if (selectedTagsWithWeights.size >= 2 && location.tags) {
+            score += calculateWeightedTagScore(new Set(location.tags), selectedTagsWithWeights);
+        }
+
+        const distance = state.appState.locationDistances[key] || 0;
+        score += calculateProximityBonus(distance, SCORE_WEIGHTS.MAX_PROXIMITY_BONUS, DISTANCE_THRESHOLDS.LOCATION_MAX_DISTANCE);
+
+        if (isVisible) {
+            score += SCORE_WEIGHTS.VISIBILITY_BOOST;
+        }
+
+        return {
+            type: 'location',
+            ref: key,
+            displayName: Utils.getDisplayName(location),
+            emoji: location.emoji,
+            score: score,
+            isVisible: isVisible
+        };
+    }
+
     function searchLocations(term, selectedTagsWithWeights, matchingLocationKeys, visibleLocationKeys) {
         const results = new Map();
         const hasSearchTerm = term.length > 0;
-        const searchIndex = state.appState.searchIndex;
 
-        for (const key in state.appState.locationsByLatLng) {
-            const location = state.appState.locationsByLatLng[key];
-            const isVisible = visibleLocationKeys.has(key);
-            const isMatching = matchingLocationKeys.has(key);
+        if (hasSearchTerm) {
+            // With a search term, scan all locations for text matches
+            const searchIndex = state.appState.searchIndex;
+            for (const key in state.appState.locationsByLatLng) {
+                const normalizedText = searchIndex?.locations?.get(key) || '';
+                if (normalizedText.includes(term)) {
+                    const location = state.appState.locationsByLatLng[key];
+                    const isVisible = visibleLocationKeys.has(key);
+                    const isMatching = matchingLocationKeys.has(key);
+                    results.set(`location-${key}`, scoreLocation(key, location, isVisible, isMatching, selectedTagsWithWeights));
+                }
+            }
+        } else {
+            // Without a search term, only iterate visible + limited matching locations
+            const HIDDEN_LIMIT = 100;
 
-            // Check if location matches search term using normalized index
-            let matchesSearchTerm = false;
-            if (hasSearchTerm && searchIndex?.locations) {
-                const normalizedText = searchIndex.locations.get(key) || '';
-                matchesSearchTerm = normalizedText.includes(term);
+            // All visible matching locations
+            for (const key of visibleLocationKeys) {
+                const location = state.appState.locationsByLatLng[key];
+                if (location) {
+                    results.set(`location-${key}`, scoreLocation(key, location, true, matchingLocationKeys.has(key), selectedTagsWithWeights));
+                }
             }
 
-            // Determine if location should be included
-            const shouldInclude = hasSearchTerm ? matchesSearchTerm : (isVisible || isMatching);
-
-            if (shouldInclude) {
-                let score = 1;
-
-                // Boost score if location has currently filtered events
-                if (isMatching) {
-                    score += SCORE_WEIGHTS.MATCHING_BOOST;
+            // Limited hidden (matching but not visible) locations
+            let hiddenCount = 0;
+            for (const key of matchingLocationKeys) {
+                if (hiddenCount >= HIDDEN_LIMIT) break;
+                if (visibleLocationKeys.has(key)) continue;
+                const location = state.appState.locationsByLatLng[key];
+                if (location) {
+                    results.set(`location-${key}`, scoreLocation(key, location, false, true, selectedTagsWithWeights));
+                    hiddenCount++;
                 }
-
-                // Boost score for locations that match multiple selected tags (with weights)
-                if (selectedTagsWithWeights.size >= 2 && location.tags) {
-                    const weightedScore = calculateWeightedTagScore(new Set(location.tags), selectedTagsWithWeights);
-                    score += weightedScore;
-                }
-
-                // Add proximity bonus
-                const distance = state.appState.locationDistances[key] || 0;
-                const proximityBonus = calculateProximityBonus(
-                    distance,
-                    SCORE_WEIGHTS.MAX_PROXIMITY_BONUS,
-                    DISTANCE_THRESHOLDS.LOCATION_MAX_DISTANCE
-                );
-                score += proximityBonus;
-
-                // Add extra boost for visible locations
-                if (isVisible) {
-                    score += SCORE_WEIGHTS.VISIBILITY_BOOST;
-                }
-
-                const resultKey = `location-${key}`;
-                results.set(resultKey, {
-                    type: 'location',
-                    ref: key,
-                    displayName: Utils.getDisplayName(location),
-                    emoji: location.emoji,
-                    score: score,
-                    isVisible: isVisible
-                });
             }
         }
 
@@ -197,73 +209,89 @@ const SearchManager = (() => {
      * @param {number} referenceDate - Reference date for temporal scoring
      * @returns {Map} Map of event results
      */
+    /**
+     * Scores an event and creates a result object
+     * @param {Object} event - Event object
+     * @param {boolean} isVisible - Whether event is in viewport
+     * @param {boolean} isMatching - Whether event matches current filters
+     * @param {Map} selectedTagsWithWeights - Map of tag -> weight
+     * @param {number} referenceDate - Reference date for temporal scoring
+     * @returns {Object} Result object
+     */
+    function scoreEvent(event, isVisible, isMatching, selectedTagsWithWeights, referenceDate) {
+        let score = 1;
+
+        if (isMatching) {
+            score += SCORE_WEIGHTS.MATCHING_BOOST;
+        }
+
+        if (selectedTagsWithWeights.size >= 2) {
+            const locationInfo = event.locationKey ? state.appState.locationsByLatLng[event.locationKey] : null;
+            const combinedTags = new Set([...(event.tags || []), ...(locationInfo?.tags || [])]);
+            const weightedScore = calculateWeightedTagScore(combinedTags, selectedTagsWithWeights);
+            score += weightedScore;
+        }
+
+        if (event.locationKey) {
+            const distance = state.appState.locationDistances[event.locationKey] || 0;
+            score += calculateProximityBonus(distance, SCORE_WEIGHTS.MAX_PROXIMITY_BONUS, DISTANCE_THRESHOLDS.LOCATION_MAX_DISTANCE);
+        }
+
+        score += calculateTemporalBonus(event, referenceDate);
+
+        if (isVisible) {
+            score += SCORE_WEIGHTS.VISIBILITY_BOOST;
+        }
+
+        const nameToDisplay = Utils.getDisplayName(event);
+
+        return {
+            type: 'event',
+            ref: event.id,
+            displayName: Utils.formatAndSanitize(nameToDisplay).replace(/<\/?em>/g, ''),
+            emoji: event.emoji,
+            score: score,
+            isVisible: isVisible
+        };
+    }
+
     function searchEvents(term, selectedTagsWithWeights, matchingEventIds, visibleEventIds, referenceDate) {
         const results = new Map();
         const hasSearchTerm = term.length > 0;
-        const searchIndex = state.appState.searchIndex;
 
-        state.appState.allEvents.forEach(event => {
-            const resultKey = `event-${event.id}`;
-            const isVisible = visibleEventIds.has(event.id);
-            const isMatching = matchingEventIds.has(event.id);
+        if (hasSearchTerm) {
+            // With a search term, scan all events for text matches
+            const searchIndex = state.appState.searchIndex;
+            state.appState.allEvents.forEach(event => {
+                const normalizedText = searchIndex?.events?.get(event.id) || '';
+                if (normalizedText.includes(term)) {
+                    const isVisible = visibleEventIds.has(event.id);
+                    const isMatching = matchingEventIds.has(event.id);
+                    results.set(`event-${event.id}`, scoreEvent(event, isVisible, isMatching, selectedTagsWithWeights, referenceDate));
+                }
+            });
+        } else {
+            // Without a search term, use pre-computed visible/matching sets
+            // instead of scanning all events
+            const HIDDEN_LIMIT = 100;
+            const visibleEvents = state.appState.currentlyVisibleMatchingEvents;
+            const matchingEvents = state.appState.currentlyMatchingEvents;
+            const visibleIds = new Set(visibleEvents.map(e => e.id));
 
-            // Check if event matches search term using normalized index
-            let textMatch = false;
-            if (hasSearchTerm && searchIndex?.events) {
-                const normalizedText = searchIndex.events.get(event.id) || '';
-                textMatch = normalizedText.includes(term);
+            // All visible matching events
+            for (const event of visibleEvents) {
+                results.set(`event-${event.id}`, scoreEvent(event, true, true, selectedTagsWithWeights, referenceDate));
             }
 
-            // Determine if event should be included
-            const shouldInclude = hasSearchTerm ? textMatch : (isVisible || isMatching);
-
-            if (shouldInclude) {
-                let score = 1;
-
-                // Boost score if event matches current filters
-                if (isMatching) {
-                    score += SCORE_WEIGHTS.MATCHING_BOOST;
-                }
-
-                // Boost score for events that match multiple selected tags (with weights)
-                if (selectedTagsWithWeights.size >= 2) {
-                    const locationInfo = event.locationKey ? state.appState.locationsByLatLng[event.locationKey] : null;
-                    const combinedTags = new Set([...(event.tags || []), ...(locationInfo?.tags || [])]);
-                    const weightedScore = calculateWeightedTagScore(combinedTags, selectedTagsWithWeights);
-                    score += weightedScore;
-                }
-
-                // Add proximity bonus
-                if (event.locationKey) {
-                    const distance = state.appState.locationDistances[event.locationKey] || 0;
-                    const proximityBonus = calculateProximityBonus(
-                        distance,
-                        SCORE_WEIGHTS.MAX_PROXIMITY_BONUS,
-                        DISTANCE_THRESHOLDS.LOCATION_MAX_DISTANCE
-                    );
-                    score += proximityBonus;
-                }
-
-                // Add temporal bonus
-                score += calculateTemporalBonus(event, referenceDate);
-
-                // Add extra boost for visible events
-                if (isVisible) {
-                    score += SCORE_WEIGHTS.VISIBILITY_BOOST;
-                }
-
-                const nameToDisplay = Utils.getDisplayName(event);
-
-                results.set(resultKey, {
-                    type: 'event',
-                    ref: event.id,
-                    displayName: Utils.formatAndSanitize(nameToDisplay).replace(/<\/?em>/g, ''),
-                    emoji: event.emoji,
-                    score: score,
-                    isVisible: isVisible
-                });
+            // Limited hidden (matching but not visible) events
+            let hiddenCount = 0;
+            for (const event of matchingEvents) {
+                if (hiddenCount >= HIDDEN_LIMIT) break;
+                if (visibleIds.has(event.id)) continue;
+                results.set(`event-${event.id}`, scoreEvent(event, false, true, selectedTagsWithWeights, referenceDate));
+                hiddenCount++;
             }
-        });
+        }
 
         return results;
     }
@@ -328,17 +356,20 @@ const SearchManager = (() => {
      * @returns {Array} Array of search results
      */
     function performSearch(term, dynamicFrequencies, selectedTagsWithColors) {
-        // Prepare search context
-        const matchingEventIds = new Set(state.appState.currentlyMatchingEvents.map(e => e.id));
-        const matchingLocationKeys = state.appState.currentlyMatchingLocationKeys;
-        const visibleEventIds = new Set(state.appState.currentlyVisibleMatchingEvents.map(e => e.id));
-        const visibleLocationKeys = state.appState.currentlyVisibleMatchingLocationKeys;
+        const hasSearchTerm = term.length > 0;
 
         // Create a map of tag -> weight for scoring
         const selectedTagsWithWeights = new Map();
         for (const [tag, , weight] of selectedTagsWithColors) {
             selectedTagsWithWeights.set(tag, weight);
         }
+
+        const matchingLocationKeys = state.appState.currentlyMatchingLocationKeys;
+        const visibleLocationKeys = state.appState.currentlyVisibleMatchingLocationKeys;
+
+        // Only build expensive event ID Sets when needed (text search requires membership checks)
+        const matchingEventIds = hasSearchTerm ? new Set(state.appState.currentlyMatchingEvents.map(e => e.id)) : null;
+        const visibleEventIds = hasSearchTerm ? new Set(state.appState.currentlyVisibleMatchingEvents.map(e => e.id)) : null;
 
         // Get reference date for temporal scoring
         const selectedDates = state.appState.datePickerInstance?.selectedDates || [];

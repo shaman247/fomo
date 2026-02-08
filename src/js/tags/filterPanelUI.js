@@ -281,11 +281,12 @@ const FilterPanelUI = (() => {
 
         if (filteredEvents && Array.isArray(filteredEvents)) {
             const tagLocationSets = {};
+            const availableTagsSet = new Set(state.allAvailableTags);
 
             filteredEvents.forEach(event => {
                 if (event.tags && Array.isArray(event.tags) && event.locationKey) {
                     event.tags.forEach(tag => {
-                        if (state.allAvailableTags.includes(tag)) {
+                        if (availableTagsSet.has(tag)) {
                             if (!tagLocationSets[tag]) {
                                 tagLocationSets[tag] = new Set();
                             }

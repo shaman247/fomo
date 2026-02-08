@@ -74,6 +74,8 @@ document.addEventListener('DOMContentLoaded', () => {
             forceDisplayEventId: null,
             lastSelectedDates: [],
             selectedLocationKey: null,
+            searchTerm: '', // Current search term for marker filtering
+            currentFilteredLocations: null, // Locations after tag/date filtering (before search)
             isInitialLoad: true, // Track if we're in initial load phase
             _moveendSearchTimeout: null, // Debounce timer for search on moveend
         },
@@ -272,7 +274,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
 
                     this.state.lastSelectedDates = selectedDates;
-                    this.updateFilteredEventList();
+                    // During init, skip display — filterAndDisplayEvents is called explicitly after map loads
+                    this.updateFilteredEventList({ skipDisplay: this.state.isInitialLoad });
                 }
             });
             FilterPanelUI.initOmniSearch({
@@ -352,7 +355,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Load emoji images for any new locations from the full dataset
                 MapManager.loadEmojiImages(this.state.locationsByLatLng);
 
-                this.updateFilteredEventList(); // This will re-filter by date/location and rebuild tag index
+                this.updateFilteredEventList({ skipDisplay: true }); // Re-filter by date/location and rebuild tag index
                 this.initFilterPanelUI();
 
                 // Re-apply URL parameter tag selections after re-initializing tag filter UI
@@ -478,6 +481,9 @@ document.addEventListener('DOMContentLoaded', () => {
          * @param {string} term - The search term
          */
         performSearch(term) {
+            const previousTerm = this.state.searchTerm;
+            this.state.searchTerm = term;
+
             // Use SearchManager to perform the search
             const dynamicFrequencies = FilterPanelUI.getDynamicFrequencies();
 
@@ -488,6 +494,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Render results using TagFilterUI, passing debug mode state
             FilterPanelUI.render(results, term, this.state.debugMode);
+
+            // Update map markers when search term changes
+            if (term !== previousTerm && this.state.currentFilteredLocations) {
+                const locationsToDisplay = this._applySearchTermFilter(this.state.currentFilteredLocations);
+                MarkerController.displayEventsOnMap(locationsToDisplay);
+            }
         },
 
         /**
@@ -517,7 +529,7 @@ document.addEventListener('DOMContentLoaded', () => {
          * Rebuilds event lookups and tag index, then triggers display update
          * @memberof App
          */
-        updateFilteredEventList() {
+        updateFilteredEventList({ skipDisplay = false } = {}) {
             const selectedDates = this.state.datePickerInstance.selectedDates;
             if (selectedDates.length < 2) {
                 this.state.allEventsFilteredByDateAndLocation = [];
@@ -537,7 +549,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             DataManager.groupEventsByLatLngInDateRange(this.state);
             DataManager.buildTagIndex(this.state, this.state.allEventsFilteredByDateAndLocation);
-            this.filterAndDisplayEvents();
+            if (!skipDisplay) {
+                this.filterAndDisplayEvents();
+            }
         },
 
         /**
@@ -922,6 +936,49 @@ document.addEventListener('DOMContentLoaded', () => {
         },
 
         /**
+         * Filter locations by the current search term
+         * Returns only locations where the location name or any event matches
+         * @memberof App
+         * @param {Object} filteredLocations - Locations grouped by key with event arrays
+         * @returns {Object} Filtered locations matching the search term
+         * @private
+         */
+        _applySearchTermFilter(filteredLocations) {
+            const searchTerm = this.state.searchTerm;
+            if (!searchTerm || searchTerm.trim().length === 0) {
+                return filteredLocations;
+            }
+
+            const normalizedTerm = Utils.normalizeForSearch(searchTerm);
+            if (!normalizedTerm) return filteredLocations;
+
+            const searchIndex = this.state.searchIndex;
+            const filtered = {};
+
+            for (const locationKey in filteredLocations) {
+                // Check if location name matches
+                const locationText = searchIndex?.locations?.get(locationKey) || '';
+                if (locationText.includes(normalizedTerm)) {
+                    filtered[locationKey] = filteredLocations[locationKey];
+                    continue;
+                }
+
+                // Check if any event at this location matches
+                const events = filteredLocations[locationKey];
+                const hasMatchingEvent = events.some(event => {
+                    const eventText = searchIndex?.events?.get(event.id) || '';
+                    return eventText.includes(normalizedTerm);
+                });
+
+                if (hasMatchingEvent) {
+                    filtered[locationKey] = filteredLocations[locationKey];
+                }
+            }
+
+            return filtered;
+        },
+
+        /**
          * Filter events by tags and display them on the map
          * Updates matching events, groups by location, and updates markers
          * @memberof App
@@ -960,6 +1017,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Group events by location
             const filteredLocations = FilterManager.groupEventsByLocation(allMatchingEventsFlatList);
             this.state.currentlyMatchingLocationKeys = new Set(Object.keys(filteredLocations));
+            this.state.currentFilteredLocations = filteredLocations;
 
             // After updating all matching items, update the visible subset as well.
             this.updateVisibleItems();
@@ -969,8 +1027,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 MarkerController.updateOpenPopupContent(openPopup);
             }
 
+            // Apply search term filter for marker display
+            const locationsToDisplay = this._applySearchTermFilter(filteredLocations);
+
             // Display markers on map
-            MarkerController.displayEventsOnMap(filteredLocations);
+            MarkerController.displayEventsOnMap(locationsToDisplay);
+
             FilterPanelUI.updateView(allMatchingEventsFlatList);
         },
 

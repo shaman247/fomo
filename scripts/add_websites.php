@@ -16,7 +16,7 @@
 // EDIT THIS ARRAY TO ADD NEW WEBSITES
 // ============================================================================
 $new_websites = [
-    // The Canvas NYC (ID 2653) - added 2026-02-07
+    // Interference Archive, People's Forum, Topos Bookstore, Life World, Jade, Rodeo - added 2026-02-07
 ];
 
 // ============================================================================

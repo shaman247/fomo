@@ -49,6 +49,23 @@ def find_first_emoji(text: str) -> str:
     return match.group(0) if match else ""
 
 
+def strip_leading_emoji(text: str) -> str:
+    """Strips leading emoji characters (and surrounding whitespace) from text."""
+    if not text:
+        return text
+    emoji_pattern = regex.compile(
+        r'^(?:\s*(?:'
+        r'(?:\p{Regional_Indicator}{2})'  # Flag emojis
+        r'|'
+        r'(?:\p{Emoji_Presentation}[\uFE0E\uFE0F]?|\p{Emoji}\uFE0F)'  # Pictographic emoji (excludes bare digits)
+        r'[\u20E3]?'  # Keycap combining enclosing
+        r'(?:\p{Emoji_Modifier})?'  # Skin tone modifiers
+        r'(?:\u200D(?:\p{Emoji_Presentation}[\uFE0E\uFE0F]?|\p{Emoji}\uFE0F)(?:\p{Emoji_Modifier})?)*'  # ZWJ sequences
+        r'))+\s*'
+    )
+    return emoji_pattern.sub('', text)
+
+
 def sanitize_text(text):
     """Removes HTML tags, entities, and normalizes whitespace."""
     if not text:
@@ -257,6 +274,44 @@ def _standardize_time(time_str):
 # Event Grouping
 # =============================================================================
 
+def normalize_event_name_caps(event_name):
+    """Normalizes mostly-caps event names to title case with smart rules.
+
+    Handles: connecting words, apostrophes, Roman numerals, ordinals,
+    two-letter acronyms, film sizes, and w/ prefix.
+    Returns the name unchanged if it's not mostly-caps or too short.
+    """
+    alpha_chars = [char for char in event_name if char.isalpha()]
+    if not alpha_chars or len(event_name) <= 5:
+        return event_name
+    num_upper = sum(1 for char in alpha_chars if char.isupper())
+    if (num_upper / len(alpha_chars)) <= 0.5:
+        return event_name
+
+    # Find two-letter acronyms before title casing (excluding common words)
+    common_words = {'OF', 'OR', 'IN', 'AT', 'ON', 'TO', 'BY', 'AN', 'AS', 'IF', 'SO', 'UP', 'WE', 'NO', 'BE', 'DO', 'GO', 'HE', 'IT', 'ME', 'MY', 'US'}
+    two_letter_acronyms = {m for m in re.findall(r'\b([A-Z]{2})\b', event_name) if m not in common_words}
+
+    event_name = event_name.title()
+    # Lowercase any letter after apostrophe at word boundary (handles 's, 't, 'd, 've, 'll, etc.)
+    event_name = re.sub(r"['\u2018\u2019\u02BC]([A-Z])\b", lambda m: "'" + m.group(1).lower(), event_name)
+    event_name = re.sub(r'(?<!^)\b(A|And|Of|The|Or|In|At|On|For|To|With|From|By)\b(?!\.)',
+                       lambda m: m.group(1).lower(), event_name)
+    event_name = re.sub(r'\bW/', r'w/', event_name)
+    event_name = re.sub(r'\b(I|Ii|Iii|Iv|V|Vi|Vii|Viii|Ix|X|Xi|Xii)\b',
+                       lambda m: m.group(1).upper(), event_name)
+    event_name = re.sub(r'\b(35|65|70)Mm\b', r'\1mm', event_name)
+    event_name = re.sub(r'(\d+)(St|Nd|Rd|Th)\b',
+                       lambda m: m.group(1) + m.group(2).lower(), event_name)
+    event_name = re.sub(r'\b([BCDFGHJKLMNPQRSTVWXYZ])([bcdfghjklmnpqrstvwxyz])\b',
+                       lambda m: m.group(0).upper(), event_name)
+    # Restore two-letter acronyms that contained vowels
+    for acronym in two_letter_acronyms:
+        event_name = re.sub(r'\b' + acronym.title() + r'\b', acronym, event_name)
+
+    return event_name
+
+
 def group_event_occurrences(rows, source_url=None):
     """Groups event rows by name and consolidates their occurrences."""
 
@@ -290,31 +345,8 @@ def group_event_occurrences(rows, source_url=None):
             continue
 
         # Normalize mostly-caps names to title case
-        alpha_chars = [char for char in event_name if char.isalpha()]
-        if alpha_chars and len(event_name) > 5:
-            num_upper = sum(1 for char in alpha_chars if char.isupper())
-            if (num_upper / len(alpha_chars)) > 0.5:
-                # Find two-letter acronyms before title casing (excluding common words)
-                common_words = {'OF', 'OR', 'IN', 'AT', 'ON', 'TO', 'BY', 'AN', 'AS', 'IF', 'SO', 'UP', 'WE', 'NO', 'BE', 'DO', 'GO', 'HE', 'IT', 'ME', 'MY', 'US'}
-                two_letter_acronyms = {m for m in re.findall(r'\b([A-Z]{2})\b', event_name) if m not in common_words}
-
-                event_name = event_name.title()
-                # Lowercase any letter after apostrophe at word boundary (handles 's, 't, 'd, 've, 'll, etc.)
-                event_name = re.sub(r"[''ʼ]([A-Z])\b", lambda m: "'" + m.group(1).lower(), event_name)
-                event_name = re.sub(r'(?<!^)\b(A|And|Of|The|Or|In|At|On|For|To|With|From|By)\b',
-                                   lambda m: m.group(1).lower(), event_name)
-                event_name = re.sub(r'\bW/', r'w/', event_name)
-                event_name = re.sub(r'\b(I|Ii|Iii|Iv|V|Vi|Vii|Viii|Ix|X|Xi|Xii)\b',
-                                   lambda m: m.group(1).upper(), event_name)
-                event_name = re.sub(r'\b(35|65|70)Mm\b', r'\1mm', event_name)
-                event_name = re.sub(r'(\d+)(St|Nd|Rd|Th)\b',
-                                   lambda m: m.group(1) + m.group(2).lower(), event_name)
-                event_name = re.sub(r'\b([BCDFGHJKLMNPQRSTVWXYZ])([bcdfghjklmnpqrstvwxyz])\b',
-                                   lambda m: m.group(0).upper(), event_name)
-                # Restore two-letter acronyms that contained vowels
-                for acronym in two_letter_acronyms:
-                    event_name = re.sub(r'\b' + acronym.title() + r'\b', acronym, event_name)
-                row_dict['name'] = event_name
+        event_name = normalize_event_name_caps(event_name)
+        row_dict['name'] = event_name
 
         start_date = row_dict.get('start_date', '')
         end_date = row_dict.get('end_date', '')
@@ -855,6 +887,7 @@ def process_events(cursor, connection, crawl_result_id, website_name, run_date_s
                 row_dict[field] = sanitize_text(row_dict[field])
         if 'name' in row_dict:
             row_dict['name'] = row_dict['name'].replace(' \\ |', ':').replace(' \\|', ':')
+            row_dict['name'] = strip_leading_emoji(row_dict['name'])
 
         if not filter_by_date(row_dict, current_date, future_limit_date):
             continue

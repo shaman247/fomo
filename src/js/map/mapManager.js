@@ -82,7 +82,11 @@ const MapManager = (() => {
             generateId: true
         });
 
-        // Layer 1: Combined emoji icons + text labels (bottom)
+        // Layer 1: Emoji icons + text labels.
+        // Each location emits TWO features: an icon-only feature (low sortKey,
+        // placed first) and a label-only feature (higher sortKey, placed after
+        // all icons). This ensures every icon's collision box is in the grid
+        // before any label is evaluated, preventing labels from overlapping icons.
         map.addLayer({
             id: 'marker-symbols',
             type: 'symbol',
@@ -92,7 +96,8 @@ const MapManager = (() => {
                 'icon-size': _getIconSize(),
                 'icon-allow-overlap': true,
                 'icon-ignore-placement': false,
-                'icon-padding': 20,
+                'icon-padding': 0,
+                'icon-offset': [-8, 0],
                 'text-field': ['get', 'shortName'],
                 'text-font': ['Inter SemiBold'],
                 'text-size': _getLabelSize(),
@@ -138,12 +143,13 @@ const MapManager = (() => {
             id: 'marker-symbols-hover',
             type: 'symbol',
             source: 'markers',
-            filter: ['==', ['id'], -1], // hidden by default
+            filter: ['==', ['get', 'locationKey'], ''], // hidden by default
             layout: {
                 'icon-image': ['get', 'emojiImageId'],
                 'icon-size': _getIconSize(),
                 'icon-allow-overlap': true,
                 'icon-ignore-placement': true,
+                'icon-offset': [-8, 0],
                 'text-field': ['get', 'shortName'],
                 'text-font': ['Inter SemiBold'],
                 'text-size': _getLabelSize(),
@@ -221,7 +227,12 @@ const MapManager = (() => {
         ctx.font = `${canvasSize * 0.72}px ${fontFamily}`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(emoji, canvasSize / 2, canvasSize / 2);
+        // Draw emoji shifted right on canvas so that when icon-offset shifts
+        // the image back left, the emoji stays centered but the collision box
+        // is biased leftward — preventing labels from colliding with their
+        // own location's icon in the dual-feature layout.
+        const collisionShift = 8 * dpr;
+        ctx.fillText(emoji, canvasSize / 2 + collisionShift, canvasSize / 2);
 
         const imageData = ctx.getImageData(0, 0, canvasSize, canvasSize);
 
@@ -270,12 +281,17 @@ const MapManager = (() => {
         // Store callbacks
         state.popupContentCallbacks = popupContentCallbacks;
 
-        // Build GeoJSON features
-        const features = [];
+        // Build GeoJSON features — up to three per location:
+        //   1. Icon features (low sortKey → placed first, populate collision grid)
+        //   2. Full label features (mid sortKey → placed after icons)
+        //   3. Short label features (high sortKey → fallback if full label collides)
+        const iconFeatures = [];
+        const labelFeatures = [];
+        const shortLabelFeatures = [];
         state.locationKeyToFeatureId.clear();
         state.featureIdToLocationKey.clear();
 
-        let featureIndex = 0;
+        const locationKeys = [];
         for (const locationKey in filteredLocations) {
             const events = filteredLocations[locationKey];
             if (events.length === 0) continue;
@@ -293,29 +309,73 @@ const MapManager = (() => {
 
             const color = getMarkerColor(locationInfo);
             const shortName = locationInfo.short_name || locationInfo.name || '';
+            const veryShortName = locationInfo.very_short_name || '';
 
-            features.push({
+            // Icon feature — no text, placed first via low sortKey
+            iconFeatures.push({
                 type: 'Feature',
-                geometry: {
-                    type: 'Point',
-                    coordinates: [lng, lat]
-                },
+                geometry: { type: 'Point', coordinates: [lng, lat] },
                 properties: {
                     locationKey,
-                    shortName,
+                    shortName: '',
                     emojiImageId: `emoji-${locationInfo.emoji || '📍'}`,
                     color,
-                    sortKey: -lat // Southern markers render on top (higher visual priority)
+                    sortKey: -10000 - lat
                 }
             });
 
-            state.locationKeyToFeatureId.set(locationKey, featureIndex);
-            state.featureIdToLocationKey.set(featureIndex, locationKey);
-            featureIndex++;
+            // Full label feature — placed after all icons
+            labelFeatures.push({
+                type: 'Feature',
+                geometry: { type: 'Point', coordinates: [lng, lat] },
+                properties: {
+                    locationKey,
+                    shortName,
+                    color,
+                    sortKey: -lat
+                }
+            });
+
+            // Short label feature — fallback when full label collides
+            shortLabelFeatures.push({
+                type: 'Feature',
+                geometry: { type: 'Point', coordinates: [lng, lat] },
+                properties: {
+                    locationKey,
+                    shortName: veryShortName,
+                    isShortLabel: true,
+                    color,
+                    sortKey: 10000 - lat
+                }
+            });
+
+            locationKeys.push(locationKey);
         }
+
+        // Icons (0..N-1), full labels (N..2N-1), short labels (2N..3N-1)
+        const features = [...iconFeatures, ...labelFeatures, ...shortLabelFeatures];
+        const N = iconFeatures.length;
+        locationKeys.forEach((locationKey, i) => {
+            state.locationKeyToFeatureId.set(locationKey, i); // icon feature ID
+            state.featureIdToLocationKey.set(i, locationKey);       // icon
+            state.featureIdToLocationKey.set(N + i, locationKey);   // full label
+            state.featureIdToLocationKey.set(2 * N + i, locationKey); // short label
+        });
 
         const geojson = { type: 'FeatureCollection', features };
         state.sourceDataCache = geojson;
+
+        // Clear stale feature-state before replacing data — MapLibre preserves
+        // feature-state across setData(), so old hover/active states would
+        // "stick" to whatever feature inherits the same auto-generated ID.
+        if (state.hoveredFeatureId !== null) {
+            map.setFeatureState({ source: 'markers', id: state.hoveredFeatureId }, { hover: false });
+            state.hoveredFeatureId = null;
+        }
+        if (state.activeFeatureId !== null) {
+            map.setFeatureState({ source: 'markers', id: state.activeFeatureId }, { active: false });
+            state.activeFeatureId = null;
+        }
 
         const source = map.getSource('markers');
         if (source) {
@@ -330,6 +390,7 @@ const MapManager = (() => {
                 map.setFeatureState({ source: 'markers', id: fid }, { active: true });
             }
         }
+        _updateHoverFilter();
     }
 
     function _restoreAfterStyleChange() {
@@ -353,12 +414,17 @@ const MapManager = (() => {
             source.setData(state.sourceDataCache);
         }
 
-        // Rebuild lookup maps
+        // Rebuild lookup maps — icons are first third, labels second, short labels third
         state.locationKeyToFeatureId.clear();
         state.featureIdToLocationKey.clear();
-        state.sourceDataCache.features.forEach((f, i) => {
-            state.locationKeyToFeatureId.set(f.properties.locationKey, i);
-            state.featureIdToLocationKey.set(i, f.properties.locationKey);
+        const allFeatures = state.sourceDataCache.features;
+        const third = allFeatures.length / 3;
+        allFeatures.forEach((f, i) => {
+            const locKey = f.properties.locationKey;
+            state.featureIdToLocationKey.set(i, locKey);
+            if (i < third) {
+                state.locationKeyToFeatureId.set(locKey, i); // icon feature ID
+            }
         });
 
         // Restore active state
@@ -387,17 +453,28 @@ const MapManager = (() => {
         const map = state.mapInstance;
         if (!map || !map.getLayer('marker-symbols-hover')) return;
 
-        const ids = new Set();
-        if (state.hoveredFeatureId !== null) ids.add(state.hoveredFeatureId);
-        if (state.activeFeatureId !== null) ids.add(state.activeFeatureId);
-
-        if (ids.size === 0) {
-            map.setFilter('marker-symbols-hover', ['==', ['id'], -1]);
-        } else if (ids.size === 1) {
-            map.setFilter('marker-symbols-hover', ['==', ['id'], [...ids][0]]);
-        } else {
-            map.setFilter('marker-symbols-hover', ['in', ['id'], ['literal', [...ids]]]);
+        // Resolve feature IDs to locationKeys so both the icon and full-label
+        // features for a location are shown in the hover layer.
+        // Short labels are excluded so hover always shows the full name.
+        const keys = new Set();
+        if (state.hoveredFeatureId !== null) {
+            const lk = state.featureIdToLocationKey.get(state.hoveredFeatureId);
+            if (lk) keys.add(lk);
         }
+        if (state.activeFeatureId !== null) {
+            const lk = state.featureIdToLocationKey.get(state.activeFeatureId);
+            if (lk) keys.add(lk);
+        }
+
+        let keyFilter;
+        if (keys.size === 0) {
+            keyFilter = ['==', ['get', 'locationKey'], ''];
+        } else if (keys.size === 1) {
+            keyFilter = ['==', ['get', 'locationKey'], [...keys][0]];
+        } else {
+            keyFilter = ['in', ['get', 'locationKey'], ['literal', [...keys]]];
+        }
+        map.setFilter('marker-symbols-hover', ['all', keyFilter, ['!=', ['get', 'isShortLabel'], true]]);
     }
 
     /**
@@ -434,13 +511,16 @@ const MapManager = (() => {
             map.getCanvas().style.cursor = 'pointer';
             const feature = _closestFeature(e);
             if (feature) {
-                const fid = feature.id;
-                if (fid === state.hoveredFeatureId) return; // same feature, no-op
+                // Resolve to the icon feature ID for this location
+                const locationKey = feature.properties.locationKey;
+                const iconFid = state.locationKeyToFeatureId.get(locationKey);
+                if (iconFid === undefined) return;
+                if (iconFid === state.hoveredFeatureId) return; // same location, no-op
                 if (state.hoveredFeatureId !== null) {
                     map.setFeatureState({ source: 'markers', id: state.hoveredFeatureId }, { hover: false });
                 }
-                state.hoveredFeatureId = fid;
-                map.setFeatureState({ source: 'markers', id: fid }, { hover: true });
+                state.hoveredFeatureId = iconFid;
+                map.setFeatureState({ source: 'markers', id: iconFid }, { hover: true });
                 _updateHoverFilter();
             }
         });

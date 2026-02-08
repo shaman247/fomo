@@ -187,11 +187,53 @@ const PopupContentBuilder = (() => {
         // Pre-calculate sort-related properties to avoid re-computation inside the sort function.
         const referenceDate = selectedStartDate ? selectedStartDate.getTime() : (activeFilters.sliderStartDate ? activeFilters.sliderStartDate.getTime() : 0);
 
+        // Pre-compute tag sets once (avoid re-parsing tagStates per event)
+        const selectedTagsSet = new Set(selectedTags);
+        const requiredTagsSet = new Set(
+            Object.entries(activeFilters.tagStates)
+                .filter(([, s]) => s === 'required')
+                .map(([tag]) => tag)
+        );
+        const forbiddenTagsSet = new Set(
+            Object.entries(activeFilters.tagStates)
+                .filter(([, s]) => s === 'forbidden')
+                .map(([tag]) => tag)
+        );
+
         const eventsWithSortData = eventsToProcess.map(event => {
-            const isMatchingTags = filterFunctions.isEventMatchingTagFilters(event, activeFilters.tagStates);
+            // Inline tag matching using pre-computed sets
+            const locationInfo = event.locationKey ? filterFunctions.getLocationInfo(event.locationKey) : null;
+            const combinedTags = event.tags || [];
+            const locationTags = locationInfo?.tags || [];
+
+            let isMatchingTags = true;
+            if (forbiddenTagsSet.size > 0) {
+                if (combinedTags.some(t => forbiddenTagsSet.has(t)) || locationTags.some(t => forbiddenTagsSet.has(t))) {
+                    isMatchingTags = false;
+                }
+            }
+            if (isMatchingTags && requiredTagsSet.size > 0) {
+                for (const tag of requiredTagsSet) {
+                    if (!combinedTags.includes(tag) && !locationTags.includes(tag)) {
+                        isMatchingTags = false;
+                        break;
+                    }
+                }
+            }
+            if (isMatchingTags && requiredTagsSet.size === 0 && selectedTagsSet.size > 0) {
+                if (!combinedTags.some(t => selectedTagsSet.has(t)) && !locationTags.some(t => selectedTagsSet.has(t))) {
+                    isMatchingTags = false;
+                }
+            }
+
             let selectedTagMatchCount = 0;
             if (hasActiveTagFilters && isMatchingTags) {
-                selectedTagMatchCount = selectedTags.filter(tag => (event.tags || []).includes(tag)).length;
+                for (const tag of combinedTags) {
+                    if (selectedTagsSet.has(tag)) selectedTagMatchCount++;
+                }
+                for (const tag of locationTags) {
+                    if (selectedTagsSet.has(tag)) selectedTagMatchCount++;
+                }
             }
             const startTime = event.occurrences?.[0]?.start?.getTime() || 0;
             const endTime = event.occurrences?.[0]?.end?.getTime() || startTime;
@@ -243,23 +285,34 @@ const PopupContentBuilder = (() => {
         eventsWithSortData.forEach(({ event, isMatchingTags }) => {
             const details = document.createElement('details');
 
+            let shouldOpen = false;
             if (forcedEvent) {
-                // If an event is forced, expand it and collapse all others.
-                details.open = (event.id === forcedEvent.id);
+                shouldOpen = (event.id === forcedEvent.id);
             } else if (hasAnyTagFilter) {
-                details.open = isMatchingTags;
+                shouldOpen = isMatchingTags;
             } else {
-                details.open = expandAll || isFirstEvent;
+                shouldOpen = expandAll || isFirstEvent;
             }
 
             const summary = document.createElement('summary');
             const emojiPrefix = event.emoji ? `${event.emoji} ` : '';
-            const sanitizedName = Utils.formatAndSanitize(event.name).replace(/<\/?em>/g, '');
-            summary.innerHTML = `${emojiPrefix}${sanitizedName}`;
+            summary.textContent = `${emojiPrefix}${event.short_name || event.name || ''}`;
 
             details.appendChild(summary);
 
-            details.appendChild(createEventDetail(event));
+            if (shouldOpen) {
+                // Build detail content immediately for initially-open events
+                details.appendChild(createEventDetail(event));
+                details.open = true;
+            } else {
+                // Defer detail content creation until the user expands this event
+                details.addEventListener('toggle', () => {
+                    if (details.open && details.children.length === 1) {
+                        details.appendChild(createEventDetail(event));
+                    }
+                }, { once: true });
+            }
+
             eventsListWrapper.appendChild(details);
             isFirstEvent = false;
         });

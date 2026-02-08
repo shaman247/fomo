@@ -38,7 +38,8 @@ const MarkerController = (() => {
 
             const eventsAtLocationInDateRange = state.appState.eventsByLatLngInDateRange[locationKey] || [];
             const filterFunctions = {
-                isEventMatchingTagFilters: (event, tagStates) => FilterManager.isEventMatchingTagFilters(event, tagStates)
+                isEventMatchingTagFilters: (event, tagStates) => FilterManager.isEventMatchingTagFilters(event, tagStates),
+                getLocationInfo: (key) => state.appState.locationsByLatLng[key]
             };
 
             // Handle forced display event (e.g., from search)
@@ -116,7 +117,8 @@ const MarkerController = (() => {
         };
 
         const filterFunctions = {
-            isEventMatchingTagFilters: (event, tagStates) => FilterManager.isEventMatchingTagFilters(event, tagStates)
+            isEventMatchingTagFilters: (event, tagStates) => FilterManager.isEventMatchingTagFilters(event, tagStates),
+            getLocationInfo: (key) => state.appState.locationsByLatLng[key]
         };
 
         // Handle forced display event
