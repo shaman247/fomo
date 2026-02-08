@@ -75,7 +75,7 @@ async function build(isDev) {
         bundle: true,
         minify: !isDev,
         write: false,
-        external: ['*.ttf'],
+        external: ['*.ttf', '*.woff2'],
     });
 
     // Prepend flatpickr CSS

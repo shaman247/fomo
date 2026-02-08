@@ -71,6 +71,12 @@ const ModalManager = (() => {
         // Set the correct radio buttons based on saved settings
         emojiFontRadios.forEach(radio => {
             radio.checked = radio.value === savedEmojiFont;
+            // Disable Noto option on unsupported browsers (Safari)
+            if (radio.value === 'noto' && !EmojiManager.isNotoSupported()) {
+                radio.disabled = true;
+                const label = radio.closest('label');
+                if (label) label.style.opacity = '0.4';
+            }
         });
         themeRadios.forEach(radio => {
             radio.checked = radio.value === savedTheme;

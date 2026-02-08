@@ -461,21 +461,13 @@ document.addEventListener('DOMContentLoaded', () => {
         /**
          * Handle special search terms (Easter eggs)
          * - "debug": Toggle debug mode visualization
-         * - "noto": Enable Noto Color Emoji font
          * @memberof App
          * @param {string} term - The search term to check
          */
         handleSpecialSearchTerms(term) {
-            // Toggle debug mode if search term is exactly "debug"
             if (term === 'debug') {
                 this.state.debugMode = !this.state.debugMode;
                 this.updateDebugOverlay();
-            }
-            // Toggle Noto emoji font if search term is exactly "noto"
-            else if (term === 'noto') {
-                if (!EmojiManager.isNotoFontActive()) {
-                    EmojiManager.updateToNotoFont();
-                }
             }
         },
 

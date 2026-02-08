@@ -120,35 +120,16 @@ const EmojiManager = (() => {
      * Called during app startup
      */
     function initEmojiFont() {
-        // Initialize emoji font from localStorage or default to system
+        // Reset to system on unsupported browsers (Safari doesn't support COLRv1)
         const savedEmojiFont = localStorage.getItem('emojiFont') || 'system';
-        applyEmojiFont(savedEmojiFont);
-    }
-
-    /**
-     * Updates emoji font to Noto (convenience method)
-     * Used for the "noto" search term Easter egg
-     */
-    function updateToNotoFont() {
-        if (state.currentFont !== 'noto') {
-            document.body.classList.add('use-noto-emoji');
-            state.currentFont = 'noto';
-
-            // Force re-render of all emoji elements after font loads
-            if (document.fonts) {
-                document.fonts.load('1em "Noto Color Emoji"').then(() => {
-                    forceEmojiRerender();
-                }).catch(() => {
-                    setTimeout(() => forceEmojiRerender(), Constants.UI.EMOJI_RERENDER_DELAY_MS);
-                });
-            } else {
-                setTimeout(() => forceEmojiRerender(), Constants.UI.EMOJI_RERENDER_DELAY_MS);
-            }
-
-            // Save preference
-            localStorage.setItem('emojiFont', 'noto');
+        if (savedEmojiFont === 'noto' && !isNotoSupported()) {
+            localStorage.setItem('emojiFont', 'system');
+            applyEmojiFont('system');
+        } else {
+            applyEmojiFont(savedEmojiFont);
         }
     }
+
 
     // ========================================
     // EMOJI RE-RENDERING
@@ -190,6 +171,16 @@ const EmojiManager = (() => {
     // ========================================
 
     /**
+     * Checks if Noto Color Emoji is supported in this browser.
+     * COLRv1 format is supported by Chrome, Edge, Firefox but not Safari.
+     * @returns {boolean} True if Noto font is supported
+     */
+    function isNotoSupported() {
+        const ua = navigator.userAgent;
+        return !(ua.includes('Safari') && !ua.includes('Chrome'));
+    }
+
+    /**
      * Gets the current emoji font
      * @returns {string} Current font ('system' or 'noto')
      */
@@ -229,13 +220,13 @@ const EmojiManager = (() => {
 
         // Font management
         applyEmojiFont,
-        updateToNotoFont,
 
         // Re-rendering
         forceEmojiRerender,
         refreshMapMarkers,
 
         // Query functions
+        isNotoSupported,
         getCurrentFont,
         isNotoFontActive
     };

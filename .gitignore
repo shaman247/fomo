@@ -30,9 +30,6 @@ dist/
 src/data/events.*.json
 src/data/locations.*.json
 
-# Generated glyph fonts (built from TTFs via build_pbf_glyphs)
-src/fonts/glyphs/
-
 # Upload state tracking
 scripts/upload_state.json
 

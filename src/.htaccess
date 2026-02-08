@@ -1,8 +1,11 @@
-# Serve JSON as text/json so LiteSpeed compresses it
-# (LiteSpeed compresses text/* by default but not application/json)
+# MIME type fixes
+# LiteSpeed compresses text/* by default but not application/json or binary types.
+# Remap JSON to text/json so it gets compressed automatically.
 AddType text/json .json
+# Fix PBF MIME type so cache rules match (default: application/octet-stream)
+AddType application/x-protobuf .pbf
 
-# Fallback for Apache: enable gzip compression for text-based assets
+# Apache fallback: enable gzip compression for text-based assets
 <IfModule mod_deflate.c>
     AddOutputFilterByType DEFLATE text/json
     AddOutputFilterByType DEFLATE application/json
@@ -11,6 +14,8 @@ AddType text/json .json
     AddOutputFilterByType DEFLATE text/html
     AddOutputFilterByType DEFLATE text/plain
     AddOutputFilterByType DEFLATE image/svg+xml
+    AddOutputFilterByType DEFLATE application/x-protobuf
+    AddOutputFilterByType DEFLATE font/ttf
 </IfModule>
 
 # Cache static assets
@@ -23,8 +28,9 @@ AddType text/json .json
     # Data files: cache for 1 hour (updated by pipeline)
     ExpiresByType text/json "access plus 1 hour"
     ExpiresByType application/json "access plus 1 hour"
-    # Fonts: cache for 1 year
+    # Fonts and glyphs: cache for 1 year
     ExpiresByType font/ttf "access plus 1 year"
+    ExpiresByType font/woff2 "access plus 1 year"
     ExpiresByType application/x-protobuf "access plus 1 year"
     # HTML: no cache (always serve fresh)
     ExpiresByType text/html "access plus 0 seconds"

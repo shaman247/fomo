@@ -12,11 +12,11 @@
  */
 
 /* === Emoji Font (Optional) === */
-/* Loaded only when debug mode is enabled via .use-noto-emoji class */
-/* Provides consistent emoji rendering across platforms */
+/* Loaded only when .use-noto-emoji class is on body (settings toggle or "noto" Easter egg) */
+/* COLRv1 vector format: supported by Chrome, Edge, Firefox. Safari falls back to system emoji. */
 @font-face {
     font-family: 'Noto Color Emoji';
-    src: url('../fonts/NotoColorEmoji-Regular.ttf') format('truetype');
+    src: url('../fonts/NotoColorEmoji-COLRv1.woff2') format('woff2');
     font-display: swap;
 }
 
