@@ -168,9 +168,10 @@ def is_false_positive(name1, name2):
 
     Catches cases where names share words but refer to distinct events:
     - Men's vs Women's sports
-    - Different showtimes (6:00 PM vs 8:00 PM)
+    - Different showtimes (6:00 PM vs 8:00 PM, anywhere in name)
     - Early vs Late sets
     - Different episode numbers
+    - Different set/part/volume numbers (Set 1 vs Set 2)
     - Different sports opponents
     """
     norm1 = normalize_name_for_dedup(name1)
@@ -206,6 +207,22 @@ def is_false_positive(name1, name2):
     if ep1 and ep2 and ep1.group(1) != ep2.group(1):
         return True
 
+    # Different set/part/volume numbers (Set 1 vs Set 2, Part 1 vs Part 2, Vol. 2 vs Vol. 3)
+    for keyword in ['set', 'part', 'vol', 'volume', 'chapter', 'session', 'round']:
+        numbered_pattern = rf'\b{keyword}\.?\s*(\d+)'
+        match1 = re.search(numbered_pattern, norm1, re.IGNORECASE)
+        match2 = re.search(numbered_pattern, norm2, re.IGNORECASE)
+        if match1 and match2 and match1.group(1) != match2.group(1):
+            return True
+
+    # Different standalone sequence numbers after pipe/dash separators (e.g., "| Wednesday Set 2 | 10:30 pm")
+    # Catches "...| 1 |..." vs "...| 2 |..." style numbering
+    seq_pattern = r'(?:^|\|)\s*#?\s*(\d+)\s*(?:\||$)'
+    seq1 = re.findall(seq_pattern, norm1)
+    seq2 = re.findall(seq_pattern, norm2)
+    if seq1 and seq2 and seq1 != seq2:
+        return True
+
     # Different sports opponents (vs X vs vs Y)
     vs_pattern = r'vs\.?\s+(.+?)(?:\s*-|$)'
     vs1 = re.search(vs_pattern, norm1, re.IGNORECASE)
@@ -216,6 +233,14 @@ def is_false_positive(name1, name2):
         # If opponents are very different, not a duplicate
         if opponent1 != opponent2 and opponent1 not in opponent2 and opponent2 not in opponent1:
             return True
+
+    # Different times anywhere in name (catches "9:00 PM" vs "10:30 PM" even when not at end)
+    # After normalization, "9:00 PM" becomes "9 00 pm" and "10:30 PM" becomes "10 30 pm"
+    time_anywhere_pattern = r'\b(\d{1,2}\s*\d{2}\s*(?:am|pm))\b'
+    times1 = set(re.findall(time_anywhere_pattern, norm1, re.IGNORECASE))
+    times2 = set(re.findall(time_anywhere_pattern, norm2, re.IGNORECASE))
+    if times1 and times2 and times1 != times2:
+        return True
 
     return False
 
@@ -388,7 +413,7 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None):
     # Use 10-day buffer to catch recurring events that may not have next occurrence posted yet
     recent_cutoff = (datetime.now() - timedelta(days=10)).date()
     cursor.execute("""
-        SELECT DISTINCT e.id, e.name, e.location_id, l.lat, l.lng, e.location_name
+        SELECT DISTINCT e.id, e.name, e.location_id, l.lat, l.lng, e.location_name, e.website_id
         FROM events e
         JOIN event_occurrences eo ON e.id = eo.event_id
         LEFT JOIN locations l ON e.location_id = l.id
@@ -397,9 +422,10 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None):
     existing_events_by_coords = {}  # key: (lat, lng) -> list of {id, name}
     existing_events_by_location_id = {}  # key: location_id -> list of {id, name}
     existing_events_by_location = {}  # key: normalized location_name -> list of {id, name}
+    existing_events_by_website = {}  # key: website_id -> list of {id, name}
     event_ids_with_future = set()
     for row in cursor.fetchall():
-        event_id, name, location_id, lat, lng, location_name = row
+        event_id, name, location_id, lat, lng, location_name, website_id = row
         event_ids_with_future.add(event_id)
         event_entry = {'id': event_id, 'name': name}
 
@@ -423,6 +449,12 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None):
                 if loc_key not in existing_events_by_location:
                     existing_events_by_location[loc_key] = []
                 existing_events_by_location[loc_key].append(event_entry)
+
+        # Index by website_id (last-resort fallback for location mismatches)
+        if website_id is not None:
+            if website_id not in existing_events_by_website:
+                existing_events_by_website[website_id] = []
+            existing_events_by_website[website_id].append(event_entry)
 
     print(f"  Loaded {len(event_ids_with_future)} existing events with future occurrences")
 
@@ -478,37 +510,44 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None):
 
         # Check for duplicate in existing events (same location + overlapping dates + similar name)
         matched_event_id = None
+        norm_name = normalize_name_for_dedup(name)
+
+        def find_best_match(candidates):
+            """Find best matching event, preferring exact normalized name matches."""
+            best_id = None
+            for existing in candidates:
+                existing_dates = event_dates.get(existing['id'], set())
+                if crawl_event_dates & existing_dates:  # date overlap required
+                    if are_names_similar(name, existing['name']):
+                        if normalize_name_for_dedup(existing['name']) == norm_name:
+                            return existing['id']  # Exact match — best possible
+                        elif best_id is None:
+                            best_id = existing['id']  # Partial match — keep looking
+            return best_id
 
         # Try matching by location_id first (most precise and reliable)
         if location_id is not None and location_id in existing_events_by_location_id:
-            for existing in existing_events_by_location_id[location_id]:
-                existing_dates = event_dates.get(existing['id'], set())
-                if crawl_event_dates & existing_dates:  # intersection
-                    if are_names_similar(name, existing['name']):
-                        matched_event_id = existing['id']
-                        break
+            matched_event_id = find_best_match(existing_events_by_location_id[location_id])
 
         # Fallback: match by coordinates if no location_id match found
         if matched_event_id is None and lat is not None and lng is not None:
             key = (round(float(lat), 5), round(float(lng), 5))
             if key in existing_events_by_coords:
-                for existing in existing_events_by_coords[key]:
-                    existing_dates = event_dates.get(existing['id'], set())
-                    if crawl_event_dates & existing_dates:  # intersection
-                        if are_names_similar(name, existing['name']):
-                            matched_event_id = existing['id']
-                            break
+                matched_event_id = find_best_match(existing_events_by_coords[key])
 
         # Second fallback: match by location_name if still no match found
         if matched_event_id is None and location_name:
             loc_key = normalize_name_for_dedup(location_name)
             if loc_key and len(loc_key) >= 3 and loc_key in existing_events_by_location:
-                for existing in existing_events_by_location[loc_key]:
-                    existing_dates = event_dates.get(existing['id'], set())
-                    if crawl_event_dates & existing_dates:  # intersection
-                        if are_names_similar(name, existing['name']):
-                            matched_event_id = existing['id']
-                            break
+                matched_event_id = find_best_match(existing_events_by_location[loc_key])
+
+        # Last-resort fallback: match by website_id when location strategies all failed.
+        # Catches cases where AI extraction assigns inconsistent location names between
+        # crawls (e.g., "Online (via Zoom)" vs "Online", "Various NYC Venues" vs
+        # "New York City Venues"). Safe because name similarity + date overlap + same
+        # website is a strong enough signal.
+        if matched_event_id is None and website_id in existing_events_by_website:
+            matched_event_id = find_best_match(existing_events_by_website[website_id])
 
         if matched_event_id:
             # Merge with existing event
@@ -619,6 +658,11 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None):
             event_entry = {'id': new_event_id, 'name': name}
             event_dates[new_event_id] = crawl_event_dates
 
+            if location_id is not None:
+                if location_id not in existing_events_by_location_id:
+                    existing_events_by_location_id[location_id] = []
+                existing_events_by_location_id[location_id].append(event_entry)
+
             if lat is not None and lng is not None:
                 key = (round(float(lat), 5), round(float(lng), 5))
                 if key not in existing_events_by_coords:
@@ -632,13 +676,20 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None):
                         existing_events_by_location[loc_key] = []
                     existing_events_by_location[loc_key].append(event_entry)
 
+            if website_id is not None:
+                if website_id not in existing_events_by_website:
+                    existing_events_by_website[website_id] = []
+                existing_events_by_website[website_id].append(event_entry)
+
             new_events_count += 1
 
     connection.commit()
     print(f"  Added {new_events_count} new events, merged {merged_count} duplicates")
 
     # Archive outdated events after merging
-    # Get unique website IDs from the crawl events we just processed
+    # Only archive for websites where we processed crawl_events from their LATEST
+    # crawl result. This prevents mass-archiving when processing a backlog of old
+    # crawl_events from historical crawls.
     if new_crawl_events:
         crawl_event_ids = [row[0] for row in new_crawl_events]
         placeholders = ','.join(['%s'] * len(crawl_event_ids))
@@ -648,6 +699,12 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None):
             JOIN crawl_results cr ON ce.crawl_result_id = cr.id
             JOIN event_sources es ON ce.id = es.crawl_event_id
             WHERE ce.id IN ({placeholders})
+              AND cr.id = (
+                  SELECT MAX(cr2.id)
+                  FROM crawl_results cr2
+                  WHERE cr2.website_id = cr.website_id
+                    AND cr2.status IN ('processed', 'extracted')
+              )
         """, crawl_event_ids)
 
         website_ids = [row[0] for row in cursor.fetchall()]

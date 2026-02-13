@@ -32,6 +32,7 @@ import processor
 import merger
 import exporter
 import uploader
+import frequency_analyzer
 
 
 async def run_pipeline(website_ids=None, limit=None):
@@ -366,6 +367,17 @@ async def run_pipeline(website_ids=None, limit=None):
         else:
             print("\n✗ Data upload failed\n")
             return False
+
+        # STEP 8: Adjust crawl frequencies based on historical data
+        print(f"{'='*60}")
+        print("STEP 8: Adjusting Crawl Frequencies")
+        print(f"{'='*60}")
+
+        freq_results = frequency_analyzer.analyze_frequencies(cursor, connection)
+        if freq_results['adjusted'] > 0:
+            print(f"\n✓ Adjusted {freq_results['adjusted']} website frequency(s)\n")
+        else:
+            print(f"\nNo frequency adjustments needed\n")
 
         print(f"{'='*60}")
         print("PIPELINE COMPLETED SUCCESSFULLY")

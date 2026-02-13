@@ -65,6 +65,58 @@ const PopupContentBuilder = (() => {
         }
 
         headerWrapper.appendChild(textWrapper);
+
+        // Collapsible venue detail (description, website, address) — left-aligned with emoji
+        const hasDetail = locationInfo.address || locationInfo.description || locationInfo.website_url;
+        if (hasDetail) {
+            const detailDiv = document.createElement('div');
+            detailDiv.className = 'popup-header-detail';
+            detailDiv.hidden = true;
+
+            if (locationInfo.description) {
+                const descP = document.createElement('p');
+                descP.className = 'popup-header-description';
+                descP.textContent = locationInfo.description;
+                detailDiv.appendChild(descP);
+            }
+
+            if (locationInfo.website_url) {
+                const linksDiv = document.createElement('div');
+                linksDiv.className = 'popup-header-links';
+                const linkIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>`;
+                try {
+                    const domain = new URL(locationInfo.website_url).hostname.replace(/^www\./, '');
+                    const a = document.createElement('a');
+                    a.href = locationInfo.website_url;
+                    a.target = '_blank';
+                    a.rel = 'noopener noreferrer';
+                    a.innerHTML = `${linkIconSvg} ${Utils.escapeHtml(domain)}`;
+                    linksDiv.appendChild(a);
+                } catch {
+                    // Skip invalid URL
+                }
+                detailDiv.appendChild(linksDiv);
+            }
+
+            if (locationInfo.address) {
+                const addressP = document.createElement('p');
+                addressP.className = 'popup-header-address';
+                addressP.textContent = locationInfo.address;
+                detailDiv.appendChild(addressP);
+            }
+
+            headerWrapper.appendChild(detailDiv);
+
+            // Toggle venue detail on header click
+            headerWrapper.style.cursor = 'pointer';
+            headerWrapper.addEventListener('click', (e) => {
+                if (e.target.closest('a, .tag-button')) return;
+                const expanded = headerWrapper.dataset.expanded === 'true';
+                headerWrapper.dataset.expanded = expanded ? 'false' : 'true';
+                detailDiv.hidden = expanded;
+            });
+        }
+
         return headerWrapper;
     }
 
@@ -80,11 +132,6 @@ const PopupContentBuilder = (() => {
     function createEventDetail(event) {
         const eventDetailContainer = document.createElement('div');
         eventDetailContainer.className = 'popup-event-detail';
-
-        const dateTimeP = document.createElement('p');
-        dateTimeP.className = 'popup-event-datetime';
-        dateTimeP.textContent = Utils.formatEventDateTimeCompactly(event);
-        eventDetailContainer.appendChild(dateTimeP);
 
         const descriptionP = document.createElement('p');
         descriptionP.innerHTML = Utils.formatAndSanitize(event.description);
@@ -283,7 +330,8 @@ const PopupContentBuilder = (() => {
         let isFirstEvent = true;
 
         eventsWithSortData.forEach(({ event, isMatchingTags }) => {
-            const details = document.createElement('details');
+            const card = document.createElement('div');
+            card.className = 'popup-event-card';
 
             let shouldOpen = false;
             if (forcedEvent) {
@@ -294,26 +342,72 @@ const PopupContentBuilder = (() => {
                 shouldOpen = expandAll || isFirstEvent;
             }
 
-            const summary = document.createElement('summary');
-            const emojiPrefix = event.emoji ? `${event.emoji} ` : '';
-            summary.textContent = `${emojiPrefix}${event.short_name || event.name || ''}`;
+            // Card header: emoji + name + datetime
+            const header = document.createElement('div');
+            header.className = 'popup-event-card-header';
 
-            details.appendChild(summary);
-
-            if (shouldOpen) {
-                // Build detail content immediately for initially-open events
-                details.appendChild(createEventDetail(event));
-                details.open = true;
-            } else {
-                // Defer detail content creation until the user expands this event
-                details.addEventListener('toggle', () => {
-                    if (details.open && details.children.length === 1) {
-                        details.appendChild(createEventDetail(event));
-                    }
-                }, { once: true });
+            if (event.emoji) {
+                const emojiSpan = document.createElement('span');
+                emojiSpan.className = 'popup-event-emoji';
+                emojiSpan.textContent = event.emoji;
+                header.appendChild(emojiSpan);
             }
 
-            eventsListWrapper.appendChild(details);
+            const info = document.createElement('div');
+            info.className = 'popup-event-card-info';
+
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'popup-event-card-name';
+            nameSpan.textContent = event.name || '';
+            info.appendChild(nameSpan);
+
+            header.appendChild(info);
+            card.appendChild(header);
+
+            const datetimeSpan = document.createElement('span');
+            datetimeSpan.className = 'popup-event-card-datetime';
+            datetimeSpan.textContent = Utils.formatEventDateTimeCompactly(event);
+            card.appendChild(datetimeSpan);
+
+            // Description preview (always visible when collapsed)
+            if (event.description) {
+                const preview = document.createElement('div');
+                preview.className = 'popup-event-card-preview';
+                preview.textContent = event.description;
+                card.appendChild(preview);
+            }
+
+            // Detail container (hidden until expanded)
+            const detailContainer = document.createElement('div');
+            detailContainer.className = 'popup-event-card-detail';
+            detailContainer.hidden = true;
+            card.appendChild(detailContainer);
+
+            if (shouldOpen) {
+                detailContainer.appendChild(createEventDetail(event));
+                detailContainer.hidden = false;
+                card.dataset.expanded = 'true';
+            }
+
+            // Toggle expand/collapse on card click
+            card.addEventListener('click', (e) => {
+                // Don't toggle if clicking a link or tag button
+                if (e.target.closest('a, .tag-button')) return;
+                const isExpanded = card.dataset.expanded === 'true';
+                if (isExpanded) {
+                    card.dataset.expanded = 'false';
+                    detailContainer.hidden = true;
+                } else {
+                    // Lazy-load detail on first expand
+                    if (detailContainer.children.length === 0) {
+                        detailContainer.appendChild(createEventDetail(event));
+                    }
+                    card.dataset.expanded = 'true';
+                    detailContainer.hidden = false;
+                }
+            });
+
+            eventsListWrapper.appendChild(card);
             isFirstEvent = false;
         });
 

@@ -542,6 +542,15 @@ const MapManager = (() => {
                 _openPopupForLocation(locationKey, e.lngLat);
             }
         });
+
+        // Click on empty map: dismiss bottom sheet (mobile)
+        map.on('click', (e) => {
+            if (typeof BottomSheet === 'undefined' || (!BottomSheet.isOpen() && !BottomSheet.isDetailMode())) return;
+            const features = map.queryRenderedFeatures(e.point, { layers: ['marker-symbols'] });
+            if (features.length === 0) {
+                BottomSheet.dismissToMini();
+            }
+        });
     }
 
     function _openPopupForLocation(locationKey, lngLat) {
@@ -582,14 +591,23 @@ const MapManager = (() => {
         }
         _updateHoverFilter();
 
-        // Create popup
+        // Mobile: use bottom sheet instead of MapLibre popup
         const isMobile = window.innerWidth <= Constants.UI.MOBILE_BREAKPOINT;
+        if (isMobile && typeof BottomSheet !== 'undefined') {
+            state.currentPopup = null;
+            state.currentPopupLocationKey = locationKey;
+            BottomSheet.open(locationKey, lngLat, wrapper);
+            // popupopen event is fired by BottomSheet.open()
+            return;
+        }
+
+        // Desktop: standard MapLibre popup
         const popup = new maplibregl.Popup({
             closeButton: true,
             closeOnClick: true,
             maxWidth: 'none',
-            anchor: isMobile ? 'center' : 'bottom',
-            offset: isMobile ? [0, 0] : [0, -26]
+            anchor: 'bottom',
+            offset: [0, -26]
         });
 
         // Handle popup close
@@ -685,6 +703,20 @@ const MapManager = (() => {
         return state.mapInstance;
     }
 
+    /**
+     * Clears active marker highlight state.
+     * Called by BottomSheet on close to remove the highlight ring.
+     */
+    function clearActiveState() {
+        const map = state.mapInstance;
+        if (state.activeFeatureId !== null && map) {
+            map.setFeatureState({ source: 'markers', id: state.activeFeatureId }, { active: false });
+            state.activeFeatureId = null;
+        }
+        state.currentPopupLocationKey = null;
+        _updateHoverFilter();
+    }
+
     // ========================================
     // PUBLIC API
     // ========================================
@@ -695,6 +727,7 @@ const MapManager = (() => {
         getMap,
         getCurrentPopup,
         getCurrentPopupLocationKey,
+        clearActiveState,
         loadEmojiImages,
         reloadEmojiImages,
         updateMarkerData,

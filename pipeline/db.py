@@ -392,6 +392,10 @@ def archive_outdated_events(cursor, connection, website_id):
     - For EVERY website that has ever referenced this event (via event_sources),
       the most recent crawl from that website does NOT include this event
     - At least one of those websites has been successfully crawled
+    - For events with future occurrences: a 14-day grace period applies — the event
+      is only archived if its most recent source crawl is older than 14 days.
+      This prevents premature archiving of events on rotating calendars that don't
+      always list events far in advance.
 
     This ensures events referenced by multiple websites are only archived when
     ALL sources stop listing them, not just one.
@@ -412,6 +416,7 @@ def archive_outdated_events(cursor, connection, website_id):
     # 1. It has a source from the website we just crawled
     # 2. No source website's latest crawl still references it
     # 3. At least one source website has been successfully crawled
+    # 4. Either has no future dates, or last source crawl is 14+ days old (grace period)
     archive_where = """
         e.archived = FALSE
           AND EXISTS (
@@ -444,6 +449,24 @@ def archive_outdated_events(cursor, connection, website_id):
               WHERE es.event_id = e.id
                 AND cr.status IN ('processed', 'extracted')
                 AND cr.processed_at IS NOT NULL
+          )
+          AND (
+              -- No future occurrences: archive immediately (past events)
+              NOT EXISTS (
+                  SELECT 1 FROM event_occurrences eo
+                  WHERE eo.event_id = e.id AND eo.start_date >= CURDATE()
+              )
+              OR
+              -- Has future occurrences: only archive after 14-day grace period
+              -- (handles rotating calendars that don't always list far-out events)
+              NOT EXISTS (
+                  SELECT 1
+                  FROM event_sources es
+                  JOIN crawl_events ce ON es.crawl_event_id = ce.id
+                  JOIN crawl_results cr ON ce.crawl_result_id = cr.id
+                  WHERE es.event_id = e.id
+                    AND cr.processed_at >= DATE_SUB(NOW(), INTERVAL 14 DAY)
+              )
           )
     """
 

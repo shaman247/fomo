@@ -101,9 +101,13 @@ const MarkerController = (() => {
      * @returns {boolean} True if popup was updated, false otherwise
      */
     function updateOpenPopupContent(openPopup) {
-        if (!openPopup) return false;
+        // Handle bottom sheet case (mobile) — openPopup is null but sheet is open
+        const isBottomSheet = !openPopup && typeof BottomSheet !== 'undefined' && BottomSheet.isDetailMode();
+        if (!openPopup && !isBottomSheet) return false;
 
-        const locationKey = MapManager.getCurrentPopupLocationKey();
+        const locationKey = isBottomSheet
+            ? BottomSheet.getCurrentLocationKey()
+            : MapManager.getCurrentPopupLocationKey();
         if (!locationKey) return false;
 
         const locationInfo = state.appState.locationsByLatLng[locationKey];
@@ -152,7 +156,11 @@ const MarkerController = (() => {
         } else {
             wrapper.innerHTML = newContent;
         }
-        openPopup.setDOMContent(wrapper);
+        if (isBottomSheet) {
+            BottomSheet.updateContent(wrapper);
+        } else {
+            openPopup.setDOMContent(wrapper);
+        }
 
         // Clear forced display after updating
         state.eventProvider.setForceDisplayEventId(null);
@@ -161,13 +169,19 @@ const MarkerController = (() => {
     }
 
     /**
-     * Finds the currently open popup if any
+     * Finds the currently open popup or bottom sheet if any
      * @returns {Object|null} Object with {popup, locationKey} or null
      */
     function findOpenPopup() {
         const popup = MapManager.getCurrentPopup();
         const locationKey = MapManager.getCurrentPopupLocationKey();
-        return popup ? { popup, locationKey } : null;
+        if (popup) return { popup, locationKey };
+
+        // Check bottom sheet detail mode (mobile)
+        if (typeof BottomSheet !== 'undefined' && BottomSheet.isDetailMode()) {
+            return { popup: null, locationKey: BottomSheet.getCurrentLocationKey() };
+        }
+        return null;
     }
 
     /**

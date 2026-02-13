@@ -35,13 +35,16 @@ def find_first_emoji(text: str) -> str:
 
     Handles simple emojis, skin-tone modifiers, variation selectors,
     and complex multi-character emojis like family groups.
+    Rejects bare ASCII characters (digits 0-9, #, *) which are technically
+    in Unicode's Emoji category but render as plain text without keycap sequences.
     """
     emoji_pattern = regex.compile(
         r'(?:\p{Regional_Indicator}{2})'  # Flag emojis
         r'|'
-        r'\p{Emoji}'
+        r'[0-9#*]\uFE0F\u20E3'  # Keycap sequences (e.g. 1️⃣) — must have both VS16 + enclosing keycap
+        r'|'
+        r'(?![0-9#*])\p{Emoji}'  # Other emoji, excluding bare digits/hash/asterisk
         r'[\uFE0E\uFE0F]?'  # Variation selectors
-        r'[\u20E3]?'  # Keycap combining enclosing
         r'(?:\p{Emoji_Modifier})?'  # Skin tone modifiers
         r'(?:\u200D\p{Emoji}[\uFE0E\uFE0F]?(?:\p{Emoji_Modifier})?)*'  # ZWJ sequences
     )

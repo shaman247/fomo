@@ -535,9 +535,10 @@ def estimate_event_count(content):
     ))
     view_event_count = len(re.findall(r'View\s+Event|View\s+Details|More\s+Info', content, re.IGNORECASE))
     event_url_count = len(re.findall(r'/events?/[^/\s"\']+', content))
+    listing_url_count = len(re.findall(r'/listings?/[^/\s"\']+', content))
 
     # Dates may appear 2x per event (heading + details), so halve them
-    return max(date_count // 2, view_event_count, event_url_count // 2)
+    return max(date_count // 2, view_event_count, event_url_count // 2, listing_url_count // 2)
 
 
 def get_enrichment_prompt(event_names, venue_name):

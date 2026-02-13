@@ -70,9 +70,9 @@
                 <button id="welcome-close-btn" class="modal-close-btn" aria-label="Close welcome">&times;</button>
             </div>
             <div class="modal-body">
-                <p>Welcome! <strong>fomo.nyc</strong> is a free, community-built interactive map of upcoming events in the NYC area.</p>
-                <p>Tap any marker to see what's happening there. Events are collected automatically from many different websites every day.</p>
-                <p><a href="about.html" target="_blank" rel="noopener" class="external-link">Learn more <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg></a></p>
+                <p>Welcome! <strong>fomo.nyc</strong> is an interactive map of upcoming events in the NYC area.</p>
+                <p>Events are collected automatically from many different websites every day.</p>
+                <p>This project is a labor of love and will always be free and open-source. <a href="about.html" target="_blank" rel="noopener" class="external-link">Learn more <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg></a></p>
             </div>
         </div>
     </div>
@@ -155,6 +155,7 @@
     <!-- Core -->
     <script src="js/core/constants.js"></script>
     <script src="js/core/utils.js"></script>
+    <script src="js/core/historyManager.js"></script>
     <script src="js/core/urlParams.js"></script>
 
     <!-- Data -->
@@ -175,6 +176,7 @@
     <script src="js/ui/modalManager.js"></script>
     <script src="js/ui/toastNotifier.js"></script>
     <script src="js/ui/gestureHandler.js"></script>
+    <script src="js/ui/bottomSheet.js"></script>
     <script src="js/ui/popupContentBuilder.js"></script>
     <script src="js/ui/uiManager.js"></script>
     <script src="js/ui/emojiManager.js"></script>
@@ -182,11 +184,11 @@
     <script src="js/ui/feedbackManager.js"></script>
 
     <!-- Map -->
-    <script src="js/map/mapManager.js?v=2"></script>
+    <script src="js/map/mapManager.js?v=4"></script>
     <script src="js/map/viewportManager.js"></script>
-    <script src="js/map/markerController.js"></script>
+    <script src="js/map/markerController.js?v=4"></script>
 
     <!-- Main Application -->
-    <script src="js/script.js?v=2"></script>
+    <script src="js/script.js?v=4"></script>
 </body>
 </html>

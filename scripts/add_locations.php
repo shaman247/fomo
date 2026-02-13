@@ -16,7 +16,7 @@
 // EDIT THIS ARRAY TO ADD NEW LOCATIONS
 // ============================================================================
 $new_locations = [
-    // Interference Archive, People's Forum, Topos Bookstore, Topos Too, Rodeo - added 2026-02-07
+    // Locations added on 2026-02-12 (Brooklyn Paper events) - see git history
 ];
 
 /*

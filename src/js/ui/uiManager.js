@@ -48,13 +48,17 @@ const UIManager = (() => {
         let initialStartDate = config.START_DATE;
         let finalDefaultEndDate = null;
 
-        if (urlParams.start && urlParams.start instanceof Date) {
-            initialStartDate = urlParams.start;
+        // Check if URL date range is stale (entirely in the past)
+        const urlDatesStale = urlParams.end instanceof Date && urlParams.end < today;
+
+        if (!urlDatesStale && urlParams.start instanceof Date) {
+            // Clamp start to today if it's in the past
+            initialStartDate = urlParams.start < today ? today : urlParams.start;
         } else if (today.getTime() > config.START_DATE.getTime() && today.getTime() <= config.END_DATE.getTime()) {
             initialStartDate = today;
         }
 
-        if (urlParams.end && urlParams.end instanceof Date) {
+        if (!urlDatesStale && urlParams.end instanceof Date) {
             finalDefaultEndDate = urlParams.end;
         } else {
             const defaultEndDate = new Date(today.getTime() + (6 * Constants.TIME.ONE_DAY_MS));

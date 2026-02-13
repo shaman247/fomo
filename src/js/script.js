@@ -276,6 +276,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     this.state.lastSelectedDates = selectedDates;
                     // During init, skip display — filterAndDisplayEvents is called explicitly after map loads
                     this.updateFilteredEventList({ skipDisplay: this.state.isInitialLoad });
+
+                    HistoryManager.push();
                 }
             });
             FilterPanelUI.initOmniSearch({
@@ -316,13 +318,18 @@ document.addEventListener('DOMContentLoaded', () => {
             if (logoContainer) logoContainer.classList.remove('initially-hidden');
             this.elements.filterContainer.classList.remove('initially-hidden');
             tagsWrapper.classList.remove('initially-hidden');
-            this.elements.expandFilterPanelButton.classList.remove('initially-hidden');
 
-            // Set up toggle tags button for mobile
-            this.elements.expandFilterPanelButton.addEventListener('click', () => {
-                this.elements.filterPanel.classList.toggle('tags-collapsed');
-                this.elements.expandFilterPanelButton.classList.toggle('collapsed');
-            });
+            // On mobile, filter panel is always slim (no collapse/expand)
+            if (window.innerWidth <= Constants.UI.MOBILE_BREAKPOINT) {
+                this.elements.filterPanel.classList.remove('tags-collapsed');
+            } else {
+                // Desktop: show expand button and set up toggle
+                this.elements.expandFilterPanelButton.classList.remove('initially-hidden');
+                this.elements.expandFilterPanelButton.addEventListener('click', () => {
+                    this.elements.filterPanel.classList.toggle('tags-collapsed');
+                    this.elements.expandFilterPanelButton.classList.toggle('collapsed');
+                });
+            }
         },
 
         /**
@@ -418,6 +425,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Mark initial load as complete
                 this.state.isInitialLoad = false;
+
+                // Initialize browser history for back/forward navigation
+                HistoryManager.init(this.state.map, {
+                    getSelectedLocationKey: () => this.state.selectedLocationKey,
+                    getTagStates: () => FilterPanelUI.getTagStates(),
+                    getSelectedDates: () => this.state.datePickerInstance?.selectedDates || [],
+                    getSearchTerm: () => this.state.searchTerm,
+                    getDatePicker: () => this.state.datePickerInstance,
+                    performSearch: (term) => {
+                        this.elements.omniSearchInput.value = term;
+                        this.performSearch(term);
+                    },
+                    updateFilteredEventList: () => this.updateFilteredEventList(),
+                    onFilterChange: () => {
+                        SelectedTagsDisplay.render();
+                        this.filterAndDisplayEvents();
+                    },
+                });
             } catch (error) {
                 console.error("Failed to initialize app with initial data:", error);
 
@@ -727,6 +752,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     MapManager.loadEmojiImages(this.state.locationsByLatLng);
                     MapManager.setupMarkerInteractions();
 
+                    // Initialize mobile bottom sheet for popups
+                    BottomSheet.init(this.state.map);
+
                     // Fade in the map container
                     const mapContainerEl = document.getElementById('map-container');
                     if (mapContainerEl) {
@@ -737,73 +765,58 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             });
 
-            // Handle popup open events (custom event fired by MapManager)
+            // Handle popup open events (custom event fired by MapManager or BottomSheet)
             this.state.map.on('popupopen', (e) => {
                 const { locationKey, popup, lngLat } = e;
                 if (locationKey) {
                     this.state.selectedLocationKey = locationKey;
 
-                    // Pan to ensure popup fits within the visible area (90% bounds)
-                    // Wait for popup to render so we can measure its actual dimensions
-                    // Use requestAnimationFrame to ensure DOM has updated
-                    requestAnimationFrame(() => {
-                        const popupElement = popup.getElement();
-                        if (!popupElement) return;
-
-                        // Helper function to update popup max-height and re-center on mobile
-                        const updatePopupForFilterPanelChange = (shouldPan = false) => {
-                            const isMobile = window.innerWidth <= Constants.UI.MOBILE_BREAKPOINT;
-                            if (isMobile) {
-                                // Re-pan to center the marker in the new visible area first
-                                if (shouldPan) {
-                                    const panOffset = ViewportManager.calculatePopupPanOffset(
-                                        this.state.map,
-                                        lngLat,
-                                        0, // height not needed for mobile centering
-                                        0  // width not needed for mobile centering
-                                    );
-                                    if (panOffset) {
-                                        this.state.map.panBy([-panOffset.panX, -panOffset.panY], { animate: false });
-                                    }
-                                }
-
-                                // Then update the popup max-height
+                    // Skip auto-pan during history restore (map is already positioned)
+                    if (!HistoryManager.isRestoring()) {
+                        if (!popup) {
+                            // Bottom sheet (mobile) — pan marker to visible area above the sheet
+                            requestAnimationFrame(() => {
                                 const { filterPanelHeight } = ViewportManager.getFilterPanelDimensions();
                                 const viewportHeight = window.innerHeight;
-                                const visibleAreaHeight = viewportHeight - filterPanelHeight;
-                                const maxPopupHeight = Math.floor(visibleAreaHeight * 0.85);
+                                const sheetHeight = viewportHeight * 0.40; // peek snap
+                                const visibleCenter = filterPanelHeight + (viewportHeight - filterPanelHeight - sheetHeight) / 2;
+                                const offsetY = visibleCenter - viewportHeight / 2;
 
-                                const innerContent = popupElement.querySelector('.maplibre-popup-content');
-                                if (innerContent) {
-                                    innerContent.style.maxHeight = `${maxPopupHeight}px`;
+                                this.state.map.easeTo({
+                                    center: [lngLat.lng, lngLat.lat],
+                                    offset: [0, offsetY],
+                                    duration: 300
+                                });
+                            });
+                        } else {
+                            // Desktop popup — measure and pan to fit
+                            requestAnimationFrame(() => {
+                                const popupElement = popup.getElement();
+                                if (!popupElement) return;
+
+                                const contentElement = popupElement.querySelector('.maplibre-popup-content');
+                                const actualWidth = contentElement ? contentElement.offsetWidth : popupElement.offsetWidth;
+                                const actualHeight = contentElement ? contentElement.offsetHeight : popupElement.offsetHeight;
+
+                                const panOffset = ViewportManager.calculatePopupPanOffset(
+                                    this.state.map,
+                                    lngLat,
+                                    actualHeight,
+                                    actualWidth
+                                );
+
+                                if (panOffset) {
+                                    this.state.map.panBy([-panOffset.panX, -panOffset.panY], { animate: true, duration: 100 });
                                 }
-                            }
-                        };
-
-                        // Initial max-height calculation (no pan needed, will pan below)
-                        updatePopupForFilterPanelChange(false);
-
-                        // Get the actual popup content element for accurate width measurement
-                        // MapLibre popup structure: .maplibregl-popup > .maplibregl-popup-content
-                        const contentElement = popupElement.querySelector('.maplibre-popup-content');
-                        const actualWidth = contentElement ? contentElement.offsetWidth : popupElement.offsetWidth;
-                        const actualHeight = contentElement ? contentElement.offsetHeight : popupElement.offsetHeight;
-
-                        const panOffset = ViewportManager.calculatePopupPanOffset(
-                            this.state.map,
-                            lngLat,
-                            actualHeight,
-                            actualWidth
-                        );
-
-                        if (panOffset) {
-                            this.state.map.panBy([-panOffset.panX, -panOffset.panY], { animate: true, duration: 100 });
+                            });
                         }
-                    });
+                    }
 
                     // Re-run search to update the UI with the selected location
                     const currentTerm = this.elements.omniSearchInput.value.toLowerCase();
                     this.performSearch(currentTerm);
+
+                    HistoryManager.push();
                 }
             });
 
@@ -829,6 +842,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Re-run search to update the UI and remove the selected location
                     const currentTerm = this.elements.omniSearchInput.value.toLowerCase();
                     this.performSearch(currentTerm);
+
+                    HistoryManager.push();
                 }
             });
         },
@@ -903,6 +918,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 onFilterChangeCallback: () => {
                     SelectedTagsDisplay.render();
                     this.filterAndDisplayEvents();
+                    HistoryManager.push();
                 },
                 onSearchResultClick: (result) => this.handleSearchResultClick(result),
                 defaultMarkerColor: this.config.DEFAULT_MARKER_COLOR_DARK,
@@ -1022,8 +1038,8 @@ document.addEventListener('DOMContentLoaded', () => {
             // After updating all matching items, update the visible subset as well.
             this.updateVisibleItems();
 
-            // Update open popup content if there is one
-            if (openPopup) {
+            // Update open popup/bottom sheet content if there is one
+            if (openPopupInfo) {
                 MarkerController.updateOpenPopupContent(openPopup);
             }
 

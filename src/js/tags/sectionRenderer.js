@@ -80,7 +80,8 @@ const SectionRenderer = (() => {
 
         // Callbacks
         createSearchResultButton: null,
-        onSectionReorder: null
+        onSectionReorder: null,
+        onAfterRender: null
     };
 
     // ========================================
@@ -485,6 +486,11 @@ const SectionRenderer = (() => {
 
             renderSection(results, hidden, metadata.title, metadata.icon, sectionKey);
         });
+
+        // Notify parent (e.g., FilterPanelUI) that rendering is complete
+        if (state.onAfterRender) {
+            state.onAfterRender();
+        }
     }
 
     // ========================================
@@ -506,6 +512,7 @@ const SectionRenderer = (() => {
         state.sectionViewStates = config.sectionViewStates;
         state.createSearchResultButton = config.createSearchResultButton;
         state.onSectionReorder = config.onSectionReorder;
+        state.onAfterRender = config.onAfterRender || null;
     }
 
     /**

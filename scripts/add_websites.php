@@ -16,8 +16,13 @@
 // EDIT THIS ARRAY TO ADD NEW WEBSITES
 // ============================================================================
 $new_websites = [
-    // Interference Archive, People's Forum, Topos Bookstore, Life World, Jade, Rodeo - added 2026-02-07
+    // Websites added on 2026-02-12 (Brooklyn Paper events) - see git history
 ];
+
+/*
+// Websites added on 2026-02-12 (Park Slope Walk venues) - see git history
+// Judd Foundation added on 2026-02-12 - see git history
+*/
 
 // ============================================================================
 // DATABASE CONFIGURATION

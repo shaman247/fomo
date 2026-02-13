@@ -20,7 +20,7 @@
     width: min(600px, max(420px, 40%));
 
     padding: 31px 31px 31px 42px;
-    background-color: color-mix(in srgb, var(--primary-bg) 80%, transparent);
+    background-color: color-mix(in srgb, var(--primary-bg) 85%, transparent);
     backdrop-filter: blur(3px);
     border: 1px solid var(--border-color);
     border-radius: 22px;
@@ -405,9 +405,6 @@ span.flatpickr-weekday {
         border: 0px;
         border-radius: 0px;
         height: auto;
-        max-height: 40vh;
-        max-height: 40dvh;
-        max-height: calc(var(--app-height, 100dvh) * 0.4);
         overflow: visible;
         margin: 0px;
         padding: 2px;
@@ -417,19 +414,12 @@ span.flatpickr-weekday {
         display: flex;
         flex-direction: column;
         z-index: var(--z-panel);
-        transition: max-height 0.3s ease;
     }
 
     /* Fallback for Android app if CSS variables aren't injected */
     .fomo-android-app #filter-panel {
         /* Use 36px as reasonable default for Android status bar (typically 24-48dp) */
         padding-top: max(2px, var(--safe-area-top, 36px));
-    }
-
-    #filter-panel.tags-collapsed {
-        max-height: 20vh;
-        max-height: 20dvh;
-        max-height: calc(var(--app-height, 100dvh) * 0.2);
     }
 
     #logo-menu-wrapper {
@@ -441,25 +431,6 @@ span.flatpickr-weekday {
         top: auto;
         left: 2px;
         margin-top: 0;
-    }
-
-    #tags-wrapper {
-        overflow-y: auto;
-        max-height: calc(40vh - 80px);
-        max-height: calc(40dvh - 80px);
-        max-height: calc(var(--app-height, 100dvh) * 0.4 - 80px);
-        -ms-overflow-style: none;
-        scrollbar-width: none;
-    }
-
-    #filter-panel.tags-collapsed #tags-wrapper {
-        max-height: calc(20vh - 80px);
-        max-height: calc(20dvh - 80px);
-        max-height: calc(var(--app-height, 100dvh) * 0.2 - 80px);
-    }
-
-    #filter-panel.no-transition {
-        transition: none;
     }
 
     #logo {

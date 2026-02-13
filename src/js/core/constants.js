@@ -56,7 +56,7 @@ const Constants = (() => {
         TOAST_DURATION_LONG: 7000,
 
         // Filter panel dimensions (in pixels)
-        FILTER_PANEL_MOBILE_HEIGHT: 145,
+        FILTER_PANEL_MOBILE_HEIGHT: 90,
 
         // Gesture thresholds (in pixels)
         SWIPE_THRESHOLD_PX: 50,

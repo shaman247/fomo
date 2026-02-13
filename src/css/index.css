@@ -32,4 +32,5 @@
 @import './tags.css';          /* Tag button component and states */
 @import './map.css';           /* MapLibre map, markers, and controls */
 @import './popups.css';        /* Location popups with event details */
+@import './bottom-sheet.css';  /* Mobile bottom sheet for popup content */
 @import './modals.css';        /* Dialogs, settings, and notifications */

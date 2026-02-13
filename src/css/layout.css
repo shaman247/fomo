@@ -180,34 +180,7 @@ a:focus-visible,
     }
 
     #expand-filter-panel-button {
-        display: flex;
-        position: absolute;
-        bottom: 12px;
-        right: 12px;
-        z-index: var(--z-panel-menu);
-        background-color: var(--accent-color);
-        color: var(--primary-bg);
-        border: none;
-        border-radius: 10px;
-        width: 36px;
-        height: 36px;
-        cursor: pointer;
-        box-shadow: var(--toggle-btn-shadow);
-        align-items: center;
-        justify-content: center;
-    }
-
-    #expand-filter-panel-button:hover {
-        background-color: var(--accent-hover);
-    }
-
-    #expand-filter-panel-button svg {
-        stroke: var(--primary-bg);
-        stroke-width: 3;
-    }
-
-    #expand-filter-panel-button.collapsed svg {
-        transform: rotate(180deg);
+        display: none;
     }
 
     .tab-link {

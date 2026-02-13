@@ -47,6 +47,7 @@ def export_events(cursor):
 
     # Get all events with their occurrences (exclude archived and suppressed events)
     # Events must have a location with coordinates to be exported
+    # Exclude events from aggregator sources unless verified by a primary source
     cursor.execute("""
         SELECT e.id, e.name, e.short_name, e.description, e.emoji,
                e.location_name, e.sublocation,
@@ -54,9 +55,21 @@ def export_events(cursor):
                l.lat, l.lng
         FROM events e
         JOIN locations l ON e.location_id = l.id
+        LEFT JOIN websites w ON e.website_id = w.id
         WHERE l.lat IS NOT NULL AND l.lng IS NOT NULL
           AND e.archived = FALSE
           AND e.suppressed = FALSE
+          AND (
+            w.source_type = 'primary'
+            OR w.id IS NULL
+            OR EXISTS (
+                SELECT 1 FROM event_sources es
+                JOIN crawl_events ce ON es.crawl_event_id = ce.id
+                JOIN crawl_results cr ON ce.crawl_result_id = cr.id
+                JOIN websites w2 ON cr.website_id = w2.id
+                WHERE es.event_id = e.id AND w2.source_type = 'primary'
+            )
+          )
     """)
 
     all_events = []
@@ -153,7 +166,7 @@ def export_events(cursor):
 
     # Load locations from database
     cursor.execute("""
-        SELECT id, name, lat, lng, emoji, alt_emoji, address, short_name, very_short_name
+        SELECT id, name, lat, lng, emoji, alt_emoji, address, short_name, very_short_name, description
         FROM locations
         WHERE lat IS NOT NULL AND lng IS NOT NULL
     """)
@@ -168,6 +181,15 @@ def export_events(cursor):
             WHERE lt.location_id = %s
         """, (location_id,))
         tags = [r[0] for r in cursor.fetchall()]
+
+        # Get website URL for this location
+        cursor.execute("""
+            SELECT w.base_url FROM website_locations wl
+            JOIN websites w ON wl.website_id = w.id
+            WHERE wl.location_id = %s
+            LIMIT 1
+        """, (location_id,))
+        website_row = cursor.fetchone()
 
         loc = {
             'name': row[1],
@@ -186,6 +208,10 @@ def export_events(cursor):
             loc['short_name'] = row[7]
         if row[8]:
             loc['very_short_name'] = row[8]
+        if row[9]:
+            loc['description'] = row[9]
+        if website_row and website_row[0]:
+            loc['website_url'] = website_row[0]
         all_locations.append(loc)
 
     init_locations = get_active_locations(init_events, all_locations)

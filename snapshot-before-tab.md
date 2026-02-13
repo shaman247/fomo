@@ -1,0 +1,2237 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e19]:
+      - button "Open menu" [ref=e6] [cursor=pointer]:
+        - img "Fomo NYC Logo"
+      - generic [ref=e22]:
+        - textbox "Search places, events, tags" [ref=e23]:
+          - /placeholder: Search places, events, tags...
+        - img
+      - generic [ref=e25]:
+        - textbox "Select date range" [ref=e26] [cursor=pointer]:
+          - /placeholder: Select date range...
+          - text: Feb 9 to Feb 15
+        - img
+    - application "Interactive map of NYC events" [ref=e9]:
+      - region "Map" [ref=e10]
+    - generic [ref=e27]:
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - generic [ref=e48]:
+                - button [ref=e49] [cursor=pointer]: Music
+                - button [ref=e50] [cursor=pointer]: Nightlife
+                - button [ref=e51] [cursor=pointer]: Valentines Day
+                - button [ref=e52] [cursor=pointer]: Performance
+                - button [ref=e53] [cursor=pointer]: Comedy
+                - button [ref=e54] [cursor=pointer]: Jazz
+                - button [ref=e55] [cursor=pointer]: Date Night
+                - button [ref=e56] [cursor=pointer]: Stand-up
+                - button [ref=e57] [cursor=pointer]: Performance Art
+                - button [ref=e58] [cursor=pointer]: Drama
+                - button [ref=e59] [cursor=pointer]: Community
+                - button [ref=e60] [cursor=pointer]: Virtual
+                - button [ref=e61] [cursor=pointer]: Storytelling
+                - button [ref=e62] [cursor=pointer]: Mindfulness
+                - button [ref=e63] [cursor=pointer]: Modern Jazz
+                - button [ref=e64] [cursor=pointer]: Dance Party
+                - button [ref=e65] [cursor=pointer]: Literature
+                - button [ref=e66] [cursor=pointer]: Singer Songwriter
+                - button [ref=e67] [cursor=pointer]: Networking
+                - button [ref=e68] [cursor=pointer]: Romance
+                - button [ref=e69] [cursor=pointer]: Contemporary Art
+                - button [ref=e70] [cursor=pointer]: Open Mic
+                - button [ref=e71] [cursor=pointer]: Wellness
+                - button [ref=e72] [cursor=pointer]: Soul Music
+                - button [ref=e73] [cursor=pointer]: DJ
+                - button [ref=e74] [cursor=pointer]: Sustainability
+                - button [ref=e75] [cursor=pointer]: Visual Arts
+                - button [ref=e76] [cursor=pointer]: Family
+                - button [ref=e77] [cursor=pointer]: History
+                - button [ref=e78] [cursor=pointer]: Arthouse
+                - button [ref=e79] [cursor=pointer]: Social Justice
+                - button [ref=e80] [cursor=pointer]: Live Show
+                - button [ref=e81] [cursor=pointer]: Avant Garde
+                - button [ref=e82] [cursor=pointer]: Education
+                - button [ref=e83] [cursor=pointer]: Live Music
+                - button [ref=e84] [cursor=pointer]: Live Jazz
+                - button [ref=e85] [cursor=pointer]: Concert
+                - button [ref=e86] [cursor=pointer]: Theater
+                - button [ref=e87] [cursor=pointer]: Community Board
+                - button [ref=e88] [cursor=pointer]: Electronic Music
+                - button [ref=e89] [cursor=pointer]: LGBTQ
+                - button [ref=e90] [cursor=pointer]: Jazz Trio
+                - button [ref=e91] [cursor=pointer]: Late Night
+                - button [ref=e92] [cursor=pointer]: Experimental
+                - button [ref=e93] [cursor=pointer]: Film
+                - button [ref=e94] [cursor=pointer]: Dance
+                - button [ref=e95] [cursor=pointer]: Classic Film
+                - button [ref=e96] [cursor=pointer]: Book Club
+                - button [ref=e97] [cursor=pointer]: Poetry
+                - button [ref=e98] [cursor=pointer]: Friday Night
+                - button [ref=e99] [cursor=pointer]: Urban Planning
+                - button [ref=e100] [cursor=pointer]: Cabaret
+                - button [ref=e101] [cursor=pointer]: Art History
+                - button [ref=e102] [cursor=pointer]: Classical Music
+                - button [ref=e103] [cursor=pointer]: Variety Show
+                - button [ref=e104] [cursor=pointer]: Trivia Night
+                - button [ref=e105] [cursor=pointer]: Sunday Funday
+                - button [ref=e106] [cursor=pointer]: Architecture
+                - button [ref=e107] [cursor=pointer]: Fine Art
+                - button [ref=e108] [cursor=pointer]: Spoken Word
+                - button [ref=e109] [cursor=pointer]: Author Talk
+                - button [ref=e110] [cursor=pointer]: Showcase
+                - button [ref=e111] [cursor=pointer]: Meditation
+                - button [ref=e112] [cursor=pointer]: Free
+                - button [ref=e113] [cursor=pointer]: Social Event
+                - button [ref=e114] [cursor=pointer]: Workshop
+                - button [ref=e115] [cursor=pointer]: Volunteer
+                - button [ref=e116] [cursor=pointer]: Valentine Event
+                - button [ref=e117] [cursor=pointer]: Jam Session
+                - button [ref=e118] [cursor=pointer]: Jazz Quartet
+                - button [ref=e119] [cursor=pointer]: Social Dance
+                - button [ref=e120] [cursor=pointer]: Contemporary Dance
+                - button [ref=e121] [cursor=pointer]: Thriller
+                - button [ref=e122] [cursor=pointer]: Rock Music
+                - button [ref=e123] [cursor=pointer]: Live Concert
+                - button [ref=e124] [cursor=pointer]: Jazz Piano
+                - button [ref=e125] [cursor=pointer]: Improv
+                - button [ref=e126] [cursor=pointer]: Indie Music
+                - button [ref=e127] [cursor=pointer]: Alternative
+                - button [ref=e128] [cursor=pointer]: Documentary
+                - button [ref=e129] [cursor=pointer]: House Music
+                - button [ref=e130] [cursor=pointer]: Culture
+                - button [ref=e131] [cursor=pointer]: Community Service
+                - button [ref=e132] [cursor=pointer]: Social
+                - button [ref=e133] [cursor=pointer]: Hip Hop
+                - button [ref=e134] [cursor=pointer]: Romantic Dinner
+                - button [ref=e135] [cursor=pointer]: Happy Hour
+                - button [ref=e136] [cursor=pointer]: Off Broadway
+                - button [ref=e137] [cursor=pointer]: Outdoor
+                - button [ref=e138] [cursor=pointer]: Performing Arts
+                - button [ref=e139] [cursor=pointer]: Exhibition
+                - button [ref=e140] [cursor=pointer]: Saxophone
+                - button [ref=e141] [cursor=pointer]: R&B
+                - button [ref=e142] [cursor=pointer]: Art
+                - button [ref=e143] [cursor=pointer]: Pop Music
+                - button [ref=e144] [cursor=pointer]: Art Workshop
+                - button [ref=e145] [cursor=pointer]: Lunar New Year
+                - button [ref=e146] [cursor=pointer]: Skyline Views
+                - button [ref=e147] [cursor=pointer]: Cultural Heritage
+                - button [ref=e148] [cursor=pointer]: Community Event
+                - button [ref=e149] [cursor=pointer]: Disco
+                - button [ref=e150] [cursor=pointer]: Economic Development
+                - button [ref=e151] [cursor=pointer]: Youth Services
+                - button [ref=e152] [cursor=pointer]: Classical
+                - button [ref=e153] [cursor=pointer]: Mixed Media
+                - button [ref=e154] [cursor=pointer]: Nature Education
+                - button [ref=e155] [cursor=pointer]: Historic Preservation
+                - button [ref=e156] [cursor=pointer]: Musical Theatre
+                - button [ref=e157] [cursor=pointer]: Ceramics
+                - button [ref=e158] [cursor=pointer]: String Quartet
+                - button [ref=e159] [cursor=pointer]: Cultural History
+                - button [ref=e160] [cursor=pointer]: Underground
+                - button [ref=e161] [cursor=pointer]: Creative Kids
+                - button [ref=e162] [cursor=pointer]: Social Services
+                - button [ref=e163] [cursor=pointer]: Public Safety
+                - button [ref=e164] [cursor=pointer]: Themed Party
+                - button [ref=e165] [cursor=pointer]: Parks
+                - button [ref=e166] [cursor=pointer]: Early Music
+                - button [ref=e167] [cursor=pointer]: Improv Comedy
+                - button [ref=e168] [cursor=pointer]: Botany
+                - button [ref=e169] [cursor=pointer]: Learning
+                - button [ref=e170] [cursor=pointer]: Pottery
+                - button [ref=e171] [cursor=pointer]: Kids Crafts
+                - button [ref=e172] [cursor=pointer]: Language Learning
+                - button [ref=e173] [cursor=pointer]: Sanitation
+                - button [ref=e174] [cursor=pointer]: Fashion Design
+                - button [ref=e175] [cursor=pointer]: Tchaikovsky
+                - button [ref=e176] [cursor=pointer]: Wheel Throwing
+                - button [ref=e177] [cursor=pointer]: Community Wellness
+                - button [ref=e178] [cursor=pointer]: Makers
+                - button [ref=e179] [cursor=pointer]: Digital Skills
+                - button [ref=e180] [cursor=pointer]: Percussion
+                - button [ref=e181] [cursor=pointer]: Historic House
+                - button [ref=e182] [cursor=pointer]: Shopping
+                - button [ref=e183] [cursor=pointer]: Youth Programs
+                - button [ref=e184] [cursor=pointer]: Art Community
+                - button [ref=e185] [cursor=pointer]: Outdoor Education
+                - button [ref=e186] [cursor=pointer]: Acting
+                - button [ref=e187] [cursor=pointer]: Art Studio
+                - button [ref=e188] [cursor=pointer]: Reading
+                - button [ref=e189] [cursor=pointer]: Clay Art
+                - button [ref=e190] [cursor=pointer]: DJ Night
+                - button [ref=e191] [cursor=pointer]: Theology
+                - button [ref=e192] [cursor=pointer]: Dating Comedy
+                - button [ref=e193] [cursor=pointer]: Music and Movement
+                - button [ref=e194] [cursor=pointer]: Tech Skills
+                - button [ref=e195] [cursor=pointer]: Winter Activities
+                - button [ref=e196] [cursor=pointer]: Fitness Motivation
+                - button [ref=e197] [cursor=pointer]: Homework Help
+                - button [ref=e198] [cursor=pointer]: Local Vendors
+                - button [ref=e199] [cursor=pointer]: Relationship Humor
+                - button [ref=e200] [cursor=pointer]: Tech Connect
+                - button [ref=e201] [cursor=pointer]: Tuesday Vibes
+                - button [ref=e202] [cursor=pointer]: Valentine Weekend
+                - button [ref=e203] [cursor=pointer]: Wellness Journey
+                - button [ref=e204] [cursor=pointer]: Nightclub
+                - button [ref=e205] [cursor=pointer]: Lincoln Center
+                - button [ref=e206] [cursor=pointer]: Textile Art
+                - button [ref=e207] [cursor=pointer]: Historical Fiction
+                - button [ref=e208] [cursor=pointer]: Hardcore
+                - button [ref=e209] [cursor=pointer]: Mozart
+                - button [ref=e210] [cursor=pointer]: Opening Reception
+                - button [ref=e211] [cursor=pointer]: Outdoor Activity
+                - button [ref=e212] [cursor=pointer]: Global Rhythms
+                - button [ref=e213] [cursor=pointer]: Housing
+                - button [ref=e214] [cursor=pointer]: Music Event
+                - button [ref=e215] [cursor=pointer]: Cultural Performance
+                - button [ref=e216] [cursor=pointer]: Dubstep
+                - button [ref=e217] [cursor=pointer]: Outdoor Fitness
+                - button [ref=e218] [cursor=pointer]: Creative Social
+                - button [ref=e219] [cursor=pointer]: Family Activity
+                - button [ref=e220] [cursor=pointer]: Hyperpop
+                - button [ref=e221] [cursor=pointer]: Landmarks
+                - button [ref=e222] [cursor=pointer]: Lifelong Learning
+                - button [ref=e223] [cursor=pointer]: Public Parks
+                - button [ref=e224] [cursor=pointer]: Spring Festival
+                - button [ref=e225] [cursor=pointer]: Volunteering
+                - button [ref=e226] [cursor=pointer]: Business
+                - button [ref=e227] [cursor=pointer]: Creative Skills
+                - button [ref=e228] [cursor=pointer]: Design History
+                - button [ref=e229] [cursor=pointer]: Human Services
+                - button [ref=e230] [cursor=pointer]: Open Studio
+                - button [ref=e231] [cursor=pointer]: Spiritual
+                - button [ref=e232] [cursor=pointer]: Sunday Vibes
+                - button [ref=e233] [cursor=pointer]: Architecture Tour
+                - button [ref=e234] [cursor=pointer]: Bronx Arts
+                - button [ref=e235] [cursor=pointer]: Chinese New Year
+                - button [ref=e236] [cursor=pointer]: Finance
+                - button [ref=e237] [cursor=pointer]: Ice Skating
+                - button [ref=e238] [cursor=pointer]: Jazz Drums
+                - button [ref=e239] [cursor=pointer]: Local Economy
+                - button [ref=e240] [cursor=pointer]: Medicine
+                - button [ref=e241] [cursor=pointer]: Neighborhood Planning
+                - button [ref=e242] [cursor=pointer]: Public Forum
+                - button [ref=e243] [cursor=pointer]: Track and Field
+                - button [ref=e244] [cursor=pointer]: Active Aging
+                - button [ref=e245] [cursor=pointer]: Cardio Dance
+                - button [ref=e246] [cursor=pointer]: Community Gardening
+                - button [ref=e247] [cursor=pointer]: DIY Workshop
+                - button [ref=e248] [cursor=pointer]: Early Childhood Education
+              - generic [ref=e249]:
+                - 'listitem "location: Fraunces Tavern Museum" [ref=e250] [cursor=pointer]':
+                  - generic [ref=e251]: 🏛️
+                  - text: Fraunces Tavern Museum
+                - 'listitem "location: The Battery" [ref=e252] [cursor=pointer]':
+                  - generic [ref=e253]: 🌳
+                  - text: The Battery
+                - 'listitem "location: Cornell AAP" [ref=e254] [cursor=pointer]':
+                  - generic [ref=e255]: 🎓
+                  - text: Cornell AAP
+                - 'listitem "location: The Skyscraper Museum" [ref=e256] [cursor=pointer]':
+                  - generic [ref=e257]: 🏙️
+                  - text: The Skyscraper Museum
+                - 'listitem "location: Trinity Church" [ref=e258] [cursor=pointer]':
+                  - generic [ref=e259]: ⛪
+                  - text: Trinity Church
+                - 'listitem "location: Museum of Jewish Heritage" [ref=e260] [cursor=pointer]':
+                  - generic [ref=e261]: ✡️
+                  - text: Museum of Jewish Heritage
+                - 'listitem "location: Positive Exposure Gallery" [ref=e262] [cursor=pointer]':
+                  - generic [ref=e263]: 📷
+                  - text: Positive Exposure Gallery
+                - 'listitem "location: Watermark Bar" [ref=e264] [cursor=pointer]':
+                  - generic [ref=e265]: 🍹
+                  - text: Watermark Bar
+                - 'listitem "location: Transportation Alternatives" [ref=e266] [cursor=pointer]':
+                  - generic [ref=e267]: 🚲
+                  - text: Transportation Alternatives
+                - 'listitem "location: McNally Jackson" [ref=e268] [cursor=pointer]':
+                  - generic [ref=e269]: 📚
+                  - text: McNally Jackson
+                - 'listitem "location: South Street Seaport Museum" [ref=e270] [cursor=pointer]':
+                  - generic [ref=e271]: 🚢
+                  - text: South Street Seaport Museum
+                - 'listitem "location: The Seaport" [ref=e272] [cursor=pointer]':
+                  - generic [ref=e273]: ⚓
+                  - text: The Seaport
+                - 'listitem "location: The Fulton" [ref=e274] [cursor=pointer]':
+                  - generic [ref=e275]: 🦞
+                  - text: The Fulton
+                - 'listitem "location: Pier 17" [ref=e276] [cursor=pointer]':
+                  - generic [ref=e277]: 🎤
+                  - text: Pier 17
+                - 'listitem "location: The Oculus" [ref=e278] [cursor=pointer]':
+                  - generic [ref=e279]: 🏬
+                  - text: The Oculus
+                - 'listitem "location: Brooklyn Bridge Park" [ref=e280] [cursor=pointer]':
+                  - generic [ref=e281]: 🌳
+                  - text: Brooklyn Bridge Park
+                - 'listitem "location: City Hall" [ref=e282] [cursor=pointer]':
+                  - generic [ref=e283]: 🏛️
+                  - text: City Hall
+                - 'listitem "location: Gotham Park" [ref=e284] [cursor=pointer]':
+                  - generic [ref=e285]: 🌳
+                  - text: Gotham Park
+                - 'listitem "location: Harriet''s Rooftop" [ref=e286] [cursor=pointer]':
+                  - generic [ref=e287]: 🌃
+                  - text: Harriet's Rooftop
+                - 'listitem "location: NYC Records & Info" [ref=e288] [cursor=pointer]':
+                  - generic [ref=e289]: 🗃️
+                  - text: NYC Records & Info
+                - 'listitem "location: The Mysterious Bookshop" [ref=e290] [cursor=pointer]':
+                  - generic [ref=e291]: 📚
+                  - text: The Mysterious Bookshop
+                - 'listitem "location: 69 Atlantic" [ref=e292] [cursor=pointer]':
+                  - generic [ref=e293]: 🎩
+                  - text: 69 Atlantic
+                - 'listitem "location: Broadway Spirits" [ref=e294] [cursor=pointer]':
+                  - generic [ref=e295]: 🍷
+                  - text: Broadway Spirits
+                - 'listitem "location: Books Are Magic" [ref=e296] [cursor=pointer]':
+                  - generic [ref=e297]: 📚
+                  - text: Books Are Magic
+                - 'listitem "location: Battery Park City Library" [ref=e298] [cursor=pointer]':
+                  - generic [ref=e299]: 📖
+                  - text: Battery Park City Library
+                - 'listitem "location: St. Ann''s Warehouse" [ref=e300] [cursor=pointer]':
+                  - generic [ref=e301]: 🎭
+                  - text: St. Ann's Warehouse
+                - 'listitem "location: Henry''s End" [ref=e302] [cursor=pointer]':
+                  - generic [ref=e303]: 🍽️
+                  - text: Henry's End
+                - 'listitem "location: Museum of Food and Drink" [ref=e304] [cursor=pointer]':
+                  - generic [ref=e305]: 🍔
+                  - text: Museum of Food and Drink
+                - 'listitem "location: Poets House" [ref=e306] [cursor=pointer]':
+                  - generic [ref=e307]: 🏛️
+                  - text: Poets House
+                - 'listitem "location: Time Out Market" [ref=e308] [cursor=pointer]':
+                  - generic [ref=e309]: 🎪
+                  - text: Time Out Market
+                - 'listitem "location: Battery Park City" [ref=e310] [cursor=pointer]':
+                  - generic [ref=e311]: 🌳
+                  - text: Battery Park City
+                - 'listitem "location: Brooklyn Poets" [ref=e312] [cursor=pointer]':
+                  - generic [ref=e313]: 📜
+                  - text: Brooklyn Poets
+                - 'listitem "location: Empire Stores" [ref=e314] [cursor=pointer]':
+                  - generic [ref=e315]: 🛍️
+                  - text: Empire Stores
+                - 'listitem "location: Tribeca Greenmarket" [ref=e316] [cursor=pointer]':
+                  - generic [ref=e317]: 🥕
+                  - text: Tribeca Greenmarket
+                - 'listitem "location: First Unitarian Society" [ref=e318] [cursor=pointer]':
+                  - generic [ref=e319]: ⛪
+                  - text: First Unitarian Society
+                - 'listitem "location: Downtown Music Gallery" [ref=e320] [cursor=pointer]':
+                  - generic [ref=e321]: 🎷
+                  - text: Downtown Music Gallery
+                - 'listitem "location: Center for Brooklyn History" [ref=e322] [cursor=pointer]':
+                  - generic [ref=e323]: 🏛️
+                  - text: Center for Brooklyn History
+                - 'listitem "location: Brooklyn Org" [ref=e324] [cursor=pointer]':
+                  - generic [ref=e325]: 🏢
+                  - text: Brooklyn Org
+                - 'listitem "location: Brooklyn Heights Library" [ref=e326] [cursor=pointer]':
+                  - generic [ref=e327]: 📖
+                  - text: Brooklyn Heights Library
+                - 'listitem "location: Chatham Square Library" [ref=e328] [cursor=pointer]':
+                  - generic [ref=e329]: 📖
+                  - text: Chatham Square Library
+                - 'listitem "location: House of Joy" [ref=e330] [cursor=pointer]':
+                  - generic [ref=e331]: 🥟
+                  - text: House of Joy
+                - 'listitem "location: The Strother School of Radical Attention" [ref=e332] [cursor=pointer]':
+                  - generic [ref=e333]: 💭
+                  - text: The Strother School of Radical Attention
+                - 'listitem "location: Environmental Education Center" [ref=e334] [cursor=pointer]':
+                  - generic [ref=e335]: 🌳
+                  - text: Environmental Education Center
+                - 'listitem "location: Mmuseumm" [ref=e336] [cursor=pointer]':
+                  - generic [ref=e337]: 🔍
+                  - text: Mmuseumm
+                - 'listitem "location: Open Plans" [ref=e338] [cursor=pointer]':
+                  - generic [ref=e339]: 🚶🏽
+                  - text: Open Plans
+                - 'listitem "location: DCTV Firehouse" [ref=e340] [cursor=pointer]':
+                  - generic [ref=e341]: 🎬
+                  - text: DCTV Firehouse
+                - 'listitem "location: Brooklyn Borough Hall Greenmarket" [ref=e342] [cursor=pointer]':
+                  - generic [ref=e343]: 🥕
+                  - text: Brooklyn Borough Hall Greenmarket
+                - 'listitem "location: Chinatown" [ref=e344] [cursor=pointer]':
+                  - generic [ref=e345]: 📍
+                  - text: Chinatown
+                - 'listitem "location: Muse Paintbar" [ref=e346] [cursor=pointer]':
+                  - generic [ref=e347]: 🎨
+                  - text: Muse Paintbar
+                - 'listitem "location: OS NYC" [ref=e348] [cursor=pointer]':
+                  - generic [ref=e349]: 🎮
+                  - text: OS NYC
+                - 'listitem "location: Voorhees Theatre" [ref=e350] [cursor=pointer]':
+                  - generic [ref=e351]: 🎓
+                  - text: Voorhees Theatre
+                - 'listitem "location: The Django" [ref=e352] [cursor=pointer]':
+                  - generic [ref=e353]: 🎷
+                  - text: The Django
+                - 'listitem "location: The Rat NYC" [ref=e354] [cursor=pointer]':
+                  - generic [ref=e355]: 🎭
+                  - text: The Rat NYC
+                - 'listitem "location: Open Arts Studio" [ref=e356] [cursor=pointer]':
+                  - generic [ref=e357]: 🎨
+                  - text: Open Arts Studio
+                - 'listitem "location: Ciao Evento" [ref=e358] [cursor=pointer]':
+                  - generic [ref=e359]: 🍝
+                  - text: Ciao Evento
+                - 'listitem "location: 42n Studios" [ref=e360] [cursor=pointer]':
+                  - generic [ref=e361]: 🎬
+                  - text: 42n Studios
+                - 'listitem "location: ISSUE Project Room" [ref=e362] [cursor=pointer]':
+                  - generic [ref=e363]: 🎭
+                  - text: ISSUE Project Room
+                - 'listitem "location: Carroll Gardens Pop-Up Library" [ref=e364] [cursor=pointer]':
+                  - generic [ref=e365]: 📖
+                  - text: Carroll Gardens Pop-Up Library
+                - 'listitem "location: Brooklyn CB2" [ref=e366] [cursor=pointer]':
+                  - generic [ref=e367]: 🏛️
+                  - text: Brooklyn CB2
+                - 'listitem "location: City Vineyard" [ref=e368] [cursor=pointer]':
+                  - generic [ref=e369]: 🍷
+                  - text: City Vineyard
+                - 'listitem "location: NYU Brooklyn" [ref=e370] [cursor=pointer]':
+                  - generic [ref=e371]: 🎓
+                  - text: NYU Brooklyn
+                - 'listitem "location: Third Door Brooklyn" [ref=e372] [cursor=pointer]':
+                  - generic [ref=e373]: 🧘🏾
+                  - text: Third Door Brooklyn
+                - 'listitem "location: Brooklyn Meetinghouse" [ref=e374] [cursor=pointer]':
+                  - generic [ref=e375]: 🏛️
+                  - text: Brooklyn Meetinghouse
+                - 'listitem "location: Kitchen at Cobble Hill" [ref=e376] [cursor=pointer]':
+                  - generic [ref=e377]: 🍽️
+                  - text: Kitchen at Cobble Hill
+                - 'listitem "location: Museum of Chinese in America" [ref=e378] [cursor=pointer]':
+                  - generic [ref=e379]: 🐉
+                  - text: Museum of Chinese in America
+                - 'listitem "location: 26 Bridge" [ref=e380] [cursor=pointer]':
+                  - generic [ref=e381]: 🎉
+                  - text: 26 Bridge
+                - 'listitem "location: Jalopy Theatre" [ref=e382] [cursor=pointer]':
+                  - generic [ref=e383]: 🪕
+                  - text: Jalopy Theatre
+                - 'listitem "location: Italian American Museum" [ref=e384] [cursor=pointer]':
+                  - generic [ref=e385]: 🇮🇹
+                  - text: Italian American Museum
+                - 'listitem "location: Metrograph" [ref=e386] [cursor=pointer]':
+                  - generic [ref=e387]: 🎬
+                  - text: Metrograph
+                - 'listitem "location: GUMBO" [ref=e388] [cursor=pointer]':
+                  - generic [ref=e389]: 🎮
+                  - text: GUMBO
+                - 'listitem "location: Home Cooking New York" [ref=e390] [cursor=pointer]':
+                  - generic [ref=e391]: 🧑🏼‍🍳
+                  - text: Home Cooking New York
+                - 'listitem "location: 22 Wooster St" [ref=e392] [cursor=pointer]':
+                  - generic [ref=e393]: 📍
+                  - text: 22 Wooster St
+                - 'listitem "location: Beat the Bomb" [ref=e394] [cursor=pointer]':
+                  - generic [ref=e395]: 💣
+                  - text: Beat the Bomb
+                - 'listitem "location: NYC-DSA Office" [ref=e396] [cursor=pointer]':
+                  - generic [ref=e397]: 🌹
+                  - text: NYC-DSA Office
+                - 'listitem "location: Fear City Comedy Club" [ref=e398] [cursor=pointer]':
+                  - generic [ref=e399]: 🎤
+                  - text: Fear City Comedy Club
+                - 'listitem "location: Poetry Society of America" [ref=e400] [cursor=pointer]':
+                  - generic [ref=e401]: 📜
+                  - text: Poetry Society of America
+                - 'listitem "location: Fabrik Tribeca" [ref=e402] [cursor=pointer]':
+                  - generic [ref=e403]: 🏢
+                  - text: Fabrik Tribeca
+                - 'listitem "location: Sound + Fury" [ref=e404] [cursor=pointer]':
+                  - generic [ref=e405]: 🍺
+                  - text: Sound + Fury
+                - 'listitem "location: Seward Park Library" [ref=e406] [cursor=pointer]':
+                  - generic [ref=e407]: 📖
+                  - text: Seward Park Library
+                - 'listitem "location: Clover Club" [ref=e408] [cursor=pointer]':
+                  - generic [ref=e409]: 🍸
+                  - text: Clover Club
+                - 'listitem "location: Jackie Robinson Museum" [ref=e410] [cursor=pointer]':
+                  - generic [ref=e411]: ⚾
+                  - text: Jackie Robinson Museum
+                - 'listitem "location: Books Are Magic" [ref=e412] [cursor=pointer]':
+                  - generic [ref=e413]: 📚
+                  - text: Books Are Magic
+                - 'listitem "location: Storefront" [ref=e414] [cursor=pointer]':
+                  - generic [ref=e415]: 🏛️
+                  - text: Storefront
+                - 'listitem "location: New Ear" [ref=e416] [cursor=pointer]':
+                  - generic [ref=e417]: 🎤
+                  - text: New Ear
+                - 'listitem "location: American Geographical Society" [ref=e418] [cursor=pointer]':
+                  - generic [ref=e419]: 🌎
+                  - text: American Geographical Society
+                - 'listitem "location: 360 Record Shop" [ref=e420] [cursor=pointer]':
+                  - generic [ref=e421]: 💿
+                  - text: 360 Record Shop
+                - 'listitem "location: The Bowery Ballroom" [ref=e422] [cursor=pointer]':
+                  - generic [ref=e423]: 🎸
+                  - text: The Bowery Ballroom
+                - 'listitem "location: Someday Bar" [ref=e424] [cursor=pointer]':
+                  - generic [ref=e425]: 🍺
+                  - text: Someday Bar
+                - 'listitem "location: Bar San Miguel" [ref=e426] [cursor=pointer]':
+                  - generic [ref=e427]: 🍹
+                  - text: Bar San Miguel
+                - 'listitem "location: Liz''s Book Bar" [ref=e428] [cursor=pointer]':
+                  - generic [ref=e429]: 📚
+                  - text: Liz's Book Bar
+                - 'listitem "location: Kings County Distillery" [ref=e430] [cursor=pointer]':
+                  - generic [ref=e431]: 🥃
+                  - text: Kings County Distillery
+                - 'listitem "location: The Tenement Museum" [ref=e432] [cursor=pointer]':
+                  - generic [ref=e433]: 🏛️
+                  - text: The Tenement Museum
+                - 'listitem "location: Kentler International Drawing Space" [ref=e434] [cursor=pointer]':
+                  - generic [ref=e435]: 🎨
+                  - text: Kentler International Drawing Space
+                - 'listitem "location: Dixon Place" [ref=e436] [cursor=pointer]':
+                  - generic [ref=e437]: 🎭
+                  - text: Dixon Place
+                - 'listitem "location: City Point" [ref=e438] [cursor=pointer]':
+                  - generic [ref=e439]: 🛍️
+                  - text: City Point
+                - 'listitem "location: McNally Jackson" [ref=e440] [cursor=pointer]':
+                  - generic [ref=e441]: 📚
+                  - text: McNally Jackson
+                - 'listitem "location: HERE Arts Center" [ref=e442] [cursor=pointer]':
+                  - generic [ref=e443]: 🎭
+                  - text: HERE Arts Center
+                - 'listitem "location: International Center of Photography" [ref=e444] [cursor=pointer]':
+                  - generic [ref=e445]: 📷
+                  - text: International Center of Photography
+                - 'listitem "location: Strong Rope Brewery Red Hook" [ref=e446] [cursor=pointer]':
+                  - generic [ref=e447]: 🍺
+                  - text: Strong Rope Brewery Red Hook
+                - 'listitem "location: Carroll Gardens Greenmarket" [ref=e448] [cursor=pointer]':
+                  - generic [ref=e449]: 🥕
+                  - text: Carroll Gardens Greenmarket
+                - 'listitem "location: BCI Studio" [ref=e450] [cursor=pointer]':
+                  - generic [ref=e451]: 🏺
+                  - text: BCI Studio
+                - 'listitem "location: Center for Fiction" [ref=e452] [cursor=pointer]':
+                  - generic [ref=e453]: 📚
+                  - text: Center for Fiction
+                - 'listitem "location: 651 ARTS" [ref=e454] [cursor=pointer]':
+                  - generic [ref=e455]: 🎭
+                  - text: 651 ARTS
+                - 'listitem "location: Library for Arts & Culture" [ref=e456] [cursor=pointer]':
+                  - generic [ref=e457]: 📖
+                  - text: Library for Arts & Culture
+                - 'listitem "location: African Diasporan Arts" [ref=e458] [cursor=pointer]':
+                  - generic [ref=e459]: 🌍
+                  - text: African Diasporan Arts
+                - 'listitem "location: Fort Greene Park" [ref=e460] [cursor=pointer]':
+                  - generic [ref=e461]: 🌳
+                  - text: Fort Greene Park
+                - 'listitem "location: Brooklyn Academy of Music" [ref=e462] [cursor=pointer]':
+                  - generic [ref=e463]: 🎭
+                  - text: Brooklyn Academy of Music
+                - 'listitem "location: BAM Fisher" [ref=e464] [cursor=pointer]':
+                  - generic [ref=e465]: 🎭
+                  - text: BAM Fisher
+                - 'listitem "location: One Hanson" [ref=e466] [cursor=pointer]':
+                  - generic [ref=e467]: 🏛️
+                  - text: One Hanson
+                - 'listitem "location: Fort Greene Park Greenmarket" [ref=e468] [cursor=pointer]':
+                  - generic [ref=e469]: 🥕
+                  - text: Fort Greene Park Greenmarket
+                - 'listitem "location: Brooklyn Navy Yard" [ref=e470] [cursor=pointer]':
+                  - generic [ref=e471]: ⚓
+                  - text: Brooklyn Navy Yard
+                - 'listitem "location: Greenlight Bookstore" [ref=e472] [cursor=pointer]':
+                  - generic [ref=e473]: 📚
+                  - text: Greenlight Bookstore
+                - 'listitem "location: PS 15" [ref=e474] [cursor=pointer]':
+                  - generic [ref=e475]: 🏫
+                  - text: PS 15
+                - 'listitem "location: BAX Annex" [ref=e476] [cursor=pointer]':
+                  - generic [ref=e477]: 💃🏻
+                  - text: BAX Annex
+                - 'listitem "location: DSK Brooklyn" [ref=e478] [cursor=pointer]':
+                  - generic [ref=e479]: 🍺
+                  - text: DSK Brooklyn
+                - 'listitem "location: Jamel Gaines Creative Outlet" [ref=e480] [cursor=pointer]':
+                  - generic [ref=e481]: 💃🏻
+                  - text: Jamel Gaines Creative Outlet
+                - 'listitem "location: South Oxford Space" [ref=e482] [cursor=pointer]':
+                  - generic [ref=e483]: 🎭
+                  - text: South Oxford Space
+                - 'listitem "location: Brooklyn Music Kitchen" [ref=e484] [cursor=pointer]':
+                  - generic [ref=e485]: 🎸
+                  - text: Brooklyn Music Kitchen
+                - 'listitem "location: Barclays Center" [ref=e486] [cursor=pointer]':
+                  - generic [ref=e487]: 🏀
+                  - text: Barclays Center
+                - 'listitem "location: La Plaza Cultural" [ref=e488] [cursor=pointer]':
+                  - generic [ref=e489]: 🌺
+                  - text: La Plaza Cultural
+                - 'listitem "location: St. Joseph''s University" [ref=e490] [cursor=pointer]':
+                  - generic [ref=e491]: 🎓
+                  - text: St. Joseph's University
+                - 'listitem "location: Museum of Reclaimed Urban Space" [ref=e492] [cursor=pointer]':
+                  - generic [ref=e493]: 🪴
+                  - text: Museum of Reclaimed Urban Space
+                - 'listitem "location: Domino Park" [ref=e494] [cursor=pointer]':
+                  - generic [ref=e495]: 🌳
+                  - text: Domino Park
+                - 'listitem "location: The Woods" [ref=e496] [cursor=pointer]':
+                  - generic [ref=e497]: 🍺
+                  - text: The Woods
+                - 'listitem "location: Baby''s All Right" [ref=e498] [cursor=pointer]':
+                  - generic [ref=e499]: 🎸
+                  - text: Baby's All Right
+                - 'listitem "location: ShapeShifter Lab" [ref=e500] [cursor=pointer]':
+                  - generic [ref=e501]: 🎷
+                  - text: ShapeShifter Lab
+                - 'listitem "location: Brooklyn Conservatory of Music" [ref=e502] [cursor=pointer]':
+                  - generic [ref=e503]: 🎻
+                  - text: Brooklyn Conservatory of Music
+                - 'listitem "location: Main Drag" [ref=e504] [cursor=pointer]':
+                  - generic [ref=e505]: 🎸
+                  - text: Main Drag
+                - 'listitem "location: Pratt" [ref=e506] [cursor=pointer]':
+                  - generic [ref=e507]: 🎓
+                  - text: Pratt
+                - 'listitem "location: Olio Lighthouse" [ref=e508] [cursor=pointer]':
+                  - generic [ref=e509]: 📚
+                  - text: Olio Lighthouse
+                - 'listitem "location: Manhattan Pump Station" [ref=e510] [cursor=pointer]':
+                  - generic [ref=e511]: 🏗️
+                  - text: Manhattan Pump Station
+                - 'listitem "location: Aurora Brooklyn" [ref=e512] [cursor=pointer]':
+                  - generic [ref=e513]: 🍽️
+                  - text: Aurora Brooklyn
+                - 'listitem "location: Soapbox Gallery" [ref=e514] [cursor=pointer]':
+                  - generic [ref=e515]: 🎹
+                  - text: Soapbox Gallery
+                - 'listitem "location: Spectacle Theater" [ref=e516] [cursor=pointer]':
+                  - generic [ref=e517]: 🎥
+                  - text: Spectacle Theater
+                - 'listitem "location: e-flux Screening Room" [ref=e518] [cursor=pointer]':
+                  - generic [ref=e519]: 🎬
+                  - text: e-flux Screening Room
+                - 'listitem "location: Farm.One" [ref=e520] [cursor=pointer]':
+                  - generic [ref=e521]: 🌱
+                  - text: Farm.One
+                - 'listitem "location: Painting Lounge" [ref=e522] [cursor=pointer]':
+                  - generic [ref=e523]: 🎨
+                  - text: Painting Lounge
+                - 'listitem "location: Nitehawk Cinema" [ref=e524] [cursor=pointer]':
+                  - generic [ref=e525]: 🎥
+                  - text: Nitehawk Cinema
+                - 'listitem "location: Bar Laika" [ref=e526] [cursor=pointer]':
+                  - generic [ref=e527]: 🍷
+                  - text: Bar Laika
+                - 'listitem "location: McNally Jackson" [ref=e528] [cursor=pointer]':
+                  - generic [ref=e529]: 📚
+                  - text: McNally Jackson
+                - 'listitem "location: Radegast Hall" [ref=e530] [cursor=pointer]':
+                  - generic [ref=e531]: 🍺
+                  - text: Radegast Hall
+                - 'listitem "location: Leland House" [ref=e532] [cursor=pointer]':
+                  - generic [ref=e533]: 🥂
+                  - text: Leland House
+                - 'listitem "location: Music Hall of Williamsburg" [ref=e534] [cursor=pointer]':
+                  - generic [ref=e535]: 🎸
+                  - text: Music Hall of Williamsburg
+                - 'listitem "location: National Sawdust" [ref=e536] [cursor=pointer]':
+                  - generic [ref=e537]: 🎸
+                  - text: National Sawdust
+                - 'listitem "location: Artists & Fleas" [ref=e538] [cursor=pointer]':
+                  - generic [ref=e539]: 🛍️
+                  - text: Artists & Fleas
+                - 'listitem "location: Twenty Sided Store" [ref=e540] [cursor=pointer]':
+                  - generic [ref=e541]: 🎲
+                  - text: Twenty Sided Store
+                - 'listitem "location: Brooklyn Brainery" [ref=e542] [cursor=pointer]':
+                  - generic [ref=e543]: 🧠
+                  - text: Brooklyn Brainery
+                - 'listitem "location: Solar One" [ref=e544] [cursor=pointer]':
+                  - generic [ref=e545]: 🌱
+                  - text: Solar One
+                - 'listitem "location: Recess Grove" [ref=e546] [cursor=pointer]':
+                  - generic [ref=e547]: 🎨
+                  - text: Recess Grove
+                - 'listitem "location: Stuyvesant Cove Park" [ref=e548] [cursor=pointer]':
+                  - generic [ref=e549]: 🏞️
+                  - text: Stuyvesant Cove Park
+                - 'listitem "location: The Second City" [ref=e550] [cursor=pointer]':
+                  - generic [ref=e551]: 🎭
+                  - text: The Second City
+                - 'listitem "location: Flop House Comedy Club" [ref=e552] [cursor=pointer]':
+                  - generic [ref=e553]: 🎤
+                  - text: Flop House Comedy Club
+                - 'listitem "location: St. Mazie Bar & Supper Club" [ref=e554] [cursor=pointer]':
+                  - generic [ref=e555]: 🎤
+                  - text: St. Mazie Bar & Supper Club
+                - 'listitem "location: The City Reliquary" [ref=e556] [cursor=pointer]':
+                  - generic [ref=e557]: 🏛️
+                  - text: The City Reliquary
+                - 'listitem "location: Isola Brooklyn" [ref=e558] [cursor=pointer]':
+                  - generic [ref=e559]: 🎤
+                  - text: Isola Brooklyn
+                - 'listitem "location: Kokomo" [ref=e560] [cursor=pointer]':
+                  - generic [ref=e561]: 🥥
+                  - text: Kokomo
+                - 'listitem "location: Brooklyn Art Haus" [ref=e562] [cursor=pointer]':
+                  - generic [ref=e563]: 🎨
+                  - text: Brooklyn Art Haus
+                - 'listitem "location: Ciao Ciao Disco" [ref=e564] [cursor=pointer]':
+                  - generic [ref=e565]: 🪩
+                  - text: Ciao Ciao Disco
+                - 'listitem "location: Brooklyn Bowl" [ref=e566] [cursor=pointer]':
+                  - generic [ref=e567]: 🎳
+                  - text: Brooklyn Bowl
+                - 'listitem "location: Othership Williamsburg" [ref=e568] [cursor=pointer]':
+                  - generic [ref=e569]: 🧖🏻
+                  - text: Othership Williamsburg
+                - 'listitem "location: Friends and Lovers" [ref=e570] [cursor=pointer]':
+                  - generic [ref=e571]: 🍹
+                  - text: Friends and Lovers
+                - 'listitem "location: pinkFROG" [ref=e572] [cursor=pointer]':
+                  - generic [ref=e573]: 🪩
+                  - text: pinkFROG
+                - 'listitem "location: Oberon" [ref=e574] [cursor=pointer]':
+                  - generic [ref=e575]: 🍹
+                  - text: Oberon
+                - 'listitem "location: Makers'' Ensemble" [ref=e576] [cursor=pointer]':
+                  - generic [ref=e577]: 🎭
+                  - text: Makers' Ensemble
+                - 'listitem "location: Circus Academy New York" [ref=e578] [cursor=pointer]':
+                  - generic [ref=e579]: 🎪
+                  - text: Circus Academy New York
+                - 'listitem "location: Union Pool" [ref=e580] [cursor=pointer]':
+                  - generic [ref=e581]: 🥂
+                  - text: Union Pool
+                - 'listitem "location: Berry Park" [ref=e582] [cursor=pointer]':
+                  - generic [ref=e583]: 🍺
+                  - text: Berry Park
+                - 'listitem "location: The Gutter" [ref=e584] [cursor=pointer]':
+                  - generic [ref=e585]: 🎳
+                  - text: The Gutter
+                - 'listitem "location: LOOVE Annex, Williamsburg" [ref=e586] [cursor=pointer]':
+                  - generic [ref=e587]: ❤️
+                  - text: LOOVE Annex, Williamsburg
+                - 'listitem "location: The Greenpoint Loft" [ref=e588] [cursor=pointer]':
+                  - generic [ref=e589]: 🎉
+                  - text: The Greenpoint Loft
+                - 'listitem "location: McCarren Park Greenmarket" [ref=e590] [cursor=pointer]':
+                  - generic [ref=e591]: 🥕
+                  - text: McCarren Park Greenmarket
+                - 'listitem "location: Stuart Cinema & Cafe" [ref=e592] [cursor=pointer]':
+                  - generic [ref=e593]: 🎬
+                  - text: Stuart Cinema & Cafe
+                - 'listitem "location: The Brick Theater" [ref=e594] [cursor=pointer]':
+                  - generic [ref=e595]: 🎭
+                  - text: The Brick Theater
+                - 'listitem "location: Brooklyn Botanic Garden" [ref=e596] [cursor=pointer]':
+                  - generic [ref=e597]: 🌺
+                  - text: Brooklyn Botanic Garden
+                - 'listitem "location: Alligator Lounge" [ref=e598] [cursor=pointer]':
+                  - generic [ref=e599]: 🥂
+                  - text: Alligator Lounge
+                - 'listitem "location: Sista''s Place" [ref=e600] [cursor=pointer]':
+                  - generic [ref=e601]: 🎷
+                  - text: Sista's Place
+                - 'listitem "location: Brick Aux" [ref=e602] [cursor=pointer]':
+                  - generic [ref=e603]: 🎭
+                  - text: Brick Aux
+                - 'listitem "location: McCarren Parkhouse" [ref=e604] [cursor=pointer]':
+                  - generic [ref=e605]: ☕
+                  - text: McCarren Parkhouse
+                - 'listitem "location: TALEA" [ref=e606] [cursor=pointer]':
+                  - generic [ref=e607]: 🍺
+                  - text: TALEA
+                - 'listitem "location: Good Room" [ref=e608] [cursor=pointer]':
+                  - generic [ref=e609]: 🪩
+                  - text: Good Room
+                - 'listitem "location: Performance Research" [ref=e610] [cursor=pointer]':
+                  - generic [ref=e611]: 💃🏻
+                  - text: Performance Research
+                - 'listitem "location: Flower Cat" [ref=e612] [cursor=pointer]':
+                  - generic [ref=e613]: 🌸
+                  - text: Flower Cat
+                - 'listitem "location: Brooklyn Comedy Collective" [ref=e614] [cursor=pointer]':
+                  - generic [ref=e615]: 🎭
+                  - text: Brooklyn Comedy Collective
+                - 'listitem "location: Eris" [ref=e616] [cursor=pointer]':
+                  - generic [ref=e617]: 🪩
+                  - text: Eris
+                - 'listitem "location: North Brooklyn" [ref=e618] [cursor=pointer]':
+                  - generic [ref=e619]: 📍
+                  - text: North Brooklyn
+                - 'listitem "location: Mommy''s Bar" [ref=e620] [cursor=pointer]':
+                  - generic [ref=e621]: 🍹
+                  - text: Mommy's Bar
+                - 'listitem "location: Film Noir Cinema" [ref=e622] [cursor=pointer]':
+                  - generic [ref=e623]: 🎬
+                  - text: Film Noir Cinema
+                - 'listitem "location: Brownstone Jazz" [ref=e624] [cursor=pointer]':
+                  - generic [ref=e625]: 🎷
+                  - text: Brownstone Jazz
+                - 'listitem "location: Brooklyn CB1" [ref=e626] [cursor=pointer]':
+                  - generic [ref=e627]: 🏛️
+                  - text: Brooklyn CB1
+                - 'listitem "location: The Poetry Society of New York" [ref=e628] [cursor=pointer]':
+                  - generic [ref=e629]: ✍🏼
+                  - text: The Poetry Society of New York
+                - 'listitem "location: Noel Pointer Foundation" [ref=e630] [cursor=pointer]':
+                  - generic [ref=e631]: 🎻
+                  - text: Noel Pointer Foundation
+                - 'listitem "location: Crown Hill Theatre" [ref=e632] [cursor=pointer]':
+                  - generic [ref=e633]: 🎭
+                  - text: Crown Hill Theatre
+                - 'listitem "location: Brower Park Library" [ref=e634] [cursor=pointer]':
+                  - generic [ref=e635]: 📖
+                  - text: Brower Park Library
+                - 'listitem "location: Brooklyn Children''s Museum" [ref=e636] [cursor=pointer]':
+                  - generic [ref=e637]: 🏛️
+                  - text: Brooklyn Children's Museum
+                - 'listitem "location: Steinberg Center" [ref=e638] [cursor=pointer]':
+                  - generic [ref=e639]: 🎭
+                  - text: Steinberg Center
+                - 'listitem "location: Rockefeller Center" [ref=e640] [cursor=pointer]':
+                  - generic [ref=e641]: 🏙️
+                  - text: Rockefeller Center
+                - 'listitem "location: New World Stages" [ref=e642] [cursor=pointer]':
+                  - generic [ref=e643]: 🎭
+                  - text: New World Stages
+                - 'listitem "location: Studio 54" [ref=e644] [cursor=pointer]':
+                  - generic [ref=e645]: 🎭
+                  - text: Studio 54
+                - 'listitem "location: Museum of Arts and Design" [ref=e646] [cursor=pointer]':
+                  - generic [ref=e647]: 🏺
+                  - text: Museum of Arts and Design
+                - 'listitem "location: Apollo Theater" [ref=e648] [cursor=pointer]':
+                  - generic [ref=e649]: 🎷
+                  - text: Apollo Theater
+              - generic [ref=e650]:
+                - 'listitem "event: Lecture and Wine Tasting - Liberty …" [ref=e651] [cursor=pointer]':
+                  - generic [ref=e652]: 🍷
+                  - text: Lecture and Wine Tasting - Liberty …
+                - 'listitem "event: Crop Planning" [ref=e653] [cursor=pointer]':
+                  - generic [ref=e654]: 🥦
+                  - text: Crop Planning
+                - 'listitem "event: Cornell AAP City Visionaries Open House" [ref=e655] [cursor=pointer]':
+                  - generic [ref=e656]: 🏛️
+                  - text: Cornell AAP City Visionaries Open House
+                - 'listitem "event: Interweaving Tomorrows" [ref=e657] [cursor=pointer]':
+                  - generic [ref=e658]: 🔮
+                  - text: Interweaving Tomorrows
+                - 'listitem "event: How a Highway Map Wrecked Baltimore" [ref=e659] [cursor=pointer]':
+                  - generic [ref=e660]: 🛣️
+                  - text: How a Highway Map Wrecked Baltimore
+                - 'listitem "event: A Tribute to Charlie Parker" [ref=e661] [cursor=pointer]':
+                  - generic [ref=e662]: 🎺
+                  - text: A Tribute to Charlie Parker
+                - 'listitem "event: The Memory Books of a Lost Jewish W…" [ref=e663] [cursor=pointer]':
+                  - generic [ref=e664]: 📕
+                  - text: The Memory Books of a Lost Jewish W…
+                - 'listitem "event: The San Diego Jewish Men’s Choir in…" [ref=e665] [cursor=pointer]':
+                  - generic [ref=e666]: 🎤
+                  - text: The San Diego Jewish Men’s Choir in…
+                - 'listitem "event: A Creative Photo Exhibit by People" [ref=e667] [cursor=pointer]':
+                  - generic [ref=e668]: 📸
+                  - text: A Creative Photo Exhibit by People
+                - 'listitem "event: Pink Pier" [ref=e669] [cursor=pointer]':
+                  - generic [ref=e670]: 💗
+                  - text: Pink Pier
+                - 'listitem "event: Western Queens Activist Committee M…" [ref=e671] [cursor=pointer]':
+                  - generic [ref=e672]: 🚲
+                  - text: Western Queens Activist Committee M…
+                - 'listitem "event: Anne Fadiman & Sam Anderson" [ref=e673] [cursor=pointer]':
+                  - generic [ref=e674]: 🐸
+                  - text: Anne Fadiman & Sam Anderson
+                - 'listitem "event: Edward" [ref=e675] [cursor=pointer]':
+                  - generic [ref=e676]: 🎭
+                  - text: Edward
+                - 'listitem "event: Chris Jennings & Tara Westover: End Days" [ref=e677] [cursor=pointer]':
+                  - generic [ref=e678]: ☄️
+                  - text: "Chris Jennings & Tara Westover: End Days"
+                - 'listitem "event: Chris Jennings in conversation" [ref=e679] [cursor=pointer]':
+                  - generic [ref=e680]: 🎙️
+                  - text: Chris Jennings in conversation
+                - 'listitem "event: Station Birds" [ref=e681] [cursor=pointer]':
+                  - generic [ref=e682]: 🐦
+                  - text: Station Birds
+                - 'listitem "event: Betsy Sussler in conversation" [ref=e683] [cursor=pointer]':
+                  - generic [ref=e684]: ✒️
+                  - text: Betsy Sussler in conversation
+                - 'listitem "event: Dorothy Roberts & Ann Morning" [ref=e685] [cursor=pointer]':
+                  - generic [ref=e686]: 🧬
+                  - text: Dorothy Roberts & Ann Morning
+                - 'listitem "event: Enzo & Morgan''s Batshit Book Club" [ref=e687] [cursor=pointer]':
+                  - generic [ref=e688]: 🏍️
+                  - text: Enzo & Morgan's Batshit Book Club
+                - 'listitem "event: Batshit Book Club: Box Hill" [ref=e689] [cursor=pointer]':
+                  - generic [ref=e690]: 🏍️
+                  - text: "Batshit Book Club: Box Hill"
+                - 'listitem "event: Lunar New Year" [ref=e691] [cursor=pointer]':
+                  - generic [ref=e692]: 🏮
+                  - text: Lunar New Year
+                - 'listitem "event: Family Activity Weekends" [ref=e693] [cursor=pointer]':
+                  - generic [ref=e694]: 🎨
+                  - text: Family Activity Weekends
+                - 'listitem "event: Walt Whitman’s Secret Loves" [ref=e695] [cursor=pointer]':
+                  - generic [ref=e696]: 🏳️‍🌈
+                  - text: Walt Whitman’s Secret Loves
+                - 'listitem "event: Heart-Shaped Pizza" [ref=e697] [cursor=pointer]':
+                  - generic [ref=e698]: 🍕
+                  - text: Heart-Shaped Pizza
+                - 'listitem "event: Las Gitanas" [ref=e699] [cursor=pointer]':
+                  - generic [ref=e700]: 💃
+                  - text: Las Gitanas
+                - 'listitem "event: Valentine’s Day" [ref=e701] [cursor=pointer]':
+                  - generic [ref=e702]: 💝
+                  - text: Valentine’s Day
+                - 'listitem "event: $1 Oysters" [ref=e703] [cursor=pointer]':
+                  - generic [ref=e704]: 🦪
+                  - text: $1 Oysters
+                - 'listitem "event: Family Friendly Great Backyard Bird…" [ref=e705] [cursor=pointer]':
+                  - generic [ref=e706]: 🦅
+                  - text: Family Friendly Great Backyard Bird…
+                - 'listitem "event: Oculus Unplugged" [ref=e707] [cursor=pointer]':
+                  - generic [ref=e708]: 🎹
+                  - text: Oculus Unplugged
+                - 'listitem "event: NYC PIT Pop Up" [ref=e709] [cursor=pointer]':
+                  - generic [ref=e710]: 💻
+                  - text: NYC PIT Pop Up
+                - 'listitem "event: Lighting: Valentine''s Day" [ref=e711] [cursor=pointer]':
+                  - generic [ref=e712]: 💡
+                  - text: "Lighting: Valentine's Day"
+                - 'listitem "event: Roses Trio Lunar New Year Performance" [ref=e713] [cursor=pointer]':
+                  - generic [ref=e714]: 🧧
+                  - text: Roses Trio Lunar New Year Performance
+                - 'listitem "event: Family Friendly Great Backyard Bird…" [ref=e715] [cursor=pointer]':
+                  - generic [ref=e716]: 🐦
+                  - text: Family Friendly Great Backyard Bird…
+                - 'listitem "event: Adult Great Bird Count" [ref=e717] [cursor=pointer]':
+                  - generic [ref=e718]: 🦅
+                  - text: Adult Great Bird Count
+                - 'listitem "event: Lunar New Year Celebration 2026" [ref=e719] [cursor=pointer]':
+                  - generic [ref=e720]: 🎆
+                  - text: Lunar New Year Celebration 2026
+                - 'listitem "event: Stewardship Saturday: Garden & Clean Up" [ref=e721] [cursor=pointer]':
+                  - generic [ref=e722]: 🌿
+                  - text: "Stewardship Saturday: Garden & Clean Up"
+                - 'listitem "event: Above" [ref=e723] [cursor=pointer]':
+                  - generic [ref=e724]: 🌅
+                  - text: Above
+                - 'listitem "event: Sol Together" [ref=e725] [cursor=pointer]':
+                  - generic [ref=e726]: ☀️
+                  - text: Sol Together
+                - 'listitem "event: Lunch & Learn: The Swans of Harlem" [ref=e727] [cursor=pointer]':
+                  - generic [ref=e728]: 🩰
+                  - text: "Lunch & Learn: The Swans of Harlem"
+                - 'listitem "event: The Hospital" [ref=e729] [cursor=pointer]':
+                  - generic [ref=e730]: 🏥
+                  - text: The Hospital
+                - 'listitem "event: Malin Nilsson // Magic from Sweden" [ref=e731] [cursor=pointer]':
+                  - generic [ref=e732]: 🇸🇪
+                  - text: Malin Nilsson // Magic from Sweden
+                - 'listitem "event: Valentine’s Day Wine Tasting" [ref=e733] [cursor=pointer]':
+                  - generic [ref=e734]: 🍷
+                  - text: Valentine’s Day Wine Tasting
+                - 'listitem "event: The Midnight Taxi" [ref=e735] [cursor=pointer]':
+                  - generic [ref=e736]: 🚕
+                  - text: The Midnight Taxi
+                - 'listitem "event: Good People" [ref=e737] [cursor=pointer]':
+                  - generic [ref=e738]: 🎭
+                  - text: Good People
+                - 'listitem "event: The End of Romance" [ref=e739] [cursor=pointer]':
+                  - generic [ref=e740]: 💔
+                  - text: The End of Romance
+                - 'listitem "event: Jordan Casteel in conversation" [ref=e741] [cursor=pointer]':
+                  - generic [ref=e742]: 🎨
+                  - text: Jordan Casteel in conversation
+                - 'listitem "event: Nisha Knows Best" [ref=e743] [cursor=pointer]':
+                  - generic [ref=e744]: 💖
+                  - text: Nisha Knows Best
+                - 'listitem "event: HIV/AIDS" [ref=e745] [cursor=pointer]':
+                  - generic [ref=e746]: 🏥
+                  - text: HIV/AIDS
+                - 'listitem "event: Hate Radio" [ref=e747] [cursor=pointer]':
+                  - generic [ref=e748]: 🎙️
+                  - text: Hate Radio
+                - 'listitem "event: Valentine''s Day 2026" [ref=e749] [cursor=pointer]':
+                  - generic [ref=e750]: ❤️
+                  - text: Valentine's Day 2026
+                - 'listitem "event: Book a School Tour" [ref=e751] [cursor=pointer]':
+                  - generic [ref=e752]: 🍎
+                  - text: Book a School Tour
+                - 'listitem "event: Street Food City" [ref=e753] [cursor=pointer]':
+                  - generic [ref=e754]: 🌭
+                  - text: Street Food City
+                - 'listitem "event: a bean-to-bar journey" [ref=e755] [cursor=pointer]':
+                  - generic [ref=e756]: 🍫
+                  - text: a bean-to-bar journey
+                - 'listitem "event: Craft Intensive: Lyric Address" [ref=e757] [cursor=pointer]':
+                  - generic [ref=e758]: 🎼
+                  - text: "Craft Intensive: Lyric Address"
+                - 'listitem "event: Mahjong Mondays" [ref=e759] [cursor=pointer]':
+                  - generic [ref=e760]: 🀄
+                  - text: Mahjong Mondays
+                - 'listitem "event: Tuesday Night Jazz" [ref=e761] [cursor=pointer]':
+                  - generic [ref=e762]: 🎷
+                  - text: Tuesday Night Jazz
+                - 'listitem "event: Soul Records Laboratory" [ref=e763] [cursor=pointer]':
+                  - generic [ref=e764]: 🎧
+                  - text: Soul Records Laboratory
+                - 'listitem "event: Pre Valentine''s Day Celebration" [ref=e765] [cursor=pointer]':
+                  - generic [ref=e766]: 😈
+                  - text: Pre Valentine's Day Celebration
+                - 'listitem "event: Voodoo Doll Making Workshop" [ref=e767] [cursor=pointer]':
+                  - generic [ref=e768]: 🪡
+                  - text: Voodoo Doll Making Workshop
+                - 'listitem "event: Rooftop Fridays & Game Night" [ref=e769] [cursor=pointer]':
+                  - generic [ref=e770]: 🌆
+                  - text: Rooftop Fridays & Game Night
+                - 'listitem "event: SIDE PIECE EDITION" [ref=e771] [cursor=pointer]':
+                  - generic [ref=e772]: 💘
+                  - text: SIDE PIECE EDITION
+                - 'listitem "event: Valentine''s Day Celebration" [ref=e773] [cursor=pointer]':
+                  - generic [ref=e774]: ❤️
+                  - text: Valentine's Day Celebration
+                - 'listitem "event: Live Music Sundays" [ref=e775] [cursor=pointer]':
+                  - generic [ref=e776]: 🎷
+                  - text: Live Music Sundays
+                - 'listitem "event: Free Puppet Show" [ref=e777] [cursor=pointer]':
+                  - generic [ref=e778]: 🎭
+                  - text: Free Puppet Show
+                - 'listitem "event: Morning Meditation" [ref=e779] [cursor=pointer]':
+                  - generic [ref=e780]: 🧘
+                  - text: Morning Meditation
+                - 'listitem "event: Senior Group Exercise" [ref=e781] [cursor=pointer]':
+                  - generic [ref=e782]: 💪
+                  - text: Senior Group Exercise
+                - 'listitem "event: Parent & Baby Yoga" [ref=e783] [cursor=pointer]':
+                  - generic [ref=e784]: 🧘‍♀️
+                  - text: Parent & Baby Yoga
+                - 'listitem "event: BPC Resiliency Drop-ins" [ref=e785] [cursor=pointer]':
+                  - generic [ref=e786]: 🗣️
+                  - text: BPC Resiliency Drop-ins
+                - 'listitem "event: Downtown Beats Chorus" [ref=e787] [cursor=pointer]':
+                  - generic [ref=e788]: 🎶
+                  - text: Downtown Beats Chorus
+                - 'listitem "event: Art Exhibition Viewing Hours" [ref=e789] [cursor=pointer]':
+                  - generic [ref=e790]: 👀
+                  - text: Art Exhibition Viewing Hours
+                - 'listitem "event: Figure Drawing" [ref=e791] [cursor=pointer]':
+                  - generic [ref=e792]: 🎨
+                  - text: Figure Drawing
+                - 'listitem "event: Fiber Art Crafts Studio" [ref=e793] [cursor=pointer]':
+                  - generic [ref=e794]: 🧶
+                  - text: Fiber Art Crafts Studio
+                - 'listitem "event: Writing Group" [ref=e795] [cursor=pointer]':
+                  - generic [ref=e796]: 🌐
+                  - text: Writing Group
+                - 'listitem "event: Yawp 2.13.26" [ref=e797] [cursor=pointer]':
+                  - generic [ref=e798]: 📣
+                  - text: Yawp 2.13.26
+                - 'listitem "event: Lara Atallah" [ref=e799] [cursor=pointer]':
+                  - generic [ref=e800]: 🌟
+                  - text: Lara Atallah
+                - 'listitem "event: Poetry Aloud" [ref=e801] [cursor=pointer]':
+                  - generic [ref=e802]: 🎤
+                  - text: Poetry Aloud
+                - 'listitem "event: Live DJs Every Tuesday!" [ref=e803] [cursor=pointer]':
+                  - generic [ref=e804]: 🎵
+                  - text: Live DJs Every Tuesday!
+                - 'listitem "event: Tribeca Greenmarket" [ref=e805] [cursor=pointer]':
+                  - generic [ref=e806]: 🥕
+                  - text: Tribeca Greenmarket
+                - 'listitem "event: Sunday Worship Service" [ref=e807] [cursor=pointer]':
+                  - generic [ref=e808]: ⛪
+                  - text: Sunday Worship Service
+                - 'listitem "event: Patrick Golden / Kevin Shea Drum Duo" [ref=e809] [cursor=pointer]':
+                  - generic [ref=e810]: 🥁
+                  - text: Patrick Golden / Kevin Shea Drum Duo
+                - 'listitem "event: Sylvain Leroux / Hill Greene / Dan …" [ref=e811] [cursor=pointer]':
+                  - generic [ref=e812]: 🪈
+                  - text: Sylvain Leroux / Hill Greene / Dan …
+                - 'listitem "event: Hilliard Greene / James Keepnews / …" [ref=e813] [cursor=pointer]':
+                  - generic [ref=e814]: 🎻
+                  - text: Hilliard Greene / James Keepnews / …
+                - 'listitem "event: Igor Lumpert / Billy Mintz" [ref=e815] [cursor=pointer]':
+                  - generic [ref=e816]: 🎷
+                  - text: Igor Lumpert / Billy Mintz
+                - 'listitem "event: Stephen Gauci / Shogo Yamgishi / Ja…" [ref=e817] [cursor=pointer]':
+                  - generic [ref=e818]: 🎶
+                  - text: Stephen Gauci / Shogo Yamgishi / Ja…
+                - 'listitem "event: Jonathan Haffner / Dalius Naujo" [ref=e819] [cursor=pointer]':
+                  - generic [ref=e820]: 🎵
+                  - text: Jonathan Haffner / Dalius Naujo
+                - 'listitem "event: From the Inside Out: How Writing an…" [ref=e821] [cursor=pointer]':
+                  - generic [ref=e822]: 🎨
+                  - text: "From the Inside Out: How Writing an…"
+                - 'listitem "event: Conversations on the Meaning of Fre…" [ref=e823] [cursor=pointer]':
+                  - generic [ref=e824]: 🗣️
+                  - text: Conversations on the Meaning of Fre…
+                - 'listitem "event: Fought and Remembered" [ref=e825] [cursor=pointer]':
+                  - generic [ref=e826]: 🚩
+                  - text: Fought and Remembered
+                - 'listitem "event: Brooklyn Org Nonprofit Leader Salon" [ref=e827] [cursor=pointer]':
+                  - generic [ref=e828]: 🎨
+                  - text: Brooklyn Org Nonprofit Leader Salon
+                - 'listitem "event: Movie: Cut Throat City" [ref=e829] [cursor=pointer]':
+                  - generic [ref=e830]: 🎬
+                  - text: "Movie: Cut Throat City"
+                - 'listitem "event: Heritage Celebration Programming [C…" [ref=e831] [cursor=pointer]':
+                  - generic [ref=e832]: 💻
+                  - text: Heritage Celebration Programming [C…
+                - 'listitem "event: Introduction to Computers and Digit…" [ref=e833] [cursor=pointer]':
+                  - generic [ref=e834]: 🏮
+                  - text: Introduction to Computers and Digit…
+                - 'listitem "event: Hybrid Adult Coloring Social Hour-" [ref=e835] [cursor=pointer]':
+                  - generic [ref=e836]: 🎨
+                  - text: Hybrid Adult Coloring Social Hour-
+                - 'listitem "event: Gold Standard Arts Foundation’s Lun…" [ref=e837] [cursor=pointer]':
+                  - generic [ref=e838]: 🥂
+                  - text: Gold Standard Arts Foundation’s Lun…
+                - 'listitem "event: Attention As Prayer" [ref=e839] [cursor=pointer]':
+                  - generic [ref=e840]: 🙏
+                  - text: Attention As Prayer
+                - 'listitem "event: Weaving Attentions" [ref=e841] [cursor=pointer]':
+                  - generic [ref=e842]: 🧶
+                  - text: Weaving Attentions
+                - 'listitem "event: Attention Activism 101 [Online]" [ref=e843] [cursor=pointer]':
+                  - generic [ref=e844]: 🧠
+                  - text: Attention Activism 101 [Online]
+                - 'listitem "event: Latin American Revolutionary Cinema" [ref=e845] [cursor=pointer]':
+                  - generic [ref=e846]: 🎬
+                  - text: Latin American Revolutionary Cinema
+                - 'listitem "event: Beginners Snowshoe" [ref=e847] [cursor=pointer]':
+                  - generic [ref=e848]: ❄️
+                  - text: Beginners Snowshoe
+                - 'listitem "event: Let’s Bird Together!" [ref=e849] [cursor=pointer]':
+                  - generic [ref=e850]: 🐦
+                  - text: Let’s Bird Together!
+                - 'listitem "event: 8-Week Beg/inter Hand-Building Workshop" [ref=e851] [cursor=pointer]':
+                  - generic [ref=e852]: 🗿
+                  - text: 8-Week Beg/inter Hand-Building Workshop
+                - 'listitem "event: 12-Week Intermediate/Advanced Class" [ref=e853] [cursor=pointer]':
+                  - generic [ref=e854]: 🏺
+                  - text: 12-Week Intermediate/Advanced Class
+                - 'listitem "event: Reading Don Quixote" [ref=e855] [cursor=pointer]':
+                  - generic [ref=e856]: 🛡️
+                  - text: Reading Don Quixote
+                - 'listitem "event: Level II" [ref=e857] [cursor=pointer]':
+                  - generic [ref=e858]: 🖋️
+                  - text: Level II
+                - 'listitem "event: Cristina Rivera Garza on Autobiogra…" [ref=e859] [cursor=pointer]':
+                  - generic [ref=e860]: 📖
+                  - text: Cristina Rivera Garza on Autobiogra…
+                - 'listitem "event: The Challenges of Writing Violence" [ref=e861] [cursor=pointer]':
+                  - generic [ref=e862]: 🔍
+                  - text: The Challenges of Writing Violence
+                - 'listitem "event: Memoir 101" [ref=e863] [cursor=pointer]':
+                  - generic [ref=e864]: ✍️
+                  - text: Memoir 101
+                - 'listitem "event: Red, Black, & Green exhibition" [ref=e865] [cursor=pointer]':
+                  - generic [ref=e866]: 🎨
+                  - text: Red, Black, & Green exhibition
+                - 'listitem "event: Franklin Furnace, 1976—2026" [ref=e867] [cursor=pointer]':
+                  - generic [ref=e868]: 🎨
+                  - text: Franklin Furnace, 1976—2026
+                - 'listitem "event: Nadja" [ref=e869] [cursor=pointer]':
+                  - generic [ref=e870]: 🧛
+                  - text: Nadja
+                - 'listitem "event: Authors Across Romance: Black Love" [ref=e871] [cursor=pointer]':
+                  - generic [ref=e872]: ❤️
+                  - text: "Authors Across Romance: Black Love"
+                - 'listitem "event: Anna Kovatcheva" [ref=e873] [cursor=pointer]':
+                  - generic [ref=e874]: 📖
+                  - text: Anna Kovatcheva
+                - 'listitem "event: Elliot Williams" [ref=e875] [cursor=pointer]':
+                  - generic [ref=e876]: 📚
+                  - text: Elliot Williams
+                - 'listitem "event: German Stammtisch" [ref=e877] [cursor=pointer]':
+                  - generic [ref=e878]: 🍻
+                  - text: German Stammtisch
+                - 'listitem "event: Trivia Tuesday" [ref=e879] [cursor=pointer]':
+                  - generic [ref=e880]: 🧠
+                  - text: Trivia Tuesday
+                - 'listitem "event: Open Mic – Music / Poetry / Comedy" [ref=e881] [cursor=pointer]':
+                  - generic [ref=e882]: 🎙️
+                  - text: Open Mic – Music / Poetry / Comedy
+                - 'listitem "event: Win Cheston / Sylvia Dieken / Nevle…" [ref=e883] [cursor=pointer]':
+                  - generic [ref=e884]: 🎵
+                  - text: Win Cheston / Sylvia Dieken / Nevle…
+                - 'listitem "event: Brooklyn Nets vs. Chicago Bulls" [ref=e885] [cursor=pointer]':
+                  - generic [ref=e886]: 🏀
+                  - text: Brooklyn Nets vs. Chicago Bulls
+                - 'listitem "event: Brooklyn Nets vs. Indiana Pacers" [ref=e887] [cursor=pointer]':
+                  - generic [ref=e888]: 🏀
+                  - text: Brooklyn Nets vs. Indiana Pacers
+                - 'listitem "event: February 9: Master''s Monday LI" [ref=e889] [cursor=pointer]':
+                  - generic [ref=e890]: 🎓
+                  - text: "February 9: Master's Monday LI"
+                - 'listitem "event: Mentor Program Info Session" [ref=e891] [cursor=pointer]':
+                  - generic [ref=e892]: 🤝
+                  - text: Mentor Program Info Session
+                - 'listitem "event: February 10: Transfer Tuesday LI" [ref=e893] [cursor=pointer]':
+                  - generic [ref=e894]: 🔄
+                  - text: "February 10: Transfer Tuesday LI"
+                - 'listitem "event: The Death and Life of Gentrification" [ref=e895] [cursor=pointer]':
+                  - generic [ref=e896]: 📖
+                  - text: The Death and Life of Gentrification
+                - 'listitem "event: Morning Food Scrap Drop-off" [ref=e897] [cursor=pointer]':
+                  - generic [ref=e898]: ♻️
+                  - text: Morning Food Scrap Drop-off
+                - 'listitem "event: Winter Workshops" [ref=e899] [cursor=pointer]':
+                  - generic [ref=e900]: 🎨
+                  - text: Winter Workshops
+                - 'listitem "event: Sombra 5 Mile Mondays" [ref=e901] [cursor=pointer]':
+                  - generic [ref=e902]: 🏃
+                  - text: Sombra 5 Mile Mondays
+                - 'listitem "event: Live Portrait Sessions" [ref=e903] [cursor=pointer]':
+                  - generic [ref=e904]: ✍️
+                  - text: Live Portrait Sessions
+                - 'listitem "event: DJ Nights" [ref=e905] [cursor=pointer]':
+                  - generic [ref=e906]: ⛸️
+                  - text: DJ Nights
+                - 'listitem "event: Erin LeCount" [ref=e907] [cursor=pointer]':
+                  - generic [ref=e908]: 🎶
+                  - text: Erin LeCount
+                - 'listitem "event: runo plum" [ref=e909] [cursor=pointer]':
+                  - generic [ref=e910]: 🌳
+                  - text: runo plum
+                - 'listitem "event: The Fat Cats Youth Orchestra 15th A…" [ref=e911] [cursor=pointer]':
+                  - generic [ref=e912]: 🎂
+                  - text: The Fat Cats Youth Orchestra 15th A…
+                - 'listitem "event: Shapeshifter Plus Jam Sessions" [ref=e913] [cursor=pointer]':
+                  - generic [ref=e914]: 🥁
+                  - text: Shapeshifter Plus Jam Sessions
+                - 'listitem "event: Saretta Morgan" [ref=e915] [cursor=pointer]':
+                  - generic [ref=e916]: 🎤
+                  - text: Saretta Morgan
+                - 'listitem "event: A Valentine''s Comedy Affair" [ref=e917] [cursor=pointer]':
+                  - generic [ref=e918]: ❤️
+                  - text: A Valentine's Comedy Affair
+                - 'listitem "event: The Scott and Gary Show!" [ref=e919] [cursor=pointer]':
+                  - generic [ref=e920]: 📺
+                  - text: The Scott and Gary Show!
+                - 'listitem "event: The Killer of Dolls" [ref=e921] [cursor=pointer]':
+                  - generic [ref=e922]: 🔪
+                  - text: The Killer of Dolls
+                - 'listitem "event: Payday" [ref=e923] [cursor=pointer]':
+                  - generic [ref=e924]: 🎸
+                  - text: Payday
+                - 'listitem "event: New Home" [ref=e925] [cursor=pointer]':
+                  - generic [ref=e926]: 🏠
+                  - text: New Home
+                - 'listitem "event: Didn’t Do It For Love" [ref=e927] [cursor=pointer]':
+                  - generic [ref=e928]: 👠
+                  - text: Didn’t Do It For Love
+                - 'listitem "event: Decoder" [ref=e929] [cursor=pointer]':
+                  - generic [ref=e930]: 🛰️
+                  - text: Decoder
+                - 'listitem "event: Zappa" [ref=e931] [cursor=pointer]':
+                  - generic [ref=e932]: 🎷
+                  - text: Zappa
+                - 'listitem "event: Be Glad for the Song Has No Ending" [ref=e933] [cursor=pointer]':
+                  - generic [ref=e934]: 🎶
+                  - text: Be Glad for the Song Has No Ending
+                - 'listitem "event: Doomed Love" [ref=e935] [cursor=pointer]':
+                  - generic [ref=e936]: 💔
+                  - text: Doomed Love
+                - 'listitem "event: Life Size" [ref=e937] [cursor=pointer]':
+                  - generic [ref=e938]: 🎞️
+                  - text: Life Size
+                - 'listitem "event: Launch of e-flux Index #8" [ref=e939] [cursor=pointer]':
+                  - generic [ref=e940]: 📖
+                  - text: "Launch of e-flux Index #8"
+                - 'listitem "event: Puzzled Pint: Murder Mystery" [ref=e941] [cursor=pointer]':
+                  - generic [ref=e942]: 🧩
+                  - text: "Puzzled Pint: Murder Mystery"
+                - 'listitem "event: Van Gogh, Picasso, and Kandinsky" [ref=e943] [cursor=pointer]':
+                  - generic [ref=e944]: 🖼️
+                  - text: Van Gogh, Picasso, and Kandinsky
+                - 'listitem "event: Dead Lover" [ref=e945] [cursor=pointer]':
+                  - generic [ref=e946]: ⚰️
+                  - text: Dead Lover
+                - 'listitem "event: Bride of Chucky" [ref=e947] [cursor=pointer]':
+                  - generic [ref=e948]: 👰
+                  - text: Bride of Chucky
+                - 'listitem "event: The Big Cheese" [ref=e949] [cursor=pointer]':
+                  - generic [ref=e950]: 🧀
+                  - text: The Big Cheese
+                - 'listitem "event: Cannibal Mukbang" [ref=e951] [cursor=pointer]':
+                  - generic [ref=e952]: 🍲
+                  - text: Cannibal Mukbang
+                - 'listitem "event: Unusual Appetites Book Club" [ref=e953] [cursor=pointer]':
+                  - generic [ref=e954]: 🍎
+                  - text: Unusual Appetites Book Club
+                - 'listitem "event: Edward, a new play by Ed Schmidt" [ref=e955] [cursor=pointer]':
+                  - generic [ref=e956]: 🎭
+                  - text: Edward, a new play by Ed Schmidt
+                - 'listitem "event: Chris Jennings in conversation" [ref=e957] [cursor=pointer]':
+                  - generic [ref=e958]: 🎙️
+                  - text: Chris Jennings in conversation
+                - 'listitem "event: Short Works of Dostoevsky" [ref=e959] [cursor=pointer]':
+                  - generic [ref=e960]: ✍️
+                  - text: Short Works of Dostoevsky
+                - 'listitem "event: Evil Trivia" [ref=e961] [cursor=pointer]':
+                  - generic [ref=e962]: 🧠
+                  - text: Evil Trivia
+                - 'listitem "event: Handmade Pasta Specials" [ref=e963] [cursor=pointer]':
+                  - generic [ref=e964]: 🍝
+                  - text: Handmade Pasta Specials
+                - 'listitem "event: Open Play Mahjong" [ref=e965] [cursor=pointer]':
+                  - generic [ref=e966]: 🀄
+                  - text: Open Play Mahjong
+                - 'listitem "event: Monthly Butcher Class & Dinner" [ref=e967] [cursor=pointer]':
+                  - generic [ref=e968]: 🐷
+                  - text: Monthly Butcher Class & Dinner
+                - 'listitem "event: Butcher class & dinner" [ref=e969] [cursor=pointer]':
+                  - generic [ref=e970]: 🐷
+                  - text: Butcher class & dinner
+                - 'listitem "event: Live Music Wednesdays" [ref=e971] [cursor=pointer]':
+                  - generic [ref=e972]: 🎸
+                  - text: Live Music Wednesdays
+                - 'listitem "event: YFN Lucci" [ref=e973] [cursor=pointer]':
+                  - generic [ref=e974]: 🎤
+                  - text: YFN Lucci
+                - 'listitem "event: Black Belt Eagle Scout and Mato Wayuhi" [ref=e975] [cursor=pointer]':
+                  - generic [ref=e976]: 🦅
+                  - text: Black Belt Eagle Scout and Mato Wayuhi
+                - 'listitem "event: [Parlor Event] MTG Draft | Lorwyn E…" [ref=e977] [cursor=pointer]':
+                  - generic [ref=e978]: 🎴
+                  - text: "[Parlor Event] MTG Draft | Lorwyn E…"
+                - 'listitem "event: [Gallery Event] Workshop | Mini Painting" [ref=e979] [cursor=pointer]':
+                  - generic [ref=e980]: 🎨
+                  - text: "[Gallery Event] Workshop | Mini Painting"
+                - 'listitem "event: Sensual Scents and Aromas" [ref=e981] [cursor=pointer]':
+                  - generic [ref=e982]: 🕯️
+                  - text: Sensual Scents and Aromas
+                - 'listitem "event: DIY Lip Balm" [ref=e983] [cursor=pointer]':
+                  - generic [ref=e984]: 💄
+                  - text: DIY Lip Balm
+                - 'listitem "event: The American Diner: A History" [ref=e985] [cursor=pointer]':
+                  - generic [ref=e986]: 🍔
+                  - text: "The American Diner: A History"
+                - 'listitem "event: Learn: Art Workshop" [ref=e987] [cursor=pointer]':
+                  - generic [ref=e988]: ✏️
+                  - text: "Learn: Art Workshop"
+                - 'listitem "event: Fiber Arts Workshop" [ref=e989] [cursor=pointer]':
+                  - generic [ref=e990]: 🧶
+                  - text: Fiber Arts Workshop
+                - 'listitem "event: Improvised Shakespeare" [ref=e991] [cursor=pointer]':
+                  - generic [ref=e992]: 🎭
+                  - text: Improvised Shakespeare
+                - 'listitem "event: Project 2026: 2 Fascist 2 Furious" [ref=e993] [cursor=pointer]':
+                  - generic [ref=e994]: 🗳️
+                  - text: "Project 2026: 2 Fascist 2 Furious"
+                - 'listitem "event: Lucho Pellegrini & His Swing Combo!" [ref=e995] [cursor=pointer]':
+                  - generic [ref=e996]: 🕺
+                  - text: Lucho Pellegrini & His Swing Combo!
+                - 'listitem "event: Bergen County Championships - Wednesday" [ref=e997] [cursor=pointer]':
+                  - generic [ref=e998]: 🏃
+                  - text: Bergen County Championships - Wednesday
+                - 'listitem "event: The Winter Lodge" [ref=e999] [cursor=pointer]':
+                  - generic [ref=e1000]: ❄️
+                  - text: The Winter Lodge
+                - 'listitem "event: Olympics Watch Party: Open For Bowling!" [ref=e1001] [cursor=pointer]':
+                  - generic [ref=e1002]: 🏅
+                  - text: "Olympics Watch Party: Open For Bowling!"
+                - 'listitem "event: Molotov - 30 Anniversary Txxxr" [ref=e1003] [cursor=pointer]':
+                  - generic [ref=e1004]: 🎸
+                  - text: Molotov - 30 Anniversary Txxxr
+                - 'listitem "event: Keepsake House Open Mics" [ref=e1005] [cursor=pointer]':
+                  - generic [ref=e1006]: 🎤
+                  - text: Keepsake House Open Mics
+                - 'listitem "event: Kayka Yano Music Session" [ref=e1007] [cursor=pointer]':
+                  - generic [ref=e1008]: 🎤
+                  - text: Kayka Yano Music Session
+                - 'listitem "event: Play GO Tuesday Meetup" [ref=e1009] [cursor=pointer]':
+                  - generic [ref=e1010]: ♟️
+                  - text: Play GO Tuesday Meetup
+                - 'listitem "event: Tuesday Game x pinkFROG Mahjong" [ref=e1011] [cursor=pointer]':
+                  - generic [ref=e1012]: 🀄
+                  - text: Tuesday Game x pinkFROG Mahjong
+                - 'listitem "event: Salvage" [ref=e1013] [cursor=pointer]':
+                  - generic [ref=e1014]: 🌲
+                  - text: Salvage
+                - 'listitem "event: Rev. Vince Anderson & The Love Choir!" [ref=e1015] [cursor=pointer]':
+                  - generic [ref=e1016]: 🎤
+                  - text: Rev. Vince Anderson & The Love Choir!
+                - 'listitem "event: Free: Facs ✷ Autobahn" [ref=e1017] [cursor=pointer]':
+                  - generic [ref=e1018]: ⚙️
+                  - text: "Free: Facs ✷ Autobahn"
+                - 'listitem "event: Karaoke Mondays!" [ref=e1019] [cursor=pointer]':
+                  - generic [ref=e1020]: 🎶
+                  - text: Karaoke Mondays!
+                - 'listitem "event: Spare Time Comedy" [ref=e1021] [cursor=pointer]':
+                  - generic [ref=e1022]: 🎳
+                  - text: Spare Time Comedy
+                - 'listitem "event: Ecstatic Dance NYC" [ref=e1023] [cursor=pointer]':
+                  - generic [ref=e1024]: 💃
+                  - text: Ecstatic Dance NYC
+                - 'listitem "event: Monday Night Bingo" [ref=e1025] [cursor=pointer]':
+                  - generic [ref=e1026]: 🎱
+                  - text: Monday Night Bingo
+                - 'listitem "event: Trivia Night" [ref=e1027] [cursor=pointer]':
+                  - generic [ref=e1028]: 🧠
+                  - text: Trivia Night
+                - 'listitem "event: Valentine’s Day" [ref=e1029] [cursor=pointer]':
+                  - generic [ref=e1030]: 💖
+                  - text: Valentine’s Day
+                - 'listitem "event: Cozy Reading Night" [ref=e1031] [cursor=pointer]':
+                  - generic [ref=e1032]: 📚
+                  - text: Cozy Reading Night
+                - 'listitem "event: Home Teams" [ref=e1033] [cursor=pointer]':
+                  - generic [ref=e1034]: 🏠
+                  - text: Home Teams
+                - 'listitem "event: Andy Junk''s Improv Level 4 Class Show" [ref=e1035] [cursor=pointer]':
+                  - generic [ref=e1036]: 🎓
+                  - text: Andy Junk's Improv Level 4 Class Show
+                - 'listitem "event: Into the What?!" [ref=e1037] [cursor=pointer]':
+                  - generic [ref=e1038]: 🎶
+                  - text: Into the What?!
+                - 'listitem "event: Land Use, Zoning & Economic Develop…" [ref=e1039] [cursor=pointer]':
+                  - generic [ref=e1040]: 🏗️
+                  - text: Land Use, Zoning & Economic Develop…
+                - 'listitem "event: Youth & Education Committee" [ref=e1041] [cursor=pointer]':
+                  - generic [ref=e1042]: 🎓
+                  - text: Youth & Education Committee
+                - 'listitem "event: Public Hearing" [ref=e1043] [cursor=pointer]':
+                  - generic [ref=e1044]: 🗣️
+                  - text: Public Hearing
+                - 'listitem "event: Again, Again: Anaphora in Poetry" [ref=e1045] [cursor=pointer]':
+                  - generic [ref=e1046]: 🔁
+                  - text: "Again, Again: Anaphora in Poetry"
+                - 'listitem "event: Carving Out Queer Joy" [ref=e1047] [cursor=pointer]':
+                  - generic [ref=e1048]: 💖
+                  - text: Carving Out Queer Joy
+                - 'listitem "event: Economic Development Committee Meeting" [ref=e1049] [cursor=pointer]':
+                  - generic [ref=e1050]: 📈
+                  - text: Economic Development Committee Meeting
+              - generic [ref=e1051]:
+                - button "Music" [ref=e1052] [cursor=pointer]
+                - button "Nightlife" [ref=e1053] [cursor=pointer]
+                - button "Valentines Day" [ref=e1054] [cursor=pointer]
+                - button "Performance" [ref=e1055] [cursor=pointer]
+                - button "Comedy" [ref=e1056] [cursor=pointer]
+                - button "Jazz" [ref=e1057] [cursor=pointer]
+                - button "Date Night" [ref=e1058] [cursor=pointer]
+                - button "Stand-up" [ref=e1059] [cursor=pointer]
+                - button "Performance Art" [ref=e1060] [cursor=pointer]
+                - button "Drama" [ref=e1061] [cursor=pointer]
+                - button "Community" [ref=e1062] [cursor=pointer]
+                - button "Virtual" [ref=e1063] [cursor=pointer]
+                - button "Storytelling" [ref=e1064] [cursor=pointer]
+                - button "Mindfulness" [ref=e1065] [cursor=pointer]
+                - button "Modern Jazz" [ref=e1066] [cursor=pointer]
+                - button "Dance Party" [ref=e1067] [cursor=pointer]
+                - button "Literature" [ref=e1068] [cursor=pointer]
+                - button "Singer Songwriter" [ref=e1069] [cursor=pointer]
+                - button "Networking" [ref=e1070] [cursor=pointer]
+                - button "Romance" [ref=e1071] [cursor=pointer]
+                - button "Contemporary Art" [ref=e1072] [cursor=pointer]
+                - button "Open Mic" [ref=e1073] [cursor=pointer]
+                - button "Wellness" [ref=e1074] [cursor=pointer]
+                - button "Soul Music" [ref=e1075] [cursor=pointer]
+                - button "DJ" [ref=e1076] [cursor=pointer]
+                - button "Sustainability" [ref=e1077] [cursor=pointer]
+                - button "Visual Arts" [ref=e1078] [cursor=pointer]
+                - button "Family" [ref=e1079] [cursor=pointer]
+                - button "History" [ref=e1080] [cursor=pointer]
+                - button "Arthouse" [ref=e1081] [cursor=pointer]
+                - button "Social Justice" [ref=e1082] [cursor=pointer]
+                - button "Live Show" [ref=e1083] [cursor=pointer]
+                - button "Avant Garde" [ref=e1084] [cursor=pointer]
+                - button "Education" [ref=e1085] [cursor=pointer]
+                - button "Live Music" [ref=e1086] [cursor=pointer]
+                - button "Live Jazz" [ref=e1087] [cursor=pointer]
+                - button "Concert" [ref=e1088] [cursor=pointer]
+                - button "Theater" [ref=e1089] [cursor=pointer]
+                - button "Community Board" [ref=e1090] [cursor=pointer]
+                - button "Electronic Music" [ref=e1091] [cursor=pointer]
+                - button "LGBTQ" [ref=e1092] [cursor=pointer]
+                - button "Jazz Trio" [ref=e1093] [cursor=pointer]
+                - button "Late Night" [ref=e1094] [cursor=pointer]
+                - button "Experimental" [ref=e1095] [cursor=pointer]
+                - button "Film" [ref=e1096] [cursor=pointer]
+                - button "Dance" [ref=e1097] [cursor=pointer]
+                - button "Classic Film" [ref=e1098] [cursor=pointer]
+                - button "Book Club" [ref=e1099] [cursor=pointer]
+                - button "Poetry" [ref=e1100] [cursor=pointer]
+                - button "Friday Night" [ref=e1101] [cursor=pointer]
+                - button "Urban Planning" [ref=e1102] [cursor=pointer]
+                - button "Cabaret" [ref=e1103] [cursor=pointer]
+                - button "Art History" [ref=e1104] [cursor=pointer]
+                - button "Classical Music" [ref=e1105] [cursor=pointer]
+                - button "Variety Show" [ref=e1106] [cursor=pointer]
+                - button "Trivia Night" [ref=e1107] [cursor=pointer]
+                - button "Sunday Funday" [ref=e1108] [cursor=pointer]
+                - button "Architecture" [ref=e1109] [cursor=pointer]
+                - button "Fine Art" [ref=e1110] [cursor=pointer]
+                - button "Spoken Word" [ref=e1111] [cursor=pointer]
+                - button "Author Talk" [ref=e1112] [cursor=pointer]
+                - button "Showcase" [ref=e1113] [cursor=pointer]
+                - button "Meditation" [ref=e1114] [cursor=pointer]
+                - button "Free" [ref=e1115] [cursor=pointer]
+                - button "Social Event" [ref=e1116] [cursor=pointer]
+                - button "Workshop" [ref=e1117] [cursor=pointer]
+                - button "Volunteer" [ref=e1118] [cursor=pointer]
+                - button "Valentine Event" [ref=e1119] [cursor=pointer]
+                - button "Jam Session" [ref=e1120] [cursor=pointer]
+                - button "Jazz Quartet" [ref=e1121] [cursor=pointer]
+                - button "Social Dance" [ref=e1122] [cursor=pointer]
+                - button "Contemporary Dance" [ref=e1123] [cursor=pointer]
+                - button "Thriller" [ref=e1124] [cursor=pointer]
+                - button "Rock Music" [ref=e1125] [cursor=pointer]
+                - button "Live Concert" [ref=e1126] [cursor=pointer]
+                - button "Jazz Piano" [ref=e1127] [cursor=pointer]
+                - button "Improv" [ref=e1128] [cursor=pointer]
+                - button "Indie Music" [ref=e1129] [cursor=pointer]
+                - button "Alternative" [ref=e1130] [cursor=pointer]
+                - button "Documentary" [ref=e1131] [cursor=pointer]
+                - button "House Music" [ref=e1132] [cursor=pointer]
+                - button "Culture" [ref=e1133] [cursor=pointer]
+                - button "Community Service" [ref=e1134] [cursor=pointer]
+                - button "Social" [ref=e1135] [cursor=pointer]
+                - button "Hip Hop" [ref=e1136] [cursor=pointer]
+                - button "Romantic Dinner" [ref=e1137] [cursor=pointer]
+                - button "Happy Hour" [ref=e1138] [cursor=pointer]
+                - button "Off Broadway" [ref=e1139] [cursor=pointer]
+                - button "Outdoor" [ref=e1140] [cursor=pointer]
+                - button "Performing Arts" [ref=e1141] [cursor=pointer]
+                - button "Exhibition" [ref=e1142] [cursor=pointer]
+                - button "Saxophone" [ref=e1143] [cursor=pointer]
+                - button "R&B" [ref=e1144] [cursor=pointer]
+                - button "Art" [ref=e1145] [cursor=pointer]
+                - button "Pop Music" [ref=e1146] [cursor=pointer]
+                - button "Art Workshop" [ref=e1147] [cursor=pointer]
+                - button "Lunar New Year" [ref=e1148] [cursor=pointer]
+                - button "Skyline Views" [ref=e1149] [cursor=pointer]
+                - button "Cultural Heritage" [ref=e1150] [cursor=pointer]
+                - button "Community Event" [ref=e1151] [cursor=pointer]
+                - button "Disco" [ref=e1152] [cursor=pointer]
+                - button "Economic Development" [ref=e1153] [cursor=pointer]
+                - button "Youth Services" [ref=e1154] [cursor=pointer]
+                - button "Classical" [ref=e1155] [cursor=pointer]
+                - button "Mixed Media" [ref=e1156] [cursor=pointer]
+                - button "Nature Education" [ref=e1157] [cursor=pointer]
+                - button "Historic Preservation" [ref=e1158] [cursor=pointer]
+                - button "Musical Theatre" [ref=e1159] [cursor=pointer]
+                - button "Ceramics" [ref=e1160] [cursor=pointer]
+                - button "String Quartet" [ref=e1161] [cursor=pointer]
+                - button "Cultural History" [ref=e1162] [cursor=pointer]
+                - button "Underground" [ref=e1163] [cursor=pointer]
+                - button "Creative Kids" [ref=e1164] [cursor=pointer]
+                - button "Social Services" [ref=e1165] [cursor=pointer]
+                - button "Public Safety" [ref=e1166] [cursor=pointer]
+                - button "Themed Party" [ref=e1167] [cursor=pointer]
+                - button "Parks" [ref=e1168] [cursor=pointer]
+                - button "Early Music" [ref=e1169] [cursor=pointer]
+                - button "Improv Comedy" [ref=e1170] [cursor=pointer]
+                - button "Botany" [ref=e1171] [cursor=pointer]
+                - button "Learning" [ref=e1172] [cursor=pointer]
+                - button "Pottery" [ref=e1173] [cursor=pointer]
+                - button "Kids Crafts" [ref=e1174] [cursor=pointer]
+                - button "Language Learning" [ref=e1175] [cursor=pointer]
+                - button "Sanitation" [ref=e1176] [cursor=pointer]
+                - button "Fashion Design" [ref=e1177] [cursor=pointer]
+                - button "Tchaikovsky" [ref=e1178] [cursor=pointer]
+                - button "Wheel Throwing" [ref=e1179] [cursor=pointer]
+                - button "Community Wellness" [ref=e1180] [cursor=pointer]
+                - button "Makers" [ref=e1181] [cursor=pointer]
+                - button "Digital Skills" [ref=e1182] [cursor=pointer]
+                - button "Percussion" [ref=e1183] [cursor=pointer]
+                - button "Historic House" [ref=e1184] [cursor=pointer]
+                - button "Shopping" [ref=e1185] [cursor=pointer]
+                - button "Youth Programs" [ref=e1186] [cursor=pointer]
+                - button "Art Community" [ref=e1187] [cursor=pointer]
+                - button "Outdoor Education" [ref=e1188] [cursor=pointer]
+                - button "Acting" [ref=e1189] [cursor=pointer]
+                - button "Art Studio" [ref=e1190] [cursor=pointer]
+                - button "Reading" [ref=e1191] [cursor=pointer]
+                - button "Clay Art" [ref=e1192] [cursor=pointer]
+                - button "DJ Night" [ref=e1193] [cursor=pointer]
+                - button "Theology" [ref=e1194] [cursor=pointer]
+                - button "Dating Comedy" [ref=e1195] [cursor=pointer]
+                - button "Music and Movement" [ref=e1196] [cursor=pointer]
+                - button "Tech Skills" [ref=e1197] [cursor=pointer]
+                - button "Winter Activities" [ref=e1198] [cursor=pointer]
+                - button "Fitness Motivation" [ref=e1199] [cursor=pointer]
+                - button "Homework Help" [ref=e1200] [cursor=pointer]
+                - button "Local Vendors" [ref=e1201] [cursor=pointer]
+                - button "Relationship Humor" [ref=e1202] [cursor=pointer]
+                - button "Tech Connect" [ref=e1203] [cursor=pointer]
+                - button "Tuesday Vibes" [ref=e1204] [cursor=pointer]
+                - button "Valentine Weekend" [ref=e1205] [cursor=pointer]
+                - button "Wellness Journey" [ref=e1206] [cursor=pointer]
+                - button "Nightclub" [ref=e1207] [cursor=pointer]
+                - button "Lincoln Center" [ref=e1208] [cursor=pointer]
+                - button "Textile Art" [ref=e1209] [cursor=pointer]
+                - button "Historical Fiction" [ref=e1210] [cursor=pointer]
+                - button "Hardcore" [ref=e1211] [cursor=pointer]
+                - button "Mozart" [ref=e1212] [cursor=pointer]
+                - button "Opening Reception" [ref=e1213] [cursor=pointer]
+                - button "Outdoor Activity" [ref=e1214] [cursor=pointer]
+                - button "Global Rhythms" [ref=e1215] [cursor=pointer]
+                - button "Housing" [ref=e1216] [cursor=pointer]
+                - button "Music Event" [ref=e1217] [cursor=pointer]
+                - button "Cultural Performance" [ref=e1218] [cursor=pointer]
+                - button "Dubstep" [ref=e1219] [cursor=pointer]
+                - button "Outdoor Fitness" [ref=e1220] [cursor=pointer]
+                - button "Creative Social" [ref=e1221] [cursor=pointer]
+                - button "Family Activity" [ref=e1222] [cursor=pointer]
+                - button "Hyperpop" [ref=e1223] [cursor=pointer]
+                - button "Landmarks" [ref=e1224] [cursor=pointer]
+                - button "Lifelong Learning" [ref=e1225] [cursor=pointer]
+                - button "Public Parks" [ref=e1226] [cursor=pointer]
+                - button "Spring Festival" [ref=e1227] [cursor=pointer]
+                - button "Volunteering" [ref=e1228] [cursor=pointer]
+                - button "Business" [ref=e1229] [cursor=pointer]
+                - button "Creative Skills" [ref=e1230] [cursor=pointer]
+                - button "Design History" [ref=e1231] [cursor=pointer]
+                - button "Human Services" [ref=e1232] [cursor=pointer]
+                - button "Open Studio" [ref=e1233] [cursor=pointer]
+                - button "Spiritual" [ref=e1234] [cursor=pointer]
+                - button "Sunday Vibes" [ref=e1235] [cursor=pointer]
+                - button "Architecture Tour" [ref=e1236] [cursor=pointer]
+                - button "Bronx Arts" [ref=e1237] [cursor=pointer]
+                - button "Chinese New Year" [ref=e1238] [cursor=pointer]
+                - button "Finance" [ref=e1239] [cursor=pointer]
+                - button "Ice Skating" [ref=e1240] [cursor=pointer]
+                - button "Jazz Drums" [ref=e1241] [cursor=pointer]
+                - button "Local Economy" [ref=e1242] [cursor=pointer]
+                - button "Medicine" [ref=e1243] [cursor=pointer]
+                - button "Neighborhood Planning" [ref=e1244] [cursor=pointer]
+                - button "Public Forum" [ref=e1245] [cursor=pointer]
+                - button "Track and Field" [ref=e1246] [cursor=pointer]
+                - button "Active Aging" [ref=e1247] [cursor=pointer]
+                - button "Cardio Dance" [ref=e1248] [cursor=pointer]
+                - button "Community Gardening" [ref=e1249] [cursor=pointer]
+                - button "DIY Workshop" [ref=e1250] [cursor=pointer]
+                - button "Early Childhood Education" [ref=e1251] [cursor=pointer]
+              - generic [ref=e1252]:
+                - listitem [ref=e1253] [cursor=pointer]:
+                  - generic [ref=e1254]: 🏛️
+                  - text: Fraunces Tavern Museum
+                - listitem [ref=e1255] [cursor=pointer]:
+                  - generic [ref=e1256]: 🌳
+                  - text: The Battery
+                - listitem [ref=e1257] [cursor=pointer]:
+                  - generic [ref=e1258]: 🎓
+                  - text: Cornell AAP
+                - listitem [ref=e1259] [cursor=pointer]:
+                  - generic [ref=e1260]: 🏙️
+                  - text: The Skyscraper Museum
+                - listitem [ref=e1261] [cursor=pointer]:
+                  - generic [ref=e1262]: ⛪
+                  - text: Trinity Church
+                - listitem [ref=e1263] [cursor=pointer]:
+                  - generic [ref=e1264]: ✡️
+                  - text: Museum of Jewish Heritage
+                - listitem [ref=e1265] [cursor=pointer]:
+                  - generic [ref=e1266]: 📷
+                  - text: Positive Exposure Gallery
+                - listitem [ref=e1267] [cursor=pointer]:
+                  - generic [ref=e1268]: 🍹
+                  - text: Watermark Bar
+                - listitem [ref=e1269] [cursor=pointer]:
+                  - generic [ref=e1270]: 🚲
+                  - text: Transportation Alternatives
+                - listitem [ref=e1271] [cursor=pointer]:
+                  - generic [ref=e1272]: 📚
+                  - text: McNally Jackson
+                - listitem [ref=e1273] [cursor=pointer]:
+                  - generic [ref=e1274]: 🚢
+                  - text: South Street Seaport Museum
+                - listitem [ref=e1275] [cursor=pointer]:
+                  - generic [ref=e1276]: ⚓
+                  - text: The Seaport
+                - listitem [ref=e1277] [cursor=pointer]:
+                  - generic [ref=e1278]: 🦞
+                  - text: The Fulton
+                - listitem [ref=e1279] [cursor=pointer]:
+                  - generic [ref=e1280]: 🎤
+                  - text: Pier 17
+                - listitem [ref=e1281] [cursor=pointer]:
+                  - generic [ref=e1282]: 🏬
+                  - text: The Oculus
+                - listitem [ref=e1283] [cursor=pointer]:
+                  - generic [ref=e1284]: 🌳
+                  - text: Brooklyn Bridge Park
+                - listitem [ref=e1285] [cursor=pointer]:
+                  - generic [ref=e1286]: 🏛️
+                  - text: City Hall
+                - listitem [ref=e1287] [cursor=pointer]:
+                  - generic [ref=e1288]: 🌳
+                  - text: Gotham Park
+                - listitem [ref=e1289] [cursor=pointer]:
+                  - generic [ref=e1290]: 🌃
+                  - text: Harriet's Rooftop
+                - listitem [ref=e1291] [cursor=pointer]:
+                  - generic [ref=e1292]: 🗃️
+                  - text: NYC Records & Info
+                - listitem [ref=e1293] [cursor=pointer]:
+                  - generic [ref=e1294]: 📚
+                  - text: The Mysterious Bookshop
+                - listitem [ref=e1295] [cursor=pointer]:
+                  - generic [ref=e1296]: 🎩
+                  - text: 69 Atlantic
+                - listitem [ref=e1297] [cursor=pointer]:
+                  - generic [ref=e1298]: 🍷
+                  - text: Broadway Spirits
+                - listitem [ref=e1299] [cursor=pointer]:
+                  - generic [ref=e1300]: 📚
+                  - text: Books Are Magic
+                - listitem [ref=e1301] [cursor=pointer]:
+                  - generic [ref=e1302]: 📖
+                  - text: Battery Park City Library
+                - listitem [ref=e1303] [cursor=pointer]:
+                  - generic [ref=e1304]: 🎭
+                  - text: St. Ann's Warehouse
+                - listitem [ref=e1305] [cursor=pointer]:
+                  - generic [ref=e1306]: 🍽️
+                  - text: Henry's End
+                - listitem [ref=e1307] [cursor=pointer]:
+                  - generic [ref=e1308]: 🍔
+                  - text: Museum of Food and Drink
+                - listitem [ref=e1309] [cursor=pointer]:
+                  - generic [ref=e1310]: 🏛️
+                  - text: Poets House
+                - listitem [ref=e1311] [cursor=pointer]:
+                  - generic [ref=e1312]: 🎪
+                  - text: Time Out Market
+                - listitem [ref=e1313] [cursor=pointer]:
+                  - generic [ref=e1314]: 🌳
+                  - text: Battery Park City
+                - listitem [ref=e1315] [cursor=pointer]:
+                  - generic [ref=e1316]: 📜
+                  - text: Brooklyn Poets
+                - listitem [ref=e1317] [cursor=pointer]:
+                  - generic [ref=e1318]: 🛍️
+                  - text: Empire Stores
+                - listitem [ref=e1319] [cursor=pointer]:
+                  - generic [ref=e1320]: 🥕
+                  - text: Tribeca Greenmarket
+                - listitem [ref=e1321] [cursor=pointer]:
+                  - generic [ref=e1322]: ⛪
+                  - text: First Unitarian Society
+                - listitem [ref=e1323] [cursor=pointer]:
+                  - generic [ref=e1324]: 🎷
+                  - text: Downtown Music Gallery
+                - listitem [ref=e1325] [cursor=pointer]:
+                  - generic [ref=e1326]: 🏛️
+                  - text: Center for Brooklyn History
+                - listitem [ref=e1327] [cursor=pointer]:
+                  - generic [ref=e1328]: 🏢
+                  - text: Brooklyn Org
+                - listitem [ref=e1329] [cursor=pointer]:
+                  - generic [ref=e1330]: 📖
+                  - text: Brooklyn Heights Library
+                - listitem [ref=e1331] [cursor=pointer]:
+                  - generic [ref=e1332]: 📖
+                  - text: Chatham Square Library
+                - listitem [ref=e1333] [cursor=pointer]:
+                  - generic [ref=e1334]: 🥟
+                  - text: House of Joy
+                - listitem [ref=e1335] [cursor=pointer]:
+                  - generic [ref=e1336]: 💭
+                  - text: The Strother School of Radical Attention
+                - listitem [ref=e1337] [cursor=pointer]:
+                  - generic [ref=e1338]: 🌳
+                  - text: Environmental Education Center
+                - listitem [ref=e1339] [cursor=pointer]:
+                  - generic [ref=e1340]: 🔍
+                  - text: Mmuseumm
+                - listitem [ref=e1341] [cursor=pointer]:
+                  - generic [ref=e1342]: 🚶🏽
+                  - text: Open Plans
+                - listitem [ref=e1343] [cursor=pointer]:
+                  - generic [ref=e1344]: 🎬
+                  - text: DCTV Firehouse
+                - listitem [ref=e1345] [cursor=pointer]:
+                  - generic [ref=e1346]: 🥕
+                  - text: Brooklyn Borough Hall Greenmarket
+                - listitem [ref=e1347] [cursor=pointer]:
+                  - generic [ref=e1348]: 📍
+                  - text: Chinatown
+                - listitem [ref=e1349] [cursor=pointer]:
+                  - generic [ref=e1350]: 🎨
+                  - text: Muse Paintbar
+                - listitem [ref=e1351] [cursor=pointer]:
+                  - generic [ref=e1352]: 🎮
+                  - text: OS NYC
+                - listitem [ref=e1353] [cursor=pointer]:
+                  - generic [ref=e1354]: 🎓
+                  - text: Voorhees Theatre
+                - listitem [ref=e1355] [cursor=pointer]:
+                  - generic [ref=e1356]: 🎷
+                  - text: The Django
+                - listitem [ref=e1357] [cursor=pointer]:
+                  - generic [ref=e1358]: 🎭
+                  - text: The Rat NYC
+                - listitem [ref=e1359] [cursor=pointer]:
+                  - generic [ref=e1360]: 🎨
+                  - text: Open Arts Studio
+                - listitem [ref=e1361] [cursor=pointer]:
+                  - generic [ref=e1362]: 🍝
+                  - text: Ciao Evento
+                - listitem [ref=e1363] [cursor=pointer]:
+                  - generic [ref=e1364]: 🎬
+                  - text: 42n Studios
+                - listitem [ref=e1365] [cursor=pointer]:
+                  - generic [ref=e1366]: 🎭
+                  - text: ISSUE Project Room
+                - listitem [ref=e1367] [cursor=pointer]:
+                  - generic [ref=e1368]: 📖
+                  - text: Carroll Gardens Pop-Up Library
+                - listitem [ref=e1369] [cursor=pointer]:
+                  - generic [ref=e1370]: 🏛️
+                  - text: Brooklyn CB2
+                - listitem [ref=e1371] [cursor=pointer]:
+                  - generic [ref=e1372]: 🍷
+                  - text: City Vineyard
+                - listitem [ref=e1373] [cursor=pointer]:
+                  - generic [ref=e1374]: 🎓
+                  - text: NYU Brooklyn
+                - listitem [ref=e1375] [cursor=pointer]:
+                  - generic [ref=e1376]: 🧘🏾
+                  - text: Third Door Brooklyn
+                - listitem [ref=e1377] [cursor=pointer]:
+                  - generic [ref=e1378]: 🏛️
+                  - text: Brooklyn Meetinghouse
+                - listitem [ref=e1379] [cursor=pointer]:
+                  - generic [ref=e1380]: 🍽️
+                  - text: Kitchen at Cobble Hill
+                - listitem [ref=e1381] [cursor=pointer]:
+                  - generic [ref=e1382]: 🐉
+                  - text: Museum of Chinese in America
+                - listitem [ref=e1383] [cursor=pointer]:
+                  - generic [ref=e1384]: 🎉
+                  - text: 26 Bridge
+                - listitem [ref=e1385] [cursor=pointer]:
+                  - generic [ref=e1386]: 🪕
+                  - text: Jalopy Theatre
+                - listitem [ref=e1387] [cursor=pointer]:
+                  - generic [ref=e1388]: 🇮🇹
+                  - text: Italian American Museum
+                - listitem [ref=e1389] [cursor=pointer]:
+                  - generic [ref=e1390]: 🎬
+                  - text: Metrograph
+                - listitem [ref=e1391] [cursor=pointer]:
+                  - generic [ref=e1392]: 🎮
+                  - text: GUMBO
+                - listitem [ref=e1393] [cursor=pointer]:
+                  - generic [ref=e1394]: 🧑🏼‍🍳
+                  - text: Home Cooking New York
+                - listitem [ref=e1395] [cursor=pointer]:
+                  - generic [ref=e1396]: 📍
+                  - text: 22 Wooster St
+                - listitem [ref=e1397] [cursor=pointer]:
+                  - generic [ref=e1398]: 💣
+                  - text: Beat the Bomb
+                - listitem [ref=e1399] [cursor=pointer]:
+                  - generic [ref=e1400]: 🌹
+                  - text: NYC-DSA Office
+                - listitem [ref=e1401] [cursor=pointer]:
+                  - generic [ref=e1402]: 🎤
+                  - text: Fear City Comedy Club
+                - listitem [ref=e1403] [cursor=pointer]:
+                  - generic [ref=e1404]: 📜
+                  - text: Poetry Society of America
+                - listitem [ref=e1405] [cursor=pointer]:
+                  - generic [ref=e1406]: 🏢
+                  - text: Fabrik Tribeca
+                - listitem [ref=e1407] [cursor=pointer]:
+                  - generic [ref=e1408]: 🍺
+                  - text: Sound + Fury
+                - listitem [ref=e1409] [cursor=pointer]:
+                  - generic [ref=e1410]: 📖
+                  - text: Seward Park Library
+                - listitem [ref=e1411] [cursor=pointer]:
+                  - generic [ref=e1412]: 🍸
+                  - text: Clover Club
+                - listitem [ref=e1413] [cursor=pointer]:
+                  - generic [ref=e1414]: ⚾
+                  - text: Jackie Robinson Museum
+                - listitem [ref=e1415] [cursor=pointer]:
+                  - generic [ref=e1416]: 📚
+                  - text: Books Are Magic
+                - listitem [ref=e1417] [cursor=pointer]:
+                  - generic [ref=e1418]: 🏛️
+                  - text: Storefront
+                - listitem [ref=e1419] [cursor=pointer]:
+                  - generic [ref=e1420]: 🎤
+                  - text: New Ear
+                - listitem [ref=e1421] [cursor=pointer]:
+                  - generic [ref=e1422]: 🌎
+                  - text: American Geographical Society
+                - listitem [ref=e1423] [cursor=pointer]:
+                  - generic [ref=e1424]: 💿
+                  - text: 360 Record Shop
+                - listitem [ref=e1425] [cursor=pointer]:
+                  - generic [ref=e1426]: 🎸
+                  - text: The Bowery Ballroom
+                - listitem [ref=e1427] [cursor=pointer]:
+                  - generic [ref=e1428]: 🍺
+                  - text: Someday Bar
+                - listitem [ref=e1429] [cursor=pointer]:
+                  - generic [ref=e1430]: 🍹
+                  - text: Bar San Miguel
+                - listitem [ref=e1431] [cursor=pointer]:
+                  - generic [ref=e1432]: 📚
+                  - text: Liz's Book Bar
+                - listitem [ref=e1433] [cursor=pointer]:
+                  - generic [ref=e1434]: 🥃
+                  - text: Kings County Distillery
+                - listitem [ref=e1435] [cursor=pointer]:
+                  - generic [ref=e1436]: 🏛️
+                  - text: The Tenement Museum
+                - listitem [ref=e1437] [cursor=pointer]:
+                  - generic [ref=e1438]: 🎨
+                  - text: Kentler International Drawing Space
+                - listitem [ref=e1439] [cursor=pointer]:
+                  - generic [ref=e1440]: 🎭
+                  - text: Dixon Place
+                - listitem [ref=e1441] [cursor=pointer]:
+                  - generic [ref=e1442]: 🛍️
+                  - text: City Point
+                - listitem [ref=e1443] [cursor=pointer]:
+                  - generic [ref=e1444]: 📚
+                  - text: McNally Jackson
+                - listitem [ref=e1445] [cursor=pointer]:
+                  - generic [ref=e1446]: 🎭
+                  - text: HERE Arts Center
+                - listitem [ref=e1447] [cursor=pointer]:
+                  - generic [ref=e1448]: 📷
+                  - text: International Center of Photography
+                - listitem [ref=e1449] [cursor=pointer]:
+                  - generic [ref=e1450]: 🍺
+                  - text: Strong Rope Brewery Red Hook
+                - listitem [ref=e1451] [cursor=pointer]:
+                  - generic [ref=e1452]: 🥕
+                  - text: Carroll Gardens Greenmarket
+                - listitem [ref=e1453] [cursor=pointer]:
+                  - generic [ref=e1454]: 🏺
+                  - text: BCI Studio
+                - listitem [ref=e1455] [cursor=pointer]:
+                  - generic [ref=e1456]: 📚
+                  - text: Center for Fiction
+                - listitem [ref=e1457] [cursor=pointer]:
+                  - generic [ref=e1458]: 🎭
+                  - text: 651 ARTS
+                - listitem [ref=e1459] [cursor=pointer]:
+                  - generic [ref=e1460]: 📖
+                  - text: Library for Arts & Culture
+                - listitem [ref=e1461] [cursor=pointer]:
+                  - generic [ref=e1462]: 🌍
+                  - text: African Diasporan Arts
+                - listitem [ref=e1463] [cursor=pointer]:
+                  - generic [ref=e1464]: 🌳
+                  - text: Fort Greene Park
+                - listitem [ref=e1465] [cursor=pointer]:
+                  - generic [ref=e1466]: 🎭
+                  - text: Brooklyn Academy of Music
+                - listitem [ref=e1467] [cursor=pointer]:
+                  - generic [ref=e1468]: 🎭
+                  - text: BAM Fisher
+                - listitem [ref=e1469] [cursor=pointer]:
+                  - generic [ref=e1470]: 🏛️
+                  - text: One Hanson
+                - listitem [ref=e1471] [cursor=pointer]:
+                  - generic [ref=e1472]: 🥕
+                  - text: Fort Greene Park Greenmarket
+                - listitem [ref=e1473] [cursor=pointer]:
+                  - generic [ref=e1474]: ⚓
+                  - text: Brooklyn Navy Yard
+                - listitem [ref=e1475] [cursor=pointer]:
+                  - generic [ref=e1476]: 📚
+                  - text: Greenlight Bookstore
+                - listitem [ref=e1477] [cursor=pointer]:
+                  - generic [ref=e1478]: 🏫
+                  - text: PS 15
+                - listitem [ref=e1479] [cursor=pointer]:
+                  - generic [ref=e1480]: 💃🏻
+                  - text: BAX Annex
+                - listitem [ref=e1481] [cursor=pointer]:
+                  - generic [ref=e1482]: 🍺
+                  - text: DSK Brooklyn
+                - listitem [ref=e1483] [cursor=pointer]:
+                  - generic [ref=e1484]: 💃🏻
+                  - text: Jamel Gaines Creative Outlet
+                - listitem [ref=e1485] [cursor=pointer]:
+                  - generic [ref=e1486]: 🎭
+                  - text: South Oxford Space
+                - listitem [ref=e1487] [cursor=pointer]:
+                  - generic [ref=e1488]: 🎸
+                  - text: Brooklyn Music Kitchen
+                - listitem [ref=e1489] [cursor=pointer]:
+                  - generic [ref=e1490]: 🏀
+                  - text: Barclays Center
+                - listitem [ref=e1491] [cursor=pointer]:
+                  - generic [ref=e1492]: 🌺
+                  - text: La Plaza Cultural
+                - listitem [ref=e1493] [cursor=pointer]:
+                  - generic [ref=e1494]: 🎓
+                  - text: St. Joseph's University
+                - listitem [ref=e1495] [cursor=pointer]:
+                  - generic [ref=e1496]: 🪴
+                  - text: Museum of Reclaimed Urban Space
+                - listitem [ref=e1497] [cursor=pointer]:
+                  - generic [ref=e1498]: 🌳
+                  - text: Domino Park
+                - listitem [ref=e1499] [cursor=pointer]:
+                  - generic [ref=e1500]: 🍺
+                  - text: The Woods
+                - listitem [ref=e1501] [cursor=pointer]:
+                  - generic [ref=e1502]: 🎸
+                  - text: Baby's All Right
+                - listitem [ref=e1503] [cursor=pointer]:
+                  - generic [ref=e1504]: 🎷
+                  - text: ShapeShifter Lab
+                - listitem [ref=e1505] [cursor=pointer]:
+                  - generic [ref=e1506]: 🎻
+                  - text: Brooklyn Conservatory of Music
+                - listitem [ref=e1507] [cursor=pointer]:
+                  - generic [ref=e1508]: 🎸
+                  - text: Main Drag
+                - listitem [ref=e1509] [cursor=pointer]:
+                  - generic [ref=e1510]: 🎓
+                  - text: Pratt
+                - listitem [ref=e1511] [cursor=pointer]:
+                  - generic [ref=e1512]: 📚
+                  - text: Olio Lighthouse
+                - listitem [ref=e1513] [cursor=pointer]:
+                  - generic [ref=e1514]: 🏗️
+                  - text: Manhattan Pump Station
+                - listitem [ref=e1515] [cursor=pointer]:
+                  - generic [ref=e1516]: 🍽️
+                  - text: Aurora Brooklyn
+                - listitem [ref=e1517] [cursor=pointer]:
+                  - generic [ref=e1518]: 🎹
+                  - text: Soapbox Gallery
+                - listitem [ref=e1519] [cursor=pointer]:
+                  - generic [ref=e1520]: 🎥
+                  - text: Spectacle Theater
+                - listitem [ref=e1521] [cursor=pointer]:
+                  - generic [ref=e1522]: 🎬
+                  - text: e-flux Screening Room
+                - listitem [ref=e1523] [cursor=pointer]:
+                  - generic [ref=e1524]: 🌱
+                  - text: Farm.One
+                - listitem [ref=e1525] [cursor=pointer]:
+                  - generic [ref=e1526]: 🎨
+                  - text: Painting Lounge
+                - listitem [ref=e1527] [cursor=pointer]:
+                  - generic [ref=e1528]: 🎥
+                  - text: Nitehawk Cinema
+                - listitem [ref=e1529] [cursor=pointer]:
+                  - generic [ref=e1530]: 🍷
+                  - text: Bar Laika
+                - listitem [ref=e1531] [cursor=pointer]:
+                  - generic [ref=e1532]: 📚
+                  - text: McNally Jackson
+                - listitem [ref=e1533] [cursor=pointer]:
+                  - generic [ref=e1534]: 🍺
+                  - text: Radegast Hall
+                - listitem [ref=e1535] [cursor=pointer]:
+                  - generic [ref=e1536]: 🥂
+                  - text: Leland House
+                - listitem [ref=e1537] [cursor=pointer]:
+                  - generic [ref=e1538]: 🎸
+                  - text: Music Hall of Williamsburg
+                - listitem [ref=e1539] [cursor=pointer]:
+                  - generic [ref=e1540]: 🎸
+                  - text: National Sawdust
+                - listitem [ref=e1541] [cursor=pointer]:
+                  - generic [ref=e1542]: 🛍️
+                  - text: Artists & Fleas
+                - listitem [ref=e1543] [cursor=pointer]:
+                  - generic [ref=e1544]: 🎲
+                  - text: Twenty Sided Store
+                - listitem [ref=e1545] [cursor=pointer]:
+                  - generic [ref=e1546]: 🧠
+                  - text: Brooklyn Brainery
+                - listitem [ref=e1547] [cursor=pointer]:
+                  - generic [ref=e1548]: 🌱
+                  - text: Solar One
+                - listitem [ref=e1549] [cursor=pointer]:
+                  - generic [ref=e1550]: 🎨
+                  - text: Recess Grove
+                - listitem [ref=e1551] [cursor=pointer]:
+                  - generic [ref=e1552]: 🏞️
+                  - text: Stuyvesant Cove Park
+                - listitem [ref=e1553] [cursor=pointer]:
+                  - generic [ref=e1554]: 🎭
+                  - text: The Second City
+                - listitem [ref=e1555] [cursor=pointer]:
+                  - generic [ref=e1556]: 🎤
+                  - text: Flop House Comedy Club
+                - listitem [ref=e1557] [cursor=pointer]:
+                  - generic [ref=e1558]: 🎤
+                  - text: St. Mazie Bar & Supper Club
+                - listitem [ref=e1559] [cursor=pointer]:
+                  - generic [ref=e1560]: 🏛️
+                  - text: The City Reliquary
+                - listitem [ref=e1561] [cursor=pointer]:
+                  - generic [ref=e1562]: 🎤
+                  - text: Isola Brooklyn
+                - listitem [ref=e1563] [cursor=pointer]:
+                  - generic [ref=e1564]: 🥥
+                  - text: Kokomo
+                - listitem [ref=e1565] [cursor=pointer]:
+                  - generic [ref=e1566]: 🎨
+                  - text: Brooklyn Art Haus
+                - listitem [ref=e1567] [cursor=pointer]:
+                  - generic [ref=e1568]: 🪩
+                  - text: Ciao Ciao Disco
+                - listitem [ref=e1569] [cursor=pointer]:
+                  - generic [ref=e1570]: 🎳
+                  - text: Brooklyn Bowl
+                - listitem [ref=e1571] [cursor=pointer]:
+                  - generic [ref=e1572]: 🧖🏻
+                  - text: Othership Williamsburg
+                - listitem [ref=e1573] [cursor=pointer]:
+                  - generic [ref=e1574]: 🍹
+                  - text: Friends and Lovers
+                - listitem [ref=e1575] [cursor=pointer]:
+                  - generic [ref=e1576]: 🪩
+                  - text: pinkFROG
+                - listitem [ref=e1577] [cursor=pointer]:
+                  - generic [ref=e1578]: 🍹
+                  - text: Oberon
+                - listitem [ref=e1579] [cursor=pointer]:
+                  - generic [ref=e1580]: 🎭
+                  - text: Makers' Ensemble
+                - listitem [ref=e1581] [cursor=pointer]:
+                  - generic [ref=e1582]: 🎪
+                  - text: Circus Academy New York
+                - listitem [ref=e1583] [cursor=pointer]:
+                  - generic [ref=e1584]: 🥂
+                  - text: Union Pool
+                - listitem [ref=e1585] [cursor=pointer]:
+                  - generic [ref=e1586]: 🍺
+                  - text: Berry Park
+                - listitem [ref=e1587] [cursor=pointer]:
+                  - generic [ref=e1588]: 🎳
+                  - text: The Gutter
+                - listitem [ref=e1589] [cursor=pointer]:
+                  - generic [ref=e1590]: ❤️
+                  - text: LOOVE Annex, Williamsburg
+                - listitem [ref=e1591] [cursor=pointer]:
+                  - generic [ref=e1592]: 🎉
+                  - text: The Greenpoint Loft
+                - listitem [ref=e1593] [cursor=pointer]:
+                  - generic [ref=e1594]: 🥕
+                  - text: McCarren Park Greenmarket
+                - listitem [ref=e1595] [cursor=pointer]:
+                  - generic [ref=e1596]: 🎬
+                  - text: Stuart Cinema & Cafe
+                - listitem [ref=e1597] [cursor=pointer]:
+                  - generic [ref=e1598]: 🎭
+                  - text: The Brick Theater
+                - listitem [ref=e1599] [cursor=pointer]:
+                  - generic [ref=e1600]: 🌺
+                  - text: Brooklyn Botanic Garden
+                - listitem [ref=e1601] [cursor=pointer]:
+                  - generic [ref=e1602]: 🥂
+                  - text: Alligator Lounge
+                - listitem [ref=e1603] [cursor=pointer]:
+                  - generic [ref=e1604]: 🎷
+                  - text: Sista's Place
+                - listitem [ref=e1605] [cursor=pointer]:
+                  - generic [ref=e1606]: 🎭
+                  - text: Brick Aux
+                - listitem [ref=e1607] [cursor=pointer]:
+                  - generic [ref=e1608]: ☕
+                  - text: McCarren Parkhouse
+                - listitem [ref=e1609] [cursor=pointer]:
+                  - generic [ref=e1610]: 🍺
+                  - text: TALEA
+                - listitem [ref=e1611] [cursor=pointer]:
+                  - generic [ref=e1612]: 🪩
+                  - text: Good Room
+                - listitem [ref=e1613] [cursor=pointer]:
+                  - generic [ref=e1614]: 💃🏻
+                  - text: Performance Research
+                - listitem [ref=e1615] [cursor=pointer]:
+                  - generic [ref=e1616]: 🌸
+                  - text: Flower Cat
+                - listitem [ref=e1617] [cursor=pointer]:
+                  - generic [ref=e1618]: 🎭
+                  - text: Brooklyn Comedy Collective
+                - listitem [ref=e1619] [cursor=pointer]:
+                  - generic [ref=e1620]: 🪩
+                  - text: Eris
+                - listitem [ref=e1621] [cursor=pointer]:
+                  - generic [ref=e1622]: 📍
+                  - text: North Brooklyn
+                - listitem [ref=e1623] [cursor=pointer]:
+                  - generic [ref=e1624]: 🍹
+                  - text: Mommy's Bar
+                - listitem [ref=e1625] [cursor=pointer]:
+                  - generic [ref=e1626]: 🎬
+                  - text: Film Noir Cinema
+                - listitem [ref=e1627] [cursor=pointer]:
+                  - generic [ref=e1628]: 🎷
+                  - text: Brownstone Jazz
+                - listitem [ref=e1629] [cursor=pointer]:
+                  - generic [ref=e1630]: 🏛️
+                  - text: Brooklyn CB1
+                - listitem [ref=e1631] [cursor=pointer]:
+                  - generic [ref=e1632]: ✍🏼
+                  - text: The Poetry Society of New York
+                - listitem [ref=e1633] [cursor=pointer]:
+                  - generic [ref=e1634]: 🎻
+                  - text: Noel Pointer Foundation
+                - listitem [ref=e1635] [cursor=pointer]:
+                  - generic [ref=e1636]: 🎭
+                  - text: Crown Hill Theatre
+                - listitem [ref=e1637] [cursor=pointer]:
+                  - generic [ref=e1638]: 📖
+                  - text: Brower Park Library
+                - listitem [ref=e1639] [cursor=pointer]:
+                  - generic [ref=e1640]: 🏛️
+                  - text: Brooklyn Children's Museum
+                - listitem [ref=e1641] [cursor=pointer]:
+                  - generic [ref=e1642]: 🎭
+                  - text: Steinberg Center
+                - listitem [ref=e1643] [cursor=pointer]:
+                  - generic [ref=e1644]: 🏙️
+                  - text: Rockefeller Center
+                - listitem [ref=e1645] [cursor=pointer]:
+                  - generic [ref=e1646]: 🎭
+                  - text: New World Stages
+                - listitem [ref=e1647] [cursor=pointer]:
+                  - generic [ref=e1648]: 🎭
+                  - text: Studio 54
+                - listitem [ref=e1649] [cursor=pointer]:
+                  - generic [ref=e1650]: 🏺
+                  - text: Museum of Arts and Design
+                - listitem [ref=e1651] [cursor=pointer]:
+                  - generic [ref=e1652]: 🎷
+                  - text: Apollo Theater
+    - generic [ref=e35]:
+      - button "Places" [ref=e36] [cursor=pointer]:
+        - img [ref=e37]
+        - generic [ref=e39]: Places
+      - button "Events" [ref=e40] [cursor=pointer]:
+        - img [ref=e41]
+        - generic [ref=e43]: Events
+      - button "Tags" [ref=e44] [cursor=pointer]:
+        - img [ref=e45]
+        - generic [ref=e47]: Tags
+  - status

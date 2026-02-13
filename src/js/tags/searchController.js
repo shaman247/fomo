@@ -114,13 +114,10 @@ const SearchController = (() => {
             // Debounce regular search
             debouncedSearch(searchTerm);
 
-            // Auto-expand panel on mobile when user enters search term
+            // On mobile, snap the bottom sheet to peek when user enters search term
             if (searchTerm && window.innerWidth <= Constants.UI.MOBILE_BREAKPOINT) {
-                if (state.filterPanelDOM) {
-                    state.filterPanelDOM.classList.remove('tags-collapsed');
-                }
-                if (state.expandFilterPanelButtonDOM) {
-                    state.expandFilterPanelButtonDOM.classList.remove('collapsed');
+                if (typeof BottomSheet !== 'undefined' && BottomSheet.getCurrentSnap() < 0.40) {
+                    BottomSheet.snapTo(0.40);
                 }
             }
         });

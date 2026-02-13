@@ -77,6 +77,7 @@ CREATE TABLE IF NOT EXISTS websites (
     use_stealth TINYINT(1) DEFAULT NULL COMMENT 'Use stealth mode to avoid detection',
     scroll_delay DECIMAL(3,2) DEFAULT NULL COMMENT 'Seconds to pause between scroll steps (default: 0.2)',
     crawl_timeout INT UNSIGNED DEFAULT NULL COMMENT 'Timeout in seconds for entire crawl operation (default: 120)',
+    crawl_frequency_locked BOOLEAN DEFAULT FALSE COMMENT 'If true, auto-frequency adjustment is disabled',
 
     INDEX idx_name (name),
     INDEX idx_last_crawled (last_crawled_at),

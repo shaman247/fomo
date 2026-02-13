@@ -83,12 +83,14 @@ const FilterPanelUI = (() => {
     function getDefaultSectionViewStates() {
         const COLLAPSED = 'collapsed';
         const DEFAULT = 'default';
+        const EXPANDED = 'expanded';
 
         if (isMobileLayout()) {
+            // On mobile, tabs show all content — no collapse buttons
             return {
-                locations: COLLAPSED,
-                events: COLLAPSED,
-                tags: COLLAPSED
+                locations: EXPANDED,
+                events: EXPANDED,
+                tags: EXPANDED
             };
         }
         return {
@@ -148,6 +150,13 @@ const FilterPanelUI = (() => {
             return;
         }
 
+        // On mobile, force all sections expanded (tabs replace collapse/expand UI)
+        if (isMobileLayout()) {
+            state.sectionViewStates.locations = 'expanded';
+            state.sectionViewStates.events = 'expanded';
+            state.sectionViewStates.tags = 'expanded';
+        }
+
         // Group and sort results using SearchManager
         const { groupedResults, hiddenResults } = SearchManager.groupAndSortResults(
             searchResults,
@@ -156,8 +165,30 @@ const FilterPanelUI = (() => {
             (tag) => TagStateManager.getTagState(tag)
         );
 
-        // Render using SectionRenderer
+        // Render using SectionRenderer (onAfterRender distributes to bottom sheet on mobile)
         SectionRenderer.renderFilters(groupedResults, hiddenResults, searchTerm);
+    }
+
+    /**
+     * On mobile, distributes each section into its own tab in the bottom sheet.
+     * The top bar keeps only search + date.
+     */
+    function _distributeContentMobile() {
+        if (!isMobileLayout() || typeof BottomSheet === 'undefined') return;
+        const container = state.resultsContainerDOM;
+        if (!container) return;
+
+        // Extract each section and pass to the bottom sheet's tab panels
+        const sections = {};
+        const locationSection = container.querySelector('[data-section-key="locations"]');
+        const eventSection = container.querySelector('[data-section-key="events"]');
+        const tagSection = container.querySelector('[data-section-key="tags"]');
+
+        if (locationSection) sections.locations = locationSection;
+        if (eventSection) sections.events = eventSection;
+        if (tagSection) sections.tags = tagSection;
+
+        BottomSheet.updateBrowseTabs(sections);
     }
 
     // ========================================
@@ -237,18 +268,21 @@ const FilterPanelUI = (() => {
             createSearchResultButton: (result) => TagStateManager.createSearchResultButton(result, state.onSearchResultClick, state.debugMode),
             onSectionReorder: (newOrder) => {
                 state.sectionOrder = newOrder;
-            }
+            },
+            onAfterRender: _distributeContentMobile
         });
 
-        // Initialize GestureHandler
-        GestureHandler.init({
-            containerDOM: state.resultsContainerDOM,
-            sectionOrder: state.sectionOrder,
-            onSectionReorder: (newOrder) => {
-                state.sectionOrder = newOrder;
-            },
-            performSearchCallback: () => performSearchCallback(state.searchTerm)
-        });
+        // Initialize GestureHandler (desktop only — conflicts with horizontal tag scroll on mobile)
+        if (!isMobileLayout()) {
+            GestureHandler.init({
+                containerDOM: state.resultsContainerDOM,
+                sectionOrder: state.sectionOrder,
+                onSectionReorder: (newOrder) => {
+                    state.sectionOrder = newOrder;
+                },
+                performSearchCallback: () => performSearchCallback(state.searchTerm)
+            });
+        }
     }
 
     /**
