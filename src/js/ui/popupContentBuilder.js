@@ -1,40 +1,42 @@
 /**
  * PopupContentBuilder Module
  *
- * Handles the creation of popup content for location markers.
- * Extracts popup building logic from UIManager for better separation of concerns.
+ * Builds tabbed popup content for location markers with sections:
+ * - Event sections (Events, Ongoing, or custom) based on event.section field
+ * - Info tab with venue description, website, and address
  *
- * Features:
- * - Creates popup headers with location info and tags
- * - Builds event lists with sorting and filtering
- * - Handles forced event display
- * - Creates event detail sections with links
+ * Tabs support horizontal swipe navigation (similar to bottom sheet tabs).
  *
  * @module PopupContentBuilder
  */
 const PopupContentBuilder = (() => {
     // ========================================
+    // CONSTANTS
+    // ========================================
+
+    const TAB_SWIPE_THRESHOLD = 8;       // px to commit to horizontal swipe
+    const SWIPE_COMMIT_FRACTION = 0.25;  // fraction of viewport width to snap
+
+    // Section display order: Events first, Ongoing second, custom alphabetical
+    const SECTION_ORDER = { 'Events': 0, 'Ongoing': 1 };
+
+    const LINK_ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>';
+
+    const LINK_ICON_SVG_16 = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>';
+
+    // ========================================
     // STATE
     // ========================================
 
-    /**
-     * Module state - stores callback for creating interactive tag buttons
-     */
     const state = {
         createInteractiveTagButton: null
     };
 
     // ========================================
-    // POPUP HEADER
+    // POPUP HEADER (simplified — no expandable detail)
     // ========================================
 
-    /**
-     * Creates the header section of a popup
-     * @param {Object} locationInfo - Location information
-     * @param {Set} geotagsSet - Set of geotags to exclude from display
-     * @returns {HTMLElement} Header wrapper element
-     */
-    function createPopupHeader(locationInfo, geotagsSet = new Set()) {
+    function createPopupHeader(locationInfo) {
         const headerWrapper = document.createElement('div');
         headerWrapper.className = 'popup-header';
 
@@ -51,84 +53,155 @@ const PopupContentBuilder = (() => {
         locationP.innerHTML = Utils.formatAndSanitize(locationInfo.name);
         textWrapper.appendChild(locationP);
 
-        const displayTags = (locationInfo.tags || []).filter(tag => !geotagsSet.has(tag.toLowerCase()));
+        // Tab bar will be inserted here by the main builder
+
+        headerWrapper.appendChild(textWrapper);
+        return headerWrapper;
+    }
+
+    // ========================================
+    // INFO PANEL
+    // ========================================
+
+    function createInfoPanel(locationInfo, displayTags = []) {
+        const panel = document.createElement('div');
+        panel.className = 'popup-info-panel';
+
+        if (locationInfo.description) {
+            const descP = document.createElement('p');
+            descP.className = 'popup-info-description';
+            descP.textContent = locationInfo.description;
+            panel.appendChild(descP);
+        }
+
+        if (locationInfo.website_url) {
+            const linksDiv = document.createElement('div');
+            linksDiv.className = 'popup-info-links';
+            try {
+                const domain = new URL(locationInfo.website_url).hostname.replace(/^www\./, '');
+                const a = document.createElement('a');
+                a.href = locationInfo.website_url;
+                a.target = '_blank';
+                a.rel = 'noopener noreferrer';
+                a.innerHTML = `${LINK_ICON_SVG} ${Utils.escapeHtml(domain)}`;
+                linksDiv.appendChild(a);
+            } catch {
+                // Skip invalid URL
+            }
+            panel.appendChild(linksDiv);
+        }
+
+        if (locationInfo.address) {
+            const addressP = document.createElement('p');
+            addressP.className = 'popup-info-address';
+            addressP.textContent = locationInfo.address;
+            panel.appendChild(addressP);
+        }
+
         if (displayTags.length > 0 && state.createInteractiveTagButton) {
             const tagsContainer = document.createElement('div');
             tagsContainer.className = 'tag-tags-container popup-tags-container';
             displayTags.forEach(tag => {
                 const tagButton = state.createInteractiveTagButton(tag);
-                if (tagButton) {
-                    tagsContainer.appendChild(tagButton);
-                }
+                if (tagButton) tagsContainer.appendChild(tagButton);
             });
-            textWrapper.appendChild(tagsContainer);
+            panel.appendChild(tagsContainer);
         }
 
-        headerWrapper.appendChild(textWrapper);
+        return panel;
+    }
 
-        // Collapsible venue detail (description, website, address) — left-aligned with emoji
-        const hasDetail = locationInfo.address || locationInfo.description || locationInfo.website_url;
-        if (hasDetail) {
-            const detailDiv = document.createElement('div');
-            detailDiv.className = 'popup-header-detail';
-            detailDiv.hidden = true;
+    // ========================================
+    // TAB SWIPE SYSTEM
+    // ========================================
 
-            if (locationInfo.description) {
-                const descP = document.createElement('p');
-                descP.className = 'popup-header-description';
-                descP.textContent = locationInfo.description;
-                detailDiv.appendChild(descP);
-            }
+    function setupTabSwipe(viewport, track, tabButtons, tabCount) {
+        let activeTab = 0;
+        let swipeStartX = 0;
+        let swipeStartY = 0;
+        let trackStartOffset = 0;
+        let isSwiping = false;
+        let isScrolling = false;
 
-            if (locationInfo.website_url) {
-                const linksDiv = document.createElement('div');
-                linksDiv.className = 'popup-header-links';
-                const linkIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>`;
-                try {
-                    const domain = new URL(locationInfo.website_url).hostname.replace(/^www\./, '');
-                    const a = document.createElement('a');
-                    a.href = locationInfo.website_url;
-                    a.target = '_blank';
-                    a.rel = 'noopener noreferrer';
-                    a.innerHTML = `${linkIconSvg} ${Utils.escapeHtml(domain)}`;
-                    linksDiv.appendChild(a);
-                } catch {
-                    // Skip invalid URL
-                }
-                detailDiv.appendChild(linksDiv);
-            }
-
-            if (locationInfo.address) {
-                const addressP = document.createElement('p');
-                addressP.className = 'popup-header-address';
-                addressP.textContent = locationInfo.address;
-                detailDiv.appendChild(addressP);
-            }
-
-            headerWrapper.appendChild(detailDiv);
-
-            // Toggle venue detail on header click
-            headerWrapper.style.cursor = 'pointer';
-            headerWrapper.addEventListener('click', (e) => {
-                if (e.target.closest('a, .tag-button')) return;
-                const expanded = headerWrapper.dataset.expanded === 'true';
-                headerWrapper.dataset.expanded = expanded ? 'false' : 'true';
-                detailDiv.hidden = expanded;
-            });
+        function getTrackOffset() {
+            const match = track.style.transform.match(/translateX\((.+?)px\)/);
+            return match ? parseFloat(match[1]) : 0;
         }
 
-        return headerWrapper;
+        function switchToTab(index, animate = false) {
+            activeTab = Math.max(0, Math.min(tabCount - 1, index));
+            const offset = -activeTab * viewport.offsetWidth;
+            track.classList.toggle('no-transition', !animate);
+            track.style.transform = `translateX(${offset}px)`;
+            if (!animate) {
+                track.offsetHeight; // force reflow
+                track.classList.remove('no-transition');
+            }
+            tabButtons.forEach((btn, i) => btn.classList.toggle('active', i === activeTab));
+        }
+
+        // Tab button clicks
+        tabButtons.forEach((btn, i) => {
+            btn.addEventListener('click', () => switchToTab(i, true));
+        });
+
+        // Touch swipe handlers
+        viewport.addEventListener('touchstart', (e) => {
+            swipeStartX = e.touches[0].clientX;
+            swipeStartY = e.touches[0].clientY;
+            trackStartOffset = getTrackOffset();
+            isSwiping = false;
+            isScrolling = false;
+        }, { passive: true });
+
+        viewport.addEventListener('touchmove', (e) => {
+            if (isScrolling) return;
+            const dx = e.touches[0].clientX - swipeStartX;
+            const dy = e.touches[0].clientY - swipeStartY;
+            if (!isSwiping) {
+                if (Math.abs(dx) < TAB_SWIPE_THRESHOLD && Math.abs(dy) < TAB_SWIPE_THRESHOLD) return;
+                // Vertical movement dominates — let the browser handle scrolling
+                if (Math.abs(dy) > Math.abs(dx)) {
+                    isScrolling = true;
+                    return;
+                }
+                isSwiping = true;
+                track.classList.add('no-transition');
+            }
+            e.preventDefault();
+
+            // Apply rubber-banding at edges
+            let offset = trackStartOffset + dx;
+            const minOffset = -(tabCount - 1) * viewport.offsetWidth;
+            if (offset > 0) {
+                offset *= 0.3;
+            } else if (offset < minOffset) {
+                offset = minOffset + (offset - minOffset) * 0.3;
+            }
+            track.style.transform = `translateX(${offset}px)`;
+        }, { passive: false });
+
+        viewport.addEventListener('touchend', (e) => {
+            if (!isSwiping) return;
+            isSwiping = false;
+
+            const rawDx = (e.changedTouches?.[0]?.clientX || swipeStartX) - swipeStartX;
+            const w = viewport.offsetWidth;
+            let target = activeTab;
+
+            if (rawDx < -w * SWIPE_COMMIT_FRACTION) target = activeTab + 1;
+            else if (rawDx > w * SWIPE_COMMIT_FRACTION) target = activeTab - 1;
+
+            switchToTab(target, true);
+        });
+
+        return { switchToTab };
     }
 
     // ========================================
     // EVENT DETAIL
     // ========================================
 
-    /**
-     * Creates the detail section for a single event
-     * @param {Object} event - Event object
-     * @returns {HTMLElement} Event detail container element
-     */
     function createEventDetail(event) {
         const eventDetailContainer = document.createElement('div');
         eventDetailContainer.className = 'popup-event-detail';
@@ -140,8 +213,6 @@ const PopupContentBuilder = (() => {
         // Limit to max 1 URL per distinct domain name
         const urls = event.urls || (event.url ? [event.url] : []);
         if (urls && urls.length > 0) {
-            const linkIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>`;
-
             const seenDomains = new Set();
             urls.forEach((url) => {
                 if (url && Utils.isValidUrl(url)) {
@@ -158,7 +229,7 @@ const PopupContentBuilder = (() => {
                     urlLink.rel = 'noopener noreferrer';
                     urlLink.className = 'popup-external-link';
                     urlLink.title = 'More Info (opens in new tab)';
-                    urlLink.innerHTML = `  ${linkIconSvg} `;
+                    urlLink.innerHTML = `  ${LINK_ICON_SVG_16} `;
                     descriptionP.appendChild(urlLink);
                 }
             });
@@ -170,9 +241,7 @@ const PopupContentBuilder = (() => {
             tagsContainer.className = 'tag-tags-container popup-tags-container';
             event.tags.forEach(tag => {
                 const tagButton = state.createInteractiveTagButton(tag);
-                if (tagButton) {
-                    tagsContainer.appendChild(tagButton);
-                }
+                if (tagButton) tagsContainer.appendChild(tagButton);
             });
             eventDetailContainer.appendChild(tagsContainer);
         }
@@ -184,16 +253,6 @@ const PopupContentBuilder = (() => {
     // EVENTS LIST
     // ========================================
 
-    /**
-     * Creates the events list section of a popup
-     * @param {Array} eventsAtLocation - Events at this location
-     * @param {Object} activeFilters - Active filter states
-     * @param {Object} locationInfo - Location information
-     * @param {Object} filterFunctions - Filter function callbacks
-     * @param {string|null} forceDisplayEventId - Event ID to force display
-     * @param {Date|null} selectedStartDate - Currently selected start date
-     * @returns {HTMLElement} Events list wrapper element
-     */
     function createEventsList(eventsAtLocation, activeFilters, locationInfo, filterFunctions, forceDisplayEventId = null, selectedStartDate = null) {
         const eventsListWrapper = document.createElement('div');
         eventsListWrapper.className = 'popup-events-list';
@@ -207,16 +266,16 @@ const PopupContentBuilder = (() => {
 
         // Get all selected tags (explicit, required, and implicit)
         const selectedTags = Object.entries(activeFilters.tagStates)
-            .filter(([, state]) => (state === 'selected' || state === 'required' || state === 'implicit'))
+            .filter(([, st]) => (st === 'selected' || st === 'required' || st === 'implicit'))
             .map(([tag]) => tag);
 
         // Get only explicitly selected tags (for determining if filters are active)
         const explicitlySelectedTags = Object.entries(activeFilters.tagStates)
-            .filter(([, state]) => (state === 'selected' || state === 'required'))
+            .filter(([, st]) => (st === 'selected' || st === 'required'))
             .map(([tag]) => tag);
 
         const hasActiveTagFilters = explicitlySelectedTags.length > 0;
-        const hasForbiddenTags = Object.entries(activeFilters.tagStates).some(([, state]) => state === 'forbidden');
+        const hasForbiddenTags = Object.entries(activeFilters.tagStates).some(([, st]) => st === 'forbidden');
         const hasAnyTagFilter = hasActiveTagFilters || hasForbiddenTags;
 
         let forcedEvent = null;
@@ -231,10 +290,10 @@ const PopupContentBuilder = (() => {
 
         const eventsToProcess = forcedEvent ? [forcedEvent, ...otherEvents] : eventsAtLocation;
 
-        // Pre-calculate sort-related properties to avoid re-computation inside the sort function.
+        // Pre-calculate sort-related properties
         const referenceDate = selectedStartDate ? selectedStartDate.getTime() : (activeFilters.sliderStartDate ? activeFilters.sliderStartDate.getTime() : 0);
 
-        // Pre-compute tag sets once (avoid re-parsing tagStates per event)
+        // Pre-compute tag sets once
         const selectedTagsSet = new Set(selectedTags);
         const requiredTagsSet = new Set(
             Object.entries(activeFilters.tagStates)
@@ -248,10 +307,9 @@ const PopupContentBuilder = (() => {
         );
 
         const eventsWithSortData = eventsToProcess.map(event => {
-            // Inline tag matching using pre-computed sets
-            const locationInfo = event.locationKey ? filterFunctions.getLocationInfo(event.locationKey) : null;
+            const locInfo = event.locationKey ? filterFunctions.getLocationInfo(event.locationKey) : null;
             const combinedTags = event.tags || [];
-            const locationTags = locationInfo?.tags || [];
+            const locationTags = locInfo?.tags || [];
 
             let isMatchingTags = true;
             if (forbiddenTagsSet.size > 0) {
@@ -285,10 +343,7 @@ const PopupContentBuilder = (() => {
             const startTime = event.occurrences?.[0]?.start?.getTime() || 0;
             const endTime = event.occurrences?.[0]?.end?.getTime() || startTime;
 
-            // Check if event is happening on the reference date
             const isOngoingOnReferenceDate = startTime <= referenceDate && endTime >= referenceDate;
-
-            // Calculate distance with a 5-day boost for ongoing events
             let distanceFromReference = Math.abs(startTime - referenceDate);
             if (isOngoingOnReferenceDate) {
                 distanceFromReference = Math.max(0, distanceFromReference - Constants.TIME.FIVE_DAYS_MS);
@@ -303,26 +358,19 @@ const PopupContentBuilder = (() => {
             };
         });
 
-        // Always sort the events based on matching status, tag count, and distance from selected date.
+        // Sort: matching first, then by tag count, then by date distance
         eventsWithSortData.sort((a, b) => {
-            // Primary sort: matching events first
-            if (a.isMatchingTags !== b.isMatchingTags) {
-                return b.isMatchingTags - a.isMatchingTags;
-            }
-            // Secondary sort: by number of matching selected tags
-            if (a.selectedTagMatchCount !== b.selectedTagMatchCount) {
-                return b.selectedTagMatchCount - a.selectedTagMatchCount;
-            }
-            // Tertiary sort: by distance from selected start date (closest first)
+            if (a.isMatchingTags !== b.isMatchingTags) return b.isMatchingTags - a.isMatchingTags;
+            if (a.selectedTagMatchCount !== b.selectedTagMatchCount) return b.selectedTagMatchCount - a.selectedTagMatchCount;
             return a.distanceFromReference - b.distanceFromReference;
         });
 
-        // If an event is forced, find it in the sorted list and move it to the top.
+        // Move forced event to top
         if (forcedEvent) {
-            const forcedEventSortDataIndex = eventsWithSortData.findIndex(data => data.event.id === forcedEvent.id);
-            if (forcedEventSortDataIndex > 0) { // No need to move if it's already first
-                const [forcedEventSortData] = eventsWithSortData.splice(forcedEventSortDataIndex, 1);
-                eventsWithSortData.unshift(forcedEventSortData);
+            const forcedIdx = eventsWithSortData.findIndex(d => d.event.id === forcedEvent.id);
+            if (forcedIdx > 0) {
+                const [forcedData] = eventsWithSortData.splice(forcedIdx, 1);
+                eventsWithSortData.unshift(forcedData);
             }
         }
 
@@ -342,7 +390,7 @@ const PopupContentBuilder = (() => {
                 shouldOpen = expandAll || isFirstEvent;
             }
 
-            // Card header: emoji + name + datetime
+            // Card header: emoji + name
             const header = document.createElement('div');
             header.className = 'popup-event-card-header';
 
@@ -391,7 +439,6 @@ const PopupContentBuilder = (() => {
 
             // Toggle expand/collapse on card click
             card.addEventListener('click', (e) => {
-                // Don't toggle if clicking a link or tag button
                 if (e.target.closest('a, .tag-button')) return;
                 const isExpanded = card.dataset.expanded === 'true';
                 if (isExpanded) {
@@ -418,26 +465,123 @@ const PopupContentBuilder = (() => {
     // MAIN BUILDER
     // ========================================
 
-    /**
-     * Creates popup content for a location marker
-     * @param {Object} locationInfo - Location information
-     * @param {Array} eventsAtLocation - Events at this location
-     * @param {Object} activeFilters - Active filter states
-     * @param {Set} geotagsSet - Set of geotags
-     * @param {Object} filterFunctions - Filter function callbacks
-     * @param {string|null} forceDisplayEventId - Event ID to force display
-     * @param {Date|null} selectedStartDate - Currently selected start date
-     * @returns {HTMLElement} Popup content container
-     */
     function createLocationPopupContent(locationInfo, eventsAtLocation, activeFilters, geotagsSet, filterFunctions, forceDisplayEventId = null, selectedStartDate = null) {
         const popupContainer = document.createElement('div');
         popupContainer.className = 'maplibre-popup-content';
 
-        if (locationInfo) {
-            popupContainer.appendChild(createPopupHeader(locationInfo, geotagsSet));
+        // Compute location display tags (filtered by geotags)
+        const displayTags = locationInfo
+            ? (locationInfo.tags || []).filter(tag => !geotagsSet.has(tag.toLowerCase()))
+            : [];
+
+        // Header (emoji + name, tab bar inserted below)
+        const header = locationInfo ? createPopupHeader(locationInfo) : null;
+        if (header) popupContainer.appendChild(header);
+
+        // Group events by section
+        const sectionMap = new Map();
+        for (const event of eventsAtLocation) {
+            const section = event.section || 'Events';
+            if (!sectionMap.has(section)) sectionMap.set(section, []);
+            sectionMap.get(section).push(event);
         }
 
-        popupContainer.appendChild(createEventsList(eventsAtLocation, activeFilters, locationInfo, filterFunctions, forceDisplayEventId, selectedStartDate));
+        // Sort sections: Events first, Ongoing second, then custom alphabetical
+        const sectionNames = [...sectionMap.keys()].sort((a, b) => {
+            const orderA = SECTION_ORDER[a] ?? 2;
+            const orderB = SECTION_ORDER[b] ?? 2;
+            return orderA !== orderB ? orderA - orderB : a.localeCompare(b);
+        });
+
+        // Info tab shown if there are tags, description, address, or website
+        const hasInfo = locationInfo && (displayTags.length > 0 || locationInfo.description || locationInfo.address || locationInfo.website_url);
+
+        // Build tab names
+        const tabNames = [...sectionNames];
+        if (hasInfo) tabNames.push('Info');
+
+        // If no tabs at all (no events, no info), return just the empty container
+        if (tabNames.length === 0) {
+            return popupContainer;
+        }
+
+        // Determine which tab to open by default
+        let defaultTab = 0;
+        if (forceDisplayEventId) {
+            const forcedEvent = eventsAtLocation.find(e => e.id === forceDisplayEventId);
+            if (forcedEvent) {
+                const idx = sectionNames.indexOf(forcedEvent.section || 'Events');
+                if (idx >= 0) defaultTab = idx;
+            }
+        }
+
+        // Tab bar — placed inside header text wrapper (replacing where tags used to be)
+        const tabBar = document.createElement('div');
+        tabBar.className = 'popup-tab-bar';
+        const tabButtons = tabNames.map((name, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'popup-tab' + (i === defaultTab ? ' active' : '');
+            btn.textContent = name;
+            tabBar.appendChild(btn);
+            return btn;
+        });
+
+        if (header) {
+            const textWrapper = header.querySelector('.popup-header-text');
+            if (textWrapper) textWrapper.appendChild(tabBar);
+        } else {
+            popupContainer.appendChild(tabBar);
+        }
+
+        // Tab viewport and track
+        const viewport = document.createElement('div');
+        viewport.className = 'popup-tab-viewport';
+        const track = document.createElement('div');
+        track.className = 'popup-tab-track';
+
+        // Create event section panels
+        for (const sectionName of sectionNames) {
+            const panel = document.createElement('div');
+            panel.className = 'popup-tab-panel';
+            const sectionEvents = sectionMap.get(sectionName);
+            // Only pass forceDisplayEventId to the section that contains the forced event
+            const forcedInThisSection = forceDisplayEventId && sectionEvents.some(e => e.id === forceDisplayEventId);
+            panel.appendChild(createEventsList(
+                sectionEvents, activeFilters, locationInfo, filterFunctions,
+                forcedInThisSection ? forceDisplayEventId : null,
+                selectedStartDate
+            ));
+            track.appendChild(panel);
+        }
+
+        // Info panel (with location tags)
+        if (hasInfo) {
+            const infoPanel = document.createElement('div');
+            infoPanel.className = 'popup-tab-panel';
+            infoPanel.appendChild(createInfoPanel(locationInfo, displayTags));
+            track.appendChild(infoPanel);
+        }
+
+        viewport.appendChild(track);
+        popupContainer.appendChild(viewport);
+
+        // Setup tab switching and swipe gestures
+        const tabs = setupTabSwipe(viewport, track, tabButtons, tabNames.length);
+        if (defaultTab > 0) {
+            tabs.switchToTab(defaultTab);
+        }
+
+        // Lock explicit pixel heights on track/panels after layout.
+        // CSS height:100% doesn't resolve against flex-determined parent heights.
+        requestAnimationFrame(() => {
+            const h = viewport.offsetHeight;
+            if (h > 0) {
+                track.style.height = h + 'px';
+                track.querySelectorAll('.popup-tab-panel').forEach(p => {
+                    p.style.height = h + 'px';
+                });
+            }
+        });
 
         return popupContainer;
     }
@@ -446,18 +590,9 @@ const PopupContentBuilder = (() => {
     // PUBLIC API
     // ========================================
 
-    /**
-     * Initializes the PopupContentBuilder module
-     * @param {Object} config - Configuration object
-     * @param {Function} config.createInteractiveTagButton - Callback to create interactive tag buttons
-     */
     function init(config) {
         state.createInteractiveTagButton = config.createInteractiveTagButton || null;
     }
-
-    // ========================================
-    // EXPORTS
-    // ========================================
 
     return {
         init,

@@ -13,6 +13,7 @@ Key features:
 """
 
 import json
+import os
 import re
 from datetime import datetime, timedelta
 
@@ -163,6 +164,56 @@ def create_short_name(name):
 
 
 # =============================================================================
+# Category Tag Mapping (loaded lazily from tag_groups.json)
+# =============================================================================
+
+_category_tag_data = None
+
+def _load_category_tag_map():
+    """Load tag_groups.json, build reverse map: normalized_tag -> [primaryTag, ...].
+
+    Returns (category_map, main_primary_tags) where main_primary_tags is a set
+    of normalized primary tags excluding cross-cutting ones (Free, Virtual).
+    """
+    global _category_tag_data
+    if _category_tag_data is not None:
+        return _category_tag_data
+
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'src', 'data', 'tag_groups.json')
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            groups = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        print(f"Warning: Could not load tag_groups.json: {e}")
+        _category_tag_data = ({}, set())
+        return _category_tag_data
+
+    CROSS_CUTTING = {'free', 'virtual'}
+    category_map = {}
+    main_primary_tags = set()
+
+    for group in groups:
+        primary = group.get('primaryTag')
+        if not primary:
+            continue
+        primary_normalized = primary.lower().replace(' ', '')
+
+        # Track main (non-cross-cutting) primary tags
+        if primary_normalized not in CROSS_CUTTING and primary_normalized != 'other':
+            main_primary_tags.add(primary_normalized)
+
+        for tag in group.get('tags', []):
+            key = tag.lower().replace(' ', '')
+            if key not in category_map:
+                category_map[key] = []
+            if primary not in category_map[key]:
+                category_map[key].append(primary)
+
+    _category_tag_data = (category_map, main_primary_tags)
+    return _category_tag_data
+
+
+# =============================================================================
 # Tag Processing
 # =============================================================================
 
@@ -224,6 +275,30 @@ def process_tags(row_dict, tag_rules, extra_tags=None):
         if final_tag_lookup not in exclude_list and final_tag_lookup not in seen_tags:
             processed_tags.append(final_tag)
             seen_tags.add(final_tag_lookup)
+
+    # Derive category tags from the processed tag set
+    category_map, main_primary_tags = _load_category_tag_map()
+    if category_map:
+        cats_to_add = set()
+        for tag in processed_tags:
+            key = tag.lower().replace(' ', '')
+            for primary in category_map.get(key, []):
+                if primary.lower().replace(' ', '') not in seen_tags:
+                    cats_to_add.add(primary)
+        for cat in sorted(cats_to_add):
+            processed_tags.append(cat)
+            seen_tags.add(cat.lower().replace(' ', ''))
+
+        # Fallback: add "Other" if no main category was assigned
+        # (Free/Virtual are cross-cutting and don't count as main categories)
+        has_main = any(
+            c.lower().replace(' ', '') in main_primary_tags for c in cats_to_add
+        ) or any(
+            t.lower().replace(' ', '') in main_primary_tags for t in processed_tags
+        )
+        if not has_main and 'other' not in seen_tags:
+            processed_tags.append('Other')
+            seen_tags.add('other')
 
     row_dict['tags'] = processed_tags
     return row_dict
@@ -608,6 +683,9 @@ def build_locations_map(cursor):
         if street_address:
             locations_map['addresses'][street_address] = info
 
+    # Website-linked locations (from website_locations table)
+    locations_map['website_linked'] = db.get_website_locations_map(cursor)
+
     return locations_map
 
 
@@ -681,10 +759,14 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
 
     # Step 4: Prefix matching (e.g., "Devocíon" matches "Devocíon (Williamsburg)")
     # Only use location_keys here to avoid matching event names to unrelated locations
+    # Require prefix to cover >= 70% of the key to avoid generic names matching
+    # specific venues (e.g., "New York City" matching "New York City Center")
     for key in location_keys:
         if len(key) >= 5:
             for loc_key, match in locations_map.get('names', {}).items():
-                if loc_key.startswith(key + ' ') or loc_key.startswith(key + '('):
+                if loc_key.startswith(key + '(') or (
+                    loc_key.startswith(key + ' ') and len(key) / len(loc_key) >= 0.7
+                ):
                     return make_result(get_first(match))
 
     # Step 5: Fuzzy matching across all tiers
@@ -724,7 +806,7 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
                             _calculate_levenshtein_ratio(normalized_name, key) if len(normalized_name) > 3 else 0
                         )
 
-                    if score >= 0.85 and (score > best_score or (score == best_score and priority < best_priority)):
+                    if score >= 0.90 and (score > best_score or (score == best_score and priority < best_priority)):
                         best_score, best_priority = score, priority
                         best_result = get_first(tier[key])
 
@@ -741,11 +823,21 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
             if isinstance(match, list):
                 continue
             score = _calculate_levenshtein_ratio(normalized_site, _normalize_location_name(key))
-            if score >= 0.85 and (score > best_score or (score == best_score and priority < best_priority)):
+            if score >= 0.90 and (score > best_score or (score == best_score and priority < best_priority)):
                 best_score, best_priority, best_result = score, priority, match
 
     if best_result:
         return make_result(best_result)
+
+    # Step 7: Website-linked location fallback
+    # When the location name is virtual/generic (normalized to empty) and the website
+    # has exactly one linked location, use it. Handles "Online" events from
+    # single-venue websites (e.g., MoMath "Online" → MoMath).
+    # Only applies when there's no real venue name to match against.
+    if website_id and not normalized_loc:
+        linked = locations_map.get('website_linked', {}).get(website_id, [])
+        if len(linked) == 1:
+            return make_result(linked[0])
 
     return None
 

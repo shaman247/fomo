@@ -81,7 +81,8 @@ const SectionRenderer = (() => {
         // Callbacks
         createSearchResultButton: null,
         onSectionReorder: null,
-        onAfterRender: null
+        onAfterRender: null,
+
     };
 
     // ========================================
@@ -481,8 +482,8 @@ const SectionRenderer = (() => {
             const metadata = SECTION_METADATA[sectionKey];
             if (!metadata) return;
 
-            const results = (groupedResults[sectionKey] || []).slice(0, 100);
-            const hidden = (hiddenResults[sectionKey] || []).slice(0, 100);
+            const results = (groupedResults[sectionKey] || []).slice(0, 300);
+            const hidden = (hiddenResults[sectionKey] || []).slice(0, 300);
 
             renderSection(results, hidden, metadata.title, metadata.icon, sectionKey);
         });

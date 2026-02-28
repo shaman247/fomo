@@ -43,7 +43,8 @@ scripts/id_rsa_sync
 # Database backups
 database/backups/
 
-# Playwright MCP screenshots
+# Screenshots
+screenshots/
 .playwright-mcp/
 
 # OS files

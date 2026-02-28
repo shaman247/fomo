@@ -12,6 +12,7 @@ import base64
 import json
 import os
 import re
+from dataclasses import dataclass, field
 from datetime import datetime
 from io import BytesIO
 from typing import Optional
@@ -29,6 +30,9 @@ load_dotenv()
 
 try:
     from google import genai
+    from google.genai.types import (
+        InlinedRequest, InlinedResponse, GenerateContentConfig, JobState
+    )
     GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
     GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash-preview-05-20")
     GEMINI_TIMEOUT = int(os.environ.get("GEMINI_TIMEOUT", "120"))
@@ -83,7 +87,7 @@ class Event(BaseModel):
         description="URL for the specific event, if available"
     )
     hashtags: list[str] = Field(
-        description="4-7 CamelCase tags describing the event (e.g., Comedy, LatinJazz, Outdoor)"
+        description="4-7 CamelCase tags. Always include at least one category (Music, Nightlife, Comedy, Art, Theater, Dance, Film, Literature, Community, Family, Wellness, Education, Outdoor, Sports, Games). Also add Free if the event is free, Virtual if online. Then add granular tags."
     )
     emoji: str = Field(description="A single emoji that represents the event")
 
@@ -128,7 +132,7 @@ class EventEnrichment(BaseModel):
     """Schema for enrichment data added in second pass."""
     name: str = Field(description="The event name (must match exactly)")
     description: str = Field(description="1-3 sentence description")
-    hashtags: list[str] = Field(description="4-7 CamelCase tags")
+    hashtags: list[str] = Field(description="4-7 CamelCase tags. Include at least one category (Music, Nightlife, Comedy, Art, Theater, Dance, Film, Literature, Community, Family, Wellness, Education, Outdoor, Sports, Games), Free if free, Virtual if online, plus granular tags")
     emoji: str = Field(description="Single emoji")
 
 
@@ -180,6 +184,45 @@ MAX_VISION_IMAGES = 10
 
 # Maximum image dimension (images will be resized if larger)
 MAX_IMAGE_DIMENSION = 1024
+
+# Batch API settings
+BATCH_POLL_INTERVAL = int(os.environ.get("BATCH_POLL_INTERVAL", "30"))  # seconds
+BATCH_TIMEOUT = int(os.environ.get("BATCH_TIMEOUT", "86400"))  # 24 hour default
+BATCH_TOKEN_LIMIT = int(os.environ.get("BATCH_TOKEN_LIMIT", "2000000"))  # conservative limit (Tier 1: 3M)
+CHARS_PER_TOKEN = 3  # conservative estimate (Gemini tokenizer averages ~3 chars/token for mixed content)
+
+
+# =============================================================================
+# Prepared Extraction Data
+# =============================================================================
+
+@dataclass
+class PreparedExtraction:
+    """Result of preparing a crawl result for extraction (no API calls made)."""
+    crawl_result_id: int
+    website_name: str
+    extraction_type: str  # 'single', 'chunked', 'vision'
+
+    # For 'single' type
+    prompt: Optional[str] = None
+    existing_events: list = field(default_factory=list)
+
+    # For 'vision' type
+    vision_contents: Optional[list] = None  # [prompt_text, image_part1, ...]
+
+    # For 'chunked' type
+    chunk_prompts: list = field(default_factory=list)
+    max_batches: Optional[int] = None
+
+    # Shared
+    url: str = ""
+    notes: str = ""
+
+    # Pre-resolved result (set if no API call needed, e.g., vision with no images)
+    resolved_result: Optional[str] = None
+
+    # Error (set if preparation failed, e.g., content too small)
+    error: Optional[str] = None
 
 
 # =============================================================================
@@ -331,7 +374,7 @@ For EACH event flyer/image, extract:
   - end_time: End time if shown
 - description: Brief description of the event based on what you see
 - url: Leave as null unless shown in image
-- hashtags: 4-7 relevant CamelCase tags (e.g., ["Art", "Exhibition", "Contemporary"])
+- hashtags: 4-7 CamelCase tags. Always include at least one category (Music, Nightlife, Comedy, Art, Theater, Dance, Film, Literature, Community, Family, Wellness, Education, Outdoor, Sports, Games). Add Free if free, Virtual if online. Then granular tags.
 - emoji: A single emoji representing the event
 {note_section}
 Rules:
@@ -547,7 +590,7 @@ def get_enrichment_prompt(event_names, venue_name):
 
     return f'''For each event at {venue_name}, provide:
 - description: 1-3 sentence description of what the event is
-- hashtags: 4-7 CamelCase tags (e.g., Comedy, Music, Outdoor, LatinJazz)
+- hashtags: 4-7 CamelCase tags. Always include at least one category (Music, Nightlife, Comedy, Art, Theater, Dance, Film, Literature, Community, Family, Wellness, Education, Outdoor, Sports, Games). Add Free if free, Virtual if online. Then granular tags.
 - emoji: Single emoji representing the event
 
 Events to enrich:
@@ -593,21 +636,25 @@ async def enrich_events_batch(event_names, venue_name):
         return {}
 
 
+def get_chunk_prompt(chunk_text, current_date_string, notes):
+    """Generate prompt for a single chunk extraction."""
+    note_section = f"\n\nIMPORTANT: {notes}" if notes else ""
+    return f'''Today's date is {current_date_string}. Extract ALL events from this NYC events page content.
+
+For each event provide: name, location (venue name), occurrences (array of start_date in YYYY-MM-DD, start_time, end_time), and url if available.
+{note_section}
+Website content:
+
+{chunk_text}'''
+
+
 async def extract_chunk(chunk_content, current_date_string, notes):
     """
     Extract events from a single content chunk.
 
     Returns a list of simple event dicts, or empty list on error.
     """
-    note_section = f"\n\nIMPORTANT: {notes}" if notes else ""
-
-    prompt = f'''Today's date is {current_date_string}. Extract ALL events from this NYC events page content.
-
-For each event provide: name, location (venue name), occurrences (array of start_date in YYYY-MM-DD, start_time, end_time), and url if available.
-{note_section}
-Website content:
-
-{chunk_content}'''
+    prompt = get_chunk_prompt(chunk_content, current_date_string, notes)
 
     try:
         response = await asyncio.wait_for(
@@ -744,7 +791,7 @@ Based on the website content below, extract all upcoming events. For each event,
   - end_time: End time (optional)
 - description: 1-3 sentence description
 - url: Specific event URL if available
-- hashtags: 4-7 CamelCase tags (e.g., ["Comedy", "Music", "Outdoor", "LatinJazz"]). Include a mix of high-level and granular tags. Avoid location-specific or NYC-redundant tags.
+- hashtags: 4-7 CamelCase tags (e.g., ["Comedy", "StandUp", "Free"]). Always include at least one category from: Music, Nightlife, Comedy, Art, Theater, Dance, Film, Literature, Community, Family, Wellness, Education, Outdoor, Sports, Games. Also include Free if the event is free, or Virtual if online. Then add granular descriptive tags. Avoid location-specific or NYC-redundant tags.
 - emoji: A single emoji representing the event
 
 {note_section}
@@ -760,42 +807,45 @@ Website content:
 {page_content}'''
 
 
-async def extract_events(cursor, connection, crawl_result_id, website_name, notes="",
-                         use_vision=False, base_url="", max_batches=None):
+async def prepare_extraction(cursor, crawl_result_id, website_name, notes="",
+                              use_vision=False, base_url="", max_batches=None):
     """
-    Extract events from crawled content using Gemini AI with structured outputs.
+    Prepare extraction request data without making API calls.
+
+    Performs all validation, classification, and prompt building, returning
+    a PreparedExtraction that can be executed via sync API calls or batched.
 
     Args:
         cursor: Database cursor
-        connection: Database connection
         crawl_result_id: ID of the crawl result
         website_name: Name of the website
         notes: Optional notes for the AI prompt
-        use_vision: If True, use vision API to analyze images in the content
+        use_vision: If True, prepare vision extraction with images
         base_url: Base URL for resolving relative image URLs
+        max_batches: Maximum enrichment batches for chunked extraction
 
     Returns:
-        True if successful, False otherwise
+        PreparedExtraction with all data needed for execution
     """
-    if not GEMINI_API_KEY or not genai_client:
-        print("    - Skipping extraction: Gemini API not configured")
-        return False
+    prep = PreparedExtraction(
+        crawl_result_id=crawl_result_id,
+        website_name=website_name,
+        extraction_type='single',
+        notes=notes,
+    )
 
     # Get crawled content from database
     page_content = db.get_crawled_content(cursor, crawl_result_id)
     if not page_content:
-        print("    - No crawled content found")
-        return False
+        prep.error = "No crawled content found"
+        return prep
 
     # Check for minimum content size to prevent hallucinations
-    # When crawled content is too small (e.g., just a URL), the LLM will
-    # hallucinate plausible-sounding events based on the venue name
     content_size = len(page_content)
     if content_size < MIN_CONTENT_SIZE:
-        error_msg = f"Crawled content too small ({content_size} bytes < {MIN_CONTENT_SIZE} minimum) - likely failed crawl, skipping to prevent hallucinations"
-        print(f"    - {error_msg}")
-        db.update_crawl_result_failed(cursor, connection, crawl_result_id, error_msg)
-        return False
+        prep.error = (f"Crawled content too small ({content_size} bytes < {MIN_CONTENT_SIZE} "
+                      f"minimum) - likely failed crawl, skipping to prevent hallucinations")
+        return prep
 
     # Get website_id for this crawl result
     cursor.execute(
@@ -811,77 +861,244 @@ async def extract_events(cursor, connection, crawl_result_id, website_name, note
         existing_events = db.get_existing_upcoming_events(cursor, website_id)
         if existing_events:
             print(f"    - Found {len(existing_events)} existing upcoming events to include in prompt")
+    prep.existing_events = existing_events
 
     current_date_string = datetime.now().strftime('%Y-%m-%d')
 
     # Extract URL from first line if present
     url, content_to_process = extract_url_from_content(page_content)
     url = url or ""
+    prep.url = url
 
     # Hard limit on content size to prevent runaway extraction
     if len(content_to_process) > MAX_CONTENT_CHARS:
         print(f"    - Content too large ({len(content_to_process)} chars), truncating to {MAX_CONTENT_CHARS}")
         content_to_process = content_to_process[:MAX_CONTENT_CHARS]
 
-    # Decide extraction approach
-    estimated_events = 0
-    use_two_pass = False
+    # Decide extraction approach and build prompts
     if use_vision:
-        print(f"    - Using vision extraction for {website_name} ({len(content_to_process)} chars)...")
+        prep.extraction_type = 'vision'
+        print(f"    - Preparing vision extraction for {website_name} ({len(content_to_process)} chars)...")
+
+        # Download and encode images
+        image_parts, image_count = await prepare_vision_content(content_to_process, base_url or url)
+        if not image_parts:
+            print("    - No valid images found for vision extraction")
+            prep.resolved_result = '{"events": []}'
+            return prep
+
+        print(f"    - Prepared {image_count} images for vision extraction")
+        prompt_text = get_vision_prompt(url, content_to_process, current_date_string, website_name, notes)
+        prep.vision_contents = [prompt_text] + image_parts
+
     else:
         estimated_events = estimate_event_count(content_to_process)
         use_two_pass = estimated_events > LARGE_PAGE_THRESHOLD or len(content_to_process) > MAX_CHUNK_CHARS * 2
 
         if use_two_pass:
-            print(f"    - Large page detected (~{estimated_events} events, {len(content_to_process)} chars), using chunked extraction...")
-        else:
-            print(f"    - Extracting events using {GEMINI_MODEL} ({len(content_to_process)} chars)...")
+            prep.extraction_type = 'chunked'
+            prep.max_batches = max_batches if max_batches is not None else DEFAULT_MAX_BATCHES
+            print(f"    - Large page detected (~{estimated_events} events, {len(content_to_process)} chars), preparing chunked extraction...")
 
-    try:
-        if use_vision:
-            response_text = await extract_with_vision(
-                url, content_to_process, current_date_string, website_name, notes,
-                base_url=base_url or url
-            )
-        elif use_two_pass:
-            response_text = await extract_large_page(
-                url, content_to_process, current_date_string, website_name, notes,
-                max_batches=max_batches
-            )
+            # Split content into chunks and build prompts
+            chunks, chunk_method = chunk_content(content_to_process, EVENTS_PER_CHUNK, MAX_CHUNK_CHARS)
+            print(f"    - Split into {len(chunks)} chunks using {chunk_method}-based chunking")
+
+            prep.chunk_prompts = [
+                get_chunk_prompt(chunk, current_date_string, notes)
+                for chunk in chunks
+            ]
         else:
-            prompt = get_prompt(url, content_to_process, current_date_string, website_name, notes, existing_events)
+            prep.extraction_type = 'single'
+            print(f"    - Preparing extraction using {GEMINI_MODEL} ({len(content_to_process)} chars)...")
+            prep.prompt = get_prompt(url, content_to_process, current_date_string,
+                                     website_name, notes, existing_events)
+
+    return prep
+
+
+async def execute_extraction_sync(cursor, connection, prep):
+    """
+    Execute extraction using individual (non-batch) API calls.
+
+    Takes a PreparedExtraction and makes the appropriate Gemini API call(s).
+
+    Returns:
+        True if successful, False otherwise
+    """
+    crawl_result_id = prep.crawl_result_id
+
+    # Handle pre-resolved results (e.g., vision with no images)
+    if prep.resolved_result is not None:
+        response_text = prep.resolved_result
+    elif prep.extraction_type == 'vision':
+        try:
             response = await asyncio.wait_for(
                 genai_client.aio.models.generate_content(
                     model=GEMINI_MODEL,
-                    contents=prompt,
+                    contents=prep.vision_contents,
                     config={
                         "response_mime_type": "application/json",
                         "response_schema": EventList,
                     }
                 ),
-                timeout=GEMINI_TIMEOUT
+                timeout=GEMINI_TIMEOUT * 2
             )
             response_text = response.text.strip()
-
-        if not response_text or not response_text.strip():
+        except asyncio.TimeoutError:
+            print(f"    - Vision extraction timeout after {GEMINI_TIMEOUT * 2}s")
+            response_text = '{"events": []}'
+        except Exception as e:
+            print(f"    - Vision extraction error: {e}")
             response_text = '{"events": []}'
 
-        # Validate JSON
+    elif prep.extraction_type == 'chunked':
+        response_text = await _execute_chunked_sync(prep)
+
+    else:  # single
+        response = await asyncio.wait_for(
+            genai_client.aio.models.generate_content(
+                model=GEMINI_MODEL,
+                contents=prep.prompt,
+                config={
+                    "response_mime_type": "application/json",
+                    "response_schema": EventList,
+                }
+            ),
+            timeout=GEMINI_TIMEOUT
+        )
+        response_text = response.text.strip()
+
+    if not response_text or not response_text.strip():
+        response_text = '{"events": []}'
+
+    # Validate JSON
+    try:
+        parsed = json.loads(response_text)
+        event_count = len(parsed.get('events', []))
+        occurrence_count = sum(
+            len(e.get('occurrences', [])) for e in parsed.get('events', [])
+        )
+    except json.JSONDecodeError:
+        response_text = '{"events": []}'
+        event_count = 0
+        occurrence_count = 0
+
+    db.update_crawl_result_extracted(cursor, connection, crawl_result_id, response_text)
+    print(f"    - Extracted {event_count} events with {occurrence_count} occurrences")
+    return True
+
+
+async def _execute_chunked_sync(prep):
+    """Execute chunked extraction synchronously (individual API calls)."""
+    max_events = prep.max_batches * ENRICHMENT_BATCH_SIZE
+
+    # Extract events from each chunk
+    all_simple_events = []
+    skipped_chunks = 0
+    for i, chunk_prompt in enumerate(prep.chunk_prompts):
+        if len(all_simple_events) >= max_events:
+            skipped_chunks = len(prep.chunk_prompts) - i
+            break
+        print(f"    - Processing chunk {i + 1}/{len(prep.chunk_prompts)}...")
         try:
-            parsed = json.loads(response_text)
-            event_count = len(parsed.get('events', []))
-            occurrence_count = sum(
-                len(e.get('occurrences', [])) for e in parsed.get('events', [])
+            response = await asyncio.wait_for(
+                genai_client.aio.models.generate_content(
+                    model=GEMINI_MODEL,
+                    contents=chunk_prompt,
+                    config={
+                        "response_mime_type": "application/json",
+                        "response_schema": SimpleEventList,
+                    }
+                ),
+                timeout=CHUNK_TIMEOUT
             )
-        except json.JSONDecodeError:
-            response_text = '{"events": []}'
-            event_count = 0
-            occurrence_count = 0
+            result = json.loads(response.text.strip())
+            events = result.get('events', [])
+            if events:
+                print(f"      Got {len(events)} events")
+                all_simple_events.extend(events)
+            else:
+                print(f"      No events extracted")
+        except asyncio.TimeoutError:
+            print(f"      Chunk timeout after {CHUNK_TIMEOUT}s")
+        except Exception as e:
+            print(f"      Chunk error: {e}")
 
-        db.update_crawl_result_extracted(cursor, connection, crawl_result_id, response_text)
-        print(f"    - Extracted {event_count} events with {occurrence_count} occurrences")
-        return True
+    if not all_simple_events:
+        return '{"events": []}'
 
+    if skipped_chunks > 0:
+        print(f"    - Skipped {skipped_chunks} remaining chunk(s) (already have {len(all_simple_events)} events)")
+
+    print(f"    - Total from chunks: {len(all_simple_events)} events")
+
+    # Cap events at max_batches to limit API cost
+    total_batches_needed = -(-len(all_simple_events) // ENRICHMENT_BATCH_SIZE)
+    if total_batches_needed > prep.max_batches:
+        print(f"    - WARNING: {len(all_simple_events)} events would need {total_batches_needed} batches, "
+              f"capping at {prep.max_batches} ({max_events} events). "
+              f"Set max_batches in websites table to override.")
+        all_simple_events = all_simple_events[:max_events]
+
+    # Enrich events with descriptions/hashtags/emoji in batches
+    event_names = [e['name'] for e in all_simple_events]
+    num_batches = -(-len(event_names) // ENRICHMENT_BATCH_SIZE)
+    all_enrichments = {}
+
+    for i in range(0, len(event_names), ENRICHMENT_BATCH_SIZE):
+        batch = event_names[i:i + ENRICHMENT_BATCH_SIZE]
+        print(f"    - Enriching batch {i // ENRICHMENT_BATCH_SIZE + 1}/{num_batches} ({len(batch)} events)...")
+        enrichments = await enrich_events_batch(batch, prep.website_name)
+        all_enrichments.update(enrichments)
+
+    return _combine_chunked_results(all_simple_events, all_enrichments)
+
+
+def _combine_chunked_results(simple_events, enrichments):
+    """Combine simple events with enrichment data into final JSON."""
+    full_events = []
+    for event in simple_events:
+        enrichment = enrichments.get(event['name'], {})
+        full_event = {
+            'name': event['name'],
+            'location': event['location'],
+            'sublocation': None,
+            'occurrences': event['occurrences'],
+            'url': event.get('url'),
+            'description': enrichment.get('description', f"Event at {event['location']}"),
+            'hashtags': enrichment.get('hashtags', ['Event']),
+            'emoji': enrichment.get('emoji', '📅'),
+        }
+        full_events.append(full_event)
+    return json.dumps({'events': full_events})
+
+
+async def extract_events(cursor, connection, crawl_result_id, website_name, notes="",
+                         use_vision=False, base_url="", max_batches=None):
+    """
+    Extract events from crawled content using individual Gemini API calls.
+
+    This is the sync (non-batch) extraction path. Prepares the request data,
+    then executes via individual API calls.
+
+    Returns:
+        True if successful, False otherwise
+    """
+    if not GEMINI_API_KEY or not genai_client:
+        print("    - Skipping extraction: Gemini API not configured")
+        return False
+
+    prep = await prepare_extraction(cursor, crawl_result_id, website_name, notes,
+                                     use_vision, base_url, max_batches)
+
+    if prep.error:
+        print(f"    - {prep.error}")
+        db.update_crawl_result_failed(cursor, connection, crawl_result_id, prep.error)
+        return False
+
+    try:
+        return await execute_extraction_sync(cursor, connection, prep)
     except Exception as e:
         error_msg = str(e) or type(e).__name__
         print(f"    - Extraction error: {error_msg}")
@@ -894,3 +1111,578 @@ async def extract_events(cursor, connection, crawl_result_id, website_name, note
 def is_available():
     """Check if Gemini API is available."""
     return GEMINI_API_KEY is not None and genai_client is not None
+
+
+# =============================================================================
+# Batch API Functions
+# =============================================================================
+
+def _build_single_request(prep):
+    """Build an InlinedRequest for single-pass extraction."""
+    return InlinedRequest(
+        contents=prep.prompt,
+        config=GenerateContentConfig(
+            response_mime_type="application/json",
+            response_schema=EventList,
+        ),
+        metadata={
+            "crawl_result_id": str(prep.crawl_result_id),
+            "type": "single",
+            "website_name": prep.website_name,
+        }
+    )
+
+
+def _build_vision_request(prep):
+    """Build an InlinedRequest for vision extraction."""
+    return InlinedRequest(
+        contents=prep.vision_contents,
+        config=GenerateContentConfig(
+            response_mime_type="application/json",
+            response_schema=EventList,
+        ),
+        metadata={
+            "crawl_result_id": str(prep.crawl_result_id),
+            "type": "vision",
+            "website_name": prep.website_name,
+        }
+    )
+
+
+def _build_chunk_requests(prep):
+    """Build InlinedRequests for chunked extraction (one per chunk).
+
+    Caps the number of chunks based on max_batches to avoid over-extraction.
+    In batch mode we can't do early stopping, so we add +1 chunk headroom
+    since actual events-per-chunk varies. The max_events cap is applied after
+    results return (in process_batch_responses).
+    """
+    max_events = prep.max_batches * ENRICHMENT_BATCH_SIZE
+    max_chunks = max(1, -(-max_events // EVENTS_PER_CHUNK)) + 1  # ceiling division + headroom
+
+    requests = []
+    for i, chunk_prompt in enumerate(prep.chunk_prompts[:max_chunks]):
+        requests.append(InlinedRequest(
+            contents=chunk_prompt,
+            config=GenerateContentConfig(
+                response_mime_type="application/json",
+                response_schema=SimpleEventList,
+            ),
+            metadata={
+                "crawl_result_id": str(prep.crawl_result_id),
+                "type": "chunk",
+                "chunk_index": str(i),
+                "total_chunks": str(len(prep.chunk_prompts)),
+                "website_name": prep.website_name,
+            }
+        ))
+
+    if len(prep.chunk_prompts) > max_chunks:
+        print(f"    - {prep.website_name}: Submitting {max_chunks}/{len(prep.chunk_prompts)} chunks "
+              f"(capped by max_batches={prep.max_batches})")
+
+    return requests
+
+
+def _build_enrichment_request(crawl_result_id, batch_event_names, venue_name, batch_idx, website_name):
+    """Build an InlinedRequest for enrichment."""
+    return InlinedRequest(
+        contents=get_enrichment_prompt(batch_event_names, venue_name),
+        config=GenerateContentConfig(
+            response_mime_type="application/json",
+            response_schema=EnrichmentBatch,
+        ),
+        metadata={
+            "crawl_result_id": str(crawl_result_id),
+            "type": "enrichment",
+            "batch_index": str(batch_idx),
+            "website_name": website_name,
+        }
+    )
+
+
+def build_batch_requests(preparations):
+    """Convert PreparedExtractions into Phase 1 InlinedRequests.
+
+    Args:
+        preparations: dict of {crawl_result_id: PreparedExtraction}
+
+    Returns:
+        list of InlinedRequest objects for all extraction types
+    """
+    requests = []
+    for crid, prep in preparations.items():
+        if prep.extraction_type == 'single':
+            requests.append(_build_single_request(prep))
+        elif prep.extraction_type == 'vision':
+            requests.append(_build_vision_request(prep))
+        elif prep.extraction_type == 'chunked':
+            requests.extend(_build_chunk_requests(prep))
+    return requests
+
+
+def build_enrichment_requests(chunked_events, preparations):
+    """Build Phase 2 InlinedRequests for enrichment of chunked results.
+
+    Args:
+        chunked_events: dict of {crawl_result_id: [simple_event_dicts]}
+        preparations: dict of {crawl_result_id: PreparedExtraction}
+
+    Returns:
+        list of InlinedRequest objects for enrichment
+    """
+    requests = []
+    for crid, events in chunked_events.items():
+        prep = preparations[crid]
+        event_names = [e['name'] for e in events]
+
+        for i in range(0, len(event_names), ENRICHMENT_BATCH_SIZE):
+            batch = event_names[i:i + ENRICHMENT_BATCH_SIZE]
+            requests.append(_build_enrichment_request(
+                crid, batch, prep.website_name,
+                batch_idx=i // ENRICHMENT_BATCH_SIZE,
+                website_name=prep.website_name,
+            ))
+
+    return requests
+
+
+def _estimate_request_tokens(request):
+    """Estimate the token count for an InlinedRequest."""
+    contents = request.contents
+    if isinstance(contents, str):
+        return len(contents) // CHARS_PER_TOKEN
+    elif isinstance(contents, list):
+        # Vision requests: list of Parts (text + images)
+        total = 0
+        for part in contents:
+            if hasattr(part, 'text') and part.text:
+                total += len(part.text) // CHARS_PER_TOKEN
+            elif hasattr(part, 'inline_data'):
+                total += 258  # Gemini charges 258 tokens per image
+        return total
+    return 0
+
+
+def _split_into_batches(requests, token_limit=BATCH_TOKEN_LIMIT):
+    """Split requests into equal-sized batches that fit under the token limit.
+
+    Returns:
+        list of lists of InlinedRequests
+    """
+    if not requests:
+        return []
+
+    total_tokens = sum(_estimate_request_tokens(r) for r in requests)
+
+    if total_tokens <= token_limit:
+        return [requests]
+
+    num_batches = -(-total_tokens // token_limit)  # ceiling division
+    batch_size = -(-len(requests) // num_batches)  # equal-sized splits
+
+    batches = [requests[i:i + batch_size] for i in range(0, len(requests), batch_size)]
+    print(f"  Splitting {len(requests)} requests (~{total_tokens:,} tokens) into {len(batches)} batches "
+          f"(limit: {token_limit:,} tokens)")
+    return batches
+
+
+async def _submit_and_poll_single_batch(requests, display_name="fomo-extraction",
+                                         poll_interval=None, timeout=None):
+    """Submit a single batch job and poll until completion.
+
+    Args:
+        requests: list of InlinedRequest objects
+        display_name: Name for the batch job
+        poll_interval: Seconds between status checks (default: BATCH_POLL_INTERVAL)
+        timeout: Maximum seconds to wait (default: BATCH_TIMEOUT)
+
+    Returns:
+        list of InlinedResponse in same order as requests
+
+    Raises:
+        RuntimeError: on timeout, job failure, or cancellation
+    """
+    if poll_interval is None:
+        poll_interval = BATCH_POLL_INTERVAL
+    if timeout is None:
+        timeout = BATCH_TIMEOUT
+
+    if not requests:
+        return []
+
+    print(f"  Submitting batch '{display_name}' with {len(requests)} request(s)...")
+
+    # Retry with backoff for transient 429 rate limits on batch creation
+    batch_job = None
+    for attempt in range(3):
+        try:
+            batch_job = await genai_client.aio.batches.create(
+                model=GEMINI_MODEL,
+                src=requests,
+                config={"display_name": display_name},
+            )
+            break
+        except Exception as e:
+            if attempt < 2 and "429" in str(e):
+                wait = 60 * (attempt + 1)
+                print(f"  Rate limited on batch creation, retrying in {wait}s... (attempt {attempt + 1}/3)")
+                await asyncio.sleep(wait)
+            else:
+                raise RuntimeError(f"Failed to create batch job: {e}") from e
+
+    print(f"  Batch job created: {batch_job.name} (state: {batch_job.state.name})")
+
+    elapsed = 0
+    while not batch_job.done:
+        await asyncio.sleep(poll_interval)
+        elapsed += poll_interval
+        try:
+            batch_job = await genai_client.aio.batches.get(name=batch_job.name)
+        except Exception as e:
+            print(f"  Warning: Failed to poll batch status: {e}")
+            # Continue polling — transient errors are expected
+            continue
+
+        state_name = batch_job.state.name if batch_job.state else "UNKNOWN"
+        print(f"  Batch status: {state_name} ({elapsed}s elapsed)")
+
+        if elapsed >= timeout:
+            # Try to cancel the job before raising
+            try:
+                await genai_client.aio.batches.cancel(name=batch_job.name)
+                print(f"  Cancelled timed-out batch job {batch_job.name}")
+            except Exception:
+                pass
+            raise RuntimeError(
+                f"Batch job {batch_job.name} timed out after {timeout}s "
+                f"(state: {state_name})"
+            )
+
+    state_name = batch_job.state.name if batch_job.state else "UNKNOWN"
+
+    if state_name == "JOB_STATE_FAILED":
+        error_detail = batch_job.error.message if batch_job.error else "unknown error"
+        raise RuntimeError(f"Batch job {batch_job.name} failed: {error_detail}")
+
+    if state_name == "JOB_STATE_CANCELLED":
+        raise RuntimeError(f"Batch job {batch_job.name} was cancelled")
+
+    responses = batch_job.dest.inlined_responses or []
+    succeeded = sum(1 for r in responses if r.response)
+    failed = sum(1 for r in responses if r.error)
+    print(f"  Batch completed: {succeeded} succeeded, {failed} failed out of {len(responses)} request(s)")
+
+    return responses
+
+
+async def submit_and_poll_batch(requests, display_name="fomo-extraction",
+                                 poll_interval=None, timeout=None):
+    """Submit batch requests, splitting into sub-batches if needed to stay under token limits.
+
+    Args:
+        requests: list of InlinedRequest objects
+        display_name: Name prefix for batch jobs
+        poll_interval: Seconds between status checks (default: BATCH_POLL_INTERVAL)
+        timeout: Maximum seconds to wait per sub-batch (default: BATCH_TIMEOUT)
+
+    Returns:
+        list of InlinedResponse in same order as requests
+    """
+    batches = _split_into_batches(requests)
+    if not batches:
+        return []
+
+    all_responses = []
+    for i, batch in enumerate(batches):
+        suffix = f"-{i+1}of{len(batches)}" if len(batches) > 1 else ""
+        responses = await _submit_and_poll_single_batch(
+            batch,
+            display_name=f"{display_name}{suffix}",
+            poll_interval=poll_interval,
+            timeout=timeout,
+        )
+        all_responses.extend(responses)
+
+    return all_responses
+
+
+def process_batch_responses(requests, responses, preparations):
+    """Map Phase 1 batch responses back to crawl results.
+
+    Args:
+        requests: list of InlinedRequest (for metadata)
+        responses: list of InlinedResponse (same order)
+        preparations: dict of {crawl_result_id: PreparedExtraction}
+
+    Returns:
+        tuple of (single_results, chunked_events, failed_ids):
+        - single_results: {crawl_result_id: json_string} for single/vision
+        - chunked_events: {crawl_result_id: [simple_event_dicts]} for chunks
+        - failed_ids: list of crawl_result_ids that completely failed
+    """
+    single_results = {}  # crid -> json string
+    chunk_events_by_crid = {}  # crid -> list of simple event dicts
+    failed_crids = set()
+
+    for i, (req, resp) in enumerate(zip(requests, responses)):
+        metadata = req.metadata or {}
+        crid = int(metadata.get("crawl_result_id", 0))
+        req_type = metadata.get("type", "")
+        website_name = metadata.get("website_name", "")
+
+        if crid == 0:
+            print(f"    - WARNING: Invalid metadata in batch response {i}: {metadata}")
+            continue
+
+        if resp.error:
+            error_msg = resp.error.message if resp.error.message else str(resp.error)
+            print(f"    - {website_name}: Batch request failed ({req_type}): {error_msg}")
+            if req_type in ("single", "vision"):
+                failed_crids.add(crid)
+            # For chunks, partial failure is OK — continue with other chunks
+            continue
+
+        try:
+            response_text = resp.response.text.strip() if resp.response and resp.response.text else ""
+            if not response_text:
+                if req_type in ("single", "vision"):
+                    single_results[crid] = '{"events": []}'
+                continue
+
+            if req_type in ("single", "vision"):
+                # Validate JSON
+                try:
+                    parsed = json.loads(response_text)
+                    event_count = len(parsed.get('events', []))
+                    print(f"    - {website_name}: {event_count} events extracted")
+                except json.JSONDecodeError:
+                    response_text = '{"events": []}'
+                single_results[crid] = response_text
+
+            elif req_type == "chunk":
+                parsed = json.loads(response_text)
+                events = parsed.get('events', [])
+                if crid not in chunk_events_by_crid:
+                    chunk_events_by_crid[crid] = []
+                chunk_events_by_crid[crid].extend(events)
+
+        except Exception as e:
+            print(f"    - {website_name}: Error processing batch response ({req_type}): {e}")
+            if req_type in ("single", "vision"):
+                failed_crids.add(crid)
+
+    # Apply max_events cap to chunked results
+    for crid, events in chunk_events_by_crid.items():
+        prep = preparations[crid]
+        max_events = prep.max_batches * ENRICHMENT_BATCH_SIZE
+        if len(events) > max_events:
+            print(f"    - {prep.website_name}: Capping {len(events)} chunked events at {max_events}")
+            chunk_events_by_crid[crid] = events[:max_events]
+        else:
+            print(f"    - {prep.website_name}: {len(events)} events from chunks")
+
+    # Check for chunked crids with zero events (all chunks failed)
+    for crid, prep in preparations.items():
+        if prep.extraction_type == 'chunked' and crid not in chunk_events_by_crid and crid not in single_results:
+            # All chunks failed — store empty result
+            single_results[crid] = '{"events": []}'
+
+    return single_results, chunk_events_by_crid, list(failed_crids)
+
+
+def process_enrichment_responses(requests, responses, chunked_events, preparations):
+    """Combine Phase 2 enrichment responses with chunked extraction results.
+
+    Args:
+        requests: list of enrichment InlinedRequests
+        responses: list of InlinedResponse
+        chunked_events: dict of {crawl_result_id: [simple_event_dicts]}
+        preparations: dict of {crawl_result_id: PreparedExtraction}
+
+    Returns:
+        dict of {crawl_result_id: json_string} with fully enriched events
+    """
+    # Collect enrichments per crawl_result_id
+    enrichments_by_crid = {}
+
+    for i, (req, resp) in enumerate(zip(requests, responses)):
+        metadata = req.metadata or {}
+        crid = int(metadata.get("crawl_result_id", 0))
+        website_name = metadata.get("website_name", "")
+
+        if crid == 0:
+            print(f"    - WARNING: Invalid metadata in enrichment response {i}: {metadata}")
+            continue
+
+        if crid not in enrichments_by_crid:
+            enrichments_by_crid[crid] = {}
+
+        if resp.error:
+            print(f"    - {website_name}: Enrichment batch failed: "
+                  f"{resp.error.message if resp.error.message else resp.error}")
+            continue
+
+        try:
+            response_text = resp.response.text.strip() if resp.response and resp.response.text else ""
+            if not response_text:
+                continue
+            result = json.loads(response_text)
+            for item in result.get('enrichments', []):
+                enrichments_by_crid[crid][item.get('name', '')] = {
+                    'description': item.get('description', ''),
+                    'hashtags': item.get('hashtags', []),
+                    'emoji': item.get('emoji', '📅'),
+                }
+        except Exception as e:
+            print(f"    - {website_name}: Error processing enrichment response: {e}")
+
+    # Combine chunked events with enrichments
+    results = {}
+    for crid, events in chunked_events.items():
+        enrichments = enrichments_by_crid.get(crid, {})
+        results[crid] = _combine_chunked_results(events, enrichments)
+        prep = preparations[crid]
+        enriched_count = sum(1 for e in events if e['name'] in enrichments)
+        print(f"    - {prep.website_name}: Combined {len(events)} events ({enriched_count} enriched)")
+
+    return results
+
+
+async def run_batch_extraction(extraction_queue, poll_interval=None, timeout=None):
+    """Run extraction for all queued items using the Gemini Batch API.
+
+    Two-phase process:
+      Phase 1: All extractions (single, vision, chunk) in one batch
+      Phase 2: Enrichment for chunked results in a second batch
+
+    Args:
+        extraction_queue: list of dicts with crawl_result_id, name, notes, etc.
+        poll_interval: Seconds between batch status checks
+        timeout: Maximum seconds to wait per batch
+
+    Returns:
+        list of (crawl_result_id, success) tuples
+    """
+    results = []
+    preparations = {}
+
+    # Phase 0: Prepare all extraction requests
+    print(f"\n  Preparing {len(extraction_queue)} extraction request(s)...")
+
+    conn = db.create_connection()
+    if not conn:
+        print("  Failed to connect to database for batch preparation")
+        return [(item['crawl_result_id'], False) for item in extraction_queue]
+    cursor = conn.cursor(buffered=True)
+
+    resolved_results = {}  # crid -> json string (for pre-resolved items)
+
+    try:
+        for item in extraction_queue:
+            crid = item['crawl_result_id']
+            prep = await prepare_extraction(
+                cursor, crid, item['name'], item.get('notes', ''),
+                item.get('use_vision', False), item.get('base_url', ''),
+                item.get('max_batches')
+            )
+
+            if prep.error:
+                print(f"    - {item['name']}: {prep.error}")
+                db.update_crawl_result_failed(cursor, conn, crid, prep.error)
+                results.append((crid, False))
+            elif prep.resolved_result is not None:
+                resolved_results[crid] = prep.resolved_result
+                preparations[crid] = prep  # Keep for result tracking
+            else:
+                preparations[crid] = prep
+    finally:
+        cursor.close()
+        conn.close()
+
+    if not preparations and not resolved_results:
+        return results
+
+    # Store pre-resolved results immediately
+    if resolved_results:
+        conn = db.create_connection()
+        cursor = conn.cursor(buffered=True)
+        try:
+            for crid, result_text in resolved_results.items():
+                db.update_crawl_result_extracted(cursor, conn, crid, result_text)
+                results.append((crid, True))
+                print(f"    - {preparations[crid].website_name}: Stored pre-resolved result")
+        finally:
+            cursor.close()
+            conn.close()
+        # Remove resolved items from preparations (no batch requests needed)
+        for crid in resolved_results:
+            del preparations[crid]
+
+    if not preparations:
+        return results
+
+    # Phase 1: Build and submit extraction batch
+    batch_requests = build_batch_requests(preparations)
+    if not batch_requests:
+        return results
+
+    timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
+    phase1_responses = await submit_and_poll_batch(
+        batch_requests,
+        display_name=f"fomo-extract-{timestamp}",
+        poll_interval=poll_interval,
+        timeout=timeout,
+    )
+
+    single_results, chunked_events, failed_ids = process_batch_responses(
+        batch_requests, phase1_responses, preparations
+    )
+
+    # Phase 2: Enrichment for chunked results
+    enriched_results = {}
+    if chunked_events:
+        enrichment_requests = build_enrichment_requests(chunked_events, preparations)
+        if enrichment_requests:
+            print(f"\n  Phase 2: Enriching {sum(len(e) for e in chunked_events.values())} "
+                  f"events in {len(enrichment_requests)} batch(es)...")
+            phase2_responses = await submit_and_poll_batch(
+                enrichment_requests,
+                display_name=f"fomo-enrich-{timestamp}",
+                poll_interval=poll_interval,
+                timeout=timeout,
+            )
+            enriched_results = process_enrichment_responses(
+                enrichment_requests, phase2_responses, chunked_events, preparations
+            )
+        else:
+            # No enrichment needed — combine with empty enrichments
+            for crid, events in chunked_events.items():
+                enriched_results[crid] = _combine_chunked_results(events, {})
+
+    # Phase 3: Store all results in database
+    all_results = {**single_results, **enriched_results}
+    if all_results:
+        conn = db.create_connection()
+        cursor = conn.cursor(buffered=True)
+        try:
+            for crid, result_text in all_results.items():
+                db.update_crawl_result_extracted(cursor, conn, crid, result_text)
+                results.append((crid, True))
+        finally:
+            cursor.close()
+            conn.close()
+
+    # Mark failed items
+    if failed_ids:
+        conn = db.create_connection()
+        cursor = conn.cursor(buffered=True)
+        try:
+            for crid in failed_ids:
+                db.update_crawl_result_failed(cursor, conn, crid, "Batch extraction failed")
+                results.append((crid, False))
+        finally:
+            cursor.close()
+            conn.close()
+
+    return results

@@ -15,6 +15,61 @@ INIT_LAT_RANGE = (40.672945, 40.735535)
 INIT_LNG_RANGE = (-73.998595, -73.943125)
 
 
+def classify_event_sections(cursor, connection):
+    """Classify events into sections (Events/Ongoing) based on occurrence patterns.
+
+    Events with an existing section value are left unchanged (supports manual overrides).
+    """
+    cursor.execute("""
+        SELECT e.id
+        FROM events e
+        WHERE e.section IS NULL
+          AND e.archived = FALSE
+          AND e.suppressed = FALSE
+    """)
+    event_ids = [row[0] for row in cursor.fetchall()]
+
+    if not event_ids:
+        print("  No events need section classification")
+        return
+
+    classified = 0
+    for event_id in event_ids:
+        cursor.execute("""
+            SELECT start_date, end_date
+            FROM event_occurrences
+            WHERE event_id = %s
+            ORDER BY start_date
+        """, (event_id,))
+        occurrences = cursor.fetchall()
+
+        if not occurrences:
+            continue
+
+        section = 'Events'
+
+        # Check if any single occurrence spans > 14 days
+        for start_date, end_date in occurrences:
+            if start_date and end_date and (end_date - start_date).days > 14:
+                section = 'Ongoing'
+                break
+
+        # Check if many occurrences spread over > 21 days
+        if section == 'Events' and len(occurrences) > 4:
+            first_date = occurrences[0][0]
+            last_date = occurrences[-1][0]
+            if first_date and last_date and (last_date - first_date).days > 21:
+                section = 'Ongoing'
+
+        cursor.execute("UPDATE events SET section = %s WHERE id = %s", (section, event_id))
+        classified += 1
+
+    connection.commit()
+    cursor.execute("SELECT COUNT(*) FROM events WHERE section = 'Ongoing' AND archived = FALSE AND suppressed = FALSE")
+    ongoing_count = cursor.fetchone()[0]
+    print(f"  Classified {classified} events ({ongoing_count} ongoing)")
+
+
 def get_active_locations(events, all_locations):
     """Get locations that have events at their coordinates."""
     active_coords = set(
@@ -52,7 +107,7 @@ def export_events(cursor):
         SELECT e.id, e.name, e.short_name, e.description, e.emoji,
                e.location_name, e.sublocation,
                l.name as matched_location_name,
-               l.lat, l.lng
+               l.lat, l.lng, e.section
         FROM events e
         JOIN locations l ON e.location_id = l.id
         LEFT JOIN websites w ON e.website_id = w.id
@@ -133,6 +188,10 @@ def export_events(cursor):
         if row[2]:  # short_name
             event['short_name'] = row[2]
 
+        section = row[10]
+        if section and section != 'Events':
+            event['section'] = section
+
         all_events.append(event)
 
     # Sort by first occurrence date
@@ -182,11 +241,11 @@ def export_events(cursor):
         """, (location_id,))
         tags = [r[0] for r in cursor.fetchall()]
 
-        # Get website URL for this location
+        # Get website URL for this location (only from primary website link)
         cursor.execute("""
-            SELECT w.base_url FROM website_locations wl
+            SELECT COALESCE(wl.url, w.base_url) as url FROM website_locations wl
             JOIN websites w ON wl.website_id = w.id
-            WHERE wl.location_id = %s
+            WHERE wl.location_id = %s AND wl.is_primary = 1
             LIMIT 1
         """, (location_id,))
         website_row = cursor.fetchone()

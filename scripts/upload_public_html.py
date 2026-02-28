@@ -1,27 +1,29 @@
 """
 Upload Script
 
-Uploads the dist/ build output to the server's public_html/ directory via FTP.
+Builds the project and uploads dist/ to the server's public_html/ directory via FTP.
 
 Smart Upload:
+- Runs `npm run build` automatically before uploading
 - Tracks file content hashes in upload_state.json
 - Only uploads files whose content has changed since the last upload
 - Use --force to upload all files regardless of state
-
-Prerequisite: Run `npm run build` first to generate dist/
+- Use --skip-build to skip the build step
 
 Configuration:
 - FTP credentials should be set in .env file:
   FTP_HOST, PUBLIC_HTML_FTP_USER, FTP_PASSWORD, FTP_REMOTE_DIR (optional)
 
 Usage:
-    python upload_public_html.py          # Upload only changed files
-    python upload_public_html.py --force  # Upload all files
+    python upload_public_html.py                # Build + upload changed files
+    python upload_public_html.py --force        # Build + upload all files
+    python upload_public_html.py --skip-build   # Upload only (no build)
 """
 
 import hashlib
 import json
 import os
+import subprocess
 import sys
 from ftplib import FTP, FTP_TLS
 from pathlib import Path
@@ -183,19 +185,39 @@ def upload_directory(ftp, local_dir, remote_dir, is_root=True,
     return uploaded_count, skipped_count, total_count
 
 
-def main(remote_dir=None, use_tls=False, force=False):
+def run_build():
+    """Run npm run build and return True if successful."""
+    project_root = os.path.join(SCRIPT_DIR, '..')
+    print("Running npm run build...")
+    result = subprocess.run(
+        ['npm', 'run', 'build'],
+        cwd=project_root,
+    )
+    if result.returncode != 0:
+        print("Build failed!")
+        return False
+    print("Build succeeded.\n")
+    return True
+
+
+def main(remote_dir=None, use_tls=False, force=False, skip_build=False):
     """
-    Upload dist/ contents to the server's public_html/ directory via FTP.
+    Build the project and upload dist/ contents to the server via FTP.
 
     Args:
         remote_dir: Remote directory on FTP server (optional)
         use_tls: Whether to use FTPS (FTP over TLS) instead of plain FTP
         force: If True, upload all files regardless of modification time
+        skip_build: If True, skip the build step
 
     Returns:
         bool: True if upload was successful, False otherwise
     """
     load_dotenv()
+
+    if not skip_build:
+        if not run_build():
+            return False
 
     local_dir = os.path.join(SCRIPT_DIR, '..', 'dist')
 
@@ -286,12 +308,17 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(
-        description="Upload dist/ build output to FTP server (smart upload - only changed files)"
+        description="Build project and upload dist/ to FTP server (smart upload - only changed files)"
     )
     parser.add_argument(
         '--force', '-f',
         action='store_true',
         help='Force upload all files, ignoring content hashes'
+    )
+    parser.add_argument(
+        '--skip-build',
+        action='store_true',
+        help='Skip the build step (upload existing dist/ as-is)'
     )
     parser.add_argument(
         '--tls',
@@ -305,5 +332,5 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    success = main(remote_dir=args.remote_dir, use_tls=args.tls, force=args.force)
+    success = main(remote_dir=args.remote_dir, use_tls=args.tls, force=args.force, skip_build=args.skip_build)
     sys.exit(0 if success else 1)
