@@ -29,7 +29,9 @@ const PopupContentBuilder = (() => {
     // ========================================
 
     const state = {
-        createInteractiveTagButton: null
+        createInteractiveTagButton: null,
+        hierarchyTagsSet: new Set(),
+        tagEmojiMap: {}
     };
 
     // ========================================
@@ -57,6 +59,40 @@ const PopupContentBuilder = (() => {
 
         headerWrapper.appendChild(textWrapper);
         return headerWrapper;
+    }
+
+    // ========================================
+    // TAG HELPERS
+    // ========================================
+
+    /**
+     * Creates a display-only keyword tag span (non-clickable)
+     */
+    function createKeywordTagSpan(tag) {
+        const span = document.createElement('span');
+        span.className = 'tag-keyword';
+        const emoji = state.tagEmojiMap[tag] || '';
+        if (emoji) {
+            const emojiSpan = document.createElement('span');
+            emojiSpan.className = 'chip-emoji';
+            emojiSpan.setAttribute('aria-hidden', 'true');
+            emojiSpan.textContent = emoji;
+            span.appendChild(emojiSpan);
+        }
+        span.appendChild(document.createTextNode(tag));
+        return span;
+    }
+
+    /**
+     * Creates the appropriate element for a tag: interactive button for curated tags,
+     * display-only span for keyword tags
+     */
+    function createTagElement(tag) {
+        const isCurated = state.hierarchyTagsSet.size === 0 || state.hierarchyTagsSet.has(tag);
+        if (isCurated && state.createInteractiveTagButton) {
+            return state.createInteractiveTagButton(tag);
+        }
+        return createKeywordTagSpan(tag);
     }
 
     // ========================================
@@ -98,12 +134,12 @@ const PopupContentBuilder = (() => {
             panel.appendChild(addressP);
         }
 
-        if (displayTags.length > 0 && state.createInteractiveTagButton) {
+        if (displayTags.length > 0) {
             const tagsContainer = document.createElement('div');
             tagsContainer.className = 'tag-tags-container popup-tags-container';
             displayTags.forEach(tag => {
-                const tagButton = state.createInteractiveTagButton(tag);
-                if (tagButton) tagsContainer.appendChild(tagButton);
+                const el = createTagElement(tag);
+                if (el) tagsContainer.appendChild(el);
             });
             panel.appendChild(tagsContainer);
         }
@@ -236,12 +272,13 @@ const PopupContentBuilder = (() => {
         }
         eventDetailContainer.appendChild(descriptionP);
 
-        if (event.tags && event.tags.length > 0 && state.createInteractiveTagButton) {
+        const tagsToShow = event.display_tags || event.tags;
+        if (tagsToShow && tagsToShow.length > 0) {
             const tagsContainer = document.createElement('div');
             tagsContainer.className = 'tag-tags-container popup-tags-container';
-            event.tags.forEach(tag => {
-                const tagButton = state.createInteractiveTagButton(tag);
-                if (tagButton) tagsContainer.appendChild(tagButton);
+            tagsToShow.forEach(tag => {
+                const el = createTagElement(tag);
+                if (el) tagsContainer.appendChild(el);
             });
             eventDetailContainer.appendChild(tagsContainer);
         }
@@ -264,17 +301,12 @@ const PopupContentBuilder = (() => {
             return eventsListWrapper;
         }
 
-        // Get all selected tags (explicit, required, and implicit)
+        // Get all selected tags
         const selectedTags = Object.entries(activeFilters.tagStates)
-            .filter(([, st]) => (st === 'selected' || st === 'required' || st === 'implicit'))
-            .map(([tag]) => tag);
-
-        // Get only explicitly selected tags (for determining if filters are active)
-        const explicitlySelectedTags = Object.entries(activeFilters.tagStates)
             .filter(([, st]) => (st === 'selected' || st === 'required'))
             .map(([tag]) => tag);
 
-        const hasActiveTagFilters = explicitlySelectedTags.length > 0;
+        const hasActiveTagFilters = selectedTags.length > 0;
         const hasForbiddenTags = Object.entries(activeFilters.tagStates).some(([, st]) => st === 'forbidden');
         const hasAnyTagFilter = hasActiveTagFilters || hasForbiddenTags;
 
@@ -439,7 +471,7 @@ const PopupContentBuilder = (() => {
 
             // Toggle expand/collapse on card click
             card.addEventListener('click', (e) => {
-                if (e.target.closest('a, .tag-button')) return;
+                if (e.target.closest('a, .tag-button, .tag-keyword')) return;
                 const isExpanded = card.dataset.expanded === 'true';
                 if (isExpanded) {
                     card.dataset.expanded = 'false';
@@ -469,9 +501,9 @@ const PopupContentBuilder = (() => {
         const popupContainer = document.createElement('div');
         popupContainer.className = 'maplibre-popup-content';
 
-        // Compute location display tags (filtered by geotags)
+        // Compute location display tags (leaf tags only, filtered by geotags)
         const displayTags = locationInfo
-            ? (locationInfo.tags || []).filter(tag => !geotagsSet.has(tag.toLowerCase()))
+            ? (locationInfo.display_tags || locationInfo.tags || []).filter(tag => !geotagsSet.has(tag.toLowerCase()))
             : [];
 
         // Header (emoji + name, tab bar inserted below)
@@ -592,6 +624,8 @@ const PopupContentBuilder = (() => {
 
     function init(config) {
         state.createInteractiveTagButton = config.createInteractiveTagButton || null;
+        state.hierarchyTagsSet = config.hierarchyTagsSet || new Set();
+        state.tagEmojiMap = config.tagEmojiMap || {};
     }
 
     return {

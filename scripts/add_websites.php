@@ -393,7 +393,7 @@ $prev_websites = [
 ];
 
 $new_websites = [
-    // Partiful venues added on 2026-02-24 - see git history
+    // Pint of Science NYC added on 2026-02-27 - see git history
 ];
 
 $done_partiful_venues = [

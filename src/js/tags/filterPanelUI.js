@@ -44,14 +44,18 @@ const FilterPanelUI = (() => {
         getSearchTerm: null,
 
         // Provider objects
-        colorProvider: null,  // { getTagColor, assignColorToTag, unassignColorFromTag, isImplicitlySelected }
+        colorProvider: null,  // { getTagColor, assignColorToTag, unassignColorFromTag }
 
         // Section management - determined at init time based on device type
         sectionOrder: null,
         sectionViewStates: null,
 
-        // Tag groups for quick filters and grouped tag display
-        tagGroups: []
+        // Hierarchy data
+        tagDescendantsOf: {},
+        tagEmojiMap: {},
+
+        // Chip bar
+        getSelectedTagsWithColors: null
     };
 
     /**
@@ -130,53 +134,28 @@ const FilterPanelUI = (() => {
     }
 
     // ========================================
-    // QUICK FILTERS
+    // CHIP BAR
     // ========================================
 
-    /**
-     * Renders quick filter chips from tag groups config.
-     * Called once on init; active states are refreshed after each filter change.
-     */
-    function _renderQuickFilters() {
-        const container = document.getElementById('quick-filters-row');
-        if (!container || !state.tagGroups || state.tagGroups.length === 0) return;
-
-        const quickFilters = state.tagGroups.filter(g => g.quickFilter);
-        if (quickFilters.length === 0) return;
-
-        container.innerHTML = '';
-        quickFilters.forEach(group => {
-            const btn = document.createElement('button');
-            btn.className = 'quick-filter-chip';
-            btn.dataset.primaryTag = group.primaryTag;
-            btn.dataset.groupId = group.id;
-            btn.setAttribute('aria-label', `Filter by ${group.label}`);
-            btn.innerHTML = `<span class="chip-emoji" aria-hidden="true">${group.emoji}</span>${group.label}`;
-            btn.addEventListener('click', () => _handleQuickFilterClick(group));
-            container.appendChild(btn);
-        });
-
-        container.style.display = 'flex';
-    }
+    const CHIP_BAR_MAX_LINES = 3;
+    const CHIP_BAR_RENDER_LIMIT = 100; // render up to this many, then trim to fit lines
 
     /**
-     * Toggles the primary tag for a quick filter group on/off.
+     * Toggles a chip bar tag on/off.
      */
-    function _handleQuickFilterClick(group) {
+    function _handleChipClick(tagName) {
         const TAG_STATE = TagStateManager.getTagStateConstants();
-        const currentState = TagStateManager.getTagState(group.primaryTag);
+        const currentState = TagStateManager.getTagState(tagName);
 
         if (currentState !== TAG_STATE.UNSELECTED) {
-            // Deselect: return to unselected
-            state.tagStates[group.primaryTag] = TAG_STATE.UNSELECTED;
+            state.tagStates[tagName] = TAG_STATE.UNSELECTED;
             if (state.colorProvider) {
-                state.colorProvider.unassignColorFromTag(group.primaryTag);
+                state.colorProvider.unassignColorFromTag(tagName);
             }
         } else {
-            // Select: set to selected state and assign color
-            state.tagStates[group.primaryTag] = TAG_STATE.SELECTED;
+            state.tagStates[tagName] = TAG_STATE.SELECTED;
             if (state.colorProvider) {
-                state.colorProvider.assignColorToTag(group.primaryTag);
+                state.colorProvider.assignColorToTag(tagName);
             }
         }
 
@@ -186,50 +165,170 @@ const FilterPanelUI = (() => {
     }
 
     /**
-     * Updates active/inactive visual state on all quick filter chips
-     * and re-sorts them: selected first, then by descending frequency.
+     * Renders the unified chip bar showing selected tags + top unselected curated tags.
+     * Called after every filter/search change via onAfterRender.
      */
-    function _updateQuickFilterActiveStates() {
-        const container = document.getElementById('quick-filters-row');
+    function _renderChipBar() {
+        const container = document.getElementById('chip-bar');
         if (!container) return;
 
         const TAG_STATE = TagStateManager.getTagStateConstants();
-        const chips = Array.from(container.querySelectorAll('.quick-filter-chip'));
 
-        chips.forEach(btn => {
-            const primaryTag = btn.dataset.primaryTag;
-            const tagState = TagStateManager.getTagState(primaryTag);
-            const isActive = tagState !== TAG_STATE.UNSELECTED;
-            btn.classList.toggle('active', isActive);
-            if (isActive && state.colorProvider) {
-                const color = state.colorProvider.getTagColor(primaryTag);
+        // 1. Collect selected tags (always shown first)
+        const selectedTagsWithColors = state.getSelectedTagsWithColors
+            ? state.getSelectedTagsWithColors()
+            : [];
+        const selectedTagNames = new Set(selectedTagsWithColors.map(([tag]) => tag));
+
+        // 2. Score unselected curated tags using the same formula as SearchManager,
+        //    plus descendant aggregation for parent categories.
+        const hasSearch = state.searchTerm && state.searchTerm.trim().length > 0;
+        const normalizedSearchTerm = hasSearch ? Utils.normalizeForSearch(state.searchTerm) : '';
+        const visibleFreqs = state.getVisibleTagFrequencies ? state.getVisibleTagFrequencies() : {};
+
+        const unselectedTags = [];
+        for (const tag of state.allAvailableTags) {
+            if (selectedTagNames.has(tag)) continue;
+            const tagState = TagStateManager.getTagState(tag);
+            if (tagState !== TAG_STATE.UNSELECTED) continue;
+
+            const normalizedTag = Utils.normalizeForSearch(tag);
+
+            // When searching, only include tags whose name matches the term
+            if (hasSearch && !normalizedTag.includes(normalizedSearchTerm)) continue;
+
+            const freq = state.currentDynamicFrequencies[tag] || 0;
+            if (!hasSearch && freq <= 0) continue;
+
+            // Base score: dynamic frequency (same as SearchManager)
+            let score = freq;
+
+            if (hasSearch) {
+                // Exact match boost
+                if (normalizedTag === normalizedSearchTerm) {
+                    score += 1000;
+                }
+            }
+
+            // Viewport visibility boost
+            const visFreq = visibleFreqs[tag] || 0;
+            if (visFreq > 0) {
+                score += visFreq * 5;
+                score += 5;
+            }
+
+            // Global frequency tiebreaker
+            const globalFreq = state.initialGlobalFrequencies[tag] || 0;
+            score += globalFreq * 0.01;
+
+            // Descendant aggregation: parent tags get credit for children's scores
+            const descendants = state.tagDescendantsOf[tag];
+            if (descendants) {
+                descendants.forEach(d => {
+                    const dFreq = state.currentDynamicFrequencies[d] || 0;
+                    const dVisFreq = visibleFreqs[d] || 0;
+                    score += dFreq;
+                    if (dVisFreq > 0) {
+                        score += dVisFreq * 5 + 5;
+                    }
+                    score += (state.initialGlobalFrequencies[d] || 0) * 0.01;
+                });
+            }
+
+            if (score <= 0) continue;
+
+            unselectedTags.push({ tag, score });
+        }
+
+        // Sort unselected by descending score
+        unselectedTags.sort((a, b) => b.score - a.score);
+
+        // 4. Build DOM with generous limit, then trim to fit max lines
+        const unselectedToRender = unselectedTags.slice(0, CHIP_BAR_RENDER_LIMIT);
+
+        container.innerHTML = '';
+
+        // Selected chips first
+        for (const [tagName] of selectedTagsWithColors) {
+            const btn = _createChipButton(tagName, true);
+            container.appendChild(btn);
+        }
+
+        // Unselected chips
+        for (const { tag } of unselectedToRender) {
+            const btn = _createChipButton(tag, false);
+            container.appendChild(btn);
+        }
+
+        const hasChips = selectedTagNames.size > 0 || unselectedToRender.length > 0;
+        container.style.display = hasChips ? 'flex' : 'none';
+
+        // Trim to max lines on desktop (mobile is single-row horizontal scroll)
+        if (hasChips && !isMobileLayout()) {
+            _trimChipBarToMaxLines(container);
+        }
+    }
+
+    /**
+     * Removes unselected chips that overflow past CHIP_BAR_MAX_LINES rows.
+     * Measures actual rendered positions to account for variable chip widths.
+     */
+    function _trimChipBarToMaxLines(container) {
+        const chips = container.children;
+        if (chips.length === 0) return;
+
+        // Find the top of the first chip to establish the baseline
+        const firstTop = chips[0].offsetTop;
+        let lineCount = 1;
+        let prevTop = firstTop;
+
+        for (let i = 1; i < chips.length; i++) {
+            const chipTop = chips[i].offsetTop;
+            if (chipTop > prevTop) {
+                lineCount++;
+                prevTop = chipTop;
+            }
+            if (lineCount > CHIP_BAR_MAX_LINES && !chips[i].classList.contains('active')) {
+                // Remove this and all subsequent unselected chips
+                while (container.children.length > i) {
+                    container.removeChild(container.lastChild);
+                }
+                return;
+            }
+        }
+    }
+
+    /**
+     * Creates a chip bar button element
+     */
+    function _createChipButton(tagName, isActive) {
+        const btn = document.createElement('button');
+        btn.className = 'chip-bar-chip';
+        btn.dataset.primaryTag = tagName;
+        btn.setAttribute('aria-label', `Filter by ${tagName}`);
+
+        if (isActive) {
+            btn.classList.add('active');
+            if (state.colorProvider) {
+                const color = state.colorProvider.getTagColor(tagName);
                 if (color) {
                     btn.style.setProperty('--chip-color', color);
                 }
-            } else {
-                btn.style.removeProperty('--chip-color');
             }
-        });
+        }
 
-        // Sort: selected first, then search matches, then by descending frequency
-        const searchTerm = state.searchTerm ? state.searchTerm.trim().toLowerCase() : '';
-        chips.sort((a, b) => {
-            const aActive = a.classList.contains('active') ? 1 : 0;
-            const bActive = b.classList.contains('active') ? 1 : 0;
-            if (aActive !== bActive) return bActive - aActive;
+        const emoji = state.tagEmojiMap[tagName] || '';
+        if (emoji) {
+            const emojiSpan = document.createElement('span');
+            emojiSpan.className = 'chip-emoji';
+            emojiSpan.setAttribute('aria-hidden', 'true');
+            emojiSpan.textContent = emoji;
+            btn.appendChild(emojiSpan);
+        }
+        btn.appendChild(document.createTextNode(tagName));
 
-            if (searchTerm) {
-                const aMatch = a.textContent.toLowerCase().includes(searchTerm) ? 1 : 0;
-                const bMatch = b.textContent.toLowerCase().includes(searchTerm) ? 1 : 0;
-                if (aMatch !== bMatch) return bMatch - aMatch;
-            }
-
-            const aFreq = state.currentDynamicFrequencies[a.dataset.primaryTag] || 0;
-            const bFreq = state.currentDynamicFrequencies[b.dataset.primaryTag] || 0;
-            return bFreq - aFreq;
-        });
-
-        chips.forEach(btn => container.appendChild(btn));
+        btn.addEventListener('click', () => _handleChipClick(tagName));
+        return btn;
     }
 
     // ========================================
@@ -317,14 +416,15 @@ const FilterPanelUI = (() => {
      * @param {Function} config.colorProvider.getTagColor - Get tag color
      * @param {Function} config.colorProvider.assignColorToTag - Assign color to tag
      * @param {Function} config.colorProvider.unassignColorFromTag - Unassign color from tag
-     * @param {Function} config.colorProvider.isImplicitlySelected - Check if tag is implicitly selected
      */
     function init(config) {
         // Extract provider and assign rest to state
         state.colorProvider = config.colorProvider || null;
         state.allAvailableTags = config.allAvailableTags || [];
         state.tagConfigBgColors = config.tagConfigBgColors || [];
-        state.tagGroups = config.tagGroups || [];
+        state.tagDescendantsOf = config.tagDescendantsOf || {};
+        state.tagEmojiMap = config.tagEmojiMap || {};
+        state.getSelectedTagsWithColors = config.getSelectedTagsWithColors || null;
         state.resultsContainerDOM = config.resultsContainerDOM;
         state.onFilterChangeCallback = config.onFilterChangeCallback;
         state.onSearchResultClick = config.onSearchResultClick;
@@ -334,6 +434,9 @@ const FilterPanelUI = (() => {
 
         if (config.getSearchTerm) {
             state.getSearchTerm = config.getSearchTerm;
+        }
+        if (config.getVisibleTagFrequencies) {
+            state.getVisibleTagFrequencies = config.getVisibleTagFrequencies;
         }
 
         // Initialize section order and view states based on device type (only on first init)
@@ -359,12 +462,9 @@ const FilterPanelUI = (() => {
         TagStateManager.init({
             tagStates: state.tagStates,
             colorProvider: state.colorProvider,
-            relatedTagsProvider: {
-                isImplicitlySelected: state.colorProvider?.isImplicitlySelected,
-                isIncludingRelatedTags: () => SelectedTagsDisplay.isIncludingRelatedTags()
-            },
             onFilterChangeCallback: state.onFilterChangeCallback,
-            defaultMarkerColor: state.defaultMarkerColor
+            defaultMarkerColor: state.defaultMarkerColor,
+            tagEmojiMap: state.tagEmojiMap
         });
 
         // Initialize SectionRenderer
@@ -378,11 +478,11 @@ const FilterPanelUI = (() => {
             },
             onAfterRender: () => {
                 _distributeContentMobile();
-                _updateQuickFilterActiveStates();
+                _renderChipBar();
             }
         });
 
-        _renderQuickFilters();
+        _renderChipBar();
 
         // Initialize GestureHandler (desktop only — conflicts with horizontal tag scroll on mobile)
         if (!isMobileLayout()) {
@@ -475,7 +575,7 @@ const FilterPanelUI = (() => {
             state.tagStates[tag] = TAG_STATE.UNSELECTED;
         });
         clearSearch('');
-        _updateQuickFilterActiveStates();
+        _renderChipBar();
     }
 
     /**
@@ -551,6 +651,7 @@ const FilterPanelUI = (() => {
         createInteractiveTagButton: (tag) => TagStateManager.createInteractiveTagButton(tag),
         updateAllTagVisuals: () => TagStateManager.updateAllTagVisuals(),
         render: renderFilters,
+        renderChipBar: _renderChipBar,
         clearSearch,
     };
 })();

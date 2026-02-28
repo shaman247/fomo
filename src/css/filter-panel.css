@@ -173,65 +173,44 @@
     gap: 12px;
 }
 
-/* Quick filter chips row */
-#quick-filters-row {
-    display: none; /* shown via JS once tagGroups are loaded */
+/* Chip bar: selected tags + top unselected curated tags */
+#chip-bar {
+    display: none; /* shown via JS once tags are loaded */
     flex-wrap: wrap;
     gap: 5px;
     padding: 2px 0;
 }
 
-.quick-filter-chip {
+.chip-bar-chip {
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    padding: 5px 11px;
+    padding: 4px 8px;
     border-radius: 16px;
-    border: 1.5px solid var(--border-color);
+    border: 1.5px solid var(--secondary-border-color);
     background: color-mix(in srgb, var(--tertiary-bg) 70%, transparent);
-    color: var(--primary-text);
+    color: var(--secondary-text);
     font-size: 0.95em;
+    font-family: var(--font-family);
+    letter-spacing: -0.02em;
     cursor: pointer;
     white-space: nowrap;
     transition: background 0.15s, border-color 0.15s;
 }
 
-.quick-filter-chip:hover {
+.chip-bar-chip:hover {
     background: color-mix(in srgb, var(--tertiary-bg) 95%, transparent);
 }
 
-.quick-filter-chip.active {
+.chip-bar-chip.active {
     background: color-mix(in srgb, var(--chip-color, var(--accent-color)) 25%, var(--primary-bg));
     border-color: var(--chip-color, var(--accent-color));
     color: var(--primary-text);
 }
 
 .chip-emoji {
-    font-size: 1em;
+    font-size: 1.15em;
     line-height: 1;
-}
-
-#selected-tags-display {
-    display: none;
-    flex-wrap: wrap;
-    gap: 5px;
-    padding: 0px 0;
-}
-
-/* Implicit/related tags in selected tags display */
-#selected-tags-display .state-implicit {
-    opacity: 0.7;
-}
-
-#selected-tags-display .state-implicit:hover {
-    opacity: 1;
-}
-
-/* Add/remove related tags buttons */
-#selected-tags-display .add-related-tags-button,
-#selected-tags-display .remove-related-tags-button {
-    min-width: 34px;
-    padding: 2px 10px;
 }
 
 #date-filter-container {
@@ -502,7 +481,7 @@ span.flatpickr-weekday {
         left: 10px;
     }
 
-    #quick-filters-row {
+    #chip-bar {
         flex-wrap: nowrap;
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
@@ -510,7 +489,7 @@ span.flatpickr-weekday {
         padding-bottom: 2px;
     }
 
-    #quick-filters-row::-webkit-scrollbar {
+    #chip-bar::-webkit-scrollbar {
         display: none;
     }
 

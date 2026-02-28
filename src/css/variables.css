@@ -32,6 +32,7 @@
 
     /* Borders and dividers */
     --border-color: #666;
+    --secondary-border-color: #555;
 
     /* Special purpose colors */
     --attribution-bg: rgba(0, 0, 0, 0.7);

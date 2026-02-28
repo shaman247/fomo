@@ -399,6 +399,7 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
 
         print("  Exporting events from database to JSON...")
         exporter.export_events(cursor)
+        exporter.export_tag_hierarchy(cursor)
 
         print("\n✓ Event export completed\n")
 

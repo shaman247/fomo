@@ -40,11 +40,10 @@ js/
 |--------|-------------|
 | **filterPanelUI.js** | Orchestrates filter panel UI, delegates to specialized modules |
 | **searchController.js** | Handles search input UI, debouncing, special terms, mobile auto-expand |
-| **tagStateManager.js** | Manage tag filter states (uses `colorProvider`, `relatedTagsProvider`) |
+| **tagStateManager.js** | Manage tag filter states (uses `colorProvider`) |
 | **tagColorManager.js** | Assign colors to selected tags from theme palette |
-| **selectedTagsDisplay.js** | Selected tags display with related tags toggle |
+| **selectedTagsDisplay.js** | Selected tags display as interactive pill buttons |
 | **sectionRenderer.js** | Render collapsible search result sections |
-| **relatedTagsManager.js** | Related tag relationships and weights |
 
 ### UI (`ui/`)
 | Module | Description |

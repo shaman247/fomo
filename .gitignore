@@ -4,7 +4,8 @@
 .env.*.local
 
 # Claude Code and IDE
-.claude/
+.claude/*
+!.claude/commands/
 .vscode/
 CLAUDE.md
 
@@ -43,8 +44,9 @@ scripts/id_rsa_sync
 # Database backups
 database/backups/
 
-# Screenshots
+# Screenshots and images
 screenshots/
+*.png
 .playwright-mcp/
 
 # OS files

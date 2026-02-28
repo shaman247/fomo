@@ -8,11 +8,45 @@ import json
 import os
 from datetime import datetime, timedelta
 
+import db
+
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Bounding box for the "init" set (NYC core area)
 INIT_LAT_RANGE = (40.672945, 40.735535)
 INIT_LNG_RANGE = (-73.998595, -73.943125)
+
+
+def _build_descendants_map(cursor):
+    """Build tag_name -> set of descendant tag_names (transitive)."""
+    cursor.execute("""
+        SELECT p.name AS parent_name, c.name AS child_name
+        FROM tag_hierarchy th
+        JOIN tags p ON th.parent_tag_id = p.id
+        JOIN tags c ON th.child_tag_id = c.id
+    """)
+    children_of = {}
+    for row in cursor.fetchall():
+        parent, child = row[0], row[1]
+        children_of.setdefault(parent, []).append(child)
+
+    descendants_of = {}
+    for parent in children_of:
+        desc = set()
+        queue = list(children_of.get(parent, []))
+        while queue:
+            c = queue.pop(0)
+            if c not in desc:
+                desc.add(c)
+                queue.extend(children_of.get(c, []))
+        descendants_of[parent] = desc
+    return descendants_of
+
+
+def _filter_to_leaf_tags(tags, descendants_of):
+    """Remove tags that are ancestors of other tags in the same list."""
+    tag_set = set(tags)
+    return [t for t in tags if t not in descendants_of or not descendants_of[t] & tag_set]
 
 
 def classify_event_sections(cursor, connection):
@@ -96,6 +130,9 @@ def export_events(cursor):
     output_dir = os.path.join(SCRIPT_DIR, '..', 'src', 'data')
     os.makedirs(output_dir, exist_ok=True)
 
+    # Build hierarchy descendants map for leaf-tag filtering in popups
+    descendants_of = _build_descendants_map(cursor)
+
     current_date = datetime.now().date()
     future_limit_date = (datetime.now() + timedelta(days=90)).date()
     init_limit_date = (datetime.now() + timedelta(days=7)).date()
@@ -165,6 +202,7 @@ def export_events(cursor):
             SELECT t.name FROM event_tags et JOIN tags t ON et.tag_id = t.id WHERE et.event_id = %s
         """, (event_id,))
         tags = [r[0] for r in cursor.fetchall()]
+        display_tags = _filter_to_leaf_tags(tags, descendants_of)
 
         # Use location coordinates (events no longer have their own coordinates)
         lat = float(row[8]) if row[8] is not None else None
@@ -185,6 +223,8 @@ def export_events(cursor):
             'occurrences': occurrences,
             'urls': urls,
         }
+        if len(display_tags) < len(tags):
+            event['display_tags'] = display_tags
         if row[2]:  # short_name
             event['short_name'] = row[2]
 
@@ -240,6 +280,7 @@ def export_events(cursor):
             WHERE lt.location_id = %s
         """, (location_id,))
         tags = [r[0] for r in cursor.fetchall()]
+        display_tags = _filter_to_leaf_tags(tags, descendants_of)
 
         # Get website URL for this location (only from primary website link)
         cursor.execute("""
@@ -257,6 +298,8 @@ def export_events(cursor):
         }
         if tags:
             loc['tags'] = tags
+            if len(display_tags) < len(tags):
+                loc['display_tags'] = display_tags
         if row[4]:
             loc['emoji'] = row[4]
         if row[5]:
@@ -301,3 +344,24 @@ def export_events(cursor):
         'init_locations': len(init_locations),
         'full_locations': len(full_locations)
     }
+
+
+def export_tag_hierarchy(cursor):
+    """Export tag hierarchy from database to JSON for frontend consumption.
+
+    Creates src/data/tag_hierarchy.json with curated tags and their parent relationships.
+    Keywords are NOT included — the frontend infers keyword status by checking whether
+    an event's tag is in the curated set.
+    """
+    output_dir = os.path.join(SCRIPT_DIR, '..', 'src', 'data')
+    os.makedirs(output_dir, exist_ok=True)
+
+    tags_list = db.get_tag_hierarchy_for_export(cursor)
+
+    output = {'tags': tags_list}
+
+    output_path = os.path.join(output_dir, 'tag_hierarchy.json')
+    with open(output_path, 'w', encoding='utf-8') as f:
+        json.dump(output, f, separators=(',', ':'), ensure_ascii=False)
+
+    print(f"  Exported {len(tags_list)} tags to tag_hierarchy.json")

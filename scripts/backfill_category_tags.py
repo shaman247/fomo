@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 """
-Backfill category tags for all existing events.
+Backfill ancestor tags for all existing events using the database tag hierarchy.
 
-Reads tag_groups.json to build a reverse map from granular tags to category tags,
-then iterates over all active events, checks their existing tags, and adds
-any missing category tags.
+Iterates over all active events, checks their existing tags, derives ancestor
+tags from the tag_hierarchy table, and adds any missing ancestor tags.
 
 Usage:
     ./venv/bin/python scripts/backfill_category_tags.py            # Dry run (default)
@@ -13,54 +12,24 @@ Usage:
 """
 
 import argparse
-import json
 import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'pipeline'))
-from db import create_connection
-
-CROSS_CUTTING = {'free', 'virtual'}
-
-
-def load_category_map():
-    """Load tag_groups.json and build reverse map: normalized_tag -> [primaryTag, ...]."""
-    path = os.path.join(os.path.dirname(__file__), '..', 'src', 'data', 'tag_groups.json')
-    with open(path, 'r', encoding='utf-8') as f:
-        groups = json.load(f)
-
-    cat_map = {}
-    main_primary_tags = set()
-
-    for group in groups:
-        primary = group.get('primaryTag')
-        if not primary:
-            continue
-        primary_norm = primary.lower().replace(' ', '')
-
-        if primary_norm not in CROSS_CUTTING and primary_norm != 'other':
-            main_primary_tags.add(primary_norm)
-
-        for tag in group.get('tags', []):
-            key = tag.lower().replace(' ', '')
-            if key not in cat_map:
-                cat_map[key] = []
-            if primary not in cat_map[key]:
-                cat_map[key].append(primary)
-
-    return cat_map, main_primary_tags
+from db import create_connection, build_tag_ancestor_map
 
 
 def backfill(apply=False, verbose=False):
-    cat_map, main_primary_tags = load_category_map()
-    print(f"Loaded {len(cat_map)} tag mappings across {len(main_primary_tags)} main categories")
-
     conn = create_connection()
     if not conn:
         print("Failed to connect to database")
         return
 
     cursor = conn.cursor(dictionary=True)
+
+    # Load ancestor map from database hierarchy
+    ancestor_map, root_tags = build_tag_ancestor_map(cursor)
+    print(f"Loaded hierarchy: {len(ancestor_map)} tags with ancestors, {len(root_tags)} root tags")
 
     # Get all active events with their tags
     cursor.execute("""
@@ -83,41 +52,42 @@ def backfill(apply=False, verbose=False):
         existing_tags = event['tags'].split('|||') if event['tags'] else []
         existing_normalized = set(t.lower().replace(' ', '') for t in existing_tags)
 
-        # Derive category tags from existing granular tags
-        cats_to_add = set()
+        # Derive ancestor tags from existing tags
+        ancestors_to_add = set()
         for tag in existing_tags:
             key = tag.lower().replace(' ', '')
-            for primary in cat_map.get(key, []):
-                if primary.lower().replace(' ', '') not in existing_normalized:
-                    cats_to_add.add(primary)
+            for ancestor in ancestor_map.get(key, set()):
+                if ancestor.lower().replace(' ', '') not in existing_normalized:
+                    ancestors_to_add.add(ancestor)
 
-        # Check if event already has or is getting a main category
-        main_cats = {c for c in cats_to_add if c.lower().replace(' ', '') in main_primary_tags}
-        has_main = bool(main_cats) or any(
-            t.lower().replace(' ', '') in main_primary_tags for t in existing_tags
+        # Check if event already has or is getting a root-level tag
+        has_root = any(
+            t.lower().replace(' ', '') in root_tags for t in existing_tags
+        ) or any(
+            a.lower().replace(' ', '') in root_tags for a in ancestors_to_add
         )
 
-        # Add "Other" fallback if no main category
-        if not has_main:
+        # Add "Other" fallback if no root tag
+        if not has_root:
             if 'other' not in existing_normalized:
-                cats_to_add.add('Other')
+                ancestors_to_add.add('Other')
             events_no_category.append((event['id'], event['name'], existing_tags[:5]))
 
-        if not cats_to_add:
+        if not ancestors_to_add:
             continue
 
         if verbose:
-            print(f"  [{event['id']}] {event['name']}: +{', '.join(sorted(cats_to_add))}")
+            print(f"  [{event['id']}] {event['name']}: +{', '.join(sorted(ancestors_to_add))}")
 
         if apply:
-            for cat_tag in cats_to_add:
+            for tag_name in ancestors_to_add:
                 # Get or create tag
-                cursor.execute("SELECT id FROM tags WHERE name = %s", (cat_tag,))
+                cursor.execute("SELECT id FROM tags WHERE name = %s", (tag_name,))
                 tag_row = cursor.fetchone()
                 if tag_row:
                     tag_id = tag_row['id']
                 else:
-                    cursor.execute("INSERT INTO tags (name) VALUES (%s)", (cat_tag,))
+                    cursor.execute("INSERT INTO tags (name) VALUES (%s)", (tag_name,))
                     tag_id = cursor.lastrowid
 
                 cursor.execute(
@@ -126,7 +96,7 @@ def backfill(apply=False, verbose=False):
                 )
 
         events_updated += 1
-        tags_added_total += len(cats_to_add)
+        tags_added_total += len(ancestors_to_add)
 
     if apply:
         conn.commit()
@@ -136,12 +106,12 @@ def backfill(apply=False, verbose=False):
     print(f"Backfill {mode}")
     print(f"{'=' * 50}")
     print(f"  Total events scanned:          {total_events}")
-    print(f"  Events needing category tags:  {events_updated}")
-    print(f"  Category tags to add:          {tags_added_total}")
-    print(f"  Events with no main category:  {len(events_no_category)} (assigned 'Other')")
+    print(f"  Events needing ancestor tags:  {events_updated}")
+    print(f"  Ancestor tags to add:          {tags_added_total}")
+    print(f"  Events with no root category:  {len(events_no_category)} (assigned 'Other')")
 
     if events_no_category and verbose:
-        print(f"\nEvents assigned 'Other' (no main category match):")
+        print(f"\nEvents assigned 'Other' (no root category match):")
         for eid, name, tags in events_no_category[:50]:
             print(f"  [{eid}] {name} — tags: {', '.join(tags)}")
         if len(events_no_category) > 50:
@@ -155,7 +125,7 @@ def backfill(apply=False, verbose=False):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Backfill category tags for existing events')
+    parser = argparse.ArgumentParser(description='Backfill ancestor tags for existing events')
     parser.add_argument('--apply', action='store_true', help='Actually write to database (default: dry run)')
     parser.add_argument('--verbose', '-v', action='store_true', help='Show per-event details')
     args = parser.parse_args()

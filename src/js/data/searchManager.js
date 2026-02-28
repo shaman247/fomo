@@ -89,54 +89,22 @@ const SearchManager = (() => {
         return [...itemTags].filter(tag => selectedTags.has(tag)).length;
     }
 
-    /**
-     * Calculates weighted tag match score for an item
-     * @param {Set} itemTags - Set of tags for the item
-     * @param {Map} selectedTagsWithWeights - Map of tag -> weight
-     * @returns {number} Weighted score based on matching tags
-     */
-    function calculateWeightedTagScore(itemTags, selectedTagsWithWeights) {
-        if (selectedTagsWithWeights.size < 2) return 0;
-
-        let weightedScore = 0;
-        const matchedTags = [];
-        for (const tag of itemTags) {
-            const weight = selectedTagsWithWeights.get(tag);
-            if (weight !== undefined) {
-                // Weight ranges from 0 to 1, multiply by score weight
-                const tagScore = weight * SCORE_WEIGHTS.MULTI_TAG_MATCH;
-                weightedScore += tagScore;
-                matchedTags.push({ tag, weight, tagScore });
-            }
-        }
-
-        return weightedScore;
-    }
-
     // ========================================
     // SEARCH FUNCTIONS
     // ========================================
 
     /**
-     * Searches locations based on the search term and current filters
-     * @param {string} term - Search term (already normalized)
-     * @param {Map} selectedTagsWithWeights - Map of tag -> weight
-     * @param {Set} matchingLocationKeys - Set of location keys with matching events
-     * @param {Set} visibleLocationKeys - Set of currently visible location keys
-     * @returns {Map} Map of location results
-     */
-    /**
      * Scores a location and creates a result object
      */
-    function scoreLocation(key, location, isVisible, isMatching, selectedTagsWithWeights) {
+    function scoreLocation(key, location, isVisible, isMatching, selectedTags) {
         let score = 1;
 
         if (isMatching) {
             score += SCORE_WEIGHTS.MATCHING_BOOST;
         }
 
-        if (selectedTagsWithWeights.size >= 2 && location.tags) {
-            score += calculateWeightedTagScore(new Set(location.tags), selectedTagsWithWeights);
+        if (selectedTags.size >= 2 && location.tags) {
+            score += countMatchingTags(new Set(location.tags), selectedTags) * SCORE_WEIGHTS.MULTI_TAG_MATCH;
         }
 
         const distance = state.appState.locationDistances[key] || 0;
@@ -156,7 +124,7 @@ const SearchManager = (() => {
         };
     }
 
-    function searchLocations(term, selectedTagsWithWeights, matchingLocationKeys, visibleLocationKeys) {
+    function searchLocations(term, selectedTags, matchingLocationKeys, visibleLocationKeys) {
         const results = new Map();
         const hasSearchTerm = term.length > 0;
 
@@ -169,7 +137,7 @@ const SearchManager = (() => {
                     const location = state.appState.locationsByLatLng[key];
                     const isVisible = visibleLocationKeys.has(key);
                     const isMatching = matchingLocationKeys.has(key);
-                    results.set(`location-${key}`, scoreLocation(key, location, isVisible, isMatching, selectedTagsWithWeights));
+                    results.set(`location-${key}`, scoreLocation(key, location, isVisible, isMatching, selectedTags));
                 }
             }
         } else {
@@ -180,7 +148,7 @@ const SearchManager = (() => {
             for (const key of visibleLocationKeys) {
                 const location = state.appState.locationsByLatLng[key];
                 if (location) {
-                    results.set(`location-${key}`, scoreLocation(key, location, true, matchingLocationKeys.has(key), selectedTagsWithWeights));
+                    results.set(`location-${key}`, scoreLocation(key, location, true, matchingLocationKeys.has(key), selectedTags));
                 }
             }
 
@@ -191,7 +159,7 @@ const SearchManager = (() => {
                 if (visibleLocationKeys.has(key)) continue;
                 const location = state.appState.locationsByLatLng[key];
                 if (location) {
-                    results.set(`location-${key}`, scoreLocation(key, location, false, true, selectedTagsWithWeights));
+                    results.set(`location-${key}`, scoreLocation(key, location, false, true, selectedTags));
                     hiddenCount++;
                 }
             }
@@ -203,7 +171,7 @@ const SearchManager = (() => {
     /**
      * Searches events based on the search term and current filters
      * @param {string} term - Search term (already normalized)
-     * @param {Map} selectedTagsWithWeights - Map of tag -> weight
+     * @param {Map} selectedTags - Map of tag -> weight
      * @param {Set} matchingEventIds - Set of event IDs matching current filters
      * @param {Set} visibleEventIds - Set of currently visible event IDs
      * @param {number} referenceDate - Reference date for temporal scoring
@@ -214,22 +182,21 @@ const SearchManager = (() => {
      * @param {Object} event - Event object
      * @param {boolean} isVisible - Whether event is in viewport
      * @param {boolean} isMatching - Whether event matches current filters
-     * @param {Map} selectedTagsWithWeights - Map of tag -> weight
+     * @param {Map} selectedTags - Map of tag -> weight
      * @param {number} referenceDate - Reference date for temporal scoring
      * @returns {Object} Result object
      */
-    function scoreEvent(event, isVisible, isMatching, selectedTagsWithWeights, referenceDate) {
+    function scoreEvent(event, isVisible, isMatching, selectedTags, referenceDate) {
         let score = 1;
 
         if (isMatching) {
             score += SCORE_WEIGHTS.MATCHING_BOOST;
         }
 
-        if (selectedTagsWithWeights.size >= 2) {
+        if (selectedTags.size >= 2) {
             const locationInfo = event.locationKey ? state.appState.locationsByLatLng[event.locationKey] : null;
             const combinedTags = new Set([...(event.tags || []), ...(locationInfo?.tags || [])]);
-            const weightedScore = calculateWeightedTagScore(combinedTags, selectedTagsWithWeights);
-            score += weightedScore;
+            score += countMatchingTags(combinedTags, selectedTags) * SCORE_WEIGHTS.MULTI_TAG_MATCH;
         }
 
         if (event.locationKey) {
@@ -255,7 +222,7 @@ const SearchManager = (() => {
         };
     }
 
-    function searchEvents(term, selectedTagsWithWeights, matchingEventIds, visibleEventIds, referenceDate) {
+    function searchEvents(term, selectedTags, matchingEventIds, visibleEventIds, referenceDate) {
         const results = new Map();
         const hasSearchTerm = term.length > 0;
 
@@ -267,7 +234,7 @@ const SearchManager = (() => {
                 if (normalizedText.includes(term)) {
                     const isVisible = visibleEventIds.has(event.id);
                     const isMatching = matchingEventIds.has(event.id);
-                    results.set(`event-${event.id}`, scoreEvent(event, isVisible, isMatching, selectedTagsWithWeights, referenceDate));
+                    results.set(`event-${event.id}`, scoreEvent(event, isVisible, isMatching, selectedTags, referenceDate));
                 }
             });
         } else {
@@ -280,7 +247,7 @@ const SearchManager = (() => {
 
             // All visible matching events
             for (const event of visibleEvents) {
-                results.set(`event-${event.id}`, scoreEvent(event, true, true, selectedTagsWithWeights, referenceDate));
+                results.set(`event-${event.id}`, scoreEvent(event, true, true, selectedTags, referenceDate));
             }
 
             // Limited hidden (matching but not visible) events
@@ -288,7 +255,7 @@ const SearchManager = (() => {
             for (const event of matchingEvents) {
                 if (hiddenCount >= HIDDEN_LIMIT) break;
                 if (visibleIds.has(event.id)) continue;
-                results.set(`event-${event.id}`, scoreEvent(event, false, true, selectedTagsWithWeights, referenceDate));
+                results.set(`event-${event.id}`, scoreEvent(event, false, true, selectedTags, referenceDate));
                 hiddenCount++;
             }
         }
@@ -310,8 +277,12 @@ const SearchManager = (() => {
             // Use normalized index for matching
             const normalizedTag = searchIndex?.tags?.get(tag) || tag.toLowerCase();
             if (normalizedTag.includes(term)) {
-                // Skip geotags when search term is empty
+                // Skip geotags and keywords when search term is empty
                 if (!term && state.appState.geotagsSet.has(tag.toLowerCase())) {
+                    return;
+                }
+                if (state.appState.hierarchyTagsSet && state.appState.hierarchyTagsSet.size > 0
+                    && !state.appState.hierarchyTagsSet.has(tag)) {
                     return;
                 }
 
@@ -351,18 +322,14 @@ const SearchManager = (() => {
      * Main search function that searches across locations, events, and tags
      * @param {string} term - Search term (lowercase)
      * @param {Object} dynamicFrequencies - Current dynamic tag frequencies
-     * @param {Array<[string, string, number]>} selectedTagsWithColors - Array of [tag, color, weight] tuples
-     *        where weight=1.0 for explicitly selected tags and weight<1.0 for implicit/related tags
+     * @param {Array<[string, string]>} selectedTagsWithColors - Array of [tag, color] tuples
      * @returns {Array} Array of search results
      */
     function performSearch(term, dynamicFrequencies, selectedTagsWithColors) {
         const hasSearchTerm = term.length > 0;
 
-        // Create a map of tag -> weight for scoring
-        const selectedTagsWithWeights = new Map();
-        for (const [tag, , weight] of selectedTagsWithColors) {
-            selectedTagsWithWeights.set(tag, weight);
-        }
+        // Create a set of selected tags for scoring
+        const selectedTags = new Set(selectedTagsWithColors.map(([tag]) => tag));
 
         const matchingLocationKeys = state.appState.currentlyMatchingLocationKeys;
         const visibleLocationKeys = state.appState.currentlyVisibleMatchingLocationKeys;
@@ -376,8 +343,8 @@ const SearchManager = (() => {
         const referenceDate = selectedDates.length > 0 ? selectedDates[0].getTime() : 0;
 
         // Perform searches
-        const locationResults = searchLocations(term, selectedTagsWithWeights, matchingLocationKeys, visibleLocationKeys);
-        const eventResults = searchEvents(term, selectedTagsWithWeights, matchingEventIds, visibleEventIds, referenceDate);
+        const locationResults = searchLocations(term, selectedTags, matchingLocationKeys, visibleLocationKeys);
+        const eventResults = searchEvents(term, selectedTags, matchingEventIds, visibleEventIds, referenceDate);
         const tagResults = searchTags(term, dynamicFrequencies);
 
         // Combine all results
@@ -442,7 +409,7 @@ const SearchManager = (() => {
         // Filter and sort tags (exclude selected/required/forbidden tags)
         const filterTags = (result) => {
             const tagState = getTagState(result.ref);
-            return tagState === 'unselected' || tagState === 'implicit';
+            return tagState === 'unselected';
         };
 
         groupedResults.tags = groupedResults.tags.filter(filterTags);
@@ -471,7 +438,7 @@ const SearchManager = (() => {
      * Performs a search and returns results
      * @param {string} term - Search term (will be normalized for accent/case-insensitive search)
      * @param {Object} dynamicFrequencies - Current dynamic tag frequencies
-     * @param {Array<[string, string, number]>} selectedTagsWithColors - Array of [tag, color, weight] tuples
+     * @param {Array<[string, string]>} selectedTagsWithColors - Array of [tag, color] tuples
      * @returns {Array} Array of search results
      */
     function search(term, dynamicFrequencies, selectedTagsWithColors) {

@@ -636,3 +636,142 @@ def get_websites_with_tags(cursor):
             websites_map[normalized_url].append(tag)
 
     return websites_map
+
+
+def build_tag_ancestor_map(cursor):
+    """Build a complete map: normalized_tag_name -> set of ancestor tag names.
+
+    Loads all tag_hierarchy rows and computes transitive closure via BFS.
+    Returns (ancestor_map, root_tags) where:
+      - ancestor_map: dict mapping normalized_tag_name -> set of ancestor tag names
+      - root_tags: set of normalized names for root tags (no parents, excl. Free/Virtual)
+    """
+    CROSS_CUTTING = {'free', 'virtual'}
+
+    # Load all hierarchy edges with tag names
+    cursor.execute("""
+        SELECT p.name AS parent_name, c.name AS child_name
+        FROM tag_hierarchy th
+        JOIN tags p ON th.parent_tag_id = p.id
+        JOIN tags c ON th.child_tag_id = c.id
+    """)
+    edges = cursor.fetchall()
+
+    # Build direct parent map: normalized_child -> set of parent names
+    direct_parents = {}
+    all_children = set()
+    all_parents = set()
+    for row in edges:
+        parent_name = row['parent_name'] if isinstance(row, dict) else row[0]
+        child_name = row['child_name'] if isinstance(row, dict) else row[1]
+        child_key = child_name.lower().replace(' ', '')
+        all_children.add(child_key)
+        all_parents.add(parent_name.lower().replace(' ', ''))
+        if child_key not in direct_parents:
+            direct_parents[child_key] = set()
+        direct_parents[child_key].add(parent_name)
+
+    # Compute transitive closure via BFS: for each tag, find ALL ancestors
+    ancestor_map = {}
+    for child_key in direct_parents:
+        ancestors = set()
+        queue = list(direct_parents[child_key])
+        while queue:
+            parent = queue.pop(0)
+            if parent in ancestors:
+                continue
+            ancestors.add(parent)
+            parent_key = parent.lower().replace(' ', '')
+            for grandparent in direct_parents.get(parent_key, set()):
+                if grandparent not in ancestors:
+                    queue.append(grandparent)
+        ancestor_map[child_key] = ancestors
+
+    # Root tags: tags that are parents but never children (excl. cross-cutting)
+    root_keys = all_parents - all_children
+    root_tags = {k for k in root_keys if k not in CROSS_CUTTING and k != 'other'}
+
+    return ancestor_map, root_tags
+
+
+def get_all_tags_with_metadata(cursor):
+    """Get all tags with hierarchy metadata.
+
+    Returns list of dicts: {id, name, emoji, is_quick_filter, display_order, type}
+    """
+    cursor.execute("""
+        SELECT id, name, emoji, is_quick_filter, display_order, type
+        FROM tags
+        ORDER BY display_order IS NULL, display_order, name
+    """)
+    def _row_get(row, key_or_index, index):
+        return row[key_or_index] if isinstance(row, dict) else row[index]
+
+    return [
+        {
+            'id': _row_get(row, 'id', 0),
+            'name': _row_get(row, 'name', 1),
+            'emoji': _row_get(row, 'emoji', 2),
+            'is_quick_filter': bool(_row_get(row, 'is_quick_filter', 3)),
+            'display_order': _row_get(row, 'display_order', 4),
+            'type': _row_get(row, 'type', 5)
+        }
+        for row in cursor.fetchall()
+    ]
+
+
+def get_tag_hierarchy_for_export(cursor):
+    """Get tag hierarchy data formatted for JSON export.
+
+    Returns (tags_list, keywords_list) where:
+      - tags_list: list of dicts with name, parents, and optional emoji/quickFilter/order
+      - keywords_list: list of keyword tag names
+    """
+    def _get(row, key, index):
+        return row[key] if isinstance(row, dict) else row[index]
+
+    # Get all tags with type='tag' and their parents
+    cursor.execute("""
+        SELECT t.id, t.name, t.emoji, t.is_quick_filter, t.display_order
+        FROM tags t
+        WHERE t.type = 'tag'
+        ORDER BY t.display_order IS NULL, t.display_order, t.name
+    """)
+    tag_rows = cursor.fetchall()
+
+    # Get all hierarchy edges
+    cursor.execute("""
+        SELECT p.name AS parent_name, c.name AS child_name
+        FROM tag_hierarchy th
+        JOIN tags p ON th.parent_tag_id = p.id
+        JOIN tags c ON th.child_tag_id = c.id
+    """)
+    edges = cursor.fetchall()
+
+    # Build parent map: tag_name -> [parent_names]
+    parents_of = {}
+    for row in edges:
+        parent_name = _get(row, 'parent_name', 0)
+        child_name = _get(row, 'child_name', 1)
+        parents_of.setdefault(child_name, []).append(parent_name)
+
+    # Build tags list
+    tags_list = []
+    for row in tag_rows:
+        name = _get(row, 'name', 1)
+        emoji = _get(row, 'emoji', 2)
+        is_quick_filter = _get(row, 'is_quick_filter', 3)
+        display_order = _get(row, 'display_order', 4)
+
+        entry = {'name': name}
+        parents = parents_of.get(name, [])
+        entry['parents'] = sorted(parents)
+        if emoji:
+            entry['emoji'] = emoji
+        if is_quick_filter:
+            entry['quickFilter'] = True
+        if display_order is not None:
+            entry['order'] = display_order
+        tags_list.append(entry)
+
+    return tags_list

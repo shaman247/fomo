@@ -22,6 +22,7 @@ const MapManager = (() => {
 
         // Emoji image tracking
         emojiImagesLoaded: new Set(),
+        emojiScale: null, // computed once at first render
 
         // Cache for restoring after style.load (theme change)
         sourceDataCache: null,
@@ -204,6 +205,49 @@ const MapManager = (() => {
     // EMOJI IMAGE RENDERING
     // ========================================
 
+    /**
+     * Measure the actual rendered size of a reference emoji and return a
+     * scale factor that normalizes it to a target ratio (Apple-sized).
+     * Called once per font configuration; result is cached in state.emojiScale.
+     */
+    function _measureEmojiScale(fontFamily) {
+        const TARGET_RATIO = 1.0; // Apple ⬛ fills 1.0 of em-square; normalize others to match
+        const testSize = 128;
+        const canvas = document.createElement('canvas');
+        const dim = testSize * 2;
+        canvas.width = dim;
+        canvas.height = dim;
+        const ctx = canvas.getContext('2d');
+        ctx.font = `${testSize}px ${fontFamily}`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('\u2B1B', dim / 2, dim / 2); // ⬛ — solid square, fills design space
+
+        const imageData = ctx.getImageData(0, 0, dim, dim);
+        const data = imageData.data;
+        let minX = dim, maxX = 0, minY = dim, maxY = 0;
+        let found = false;
+        for (let y = 0; y < dim; y++) {
+            for (let x = 0; x < dim; x++) {
+                if (data[(y * dim + x) * 4 + 3] > 10) {
+                    found = true;
+                    if (x < minX) minX = x;
+                    if (x > maxX) maxX = x;
+                    if (y < minY) minY = y;
+                    if (y > maxY) maxY = y;
+                }
+            }
+        }
+        if (!found) return 1;
+
+        const measuredRatio = Math.max(maxX - minX + 1, maxY - minY + 1) / testSize;
+        const scale = TARGET_RATIO / measuredRatio;
+        console.log(
+            `[MapManager] Emoji scale: font="${fontFamily}" measured=${measuredRatio.toFixed(3)} target=${TARGET_RATIO} scale=${scale.toFixed(3)}`
+        );
+        return scale;
+    }
+
     function _addEmojiImage(emoji) {
         const map = state.mapInstance;
         const imageId = `emoji-${emoji}`;
@@ -224,7 +268,13 @@ const MapManager = (() => {
         // Use Noto font if active
         const isNoto = document.body.classList.contains('use-noto-emoji');
         const fontFamily = isNoto ? '"Noto Color Emoji"' : 'serif';
-        ctx.font = `${canvasSize * 0.72}px ${fontFamily}`;
+
+        // Compute scale factor once per font configuration
+        if (state.emojiScale === null) {
+            state.emojiScale = _measureEmojiScale(fontFamily);
+        }
+
+        ctx.font = `${canvasSize * 0.72 * state.emojiScale}px ${fontFamily}`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         // Draw emoji shifted right on canvas so that when icon-offset shifts
@@ -252,6 +302,8 @@ const MapManager = (() => {
 
     function reloadEmojiImages(locationsByLatLng) {
         if (!state.mapInstance) return;
+        // Reset scale so it's re-measured with the (possibly changed) font
+        state.emojiScale = null;
         // Remove all existing emoji images and reload
         state.emojiImagesLoaded.forEach(imageId => {
             if (state.mapInstance.hasImage(imageId)) {

@@ -411,6 +411,65 @@ const DataManager = (() => {
     }
 
     /**
+     * Builds hierarchy lookup maps from the exported tag_hierarchy.json data.
+     * @param {Object} data - { tags: [...], keywords: [...] }
+     * @returns {Object} { childrenOf, parentsOf, descendantsOf, quickFilters, hierarchyTagsSet, tagEmojiMap }
+     */
+    function buildTagHierarchyMaps(data) {
+        const tags = data.tags || [];
+
+        const childrenOf = {};   // parent -> [children]
+        const parentsOf = {};    // child -> [parents]
+        const quickFilters = []; // [{name, emoji, order}]
+        const tagEmojiMap = {};  // tagName -> emoji
+        // Set of all curated tag names (tags NOT in this set are keywords)
+        const hierarchyTagsSet = new Set();
+
+        // Build parent/child maps from flat list
+        tags.forEach(tag => {
+            hierarchyTagsSet.add(tag.name);
+            if (tag.emoji) tagEmojiMap[tag.name] = tag.emoji;
+            const parents = tag.parents || [];
+            if (parents.length > 0) {
+                parentsOf[tag.name] = parents;
+                parents.forEach(parent => {
+                    if (!childrenOf[parent]) childrenOf[parent] = [];
+                    childrenOf[parent].push(tag.name);
+                });
+            }
+            if (tag.quickFilter) {
+                quickFilters.push({
+                    name: tag.name,
+                    emoji: tag.emoji || '',
+                    order: tag.order || 999
+                });
+            }
+        });
+
+        // Sort quick filters by order
+        quickFilters.sort((a, b) => a.order - b.order);
+
+        // Compute transitive descendants via BFS
+        const descendantsOf = {};
+        const allParents = Object.keys(childrenOf);
+        allParents.forEach(parent => {
+            const descendants = new Set();
+            const queue = [...(childrenOf[parent] || [])];
+            while (queue.length > 0) {
+                const child = queue.shift();
+                if (descendants.has(child)) continue;
+                descendants.add(child);
+                (childrenOf[child] || []).forEach(grandchild => {
+                    if (!descendants.has(grandchild)) queue.push(grandchild);
+                });
+            }
+            descendantsOf[parent] = descendants;
+        });
+
+        return { childrenOf, parentsOf, descendantsOf, quickFilters, hierarchyTagsSet, tagEmojiMap };
+    }
+
+    /**
      * Processes tag hierarchy and available tags
      * @param {Object} state - Application state
      * @param {Object} config - Application configuration
@@ -430,7 +489,11 @@ const DataManager = (() => {
             }
         });
 
-        state.allAvailableTags = Array.from(allUniqueTagsSet).sort();
+        // Exclude keywords (tags not in the hierarchy) from the browsable tag list
+        const hierarchyTagsSet = state.hierarchyTagsSet || new Set();
+        state.allAvailableTags = Array.from(allUniqueTagsSet)
+            .filter(tag => hierarchyTagsSet.size === 0 || hierarchyTagsSet.has(tag))
+            .sort();
     }
 
     /**
@@ -467,6 +530,7 @@ const DataManager = (() => {
         buildSearchIndex,
         buildTagIndex,
         calculateTagFrequencies,
+        buildTagHierarchyMaps,
         processTagHierarchy,
         groupEventsByLatLngInDateRange
     };

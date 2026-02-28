@@ -164,60 +164,36 @@ def create_short_name(name):
 
 
 # =============================================================================
-# Category Tag Mapping (loaded lazily from tag_groups.json)
+# Tag Ancestor Map (loaded from database tag_hierarchy)
 # =============================================================================
 
-_category_tag_data = None
+_tag_ancestor_data = None
 
-def _load_category_tag_map():
-    """Load tag_groups.json, build reverse map: normalized_tag -> [primaryTag, ...].
+def _load_tag_ancestor_map(cursor=None):
+    """Load tag hierarchy from database, build ancestor map.
 
-    Returns (category_map, main_primary_tags) where main_primary_tags is a set
-    of normalized primary tags excluding cross-cutting ones (Free, Virtual).
+    Returns (ancestor_map, root_tags) where:
+      - ancestor_map: dict mapping normalized_tag_name -> set of ancestor tag names
+      - root_tags: set of normalized names for root tags (no parents, excl. Free/Virtual)
+
+    If cursor is None, returns cached data (or empty defaults).
     """
-    global _category_tag_data
-    if _category_tag_data is not None:
-        return _category_tag_data
+    global _tag_ancestor_data
+    if _tag_ancestor_data is not None:
+        return _tag_ancestor_data
 
-    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'src', 'data', 'tag_groups.json')
-    try:
-        with open(path, 'r', encoding='utf-8') as f:
-            groups = json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError) as e:
-        print(f"Warning: Could not load tag_groups.json: {e}")
-        _category_tag_data = ({}, set())
-        return _category_tag_data
+    if cursor is None:
+        return {}, set()
 
-    CROSS_CUTTING = {'free', 'virtual'}
-    category_map = {}
-    main_primary_tags = set()
-
-    for group in groups:
-        primary = group.get('primaryTag')
-        if not primary:
-            continue
-        primary_normalized = primary.lower().replace(' ', '')
-
-        # Track main (non-cross-cutting) primary tags
-        if primary_normalized not in CROSS_CUTTING and primary_normalized != 'other':
-            main_primary_tags.add(primary_normalized)
-
-        for tag in group.get('tags', []):
-            key = tag.lower().replace(' ', '')
-            if key not in category_map:
-                category_map[key] = []
-            if primary not in category_map[key]:
-                category_map[key].append(primary)
-
-    _category_tag_data = (category_map, main_primary_tags)
-    return _category_tag_data
+    _tag_ancestor_data = db.build_tag_ancestor_map(cursor)
+    return _tag_ancestor_data
 
 
 # =============================================================================
 # Tag Processing
 # =============================================================================
 
-def process_tags(row_dict, tag_rules, extra_tags=None):
+def process_tags(row_dict, tag_rules, extra_tags=None, ancestor_map=None, root_tags=None):
     """Processes the 'hashtags' field (string or list) into a list of 'tags'."""
     if 'hashtags' not in row_dict:
         return row_dict
@@ -276,27 +252,26 @@ def process_tags(row_dict, tag_rules, extra_tags=None):
             processed_tags.append(final_tag)
             seen_tags.add(final_tag_lookup)
 
-    # Derive category tags from the processed tag set
-    category_map, main_primary_tags = _load_category_tag_map()
-    if category_map:
-        cats_to_add = set()
+    # Derive ancestor tags from the database hierarchy
+    if ancestor_map is None or root_tags is None:
+        ancestor_map, root_tags = _load_tag_ancestor_map()
+    if ancestor_map:
+        ancestors_to_add = set()
         for tag in processed_tags:
             key = tag.lower().replace(' ', '')
-            for primary in category_map.get(key, []):
-                if primary.lower().replace(' ', '') not in seen_tags:
-                    cats_to_add.add(primary)
-        for cat in sorted(cats_to_add):
-            processed_tags.append(cat)
-            seen_tags.add(cat.lower().replace(' ', ''))
+            for ancestor in ancestor_map.get(key, set()):
+                if ancestor.lower().replace(' ', '') not in seen_tags:
+                    ancestors_to_add.add(ancestor)
+        for anc in sorted(ancestors_to_add):
+            processed_tags.append(anc)
+            seen_tags.add(anc.lower().replace(' ', ''))
 
-        # Fallback: add "Other" if no main category was assigned
-        # (Free/Virtual are cross-cutting and don't count as main categories)
-        has_main = any(
-            c.lower().replace(' ', '') in main_primary_tags for c in cats_to_add
-        ) or any(
-            t.lower().replace(' ', '') in main_primary_tags for t in processed_tags
+        # Fallback: add "Other" if no root-level tag was assigned
+        # (Free/Virtual are cross-cutting and don't count as root tags)
+        has_root = any(
+            t.lower().replace(' ', '') in root_tags for t in processed_tags
         )
-        if not has_main and 'other' not in seen_tags:
+        if not has_root and 'other' not in seen_tags:
             processed_tags.append('Other')
             seen_tags.add('other')
 
@@ -507,12 +482,21 @@ def _normalize_location_name(name):
 
     normalized = re.sub(r'[^\w\s]', '', original_lower)
 
-    if normalized in ['virtual', 'online', 'livestream']:
+    if normalized in ['virtual', 'online', 'livestream', 'private residence',
+                      'various locations', 'zoom', 'unknown venue']:
         return ""
     if len(normalized) > 15 and normalized.startswith('the '):
         normalized = normalized[4:]
 
-    suffixes = ['nyc', 'new york', 'brooklyn', 'manhattan', 'queens', 'bronx', 'staten island']
+    # Strip trailing state abbreviations/names (e.g., "Brooklyn, NY" -> "brooklyn")
+    state_suffixes = [' ny', ' nj', ' ct', ' new york', ' new jersey', ' connecticut']
+    for ss in state_suffixes:
+        if normalized.endswith(ss) and len(normalized) > len(ss) + 1:
+            normalized = normalized[:-len(ss)].strip()
+            break
+
+    suffixes = ['nyc', 'new york', 'brooklyn', 'manhattan', 'queens', 'bronx', 'staten island',
+                'the bronx', 'long island']
     if normalized in suffixes:
         return ""
 
@@ -797,7 +781,7 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
                 if is_match:
                     if len(normalized_name) > 3 and key == normalized_name:
                         score = 1.0
-                    elif len(key) > 3 and (full_loc.startswith(key) or full_loc.endswith(key)):
+                    elif len(key) > 3 and (full_loc.startswith(key) or full_loc.endswith(key)) and len(key) / len(full_loc) >= 0.7:
                         score = 0.9 + (len(key) / len(full_loc)) * 0.09
                     else:
                         score = max(
@@ -970,8 +954,9 @@ def process_events(cursor, connection, crawl_result_id, website_name, run_date_s
     current_date = datetime.now().date()
     future_limit_date = (datetime.now() + timedelta(days=90)).date()
 
-    # Get tag rules from database
+    # Get tag rules and ancestor map from database
     tag_rules = db.get_tag_rules(cursor)
+    ancestor_map, root_tags = _load_tag_ancestor_map(cursor)
 
     processed_rows = []
 
@@ -992,7 +977,8 @@ def process_events(cursor, connection, crawl_result_id, website_name, run_date_s
         if source_url and websites_map:
             extra_tags_list = websites_map.get(source_url.rstrip('/').lower(), [])
 
-        processed_row = process_tags(row_dict, tag_rules, extra_tags=extra_tags_list)
+        processed_row = process_tags(row_dict, tag_rules, extra_tags=extra_tags_list,
+                                     ancestor_map=ancestor_map, root_tags=root_tags)
 
         # Check for virtual events
         if any(kw in processed_row.get('location', '').lower() for kw in ['virtual', 'online', 'livestream']):
