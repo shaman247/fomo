@@ -57,7 +57,10 @@ document.addEventListener('DOMContentLoaded', () => {
             allEvents: [],
             eventsById: {},
             tagConfig: {},
-            tagGroups: [],
+            quickFilters: [],
+            hierarchyTagsSet: new Set(),
+            tagDescendantsOf: {},
+            tagEmojiMap: {},
             eventsByLatLng: {},
             locationsByLatLng: {},
             tagFrequencies: {},
@@ -106,8 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
             EVENT_FULL_URL: 'data/events.full.json',
             LOCATIONS_FULL_URL: 'data/locations.full.json',
             TAG_CONFIG_URL: 'data/tags.json',
-            RELATED_TAGS_URL: 'data/related_tags.json',
-            TAG_GROUPS_URL: 'data/tag_groups.json',
+            TAG_HIERARCHY_URL: 'data/tag_hierarchy.json',
 
             START_DATE: new Date(new Date().setHours(0, 0, 0, 0)),
             END_DATE: new Date(new Date().setHours(0, 0, 0, 0) + 90 * 24 * 60 * 60 * 1000),
@@ -151,7 +153,6 @@ document.addEventListener('DOMContentLoaded', () => {
          * @property {HTMLElement} expandFilterPanelButton - Button to expand/collapse filter panel on mobile
          * @property {HTMLElement} filterPanel - Filter panel element
          * @property {HTMLElement} omniSearchInput - Search input element
-         * @property {HTMLElement} selectedTagsDisplay - Display for selected tags
          */
         elements: {
             resultsContainer: document.getElementById('results-container'),
@@ -163,7 +164,6 @@ document.addEventListener('DOMContentLoaded', () => {
             expandFilterPanelButton: document.getElementById('expand-filter-panel-button'),
             filterPanel: document.getElementById('filter-panel'),
             omniSearchInput: document.getElementById('omni-search-input'),
-            selectedTagsDisplay: document.getElementById('selected-tags-display'),
         },
 
         /**
@@ -194,34 +194,30 @@ document.addEventListener('DOMContentLoaded', () => {
          * @private
          */
         async _loadInitialData() {
-            const [initEventData, initLocationData, tagConfig, tagGroups] = await Promise.all([
+            const [initEventData, initLocationData, tagConfig, tagHierarchy] = await Promise.all([
                 DataManager.fetchData(this.config.EVENT_INIT_URL),
                 DataManager.fetchData(this.config.LOCATIONS_INIT_URL),
                 DataManager.fetchData(this.config.TAG_CONFIG_URL),
-                DataManager.fetchData(this.config.TAG_GROUPS_URL)
+                DataManager.fetchData(this.config.TAG_HIERARCHY_URL)
             ]);
 
             this.state.tagConfig = tagConfig;
-            this.state.tagGroups = tagGroups || [];
             this.state.geotagsSet = new Set((tagConfig.geotags || []).map(tag => tag.toLowerCase()));
 
-            // Initialize TagColorManager with color palettes
+            // Build hierarchy maps from exported data
+            const hierarchyMaps = DataManager.buildTagHierarchyMaps(tagHierarchy || { tags: [], keywords: [] });
+            this.state.quickFilters = hierarchyMaps.quickFilters;
+            this.state.hierarchyTagsSet = hierarchyMaps.hierarchyTagsSet;
+            this.state.tagDescendantsOf = hierarchyMaps.descendantsOf;
+            this.state.tagEmojiMap = hierarchyMaps.tagEmojiMap;
+
+            // Initialize TagColorManager with color palettes and emoji bgcolors
             TagColorManager.init({
                 darkPalette: this.config.TAG_COLOR_PALETTE_DARK,
                 lightPalette: this.config.TAG_COLOR_PALETTE_LIGHT,
-                onImplicitTagsChanged: (addedTags, removedTags) => {
-                    // Update tag states for added/removed implicit tags
-                    if (SelectedTagsDisplay.isIncludingRelatedTags()) {
-                        addedTags.forEach(tag => FilterPanelUI.setTagState(tag, 'implicit'));
-                        removedTags.forEach(tag => FilterPanelUI.setTagState(tag, 'unselected'));
-                        // Update visuals for all tag buttons
-                        FilterPanelUI.updateAllTagVisuals();
-                    }
-                }
+                tagEmojiMap: this.state.tagEmojiMap,
+                bgcolors: this.state.tagConfig.bgcolors || {}
             });
-
-            // RelatedTagsManager is deferred to Phase 2 (loaded in _loadFullData)
-            // TagColorManager works without it — getRelatedTags() returns [] until loaded
 
             DataManager.processInitialData(initEventData, initLocationData, this.state, this.config);
             DataManager.calculateTagFrequencies(this.state);
@@ -265,7 +261,6 @@ document.addEventListener('DOMContentLoaded', () => {
             // This ensures tags are selected when the date picker triggers initial filtering
             if (urlParams.tags && urlParams.tags.length > 0) {
                 FilterPanelUI.selectTags(urlParams.tags, (tag) => TagColorManager.assignColorToTag(tag));
-                SelectedTagsDisplay.render();
             }
 
             UIManager.initDatePicker(this.elements, this.config, this.state, {
@@ -346,15 +341,10 @@ document.addEventListener('DOMContentLoaded', () => {
          */
         async _loadFullData(urlParams) {
             try {
-                // Load full dataset and related tags in parallel
+                // Load full dataset in parallel
                 const [fullEventData, fullLocationData] = await Promise.all([
                     DataManager.fetchData(this.config.EVENT_FULL_URL),
-                    DataManager.fetchData(this.config.LOCATIONS_FULL_URL),
-                    // Related tags deferred from Phase 1 — load in background
-                    RelatedTagsManager.init({ relatedTagsUrl: this.config.RELATED_TAGS_URL })
-                        .then(() => TagColorManager.setRelatedTagsCallback(
-                            (tag) => RelatedTagsManager.getRelatedTags(tag)
-                        ))
+                    DataManager.fetchData(this.config.LOCATIONS_FULL_URL)
                 ]);
 
                 // Merge and process the full dataset
@@ -373,7 +363,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 // This preserves the tags selected from URL parameters during Phase 2 full data load
                 if (urlParams.tags && urlParams.tags.length > 0) {
                     FilterPanelUI.selectTags(urlParams.tags, (tag) => TagColorManager.assignColorToTag(tag));
-                    SelectedTagsDisplay.render();
                 }
 
                 // Re-render with the full dataset, applying current filters.
@@ -443,7 +432,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     },
                     updateFilteredEventList: () => this.updateFilteredEventList(),
                     onFilterChange: () => {
-                        SelectedTagsDisplay.render();
                         this.filterAndDisplayEvents();
                     },
                 });
@@ -485,7 +473,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 onThemeChange: (theme) => {
                     // Reassign colors for selected tags with new theme palette
                     TagColorManager.reassignTagColors();
-                    SelectedTagsDisplay.render();
+                    FilterPanelUI.renderChipBar();
                 }
             });
         },
@@ -516,8 +504,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Use SearchManager to perform the search
             const dynamicFrequencies = FilterPanelUI.getDynamicFrequencies();
 
-            // Get selected tags with colors from SelectedTagsDisplay (respects include related tags setting)
-            const selectedTagsWithColors = SelectedTagsDisplay.getEffectiveSelectedTagsWithColors();
+            const selectedTagsWithColors = TagColorManager.getSelectedTagsWithColors();
 
             const results = SearchManager.search(term, dynamicFrequencies, selectedTagsWithColors);
 
@@ -917,11 +904,12 @@ document.addEventListener('DOMContentLoaded', () => {
             FilterPanelUI.init({
                 allAvailableTags: this.state.allAvailableTags,
                 tagConfigBgColors: this.state.tagConfig.bgcolors,
-                tagGroups: this.state.tagGroups,
+                tagDescendantsOf: this.state.tagDescendantsOf,
+                tagEmojiMap: this.state.tagEmojiMap,
+                getSelectedTagsWithColors: () => TagColorManager.getSelectedTagsWithColors(),
                 initialGlobalFrequencies: this.state.tagFrequencies,
                 resultsContainerDOM: this.elements.resultsContainer,
                 onFilterChangeCallback: () => {
-                    SelectedTagsDisplay.render();
                     this.filterAndDisplayEvents();
                     HistoryManager.push();
                 },
@@ -929,11 +917,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 defaultMarkerColor: this.config.DEFAULT_MARKER_COLOR_DARK,
                 performSearch: (term) => this.performSearch(term),
                 getSearchTerm: () => this.elements.omniSearchInput.value.toLowerCase(),
+                getVisibleTagFrequencies: () => this.state.visibleTagFrequencies,
                 colorProvider: {
                     getTagColor: (tag) => TagColorManager.getTagColor(tag),
                     assignColorToTag: (tag) => TagColorManager.assignColorToTag(tag),
-                    unassignColorFromTag: (tag) => TagColorManager.unassignColorFromTag(tag),
-                    isImplicitlySelected: (tag) => TagColorManager.isImplicitlySelected(tag)
+                    unassignColorFromTag: (tag) => TagColorManager.unassignColorFromTag(tag)
                 }
             });
             FilterPanelUI.setAppProviders({ getSelectedLocationKey: () => this.state.selectedLocationKey });
@@ -941,21 +929,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Initialize PopupContentBuilder for creating marker popups
             PopupContentBuilder.init({
-                createInteractiveTagButton: (tag) => FilterPanelUI.createInteractiveTagButton(tag)
-            });
-
-            // Initialize SelectedTagsDisplay
-            SelectedTagsDisplay.init({
-                containerDOM: this.elements.selectedTagsDisplay,
-                quickFilterTags: new Set((this.state.tagGroups || [])
-                    .filter(g => g.quickFilter)
-                    .map(g => g.primaryTag)),
-                getSelectedTagsWithColors: () => TagColorManager.getSelectedTagsWithColors(),
                 createInteractiveTagButton: (tag) => FilterPanelUI.createInteractiveTagButton(tag),
-                setTagState: (tag, state) => FilterPanelUI.setTagState(tag, state),
-                onRelatedTagsToggle: () => {
-                    this.filterAndDisplayEvents();
-                }
+                hierarchyTagsSet: this.state.hierarchyTagsSet,
+                tagEmojiMap: this.state.tagEmojiMap
             });
         },
 
@@ -1025,14 +1001,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const currentTagStates = FilterPanelUI.getTagStates();
 
-            // Get selected tags from SelectedTagsDisplay (respects include related tags setting)
-            const selectedTags = SelectedTagsDisplay.getEffectiveSelectedTags();
-
             // Use FilterManager to filter events by tags
             const allMatchingEventsFlatList = FilterManager.filterEventsByTags(
                 currentTagStates,
-                this.state.allEventsFilteredByDateAndLocation,
-                selectedTags
+                this.state.allEventsFilteredByDateAndLocation
             );
 
             // Store the computed lists in the state for use by other functions like search

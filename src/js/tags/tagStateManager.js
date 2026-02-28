@@ -26,8 +26,7 @@ const TagStateManager = (() => {
         UNSELECTED: 'unselected',
         SELECTED: 'selected',
         REQUIRED: 'required',
-        FORBIDDEN: 'forbidden',
-        IMPLICIT: 'implicit'  // Implicitly selected via related tags
+        FORBIDDEN: 'forbidden'
     };
 
     // ========================================
@@ -43,13 +42,15 @@ const TagStateManager = (() => {
 
         // Provider objects
         colorProvider: null,    // { getTagColor, assignColorToTag, unassignColorFromTag }
-        relatedTagsProvider: null, // { isImplicitlySelected, isIncludingRelatedTags }
 
         // Callbacks
         onFilterChangeCallback: null,
 
         // Configuration
-        defaultMarkerColor: null
+        defaultMarkerColor: null,
+
+        // Emoji lookup (tagName -> emoji)
+        tagEmojiMap: {}
     };
 
     // ========================================
@@ -68,7 +69,6 @@ const TagStateManager = (() => {
             case TAG_STATE.FORBIDDEN:
                 return TAG_STATE.UNSELECTED;
             case TAG_STATE.UNSELECTED:
-            case TAG_STATE.IMPLICIT:
                 return TAG_STATE.SELECTED;
             default:
                 return TAG_STATE.SELECTED;
@@ -83,7 +83,6 @@ const TagStateManager = (() => {
     function getRightClickNextState(currentState) {
         switch (currentState) {
             case TAG_STATE.UNSELECTED:
-            case TAG_STATE.IMPLICIT:
                 return TAG_STATE.SELECTED;
             case TAG_STATE.SELECTED:
                 return TAG_STATE.REQUIRED;
@@ -102,10 +101,10 @@ const TagStateManager = (() => {
      * @param {string} tag - Tag name
      */
     function handleColorAssignment(oldState, newState, tag) {
-        const wasUnselected = oldState === TAG_STATE.UNSELECTED || oldState === TAG_STATE.IMPLICIT;
+        const wasUnselected = oldState === TAG_STATE.UNSELECTED;
         const isNowActive = newState === TAG_STATE.SELECTED || newState === TAG_STATE.REQUIRED;
         const wasActive = oldState === TAG_STATE.SELECTED || oldState === TAG_STATE.REQUIRED || oldState === TAG_STATE.FORBIDDEN;
-        const isNowUnselected = newState === TAG_STATE.UNSELECTED || newState === TAG_STATE.IMPLICIT;
+        const isNowUnselected = newState === TAG_STATE.UNSELECTED;
 
         if (wasUnselected && isNowActive) {
             if (state.colorProvider && state.colorProvider.assignColorToTag) {
@@ -163,12 +162,6 @@ const TagStateManager = (() => {
                 buttonElement.setAttribute('aria-label', `${tagValue}`);
                 break;
 
-            case TAG_STATE.IMPLICIT:
-                buttonElement.classList.add('state-implicit');
-                buttonElement.setAttribute('aria-pressed', 'mixed');
-                buttonElement.setAttribute('aria-label', `${tagValue} (related)`);
-                break;
-
             case TAG_STATE.UNSELECTED:
             default:
                 buttonElement.classList.add('state-unselected');
@@ -177,7 +170,16 @@ const TagStateManager = (() => {
                 break;
         }
 
-        buttonElement.textContent = tagValue;
+        const emoji = state.tagEmojiMap[tagValue] || '';
+        buttonElement.textContent = '';
+        if (emoji) {
+            const emojiSpan = document.createElement('span');
+            emojiSpan.className = 'chip-emoji';
+            emojiSpan.setAttribute('aria-hidden', 'true');
+            emojiSpan.textContent = emoji;
+            buttonElement.appendChild(emojiSpan);
+        }
+        buttonElement.appendChild(document.createTextNode(tagValue));
     }
 
     // ========================================
@@ -376,18 +378,15 @@ const TagStateManager = (() => {
      * @param {Function} config.colorProvider.getTagColor - Get tag color
      * @param {Function} config.colorProvider.assignColorToTag - Assign color to tag
      * @param {Function} config.colorProvider.unassignColorFromTag - Unassign color from tag
-     * @param {Object} [config.relatedTagsProvider] - Provider for related tags operations
-     * @param {Function} [config.relatedTagsProvider.isImplicitlySelected] - Check if tag is implicitly selected
-     * @param {Function} [config.relatedTagsProvider.isIncludingRelatedTags] - Check if related tags are included
      * @param {Function} config.onFilterChangeCallback - Callback when filters change
      * @param {string} config.defaultMarkerColor - Default marker color
      */
     function init(config) {
         state.tagStates = config.tagStates;
         state.colorProvider = config.colorProvider || null;
-        state.relatedTagsProvider = config.relatedTagsProvider || null;
         state.onFilterChangeCallback = config.onFilterChangeCallback;
         state.defaultMarkerColor = config.defaultMarkerColor;
+        state.tagEmojiMap = config.tagEmojiMap || {};
     }
 
     /**

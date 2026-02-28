@@ -32,6 +32,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 4px;
     padding: 5px 10px;
     border-radius: 14px;
     font-size: 1.07em;
@@ -135,25 +136,19 @@
     vertical-align: middle;
 }
 
-/* === Implicit Tags (Related Tags) === */
-/* Tags that are implicitly selected through related tags system */
-.tag-button.state-implicit {
-    background-color: color-mix(in srgb, var(--secondary-accent-color) 25%, var(--tertiary-bg));
-    color: var(--primary-text);
-}
-
-.tag-button.state-implicit:hover {
-    background-color: color-mix(in srgb, var(--secondary-accent-hover) 35%, var(--tertiary-bg));
-}
-
-/* Active related tags toggle button */
-.tag-button.related-tags-active {
-    background-color: color-mix(in srgb, var(--secondary-accent-color) 40%, var(--tertiary-bg));
-    color: var(--primary-text);
-}
-
-.tag-button.related-tags-active:hover {
-    background-color: color-mix(in srgb, var(--secondary-accent-hover) 55%, var(--tertiary-bg));
+/* === Display-Only Keyword Tags === */
+/* Non-clickable pills for keyword tags in popups */
+.tag-keyword {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 4px 9px;
+    border-radius: 12px;
+    font-size: 0.95em;
+    background-color: color-mix(in srgb, var(--tertiary-bg) 40%, transparent);
+    color: var(--secondary-text);
+    opacity: 0.7;
+    cursor: default;
 }
 
 /* === Mobile Responsive Styles === */

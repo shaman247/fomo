@@ -307,6 +307,12 @@
     background-color: color-mix(in srgb, var(--secondary-accent-hover) 35%, var(--tertiary-bg));
 }
 
+/* Keyword tag pills in popups — override inherited cursor:pointer from .popup-event-card */
+.maplibregl-popup-content .tag-keyword {
+    cursor: default;
+    font-size: 0.8em;
+}
+
 /* === Events List === */
 
 .popup-events-list {
