@@ -354,6 +354,78 @@ def are_names_similar(name1, name2):
     return False
 
 
+def _deduplicate_same_name_events(cursor, connection, current_date, edit_logger=None):
+    """Find and merge exact-name duplicate events within the same website.
+
+    Catches duplicates that slip through the main matching logic when AI extraction
+    assigns inconsistent location info between crawls.  Keeps the oldest event
+    (lowest id) and merges newer duplicates into it.
+
+    Returns the number of duplicate events removed.
+    """
+    cursor.execute("""
+        SELECT LOWER(TRIM(e.name)) AS norm_name, e.website_id,
+               GROUP_CONCAT(DISTINCT e.id ORDER BY e.id) AS event_ids,
+               COUNT(DISTINCT e.id) AS cnt
+        FROM events e
+        JOIN event_occurrences eo ON eo.event_id = e.id
+        WHERE eo.start_date >= %s
+          AND e.archived = 0
+          AND e.suppressed = 0
+        GROUP BY LOWER(TRIM(e.name)), e.website_id
+        HAVING COUNT(DISTINCT e.id) > 1
+    """, (current_date,))
+    dup_groups = cursor.fetchall()
+
+    if not dup_groups:
+        return 0
+
+    removed = 0
+    for row in dup_groups:
+        ids = [int(x) for x in row[2].split(',')]
+        keep_id = ids[0]
+        for remove_id in ids[1:]:
+            # Transfer event_sources that don't already exist on the keeper
+            cursor.execute("""
+                UPDATE event_sources SET event_id = %s
+                WHERE event_id = %s
+                  AND crawl_event_id NOT IN (
+                      SELECT crawl_event_id FROM (
+                          SELECT crawl_event_id FROM event_sources WHERE event_id = %s
+                      ) t
+                  )
+            """, (keep_id, remove_id, keep_id))
+
+            # Remove leftover sources
+            cursor.execute("DELETE FROM event_sources WHERE event_id = %s", (remove_id,))
+
+            # Merge any unique occurrences into the keeper
+            cursor.execute("""
+                INSERT IGNORE INTO event_occurrences
+                    (event_id, start_date, start_time, end_date, end_time, sort_order)
+                SELECT %s, start_date, start_time, end_date, end_time, sort_order
+                FROM event_occurrences WHERE event_id = %s
+            """, (keep_id, remove_id))
+
+            # Clean up the duplicate
+            cursor.execute("DELETE FROM event_occurrences WHERE event_id = %s", (remove_id,))
+            cursor.execute("DELETE FROM event_urls WHERE event_id = %s", (remove_id,))
+            cursor.execute("DELETE FROM event_tags WHERE event_id = %s", (remove_id,))
+
+            if edit_logger:
+                cursor.execute("SELECT * FROM events WHERE id = %s", (remove_id,))
+                record = cursor.fetchone()
+                if record:
+                    col_names = [d[0] for d in cursor.description]
+                    edit_logger.log_delete('events', remove_id, dict(zip(col_names, record)))
+
+            cursor.execute("DELETE FROM events WHERE id = %s", (remove_id,))
+            removed += 1
+
+    connection.commit()
+    return removed
+
+
 def merge_crawl_events(cursor, connection, crawl_run_id=None):
     """
     Merge new crawl_events into the final events table with deduplication.
@@ -387,7 +459,9 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None):
         edit_logger = EditLogger(cursor, connection, source='crawl',
                                  editor_info=f'crawl_run:{crawl_run_id}' if crawl_run_id else 'crawl')
 
-    # Get crawl_events that haven't been linked to any final event yet
+    # Get crawl_events that haven't been linked to any final event yet.
+    # Only fetch CEs that have at least one future occurrence — skips historical
+    # backlog CEs with only past dates that can never match future events.
     cursor.execute("""
         SELECT ce.id, ce.name, ce.short_name, ce.description, ce.emoji,
                ce.location_name, ce.sublocation, ce.location_id, ce.url,
@@ -398,13 +472,24 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None):
         LEFT JOIN locations l ON ce.location_id = l.id
         WHERE cr.status = 'processed'
           AND es.id IS NULL
-    """)
+          AND EXISTS (
+              SELECT 1 FROM crawl_event_occurrences ceo
+              WHERE ceo.crawl_event_id = ce.id
+                AND (ceo.start_date >= %s OR (ceo.end_date IS NOT NULL AND ceo.end_date >= %s))
+          )
+    """, (current_date, current_date))
 
     new_crawl_events = cursor.fetchall()
     print(f"  Found {len(new_crawl_events)} unprocessed crawl_events")
 
     if not new_crawl_events:
         return 0, 0
+
+    # Build website -> location_ids map for authoritative location correction
+    cursor.execute("SELECT website_id, location_id FROM website_locations")
+    website_location_ids = {}
+    for row in cursor.fetchall():
+        website_location_ids.setdefault(row[0], set()).add(row[1])
 
     # Build lookups of existing events for deduplication:
     # 1. By location_id for events with matched locations
@@ -494,8 +579,11 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None):
         valid_occurrences = []
         for occ in occurrences:
             start_date = occ[0]
-            if start_date and current_date <= start_date <= future_limit_date:
-                valid_occurrences.append(occ)
+            end_date = occ[2]
+            if start_date and start_date <= future_limit_date:
+                # Include if start_date is today or future, OR if end_date extends past today
+                if start_date >= current_date or (end_date and end_date >= current_date):
+                    valid_occurrences.append(occ)
 
         if not valid_occurrences:
             # No valid future occurrences, skip
@@ -570,12 +658,17 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None):
                         (matched_event_id, url[:2000])
                     )
 
-            # Update location_id if not already set (in case location was added after event)
+            # Update location_id if missing or if the new value is the website's
+            # linked location (corrects stale fuzzy-match errors from earlier crawls)
             if location_id:
                 cursor.execute("SELECT location_id FROM events WHERE id = %s", (matched_event_id,))
                 result = cursor.fetchone()
                 current_location_id = result[0] if result else None
-                if not current_location_id:
+                if not current_location_id or (
+                    current_location_id != location_id and
+                    website_id in website_location_ids and
+                    location_id in website_location_ids[website_id]
+                ):
                     cursor.execute("UPDATE events SET location_id = %s WHERE id = %s", (location_id, matched_event_id))
 
             # Link crawl_event to existing event
@@ -685,6 +778,14 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None):
 
     connection.commit()
     print(f"  Added {new_events_count} new events, merged {merged_count} duplicates")
+
+    # Post-merge dedup: catch any exact-name duplicates the matching logic missed.
+    # This happens when AI extraction assigns different locations between crawls,
+    # causing the merger to create a new event instead of matching the existing one.
+    if new_events_count > 0:
+        deduped = _deduplicate_same_name_events(cursor, connection, current_date, edit_logger)
+        if deduped > 0:
+            print(f"  Post-merge dedup: merged {deduped} duplicate(s)")
 
     # Archive outdated events after merging
     # Only archive for websites where we processed crawl_events from their LATEST

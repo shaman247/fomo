@@ -48,7 +48,10 @@ const FilterPanelUI = (() => {
 
         // Section management - determined at init time based on device type
         sectionOrder: null,
-        sectionViewStates: null
+        sectionViewStates: null,
+
+        // Tag groups for quick filters and grouped tag display
+        tagGroups: []
     };
 
     /**
@@ -124,6 +127,109 @@ const FilterPanelUI = (() => {
         SearchController.clearSearch();
         state.searchTerm = '';
         renderFilters([]);
+    }
+
+    // ========================================
+    // QUICK FILTERS
+    // ========================================
+
+    /**
+     * Renders quick filter chips from tag groups config.
+     * Called once on init; active states are refreshed after each filter change.
+     */
+    function _renderQuickFilters() {
+        const container = document.getElementById('quick-filters-row');
+        if (!container || !state.tagGroups || state.tagGroups.length === 0) return;
+
+        const quickFilters = state.tagGroups.filter(g => g.quickFilter);
+        if (quickFilters.length === 0) return;
+
+        container.innerHTML = '';
+        quickFilters.forEach(group => {
+            const btn = document.createElement('button');
+            btn.className = 'quick-filter-chip';
+            btn.dataset.primaryTag = group.primaryTag;
+            btn.dataset.groupId = group.id;
+            btn.setAttribute('aria-label', `Filter by ${group.label}`);
+            btn.innerHTML = `<span class="chip-emoji" aria-hidden="true">${group.emoji}</span>${group.label}`;
+            btn.addEventListener('click', () => _handleQuickFilterClick(group));
+            container.appendChild(btn);
+        });
+
+        container.style.display = 'flex';
+    }
+
+    /**
+     * Toggles the primary tag for a quick filter group on/off.
+     */
+    function _handleQuickFilterClick(group) {
+        const TAG_STATE = TagStateManager.getTagStateConstants();
+        const currentState = TagStateManager.getTagState(group.primaryTag);
+
+        if (currentState !== TAG_STATE.UNSELECTED) {
+            // Deselect: return to unselected
+            state.tagStates[group.primaryTag] = TAG_STATE.UNSELECTED;
+            if (state.colorProvider) {
+                state.colorProvider.unassignColorFromTag(group.primaryTag);
+            }
+        } else {
+            // Select: set to selected state and assign color
+            state.tagStates[group.primaryTag] = TAG_STATE.SELECTED;
+            if (state.colorProvider) {
+                state.colorProvider.assignColorToTag(group.primaryTag);
+            }
+        }
+
+        if (state.onFilterChangeCallback) {
+            state.onFilterChangeCallback();
+        }
+    }
+
+    /**
+     * Updates active/inactive visual state on all quick filter chips
+     * and re-sorts them: selected first, then by descending frequency.
+     */
+    function _updateQuickFilterActiveStates() {
+        const container = document.getElementById('quick-filters-row');
+        if (!container) return;
+
+        const TAG_STATE = TagStateManager.getTagStateConstants();
+        const chips = Array.from(container.querySelectorAll('.quick-filter-chip'));
+
+        chips.forEach(btn => {
+            const primaryTag = btn.dataset.primaryTag;
+            const tagState = TagStateManager.getTagState(primaryTag);
+            const isActive = tagState !== TAG_STATE.UNSELECTED;
+            btn.classList.toggle('active', isActive);
+            if (isActive && state.colorProvider) {
+                const color = state.colorProvider.getTagColor(primaryTag);
+                if (color) {
+                    btn.style.setProperty('--chip-color', color);
+                }
+            } else {
+                btn.style.removeProperty('--chip-color');
+            }
+        });
+
+        // Sort: selected first, then search matches, then by descending frequency
+        const searchTerm = state.searchTerm ? state.searchTerm.trim().toLowerCase() : '';
+        chips.sort((a, b) => {
+            const aActive = a.classList.contains('active') ? 1 : 0;
+            const bActive = b.classList.contains('active') ? 1 : 0;
+            if (aActive !== bActive) return bActive - aActive;
+
+            if (searchTerm) {
+                const aMatch = a.textContent.toLowerCase().includes(searchTerm) ? 1 : 0;
+                const bMatch = b.textContent.toLowerCase().includes(searchTerm) ? 1 : 0;
+                if (aMatch !== bMatch) return bMatch - aMatch;
+            }
+
+            const aFreq = state.currentDynamicFrequencies[a.dataset.primaryTag] || 0;
+            const bFreq = state.currentDynamicFrequencies[b.dataset.primaryTag] || 0;
+            return bFreq - aFreq;
+        });
+
+        chips.forEach(btn => container.appendChild(btn));
     }
 
     // ========================================
@@ -218,6 +324,7 @@ const FilterPanelUI = (() => {
         state.colorProvider = config.colorProvider || null;
         state.allAvailableTags = config.allAvailableTags || [];
         state.tagConfigBgColors = config.tagConfigBgColors || [];
+        state.tagGroups = config.tagGroups || [];
         state.resultsContainerDOM = config.resultsContainerDOM;
         state.onFilterChangeCallback = config.onFilterChangeCallback;
         state.onSearchResultClick = config.onSearchResultClick;
@@ -269,8 +376,13 @@ const FilterPanelUI = (() => {
             onSectionReorder: (newOrder) => {
                 state.sectionOrder = newOrder;
             },
-            onAfterRender: _distributeContentMobile
+            onAfterRender: () => {
+                _distributeContentMobile();
+                _updateQuickFilterActiveStates();
+            }
         });
+
+        _renderQuickFilters();
 
         // Initialize GestureHandler (desktop only — conflicts with horizontal tag scroll on mobile)
         if (!isMobileLayout()) {
@@ -363,6 +475,7 @@ const FilterPanelUI = (() => {
             state.tagStates[tag] = TAG_STATE.UNSELECTED;
         });
         clearSearch('');
+        _updateQuickFilterActiveStates();
     }
 
     /**

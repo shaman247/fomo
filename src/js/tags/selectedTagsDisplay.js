@@ -29,6 +29,9 @@ const SelectedTagsDisplay = (() => {
         // Whether related/implicit tags are included in search and filtering
         includeRelatedTags: false,
 
+        // Tags shown as quick filter chips (skip from pill display)
+        quickFilterTags: new Set(),
+
         // Callbacks
         getSelectedTagsWithColors: null,
         createInteractiveTagButton: null,
@@ -54,8 +57,9 @@ const SelectedTagsDisplay = (() => {
             : [];
 
         // Separate explicit (weight=1.0) and implicit (weight<1.0) tags
+        // Skip tags already shown as quick filter chips
         const explicitTags = allTagsWithColors
-            .filter(([, , weight]) => weight === 1.0)
+            .filter(([tag, , weight]) => weight === 1.0 && !state.quickFilterTags.has(tag))
             .map(([tag]) => tag);
         const implicitTags = allTagsWithColors
             .filter(([, , weight]) => weight < 1.0)
@@ -210,6 +214,7 @@ const SelectedTagsDisplay = (() => {
      */
     function init(config) {
         state.containerDOM = config.containerDOM;
+        state.quickFilterTags = config.quickFilterTags || new Set();
         state.getSelectedTagsWithColors = config.getSelectedTagsWithColors;
         state.createInteractiveTagButton = config.createInteractiveTagButton;
         state.onRelatedTagsToggle = config.onRelatedTagsToggle;

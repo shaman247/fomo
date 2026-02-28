@@ -173,6 +173,44 @@
     gap: 12px;
 }
 
+/* Quick filter chips row */
+#quick-filters-row {
+    display: none; /* shown via JS once tagGroups are loaded */
+    flex-wrap: wrap;
+    gap: 5px;
+    padding: 2px 0;
+}
+
+.quick-filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 11px;
+    border-radius: 16px;
+    border: 1.5px solid var(--border-color);
+    background: color-mix(in srgb, var(--tertiary-bg) 70%, transparent);
+    color: var(--primary-text);
+    font-size: 0.95em;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.quick-filter-chip:hover {
+    background: color-mix(in srgb, var(--tertiary-bg) 95%, transparent);
+}
+
+.quick-filter-chip.active {
+    background: color-mix(in srgb, var(--chip-color, var(--accent-color)) 25%, var(--primary-bg));
+    border-color: var(--chip-color, var(--accent-color));
+    color: var(--primary-text);
+}
+
+.chip-emoji {
+    font-size: 1em;
+    line-height: 1;
+}
+
 #selected-tags-display {
     display: none;
     flex-wrap: wrap;
@@ -462,6 +500,18 @@ span.flatpickr-weekday {
     .location-icon,
     .search-icon {
         left: 10px;
+    }
+
+    #quick-filters-row {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding-bottom: 2px;
+    }
+
+    #quick-filters-row::-webkit-scrollbar {
+        display: none;
     }
 
     .flatpickr-calendar {

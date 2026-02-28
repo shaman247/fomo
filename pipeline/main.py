@@ -35,13 +35,15 @@ import uploader
 import frequency_analyzer
 
 
-async def run_pipeline(website_ids=None, limit=None):
+async def run_pipeline(website_ids=None, limit=None, use_batch=None):
     """Execute the complete event processing pipeline.
 
     Args:
         website_ids: Optional list of website IDs to process. If None, processes
                      all websites due for crawling based on crawl_frequency.
         limit: Optional maximum number of websites to crawl.
+        use_batch: If True, use Gemini Batch API for extraction (50% cheaper).
+                   If None, defaults to True for full runs, False for --ids runs.
     """
     print(f"{'='*60}")
     print("EVENT PROCESSING PIPELINE")
@@ -233,12 +235,56 @@ async def run_pipeline(website_ids=None, limit=None):
                 'max_batches': website.get('max_batches')
             })
 
-        if extraction_queue:
-            print(f"\n  Extracting events from {len(extraction_queue)} website(s) with {num_workers} workers...")
+        # Resolve batch mode: default to batch for full runs with 10+ extractions, sync otherwise
+        if use_batch is not None:
+            effective_batch = use_batch
+        elif website_ids is not None:
+            effective_batch = False
+        else:
+            effective_batch = len(extraction_queue) >= 10
 
-            # Worker pool pattern: maintain N concurrent extractors at all times
+        batch_processed_crids = set()  # Track items handled by batch to avoid duplicates
+
+        if extraction_queue and effective_batch:
+            # Batch extraction path (Gemini Batch API — 50% cheaper)
+            print(f"\n  Batch extracting events from {len(extraction_queue)} website(s)...")
+
+            try:
+                batch_results = await extractor.run_batch_extraction(extraction_queue)
+
+                # Track all items processed by batch (success or fail)
+                batch_processed_crids = {crid for crid, _ in batch_results}
+
+                # Map successful results back to extraction_queue items
+                success_crids = {crid for crid, success in batch_results if success}
+                for item in extraction_queue:
+                    crid = item['crawl_result_id']
+                    if crid in success_crids:
+                        if item['source'] == 'incomplete':
+                            extracted_results.append((crid, {
+                                'name': item['name'],
+                                'notes': item['notes'],
+                                'run_date': item['run_date']
+                            }))
+                        else:
+                            extracted_results.append((crid, item['website']))
+
+            except Exception as e:
+                print(f"\n  Batch extraction failed: {e}")
+                print(f"  Falling back to individual API calls...")
+                effective_batch = False  # Fall through to sync path below
+
+        # Sync extraction path — either primary or fallback from batch failure
+        # Filter out items already processed by batch to avoid duplicates
+        sync_queue = [item for item in extraction_queue
+                       if item['crawl_result_id'] not in batch_processed_crids]
+
+        if sync_queue and not effective_batch:
+            # Sync extraction path (individual API calls)
+            print(f"\n  Extracting events from {len(sync_queue)} website(s) with {num_workers} workers...")
+
             extract_queue = asyncio.Queue()
-            for item in extraction_queue:
+            for item in sync_queue:
                 await extract_queue.put(item)
 
             async def extract_worker():
@@ -250,7 +296,6 @@ async def run_pipeline(website_ids=None, limit=None):
                     except asyncio.QueueEmpty:
                         break
 
-                    # Each worker gets its own connection to see latest committed data
                     conn = db.create_connection()
                     if not conn:
                         extract_queue.task_done()
@@ -281,10 +326,8 @@ async def run_pipeline(website_ids=None, limit=None):
                         extract_queue.task_done()
                 return results
 
-            # Start N workers and wait for all to complete
             worker_results = await asyncio.gather(*[extract_worker() for _ in range(num_workers)])
 
-            # Flatten results from all workers
             for results in worker_results:
                 extracted_results.extend(results)
 
@@ -344,6 +387,10 @@ async def run_pipeline(website_ids=None, limit=None):
 
         new_events, merged_events = merger.merge_crawl_events(cursor, connection)
         print(f"\n✓ Merged events ({new_events} new, {merged_events} merged)\n")
+
+        # STEP 5b: Classify event sections
+        print(f"\n  Classifying event sections...")
+        exporter.classify_event_sections(cursor, connection)
 
         # STEP 6: Export to JSON from events table
         print(f"{'='*60}")
@@ -415,9 +462,10 @@ def parse_args():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python main.py                     # Process all websites due for crawling
-  python main.py --ids 941           # Process specific website ID
-  python main.py --ids 941,942,943   # Process multiple website IDs
+  python main.py                     # Full run (uses Batch API by default)
+  python main.py --ids 941           # Specific website (uses sync API by default)
+  python main.py --ids 941 --batch   # Specific website with Batch API
+  python main.py --no-batch          # Full run with sync API
   python main.py --limit 5           # Only crawl first 5 websites due
         """
     )
@@ -431,6 +479,17 @@ Examples:
         type=int,
         help='Maximum number of websites to crawl'
     )
+    batch_group = parser.add_mutually_exclusive_group()
+    batch_group.add_argument(
+        '--batch',
+        action='store_true', default=None,
+        help='Use Gemini Batch API for extraction (50%% cheaper, default for full runs)'
+    )
+    batch_group.add_argument(
+        '--no-batch',
+        action='store_true', default=None,
+        help='Use individual API calls for extraction (default for --ids runs)'
+    )
     return parser.parse_args()
 
 
@@ -441,5 +500,13 @@ if __name__ == "__main__":
     if args.ids:
         website_ids = [int(id.strip()) for id in args.ids.split(',')]
 
-    success = asyncio.run(run_pipeline(website_ids, args.limit))
+    # Resolve batch mode from CLI flags
+    if args.batch:
+        use_batch = True
+    elif args.no_batch:
+        use_batch = False
+    else:
+        use_batch = None  # Let run_pipeline decide based on whether --ids was used
+
+    success = asyncio.run(run_pipeline(website_ids, args.limit, use_batch))
     sys.exit(0 if success else 1)

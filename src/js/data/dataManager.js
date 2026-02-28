@@ -174,6 +174,7 @@ const DataManager = (() => {
         return {
             id: eventId,
             ...restOfEvent,
+            section: restOfEvent.section || 'Events',
             emoji,
             latitude: lat,
             longitude: lng,

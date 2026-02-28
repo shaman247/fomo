@@ -57,6 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
             allEvents: [],
             eventsById: {},
             tagConfig: {},
+            tagGroups: [],
             eventsByLatLng: {},
             locationsByLatLng: {},
             tagFrequencies: {},
@@ -106,6 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
             LOCATIONS_FULL_URL: 'data/locations.full.json',
             TAG_CONFIG_URL: 'data/tags.json',
             RELATED_TAGS_URL: 'data/related_tags.json',
+            TAG_GROUPS_URL: 'data/tag_groups.json',
 
             START_DATE: new Date(new Date().setHours(0, 0, 0, 0)),
             END_DATE: new Date(new Date().setHours(0, 0, 0, 0) + 90 * 24 * 60 * 60 * 1000),
@@ -192,13 +194,15 @@ document.addEventListener('DOMContentLoaded', () => {
          * @private
          */
         async _loadInitialData() {
-            const [initEventData, initLocationData, tagConfig] = await Promise.all([
+            const [initEventData, initLocationData, tagConfig, tagGroups] = await Promise.all([
                 DataManager.fetchData(this.config.EVENT_INIT_URL),
                 DataManager.fetchData(this.config.LOCATIONS_INIT_URL),
-                DataManager.fetchData(this.config.TAG_CONFIG_URL)
+                DataManager.fetchData(this.config.TAG_CONFIG_URL),
+                DataManager.fetchData(this.config.TAG_GROUPS_URL)
             ]);
 
             this.state.tagConfig = tagConfig;
+            this.state.tagGroups = tagGroups || [];
             this.state.geotagsSet = new Set((tagConfig.geotags || []).map(tag => tag.toLowerCase()));
 
             // Initialize TagColorManager with color palettes
@@ -913,6 +917,7 @@ document.addEventListener('DOMContentLoaded', () => {
             FilterPanelUI.init({
                 allAvailableTags: this.state.allAvailableTags,
                 tagConfigBgColors: this.state.tagConfig.bgcolors,
+                tagGroups: this.state.tagGroups,
                 initialGlobalFrequencies: this.state.tagFrequencies,
                 resultsContainerDOM: this.elements.resultsContainer,
                 onFilterChangeCallback: () => {
@@ -942,6 +947,9 @@ document.addEventListener('DOMContentLoaded', () => {
             // Initialize SelectedTagsDisplay
             SelectedTagsDisplay.init({
                 containerDOM: this.elements.selectedTagsDisplay,
+                quickFilterTags: new Set((this.state.tagGroups || [])
+                    .filter(g => g.quickFilter)
+                    .map(g => g.primaryTag)),
                 getSelectedTagsWithColors: () => TagColorManager.getSelectedTagsWithColors(),
                 createInteractiveTagButton: (tag) => FilterPanelUI.createInteractiveTagButton(tag),
                 setTagState: (tag, state) => FilterPanelUI.setTagState(tag, state),

@@ -553,6 +553,35 @@ def get_all_locations(cursor):
     return list(locations.values())
 
 
+def get_website_locations_map(cursor):
+    """
+    Build a map of website_id -> [location_info] from website_locations table.
+
+    Returns dict mapping website_id to list of location dicts with id, name, lat, lng, emoji.
+    Only includes locations with valid coordinates.
+    """
+    cursor.execute("""
+        SELECT wl.website_id, l.id, l.name, l.lat, l.lng, l.emoji
+        FROM website_locations wl
+        JOIN locations l ON wl.location_id = l.id
+        WHERE l.lat IS NOT NULL AND l.lng IS NOT NULL
+    """)
+
+    result = {}
+    for row in cursor.fetchall():
+        website_id = row[0]
+        loc_info = {
+            'id': row[1],
+            'name': row[2],
+            'lat': float(row[3]) if row[3] else None,
+            'lng': float(row[4]) if row[4] else None,
+            'emoji': row[5]
+        }
+        result.setdefault(website_id, []).append(loc_info)
+
+    return result
+
+
 def get_tag_rules(cursor):
     """
     Get tag processing rules from the database.
