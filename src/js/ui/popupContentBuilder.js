@@ -31,7 +31,8 @@ const PopupContentBuilder = (() => {
     const state = {
         createInteractiveTagButton: null,
         hierarchyTagsSet: new Set(),
-        tagEmojiMap: {}
+        tagEmojiMap: {},
+        getDebugMode: () => false
     };
 
     // ========================================
@@ -135,13 +136,19 @@ const PopupContentBuilder = (() => {
         }
 
         if (displayTags.length > 0) {
-            const tagsContainer = document.createElement('div');
-            tagsContainer.className = 'tag-tags-container popup-tags-container';
-            displayTags.forEach(tag => {
-                const el = createTagElement(tag);
-                if (el) tagsContainer.appendChild(el);
-            });
-            panel.appendChild(tagsContainer);
+            // Only show curated tags (from tag hierarchy), hide keywords (unless debug mode)
+            const curatedTags = state.hierarchyTagsSet.size > 0 && !state.getDebugMode()
+                ? displayTags.filter(tag => state.hierarchyTagsSet.has(tag))
+                : displayTags;
+            if (curatedTags.length > 0) {
+                const tagsContainer = document.createElement('div');
+                tagsContainer.className = 'tag-tags-container popup-tags-container';
+                curatedTags.forEach(tag => {
+                    const el = createTagElement(tag);
+                    if (el) tagsContainer.appendChild(el);
+                });
+                panel.appendChild(tagsContainer);
+            }
         }
 
         return panel;
@@ -274,13 +281,19 @@ const PopupContentBuilder = (() => {
 
         const tagsToShow = event.display_tags || event.tags;
         if (tagsToShow && tagsToShow.length > 0) {
-            const tagsContainer = document.createElement('div');
-            tagsContainer.className = 'tag-tags-container popup-tags-container';
-            tagsToShow.forEach(tag => {
-                const el = createTagElement(tag);
-                if (el) tagsContainer.appendChild(el);
-            });
-            eventDetailContainer.appendChild(tagsContainer);
+            // Only show curated tags (from tag hierarchy), hide keywords (unless debug mode)
+            const curatedTags = state.hierarchyTagsSet.size > 0 && !state.getDebugMode()
+                ? tagsToShow.filter(tag => state.hierarchyTagsSet.has(tag))
+                : tagsToShow;
+            if (curatedTags.length > 0) {
+                const tagsContainer = document.createElement('div');
+                tagsContainer.className = 'tag-tags-container popup-tags-container';
+                curatedTags.forEach(tag => {
+                    const el = createTagElement(tag);
+                    if (el) tagsContainer.appendChild(el);
+                });
+                eventDetailContainer.appendChild(tagsContainer);
+            }
         }
 
         return eventDetailContainer;
@@ -626,6 +639,7 @@ const PopupContentBuilder = (() => {
         state.createInteractiveTagButton = config.createInteractiveTagButton || null;
         state.hierarchyTagsSet = config.hierarchyTagsSet || new Set();
         state.tagEmojiMap = config.tagEmojiMap || {};
+        state.getDebugMode = config.getDebugMode || (() => false);
     }
 
     return {

@@ -9,10 +9,11 @@ Logs all changes to the edits table for sync tracking.
 import re
 import sys
 import unicodedata
-from datetime import datetime, timedelta
+from datetime import date as date_type, datetime, timedelta
 from pathlib import Path
 
 import db
+from constants import FUTURE_WINDOW_DAYS
 
 # Add database module to path for edit logger
 sys.path.insert(0, str(Path(__file__).parent.parent / 'database'))
@@ -178,7 +179,12 @@ def is_false_positive(name1, name2):
     norm2 = normalize_name_for_dedup(name2)
 
     # Different gendered sports events (Men's vs Women's)
-    if ("men" in norm1) != ("men" in norm2) or ("women" in norm1) != ("women" in norm2):
+    # Use word boundaries to avoid false matches on substrings (e.g., "documentary" contains "men")
+    has_men1 = bool(re.search(r'\bmen\b', norm1))
+    has_men2 = bool(re.search(r'\bmen\b', norm2))
+    has_women1 = bool(re.search(r'\bwomen\b', norm1))
+    has_women2 = bool(re.search(r'\bwomen\b', norm2))
+    if has_men1 != has_men2 or has_women1 != has_women2:
         return True
 
     # Different times at end (different showtimes)
@@ -451,14 +457,16 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None):
         Tuple of (new_events_count, merged_count)
     """
     current_date = datetime.now().date()
-    future_limit_date = (datetime.now() + timedelta(days=90)).date()
+    future_limit_date = (datetime.now() + timedelta(days=FUTURE_WINDOW_DAYS)).date()
 
+    # ── Setup ──
     # Initialize edit logger if available
     edit_logger = None
     if EditLogger:
         edit_logger = EditLogger(cursor, connection, source='crawl',
                                  editor_info=f'crawl_run:{crawl_run_id}' if crawl_run_id else 'crawl')
 
+    # ── Load unprocessed crawl events ──
     # Get crawl_events that haven't been linked to any final event yet.
     # Only fetch CEs that have at least one future occurrence — skips historical
     # backlog CEs with only past dates that can never match future events.
@@ -485,6 +493,7 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None):
     if not new_crawl_events:
         return 0, 0
 
+    # ── Build lookup indexes for deduplication ──
     # Build website -> location_ids map for authoritative location correction
     cursor.execute("SELECT website_id, location_id FROM website_locations")
     website_location_ids = {}
@@ -503,7 +512,8 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None):
         JOIN event_occurrences eo ON e.id = eo.event_id
         LEFT JOIN locations l ON e.location_id = l.id
         WHERE eo.start_date >= %s
-    """, (recent_cutoff,))
+           OR (eo.end_date IS NOT NULL AND eo.end_date >= %s)
+    """, (recent_cutoff, recent_cutoff))
     existing_events_by_coords = {}  # key: (lat, lng) -> list of {id, name}
     existing_events_by_location_id = {}  # key: location_id -> list of {id, name}
     existing_events_by_location = {}  # key: normalized location_name -> list of {id, name}
@@ -543,20 +553,26 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None):
 
     print(f"  Loaded {len(event_ids_with_future)} existing events with future occurrences")
 
-    # Load future occurrence dates for these events (only dates we care about for dedup)
+    # Load future occurrence dates and date ranges for these events (for dedup)
     event_dates = {eid: set() for eid in event_ids_with_future}
+    event_date_ranges = {eid: [] for eid in event_ids_with_future}
     if event_ids_with_future:
         # Use a placeholder approach for large IN clauses
         placeholders = ','.join(['%s'] * len(event_ids_with_future))
         cursor.execute(f"""
-            SELECT event_id, start_date FROM event_occurrences
+            SELECT event_id, start_date, end_date FROM event_occurrences
             WHERE event_id IN ({placeholders})
-              AND start_date >= %s AND start_date <= %s
-        """, (*event_ids_with_future, current_date, future_limit_date))
-        for event_id, start_date in cursor.fetchall():
+              AND (start_date >= %s AND start_date <= %s
+                   OR (end_date IS NOT NULL AND end_date >= %s))
+        """, (*event_ids_with_future, current_date, future_limit_date, current_date))
+        for row in cursor.fetchall():
+            event_id, start_date, end_date = row
             if start_date:
                 event_dates[event_id].add(str(start_date))
+            if start_date and end_date:
+                event_date_ranges[event_id].append((start_date, end_date))
 
+    # ── Match crawl events to existing events or create new ones ──
     new_events_count = 0
     merged_count = 0
 
@@ -589,8 +605,9 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None):
             # No valid future occurrences, skip
             continue
 
-        # Build set of occurrence dates for this crawl event
+        # Build set of occurrence dates and date ranges for this crawl event
         crawl_event_dates = set(str(occ[0]) for occ in valid_occurrences if occ[0])
+        crawl_event_ranges = [(occ[0], occ[2]) for occ in valid_occurrences if occ[0] and occ[2]]
 
         # Get tags for this crawl event
         cursor.execute("SELECT tag FROM crawl_event_tags WHERE crawl_event_id = %s", (ce_id,))
@@ -600,12 +617,44 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None):
         matched_event_id = None
         norm_name = normalize_name_for_dedup(name)
 
+        def _dates_overlap(existing_id):
+            """Check if crawl event dates overlap with existing event dates.
+            First checks start_date intersection, then falls back to date range overlap
+            (for ongoing events like exhibitions where start_dates may differ between crawls).
+            """
+            existing_dates = event_dates.get(existing_id, set())
+            if crawl_event_dates & existing_dates:
+                return True
+            # Fallback: check date range overlap (s1 <= e2 and s2 <= e1)
+            existing_ranges = event_date_ranges.get(existing_id, [])
+            for cs, ce in crawl_event_ranges:
+                for es, ee in existing_ranges:
+                    if cs <= ee and es <= ce:
+                        return True
+                # Also check if crawl event's range contains an existing start_date
+                for ed_str in existing_dates:
+                    try:
+                        ed = date_type.fromisoformat(ed_str)
+                        if cs <= ed <= ce:
+                            return True
+                    except ValueError:
+                        pass
+            # Also check if any existing range contains a crawl start_date
+            for es, ee in existing_ranges:
+                for cd_str in crawl_event_dates:
+                    try:
+                        cd = date_type.fromisoformat(cd_str)
+                        if es <= cd <= ee:
+                            return True
+                    except ValueError:
+                        pass
+            return False
+
         def find_best_match(candidates):
             """Find best matching event, preferring exact normalized name matches."""
             best_id = None
             for existing in candidates:
-                existing_dates = event_dates.get(existing['id'], set())
-                if crawl_event_dates & existing_dates:  # date overlap required
+                if _dates_overlap(existing['id']):
                     if are_names_similar(name, existing['name']):
                         if normalize_name_for_dedup(existing['name']) == norm_name:
                             return existing['id']  # Exact match — best possible
@@ -626,8 +675,22 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None):
         # Second fallback: match by location_name if still no match found
         if matched_event_id is None and location_name:
             loc_key = normalize_name_for_dedup(location_name)
-            if loc_key and len(loc_key) >= 3 and loc_key in existing_events_by_location:
-                matched_event_id = find_best_match(existing_events_by_location[loc_key])
+            if loc_key and len(loc_key) >= 3:
+                # Try exact normalized match first
+                if loc_key in existing_events_by_location:
+                    matched_event_id = find_best_match(existing_events_by_location[loc_key])
+                # If no exact match, try prefix containment (catches AI-added suffixes
+                # like ", Brooklyn" or " New York" on otherwise matching location names).
+                # Require the shorter key to be ≥20 chars to avoid false matches on
+                # generic short names.
+                if matched_event_id is None and len(loc_key) >= 20:
+                    for existing_loc_key, candidates in existing_events_by_location.items():
+                        if len(existing_loc_key) >= 20 and (
+                            loc_key.startswith(existing_loc_key) or existing_loc_key.startswith(loc_key)
+                        ):
+                            matched_event_id = find_best_match(candidates)
+                            if matched_event_id:
+                                break
 
         # Last-resort fallback: match by website_id when location strategies all failed.
         # Catches cases where AI extraction assigns inconsistent location names between
@@ -750,6 +813,7 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None):
             # Add to lookup indexes for future dedup within this batch
             event_entry = {'id': new_event_id, 'name': name}
             event_dates[new_event_id] = crawl_event_dates
+            event_date_ranges[new_event_id] = crawl_event_ranges
 
             if location_id is not None:
                 if location_id not in existing_events_by_location_id:
@@ -779,6 +843,7 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None):
     connection.commit()
     print(f"  Added {new_events_count} new events, merged {merged_count} duplicates")
 
+    # ── Post-merge dedup (safety net) ──
     # Post-merge dedup: catch any exact-name duplicates the matching logic missed.
     # This happens when AI extraction assigns different locations between crawls,
     # causing the merger to create a new event instead of matching the existing one.
@@ -787,6 +852,7 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None):
         if deduped > 0:
             print(f"  Post-merge dedup: merged {deduped} duplicate(s)")
 
+    # ── Archive outdated events ──
     # Archive outdated events after merging
     # Only archive for websites where we processed crawl_events from their LATEST
     # crawl result. This prevents mass-archiving when processing a backlog of old

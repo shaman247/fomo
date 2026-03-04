@@ -19,6 +19,8 @@ except ImportError:
     print("Install it with: pip install mysql-connector-python")
     sys.exit(1)
 
+from constants import MAX_PAGES_DEFAULT
+
 
 # Database Configuration
 DB_CONFIG = {
@@ -132,7 +134,7 @@ def get_websites_due_for_crawling(cursor, website_ids=None):
             'selector': row[3],
             'num_clicks': row[4] or 2,
             'keywords': row[5],
-            'max_pages': row[6] or 30,
+            'max_pages': row[6] or MAX_PAGES_DEFAULT,
             'max_batches': row[7],
             'notes': row[8],
             'delay_before_return_html': row[9],
@@ -692,6 +694,41 @@ def build_tag_ancestor_map(cursor):
     root_tags = {k for k in root_keys if k not in CROSS_CUTTING and k != 'other'}
 
     return ancestor_map, root_tags
+
+
+def get_tag_aliases(cursor):
+    """Get tag aliases as a dict mapping normalized alias -> canonical tag name.
+
+    Used during tag processing to replace alias tags with their canonical form.
+    """
+    cursor.execute("""
+        SELECT ta.alias, t.name
+        FROM tag_aliases ta
+        JOIN tags t ON ta.tag_id = t.id
+    """)
+    return {
+        row[0].lower().replace(' ', ''): row[1]
+        for row in cursor.fetchall()
+    }
+
+
+def get_tag_aliases_for_export(cursor):
+    """Get tag aliases grouped by canonical tag name.
+
+    Returns dict mapping tag_name -> [alias1, alias2, ...] for tag hierarchy export.
+    """
+    cursor.execute("""
+        SELECT t.name, ta.alias
+        FROM tag_aliases ta
+        JOIN tags t ON ta.tag_id = t.id
+        ORDER BY t.name, ta.alias
+    """)
+    aliases_by_tag = {}
+    for row in cursor.fetchall():
+        tag_name = row[0]
+        alias = row[1]
+        aliases_by_tag.setdefault(tag_name, []).append(alias)
+    return aliases_by_tag
 
 
 def get_all_tags_with_metadata(cursor):

@@ -349,6 +349,15 @@ const FilterPanelUI = (() => {
 
         if (!state.resultsContainerDOM) return;
 
+        // Toggle panel height based on whether sections will be shown (desktop only)
+        if (!isMobileLayout()) {
+            const filterPanel = state.resultsContainerDOM.closest('#filter-panel');
+            if (filterPanel) {
+                const showSections = !!searchTerm || debugMode;
+                filterPanel.classList.toggle('sections-hidden', !showSections);
+            }
+        }
+
         if (!searchResults || searchResults.length === 0) {
             state.resultsContainerDOM.innerHTML = '';
             state.resultsContainerDOM.scrollTop = 0;
@@ -371,7 +380,7 @@ const FilterPanelUI = (() => {
         );
 
         // Render using SectionRenderer (onAfterRender distributes to bottom sheet on mobile)
-        SectionRenderer.renderFilters(groupedResults, hiddenResults, searchTerm);
+        SectionRenderer.renderFilters(groupedResults, hiddenResults, searchTerm, debugMode);
     }
 
     /**

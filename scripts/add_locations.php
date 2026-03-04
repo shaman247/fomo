@@ -16,7 +16,139 @@
 // EDIT THIS ARRAY TO ADD NEW LOCATIONS
 // ============================================================================
 $new_locations = [
-    // Locations added on 2026-02-26 - see git history
+    // Baci Studio, Cuban Art Space, Springs Projects, Sunset Park Recreation Center added on 2026-03-03
+];
+
+$done_dumbo_venues = [
+    [
+        'name' => 'Baci Studio',
+        'description' => 'Art studio and gallery in DUMBO hosting exhibitions and opening receptions as part of the DUMBO arts community.',
+        'address' => '140 Plymouth St, Brooklyn, NY 11201, USA',
+        'lat' => 40.703764,
+        'lng' => -73.988149,
+        'emoji' => '🎨',
+        'tags' => ['Brooklyn', 'DUMBO', 'Art', 'Gallery'],
+    ],
+    [
+        'name' => 'Cuban Art Space',
+        'description' => 'Gallery dedicated to Cuban art and culture in DUMBO, hosting exhibitions, festivals, and cultural events.',
+        'address' => '20 Jay St, Suite 301, Brooklyn, NY 11201, USA',
+        'lat' => 40.704079,
+        'lng' => -73.987028,
+        'emoji' => '🎨',
+        'tags' => ['Brooklyn', 'DUMBO', 'Art', 'Gallery'],
+    ],
+    [
+        'name' => 'Springs Projects',
+        'description' => 'Contemporary art gallery in DUMBO featuring group and solo exhibitions by emerging and established artists.',
+        'address' => '20 Jay St, Suite 311B, Brooklyn, NY 11201, USA',
+        'lat' => 40.704029,
+        'lng' => -73.986712,
+        'emoji' => '🎨',
+        'tags' => ['Brooklyn', 'DUMBO', 'Art', 'Gallery'],
+    ],
+    [
+        'name' => 'Sunset Park Recreation Center',
+        'description' => 'Public recreation center in Sunset Park offering sports facilities, community programs, and park events.',
+        'address' => '4200 7th Ave, Brooklyn, NY 11232, USA',
+        'lat' => 40.646886,
+        'lng' => -74.002034,
+        'emoji' => '🏊',
+        'tags' => ['Brooklyn', 'Sunset Park', 'Community Space'],
+    ],
+];
+
+$done_partiful_venues = [
+    [
+        'name' => 'Verci',
+        'description' => 'Event and performance venue in the Flatiron District hosting live music showcases and intimate concerts.',
+        'address' => '45 E 20th St, New York, NY 10003, USA',
+        'lat' => 40.738784,
+        'lng' => -73.988356,
+        'emoji' => '🎤',
+        'tags' => ['Manhattan', 'Flatiron', 'Live Music'],
+    ],
+    [
+        'name' => "All 'Bout Clay",
+        'description' => 'Ceramics studio and gallery space in the Garment District offering workshops and hosting art exhibitions.',
+        'address' => '247 W 36th St, 7th Floor, New York, NY 10018, USA',
+        'lat' => 40.753205,
+        'lng' => -73.991290,
+        'emoji' => '🎨',
+        'tags' => ['Manhattan', 'Midtown', 'Art', 'Gallery'],
+    ],
+    [
+        'name' => 'Goodside Studios',
+        'description' => 'Pole dance and fitness studio on the Lower East Side offering classes for all levels.',
+        'address' => '329 Broome St, New York, NY 10002, USA',
+        'lat' => 40.718999,
+        'lng' => -73.993934,
+        'emoji' => '🏋️',
+        'tags' => ['Manhattan', 'Lower East Side', 'Fitness'],
+    ],
+    [
+        'name' => "Sally's BK",
+        'description' => 'Caribbean Asian fusion restaurant in Bed-Stuy hosting paint-and-sip events and community gatherings.',
+        'address' => '151 Tompkins Ave, Brooklyn, NY 11206, USA',
+        'lat' => 40.694144,
+        'lng' => -73.945814,
+        'emoji' => '🍱',
+        'tags' => ['Brooklyn', 'Bed-Stuy', 'Restaurant'],
+    ],
+    [
+        'name' => 'Bomba',
+        'description' => 'Nightlife venue and cocktail bar in the Meatpacking District hosting dance parties and themed events.',
+        'address' => '446 W 14th St, New York, NY 10014, USA',
+        'lat' => 40.741586,
+        'lng' => -74.007595,
+        'emoji' => '🪩',
+        'tags' => ['Manhattan', 'Meatpacking District', 'Nightlife', 'Bar'],
+    ],
+    [
+        'name' => "Andy's Rehearsal Studios",
+        'description' => 'Rehearsal and studio space in the Theater District used for dance workshops, classes, and performances.',
+        'address' => '353 W 48th St, 2nd Floor, New York, NY 10036, USA',
+        'lat' => 40.762052,
+        'lng' => -73.988844,
+        'emoji' => '🎭',
+        'tags' => ['Manhattan', 'Theater District', 'Dance', 'Studio'],
+    ],
+    [
+        'name' => 'The Green Room PLG',
+        'description' => 'Bar and live music venue in Prospect Lefferts Gardens hosting performances and community events.',
+        'address' => '408 Rogers Ave, Brooklyn, NY 11225, USA',
+        'lat' => 40.662759,
+        'lng' => -73.954098,
+        'emoji' => '🎸',
+        'tags' => ['Brooklyn', 'Prospect Lefferts Gardens', 'Live Music', 'Bar'],
+    ],
+    [
+        'name' => 'W Union Square',
+        'description' => 'Boutique hotel at Union Square hosting private events, live experiences, and cultural gatherings.',
+        'address' => '201 Park Ave S, New York, NY 10003, USA',
+        'lat' => 40.736696,
+        'lng' => -73.988733,
+        'emoji' => '🏨',
+        'tags' => ['Manhattan', 'Union Square'],
+    ],
+    [
+        'name' => '68 Jay Street',
+        'description' => 'Multi-tenant creative building in DUMBO housing studios, galleries, and event spaces for pop-up markets and fairs.',
+        'address' => '68 Jay St, Brooklyn, NY 11201, USA',
+        'lat' => 40.702756,
+        'lng' => -73.986866,
+        'emoji' => '🏢',
+        'tags' => ['Brooklyn', 'DUMBO', 'Art'],
+    ],
+    [
+        'name' => '222 Leonard Street',
+        'description' => 'Event space in Williamsburg used for pop-up markets, art fairs, and community gatherings.',
+        'address' => '222 Leonard St, Brooklyn, NY 11211, USA',
+        'lat' => 40.711738,
+        'lng' => -73.947076,
+        'emoji' => '🏢',
+        'tags' => ['Brooklyn', 'Williamsburg'],
+    ],
 ];
 
 $done_unmapped_event_venues = [

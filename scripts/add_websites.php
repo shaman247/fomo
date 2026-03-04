@@ -393,7 +393,7 @@ $prev_websites = [
 ];
 
 $new_websites = [
-    // Pint of Science NYC added on 2026-02-27 - see git history
+    // Asian Rainbow Chorus added on 2026-03-02 - see git history
 ];
 
 $done_partiful_venues = [

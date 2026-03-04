@@ -75,6 +75,7 @@ const SectionRenderer = (() => {
 
         // Search state
         searchTerm: '',
+        debugMode: false,
         lastSearchResults: [],
         lastSearchTerm: '',
 
@@ -216,7 +217,7 @@ const SectionRenderer = (() => {
         const offsetFromTop = elemRect.top - containerRect.top;
 
         // Re-render
-        renderFilters(state.lastSearchResults.groupedResults, state.lastSearchResults.hiddenResults, state.lastSearchTerm);
+        renderFilters(state.lastSearchResults.groupedResults, state.lastSearchResults.hiddenResults, state.lastSearchTerm, state.debugMode);
 
         // Find the equivalent element after re-render
         const newSectionWrapper = state.resultsContainerDOM.querySelector(`[data-section-key="${sectionKey}"]`);
@@ -291,7 +292,7 @@ const SectionRenderer = (() => {
                 state.onSectionReorder(state.sectionOrder);
             }
 
-            renderFilters(state.lastSearchResults.groupedResults, state.lastSearchResults.hiddenResults, state.lastSearchTerm);
+            renderFilters(state.lastSearchResults.groupedResults, state.lastSearchResults.hiddenResults, state.lastSearchTerm, state.debugMode);
         });
 
         return toggleButton;
@@ -460,8 +461,9 @@ const SectionRenderer = (() => {
      * @param {Object} hiddenResults - Hidden results by type
      * @param {string} searchTerm - Current search term
      */
-    function renderFilters(groupedResults = {}, hiddenResults = {}, searchTerm = '') {
+    function renderFilters(groupedResults = {}, hiddenResults = {}, searchTerm = '', debugMode = false) {
         state.searchTerm = searchTerm;
+        state.debugMode = debugMode;
         state.lastSearchResults = { groupedResults, hiddenResults };
         state.lastSearchTerm = searchTerm;
 
@@ -470,6 +472,14 @@ const SectionRenderer = (() => {
         // Clear and reset scroll
         state.resultsContainerDOM.innerHTML = '';
         state.resultsContainerDOM.scrollTop = 0;
+
+        // On desktop, hide sections when there's no search term (unless debug mode)
+        if (!isSmallWindow() && !searchTerm && !debugMode) {
+            if (state.onAfterRender) {
+                state.onAfterRender();
+            }
+            return;
+        }
 
         // Check if we have any results
         const hasResults = Object.values(groupedResults).some(arr => arr && arr.length > 0) ||

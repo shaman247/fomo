@@ -20,6 +20,7 @@ from datetime import datetime, timedelta
 import regex
 
 import db
+from constants import FUTURE_WINDOW_DAYS, FUZZY_MATCH_THRESHOLD, PREFIX_MATCH_COVERAGE
 from crawler import create_safe_filename
 
 # Blocked emoji characters that render poorly
@@ -681,6 +682,18 @@ def build_websites_map(cursor):
 def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, event_name_raw, locations_map, website_id=None):
     """Finds the best matching location ID for an event.
 
+    Matching cascade (checked in priority order, first match wins):
+      1. Website-scoped alternate names (highest priority — exact match for this website)
+      2. Exact name match (against names, alternate_names, short_names)
+      3. Address match (normalized street address comparison)
+      4. Prefix match (location name starts with known name, ≥PREFIX_MATCH_COVERAGE to avoid generics)
+      5. Fuzzy match (Levenshtein ratio ≥ FUZZY_MATCH_THRESHOLD)
+      6. Source site fallback (website name matches a location name)
+      7. Website-linked location (single-venue websites via website_locations table)
+
+    Each tier tries location_name, sublocation, and event_name variants.
+    Within a tier, results are scored and the best match is selected.
+
     Args:
         location_name_raw: The location name from the event
         sublocation_name_raw: The sublocation name from the event
@@ -749,7 +762,7 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
         if len(key) >= 5:
             for loc_key, match in locations_map.get('names', {}).items():
                 if loc_key.startswith(key + '(') or (
-                    loc_key.startswith(key + ' ') and len(key) / len(loc_key) >= 0.7
+                    loc_key.startswith(key + ' ') and len(key) / len(loc_key) >= PREFIX_MATCH_COVERAGE
                 ):
                     return make_result(get_first(match))
 
@@ -781,7 +794,7 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
                 if is_match:
                     if len(normalized_name) > 3 and key == normalized_name:
                         score = 1.0
-                    elif len(key) > 3 and (full_loc.startswith(key) or full_loc.endswith(key)) and len(key) / len(full_loc) >= 0.7:
+                    elif len(key) > 3 and (full_loc.startswith(key) or full_loc.endswith(key)) and len(key) / len(full_loc) >= PREFIX_MATCH_COVERAGE:
                         score = 0.9 + (len(key) / len(full_loc)) * 0.09
                     else:
                         score = max(
@@ -790,7 +803,7 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
                             _calculate_levenshtein_ratio(normalized_name, key) if len(normalized_name) > 3 else 0
                         )
 
-                    if score >= 0.90 and (score > best_score or (score == best_score and priority < best_priority)):
+                    if score >= FUZZY_MATCH_THRESHOLD and (score > best_score or (score == best_score and priority < best_priority)):
                         best_score, best_priority = score, priority
                         best_result = get_first(tier[key])
 
@@ -807,7 +820,7 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
             if isinstance(match, list):
                 continue
             score = _calculate_levenshtein_ratio(normalized_site, _normalize_location_name(key))
-            if score >= 0.90 and (score > best_score or (score == best_score and priority < best_priority)):
+            if score >= FUZZY_MATCH_THRESHOLD and (score > best_score or (score == best_score and priority < best_priority)):
                 best_score, best_priority, best_result = score, priority, match
 
     if best_result:
@@ -952,10 +965,12 @@ def process_events(cursor, connection, crawl_result_id, website_name, run_date_s
         return 0
 
     current_date = datetime.now().date()
-    future_limit_date = (datetime.now() + timedelta(days=90)).date()
+    future_limit_date = (datetime.now() + timedelta(days=FUTURE_WINDOW_DAYS)).date()
 
-    # Get tag rules and ancestor map from database
+    # Get tag rules, aliases, and ancestor map from database
     tag_rules = db.get_tag_rules(cursor)
+    tag_aliases = db.get_tag_aliases(cursor)
+    tag_rules['rewrite'].update(tag_aliases)  # aliases override rewrites
     ancestor_map, root_tags = _load_tag_ancestor_map(cursor)
 
     processed_rows = []

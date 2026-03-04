@@ -118,6 +118,10 @@
     min-width: 0;
 }
 
+#filter-panel.sections-hidden {
+    height: auto;
+}
+
 #filter-panel.collapsed {
     width: 0;
     padding: 0;
