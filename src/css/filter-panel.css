@@ -415,6 +415,110 @@ span.flatpickr-weekday {
     font-weight: bold;
 }
 
+/* === Desktop Top Bar Layout === */
+/* On desktop, the panel is a horizontal top bar with dropdown results */
+@media (min-width: 769px) {
+    #filter-panel {
+        width: auto;
+        right: 0;
+        height: auto;
+        overflow: visible;
+        padding: 8px 12px;
+        margin: 12px;
+        margin-bottom: 0;
+        /* Transparent background — controls get their own bg */
+        background-color: transparent;
+        backdrop-filter: none;
+        border: none;
+    }
+
+    /* Neutralize tags-collapsed on desktop — top bar is always visible */
+    #filter-panel.tags-collapsed {
+        width: auto;
+        height: auto;
+        padding: 8px 12px;
+        overflow: visible;
+    }
+
+    #filter-panel.tags-collapsed > * {
+        opacity: 1;
+    }
+
+    /* Filter controls in a single horizontal row, vertically centered */
+    #filter-container {
+        flex-direction: row;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 0;
+        padding: 0;
+    }
+
+    #filter-container > div:first-child {
+        flex-shrink: 0;
+        gap: 10px;
+    }
+
+    /* Controls: smaller to match chip bar height, opaque for readability */
+    #date-picker,
+    #omni-search-input {
+        padding: 4px 4px 4px 30px;
+        font-size: 0.95em;
+        background: color-mix(in srgb, var(--primary-bg) 75%, transparent);
+        backdrop-filter: blur(3px);
+        border-color: var(--border-color);
+    }
+
+    /* Chips: more opaque for readability over the map */
+    .chip-bar-chip {
+        background: color-mix(in srgb, var(--primary-bg) 75%, transparent);
+        backdrop-filter: blur(3px);
+        border-color: var(--border-color);
+    }
+
+    .chip-bar-chip:hover {
+        background: color-mix(in srgb, var(--primary-bg) 90%, transparent);
+    }
+
+    /* Chip bar: single row, only show chips that fully fit */
+    #chip-bar {
+        flex: 1;
+        min-width: 0;
+        flex-wrap: wrap;
+        overflow: hidden;
+        max-height: 30px; /* one row of chips */
+        align-items: center;
+        padding: 0;
+    }
+
+    /* Results dropdown below top bar, left-aligned */
+    #tags-wrapper {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        margin-top: 8px;
+        width: min(550px, max(400px, 35vw));
+        max-height: calc(var(--app-height, 100dvh) - 120px);
+        flex-grow: 0;
+        overflow-y: auto;
+        overflow-x: hidden;
+        background-color: color-mix(in srgb, var(--primary-bg) 90%, transparent);
+        backdrop-filter: blur(3px);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 8px;
+        scrollbar-width: none;
+    }
+
+    #tags-wrapper::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Hide dropdown when no search term */
+    #filter-panel.sections-hidden #tags-wrapper {
+        display: none;
+    }
+}
+
 /* === Mobile Responsive Styles === */
 /* On mobile, the panel becomes a full-width collapsible header (85% of desktop sizes) */
 @media (max-width: 768px) {

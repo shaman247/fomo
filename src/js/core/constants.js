@@ -57,6 +57,7 @@ const Constants = (() => {
 
         // Filter panel dimensions (in pixels)
         FILTER_PANEL_MOBILE_HEIGHT: 90,
+        FILTER_PANEL_DESKTOP_HEIGHT: 60,
 
         // Gesture thresholds (in pixels)
         SWIPE_THRESHOLD_PX: 50,
