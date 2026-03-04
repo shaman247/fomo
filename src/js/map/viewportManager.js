@@ -85,8 +85,12 @@ const ViewportManager = (() => {
                     filterPanelHeight = filterPanel.offsetHeight;
                 }
             } else {
-                // On desktop, panel covers left side of screen
-                filterPanelWidth = filterPanel.offsetWidth;
+                // On desktop, top bar covers top of screen
+                if (isInitialLoad) {
+                    filterPanelHeight = Constants.UI.FILTER_PANEL_DESKTOP_HEIGHT;
+                } else {
+                    filterPanelHeight = filterPanel.offsetHeight;
+                }
             }
         }
 

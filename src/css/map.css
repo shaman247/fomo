@@ -102,19 +102,19 @@
 /* === Tile Buffer Compensation === */
 /* The map renders at 140% size with 20% offset for tile buffering.
    Controls need to be offset back into the visible viewport area. */
-.maplibregl-ctrl-top-right {
+.maplibregl-ctrl-bottom-right {
     /* Offset from the enlarged container edge into the visible viewport */
     /* 20vw brings it to viewport edge, then 12px for standard MapLibre margin */
     right: calc(20vw + 12px) !important;
-    top: calc(20vh + 12px) !important;
-    top: calc(20dvh + 12px) !important;
-    top: calc(var(--app-height, 100dvh) * 0.2 + 12px) !important;
+    bottom: calc(20vh + 12px) !important;
+    bottom: calc(20dvh + 12px) !important;
+    bottom: calc(var(--app-height, 100dvh) * 0.2 + 12px) !important;
 }
 
 /* === Mobile Responsive Styles === */
 /* Hide zoom controls on mobile (pinch gestures used instead) */
 @media (max-width: 768px) {
-    .maplibregl-ctrl-top-right .maplibregl-ctrl-group {
+    .maplibregl-ctrl-bottom-right .maplibregl-ctrl-group {
         display: none;
     }
 }

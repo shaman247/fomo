@@ -318,17 +318,8 @@ document.addEventListener('DOMContentLoaded', () => {
             this.elements.filterContainer.classList.remove('initially-hidden');
             tagsWrapper.classList.remove('initially-hidden');
 
-            // On mobile, filter panel is always slim (no collapse/expand)
-            if (window.innerWidth <= Constants.UI.MOBILE_BREAKPOINT) {
-                this.elements.filterPanel.classList.remove('tags-collapsed');
-            } else {
-                // Desktop: show expand button and set up toggle
-                this.elements.expandFilterPanelButton.classList.remove('initially-hidden');
-                this.elements.expandFilterPanelButton.addEventListener('click', () => {
-                    this.elements.filterPanel.classList.toggle('tags-collapsed');
-                    this.elements.expandFilterPanelButton.classList.toggle('collapsed');
-                });
-            }
+            // Remove tags-collapsed so panel is visible
+            this.elements.filterPanel.classList.remove('tags-collapsed');
         },
 
         /**
@@ -698,7 +689,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 showZoom: true,
                 visualizePitch: true
             });
-            this.state.map.addControl(navControl, 'top-right');
+            this.state.map.addControl(navControl, 'bottom-right');
 
             // Override the compass click to use a faster reset animation
             // The compass button resets bearing and pitch to 0
