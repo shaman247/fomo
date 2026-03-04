@@ -9,6 +9,7 @@ import os
 from datetime import datetime, timedelta
 
 import db
+from constants import FUTURE_WINDOW_DAYS
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -122,7 +123,7 @@ def export_events(cursor):
     Export events from the events table to JSON files for the website.
 
     Creates:
-    - events.init.json (core NYC area, 7-day window)
+    - events.init.json (core NYC area, 2-day window)
     - events.full.json (extended area and time range)
     - locations.init.json (locations for init events)
     - locations.full.json (locations for full events)
@@ -134,8 +135,13 @@ def export_events(cursor):
     descendants_of = _build_descendants_map(cursor)
 
     current_date = datetime.now().date()
-    future_limit_date = (datetime.now() + timedelta(days=90)).date()
-    init_limit_date = (datetime.now() + timedelta(days=7)).date()
+    future_limit_date = (datetime.now() + timedelta(days=FUTURE_WINDOW_DAYS)).date()
+    init_limit_date = (datetime.now() + timedelta(days=2)).date()
+
+    # Build set of (website_id, location_id) pairs where the website IS the venue.
+    # Events from these pairs won't get organizer_id — only external organizers are attributed.
+    cursor.execute("SELECT website_id, location_id FROM website_locations")
+    venue_links = set((row[0], row[1]) for row in cursor.fetchall())
 
     # Get all events with their occurrences (exclude archived and suppressed events)
     # Events must have a location with coordinates to be exported
@@ -144,7 +150,7 @@ def export_events(cursor):
         SELECT e.id, e.name, e.short_name, e.description, e.emoji,
                e.location_name, e.sublocation,
                l.name as matched_location_name,
-               l.lat, l.lng, e.section
+               l.lat, l.lng, e.section, e.website_id, e.location_id
         FROM events e
         JOIN locations l ON e.location_id = l.id
         LEFT JOIN websites w ON e.website_id = w.id
@@ -231,6 +237,12 @@ def export_events(cursor):
         section = row[10]
         if section and section != 'Events':
             event['section'] = section
+
+        website_id = row[11]
+        location_id = row[12]
+        # Only attribute organizer when the website is NOT the venue itself
+        if website_id and (website_id, location_id) not in venue_links:
+            event['organizer_id'] = website_id
 
         all_events.append(event)
 
@@ -358,6 +370,13 @@ def export_tag_hierarchy(cursor):
 
     tags_list = db.get_tag_hierarchy_for_export(cursor)
 
+    # Add aliases to each tag entry
+    aliases_by_tag = db.get_tag_aliases_for_export(cursor)
+    for tag_entry in tags_list:
+        aliases = aliases_by_tag.get(tag_entry['name'])
+        if aliases:
+            tag_entry['aliases'] = aliases
+
     output = {'tags': tags_list}
 
     output_path = os.path.join(output_dir, 'tag_hierarchy.json')
@@ -365,3 +384,44 @@ def export_tag_hierarchy(cursor):
         json.dump(output, f, separators=(',', ':'), ensure_ascii=False)
 
     print(f"  Exported {len(tags_list)} tags to tag_hierarchy.json")
+
+
+def export_organizers(cursor):
+    """Export organizers (websites) that have active events to JSON for frontend.
+
+    Creates src/data/organizers.json as a map of {id: {name, url, emoji, description}}.
+    Only includes primary-source websites with at least one active (non-archived,
+    non-suppressed) event.
+    """
+    output_dir = os.path.join(SCRIPT_DIR, '..', 'src', 'data')
+    os.makedirs(output_dir, exist_ok=True)
+
+    cursor.execute("""
+        SELECT w.id, w.name, w.base_url, w.description, w.emoji
+        FROM websites w
+        WHERE w.disabled = FALSE
+          AND w.source_type = 'primary'
+          AND EXISTS (
+              SELECT 1 FROM events e
+              WHERE e.website_id = w.id
+                AND e.archived = FALSE AND e.suppressed = FALSE
+          )
+        ORDER BY w.name
+    """)
+
+    organizers = {}
+    for row in cursor.fetchall():
+        org = {'name': row[1]}
+        if row[2]:
+            org['url'] = row[2]
+        if row[3]:
+            org['description'] = row[3]
+        if row[4]:
+            org['emoji'] = row[4]
+        organizers[str(row[0])] = org
+
+    output_path = os.path.join(output_dir, 'organizers.json')
+    with open(output_path, 'w', encoding='utf-8') as f:
+        json.dump(organizers, f, separators=(',', ':'), ensure_ascii=False)
+
+    print(f"  Exported {len(organizers)} organizers to organizers.json")

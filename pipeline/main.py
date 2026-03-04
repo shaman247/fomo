@@ -45,8 +45,12 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
         use_batch: If True, use Gemini Batch API for extraction (50% cheaper).
                    If None, defaults to True for full runs, False for --ids runs.
     """
+    def ts():
+        """Return current timestamp string for logging."""
+        return datetime.now().strftime('%H:%M:%S')
+
     print(f"{'='*60}")
-    print("EVENT PROCESSING PIPELINE")
+    print(f"EVENT PROCESSING PIPELINE [{ts()}]")
     if website_ids:
         print(f"  Filtering to website IDs: {', '.join(map(str, website_ids))}")
     print(f"{'='*60}\n")
@@ -62,7 +66,7 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
     try:
         # Check for incomplete crawl results first
         print(f"{'='*60}")
-        print("STEP 0: Checking for Incomplete Crawl Results")
+        print(f"STEP 0: Checking for Incomplete Crawl Results [{ts()}]")
         print(f"{'='*60}")
 
         incomplete_results = db.get_incomplete_crawl_results(cursor)
@@ -94,7 +98,7 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
 
         # STEP 1: Get websites due for crawling
         print(f"\n{'='*60}")
-        print("STEP 1: Finding Websites Due for Crawling")
+        print(f"STEP 1: Finding Websites Due for Crawling [{ts()}]")
         print(f"{'='*60}")
 
         websites = db.get_websites_due_for_crawling(cursor, website_ids)
@@ -125,7 +129,7 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
 
         # STEP 2: Crawl websites
         print(f"\n{'='*60}")
-        print("STEP 2: Crawling Websites")
+        print(f"STEP 2: Crawling Websites [{ts()}]")
         print(f"{'='*60}")
 
         # Number of concurrent workers for crawling and extraction
@@ -199,11 +203,11 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
                 for results in worker_results:
                     crawl_results.extend(results)
 
-        print(f"\n✓ Crawled {len(crawl_results)} website(s)\n")
+        print(f"\n✓ Crawled {len(crawl_results)} website(s) [{ts()}]\n")
 
         # STEP 3: Extract events using Gemini AI
         print(f"{'='*60}")
-        print("STEP 3: Extracting Events with Gemini AI")
+        print(f"STEP 3: Extracting Events with Gemini AI [{ts()}]")
         print(f"{'='*60}")
 
         extracted_results = []
@@ -331,11 +335,11 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
             for results in worker_results:
                 extracted_results.extend(results)
 
-        print(f"\n✓ Extracted events from {len(extracted_results)} website(s)\n")
+        print(f"\n✓ Extracted events from {len(extracted_results)} website(s) [{ts()}]\n")
 
         # STEP 4: Process responses
         print(f"{'='*60}")
-        print("STEP 4: Processing Responses")
+        print(f"STEP 4: Processing Responses [{ts()}]")
         print(f"{'='*60}")
 
         # Refresh connection to see data committed by extract workers
@@ -375,14 +379,14 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
             total_events += event_count
             print(f"    - {event_count} events processed")
 
-        print(f"\n✓ Processed {total_events} total events\n")
+        print(f"\n✓ Processed {total_events} total events [{ts()}]\n")
 
         # Mark crawl run as completed
         db.complete_crawl_run(cursor, connection, crawl_run_id)
 
         # STEP 5: Merge crawl_events into final events table and archive outdated events
         print(f"{'='*60}")
-        print("STEP 5: Merging Crawl Events and Archiving Outdated Events")
+        print(f"STEP 5: Merging Crawl Events and Archiving Outdated Events [{ts()}]")
         print(f"{'='*60}")
 
         new_events, merged_events = merger.merge_crawl_events(cursor, connection)
@@ -394,18 +398,19 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
 
         # STEP 6: Export to JSON from events table
         print(f"{'='*60}")
-        print("STEP 6: Exporting Events to JSON")
+        print(f"STEP 6: Exporting Events to JSON [{ts()}]")
         print(f"{'='*60}")
 
         print("  Exporting events from database to JSON...")
         exporter.export_events(cursor)
         exporter.export_tag_hierarchy(cursor)
+        exporter.export_organizers(cursor)
 
         print("\n✓ Event export completed\n")
 
         # STEP 7: Upload data files
         print(f"{'='*60}")
-        print("STEP 7: Uploading Data")
+        print(f"STEP 7: Uploading Data [{ts()}]")
         print(f"{'='*60}")
 
         success = uploader.upload(use_tls=False)
@@ -418,7 +423,7 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
 
         # STEP 8: Adjust crawl frequencies based on historical data
         print(f"{'='*60}")
-        print("STEP 8: Adjusting Crawl Frequencies")
+        print(f"STEP 8: Adjusting Crawl Frequencies [{ts()}]")
         print(f"{'='*60}")
 
         freq_results = frequency_analyzer.analyze_frequencies(cursor, connection)
@@ -428,7 +433,7 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
             print(f"\nNo frequency adjustments needed\n")
 
         print(f"{'='*60}")
-        print("PIPELINE COMPLETED SUCCESSFULLY")
+        print(f"PIPELINE COMPLETED SUCCESSFULLY [{ts()}]")
         print(f"{'='*60}\n")
 
         # Show summary

@@ -94,6 +94,10 @@ class Event(BaseModel):
 
 class EventList(BaseModel):
     """Schema for a list of events extracted from website content."""
+    request_id: str = Field(
+        default="",
+        description="Echo back the request_id from the prompt"
+    )
     events: list[Event] = Field(
         default_factory=list,
         description="List of upcoming events found in the content"
@@ -121,6 +125,10 @@ class SimpleEvent(BaseModel):
 
 class SimpleEventList(BaseModel):
     """Simplified event list for first-pass extraction."""
+    request_id: str = Field(
+        default="",
+        description="Echo back the request_id from the prompt"
+    )
     events: list[SimpleEvent] = Field(default_factory=list)
 
 
@@ -138,6 +146,10 @@ class EventEnrichment(BaseModel):
 
 class EnrichmentBatch(BaseModel):
     """Batch of enrichments as a list."""
+    request_id: str = Field(
+        default="",
+        description="Echo back the request_id from the prompt"
+    )
     enrichments: list[EventEnrichment] = Field(
         description="List of enrichment data for each event"
     )
@@ -356,9 +368,10 @@ async def prepare_vision_content(content, base_url=None, max_images=MAX_VISION_I
     return image_parts, len(image_parts)
 
 
-def get_vision_prompt(url, text_content, current_date_string, name, notes):
+def get_vision_prompt(url, text_content, current_date_string, name, notes, request_id=""):
     """Generate a prompt for vision-based event extraction."""
     note_section = f"\n\nIMPORTANT: {notes}" if notes else ""
+    rid_section = f"\n\nIMPORTANT: Set request_id to \"{request_id}\" in your response." if request_id else ""
 
     return f'''Today's date is {current_date_string}. We are extracting events from {name} ({url}).
 
@@ -383,7 +396,7 @@ Rules:
 - For art exhibitions, the start_date is opening day and end_date is closing day
 - If you can't read a date clearly, skip that event
 - Gallery hours (like "Wed-Sat 1-6pm") are NOT start/end times - those are for visitors
-
+{rid_section}
 Additional text content from the page (for reference):
 {text_content[:2000] if text_content else "No additional text"}'''
 
@@ -584,9 +597,10 @@ def estimate_event_count(content):
     return max(date_count // 2, view_event_count, event_url_count // 2, listing_url_count // 2)
 
 
-def get_enrichment_prompt(event_names, venue_name):
+def get_enrichment_prompt(event_names, venue_name, request_id=""):
     """Generate prompt for enriching events with descriptions, hashtags, and emoji."""
     names_list = "\n".join(f"- {name}" for name in event_names)
+    rid_section = f"\n\nIMPORTANT: Set request_id to \"{request_id}\" in your response." if request_id else ""
 
     return f'''For each event at {venue_name}, provide:
 - description: 1-3 sentence description of what the event is
@@ -595,7 +609,7 @@ def get_enrichment_prompt(event_names, venue_name):
 
 Events to enrich:
 {names_list}
-
+{rid_section}
 Return a JSON object with "enrichments" key mapping each event name to its enrichment data.'''
 
 
@@ -636,13 +650,14 @@ async def enrich_events_batch(event_names, venue_name):
         return {}
 
 
-def get_chunk_prompt(chunk_text, current_date_string, notes):
+def get_chunk_prompt(chunk_text, current_date_string, notes, request_id=""):
     """Generate prompt for a single chunk extraction."""
     note_section = f"\n\nIMPORTANT: {notes}" if notes else ""
+    rid_section = f"\n\nIMPORTANT: Set request_id to \"{request_id}\" in your response." if request_id else ""
     return f'''Today's date is {current_date_string}. Extract ALL events from this NYC events page content.
 
 For each event provide: name, location (venue name), occurrences (array of start_date in YYYY-MM-DD, start_time, end_time), and url if available.
-{note_section}
+{note_section}{rid_section}
 Website content:
 
 {chunk_text}'''
@@ -762,9 +777,17 @@ async def extract_large_page(url, content, current_date_string, name, notes, max
     return json.dumps({'events': full_events})
 
 
-def get_prompt(url, page_content, current_date_string, name, notes, existing_events=None):
-    """Generate the AI prompt for event extraction."""
+def get_prompt(url, page_content, current_date_string, name, notes, existing_events=None, request_id=""):
+    """Generate the AI prompt for full event extraction.
+
+    Prompt structure:
+      1. Previously extracted events (reference only, for naming consistency)
+      2. Website-specific notes (from websites.notes column)
+      3. System instructions (extraction rules, date handling, field formats)
+      4. Page content to extract from
+    """
     note_section = f"\n\nIMPORTANT: {notes}" if notes else ""
+    rid_section = f"\n\nIMPORTANT: Set request_id to \"{request_id}\" in your response." if request_id else ""
 
     # Format existing events as JSON for prompt
     existing_events_section = ""
@@ -794,7 +817,7 @@ Based on the website content below, extract all upcoming events. For each event,
 - hashtags: 4-7 CamelCase tags (e.g., ["Comedy", "StandUp", "Free"]). Always include at least one category from: Music, Nightlife, Comedy, Art, Theater, Dance, Film, Literature, Community, Family, Wellness, Education, Outdoor, Sports, Games. Also include Free if the event is free, or Virtual if online. Then add granular descriptive tags. Avoid location-specific or NYC-redundant tags.
 - emoji: A single emoji representing the event
 
-{note_section}
+{note_section}{rid_section}
 Rules:
 - Extract ALL events from the page - do not skip or summarize
 - Only include events in the NYC area within the next 3 months
@@ -847,6 +870,24 @@ async def prepare_extraction(cursor, crawl_result_id, website_name, notes="",
                       f"minimum) - likely failed crawl, skipping to prevent hallucinations")
         return prep
 
+    # Check for explicit "no events" indicators to prevent hallucinations.
+    # Some pages (e.g., Eventbrite organizer pages with no upcoming events)
+    # have substantial content (navigation, past events) but explicitly state
+    # there are no upcoming events. Gemini will hallucinate events from such pages.
+    no_events_patterns = [
+        "upcoming (0)",
+        "sorry, there are no upcoming events",
+        "no upcoming events",
+        "no events found",
+        "no events scheduled",
+    ]
+    content_lower = page_content[:15000].lower()  # Only check first 15K chars
+    for pattern in no_events_patterns:
+        if pattern in content_lower:
+            prep.resolved_result = '{"events": []}'
+            print(f"    - Page explicitly states no events ('{pattern}'), skipping extraction")
+            return prep
+
     # Get website_id for this crawl result
     cursor.execute(
         "SELECT website_id FROM crawl_results WHERE id = %s",
@@ -888,7 +929,8 @@ async def prepare_extraction(cursor, crawl_result_id, website_name, notes="",
             return prep
 
         print(f"    - Prepared {image_count} images for vision extraction")
-        prompt_text = get_vision_prompt(url, content_to_process, current_date_string, website_name, notes)
+        prompt_text = get_vision_prompt(url, content_to_process, current_date_string, website_name, notes,
+                                        request_id=f"cr-{crawl_result_id}")
         prep.vision_contents = [prompt_text] + image_parts
 
     else:
@@ -905,14 +947,16 @@ async def prepare_extraction(cursor, crawl_result_id, website_name, notes="",
             print(f"    - Split into {len(chunks)} chunks using {chunk_method}-based chunking")
 
             prep.chunk_prompts = [
-                get_chunk_prompt(chunk, current_date_string, notes)
-                for chunk in chunks
+                get_chunk_prompt(chunk, current_date_string, notes,
+                                 request_id=f"cr-{crawl_result_id}-chunk-{i}")
+                for i, chunk in enumerate(chunks)
             ]
         else:
             prep.extraction_type = 'single'
-            print(f"    - Preparing extraction using {GEMINI_MODEL} ({len(content_to_process)} chars)...")
+            print(f"    - Preparing extraction using {GEMINI_MODEL} ({len(content_to_process)} chars)... [{datetime.now().strftime('%H:%M:%S')}]")
             prep.prompt = get_prompt(url, content_to_process, current_date_string,
-                                     website_name, notes, existing_events)
+                                     website_name, notes, existing_events,
+                                     request_id=f"cr-{crawl_result_id}")
 
     return prep
 
@@ -985,7 +1029,7 @@ async def execute_extraction_sync(cursor, connection, prep):
         occurrence_count = 0
 
     db.update_crawl_result_extracted(cursor, connection, crawl_result_id, response_text)
-    print(f"    - Extracted {event_count} events with {occurrence_count} occurrences")
+    print(f"    - Extracted {event_count} events with {occurrence_count} occurrences [{datetime.now().strftime('%H:%M:%S')}]")
     return True
 
 
@@ -1119,6 +1163,7 @@ def is_available():
 
 def _build_single_request(prep):
     """Build an InlinedRequest for single-pass extraction."""
+    request_id = f"cr-{prep.crawl_result_id}"
     return InlinedRequest(
         contents=prep.prompt,
         config=GenerateContentConfig(
@@ -1129,12 +1174,14 @@ def _build_single_request(prep):
             "crawl_result_id": str(prep.crawl_result_id),
             "type": "single",
             "website_name": prep.website_name,
+            "request_id": request_id,
         }
     )
 
 
 def _build_vision_request(prep):
     """Build an InlinedRequest for vision extraction."""
+    request_id = f"cr-{prep.crawl_result_id}"
     return InlinedRequest(
         contents=prep.vision_contents,
         config=GenerateContentConfig(
@@ -1145,6 +1192,7 @@ def _build_vision_request(prep):
             "crawl_result_id": str(prep.crawl_result_id),
             "type": "vision",
             "website_name": prep.website_name,
+            "request_id": request_id,
         }
     )
 
@@ -1174,6 +1222,7 @@ def _build_chunk_requests(prep):
                 "chunk_index": str(i),
                 "total_chunks": str(len(prep.chunk_prompts)),
                 "website_name": prep.website_name,
+                "request_id": f"cr-{prep.crawl_result_id}-chunk-{i}",
             }
         ))
 
@@ -1186,8 +1235,9 @@ def _build_chunk_requests(prep):
 
 def _build_enrichment_request(crawl_result_id, batch_event_names, venue_name, batch_idx, website_name):
     """Build an InlinedRequest for enrichment."""
+    request_id = f"cr-{crawl_result_id}-enrich-{batch_idx}"
     return InlinedRequest(
-        contents=get_enrichment_prompt(batch_event_names, venue_name),
+        contents=get_enrichment_prompt(batch_event_names, venue_name, request_id=request_id),
         config=GenerateContentConfig(
             response_mime_type="application/json",
             response_schema=EnrichmentBatch,
@@ -1197,6 +1247,7 @@ def _build_enrichment_request(crawl_result_id, batch_event_names, venue_name, ba
             "type": "enrichment",
             "batch_index": str(batch_idx),
             "website_name": website_name,
+            "request_id": request_id,
         }
     )
 
@@ -1407,12 +1458,39 @@ async def submit_and_poll_batch(requests, display_name="fomo-extraction",
     return all_responses
 
 
+def _parse_request_id(response_text):
+    """Extract request_id from a JSON response string.
+
+    Returns request_id string or None if not found/parseable.
+    """
+    try:
+        parsed = json.loads(response_text)
+        rid = parsed.get('request_id', '')
+        return rid if rid else None
+    except (json.JSONDecodeError, AttributeError):
+        return None
+
+
+def _resolve_metadata(request_id, id_to_metadata):
+    """Look up request metadata from a response's request_id.
+
+    Returns (metadata, matched) tuple. If no match found, returns
+    a fallback metadata dict with crid=0.
+    """
+    if request_id and request_id in id_to_metadata:
+        return id_to_metadata[request_id], True
+    return {"crawl_result_id": "0", "type": "", "website_name": "unknown"}, False
+
+
 def process_batch_responses(requests, responses, preparations):
     """Map Phase 1 batch responses back to crawl results.
 
+    Uses request_id echoed in the response JSON to match responses to requests,
+    since the Gemini Batch API does NOT guarantee response ordering.
+
     Args:
         requests: list of InlinedRequest (for metadata)
-        responses: list of InlinedResponse (same order)
+        responses: list of InlinedResponse (unordered)
         preparations: dict of {crawl_result_id: PreparedExtraction}
 
     Returns:
@@ -1421,37 +1499,49 @@ def process_batch_responses(requests, responses, preparations):
         - chunked_events: {crawl_result_id: [simple_event_dicts]} for chunks
         - failed_ids: list of crawl_result_ids that completely failed
     """
+    # Build lookup from request_id to request metadata
+    id_to_metadata = {}
+    for req in requests:
+        metadata = req.metadata or {}
+        rid = metadata.get("request_id", "")
+        if rid:
+            id_to_metadata[rid] = metadata
+
     single_results = {}  # crid -> json string
     chunk_events_by_crid = {}  # crid -> list of simple event dicts
     failed_crids = set()
+    unmatched_count = 0
 
-    for i, (req, resp) in enumerate(zip(requests, responses)):
-        metadata = req.metadata or {}
-        crid = int(metadata.get("crawl_result_id", 0))
-        req_type = metadata.get("type", "")
-        website_name = metadata.get("website_name", "")
-
-        if crid == 0:
-            print(f"    - WARNING: Invalid metadata in batch response {i}: {metadata}")
-            continue
-
+    for i, resp in enumerate(responses):
+        # For error responses, we can't parse JSON to get request_id
         if resp.error:
             error_msg = resp.error.message if resp.error.message else str(resp.error)
-            print(f"    - {website_name}: Batch request failed ({req_type}): {error_msg}")
-            if req_type in ("single", "vision"):
-                failed_crids.add(crid)
-            # For chunks, partial failure is OK — continue with other chunks
+            print(f"    - WARNING: Batch request {i} failed (cannot identify source): {error_msg}")
             continue
 
         try:
             response_text = resp.response.text.strip() if resp.response and resp.response.text else ""
             if not response_text:
-                if req_type in ("single", "vision"):
-                    single_results[crid] = '{"events": []}'
+                continue
+
+            # Match response to request via request_id in the JSON
+            request_id = _parse_request_id(response_text)
+            metadata, matched = _resolve_metadata(request_id, id_to_metadata)
+
+            if not matched:
+                unmatched_count += 1
+                print(f"    - WARNING: Response {i} has unrecognized request_id: {request_id!r}")
+                continue
+
+            crid = int(metadata.get("crawl_result_id", 0))
+            req_type = metadata.get("type", "")
+            website_name = metadata.get("website_name", "")
+
+            if crid == 0:
+                print(f"    - WARNING: Invalid crawl_result_id in metadata for request_id {request_id}")
                 continue
 
             if req_type in ("single", "vision"):
-                # Validate JSON
                 try:
                     parsed = json.loads(response_text)
                     event_count = len(parsed.get('events', []))
@@ -1468,9 +1558,10 @@ def process_batch_responses(requests, responses, preparations):
                 chunk_events_by_crid[crid].extend(events)
 
         except Exception as e:
-            print(f"    - {website_name}: Error processing batch response ({req_type}): {e}")
-            if req_type in ("single", "vision"):
-                failed_crids.add(crid)
+            print(f"    - WARNING: Error processing batch response {i}: {e}")
+
+    if unmatched_count:
+        print(f"    - WARNING: {unmatched_count} response(s) could not be matched to requests")
 
     # Apply max_events cap to chunked results
     for crid, events in chunk_events_by_crid.items():
@@ -1494,39 +1585,57 @@ def process_batch_responses(requests, responses, preparations):
 def process_enrichment_responses(requests, responses, chunked_events, preparations):
     """Combine Phase 2 enrichment responses with chunked extraction results.
 
+    Uses request_id echoed in the response JSON to match responses to requests,
+    since the Gemini Batch API does NOT guarantee response ordering.
+
     Args:
         requests: list of enrichment InlinedRequests
-        responses: list of InlinedResponse
+        responses: list of InlinedResponse (unordered)
         chunked_events: dict of {crawl_result_id: [simple_event_dicts]}
         preparations: dict of {crawl_result_id: PreparedExtraction}
 
     Returns:
         dict of {crawl_result_id: json_string} with fully enriched events
     """
+    # Build lookup from request_id to request metadata
+    id_to_metadata = {}
+    for req in requests:
+        metadata = req.metadata or {}
+        rid = metadata.get("request_id", "")
+        if rid:
+            id_to_metadata[rid] = metadata
+
     # Collect enrichments per crawl_result_id
     enrichments_by_crid = {}
 
-    for i, (req, resp) in enumerate(zip(requests, responses)):
-        metadata = req.metadata or {}
-        crid = int(metadata.get("crawl_result_id", 0))
-        website_name = metadata.get("website_name", "")
-
-        if crid == 0:
-            print(f"    - WARNING: Invalid metadata in enrichment response {i}: {metadata}")
-            continue
-
-        if crid not in enrichments_by_crid:
-            enrichments_by_crid[crid] = {}
-
+    for i, resp in enumerate(responses):
         if resp.error:
-            print(f"    - {website_name}: Enrichment batch failed: "
-                  f"{resp.error.message if resp.error.message else resp.error}")
+            error_msg = resp.error.message if resp.error.message else str(resp.error)
+            print(f"    - WARNING: Enrichment batch {i} failed (cannot identify source): {error_msg}")
             continue
 
         try:
             response_text = resp.response.text.strip() if resp.response and resp.response.text else ""
             if not response_text:
                 continue
+
+            # Match response to request via request_id
+            request_id = _parse_request_id(response_text)
+            metadata, matched = _resolve_metadata(request_id, id_to_metadata)
+
+            if not matched:
+                print(f"    - WARNING: Enrichment response {i} has unrecognized request_id: {request_id!r}")
+                continue
+
+            crid = int(metadata.get("crawl_result_id", 0))
+            website_name = metadata.get("website_name", "")
+
+            if crid == 0:
+                continue
+
+            if crid not in enrichments_by_crid:
+                enrichments_by_crid[crid] = {}
+
             result = json.loads(response_text)
             for item in result.get('enrichments', []):
                 enrichments_by_crid[crid][item.get('name', '')] = {
@@ -1535,7 +1644,7 @@ def process_enrichment_responses(requests, responses, chunked_events, preparatio
                     'emoji': item.get('emoji', '📅'),
                 }
         except Exception as e:
-            print(f"    - {website_name}: Error processing enrichment response: {e}")
+            print(f"    - WARNING: Error processing enrichment response {i}: {e}")
 
     # Combine chunked events with enrichments
     results = {}

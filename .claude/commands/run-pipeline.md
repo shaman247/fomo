@@ -131,7 +131,11 @@ Repeat until `--count` shows 0.
 
 **Watch for false positives:** Movie titles matching patterns ("A Private Life", "Snow Day", "Maintenance Artist"), venue series names ("Office Hours" at a music venue), musical residencies (not school residencies), comedy audition shows (public entertainment).
 
-## Step 5: Fix Imprecise Location Mappings
+## Step 5: Deduplicate Events
+
+Run the `dedupe-events` command to find and suppress duplicate events.
+
+## Step 6: Fix Imprecise Location Mappings
 
 Find active events mapped to generic Borough, Neighborhood, or City locations that could be mapped more precisely:
 
@@ -184,7 +188,7 @@ These have location names like "Private Residence", "Bushwick", "Online via Zoom
 
 For most, the source website genuinely doesn't provide a specific venue — skip them. But scan event names and descriptions for recognizable venue names that exist in our database (greenmarkets, parks, offices, etc.).
 
-## Step 6: Fix Unmapped Events
+## Step 7: Fix Unmapped Events
 
 Find active events with no location at all (`location_id IS NULL`) that have a specific venue name:
 
@@ -222,7 +226,7 @@ For each event, determine:
 - **Specific NYC venues** — create locations and remap
 - **Long Island/Westchester/Hudson Valley/NJ/CT venues** — create locations with appropriate regional tags
 
-## Step 7: Re-export and Upload
+## Step 8: Re-export
 
 After applying fixes and reviewing events, re-export the data so changes are reflected on the live site:
 
@@ -240,12 +244,6 @@ export_events(cursor)
 
 cursor.close()
 conn.close()
-```
-
-Then upload:
-
-```bash
-python scripts/upload_public_html.py
 ```
 
 ## Summary Format

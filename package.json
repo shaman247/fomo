@@ -1,7 +1,7 @@
 {
   "private": true,
   "scripts": {
-    "dev": "node build.js --dev --watch",
+    "dev": "node build.js --dev",
     "build": "node build.js"
   },
   "devDependencies": {

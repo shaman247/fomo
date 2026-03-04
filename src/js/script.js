@@ -931,7 +931,8 @@ document.addEventListener('DOMContentLoaded', () => {
             PopupContentBuilder.init({
                 createInteractiveTagButton: (tag) => FilterPanelUI.createInteractiveTagButton(tag),
                 hierarchyTagsSet: this.state.hierarchyTagsSet,
-                tagEmojiMap: this.state.tagEmojiMap
+                tagEmojiMap: this.state.tagEmojiMap,
+                getDebugMode: () => this.state.debugMode
             });
         },
 

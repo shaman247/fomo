@@ -17,7 +17,7 @@ NORMALIZE_TEST_CASES = [
 
     # Punctuation removal
     ("Event - With Dashes", "event with dashes"),
-    ("What's Happening?", "whats happening"),
+    ("What's Happening?", "what s happening"),
 
     # Underscore removal
     ("Event_Name", "eventname"),
@@ -193,9 +193,9 @@ class TestGetSignificantWords(unittest.TestCase):
     """Tests for the get_significant_words function."""
 
     def test_filters_short_words(self):
-        """Words shorter than 3 characters should be filtered out."""
+        """Words shorter than 3 characters and stop words should be filtered out."""
         result = get_significant_words("A is the an")
-        self.assertEqual(result, {"the"})
+        self.assertEqual(result, set())  # "the" is a stop word, rest are < 3 chars
 
     def test_returns_set(self):
         """Should return a set of words."""

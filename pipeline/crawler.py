@@ -8,6 +8,7 @@ import asyncio
 from datetime import datetime, timedelta
 from crawl4ai import CacheMode
 import db
+from constants import MAX_PAGES_DEFAULT
 
 # Default timeout for crawl operations (in seconds)
 DEFAULT_CRAWL_TIMEOUT = 180
@@ -105,7 +106,7 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
         keywords = website.get('keywords')
         if keywords:
             filters = [f"*{k.strip()}*" for k in keywords.split(', ')]
-            max_pages = website.get('max_pages', 30)
+            max_pages = website.get('max_pages', MAX_PAGES_DEFAULT)
             url_filter = URLPatternFilter(patterns=filters)
             deep_crawl_strategy = BestFirstCrawlingStrategy(
                 max_depth=1,
@@ -159,7 +160,7 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
             markdown_generator=md_generator,
         )
 
-        print(f"  Crawling {name} (timeout: {crawl_timeout}s)...")
+        print(f"  Crawling {name} (timeout: {crawl_timeout}s)... [{datetime.now().strftime('%H:%M:%S')}]")
         combined_markdown = ""
 
         async def crawl_urls():
@@ -268,7 +269,7 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
         db.update_crawl_result_crawled(cursor, connection, crawl_result_id, combined_markdown)
         db.update_website_last_crawled(cursor, connection, website['id'])
 
-        print(f"    - Stored {len(combined_markdown)} characters of content")
+        print(f"    - Stored {len(combined_markdown)} characters of content [{datetime.now().strftime('%H:%M:%S')}]")
         return crawl_result_id
 
     except Exception as e:
