@@ -476,6 +476,31 @@ const ViewportManager = (() => {
             } else if (popupRight > debugRectBounds.right - padding) {
                 panX = (debugRectBounds.right - padding) - popupRight;
             }
+
+            // Check if popup overlaps with the search results panel (visible when searching)
+            const tagsWrapper = document.getElementById('tags-wrapper');
+            if (tagsWrapper) {
+                const panelRect = tagsWrapper.getBoundingClientRect();
+                if (panelRect.width > 0 && panelRect.height > 0) {
+                    const panelRight = panelRect.right + offsetX;
+                    const panelBottom = panelRect.bottom + offsetY;
+                    const panelTop = panelRect.top + offsetY;
+
+                    // Check if popup (after existing adjustments) still overlaps the panel
+                    const adjLeft = popupLeft + panX;
+                    const adjTop = popupTop + panY;
+                    const adjBottom = popupBottom + panY;
+
+                    if (adjLeft < panelRight + padding &&
+                        adjBottom > panelTop &&
+                        adjTop < panelBottom) {
+                        const neededPanX = (panelRight + padding) - popupLeft;
+                        if (neededPanX > panX) {
+                            panX = neededPanX;
+                        }
+                    }
+                }
+            }
         }
 
         if (panX === 0 && panY === 0) {

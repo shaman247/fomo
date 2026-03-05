@@ -258,7 +258,7 @@
 .location-icon,
 .search-icon {
     position: absolute;
-    left: 12px;
+    left: 6px;
     top: 50%;
     transform: translateY(-50%);
     pointer-events: none;
@@ -278,19 +278,20 @@
     width: auto;
     white-space: nowrap;
     font-family: var(--font-family);
-    font-size: 1.14em;
-    padding-left: 42px;
-    padding-right: 7px;
+    font-size: 1.08em;
+    letter-spacing: -0.03em;
+    padding-left: 27px;
+    padding-right: 12px;
 }
 
 #date-picker,
 #geotag-search-input,
 #omni-search-input {
-    padding: 6px 6px 6px 33px;
+    padding: 6px 12px 6px 27px;
     background-color: transparent;
     border: 1px solid var(--border-color);
     color: var(--secondary-text);
-    border-radius: 10px;
+    border-radius: 16px;
     box-sizing: border-box;
     font-family: var(--font-family);
     font-size: 1.08em;
@@ -415,6 +416,38 @@ span.flatpickr-weekday {
     font-weight: bold;
 }
 
+/* Date preset buttons above calendar */
+.flatpickr-presets {
+    display: flex;
+    gap: 6px;
+    padding: 8px 8px 4px;
+}
+
+.flatpickr-preset-btn {
+    flex: 1;
+    padding: 5px 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--secondary-text);
+    font-family: var(--font-family);
+    font-size: 0.85em;
+    cursor: pointer;
+    transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+    white-space: nowrap;
+}
+
+.flatpickr-preset-btn:hover {
+    background: var(--tertiary-bg);
+    color: var(--primary-text);
+}
+
+.flatpickr-preset-btn.active {
+    background: var(--accent-color);
+    border-color: var(--accent-color);
+    color: var(--calendar-day-selected-text);
+}
+
 /* === Desktop Top Bar Layout === */
 /* On desktop, the panel is a horizontal top bar with dropdown results */
 @media (min-width: 769px) {
@@ -423,20 +456,35 @@ span.flatpickr-weekday {
         right: 0;
         height: auto;
         overflow: visible;
-        padding: 8px 12px;
-        margin: 12px;
-        margin-bottom: 0;
+        padding: 4px 6px;
+        margin: 4px 6px 0;
         /* Transparent background — controls get their own bg */
         background-color: transparent;
         backdrop-filter: none;
         border: none;
     }
 
+    /* Gradient scrim behind filters for readability over the map */
+    #filter-panel::before {
+        content: '';
+        position: absolute;
+        top: -4px;
+        left: -6px;
+        right: -6px;
+        bottom: -30px;
+        background: linear-gradient(to bottom, color-mix(in srgb, var(--primary-bg) 80%, transparent) 0%, transparent 100%);
+        backdrop-filter: blur(6px);
+        mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
+        -webkit-mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
+        pointer-events: none;
+        z-index: -1;
+    }
+
     /* Neutralize tags-collapsed on desktop — top bar is always visible */
     #filter-panel.tags-collapsed {
         width: auto;
         height: auto;
-        padding: 8px 12px;
+        padding: 4px 6px;
         overflow: visible;
     }
 
@@ -448,35 +496,45 @@ span.flatpickr-weekday {
     #filter-container {
         flex-direction: row;
         align-items: center;
-        gap: 10px;
+        gap: 14px;
         margin-bottom: 0;
         padding: 0;
     }
 
     #filter-container > div:first-child {
         flex-shrink: 0;
-        gap: 10px;
+        gap: 6px;
     }
 
-    /* Controls: smaller to match chip bar height, opaque for readability */
+    #filter-container > div:first-child .filter-group {
+        margin-bottom: 0;
+    }
+
+    /* Controls: smaller to match chip bar height, with shadow and blur for readability */
     #date-picker,
     #omni-search-input {
-        padding: 4px 4px 4px 30px;
+        padding: 4px 10px 4px 24px;
         font-size: 0.95em;
-        background: color-mix(in srgb, var(--primary-bg) 75%, transparent);
-        backdrop-filter: blur(3px);
+        background: color-mix(in srgb, var(--primary-bg) 85%, transparent);
+        backdrop-filter: blur(8px);
         border-color: var(--border-color);
     }
 
-    /* Chips: more opaque for readability over the map */
+    #date-picker-sizer {
+        font-size: 0.95em;
+        padding-left: 24px;
+        padding-right: 10px;
+    }
+
+    /* Chips: shadow and blur for readability over the map */
     .chip-bar-chip {
-        background: color-mix(in srgb, var(--primary-bg) 75%, transparent);
-        backdrop-filter: blur(3px);
+        background: color-mix(in srgb, var(--primary-bg) 85%, transparent);
+        backdrop-filter: blur(8px);
         border-color: var(--border-color);
     }
 
     .chip-bar-chip:hover {
-        background: color-mix(in srgb, var(--primary-bg) 90%, transparent);
+        background: color-mix(in srgb, var(--primary-bg) 95%, transparent);
     }
 
     /* Chip bar: single row, only show chips that fully fit */
@@ -488,6 +546,17 @@ span.flatpickr-weekday {
         max-height: 30px; /* one row of chips */
         align-items: center;
         padding: 0;
+    }
+
+    /* When too few chips fit inline, move chip bar to its own row */
+    #filter-container.chips-below {
+        flex-wrap: wrap;
+        row-gap: 2px;
+    }
+
+    #filter-container.chips-below #chip-bar {
+        flex-basis: 100%;
+        max-height: 30px;
     }
 
     /* Results dropdown below top bar, left-aligned */
@@ -580,13 +649,18 @@ span.flatpickr-weekday {
     #date-picker,
     #geotag-search-input,
     #omni-search-input {
-        padding: 5px 5px 5px 32px;
+        padding: 5px 10px 5px 27px;
+    }
+
+    #date-picker-sizer {
+        padding-left: 27px;
+        padding-right: 10px;
     }
 
     .calendar-icon,
     .location-icon,
     .search-icon {
-        left: 10px;
+        left: 4px;
     }
 
     #chip-bar {
