@@ -29,6 +29,101 @@ const UIManager = (() => {
         }
     }
 
+    // ========================================
+    // DATE PRESETS
+    // ========================================
+
+    function getDatePresets() {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+
+        const dayOfWeek = today.getDay();
+        const daysUntilSunday = (7 - dayOfWeek) % 7;
+        const nextSunday = new Date(today);
+        nextSunday.setDate(nextSunday.getDate() + daysUntilSunday);
+
+        const presets = [
+            { label: 'Today', range: [new Date(today), new Date(today)] },
+            { label: 'Tomorrow', range: [new Date(tomorrow), new Date(tomorrow)] },
+        ];
+
+        // Only add "This Week" if it spans more than one day
+        if (daysUntilSunday > 0) {
+            presets.push({ label: 'This Week', range: [new Date(today), new Date(nextSunday)] });
+        }
+
+        return presets;
+    }
+
+    function getPresetLabel(selectedDates) {
+        if (selectedDates.length !== 2) return null;
+        const presets = getDatePresets();
+        const start = new Date(selectedDates[0]);
+        start.setHours(0, 0, 0, 0);
+        const end = new Date(selectedDates[1]);
+        end.setHours(0, 0, 0, 0);
+
+        for (const preset of presets) {
+            if (start.getTime() === preset.range[0].getTime() &&
+                end.getTime() === preset.range[1].getTime()) {
+                return preset.label;
+            }
+        }
+        return null;
+    }
+
+    function updateDatePickerDisplay(instance, elements) {
+        const label = getPresetLabel(instance.selectedDates);
+        if (label) {
+            instance.input.value = label;
+        }
+        resizeDatePickerInput(instance, elements);
+
+        // Update preset button active states
+        const calendar = instance.calendarContainer;
+        if (calendar) {
+            const buttons = calendar.querySelectorAll('.flatpickr-preset-btn');
+            buttons.forEach(btn => {
+                btn.classList.toggle('active', btn.textContent === label);
+            });
+        }
+    }
+
+    function injectDatePresets(instance, elements) {
+        const presets = getDatePresets();
+        const container = document.createElement('div');
+        container.className = 'flatpickr-presets';
+
+        const minDate = instance.config.minDate;
+        const maxDate = instance.config.maxDate;
+
+        presets.forEach(preset => {
+            if ((minDate && preset.range[0] < minDate) || (maxDate && preset.range[1] > maxDate)) return;
+
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'flatpickr-preset-btn';
+            btn.textContent = preset.label;
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                instance.setDate(preset.range, true);
+                instance.close();
+            });
+            container.appendChild(btn);
+        });
+
+        const calendar = instance.calendarContainer;
+        calendar.insertBefore(container, calendar.firstChild);
+    }
+
+    // ========================================
+    // DATE PICKER INIT
+    // ========================================
+
     /**
      * Initializes the date picker with Flatpickr
      * @param {Object} elements - DOM element references
@@ -61,8 +156,8 @@ const UIManager = (() => {
         if (!urlDatesStale && urlParams.end instanceof Date) {
             finalDefaultEndDate = urlParams.end;
         } else {
-            const defaultEndDate = new Date(today.getTime() + (6 * Constants.TIME.ONE_DAY_MS));
-            finalDefaultEndDate = defaultEndDate > config.END_DATE ? config.END_DATE : defaultEndDate;
+            // Default to same day as start (matches "Today" preset)
+            finalDefaultEndDate = new Date(initialStartDate.getTime());
         }
 
         state.datePickerInstance = flatpickr(elements.datePicker, {
@@ -72,12 +167,20 @@ const UIManager = (() => {
             minDate: config.START_DATE,
             maxDate: config.END_DATE,
             monthSelectorType: "static",
-            onReady: (selectedDates, dateStr, instance) => resizeDatePickerInput(instance, elements),
+            onReady: (selectedDates, dateStr, instance) => {
+                injectDatePresets(instance, elements);
+                updateDatePickerDisplay(instance, elements);
+            },
+            onChange: (selectedDates, dateStr, instance) => {
+                if (selectedDates.length === 2) {
+                    updateDatePickerDisplay(instance, elements);
+                }
+            },
             onClose: (selectedDates, dateStr, instance) => {
                 if (selectedDates.length === 2) {
                     callbacks.onDatePickerClose(selectedDates);
                 }
-                resizeDatePickerInput(instance, elements);
+                updateDatePickerDisplay(instance, elements);
             }
         });
 
@@ -85,6 +188,13 @@ const UIManager = (() => {
         if (initialSelectedDates.length === 2) {
             callbacks.onDatePickerClose(initialSelectedDates);
         }
+
+        // Re-measure after fonts load (initial sizing may use fallback font metrics)
+        document.fonts.ready.then(() => {
+            if (state.datePickerInstance) {
+                resizeDatePickerInput(state.datePickerInstance, elements);
+            }
+        });
     }
 
     /**
@@ -97,7 +207,7 @@ const UIManager = (() => {
         const sizer = elements.datePickerSizer;
         if (!sizer || !input) return;
         sizer.textContent = input.value || input.placeholder;
-        input.style.width = `${sizer.offsetWidth + 5}px`;
+        input.style.width = `${sizer.offsetWidth + 2}px`;
     }
 
     // ========================================
@@ -197,6 +307,8 @@ const UIManager = (() => {
         destroyDatePicker,
         initDatePicker,
         resizeDatePickerInput,
+        updateDatePickerDisplay,
+        getPresetLabel,
 
         // Event listeners
         initLogoMenu,

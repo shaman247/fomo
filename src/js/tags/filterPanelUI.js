@@ -266,6 +266,41 @@ const FilterPanelUI = (() => {
         // Trim to max lines on desktop (mobile is single-row horizontal scroll)
         if (hasChips && !isMobileLayout()) {
             _trimChipBarToMaxLines(container);
+            _updateChipBarLayout(container);
+        }
+    }
+
+    /**
+     * If fewer than 6 chips are visible inline, move chip bar to its own row.
+     */
+    function _updateChipBarLayout(container) {
+        const filterContainer = document.getElementById('filter-container');
+        if (!filterContainer) return;
+
+        // Count chips visible within the container bounds
+        const containerRect = container.getBoundingClientRect();
+        let visibleCount = 0;
+        for (const chip of container.children) {
+            const chipRect = chip.getBoundingClientRect();
+            if (chipRect.top < containerRect.bottom && chipRect.right <= containerRect.right + 1) {
+                visibleCount++;
+            }
+        }
+
+        const needsOwnRow = visibleCount < 6 && container.children.length >= 6;
+        filterContainer.classList.toggle('chips-below', needsOwnRow);
+
+        if (needsOwnRow) {
+            // Align chip bar left edge with search bar (skip past logo)
+            const logo = document.getElementById('logo-menu-wrapper');
+            if (logo) {
+                const gap = 10; // matches #filter-container > div:first-child gap
+                container.style.marginLeft = (logo.offsetWidth + gap) + 'px';
+            }
+            // Re-trim after layout change since more chips may now fit
+            _trimChipBarToMaxLines(container);
+        } else {
+            container.style.marginLeft = '';
         }
     }
 
