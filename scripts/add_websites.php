@@ -393,7 +393,7 @@ $prev_websites = [
 ];
 
 $new_websites = [
-    // Asian Rainbow Chorus added on 2026-03-02 - see git history
+    // Final 9 venues added on 2026-03-09 (batch 4) — see git history
 ];
 
 $done_partiful_venues = [

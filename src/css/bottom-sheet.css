@@ -74,7 +74,7 @@
     flex-shrink: 0;
     display: flex;
     justify-content: center;
-    padding: 10px 0 6px;
+    padding: 4px 0 2px;
     cursor: grab;
     touch-action: none;
 }
@@ -142,31 +142,6 @@
     color: var(--accent-hover);
 }
 
-/* ── Popup Tabs in Bottom Sheet Tab Bar ───────────────────────── */
-/* When a location popup is open, its tabs replace the browse tabs */
-
-.bottom-sheet-tab-bar .popup-tab {
-    flex: 1;
-    padding: 10px 0;
-    background: none;
-    border: none;
-    border-bottom: 2px solid transparent;
-    color: var(--secondary-text);
-    font-family: var(--font-family);
-    font-size: 0.85em;
-    font-weight: 600;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    cursor: pointer;
-    text-align: center;
-    transition: color 0.2s, border-color 0.2s;
-}
-
-.bottom-sheet-tab-bar .popup-tab.active {
-    color: var(--primary-text);
-    border-bottom-color: var(--accent-color);
-}
-
 /* ── Content Area ─────────────────────────────────────────────── */
 
 .bottom-sheet-content {
@@ -190,7 +165,7 @@
 }
 
 .bottom-sheet-content .popup-header {
-    padding-top: 0;
+    padding: 0 10px;
 }
 
 .bottom-sheet-content .popup-events-list {

@@ -80,6 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
             selectedLocationKey: null,
             searchTerm: '', // Current search term for marker filtering
             currentFilteredLocations: null, // Locations after tag/date filtering (before search)
+            organizersById: {}, // Organizer data keyed by website ID
             isInitialLoad: true, // Track if we're in initial load phase
             _moveendSearchTimeout: null, // Debounce timer for search on moveend
         },
@@ -110,6 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
             LOCATIONS_FULL_URL: 'data/locations.full.json',
             TAG_CONFIG_URL: 'data/tags.json',
             TAG_HIERARCHY_URL: 'data/tag_hierarchy.json',
+            ORGANIZERS_URL: 'data/organizers.json',
 
             START_DATE: new Date(new Date().setHours(0, 0, 0, 0)),
             END_DATE: new Date(new Date().setHours(0, 0, 0, 0) + 90 * 24 * 60 * 60 * 1000),
@@ -194,12 +196,14 @@ document.addEventListener('DOMContentLoaded', () => {
          * @private
          */
         async _loadInitialData() {
-            const [initEventData, initLocationData, tagConfig, tagHierarchy] = await Promise.all([
+            const [initEventData, initLocationData, tagConfig, tagHierarchy, organizersData] = await Promise.all([
                 DataManager.fetchData(this.config.EVENT_INIT_URL),
                 DataManager.fetchData(this.config.LOCATIONS_INIT_URL),
                 DataManager.fetchData(this.config.TAG_CONFIG_URL),
-                DataManager.fetchData(this.config.TAG_HIERARCHY_URL)
+                DataManager.fetchData(this.config.TAG_HIERARCHY_URL),
+                DataManager.fetchData(this.config.ORGANIZERS_URL)
             ]);
+            this.state.organizersById = organizersData || {};
 
             this.state.tagConfig = tagConfig;
             this.state.geotagsSet = new Set((tagConfig.geotags || []).map(tag => tag.toLowerCase()));
@@ -528,6 +532,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     [lat, lng] = event.locationKey.split(',').map(Number);
                 }
                 MarkerController.flyToLocationAndOpenPopup(lat, lng, result.type === 'event' ? result.ref : null);
+            } else if (result.type === 'organizer') {
+                // Find first matching event from this organizer and fly to its location
+                const orgId = String(result.ref);
+                const event = this.state.allEvents.find(e => String(e.organizer_id) === orgId);
+                if (event && event.locationKey) {
+                    const [lat, lng] = event.locationKey.split(',').map(Number);
+                    MarkerController.flyToLocationAndOpenPopup(lat, lng, event.id);
+                }
             }
         },
 
@@ -923,6 +935,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 createInteractiveTagButton: (tag) => FilterPanelUI.createInteractiveTagButton(tag),
                 hierarchyTagsSet: this.state.hierarchyTagsSet,
                 tagEmojiMap: this.state.tagEmojiMap,
+                organizersById: this.state.organizersById,
                 getDebugMode: () => this.state.debugMode
             });
         },

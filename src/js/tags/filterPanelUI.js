@@ -77,8 +77,8 @@ const FilterPanelUI = (() => {
      */
     function getDefaultSectionOrder() {
         return isMobileLayout()
-            ? ['tags', 'events', 'locations']
-            : ['locations', 'events', 'tags'];
+            ? ['tags', 'events', 'locations', 'organizers']
+            : ['locations', 'events', 'tags', 'organizers'];
     }
 
     /**
@@ -97,13 +97,15 @@ const FilterPanelUI = (() => {
             return {
                 locations: EXPANDED,
                 events: EXPANDED,
-                tags: EXPANDED
+                tags: EXPANDED,
+                organizers: EXPANDED
             };
         }
         return {
             locations: COLLAPSED,
             events: COLLAPSED,
-            tags: DEFAULT
+            tags: DEFAULT,
+            organizers: COLLAPSED
         };
     }
 
@@ -404,6 +406,7 @@ const FilterPanelUI = (() => {
             state.sectionViewStates.locations = 'expanded';
             state.sectionViewStates.events = 'expanded';
             state.sectionViewStates.tags = 'expanded';
+            state.sectionViewStates.organizers = 'expanded';
         }
 
         // Group and sort results using SearchManager
@@ -432,10 +435,12 @@ const FilterPanelUI = (() => {
         const locationSection = container.querySelector('[data-section-key="locations"]');
         const eventSection = container.querySelector('[data-section-key="events"]');
         const tagSection = container.querySelector('[data-section-key="tags"]');
+        const organizerSection = container.querySelector('[data-section-key="organizers"]');
 
         if (locationSection) sections.locations = locationSection;
         if (eventSection) sections.events = eventSection;
         if (tagSection) sections.tags = tagSection;
+        if (organizerSection) sections.organizers = organizerSection;
 
         BottomSheet.updateBrowseTabs(sections);
     }

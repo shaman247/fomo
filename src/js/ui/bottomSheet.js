@@ -7,9 +7,9 @@
  *
  * Tab bar: Places | Events | Tags (3 tabs, always present)
  *   - Always visible on mobile (hidden on desktop via CSS)
- *   - No active tab when sheet is closed or in detail mode
+ *   - No active tab when sheet is closed
  *   - Tapping a tab opens the sheet; tapping the active tab closes it
- *   - Detail mode (marker click) shows popup content with no active tab
+ *   - Detail mode (marker click) shows popup content; browse tabs stay unchanged
  *     Tapping any tab returns to browse mode
  *   - Tabs wrap circularly: swipe right past Tags → Places, left past Places → Tags
  *   - Horizontal swipe on detail popup dismisses it, returns to previous tab
@@ -95,8 +95,8 @@ const BottomSheet = (() => {
         cloneStart: null,  // clone of last tab (before first real tab)
         cloneEnd: null,     // clone of first tab (after last real tab)
 
-        // Popup tabs (moved from popup content to bottom sheet tab bar during detail mode)
-        popupTabButtons: null
+        // Detail mode: true if popup content has its own tab bar (prevents swipe-to-dismiss)
+        detailHasPopupTabs: false
     };
 
     // ========================================
@@ -282,44 +282,6 @@ const BottomSheet = (() => {
     }
 
     // ========================================
-    // POPUP TABS IN BOTTOM SHEET TAB BAR
-    // ========================================
-
-    /**
-     * Moves popup tab buttons from the popup content into the bottom sheet tab bar,
-     * temporarily replacing the browse tabs (Places/Events/Tags).
-     */
-    function _setupPopupTabs(contentElement) {
-        _teardownPopupTabs();
-
-        const popupTabBar = contentElement.querySelector('.popup-tab-bar');
-        if (!popupTabBar) return;
-
-        // Hide original bottom sheet tab buttons
-        state.tabButtons.forEach(btn => btn.style.display = 'none');
-
-        // Move popup tab buttons into the bottom sheet tab bar
-        const popupBtns = [...popupTabBar.querySelectorAll('.popup-tab')];
-        state.popupTabButtons = popupBtns;
-        popupBtns.forEach(btn => state.tabBar.appendChild(btn));
-
-        // Hide the now-empty popup tab bar inside the content
-        popupTabBar.style.display = 'none';
-    }
-
-    /**
-     * Removes popup tab buttons from the bottom sheet tab bar and
-     * restores the original browse tab buttons.
-     */
-    function _teardownPopupTabs() {
-        if (state.popupTabButtons) {
-            state.popupTabButtons.forEach(btn => btn.remove());
-            state.popupTabButtons = null;
-        }
-        state.tabButtons.forEach(btn => btn.style.display = '');
-    }
-
-    // ========================================
     // DETAIL MODE
     // ========================================
 
@@ -332,9 +294,9 @@ const BottomSheet = (() => {
 
         state.activeLocationKey = null;
         state.activeLngLat = null;
+        state.detailHasPopupTabs = false;
 
         state.detailContentContainer.innerHTML = '';
-        _teardownPopupTabs();
         _showBrowse();
 
         // Clear marker highlight
@@ -559,7 +521,7 @@ const BottomSheet = (() => {
 
     function _onDetailSwipeEnd(e) {
         if (!state.activeLocationKey) return;
-        if (state.popupTabButtons) return; // Don't dismiss via swipe when popup has tabs
+        if (state.detailHasPopupTabs) return; // Don't dismiss via swipe when popup has its own tabs
         const touch = e.changedTouches?.[0];
         if (!touch) return;
 
@@ -651,9 +613,8 @@ const BottomSheet = (() => {
         state.detailContentContainer.scrollTop = 0;
         _showDetail();
 
-        // Deactivate browse tabs and show popup tabs in the tab bar instead
-        _deactivateAllTabs();
-        _setupPopupTabs(contentElement);
+        // Track whether popup has its own tab bar (prevents swipe-to-dismiss)
+        state.detailHasPopupTabs = !!contentElement.querySelector('.popup-tab-bar');
 
         // Open sheet if closed
         if (state.currentSnap < SNAP_PEEK) {
@@ -698,7 +659,7 @@ const BottomSheet = (() => {
         state.detailContentContainer.innerHTML = '';
         state.detailContentContainer.appendChild(contentElement);
         state.detailContentContainer.scrollTop = 0;
-        _setupPopupTabs(contentElement);
+        state.detailHasPopupTabs = !!contentElement.querySelector('.popup-tab-bar');
     }
 
     function updateBrowseTabs(sections) {

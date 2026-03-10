@@ -32,6 +32,7 @@ const PopupContentBuilder = (() => {
         createInteractiveTagButton: null,
         hierarchyTagsSet: new Set(),
         tagEmojiMap: {},
+        organizersById: {},
         getDebugMode: () => false
     };
 
@@ -280,18 +281,40 @@ const PopupContentBuilder = (() => {
         eventDetailContainer.appendChild(descriptionP);
 
         const tagsToShow = event.display_tags || event.tags;
-        if (tagsToShow && tagsToShow.length > 0) {
-            // Only show curated tags (from tag hierarchy), hide keywords (unless debug mode)
-            const curatedTags = state.hierarchyTagsSet.size > 0 && !state.getDebugMode()
-                ? tagsToShow.filter(tag => state.hierarchyTagsSet.has(tag))
-                : tagsToShow;
-            if (curatedTags.length > 0) {
-                const tagsContainer = document.createElement('div');
-                tagsContainer.className = 'tag-tags-container popup-tags-container';
+        const org = event.organizer_id ? state.organizersById[String(event.organizer_id)] : null;
+        const hasTags = tagsToShow && tagsToShow.length > 0;
+
+        if (hasTags || org) {
+            const tagsContainer = document.createElement('div');
+            tagsContainer.className = 'tag-tags-container popup-tags-container';
+
+            // Show curated tags (from tag hierarchy), hide keywords (unless debug mode)
+            if (hasTags) {
+                const curatedTags = state.hierarchyTagsSet.size > 0 && !state.getDebugMode()
+                    ? tagsToShow.filter(tag => state.hierarchyTagsSet.has(tag))
+                    : tagsToShow;
                 curatedTags.forEach(tag => {
                     const el = createTagElement(tag);
                     if (el) tagsContainer.appendChild(el);
                 });
+            }
+
+            // Show organizer tag (only when organizer_id is set, i.e. organizer != venue)
+            if (org) {
+                const orgButton = document.createElement('button');
+                orgButton.className = 'tag-button state-unselected popup-organizer-tag';
+                if (org.emoji) {
+                    const emojiSpan = document.createElement('span');
+                    emojiSpan.className = 'chip-emoji';
+                    emojiSpan.setAttribute('aria-hidden', 'true');
+                    emojiSpan.textContent = org.emoji;
+                    orgButton.appendChild(emojiSpan);
+                }
+                orgButton.appendChild(document.createTextNode(org.name));
+                tagsContainer.appendChild(orgButton);
+            }
+
+            if (tagsContainer.children.length > 0) {
                 eventDetailContainer.appendChild(tagsContainer);
             }
         }
@@ -639,6 +662,7 @@ const PopupContentBuilder = (() => {
         state.createInteractiveTagButton = config.createInteractiveTagButton || null;
         state.hierarchyTagsSet = config.hierarchyTagsSet || new Set();
         state.tagEmojiMap = config.tagEmojiMap || {};
+        state.organizersById = config.organizersById || {};
         state.getDebugMode = config.getDebugMode || (() => false);
     }
 

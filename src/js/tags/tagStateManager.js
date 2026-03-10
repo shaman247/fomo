@@ -288,6 +288,8 @@ const TagStateManager = (() => {
                 button.classList.add('non-visible-location');
             } else if (result.type === 'event') {
                 button.classList.add('non-visible-event');
+            } else if (result.type === 'organizer') {
+                button.classList.add('non-visible-organizer');
             }
         }
 
@@ -295,10 +297,11 @@ const TagStateManager = (() => {
         button.dataset.resultRef = result.ref;
         button.setAttribute('role', 'listitem');
 
-        const emoji = result.emoji ? `<span class="popup-event-emoji" aria-hidden="true">${result.emoji}</span>` : '';
+        const emoji = result.emoji ? `<span class="chip-emoji" aria-hidden="true">${result.emoji}</span>` : '';
         const displayName = result.displayName || result.ref;
+        const countText = result.eventCount ? ` <span class="organizer-event-count">(${result.eventCount})</span>` : '';
         const scoreText = (debugMode && result.score !== undefined) ? ` <span class="debug-score" style="opacity: 0.6; font-size: 0.85em;">[${result.score.toFixed(1)}]</span>` : '';
-        button.innerHTML = `${emoji} ${displayName.replace(/<\/?strong>/g, '')}${scoreText}`;
+        button.innerHTML = `${emoji}${displayName.replace(/<\/?strong>/g, '')}${countText}${scoreText}`;
         button.setAttribute('aria-label', `${result.type}: ${displayName.replace(/<\/?[^>]+(>|$)/g, '')}`);
 
         button.addEventListener('click', () => {
