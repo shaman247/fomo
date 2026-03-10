@@ -319,6 +319,53 @@ const SearchManager = (() => {
     }
 
     /**
+     * Searches organizers based on the search term
+     * @param {string} term - Search term (already normalized)
+     * @returns {Map} Map of organizer results
+     */
+    function searchOrganizers(term) {
+        const results = new Map();
+        if (!term || !state.appState.organizersById) return results;
+
+        const searchIndex = state.appState.searchIndex;
+        const matchingEvents = state.appState.currentlyMatchingEvents;
+
+        // Build organizer -> matching event count lookup
+        const orgEventCounts = {};
+        for (const event of matchingEvents) {
+            if (event.organizer_id) {
+                const orgId = String(event.organizer_id);
+                orgEventCounts[orgId] = (orgEventCounts[orgId] || 0) + 1;
+            }
+        }
+
+        for (const [id, org] of Object.entries(state.appState.organizersById)) {
+            const normalizedText = searchIndex?.organizers?.get(id) || Utils.normalizeForSearch(org.name || '');
+            if (!normalizedText.includes(term)) continue;
+
+            const matchCount = orgEventCounts[id] || 0;
+            let score = matchCount;
+
+            // Exact match boost
+            if (normalizedText === term) {
+                score += SCORE_WEIGHTS.EXACT_TAG_MATCH;
+            }
+
+            results.set(`organizer-${id}`, {
+                type: 'organizer',
+                ref: id,
+                displayName: org.name,
+                emoji: org.emoji || null,
+                score: score,
+                isVisible: matchCount > 0,
+                eventCount: matchCount
+            });
+        }
+
+        return results;
+    }
+
+    /**
      * Main search function that searches across locations, events, and tags
      * @param {string} term - Search term (lowercase)
      * @param {Object} dynamicFrequencies - Current dynamic tag frequencies
@@ -346,9 +393,10 @@ const SearchManager = (() => {
         const locationResults = searchLocations(term, selectedTags, matchingLocationKeys, visibleLocationKeys);
         const eventResults = searchEvents(term, selectedTags, matchingEventIds, visibleEventIds, referenceDate);
         const tagResults = searchTags(term, dynamicFrequencies);
+        const organizerResults = searchOrganizers(term);
 
         // Combine all results
-        const allResults = new Map([...locationResults, ...eventResults, ...tagResults]);
+        const allResults = new Map([...locationResults, ...eventResults, ...tagResults, ...organizerResults]);
 
         return Array.from(allResults.values());
     }
@@ -369,13 +417,15 @@ const SearchManager = (() => {
         const groupedResults = {
             locations: [],
             events: [],
-            tags: []
+            tags: [],
+            organizers: []
         };
 
         const hiddenResults = {
             locations: [],
             events: [],
-            tags: []
+            tags: [],
+            organizers: []
         };
 
         const hasSearchTerm = searchTerm && searchTerm.trim().length > 0;
@@ -388,6 +438,7 @@ const SearchManager = (() => {
             if (type === 'location') targetGroup.locations.push(result);
             else if (type === 'event') targetGroup.events.push(result);
             else if (type === 'tag') targetGroup.tags.push(result);
+            else if (type === 'organizer') targetGroup.organizers.push(result);
         });
 
         // Sort locations (selected location first, then by score)
@@ -417,6 +468,10 @@ const SearchManager = (() => {
 
         groupedResults.tags.sort((a, b) => (b.score || 0) - (a.score || 0));
         hiddenResults.tags.sort((a, b) => (b.score || 0) - (a.score || 0));
+
+        // Sort organizers by score
+        groupedResults.organizers.sort((a, b) => (b.score || 0) - (a.score || 0));
+        hiddenResults.organizers.sort((a, b) => (b.score || 0) - (a.score || 0));
 
         return { groupedResults, hiddenResults };
     }

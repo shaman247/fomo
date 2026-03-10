@@ -16,7 +16,56 @@
 // EDIT THIS ARRAY TO ADD NEW LOCATIONS
 // ============================================================================
 $new_locations = [
-    // Baci Studio, Cuban Art Space, Springs Projects, Sunset Park Recreation Center added on 2026-03-03
+];
+
+$done_20260309b = [
+    [
+        'name' => 'New Era Creative Space',
+        'short_name' => 'New Era Creative',
+        'description' => 'Youth arts education center in Peekskill offering performing and visual arts, STEM, and leadership programs with public showcases and community events.',
+        'address' => '203 Esther St, Peekskill, NY 10566, USA',
+        'lat' => 41.289630,
+        'lng' => -73.919691,
+        'emoji' => '🎭',
+        'tags' => ['Westchester', 'Peekskill', 'Theatre', 'Community Space', 'Education'],
+    ],
+    [
+        'name' => 'The Great Escape Room Queens',
+        'short_name' => 'Great Escape Room',
+        'description' => 'Immersive escape room venue in Rego Park offering themed puzzle rooms for groups and team-building events.',
+        'address' => '62-33 Woodhaven Blvd, Rego Park, NY 11374, USA',
+        'lat' => 40.726089,
+        'lng' => -73.869869,
+        'emoji' => '🎪',
+        'tags' => ['Queens', 'Rego Park', 'Games', 'Entertainment'],
+    ],
+    [
+        'name' => 'Teatro Yerbabruja',
+        'description' => 'Latino theater and arts nonprofit in Bay Shore presenting bilingual performances, visual arts exhibitions, and cultural programming.',
+        'address' => '17 2nd Ave, Bay Shore, NY 11706, USA',
+        'lat' => 40.724520,
+        'lng' => -73.245472,
+        'emoji' => '🎭',
+        'tags' => ['Long Island', 'Bay Shore', 'Theatre', 'Latino', 'Community Space'],
+    ],
+    [
+        'name' => 'Kato Sake Works',
+        'description' => 'Brooklyn sake brewery and taproom in Bushwick crafting small-batch sake, hosting tastings, workshops, and cultural events.',
+        'address' => '379 Troutman St, Brooklyn, NY 11237, USA',
+        'lat' => 40.705970,
+        'lng' => -73.923780,
+        'emoji' => '🍶',
+        'tags' => ['Brooklyn', 'Bushwick', 'Brewery', 'Food & Drink'],
+    ],
+    [
+        'name' => 'Chambers',
+        'description' => 'American restaurant and wine bar in TriBeCa known for its seasonal cuisine and curated wine list, hosting comedy and live events.',
+        'address' => '94 Chambers St, New York, NY 10007, USA',
+        'lat' => 40.714562,
+        'lng' => -74.007574,
+        'emoji' => '🍷',
+        'tags' => ['Manhattan', 'TriBeCa', 'Restaurant', 'Wine Bar'],
+    ],
 ];
 
 $done_dumbo_venues = [

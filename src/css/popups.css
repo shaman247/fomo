@@ -313,6 +313,11 @@
     font-size: 0.8em;
 }
 
+/* Organizer tag in popup — italicized to distinguish from regular tags */
+.popup-organizer-tag {
+    font-style: italic;
+}
+
 /* === Events List === */
 
 .popup-events-list {

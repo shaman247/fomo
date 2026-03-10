@@ -1,7 +1,8 @@
-"""Find potential duplicate events at the same location with overlapping dates.
+"""Find potential duplicate events.
 
-Checks both start_date matches and date range overlaps. Uses the merger's
-name similarity logic to classify pairs by confidence level.
+Detection methods:
+1. Same location + overlapping dates, classified by name similarity
+2. Shared URLs (ignoring query params) — catches re-extractions with different names
 
 Usage:
     ./venv/bin/python scripts/find_duplicate_events.py [--suppress] [--review]
@@ -9,6 +10,9 @@ Usage:
 import argparse
 import sys
 sys.path.insert(0, 'pipeline')
+
+from collections import defaultdict
+from urllib.parse import urlparse
 
 from db import create_connection
 from merger import normalize_name_for_dedup, are_names_similar
@@ -44,14 +48,50 @@ def find_duplicates(cursor):
     return cursor.fetchall()
 
 
-def classify_pairs(pairs):
+def find_shared_url_pairs(cursor):
+    """Find active event pairs that share a specific URL (ignoring query params).
+
+    Filters out generic venue/calendar URLs by requiring 2+ path segments
+    and only counting URLs shared by at most 3 events (venue homepages
+    are shared by many more).
+    """
+    cursor.execute("""
+        SELECT eu.event_id, eu.url
+        FROM event_urls eu
+        JOIN events e ON eu.event_id = e.id
+        WHERE e.archived = 0 AND e.suppressed = 0
+    """)
+    url_to_events = defaultdict(set)
+    for event_id, url in cursor.fetchall():
+        base_url = url.split('?')[0].rstrip('/')
+        path = urlparse(base_url).path.strip('/')
+        # Skip generic URLs (homepages, single-segment paths like /events)
+        segments = [s for s in path.split('/') if s]
+        if len(segments) < 2:
+            continue
+        url_to_events[base_url].add(event_id)
+
+    pairs = set()
+    for event_ids in url_to_events.values():
+        # URLs shared by 4+ events are likely venue/series pages, not specific events
+        if 2 <= len(event_ids) <= 3:
+            ids = sorted(event_ids)
+            for i in range(len(ids)):
+                for j in range(i + 1, len(ids)):
+                    pairs.add((ids[i], ids[j]))
+    return pairs
+
+
+def classify_pairs(pairs, shared_url_pair_ids):
     """Classify pairs into confidence tiers.
 
-    Returns: (exact_dupes, similar_dupes)
+    Returns: (exact_dupes, shared_url_dupes, similar_dupes)
         exact_dupes: Identical normalized names — safe to auto-suppress
+        shared_url_dupes: Different names but shared event URL — needs review
         similar_dupes: are_names_similar() match — needs manual review
     """
     exact_dupes = []
+    shared_url_dupes = []
     similar_dupes = []
 
     for row in pairs:
@@ -68,10 +108,12 @@ def classify_pairs(pairs):
 
         if norm1 == norm2:
             exact_dupes.append(entry)
+        elif (id1, id2) in shared_url_pair_ids:
+            shared_url_dupes.append(entry)
         elif are_names_similar(name1, name2):
             similar_dupes.append(entry)
 
-    return exact_dupes, similar_dupes
+    return exact_dupes, shared_url_dupes, similar_dupes
 
 
 def collect_suppress_ids(pairs):
@@ -112,16 +154,21 @@ def main():
     pairs = find_duplicates(cursor)
     print(f"Found {len(pairs)} event pairs at same location with overlapping dates")
 
-    exact_dupes, similar_dupes = classify_pairs(pairs)
+    print("Checking for shared URLs...")
+    shared_url_pair_ids = find_shared_url_pairs(cursor)
+
+    exact_dupes, shared_url_dupes, similar_dupes = classify_pairs(pairs, shared_url_pair_ids)
 
     print_pairs(exact_dupes, "EXACT NAME DUPLICATES (safe to auto-suppress)")
+    print_pairs(shared_url_dupes, "SHARED URL DUPLICATES (review needed)")
 
     if args.review:
-        print_pairs(similar_dupes, "SIMILAR NAME PAIRS (manual review needed)")
+        print_pairs(similar_dupes, "SIMILAR NAME PAIRS (review needed)")
 
     # Summary
     print(f"\n--- Summary ---")
     print(f"Exact name dupes: {len(exact_dupes)} pairs")
+    print(f"Shared URL dupes: {len(shared_url_dupes)} pairs")
     print(f"Similar name pairs: {len(similar_dupes)} pairs (use --review to see)")
 
     if exact_dupes:

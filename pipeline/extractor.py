@@ -200,8 +200,13 @@ MAX_IMAGE_DIMENSION = 1024
 # Batch API settings
 BATCH_POLL_INTERVAL = int(os.environ.get("BATCH_POLL_INTERVAL", "30"))  # seconds
 BATCH_TIMEOUT = int(os.environ.get("BATCH_TIMEOUT", "86400"))  # 24 hour default
-BATCH_TOKEN_LIMIT = int(os.environ.get("BATCH_TOKEN_LIMIT", "2000000"))  # conservative limit (Tier 1: 3M)
+BATCH_TOKEN_LIMIT = int(os.environ.get("BATCH_TOKEN_LIMIT", "10000000"))  # Tier 1 limit for Flash models
 CHARS_PER_TOKEN = 3  # conservative estimate (Gemini tokenizer averages ~3 chars/token for mixed content)
+# Maximum estimated tokens per individual request. Typical prompts are 40K-55K tokens.
+# Gemini's context window is 1M tokens, but we cap at 100K to catch data bugs early
+# (the largest legitimate prompt is ~55K tokens, so 100K gives ~2x headroom for growth
+# while still catching runaway inputs well before they hit the API limit).
+MAX_REQUEST_TOKENS = int(os.environ.get("MAX_REQUEST_TOKENS", "100000"))
 
 
 # =============================================================================
@@ -789,11 +794,26 @@ def get_prompt(url, page_content, current_date_string, name, notes, existing_eve
     note_section = f"\n\nIMPORTANT: {notes}" if notes else ""
     rid_section = f"\n\nIMPORTANT: Set request_id to \"{request_id}\" in your response." if request_id else ""
 
-    # Format existing events as JSON for prompt
+    # Format existing events as JSON for prompt (with size guardrails)
     existing_events_section = ""
     if existing_events:
-        existing_events_json = json.dumps(existing_events, indent=2)
-        existing_events_section = f"""
+        # Trim occurrences to max 3 per event — we only need these for naming
+        # consistency, not full scheduling data. This prevents prompt bloat from
+        # highly-recurring events (e.g., library programs with 100s of occurrences).
+        trimmed = []
+        for ev in existing_events:
+            trimmed_ev = {k: v for k, v in ev.items() if k != 'occurrences'}
+            occs = ev.get('occurrences', [])
+            trimmed_ev['occurrences'] = occs[:3]
+            trimmed.append(trimmed_ev)
+        existing_events_json = json.dumps(trimmed, indent=2)
+
+        # Hard cap: if existing events JSON still exceeds 50K chars, drop it entirely
+        if len(existing_events_json) > 50000:
+            print(f"    - WARNING: Existing events JSON too large ({len(existing_events_json)} chars), omitting from prompt")
+            existing_events_section = ""
+        else:
+            existing_events_section = f"""
 REFERENCE - Previously extracted events (for naming consistency only):
 {existing_events_json}
 
@@ -1000,18 +1020,24 @@ async def execute_extraction_sync(cursor, connection, prep):
         response_text = await _execute_chunked_sync(prep)
 
     else:  # single
-        response = await asyncio.wait_for(
-            genai_client.aio.models.generate_content(
-                model=GEMINI_MODEL,
-                contents=prep.prompt,
-                config={
-                    "response_mime_type": "application/json",
-                    "response_schema": EventList,
-                }
-            ),
-            timeout=GEMINI_TIMEOUT
-        )
-        response_text = response.text.strip()
+        estimated_tokens = len(prep.prompt) // CHARS_PER_TOKEN
+        if estimated_tokens > MAX_REQUEST_TOKENS:
+            error_msg = f"Prompt too large (~{estimated_tokens:,} est. tokens, limit {MAX_REQUEST_TOKENS:,})"
+            print(f"    ⚠️  ERROR: {error_msg}, skipping extraction")
+            raise RuntimeError(error_msg)
+        else:
+            response = await asyncio.wait_for(
+                genai_client.aio.models.generate_content(
+                    model=GEMINI_MODEL,
+                    contents=prep.prompt,
+                    config={
+                        "response_mime_type": "application/json",
+                        "response_schema": EventList,
+                    }
+                ),
+                timeout=GEMINI_TIMEOUT
+            )
+            response_text = response.text.strip()
 
     if not response_text or not response_text.strip():
         response_text = '{"events": []}'
@@ -1252,6 +1278,20 @@ def _build_enrichment_request(crawl_result_id, batch_event_names, venue_name, ba
     )
 
 
+def _validate_request_size(request, source_label):
+    """Check if a request exceeds the per-request token limit.
+
+    Returns the request if within limits, or None if it exceeds the limit.
+    Logs a warning for rejected requests.
+    """
+    estimated_tokens = _estimate_request_tokens(request)
+    if estimated_tokens > MAX_REQUEST_TOKENS:
+        print(f"    - WARNING: Dropping request for {source_label}: "
+              f"~{estimated_tokens:,} tokens exceeds {MAX_REQUEST_TOKENS:,} limit")
+        return None
+    return request
+
+
 def build_batch_requests(preparations):
     """Convert PreparedExtractions into Phase 1 InlinedRequests.
 
@@ -1259,17 +1299,34 @@ def build_batch_requests(preparations):
         preparations: dict of {crawl_result_id: PreparedExtraction}
 
     Returns:
-        list of InlinedRequest objects for all extraction types
+        tuple of (requests, dropped_crids) where:
+        - requests: list of InlinedRequest objects for all extraction types
+        - dropped_crids: dict of {crawl_result_id: error_message} for oversized requests
     """
     requests = []
+    dropped_crids = {}
     for crid, prep in preparations.items():
+        label = f"{prep.website_name} (cr-{crid})"
         if prep.extraction_type == 'single':
-            requests.append(_build_single_request(prep))
+            req = _validate_request_size(_build_single_request(prep), label)
+            if req:
+                requests.append(req)
+            else:
+                dropped_crids[crid] = (f"Prompt too large (~{len(prep.prompt) // CHARS_PER_TOKEN:,} est. tokens, "
+                                       f"limit {MAX_REQUEST_TOKENS:,})")
         elif prep.extraction_type == 'vision':
-            requests.append(_build_vision_request(prep))
+            req = _validate_request_size(_build_vision_request(prep), label)
+            if req:
+                requests.append(req)
+            else:
+                dropped_crids[crid] = "Vision request too large"
         elif prep.extraction_type == 'chunked':
-            requests.extend(_build_chunk_requests(prep))
-    return requests
+            for req in _build_chunk_requests(prep):
+                validated = _validate_request_size(req, f"{label} chunk")
+                if validated:
+                    requests.append(validated)
+                # Note: individual chunk drops don't fail the whole extraction
+    return requests, dropped_crids
 
 
 def build_enrichment_requests(chunked_events, preparations):
@@ -1732,7 +1789,23 @@ async def run_batch_extraction(extraction_queue, poll_interval=None, timeout=Non
         return results
 
     # Phase 1: Build and submit extraction batch
-    batch_requests = build_batch_requests(preparations)
+    batch_requests, dropped_crids = build_batch_requests(preparations)
+
+    # Mark dropped requests as failed in the database so they don't retry forever
+    if dropped_crids:
+        conn = db.create_connection()
+        cursor = conn.cursor(buffered=True)
+        try:
+            for crid, error_msg in dropped_crids.items():
+                prep = preparations[crid]
+                print(f"    ⚠️  {prep.website_name}: extraction dropped — {error_msg}")
+                db.update_crawl_result_failed(cursor, conn, crid, error_msg)
+                results.append((crid, False))
+                del preparations[crid]
+        finally:
+            cursor.close()
+            conn.close()
+
     if not batch_requests:
         return results
 

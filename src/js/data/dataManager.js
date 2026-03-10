@@ -310,7 +310,8 @@ const DataManager = (() => {
         state.searchIndex = {
             events: new Map(),      // eventId -> normalized searchable text
             locations: new Map(),   // locationKey -> normalized searchable text
-            tags: new Map()         // tag -> normalized tag
+            tags: new Map(),        // tag -> normalized tag
+            organizers: new Map()   // organizerId -> normalized searchable text
         };
 
         // Index events
@@ -349,6 +350,14 @@ const DataManager = (() => {
         state.allAvailableTags.forEach(tag => {
             state.searchIndex.tags.set(tag, Utils.normalizeForSearch(tag));
         });
+
+        // Index organizers
+        if (state.organizersById) {
+            Object.entries(state.organizersById).forEach(([id, org]) => {
+                const normalizedText = Utils.normalizeForSearch(org.name || '');
+                state.searchIndex.organizers.set(id, normalizedText);
+            });
+        }
     }
 
     /**

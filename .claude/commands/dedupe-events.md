@@ -18,6 +18,7 @@ Run the duplicate finder script, which checks for active event pairs at the same
 
 This shows:
 - **Exact-name duplicates**: Identical normalized names — safe to auto-suppress
+- **Shared URL duplicates**: Different names but same event URL — review needed (catches re-extractions where the event name changed between crawls, e.g., "Wine Between the Lines: Fermentation is Magic" vs "Wine Between the Lines: A Deep Dive on Natural Wine" sharing the same Eventbrite URL)
 - **Summary** of similar-name pairs (use `--review` to see them)
 
 ### Auto-suppress exact-name duplicates
@@ -29,6 +30,21 @@ If exact-name duplicates are found, suppress them:
 ```
 
 This suppresses the higher-ID event from each exact-name pair.
+
+### Review shared URL duplicates
+
+Shared URL pairs are always shown (no flag needed). These are events at the same location with overlapping dates that share a specific event URL (filtered to URLs with 2+ path segments, shared by at most 3 events — excludes venue homepages).
+
+Review each pair. Common false positives:
+- **Lecture/workshop series**: Different installments sharing the series URL (e.g., "Winter Lecture: Speaker A" vs "Winter Lecture: Speaker B")
+- **Community board meetings**: Different committees sharing the board calendar URL
+- **Late show variants**: Same show at different times sharing the event page
+
+For confirmed duplicates, suppress the higher ID:
+
+```sql
+UPDATE events SET suppressed = 1 WHERE id IN (...);
+```
 
 ### Review similar-name pairs
 
@@ -166,6 +182,7 @@ ON o1.event_id = o2.event_id
 ## Notes
 
 - The script (`find_duplicate_events.py`) only checks events at the **same location** — use Pattern A for cross-location/cross-source duplicates
+- Shared URL detection filters out generic venue URLs (requires 2+ path segments, shared by ≤3 events) — venue homepages shared by many events are excluded
 - Prefer suppressing over deleting — suppressed events won't appear in the export but the data is preserved
 - Prefer keeping the event with a location over one without
 - Prefer keeping the event with a website_id over one without

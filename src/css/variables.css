@@ -121,15 +121,7 @@
     --summary-open-hover: #8b6400;   /* Deep yellow */
 }
 
-/*
- * === Mobile Responsive Base ===
- * Scale down the UI on mobile devices (85% of desktop size)
- */
-@media (max-width: 768px) {
-    html {
-        font-size: 85%;
-    }
-}
+/* Mobile uses the same base font size as desktop */
 
 /* === Variable Font Support === */
 /* Override font-family to use InterVariable when variable fonts are supported */

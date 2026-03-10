@@ -344,7 +344,7 @@ def get_existing_upcoming_events(cursor, website_id):
             e.id, e.name, e.description,
             l.name as location, e.sublocation,
             GROUP_CONCAT(
-                JSON_OBJECT(
+                DISTINCT JSON_OBJECT(
                     'start_date', eo.start_date,
                     'start_time', eo.start_time,
                     'end_date', eo.end_date,

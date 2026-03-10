@@ -165,8 +165,8 @@
     flex-direction: column;
     padding-left: 6px;
     padding-right: 6px;
-    margin-bottom: 6px;
-    gap: 6px;
+    margin-bottom: 2px;
+    gap: 3px;
     flex-shrink: 0;
 }
 
@@ -191,8 +191,9 @@
     gap: 4px;
     padding: 4px 8px;
     border-radius: 16px;
-    border: 1.5px solid var(--secondary-border-color);
-    background: color-mix(in srgb, var(--tertiary-bg) 70%, transparent);
+    border: 1.5px solid var(--border-color);
+    background: color-mix(in srgb, var(--primary-bg) 85%, transparent);
+    backdrop-filter: blur(8px);
     color: var(--secondary-text);
     font-size: 0.95em;
     font-family: var(--font-family);
@@ -203,7 +204,7 @@
 }
 
 .chip-bar-chip:hover {
-    background: color-mix(in srgb, var(--tertiary-bg) 95%, transparent);
+    background: color-mix(in srgb, var(--primary-bg) 95%, transparent);
 }
 
 .chip-bar-chip.active {
@@ -254,6 +255,11 @@
     padding: 7px;
 }
 
+.organizer-event-count {
+    opacity: 0.6;
+    font-size: 0.85em;
+}
+
 .calendar-icon,
 .location-icon,
 .search-icon {
@@ -288,7 +294,8 @@
 #geotag-search-input,
 #omni-search-input {
     padding: 6px 12px 6px 27px;
-    background-color: transparent;
+    background: color-mix(in srgb, var(--primary-bg) 85%, transparent);
+    backdrop-filter: blur(8px);
     border: 1px solid var(--border-color);
     color: var(--secondary-text);
     border-radius: 16px;
@@ -510,31 +517,17 @@ span.flatpickr-weekday {
         margin-bottom: 0;
     }
 
-    /* Controls: smaller to match chip bar height, with shadow and blur for readability */
+    /* Controls: smaller to match chip bar height on desktop */
     #date-picker,
     #omni-search-input {
         padding: 4px 10px 4px 24px;
         font-size: 0.95em;
-        background: color-mix(in srgb, var(--primary-bg) 85%, transparent);
-        backdrop-filter: blur(8px);
-        border-color: var(--border-color);
     }
 
     #date-picker-sizer {
         font-size: 0.95em;
         padding-left: 24px;
         padding-right: 10px;
-    }
-
-    /* Chips: shadow and blur for readability over the map */
-    .chip-bar-chip {
-        background: color-mix(in srgb, var(--primary-bg) 85%, transparent);
-        backdrop-filter: blur(8px);
-        border-color: var(--border-color);
-    }
-
-    .chip-bar-chip:hover {
-        background: color-mix(in srgb, var(--primary-bg) 95%, transparent);
     }
 
     /* Chip bar: single row, only show chips that fully fit */
@@ -595,25 +588,42 @@ span.flatpickr-weekday {
         position: fixed;
         top: 0;
         left: 0;
-        width: calc(100vw - 0px);
-        border: 0px;
-        border-radius: 0px;
+        width: 100vw;
         height: auto;
         overflow: visible;
-        margin: 0px;
-        padding: 2px;
-        /* Add safe area padding for devices with notches/status bars (Android app, iOS) */
-        /* Uses CSS variable --safe-area-top injected by Android app, or env() fallback */
-        padding-top: max(2px, var(--safe-area-top, env(safe-area-inset-top, 0px)));
+        margin: 0;
+        padding: 4px 6px;
+        /* Safe area padding for devices with notches/status bars */
+        padding-top: max(4px, var(--safe-area-top, env(safe-area-inset-top, 0px)));
         display: flex;
         flex-direction: column;
         z-index: var(--z-panel);
+        /* Match desktop: transparent bg with gradient scrim */
+        background-color: transparent;
+        backdrop-filter: none;
+        border: none;
+        border-radius: 0;
+    }
+
+    /* Gradient scrim behind filters for readability over the map */
+    #filter-panel::before {
+        content: '';
+        position: absolute;
+        top: -4px;
+        left: -6px;
+        right: -6px;
+        bottom: -30px;
+        background: linear-gradient(to bottom, color-mix(in srgb, var(--primary-bg) 80%, transparent) 0%, transparent 100%);
+        backdrop-filter: blur(6px);
+        mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
+        -webkit-mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
+        pointer-events: none;
+        z-index: -1;
     }
 
     /* Fallback for Android app if CSS variables aren't injected */
     .fomo-android-app #filter-panel {
-        /* Use 36px as reasonable default for Android status bar (typically 24-48dp) */
-        padding-top: max(2px, var(--safe-area-top, 36px));
+        padding-top: max(4px, var(--safe-area-top, 36px));
     }
 
     #logo-menu-wrapper {
@@ -631,38 +641,6 @@ span.flatpickr-weekday {
         height: 29px;
     }
 
-    #filter-container {
-        padding: 0;
-        margin-bottom: 4px;
-        gap: 5px;
-    }
-
-    .panel-header h2 {
-        font-size: 1.5em;
-        margin-bottom: 10px;
-    }
-
-    .filter-group {
-        margin-bottom: 0px;
-    }
-
-    #date-picker,
-    #geotag-search-input,
-    #omni-search-input {
-        padding: 5px 10px 5px 27px;
-    }
-
-    #date-picker-sizer {
-        padding-left: 27px;
-        padding-right: 10px;
-    }
-
-    .calendar-icon,
-    .location-icon,
-    .search-icon {
-        left: 4px;
-    }
-
     #chip-bar {
         flex-wrap: nowrap;
         overflow-x: auto;
@@ -673,9 +651,5 @@ span.flatpickr-weekday {
 
     #chip-bar::-webkit-scrollbar {
         display: none;
-    }
-
-    .flatpickr-calendar {
-        font-size: 1em;
     }
 }
