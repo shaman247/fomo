@@ -333,10 +333,11 @@ const BottomSheet = (() => {
         state.detailContentContainer.addEventListener('touchstart', _onDetailSwipeStart, { passive: true });
         state.detailContentContainer.addEventListener('touchend', _onDetailSwipeEnd, { passive: true });
 
-        // Move / end on sheet (captures handle drags)
-        state.sheetElement.addEventListener('touchmove', _onDragMove, { passive: false });
-        state.sheetElement.addEventListener('touchend', _onDragEnd, { passive: true });
-        state.sheetElement.addEventListener('touchcancel', _onDragEnd, { passive: true });
+        // Move / end on handle area (touch events follow touchstart target,
+        // so these fire even when the finger moves outside the handle)
+        state.handleArea.addEventListener('touchmove', _onDragMove, { passive: false });
+        state.handleArea.addEventListener('touchend', _onDragEnd, { passive: true });
+        state.handleArea.addEventListener('touchcancel', _onDragEnd, { passive: true });
 
         // Resize — clean up at breakpoint
         window.addEventListener('resize', _onResize);
@@ -579,6 +580,7 @@ const BottomSheet = (() => {
         const h = window.innerHeight * snapRatio;
         state.sheetElement.style.height = `${h}px`;
         state.sheetElement.classList.toggle('open', snapRatio > 0);
+        state.sheetElement.classList.toggle('full', snapRatio >= SNAP_FULL);
     }
 
     function _onResize() {

@@ -269,11 +269,14 @@ const DataManager = (() => {
      * @param {Object} config - Application configuration
      */
     function appendEventData(newEventData, state, config) {
-        const initialEventCount = state.allEvents.length;
+        // Use max existing ID + 1 as offset to avoid ID collisions.
+        // processEventData assigns IDs by raw array index, so some IDs may be
+        // higher than allEvents.length (due to date-filtered events being removed).
+        const idOffset = state.allEvents.reduce((max, e) => Math.max(max, e.id), -1) + 1;
         const isWindows = Utils.isWindows();
 
         const newEvents = newEventData
-            .map((rawEvent, index) => transformRawEvent(rawEvent, initialEventCount + index, state, config, isWindows))
+            .map((rawEvent, index) => transformRawEvent(rawEvent, idOffset + index, state, config, isWindows))
             .filter(Boolean);
 
         state.allEvents.push(...newEvents);

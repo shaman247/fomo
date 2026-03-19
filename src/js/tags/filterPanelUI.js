@@ -249,6 +249,7 @@ const FilterPanelUI = (() => {
         const unselectedToRender = unselectedTags.slice(0, CHIP_BAR_RENDER_LIMIT);
 
         container.innerHTML = '';
+        container.scrollLeft = 0;
 
         // Selected chips first
         for (const [tagName] of selectedTagsWithColors) {

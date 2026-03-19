@@ -281,7 +281,7 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
         return None
 
 
-def get_browser_config(javascript_enabled=True, text_mode=True, light_mode=True, use_stealth=False):
+def get_browser_config(javascript_enabled=True, text_mode=True, light_mode=True, use_stealth=False, user_agent=None):
     """
     Get the browser configuration for crawling.
 
@@ -292,6 +292,8 @@ def get_browser_config(javascript_enabled=True, text_mode=True, light_mode=True,
         light_mode: If True, uses minimal browser features for speed (default: True).
         use_stealth: If True, uses undetected browser mode to bypass bot detection (default: False).
                     Required for sites like Resident Advisor that have verification pages.
+        user_agent: Custom User-Agent string. If set, overrides the default browser UA.
+                   Use this for sites that block the default headless Chrome UA with 403.
 
     Note: These are browser-level settings. All websites crawled with this
           config will share the same settings.
@@ -305,14 +307,17 @@ def get_browser_config(javascript_enabled=True, text_mode=True, light_mode=True,
             light_mode=light_mode,
             use_managed_browser=True,
             enable_stealth=True,
-            user_agent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+            user_agent=user_agent or 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
             extra_args=['--disable-blink-features=AutomationControlled']
         )
     else:
         # Standard browser mode
-        return BrowserConfig(
-            headless=False,
-            java_script_enabled=javascript_enabled,
-            text_mode=text_mode,
-            light_mode=light_mode
-        )
+        config_kwargs = {
+            'headless': False,
+            'java_script_enabled': javascript_enabled,
+            'text_mode': text_mode,
+            'light_mode': light_mode,
+        }
+        if user_agent:
+            config_kwargs['user_agent'] = user_agent
+        return BrowserConfig(**config_kwargs)

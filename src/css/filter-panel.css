@@ -163,8 +163,8 @@
 #filter-container {
     display: flex;
     flex-direction: column;
-    padding-left: 6px;
-    padding-right: 6px;
+    padding-left: 0;
+    padding-right: 0;
     margin-bottom: 2px;
     gap: 3px;
     flex-shrink: 0;
@@ -183,6 +183,10 @@
     flex-wrap: wrap;
     gap: 5px;
     padding: 2px 0;
+    margin-left: -6px;
+    margin-right: -6px;
+    padding-left: 6px;
+    padding-right: 6px;
 }
 
 .chip-bar-chip {
@@ -539,6 +543,8 @@ span.flatpickr-weekday {
         max-height: 30px; /* one row of chips */
         align-items: center;
         padding: 0;
+        margin-left: 0;
+        margin-right: 0;
     }
 
     /* When too few chips fit inline, move chip bar to its own row */

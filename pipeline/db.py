@@ -96,7 +96,7 @@ def get_websites_due_for_crawling(cursor, website_ids=None):
                    w.keywords, w.max_pages, w.max_batches, w.notes,
                    w.delay_before_return_html, w.content_filter_threshold, w.scan_full_page,
                    w.remove_overlay_elements, w.javascript_enabled, w.text_mode, w.light_mode,
-                   w.use_stealth, w.scroll_delay, w.crawl_timeout, w.process_images, w.base_url,
+                   w.use_stealth, w.user_agent, w.scroll_delay, w.crawl_timeout, w.process_images, w.base_url,
                    GROUP_CONCAT(CONCAT(wu.url, ':::', IFNULL(wu.js_code, '')) ORDER BY wu.sort_order SEPARATOR '|||') as urls
             FROM websites w
             LEFT JOIN website_urls wu ON w.id = wu.website_id
@@ -111,7 +111,7 @@ def get_websites_due_for_crawling(cursor, website_ids=None):
                    w.keywords, w.max_pages, w.max_batches, w.notes,
                    w.delay_before_return_html, w.content_filter_threshold, w.scan_full_page,
                    w.remove_overlay_elements, w.javascript_enabled, w.text_mode, w.light_mode,
-                   w.use_stealth, w.scroll_delay, w.crawl_timeout, w.process_images, w.base_url,
+                   w.use_stealth, w.user_agent, w.scroll_delay, w.crawl_timeout, w.process_images, w.base_url,
                    GROUP_CONCAT(CONCAT(wu.url, ':::', IFNULL(wu.js_code, '')) ORDER BY wu.sort_order SEPARATOR '|||') as urls
             FROM websites w
             LEFT JOIN website_urls wu ON w.id = wu.website_id
@@ -145,11 +145,12 @@ def get_websites_due_for_crawling(cursor, website_ids=None):
             'text_mode': row[14],
             'light_mode': row[15],
             'use_stealth': row[16],
-            'scroll_delay': float(row[17]) if row[17] is not None else None,
-            'crawl_timeout': row[18],
-            'process_images': row[19],
-            'base_url': row[20],
-            'urls': _parse_url_data(row[21]) if row[21] else []
+            'user_agent': row[17],
+            'scroll_delay': float(row[18]) if row[18] is not None else None,
+            'crawl_timeout': row[19],
+            'process_images': row[20],
+            'base_url': row[21],
+            'urls': _parse_url_data(row[22]) if row[22] else []
         }
         websites.append(website)
 

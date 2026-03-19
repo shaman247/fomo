@@ -193,22 +193,14 @@ const ModalManager = (() => {
      */
     function initWelcomeModal() {
         const modal = document.getElementById('welcome-modal');
-        const closeBtn = document.getElementById('welcome-close-btn');
 
-        if (!modal || !closeBtn) return;
+        if (!modal) return;
 
         state.welcomeModal = modal;
 
-        // Close modal when clicking close button
-        closeBtn.addEventListener('click', () => {
+        // Close modal when clicking outside or anywhere on the modal
+        modal.addEventListener('click', () => {
             closeWelcomeModal();
-        });
-
-        // Close modal when clicking outside
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                closeWelcomeModal();
-            }
         });
 
         // Close modal on Escape key
