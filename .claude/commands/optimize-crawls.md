@@ -102,9 +102,15 @@ INSERT INTO website_urls (website_id, url, sort_order)
 VALUES ({website_id}, '{new_url}', 1);
 ```
 
-### For sites needing stealth mode (RA, Cloudflare):
+### For bot-protected sites (try custom UA first):
 ```sql
-UPDATE websites 
+-- Step 1: Try custom User-Agent (preferred — reliable in batch mode)
+UPDATE websites
+SET user_agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
+WHERE id = {website_id};
+
+-- Step 2: Only if custom UA fails, try stealth mode (unreliable in batch)
+UPDATE websites
 SET use_stealth = 1,
     delay_before_return_html = 15,
     scan_full_page = 1
@@ -145,12 +151,27 @@ Provide a summary table showing:
 **Examples:** Club Cumming, Coney Island USA, Berry Park
 
 ### Bot-Protected Sites
-**Symptoms:** "Verifying browser", "Challenge", very small content
-**Fix:** use_stealth=1
-**Examples:** 
-- Resident Advisor (ra.co) - verification page
-- Cloudflare protection - Juilliard
-- Vercel protection - Met Museum (no current bypass)
+**Symptoms:** "Verifying browser", "Challenge", 403 Forbidden, very small content, "No content retrieved"
+
+**Try custom User-Agent first** before resorting to stealth mode. Many sites only check the UA string and don't need full stealth browser emulation. A realistic Chrome UA avoids the unreliable managed browser (`use_stealth=1`), which shares a single browser instance on port 9222 and is fragile in batch mode.
+
+```sql
+-- Preferred: Custom User-Agent (reliable, works in standard browser)
+UPDATE websites
+SET user_agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
+WHERE id = {website_id};
+```
+
+**Decision tree:**
+1. Site returns 403 or empty content → try custom UA first
+2. Custom UA works → done, no stealth needed
+3. Custom UA still blocked (Cloudflare challenge page with JS challenge, DataDome `dd` variable) → try `use_stealth=1`
+4. Stealth also blocked → site has advanced anti-bot (e.g., ra.co uses DataDome) — find alternative source or disable
+
+**Examples:**
+- **Custom UA sufficient:** The Public Theater, Bossa Nova Civic Club, Jupiter Disco, Juilliard, Spoke The Hub, LGBT Community Center
+- **Advanced anti-bot (no bypass):** Resident Advisor (ra.co) — DataDome/Cloudflare, blocks even stealth browsers
+- **Vercel protection:** Met Museum (no current bypass)
 
 ### Broken Calendar Widgets
 **Symptoms:** Widget mentioned in HTML but no event data
@@ -173,7 +194,7 @@ Provide a summary table showing:
 ### SSL/Connection Errors
 **Symptoms:** ERR_SSL_PROTOCOL_ERROR, ERR_ABORTED, ERR_NAME_NOT_RESOLVED
 **Fix:** Check if site is down, try alternative sources
-**Examples:** Bossa Nova Civic Club direct site (use RA instead)
+**Examples:** Bossa Nova Civic Club (direct site fixed with custom UA after RA disabled)
 
 ### Wrong Domain/URL Issues
 **Symptoms:** ERR_NAME_NOT_RESOLVED, No content retrieved, but venue is active
@@ -295,7 +316,7 @@ VALUES ({website_id}, LAST_INSERT_ID());
 5. **Document changes** - Update notes field explaining configuration
 6. **Batch testing** - Test 3-5 sites at a time, not all at once
 7. **Start conservative** - Try delay=15s first, only increase if needed
-8. **Monitor stealth mode** - Group all stealth sites in same batch
+8. **Prefer custom UA over stealth** - `user_agent` column is reliable; `use_stealth=1` uses a shared managed browser that's fragile in batch mode
 9. **Check URL paths** - Squarespace sites may change /events-1 to /events
 10. **0 events is OK** - Galleries/museums between exhibitions will have empty calendars
 
@@ -307,7 +328,8 @@ When a site fails, follow this decision tree:
    - `ERR_NAME_NOT_RESOLVED` → Search for correct domain
    - `ERR_SSL_*` or `ERR_ABORTED` → Site may be down, search for alternatives
    - `Timeout` → Check if keywords enabled (movie theaters), increase delay/timeout
-   - `No content retrieved` → Try better settings (delay=15, scan_full_page=1)
+   - `No content retrieved` → Try custom User-Agent first, then better settings (delay=15, scan_full_page=1)
+   - `403 Forbidden` → Try custom User-Agent (most common fix for bot detection)
    - `Content too small` → Same as "No content", or site uses heavy JavaScript
 
 2. **If error unclear, web search:**

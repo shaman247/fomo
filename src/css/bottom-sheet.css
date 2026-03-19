@@ -64,6 +64,10 @@
     box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
 }
 
+#bottom-sheet.full {
+    z-index: calc(var(--z-panel) + 1);
+}
+
 #bottom-sheet.no-transition {
     transition: none;
 }
@@ -150,7 +154,11 @@
     min-height: 0;
 }
 
-/* Override popup content styles when inside bottom sheet */
+/* Override popup content styles when inside bottom sheet.
+   The popup is double-wrapped: detail-content > wrapper > popup-content.
+   Both layers must be height:100% so the inner flex column is constrained
+   and .popup-tab-viewport (flex:1) gets a bounded height, allowing
+   .popup-tab-panel (overflow-y:auto) to scroll. */
 .bottom-sheet-content .maplibre-popup-content {
     max-height: none;
     overflow: hidden;
@@ -170,6 +178,16 @@
 
 .bottom-sheet-content .popup-events-list {
     padding: 0 4px;
+}
+
+/* Constrain popup tab track to viewport height so panels scroll */
+.bottom-sheet-content .popup-tab-track {
+    height: 100%;
+}
+
+/* Show scrollbar in bottom sheet (desktop popups hide it) */
+.bottom-sheet-content .popup-tab-panel {
+    scrollbar-width: thin;
 }
 
 .bottom-sheet-content .popup-event-card-detail p {

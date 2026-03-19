@@ -135,15 +135,16 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
         # Number of concurrent workers for crawling and extraction
         num_workers = 6
 
-        # Group websites by browser settings (text_mode, light_mode, use_stealth)
+        # Group websites by browser settings (text_mode, light_mode, use_stealth, user_agent)
         # These are browser-level settings, so websites with different settings
         # need separate browser instances
         def get_browser_key(w):
-            """Group key from browser-level settings (defaults: text=True, light=True, stealth=False)."""
+            """Group key from browser-level settings (defaults: text=True, light=True, stealth=False, user_agent=None)."""
             return (
                 w.get('text_mode') if w.get('text_mode') is not None else True,
                 w.get('light_mode') if w.get('light_mode') is not None else True,
                 w.get('use_stealth') if w.get('use_stealth') is not None else False,
+                w.get('user_agent'),
             )
 
         website_batches = {}
@@ -153,12 +154,13 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
 
         crawl_results = []
 
-        for (text_mode, light_mode, use_stealth), batch_websites in website_batches.items():
+        for (text_mode, light_mode, use_stealth, user_agent), batch_websites in website_batches.items():
             if len(website_batches) > 1:
                 stealth_str = ", stealth=True" if use_stealth else ""
-                print(f"\n  Batch: text_mode={text_mode}, light_mode={light_mode}{stealth_str} ({len(batch_websites)} sites)")
+                ua_str = f", user_agent=..." if user_agent else ""
+                print(f"\n  Batch: text_mode={text_mode}, light_mode={light_mode}{stealth_str}{ua_str} ({len(batch_websites)} sites)")
 
-            browser_config = crawler.get_browser_config(text_mode=text_mode, light_mode=light_mode, use_stealth=use_stealth)
+            browser_config = crawler.get_browser_config(text_mode=text_mode, light_mode=light_mode, use_stealth=use_stealth, user_agent=user_agent)
 
             async with AsyncWebCrawler(config=browser_config) as web_crawler:
                 # Worker pool pattern: maintain N concurrent crawlers at all times

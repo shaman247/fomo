@@ -750,9 +750,9 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
     # Step 3: Address matching (e.g., "347 Davis Ave" matches location at that address)
     addresses_tier = locations_map.get('addresses', {})
     for key in search_keys:
-        normalized_addr = _normalize_street_address(key)
-        if normalized_addr and normalized_addr in addresses_tier:
-            return make_result(addresses_tier[normalized_addr])
+        street_addr = _extract_street_address(key)
+        if street_addr and street_addr in addresses_tier:
+            return make_result(addresses_tier[street_addr])
 
     # Step 4: Prefix matching (e.g., "Devocíon" matches "Devocíon (Williamsburg)")
     # Only use location_keys here to avoid matching event names to unrelated locations
@@ -809,6 +809,18 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
 
     if best_result:
         return make_result(best_result)
+
+    # Step 5b: Sublocation address matching
+    # When name-based matching (steps 1-5) fails, try the sublocation as a street address.
+    # This handles cases like location="POWRPLNT", sublocation="100 Hinsdale St, NY"
+    # where the sublocation contains the actual venue address.
+    # Placed after fuzzy matching to avoid overriding correct name-based matches
+    # (e.g., "MoCADA Culture Lab" should fuzzy-match MoCADA, not match a different
+    # venue at the same address like 651 ARTS).
+    if normalized_subloc and len(normalized_subloc) > 3:
+        street_addr = _extract_street_address(normalized_subloc)
+        if street_addr and street_addr in addresses_tier:
+            return make_result(addresses_tier[street_addr])
 
     # Step 6: Source site fallback (match website name to location)
     normalized_site = _normalize_location_name(source_site_name)
