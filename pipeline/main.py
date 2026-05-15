@@ -6,8 +6,8 @@ Orchestrates the complete event processing workflow:
 1. Crawl - Query websites table, crawl due sites, store in crawl_results
 2. Extract - Use Gemini AI to extract structured event data
 3. Process - Parse responses, enrich with location data, store in crawl_events
-4. Merge - Deduplicate crawl_events into final events table
-5. Archive - Hide events no longer found in recent crawls
+4. Detail Crawl - Crawl individual event URLs for missing descriptions
+5. Merge - Deduplicate crawl_events into final events table
 6. Export - Generate JSON files from events table for website
 7. Upload - Push JSON files to FTP server
 
@@ -20,19 +20,30 @@ Usage:
 
 import argparse
 import asyncio
+import os
 import sys
 from datetime import datetime
+
+# Force unbuffered stdout so pipeline progress is visible in real time,
+# even when output is redirected to a file (line_buffering alone only works for TTYs)
+if not os.environ.get('PYTHONUNBUFFERED'):
+    sys.stdout.reconfigure(write_through=True)
+    sys.stderr.reconfigure(write_through=True)
 
 from crawl4ai import AsyncWebCrawler
 
 import db
 import crawler
+from crawler import get_browser_key
 import extractor
 import processor
 import merger
 import exporter
 import uploader
 import frequency_analyzer
+
+# Number of concurrent workers for crawling, extraction, and detail crawling
+NUM_WORKERS = 10
 
 
 async def run_pipeline(website_ids=None, limit=None, use_batch=None):
@@ -69,22 +80,27 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
         print(f"STEP 0: Checking for Incomplete Crawl Results [{ts()}]")
         print(f"{'='*60}")
 
-        incomplete_results = db.get_incomplete_crawl_results(cursor)
+        incomplete_results = db.get_incomplete_crawl_results(cursor, website_ids=website_ids)
         incomplete_crawled = [r for r in incomplete_results if r['status'] == 'crawled']
         incomplete_extracted = [r for r in incomplete_results if r['status'] == 'extracted']
 
         def print_incomplete_status(results, action_needed):
             """Print status summary for a list of incomplete results."""
             retry_count = sum(1 for r in results if r.get('original_status') == 'failed')
+            batch_count = sum(1 for r in results if r.get('batch_job_name'))
             incomplete_count = len(results) - retry_count
             status_parts = []
             if incomplete_count:
                 status_parts.append(f"{incomplete_count} incomplete")
             if retry_count:
                 status_parts.append(f"{retry_count} failed retries")
+            if batch_count:
+                status_parts.append(f"{batch_count} with in-flight batch")
             print(f"  - {len(results)} need {action_needed} ({', '.join(status_parts)})")
             for r in results:
                 suffix = " [retry]" if r.get('original_status') == 'failed' else ""
+                if r.get('batch_job_name'):
+                    suffix += " [batch pending]"
                 print(f"      {r['name']} (run: {r['run_date']}){suffix}")
 
         if incomplete_results:
@@ -132,21 +148,7 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
         print(f"STEP 2: Crawling Websites [{ts()}]")
         print(f"{'='*60}")
 
-        # Number of concurrent workers for crawling and extraction
-        num_workers = 6
-
-        # Group websites by browser settings (text_mode, light_mode, use_stealth, user_agent)
-        # These are browser-level settings, so websites with different settings
-        # need separate browser instances
-        def get_browser_key(w):
-            """Group key from browser-level settings (defaults: text=True, light=True, stealth=False, user_agent=None)."""
-            return (
-                w.get('text_mode') if w.get('text_mode') is not None else True,
-                w.get('light_mode') if w.get('light_mode') is not None else True,
-                w.get('use_stealth') if w.get('use_stealth') is not None else False,
-                w.get('user_agent'),
-            )
-
+        # Group websites by browser settings so each group shares a browser instance
         website_batches = {}
         for website in websites:
             key = get_browser_key(website)
@@ -154,13 +156,14 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
 
         crawl_results = []
 
-        for (text_mode, light_mode, use_stealth, user_agent), batch_websites in website_batches.items():
+        for (text_mode, light_mode, use_stealth, headed, user_agent), batch_websites in website_batches.items():
             if len(website_batches) > 1:
                 stealth_str = ", stealth=True" if use_stealth else ""
+                headed_str = ", headed=True" if headed and not use_stealth else ""
                 ua_str = f", user_agent=..." if user_agent else ""
-                print(f"\n  Batch: text_mode={text_mode}, light_mode={light_mode}{stealth_str}{ua_str} ({len(batch_websites)} sites)")
+                print(f"\n  Batch: text_mode={text_mode}, light_mode={light_mode}{stealth_str}{headed_str}{ua_str} ({len(batch_websites)} sites)")
 
-            browser_config = crawler.get_browser_config(text_mode=text_mode, light_mode=light_mode, use_stealth=use_stealth, user_agent=user_agent)
+            browser_config = crawler.get_browser_config(text_mode=text_mode, light_mode=light_mode, use_stealth=use_stealth, headed=headed, user_agent=user_agent)
 
             async with AsyncWebCrawler(config=browser_config) as web_crawler:
                 # Worker pool pattern: maintain N concurrent crawlers at all times
@@ -199,7 +202,7 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
                     return results
 
                 # Start N workers and wait for all to complete
-                worker_results = await asyncio.gather(*[worker() for _ in range(num_workers)])
+                worker_results = await asyncio.gather(*[worker() for _ in range(NUM_WORKERS)])
 
                 # Flatten results from all workers
                 for results in worker_results:
@@ -241,13 +244,11 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
                 'max_batches': website.get('max_batches')
             })
 
-        # Resolve batch mode: default to batch for full runs with 10+ extractions, sync otherwise
+        # Resolve batch mode: default to sync (no-batch) — use --batch to opt in
         if use_batch is not None:
             effective_batch = use_batch
-        elif website_ids is not None:
-            effective_batch = False
         else:
-            effective_batch = len(extraction_queue) >= 10
+            effective_batch = False
 
         batch_processed_crids = set()  # Track items handled by batch to avoid duplicates
 
@@ -287,7 +288,7 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
 
         if sync_queue and not effective_batch:
             # Sync extraction path (individual API calls)
-            print(f"\n  Extracting events from {len(sync_queue)} website(s) with {num_workers} workers...")
+            print(f"\n  Extracting events from {len(sync_queue)} website(s) with {NUM_WORKERS} workers...")
 
             extract_queue = asyncio.Queue()
             for item in sync_queue:
@@ -332,7 +333,7 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
                         extract_queue.task_done()
                 return results
 
-            worker_results = await asyncio.gather(*[extract_worker() for _ in range(num_workers)])
+            worker_results = await asyncio.gather(*[extract_worker() for _ in range(NUM_WORKERS)])
 
             for results in worker_results:
                 extracted_results.extend(results)
@@ -383,24 +384,39 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
 
         print(f"\n✓ Processed {total_events} total events [{ts()}]\n")
 
+        # STEP 5: Detail-crawl individual event URLs for missing descriptions
+        print(f"{'='*60}")
+        print(f"STEP 5: Crawling Event Details [{ts()}]")
+        print(f"{'='*60}")
+
+        candidates = db.get_detail_crawl_candidates(cursor, website_ids=website_ids)
+        if candidates:
+            detail_crawled = await processor.crawl_event_details(
+                cursor, connection, candidates, NUM_WORKERS
+            )
+        else:
+            print("  No events need detail crawling")
+            detail_crawled = 0
+        print(f"\n✓ Detail-crawled {detail_crawled} events [{ts()}]\n")
+
         # Mark crawl run as completed
         db.complete_crawl_run(cursor, connection, crawl_run_id)
 
-        # STEP 5: Merge crawl_events into final events table and archive outdated events
+        # STEP 6: Merge crawl_events into final events table and archive outdated events
         print(f"{'='*60}")
-        print(f"STEP 5: Merging Crawl Events and Archiving Outdated Events [{ts()}]")
+        print(f"STEP 6: Merging Crawl Events and Archiving Outdated Events [{ts()}]")
         print(f"{'='*60}")
 
-        new_events, merged_events = merger.merge_crawl_events(cursor, connection)
+        new_events, merged_events = merger.merge_crawl_events(cursor, connection, website_ids=website_ids)
         print(f"\n✓ Merged events ({new_events} new, {merged_events} merged)\n")
 
-        # STEP 5b: Classify event sections
+        # Classify event sections
         print(f"\n  Classifying event sections...")
         exporter.classify_event_sections(cursor, connection)
 
-        # STEP 6: Export to JSON from events table
+        # STEP 7: Export to JSON from events table
         print(f"{'='*60}")
-        print(f"STEP 6: Exporting Events to JSON [{ts()}]")
+        print(f"STEP 7: Exporting Events to JSON [{ts()}]")
         print(f"{'='*60}")
 
         print("  Exporting events from database to JSON...")
@@ -410,9 +426,9 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
 
         print("\n✓ Event export completed\n")
 
-        # STEP 7: Upload data files
+        # STEP 8: Upload data files
         print(f"{'='*60}")
-        print(f"STEP 7: Uploading Data [{ts()}]")
+        print(f"STEP 8: Uploading Data [{ts()}]")
         print(f"{'='*60}")
 
         success = uploader.upload(use_tls=False)
@@ -423,9 +439,9 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
             print("\n✗ Data upload failed\n")
             return False
 
-        # STEP 8: Adjust crawl frequencies based on historical data
+        # STEP 9: Adjust crawl frequencies based on historical data
         print(f"{'='*60}")
-        print(f"STEP 8: Adjusting Crawl Frequencies [{ts()}]")
+        print(f"STEP 9: Adjusting Crawl Frequencies [{ts()}]")
         print(f"{'='*60}")
 
         freq_results = frequency_analyzer.analyze_frequencies(cursor, connection)
@@ -470,10 +486,9 @@ def parse_args():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python main.py                     # Full run (uses Batch API by default)
-  python main.py --ids 941           # Specific website (uses sync API by default)
-  python main.py --ids 941 --batch   # Specific website with Batch API
-  python main.py --no-batch          # Full run with sync API
+  python main.py                     # Full run (uses sync API by default)
+  python main.py --ids 941           # Specific website
+  python main.py --batch             # Full run with Batch API (50% cheaper but slower)
   python main.py --limit 5           # Only crawl first 5 websites due
         """
     )
@@ -491,12 +506,12 @@ Examples:
     batch_group.add_argument(
         '--batch',
         action='store_true', default=None,
-        help='Use Gemini Batch API for extraction (50%% cheaper, default for full runs)'
+        help='Use Gemini Batch API for extraction (50%% cheaper but can get stuck)'
     )
     batch_group.add_argument(
         '--no-batch',
         action='store_true', default=None,
-        help='Use individual API calls for extraction (default for --ids runs)'
+        help='Use individual API calls for extraction (this is the default)'
     )
     return parser.parse_args()
 

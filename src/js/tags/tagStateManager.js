@@ -132,13 +132,13 @@ const TagStateManager = (() => {
         const colorToUse = tagColor || state.defaultMarkerColor;
 
         buttonElement.className = 'tag-button';
+        buttonElement.style.removeProperty('--chip-color');
+        buttonElement.style.removeProperty('background');
+        buttonElement.style.removeProperty('background-color');
 
         const applyColor = () => {
-            if (Array.isArray(colorToUse)) {
-                buttonElement.style.background = `linear-gradient(to bottom, color-mix(in srgb, ${colorToUse[0]} 80%, transparent), color-mix(in srgb, ${colorToUse[1]} 80%, transparent))`;
-            } else {
-                buttonElement.style.backgroundColor = `color-mix(in srgb, ${colorToUse} 80%, transparent)`;
-            }
+            const color = Array.isArray(colorToUse) ? colorToUse[0] : colorToUse;
+            buttonElement.style.setProperty('--chip-color', color);
         };
 
         switch (tagState) {
@@ -179,7 +179,7 @@ const TagStateManager = (() => {
             emojiSpan.textContent = emoji;
             buttonElement.appendChild(emojiSpan);
         }
-        buttonElement.appendChild(document.createTextNode(tagValue));
+        buttonElement.appendChild(document.createTextNode(Utils.getTagDisplayName(tagValue)));
     }
 
     // ========================================

@@ -17,6 +17,10 @@ const PopupContentBuilder = (() => {
     const TAB_SWIPE_THRESHOLD = 8;       // px to commit to horizontal swipe
     const SWIPE_COMMIT_FRACTION = 0.25;  // fraction of viewport width to snap
 
+    // Non-matching occurrences shown inline (dimmed) up to this count; beyond it,
+    // a "+N other dates" toggle expands them on demand.
+    const INLINE_OTHER_DATES_THRESHOLD = 2;
+
     // Section display order: Events first, Ongoing second, custom alphabetical
     const SECTION_ORDER = { 'Events': 0, 'Ongoing': 1 };
 
@@ -32,7 +36,6 @@ const PopupContentBuilder = (() => {
         createInteractiveTagButton: null,
         hierarchyTagsSet: new Set(),
         tagEmojiMap: {},
-        organizersById: {},
         getDebugMode: () => false
     };
 
@@ -81,7 +84,7 @@ const PopupContentBuilder = (() => {
             emojiSpan.textContent = emoji;
             span.appendChild(emojiSpan);
         }
-        span.appendChild(document.createTextNode(tag));
+        span.appendChild(document.createTextNode(Utils.getTagDisplayName(tag)));
         return span;
     }
 
@@ -112,21 +115,33 @@ const PopupContentBuilder = (() => {
             panel.appendChild(descP);
         }
 
-        if (locationInfo.website_url) {
+        // Render any number of website URLs (locations can link to a directory
+        // page and the venue's own site, etc.). Falls back to legacy single
+        // website_url field for older exports.
+        const locationUrls = locationInfo.website_urls
+            || (locationInfo.website_url ? [locationInfo.website_url] : []);
+        if (locationUrls.length > 0) {
             const linksDiv = document.createElement('div');
             linksDiv.className = 'popup-info-links';
-            try {
-                const domain = new URL(locationInfo.website_url).hostname.replace(/^www\./, '');
-                const a = document.createElement('a');
-                a.href = locationInfo.website_url;
-                a.target = '_blank';
-                a.rel = 'noopener noreferrer';
-                a.innerHTML = `${LINK_ICON_SVG} ${Utils.escapeHtml(domain)}`;
-                linksDiv.appendChild(a);
-            } catch {
-                // Skip invalid URL
+            const seenDomains = new Set();
+            for (const url of locationUrls) {
+                try {
+                    const domain = new URL(url).hostname.replace(/^www\./, '');
+                    if (seenDomains.has(domain)) continue;
+                    seenDomains.add(domain);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.target = '_blank';
+                    a.rel = 'noopener noreferrer';
+                    a.innerHTML = `${LINK_ICON_SVG} ${Utils.escapeHtml(domain)}`;
+                    linksDiv.appendChild(a);
+                } catch {
+                    // Skip invalid URL
+                }
             }
-            panel.appendChild(linksDiv);
+            if (linksDiv.children.length > 0) {
+                panel.appendChild(linksDiv);
+            }
         }
 
         if (locationInfo.address) {
@@ -281,38 +296,20 @@ const PopupContentBuilder = (() => {
         eventDetailContainer.appendChild(descriptionP);
 
         const tagsToShow = event.display_tags || event.tags;
-        const org = event.organizer_id ? state.organizersById[String(event.organizer_id)] : null;
         const hasTags = tagsToShow && tagsToShow.length > 0;
 
-        if (hasTags || org) {
+        if (hasTags) {
             const tagsContainer = document.createElement('div');
             tagsContainer.className = 'tag-tags-container popup-tags-container';
 
             // Show curated tags (from tag hierarchy), hide keywords (unless debug mode)
-            if (hasTags) {
-                const curatedTags = state.hierarchyTagsSet.size > 0 && !state.getDebugMode()
-                    ? tagsToShow.filter(tag => state.hierarchyTagsSet.has(tag))
-                    : tagsToShow;
-                curatedTags.forEach(tag => {
-                    const el = createTagElement(tag);
-                    if (el) tagsContainer.appendChild(el);
-                });
-            }
-
-            // Show organizer tag (only when organizer_id is set, i.e. organizer != venue)
-            if (org) {
-                const orgButton = document.createElement('button');
-                orgButton.className = 'tag-button state-unselected popup-organizer-tag';
-                if (org.emoji) {
-                    const emojiSpan = document.createElement('span');
-                    emojiSpan.className = 'chip-emoji';
-                    emojiSpan.setAttribute('aria-hidden', 'true');
-                    emojiSpan.textContent = org.emoji;
-                    orgButton.appendChild(emojiSpan);
-                }
-                orgButton.appendChild(document.createTextNode(org.name));
-                tagsContainer.appendChild(orgButton);
-            }
+            const curatedTags = state.hierarchyTagsSet.size > 0 && !state.getDebugMode()
+                ? tagsToShow.filter(tag => state.hierarchyTagsSet.has(tag))
+                : tagsToShow;
+            curatedTags.forEach(tag => {
+                const el = createTagElement(tag);
+                if (el) tagsContainer.appendChild(el);
+            });
 
             if (tagsContainer.children.length > 0) {
                 eventDetailContainer.appendChild(tagsContainer);
@@ -323,58 +320,137 @@ const PopupContentBuilder = (() => {
     }
 
     // ========================================
+    // EVENT DATETIME
+    // ========================================
+
+    function createEventDatetimeElement(event) {
+        const span = document.createElement('span');
+        span.className = 'popup-event-card-datetime';
+
+        const { matchingText, otherText, otherCount } = Utils.buildEventDateTime(event);
+
+        const matchingSpan = document.createElement('span');
+        matchingSpan.className = 'datetime-matching';
+        matchingSpan.textContent = matchingText;
+        span.appendChild(matchingSpan);
+
+        if (otherCount === 0) return span;
+
+        if (otherCount <= INLINE_OTHER_DATES_THRESHOLD) {
+            const otherSpan = document.createElement('span');
+            otherSpan.className = 'datetime-other';
+            otherSpan.textContent = matchingText ? `; ${otherText}` : otherText;
+            span.appendChild(otherSpan);
+            return span;
+        }
+
+        const toggle = document.createElement('button');
+        toggle.type = 'button';
+        toggle.className = 'datetime-toggle';
+        toggle.textContent = `+${otherCount} other date${otherCount === 1 ? '' : 's'}`;
+
+        const otherSpan = document.createElement('span');
+        otherSpan.className = 'datetime-other';
+        otherSpan.hidden = true;
+        otherSpan.textContent = matchingText ? `; ${otherText}` : otherText;
+
+        toggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            otherSpan.hidden = false;
+            toggle.hidden = true;
+        });
+
+        span.appendChild(toggle);
+        span.appendChild(otherSpan);
+        return span;
+    }
+
+    // ========================================
     // EVENTS LIST
     // ========================================
 
-    function createEventsList(eventsAtLocation, activeFilters, locationInfo, filterFunctions, forceDisplayEventId = null, selectedStartDate = null) {
-        const eventsListWrapper = document.createElement('div');
-        eventsListWrapper.className = 'popup-events-list';
+    /**
+     * Returns the section name the popup will open by default for this set
+     * of events. Sections are ordered "Events" first, then "Ongoing", then any
+     * custom section alphabetically.
+     *
+     * When `ctx` is provided (with current filter state), the first section
+     * containing a tag-matching event wins — so a location that only has
+     * matching events in "Ongoing" opens to that tab instead of falling
+     * through to a non-matching "Events" section.
+     */
+    function getDefaultSectionName(events, ctx = null) {
+        const sectionsSet = new Set();
+        for (const event of events) sectionsSet.add(event.section || 'Events');
+        const sections = [...sectionsSet];
+        sections.sort((a, b) => {
+            const orderA = SECTION_ORDER[a] ?? 2;
+            const orderB = SECTION_ORDER[b] ?? 2;
+            return orderA !== orderB ? orderA - orderB : a.localeCompare(b);
+        });
 
-        if (eventsAtLocation.length === 0 && !forceDisplayEventId) {
-            const noEventsP = document.createElement('p');
-            noEventsP.textContent = "No events at this location in the selected date range.";
-            eventsListWrapper.appendChild(noEventsP);
-            return eventsListWrapper;
-        }
-
-        // Get all selected tags
-        const selectedTags = Object.entries(activeFilters.tagStates)
-            .filter(([, st]) => (st === 'selected' || st === 'required'))
-            .map(([tag]) => tag);
-
-        const hasActiveTagFilters = selectedTags.length > 0;
-        const hasForbiddenTags = Object.entries(activeFilters.tagStates).some(([, st]) => st === 'forbidden');
-        const hasAnyTagFilter = hasActiveTagFilters || hasForbiddenTags;
-
-        let forcedEvent = null;
-        let otherEvents = [...eventsAtLocation];
-
-        if (forceDisplayEventId) {
-            const forcedEventIndex = otherEvents.findIndex(e => e.id === forceDisplayEventId);
-            if (forcedEventIndex > -1) {
-                [forcedEvent] = otherEvents.splice(forcedEventIndex, 1);
+        if (ctx && ctx.activeFilters) {
+            const { sortedEvents } = sortEventsForLocation(events, ctx);
+            const matchingSections = new Set(
+                sortedEvents.filter(d => d.isMatchingTags).map(d => d.event.section || 'Events')
+            );
+            for (const section of sections) {
+                if (matchingSections.has(section)) return section;
             }
         }
 
+        return sections[0] || 'Events';
+    }
+
+    /**
+     * Sorts events at a single location using the same priority order the
+     * popup UI shows: tag-matching events first, then by number of matching
+     * selected tags, then by date proximity to the reference date. A forced
+     * event (typically from a search hit) is pinned to the top.
+     *
+     * Exposed publicly so other modules (e.g. MarkerController choosing the
+     * preview event for the map label) can pick the same "first" event the
+     * popup would surface.
+     *
+     * @returns {{ sortedEvents: Array, forcedEvent: Object|null }} Each item
+     *   in sortedEvents is { event, isMatchingTags, selectedTagMatchCount,
+     *   startTime, distanceFromReference }.
+     */
+    function sortEventsForLocation(eventsAtLocation, ctx) {
+        const { activeFilters, filterFunctions, selectedStartDate = null, forceDisplayEventId = null } = ctx;
+
+        // Tag-state Sets can be expensive to derive when called per-location in a
+        // tight loop (e.g. MarkerController's label computation). Callers may
+        // precompute and pass them in via ctx.tagSets.
+        let selectedTagsSet, requiredTagsSet, forbiddenTagsSet;
+        if (ctx.tagSets) {
+            ({ selectedTagsSet, requiredTagsSet, forbiddenTagsSet } = ctx.tagSets);
+        } else {
+            selectedTagsSet = new Set();
+            requiredTagsSet = new Set();
+            forbiddenTagsSet = new Set();
+            for (const tag in activeFilters.tagStates) {
+                const s = activeFilters.tagStates[tag];
+                if (s === 'selected' || s === 'required') selectedTagsSet.add(tag);
+                if (s === 'required') requiredTagsSet.add(tag);
+                else if (s === 'forbidden') forbiddenTagsSet.add(tag);
+            }
+        }
+        const hasActiveTagFilters = selectedTagsSet.size > 0;
+
+        let forcedEvent = null;
+        const otherEvents = [...eventsAtLocation];
+        if (forceDisplayEventId) {
+            const idx = otherEvents.findIndex(e => e.id === forceDisplayEventId);
+            if (idx > -1) [forcedEvent] = otherEvents.splice(idx, 1);
+        }
         const eventsToProcess = forcedEvent ? [forcedEvent, ...otherEvents] : eventsAtLocation;
 
-        // Pre-calculate sort-related properties
-        const referenceDate = selectedStartDate ? selectedStartDate.getTime() : (activeFilters.sliderStartDate ? activeFilters.sliderStartDate.getTime() : 0);
+        const referenceDate = selectedStartDate
+            ? selectedStartDate.getTime()
+            : (activeFilters.sliderStartDate ? activeFilters.sliderStartDate.getTime() : 0);
 
-        // Pre-compute tag sets once
-        const selectedTagsSet = new Set(selectedTags);
-        const requiredTagsSet = new Set(
-            Object.entries(activeFilters.tagStates)
-                .filter(([, s]) => s === 'required')
-                .map(([tag]) => tag)
-        );
-        const forbiddenTagsSet = new Set(
-            Object.entries(activeFilters.tagStates)
-                .filter(([, s]) => s === 'forbidden')
-                .map(([tag]) => tag)
-        );
-
-        const eventsWithSortData = eventsToProcess.map(event => {
+        const sortedEvents = eventsToProcess.map(event => {
             const locInfo = event.locationKey ? filterFunctions.getLocationInfo(event.locationKey) : null;
             const combinedTags = event.tags || [];
             const locationTags = locInfo?.tags || [];
@@ -401,48 +477,64 @@ const PopupContentBuilder = (() => {
 
             let selectedTagMatchCount = 0;
             if (hasActiveTagFilters && isMatchingTags) {
-                for (const tag of combinedTags) {
-                    if (selectedTagsSet.has(tag)) selectedTagMatchCount++;
-                }
-                for (const tag of locationTags) {
-                    if (selectedTagsSet.has(tag)) selectedTagMatchCount++;
-                }
+                for (const tag of combinedTags) if (selectedTagsSet.has(tag)) selectedTagMatchCount++;
+                for (const tag of locationTags) if (selectedTagsSet.has(tag)) selectedTagMatchCount++;
             }
+
             const startTime = event.occurrences?.[0]?.start?.getTime() || 0;
             const endTime = event.occurrences?.[0]?.end?.getTime() || startTime;
-
             const isOngoingOnReferenceDate = startTime <= referenceDate && endTime >= referenceDate;
             let distanceFromReference = Math.abs(startTime - referenceDate);
             if (isOngoingOnReferenceDate) {
                 distanceFromReference = Math.max(0, distanceFromReference - Constants.TIME.FIVE_DAYS_MS);
             }
 
-            return {
-                event,
-                isMatchingTags,
-                selectedTagMatchCount,
-                startTime,
-                distanceFromReference
-            };
+            return { event, isMatchingTags, selectedTagMatchCount, startTime, distanceFromReference };
         });
 
-        // Sort: matching first, then by tag count, then by date distance
-        eventsWithSortData.sort((a, b) => {
+        sortedEvents.sort((a, b) => {
             if (a.isMatchingTags !== b.isMatchingTags) return b.isMatchingTags - a.isMatchingTags;
             if (a.selectedTagMatchCount !== b.selectedTagMatchCount) return b.selectedTagMatchCount - a.selectedTagMatchCount;
             return a.distanceFromReference - b.distanceFromReference;
         });
 
-        // Move forced event to top
         if (forcedEvent) {
-            const forcedIdx = eventsWithSortData.findIndex(d => d.event.id === forcedEvent.id);
-            if (forcedIdx > 0) {
-                const [forcedData] = eventsWithSortData.splice(forcedIdx, 1);
-                eventsWithSortData.unshift(forcedData);
+            const idx = sortedEvents.findIndex(d => d.event.id === forcedEvent.id);
+            if (idx > 0) {
+                const [forcedData] = sortedEvents.splice(idx, 1);
+                sortedEvents.unshift(forcedData);
             }
         }
 
-        const expandAll = !hasAnyTagFilter && eventsToProcess.length > 0 && eventsToProcess.length < 4;
+        return { sortedEvents, forcedEvent };
+    }
+
+    function createEventsList(eventsAtLocation, activeFilters, locationInfo, filterFunctions, forceDisplayEventId = null, selectedStartDate = null) {
+        const eventsListWrapper = document.createElement('div');
+        eventsListWrapper.className = 'popup-events-list';
+
+        if (eventsAtLocation.length === 0 && !forceDisplayEventId) {
+            const noEventsP = document.createElement('p');
+            noEventsP.textContent = "No events at this location in the selected date range.";
+            eventsListWrapper.appendChild(noEventsP);
+            return eventsListWrapper;
+        }
+
+        // Get all selected tags
+        const selectedTags = Object.entries(activeFilters.tagStates)
+            .filter(([, st]) => (st === 'selected' || st === 'required'))
+            .map(([tag]) => tag);
+
+        const hasActiveTagFilters = selectedTags.length > 0;
+        const hasForbiddenTags = Object.entries(activeFilters.tagStates).some(([, st]) => st === 'forbidden');
+        const hasAnyTagFilter = hasActiveTagFilters || hasForbiddenTags;
+
+        const { sortedEvents: eventsWithSortData, forcedEvent } = sortEventsForLocation(
+            eventsAtLocation,
+            { activeFilters, filterFunctions, selectedStartDate, forceDisplayEventId }
+        );
+
+        const expandAll = !hasAnyTagFilter && eventsWithSortData.length > 0 && eventsWithSortData.length < 4;
         let isFirstEvent = true;
 
         eventsWithSortData.forEach(({ event, isMatchingTags }) => {
@@ -480,10 +572,7 @@ const PopupContentBuilder = (() => {
             header.appendChild(info);
             card.appendChild(header);
 
-            const datetimeSpan = document.createElement('span');
-            datetimeSpan.className = 'popup-event-card-datetime';
-            datetimeSpan.textContent = Utils.formatEventDateTimeCompactly(event);
-            card.appendChild(datetimeSpan);
+            card.appendChild(createEventDatetimeElement(event));
 
             // Description preview (always visible when collapsed)
             if (event.description) {
@@ -533,9 +622,39 @@ const PopupContentBuilder = (() => {
     // MAIN BUILDER
     // ========================================
 
-    function createLocationPopupContent(locationInfo, eventsAtLocation, activeFilters, geotagsSet, filterFunctions, forceDisplayEventId = null, selectedStartDate = null) {
+    function createLocationPopupContent(locationInfo, eventsAtLocation, activeFilters, geotagsSet, filterFunctions, forceDisplayEventId = null, selectedStartDate = null, previousActiveTab = null) {
         const popupContainer = document.createElement('div');
         popupContainer.className = 'maplibre-popup-content';
+
+        // Tint popup-specific accents (tab indicator, event names) with the
+        // location's marker color — the ring color derived from its emoji.
+        // Links keep the global teal via --accent-color.
+        //   --popup-accent       : raw hue (used by the tab pill)
+        //   --popup-accent-muted : darker, desaturated — collapsed event titles
+        //   --popup-accent-vivid : brighter, more saturated — expanded titles
+        if (locationInfo && typeof MapManager !== 'undefined' && MapManager.getMarkerColor) {
+            const markerColor = MapManager.getMarkerColor(locationInfo);
+            if (markerColor) {
+                popupContainer.style.setProperty('--popup-accent', markerColor);
+                if (MapManager.toEventLabelColor) {
+                    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+                    popupContainer.style.setProperty(
+                        '--popup-accent-muted',
+                        MapManager.toEventLabelColor(markerColor, {
+                            lightness: isLight ? 32 : 52,
+                            saturation: 22
+                        })
+                    );
+                    popupContainer.style.setProperty(
+                        '--popup-accent-vivid',
+                        MapManager.toEventLabelColor(markerColor, {
+                            lightness: isLight ? 36 : 70,
+                            saturation: 75
+                        })
+                    );
+                }
+            }
+        }
 
         // Compute location display tags (leaf tags only, filtered by geotags)
         const displayTags = locationInfo
@@ -562,7 +681,7 @@ const PopupContentBuilder = (() => {
         });
 
         // Info tab shown if there are tags, description, address, or website
-        const hasInfo = locationInfo && (displayTags.length > 0 || locationInfo.description || locationInfo.address || locationInfo.website_url);
+        const hasInfo = locationInfo && (displayTags.length > 0 || locationInfo.description || locationInfo.address || locationInfo.website_url || (locationInfo.website_urls && locationInfo.website_urls.length > 0));
 
         // Build tab names
         const tabNames = [...sectionNames];
@@ -581,6 +700,21 @@ const PopupContentBuilder = (() => {
                 const idx = sectionNames.indexOf(forcedEvent.section || 'Events');
                 if (idx >= 0) defaultTab = idx;
             }
+        } else if (previousActiveTab) {
+            const idx = tabNames.indexOf(previousActiveTab);
+            if (idx >= 0) defaultTab = idx;
+        } else {
+            // If filters are active and the default section ("Events") has no
+            // matching events but another section does, open to that section
+            // instead — otherwise the user lands on a tab full of dimmed,
+            // non-matching events.
+            const preferredSection = getDefaultSectionName(eventsAtLocation, {
+                activeFilters,
+                filterFunctions,
+                selectedStartDate
+            });
+            const idx = sectionNames.indexOf(preferredSection);
+            if (idx >= 0) defaultTab = idx;
         }
 
         // Tab bar — placed inside header text wrapper (replacing where tags used to be)
@@ -635,13 +769,13 @@ const PopupContentBuilder = (() => {
 
         // Setup tab switching and swipe gestures
         const tabs = setupTabSwipe(viewport, track, tabButtons, tabNames.length);
-        if (defaultTab > 0) {
-            tabs.switchToTab(defaultTab);
-        }
 
-        // Lock explicit pixel heights on track/panels after layout.
-        // CSS height:100% doesn't resolve against flex-determined parent heights.
+        // Lock explicit pixel heights on track/panels after layout, and switch to
+        // default tab once viewport has dimensions (offsetWidth is 0 before DOM insertion).
         requestAnimationFrame(() => {
+            if (defaultTab > 0) {
+                tabs.switchToTab(defaultTab);
+            }
             const h = viewport.offsetHeight;
             if (h > 0) {
                 track.style.height = h + 'px';
@@ -662,8 +796,44 @@ const PopupContentBuilder = (() => {
         state.createInteractiveTagButton = config.createInteractiveTagButton || null;
         state.hierarchyTagsSet = config.hierarchyTagsSet || new Set();
         state.tagEmojiMap = config.tagEmojiMap || {};
-        state.organizersById = config.organizersById || {};
         state.getDebugMode = config.getDebugMode || (() => false);
+    }
+
+    /**
+     * One-pass version of getDefaultSectionName + section filter + sortEventsForLocation.
+     * Used by MarkerController to compute marker label events without paying for
+     * sortEventsForLocation twice. Returns { defaultSection, sectionEvents } where
+     * sectionEvents is the array of events (not sortData) in popup display order.
+     */
+    function getDefaultSectionAndEvents(events, ctx) {
+        const { sortedEvents } = sortEventsForLocation(events, ctx);
+
+        const sectionsSet = new Set();
+        for (const e of events) sectionsSet.add(e.section || 'Events');
+        const orderedSections = [...sectionsSet].sort((a, b) => {
+            const orderA = SECTION_ORDER[a] ?? 2;
+            const orderB = SECTION_ORDER[b] ?? 2;
+            return orderA !== orderB ? orderA - orderB : a.localeCompare(b);
+        });
+
+        let defaultSection = orderedSections[0] || 'Events';
+        if (ctx && ctx.activeFilters) {
+            const matchingSections = new Set();
+            for (const d of sortedEvents) {
+                if (d.isMatchingTags) matchingSections.add(d.event.section || 'Events');
+            }
+            for (const s of orderedSections) {
+                if (matchingSections.has(s)) { defaultSection = s; break; }
+            }
+        }
+
+        const sectionEvents = [];
+        for (const d of sortedEvents) {
+            if ((d.event.section || 'Events') === defaultSection) {
+                sectionEvents.push(d.event);
+            }
+        }
+        return { defaultSection, sectionEvents };
     }
 
     return {
@@ -671,6 +841,9 @@ const PopupContentBuilder = (() => {
         createLocationPopupContent,
         createPopupHeader,
         createEventsList,
-        createEventDetail
+        createEventDetail,
+        sortEventsForLocation,
+        getDefaultSectionName,
+        getDefaultSectionAndEvents
     };
 })();

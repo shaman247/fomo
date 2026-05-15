@@ -5,7 +5,6 @@
 
 # Claude Code and IDE
 .claude/*
-!.claude/commands/
 .vscode/
 CLAUDE.md
 
@@ -30,6 +29,9 @@ dist/
 # Generated data (pipeline output, regenerated on each run)
 src/data/events.*.json
 src/data/locations.*.json
+
+# Scraper dumps (raw payloads, regenerable)
+data/
 
 # Upload state tracking
 scripts/upload_state.json

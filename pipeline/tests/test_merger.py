@@ -7,7 +7,7 @@ import os
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from merger import normalize_name_for_dedup, stem_word, get_significant_words, are_names_similar, is_false_positive, extract_core_title
+from merger import normalize_name_for_dedup, normalize_time_for_dedup, stem_word, get_significant_words, are_names_similar, is_false_positive, extract_core_title
 
 # Test cases for normalize_name_for_dedup: (input, expected_output)
 NORMALIZE_TEST_CASES = [
@@ -88,6 +88,13 @@ CORE_TITLE_TEST_CASES = [
 
     # Short title before colon - keep full name
     ("Q&A: Discussion Panel", "Q&A: Discussion Panel"),
+
+    # Generic delivery/category prefixes — keep full name so the subtitle isn't
+    # collapsed to a high-collision substring (e.g. "online" matching every
+    # event whose name contains the word "online").
+    ("Online: Nothing Stands Alone", "Online: Nothing Stands Alone"),
+    ("Virtual: Yoga Class", "Virtual: Yoga Class"),
+    ("Workshop: Photography 101", "Workshop: Photography 101"),
 ]
 
 # Test cases for are_names_similar: (name1, name2, should_match)
@@ -126,6 +133,13 @@ SIMILARITY_TEST_CASES = [
     ("Jazz Festival", "Rock Festival", False),
     ("Art Show", "Food Festival", False),
     ("Morning Yoga", "Evening Dance", False),
+
+    # Generic "Online:" prefix must not act as a core-title hook (regression
+    # 2026-05-14 — a brooklynpride.org admin notice "Parade Registration is
+    # online NOW!" was merging into "Online: Nothing Stands Alone …" because
+    # extract_core_title collapsed the latter to "Online" and the 6-char
+    # substring matched any title containing the word "online").
+    ("Parade Registration is online NOW!", "Online: Nothing Stands Alone – A Four Part Course Exploring the Heart Sutra", False),
 
     # Edge cases
     ("A", "B", False),  # Single letters
@@ -177,6 +191,26 @@ class TestNormalizeNameForDedup(unittest.TestCase):
         for input_str, expected in NORMALIZE_TEST_CASES:
             with self.subTest(input=input_str):
                 self.assertEqual(normalize_name_for_dedup(input_str), expected)
+
+
+class TestNormalizeTimeForDedup(unittest.TestCase):
+    """Tests for normalize_time_for_dedup — collapses format drift from nyc.gov etc."""
+
+    def test_format_variants_collapse(self):
+        cases = [
+            ('11:30 AM', '11:30am'),
+            ('11:30am',  '11:30am'),
+            ('1:00 PM',  '1pm'),
+            ('1pm',      '1pm'),
+            ('9:00 AM',  '9am'),
+            ('9am',      '9am'),
+            ('12pm',     '12pm'),
+            (None,       ''),
+            ('',         ''),
+        ]
+        for raw, expected in cases:
+            with self.subTest(raw=raw):
+                self.assertEqual(normalize_time_for_dedup(raw), expected)
 
 
 class TestStemWord(unittest.TestCase):

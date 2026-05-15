@@ -21,20 +21,62 @@ Events from touring companies performing at venues **outside** this area (e.g., 
 
 ## Step 1: Run the Pipeline
 
+Run the pipeline in the background, logging to `/tmp/pipeline_run.log`:
+
 ```bash
-./venv/bin/python pipeline/main.py
+./venv/bin/python pipeline/main.py 2>&1 | tee /tmp/pipeline_run.log
 ```
 
 This runs the full pipeline: crawl → extract → process → merge → export → upload. It typically takes 30-60 minutes depending on the number of websites due for crawling.
 
-Monitor the output for:
-- **Crawl failures** (`ERR_ABORTED`, `Timeout`, `failed`)
-- **Archival warnings** (`⚠️ WARNING: N upcoming event(s) archived`)
-- **Total counts** (websites crawled, events processed, events archived)
+**Do not arm a Monitor.** Per-site signals (iframe timeouts, ERR_FAILED on PDF/image sub-resources, per-site undated-event counts, per-site archival warnings) fire dozens of times and are almost never actionable mid-run. Earlier versions of this command tailed the log; the result was ~50 notifications per run with maybe 3 actionable items, all of which were equally findable by grepping the log after completion.
+
+Just wait for the background task's completion notification — the runtime fires it the moment `pipeline/main.py` exits. Stay idle (or do unrelated work) until then. **Do NOT call `ScheduleWakeup`** to "check in later" — it re-fires this whole `/run-pipeline` prompt and kicks off a fresh pipeline run.
+
+Once the task completes, extract the summary and any signals worth triaging from the log:
+
+```bash
+# Final summary
+grep -E "PIPELINE COMPLETED|PIPELINE FAILED|^Summary:|Websites crawled:|Total events processed:|Total archived:|Total upcoming events archived" /tmp/pipeline_run.log
+
+# Things worth triaging (all aggregated post-hoc, not per-site)
+grep -E "Traceback|WARNING: .* events would need .* batches, capping|upcoming event\(s\) archived" /tmp/pipeline_run.log
+```
+
+The pipeline output to look for:
+- **Cap warnings** (`WARNING: N events would need M batches, capping at X`) — high-yield sites that need `max_batches` bumped
+- **Archival warnings** (`⚠️ WARNING: N upcoming event(s) archived`) — review for crawl regressions vs legitimate site rotations
+- **Tracebacks** — fatal errors that need investigation
+- **Total counts** — sanity-check websites crawled, events processed, events archived
 
 ## Step 2: Triage Findings
 
 After the pipeline completes, triage ALL issues from the output.
+
+> **Parallelize when 3+ sites need investigation.** Instead of triaging websites one at a time
+> in a sequential bash loop, fan out one `general-purpose` Agent per affected site in a single
+> message (multiple Agent tool calls in one turn). Brief each agent with a self-contained
+> prompt:
+>
+> ```
+> Diagnose website {id} ({name}). Recent symptom: {one-line summary, e.g. "5 upcoming events
+> archived after last crawl" or "timeout with 200KB content saved"}.
+>
+> Steps:
+>   1. Pull last 5 rows from crawl_results for website_id={id} (id, crawled_at, status,
+>      LENGTH(crawled_content), error_message, event_count).
+>   2. Read websites.notes, websites.max_batches, websites.crawl_timeout, and
+>      website_urls.url + js_code for this site.
+>   3. If archival warning: pull the archived events and check whether the venue's site still
+>      lists them (WebFetch the crawl URL).
+>   4. Classify: intermittent / cap warning / extraction regression / venue rotation / fatal.
+>   5. Report back: 2-line diagnosis + proposed SQL fix (or "no action — intermittent").
+>
+> Report only — do not apply fixes. Under 200 words.
+> ```
+>
+> Apply the recommended fixes after all agents return. This compresses what was a 30-minute
+> sequential loop into one parallel round.
 
 ### 2a: Crawl Failures and Timeouts
 
@@ -135,7 +177,11 @@ Repeat until `--count` shows 0.
 
 Run the `dedupe-events` command to find and suppress duplicate events.
 
-## Step 6: Fix Imprecise Location Mappings
+## Step 6: Fix Undated Events
+
+If the pipeline output showed any "event(s) extracted without dates" warnings, run the `fix-undated-events` command to investigate and fix them. These are events found on pages without explicit date information — typically catalog entries, archived content, or ongoing programs that should be trimmed via `js_code`.
+
+## Step 7: Fix Imprecise Location Mappings
 
 Find active events mapped to generic Borough, Neighborhood, or City locations that could be mapped more precisely:
 
@@ -188,7 +234,39 @@ These have location names like "Private Residence", "Bushwick", "Online via Zoom
 
 For most, the source website genuinely doesn't provide a specific venue — skip them. But scan event names and descriptions for recognizable venue names that exist in our database (greenmarkets, parks, offices, etc.).
 
-## Step 7: Fix Unmapped Events
+## Step 7b: Fix Out-of-Area Mismapped Events
+
+Find active events whose descriptions suggest they take place outside the NYC metro area but are mapped to a local location. This catches events from multi-city organizations (e.g., Fabrik, n+1) where the extracted venue name is generic (e.g., "Fabrik", "Dumbo") but the event actually happens elsewhere.
+
+```sql
+SELECT e.id, e.name, e.location_name, l.name as mapped_to,
+       SUBSTRING(e.description, 1, 200) as description_preview,
+       w.name as website_name
+FROM events e
+JOIN locations l ON e.location_id = l.id
+LEFT JOIN websites w ON e.website_id = w.id
+WHERE e.archived = FALSE AND e.suppressed = FALSE
+  AND (
+    e.description REGEXP '(^|[^a-zA-Z])(in|across|around|throughout) (Los Angeles|Chicago|San Francisco|Philadelphia|Miami|Seattle|Portland|Austin|Denver|Atlanta|Nashville|Washington D\\.?C\\.?|Houston|Dallas|Detroit|Minneapolis|New Orleans|San Diego|Phoenix|Salt Lake City|Richmond|Raleigh|Charlotte|Tampa|Orlando|Las Vegas|Honolulu|London|Paris|Berlin|Tokyo|Toronto|Montreal|Mexico City)([^a-zA-Z]|$)'
+    OR e.description REGEXP '(Los Angeles|Chicago|San Francisco|Philadelphia|Miami|Seattle|Portland|Austin|Denver|Atlanta|Nashville|Houston|Dallas|Detroit|Minneapolis|New Orleans|San Diego|Phoenix|Salt Lake City|London|Paris|Berlin|Tokyo|Toronto|Montreal|Mexico City) (arts? district|community|creatives?|locals?|area|neighborhood|chapter|region)'
+  )
+ORDER BY w.name, e.id;
+```
+
+Review each result. Many will be false positives — films set in other cities, visiting performers ("Chicago-based band"), sports opponents ("vs. Chicago Bulls"), etc. Only suppress events that are genuinely **taking place** in another city:
+- "Join us in Philadelphia for..." → suppress
+- "A gathering for Chicago fashion creatives" → suppress
+- "Set in 1970s Los Angeles" (film description) → keep
+- "Nashville-based band performs at..." → keep
+
+```sql
+-- Suppress mismapped out-of-area events
+UPDATE events SET suppressed = 1 WHERE id IN (...);
+```
+
+If a website repeatedly produces out-of-area events, check its `blocked_location_names` setting and add missing terms. Note that `blocked_location_names` only matches against the extracted **location** field, so it won't catch events where the venue name is generic (e.g., just "Fabrik"). For those, this description-based review is the safety net.
+
+## Step 8: Fix Unmapped Events
 
 Find active events with no location at all (`location_id IS NULL`) that have a specific venue name:
 
@@ -204,6 +282,32 @@ WHERE e.location_id IS NULL AND e.archived = FALSE AND e.suppressed = FALSE
   AND e.location_name NOT LIKE '%TBA%' AND e.location_name NOT LIKE '%Various%'
 ORDER BY w.name, e.location_name;
 ```
+
+> **Parallelize venue research when there are 10+ unique unmapped venues.** Group events by
+> `location_name` so each venue is researched once, then fan out `general-purpose` Agents in
+> batches of ~5–8 venues per agent (one message, multiple Agent tool calls in parallel). Brief
+> each agent:
+>
+> ```
+> Research these N venues from unmapped events: [{name, sample event title, website_name}, ...]
+>
+> For each venue, return a JSON row:
+>   {name, decision: "match_existing"|"create"|"archive"|"skip",
+>    location_id (if match), proposed_address, proposed_emoji, proposed_tags, reason}
+>
+> Rules:
+>   - Check locations.name + short_name + location_alternate_names BEFORE proposing "create".
+>   - Use the /geocode skill for any new venue's address — never paste from web search.
+>   - "archive" if venue is permanently closed OR outside the NYC metro coverage area.
+>   - "skip" if venue is genuinely generic (Online, TBA, neighborhood-only).
+>   - Do NOT actually INSERT or UPDATE — return proposals only.
+>
+> Report under 300 words.
+> ```
+>
+> Apply the proposals (via `add_locations.php` for creates, alternate-name INSERTs for matches,
+> archive UPDATEs) in the parent session after all agents return. This avoids serial WebFetch +
+> geocode + DB-check loops.
 
 For each event, determine:
 
@@ -226,7 +330,7 @@ For each event, determine:
 - **Specific NYC venues** — create locations and remap
 - **Long Island/Westchester/Hudson Valley/NJ/CT venues** — create locations with appropriate regional tags
 
-## Step 8: Re-export
+## Step 9: Re-export
 
 After applying fixes and reviewing events, re-export the data so changes are reflected on the live site:
 
@@ -267,6 +371,12 @@ Event Review:
 - Candidates found: N
 - Suppressed: N (list categories)
 - Kept: N
+
+Undated Events:
+- Total undated: N
+- Websites affected: N
+- Fixed via js_code: N
+- Remaining (no action needed): N
 
 Location Fixes (generic locations):
 - Events on generic locations: N

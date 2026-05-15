@@ -15,8 +15,52 @@ const MarkerController = (() => {
         appState: null,
         config: null,
         filterProvider: null,
-        eventProvider: null
+        eventProvider: null,
+        // Cached label events from the most recent two filter signatures.
+        // Lets a select→deselect roundtrip reuse work, and lets viewport
+        // refreshes hit the cache for already-computed locations.
+        _labelCache: new Map(), // signature -> Map<locationKey, Event[]>
+        _labelCacheOrder: [],   // signatures in MRU order (max 2)
+        _lastDisplay: null      // { locationsToDisplay } for moveend label refresh
     };
+
+    const LABEL_CACHE_MAX = 2;
+
+    function _signatureFromCtx(sortCtx) {
+        const tagStates = sortCtx.activeFilters.tagStates || {};
+        const parts = [];
+        for (const tag in tagStates) {
+            const s = tagStates[tag];
+            if (s && s !== 'unselected') parts.push(`${tag}:${s[0]}`);
+        }
+        parts.sort();
+        // Both dates affect eventsByLatLngInDateRange, so both must be in the
+        // signature — otherwise narrowing/widening the end date would return
+        // stale label events from the prior range.
+        const startMs = sortCtx.selectedStartDate ? sortCtx.selectedStartDate.getTime() : 0;
+        const endMs = sortCtx.selectedEndDate ? sortCtx.selectedEndDate.getTime() : 0;
+        const forceId = sortCtx.forceDisplayEventId || '';
+        return `${startMs}-${endMs}|${forceId}|${parts.join(',')}`;
+    }
+
+    function _getOrCreateCacheBucket(signature) {
+        let bucket = state._labelCache.get(signature);
+        if (bucket) {
+            // Move to MRU position
+            const idx = state._labelCacheOrder.indexOf(signature);
+            if (idx > -1) state._labelCacheOrder.splice(idx, 1);
+            state._labelCacheOrder.push(signature);
+            return bucket;
+        }
+        bucket = new Map();
+        state._labelCache.set(signature, bucket);
+        state._labelCacheOrder.push(signature);
+        while (state._labelCacheOrder.length > LABEL_CACHE_MAX) {
+            const evicted = state._labelCacheOrder.shift();
+            state._labelCache.delete(evicted);
+        }
+        return bucket;
+    }
 
     // ========================================
     // POPUP CONTENT
@@ -78,7 +122,37 @@ const MarkerController = (() => {
      *
      * @param {Object} locationsToDisplay - Object mapping locationKey to array of events
      */
+    function _buildSortCtx() {
+        const selectedDates = state.filterProvider.getSelectedDates();
+        const tagStates = state.filterProvider.getTagStates();
+        // Derive tag-state Sets ONCE per render, not per location. Hands them
+        // to sortEventsForLocation via ctx.tagSets so the inner loop skips the
+        // O(|tagStates|) Object.entries+filter work per call.
+        const selectedTagsSet = new Set();
+        const requiredTagsSet = new Set();
+        const forbiddenTagsSet = new Set();
+        for (const tag in tagStates) {
+            const s = tagStates[tag];
+            if (s === 'selected' || s === 'required') selectedTagsSet.add(tag);
+            if (s === 'required') requiredTagsSet.add(tag);
+            else if (s === 'forbidden') forbiddenTagsSet.add(tag);
+        }
+        return {
+            activeFilters: { tagStates, sliderStartDate: selectedDates[0] },
+            filterFunctions: { getLocationInfo: (key) => state.appState.locationsByLatLng[key] },
+            selectedStartDate: selectedDates[0],
+            selectedEndDate: selectedDates[1],
+            forceDisplayEventId: state.eventProvider.getForceDisplayEventId(),
+            tagSets: { selectedTagsSet, requiredTagsSet, forbiddenTagsSet }
+        };
+    }
+
     function displayEventsOnMap(locationsToDisplay) {
+        const FP = (typeof window !== 'undefined' && window.FilterProfiler) || null;
+        if (FP) FP.mark('fp:dom:start');
+
+        state._lastDisplay = { locationsToDisplay };
+
         // Build popup content callbacks for all locations
         const callbacks = new Map();
         for (const locationKey in locationsToDisplay) {
@@ -86,9 +160,163 @@ const MarkerController = (() => {
             callbacks.set(locationKey, createPopupContentCallback(locationKey));
         }
 
-        // Update the WebGL marker data
+        if (FP) {
+            FP.mark('fp:dom:callbacks');
+            FP.measure('fp:dom:buildCallbacks', 'fp:dom:start', 'fp:dom:callbacks');
+        }
+
+        const sortCtx = _buildSortCtx();
+
+        // Only compute popup-ordered labels for in-viewport locations. Off-screen
+        // markers fall back to the raw event order — when the user pans to them,
+        // moveend triggers refreshLabelsForViewport() to upgrade them.
+        const visibleSet = state.appState.currentlyVisibleMatchingLocationKeys;
+        const useViewport = visibleSet && typeof visibleSet.has === 'function' && visibleSet.size > 0;
+
+        const signature = _signatureFromCtx(sortCtx);
+        const cacheBucket = _getOrCreateCacheBucket(signature);
+
+        const labelEventsByKey = {};
+        let _computed = 0, _cached = 0, _skipped = 0;
+        for (const locationKey of callbacks.keys()) {
+            const eventsAtLocation = state.appState.eventsByLatLngInDateRange[locationKey] || [];
+            if (eventsAtLocation.length === 0) {
+                labelEventsByKey[locationKey] = locationsToDisplay[locationKey];
+                continue;
+            }
+            if (useViewport && !visibleSet.has(locationKey)) {
+                labelEventsByKey[locationKey] = locationsToDisplay[locationKey];
+                _skipped++;
+                continue;
+            }
+            const cached = cacheBucket.get(locationKey);
+            if (cached) {
+                labelEventsByKey[locationKey] = cached;
+                _cached++;
+                continue;
+            }
+            const { sectionEvents } = PopupContentBuilder.getDefaultSectionAndEvents(eventsAtLocation, sortCtx);
+            cacheBucket.set(locationKey, sectionEvents);
+            labelEventsByKey[locationKey] = sectionEvents;
+            _computed++;
+        }
+
+        if (FP && FP._active) {
+            FP.mark('fp:dom:labelLoop');
+            FP.measure('fp:dom:labelLoop', 'fp:dom:callbacks', 'fp:dom:labelLoop');
+            console.log(`  [dom labelLoop] computed ${_computed} · cached ${_cached} · skipped(off-viewport) ${_skipped}`);
+        }
+
+        // Update the WebGL marker data — pass the popup-sorted events so the
+        // secondary label and "+N" count agree with the popup.
         MapManager.updateMarkerData(
-            locationsToDisplay,
+            labelEventsByKey,
+            state.appState.locationsByLatLng,
+            callbacks
+        );
+
+        if (FP) {
+            FP.mark('fp:dom:end');
+            FP.measure('fp:dom:updateMarkerData', 'fp:dom:labelLoop', 'fp:dom:end');
+        }
+
+        // Idle-warm the cache for off-viewport locations so subsequent pans
+        // are instant. Runs in chunks during browser idle time so it never
+        // blocks user interaction.
+        _scheduleIdleWarm(sortCtx, locationsToDisplay);
+    }
+
+    let _idleWarmHandle = null;
+    function _scheduleIdleWarm(sortCtx, locationsToDisplay) {
+        if (_idleWarmHandle != null) {
+            (window.cancelIdleCallback || clearTimeout)(_idleWarmHandle);
+            _idleWarmHandle = null;
+        }
+        const ric = window.requestIdleCallback || ((cb) => setTimeout(() => cb({ timeRemaining: () => 16, didTimeout: false }), 50));
+        const signature = _signatureFromCtx(sortCtx);
+        const cacheBucket = _getOrCreateCacheBucket(signature);
+        const keysToWarm = [];
+        for (const locationKey in locationsToDisplay) {
+            if (locationsToDisplay[locationKey].length === 0) continue;
+            if (cacheBucket.has(locationKey)) continue;
+            keysToWarm.push(locationKey);
+        }
+        if (keysToWarm.length === 0) return;
+
+        let i = 0;
+        const step = (deadline) => {
+            // If the user has triggered a new render in the meantime, the cache
+            // bucket signature will differ — bail out so we don't waste work.
+            const currentSig = _signatureFromCtx(_buildSortCtx());
+            if (currentSig !== signature) { _idleWarmHandle = null; return; }
+
+            while (i < keysToWarm.length && deadline.timeRemaining() > 1) {
+                const key = keysToWarm[i++];
+                if (cacheBucket.has(key)) continue;
+                const eventsAtLocation = state.appState.eventsByLatLngInDateRange[key] || [];
+                if (eventsAtLocation.length === 0) continue;
+                const { sectionEvents } = PopupContentBuilder.getDefaultSectionAndEvents(eventsAtLocation, sortCtx);
+                cacheBucket.set(key, sectionEvents);
+            }
+            if (i < keysToWarm.length) {
+                _idleWarmHandle = ric(step);
+            } else {
+                _idleWarmHandle = null;
+            }
+        };
+        _idleWarmHandle = ric(step);
+    }
+
+    /**
+     * Refreshes marker labels for newly-visible locations after a viewport change.
+     * Cheaper than displayEventsOnMap — reuses cached locations and only computes
+     * for locations that just entered the viewport.
+     */
+    function refreshLabelsForViewport() {
+        if (!state._lastDisplay) return;
+        const { locationsToDisplay } = state._lastDisplay;
+        const visibleSet = state.appState.currentlyVisibleMatchingLocationKeys;
+        if (!visibleSet || typeof visibleSet.has !== 'function') return;
+
+        const sortCtx = _buildSortCtx();
+        const signature = _signatureFromCtx(sortCtx);
+        const cacheBucket = _getOrCreateCacheBucket(signature);
+
+        let dirty = false;
+        const labelEventsByKey = {};
+        for (const locationKey in locationsToDisplay) {
+            const events = locationsToDisplay[locationKey];
+            if (!events || events.length === 0) continue;
+            const eventsAtLocation = state.appState.eventsByLatLngInDateRange[locationKey] || [];
+            if (eventsAtLocation.length === 0) {
+                labelEventsByKey[locationKey] = events;
+                continue;
+            }
+            if (!visibleSet.has(locationKey)) {
+                labelEventsByKey[locationKey] = events;
+                continue;
+            }
+            const cached = cacheBucket.get(locationKey);
+            if (cached) {
+                labelEventsByKey[locationKey] = cached;
+                continue;
+            }
+            const { sectionEvents } = PopupContentBuilder.getDefaultSectionAndEvents(eventsAtLocation, sortCtx);
+            cacheBucket.set(locationKey, sectionEvents);
+            labelEventsByKey[locationKey] = sectionEvents;
+            dirty = true;
+        }
+        if (!dirty) return;
+
+        // Build callbacks again so MapManager has the same shape it expects.
+        const callbacks = new Map();
+        for (const locationKey in labelEventsByKey) {
+            if (labelEventsByKey[locationKey] && labelEventsByKey[locationKey].length > 0) {
+                callbacks.set(locationKey, createPopupContentCallback(locationKey));
+            }
+        }
+        MapManager.updateMarkerData(
+            labelEventsByKey,
             state.appState.locationsByLatLng,
             callbacks
         );
@@ -138,6 +366,13 @@ const MarkerController = (() => {
             }
         }
 
+        // Preserve the currently active tab across rebuilds
+        const currentPopupEl = isBottomSheet
+            ? document.querySelector('.bottom-sheet .maplibre-popup-content')
+            : openPopup.getElement()?.querySelector('.maplibre-popup-content');
+        const activeTabBtn = currentPopupEl?.querySelector('.popup-tab-bar .popup-tab.active');
+        const previousActiveTab = activeTabBtn ? activeTabBtn.textContent : null;
+
         const newContent = UIManager.createLocationPopupContent(
             locationInfo,
             eventsToDisplay,
@@ -145,7 +380,8 @@ const MarkerController = (() => {
             state.appState.geotagsSet,
             filterFunctions,
             forceDisplayEventId,
-            selectedDates[0]
+            selectedDates[0],
+            previousActiveTab
         );
 
         // Update popup content
@@ -235,6 +471,7 @@ const MarkerController = (() => {
     return {
         init,
         displayEventsOnMap,
+        refreshLabelsForViewport,
         updateOpenPopupContent,
         findOpenPopup,
         hasMatchingEvents,

@@ -210,12 +210,17 @@ const SearchManager = (() => {
             score += SCORE_WEIGHTS.VISIBILITY_BOOST;
         }
 
-        const nameToDisplay = Utils.getDisplayName(event);
+        // Display name is precomputed at data load (avoids per-search textarea creation
+        // via Utils.formatAndSanitize). Falls back to live computation if cache missing.
+        const cachedName = state.appState.searchIndex?.eventDisplayNames?.get(event.id);
+        const displayName = cachedName !== undefined
+            ? cachedName
+            : Utils.formatAndSanitize(Utils.getDisplayName(event)).replace(/<\/?em>/g, '');
 
         return {
             type: 'event',
             ref: event.id,
-            displayName: Utils.formatAndSanitize(nameToDisplay).replace(/<\/?em>/g, ''),
+            displayName,
             emoji: event.emoji,
             score: score,
             isVisible: isVisible
@@ -273,19 +278,16 @@ const SearchManager = (() => {
         const results = new Map();
         const searchIndex = state.appState.searchIndex;
 
-        state.appState.allAvailableTags.forEach(tag => {
+        // Empty term: skip geotags via precomputed list. Term: keep all hierarchy tags.
+        // (allAvailableTags is already hierarchy-filtered at load — no per-iteration check needed.)
+        const tagList = !term && state.appState.searchableTagsForEmptyTerm
+            ? state.appState.searchableTagsForEmptyTerm
+            : state.appState.allAvailableTags;
+
+        tagList.forEach(tag => {
             // Use normalized index for matching
             const normalizedTag = searchIndex?.tags?.get(tag) || tag.toLowerCase();
             if (normalizedTag.includes(term)) {
-                // Skip geotags and keywords when search term is empty
-                if (!term && state.appState.geotagsSet.has(tag.toLowerCase())) {
-                    return;
-                }
-                if (state.appState.hierarchyTagsSet && state.appState.hierarchyTagsSet.size > 0
-                    && !state.appState.hierarchyTagsSet.has(tag)) {
-                    return;
-                }
-
                 const isVisible = state.appState.visibleTagFrequencies[tag] > 0;
 
                 let score = dynamicFrequencies[tag] || 0;

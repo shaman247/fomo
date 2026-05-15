@@ -5,6 +5,7 @@ Uses Crawl4AI to crawl event websites and store content in the database.
 """
 
 import asyncio
+import re
 from datetime import datetime, timedelta
 from crawl4ai import CacheMode
 import db
@@ -30,6 +31,20 @@ except ImportError:
     raise
 
 
+# URL prefixes the regular crawl4ai-based crawler should not touch. Instagram is
+# Cloudflare-gated and gets its own ingest path via /picnob-scrape; we keep the
+# IG profile URLs as ordinary website_urls rows so the rest of the pipeline
+# treats IG sources identically to any other website.
+_INSTAGRAM_URL_RE = re.compile(r'^https?://(www\.)?instagram\.com/', re.IGNORECASE)
+
+
+def is_instagram_url(url):
+    return bool(url) and bool(_INSTAGRAM_URL_RE.match(url))
+
+
+_DATE_OFFSET_RE = re.compile(r'\{\{date([+-]\d+)?\}\}')
+
+
 def resolve_url_templates(url):
     """Resolve date template placeholders in URLs.
 
@@ -38,10 +53,14 @@ def resolve_url_templates(url):
         {{year}}            - current year (e.g. "2026")
         {{next_month}}      - next month name, lowercase
         {{next_month_year}} - year of the next month (handles Dec→Jan rollover)
+        {{date}}            - today's date in ISO format (YYYY-MM-DD)
+        {{date+N}}          - today + N days, ISO format (e.g. {{date+7}})
+        {{date-N}}          - today - N days, ISO format
     """
     if '{{' not in url:
         return url
     now = datetime.now()
+    today = now.date()
     next_month_date = (now.replace(day=1) + timedelta(days=32)).replace(day=1)
     replacements = {
         '{{month}}': now.strftime('%B').lower(),
@@ -51,6 +70,10 @@ def resolve_url_templates(url):
     }
     for placeholder, value in replacements.items():
         url = url.replace(placeholder, value)
+    url = _DATE_OFFSET_RE.sub(
+        lambda m: (today + timedelta(days=int(m.group(1) or 0))).isoformat(),
+        url,
+    )
     return url
 
 
@@ -83,6 +106,16 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
     if not urls:
         print(f"  Skipping {name}: no URLs configured")
         return None
+
+    # Filter out Instagram URLs — those are ingested via /picnob-scrape (the
+    # crawl4ai crawler can't bypass Cloudflare on instagram.com or its mirrors).
+    def _url_of(u):
+        return u['url'] if isinstance(u, dict) else u
+    non_ig_urls = [u for u in urls if not is_instagram_url(_url_of(u))]
+    if not non_ig_urls:
+        print(f"  Skipping {name}: only Instagram URLs (use /picnob-scrape)")
+        return None
+    urls = non_ig_urls
 
     # Create safe filename from website name
     safe_filename = create_safe_filename(name, '.md')
@@ -124,6 +157,7 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
         remove_overlays = website.get('remove_overlay_elements', False)
         scroll_delay = website.get('scroll_delay') or 0.2
         crawl_timeout = website.get('crawl_timeout') or DEFAULT_CRAWL_TIMEOUT
+        page_timeout_ms = max(60000, crawl_timeout * 1000)  # At least 60s, scale with crawl_timeout
 
         # Configure markdown generator with optional content filter
         # If filter_threshold is explicitly 0 or None, disable the filter entirely
@@ -153,7 +187,7 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
             delay_before_return_html=delay_seconds,
             scan_full_page=scan_full_page,
             scroll_delay=scroll_delay,
-            page_timeout=60000,
+            page_timeout=page_timeout_ms,
             wait_until='domcontentloaded',  # Use domcontentloaded instead of networkidle for faster/more reliable JS navigation
             ignore_body_visibility=True,  # Don't skip invisible body elements
             deep_crawl_strategy=deep_crawl_strategy,
@@ -187,7 +221,7 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
                         delay_before_return_html=delay_seconds,
                         scan_full_page=scan_full_page,
                         scroll_delay=scroll_delay,
-                        page_timeout=60000,
+                        page_timeout=page_timeout_ms,
                         wait_until='domcontentloaded',
                         ignore_body_visibility=True,
                         deep_crawl_strategy=deep_crawl_strategy,
@@ -281,7 +315,7 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
         return None
 
 
-def get_browser_config(javascript_enabled=True, text_mode=True, light_mode=True, use_stealth=False, user_agent=None):
+def get_browser_config(javascript_enabled=True, text_mode=True, light_mode=True, use_stealth=False, headed=False, user_agent=None):
     """
     Get the browser configuration for crawling.
 
@@ -292,14 +326,22 @@ def get_browser_config(javascript_enabled=True, text_mode=True, light_mode=True,
         light_mode: If True, uses minimal browser features for speed (default: True).
         use_stealth: If True, uses undetected browser mode to bypass bot detection (default: False).
                     Required for sites like Resident Advisor that have verification pages.
+                    Always runs headed regardless of `headed`.
+        headed: If True, run browser with a visible window (default: False, i.e. headless).
+                Use this for sites that need a real window to render correctly.
         user_agent: Custom User-Agent string. If set, overrides the default browser UA.
                    Use this for sites that block the default headless Chrome UA with 403.
 
     Note: These are browser-level settings. All websites crawled with this
           config will share the same settings.
     """
+    # Crawl4AI's default UA is Chrome/116 on Linux, which creates a UA/TLS fingerprint
+    # mismatch that some CDNs (e.g. Fastly) detect and reject with 403. Always set a
+    # realistic UA matching the actual browser to avoid this.
+    DEFAULT_USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36'
+
     if use_stealth:
-        # Use undetected browser mode with stealth features for bot detection bypass
+        # Stealth requires a real (headed) browser instance.
         return BrowserConfig(
             headless=False,
             java_script_enabled=javascript_enabled,
@@ -307,17 +349,99 @@ def get_browser_config(javascript_enabled=True, text_mode=True, light_mode=True,
             light_mode=light_mode,
             use_managed_browser=True,
             enable_stealth=True,
-            user_agent=user_agent or 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+            user_agent=user_agent or DEFAULT_USER_AGENT,
             extra_args=['--disable-blink-features=AutomationControlled']
         )
     else:
-        # Standard browser mode
         config_kwargs = {
-            'headless': False,
+            'headless': not headed,
             'java_script_enabled': javascript_enabled,
             'text_mode': text_mode,
             'light_mode': light_mode,
+            'user_agent': user_agent or DEFAULT_USER_AGENT,
         }
-        if user_agent:
-            config_kwargs['user_agent'] = user_agent
         return BrowserConfig(**config_kwargs)
+
+
+def get_browser_key(settings):
+    """Return a hashable key for grouping websites by browser settings.
+
+    Websites with the same browser key can share a single AsyncWebCrawler
+    instance (same text_mode, light_mode, stealth, headed, user_agent).
+    Stealth implies headed, so `headed` is OR'd with `use_stealth` here to
+    keep stealth sites from splitting into a redundant headless batch.
+    """
+    use_stealth = settings.get('use_stealth') if settings.get('use_stealth') is not None else False
+    headed_setting = settings.get('headed') if settings.get('headed') is not None else False
+    return (
+        settings.get('text_mode') if settings.get('text_mode') is not None else True,
+        settings.get('light_mode') if settings.get('light_mode') is not None else True,
+        bool(use_stealth),
+        bool(use_stealth) or bool(headed_setting),
+        settings.get('user_agent'),
+    )
+
+
+def build_event_crawl_config(website_settings):
+    """
+    Build a CrawlerRunConfig for crawling an individual event URL.
+
+    Uses the same per-website settings as the main crawl, but without
+    js_code, deep crawling, or click-based pagination (those are for
+    listing pages, not individual event pages).
+
+    Args:
+        website_settings: Dict with keys like delay_before_return_html,
+            content_filter_threshold, scan_full_page, remove_overlay_elements,
+            scroll_delay.
+    """
+    ws = website_settings
+    delay = min(ws.get('delay_before_return_html') or 5, 10)  # Cap at 10s for individual event pages
+    filter_threshold = ws.get('content_filter_threshold')
+    scan = False  # Don't scroll full page for individual event pages
+    overlays = ws.get('remove_overlay_elements', False)
+    sd = ws.get('scroll_delay') or 0.2
+
+    if filter_threshold is not None and float(filter_threshold) > 0:
+        md_generator = DefaultMarkdownGenerator(
+            content_filter=PruningContentFilter(
+                threshold=float(filter_threshold),
+                threshold_type="fixed",
+                min_word_threshold=0,
+            ),
+            options={"ignore_links": True},
+        )
+    else:
+        md_generator = DefaultMarkdownGenerator(options={"ignore_links": True})
+
+    return CrawlerRunConfig(
+        word_count_threshold=5,
+        excluded_tags=[],
+        process_iframes=True,
+        cache_mode=CacheMode.BYPASS,
+        remove_overlay_elements=overlays,
+        delay_before_return_html=delay,
+        scan_full_page=scan,
+        scroll_delay=sd,
+        page_timeout=60000,
+        wait_until='domcontentloaded',
+        ignore_body_visibility=True,
+        markdown_generator=md_generator,
+    )
+
+
+async def crawl_event_url(web_crawler, url, crawl_config):
+    """
+    Crawl a single event URL and return its markdown content.
+
+    Returns the page content (truncated to 12K chars) or None on failure.
+    """
+    try:
+        result = await web_crawler.arun(url=url, config=crawl_config)
+        if result.success and result.markdown:
+            content = result.markdown.fit_markdown or result.markdown.raw_markdown
+            if content and len(content) > 50:
+                return content[:12000]
+    except Exception as e:
+        print(f"    Crawl error for {url}: {e}")
+    return None
