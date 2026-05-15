@@ -1,16 +1,17 @@
 /*
  * ============================================================================
- * Tag Button Component
+ * Tag/Chip Component
  * ============================================================================
  *
- * Interactive tag buttons with multiple states:
- * - unselected: Default state (gray)
- * - selected: User clicked to filter (red)
- * - required: Must match (red with glow)
+ * Shared pill-shaped button used in chip bar, filter panel, and popups.
+ * States:
+ * - unselected: Default (muted)
+ * - selected: User clicked to filter (colored border + tinted bg)
+ * - required: Must match (colored + glow)
  * - forbidden: Excluded from results (strikethrough)
  * - non-visible: Filtered out but shown (dimmed)
  *
- * Also includes section control buttons and state cycle buttons.
+ * Also includes section header buttons and display-only keyword tags.
  */
 
 .tag-tags-container {
@@ -28,22 +29,117 @@
     gap: 2px;
 }
 
-.tag-button {
+@keyframes chip-fade-in {
+    from {
+        opacity: 0;
+        transform: scale(0.85);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes chip-dropdown-slide-in {
+    from {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes chip-dropdown-item-slide-in {
+    from {
+        opacity: 0;
+        transform: translateY(-4px) scale(0.92);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Vertical dropdown of descendant chips, anchored below a chip on hover/long-press/right-click */
+.chip-descendant-dropdown {
+    position: fixed;
     display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    padding: 4px 0 0 0;
+    background: transparent;
+    border: none;
+    z-index: var(--z-panel-menu);
+    animation: chip-dropdown-slide-in 0.18s ease-out;
+    transform-origin: top left;
+}
+
+.chip-descendant-dropdown.closing {
+    animation: chip-dropdown-slide-in 0.15s ease-in reverse forwards;
+}
+
+.chip-descendant-dropdown .tag-button {
+    animation: chip-dropdown-item-slide-in 0.18s ease-out backwards;
+    border-color: var(--border-color);
+    background: color-mix(in srgb, var(--primary-bg) 96%, transparent);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 1px 6px 1px rgba(0, 0, 0, 0.5);
+}
+
+.chip-descendant-dropdown .tag-button.state-selected,
+.chip-descendant-dropdown .tag-button.state-required {
+    border-color: var(--chip-color, var(--accent-color));
+    background: color-mix(in srgb, var(--chip-color, var(--accent-color)) 15%, var(--tertiary-bg));
+}
+
+.tag-button {
+    display: inline-flex;
     align-items: center;
-    justify-content: center;
     gap: 4px;
-    padding: 5px 10px;
-    border-radius: 14px;
-    font-size: 1.07em;
-    font-weight: 400;
+    padding: 4px 8px;
+    border-radius: 16px;
+    border: 1.5px solid transparent;
+    background: var(--tertiary-bg);
+    color: var(--secondary-text);
+    font-size: 0.95em;
     font-family: var(--font-family);
+    letter-spacing: -0.02em;
     cursor: pointer;
-    border: 0;
+    white-space: nowrap;
     overflow: hidden;
-    text-align: center;
     line-height: 1.2;
-    letter-spacing: -0.03em;
+    transition: background 0.15s, border-color 0.15s;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+}
+
+/* Chip bar tags: bordered, translucent style */
+#chip-bar .tag-button {
+    border-color: var(--border-color);
+    background: color-mix(in srgb, var(--primary-bg) 85%, transparent);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 1px 6px 1px rgba(0, 0, 0, 0.5);
+    flex-shrink: 0; /* prevent chips from shrinking when chip-bar is nowrap */
+}
+
+#chip-bar .tag-button.state-unselected:hover {
+    background: var(--tertiary-bg);
+}
+
+#chip-bar .tag-button.state-selected,
+#chip-bar .tag-button.state-required {
+    border-color: var(--chip-color, var(--accent-color));
+    background: color-mix(in srgb, var(--chip-color, var(--accent-color)) 15%, var(--tertiary-bg));
+}
+
+#chip-bar .tag-button.state-selected:hover,
+#chip-bar .tag-button.state-required:hover {
+    background: color-mix(in srgb, var(--chip-color, var(--accent-color)) 20%, var(--tertiary-hover-bg));
 }
 
 .tag-button .result-type {
@@ -52,45 +148,40 @@
     margin-left: 7px;
 }
 
-.tag-button.state-unselected {
-    background-color: color-mix(in srgb, var(--tertiary-bg) 80%, transparent);
-    color: var(--secondary-text);
+.tag-button .chip-emoji {
+    font-size: 1.15em;
+    line-height: 1;
 }
 
 .tag-button.state-unselected:hover {
-    background-color: var(--tertiary-hover-bg);
+    background: var(--tertiary-hover-bg);
     color: var(--primary-text);
 }
 
 .tag-button.state-selected,
 .tag-button.state-required {
-    background-color: var(--tag-selected-bg);
-    color: var(--tag-selected-text);
-    font-weight: 400;
-    text-shadow: var(--tag-text-shadow);
+    border-color: var(--chip-color, var(--accent-color));
+    background: color-mix(in srgb, var(--chip-color, var(--accent-color)) 15%, var(--tertiary-bg));
+    color: var(--primary-text);
+}
+
+.tag-button.state-selected:hover,
+.tag-button.state-required:hover {
+    background: color-mix(in srgb, var(--chip-color, var(--accent-color)) 20%, var(--tertiary-hover-bg));
 }
 
 .tag-button.state-required {
-    border: 2px solid var(--primary-bg);
     filter: drop-shadow(0 0 3px var(--tag-required-glow));
 }
 
 .tag-button.state-forbidden {
     text-decoration: line-through;
-    border: 1px solid transparent;
-    padding: 4px 11px;
     background-color: transparent;
     color: var(--secondary-text);
 }
 
-.tag-button.state-forbidden {
-    text-decoration: line-through;
-}
-
 .tag-button.state-forbidden:hover {
     text-decoration: line-through;
-    border: 1px solid var(--tertiary-bg);
-    padding: 4px 11px;
     color: var(--secondary-text);
 }
 
@@ -112,28 +203,25 @@
     color: var(--secondary-text);
 }
 
-/* === Section Control Buttons === */
-/* Special buttons for section actions (collapse/expand, state cycling) */
-.tag-button.section-icon-button,
-.tag-button.state-cycle-button {
+/* === Section Header Buttons === */
+.tag-button.section-icon-button {
     background-color: color-mix(in srgb, var(--accent-color) 30%, var(--tertiary-bg));
     color: var(--primary-text);
-    border: 0px solid color-mix(in srgb, var(--accent-color) 40%, transparent);
+    border: 0;
 }
 
-.tag-button.section-icon-button:hover,
-.tag-button.state-cycle-button:hover {
+.tag-button.section-icon-button:hover {
     background-color: color-mix(in srgb, var(--accent-color) 50%, var(--tertiary-bg));
     color: var(--primary-text);
     border-color: color-mix(in srgb, var(--accent-color) 60%, transparent);
 }
 
-/* State indicator symbol within icon button */
-.tag-button.section-icon-button .state-indicator {
-    margin-left: 4px;
-    font-size: 0.84em;
-    opacity: 0.8;
-    vertical-align: middle;
+/* Section label text */
+.tag-button.section-icon-button .section-label {
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    font-size: 0.8em;
 }
 
 /* === Display-Only Keyword Tags === */
@@ -152,15 +240,8 @@
 }
 
 /* === Mobile Responsive Styles === */
-/* Scale down tag buttons for mobile (85% of desktop) */
 @media (max-width: 768px) {
-    .tag-button {
-        padding: 4px 7px;
-        border-radius: 12px;
-        font-size: 1.1em;
-    }
-
-    .tag-tags-container {
+.tag-tags-container {
         gap: 3px;
     }
 
@@ -176,9 +257,7 @@
 
     /* In tab panels, hide section headers and expand/collapse buttons —
        the tab tells the user which section they're in */
-    .bottom-sheet-tab-panel .section-icon-button,
-    .bottom-sheet-tab-panel .show-more-button,
-    .bottom-sheet-tab-panel .show-fewer-button {
+    .bottom-sheet-tab-panel .section-icon-button {
         display: none;
     }
 

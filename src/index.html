@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Fomo NYC</title>
     <link rel="icon" href="images/torch.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" crossorigin=""/>
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css" crossorigin=""/>
     <link rel="preconnect" href="https://rsms.me/">
     <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" crossorigin="anonymous">
@@ -15,6 +15,9 @@
         <div id="filter-panel" class="tags-collapsed">
             <div id="loading-container">
                 <p class="loading-message">Loading... please wait 🧘</p>
+                <div class="loading-progress" role="progressbar" aria-label="Loading progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                    <div class="loading-progress-bar"></div>
+                </div>
             </div>
             <div id="filter-container" class="initially-hidden">
                 <div>
@@ -25,7 +28,6 @@
                         <div id="logo-menu" class="logo-menu-hidden" role="menu" aria-label="Logo menu">
                             <button type="button" id="settings-btn" role="menuitem">⚙️ Settings</button>
                             <button type="button" id="share-view-btn" role="menuitem">🔗 Share this view</button>
-                            <a href="admin" target="_blank" role="menuitem">🛠️ Database View</a>
                             <button type="button" id="feedback-btn" role="menuitem">💬 Submit feedback</button>
                             <a href="about.html" target="_blank" role="menuitem">🗽 About fomo.nyc</a>
                         </div>
@@ -58,6 +60,11 @@
         <div id="map-container">
             <div id="map-wrapper">
                 <div id="map" role="application" aria-label="Interactive map of NYC events"></div>
+            </div>
+            <div id="phase2-loading-indicator" role="status" aria-live="polite">
+                <span class="phase2-spinner" aria-hidden="true"></span>
+                <span class="phase2-label">Loading more events…</span>
+                <span class="phase2-progress"></span>
             </div>
         </div>
     </div>
@@ -147,7 +154,7 @@
     </div>
     <link rel="stylesheet" href="css/index.css">
 
-    <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js" crossorigin=""></script>
+    <script src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js" crossorigin=""></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr" crossorigin="anonymous"></script>
 
     <!-- Core -->

@@ -41,19 +41,17 @@ const UIManager = (() => {
         tomorrow.setDate(tomorrow.getDate() + 1);
 
         const dayOfWeek = today.getDay();
-        const daysUntilSunday = (7 - dayOfWeek) % 7;
+        let daysUntilSunday = (7 - dayOfWeek) % 7;
+        // On Saturday/Sunday, show the upcoming week instead
+        if (daysUntilSunday <= 1) daysUntilSunday += 7;
         const nextSunday = new Date(today);
         nextSunday.setDate(nextSunday.getDate() + daysUntilSunday);
 
         const presets = [
             { label: 'Today', range: [new Date(today), new Date(today)] },
             { label: 'Tomorrow', range: [new Date(tomorrow), new Date(tomorrow)] },
+            { label: 'This Week', range: [new Date(today), new Date(nextSunday)] },
         ];
-
-        // Only add "This Week" if it spans more than one day
-        if (daysUntilSunday > 0) {
-            presets.push({ label: 'This Week', range: [new Date(today), new Date(nextSunday)] });
-        }
 
         return presets;
     }
@@ -286,7 +284,7 @@ const UIManager = (() => {
      * @param {Date|null} selectedStartDate - Currently selected start date
      * @returns {HTMLElement} Popup content container
      */
-    function createLocationPopupContent(locationInfo, eventsAtLocation, activeFilters, geotagsSet, filterFunctions, forceDisplayEventId = null, selectedStartDate = null) {
+    function createLocationPopupContent(locationInfo, eventsAtLocation, activeFilters, geotagsSet, filterFunctions, forceDisplayEventId = null, selectedStartDate = null, previousActiveTab = null) {
         return PopupContentBuilder.createLocationPopupContent(
             locationInfo,
             eventsAtLocation,
@@ -294,7 +292,8 @@ const UIManager = (() => {
             geotagsSet,
             filterFunctions,
             forceDisplayEventId,
-            selectedStartDate
+            selectedStartDate,
+            previousActiveTab
         );
     }
 

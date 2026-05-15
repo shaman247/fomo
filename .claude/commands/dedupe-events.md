@@ -19,46 +19,148 @@ Run the duplicate finder script, which checks for active event pairs at the same
 This shows:
 - **Exact-name duplicates**: Identical normalized names — safe to auto-suppress
 - **Shared URL duplicates**: Different names but same event URL — review needed (catches re-extractions where the event name changed between crawls, e.g., "Wine Between the Lines: Fermentation is Magic" vs "Wine Between the Lines: A Deep Dive on Natural Wine" sharing the same Eventbrite URL)
-- **Summary** of similar-name pairs (use `--review` to see them)
+- **Cross-source same date+time duplicates**: Same location, same date AND start_time, but from **different websites** — high signal for cross-source dupes where names diverge completely (e.g. organizer's Luma title vs venue's site title for the same event). Review needed.
+- **Summary** of same-source same-time pairs and similar-name pairs (use `--review` to see them)
 
 ### Auto-suppress exact-name duplicates
 
-If exact-name duplicates are found, suppress them:
+Exact-name pairs are safe to auto-suppress without holistic review:
 
 ```bash
 ./venv/bin/python scripts/find_duplicate_events.py --suppress
 ```
 
-This suppresses the higher-ID event from each exact-name pair.
+This suppresses the higher-ID event from each exact-name pair. (The kept event preserves foreign-key references; if the higher ID had richer fields, fix manually after — exact-name pairs almost always have identical fields.)
 
-### Review shared URL duplicates
+### Holistic review for ALL review-needed tiers
 
-Shared URL pairs are always shown (no flag needed). These are events at the same location with overlapping dates that share a specific event URL (filtered to URLs with 2+ path segments, shared by at most 3 events — excludes venue homepages).
+The remaining three tiers — **shared URL**, **cross-source same date+time**, and **similar-name** — must each be reviewed holistically by Claude. Do not skip any tier and do not use length-based heuristics. The mechanics are identical for all three: fetch fields, decide, apply (merge OR record dismissal).
 
-Review each pair. Common false positives:
-- **Lecture/workshop series**: Different installments sharing the series URL (e.g., "Winter Lecture: Speaker A" vs "Winter Lecture: Speaker B")
-- **Community board meetings**: Different committees sharing the board calendar URL
-- **Late show variants**: Same show at different times sharing the event page
+Pairs that have been reviewed and dismissed in a prior run are stored in `dedupe_dismissed_pairs` and automatically filtered out of these three tiers, so the same false positives don't keep resurfacing. Every pair you review and decide is NOT a duplicate must be recorded so the next run skips it.
 
-For confirmed duplicates, suppress the higher ID:
-
-```sql
-UPDATE events SET suppressed = 1 WHERE id IN (...);
-```
-
-### Review similar-name pairs
+Run the script first (without `--review`) to get the cross-source and shared URL lists, then again with `--review` to also see similar-name pairs:
 
 ```bash
 ./venv/bin/python scripts/find_duplicate_events.py --review
 ```
 
-Review each similar-name pair manually. The script uses the merger's `are_names_similar()` logic, which catches accent variations, suffix variations, word subsets, substring matches, and presenter-prefix patterns. But it can still produce false positives (e.g., "Festival Night 1" vs "Festival Night 2", "Letterpress I" vs "Letterpress II").
+#### Step A: Fetch full data for ALL review-needed pairs in one batch
 
-For confirmed duplicates, suppress the higher ID:
+To minimize round-trips, fetch field data for every pair across all three tiers in a single Python call. Pass the full pair list (collected from the script's printed output):
 
-```sql
-UPDATE events SET suppressed = 1 WHERE id IN (...);
+```python
+import sys; sys.path.insert(0, 'pipeline')
+from db import create_connection
+conn = create_connection()
+cur = conn.cursor(dictionary=True)
+
+# Paste in pairs from each tier:
+shared_url_pairs = [(<id1>, <id2>), ...]
+cross_source_pairs = [(<id1>, <id2>), ...]
+similar_name_pairs = [(<id1>, <id2>), ...]
+
+for label, pairs in [('SHARED-URL', shared_url_pairs),
+                     ('CROSS-SOURCE', cross_source_pairs),
+                     ('SIMILAR-NAME', similar_name_pairs)]:
+    for id1, id2 in pairs:
+        print(f'\n=== [{label}] {id1} vs {id2} ===')
+        for eid in [id1, id2]:
+            cur.execute('''
+                SELECT e.id, e.name, e.short_name, e.description, e.emoji, e.sublocation,
+                       l.name AS location, w.name AS website
+                FROM events e
+                JOIN locations l ON e.location_id = l.id
+                JOIN websites w ON e.website_id = w.id
+                WHERE e.id = %s
+            ''', (eid,))
+            r = cur.fetchone()
+            print(f"  [{r['id']}] '{r['name']}' [{r['website']}] sub={r['sublocation']!r} emoji={r['emoji']!r}")
+            print(f"    desc: {(r['description'] or '')[:300]}")
+            cur.execute('SELECT url FROM event_urls WHERE event_id = %s', (eid,))
+            print(f"    urls: {[r2['url'] for r2 in cur.fetchall()]}")
+            cur.execute('SELECT t.name FROM event_tags et JOIN tags t ON et.tag_id=t.id WHERE et.event_id=%s', (eid,))
+            print(f"    tags: {[r2['name'] for r2 in cur.fetchall()]}")
+            cur.execute('SELECT start_date, start_time, end_time FROM event_occurrences WHERE event_id=%s ORDER BY start_date LIMIT 5', (eid,))
+            print(f"    occs: {[dict(r2) for r2 in cur.fetchall()]}")
+conn.close()
 ```
+
+#### Step B: Holistically review each pair
+
+Read both events' name, description, emoji, sublocation, tags, URLs, occurrences, and source website together. For each pair, decide:
+
+- **Are they the same event?** Look for:
+  - Description content that describes the same thing (even if titled differently)
+  - URLs pointing at the same Eventbrite/Luma/ticket page
+  - Tags that overlap meaningfully
+  - Occurrence date/time alignment
+
+- **Common false-positive patterns to recognize**:
+  - **Shared URL**: lecture/workshop series sharing a series URL (different installments); community-board meetings sharing the board calendar URL; multi-show events at the same venue sharing a "what's on" page; numbered nights (Night 1/2/3); lettered editions (I/II/III)
+  - **Cross-source same-time**: concurrent walking tours at the Municipal Art Society; simultaneous museum exhibitions sharing daily hours; multi-stage theaters (Carnegie, BAM); multi-room cultural centers (JCC, 92NY); huge parks where two activities run at different physical spots
+  - **Similar-name**: numbered series, men's vs women's sports, early vs late sets, same title at different theaters
+
+- **If yes (it IS a duplicate), what are the best merged field values?**
+  - **name**: pick the clearer, more specific title; or synthesize a better one. Don't just keep the lower-ID's. Avoid generic venue names if a more specific event title is available.
+  - **description**: pick the more accurate/informative one. Don't pick a longer description if it's actually about a different event.
+  - **emoji**: the more relevant one for the event type
+  - **sublocation**: the more specific one (e.g. "Ground Floor", "Studio B"); null if neither helps
+  - **short_name**: prefer non-null
+  - tags, URLs, occurrences, sources: always merged as a union — handled by `merge_pair`
+
+#### Step C: Apply the decisions in a batch
+
+For each reviewed pair you must do exactly ONE of these:
+- **Merge** — call `apply_field_overrides` (only with the scalar fields you want to change) followed by `merge_pair`.
+- **Dismiss** — call `record_dismissal` so the pair won't be re-flagged in the next run.
+
+Every pair must be one or the other. Don't silently skip pairs.
+
+```python
+import sys; sys.path.insert(0, 'pipeline')
+sys.path.insert(0, 'scripts')
+from db import create_connection
+from find_duplicate_events import apply_field_overrides, merge_pair, record_dismissal
+conn = create_connection()
+cur = conn.cursor()
+
+# Confirmed duplicate — apply chosen field values then merge collections + suppress:
+apply_field_overrides(cur, <keep_id>,
+    name='<chosen name or omit>',
+    description='<chosen description or omit>',
+    emoji='<chosen emoji or omit>',
+    sublocation='<chosen sublocation or omit>',
+)
+merge_pair(cur, <keep_id>, <delete_id>)
+
+# NOT a duplicate — record dismissal with a short reason
+# (the reason is stored alongside the pair so future maintainers know why):
+record_dismissal(cur, <id1>, <id2>, "concise reason — e.g. 'multi-room venue: different programs'")
+
+# ...repeat for each pair...
+
+conn.commit()
+conn.close()
+```
+
+For pairs that are NOT duplicates but where one event clearly has corrupted data (e.g. URLs, tags, or descriptions belonging to a different event mixed in), still record the dismissal AND flag the corrupted event in your reply so the user can decide whether to clean it up.
+
+#### Step D: After all pairs are processed, re-export
+
+```python
+import sys; sys.path.insert(0, 'pipeline')
+from db import create_connection
+import exporter
+conn = create_connection()
+exporter.export_events(conn.cursor())
+conn.close()
+```
+
+Then ask the user whether to upload via `python scripts/upload_public_html.py`.
+
+### Same-source same date+time pairs
+
+Use `--review` to see these. Same-website same-time pairs are mostly noise from multi-tour or multi-room venues (Municipal Art Society's concurrent walking tours, museums with parallel programs, theaters with multiple stages). Skim for any that share descriptions or are clearly re-extractions and run the holistic-review workflow on those; ignore the rest.
 
 ---
 

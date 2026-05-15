@@ -146,8 +146,25 @@ a:focus-visible,
 
 .loading-message {
     text-align: center;
-    padding: 24px;
+    padding: 24px 24px 12px;
     animation: pulse-text 1.5s ease-in-out infinite;
+}
+
+.loading-progress {
+    margin: 0 auto 24px;
+    max-width: 220px;
+    height: 6px;
+    background-color: var(--tertiary-bg);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.loading-progress-bar {
+    width: 0;
+    height: 100%;
+    background-color: var(--accent-color);
+    border-radius: 3px;
+    transition: width 0.3s ease-out;
 }
 
 @keyframes pulse-text {
@@ -189,6 +206,10 @@ a:focus-visible,
     }
 
     .loading-message {
-        padding: 20px;
+        padding: 20px 20px 10px;
+    }
+
+    .loading-progress {
+        margin: 0 auto 20px;
     }
 }

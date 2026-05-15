@@ -79,12 +79,24 @@
 
         ul ul {
             padding-left: 0;
+            margin-top: 8px;
+            margin-bottom: 0;
         }
 
         li {
             margin-bottom: 8px;
+        }
+
+        /* Top-level rows align an emoji bullet with the content beside it */
+        .bullet-row {
             display: flex;
             gap: 0.4em;
+            align-items: flex-start;
+        }
+
+        .bullet-row > .bullet-content {
+            flex: 1;
+            min-width: 0;
         }
 
         .emoji-bullet {
@@ -177,35 +189,49 @@
 
     <h2>How you can help</h2>
     <ul>
-        <li><span class="emoji-bullet">📢</span><span><strong>Share with your friends</strong></span>
+        <li class="bullet-row">
+            <span class="emoji-bullet">📢</span>
+            <div class="bullet-content"><strong>Share with your friends</strong></div>
         </li>
-        <li><span class="emoji-bullet">📍</span><span><strong>Add events and places you know</strong>
-            <ul>
-                <li>You can <a href="https://fomo.nyc/#feedback" id="feedback-link">submit feedback</a> directly from the website, or email <span class="obfuscated-email" data-contact="15,28,5,14,114,86,93,88,9,65,3,22,81" data-key="fomo2025"></span></li>
-            </ul></span>
+        <li class="bullet-row">
+            <span class="emoji-bullet">📍</span>
+            <div class="bullet-content">
+                <strong>Add events and places you know</strong>
+                <ul>
+                    <li>You can <a href="https://fomo.nyc/#feedback" id="feedback-link">submit feedback</a> directly from the website, or email <span class="obfuscated-email" data-contact="15,28,5,14,114,86,93,88,9,65,3,22,81" data-key="fomo2025"></span></li>
+                </ul>
+            </div>
         </li>
-        <li><span class="emoji-bullet">🫱🏾‍🫲🏼</span><span><strong>Stay in touch</strong>
-            <ul>
-                <li>This website is in active development, so keep visiting for regular updates!</li>
-                <li>You can reach me by email at <span class="obfuscated-email" data-contact="15,28,5,14,114,86,93,88,9,65,3,22,81" data-key="fomo2025"></span>. There is also a <span class="obfuscated-link" data-contact="6,13,23,66,67,8,26,65,29,10,65,83,93,71,10,87,4,85,31,106,91,88,14,43,87,87,88,99,24" data-key="nyc2025">Discord server</span> you can join.
-                </li>
-            </ul></span>
+        <li class="bullet-row">
+            <span class="emoji-bullet">🫱🏾‍🫲🏼</span>
+            <div class="bullet-content">
+                <strong>Stay in touch</strong>
+                <ul>
+                    <li>This website is in active development, so keep visiting for regular updates!</li>
+                    <li>You can reach me by email at <span class="obfuscated-email" data-contact="15,28,5,14,114,86,93,88,9,65,3,22,81" data-key="fomo2025"></span>. There is also a <span class="obfuscated-link" data-contact="6,13,23,66,67,8,26,65,29,10,65,83,93,71,10,87,4,85,31,106,91,88,14,43,87,87,88,99,24" data-key="nyc2025">Discord server</span> you can join.</li>
+                </ul>
+            </div>
         </li>
-        <li><span class="emoji-bullet">🛠️</span><span><strong>See the source</strong>
-            <ul>The code for this project is available at <a href="https://github.com/shaman247/fomo" target="_blank">github.com/shaman247/fomo</a>.
-            </ul></span>
+        <li class="bullet-row">
+            <span class="emoji-bullet">🛠️</span>
+            <div class="bullet-content">
+                <strong>See the source</strong>
+                <ul>
+                    <li>The code for this project is available at <a href="https://github.com/shaman247/fomo" target="_blank">github.com/shaman247/fomo</a>.</li>
+                </ul>
+            </div>
         </li>
     </ul>
 
     <h2>Acknowledgements</h2>
     <ul>
-        <li><span class="emoji-bullet">🧭</span><span>Map library: <a href="https://maplibre.org/" target="_blank">MapLibre GL JS</a></span></li>
-        <li><span class="emoji-bullet">🗺️</span><span>Map tiles: © <a href="https://protomaps.com" target="_blank">Protomaps</a>, © <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors</span></li>
-        <li><span class="emoji-bullet">📅</span><span>Date picker: <a href="https://flatpickr.js.org/" target="_blank">Flatpickr</a></span></li>
-        <li><span class="emoji-bullet">🔠</span><span>Fonts: <a href="https://rsms.me/inter/" target="_blank">Inter</a>, <a href="https://fonts.google.com/noto/specimen/Noto+Color+Emoji" target="_blank">Noto Color Emoji</a></span></li>
-        <li><span class="emoji-bullet">🚀</span><span>This project uses <a href="https://github.com/unclecode/crawl4ai" target="_blank">Crawl4AI</a> for web data extraction.</span></li>
-        <li><span class="emoji-bullet">🤖</span><span><a href="https://gemini.google.com">Gemini</a> and <a href="https://claude.ai">Claude</a> for data processing and vibe coding</span></li>
-        <li><span class="emoji-bullet">💖</span><span><em>All the amazing, creative, hard-working people who make the city shine with their light!</em> 🗽</span></li>
+        <li class="bullet-row"><span class="emoji-bullet">🧭</span><div class="bullet-content">Map library: <a href="https://maplibre.org/" target="_blank">MapLibre GL JS</a></div></li>
+        <li class="bullet-row"><span class="emoji-bullet">🗺️</span><div class="bullet-content">Map tiles: © <a href="https://protomaps.com" target="_blank">Protomaps</a>, © <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors</div></li>
+        <li class="bullet-row"><span class="emoji-bullet">📅</span><div class="bullet-content">Date picker: <a href="https://flatpickr.js.org/" target="_blank">Flatpickr</a></div></li>
+        <li class="bullet-row"><span class="emoji-bullet">🔠</span><div class="bullet-content">Fonts: <a href="https://rsms.me/inter/" target="_blank">Inter</a>, <a href="https://fonts.google.com/noto/specimen/Noto+Color+Emoji" target="_blank">Noto Color Emoji</a></div></li>
+        <li class="bullet-row"><span class="emoji-bullet">🚀</span><div class="bullet-content">This project uses <a href="https://github.com/unclecode/crawl4ai" target="_blank">Crawl4AI</a> for web data extraction.</div></li>
+        <li class="bullet-row"><span class="emoji-bullet">🤖</span><div class="bullet-content"><a href="https://gemini.google.com">Gemini</a> and <a href="https://claude.ai">Claude</a> for data processing and vibe coding</div></li>
+        <li class="bullet-row"><span class="emoji-bullet">💖</span><div class="bullet-content"><em>All the amazing, creative, hard-working people who make the city shine with their light!</em> 🗽</div></li>
     </ul>
 </body>
 </html>

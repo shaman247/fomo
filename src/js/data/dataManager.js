@@ -116,16 +116,17 @@ const DataManager = (() => {
     }
 
     /**
-     * Transforms a raw event into a structured event object
+     * Transforms a raw event into a structured event object.
+     * The id comes from the backend export so the same event in two chunks
+     * (recurring events live in every day chunk they touch) collapses to one.
      * @param {Object} rawEvent - Raw event from data source
-     * @param {number} eventId - ID to assign to the event
      * @param {Object} state - Application state (for location lookups)
      * @param {Object} config - Application configuration
      * @param {boolean} isWindows - Whether running on Windows
      * @returns {Object|null} Processed event or null if invalid
      */
-    function transformRawEvent(rawEvent, eventId, state, config, isWindows) {
-        const { lat, lng, tags, occurrences: occurrencesJson, ...restOfEvent } = rawEvent;
+    function transformRawEvent(rawEvent, state, config, isWindows) {
+        const { id, lat, lng, tags, occurrences: occurrencesJson, ...restOfEvent } = rawEvent;
 
         // Decode HTML entities in text fields
         ['name', 'location', 'sublocation'].forEach(field => {
@@ -172,7 +173,7 @@ const DataManager = (() => {
         }
 
         return {
-            id: eventId,
+            id,
             ...restOfEvent,
             section: restOfEvent.section || 'Events',
             emoji,
@@ -193,7 +194,7 @@ const DataManager = (() => {
     function processEventData(eventData, state, config) {
         const isWindows = Utils.isWindows();
         state.allEvents = eventData
-            .map((rawEvent, index) => transformRawEvent(rawEvent, index, state, config, isWindows))
+            .map(rawEvent => transformRawEvent(rawEvent, state, config, isWindows))
             .filter(Boolean);
 
         rebuildEventLookups(state);
@@ -219,6 +220,23 @@ const DataManager = (() => {
 
         // Append new events from the full set
         appendEventData(fullEventData, state, config);
+    }
+
+    /**
+     * Async version of processFullData that yields to the main thread between
+     * event-processing chunks. Keeps clicks/typing responsive during the heavy
+     * Phase 2 merge (~30k events would otherwise block ~150ms uninterrupted).
+     */
+    async function processFullDataAsync(fullEventData, fullLocationData, state, config, onProgress) {
+        fullLocationData.forEach(location => {
+            if (location.lat != null && location.lng != null) {
+                const locationKey = `${location.lat},${location.lng}`;
+                if (!state.locationsByLatLng[locationKey]) {
+                    state.locationsByLatLng[locationKey] = location;
+                }
+            }
+        });
+        await appendEventDataChunked(fullEventData, state, config, onProgress);
     }
 
     /**
@@ -269,18 +287,84 @@ const DataManager = (() => {
      * @param {Object} config - Application configuration
      */
     function appendEventData(newEventData, state, config) {
-        // Use max existing ID + 1 as offset to avoid ID collisions.
-        // processEventData assigns IDs by raw array index, so some IDs may be
-        // higher than allEvents.length (due to date-filtered events being removed).
-        const idOffset = state.allEvents.reduce((max, e) => Math.max(max, e.id), -1) + 1;
         const isWindows = Utils.isWindows();
+        const seen = state.eventsById || {};
 
-        const newEvents = newEventData
-            .map((rawEvent, index) => transformRawEvent(rawEvent, idOffset + index, state, config, isWindows))
-            .filter(Boolean);
+        const newEvents = [];
+        for (const rawEvent of newEventData) {
+            // Skip events already loaded — chunks overlap on multi-day events.
+            if (rawEvent && rawEvent.id != null && seen[rawEvent.id]) continue;
+            const ev = transformRawEvent(rawEvent, state, config, isWindows);
+            if (!ev) continue;
+            if (seen[ev.id]) continue;
+            seen[ev.id] = ev;
+            newEvents.push(ev);
+        }
 
         state.allEvents.push(...newEvents);
-        rebuildEventLookups(state);
+        appendToEventLookups(state, newEvents);
+    }
+
+    /**
+     * Async chunked version of appendEventData. Processes events in batches of
+     * EVENT_PROCESS_CHUNK_SIZE and yields to the main thread between chunks
+     * via setTimeout(0), so user interactions get frame boundaries to fire on.
+     */
+    // Use scheduler.yield() when available (yields with input priority on modern Chrome),
+    // otherwise MessageChannel.postMessage (sub-ms scheduling, vs setTimeout's 4ms min).
+    // Lets chunked loops yield ~10× more cheaply than `setTimeout(0)`.
+    let _yieldChannel = null;
+    function _yieldToMain() {
+        if (typeof scheduler !== 'undefined' && typeof scheduler.yield === 'function') {
+            return scheduler.yield();
+        }
+        if (typeof MessageChannel !== 'undefined') {
+            if (!_yieldChannel) {
+                _yieldChannel = new MessageChannel();
+                _yieldChannel.port1.start?.();
+            }
+            return new Promise(resolve => {
+                const handler = () => {
+                    _yieldChannel.port1.removeEventListener('message', handler);
+                    resolve();
+                };
+                _yieldChannel.port1.addEventListener('message', handler);
+                _yieldChannel.port2.postMessage(0);
+            });
+        }
+        return new Promise(r => setTimeout(r, 0));
+    }
+
+    // Larger chunks = less yield overhead but longer pauses between input handling.
+    // 4000 events ≈ ~25ms per chunk on a typical machine — under a 30fps frame budget.
+    const EVENT_PROCESS_CHUNK_SIZE = 4000;
+    async function appendEventDataChunked(newEventData, state, config, onProgress) {
+        const isWindows = Utils.isWindows();
+        const total = newEventData.length;
+        const newEvents = [];
+        // Track ids seen across chunks (Phase 1's eventsById + this batch).
+        // Multi-day events appear in every chunk they touch — dedup on id.
+        const seen = new Set(Object.keys(state.eventsById || {}));
+
+        for (let i = 0; i < total; i += EVENT_PROCESS_CHUNK_SIZE) {
+            const end = Math.min(i + EVENT_PROCESS_CHUNK_SIZE, total);
+            for (let j = i; j < end; j++) {
+                const raw = newEventData[j];
+                if (!raw || raw.id == null) continue;
+                const idKey = String(raw.id);
+                if (seen.has(idKey)) continue;
+                seen.add(idKey);
+                const ev = transformRawEvent(raw, state, config, isWindows);
+                if (ev) newEvents.push(ev);
+            }
+            if (onProgress) onProgress(end, total);
+            if (end < total) {
+                await _yieldToMain();
+            }
+        }
+
+        state.allEvents.push(...newEvents);
+        appendToEventLookups(state, newEvents);
     }
 
     // ========================================
@@ -294,7 +378,18 @@ const DataManager = (() => {
     function rebuildEventLookups(state) {
         state.eventsById = {};
         state.eventsByLatLng = {};
-        state.allEvents.forEach(event => {
+        appendToEventLookups(state, state.allEvents);
+    }
+
+    /**
+     * Append-only update of event lookups. Phase 2 uses this instead of
+     * rebuilding from scratch — saves O(initEventCount) work each time the
+     * full dataset merges.
+     */
+    function appendToEventLookups(state, eventsToAdd) {
+        if (!state.eventsById) state.eventsById = {};
+        if (!state.eventsByLatLng) state.eventsByLatLng = {};
+        for (const event of eventsToAdd) {
             state.eventsById[event.id] = event;
             if (event.locationKey) {
                 if (!state.eventsByLatLng[event.locationKey]) {
@@ -302,65 +397,75 @@ const DataManager = (() => {
                 }
                 state.eventsByLatLng[event.locationKey].push(event);
             }
-        });
+        }
     }
 
     /**
      * Builds search index with normalized text for accent/case-insensitive search
      * @param {Object} state - Application state
      */
-    function buildSearchIndex(state) {
+    /**
+     * Async chunked version of buildSearchIndex. Yields to the main thread
+     * every SEARCH_INDEX_CHUNK_SIZE events. The synchronous version is kept
+     * for callers that need to block (e.g. a search fired before the async
+     * build completes).
+     */
+    const SEARCH_INDEX_CHUNK_SIZE = 5000;
+    async function buildSearchIndexAsync(state) {
+        _initSearchIndexShell(state);
+        for (let i = 0; i < state.allEvents.length; i += SEARCH_INDEX_CHUNK_SIZE) {
+            const end = Math.min(i + SEARCH_INDEX_CHUNK_SIZE, state.allEvents.length);
+            for (let j = i; j < end; j++) {
+                _indexEvent(state, state.allEvents[j]);
+            }
+            if (end < state.allEvents.length) {
+                await _yieldToMain();
+            }
+        }
+        _indexLocationsTagsOrganizers(state);
+    }
+
+    function _initSearchIndexShell(state) {
         state.searchIndex = {
-            events: new Map(),      // eventId -> normalized searchable text
-            locations: new Map(),   // locationKey -> normalized searchable text
-            tags: new Map(),        // tag -> normalized tag
-            organizers: new Map()   // organizerId -> normalized searchable text
+            events: new Map(),
+            locations: new Map(),
+            tags: new Map(),
+            organizers: new Map(),
+            eventDisplayNames: new Map()
         };
+    }
 
-        // Index events
-        state.allEvents.forEach(event => {
-            const searchableFields = [
-                event.name,
-                event.short_name,
-                event.description,
-                event.location,
-                event.sublocation
-            ].filter(Boolean);
+    function _indexEvent(state, event) {
+        const searchableFields = [
+            event.name, event.short_name, event.description, event.location, event.sublocation
+        ].filter(Boolean);
+        const normalizedText = searchableFields.map(field => Utils.normalizeForSearch(field)).join(' ');
+        state.searchIndex.events.set(event.id, normalizedText);
+        const nameToDisplay = Utils.getDisplayName(event);
+        const formatted = Utils.formatAndSanitize(nameToDisplay).replace(/<\/?em>/g, '');
+        state.searchIndex.eventDisplayNames.set(event.id, formatted);
+    }
 
-            const normalizedText = searchableFields
-                .map(field => Utils.normalizeForSearch(field))
-                .join(' ');
-
-            state.searchIndex.events.set(event.id, normalizedText);
-        });
-
-        // Index locations
+    function _indexLocationsTagsOrganizers(state) {
         Object.entries(state.locationsByLatLng).forEach(([key, location]) => {
-            const searchableFields = [
-                location.name,
-                location.short_name,
-                ...(location.tags || [])
-            ].filter(Boolean);
-
-            const normalizedText = searchableFields
-                .map(field => Utils.normalizeForSearch(field))
-                .join(' ');
-
+            const searchableFields = [location.name, location.short_name, ...(location.tags || [])].filter(Boolean);
+            const normalizedText = searchableFields.map(field => Utils.normalizeForSearch(field)).join(' ');
             state.searchIndex.locations.set(key, normalizedText);
         });
-
-        // Index tags
         state.allAvailableTags.forEach(tag => {
             state.searchIndex.tags.set(tag, Utils.normalizeForSearch(tag));
         });
-
-        // Index organizers
         if (state.organizersById) {
             Object.entries(state.organizersById).forEach(([id, org]) => {
-                const normalizedText = Utils.normalizeForSearch(org.name || '');
-                state.searchIndex.organizers.set(id, normalizedText);
+                state.searchIndex.organizers.set(id, Utils.normalizeForSearch(org.name || ''));
             });
         }
+    }
+
+    function buildSearchIndex(state) {
+        _initSearchIndexShell(state);
+        for (const event of state.allEvents) _indexEvent(state, event);
+        _indexLocationsTagsOrganizers(state);
     }
 
     /**
@@ -506,6 +611,14 @@ const DataManager = (() => {
         state.allAvailableTags = Array.from(allUniqueTagsSet)
             .filter(tag => hierarchyTagsSet.size === 0 || hierarchyTagsSet.has(tag))
             .sort();
+
+        // Precompute the empty-term tag list (excludes geotags). SearchManager
+        // iterates this on every search-clear; doing the geotag filter once
+        // saves ~2,100 Set lookups per search.
+        const geotagsSet = state.geotagsSet || new Set();
+        state.searchableTagsForEmptyTerm = state.allAvailableTags.filter(
+            tag => !geotagsSet.has(tag.toLowerCase())
+        );
     }
 
     /**
@@ -535,11 +648,13 @@ const DataManager = (() => {
         processInitialData,
         processEventData,
         processFullData,
+        processFullDataAsync,
         parseOccurrences,
         isEventInAppDateRange,
         appendEventData,
         rebuildEventLookups,
         buildSearchIndex,
+        buildSearchIndexAsync,
         buildTagIndex,
         calculateTagFrequencies,
         buildTagHierarchyMaps,

@@ -10,12 +10,14 @@ from datetime import datetime, timedelta
 
 import db
 from constants import FUTURE_WINDOW_DAYS
+from processor import sublocation_redundant_with_address
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# Bounding box for the "init" set (NYC core area)
-INIT_LAT_RANGE = (40.672945, 40.735535)
-INIT_LNG_RANGE = (-73.998595, -73.943125)
+# Number of single-day chunks to emit (today, +1, +2, +3). Everything else
+# goes into the "remainder" chunk. Frontend loads the chunk matching its
+# current date in Phase 1 and the rest in Phase 2.
+NUM_DAY_CHUNKS = 4
 
 
 def _build_descendants_map(cursor):
@@ -44,9 +46,17 @@ def _build_descendants_map(cursor):
     return descendants_of
 
 
-def _filter_to_leaf_tags(tags, descendants_of):
-    """Remove tags that are ancestors of other tags in the same list."""
+def _filter_to_leaf_tags(tags, descendants_of, curated_tags=None):
+    """Remove tags that are ancestors of other curated tags in the same list.
+
+    Only strips an ancestor if it has a descendant in the list that is also a
+    curated tag (type='tag'). This prevents hierarchy tags from being removed
+    when their only descendants are keywords the frontend won't display.
+    """
     tag_set = set(tags)
+    if curated_tags is not None:
+        curated_set = curated_tags & tag_set
+        return [t for t in tags if t not in descendants_of or not descendants_of[t] & curated_set]
     return [t for t in tags if t not in descendants_of or not descendants_of[t] & tag_set]
 
 
@@ -118,15 +128,59 @@ def get_active_locations(events, all_locations):
     ]
 
 
+def _occurrence_dates(occurrences):
+    """Yield (start_date, end_date) for each occurrence in an exported event.
+
+    Mirrors the export shape: occurrence is a list [start_str, start_time, end_str, end_time].
+    Skips entries with unparseable dates.
+    """
+    for occ in occurrences:
+        start_str = occ[0]
+        end_str = occ[2] if len(occ) > 2 else None
+        if not start_str:
+            continue
+        try:
+            start = datetime.strptime(start_str, '%Y-%m-%d').date()
+        except (ValueError, TypeError):
+            continue
+        end = start
+        if end_str:
+            try:
+                end = datetime.strptime(end_str, '%Y-%m-%d').date()
+            except (ValueError, TypeError):
+                end = start
+        yield start, end
+
+
+def _event_covers_day(event, day):
+    """True if any occurrence of the event spans `day`."""
+    for start, end in _occurrence_dates(event.get('occurrences', [])):
+        if start <= day <= end:
+            return True
+    return False
+
+
+def _event_extends_past(event, day):
+    """True if any occurrence of the event ends after `day`."""
+    for _, end in _occurrence_dates(event.get('occurrences', [])):
+        if end > day:
+            return True
+    return False
+
+
 def export_events(cursor):
     """
     Export events from the events table to JSON files for the website.
 
-    Creates:
-    - events.init.json (core NYC area, 2-day window)
-    - events.full.json (extended area and time range)
-    - locations.init.json (locations for init events)
-    - locations.full.json (locations for full events)
+    Splits events into per-day chunks for fast frontend startup:
+    - events.day0.json … events.day{NUM_DAY_CHUNKS-1}.json — events occurring on
+      that calendar day (an event with multiple occurrences appears in every
+      chunk it touches; the frontend dedupes by id)
+    - events.remainder.json — events with at least one occurrence past the last
+      day chunk (within the 90-day future window)
+    - locations.{chunk}.json — locations referenced by events in that chunk
+    - manifest.json — { days: ["YYYY-MM-DD", …] } so the frontend can pick the
+      chunk matching the user's current date
     """
     output_dir = os.path.join(SCRIPT_DIR, '..', 'src', 'data')
     os.makedirs(output_dir, exist_ok=True)
@@ -134,9 +188,14 @@ def export_events(cursor):
     # Build hierarchy descendants map for leaf-tag filtering in popups
     descendants_of = _build_descendants_map(cursor)
 
+    # Build set of curated tags (type='tag') — only these count when stripping ancestors
+    cursor.execute("SELECT name FROM tags WHERE type = 'tag'")
+    curated_tags = set(r[0] for r in cursor.fetchall())
+
     current_date = datetime.now().date()
     future_limit_date = (datetime.now() + timedelta(days=FUTURE_WINDOW_DAYS)).date()
-    init_limit_date = (datetime.now() + timedelta(days=2)).date()
+    day_dates = [current_date + timedelta(days=i) for i in range(NUM_DAY_CHUNKS)]
+    last_day = day_dates[-1]
 
     # Build set of (website_id, location_id) pairs where the website IS the venue.
     # Events from these pairs won't get organizer_id — only external organizers are attributed.
@@ -150,7 +209,8 @@ def export_events(cursor):
         SELECT e.id, e.name, e.short_name, e.description, e.emoji,
                e.location_name, e.sublocation,
                l.name as matched_location_name,
-               l.lat, l.lng, e.section, e.website_id, e.location_id
+               l.lat, l.lng, e.section, e.website_id, e.location_id,
+               l.address
         FROM events e
         JOIN locations l ON e.location_id = l.id
         LEFT JOIN websites w ON e.website_id = w.id
@@ -197,18 +257,20 @@ def export_events(cursor):
         if not occurrences:
             continue
 
-        # Get URLs
+        # Get URLs — events without any URL are not shown on fomo.nyc
         cursor.execute("""
             SELECT url FROM event_urls WHERE event_id = %s ORDER BY sort_order
         """, (event_id,))
         urls = [r[0] for r in cursor.fetchall()]
+        if not urls:
+            continue
 
         # Get tags
         cursor.execute("""
             SELECT t.name FROM event_tags et JOIN tags t ON et.tag_id = t.id WHERE et.event_id = %s
         """, (event_id,))
         tags = [r[0] for r in cursor.fetchall()]
-        display_tags = _filter_to_leaf_tags(tags, descendants_of)
+        display_tags = _filter_to_leaf_tags(tags, descendants_of, curated_tags)
 
         # Use location coordinates (events no longer have their own coordinates)
         lat = float(row[8]) if row[8] is not None else None
@@ -219,6 +281,7 @@ def export_events(cursor):
             continue
 
         event = {
+            'id': event_id,
             'name': row[1],
             'location': row[7] or row[5],  # matched_location_name or location_name
             'description': row[3],
@@ -233,6 +296,10 @@ def export_events(cursor):
             event['display_tags'] = display_tags
         if row[2]:  # short_name
             event['short_name'] = row[2]
+
+        sublocation = row[6]
+        if sublocation and not sublocation_redundant_with_address(sublocation, row[13]):
+            event['sublocation'] = sublocation
 
         section = row[10]
         if section and section != 'Events':
@@ -249,31 +316,18 @@ def export_events(cursor):
     # Sort by first occurrence date
     all_events.sort(key=lambda e: e.get('occurrences', [[None]])[0][0] or '9999-99-99')
 
-    # Split into init and full sets
-    init_events = []
-    full_events = []
+    # Split events into per-day chunks plus a remainder. Events with multiple
+    # occurrences spanning several days appear in each matching chunk so the
+    # frontend can load just one chunk and have everything for that day.
+    day_event_chunks = [[] for _ in range(NUM_DAY_CHUNKS)]
+    remainder_events = []
 
     for event in all_events:
-        lat = event.get('lat')
-        lng = event.get('lng')
-        is_in_bbox = (lat is not None and lng is not None and
-                      INIT_LAT_RANGE[0] <= lat <= INIT_LAT_RANGE[1] and
-                      INIT_LNG_RANGE[0] <= lng <= INIT_LNG_RANGE[1])
-
-        first_occurrence_start_str = event.get('occurrences', [[None]])[0][0]
-        is_in_init_timeframe = False
-        if first_occurrence_start_str:
-            try:
-                start_date = datetime.strptime(first_occurrence_start_str, '%Y-%m-%d').date()
-                if start_date < init_limit_date:
-                    is_in_init_timeframe = True
-            except (ValueError, TypeError):
-                pass
-
-        if is_in_bbox and is_in_init_timeframe:
-            init_events.append(event)
-        else:
-            full_events.append(event)
+        for i, day in enumerate(day_dates):
+            if _event_covers_day(event, day):
+                day_event_chunks[i].append(event)
+        if _event_extends_past(event, last_day):
+            remainder_events.append(event)
 
     # Load locations from database
     cursor.execute("""
@@ -292,16 +346,24 @@ def export_events(cursor):
             WHERE lt.location_id = %s
         """, (location_id,))
         tags = [r[0] for r in cursor.fetchall()]
-        display_tags = _filter_to_leaf_tags(tags, descendants_of)
+        display_tags = _filter_to_leaf_tags(tags, descendants_of, curated_tags)
 
-        # Get website URL for this location (only from primary website link)
+        # Get website URLs for this location (primary first, then secondaries).
+        # Multiple URLs are exported as an array — locations can have e.g. both
+        # an official directory page and a venue's own website.
         cursor.execute("""
             SELECT COALESCE(wl.url, w.base_url) as url FROM website_locations wl
             JOIN websites w ON wl.website_id = w.id
-            WHERE wl.location_id = %s AND wl.is_primary = 1
-            LIMIT 1
+            WHERE wl.location_id = %s
+            ORDER BY wl.is_primary DESC, wl.id
         """, (location_id,))
-        website_row = cursor.fetchone()
+        website_urls = []
+        seen_urls = set()
+        for r in cursor.fetchall():
+            url = r[0]
+            if url and url not in seen_urls:
+                website_urls.append(url)
+                seen_urls.add(url)
 
         loc = {
             'name': row[1],
@@ -324,37 +386,52 @@ def export_events(cursor):
             loc['very_short_name'] = row[8]
         if row[9]:
             loc['description'] = row[9]
-        if website_row and website_row[0]:
-            loc['website_url'] = website_row[0]
+        if website_urls:
+            # Keep website_url as the primary for backwards-compat; full list in website_urls.
+            loc['website_url'] = website_urls[0]
+            if len(website_urls) > 1:
+                loc['website_urls'] = website_urls
         all_locations.append(loc)
 
-    init_locations = get_active_locations(init_events, all_locations)
-    init_location_coords = set(
-        (round(loc['lat'], 5), round(loc['lng'], 5)) for loc in init_locations
-    )
-    full_locations = [
-        loc for loc in get_active_locations(full_events, all_locations)
-        if (round(loc['lat'], 5), round(loc['lng'], 5)) not in init_location_coords
-    ]
+    # Locations per chunk include all venues referenced by that chunk's events.
+    # Recurring venues will appear in multiple files; the frontend dedupes by
+    # lat/lng key on merge.
+    day_location_chunks = [get_active_locations(events, all_locations) for events in day_event_chunks]
+    remainder_locations = get_active_locations(remainder_events, all_locations)
 
-    # Write output files (compact JSON — no whitespace)
-    for filename, data in [
-        ('events.init.json', init_events),
-        ('locations.init.json', init_locations),
-        ('events.full.json', full_events),
-        ('locations.full.json', full_locations),
-    ]:
+    # Remove old init/full files left over from the previous export scheme so
+    # downstream steps (FTP upload tracking) don't keep shipping stale data.
+    for stale in ('events.init.json', 'events.full.json',
+                  'locations.init.json', 'locations.full.json'):
+        stale_path = os.path.join(output_dir, stale)
+        if os.path.exists(stale_path):
+            os.remove(stale_path)
+
+    files_to_write = []
+    for i in range(NUM_DAY_CHUNKS):
+        files_to_write.append((f'events.day{i}.json', day_event_chunks[i]))
+        files_to_write.append((f'locations.day{i}.json', day_location_chunks[i]))
+    files_to_write.append(('events.remainder.json', remainder_events))
+    files_to_write.append(('locations.remainder.json', remainder_locations))
+    files_to_write.append(('manifest.json', {'days': [d.isoformat() for d in day_dates]}))
+
+    for filename, data in files_to_write:
         with open(os.path.join(output_dir, filename), 'w', encoding='utf-8') as f:
             json.dump(data, f, separators=(',', ':'), ensure_ascii=False)
 
-    print(f"  Exported {len(init_events)} init events, {len(full_events)} full events")
-    print(f"  Exported {len(init_locations)} init locations, {len(full_locations)} full locations")
+    total_event_placements = sum(len(c) for c in day_event_chunks) + len(remainder_events)
+    unique_event_count = len({e['id'] for e in all_events})
+    print(f"  Exported {unique_event_count} unique events across {NUM_DAY_CHUNKS} day chunks + remainder")
+    for i, day in enumerate(day_dates):
+        print(f"    day{i} ({day.isoformat()}): {len(day_event_chunks[i])} events, {len(day_location_chunks[i])} locations")
+    print(f"    remainder: {len(remainder_events)} events, {len(remainder_locations)} locations")
+    print(f"    placements (sum across chunks, with overlap): {total_event_placements}")
 
     return {
-        'init_events': len(init_events),
-        'full_events': len(full_events),
-        'init_locations': len(init_locations),
-        'full_locations': len(full_locations)
+        'unique_events': unique_event_count,
+        'placements': total_event_placements,
+        'day_event_counts': [len(c) for c in day_event_chunks],
+        'remainder_events': len(remainder_events),
     }
 
 

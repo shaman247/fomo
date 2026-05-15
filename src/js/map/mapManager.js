@@ -29,7 +29,15 @@ const MapManager = (() => {
         layersAdded: false,
 
         // Popup content callbacks by locationKey
-        popupContentCallbacks: new Map()
+        popupContentCallbacks: new Map(),
+
+        // When a hover starts, we pin the location's main-layer variant so
+        // subsequent zoom re-renders can't switch it (and end up rendering
+        // the wrong variant on top of the hover layer's locked variant).
+        // Variant is '1-line' (filter out expanded) or '2-line' (filter out
+        // compact + short). null means no lock.
+        hoverLockedLocationKey: null,
+        hoverLockedVariant: null
     };
 
     // ========================================
@@ -84,10 +92,13 @@ const MapManager = (() => {
         });
 
         // Layer 1: Emoji icons + text labels.
-        // Each location emits TWO features: an icon-only feature (low sortKey,
-        // placed first) and a label-only feature (higher sortKey, placed after
-        // all icons). This ensures every icon's collision box is in the grid
-        // before any label is evaluated, preventing labels from overlapping icons.
+        // Each location emits FOUR features in priority order:
+        //   1. Icon-only (lowest sortKey, placed first → populates collision grid)
+        //   2. Expanded label — 2-line: location name + event label below
+        //   3. Compact label — 1-line: location name only (fallback)
+        //   4. Short label — 1-line: very-short name (fallback if compact collides)
+        // Expanded fully contains compact's collision box, so when expanded places
+        // it shadows compact. When density blocks expanded, compact tries next.
         map.addLayer({
             id: 'marker-symbols',
             type: 'symbol',
@@ -99,7 +110,7 @@ const MapManager = (() => {
                 'icon-ignore-placement': false,
                 'icon-padding': 0,
                 'icon-offset': [-8, 0],
-                'text-field': ['get', 'shortName'],
+                'text-field': _getTextFieldExpression(),
                 'text-font': ['Inter SemiBold'],
                 'text-size': _getLabelSize(),
                 'text-anchor': 'left',
@@ -111,6 +122,7 @@ const MapManager = (() => {
                 'text-ignore-placement': false,
                 'text-padding': 3,
                 'text-letter-spacing': -0.03,
+                'text-line-height': 1.15,
                 'symbol-sort-key': ['get', 'sortKey']
             },
             paint: {
@@ -151,7 +163,7 @@ const MapManager = (() => {
                 'icon-allow-overlap': true,
                 'icon-ignore-placement': true,
                 'icon-offset': [-8, 0],
-                'text-field': ['get', 'shortName'],
+                'text-field': _getTextFieldExpression(),
                 'text-font': ['Inter SemiBold'],
                 'text-size': _getLabelSize(),
                 'text-anchor': 'left',
@@ -161,6 +173,7 @@ const MapManager = (() => {
                 'text-allow-overlap': true,
                 'text-ignore-placement': true,
                 'text-letter-spacing': -0.03,
+                'text-line-height': 1.15,
                 'symbol-sort-key': ['get', 'sortKey']
             },
             paint: {
@@ -199,6 +212,88 @@ const MapManager = (() => {
     function _getHaloColor() {
         const theme = document.documentElement.getAttribute('data-theme') || 'dark';
         return theme === 'dark' ? '#171717' : '#f0f0f0';
+    }
+
+    /**
+     * Builds the text-field expression used by both the main and hover layers.
+     * Renders multi-line (location + event) for expanded features, single-line
+     * (shortName) for everything else. The event line uses a desaturated version
+     * of the marker color (pre-computed in feature properties) so the hue stays
+     * tied to the highlight ring while brightness is consistent across labels.
+     */
+    function _getTextFieldExpression() {
+        return ['case',
+            ['==', ['get', 'labelType'], 'expanded'],
+                ['format',
+                    ['get', 'locationName'], {},
+                    '\n', {},
+                    ['get', 'eventLabel'], {
+                        'text-font': ['literal', ['Inter SemiBold']],
+                        'text-color': ['get', 'eventLabelColor'],
+                        'font-scale': 0.88
+                    },
+                    ['get', 'eventLabelExtra'], {
+                        'text-font': ['literal', ['Inter SemiBold']],
+                        'font-scale': 0.88
+                    }
+                ],
+            ['get', 'shortName']
+        ];
+    }
+
+    /**
+     * Converts a hex marker color into a CSS hsl() string with reduced
+     * saturation and a theme-dependent fixed lightness, so all event labels
+     * share a consistent brightness level regardless of the marker hue.
+     */
+    function _toEventLabelColor(hexColor, opts = {}) {
+        const hex = (hexColor || '#888').replace(/^#/, '');
+        const full = hex.length === 3 ? hex.split('').map(c => c + c).join('') : hex;
+        const r = parseInt(full.slice(0, 2), 16) / 255;
+        const g = parseInt(full.slice(2, 4), 16) / 255;
+        const b = parseInt(full.slice(4, 6), 16) / 255;
+        const max = Math.max(r, g, b), min = Math.min(r, g, b);
+        const l0 = (max + min) / 2;
+        let h = 0, s0 = 0;
+        if (max !== min) {
+            const d = max - min;
+            s0 = l0 > 0.5 ? d / (2 - max - min) : d / (max + min);
+            if (max === r) h = (g - b) / d + (g < b ? 6 : 0);
+            else if (max === g) h = (b - r) / d + 2;
+            else h = (r - g) / d + 4;
+            h *= 60;
+        }
+        const theme = document.documentElement.getAttribute('data-theme') || 'dark';
+        const targetL = opts.lightness ?? (theme === 'dark' ? 68 : 44);
+        const baseS = s0 > 0.05 ? 32 : 0;
+        const targetS = opts.saturation ?? baseS;
+        return `hsl(${Math.round(h)}, ${targetS}%, ${targetL}%)`;
+    }
+
+    /**
+     * Builds the second-line event label parts.
+     * Returns the first event's name (truncated with ellipsis) and a separate
+     * " +N" suffix string when there are additional matching events at the
+     * location. Split into two parts so the format expression can color them
+     * independently — the name uses the marker's hue, the count is neutral.
+     */
+    function _buildEventLabel(events) {
+        if (!events || events.length === 0) return { name: '', extra: '' };
+        const first = events[0];
+        const rawName = (first && (first.short_name || first.name)) || '';
+        if (!rawName) return { name: '', extra: '' };
+
+        // Only truncate when it actually saves space — slicing 23 chars down
+        // to "22 chars + …" leaves the label the same length but less readable.
+        const MAX_LEN = 22;
+        const MIN_SAVINGS = 3;
+        const name = rawName.length > MAX_LEN + MIN_SAVINGS
+            ? rawName.slice(0, MAX_LEN).trimEnd() + '…'
+            : rawName;
+
+        const extras = events.length - 1;
+        const extra = extras > 0 ? ` +${extras}` : '';
+        return { name, extra };
     }
 
     // ========================================
@@ -300,6 +395,33 @@ const MapManager = (() => {
         uniqueEmojis.forEach(emoji => _addEmojiImage(emoji));
     }
 
+    /**
+     * Async chunked version. Each canvas creation+draw is ~0.5-1ms; with 200+
+     * unique emojis that adds up to ~100ms of main-thread time on a fresh
+     * Phase 2 merge. This yields every CHUNK emojis so the user can interact.
+     */
+    async function loadEmojiImagesChunked(locationsByLatLng) {
+        if (!state.mapInstance) return;
+        const uniqueEmojis = new Set();
+        for (const key in locationsByLatLng) {
+            const loc = locationsByLatLng[key];
+            if (loc && loc.emoji) uniqueEmojis.add(loc.emoji);
+        }
+        const list = [...uniqueEmojis];
+        const CHUNK = 50;
+        for (let i = 0; i < list.length; i += CHUNK) {
+            const end = Math.min(i + CHUNK, list.length);
+            for (let j = i; j < end; j++) _addEmojiImage(list[j]);
+            if (end < list.length) {
+                if (typeof scheduler !== 'undefined' && typeof scheduler.yield === 'function') {
+                    await scheduler.yield();
+                } else {
+                    await new Promise(r => setTimeout(r, 0));
+                }
+            }
+        }
+    }
+
     function reloadEmojiImages(locationsByLatLng) {
         if (!state.mapInstance) return;
         // Reset scale so it's re-measured with the (possibly changed) font
@@ -333,12 +455,16 @@ const MapManager = (() => {
         // Store callbacks
         state.popupContentCallbacks = popupContentCallbacks;
 
-        // Build GeoJSON features — up to three per location:
-        //   1. Icon features (low sortKey → placed first, populate collision grid)
-        //   2. Full label features (mid sortKey → placed after icons)
-        //   3. Short label features (high sortKey → fallback if full label collides)
+        // Build GeoJSON features — up to four per location, in placement priority:
+        //   1. Icon (lowest sortKey → placed first, populates collision grid)
+        //   2. Expanded label — multi-line: location + event title (try first)
+        //   3. Compact label — single-line: location only (fallback)
+        //   4. Short label — single-line: very-short name (final fallback)
+        // Expanded's collision box vertically contains compact's, so when
+        // expanded places it shadows compact at the same coordinate.
         const iconFeatures = [];
-        const labelFeatures = [];
+        const expandedLabelFeatures = [];
+        const compactLabelFeatures = [];
         const shortLabelFeatures = [];
         state.locationKeyToFeatureId.clear();
         state.featureIdToLocationKey.clear();
@@ -362,6 +488,7 @@ const MapManager = (() => {
             const color = getMarkerColor(locationInfo);
             const shortName = locationInfo.short_name || locationInfo.name || '';
             const veryShortName = locationInfo.very_short_name || '';
+            const { name: eventLabel, extra: eventLabelExtra } = _buildEventLabel(events);
 
             // Icon feature — no text, placed first via low sortKey
             iconFeatures.push({
@@ -369,6 +496,7 @@ const MapManager = (() => {
                 geometry: { type: 'Point', coordinates: [lng, lat] },
                 properties: {
                     locationKey,
+                    labelType: 'icon',
                     shortName: '',
                     emojiImageId: `emoji-${locationInfo.emoji || '📍'}`,
                     color,
@@ -376,26 +504,46 @@ const MapManager = (() => {
                 }
             });
 
-            // Full label feature — placed after all icons
-            labelFeatures.push({
+            // Expanded label — 2-line; only emit when an event label exists
+            if (eventLabel) {
+                expandedLabelFeatures.push({
+                    type: 'Feature',
+                    geometry: { type: 'Point', coordinates: [lng, lat] },
+                    properties: {
+                        locationKey,
+                        labelType: 'expanded',
+                        locationName: shortName,
+                        eventLabel,
+                        eventLabelExtra,
+                        eventLabelColor: _toEventLabelColor(color),
+                        shortName,
+                        color,
+                        sortKey: -5000 - lat
+                    }
+                });
+            }
+
+            // Compact label — single-line, placed if expanded didn't fit
+            compactLabelFeatures.push({
                 type: 'Feature',
                 geometry: { type: 'Point', coordinates: [lng, lat] },
                 properties: {
                     locationKey,
+                    labelType: 'compact',
                     shortName,
                     color,
                     sortKey: -lat
                 }
             });
 
-            // Short label feature — fallback when full label collides
+            // Short label — final fallback when compact also collides
             shortLabelFeatures.push({
                 type: 'Feature',
                 geometry: { type: 'Point', coordinates: [lng, lat] },
                 properties: {
                     locationKey,
+                    labelType: 'short',
                     shortName: veryShortName,
-                    isShortLabel: true,
                     color,
                     sortKey: 10000 - lat
                 }
@@ -404,14 +552,32 @@ const MapManager = (() => {
             locationKeys.push(locationKey);
         }
 
-        // Icons (0..N-1), full labels (N..2N-1), short labels (2N..3N-1)
-        const features = [...iconFeatures, ...labelFeatures, ...shortLabelFeatures];
-        const N = iconFeatures.length;
-        locationKeys.forEach((locationKey, i) => {
-            state.locationKeyToFeatureId.set(locationKey, i); // icon feature ID
-            state.featureIdToLocationKey.set(i, locationKey);       // icon
-            state.featureIdToLocationKey.set(N + i, locationKey);   // full label
-            state.featureIdToLocationKey.set(2 * N + i, locationKey); // short label
+        // Order: icons, expanded labels, compact labels, short labels.
+        // Icons map 1:1 to locations (0..N-1) and own the feature-state for
+        // hover/active rings. Expanded labels are sparse (only when a non-empty
+        // event label exists), so we record their feature IDs explicitly while
+        // building the array.
+        const features = [];
+        iconFeatures.forEach((f, i) => {
+            features.push(f);
+            const lk = f.properties.locationKey;
+            state.locationKeyToFeatureId.set(lk, i);
+            state.featureIdToLocationKey.set(i, lk);
+        });
+        expandedLabelFeatures.forEach((f) => {
+            const id = features.length;
+            features.push(f);
+            state.featureIdToLocationKey.set(id, f.properties.locationKey);
+        });
+        compactLabelFeatures.forEach((f) => {
+            const id = features.length;
+            features.push(f);
+            state.featureIdToLocationKey.set(id, f.properties.locationKey);
+        });
+        shortLabelFeatures.forEach((f) => {
+            const id = features.length;
+            features.push(f);
+            state.featureIdToLocationKey.set(id, f.properties.locationKey);
         });
 
         const geojson = { type: 'FeatureCollection', features };
@@ -466,16 +632,14 @@ const MapManager = (() => {
             source.setData(state.sourceDataCache);
         }
 
-        // Rebuild lookup maps — icons are first third, labels second, short labels third
+        // Rebuild lookup maps — icons are emitted first; labelType disambiguates
         state.locationKeyToFeatureId.clear();
         state.featureIdToLocationKey.clear();
-        const allFeatures = state.sourceDataCache.features;
-        const third = allFeatures.length / 3;
-        allFeatures.forEach((f, i) => {
+        state.sourceDataCache.features.forEach((f, i) => {
             const locKey = f.properties.locationKey;
             state.featureIdToLocationKey.set(i, locKey);
-            if (i < third) {
-                state.locationKeyToFeatureId.set(locKey, i); // icon feature ID
+            if (f.properties.labelType === 'icon') {
+                state.locationKeyToFeatureId.set(locKey, i);
             }
         });
 
@@ -505,9 +669,10 @@ const MapManager = (() => {
         const map = state.mapInstance;
         if (!map || !map.getLayer('marker-symbols-hover')) return;
 
-        // Resolve feature IDs to locationKeys so both the icon and full-label
-        // features for a location are shown in the hover layer.
-        // Short labels are excluded so hover always shows the full name.
+        // Resolve feature IDs to locationKeys so both the icon and the most
+        // detailed label feature for a location are shown in the hover layer.
+        // Hover prefers expanded (location + event); falls back to compact
+        // when no event label exists for the location.
         const keys = new Set();
         if (state.hoveredFeatureId !== null) {
             const lk = state.featureIdToLocationKey.get(state.hoveredFeatureId);
@@ -526,7 +691,83 @@ const MapManager = (() => {
         } else {
             keyFilter = ['in', ['get', 'locationKey'], ['literal', [...keys]]];
         }
-        map.setFilter('marker-symbols-hover', ['all', keyFilter, ['!=', ['get', 'isShortLabel'], true]]);
+
+        // Per location: which label variant should hover render? Match
+        // whichever variant the main layer is currently drawing post-collision,
+        // so we don't stack an expanded label on top of a rendered compact one.
+        const labelVariantByKey = {};
+        if (keys.size > 0) {
+            const priority = { expanded: 3, compact: 2, short: 1 };
+            const rendered = map.queryRenderedFeatures(undefined, { layers: ['marker-symbols'] });
+            rendered.forEach(f => {
+                const lk = f.properties.locationKey;
+                const lt = f.properties.labelType;
+                if (!keys.has(lk) || lt === 'icon') return;
+                const cur = labelVariantByKey[lk];
+                if (!cur || priority[lt] > priority[cur]) {
+                    labelVariantByKey[lk] = lt;
+                }
+            });
+            // No label rendered for the location (all variants collided) — fall back
+            keys.forEach(k => { if (!labelVariantByKey[k]) labelVariantByKey[k] = 'compact'; });
+        }
+
+        // Build a per-feature predicate that keeps the icon + the chosen
+        // label variant for each hovered/active location.
+        const variantClauses = ['any'];
+        Object.entries(labelVariantByKey).forEach(([lk, variant]) => {
+            variantClauses.push(['all',
+                ['==', ['get', 'locationKey'], lk],
+                ['==', ['get', 'labelType'], variant]
+            ]);
+        });
+        const labelPredicate = variantClauses.length > 1
+            ? variantClauses
+            : ['==', ['get', 'labelType'], 'compact']; // never matches when keys is empty
+
+        map.setFilter('marker-symbols-hover', ['all',
+            keyFilter,
+            ['any',
+                ['==', ['get', 'labelType'], 'icon'],
+                labelPredicate
+            ]
+        ]);
+
+        // Pin the main layer to whatever variant the hovered location is
+        // currently showing, so subsequent zoom re-renders can't switch it
+        // and double-render on top of the hover layer's locked variant.
+        //   1-line at hover start → filter out expanded for this key
+        //   2-line at hover start → filter out compact + short for this key
+        // Active/popup state alone doesn't lock — only an actual hover does.
+        let nextLockedKey = null;
+        let nextLockedVariant = null;
+        if (state.hoveredFeatureId !== null) {
+            const hk = state.featureIdToLocationKey.get(state.hoveredFeatureId);
+            const v = hk ? labelVariantByKey[hk] : null;
+            if (v === 'compact' || v === 'short') {
+                nextLockedKey = hk;
+                nextLockedVariant = '1-line';
+            } else if (v === 'expanded') {
+                nextLockedKey = hk;
+                nextLockedVariant = '2-line';
+            }
+        }
+        if (nextLockedKey !== state.hoverLockedLocationKey
+            || nextLockedVariant !== state.hoverLockedVariant) {
+            state.hoverLockedLocationKey = nextLockedKey;
+            state.hoverLockedVariant = nextLockedVariant;
+            if (nextLockedKey) {
+                const excludedTypes = nextLockedVariant === '1-line'
+                    ? ['expanded']
+                    : ['compact', 'short'];
+                map.setFilter('marker-symbols', ['!', ['all',
+                    ['==', ['get', 'locationKey'], nextLockedKey],
+                    ['in', ['get', 'labelType'], ['literal', excludedTypes]]
+                ]]);
+            } else {
+                map.setFilter('marker-symbols', null);
+            }
+        }
     }
 
     /**
@@ -734,6 +975,24 @@ const MapManager = (() => {
             map.setPaintProperty('marker-symbols-hover', 'text-color', _getHoverLabelColor());
             map.setPaintProperty('marker-symbols-hover', 'text-halo-color', _getHaloColor());
         }
+
+        // Per-section event label color depends on theme (different lightness),
+        // so recompute it from the marker color and re-push the source data.
+        if (state.sourceDataCache) {
+            let changed = false;
+            state.sourceDataCache.features.forEach(f => {
+                if (f.properties.labelType !== 'expanded') return;
+                const next = _toEventLabelColor(f.properties.color);
+                if (f.properties.eventLabelColor !== next) {
+                    f.properties.eventLabelColor = next;
+                    changed = true;
+                }
+            });
+            if (changed) {
+                const source = map.getSource('markers');
+                if (source) source.setData(state.sourceDataCache);
+            }
+        }
     }
 
     // ========================================
@@ -776,11 +1035,13 @@ const MapManager = (() => {
     return {
         init,
         getMarkerColor,
+        toEventLabelColor: _toEventLabelColor,
         getMap,
         getCurrentPopup,
         getCurrentPopupLocationKey,
         clearActiveState,
         loadEmojiImages,
+        loadEmojiImagesChunked,
         reloadEmojiImages,
         updateMarkerData,
         setupMarkerInteractions,

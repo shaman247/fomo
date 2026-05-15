@@ -127,7 +127,10 @@ Use these emojis based on venue type:
 - 🏫 School
 - 📚 Library
 - ⛪ Church
-- ✡️ Synagogue
+- 🕍 Synagogue
+- ☸️ Buddhist temple/center
+- 🛕 Hindu/Jain temple
+- 🙏 Sikh gurdwara/Interfaith center
 - 🕊️ Quaker meetinghouse
 - 🏢 Office building
 - 🏨 Hotel

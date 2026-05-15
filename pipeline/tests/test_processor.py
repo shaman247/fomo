@@ -38,6 +38,11 @@ SHORT_NAME_TEST_CASES = [
     # Remove venue suffixes
     ("Concert at Madison Square Garden", "Concert"),
 
+    # Short names that fit on the map label aren't over-shortened
+    ("Java with Jo Anne", "Java with Jo Anne"),
+    ("Coffee w/ Sarah", "Coffee w/ Sarah"),
+    ("Talk at MoMA", "Talk at MoMA"),
+
     # Long titles with colons extract subtitle
     ("A Very Long Exhibition Title That Exceeds Forty Characters: The Actual Show Name", "The Actual Show Name"),
 

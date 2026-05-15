@@ -54,8 +54,15 @@ STALE_CRAWL_THRESHOLD = 3
 # Multiplier when site is stale
 STALE_FREQUENCY_MULTIPLIER = 1.5
 
+# Very stale: consecutive crawls with no new events before aggressive relaxation
+VERY_STALE_CRAWL_THRESHOLD = 10
+
 # Buffer days subtracted from event horizon for safety margin
 HORIZON_BUFFER_DAYS = 1
+
+# Minimum new-event rate (new events / crawls) below which we ignore lead times
+# and relax frequency. Prevents 1 event in 40 crawls from keeping freq at 1d.
+MIN_USEFUL_EVENT_RATE = 0.1
 
 
 def _compute_lead_times(cursor, website_id):
@@ -168,6 +175,40 @@ def _compute_stability(new_event_data):
     }
 
 
+def _compute_content_staleness(cursor, website_id):
+    """
+    Count consecutive recent crawls with identical content size.
+
+    Same content size strongly correlates with identical content — the page
+    hasn't changed between crawls, making subsequent crawls pure waste.
+
+    Returns the number of consecutive recent crawls with the same content size
+    (counting back from the most recent crawl).
+    """
+    cursor.execute("""
+        SELECT LENGTH(crawled_content) as content_size
+        FROM crawl_results
+        WHERE website_id = %s
+          AND status = 'processed'
+          AND crawled_at >= DATE_SUB(NOW(), INTERVAL %s DAY)
+        ORDER BY id DESC
+        LIMIT 30
+    """, (website_id, ANALYSIS_WINDOW_DAYS))
+
+    sizes = [row[0] for row in cursor.fetchall()]
+    if len(sizes) < 2:
+        return 0
+
+    consecutive_same = 0
+    for i in range(1, len(sizes)):
+        if sizes[i] == sizes[0]:
+            consecutive_same += 1
+        else:
+            break
+
+    return consecutive_same
+
+
 def _has_upcoming_events(cursor, website_id):
     """Check if a website has active events starting in the next 14 days."""
     cursor.execute("""
@@ -188,7 +229,8 @@ def _percentile(sorted_values, pct):
     return sorted_values[index]
 
 
-def _recommend_frequency(lead_times, horizons, new_event_data, stability, has_upcoming, current_frequency):
+def _recommend_frequency(lead_times, horizons, new_event_data, stability,
+                         has_upcoming, current_frequency, content_staleness=0):
     """
     Recommend a crawl frequency based on analyzed metrics.
 
@@ -199,10 +241,13 @@ def _recommend_frequency(lead_times, horizons, new_event_data, stability, has_up
     The binding constraint (smaller value) wins.
 
     Then:
-    3. Adjust up if site is stable with no new events
-    4. Set to MAX if no upcoming events and no short-lead history
-    5. Clamp to [MIN, MAX] days
-    6. Limit change to 2x in either direction
+    3. Override if new-event rate is too low (lead times from rare events shouldn't
+       keep frequency high — 1 event in 40 crawls doesn't justify daily crawling)
+    4. Adjust up if site is stable with no new events
+    5. Aggressively relax if very stale (10+ consecutive crawls with no new events)
+    6. Set to MAX if no upcoming events and no short-lead history
+    7. Clamp to [MIN, MAX] days
+    8. Limit change to 2x in either direction (relaxed to 4x for very stale sites)
     """
     current = current_frequency or DEFAULT_FREQUENCY
     reasons = []
@@ -211,14 +256,20 @@ def _recommend_frequency(lead_times, horizons, new_event_data, stability, has_up
     p25_lead_time = _percentile(lead_times, LEAD_TIME_PERCENTILE)
     p25_horizon = _percentile(horizons, LEAD_TIME_PERCENTILE)
 
+    # Check if new-event rate is too low to trust lead time signal.
+    # A site that produced 1 event in 40 crawls shouldn't stay at 1d just because
+    # that one event had a 2-day lead time.
+    low_yield = (new_event_data['total_crawls'] >= 10
+                 and new_event_data['rate'] < MIN_USEFUL_EVENT_RATE)
+
     # Frequency from lead time signal
     freq_from_lead = None
-    if p25_lead_time is not None:
+    if p25_lead_time is not None and not low_yield:
         freq_from_lead = max(MIN_FREQUENCY, p25_lead_time // LEAD_TIME_DIVISOR)
 
     # Frequency from horizon signal
     freq_from_horizon = None
-    if p25_horizon is not None:
+    if p25_horizon is not None and not low_yield:
         freq_from_horizon = max(MIN_FREQUENCY, p25_horizon - HORIZON_BUFFER_DAYS)
 
     if freq_from_lead is not None and freq_from_horizon is not None:
@@ -235,9 +286,14 @@ def _recommend_frequency(lead_times, horizons, new_event_data, stability, has_up
         recommended = freq_from_horizon
         reasons.append(f"Horizon P25: {p25_horizon}d -> freq: {freq_from_horizon}d")
     else:
-        # No lead time or horizon data
-        if new_event_data['total_crawls'] >= MIN_CRAWL_HISTORY and new_event_data['rate'] == 0:
-            recommended = min(int(current * STALE_FREQUENCY_MULTIPLIER), MAX_FREQUENCY)
+        # No usable lead time or horizon data (either missing or low-yield override)
+        if low_yield:
+            rate_pct = f"{new_event_data['rate']:.0%}"
+            recommended = max(DEFAULT_FREQUENCY, current)
+            reasons.append(f"Low yield: {rate_pct} new-event rate over "
+                           f"{new_event_data['total_crawls']} crawls")
+        elif new_event_data['total_crawls'] >= MIN_CRAWL_HISTORY and new_event_data['rate'] == 0:
+            recommended = max(current + 1, min(int(current * STALE_FREQUENCY_MULTIPLIER), MAX_FREQUENCY))
             reasons.append(f"No new events in {new_event_data['total_crawls']} crawls")
         else:
             return {
@@ -247,13 +303,22 @@ def _recommend_frequency(lead_times, horizons, new_event_data, stability, has_up
                 'metrics': {'lead_times_count': 0, 'horizons_count': 0},
             }
 
-    # Stability adjustment
+    # Stability adjustment — relax frequency for stale sites
     if stability['consecutive_no_new'] >= STALE_CRAWL_THRESHOLD:
-        adjusted = int(recommended * STALE_FREQUENCY_MULTIPLIER)
+        # Use max(current + 1, ...) so 1d sites can actually increase (1*1.5 rounds to 1)
+        adjusted = max(recommended + 1, int(recommended * STALE_FREQUENCY_MULTIPLIER))
         if adjusted > recommended:
             reasons.append(f"{stability['consecutive_no_new']} stale crawls, "
                            f"{recommended}d -> {adjusted}d")
             recommended = adjusted
+
+    # Content staleness — if page content hasn't changed, recrawling is waste
+    if content_staleness >= VERY_STALE_CRAWL_THRESHOLD:
+        content_floor = max(recommended, DEFAULT_FREQUENCY)
+        if content_floor > recommended:
+            reasons.append(f"{content_staleness} identical-content crawls, "
+                           f"{recommended}d -> {content_floor}d")
+            recommended = content_floor
 
     # No upcoming events with no short-lead history
     if not has_upcoming and lead_times and min(lead_times) > 7:
@@ -263,12 +328,16 @@ def _recommend_frequency(lead_times, horizons, new_event_data, stability, has_up
     # Clamp to bounds
     recommended = max(MIN_FREQUENCY, min(MAX_FREQUENCY, recommended))
 
-    # Limit change rate
+    # Limit change rate — but allow faster relaxation for very stale sites
+    very_stale = stability['consecutive_no_new'] >= VERY_STALE_CRAWL_THRESHOLD
+    change_factor = MAX_CHANGE_FACTOR * 2 if very_stale else MAX_CHANGE_FACTOR
+
     if current > 0:
-        max_new = int(current * MAX_CHANGE_FACTOR)
+        max_new = int(current * change_factor)
         min_new = max(MIN_FREQUENCY, int(current / MAX_CHANGE_FACTOR))
         if recommended > max_new:
-            reasons.append(f"Clamped {recommended}d -> {max_new}d (max 2x increase)")
+            reasons.append(f"Clamped {recommended}d -> {max_new}d "
+                           f"(max {int(change_factor)}x increase)")
             recommended = max_new
         elif recommended < min_new:
             reasons.append(f"Clamped {recommended}d -> {min_new}d (max 2x decrease)")
@@ -285,6 +354,7 @@ def _recommend_frequency(lead_times, horizons, new_event_data, stability, has_up
         'median_horizon': horizons[len(horizons) // 2] if horizons else None,
         'new_event_rate': new_event_data['rate'],
         'consecutive_no_new': stability['consecutive_no_new'],
+        'content_staleness': content_staleness,
         'has_upcoming': has_upcoming,
     }
 
@@ -385,9 +455,11 @@ def analyze_frequencies(cursor, connection, website_ids=None, dry_run=False, ver
         new_event_data = _compute_new_event_rate(cursor, wid)
         stability = _compute_stability(new_event_data)
         has_upcoming = _has_upcoming_events(cursor, wid)
+        content_staleness = _compute_content_staleness(cursor, wid)
 
         recommendation = _recommend_frequency(
-            lead_times, horizons, new_event_data, stability, has_upcoming, current_freq
+            lead_times, horizons, new_event_data, stability, has_upcoming, current_freq,
+            content_staleness=content_staleness
         )
 
         results['analyzed'] += 1
@@ -431,6 +503,7 @@ def analyze_frequencies(cursor, connection, website_ids=None, dry_run=False, ver
                       f"median={m['median_horizon']}d")
             print(f"    New event rate: {m['new_event_rate']:.0%}, "
                   f"consecutive stale: {m['consecutive_no_new']}, "
+                  f"content stale: {m.get('content_staleness', 0)}, "
                   f"upcoming: {'yes' if m['has_upcoming'] else 'no'}")
 
     return results

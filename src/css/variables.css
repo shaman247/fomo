@@ -41,10 +41,6 @@
     --marker-stroke: #666;
 
     /* === Tag Button Colors === */
-    /* Selected/active tags use a red/pink color to stand out */
-    --tag-selected-bg: #c8535b;       /* Background for selected tags */
-    --tag-selected-text: white;       /* Text color for selected tags */
-    --tag-text-shadow: 0 0 2px #000;  /* Shadow for better readability */
     --tag-required-glow: white;       /* Glow effect for required tags */
 
     /* === Popup Detail Colors === */
@@ -109,10 +105,6 @@
 
     /* Borders are lighter in light theme */
     --border-color: #b0b0b0;
-
-    /* Tag colors adjusted for light theme */
-    --tag-selected-text: black;      /* Dark text instead of white */
-    --tag-text-shadow: none;         /* No shadow needed on light bg */
 
     /* Summary colors adjusted for light theme contrast */
     --summary-closed: #9d474c;       /* Darker red */

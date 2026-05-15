@@ -62,17 +62,47 @@ const Utils = (() => {
             .replace(' ', '');
     }
 
-    function formatEventDateTimeCompactly(event) {
-        const occurrencesToDisplay = event.matching_occurrences || event.occurrences;
-        if (!event || !Array.isArray(occurrencesToDisplay) || occurrencesToDisplay.length === 0) {
-            return "Date/Time N/A";
+    /**
+     * Returns structured datetime data for an event, separating occurrences that
+     * match the active date filter from those that don't. The popup uses this to
+     * show matching dates prominently while keeping the rest accessible.
+     *
+     * @param {Object} event - Event with `occurrences` and optional `matching_occurrences`
+     * @returns {{matchingText: string, otherText: string, otherCount: number}}
+     */
+    function buildEventDateTime(event) {
+        const all = event && Array.isArray(event.occurrences) ? event.occurrences : null;
+        if (!all || all.length === 0) {
+            return { matchingText: 'Date/Time N/A', otherText: '', otherCount: 0 };
         }
 
-        if (occurrencesToDisplay.length === 1) {
-            return formatSingleOccurrence(occurrencesToDisplay[0]);
+        if (all.length === 1) {
+            return { matchingText: formatSingleOccurrence(all[0]), otherText: '', otherCount: 0 };
         }
 
-        return formatMultipleOccurrences(occurrencesToDisplay);
+        const matching = Array.isArray(event.matching_occurrences) ? event.matching_occurrences : all;
+        const matchingKeys = new Set(
+            matching
+                .filter(o => o.start instanceof Date && !isNaN(o.start))
+                .map(o => o.start.toISOString())
+        );
+
+        const matchingOccs = [];
+        const otherOccs = [];
+        for (const occ of all) {
+            if (!(occ.start instanceof Date) || isNaN(occ.start)) continue;
+            if (matchingKeys.has(occ.start.toISOString())) {
+                matchingOccs.push(occ);
+            } else {
+                otherOccs.push(occ);
+            }
+        }
+
+        return {
+            matchingText: matchingOccs.length > 0 ? formatMultipleOccurrences(matchingOccs) : '',
+            otherText: otherOccs.length > 0 ? formatMultipleOccurrences(otherOccs) : '',
+            otherCount: otherOccs.length
+        };
     }
 
     function formatSingleOccurrence(occurrence) {
@@ -194,6 +224,16 @@ const Utils = (() => {
         const finalDate = new Date(isoString);
 
         return isNaN(finalDate.getTime()) ? null : finalDate;
+    }
+
+    // Today's date in NYC timezone as YYYY-MM-DD. Used to pick the matching
+    // events.{day}.json chunk regardless of the user's local timezone.
+    const _nycDateFormatter = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'America/New_York',
+        year: 'numeric', month: '2-digit', day: '2-digit'
+    });
+    function getTodayInNewYork() {
+        return _nycDateFormatter.format(new Date());
     }
 
     function isWindows() {
@@ -352,14 +392,28 @@ const Utils = (() => {
         }
     };
 
+    /**
+     * Returns the human-readable form of a tag name, stripping any
+     * disambiguator suffix (everything after " / "). The internal tag
+     * name (with disambiguator) remains the unique identifier — only
+     * rendered text is shortened. e.g. "Avant Garde / Music" → "Avant Garde".
+     */
+    function getTagDisplayName(tag) {
+        if (!tag) return tag;
+        const idx = tag.indexOf(' / ');
+        return idx === -1 ? tag : tag.slice(0, idx);
+    }
+
     return {
         escapeHtml,
         decodeHtml,
         formatAndSanitize,
+        getTagDisplayName,
         isValidUrl,
         formatDateForDisplay,
-        formatEventDateTimeCompactly,
+        buildEventDateTime,
         parseDateInNewYork,
+        getTodayInNewYork,
         isWindows,
         isCountryFlagEmoji,
         normalizeForSearch,

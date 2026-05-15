@@ -7,8 +7,10 @@ Handles all database connections and CRUD operations for:
 - Crawl events (raw extracted data)
 """
 
+import hashlib
 import json
 import os
+import re
 import sys
 
 try:
@@ -20,6 +22,15 @@ except ImportError:
     sys.exit(1)
 
 from constants import MAX_PAGES_DEFAULT
+
+
+def compute_content_hash(content):
+    """SHA-256 hash of crawled content for change detection."""
+    if content is None:
+        return None
+    if isinstance(content, str):
+        content = content.encode('utf-8')
+    return hashlib.sha256(content).hexdigest()
 
 
 # Database Configuration
@@ -96,7 +107,7 @@ def get_websites_due_for_crawling(cursor, website_ids=None):
                    w.keywords, w.max_pages, w.max_batches, w.notes,
                    w.delay_before_return_html, w.content_filter_threshold, w.scan_full_page,
                    w.remove_overlay_elements, w.javascript_enabled, w.text_mode, w.light_mode,
-                   w.use_stealth, w.user_agent, w.scroll_delay, w.crawl_timeout, w.process_images, w.base_url,
+                   w.use_stealth, w.headed, w.user_agent, w.scroll_delay, w.crawl_timeout, w.process_images, w.base_url,
                    GROUP_CONCAT(CONCAT(wu.url, ':::', IFNULL(wu.js_code, '')) ORDER BY wu.sort_order SEPARATOR '|||') as urls
             FROM websites w
             LEFT JOIN website_urls wu ON w.id = wu.website_id
@@ -111,7 +122,7 @@ def get_websites_due_for_crawling(cursor, website_ids=None):
                    w.keywords, w.max_pages, w.max_batches, w.notes,
                    w.delay_before_return_html, w.content_filter_threshold, w.scan_full_page,
                    w.remove_overlay_elements, w.javascript_enabled, w.text_mode, w.light_mode,
-                   w.use_stealth, w.user_agent, w.scroll_delay, w.crawl_timeout, w.process_images, w.base_url,
+                   w.use_stealth, w.headed, w.user_agent, w.scroll_delay, w.crawl_timeout, w.process_images, w.base_url,
                    GROUP_CONCAT(CONCAT(wu.url, ':::', IFNULL(wu.js_code, '')) ORDER BY wu.sort_order SEPARATOR '|||') as urls
             FROM websites w
             LEFT JOIN website_urls wu ON w.id = wu.website_id
@@ -145,12 +156,13 @@ def get_websites_due_for_crawling(cursor, website_ids=None):
             'text_mode': row[14],
             'light_mode': row[15],
             'use_stealth': row[16],
-            'user_agent': row[17],
-            'scroll_delay': float(row[18]) if row[18] is not None else None,
-            'crawl_timeout': row[19],
-            'process_images': row[20],
-            'base_url': row[21],
-            'urls': _parse_url_data(row[22]) if row[22] else []
+            'headed': row[17],
+            'user_agent': row[18],
+            'scroll_delay': float(row[19]) if row[19] is not None else None,
+            'crawl_timeout': row[20],
+            'process_images': row[21],
+            'base_url': row[22],
+            'urls': _parse_url_data(row[23]) if row[23] else []
         }
         websites.append(website)
 
@@ -216,9 +228,12 @@ def update_crawl_result(cursor, connection, crawl_result_id, status, **kwargs):
     if 'content' in kwargs:
         if status == 'crawled':
             updates.append("crawled_content = %s")
+            updates.append("content_hash = %s")
+            params.append(kwargs['content'])
+            params.append(compute_content_hash(kwargs['content']))
         elif status == 'extracted':
             updates.append("extracted_content = %s")
-        params.append(kwargs['content'])
+            params.append(kwargs['content'])
 
     if 'event_count' in kwargs:
         updates.append("event_count = %s")
@@ -258,6 +273,156 @@ def update_crawl_result_failed(cursor, connection, crawl_result_id, error_messag
     update_crawl_result(cursor, connection, crawl_result_id, 'failed', error_message=error_message)
 
 
+def find_prior_crawl_with_same_content(cursor, crawl_result_id):
+    """
+    Find the most recent prior crawl_result for the same website that has the
+    same content_hash and was successfully processed.
+
+    Returns the prior crawl_result_id if found, otherwise None.
+
+    Used to short-circuit extraction when a crawl produces identical content
+    to a previous successful crawl — we copy its events instead of re-running
+    the AI extractor.
+    """
+    cursor.execute("""
+        SELECT cr_prior.id
+        FROM crawl_results cr_curr
+        JOIN crawl_results cr_prior
+          ON cr_prior.website_id = cr_curr.website_id
+         AND cr_prior.content_hash = cr_curr.content_hash
+         AND cr_prior.id < cr_curr.id
+         AND cr_prior.status = 'processed'
+         AND cr_prior.event_count IS NOT NULL
+        WHERE cr_curr.id = %s AND cr_curr.content_hash IS NOT NULL
+        ORDER BY cr_prior.id DESC
+        LIMIT 1
+    """, (crawl_result_id,))
+    row = cursor.fetchone()
+    if not row:
+        return None
+    return row[0] if not isinstance(row, dict) else row['id']
+
+
+def copy_crawl_events(cursor, connection, src_crawl_result_id, dst_crawl_result_id):
+    """
+    Copy all crawl_events (and their occurrences) from one crawl_result to another.
+
+    Used when a fresh crawl produced identical content to a previous successful
+    crawl — we reuse the prior extraction without re-calling Gemini.
+
+    Returns the number of crawl_events copied.
+    """
+    # Map old crawl_event ids → new ones so we can copy occurrences
+    cursor.execute("""
+        SELECT id, name, short_name, description, emoji, location_name, sublocation,
+               location_id, url, raw_data, content_hash
+        FROM crawl_events
+        WHERE crawl_result_id = %s
+        ORDER BY id
+    """, (src_crawl_result_id,))
+    src_events = cursor.fetchall()
+
+    if not src_events:
+        return 0
+
+    id_map = {}
+    for row in src_events:
+        # Support both tuple and dict cursors
+        if isinstance(row, dict):
+            (src_id, name, short_name, description, emoji, location_name,
+             sublocation, location_id, url, raw_data, ce_content_hash) = (
+                row['id'], row['name'], row['short_name'], row['description'],
+                row['emoji'], row['location_name'], row['sublocation'],
+                row['location_id'], row['url'], row['raw_data'], row['content_hash']
+            )
+        else:
+            (src_id, name, short_name, description, emoji, location_name,
+             sublocation, location_id, url, raw_data, ce_content_hash) = row
+
+        cursor.execute("""
+            INSERT INTO crawl_events
+                (crawl_result_id, name, short_name, description, emoji,
+                 location_name, sublocation, location_id, url, raw_data,
+                 content_hash, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
+        """, (dst_crawl_result_id, name, short_name, description, emoji,
+              location_name, sublocation, location_id, url, raw_data,
+              ce_content_hash))
+        id_map[src_id] = cursor.lastrowid
+
+    # Copy occurrences
+    if id_map:
+        placeholders = ','.join(['%s'] * len(id_map))
+        cursor.execute(f"""
+            SELECT crawl_event_id, start_date, start_time, end_date, end_time, sort_order
+            FROM crawl_event_occurrences
+            WHERE crawl_event_id IN ({placeholders})
+        """, tuple(id_map.keys()))
+        occs = cursor.fetchall()
+
+        for occ in occs:
+            if isinstance(occ, dict):
+                src_event_id = occ['crawl_event_id']
+                values = (id_map[src_event_id], occ['start_date'], occ['start_time'],
+                          occ['end_date'], occ['end_time'], occ['sort_order'])
+            else:
+                src_event_id, start_date, start_time, end_date, end_time, sort_order = occ
+                values = (id_map[src_event_id], start_date, start_time, end_date, end_time, sort_order)
+
+            cursor.execute("""
+                INSERT INTO crawl_event_occurrences
+                    (crawl_event_id, start_date, start_time, end_date, end_time, sort_order)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, values)
+
+    connection.commit()
+    return len(src_events)
+
+
+def set_batch_job_name(cursor, connection, crawl_result_ids, batch_job_name):
+    """Tag crawl results with their Gemini batch job name for crash recovery."""
+    if not crawl_result_ids:
+        return
+    placeholders = ','.join(['%s'] * len(crawl_result_ids))
+    cursor.execute(
+        f"UPDATE crawl_results SET batch_job_name = %s WHERE id IN ({placeholders})",
+        (batch_job_name, *crawl_result_ids)
+    )
+    connection.commit()
+
+
+def clear_batch_job_name(cursor, connection, crawl_result_ids):
+    """Clear batch job name after results have been processed."""
+    if not crawl_result_ids:
+        return
+    placeholders = ','.join(['%s'] * len(crawl_result_ids))
+    cursor.execute(
+        f"UPDATE crawl_results SET batch_job_name = NULL WHERE id IN ({placeholders})",
+        tuple(crawl_result_ids)
+    )
+    connection.commit()
+
+
+def get_pending_batch_jobs(cursor):
+    """Find crawl results with in-flight batch jobs (for crash recovery).
+
+    Returns dict of {batch_job_name: [crawl_result_id, ...]} for crawl results
+    that have a batch_job_name set but haven't been extracted yet.
+    """
+    cursor.execute("""
+        SELECT batch_job_name, GROUP_CONCAT(id) as crid_list
+        FROM crawl_results
+        WHERE batch_job_name IS NOT NULL
+          AND status IN ('crawled', 'failed')
+          AND extracted_content IS NULL
+        GROUP BY batch_job_name
+    """)
+    result = {}
+    for row in cursor.fetchall():
+        result[row[0]] = [int(x) for x in row[1].split(',')]
+    return result
+
+
 def update_website_last_crawled(cursor, connection, website_id):
     """Update the last_crawled_at timestamp for a website and reset force_crawl flag."""
     cursor.execute(
@@ -276,7 +441,7 @@ def complete_crawl_run(cursor, connection, crawl_run_id):
     connection.commit()
 
 
-def get_incomplete_crawl_results(cursor):
+def get_incomplete_crawl_results(cursor, website_ids=None):
     """
     Get crawl results that need reprocessing.
 
@@ -285,9 +450,12 @@ def get_incomplete_crawl_results(cursor):
     - In 'extracted' status (need processing)
     - In 'failed' status but have crawled_content (extraction failed, can retry)
 
-    Returns results from any crawl run, not just today's.
+    Args:
+        cursor: DB cursor
+        website_ids: Optional list of website IDs to restrict to.
+                     If None, returns results from any crawl run.
     """
-    cursor.execute("""
+    query = """
         SELECT cr.id, cr.status, cr.website_id, cr.crawl_run_id,
                w.name, w.notes, crun.run_date,
                CASE
@@ -295,7 +463,8 @@ def get_incomplete_crawl_results(cursor):
                         AND cr.extracted_content IS NULL THEN 'crawled'
                    WHEN cr.status = 'failed' AND cr.extracted_content IS NOT NULL THEN 'extracted'
                    ELSE cr.status
-               END as effective_status
+               END as effective_status,
+               cr.batch_job_name
         FROM crawl_results cr
         JOIN websites w ON cr.website_id = w.id
         JOIN crawl_runs crun ON cr.crawl_run_id = crun.id
@@ -304,8 +473,14 @@ def get_incomplete_crawl_results(cursor):
               cr.status IN ('crawled', 'extracted')
               OR (cr.status = 'failed' AND cr.crawled_content IS NOT NULL)
           )
-        ORDER BY cr.status, crun.run_date DESC
-    """)
+    """
+    params = []
+    if website_ids:
+        placeholders = ','.join(['%s'] * len(website_ids))
+        query += f" AND cr.website_id IN ({placeholders})"
+        params.extend(website_ids)
+    query += " ORDER BY cr.status, crun.run_date DESC"
+    cursor.execute(query, params)
 
     results = []
     for row in cursor.fetchall():
@@ -317,7 +492,8 @@ def get_incomplete_crawl_results(cursor):
             'crawl_run_id': row[3],
             'name': row[4],
             'notes': row[5],
-            'run_date': row[6]
+            'run_date': row[6],
+            'batch_job_name': row[8]
         })
 
     return results
@@ -585,6 +761,184 @@ def get_website_locations_map(cursor):
     return result
 
 
+def _load_generic_location_names():
+    """Load geotag names from tags.json as a set of generic location names.
+
+    These are neighborhood/borough/region names that are too vague to be useful
+    as event locations — events with these as their only location info should be
+    detail-crawled to find the specific venue.
+    """
+    import json, os
+    tags_path = os.path.join(os.path.dirname(__file__), '..', 'src', 'data', 'tags.json')
+    try:
+        with open(tags_path) as f:
+            data = json.load(f)
+        names = {name.lower() for name in data.get('geotags', [])}
+        # Add common city-level names not in geotags
+        names.update(['new york', 'nyc', 'new york city', 'ny'])
+        return names
+    except (FileNotFoundError, json.JSONDecodeError):
+        return set()
+
+
+def get_detail_crawl_candidates(cursor, website_ids=None):
+    """Find crawl_events needing a detail crawl, filtered to individual event URLs.
+
+    Finds unmerged crawl_events with missing descriptions, locations, or only
+    generic location names (neighborhoods/boroughs) that have an event URL,
+    then filters out listing-page URLs (shared by multiple events or matching
+    the website's source URLs).
+
+    Args:
+        cursor: DB cursor
+        website_ids: Optional list of website IDs to restrict to. If None,
+                     considers all websites crawled within the last 7 days.
+
+    Returns list of (ce_id, name, url, website_id) tuples.
+    """
+    generic_locations = _load_generic_location_names()
+
+    # Query includes location_name so we can filter generic names in Python.
+    # has_occurrences flag lets us detect events whose listing page provided
+    # no date — those need a detail crawl too, not just events missing a description.
+    if website_ids:
+        placeholders = ','.join(['%s'] * len(website_ids))
+        query = f"""
+            SELECT ce.id, ce.name, ce.url, cr.website_id, ce.location_name, ce.description,
+                   EXISTS(SELECT 1 FROM crawl_event_occurrences ceo WHERE ceo.crawl_event_id = ce.id) AS has_occurrences
+            FROM crawl_events ce
+            JOIN crawl_results cr ON ce.crawl_result_id = cr.id
+            JOIN websites w ON cr.website_id = w.id
+            LEFT JOIN event_sources es ON ce.id = es.crawl_event_id
+            WHERE ce.url IS NOT NULL AND ce.url != ''
+            AND es.id IS NULL
+            AND w.skip_reenrichment = 0
+            AND cr.website_id IN ({placeholders})
+        """
+        cursor.execute(query, list(website_ids))
+    else:
+        cursor.execute("""
+            SELECT ce.id, ce.name, ce.url, cr.website_id, ce.location_name, ce.description,
+                   EXISTS(SELECT 1 FROM crawl_event_occurrences ceo WHERE ceo.crawl_event_id = ce.id) AS has_occurrences
+            FROM crawl_events ce
+            JOIN crawl_results cr ON ce.crawl_result_id = cr.id
+            JOIN websites w ON cr.website_id = w.id
+            LEFT JOIN event_sources es ON ce.id = es.crawl_event_id
+            WHERE ce.url IS NOT NULL AND ce.url != ''
+            AND es.id IS NULL
+            AND w.skip_reenrichment = 0
+            AND ce.detail_crawl_attempts < 2
+            AND cr.crawled_at >= DATE_SUB(NOW(), INTERVAL 14 DAY)
+        """)
+    rows = cursor.fetchall()
+
+    # Filter to events that actually need detail crawling
+    def needs_detail_crawl(location_name, description, has_occurrences):
+        if not has_occurrences:
+            return True
+        if description == 'No description available.':
+            return True
+        if not location_name or location_name == 'Not specified':
+            return True
+        if location_name.lower() in generic_locations:
+            return True
+        return False
+
+    candidates = [
+        (ce_id, name, url, website_id)
+        for ce_id, name, url, website_id, location_name, description, has_occurrences in rows
+        if needs_detail_crawl(location_name, description, has_occurrences)
+    ]
+
+    if not candidates:
+        return []
+
+    # Count distinct event names per (website_id, url) — true listing pages have
+    # multiple distinct events sharing one URL. Same name across crawl runs is
+    # just a recurring event, not a listing page. Strip trailing parenthetical
+    # suffixes (e.g. "(postponed)", "(rescheduled)") so a renamed recurring
+    # event isn't mistaken for a listing page.
+    _suffix_re = re.compile(r'\s*\([^)]*\)\s*$')
+    def _norm_name(n):
+        n = (n or '').strip().lower()
+        # Strip up to 2 trailing parenthetical suffixes
+        for _ in range(2):
+            stripped = _suffix_re.sub('', n)
+            if stripped == n:
+                break
+            n = stripped
+        return n
+
+    url_name_sets = {}
+    for _, name, url, website_id in candidates:
+        key = (website_id, url.rstrip('/'))
+        url_name_sets.setdefault(key, set()).add(_norm_name(name))
+
+    # Cache source/listing URLs per website
+    source_url_cache = {}
+
+    events_to_enrich = []
+    skipped_shared = 0
+    for ce_id, name, url, website_id in candidates:
+        # Skip URLs that have multiple distinct event names (real listing pages)
+        if len(url_name_sets.get((website_id, url.rstrip('/')), set())) > 1:
+            skipped_shared += 1
+            continue
+        # Skip URLs matching the website's source/listing URLs
+        if website_id not in source_url_cache:
+            cursor.execute(
+                "SELECT url FROM website_urls WHERE website_id = %s",
+                (website_id,),
+            )
+            source_url_cache[website_id] = {
+                row[0].rstrip('/') for row in cursor.fetchall()
+            }
+        if url.rstrip('/') not in source_url_cache[website_id]:
+            events_to_enrich.append((ce_id, name, url, website_id))
+
+    if skipped_shared:
+        print(f"  Skipped {skipped_shared} events with shared/listing URLs")
+
+    return events_to_enrich
+
+
+def get_website_crawl_settings(cursor, website_ids):
+    """Load crawl and browser settings for the given website IDs.
+
+    Returns dict mapping website_id to settings dict with keys:
+    delay_before_return_html, content_filter_threshold, scan_full_page,
+    remove_overlay_elements, scroll_delay, text_mode, light_mode,
+    use_stealth, headed, user_agent.
+    """
+    if not website_ids:
+        return {}
+
+    placeholders = ','.join(['%s'] * len(website_ids))
+    cursor.execute(f"""
+        SELECT id, delay_before_return_html, content_filter_threshold,
+               scan_full_page, remove_overlay_elements, scroll_delay,
+               text_mode, light_mode, use_stealth, headed, user_agent
+        FROM websites WHERE id IN ({placeholders})
+    """, list(website_ids))
+
+    settings = {}
+    for row in cursor.fetchall():
+        settings[row[0]] = {
+            'delay_before_return_html': row[1],
+            'content_filter_threshold': row[2],
+            'scan_full_page': row[3],
+            'remove_overlay_elements': row[4],
+            'scroll_delay': float(row[5]) if row[5] is not None else None,
+            'text_mode': row[6] if row[6] is not None else True,
+            'light_mode': row[7] if row[7] is not None else True,
+            'use_stealth': row[8] if row[8] is not None else False,
+            'headed': row[9] if row[9] is not None else False,
+            'user_agent': row[10],
+        }
+
+    return settings
+
+
 def get_tag_rules(cursor):
     """
     Get tag processing rules from the database.
@@ -732,6 +1086,38 @@ def get_tag_aliases_for_export(cursor):
     return aliases_by_tag
 
 
+def get_tag_disambiguations(cursor):
+    """Load context-aware disambiguation rules for ambiguous tag names.
+
+    Returns dict mapping normalized alias -> list of rules sorted by priority desc:
+        {'avantgarde': [
+            {'ctx_name': 'music', 'target_name': 'Avant Garde / Music', 'priority': 100},
+            {'ctx_name': None,    'target_name': 'Avant Garde / Art',   'priority': 0},
+        ], ...}
+    ctx_name is normalized (lowercase, no spaces) for direct comparison against
+    co-tag normalized forms / ancestor sets.
+    """
+    cursor.execute("""
+        SELECT d.ambiguous_alias, ctx.name AS ctx_name, tgt.name AS target_name, d.priority
+        FROM tag_disambiguations d
+        LEFT JOIN tags ctx ON d.context_tag_id = ctx.id
+        JOIN tags tgt ON d.target_tag_id = tgt.id
+        ORDER BY d.ambiguous_alias, d.priority DESC
+    """)
+    rules = {}
+    for row in cursor.fetchall():
+        alias = row[0]
+        ctx_name = row[1].lower().replace(' ', '') if row[1] else None
+        target_name = row[2]
+        priority = row[3]
+        rules.setdefault(alias, []).append({
+            'ctx_name': ctx_name,
+            'target_name': target_name,
+            'priority': priority,
+        })
+    return rules
+
+
 def get_all_tags_with_metadata(cursor):
     """Get all tags with hierarchy metadata.
 
@@ -756,6 +1142,25 @@ def get_all_tags_with_metadata(cursor):
         }
         for row in cursor.fetchall()
     ]
+
+
+def upsert_event_tags(cursor, event_id, tag_names, replace=False):
+    """Set tags for an event. If replace=True, deletes existing tags first."""
+    if replace:
+        cursor.execute("DELETE FROM event_tags WHERE event_id = %s", (event_id,))
+    for tag in tag_names:
+        if not tag:
+            continue
+        cursor.execute("SELECT id FROM tags WHERE name = %s", (tag[:100],))
+        row = cursor.fetchone()
+        tag_id = row[0] if row else None
+        if not tag_id:
+            cursor.execute("INSERT INTO tags (name) VALUES (%s)", (tag[:100],))
+            tag_id = cursor.lastrowid
+        cursor.execute(
+            "INSERT IGNORE INTO event_tags (event_id, tag_id) VALUES (%s, %s)",
+            (event_id, tag_id)
+        )
 
 
 def get_tag_hierarchy_for_export(cursor):

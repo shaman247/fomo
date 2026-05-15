@@ -60,6 +60,8 @@ document.addEventListener('DOMContentLoaded', () => {
             quickFilters: [],
             hierarchyTagsSet: new Set(),
             tagDescendantsOf: {},
+            tagParentsOf: {},
+            tagChildrenOf: {},
             tagEmojiMap: {},
             eventsByLatLng: {},
             locationsByLatLng: {},
@@ -105,10 +107,12 @@ document.addEventListener('DOMContentLoaded', () => {
          * @property {number} MAP_MAX_ZOOM - Maximum zoom level
          */
         config: {
-            EVENT_INIT_URL: 'data/events.init.json',
-            LOCATIONS_INIT_URL: 'data/locations.init.json',
-            EVENT_FULL_URL: 'data/events.full.json',
-            LOCATIONS_FULL_URL: 'data/locations.full.json',
+            // Event data is split into per-day chunks. Phase 1 fetches the
+            // chunk matching the user's current NYC date; Phase 2 fetches the
+            // others. manifest.json maps "day0".."dayN" → calendar dates.
+            DATA_DIR: 'data/',
+            MANIFEST_URL: 'data/manifest.json',
+            REMAINDER_CHUNK: 'remainder',
             TAG_CONFIG_URL: 'data/tags.json',
             TAG_HIERARCHY_URL: 'data/tag_hierarchy.json',
             ORGANIZERS_URL: 'data/organizers.json',
@@ -196,12 +200,30 @@ document.addEventListener('DOMContentLoaded', () => {
          * @private
          */
         async _loadInitialData() {
-            const [initEventData, initLocationData, tagConfig, tagHierarchy, organizersData] = await Promise.all([
-                DataManager.fetchData(this.config.EVENT_INIT_URL),
-                DataManager.fetchData(this.config.LOCATIONS_INIT_URL),
+            // Step 1: Fetch the manifest + small shared metadata in parallel.
+            // The manifest tells us which day-chunk maps to today's NYC date.
+            const [manifest, tagConfig, tagHierarchy, organizersData] = await Promise.all([
+                DataManager.fetchData(this.config.MANIFEST_URL),
                 DataManager.fetchData(this.config.TAG_CONFIG_URL),
                 DataManager.fetchData(this.config.TAG_HIERARCHY_URL),
                 DataManager.fetchData(this.config.ORGANIZERS_URL)
+            ]);
+
+            this.state.manifest = manifest || { days: [] };
+            this.state.loadedChunks = new Set();
+
+            // Step 2: Pick the chunk matching today's date. If today isn't in
+            // the manifest (export is older than NUM_DAY_CHUNKS days), fall
+            // back to remainder so the user still sees recent + future events.
+            const todayStr = Utils.getTodayInNewYork();
+            const dayIndex = (this.state.manifest.days || []).indexOf(todayStr);
+            const initChunk = dayIndex >= 0 ? `day${dayIndex}` : this.config.REMAINDER_CHUNK;
+            this.state.initChunk = initChunk;
+            this.state.loadedChunks.add(initChunk);
+
+            const [initEventData, initLocationData] = await Promise.all([
+                DataManager.fetchData(`${this.config.DATA_DIR}events.${initChunk}.json`),
+                DataManager.fetchData(`${this.config.DATA_DIR}locations.${initChunk}.json`)
             ]);
             this.state.organizersById = organizersData || {};
 
@@ -213,6 +235,8 @@ document.addEventListener('DOMContentLoaded', () => {
             this.state.quickFilters = hierarchyMaps.quickFilters;
             this.state.hierarchyTagsSet = hierarchyMaps.hierarchyTagsSet;
             this.state.tagDescendantsOf = hierarchyMaps.descendantsOf;
+            this.state.tagParentsOf = hierarchyMaps.parentsOf;
+            this.state.tagChildrenOf = hierarchyMaps.childrenOf;
             this.state.tagEmojiMap = hierarchyMaps.tagEmojiMap;
 
             // Initialize TagColorManager with color palettes and emoji bgcolors
@@ -308,6 +332,21 @@ document.addEventListener('DOMContentLoaded', () => {
         },
 
         /**
+         * Update the Phase 1 loading progress bar.
+         * @memberof App
+         * @private
+         * @param {number} pct - Percentage (0-100)
+         */
+        _setLoadingProgress(pct) {
+            const container = document.getElementById('loading-container');
+            if (!container) return;
+            const bar = container.querySelector('.loading-progress-bar');
+            const wrapper = container.querySelector('.loading-progress');
+            if (bar) bar.style.width = `${pct}%`;
+            if (wrapper) wrapper.setAttribute('aria-valuenow', String(pct));
+        },
+
+        /**
          * Show main UI and hide loading screen
          * @memberof App
          * @private
@@ -335,35 +374,115 @@ document.addEventListener('DOMContentLoaded', () => {
          * @private
          */
         async _loadFullData(urlParams) {
-            try {
-                // Load full dataset in parallel
-                const [fullEventData, fullLocationData] = await Promise.all([
-                    DataManager.fetchData(this.config.EVENT_FULL_URL),
-                    DataManager.fetchData(this.config.LOCATIONS_FULL_URL)
-                ]);
+            const FP = (typeof window !== 'undefined' && window.FilterProfiler) || null;
+            const profile = FP && FP.enabled;
+            if (profile) FP.start('Phase 2: full data load');
 
-                // Merge and process the full dataset
-                DataManager.processFullData(fullEventData, fullLocationData, this.state, this.config);
+            const indicator = document.getElementById('phase2-loading-indicator');
+            if (indicator) indicator.classList.add('visible');
+
+            try {
+                if (profile) FP.mark('fp:p2:fetch-start');
+
+                // Build list of chunks not yet loaded: every day chunk in the
+                // manifest plus the remainder, minus whichever one Phase 1
+                // already grabbed. Fetched in parallel; HTTP/2 multiplexes.
+                const allChunks = (this.state.manifest.days || []).map((_, i) => `day${i}`);
+                allChunks.push(this.config.REMAINDER_CHUNK);
+                const remainingChunks = allChunks.filter(c => !this.state.loadedChunks.has(c));
+
+                const fetches = [];
+                for (const chunk of remainingChunks) {
+                    fetches.push(DataManager.fetchData(`${this.config.DATA_DIR}events.${chunk}.json`));
+                    fetches.push(DataManager.fetchData(`${this.config.DATA_DIR}locations.${chunk}.json`));
+                }
+                const fetched = await Promise.all(fetches);
+
+                const fullEventData = [];
+                const fullLocationData = [];
+                for (let i = 0; i < remainingChunks.length; i++) {
+                    fullEventData.push(...(fetched[i * 2] || []));
+                    fullLocationData.push(...(fetched[i * 2 + 1] || []));
+                    this.state.loadedChunks.add(remainingChunks[i]);
+                }
+                if (profile) {
+                    FP.mark('fp:p2:fetch-end');
+                    FP.measure('fp:p2:fetch+parse', 'fp:p2:fetch-start', 'fp:p2:fetch-end');
+                }
+
+                // Chunked merge — yields to main thread between batches so map clicks
+                // and typing stay responsive during the heavy ~30k-event processing.
+                await DataManager.processFullDataAsync(
+                    fullEventData,
+                    fullLocationData,
+                    this.state,
+                    this.config,
+                    (done, total) => {
+                        if (indicator) {
+                            const pct = Math.round((done / total) * 100);
+                            indicator.querySelector('.phase2-progress').textContent = `${pct}%`;
+                        }
+                    }
+                );
+                if (profile) {
+                    FP.mark('fp:p2:processFullData');
+                    FP.measure('fp:p2:processFullData', 'fp:p2:fetch-end', 'fp:p2:processFullData');
+                }
+
                 DataManager.calculateTagFrequencies(this.state);
                 DataManager.processTagHierarchy(this.state, this.config);
-                DataManager.buildSearchIndex(this.state);
+                if (profile) {
+                    FP.mark('fp:p2:tagHier');
+                    FP.measure('fp:p2:tagFreq+hierarchy', 'fp:p2:processFullData', 'fp:p2:tagHier');
+                }
 
-                // Load emoji images for any new locations from the full dataset
-                MapManager.loadEmojiImages(this.state.locationsByLatLng);
+                // Yield once before the next big block so any pending input fires.
+                await new Promise(r => setTimeout(r, 0));
 
-                this.updateFilteredEventList({ skipDisplay: true }); // Re-filter by date/location and rebuild tag index
-                this.initFilterPanelUI();
+                await DataManager.buildSearchIndexAsync(this.state);
+                if (profile) {
+                    FP.mark('fp:p2:searchIndex');
+                    FP.measure('fp:p2:buildSearchIndex', 'fp:p2:tagHier', 'fp:p2:searchIndex');
+                }
 
-                // Re-apply URL parameter tag selections after re-initializing tag filter UI
-                // This preserves the tags selected from URL parameters during Phase 2 full data load
+                await MapManager.loadEmojiImagesChunked(this.state.locationsByLatLng);
+                if (profile) {
+                    FP.mark('fp:p2:emoji');
+                    FP.measure('fp:p2:loadEmojiImages', 'fp:p2:searchIndex', 'fp:p2:emoji');
+                }
+
+                this.updateFilteredEventList({ skipDisplay: true });
+                // Lightweight refresh — preserves user selections made during Phase 1
+                // and avoids re-instantiating SectionRenderer / GestureHandler / etc.
+                FilterPanelUI.refreshAvailableTags({
+                    allAvailableTags: this.state.allAvailableTags,
+                    initialGlobalFrequencies: this.state.tagFrequencies
+                });
+                if (profile) {
+                    FP.mark('fp:p2:initPanel');
+                    FP.measure('fp:p2:filterList+refreshPanel', 'fp:p2:emoji', 'fp:p2:initPanel');
+                }
+
+                // Re-apply URL-param tag selections — these might reference tags
+                // that didn't exist in Phase 1 and were skipped earlier. Idempotent
+                // for tags that were already selected.
                 if (urlParams.tags && urlParams.tags.length > 0) {
                     FilterPanelUI.selectTags(urlParams.tags, (tag) => TagColorManager.assignColorToTag(tag));
                 }
 
-                // Re-render with the full dataset, applying current filters.
                 this.filterAndDisplayEvents();
+                if (profile) {
+                    FP.mark('fp:p2:render');
+                    FP.measure('fp:p2:filterAndDisplayEvents', 'fp:p2:initPanel', 'fp:p2:render');
+                }
+
+                if (indicator) {
+                    indicator.classList.remove('visible');
+                    indicator.classList.add('done');
+                }
 
             } catch (error) {
+                if (indicator) indicator.classList.remove('visible');
                 console.error("Failed to load full dataset:", error);
 
                 // Show toast notification for full dataset loading errors
@@ -373,6 +492,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     'error',
                     Constants.UI.TOAST_DURATION_MEDIUM
                 );
+            } finally {
+                const FP = (typeof window !== 'undefined' && window.FilterProfiler) || null;
+                if (FP && FP.enabled) FP.flush();
             }
         },
 
@@ -400,15 +522,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // --- Phase 1: Load Initial Data ---
             try {
+                this._setLoadingProgress(5);
                 await this._loadInitialData();
+                this._setLoadingProgress(30);
                 await this._initializeModules();
+                this._setLoadingProgress(50);
                 this._setupUIComponents(urlParams);
+                this._setLoadingProgress(65);
 
                 // Wait for map tiles to load before showing markers
                 // This prevents markers from appearing over a blank/ocean background
                 await this.state.mapLoadPromise;
+                this._setLoadingProgress(85);
 
                 this.filterAndDisplayEvents();
+                this._setLoadingProgress(100);
                 this._showMainUI();
 
                 // Mark initial load as complete
@@ -493,24 +621,28 @@ document.addEventListener('DOMContentLoaded', () => {
          * @param {string} term - The search term
          */
         performSearch(term) {
-            const previousTerm = this.state.searchTerm;
-            this.state.searchTerm = term;
+            const FP = (typeof window !== 'undefined' && window.FilterProfiler) || null;
+            const run = () => {
+                const previousTerm = this.state.searchTerm;
+                this.state.searchTerm = term;
 
-            // Use SearchManager to perform the search
-            const dynamicFrequencies = FilterPanelUI.getDynamicFrequencies();
+                if (FP) FP.mark('fp:search:start');
+                const dynamicFrequencies = FilterPanelUI.getDynamicFrequencies();
+                const selectedTagsWithColors = TagColorManager.getSelectedTagsWithColors();
+                const results = SearchManager.search(term, dynamicFrequencies, selectedTagsWithColors);
+                if (FP) {
+                    FP.mark('fp:search:scored');
+                    FP.measure('fp:search:scoring', 'fp:search:start', 'fp:search:scored');
+                }
 
-            const selectedTagsWithColors = TagColorManager.getSelectedTagsWithColors();
+                FilterPanelUI.render(results, term, this.state.debugMode);
 
-            const results = SearchManager.search(term, dynamicFrequencies, selectedTagsWithColors);
-
-            // Render results using TagFilterUI, passing debug mode state
-            FilterPanelUI.render(results, term, this.state.debugMode);
-
-            // Update map markers when search term changes
-            if (term !== previousTerm && this.state.currentFilteredLocations) {
-                const locationsToDisplay = this._applySearchTermFilter(this.state.currentFilteredLocations);
-                MarkerController.displayEventsOnMap(locationsToDisplay);
-            }
+                if (term !== previousTerm && this.state.currentFilteredLocations) {
+                    const locationsToDisplay = this._applySearchTermFilter(this.state.currentFilteredLocations);
+                    MarkerController.displayEventsOnMap(locationsToDisplay);
+                }
+            };
+            return FP ? FP.wrap(`performSearch "${term}"`, run) : run();
         },
 
         /**
@@ -549,28 +681,54 @@ document.addEventListener('DOMContentLoaded', () => {
          * @memberof App
          */
         updateFilteredEventList({ skipDisplay = false } = {}) {
-            const selectedDates = this.state.datePickerInstance.selectedDates;
-            if (selectedDates.length < 2) {
-                this.state.allEventsFilteredByDateAndLocation = [];
-            } else {
-                const [startDate, endDate] = selectedDates;
-                let events = FilterManager.filterEventsByDateRange(startDate, endDate);
+            const FP = (typeof window !== 'undefined' && window.FilterProfiler) || null;
+            const run = () => {
+                if (FP) FP.mark('fp:dates:start');
 
-                if (this.state.selectedGeotags && this.state.selectedGeotags.size > 0) {
-                    events = events.filter(event => {
-                        if (!event.locationKey) return false;
-                        const locationInfo = this.state.locationsByLatLng[event.locationKey];
-                        if (!locationInfo || !locationInfo.tags) return false;
-                        return locationInfo.tags.some(locationTag => this.state.selectedGeotags.has(locationTag));
-                    });
+                const selectedDates = this.state.datePickerInstance.selectedDates;
+                if (selectedDates.length < 2) {
+                    this.state.allEventsFilteredByDateAndLocation = [];
+                } else {
+                    const [startDate, endDate] = selectedDates;
+                    let events = FilterManager.filterEventsByDateRange(startDate, endDate);
+
+                    if (FP) {
+                        FP.mark('fp:dates:byRange');
+                        FP.measure('fp:dates:filterByDateRange', 'fp:dates:start', 'fp:dates:byRange');
+                    }
+
+                    if (this.state.selectedGeotags && this.state.selectedGeotags.size > 0) {
+                        events = events.filter(event => {
+                            if (!event.locationKey) return false;
+                            const locationInfo = this.state.locationsByLatLng[event.locationKey];
+                            if (!locationInfo || !locationInfo.tags) return false;
+                            return locationInfo.tags.some(locationTag => this.state.selectedGeotags.has(locationTag));
+                        });
+                    }
+                    this.state.allEventsFilteredByDateAndLocation = events;
                 }
-                this.state.allEventsFilteredByDateAndLocation = events;
-            }
-            DataManager.groupEventsByLatLngInDateRange(this.state);
-            DataManager.buildTagIndex(this.state, this.state.allEventsFilteredByDateAndLocation);
-            if (!skipDisplay) {
-                this.filterAndDisplayEvents();
-            }
+
+                if (FP) FP.mark('fp:dates:filtered');
+
+                DataManager.groupEventsByLatLngInDateRange(this.state);
+
+                if (FP) {
+                    FP.mark('fp:dates:grouped');
+                    FP.measure('fp:dates:groupByLatLng', 'fp:dates:filtered', 'fp:dates:grouped');
+                }
+
+                DataManager.buildTagIndex(this.state, this.state.allEventsFilteredByDateAndLocation);
+
+                if (FP) {
+                    FP.mark('fp:dates:tagIndex');
+                    FP.measure('fp:dates:buildTagIndex', 'fp:dates:grouped', 'fp:dates:tagIndex');
+                }
+
+                if (!skipDisplay) {
+                    this.filterAndDisplayEvents();
+                }
+            };
+            return FP ? FP.wrap('updateFilteredEventList', run) : run();
         },
 
         /**
@@ -685,7 +843,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 zoom: initialZoom,
                 maxZoom: this.config.MAP_MAX_ZOOM,
                 attributionControl: false,
-                dragPan: false // Disable initially, re-enable without inertia below
+                dragPan: false, // Disable initially, re-enable without inertia below
+                fadeDuration: 0 // No crossfade on label collision changes
             });
 
             // Re-enable drag pan without inertia (momentum after releasing)
@@ -815,15 +974,27 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             this.state.map.on('moveend', () => {
-                this.updateVisibleItems();
-                // Debounce search rescoring — secondary to visual map updates
-                clearTimeout(this._moveendSearchTimeout);
-                this._moveendSearchTimeout = setTimeout(() => {
-                    const currentTerm = this.elements.omniSearchInput.value.toLowerCase();
-                    this.performSearch(currentTerm);
-                }, 150);
-                // Update debug overlay if debug mode is enabled
-                this.updateDebugOverlay();
+                const FP = (typeof window !== 'undefined' && window.FilterProfiler) || null;
+                const run = () => {
+                    if (FP) FP.mark('fp:moveend:start');
+                    this.updateVisibleItems();
+                    if (FP) {
+                        FP.mark('fp:moveend:visibleItems');
+                        FP.measure('fp:moveend:updateVisibleItems', 'fp:moveend:start', 'fp:moveend:visibleItems');
+                    }
+                    MarkerController.refreshLabelsForViewport();
+                    if (FP) {
+                        FP.mark('fp:moveend:labels');
+                        FP.measure('fp:moveend:refreshLabels', 'fp:moveend:visibleItems', 'fp:moveend:labels');
+                    }
+                    clearTimeout(this._moveendSearchTimeout);
+                    this._moveendSearchTimeout = setTimeout(() => {
+                        const currentTerm = this.elements.omniSearchInput.value.toLowerCase();
+                        this.performSearch(currentTerm);
+                    }, 150);
+                    this.updateDebugOverlay();
+                };
+                if (FP) FP.wrap('moveend', run); else run();
             });
 
             // Handle popup close events (custom event fired by MapManager)
@@ -908,6 +1079,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 allAvailableTags: this.state.allAvailableTags,
                 tagConfigBgColors: this.state.tagConfig.bgcolors,
                 tagDescendantsOf: this.state.tagDescendantsOf,
+                tagParentsOf: this.state.tagParentsOf,
+                tagChildrenOf: this.state.tagChildrenOf,
                 tagEmojiMap: this.state.tagEmojiMap,
                 getSelectedTagsWithColors: () => TagColorManager.getSelectedTagsWithColors(),
                 initialGlobalFrequencies: this.state.tagFrequencies,
@@ -935,7 +1108,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 createInteractiveTagButton: (tag) => FilterPanelUI.createInteractiveTagButton(tag),
                 hierarchyTagsSet: this.state.hierarchyTagsSet,
                 tagEmojiMap: this.state.tagEmojiMap,
-                organizersById: this.state.organizersById,
                 getDebugMode: () => this.state.debugMode
             });
         },
@@ -995,6 +1167,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
+            const FP = (typeof window !== 'undefined' && window.FilterProfiler) || null;
+            if (FP) FP.mark('fp:fade:start');
+
             // Find any open popup
             const openPopupInfo = MarkerController.findOpenPopup();
             const openPopup = openPopupInfo?.popup;
@@ -1012,6 +1187,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.state.allEventsFilteredByDateAndLocation
             );
 
+            if (FP) {
+                FP.mark('fp:fade:byTags');
+                FP.measure('fp:fade:filterByTags', 'fp:fade:start', 'fp:fade:byTags');
+            }
+
             // Store the computed lists in the state for use by other functions like search
             this.state.currentlyMatchingEvents = allMatchingEventsFlatList;
 
@@ -1020,8 +1200,18 @@ document.addEventListener('DOMContentLoaded', () => {
             this.state.currentlyMatchingLocationKeys = new Set(Object.keys(filteredLocations));
             this.state.currentFilteredLocations = filteredLocations;
 
+            if (FP) {
+                FP.mark('fp:fade:grouped');
+                FP.measure('fp:fade:groupByLoc', 'fp:fade:byTags', 'fp:fade:grouped');
+            }
+
             // After updating all matching items, update the visible subset as well.
             this.updateVisibleItems();
+
+            if (FP) {
+                FP.mark('fp:fade:viewport');
+                FP.measure('fp:fade:updateVisibleItems', 'fp:fade:grouped', 'fp:fade:viewport');
+            }
 
             // Update open popup/bottom sheet content if there is one
             if (openPopupInfo) {
@@ -1034,7 +1224,17 @@ document.addEventListener('DOMContentLoaded', () => {
             // Display markers on map
             MarkerController.displayEventsOnMap(locationsToDisplay);
 
+            if (FP) {
+                FP.mark('fp:fade:markers');
+                FP.measure('fp:fade:displayOnMap', 'fp:fade:viewport', 'fp:fade:markers');
+            }
+
             FilterPanelUI.updateView(allMatchingEventsFlatList);
+
+            if (FP) {
+                FP.mark('fp:fade:end');
+                FP.measure('fp:fade:updateView-wall', 'fp:fade:markers', 'fp:fade:end');
+            }
         },
 
         /**

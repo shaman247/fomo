@@ -50,6 +50,19 @@
     flex-direction: column;
     overflow: hidden;
     width: auto !important;
+    /* Per-location accents: --popup-accent (raw), --popup-accent-muted
+       (darker/desaturated), --popup-accent-vivid (brighter/saturated) are
+       set inline by JS. Hover variants are derived: lighten in dark, darken
+       in light. Falls back to the global teal / summary-open. */
+    --popup-accent-hover: color-mix(in srgb, var(--popup-accent, var(--accent-color)), white 30%);
+    --popup-accent-muted-hover: color-mix(in srgb, var(--popup-accent-muted, var(--accent-color)), white 22%);
+    --popup-accent-vivid-hover: color-mix(in srgb, var(--popup-accent-vivid, var(--summary-open)), white 18%);
+}
+
+:root[data-theme="light"] .maplibre-popup-content {
+    --popup-accent-hover: color-mix(in srgb, var(--popup-accent, var(--accent-color)), black 25%);
+    --popup-accent-muted-hover: color-mix(in srgb, var(--popup-accent-muted, var(--accent-color)), black 22%);
+    --popup-accent-vivid-hover: color-mix(in srgb, var(--popup-accent-vivid, var(--summary-open)), black 18%);
 }
 
 .maplibre-popup-content p {
@@ -68,10 +81,10 @@
 }
 
 .popup-tab {
+    position: relative;
     padding: 6px 2px;
     background: none;
     border: none;
-    border-bottom: 2px solid transparent;
     color: color-mix(in srgb, var(--secondary-text) 70%, transparent);
     font-family: var(--font-family);
     font-size: 0.7em;
@@ -80,12 +93,22 @@
     cursor: pointer;
     text-align: center;
     text-transform: uppercase;
-    transition: color 0.2s, border-color 0.2s;
+    transition: color 0.2s;
 }
 
 .popup-tab.active {
     color: var(--primary-text);
-    border-bottom-color: var(--accent-color);
+}
+
+.popup-tab.active::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    transform: translateX(-50%);
+    width: 90%;
+    height: 4px;
+    background: var(--popup-accent, var(--accent-color));
 }
 
 /* === Tab Viewport & Track === */
@@ -138,21 +161,21 @@
 
 .popup-event-card-name {
     font-weight: 500;
-    color: var(--accent-color);
+    color: var(--popup-accent-muted, var(--accent-color));
     display: block;
     line-height: 1.2;
 }
 
 .popup-event-card:hover .popup-event-card-name {
-    color: var(--accent-hover);
+    color: var(--popup-accent-muted-hover, var(--accent-hover));
 }
 
 .popup-event-card[data-expanded="true"] .popup-event-card-name {
-    color: var(--summary-open);
+    color: var(--popup-accent-vivid, var(--summary-open));
 }
 
 .popup-event-card[data-expanded="true"]:hover .popup-event-card-name {
-    color: var(--summary-open-hover);
+    color: var(--popup-accent-vivid-hover, var(--summary-open-hover));
 }
 
 .popup-event-card-datetime {
@@ -165,6 +188,27 @@
 
 .popup-event-card[data-expanded="true"] .popup-event-card-datetime {
     display: block;
+}
+
+.popup-event-card-datetime .datetime-other {
+    opacity: 0.6;
+}
+
+.popup-event-card-datetime .datetime-toggle {
+    background: none;
+    border: none;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    padding: 0;
+    margin-left: 0.4em;
+    text-decoration: underline dotted;
+    text-underline-offset: 2px;
+    opacity: 0.75;
+}
+
+.popup-event-card-datetime .datetime-toggle:hover {
+    opacity: 1;
 }
 
 .popup-event-card-preview {
@@ -299,23 +343,18 @@
 
 /* Implicit tag styling in popups */
 .maplibregl-popup-content .tag-button.state-implicit {
-    background-color: color-mix(in srgb, var(--secondary-accent-color) 25%, var(--tertiary-bg));
+    border-color: var(--secondary-accent-color);
     color: var(--primary-text);
 }
 
 .maplibregl-popup-content .tag-button.state-implicit:hover {
-    background-color: color-mix(in srgb, var(--secondary-accent-hover) 35%, var(--tertiary-bg));
+    border-color: var(--secondary-accent-hover);
 }
 
 /* Keyword tag pills in popups — override inherited cursor:pointer from .popup-event-card */
 .maplibregl-popup-content .tag-keyword {
     cursor: default;
     font-size: 0.8em;
-}
-
-/* Organizer tag in popup — italicized to distinguish from regular tags */
-.popup-organizer-tag {
-    font-style: italic;
 }
 
 /* === Events List === */

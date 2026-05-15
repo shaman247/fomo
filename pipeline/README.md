@@ -121,7 +121,7 @@ websites table
      ↓
 [Merge] → events + occurrences + urls + tags + sources
      ↓
-[Export] → events.init.json, events.full.json
+[Export] → events.day{0..3}.json + events.remainder.json + manifest.json
      ↓
 [Upload] → FTP server
 ```
@@ -137,10 +137,12 @@ Duplicates are merged: URLs combined, shorter name kept, sources tracked.
 
 ## Output Files
 
-- `events.init.json` - Core NYC area, 7-day window
-- `events.full.json` - Extended area, 90-day window
-- `locations.init.json` - Locations for init events
-- `locations.full.json` - Locations for full events
+Events are split into per-day chunks so the frontend can load just today's events on startup:
+
+- `events.day0.json` … `events.day3.json` - Events occurring on each of the next 4 calendar days. Multi-day events appear in every chunk they touch; the frontend dedupes by backend `id`.
+- `events.remainder.json` - Events with at least one occurrence past day 3 (within the 90-day future window).
+- `locations.day0.json` … `locations.day3.json`, `locations.remainder.json` - Venues referenced by events in each chunk.
+- `manifest.json` - `{ "days": ["YYYY-MM-DD", …] }` mapping day index → calendar date.
 
 ## Troubleshooting
 

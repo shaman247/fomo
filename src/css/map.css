@@ -118,3 +118,67 @@
         display: none;
     }
 }
+
+/* === Phase 2 Loading Indicator === */
+/* Subtle pill shown while the full dataset is merging after Phase 1.
+   The map and Phase-1 markers are interactive during this time. */
+#phase2-loading-indicator {
+    position: absolute;
+    bottom: calc(20dvh + 16px);
+    bottom: calc(var(--app-height, 100dvh) * 0.2 + 16px);
+    left: 50%;
+    transform: translateX(-50%) translateY(8px);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    background: var(--color-surface, rgba(20, 20, 20, 0.85));
+    color: var(--color-text-primary, #fff);
+    border-radius: 999px;
+    font-size: 13px;
+    line-height: 1;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 200ms ease, transform 200ms ease;
+    z-index: 5;
+}
+
+#phase2-loading-indicator.visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+#phase2-loading-indicator.done {
+    /* Stays hidden once Phase 2 finishes; .visible is removed first */
+    display: none;
+}
+
+.phase2-spinner {
+    width: 12px;
+    height: 12px;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: phase2-spin 800ms linear infinite;
+}
+
+.phase2-progress {
+    opacity: 0.7;
+    font-variant-numeric: tabular-nums;
+    min-width: 2.5em;
+    text-align: right;
+}
+
+@keyframes phase2-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* On mobile, sit above the bottom sheet's collapsed handle area. */
+@media (max-width: 768px) {
+    #phase2-loading-indicator {
+        bottom: 70px;
+    }
+}

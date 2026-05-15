@@ -75,6 +75,7 @@ CREATE TABLE IF NOT EXISTS websites (
     text_mode TINYINT(1) DEFAULT NULL COMMENT 'Disable images for text-only crawl (default: false)',
     light_mode TINYINT(1) DEFAULT NULL COMMENT 'Use minimal browser features (default: true)',
     use_stealth TINYINT(1) DEFAULT NULL COMMENT 'Use stealth mode to avoid detection',
+    headed TINYINT(1) DEFAULT NULL COMMENT 'Run browser in headed (visible window) mode (default: false). Stealth always runs headed regardless.',
     scroll_delay DECIMAL(3,2) DEFAULT NULL COMMENT 'Seconds to pause between scroll steps (default: 0.2)',
     crawl_timeout INT UNSIGNED DEFAULT NULL COMMENT 'Timeout in seconds for entire crawl operation (default: 120)',
     crawl_frequency_locked BOOLEAN DEFAULT FALSE COMMENT 'If true, auto-frequency adjustment is disabled',
