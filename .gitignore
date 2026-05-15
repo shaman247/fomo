@@ -5,6 +5,15 @@
 
 # Claude Code and IDE
 .claude/*
+!.claude/commands/
+.claude/commands/*
+!.claude/commands/add-locations.md
+!.claude/commands/add-websites.md
+!.claude/commands/dedupe-events.md
+!.claude/commands/discover-venues.md
+!.claude/commands/fix-undated-events.md
+!.claude/commands/fix-unmapped-events.md
+!.claude/commands/run-pipeline.md
 .vscode/
 CLAUDE.md
 
@@ -33,14 +42,17 @@ src/data/locations.*.json
 # Scraper dumps (raw payloads, regenerable)
 data/
 
-# Upload state tracking
-scripts/upload_state.json
+# Scripts directory — only the four canonical helpers are tracked
+scripts/*
+!scripts/add_locations.php
+!scripts/add_websites.php
+!scripts/upload_public_html.py
+!scripts/geocode.php
 
 # PHP config with database credentials
 src/api/config.php
 
 # SSH private keys
-scripts/id_rsa_sync
 *.pem
 
 # Database backups

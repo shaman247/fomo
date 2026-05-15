@@ -95,13 +95,12 @@ php scripts/add_locations.php --production
 
 **Note**: Unlike websites, locations use auto-increment IDs in both databases. The IDs may differ between local and production.
 
-### Step 6: Clean Up
+### Step 6: Clean Up (REQUIRED)
 
-After successfully adding locations, reset the `$new_locations` array back to empty:
+After successfully adding locations, reset the `$new_locations` array back to empty. Do NOT leave previous entries, dated comments, or "see git history" trail markers behind — git is the source of truth for what was added when.
 
 ```php
 $new_locations = [
-    // Locations added on YYYY-MM-DD - see git history
 ];
 ```
 
