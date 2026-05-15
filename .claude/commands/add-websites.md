@@ -138,13 +138,12 @@ php scripts/add_websites.php --production
 - Skip if the website doesn't exist locally (must add to local first!)
 - Error if the local ID conflicts with a different website in production
 
-### Step 8: Clean Up
+### Step 8: Clean Up (REQUIRED)
 
-After successfully adding websites, reset the `$new_websites` array back to empty:
+After successfully adding websites, reset the `$new_websites` array back to empty. Do NOT leave previous entries, dated comments, or "see git history" trail markers behind — git is the source of truth for what was added when.
 
 ```php
 $new_websites = [
-    // Websites added on YYYY-MM-DD - see git history
 ];
 ```
 
