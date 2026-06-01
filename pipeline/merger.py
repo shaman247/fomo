@@ -50,8 +50,34 @@ except ImportError:
     EditLogger = None
 
 
+# Cinema/screening format & accessibility tags. When a parenthetical group is
+# made up ENTIRELY of these, it carries no event identity (it marks how a film
+# is screened, not which film). Left in, the shared tokens inflate word-overlap
+# and make DIFFERENT films match (e.g. "Pressure (Open Cap/Eng Sub)" ~
+# "Star Wars … (Open Cap/Eng Sub)" via asymmetric-containment).
+_FORMAT_TAGS = {
+    'open', 'cap', 'caption', 'captioned', 'captions', 'oc',
+    'eng', 'sub', 'subs', 'subbed', 'subtitle', 'subtitled', 'subtitles',
+    'cc', 'ad', 'ov', 'omu', 'dub', 'dubbed', 'dubs',
+    '2d', '3d', 'imax', 'dbox', '4dx', 'hd', 'ddh', 'das',
+}
+
+
+def _strip_format_parentheticals(name):
+    """Drop ()/[] groups whose alpha tokens are all screening-format tags."""
+    def repl(match):
+        inner = match.group(1) if match.group(1) is not None else match.group(2)
+        tokens = [t for t in re.split(r'[^a-z0-9]+', inner.lower()) if t]
+        alpha = [t for t in tokens if not t.isdigit()]
+        if alpha and all(t in _FORMAT_TAGS for t in alpha):
+            return ' '
+        return match.group(0)
+    return re.sub(r'\(([^()]*)\)|\[([^\[\]]*)\]', repl, name)
+
+
 def normalize_name_for_dedup(name):
     """Remove accents, punctuation, underscores, and whitespace; convert to lowercase."""
+    name = _strip_format_parentheticals(name)
     # Normalize unicode to remove accents (é -> e, etc.)
     nfkd = unicodedata.normalize('NFKD', name)
     ascii_name = ''.join(c for c in nfkd if not unicodedata.combining(c))
@@ -210,6 +236,116 @@ def extract_core_title(name):
     return result.strip()
 
 
+# Lineup markers ("ft:", "feat:", etc.) introduce a per-occurrence cast rather
+# than a distinct sub-event, so a colon right after one is NOT a subtitle break.
+_LINEUP_MARKERS = {'ft', 'feat', 'featuring', 'w', 'with', 'presents', 'present'}
+
+
+def _ordered_significant_words(name):
+    """Like get_significant_words but preserves order (for prefix comparison)."""
+    stop_words = {'the', 'and', 'for', 'with', 'from', 'into', 'your'}
+    words = normalize_name_for_dedup(name).split()
+    return [
+        w for w in words
+        if len(w) >= 3 and w not in stop_words
+        and not (len(w) == 4 and w.isdigit() and w.startswith('20'))
+    ]
+
+
+def _split_on_subtitle_colon(name):
+    """Return (head, subtitle) split on a genuine "Head: Subtitle" colon, or None.
+
+    Only a *clean top-level* colon counts. We skip colons that are:
+    - inside parentheses/brackets/quotes (e.g. "(2hr:Harlem:Lenox)")
+    - part of a clock time (digit:digit, e.g. "10:00am")
+    - immediately preceded by a lineup marker (e.g. "ft:", "feat:")
+    """
+    depth = 0
+    openers = {'(': ')', '[': ']', '{': '}'}
+    closers = {')', ']', '}'}
+    for i, ch in enumerate(name):
+        if ch in openers:
+            depth += 1
+        elif ch in closers:
+            depth = max(0, depth - 1)
+        elif ch == ':' and depth == 0:
+            prev_char = name[i - 1] if i > 0 else ''
+            next_char = name[i + 1] if i + 1 < len(name) else ''
+            # Clock time like 10:00 — digit on both immediate sides.
+            if prev_char.isdigit() and next_char.isdigit():
+                continue
+            head, subtitle = name[:i].strip(), name[i + 1:].strip()
+            if not head or not subtitle:
+                return None
+            last_word = re.sub(r'[^a-z]', '', head.split()[-1].lower()) if head.split() else ''
+            if last_word in _LINEUP_MARKERS:
+                continue
+            return head, subtitle
+    return None
+
+
+def _bare_name_vs_distinct_subtitle(bare, specific):
+    """Detect a bare/umbrella name being loosely matched against a more specific
+    "Head: Subtitle" sibling that it should NOT merge with.
+
+    Fires only when ALL of the following hold:
+    - `specific` has a clean subtitle colon and `bare` has no such colon
+    - `bare` matches the head LOOSELY (substring or word-subset) but NOT exactly
+    - `bare` shares no significant words with the subtitle
+
+    This blocks a short umbrella name (e.g. "DanceAfrica") from absorbing a
+    distinct sub-event ("BAM DanceAfrica 2026: Visual Art | Sanaa Gateja") whose
+    subtitle carries the distinguishing content. It deliberately leaves the
+    common legitimate case intact — when the bare name EQUALS the head (e.g.
+    "The Monsters" vs "The Monsters: a Sibling Love Story") it is the same event.
+    """
+    split = _split_on_subtitle_colon(specific)
+    if split is None or _split_on_subtitle_colon(bare) is not None:
+        return False
+    head, subtitle = split
+
+    # The subtitle must carry real distinguishing content (>=2 significant words)
+    # to count as a distinct sub-event. A one-word tagline ("Constance: A
+    # Confession") is just a fuller title of the same event, so don't split it —
+    # that structure is otherwise indistinguishable from "<presenter> <core>:
+    # <sub-event>" by name alone, and over-firing would create duplicate events.
+    if len(get_significant_words(subtitle)) < 2:
+        return False
+
+    nbare = normalize_name_for_dedup(bare)
+    nhead = normalize_name_for_dedup(head)
+    # Bare name equal to the head => same event, not a false positive.
+    if nbare == nhead:
+        return False
+
+    # If the bare name is a leading prefix of the full specific name, the
+    # specific name is just a longer/fuller title of the SAME event (e.g.
+    # "MOCA TALKS with Madelyn Postman" vs "MOCA TALKS with Madelyn Postman
+    # Staring into the Sun: Stories ..."), not an umbrella absorbing a distinct
+    # sub-event. The umbrella case has the shared token embedded mid-name
+    # ("DanceAfrica" inside "BAM DanceAfrica 2026: ...").
+    bare_ordered = _ordered_significant_words(bare)
+    specific_ordered = _ordered_significant_words(specific)
+    if len(bare_ordered) >= 2 and specific_ordered[:len(bare_ordered)] == bare_ordered:
+        return False
+
+    bare_words = get_significant_words(bare)
+    head_words = get_significant_words(head)
+    loose_head_match = (
+        (len(nbare) >= 5 and len(nhead) >= 5 and nbare in nhead)
+        or (bare_words and head_words and bare_words.issubset(head_words))
+    )
+    if not loose_head_match:
+        return False
+
+    # If the bare name references the subtitle at all, it's plausibly the same
+    # specific event described two ways — don't treat as a false positive.
+    if bare_words & get_significant_words(subtitle):
+        return False
+
+    return True
+
+
 def is_false_positive(name1, name2):
     """
     Check if two "similar" names are actually different events.
@@ -222,6 +358,7 @@ def is_false_positive(name1, name2):
     - Different episode numbers
     - Different set/part/volume numbers (Set 1 vs Set 2)
     - Different sports opponents
+    - A bare/umbrella name vs a more specific "Head: Subtitle" sibling
     """
     norm1 = normalize_name_for_dedup(name1)
     norm2 = normalize_name_for_dedup(name2)
@@ -294,6 +431,12 @@ def is_false_positive(name1, name2):
     times1 = set(re.findall(time_anywhere_pattern, norm1, re.IGNORECASE))
     times2 = set(re.findall(time_anywhere_pattern, norm2, re.IGNORECASE))
     if times1 and times2 and times1 != times2:
+        return True
+
+    # Bare/umbrella name vs a distinct "Head: Subtitle" sibling (check both
+    # orderings since the bare name may be either argument).
+    if (_bare_name_vs_distinct_subtitle(name1, name2)
+            or _bare_name_vs_distinct_subtitle(name2, name1)):
         return True
 
     return False
