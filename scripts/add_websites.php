@@ -10,13 +10,18 @@
  *   php scripts/add_websites.php --production --dry-run
  *
  * Edit the $new_websites array below to specify websites to add.
+ *
+ * CLEANUP: After a successful run, REMOVE the entries you just added from
+ * $new_websites so the array stays empty between sessions. Stale entries
+ * clutter dry-runs (everything reports "already exists") and obscure the
+ * next addition. Re-running with the same entries is a no-op, but they
+ * should still be deleted as part of finishing the task.
  */
 
 // ============================================================================
 // EDIT THIS ARRAY TO ADD NEW WEBSITES
 // ============================================================================
-$new_websites = [
-];
+$new_websites = [];
 
 // ============================================================================
 // DATABASE CONFIGURATION

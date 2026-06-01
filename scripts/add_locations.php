@@ -10,17 +10,19 @@
  *   php scripts/add_locations.php --production --dry-run
  *
  * Edit the $new_locations array below to specify locations to add.
+ *
+ * CLEANUP: After a successful run, REMOVE the entries you just added from
+ * $new_locations so the array stays empty between sessions. Stale entries
+ * clutter dry-runs (everything reports "already exists") and obscure the
+ * next addition. Re-running with the same entries is a no-op, but they
+ * should still be deleted as part of finishing the task.
  */
 
 // ============================================================================
 // EDIT THIS ARRAY TO ADD NEW LOCATIONS
 // ============================================================================
-$new_locations = [
-];
+$new_locations = [];
 
-// ============================================================================
-// DATABASE CONFIGURATION
-// ============================================================================
 
 // Load .env file
 function load_env($path) {

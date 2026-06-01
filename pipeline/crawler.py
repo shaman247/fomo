@@ -42,6 +42,11 @@ def is_instagram_url(url):
     return bool(url) and bool(_INSTAGRAM_URL_RE.match(url))
 
 
+# ra.co URLs short-circuit to the GraphQL API (DataDome blocks HTML scraping
+# but /graphql is reachable with a normal Chrome UA). See pipeline/ra_graphql.py.
+from ra_graphql import is_ra_url, fetch_and_build_markdown as _ra_fetch_and_build_markdown
+
+
 _DATE_OFFSET_RE = re.compile(r'\{\{date([+-]\d+)?\}\}')
 
 
@@ -116,6 +121,29 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
         print(f"  Skipping {name}: only Instagram URLs (use /picnob-scrape)")
         return None
     urls = non_ig_urls
+
+    # ra.co URLs short-circuit to the GraphQL API. DataDome blocks crawl4ai on
+    # the HTML pages, but /graphql is reachable. Currently only the NYC area
+    # listing (w388) is supported; per-venue ra.co/clubs/<id> URLs return
+    # empty markdown until the GraphQL handler learns to query by venue.
+    if all(is_ra_url(_url_of(u)) for u in urls):
+        crawl_result_id = db.create_crawl_result(
+            cursor, connection, crawl_run_id, website['id'], create_safe_filename(name, '.md')
+        )
+        try:
+            md, n_events = _ra_fetch_and_build_markdown()
+        except Exception as exc:
+            print(f"  ! {name}: ra.co GraphQL fetch failed: {exc}")
+            db.update_crawl_result_failed(cursor, connection, crawl_result_id, f"ra.co GraphQL: {exc}")
+            return None
+        if not md:
+            print(f"  ! {name}: ra.co GraphQL returned 0 events")
+            db.update_crawl_result_failed(cursor, connection, crawl_result_id, "ra.co GraphQL returned 0 events")
+            return None
+        db.update_crawl_result_crawled(cursor, connection, crawl_result_id, md)
+        db.update_website_last_crawled(cursor, connection, website['id'])
+        print(f"  + {name}: ra.co GraphQL → {n_events} events, {len(md)} bytes")
+        return crawl_result_id
 
     # Create safe filename from website name
     safe_filename = create_safe_filename(name, '.md')
@@ -194,7 +222,7 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
             markdown_generator=md_generator,
         )
 
-        print(f"  Crawling {name} (timeout: {crawl_timeout}s)... [{datetime.now().strftime('%H:%M:%S')}]")
+        print(f"  Crawling {name} (timeout: {crawl_timeout}s)...")
         combined_markdown = ""
 
         async def crawl_urls():
@@ -303,7 +331,7 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
         db.update_crawl_result_crawled(cursor, connection, crawl_result_id, combined_markdown)
         db.update_website_last_crawled(cursor, connection, website['id'])
 
-        print(f"    - Stored {len(combined_markdown)} characters of content [{datetime.now().strftime('%H:%M:%S')}]")
+        print(f"    - Stored {len(combined_markdown)} characters of content")
         return crawl_result_id
 
     except Exception as e:
@@ -430,18 +458,30 @@ def build_event_crawl_config(website_settings):
     )
 
 
-async def crawl_event_url(web_crawler, url, crawl_config):
+async def crawl_event_url(web_crawler, url, crawl_config, timeout=120):
     """
     Crawl a single event URL and return its markdown content.
+
+    Wraps the crawl in a hard ``asyncio.wait_for`` ceiling so a single hung
+    page (e.g. a broken/slow iframe under ``process_iframes=True``) cannot
+    block forever and starve the shared worker semaphore in Step 5. The
+    page-level ``page_timeout`` is 60s; this outer ceiling (default 120s)
+    covers iframe processing and any browser-level wedge crawl4ai's own
+    timeout fails to interrupt.
 
     Returns the page content (truncated to 12K chars) or None on failure.
     """
     try:
-        result = await web_crawler.arun(url=url, config=crawl_config)
+        result = await asyncio.wait_for(
+            web_crawler.arun(url=url, config=crawl_config),
+            timeout=timeout,
+        )
         if result.success and result.markdown:
             content = result.markdown.fit_markdown or result.markdown.raw_markdown
             if content and len(content) > 50:
                 return content[:12000]
+    except asyncio.TimeoutError:
+        print(f"    Crawl timed out after {timeout}s for {url}")
     except Exception as e:
         print(f"    Crawl error for {url}: {e}")
     return None

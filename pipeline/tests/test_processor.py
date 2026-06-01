@@ -125,6 +125,9 @@ STRIP_EMOJI_TEST_CASES = [
     # Leading digits not stripped (digits are \p{Emoji} but not \p{Emoji_Presentation})
     ("3 Blind Mice", "3 Blind Mice"),
 
+    # Text-default emoji without variation selector (e.g. dove 🕊 U+1F54A) — should still be stripped
+    ("\U0001f54a Upper West Side Girl Club Coffee Walk", "Upper West Side Girl Club Coffee Walk"),
+
     # Empty string
     ("", ""),
 ]

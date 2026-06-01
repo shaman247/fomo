@@ -4,7 +4,7 @@ Adaptive crawl frequency analyzer.
 Analyzes historical crawl data to recommend optimal crawl frequencies
 for each website, ensuring coverage of events in the next 2 weeks.
 
-Two key signals:
+Two key signals for frequency:
 1. Posting lead time — how far in advance a site posts new events.
    If P25 lead time is 5 days, we need to crawl every ~2 days to catch them.
 2. Event horizon — how far into the future a crawl's events reach.
@@ -12,6 +12,13 @@ Two key signals:
    or we'll have a coverage gap.
 
 The binding constraint is whichever requires more frequent crawling.
+
+Periodicity (for crawl_after):
+    For sites with repeating active/dormant cycles in their crawl history
+    (annual festivals, seasonal venues), the analyzer also predicts the
+    next active window and sets `crawl_after` so the scheduler skips the
+    site entirely during the predicted dormant period — saving crawl
+    budget that would otherwise be wasted at the MAX_FREQUENCY ceiling.
 
 Standalone usage:
     python frequency_analyzer.py                  # Apply adjustments
@@ -25,6 +32,7 @@ Integration:
 
 import argparse
 import sys
+from datetime import date, timedelta
 
 import db
 
@@ -33,7 +41,7 @@ MIN_CRAWL_HISTORY = 3
 
 # Frequency bounds (days)
 MIN_FREQUENCY = 1
-MAX_FREQUENCY = 14
+MAX_FREQUENCY = 90
 DEFAULT_FREQUENCY = 7
 
 # Maximum change factor per adjustment (prevent oscillation)
@@ -63,6 +71,17 @@ HORIZON_BUFFER_DAYS = 1
 # Minimum new-event rate (new events / crawls) below which we ignore lead times
 # and relax frequency. Prevents 1 event in 40 crawls from keeping freq at 1d.
 MIN_USEFUL_EVENT_RATE = 0.1
+
+# ---- Periodicity detection ----
+# Won't trigger until we accumulate enough history. Annual patterns need ~1+ year
+# of data; shorter cycles (60-180d) can be detected sooner.
+PERIODICITY_MIN_CRAWLS = 10                 # Need this many processed crawls
+PERIODICITY_MIN_HISTORY_DAYS = 120          # Need at least this much calendar span
+PERIODICITY_MIN_PERIOD_DAYS = 60            # Don't predict cycles shorter than 2 months
+PERIODICITY_TOLERANCE_DAYS = 45             # Cycle length can vary by this much
+PERIODICITY_WINDOW_GAP_TOLERANCE_DAYS = 21  # Brief dormant breaks don't split a window
+PERIODICITY_RECENT_DORMANT_CRAWLS = 3       # Last N crawls must all be zero
+PERIODICITY_LEAD_BUFFER_DAYS = 30           # Start crawling this much before predicted next active
 
 
 def _compute_lead_times(cursor, website_id):
@@ -229,6 +248,136 @@ def _percentile(sorted_values, pct):
     return sorted_values[index]
 
 
+def _find_active_windows(crawl_history, gap_tolerance_days=PERIODICITY_WINDOW_GAP_TOLERANCE_DAYS):
+    """
+    Find continuous active windows in a chronological crawl history.
+
+    An active window is a sequence of crawls with event_count > 0, possibly
+    interrupted by brief dormant gaps (<= gap_tolerance_days). Longer dormant
+    runs close the current window.
+
+    Args:
+        crawl_history: list of (date, event_count) tuples, sorted by date.
+        gap_tolerance_days: max consecutive dormant days that don't split a window.
+
+    Returns:
+        list of (start_date, end_date) tuples.
+    """
+    windows = []
+    current_start = None
+    current_end = None
+
+    for d, event_count in crawl_history:
+        if event_count > 0:
+            if current_start is None:
+                current_start = d
+            current_end = d
+        elif current_start is not None and (d - current_end).days > gap_tolerance_days:
+            windows.append((current_start, current_end))
+            current_start = None
+            current_end = None
+
+    if current_start is not None:
+        windows.append((current_start, current_end))
+
+    return windows
+
+
+def _detect_periodicity_from_history(crawl_history, today):
+    """
+    Detect repeating active-window patterns in a crawl history.
+
+    Pure function — no DB access — for testability.
+
+    Args:
+        crawl_history: list of (date, event_count) tuples, sorted ascending.
+        today: reference date (typically date.today()).
+
+    Returns:
+        dict with:
+          period_days, last_active_start, next_predicted_start,
+          crawl_after, cycles_observed, total_windows
+        — or None if no reliable pattern.
+    """
+    if len(crawl_history) < PERIODICITY_MIN_CRAWLS:
+        return None
+
+    history_span_days = (crawl_history[-1][0] - crawl_history[0][0]).days
+    if history_span_days < PERIODICITY_MIN_HISTORY_DAYS:
+        return None
+
+    windows = _find_active_windows(crawl_history)
+    if len(windows) < 2:
+        return None
+
+    gaps = [(windows[i][0] - windows[i - 1][0]).days for i in range(1, len(windows))]
+
+    # Only consider gaps that look like real cycles (sub-MIN_PERIOD gaps may just be
+    # noise within an active window that the gap-tolerance didn't bridge).
+    cycle_gaps = [g for g in gaps if g >= PERIODICITY_MIN_PERIOD_DAYS]
+    if not cycle_gaps:
+        return None
+
+    mean_gap = sum(cycle_gaps) / len(cycle_gaps)
+
+    # All cycle gaps must cluster tightly — otherwise it's not really periodic.
+    if not all(abs(g - mean_gap) <= PERIODICITY_TOLERANCE_DAYS for g in cycle_gaps):
+        return None
+
+    # Confidence guard: a single observed gap is only trusted at annual-ish
+    # lengths (where the prior is strong — yearly festivals, seasonal venues).
+    # Shorter "1-gap" patterns (e.g. one quarterly-looking gap) are too easy
+    # to find coincidentally; require 2+ confirming cycles.
+    annual_range = (310, 410)
+    if len(cycle_gaps) < 2 and not (annual_range[0] <= mean_gap <= annual_range[1]):
+        return None
+
+    # Only set crawl_after if the site is currently dormant. If recent crawls
+    # show activity, the site is in its active window and should keep being crawled.
+    recent = crawl_history[-PERIODICITY_RECENT_DORMANT_CRAWLS:]
+    if any(event_count > 0 for _, event_count in recent):
+        return None
+
+    period_days = round(mean_gap)
+    last_window_start = windows[-1][0]
+    next_predicted = last_window_start + timedelta(days=period_days)
+    proposed_crawl_after = next_predicted - timedelta(days=PERIODICITY_LEAD_BUFFER_DAYS)
+
+    # If the predicted reactivation is in the past or imminent, don't set
+    # crawl_after — the site is overdue and should be crawled normally.
+    if proposed_crawl_after <= today:
+        return None
+
+    return {
+        'period_days': period_days,
+        'last_active_start': last_window_start,
+        'next_predicted_start': next_predicted,
+        'crawl_after': proposed_crawl_after,
+        'cycles_observed': len(cycle_gaps),
+        'total_windows': len(windows),
+    }
+
+
+def _detect_periodicity(cursor, website_id, today=None):
+    """
+    DB-backed wrapper around _detect_periodicity_from_history.
+
+    Pulls the full processed crawl history for the website (not limited to
+    ANALYSIS_WINDOW_DAYS — periodicity needs as much history as possible).
+    """
+    if today is None:
+        today = date.today()
+
+    cursor.execute("""
+        SELECT DATE(crawled_at), event_count
+        FROM crawl_results
+        WHERE website_id = %s AND status = 'processed'
+        ORDER BY crawled_at
+    """, (website_id,))
+    history = [(row[0], row[1]) for row in cursor.fetchall()]
+    return _detect_periodicity_from_history(history, today)
+
+
 def _recommend_frequency(lead_times, horizons, new_event_data, stability,
                          has_upcoming, current_frequency, content_staleness=0):
     """
@@ -380,11 +529,12 @@ def analyze_frequencies(cursor, connection, website_ids=None, dry_run=False, ver
     Returns:
         dict with analyzed, adjusted, skipped counts and details list
     """
-    # Get eligible websites
+    # Get eligible websites. `crawl_after` is pulled so we can skip sites that
+    # already have a future skip-until date set (manually or by a prior run).
     if website_ids:
         placeholders = ','.join(['%s'] * len(website_ids))
         cursor.execute(f"""
-            SELECT w.id, w.name, w.crawl_frequency, w.crawl_frequency_locked,
+            SELECT w.id, w.name, w.crawl_frequency, w.crawl_frequency_locked, w.crawl_after,
                    (SELECT COUNT(*) FROM crawl_results cr
                     WHERE cr.website_id = w.id
                       AND cr.status = 'processed'
@@ -396,7 +546,7 @@ def analyze_frequencies(cursor, connection, website_ids=None, dry_run=False, ver
         """, website_ids)
     else:
         cursor.execute(f"""
-            SELECT w.id, w.name, w.crawl_frequency, w.crawl_frequency_locked,
+            SELECT w.id, w.name, w.crawl_frequency, w.crawl_frequency_locked, w.crawl_after,
                    (SELECT COUNT(*) FROM crawl_results cr
                     WHERE cr.website_id = w.id
                       AND cr.status = 'processed'
@@ -413,25 +563,38 @@ def analyze_frequencies(cursor, connection, website_ids=None, dry_run=False, ver
             'name': row[1],
             'crawl_frequency': row[2],
             'locked': bool(row[3]),
-            'crawl_count': row[4],
+            'crawl_after': row[4],
+            'crawl_count': row[5],
         })
 
     results = {
         'analyzed': 0,
         'adjusted': 0,
         'skipped': 0,
+        'crawl_after_set': 0,
         'details': [],
     }
+
+    today = date.today()
 
     for w in websites:
         wid = w['id']
         name = w['name']
         current_freq = w['crawl_frequency'] or DEFAULT_FREQUENCY
+        current_crawl_after = w['crawl_after']
 
         # Skip locked websites
         if w['locked']:
             if verbose:
                 print(f"  Skipped {name}: frequency locked")
+            results['skipped'] += 1
+            continue
+
+        # Skip sites already gated by a future crawl_after — manual or prior-run.
+        # Re-evaluating them is unsafe because we have no fresh data to override with.
+        if current_crawl_after is not None and current_crawl_after > today:
+            if verbose:
+                print(f"  Skipped {name}: crawl_after={current_crawl_after} (future)")
             results['skipped'] += 1
             continue
 
@@ -456,6 +619,7 @@ def analyze_frequencies(cursor, connection, website_ids=None, dry_run=False, ver
         stability = _compute_stability(new_event_data)
         has_upcoming = _has_upcoming_events(cursor, wid)
         content_staleness = _compute_content_staleness(cursor, wid)
+        periodicity = _detect_periodicity(cursor, wid, today=today)
 
         recommendation = _recommend_frequency(
             lead_times, horizons, new_event_data, stability, has_upcoming, current_freq,
@@ -464,6 +628,7 @@ def analyze_frequencies(cursor, connection, website_ids=None, dry_run=False, ver
 
         results['analyzed'] += 1
         new_freq = recommendation['frequency']
+        new_crawl_after = periodicity['crawl_after'] if periodicity else None
 
         detail = {
             'website_id': wid,
@@ -473,9 +638,12 @@ def analyze_frequencies(cursor, connection, website_ids=None, dry_run=False, ver
             'changed': recommendation['changed'],
             'reason': recommendation['reason'],
             'metrics': recommendation['metrics'],
+            'periodicity': periodicity,
+            'new_crawl_after': new_crawl_after,
         }
         results['details'].append(detail)
 
+        # Apply frequency change
         if recommendation['changed']:
             results['adjusted'] += 1
             prefix = "[DRY RUN] " if dry_run else ""
@@ -489,6 +657,22 @@ def analyze_frequencies(cursor, connection, website_ids=None, dry_run=False, ver
                 connection.commit()
         elif verbose:
             print(f"  {name}: {current_freq}d (no change — {recommendation['reason']})")
+
+        # Apply crawl_after from periodicity detection (independent of frequency change)
+        if new_crawl_after is not None:
+            results['crawl_after_set'] += 1
+            prefix = "[DRY RUN] " if dry_run else ""
+            print(f"  {prefix}{name}: crawl_after -> {new_crawl_after} "
+                  f"(period {periodicity['period_days']}d, "
+                  f"{periodicity['cycles_observed']} cycle(s); "
+                  f"next active ~{periodicity['next_predicted_start']})")
+
+            if not dry_run:
+                cursor.execute(
+                    "UPDATE websites SET crawl_after = %s WHERE id = %s",
+                    (new_crawl_after, wid)
+                )
+                connection.commit()
 
         if verbose and (recommendation['metrics'].get('lead_times_count', 0) > 0
                         or recommendation['metrics'].get('horizons_count', 0) > 0):
@@ -571,9 +755,10 @@ if __name__ == "__main__":
         print(f"\n{'='*60}")
         print("SUMMARY")
         print(f"{'='*60}")
-        print(f"  Analyzed: {results['analyzed']}")
-        print(f"  Adjusted: {results['adjusted']}")
-        print(f"  Skipped:  {results['skipped']}")
+        print(f"  Analyzed:        {results['analyzed']}")
+        print(f"  Frequency adj:   {results['adjusted']}")
+        print(f"  crawl_after set: {results['crawl_after_set']}")
+        print(f"  Skipped:         {results['skipped']}")
         if args.dry_run:
             print(f"\n  (Dry run -- no changes applied)")
     finally:

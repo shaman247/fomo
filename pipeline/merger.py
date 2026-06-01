@@ -420,6 +420,119 @@ def source_url_listing_set(cursor, cache, website_id):
     return cache[website_id]
 
 
+def _merge_occurrences_into_event(cursor, event_id, new_occurrences):
+    """Insert new occurrences into event_occurrences, deduping by (sd, st, ed).
+
+    Within a (start_date, end_date) bucket, a row with non-empty start_time supersedes
+    one with empty start_time. Within a (start_date, start_time, end_date) key, only
+    one row exists; end_time is reconciled by promoting empty → non-empty, but conflicting
+    non-empty end_times resolve to the existing row (first-writer-wins). This prevents
+    later sources from clobbering established occurrences when their extractor misreads
+    a time (e.g. 12am → 12pm).
+
+    Incoming start_time/end_time strings are canonicalized through
+    processor._standardize_time at the DB-write boundary, so legacy data and any
+    path that bypasses pipeline normalization still lands in canonical form.
+
+    new_occurrences is an iterable of (start_date, start_time, end_date, end_time, ...).
+    """
+    from processor import _standardize_time
+    cursor.execute(
+        "SELECT start_date, start_time, end_date, end_time, COALESCE(MAX(sort_order), -1) "
+        "FROM event_occurrences WHERE event_id = %s "
+        "GROUP BY start_date, start_time, end_date, end_time",
+        (event_id,),
+    )
+    existing_rows = cursor.fetchall()
+    # (sd, start_time, ed) -> end_time. Legacy data may have multiple rows per key
+    # (pre-tightening); we keep the first non-empty end_time we see so the new
+    # merger doesn't clobber a real value with a stale empty one.
+    existing_by_key = {}
+    # (sd, ed) -> set of start_times for the dateless-vs-timed supersession check
+    starts_by_date = {}
+    for sd, st, ed, et, _so in existing_rows:
+        st_s = st or ''
+        et_s = et or ''
+        key = (sd, st_s, ed)
+        prev = existing_by_key.get(key, '')
+        if not prev:
+            existing_by_key[key] = et_s
+        starts_by_date.setdefault((sd, ed), set()).add(st_s)
+    next_sort = max((row[4] for row in existing_rows), default=-1) + 1
+
+    for occ in new_occurrences:
+        sd = occ[0]
+        ed = occ[2]
+        # Canonicalize at the write boundary — guarantees the dedupe key compares
+        # strings in a single normalized form (e.g. '17:38' vs '5:38pm' both
+        # collapse to '5:38pm').
+        new_st = _standardize_time(occ[1])
+        new_et = _standardize_time(occ[3])
+
+        date_key = (sd, ed)
+        existing_starts = starts_by_date.get(date_key, set())
+
+        # Dateless incoming loses to any timed existing row at this (sd, ed).
+        if not new_st and any(s for s in existing_starts):
+            continue
+
+        key = (sd, new_st, ed)
+        if key in existing_by_key:
+            existing_et = existing_by_key[key]
+            if existing_et or not new_et:
+                # Existing already has an end_time, or incoming has nothing to add.
+                continue
+            # Promote: existing rows for this key have empty end_time; fill them in.
+            if ed is None:
+                cursor.execute(
+                    "UPDATE event_occurrences SET end_time = %s "
+                    "WHERE event_id = %s AND start_date = %s "
+                    "AND COALESCE(start_time, '') = %s "
+                    "AND end_date IS NULL AND COALESCE(end_time, '') = ''",
+                    (new_et, event_id, sd, new_st),
+                )
+            else:
+                cursor.execute(
+                    "UPDATE event_occurrences SET end_time = %s "
+                    "WHERE event_id = %s AND start_date = %s "
+                    "AND COALESCE(start_time, '') = %s "
+                    "AND end_date = %s AND COALESCE(end_time, '') = ''",
+                    (new_et, event_id, sd, new_st, ed),
+                )
+            existing_by_key[key] = new_et
+            continue
+
+        # New (sd, st, ed) key. Demote any dateless existing row at this date if
+        # incoming has a start_time.
+        if new_st and ('' in existing_starts):
+            if ed is None:
+                cursor.execute(
+                    "DELETE FROM event_occurrences WHERE event_id = %s "
+                    "AND start_date = %s AND (start_time IS NULL OR start_time = '') "
+                    "AND end_date IS NULL",
+                    (event_id, sd),
+                )
+            else:
+                cursor.execute(
+                    "DELETE FROM event_occurrences WHERE event_id = %s "
+                    "AND start_date = %s AND (start_time IS NULL OR start_time = '') "
+                    "AND end_date = %s",
+                    (event_id, sd, ed),
+                )
+            existing_by_key.pop((sd, '', ed), None)
+            existing_starts.discard('')
+
+        cursor.execute(
+            "INSERT INTO event_occurrences (event_id, start_date, start_time, end_date, end_time, sort_order) "
+            "VALUES (%s, %s, %s, %s, %s, %s)",
+            (event_id, sd, new_st, ed, new_et, next_sort),
+        )
+        next_sort += 1
+        existing_by_key[key] = new_et
+        existing_starts.add(new_st)
+        starts_by_date[date_key] = existing_starts
+
+
 def _deduplicate_same_name_events(cursor, connection, current_date, edit_logger=None):
     """Find and merge exact-name duplicate events within the same website.
 
@@ -849,7 +962,7 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                         pass
             return False
 
-        def find_best_match(candidates, require_location_id_match=False):
+        def find_best_match(candidates, require_location_id_match=False, allow_no_date_overlap=False):
             """Find best matching event, preferring exact normalized name matches.
 
             When `require_location_id_match` is set and the crawl_event has a
@@ -857,8 +970,16 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
             This prevents cross-venue merges when the location_name fallback
             tier matches generic brand names that are shared across venues
             (e.g. "AMC Theatres" appears at every AMC location).
+
+            When `allow_no_date_overlap` is set, exact-name matches (normalized)
+            are accepted even when date ranges don't overlap. This rescues
+            recurring weekly programs whose previously-extracted occurrences
+            ran out before the new crawl extracted fresh dates — without this,
+            the merger creates a duplicate event each time a recurring program's
+            "schedule horizon" lapses.
             """
             best_id = None
+            exact_no_overlap_id = None
             for existing in candidates:
                 if require_location_id_match and location_id is not None:
                     existing_loc_id = existing.get('location_id')
@@ -870,11 +991,20 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                             return existing['id']  # Exact match — best possible
                         elif best_id is None:
                             best_id = existing['id']  # Partial match — keep looking
-            return best_id
+                elif allow_no_date_overlap and exact_no_overlap_id is None:
+                    if normalize_name_for_dedup(existing['name']) == norm_name:
+                        exact_no_overlap_id = existing['id']
+            return best_id if best_id is not None else exact_no_overlap_id
 
-        # Try matching by location_id first (most precise and reliable)
+        # Try matching by location_id first (most precise and reliable).
+        # Allow no-date-overlap match here only: same venue + exact name is a
+        # strong-enough signal to merge a recurring event whose old occurrences
+        # have lapsed before the new crawl extracted fresh dates.
         if location_id is not None and location_id in existing_events_by_location_id:
-            matched_event_id = find_best_match(existing_events_by_location_id[location_id])
+            matched_event_id = find_best_match(
+                existing_events_by_location_id[location_id],
+                allow_no_date_overlap=True,
+            )
 
         # Fallback: match by coordinates if no location_id match found
         if matched_event_id is None and lat is not None and lng is not None:
@@ -951,29 +1081,17 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
             # Append new occurrences from this crawl that aren't already on the event.
             # Without this, a multi-day run first ingested with one date (e.g. announcement-only)
             # would stay stuck on that date even after later crawls discover the full schedule.
-            cursor.execute(
-                "SELECT start_date, start_time, end_date, end_time, COALESCE(MAX(sort_order), -1) "
-                "FROM event_occurrences WHERE event_id = %s "
-                "GROUP BY start_date, start_time, end_date, end_time",
-                (matched_event_id,)
+            #
+            # Specificity ladder for same (start_date, end_date): a row with a non-empty
+            # start_time is more specific than one with empty start_time, and within a
+            # given start_time, a non-empty end_time is more specific than empty. Listing
+            # crawls often re-emit dateless variants of dates the detail crawl already
+            # populated with times — without this ladder, the merger ended up storing both
+            # rows and the popup showed e.g. "2026-05-22 11am-4pm" and "2026-05-22" as
+            # two separate occurrences.
+            _merge_occurrences_into_event(
+                cursor, matched_event_id, valid_occurrences,
             )
-            existing_rows = cursor.fetchall()
-            existing_occ_keys = {
-                (row[0], row[1] or '', row[2], row[3] or '')
-                for row in existing_rows
-            }
-            next_sort = max((row[4] for row in existing_rows), default=-1) + 1
-            for occ in valid_occurrences:
-                occ_key = (occ[0], occ[1] or '', occ[2], occ[3] or '')
-                if occ_key in existing_occ_keys:
-                    continue
-                cursor.execute(
-                    "INSERT INTO event_occurrences (event_id, start_date, start_time, end_date, end_time, sort_order) "
-                    "VALUES (%s, %s, %s, %s, %s, %s)",
-                    (matched_event_id, occ[0], occ[1], occ[2], occ[3], next_sort)
-                )
-                next_sort += 1
-                existing_occ_keys.add(occ_key)
 
             # Add URL if not already present.
             # Promote event-specific URLs over website listing URLs: if the new URL
@@ -1131,12 +1249,13 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                     'website_id': website_id
                 })
 
-            # Add occurrences
+            # Add occurrences — canonicalize times at the boundary.
+            from processor import _standardize_time
             for i, occ in enumerate(valid_occurrences):
                 cursor.execute("""
                     INSERT IGNORE INTO event_occurrences (event_id, start_date, start_time, end_date, end_time, sort_order)
                     VALUES (%s, %s, %s, %s, %s, %s)
-                """, (new_event_id, occ[0], occ[1], occ[2], occ[3], i))
+                """, (new_event_id, occ[0], _standardize_time(occ[1]), occ[2], _standardize_time(occ[3]), i))
 
             # Add URL
             if url:

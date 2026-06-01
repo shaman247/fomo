@@ -8,7 +8,7 @@
       "attribution": "<a href=\"https://protomaps.com\">Protomaps</a> © <a href=\"https://openstreetmap.org\">OpenStreetMap</a>"
     }
   },
-  "glyphs": "fonts/glyphs/{fontstack}/{range}.pbf",
+  "glyphs": "fonts/glyphs-48/{fontstack}/{range}.pbf",
   "layers": [
     {
       "id": "background",
@@ -174,7 +174,7 @@
         "text-max-angle": 30
       },
       "paint": {
-        "text-color": "#444444",
+        "text-color": "#333333",
         "text-halo-color": "#f0f0f0",
         "text-halo-width": 2
       }
@@ -188,7 +188,7 @@
       "minzoom": 12,
       "layout": {
         "text-field": ["get", "name"],
-        "text-font": ["Inter SemiBold"],
+        "text-font": ["Inter Regular"],
         "text-size": [
           "interpolate", ["linear"], ["zoom"],
           12, 10,
@@ -199,7 +199,7 @@
         "text-letter-spacing": 0.1
       },
       "paint": {
-        "text-color": "#555555",
+        "text-color": "#444444",
         "text-halo-color": "#f0f0f0",
         "text-halo-width": 2
       }
