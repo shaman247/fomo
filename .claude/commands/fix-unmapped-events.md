@@ -7,6 +7,7 @@ Investigate and fix events that are not mapped to a location, or are mapped to a
 Events need a location to appear correctly on the map. The pipeline's location matcher handles most cases, but some events end up:
 - **Unmapped** (`location_id IS NULL`): The extracted `location_name` didn't match any known location
 - **Generic** (`generic_location = TRUE`): Mapped to a neighborhood/borough instead of a specific venue
+- **Mismatched** (mapped to a specific venue, but `location_name` doesn't match the venue's name/address/alt names): The extracted location is more precise than — or just different from — the mapped venue. Usually the venue exists but isn't in the locations table yet, or the location matcher fell back to the website's tied default. Subset of these flow up via Step 1 alongside Generic.
 
 Common causes:
 - **New venues** not yet in the locations table
@@ -17,19 +18,27 @@ Common causes:
 
 ## Step 1: Find Unmapped Events
 
-```sql
-SELECT e.id, e.name, e.location_id, e.location_name, w.name as website_name,
-       CASE WHEN l.generic_location = 1 THEN 'GENERIC'
-            WHEN e.location_id IS NULL THEN 'NO LOCATION' END as issue
-FROM events e
-LEFT JOIN locations l ON e.location_id = l.id
-LEFT JOIN websites w ON e.website_id = w.id
-WHERE e.suppressed = 0 AND e.archived = 0
-  AND (e.location_id IS NULL OR l.generic_location = 1)
-ORDER BY w.name, e.id;
+```bash
+./venv/bin/python scripts/find_unmapped_events.py --count
+./venv/bin/python scripts/find_unmapped_events.py --limit 50
+./venv/bin/python scripts/find_unmapped_events.py --issue MISMATCHED
+./venv/bin/python scripts/find_unmapped_events.py --website "NY Tech Week"
+./venv/bin/python scripts/find_unmapped_events.py --suggest-fixes --limit 100   # also re-run get_location_id and show where it would route differently
 ```
 
-Group by website to handle in batches — events from the same source often need the same fix.
+The script reuses `pipeline/processor.py:_normalize_location_name` so apostrophes, `&` / `+` → `and`, diacritics, and borough/state suffixes are all handled in lockstep with the pipeline matcher. No SQL drift.
+
+Output is grouped by issue class then website. Pass `--offset N` to paginate.
+
+### Issue classes
+
+- **NO_LOCATION** — `events.location_id IS NULL`. The matcher couldn't place these. `--suggest-fixes` will report when the current matcher *would* now find a location (e.g. because we added the venue since the event was first crawled).
+- **GENERIC** — mapped to a neighborhood/borough/region placeholder (`locations.generic_location = 1`). The event is on the map but pinned to the centroid; a specific venue would be better.
+- **MISMATCHED** — mapped to a specific venue, but the normalized `location_name` doesn't substring-match the venue's name / address / alternate names. Subset of these are real mis-maps (AI extracted a specific venue but the matcher fell back to the website's tied default); others are sublocation references (e.g. `"The Spare Room"` is the bar area inside `"The Gutter"` bowling alley) where the reviewer just needs to move the descriptor into `events.sublocation` or add a website-scoped alt name.
+
+### Tuning the skip list
+
+The script ships with a `SKIP_LOCATION_NAMES` set covering common vague labels (`tba`, `online`, `the rooftop`, etc.), chain brand names that map per-theater (`amc theatres`), and `% between %` street-intersection patterns. If a new venue's events keep surfacing because of a generic location_name that's correctly mapped, extend that set rather than adding hundreds of website-scoped alts.
 
 ## Step 2: Categorize Each Event
 

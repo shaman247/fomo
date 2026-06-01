@@ -22,6 +22,7 @@ import argparse
 import asyncio
 import os
 import sys
+import time
 from datetime import datetime
 
 # Force unbuffered stdout so pipeline progress is visible in real time,
@@ -31,6 +32,9 @@ if not os.environ.get('PYTHONUNBUFFERED'):
     sys.stderr.reconfigure(write_through=True)
 
 from crawl4ai import AsyncWebCrawler
+
+import logging_utils
+logging_utils.install()  # Prefix every log line with a timestamp for profiling
 
 import db
 import crawler
@@ -56,12 +60,21 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
         use_batch: If True, use Gemini Batch API for extraction (50% cheaper).
                    If None, defaults to True for full runs, False for --ids runs.
     """
-    def ts():
-        """Return current timestamp string for logging."""
-        return datetime.now().strftime('%H:%M:%S')
+    timer = logging_utils.StepTimer()
+
+    def step(title):
+        """Print a step header, reporting how long the previous step took."""
+        result = timer.stop()
+        if result is not None:
+            name, elapsed = result
+            print(f"  {name} took {logging_utils.format_duration(elapsed)}")
+        print(f"\n{'='*60}")
+        print(title)
+        print(f"{'='*60}")
+        timer.start(title)
 
     print(f"{'='*60}")
-    print(f"EVENT PROCESSING PIPELINE [{ts()}]")
+    print(f"EVENT PROCESSING PIPELINE")
     if website_ids:
         print(f"  Filtering to website IDs: {', '.join(map(str, website_ids))}")
     print(f"{'='*60}\n")
@@ -76,9 +89,7 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
 
     try:
         # Check for incomplete crawl results first
-        print(f"{'='*60}")
-        print(f"STEP 0: Checking for Incomplete Crawl Results [{ts()}]")
-        print(f"{'='*60}")
+        step("STEP 0: Checking for Incomplete Crawl Results")
 
         incomplete_results = db.get_incomplete_crawl_results(cursor, website_ids=website_ids)
         incomplete_crawled = [r for r in incomplete_results if r['status'] == 'crawled']
@@ -113,9 +124,7 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
             print("No incomplete crawl results found.")
 
         # STEP 1: Get websites due for crawling
-        print(f"\n{'='*60}")
-        print(f"STEP 1: Finding Websites Due for Crawling [{ts()}]")
-        print(f"{'='*60}")
+        step("STEP 1: Finding Websites Due for Crawling")
 
         websites = db.get_websites_due_for_crawling(cursor, website_ids)
         if limit and len(websites) > limit:
@@ -144,9 +153,7 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
         print(f"\nCrawl run ID: {crawl_run_id} ({run_date_str})")
 
         # STEP 2: Crawl websites
-        print(f"\n{'='*60}")
-        print(f"STEP 2: Crawling Websites [{ts()}]")
-        print(f"{'='*60}")
+        step("STEP 2: Crawling Websites")
 
         # Group websites by browser settings so each group shares a browser instance
         website_batches = {}
@@ -165,55 +172,88 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
 
             browser_config = crawler.get_browser_config(text_mode=text_mode, light_mode=light_mode, use_stealth=use_stealth, headed=headed, user_agent=user_agent)
 
-            async with AsyncWebCrawler(config=browser_config) as web_crawler:
-                # Worker pool pattern: maintain N concurrent crawlers at all times
-                queue = asyncio.Queue()
+            # Stall protection: a single wedged site can hang Playwright's shared
+            # browser below the asyncio layer, where crawl_website's own
+            # wait_for cannot cancel it — poisoning the browser so every queued
+            # worker also hangs and gather() never returns. A heartbeat-driven
+            # watchdog SIGKILLs the wedged browser on stall so the batch aborts
+            # instead of hanging the whole pipeline. Workers append to a shared
+            # list as they finish, so an abort keeps already-completed crawls.
+            STALL_TIMEOUT = 300  # 5 minutes with zero progress => kill browser & abort batch
+            heartbeat = {'last': time.monotonic()}
+            batch_results = []
 
-                # Fill the queue with batch websites
-                for website in batch_websites:
-                    await queue.put(website)
+            try:
+                async with AsyncWebCrawler(config=browser_config) as web_crawler:
+                    # Worker pool pattern: maintain N concurrent crawlers at all times
+                    queue = asyncio.Queue()
 
-                async def worker():
-                    """Worker that continuously pulls from queue until empty."""
-                    results = []
-                    while True:
-                        try:
-                            website = queue.get_nowait()
-                        except asyncio.QueueEmpty:
-                            break
+                    # Fill the queue with batch websites
+                    for website in batch_websites:
+                        await queue.put(website)
 
-                        conn = db.create_connection()
-                        if not conn:
-                            queue.task_done()
-                            continue
-                        cur = conn.cursor(buffered=True)
-                        try:
-                            result_id = await crawler.crawl_website(
-                                web_crawler, website, cur, conn, crawl_run_id
-                            )
-                            if result_id:
-                                results.append((result_id, website))
-                        except Exception as e:
-                            print(f"    - Error crawling {website['name']}: {e}")
-                        finally:
-                            cur.close()
-                            conn.close()
-                            queue.task_done()
-                    return results
+                    async def worker():
+                        """Worker that continuously pulls from queue until empty."""
+                        while True:
+                            try:
+                                website = queue.get_nowait()
+                            except asyncio.QueueEmpty:
+                                break
 
-                # Start N workers and wait for all to complete
-                worker_results = await asyncio.gather(*[worker() for _ in range(NUM_WORKERS)])
+                            conn = db.create_connection()
+                            if not conn:
+                                queue.task_done()
+                                continue
+                            cur = conn.cursor(buffered=True)
+                            try:
+                                result_id = await crawler.crawl_website(
+                                    web_crawler, website, cur, conn, crawl_run_id
+                                )
+                                if result_id:
+                                    batch_results.append((result_id, website))
+                            except Exception as e:
+                                print(f"    - Error crawling {website['name']}: {e}")
+                            finally:
+                                heartbeat['last'] = time.monotonic()
+                                cur.close()
+                                conn.close()
+                                queue.task_done()
 
-                # Flatten results from all workers
-                for results in worker_results:
-                    crawl_results.extend(results)
+                    async def crawl_watchdog(gather_task):
+                        """Kill the wedged browser if no crawl completes for STALL_TIMEOUT."""
+                        while not gather_task.done():
+                            await asyncio.sleep(30)
+                            idle = time.monotonic() - heartbeat['last']
+                            if idle > STALL_TIMEOUT and not gather_task.done():
+                                print(
+                                    f"  ⚠️ WATCHDOG: crawl stalled — no progress for "
+                                    f"{int(idle)}s ({len(batch_results)}/{len(batch_websites)} done). "
+                                    f"Killing wedged browser and aborting this batch."
+                                )
+                                gather_task.cancel()
+                                processor._kill_crawl_browsers()
+                                return
 
-        print(f"\n✓ Crawled {len(crawl_results)} website(s) [{ts()}]\n")
+                    # Start N workers; a watchdog aborts the batch if the browser wedges
+                    gather_task = asyncio.gather(*[worker() for _ in range(NUM_WORKERS)], return_exceptions=True)
+                    watchdog_task = asyncio.create_task(crawl_watchdog(gather_task))
+                    try:
+                        await gather_task
+                    except asyncio.CancelledError:
+                        print("  Crawl batch aborted; continuing with remaining batches.")
+                    finally:
+                        watchdog_task.cancel()
+            except Exception as e:
+                # A killed/wedged browser can make the context manager teardown
+                # raise — isolate it so remaining batches still run.
+                print(f"  Crawl batch error ({type(e).__name__}: {e}); continuing with remaining batches.")
+
+            crawl_results.extend(batch_results)
+
+        print(f"\n✓ Crawled {len(crawl_results)} website(s)\n")
 
         # STEP 3: Extract events using Gemini AI
-        print(f"{'='*60}")
-        print(f"STEP 3: Extracting Events with Gemini AI [{ts()}]")
-        print(f"{'='*60}")
+        step("STEP 3: Extracting Events with Gemini AI")
 
         extracted_results = []
 
@@ -338,12 +378,10 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
             for results in worker_results:
                 extracted_results.extend(results)
 
-        print(f"\n✓ Extracted events from {len(extracted_results)} website(s) [{ts()}]\n")
+        print(f"\n✓ Extracted events from {len(extracted_results)} website(s)\n")
 
         # STEP 4: Process responses
-        print(f"{'='*60}")
-        print(f"STEP 4: Processing Responses [{ts()}]")
-        print(f"{'='*60}")
+        step("STEP 4: Processing Responses")
 
         # Refresh connection to see data committed by extract workers
         cursor.close()
@@ -382,12 +420,10 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
             total_events += event_count
             print(f"    - {event_count} events processed")
 
-        print(f"\n✓ Processed {total_events} total events [{ts()}]\n")
+        print(f"\n✓ Processed {total_events} total events\n")
 
         # STEP 5: Detail-crawl individual event URLs for missing descriptions
-        print(f"{'='*60}")
-        print(f"STEP 5: Crawling Event Details [{ts()}]")
-        print(f"{'='*60}")
+        step("STEP 5: Crawling Event Details")
 
         candidates = db.get_detail_crawl_candidates(cursor, website_ids=website_ids)
         if candidates:
@@ -397,15 +433,13 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
         else:
             print("  No events need detail crawling")
             detail_crawled = 0
-        print(f"\n✓ Detail-crawled {detail_crawled} events [{ts()}]\n")
+        print(f"\n✓ Detail-crawled {detail_crawled} events\n")
 
         # Mark crawl run as completed
         db.complete_crawl_run(cursor, connection, crawl_run_id)
 
         # STEP 6: Merge crawl_events into final events table and archive outdated events
-        print(f"{'='*60}")
-        print(f"STEP 6: Merging Crawl Events and Archiving Outdated Events [{ts()}]")
-        print(f"{'='*60}")
+        step("STEP 6: Merging Crawl Events and Archiving Outdated Events")
 
         new_events, merged_events = merger.merge_crawl_events(cursor, connection, website_ids=website_ids)
         print(f"\n✓ Merged events ({new_events} new, {merged_events} merged)\n")
@@ -415,9 +449,7 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
         exporter.classify_event_sections(cursor, connection)
 
         # STEP 7: Export to JSON from events table
-        print(f"{'='*60}")
-        print(f"STEP 7: Exporting Events to JSON [{ts()}]")
-        print(f"{'='*60}")
+        step("STEP 7: Exporting Events to JSON")
 
         print("  Exporting events from database to JSON...")
         exporter.export_events(cursor)
@@ -427,9 +459,7 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
         print("\n✓ Event export completed\n")
 
         # STEP 8: Upload data files
-        print(f"{'='*60}")
-        print(f"STEP 8: Uploading Data [{ts()}]")
-        print(f"{'='*60}")
+        step("STEP 8: Uploading Data")
 
         success = uploader.upload(use_tls=False)
 
@@ -440,9 +470,7 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
             return False
 
         # STEP 9: Adjust crawl frequencies based on historical data
-        print(f"{'='*60}")
-        print(f"STEP 9: Adjusting Crawl Frequencies [{ts()}]")
-        print(f"{'='*60}")
+        step("STEP 9: Adjusting Crawl Frequencies")
 
         freq_results = frequency_analyzer.analyze_frequencies(cursor, connection)
         if freq_results['adjusted'] > 0:
@@ -450,8 +478,13 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
         else:
             print(f"\nNo frequency adjustments needed\n")
 
-        print(f"{'='*60}")
-        print(f"PIPELINE COMPLETED SUCCESSFULLY [{ts()}]")
+        result = timer.stop()
+        if result is not None:
+            name, elapsed = result
+            print(f"  {name} took {logging_utils.format_duration(elapsed)}")
+
+        print(f"\n{'='*60}")
+        print(f"PIPELINE COMPLETED SUCCESSFULLY")
         print(f"{'='*60}\n")
 
         # Show summary
@@ -463,6 +496,13 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
             print(f"  - Resumed processing: {len(incomplete_extracted)}")
         print(f"  - Events extracted: {len(extracted_results)}")
         print(f"  - Total events processed: {total_events}")
+
+        # Step timings (slowest first) to surface bottlenecks
+        print("\nStep timings (slowest first):")
+        for name, secs in sorted(timer.steps, key=lambda s: s[1], reverse=True):
+            print(f"  {logging_utils.format_duration(secs):>8}  {name}")
+        print(f"  {'-'*8}")
+        print(f"  {logging_utils.format_duration(timer.total):>8}  TOTAL")
 
         return True
 

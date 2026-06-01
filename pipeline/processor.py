@@ -13,9 +13,12 @@ Key features:
 """
 
 import asyncio
+import time
 import json
 import os
 import re
+import subprocess
+import unicodedata
 from datetime import datetime, timedelta
 
 import regex
@@ -64,10 +67,10 @@ def strip_leading_emoji(text: str) -> str:
         r'^(?:\s*(?:'
         r'(?:\p{Regional_Indicator}{2})'  # Flag emojis
         r'|'
-        r'(?:\p{Emoji_Presentation}[\uFE0E\uFE0F]?|\p{Emoji}\uFE0F)'  # Pictographic emoji (excludes bare digits)
+        r'(?:\p{Extended_Pictographic}[\uFE0E\uFE0F]?)'  # Pictographic emoji (text- or emoji-default; excludes bare digits/#/*)
         r'[\u20E3]?'  # Keycap combining enclosing
         r'(?:\p{Emoji_Modifier})?'  # Skin tone modifiers
-        r'(?:\u200D(?:\p{Emoji_Presentation}[\uFE0E\uFE0F]?|\p{Emoji}\uFE0F)(?:\p{Emoji_Modifier})?)*'  # ZWJ sequences
+        r'(?:\u200D\p{Extended_Pictographic}[\uFE0E\uFE0F]?(?:\p{Emoji_Modifier})?)*'  # ZWJ sequences
         r'))+\s*'
     )
     return emoji_pattern.sub('', text)
@@ -385,8 +388,8 @@ def filter_by_date(row_dict, current_date, future_limit_date):
     before rejecting so multi-session events and recently-ended listings
     aren't dropped on day 1.
     """
-    start_date_str = row_dict.get('start_date', '').strip()
-    end_date_str = row_dict.get('end_date', '').strip()
+    start_date_str = (row_dict.get('start_date') or '').strip()
+    end_date_str = (row_dict.get('end_date') or '').strip()
 
     try:
         start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
@@ -486,15 +489,128 @@ def log_rejection(cursor, connection, crawl_result_id, website_id,
         print(f"    - Warning: failed to log rejection: {e}")
 
 
+# Canonical time format: compact lowercase 12-hour with no space, no colon-zero.
+# Examples: '7pm', '7:30pm', '11am', '12am' (midnight), '12pm' (noon).
+# Empty/sentinel values normalize to ''.
+_TZ_SUFFIX_RE = re.compile(r'(est|edt|pst|pdt|mst|mdt|cst|cdt|et|pt|mt|ct)$')
+_TWELVE_HOUR_RE = re.compile(r'^(\d{1,2})(?::(\d{2}))?(am|pm)$')
+_HHMM_RE = re.compile(r'^(\d{1,2}):(\d{2})$')
+_HH_RE = re.compile(r'^(\d{1,2})$')
+_SENTINEL_TIMES = frozenset({
+    '', 'allday', 'allday/varies', 'varioustimes', 'multipletimes', 'tba', 'tbd',
+    'none', 'close', 'closing', 'late', 'tbc', 'ongoing', 'sundown', 'sunrise',
+    'sunset', 'dusk', 'dawn',
+})
+
+
+def _canonical_time(hour, minute, is_pm):
+    """Build a canonical time string from a 12-hour hour (1-12), minute, and AM/PM."""
+    suffix = 'pm' if is_pm else 'am'
+    return f'{hour}{suffix}' if minute == 0 else f'{hour}:{minute:02d}{suffix}'
+
+
 def _standardize_time(time_str):
-    """Standardizes time formats like '6:30 PM' to '6:30pm'."""
-    if not time_str:
+    """Canonicalize a time string to compact lowercase 12-hour form.
+
+    Examples:
+        '6:30 PM' -> '6:30pm'
+        '6:00pm'  -> '6pm'
+        '17:38'   -> '5:38pm'
+        '20'      -> '8pm'
+        '08'      -> '8am'
+        '1pmest'  -> '1pm'
+        'allday'  -> ''
+        '7pm'     -> '7pm'  (idempotent)
+
+    Ambiguous inputs (bare HH:MM with HH in 1-12, bare HH in 1-12) are returned with
+    whitespace/case normalized but otherwise unchanged — they could be either AM or PM
+    and auto-converting risks corrupting data. Unrecognized strings get the same
+    treatment so manual cleanup can find them via grep.
+    """
+    if time_str is None:
         return ''
-    normalized = time_str.lower().replace(' ', '').replace('.', '')
-    if normalized == 'allday':
+    s = str(time_str).strip().lower()
+    # Strip whitespace, dots, and underscores ('9_pm' -> '9pm').
+    s = s.replace(' ', '').replace('.', '').replace('_', '')
+    # Collapse single-digit zero minutes ('7:0pm' -> '7pm', '10:0' -> '10').
+    s = re.sub(r':0(?!\d)', '', s)
+    if s in _SENTINEL_TIMES:
         return ''
-    # Remove :00 suffix (e.g., '6:00pm' -> '6pm')
-    return normalized.replace(':00', '')
+
+    # Strip US timezone suffixes (1pmest, 7pmet, etc.)
+    s = _TZ_SUFFIX_RE.sub('', s)
+    if not s:
+        return ''
+
+    m = _TWELVE_HOUR_RE.match(s)
+    if m:
+        h = int(m.group(1))
+        mi = int(m.group(2) or 0)
+        if 1 <= h <= 12 and 0 <= mi <= 59:
+            return _canonical_time(h, mi, m.group(3) == 'pm')
+        return s  # malformed (e.g. '13pm'); preserve so it's findable
+
+    m = _HHMM_RE.match(s)
+    if m:
+        h = int(m.group(1))
+        mi = int(m.group(2))
+        if 0 <= h <= 23 and 0 <= mi <= 59:
+            # Unambiguous 24-hour values: hour 0 (midnight), hour 12 (noon), hour 13-23.
+            # Hour 1-11 in HH:MM with no AM/PM is ambiguous; leave alone.
+            if h == 0:
+                return _canonical_time(12, mi, False)
+            if h == 12:
+                return _canonical_time(12, mi, True)
+            if h >= 13:
+                return _canonical_time(h - 12, mi, True)
+            return s
+
+    m = _HH_RE.match(s)
+    if m:
+        raw = m.group(1)
+        h = int(raw)
+        if 0 <= h <= 23:
+            # A leading zero (e.g. '08') is a strong 24-hour signal even for hours 1-12.
+            has_leading_zero = len(raw) >= 2 and raw[0] == '0'
+            if h == 0:
+                return '12am'
+            if h == 12:
+                return '12pm'
+            if h >= 13:
+                return _canonical_time(h - 12, 0, True)
+            if has_leading_zero:
+                return _canonical_time(h, 0, False)  # '08' -> '8am'
+            return s  # bare '6' is ambiguous; leave alone
+
+    return s  # unrecognized; preserve original text (normalized whitespace/case)
+
+
+_SOURCE_MIDNIGHT_RE = re.compile(r'(?<!\d)12\s*am\b', re.IGNORECASE)
+
+
+def _sanity_check_end_time(start_time, end_time, source_text):
+    """Fix '12pm' (noon) end_time when context implies midnight close.
+
+    Gemini occasionally emits '12am' (midnight) as '12pm' (noon). Two cheap
+    heuristics catch the common cases:
+
+    1. PM start with 12pm end is impossible — '7pm-12pm' would mean going
+       backward through noon, so flip to 12am unconditionally.
+    2. AM start with 12pm end is usually noon — but if the source text
+       explicitly mentions '12am', the extractor probably misread it.
+
+    Inputs are canonicalized internally; the original end_time is returned
+    when nothing matches, so the caller's idempotency contract is preserved.
+    """
+    if _standardize_time(end_time) != '12pm':
+        return end_time
+    std_st = _standardize_time(start_time)
+    m = _TWELVE_HOUR_RE.match(std_st)
+    if m and m.group(3) == 'pm' and 1 <= int(m.group(1)) <= 11:
+        return '12am'
+    if source_text and _SOURCE_MIDNIGHT_RE.search(source_text):
+        return '12am'
+    return end_time
 
 
 # =============================================================================
@@ -594,13 +710,13 @@ def group_event_occurrences(rows, source_url=None):
                          if k not in ['start_date', 'start_time', 'end_date', 'end_time', 'sublocation', 'url']}
             base_event['occurrences'] = []
 
-            sublocation = row_dict.get('sublocation', '').strip()
+            sublocation = (row_dict.get('sublocation') or '').strip()
             if sublocation and sublocation.upper() != 'N/A':
                 base_event['sublocation'] = sublocation
 
             # Prefer event-specific URL over source_url (which is often generic)
             urls = []
-            url = row_dict.get('url', '').strip()
+            url = (row_dict.get('url') or '').strip()
             if url:
                 urls.append(url)
             if source_url and source_url not in urls:
@@ -613,7 +729,7 @@ def group_event_occurrences(rows, source_url=None):
             if len(event_name) < len(existing_name):
                 grouped_events[group_key]['name'] = event_name
 
-            url = row_dict.get('url', '').strip()
+            url = (row_dict.get('url') or '').strip()
             if url and url not in grouped_events[group_key]['urls']:
                 grouped_events[group_key]['urls'].append(url)
 
@@ -647,6 +763,14 @@ def _normalize_location_name(name):
     """Normalizes a location name for matching."""
     if not name:
         return ""
+
+    # Strip diacritics so "Café" matches "Cafe", "Jardín" matches "Jardin".
+    name = ''.join(
+        c for c in unicodedata.normalize('NFKD', name)
+        if not unicodedata.combining(c)
+    )
+    # Normalize "&" and "+" to "and" so "Art & Architecture" matches "Art and Architecture".
+    name = re.sub(r'\s*[&+]\s*', ' and ', name)
 
     original_lower = name.lower()
     has_dash_before_borough = any(
@@ -767,6 +891,8 @@ _ADDR_LONG_TO_SHORT = {
     'road': 'rd', 'place': 'pl', 'court': 'ct', 'lane': 'ln',
     'parkway': 'pkwy', 'highway': 'hwy', 'east': 'e', 'west': 'w',
     'north': 'n', 'south': 's', 'turnpike': 'tpke', 'square': 'sq',
+    # "Saint Marks Ave" → "St Marks Ave" (matches DB form "St Marks Ave")
+    'saint': 'st',
 }
 _ADDR_WORD_NUMS = {
     'first': '1st', 'second': '2nd', 'third': '3rd', 'fourth': '4th',
@@ -830,12 +956,73 @@ def sublocation_redundant_with_address(sublocation, location_address):
     sublocation. After location matching, that's redundant with the matched
     location's own address — clear it. Real sub-venue values like "Studio B"
     or "5th Floor" don't parse as a street address and are preserved.
+
+    Also handles the case where one form glues a suite/unit number to the
+    house number via a hyphen ("68-117 Jay St") and the other expresses it
+    as a #-suffix or comma-separated suite ("68 Jay St #117"). When the
+    hyphenated form's leading segment matches the other form's bare house
+    number on the same street, treat them as equivalent.
     """
     if not sublocation or not location_address:
         return False
     sub = _extract_street_address_loose(sublocation)
     addr = _extract_street_address_loose(location_address)
-    return bool(sub and addr and sub == addr)
+    if not sub or not addr:
+        return False
+    if sub == addr:
+        return True
+    # Hyphenated suite form ("68117 jay st") vs bare house number ("68 jay st")
+    # on the same street. Check both directions.
+    def _split(key):
+        # key is "<digits> <rest>" — return (digits, rest) or (None, None)
+        m = re.match(r'^(\d+)\s+(.+)$', key)
+        return (m.group(1), m.group(2)) if m else (None, None)
+    s_num, s_rest = _split(sub)
+    a_num, a_rest = _split(addr)
+    if s_num and a_num and s_rest == a_rest:
+        # One side might be the hyphen-glued form. The original raw addresses
+        # need to have a "#<suite>" or ", suite/unit/apt <suite>" marker that
+        # numerically matches the suffix the other side glued on.
+        def _suite(raw):
+            m = re.search(r'#\s*(\w+)', raw)
+            if m:
+                return m.group(1).lower()
+            m = re.search(r'\b(?:suite|unit|apt|apartment|ste)\s*#?\s*(\w+)',
+                          raw, re.IGNORECASE)
+            if m:
+                return m.group(1).lower()
+            return None
+        sub_suite = _suite(sublocation)
+        addr_suite = _suite(location_address)
+        # Case A: sub has the hyphen-glued form (s_num starts with a_num),
+        # and the DB raw has a #-suite matching the trailing digits.
+        if s_num.startswith(a_num) and len(s_num) > len(a_num):
+            tail = s_num[len(a_num):]
+            if addr_suite and addr_suite.lstrip('0') == tail.lstrip('0'):
+                return True
+        # Case B: DB has the hyphen-glued form and sub raw has a #-suite.
+        if a_num.startswith(s_num) and len(a_num) > len(s_num):
+            tail = a_num[len(s_num):]
+            if sub_suite and sub_suite.lstrip('0') == tail.lstrip('0'):
+                return True
+        # Case C: building-range form ("12-16 Vestry St" — one building spanning
+        # numbers 12 through 16) vs a single number in the range. Distinguish
+        # from the suite case (which carries a #/suite marker on the non-glued
+        # side); here both sides should be bare addresses, and the range form's
+        # original raw text must contain "<a>-<b>" with the other side's number
+        # equal to <a> or <b>.
+        def _range_endpoints(raw):
+            # Find first "<digits>-<digits>" at the start of a token
+            m = re.search(r'\b(\d+)-(\d+)\b', raw)
+            return (m.group(1), m.group(2)) if m else (None, None)
+        if not sub_suite and not addr_suite:
+            a_lo, a_hi = _range_endpoints(location_address)
+            if a_lo and a_hi and s_num in (a_lo, a_hi):
+                return True
+            s_lo, s_hi = _range_endpoints(sublocation)
+            if s_lo and s_hi and a_num in (s_lo, s_hi):
+                return True
+    return False
 
 
 def build_locations_map(cursor):
@@ -1366,6 +1553,15 @@ def process_events(cursor, connection, crawl_result_id, website_name, run_date_s
         db.update_crawl_result_processed(cursor, connection, crawl_result_id, 0)
         return 0
 
+    # Sanity-fix 12pm/12am misreads before downstream processing.
+    for row in parsed_rows:
+        if row.get('end_time'):
+            row['end_time'] = _sanity_check_end_time(
+                row.get('start_time') or '',
+                row['end_time'],
+                crawled_content,
+            )
+
     current_date = datetime.now().date()
     future_limit_date = (datetime.now() + timedelta(days=FUTURE_WINDOW_DAYS)).date()
 
@@ -1650,12 +1846,18 @@ def apply_crawled_details(cursor, connection, ce_id, data, tag_context):
                     )
                     continue
 
+                # Mirror group_event_occurrences: collapse end_date when it
+                # equals start_date so the merger's dedup matches the
+                # listing-crawl rows (which use NULL for single-day events).
+                if parsed_end and parsed_end == parsed_start:
+                    end_date = None
+
                 cursor.execute(
                     "INSERT INTO crawl_event_occurrences "
                     "(crawl_event_id, start_date, start_time, end_date, end_time, sort_order) "
                     "VALUES (%s, %s, %s, %s, %s, %s)",
-                    (ce_id, start_date, occ.get('start_time'),
-                     end_date, occ.get('end_time'), sort_order),
+                    (ce_id, start_date, _standardize_time(occ.get('start_time')),
+                     end_date, _standardize_time(occ.get('end_time')), sort_order),
                 )
                 sort_order += 1
 
@@ -1671,6 +1873,28 @@ def apply_crawled_details(cursor, connection, ce_id, data, tag_context):
         )
 
     connection.commit()
+
+
+def _kill_crawl_browsers():
+    """Force-kill crawl4ai's chromium processes to unblock a wedged browser.
+
+    A single wedged page can hang Playwright's transport thread at the C level,
+    where ``asyncio.wait_for``/task cancellation cannot interrupt it — and the
+    browser instance is shared across the batch, so every subsequent ``arun``
+    on it also hangs (the Step 5 deadlock). SIGKILL'ing the browser process is
+    the only reliable way to make those wedged awaits raise and unblock.
+
+    Matched by the ``playwright_chromiumdev_profile`` user-data-dir so the
+    standalone Playwright MCP browser (run with ``--isolated``, a different
+    profile) is left untouched.
+    """
+    try:
+        subprocess.run(
+            ["pkill", "-9", "-f", "playwright_chromiumdev_profile"],
+            timeout=10, check=False,
+        )
+    except Exception as e:
+        print(f"    (browser kill failed: {e})")
 
 
 async def crawl_event_details(cursor, connection, candidates, num_workers=10):
@@ -1730,20 +1954,64 @@ async def crawl_event_details(cursor, connection, candidates, num_workers=10):
 
     attempted_ids = []  # Track all attempted ce_ids for counter increment
 
+    # Stall detection: each completed crawl bumps the heartbeat. A watchdog
+    # task aborts the step if no progress is made for STALL_TIMEOUT seconds,
+    # so a systemic hang (e.g. a wedged browser) fails fast instead of sitting
+    # idle for hours. Individual hung pages are already bounded by the
+    # per-crawl timeout in crawler.crawl_event_url(); this is the safety net
+    # for failures that escape it.
+    STALL_TIMEOUT = 300  # 5 minutes with zero progress => kill browser & abort
+    EXTRACT_TIMEOUT = 120  # hard ceiling on a single Gemini extract call
+    heartbeat = {'last': time.monotonic(), 'done': 0}
+    total_candidates = len(candidates)
+
     async def process_website(web_crawler, ws_id):
-        """Process all events for one website sequentially."""
-        ws_results = []
+        """Process all events for one website sequentially.
+
+        Appends successful extractions to the shared ``results`` list as they
+        complete (rather than returning at the end) so a watchdog abort keeps
+        all work finished before the stall.
+        """
         crawl_config = crawl_configs.get(ws_id, crawler.build_event_crawl_config({}))
         for ce_id, name, url, _ in events_by_website[ws_id]:
             async with semaphore:
                 attempted_ids.append(ce_id)
                 content = await crawler.crawl_event_url(web_crawler, url, crawl_config)
+                heartbeat['last'] = time.monotonic()
+                heartbeat['done'] += 1
                 if not content:
                     continue
-                data = await extractor.extract_single_event(name, content)
+                try:
+                    data = await asyncio.wait_for(
+                        extractor.extract_single_event(name, content),
+                        timeout=EXTRACT_TIMEOUT,
+                    )
+                except asyncio.TimeoutError:
+                    print(f"    Extract timed out after {EXTRACT_TIMEOUT}s for {name}")
+                    continue
                 if data:
-                    ws_results.append((ce_id, name, data))
-        return ws_results
+                    results.append((ce_id, name, data))
+
+    async def watchdog(gather_task):
+        """Abort the detail crawl if no progress is made for STALL_TIMEOUT.
+
+        Cancelling the gather alone cannot unblock a wedged Playwright browser
+        (the awaits are stuck below the asyncio layer), so we also SIGKILL the
+        crawl4ai chromium — that forces the wedged ``arun`` awaits to raise and
+        lets ``await gather_task`` actually return.
+        """
+        while not gather_task.done():
+            await asyncio.sleep(30)
+            idle = time.monotonic() - heartbeat['last']
+            if idle > STALL_TIMEOUT and not gather_task.done():
+                print(
+                    f"  ⚠️ WATCHDOG: detail crawl stalled — no progress for "
+                    f"{int(idle)}s ({heartbeat['done']}/{total_candidates} crawled). "
+                    f"Killing wedged browser and aborting Step 5 with partial results."
+                )
+                gather_task.cancel()
+                _kill_crawl_browsers()
+                return
 
     for (text_mode, light_mode, use_stealth, headed, user_agent), ws_ids in browser_batches.items():
         if len(browser_batches) > 1:
@@ -1757,10 +2025,23 @@ async def crawl_event_details(cursor, connection, candidates, num_workers=10):
             text_mode=text_mode, light_mode=light_mode,
             use_stealth=use_stealth, headed=headed, user_agent=user_agent,
         )
-        async with AsyncWebCrawler(config=browser_config) as web_crawler:
-            tasks = [process_website(web_crawler, ws_id) for ws_id in ws_ids]
-            for ws_results in await asyncio.gather(*tasks):
-                results.extend(ws_results)
+        try:
+            async with AsyncWebCrawler(config=browser_config) as web_crawler:
+                tasks = [process_website(web_crawler, ws_id) for ws_id in ws_ids]
+                gather_task = asyncio.gather(*tasks, return_exceptions=True)
+                watchdog_task = asyncio.create_task(watchdog(gather_task))
+                try:
+                    await gather_task
+                except asyncio.CancelledError:
+                    # Watchdog aborted a stalled batch; keep whatever finished
+                    # (workers append to `results` as they go).
+                    print("  Detail crawl batch aborted; continuing with partial results.")
+                finally:
+                    watchdog_task.cancel()
+        except Exception as e:
+            # A killed/wedged browser can make the AsyncWebCrawler context
+            # manager's teardown raise — isolate it so remaining batches still run.
+            print(f"  Detail crawl batch error ({type(e).__name__}: {e}); continuing with remaining batches.")
 
     # Increment attempt counter for all attempted events (success or failure)
     if attempted_ids:

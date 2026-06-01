@@ -111,7 +111,7 @@ const MapManager = (() => {
                 'icon-padding': 0,
                 'icon-offset': [-8, 0],
                 'text-field': _getTextFieldExpression(),
-                'text-font': ['Inter SemiBold'],
+                'text-font': ['Inter Regular'],
                 'text-size': _getLabelSize(),
                 'text-anchor': 'left',
                 'text-justify': 'left',
@@ -121,7 +121,7 @@ const MapManager = (() => {
                 'text-optional': true,
                 'text-ignore-placement': false,
                 'text-padding': 3,
-                'text-letter-spacing': -0.03,
+                'text-letter-spacing': 0,
                 'text-line-height': 1.15,
                 'symbol-sort-key': ['get', 'sortKey']
             },
@@ -129,7 +129,7 @@ const MapManager = (() => {
                 'text-color': _getLabelColor(),
                 'text-halo-color': _getHaloColor(),
                 'text-halo-width': 2,
-                'text-halo-blur': 1
+                'text-halo-blur': 0
             }
         });
 
@@ -164,7 +164,7 @@ const MapManager = (() => {
                 'icon-ignore-placement': true,
                 'icon-offset': [-8, 0],
                 'text-field': _getTextFieldExpression(),
-                'text-font': ['Inter SemiBold'],
+                'text-font': ['Inter Regular'],
                 'text-size': _getLabelSize(),
                 'text-anchor': 'left',
                 'text-justify': 'left',
@@ -172,7 +172,7 @@ const MapManager = (() => {
                 'text-max-width': 50,
                 'text-allow-overlap': true,
                 'text-ignore-placement': true,
-                'text-letter-spacing': -0.03,
+                'text-letter-spacing': 0,
                 'text-line-height': 1.15,
                 'symbol-sort-key': ['get', 'sortKey']
             },
@@ -180,7 +180,7 @@ const MapManager = (() => {
                 'text-color': _getHoverLabelColor(),
                 'text-halo-color': _getHaloColor(),
                 'text-halo-width': 2.5,
-                'text-halo-blur': 0.5
+                'text-halo-blur': 0
             }
         });
 
@@ -201,7 +201,7 @@ const MapManager = (() => {
 
     function _getLabelColor() {
         const theme = document.documentElement.getAttribute('data-theme') || 'dark';
-        return theme === 'dark' ? '#ccc' : '#333';
+        return theme === 'dark' ? '#e5e5e5' : '#1a1a1a';
     }
 
     function _getHoverLabelColor() {
@@ -228,12 +228,12 @@ const MapManager = (() => {
                     ['get', 'locationName'], {},
                     '\n', {},
                     ['get', 'eventLabel'], {
-                        'text-font': ['literal', ['Inter SemiBold']],
+                        'text-font': ['literal', ['Inter Regular']],
                         'text-color': ['get', 'eventLabelColor'],
                         'font-scale': 0.88
                     },
                     ['get', 'eventLabelExtra'], {
-                        'text-font': ['literal', ['Inter SemiBold']],
+                        'text-font': ['literal', ['Inter Regular']],
                         'font-scale': 0.88
                     }
                 ],

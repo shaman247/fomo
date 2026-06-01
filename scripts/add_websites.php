@@ -10,6 +10,12 @@
  *   php scripts/add_websites.php --production --dry-run
  *
  * Edit the $new_websites array below to specify websites to add.
+ *
+ * CLEANUP: After a successful run, REMOVE the entries you just added from
+ * $new_websites so the array stays empty between sessions. Stale entries
+ * clutter dry-runs (everything reports "already exists") and obscure the
+ * next addition. Re-running with the same entries is a no-op, but they
+ * should still be deleted as part of finishing the task.
  */
 
 // ============================================================================
@@ -17,135 +23,6 @@
 // ============================================================================
 $new_websites = [
 ];
-
-// ============================================================================
-// DATABASE CONFIGURATION
-// ============================================================================
-
-// Load .env file
-function load_env($path) {
-    if (!file_exists($path)) return;
-    $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    foreach ($lines as $line) {
-        if (strpos(trim($line), '#') === 0) continue;
-        if (strpos($line, '=') === false) continue;
-        list($name, $value) = explode('=', $line, 2);
-        $name = trim($name);
-        $value = trim($value, " \t\n\r\0\x0B\"'");
-        if (!getenv($name)) putenv("$name=$value");
-    }
-}
-load_env(__DIR__ . '/../.env');
-
-$config = [
-    'local' => [
-        'host' => 'localhost',
-        'port' => 3306,
-        'dbname' => 'fomo',
-        'user' => 'root',
-        'password' => '',
-    ],
-    'production' => [
-        'via_ssh' => true,
-        'ssh_host' => getenv('SSH_HOST') ?: '69.57.162.203',
-        'ssh_port' => getenv('SSH_PORT') ?: 21098,
-        'ssh_user' => getenv('SSH_USER') ?: 'fomoowsq',
-        'ssh_key' => __DIR__ . '/' . (getenv('SSH_KEY') ?: 'id_rsa_sync'),
-        'dbname' => getenv('PROD_DB_NAME') ?: die("Error: PROD_DB_NAME not set in .env\n"),
-        'user' => getenv('PROD_DB_USER') ?: die("Error: PROD_DB_USER not set in .env\n"),
-        'password' => getenv('PROD_DB_PASS') ?: die("Error: PROD_DB_PASS not set in .env\n"),
-    ],
-];
-
-// ============================================================================
-// SCRIPT LOGIC (no need to edit below)
-// ============================================================================
-
-// Parse command line arguments
-$is_production = in_array('--production', $argv) || in_array('-p', $argv);
-$is_dry_run = in_array('--dry-run', $argv) || in_array('-n', $argv);
-$show_help = in_array('--help', $argv) || in_array('-h', $argv);
-
-if ($show_help) {
-    echo <<<HELP
-Add new websites to the database
-
-Usage:
-  php scripts/add_websites.php [options]
-
-Options:
-  --production, -p    Add to production database (default: local)
-  --dry-run, -n       Show what would be added without making changes
-  --help, -h          Show this help message
-
-Instructions:
-  1. Edit the \$new_websites array at the top of this script
-  2. Run with --dry-run first to verify
-  3. Run without --dry-run to actually add the websites
-
-ID Sync (Production):
-  When adding to production, the script will:
-  - Look up the website's ID in local database
-  - Use that same ID in production to keep databases in sync
-  - Skip if the website doesn't exist locally (add to local first!)
-  - Error if the local ID is already used by a different website in production
-
-Example website entry:
-  [
-      'name' => 'Blue Note',
-      'description' => 'Legendary jazz club...',  // Optional: organization description
-      'base_url' => 'https://www.bluenotejazz.com/',  // Root domain (optional)
-      'urls' => ['https://www.bluenotejazz.com/nyc/schedule'],  // Crawl URLs (optional)
-      'crawl_frequency' => 4,      // Days between crawls (optional)
-      'crawl_after' => '2026-06-01', // Don't crawl until this date (optional, for seasonal events)
-      'keywords' => '&event_id=',  // URL keywords to follow (optional)
-      'max_pages' => 50,           // Max pages to crawl (optional)
-      'location' => 'Blue Note',   // Links to existing location (optional)
-      'tags' => ['Jazz', 'Live Music'],  // Website tags (optional)
-  ]
-
-HELP;
-    exit(0);
-}
-
-$env = $is_production ? 'production' : 'local';
-$db_config = $config[$env];
-
-echo "=== Add Websites Script ===\n";
-echo "Target: " . strtoupper($env) . " database\n";
-echo "Mode: " . ($is_dry_run ? "DRY RUN (no changes will be made)" : "LIVE") . "\n";
-echo "\n";
-
-if (empty($new_websites)) {
-    echo "No websites to add. Edit the \$new_websites array in this script.\n";
-    exit(0);
-}
-
-echo "Websites to add: " . count($new_websites) . "\n\n";
-
-// Validate websites before connecting
-$errors = [];
-foreach ($new_websites as $i => $site) {
-    $idx = $i + 1;
-    if (empty($site['name'])) {
-        $errors[] = "Website #$idx: 'name' is required";
-    }
-    if (empty($site['base_url'])) {
-        $errors[] = "Website #$idx ({$site['name']}): 'base_url' is required";
-    }
-}
-
-if (!empty($errors)) {
-    echo "Validation errors:\n";
-    foreach ($errors as $error) {
-        echo "  - $error\n";
-    }
-    exit(1);
-}
-
-// Helper function to run SQL via SSH for production
-function run_ssh_query($config, $sql) {
-    $escaped_password = str_replace(']', '\\]', $config['password']);
     $cmd = sprintf(
         'ssh -p %d -i %s -o StrictHostKeyChecking=no %s@%s %s 2>&1',
         $config['ssh_port'],

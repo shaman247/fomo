@@ -35,12 +35,15 @@ ENV/
 # Build output
 dist/
 
-# Generated data (pipeline output, regenerated on each run)
-src/data/events.*.json
-src/data/locations.*.json
+# Frontend data — only static config is tracked; events/locations/etc. are generated
+src/data/*
+!src/data/map-style-dark.json
+!src/data/map-style-light.json
+!src/data/tags.json
+!src/data/tag_hierarchy.json
 
 # Scraper dumps (raw payloads, regenerable)
-data/
+/data/
 
 # Scripts directory — only the four canonical helpers are tracked
 scripts/*

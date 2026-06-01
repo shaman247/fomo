@@ -13,6 +13,7 @@
 
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/edit_logger.php';
+require_once __DIR__ . '/time_format.php';
 
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
@@ -251,9 +252,9 @@ function createEvent(PDO $pdo, EditLogger $logger): void {
             $stmtOcc->execute([
                 $id,
                 $occ['start_date'],
-                isset($occ['start_time']) ? substr(trim($occ['start_time']), 0, 20) : null,
+                isset($occ['start_time']) ? substr(standardize_time($occ['start_time']), 0, 20) : null,
                 $occ['end_date'] ?? null,
-                isset($occ['end_time']) ? substr(trim($occ['end_time']), 0, 20) : null,
+                isset($occ['end_time']) ? substr(standardize_time($occ['end_time']), 0, 20) : null,
                 $i
             ]);
         }
@@ -361,9 +362,9 @@ function updateEvent(PDO $pdo, EditLogger $logger, int $id): void {
                 $stmtOcc->execute([
                     $id,
                     $occ['start_date'],
-                    isset($occ['start_time']) ? substr(trim($occ['start_time']), 0, 20) : null,
+                    isset($occ['start_time']) ? substr(standardize_time($occ['start_time']), 0, 20) : null,
                     $occ['end_date'] ?? null,
-                    isset($occ['end_time']) ? substr(trim($occ['end_time']), 0, 20) : null,
+                    isset($occ['end_time']) ? substr(standardize_time($occ['end_time']), 0, 20) : null,
                     $i
                 ]);
             }
