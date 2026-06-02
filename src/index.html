@@ -5,9 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Fomo NYC</title>
     <link rel="icon" href="images/torch.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css" crossorigin=""/>
-    <link rel="preconnect" href="https://rsms.me/">
-    <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+
+    <!-- Warm up the only remaining cross-origin: the map tile/glyph CDN. -->
+    <link rel="preconnect" href="https://api.protomaps.com" crossorigin>
+    <link rel="dns-prefetch" href="https://api.protomaps.com">
+
+    <!-- Start the render-critical fetches during HTML parse, before the
+         bottom-of-body scripts download + execute and App.init() runs. -->
+    <link rel="preload" as="script" href="vendor/maplibre-gl.js?v=5.24.0">
+    <!-- crossorigin is required on as=fetch preloads so the request's CORS mode
+         matches fetch()'s default — without it the file is downloaded twice. -->
+    <link rel="preload" as="fetch" href="data/manifest.json" crossorigin>
+    <link rel="preload" as="fetch" href="data/tags.json" crossorigin>
+    <link rel="preload" as="fetch" href="data/tag_hierarchy.json" crossorigin>
+
+    <!-- Self-hosted (see src/vendor and src/css/fonts.css). ?v= busts the
+         1-year cache when the pinned version changes. -->
+    <link rel="stylesheet" href="vendor/maplibre-gl.css?v=5.24.0"/>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" crossorigin="anonymous">
 </head>
 <body>
@@ -63,7 +77,7 @@
             </div>
             <div id="phase2-loading-indicator" role="status" aria-live="polite">
                 <span class="phase2-spinner" aria-hidden="true"></span>
-                <span class="phase2-label">Loading more events…</span>
+                <span class="phase2-label">Loading events…</span>
                 <span class="phase2-progress"></span>
             </div>
         </div>
@@ -154,7 +168,7 @@
     </div>
     <link rel="stylesheet" href="css/index.css">
 
-    <script src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js" crossorigin=""></script>
+    <script src="vendor/maplibre-gl.js?v=5.24.0"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr" crossorigin="anonymous"></script>
 
     <!-- Core -->

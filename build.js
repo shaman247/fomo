@@ -9,7 +9,7 @@ const FLATPICKR_JS = path.join(__dirname, 'node_modules', 'flatpickr', 'dist', '
 const FLATPICKR_CSS = path.join(__dirname, 'node_modules', 'flatpickr', 'dist', 'flatpickr.css');
 
 // Directories to include in dist/ (everything the server needs)
-const ASSET_DIRS = ['data', 'images', 'fonts', 'api', 'admin'];
+const ASSET_DIRS = ['data', 'images', 'fonts', 'api', 'admin', 'vendor'];
 
 function copyDirSync(src, dest) {
     fs.mkdirSync(dest, { recursive: true });
