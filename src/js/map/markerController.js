@@ -328,6 +328,17 @@ const MarkerController = (() => {
      * @param {maplibregl.Popup} openPopup - The open popup to update
      * @returns {boolean} True if popup was updated, false otherwise
      */
+    /**
+     * Force a rebuild of the currently open popup/bottom sheet, bypassing the
+     * unchanged-content early-out in updateOpenPopupContent (whose signature
+     * keys on event ids/tags/dates, not description text). Used when deferred
+     * descriptions arrive for events whose popup is already open.
+     */
+    function refreshOpenPopupContent() {
+        state._popupContentSig = null;
+        return updateOpenPopupContent(MapManager.getCurrentPopup());
+    }
+
     function updateOpenPopupContent(openPopup) {
         // Handle bottom sheet case (mobile) — openPopup is null but sheet is open
         const isBottomSheet = !openPopup && typeof BottomSheet !== 'undefined' && BottomSheet.isDetailMode();
@@ -513,6 +524,7 @@ const MarkerController = (() => {
         displayEventsOnMap,
         refreshLabelsForViewport,
         updateOpenPopupContent,
+        refreshOpenPopupContent,
         findOpenPopup,
         hasMatchingEvents,
         createPopupContentCallback,

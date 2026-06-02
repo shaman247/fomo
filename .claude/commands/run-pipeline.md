@@ -19,6 +19,26 @@ Our coverage area is the **NYC metro region**, which includes:
 
 Events from touring companies performing at venues **outside** this area (e.g., in Europe, the Midwest, the Deep South) should be archived. Events at venues **within** this area should be kept and mapped to locations.
 
+## Step 0: Scheduled Tasks Due Today
+
+Before crawling, check for date-triggered maintenance tasks that have come due:
+
+```bash
+./venv/bin/python scripts/due_tasks.py
+```
+
+This reads `.claude/scheduled-tasks.md` and lists tasks whose `Due` date has arrived (`Status: pending`, `Due` <= today). Exit code is 0 if any are due, 1 if none.
+
+- **If none are due**, proceed to Step 1.
+- **If tasks are due**, open `.claude/scheduled-tasks.md`, and for each due task carry out the actions in its block. These are self-contained (each names the website IDs, commands, SQL, and success criteria). Most are targeted recrawls + verification — run them here via `./venv/bin/python pipeline/main.py --ids <ids>` and confirm the success criteria. If a task adds a **new** crawl source (website or `website_urls` entry), add it now so the main Step 1 run picks it up.
+- **After completing each task**, update its entry in `.claude/scheduled-tasks.md`:
+  - `Recur: none` → mark `Status: done` and move the whole block to `.claude/completed-tasks.md` (newest at top).
+  - `Recur: annual` → bump `Due` forward one year and **keep** `Status: pending` (also update any year literals inside the task's commands, e.g. a `crawl_after` value).
+  - `Recur: <N>d` → bump `Due` forward by N days, keep `Status: pending`.
+- If a task needs judgment beyond its documented actions (e.g. a source still isn't published), leave it `pending`, do **not** bump the date, and surface it under "Findings requiring user approval" in the summary.
+
+Re-export + upload (Step 5) at the end of the run will publish any event changes these tasks produced.
+
 ## Step 1: Run the Pipeline
 
 Run the pipeline in the background, logging to `/tmp/pipeline_run.log`:
@@ -224,6 +244,9 @@ After all steps, provide a summary that combines the parent agent's work with ea
 
 ```
 === PIPELINE RUN SUMMARY ===
+
+Step 0 — Scheduled Tasks:
+- Tasks due: N (titles) — completed K, deferred J (with reason)
 
 Pipeline (Step 1):
 - Websites crawled: N

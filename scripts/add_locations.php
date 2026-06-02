@@ -1,13 +1,11 @@
 #!/usr/bin/env php
 <?php
 /**
- * Add new locations to the database (local or production)
+ * Add new locations to the local database
  *
  * Usage:
  *   php scripts/add_locations.php                    # Add to local database
- *   php scripts/add_locations.php --production      # Add to production database
  *   php scripts/add_locations.php --dry-run         # Show what would be added
- *   php scripts/add_locations.php --production --dry-run
  *
  * Edit the $new_locations array below to specify locations to add.
  *
@@ -47,16 +45,6 @@ $config = [
         'user' => 'root',
         'password' => '',
     ],
-    'production' => [
-        'via_ssh' => true,
-        'ssh_host' => getenv('SSH_HOST') ?: '69.57.162.203',
-        'ssh_port' => getenv('SSH_PORT') ?: 21098,
-        'ssh_user' => getenv('SSH_USER') ?: 'fomoowsq',
-        'ssh_key' => __DIR__ . '/' . (getenv('SSH_KEY') ?: 'id_rsa_sync'),
-        'dbname' => getenv('PROD_DB_NAME') ?: die("Error: PROD_DB_NAME not set in .env\n"),
-        'user' => getenv('PROD_DB_USER') ?: die("Error: PROD_DB_USER not set in .env\n"),
-        'password' => getenv('PROD_DB_PASS') ?: die("Error: PROD_DB_PASS not set in .env\n"),
-    ],
 ];
 
 // ============================================================================
@@ -64,7 +52,6 @@ $config = [
 // ============================================================================
 
 // Parse command line arguments
-$is_production = in_array('--production', $argv) || in_array('-p', $argv);
 $is_dry_run = in_array('--dry-run', $argv) || in_array('-n', $argv);
 $show_help = in_array('--help', $argv) || in_array('-h', $argv);
 
@@ -76,7 +63,6 @@ Usage:
   php scripts/add_locations.php [options]
 
 Options:
-  --production, -p    Add to production database (default: local)
   --dry-run, -n       Show what would be added without making changes
   --help, -h          Show this help message
 
@@ -105,7 +91,7 @@ HELP;
     exit(0);
 }
 
-$env = $is_production ? 'production' : 'local';
+$env = 'local';
 $db_config = $config[$env];
 
 echo "=== Add Locations Script ===\n";
@@ -146,67 +132,26 @@ if (!empty($errors)) {
     exit(1);
 }
 
-// Helper function to run SQL via SSH for production
-function run_ssh_query($config, $sql) {
-    $escaped_password = str_replace(']', '\\]', $config['password']);
-    $cmd = sprintf(
-        'ssh -p %d -i %s -o StrictHostKeyChecking=no %s@%s %s 2>&1',
-        $config['ssh_port'],
-        escapeshellarg($config['ssh_key']),
-        $config['ssh_user'],
-        $config['ssh_host'],
-        escapeshellarg("mariadb -u {$config['user']} -p{$escaped_password} {$config['dbname']} -N -e " . escapeshellarg($sql))
-    );
-    $output = shell_exec($cmd);
-    return $output;
-}
-
-// Check if using SSH for production
-$use_ssh = $is_production && !empty($db_config['via_ssh']);
-
-if ($use_ssh) {
-    echo "Connecting to production via SSH...\n";
-    // Test connection
-    $test = run_ssh_query($db_config, "SELECT 1");
-    if (trim($test) !== '1') {
-        echo "Connection failed: $test\n";
-        exit(1);
-    }
-    echo "Connected to $env database via SSH\n\n";
-    $pdo = null;  // Not used for SSH mode
-} else {
-    // Connect to database directly (local)
-    $port = $db_config['port'] ?? 3306;
-    try {
-        $dsn = "mysql:host={$db_config['host']};port={$port};dbname={$db_config['dbname']};charset=utf8mb4";
-        $pdo = new PDO($dsn, $db_config['user'], $db_config['password'], [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4"
-        ]);
-        echo "Connected to $env database\n\n";
-    } catch (PDOException $e) {
-        echo "Connection failed: " . $e->getMessage() . "\n";
-        exit(1);
-    }
+// Connect to database directly (local)
+$port = $db_config['port'] ?? 3306;
+try {
+    $dsn = "mysql:host={$db_config['host']};port={$port};dbname={$db_config['dbname']};charset=utf8mb4";
+    $pdo = new PDO($dsn, $db_config['user'], $db_config['password'], [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4"
+    ]);
+    echo "Connected to $env database\n\n";
+} catch (PDOException $e) {
+    echo "Connection failed: " . $e->getMessage() . "\n";
+    exit(1);
 }
 
 // Helper functions for database operations
-function escape_sql($value) {
-    if ($value === null) return 'NULL';
-    return "'" . addslashes($value) . "'";
-}
-
 function check_exists_pdo($pdo, $name) {
     $stmt = $pdo->prepare("SELECT id FROM locations WHERE name = ?");
     $stmt->execute([$name]);
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
     return $row ? $row['id'] : null;
-}
-
-function check_exists_ssh($config, $name) {
-    $sql = "SELECT id FROM locations WHERE name = " . escape_sql($name);
-    $result = trim(run_ssh_query($config, $sql));
-    return $result && is_numeric($result) ? $result : null;
 }
 
 function insert_location_pdo($pdo, $loc) {
@@ -225,23 +170,6 @@ function insert_location_pdo($pdo, $loc) {
         ':alt_emoji' => $loc['alt_emoji'] ?? null,
     ]);
     return $pdo->lastInsertId();
-}
-
-function insert_location_ssh($config, $loc) {
-    $sql = sprintf(
-        "INSERT INTO locations (name, short_name, very_short_name, description, address, lat, lng, emoji, alt_emoji) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s); SELECT LAST_INSERT_ID();",
-        escape_sql($loc['name']),
-        escape_sql($loc['short_name'] ?? null),
-        escape_sql($loc['very_short_name'] ?? null),
-        escape_sql($loc['description'] ?? null),
-        escape_sql($loc['address'] ?? null),
-        $loc['lat'],
-        $loc['lng'],
-        escape_sql($loc['emoji']),
-        escape_sql($loc['alt_emoji'] ?? null)
-    );
-    $result = trim(run_ssh_query($config, $sql));
-    return $result;
 }
 
 function add_tags_pdo($pdo, $location_id, $tags) {
@@ -272,47 +200,15 @@ function add_tags_pdo($pdo, $location_id, $tags) {
     return ['existing' => $existing_tags, 'new' => $new_tags];
 }
 
-function add_tags_ssh($config, $location_id, $tags) {
-    $new_tags = [];
-    $existing_tags = [];
-
-    // Build a single SQL to insert tags and link them. Location tags are
-    // curated/filterable, so set type='tag' explicitly (column default is 'keyword').
-    $tag_values = [];
-    foreach ($tags as $tag_name) {
-        $tag_values[] = "(" . escape_sql($tag_name) . ", 'tag')";
-    }
-
-    // Insert tags (ignore duplicates)
-    $sql = "INSERT IGNORE INTO tags (name, type) VALUES " . implode(", ", $tag_values);
-    run_ssh_query($config, $sql);
-
-    // Link tags to location
-    $tag_list = implode(", ", array_map('escape_sql', $tags));
-    $sql = "INSERT INTO location_tags (location_id, tag_id) SELECT $location_id, id FROM tags WHERE name IN ($tag_list)";
-    run_ssh_query($config, $sql);
-
-    // Get which tags are new vs existing (approximate - all count as existing for SSH)
-    return ['existing' => $tags, 'new' => []];
-}
-
 function get_stats_pdo($pdo) {
     $result = $pdo->query("SELECT COUNT(*) as total, MAX(id) as max_id FROM locations");
     return $result->fetch(PDO::FETCH_ASSOC);
 }
 
-function get_stats_ssh($config) {
-    $result = run_ssh_query($config, "SELECT COUNT(*), MAX(id) FROM locations");
-    $parts = explode("\t", trim($result));
-    return ['total' => $parts[0] ?? '?', 'max_id' => $parts[1] ?? '?'];
-}
-
 // Check for duplicates
 $duplicates = [];
 foreach ($new_locations as $loc) {
-    $existing_id = $use_ssh
-        ? check_exists_ssh($db_config, $loc['name'])
-        : check_exists_pdo($pdo, $loc['name']);
+    $existing_id = check_exists_pdo($pdo, $loc['name']);
     if ($existing_id) {
         $duplicates[] = "'{$loc['name']}' already exists (ID: $existing_id)";
     }
@@ -332,9 +228,7 @@ $skipped = 0;
 
 foreach ($new_locations as $loc) {
     // Check if already exists
-    $existing_id = $use_ssh
-        ? check_exists_ssh($db_config, $loc['name'])
-        : check_exists_pdo($pdo, $loc['name']);
+    $existing_id = check_exists_pdo($pdo, $loc['name']);
 
     if ($existing_id) {
         echo "  SKIP: {$loc['name']} (already exists)\n";
@@ -354,17 +248,13 @@ foreach ($new_locations as $loc) {
         $added++;
     } else {
         try {
-            $new_id = $use_ssh
-                ? insert_location_ssh($db_config, $loc)
-                : insert_location_pdo($pdo, $loc);
+            $new_id = insert_location_pdo($pdo, $loc);
 
             echo "  ADD: {$loc['name']} {$loc['emoji']} (ID: $new_id)\n";
 
             // Add tags
             if (!empty($tags)) {
-                $tag_result = $use_ssh
-                    ? add_tags_ssh($db_config, $new_id, $tags)
-                    : add_tags_pdo($pdo, $new_id, $tags);
+                $tag_result = add_tags_pdo($pdo, $new_id, $tags);
 
                 if (!empty($tag_result['existing'])) {
                     echo "       Tags (existing): " . implode(', ', $tag_result['existing']) . "\n";
@@ -391,5 +281,5 @@ if ($is_dry_run && $added > 0) {
 }
 
 // Show current totals
-$stats = $use_ssh ? get_stats_ssh($db_config) : get_stats_pdo($pdo);
+$stats = get_stats_pdo($pdo);
 echo "\nDatabase now has {$stats['total']} locations (max ID: {$stats['max_id']})\n";

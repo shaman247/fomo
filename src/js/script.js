@@ -428,6 +428,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     fetches.push(DataManager.fetchData(`${this.config.DATA_DIR}events.${chunk}.json`));
                     fetches.push(DataManager.fetchData(`${this.config.DATA_DIR}locations.${chunk}.json`));
                 }
+                // Description companions download in parallel; applied after the
+                // events are merged (so ids resolve) and before the search index
+                // is built, so Phase-2 descriptions are searchable immediately.
+                const descPromise = Promise.all(remainingChunks.map(c =>
+                    DataManager.fetchData(`${this.config.DATA_DIR}events.${c}.desc.json`).catch(() => null)
+                ));
                 const fetched = await Promise.all(fetches);
 
                 const fullEventData = [];
@@ -460,6 +466,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     FP.mark('fp:p2:processFullData');
                     FP.measure('fp:p2:processFullData', 'fp:p2:fetch-end', 'fp:p2:processFullData');
                 }
+
+                // Merge descriptions before the search index is (re)built below.
+                const descMaps = await descPromise;
+                for (const m of descMaps) DataManager.applyDescriptions(m, this.state, false);
 
                 DataManager.calculateTagFrequencies(this.state);
                 DataManager.processTagHierarchy(this.state, this.config);
@@ -622,8 +632,40 @@ document.addEventListener('DOMContentLoaded', () => {
                 return; // Stop if initial load fails
             }
 
+            // Descriptions are split out of the event payload (largest, worst-
+            // compressing field) and loaded here, AFTER the markers are on the
+            // map, so they never block time-to-interactive. Merge today's chunk
+            // now — search + any open popup pick them up — then go to Phase 2.
+            try {
+                if (await this._loadChunkDescriptions([this.state.initChunk], true)) {
+                    MarkerController.refreshOpenPopupContent();
+                }
+            } catch (e) {
+                console.warn('Initial description load failed:', e);
+            }
+
             // --- Phase 2: Asynchronously Load Full Data ---
             await this._loadFullData(urlParams);
+        },
+
+        /**
+         * Fetch and merge the {eventId: description} companion files for the
+         * given chunks (descriptions are deferred off the marker-render path).
+         * @param {string[]} chunks - chunk names, e.g. ['day1'] or ['remainder']
+         * @param {boolean} reindex - re-index touched events for search (Phase 1;
+         *   Phase 2 merges before its index build, so it passes false)
+         * @returns {Promise<boolean>} true if any loaded event was updated
+         * @private
+         */
+        async _loadChunkDescriptions(chunks, reindex) {
+            const maps = await Promise.all(chunks.map(c =>
+                DataManager.fetchData(`${this.config.DATA_DIR}events.${c}.desc.json`).catch(() => null)
+            ));
+            let changed = false;
+            for (const m of maps) {
+                if (DataManager.applyDescriptions(m, this.state, reindex)) changed = true;
+            }
+            return changed;
         },
 
         /**
