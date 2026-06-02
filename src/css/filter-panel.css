@@ -226,11 +226,6 @@
     padding: 7px;
 }
 
-.organizer-event-count {
-    opacity: 0.6;
-    font-size: 0.85em;
-}
-
 .calendar-icon,
 .location-icon,
 .search-icon {
@@ -315,6 +310,12 @@
     font-size: 1.1em;
 }
 
+/* Anchor the absolutely-positioned prev/next arrows to the month header row,
+   not the calendar top — otherwise they overlap the injected presets row. */
+.flatpickr-months {
+    position: relative;
+}
+
 .flatpickr-months .flatpickr-month {
     color: var(--accent-color);
     fill: var(--accent-color);
@@ -347,8 +348,8 @@ span.flatpickr-day.nextMonthDay {
 span.flatpickr-day:hover,
 span.flatpickr-day.prevMonthDay:hover,
 span.flatpickr-day.nextMonthDay:hover {
-    background: var(--accent-hover);
-    border-color: var(--accent-hover);
+    background: var(--accent-color);
+    border-color: var(--accent-color);
     color: var(--calendar-day-hover-text);
 }
 
@@ -358,6 +359,35 @@ span.flatpickr-day.endRange {
     background: var(--accent-color);
     border-color: var(--accent-color);
     color: var(--calendar-day-selected-text);
+}
+
+/* Higher-specificity flatpickr defaults (selected/range while hovered,
+   focused, also inRange, or on a prev/next-month edge) otherwise leak
+   flatpickr's default blue (#569ff7). Match its specificity with var(). */
+span.flatpickr-day.selected:hover,
+span.flatpickr-day.selected:focus,
+span.flatpickr-day.startRange:hover,
+span.flatpickr-day.startRange:focus,
+span.flatpickr-day.endRange:hover,
+span.flatpickr-day.endRange:focus,
+span.flatpickr-day.selected.prevMonthDay,
+span.flatpickr-day.selected.nextMonthDay,
+span.flatpickr-day.startRange.prevMonthDay,
+span.flatpickr-day.startRange.nextMonthDay,
+span.flatpickr-day.endRange.prevMonthDay,
+span.flatpickr-day.endRange.nextMonthDay,
+span.flatpickr-day.startRange.inRange,
+span.flatpickr-day.endRange.inRange {
+    background: var(--accent-color);
+    border-color: var(--accent-color);
+    color: var(--calendar-day-selected-text);
+}
+
+/* Connector shadow between adjacent start/end range days */
+span.flatpickr-day.selected.startRange + .endRange:not(:nth-child(7n+1)),
+span.flatpickr-day.startRange.startRange + .endRange:not(:nth-child(7n+1)),
+span.flatpickr-day.endRange.startRange + .endRange:not(:nth-child(7n+1)) {
+    box-shadow: -10px 0 0 var(--accent-color);
 }
 
 span.flatpickr-day.inRange,
@@ -373,7 +403,7 @@ span.flatpickr-day.today {
 }
 
 span.flatpickr-day.today:hover {
-    background: var(--accent-hover);
+    background: var(--accent-color);
     color: var(--calendar-day-today-hover-text);
 }
 
@@ -392,6 +422,48 @@ span.flatpickr-day.today:hover {
 span.flatpickr-weekday {
     color: var(--accent-color);
     font-weight: bold;
+}
+
+/* === Compact layout === */
+/* Trim flatpickr's generous default whitespace without changing font size.
+   Defaults: 307.875px grid, 39px-tall day cells, 28px weekday + 34px month
+   header rows. Widths matched to 7×36px so cells leave no leftover gap. */
+.flatpickr-calendar,
+.flatpickr-days,
+.dayContainer {
+    width: 252px;
+    min-width: 252px;
+    max-width: 252px;
+}
+
+span.flatpickr-day {
+    height: 32px;
+    line-height: 32px;
+    max-width: 36px;
+}
+
+.flatpickr-weekdays {
+    height: 22px;
+}
+
+span.flatpickr-weekday {
+    height: 22px;
+    line-height: 22px;
+}
+
+.flatpickr-months .flatpickr-month,
+.flatpickr-months .flatpickr-prev-month,
+.flatpickr-months .flatpickr-next-month {
+    height: 30px;
+}
+
+.flatpickr-months .flatpickr-prev-month,
+.flatpickr-months .flatpickr-next-month {
+    padding: 7px 10px;
+}
+
+.flatpickr-current-month {
+    padding-top: 4px;
 }
 
 /* Date preset buttons above calendar */

@@ -260,9 +260,13 @@ const TagStateManager = (() => {
      * @returns {HTMLElement} Button element
      */
     function createSearchResultButton(result, onSearchResultClick, debugMode = false) {
-        // For tags, create the interactive button
-        if (result.type === 'tag') {
-            const button = createInteractiveTagButton(result.ref);
+        // Tags and organizers both render as interactive filter chips. Organizers
+        // are toggled via their pseudo-tag, so they filter exactly like a tag.
+        if (result.type === 'tag' || result.type === 'organizer') {
+            const tagKey = result.type === 'organizer'
+                ? Utils.makeOrganizerTag(result.ref)
+                : result.ref;
+            const button = createInteractiveTagButton(tagKey);
             if (result.isVisible === false) {
                 button.classList.add('non-visible-tag');
             }
@@ -288,8 +292,6 @@ const TagStateManager = (() => {
                 button.classList.add('non-visible-location');
             } else if (result.type === 'event') {
                 button.classList.add('non-visible-event');
-            } else if (result.type === 'organizer') {
-                button.classList.add('non-visible-organizer');
             }
         }
 
@@ -299,9 +301,8 @@ const TagStateManager = (() => {
 
         const emoji = result.emoji ? `<span class="chip-emoji" aria-hidden="true">${result.emoji}</span>` : '';
         const displayName = result.displayName || result.ref;
-        const countText = result.eventCount ? ` <span class="organizer-event-count">(${result.eventCount})</span>` : '';
         const scoreText = (debugMode && result.score !== undefined) ? ` <span class="debug-score" style="opacity: 0.6; font-size: 0.85em;">[${result.score.toFixed(1)}]</span>` : '';
-        button.innerHTML = `${emoji}${displayName.replace(/<\/?strong>/g, '')}${countText}${scoreText}`;
+        button.innerHTML = `${emoji}${displayName.replace(/<\/?strong>/g, '')}${scoreText}`;
         button.setAttribute('aria-label', `${result.type}: ${displayName.replace(/<\/?[^>]+(>|$)/g, '')}`);
 
         button.addEventListener('click', () => {

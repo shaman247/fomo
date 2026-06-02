@@ -60,7 +60,14 @@ async function build(isDev) {
     // Minify JS in prod, pass through in dev
     let jsContent;
     if (isDev) {
-        jsContent = concatenated;
+        // Dev-only: expose the App orchestrator (and via it state.map,
+        // datePickerInstance, filtered-event arrays) on window for Playwright
+        // UX verification. App is scoped inside the DOMContentLoaded closure,
+        // so inject the handle there where it's in scope. Never in prod.
+        jsContent = concatenated.replace(
+            'App.init();',
+            'App.init();\n    if (typeof window !== "undefined") window.__fomo = App;'
+        );
     } else {
         const jsResult = await esbuild.transform(concatenated, {
             minify: true,

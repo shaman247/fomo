@@ -716,10 +716,35 @@ def _deduplicate_same_name_events(cursor, connection, current_date, edit_logger=
     if not dup_groups:
         return 0
 
+    # An event has multiple occurrences, so the same event id can appear in
+    # several (name, website, date, time) groups. When duplicate rows of the
+    # same name span different dates (e.g. a gallery artwork re-extracted across
+    # crawls, each row covering an overlapping run of days), one event can be the
+    # keeper (lowest id) in one group but a removed duplicate in another. If the
+    # group where it's removed is processed first, its row is gone before the
+    # group where it's the keeper runs — and `UPDATE event_sources SET event_id`
+    # would then point at a deleted id, violating the FK. Resolve every id through
+    # `merged_into` to its surviving keeper so merges chain transitively and the
+    # keeper always exists, regardless of dict iteration order.
+    merged_into = {}
+
+    def resolve(event_id):
+        while event_id in merged_into:
+            event_id = merged_into[event_id]
+        return event_id
+
     removed = 0
     for _key, ids in dup_groups:
-        keep_id = ids[0]
-        for remove_id in ids[1:]:
+        live = []
+        for i in ids:
+            r = resolve(i)
+            if r not in live:
+                live.append(r)
+        if len(live) < 2:
+            continue
+        live.sort()
+        keep_id = live[0]
+        for remove_id in live[1:]:
             # Transfer event_sources that don't already exist on the keeper
             cursor.execute("""
                 UPDATE event_sources SET event_id = %s
@@ -755,6 +780,7 @@ def _deduplicate_same_name_events(cursor, connection, current_date, edit_logger=
                     edit_logger.log_delete('events', remove_id, dict(zip(col_names, record)))
 
             cursor.execute("DELETE FROM events WHERE id = %s", (remove_id,))
+            merged_into[remove_id] = keep_id
             removed += 1
 
     _retry_on_deadlock(connection.commit)
@@ -1212,6 +1238,18 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                         return existing['id']
                 return None
             matched_event_id = _safe_website_match(existing_events_by_website[website_id])
+
+        # Global cross-location guard: never merge a crawl_event into an event at a
+        # DIFFERENT known location. Same-name events at distinct venues (library
+        # programs across branches, a film across theaters, a class series across
+        # parks) are the dominant over-merge cause — the per-path guards missed
+        # cases routed through the coordinate/website fallbacks or via NULL-location
+        # "bridge" crawl_events. This is the authoritative backstop.
+        if matched_event_id is not None and location_id is not None:
+            cursor.execute("SELECT location_id FROM events WHERE id = %s", (matched_event_id,))
+            _m = cursor.fetchone()
+            if _m and _m[0] is not None and _m[0] != location_id:
+                matched_event_id = None
 
         if matched_event_id:
             # Merge with existing event

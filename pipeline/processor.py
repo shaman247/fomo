@@ -489,6 +489,63 @@ def log_rejection(cursor, connection, crawl_result_id, website_id,
         print(f"    - Warning: failed to log rejection: {e}")
 
 
+# High-precision "this is not a real public event" name patterns. Kept
+# deliberately conservative — these must (almost) never match a genuine event,
+# since matches are dropped at extraction time before they ever become a
+# crawl_event. Broader / fuzzier heuristics live in
+# scripts/find_review_candidates.py, which only flags events for human review.
+# Patterns are matched case-insensitively against the (sanitized) event name.
+_NON_EVENT_NAME_PATTERNS = [
+    # Calls for submissions / applications / grants (not attendable events)
+    r'\bopen call\b',
+    r'\bcall for (artists?|art|submissions?|entries|proposals|vendors?|applicants?|papers?|works?)\b',
+    r'\bsubmissions?\s+(period|deadline|window|open|guidelines)\b',
+    r'^\s*submissions?\s*:',
+    r'\b(now\s+)?accepting\s+(submissions|applications|entries|proposals)\b',
+    r'^\s*grants?\s*:',
+    r'\bmicro[\s-]?grants?\b',
+    r'\bgrants?\s+(cycle|round|application|deadline)\b',
+    # Closures / cancellations (venue/program notices, not events)
+    r'\bclosed\s*[:\|\-—]',
+    r'\bclosed\s+(to the public|for|on|due|until|this|next|all)\b',
+    r'\b(museum|library|park|gallery|office|building|city hall|center|centre|garden|gym|pool|branch|store|shop|hall|room\b[^a-z]*\w*)\s+clos(ed|es|ure)\b',
+    r'\bcloses?\s+(early|today|tonight|at\s+\d|\d)',
+    r'^\s*no\s+[\w\s]*\b(program|programming|class|classes|session|service|meeting)\b[\w\s]*\b(today|tonight|this week)\b',
+    # Rentals / venue marketing (selling the space, not hosting an event).
+    # NOTE: a bare "RENTAL:" prefix is NOT auto-dropped — venues use it as an
+    # internal booking label on public events too (rented-out dance parties,
+    # comedy shows). Only match the rental *listing itself* ("Space Rental",
+    # "Point Rental"); leave bare-prefix cases to editorial review.
+    r'\b(venue|space|room|hall|studio|facility|point|field|court|table)\s+rental\b',
+    r'\bavailable for (booking|rent|hire|private|your)\b',
+    # Season passes / passes-for-sale
+    r'\bseason\s*pass\b',
+    r'\bsummer\s*pass\b',
+    # Cinema/venue placeholder listing pages
+    r'\bshowtimes\b',
+    # SEO / spam injected into crawled calendars
+    r'\[[^\]]*~[^\]]*\]',
+    r'\bpay (my|your)\b[\w\s]{0,30}\bbill\b',
+    r'\bover the phone\b',
+    r'\b(customer (service|support|care)|help[\s-]?line|toll[\s-]?free)\b[\w\s]{0,20}\bnumber\b',
+]
+
+_NON_EVENT_NAME_RE = re.compile('|'.join(_NON_EVENT_NAME_PATTERNS), re.IGNORECASE)
+
+
+def is_obvious_non_event(name):
+    """Return True if the event name is an unmistakable non-event.
+
+    Covers closures, calls for submissions/grants, venue rentals, season-pass
+    listings, cinema showtime placeholders, and SEO spam — the kinds of rows
+    that should never reach the map. High precision by design; anything fuzzier
+    belongs in scripts/find_review_candidates.py for human review.
+    """
+    if not name:
+        return False
+    return bool(_NON_EVENT_NAME_RE.search(name))
+
+
 # Canonical time format: compact lowercase 12-hour with no space, no colon-zero.
 # Examples: '7pm', '7:30pm', '11am', '12am' (midnight), '12pm' (noon).
 # Empty/sentinel values normalize to ''.
@@ -759,6 +816,35 @@ def group_event_occurrences(rows, source_url=None):
 # Location Matching
 # =============================================================================
 
+# Generic venue-type / room-descriptor common nouns. Stripping a borough suffix
+# from a venue name like "Gallery Brooklyn" would collapse it to one of these
+# bare tokens ("gallery"), and that token then exact-matches any unrelated event
+# whose location is just the generic word (e.g. the Ace Hotel's in-house
+# "Gallery"). When borough-stripping would leave only a single generic token, we
+# keep the borough so the name stays specific. Distinctive single tokens
+# ("Fotografiska", "Aurora") are unaffected and still strip normally.
+#
+# Deliberately NOT included: directional/area words (downtown, midtown, lower,
+# east, ...). Those ARE the short form of neighborhood locations ("Midtown" ->
+# "Midtown Manhattan"), so collapsing them is intended neighborhood resolution,
+# not a venue collision.
+GENERIC_LOCATION_WORDS = {
+    'gallery', 'bar', 'lounge', 'studio', 'garden', 'lobby', 'hall', 'room',
+    'cafe', 'kitchen', 'market', 'club', 'space', 'theater', 'theatre',
+    'museum', 'library', 'park', 'shop', 'store', 'center', 'centre', 'hotel',
+    'restaurant', 'rooftop', 'terrace', 'patio', 'courtyard', 'atrium',
+    'mezzanine', 'auditorium', 'chapel', 'sanctuary', 'annex', 'pavilion',
+    'plaza', 'commons', 'field', 'court', 'pool', 'deck', 'stage', 'cellar',
+    'ballroom', 'parlor', 'parlour', 'gym', 'loft', 'table', 'basement',
+    'harbor', 'harbour', 'sea', 'dance',
+}
+
+# Sentinel marking a street address shared by 2+ distinct venues in the
+# addresses tier. Address matching skips these — it can't disambiguate which
+# venue an event at that address belongs to.
+_AMBIGUOUS_ADDRESS = object()
+
+
 def _normalize_location_name(name):
     """Normalizes a location name for matching."""
     if not name:
@@ -790,7 +876,11 @@ def _normalize_location_name(name):
     state_suffixes = [' ny', ' nj', ' ct', ' new york', ' new jersey', ' connecticut']
     for ss in state_suffixes:
         if normalized.endswith(ss) and len(normalized) > len(ss) + 1:
-            normalized = normalized[:-len(ss)].strip()
+            stripped = normalized[:-len(ss)].strip()
+            # See GENERIC_LOCATION_WORDS: don't collapse to a bare generic token.
+            if ' ' not in stripped and stripped in GENERIC_LOCATION_WORDS:
+                break
+            normalized = stripped
             break
 
     suffixes = ['nyc', 'new york', 'brooklyn', 'manhattan', 'queens', 'bronx', 'staten island',
@@ -801,7 +891,14 @@ def _normalize_location_name(name):
     if not has_dash_before_borough:
         for suffix in suffixes:
             if normalized.endswith(f' {suffix}') and len(normalized) > len(suffix) + 2:
-                normalized = normalized[:-len(f' {suffix}')].strip()
+                stripped = normalized[:-len(f' {suffix}')].strip()
+                # Don't collapse a venue to a bare generic token (e.g.
+                # "Gallery Brooklyn" -> "gallery"), which would then exact-match
+                # any unrelated event whose location is just that word. Keep the
+                # borough so the name stays specific.
+                if ' ' not in stripped and stripped in GENERIC_LOCATION_WORDS:
+                    break
+                normalized = stripped
                 break
 
     return " ".join(normalized.split())
@@ -875,6 +972,13 @@ def _extract_street_address(full_address):
     # Take everything before the first comma (or the whole thing if no comma)
     street_part = full_address.split(',')[0].strip()
     if not street_part or len(street_part) < 5:
+        return None
+    # Require a leading house number. Without this, a value like "Harbor" (from a
+    # venue whose address is literally "Harbor, Frankfort, NY") or a bare park
+    # name ("Bryant Park, New York") becomes an address key and collides with
+    # unrelated queries. Real street addresses start with a number; venues are
+    # matched by name elsewhere.
+    if not re.match(r'\d', street_part):
         return None
     return _normalize_street_address(street_part)
 
@@ -1068,9 +1172,6 @@ def build_locations_map(cursor):
             'lng': loc.get('lng'),
             'emoji': loc.get('emoji')
         }
-        # Simple info for backward compatibility
-        info = {'lat': loc.get('lat'), 'lng': loc.get('lng'), 'emoji': loc.get('emoji')}
-
         main_name = loc.get('name', '')
         normalized_main = _normalize_location_name(main_name)
 
@@ -1105,11 +1206,20 @@ def build_locations_map(cursor):
                     if normalized_alt and len(normalized_alt) >= 3:
                         locations_map['website_scoped'][website_id][normalized_alt] = full_info
 
-        # Index by street address (e.g., "347 davis ave" from "347 Davis Ave, Staten Island, NY")
+        # Index by street address (e.g., "347 davis ave" from "347 Davis Ave, Staten Island, NY").
+        # Use full_info so an address match actually resolves a location_id (not
+        # just an emoji). Multiple distinct venues can share a street address (a
+        # building with several venues); an address match can't tell them apart,
+        # so the second distinct venue marks the address AMBIGUOUS and match-time
+        # skips it rather than guessing.
         address = loc.get('address', '')
         street_address = _extract_street_address(address)
         if street_address:
-            locations_map['addresses'][street_address] = info
+            existing = locations_map['addresses'].get(street_address)
+            if existing is None:
+                locations_map['addresses'][street_address] = full_info
+            elif existing is not _AMBIGUOUS_ADDRESS and existing.get('id') != loc.get('id'):
+                locations_map['addresses'][street_address] = _AMBIGUOUS_ADDRESS
 
     # Website-linked locations (from website_locations table)
     locations_map['website_linked'] = db.get_website_locations_map(cursor)
@@ -1129,10 +1239,12 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
       1. Website-scoped alternate names (highest priority — exact match for this website)
       2. Exact name match (against names, alternate_names, short_names)
       3. Address match (normalized street address comparison)
+      3.5. Single-venue website authority (a single-venue website's own venue wins
+           over arbitrary same-brand prefix/fuzzy matches when the name is generic)
       4. Prefix match (location name starts with known name, ≥PREFIX_MATCH_COVERAGE to avoid generics)
       5. Fuzzy match (Levenshtein ratio ≥ FUZZY_MATCH_THRESHOLD)
       6. Source site fallback (website name matches a location name)
-      7. Website-linked location (single-venue websites via website_locations table)
+      7. Website-linked location fallback (single-venue website, empty/virtual location_name)
 
     Each tier tries location_name, sublocation, and event_name variants.
     Within a tier, results are scored and the best match is selected.
@@ -1227,20 +1339,52 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
     addresses_tier = locations_map.get('addresses', {})
     for key in search_keys:
         street_addr = _extract_street_address(key)
-        if street_addr and street_addr in addresses_tier:
-            return make_result(addresses_tier[street_addr])
+        match = addresses_tier.get(street_addr) if street_addr else None
+        if match is not None and match is not _AMBIGUOUS_ADDRESS:
+            return make_result(match)
+
+    # Step 3.5: Single-venue website authority.
+    # When the source website is linked to exactly ONE venue, that venue is
+    # authoritative for events crawled from it. If the extracted location_name is
+    # only a brand prefix/substring of the venue (e.g. "Regal" from a specific
+    # Regal theater's own site, "AMC" from one AMC) it would otherwise prefix- or
+    # fuzzy-match an ARBITRARY same-brand venue below and collapse many theaters
+    # onto one location. Prefer the website's own venue. A specific DIFFERENT
+    # venue name is already returned by the exact/address steps above, so this
+    # only fires for generic/partial names consistent with the linked venue.
+    if website_id and normalized_loc and len(normalized_loc) >= 3:
+        linked = locations_map.get('website_linked', {}).get(website_id, [])
+        if len(linked) == 1:
+            v_name = _normalize_location_name(linked[0].get('name') or '')
+            if v_name and (
+                normalized_loc in v_name or v_name in normalized_loc
+                or _calculate_levenshtein_ratio(normalized_loc, v_name) >= 0.6
+            ):
+                return make_result(linked[0])
 
     # Step 4: Prefix matching (e.g., "Devocíon" matches "Devocíon (Williamsburg)")
     # Only use location_keys here to avoid matching event names to unrelated locations
     # Require prefix to cover >= 70% of the key to avoid generic names matching
-    # specific venues (e.g., "New York City" matching "New York City Center")
+    # specific venues (e.g., "New York City" matching "New York City Center").
+    # Scan alternate_names too: a curated alternate like "Agger Fish Building at BNY"
+    # should still resolve when the extractor emits the bare "Agger Fish Building"
+    # (73% coverage). Without this, such near-misses fall through to fuzzy matching,
+    # whose 0.90 threshold rejects them — leaving location_id NULL and spawning a
+    # duplicate event in the merger.
     for key in location_keys:
+        # A bare generic word ("gallery", "studio") carries no venue-identifying
+        # information — don't let it prefix-match a specific venue like
+        # "Gallery MC" or "Studio 525". Such queries should fall through to
+        # website-scoped resolution or stay unmatched.
+        if key in GENERIC_LOCATION_WORDS:
+            continue
         if len(key) >= 5:
-            for loc_key, match in locations_map.get('names', {}).items():
-                if loc_key.startswith(key + '(') or (
-                    loc_key.startswith(key + ' ') and len(key) / len(loc_key) >= PREFIX_MATCH_COVERAGE
-                ):
-                    return make_result(get_first(match))
+            for tier_name in ('names', 'alternate_names'):
+                for loc_key, match in locations_map.get(tier_name, {}).items():
+                    if loc_key.startswith(key + '(') or (
+                        loc_key.startswith(key + ' ') and len(key) / len(loc_key) >= PREFIX_MATCH_COVERAGE
+                    ):
+                        return make_result(get_first(match))
 
     # Step 5: Fuzzy matching across all tiers
     all_tiers = [
@@ -1270,12 +1414,17 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
                 if not key.strip():
                     continue
 
+                # A bare generic word shouldn't fuzzy-match a specific venue
+                # whose name merely contains it (e.g. "gallery" in "gallery mc").
+                loc_is_generic = normalized_loc in GENERIC_LOCATION_WORDS
+                subloc_is_generic = normalized_subloc in GENERIC_LOCATION_WORDS
+
                 is_match = (
                     key == normalized_loc or
                     (len(normalized_name) > 3 and key == normalized_name) or
                     (len(key) > 3 and (full_loc.startswith(key) or full_loc.endswith(key) or key in full_loc)) or
-                    (len(normalized_loc) > 3 and normalized_loc in key) or
-                    (len(normalized_subloc) > 3 and normalized_subloc in key)
+                    (len(normalized_loc) > 3 and not loc_is_generic and normalized_loc in key) or
+                    (len(normalized_subloc) > 3 and not subloc_is_generic and normalized_subloc in key)
                 )
 
                 # Token-overlap tripwire: if a variant shares ≥2 long tokens
@@ -1319,8 +1468,9 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
     # venue at the same address like 651 ARTS).
     if normalized_subloc and len(normalized_subloc) > 3:
         street_addr = _extract_street_address(normalized_subloc)
-        if street_addr and street_addr in addresses_tier:
-            return make_result(addresses_tier[street_addr])
+        match = addresses_tier.get(street_addr) if street_addr else None
+        if match is not None and match is not _AMBIGUOUS_ADDRESS:
+            return make_result(match)
 
     # Step 6: Source site fallback (match website name to location)
     # Only fires when no real venue name was extracted — otherwise an event
@@ -1352,39 +1502,9 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
         if len(linked) == 1:
             return make_result(linked[0])
 
-    # Step 8: Single-venue website brand-name fallback.
-    # When fuzzy matching (Step 5) didn't find anything but the AI returned a
-    # variant brand name (e.g. "AMC Theatres", "Regal UA Sheepshead Bay" when
-    # DB has "Regal Cinema Sheepshead Bay") and the website has exactly one
-    # linked location, the linked location is virtually always the right
-    # answer. Two conditions either qualify:
-    #   (a) substring containment in either direction (handles "AMC Theatres"
-    #       inside "AMC 34th Street 14")
-    #   (b) Levenshtein ratio ≥ 0.6 (handles "Regal UA Sheepshead Bay" vs
-    #       "Regal Cinema Sheepshead Bay" — close but not substring)
-    # Without this tier, those events end up with `location_id = NULL` and
-    # never appear on the map.
-    if website_id and normalized_loc:
-        linked = locations_map.get('website_linked', {}).get(website_id, [])
-        if len(linked) == 1:
-            linked_id = linked[0].get('id')
-            linked_norm_name = ''
-            for tier_name in ('names', 'short_names'):
-                for key, match in locations_map.get(tier_name, {}).items():
-                    candidate = match[0] if isinstance(match, list) else match
-                    if candidate.get('id') == linked_id:
-                        linked_norm_name = key
-                        break
-                if linked_norm_name:
-                    break
-            if linked_norm_name and len(normalized_loc) >= 3:
-                contains = (
-                    normalized_loc in linked_norm_name or
-                    linked_norm_name in normalized_loc
-                )
-                ratio = _calculate_levenshtein_ratio(normalized_loc, linked_norm_name)
-                if contains or ratio >= 0.6:
-                    return make_result(linked[0])
+    # (The former single-venue brand-name fallback is now Step 3.5, which runs
+    # before prefix/fuzzy so the authoritative venue wins over arbitrary
+    # same-brand prefix matches.)
 
     return None
 
@@ -1583,6 +1703,22 @@ def process_events(cursor, connection, crawl_result_id, website_name, run_date_s
         if 'name' in row_dict:
             row_dict['name'] = row_dict['name'].replace(' \\ |', ':').replace(' \\|', ':')
             row_dict['name'] = strip_leading_emoji(row_dict['name'])
+
+        # Non-event junk filter: closures, calls for submissions/grants, venue
+        # rentals, season passes, showtime placeholders, SEO spam. Drop before
+        # they ever become a crawl_event; log so the rejection is auditable.
+        if is_obvious_non_event(row_dict.get('name', '')):
+            log_rejection(
+                cursor, connection, crawl_result_id, website_id,
+                rejection_type='non_event_junk', stage='extract',
+                event_name=row_dict.get('name'),
+                event_url=(row_dict.get('url') or '').strip() or None,
+                start_date=(row_dict.get('start_date') or None),
+                end_date=(row_dict.get('end_date') or None),
+                details='Name matched non-event junk pattern',
+            )
+            rejection_counts['non_event_junk'] = rejection_counts.get('non_event_junk', 0) + 1
+            continue
 
         # URL grounding check: if the AI returned a URL that doesn't appear in
         # the crawled content, it's likely a hallucinated event. Log and skip.

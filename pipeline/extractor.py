@@ -140,7 +140,11 @@ class EventOccurrence(BaseModel):
     )
     end_date: Optional[str] = Field(
         default=None,
-        description="The end date if different from start_date, in YYYY-MM-DD format"
+        description="The end date if different from start_date, in YYYY-MM-DD format. "
+                    "REQUIRED for multi-day events and for art exhibitions / gallery "
+                    "shows / installations that run over a period — set it to the "
+                    "closing date (e.g. 'On view through July 5' -> end_date "
+                    "2026-07-05). Leave null only for genuinely single-day events."
     )
     end_time: Optional[str] = Field(
         default=None,
@@ -1014,6 +1018,7 @@ For each event provide: name, location (venue name), occurrences (array of start
 
 CRITICAL DATE RULES:
 - Only return occurrences for SPECIFIC calendar dates EXPLICITLY shown on the page near the event (e.g. "May 7, 2026", "Sat Jun 14", "9/22").
+- EXHIBITIONS: for an art exhibition / gallery show / installation with a stated date range ("March 1 – July 5", "On view through June 30"), return ONE occurrence with start_date = opening date and end_date = closing date. Never collapse the run to a single day, and never stamp today's date as the exhibition date.
 - If an event is described as "monthly", "weekly", "ongoing", "permanent", "recurring", or has no specific date listed, set occurrences=null. Do NOT invent a next-occurrence date.
 - Do NOT default to today's date when no date is listed.
 - Do NOT extract dates from URLs or Google Calendar/iCal links — those often reference past instances. Only use dates visible in the page text adjacent to the event.
@@ -1189,6 +1194,7 @@ Based on the website content below, extract all upcoming events. For each event,
   - start_time: Time like "4:00 PM" (optional)
   - end_date: End date if different from start (optional)
   - end_time: End time (optional)
+  EXHIBITIONS: For an art exhibition, gallery show, or installation that runs over a date range (e.g. "March 1 – July 5", "On view through June 30"), create ONE occurrence spanning the run: start_date = opening date, end_date = closing date. Do NOT collapse the run to a single day, and do NOT stamp today's date as the exhibition date. If the page gives no opening or closing date at all (a permanent / date-less display), set occurrences=null instead of inventing a single date.
 - description: 1-3 sentence description based ONLY on what is stated in the source content. If the listing only has a name/date/time with no further details, use "No description available." Do NOT make up or infer descriptions.
 - url: Specific event URL if available
 - hashtags: 4-7 CamelCase tags (e.g., ["Comedy", "StandUp", "Free"]). Always include at least one category from: Music, Nightlife, Comedy, Art, Theater, Dance, Film, Literature, Community, Family, Wellness, Education, Outdoor, Sports, Games. Also include Free if the event is free, or Virtual if online. Then add granular descriptive tags. Avoid location-specific or NYC-redundant tags.
@@ -1197,6 +1203,7 @@ Based on the website content below, extract all upcoming events. For each event,
 {note_section}{rid_section}
 Rules:
 - Extract ALL events from the page - do not skip or summarize
+- Do NOT extract things that are not attendable public events. Skip: venue/program closures and holiday-closure notices ("Museum Closed", "Park Closes at 5pm", "Office Closed for Juneteenth"); calls for submissions, applications, or grants ("Open Call for Artists", "Submission Deadline", "Micro Grants Round 3"); venue marketing (space/room rentals, "Private Events", "Available for Booking", dining service like "Signature Breakfast"); season passes and ticketing placeholders ("Summer Pass 2026", "Showtimes"); and content placeholders or unrelated spam. These are not events — leave them out entirely.
 - Only include events in the NYC metro area within the next 3 months. The NYC metro area includes: all five NYC boroughs; Long Island (Nassau, Suffolk, the Hamptons); Westchester and Rockland counties; the Hudson Valley (Dutchess, Orange, Ulster, Putnam); Northern New Jersey (Bergen, Hudson, Essex, Passaic, Union, Middlesex, Monmouth, Ocean); and Southern Connecticut (Fairfield County). Skip events at venues outside this metro region (e.g. Philadelphia, Boston, Chicago, LA, Europe, etc.).
 - Ignore unrelated event sections ("Hot Events", "Similar events", etc.)
 - For recurring events, expand ALL individual dates into the occurrences array

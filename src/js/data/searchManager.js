@@ -332,12 +332,13 @@ const SearchManager = (() => {
         const searchIndex = state.appState.searchIndex;
         const matchingEvents = state.appState.currentlyMatchingEvents;
 
-        // Build organizer -> matching event count lookup
+        // Build organizer -> matching event count lookup. A merged event can have
+        // several organizers (organizer_ids), each counted toward its own total.
         const orgEventCounts = {};
         for (const event of matchingEvents) {
-            if (event.organizer_id) {
-                const orgId = String(event.organizer_id);
-                orgEventCounts[orgId] = (orgEventCounts[orgId] || 0) + 1;
+            for (const orgId of (event.organizer_ids || [])) {
+                const key = String(orgId);
+                orgEventCounts[key] = (orgEventCounts[key] || 0) + 1;
             }
         }
 

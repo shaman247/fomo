@@ -239,6 +239,16 @@ document.addEventListener('DOMContentLoaded', () => {
             this.state.tagChildrenOf = hierarchyMaps.childrenOf;
             this.state.tagEmojiMap = hierarchyMaps.tagEmojiMap;
 
+            // Organizers participate in the tag filter system as namespaced
+            // pseudo-tags (e.g. "organizer:123"). Register their names and fold
+            // their emojis into tagEmojiMap so they render like any other tag
+            // wherever a tag chip is drawn (popups, chip bar, search results).
+            Utils.registerOrganizers(this.state.organizersById);
+            for (const [id, org] of Object.entries(this.state.organizersById)) {
+                const orgTag = Utils.makeOrganizerTag(id);
+                if (orgTag && org && org.emoji) this.state.tagEmojiMap[orgTag] = org.emoji;
+            }
+
             // Initialize TagColorManager with color palettes and emoji bgcolors
             TagColorManager.init({
                 darkPalette: this.config.TAG_COLOR_PALETTE_DARK,
@@ -664,15 +674,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     [lat, lng] = event.locationKey.split(',').map(Number);
                 }
                 MarkerController.flyToLocationAndOpenPopup(lat, lng, result.type === 'event' ? result.ref : null);
-            } else if (result.type === 'organizer') {
-                // Find first matching event from this organizer and fly to its location
-                const orgId = String(result.ref);
-                const event = this.state.allEvents.find(e => String(e.organizer_id) === orgId);
-                if (event && event.locationKey) {
-                    const [lat, lng] = event.locationKey.split(',').map(Number);
-                    MarkerController.flyToLocationAndOpenPopup(lat, lng, event.id);
-                }
             }
+            // Organizer results are rendered as interactive tag chips (see
+            // TagStateManager.createSearchResultButton) and toggle the organizer
+            // filter directly, so they never reach this fly-to handler.
         },
 
         /**
@@ -686,10 +691,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (FP) FP.mark('fp:dates:start');
 
                 const selectedDates = this.state.datePickerInstance.selectedDates;
-                if (selectedDates.length < 2) {
+                if (selectedDates.length < 1) {
                     this.state.allEventsFilteredByDateAndLocation = [];
                 } else {
-                    const [startDate, endDate] = selectedDates;
+                    // A lone start date (mid range-pick) acts as a single-day
+                    // range (start, start) so filtering applies on the first click.
+                    const startDate = selectedDates[0];
+                    const endDate = selectedDates.length >= 2 ? selectedDates[1] : selectedDates[0];
                     let events = FilterManager.filterEventsByDateRange(startDate, endDate);
 
                     if (FP) {
@@ -1081,6 +1089,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 tagDescendantsOf: this.state.tagDescendantsOf,
                 tagParentsOf: this.state.tagParentsOf,
                 tagChildrenOf: this.state.tagChildrenOf,
+                structuralFormatTags: this.state.structuralFormatTags,
                 tagEmojiMap: this.state.tagEmojiMap,
                 getSelectedTagsWithColors: () => TagColorManager.getSelectedTagsWithColors(),
                 initialGlobalFrequencies: this.state.tagFrequencies,
@@ -1175,7 +1184,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const openPopup = openPopupInfo?.popup;
 
             const selectedDates = this.state.datePickerInstance.selectedDates;
-            if (selectedDates.length < 2) {
+            // A lone start date (mid range-pick) is treated as a single-day
+            // range, so only bail when nothing is selected at all.
+            if (selectedDates.length < 1) {
                 return;
             }
 
@@ -1245,12 +1256,35 @@ document.addEventListener('DOMContentLoaded', () => {
         updateVisibleItems() {
             if (!this.state.map) return;
 
-            // Use ViewportManager to calculate viewport bounds and distances
-            const viewportData = ViewportManager.updateViewportCalculations(
-                this.state.map,
-                this.state.locationsByLatLng,
-                this.state.isInitialLoad
-            );
+            // Viewport bounds + per-location haversine distances depend only on
+            // the camera (center/zoom/bearing/pitch), the window/panel size, and
+            // the set of locations — NOT on tag filters. Recomputing them on
+            // every tag toggle re-runs a haversine over all ~2400 locations for
+            // nothing (~2.3ms). Cache by a view signature and reuse when the map
+            // hasn't moved; moveend/resize/Phase-2-load change the signature and
+            // force a fresh compute.
+            const m = this.state.map;
+            const c = m.getCenter();
+            const viewSig = [
+                c.lng.toFixed(6), c.lat.toFixed(6),
+                m.getZoom().toFixed(4), m.getBearing().toFixed(2), m.getPitch().toFixed(2),
+                window.innerWidth, window.innerHeight,
+                Object.keys(this.state.locationsByLatLng).length,
+                this.state.isInitialLoad ? 1 : 0
+            ].join('|');
+
+            let viewportData;
+            if (this._viewportCache && this._viewportCache.sig === viewSig) {
+                viewportData = this._viewportCache.data;
+            } else {
+                viewportData = ViewportManager.updateViewportCalculations(
+                    m,
+                    this.state.locationsByLatLng,
+                    this.state.isInitialLoad
+                );
+                if (!viewportData) return;
+                this._viewportCache = { sig: viewSig, data: viewportData };
+            }
 
             if (!viewportData) return;
 

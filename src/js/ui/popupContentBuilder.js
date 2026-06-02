@@ -21,6 +21,10 @@ const PopupContentBuilder = (() => {
     // a "+N other dates" toggle expands them on demand.
     const INLINE_OTHER_DATES_THRESHOLD = 2;
 
+    // Max organizer chips to render per event card. Merged events can have many
+    // source websites (incl. over-merge noise); cap keeps the card readable.
+    const ORGANIZER_CHIP_CAP = 5;
+
     // Section display order: Events first, Ongoing second, custom alphabetical
     const SECTION_ORDER = { 'Events': 0, 'Ongoing': 1 };
 
@@ -296,19 +300,42 @@ const PopupContentBuilder = (() => {
         eventDetailContainer.appendChild(descriptionP);
 
         const tagsToShow = event.display_tags || event.tags;
-        const hasTags = tagsToShow && tagsToShow.length > 0;
 
-        if (hasTags) {
+        // Show curated tags (from tag hierarchy), hide keywords (unless debug mode)
+        const curatedTags = (tagsToShow && tagsToShow.length > 0)
+            ? (state.hierarchyTagsSet.size > 0 && !state.getDebugMode()
+                ? tagsToShow.filter(tag => state.hierarchyTagsSet.has(tag))
+                : tagsToShow)
+            : [];
+
+        // Organizers render as first-class, interactive tag chips (namespaced
+        // pseudo-tags) so they filter identically to topic tags. A merged event
+        // can have several organizers — show one chip per KNOWN organizer
+        // (aggregators/unknowns are dropped), deduped by display name and capped.
+        const organizerTags = [];
+        if (state.createInteractiveTagButton) {
+            const seenOrgNames = new Set();
+            for (const t of Utils.organizerTagsForEvent(event)) {
+                if (!Utils.isKnownOrganizerTag(t)) continue;
+                const label = Utils.getTagDisplayName(t);
+                if (seenOrgNames.has(label)) continue;  // collapse duplicate venue website rows
+                seenOrgNames.add(label);
+                organizerTags.push(t);
+                if (organizerTags.length >= ORGANIZER_CHIP_CAP) break;
+            }
+        }
+
+        if (curatedTags.length > 0 || organizerTags.length > 0) {
             const tagsContainer = document.createElement('div');
             tagsContainer.className = 'tag-tags-container popup-tags-container';
 
-            // Show curated tags (from tag hierarchy), hide keywords (unless debug mode)
-            const curatedTags = state.hierarchyTagsSet.size > 0 && !state.getDebugMode()
-                ? tagsToShow.filter(tag => state.hierarchyTagsSet.has(tag))
-                : tagsToShow;
             curatedTags.forEach(tag => {
                 const el = createTagElement(tag);
                 if (el) tagsContainer.appendChild(el);
+            });
+            organizerTags.forEach(t => {
+                const orgEl = state.createInteractiveTagButton(t);
+                if (orgEl) tagsContainer.appendChild(orgEl);
             });
 
             if (tagsContainer.children.length > 0) {
@@ -454,23 +481,30 @@ const PopupContentBuilder = (() => {
             const locInfo = event.locationKey ? filterFunctions.getLocationInfo(event.locationKey) : null;
             const combinedTags = event.tags || [];
             const locationTags = locInfo?.tags || [];
+            // Organizers participate as pseudo-tags, so a selected/required/
+            // forbidden organizer must count toward this event's match — otherwise
+            // organizer-selected events wouldn't auto-expand or sort to the top.
+            // A merged event can have several organizers.
+            const orgTags = Utils.organizerTagsForEvent(event);
 
             let isMatchingTags = true;
             if (forbiddenTagsSet.size > 0) {
-                if (combinedTags.some(t => forbiddenTagsSet.has(t)) || locationTags.some(t => forbiddenTagsSet.has(t))) {
+                if (combinedTags.some(t => forbiddenTagsSet.has(t)) || locationTags.some(t => forbiddenTagsSet.has(t))
+                    || orgTags.some(t => forbiddenTagsSet.has(t))) {
                     isMatchingTags = false;
                 }
             }
             if (isMatchingTags && requiredTagsSet.size > 0) {
                 for (const tag of requiredTagsSet) {
-                    if (!combinedTags.includes(tag) && !locationTags.includes(tag)) {
+                    if (!combinedTags.includes(tag) && !locationTags.includes(tag) && !orgTags.includes(tag)) {
                         isMatchingTags = false;
                         break;
                     }
                 }
             }
             if (isMatchingTags && requiredTagsSet.size === 0 && selectedTagsSet.size > 0) {
-                if (!combinedTags.some(t => selectedTagsSet.has(t)) && !locationTags.some(t => selectedTagsSet.has(t))) {
+                if (!combinedTags.some(t => selectedTagsSet.has(t)) && !locationTags.some(t => selectedTagsSet.has(t))
+                    && !orgTags.some(t => selectedTagsSet.has(t))) {
                     isMatchingTags = false;
                 }
             }
@@ -479,6 +513,7 @@ const PopupContentBuilder = (() => {
             if (hasActiveTagFilters && isMatchingTags) {
                 for (const tag of combinedTags) if (selectedTagsSet.has(tag)) selectedTagMatchCount++;
                 for (const tag of locationTags) if (selectedTagsSet.has(tag)) selectedTagMatchCount++;
+                for (const tag of orgTags) if (selectedTagsSet.has(tag)) selectedTagMatchCount++;
             }
 
             const startTime = event.occurrences?.[0]?.start?.getTime() || 0;

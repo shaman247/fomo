@@ -53,6 +53,7 @@ const FilterPanelUI = (() => {
         tagDescendantsOf: {},
         tagParentsOf: {},
         tagChildrenOf: {},
+        structuralFormatTags: new Set(),
         tagEmojiMap: {},
 
         // Chip bar
@@ -541,11 +542,15 @@ const FilterPanelUI = (() => {
         const visibleFreqs = state.getVisibleTagFrequencies ? state.getVisibleTagFrequencies() : {};
         const seen = new Set([tagName]);
 
+        const structural = state.structuralFormatTags;
         const collect = (candidates) => {
             const layer = [];
             candidates.forEach(tag => {
                 if (seen.has(tag)) return;
                 seen.add(tag);
+                // Structural Format nodes (Format root + category tags) are never
+                // shown as chips — only their leaf event-type tags are.
+                if (structural && structural.has(tag)) return;
                 const score = _scoreRelatedTag(tag, visibleFreqs);
                 if (score === null) return;
                 layer.push({ tag, score });
@@ -864,6 +869,12 @@ const FilterPanelUI = (() => {
         state.tagDescendantsOf = config.tagDescendantsOf || {};
         state.tagParentsOf = config.tagParentsOf || {};
         state.tagChildrenOf = config.tagChildrenOf || {};
+        // Structural Format nodes (Format root + its category children) are kept in
+        // the hierarchy for grouping but never shown as chips. Prefer the value
+        // computed in DataManager; fall back to deriving from the hierarchy here so
+        // this never depends on init ordering.
+        state.structuralFormatTags = config.structuralFormatTags
+            || new Set(['Format', ...(((config.tagChildrenOf || {})['Format']) || [])]);
         state.tagEmojiMap = config.tagEmojiMap || {};
         state.getSelectedTagsWithColors = config.getSelectedTagsWithColors || null;
         state.resultsContainerDOM = config.resultsContainerDOM;
@@ -1066,6 +1077,17 @@ const FilterPanelUI = (() => {
         const TAG_STATE = TagStateManager.getTagStateConstants();
 
         tagsToSelect.forEach(tag => {
+            // Organizer pseudo-tags are valid filter keys even though they're not
+            // in the browsable tag list — select them directly.
+            if (Utils.isOrganizerTag(tag)) {
+                const oldState = state.tagStates[tag];
+                state.tagStates[tag] = TAG_STATE.SELECTED;
+                if (oldState !== TAG_STATE.SELECTED && assignColorCallback) {
+                    assignColorCallback(tag);
+                }
+                return;
+            }
+
             // Try exact match first, then case-insensitive match
             let matchedTag = tag;
             if (!state.allAvailableTags.includes(tag)) {

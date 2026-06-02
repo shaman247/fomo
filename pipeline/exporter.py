@@ -198,13 +198,18 @@ def export_events(cursor):
     last_day = day_dates[-1]
 
     # Build set of (website_id, location_id) pairs where the website IS the venue.
-    # Events from these pairs won't get organizer_id — only external organizers are attributed.
+    # NOTE: temporarily unused — the organizer-attribution gate below is disabled
+    # for debugging (every event gets an organizer_id). Kept for an easy revert.
     cursor.execute("SELECT website_id, location_id FROM website_locations")
     venue_links = set((row[0], row[1]) for row in cursor.fetchall())
 
     # Get all events with their occurrences (exclude archived and suppressed events)
-    # Events must have a location with coordinates to be exported
-    # Exclude events from aggregator sources unless verified by a primary source
+    # Events must have a location with coordinates to be exported.
+    #
+    # Aggregator trust gate: enabled aggregators (RA, Eventbrite, Partiful, …) are
+    # trusted discovery feeds — keep their events. Only DISABLED aggregators
+    # (re-listers we've turned off, e.g. NYC Trivialist) require independent
+    # corroboration by a primary source before their leftover events are shown.
     cursor.execute("""
         SELECT e.id, e.name, e.short_name, e.description, e.emoji,
                e.location_name, e.sublocation,
@@ -218,8 +223,9 @@ def export_events(cursor):
           AND e.archived = FALSE
           AND e.suppressed = FALSE
           AND (
-            w.source_type = 'primary'
-            OR w.id IS NULL
+            w.id IS NULL
+            OR w.source_type = 'primary'
+            OR w.disabled = FALSE
             OR EXISTS (
                 SELECT 1 FROM event_sources es
                 JOIN crawl_events ce ON es.crawl_event_id = ce.id
@@ -230,8 +236,24 @@ def export_events(cursor):
           )
     """)
 
+    event_rows = cursor.fetchall()
+
+    # Prefetch the distinct source websites for every event (merged events can
+    # carry several). Used to attribute multiple organizer chips per event. The
+    # event's own website_id (the merger's primary) is added first below.
+    source_sites_by_event = {}
+    cursor.execute("""
+        SELECT es.event_id, cr.website_id
+        FROM event_sources es
+        JOIN crawl_events ce ON es.crawl_event_id = ce.id
+        JOIN crawl_results cr ON ce.crawl_result_id = cr.id
+        WHERE cr.website_id IS NOT NULL
+    """)
+    for ev_id, src_wid in cursor.fetchall():
+        source_sites_by_event.setdefault(ev_id, set()).add(src_wid)
+
     all_events = []
-    for row in cursor.fetchall():
+    for row in event_rows:
         event_id = row[0]
 
         # Get occurrences
@@ -305,11 +327,25 @@ def export_events(cursor):
         if section and section != 'Events':
             event['section'] = section
 
+        # Organizer attribution: a merged event can come from several sources, so
+        # we export every distinct source website as an organizer (organizer_ids),
+        # primary first. The frontend renders one chip per organizer that resolves
+        # in organizers.json — aggregators and unknown sources are dropped there.
+        #
+        # TEMP (debugging organizer attribution): the primary website is included
+        # even when it IS the venue itself. To restore production behavior
+        # (external organizers only), gate the primary on venue_links:
+        #     location_id = row[12]
+        #     primary = website_id if (website_id, location_id) not in venue_links else None
         website_id = row[11]
-        location_id = row[12]
-        # Only attribute organizer when the website is NOT the venue itself
-        if website_id and (website_id, location_id) not in venue_links:
-            event['organizer_id'] = website_id
+        organizer_ids = []
+        if website_id:
+            organizer_ids.append(website_id)  # merger's primary, first
+        for src_wid in sorted(source_sites_by_event.get(event_id, set())):
+            if src_wid not in organizer_ids:
+                organizer_ids.append(src_wid)
+        if organizer_ids:
+            event['organizer_ids'] = organizer_ids
 
         all_events.append(event)
 
@@ -473,11 +509,18 @@ def export_organizers(cursor):
     output_dir = os.path.join(SCRIPT_DIR, '..', 'src', 'data')
     os.makedirs(output_dir, exist_ok=True)
 
+    # Aggregator sources (platforms / re-listers like Eventbrite, Partiful, RA)
+    # are NOT real organizers, so they're excluded here — that hides their
+    # organizer chip and makes them non-filterable on the frontend (the
+    # isKnownOrganizerTag guard suppresses any organizer not in this map).
+    #
+    # Disabled NON-aggregator websites ARE included (TEMP, debugging organizer
+    # attribution): their leftover active events should still attribute to the
+    # real organizer. To restore production behavior, re-add `AND w.disabled = FALSE`.
     cursor.execute("""
         SELECT w.id, w.name, w.base_url, w.description, w.emoji
         FROM websites w
-        WHERE w.disabled = FALSE
-          AND w.source_type = 'primary'
+        WHERE w.source_type <> 'aggregator'
           AND EXISTS (
               SELECT 1 FROM events e
               WHERE e.website_id = w.id
