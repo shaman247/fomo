@@ -64,6 +64,7 @@ database/backups/
 # Screenshots and images
 screenshots/
 *.png
+*.jpeg
 .playwright-mcp/
 
 # OS files

@@ -85,17 +85,7 @@ Show the user the output and confirm they want to proceed.
 php scripts/add_locations.php
 ```
 
-### Step 5: Add to Production
-
-Ask the user if they want to also add to production. If yes:
-
-```bash
-php scripts/add_locations.php --production
-```
-
-**Note**: Unlike websites, locations use auto-increment IDs in both databases. The IDs may differ between local and production.
-
-### Step 6: Clean Up (REQUIRED)
+### Step 5: Clean Up (REQUIRED)
 
 After successfully adding locations, reset the `$new_locations` array back to empty. Do NOT leave previous entries, dated comments, or "see git history" trail markers behind — git is the source of truth for what was added when.
 

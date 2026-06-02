@@ -5,25 +5,12 @@
  * Shared database connection for all admin pages.
  */
 
-// Auto-detect environment by hostname
-$isLocal = in_array($_SERVER['HTTP_HOST'] ?? '', ['localhost', '127.0.0.1'])
-        || strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost:') === 0;
-
-if ($isLocal) {
-    $config = [
-        'host' => 'localhost',
-        'database' => 'fomo',
-        'user' => 'root',
-        'password' => ''
-    ];
-} else {
-    $config = [
-        'host' => 'localhost',
-        'database' => 'fomoowsq_fomo',
-        'user' => 'fomoowsq_root',
-        'password' => 'REDACTED_DB_PASSWORD'
-    ];
-}
+$config = [
+    'host' => 'localhost',
+    'database' => 'fomo',
+    'user' => 'root',
+    'password' => ''
+];
 
 try {
     $pdo = new PDO(
