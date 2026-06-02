@@ -156,6 +156,11 @@ const FilterManager = (() => {
             ...(locationInfo?.tags || [])
         ]);
 
+        // Organizers participate as pseudo-tags (see DataManager.buildTagIndex).
+        for (const orgTag of Utils.organizerTagsForEvent(event)) {
+            combinedTags.add(orgTag);
+        }
+
         // Forbidden tags: event must not have any forbidden tags
         if (forbiddenTags.length > 0 && forbiddenTags.some(tag => combinedTags.has(tag))) {
             return false;
@@ -240,9 +245,11 @@ const FilterManager = (() => {
         // Apply forbidden tag filter
         if (forbiddenTags.length > 0) {
             const forbiddenTagsSet = new Set(forbiddenTags);
-            filteredEvents = filteredEvents.filter(event =>
-                !event.tags?.some(tag => forbiddenTagsSet.has(tag))
-            );
+            filteredEvents = filteredEvents.filter(event => {
+                if (event.tags?.some(tag => forbiddenTagsSet.has(tag))) return false;
+                if (Utils.organizerTagsForEvent(event).some(t => forbiddenTagsSet.has(t))) return false;
+                return true;
+            });
         }
 
         return filteredEvents;

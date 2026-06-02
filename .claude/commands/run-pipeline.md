@@ -24,10 +24,10 @@ Events from touring companies performing at venues **outside** this area (e.g., 
 Run the pipeline in the background, logging to `/tmp/pipeline_run.log`:
 
 ```bash
-./venv/bin/python pipeline/main.py 2>&1 | tee /tmp/pipeline_run.log
+caffeinate -i -m -s ./venv/bin/python pipeline/main.py 2>&1 | tee /tmp/pipeline_run.log
 ```
 
-This runs the full pipeline: crawl → extract → process → merge → export → upload. It typically takes 30-60 minutes depending on the number of websites due for crawling.
+This runs the full pipeline: crawl → extract → process → merge → export → upload.
 
 Wait for the background task's completion notification — the runtime fires it the moment `pipeline/main.py` exits. Stay idle (or work on unrelated tasks) until then. Grep the log post-hoc for actionable signals; the runtime already aggregates per-site signals into the final summary.
 
@@ -154,7 +154,46 @@ ORDER BY w.name, e.id;
 
 Suppress only events where the description explicitly says "Join us in Philadelphia for..." / "A gathering for Chicago fashion creatives in <Chicago neighborhood>". Keep films set elsewhere, touring performers, and similar references.
 
-## Step 4: Re-export and Upload
+## Step 4: Classify New Event Types
+
+The merge (Step 1) and any re-crawls in Step 3 create new events with `event_type = NULL`. Classify them now — **after** dedupe/hide/merge cleanup so events that got suppressed or merged away aren't classified. Run this last among the data steps because it only needs the final event set.
+
+```bash
+# How many active events still need a type?
+./venv/bin/python -c "
+import sys; sys.path.insert(0,'pipeline')
+from db import create_connection
+conn=create_connection(); c=conn.cursor()
+c.execute('SELECT COUNT(*) FROM events WHERE archived=0 AND suppressed=0 AND event_type IS NULL')
+print('untyped active events:', c.fetchone()[0])
+"
+```
+
+If the count is 0, skip this step. Otherwise delegate to one `general-purpose` sub-agent:
+
+```
+Follow the workflow in .claude/commands/classify-event-types.md (Mode A), but scope ONLY to active events with event_type IS NULL (the new events from this run). Do NOT touch already-typed events.
+
+Pull every NULL-typed active event (id, name, short_name, description, location_name, sublocation, section, tags, occ_count, span_days) to a JSON file. If ≤600 rows, classify in a single pass; if more, split into ~600-row batches and fan out inner sub-agents. The valid label strings are defined in pipeline/event_types.py (VALID_EVENT_TYPES) — assign exactly one per event and validate every label against that set before writing.
+
+Bulk-update events.event_type for each row. Then run:
+  ./venv/bin/python scripts/audit_event_types.py --validate --drift
+to confirm 0 invalid labels, 0 NULL active, and to spot-check for obvious name↔type drift.
+
+Report: events classified N; type distribution (top 10); UNKNOWN rows with ids (these are non-events — suppress them, and note that any reaching here means the extractor junk filter has a gap worth a look); Other rows with ids (flag if 3+ share a shape — the taxonomy may need a new type); and audit results (invalid labels, drift mismatches).
+```
+
+UNKNOWN rows surfaced here are junk that slipped past the extractor's `is_obvious_non_event` filter — suppress them (`suppressed=1, reviewed=1`) and treat a recurring pattern as a signal to extend that filter.
+
+After classification, mirror `event_type` into the **Format** tag family so the new events are filterable/searchable by type (idempotent; rebuilds membership from `event_type`):
+
+```bash
+./venv/bin/python scripts/sync_format_tags.py
+```
+
+> `event_type` is surfaced to the frontend via the `Format` curated-tag family (`Format › category › type`), driven by `pipeline/event_types.py`. The sync above keeps `event_tags` in step with `event_type`; the tag hierarchy + event_tags then export normally in Step 5. (See `.claude/rules/tag-system.md` → Format family.)
+
+## Step 5: Re-export and Upload
 
 After all sub-agents return, re-export the data and upload to production:
 
@@ -207,7 +246,14 @@ Step 3 — Parallel Cleanup (5 sub-agents):
 - Address mismatches: scanned N, fixed K, left alone J
 - Out-of-area inline review: scanned N, suppressed K
 
-Step 4 — Re-export and Upload:
+Step 4 — Classify New Event Types:
+- New events classified: N (skipped if 0)
+- UNKNOWN (junk) found + suppressed: K
+- Other flagged for taxonomy review: J
+- Audit: invalid labels (target 0), drift mismatches noted
+- Format tags synced (event_type → tag family): ✓
+
+Step 5 — Re-export and Upload:
 - Events exported: N
 - Data uploaded: ✓/✗
 

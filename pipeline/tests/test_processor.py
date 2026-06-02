@@ -7,7 +7,13 @@ import os
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from processor import create_short_name, normalize_event_name_caps, strip_leading_emoji
+from processor import (
+    create_short_name,
+    normalize_event_name_caps,
+    strip_leading_emoji,
+    _normalize_location_name,
+    _extract_street_address,
+)
 
 # Test cases: (input, expected_output, description)
 SHORT_NAME_TEST_CASES = [
@@ -152,6 +158,73 @@ class TestStripLeadingEmoji(unittest.TestCase):
 
     def test_none_input(self):
         self.assertIsNone(strip_leading_emoji(None))
+
+
+class TestNormalizeLocationName(unittest.TestCase):
+    """Tests for _normalize_location_name borough/state stripping."""
+
+    def test_generic_token_keeps_borough(self):
+        # A venue whose name collapses to a bare generic token must NOT be
+        # stripped, or it exact-matches any unrelated event located in a
+        # "Gallery" / "Loft" / etc. (regression: Ace Hotel "Gallery" sublocation
+        # was mapping to the "Gallery Brooklyn" venue in Red Hook).
+        cases = [
+            ("Gallery Brooklyn", "gallery brooklyn"),
+            ("Dance Manhattan", "dance manhattan"),
+            ("GYM NYC", "gym nyc"),
+            ("The Loft New York", "loft new york"),
+            ("The Table New York", "table new york"),
+            ("Basement NY", "basement ny"),
+        ]
+        for input_str, expected in cases:
+            with self.subTest(input=input_str):
+                self.assertEqual(_normalize_location_name(input_str), expected)
+
+    def test_distinctive_token_still_strips(self):
+        # Distinctive proper-noun names should still strip the borough/state so
+        # an aggregator's bare "Fotografiska" resolves to "Fotografiska New York".
+        # Directional/area words also still strip — "Midtown Manhattan" -> "midtown"
+        # is intended neighborhood resolution, not a venue collision.
+        cases = [
+            ("Aurora Brooklyn", "aurora"),
+            ("Fotografiska New York", "fotografiska"),
+            ("Isola Brooklyn", "isola"),
+            ("The Bell House Brooklyn", "bell house"),
+            ("Williamsburg, Brooklyn", "williamsburg"),
+            ("Midtown Manhattan", "midtown"),
+            ("Downtown Brooklyn", "downtown"),
+        ]
+        for input_str, expected in cases:
+            with self.subTest(input=input_str):
+                self.assertEqual(_normalize_location_name(input_str), expected)
+
+
+class TestExtractStreetAddress(unittest.TestCase):
+    """Tests for _extract_street_address house-number requirement."""
+
+    def test_real_addresses(self):
+        cases = [
+            ("347 Davis Ave, Staten Island, NY 10310, USA", "347 davis ave"),
+            ("100 Hinsdale St, NY", "100 hinsdale st"),
+            ("5-25 46th Ave, Queens, NY", "5-25 46th ave"),
+        ]
+        for input_str, expected in cases:
+            with self.subTest(input=input_str):
+                self.assertEqual(_extract_street_address(input_str), expected)
+
+    def test_non_addresses_rejected(self):
+        # A value with no leading house number is not a street address. Without
+        # this guard, "Harbor" (a venue whose address is literally
+        # "Harbor, Frankfort, NY") or a bare park name pollutes the address tier
+        # and collides with unrelated queries.
+        for input_str in [
+            "Harbor, Frankfort, NY 13340, USA",
+            "Bryant Park, New York, NY 10018, USA",
+            "Central Park, New York, NY, USA",
+            "New York, NY 10004",
+        ]:
+            with self.subTest(input=input_str):
+                self.assertIsNone(_extract_street_address(input_str))
 
 
 if __name__ == "__main__":

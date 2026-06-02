@@ -392,14 +392,64 @@ const Utils = (() => {
         }
     };
 
+    // ========================================
+    // ORGANIZER PSEUDO-TAGS
+    // ========================================
+    // Organizers participate in the tag filter system as namespaced pseudo-tags
+    // (e.g. "organizer:123"). They ride the same tagStates / eventTagIndex /
+    // color machinery as curated tags, but are kept out of the curated hierarchy
+    // so they never appear in the browsable tag tree. The name lookup below lets
+    // getTagDisplayName() render an organizer chip with the organizer's real name.
+
+    const ORGANIZER_TAG_PREFIX = 'organizer:';
+    let organizerNameMap = {};
+
+    /** Populates the organizer-name lookup from the loaded organizers map. */
+    function registerOrganizers(organizersById) {
+        organizerNameMap = {};
+        if (!organizersById) return;
+        for (const [id, org] of Object.entries(organizersById)) {
+            if (org && org.name) organizerNameMap[ORGANIZER_TAG_PREFIX + id] = org.name;
+        }
+    }
+
+    /** Builds the pseudo-tag key for an organizer id, or null if id is absent. */
+    function makeOrganizerTag(id) {
+        return (id === null || id === undefined || id === '') ? null : ORGANIZER_TAG_PREFIX + id;
+    }
+
+    /** True if the tag string is an organizer pseudo-tag. */
+    function isOrganizerTag(tag) {
+        return typeof tag === 'string' && tag.startsWith(ORGANIZER_TAG_PREFIX);
+    }
+
+    /** True if the pseudo-tag resolves to a known (loaded) organizer. */
+    function isKnownOrganizerTag(tag) {
+        return Object.prototype.hasOwnProperty.call(organizerNameMap, tag);
+    }
+
+    /**
+     * Returns the organizer pseudo-tags for an event (one per source website in
+     * event.organizer_ids). A merged event can have several. Order is preserved
+     * (primary first). Includes unknown/aggregator ids — callers that render
+     * chips should filter with isKnownOrganizerTag.
+     */
+    function organizerTagsForEvent(event) {
+        const ids = event && event.organizer_ids;
+        if (!Array.isArray(ids) || ids.length === 0) return [];
+        return ids.map(id => ORGANIZER_TAG_PREFIX + id);
+    }
+
     /**
      * Returns the human-readable form of a tag name, stripping any
      * disambiguator suffix (everything after " / "). The internal tag
      * name (with disambiguator) remains the unique identifier — only
      * rendered text is shortened. e.g. "Avant Garde / Music" → "Avant Garde".
+     * Organizer pseudo-tags resolve to the organizer's display name.
      */
     function getTagDisplayName(tag) {
         if (!tag) return tag;
+        if (organizerNameMap[tag]) return organizerNameMap[tag];
         const idx = tag.indexOf(' / ');
         return idx === -1 ? tag : tag.slice(0, idx);
     }
@@ -409,6 +459,11 @@ const Utils = (() => {
         decodeHtml,
         formatAndSanitize,
         getTagDisplayName,
+        registerOrganizers,
+        makeOrganizerTag,
+        isOrganizerTag,
+        isKnownOrganizerTag,
+        organizerTagsForEvent,
         isValidUrl,
         formatDateForDisplay,
         buildEventDateTime,

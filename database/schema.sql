@@ -222,6 +222,10 @@ CREATE TABLE IF NOT EXISTS event_urls (
 CREATE TABLE IF NOT EXISTS tags (
     id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
+    emoji VARCHAR(10) DEFAULT NULL,
+    is_quick_filter TINYINT(1) NOT NULL DEFAULT 0,
+    display_order INT DEFAULT NULL,
+    type ENUM('tag','keyword') NOT NULL DEFAULT 'keyword' COMMENT 'tag=curated (in hierarchy/filters), keyword=search-only. New AI tags default to keyword; promote via populate_tag_hierarchy.py',
 
     UNIQUE KEY unique_tag_name (name),
     INDEX idx_name (name)

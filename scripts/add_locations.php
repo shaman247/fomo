@@ -258,7 +258,7 @@ function add_tags_pdo($pdo, $location_id, $tags) {
             $tag_id = $row['id'];
             $existing_tags[] = $tag_name;
         } else {
-            $stmt = $pdo->prepare("INSERT INTO tags (name) VALUES (?)");
+            $stmt = $pdo->prepare("INSERT INTO tags (name, type) VALUES (?, 'tag')");
             $stmt->execute([$tag_name]);
             $tag_id = $pdo->lastInsertId();
             $new_tags[] = $tag_name;
@@ -276,14 +276,15 @@ function add_tags_ssh($config, $location_id, $tags) {
     $new_tags = [];
     $existing_tags = [];
 
-    // Build a single SQL to insert tags and link them
+    // Build a single SQL to insert tags and link them. Location tags are
+    // curated/filterable, so set type='tag' explicitly (column default is 'keyword').
     $tag_values = [];
     foreach ($tags as $tag_name) {
-        $tag_values[] = "(" . escape_sql($tag_name) . ")";
+        $tag_values[] = "(" . escape_sql($tag_name) . ", 'tag')";
     }
 
     // Insert tags (ignore duplicates)
-    $sql = "INSERT IGNORE INTO tags (name) VALUES " . implode(", ", $tag_values);
+    $sql = "INSERT IGNORE INTO tags (name, type) VALUES " . implode(", ", $tag_values);
     run_ssh_query($config, $sql);
 
     // Link tags to location

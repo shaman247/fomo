@@ -791,10 +791,14 @@ def get_detail_crawl_candidates(cursor, website_ids=None):
 
     Args:
         cursor: DB cursor
-        website_ids: Optional list of website IDs to restrict to. If None,
-                     considers all websites crawled within the last 7 days.
+        website_ids: Optional list of website IDs to restrict to. When given,
+                     only the website filter changes — the same staleness guards
+                     (detail_crawl_attempts < 2, crawled within 14 days) still
+                     apply, so a manual `--ids` run does NOT re-crawl the entire
+                     historical backlog of orphaned/exhausted crawl_events.
 
-    Returns list of (ce_id, name, url, website_id) tuples.
+    Returns list of (ce_id, name, url, website_id) tuples, deduped so each
+    distinct (website_id, url) is crawled at most once per run.
     """
     generic_locations = _load_generic_location_names()
 
@@ -813,6 +817,8 @@ def get_detail_crawl_candidates(cursor, website_ids=None):
             WHERE ce.url IS NOT NULL AND ce.url != ''
             AND es.id IS NULL
             AND w.skip_reenrichment = 0
+            AND ce.detail_crawl_attempts < 2
+            AND cr.crawled_at >= DATE_SUB(NOW(), INTERVAL 14 DAY)
             AND cr.website_id IN ({placeholders})
         """
         cursor.execute(query, list(website_ids))
@@ -879,9 +885,18 @@ def get_detail_crawl_candidates(cursor, website_ids=None):
 
     events_to_enrich = []
     skipped_shared = 0
+    skipped_dup_url = 0
+    # Crawl each distinct (website_id, url) at most once. After the listing-page
+    # filter below, every remaining URL maps to a single event name, so any
+    # duplicates here are the SAME recurring event captured across multiple crawl
+    # runs (e.g. an exhibit re-extracted weekly that never merged). Fetching the
+    # URL once and letting the merger collapse the duplicates avoids re-crawling
+    # the same page N times — the backlog that made `--ids` runs crawl for hours.
+    seen_urls = set()
     for ce_id, name, url, website_id in candidates:
+        norm_url = url.rstrip('/')
         # Skip URLs that have multiple distinct event names (real listing pages)
-        if len(url_name_sets.get((website_id, url.rstrip('/')), set())) > 1:
+        if len(url_name_sets.get((website_id, norm_url), set())) > 1:
             skipped_shared += 1
             continue
         # Skip URLs matching the website's source/listing URLs
@@ -893,11 +908,19 @@ def get_detail_crawl_candidates(cursor, website_ids=None):
             source_url_cache[website_id] = {
                 row[0].rstrip('/') for row in cursor.fetchall()
             }
-        if url.rstrip('/') not in source_url_cache[website_id]:
-            events_to_enrich.append((ce_id, name, url, website_id))
+        if norm_url in source_url_cache[website_id]:
+            continue
+        # Collapse same-URL duplicates to a single fetch per run.
+        if (website_id, norm_url) in seen_urls:
+            skipped_dup_url += 1
+            continue
+        seen_urls.add((website_id, norm_url))
+        events_to_enrich.append((ce_id, name, url, website_id))
 
     if skipped_shared:
         print(f"  Skipped {skipped_shared} events with shared/listing URLs")
+    if skipped_dup_url:
+        print(f"  Skipped {skipped_dup_url} duplicate same-URL events (one fetch per URL)")
 
     return events_to_enrich
 
@@ -1155,7 +1178,10 @@ def upsert_event_tags(cursor, event_id, tag_names, replace=False):
         row = cursor.fetchone()
         tag_id = row[0] if row else None
         if not tag_id:
-            cursor.execute("INSERT INTO tags (name) VALUES (%s)", (tag[:100],))
+            # Novel AI-emitted tags are search-only keywords. They become
+            # curated ('tag') only when explicitly promoted into the hierarchy
+            # (see scripts/populate_tag_hierarchy.py).
+            cursor.execute("INSERT INTO tags (name, type) VALUES (%s, 'keyword')", (tag[:100],))
             tag_id = cursor.lastrowid
         cursor.execute(
             "INSERT IGNORE INTO event_tags (event_id, tag_id) VALUES (%s, %s)",
