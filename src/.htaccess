@@ -10,6 +10,11 @@ AddType application/x-protobuf .pbf
     AddOutputFilterByType DEFLATE text/json
     AddOutputFilterByType DEFLATE application/json
     AddOutputFilterByType DEFLATE application/javascript
+    # Servers disagree on the .js MIME type (Apache/XAMPP: application/x-javascript;
+    # others: text/javascript). List every variant or the app bundle + maplibre-gl.js
+    # ship UNCOMPRESSED (~1 MB for maplibre vs ~250 KB gzipped — a big slow-link regression).
+    AddOutputFilterByType DEFLATE text/javascript
+    AddOutputFilterByType DEFLATE application/x-javascript
     AddOutputFilterByType DEFLATE text/css
     AddOutputFilterByType DEFLATE text/html
     AddOutputFilterByType DEFLATE text/plain

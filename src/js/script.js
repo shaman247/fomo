@@ -200,14 +200,9 @@ document.addEventListener('DOMContentLoaded', () => {
          * @private
          */
         async _loadInitialData() {
-            // Step 1: Fetch the manifest + small shared metadata in parallel.
-            // The manifest tells us which day-chunk maps to today's NYC date.
-            const [manifest, tagConfig, tagHierarchy, organizersData] = await Promise.all([
-                DataManager.fetchData(this.config.MANIFEST_URL),
-                DataManager.fetchData(this.config.TAG_CONFIG_URL),
-                DataManager.fetchData(this.config.TAG_HIERARCHY_URL),
-                DataManager.fetchData(this.config.ORGANIZERS_URL)
-            ]);
+            // Step 1: Fetch the manifest first — it's tiny (~60 bytes) and tells
+            // us which day-chunk maps to today's NYC date.
+            const manifest = await DataManager.fetchData(this.config.MANIFEST_URL);
 
             this.state.manifest = manifest || { days: [] };
             this.state.loadedChunks = new Set();
@@ -221,7 +216,15 @@ document.addEventListener('DOMContentLoaded', () => {
             this.state.initChunk = initChunk;
             this.state.loadedChunks.add(initChunk);
 
-            const [initEventData, initLocationData] = await Promise.all([
+            // Step 3: Fetch everything else in a SINGLE parallel batch. The heavy
+            // events chunk (~330 KB gz) now downloads concurrently with the
+            // metadata instead of waiting for it — previously organizers.json
+            // (~120 KB gz) sat on the critical path *before* the chunk fetch even
+            // started, adding a full round-trip + its transfer to time-to-markers.
+            const [tagConfig, tagHierarchy, organizersData, initEventData, initLocationData] = await Promise.all([
+                DataManager.fetchData(this.config.TAG_CONFIG_URL),
+                DataManager.fetchData(this.config.TAG_HIERARCHY_URL),
+                DataManager.fetchData(this.config.ORGANIZERS_URL),
                 DataManager.fetchData(`${this.config.DATA_DIR}events.${initChunk}.json`),
                 DataManager.fetchData(`${this.config.DATA_DIR}locations.${initChunk}.json`)
             ]);
@@ -270,8 +273,11 @@ document.addEventListener('DOMContentLoaded', () => {
          * @private
          * @async
          */
-        async _initializeModules() {
-            // Initialize emoji font and theme before map
+        async _startMap() {
+            // Everything here is independent of the event/tag data, so it can run
+            // (and kick off the base map's style/tile/glyph downloads) in PARALLEL
+            // with _loadInitialData() instead of waiting for it. The base map needs
+            // only the theme (for its style URL) and the initial center/zoom.
             this.initEmojiManager();
             EmojiManager.initEmojiFont();
             this.initThemeManager();
@@ -283,7 +289,23 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             this.initMap();
+            // ViewportManager must exist before mapLoadPromise resolves — the
+            // map's ready handler calls ViewportManager.adjustMapToVisibleCenter().
             this.initViewportManager();
+            // Search/filter managers must be ready before the map can fire a
+            // moveend→performSearch (which happens during the parallel load).
+            this.initSearchAndFilterManagers();
+        },
+
+        /**
+         * Initialize the modules that depend on the loaded event/tag data.
+         * Runs after both _startMap() and _loadInitialData() have completed.
+         * @memberof App
+         * @private
+         */
+        _initDataDependentModules() {
+            // Feed the now-loaded emoji→color map to the already-created map.
+            MapManager.setMarkerColors((this.state.tagConfig && this.state.tagConfig.bgcolors) || {});
             this.initMarkerController();
             this.initFilterPanelUI();
         },
@@ -533,15 +555,26 @@ document.addEventListener('DOMContentLoaded', () => {
             // --- Phase 1: Load Initial Data ---
             try {
                 this._setLoadingProgress(5);
-                await this._loadInitialData();
-                this._setLoadingProgress(30);
-                await this._initializeModules();
-                this._setLoadingProgress(50);
+
+                // Start the base map and load the data CONCURRENTLY. The map's
+                // style/tiles/glyphs and the event/location JSON are independent,
+                // so overlapping them shaves the (previously serial) map-init tail
+                // off the time-to-interactive — the largest remaining win on slow
+                // connections.
+                await Promise.all([
+                    this._startMap(),
+                    this._loadInitialData()
+                ]);
+                this._setLoadingProgress(45);
+
+                // Modules that need the loaded data, then UI wiring.
+                this._initDataDependentModules();
                 this._setupUIComponents(urlParams);
                 this._setLoadingProgress(65);
 
-                // Wait for map tiles to load before showing markers
-                // This prevents markers from appearing over a blank/ocean background
+                // Wait for the base map tiles to be ready before showing markers
+                // (prevents markers over a blank/ocean background). Glyphs/labels
+                // are intentionally NOT awaited here — see initMap's mapLoadPromise.
                 await this.state.mapLoadPromise;
                 this._setLoadingProgress(85);
 
@@ -885,8 +918,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 }, true); // Use capture to intercept before MapLibre's handler
             }
 
-            // Initialize MapManager with the MapLibre map
-            MapManager.init(this.state.map, {}, this.state.tagConfig.bgcolors);
+            // Initialize MapManager with the MapLibre map. bgcolors may not be
+            // loaded yet (the map is started in parallel with the data fetch) —
+            // App.init calls MapManager.setMarkerColors() once tagConfig arrives,
+            // before any marker is drawn.
+            MapManager.init(this.state.map, {}, (this.state.tagConfig && this.state.tagConfig.bgcolors) || {});
 
             // Create debug container for DOM-based debug overlay
             const mapContainer = this.state.map.getContainer();
@@ -901,20 +937,38 @@ document.addEventListener('DOMContentLoaded', () => {
             this.state.debugContainer.style.zIndex = '1000';
             mapContainer.appendChild(this.state.debugContainer);
 
-            // Create a promise that resolves when map tiles are loaded
+            // Create a promise that resolves once the map is ready to show
+            // markers. We resolve as soon as the base vector tiles for the
+            // initial viewport have loaded (geography is painted → no markers
+            // over a blank/ocean background) WITHOUT waiting for the map's full
+            // `load` event, which also blocks on the ~0.5 MB of label glyph PBFs.
+            // Labels (street names + marker text) fill in a beat later when the
+            // glyphs arrive; until then the user already has the map + emoji
+            // markers + popups and can pan/zoom freely.
             this.state.mapLoadPromise = new Promise((resolve) => {
-                this.state.map.on('load', () => {
+                const map = this.state.map;
+                let resolved = false;
+
+                const onReady = () => {
+                    if (resolved) return;
+                    resolved = true;
+                    map.off('sourcedata', onSourceData);
+                    map.off('load', onReady);
+
                     // Adjust the initial view so the visible center (accounting for filter panel)
                     // ends up at the desired initial view coordinates (from URL params or default)
                     const desiredVisibleCenter = { lat: initialView[0], lng: initialView[1] };
-                    ViewportManager.adjustMapToVisibleCenter(this.state.map, desiredVisibleCenter, false);
+                    ViewportManager.adjustMapToVisibleCenter(map, desiredVisibleCenter, false);
 
-                    // Load emoji images and set up WebGL marker interactions
-                    MapManager.loadEmojiImages(this.state.locationsByLatLng);
+                    // Load emoji images and set up WebGL marker interactions.
+                    // The map can become ready before Phase-1 data has loaded
+                    // (they run in parallel), so locationsByLatLng may be absent;
+                    // updateMarkerData() lazily adds any missing emoji images later.
+                    MapManager.loadEmojiImages(this.state.locationsByLatLng || {});
                     MapManager.setupMarkerInteractions();
 
                     // Initialize mobile bottom sheet for popups
-                    BottomSheet.init(this.state.map);
+                    BottomSheet.init(map);
 
                     // Fade in the map container
                     const mapContainerEl = document.getElementById('map-container');
@@ -923,7 +977,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
 
                     resolve();
-                });
+                };
+
+                // Fire as soon as the base source's viewport tiles are all in.
+                const onSourceData = (e) => {
+                    if (e.sourceId === 'protomaps' && e.isSourceLoaded && map.isStyleLoaded()) {
+                        onReady();
+                    }
+                };
+                map.on('sourcedata', onSourceData);
+
+                // Fallback: the full `load` event always resolves us, covering
+                // edge cases (e.g. no tiles for the viewport, or sourcedata
+                // already fired before this handler attached).
+                map.on('load', onReady);
             });
 
             // Handle popup open events (custom event fired by MapManager or BottomSheet)
@@ -982,6 +1049,12 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             this.state.map.on('moveend', () => {
+                // The map is created in parallel with the data load and fires
+                // moveend (e.g. from the initial adjustMapToVisibleCenter) before
+                // the data-dependent modules (MarkerController/FilterPanelUI) are
+                // ready. Skip during init — the explicit filterAndDisplayEvents()
+                // at the end of init() performs the first render.
+                if (this.state.isInitialLoad) return;
                 const FP = (typeof window !== 'undefined' && window.FilterProfiler) || null;
                 const run = () => {
                     if (FP) FP.mark('fp:moveend:start');
@@ -1071,18 +1144,25 @@ document.addEventListener('DOMContentLoaded', () => {
          * Sets up SearchManager, FilterManager, and FilterPanelUI with callbacks
          * @memberof App
          */
-        initFilterPanelUI() {
-            // Initialize SearchManager
+        /**
+         * Initialize SearchManager + FilterManager. These only need appState/
+         * config (no loaded data), so they run in _startMap — BEFORE the map can
+         * fire a moveend→performSearch. Initializing them late (after the data
+         * load) left a window on slow connections where a search ran against a
+         * not-yet-initialized SearchManager (null appState).
+         * @memberof App
+         */
+        initSearchAndFilterManagers() {
             SearchManager.init({
                 appState: this.state
             });
-
-            // Initialize FilterManager
             FilterManager.init({
                 appState: this.state,
                 config: this.config
             });
+        },
 
+        initFilterPanelUI() {
             FilterPanelUI.init({
                 allAvailableTags: this.state.allAvailableTags,
                 tagConfigBgColors: this.state.tagConfig.bgcolors,

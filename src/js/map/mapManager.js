@@ -40,9 +40,15 @@ const MapManager = (() => {
         state.mapInstance = mapInstance;
         state.markerColorsRef = markerColors || {};
 
-        // Ensure source/layers exist whenever the map becomes idle.
-        // Covers both initial load and style changes (theme switch destroys
-        // custom sources/layers; idle fires after the new style is fully ready).
+        // Add the marker source/layers as soon as the style is parsed. This
+        // fires well before the map's `load`/`idle` events (which also wait on
+        // label glyph PBFs to download), so emoji markers can render without
+        // blocking on the ~0.5 MB of font glyphs. In MapLibre v5 `style.load`
+        // fires on both initial load and setStyle() (theme switch).
+        mapInstance.on('style.load', _ensureLayers);
+
+        // Ensure source/layers exist whenever the map becomes idle, too.
+        // Safety net covering any path where style.load didn't (re-)create them.
         mapInstance.on('idle', _ensureLayers);
 
         // Try immediate setup if style is already loaded
@@ -875,6 +881,13 @@ const MapManager = (() => {
     // UTILITY
     // ========================================
 
+    // Set/replace the emoji→marker-color map. Lets the map be created before
+    // the tag config (which carries bgcolors) has loaded — colors are only read
+    // when markers are actually built (updateMarkerData), which happens after.
+    function setMarkerColors(markerColors) {
+        state.markerColorsRef = markerColors || {};
+    }
+
     function getMarkerColor(locationInfo) {
         if (locationInfo) {
             const emoji = locationInfo.emoji;
@@ -919,6 +932,7 @@ const MapManager = (() => {
         loadEmojiImages,
         loadEmojiImagesChunked,
         reloadEmojiImages,
+        setMarkerColors,
         updateMarkerData,
         setupMarkerInteractions,
         openPopupAtCoordinates,
