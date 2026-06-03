@@ -19,7 +19,8 @@
 // ============================================================================
 // EDIT THIS ARRAY TO ADD NEW LOCATIONS
 // ============================================================================
-$new_locations = [];
+$new_locations = [
+];
 
 
 // Load .env file
@@ -82,6 +83,10 @@ Example location entry:
       'emoji' => '🎷',
       'alt_emoji' => '🎵',                // Optional: alternative emoji
       'tags' => ['Jazz', 'Live Music', 'Manhattan', 'Greenwich Village'],  // Optional
+      'alternate_names' => [              // Optional: extra names the matcher resolves to this location
+          'Blue Note Jazz Club',                          // global alternate (website_id = NULL)
+          ['name' => 'The Blue Note', 'website_id' => 42],  // scoped to one website
+      ],
   ]
 
 Note: Instagram handles are stored separately in the instagram_accounts table.
@@ -200,6 +205,41 @@ function add_tags_pdo($pdo, $location_id, $tags) {
     return ['existing' => $existing_tags, 'new' => $new_tags];
 }
 
+function add_alternate_names_pdo($pdo, $location_id, $alt_names) {
+    $added = [];
+
+    foreach ($alt_names as $entry) {
+        // Each entry is either a plain string (global alternate) or
+        // ['name' => '...', 'website_id' => 123] (scoped to one website).
+        if (is_array($entry)) {
+            $name = $entry['name'] ?? null;
+            $website_id = $entry['website_id'] ?? null;
+        } else {
+            $name = $entry;
+            $website_id = null;
+        }
+        if (empty($name)) continue;
+
+        // Skip if this exact (location, name, scope) alternate already exists.
+        // <=> is MySQL's NULL-safe equality so global (NULL) rows match correctly.
+        $stmt = $pdo->prepare(
+            "SELECT id FROM location_alternate_names
+             WHERE location_id = ? AND alternate_name = ? AND website_id <=> ?"
+        );
+        $stmt->execute([$location_id, $name, $website_id]);
+        if ($stmt->fetch(PDO::FETCH_ASSOC)) continue;
+
+        $stmt = $pdo->prepare(
+            "INSERT INTO location_alternate_names (location_id, alternate_name, website_id)
+             VALUES (?, ?, ?)"
+        );
+        $stmt->execute([$location_id, $name, $website_id]);
+        $added[] = $website_id === null ? $name : "$name (website $website_id)";
+    }
+
+    return $added;
+}
+
 function get_stats_pdo($pdo) {
     $result = $pdo->query("SELECT COUNT(*) as total, MAX(id) as max_id FROM locations");
     return $result->fetch(PDO::FETCH_ASSOC);
@@ -237,6 +277,7 @@ foreach ($new_locations as $loc) {
     }
 
     $tags = $loc['tags'] ?? [];
+    $alt_names = $loc['alternate_names'] ?? [];
 
     if ($is_dry_run) {
         echo "  [DRY RUN] Would add: {$loc['name']} {$loc['emoji']}\n";
@@ -244,6 +285,15 @@ foreach ($new_locations as $loc) {
         echo "            Coords: {$loc['lat']}, {$loc['lng']}\n";
         if (!empty($tags)) {
             echo "            Tags: " . implode(', ', $tags) . "\n";
+        }
+        if (!empty($alt_names)) {
+            $alt_labels = array_map(function ($e) {
+                if (is_array($e)) {
+                    return ($e['name'] ?? '') . ' (website ' . ($e['website_id'] ?? 'global') . ')';
+                }
+                return $e;
+            }, $alt_names);
+            echo "            Alt names: " . implode(', ', $alt_labels) . "\n";
         }
         $added++;
     } else {
@@ -261,6 +311,14 @@ foreach ($new_locations as $loc) {
                 }
                 if (!empty($tag_result['new'])) {
                     echo "       Tags (NEW): " . implode(', ', $tag_result['new']) . "\n";
+                }
+            }
+
+            // Add alternate names
+            if (!empty($alt_names)) {
+                $alt_result = add_alternate_names_pdo($pdo, $new_id, $alt_names);
+                if (!empty($alt_result)) {
+                    echo "       Alt names: " . implode(', ', $alt_result) . "\n";
                 }
             }
 
