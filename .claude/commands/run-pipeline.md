@@ -81,9 +81,9 @@ Single-event archival warnings are included in scope alongside larger ones — S
 
 For complex crawl issues (stealth mode, Cloudflare bypass, JS navigation, broken widgets, venue closures), the command defers to `/optimize-crawls`.
 
-## Step 3: Parallel Cleanup (5 sub-agents in one message)
+## Step 3: Parallel Cleanup (6 sub-agents in one message)
 
-After `/triage-pipeline-issues` finishes, fan out the per-domain cleanup commands as **five concurrent `general-purpose` sub-agents**. Send all five `Agent` tool calls in a single message.
+After `/triage-pipeline-issues` finishes, fan out the per-domain cleanup commands as **six concurrent `general-purpose` sub-agents**. Send all six `Agent` tool calls in a single message.
 
 ### Sub-agent briefs
 
@@ -150,6 +150,21 @@ Use the /geocode skill for any address change.
 Leave the events export and upload to the parent.
 
 Report: candidates scanned N, fixed K (Category 1), classified-and-left J (Category 2-5 with breakdown), unclassified (target: 0).
+```
+
+**Agent 6 — Review newly-added recurring spans**
+```
+Catch envelope spans introduced by THIS run before they blanket every day on the map. Scope is just-added spans, not the full backlog (the weekly /fix-recurring-spans task does the comprehensive sweep).
+
+1. Run: ./venv/bin/python scripts/fix_recurring_spans.py --review --new
+   (--new restricts to events created/updated in the last day — i.e. this run's merge.)
+2. FIX_SPAN bucket = auto-fixable. Review the listed ids with `--show <ids>` to confirm they're periodic meetings (not exhibitions), then apply scoped to those ids:
+   ./venv/bin/python scripts/fix_recurring_spans.py --apply --ids <fix_span_ids>
+3. RECURRING_RANGE / PROGRAM_RANGE / INVERSE buckets need source judgment — do NOT auto-fix. List them in your report (id + name + bucket) so the parent can decide whether to handle now or defer to the weekly full scan.
+
+Follow .claude/commands/fix-recurring-spans.md for the bucket definitions and the exhibition-vs-meeting discriminator. Leave the events export and upload to the parent.
+
+Report: new span-bearing events scanned N; FIX_SPAN auto-fixed K (with ids); RECURRING_RANGE/PROGRAM_RANGE/INVERSE flagged for review (ids + bucket); LIKELY_OK count.
 ```
 
 ### After the parallel batch returns
@@ -261,12 +276,13 @@ Step 2 — Triage Pipeline Issues:
 - Un-archivals: J events
 - Findings requiring user approval: F
 
-Step 3 — Parallel Cleanup (5 sub-agents):
+Step 3 — Parallel Cleanup (6 sub-agents):
 - Hide uninteresting: suppressed N (top categories), kept M
 - Dedupe: auto-suppressed N, merged K pairs, dismissed J pairs
 - Undated: total N, fixed K via js_code, flagged J for follow-up
 - Unmapped: matched N, created M new locations, archived K, skipped J
 - Address mismatches: scanned N, fixed K, left alone J
+- New recurring spans: scanned N, FIX_SPAN auto-fixed K, flagged J for review (ids+bucket)
 - Out-of-area inline review: scanned N, suppressed K
 
 Step 4 — Classify New Event Types:
