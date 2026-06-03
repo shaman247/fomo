@@ -143,23 +143,36 @@ const Utils = (() => {
     }
 
     function formatMultipleOccurrences(occurrences) {
-        const dateGroups = {};
+        const segments = [];        // ordered output segments
+        const groupByDate = {};     // dateKey -> segment, for merging single-day occurrences
 
         occurrences.forEach(occurrence => {
             const { start, end, originalStartTime, originalEndTime } = occurrence;
             if (!(start instanceof Date) || isNaN(start)) return;
 
+            const hasEnd = end instanceof Date && !isNaN(end);
+            const isMultiDay = hasEnd && start.toDateString() !== end.toDateString();
+
+            // Multi-day spans (e.g. exhibition runs) render as their own "start – end"
+            // range so the end date isn't lost when grouping by start date.
+            if (isMultiDay) {
+                segments.push({ text: formatSingleOccurrence(occurrence) });
+                return;
+            }
+
             const dateKey = start.toISOString().split('T')[0];
-            if (!dateGroups[dateKey]) {
-                dateGroups[dateKey] = { displayDate: start.toLocaleDateString('en-US', DATE_OPTIONS), times: new Set() };
+            let segment = groupByDate[dateKey];
+            if (!segment) {
+                segment = { displayDate: start.toLocaleDateString('en-US', DATE_OPTIONS), times: new Set() };
+                groupByDate[dateKey] = segment;
+                segments.push(segment);
             }
 
             const hasStartTime = originalStartTime && originalStartTime.trim() !== '';
-            const hasEndTime = end && originalEndTime && originalEndTime.trim() !== '';
-            const isSameDay = end && start.toDateString() === end.toDateString();
+            const hasEndTime = hasEnd && originalEndTime && originalEndTime.trim() !== '';
 
             let timeStr = '';
-            if (hasStartTime && hasEndTime && isSameDay) {
+            if (hasStartTime && hasEndTime) {
                 const startTime = formatTimeCompact(start);
                 const endTime = formatTimeCompact(end);
                 timeStr = (startTime !== endTime) ? `${startTime}–${endTime}` : startTime;
@@ -168,12 +181,15 @@ const Utils = (() => {
             }
 
             if (timeStr) {
-                dateGroups[dateKey].times.add(timeStr);
+                segment.times.add(timeStr);
             }
         });
 
-        return Object.values(dateGroups).map(group => {
-            return group.times.size > 0 ? `${group.displayDate}: ${Array.from(group.times).join(', ')}` : group.displayDate;
+        return segments.map(segment => {
+            if (segment.text) return segment.text;
+            return segment.times.size > 0
+                ? `${segment.displayDate}: ${Array.from(segment.times).join(', ')}`
+                : segment.displayDate;
         }).join('; ');
     }
 

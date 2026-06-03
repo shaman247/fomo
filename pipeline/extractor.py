@@ -965,6 +965,12 @@ async def extract_single_event(event_name, content):
         f'return ONLY the day(s) the event itself takes place. Pickup/expo/setup '
         f'days are logistics, not occurrences of the event. Example: a race page '
         f'showing "Wed-Fri Expo / Sat Race" should return only Saturday.\n\n'
+        f'RECEPTION vs EXHIBITION RUN: If the named event is an opening/closing '
+        f'reception, opening night, preview, or launch tied to an exhibition, '
+        f'occurrences = ONLY that reception\'s own date and time (a single-day '
+        f'event). Do NOT add the exhibition\'s broader on-view run (e.g. "on view '
+        f'June 4 – July 10") as an additional occurrence — that run belongs to the '
+        f'exhibition itself, which is a separate event.\n\n'
         f'{content}'
     )
 
@@ -1019,6 +1025,7 @@ For each event provide: name, location (venue name), occurrences (array of start
 CRITICAL DATE RULES:
 - Only return occurrences for SPECIFIC calendar dates EXPLICITLY shown on the page near the event (e.g. "May 7, 2026", "Sat Jun 14", "9/22").
 - EXHIBITIONS: for an art exhibition / gallery show / installation with a stated date range ("March 1 – July 5", "On view through June 30"), return ONE occurrence with start_date = opening date and end_date = closing date. Never collapse the run to a single day, and never stamp today's date as the exhibition date.
+- RECEPTION vs RUN: a timed opening/closing reception, opening night, or preview is a SEPARATE single-day event, NOT an occurrence of the exhibition. If a page lists both a dated+timed reception and a broader exhibition run, emit TWO events — the reception (one single-day occurrence: its date + time) and the exhibition (one start→end run occurrence) — never the full run as a second occurrence of the reception, and never the reception's time on the run.
 - If an event is described as "monthly", "weekly", "ongoing", "permanent", "recurring", or has no specific date listed, set occurrences=null. Do NOT invent a next-occurrence date.
 - Do NOT default to today's date when no date is listed.
 - Do NOT extract dates from URLs or Google Calendar/iCal links — those often reference past instances. Only use dates visible in the page text adjacent to the event.
@@ -1195,6 +1202,7 @@ Based on the website content below, extract all upcoming events. For each event,
   - end_date: End date if different from start (optional)
   - end_time: End time (optional)
   EXHIBITIONS: For an art exhibition, gallery show, or installation that runs over a date range (e.g. "March 1 – July 5", "On view through June 30"), create ONE occurrence spanning the run: start_date = opening date, end_date = closing date. Do NOT collapse the run to a single day, and do NOT stamp today's date as the exhibition date. If the page gives no opening or closing date at all (a permanent / date-less display), set occurrences=null instead of inventing a single date.
+  RECEPTION vs RUN: A timed opening/closing reception, opening night, or preview is a DISTINCT single-day event — NOT an occurrence of the exhibition it celebrates. When a page describes both a dated, timed reception AND a broader exhibition run (e.g. "Opening reception June 4, 6–8pm" for a show "on view June 4 – July 10"), emit TWO separate events: (1) the reception, with ONE single-day occurrence (its date + time), and (2) the exhibition, with ONE run occurrence (start_date = opening, end_date = closing). Never attach the exhibition's full run as a second occurrence of the reception event, and never put the reception's time on the exhibition run.
 - description: 1-3 sentence description based ONLY on what is stated in the source content. If the listing only has a name/date/time with no further details, use "No description available." Do NOT make up or infer descriptions.
 - url: Specific event URL if available
 - hashtags: 4-7 CamelCase tags (e.g., ["Comedy", "StandUp", "Free"]). Always include at least one category from: Music, Nightlife, Comedy, Art, Theater, Dance, Film, Literature, Community, Family, Wellness, Education, Outdoor, Sports, Games. Also include Free if the event is free, or Virtual if online. Then add granular descriptive tags. Avoid location-specific or NYC-redundant tags.
