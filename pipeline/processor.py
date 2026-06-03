@@ -722,13 +722,33 @@ def group_event_occurrences(rows, source_url=None):
         no_punct = re.sub(r'[^\w\s]', '', no_underscores.strip().lower())
         return re.sub(r'\s+', ' ', no_punct).strip()
 
-    def find_matching_group_key(event_name, grouped_events):
+    def loc_key(d):
+        """Location identity for a row/group: resolved location_id if known,
+        else the normalized location_name, else None (unknown)."""
+        lid = d.get('location_id')
+        if lid:
+            return ('id', lid)
+        loc = re.sub(r'\s+', ' ', (d.get('location') or '').strip().lower())
+        return ('name', loc) if loc else None
+
+    def locations_compatible(a, b):
+        """Two rows may group only if their locations don't conflict. A missing
+        location, or an id-vs-name mismatch we can't compare, is treated as
+        compatible; two different resolved ids (or two different names) are not.
+        This stops a generic name ("National Trails Day") from absorbing a
+        distinct event at another venue ("...: Highbridge Park Guided Walk")
+        purely because one name is a substring of the other."""
+        if a is None or b is None or a[0] != b[0]:
+            return True
+        return a[1] == b[1]
+
+    def find_matching_group_key(event_name, row_loc, grouped_events):
         normalized_event = normalize_name_for_grouping(event_name)
-        if event_name in grouped_events:
-            return event_name
-        for existing_key in grouped_events.keys():
+        for existing_key, existing in grouped_events.items():
+            if not locations_compatible(row_loc, loc_key(existing)):
+                continue
             normalized_existing = normalize_name_for_grouping(existing_key)
-            if normalized_event == normalized_existing:
+            if event_name == existing_key or normalized_event == normalized_existing:
                 return existing_key
             if len(normalized_event) >= 5 and len(normalized_existing) >= 5:
                 if normalized_event in normalized_existing or normalized_existing in normalized_event:
@@ -760,7 +780,7 @@ def group_event_occurrences(rows, source_url=None):
             _standardize_time(row_dict.get('end_time', ''))
         ]
 
-        group_key = find_matching_group_key(event_name, grouped_events)
+        group_key = find_matching_group_key(event_name, loc_key(row_dict), grouped_events)
 
         if group_key not in grouped_events:
             base_event = {k: v for k, v in row_dict.items()
