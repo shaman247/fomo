@@ -127,6 +127,16 @@ SIMILARITY_TEST_CASES = [
     ("The Monsters", "The Monsters: a Sibling Love Story", True),
     ("Lincoln Center Presents: Jazz Night", "Jazz Night at Lincoln Center", True),
 
+    # Screening-format/accessibility parentheticals must not make DIFFERENT films
+    # match. Regression 2026-06-01: "(Open Cap/Eng Sub)" contributed 4 generic
+    # tokens (open/cap/eng/sub) that tripped asymmetric word-containment, merging
+    # different films screened at the same cinema (e106069 Star Wars + Pressure).
+    ("Star Wars: Mandalorian & Grogu (Open Cap/Eng Sub)", "Pressure (Open Cap/Eng Sub)", False),
+    ("Wicked (Open Cap/Eng Sub)", "Pressure (Open Cap/Eng Sub)", False),
+    # ...but the same film across screening labels must still merge
+    ("Star Wars: Mandalorian & Grogu (Open Cap/Eng Sub)", "Star Wars: The Mandalorian & Grogu", True),
+    ("Pressure (Open Cap/Eng Sub)", "Pressure", True),
+
     # Should NOT match - different events
     ("Weekly Thursday Karaoke", "Friday Night Karaoke", False),
     ("Tim Berne Concert", "John Smith Concert", False),
@@ -180,6 +190,17 @@ FALSE_POSITIVE_TEST_CASES = [
     # Regular duplicates - should match (NOT false positive)
     ("Jazz Concert", "Jazz Concert at the Club", False),
     ("Art Exhibition", "Art Exhibition Opening", False),
+
+    # Bare/umbrella name vs distinct "Head: Subtitle" sibling - should NOT merge.
+    # Regression 2026-06-01: a single-token festival name ("DanceAfrica") was
+    # absorbing a long-running art installation ("BAM DanceAfrica 2026: Visual
+    # Art | Sanaa Gateja", on view May–Sep) via loose substring/subset matching,
+    # dragging the festival's displayed end date to September 30.
+    ("DanceAfrica", "BAM DanceAfrica 2026: Visual Art | Sanaa Gateja", True),
+    ("Jazz", "Jazz at Lincoln Center: Duke Ellington Tribute", True),
+    # Bare name EQUALS the head => same event, must still merge (NOT a false positive)
+    ("The Monsters", "The Monsters: a Sibling Love Story", False),
+    ("Brooklyn Museum", "Brooklyn Museum: First Saturdays", False),
 ]
 
 

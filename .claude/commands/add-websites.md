@@ -124,21 +124,7 @@ Verify that:
 - Content was retrieved (content_size > 0)
 - Events were extracted (check `crawl_events` table)
 
-### Step 7: Add to Production
-
-Ask the user if they want to also add to production. If yes:
-
-```bash
-php scripts/add_websites.php --production
-```
-
-**Important**: The production script will:
-- Look up the website's ID from the local database
-- Use the same ID in production to keep databases in sync
-- Skip if the website doesn't exist locally (must add to local first!)
-- Error if the local ID conflicts with a different website in production
-
-### Step 8: Clean Up (REQUIRED)
+### Step 7: Clean Up (REQUIRED)
 
 After successfully adding websites, reset the `$new_websites` array back to empty. Do NOT leave previous entries, dated comments, or "see git history" trail markers behind — git is the source of truth for what was added when.
 

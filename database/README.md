@@ -15,16 +15,11 @@ pip install mysql-connector-python
 
 ## Database Configuration
 
-The database uses the same credentials as the PHP API (`src/api/config.php`):
+The local XAMPP database is the sole source of truth.
 
-| Environment | Database | User | Host |
-|-------------|----------|------|------|
-| Local (XAMPP) | `fomo` | `root` | `localhost` |
-| Production | `fomoowsq_fomo` | `fomoowsq_root` | `localhost` |
-
-Set the `FOMO_ENV` environment variable to switch environments:
-- `local` (default) - Uses XAMPP credentials
-- `production` - Uses production credentials
+| Database | User | Host |
+|----------|------|------|
+| `fomo` | `root` | `localhost` |
 
 ## Schema Overview
 
@@ -444,17 +439,6 @@ Use `python setup.py --drop-tables` to drop and recreate all tables (WARNING: de
 
 # Linux/Mac
 mysqldump -u root fomo > database/backups/fomo_backup_YYYYMMDD.sql
-```
-
-### Production Environment
-
-```bash
-# Windows
-set FOMO_ENV=production
-python setup.py
-
-# Unix/Mac
-FOMO_ENV=production python setup.py
 ```
 
 ## Sample Queries

@@ -21,7 +21,7 @@ const URLParams = (() => {
         // Tag validation
         MAX_TAG_LENGTH: 100,
         MAX_TAGS_COUNT: 50,
-        TAG_PATTERN: /^[a-zA-Z0-9\s\-_&]+$/,  // Alphanumeric, spaces, hyphens, underscores, ampersands
+        TAG_PATTERN: /^[a-zA-Z0-9\s\-_&:]+$/,  // Alphanumeric, spaces, hyphens, underscores, ampersands, colons (organizer:<id> pseudo-tags)
 
         // Input length limits (prevent DoS)
         MAX_PARAM_LENGTH: 1000

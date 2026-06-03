@@ -68,8 +68,6 @@ tag_rules             - Tag rewrite/exclude/remove rules
 Create a `.env` file:
 
 ```env
-FOMO_ENV=local
-
 # Gemini AI
 GEMINI_API_KEY="your-api-key"
 GEMINI_MODEL="gemini-3-flash-preview"
@@ -82,7 +80,7 @@ FTP_PASSWORD="your-password"
 FTP_REMOTE_DIR="data"
 ```
 
-Database credentials are in `db.py` based on `FOMO_ENV`.
+Database credentials are in `db.py` (local database).
 
 ## Usage
 

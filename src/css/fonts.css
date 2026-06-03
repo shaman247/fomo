@@ -11,6 +11,43 @@
  * Variable font support is detected via @supports and used when available.
  */
 
+/* === Inter (self-hosted) === */
+/* Previously loaded from rsms.me; self-hosting removes a third-party origin
+ * (DNS + TLS handshake) from the critical path and lets us serve it
+ * same-origin with the long cache + compression in .htaccess. The variable
+ * font (one file) covers weights 100–900. font-display: swap keeps it
+ * non-render-blocking — UI text paints in the system fallback, then swaps. */
+@font-face {
+    font-family: InterVariable;
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url('../fonts/inter/InterVariable.woff2') format('woff2');
+}
+@font-face {
+    font-family: InterVariable;
+    font-style: italic;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url('../fonts/inter/InterVariable-Italic.woff2') format('woff2');
+}
+/* Fallback family name for browsers without variable-font support; points at
+ * the same file (renders at default weight) rather than pulling system fonts. */
+@font-face {
+    font-family: Inter;
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url('../fonts/inter/InterVariable.woff2') format('woff2');
+}
+@font-face {
+    font-family: Inter;
+    font-style: italic;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url('../fonts/inter/InterVariable-Italic.woff2') format('woff2');
+}
+
 /* === Emoji Font (Optional) === */
 /* Loaded only when .use-noto-emoji class is on body (settings toggle or "noto" Easter egg) */
 /* COLRv1 vector format: supported by Chrome, Edge, Firefox. Safari falls back to system emoji. */

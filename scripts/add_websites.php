@@ -1,15 +1,19 @@
 #!/usr/bin/env php
 <?php
 /**
- * Add new websites to the database (local or production)
+ * Add new websites to the database (local)
  *
  * Usage:
  *   php scripts/add_websites.php                    # Add to local database
- *   php scripts/add_websites.php --production      # Add to production database
  *   php scripts/add_websites.php --dry-run         # Show what would be added
- *   php scripts/add_websites.php --production --dry-run
  *
  * Edit the $new_websites array below to specify websites to add.
+ *
+ * CLEANUP: After a successful run, REMOVE the entries you just added from
+ * $new_websites so the array stays empty between sessions. Stale entries
+ * clutter dry-runs (everything reports "already exists") and obscure the
+ * next addition. Re-running with the same entries is a no-op, but they
+ * should still be deleted as part of finishing the task.
  */
 
 // ============================================================================
@@ -45,16 +49,6 @@ $config = [
         'user' => 'root',
         'password' => '',
     ],
-    'production' => [
-        'via_ssh' => true,
-        'ssh_host' => getenv('SSH_HOST') ?: '69.57.162.203',
-        'ssh_port' => getenv('SSH_PORT') ?: 21098,
-        'ssh_user' => getenv('SSH_USER') ?: 'fomoowsq',
-        'ssh_key' => __DIR__ . '/' . (getenv('SSH_KEY') ?: 'id_rsa_sync'),
-        'dbname' => getenv('PROD_DB_NAME') ?: die("Error: PROD_DB_NAME not set in .env\n"),
-        'user' => getenv('PROD_DB_USER') ?: die("Error: PROD_DB_USER not set in .env\n"),
-        'password' => getenv('PROD_DB_PASS') ?: die("Error: PROD_DB_PASS not set in .env\n"),
-    ],
 ];
 
 // ============================================================================
@@ -62,7 +56,6 @@ $config = [
 // ============================================================================
 
 // Parse command line arguments
-$is_production = in_array('--production', $argv) || in_array('-p', $argv);
 $is_dry_run = in_array('--dry-run', $argv) || in_array('-n', $argv);
 $show_help = in_array('--help', $argv) || in_array('-h', $argv);
 
@@ -74,7 +67,6 @@ Usage:
   php scripts/add_websites.php [options]
 
 Options:
-  --production, -p    Add to production database (default: local)
   --dry-run, -n       Show what would be added without making changes
   --help, -h          Show this help message
 
@@ -82,13 +74,6 @@ Instructions:
   1. Edit the \$new_websites array at the top of this script
   2. Run with --dry-run first to verify
   3. Run without --dry-run to actually add the websites
-
-ID Sync (Production):
-  When adding to production, the script will:
-  - Look up the website's ID in local database
-  - Use that same ID in production to keep databases in sync
-  - Skip if the website doesn't exist locally (add to local first!)
-  - Error if the local ID is already used by a different website in production
 
 Example website entry:
   [
@@ -108,7 +93,7 @@ HELP;
     exit(0);
 }
 
-$env = $is_production ? 'production' : 'local';
+$env = 'local';
 $db_config = $config[$env];
 
 echo "=== Add Websites Script ===\n";
@@ -143,54 +128,20 @@ if (!empty($errors)) {
     exit(1);
 }
 
-// Helper function to run SQL via SSH for production
-function run_ssh_query($config, $sql) {
-    $escaped_password = str_replace(']', '\\]', $config['password']);
-    $cmd = sprintf(
-        'ssh -p %d -i %s -o StrictHostKeyChecking=no %s@%s %s 2>&1',
-        $config['ssh_port'],
-        escapeshellarg($config['ssh_key']),
-        $config['ssh_user'],
-        $config['ssh_host'],
-        escapeshellarg("mariadb -u {$config['user']} -p{$escaped_password} {$config['dbname']} -N -e " . escapeshellarg($sql))
-    );
-    $output = shell_exec($cmd);
-    return $output;
-}
-
-// Check if using SSH for production
-$use_ssh = $is_production && !empty($db_config['via_ssh']);
-
-if ($use_ssh) {
-    echo "Connecting to production via SSH...\n";
-    $test = run_ssh_query($db_config, "SELECT 1");
-    if (trim($test) !== '1') {
-        echo "Connection failed: $test\n";
-        exit(1);
-    }
-    echo "Connected to $env database via SSH\n\n";
-    $pdo = null;
-} else {
-    $port = $db_config['port'] ?? 3306;
-    try {
-        $dsn = "mysql:host={$db_config['host']};port={$port};dbname={$db_config['dbname']};charset=utf8mb4";
-        $pdo = new PDO($dsn, $db_config['user'], $db_config['password'], [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4"
-        ]);
-        echo "Connected to $env database\n\n";
-    } catch (PDOException $e) {
-        echo "Connection failed: " . $e->getMessage() . "\n";
-        exit(1);
-    }
+$port = $db_config['port'] ?? 3306;
+try {
+    $dsn = "mysql:host={$db_config['host']};port={$port};dbname={$db_config['dbname']};charset=utf8mb4";
+    $pdo = new PDO($dsn, $db_config['user'], $db_config['password'], [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4"
+    ]);
+    echo "Connected to $env database\n\n";
+} catch (PDOException $e) {
+    echo "Connection failed: " . $e->getMessage() . "\n";
+    exit(1);
 }
 
 // Helper functions for database operations
-function escape_sql($value) {
-    if ($value === null) return 'NULL';
-    return "'" . addslashes($value) . "'";
-}
-
 function check_website_exists_pdo($pdo, $name) {
     $stmt = $pdo->prepare("SELECT id FROM websites WHERE name = ?");
     $stmt->execute([$name]);
@@ -198,47 +149,11 @@ function check_website_exists_pdo($pdo, $name) {
     return $row ? $row['id'] : null;
 }
 
-function check_website_exists_ssh($config, $name) {
-    $sql = "SELECT id FROM websites WHERE name = " . escape_sql($name);
-    $result = trim(run_ssh_query($config, $sql));
-    return $result && is_numeric($result) ? $result : null;
-}
-
-function check_website_id_exists_ssh($config, $id) {
-    $sql = "SELECT name FROM websites WHERE id = " . intval($id);
-    $result = trim(run_ssh_query($config, $sql));
-    return $result && strlen($result) > 0 ? $result : null;
-}
-
-function get_local_website_id($local_config, $name) {
-    // Connect to local database to get the ID
-    $port = $local_config['port'] ?? 3306;
-    try {
-        $dsn = "mysql:host={$local_config['host']};port={$port};dbname={$local_config['dbname']};charset=utf8mb4";
-        $local_pdo = new PDO($dsn, $local_config['user'], $local_config['password'], [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $stmt = $local_pdo->prepare("SELECT id FROM websites WHERE name = ?");
-        $stmt->execute([$name]);
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $row ? $row['id'] : null;
-    } catch (PDOException $e) {
-        echo "  Warning: Could not connect to local database to get ID: " . $e->getMessage() . "\n";
-        return null;
-    }
-}
-
 function get_location_id_pdo($pdo, $name) {
     $stmt = $pdo->prepare("SELECT id FROM locations WHERE name = ?");
     $stmt->execute([$name]);
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
     return $row ? $row['id'] : null;
-}
-
-function get_location_id_ssh($config, $name) {
-    $sql = "SELECT id FROM locations WHERE name = " . escape_sql($name);
-    $result = trim(run_ssh_query($config, $sql));
-    return $result && is_numeric($result) ? $result : null;
 }
 
 function insert_website_pdo($pdo, $site) {
@@ -259,41 +174,6 @@ function insert_website_pdo($pdo, $site) {
     return $pdo->lastInsertId();
 }
 
-function insert_website_ssh($config, $site, $explicit_id = null) {
-    $crawl_after = isset($site['crawl_after']) ? escape_sql($site['crawl_after']) : 'NULL';
-    if ($explicit_id !== null) {
-        // Insert with explicit ID to match local database
-        $sql = sprintf(
-            "INSERT INTO websites (id, name, description, base_url, crawl_frequency, crawl_after, selector, keywords, max_pages, notes) VALUES (%d, %s, %s, %s, %s, %s, %s, %s, %s, %s); SELECT LAST_INSERT_ID();",
-            intval($explicit_id),
-            escape_sql($site['name']),
-            escape_sql($site['description'] ?? null),
-            escape_sql($site['base_url'] ?? null),
-            $site['crawl_frequency'] ?? 'NULL',
-            $crawl_after,
-            escape_sql($site['selector'] ?? null),
-            escape_sql($site['keywords'] ?? null),
-            $site['max_pages'] ?? 'NULL',
-            escape_sql($site['notes'] ?? null)
-        );
-    } else {
-        $sql = sprintf(
-            "INSERT INTO websites (name, description, base_url, crawl_frequency, crawl_after, selector, keywords, max_pages, notes) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s); SELECT LAST_INSERT_ID();",
-            escape_sql($site['name']),
-            escape_sql($site['description'] ?? null),
-            escape_sql($site['base_url'] ?? null),
-            $site['crawl_frequency'] ?? 'NULL',
-            $crawl_after,
-            escape_sql($site['selector'] ?? null),
-            escape_sql($site['keywords'] ?? null),
-            $site['max_pages'] ?? 'NULL',
-            escape_sql($site['notes'] ?? null)
-        );
-    }
-    $result = trim(run_ssh_query($config, $sql));
-    return $result;
-}
-
 function add_website_urls_pdo($pdo, $website_id, $urls) {
     $stmt = $pdo->prepare("INSERT INTO website_urls (website_id, url, sort_order) VALUES (?, ?, ?)");
     foreach ($urls as $i => $url) {
@@ -301,25 +181,9 @@ function add_website_urls_pdo($pdo, $website_id, $urls) {
     }
 }
 
-function add_website_urls_ssh($config, $website_id, $urls) {
-    $values = [];
-    foreach ($urls as $i => $url) {
-        $values[] = "($website_id, " . escape_sql($url) . ", $i)";
-    }
-    if (!empty($values)) {
-        $sql = "INSERT INTO website_urls (website_id, url, sort_order) VALUES " . implode(", ", $values);
-        run_ssh_query($config, $sql);
-    }
-}
-
 function link_website_location_pdo($pdo, $website_id, $location_id) {
     $stmt = $pdo->prepare("INSERT INTO website_locations (website_id, location_id) VALUES (?, ?)");
     $stmt->execute([$website_id, $location_id]);
-}
-
-function link_website_location_ssh($config, $website_id, $location_id) {
-    $sql = "INSERT INTO website_locations (website_id, location_id) VALUES ($website_id, $location_id)";
-    run_ssh_query($config, $sql);
 }
 
 function add_website_tags_pdo($pdo, $website_id, $tags) {
@@ -329,34 +193,15 @@ function add_website_tags_pdo($pdo, $website_id, $tags) {
     }
 }
 
-function add_website_tags_ssh($config, $website_id, $tags) {
-    $values = [];
-    foreach ($tags as $tag) {
-        $values[] = "($website_id, " . escape_sql($tag) . ")";
-    }
-    if (!empty($values)) {
-        $sql = "INSERT INTO website_tags (website_id, tag) VALUES " . implode(", ", $values);
-        run_ssh_query($config, $sql);
-    }
-}
-
 function get_stats_pdo($pdo) {
     $result = $pdo->query("SELECT COUNT(*) as total, MAX(id) as max_id FROM websites");
     return $result->fetch(PDO::FETCH_ASSOC);
 }
 
-function get_stats_ssh($config) {
-    $result = run_ssh_query($config, "SELECT COUNT(*), MAX(id) FROM websites");
-    $parts = explode("\t", trim($result));
-    return ['total' => $parts[0] ?? '?', 'max_id' => $parts[1] ?? '?'];
-}
-
 // Check for duplicates
 $duplicates = [];
 foreach ($new_websites as $site) {
-    $existing_id = $use_ssh
-        ? check_website_exists_ssh($db_config, $site['name'])
-        : check_website_exists_pdo($pdo, $site['name']);
+    $existing_id = check_website_exists_pdo($pdo, $site['name']);
     if ($existing_id) {
         $duplicates[] = "'{$site['name']}' already exists (ID: $existing_id)";
     }
@@ -376,9 +221,7 @@ $skipped = 0;
 
 foreach ($new_websites as $site) {
     // Check if already exists
-    $existing_id = $use_ssh
-        ? check_website_exists_ssh($db_config, $site['name'])
-        : check_website_exists_pdo($pdo, $site['name']);
+    $existing_id = check_website_exists_pdo($pdo, $site['name']);
 
     if ($existing_id) {
         echo "  SKIP: {$site['name']} (already exists)\n";
@@ -389,9 +232,7 @@ foreach ($new_websites as $site) {
     // Check if location exists (if specified)
     $location_id = null;
     if (!empty($site['location'])) {
-        $location_id = $use_ssh
-            ? get_location_id_ssh($db_config, $site['location'])
-            : get_location_id_pdo($pdo, $site['location']);
+        $location_id = get_location_id_pdo($pdo, $site['location']);
 
         if (!$location_id) {
             echo "  WARNING: Location '{$site['location']}' not found for {$site['name']}\n";
@@ -402,35 +243,8 @@ foreach ($new_websites as $site) {
 
     $urls = $site['urls'] ?? [];
 
-    // For production, look up the local ID to ensure sync
-    $explicit_id = null;
-    if ($use_ssh) {
-        $local_id = get_local_website_id($config['local'], $site['name']);
-        if ($local_id) {
-            // Check if this ID is already in use in production
-            $existing_name = check_website_id_exists_ssh($db_config, $local_id);
-            if ($existing_name) {
-                echo "  ERROR: Cannot add '{$site['name']}' - Local ID $local_id is already used by '$existing_name' in production.\n";
-                echo "         Please resolve this ID conflict manually before continuing.\n";
-                $skipped++;
-                continue;
-            }
-            $explicit_id = $local_id;
-            echo "  (Using local ID: $local_id)\n";
-        } else {
-            echo "  WARNING: Website '{$site['name']}' not found in local database.\n";
-            echo "           You should add it to LOCAL first, then to production.\n";
-            echo "           Skipping to prevent ID mismatch.\n";
-            $skipped++;
-            continue;
-        }
-    }
-
     if ($is_dry_run) {
         echo "  [DRY RUN] Would add: {$site['name']}\n";
-        if ($explicit_id) {
-            echo "            ID: $explicit_id (from local)\n";
-        }
         if (!empty($site['base_url'])) {
             echo "            Base URL: {$site['base_url']}\n";
         }
@@ -459,9 +273,7 @@ foreach ($new_websites as $site) {
         $added++;
     } else {
         try {
-            $new_id = $use_ssh
-                ? insert_website_ssh($db_config, $site, $explicit_id)
-                : insert_website_pdo($pdo, $site);
+            $new_id = insert_website_pdo($pdo, $site);
 
             echo "  ADD: {$site['name']} (ID: $new_id)\n";
             if (!empty($site['base_url'])) {
@@ -470,11 +282,7 @@ foreach ($new_websites as $site) {
 
             // Add crawl URLs
             if (!empty($urls)) {
-                if ($use_ssh) {
-                    add_website_urls_ssh($db_config, $new_id, $urls);
-                } else {
-                    add_website_urls_pdo($pdo, $new_id, $urls);
-                }
+                add_website_urls_pdo($pdo, $new_id, $urls);
                 foreach ($urls as $url) {
                     echo "       Crawl URL: {$url}\n";
                 }
@@ -482,21 +290,13 @@ foreach ($new_websites as $site) {
 
             // Link to location
             if ($location_id) {
-                if ($use_ssh) {
-                    link_website_location_ssh($db_config, $new_id, $location_id);
-                } else {
-                    link_website_location_pdo($pdo, $new_id, $location_id);
-                }
+                link_website_location_pdo($pdo, $new_id, $location_id);
                 echo "       Location: {$site['location']} (ID: $location_id)\n";
             }
 
             // Add tags
             if (!empty($tags)) {
-                if ($use_ssh) {
-                    add_website_tags_ssh($db_config, $new_id, $tags);
-                } else {
-                    add_website_tags_pdo($pdo, $new_id, $tags);
-                }
+                add_website_tags_pdo($pdo, $new_id, $tags);
                 echo "       Tags: " . implode(', ', $tags) . "\n";
             }
 
@@ -517,5 +317,5 @@ if ($is_dry_run && $added > 0) {
 }
 
 // Show current totals
-$stats = $use_ssh ? get_stats_ssh($db_config) : get_stats_pdo($pdo);
+$stats = get_stats_pdo($pdo);
 echo "\nDatabase now has {$stats['total']} websites (max ID: {$stats['max_id']})\n";

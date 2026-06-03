@@ -13,9 +13,12 @@ Key features:
 """
 
 import asyncio
+import time
 import json
 import os
 import re
+import subprocess
+import unicodedata
 from datetime import datetime, timedelta
 
 import regex
@@ -64,10 +67,10 @@ def strip_leading_emoji(text: str) -> str:
         r'^(?:\s*(?:'
         r'(?:\p{Regional_Indicator}{2})'  # Flag emojis
         r'|'
-        r'(?:\p{Emoji_Presentation}[\uFE0E\uFE0F]?|\p{Emoji}\uFE0F)'  # Pictographic emoji (excludes bare digits)
+        r'(?:\p{Extended_Pictographic}[\uFE0E\uFE0F]?)'  # Pictographic emoji (text- or emoji-default; excludes bare digits/#/*)
         r'[\u20E3]?'  # Keycap combining enclosing
         r'(?:\p{Emoji_Modifier})?'  # Skin tone modifiers
-        r'(?:\u200D(?:\p{Emoji_Presentation}[\uFE0E\uFE0F]?|\p{Emoji}\uFE0F)(?:\p{Emoji_Modifier})?)*'  # ZWJ sequences
+        r'(?:\u200D\p{Extended_Pictographic}[\uFE0E\uFE0F]?(?:\p{Emoji_Modifier})?)*'  # ZWJ sequences
         r'))+\s*'
     )
     return emoji_pattern.sub('', text)
@@ -385,8 +388,8 @@ def filter_by_date(row_dict, current_date, future_limit_date):
     before rejecting so multi-session events and recently-ended listings
     aren't dropped on day 1.
     """
-    start_date_str = row_dict.get('start_date', '').strip()
-    end_date_str = row_dict.get('end_date', '').strip()
+    start_date_str = (row_dict.get('start_date') or '').strip()
+    end_date_str = (row_dict.get('end_date') or '').strip()
 
     try:
         start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
@@ -486,15 +489,185 @@ def log_rejection(cursor, connection, crawl_result_id, website_id,
         print(f"    - Warning: failed to log rejection: {e}")
 
 
+# High-precision "this is not a real public event" name patterns. Kept
+# deliberately conservative — these must (almost) never match a genuine event,
+# since matches are dropped at extraction time before they ever become a
+# crawl_event. Broader / fuzzier heuristics live in
+# scripts/find_review_candidates.py, which only flags events for human review.
+# Patterns are matched case-insensitively against the (sanitized) event name.
+_NON_EVENT_NAME_PATTERNS = [
+    # Calls for submissions / applications / grants (not attendable events)
+    r'\bopen call\b',
+    r'\bcall for (artists?|art|submissions?|entries|proposals|vendors?|applicants?|papers?|works?)\b',
+    r'\bsubmissions?\s+(period|deadline|window|open|guidelines)\b',
+    r'^\s*submissions?\s*:',
+    r'\b(now\s+)?accepting\s+(submissions|applications|entries|proposals)\b',
+    r'^\s*grants?\s*:',
+    r'\bmicro[\s-]?grants?\b',
+    r'\bgrants?\s+(cycle|round|application|deadline)\b',
+    # Closures / cancellations (venue/program notices, not events)
+    r'\bclosed\s*[:\|\-—]',
+    r'\bclosed\s+(to the public|for|on|due|until|this|next|all)\b',
+    r'\b(museum|library|park|gallery|office|building|city hall|center|centre|garden|gym|pool|branch|store|shop|hall|room\b[^a-z]*\w*)\s+clos(ed|es|ure)\b',
+    r'\bcloses?\s+(early|today|tonight|at\s+\d|\d)',
+    r'^\s*no\s+[\w\s]*\b(program|programming|class|classes|session|service|meeting)\b[\w\s]*\b(today|tonight|this week)\b',
+    # Rentals / venue marketing (selling the space, not hosting an event).
+    # NOTE: a bare "RENTAL:" prefix is NOT auto-dropped — venues use it as an
+    # internal booking label on public events too (rented-out dance parties,
+    # comedy shows). Only match the rental *listing itself* ("Space Rental",
+    # "Point Rental"); leave bare-prefix cases to editorial review.
+    r'\b(venue|space|room|hall|studio|facility|point|field|court|table)\s+rental\b',
+    r'\bavailable for (booking|rent|hire|private|your)\b',
+    # Season passes / passes-for-sale
+    r'\bseason\s*pass\b',
+    r'\bsummer\s*pass\b',
+    # Cinema/venue placeholder listing pages
+    r'\bshowtimes\b',
+    # SEO / spam injected into crawled calendars
+    r'\[[^\]]*~[^\]]*\]',
+    r'\bpay (my|your)\b[\w\s]{0,30}\bbill\b',
+    r'\bover the phone\b',
+    r'\b(customer (service|support|care)|help[\s-]?line|toll[\s-]?free)\b[\w\s]{0,20}\bnumber\b',
+]
+
+_NON_EVENT_NAME_RE = re.compile('|'.join(_NON_EVENT_NAME_PATTERNS), re.IGNORECASE)
+
+
+def is_obvious_non_event(name):
+    """Return True if the event name is an unmistakable non-event.
+
+    Covers closures, calls for submissions/grants, venue rentals, season-pass
+    listings, cinema showtime placeholders, and SEO spam — the kinds of rows
+    that should never reach the map. High precision by design; anything fuzzier
+    belongs in scripts/find_review_candidates.py for human review.
+    """
+    if not name:
+        return False
+    return bool(_NON_EVENT_NAME_RE.search(name))
+
+
+# Canonical time format: compact lowercase 12-hour with no space, no colon-zero.
+# Examples: '7pm', '7:30pm', '11am', '12am' (midnight), '12pm' (noon).
+# Empty/sentinel values normalize to ''.
+_TZ_SUFFIX_RE = re.compile(r'(est|edt|pst|pdt|mst|mdt|cst|cdt|et|pt|mt|ct)$')
+_TWELVE_HOUR_RE = re.compile(r'^(\d{1,2})(?::(\d{2}))?(am|pm)$')
+_HHMM_RE = re.compile(r'^(\d{1,2}):(\d{2})$')
+_HH_RE = re.compile(r'^(\d{1,2})$')
+_SENTINEL_TIMES = frozenset({
+    '', 'allday', 'allday/varies', 'varioustimes', 'multipletimes', 'tba', 'tbd',
+    'none', 'close', 'closing', 'late', 'tbc', 'ongoing', 'sundown', 'sunrise',
+    'sunset', 'dusk', 'dawn',
+})
+
+
+def _canonical_time(hour, minute, is_pm):
+    """Build a canonical time string from a 12-hour hour (1-12), minute, and AM/PM."""
+    suffix = 'pm' if is_pm else 'am'
+    return f'{hour}{suffix}' if minute == 0 else f'{hour}:{minute:02d}{suffix}'
+
+
 def _standardize_time(time_str):
-    """Standardizes time formats like '6:30 PM' to '6:30pm'."""
-    if not time_str:
+    """Canonicalize a time string to compact lowercase 12-hour form.
+
+    Examples:
+        '6:30 PM' -> '6:30pm'
+        '6:00pm'  -> '6pm'
+        '17:38'   -> '5:38pm'
+        '20'      -> '8pm'
+        '08'      -> '8am'
+        '1pmest'  -> '1pm'
+        'allday'  -> ''
+        '7pm'     -> '7pm'  (idempotent)
+
+    Ambiguous inputs (bare HH:MM with HH in 1-12, bare HH in 1-12) are returned with
+    whitespace/case normalized but otherwise unchanged — they could be either AM or PM
+    and auto-converting risks corrupting data. Unrecognized strings get the same
+    treatment so manual cleanup can find them via grep.
+    """
+    if time_str is None:
         return ''
-    normalized = time_str.lower().replace(' ', '').replace('.', '')
-    if normalized == 'allday':
+    s = str(time_str).strip().lower()
+    # Strip whitespace, dots, and underscores ('9_pm' -> '9pm').
+    s = s.replace(' ', '').replace('.', '').replace('_', '')
+    # Collapse single-digit zero minutes ('7:0pm' -> '7pm', '10:0' -> '10').
+    s = re.sub(r':0(?!\d)', '', s)
+    if s in _SENTINEL_TIMES:
         return ''
-    # Remove :00 suffix (e.g., '6:00pm' -> '6pm')
-    return normalized.replace(':00', '')
+
+    # Strip US timezone suffixes (1pmest, 7pmet, etc.)
+    s = _TZ_SUFFIX_RE.sub('', s)
+    if not s:
+        return ''
+
+    m = _TWELVE_HOUR_RE.match(s)
+    if m:
+        h = int(m.group(1))
+        mi = int(m.group(2) or 0)
+        if 1 <= h <= 12 and 0 <= mi <= 59:
+            return _canonical_time(h, mi, m.group(3) == 'pm')
+        return s  # malformed (e.g. '13pm'); preserve so it's findable
+
+    m = _HHMM_RE.match(s)
+    if m:
+        h = int(m.group(1))
+        mi = int(m.group(2))
+        if 0 <= h <= 23 and 0 <= mi <= 59:
+            # Unambiguous 24-hour values: hour 0 (midnight), hour 12 (noon), hour 13-23.
+            # Hour 1-11 in HH:MM with no AM/PM is ambiguous; leave alone.
+            if h == 0:
+                return _canonical_time(12, mi, False)
+            if h == 12:
+                return _canonical_time(12, mi, True)
+            if h >= 13:
+                return _canonical_time(h - 12, mi, True)
+            return s
+
+    m = _HH_RE.match(s)
+    if m:
+        raw = m.group(1)
+        h = int(raw)
+        if 0 <= h <= 23:
+            # A leading zero (e.g. '08') is a strong 24-hour signal even for hours 1-12.
+            has_leading_zero = len(raw) >= 2 and raw[0] == '0'
+            if h == 0:
+                return '12am'
+            if h == 12:
+                return '12pm'
+            if h >= 13:
+                return _canonical_time(h - 12, 0, True)
+            if has_leading_zero:
+                return _canonical_time(h, 0, False)  # '08' -> '8am'
+            return s  # bare '6' is ambiguous; leave alone
+
+    return s  # unrecognized; preserve original text (normalized whitespace/case)
+
+
+_SOURCE_MIDNIGHT_RE = re.compile(r'(?<!\d)12\s*am\b', re.IGNORECASE)
+
+
+def _sanity_check_end_time(start_time, end_time, source_text):
+    """Fix '12pm' (noon) end_time when context implies midnight close.
+
+    Gemini occasionally emits '12am' (midnight) as '12pm' (noon). Two cheap
+    heuristics catch the common cases:
+
+    1. PM start with 12pm end is impossible — '7pm-12pm' would mean going
+       backward through noon, so flip to 12am unconditionally.
+    2. AM start with 12pm end is usually noon — but if the source text
+       explicitly mentions '12am', the extractor probably misread it.
+
+    Inputs are canonicalized internally; the original end_time is returned
+    when nothing matches, so the caller's idempotency contract is preserved.
+    """
+    if _standardize_time(end_time) != '12pm':
+        return end_time
+    std_st = _standardize_time(start_time)
+    m = _TWELVE_HOUR_RE.match(std_st)
+    if m and m.group(3) == 'pm' and 1 <= int(m.group(1)) <= 11:
+        return '12am'
+    if source_text and _SOURCE_MIDNIGHT_RE.search(source_text):
+        return '12am'
+    return end_time
 
 
 # =============================================================================
@@ -549,13 +722,33 @@ def group_event_occurrences(rows, source_url=None):
         no_punct = re.sub(r'[^\w\s]', '', no_underscores.strip().lower())
         return re.sub(r'\s+', ' ', no_punct).strip()
 
-    def find_matching_group_key(event_name, grouped_events):
+    def loc_key(d):
+        """Location identity for a row/group: resolved location_id if known,
+        else the normalized location_name, else None (unknown)."""
+        lid = d.get('location_id')
+        if lid:
+            return ('id', lid)
+        loc = re.sub(r'\s+', ' ', (d.get('location') or '').strip().lower())
+        return ('name', loc) if loc else None
+
+    def locations_compatible(a, b):
+        """Two rows may group only if their locations don't conflict. A missing
+        location, or an id-vs-name mismatch we can't compare, is treated as
+        compatible; two different resolved ids (or two different names) are not.
+        This stops a generic name ("National Trails Day") from absorbing a
+        distinct event at another venue ("...: Highbridge Park Guided Walk")
+        purely because one name is a substring of the other."""
+        if a is None or b is None or a[0] != b[0]:
+            return True
+        return a[1] == b[1]
+
+    def find_matching_group_key(event_name, row_loc, grouped_events):
         normalized_event = normalize_name_for_grouping(event_name)
-        if event_name in grouped_events:
-            return event_name
-        for existing_key in grouped_events.keys():
+        for existing_key, existing in grouped_events.items():
+            if not locations_compatible(row_loc, loc_key(existing)):
+                continue
             normalized_existing = normalize_name_for_grouping(existing_key)
-            if normalized_event == normalized_existing:
+            if event_name == existing_key or normalized_event == normalized_existing:
                 return existing_key
             if len(normalized_event) >= 5 and len(normalized_existing) >= 5:
                 if normalized_event in normalized_existing or normalized_existing in normalized_event:
@@ -587,20 +780,20 @@ def group_event_occurrences(rows, source_url=None):
             _standardize_time(row_dict.get('end_time', ''))
         ]
 
-        group_key = find_matching_group_key(event_name, grouped_events)
+        group_key = find_matching_group_key(event_name, loc_key(row_dict), grouped_events)
 
         if group_key not in grouped_events:
             base_event = {k: v for k, v in row_dict.items()
                          if k not in ['start_date', 'start_time', 'end_date', 'end_time', 'sublocation', 'url']}
             base_event['occurrences'] = []
 
-            sublocation = row_dict.get('sublocation', '').strip()
+            sublocation = (row_dict.get('sublocation') or '').strip()
             if sublocation and sublocation.upper() != 'N/A':
                 base_event['sublocation'] = sublocation
 
             # Prefer event-specific URL over source_url (which is often generic)
             urls = []
-            url = row_dict.get('url', '').strip()
+            url = (row_dict.get('url') or '').strip()
             if url:
                 urls.append(url)
             if source_url and source_url not in urls:
@@ -613,7 +806,7 @@ def group_event_occurrences(rows, source_url=None):
             if len(event_name) < len(existing_name):
                 grouped_events[group_key]['name'] = event_name
 
-            url = row_dict.get('url', '').strip()
+            url = (row_dict.get('url') or '').strip()
             if url and url not in grouped_events[group_key]['urls']:
                 grouped_events[group_key]['urls'].append(url)
 
@@ -643,10 +836,47 @@ def group_event_occurrences(rows, source_url=None):
 # Location Matching
 # =============================================================================
 
+# Generic venue-type / room-descriptor common nouns. Stripping a borough suffix
+# from a venue name like "Gallery Brooklyn" would collapse it to one of these
+# bare tokens ("gallery"), and that token then exact-matches any unrelated event
+# whose location is just the generic word (e.g. the Ace Hotel's in-house
+# "Gallery"). When borough-stripping would leave only a single generic token, we
+# keep the borough so the name stays specific. Distinctive single tokens
+# ("Fotografiska", "Aurora") are unaffected and still strip normally.
+#
+# Deliberately NOT included: directional/area words (downtown, midtown, lower,
+# east, ...). Those ARE the short form of neighborhood locations ("Midtown" ->
+# "Midtown Manhattan"), so collapsing them is intended neighborhood resolution,
+# not a venue collision.
+GENERIC_LOCATION_WORDS = {
+    'gallery', 'bar', 'lounge', 'studio', 'garden', 'lobby', 'hall', 'room',
+    'cafe', 'kitchen', 'market', 'club', 'space', 'theater', 'theatre',
+    'museum', 'library', 'park', 'shop', 'store', 'center', 'centre', 'hotel',
+    'restaurant', 'rooftop', 'terrace', 'patio', 'courtyard', 'atrium',
+    'mezzanine', 'auditorium', 'chapel', 'sanctuary', 'annex', 'pavilion',
+    'plaza', 'commons', 'field', 'court', 'pool', 'deck', 'stage', 'cellar',
+    'ballroom', 'parlor', 'parlour', 'gym', 'loft', 'table', 'basement',
+    'harbor', 'harbour', 'sea', 'dance',
+}
+
+# Sentinel marking a street address shared by 2+ distinct venues in the
+# addresses tier. Address matching skips these — it can't disambiguate which
+# venue an event at that address belongs to.
+_AMBIGUOUS_ADDRESS = object()
+
+
 def _normalize_location_name(name):
     """Normalizes a location name for matching."""
     if not name:
         return ""
+
+    # Strip diacritics so "Café" matches "Cafe", "Jardín" matches "Jardin".
+    name = ''.join(
+        c for c in unicodedata.normalize('NFKD', name)
+        if not unicodedata.combining(c)
+    )
+    # Normalize "&" and "+" to "and" so "Art & Architecture" matches "Art and Architecture".
+    name = re.sub(r'\s*[&+]\s*', ' and ', name)
 
     original_lower = name.lower()
     has_dash_before_borough = any(
@@ -666,7 +896,11 @@ def _normalize_location_name(name):
     state_suffixes = [' ny', ' nj', ' ct', ' new york', ' new jersey', ' connecticut']
     for ss in state_suffixes:
         if normalized.endswith(ss) and len(normalized) > len(ss) + 1:
-            normalized = normalized[:-len(ss)].strip()
+            stripped = normalized[:-len(ss)].strip()
+            # See GENERIC_LOCATION_WORDS: don't collapse to a bare generic token.
+            if ' ' not in stripped and stripped in GENERIC_LOCATION_WORDS:
+                break
+            normalized = stripped
             break
 
     suffixes = ['nyc', 'new york', 'brooklyn', 'manhattan', 'queens', 'bronx', 'staten island',
@@ -677,7 +911,14 @@ def _normalize_location_name(name):
     if not has_dash_before_borough:
         for suffix in suffixes:
             if normalized.endswith(f' {suffix}') and len(normalized) > len(suffix) + 2:
-                normalized = normalized[:-len(f' {suffix}')].strip()
+                stripped = normalized[:-len(f' {suffix}')].strip()
+                # Don't collapse a venue to a bare generic token (e.g.
+                # "Gallery Brooklyn" -> "gallery"), which would then exact-match
+                # any unrelated event whose location is just that word. Keep the
+                # borough so the name stays specific.
+                if ' ' not in stripped and stripped in GENERIC_LOCATION_WORDS:
+                    break
+                normalized = stripped
                 break
 
     return " ".join(normalized.split())
@@ -752,6 +993,13 @@ def _extract_street_address(full_address):
     street_part = full_address.split(',')[0].strip()
     if not street_part or len(street_part) < 5:
         return None
+    # Require a leading house number. Without this, a value like "Harbor" (from a
+    # venue whose address is literally "Harbor, Frankfort, NY") or a bare park
+    # name ("Bryant Park, New York") becomes an address key and collides with
+    # unrelated queries. Real street addresses start with a number; venues are
+    # matched by name elsewhere.
+    if not re.match(r'\d', street_part):
+        return None
     return _normalize_street_address(street_part)
 
 
@@ -767,6 +1015,8 @@ _ADDR_LONG_TO_SHORT = {
     'road': 'rd', 'place': 'pl', 'court': 'ct', 'lane': 'ln',
     'parkway': 'pkwy', 'highway': 'hwy', 'east': 'e', 'west': 'w',
     'north': 'n', 'south': 's', 'turnpike': 'tpke', 'square': 'sq',
+    # "Saint Marks Ave" → "St Marks Ave" (matches DB form "St Marks Ave")
+    'saint': 'st',
 }
 _ADDR_WORD_NUMS = {
     'first': '1st', 'second': '2nd', 'third': '3rd', 'fourth': '4th',
@@ -830,12 +1080,73 @@ def sublocation_redundant_with_address(sublocation, location_address):
     sublocation. After location matching, that's redundant with the matched
     location's own address — clear it. Real sub-venue values like "Studio B"
     or "5th Floor" don't parse as a street address and are preserved.
+
+    Also handles the case where one form glues a suite/unit number to the
+    house number via a hyphen ("68-117 Jay St") and the other expresses it
+    as a #-suffix or comma-separated suite ("68 Jay St #117"). When the
+    hyphenated form's leading segment matches the other form's bare house
+    number on the same street, treat them as equivalent.
     """
     if not sublocation or not location_address:
         return False
     sub = _extract_street_address_loose(sublocation)
     addr = _extract_street_address_loose(location_address)
-    return bool(sub and addr and sub == addr)
+    if not sub or not addr:
+        return False
+    if sub == addr:
+        return True
+    # Hyphenated suite form ("68117 jay st") vs bare house number ("68 jay st")
+    # on the same street. Check both directions.
+    def _split(key):
+        # key is "<digits> <rest>" — return (digits, rest) or (None, None)
+        m = re.match(r'^(\d+)\s+(.+)$', key)
+        return (m.group(1), m.group(2)) if m else (None, None)
+    s_num, s_rest = _split(sub)
+    a_num, a_rest = _split(addr)
+    if s_num and a_num and s_rest == a_rest:
+        # One side might be the hyphen-glued form. The original raw addresses
+        # need to have a "#<suite>" or ", suite/unit/apt <suite>" marker that
+        # numerically matches the suffix the other side glued on.
+        def _suite(raw):
+            m = re.search(r'#\s*(\w+)', raw)
+            if m:
+                return m.group(1).lower()
+            m = re.search(r'\b(?:suite|unit|apt|apartment|ste)\s*#?\s*(\w+)',
+                          raw, re.IGNORECASE)
+            if m:
+                return m.group(1).lower()
+            return None
+        sub_suite = _suite(sublocation)
+        addr_suite = _suite(location_address)
+        # Case A: sub has the hyphen-glued form (s_num starts with a_num),
+        # and the DB raw has a #-suite matching the trailing digits.
+        if s_num.startswith(a_num) and len(s_num) > len(a_num):
+            tail = s_num[len(a_num):]
+            if addr_suite and addr_suite.lstrip('0') == tail.lstrip('0'):
+                return True
+        # Case B: DB has the hyphen-glued form and sub raw has a #-suite.
+        if a_num.startswith(s_num) and len(a_num) > len(s_num):
+            tail = a_num[len(s_num):]
+            if sub_suite and sub_suite.lstrip('0') == tail.lstrip('0'):
+                return True
+        # Case C: building-range form ("12-16 Vestry St" — one building spanning
+        # numbers 12 through 16) vs a single number in the range. Distinguish
+        # from the suite case (which carries a #/suite marker on the non-glued
+        # side); here both sides should be bare addresses, and the range form's
+        # original raw text must contain "<a>-<b>" with the other side's number
+        # equal to <a> or <b>.
+        def _range_endpoints(raw):
+            # Find first "<digits>-<digits>" at the start of a token
+            m = re.search(r'\b(\d+)-(\d+)\b', raw)
+            return (m.group(1), m.group(2)) if m else (None, None)
+        if not sub_suite and not addr_suite:
+            a_lo, a_hi = _range_endpoints(location_address)
+            if a_lo and a_hi and s_num in (a_lo, a_hi):
+                return True
+            s_lo, s_hi = _range_endpoints(sublocation)
+            if s_lo and s_hi and a_num in (s_lo, s_hi):
+                return True
+    return False
 
 
 def build_locations_map(cursor):
@@ -881,9 +1192,6 @@ def build_locations_map(cursor):
             'lng': loc.get('lng'),
             'emoji': loc.get('emoji')
         }
-        # Simple info for backward compatibility
-        info = {'lat': loc.get('lat'), 'lng': loc.get('lng'), 'emoji': loc.get('emoji')}
-
         main_name = loc.get('name', '')
         normalized_main = _normalize_location_name(main_name)
 
@@ -918,11 +1226,20 @@ def build_locations_map(cursor):
                     if normalized_alt and len(normalized_alt) >= 3:
                         locations_map['website_scoped'][website_id][normalized_alt] = full_info
 
-        # Index by street address (e.g., "347 davis ave" from "347 Davis Ave, Staten Island, NY")
+        # Index by street address (e.g., "347 davis ave" from "347 Davis Ave, Staten Island, NY").
+        # Use full_info so an address match actually resolves a location_id (not
+        # just an emoji). Multiple distinct venues can share a street address (a
+        # building with several venues); an address match can't tell them apart,
+        # so the second distinct venue marks the address AMBIGUOUS and match-time
+        # skips it rather than guessing.
         address = loc.get('address', '')
         street_address = _extract_street_address(address)
         if street_address:
-            locations_map['addresses'][street_address] = info
+            existing = locations_map['addresses'].get(street_address)
+            if existing is None:
+                locations_map['addresses'][street_address] = full_info
+            elif existing is not _AMBIGUOUS_ADDRESS and existing.get('id') != loc.get('id'):
+                locations_map['addresses'][street_address] = _AMBIGUOUS_ADDRESS
 
     # Website-linked locations (from website_locations table)
     locations_map['website_linked'] = db.get_website_locations_map(cursor)
@@ -942,10 +1259,12 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
       1. Website-scoped alternate names (highest priority — exact match for this website)
       2. Exact name match (against names, alternate_names, short_names)
       3. Address match (normalized street address comparison)
+      3.5. Single-venue website authority (a single-venue website's own venue wins
+           over arbitrary same-brand prefix/fuzzy matches when the name is generic)
       4. Prefix match (location name starts with known name, ≥PREFIX_MATCH_COVERAGE to avoid generics)
       5. Fuzzy match (Levenshtein ratio ≥ FUZZY_MATCH_THRESHOLD)
       6. Source site fallback (website name matches a location name)
-      7. Website-linked location (single-venue websites via website_locations table)
+      7. Website-linked location fallback (single-venue website, empty/virtual location_name)
 
     Each tier tries location_name, sublocation, and event_name variants.
     Within a tier, results are scored and the best match is selected.
@@ -1040,20 +1359,52 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
     addresses_tier = locations_map.get('addresses', {})
     for key in search_keys:
         street_addr = _extract_street_address(key)
-        if street_addr and street_addr in addresses_tier:
-            return make_result(addresses_tier[street_addr])
+        match = addresses_tier.get(street_addr) if street_addr else None
+        if match is not None and match is not _AMBIGUOUS_ADDRESS:
+            return make_result(match)
+
+    # Step 3.5: Single-venue website authority.
+    # When the source website is linked to exactly ONE venue, that venue is
+    # authoritative for events crawled from it. If the extracted location_name is
+    # only a brand prefix/substring of the venue (e.g. "Regal" from a specific
+    # Regal theater's own site, "AMC" from one AMC) it would otherwise prefix- or
+    # fuzzy-match an ARBITRARY same-brand venue below and collapse many theaters
+    # onto one location. Prefer the website's own venue. A specific DIFFERENT
+    # venue name is already returned by the exact/address steps above, so this
+    # only fires for generic/partial names consistent with the linked venue.
+    if website_id and normalized_loc and len(normalized_loc) >= 3:
+        linked = locations_map.get('website_linked', {}).get(website_id, [])
+        if len(linked) == 1:
+            v_name = _normalize_location_name(linked[0].get('name') or '')
+            if v_name and (
+                normalized_loc in v_name or v_name in normalized_loc
+                or _calculate_levenshtein_ratio(normalized_loc, v_name) >= 0.6
+            ):
+                return make_result(linked[0])
 
     # Step 4: Prefix matching (e.g., "Devocíon" matches "Devocíon (Williamsburg)")
     # Only use location_keys here to avoid matching event names to unrelated locations
     # Require prefix to cover >= 70% of the key to avoid generic names matching
-    # specific venues (e.g., "New York City" matching "New York City Center")
+    # specific venues (e.g., "New York City" matching "New York City Center").
+    # Scan alternate_names too: a curated alternate like "Agger Fish Building at BNY"
+    # should still resolve when the extractor emits the bare "Agger Fish Building"
+    # (73% coverage). Without this, such near-misses fall through to fuzzy matching,
+    # whose 0.90 threshold rejects them — leaving location_id NULL and spawning a
+    # duplicate event in the merger.
     for key in location_keys:
+        # A bare generic word ("gallery", "studio") carries no venue-identifying
+        # information — don't let it prefix-match a specific venue like
+        # "Gallery MC" or "Studio 525". Such queries should fall through to
+        # website-scoped resolution or stay unmatched.
+        if key in GENERIC_LOCATION_WORDS:
+            continue
         if len(key) >= 5:
-            for loc_key, match in locations_map.get('names', {}).items():
-                if loc_key.startswith(key + '(') or (
-                    loc_key.startswith(key + ' ') and len(key) / len(loc_key) >= PREFIX_MATCH_COVERAGE
-                ):
-                    return make_result(get_first(match))
+            for tier_name in ('names', 'alternate_names'):
+                for loc_key, match in locations_map.get(tier_name, {}).items():
+                    if loc_key.startswith(key + '(') or (
+                        loc_key.startswith(key + ' ') and len(key) / len(loc_key) >= PREFIX_MATCH_COVERAGE
+                    ):
+                        return make_result(get_first(match))
 
     # Step 5: Fuzzy matching across all tiers
     all_tiers = [
@@ -1083,12 +1434,17 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
                 if not key.strip():
                     continue
 
+                # A bare generic word shouldn't fuzzy-match a specific venue
+                # whose name merely contains it (e.g. "gallery" in "gallery mc").
+                loc_is_generic = normalized_loc in GENERIC_LOCATION_WORDS
+                subloc_is_generic = normalized_subloc in GENERIC_LOCATION_WORDS
+
                 is_match = (
                     key == normalized_loc or
                     (len(normalized_name) > 3 and key == normalized_name) or
                     (len(key) > 3 and (full_loc.startswith(key) or full_loc.endswith(key) or key in full_loc)) or
-                    (len(normalized_loc) > 3 and normalized_loc in key) or
-                    (len(normalized_subloc) > 3 and normalized_subloc in key)
+                    (len(normalized_loc) > 3 and not loc_is_generic and normalized_loc in key) or
+                    (len(normalized_subloc) > 3 and not subloc_is_generic and normalized_subloc in key)
                 )
 
                 # Token-overlap tripwire: if a variant shares ≥2 long tokens
@@ -1132,8 +1488,9 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
     # venue at the same address like 651 ARTS).
     if normalized_subloc and len(normalized_subloc) > 3:
         street_addr = _extract_street_address(normalized_subloc)
-        if street_addr and street_addr in addresses_tier:
-            return make_result(addresses_tier[street_addr])
+        match = addresses_tier.get(street_addr) if street_addr else None
+        if match is not None and match is not _AMBIGUOUS_ADDRESS:
+            return make_result(match)
 
     # Step 6: Source site fallback (match website name to location)
     # Only fires when no real venue name was extracted — otherwise an event
@@ -1165,39 +1522,9 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
         if len(linked) == 1:
             return make_result(linked[0])
 
-    # Step 8: Single-venue website brand-name fallback.
-    # When fuzzy matching (Step 5) didn't find anything but the AI returned a
-    # variant brand name (e.g. "AMC Theatres", "Regal UA Sheepshead Bay" when
-    # DB has "Regal Cinema Sheepshead Bay") and the website has exactly one
-    # linked location, the linked location is virtually always the right
-    # answer. Two conditions either qualify:
-    #   (a) substring containment in either direction (handles "AMC Theatres"
-    #       inside "AMC 34th Street 14")
-    #   (b) Levenshtein ratio ≥ 0.6 (handles "Regal UA Sheepshead Bay" vs
-    #       "Regal Cinema Sheepshead Bay" — close but not substring)
-    # Without this tier, those events end up with `location_id = NULL` and
-    # never appear on the map.
-    if website_id and normalized_loc:
-        linked = locations_map.get('website_linked', {}).get(website_id, [])
-        if len(linked) == 1:
-            linked_id = linked[0].get('id')
-            linked_norm_name = ''
-            for tier_name in ('names', 'short_names'):
-                for key, match in locations_map.get(tier_name, {}).items():
-                    candidate = match[0] if isinstance(match, list) else match
-                    if candidate.get('id') == linked_id:
-                        linked_norm_name = key
-                        break
-                if linked_norm_name:
-                    break
-            if linked_norm_name and len(normalized_loc) >= 3:
-                contains = (
-                    normalized_loc in linked_norm_name or
-                    linked_norm_name in normalized_loc
-                )
-                ratio = _calculate_levenshtein_ratio(normalized_loc, linked_norm_name)
-                if contains or ratio >= 0.6:
-                    return make_result(linked[0])
+    # (The former single-venue brand-name fallback is now Step 3.5, which runs
+    # before prefix/fuzzy so the authoritative venue wins over arbitrary
+    # same-brand prefix matches.)
 
     return None
 
@@ -1366,6 +1693,15 @@ def process_events(cursor, connection, crawl_result_id, website_name, run_date_s
         db.update_crawl_result_processed(cursor, connection, crawl_result_id, 0)
         return 0
 
+    # Sanity-fix 12pm/12am misreads before downstream processing.
+    for row in parsed_rows:
+        if row.get('end_time'):
+            row['end_time'] = _sanity_check_end_time(
+                row.get('start_time') or '',
+                row['end_time'],
+                crawled_content,
+            )
+
     current_date = datetime.now().date()
     future_limit_date = (datetime.now() + timedelta(days=FUTURE_WINDOW_DAYS)).date()
 
@@ -1387,6 +1723,22 @@ def process_events(cursor, connection, crawl_result_id, website_name, run_date_s
         if 'name' in row_dict:
             row_dict['name'] = row_dict['name'].replace(' \\ |', ':').replace(' \\|', ':')
             row_dict['name'] = strip_leading_emoji(row_dict['name'])
+
+        # Non-event junk filter: closures, calls for submissions/grants, venue
+        # rentals, season passes, showtime placeholders, SEO spam. Drop before
+        # they ever become a crawl_event; log so the rejection is auditable.
+        if is_obvious_non_event(row_dict.get('name', '')):
+            log_rejection(
+                cursor, connection, crawl_result_id, website_id,
+                rejection_type='non_event_junk', stage='extract',
+                event_name=row_dict.get('name'),
+                event_url=(row_dict.get('url') or '').strip() or None,
+                start_date=(row_dict.get('start_date') or None),
+                end_date=(row_dict.get('end_date') or None),
+                details='Name matched non-event junk pattern',
+            )
+            rejection_counts['non_event_junk'] = rejection_counts.get('non_event_junk', 0) + 1
+            continue
 
         # URL grounding check: if the AI returned a URL that doesn't appear in
         # the crawled content, it's likely a hallucinated event. Log and skip.
@@ -1650,12 +2002,18 @@ def apply_crawled_details(cursor, connection, ce_id, data, tag_context):
                     )
                     continue
 
+                # Mirror group_event_occurrences: collapse end_date when it
+                # equals start_date so the merger's dedup matches the
+                # listing-crawl rows (which use NULL for single-day events).
+                if parsed_end and parsed_end == parsed_start:
+                    end_date = None
+
                 cursor.execute(
                     "INSERT INTO crawl_event_occurrences "
                     "(crawl_event_id, start_date, start_time, end_date, end_time, sort_order) "
                     "VALUES (%s, %s, %s, %s, %s, %s)",
-                    (ce_id, start_date, occ.get('start_time'),
-                     end_date, occ.get('end_time'), sort_order),
+                    (ce_id, start_date, _standardize_time(occ.get('start_time')),
+                     end_date, _standardize_time(occ.get('end_time')), sort_order),
                 )
                 sort_order += 1
 
@@ -1671,6 +2029,28 @@ def apply_crawled_details(cursor, connection, ce_id, data, tag_context):
         )
 
     connection.commit()
+
+
+def _kill_crawl_browsers():
+    """Force-kill crawl4ai's chromium processes to unblock a wedged browser.
+
+    A single wedged page can hang Playwright's transport thread at the C level,
+    where ``asyncio.wait_for``/task cancellation cannot interrupt it — and the
+    browser instance is shared across the batch, so every subsequent ``arun``
+    on it also hangs (the Step 5 deadlock). SIGKILL'ing the browser process is
+    the only reliable way to make those wedged awaits raise and unblock.
+
+    Matched by the ``playwright_chromiumdev_profile`` user-data-dir so the
+    standalone Playwright MCP browser (run with ``--isolated``, a different
+    profile) is left untouched.
+    """
+    try:
+        subprocess.run(
+            ["pkill", "-9", "-f", "playwright_chromiumdev_profile"],
+            timeout=10, check=False,
+        )
+    except Exception as e:
+        print(f"    (browser kill failed: {e})")
 
 
 async def crawl_event_details(cursor, connection, candidates, num_workers=10):
@@ -1730,20 +2110,64 @@ async def crawl_event_details(cursor, connection, candidates, num_workers=10):
 
     attempted_ids = []  # Track all attempted ce_ids for counter increment
 
+    # Stall detection: each completed crawl bumps the heartbeat. A watchdog
+    # task aborts the step if no progress is made for STALL_TIMEOUT seconds,
+    # so a systemic hang (e.g. a wedged browser) fails fast instead of sitting
+    # idle for hours. Individual hung pages are already bounded by the
+    # per-crawl timeout in crawler.crawl_event_url(); this is the safety net
+    # for failures that escape it.
+    STALL_TIMEOUT = 300  # 5 minutes with zero progress => kill browser & abort
+    EXTRACT_TIMEOUT = 120  # hard ceiling on a single Gemini extract call
+    heartbeat = {'last': time.monotonic(), 'done': 0}
+    total_candidates = len(candidates)
+
     async def process_website(web_crawler, ws_id):
-        """Process all events for one website sequentially."""
-        ws_results = []
+        """Process all events for one website sequentially.
+
+        Appends successful extractions to the shared ``results`` list as they
+        complete (rather than returning at the end) so a watchdog abort keeps
+        all work finished before the stall.
+        """
         crawl_config = crawl_configs.get(ws_id, crawler.build_event_crawl_config({}))
         for ce_id, name, url, _ in events_by_website[ws_id]:
             async with semaphore:
                 attempted_ids.append(ce_id)
                 content = await crawler.crawl_event_url(web_crawler, url, crawl_config)
+                heartbeat['last'] = time.monotonic()
+                heartbeat['done'] += 1
                 if not content:
                     continue
-                data = await extractor.extract_single_event(name, content)
+                try:
+                    data = await asyncio.wait_for(
+                        extractor.extract_single_event(name, content),
+                        timeout=EXTRACT_TIMEOUT,
+                    )
+                except asyncio.TimeoutError:
+                    print(f"    Extract timed out after {EXTRACT_TIMEOUT}s for {name}")
+                    continue
                 if data:
-                    ws_results.append((ce_id, name, data))
-        return ws_results
+                    results.append((ce_id, name, data))
+
+    async def watchdog(gather_task):
+        """Abort the detail crawl if no progress is made for STALL_TIMEOUT.
+
+        Cancelling the gather alone cannot unblock a wedged Playwright browser
+        (the awaits are stuck below the asyncio layer), so we also SIGKILL the
+        crawl4ai chromium — that forces the wedged ``arun`` awaits to raise and
+        lets ``await gather_task`` actually return.
+        """
+        while not gather_task.done():
+            await asyncio.sleep(30)
+            idle = time.monotonic() - heartbeat['last']
+            if idle > STALL_TIMEOUT and not gather_task.done():
+                print(
+                    f"  ⚠️ WATCHDOG: detail crawl stalled — no progress for "
+                    f"{int(idle)}s ({heartbeat['done']}/{total_candidates} crawled). "
+                    f"Killing wedged browser and aborting Step 5 with partial results."
+                )
+                gather_task.cancel()
+                _kill_crawl_browsers()
+                return
 
     for (text_mode, light_mode, use_stealth, headed, user_agent), ws_ids in browser_batches.items():
         if len(browser_batches) > 1:
@@ -1757,10 +2181,23 @@ async def crawl_event_details(cursor, connection, candidates, num_workers=10):
             text_mode=text_mode, light_mode=light_mode,
             use_stealth=use_stealth, headed=headed, user_agent=user_agent,
         )
-        async with AsyncWebCrawler(config=browser_config) as web_crawler:
-            tasks = [process_website(web_crawler, ws_id) for ws_id in ws_ids]
-            for ws_results in await asyncio.gather(*tasks):
-                results.extend(ws_results)
+        try:
+            async with AsyncWebCrawler(config=browser_config) as web_crawler:
+                tasks = [process_website(web_crawler, ws_id) for ws_id in ws_ids]
+                gather_task = asyncio.gather(*tasks, return_exceptions=True)
+                watchdog_task = asyncio.create_task(watchdog(gather_task))
+                try:
+                    await gather_task
+                except asyncio.CancelledError:
+                    # Watchdog aborted a stalled batch; keep whatever finished
+                    # (workers append to `results` as they go).
+                    print("  Detail crawl batch aborted; continuing with partial results.")
+                finally:
+                    watchdog_task.cancel()
+        except Exception as e:
+            # A killed/wedged browser can make the AsyncWebCrawler context
+            # manager's teardown raise — isolate it so remaining batches still run.
+            print(f"  Detail crawl batch error ({type(e).__name__}: {e}); continuing with remaining batches.")
 
     # Increment attempt counter for all attempted events (success or failure)
     if attempted_ids:

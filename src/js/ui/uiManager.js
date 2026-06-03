@@ -170,13 +170,30 @@ const UIManager = (() => {
                 updateDatePickerDisplay(instance, elements);
             },
             onChange: (selectedDates, dateStr, instance) => {
-                if (selectedDates.length === 2) {
+                if (selectedDates.length >= 1) {
                     updateDatePickerDisplay(instance, elements);
+                    // Filter immediately on each click rather than waiting for
+                    // the picker to close. A lone start date acts as a
+                    // single-day range (start, start). We intentionally do NOT
+                    // setDate here so flatpickr stays in "selecting end" mode
+                    // and the next click extends the range.
+                    const dates = selectedDates.length === 1
+                        ? [selectedDates[0], selectedDates[0]]
+                        : selectedDates;
+                    callbacks.onDatePickerClose(dates);
                 }
             },
             onClose: (selectedDates, dateStr, instance) => {
-                if (selectedDates.length === 2) {
-                    callbacks.onDatePickerClose(selectedDates);
+                let dates = selectedDates;
+                // If only a start date was picked, treat it as a single-day
+                // range (start, start) so the picker doubles as a single-date
+                // picker. Flatpickr otherwise discards a lone date on close.
+                if (dates.length === 1) {
+                    dates = [dates[0], dates[0]];
+                    instance.setDate(dates, false);
+                }
+                if (dates.length === 2) {
+                    callbacks.onDatePickerClose(dates);
                 }
                 updateDatePickerDisplay(instance, elements);
             }

@@ -21,10 +21,53 @@ from urllib.parse import urljoin
 import httpx
 from dotenv import load_dotenv
 from PIL import Image
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 import db
-from processor import extract_url_from_content
+from processor import _standardize_time, extract_url_from_content
+
+
+_DATE_RE = re.compile(r'^\d{4}-\d{2}-\d{2}$')
+_CANONICAL_TIME_RE = re.compile(r'^\d{1,2}(:\d{2})?(am|pm)$')
+
+
+def _clean_extracted_date(value):
+    """Field validator: keep only YYYY-MM-DD strings, drop everything else.
+
+    Gemini occasionally emits a free-form blob (e.g. a paragraph of description text)
+    in a date field. Reject these silently so the row keeps its other fields.
+    """
+    if value is None:
+        return None
+    if isinstance(value, str):
+        v = value.strip()
+        if not v:
+            return None
+        if _DATE_RE.fullmatch(v):
+            return v
+    return None
+
+
+def _clean_extracted_time(value):
+    """Field validator: canonicalize Gemini-emitted time strings.
+
+    Routes the value through `_standardize_time`. If the result isn't a recognizable
+    time (e.g. Gemini hallucinated 'pulitzerprizewinning' or a YYYY-MM-DD date into
+    a time field), we return None rather than persisting garbage.
+    """
+    if value is None:
+        return None
+    if not isinstance(value, str):
+        return None
+    canonical = _standardize_time(value)
+    if not canonical:
+        return None
+    # Accept only the canonical shape. The standardizer preserves ambiguous strings
+    # like '6:30' for downstream manual review; reject those at the extractor since
+    # Gemini should have included AM/PM if the source did.
+    if _CANONICAL_TIME_RE.fullmatch(canonical):
+        return canonical
+    return None
 
 load_dotenv()
 
@@ -87,19 +130,31 @@ def _resolve_notes(base_url: str, notes: str) -> str:
 
 class EventOccurrence(BaseModel):
     """Schema for a single occurrence (date/time) of an event."""
-    start_date: str = Field(description="The date of this occurrence in YYYY-MM-DD format")
+    start_date: Optional[str] = Field(
+        default=None,
+        description="REQUIRED — the date of this occurrence in YYYY-MM-DD format (e.g. 2026-06-15). Set to null only if no specific date is given."
+    )
     start_time: Optional[str] = Field(
         default=None,
-        description="The start time (e.g., 4:00 PM)"
+        description="The start time as a clock time in 12-hour AM/PM format only (e.g. '7pm', '7:30pm', '11am'). Leave null if no specific time is given."
     )
     end_date: Optional[str] = Field(
         default=None,
-        description="The end date if different from start_date, in YYYY-MM-DD format"
+        description="The end date if different from start_date, in YYYY-MM-DD format. "
+                    "REQUIRED for multi-day events and for art exhibitions / gallery "
+                    "shows / installations that run over a period — set it to the "
+                    "closing date (e.g. 'On view through July 5' -> end_date "
+                    "2026-07-05). Leave null only for genuinely single-day events."
     )
     end_time: Optional[str] = Field(
         default=None,
-        description="The end time (e.g., 7:00 PM)"
+        description="The end time as a clock time in 12-hour AM/PM format only (e.g. '7pm', '9:30pm'). Leave null if no end time is given."
     )
+
+    _v_start_date = field_validator('start_date', mode='before')(_clean_extracted_date)
+    _v_end_date = field_validator('end_date', mode='before')(_clean_extracted_date)
+    _v_start_time = field_validator('start_time', mode='before')(_clean_extracted_time)
+    _v_end_time = field_validator('end_time', mode='before')(_clean_extracted_time)
 
 
 class Event(BaseModel):
@@ -143,9 +198,22 @@ class EventList(BaseModel):
 
 class SimpleOccurrence(BaseModel):
     """Simplified occurrence schema for first-pass extraction."""
-    start_date: str = Field(description="YYYY-MM-DD format")
-    start_time: Optional[str] = Field(default=None, description="e.g. 8:00 PM")
-    end_time: Optional[str] = Field(default=None)
+    start_date: Optional[str] = Field(
+        default=None,
+        description="REQUIRED — YYYY-MM-DD format. Null only if no specific date given; never a non-date value."
+    )
+    start_time: Optional[str] = Field(
+        default=None,
+        description="12-hour clock time only, e.g. '8pm', '8:30pm', '10am'."
+    )
+    end_time: Optional[str] = Field(
+        default=None,
+        description="12-hour clock time only, e.g. '10pm'."
+    )
+
+    _v_start_date = field_validator('start_date', mode='before')(_clean_extracted_date)
+    _v_start_time = field_validator('start_time', mode='before')(_clean_extracted_time)
+    _v_end_time = field_validator('end_time', mode='before')(_clean_extracted_time)
 
 
 class SimpleEvent(BaseModel):
@@ -222,10 +290,10 @@ CHUNK_TIMEOUT = 300
 MAX_CHUNK_CHARS = 30000
 
 # Hard limit on total content size before extraction (characters).
-# Pages exceeding this will be truncated. 120K chars ≈ 4 chunks of 30K,
-# which is plenty for any events page. Prevents runaway extraction on
-# pages with huge archives (e.g., years of past events).
-MAX_CONTENT_CHARS = 120000
+# Pages exceeding this will be truncated. 300K chars ≈ 10 chunks of 30K,
+# accommodating multi-week event aggregators like NYC Parks date-windowed
+# crawls. Prevents runaway extraction on pages with huge archives.
+MAX_CONTENT_CHARS = 300000
 
 # Maximum number of images to process for vision extraction
 MAX_VISION_IMAGES = 10
@@ -657,14 +725,28 @@ def estimate_event_count(content):
     return max(date_count // 2, view_event_count, event_url_count // 2, listing_url_count // 2)
 
 
+# Markdown markers that signal the start of a new event card on a listing page.
+# Covers `### [...]`, `#### [...]`, and bulleted/numbered variants like
+# `* ### [...]` or `1. ### [...]`.
+_EVENT_HEADING_RE = re.compile(
+    r'(?:^|\n)[ \t]*(?:[\*\-]\s+|\d+\.\s+)?#{2,5}\s*\[',
+    re.MULTILINE,
+)
+
+
 def extract_content_snippets(event_names, content, snippet_chars=500):
     """Extract content snippets surrounding each event name from page content.
 
-    For each event name, finds its position in the content and extracts surrounding
-    text to provide context for enrichment. Returns a dict mapping event names to snippets.
+    For each event name, finds its position in the content and extracts the
+    surrounding text bounded by adjacent event headings, so neighboring events'
+    descriptions don't leak into the focal event's context. Returns a dict
+    mapping event names to snippets.
     """
     if not content:
         return {}
+
+    # Pre-compute heading positions so we can bound each snippet to a single event.
+    heading_positions = sorted({m.start() for m in _EVENT_HEADING_RE.finditer(content)})
 
     content_lower = content.lower()
     snippets = {}
@@ -681,14 +763,50 @@ def extract_content_snippets(event_names, content, snippet_chars=500):
                 # Search for the first long word to get approximate position
                 pos = content_lower.find(words[0].lower())
 
-        if pos != -1:
-            start = max(0, pos - snippet_chars // 4)  # Less before, more after
-            end = min(len(content), pos + snippet_chars)
-            snippet = content[start:end].strip()
-            if snippet:
-                snippets[name] = snippet
+        if pos == -1:
+            continue
+
+        # Find the nearest event heading at/before pos and the next one after.
+        prev_heading = 0
+        next_heading = len(content)
+        for hp in heading_positions:
+            if hp <= pos:
+                prev_heading = hp
+            else:
+                next_heading = hp
+                break
+
+        # Cap by the char budget so very long entries don't dominate the prompt.
+        start = max(prev_heading, pos - snippet_chars // 4)
+        end = min(next_heading, pos + snippet_chars)
+
+        snippet = content[start:end].strip()
+        if snippet:
+            snippets[name] = snippet
 
     return snippets
+
+
+_BOILERPLATE_DESC_PATTERNS = [
+    # Pure "visit the website" deflections
+    re.compile(r'please\s+visit\s+the\s+official\s+website', re.IGNORECASE),
+    re.compile(r'visit\s+the\s+official\s+website\s+for\s+(?:more\s+)?(?:specific\s+)?(?:event\s+)?details', re.IGNORECASE),
+    re.compile(r'check\s+the\s+official\s+website\s+for\s+(?:more\s+)?(?:specific\s+)?details', re.IGNORECASE),
+    re.compile(r'more\s+specific\s+event\s+details', re.IGNORECASE),
+    re.compile(r'for\s+more\s+(?:event\s+)?details(?:\s+about\s+(?:the\s+event|this\s+event))?', re.IGNORECASE),
+    # Generic "is a … community/special event" boilerplate
+    re.compile(r'\bis\s+a(?:n)?\s+(?:local|special|recurring|informational|community)\s+(?:community\s+)?event\b', re.IGNORECASE),
+    re.compile(r'\bis\s+a\s+community\s+(?:gathering|event)\b', re.IGNORECASE),
+]
+
+
+def _looks_like_boilerplate_fabrication(desc):
+    """Detect descriptions that are obviously generic fillers Gemini wrote when
+    the page had no real content. Conservative — only matches phrases that
+    legitimate event descriptions almost never include verbatim."""
+    if not desc:
+        return False
+    return any(p.search(desc) for p in _BOILERPLATE_DESC_PATTERNS)
 
 
 def get_enrichment_prompt(event_names, venue_name, request_id="", content_snippets=None):
@@ -709,9 +827,13 @@ def get_enrichment_prompt(event_names, venue_name, request_id="", content_snippe
         events_section = "\n".join(f"- {name}" for name in event_names)
 
     return f'''For each event at {venue_name}, provide:
-- description: 1-3 sentence description based ONLY on real information from the source content. If you only have the event name with no additional details, use "No description available." Do NOT fabricate descriptions.
+- description: 1-3 sentence description built from words and sentences that actually appear in the event's own Context block. If the Context only has the name, date/time, venue, and links — with no descriptive prose — return EXACTLY "No description available." Do NOT paraphrase the event name. Do NOT write generic filler like "is a local community event" or "visit the official website for more details". Do NOT use background knowledge about the artist, venue, or topic. Each event's description must come from THAT event's Context block, not a neighbor's.
 - hashtags: 4-7 CamelCase tags. Always include at least one category (Music, Nightlife, Comedy, Art, Theater, Dance, Film, Literature, Community, Family, Wellness, Education, Outdoor, Sports, Games). Add Free if free, Virtual if online. Then granular tags.
 - emoji: Single emoji representing the event
+
+Examples:
+  Context only has name + date + venue → description="No description available."
+  Context has a sentence describing the event → use that sentence (lightly compressed if needed)
 
 Events to enrich:
 {events_section}
@@ -747,14 +869,17 @@ async def enrich_events_batch(event_names, venue_name, content=None):
             timeout=GEMINI_TIMEOUT
         )
         result = json.loads(response.text.strip())
-        return {
-            item.get('name', ''): {
-                'description': item.get('description', ''),
+        out = {}
+        for item in result.get('enrichments', []):
+            desc = (item.get('description') or '').strip()
+            if _looks_like_boilerplate_fabrication(desc):
+                desc = 'No description available.'
+            out[item.get('name', '')] = {
+                'description': desc,
                 'hashtags': item.get('hashtags', []),
-                'emoji': item.get('emoji', '📅')
+                'emoji': item.get('emoji', '📅'),
             }
-            for item in result.get('enrichments', [])
-        }
+        return out
     except Exception as e:
         print(f"    - Enrichment batch error: {e}")
         return {}
@@ -817,6 +942,15 @@ async def extract_single_event(event_name, content):
         f'Today\'s date is {current_date}. '
         f'Extract information about the event "{event_name}" from this web page. '
         f'Include the venue name if it appears on the page.\n\n'
+        f'CRITICAL — DESCRIPTION: The description MUST be derived from words '
+        f'and sentences actually present on the page. If the page only contains '
+        f'the event name, date/time, venue, and links (no descriptive prose), '
+        f'set description to exactly "No description available." Do NOT '
+        f'paraphrase the event name. Do NOT write generic filler like "is a '
+        f'local community event" or "visit the official website for more '
+        f'details". Do NOT use background knowledge about the artist, venue, '
+        f'or topic. If you would only be guessing, return "No description '
+        f'available." instead.\n\n'
         f'CRITICAL: Only return occurrences for SPECIFIC calendar dates that are '
         f'EXPLICITLY stated on the page. If the page describes a permanent '
         f'exhibit, ongoing installation, recurring schedule (e.g. "Fridays 7pm"), '
@@ -831,6 +965,12 @@ async def extract_single_event(event_name, content):
         f'return ONLY the day(s) the event itself takes place. Pickup/expo/setup '
         f'days are logistics, not occurrences of the event. Example: a race page '
         f'showing "Wed-Fri Expo / Sat Race" should return only Saturday.\n\n'
+        f'RECEPTION vs EXHIBITION RUN: If the named event is an opening/closing '
+        f'reception, opening night, preview, or launch tied to an exhibition, '
+        f'occurrences = ONLY that reception\'s own date and time (a single-day '
+        f'event). Do NOT add the exhibition\'s broader on-view run (e.g. "on view '
+        f'June 4 – July 10") as an additional occurrence — that run belongs to the '
+        f'exhibition itself, which is a separate event.\n\n'
         f'{content}'
     )
 
@@ -849,6 +989,8 @@ async def extract_single_event(event_name, content):
         data = json.loads(response.text.strip())
         desc = data.get('description', '').strip().strip('"')
         if not desc or 'No description available' in desc:
+            return None
+        if _looks_like_boilerplate_fabrication(desc):
             return None
         result = {
             'description': desc,
@@ -882,6 +1024,8 @@ For each event provide: name, location (venue name), occurrences (array of start
 
 CRITICAL DATE RULES:
 - Only return occurrences for SPECIFIC calendar dates EXPLICITLY shown on the page near the event (e.g. "May 7, 2026", "Sat Jun 14", "9/22").
+- EXHIBITIONS: for an art exhibition / gallery show / installation with a stated date range ("March 1 – July 5", "On view through June 30"), return ONE occurrence with start_date = opening date and end_date = closing date. Never collapse the run to a single day, and never stamp today's date as the exhibition date.
+- RECEPTION vs RUN: a timed opening/closing reception, opening night, or preview is a SEPARATE single-day event, NOT an occurrence of the exhibition. If a page lists both a dated+timed reception and a broader exhibition run, emit TWO events — the reception (one single-day occurrence: its date + time) and the exhibition (one start→end run occurrence) — never the full run as a second occurrence of the reception, and never the reception's time on the run.
 - If an event is described as "monthly", "weekly", "ongoing", "permanent", "recurring", or has no specific date listed, set occurrences=null. Do NOT invent a next-occurrence date.
 - Do NOT default to today's date when no date is listed.
 - Do NOT extract dates from URLs or Google Calendar/iCal links — those often reference past instances. Only use dates visible in the page text adjacent to the event.
@@ -973,7 +1117,7 @@ async def extract_large_page(url, content, current_date_string, name, notes, max
     # Cap events at max_batches to limit API cost
     total_batches_needed = -(-len(all_simple_events) // ENRICHMENT_BATCH_SIZE)  # ceiling division
     if total_batches_needed > max_batches:
-        print(f"    - WARNING: {len(all_simple_events)} events would need {total_batches_needed} batches, capping at {max_batches} ({max_events} events). "
+        print(f"    - WARNING: [{name}] {len(all_simple_events)} events would need {total_batches_needed} batches, capping at {max_batches} ({max_events} events). "
               f"Set max_batches in websites table to override.")
         all_simple_events = all_simple_events[:max_events]
 
@@ -1057,6 +1201,8 @@ Based on the website content below, extract all upcoming events. For each event,
   - start_time: Time like "4:00 PM" (optional)
   - end_date: End date if different from start (optional)
   - end_time: End time (optional)
+  EXHIBITIONS: For an art exhibition, gallery show, or installation that runs over a date range (e.g. "March 1 – July 5", "On view through June 30"), create ONE occurrence spanning the run: start_date = opening date, end_date = closing date. Do NOT collapse the run to a single day, and do NOT stamp today's date as the exhibition date. If the page gives no opening or closing date at all (a permanent / date-less display), set occurrences=null instead of inventing a single date.
+  RECEPTION vs RUN: A timed opening/closing reception, opening night, or preview is a DISTINCT single-day event — NOT an occurrence of the exhibition it celebrates. When a page describes both a dated, timed reception AND a broader exhibition run (e.g. "Opening reception June 4, 6–8pm" for a show "on view June 4 – July 10"), emit TWO separate events: (1) the reception, with ONE single-day occurrence (its date + time), and (2) the exhibition, with ONE run occurrence (start_date = opening, end_date = closing). Never attach the exhibition's full run as a second occurrence of the reception event, and never put the reception's time on the exhibition run.
 - description: 1-3 sentence description based ONLY on what is stated in the source content. If the listing only has a name/date/time with no further details, use "No description available." Do NOT make up or infer descriptions.
 - url: Specific event URL if available
 - hashtags: 4-7 CamelCase tags (e.g., ["Comedy", "StandUp", "Free"]). Always include at least one category from: Music, Nightlife, Comedy, Art, Theater, Dance, Film, Literature, Community, Family, Wellness, Education, Outdoor, Sports, Games. Also include Free if the event is free, or Virtual if online. Then add granular descriptive tags. Avoid location-specific or NYC-redundant tags.
@@ -1065,7 +1211,8 @@ Based on the website content below, extract all upcoming events. For each event,
 {note_section}{rid_section}
 Rules:
 - Extract ALL events from the page - do not skip or summarize
-- Only include events in the NYC area within the next 3 months
+- Do NOT extract things that are not attendable public events. Skip: venue/program closures and holiday-closure notices ("Museum Closed", "Park Closes at 5pm", "Office Closed for Juneteenth"); calls for submissions, applications, or grants ("Open Call for Artists", "Submission Deadline", "Micro Grants Round 3"); venue marketing (space/room rentals, "Private Events", "Available for Booking", dining service like "Signature Breakfast"); season passes and ticketing placeholders ("Summer Pass 2026", "Showtimes"); and content placeholders or unrelated spam. These are not events — leave them out entirely.
+- Only include events in the NYC metro area within the next 3 months. The NYC metro area includes: all five NYC boroughs; Long Island (Nassau, Suffolk, the Hamptons); Westchester and Rockland counties; the Hudson Valley (Dutchess, Orange, Ulster, Putnam); Northern New Jersey (Bergen, Hudson, Essex, Passaic, Union, Middlesex, Monmouth, Ocean); and Southern Connecticut (Fairfield County). Skip events at venues outside this metro region (e.g. Philadelphia, Boston, Chicago, LA, Europe, etc.).
 - Ignore unrelated event sections ("Hot Events", "Similar events", etc.)
 - For recurring events, expand ALL individual dates into the occurrences array
 - If no events are found, return an empty events list
@@ -1210,7 +1357,7 @@ async def prepare_extraction(cursor, crawl_result_id, website_name, notes="",
             ]
         else:
             prep.extraction_type = 'single'
-            print(f"    - Preparing extraction using {GEMINI_MODEL} ({len(content_to_process)} chars)... [{datetime.now().strftime('%H:%M:%S')}]")
+            print(f"    - Preparing extraction using {GEMINI_MODEL} ({len(content_to_process)} chars)...")
             prep.prompt = get_prompt(url, content_to_process, current_date_string,
                                      website_name, notes, existing_events,
                                      request_id=f"cr-{crawl_result_id}")
@@ -1306,7 +1453,7 @@ async def execute_extraction_sync(cursor, connection, prep):
         occurrence_count = 0
 
     db.update_crawl_result_extracted(cursor, connection, crawl_result_id, response_text)
-    print(f"    - Extracted {event_count} events with {occurrence_count} occurrences [{datetime.now().strftime('%H:%M:%S')}]")
+    print(f"    - Extracted {event_count} events with {occurrence_count} occurrences")
     return True
 
 
@@ -1357,7 +1504,7 @@ async def _execute_chunked_sync(prep):
     # Cap events at max_batches to limit API cost
     total_batches_needed = -(-len(all_simple_events) // ENRICHMENT_BATCH_SIZE)
     if total_batches_needed > prep.max_batches:
-        print(f"    - WARNING: {len(all_simple_events)} events would need {total_batches_needed} batches, "
+        print(f"    - WARNING: [{prep.website_name}] {len(all_simple_events)} events would need {total_batches_needed} batches, "
               f"capping at {prep.max_batches} ({max_events} events). "
               f"Set max_batches in websites table to override.")
         all_simple_events = all_simple_events[:max_events]

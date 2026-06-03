@@ -13,6 +13,7 @@
 
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/edit_logger.php';
+require_once __DIR__ . '/time_format.php';
 
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
@@ -269,6 +270,13 @@ function applyEdit(PDO $pdo, array $edit): bool {
             // Validate field name (alphanumeric and underscore only)
             if (!preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $fieldName)) {
                 return false;
+            }
+
+            // Canonicalize time strings at the write boundary so cross-source
+            // syncs land in the same format the merger/admin paths produce.
+            if ($tableName === 'event_occurrences'
+                && ($fieldName === 'start_time' || $fieldName === 'end_time')) {
+                $newValue = standardize_time($newValue);
             }
 
             $stmt = $pdo->prepare("UPDATE `$tableName` SET `$fieldName` = ? WHERE id = ?");

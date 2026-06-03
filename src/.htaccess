@@ -2,19 +2,29 @@
 # LiteSpeed compresses text/* by default but not application/json or binary types.
 # Remap JSON to text/json so it gets compressed automatically.
 AddType text/json .json
-# Fix PBF MIME type so cache rules match (default: application/octet-stream)
-AddType application/x-protobuf .pbf
+# Glyph PBFs: serve as a text/* subtype so LiteSpeed gzips them. LiteSpeed only
+# auto-compresses text/* + a few app/* types and IGNORES the DEFLATE rule below
+# for binary types, so application/x-protobuf shipped UNCOMPRESSED on production
+# (320 KB vs ~71 KB gzipped). MapLibre fetches glyphs as an arraybuffer and never
+# inspects Content-Type, so a text/* label is harmless. A distinct subtype
+# (text/x-protobuf, not text/plain) avoids colliding with real plain-text files.
+AddType text/x-protobuf .pbf
 
 # Apache fallback: enable gzip compression for text-based assets
 <IfModule mod_deflate.c>
     AddOutputFilterByType DEFLATE text/json
     AddOutputFilterByType DEFLATE application/json
     AddOutputFilterByType DEFLATE application/javascript
+    # Servers disagree on the .js MIME type (Apache/XAMPP: application/x-javascript;
+    # others: text/javascript). List every variant or the app bundle + maplibre-gl.js
+    # ship UNCOMPRESSED (~1 MB for maplibre vs ~250 KB gzipped — a big slow-link regression).
+    AddOutputFilterByType DEFLATE text/javascript
+    AddOutputFilterByType DEFLATE application/x-javascript
     AddOutputFilterByType DEFLATE text/css
     AddOutputFilterByType DEFLATE text/html
     AddOutputFilterByType DEFLATE text/plain
     AddOutputFilterByType DEFLATE image/svg+xml
-    AddOutputFilterByType DEFLATE application/x-protobuf
+    AddOutputFilterByType DEFLATE text/x-protobuf
     AddOutputFilterByType DEFLATE font/ttf
 </IfModule>
 
@@ -31,7 +41,7 @@ AddType application/x-protobuf .pbf
     # Fonts and glyphs: cache for 1 year
     ExpiresByType font/ttf "access plus 1 year"
     ExpiresByType font/woff2 "access plus 1 year"
-    ExpiresByType application/x-protobuf "access plus 1 year"
+    ExpiresByType text/x-protobuf "access plus 1 year"
     # HTML: no cache (always serve fresh)
     ExpiresByType text/html "access plus 0 seconds"
 </IfModule>

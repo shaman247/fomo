@@ -34,12 +34,6 @@ DB_CONFIG = {
         'user': 'root',
         'password': ''
     },
-    'production': {
-        'host': 'localhost',
-        'database': 'fomoowsq_fomo',
-        'user': 'fomoowsq_root',
-        'password': 'REDACTED_DB_PASSWORD'
-    }
 }
 
 # Paths

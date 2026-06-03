@@ -328,6 +328,17 @@ const MarkerController = (() => {
      * @param {maplibregl.Popup} openPopup - The open popup to update
      * @returns {boolean} True if popup was updated, false otherwise
      */
+    /**
+     * Force a rebuild of the currently open popup/bottom sheet, bypassing the
+     * unchanged-content early-out in updateOpenPopupContent (whose signature
+     * keys on event ids/tags/dates, not description text). Used when deferred
+     * descriptions arrive for events whose popup is already open.
+     */
+    function refreshOpenPopupContent() {
+        state._popupContentSig = null;
+        return updateOpenPopupContent(MapManager.getCurrentPopup());
+    }
+
     function updateOpenPopupContent(openPopup) {
         // Handle bottom sheet case (mobile) — openPopup is null but sheet is open
         const isBottomSheet = !openPopup && typeof BottomSheet !== 'undefined' && BottomSheet.isDetailMode();
@@ -366,6 +377,41 @@ const MarkerController = (() => {
             }
         }
 
+        // Early-out: rebuilding the popup DOM is the costliest part of a tag
+        // toggle when a popup is open (~3-10ms). The event list at a location is
+        // date-filtered, not tag-filtered, so it's stable across tag toggles;
+        // the only filter changes that alter this popup's rendering (event sort
+        // order, dimming of non-matching events, tag-chip styling) are:
+        //   - a change to any required/forbidden tag (can dim/reorder anything), or
+        //   - a change to a *selected* tag that actually appears on these events.
+        // Toggling a selected tag absent from this location's events — the common
+        // case while filtering the whole map with a popup open — can't change
+        // anything here, so we skip the rebuild. Signature captures exactly those
+        // inputs plus the date range, the event set, and any forced event.
+        const tagStates = currentPopupFilters.tagStates || {};
+        const localTags = new Set();
+        for (const ev of eventsToDisplay) {
+            if (ev.tags) for (const t of ev.tags) localTags.add(t);
+        }
+        const relevantTagParts = [];
+        for (const tag in tagStates) {
+            const st = tagStates[tag];
+            if (st === 'required' || st === 'forbidden') relevantTagParts.push(tag + ':' + st);
+            else if (st === 'selected' && localTags.has(tag)) relevantTagParts.push(tag + ':s');
+        }
+        relevantTagParts.sort();
+        const contentSig = [
+            locationKey,
+            currentPopupFilters.sliderStartDate, currentPopupFilters.sliderEndDate,
+            forceDisplayEventId || '',
+            eventsToDisplay.map(e => e.id).join(','),
+            relevantTagParts.join('|')
+        ].join('§');
+
+        if (!forceDisplayEventId && state._popupContentSig === contentSig) {
+            return true; // popup already shows the current content — nothing to do
+        }
+
         // Preserve the currently active tab across rebuilds
         const currentPopupEl = isBottomSheet
             ? document.querySelector('.bottom-sheet .maplibre-popup-content')
@@ -400,6 +446,11 @@ const MarkerController = (() => {
 
         // Clear forced display after updating
         state.eventProvider.setForceDisplayEventId(null);
+
+        // Remember what we just rendered so an unrelated next toggle can skip
+        // the rebuild. Forced-display renders inject a transient event, so don't
+        // cache them as the steady-state signature.
+        state._popupContentSig = forceDisplayEventId ? null : contentSig;
 
         return true;
     }
@@ -473,6 +524,7 @@ const MarkerController = (() => {
         displayEventsOnMap,
         refreshLabelsForViewport,
         updateOpenPopupContent,
+        refreshOpenPopupContent,
         findOpenPopup,
         hasMatchingEvents,
         createPopupContentCallback,

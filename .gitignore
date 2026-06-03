@@ -1,3 +1,24 @@
+# ===================
+# Base directory: ignore everything, then allowlist only what we commit.
+# New loose files dropped at the repo root are ignored by default.
+# (Rules further down still apply *within* the re-included directories.)
+# ===================
+/*
+!/.gitignore
+!/.env.example
+!/LICENSE
+!/README.md
+!/build.js
+!/package.json
+!/package-lock.json
+# Tracked top-level directories
+!/.claude/
+!/database/
+!/mobile/
+!/pipeline/
+!/scripts/
+!/src/
+
 # Environment variables
 .env
 .env.local
@@ -35,12 +56,15 @@ ENV/
 # Build output
 dist/
 
-# Generated data (pipeline output, regenerated on each run)
-src/data/events.*.json
-src/data/locations.*.json
+# Frontend data — only static config is tracked; events/locations/etc. are generated
+src/data/*
+!src/data/map-style-dark.json
+!src/data/map-style-light.json
+!src/data/tags.json
+!src/data/tag_hierarchy.json
 
 # Scraper dumps (raw payloads, regenerable)
-data/
+/data/
 
 # Scripts directory — only the four canonical helpers are tracked
 scripts/*
@@ -61,6 +85,7 @@ database/backups/
 # Screenshots and images
 screenshots/
 *.png
+*.jpeg
 .playwright-mcp/
 
 # OS files
