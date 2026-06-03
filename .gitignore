@@ -1,3 +1,24 @@
+# ===================
+# Base directory: ignore everything, then allowlist only what we commit.
+# New loose files dropped at the repo root are ignored by default.
+# (Rules further down still apply *within* the re-included directories.)
+# ===================
+/*
+!/.gitignore
+!/.env.example
+!/LICENSE
+!/README.md
+!/build.js
+!/package.json
+!/package-lock.json
+# Tracked top-level directories
+!/.claude/
+!/database/
+!/mobile/
+!/pipeline/
+!/scripts/
+!/src/
+
 # Environment variables
 .env
 .env.local
