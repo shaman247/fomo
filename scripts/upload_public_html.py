@@ -251,13 +251,16 @@ def main(remote_dir=None, use_tls=False, force=False, skip_build=False):
     try:
         print(f"Connecting to FTP server: {ftp_host}")
 
-        # Connect to FTP server
+        # Connect to FTP server. Pass a socket timeout so a stalled network
+        # connection (control or data) raises instead of blocking the upload
+        # forever — ftplib defaults to no timeout.
+        FTP_TIMEOUT = 120
         if use_tls:
-            ftp = FTP_TLS(ftp_host)
+            ftp = FTP_TLS(ftp_host, timeout=FTP_TIMEOUT)
             ftp.login(ftp_user, ftp_password)
             ftp.prot_p()  # Enable encryption for data transfer
         else:
-            ftp = FTP(ftp_host)
+            ftp = FTP(ftp_host, timeout=FTP_TIMEOUT)
             ftp.login(ftp_user, ftp_password)
 
         print(f"Successfully connected as {ftp_user}")
