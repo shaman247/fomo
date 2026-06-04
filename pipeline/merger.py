@@ -970,6 +970,17 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
     cursor.execute("SELECT id, name FROM locations")
     location_names_by_id = {row[0]: row[1] for row in cursor.fetchall()}
 
+    # Websites needing strict name matching: a fuzzy (non-exact) name match must
+    # be confirmed by a shared occurrence before merging. Without this, distinct
+    # recurring programs at a shared generic venue (e.g. different daily.nyc run
+    # clubs all meeting in Central Park, whose names share tokens) collapse onto
+    # one event via the partial-name fallback. Exact-name matches and
+    # same-schedule co-listings still merge. Configured per-website via
+    # websites.strict_name_match to keep the merger generic — no site-specific
+    # logic here.
+    cursor.execute("SELECT id FROM websites WHERE strict_name_match = 1")
+    strict_name_match_ids = {row[0] for row in cursor.fetchall()}
+
     # Build lookups of existing events for deduplication:
     # 1. By location_id for events with matched locations
     # 2. By normalized location_name for events without location_id (fallback)
@@ -1036,19 +1047,22 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
     # Load future occurrence dates and date ranges for these events (for dedup)
     event_dates = {eid: set() for eid in event_ids_with_future}
     event_date_ranges = {eid: [] for eid in event_ids_with_future}
+    event_slots = {eid: set() for eid in event_ids_with_future}  # {eid: {(date_str, std_time)}}
     if event_ids_with_future:
+        from processor import _standardize_time
         # Use a placeholder approach for large IN clauses
         placeholders = ','.join(['%s'] * len(event_ids_with_future))
         cursor.execute(f"""
-            SELECT event_id, start_date, end_date FROM event_occurrences
+            SELECT event_id, start_date, start_time, end_date FROM event_occurrences
             WHERE event_id IN ({placeholders})
               AND (start_date >= %s AND start_date <= %s
                    OR (end_date IS NOT NULL AND end_date >= %s))
         """, (*event_ids_with_future, current_date, future_limit_date, current_date))
         for row in cursor.fetchall():
-            event_id, start_date, end_date = row
+            event_id, start_date, start_time, end_date = row
             if start_date:
                 event_dates[event_id].add(str(start_date))
+                event_slots[event_id].add((str(start_date), _standardize_time(start_time)))
             if start_date and end_date:
                 event_date_ranges[event_id].append((start_date, end_date))
 
@@ -1089,6 +1103,9 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
         # Build set of occurrence dates and date ranges for this crawl event
         crawl_event_dates = set(str(occ[0]) for occ in valid_occurrences if occ[0])
         crawl_event_ranges = [(occ[0], occ[2]) for occ in valid_occurrences if occ[0] and occ[2]]
+        from processor import _standardize_time as _std_time
+        crawl_event_slots = {(str(occ[0]), _std_time(occ[1])) for occ in valid_occurrences if occ[0]}
+        strict_match = website_id in strict_name_match_ids
 
         # Get tags for this crawl event
         cursor.execute("SELECT tag FROM crawl_event_tags WHERE crawl_event_id = %s", (ce_id,))
@@ -1146,6 +1163,14 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
             ran out before the new crawl extracted fresh dates — without this,
             the merger creates a duplicate event each time a recurring program's
             "schedule horizon" lapses.
+
+            For `strict_match` websites a *partial* (non-exact) name match is only
+            accepted when the crawl_event shares at least one occurrence slot
+            (date + start time) with the candidate. This stops different recurring
+            programs at a shared generic venue — whose generic names merely share
+            tokens (e.g. several run clubs in Central Park) — from collapsing,
+            while still allowing same-schedule co-listings to merge. Exact matches
+            are unaffected.
             """
             best_id = None
             exact_no_overlap_id = None
@@ -1159,6 +1184,8 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                         if normalize_name_for_dedup(existing['name']) == norm_name:
                             return existing['id']  # Exact match — best possible
                         elif best_id is None:
+                            if strict_match and not (crawl_event_slots & event_slots.get(existing['id'], set())):
+                                continue  # partial name match unconfirmed by schedule — skip
                             best_id = existing['id']  # Partial match — keep looking
                 elif allow_no_date_overlap and exact_no_overlap_id is None:
                     if normalize_name_for_dedup(existing['name']) == norm_name:
@@ -1230,6 +1257,12 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                     if not _dates_overlap(existing['id']):
                         continue
                     if not are_names_similar(name, existing['name']):
+                        continue
+                    # strict_match sites: a non-exact name match needs a shared
+                    # occurrence slot (see find_best_match) to merge here too.
+                    if (strict_match
+                            and normalize_name_for_dedup(existing['name']) != norm_name
+                            and not (crawl_event_slots & event_slots.get(existing['id'], set()))):
                         continue
                     existing_loc_norm = normalize_name_for_dedup(existing.get('location_name') or '') if existing.get('location_name') else ''
                     existing_loc_is_generic = (not existing_loc_norm) or (existing_loc_norm in generic_locs)
@@ -1458,6 +1491,7 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
             event_entry = {'id': new_event_id, 'name': name}
             event_dates[new_event_id] = crawl_event_dates
             event_date_ranges[new_event_id] = crawl_event_ranges
+            event_slots[new_event_id] = crawl_event_slots
 
             if location_id is not None:
                 if location_id not in existing_events_by_location_id:

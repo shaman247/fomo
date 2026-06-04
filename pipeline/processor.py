@@ -15,6 +15,7 @@ Key features:
 import asyncio
 import time
 import json
+from contextlib import asynccontextmanager
 import os
 import re
 import subprocess
@@ -521,6 +522,17 @@ _NON_EVENT_NAME_PATTERNS = [
     # Season passes / passes-for-sale
     r'\bseason\s*pass\b',
     r'\bsummer\s*pass\b',
+    # Registration / enrollment notices — the sign-up window itself, not an
+    # attendable event. Anchored to the start of the name so genuine events that
+    # merely contain the word (e.g. "Voter Registration Drive", "Open
+    # Registration Soccer Tournament") are not dropped.
+    r'^\s*registration\s+(for|is|now|open|opens?|closes?|closed|deadline|required|begins?|ends?|available)\b',
+    r'^\s*(class|workshop|camp|program|course|session)\s+registration\b',
+    # Academic-calendar day markers (school/library sources leak these as "events")
+    r'^\s*(first|last)\s+day\s+of\s+(the\s+)?(\d{4}\s*[-–/]\s*\d{2,4}\s+)?school\b',
+    r'^\s*no\s+school\b',
+    # Donation drop-off notices (a collection, not an attendable event)
+    r'\bdonations?\s+(accepted|drop[\s-]?off)\b',
     # Cinema/venue placeholder listing pages
     r'\bshowtimes\b',
     # SEO / spam injected into crawled calendars
@@ -2053,6 +2065,37 @@ def _kill_crawl_browsers():
         print(f"    (browser kill failed: {e})")
 
 
+@asynccontextmanager
+async def managed_crawler(browser_config, startup_timeout=90, teardown_timeout=30):
+    """`AsyncWebCrawler` context with bounded startup and teardown.
+
+    The in-loop crawl watchdogs (Steps 2 & 5) guard the worker ``gather`` but
+    NOT the ``async with AsyncWebCrawler`` boundary itself. A wedged browser can
+    hang ``__aenter__`` (startup) or — after a watchdog SIGKILLs it — ``__aexit__``
+    (crawl4ai's ``close()`` awaiting a now-dead browser), leaving the step parked
+    at 0% CPU with no coverage. Unlike a page wedge inside Playwright's C-level
+    transport, start/close are crawl4ai coroutines awaiting their own RPCs, so an
+    ``asyncio.wait_for`` over them DOES cancel; on timeout we also SIGKILL the
+    chromium so the wedged await raises and teardown completes.
+    """
+    from crawl4ai import AsyncWebCrawler
+    wc = AsyncWebCrawler(config=browser_config)
+    try:
+        await asyncio.wait_for(wc.__aenter__(), timeout=startup_timeout)
+    except Exception as e:
+        print(f"    ⚠️ browser startup failed/timed out ({type(e).__name__}); killing chromium")
+        _kill_crawl_browsers()
+        raise
+    try:
+        yield wc
+    finally:
+        try:
+            await asyncio.wait_for(wc.__aexit__(None, None, None), timeout=teardown_timeout)
+        except Exception as e:
+            print(f"    ⚠️ browser teardown failed/timed out ({type(e).__name__}); killing chromium")
+            _kill_crawl_browsers()
+
+
 async def crawl_event_details(cursor, connection, candidates, num_workers=10):
     """Crawl individual event pages to fill in missing details.
 
@@ -2182,7 +2225,7 @@ async def crawl_event_details(cursor, connection, candidates, num_workers=10):
             use_stealth=use_stealth, headed=headed, user_agent=user_agent,
         )
         try:
-            async with AsyncWebCrawler(config=browser_config) as web_crawler:
+            async with managed_crawler(browser_config) as web_crawler:
                 tasks = [process_website(web_crawler, ws_id) for ws_id in ws_ids]
                 gather_task = asyncio.gather(*tasks, return_exceptions=True)
                 watchdog_task = asyncio.create_task(watchdog(gather_task))
@@ -2195,8 +2238,9 @@ async def crawl_event_details(cursor, connection, candidates, num_workers=10):
                 finally:
                     watchdog_task.cancel()
         except Exception as e:
-            # A killed/wedged browser can make the AsyncWebCrawler context
-            # manager's teardown raise — isolate it so remaining batches still run.
+            # managed_crawler bounds startup/teardown (and SIGKILLs a wedged
+            # browser); this catches a re-raised startup failure so remaining
+            # batches still run.
             print(f"  Detail crawl batch error ({type(e).__name__}: {e}); continuing with remaining batches.")
 
     # Increment attempt counter for all attempted events (success or failure)

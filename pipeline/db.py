@@ -60,7 +60,10 @@ def create_connection():
             host=config['host'],
             database=config['database'],
             user=config['user'],
-            password=config['password']
+            password=config['password'],
+            # Bound the connect phase so an unreachable/hung DB fails fast
+            # instead of blocking a worker indefinitely (default is unbounded).
+            connection_timeout=30,
         )
     except Error as e:
         print(f"Error connecting to database: {e}")

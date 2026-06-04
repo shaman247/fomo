@@ -1814,7 +1814,13 @@ async def _poll_batch_until_done(batch_job, poll_interval, timeout):
         await asyncio.sleep(poll_interval)
         elapsed += poll_interval
         try:
-            batch_job = await genai_client.aio.batches.get(name=batch_job.name)
+            # Bound the status GET: the genai client sets no HTTP read timeout,
+            # so a hung poll would freeze `elapsed` here and the loop would never
+            # reach its own timeout check below. wait_for cancels a stuck HTTP
+            # await; on timeout we just poll again (elapsed keeps advancing).
+            batch_job = await asyncio.wait_for(
+                genai_client.aio.batches.get(name=batch_job.name), timeout=120
+            )
         except Exception as e:
             print(f"  Warning: Failed to poll batch status: {e}")
             continue
@@ -1824,7 +1830,9 @@ async def _poll_batch_until_done(batch_job, poll_interval, timeout):
 
         if elapsed >= timeout:
             try:
-                await genai_client.aio.batches.cancel(name=batch_job.name)
+                await asyncio.wait_for(
+                    genai_client.aio.batches.cancel(name=batch_job.name), timeout=60
+                )
                 print(f"  Cancelled timed-out batch job {batch_job.name}")
             except Exception:
                 pass
@@ -1883,10 +1891,15 @@ async def _submit_and_poll_single_batch(requests, display_name="fomo-extraction"
     batch_job = None
     for attempt in range(3):
         try:
-            batch_job = await genai_client.aio.batches.create(
-                model=GEMINI_MODEL,
-                src=requests,
-                config={"display_name": display_name},
+            # Bound the submit: create uploads the request payload, so allow
+            # generous time (300s) but never hang forever on a stuck connection.
+            batch_job = await asyncio.wait_for(
+                genai_client.aio.batches.create(
+                    model=GEMINI_MODEL,
+                    src=requests,
+                    config={"display_name": display_name},
+                ),
+                timeout=300,
             )
             break
         except Exception as e:
@@ -2237,7 +2250,9 @@ async def _poll_and_process_resumed_batch(job_name, crid_list, extraction_queue,
     print(f"\n  Resuming in-flight batch: {job_name} ({len(crid_list)} item(s))")
 
     try:
-        batch_job = await genai_client.aio.batches.get(name=job_name)
+        batch_job = await asyncio.wait_for(
+            genai_client.aio.batches.get(name=job_name), timeout=120
+        )
     except Exception as e:
         print(f"  Warning: Could not retrieve batch job {job_name}: {e}")
         conn = db.create_connection()
