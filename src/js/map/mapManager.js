@@ -657,6 +657,38 @@ const MapManager = (() => {
      * features sorted by symbol-sort-key — not by proximity to the cursor.
      * This picks the feature whose geometry is closest to the event point.
      */
+    /**
+     * Programmatically highlight a location's marker (ring + label) by its
+     * locationKey, mirroring a mouse hover. Used by the desktop list view so
+     * hovering a list row highlights the corresponding marker. Shares the same
+     * `hoveredFeatureId` state as real mouse hover, so the two interleave
+     * cleanly. No-op if the location has no currently-rendered marker.
+     */
+    function highlightLocationByKey(locationKey) {
+        const map = state.mapInstance;
+        if (!map) return;
+        const iconFid = state.locationKeyToFeatureId.get(locationKey);
+        if (iconFid === undefined) return;
+        if (iconFid === state.hoveredFeatureId) return;
+        if (state.hoveredFeatureId !== null) {
+            map.setFeatureState({ source: 'markers', id: state.hoveredFeatureId }, { hover: false });
+        }
+        state.hoveredFeatureId = iconFid;
+        map.setFeatureState({ source: 'markers', id: iconFid }, { hover: true });
+        _updateHoverFilter();
+    }
+
+    /** Clear any hover highlight set via highlightLocationByKey or mouse hover. */
+    function clearHoverHighlight() {
+        const map = state.mapInstance;
+        if (!map) return;
+        if (state.hoveredFeatureId !== null) {
+            map.setFeatureState({ source: 'markers', id: state.hoveredFeatureId }, { hover: false });
+            state.hoveredFeatureId = null;
+            _updateHoverFilter();
+        }
+    }
+
     function _closestFeature(e) {
         const features = e.features;
         if (!features || features.length === 0) return null;
@@ -937,6 +969,8 @@ const MapManager = (() => {
         setupMarkerInteractions,
         openPopupAtCoordinates,
         registerPopupCallback,
-        updateThemeColors
+        updateThemeColors,
+        highlightLocationByKey,
+        clearHoverHighlight
     };
 })();

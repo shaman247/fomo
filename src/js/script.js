@@ -392,6 +392,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (logoContainer) logoContainer.classList.remove('initially-hidden');
             this.elements.filterContainer.classList.remove('initially-hidden');
             tagsWrapper.classList.remove('initially-hidden');
+            const listToggleBtn = document.getElementById('list-toggle-btn');
+            if (listToggleBtn) listToggleBtn.classList.remove('initially-hidden');
 
             // Remove tags-collapsed so panel is visible
             this.elements.filterPanel.classList.remove('tags-collapsed');
@@ -1240,6 +1242,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 hierarchyTagsSet: this.state.hierarchyTagsSet,
                 tagEmojiMap: this.state.tagEmojiMap,
                 getDebugMode: () => this.state.debugMode
+            });
+
+            ListView.init({
+                getMatchingEvents: () => this.state.currentlyMatchingEvents,
+                getLocationInfo: (key) => this.state.locationsByLatLng[key],
+                getLocationDistances: () => this.state.locationDistances,
+                getVisibleCenter: () => this.state.visibleCenter || ViewportManager.getVisibleCenter(),
+                getContainer: () => document.getElementById('results-container')
             });
         },
 

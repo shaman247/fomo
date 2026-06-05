@@ -262,6 +262,45 @@ const PopupContentBuilder = (() => {
     }
 
     // ========================================
+    // ACCENT TINTING
+    // ========================================
+
+    /**
+     * Tint an element's popup accents (tab indicator, event names) with a
+     * location's marker color — the ring color derived from its emoji.
+     * Links keep the global teal via --accent-color.
+     *   --popup-accent       : raw hue (used by the tab pill)
+     *   --popup-accent-muted : darker, desaturated — collapsed event titles
+     *   --popup-accent-vivid : brighter, more saturated — expanded titles
+     *
+     * Applied per-element so the list view (one card per location) can tint
+     * each card independently, while the popup tints its single container.
+     */
+    function applyAccentVars(el, locationInfo) {
+        if (!el || !locationInfo || typeof MapManager === 'undefined' || !MapManager.getMarkerColor) return;
+        const markerColor = MapManager.getMarkerColor(locationInfo);
+        if (!markerColor) return;
+        el.style.setProperty('--popup-accent', markerColor);
+        if (MapManager.toEventLabelColor) {
+            const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+            el.style.setProperty(
+                '--popup-accent-muted',
+                MapManager.toEventLabelColor(markerColor, {
+                    lightness: isLight ? 32 : 52,
+                    saturation: 22
+                })
+            );
+            el.style.setProperty(
+                '--popup-accent-vivid',
+                MapManager.toEventLabelColor(markerColor, {
+                    lightness: isLight ? 36 : 70,
+                    saturation: 75
+                })
+            );
+        }
+    }
+
+    // ========================================
     // EVENT DETAIL
     // ========================================
 
@@ -544,6 +583,95 @@ const PopupContentBuilder = (() => {
         return { sortedEvents, forcedEvent };
     }
 
+    /**
+     * Builds a single `.popup-event-card` with header (emoji + name) and a
+     * description preview. When `interactive` (default), it also gets the
+     * datetime line and a lazily-rendered detail section toggled on click —
+     * this is the location popup's behavior.
+     *
+     * The desktop list view passes `interactive: false` to get a permanently
+     * collapsed, non-expanding card (it wires its own hover/click handlers).
+     *
+     * @param {Object} event
+     * @param {Object} [opts]
+     * @param {boolean} [opts.shouldOpen]   Render detail eagerly and start expanded (interactive only)
+     * @param {boolean} [opts.interactive]  Add datetime + expand/collapse on click (default true)
+     */
+    function createEventCard(event, { shouldOpen = false, interactive = true } = {}) {
+        const card = document.createElement('div');
+        card.className = 'popup-event-card';
+
+        // Card header: emoji + name
+        const header = document.createElement('div');
+        header.className = 'popup-event-card-header';
+
+        if (event.emoji) {
+            const emojiSpan = document.createElement('span');
+            emojiSpan.className = 'popup-event-emoji';
+            emojiSpan.textContent = event.emoji;
+            header.appendChild(emojiSpan);
+        }
+
+        const info = document.createElement('div');
+        info.className = 'popup-event-card-info';
+
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'popup-event-card-name';
+        nameSpan.textContent = event.name || '';
+        info.appendChild(nameSpan);
+
+        header.appendChild(info);
+        card.appendChild(header);
+
+        if (interactive) {
+            card.appendChild(createEventDatetimeElement(event));
+        }
+
+        // Description preview (always visible when collapsed)
+        if (event.description) {
+            const preview = document.createElement('div');
+            preview.className = 'popup-event-card-preview';
+            preview.textContent = event.description;
+            card.appendChild(preview);
+        }
+
+        // Non-interactive cards (list view) stay permanently collapsed.
+        if (!interactive) {
+            return card;
+        }
+
+        // Detail container (hidden until expanded)
+        const detailContainer = document.createElement('div');
+        detailContainer.className = 'popup-event-card-detail';
+        detailContainer.hidden = true;
+        card.appendChild(detailContainer);
+
+        if (shouldOpen) {
+            detailContainer.appendChild(createEventDetail(event));
+            detailContainer.hidden = false;
+            card.dataset.expanded = 'true';
+        }
+
+        // Toggle expand/collapse on card click
+        card.addEventListener('click', (e) => {
+            if (e.target.closest('a, .tag-button, .tag-keyword')) return;
+            const isExpanded = card.dataset.expanded === 'true';
+            if (isExpanded) {
+                card.dataset.expanded = 'false';
+                detailContainer.hidden = true;
+            } else {
+                // Lazy-load detail on first expand
+                if (detailContainer.children.length === 0) {
+                    detailContainer.appendChild(createEventDetail(event));
+                }
+                card.dataset.expanded = 'true';
+                detailContainer.hidden = false;
+            }
+        });
+
+        return card;
+    }
+
     function createEventsList(eventsAtLocation, activeFilters, locationInfo, filterFunctions, forceDisplayEventId = null, selectedStartDate = null) {
         const eventsListWrapper = document.createElement('div');
         eventsListWrapper.className = 'popup-events-list';
@@ -573,9 +701,6 @@ const PopupContentBuilder = (() => {
         let isFirstEvent = true;
 
         eventsWithSortData.forEach(({ event, isMatchingTags }) => {
-            const card = document.createElement('div');
-            card.className = 'popup-event-card';
-
             let shouldOpen = false;
             if (forcedEvent) {
                 shouldOpen = (event.id === forcedEvent.id);
@@ -585,68 +710,7 @@ const PopupContentBuilder = (() => {
                 shouldOpen = expandAll || isFirstEvent;
             }
 
-            // Card header: emoji + name
-            const header = document.createElement('div');
-            header.className = 'popup-event-card-header';
-
-            if (event.emoji) {
-                const emojiSpan = document.createElement('span');
-                emojiSpan.className = 'popup-event-emoji';
-                emojiSpan.textContent = event.emoji;
-                header.appendChild(emojiSpan);
-            }
-
-            const info = document.createElement('div');
-            info.className = 'popup-event-card-info';
-
-            const nameSpan = document.createElement('span');
-            nameSpan.className = 'popup-event-card-name';
-            nameSpan.textContent = event.name || '';
-            info.appendChild(nameSpan);
-
-            header.appendChild(info);
-            card.appendChild(header);
-
-            card.appendChild(createEventDatetimeElement(event));
-
-            // Description preview (always visible when collapsed)
-            if (event.description) {
-                const preview = document.createElement('div');
-                preview.className = 'popup-event-card-preview';
-                preview.textContent = event.description;
-                card.appendChild(preview);
-            }
-
-            // Detail container (hidden until expanded)
-            const detailContainer = document.createElement('div');
-            detailContainer.className = 'popup-event-card-detail';
-            detailContainer.hidden = true;
-            card.appendChild(detailContainer);
-
-            if (shouldOpen) {
-                detailContainer.appendChild(createEventDetail(event));
-                detailContainer.hidden = false;
-                card.dataset.expanded = 'true';
-            }
-
-            // Toggle expand/collapse on card click
-            card.addEventListener('click', (e) => {
-                if (e.target.closest('a, .tag-button, .tag-keyword')) return;
-                const isExpanded = card.dataset.expanded === 'true';
-                if (isExpanded) {
-                    card.dataset.expanded = 'false';
-                    detailContainer.hidden = true;
-                } else {
-                    // Lazy-load detail on first expand
-                    if (detailContainer.children.length === 0) {
-                        detailContainer.appendChild(createEventDetail(event));
-                    }
-                    card.dataset.expanded = 'true';
-                    detailContainer.hidden = false;
-                }
-            });
-
-            eventsListWrapper.appendChild(card);
+            eventsListWrapper.appendChild(createEventCard(event, { shouldOpen }));
             isFirstEvent = false;
         });
 
@@ -661,35 +725,7 @@ const PopupContentBuilder = (() => {
         const popupContainer = document.createElement('div');
         popupContainer.className = 'maplibre-popup-content';
 
-        // Tint popup-specific accents (tab indicator, event names) with the
-        // location's marker color — the ring color derived from its emoji.
-        // Links keep the global teal via --accent-color.
-        //   --popup-accent       : raw hue (used by the tab pill)
-        //   --popup-accent-muted : darker, desaturated — collapsed event titles
-        //   --popup-accent-vivid : brighter, more saturated — expanded titles
-        if (locationInfo && typeof MapManager !== 'undefined' && MapManager.getMarkerColor) {
-            const markerColor = MapManager.getMarkerColor(locationInfo);
-            if (markerColor) {
-                popupContainer.style.setProperty('--popup-accent', markerColor);
-                if (MapManager.toEventLabelColor) {
-                    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
-                    popupContainer.style.setProperty(
-                        '--popup-accent-muted',
-                        MapManager.toEventLabelColor(markerColor, {
-                            lightness: isLight ? 32 : 52,
-                            saturation: 22
-                        })
-                    );
-                    popupContainer.style.setProperty(
-                        '--popup-accent-vivid',
-                        MapManager.toEventLabelColor(markerColor, {
-                            lightness: isLight ? 36 : 70,
-                            saturation: 75
-                        })
-                    );
-                }
-            }
-        }
+        applyAccentVars(popupContainer, locationInfo);
 
         // Compute location display tags (leaf tags only, filtered by geotags)
         const displayTags = locationInfo
@@ -876,7 +912,9 @@ const PopupContentBuilder = (() => {
         createLocationPopupContent,
         createPopupHeader,
         createEventsList,
+        createEventCard,
         createEventDetail,
+        applyAccentVars,
         sortEventsForLocation,
         getDefaultSectionName,
         getDefaultSectionAndEvents
