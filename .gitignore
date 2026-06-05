@@ -27,14 +27,21 @@
 # Claude Code and IDE
 .claude/*
 !.claude/commands/
+!.claude/rules/
 .claude/commands/*
 !.claude/commands/add-locations.md
 !.claude/commands/add-websites.md
+!.claude/commands/classify-event-types.md
 !.claude/commands/dedupe-events.md
 !.claude/commands/discover-venues.md
+!.claude/commands/fix-address-mismatches.md
+!.claude/commands/fix-recurring-spans.md
 !.claude/commands/fix-undated-events.md
 !.claude/commands/fix-unmapped-events.md
+!.claude/commands/hide-uninteresting-events.md
+!.claude/commands/optimize-crawls.md
 !.claude/commands/run-pipeline.md
+!.claude/commands/triage-pipeline-issues.md
 .vscode/
 CLAUDE.md
 
@@ -66,12 +73,21 @@ src/data/*
 # Scraper dumps (raw payloads, regenerable)
 /data/
 
-# Scripts directory — only the four canonical helpers are tracked
+# Scripts directory — allowlist the canonical helpers plus the scripts the
+# tracked /run-pipeline command (and its sub-commands) invoke.
 scripts/*
 !scripts/add_locations.php
 !scripts/add_websites.php
 !scripts/upload_public_html.py
 !scripts/geocode.php
+# /run-pipeline pipeline + cleanup scripts
+!scripts/due_tasks.py
+!scripts/find_review_candidates.py
+!scripts/find_duplicate_events.py
+!scripts/find_unmapped_events.py
+!scripts/fix_recurring_spans.py
+!scripts/audit_event_types.py
+!scripts/sync_format_tags.py
 
 # PHP config with database credentials
 src/api/config.php

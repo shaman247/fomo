@@ -1,0 +1,270 @@
+#!/usr/bin/env python3
+"""
+Surface events whose location mapping likely needs human review.
+
+Three issue classes:
+- NO_LOCATION: events.location_id IS NULL
+- GENERIC:    mapped to a neighborhood/borough placeholder (locations.generic_location=1)
+- MISMATCHED: mapped to a specific venue, but events.location_name does not match
+              the venue's name/address/alternate-names. Subset of these are real
+              mis-maps (AI extracted a specific venue but the matcher fell back to
+              the website's tied default); others are sublocation refs that the
+              reviewer can ignore.
+
+Re-uses pipeline/processor.py's _normalize_location_name so this script stays in
+sync with the pipeline matcher (apostrophe-strip, & + → and, diacritic strip,
+borough-suffix strip, etc.).
+
+Pass --suggest-fixes to additionally re-run get_location_id() against the current
+locations table and report events where the matcher would route somewhere different.
+
+Usage:
+    ./venv/bin/python scripts/find_unmapped_events.py --count
+    ./venv/bin/python scripts/find_unmapped_events.py --limit 50
+    ./venv/bin/python scripts/find_unmapped_events.py --issue MISMATCHED
+    ./venv/bin/python scripts/find_unmapped_events.py --website "NY Tech Week"
+    ./venv/bin/python scripts/find_unmapped_events.py --suggest-fixes --limit 100
+"""
+
+import argparse
+import sys
+from collections import Counter, defaultdict
+
+sys.path.insert(0, 'pipeline')
+from db import create_connection
+from processor import _normalize_location_name, build_locations_map, get_location_id
+
+
+# Location names that are correctly mapped via website-default fallback or are
+# generic enough that mismatch is expected. Lowercase comparison.
+SKIP_LOCATION_NAMES = {
+    # vague/virtual placeholders
+    'online', 'virtual', 'online event', 'virtual event', 'zoom', 'webex',
+    'online via zoom', 'livestream', 'live stream', 'tba', 'tbd', 'n/a',
+    'hybrid', 'in person', 'in-person', 'not specified', 'location not specified yet',
+    'no location provided', 'off campus', 'various', 'not provided',
+    'zoom/online', 'live on zoom', 'via webex platform', 'virtual/online workshop',
+    'off-site', 'main stage', 'open streets program',
+    'remote', 'google meet', 'google hangouts', 'microsoft teams', 'your phone',
+    'online streaming', 'online through zoom', 'online live', 'online streaming, new york',
+    'various locations', 'various sites', 'multiple locations', 'virtual/online events',
+    'secret brooklyn location', 'tba - open air', 'details tba.', 'please see the flyer',
+    # theater chain brand names (events correctly mapped to specific theaters)
+    'amc theatres', 'amc theater', 'amc theatre', 'regal cinemas', 'regal cinema',
+    # generic sublocation labels (room/area within mapped venue)
+    'the rooftop', 'full venue', 'poolside', 'main hall', 'main room',
+    'concert hall', 'screen 1', 'community board office - conference room',
+    # vague geo labels
+    'brooklyn, new york', 'midtown, new york', 'manhattan (exact location unspecified)',
+    'multiple venues', 'kids', 'offsite', 'no location', 'varies - see monthly newsletter',
+}
+
+# Street-intersection patterns: outdoor markets / waste drop-offs / flea markets
+# whose location_name names the street but whose mapping to a specific venue is
+# correct.
+SKIP_LOCATION_NAME_SUBSTRINGS = (' between ', ' btwn ')
+
+ISSUE_ORDER = ('NO_LOCATION', 'GENERIC', 'MISMATCHED')
+
+
+def load_data(cursor, website_filter=None):
+    """One pass through events + locations + alts + websites."""
+    where = "e.suppressed = 0 AND e.archived = 0"
+    params = []
+    if website_filter:
+        where += " AND w.name = %s"
+        params.append(website_filter)
+
+    cursor.execute(f"""
+        SELECT e.id, e.name, e.location_id, e.location_name, e.sublocation,
+               e.website_id, w.name AS website_name,
+               l.name AS venue_name, l.address AS venue_address,
+               l.generic_location AS venue_generic
+        FROM events e
+        LEFT JOIN locations l ON e.location_id = l.id
+        LEFT JOIN websites w ON e.website_id = w.id
+        WHERE {where}
+    """, params)
+    events = cursor.fetchall()
+
+    cursor.execute("""
+        SELECT location_id, alternate_name, website_id
+        FROM location_alternate_names
+    """)
+    alts_by_loc = defaultdict(list)
+    for row in cursor.fetchall():
+        alts_by_loc[row['location_id']].append((row['alternate_name'], row['website_id']))
+
+    return events, alts_by_loc
+
+
+def classify(event, alts_by_loc):
+    """Return one of NO_LOCATION / GENERIC / MISMATCHED / None."""
+    if event['location_id'] is None:
+        return 'NO_LOCATION'
+
+    if event['venue_generic']:
+        return 'GENERIC'
+
+    location_name = (event['location_name'] or '').strip()
+    if len(location_name) < 3:
+        return None
+
+    ln_lower = location_name.lower()
+    if ln_lower in SKIP_LOCATION_NAMES:
+        return None
+    if any(s in ln_lower for s in SKIP_LOCATION_NAME_SUBSTRINGS):
+        return None
+
+    n_loc = _normalize_location_name(location_name)
+    n_name = _normalize_location_name(event['venue_name'] or '')
+    n_addr = _normalize_location_name(event['venue_address'] or '')
+    if not n_loc or not n_name:
+        return None
+
+    # Mapping is consistent if normalized location_name and venue name/address
+    # are substrings of each other (in either direction).
+    if n_loc in n_name or n_name in n_loc:
+        return None
+    if n_loc in n_addr:
+        return None
+
+    # Check alt names (global + website-scoped to this event)
+    website_id = event['website_id']
+    for alt_name, alt_wid in alts_by_loc.get(event['location_id'], ()):
+        if alt_wid is not None and alt_wid != website_id:
+            continue
+        n_alt = _normalize_location_name(alt_name)
+        if not n_alt:
+            continue
+        if n_alt in n_loc or n_loc in n_alt:
+            return None
+
+    return 'MISMATCHED'
+
+
+def maybe_suggest_fix(event, locations_map, locations_by_id):
+    """Re-run the matcher against current data. Returns dict or None."""
+    result = get_location_id(
+        event['location_name'] or '',
+        event['sublocation'] or '',
+        event['website_name'] or '',
+        event['name'] or '',
+        locations_map,
+        website_id=event['website_id'],
+    )
+    if not result:
+        return None
+    suggested_id = result.get('id')
+    if suggested_id == event['location_id']:
+        return None
+    suggested = locations_by_id.get(suggested_id)
+    if not suggested:
+        return None
+    return {'id': suggested_id, 'name': suggested.get('name'),
+            'address': suggested.get('address')}
+
+
+def print_counts(events, alts_by_loc):
+    counts = Counter()
+    for e in events:
+        issue = classify(e, alts_by_loc)
+        if issue:
+            counts[issue] += 1
+
+    print(f"{'Issue':<14}{'Count':>8}")
+    print('─' * 22)
+    for issue in ISSUE_ORDER:
+        if counts[issue]:
+            print(f"{issue:<14}{counts[issue]:>8}")
+    print('─' * 22)
+    print(f"{'Total':<14}{sum(counts.values()):>8}")
+
+
+def print_candidates(events, alts_by_loc, *, issue_filter=None, limit=50, offset=0,
+                     suggest_fixes=False, locations_map=None, locations_by_id=None):
+    flagged = []
+    for e in events:
+        issue = classify(e, alts_by_loc)
+        if not issue:
+            continue
+        if issue_filter and issue != issue_filter:
+            continue
+        flagged.append((issue, e))
+
+    # Order: issue (NO_LOCATION → GENERIC → MISMATCHED) → website → id
+    issue_rank = {k: i for i, k in enumerate(ISSUE_ORDER)}
+    flagged.sort(key=lambda x: (issue_rank[x[0]], x[1]['website_name'] or '', x[1]['id']))
+
+    page = flagged[offset:offset + limit]
+    total = len(flagged)
+    print(f"=== Unmapped Candidates ({offset + 1}-{min(offset + len(page), total)} of {total}) ===\n")
+
+    for i, (issue, e) in enumerate(page, start=offset + 1):
+        venue = e['venue_name'] if e['location_id'] else '—'
+        venue_id = e['location_id'] or '—'
+        print(f"[{i}] {issue}  event #{e['id']}: {e['name']}")
+        print(f"    location_name: {e['location_name']!r}")
+        print(f"    mapped venue:  #{venue_id} {venue!r}" + (
+            f" @ {e['venue_address']}" if e['venue_address'] else ""))
+        if e['website_name']:
+            print(f"    website:       {e['website_name']!r}")
+        if suggest_fixes and locations_map:
+            fix = maybe_suggest_fix(e, locations_map, locations_by_id)
+            if fix:
+                print(f"    → matcher would now route to #{fix['id']} {fix['name']!r}"
+                      + (f" @ {fix['address']}" if fix['address'] else ""))
+        print()
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__,
+                                     formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument('--count', action='store_true', help='Just print issue counts')
+    parser.add_argument('--limit', type=int, default=50, help='Max candidates to print (default 50)')
+    parser.add_argument('--offset', type=int, default=0, help='Skip first N candidates (pagination)')
+    parser.add_argument('--issue', choices=ISSUE_ORDER,
+                        help='Only show events with this issue class')
+    parser.add_argument('--website', help='Only show events from this website (exact name)')
+    parser.add_argument('--suggest-fixes', action='store_true',
+                        help='Re-run get_location_id and report when the matcher would route differently')
+    args = parser.parse_args()
+
+    conn = create_connection()
+    if not conn:
+        sys.exit('Failed to connect to database')
+    cur = conn.cursor(dictionary=True)
+
+    try:
+        events, alts_by_loc = load_data(cur, website_filter=args.website)
+
+        if args.count:
+            print_counts(events, alts_by_loc)
+            return
+
+        locations_map = None
+        locations_by_id = None
+        if args.suggest_fixes:
+            # build_locations_map() uses tuple cursor under the hood
+            tuple_cur = conn.cursor()
+            locations_map = build_locations_map(tuple_cur)
+            tuple_cur.close()
+            cur.execute("SELECT id, name, address FROM locations")
+            locations_by_id = {r['id']: r for r in cur.fetchall()}
+
+        print_candidates(
+            events, alts_by_loc,
+            issue_filter=args.issue,
+            limit=args.limit,
+            offset=args.offset,
+            suggest_fixes=args.suggest_fixes,
+            locations_map=locations_map,
+            locations_by_id=locations_by_id,
+        )
+    finally:
+        cur.close()
+        conn.close()
+
+
+if __name__ == '__main__':
+    main()
