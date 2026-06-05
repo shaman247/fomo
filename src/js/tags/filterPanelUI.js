@@ -784,14 +784,38 @@ const FilterPanelUI = (() => {
 
         if (!state.resultsContainerDOM) return;
 
-        // Toggle panel height based on whether sections will be shown (desktop only)
-        if (!isMobileLayout()) {
-            const filterPanel = state.resultsContainerDOM.closest('#filter-panel');
-            if (filterPanel) {
-                const showSections = !!searchTerm || debugMode;
-                filterPanel.classList.toggle('sections-hidden', !showSections);
+        const filterPanel = !isMobileLayout()
+            ? state.resultsContainerDOM.closest('#filter-panel')
+            : null;
+
+        // Desktop, no search term: show the event list view in place of search
+        // sections. Keep the panel full-height when the list has content (so it
+        // can scroll); collapse it when there are no matching events.
+        if (filterPanel && !searchTerm && !debugMode && typeof ListView !== 'undefined') {
+            const showList = ListView.isVisible() && ListView.hasContent();
+            filterPanel.classList.toggle('sections-hidden', !showList);
+            if (showList) {
+                ListView.render();
+            } else {
+                state.resultsContainerDOM.innerHTML = '';
+                state.resultsContainerDOM.scrollTop = 0;
             }
+            // Mirror SectionRenderer's onAfterRender: keep the chip bar in sync.
+            const shouldAnimate = _chipBarAnimateNext;
+            _chipBarAnimateNext = false;
+            _renderChipBar(shouldAnimate);
+            return;
         }
+
+        // Toggle panel height based on whether sections will be shown (desktop only)
+        if (filterPanel) {
+            const showSections = !!searchTerm || debugMode;
+            filterPanel.classList.toggle('sections-hidden', !showSections);
+        }
+
+        // A search term (or debug mode) takes over the results container — tear
+        // down any list view that was showing.
+        if (typeof ListView !== 'undefined') ListView.teardown();
 
         if (!searchResults || searchResults.length === 0) {
             state.resultsContainerDOM.innerHTML = '';
@@ -1134,6 +1158,18 @@ const FilterPanelUI = (() => {
     // EXPORTS
     // ========================================
 
+    /**
+     * Flip the desktop event list view on/off and re-render the panel with the
+     * last search state. Returns the new visibility (true = list shown).
+     */
+    function toggleListView() {
+        if (typeof ListView === 'undefined') return false;
+        const nowVisible = !ListView.isVisible();
+        ListView.setVisible(nowVisible);
+        renderFilters(state.lastSearchResults || [], state.lastSearchTerm || '', state.debugMode);
+        return nowVisible;
+    }
+
     return {
         init,
         initOmniSearch,
@@ -1150,6 +1186,7 @@ const FilterPanelUI = (() => {
         updateAllTagVisuals: () => TagStateManager.updateAllTagVisuals(),
         render: renderFilters,
         renderChipBar: _renderChipBar,
+        toggleListView,
         clearSearch,
     };
 })();
