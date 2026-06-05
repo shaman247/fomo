@@ -184,7 +184,7 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
             batch_results = []
 
             try:
-                async with AsyncWebCrawler(config=browser_config) as web_crawler:
+                async with processor.managed_crawler(browser_config) as web_crawler:
                     # Worker pool pattern: maintain N concurrent crawlers at all times
                     queue = asyncio.Queue()
 
@@ -244,8 +244,9 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
                     finally:
                         watchdog_task.cancel()
             except Exception as e:
-                # A killed/wedged browser can make the context manager teardown
-                # raise — isolate it so remaining batches still run.
+                # managed_crawler bounds startup/teardown (and SIGKILLs a wedged
+                # browser); this catches a re-raised startup failure so remaining
+                # batches still run.
                 print(f"  Crawl batch error ({type(e).__name__}: {e}); continuing with remaining batches.")
 
             crawl_results.extend(batch_results)

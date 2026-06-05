@@ -79,6 +79,7 @@ CREATE TABLE IF NOT EXISTS websites (
     scroll_delay DECIMAL(3,2) DEFAULT NULL COMMENT 'Seconds to pause between scroll steps (default: 0.2)',
     crawl_timeout INT UNSIGNED DEFAULT NULL COMMENT 'Timeout in seconds for entire crawl operation (default: 120)',
     crawl_frequency_locked BOOLEAN DEFAULT FALSE COMMENT 'If true, auto-frequency adjustment is disabled',
+    strict_name_match TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'If true, merger only fuses a crawl_event into an existing event on an EXACT name match, or a fuzzy match confirmed by a shared occurrence slot (prevents different recurring programs at a shared generic venue from collapsing; e.g. daily.nyc run clubs)',
 
     INDEX idx_name (name),
     INDEX idx_last_crawled (last_crawled_at),

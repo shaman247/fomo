@@ -7,12 +7,59 @@ Uses Crawl4AI to crawl event websites and store content in the database.
 import asyncio
 import re
 from datetime import datetime, timedelta
+from urllib.parse import urlparse
 from crawl4ai import CacheMode
 import db
 from constants import MAX_PAGES_DEFAULT
 
 # Default timeout for crawl operations (in seconds)
 DEFAULT_CRAWL_TIMEOUT = 180
+
+# Meetup group "/events/" listing pages render every event as a single <a> card with the
+# event-detail URL at the END of the link. When crawl4ai linearizes the page to markdown,
+# each card's URL lands immediately BEFORE the *next* card's title, so the AI extractor
+# mis-assigns a card's URL to the following event (e.g. the "40's & Over Mixer" detail URL
+# bled onto the "Mix & Mingle Meetup" event at a different venue). Inject each card's own
+# URL as a leading text node and neutralize the trailing href so every event is
+# unambiguously paired with its own link. Class-agnostic: keyed only on href shape, so it
+# survives Meetup's frequent markup churn and applies to all ~60 Meetup group sources.
+MEETUP_EVENT_URL_DISAMBIGUATION_JS = """
+(function(){
+  var SKIP = {calendar:1, past:1, drafts:1, ical:1, rsvps:1, series:1, photos:1};
+  var anchors = document.querySelectorAll('a[href*="/events/"]');
+  for (var i = 0; i < anchors.length; i++) {
+    var a = anchors[i];
+    try {
+      var u = new URL(a.href);
+      var m = u.pathname.match(/^\\/[^/]+\\/events\\/([A-Za-z0-9]+)\\/?$/);
+      if (!m || SKIP[m[1].toLowerCase()]) continue;
+      var marker = document.createElement('div');
+      marker.textContent = 'EVENT DETAIL URL: ' + u.origin + u.pathname;
+      a.parentNode.insertBefore(marker, a);
+      a.setAttribute('href', '#');
+    } catch (e) {}
+  }
+})();
+""".strip()
+
+
+def _host_specific_js(url):
+    """Return extra in-page js to run for known problem hosts, or '' if none.
+
+    Currently only Meetup group listing pages (see MEETUP_EVENT_URL_DISAMBIGUATION_JS).
+    """
+    try:
+        host = (urlparse(url).hostname or '').lower()
+    except Exception:
+        return ''
+    if (host == 'meetup.com' or host.endswith('.meetup.com')) and '/events/' in url:
+        return MEETUP_EVENT_URL_DISAMBIGUATION_JS
+    return ''
+
+
+def _combine_js(*parts):
+    """Concatenate js snippets into one script, dropping empties."""
+    return "\n".join(p for p in parts if p)
 
 # Minimum content size (in bytes) to consider a crawl successful.
 # Crawls with less content than this are likely failed (e.g., JS-rendered
@@ -237,14 +284,20 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
                     url = resolve_url_templates(url_data)
                     url_js_code = None
 
-                # Use per-URL js_code if set, otherwise use website-level config
-                if url_js_code:
+                # Append host-specific in-page js (e.g. Meetup listing URL disambiguation)
+                # to whatever js_code is already configured for this URL/website.
+                host_js = _host_specific_js(url)
+                effective_js = _combine_js(url_js_code or js_code, host_js)
+
+                # Use a per-URL config when this URL needs js_code different from the
+                # shared website-level config (custom per-URL js or a host-specific add-on).
+                if effective_js != js_code:
                     url_config = CrawlerRunConfig(
                         word_count_threshold=5,
                         excluded_tags=[],
                         process_iframes=True,
                         cache_mode=CacheMode.BYPASS,
-                        js_code=url_js_code,
+                        js_code=effective_js,
                         remove_overlay_elements=remove_overlays,
                         delay_before_return_html=delay_seconds,
                         scan_full_page=scan_full_page,
