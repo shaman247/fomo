@@ -1284,9 +1284,14 @@ async def prepare_extraction(cursor, crawl_result_id, website_name, notes="",
         "no upcoming events",
         "no events scheduled",
     ]
+    # Guard against false positives in Squarespace ?format=json payloads, which
+    # embed the i18n string "There are no upcoming events at this time." even when
+    # the upcoming[] array is populated. A non-empty "upcoming":[{ array means there
+    # ARE events, so don't trust the no-events shortcut.
+    has_populated_json_events = '"upcoming":[{' in page_content
     content_lower = page_content[:15000].lower()  # Only check first 15K chars
     for pattern in no_events_patterns:
-        if pattern in content_lower:
+        if pattern in content_lower and not has_populated_json_events:
             prep.resolved_result = '{"events": []}'
             print(f"    - Page explicitly states no events ('{pattern}'), skipping extraction")
             return prep
