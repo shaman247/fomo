@@ -7,54 +7,13 @@ Uses Crawl4AI to crawl event websites and store content in the database.
 import asyncio
 import re
 from datetime import datetime, timedelta
-from urllib.parse import urlparse
 from crawl4ai import CacheMode
 import db
-from constants import MAX_PAGES_DEFAULT
+import site_profiles
+from constants import MAX_PAGES_DEFAULT, get_user_agent
 
 # Default timeout for crawl operations (in seconds)
 DEFAULT_CRAWL_TIMEOUT = 180
-
-# Meetup group "/events/" listing pages render every event as a single <a> card with the
-# event-detail URL at the END of the link. When crawl4ai linearizes the page to markdown,
-# each card's URL lands immediately BEFORE the *next* card's title, so the AI extractor
-# mis-assigns a card's URL to the following event (e.g. the "40's & Over Mixer" detail URL
-# bled onto the "Mix & Mingle Meetup" event at a different venue). Inject each card's own
-# URL as a leading text node and neutralize the trailing href so every event is
-# unambiguously paired with its own link. Class-agnostic: keyed only on href shape, so it
-# survives Meetup's frequent markup churn and applies to all ~60 Meetup group sources.
-MEETUP_EVENT_URL_DISAMBIGUATION_JS = """
-(function(){
-  var SKIP = {calendar:1, past:1, drafts:1, ical:1, rsvps:1, series:1, photos:1};
-  var anchors = document.querySelectorAll('a[href*="/events/"]');
-  for (var i = 0; i < anchors.length; i++) {
-    var a = anchors[i];
-    try {
-      var u = new URL(a.href);
-      var m = u.pathname.match(/^\\/[^/]+\\/events\\/([A-Za-z0-9]+)\\/?$/);
-      if (!m || SKIP[m[1].toLowerCase()]) continue;
-      var marker = document.createElement('div');
-      marker.textContent = 'EVENT DETAIL URL: ' + u.origin + u.pathname;
-      a.parentNode.insertBefore(marker, a);
-      a.setAttribute('href', '#');
-    } catch (e) {}
-  }
-})();
-""".strip()
-
-
-def _host_specific_js(url):
-    """Return extra in-page js to run for known problem hosts, or '' if none.
-
-    Currently only Meetup group listing pages (see MEETUP_EVENT_URL_DISAMBIGUATION_JS).
-    """
-    try:
-        host = (urlparse(url).hostname or '').lower()
-    except Exception:
-        return ''
-    if (host == 'meetup.com' or host.endswith('.meetup.com')) and '/events/' in url:
-        return MEETUP_EVENT_URL_DISAMBIGUATION_JS
-    return ''
 
 
 def _combine_js(*parts):
@@ -78,20 +37,11 @@ except ImportError:
     raise
 
 
-# URL prefixes the regular crawl4ai-based crawler should not touch. Instagram is
-# Cloudflare-gated and gets its own ingest path via /picnob-scrape; we keep the
-# IG profile URLs as ordinary website_urls rows so the rest of the pipeline
-# treats IG sources identically to any other website.
-_INSTAGRAM_URL_RE = re.compile(r'^https?://(www\.)?instagram\.com/', re.IGNORECASE)
-
-
+# Back-compat shim: Instagram URLs are skipped by the crawler (Cloudflare-gated;
+# ingested via /picnob-scrape instead). The skip decision now lives in the
+# site_profiles registry — Instagram is currently the only SKIP profile.
 def is_instagram_url(url):
-    return bool(url) and bool(_INSTAGRAM_URL_RE.match(url))
-
-
-# ra.co URLs short-circuit to the GraphQL API (DataDome blocks HTML scraping
-# but /graphql is reachable with a normal Chrome UA). See pipeline/ra_graphql.py.
-from ra_graphql import is_ra_url, fetch_and_build_markdown as _ra_fetch_and_build_markdown
+    return site_profiles.is_skip_url(url)
 
 
 _DATE_OFFSET_RE = re.compile(r'\{\{date([+-]\d+)?\}\}')
@@ -159,37 +109,40 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
         print(f"  Skipping {name}: no URLs configured")
         return None
 
-    # Filter out Instagram URLs — those are ingested via /picnob-scrape (the
-    # crawl4ai crawler can't bypass Cloudflare on instagram.com or its mirrors).
     def _url_of(u):
         return u['url'] if isinstance(u, dict) else u
-    non_ig_urls = [u for u in urls if not is_instagram_url(_url_of(u))]
-    if not non_ig_urls:
-        print(f"  Skipping {name}: only Instagram URLs (use /picnob-scrape)")
-        return None
-    urls = non_ig_urls
 
-    # ra.co URLs short-circuit to the GraphQL API. DataDome blocks crawl4ai on
-    # the HTML pages, but /graphql is reachable. Currently only the NYC area
-    # listing (w388) is supported; per-venue ra.co/clubs/<id> URLs return
-    # empty markdown until the GraphQL handler learns to query by venue.
-    if all(is_ra_url(_url_of(u)) for u in urls):
+    # Drop URLs handled out-of-band (e.g. Instagram, ingested via /picnob-scrape —
+    # crawl4ai can't bypass Cloudflare on instagram.com). See site_profiles.
+    crawlable = [u for u in urls if not site_profiles.is_skip_url(_url_of(u))]
+    if not crawlable:
+        reason = site_profiles.all_skip([_url_of(u) for u in urls]) or "all URLs skipped"
+        print(f"  Skipping {name}: {reason}")
+        return None
+    urls = crawlable
+
+    # Some platforms short-circuit crawl4ai entirely and fetch via a custom Python
+    # path (e.g. ra.co: DataDome blocks the HTML pages, but /graphql is reachable).
+    # If every URL resolves to one such fetcher, run it instead of the browser crawl.
+    custom_profile = site_profiles.custom_fetch_profile([_url_of(u) for u in urls])
+    if custom_profile is not None:
+        label = custom_profile.display_label
         crawl_result_id = db.create_crawl_result(
             cursor, connection, crawl_run_id, website['id'], create_safe_filename(name, '.md')
         )
         try:
-            md, n_events = _ra_fetch_and_build_markdown()
+            md, n_events = custom_profile.fetcher()
         except Exception as exc:
-            print(f"  ! {name}: ra.co GraphQL fetch failed: {exc}")
-            db.update_crawl_result_failed(cursor, connection, crawl_result_id, f"ra.co GraphQL: {exc}")
+            print(f"  ! {name}: {label} fetch failed: {exc}")
+            db.update_crawl_result_failed(cursor, connection, crawl_result_id, f"{label}: {exc}")
             return None
         if not md:
-            print(f"  ! {name}: ra.co GraphQL returned 0 events")
-            db.update_crawl_result_failed(cursor, connection, crawl_result_id, "ra.co GraphQL returned 0 events")
+            print(f"  ! {name}: {label} returned 0 events")
+            db.update_crawl_result_failed(cursor, connection, crawl_result_id, f"{label} returned 0 events")
             return None
         db.update_crawl_result_crawled(cursor, connection, crawl_result_id, md)
         db.update_website_last_crawled(cursor, connection, website['id'])
-        print(f"  + {name}: ra.co GraphQL → {n_events} events, {len(md)} bytes")
+        print(f"  + {name}: {label} → {n_events} events, {len(md)} bytes")
         return crawl_result_id
 
     # Create safe filename from website name
@@ -284,9 +237,10 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
                     url = resolve_url_templates(url_data)
                     url_js_code = None
 
-                # Append host-specific in-page js (e.g. Meetup listing URL disambiguation)
-                # to whatever js_code is already configured for this URL/website.
-                host_js = _host_specific_js(url)
+                # Append platform-specific in-page js (e.g. Meetup listing URL
+                # disambiguation) to whatever js_code is already configured for this
+                # URL/website. See site_profiles.
+                host_js = site_profiles.inject_js_for(url)
                 effective_js = _combine_js(url_js_code or js_code, host_js)
 
                 # Use a per-URL config when this URL needs js_code different from the
@@ -418,8 +372,8 @@ def get_browser_config(javascript_enabled=True, text_mode=True, light_mode=True,
     """
     # Crawl4AI's default UA is Chrome/116 on Linux, which creates a UA/TLS fingerprint
     # mismatch that some CDNs (e.g. Fastly) detect and reject with 403. Always set a
-    # realistic UA matching the actual browser to avoid this.
-    DEFAULT_USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36'
+    # realistic UA matching the actual browser to avoid this (see constants.get_user_agent).
+    DEFAULT_USER_AGENT = get_user_agent()
 
     if use_stealth:
         # Stealth requires a real (headed) browser instance.

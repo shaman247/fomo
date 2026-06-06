@@ -766,13 +766,14 @@ def _load_generic_location_names():
     detail-crawled to find the specific venue.
     """
     import json, os
+    import city_config
     tags_path = os.path.join(os.path.dirname(__file__), '..', 'src', 'data', 'tags.json')
     try:
         with open(tags_path) as f:
             data = json.load(f)
         names = {name.lower() for name in data.get('geotags', [])}
-        # Add common city-level names not in geotags
-        names.update(['new york', 'nyc', 'new york city', 'ny'])
+        # Add common city-level names not in geotags (from city config)
+        names.update(city_config.generic_location_names())
         return names
     except (FileNotFoundError, json.JSONDecodeError):
         return set()

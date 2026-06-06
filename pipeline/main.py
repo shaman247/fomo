@@ -45,6 +45,7 @@ import merger
 import exporter
 import uploader
 import frequency_analyzer
+import dblock
 
 # Number of concurrent workers for crawling, extraction, and detail crawling
 NUM_WORKERS = 10
@@ -438,6 +439,22 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
 
         # Mark crawl run as completed
         db.complete_crawl_run(cursor, connection, crawl_run_id)
+
+        # Serialize the mutate-and-publish tail (merge → export → upload → freq) so a
+        # concurrent session can't write events / publish at the same time. The lock is
+        # MySQL-connection-scoped, so the `finally: connection.close()` below releases it
+        # on every exit path (success, error, abort). See pipeline/dblock.py.
+        _lock_cur = connection.cursor()
+        _lock_cur.execute("SELECT GET_LOCK(%s, %s)", (dblock.LOCK_NAME, dblock.DEFAULT_TIMEOUT))
+        if (_lock_cur.fetchone() or [0])[0] != 1:
+            holder = dblock.acquired_by(connection)
+            print(f"\n✗ Could not acquire DB write lock (held by {holder}). Another session "
+                  f"is publishing — aborting before merge to avoid a write conflict.\n")
+            return False
+        try:
+            dblock._set_holder(connection, dblock.LOCK_NAME, "run_pipeline")
+        except Exception:
+            pass
 
         # STEP 6: Merge crawl_events into final events table and archive outdated events
         step("STEP 6: Merging Crawl Events and Archiving Outdated Events")

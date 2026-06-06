@@ -13,11 +13,19 @@
 !/package-lock.json
 # Tracked top-level directories
 !/.claude/
+!/config/
 !/database/
 !/mobile/
 !/pipeline/
 !/scripts/
 !/src/
+
+# City/region config (config/<FOMO_CITY>.yaml) is committed — see config/nyc.yaml.
+
+# Source plugins — auto-discovered; commit loader + examples, ignore real plugins
+pipeline/sources/*.py
+!pipeline/sources/__init__.py
+!pipeline/sources/*.example.py
 
 # Environment variables
 .env
@@ -88,6 +96,8 @@ scripts/*
 !scripts/fix_recurring_spans.py
 !scripts/audit_event_types.py
 !scripts/sync_format_tags.py
+# Concurrent-session worktree helper (see CLAUDE.md → Concurrent Sessions)
+!scripts/new-worktree.sh
 
 # PHP config with database credentials
 src/api/config.php
@@ -209,3 +219,6 @@ mobile/android/**/lint-results*
 
 # Android profiling
 *.hprof
+
+# Per-worktree scratch (see scripts/new-worktree.sh)
+.scratch/

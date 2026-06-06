@@ -116,30 +116,34 @@ For each reviewed pair you must do exactly ONE of these:
 
 Every pair must be one or the other. Don't silently skip pairs.
 
+Wrap the whole apply batch in the cross-session **write lock** (`pipeline/dblock.py`) so a concurrent session can't mutate the same tables at once — this exact workflow has collided with a parallel dedupe before. See CLAUDE.md → Concurrent Sessions.
+
 ```python
 import sys; sys.path.insert(0, 'pipeline')
 sys.path.insert(0, 'scripts')
 from db import create_connection
+from dblock import write_lock
 from find_duplicate_events import apply_field_overrides, merge_pair, record_dismissal
 conn = create_connection()
 cur = conn.cursor()
 
-# Confirmed duplicate — apply chosen field values then merge collections + suppress:
-apply_field_overrides(cur, <keep_id>,
-    name='<chosen name or omit>',
-    description='<chosen description or omit>',
-    emoji='<chosen emoji or omit>',
-    sublocation='<chosen sublocation or omit>',
-)
-merge_pair(cur, <keep_id>, <delete_id>)
+with write_lock(conn):   # blocks until no other session is writing; raises after 600s
+    # Confirmed duplicate — apply chosen field values then merge collections + suppress:
+    apply_field_overrides(cur, <keep_id>,
+        name='<chosen name or omit>',
+        description='<chosen description or omit>',
+        emoji='<chosen emoji or omit>',
+        sublocation='<chosen sublocation or omit>',
+    )
+    merge_pair(cur, <keep_id>, <delete_id>)
 
-# NOT a duplicate — record dismissal with a short reason
-# (the reason is stored alongside the pair so future maintainers know why):
-record_dismissal(cur, <id1>, <id2>, "concise reason — e.g. 'multi-room venue: different programs'")
+    # NOT a duplicate — record dismissal with a short reason
+    # (the reason is stored alongside the pair so future maintainers know why):
+    record_dismissal(cur, <id1>, <id2>, "concise reason — e.g. 'multi-room venue: different programs'")
 
-# ...repeat for each pair...
+    # ...repeat for each pair...
 
-conn.commit()
+    conn.commit()
 conn.close()
 ```
 

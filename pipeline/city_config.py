@@ -1,0 +1,113 @@
+"""
+City/region configuration loader.
+
+Engine code is city-agnostic; all city-specific strings live in one committed
+YAML file under config/. This repo ships config/nyc.yaml (the complete fomo.nyc
+config) as the worked example. To run a different city, either edit that file in
+place or add config/<city>.yaml and set FOMO_CITY=<city>.
+
+The active file is config/<FOMO_CITY>.yaml, defaulting to config/nyc.yaml.
+
+Bare-importable (`import city_config`) per the sys.path-not-package convention
+used across pipeline/ (see CLAUDE.md).
+"""
+import functools
+import os
+
+import yaml
+
+_DIR = os.path.dirname(__file__)
+
+
+def _config_path() -> str:
+    city = os.environ.get("FOMO_CITY", "nyc")
+    return os.path.join(_DIR, "..", "config", f"{city}.yaml")
+
+
+@functools.lru_cache(maxsize=1)
+def get_config() -> dict:
+    """Load and cache the active city config (config/<FOMO_CITY>.yaml)."""
+    path = _config_path()
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            cfg = yaml.safe_load(f) or {}
+    except FileNotFoundError:
+        raise FileNotFoundError(
+            f"City config not found: {os.path.abspath(path)}. "
+            f"Create it (copy config/nyc.yaml) or set FOMO_CITY to an existing config."
+        )
+    cfg["_source_path"] = path
+    return cfg
+
+
+def reset_cache():
+    """Clear the cached config (test/verification hook, or after changing FOMO_CITY)."""
+    get_config.cache_clear()
+
+
+# --- Convenience accessors. Each has a safe default so a partial config
+# --- (missing optional fields) never throws. ---
+
+def city_name() -> str:
+    return get_config().get("city_name", "the city")
+
+
+def city_short() -> str:
+    return get_config().get("city_short", city_name())
+
+
+def metro_name() -> str:
+    return get_config().get("metro_name", city_name())
+
+
+def _extraction() -> dict:
+    return get_config().get("extraction") or {}
+
+
+def extraction_intro() -> str:
+    # "We are assembling a database of upcoming events in <metro>."
+    return _extraction().get(
+        "intro", f"We are assembling a database of upcoming events in {metro_name()}.")
+
+
+def extraction_page_descriptor() -> str:
+    # The word before "events page content" in the chunk prompt.
+    return _extraction().get("page_descriptor", "")
+
+
+def extraction_tag_avoidance() -> str:
+    # "Avoid location-specific or <city>-redundant tags."
+    return _extraction().get("tag_avoidance", "Avoid location-specific or redundant tags.")
+
+
+def extraction_region_rule() -> str:
+    # The metro-geography rule bullet. Empty => no geographic restriction stated.
+    return _extraction().get("region_rule", "")
+
+
+def generic_location_names() -> list:
+    return [s.lower() for s in (get_config().get("generic_location_names") or [])]
+
+
+def _processor() -> dict:
+    return get_config().get("processor") or {}
+
+
+def state_suffixes() -> list:
+    return [s.lower() for s in (_processor().get("state_suffixes") or [])]
+
+
+def city_area_tokens() -> list:
+    return [s.lower() for s in (_processor().get("city_area_tokens") or [])]
+
+
+def borough_tokens() -> list:
+    return [s.lower() for s in (_processor().get("borough_tokens") or [])]
+
+
+def region_tag_token() -> str:
+    return _processor().get("region_tag_token", "")
+
+
+def non_region_place_patterns() -> list:
+    return list((get_config().get("review") or {}).get("non_region_places") or [])

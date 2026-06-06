@@ -18,41 +18,13 @@ import sys
 
 sys.path.insert(0, 'pipeline')
 from db import create_connection
+import city_config
 
-# Places outside the NYC metro region that, when they appear in an event's
+# Places outside the metro region that, when they appear in an event's
 # `location_name`, strongly suggest the event is not local (e.g. cultural tours
-# abroad, off-region webinars whose mapped venue is the website's NYC default).
-# Word-boundary matched. Omits names that overlap NYC venues/streets (Washington,
-# Phoenix, Boston, Vermont, Georgia, Rhode Island).
-NON_NYC_PLACES = [
-    # Foreign countries
-    "Morocco", "Egypt", "Tunisia", "Ghana", "Kenya", "Tanzania", "Ethiopia",
-    "South Africa", "Nigeria", "Senegal",
-    "India", "Japan", "China", "Korea", "Vietnam", "Thailand", "Cambodia",
-    "Indonesia", "Philippines", "Sri Lanka", "Nepal", "Tibet",
-    "Israel", "Palestine", "Jordan", "Lebanon", "Turkey", "Iran",
-    "Spain", "France", "Italy", "Greece", "Portugal", "Ireland", "Scotland",
-    "England", "Wales", "Germany", "Netherlands", "Belgium", "Switzerland",
-    "Austria", "Poland", "Hungary", "Norway", "Sweden", "Denmark", "Finland",
-    "Iceland", "Russia",
-    "Mexico", "Cuba", "Peru", "Brazil", "Argentina", "Chile", "Colombia",
-    "Ecuador", "Guatemala", "Costa Rica",
-    "Australia", "New Zealand", "Canada",
-    # US states (excludes NY/NJ/CT/PA — NYC metro reaches into PA)
-    "California", "Texas", "Florida", "Illinois", "Ohio", "Michigan",
-    "Virginia", "Arizona", "Massachusetts", "Maryland", "Colorado",
-    "Minnesota", "Wisconsin", "Indiana", "Tennessee", "Missouri", "Louisiana",
-    "Oklahoma", "Oregon", "Kentucky", "Iowa", "Nevada", "Kansas", "Utah",
-    "New Mexico", "Nebraska", "Idaho", "Hawaii", "Maine", "Montana",
-    "Delaware", "Alaska", "Wyoming", "West Virginia",
-    # Major non-NYC cities
-    "Los Angeles", "San Francisco", "Chicago", "Philadelphia", "Washington DC",
-    "Miami", "Atlanta", "Seattle", "Portland", "Denver", "Las Vegas",
-    "New Orleans", "Houston", "Dallas", "Detroit", "Minneapolis",
-    "San Diego", "Austin", "Nashville",
-    # Vague multi-location markers — usually tours or off-region series
-    "Various locations", "Various cities", "Multiple cities", "Multiple locations",
-]
+# abroad, off-region webinars whose mapped venue is the website's default).
+# Word-boundary matched. Loaded from the city config (review.non_region_places).
+NON_NYC_PLACES = city_config.non_region_place_patterns()
 _NON_NYC_REGEXP = "[[:<:]](" + "|".join(NON_NYC_PLACES) + ")[[:>:]]"
 
 

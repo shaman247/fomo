@@ -18,6 +18,8 @@ import json
 from contextlib import asynccontextmanager
 import os
 import re
+
+import city_config
 import subprocess
 import unicodedata
 from datetime import datetime, timedelta
@@ -155,7 +157,9 @@ def create_short_name(name):
         short_name = re.sub(r'\s+with\s+.*$', '', short_name, flags=re.IGNORECASE)
         short_name = re.sub(r'\s+at\s+.*$', '', short_name, flags=re.IGNORECASE)
         short_name = re.sub(r'\s*@.*$', '', short_name)
-        short_name = re.sub(r'\s+in\s+NYC\s*[-–].*$', '', short_name)
+        _region_tok = city_config.region_tag_token()
+        if _region_tok:
+            short_name = re.sub(rf'\s+in\s+{re.escape(_region_tok)}\s*[-–].*$', '', short_name)
 
     # Remove date patterns
     short_name = re.sub(r'\s*[-–]\s*(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday),\s+.*$', '', short_name)
@@ -310,9 +314,12 @@ def process_tags(row_dict, tag_rules, extra_tags=None, ancestor_map=None, root_t
         final_tag = re.sub(r'(\d+)(St|Nd|Rd|Th)\b', lambda m: m.group(1) + m.group(2).lower(), final_tag)
         final_tag = re.sub(r'\b([A-Z])&([a-z])\b', lambda m: m.group(1) + '&' + m.group(2).upper(), final_tag)
 
-        # Remove NYC prefix/suffix
-        final_tag = re.sub(r'^NYC\s+', '', final_tag, flags=re.IGNORECASE)
-        final_tag = re.sub(r'\s+NYC$', '', final_tag, flags=re.IGNORECASE)
+        # Remove region prefix/suffix (e.g. "NYC Comedy" -> "Comedy")
+        _region_tok = city_config.region_tag_token()
+        if _region_tok:
+            _rt = re.escape(_region_tok)
+            final_tag = re.sub(rf'^{_rt}\s+', '', final_tag, flags=re.IGNORECASE)
+            final_tag = re.sub(rf'\s+{_rt}$', '', final_tag, flags=re.IGNORECASE)
 
         final_tag_lookup = final_tag.lower().replace(" ", "")
         if final_tag_lookup not in exclude_list and final_tag_lookup not in seen_tags:
@@ -893,7 +900,7 @@ def _normalize_location_name(name):
     original_lower = name.lower()
     has_dash_before_borough = any(
         f'- {b}' in original_lower or f'_{b}' in original_lower
-        for b in ['queens', 'bronx', 'brooklyn', 'manhattan', 'staten island']
+        for b in city_config.borough_tokens()
     )
 
     normalized = re.sub(r'[^\w\s]', '', original_lower)
@@ -905,7 +912,7 @@ def _normalize_location_name(name):
         normalized = normalized[4:]
 
     # Strip trailing state abbreviations/names (e.g., "Brooklyn, NY" -> "brooklyn")
-    state_suffixes = [' ny', ' nj', ' ct', ' new york', ' new jersey', ' connecticut']
+    state_suffixes = city_config.state_suffixes()
     for ss in state_suffixes:
         if normalized.endswith(ss) and len(normalized) > len(ss) + 1:
             stripped = normalized[:-len(ss)].strip()
@@ -915,8 +922,7 @@ def _normalize_location_name(name):
             normalized = stripped
             break
 
-    suffixes = ['nyc', 'new york', 'brooklyn', 'manhattan', 'queens', 'bronx', 'staten island',
-                'the bronx', 'long island']
+    suffixes = city_config.city_area_tokens()
     if normalized in suffixes:
         return ""
 

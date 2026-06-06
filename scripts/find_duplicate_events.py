@@ -339,12 +339,15 @@ def main():
         print(f"IDs: {sorted(to_suppress)}")
 
         if args.suppress:
+            # Serialize against other sessions' writes (see pipeline/dblock.py).
+            from dblock import write_lock
             placeholders = ','.join(['%s'] * len(to_suppress))
-            cursor.execute(
-                f'UPDATE events SET suppressed = 1 WHERE id IN ({placeholders})',
-                tuple(to_suppress)
-            )
-            conn.commit()
+            with write_lock(conn, label="find_duplicate_events --suppress"):
+                cursor.execute(
+                    f'UPDATE events SET suppressed = 1 WHERE id IN ({placeholders})',
+                    tuple(to_suppress)
+                )
+                conn.commit()
             print(f"\nSuppressed {cursor.rowcount} events.")
         else:
             print("\nRun with --suppress to auto-suppress exact-name duplicates.")

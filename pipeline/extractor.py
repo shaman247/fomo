@@ -23,7 +23,10 @@ from dotenv import load_dotenv
 from PIL import Image
 from pydantic import BaseModel, Field, field_validator
 
+import city_config
+import constants
 import db
+import site_profiles
 from processor import _standardize_time, extract_url_from_content
 
 
@@ -77,7 +80,7 @@ try:
         InlinedRequest, InlinedResponse, GenerateContentConfig, JobState
     )
     GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
-    GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash-preview-05-20")
+    GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.1-flash-lite")
     GEMINI_TIMEOUT = int(os.environ.get("GEMINI_TIMEOUT", "120"))
     if GEMINI_API_KEY:
         genai_client = genai.Client(api_key=GEMINI_API_KEY)
@@ -90,38 +93,6 @@ except ImportError:
     GEMINI_API_KEY = None
     GEMINI_MODEL = None
     GEMINI_TIMEOUT = 120
-
-
-# Default extraction guidance for Instagram-mirror crawls (see /picnob-scrape).
-# Every IG website in the DB used to carry an identical copy of this string in
-# `websites.notes`; it now lives here so the extractor stamps it automatically
-# whenever the crawl URL is on instagram.com. Per-site `notes` still flow
-# through, appended after the default for site-specific overrides.
-INSTAGRAM_NOTES_DEFAULT = (
-    "Instagram post extraction. The crawled markdown bundle contains one section per IG post; "
-    "each section has BOTH a flyer image (the ![] markdown) AND a caption (the body text). "
-    "For dates and times, USE THE CAPTION AS THE PRIMARY SOURCE — IG captions typically state "
-    "the date clearly even when the flyer image doesn't (e.g., 'TRIVIA TUESDAYS — 7:30PM', "
-    "'every Friday', 'Tuesday May 14'). Use the flyer image for visual context (event name, "
-    "vibe, lineup) and as a secondary date source. DO NOT skip a post just because the image "
-    "lacks dates — if the caption gives a date, that's enough. Recurring patterns like "
-    "'every Tuesday' / 'Trivia Tuesdays' should produce occurrences for the next 4 weeks. "
-    "The Author line marks who actually posted: when the author is a third-party organizer "
-    "(not the venue itself), the event is still typically AT this venue (look for venue handle "
-    "in caption). Skip posts that are not event announcements (food photos, general branding, "
-    "customer reviews)."
-)
-
-
-def _is_instagram_url(url: str) -> bool:
-    return bool(url) and "instagram.com/" in url
-
-
-def _resolve_notes(base_url: str, notes: str) -> str:
-    """Prepend the IG default note when the crawl source is Instagram."""
-    if _is_instagram_url(base_url):
-        return f"{INSTAGRAM_NOTES_DEFAULT}\n\n{notes}".rstrip() if notes else INSTAGRAM_NOTES_DEFAULT
-    return notes or ""
 
 
 # =============================================================================
@@ -395,17 +366,14 @@ async def download_and_encode_image(url, max_dimension=MAX_IMAGE_DIMENSION):
     """
     try:
         # Some image CDNs (notably Instagram's scontent.cdninstagram.com)
-        # 403 the default httpx user-agent. Use a real browser UA + Referer
-        # so vision extraction can actually fetch the bytes.
+        # 403 the default httpx user-agent. Use a real browser UA + any
+        # platform-specific headers (e.g. an IG Referer) so vision extraction
+        # can actually fetch the bytes. See site_profiles.image_headers_for.
         headers = {
-            "User-Agent": (
-                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-                "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
-            ),
+            "User-Agent": constants.get_user_agent(),
             "Accept": "image/webp,image/avif,image/apng,image/svg+xml,image/*,*/*;q=0.8",
         }
-        if "cdninstagram.com" in url or "fbcdn.net" in url:
-            headers["Referer"] = "https://www.instagram.com/"
+        headers.update(site_profiles.image_headers_for(url))
         async with httpx.AsyncClient(timeout=10.0, headers=headers) as client:
             response = await client.get(url, follow_redirects=True)
             if response.status_code != 200:
@@ -1018,7 +986,7 @@ def get_chunk_prompt(chunk_text, current_date_string, notes, request_id=""):
     """Generate prompt for a single chunk extraction."""
     note_section = f"\n\nIMPORTANT: {notes}" if notes else ""
     rid_section = f"\n\nIMPORTANT: Set request_id to \"{request_id}\" in your response." if request_id else ""
-    return f'''Today's date is {current_date_string}. Extract ALL events from this NYC events page content.
+    return f'''Today's date is {current_date_string}. Extract ALL events from this {city_config.extraction_page_descriptor()} events page content.
 
 For each event provide: name, location (venue name), occurrences (array of start_date in YYYY-MM-DD, start_time, end_time), and url if available.
 
@@ -1190,7 +1158,7 @@ NOTE: The above is ONLY for reference to maintain consistent naming. You MUST st
 
 """
 
-    return f'''Today's date is {current_date_string}. We are assembling a database of upcoming events in New York City. Currently, we are inspecting {name} ({url}).
+    return f'''Today's date is {current_date_string}. {city_config.extraction_intro()} Currently, we are inspecting {name} ({url}).
 {existing_events_section}
 Based on the website content below, extract all upcoming events. For each event, provide:
 - name: The event name
@@ -1205,14 +1173,14 @@ Based on the website content below, extract all upcoming events. For each event,
   RECEPTION vs RUN: A timed opening/closing reception, opening night, or preview is a DISTINCT single-day event — NOT an occurrence of the exhibition it celebrates. When a page describes both a dated, timed reception AND a broader exhibition run (e.g. "Opening reception June 4, 6–8pm" for a show "on view June 4 – July 10"), emit TWO separate events: (1) the reception, with ONE single-day occurrence (its date + time), and (2) the exhibition, with ONE run occurrence (start_date = opening, end_date = closing). Never attach the exhibition's full run as a second occurrence of the reception event, and never put the reception's time on the exhibition run.
 - description: 1-3 sentence description based ONLY on what is stated in the source content. If the listing only has a name/date/time with no further details, use "No description available." Do NOT make up or infer descriptions.
 - url: Specific event URL if available
-- hashtags: 4-7 CamelCase tags (e.g., ["Comedy", "StandUp", "Free"]). Always include at least one category from: Music, Nightlife, Comedy, Art, Theater, Dance, Film, Literature, Community, Family, Wellness, Education, Outdoor, Sports, Games. Also include Free if the event is free, or Virtual if online. Then add granular descriptive tags. Avoid location-specific or NYC-redundant tags.
+- hashtags: 4-7 CamelCase tags (e.g., ["Comedy", "StandUp", "Free"]). Always include at least one category from: Music, Nightlife, Comedy, Art, Theater, Dance, Film, Literature, Community, Family, Wellness, Education, Outdoor, Sports, Games. Also include Free if the event is free, or Virtual if online. Then add granular descriptive tags. {city_config.extraction_tag_avoidance()}
 - emoji: A single emoji representing the event
 
 {note_section}{rid_section}
 Rules:
 - Extract ALL events from the page - do not skip or summarize
 - Do NOT extract things that are not attendable public events. Skip: venue/program closures and holiday-closure notices ("Museum Closed", "Park Closes at 5pm", "Office Closed for Juneteenth"); calls for submissions, applications, or grants ("Open Call for Artists", "Submission Deadline", "Micro Grants Round 3"); venue marketing (space/room rentals, "Private Events", "Available for Booking", dining service like "Signature Breakfast"); season passes and ticketing placeholders ("Summer Pass 2026", "Showtimes"); and content placeholders or unrelated spam. These are not events — leave them out entirely.
-- Only include events in the NYC metro area within the next 3 months. The NYC metro area includes: all five NYC boroughs; Long Island (Nassau, Suffolk, the Hamptons); Westchester and Rockland counties; the Hudson Valley (Dutchess, Orange, Ulster, Putnam); Northern New Jersey (Bergen, Hudson, Essex, Passaic, Union, Middlesex, Monmouth, Ocean); and Southern Connecticut (Fairfield County). Skip events at venues outside this metro region (e.g. Philadelphia, Boston, Chicago, LA, Europe, etc.).
+- {city_config.extraction_region_rule()}
 - Ignore unrelated event sections ("Hot Events", "Similar events", etc.)
 - For recurring events, expand ALL individual dates into the occurrences array
 - If no events are found, return an empty events list
@@ -1243,7 +1211,7 @@ async def prepare_extraction(cursor, crawl_result_id, website_name, notes="",
     Returns:
         PreparedExtraction with all data needed for execution
     """
-    notes = _resolve_notes(base_url, notes)
+    notes = site_profiles.resolve_notes(base_url, notes)
 
     prep = PreparedExtraction(
         crawl_result_id=crawl_result_id,
