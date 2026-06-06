@@ -47,7 +47,6 @@ pipeline/sources/*.py
 !.claude/commands/fix-undated-events.md
 !.claude/commands/fix-unmapped-events.md
 !.claude/commands/hide-uninteresting-events.md
-!.claude/commands/optimize-crawls.md
 !.claude/commands/run-pipeline.md
 !.claude/commands/triage-pipeline-issues.md
 .vscode/

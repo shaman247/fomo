@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Fomo NYC</title>
+    <title>{{SITE_NAME}}</title>
     <link rel="icon" href="images/torch.svg" type="image/svg+xml">
 
     <!-- Warm up the only remaining cross-origin: the map tile/glyph CDN. -->
@@ -37,18 +37,18 @@
                 <div>
                     <div id="logo-menu-wrapper">
                         <button id="logo-container" class="initially-hidden" aria-label="Open menu" aria-haspopup="true" aria-expanded="false">
-                            <img src="images/torch.svg" alt="Fomo NYC Logo" id="logo">
+                            <img src="images/torch.svg" alt="{{SITE_NAME}} Logo" id="logo">
                         </button>
                         <div id="logo-menu" class="logo-menu-hidden" role="menu" aria-label="Logo menu">
                             <button type="button" id="settings-btn" role="menuitem">⚙️ Settings</button>
                             <button type="button" id="share-view-btn" role="menuitem">🔗 Share this view</button>
                             <button type="button" id="feedback-btn" role="menuitem">💬 Submit feedback</button>
-                            <a href="about.html" target="_blank" role="menuitem">🗽 About fomo.nyc</a>
+                            <a href="about.html" target="_blank" role="menuitem">{{EMOJI}} About {{DOMAIN}}</a>
                         </div>
                     </div>
                     <div class="filter-group" id="omni-search-filter">
                         <div class="search-input-container">
-                            <input type="text" id="omni-search-input" placeholder="Search fomo.nyc" autocomplete="off" aria-label="Search places, events, organizers">
+                            <input type="text" id="omni-search-input" placeholder="Search {{DOMAIN}}" autocomplete="off" aria-label="Search places, events, organizers">
                             <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 0 24 24" width="18px" fill="currentColor" aria-hidden="true"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
                         </div>
                     </div>
@@ -88,11 +88,7 @@
     <div id="welcome-modal" class="modal" role="dialog" aria-labelledby="welcome-modal-title" aria-modal="true">
         <div class="modal-content">
             <div class="modal-body">
-                <ul>
-                    <li><span class="emoji-bullet">🗽</span><span><strong>Fomo NYC</strong> is a map of upcoming events in the New York City area.</span></li>
-                    <li><span class="emoji-bullet">🤖</span><span>Events are collected automatically from many different websites every day.</span></li>
-                    <li><span class="emoji-bullet">💖</span><span>This project is a labor of love and will always be free and open-source.</span></li>
-                </ul>
+                {{WELCOME_MODAL}}
             </div>
         </div>
     </div>
@@ -108,7 +104,7 @@
                 <button id="feedback-close-btn" class="modal-close-btn" aria-label="Close feedback">&times;</button>
             </div>
             <div class="modal-body">
-                <p class="feedback-description">Help improve <strong>fomo.nyc</strong>! 💖 <br> Share your thoughts, report issues, or suggest new features 🗽</p>
+                <p class="feedback-description">Help improve <strong>{{DOMAIN}}</strong>! 💖 <br> Share your thoughts, report issues, or suggest new features {{EMOJI}}</p>
                 <textarea id="feedback-message" placeholder="Enter your feedback here..." rows="6" maxlength="10000" aria-label="Feedback message"></textarea>
                 <div class="feedback-footer">
                     <span id="feedback-char-count" class="feedback-char-count">0 / 10000</span>

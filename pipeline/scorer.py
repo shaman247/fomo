@@ -1,5 +1,5 @@
 """
-Event scoring script for fomo.nyc.
+Event scoring script.
 
 Scores events on six dimensions using Gemini AI:
   - Specificity: How tied this event is to a non-interchangeable, purposeful occasion (1=generic/recurring, 5=singular occasion)
@@ -29,6 +29,7 @@ from typing import Optional
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 
+import city_config
 import db
 
 load_dotenv()
@@ -114,12 +115,12 @@ OPENNESS — How accessible is this event to the general public?
   Hint: "Open to all" or "free" → lean toward 5. "Members" or "alumni" language → lean toward 1.
 
 PROMINENCE — How big or high-profile is this event?
-  5 = Large-scale, city-wide — expect press coverage, thousands of attendees (NYC Pride, museum blockbuster, Broadway opening)
+  5 = Large-scale, city-wide — expect press coverage, thousands of attendees (a major city-wide festival, a museum blockbuster, a flagship theater opening)
   4 = Medium-sized, established institution with real track record — recognized venue, well-known ensemble or performer
   3 = Small-to-medium, known local organization with a regular local audience — neighborhood venue, local arts org
   2 = Small event by a relatively unknown organizer — first-time organizer, small collective, new venue
   1 = Obscure, very small-scale, no institutional backing, no evident prior audience
-  Hint: Venue and source website are strong signals. Prestigious NYC institutions → 5. Recognized niche venues → 3-4. Unknown Eventbrite organizers → 1-2.
+  Hint: Venue and source website are strong signals. Prestigious major institutions → 5. Recognized niche venues → 3-4. Unknown one-off organizers → 1-2.
 
 CONNECTION — How participatory and human-scale is this event?
   Ask: "Is direct human exchange the point, or are you anonymous in a crowd?"
@@ -147,23 +148,7 @@ SUBSTANCE — How lasting is the impact? Would you be glad you went, in retrospe
   IMPORTANT: Novelty ≠ Substance. A lookalike contest may be highly novel but scores substance:1 — it's a laugh and it's over.
   Civic participation and volunteering score HIGH on Substance even if they score low on Novelty.
 
-CALIBRATION EXAMPLES (reference only — do not score these):
-  "NYC Pride March" → specificity:5, novelty:2, openness:5, prominence:5, connection:3, substance:3
-    (Annual named occasion; familiar march format; free/open; massive city event; large crowd limits intimacy; emotionally resonant march but impact varies)
-  "Farewell Tour: David Byrne at Carnegie Hall" → specificity:5, novelty:2, openness:4, prominence:5, connection:2, substance:3
-    (Explicit farewell framing; standard concert format; ticketed; world-famous performer; large passive venue; memorable but standard concert experience)
-  "John Smith @ Bowery Ballroom" (standard tour date, no special occasion) → specificity:2, novelty:1, openness:4, prominence:3, connection:2, substance:2
-    (Ordinary tour stop; standard concert; ticketed; known venue; medium-sized passive; fun but forgettable)
-  "Immersive theatrical experience: blindfolded audience navigates 12 rooms, each with a live score" → specificity:4, novelty:5, openness:4, prominence:3, connection:4, substance:4
-    (Limited-run distinct identity; utterly original concept; ticketed; small company; intimate participatory format; perspective-shifting experience)
-  "Pitchblack Playback: monthly vinyl listening party in total darkness" → specificity:3, novelty:4, openness:4, prominence:2, connection:3, substance:3
-    (Regular monthly series; original concept; publicly ticketed; small unknown venue; intimate community feel; modest lasting aesthetic impression)
-  "Neighborhood block association cleanup day" → specificity:3, novelty:1, openness:5, prominence:1, connection:5, substance:5
-    (Regular community event; no concept novelty; free/open; very small scale; direct collaboration with neighbors is the point; produces lasting real-world change in the neighborhood)
-  "Weekly jazz residency at a neighborhood venue" → specificity:2, novelty:1, openness:4, prominence:3, connection:3, substance:2
-    (Routine weekly programming; standard jazz format; publicly ticketed; known local venue; intimate enough for social texture; enjoyable but routine)
-  "Open mic night at a local bar" → specificity:1, novelty:1, openness:4, prominence:1, connection:4, substance:2
-    (Completely interchangeable; generic; walk-in; no institutional backing; participatory for performers and encourages audience warmth; ephemeral entertainment)
+{calibration_examples}
 
 KEY: All six signals are INDEPENDENT.
   Specificity and Novelty are independent: a farewell concert can be specificity:5 and novelty:1.
@@ -205,7 +190,8 @@ def format_event_for_prompt(event: dict) -> str:
 def build_scoring_prompt(events_batch: list[dict]) -> str:
     """Build the full Gemini prompt for a batch of events."""
     event_blocks = '\n\n'.join(format_event_for_prompt(e) for e in events_batch)
-    return f"""{RUBRIC}
+    rubric = RUBRIC.replace('{calibration_examples}', city_config.scoring_calibration_examples())
+    return f"""{rubric}
 
 Score the following {len(events_batch)} events. Return one score object per event, using the event_id from the EVENT ID field.
 

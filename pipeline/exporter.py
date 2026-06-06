@@ -160,9 +160,7 @@ def export_events(cursor):
     # Events must have a location with coordinates to be exported.
     #
     # Aggregator trust gate: enabled aggregators (RA, Eventbrite, Partiful, …) are
-    # trusted discovery feeds — keep their events. Only DISABLED aggregators
-    # (re-listers we've turned off, e.g. NYC Trivialist) require independent
-    # corroboration by a primary source before their leftover events are shown.
+    # trusted discovery feeds — keep their events.
     cursor.execute("""
         SELECT e.id, e.name, e.short_name, e.description, e.emoji,
                e.location_name, e.sublocation,

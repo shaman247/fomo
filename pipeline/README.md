@@ -70,7 +70,7 @@ Create a `.env` file:
 ```env
 # Gemini AI
 GEMINI_API_KEY="your-api-key"
-GEMINI_MODEL="gemini-3-flash-preview"
+GEMINI_MODEL="gemini-3.1-flash-lite""
 GEMINI_TIMEOUT=120
 
 # FTP Upload

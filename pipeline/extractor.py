@@ -365,10 +365,9 @@ async def download_and_encode_image(url, max_dimension=MAX_IMAGE_DIMENSION):
     Returns tuple of (base64_data, mime_type) or (None, None) on failure.
     """
     try:
-        # Some image CDNs (notably Instagram's scontent.cdninstagram.com)
-        # 403 the default httpx user-agent. Use a real browser UA + any
-        # platform-specific headers (e.g. an IG Referer) so vision extraction
-        # can actually fetch the bytes. See site_profiles.image_headers_for.
+        # Some image CDNs 403 the default httpx user-agent. Use a real browser
+        # UA + any platform-specific headers so vision extraction can actually
+        # fetch the bytes. See site_profiles.image_headers_for.
         headers = {
             "User-Agent": constants.get_user_agent(),
             "Accept": "image/webp,image/avif,image/apng,image/svg+xml,image/*,*/*;q=0.8",
@@ -986,7 +985,7 @@ def get_chunk_prompt(chunk_text, current_date_string, notes, request_id=""):
     """Generate prompt for a single chunk extraction."""
     note_section = f"\n\nIMPORTANT: {notes}" if notes else ""
     rid_section = f"\n\nIMPORTANT: Set request_id to \"{request_id}\" in your response." if request_id else ""
-    return f'''Today's date is {current_date_string}. Extract ALL events from this {city_config.extraction_page_descriptor()} events page content.
+    return f'''{city_config.extraction_chunk_intro().format(date=current_date_string)}
 
 For each event provide: name, location (venue name), occurrences (array of start_date in YYYY-MM-DD, start_time, end_time), and url if available.
 
@@ -1158,7 +1157,7 @@ NOTE: The above is ONLY for reference to maintain consistent naming. You MUST st
 
 """
 
-    return f'''Today's date is {current_date_string}. {city_config.extraction_intro()} Currently, we are inspecting {name} ({url}).
+    return f'''{city_config.extraction_intro().format(date=current_date_string, name=name, url=url)}
 {existing_events_section}
 Based on the website content below, extract all upcoming events. For each event, provide:
 - name: The event name

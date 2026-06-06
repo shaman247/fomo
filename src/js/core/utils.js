@@ -212,29 +212,27 @@ const Utils = (() => {
         return { hours, minutes, seconds: 0 };
     }
 
-    function getNewYorkOffset(date) {
-        const year = date.getFullYear();
-        const mar1 = new Date(year, 2, 1);
-        const firstSundayInMarch = new Date(mar1);
-        firstSundayInMarch.setDate(1 + (7 - mar1.getDay()) % 7);
-        const dstStart = new Date(firstSundayInMarch);
-        dstStart.setDate(firstSundayInMarch.getDate() + 7);
-        dstStart.setHours(2);
+    // The app's timezone, injected by build.js (window.__CITY__.timezone). Used to
+    // interpret event dates/times and "today" regardless of the user's local zone.
+    const APP_TIMEZONE = (typeof window !== 'undefined' && window.__CITY__ && window.__CITY__.timezone) || 'America/New_York';
 
-        const nov1 = new Date(year, 10, 1);
-        const dstEnd = new Date(nov1);
-        dstEnd.setDate(1 + (7 - nov1.getDay()) % 7);
-        dstEnd.setHours(2);
-
-        return (date >= dstStart && date < dstEnd) ? '-04:00' : '-05:00';
+    // UTC offset (e.g. "-04:00") for APP_TIMEZONE at the given date. Driven by the
+    // IANA database via Intl, so it's correct for any zone's DST rules — not just US.
+    function getZoneOffset(date) {
+        const parts = new Intl.DateTimeFormat('en-US', {
+            timeZone: APP_TIMEZONE, timeZoneName: 'longOffset'
+        }).formatToParts(date);
+        const tzName = parts.find(p => p.type === 'timeZoneName');
+        const m = tzName && tzName.value.match(/GMT([+-]\d{2}:\d{2})/);
+        return m ? m[1] : '+00:00'; // "GMT" (no suffix) => UTC
     }
 
-    function parseDateInNewYork(dateStr, timeStr) {
+    function parseDateInZone(dateStr, timeStr) {
         if (!dateStr) return null;
         const tempDate = new Date(dateStr.replace(/-/g, '/') + ' 12:00:00');
         if (isNaN(tempDate.getTime())) return null;
 
-        const offset = getNewYorkOffset(tempDate);
+        const offset = getZoneOffset(tempDate);
         const timeParts = parseTime(timeStr);
         const isoString = `${dateStr}T${String(timeParts.hours).padStart(2, '0')}:${String(timeParts.minutes).padStart(2, '0')}:${String(timeParts.seconds).padStart(2, '0')}${offset}`;
         const finalDate = new Date(isoString);
@@ -242,14 +240,14 @@ const Utils = (() => {
         return isNaN(finalDate.getTime()) ? null : finalDate;
     }
 
-    // Today's date in NYC timezone as YYYY-MM-DD. Used to pick the matching
+    // Today's date in the app timezone as YYYY-MM-DD. Used to pick the matching
     // events.{day}.json chunk regardless of the user's local timezone.
-    const _nycDateFormatter = new Intl.DateTimeFormat('en-CA', {
-        timeZone: 'America/New_York',
+    const _todayFormatter = new Intl.DateTimeFormat('en-CA', {
+        timeZone: APP_TIMEZONE,
         year: 'numeric', month: '2-digit', day: '2-digit'
     });
-    function getTodayInNewYork() {
-        return _nycDateFormatter.format(new Date());
+    function getTodayInZone() {
+        return _todayFormatter.format(new Date());
     }
 
     function isWindows() {
@@ -483,8 +481,8 @@ const Utils = (() => {
         isValidUrl,
         formatDateForDisplay,
         buildEventDateTime,
-        parseDateInNewYork,
-        getTodayInNewYork,
+        parseDateInZone,
+        getTodayInZone,
         isWindows,
         isCountryFlagEmoji,
         normalizeForSearch,

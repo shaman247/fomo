@@ -65,14 +65,17 @@ def _extraction() -> dict:
 
 
 def extraction_intro() -> str:
-    # "We are assembling a database of upcoming events in <metro>."
+    # The full opening line of get_prompt. Template with {date}, {name}, {url}.
     return _extraction().get(
-        "intro", f"We are assembling a database of upcoming events in {metro_name()}.")
+        "intro",
+        "Today's date is {date}. We are assembling a database of upcoming events in "
+        f"{metro_name()}. Currently, we are inspecting {{name}} ({{url}}).")
 
 
-def extraction_page_descriptor() -> str:
-    # The word before "events page content" in the chunk prompt.
-    return _extraction().get("page_descriptor", "")
+def extraction_chunk_intro() -> str:
+    # The full opening line of get_chunk_prompt. Template with {date}.
+    return _extraction().get(
+        "chunk_intro", "Today's date is {date}. Extract ALL events from this page content.")
 
 
 def extraction_tag_avoidance() -> str:
@@ -111,3 +114,8 @@ def region_tag_token() -> str:
 
 def non_region_place_patterns() -> list:
     return list((get_config().get("review") or {}).get("non_region_places") or [])
+
+
+def scoring_calibration_examples() -> str:
+    # scorer.py — concrete (city-specific) calibration examples block for the rubric.
+    return (get_config().get("scoring") or {}).get("calibration_examples", "").rstrip("\n")

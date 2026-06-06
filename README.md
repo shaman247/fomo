@@ -6,6 +6,8 @@
 
 It works by visiting the websites of parks, museums, music venues, etc., identifying any upcoming events, and displaying them on a map. My hope is that this becomes a useful resource for people to find events they are interested in and to engage with their local communities.
 
+The codebase is **city-agnostic** — NYC is just the default deployment. Every city/region/branding specific (map view, timezone, geography, prompt wording, site name, per-platform crawl behavior) lives in `config/<FOMO_CITY>.yaml` (default `config/nyc.yaml`) and gitignored `pipeline/sources/` plugins, so you can fork it for your own city by editing config rather than engine code.
+
 ## Project Structure
 
 ### Main Directories
@@ -65,6 +67,7 @@ npm run build   # Prod build (minified, content-hashed, full asset copies)
 - JS modules are concatenated in load order and minified (not bundled — they use the IIFE pattern with globals)
 - CSS `@import` chain is resolved and minified
 - Flatpickr is installed via npm and bundled into the output
+- `build.js` reads `config/<FOMO_CITY>.yaml` and injects the city config: a `window.__CITY__` global (map/timezone) prepended to the JS bundle, plus `{{TOKEN}}` branding replacement in `index.html`
 - `dist/` contains the complete deployable output: HTML, JS/CSS bundles, plus copies of `data/`, `images/`, `fonts/`, `api/`, `admin/`
 
 ### Data Pipeline Flow

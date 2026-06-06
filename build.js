@@ -2,14 +2,65 @@ const esbuild = require('esbuild');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const yaml = require('yaml');
 
 const SRC = path.join(__dirname, 'src');
 const DIST = path.join(__dirname, 'dist');
 const FLATPICKR_JS = path.join(__dirname, 'node_modules', 'flatpickr', 'dist', 'flatpickr.js');
 const FLATPICKR_CSS = path.join(__dirname, 'node_modules', 'flatpickr', 'dist', 'flatpickr.css');
 
+// City/region config (config/<FOMO_CITY>.yaml, default "nyc") — the single source of
+// truth shared with the backend. Its `frontend` block is injected into the build.
+const FOMO_CITY = process.env.FOMO_CITY || 'nyc';
+const CITY_CONFIG_PATH = path.join(__dirname, 'config', `${FOMO_CITY}.yaml`);
+
 // Directories to include in dist/ (everything the server needs)
 const ASSET_DIRS = ['data', 'images', 'fonts', 'api', 'admin', 'vendor'];
+
+// Load the `frontend` block from the city config.
+function loadFrontendConfig() {
+    const cfg = yaml.parse(fs.readFileSync(CITY_CONFIG_PATH, 'utf8')) || {};
+    const fe = cfg.frontend || {};
+    if (!fe.map || !fe.map.center) {
+        throw new Error(`config/${FOMO_CITY}.yaml is missing a frontend.map.center`);
+    }
+    return fe;
+}
+
+// Runtime values injected as a window.__CITY__ global at the head of the JS bundle,
+// so they're available before any IIFE module evaluates.
+function cityPrelude(fe) {
+    const b = fe.map.bounds;
+    const bounds = b ? { latMin: b.lat_min, latMax: b.lat_max, lngMin: b.lng_min, lngMax: b.lng_max } : null;
+    const jsSubset = {
+        map: {
+            center: fe.map.center,
+            zoom: fe.map.zoom,
+            userLocationZoom: fe.map.user_location_zoom,
+            bounds,
+        },
+        timezone: fe.timezone,
+    };
+    return `;window.__CITY__ = ${JSON.stringify(jsSubset)};\n`;
+}
+
+// Replace {{TOKEN}} branding placeholders, then fail the build on any leftover token.
+function applyBranding(html, fe) {
+    const tokens = {
+        '{{SITE_NAME}}': fe.site_name,
+        '{{DOMAIN}}': fe.domain,
+        '{{EMOJI}}': fe.emoji,
+        '{{WELCOME_MODAL}}': fe.welcome_modal,
+    };
+    for (const [token, value] of Object.entries(tokens)) {
+        html = html.split(token).join(value);
+    }
+    const leftover = html.match(/\{\{[A-Z_]+\}\}/);
+    if (leftover) {
+        throw new Error(`Unreplaced branding token ${leftover[0]} — add it to config/${FOMO_CITY}.yaml frontend block`);
+    }
+    return html;
+}
 
 function copyDirSync(src, dest) {
     fs.mkdirSync(dest, { recursive: true });
@@ -26,6 +77,9 @@ function copyDirSync(src, dest) {
 
 async function build(isDev) {
     const startTime = Date.now();
+
+    // Load city/region frontend config (map, timezone, branding).
+    const frontend = loadFrontendConfig();
 
     // Clean dist/
     if (fs.existsSync(DIST)) {
@@ -55,7 +109,8 @@ async function build(isDev) {
         originalJsSize += Buffer.byteLength(content, 'utf8');
         return content;
     }).join('\n;\n');
-    const concatenated = flatpickrJs + '\n;\n' + appJs;
+    // Prepend the city config global so it exists before any module evaluates.
+    const concatenated = cityPrelude(frontend) + flatpickrJs + '\n;\n' + appJs;
 
     // Minify JS in prod, pass through in dev
     let jsContent;
@@ -133,6 +188,9 @@ async function build(isDev) {
         `\n\n    <script src="${jsBundleName}"></script>\n`
     );
 
+    // Inject city branding (must run last; fails the build on any leftover token).
+    html = applyBranding(html, frontend);
+
     fs.writeFileSync(path.join(DIST, 'index.html'), html);
 
     // Copy about.html and .htaccess
@@ -201,6 +259,14 @@ function watch() {
         console.log('  Changed: index.html');
         rebuild();
     });
+
+    // Watch the city config so branding / map / timezone changes rebuild in dev.
+    if (fs.existsSync(CITY_CONFIG_PATH)) {
+        fs.watch(CITY_CONFIG_PATH, () => {
+            console.log(`  Changed: config/${FOMO_CITY}.yaml`);
+            rebuild();
+        });
+    }
 
     console.log('Watching for changes... (Ctrl+C to stop)\n');
 }

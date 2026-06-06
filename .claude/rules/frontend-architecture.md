@@ -14,6 +14,12 @@ paths:
 - Vanilla JS with IIFE module pattern (no framework, no bundler)
 - CSS with `@import` chain (no preprocessor)
 
+## City config (`window.__CITY__`)
+
+City-specific frontend values are NOT hardcoded — `build.js` injects them from `config/<FOMO_CITY>.yaml` as a `window.__CITY__` global (prepended to the bundle) + `{{TOKEN}}` branding replacement in `index.html` (see `.claude/rules/build-system.md`). Readers:
+- `script.js` `App.config`: `MAP_INITIAL_VIEW`/`MAP_INITIAL_ZOOM`/`MAP_USER_LOCATION_ZOOM` and `REGION_BOUNDS` come from `window.__CITY__.map`. `App.isWithinRegion()` gates geolocation (accepts any location when `REGION_BOUNDS` is null).
+- `utils.js`: `getTodayInZone()` / `parseDateInZone()` / `getZoneOffset()` use `window.__CITY__.timezone` (generic `Intl` offset — any IANA zone, not just US DST).
+
 ## Module Load Order
 
 Defined by `<script>` tags in `src/index.html`:
@@ -33,7 +39,7 @@ core (constants, utils, historyManager, urlParams) → data → tags → UI → 
 - `events.day0.json` … `events.day3.json` — events occurring on each of the next 4 calendar days (an event with multi-day occurrences appears in every chunk it touches; frontend dedupes by backend `id`)
 - `events.remainder.json` — events with at least one occurrence past day 3 (within the 90-day future window)
 - `locations.day0.json` … `locations.day3.json` / `locations.remainder.json` — venues referenced by events in each chunk
-- `manifest.json` — `{ days: ["YYYY-MM-DD", …] }`; the frontend picks the chunk matching today's NYC date for Phase 1, falls back to `remainder` if today isn't in the manifest
+- `manifest.json` — `{ days: ["YYYY-MM-DD", …] }`; the frontend picks the chunk matching today's date in the configured timezone (`window.__CITY__.timezone`, via `Utils.getTodayInZone()`) for Phase 1, falls back to `remainder` if today isn't in the manifest
 - `tag_hierarchy.json` — exported tag DAG for filter panel
 - `tags.json` — tag metadata including geotags list
 - `map-style-light.json` / `map-style-dark.json` — MapLibre styles

@@ -10,11 +10,35 @@ city_name: "New York City"
 city_short: "NYC"
 metro_name: "New York City"
 
+# Frontend config — injected into the built site by build.js (window.__CITY__ for the
+# JS bundle + {{TOKEN}} branding replacement in src/index.html). See build.js.
+frontend:
+  site_name: "Fomo NYC"          # <title>, logo alt, search placeholder, menu
+  domain: "fomo.nyc"             # "Search fomo.nyc", "About fomo.nyc"
+  emoji: "🗽"                     # menu / feedback decoration
+  timezone: "America/New_York"   # utils.js: "today" + event-time parsing
+  # Full welcome-modal body (HTML), injected verbatim into #welcome-modal .modal-body.
+  welcome_modal: |
+    <ul>
+        <li><span class="emoji-bullet">🗽</span><span><strong>Fomo NYC</strong> is a map of upcoming events in the New York City area.</span></li>
+        <li><span class="emoji-bullet">🤖</span><span>Events are collected automatically from many different websites every day.</span></li>
+        <li><span class="emoji-bullet">💖</span><span>This project is a labor of love and will always be free and open-source.</span></li>
+    </ul>
+  map:
+    center: [40.70424, -73.97086]  # [lat, lng] initial map view
+    zoom: 12
+    user_location_zoom: 14
+    bounds:                        # OPTIONAL — omit to accept any geolocation (no region gate)
+      lat_min: 40.49
+      lat_max: 40.92
+      lng_min: -74.26
+      lng_max: -73.70
+
 extraction:
-  # extractor.py get_chunk_prompt: "...Extract ALL events from this <page_descriptor> events page content."
-  page_descriptor: "NYC"
-  # extractor.py get_prompt: the sentence after "Today's date is ...".
-  intro: "We are assembling a database of upcoming events in New York City."
+  # extractor.py get_chunk_prompt — the full opening line. {date} is substituted.
+  chunk_intro: "Today's date is {date}. Extract ALL events from this NYC events page content."
+  # extractor.py get_prompt — the full opening line. {date}, {name}, {url} are substituted.
+  intro: "Today's date is {date}. We are assembling a database of upcoming events in New York City. Currently, we are inspecting {name} ({url})."
   # extractor.py get_prompt hashtag-guidance tail.
   tag_avoidance: "Avoid location-specific or NYC-redundant tags."
   # extractor.py get_prompt: the full metro-geography rule bullet (verbatim).
@@ -171,3 +195,26 @@ review:
     - "Various cities"
     - "Multiple cities"
     - "Multiple locations"
+
+scoring:
+  # scorer.py RUBRIC — the concrete calibration examples (city-specific venues/events).
+  # The generic scoring criteria stay in scorer.py; only these examples live here so a
+  # fork can swap in its own local landmarks. Injected verbatim into the rubric.
+  calibration_examples: |
+    CALIBRATION EXAMPLES (reference only — do not score these):
+      "NYC Pride March" → specificity:5, novelty:2, openness:5, prominence:5, connection:3, substance:3
+        (Annual named occasion; familiar march format; free/open; massive city event; large crowd limits intimacy; emotionally resonant march but impact varies)
+      "Farewell Tour: David Byrne at Carnegie Hall" → specificity:5, novelty:2, openness:4, prominence:5, connection:2, substance:3
+        (Explicit farewell framing; standard concert format; ticketed; world-famous performer; large passive venue; memorable but standard concert experience)
+      "John Smith @ Bowery Ballroom" (standard tour date, no special occasion) → specificity:2, novelty:1, openness:4, prominence:3, connection:2, substance:2
+        (Ordinary tour stop; standard concert; ticketed; known venue; medium-sized passive; fun but forgettable)
+      "Immersive theatrical experience: blindfolded audience navigates 12 rooms, each with a live score" → specificity:4, novelty:5, openness:4, prominence:3, connection:4, substance:4
+        (Limited-run distinct identity; utterly original concept; ticketed; small company; intimate participatory format; perspective-shifting experience)
+      "Pitchblack Playback: monthly vinyl listening party in total darkness" → specificity:3, novelty:4, openness:4, prominence:2, connection:3, substance:3
+        (Regular monthly series; original concept; publicly ticketed; small unknown venue; intimate community feel; modest lasting aesthetic impression)
+      "Neighborhood block association cleanup day" → specificity:3, novelty:1, openness:5, prominence:1, connection:5, substance:5
+        (Regular community event; no concept novelty; free/open; very small scale; direct collaboration with neighbors is the point; produces lasting real-world change in the neighborhood)
+      "Weekly jazz residency at a neighborhood venue" → specificity:2, novelty:1, openness:4, prominence:3, connection:3, substance:2
+        (Routine weekly programming; standard jazz format; publicly ticketed; known local venue; intimate enough for social texture; enjoyable but routine)
+      "Open mic night at a local bar" → specificity:1, novelty:1, openness:4, prominence:1, connection:4, substance:2
+        (Completely interchangeable; generic; walk-in; no institutional backing; participatory for performers and encourages audience warmth; ephemeral entertainment)

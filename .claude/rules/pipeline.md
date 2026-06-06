@@ -42,13 +42,15 @@ Some events get "No description available." because the listing page lacked deta
 
 ## Module Roles
 
-- `constants.py` — Shared constants (FUTURE_WINDOW_DAYS, MAX_PAGES_DEFAULT, match thresholds)
-- `crawler.py` — Web crawling with Crawl4AI (listing pages + individual event URLs), browser config/grouping
-- `extractor.py` — Gemini AI event extraction (full pages + single event detail crawl)
-- `processor.py` — Markdown parsing, text utilities, tag processing, detail crawl orchestration (Step 5)
+- `constants.py` — Shared constants (FUTURE_WINDOW_DAYS, MAX_PAGES_DEFAULT, match thresholds) + `get_user_agent()` (USER_AGENT env, the single UA for crawler/extractor/plugins)
+- `city_config.py` — Loads `config/<FOMO_CITY>.yaml` (default `nyc`); all city-specific strings (extraction-prompt geography/intro, generic location names, processor token lists, scoring calibration examples). `import city_config`
+- `site_profiles.py` — Generic per-platform registry; auto-discovers site-specific crawl plugins from `pipeline/sources/*.py`.
+- `crawler.py` — Web crawling with Crawl4AI (listing pages + individual event URLs), browser config/grouping; consults `site_profiles` for skip/inject-js/custom-fetch
+- `extractor.py` — Gemini AI event extraction (full pages + single event detail crawl); prompt city-bits from `city_config`
+- `processor.py` — Markdown parsing, text utilities, tag processing, detail crawl orchestration (Step 5); location/tag token lists from `city_config`
 - `merger.py` — Event deduplication
 - `exporter.py` — JSON export to per-day chunks (`events.day0..day3.json` + `events.remainder.json`, matching `locations.*.json`, plus `manifest.json` mapping day index → calendar date)
 - `uploader.py` — FTP upload
 - `db.py` — Database connection and all DB operations
-- `scorer.py` / `export_scores.py` — Event scoring
+- `scorer.py` / `export_scores.py` — Event scoring (rubric calibration examples from `city_config`)
 - `frequency_analyzer.py` — Crawl frequency analysis

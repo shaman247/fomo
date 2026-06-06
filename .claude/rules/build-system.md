@@ -3,16 +3,25 @@ paths:
   - "build.js"
   - "package.json"
   - "src/index.html"
+  - "config/*.yaml"
   - "scripts/upload_public_html.py"
 ---
 
 # Build System Details
 
+## City config injection
+
+`build.js` reads `config/<FOMO_CITY>.yaml` (`process.env.FOMO_CITY || 'nyc'`, parsed with the `yaml` devDep) and injects its `frontend:` block at build time:
+
+- **Runtime JS** — a `;window.__CITY__ = {map, timezone};` prelude is **prepended** to the concatenated bundle (before flatpickr) so the global exists before any IIFE evaluates. `src/js/script.js` (`App.config` map fields, `REGION_BOUNDS`) and `src/js/core/utils.js` (timezone) read it.
+- **Branding** — `applyBranding()` replaces `{{SITE_NAME}}`, `{{DOMAIN}}`, `{{EMOJI}}`, `{{WELCOME_MODAL}}` tokens in `src/index.html` (runs last; the build **fails** on any leftover `{{TOKEN}}`). `src/about.html` is copied as-is (not tokenized).
+- Dev watch includes `config/<FOMO_CITY>.yaml`, so config edits rebuild.
+
 ## JS Build
 
 - JS modules use IIFE pattern with globals — they are **concatenated** (not bundled) then minified via `esbuild.transform()`. esbuild's bundler mode would break global scope.
 - `build.js` reads `src/index.html` to determine JS file order — no separate manifest
-- flatpickr installed via npm, prepended to JS/CSS bundles
+- flatpickr installed via npm, prepended to JS/CSS bundles; the `window.__CITY__` prelude sits before flatpickr
 
 ## CSS Build
 

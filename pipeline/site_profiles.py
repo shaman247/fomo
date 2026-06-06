@@ -5,18 +5,9 @@ This module defines the SiteProfile data shape and the helper API the pipeline
 consults to apply per-platform behavior generically — but it contains NO
 references to any specific site. The actual profiles are auto-discovered from
 the `sources/` plugin package (one module per platform, each exporting a
-`PROFILE`/`PROFILES`). Real plugins are gitignored and deployment-specific; the
-repo ships example templates. A fresh clone with no plugins yields an empty
-registry, so every URL crawls via the generic crawl4ai path.
-
-Why a code plugin and not a pure DB table: most behaviors are pure data (JS
-snippets, note text, headers) but some sources need a *custom Python fetch path*
-(e.g. ra.co's HTTP+GraphQL, no browser) that can't be serialized as data — so a
-profile may reference a callable defined in its plugin module. Pipeline BEHAVIOR
-is version-controlled in the plugin layer; the DB remains the source of truth
-for EVENT/CRAWL data (see CLAUDE.md). Source *classification*
-(websites.source_type, used in exporter.py) is a separate, already-DB-driven
-concern and intentionally not modeled here.
+`PROFILE`/`PROFILES`). Plugins deployment-specific; the repo ships example
+templates. A fresh clone with no plugins yields an empty registry, so every
+URL crawls via the generic crawl4ai path.
 
 To add a platform: drop a `<platform>.py` into pipeline/sources/ (copy an
 `*.example.py` to start).
@@ -34,7 +25,7 @@ from urllib.parse import urlparse
 
 class CrawlMode(Enum):
     STANDARD = "standard"   # normal crawl4ai path
-    SKIP = "skip"           # don't crawl (ingested out-of-band, e.g. /picnob-scrape)
+    SKIP = "skip"           # don't crawl (ingested out-of-band)
     CUSTOM = "custom"       # bypass crawl4ai, call fetcher() -> (markdown, n_events)
 
 
@@ -147,7 +138,7 @@ def inject_js_for(url) -> str:
 
 
 def is_skip_url(url) -> bool:
-    """True if this URL is handled out-of-band and should not be crawled (instagram)."""
+    """True if this URL is handled out-of-band and should not be crawled."""
     p = resolve_profile(url)
     return bool(p and p.crawl_mode is CrawlMode.SKIP)
 
@@ -166,7 +157,7 @@ def all_skip(urls) -> Optional[str]:
 
 
 def custom_fetch_profile(urls) -> Optional[SiteProfile]:
-    """If EVERY url resolves to the SAME custom fetcher, return its profile; else None (ra.co)."""
+    """If EVERY url resolves to the SAME custom fetcher, return its profile; else None."""
     if not urls:
         return None
     profile = None
@@ -184,7 +175,7 @@ def custom_fetch_profile(urls) -> Optional[SiteProfile]:
 # --- extract-level helpers (extractor.py) ---
 
 def resolve_notes(base_url, notes) -> str:
-    """Prepend a profile's extraction_notes to the per-site notes (instagram)."""
+    """Prepend a profile's extraction_notes to the per-site notes."""
     p = resolve_profile(base_url)
     prefix = p.extraction_notes if (p and p.extraction_notes) else None
     if prefix:

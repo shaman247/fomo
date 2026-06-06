@@ -13,6 +13,10 @@
  * Coordinates all modules and manages application state
  */
 document.addEventListener('DOMContentLoaded', () => {
+    // City/region config injected by build.js (window.__CITY__). Defensive default
+    // keeps the app from hard-crashing if served unbuilt; the build always injects it.
+    const CITY = (typeof window !== 'undefined' && window.__CITY__) || { map: {} };
+
     /**
      * Main application object - orchestrates all modules and manages global state
      * @namespace App
@@ -131,16 +135,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 '#a8d085', '#c88598', '#e09075', '#85a0d8', '#75c0b0', '#e89075',
                 '#9585e0', '#e0b085', '#8dc090', '#c88590', '#859098', '#a8b075'
             ],
-            MAP_INITIAL_VIEW: [40.70424, -73.97086],
-            MAP_INITIAL_ZOOM: 12,
-            MAP_USER_LOCATION_ZOOM: 14,
-            // NYC area bounds for geolocation validation
-            NYC_BOUNDS: {
-                latMin: 40.49,
-                latMax: 40.92,
-                lngMin: -74.26,
-                lngMax: -73.70
-            },
+            MAP_INITIAL_VIEW: CITY.map.center,
+            MAP_INITIAL_ZOOM: CITY.map.zoom,
+            MAP_USER_LOCATION_ZOOM: CITY.map.userLocationZoom,
+            // Region bounds for geolocation validation (null => accept any location).
+            REGION_BOUNDS: CITY.map.bounds || null,
             MAP_STYLE_DARK: 'data/map-style-dark.json?v=7',
             MAP_STYLE_LIGHT: 'data/map-style-light.json?v=7',
             MAP_ATTRIBUTION: '© <a href="https://protomaps.com">Protomaps</a> © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
@@ -210,7 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Step 2: Pick the chunk matching today's date. If today isn't in
             // the manifest (export is older than NUM_DAY_CHUNKS days), fall
             // back to remainder so the user still sees recent + future events.
-            const todayStr = Utils.getTodayInNewYork();
+            const todayStr = Utils.getTodayInZone();
             const dayIndex = (this.state.manifest.days || []).indexOf(todayStr);
             const initChunk = dayIndex >= 0 ? `day${dayIndex}` : this.config.REMAINDER_CHUNK;
             this.state.initChunk = initChunk;
@@ -820,18 +819,19 @@ document.addEventListener('DOMContentLoaded', () => {
          * Check if coordinates are within NYC bounds
          * @param {number} lat - Latitude
          * @param {number} lng - Longitude
-         * @returns {boolean} True if within NYC bounds
+         * @returns {boolean} True if within the region bounds (or if no bounds configured)
          * @memberof App
          */
-        isWithinNYC(lat, lng) {
-            const bounds = this.config.NYC_BOUNDS;
+        isWithinRegion(lat, lng) {
+            const bounds = this.config.REGION_BOUNDS;
+            if (!bounds) return true; // No region gate configured — accept any location.
             return lat >= bounds.latMin && lat <= bounds.latMax &&
                    lng >= bounds.lngMin && lng <= bounds.lngMax;
         },
 
         /**
          * Get user's current location via Geolocation API
-         * Returns null if geolocation is unavailable, denied, or location is outside NYC
+         * Returns null if geolocation is unavailable, denied, or location is outside the region
          * @returns {Promise<{lat: number, lng: number}|null>}
          * @memberof App
          */
@@ -852,8 +852,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const lat = position.coords.latitude;
                 const lng = position.coords.longitude;
 
-                // Only use location if within NYC area
-                if (this.isWithinNYC(lat, lng)) {
+                // Only use location if within the configured region
+                if (this.isWithinRegion(lat, lng)) {
                     return { lat, lng };
                 }
                 return null;

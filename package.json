@@ -5,7 +5,8 @@
     "build": "node build.js"
   },
   "devDependencies": {
-    "esbuild": "^0.28.0"
+    "esbuild": "^0.28.0",
+    "yaml": "^2.9.0"
   },
   "dependencies": {
     "flatpickr": "^4.6.13"

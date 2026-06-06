@@ -37,13 +37,6 @@ except ImportError:
     raise
 
 
-# Back-compat shim: Instagram URLs are skipped by the crawler (Cloudflare-gated;
-# ingested via /picnob-scrape instead). The skip decision now lives in the
-# site_profiles registry — Instagram is currently the only SKIP profile.
-def is_instagram_url(url):
-    return site_profiles.is_skip_url(url)
-
-
 _DATE_OFFSET_RE = re.compile(r'\{\{date([+-]\d+)?\}\}')
 
 
@@ -112,8 +105,7 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
     def _url_of(u):
         return u['url'] if isinstance(u, dict) else u
 
-    # Drop URLs handled out-of-band (e.g. Instagram, ingested via /picnob-scrape —
-    # crawl4ai can't bypass Cloudflare on instagram.com). See site_profiles.
+    # Drop URLs handled out-of-band.
     crawlable = [u for u in urls if not site_profiles.is_skip_url(_url_of(u))]
     if not crawlable:
         reason = site_profiles.all_skip([_url_of(u) for u in urls]) or "all URLs skipped"
@@ -121,8 +113,7 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
         return None
     urls = crawlable
 
-    # Some platforms short-circuit crawl4ai entirely and fetch via a custom Python
-    # path (e.g. ra.co: DataDome blocks the HTML pages, but /graphql is reachable).
+    # Some platforms short-circuit crawl4ai entirely and fetch via a custom Python path.
     # If every URL resolves to one such fetcher, run it instead of the browser crawl.
     custom_profile = site_profiles.custom_fetch_profile([_url_of(u) for u in urls])
     if custom_profile is not None:
@@ -360,8 +351,6 @@ def get_browser_config(javascript_enabled=True, text_mode=True, light_mode=True,
         text_mode: If True, disables images for faster text-only crawls (default: True).
         light_mode: If True, uses minimal browser features for speed (default: True).
         use_stealth: If True, uses undetected browser mode to bypass bot detection (default: False).
-                    Required for sites like Resident Advisor that have verification pages.
-                    Always runs headed regardless of `headed`.
         headed: If True, run browser with a visible window (default: False, i.e. headless).
                 Use this for sites that need a real window to render correctly.
         user_agent: Custom User-Agent string. If set, overrides the default browser UA.
