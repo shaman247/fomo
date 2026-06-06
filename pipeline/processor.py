@@ -1078,6 +1078,9 @@ def _extract_street_address_loose(s):
     if name:
         name = re.sub(r'[.\']+', '', name)
         name = re.sub(r'\s+', ' ', name.strip())
+        # Drop ordinal suffixes from numbered street names so "14 st" and
+        # "14th st" normalize to the same form ("14 st" vs "39 w 14th st").
+        name = re.sub(r'\b(\d+)(st|nd|rd|th)\b', r'\1', name)
         return f"{num} {name} {st}"
     # Standalone street (Broadway, Bowery) — guard against bare "<n> st" matches
     if st not in _ADDR_STANDALONE_TYPES:
