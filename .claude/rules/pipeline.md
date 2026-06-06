@@ -52,5 +52,4 @@ Some events get "No description available." because the listing page lacked deta
 - `exporter.py` — JSON export to per-day chunks (`events.day0..day3.json` + `events.remainder.json`, matching `locations.*.json`, plus `manifest.json` mapping day index → calendar date)
 - `uploader.py` — FTP upload
 - `db.py` — Database connection and all DB operations
-- `scorer.py` / `export_scores.py` — Event scoring (rubric calibration examples from `city_config`)
 - `frequency_analyzer.py` — Crawl frequency analysis

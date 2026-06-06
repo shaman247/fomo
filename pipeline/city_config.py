@@ -114,8 +114,3 @@ def region_tag_token() -> str:
 
 def non_region_place_patterns() -> list:
     return list((get_config().get("review") or {}).get("non_region_places") or [])
-
-
-def scoring_calibration_examples() -> str:
-    # scorer.py — concrete (city-specific) calibration examples block for the rubric.
-    return (get_config().get("scoring") or {}).get("calibration_examples", "").rstrip("\n")
