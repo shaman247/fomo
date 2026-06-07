@@ -6,7 +6,6 @@
 const MapManager = (() => {
     const state = {
         mapInstance: null,
-        markerColorsRef: null,
 
         // Popup state
         currentPopup: null,
@@ -36,9 +35,8 @@ const MapManager = (() => {
     // INITIALIZATION
     // ========================================
 
-    function init(mapInstance, _tagColors, markerColors) {
+    function init(mapInstance) {
         state.mapInstance = mapInstance;
-        state.markerColorsRef = markerColors || {};
 
         // Add the marker source/layers as soon as the style is parsed. This
         // fires well before the map's `load`/`idle` events (which also wait on
@@ -434,6 +432,19 @@ const MapManager = (() => {
 
         // Trigger a source data refresh to pick up new images
         if (state.sourceDataCache) {
+            // Marker colors are derived from the emoji font (see getMarkerColor), so
+            // a font switch changes them too. The cached features carry baked color
+            // properties — re-derive them under the now-active font so highlight rings
+            // and secondary labels stay consistent with the glyphs.
+            state.sourceDataCache.features.forEach(f => {
+                const li = locationsByLatLng[f.properties.locationKey];
+                if (!li) return;
+                const color = getMarkerColor(li);
+                f.properties.color = color;
+                if (f.properties.labelType === 'expanded') {
+                    f.properties.eventLabelColor = _toEventLabelColor(color);
+                }
+            });
             const source = state.mapInstance.getSource('markers');
             if (source) {
                 source.setData(state.sourceDataCache);
@@ -913,33 +924,15 @@ const MapManager = (() => {
     // UTILITY
     // ========================================
 
-    // Set/replace the emoji→marker-color map. Lets the map be created before
-    // the tag config (which carries bgcolors) has loaded — colors are only read
-    // when markers are actually built (updateMarkerData), which happens after.
-    function setMarkerColors(markerColors) {
-        state.markerColorsRef = markerColors || {};
-    }
-
+    // Resolve a location's marker color from its emoji. The color is derived live
+    // from the emoji's rendered pixels under the active emoji font (system or Noto),
+    // so it matches the glyph the viewer sees. TagColorManager owns the (font-aware)
+    // extraction + cache; this just delegates.
     function getMarkerColor(locationInfo) {
-        if (locationInfo && locationInfo.emoji) {
-            const emoji = locationInfo.emoji;
-            const colors = state.markerColorsRef;
-            if (colors && colors[emoji]) {
-                return colors[emoji];
-            }
-            // Fall back to live canvas extraction for emoji absent from the
-            // precomputed bgcolors table (e.g. newer emoji like the folding hand
-            // fan 🪭). Without this, such markers are stuck on the gray default
-            // even though extraction yields a good color. Mirrors the tag path
-            // (TagColorManager.getEmojiBgColor); result is cached so it runs once
-            // per distinct emoji.
-            if (typeof TagColorManager !== 'undefined' && TagColorManager.getColorForEmoji) {
-                const extracted = TagColorManager.getColorForEmoji(emoji);
-                if (extracted) {
-                    if (colors) colors[emoji] = extracted;
-                    return extracted;
-                }
-            }
+        if (locationInfo && locationInfo.emoji &&
+            typeof TagColorManager !== 'undefined' && TagColorManager.getColorForEmoji) {
+            const color = TagColorManager.getColorForEmoji(locationInfo.emoji);
+            if (color) return color;
         }
         return '#444';
     }
@@ -977,7 +970,6 @@ const MapManager = (() => {
         loadEmojiImages,
         loadEmojiImagesChunked,
         reloadEmojiImages,
-        setMarkerColors,
         updateMarkerData,
         setupMarkerInteractions,
         openPopupAtCoordinates,

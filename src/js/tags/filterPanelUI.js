@@ -23,7 +23,6 @@ const FilterPanelUI = (() => {
     const state = {
         // Configuration
         allAvailableTags: [],
-        tagConfigBgColors: [],
         resultsContainerDOM: null,
         onFilterChangeCallback: null,
         defaultMarkerColor: null,
@@ -872,7 +871,6 @@ const FilterPanelUI = (() => {
      * Initializes the FilterPanelUI module
      * @param {Object} config - Configuration object
      * @param {Array} config.allAvailableTags - All available tags
-     * @param {Array} config.tagConfigBgColors - Background colors for tags
      * @param {Object} config.initialGlobalFrequencies - Initial tag frequencies
      * @param {HTMLElement} config.resultsContainerDOM - Container for search results
      * @param {Function} config.onFilterChangeCallback - Callback when filters change
@@ -889,7 +887,6 @@ const FilterPanelUI = (() => {
         // Extract provider and assign rest to state
         state.colorProvider = config.colorProvider || null;
         state.allAvailableTags = config.allAvailableTags || [];
-        state.tagConfigBgColors = config.tagConfigBgColors || [];
         state.tagDescendantsOf = config.tagDescendantsOf || {};
         state.tagParentsOf = config.tagParentsOf || {};
         state.tagChildrenOf = config.tagChildrenOf || {};

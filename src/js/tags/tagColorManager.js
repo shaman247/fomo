@@ -28,7 +28,7 @@ const TagColorManager = (() => {
 
         // Emoji-based color lookup
         tagEmojiMap: {},   // tag name -> emoji
-        bgcolors: {},      // emoji -> hex color
+        bgcolors: {},      // "<font>|<emoji>" -> hex color (runtime cache of live-extracted colors)
 
         // Selected tags with their assigned colors
         // Array of [tag, color] tuples, maintains selection order
@@ -76,18 +76,36 @@ const TagColorManager = (() => {
     }
 
     /**
+     * Returns the font-family string for the emoji font currently in use, matching
+     * what the map renders glyphs with (MapManager._addEmojiImage). When the user
+     * switches to Noto, the body gets the `use-noto-emoji` class; otherwise the
+     * platform/system emoji font (via `serif` fallback) is used. Keeping extraction
+     * on the same font as the rendered glyph ensures the derived color matches it.
+     * @returns {string} CSS font-family
+     */
+    function getActiveEmojiFont() {
+        return (typeof document !== 'undefined' &&
+                document.body && document.body.classList.contains('use-noto-emoji'))
+            ? '"Noto Color Emoji"'
+            : 'serif';
+    }
+
+    /**
      * Extracts a dominant color from an emoji by drawing it on canvas and analyzing pixels.
-     * Result is cached in state.bgcolors for subsequent lookups.
+     * Renders with the active emoji font (system or Noto), so the result tracks the
+     * glyph the viewer actually sees. Callers go through getColorForEmoji, which caches;
+     * this function does the raw extraction.
      * @param {string} emoji - Emoji character(s)
+     * @param {string} [fontFamily] - Font to render with; defaults to the active emoji font
      * @returns {string} Hex color code
      */
-    function extractColorFromEmoji(emoji) {
+    function extractColorFromEmoji(emoji, fontFamily) {
         const size = 64;
         const canvas = document.createElement('canvas');
         canvas.width = size;
         canvas.height = size;
         const ctx = canvas.getContext('2d');
-        ctx.font = size * 0.85 + 'px serif';
+        ctx.font = size * 0.85 + 'px ' + (fontFamily || getActiveEmojiFont());
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(emoji, size / 2, size / 2);
@@ -164,20 +182,29 @@ const TagColorManager = (() => {
     }
 
     /**
-     * Gets the emoji bgcolor for a tag. Checks precomputed bgcolors first,
-     * then extracts from canvas if the tag has an emoji but no precomputed color.
-     * @param {string} tag - Tag name
-     * @returns {string|null} Color hex code or null if tag has no emoji
+     * Resolves a color for an emoji, extracting it live from the rendered glyph on
+     * first use and caching the result. There is no precomputed/curated table — the
+     * viewer's own emoji font determines the color. The cache is keyed by font too,
+     * so switching between system and Noto emoji yields (and retains) distinct colors
+     * without stale hits.
+     * @param {string} emoji - Emoji character(s)
+     * @returns {string|null} Color hex code, or null if no emoji given
      */
     function getColorForEmoji(emoji) {
         if (!emoji) return null;
-        if (state.bgcolors[emoji]) return state.bgcolors[emoji];
-        // Extract and cache
-        const color = extractColorFromEmoji(emoji);
-        state.bgcolors[emoji] = color;
+        const font = getActiveEmojiFont();
+        const key = font + '|' + emoji;
+        if (state.bgcolors[key]) return state.bgcolors[key];  // cache hit
+        const color = extractColorFromEmoji(emoji, font);
+        state.bgcolors[key] = color;
         return color;
     }
 
+    /**
+     * Resolves a color for a tag via its emoji.
+     * @param {string} tag - Tag name
+     * @returns {string|null} Color hex code, or null if the tag has no emoji
+     */
     function getEmojiBgColor(tag) {
         return getColorForEmoji(state.tagEmojiMap[tag]);
     }
@@ -347,7 +374,10 @@ const TagColorManager = (() => {
         state.darkPalette = config.darkPalette || [];
         state.lightPalette = config.lightPalette || [];
         state.tagEmojiMap = config.tagEmojiMap || {};
-        state.bgcolors = config.bgcolors || {};
+        // Colors are derived live from each emoji's rendered pixels (see
+        // getColorForEmoji), reflecting the viewer's active emoji font. bgcolors is
+        // purely a runtime cache keyed by "<font>|<emoji>"; it starts empty.
+        state.bgcolors = {};
         state.selectedTagsWithColors = [];
     }
 

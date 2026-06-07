@@ -8,7 +8,6 @@
       "attribution": "<a href=\"https://protomaps.com\">Protomaps</a> © <a href=\"https://openstreetmap.org\">OpenStreetMap</a>"
     }
   },
-  "glyphs": "fonts/glyphs-48/{fontstack}/{range}.pbf",
   "layers": [
     {
       "id": "background",

@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
          * @property {Object} locationDistances - Map of locationKey -> distance from center
          * @property {Array} allEvents - All loaded events
          * @property {Object} eventsById - Event lookup by ID
-         * @property {Object} tagConfig - Tag configuration (geotags, bgcolors)
+         * @property {Object} tagConfig - Tag configuration (geotags)
          * @property {Object} eventsByLatLng - Events grouped by location
          * @property {Object} locationsByLatLng - Location info by coordinates
          * @property {Object} tagFrequencies - Global tag frequency counts
@@ -140,8 +140,8 @@ document.addEventListener('DOMContentLoaded', () => {
             MAP_USER_LOCATION_ZOOM: CITY.map.userLocationZoom,
             // Region bounds for geolocation validation (null => accept any location).
             REGION_BOUNDS: CITY.map.bounds || null,
-            MAP_STYLE_DARK: 'data/map-style-dark.json?v=7',
-            MAP_STYLE_LIGHT: 'data/map-style-light.json?v=7',
+            MAP_STYLE_DARK: 'data/map-style-dark.json?v=8',
+            MAP_STYLE_LIGHT: 'data/map-style-light.json?v=8',
             MAP_ATTRIBUTION: '© <a href="https://protomaps.com">Protomaps</a> © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
             MAP_MAX_ZOOM: 20
         },
@@ -251,12 +251,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (orgTag && org && org.emoji) this.state.tagEmojiMap[orgTag] = org.emoji;
             }
 
-            // Initialize TagColorManager with color palettes and emoji bgcolors
+            // Initialize TagColorManager with color palettes. Emoji colors are
+            // extracted live per emoji (no precomputed table needed).
             TagColorManager.init({
                 darkPalette: this.config.TAG_COLOR_PALETTE_DARK,
                 lightPalette: this.config.TAG_COLOR_PALETTE_LIGHT,
-                tagEmojiMap: this.state.tagEmojiMap,
-                bgcolors: this.state.tagConfig.bgcolors || {}
+                tagEmojiMap: this.state.tagEmojiMap
             });
 
             DataManager.processInitialData(initEventData, initLocationData, this.state, this.config);
@@ -303,8 +303,6 @@ document.addEventListener('DOMContentLoaded', () => {
          * @private
          */
         _initDataDependentModules() {
-            // Feed the now-loaded emoji→color map to the already-created map.
-            MapManager.setMarkerColors((this.state.tagConfig && this.state.tagConfig.bgcolors) || {});
             this.initMarkerController();
             this.initFilterPanelUI();
         },
@@ -962,11 +960,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 }, true); // Use capture to intercept before MapLibre's handler
             }
 
-            // Initialize MapManager with the MapLibre map. bgcolors may not be
-            // loaded yet (the map is started in parallel with the data fetch) —
-            // App.init calls MapManager.setMarkerColors() once tagConfig arrives,
-            // before any marker is drawn.
-            MapManager.init(this.state.map, {}, (this.state.tagConfig && this.state.tagConfig.bgcolors) || {});
+            // Initialize MapManager with the MapLibre map. Marker colors are
+            // derived live from each emoji (TagColorManager.getColorForEmoji), so
+            // there's no color map to feed in.
+            MapManager.init(this.state.map);
 
             // Create debug container for DOM-based debug overlay
             const mapContainer = this.state.map.getContainer();
@@ -1209,7 +1206,6 @@ document.addEventListener('DOMContentLoaded', () => {
         initFilterPanelUI() {
             FilterPanelUI.init({
                 allAvailableTags: this.state.allAvailableTags,
-                tagConfigBgColors: this.state.tagConfig.bgcolors,
                 tagDescendantsOf: this.state.tagDescendantsOf,
                 tagParentsOf: this.state.tagParentsOf,
                 tagChildrenOf: this.state.tagChildrenOf,
