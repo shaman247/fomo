@@ -17,6 +17,11 @@ const CITY_CONFIG_PATH = path.join(__dirname, 'config', `${FOMO_CITY}.yaml`);
 // Directories to include in dist/ (everything the server needs)
 const ASSET_DIRS = ['data', 'images', 'fonts', 'api', 'admin', 'vendor'];
 
+// Generated data files are gitignored (the pipeline rewrites them every run). Each has a
+// committed `<name>.example.json` fallback so a fresh checkout — with no pipeline export yet —
+// still builds a functioning app. Map: live filename -> example filename (both under src/data/).
+const EXAMPLE_DATA_FILES = { 'tag_hierarchy.json': 'tag_hierarchy.example.json' };
+
 // Load the `frontend` block from the city config.
 function loadFrontendConfig() {
     const cfg = yaml.parse(fs.readFileSync(CITY_CONFIG_PATH, 'utf8')) || {};
@@ -65,12 +70,28 @@ function applyBranding(html, fe) {
 function copyDirSync(src, dest) {
     fs.mkdirSync(dest, { recursive: true });
     for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
+        // Example files are a build-time fallback, not a shipped asset — keep them out of dist/.
+        if (entry.name.endsWith('.example.json')) continue;
         const srcPath = path.join(src, entry.name);
         const destPath = path.join(dest, entry.name);
         if (entry.isDirectory()) {
             copyDirSync(srcPath, destPath);
         } else {
             fs.copyFileSync(srcPath, destPath);
+        }
+    }
+}
+
+// Ensure each generated data file exists, falling back to its committed example when the
+// pipeline hasn't produced one yet (fresh checkout / fork). The live file, once present,
+// is never overwritten — a real export always wins.
+function ensureSeededData() {
+    for (const [live, example] of Object.entries(EXAMPLE_DATA_FILES)) {
+        const livePath = path.join(SRC, 'data', live);
+        const examplePath = path.join(SRC, 'data', example);
+        if (!fs.existsSync(livePath) && fs.existsSync(examplePath)) {
+            fs.copyFileSync(examplePath, livePath);
+            console.log(`  Seeded src/data/${live} from ${example} (no pipeline export found)`);
         }
     }
 }
@@ -196,6 +217,9 @@ async function build(isDev) {
     // Copy about.html and .htaccess
     fs.copyFileSync(path.join(SRC, 'about.html'), path.join(DIST, 'about.html'));
     fs.copyFileSync(path.join(SRC, '.htaccess'), path.join(DIST, '.htaccess'));
+
+    // Seed any missing generated data files before they get symlinked/copied below.
+    ensureSeededData();
 
     // Copy asset directories into dist/
     // Dev: symlinks (fast, live updates); Prod: full copies (self-contained)
