@@ -19,6 +19,7 @@ js/
 |--------|-------------|
 | **constants.js** | Application-wide constants (eliminates magic numbers) |
 | **utils.js** | Utilities: HTML escaping, date formatting, debounce/throttle, SafeStorage |
+| **historyManager.js** | Browser history/URL state management |
 | **urlParams.js** | URL parameter parsing and updates |
 
 ### Data (`data/`)
@@ -31,7 +32,7 @@ js/
 ### Map (`map/`)
 | Module | Description |
 |--------|-------------|
-| **mapManager.js** | Create and manage Leaflet markers with custom icons |
+| **mapManager.js** | Create and manage MapLibre WebGL symbol-layer markers (GPU-accelerated, not DOM markers) |
 | **markerController.js** | Marker lifecycle, popup content, display limits (uses `filterProvider`, `eventProvider`) |
 | **viewportManager.js** | Calculate visible center accounting for filter panel overlay |
 
@@ -42,7 +43,7 @@ js/
 | **searchController.js** | Handles search input UI, debouncing, special terms, mobile auto-expand |
 | **tagStateManager.js** | Manage tag filter states (uses `colorProvider`) |
 | **tagColorManager.js** | Assign colors to selected tags from theme palette |
-| **selectedTagsDisplay.js** | Selected tags display as interactive pill buttons |
+| **selectedTagsDisplay.js** | Retired no-op stub (init/reset/render empty); selected tags now live in the FilterPanelUI chip bar |
 | **sectionRenderer.js** | Render collapsible search result sections |
 
 ### UI (`ui/`)
@@ -50,6 +51,9 @@ js/
 |--------|-------------|
 | **uiManager.js** | Date picker, event listeners, delegates to PopupContentBuilder |
 | **popupContentBuilder.js** | Creates popup content for location markers |
+| **bottomSheet.js** | Mobile bottom sheet for popup content |
+| **listView.js** | List view of events |
+| **feedbackManager.js** | User feedback UI |
 | **gestureHandler.js** | Swipe gestures for section reordering |
 | **modalManager.js** | Welcome and settings modals |
 | **toastNotifier.js** | Toast notifications |

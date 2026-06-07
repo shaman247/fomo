@@ -30,7 +30,7 @@ paths:
 
 ## Dev vs Prod
 
-- Dev (`npm run dev`): unminified, stable filenames, symlinks `data/`, `images/`, `fonts/`, `api/`, `admin/` from `dist/` → `src/`
+- Dev (`npm run dev`): unminified, stable filenames, symlinks `data/`, `images/`, `fonts/`, `api/`, `admin/`, `vendor/` from `dist/` → `src/`
 - Prod (`npm run build`): minified, content-hashed filenames, copies those directories into `dist/`
 
 ## Deployment
@@ -40,4 +40,4 @@ npm run build                          # Build to dist/
 python scripts/upload_public_html.py   # Upload dist/ to server via FTP
 ```
 
-The upload script tracks file modification times in `scripts/upload_state.json` and only uploads changed files. Use `--force` to upload everything.
+The upload script tracks file content hashes (MD5) in `scripts/upload_state.json` and only uploads changed files. Use `--force` to upload everything.

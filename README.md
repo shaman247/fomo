@@ -77,9 +77,12 @@ All data flows through the database (`crawl_runs` → `crawl_results` → `crawl
 1. **Crawl** → Query `websites` table for due sites, crawl and store in `crawl_results.crawled_content`
 2. **Extract** → Use Gemini AI to extract structured tables, store in `crawl_results.extracted_content`
 3. **Process** → Parse tables, enrich with location data from `locations`, store in `crawl_events`
-4. **Merge** → Deduplicate `crawl_events` into final `events` table
-5. **Export** → Generate `src/data/*.json` from `events` table
-6. **Upload** → Push JSON files to FTP server
+4. **Detail crawl** → Visit individual event URLs to fill in missing descriptions/tags/emoji on `crawl_events`
+5. **Merge** → Deduplicate `crawl_events` into final `events` table
+6. **Export** → Generate `src/data/*.json` from `events` table
+7. **Upload** → Push JSON files to FTP server
+
+The day-to-day entry point is the `/run-pipeline` workflow (`.claude/commands/run-pipeline.md`), which wraps `pipeline/main.py` with review and fix steps.
 
 ### Deployment
 

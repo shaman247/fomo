@@ -147,7 +147,7 @@ Run Step 2 again — the script automatically skips already-reviewed events. Con
 ./venv/bin/python scripts/find_review_candidates.py --offset 50     # Skip first 50 (pagination)
 ```
 
-The 32 patterns are defined in `scripts/find_review_candidates.py`. To add new patterns, add entries to the `PATTERNS` list in that file. Pattern 23's place list (countries, US states, major non-NYC cities) lives in the `NON_NYC_PLACES` constant at the top of the same file — extend it when a new country/state shows up as a trip destination.
+The 32 patterns are defined in `scripts/find_review_candidates.py`. To add new patterns, add entries to the `PATTERNS` list in that file. Pattern 23's place list (countries, US states, major non-NYC cities) comes from `NON_NYC_PLACES = city_config.non_region_place_patterns()` at the top of the file — it's sourced from `config/<FOMO_CITY>.yaml` (city-agnostic), so extend it by editing the `non_region_place_patterns` list in `config/nyc.yaml`, not the constant in this script.
 
 ### Spotting calendar-widget leaks manually
 

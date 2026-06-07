@@ -35,6 +35,7 @@ Click any row to open a detail panel on the right showing comprehensive informat
 ```
 admin/
 ├── index.php            # Main SPA entry point
+├── api.php              # Client-side data API (?type=websites|locations|events|tags)
 ├── admin.js             # Client-side JavaScript
 ├── admin.css            # Styles
 ├── db_config.php        # Database connection and helpers
@@ -51,20 +52,20 @@ admin/
 ## Architecture
 
 ### PHP Backend
-- `index.php` handles both initial page load and AJAX requests (`?ajax=1`)
-- AJAX requests return JSON with `toolbar`, `table`, `rowsData`, and metadata
+- `index.php` is a thin shell page that loads its data client-side
+- `api.php?type=<tab>` returns JSON datasets (`websites`, `locations`, `events`, `tags`); the JS renders tables/toolbars client-side
 - Detail pages return HTML fragments loaded into the detail panel
 
 ### JavaScript Frontend
-- `tabState` tracks sort, filter, and pagination state per tab
-- `tabCache` caches fetched tab data for instant switching
+- `AdminData` caches fetched per-tab data for instant switching
+- `State` tracks the current tab, sort, and filter state
 - `detailHistory` maintains navigation history for back/forward
 - Prefetching loads other tabs in background after initial load
 
 ### CSS
 - Dark theme with CSS custom properties
 - Hidden scrollbars (content still scrollable)
-- Responsive detail panel (fixed 420px width)
+- Responsive detail panel (fixed 504px width)
 
 ## Database Tables Used
 

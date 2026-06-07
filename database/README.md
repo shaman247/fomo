@@ -96,6 +96,8 @@ Venue/location information for events.
 |--------|------|-------------|
 | `id` | INT UNSIGNED | Primary key (matches JSON id) |
 | `name` | VARCHAR(255) | Location name |
+| `short_name` | VARCHAR(100) | Display name for map labels and buttons |
+| `very_short_name` | VARCHAR(50) | Abbreviated name when space is limited |
 | `address` | VARCHAR(500) | Full address |
 | `lat` | DECIMAL(10,6) | Latitude |
 | `lng` | DECIMAL(10,6) | Longitude |
@@ -112,6 +114,7 @@ Alternative names for locations.
 | `id` | INT UNSIGNED | Auto-increment primary key |
 | `location_id` | INT UNSIGNED | Foreign key to locations |
 | `alternate_name` | VARCHAR(255) | Alternative name |
+| `website_id` | INT UNSIGNED | Scope to a specific website (NULL = global) |
 
 ### `websites`
 Event source websites for crawling.
@@ -120,13 +123,28 @@ Event source websites for crawling.
 |--------|------|-------------|
 | `id` | INT UNSIGNED | Primary key (matches JSON id) |
 | `name` | VARCHAR(255) | Website name |
+| `base_url` | VARCHAR(500) | Main website URL (informational, not crawled) |
 | `crawl_frequency` | INT UNSIGNED | Days between crawls |
 | `selector` | VARCHAR(500) | CSS selector for click-to-load |
 | `num_clicks` | INT UNSIGNED | Number of pagination clicks |
+| `js_code` | TEXT | JavaScript to execute before crawling |
 | `keywords` | VARCHAR(255) | URL filter keywords |
+| `max_pages` | INT UNSIGNED | Max pages for deep crawl (default 30) |
 | `notes` | TEXT | Internal notes |
+| `disabled` | BOOLEAN | If true, skip this website during crawling |
+| `crawl_after` | DATE | Do not crawl until this date (seasonal events) |
+| `force_crawl` | BOOLEAN | If true, crawl on next run regardless of frequency |
+| `last_crawled_at` | TIMESTAMP | When this website was last crawled |
+| `strict_name_match` | TINYINT(1) | If true, merger only fuses on exact name match (or shared occurrence) |
+| `text_mode` | TINYINT(1) | Disable images for text-only crawl |
+| `light_mode` | TINYINT(1) | Use minimal browser features |
+| `use_stealth` | TINYINT(1) | Use stealth mode to avoid detection |
+| `headed` | TINYINT(1) | Run browser in headed (visible) mode |
+| `crawl_timeout` | INT UNSIGNED | Timeout in seconds for the crawl (default 120) |
 | `created_at` | TIMESTAMP | Record creation time |
 | `updated_at` | TIMESTAMP | Last update time |
+
+There is no `websites.url` column — crawl URLs live in `website_urls.url`.
 
 ### `website_urls`
 URLs to crawl for each website.
@@ -171,11 +189,15 @@ Individual events.
 | `location_id` | INT UNSIGNED | Foreign key to locations (nullable) |
 | `location_name` | VARCHAR(255) | Original location name from source |
 | `sublocation` | VARCHAR(255) | Room, floor, etc. |
-| `lat` | DECIMAL(10,6) | Latitude |
-| `lng` | DECIMAL(10,6) | Longitude |
 | `website_id` | INT UNSIGNED | Foreign key to websites (nullable) |
+| `event_type` | VARCHAR(40) | Classified event type (drives the Format tag family) |
+| `archived` | TINYINT(1) | If true, event is archived (no future occurrences) |
+| `suppressed` | TINYINT(1) | If true, event is hidden from display |
+| `reviewed` | TINYINT(1) | If true, event has been reviewed for suppression |
 | `created_at` | TIMESTAMP | Record creation time |
 | `updated_at` | TIMESTAMP | Last update time |
+
+The `events` table has no `lat`/`lng` — coordinates live on `locations` and are joined in via `location_id`.
 
 ### `event_occurrences`
 Date/time occurrences for events (one event can have multiple dates).
@@ -207,6 +229,10 @@ Unique tag values shared by locations and events.
 |--------|------|-------------|
 | `id` | INT UNSIGNED | Auto-increment primary key |
 | `name` | VARCHAR(100) | Tag name (unique) |
+| `emoji` | VARCHAR(10) | Tag emoji |
+| `is_quick_filter` | TINYINT(1) | If true, surfaced as a quick-filter chip |
+| `display_order` | INT | Sort order for display |
+| `type` | ENUM('tag','keyword') | `tag` = curated (in hierarchy/filters); `keyword` = search-only. New AI tags default to `keyword`; promote via `populate_tag_hierarchy.py` |
 
 ### `location_tags`
 Many-to-many relationship between locations and tags.
@@ -226,8 +252,77 @@ Many-to-many relationship between events and tags.
 | `event_id` | INT UNSIGNED | Foreign key to events |
 | `tag_id` | INT UNSIGNED | Foreign key to tags |
 
+### `tag_hierarchy`
+DAG edges defining tag parent/child relationships (a tag can have multiple parents).
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `parent_tag_id` | INT UNSIGNED | Foreign key to tags (parent) |
+| `child_tag_id` | INT UNSIGNED | Foreign key to tags (child) |
+
+### `tag_aliases`
+Alternate spellings/synonyms that map onto a canonical tag.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `tag_id` | INT UNSIGNED | Foreign key to tags (canonical) |
+| `alias` | VARCHAR | Alias string |
+
+### `tag_disambiguations`
+Resolves homonym aliases to a target tag based on context.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | INT UNSIGNED | Auto-increment primary key |
+| `ambiguous_alias` | VARCHAR | The ambiguous alias string |
+| `context_tag_id` | INT UNSIGNED | Context tag that disambiguates |
+| `target_tag_id` | INT UNSIGNED | Tag to resolve to in that context |
+| `priority` | INT | Resolution priority |
+
+### `instagram_accounts`
+Instagram handles linked to locations and websites.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | INT UNSIGNED | Auto-increment primary key |
+| `handle` | VARCHAR(100) | Instagram handle (unique) |
+| `name` | VARCHAR(255) | Display name |
+| `description` | VARCHAR(500) | Optional description |
+| `created_at` | TIMESTAMP | Record creation time |
+| `updated_at` | TIMESTAMP | Last update time |
+
+### `location_instagram`
+Many-to-many between locations and Instagram accounts.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `location_id` | INT UNSIGNED | Foreign key to locations |
+| `instagram_id` | INT UNSIGNED | Foreign key to instagram_accounts |
+
+### `website_instagram`
+Many-to-many between websites and Instagram accounts.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `website_id` | INT UNSIGNED | Foreign key to websites |
+| `instagram_id` | INT UNSIGNED | Foreign key to instagram_accounts |
+
+### `grantees`
+NYSCA grant recipients tracked as candidate website additions.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | INT UNSIGNED | Auto-increment primary key |
+| `name` | VARCHAR(255) | Organization name (unique) |
+| `area` | VARCHAR(100) | NY region (e.g., New York City, Long Island) |
+| `website_id` | INT UNSIGNED | Linked website if added (nullable) |
+| `exclusion_reason` | VARCHAR(500) | Why website was not added (if applicable) |
+| `notes` | TEXT | Optional notes |
+| `created_at` | TIMESTAMP | Record creation time |
+| `updated_at` | TIMESTAMP | Last update time |
+
 ### `crawl_runs`
-Represents a daily crawl batch (corresponds to a YYYYMMDD folder in `event_data/processed/`).
+Represents a daily crawl batch (e.g., a YYYYMMDD run). All intermediate crawl data lives in the database.
 
 | Column | Type | Description |
 |--------|------|-------------|
@@ -268,10 +363,10 @@ Individual events extracted from a crawl result (raw data before deduplication).
 | `emoji` | VARCHAR(10) | Event emoji |
 | `location_name` | VARCHAR(255) | Raw location name from crawl |
 | `sublocation` | VARCHAR(255) | Room, floor, etc. |
-| `lat` | DECIMAL(10,6) | Latitude |
-| `lng` | DECIMAL(10,6) | Longitude |
+| `location_id` | INT UNSIGNED | Matched location from database (nullable) |
 | `url` | VARCHAR(2000) | Primary event URL |
 | `raw_data` | JSON | Full JSON object from crawl |
+| `content_hash` | CHAR(64) | SHA-256 hash for deduplication |
 | `created_at` | TIMESTAMP | Record creation time |
 
 ### `crawl_event_occurrences`
@@ -520,6 +615,8 @@ WHERE c.status = 'pending';
 ```
 
 ## Bidirectional Sync
+
+> **Not currently implemented.** The `edits`, `sync_state`, and `conflicts` tables exist in the schema, but `scripts/sync_bidirectional.py` does not exist — the only sync scripts present are `scripts/sync_feedback.py` and `scripts/sync_format_tags.py`. The design below describes the planned feature.
 
 The database supports bidirectional sync between local and production, with edit history and conflict resolution.
 

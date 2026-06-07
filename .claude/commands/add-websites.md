@@ -106,7 +106,7 @@ After adding websites, test that they can be crawled successfully:
 
 ```bash
 # Activate the virtual environment
-source pipeline/venv/bin/activate
+source venv/bin/activate
 
 # Run a test crawl on specific websites (by ID)
 python pipeline/main.py --website-ids 123,124,125

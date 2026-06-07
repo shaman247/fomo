@@ -10,7 +10,7 @@ paths:
 
 ## Stack
 
-- MapLibre GL JS v4.7.1 with Protomaps vector tiles
+- MapLibre GL JS v5.24.0 (self-hosted in `vendor/`) with Protomaps vector tiles
 - Vanilla JS with IIFE module pattern (no framework, no bundler)
 - CSS with `@import` chain (no preprocessor)
 
@@ -30,7 +30,7 @@ core (constants, utils, historyManager, urlParams) → data → tags → UI → 
 - `core/` — utils.js, constants.js, historyManager.js, urlParams.js
 - `data/` — dataManager.js, filterManager.js, searchManager.js
 - `tags/` — tagColorManager.js, tagStateManager.js, selectedTagsDisplay.js, searchController.js, sectionRenderer.js, filterPanelUI.js
-- `ui/` — bottomSheet.js, popupContentBuilder.js, uiManager.js, themeManager.js, gestureHandler.js, modalManager.js, emojiManager.js, feedbackManager.js, toastNotifier.js
+- `ui/` — bottomSheet.js, listView.js, popupContentBuilder.js, uiManager.js, themeManager.js, gestureHandler.js, modalManager.js, emojiManager.js, feedbackManager.js, toastNotifier.js
 - `map/` — mapManager.js, markerController.js, viewportManager.js
 - `script.js` — App initialization and event wiring
 
@@ -38,7 +38,9 @@ core (constants, utils, historyManager, urlParams) → data → tags → UI → 
 
 - `events.day0.json` … `events.day3.json` — events occurring on each of the next 4 calendar days (an event with multi-day occurrences appears in every chunk it touches; frontend dedupes by backend `id`)
 - `events.remainder.json` — events with at least one occurrence past day 3 (within the 90-day future window)
+- `events.day0.desc.json` … `events.day3.desc.json` / `events.remainder.desc.json` — per-chunk `{id: description}` companion files (descriptions are split out so the main event chunks stay small; loaded lazily/separately by `script.js`)
 - `locations.day0.json` … `locations.day3.json` / `locations.remainder.json` — venues referenced by events in each chunk
+- `organizers.json` — `{id: {name, url, emoji, description}}` map of event organizers (aggregators/unknown sources dropped)
 - `manifest.json` — `{ days: ["YYYY-MM-DD", …] }`; the frontend picks the chunk matching today's date in the configured timezone (`window.__CITY__.timezone`, via `Utils.getTodayInZone()`) for Phase 1, falls back to `remainder` if today isn't in the manifest
 - `tag_hierarchy.json` — exported tag DAG for filter panel
 - `tags.json` — tag metadata including geotags list

@@ -136,7 +136,7 @@ Re-run Step 1 and confirm the fixed locations have dropped off the list.
 
 ## Improving the matcher (only when needed)
 
-If the scan flags a venue where the DB address and sublocation are the *same* address but written differently (e.g. word ordinals, hyphenated Queens numbers, suite/floor suffixes, leading venue names in the DB address), and the existing `_extract_street_address_loose` doesn't normalize them to the same form, the matcher itself needs a tweak — not the data. Look at `pipeline/processor.py:744-807`. Add a test case to `/tmp/test_loose.py` first, get it passing, then re-export.
+If the scan flags a venue where the DB address and sublocation are the *same* address but written differently (e.g. word ordinals, hyphenated Queens numbers, suite/floor suffixes, leading venue names in the DB address), and the existing `_extract_street_address_loose` doesn't normalize them to the same form, the matcher itself needs a tweak — not the data. Look at `_extract_street_address_loose` / `sublocation_redundant_with_address` in `pipeline/processor.py`. Add a test case to `/tmp/test_loose.py` first, get it passing, then re-export.
 
 Common normalization gaps that have been added historically: `Tenth` → `10th`, `5-52` → `552`, leading `<Venue Name>, <addr>`, trailing `Suite 605A` / `#1A` / `2nd floor`, `Broadway` / `Bowery` as standalone street names, trailing punctuation on `St.`.
 

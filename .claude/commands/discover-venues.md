@@ -295,17 +295,15 @@ If a crawl extracts too many events (e.g., pages with years of historical events
 
 ### Phase 9: Cleanup
 
-After successfully adding venues, reset the PHP arrays:
+After successfully adding venues, reset the PHP arrays to empty — do **not** leave dated comments or "see git history" trail markers behind (the git log is the record). This matches the cleanup convention in `/add-locations` and `/add-websites`:
 
 ```php
 // In add_locations.php
 $new_locations = [
-    // Locations added on YYYY-MM-DD - see git history
 ];
 
 // In add_websites.php
 $new_websites = [
-    // Websites added on YYYY-MM-DD - see git history
 ];
 ```
 

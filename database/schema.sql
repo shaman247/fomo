@@ -6,6 +6,11 @@ CREATE DATABASE IF NOT EXISTS fomo CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode
 
 USE fomo;
 
+-- Tables are not declared in strict dependency order (some FOREIGN KEYs reference
+-- tables defined later), so defer FK validation until every table exists. Re-enabled
+-- at the end of the file.
+SET FOREIGN_KEY_CHECKS = 0;
+
 -- ============================================================================
 -- LOCATIONS
 -- ============================================================================
@@ -22,6 +27,7 @@ CREATE TABLE IF NOT EXISTS locations (
     lng DECIMAL(10, 6),
     emoji VARCHAR(10),
     alt_emoji VARCHAR(10),
+    generic_location TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'If true, a broad area/neighborhood rather than a specific venue (always uses pushpin emoji)',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
@@ -80,6 +86,13 @@ CREATE TABLE IF NOT EXISTS websites (
     crawl_timeout INT UNSIGNED DEFAULT NULL COMMENT 'Timeout in seconds for entire crawl operation (default: 120)',
     crawl_frequency_locked BOOLEAN DEFAULT FALSE COMMENT 'If true, auto-frequency adjustment is disabled',
     strict_name_match TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'If true, merger only fuses a crawl_event into an existing event on an EXACT name match, or a fuzzy match confirmed by a shared occurrence slot (prevents different recurring programs at a shared generic venue from collapsing; e.g. daily.nyc run clubs)',
+    max_batches INT DEFAULT NULL COMMENT 'Override default per-website extraction batch limit (default 3 = 90 events)',
+    source_type ENUM('primary','aggregator') NOT NULL DEFAULT 'primary' COMMENT 'aggregator sites are cross-referenced manually, not crawled on a regular schedule',
+    process_images TINYINT(1) DEFAULT NULL COMMENT 'Run image/vision extraction for this site (e.g. Instagram)',
+    user_agent VARCHAR(500) DEFAULT NULL COMMENT 'Per-site User-Agent override (default: constants.get_user_agent())',
+    emoji VARCHAR(8) DEFAULT NULL COMMENT 'Organizer emoji shown in event popups',
+    skip_reenrichment TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'Skip detail-crawl re-enrichment (sites whose event URLs consistently fail, e.g. bot-protected ticketing)',
+    blocked_location_names TEXT DEFAULT NULL COMMENT 'List of location names to drop (e.g. non-NYC venues from a multi-city feed)',
 
     INDEX idx_name (name),
     INDEX idx_last_crawled (last_crawled_at),
@@ -103,6 +116,8 @@ CREATE TABLE IF NOT EXISTS website_locations (
     id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     website_id INT UNSIGNED NOT NULL,
     location_id INT UNSIGNED NOT NULL,
+    is_primary TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'Primary venue for this website (default location when the extractor emits the org name)',
+    url VARCHAR(500) DEFAULT NULL COMMENT 'Optional per-link URL for this website-location pairing',
 
     UNIQUE KEY unique_website_location (website_id, location_id),
     INDEX idx_website (website_id),
@@ -178,6 +193,8 @@ CREATE TABLE IF NOT EXISTS events (
     archived TINYINT(1) DEFAULT 0 COMMENT 'If true, event is archived (no future occurrences)',
     suppressed TINYINT(1) DEFAULT 0 COMMENT 'If true, event is hidden from display',
     reviewed TINYINT(1) DEFAULT 0 COMMENT 'If true, event has been reviewed for suppression',
+    section VARCHAR(50) DEFAULT NULL COMMENT 'Display section grouping for the frontend (single-occasion vs ongoing, etc.)',
+    event_type VARCHAR(40) DEFAULT NULL COMMENT 'Classified event_type (see pipeline/event_types.py); drives the Format tag family',
 
     INDEX idx_name (name(255)),
     INDEX idx_location (location_id),
@@ -213,6 +230,47 @@ CREATE TABLE IF NOT EXISTS event_urls (
 
     INDEX idx_event (event_id),
     FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Event scores - per-event quality scores from the (optional) event scorer.
+-- event_id has no FK (scorer rows may outlive an event); composite_score is generated.
+CREATE TABLE IF NOT EXISTS event_scores (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    event_id INT NOT NULL,
+    scorer_run_id VARCHAR(50) NOT NULL,
+    scorer_model VARCHAR(100) NOT NULL,
+    scored_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    specificity DECIMAL(3,1) NOT NULL DEFAULT 0.0,
+    novelty DECIMAL(3,1) NOT NULL DEFAULT 0.0,
+    openness DECIMAL(3,1) NOT NULL DEFAULT 0.0,
+    prominence DECIMAL(3,1) NOT NULL DEFAULT 0.0,
+    connection DECIMAL(3,1) NOT NULL DEFAULT 0.0,
+    substance DECIMAL(3,1) NOT NULL DEFAULT 0.0,
+    specificity_reason TEXT DEFAULT NULL,
+    novelty_reason TEXT DEFAULT NULL,
+    openness_reason TEXT DEFAULT NULL,
+    prominence_reason TEXT DEFAULT NULL,
+    connection_reason TEXT DEFAULT NULL,
+    substance_reason TEXT DEFAULT NULL,
+    composite_score DECIMAL(5,2) GENERATED ALWAYS AS (specificity + novelty + openness + prominence + connection + substance) STORED,
+
+    UNIQUE KEY uq_event_run (event_id, scorer_run_id),
+    INDEX idx_event_id (event_id),
+    INDEX idx_composite (composite_score)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Dedupe dismissed pairs - event pairs a human reviewer marked as NOT duplicates (so they won't re-surface)
+CREATE TABLE IF NOT EXISTS dedupe_dismissed_pairs (
+    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    event_id_a INT NOT NULL,
+    event_id_b INT NOT NULL,
+    reason VARCHAR(500) DEFAULT NULL,
+    dismissed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    UNIQUE KEY unique_pair (event_id_a, event_id_b),
+    INDEX idx_a (event_id_a),
+    INDEX idx_b (event_id_b),
+    CONSTRAINT chk_order CHECK (event_id_a < event_id_b)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================================
@@ -258,6 +316,42 @@ CREATE TABLE IF NOT EXISTS event_tags (
     FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Tag hierarchy - DAG edges between curated tags (a tag may have multiple parents)
+CREATE TABLE IF NOT EXISTS tag_hierarchy (
+    parent_tag_id INT UNSIGNED NOT NULL,
+    child_tag_id INT UNSIGNED NOT NULL,
+
+    PRIMARY KEY (parent_tag_id, child_tag_id),
+    INDEX idx_child (child_tag_id),
+    FOREIGN KEY (parent_tag_id) REFERENCES tags(id) ON DELETE CASCADE,
+    FOREIGN KEY (child_tag_id) REFERENCES tags(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Tag aliases - maps keyword/synonym aliases to a canonical curated tag (semantic equivalence)
+CREATE TABLE IF NOT EXISTS tag_aliases (
+    tag_id INT UNSIGNED NOT NULL,
+    alias VARCHAR(100) NOT NULL,
+
+    PRIMARY KEY (alias),
+    INDEX idx_tag (tag_id),
+    FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Tag disambiguations - context rules picking the right homonym variant (e.g. Drama / Film)
+CREATE TABLE IF NOT EXISTS tag_disambiguations (
+    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    ambiguous_alias VARCHAR(100) NOT NULL COMMENT 'Normalized AI-emitted tag (e.g. drama)',
+    context_tag_id INT UNSIGNED DEFAULT NULL COMMENT 'Rule fires if this tag (or a descendant) is a co-tag; NULL = unconditional fallback',
+    target_tag_id INT UNSIGNED NOT NULL COMMENT 'Variant to use when the rule matches',
+    priority INT NOT NULL DEFAULT 0 COMMENT 'Higher priority evaluated first; first match wins',
+
+    INDEX idx_alias (ambiguous_alias),
+    INDEX fk_dis_ctx (context_tag_id),
+    INDEX fk_dis_tgt (target_tag_id),
+    FOREIGN KEY (context_tag_id) REFERENCES tags(id) ON DELETE CASCADE,
+    FOREIGN KEY (target_tag_id) REFERENCES tags(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- ============================================================================
 -- CRAWL DATA (Pipeline tracking)
 -- ============================================================================
@@ -286,6 +380,8 @@ CREATE TABLE IF NOT EXISTS crawl_results (
     status ENUM('pending', 'crawled', 'extracted', 'processed', 'failed') DEFAULT 'pending',
     crawled_content LONGTEXT DEFAULT NULL COMMENT 'Raw markdown from crawler',
     extracted_content LONGTEXT DEFAULT NULL COMMENT 'Markdown table from Gemini extraction',
+    batch_job_name VARCHAR(255) DEFAULT NULL COMMENT 'Gemini batch job name, if extracted via the batch API',
+    content_hash CHAR(64) DEFAULT NULL COMMENT 'Hash of crawled_content to detect unchanged pages',
     crawled_at TIMESTAMP NULL,
     extracted_at TIMESTAMP NULL,
     processed_at TIMESTAMP NULL,
@@ -314,6 +410,7 @@ CREATE TABLE IF NOT EXISTS crawl_events (
     url VARCHAR(2000) DEFAULT NULL COMMENT 'Primary event URL',
     raw_data JSON DEFAULT NULL COMMENT 'Full JSON object from crawl',
     content_hash CHAR(64) DEFAULT NULL COMMENT 'SHA-256 hash for deduplication',
+    detail_crawl_attempts TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Number of detail-crawl re-enrichment attempts on this event URL',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     INDEX idx_crawl_result (crawl_result_id),
@@ -363,6 +460,26 @@ CREATE TABLE IF NOT EXISTS event_sources (
     INDEX idx_crawl_event (crawl_event_id),
     FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE,
     FOREIGN KEY (crawl_event_id) REFERENCES crawl_events(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Extraction rejections - audit trail of events dropped during extraction/processing
+-- (e.g. out-of-window dates, non-events). No FKs so rows survive crawl_result cleanup.
+CREATE TABLE IF NOT EXISTS extraction_rejections (
+    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    crawl_result_id INT DEFAULT NULL,
+    website_id INT DEFAULT NULL,
+    rejection_type VARCHAR(50) NOT NULL COMMENT 'e.g. start_too_future, non_event, no_date',
+    stage VARCHAR(32) NOT NULL COMMENT 'Pipeline stage that rejected the event',
+    event_name VARCHAR(500) DEFAULT NULL,
+    event_url VARCHAR(2000) DEFAULT NULL,
+    extracted_start_date DATE DEFAULT NULL,
+    extracted_end_date DATE DEFAULT NULL,
+    details TEXT DEFAULT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    INDEX idx_crawl_result (crawl_result_id),
+    INDEX idx_created (created_at),
+    INDEX idx_type (rejection_type)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================================
@@ -499,3 +616,19 @@ CREATE TABLE IF NOT EXISTS grantees (
     INDEX idx_website (website_id),
     FOREIGN KEY (website_id) REFERENCES websites(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================================
+-- INFRASTRUCTURE
+-- ============================================================================
+
+-- Advisory write-lock holder - serializes bulk DB writes across git worktrees
+-- (connection-scoped MySQL advisory lock; see pipeline/dblock.py).
+CREATE TABLE IF NOT EXISTS db_write_lock_holder (
+    lock_name VARCHAR(64) NOT NULL,
+    holder VARCHAR(128) DEFAULT NULL COMMENT 'Identifier of the session currently holding the lock',
+    taken_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (lock_name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+SET FOREIGN_KEY_CHECKS = 1;

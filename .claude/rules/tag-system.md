@@ -14,8 +14,8 @@ paths:
 
 ## Two Tag Types
 
-- **Curated tags** (~2,100): in the hierarchy, shown in filter UI, `type = 'tag'`. Always have an emoji.
-- **Keywords** (~56,000): search-only, `type = 'keyword'`. No emoji, not in hierarchy.
+- **Curated tags** (~2,200): in the hierarchy, shown in filter UI, `type = 'tag'`. Always have an emoji.
+- **Keywords** (~64,000): search-only, `type = 'keyword'`. No emoji, not in hierarchy.
 - Both stored in `tags` table, distinguished by the `type` column.
 
 The invariants `type='tag' ⇒ in hierarchy` and `type='tag' ⇒ has emoji` are intentional. A handful of `type='tag'` tags exist that are intended as future hierarchy roots (e.g. **Hotel** as a venue root) — these have an emoji but no edges yet.
@@ -25,8 +25,8 @@ The invariants `type='tag' ⇒ in hierarchy` and `type='tag' ⇒ has emoji` are 
 Curated tags are organized into a DAG (directed acyclic graph) via the `tag_hierarchy` table. There are 6 independent root families representing orthogonal filtering concerns. Some tags have multiple parents (DAG, not tree). Example: "Live Jazz" is a child of both Jazz and Music.
 
 ### Event Types (15 roots)
-The "what is the event *about*?" (content/genre) axis. Each root has 2-4 levels of specificity beneath it. Descendant counts:
-- **Music** (686), **Community** (673), **Art** (398), **Education** (360), **Wellness** (234), **Nightlife** (201), **Theater** (188), **Film** (169), **Literature** (161), **Sports** (155), **Outdoor** (148), **Comedy** (107), **Dance** (97), **Family** (97), **Games** (87)
+The "what is the event *about*?" (content/genre) axis. Each root has 2-4 levels of specificity beneath it. Roots, roughly largest-subtree first (exact descendant counts drift constantly — don't treat these as authoritative):
+- **Music**, **Community**, **Art**, **Education**, **Wellness**, **Nightlife**, **Theater**, **Film**, **Literature**, **Sports**, **Outdoor**, **Comedy**, **Dance**, **Family**, **Games**
 
 ### Format (1 root → 6 categories → 32 types)
 The "what is the attendee *doing*?" (structural) axis — mirrors `events.event_type` (see `.claude/rules/database-schema.md` and `pipeline/event_types.py`). One `Format` 🎫 root → six category tags (Performance, Participatory, Browsable, Social, Gathering, **Outings**) → the 32 type leaves (Concert, Workshop, Tour, …). Category tag names match the taxonomy category names exactly, with one unavoidable exception: the `Outing` category would collide with the `Outing` leaf (`tags.name` is UNIQUE), so the category tag is **"Outings"** (plural) while the leaf stays "Outing".
@@ -43,13 +43,13 @@ The "what kind of place is the event at?" axis. These are deliberately separate 
 Most venue roots have small subtrees (1–4 children) — venue tags are usually atomic. New venue roots can be added without children if the concept is intended (e.g. **Hotel** 🏨 currently sits as a `type='tag'` root awaiting children).
 
 ### Virtual
-Delivery method filter. Children: Online, Livestream, Live Stream, Webinar, Zoom, Virtual Tour, Online Learning.
+Delivery method filter. Children: Online, Live Stream, Online Learning, Online Talk, Webinar, Zoom, Virtual Tour, Virtual Yoga.
 
 ### Free
-Pricing filter. Children: Free Entry, Free Events, Free Music, No Cover.
+Pricing filter. Children: Free Comedy. (Most free-event signal lives in the `Free` keyword/alias layer rather than curated children.)
 
 ### Neighborhood (geographic)
-Location filter (📍 emoji used uniformly across all 234 descendants — borough, city, neighborhood). Structure: Borough/Region → Neighborhood names.
+Location filter (📍 emoji used uniformly across all descendants — borough, city, neighborhood). Structure: Borough/Region → Neighborhood names.
 - **Manhattan**, **Brooklyn**, **Queens**, **Bronx**, **Staten Island**
 - **Long Island**, **Westchester**, **Hudson Valley**, **Upstate**, **New Jersey**, **Connecticut**
 

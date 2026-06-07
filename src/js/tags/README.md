@@ -66,6 +66,8 @@ TagStateManager.getTagState(tag)
 #### `selectedTagsDisplay.js`
 **Purpose**: Manages the display of selected tags above the search input.
 
+> **Retired**: now a no-op stub — selected tags are shown in the FilterPanelUI chip bar.
+
 **Key Features**:
 - Displays selected tags as interactive pill buttons
 - Skips tags already shown as quick filter chips

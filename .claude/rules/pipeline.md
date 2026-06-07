@@ -49,7 +49,7 @@ Some events get "No description available." because the listing page lacked deta
 - `extractor.py` — Gemini AI event extraction (full pages + single event detail crawl); prompt city-bits from `city_config`
 - `processor.py` — Markdown parsing, text utilities, tag processing, detail crawl orchestration (Step 5); location/tag token lists from `city_config`
 - `merger.py` — Event deduplication
-- `exporter.py` — JSON export to per-day chunks (`events.day0..day3.json` + `events.remainder.json`, matching `locations.*.json`, plus `manifest.json` mapping day index → calendar date)
+- `exporter.py` — JSON export to per-day chunks (`events.day0..day3.json` + `events.remainder.json`, matching `locations.*.json` and `events.*.desc.json` description companions, plus `organizers.json` and `manifest.json` mapping day index → calendar date)
 - `uploader.py` — FTP upload
 - `db.py` — Database connection and all DB operations
 - `frequency_analyzer.py` — Crawl frequency analysis

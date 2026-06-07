@@ -2,7 +2,7 @@
 
 Copy to `<platform>.py` (gitignored) and edit. Demonstrates the SiteProfile
 fields that don't need any custom code — extra in-page JS, a skip, and image
-headers. For a custom (non-browser) fetch path, see resident_advisor.example.py.
+headers. For a custom (non-browser) fetch path, see custom_api.example.py.
 """
 import re
 

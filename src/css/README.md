@@ -10,8 +10,9 @@ css/
 ├── layout.css         # Base layout and structure
 ├── filter-panel.css   # Filter panel and search controls
 ├── tags.css           # Tag button styles
-├── map.css            # Map, markers, and Leaflet controls
-├── popups.css         # Leaflet popup styling
+├── map.css            # Map, markers, and MapLibre controls
+├── popups.css         # MapLibre popup styling
+├── bottom-sheet.css   # Mobile bottom sheet for popup content
 └── modals.css         # Modals and toast notifications
 ```
 
@@ -79,17 +80,17 @@ Tag button component in all its states.
 - Result type labels
 
 ### [map.css](./map.css)
-Leaflet map, markers, and map controls.
+MapLibre map, markers, and map controls.
 
 - Map container with pre-loading optimization
 - Custom marker icons and emoji positioning
-- Leaflet attribution and tooltips
+- MapLibre attribution and tooltips
 - Zoom controls
 - Hardware acceleration hints
 - (mobile) Hide zoom controls (use pinch gestures)
 
 ### [popups.css](./popups.css)
-Leaflet popup styling for location markers.
+MapLibre popup styling for location markers.
 
 - Popup wrapper and content layout
 - Header with emoji and location info
@@ -102,6 +103,9 @@ Leaflet popup styling for location markers.
 - Responsive popup sizing
 - Viewport-aware max-width
 - Adjusted padding
+
+### [bottom-sheet.css](./bottom-sheet.css)
+Mobile bottom sheet for popup content.
 
 ### [modals.css](./modals.css)
 Modal dialogs, settings, and notifications.
