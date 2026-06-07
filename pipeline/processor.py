@@ -547,6 +547,11 @@ _NON_EVENT_NAME_PATTERNS = [
     r'\bpay (my|your)\b[\w\s]{0,30}\bbill\b',
     r'\bover the phone\b',
     r'\b(customer (service|support|care)|help[\s-]?line|toll[\s-]?free)\b[\w\s]{0,20}\bnumber\b',
+    # Bill-pay / account-enrollment SEO spam (vendor titles like
+    # "ATT Automated Payment Enrollment No Login Required Same Day")
+    r'\b(automated|automatic|same[\s-]?day|instant|24[\s-]?hour)\s+payment\b',
+    r'\bpayment\s+(enrollment|portal|hotline|help[\s-]?line|processing|cent(er|re)|line)\b',
+    r'\bno\s+login\s+(required|needed)\b',
 ]
 
 _NON_EVENT_NAME_RE = re.compile('|'.join(_NON_EVENT_NAME_PATTERNS), re.IGNORECASE)
