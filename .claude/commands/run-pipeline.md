@@ -152,19 +152,28 @@ Leave the events export and upload to the parent.
 Report: candidates scanned N, fixed K (Category 1), classified-and-left J (Category 2-5 with breakdown), unclassified (target: 0).
 ```
 
-**Agent 6 — Review newly-added recurring spans**
+**Agent 6 — Review newly-added recurring spans + single-occasion events**
 ```
-Catch envelope spans introduced by THIS run before they blanket every day on the map. Scope is just-added spans, not the full backlog (the weekly /fix-recurring-spans task does the comprehensive sweep).
+Catch two date-shape bugs introduced by THIS run before they mislead on the map. Scope is just-added events, not the full backlog (the weekly /fix-recurring-spans and /fix-single-occasion-events tasks do the comprehensive sweeps).
 
+PART A — recurring envelope spans (blanket every day on the map):
 1. Run: ./venv/bin/python scripts/fix_recurring_spans.py --review --new
    (--new restricts to events created/updated in the last day — i.e. this run's merge.)
 2. FIX_SPAN bucket = auto-fixable. Review the listed ids with `--show <ids>` to confirm they're periodic meetings (not exhibitions), then apply scoped to those ids:
    ./venv/bin/python scripts/fix_recurring_spans.py --apply --ids <fix_span_ids>
 3. RECURRING_RANGE / PROGRAM_RANGE / INVERSE buckets need source judgment — do NOT auto-fix. List them in your report (id + name + bucket) so the parent can decide whether to handle now or defer to the weekly full scan.
+Follow .claude/commands/fix-recurring-spans.md for the bucket definitions and the exhibition-vs-meeting discriminator.
 
-Follow .claude/commands/fix-recurring-spans.md for the bucket definitions and the exhibition-vs-meeting discriminator. Leave the events export and upload to the parent.
+PART B — single-occasion events (a named reception/weekday-ticket carrying the PARENT festival/exhibition's whole schedule, so it shows misleading dates / wrong days):
+1. Run: ./venv/bin/python scripts/fix_single_occasion_events.py --review --new
+2. DROP_SPAN + COLLAPSE_WEEKDAY buckets = auto-fixable (the two unambiguous shapes). Glance at the ids with `--show <ids>`, then apply (default run already restricts to these buckets; --new keeps it to this run):
+   ./venv/bin/python scripts/fix_single_occasion_events.py --apply --new
+3. COLLAPSE_REVIEW / REVIEW buckets need source judgment — do NOT auto-fix. List them in your report (id + name + bucket).
+Follow .claude/commands/fix-single-occasion-events.md for the bucket definitions.
 
-Report: new span-bearing events scanned N; FIX_SPAN auto-fixed K (with ids); RECURRING_RANGE/PROGRAM_RANGE/INVERSE flagged for review (ids + bucket); LIKELY_OK count.
+Leave the events export and upload to the parent.
+
+Report: Part A — new span-bearing events scanned N; FIX_SPAN auto-fixed K (ids); RECURRING_RANGE/PROGRAM_RANGE/INVERSE flagged (ids + bucket); LIKELY_OK count. Part B — single-occasion events scanned N; DROP_SPAN/COLLAPSE_WEEKDAY auto-fixed K (ids); COLLAPSE_REVIEW/REVIEW flagged (ids + bucket).
 ```
 
 ### After the parallel batch returns
