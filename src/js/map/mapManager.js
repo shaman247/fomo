@@ -921,11 +921,24 @@ const MapManager = (() => {
     }
 
     function getMarkerColor(locationInfo) {
-        if (locationInfo) {
+        if (locationInfo && locationInfo.emoji) {
             const emoji = locationInfo.emoji;
             const colors = state.markerColorsRef;
             if (colors && colors[emoji]) {
                 return colors[emoji];
+            }
+            // Fall back to live canvas extraction for emoji absent from the
+            // precomputed bgcolors table (e.g. newer emoji like the folding hand
+            // fan 🪭). Without this, such markers are stuck on the gray default
+            // even though extraction yields a good color. Mirrors the tag path
+            // (TagColorManager.getEmojiBgColor); result is cached so it runs once
+            // per distinct emoji.
+            if (typeof TagColorManager !== 'undefined' && TagColorManager.getColorForEmoji) {
+                const extracted = TagColorManager.getColorForEmoji(emoji);
+                if (extracted) {
+                    if (colors) colors[emoji] = extracted;
+                    return extracted;
+                }
             }
         }
         return '#444';

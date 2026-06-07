@@ -169,14 +169,17 @@ const TagColorManager = (() => {
      * @param {string} tag - Tag name
      * @returns {string|null} Color hex code or null if tag has no emoji
      */
-    function getEmojiBgColor(tag) {
-        const emoji = state.tagEmojiMap[tag];
+    function getColorForEmoji(emoji) {
         if (!emoji) return null;
         if (state.bgcolors[emoji]) return state.bgcolors[emoji];
         // Extract and cache
         const color = extractColorFromEmoji(emoji);
         state.bgcolors[emoji] = color;
         return color;
+    }
+
+    function getEmojiBgColor(tag) {
+        return getColorForEmoji(state.tagEmojiMap[tag]);
     }
 
     /**
@@ -365,6 +368,7 @@ const TagColorManager = (() => {
         reset,
 
         // Color management
+        getColorForEmoji,
         getTagColor,
         assignColorToTag,
         unassignColorFromTag,
