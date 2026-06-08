@@ -41,6 +41,7 @@ pipeline/sources/*.py
 !.claude/commands/add-websites.md
 !.claude/commands/classify-event-types.md
 !.claude/commands/dedupe-events.md
+!.claude/commands/recheck-duplicates.md
 !.claude/commands/discover-venues.md
 !.claude/commands/fix-address-mismatches.md
 !.claude/commands/fix-recurring-spans.md
@@ -93,6 +94,7 @@ scripts/*
 !scripts/due_tasks.py
 !scripts/find_review_candidates.py
 !scripts/find_duplicate_events.py
+!scripts/recheck_duplicates.py
 !scripts/find_unmapped_events.py
 !scripts/fix_recurring_spans.py
 !scripts/audit_event_types.py
