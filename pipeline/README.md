@@ -34,7 +34,7 @@ pipeline/
 ├── constants.py         # Shared constants + get_user_agent()
 ├── event_types.py       # event_type taxonomy labels
 ├── frequency_analyzer.py# Per-site crawl-frequency analysis
-├── dblock.py            # Cross-worktree advisory write lock
+├── dblock.py            # Cross-session advisory write lock
 ├── logging_utils.py     # Logging helpers
 └── tests/
     └── test_processor.py

@@ -635,7 +635,7 @@ CREATE TABLE IF NOT EXISTS grantees (
 -- INFRASTRUCTURE
 -- ============================================================================
 
--- Advisory write-lock holder - serializes bulk DB writes across git worktrees
+-- Advisory write-lock holder - serializes bulk DB writes across concurrent sessions
 -- (connection-scoped MySQL advisory lock; see pipeline/dblock.py).
 CREATE TABLE IF NOT EXISTS db_write_lock_holder (
     lock_name VARCHAR(64) NOT NULL,
