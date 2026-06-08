@@ -433,6 +433,20 @@ def is_false_positive(name1, name2):
     if times1 and times2 and times1 != times2:
         return True
 
+    # Different clock times incl. bare hours ("8pm" vs "10pm" vs "12am") — the
+    # minute-bearing patterns above miss bare hours. Comedy clubs list the same show
+    # name at multiple showtimes ("Friday: Primetime Comedy 8pm / 10pm / 12am"), which
+    # are distinct ticketed events; without this they merge via stemmed-word containment.
+    # Canonicalize so "8pm" == "8:00pm" (same time, different format) is NOT flagged.
+    def _clock_times(norm):
+        return set(
+            f'{int(h)}:{mn or "00"}{ap.lower()}'
+            for h, mn, ap in re.findall(r'\b(\d{1,2})(?:\s*(\d{2}))?\s*(am|pm)\b', norm, re.IGNORECASE)
+        )
+    ct1, ct2 = _clock_times(norm1), _clock_times(norm2)
+    if ct1 and ct2 and ct1 != ct2:
+        return True
+
     # Bare/umbrella name vs a distinct "Head: Subtitle" sibling (check both
     # orderings since the bare name may be either argument).
     if (_bare_name_vs_distinct_subtitle(name1, name2)

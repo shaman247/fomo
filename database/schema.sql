@@ -273,6 +273,19 @@ CREATE TABLE IF NOT EXISTS dedupe_dismissed_pairs (
     CONSTRAINT chk_order CHECK (event_id_a < event_id_b)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Dedupe dismissed umbrellas - events a reviewer cleared as NOT a problematic
+-- umbrella/envelope (e.g. concurrent exhibitions/committees/films sharing a venue
+-- calendar), so /recheck-duplicates' umbrella detector won't keep re-flagging them.
+CREATE TABLE IF NOT EXISTS dedupe_dismissed_umbrellas (
+    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    umbrella_id INT NOT NULL,
+    reason VARCHAR(500) DEFAULT NULL,
+    dismissed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    UNIQUE KEY unique_umbrella (umbrella_id),
+    INDEX idx_umbrella (umbrella_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- ============================================================================
 -- TAGS (Generic - used by locations and events)
 -- ============================================================================

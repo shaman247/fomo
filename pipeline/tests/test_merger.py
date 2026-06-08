@@ -167,6 +167,13 @@ FALSE_POSITIVE_TEST_CASES = [
     ("New Year's Eve at The Stand! (6:00 PM)", "New Year's Eve at The Stand! (8:00 PM)", True),
     ("Comedy Show 7:30 PM", "Comedy Show 9:30 PM", True),
 
+    # Different bare-hour showtimes - should NOT match (comedy-club multi-showtime listings)
+    ("Friday: Primetime Comedy 8pm", "Friday: Primetime Comedy 10pm", True),
+    ("Friday: Primetime Comedy 10pm", "Friday: Primetime Comedy 12am", True),
+    ("Late Show 11pm", "Late Show 9pm", True),
+    # Same time in different formats - SHOULD match (not a false positive)
+    ("Comedy Show 8pm", "Comedy Show 8:00pm", False),
+
     # Early vs Late sets - should NOT match
     ("New Years Eve Early Set", "New Years Eve Late Set", True),
     ("Jazz Night Early Show", "Jazz Night Late Show", True),
