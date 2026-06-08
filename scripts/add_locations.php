@@ -175,11 +175,58 @@ try {
 }
 
 // Helper functions for database operations
-function check_exists_pdo($pdo, $name) {
-    $stmt = $pdo->prepare("SELECT id FROM locations WHERE name = ?");
-    $stmt->execute([$name]);
-    $row = $stmt->fetch(PDO::FETCH_ASSOC);
-    return $row ? $row['id'] : null;
+
+// Collapse a name to lowercase alphanumerics so punctuation/spacing differences
+// don't hide a duplicate (e.g. "Q.E.D." == "QED", "QED Astoria" == "qed astoria").
+function normalize_loc_name($s) {
+    return preg_replace('/[^a-z0-9]/', '', strtolower((string)($s ?? '')));
+}
+
+// Detect whether a location entry duplicates an existing one. Matches on, in order:
+//   1. normalized name vs every existing location name,
+//   2. normalized name (or any of the entry's alternate names) vs every existing
+//      alternate name AND existing location name,
+//   3. identical street address.
+// Returns ['id' => int, 'reason' => string] or null. Exact-name-only matching used
+// to miss real dupes (a new "QED Astoria" sailed past the existing "Q.E.D." at the
+// same address that even carried "QED Astoria" as an alternate name).
+function check_exists_pdo($pdo, $loc) {
+    // Backward-compat: allow being called with a bare name string.
+    if (!is_array($loc)) {
+        $loc = ['name' => $loc];
+    }
+
+    // Every name this entry could be known by.
+    $candidates = [$loc['name'] ?? ''];
+    foreach (($loc['alternate_names'] ?? []) as $alt) {
+        $candidates[] = is_array($alt) ? ($alt['name'] ?? '') : $alt;
+    }
+    $norm_candidates = array_values(array_filter(array_map('normalize_loc_name', $candidates)));
+
+    // 1 + 2a. Against existing location names.
+    foreach ($pdo->query("SELECT id, name FROM locations")->fetchAll(PDO::FETCH_ASSOC) as $r) {
+        if (in_array(normalize_loc_name($r['name']), $norm_candidates, true)) {
+            return ['id' => $r['id'], 'reason' => "name matches existing location \"{$r['name']}\""];
+        }
+    }
+
+    // 2b. Against existing alternate names.
+    foreach ($pdo->query("SELECT location_id, alternate_name FROM location_alternate_names")->fetchAll(PDO::FETCH_ASSOC) as $r) {
+        if (in_array(normalize_loc_name($r['alternate_name']), $norm_candidates, true)) {
+            return ['id' => $r['location_id'], 'reason' => "name matches alternate \"{$r['alternate_name']}\" of location {$r['location_id']}"];
+        }
+    }
+
+    // 3. Identical address.
+    if (!empty($loc['address'])) {
+        $stmt = $pdo->prepare("SELECT id, name FROM locations WHERE address = ? LIMIT 1");
+        $stmt->execute([$loc['address']]);
+        if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            return ['id' => $row['id'], 'reason' => "address matches existing location \"{$row['name']}\" (ID {$row['id']})"];
+        }
+    }
+
+    return null;
 }
 
 function insert_location_pdo($pdo, $loc) {
@@ -271,9 +318,9 @@ function get_stats_pdo($pdo) {
 // Check for duplicates
 $duplicates = [];
 foreach ($new_locations as $loc) {
-    $existing_id = check_exists_pdo($pdo, $loc['name']);
-    if ($existing_id) {
-        $duplicates[] = "'{$loc['name']}' already exists (ID: $existing_id)";
+    $match = check_exists_pdo($pdo, $loc);
+    if ($match) {
+        $duplicates[] = "'{$loc['name']}' — {$match['reason']} (ID: {$match['id']})";
     }
 }
 
@@ -291,10 +338,10 @@ $skipped = 0;
 
 foreach ($new_locations as $loc) {
     // Check if already exists
-    $existing_id = check_exists_pdo($pdo, $loc['name']);
+    $match = check_exists_pdo($pdo, $loc);
 
-    if ($existing_id) {
-        echo "  SKIP: {$loc['name']} (already exists)\n";
+    if ($match) {
+        echo "  SKIP: {$loc['name']} (already exists — {$match['reason']}, ID: {$match['id']})\n";
         $skipped++;
         continue;
     }

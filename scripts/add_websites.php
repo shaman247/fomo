@@ -142,11 +142,45 @@ try {
 }
 
 // Helper functions for database operations
-function check_website_exists_pdo($pdo, $name) {
-    $stmt = $pdo->prepare("SELECT id FROM websites WHERE name = ?");
-    $stmt->execute([$name]);
-    $row = $stmt->fetch(PDO::FETCH_ASSOC);
-    return $row ? $row['id'] : null;
+
+// Collapse a URL to host+path for comparison: drop scheme, leading "www.", and a
+// trailing slash, lowercased. So "https://qedastoria.com/" == "https://qedastoria.com".
+function normalize_base_url($u) {
+    $u = strtolower(trim((string)($u ?? '')));
+    $u = preg_replace('#^https?://#', '', $u);
+    $u = preg_replace('#^www\.#', '', $u);
+    return rtrim($u, '/');
+}
+
+// Detect whether a website entry duplicates an existing one — by exact name OR by
+// normalized base_url. Returns ['id' => int, 'reason' => string] or null. Name-only
+// matching used to miss real dupes (a new "QED Astoria" pointed at qedastoria.com
+// sailed past the existing "Q.E.D." website on the same domain, double-crawling it).
+function check_website_exists_pdo($pdo, $site) {
+    if (!is_array($site)) {
+        $site = ['name' => $site];
+    }
+
+    if (!empty($site['name'])) {
+        $stmt = $pdo->prepare("SELECT id FROM websites WHERE name = ?");
+        $stmt->execute([$site['name']]);
+        if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            return ['id' => $row['id'], 'reason' => "name matches existing website"];
+        }
+    }
+
+    if (!empty($site['base_url'])) {
+        $target = normalize_base_url($site['base_url']);
+        if ($target !== '') {
+            foreach ($pdo->query("SELECT id, name, base_url FROM websites WHERE base_url IS NOT NULL AND base_url != ''")->fetchAll(PDO::FETCH_ASSOC) as $r) {
+                if (normalize_base_url($r['base_url']) === $target) {
+                    return ['id' => $r['id'], 'reason' => "base_url matches existing website \"{$r['name']}\" ({$r['base_url']})"];
+                }
+            }
+        }
+    }
+
+    return null;
 }
 
 function get_location_id_pdo($pdo, $name) {
@@ -201,9 +235,9 @@ function get_stats_pdo($pdo) {
 // Check for duplicates
 $duplicates = [];
 foreach ($new_websites as $site) {
-    $existing_id = check_website_exists_pdo($pdo, $site['name']);
-    if ($existing_id) {
-        $duplicates[] = "'{$site['name']}' already exists (ID: $existing_id)";
+    $match = check_website_exists_pdo($pdo, $site);
+    if ($match) {
+        $duplicates[] = "'{$site['name']}' — {$match['reason']} (ID: {$match['id']})";
     }
 }
 
@@ -221,10 +255,10 @@ $skipped = 0;
 
 foreach ($new_websites as $site) {
     // Check if already exists
-    $existing_id = check_website_exists_pdo($pdo, $site['name']);
+    $match = check_website_exists_pdo($pdo, $site);
 
-    if ($existing_id) {
-        echo "  SKIP: {$site['name']} (already exists)\n";
+    if ($match) {
+        echo "  SKIP: {$site['name']} (already exists — {$match['reason']}, ID: {$match['id']})\n";
         $skipped++;
         continue;
     }
