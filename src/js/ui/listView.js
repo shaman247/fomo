@@ -117,11 +117,10 @@ const ListView = (() => {
         wrapper.className = 'list-view-scroll';
 
         shown.forEach(({ event }) => {
-            const locationInfo = state.getLocationInfo(event.locationKey);
             // Permanently collapsed, non-expanding cards — the list wires its own
             // hover (highlight the marker) and click (open the location popup).
+            // createEventCard tints the title from the event's own emoji color.
             const card = PopupContentBuilder.createEventCard(event, { interactive: false });
-            PopupContentBuilder.applyAccentVars(card, locationInfo);
 
             const locationKey = event.locationKey;
             if (locationKey) {

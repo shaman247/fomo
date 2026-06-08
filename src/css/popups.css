@@ -65,6 +65,19 @@
     --popup-accent-vivid-hover: color-mix(in srgb, var(--popup-accent-vivid, var(--summary-open)), black 18%);
 }
 
+/* Each card overrides --popup-accent-muted/-vivid inline with its own event
+   emoji color, so re-derive the title hover variants from the card's values
+   (this scope also covers the list view, whose cards aren't inside a popup). */
+.popup-event-card {
+    --popup-accent-muted-hover: color-mix(in srgb, var(--popup-accent-muted, var(--accent-color)), white 22%);
+    --popup-accent-vivid-hover: color-mix(in srgb, var(--popup-accent-vivid, var(--summary-open)), white 18%);
+}
+
+:root[data-theme="light"] .popup-event-card {
+    --popup-accent-muted-hover: color-mix(in srgb, var(--popup-accent-muted, var(--accent-color)), black 22%);
+    --popup-accent-vivid-hover: color-mix(in srgb, var(--popup-accent-vivid, var(--summary-open)), black 18%);
+}
+
 .maplibre-popup-content p {
     margin: 4px 0;
     color: var(--primary-text);

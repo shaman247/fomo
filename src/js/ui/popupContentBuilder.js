@@ -266,38 +266,49 @@ const PopupContentBuilder = (() => {
     // ========================================
 
     /**
-     * Tint an element's popup accents (tab indicator, event names) with a
-     * location's marker color — the ring color derived from its emoji.
-     * Links keep the global teal via --accent-color.
-     *   --popup-accent       : raw hue (used by the tab pill)
-     *   --popup-accent-muted : darker, desaturated — collapsed event titles
-     *   --popup-accent-vivid : brighter, more saturated — expanded titles
-     *
-     * Applied per-element so the list view (one card per location) can tint
-     * each card independently, while the popup tints its single container.
+     * Set the event-title accents on `el` from a base color. Only the base hue
+     * is kept; OKLCH lightness + chroma are pinned (via MapManager) so every
+     * title reads as equally bright/saturated regardless of emoji hue.
+     *   --popup-accent-muted : darker, lower-chroma — collapsed event titles
+     *   --popup-accent-vivid : brighter, higher-chroma — expanded titles
+     * (Hover variants are re-derived from these in CSS, scoped per card.)
+     */
+    function setLabelAccentVars(el, baseColor) {
+        if (!el || !baseColor || typeof MapManager === 'undefined' || !MapManager.toEventLabelColor) return;
+        const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+        el.style.setProperty(
+            '--popup-accent-muted',
+            MapManager.toEventLabelColor(baseColor, { lightness: isLight ? 42 : 62, chroma: 0.05 })
+        );
+        el.style.setProperty(
+            '--popup-accent-vivid',
+            MapManager.toEventLabelColor(baseColor, { lightness: isLight ? 48 : 76, chroma: 0.13 })
+        );
+    }
+
+    /**
+     * Tint a popup/list container with a location's marker color — the ring
+     * color derived from its emoji. Links keep the global teal via --accent-color.
+     *   --popup-accent : raw hue (used by the tab pill)
+     * The muted/vivid event-title accents are set as a fallback for events with
+     * no emoji of their own; each card overrides them via applyEventAccentVars.
      */
     function applyAccentVars(el, locationInfo) {
         if (!el || !locationInfo || typeof MapManager === 'undefined' || !MapManager.getMarkerColor) return;
         const markerColor = MapManager.getMarkerColor(locationInfo);
         if (!markerColor) return;
         el.style.setProperty('--popup-accent', markerColor);
-        if (MapManager.toEventLabelColor) {
-            const isLight = document.documentElement.getAttribute('data-theme') === 'light';
-            el.style.setProperty(
-                '--popup-accent-muted',
-                MapManager.toEventLabelColor(markerColor, {
-                    lightness: isLight ? 32 : 52,
-                    saturation: 22
-                })
-            );
-            el.style.setProperty(
-                '--popup-accent-vivid',
-                MapManager.toEventLabelColor(markerColor, {
-                    lightness: isLight ? 36 : 70,
-                    saturation: 75
-                })
-            );
-        }
+        setLabelAccentVars(el, markerColor);
+    }
+
+    /**
+     * Tint a single event card's title with the EVENT emoji's color. Falls back
+     * to the container's location accent (inherited) when the event has no emoji.
+     */
+    function applyEventAccentVars(card, event) {
+        if (!card || !event || !event.emoji ||
+            typeof TagColorManager === 'undefined' || !TagColorManager.getColorForEmoji) return;
+        setLabelAccentVars(card, TagColorManager.getColorForEmoji(event.emoji));
     }
 
     // ========================================
@@ -600,6 +611,10 @@ const PopupContentBuilder = (() => {
     function createEventCard(event, { shouldOpen = false, interactive = true } = {}) {
         const card = document.createElement('div');
         card.className = 'popup-event-card';
+
+        // Title color comes from the event's own emoji (falls back to the
+        // container's location accent when the event has no emoji).
+        applyEventAccentVars(card, event);
 
         // Card header: emoji + name
         const header = document.createElement('div');
@@ -915,6 +930,7 @@ const PopupContentBuilder = (() => {
         createEventCard,
         createEventDetail,
         applyAccentVars,
+        applyEventAccentVars,
         sortEventsForLocation,
         getDefaultSectionName,
         getDefaultSectionAndEvents
