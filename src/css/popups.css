@@ -54,28 +54,28 @@
        (darker/desaturated), --popup-accent-vivid (brighter/saturated) are
        set inline by JS. Hover variants are derived: lighten in dark, darken
        in light. Falls back to the global teal / summary-open. */
-    --popup-accent-hover: color-mix(in srgb, var(--popup-accent, var(--accent-color)), white 30%);
-    --popup-accent-muted-hover: color-mix(in srgb, var(--popup-accent-muted, var(--accent-color)), white 22%);
-    --popup-accent-vivid-hover: color-mix(in srgb, var(--popup-accent-vivid, var(--summary-open)), white 18%);
+    --popup-accent-hover: color-mix(in oklab, var(--popup-accent, var(--accent-color)), white 30%);
+    --popup-accent-muted-hover: color-mix(in oklab, var(--popup-accent-muted, var(--accent-color)), white 22%);
+    --popup-accent-vivid-hover: color-mix(in oklab, var(--popup-accent-vivid, var(--summary-open)), white 18%);
 }
 
 :root[data-theme="light"] .maplibre-popup-content {
-    --popup-accent-hover: color-mix(in srgb, var(--popup-accent, var(--accent-color)), black 25%);
-    --popup-accent-muted-hover: color-mix(in srgb, var(--popup-accent-muted, var(--accent-color)), black 22%);
-    --popup-accent-vivid-hover: color-mix(in srgb, var(--popup-accent-vivid, var(--summary-open)), black 18%);
+    --popup-accent-hover: color-mix(in oklab, var(--popup-accent, var(--accent-color)), black 25%);
+    --popup-accent-muted-hover: color-mix(in oklab, var(--popup-accent-muted, var(--accent-color)), black 22%);
+    --popup-accent-vivid-hover: color-mix(in oklab, var(--popup-accent-vivid, var(--summary-open)), black 18%);
 }
 
 /* Each card overrides --popup-accent-muted/-vivid inline with its own event
    emoji color, so re-derive the title hover variants from the card's values
    (this scope also covers the list view, whose cards aren't inside a popup). */
 .popup-event-card {
-    --popup-accent-muted-hover: color-mix(in srgb, var(--popup-accent-muted, var(--accent-color)), white 22%);
-    --popup-accent-vivid-hover: color-mix(in srgb, var(--popup-accent-vivid, var(--summary-open)), white 18%);
+    --popup-accent-muted-hover: color-mix(in oklab, var(--popup-accent-muted, var(--accent-color)), white 22%);
+    --popup-accent-vivid-hover: color-mix(in oklab, var(--popup-accent-vivid, var(--summary-open)), white 18%);
 }
 
 :root[data-theme="light"] .popup-event-card {
-    --popup-accent-muted-hover: color-mix(in srgb, var(--popup-accent-muted, var(--accent-color)), black 22%);
-    --popup-accent-vivid-hover: color-mix(in srgb, var(--popup-accent-vivid, var(--summary-open)), black 18%);
+    --popup-accent-muted-hover: color-mix(in oklab, var(--popup-accent-muted, var(--accent-color)), black 22%);
+    --popup-accent-vivid-hover: color-mix(in oklab, var(--popup-accent-vivid, var(--summary-open)), black 18%);
 }
 
 .maplibre-popup-content p {

@@ -93,7 +93,7 @@
 .chip-descendant-dropdown .tag-button.state-selected,
 .chip-descendant-dropdown .tag-button.state-required {
     border-color: var(--chip-color, var(--accent-color));
-    background: color-mix(in srgb, var(--chip-color, var(--accent-color)) 15%, var(--tertiary-bg));
+    background: color-mix(in oklab, var(--chip-color, var(--accent-color)) 15%, var(--tertiary-bg));
 }
 
 .tag-button {
@@ -134,12 +134,12 @@
 #chip-bar .tag-button.state-selected,
 #chip-bar .tag-button.state-required {
     border-color: var(--chip-color, var(--accent-color));
-    background: color-mix(in srgb, var(--chip-color, var(--accent-color)) 15%, var(--tertiary-bg));
+    background: color-mix(in oklab, var(--chip-color, var(--accent-color)) 15%, var(--tertiary-bg));
 }
 
 #chip-bar .tag-button.state-selected:hover,
 #chip-bar .tag-button.state-required:hover {
-    background: color-mix(in srgb, var(--chip-color, var(--accent-color)) 20%, var(--tertiary-hover-bg));
+    background: color-mix(in oklab, var(--chip-color, var(--accent-color)) 20%, var(--tertiary-hover-bg));
 }
 
 .tag-button .result-type {
@@ -161,13 +161,13 @@
 .tag-button.state-selected,
 .tag-button.state-required {
     border-color: var(--chip-color, var(--accent-color));
-    background: color-mix(in srgb, var(--chip-color, var(--accent-color)) 15%, var(--tertiary-bg));
+    background: color-mix(in oklab, var(--chip-color, var(--accent-color)) 15%, var(--tertiary-bg));
     color: var(--primary-text);
 }
 
 .tag-button.state-selected:hover,
 .tag-button.state-required:hover {
-    background: color-mix(in srgb, var(--chip-color, var(--accent-color)) 20%, var(--tertiary-hover-bg));
+    background: color-mix(in oklab, var(--chip-color, var(--accent-color)) 20%, var(--tertiary-hover-bg));
 }
 
 .tag-button.state-required {
@@ -205,13 +205,13 @@
 
 /* === Section Header Buttons === */
 .tag-button.section-icon-button {
-    background-color: color-mix(in srgb, var(--accent-color) 30%, var(--tertiary-bg));
+    background-color: color-mix(in oklab, var(--accent-color) 30%, var(--tertiary-bg));
     color: var(--primary-text);
     border: 0;
 }
 
 .tag-button.section-icon-button:hover {
-    background-color: color-mix(in srgb, var(--accent-color) 50%, var(--tertiary-bg));
+    background-color: color-mix(in oklab, var(--accent-color) 50%, var(--tertiary-bg));
     color: var(--primary-text);
     border-color: color-mix(in srgb, var(--accent-color) 60%, transparent);
 }

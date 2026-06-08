@@ -90,11 +90,32 @@ const TagColorManager = (() => {
             : 'serif';
     }
 
+    // OKLCH targets for the final emoji-derived color. Lightness and chroma are
+    // pinned (only the hue, found below, varies per emoji) so every marker/chip
+    // color reads as equally vivid regardless of hue — the same perceptual
+    // normalization MapManager applies to event labels. Gamut-clamped per hue by
+    // ColorUtils.oklchToHex, so unreachable chromas reduce gracefully.
+    const MARKER_OKLCH_L = 0.62;
+    const MARKER_OKLCH_C = 0.15;
+
+    // Pixel clustering thresholds, in OKLab terms. Note OKLab chroma is numerically
+    // ~10× smaller than HSL saturation — a glyph that reads as clearly colored (e.g.
+    // 🎵) can have a max per-pixel chroma of only ~0.035, so these floors are far
+    // lower than the old HSL s≈0.15 cutoff would suggest.
+    const MIN_PIXEL_CHROMA = 0.02;   // reject achromatic (gray/white/black) pixels
+    const MIN_PIXEL_L = 0.12;        // reject near-black outline pixels
+    const MIN_RESULT_CHROMA = 0.015; // averaged result this gray ⇒ achromatic glyph (⚽) → fallback
+
     /**
      * Extracts a dominant color from an emoji by drawing it on canvas and analyzing pixels.
      * Renders with the active emoji font (system or Noto), so the result tracks the
      * glyph the viewer actually sees. Callers go through getColorForEmoji, which caches;
      * this function does the raw extraction.
+     *
+     * The dominant hue is found by clustering pixels into OKLCH hue buckets (weighted
+     * by OKLab chroma²), and the final color is built in OKLCH (see MARKER_OKLCH_*
+     * above) at a pinned lightness/chroma, so brightness/saturation are perceptually
+     * uniform across hues.
      * @param {string} emoji - Emoji character(s)
      * @param {string} [fontFamily] - Font to render with; defaults to the active emoji font
      * @returns {string} Hex color code
@@ -114,22 +135,18 @@ const TagColorManager = (() => {
         const buckets = new Array(36).fill(0);
         const bucketColors = Array.from({length: 36}, () => []);
 
+        // Cluster pixels by perceptual (OKLCH) hue, weighting each by its OKLab
+        // chroma² so the most colorful pixels dominate the pick. We reject only
+        // achromatic pixels (chroma alone rejects white — we must NOT reject on
+        // high L, since saturated yellow has L≈0.96) and near-black outline pixels.
         for (let i = 0; i < data.length; i += 4) {
             const r = data[i], g = data[i+1], b = data[i+2], a = data[i+3];
             if (a < 30) continue;
-            const rn = r/255, gn = g/255, bn = b/255;
-            const mx = Math.max(rn, gn, bn), mn = Math.min(rn, gn, bn);
-            const l = (mx + mn) / 2, d = mx - mn;
-            if (d < 0.05) continue;
-            const s = l > 0.5 ? d / (2 - mx - mn) : d / (mx + mn);
-            if (s < 0.15 || l < 0.08 || l > 0.92) continue;
-            let h;
-            if (mx === rn) h = ((gn - bn) / d + (gn < bn ? 6 : 0)) / 6;
-            else if (mx === gn) h = ((bn - rn) / d + 2) / 6;
-            else h = ((rn - gn) / d + 4) / 6;
-            const bucket = Math.floor((h * 360) / 10) % 36;
-            buckets[bucket] += s * s;
-            bucketColors[bucket].push({r, g, b, s});
+            const { L, C, h } = ColorUtils.rgbToOklch(r, g, b);
+            if (C < MIN_PIXEL_CHROMA || L < MIN_PIXEL_L) continue;
+            const bucket = Math.floor(h / 10) % 36;
+            buckets[bucket] += C * C;
+            bucketColors[bucket].push({r, g, b, c: C});
         }
 
         let best = 0, bestScore = 0;
@@ -147,38 +164,18 @@ const TagColorManager = (() => {
 
         let sR=0, sG=0, sB=0, sW=0;
         nearby.forEach(c => {
-            const w = c.s * c.s;
+            const w = c.c * c.c;
             sR += c.r*w; sG += c.g*w; sB += c.b*w; sW += w;
         });
         const aR = sR/sW, aG = sG/sW, aB = sB/sW;
-        const rn2 = aR/255, gn2 = aG/255, bn2 = aB/255;
-        const mx2 = Math.max(rn2,gn2,bn2), mn2 = Math.min(rn2,gn2,bn2);
-        const d2 = mx2-mn2;
-        let h2, s2;
-        if (d2 === 0) { h2=0; s2=0; }
-        else {
-            const l2 = (mx2+mn2)/2;
-            s2 = l2>0.5 ? d2/(2-mx2-mn2) : d2/(mx2+mn2);
-            if (mx2===rn2) h2=((gn2-bn2)/d2+(gn2<bn2?6:0))/6;
-            else if (mx2===gn2) h2=((bn2-rn2)/d2+2)/6;
-            else h2=((rn2-gn2)/d2+4)/6;
-        }
 
-        const tS = Math.min(1, s2 * 1.6);
-        // HSL to RGB
-        const c2 = (1 - Math.abs(2*0.45 - 1)) * tS;
-        const x2 = c2 * (1 - Math.abs((h2*6) % 2 - 1));
-        const m2 = 0.45 - c2/2;
-        let fr, fg, fb;
-        const sector = Math.floor(h2 * 6) % 6;
-        if (sector === 0) { fr=c2; fg=x2; fb=0; }
-        else if (sector === 1) { fr=x2; fg=c2; fb=0; }
-        else if (sector === 2) { fr=0; fg=c2; fb=x2; }
-        else if (sector === 3) { fr=0; fg=x2; fb=c2; }
-        else if (sector === 4) { fr=x2; fg=0; fb=c2; }
-        else { fr=c2; fg=0; fb=x2; }
-        const toHex = v => Math.round((v + m2) * 255).toString(16).padStart(2, '0');
-        return '#' + toHex(fr) + toHex(fg) + toHex(fb);
+        // Normalize the dominant color in OKLCH: keep its perceptual hue but pin
+        // lightness and chroma to the fixed targets above. (Theme-independent —
+        // this color is cached per font, not per theme.) If the dominant color is
+        // itself near-gray, the glyph is achromatic (e.g. ⚽) → neutral fallback.
+        const avg = ColorUtils.rgbToOklch(aR, aG, aB);
+        if (avg.C < MIN_RESULT_CHROMA) return '#8899aa';
+        return ColorUtils.oklchToHex(MARKER_OKLCH_L, MARKER_OKLCH_C, avg.h);
     }
 
     /**
