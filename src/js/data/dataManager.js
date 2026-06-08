@@ -191,6 +191,11 @@ const DataManager = (() => {
             const dedupeKey = venueOffsetKey(location.lat, location.lng, location.name);
             if (state._rawLocationSeen.has(dedupeKey)) continue;
             state._rawLocationSeen.add(dedupeKey);
+            // On Windows, swap an unrenderable country-flag emoji for this
+            // location's configured alt_emoji (no-op elsewhere). Done at the
+            // source so markers, popup headers, derived marker colors, and
+            // flag-event location fallbacks all stay in sync.
+            if (location.emoji) location.emoji = Utils.resolveDisplayEmoji(location.emoji, location.alt_emoji);
             // Derive leaf-only display_tags client-side (was shipped inline).
             if (location.tags && !location.display_tags) {
                 location.display_tags = filterToLeafTags(location.tags, state);
@@ -736,7 +741,11 @@ const DataManager = (() => {
         // Build parent/child maps from flat list
         tags.forEach(tag => {
             hierarchyTagsSet.add(tag.name);
-            if (tag.emoji) tagEmojiMap[tag.name] = tag.emoji;
+            // On Windows, swap an unrenderable country-flag emoji for the tag's
+            // configured alt_emoji (no-op elsewhere) so tag chips and emoji-
+            // derived chip colors stay in sync.
+            const emoji = tag.emoji ? Utils.resolveDisplayEmoji(tag.emoji, tag.alt_emoji) : tag.emoji;
+            if (emoji) tagEmojiMap[tag.name] = emoji;
             const parents = tag.parents || [];
             if (parents.length > 0) {
                 parentsOf[tag.name] = parents;
@@ -748,7 +757,7 @@ const DataManager = (() => {
             if (tag.quickFilter) {
                 quickFilters.push({
                     name: tag.name,
-                    emoji: tag.emoji || '',
+                    emoji: emoji || '',
                     order: tag.order || 999
                 });
             }

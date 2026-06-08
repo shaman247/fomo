@@ -1187,6 +1187,16 @@ def upsert_event_tags(cursor, event_id, tag_names, replace=False):
         )
 
 
+def is_country_flag_emoji(s):
+    """True if s is composed solely of regional-indicator symbols (U+1F1E6–
+    U+1F1FF), i.e. a country-flag emoji. These have no glyphs in Windows' system
+    emoji font, so the frontend swaps them for `alt_emoji` (Utils.resolveDisplayEmoji).
+    Mirrors the JS `isCountryFlagEmoji`."""
+    if not s or len(s) < 2:
+        return False
+    return all(0x1F1E6 <= ord(ch) <= 0x1F1FF for ch in s)
+
+
 def get_tag_hierarchy_for_export(cursor):
     """Get tag hierarchy data formatted for JSON export.
 
@@ -1199,7 +1209,7 @@ def get_tag_hierarchy_for_export(cursor):
 
     # Get all tags with type='tag' and their parents
     cursor.execute("""
-        SELECT t.id, t.name, t.emoji, t.is_quick_filter, t.display_order
+        SELECT t.id, t.name, t.emoji, t.is_quick_filter, t.display_order, t.alt_emoji
         FROM tags t
         WHERE t.type = 'tag'
         ORDER BY t.display_order IS NULL, t.display_order, t.name
@@ -1229,12 +1239,17 @@ def get_tag_hierarchy_for_export(cursor):
         emoji = _get(row, 'emoji', 2)
         is_quick_filter = _get(row, 'is_quick_filter', 3)
         display_order = _get(row, 'display_order', 4)
+        alt_emoji = _get(row, 'alt_emoji', 5)
 
         entry = {'name': name}
         parents = parents_of.get(name, [])
         entry['parents'] = sorted(parents)
         if emoji:
             entry['emoji'] = emoji
+        # alt_emoji is only a Windows fallback for flag emoji (which render as
+        # letter boxes there) — pointless to ship otherwise.
+        if alt_emoji and is_country_flag_emoji(emoji):
+            entry['alt_emoji'] = alt_emoji
         if is_quick_filter:
             entry['quickFilter'] = True
         if display_order is not None:

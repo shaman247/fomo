@@ -6,6 +6,7 @@ Exports events from the database to JSON files for the website.
 
 import json
 import os
+import sys
 from datetime import datetime, timedelta
 
 import db
@@ -363,7 +364,9 @@ def export_events(cursor):
             loc['tags'] = tags  # display_tags derived client-side from the hierarchy
         if row[4]:
             loc['emoji'] = row[4]
-        if row[5]:
+        # alt_emoji is only a Windows fallback for flag emoji (which render as
+        # letter boxes there) — pointless to ship otherwise.
+        if row[5] and db.is_country_flag_emoji(row[4]):
             loc['alt_emoji'] = row[5]
         if row[6]:
             loc['address'] = row[6]
@@ -458,6 +461,23 @@ def export_tag_hierarchy(cursor):
         json.dump(output, f, separators=(',', ':'), ensure_ascii=False)
 
     print(f"  Exported {len(tags_list)} tags to tag_hierarchy.json")
+
+    # Warn (don't fail) on flag-emoji locations/tags lacking an alt_emoji — these
+    # render as letter boxes on Windows. Catches AI-curated tags that picked up a
+    # flag emoji since the last publish. See scripts/check_flag_emoji_alt.py.
+    try:
+        scripts_dir = os.path.join(SCRIPT_DIR, '..', 'scripts')
+        if scripts_dir not in sys.path:
+            sys.path.insert(0, scripts_dir)
+        from check_flag_emoji_alt import find_flag_emoji_without_alt
+        problems = find_flag_emoji_without_alt(cursor)
+        if problems:
+            print(f"  WARNING: {len(problems)} flag-emoji record(s) missing alt_emoji "
+                  f"(won't render on Windows):")
+            for p in problems:
+                print(f"    {p['kind']} #{p['id']} {p['emoji']}  {p['name']}")
+    except Exception as e:
+        print(f"  (flag-emoji alt check skipped: {e})")
 
 
 def export_organizers(cursor):

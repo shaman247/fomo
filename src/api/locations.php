@@ -14,6 +14,22 @@
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/edit_logger.php';
 
+/**
+ * True if $emoji is a country-flag emoji (a pair of Unicode regional-indicator
+ * symbols, U+1F1E6–U+1F1FF). These have no glyphs in Windows' system emoji
+ * font, so an alt_emoji fallback is required (see Utils.resolveDisplayEmoji).
+ */
+function isCountryFlagEmoji(?string $emoji): bool {
+    if ($emoji === null || $emoji === '') return false;
+    $chars = preg_split('//u', $emoji, -1, PREG_SPLIT_NO_EMPTY);
+    if (count($chars) < 2) return false;
+    foreach ($chars as $ch) {
+        $cp = mb_ord($ch, 'UTF-8');
+        if ($cp === false || $cp < 0x1F1E6 || $cp > 0x1F1FF) return false;
+    }
+    return true;
+}
+
 // CORS headers
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
@@ -197,6 +213,13 @@ function createLocation(PDO $pdo, EditLogger $logger): void {
     }
     if ($data['lng'] !== null && ($data['lng'] < -180 || $data['lng'] > 180)) {
         jsonError('Invalid longitude', 400);
+    }
+
+    // Country-flag emoji don't render on Windows (no flag glyphs in the system
+    // emoji font) — require a non-flag alt_emoji fallback. See schema.sql /
+    // Utils.resolveDisplayEmoji.
+    if (isCountryFlagEmoji($data['emoji']) && empty($data['alt_emoji'])) {
+        jsonError("emoji is a country flag ({$data['emoji']}), which doesn't render on Windows. Provide an alt_emoji fallback.", 400);
     }
 
     // Insert location

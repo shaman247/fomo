@@ -261,6 +261,19 @@ const Utils = (() => {
     }
 
     /**
+     * Resolves the emoji to actually display. Country-flag emoji (regional-
+     * indicator pairs) have no glyphs in Windows' system emoji font and render
+     * as two letter boxes (e.g. "IT"). On Windows only, a flag emoji is swapped
+     * for the record's configured `alt_emoji` (a per-location/per-tag fallback);
+     * if none is set it falls back to the globe so a flag never shows as boxes.
+     * On other platforms, and for non-flag emoji, the original is returned.
+     */
+    function resolveDisplayEmoji(emoji, altEmoji) {
+        if (!emoji || !isWindows() || !isCountryFlagEmoji(emoji)) return emoji;
+        return altEmoji || '🌐';
+    }
+
+    /**
      * Normalizes text for accent-insensitive, case-insensitive search.
      * Decomposes accented characters and removes diacritical marks.
      * @param {string} text - Text to normalize
@@ -485,6 +498,7 @@ const Utils = (() => {
         getTodayInZone,
         isWindows,
         isCountryFlagEmoji,
+        resolveDisplayEmoji,
         normalizeForSearch,
         getDisplayName,
         debounce,

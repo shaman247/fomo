@@ -38,6 +38,23 @@ function load_env($path) {
 }
 load_env(__DIR__ . '/../.env');
 
+/**
+ * True if $emoji is a country-flag emoji (a pair of Unicode regional-indicator
+ * symbols, U+1F1E6–U+1F1FF). These have no glyphs in Windows' system emoji
+ * font, so a non-flag 'alt_emoji' fallback is required — see schema.sql and
+ * Utils.resolveDisplayEmoji in the frontend.
+ */
+function is_country_flag_emoji($emoji) {
+    if ($emoji === null || $emoji === '') return false;
+    $chars = preg_split('//u', $emoji, -1, PREG_SPLIT_NO_EMPTY);
+    if (count($chars) < 2) return false;
+    foreach ($chars as $ch) {
+        $cp = mb_ord($ch, 'UTF-8');
+        if ($cp === false || $cp < 0x1F1E6 || $cp > 0x1F1FF) return false;
+    }
+    return true;
+}
+
 $config = [
     'local' => [
         'host' => 'localhost',
@@ -81,7 +98,8 @@ Example location entry:
       'lat' => 40.7308,
       'lng' => -74.0005,
       'emoji' => '🎷',
-      'alt_emoji' => '🎵',                // Optional: alternative emoji
+      'alt_emoji' => '🎵',                // Optional, but REQUIRED if 'emoji' is a country flag
+                                          //   (flags don't render on Windows — see schema.sql)
       'tags' => ['Jazz', 'Live Music', 'Manhattan', 'Greenwich Village'],  // Optional
       'alternate_names' => [              // Optional: extra names the matcher resolves to this location
           'Blue Note Jazz Club',                          // global alternate (website_id = NULL)
@@ -126,6 +144,11 @@ foreach ($new_locations as $i => $loc) {
     }
     if (empty($loc['emoji'])) {
         $errors[] = "Location #$idx ({$loc['name']}): 'emoji' is required";
+    } elseif (is_country_flag_emoji($loc['emoji']) && empty($loc['alt_emoji'])) {
+        // Country-flag emoji have no glyphs in Windows' system emoji font, so
+        // they render as two letter boxes. Require a non-flag 'alt_emoji' the
+        // frontend swaps in on Windows (see Utils.resolveDisplayEmoji).
+        $errors[] = "Location #$idx ({$loc['name']}): 'emoji' is a country flag ({$loc['emoji']}), which doesn't render on Windows. Add an 'alt_emoji' fallback (e.g. a venue-type emoji like 🍽️ or 🏛️).";
     }
 }
 
