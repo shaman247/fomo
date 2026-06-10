@@ -1,0 +1,345 @@
+/*
+ * ============================================================================
+ * Sheet — unified list / search-results panel (desktop + mobile)
+ * ============================================================================
+ *
+ * Both platforms host the same content (#tags-wrapper > #results-container:
+ * the event list when the search box is empty, search sections when a term is
+ * active) but dock it differently:
+ *
+ *   Desktop (min-width: 769px): a fixed panel sliding in from the LEFT edge.
+ *   The handle (#sheet-handle) is a SEPARATE floating "Show list" button,
+ *   vertically centered and flush with the screen's left edge, shown only
+ *   while the sheet is collapsed; the open sheet is dismissed by clicking
+ *   empty map space (no "Hide list" button).
+ *   The sheet sits BELOW the filter panel (--z-panel) so the floating top bar
+ *   renders over it; #results-container gets top padding
+ *   (--sheet-content-top, JS-measured) so content clears that bar.
+ *
+ *   Mobile (max-width: 768px): a bottom sheet, height-driven by JS with snap
+ *   points (PEEK/FULL). `.sheet-drag-area` holds the drag grip; `.sheet-detail`
+ *   hosts a tapped marker's popup content (swapped with #tags-wrapper).
+ *   Closed is a mini strip, not hidden: the sheet's min-height keeps the grip
+ *   peeking at the bottom of the screen, and tap / drag-up reopens it.
+ *
+ * Everything platform-specific lives inside the media blocks — mobile's
+ * inline height and .open/.full classes must never leak into the desktop
+ * layout, and vice versa.
+ */
+
+/* Hidden by default; each media block turns on its pieces. */
+#sheet,
+#sheet-handle {
+    display: none;
+}
+
+/* ════════════════════════════ DESKTOP ═══════════════════════════ */
+
+@media (min-width: 769px) {
+    :root {
+        --sheet-width: 380px;          /* live width, driven by JS */
+        --sheet-content-top: 60px;     /* measured top-bar clearance, set by JS */
+        --sheet-handle-w: 30px;
+        --sheet-handle-h: 30px;
+    }
+
+    #sheet {
+        display: block;
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        height: 100dvh;
+        height: var(--app-height, 100dvh);
+        width: var(--sheet-width);
+        z-index: var(--z-sheet);
+        transform: translateX(0);
+        transition: transform 0.28s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    /* Collapsed: slide the sheet off the left edge. The extra -30px pushes the
+       sheet's drop shadow fully off-screen too, so nothing leaves a seam along
+       the screen's left edge. */
+    #sheet.sheet-collapsed {
+        transform: translateX(calc(-100% - 30px));
+        pointer-events: none;
+    }
+
+    /* Mobile-only pieces stay hidden on desktop. */
+    #sheet .sheet-drag-area,
+    #sheet .sheet-detail {
+        display: none;
+    }
+
+    #sheet .sheet-content {
+        position: absolute;
+        inset: 0;
+    }
+
+    /* The sheet surface lives on #tags-wrapper. Overrides the base panel rules
+       from filter-panel.css. */
+    #sheet #tags-wrapper {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        max-height: none;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        background-color: color-mix(in srgb, var(--primary-bg) 92%, transparent);
+        backdrop-filter: blur(8px);
+        border: none;
+        border-right: 1px solid var(--border-color);
+        border-radius: 0;
+        box-shadow: var(--popup-shadow);
+    }
+
+    /* Inner scroll area. Top padding clears the floating top filter bar. */
+    #sheet #results-container {
+        position: absolute;
+        inset: 0;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: var(--sheet-content-top) 8px 16px;
+        box-sizing: border-box;
+        scrollbar-width: none;
+    }
+
+    #sheet #results-container::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Handle: a floating "Show list" button, vertically centered at the
+       screen's left edge. Only shown while the sheet is collapsed — dismissing
+       the open sheet is done by clicking empty map space (MapManager's click
+       handler calls Sheet.dismissToMini()), so there is no "Hide list"
+       affordance. */
+    #sheet-handle {
+        display: flex;
+        position: fixed;
+        top: 50%;
+        left: 0;
+        transform: translateY(-50%);
+        width: var(--sheet-handle-w);
+        height: var(--sheet-handle-h);
+        padding: 0;
+        align-items: center;
+        justify-content: center;
+        background-color: color-mix(in srgb, var(--primary-bg) 92%, transparent);
+        backdrop-filter: blur(8px);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        box-shadow: var(--popup-shadow);
+        cursor: grab;
+        color: var(--secondary-text);
+        z-index: calc(var(--z-sheet) + 1);
+    }
+
+    /* Expanded: no hide affordance — the handle only ever offers "Show list". */
+    #sheet-handle:not(.sheet-collapsed) {
+        display: none;
+    }
+
+    #sheet-handle:hover {
+        background-color: var(--tertiary-bg);
+        color: var(--primary-text);
+    }
+
+    #sheet-handle:focus-visible {
+        outline: 2px solid var(--accent-color);
+        outline-offset: 2px;
+    }
+
+    /* Triangle: points right (click to open). */
+    .sheet-handle-icon {
+        display: block;
+        pointer-events: none;
+    }
+
+    /* Hover label ("Show list"), styled like the map's text labels:
+       Inter, light text with a halo (text-shadow in the map background color).
+       Hidden until the handle is hovered/focused. */
+    .sheet-handle-label {
+        position: absolute;
+        left: calc(100% + 8px);
+        top: 50%;
+        transform: translateY(-50%);
+        white-space: nowrap;
+        font-family: var(--font-family);
+        font-size: 0.95rem;
+        font-weight: 500;
+        color: var(--primary-text);
+        text-shadow:
+            -1px -1px 0 var(--primary-bg), 1px -1px 0 var(--primary-bg),
+            -1px 1px 0 var(--primary-bg), 1px 1px 0 var(--primary-bg),
+            0 0 3px var(--primary-bg);
+        pointer-events: none;
+        opacity: 0;
+    }
+
+    #sheet-handle:hover .sheet-handle-label,
+    #sheet-handle:focus-visible .sheet-handle-label {
+        opacity: 1;
+    }
+}
+
+/* ════════════════════════════ MOBILE ════════════════════════════ */
+
+@media (max-width: 768px) {
+    #sheet {
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: var(--z-popup);
+
+        /* Height set dynamically via JS (grows from bottom). Closed isn't 0:
+           the min-height floor keeps the sheet's top edge (drag grip) peeking
+           as a mini strip at the bottom of the screen — the affordance for
+           reopening (tap or drag up). */
+        height: 0;
+        min-height: calc(21px + env(safe-area-inset-bottom, 0px));
+        overflow: hidden;
+
+        /* Snap animation */
+        transition: height 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+
+        /* Visual style */
+        background: color-mix(in srgb, var(--secondary-bg) 95%, transparent);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border-radius: 16px 16px 0 0;
+        border-top: 1px solid var(--border-color);
+
+        font-family: var(--font-family);
+        color: var(--primary-text);
+        font-size: 16px;
+    }
+
+    #sheet.open {
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Fully expanded, the sheet rides over the top filter bar. */
+    #sheet.full {
+        z-index: calc(var(--z-panel) + 1);
+    }
+
+    #sheet.no-transition {
+        transition: none;
+    }
+
+    /* ── Drag grip ─────────────────────────────────────────────── */
+    /* Sized so the closed sheet's mini strip (the #sheet min-height) is
+       exactly the grip area — the whole visible strip is the touch target. */
+
+    .sheet-drag-area {
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 21px;
+        cursor: grab;
+        touch-action: none;
+    }
+
+    .sheet-drag-area:active {
+        cursor: grabbing;
+    }
+
+    .sheet-grip {
+        width: 40px;
+        height: 5px;
+        background: var(--secondary-text);
+        border-radius: 3px;
+        opacity: 0.5;
+    }
+
+    /* ── Content area ──────────────────────────────────────────── */
+
+    .sheet-content {
+        flex: 1;
+        overflow: hidden;
+        min-height: 0;
+        position: relative;
+    }
+
+    /* Browse content: the shared #tags-wrapper / #results-container. Override
+       the base flex rules from filter-panel.css so the container fills the
+       sheet and scrolls like the old tab panels did. */
+    #sheet #tags-wrapper {
+        display: block;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+    }
+
+    #sheet #results-container {
+        height: 100%;
+        box-sizing: border-box;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        touch-action: pan-y;
+        padding: 0 10px;
+        padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    }
+
+    /* Detail content (a tapped marker's popup, swapped with #tags-wrapper) */
+    .sheet-detail {
+        display: none;
+        height: 100%;
+        box-sizing: border-box;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        touch-action: pan-y;
+        padding: 0 10px;
+    }
+
+    /* ── Popup-content overrides (detail mode) ─────────────────── */
+    /* The popup is double-wrapped: .sheet-detail > wrapper > popup-content.
+       Both layers must be height:100% so the inner flex column is constrained
+       and .popup-tab-viewport (flex:1) gets a bounded height, allowing
+       .popup-tab-panel (overflow-y:auto) to scroll. */
+    .sheet-content .maplibre-popup-content {
+        max-height: none;
+        overflow: hidden;
+        height: 100%;
+        width: auto;
+        background: none;
+        border: none;
+        box-shadow: none;
+        border-radius: 0;
+        padding: 0;
+        font-size: inherit;
+    }
+
+    .sheet-content .popup-header {
+        padding: 0 10px;
+    }
+
+    .sheet-content .popup-events-list {
+        padding: 0 4px;
+    }
+
+    /* Constrain popup tab track to viewport height so panels scroll */
+    .sheet-content .popup-tab-track {
+        height: 100%;
+    }
+
+    /* Show scrollbar in the sheet (desktop popups hide it) */
+    .sheet-content .popup-tab-panel {
+        scrollbar-width: thin;
+    }
+
+    .sheet-content .popup-event-card-detail p {
+        font-size: 0.92em;
+    }
+
+    /* Desktop-only pieces stay hidden on mobile. */
+    #sheet-handle {
+        display: none !important;
+    }
+}

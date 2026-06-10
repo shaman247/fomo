@@ -2,9 +2,8 @@
  * HistoryManager — browser history (pushState/popstate) for back/forward navigation
  *
  * Pushes a full state snapshot on every discrete user action (marker click,
- * tag toggle, date change, tab switch, sheet snap). Continuous changes
- * (map pan, search typing) don't push — their values are captured in
- * the next discrete push.
+ * tag toggle, date change, sheet snap). Continuous changes (map pan, search
+ * typing) don't push — their values are captured in the next discrete push.
  *
  * @module HistoryManager
  */
@@ -37,12 +36,13 @@ const HistoryManager = (() => {
         const rawDates = cb.getSelectedDates();
         const dates = rawDates.map(d => d instanceof Date ? d.toISOString().split('T')[0] : '');
 
-        // Bottom sheet
-        let bottomSheet = { mode: 'closed', tab: 0, snap: 0 };
-        if (BottomSheet.isDetailMode()) {
-            bottomSheet = { mode: 'detail', tab: -1, snap: BottomSheet.getCurrentSnap() };
-        } else if (BottomSheet.isOpen()) {
-            bottomSheet = { mode: 'browse', tab: BottomSheet.getActiveTab(), snap: BottomSheet.getCurrentSnap() };
+        // Sheet (mobile only — desktop open state persists via localStorage,
+        // and back/forward shouldn't toggle a docked panel)
+        let sheet = { mode: 'closed', snap: 0 };
+        if (Sheet.isDetailMode()) {
+            sheet = { mode: 'detail', snap: Sheet.getCurrentSnap() };
+        } else if (window.innerWidth <= Constants.UI.MOBILE_BREAKPOINT && Sheet.isOpen()) {
+            sheet = { mode: 'browse', snap: Sheet.getCurrentSnap() };
         }
 
         return {
@@ -53,7 +53,7 @@ const HistoryManager = (() => {
             tags,
             dates,
             searchTerm: cb.getSearchTerm(),
-            bottomSheet
+            sheet
         };
     }
 
@@ -89,10 +89,12 @@ const HistoryManager = (() => {
         // Search
         if (a.searchTerm !== b.searchTerm) return false;
 
-        // Bottom sheet
-        if (a.bottomSheet.mode !== b.bottomSheet.mode) return false;
-        if (a.bottomSheet.tab !== b.bottomSheet.tab) return false;
-        if (a.bottomSheet.snap !== b.bottomSheet.snap) return false;
+        // Sheet (read the legacy `bottomSheet` key from pre-rename entries;
+        // its extra `tab` field is ignored)
+        const as = a.sheet || a.bottomSheet || {};
+        const bs = b.sheet || b.bottomSheet || {};
+        if (as.mode !== bs.mode) return false;
+        if (as.snap !== bs.snap) return false;
 
         return true;
     }
@@ -114,9 +116,8 @@ const HistoryManager = (() => {
 
     /**
      * Suppress pushes during fn(). Use when a single user action triggers
-     * multiple events that each call push() — e.g. _clearDetail() fires
-     * popupclose (→ push) before the tab switch (→ push). Wrapping the
-     * first part in batch() ensures only the final push captures state.
+     * multiple events that each call push() — wrapping the intermediate steps
+     * in batch() ensures only the final push captures the settled state.
      */
     function batch(fn) {
         const was = state.isRestoringState;
@@ -132,8 +133,8 @@ const HistoryManager = (() => {
         const popup = MapManager.getCurrentPopup();
         if (popup) {
             popup.remove();
-        } else if (BottomSheet.isDetailMode()) {
-            BottomSheet.close();
+        } else if (Sheet.isDetailMode()) {
+            Sheet.close();
         }
     }
 
@@ -211,18 +212,17 @@ const HistoryManager = (() => {
             _closeCurrentPopup();
         }
 
-        // 7. Bottom sheet (mobile)
+        // 7. Sheet (mobile; legacy entries stored it under `bottomSheet`)
         const isMobile = window.innerWidth <= Constants.UI.MOBILE_BREAKPOINT;
         if (isMobile) {
-            const bs = historyState.bottomSheet || { mode: 'closed', tab: 0, snap: 0 };
+            const s = historyState.sheet || historyState.bottomSheet || { mode: 'closed', snap: 0 };
 
             if (!historyState.selectedLocationKey) {
-                if (bs.mode === 'browse') {
-                    if (BottomSheet.isDetailMode()) BottomSheet.close();
-                    BottomSheet.switchTab(bs.tab);
-                    BottomSheet.snapTo(bs.snap);
+                if (s.mode === 'browse' && s.snap > 0) {
+                    if (Sheet.isDetailMode()) Sheet.close();
+                    Sheet.snapTo(s.snap);
                 } else {
-                    BottomSheet.close();
+                    Sheet.close();
                 }
             }
         }

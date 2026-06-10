@@ -61,6 +61,7 @@
     --z-modal: 2000;           /* Settings modal, welcome modal */
     --z-panel: 1000;           /* Filter panel */
     --z-panel-menu: 1001;      /* Logo menu, dropdowns within panel */
+    --z-sheet: 900;            /* Desktop sheet (below the filter panel top bar; mobile uses --z-popup) */
     --z-popup: 600;            /* Map location popups (above hovered markers at 500) */
     --z-controls: 500;         /* Map zoom controls, navigation */
     --z-tooltip: 300;          /* Marker tooltips on hover */

@@ -383,14 +383,17 @@ document.addEventListener('DOMContentLoaded', () => {
         _showMainUI() {
             const loadingContainer = document.getElementById('loading-container');
             const logoContainer = document.getElementById('logo-container');
-            const tagsWrapper = document.getElementById('tags-wrapper');
+            const sheet = document.getElementById('sheet');
+            const sheetHandle = document.getElementById('sheet-handle');
 
             if (loadingContainer) loadingContainer.style.display = 'none';
             if (logoContainer) logoContainer.classList.remove('initially-hidden');
             this.elements.filterContainer.classList.remove('initially-hidden');
-            tagsWrapper.classList.remove('initially-hidden');
-            const listToggleBtn = document.getElementById('list-toggle-btn');
-            if (listToggleBtn) listToggleBtn.classList.remove('initially-hidden');
+            if (sheet) sheet.classList.remove('initially-hidden');
+            if (sheetHandle) sheetHandle.classList.remove('initially-hidden');
+            // Re-measure the top-bar clearance now the loading screen is gone and
+            // the real top bar has settled (the init-time measurement was stale).
+            if (typeof Sheet !== 'undefined') Sheet.measureTopOffset();
 
             // Remove tags-collapsed so panel is visible
             this.elements.filterPanel.classList.remove('tags-collapsed');
@@ -1008,8 +1011,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     MapManager.loadEmojiImages(this.state.locationsByLatLng || {});
                     MapManager.setupMarkerInteractions();
 
-                    // Initialize mobile bottom sheet for popups
-                    BottomSheet.init(map);
+                    // Give the sheet the map instance (popupopen/popupclose firing)
+                    Sheet.setMap(map);
 
                     // Fade in the map container
                     const mapContainerEl = document.getElementById('map-container');
@@ -1034,7 +1037,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 map.on('load', onReady);
             });
 
-            // Handle popup open events (custom event fired by MapManager or BottomSheet)
+            // Handle popup open events (custom event fired by MapManager or Sheet)
             this.state.map.on('popupopen', (e) => {
                 const { locationKey, popup, lngLat } = e;
                 if (locationKey) {
@@ -1047,7 +1050,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             requestAnimationFrame(() => {
                                 const { filterPanelHeight } = ViewportManager.getFilterPanelDimensions();
                                 const viewportHeight = window.innerHeight;
-                                const sheetHeight = viewportHeight * 0.40; // peek snap
+                                const sheetHeight = viewportHeight * Sheet.SNAP_PEEK;
                                 const visibleCenter = filterPanelHeight + (viewportHeight - filterPanelHeight - sheetHeight) / 2;
                                 const offsetY = visibleCenter - viewportHeight / 2;
 
@@ -1241,12 +1244,24 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             ListView.init({
-                getMatchingEvents: () => this.state.currentlyMatchingEvents,
+                // Only events within the current map window (re-filtered on every
+                // pan via updateVisibleItems), sorted by distance + capped in render.
+                getMatchingEvents: () => this.state.currentlyVisibleMatchingEvents,
                 getLocationInfo: (key) => this.state.locationsByLatLng[key],
                 getLocationDistances: () => this.state.locationDistances,
                 getVisibleCenter: () => this.state.visibleCenter || ViewportManager.getVisibleCenter(),
                 getContainer: () => document.getElementById('results-container')
             });
+
+            // The sheet hosting the list view / search results. Whenever its
+            // browse content newly becomes visible (open / snap up / detail
+            // dismissed), re-render the panel so the (otherwise skipped) list
+            // view populates.
+            if (typeof Sheet !== 'undefined') {
+                Sheet.init({
+                    onToggle: (open) => { if (open) FilterPanelUI.rerender(); }
+                });
+            }
         },
 
         /**

@@ -62,15 +62,32 @@
                 </div>
                 <div id="chip-bar"></div>
             </div>
-            <button id="list-toggle-btn" class="initially-hidden" type="button" aria-pressed="false" title="Show a list of events near the map center">Show list</button>
-            <div id="tags-wrapper" class="initially-hidden">
-                <div id="results-container" role="list" aria-label="Search results"></div>
-            </div>
-            
             <button id="expand-filter-panel-button" class="initially-hidden collapsed" aria-label="Expand Filter Panel" title="Expand Filter Panel">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="18 15 12 9 6 15"></polyline></svg>
             </button>
         </div>
+
+        <!-- Event list / search results sheet, shared by desktop and mobile.
+             Desktop: slides in from the left edge; the floating #sheet-handle
+             "Show list" button appears at the screen's left edge only while
+             collapsed (the open sheet is dismissed by clicking the map).
+             Mobile: a bottom sheet with a drag grip; .sheet-detail hosts a
+             tapped marker's popup content. When closed, the sheet's top edge
+             (the grip strip) stays peeking at the bottom of the screen — tap
+             or drag up to reopen. -->
+        <div id="sheet" class="sheet-collapsed initially-hidden">
+            <div class="sheet-drag-area" role="button" aria-label="Toggle event list"><div class="sheet-grip"></div></div>
+            <div class="sheet-content">
+                <div id="tags-wrapper">
+                    <div id="results-container" role="list" aria-label="Search results"></div>
+                </div>
+                <div class="sheet-detail"></div>
+            </div>
+        </div>
+        <button id="sheet-handle" class="sheet-collapsed initially-hidden" type="button" aria-label="Show list" aria-expanded="false">
+            <svg class="sheet-handle-icon" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M8 5l8 7-8 7z" fill="currentColor"/></svg>
+            <span class="sheet-handle-label" aria-hidden="true">Show list</span>
+        </button>
 
         <div id="map-container">
             <div id="map-wrapper">
@@ -192,7 +209,7 @@
     <script src="js/ui/modalManager.js"></script>
     <script src="js/ui/toastNotifier.js"></script>
     <script src="js/ui/gestureHandler.js"></script>
-    <script src="js/ui/bottomSheet.js"></script>
+    <script src="js/ui/sheet.js"></script>
     <script src="js/ui/popupContentBuilder.js"></script>
     <script src="js/ui/listView.js"></script>
     <script src="js/ui/uiManager.js"></script>

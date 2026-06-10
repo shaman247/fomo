@@ -30,7 +30,7 @@ core (constants, utils, historyManager, urlParams) → data → tags → UI → 
 - `core/` — utils.js, colorUtils.js (shared OKLCH/OKLab color math), constants.js, historyManager.js, urlParams.js
 - `data/` — dataManager.js, filterManager.js, searchManager.js
 - `tags/` — tagColorManager.js, tagStateManager.js, selectedTagsDisplay.js, searchController.js, sectionRenderer.js, filterPanelUI.js
-- `ui/` — bottomSheet.js, listView.js, popupContentBuilder.js, uiManager.js, themeManager.js, gestureHandler.js, modalManager.js, emojiManager.js, feedbackManager.js, toastNotifier.js
+- `ui/` — sheet.js, listView.js, popupContentBuilder.js, uiManager.js, themeManager.js, gestureHandler.js, modalManager.js, emojiManager.js, feedbackManager.js, toastNotifier.js
 - `map/` — mapManager.js, markerController.js, viewportManager.js
 - `script.js` — App initialization and event wiring
 
@@ -50,4 +50,4 @@ core (constants, utils, historyManager, urlParams) → data → tags → UI → 
 
 - `variables.css` — CSS custom properties (colors, sizes, breakpoints)
 - `index.css` — entry point, imports all other files
-- Component files: layout, map, filter-panel, tags, popups, bottom-sheet, modals, fonts
+- Component files: layout, map, filter-panel, tags, popups, sheet, modals, fonts

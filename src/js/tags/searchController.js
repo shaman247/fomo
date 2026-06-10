@@ -114,10 +114,11 @@ const SearchController = (() => {
             // Debounce regular search
             debouncedSearch(searchTerm);
 
-            // On mobile, snap the bottom sheet to peek when user enters search term
+            // On mobile, open the sheet to peek as soon as the user starts
+            // typing (renderFilters' auto-open only fires after the debounce)
             if (searchTerm && window.innerWidth <= Constants.UI.MOBILE_BREAKPOINT) {
-                if (typeof BottomSheet !== 'undefined' && BottomSheet.getCurrentSnap() < 0.40) {
-                    BottomSheet.snapTo(0.40);
+                if (typeof Sheet !== 'undefined' && Sheet.getCurrentSnap() < Sheet.SNAP_PEEK) {
+                    Sheet.open();
                 }
             }
         });

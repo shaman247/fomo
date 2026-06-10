@@ -226,47 +226,37 @@
     padding: 7px;
 }
 
-/* "Show list" / "Hide list" toggle below the logo (desktop only). In normal
-   flow below the controls bar so the absolutely-positioned #tags-wrapper
-   dropdown starts beneath it automatically. */
-#list-toggle-btn {
-    /* TEMPORARY: hidden so the event list view doesn't ship to the live site
-       yet. Remove this single line to re-enable the "Show list" toggle. */
-    display: none;
-
-    align-self: flex-start;
-    flex-shrink: 0;
-    margin: 6px 0 0 4px;
-    font-family: var(--font-family);
-    font-size: 0.9em;
-    padding: 4px 12px;
-    background-color: var(--secondary-bg);
-    color: var(--primary-text);
-    border: 1px solid var(--border-color);
-    border-radius: 14px;
-    box-shadow: var(--popup-shadow);
-    cursor: pointer;
-}
-
-#list-toggle-btn:hover {
-    background-color: var(--tertiary-bg);
-    border-color: var(--tertiary-hover-bg);
-}
-
-/* === Desktop event list view (shown in place of search results when the
-   search box is empty). Reuses .popup-event-card* styles from popups.css. === */
+/* === Desktop event list view (shown in the left sheet when the search box is
+   empty). Reuses .popup-event-card* styles from popups.css. === */
 .list-view-scroll {
     display: flex;
     flex-direction: column;
 }
 
+/* No separator lines between events. */
 .list-view-scroll .popup-event-card {
-    padding: 10px 4px;
-    border-bottom: 1px solid var(--border-color);
+    padding: 8px 6px;
+    border-radius: 8px;
 }
 
-.list-view-scroll .popup-event-card:last-of-type {
-    border-bottom: none;
+.list-view-scroll .popup-event-card:hover {
+    background-color: var(--tertiary-bg);
+}
+
+/* Brighter, expanded-style colors: the event title uses the vivid accent and the
+   description preview is shown at full opacity (matching the popup hover state).
+   Titles are toned slightly below the popup's full-vivid version: lightness
+   ×0.9, chroma ×0.8. */
+.list-view-scroll .popup-event-card-name {
+    color: oklch(from var(--popup-accent-vivid, var(--summary-open)) calc(l * 0.9) calc(c * 0.8) h);
+}
+
+.list-view-scroll .popup-event-card:hover .popup-event-card-name {
+    color: var(--popup-accent-vivid-hover, var(--summary-open-hover));
+}
+
+.list-view-scroll .popup-event-card-preview {
+    color: var(--secondary-text);
 }
 
 .list-view-footer {
@@ -556,7 +546,7 @@ span.flatpickr-weekday {
         right: 0;
         height: auto;
         overflow: visible;
-        padding: 4px 6px;
+        padding: 4px 2px;
         margin: 4px 6px 0;
         /* Transparent background — controls get their own bg */
         background-color: transparent;
@@ -564,27 +554,11 @@ span.flatpickr-weekday {
         border: none;
     }
 
-    /* Gradient scrim behind filters for readability over the map */
-    #filter-panel::before {
-        content: '';
-        position: absolute;
-        top: -4px;
-        left: -6px;
-        right: -6px;
-        bottom: -30px;
-        background: linear-gradient(to bottom, color-mix(in srgb, var(--primary-bg) 80%, transparent) 0%, transparent 100%);
-        backdrop-filter: blur(6px);
-        mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
-        -webkit-mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
-        pointer-events: none;
-        z-index: -1;
-    }
-
     /* Neutralize tags-collapsed on desktop — top bar is always visible */
     #filter-panel.tags-collapsed {
         width: auto;
         height: auto;
-        padding: 4px 6px;
+        padding: 4px 2px;
         overflow: visible;
     }
 
@@ -592,18 +566,26 @@ span.flatpickr-weekday {
         opacity: 1;
     }
 
-    /* Filter controls in a single horizontal row, vertically centered */
+    /* Filter controls in a single horizontal row. Top-aligned so a wrapped
+       chip bar grows downward without re-centering the controls. */
     #filter-container {
         flex-direction: row;
-        align-items: center;
+        align-items: flex-start;
         gap: 14px;
         margin-bottom: 0;
         padding: 0;
     }
 
+    /* Logo + search + date picker: aligned with the expanded left sheet.
+       The panel content sits 8px in from the viewport edge (6px margin +
+       2px padding); the group ends 8px short of the sheet's right edge so
+       the date picker keeps a matching right inset. The search input
+       (flex: 1) absorbs the slack. */
     #filter-container > div:first-child {
         flex-shrink: 0;
         gap: 6px;
+        width: calc(var(--sheet-width, 380px) - 16px);
+        box-sizing: border-box;
     }
 
     #filter-container > div:first-child .filter-group {
@@ -623,17 +605,20 @@ span.flatpickr-weekday {
         padding-right: 10px;
     }
 
-    /* Chip bar: single row, horizontally scrollable */
+    /* Chip bar: a single row starting right of the left sheet's edge,
+       horizontally scrollable. Wheel input — vertical included — is mapped to
+       horizontal scroll by FilterPanelUI's chip-bar wheel handler. */
     #chip-bar {
         flex: 1;
         min-width: 0;
         flex-wrap: nowrap;
         overflow-x: auto;
-        overflow-y: visible;
-        overflow-clip-margin: 10px; /* let chip shadows extend past the clip box */
+        overflow-y: hidden;
         -webkit-overflow-scrolling: touch;
         scrollbar-width: none;
-        max-height: 30px; /* one row of chips */
+        /* Logo row height (34px logo + 2×5px padding): chips center vertically
+           against the controls, with room so chip shadows aren't clipped. */
+        height: 44px;
         align-items: center;
         padding: 0;
         margin-left: 0;
@@ -644,54 +629,13 @@ span.flatpickr-weekday {
         display: none;
     }
 
-    /* When too few chips fit inline, move chip bar to its own row */
-    #filter-container.chips-below {
-        flex-wrap: wrap;
-        row-gap: 2px;
-    }
-
-    #filter-container.chips-below #chip-bar {
-        flex-basis: 100%;
-        max-height: 30px;
-    }
-
-    /* Results dropdown below top bar, left-aligned */
-    #tags-wrapper {
-        position: absolute;
-        top: 100%;
-        left: 0;
-        margin-top: 8px;
-        width: min(550px, max(400px, 35vw));
-        max-height: calc(var(--app-height, 100dvh) - 120px);
-        flex-grow: 0;
-        overflow-y: auto;
-        overflow-x: hidden;
-        background-color: color-mix(in srgb, var(--primary-bg) 90%, transparent);
-        backdrop-filter: blur(3px);
-        border: 1px solid var(--border-color);
-        border-radius: 16px;
-        padding: 8px;
-        scrollbar-width: none;
-    }
-
-    #tags-wrapper::-webkit-scrollbar {
-        display: none;
-    }
-
-    /* Hide dropdown when no search term */
-    #filter-panel.sections-hidden #tags-wrapper {
-        display: none;
-    }
+    /* The results live in the sheet (see sheet.css), which hosts #tags-wrapper /
+       #results-container — left-docked on desktop, bottom-docked on mobile. */
 }
 
 /* === Mobile Responsive Styles === */
 /* On mobile, the panel becomes a full-width collapsible header (85% of desktop sizes) */
 @media (max-width: 768px) {
-    /* List view is desktop-only (mobile uses the bottom sheet) — hide its toggle */
-    #list-toggle-btn {
-        display: none;
-    }
-
     #filter-panel {
         position: fixed;
         top: 0;
@@ -706,27 +650,11 @@ span.flatpickr-weekday {
         display: flex;
         flex-direction: column;
         z-index: var(--z-panel);
-        /* Match desktop: transparent bg with gradient scrim */
+        /* Match desktop: transparent bg — controls get their own bg */
         background-color: transparent;
         backdrop-filter: none;
         border: none;
         border-radius: 0;
-    }
-
-    /* Gradient scrim behind filters for readability over the map */
-    #filter-panel::before {
-        content: '';
-        position: absolute;
-        top: -4px;
-        left: -6px;
-        right: -6px;
-        bottom: -30px;
-        background: linear-gradient(to bottom, color-mix(in srgb, var(--primary-bg) 80%, transparent) 0%, transparent 100%);
-        backdrop-filter: blur(6px);
-        mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
-        -webkit-mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
-        pointer-events: none;
-        z-index: -1;
     }
 
     /* Fallback for Android app if CSS variables aren't injected */

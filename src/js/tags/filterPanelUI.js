@@ -118,8 +118,7 @@ const FilterPanelUI = (() => {
     // CHIP BAR
     // ========================================
 
-    const CHIP_BAR_MAX_LINES = 3;
-    const CHIP_BAR_RENDER_LIMIT = 100; // render up to this many, then trim to fit lines
+    const CHIP_BAR_RENDER_LIMIT = 100; // max chips rendered; overflow is reachable by scrolling
     const DESCENDANT_DROPDOWN_LIMIT = 12;
     const DESCENDANT_HOVER_OPEN_DELAY = 250;   // ms before hover opens dropdown
     const DESCENDANT_HOVER_CLOSE_DELAY = 180;  // grace period when leaving chip → dropdown
@@ -332,7 +331,7 @@ const FilterPanelUI = (() => {
         FilterProfiler.mark('fp:chipbar:scored');
         FilterProfiler.measure('fp:chipbar:score', 'fp:chipbar:start', 'fp:chipbar:scored');
 
-        // 4. Build DOM with generous limit, then trim to fit max lines
+        // 4. Build DOM up to the render limit; overflow scrolls horizontally
         const unselectedToRender = unselectedTags.slice(0, CHIP_BAR_RENDER_LIMIT);
 
         // FLIP: capture old chip positions before rebuilding
@@ -369,14 +368,14 @@ const FilterPanelUI = (() => {
         FilterProfiler.mark('fp:chipbar:dom-built');
         FilterProfiler.measure('fp:chipbar:dom-build', 'fp:chipbar:flip-capture', 'fp:chipbar:dom-built');
 
-        // Trim to max lines on desktop (mobile is single-row horizontal scroll)
-        if (hasChips && !isMobileLayout()) {
-            _trimChipBarToMaxLines(container);
-            _updateChipBarLayout(container);
+        // Toggling the chip bar's visibility can change the top bar's height —
+        // keep the sheet's content offset below it in sync (desktop only).
+        if (!isMobileLayout() && typeof Sheet !== 'undefined') {
+            Sheet.measureTopOffset();
         }
 
-        FilterProfiler.mark('fp:chipbar:trimmed');
-        FilterProfiler.measure('fp:chipbar:trim+layout', 'fp:chipbar:dom-built', 'fp:chipbar:trimmed');
+        FilterProfiler.mark('fp:chipbar:layout');
+        FilterProfiler.measure('fp:chipbar:layout', 'fp:chipbar:dom-built', 'fp:chipbar:layout');
 
         // FLIP: animate chips from old positions to new positions
         if (animate && oldPositions.size > 0) {
@@ -416,71 +415,8 @@ const FilterPanelUI = (() => {
         }
 
         FilterProfiler.mark('fp:chipbar:end');
-        FilterProfiler.measure('fp:chipbar:flip-apply', 'fp:chipbar:trimmed', 'fp:chipbar:end');
+        FilterProfiler.measure('fp:chipbar:flip-apply', 'fp:chipbar:layout', 'fp:chipbar:end');
         FilterProfiler.measure('fp:chipbar:total', 'fp:chipbar:start', 'fp:chipbar:end');
-    }
-
-    /**
-     * If fewer than 6 chips are visible inline, move chip bar to its own row.
-     */
-    function _updateChipBarLayout(container) {
-        const filterContainer = document.getElementById('filter-container');
-        if (!filterContainer) return;
-
-        // Count chips visible within the container bounds
-        const containerRect = container.getBoundingClientRect();
-        let visibleCount = 0;
-        for (const chip of container.children) {
-            const chipRect = chip.getBoundingClientRect();
-            if (chipRect.top < containerRect.bottom && chipRect.right <= containerRect.right + 1) {
-                visibleCount++;
-            }
-        }
-
-        const needsOwnRow = visibleCount < 6 && container.children.length >= 6;
-        filterContainer.classList.toggle('chips-below', needsOwnRow);
-
-        if (needsOwnRow) {
-            // Align chip bar left edge with search bar (skip past logo)
-            const logo = document.getElementById('logo-menu-wrapper');
-            if (logo) {
-                const gap = 10; // matches #filter-container > div:first-child gap
-                container.style.marginLeft = (logo.offsetWidth + gap) + 'px';
-            }
-            // Re-trim after layout change since more chips may now fit
-            _trimChipBarToMaxLines(container);
-        } else {
-            container.style.marginLeft = '';
-        }
-    }
-
-    /**
-     * Removes unselected chips that overflow past CHIP_BAR_MAX_LINES rows.
-     * Measures actual rendered positions to account for variable chip widths.
-     */
-    function _trimChipBarToMaxLines(container) {
-        const chips = container.children;
-        if (chips.length === 0) return;
-
-        // Find the top of the first chip to establish the baseline
-        const firstTop = chips[0].offsetTop;
-        let lineCount = 1;
-        let prevTop = firstTop;
-
-        for (let i = 1; i < chips.length; i++) {
-            const chipTop = chips[i].offsetTop;
-            if (chipTop > prevTop) {
-                lineCount++;
-                prevTop = chipTop;
-            }
-            if (lineCount > CHIP_BAR_MAX_LINES && !chips[i].classList.contains('active')) {
-                // Remove this and all subsequent unselected chips
-                while (container.children.length > i) {
-                    container.removeChild(container.lastChild);
-                }
-                return;
-            }
-        }
     }
 
     /**
@@ -783,16 +719,20 @@ const FilterPanelUI = (() => {
 
         if (!state.resultsContainerDOM) return;
 
-        const filterPanel = !isMobileLayout()
-            ? state.resultsContainerDOM.closest('#filter-panel')
-            : null;
+        const sheet = (typeof Sheet !== 'undefined') ? Sheet : null;
 
-        // Desktop, no search term: show the event list view in place of search
-        // sections. Keep the panel full-height when the list has content (so it
-        // can scroll); collapse it when there are no matching events.
-        if (filterPanel && !searchTerm && !debugMode && typeof ListView !== 'undefined') {
-            const showList = ListView.isVisible() && ListView.hasContent();
-            filterPanel.classList.toggle('sections-hidden', !showList);
+        // A search term (or debug mode) auto-opens the sheet so the results are
+        // visible as the user types (mobile: snaps the bottom sheet to peek).
+        if (sheet && (searchTerm || debugMode)) {
+            sheet.open();
+        }
+
+        // No search term: the sheet shows the nearby-events list view instead
+        // of search sections. We only render it while the browse content is
+        // actually on screen (skip rendering 200 cards off-screen on every map
+        // pan); the sheet fires onToggle when it opens, triggering a re-render.
+        if (!searchTerm && !debugMode && typeof ListView !== 'undefined') {
+            const showList = (!sheet || sheet.isBrowseVisible()) && ListView.hasContent();
             if (showList) {
                 ListView.render();
             } else {
@@ -804,12 +744,6 @@ const FilterPanelUI = (() => {
             _chipBarAnimateNext = false;
             _renderChipBar(shouldAnimate);
             return;
-        }
-
-        // Toggle panel height based on whether sections will be shown (desktop only)
-        if (filterPanel) {
-            const showSections = !!searchTerm || debugMode;
-            filterPanel.classList.toggle('sections-hidden', !showSections);
         }
 
         // A search term (or debug mode) takes over the results container — tear
@@ -835,32 +769,8 @@ const FilterPanelUI = (() => {
         FilterProfiler.mark('fp:panel:group-end');
         FilterProfiler.measure('fp:panel:groupResults', 'fp:panel:group-start', 'fp:panel:group-end');
 
-        // Render using SectionRenderer (onAfterRender distributes to bottom sheet on mobile)
+        // Render using SectionRenderer
         SectionRenderer.renderFilters(groupedResults, hiddenResults, searchTerm, debugMode);
-    }
-
-    /**
-     * On mobile, distributes each section into its own tab in the bottom sheet.
-     * The top bar keeps only search + date.
-     */
-    function _distributeContentMobile() {
-        if (!isMobileLayout() || typeof BottomSheet === 'undefined') return;
-        const container = state.resultsContainerDOM;
-        if (!container) return;
-
-        // Extract each section and pass to the bottom sheet's tab panels
-        const sections = {};
-        const locationSection = container.querySelector('[data-section-key="locations"]');
-        const eventSection = container.querySelector('[data-section-key="events"]');
-        const tagSection = container.querySelector('[data-section-key="tags"]');
-        const organizerSection = container.querySelector('[data-section-key="organizers"]');
-
-        if (locationSection) sections.locations = locationSection;
-        if (eventSection) sections.events = eventSection;
-        if (tagSection) sections.tags = tagSection;
-        if (organizerSection) sections.organizers = organizerSection;
-
-        BottomSheet.updateBrowseTabs(sections);
     }
 
     // ========================================
@@ -948,7 +858,6 @@ const FilterPanelUI = (() => {
                 state.sectionOrder = newOrder;
             },
             onAfterRender: () => {
-                _distributeContentMobile();
                 const shouldAnimate = _chipBarAnimateNext;
                 _chipBarAnimateNext = false;
                 _renderChipBar(shouldAnimate);
@@ -1156,15 +1065,11 @@ const FilterPanelUI = (() => {
     // ========================================
 
     /**
-     * Flip the desktop event list view on/off and re-render the panel with the
-     * last search state. Returns the new visibility (true = list shown).
+     * Re-render the panel with the last search/debug state. Used when the left
+     * sheet opens so the (previously skipped) list view populates.
      */
-    function toggleListView() {
-        if (typeof ListView === 'undefined') return false;
-        const nowVisible = !ListView.isVisible();
-        ListView.setVisible(nowVisible);
+    function rerender() {
         renderFilters(state.lastSearchResults || [], state.lastSearchTerm || '', state.debugMode);
-        return nowVisible;
     }
 
     return {
@@ -1183,7 +1088,7 @@ const FilterPanelUI = (() => {
         updateAllTagVisuals: () => TagStateManager.updateAllTagVisuals(),
         render: renderFilters,
         renderChipBar: _renderChipBar,
-        toggleListView,
+        rerender,
         clearSearch,
     };
 })();

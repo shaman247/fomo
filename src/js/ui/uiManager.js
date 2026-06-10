@@ -284,15 +284,6 @@ const UIManager = (() => {
             });
         }
 
-        // "Show list" / "Hide list" toggle below the logo (desktop only)
-        const listToggleBtn = document.getElementById('list-toggle-btn');
-        if (listToggleBtn) {
-            listToggleBtn.addEventListener('click', () => {
-                const nowVisible = FilterPanelUI.toggleListView();
-                listToggleBtn.textContent = nowVisible ? 'Hide list' : 'Show list';
-                listToggleBtn.setAttribute('aria-pressed', nowVisible ? 'true' : 'false');
-            });
-        }
     }
 
     // ========================================

@@ -250,25 +250,8 @@
         margin-bottom: 3px;
     }
 
-    /* On mobile, tags/events/places all live in the bottom sheet */
-    #tags-wrapper {
-        display: none;
-    }
-
-    /* In tab panels, hide section headers and expand/collapse buttons —
-       the tab tells the user which section they're in */
-    .bottom-sheet-tab-panel .section-icon-button {
-        display: none;
-    }
-
-    /* Section wrappers in tabs need no extra margin */
-    .bottom-sheet-tab-panel .search-results-section {
-        margin-bottom: 0;
-    }
-
-    /* Smaller tag buttons inside bottom sheet */
-    .bottom-sheet-tab-panel .tag-button,
-    .bottom-sheet-detail-content .tag-button {
+    /* Smaller tag buttons inside the sheet */
+    #sheet .tag-button {
         font-size: 0.95em;
         padding: 3px 6px;
     }

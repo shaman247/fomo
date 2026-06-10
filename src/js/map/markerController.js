@@ -340,12 +340,12 @@ const MarkerController = (() => {
     }
 
     function updateOpenPopupContent(openPopup) {
-        // Handle bottom sheet case (mobile) — openPopup is null but sheet is open
-        const isBottomSheet = !openPopup && typeof BottomSheet !== 'undefined' && BottomSheet.isDetailMode();
-        if (!openPopup && !isBottomSheet) return false;
+        // Handle sheet detail case (mobile) — openPopup is null but sheet is open
+        const isSheetDetail = !openPopup && typeof Sheet !== 'undefined' && Sheet.isDetailMode();
+        if (!openPopup && !isSheetDetail) return false;
 
-        const locationKey = isBottomSheet
-            ? BottomSheet.getCurrentLocationKey()
+        const locationKey = isSheetDetail
+            ? Sheet.getCurrentLocationKey()
             : MapManager.getCurrentPopupLocationKey();
         if (!locationKey) return false;
 
@@ -413,8 +413,8 @@ const MarkerController = (() => {
         }
 
         // Preserve the currently active tab across rebuilds
-        const currentPopupEl = isBottomSheet
-            ? document.querySelector('.bottom-sheet .maplibre-popup-content')
+        const currentPopupEl = isSheetDetail
+            ? document.querySelector('#sheet .sheet-detail .maplibre-popup-content')
             : openPopup.getElement()?.querySelector('.maplibre-popup-content');
         const activeTabBtn = currentPopupEl?.querySelector('.popup-tab-bar .popup-tab.active');
         const previousActiveTab = activeTabBtn ? activeTabBtn.textContent : null;
@@ -438,8 +438,8 @@ const MarkerController = (() => {
         } else {
             wrapper.innerHTML = newContent;
         }
-        if (isBottomSheet) {
-            BottomSheet.updateContent(wrapper);
+        if (isSheetDetail) {
+            Sheet.updateContent(wrapper);
         } else {
             openPopup.setDOMContent(wrapper);
         }
@@ -456,7 +456,7 @@ const MarkerController = (() => {
     }
 
     /**
-     * Finds the currently open popup or bottom sheet if any
+     * Finds the currently open popup or sheet detail if any
      * @returns {Object|null} Object with {popup, locationKey} or null
      */
     function findOpenPopup() {
@@ -464,9 +464,9 @@ const MarkerController = (() => {
         const locationKey = MapManager.getCurrentPopupLocationKey();
         if (popup) return { popup, locationKey };
 
-        // Check bottom sheet detail mode (mobile)
-        if (typeof BottomSheet !== 'undefined' && BottomSheet.isDetailMode()) {
-            return { popup: null, locationKey: BottomSheet.getCurrentLocationKey() };
+        // Check sheet detail mode (mobile)
+        if (typeof Sheet !== 'undefined' && Sheet.isDetailMode()) {
+            return { popup: null, locationKey: Sheet.getCurrentLocationKey() };
         }
         return null;
     }

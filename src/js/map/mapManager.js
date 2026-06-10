@@ -15,6 +15,14 @@ const MapManager = (() => {
         hoveredFeatureId: null,
         activeFeatureId: null,
 
+        // Whether main-layer labels are hidden so only the hovered location's
+        // label (on the hover layer) shows — see _setLabelSolo()
+        labelSoloActive: false,
+
+        // "<locationKey>|<eventName>" while the hover layer's label is
+        // overridden to show a specific event (list-row hover), else null
+        hoverLabelEventSig: null,
+
         // Bidirectional lookups between locationKey and feature ID
         locationKeyToFeatureId: new Map(),
         featureIdToLocationKey: new Map(),
@@ -124,7 +132,10 @@ const MapManager = (() => {
                 'text-color': _getLabelColor(),
                 'text-halo-color': _getHaloColor(),
                 'text-halo-width': 2,
-                'text-halo-blur': 0
+                'text-halo-blur': 0,
+                // Label-solo mode (list-row hover) toggles text-opacity; kill the
+                // default 300ms paint transition so labels snap instead of fading.
+                'text-opacity-transition': { duration: 0, delay: 0 }
             }
         });
 
@@ -179,6 +190,10 @@ const MapManager = (() => {
             }
         });
 
+        // Freshly created layers have default text-opacity (labels visible)
+        // and the default hover text-field (no per-event label override).
+        state.labelSoloActive = false;
+        state.hoverLabelEventSig = null;
         state.layersAdded = true;
     }
 
@@ -480,14 +495,16 @@ const MapManager = (() => {
             const shortName = locationInfo.short_name || locationInfo.name || '';
             const { name: eventLabel, extra: eventLabelExtra } = _buildEventLabel(events);
 
-            // Icon feature — no text, placed first via low sortKey
+            // Icon feature — no text (the default text-field expression skips
+            // icons), placed first via low sortKey. shortName is carried for the
+            // hover layer's list-hover override, which labels the icon feature.
             iconFeatures.push({
                 type: 'Feature',
                 geometry: { type: 'Point', coordinates: [lng, lat] },
                 properties: {
                     locationKey,
                     labelType: 'icon',
-                    shortName: '',
+                    shortName,
                     emojiImageId: `emoji-${locationInfo.emoji || '📍'}`,
                     color,
                     sortKey: -10000 - lat
@@ -539,6 +556,8 @@ const MapManager = (() => {
         // Clear stale feature-state before replacing data — MapLibre preserves
         // feature-state across setData(), so old hover/active states would
         // "stick" to whatever feature inherits the same auto-generated ID.
+        // The hover-label override references the old data too.
+        _clearHoverLabelEvent();
         if (state.hoveredFeatureId !== null) {
             map.setFeatureState({ source: 'markers', id: state.hoveredFeatureId }, { hover: false });
             state.hoveredFeatureId = null;
@@ -657,17 +676,91 @@ const MapManager = (() => {
      * This picks the feature whose geometry is closest to the event point.
      */
     /**
+     * Hides (or restores) every main-layer label while keeping the emoji icons,
+     * so the only label on the map is the hovered location's one drawn by the
+     * always-visible hover layer. Paint-property change only — no symbol
+     * re-layout — applied instantly (the layer zeroes out the default
+     * text-opacity paint transition).
+     */
+    function _setLabelSolo(on) {
+        const map = state.mapInstance;
+        if (!map || state.labelSoloActive === on || !map.getLayer('marker-symbols')) return;
+        state.labelSoloActive = on;
+        map.setPaintProperty('marker-symbols', 'text-opacity', on ? 0 : 1);
+    }
+
+    /**
+     * Overrides the hover layer's label for `locationKey` so its second line
+     * shows `labelEvent`'s name — the desktop list view hovers individual
+     * events, which may not be the event the location's default label picked.
+     * The override renders on the location's icon feature (which exists even
+     * when the main layer emitted no expanded label, and carries shortName for
+     * line 1) and blanks that location's expanded feature so the label isn't
+     * doubled. Any other location in the hover layer (the active popup's)
+     * keeps the default label.
+     */
+    function _setHoverLabelEvent(locationKey, labelEvent) {
+        const map = state.mapInstance;
+        if (!map || !map.getLayer('marker-symbols-hover')) return;
+        const iconFid = state.locationKeyToFeatureId.get(locationKey);
+        const icon = (iconFid !== undefined && state.sourceDataCache)
+            ? state.sourceDataCache.features[iconFid]
+            : null;
+        const { name } = _buildEventLabel([labelEvent]);
+        if (!icon || !name) {
+            _clearHoverLabelEvent();
+            return;
+        }
+        const sig = `${locationKey}|${name}`;
+        if (sig === state.hoverLabelEventSig) return;
+        state.hoverLabelEventSig = sig;
+        map.setLayoutProperty('marker-symbols-hover', 'text-field', ['case',
+            ['==', ['get', 'locationKey'], locationKey],
+                ['case',
+                    ['==', ['get', 'labelType'], 'icon'],
+                        ['format',
+                            ['get', 'shortName'], {},
+                            '\n', {},
+                            name, {
+                                'text-font': ['literal', ['Inter Regular']],
+                                'text-color': _toEventLabelColor(icon.properties.color),
+                                'font-scale': 0.88
+                            }
+                        ],
+                    ''
+                ],
+            _getTextFieldExpression()
+        ]);
+    }
+
+    /** Restore the hover layer's default label (location + its top event). */
+    function _clearHoverLabelEvent() {
+        const map = state.mapInstance;
+        if (!map || state.hoverLabelEventSig === null || !map.getLayer('marker-symbols-hover')) return;
+        state.hoverLabelEventSig = null;
+        map.setLayoutProperty('marker-symbols-hover', 'text-field', _getTextFieldExpression());
+    }
+
+    /**
      * Programmatically highlight a location's marker (ring + label) by its
      * locationKey, mirroring a mouse hover. Used by the desktop list view so
      * hovering a list row highlights the corresponding marker. Shares the same
      * `hoveredFeatureId` state as real mouse hover, so the two interleave
      * cleanly. No-op if the location has no currently-rendered marker.
+     *
+     * With `soloLabel: true`, all other labels on the map are hidden while the
+     * highlight lasts, leaving only this location's label visible. With
+     * `labelEvent`, the label's second line shows that event's name instead of
+     * the location's default label event.
      */
-    function highlightLocationByKey(locationKey) {
+    function highlightLocationByKey(locationKey, { soloLabel = false, labelEvent = null } = {}) {
         const map = state.mapInstance;
         if (!map) return;
         const iconFid = state.locationKeyToFeatureId.get(locationKey);
         if (iconFid === undefined) return;
+        if (soloLabel) _setLabelSolo(true);
+        if (labelEvent) _setHoverLabelEvent(locationKey, labelEvent);
+        else _clearHoverLabelEvent();
         if (iconFid === state.hoveredFeatureId) return;
         if (state.hoveredFeatureId !== null) {
             map.setFeatureState({ source: 'markers', id: state.hoveredFeatureId }, { hover: false });
@@ -681,6 +774,8 @@ const MapManager = (() => {
     function clearHoverHighlight() {
         const map = state.mapInstance;
         if (!map) return;
+        _setLabelSolo(false);
+        _clearHoverLabelEvent();
         if (state.hoveredFeatureId !== null) {
             map.setFeatureState({ source: 'markers', id: state.hoveredFeatureId }, { hover: false });
             state.hoveredFeatureId = null;
@@ -721,6 +816,8 @@ const MapManager = (() => {
                 const locationKey = feature.properties.locationKey;
                 const iconFid = state.locationKeyToFeatureId.get(locationKey);
                 if (iconFid === undefined) return;
+                // Direct marker hover always shows the default label
+                _clearHoverLabelEvent();
                 if (iconFid === state.hoveredFeatureId) return; // same location, no-op
                 if (state.hoveredFeatureId !== null) {
                     map.setFeatureState({ source: 'markers', id: state.hoveredFeatureId }, { hover: false });
@@ -749,13 +846,20 @@ const MapManager = (() => {
             }
         });
 
-        // Click on empty map: dismiss bottom sheet (mobile)
+        // Click on empty map: dismiss the sheet (mobile: snap closed; desktop:
+        // collapse the left-docked panel). MapLibre only fires 'click' on a
+        // genuine click, not after a drag-pan, so dragging from empty space
+        // leaves the sheet open.
         map.on('click', (e) => {
-            if (typeof BottomSheet === 'undefined' || (!BottomSheet.isOpen() && !BottomSheet.isDetailMode())) return;
+            const sheetActive = typeof Sheet !== 'undefined' && (Sheet.isOpen() || Sheet.isDetailMode());
+            if (!sheetActive) return;
             const features = map.queryRenderedFeatures(e.point, { layers: ['marker-symbols'] });
-            if (features.length === 0) {
-                BottomSheet.dismissToMini();
-            }
+            if (features.length > 0) return; // clicked a marker, not empty space
+            // If a popup is open, this click only closes the popup (handled by the
+            // popup's own closeOnClick) — leave the sheet open. The next empty
+            // click, with no popup, collapses/dismisses the sheet.
+            if (state.currentPopup) return;
+            Sheet.dismissToMini();
         });
     }
 
@@ -797,13 +901,13 @@ const MapManager = (() => {
         }
         _updateHoverFilter();
 
-        // Mobile: use bottom sheet instead of MapLibre popup
+        // Mobile: show the popup content inside the sheet (detail mode)
         const isMobile = window.innerWidth <= Constants.UI.MOBILE_BREAKPOINT;
-        if (isMobile && typeof BottomSheet !== 'undefined') {
+        if (isMobile && typeof Sheet !== 'undefined') {
             state.currentPopup = null;
             state.currentPopupLocationKey = locationKey;
-            BottomSheet.open(locationKey, lngLat, wrapper);
-            // popupopen event is fired by BottomSheet.open()
+            Sheet.openDetail(locationKey, lngLat, wrapper);
+            // popupopen event is fired by Sheet.openDetail()
             return;
         }
 
@@ -931,7 +1035,7 @@ const MapManager = (() => {
 
     /**
      * Clears active marker highlight state.
-     * Called by BottomSheet on close to remove the highlight ring.
+     * Called by the Sheet on detail close to remove the highlight ring.
      */
     function clearActiveState() {
         const map = state.mapInstance;
