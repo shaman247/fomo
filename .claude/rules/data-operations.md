@@ -24,9 +24,10 @@ php scripts/add_locations.php --help
 php scripts/add_websites.php --help
 ```
 - Supports `location` field to auto-link via `website_locations` table
+- Supports `parent` field (website id or exact name) to set `parent_website_id` — use whenever adding another page/venue/branch of an organizer we already track (park pages, library branches, theater chains), so all its sites collapse into one organizer chip. Run `./venv/bin/python scripts/backfill_parent_websites.py --audit` if unsure about grouping invariants.
 - Always navigate the website first to find the correct events/calendar URL
 - Check for external platforms (Eventbrite, Ovation Tix, Dice)
-- **Informational-only websites are valid**: omit `urls` and `crawl_frequency` for venues without crawlable event pages — they still serve as the popup link for the location.
+- **Informational-only websites are valid**: omit `urls` and `crawl_frequency` for venues without crawlable event pages — they still serve as the popup link for the location (and as organizer-root placeholders, e.g. "Regal Cinemas").
 
 ## Linking Tables
 
@@ -67,6 +68,10 @@ import sys; sys.path.insert(0, 'pipeline')
 import exporter, uploader
 from db import create_connection
 conn = create_connection()
-exporter.export_events(conn.cursor()); conn.close()
+cur = conn.cursor()
+stats = exporter.export_events(cur)
+exporter.export_organizers(cur, stats['organizer_root_ids'])
+conn.close()
 uploader.upload(use_tls=False)
 ```
+Note `uploader.upload()` only ships `events*`/`locations*` JSON — if `organizers.json` changed (new/renamed organizers, parent regrouping), it goes out with the full-site upload: `npm run build && ./venv/bin/python scripts/upload_public_html.py`.

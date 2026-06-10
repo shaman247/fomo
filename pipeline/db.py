@@ -21,7 +21,7 @@ except ImportError:
     print("Install it with: pip install mysql-connector-python")
     sys.exit(1)
 
-from constants import MAX_PAGES_DEFAULT
+from constants import MAX_PAGES_DEFAULT, FUTURE_WINDOW_DAYS
 
 
 def compute_content_hash(content):
@@ -220,6 +220,10 @@ def update_crawl_result(cursor, connection, crawl_result_id, status, **kwargs):
     }
     if status in timestamp_map:
         updates.append(f"{timestamp_map[status]} = NOW()")
+    if status == 'crawled':
+        # A fresh crawl reuses the same row within a crawl run (unique_run_file),
+        # so the previous cycle's merge stamp no longer describes this content.
+        updates.append("merged_at = NULL")
 
     # Handle optional fields
     if 'content' in kwargs:
@@ -496,6 +500,53 @@ def get_incomplete_crawl_results(cursor, website_ids=None):
     return results
 
 
+def get_stranded_merge_summary(cursor, website_ids=None):
+    """Find recently-processed crawl_results whose crawl_events never merged.
+
+    A row qualifies when the crawl_result is 'processed' but still has at least
+    one crawl_event with no event_sources link and a present/future occurrence —
+    i.e. extraction succeeded but the merge tail never ran for it (interrupted
+    run or lost lock race). These are exactly the rows the next merge pass picks
+    up; this just makes them visible (and lets --merge-only report its scope).
+
+    Two deliberate scope bounds keep by-design skips out of the report:
+    - last 7 days only (older unmerged residue would already have been retried
+      by the nightly merges — it isn't "stranded", it's declined);
+    - the occurrence window mirrors the merger's valid-occurrence filter
+      (start within FUTURE_WINDOW_DAYS and start/end not entirely past) — CEs
+      whose dates are all beyond the window are deferred by design and merge
+      on their own once the dates approach.
+
+    Returns a list of (crawl_result_id, website_id, website_name, processed_at,
+    unmerged_event_count) tuples.
+    """
+    query = """
+        SELECT cr.id, cr.website_id, w.name, cr.processed_at, COUNT(DISTINCT ce.id)
+        FROM crawl_results cr
+        JOIN websites w ON cr.website_id = w.id
+        JOIN crawl_events ce ON ce.crawl_result_id = cr.id
+        LEFT JOIN event_sources es ON es.crawl_event_id = ce.id
+        WHERE cr.status = 'processed'
+          AND cr.processed_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+          AND es.id IS NULL
+          AND EXISTS (
+              SELECT 1 FROM crawl_event_occurrences ceo
+              WHERE ceo.crawl_event_id = ce.id
+                AND ceo.start_date <= DATE_ADD(CURDATE(), INTERVAL %s DAY)
+                AND (ceo.start_date >= CURDATE()
+                     OR (ceo.end_date IS NOT NULL AND ceo.end_date >= CURDATE()))
+          )
+    """
+    params = [FUTURE_WINDOW_DAYS]
+    if website_ids:
+        placeholders = ','.join(['%s'] * len(website_ids))
+        query += f" AND cr.website_id IN ({placeholders})"
+        params.extend(website_ids)
+    query += " GROUP BY cr.id, cr.website_id, w.name, cr.processed_at ORDER BY cr.processed_at"
+    cursor.execute(query, params)
+    return cursor.fetchall()
+
+
 def get_crawled_content(cursor, crawl_result_id):
     """Get crawled content for a crawl result."""
     cursor.execute(
@@ -568,10 +619,22 @@ def archive_outdated_events(cursor, connection, website_id):
     - For EVERY website that has ever referenced this event (via event_sources),
       the most recent crawl from that website does NOT include this event
     - At least one of those websites has been successfully crawled
-    - For events with future occurrences: a 14-day grace period applies — the event
-      is only archived if its most recent source crawl is older than 14 days.
-      This prevents premature archiving of events on rotating calendars that don't
-      always list events far in advance.
+    - For events with future occurrences, THREE guards must all pass:
+      1. 14-day grace period — the event's most recent supporting crawl is older
+         than 14 days. Prevents premature archiving on rotating calendars that
+         don't always list events far in advance.
+      2. Fresh-crawl count — this website has completed >= 2 successful crawls
+         since the event was last seen. On frequently-crawled sites the 14-day
+         grace already implies many misses, but on monthly/annual-cadence sites
+         14 days can pass with a single fresh crawl — one extraction miss would
+         archive a live event without this guard.
+      3. No recent 'start_too_future' rejection matching the event's name from
+         this website. When all of an event's occurrences sit beyond
+         FUTURE_WINDOW_DAYS the processor rejects the extraction, so the event
+         never gets a fresh event_sources link even though it IS still listed
+         on the page — without this guard such events age past the grace period
+         and get archived while still published (e.g. Storm King's September
+         program each June).
 
     This ensures events referenced by multiple websites are only archived when
     ALL sources stop listing them, not just one.
@@ -592,7 +655,9 @@ def archive_outdated_events(cursor, connection, website_id):
     # 1. It has a source from the website we just crawled
     # 2. No source website's latest crawl still references it
     # 3. At least one source website has been successfully crawled
-    # 4. Either has no future dates, or last source crawl is 14+ days old (grace period)
+    # 4. Either has no future dates, or all three future-event guards pass
+    #    (14-day grace, >=2 fresh crawls since last seen, no too-future rejection)
+    # Takes the website_id parameter THREE times (in order).
     archive_where = """
         e.archived = FALSE
           AND EXISTS (
@@ -633,18 +698,50 @@ def archive_outdated_events(cursor, connection, website_id):
                   WHERE eo.event_id = e.id AND eo.start_date >= CURDATE()
               )
               OR
-              -- Has future occurrences: only archive after 14-day grace period
-              -- (handles rotating calendars that don't always list far-out events)
-              NOT EXISTS (
-                  SELECT 1
-                  FROM event_sources es
-                  JOIN crawl_events ce ON es.crawl_event_id = ce.id
-                  JOIN crawl_results cr ON ce.crawl_result_id = cr.id
-                  WHERE es.event_id = e.id
-                    AND cr.processed_at >= DATE_SUB(NOW(), INTERVAL 14 DAY)
+              (
+                  -- Has future occurrences: only archive after 14-day grace period
+                  -- (handles rotating calendars that don't always list far-out events)
+                  NOT EXISTS (
+                      SELECT 1
+                      FROM event_sources es
+                      JOIN crawl_events ce ON es.crawl_event_id = ce.id
+                      JOIN crawl_results cr ON ce.crawl_result_id = cr.id
+                      WHERE es.event_id = e.id
+                        AND cr.processed_at >= DATE_SUB(NOW(), INTERVAL 14 DAY)
+                  )
+                  -- ... AND this website has had >= 2 successful crawls since the
+                  -- event was last seen (a wall-clock grace alone is zero-tolerance
+                  -- on monthly-cadence sites: one missed extraction would archive)
+                  AND (
+                      SELECT COUNT(*)
+                      FROM crawl_results crn
+                      WHERE crn.website_id = %s
+                        AND crn.status IN ('processed', 'extracted')
+                        AND crn.processed_at IS NOT NULL
+                        AND crn.processed_at > COALESCE((
+                            SELECT MAX(cr3.processed_at)
+                            FROM event_sources es3
+                            JOIN crawl_events ce3 ON es3.crawl_event_id = ce3.id
+                            JOIN crawl_results cr3 ON ce3.crawl_result_id = cr3.id
+                            WHERE es3.event_id = e.id
+                              AND cr3.processed_at IS NOT NULL
+                        ), '1970-01-01')
+                  ) >= 2
+                  -- ... AND the extractor didn't recently reject this event as
+                  -- start_too_future (beyond FUTURE_WINDOW_DAYS = still on the page,
+                  -- just too far out to re-link; treat as present, don't archive)
+                  AND NOT EXISTS (
+                      SELECT 1
+                      FROM extraction_rejections er
+                      WHERE er.website_id = %s
+                        AND er.rejection_type = 'start_too_future'
+                        AND er.created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY)
+                        AND er.event_name = e.name
+                  )
               )
           )
     """
+    archive_params = (website_id, website_id, website_id)
 
     # First, identify events that will be archived to check for upcoming ones
     cursor.execute(f"""
@@ -655,7 +752,7 @@ def archive_outdated_events(cursor, connection, website_id):
                   AND eo.start_date >= CURDATE()) as next_occurrence
         FROM events e
         WHERE {archive_where}
-    """, (website_id,))
+    """, archive_params)
 
     events_to_archive = cursor.fetchall()
     upcoming_events = [(event_id, name, next_occ) for event_id, name, next_occ in events_to_archive if next_occ]
@@ -665,7 +762,7 @@ def archive_outdated_events(cursor, connection, website_id):
         UPDATE events e
         SET archived = TRUE
         WHERE {archive_where}
-    """, (website_id,))
+    """, archive_params)
 
     archived_count = cursor.rowcount
     connection.commit()

@@ -50,6 +50,41 @@ import dblock
 # Number of concurrent workers for crawling, extraction, and detail crawling
 NUM_WORKERS = 10
 
+# Publish-lock acquisition: each attempt blocks up to dblock.DEFAULT_TIMEOUT
+# (600s); retry a few times before giving up so a busy-but-progressing
+# concurrent session doesn't strand this run's merge.
+PUBLISH_LOCK_ATTEMPTS = 3
+
+
+def acquire_publish_lock(connection, attempts=PUBLISH_LOCK_ATTEMPTS,
+                         timeout=dblock.DEFAULT_TIMEOUT):
+    """Acquire the advisory write lock for the merge→export→upload tail.
+
+    Blocks up to `timeout` seconds per attempt, `attempts` times, printing who
+    holds the lock between attempts. The lock is MySQL-connection-scoped, so
+    closing `connection` releases it on every exit path. Returns True/False.
+    """
+    lock_cur = connection.cursor()
+    for attempt in range(1, attempts + 1):
+        lock_cur.execute("SELECT GET_LOCK(%s, %s)", (dblock.LOCK_NAME, timeout))
+        if (lock_cur.fetchone() or [0])[0] == 1:
+            try:
+                dblock._set_holder(connection, dblock.LOCK_NAME, "run_pipeline")
+            except Exception:
+                pass
+            return True
+        holder = dblock.acquired_by(connection)
+        more = "; retrying..." if attempt < attempts else ""
+        print(f"  Write lock busy (held by {holder or 'another session'}) — "
+              f"attempt {attempt}/{attempts} timed out after {timeout}s{more}")
+    return False
+
+
+def _merge_only_hint(website_ids):
+    """The recovery command to print when the merge tail couldn't run."""
+    ids_arg = f" --ids {','.join(map(str, website_ids))}" if website_ids else ""
+    return f"python pipeline/main.py --merge-only{ids_arg}"
+
 
 async def run_pipeline(website_ids=None, limit=None, use_batch=None):
     """Execute the complete event processing pipeline.
@@ -123,6 +158,20 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
                 print_incomplete_status(incomplete_extracted, "processing")
         else:
             print("No incomplete crawl results found.")
+
+        # Stranded merges: extraction/processing succeeded in a prior run but the
+        # merge tail never ran (interrupted run or lost lock race). This run's
+        # merge picks them up automatically — surfacing them here so a sudden
+        # batch of "old" events in the merge isn't a surprise.
+        stranded = db.get_stranded_merge_summary(cursor, website_ids=website_ids)
+        if stranded:
+            total_unmerged = sum(r[4] for r in stranded)
+            print(f"  - {len(stranded)} processed crawl result(s) from prior runs still have "
+                  f"{total_unmerged} unmerged event(s) — this run's merge will include them:")
+            for cr_id, w_id, w_name, processed_at, n in stranded[:10]:
+                print(f"      cr={cr_id} w={w_id} {w_name} (processed {processed_at}, {n} unmerged)")
+            if len(stranded) > 10:
+                print(f"      ... and {len(stranded) - 10} more")
 
         # STEP 1: Get websites due for crawling
         step("STEP 1: Finding Websites Due for Crawling")
@@ -444,17 +493,13 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
         # concurrent session can't write events / publish at the same time. The lock is
         # MySQL-connection-scoped, so the `finally: connection.close()` below releases it
         # on every exit path (success, error, abort). See pipeline/dblock.py.
-        _lock_cur = connection.cursor()
-        _lock_cur.execute("SELECT GET_LOCK(%s, %s)", (dblock.LOCK_NAME, dblock.DEFAULT_TIMEOUT))
-        if (_lock_cur.fetchone() or [0])[0] != 1:
-            holder = dblock.acquired_by(connection)
-            print(f"\n✗ Could not acquire DB write lock (held by {holder}). Another session "
-                  f"is publishing — aborting before merge to avoid a write conflict.\n")
+        if not acquire_publish_lock(connection):
+            print(f"\n✗ Could not acquire DB write lock after {PUBLISH_LOCK_ATTEMPTS} attempts "
+                  f"(~{PUBLISH_LOCK_ATTEMPTS * dblock.DEFAULT_TIMEOUT // 60} min). Another session "
+                  f"is publishing — aborting before merge to avoid a write conflict.\n"
+                  f"  Crawled+extracted data is saved. Finish the merge/export/upload later with:\n"
+                  f"    {_merge_only_hint(website_ids)}\n")
             return False
-        try:
-            dblock._set_holder(connection, dblock.LOCK_NAME, "run_pipeline")
-        except Exception:
-            pass
 
         # STEP 6: Merge crawl_events into final events table and archive outdated events
         step("STEP 6: Merging Crawl Events and Archiving Outdated Events")
@@ -470,9 +515,9 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
         step("STEP 7: Exporting Events to JSON")
 
         print("  Exporting events from database to JSON...")
-        exporter.export_events(cursor)
+        export_stats = exporter.export_events(cursor)
         exporter.export_tag_hierarchy(cursor)
-        exporter.export_organizers(cursor)
+        exporter.export_organizers(cursor, export_stats['organizer_root_ids'])
 
         print("\n✓ Event export completed\n")
 
@@ -537,6 +582,84 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
         connection.close()
 
 
+def run_merge_only(website_ids=None):
+    """Run ONLY the merge → classify → export → upload tail. No crawling, no AI.
+
+    Recovery path for interrupted runs: picks up crawl_results that were
+    processed but whose crawl_events never merged (killed run, lost lock race)
+    without re-crawling or re-paying extraction. Safe to run anytime — with no
+    pending unmerged events it just re-exports and re-uploads.
+
+    Returns True on success.
+    """
+    print(f"{'='*60}")
+    print("EVENT PROCESSING PIPELINE — MERGE-ONLY MODE")
+    if website_ids:
+        print(f"  Filtering to website IDs: {', '.join(map(str, website_ids))}")
+    print(f"{'='*60}\n")
+
+    connection = db.create_connection()
+    if not connection:
+        print("Failed to connect to database")
+        return False
+    cursor = connection.cursor(buffered=True)
+
+    try:
+        stranded = db.get_stranded_merge_summary(cursor, website_ids=website_ids)
+        if stranded:
+            total_unmerged = sum(r[4] for r in stranded)
+            print(f"Found {len(stranded)} crawl result(s) with {total_unmerged} unmerged event(s):")
+            for cr_id, w_id, w_name, processed_at, n in stranded[:20]:
+                print(f"  cr={cr_id} w={w_id} {w_name} (processed {processed_at}, {n} unmerged)")
+            if len(stranded) > 20:
+                print(f"  ... and {len(stranded) - 20} more")
+        else:
+            print("No unmerged crawl results pending — will still re-export and upload.")
+
+        if not acquire_publish_lock(connection):
+            print(f"\n✗ Could not acquire DB write lock after {PUBLISH_LOCK_ATTEMPTS} attempts. "
+                  f"Another session is publishing — retry when it finishes "
+                  f"(./venv/bin/python pipeline/dblock.py status).\n")
+            return False
+
+        print(f"\n{'='*60}\nMerging Crawl Events and Archiving Outdated Events\n{'='*60}")
+        new_events, merged_events = merger.merge_crawl_events(cursor, connection, website_ids=website_ids)
+        print(f"\n✓ Merged events ({new_events} new, {merged_events} merged)\n")
+
+        print("  Classifying event sections...")
+        exporter.classify_event_sections(cursor, connection)
+
+        print(f"\n{'='*60}\nExporting Events to JSON\n{'='*60}")
+        export_stats = exporter.export_events(cursor)
+        exporter.export_tag_hierarchy(cursor)
+        exporter.export_organizers(cursor, export_stats['organizer_root_ids'])
+        print("\n✓ Event export completed\n")
+
+        print(f"{'='*60}\nUploading Data\n{'='*60}")
+        success = uploader.upload(use_tls=False)
+        if not success:
+            print("\n✗ Data upload failed\n")
+            return False
+        print("\n✓ Data upload completed\n")
+
+        print(f"{'='*60}")
+        print("MERGE-ONLY RUN COMPLETED SUCCESSFULLY")
+        print(f"{'='*60}\n")
+        return True
+
+    except KeyboardInterrupt:
+        print("\n\nMerge-only run interrupted by user.")
+        return False
+    except Exception as e:
+        print(f"\n\nMerge-only Error: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
+    finally:
+        cursor.close()
+        connection.close()
+
+
 def parse_args():
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(
@@ -548,6 +671,7 @@ Examples:
   python main.py --ids 941           # Specific website
   python main.py --batch             # Full run with Batch API (50% cheaper but slower)
   python main.py --limit 5           # Only crawl first 5 websites due
+  python main.py --merge-only        # Just merge pending events + export + upload (no crawling)
         """
     )
     parser.add_argument(
@@ -559,6 +683,12 @@ Examples:
         '--limit', '-n',
         type=int,
         help='Maximum number of websites to crawl'
+    )
+    parser.add_argument(
+        '--merge-only',
+        action='store_true',
+        help='Skip crawl/extract/process; only merge pending crawl_events, then export + upload. '
+             'Recovers interrupted runs without re-crawling.'
     )
     batch_group = parser.add_mutually_exclusive_group()
     batch_group.add_argument(
@@ -589,5 +719,8 @@ if __name__ == "__main__":
     else:
         use_batch = None  # Let run_pipeline decide based on whether --ids was used
 
-    success = asyncio.run(run_pipeline(website_ids, args.limit, use_batch))
+    if args.merge_only:
+        success = run_merge_only(website_ids)
+    else:
+        success = asyncio.run(run_pipeline(website_ids, args.limit, use_batch))
     sys.exit(0 if success else 1)

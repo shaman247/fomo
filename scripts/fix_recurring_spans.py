@@ -12,6 +12,16 @@ points. For such events we:
     future-window), so no in-window meeting is lost, then
   - delete the envelope span occurrence(s).
 
+A second shape, COURSE_WEEKLY, covers weekly classes/courses captured as ONE bare
+span with no discrete dates at all (so the envelope scan can't see them): exactly
+one occurrence, a 2-week..6-month span whose endpoints fall on the SAME weekday,
+corroborated by a clock time on the span or an explicit recurrence keyword. The
+fix expands the span into the weekly series at the span's time (e.g. "Aug 11 –
+Dec 15, 6:30pm Tuesdays" -> 19 Tuesday occurrences). Because a same-weekday span
+can still be non-weekly (quarterly PPV listings, daily summer programs), course
+fixes apply ONLY with explicit `--apply --ids <ids>` after a source check —
+a blanket `--apply` lists them and moves on.
+
 Dry-run by default. Pass --apply to write changes.
 """
 import sys, argparse, statistics, re
@@ -20,6 +30,7 @@ from datetime import date, timedelta
 
 sys.path.insert(0, 'pipeline')
 from db import create_connection
+from dblock import write_lock
 from constants import FUTURE_WINDOW_DAYS
 
 TODAY = date.today()
@@ -84,6 +95,14 @@ EXHIB_RE = re.compile('|'.join(re.escape(k) for k in EXHIBITION_KW), re.I)
 
 REVIEW_SPAN_MIN = 4   # surface spans > 4 days (>=5) in --review; auto-fix still gated at >14
 
+# Course-shape detection (COURSE_WEEKLY): a weekly class/course captured as ONE
+# span occurrence. The give-away is that the span starts and ends on the SAME
+# weekday — publishers state a weekly series as "Aug 11 – Dec 15" where both
+# endpoints are class days (1-in-7 odds by chance). Bounds keep it to
+# course-plausible lengths: >= 2 weeks (3+ sessions), <= ~6 months (a semester).
+COURSE_SPAN_MIN_DAYS = 14
+COURSE_SPAN_MAX_DAYS = 190
+
 
 def classify(eid, name, occ, description=''):
     """Return (verdict, info-dict) for an event's occurrences.
@@ -129,7 +148,57 @@ def classify(eid, name, occ, description=''):
     return 'skip', {'reason': f'irregular cadence med={med} gaps={gaps} same_wd={same_weekday}'}
 
 
+def classify_course(name, occ, description=''):
+    """Span-only course detector. Returns ('course_weekly', info) or ('skip', info).
+
+    Deliberately the most conservative shape that covers the real cases (BISR
+    courses, Bhakti Center modules): the event has EXACTLY ONE occurrence, and it
+    is a single span of COURSE_SPAN_MIN..MAX days whose start and end fall on the
+    same weekday, plus at least one corroborating signal — a start_time on the
+    span (exhibitions don't publish a clock time on their run) or an EXPLICIT
+    recurrence keyword ("weekly", "Tuesdays"...) in the name/description.
+    Program/camp keywords deliberately do NOT corroborate: summer programs and
+    camps run DAILY, so a same-weekday span + "program" is usually not weekly.
+    Exhibition/continuous keywords veto.
+
+    Even matches are NOT blanket-applied — a timed same-weekday span can still be
+    a non-weekly series (e.g. a bar's "UFC PPVs" quarter with a 1pm time), so the
+    fix requires explicit --apply --ids approval after a source check.
+    """
+    blob = name + ' ' + (description or '')
+    if EXHIB_RE.search(blob) or CONTINUOUS_RE.search(blob):
+        return 'skip', {'reason': 'exhibition/continuous keyword'}
+    if len(occ) != 1:
+        return 'skip', {'reason': f'{len(occ)} occurrence rows (course shape = exactly 1 span)'}
+    o = occ[0]
+    if not o['end_date']:
+        return 'skip', {'reason': 'no end_date'}
+    days = (o['end_date'] - o['start_date']).days
+    if not (COURSE_SPAN_MIN_DAYS <= days <= COURSE_SPAN_MAX_DAYS):
+        return 'skip', {'reason': f'span {days}d outside course bounds'}
+    if o['start_date'].weekday() != o['end_date'].weekday():
+        return 'skip', {'reason': 'span endpoints on different weekdays'}
+    has_time = bool(o['start_time'])
+    has_kw = bool(RECUR_RE.search(blob))
+    if not (has_time or has_kw):
+        return 'skip', {'reason': 'no time and no explicit recurrence keyword'}
+    info = {'disc': [], 'wd': o['start_date'].weekday(),
+            'span_start': o['start_date'], 'span_end': o['end_date'],
+            'time': (o['start_time'], o['end_time']),
+            'signal': ('time' if has_time else '') + ('+kw' if has_kw else '')}
+    return 'course_weekly', info
+
+
 def planned_dates(verdict, info):
+    if verdict == 'course_weekly':
+        # Expand the full published series (span_end is the course's real last
+        # session — don't truncate to the crawl future-window).
+        out = []
+        d = info['span_start']
+        while d <= info['span_end']:
+            out.append(d)
+            d += timedelta(days=7)
+        return out
     disc = info['disc']
     first = disc[0]
     end = min(info['span_end'], WINDOW_END)
@@ -193,6 +262,13 @@ def categorize_for_review(eid, name, occ, description=''):
     if verdict != 'skip':
         return 'FIX_SPAN', verdict
 
+    cverdict, cinfo = classify_course(name, occ, description)
+    if cverdict == 'course_weekly':
+        n = len(planned_dates('course_weekly', cinfo))
+        st = cinfo['time'][0] or 'no time'
+        return 'COURSE_WEEKLY', (f'same-weekday {longest}d span ({cinfo["signal"]}) '
+                                 f'-> {n} weekly dates @ {st}')
+
     # regular discrete grid? (same weekday, 7/14/28-31 day gaps)
     regular = False
     if len(disc) >= 3:
@@ -245,7 +321,7 @@ def review_scan(cur, recent_only=False, ids=None):
     )
     events = cur.fetchall()
     scope = " created/updated in the last day" if recent_only else ""
-    buckets = {'FIX_SPAN': [], 'RECURRING_RANGE': [], 'PROGRAM_RANGE': [], 'INVERSE': [], 'LIKELY_OK': []}
+    buckets = {'FIX_SPAN': [], 'COURSE_WEEKLY': [], 'RECURRING_RANGE': [], 'PROGRAM_RANGE': [], 'INVERSE': [], 'LIKELY_OK': []}
     for e in events:
         cur.execute('SELECT start_date,start_time,end_date,end_time FROM event_occurrences WHERE event_id=%s ORDER BY start_date', (e['id'],))
         occ = cur.fetchall()
@@ -255,11 +331,12 @@ def review_scan(cur, recent_only=False, ids=None):
     print(f"\nScanned {len(events)} active events with a future-ending >{REVIEW_SPAN_MIN}-day span{scope}.\n")
     actions = {
         'FIX_SPAN': 'auto-fixable — run with --apply (review first as usual)',
+        'COURSE_WEEKLY': 'same-weekday course span -> weekly dates; verify cadence via --show/source, then --apply --ids <ids>',
         'RECURRING_RANGE': 'MANUAL — build the real meeting dates from the source, then delete the span',
         'PROGRAM_RANGE': 'MANUAL — umbrella/program: split into sub-events, make discrete, or accept as ongoing',
         'INVERSE': 'MANUAL — delete the bogus regular discrete rows, KEEP the span',
     }
-    for cat in ('FIX_SPAN', 'RECURRING_RANGE', 'PROGRAM_RANGE', 'INVERSE'):
+    for cat in ('FIX_SPAN', 'COURSE_WEEKLY', 'RECURRING_RANGE', 'PROGRAM_RANGE', 'INVERSE'):
         rows = buckets[cat]
         print(f"### {cat} ({len(rows)}) — {actions[cat]}")
         for eid, name, note in rows:
@@ -344,11 +421,59 @@ def main():
         new_dates = [d for d in dates if d not in existing_disc and d >= TODAY]
         to_fix.append((e['id'], e['name'], verdict, info, dates, new_dates, st, et))
 
-    print(f"\nScanned {len(events)} candidate events. Verdicts: {dict(by_verdict)}\n")
+    # Second scan: course-shaped span-only events (exactly one occurrence, a
+    # course-length span). These have no discrete dates, so the envelope scan
+    # above never sees them; classify_course applies the same-weekday + signal
+    # gates and the fix expands the span into the weekly series.
+    cur.execute('''
+        SELECT e.id, e.name, e.description FROM events e
+        WHERE e.archived=0 AND e.suppressed=0
+          AND (SELECT COUNT(*) FROM event_occurrences o WHERE o.event_id=e.id) = 1
+          AND EXISTS (SELECT 1 FROM event_occurrences o WHERE o.event_id=e.id
+                      AND o.end_date IS NOT NULL
+                      AND DATEDIFF(o.end_date,o.start_date) BETWEEN %s AND %s)
+    ''', (COURSE_SPAN_MIN_DAYS, COURSE_SPAN_MAX_DAYS))
+    course_events = cur.fetchall()
+    if args.ids:
+        keep = set(int(x) for x in args.ids.split(','))
+        course_events = [e for e in course_events if e['id'] in keep]
+    course_needs_ids = []  # COURSE_WEEKLY matches not approved via --ids
+    for e in course_events:
+        cur.execute('SELECT start_date,start_time,end_date,end_time FROM event_occurrences WHERE event_id=%s ORDER BY start_date', (e['id'],))
+        occ = cur.fetchall()
+        verdict, info = classify_course(e['name'], occ, e.get('description'))
+        by_verdict[verdict if verdict != 'skip' else 'course_skip'] += 1
+        if verdict == 'skip':
+            skipped.append((e['id'], e['name'], 'course-scan: ' + info.get('reason', '')))
+            continue
+        if e['id'] in exclude:
+            by_verdict['excluded'] += 1
+            skipped.append((e['id'], e['name'], 'EXCLUDED by --exclude'))
+            continue
+        if not args.ids:
+            # A same-weekday timed span can still be non-weekly (UFC PPV quarters);
+            # course fixes need explicit per-id approval after a source check.
+            course_needs_ids.append((e['id'], e['name'], info))
+            continue
+        dates = planned_dates(verdict, info)
+        st, et = info['time']
+        new_dates = [d for d in dates if d >= TODAY]
+        to_fix.append((e['id'], e['name'], verdict, info, dates, new_dates, st, et))
+
+    print(f"\nScanned {len(events)} envelope + {len(course_events)} course-shape candidates. "
+          f"Verdicts: {dict(by_verdict)}\n")
     print(f"{'id':>7} {'verdict':10} {'name':46} discrete  span_end    +new_in_window")
     for eid, name, verdict, info, dates, new_dates, st, et in to_fix:
         tm = f"{st or '--'}-{et or '--'}"
         print(f"{eid:>7} {verdict:10} {name[:46]:46} n={len(info['disc']):<3} {tm:13} span_end={info['span_end']}  +{len(new_dates)} {[str(d) for d in new_dates] if new_dates else ''}")
+
+    if course_needs_ids:
+        print(f"\nCOURSE_WEEKLY matches needing per-id approval (verify weekly cadence via --show/source, "
+              f"then re-run with --apply --ids <ids>):")
+        for eid, name, info in course_needs_ids:
+            n = len(planned_dates('course_weekly', info))
+            print(f"  {eid:>7}  {name[:50]:50}  {info['span_start']}..{info['span_end']} "
+                  f"({info['signal']}) -> {n} weekly dates")
 
     if args.skipped:
         print(f"\nSkipped {len(skipped)} candidates (use --show <ids> to inspect, --ids to force-include after review):")
@@ -361,19 +486,28 @@ def main():
         return
 
     fixed = 0
-    for eid, name, verdict, info, dates, new_dates, st, et in to_fix:
-        # delete envelope span occurrences
-        cur.execute('''DELETE FROM event_occurrences WHERE event_id=%s
-                       AND end_date IS NOT NULL AND DATEDIFF(end_date,start_date)>%s''', (eid, SPAN_THRESHOLD))
-        # insert missing in-window discrete dates at the cadence time
-        for d in new_dates:
-            cur.execute('''INSERT INTO event_occurrences (event_id,start_date,start_time,end_date,end_time,sort_order)
-                           VALUES (%s,%s,%s,NULL,%s,0)''', (eid, d, st or '', et or ''))
-        # reset section so exporter reclassifies
-        cur.execute('UPDATE events SET section=NULL WHERE id=%s', (eid,))
-        fixed += 1
-    conn.commit()
-    print(f"\n[APPLIED] Fixed {fixed} events (deleted envelope spans, added {sum(len(x[5]) for x in to_fix)} in-window dates, reset section).")
+    with write_lock(conn):  # shared DB: serialize the event_occurrences mutation
+        for eid, name, verdict, info, dates, new_dates, st, et in to_fix:
+            if verdict == 'course_weekly':
+                # delete the single course span (>= COURSE_SPAN_MIN_DAYS, shorter
+                # than the envelope threshold can catch)
+                cur.execute('''DELETE FROM event_occurrences WHERE event_id=%s
+                               AND end_date IS NOT NULL
+                               AND DATEDIFF(end_date,start_date) BETWEEN %s AND %s''',
+                            (eid, COURSE_SPAN_MIN_DAYS, COURSE_SPAN_MAX_DAYS))
+            else:
+                # delete envelope span occurrences
+                cur.execute('''DELETE FROM event_occurrences WHERE event_id=%s
+                               AND end_date IS NOT NULL AND DATEDIFF(end_date,start_date)>%s''', (eid, SPAN_THRESHOLD))
+            # insert missing in-window discrete dates at the cadence time
+            for d in new_dates:
+                cur.execute('''INSERT INTO event_occurrences (event_id,start_date,start_time,end_date,end_time,sort_order)
+                               VALUES (%s,%s,%s,NULL,%s,0)''', (eid, d, st or '', et or ''))
+            # reset section so exporter reclassifies
+            cur.execute('UPDATE events SET section=NULL WHERE id=%s', (eid,))
+            fixed += 1
+        conn.commit()
+    print(f"\n[APPLIED] Fixed {fixed} events (deleted spans, added {sum(len(x[5]) for x in to_fix)} in-window dates, reset section).")
 
 
 if __name__ == '__main__':

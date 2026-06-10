@@ -93,10 +93,13 @@ CREATE TABLE IF NOT EXISTS websites (
     emoji VARCHAR(8) DEFAULT NULL COMMENT 'Organizer emoji shown in event popups',
     skip_reenrichment TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'Skip detail-crawl re-enrichment (sites whose event URLs consistently fail, e.g. bot-protected ticketing)',
     blocked_location_names TEXT DEFAULT NULL COMMENT 'List of location names to drop (e.g. non-NYC venues from a multi-city feed)',
+    parent_website_id INT UNSIGNED DEFAULT NULL COMMENT 'Organizer root this site belongs to (e.g. park pages -> nycgovparks root). NULL = this site IS the organizer. Single-level by convention; exporter resolves chains defensively. May cross domains (a venue''s Instagram row -> the venue''s main site).',
 
     INDEX idx_name (name),
     INDEX idx_last_crawled (last_crawled_at),
-    INDEX idx_disabled (disabled)
+    INDEX idx_disabled (disabled),
+    INDEX idx_parent_website (parent_website_id),
+    FOREIGN KEY (parent_website_id) REFERENCES websites(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Website URLs (one website can have multiple URLs to crawl)
@@ -399,6 +402,7 @@ CREATE TABLE IF NOT EXISTS crawl_results (
     crawled_at TIMESTAMP NULL,
     extracted_at TIMESTAMP NULL,
     processed_at TIMESTAMP NULL,
+    merged_at TIMESTAMP NULL COMMENT 'When this result''s crawl_events went through a merge pass; processed + merged_at IS NULL = stranded merge (interrupted run)',
     error_message TEXT DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 

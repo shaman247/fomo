@@ -12,6 +12,7 @@ import base64
 import json
 import os
 import re
+import statistics
 from dataclasses import dataclass, field
 from datetime import datetime
 from io import BytesIO
@@ -254,6 +255,13 @@ ENRICHMENT_BATCH_SIZE = 30
 # Can be overridden per-website via the max_batches column
 DEFAULT_MAX_BATCHES = 3
 
+# When a chunked extraction yields more events than the website's max_batches
+# allows, the sync path auto-raises websites.max_batches (ceil(N/30)+1, the same
+# formula triage applied by hand) instead of silently dropping events — but never
+# above this ceiling, so a runaway page can't burn unbounded enrichment quota.
+# Websites deliberately throttled BELOW the default are never auto-bumped.
+AUTO_MAX_BATCHES_CEILING = 40
+
 # Timeout per chunk (seconds) - increased for large pages that can't be chunked
 CHUNK_TIMEOUT = 300
 
@@ -310,6 +318,7 @@ class PreparedExtraction:
     # Shared
     url: str = ""
     notes: str = ""
+    website_id: Optional[int] = None
 
     # Pre-resolved result (set if no API call needed, e.g., vision with no images)
     resolved_result: Optional[str] = None
@@ -1178,7 +1187,7 @@ Based on the website content below, extract all upcoming events. For each event,
 {note_section}{rid_section}
 Rules:
 - Extract ALL events from the page - do not skip or summarize
-- Do NOT extract things that are not attendable public events. Skip: venue/program closures and holiday-closure notices ("Museum Closed", "Park Closes at 5pm", "Office Closed for Juneteenth"); calls for submissions, applications, or grants ("Open Call for Artists", "Submission Deadline", "Micro Grants Round 3"); venue marketing (space/room rentals, "Private Events", "Available for Booking", dining service like "Signature Breakfast"); season passes and ticketing placeholders ("Summer Pass 2026", "Showtimes"); and content placeholders or unrelated spam. These are not events — leave them out entirely.
+- Do NOT extract things that are not attendable public events. Skip: venue/program closures and holiday-closure notices ("Museum Closed", "Park Closes at 5pm", "Office Closed for Juneteenth"); calls for submissions, applications, or grants ("Open Call for Artists", "Submission Deadline", "Micro Grants Round 3"); venue marketing (space/room rentals, "Private Events", "Available for Booking", dining service like "Signature Breakfast"); season passes and ticketing placeholders ("Summer Pass 2026", "Showtimes"); fundraising campaigns and donation-match drives ("Match Campaign", "Giving Day") — an attendable benefit concert or gala IS an event; submit-your-work contests with an entry deadline ("Library Card Art Contest") — a contest held live in front of an audience (trivia, dance, pie-eating) IS an event; info-booth or vendor-table marketing listings inside a festival program ("Our Info Booths"); and content placeholders or unrelated spam. These are not events — leave them out entirely.
 - {city_config.extraction_region_rule()}
 - Ignore unrelated event sections ("Hot Events", "Similar events", etc.)
 - For recurring events, expand ALL individual dates into the occurrences array
@@ -1270,6 +1279,7 @@ async def prepare_extraction(cursor, crawl_result_id, website_name, notes="",
     )
     result = cursor.fetchone()
     website_id = result[0] if result else None
+    prep.website_id = website_id
 
     # Get existing upcoming events from this website
     existing_events = []
@@ -1365,7 +1375,41 @@ async def execute_extraction_sync(cursor, connection, prep):
     # Handle pre-resolved results (e.g., vision with no images)
     if prep.resolved_result is not None:
         response_text = prep.resolved_result
-    elif prep.extraction_type == 'vision':
+    else:
+        response_text = await _generate_extraction_response(prep, cursor, connection)
+
+    response_text, event_count, occurrence_count = _normalize_extraction_response(response_text)
+
+    # Variance guard: Gemini's per-run yield on near-identical content can swing
+    # wildly (observed 4 -> 24 events run-to-run on stable pages). A collapsed
+    # extraction cascades into false archivals downstream. When the count drops
+    # below half the website's trailing median while the crawled content size is
+    # stable, retry the extraction once and keep the better result.
+    if prep.resolved_result is None and prep.extraction_type in ('single', 'chunked'):
+        retry_reason = _variance_retry_reason(cursor, prep.crawl_result_id, event_count)
+        if retry_reason:
+            print(f"    - ⚠️  VARIANCE GUARD: {retry_reason}; retrying extraction once...")
+            retry_text = await _generate_extraction_response(prep, cursor, connection)
+            retry_text, retry_count, retry_occ = _normalize_extraction_response(retry_text)
+            if retry_count > event_count:
+                print(f"    - Variance retry recovered {retry_count} events (first attempt: {event_count}); keeping retry")
+                response_text, event_count, occurrence_count = retry_text, retry_count, retry_occ
+            else:
+                print(f"    - Variance retry yielded {retry_count} events (no better); keeping first attempt")
+
+    db.update_crawl_result_extracted(cursor, connection, crawl_result_id, response_text)
+    print(f"    - Extracted {event_count} events with {occurrence_count} occurrences")
+    return True
+
+
+async def _generate_extraction_response(prep, cursor, connection):
+    """Make the Gemini API call(s) for one extraction attempt and return raw text.
+
+    Shared by the first attempt and the variance-guard retry in
+    execute_extraction_sync. cursor/connection are only used by the chunked
+    path's max_batches auto-bump.
+    """
+    if prep.extraction_type == 'vision':
         try:
             response = await asyncio.wait_for(
                 genai_client.aio.models.generate_content(
@@ -1378,59 +1422,111 @@ async def execute_extraction_sync(cursor, connection, prep):
                 ),
                 timeout=GEMINI_TIMEOUT * 2
             )
-            response_text = response.text.strip()
+            return response.text.strip()
         except asyncio.TimeoutError:
             print(f"    - Vision extraction timeout after {GEMINI_TIMEOUT * 2}s")
-            response_text = '{"events": []}'
+            return '{"events": []}'
         except Exception as e:
             print(f"    - Vision extraction error: {e}")
-            response_text = '{"events": []}'
+            return '{"events": []}'
 
-    elif prep.extraction_type == 'chunked':
-        response_text = await _execute_chunked_sync(prep)
+    if prep.extraction_type == 'chunked':
+        return await _execute_chunked_sync(prep, cursor, connection)
 
-    else:  # single
-        estimated_tokens = len(prep.prompt) // CHARS_PER_TOKEN
-        if estimated_tokens > MAX_REQUEST_TOKENS:
-            error_msg = f"Prompt too large (~{estimated_tokens:,} est. tokens, limit {MAX_REQUEST_TOKENS:,})"
-            print(f"    ⚠️  ERROR: {error_msg}, skipping extraction")
-            raise RuntimeError(error_msg)
-        else:
-            response = await asyncio.wait_for(
-                genai_client.aio.models.generate_content(
-                    model=GEMINI_MODEL,
-                    contents=prep.prompt,
-                    config={
-                        "response_mime_type": "application/json",
-                        "response_schema": EventList,
-                    }
-                ),
-                timeout=GEMINI_TIMEOUT
-            )
-            response_text = response.text.strip()
+    # single
+    estimated_tokens = len(prep.prompt) // CHARS_PER_TOKEN
+    if estimated_tokens > MAX_REQUEST_TOKENS:
+        error_msg = f"Prompt too large (~{estimated_tokens:,} est. tokens, limit {MAX_REQUEST_TOKENS:,})"
+        print(f"    ⚠️  ERROR: {error_msg}, skipping extraction")
+        raise RuntimeError(error_msg)
+    response = await asyncio.wait_for(
+        genai_client.aio.models.generate_content(
+            model=GEMINI_MODEL,
+            contents=prep.prompt,
+            config={
+                "response_mime_type": "application/json",
+                "response_schema": EventList,
+            }
+        ),
+        timeout=GEMINI_TIMEOUT
+    )
+    return response.text.strip()
 
+
+def _normalize_extraction_response(response_text):
+    """Validate extraction JSON; return (response_text, event_count, occurrence_count).
+
+    Falls back to an empty result on missing/invalid JSON.
+    """
     if not response_text or not response_text.strip():
-        response_text = '{"events": []}'
-
-    # Validate JSON
+        return '{"events": []}', 0, 0
     try:
         parsed = json.loads(response_text)
         event_count = len(parsed.get('events', []))
         occurrence_count = sum(
             len(e.get('occurrences') or []) for e in parsed.get('events', [])
         )
+        return response_text, event_count, occurrence_count
     except json.JSONDecodeError:
-        response_text = '{"events": []}'
-        event_count = 0
-        occurrence_count = 0
-
-    db.update_crawl_result_extracted(cursor, connection, crawl_result_id, response_text)
-    print(f"    - Extracted {event_count} events with {occurrence_count} occurrences")
-    return True
+        return '{"events": []}', 0, 0
 
 
-async def _execute_chunked_sync(prep):
-    """Execute chunked extraction synchronously (individual API calls)."""
+def _variance_retry_reason(cursor, crawl_result_id, new_count):
+    """Decide whether an extraction's event count collapsed vs the site's history.
+
+    Returns a human-readable reason string when ALL of these hold (else None):
+    - the website has >= 3 prior successfully-processed crawls,
+    - the trailing median event count is >= 4 (tiny sites are too noisy to judge),
+    - this extraction yielded < half the trailing median,
+    - the current crawled content size is within ±20% of the trailing median size
+      (a size change means the page really changed — that's not variance).
+    """
+    try:
+        cursor.execute(
+            "SELECT website_id, LENGTH(crawled_content) FROM crawl_results WHERE id = %s",
+            (crawl_result_id,)
+        )
+        row = cursor.fetchone()
+        if not row or not row[0] or not row[1]:
+            return None
+        website_id, current_size = row[0], row[1]
+
+        cursor.execute("""
+            SELECT event_count, LENGTH(crawled_content)
+            FROM crawl_results
+            WHERE website_id = %s AND id != %s
+              AND status = 'processed'
+              AND event_count IS NOT NULL
+              AND crawled_content IS NOT NULL
+            ORDER BY id DESC
+            LIMIT 5
+        """, (website_id, crawl_result_id))
+        rows = cursor.fetchall()
+        if len(rows) < 3:
+            return None
+
+        median_count = statistics.median([r[0] for r in rows])
+        median_size = statistics.median([r[1] for r in rows])
+        if median_count < 4 or not median_size:
+            return None
+        if new_count >= median_count * 0.5:
+            return None
+        if abs(current_size - median_size) > median_size * 0.2:
+            return None
+        return (f"extracted {new_count} events vs trailing median {median_count:.0f} "
+                f"on similar-size content ({current_size} vs ~{median_size:.0f} chars)")
+    except Exception as e:
+        # The guard must never break extraction — fail open (no retry).
+        print(f"    - Variance guard check failed ({e}); skipping retry")
+        return None
+
+
+async def _execute_chunked_sync(prep, cursor=None, connection=None):
+    """Execute chunked extraction synchronously (individual API calls).
+
+    cursor/connection enable the max_batches auto-bump when the chunk yield
+    exceeds the website's cap; omit them (e.g. in tests) to disable the bump.
+    """
     max_events = prep.max_batches * ENRICHMENT_BATCH_SIZE
 
     # Extract events from each chunk
@@ -1473,8 +1569,14 @@ async def _execute_chunked_sync(prep):
 
     print(f"    - Total from chunks: {len(all_simple_events)} events")
 
-    # Cap events at max_batches to limit API cost
+    # Cap events at max_batches to limit API cost — but first try to auto-raise
+    # the website's cap (triage previously did this by hand every run it fired).
     total_batches_needed = -(-len(all_simple_events) // ENRICHMENT_BATCH_SIZE)
+    if total_batches_needed > prep.max_batches and cursor is not None and connection is not None:
+        bumped = _maybe_auto_bump_max_batches(cursor, connection, prep, total_batches_needed)
+        if bumped:
+            prep.max_batches = bumped
+            max_events = bumped * ENRICHMENT_BATCH_SIZE
     if total_batches_needed > prep.max_batches:
         print(f"    - WARNING: [{prep.website_name}] {len(all_simple_events)} events would need {total_batches_needed} batches, "
               f"capping at {prep.max_batches} ({max_events} events). "
@@ -1493,6 +1595,42 @@ async def _execute_chunked_sync(prep):
         all_enrichments.update(enrichments)
 
     return _combine_chunked_results(all_simple_events, all_enrichments)
+
+
+def _maybe_auto_bump_max_batches(cursor, connection, prep, batches_needed):
+    """Persistently raise websites.max_batches when a site outgrows its cap.
+
+    Returns the new cap, or None when no bump applies. Rules:
+    - never touch a site deliberately throttled BELOW the default (a low cap is
+      an explicit decision to limit a noisy source);
+    - new cap = batches_needed + 1 (one batch of headroom — the same formula
+      triage previously applied by hand), clamped to AUTO_MAX_BATCHES_CEILING;
+    - only ever bumps upward.
+
+    Chunk extraction stops early once the current cap's event budget is reached,
+    so a single bump may not cover the site's full listing — the next run starts
+    with the raised cap and converges over a few runs.
+    """
+    if not prep.website_id:
+        return None
+    current = prep.max_batches or DEFAULT_MAX_BATCHES
+    if current < DEFAULT_MAX_BATCHES:
+        return None
+    new_cap = min(batches_needed + 1, AUTO_MAX_BATCHES_CEILING)
+    if new_cap <= current:
+        return None
+    try:
+        cursor.execute(
+            "UPDATE websites SET max_batches = %s WHERE id = %s",
+            (new_cap, prep.website_id)
+        )
+        connection.commit()
+    except Exception as e:
+        print(f"    - max_batches auto-bump failed ({e}); keeping cap {current}")
+        return None
+    print(f"    - AUTO-BUMP: [{prep.website_name}] max_batches {current} -> {new_cap} "
+          f"(this run needed {batches_needed}); persisted to websites table.")
+    return new_cap
 
 
 def _combine_chunked_results(simple_events, enrichments):

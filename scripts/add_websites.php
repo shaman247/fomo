@@ -87,6 +87,9 @@ Example website entry:
       'max_pages' => 50,           // Max pages to crawl (optional)
       'location' => 'Blue Note',   // Links to existing location (optional)
       'tags' => ['Jazz', 'Live Music'],  // Website tags (optional)
+      'parent' => 'NYC Parks',     // Organizer root website this site belongs to,
+                                   // by id or exact name (optional). Use when adding
+                                   // another page/venue of an org we already track.
   ]
 
 HELP;
@@ -190,9 +193,23 @@ function get_location_id_pdo($pdo, $name) {
     return $row ? $row['id'] : null;
 }
 
-function insert_website_pdo($pdo, $site) {
-    $sql = "INSERT INTO websites (name, description, base_url, crawl_frequency, crawl_after, selector, keywords, max_pages, notes)
-            VALUES (:name, :description, :base_url, :crawl_frequency, :crawl_after, :selector, :keywords, :max_pages, :notes)";
+// Resolve a 'parent' entry value (website id or exact name) to a website id.
+// Returns null (with a warning printed by the caller) when unresolved.
+function get_parent_website_id_pdo($pdo, $parent) {
+    if (is_int($parent) || ctype_digit((string)$parent)) {
+        $stmt = $pdo->prepare("SELECT id FROM websites WHERE id = ?");
+        $stmt->execute([(int)$parent]);
+    } else {
+        $stmt = $pdo->prepare("SELECT id FROM websites WHERE name = ?");
+        $stmt->execute([$parent]);
+    }
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $row ? (int)$row['id'] : null;
+}
+
+function insert_website_pdo($pdo, $site, $parent_website_id = null) {
+    $sql = "INSERT INTO websites (name, description, base_url, crawl_frequency, crawl_after, selector, keywords, max_pages, notes, parent_website_id)
+            VALUES (:name, :description, :base_url, :crawl_frequency, :crawl_after, :selector, :keywords, :max_pages, :notes, :parent_website_id)";
     $stmt = $pdo->prepare($sql);
     $stmt->execute([
         ':name' => $site['name'],
@@ -204,6 +221,7 @@ function insert_website_pdo($pdo, $site) {
         ':keywords' => $site['keywords'] ?? null,
         ':max_pages' => $site['max_pages'] ?? null,
         ':notes' => $site['notes'] ?? null,
+        ':parent_website_id' => $parent_website_id,
     ]);
     return $pdo->lastInsertId();
 }
@@ -273,6 +291,16 @@ foreach ($new_websites as $site) {
         }
     }
 
+    // Resolve parent organizer website (if specified)
+    $parent_website_id = null;
+    if (!empty($site['parent'])) {
+        $parent_website_id = get_parent_website_id_pdo($pdo, $site['parent']);
+
+        if (!$parent_website_id) {
+            echo "  WARNING: Parent website '{$site['parent']}' not found for {$site['name']}\n";
+        }
+    }
+
     $tags = $site['tags'] ?? [];
 
     $urls = $site['urls'] ?? [];
@@ -301,17 +329,25 @@ foreach ($new_websites as $site) {
         } elseif (!empty($site['location'])) {
             echo "            Location: {$site['location']} (NOT FOUND)\n";
         }
+        if ($parent_website_id) {
+            echo "            Parent organizer: {$site['parent']} (ID: $parent_website_id)\n";
+        } elseif (!empty($site['parent'])) {
+            echo "            Parent organizer: {$site['parent']} (NOT FOUND)\n";
+        }
         if (!empty($tags)) {
             echo "            Tags: " . implode(', ', $tags) . "\n";
         }
         $added++;
     } else {
         try {
-            $new_id = insert_website_pdo($pdo, $site);
+            $new_id = insert_website_pdo($pdo, $site, $parent_website_id);
 
             echo "  ADD: {$site['name']} (ID: $new_id)\n";
             if (!empty($site['base_url'])) {
                 echo "       Base URL: {$site['base_url']}\n";
+            }
+            if ($parent_website_id) {
+                echo "       Parent organizer: {$site['parent']} (ID: $parent_website_id)\n";
             }
 
             // Add crawl URLs

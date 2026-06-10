@@ -11,13 +11,25 @@ paths:
 
 All intermediate data lives in the database (not files).
 
+- The merge→export→upload tail runs under the advisory write lock (`dblock.py`); acquisition retries 3 × 600s before aborting with exit code 1 and printing the `--merge-only` recovery command.
+- `python pipeline/main.py --merge-only [--ids ...]` runs ONLY the tail (merge → classify → export → upload) — picks up crawl_results that were processed but never merged (interrupted run / lost lock race) without re-crawling or re-paying extraction. Step 0 of a normal run also reports such stranded results (`db.get_stranded_merge_summary`); `crawl_results.merged_at` records when a result's events went through a merge (`status='processed' AND merged_at IS NULL` = stranded).
+
 ## Extraction & Enrichment
 
 - Small pages are extracted in a single AI call
 - Large pages are chunked, events extracted per chunk, then enriched in batches of 30
 - `websites.max_batches` overrides the default limit per-website (default: 3 batches = 90 events)
+- **Auto-bump**: when a chunked extraction exceeds the cap, the sync path raises `websites.max_batches` in place to `ceil(N/30)+1` (ceiling 40) and persists it (`extractor._maybe_auto_bump_max_batches`) — unless the site was deliberately throttled below the default of 3, which is respected. Chunk extraction stops early at the old cap's budget, so coverage converges over a couple of runs.
+- **Variance guard**: if a sync extraction yields < half the website's trailing-median event count while the crawled content size is within ±20% of its median, the extraction is retried once and the better result kept (`extractor._variance_retry_reason`). Protects against Gemini per-run yield swings (observed 4→24 on identical content) cascading into false archivals.
 - Per-URL `js_code` in `website_urls` runs in-browser before scraping — use this to trim historical content from pages with years of past events
 - Run pipeline for specific websites: `python pipeline/main.py --ids 123,456`
+
+## Archival guards (merge step)
+
+`db.archive_outdated_events` archives an event only when no source website's latest crawl references it. Events with **future occurrences** additionally require ALL THREE of:
+1. last supporting crawl ≥ 14 days old (grace period),
+2. ≥ 2 successful crawls of the website since the event was last seen (protects monthly/annual-cadence sites from one-missed-extraction archival),
+3. no `start_too_future` rejection matching the event's name from that website in the last 14 days — an extraction rejected only for being beyond `FUTURE_WINDOW_DAYS` means the event is still listed on the page (e.g. Storm King's September program crawled in June).
 
 ## Detail Crawl (Step 5)
 

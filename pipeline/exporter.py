@@ -129,6 +129,37 @@ def _event_extends_past(event, day):
     return False
 
 
+def _load_parent_map(cursor):
+    """Map of {child_website_id: parent_website_id} for organizer attribution.
+
+    `websites.parent_website_id` points at the organizer root a site belongs to
+    (e.g. each nycgovparks.org park page -> the NYC Parks root site).
+    """
+    cursor.execute("SELECT id, parent_website_id FROM websites WHERE parent_website_id IS NOT NULL")
+    return {row[0]: row[1] for row in cursor.fetchall()}
+
+
+def _resolve_root(website_id, parent_map):
+    """Resolve a website to its organizer root (parent chain, else itself).
+
+    The hierarchy is single-level by convention (enforced by
+    scripts/backfill_parent_websites.py --audit), but chains are followed
+    defensively with a depth cap and cycle guard so bad data can never make
+    the export loop or crash — on a cycle the original id is returned as-is.
+    """
+    seen = set()
+    current = website_id
+    for _ in range(10):
+        parent = parent_map.get(current)
+        if parent is None:
+            return current
+        if parent in seen:
+            return website_id  # cycle — audit will flag it
+        seen.add(current)
+        current = parent
+    return current
+
+
 def export_events(cursor):
     """
     Export events from the events table to JSON files for the website.
@@ -151,11 +182,18 @@ def export_events(cursor):
     day_dates = [current_date + timedelta(days=i) for i in range(NUM_DAY_CHUNKS)]
     last_day = day_dates[-1]
 
-    # Build set of (website_id, location_id) pairs where the website IS the venue.
+    # Organizer roots: a website with parent_website_id set belongs to that
+    # parent organizer (e.g. 133 nycgovparks.org park pages -> one NYC Parks
+    # root). All organizer attribution below works on resolved roots.
+    parent_map = _load_parent_map(cursor)
+
+    # Build set of (root_website_id, location_id) pairs where the website (or
+    # any of its sibling sites under the same root) IS the venue. Tested at
+    # root granularity because the displayed organizer chip is the root.
     # NOTE: temporarily unused — the organizer-attribution gate below is disabled
     # for debugging (every event gets an organizer_id). Kept for an easy revert.
     cursor.execute("SELECT website_id, location_id FROM website_locations")
-    venue_links = set((row[0], row[1]) for row in cursor.fetchall())
+    venue_links = set((_resolve_root(row[0], parent_map), row[1]) for row in cursor.fetchall())
 
     # Get all events with their occurrences (exclude archived and suppressed events)
     # Events must have a location with coordinates to be exported.
@@ -206,6 +244,7 @@ def export_events(cursor):
 
     all_events = []
     descriptions_by_id = {}  # event_id -> description; shipped as desc companions
+    referenced_organizer_ids = set()  # organizer roots emitted on any exported event
     for row in event_rows:
         event_id = row[0]
 
@@ -282,25 +321,30 @@ def export_events(cursor):
         if section and section != 'Events':
             event['section'] = section
 
-        # Organizer attribution: a merged event can come from several sources, so
-        # we export every distinct source website as an organizer (organizer_ids),
-        # primary first. The frontend renders one chip per organizer that resolves
-        # in organizers.json — aggregators and unknown sources are dropped there.
+        # Organizer attribution: a merged event can come from several sources.
+        # Each source website resolves to its organizer ROOT (parent_website_id
+        # chain, else itself), so sibling sites of one org (e.g. several BPCA
+        # park pages) collapse into a single organizer id. Primary's root
+        # first. The frontend renders one chip per organizer that resolves in
+        # organizers.json — aggregators and unknown sources are dropped there.
         #
         # TEMP (debugging organizer attribution): the primary website is included
         # even when it IS the venue itself. To restore production behavior
         # (external organizers only), gate the primary on venue_links:
         #     location_id = row[12]
-        #     primary = website_id if (website_id, location_id) not in venue_links else None
+        #     primary_root = _resolve_root(website_id, parent_map)
+        #     primary = primary_root if (primary_root, location_id) not in venue_links else None
         website_id = row[11]
         organizer_ids = []
         if website_id:
-            organizer_ids.append(website_id)  # merger's primary, first
+            organizer_ids.append(_resolve_root(website_id, parent_map))  # merger's primary, first
         for src_wid in sorted(source_sites_by_event.get(event_id, set())):
-            if src_wid not in organizer_ids:
-                organizer_ids.append(src_wid)
+            root = _resolve_root(src_wid, parent_map)
+            if root not in organizer_ids:
+                organizer_ids.append(root)
         if organizer_ids:
             event['organizer_ids'] = organizer_ids
+            referenced_organizer_ids.update(organizer_ids)
 
         all_events.append(event)
 
@@ -432,6 +476,7 @@ def export_events(cursor):
         'placements': total_event_placements,
         'day_event_counts': [len(c) for c in day_event_chunks],
         'remainder_events': len(remainder_events),
+        'organizer_root_ids': referenced_organizer_ids,
     }
 
 
@@ -480,35 +525,60 @@ def export_tag_hierarchy(cursor):
         print(f"  (flag-emoji alt check skipped: {e})")
 
 
-def export_organizers(cursor):
-    """Export organizers (websites) that have active events to JSON for frontend.
+def export_organizers(cursor, organizer_ids=None):
+    """Export organizers (root websites) referenced by exported events to JSON.
 
     Creates src/data/organizers.json as a map of {id: {name, url, emoji, description}}.
-    Only includes primary-source websites with at least one active (non-archived,
-    non-suppressed) event.
+    `organizer_ids` is the `organizer_root_ids` set returned by export_events()
+    — exactly the organizer roots emitted on exported events, so the map can't
+    miss secondary-source-only organizers and doesn't depend on the disabled
+    flag. When None (ad-hoc callers), the set is recomputed from active events.
     """
     output_dir = os.path.join(SCRIPT_DIR, '..', 'src', 'data')
     os.makedirs(output_dir, exist_ok=True)
+
+    if organizer_ids is None:
+        # Recompute roots from active events' primary + source websites.
+        parent_map = _load_parent_map(cursor)
+        organizer_ids = set()
+        cursor.execute("""
+            SELECT DISTINCT e.website_id FROM events e
+            WHERE e.website_id IS NOT NULL
+              AND e.archived = FALSE AND e.suppressed = FALSE
+        """)
+        wids = [row[0] for row in cursor.fetchall()]
+        cursor.execute("""
+            SELECT DISTINCT cr.website_id
+            FROM event_sources es
+            JOIN crawl_events ce ON es.crawl_event_id = ce.id
+            JOIN crawl_results cr ON ce.crawl_result_id = cr.id
+            JOIN events e ON es.event_id = e.id
+            WHERE cr.website_id IS NOT NULL
+              AND e.archived = FALSE AND e.suppressed = FALSE
+        """)
+        wids += [row[0] for row in cursor.fetchall()]
+        organizer_ids = {_resolve_root(w, parent_map) for w in wids}
+
+    if not organizer_ids:
+        organizers = {}
+        output_path = os.path.join(output_dir, 'organizers.json')
+        with open(output_path, 'w', encoding='utf-8') as f:
+            json.dump(organizers, f, separators=(',', ':'), ensure_ascii=False)
+        print("  Exported 0 organizers to organizers.json")
+        return
 
     # Aggregator sources (platforms / re-listers like Eventbrite, Partiful, RA)
     # are NOT real organizers, so they're excluded here — that hides their
     # organizer chip and makes them non-filterable on the frontend (the
     # isKnownOrganizerTag guard suppresses any organizer not in this map).
-    #
-    # Disabled NON-aggregator websites ARE included (TEMP, debugging organizer
-    # attribution): their leftover active events should still attribute to the
-    # real organizer. To restore production behavior, re-add `AND w.disabled = FALSE`.
-    cursor.execute("""
+    placeholders = ','.join(['%s'] * len(organizer_ids))
+    cursor.execute(f"""
         SELECT w.id, w.name, w.base_url, w.description, w.emoji
         FROM websites w
         WHERE w.source_type <> 'aggregator'
-          AND EXISTS (
-              SELECT 1 FROM events e
-              WHERE e.website_id = w.id
-                AND e.archived = FALSE AND e.suppressed = FALSE
-          )
+          AND w.id IN ({placeholders})
         ORDER BY w.name
-    """)
+    """, tuple(organizer_ids))
 
     organizers = {}
     for row in cursor.fetchall():

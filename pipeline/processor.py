@@ -552,22 +552,86 @@ _NON_EVENT_NAME_PATTERNS = [
     r'\b(automated|automatic|same[\s-]?day|instant|24[\s-]?hour)\s+payment\b',
     r'\bpayment\s+(enrollment|portal|hotline|help[\s-]?line|processing|cent(er|re)|line)\b',
     r'\bno\s+login\s+(required|needed)\b',
+    # Fundraising / donation-match campaigns (a giving drive, not an attendable
+    # gathering — "Give Where Your Heart Lives Match Campaign"). Attendable
+    # fundraisers put words after "campaign" ("Annual Campaign Kickoff Gala"),
+    # so all but the unmistakable "match campaign" are anchored to the end of
+    # the name (optionally trailed by a year). Attendable BENEFITS (benefit
+    # concerts, galas) are real events and must not match here.
+    r'\bmatch(ing)?\s+campaign\b',
+    r'\b(donation|fundraising|giving|annual|capital)\s+campaign\s*(\d{4})?\s*$',
+    r'\bgiving\s+day\s*(\d{4})?\s*$',
 ]
 
 _NON_EVENT_NAME_RE = re.compile('|'.join(_NON_EVENT_NAME_PATTERNS), re.IGNORECASE)
 
+# Two-signal patterns: the name alone is ambiguous (real attendable events
+# share these words), so a corroborating description signal is required before
+# dropping. Same conservatism as above — a miss just means the row falls
+# through to find_review_candidates.py instead.
+#
+# Submission-call contests: creative-work contests entered by submitting a
+# piece, not by showing up ("Children's Library Card Art Contest"). Attendable
+# contest EVENTS (trivia contests, dance contests, pie-eating contests) are
+# real, so three gates: the name must carry a creative-work qualifier directly
+# before "contest"/"competition", the description must use call-for-entries
+# framing, and names signalling an attendable occasion (awards night, winners'
+# screening) never match.
+_SUBMISSION_CONTEST_NAME_RE = re.compile(
+    r'\b(arts?|design|poster|photo(?:graphy)?|essay|writing|poetry|drawing|'
+    r'coloring|logo|bookmark|recipe|video|short[\s-]story)\s+(contest|competition)\b',
+    re.IGNORECASE)
+_ATTENDABLE_CONTEST_NAME_RE = re.compile(
+    r'\b(screening|ceremony|awards?|reception|party|showcase|show|night|gala|'
+    r'festival|celebration|finale?|finals)\b', re.IGNORECASE)
+_SUBMISSION_CALL_DESC_RE = re.compile(
+    r'\b(submission|entry)\s+deadline\b|'
+    r'\bdeadline\s+(to|for)\s+(submit|enter|entries|submissions?)\b|'
+    r'\bsubmissions?\s+(are\s+|is\s+)?due\b|'
+    r'\b(now\s+)?accepting\s+(submissions?|entries)\b|'
+    r'\bsubmit\s+(your|an?|one|original)\b|'
+    r'\bwinning\s+submissions?\b',
+    re.IGNORECASE)
 
-def is_obvious_non_event(name):
-    """Return True if the event name is an unmistakable non-event.
+# Festival info-booth sub-listings: an org's marketing booth inside a festival
+# program ("L'Alliance Booths"), not an attendable event. The name must END
+# with "Booths"/"Info Booth(s)" (a name merely containing "booths" mid-phrase
+# is left alone) and the description must read as visit-our-booth marketing.
+_BOOTH_NAME_RE = re.compile(r'\b(info(?:rmation)?\s+booths?|booths)\s*$',
+                            re.IGNORECASE)
+_BOOTH_MARKETING_DESC_RE = re.compile(
+    r'\b(visit|stop by|swing by|come by|find)\b[^.!?]{0,80}\bbooths?\b|'
+    r'\bbooths?\b[^.!?]{0,80}\blearn more\b',
+    re.IGNORECASE)
+
+
+def is_obvious_non_event(name, description=None):
+    """Return True if the event is an unmistakable non-event.
 
     Covers closures, calls for submissions/grants, venue rentals, season-pass
-    listings, cinema showtime placeholders, and SEO spam — the kinds of rows
-    that should never reach the map. High precision by design; anything fuzzier
-    belongs in scripts/find_review_candidates.py for human review.
+    listings, cinema showtime placeholders, SEO spam, fundraising campaigns,
+    submission-call contests, and festival info-booth listings — the kinds of
+    rows that should never reach the map. High precision by design; anything
+    fuzzier belongs in scripts/find_review_candidates.py for human review.
+
+    Most patterns match on the name alone; a few ambiguous categories
+    (contests, booths) also require corroborating description language and
+    never fire when the description is missing.
     """
     if not name:
         return False
-    return bool(_NON_EVENT_NAME_RE.search(name))
+    if _NON_EVENT_NAME_RE.search(name):
+        return True
+    description = description or ''
+    if description:
+        if (_SUBMISSION_CONTEST_NAME_RE.search(name)
+                and not _ATTENDABLE_CONTEST_NAME_RE.search(name)
+                and _SUBMISSION_CALL_DESC_RE.search(description)):
+            return True
+        if (_BOOTH_NAME_RE.search(name)
+                and _BOOTH_MARKETING_DESC_RE.search(description)):
+            return True
+    return False
 
 
 # Canonical time format: compact lowercase 12-hour with no space, no colon-zero.
@@ -1026,6 +1090,74 @@ def _extract_street_address(full_address):
     return _normalize_street_address(street_part)
 
 
+# US state abbreviations, used to parse the "City, ST" tail of an address.
+_US_STATES = {
+    'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA', 'HI', 'ID',
+    'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD', 'MA', 'MI', 'MN', 'MS',
+    'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY', 'NC', 'ND', 'OH', 'OK',
+    'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV',
+    'WI', 'WY', 'DC',
+}
+
+
+def _parse_city_state(address):
+    """Parse the (city, state) tail of a US address string.
+
+    "9003 Bergenline Ave, North Bergen, NJ 07047, USA" -> ("north bergen", "NJ")
+    "Central Park, New York, NY, USA"                   -> ("new york", "NY")
+    Returns (None, None) when no recognizable "City, ST" tail is present.
+    """
+    if not address:
+        return (None, None)
+    parts = [p.strip() for p in address.split(',') if p.strip()]
+    if parts and parts[-1].upper() in ('USA', 'US', 'UNITED STATES'):
+        parts = parts[:-1]
+    if len(parts) < 2:
+        return (None, None)
+    m = re.match(r'^([A-Za-z]{2})(?:\s+\d{5}(?:-\d{4})?)?$', parts[-1])
+    if not m:
+        return (None, None)
+    state = m.group(1).upper()
+    if state not in _US_STATES:
+        return (None, None)
+    return (parts[-2].lower(), state)
+
+
+def _region_conflict(raw_text, candidate_info, city_states):
+    """True if `raw_text`'s address tail names a city in a conflicting state.
+
+    Guards the heuristic match tiers (alternate-name/short-name/prefix/fuzzy)
+    against bare-name collisions across municipalities — e.g. a "Columbus Park,
+    199 W Franklin St, Hackensack, NJ" event fuzzy-matching "Columbus Park" in
+    Manhattan. The city->state knowledge is learned from the DB's own location
+    addresses (see build_locations_map), so the engine stays city-agnostic.
+
+    Conservative by construction to avoid false positives: it only inspects the
+    comma/slash-delimited segments AFTER the first comma (the address tail, not
+    the venue name), and a segment must EQUAL a known city — modulo a trailing
+    state/zip — to count. This ignores city words embedded in a venue name
+    ("Elizabeth Catlett Art Space", "Fairfield Inn") or in a street ("50 Madison
+    Ave"), and only fires when the named city maps to a single state in the data
+    that differs from the candidate's.
+    """
+    if not raw_text or ',' not in raw_text or not city_states:
+        return False
+    _, cand_state = _parse_city_state((candidate_info or {}).get('address') or '')
+    if not cand_state:
+        return False
+    tail = raw_text.split(',', 1)[1]
+    for seg in re.split(r'[,/]', tail):
+        toks = seg.split()
+        if len(toks) >= 2 and toks[-1].upper() in _US_STATES:
+            toks = toks[:-1]
+        if toks and re.fullmatch(r'\d{5}(?:-\d{4})?', toks[-1]):
+            toks = toks[:-1]
+        states = city_states.get(_normalize_location_name(' '.join(toks)))
+        if states and len(states) == 1 and cand_state not in states:
+            return True
+    return False
+
+
 _ADDR_STREET_TYPES = sorted(
     {'st', 'ave', 'blvd', 'dr', 'rd', 'pl', 'ct', 'ln', 'pkwy', 'hwy',
      'broadway', 'bowery', 'way', 'sq', 'terrace', 'tpke'},
@@ -1082,6 +1214,15 @@ def _extract_street_address_loose(s):
         return None
     num, name, st = m.groups()
     num = num.replace('-', '')
+    # "4140 Broadway & 176th St" — a trailing "& <cross street>" after a
+    # standalone street name gets absorbed into the name group ("broadway &
+    # 176") with the cross street's type closing the match. The address is
+    # just "<num> <standalone>". (After a *typed* street the regex already
+    # stops at the first type token, so only standalone names need this.)
+    if name and '&' in name:
+        head = name.split('&')[0].strip().rstrip('.').lower()
+        if head in _ADDR_STANDALONE_TYPES:
+            return f"{num} {head}"
     # "50 Bowery St" / "350 Broadway St" — the standalone street is the real
     # street name and the trailing "st" is redundant. Drop it.
     if name and name.lower() in _ADDR_STANDALONE_TYPES:
@@ -1191,6 +1332,9 @@ def build_locations_map(cursor):
         'short_names': {},
         'addresses': {},
         'website_scoped': {},
+        # city (lowercase) -> set of states seen at that city in our data.
+        # Learned from location addresses; powers the region-conflict guard.
+        'city_states': {},
     }
 
     locations_data = db.get_all_locations(cursor)
@@ -1259,6 +1403,9 @@ def build_locations_map(cursor):
         # so the second distinct venue marks the address AMBIGUOUS and match-time
         # skips it rather than guessing.
         address = loc.get('address', '')
+        city, state = _parse_city_state(address)
+        if city and state and len(city) >= 4:
+            locations_map['city_states'].setdefault(city, set()).add(state)
         street_address = _extract_street_address(address)
         if street_address:
             existing = locations_map['addresses'].get(street_address)
@@ -1311,6 +1458,16 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
     normalized_name = _normalize_location_name(event_name_raw)
     full_loc = f"{normalized_loc} {normalized_subloc}".strip()
 
+    # Raw (un-normalized) location text + city->state index for the region-conflict
+    # guard. Uses the raw strings, not the normalized keys, so the "City, ST" tail
+    # and city tokens survive for _region_conflict.
+    city_states = locations_map.get('city_states', {})
+    raw_geo = ' '.join(p for p in (location_name_raw, sublocation_name_raw) if p)
+
+    def conflicts(info):
+        """True if this candidate's state conflicts with a city named in raw_geo."""
+        return _region_conflict(raw_geo, info, city_states)
+
     # Location-only keys (for prefix matching where event names cause false positives)
     location_keys = []
     if len(full_loc) > 3:
@@ -1324,6 +1481,16 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
     primary_search_keys = location_keys.copy()
     if len(normalized_name) > 3:
         primary_search_keys.append(normalized_name)
+
+    # Also let website-scoped alts (Step 1) match the venue-name portion before a
+    # comma-address tail. Aggregators often emit "Columbus Park, 199 W Franklin
+    # St, Hackensack" as one location string; a curated per-website alt keyed on
+    # the bare "Columbus Park" should still resolve it (and disambiguate two
+    # same-named parks in different towns that the state-level guard can't split).
+    if location_name_raw and ',' in location_name_raw:
+        before_comma_key = _normalize_location_name(location_name_raw.split(',')[0])
+        if len(before_comma_key) > 3 and before_comma_key not in primary_search_keys:
+            primary_search_keys.append(before_comma_key)
 
     # Variant: handle "Branch, Room" patterns (e.g. BPL "Highlawn, Meeting Room")
     # by also trying just the part before the first comma. Some extraction passes
@@ -1374,12 +1541,20 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
             if key in website_tier:
                 return make_result(website_tier[key])
 
-    # Step 2: Exact matches in global tiers (names, alternate_names, short_names)
+    # Step 2: Exact matches in global tiers (names, alternate_names, short_names).
+    # The 'names' tier is the location's own primary name (high confidence — a
+    # city token there is usually part of the name). The alternate_names and
+    # short_names tiers are looser, so a same-named place in a conflicting
+    # municipality is rejected via the region-conflict guard (e.g. the global
+    # "Columbus Park" alt of Manhattan's park vs a "Columbus Park, Hoboken" event).
     for tier_name in ['names', 'alternate_names', 'short_names']:
         tier = locations_map.get(tier_name, {})
         for key in search_keys:
             if key in tier:
-                return make_result(get_first(tier[key]))
+                cand = get_first(tier[key])
+                if tier_name != 'names' and conflicts(cand):
+                    continue
+                return make_result(cand)
 
     # Step 3: Address matching (e.g., "347 Davis Ave" matches location at that address)
     addresses_tier = locations_map.get('addresses', {})
@@ -1430,7 +1605,10 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
                     if loc_key.startswith(key + '(') or (
                         loc_key.startswith(key + ' ') and len(key) / len(loc_key) >= PREFIX_MATCH_COVERAGE
                     ):
-                        return make_result(get_first(match))
+                        cand = get_first(match)
+                        if conflicts(cand):
+                            continue
+                        return make_result(cand)
 
     # Step 5: Fuzzy matching across all tiers
     all_tiers = [
@@ -1502,7 +1680,7 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
                         best_score, best_priority = score, priority
                         best_result = get_first(tier[key])
 
-    if best_result:
+    if best_result and not conflicts(best_result):
         return make_result(best_result)
 
     # Step 5b: Sublocation address matching
@@ -1751,9 +1929,11 @@ def process_events(cursor, connection, crawl_result_id, website_name, run_date_s
             row_dict['name'] = strip_leading_emoji(row_dict['name'])
 
         # Non-event junk filter: closures, calls for submissions/grants, venue
-        # rentals, season passes, showtime placeholders, SEO spam. Drop before
+        # rentals, season passes, showtime placeholders, SEO spam, fundraising
+        # campaigns, submission-call contests, info-booth listings. Drop before
         # they ever become a crawl_event; log so the rejection is auditable.
-        if is_obvious_non_event(row_dict.get('name', '')):
+        if is_obvious_non_event(row_dict.get('name', ''),
+                                row_dict.get('description', '')):
             log_rejection(
                 cursor, connection, crawl_result_id, website_id,
                 rejection_type='non_event_junk', stage='extract',

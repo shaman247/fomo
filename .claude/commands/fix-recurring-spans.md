@@ -25,6 +25,7 @@ Buckets (only the first three are printed in full; the rest are `LIKELY_OK`):
 | Bucket | What it is | Action |
 | --- | --- | --- |
 | **FIX_SPAN** | Regular cadence (≥3 discrete, same weekday, 7/14/~30-day gaps) with an **envelope** span. | Auto-fixable — Steps 2–3. |
+| **COURSE_WEEKLY** | A weekly class/course captured as **one bare span** (exactly 1 occurrence, no discrete dates): a 2-week–6-month span whose endpoints fall on the **same weekday**, corroborated by a clock time on the span or an explicit recurrence keyword (e.g. "Bhakti Sastri: Aug 11 – Dec 15, 6:30–8:30pm" → 19 Tuesdays). | Apply **per id only**: verify the weekly cadence via `--show` + the event's source URL (a same-weekday span can be a quarterly PPV listing or daily summer program), then `--apply --ids <ids>`. A blanket `--apply` skips these. |
 | **RECURRING_RANGE** | A recurring meeting **flattened into a range**: either span-only / ≤2 discrete with a recurrence keyword ("weekly", "Saturdays"), or a regular discrete grid whose span **extends past** the captured dates (the series' tail was caught as a range). | **Manual** — build the real meeting dates from the source page, then delete the span. The discrete dates the auto-fixer would have generated can't be trusted here (break weeks, enrollment-only programs). |
 | **INVERSE** | A continuously-open **exhibition** with a correct span **plus bogus regular discrete dates** layered on (e.g. "Hyunjin Park: Jump", weekly Fridays on a daily-open show). | **Manual** — delete the discrete rows, **keep** the span. |
 | LIKELY_OK | Continuous exhibition/run, or irregular dates. | Leave alone. |
@@ -77,7 +78,7 @@ Or restrict to a hand-approved subset with `--ids`:
 ./venv/bin/python scripts/fix_recurring_spans.py --apply --ids 92589,84169,143466
 ```
 
-For each fixed event the script: deletes the >14-day envelope span(s), inserts any missing in-window cadence dates at the meeting time, and sets `section = NULL` for reclassification.
+For each fixed event the script: deletes the span(s) (>14-day envelopes, or the single 14–190-day span for COURSE_WEEKLY), inserts the cadence dates at the meeting time (COURSE_WEEKLY expands through the span's real end date, not just the export window), and sets `section = NULL` for reclassification. Writes run under the shared DB write lock.
 
 > **Tip:** snapshot the affected occurrences first if you want an easy revert — `SELECT * FROM event_occurrences WHERE event_id IN (...)` to a file before applying.
 

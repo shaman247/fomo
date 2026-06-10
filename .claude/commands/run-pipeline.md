@@ -159,8 +159,8 @@ Catch two date-shape bugs introduced by THIS run before they mislead on the map.
 PART A — recurring envelope spans (blanket every day on the map):
 1. Run: ./venv/bin/python scripts/fix_recurring_spans.py --review --new
    (--new restricts to events created/updated in the last day — i.e. this run's merge.)
-2. FIX_SPAN bucket = auto-fixable. Review the listed ids with `--show <ids>` to confirm they're periodic meetings (not exhibitions), then apply scoped to those ids:
-   ./venv/bin/python scripts/fix_recurring_spans.py --apply --ids <fix_span_ids>
+2. FIX_SPAN + COURSE_WEEKLY buckets = fixable after review. Review the listed ids with `--show <ids>` (FIX_SPAN: confirm periodic meetings, not exhibitions; COURSE_WEEKLY: confirm the same-weekday span really is a WEEKLY class by checking the event's source URL — quarterly PPV listings and daily summer programs are the known false positives), then apply scoped to the approved ids (COURSE_WEEKLY only ever applies via explicit --ids):
+   ./venv/bin/python scripts/fix_recurring_spans.py --apply --ids <approved_ids>
 3. RECURRING_RANGE / PROGRAM_RANGE / INVERSE buckets need source judgment — do NOT auto-fix. List them in your report (id + name + bucket) so the parent can decide whether to handle now or defer to the weekly full scan.
 Follow .claude/commands/fix-recurring-spans.md for the bucket definitions and the exhibition-vs-meeting discriminator.
 
@@ -173,7 +173,7 @@ Follow .claude/commands/fix-single-occasion-events.md for the bucket definitions
 
 Leave the events export and upload to the parent.
 
-Report: Part A — new span-bearing events scanned N; FIX_SPAN auto-fixed K (ids); RECURRING_RANGE/PROGRAM_RANGE/INVERSE flagged (ids + bucket); LIKELY_OK count. Part B — single-occasion events scanned N; DROP_SPAN/COLLAPSE_WEEKDAY auto-fixed K (ids); COLLAPSE_REVIEW/REVIEW flagged (ids + bucket).
+Report: Part A — new span-bearing events scanned N; FIX_SPAN/COURSE_WEEKLY auto-fixed K (ids); RECURRING_RANGE/PROGRAM_RANGE/INVERSE flagged (ids + bucket); LIKELY_OK count. Part B — single-occasion events scanned N; DROP_SPAN/COLLAPSE_WEEKDAY auto-fixed K (ids); COLLAPSE_REVIEW/REVIEW flagged (ids + bucket).
 ```
 
 ### After the parallel batch returns

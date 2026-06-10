@@ -1599,4 +1599,17 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
         if total_upcoming_flagged > 0:
             print(f"  ⚠️  Total upcoming events archived: {total_upcoming_flagged} (review recommended)")
 
+        # ── Stamp merged_at on the crawl_results whose events went through this merge ──
+        # Pure observability: lets `status='processed' AND merged_at IS NULL` flag
+        # crawl results whose merge tail was interrupted (lock race / killed run)
+        # without joining through event_sources.
+        for i in range(0, len(crawl_event_ids), 1000):
+            chunk = crawl_event_ids[i:i + 1000]
+            ph = ','.join(['%s'] * len(chunk))
+            cursor.execute(f"""
+                UPDATE crawl_results SET merged_at = NOW()
+                WHERE id IN (SELECT DISTINCT crawl_result_id FROM crawl_events WHERE id IN ({ph}))
+            """, chunk)
+        _retry_on_deadlock(connection.commit)
+
     return new_events_count, merged_count
