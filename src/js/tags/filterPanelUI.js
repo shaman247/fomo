@@ -13,6 +13,9 @@
  * @module FilterPanelUI
  */
 const FilterPanelUI = (() => {
+    // Static enum object; TagStateManager loads earlier in script-tag order, so eager capture is safe.
+    const TAG_STATE = TagStateManager.getTagStateConstants();
+
     // ========================================
     // STATE
     // ========================================
@@ -25,7 +28,6 @@ const FilterPanelUI = (() => {
         allAvailableTags: [],
         resultsContainerDOM: null,
         onFilterChangeCallback: null,
-        defaultMarkerColor: null,
         debugMode: false,
 
         // Frequencies (tag usage counts)
@@ -38,7 +40,6 @@ const FilterPanelUI = (() => {
         // Search state (SearchController handles input events)
         searchTerm: '',
         lastSearchResults: [],
-        lastSearchTerm: '',
         onSearchResultClick: null,
         getSearchTerm: null,
 
@@ -59,15 +60,26 @@ const FilterPanelUI = (() => {
         getSelectedTagsWithColors: null
     };
 
+    // Derived caches over state.allAvailableTags, rebuilt at its only two
+    // assignment sites (init, refreshAvailableTags). Tag names are immutable,
+    // so re-normalizing / re-building the Set on every render is pure waste.
+    let _normalizedTagCache = new Map();   // tag -> Utils.normalizeForSearch(tag)
+    let _availableTagsSet = new Set();
+
+    function _rebuildTagCaches() {
+        _availableTagsSet = new Set(state.allAvailableTags);
+        _normalizedTagCache = new Map();
+        for (const tag of state.allAvailableTags) {
+            _normalizedTagCache.set(tag, Utils.normalizeForSearch(tag));
+        }
+    }
+
     /**
      * Determines if the current window is mobile-sized
      * @returns {boolean} True if window width is at or below mobile breakpoint
      */
     function isMobileLayout() {
-        const breakpoint = (typeof Constants !== 'undefined' && Constants.UI && Constants.UI.MOBILE_BREAKPOINT)
-            ? Constants.UI.MOBILE_BREAKPOINT
-            : 768;
-        return window.innerWidth <= breakpoint;
+        return Utils.isMobileLayout();
     }
 
     /**
@@ -83,12 +95,6 @@ const FilterPanelUI = (() => {
     }
 
     /**
-     * Gets the default section view states based on device type
-     * Desktop: tags expanded, others collapsed
-     * Mobile: all sections collapsed
-     * @returns {Object} Section view states
-     */
-    /**
      * Provider functions from parent application
      */
     const providers = {
@@ -99,20 +105,6 @@ const FilterPanelUI = (() => {
      * Callback to perform search operations
      */
     let performSearchCallback = () => {};
-
-    // ========================================
-    // SEARCH HANDLING (delegated to SearchController)
-    // ========================================
-
-    /**
-     * Clears the search input and results
-     * Delegates to SearchController for input clearing
-     */
-    function clearSearch() {
-        SearchController.clearSearch();
-        state.searchTerm = '';
-        renderFilters([]);
-    }
 
     // ========================================
     // CHIP BAR
@@ -189,7 +181,6 @@ const FilterPanelUI = (() => {
      * Toggles a chip bar tag on/off.
      */
     function _handleChipClick(tagName) {
-        const TAG_STATE = TagStateManager.getTagStateConstants();
         const currentState = TagStateManager.getTagState(tagName);
         const willSelect = currentState === TAG_STATE.UNSELECTED;
         FilterProfiler.start(`chip ${willSelect ? 'select' : 'deselect'} → ${tagName}`);
@@ -252,12 +243,17 @@ const FilterPanelUI = (() => {
         const container = document.getElementById('chip-bar');
         if (!container) return;
 
+        _initChipBarChipEvents(container);
+
         FilterProfiler.mark('fp:chipbar:start');
 
-        // Anchored chip elements are about to be discarded; close any open dropdown.
+        // Anchored chip elements are about to be discarded; close any open
+        // dropdown and cancel any pending long-press anchored to them.
         _hideDescendantDropdown(true);
-
-        const TAG_STATE = TagStateManager.getTagStateConstants();
+        if (_longPressTimer) {
+            clearTimeout(_longPressTimer);
+            _longPressTimer = null;
+        }
 
         // 1. Collect selected tags (always shown first)
         const selectedTagsWithColors = state.getSelectedTagsWithColors
@@ -277,46 +273,35 @@ const FilterPanelUI = (() => {
             const tagState = TagStateManager.getTagState(tag);
             if (tagState !== TAG_STATE.UNSELECTED) continue;
 
-            const normalizedTag = Utils.normalizeForSearch(tag);
-
             // When searching, only include tags whose name matches the term
-            if (hasSearch && !normalizedTag.includes(normalizedSearchTerm)) continue;
+            let exactMatch = false;
+            if (hasSearch) {
+                const normalizedTag = _normalizedTagCache.get(tag) ?? Utils.normalizeForSearch(tag);
+                if (!normalizedTag.includes(normalizedSearchTerm)) continue;
+                exactMatch = normalizedTag === normalizedSearchTerm;
+            }
 
             const freq = state.currentDynamicFrequencies[tag] || 0;
             if (!hasSearch && freq <= 0) continue;
 
-            // Base score: dynamic frequency (same as SearchManager)
-            let score = freq;
-
-            if (hasSearch) {
-                // Exact match boost
-                if (normalizedTag === normalizedSearchTerm) {
-                    score += 1000;
-                }
-            }
-
-            // Viewport visibility boost
-            const visFreq = visibleFreqs[tag] || 0;
-            if (visFreq > 0) {
-                score += visFreq * 5;
-                score += 5;
-            }
-
-            // Global frequency tiebreaker
-            const globalFreq = state.initialGlobalFrequencies[tag] || 0;
-            score += globalFreq * 0.01;
+            // Same scoring formula as SearchManager.searchTags
+            let score = SearchManager.scoreTagSignal({
+                dynamicFreq: freq,
+                visibleFreq: visibleFreqs[tag] || 0,
+                globalFreq: state.initialGlobalFrequencies[tag] || 0,
+                isExactMatch: exactMatch
+            });
 
             // Descendant aggregation: parent tags get credit for children's scores
             const descendants = state.tagDescendantsOf[tag];
             if (descendants) {
                 descendants.forEach(d => {
-                    const dFreq = state.currentDynamicFrequencies[d] || 0;
-                    const dVisFreq = visibleFreqs[d] || 0;
-                    score += dFreq;
-                    if (dVisFreq > 0) {
-                        score += dVisFreq * 5 + 5;
-                    }
-                    score += (state.initialGlobalFrequencies[d] || 0) * 0.01;
+                    score += SearchManager.scoreTagSignal({
+                        dynamicFreq: state.currentDynamicFrequencies[d] || 0,
+                        visibleFreq: visibleFreqs[d] || 0,
+                        globalFreq: state.initialGlobalFrequencies[d] || 0,
+                        isExactMatch: false
+                    });
                 });
             }
 
@@ -334,13 +319,16 @@ const FilterPanelUI = (() => {
         // 4. Build DOM up to the render limit; overflow scrolls horizontally
         const unselectedToRender = unselectedTags.slice(0, CHIP_BAR_RENDER_LIMIT);
 
-        // FLIP: capture old chip positions before rebuilding
+        // FLIP: capture old chip positions before rebuilding. Only consumed by
+        // the animate path below — skip the forced-layout rect reads otherwise.
         const oldPositions = new Map();
-        for (const chip of container.children) {
-            const tag = chip.dataset.primaryTag;
-            if (tag) {
-                const rect = chip.getBoundingClientRect();
-                oldPositions.set(tag, { left: rect.left, top: rect.top });
+        if (animate) {
+            for (const chip of container.children) {
+                const tag = chip.dataset.primaryTag;
+                if (tag) {
+                    const rect = chip.getBoundingClientRect();
+                    oldPositions.set(tag, { left: rect.left, top: rect.top });
+                }
             }
         }
 
@@ -420,9 +408,13 @@ const FilterPanelUI = (() => {
     }
 
     /**
-     * Creates a chip bar button element
+     * Builds a chip button shared by the chip bar and the descendant dropdown.
+     * Chip-bar chips rely on the container's delegated handlers (see
+     * _initChipBarChipEvents); dropdown chips attach their own click handler
+     * in _createDropdownChip, stopping propagation so the document-level
+     * outside-click handler doesn't close the dropdown.
      */
-    function _createChipButton(tagName, isActive) {
+    function _buildChip(tagName, isActive) {
         const btn = document.createElement('button');
         btn.className = isActive ? 'tag-button state-selected' : 'tag-button state-unselected';
         btn.dataset.primaryTag = tagName;
@@ -435,19 +427,93 @@ const FilterPanelUI = (() => {
             }
         }
 
-        const emoji = state.tagEmojiMap[tagName] || '';
-        if (emoji) {
-            const emojiSpan = document.createElement('span');
-            emojiSpan.className = 'chip-emoji';
-            emojiSpan.setAttribute('aria-hidden', 'true');
-            emojiSpan.textContent = emoji;
-            btn.appendChild(emojiSpan);
-        }
-        btn.appendChild(document.createTextNode(Utils.getTagDisplayName(tagName)));
-
-        btn.addEventListener('click', () => _handleChipClick(tagName));
-        _attachDescendantDropdownTriggers(btn, tagName);
+        Utils.appendChipContent(btn, state.tagEmojiMap[tagName], tagName);
         return btn;
+    }
+
+    /**
+     * Creates a chip bar button element
+     */
+    function _createChipButton(tagName, isActive) {
+        return _buildChip(tagName, isActive);
+    }
+
+    /**
+     * Binds the chip bar's click, hover, long-press, and right-click handlers
+     * once, via delegation on the container — chips are rebuilt on every
+     * render, so per-chip listeners would be re-attached constantly.
+     * mouseover/mouseout + relatedTarget checks emulate the per-chip
+     * mouseenter/mouseleave semantics.
+     */
+    function _initChipBarChipEvents(container) {
+        if (container.dataset.chipEventsBound) return;
+        container.dataset.chipEventsBound = '1';
+
+        // Resolves an event to its chip button, or null (gap/padding hits).
+        const chipFromEvent = (e) => {
+            const target = e.target instanceof Element ? e.target : null;
+            const btn = target && target.closest('button[data-primary-tag]');
+            return btn && container.contains(btn) ? btn : null;
+        };
+
+        container.addEventListener('click', (e) => {
+            const btn = chipFromEvent(e);
+            if (btn) _handleChipClick(btn.dataset.primaryTag);
+        });
+
+        // mouseenter equivalent: skip moves between a chip's own children.
+        container.addEventListener('mouseover', (e) => {
+            const btn = chipFromEvent(e);
+            if (!btn || (e.relatedTarget && btn.contains(e.relatedTarget))) return;
+            const tagName = btn.dataset.primaryTag;
+            if (!_hasDropdownContent(tagName)) return;
+            clearTimeout(_dropdownCloseTimer);
+            if (_activeDropdown && _activeDropdown.tagName === tagName) return;
+            clearTimeout(_dropdownOpenTimer);
+            _dropdownOpenTimer = setTimeout(() => {
+                _showDescendantDropdown(btn, tagName);
+            }, DESCENDANT_HOVER_OPEN_DELAY);
+        });
+
+        // mouseleave equivalent
+        container.addEventListener('mouseout', (e) => {
+            const btn = chipFromEvent(e);
+            if (!btn || (e.relatedTarget && btn.contains(e.relatedTarget))) return;
+            if (!_hasDropdownContent(btn.dataset.primaryTag)) return;
+            clearTimeout(_dropdownOpenTimer);
+            _scheduleDropdownClose();
+        });
+
+        container.addEventListener('contextmenu', (e) => {
+            const btn = chipFromEvent(e);
+            // Chips with no dropdown keep the native context menu.
+            if (!btn || !_hasDropdownContent(btn.dataset.primaryTag)) return;
+            e.preventDefault();
+            clearTimeout(_dropdownOpenTimer);
+            _showDescendantDropdown(btn, btn.dataset.primaryTag);
+        });
+
+        container.addEventListener('touchstart', (e) => {
+            const btn = chipFromEvent(e);
+            if (!btn || !_hasDropdownContent(btn.dataset.primaryTag)) return;
+            clearTimeout(_longPressTimer);
+            _longPressTimer = setTimeout(() => {
+                _showDescendantDropdown(btn, btn.dataset.primaryTag);
+                _longPressTimer = null;
+            }, DESCENDANT_LONG_PRESS_MS);
+        }, { passive: true });
+
+        const cancelLongPress = (e) => {
+            const btn = chipFromEvent(e);
+            if (!btn || !_hasDropdownContent(btn.dataset.primaryTag)) return;
+            if (_longPressTimer) {
+                clearTimeout(_longPressTimer);
+                _longPressTimer = null;
+            }
+        };
+        container.addEventListener('touchend', cancelLongPress);
+        container.addEventListener('touchcancel', cancelLongPress);
+        container.addEventListener('touchmove', cancelLongPress, { passive: true });
     }
 
     // ========================================
@@ -459,11 +525,12 @@ const FilterPanelUI = (() => {
      * Returns null if the tag should be dropped (no signal for it).
      */
     function _scoreRelatedTag(tag, visibleFreqs) {
-        const freq = state.currentDynamicFrequencies[tag] || 0;
-        const visFreq = visibleFreqs[tag] || 0;
-        let score = freq;
-        if (visFreq > 0) score += visFreq * 5 + 5;
-        score += (state.initialGlobalFrequencies[tag] || 0) * 0.01;
+        const score = SearchManager.scoreTagSignal({
+            dynamicFreq: state.currentDynamicFrequencies[tag] || 0,
+            visibleFreq: visibleFreqs[tag] || 0,
+            globalFreq: state.initialGlobalFrequencies[tag] || 0,
+            isExactMatch: false
+        });
         return score > 0 ? score : null;
     }
 
@@ -529,52 +596,6 @@ const FilterPanelUI = (() => {
         return false;
     }
 
-    /**
-     * Attaches hover, long-press, and right-click handlers that open a dropdown
-     * of descendant chips below the given chip button.
-     */
-    function _attachDescendantDropdownTriggers(btn, tagName) {
-        if (!_hasDropdownContent(tagName)) return;
-
-        btn.addEventListener('mouseenter', () => {
-            clearTimeout(_dropdownCloseTimer);
-            if (_activeDropdown && _activeDropdown.tagName === tagName) return;
-            clearTimeout(_dropdownOpenTimer);
-            _dropdownOpenTimer = setTimeout(() => {
-                _showDescendantDropdown(btn, tagName);
-            }, DESCENDANT_HOVER_OPEN_DELAY);
-        });
-
-        btn.addEventListener('mouseleave', () => {
-            clearTimeout(_dropdownOpenTimer);
-            _scheduleDropdownClose();
-        });
-
-        btn.addEventListener('contextmenu', (e) => {
-            e.preventDefault();
-            clearTimeout(_dropdownOpenTimer);
-            _showDescendantDropdown(btn, tagName);
-        });
-
-        btn.addEventListener('touchstart', () => {
-            clearTimeout(_longPressTimer);
-            _longPressTimer = setTimeout(() => {
-                _showDescendantDropdown(btn, tagName);
-                _longPressTimer = null;
-            }, DESCENDANT_LONG_PRESS_MS);
-        }, { passive: true });
-
-        const cancelLongPress = () => {
-            if (_longPressTimer) {
-                clearTimeout(_longPressTimer);
-                _longPressTimer = null;
-            }
-        };
-        btn.addEventListener('touchend', cancelLongPress);
-        btn.addEventListener('touchcancel', cancelLongPress);
-        btn.addEventListener('touchmove', cancelLongPress, { passive: true });
-    }
-
     function _scheduleDropdownClose() {
         clearTimeout(_dropdownCloseTimer);
         _dropdownCloseTimer = setTimeout(() => _hideDescendantDropdown(false), DESCENDANT_HOVER_CLOSE_DELAY);
@@ -590,7 +611,6 @@ const FilterPanelUI = (() => {
         const items = _getSortedDescendants(tagName);
         if (items.length === 0) return;
 
-        const TAG_STATE = TagStateManager.getTagStateConstants();
         const container = document.createElement('div');
         container.className = 'chip-descendant-dropdown';
         container.dataset.parentTag = tagName;
@@ -657,26 +677,7 @@ const FilterPanelUI = (() => {
     }
 
     function _createDropdownChip(tagName, isActive) {
-        const btn = document.createElement('button');
-        btn.className = isActive ? 'tag-button state-selected' : 'tag-button state-unselected';
-        btn.dataset.primaryTag = tagName;
-        btn.setAttribute('aria-label', `Filter by ${tagName}`);
-
-        if (isActive && state.colorProvider) {
-            const color = state.colorProvider.getTagColor(tagName);
-            if (color) btn.style.setProperty('--chip-color', color);
-        }
-
-        const emoji = state.tagEmojiMap[tagName] || '';
-        if (emoji) {
-            const emojiSpan = document.createElement('span');
-            emojiSpan.className = 'chip-emoji';
-            emojiSpan.setAttribute('aria-hidden', 'true');
-            emojiSpan.textContent = emoji;
-            btn.appendChild(emojiSpan);
-        }
-        btn.appendChild(document.createTextNode(Utils.getTagDisplayName(tagName)));
-
+        const btn = _buildChip(tagName, isActive);
         btn.addEventListener('click', (e) => {
             e.stopPropagation();
             _handleChipClick(tagName);
@@ -714,7 +715,6 @@ const FilterPanelUI = (() => {
     function renderFilters(searchResults = [], searchTerm = '', debugMode = false) {
         state.searchTerm = searchTerm;
         state.lastSearchResults = searchResults;
-        state.lastSearchTerm = searchTerm;
         state.debugMode = debugMode;
 
         if (!state.resultsContainerDOM) return;
@@ -753,6 +753,11 @@ const FilterPanelUI = (() => {
         if (!searchResults || searchResults.length === 0) {
             state.resultsContainerDOM.innerHTML = '';
             state.resultsContainerDOM.scrollTop = 0;
+            // Mirror SectionRenderer's onAfterRender so the chip bar resyncs
+            // to the current term even when the search has no results.
+            const shouldAnimate = _chipBarAnimateNext;
+            _chipBarAnimateNext = false;
+            _renderChipBar(shouldAnimate);
             return;
         }
 
@@ -785,7 +790,6 @@ const FilterPanelUI = (() => {
      * @param {HTMLElement} config.resultsContainerDOM - Container for search results
      * @param {Function} config.onFilterChangeCallback - Callback when filters change
      * @param {Function} config.onSearchResultClick - Callback when search result clicked
-     * @param {string} config.defaultMarkerColor - Default marker color
      * @param {Function} config.performSearch - Function to perform search
      * @param {Function} config.getSearchTerm - Function to get current search term
      * @param {Object} config.colorProvider - Provider for tag color operations
@@ -797,6 +801,7 @@ const FilterPanelUI = (() => {
         // Extract provider and assign rest to state
         state.colorProvider = config.colorProvider || null;
         state.allAvailableTags = config.allAvailableTags || [];
+        _rebuildTagCaches();
         state.tagDescendantsOf = config.tagDescendantsOf || {};
         state.tagParentsOf = config.tagParentsOf || {};
         state.tagChildrenOf = config.tagChildrenOf || {};
@@ -811,7 +816,6 @@ const FilterPanelUI = (() => {
         state.resultsContainerDOM = config.resultsContainerDOM;
         state.onFilterChangeCallback = config.onFilterChangeCallback;
         state.onSearchResultClick = config.onSearchResultClick;
-        state.defaultMarkerColor = config.defaultMarkerColor;
         state.initialGlobalFrequencies = { ...config.initialGlobalFrequencies };
         state.currentDynamicFrequencies = { ...config.initialGlobalFrequencies };
 
@@ -828,7 +832,6 @@ const FilterPanelUI = (() => {
         }
 
         // Initialize tag states
-        const TAG_STATE = TagStateManager.getTagStateConstants();
         state.allAvailableTags.forEach(tag => {
             state.tagStates[tag] = TAG_STATE.UNSELECTED;
         });
@@ -845,7 +848,6 @@ const FilterPanelUI = (() => {
             tagStates: state.tagStates,
             colorProvider: state.colorProvider,
             onFilterChangeCallback: state.onFilterChangeCallback,
-            defaultMarkerColor: state.defaultMarkerColor,
             tagEmojiMap: state.tagEmojiMap
         });
 
@@ -899,7 +901,6 @@ const FilterPanelUI = (() => {
      * a normal render cycle that picks up the refreshed frequencies.
      */
     function refreshAvailableTags(updates = {}) {
-        const TAG_STATE = TagStateManager.getTagStateConstants();
         if (updates.allAvailableTags) {
             state.allAvailableTags = updates.allAvailableTags;
             for (const tag of state.allAvailableTags) {
@@ -907,22 +908,11 @@ const FilterPanelUI = (() => {
                     state.tagStates[tag] = TAG_STATE.UNSELECTED;
                 }
             }
+            _rebuildTagCaches();
         }
         if (updates.initialGlobalFrequencies) {
             state.initialGlobalFrequencies = { ...updates.initialGlobalFrequencies };
         }
-    }
-
-    /**
-     * Populates initial filters
-     */
-    function populateInitialFilters() {
-        const TAG_STATE = TagStateManager.getTagStateConstants();
-        state.currentDynamicFrequencies = { ...state.initialGlobalFrequencies };
-        state.allAvailableTags.forEach(tag => {
-            state.tagStates[tag] = TAG_STATE.UNSELECTED;
-        });
-        renderFilters();
     }
 
     /**
@@ -937,12 +927,11 @@ const FilterPanelUI = (() => {
 
         if (filteredEvents && Array.isArray(filteredEvents)) {
             const tagLocationSets = {};
-            const availableTagsSet = new Set(state.allAvailableTags);
 
             filteredEvents.forEach(event => {
                 if (event.tags && Array.isArray(event.tags) && event.locationKey) {
                     event.tags.forEach(tag => {
-                        if (availableTagsSet.has(tag)) {
+                        if (_availableTagsSet.has(tag)) {
                             if (!tagLocationSets[tag]) {
                                 tagLocationSets[tag] = new Set();
                             }
@@ -968,30 +957,20 @@ const FilterPanelUI = (() => {
 
     /**
      * Gets current tag states
-     * @returns {Object} Copy of tag states
+     * @returns {Object} Live reference — treat as read-only. All consumers
+     *     iterate immediately (HistoryManager copies what it keeps); none
+     *     mutate or retain it across tag-state changes.
      */
     function getTagStates() {
-        return { ...state.tagStates };
+        return state.tagStates;
     }
 
     /**
      * Gets current dynamic frequencies
-     * @returns {Object} Copy of dynamic frequencies
+     * @returns {Object} Live reference — treat as read-only (see getTagStates)
      */
     function getDynamicFrequencies() {
-        return { ...state.currentDynamicFrequencies };
-    }
-
-    /**
-     * Resets all tag selections
-     */
-    function resetSelections() {
-        const TAG_STATE = TagStateManager.getTagStateConstants();
-        state.allAvailableTags.forEach(tag => {
-            state.tagStates[tag] = TAG_STATE.UNSELECTED;
-        });
-        clearSearch('');
-        _renderChipBar();
+        return state.currentDynamicFrequencies;
     }
 
     /**
@@ -1003,8 +982,6 @@ const FilterPanelUI = (() => {
         if (!Array.isArray(tagsToSelect)) {
             return;
         }
-
-        const TAG_STATE = TagStateManager.getTagStateConstants();
 
         tagsToSelect.forEach(tag => {
             // Organizer pseudo-tags are valid filter keys even though they're not
@@ -1046,15 +1023,11 @@ const FilterPanelUI = (() => {
      * Initialize the search input functionality
      * Delegates to SearchController for input handling
      * @param {Object} config - Configuration object
-     * @param {HTMLElement} config.filterPanelDOM - Filter panel element (for mobile auto-expand)
-     * @param {HTMLElement} config.expandFilterPanelButtonDOM - Expand button element (for mobile)
      * @param {Function} config.onSpecialSearchTerm - Callback for special search terms (debug, noto)
      */
     function initOmniSearch(config) {
         // Delegate to SearchController
         SearchController.init({
-            filterPanelDOM: config.filterPanelDOM,
-            expandFilterPanelButtonDOM: config.expandFilterPanelButtonDOM,
             onSpecialSearchTerm: config.onSpecialSearchTerm,
             performSearchCallback: performSearchCallback
         });
@@ -1069,7 +1042,7 @@ const FilterPanelUI = (() => {
      * sheet opens so the (previously skipped) list view populates.
      */
     function rerender() {
-        renderFilters(state.lastSearchResults || [], state.lastSearchTerm || '', state.debugMode);
+        renderFilters(state.lastSearchResults || [], state.searchTerm || '', state.debugMode);
     }
 
     return {
@@ -1077,11 +1050,9 @@ const FilterPanelUI = (() => {
         initOmniSearch,
         setAppProviders,
         refreshAvailableTags,
-        populateInitialFilters,
         updateView,
         getTagStates,
         getDynamicFrequencies,
-        resetSelections,
         selectTags,
         setTagState: (tag, state) => TagStateManager.setTagState(tag, state),
         createInteractiveTagButton: (tag) => TagStateManager.createInteractiveTagButton(tag),
@@ -1089,6 +1060,5 @@ const FilterPanelUI = (() => {
         render: renderFilters,
         renderChipBar: _renderChipBar,
         rerender,
-        clearSearch,
     };
 })();

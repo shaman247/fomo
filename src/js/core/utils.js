@@ -9,11 +9,20 @@ const Utils = (() => {
             .replace(/'/g, "&#039;");
     }
 
+    // Scratch element for decodeHtml, created lazily and reused so hot loops
+    // (Phase 2 transform, search-index build, popup renders) don't pay for a
+    // fresh <textarea> + HTML parse per string.
+    let _decodeTextarea = null;
+
     function decodeHtml(html) {
         if (typeof html !== 'string') return '';
-        const txt = document.createElement("textarea");
-        txt.innerHTML = html;
-        return txt.value;
+        // Entity references always contain '&', so other strings decode to
+        // themselves. (The parser would also normalize \r to \n, but exported
+        // data never contains bare carriage returns.)
+        if (!html.includes('&')) return html;
+        if (!_decodeTextarea) _decodeTextarea = document.createElement("textarea");
+        _decodeTextarea.innerHTML = html;
+        return _decodeTextarea.value;
     }
 
     function formatAndSanitize(text) {
@@ -34,15 +43,6 @@ const Utils = (() => {
 
     function isValidUrl(string) {
         return string && (string.startsWith('http://') || string.startsWith('https://'));
-    }
-
-    function formatDateForDisplay(timestamp) {
-        const date = new Date(Number(timestamp));
-        if (isNaN(date.getTime())) {
-            console.warn("Utils.formatDateForDisplay received an invalid timestamp:", timestamp);
-            return "Invalid Date";
-        }
-        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     }
 
     // Shared date/time formatting options
@@ -160,7 +160,9 @@ const Utils = (() => {
                 return;
             }
 
-            const dateKey = start.toISOString().split('T')[0];
+            // Key by local calendar date so grouping matches the rendered
+            // displayDate (the ISO/UTC date is the next day for evening events).
+            const dateKey = start.toDateString();
             let segment = groupByDate[dateKey];
             if (!segment) {
                 segment = { displayDate: start.toLocaleDateString('en-US', DATE_OPTIONS), times: new Set() };
@@ -218,21 +220,31 @@ const Utils = (() => {
 
     // UTC offset (e.g. "-04:00") for APP_TIMEZONE at the given date. Driven by the
     // IANA database via Intl, so it's correct for any zone's DST rules — not just US.
+    const _offsetFormatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: APP_TIMEZONE, timeZoneName: 'longOffset'
+    });
     function getZoneOffset(date) {
-        const parts = new Intl.DateTimeFormat('en-US', {
-            timeZone: APP_TIMEZONE, timeZoneName: 'longOffset'
-        }).formatToParts(date);
+        const parts = _offsetFormatter.formatToParts(date);
         const tzName = parts.find(p => p.type === 'timeZoneName');
         const m = tzName && tzName.value.match(/GMT([+-]\d{2}:\d{2})/);
         return m ? m[1] : '+00:00'; // "GMT" (no suffix) => UTC
     }
 
+    // The zone offset depends only on the calendar date (tempDate is pinned to noon),
+    // so cache it per dateStr — parseDateInZone runs ~2x per occurrence in the Phase 2 merge.
+    const _zoneOffsetByDate = new Map();
+
     function parseDateInZone(dateStr, timeStr) {
         if (!dateStr) return null;
-        const tempDate = new Date(dateStr.replace(/-/g, '/') + ' 12:00:00');
-        if (isNaN(tempDate.getTime())) return null;
 
-        const offset = getZoneOffset(tempDate);
+        let offset = _zoneOffsetByDate.get(dateStr);
+        if (offset === undefined) {
+            const tempDate = new Date(dateStr.replace(/-/g, '/') + ' 12:00:00');
+            if (isNaN(tempDate.getTime())) return null;
+            offset = getZoneOffset(tempDate);
+            _zoneOffsetByDate.set(dateStr, offset);
+        }
+
         const timeParts = parseTime(timeStr);
         const isoString = `${dateStr}T${String(timeParts.hours).padStart(2, '0')}:${String(timeParts.minutes).padStart(2, '0')}:${String(timeParts.seconds).padStart(2, '0')}${offset}`;
         const finalDate = new Date(isoString);
@@ -248,6 +260,19 @@ const Utils = (() => {
     });
     function getTodayInZone() {
         return _todayFormatter.format(new Date());
+    }
+
+    // Current UI theme. Reads the DOM as source of truth ('data-theme' is set
+    // by ThemeManager); defaults to 'dark' before any theme is applied.
+    function getCurrentTheme() {
+        return document.documentElement.getAttribute('data-theme') || 'dark';
+    }
+
+    // Canonical mobile-layout check. <= so exactly 768px counts as mobile,
+    // matching the CSS media queries (max-width: 768px).
+    function isMobileLayout() {
+        const bp = (typeof Constants !== 'undefined' && Constants.UI && Constants.UI.MOBILE_BREAKPOINT) || 768;
+        return window.innerWidth <= bp;
     }
 
     function isWindows() {
@@ -328,23 +353,6 @@ const Utils = (() => {
     }
 
     /**
-     * Creates a throttled function that only invokes func at most once per every wait milliseconds
-     * @param {Function} func - Function to throttle
-     * @param {number} wait - Delay in milliseconds
-     * @returns {Function} Throttled function
-     */
-    function throttle(func, wait) {
-        let inThrottle;
-        return function executedFunction(...args) {
-            if (!inThrottle) {
-                func.apply(this, args);
-                inThrottle = true;
-                setTimeout(() => inThrottle = false, wait);
-            }
-        };
-    }
-
-    /**
      * Calculates distance between two lat/lng points using Haversine formula
      * @param {Object} point1 - First point {lat, lng}
      * @param {Object} point2 - Second point {lat, lng}
@@ -363,6 +371,18 @@ const Utils = (() => {
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
         return R * c;
+    }
+
+    /**
+     * Parses a "lat,lng" location key into coordinates.
+     * @param {string} key - Location key in "lat,lng" format
+     * @returns {{lat: number, lng: number}|null} Coordinates, or null when the
+     *   key is missing or malformed (either part not a finite number)
+     */
+    function parseLocationKey(key) {
+        if (typeof key !== 'string') return null;
+        const [lat, lng] = key.split(',').map(Number);
+        return (Number.isFinite(lat) && Number.isFinite(lng)) ? { lat, lng } : null;
     }
 
     /**
@@ -399,21 +419,6 @@ const Utils = (() => {
                 } else {
                     console.error(`Failed to write to localStorage (key: ${key}):`, error);
                 }
-                return false;
-            }
-        },
-
-        /**
-         * Safely remove an item from localStorage
-         * @param {string} key - Storage key
-         * @returns {boolean} True if successful, false otherwise
-         */
-        removeItem(key) {
-            try {
-                localStorage.removeItem(key);
-                return true;
-            } catch (error) {
-                console.warn(`Failed to remove from localStorage (key: ${key}):`, error);
                 return false;
             }
         }
@@ -468,6 +473,37 @@ const Utils = (() => {
     }
 
     /**
+     * Three-tier tag matching rule shared by FilterManager and
+     * PopupContentBuilder: forbidden excludes, required must all match,
+     * selected needs at least one (only checked when nothing is required).
+     * Tag lists are passed separately (event, location, organizer) so hot
+     * callers can reuse existing arrays without concatenating.
+     */
+    function matchesTagSets(eventTags, locationTags, orgTags, selectedTagsSet, requiredTagsSet, forbiddenTagsSet) {
+        if (forbiddenTagsSet.size > 0) {
+            if (eventTags.some(t => forbiddenTagsSet.has(t))
+                || locationTags.some(t => forbiddenTagsSet.has(t))
+                || orgTags.some(t => forbiddenTagsSet.has(t))) {
+                return false;
+            }
+        }
+        if (requiredTagsSet.size > 0) {
+            for (const tag of requiredTagsSet) {
+                if (!eventTags.includes(tag) && !locationTags.includes(tag) && !orgTags.includes(tag)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        if (selectedTagsSet.size > 0) {
+            return eventTags.some(t => selectedTagsSet.has(t))
+                || locationTags.some(t => selectedTagsSet.has(t))
+                || orgTags.some(t => selectedTagsSet.has(t));
+        }
+        return true;
+    }
+
+    /**
      * Returns the human-readable form of a tag name, stripping any
      * disambiguator suffix (everything after " / "). The internal tag
      * name (with disambiguator) remains the unique identifier — only
@@ -481,29 +517,90 @@ const Utils = (() => {
         return idx === -1 ? tag : tag.slice(0, idx);
     }
 
+    /**
+     * Appends standard chip content to an element: an aria-hidden
+     * .chip-emoji span (when emoji is truthy) followed by the tag's
+     * display name as a text node.
+     */
+    function appendChipContent(el, emoji, tag) {
+        if (emoji) {
+            const emojiSpan = document.createElement('span');
+            emojiSpan.className = 'chip-emoji';
+            emojiSpan.setAttribute('aria-hidden', 'true');
+            emojiSpan.textContent = emoji;
+            el.appendChild(emojiSpan);
+        }
+        el.appendChild(document.createTextNode(getTagDisplayName(tag)));
+    }
+
+    // ========================================
+    // TAG-STATE PARTITIONING
+    // ========================================
+
+    /**
+     * Partitions a tagStates object ({tagName: 'selected'|'required'|'forbidden'|...})
+     * into per-state arrays and Sets in a single pass.
+     *
+     * Convention (load-bearing — do not "fix"): the selectedTags ARRAY excludes
+     * required tags (FilterManager gates on requiredTags separately), while
+     * selectedTagsSet INCLUDES required tags (popup/label sorting counts
+     * required-tag matches toward hasActiveTagFilters and selectedTagMatchCount).
+     *
+     * @param {Object} tagStates - Tag states object {tagName: state}
+     * @returns {{selectedTags: Array, requiredTags: Array, forbiddenTags: Array,
+     *            selectedTagsSet: Set, requiredTagsSet: Set, forbiddenTagsSet: Set}}
+     */
+    function partitionTagStates(tagStates) {
+        const selectedTags = [];
+        const requiredTags = [];
+        const forbiddenTags = [];
+        const selectedTagsSet = new Set();
+        const requiredTagsSet = new Set();
+        const forbiddenTagsSet = new Set();
+        for (const tag in tagStates) {
+            const s = tagStates[tag];
+            if (s === 'selected') {
+                selectedTags.push(tag);
+                selectedTagsSet.add(tag);
+            } else if (s === 'required') {
+                requiredTags.push(tag);
+                requiredTagsSet.add(tag);
+                selectedTagsSet.add(tag);
+            } else if (s === 'forbidden') {
+                forbiddenTags.push(tag);
+                forbiddenTagsSet.add(tag);
+            }
+        }
+        return { selectedTags, requiredTags, forbiddenTags, selectedTagsSet, requiredTagsSet, forbiddenTagsSet };
+    }
+
     return {
         escapeHtml,
         decodeHtml,
         formatAndSanitize,
         getTagDisplayName,
+        appendChipContent,
+        partitionTagStates,
         registerOrganizers,
         makeOrganizerTag,
         isOrganizerTag,
         isKnownOrganizerTag,
         organizerTagsForEvent,
+        matchesTagSets,
         isValidUrl,
-        formatDateForDisplay,
         buildEventDateTime,
         parseDateInZone,
         getTodayInZone,
+        getCurrentTheme,
         isWindows,
+        isMobileLayout,
         isCountryFlagEmoji,
         resolveDisplayEmoji,
         normalizeForSearch,
         getDisplayName,
         debounce,
-        throttle,
         calculateHaversineDistance,
+        parseLocationKey,
         SafeStorage,
     };
 })();

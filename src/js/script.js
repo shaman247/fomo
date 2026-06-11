@@ -33,7 +33,6 @@ document.addEventListener('DOMContentLoaded', () => {
          * @property {Array} allEvents - All loaded events
          * @property {Object} eventsById - Event lookup by ID
          * @property {Object} tagConfig - Tag configuration (geotags)
-         * @property {Object} eventsByLatLng - Events grouped by location
          * @property {Object} locationsByLatLng - Location info by coordinates
          * @property {Object} tagFrequencies - Global tag frequency counts
          * @property {Object|null} datePickerInstance - Flatpickr instance
@@ -61,13 +60,11 @@ document.addEventListener('DOMContentLoaded', () => {
             allEvents: [],
             eventsById: {},
             tagConfig: {},
-            quickFilters: [],
             hierarchyTagsSet: new Set(),
             tagDescendantsOf: {},
             tagParentsOf: {},
             tagChildrenOf: {},
             tagEmojiMap: {},
-            eventsByLatLng: {},
             locationsByLatLng: {},
             tagFrequencies: {},
             datePickerInstance: null,
@@ -88,26 +85,27 @@ document.addEventListener('DOMContentLoaded', () => {
             currentFilteredLocations: null, // Locations after tag/date filtering (before search)
             organizersById: {}, // Organizer data keyed by website ID
             isInitialLoad: true, // Track if we're in initial load phase
-            _moveendSearchTimeout: null, // Debounce timer for search on moveend
         },
 
         /**
          * Application configuration object
          * @type {Object}
-         * @property {string} EVENT_INIT_URL - URL for initial events data
-         * @property {string} LOCATIONS_INIT_URL - URL for initial locations data
-         * @property {string} EVENT_FULL_URL - URL for full events dataset
-         * @property {string} LOCATIONS_FULL_URL - URL for full locations dataset
+         * @property {string} DATA_DIR - Base directory for per-day event/location data chunks
+         * @property {string} MANIFEST_URL - URL for the chunk manifest (maps day0..dayN to dates)
+         * @property {string} REMAINDER_CHUNK - Name of the chunk holding events beyond the dated days
          * @property {string} TAG_CONFIG_URL - URL for tag configuration
+         * @property {string} TAG_HIERARCHY_URL - URL for the tag hierarchy
+         * @property {string} ORGANIZERS_URL - URL for organizer data
          * @property {Date} START_DATE - Default start date for date range
          * @property {Date} END_DATE - Default end date for date range
          * @property {Array<string>} TAG_COLOR_PALETTE_DARK - Color palette for dark theme
          * @property {Array<string>} TAG_COLOR_PALETTE_LIGHT - Color palette for light theme
          * @property {Array<number>} MAP_INITIAL_VIEW - Initial map center [lat, lng]
          * @property {number} MAP_INITIAL_ZOOM - Initial map zoom level
-         * @property {string} MAP_TILE_URL_DARK - Tile URL for dark theme map
-         * @property {string} MAP_TILE_URL_LIGHT - Tile URL for light theme map
-         * @property {string} MAP_ATTRIBUTION - Map attribution text
+         * @property {number} MAP_USER_LOCATION_ZOOM - Zoom level when centering on the user's location
+         * @property {?Object} REGION_BOUNDS - {latMin, latMax, lngMin, lngMax} geolocation bounds, or null to accept any
+         * @property {string} MAP_STYLE_DARK - Map style URL for dark theme
+         * @property {string} MAP_STYLE_LIGHT - Map style URL for light theme
          * @property {number} MAP_MAX_ZOOM - Maximum zoom level
          */
         config: {
@@ -142,7 +140,6 @@ document.addEventListener('DOMContentLoaded', () => {
             REGION_BOUNDS: CITY.map.bounds || null,
             MAP_STYLE_DARK: 'data/map-style-dark.json?v=8',
             MAP_STYLE_LIGHT: 'data/map-style-light.json?v=8',
-            MAP_ATTRIBUTION: '© <a href="https://protomaps.com">Protomaps</a> © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
             MAP_MAX_ZOOM: 20
         },
 
@@ -152,10 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
          * @property {HTMLElement} resultsContainer - Container for search results
          * @property {HTMLElement} datePicker - Date picker input element
          * @property {HTMLElement} datePickerSizer - Hidden element for measuring date picker width
-         * @property {HTMLElement} dateFilterContainer - Container for date filter
          * @property {HTMLElement} filterContainer - Main filter container
-         * @property {HTMLElement} omniSearchFilter - Omni search filter container
-         * @property {HTMLElement} expandFilterPanelButton - Button to expand/collapse filter panel on mobile
          * @property {HTMLElement} filterPanel - Filter panel element
          * @property {HTMLElement} omniSearchInput - Search input element
          */
@@ -163,10 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
             resultsContainer: document.getElementById('results-container'),
             datePicker: document.getElementById('date-picker'),
             datePickerSizer: document.getElementById('date-picker-sizer'),
-            dateFilterContainer: document.getElementById('date-filter-container'),
             filterContainer: document.getElementById('filter-container'),
-            omniSearchFilter: document.getElementById('omni-search-filter'),
-            expandFilterPanelButton: document.getElementById('expand-filter-panel-button'),
             filterPanel: document.getElementById('filter-panel'),
             omniSearchInput: document.getElementById('omni-search-input'),
         },
@@ -234,7 +225,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Build hierarchy maps from exported data
             const hierarchyMaps = DataManager.buildTagHierarchyMaps(tagHierarchy || { tags: [], keywords: [] });
-            this.state.quickFilters = hierarchyMaps.quickFilters;
             this.state.hierarchyTagsSet = hierarchyMaps.hierarchyTagsSet;
             this.state.tagDescendantsOf = hierarchyMaps.descendantsOf;
             this.state.tagParentsOf = hierarchyMaps.parentsOf;
@@ -267,7 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
         },
 
         /**
-         * Initialize all core modules (emoji, theme, map, viewport, etc.)
+         * Initialize all core modules (emoji, theme, map, etc.)
          * @memberof App
          * @private
          * @async
@@ -288,9 +278,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             this.initMap();
-            // ViewportManager must exist before mapLoadPromise resolves — the
-            // map's ready handler calls ViewportManager.adjustMapToVisibleCenter().
-            this.initViewportManager();
             // Search/filter managers must be ready before the map can fire a
             // moveend→performSearch (which happens during the parallel load).
             this.initSearchAndFilterManagers();
@@ -337,8 +324,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
             FilterPanelUI.initOmniSearch({
-                filterPanelDOM: this.elements.filterPanel,
-                expandFilterPanelButtonDOM: this.elements.expandFilterPanelButton,
                 onSpecialSearchTerm: (term) => this.handleSpecialSearchTerms(term)
             });
             UIManager.initLogoMenu({
@@ -433,9 +418,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Description companions download in parallel; applied after the
                 // events are merged (so ids resolve) and before the search index
                 // is built, so Phase-2 descriptions are searchable immediately.
-                const descPromise = Promise.all(remainingChunks.map(c =>
-                    DataManager.fetchData(`${this.config.DATA_DIR}events.${c}.desc.json`).catch(() => null)
-                ));
+                const descPromise = this._fetchChunkDescriptions(remainingChunks);
                 const fetched = await Promise.all(fetches);
 
                 const fullEventData = [];
@@ -470,8 +453,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 // Merge descriptions before the search index is (re)built below.
-                const descMaps = await descPromise;
-                for (const m of descMaps) DataManager.applyDescriptions(m, this.state, false);
+                this._applyChunkDescriptions(await descPromise, false);
 
                 DataManager.calculateTagFrequencies(this.state);
                 DataManager.processTagHierarchy(this.state, this.config);
@@ -651,23 +633,45 @@ document.addEventListener('DOMContentLoaded', () => {
         },
 
         /**
-         * Fetch and merge the {eventId: description} companion files for the
-         * given chunks (descriptions are deferred off the marker-render path).
+         * Start fetching the {eventId: description} companion files for the
+         * given chunks. Failed fetches resolve to null (applyDescriptions
+         * ignores null maps).
          * @param {string[]} chunks - chunk names, e.g. ['day1'] or ['remainder']
-         * @param {boolean} reindex - re-index touched events for search (Phase 1;
-         *   Phase 2 merges before its index build, so it passes false)
-         * @returns {Promise<boolean>} true if any loaded event was updated
+         * @returns {Promise<Array<Object|null>>}
          * @private
          */
-        async _loadChunkDescriptions(chunks, reindex) {
-            const maps = await Promise.all(chunks.map(c =>
+        _fetchChunkDescriptions(chunks) {
+            return Promise.all(chunks.map(c =>
                 DataManager.fetchData(`${this.config.DATA_DIR}events.${c}.desc.json`).catch(() => null)
             ));
+        },
+
+        /**
+         * Merge fetched description maps into loaded events.
+         * @param {Array<Object|null>} maps - results of _fetchChunkDescriptions
+         * @param {boolean} reindex - re-index touched events for search (Phase 1;
+         *   Phase 2 merges before its index build, so it passes false)
+         * @returns {boolean} true if any loaded event was updated
+         * @private
+         */
+        _applyChunkDescriptions(maps, reindex) {
             let changed = false;
             for (const m of maps) {
                 if (DataManager.applyDescriptions(m, this.state, reindex)) changed = true;
             }
             return changed;
+        },
+
+        /**
+         * Fetch and merge the {eventId: description} companion files for the
+         * given chunks (descriptions are deferred off the marker-render path).
+         * @param {string[]} chunks - chunk names, e.g. ['day1'] or ['remainder']
+         * @param {boolean} reindex - re-index touched events for search
+         * @returns {Promise<boolean>} true if any loaded event was updated
+         * @private
+         */
+        async _loadChunkDescriptions(chunks, reindex) {
+            return this._applyChunkDescriptions(await this._fetchChunkDescriptions(chunks), reindex);
         },
 
         /**
@@ -702,6 +706,15 @@ document.addEventListener('DOMContentLoaded', () => {
         },
 
         /**
+         * Read the current omni-search input value, lowercased
+         * @memberof App
+         * @returns {string} The current search term
+         */
+        _getCurrentSearchTerm() {
+            return this.elements.omniSearchInput.value.toLowerCase();
+        },
+
+        /**
          * Perform search across locations, events, and tags
          * Uses SearchManager for scoring and TagFilterUI for rendering
          * @memberof App
@@ -714,9 +727,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.state.searchTerm = term;
 
                 if (FP) FP.mark('fp:search:start');
-                const dynamicFrequencies = FilterPanelUI.getDynamicFrequencies();
-                const selectedTagsWithColors = TagColorManager.getSelectedTagsWithColors();
-                const results = SearchManager.search(term, dynamicFrequencies, selectedTagsWithColors);
+                // No term + debug off: renderFilters takes the ListView branch
+                // and never reads the results — skip the scoring pass.
+                let results = [];
+                if (term || this.state.debugMode) {
+                    const dynamicFrequencies = FilterPanelUI.getDynamicFrequencies();
+                    const selectedTagsWithColors = TagColorManager.getSelectedTagsWithColors();
+                    results = SearchManager.search(term, dynamicFrequencies, selectedTagsWithColors);
+                }
                 if (FP) {
                     FP.mark('fp:search:scored');
                     FP.measure('fp:search:scoring', 'fp:search:start', 'fp:search:scored');
@@ -742,15 +760,17 @@ document.addEventListener('DOMContentLoaded', () => {
          */
         handleSearchResultClick(result) {
             if (result.type === 'location' || result.type === 'event') {
-                let lat, lng;
+                let key;
                 if (result.type === 'location') {
-                    [lat, lng] = result.ref.split(',').map(Number);
+                    key = result.ref;
                 } else { // event
                     const event = this.state.eventsById[result.ref];
-                    if (!event || !event.locationKey) return;
-                    [lat, lng] = event.locationKey.split(',').map(Number);
+                    if (!event) return;
+                    key = event.locationKey;
                 }
-                MarkerController.flyToLocationAndOpenPopup(lat, lng, result.type === 'event' ? result.ref : null);
+                const ll = Utils.parseLocationKey(key);
+                if (!ll) return;
+                MarkerController.flyToLocationAndOpenPopup(ll.lat, ll.lng, result.type === 'event' ? result.ref : null);
             }
             // Organizer results are rendered as interactive tag chips (see
             // TagStateManager.createSearchResultButton) and toggle the organizer
@@ -758,7 +778,7 @@ document.addEventListener('DOMContentLoaded', () => {
         },
 
         /**
-         * Update the list of events filtered by date range and location tags
+         * Update the list of events filtered by date range
          * Rebuilds event lookups and tag index, then triggers display update
          * @memberof App
          */
@@ -775,21 +795,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     // range (start, start) so filtering applies on the first click.
                     const startDate = selectedDates[0];
                     const endDate = selectedDates.length >= 2 ? selectedDates[1] : selectedDates[0];
-                    let events = FilterManager.filterEventsByDateRange(startDate, endDate);
+                    const events = FilterManager.filterEventsByDateRange(startDate, endDate);
 
                     if (FP) {
                         FP.mark('fp:dates:byRange');
                         FP.measure('fp:dates:filterByDateRange', 'fp:dates:start', 'fp:dates:byRange');
                     }
 
-                    if (this.state.selectedGeotags && this.state.selectedGeotags.size > 0) {
-                        events = events.filter(event => {
-                            if (!event.locationKey) return false;
-                            const locationInfo = this.state.locationsByLatLng[event.locationKey];
-                            if (!locationInfo || !locationInfo.tags) return false;
-                            return locationInfo.tags.some(locationTag => this.state.selectedGeotags.has(locationTag));
-                        });
-                    }
                     this.state.allEventsFilteredByDateAndLocation = events;
                 }
 
@@ -1085,8 +1097,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
 
                     // Re-run search to update the UI with the selected location
-                    const currentTerm = this.elements.omniSearchInput.value.toLowerCase();
-                    this.performSearch(currentTerm);
+                    this.performSearch(this._getCurrentSearchTerm());
 
                     HistoryManager.push();
                 }
@@ -1114,8 +1125,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     clearTimeout(this._moveendSearchTimeout);
                     this._moveendSearchTimeout = setTimeout(() => {
-                        const currentTerm = this.elements.omniSearchInput.value.toLowerCase();
-                        this.performSearch(currentTerm);
+                        this.performSearch(this._getCurrentSearchTerm());
                     }, 150);
                     this.updateDebugOverlay();
                 };
@@ -1130,8 +1140,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (this.state.selectedLocationKey === locationKey) {
                     this.state.selectedLocationKey = null;
                     // Re-run search to update the UI and remove the selected location
-                    const currentTerm = this.elements.omniSearchInput.value.toLowerCase();
-                    this.performSearch(currentTerm);
+                    this.performSearch(this._getCurrentSearchTerm());
 
                     HistoryManager.push();
                 }
@@ -1151,18 +1160,6 @@ document.addEventListener('DOMContentLoaded', () => {
         },
 
         /**
-         * Initialize the ViewportManager module
-         * Sets up viewport calculations accounting for filter panel overlay
-         * @memberof App
-         */
-        initViewportManager() {
-            // Initialize ViewportManager
-            ViewportManager.init({
-                appState: this.state
-            });
-        },
-
-        /**
          * Initialize the MarkerController module
          * Sets up marker creation, updating, and lifecycle management
          * @memberof App
@@ -1171,7 +1168,6 @@ document.addEventListener('DOMContentLoaded', () => {
             // Initialize MarkerController with provider objects
             MarkerController.init({
                 appState: this.state,
-                config: this.config,
                 filterProvider: {
                     getTagStates: () => FilterPanelUI.getTagStates(),
                     getSelectedDates: () => this.state.datePickerInstance.selectedDates
@@ -1222,9 +1218,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     HistoryManager.push();
                 },
                 onSearchResultClick: (result) => this.handleSearchResultClick(result),
-                defaultMarkerColor: this.config.DEFAULT_MARKER_COLOR_DARK,
                 performSearch: (term) => this.performSearch(term),
-                getSearchTerm: () => this.elements.omniSearchInput.value.toLowerCase(),
+                getSearchTerm: () => this._getCurrentSearchTerm(),
                 getVisibleTagFrequencies: () => this.state.visibleTagFrequencies,
                 colorProvider: {
                     getTagColor: (tag) => TagColorManager.getTagColor(tag),
@@ -1474,10 +1469,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const selectedDates = this.state.datePickerInstance?.selectedDates || [];
 
                 // Get selected tags
-                const tagStates = FilterPanelUI.getTagStates();
-                const selectedTags = Object.entries(tagStates)
-                    .filter(([, state]) => state === 'selected')
-                    .map(([tag]) => tag);
+                const { selectedTags } = Utils.partitionTagStates(FilterPanelUI.getTagStates());
 
                 // Build URL parameters
                 const params = {

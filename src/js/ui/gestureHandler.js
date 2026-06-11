@@ -9,7 +9,6 @@
  * - Horizontal swipe recognition with directional threshold
  * - Visual feedback during swipe (translation and opacity)
  * - Section reordering via swipe-to-dismiss
- * - Pointer event management to prevent conflicts
  *
  * @module GestureHandler
  */
@@ -37,7 +36,6 @@ const GestureHandler = (() => {
         isHorizontalSwipe: false,
         hasTriggeredReorder: false,
         targetSectionKey: null,
-        targetHeader: null,
         targetContainer: null,
 
         // Event handler references (for cleanup)
@@ -68,7 +66,6 @@ const GestureHandler = (() => {
 
         state.targetContainer = container;
         state.targetSectionKey = container.dataset.sectionKey;
-        state.targetHeader = container.querySelector('.result-group-title');
 
         state.startX = x;
         state.startY = y;
@@ -91,14 +88,6 @@ const GestureHandler = (() => {
         // Determine if this is a horizontal swipe
         if (!state.isHorizontalSwipe && (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10)) {
             state.isHorizontalSwipe = Math.abs(deltaX) > Math.abs(deltaY);
-
-            // Prevent click on buttons when swiping horizontally
-            if (state.isHorizontalSwipe && state.targetHeader && state.targetHeader.querySelector('.tag-button')) {
-                const buttons = state.targetContainer ? state.targetContainer.querySelectorAll('.tag-button') : [];
-                buttons.forEach(btn => {
-                    btn.style.pointerEvents = 'none';
-                });
-            }
         }
 
         // Apply visual feedback for horizontal swipes
@@ -174,14 +163,6 @@ const GestureHandler = (() => {
             }
         }
 
-        // Re-enable pointer events on buttons
-        if (state.targetContainer) {
-            const buttons = state.targetContainer.querySelectorAll('.tag-button');
-            buttons.forEach(btn => {
-                btn.style.pointerEvents = '';
-            });
-        }
-
         resetGestureState();
     }
 
@@ -190,18 +171,7 @@ const GestureHandler = (() => {
      */
     function handleMouseLeave() {
         if (state.isDragging && state.isHorizontalSwipe) {
-            if (state.targetContainer) {
-                state.targetContainer.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
-                state.targetContainer.style.transform = 'translateX(0)';
-                state.targetContainer.style.opacity = '1';
-
-                const buttons = state.targetContainer.querySelectorAll('.tag-button');
-                buttons.forEach(btn => {
-                    btn.style.pointerEvents = '';
-                });
-            }
-
-            resetGestureState();
+            handleEnd();
         }
     }
 
@@ -213,7 +183,6 @@ const GestureHandler = (() => {
         state.isHorizontalSwipe = false;
         state.hasTriggeredReorder = false;
         state.targetSectionKey = null;
-        state.targetHeader = null;
         state.targetContainer = null;
     }
 
@@ -227,39 +196,11 @@ const GestureHandler = (() => {
     function cleanup() {
         if (!state.containerDOM) return;
 
-        // Remove all event listeners using stored references
-        if (state.handlers.touchstart) {
-            state.containerDOM.removeEventListener('touchstart', state.handlers.touchstart);
+        // Handler keys are the DOM event type names
+        for (const [type, fn] of Object.entries(state.handlers)) {
+            if (fn) state.containerDOM.removeEventListener(type, fn);
+            state.handlers[type] = null;
         }
-        if (state.handlers.touchmove) {
-            state.containerDOM.removeEventListener('touchmove', state.handlers.touchmove);
-        }
-        if (state.handlers.touchend) {
-            state.containerDOM.removeEventListener('touchend', state.handlers.touchend);
-        }
-        if (state.handlers.mousedown) {
-            state.containerDOM.removeEventListener('mousedown', state.handlers.mousedown);
-        }
-        if (state.handlers.mousemove) {
-            state.containerDOM.removeEventListener('mousemove', state.handlers.mousemove);
-        }
-        if (state.handlers.mouseup) {
-            state.containerDOM.removeEventListener('mouseup', state.handlers.mouseup);
-        }
-        if (state.handlers.mouseleave) {
-            state.containerDOM.removeEventListener('mouseleave', state.handlers.mouseleave);
-        }
-
-        // Clear handler references
-        state.handlers = {
-            touchstart: null,
-            touchmove: null,
-            touchend: null,
-            mousedown: null,
-            mousemove: null,
-            mouseup: null,
-            mouseleave: null
-        };
     }
 
     /**

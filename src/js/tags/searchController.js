@@ -4,7 +4,7 @@
  * Handles the search input UI functionality including:
  * - Debounced search input handling
  * - Special search term detection (debug, noto)
- * - Mobile auto-expand behavior
+ * - Mobile sheet auto-open on typing
  * - Search input event management
  *
  * Note: This is distinct from SearchManager which handles the search algorithm/scoring.
@@ -23,8 +23,6 @@ const SearchController = (() => {
     const state = {
         // DOM elements
         searchInputDOM: null,
-        filterPanelDOM: null,
-        expandFilterPanelButtonDOM: null,
 
         // Callbacks
         onSpecialSearchTerm: null,
@@ -60,14 +58,6 @@ const SearchController = (() => {
         }
     }
 
-    /**
-     * Gets the current search term
-     * @returns {string} Current search term (lowercase)
-     */
-    function getSearchTerm() {
-        return state.searchInputDOM ? state.searchInputDOM.value.toLowerCase() : '';
-    }
-
     // ========================================
     // PUBLIC API
     // ========================================
@@ -75,14 +65,10 @@ const SearchController = (() => {
     /**
      * Initializes the SearchController module
      * @param {Object} config - Configuration object
-     * @param {HTMLElement} [config.filterPanelDOM] - Filter panel element (for mobile auto-expand)
-     * @param {HTMLElement} [config.expandFilterPanelButtonDOM] - Expand button element (for mobile)
      * @param {Function} [config.onSpecialSearchTerm] - Callback for special search terms (debug, noto)
      * @param {Function} config.performSearchCallback - Callback to perform search
      */
     function init(config) {
-        state.filterPanelDOM = config.filterPanelDOM || null;
-        state.expandFilterPanelButtonDOM = config.expandFilterPanelButtonDOM || null;
         state.onSpecialSearchTerm = config.onSpecialSearchTerm || null;
         state.performSearchCallback = config.performSearchCallback;
 
@@ -116,7 +102,7 @@ const SearchController = (() => {
 
             // On mobile, open the sheet to peek as soon as the user starts
             // typing (renderFilters' auto-open only fires after the debounce)
-            if (searchTerm && window.innerWidth <= Constants.UI.MOBILE_BREAKPOINT) {
+            if (searchTerm && Utils.isMobileLayout()) {
                 if (typeof Sheet !== 'undefined' && Sheet.getCurrentSnap() < Sheet.SNAP_PEEK) {
                     Sheet.open();
                 }
@@ -137,7 +123,6 @@ const SearchController = (() => {
 
     return {
         init,
-        clearSearch,
-        getSearchTerm
+        clearSearch
     };
 })();

@@ -70,19 +70,8 @@ const FeedbackManager = (() => {
             });
         }
 
-        // Click outside to close
-        state.modal.addEventListener('click', (e) => {
-            if (e.target === state.modal) {
-                close();
-            }
-        });
-
-        // Escape key to close
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && state.modal.classList.contains('show')) {
-                close();
-            }
-        });
+        // Click outside or Escape to close
+        ModalManager.wireDismiss(state.modal, close);
 
         // Character count and validation
         state.textarea.addEventListener('input', () => {
@@ -245,13 +234,13 @@ const FeedbackManager = (() => {
                 close();
                 // Show success toast
                 if (typeof ToastNotifier !== 'undefined') {
-                    ToastNotifier.show('Thank you for your feedback!', 'success');
+                    ToastNotifier.showToast('Thank you for your feedback!', 'success');
                 }
             } else {
                 const errorMsg = data.error || 'Failed to submit feedback';
                 setStatus(errorMsg, 'error');
                 if (typeof ToastNotifier !== 'undefined') {
-                    ToastNotifier.show(errorMsg, 'error');
+                    ToastNotifier.showToast(errorMsg, 'error');
                 }
             }
         } catch (error) {
@@ -259,7 +248,7 @@ const FeedbackManager = (() => {
             const errorMsg = 'Network error. Please try again.';
             setStatus(errorMsg, 'error');
             if (typeof ToastNotifier !== 'undefined') {
-                ToastNotifier.show(errorMsg, 'error');
+                ToastNotifier.showToast(errorMsg, 'error');
             }
         } finally {
             state.isSubmitting = false;

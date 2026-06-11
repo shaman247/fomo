@@ -9,7 +9,6 @@
  * - Settings modal for user preferences (theme, emoji font)
  * - Keyboard navigation (Escape key support)
  * - Click-outside-to-close behavior
- * - Accessibility features (focus management)
  *
  * @module ModalManager
  */
@@ -33,6 +32,33 @@ const ModalManager = (() => {
         locationToggle: null,
         locationStatus: null
     };
+
+    // ========================================
+    // SHARED DISMISS WIRING
+    // ========================================
+
+    /**
+     * Wires standard dismiss behavior onto a modal: click-to-close and
+     * Escape-to-close while the modal is shown.
+     * @param {HTMLElement} modal - The modal overlay element
+     * @param {Function} close - Closes the modal
+     * @param {Object} [options]
+     * @param {boolean} [options.closeOnAnyClick=false] - Close on any click on
+     *   the modal (including its content), not just the backdrop
+     */
+    function wireDismiss(modal, close, { closeOnAnyClick = false } = {}) {
+        modal.addEventListener('click', (e) => {
+            if (closeOnAnyClick || e.target === modal) {
+                close();
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal.classList.contains('show')) {
+                close();
+            }
+        });
+    }
 
     // ========================================
     // SETTINGS MODAL
@@ -90,18 +116,13 @@ const ModalManager = (() => {
             closeSettingsModal();
         });
 
-        // Close modal when clicking outside
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                closeSettingsModal();
-            }
-        });
+        // Close modal when clicking outside or on Escape
+        wireDismiss(modal, closeSettingsModal);
 
         // Handle emoji font change
         emojiFontRadios.forEach(radio => {
             radio.addEventListener('change', (e) => {
                 const emojiFont = e.target.value;
-                Utils.SafeStorage.setItem('emojiFont', emojiFont);
                 if (state.onEmojiFontChange) {
                     state.onEmojiFontChange(emojiFont);
                 }
@@ -112,7 +133,6 @@ const ModalManager = (() => {
         themeRadios.forEach(radio => {
             radio.addEventListener('change', (e) => {
                 const theme = e.target.value;
-                Utils.SafeStorage.setItem('theme', theme);
                 if (state.onThemeChange) {
                     state.onThemeChange(theme);
                 }
@@ -130,12 +150,6 @@ const ModalManager = (() => {
             });
         }
 
-        // Close modal on Escape key
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && modal.classList.contains('show')) {
-                closeSettingsModal();
-            }
-        });
     }
 
     /**
@@ -145,11 +159,6 @@ const ModalManager = (() => {
         const modal = state.settingsModal || document.getElementById('settings-modal');
         if (modal) {
             modal.classList.add('show');
-            // Focus the first input for accessibility
-            const firstInput = modal.querySelector('select');
-            if (firstInput) {
-                setTimeout(() => firstInput.focus(), 100);
-            }
         }
     }
 
@@ -198,17 +207,8 @@ const ModalManager = (() => {
 
         state.welcomeModal = modal;
 
-        // Close modal when clicking outside or anywhere on the modal
-        modal.addEventListener('click', () => {
-            closeWelcomeModal();
-        });
-
-        // Close modal on Escape key
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && modal.classList.contains('show')) {
-                closeWelcomeModal();
-            }
-        });
+        // Close modal when clicking anywhere on it, or on Escape
+        wireDismiss(modal, closeWelcomeModal, { closeOnAnyClick: true });
     }
 
     /**
@@ -254,17 +254,17 @@ const ModalManager = (() => {
     // ========================================
 
     return {
+        // Shared
+        wireDismiss,
+
         // Settings modal
         initSettingsModal,
         openSettingsModal,
-        closeSettingsModal,
         setLocationStatus,
         isLocationEnabled,
 
         // Welcome modal
         initWelcomeModal,
-        showWelcomeModalIfFirstVisit,
-        openWelcomeModal,
-        closeWelcomeModal
+        showWelcomeModalIfFirstVisit
     };
 })();

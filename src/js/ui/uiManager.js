@@ -2,10 +2,9 @@
  * UIManager Module
  *
  * Manages UI components and event listeners for the application.
- * Coordinates date picker, filter panel interactions, and popup content creation.
+ * Coordinates the date picker and logo menu interactions.
  *
  * Note: Modal and toast functionality has been extracted to ModalManager and ToastNotifier modules.
- * Note: Popup content creation is delegated to PopupContentBuilder module.
  *
  * @module UIManager
  */
@@ -287,53 +286,14 @@ const UIManager = (() => {
     }
 
     // ========================================
-    // POPUP CONTENT CREATION (delegated to PopupContentBuilder)
-    // ========================================
-
-    /**
-     * Creates popup content for a location marker
-     * Delegates to PopupContentBuilder for actual content creation
-     * @param {Object} locationInfo - Location information
-     * @param {Array} eventsAtLocation - Events at this location
-     * @param {Object} activeFilters - Active filter states
-     * @param {Set} geotagsSet - Set of geotags
-     * @param {Object} filterFunctions - Filter function callbacks
-     * @param {string|null} forceDisplayEventId - Event ID to force display
-     * @param {Date|null} selectedStartDate - Currently selected start date
-     * @returns {HTMLElement} Popup content container
-     */
-    function createLocationPopupContent(locationInfo, eventsAtLocation, activeFilters, geotagsSet, filterFunctions, forceDisplayEventId = null, selectedStartDate = null, previousActiveTab = null) {
-        return PopupContentBuilder.createLocationPopupContent(
-            locationInfo,
-            eventsAtLocation,
-            activeFilters,
-            geotagsSet,
-            filterFunctions,
-            forceDisplayEventId,
-            selectedStartDate,
-            previousActiveTab
-        );
-    }
-
-    // ========================================
     // EXPORTS
     // ========================================
 
     return {
         // Date picker
-        destroyDatePicker,
         initDatePicker,
-        resizeDatePickerInput,
-        updateDatePickerDisplay,
-        getPresetLabel,
 
         // Event listeners
-        initLogoMenu,
-
-        // Popup content (delegated to PopupContentBuilder)
-        createLocationPopupContent,
-        createPopupHeader: PopupContentBuilder.createPopupHeader,
-        createEventsList: PopupContentBuilder.createEventsList,
-        createEventDetail: PopupContentBuilder.createEventDetail
+        initLogoMenu
     };
 })();

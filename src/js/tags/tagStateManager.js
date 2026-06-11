@@ -46,9 +46,6 @@ const TagStateManager = (() => {
         // Callbacks
         onFilterChangeCallback: null,
 
-        // Configuration
-        defaultMarkerColor: null,
-
         // Emoji lookup (tagName -> emoji)
         tagEmojiMap: {}
     };
@@ -129,7 +126,7 @@ const TagStateManager = (() => {
     function updateTagVisuals(buttonElement, tagValue) {
         const tagState = state.tagStates[tagValue] || TAG_STATE.UNSELECTED;
         const tagColor = state.colorProvider && state.colorProvider.getTagColor ? state.colorProvider.getTagColor(tagValue) : null;
-        const colorToUse = tagColor || state.defaultMarkerColor;
+        const colorToUse = tagColor;
 
         buttonElement.className = 'tag-button';
         buttonElement.style.removeProperty('--chip-color');
@@ -170,16 +167,8 @@ const TagStateManager = (() => {
                 break;
         }
 
-        const emoji = state.tagEmojiMap[tagValue] || '';
         buttonElement.textContent = '';
-        if (emoji) {
-            const emojiSpan = document.createElement('span');
-            emojiSpan.className = 'chip-emoji';
-            emojiSpan.setAttribute('aria-hidden', 'true');
-            emojiSpan.textContent = emoji;
-            buttonElement.appendChild(emojiSpan);
-        }
-        buttonElement.appendChild(document.createTextNode(Utils.getTagDisplayName(tagValue)));
+        Utils.appendChipContent(buttonElement, state.tagEmojiMap[tagValue], tagValue);
     }
 
     // ========================================
@@ -239,12 +228,9 @@ const TagStateManager = (() => {
      * @param {string} tag - Tag name
      * @returns {HTMLElement} Tag button element
      */
-    function createTagElement(tag) {
+    function createInteractiveTagButton(tag) {
         return createTagButtonWithHandlers(tag, notifyFilterChange, notifyFilterChange);
     }
-
-    // Alias for backwards compatibility
-    const createInteractiveTagButton = createTagElement;
 
     /**
      * Creates a button for a search result (location, event, or tag)
@@ -347,16 +333,6 @@ const TagStateManager = (() => {
     }
 
     /**
-     * Selects multiple tags (sets them to SELECTED state)
-     * @param {Array<string>} tags - Tags to select
-     */
-    function selectTags(tags) {
-        tags.forEach(tag => {
-            setTagState(tag, TAG_STATE.SELECTED);
-        });
-    }
-
-    /**
      * Updates all tag button visuals
      * Used when colors are reassigned (e.g., theme change)
      */
@@ -383,13 +359,11 @@ const TagStateManager = (() => {
      * @param {Function} config.colorProvider.assignColorToTag - Assign color to tag
      * @param {Function} config.colorProvider.unassignColorFromTag - Unassign color from tag
      * @param {Function} config.onFilterChangeCallback - Callback when filters change
-     * @param {string} config.defaultMarkerColor - Default marker color
      */
     function init(config) {
         state.tagStates = config.tagStates;
         state.colorProvider = config.colorProvider || null;
         state.onFilterChangeCallback = config.onFilterChangeCallback;
-        state.defaultMarkerColor = config.defaultMarkerColor;
         state.tagEmojiMap = config.tagEmojiMap || {};
     }
 
@@ -410,7 +384,6 @@ const TagStateManager = (() => {
         init,
 
         // Button creation
-        createTagElement,
         createInteractiveTagButton,
         createSearchResultButton,
 
@@ -418,7 +391,6 @@ const TagStateManager = (() => {
         setTagState,
         getTagState,
         getTagStates,
-        selectTags,
         updateAllTagVisuals,
 
         // Constants

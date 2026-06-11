@@ -18,7 +18,7 @@ js/
 | Module | Description |
 |--------|-------------|
 | **constants.js** | Application-wide constants (eliminates magic numbers) |
-| **utils.js** | Utilities: HTML escaping, date formatting, debounce/throttle, SafeStorage |
+| **utils.js** | Utilities: HTML escaping, date formatting, debounce, SafeStorage |
 | **historyManager.js** | Browser history/URL state management |
 | **urlParams.js** | URL parameter parsing and updates |
 
@@ -43,7 +43,6 @@ js/
 | **searchController.js** | Handles search input UI, debouncing, special terms, mobile auto-expand |
 | **tagStateManager.js** | Manage tag filter states (uses `colorProvider`) |
 | **tagColorManager.js** | Assign colors to selected tags from theme palette |
-| **selectedTagsDisplay.js** | Retired no-op stub (init/reset/render empty); selected tags now live in the FilterPanelUI chip bar |
 | **sectionRenderer.js** | Render collapsible search result sections |
 
 ### UI (`ui/`)

@@ -40,7 +40,6 @@ The tag system provides advanced filtering and search capabilities with support 
 **Public API**:
 ```javascript
 TagColorManager.init({ darkPalette, lightPalette })
-TagColorManager.getSelectedTags() // Returns array of tag names
 TagColorManager.getSelectedTagsWithColors() // Returns [tag, color] tuples
 TagColorManager.assignColorToTag(tag)
 TagColorManager.unassignColorFromTag(tag)
@@ -57,25 +56,10 @@ TagColorManager.unassignColorFromTag(tag)
 
 **Public API**:
 ```javascript
-TagStateManager.init({ tagStates, colorProvider, onFilterChangeCallback, defaultMarkerColor })
+TagStateManager.init({ tagStates, colorProvider, onFilterChangeCallback, tagEmojiMap })
 TagStateManager.createInteractiveTagButton(tag)
 TagStateManager.setTagState(tag, state)
 TagStateManager.getTagState(tag)
-```
-
-#### `selectedTagsDisplay.js`
-**Purpose**: Manages the display of selected tags above the search input.
-
-> **Retired**: now a no-op stub — selected tags are shown in the FilterPanelUI chip bar.
-
-**Key Features**:
-- Displays selected tags as interactive pill buttons
-- Skips tags already shown as quick filter chips
-
-**Public API**:
-```javascript
-SelectedTagsDisplay.init({ containerDOM, quickFilterTags, getSelectedTagsWithColors, createInteractiveTagButton })
-SelectedTagsDisplay.render() // Re-render the display
 ```
 
 #### `searchManager.js`
@@ -281,7 +265,6 @@ TagColorManager.assignColorToTag() (if selected/required)
     |
 onFilterChangeCallback() triggers
     |
-App.updateSelectedTagsDisplay()
 App.filterAndDisplayEvents()
 ```
 

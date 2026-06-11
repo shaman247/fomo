@@ -360,7 +360,9 @@ const DataManager = (() => {
     }
 
     /**
-     * Processes event data into structured format
+     * Processes event data into structured format. Leaves eventsById
+     * untouched — processInitialData owns the (single) lookup build via
+     * applyCoordPerturbation's rebuildEventLookups.
      * @param {Array} eventData - Array of raw event objects
      * @param {Object} state - Application state
      * @param {Object} config - Application configuration
@@ -370,38 +372,23 @@ const DataManager = (() => {
         state.allEvents = eventData
             .map(rawEvent => transformRawEvent(rawEvent, state, config, isWindows))
             .filter(Boolean);
-
-        rebuildEventLookups(state);
     }
 
     /**
-     * Processes full dataset (events and locations)
-     * @param {Array} fullEventData - Array of all event objects
-     * @param {Array} fullLocationData - Array of all location objects
-     * @param {Object} state - Application state
-     * @param {Object} config - Application configuration
-     */
-    function processFullData(fullEventData, fullLocationData, state, config) {
-        // Accumulate new locations from the full set
-        addRawLocations(fullLocationData, state);
-
-        // Append new events from the full set
-        appendEventData(fullEventData, state, config);
-
-        // Re-key any venues that now collide onto distinct points
-        applyCoordPerturbation(state);
-    }
-
-    /**
-     * Async version of processFullData that yields to the main thread between
-     * event-processing chunks. Keeps clicks/typing responsive during the heavy
-     * Phase 2 merge (~30k events would otherwise block ~150ms uninterrupted).
+     * Processes the full dataset (events and locations), yielding to the main
+     * thread between event-processing chunks. Keeps clicks/typing responsive
+     * during the heavy Phase 2 merge (~30k events would otherwise block
+     * ~150ms uninterrupted).
      */
     async function processFullDataAsync(fullEventData, fullLocationData, state, config, onProgress) {
         addRawLocations(fullLocationData, state);
         await appendEventDataChunked(fullEventData, state, config, onProgress);
         // One re-key pass after the full merge so cross-chunk venue collisions
         // (a venue whose siblings only appear in a later chunk) are caught.
+        // INVARIANT: appendEventDataChunked leaves the event lookups stale
+        // (this rebuild owns them), and only a microtask boundary separates
+        // the two — user input can't interleave. Never insert a real yield
+        // (await _yieldToMain/setTimeout) between these calls.
         applyCoordPerturbation(state);
     }
 
@@ -447,34 +434,9 @@ const DataManager = (() => {
     }
 
     /**
-     * Appends new event data to existing events
-     * @param {Array} newEventData - Array of new event objects
-     * @param {Object} state - Application state
-     * @param {Object} config - Application configuration
-     */
-    function appendEventData(newEventData, state, config) {
-        const isWindows = Utils.isWindows();
-        const seen = state.eventsById || {};
-
-        const newEvents = [];
-        for (const rawEvent of newEventData) {
-            // Skip events already loaded — chunks overlap on multi-day events.
-            if (rawEvent && rawEvent.id != null && seen[rawEvent.id]) continue;
-            const ev = transformRawEvent(rawEvent, state, config, isWindows);
-            if (!ev) continue;
-            if (seen[ev.id]) continue;
-            seen[ev.id] = ev;
-            newEvents.push(ev);
-        }
-
-        state.allEvents.push(...newEvents);
-        appendToEventLookups(state, newEvents);
-    }
-
-    /**
-     * Async chunked version of appendEventData. Processes events in batches of
-     * EVENT_PROCESS_CHUNK_SIZE and yields to the main thread between chunks
-     * via setTimeout(0), so user interactions get frame boundaries to fire on.
+     * Appends new event data to existing events. Processes events in batches
+     * of EVENT_PROCESS_CHUNK_SIZE and yields to the main thread between chunks
+     * via _yieldToMain(), so user interactions get frame boundaries to fire on.
      */
     // Use scheduler.yield() when available (yields with input priority on modern Chrome),
     // otherwise MessageChannel.postMessage (sub-ms scheduling, vs setTimeout's 4ms min).
@@ -530,7 +492,9 @@ const DataManager = (() => {
         }
 
         state.allEvents.push(...newEvents);
-        appendToEventLookups(state, newEvents);
+        // No lookup update here: processFullDataAsync (the only caller)
+        // immediately rebuilds eventsById inside applyCoordPerturbation —
+        // appending first was a wasted O(n) pass on the blocking Phase-2 tail.
     }
 
     // ========================================
@@ -543,26 +507,19 @@ const DataManager = (() => {
      */
     function rebuildEventLookups(state) {
         state.eventsById = {};
-        state.eventsByLatLng = {};
         appendToEventLookups(state, state.allEvents);
     }
 
     /**
-     * Append-only update of event lookups. Phase 2 uses this instead of
-     * rebuilding from scratch — saves O(initEventCount) work each time the
-     * full dataset merges.
+     * Append-only keying of events into eventsById.
+     * The live load paths (processInitialData / processFullDataAsync) don't
+     * call this directly — each defers to the single rebuildEventLookups pass
+     * inside applyCoordPerturbation.
      */
     function appendToEventLookups(state, eventsToAdd) {
         if (!state.eventsById) state.eventsById = {};
-        if (!state.eventsByLatLng) state.eventsByLatLng = {};
         for (const event of eventsToAdd) {
             state.eventsById[event.id] = event;
-            if (event.locationKey) {
-                if (!state.eventsByLatLng[event.locationKey]) {
-                    state.eventsByLatLng[event.locationKey] = [];
-                }
-                state.eventsByLatLng[event.locationKey].push(event);
-            }
         }
     }
 
@@ -726,14 +683,13 @@ const DataManager = (() => {
     /**
      * Builds hierarchy lookup maps from the exported tag_hierarchy.json data.
      * @param {Object} data - { tags: [...], keywords: [...] }
-     * @returns {Object} { childrenOf, parentsOf, descendantsOf, quickFilters, hierarchyTagsSet, tagEmojiMap }
+     * @returns {Object} { childrenOf, parentsOf, descendantsOf, hierarchyTagsSet, tagEmojiMap }
      */
     function buildTagHierarchyMaps(data) {
         const tags = data.tags || [];
 
         const childrenOf = {};   // parent -> [children]
         const parentsOf = {};    // child -> [parents]
-        const quickFilters = []; // [{name, emoji, order}]
         const tagEmojiMap = {};  // tagName -> emoji
         // Set of all curated tag names (tags NOT in this set are keywords)
         const hierarchyTagsSet = new Set();
@@ -754,17 +710,7 @@ const DataManager = (() => {
                     childrenOf[parent].push(tag.name);
                 });
             }
-            if (tag.quickFilter) {
-                quickFilters.push({
-                    name: tag.name,
-                    emoji: emoji || '',
-                    order: tag.order || 999
-                });
-            }
         });
-
-        // Sort quick filters by order
-        quickFilters.sort((a, b) => a.order - b.order);
 
         // Compute transitive descendants via BFS
         const descendantsOf = {};
@@ -783,7 +729,7 @@ const DataManager = (() => {
             descendantsOf[parent] = descendants;
         });
 
-        return { childrenOf, parentsOf, descendantsOf, quickFilters, hierarchyTagsSet, tagEmojiMap };
+        return { childrenOf, parentsOf, descendantsOf, hierarchyTagsSet, tagEmojiMap };
     }
 
     /**
@@ -836,15 +782,8 @@ const DataManager = (() => {
      * @param {Object} state - Application state (will be modified)
      */
     function groupEventsByLatLngInDateRange(state) {
-        state.eventsByLatLngInDateRange = {};
-        state.allEventsFilteredByDateAndLocation.forEach(event => {
-            if (event.locationKey) {
-                if (!state.eventsByLatLngInDateRange[event.locationKey]) {
-                    state.eventsByLatLngInDateRange[event.locationKey] = [];
-                }
-                state.eventsByLatLngInDateRange[event.locationKey].push(event);
-            }
-        });
+        state.eventsByLatLngInDateRange =
+            FilterManager.groupEventsByLocation(state.allEventsFilteredByDateAndLocation);
     }
 
     // ========================================
@@ -853,16 +792,9 @@ const DataManager = (() => {
 
     return {
         fetchData,
-        processLocationData,
         processInitialData,
-        processEventData,
-        processFullData,
         processFullDataAsync,
-        parseOccurrences,
-        isEventInAppDateRange,
-        appendEventData,
         applyDescriptions,
-        rebuildEventLookups,
         buildSearchIndex,
         buildSearchIndexAsync,
         buildTagIndex,

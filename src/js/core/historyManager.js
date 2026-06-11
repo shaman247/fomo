@@ -32,16 +32,17 @@ const HistoryManager = (() => {
             Object.entries(cb.getTagStates()).filter(([, s]) => s !== 'unselected')
         );
 
-        // Dates: convert to ISO strings
+        // Dates: convert to local YYYY-MM-DD strings (toISOString would shift
+        // to the next day in any timezone west of UTC for evening captures)
         const rawDates = cb.getSelectedDates();
-        const dates = rawDates.map(d => d instanceof Date ? d.toISOString().split('T')[0] : '');
+        const dates = rawDates.map(d => d instanceof Date ? URLParams.formatDate(d) : '');
 
         // Sheet (mobile only — desktop open state persists via localStorage,
         // and back/forward shouldn't toggle a docked panel)
         let sheet = { mode: 'closed', snap: 0 };
         if (Sheet.isDetailMode()) {
             sheet = { mode: 'detail', snap: Sheet.getCurrentSnap() };
-        } else if (window.innerWidth <= Constants.UI.MOBILE_BREAKPOINT && Sheet.isOpen()) {
+        } else if (Utils.isMobileLayout() && Sheet.isOpen()) {
             sheet = { mode: 'browse', snap: Sheet.getCurrentSnap() };
         }
 
@@ -114,17 +115,6 @@ const HistoryManager = (() => {
         window.history.pushState(newState, '');
     }
 
-    /**
-     * Suppress pushes during fn(). Use when a single user action triggers
-     * multiple events that each call push() — wrapping the intermediate steps
-     * in batch() ensures only the final push captures the settled state.
-     */
-    function batch(fn) {
-        const was = state.isRestoringState;
-        state.isRestoringState = true;
-        try { fn(); } finally { state.isRestoringState = was; }
-    }
-
     // ========================================
     // RESTORE
     // ========================================
@@ -179,12 +169,18 @@ const HistoryManager = (() => {
                 const currentDates = datePicker.selectedDates;
                 const savedStart = savedDates[0];
                 const savedEnd = savedDates[1];
-                const currentStart = currentDates[0] ? currentDates[0].toISOString().split('T')[0] : '';
-                const currentEnd = currentDates[1] ? currentDates[1].toISOString().split('T')[0] : '';
+                const currentStart = currentDates[0] ? URLParams.formatDate(currentDates[0]) : '';
+                const currentEnd = currentDates[1] ? URLParams.formatDate(currentDates[1]) : '';
 
                 if (savedStart !== currentStart || savedEnd !== currentEnd) {
-                    datePicker.setDate(savedDates);
-                    datesChanged = true;
+                    // setDate needs Date objects: flatpickr parses string args
+                    // with its display format ("M j"), so YYYY-MM-DD strings
+                    // would fail to parse and clear the selection
+                    const parsed = savedDates.slice(0, 2).map(s => URLParams.parseDate(s).date);
+                    if (parsed.every(Boolean)) {
+                        datePicker.setDate(parsed);
+                        datesChanged = true;
+                    }
                 }
             }
         }
@@ -205,15 +201,15 @@ const HistoryManager = (() => {
         if (historyState.selectedLocationKey) {
             if (currentKey !== historyState.selectedLocationKey) {
                 if (currentKey) _closeCurrentPopup();
-                const [lat, lng] = historyState.selectedLocationKey.split(',').map(Number);
-                MarkerController.flyToLocationAndOpenPopup(lat, lng, null);
+                const ll = Utils.parseLocationKey(historyState.selectedLocationKey);
+                if (ll) MarkerController.flyToLocationAndOpenPopup(ll.lat, ll.lng, null);
             }
         } else if (currentKey) {
             _closeCurrentPopup();
         }
 
         // 7. Sheet (mobile; legacy entries stored it under `bottomSheet`)
-        const isMobile = window.innerWidth <= Constants.UI.MOBILE_BREAKPOINT;
+        const isMobile = Utils.isMobileLayout();
         if (isMobile) {
             const s = historyState.sheet || historyState.bottomSheet || { mode: 'closed', snap: 0 };
 
@@ -269,7 +265,6 @@ const HistoryManager = (() => {
     return {
         init,
         push,
-        batch,
         isRestoring
     };
 })();

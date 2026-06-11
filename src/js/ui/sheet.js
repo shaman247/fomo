@@ -54,7 +54,6 @@ const Sheet = (() => {
         // DOM (static markup in index.html)
         sheet: null,        // #sheet
         dragArea: null,     // .sheet-drag-area (mobile grip)
-        contentEl: null,    // .sheet-content
         browseEl: null,     // #tags-wrapper
         detailEl: null,     // .sheet-detail
         edgeHandle: null,   // #sheet-handle (desktop "Show list" button)
@@ -91,10 +90,7 @@ const Sheet = (() => {
     // ========================================
 
     function isDesktop() {
-        const bp = (typeof Constants !== 'undefined' && Constants.UI && Constants.UI.MOBILE_BREAKPOINT)
-            ? Constants.UI.MOBILE_BREAKPOINT
-            : 768;
-        return window.innerWidth > bp;
+        return !Utils.isMobileLayout();
     }
 
     /** Notify the content layer that the browse content newly became visible. */
@@ -136,15 +132,11 @@ const Sheet = (() => {
     }
 
     function _persist() {
-        try {
-            localStorage.setItem(STORAGE_KEY_OPEN, state.desktopOpen ? '1' : '0');
-        } catch (e) { /* private mode / disabled storage — non-fatal */ }
+        Utils.SafeStorage.setItem(STORAGE_KEY_OPEN, state.desktopOpen ? '1' : '0');
     }
 
     function _restore() {
-        try {
-            state.desktopOpen = localStorage.getItem(STORAGE_KEY_OPEN) === '1';
-        } catch (e) { /* default (collapsed) stands */ }
+        state.desktopOpen = Utils.SafeStorage.getItem(STORAGE_KEY_OPEN) === '1';
     }
 
     function _setDesktopOpen(v) {
@@ -448,16 +440,6 @@ const Sheet = (() => {
         }
     }
 
-    function toggle() {
-        if (isDesktop()) {
-            _setDesktopOpen(!state.desktopOpen);
-        } else if (state.currentSnap > 0) {
-            _clearAndClose(true);
-        } else {
-            _snapTo(SNAP_PEEK);
-        }
-    }
-
     function isOpen() {
         return isDesktop() ? state.desktopOpen : state.currentSnap > 0;
     }
@@ -537,7 +519,6 @@ const Sheet = (() => {
         state.sheet = document.getElementById('sheet');
         if (!state.sheet) return;
         state.dragArea = state.sheet.querySelector('.sheet-drag-area');
-        state.contentEl = state.sheet.querySelector('.sheet-content');
         state.browseEl = document.getElementById('tags-wrapper');
         state.detailEl = state.sheet.querySelector('.sheet-detail');
         state.edgeHandle = document.getElementById('sheet-handle');
@@ -581,7 +562,6 @@ const Sheet = (() => {
         open,
         close,
         dismissToMini,
-        toggle,
         isOpen,
         isBrowseVisible,
         isDetailMode,
@@ -592,6 +572,5 @@ const Sheet = (() => {
         getCurrentLocationKey: () => state.activeLocationKey,
         measureTopOffset: _measureTopOffset,
         SNAP_PEEK,
-        SNAP_FULL,
     };
 })();

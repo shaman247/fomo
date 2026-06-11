@@ -26,9 +26,6 @@ const ThemeManager = (() => {
         appState: null,
         config: null,
 
-        // Current theme ('dark' or 'light')
-        currentTheme: 'dark',
-
         // Callbacks (injected during init)
         onThemeChange: null
     };
@@ -39,30 +36,16 @@ const ThemeManager = (() => {
 
     /**
      * Sets the theme for the application
-     * Updates DOM attribute, localStorage, and optionally updates icon visibility
+     * Updates DOM attribute and localStorage
      *
      * @param {string} theme - Theme to apply ('dark' or 'light')
-     * @param {HTMLElement} [moonIcon=null] - Optional moon icon element to toggle
-     * @param {HTMLElement} [sunIcon=null] - Optional sun icon element to toggle
      */
-    function setTheme(theme, moonIcon = null, sunIcon = null) {
+    function setTheme(theme) {
         const root = document.documentElement;
         root.setAttribute('data-theme', theme);
-        state.currentTheme = theme;
-
-        // Update icon visibility if icons provided
-        if (moonIcon && sunIcon) {
-            if (theme === 'light') {
-                moonIcon.style.display = 'none';
-                sunIcon.style.display = 'block';
-            } else {
-                moonIcon.style.display = 'block';
-                sunIcon.style.display = 'none';
-            }
-        }
 
         // Save theme preference to localStorage
-        localStorage.setItem('theme', theme);
+        Utils.SafeStorage.setItem('theme', theme);
     }
 
     /**
@@ -73,7 +56,7 @@ const ThemeManager = (() => {
      */
     function applyThemeChange(theme) {
         // Update theme in DOM and localStorage
-        setTheme(theme, null, null);
+        setTheme(theme);
 
         // Update MapLibre style based on theme
         if (state.appState && state.appState.map) {
@@ -95,8 +78,8 @@ const ThemeManager = (() => {
      * Should be called during app startup before map initialization
      */
     function initTheme() {
-        const savedTheme = localStorage.getItem('theme') || 'dark';
-        setTheme(savedTheme, null, null);
+        const savedTheme = Utils.SafeStorage.getItem('theme') || 'dark';
+        setTheme(savedTheme);
     }
 
     /**
@@ -121,24 +104,7 @@ const ThemeManager = (() => {
      * @returns {string} Current theme ('dark' or 'light')
      */
     function getCurrentTheme() {
-        // Always read from DOM as source of truth
-        return document.documentElement.getAttribute('data-theme') || 'dark';
-    }
-
-    /**
-     * Checks if dark theme is currently active
-     * @returns {boolean} True if dark theme is active
-     */
-    function isDarkTheme() {
-        return getCurrentTheme() === 'dark';
-    }
-
-    /**
-     * Checks if light theme is currently active
-     * @returns {boolean} True if light theme is active
-     */
-    function isLightTheme() {
-        return getCurrentTheme() === 'light';
+        return Utils.getCurrentTheme();
     }
 
     // ========================================
@@ -149,7 +115,7 @@ const ThemeManager = (() => {
      * Initializes the ThemeManager module
      * @param {Object} config - Configuration object
      * @param {Object} config.appState - Reference to app state
-     * @param {Object} config.config - App configuration with MAP_TILE_URL_DARK and MAP_TILE_URL_LIGHT
+     * @param {Object} config.config - App configuration with MAP_STYLE_DARK and MAP_STYLE_LIGHT
      * @param {Function} [config.onThemeChange] - Optional callback when theme changes
      */
     function init(config) {
@@ -168,13 +134,10 @@ const ThemeManager = (() => {
         initTheme,
 
         // Theme management
-        setTheme,
         applyThemeChange,
         getStyleUrlForCurrentTheme,
 
         // Query functions
-        getCurrentTheme,
-        isDarkTheme,
-        isLightTheme
+        getCurrentTheme
     };
 })();

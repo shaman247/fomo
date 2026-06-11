@@ -44,7 +44,7 @@ const TagColorManager = (() => {
      * @returns {string} 'dark' or 'light'
      */
     function getCurrentTheme() {
-        return document.documentElement.getAttribute('data-theme') || 'dark';
+        return Utils.getCurrentTheme();
     }
 
     /**
@@ -76,11 +76,13 @@ const TagColorManager = (() => {
     }
 
     /**
-     * Returns the font-family string for the emoji font currently in use, matching
-     * what the map renders glyphs with (MapManager._addEmojiImage). When the user
-     * switches to Noto, the body gets the `use-noto-emoji` class; otherwise the
-     * platform/system emoji font (via `serif` fallback) is used. Keeping extraction
-     * on the same font as the rendered glyph ensures the derived color matches it.
+     * Returns the font-family string for the emoji font currently in use — the
+     * single source of truth for emoji font resolution, also consumed by
+     * MapManager._addEmojiImage when rendering map glyphs. When the user switches
+     * to Noto, the body gets the `use-noto-emoji` class; otherwise the
+     * platform/system emoji font (via `serif` fallback) is used. Sharing one
+     * resolver keeps color extraction on the same font as the rendered glyph,
+     * so the derived color matches it.
      * @returns {string} CSS font-family
      */
     function getActiveEmojiFont() {
@@ -296,24 +298,9 @@ const TagColorManager = (() => {
         });
     }
 
-    /**
-     * Clears all color assignments
-     */
-    function clearAll() {
-        state.selectedTagsWithColors = [];
-    }
-
     // ========================================
     // QUERY FUNCTIONS
     // ========================================
-
-    /**
-     * Gets all selected tags in selection order
-     * @returns {Array<string>} Array of tag names
-     */
-    function getSelectedTags() {
-        return state.selectedTagsWithColors.map(([tag]) => tag);
-    }
 
     /**
      * Gets all tags with their colors
@@ -321,40 +308,6 @@ const TagColorManager = (() => {
      */
     function getSelectedTagsWithColors() {
         return [...state.selectedTagsWithColors];
-    }
-
-    /**
-     * Gets the number of selected tags
-     * @returns {number} Count of selected tags
-     */
-    function getSelectedTagCount() {
-        return state.selectedTagsWithColors.length;
-    }
-
-    /**
-     * Checks if a tag is selected
-     * @param {string} tag - Tag name
-     * @returns {boolean} True if tag is selected
-     */
-    function isTagSelected(tag) {
-        return state.selectedTagsWithColors.some(([t]) => t === tag);
-    }
-
-    /**
-     * Gets color statistics for debugging/monitoring
-     * @returns {Object} Object with color usage stats
-     */
-    function getColorStats() {
-        const palette = getCurrentPalette();
-        const usedColors = getUsedColors();
-
-        return {
-            theme: getCurrentTheme(),
-            paletteSize: palette.length,
-            tagCount: state.selectedTagsWithColors.length,
-            uniqueColorsUsed: usedColors.size,
-            allColorsUsed: usedColors.size >= palette.length
-        };
     }
 
     // ========================================
@@ -378,13 +331,6 @@ const TagColorManager = (() => {
         state.selectedTagsWithColors = [];
     }
 
-    /**
-     * Resets the manager to initial state
-     */
-    function reset() {
-        state.selectedTagsWithColors = [];
-    }
-
     // ========================================
     // EXPORTS
     // ========================================
@@ -392,7 +338,6 @@ const TagColorManager = (() => {
     return {
         // Initialization
         init,
-        reset,
 
         // Color management
         getColorForEmoji,
@@ -400,17 +345,11 @@ const TagColorManager = (() => {
         assignColorToTag,
         unassignColorFromTag,
         reassignTagColors,
-        clearAll,
 
         // Query functions
-        getSelectedTags,
         getSelectedTagsWithColors,
-        getSelectedTagCount,
-        isTagSelected,
-        getColorStats,
 
-        // Utility (exposed for testing/debugging)
-        getCurrentTheme,
-        getCurrentPalette
+        // Emoji font resolution (single source — consumed by MapManager._addEmojiImage)
+        getActiveEmojiFont
     };
 })();

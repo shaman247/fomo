@@ -12,14 +12,6 @@ const SearchManager = (() => {
     // ========================================
 
     /**
-     * Time constants for temporal scoring
-     */
-    const TIME_CONSTANTS = {
-        FIVE_DAYS_MS: 5 * 24 * 60 * 60 * 1000,
-        THIRTY_DAYS_MS: 30 * 24 * 60 * 60 * 1000
-    };
-
-    /**
      * Scoring weights for different match types
      */
     const SCORE_WEIGHTS = {
@@ -27,16 +19,9 @@ const SearchManager = (() => {
         MULTI_TAG_MATCH: 3,        // Points per matched tag (when 2+ tags selected)
         VISIBILITY_BOOST: 5,       // Boost for currently visible items
         MAX_PROXIMITY_BONUS: 5,    // Max points for proximity to map center
-        MAX_TEMPORAL_BONUS: 5,     // Max points for temporal proximity to selected date
         EXACT_TAG_MATCH: 1000,     // Large boost for exact tag matches
-        VISIBLE_TAG_MULTIPLIER: 5  // Multiplier for visible tag frequency
-    };
-
-    /**
-     * Distance thresholds for proximity scoring
-     */
-    const DISTANCE_THRESHOLDS = {
-        LOCATION_MAX_DISTANCE: 20000  // 20km in meters
+        VISIBLE_TAG_MULTIPLIER: 5, // Multiplier for visible tag frequency
+        GLOBAL_FREQ_TIEBREAKER: 0.01 // Global tag frequency tiebreaker
     };
 
     // ========================================
@@ -64,18 +49,6 @@ const SearchManager = (() => {
      */
     function calculateProximityBonus(distance, maxBonus, maxDistance) {
         return Math.max(0, maxBonus * (1 - distance / maxDistance));
-    }
-
-    /**
-     * Calculates temporal bonus based on event timing relative to reference date
-     * Currently disabled - returns 0. Kept for potential future use.
-     * @param {Object} _event - Event object with occurrences (unused)
-     * @param {number} _referenceDate - Reference timestamp (unused)
-     * @returns {number} Always returns 0
-     */
-    function calculateTemporalBonus(_event, _referenceDate) {
-        // Temporal scoring is currently disabled
-        return 0;
     }
 
     /**
@@ -108,7 +81,7 @@ const SearchManager = (() => {
         }
 
         const distance = state.appState.locationDistances[key] || 0;
-        score += calculateProximityBonus(distance, SCORE_WEIGHTS.MAX_PROXIMITY_BONUS, DISTANCE_THRESHOLDS.LOCATION_MAX_DISTANCE);
+        score += calculateProximityBonus(distance, SCORE_WEIGHTS.MAX_PROXIMITY_BONUS, Constants.DISTANCE.MAX_PROXIMITY_METERS);
 
         if (isVisible) {
             score += SCORE_WEIGHTS.VISIBILITY_BOOST;
@@ -125,7 +98,7 @@ const SearchManager = (() => {
     }
 
     function searchLocations(term, selectedTags, matchingLocationKeys, visibleLocationKeys) {
-        const results = new Map();
+        const results = [];
         const hasSearchTerm = term.length > 0;
 
         if (hasSearchTerm) {
@@ -137,7 +110,7 @@ const SearchManager = (() => {
                     const location = state.appState.locationsByLatLng[key];
                     const isVisible = visibleLocationKeys.has(key);
                     const isMatching = matchingLocationKeys.has(key);
-                    results.set(`location-${key}`, scoreLocation(key, location, isVisible, isMatching, selectedTags));
+                    results.push(scoreLocation(key, location, isVisible, isMatching, selectedTags));
                 }
             }
         } else {
@@ -148,7 +121,7 @@ const SearchManager = (() => {
             for (const key of visibleLocationKeys) {
                 const location = state.appState.locationsByLatLng[key];
                 if (location) {
-                    results.set(`location-${key}`, scoreLocation(key, location, true, matchingLocationKeys.has(key), selectedTags));
+                    results.push(scoreLocation(key, location, true, matchingLocationKeys.has(key), selectedTags));
                 }
             }
 
@@ -159,7 +132,7 @@ const SearchManager = (() => {
                 if (visibleLocationKeys.has(key)) continue;
                 const location = state.appState.locationsByLatLng[key];
                 if (location) {
-                    results.set(`location-${key}`, scoreLocation(key, location, false, true, selectedTags));
+                    results.push(scoreLocation(key, location, false, true, selectedTags));
                     hiddenCount++;
                 }
             }
@@ -174,8 +147,7 @@ const SearchManager = (() => {
      * @param {Map} selectedTags - Map of tag -> weight
      * @param {Set} matchingEventIds - Set of event IDs matching current filters
      * @param {Set} visibleEventIds - Set of currently visible event IDs
-     * @param {number} referenceDate - Reference date for temporal scoring
-     * @returns {Map} Map of event results
+     * @returns {Array} Array of event results
      */
     /**
      * Scores an event and creates a result object
@@ -183,10 +155,9 @@ const SearchManager = (() => {
      * @param {boolean} isVisible - Whether event is in viewport
      * @param {boolean} isMatching - Whether event matches current filters
      * @param {Map} selectedTags - Map of tag -> weight
-     * @param {number} referenceDate - Reference date for temporal scoring
      * @returns {Object} Result object
      */
-    function scoreEvent(event, isVisible, isMatching, selectedTags, referenceDate) {
+    function scoreEvent(event, isVisible, isMatching, selectedTags) {
         let score = 1;
 
         if (isMatching) {
@@ -201,10 +172,8 @@ const SearchManager = (() => {
 
         if (event.locationKey) {
             const distance = state.appState.locationDistances[event.locationKey] || 0;
-            score += calculateProximityBonus(distance, SCORE_WEIGHTS.MAX_PROXIMITY_BONUS, DISTANCE_THRESHOLDS.LOCATION_MAX_DISTANCE);
+            score += calculateProximityBonus(distance, SCORE_WEIGHTS.MAX_PROXIMITY_BONUS, Constants.DISTANCE.MAX_PROXIMITY_METERS);
         }
-
-        score += calculateTemporalBonus(event, referenceDate);
 
         if (isVisible) {
             score += SCORE_WEIGHTS.VISIBILITY_BOOST;
@@ -227,8 +196,8 @@ const SearchManager = (() => {
         };
     }
 
-    function searchEvents(term, selectedTags, matchingEventIds, visibleEventIds, referenceDate) {
-        const results = new Map();
+    function searchEvents(term, selectedTags, matchingEventIds, visibleEventIds) {
+        const results = [];
         const hasSearchTerm = term.length > 0;
 
         if (hasSearchTerm) {
@@ -239,7 +208,7 @@ const SearchManager = (() => {
                 if (normalizedText.includes(term)) {
                     const isVisible = visibleEventIds.has(event.id);
                     const isMatching = matchingEventIds.has(event.id);
-                    results.set(`event-${event.id}`, scoreEvent(event, isVisible, isMatching, selectedTags, referenceDate));
+                    results.push(scoreEvent(event, isVisible, isMatching, selectedTags));
                 }
             });
         } else {
@@ -252,7 +221,7 @@ const SearchManager = (() => {
 
             // All visible matching events
             for (const event of visibleEvents) {
-                results.set(`event-${event.id}`, scoreEvent(event, true, true, selectedTags, referenceDate));
+                results.push(scoreEvent(event, true, true, selectedTags));
             }
 
             // Limited hidden (matching but not visible) events
@@ -260,7 +229,7 @@ const SearchManager = (() => {
             for (const event of matchingEvents) {
                 if (hiddenCount >= HIDDEN_LIMIT) break;
                 if (visibleIds.has(event.id)) continue;
-                results.set(`event-${event.id}`, scoreEvent(event, false, true, selectedTags, referenceDate));
+                results.push(scoreEvent(event, false, true, selectedTags));
                 hiddenCount++;
             }
         }
@@ -269,13 +238,44 @@ const SearchManager = (() => {
     }
 
     /**
+     * Scores a single tag's relevance signal. Shared by searchTags, the chip
+     * bar, and the descendant dropdown (FilterPanelUI) so tuning SCORE_WEIGHTS
+     * keeps all three rankings in sync.
+     * @param {Object} signal
+     * @param {number} signal.dynamicFreq - Dynamic (filter-scoped) tag frequency
+     * @param {number} signal.visibleFreq - Proximity-weighted visible tag frequency
+     * @param {number} signal.globalFreq - Global tag frequency (tiebreaker)
+     * @param {boolean} signal.isExactMatch - Search term exactly matches the tag
+     * @returns {number} Relevance score
+     */
+    function scoreTagSignal({ dynamicFreq, visibleFreq, globalFreq, isExactMatch }) {
+        let score = dynamicFreq;
+
+        // Boost score significantly for exact matches
+        if (isExactMatch) {
+            score += SCORE_WEIGHTS.EXACT_TAG_MATCH;
+        }
+
+        // Add proximity-weighted score for visible tags
+        if (visibleFreq > 0) {
+            score += visibleFreq * SCORE_WEIGHTS.VISIBLE_TAG_MULTIPLIER;
+            score += SCORE_WEIGHTS.VISIBILITY_BOOST;
+        }
+
+        // Add global frequency tiebreaker
+        score += globalFreq * SCORE_WEIGHTS.GLOBAL_FREQ_TIEBREAKER;
+
+        return score;
+    }
+
+    /**
      * Searches tags based on the search term and current filters
      * @param {string} term - Search term (already normalized)
      * @param {Object} dynamicFrequencies - Current dynamic tag frequencies
-     * @returns {Map} Map of tag results
+     * @returns {Array} Array of tag results
      */
     function searchTags(term, dynamicFrequencies) {
-        const results = new Map();
+        const results = [];
         const searchIndex = state.appState.searchIndex;
 
         // Empty term: skip geotags via precomputed list. Term: keep all hierarchy tags.
@@ -288,31 +288,20 @@ const SearchManager = (() => {
             // Use normalized index for matching
             const normalizedTag = searchIndex?.tags?.get(tag) || tag.toLowerCase();
             if (normalizedTag.includes(term)) {
-                const isVisible = state.appState.visibleTagFrequencies[tag] > 0;
+                const visibleFreq = state.appState.visibleTagFrequencies[tag] || 0;
 
-                let score = dynamicFrequencies[tag] || 0;
+                const score = scoreTagSignal({
+                    dynamicFreq: dynamicFrequencies[tag] || 0,
+                    visibleFreq,
+                    globalFreq: state.appState.tagFrequencies[tag] || 0,
+                    isExactMatch: normalizedTag === term
+                });
 
-                // Boost score significantly for exact matches
-                if (normalizedTag === term) {
-                    score += SCORE_WEIGHTS.EXACT_TAG_MATCH;
-                }
-
-                // Add proximity-weighted score for visible tags
-                if (isVisible) {
-                    score += state.appState.visibleTagFrequencies[tag] * SCORE_WEIGHTS.VISIBLE_TAG_MULTIPLIER;
-                    score += SCORE_WEIGHTS.VISIBILITY_BOOST;
-                }
-
-                // Add global frequency tiebreaker
-                const globalFreq = state.appState.tagFrequencies[tag] || 0;
-                score += globalFreq * 0.01;
-
-                const resultKey = `tag-${tag}`;
-                results.set(resultKey, {
+                results.push({
                     type: 'tag',
                     ref: tag,
                     score: score,
-                    isVisible: isVisible
+                    isVisible: visibleFreq > 0
                 });
             }
         });
@@ -323,10 +312,10 @@ const SearchManager = (() => {
     /**
      * Searches organizers based on the search term
      * @param {string} term - Search term (already normalized)
-     * @returns {Map} Map of organizer results
+     * @returns {Array} Array of organizer results
      */
     function searchOrganizers(term) {
-        const results = new Map();
+        const results = [];
         if (!term || !state.appState.organizersById) return results;
 
         const searchIndex = state.appState.searchIndex;
@@ -354,7 +343,7 @@ const SearchManager = (() => {
                 score += SCORE_WEIGHTS.EXACT_TAG_MATCH;
             }
 
-            results.set(`organizer-${id}`, {
+            results.push({
                 type: 'organizer',
                 ref: id,
                 displayName: org.name,
@@ -388,20 +377,14 @@ const SearchManager = (() => {
         const matchingEventIds = hasSearchTerm ? new Set(state.appState.currentlyMatchingEvents.map(e => e.id)) : null;
         const visibleEventIds = hasSearchTerm ? new Set(state.appState.currentlyVisibleMatchingEvents.map(e => e.id)) : null;
 
-        // Get reference date for temporal scoring
-        const selectedDates = state.appState.datePickerInstance?.selectedDates || [];
-        const referenceDate = selectedDates.length > 0 ? selectedDates[0].getTime() : 0;
-
         // Perform searches
         const locationResults = searchLocations(term, selectedTags, matchingLocationKeys, visibleLocationKeys);
-        const eventResults = searchEvents(term, selectedTags, matchingEventIds, visibleEventIds, referenceDate);
+        const eventResults = searchEvents(term, selectedTags, matchingEventIds, visibleEventIds);
         const tagResults = searchTags(term, dynamicFrequencies);
         const organizerResults = searchOrganizers(term);
 
-        // Combine all results
-        const allResults = new Map([...locationResults, ...eventResults, ...tagResults, ...organizerResults]);
-
-        return Array.from(allResults.values());
+        // Combine all results (each search yields unique items, so no dedup is needed)
+        return [...locationResults, ...eventResults, ...tagResults, ...organizerResults];
     }
 
     // ========================================
@@ -512,10 +495,6 @@ const SearchManager = (() => {
         init,
         search,
         groupAndSortResults,
-
-        // Export constants for testing/configuration
-        SCORE_WEIGHTS,
-        TIME_CONSTANTS,
-        DISTANCE_THRESHOLDS
+        scoreTagSignal
     };
 })();

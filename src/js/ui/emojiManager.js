@@ -24,10 +24,7 @@ const EmojiManager = (() => {
      */
     const state = {
         // App state reference (injected during init)
-        appState: null,
-
-        // Current emoji font ('system' or 'noto')
-        currentFont: 'system'
+        appState: null
     };
 
     // ========================================
@@ -45,7 +42,6 @@ const EmojiManager = (() => {
         if (emojiFont === 'noto') {
             // Apply the class immediately (non-blocking)
             document.body.classList.add('use-noto-emoji');
-            state.currentFont = 'noto';
 
             // Show loading status
             if (statusElement) {
@@ -99,7 +95,6 @@ const EmojiManager = (() => {
         } else {
             // Remove Noto emoji class to use system default
             document.body.classList.remove('use-noto-emoji');
-            state.currentFont = 'system';
 
             // Force re-render to apply system emoji
             forceEmojiRerender();
@@ -112,7 +107,7 @@ const EmojiManager = (() => {
         }
 
         // Save preference to localStorage
-        localStorage.setItem('emojiFont', emojiFont);
+        Utils.SafeStorage.setItem('emojiFont', emojiFont);
     }
 
     /**
@@ -121,9 +116,9 @@ const EmojiManager = (() => {
      */
     function initEmojiFont() {
         // Reset to system on unsupported browsers (Safari doesn't support COLRv1)
-        const savedEmojiFont = localStorage.getItem('emojiFont') || 'system';
+        const savedEmojiFont = Utils.SafeStorage.getItem('emojiFont') || 'system';
         if (savedEmojiFont === 'noto' && !isNotoSupported()) {
-            localStorage.setItem('emojiFont', 'system');
+            Utils.SafeStorage.setItem('emojiFont', 'system');
             applyEmojiFont('system');
         } else {
             applyEmojiFont(savedEmojiFont);
@@ -180,22 +175,6 @@ const EmojiManager = (() => {
         return !(ua.includes('Safari') && !ua.includes('Chrome'));
     }
 
-    /**
-     * Gets the current emoji font
-     * @returns {string} Current font ('system' or 'noto')
-     */
-    function getCurrentFont() {
-        return state.currentFont;
-    }
-
-    /**
-     * Checks if Noto emoji font is currently active
-     * @returns {boolean} True if Noto font is active
-     */
-    function isNotoFontActive() {
-        return state.currentFont === 'noto';
-    }
-
     // ========================================
     // PUBLIC API
     // ========================================
@@ -221,13 +200,7 @@ const EmojiManager = (() => {
         // Font management
         applyEmojiFont,
 
-        // Re-rendering
-        forceEmojiRerender,
-        refreshMapMarkers,
-
         // Query functions
-        isNotoSupported,
-        getCurrentFont,
-        isNotoFontActive
+        isNotoSupported
     };
 })();

@@ -33,6 +33,11 @@ const SectionRenderer = (() => {
         }
     };
 
+    /**
+     * Maximum items rendered per section (visible + hidden combined)
+     */
+    const SECTION_ITEM_LIMIT = 10;
+
     // ========================================
     // STATE
     // ========================================
@@ -49,7 +54,6 @@ const SectionRenderer = (() => {
         sectionOrder: [],
 
         // Search state
-        searchTerm: '',
         debugMode: false,
         lastSearchResults: [],
         lastSearchTerm: '',
@@ -67,10 +71,10 @@ const SectionRenderer = (() => {
 
     /**
      * Determines if the current window is small (mobile-like)
-     * @returns {boolean} True if window width is less than mobile breakpoint
+     * @returns {boolean} True if window width is at or below the mobile breakpoint
      */
     function isSmallWindow() {
-        return window.innerWidth < Constants.UI.MOBILE_BREAKPOINT;
+        return Utils.isMobileLayout();
     }
 
     // ========================================
@@ -134,8 +138,8 @@ const SectionRenderer = (() => {
         const header = createSectionHeader(sectionTitle, sectionKey);
         sectionWrapper.appendChild(header);
 
-        // Create and add result elements (visible + hidden, max 10)
-        const allItems = [...results, ...(hiddenItems || [])].slice(0, 10);
+        // Create and add result elements (visible + hidden, capped)
+        const allItems = [...results, ...(hiddenItems || [])].slice(0, SECTION_ITEM_LIMIT);
         allItems.forEach(result => {
             sectionWrapper.appendChild(state.createSearchResultButton(result));
         });
@@ -153,7 +157,6 @@ const SectionRenderer = (() => {
         const FP = (typeof window !== 'undefined' && window.FilterProfiler) || null;
         if (FP) FP.mark('fp:sections:start');
 
-        state.searchTerm = searchTerm;
         state.debugMode = debugMode;
         state.lastSearchResults = { groupedResults, hiddenResults };
         state.lastSearchTerm = searchTerm;
@@ -184,15 +187,22 @@ const SectionRenderer = (() => {
         const hasResults = Object.values(groupedResults).some(arr => arr && arr.length > 0) ||
                           Object.values(hiddenResults).some(arr => arr && arr.length > 0);
 
-        if (!hasResults) return;
+        if (!hasResults) {
+            // Container was already cleared above; still notify the parent so
+            // the chip bar resyncs to the current term.
+            if (state.onAfterRender) {
+                state.onAfterRender();
+            }
+            return;
+        }
 
         // Render sections in the specified order
         state.sectionOrder.forEach(sectionKey => {
             const metadata = SECTION_METADATA[sectionKey];
             if (!metadata) return;
 
-            const results = (groupedResults[sectionKey] || []).slice(0, 10);
-            const hidden = (hiddenResults[sectionKey] || []).slice(0, 10);
+            const results = groupedResults[sectionKey] || [];
+            const hidden = hiddenResults[sectionKey] || [];
 
             renderSection(results, hidden, metadata.title, sectionKey);
         });
@@ -233,14 +243,6 @@ const SectionRenderer = (() => {
         state.onAfterRender = config.onAfterRender || null;
     }
 
-    /**
-     * Gets the section metadata
-     * @returns {Object} Section metadata
-     */
-    function getSectionMetadata() {
-        return SECTION_METADATA;
-    }
-
     // ========================================
     // EXPORTS
     // ========================================
@@ -251,8 +253,5 @@ const SectionRenderer = (() => {
 
         // Rendering
         renderFilters,
-
-        // Query functions
-        getSectionMetadata,
     };
 })();

@@ -34,7 +34,7 @@ const ListView = (() => {
     // top-ranked N and note the truncation in a footer.
     const RENDER_CAP = 200;
 
-    const MS_PER_DAY = 24 * 60 * 60 * 1000;
+    const MS_PER_DAY = Constants.TIME.ONE_DAY_MS;
 
     // Spread value assigned to exporter-classified 'Ongoing' events so they
     // always sort with the long-running tail, even when their listed
@@ -51,6 +51,9 @@ const ListView = (() => {
         getLocationDistances: () => ({}),
         getVisibleCenter: () => null,
         getContainer: () => null,
+        // Signature of the last-built DOM; render() skips the rebuild when the
+        // output would be identical (see render). null = nothing built.
+        lastSignature: null,
     };
 
     // ========================================
@@ -69,9 +72,9 @@ const ListView = (() => {
             return distances[key];
         }
         if (visibleCenter && key) {
-            const [lat, lng] = key.split(',').map(Number);
-            if (Number.isFinite(lat) && Number.isFinite(lng)) {
-                return Utils.calculateHaversineDistance(visibleCenter, { lat, lng });
+            const ll = Utils.parseLocationKey(key);
+            if (ll) {
+                return Utils.calculateHaversineDistance(visibleCenter, ll);
             }
         }
         return Infinity;
@@ -117,8 +120,7 @@ const ListView = (() => {
      * covered bottom half would reshuffle the list on every snap change).
      */
     function coveredLeftPx(map) {
-        const bp = (typeof Constants !== 'undefined' && Constants.UI && Constants.UI.MOBILE_BREAKPOINT) || 768;
-        if (window.innerWidth <= bp) return 0;
+        if (Utils.isMobileLayout()) return 0;
         if (typeof Sheet === 'undefined' || !Sheet.isOpen()) return 0;
         const sheet = document.getElementById('sheet');
         if (!sheet) return 0;
@@ -147,8 +149,8 @@ const ListView = (() => {
             if (!key) return true;
             let x = projectedX.get(key);
             if (x === undefined) {
-                const [lat, lng] = key.split(',').map(Number);
-                x = (Number.isFinite(lat) && Number.isFinite(lng)) ? map.project([lng, lat]).x : Infinity;
+                const ll = Utils.parseLocationKey(key);
+                x = ll ? map.project([ll.lng, ll.lat]).x : Infinity;
                 projectedX.set(key, x);
             }
             return x >= cutoff;
@@ -165,6 +167,7 @@ const ListView = (() => {
         if (config.getLocationDistances) state.getLocationDistances = config.getLocationDistances;
         if (config.getVisibleCenter) state.getVisibleCenter = config.getVisibleCenter;
         if (config.getContainer) state.getContainer = config.getContainer;
+        state.lastSignature = null;
     }
 
     /**
@@ -231,6 +234,25 @@ const ListView = (() => {
         const total = deduped.length;
         const shown = deduped.slice(0, RENDER_CAP);
 
+        // Skip the dominant-cost DOM rebuild when the output would be identical
+        // to what the container already holds (popup open/close, no-op filter
+        // changes, small pans that don't reorder distance ties). The signature
+        // covers every input the non-interactive cards render from: id order,
+        // footer total, lazily-merged description presence (descriptions arrive
+        // after the first render), and the theme / emoji font driving the
+        // accent colors. The first-child check forces a rebuild after the
+        // container was cleared externally (search takeover, mobile detail mode).
+        const signature = (document.documentElement.getAttribute('data-theme') || '') +
+            '|' + (document.body.classList.contains('use-noto-emoji') ? 'noto' : 'sys') +
+            '|' + total +
+            '|' + shown.map(({ event }) => event.id + (event.description ? '+' : '')).join(',');
+        const existing = container.firstElementChild;
+        if (signature === state.lastSignature &&
+            existing && existing.classList.contains('list-view-scroll')) {
+            container.scrollTop = 0; // every render resets the scroll, skipped or not
+            return;
+        }
+
         const wrapper = document.createElement('div');
         wrapper.className = 'list-view-scroll';
 
@@ -250,9 +272,9 @@ const ListView = (() => {
                     MapManager.clearHoverHighlight();
                 });
                 card.addEventListener('click', () => {
-                    const [lat, lng] = locationKey.split(',').map(Number);
-                    if (Number.isFinite(lat) && Number.isFinite(lng)) {
-                        MarkerController.flyToLocationAndOpenPopup(lat, lng, event.id);
+                    const ll = Utils.parseLocationKey(locationKey);
+                    if (ll) {
+                        MarkerController.flyToLocationAndOpenPopup(ll.lat, ll.lng, event.id);
                     }
                 });
             }
@@ -270,12 +292,14 @@ const ListView = (() => {
         container.innerHTML = '';
         container.appendChild(wrapper);
         container.scrollTop = 0;
+        state.lastSignature = signature;
     }
 
     /**
      * Clears the list (used when a search term takes over the results container).
      */
     function teardown() {
+        state.lastSignature = null;
         const container = state.getContainer();
         if (container) {
             container.innerHTML = '';

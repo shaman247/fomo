@@ -53,7 +53,7 @@ const PopupContentBuilder = (() => {
 
         const emojiSpan = document.createElement('span');
         emojiSpan.className = 'popup-header-emoji';
-        emojiSpan.textContent = Utils.escapeHtml(locationInfo.emoji);
+        emojiSpan.textContent = locationInfo.emoji || '';
         headerWrapper.appendChild(emojiSpan);
 
         const textWrapper = document.createElement('div');
@@ -80,15 +80,7 @@ const PopupContentBuilder = (() => {
     function createKeywordTagSpan(tag) {
         const span = document.createElement('span');
         span.className = 'tag-keyword';
-        const emoji = state.tagEmojiMap[tag] || '';
-        if (emoji) {
-            const emojiSpan = document.createElement('span');
-            emojiSpan.className = 'chip-emoji';
-            emojiSpan.setAttribute('aria-hidden', 'true');
-            emojiSpan.textContent = emoji;
-            span.appendChild(emojiSpan);
-        }
-        span.appendChild(document.createTextNode(Utils.getTagDisplayName(tag)));
+        Utils.appendChipContent(span, state.tagEmojiMap[tag], tag);
         return span;
     }
 
@@ -275,7 +267,7 @@ const PopupContentBuilder = (() => {
      */
     function setLabelAccentVars(el, baseColor) {
         if (!el || !baseColor || typeof MapManager === 'undefined' || !MapManager.toEventLabelColor) return;
-        const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+        const isLight = Utils.getCurrentTheme() === 'light';
         el.style.setProperty(
             '--popup-accent-muted',
             MapManager.toEventLabelColor(baseColor, { lightness: isLight ? 42 : 62, chroma: 0.05 })
@@ -447,36 +439,13 @@ const PopupContentBuilder = (() => {
     // ========================================
 
     /**
-     * Returns the section name the popup will open by default for this set
-     * of events. Sections are ordered "Events" first, then "Ongoing", then any
-     * custom section alphabetically.
-     *
-     * When `ctx` is provided (with current filter state), the first section
-     * containing a tag-matching event wins — so a location that only has
-     * matching events in "Ongoing" opens to that tab instead of falling
-     * through to a non-matching "Events" section.
+     * Comparator for popup section names: "Events" first, then "Ongoing",
+     * then any custom section alphabetically.
      */
-    function getDefaultSectionName(events, ctx = null) {
-        const sectionsSet = new Set();
-        for (const event of events) sectionsSet.add(event.section || 'Events');
-        const sections = [...sectionsSet];
-        sections.sort((a, b) => {
-            const orderA = SECTION_ORDER[a] ?? 2;
-            const orderB = SECTION_ORDER[b] ?? 2;
-            return orderA !== orderB ? orderA - orderB : a.localeCompare(b);
-        });
-
-        if (ctx && ctx.activeFilters) {
-            const { sortedEvents } = sortEventsForLocation(events, ctx);
-            const matchingSections = new Set(
-                sortedEvents.filter(d => d.isMatchingTags).map(d => d.event.section || 'Events')
-            );
-            for (const section of sections) {
-                if (matchingSections.has(section)) return section;
-            }
-        }
-
-        return sections[0] || 'Events';
+    function compareSections(a, b) {
+        const orderA = SECTION_ORDER[a] ?? 2;
+        const orderB = SECTION_ORDER[b] ?? 2;
+        return orderA !== orderB ? orderA - orderB : a.localeCompare(b);
     }
 
     /**
@@ -484,10 +453,6 @@ const PopupContentBuilder = (() => {
      * popup UI shows: tag-matching events first, then by number of matching
      * selected tags, then by date proximity to the reference date. A forced
      * event (typically from a search hit) is pinned to the top.
-     *
-     * Exposed publicly so other modules (e.g. MarkerController choosing the
-     * preview event for the map label) can pick the same "first" event the
-     * popup would surface.
      *
      * @returns {{ sortedEvents: Array, forcedEvent: Object|null }} Each item
      *   in sortedEvents is { event, isMatchingTags, selectedTagMatchCount,
@@ -499,35 +464,21 @@ const PopupContentBuilder = (() => {
         // Tag-state Sets can be expensive to derive when called per-location in a
         // tight loop (e.g. MarkerController's label computation). Callers may
         // precompute and pass them in via ctx.tagSets.
-        let selectedTagsSet, requiredTagsSet, forbiddenTagsSet;
-        if (ctx.tagSets) {
-            ({ selectedTagsSet, requiredTagsSet, forbiddenTagsSet } = ctx.tagSets);
-        } else {
-            selectedTagsSet = new Set();
-            requiredTagsSet = new Set();
-            forbiddenTagsSet = new Set();
-            for (const tag in activeFilters.tagStates) {
-                const s = activeFilters.tagStates[tag];
-                if (s === 'selected' || s === 'required') selectedTagsSet.add(tag);
-                if (s === 'required') requiredTagsSet.add(tag);
-                else if (s === 'forbidden') forbiddenTagsSet.add(tag);
-            }
-        }
+        const { selectedTagsSet, requiredTagsSet, forbiddenTagsSet } =
+            ctx.tagSets || Utils.partitionTagStates(activeFilters.tagStates);
         const hasActiveTagFilters = selectedTagsSet.size > 0;
 
-        let forcedEvent = null;
-        const otherEvents = [...eventsAtLocation];
-        if (forceDisplayEventId) {
-            const idx = otherEvents.findIndex(e => e.id === forceDisplayEventId);
-            if (idx > -1) [forcedEvent] = otherEvents.splice(idx, 1);
-        }
-        const eventsToProcess = forcedEvent ? [forcedEvent, ...otherEvents] : eventsAtLocation;
+        // No pre-ordering (or array copy) needed for the forced event: sort is
+        // stable, and the post-sort pin below moves it to the front anyway.
+        const forcedEvent = forceDisplayEventId
+            ? (eventsAtLocation.find(e => e.id === forceDisplayEventId) || null)
+            : null;
 
         const referenceDate = selectedStartDate
             ? selectedStartDate.getTime()
             : (activeFilters.sliderStartDate ? activeFilters.sliderStartDate.getTime() : 0);
 
-        const sortedEvents = eventsToProcess.map(event => {
+        const sortedEvents = eventsAtLocation.map(event => {
             const locInfo = event.locationKey ? filterFunctions.getLocationInfo(event.locationKey) : null;
             const combinedTags = event.tags || [];
             const locationTags = locInfo?.tags || [];
@@ -537,27 +488,14 @@ const PopupContentBuilder = (() => {
             // A merged event can have several organizers.
             const orgTags = Utils.organizerTagsForEvent(event);
 
-            let isMatchingTags = true;
-            if (forbiddenTagsSet.size > 0) {
-                if (combinedTags.some(t => forbiddenTagsSet.has(t)) || locationTags.some(t => forbiddenTagsSet.has(t))
-                    || orgTags.some(t => forbiddenTagsSet.has(t))) {
-                    isMatchingTags = false;
-                }
-            }
-            if (isMatchingTags && requiredTagsSet.size > 0) {
-                for (const tag of requiredTagsSet) {
-                    if (!combinedTags.includes(tag) && !locationTags.includes(tag) && !orgTags.includes(tag)) {
-                        isMatchingTags = false;
-                        break;
-                    }
-                }
-            }
-            if (isMatchingTags && requiredTagsSet.size === 0 && selectedTagsSet.size > 0) {
-                if (!combinedTags.some(t => selectedTagsSet.has(t)) && !locationTags.some(t => selectedTagsSet.has(t))
-                    && !orgTags.some(t => selectedTagsSet.has(t))) {
-                    isMatchingTags = false;
-                }
-            }
+            // selectedTagsSet here also contains required tags (it feeds
+            // selectedTagMatchCount below), but the predicate's selected tier
+            // only runs when requiredTagsSet is empty — where the two
+            // conventions coincide — so the boolean is unaffected.
+            const isMatchingTags = Utils.matchesTagSets(
+                combinedTags, locationTags, orgTags,
+                selectedTagsSet, requiredTagsSet, forbiddenTagsSet
+            );
 
             let selectedTagMatchCount = 0;
             if (hasActiveTagFilters && isMatchingTags) {
@@ -687,7 +625,7 @@ const PopupContentBuilder = (() => {
         return card;
     }
 
-    function createEventsList(eventsAtLocation, activeFilters, locationInfo, filterFunctions, forceDisplayEventId = null, selectedStartDate = null) {
+    function createEventsList(eventsAtLocation, activeFilters, filterFunctions, forceDisplayEventId = null, selectedStartDate = null) {
         const eventsListWrapper = document.createElement('div');
         eventsListWrapper.className = 'popup-events-list';
 
@@ -698,13 +636,13 @@ const PopupContentBuilder = (() => {
             return eventsListWrapper;
         }
 
-        // Get all selected tags
-        const selectedTags = Object.entries(activeFilters.tagStates)
-            .filter(([, st]) => (st === 'selected' || st === 'required'))
-            .map(([tag]) => tag);
-
-        const hasActiveTagFilters = selectedTags.length > 0;
-        const hasForbiddenTags = Object.entries(activeFilters.tagStates).some(([, st]) => st === 'forbidden');
+        let hasActiveTagFilters = false;
+        let hasForbiddenTags = false;
+        for (const tag in activeFilters.tagStates) {
+            const st = activeFilters.tagStates[tag];
+            if (st === 'selected' || st === 'required') hasActiveTagFilters = true;
+            else if (st === 'forbidden') hasForbiddenTags = true;
+        }
         const hasAnyTagFilter = hasActiveTagFilters || hasForbiddenTags;
 
         const { sortedEvents: eventsWithSortData, forcedEvent } = sortEventsForLocation(
@@ -760,11 +698,7 @@ const PopupContentBuilder = (() => {
         }
 
         // Sort sections: Events first, Ongoing second, then custom alphabetical
-        const sectionNames = [...sectionMap.keys()].sort((a, b) => {
-            const orderA = SECTION_ORDER[a] ?? 2;
-            const orderB = SECTION_ORDER[b] ?? 2;
-            return orderA !== orderB ? orderA - orderB : a.localeCompare(b);
-        });
+        const sectionNames = [...sectionMap.keys()].sort(compareSections);
 
         // Info tab shown if there are tags, description, address, or website
         const hasInfo = locationInfo && (displayTags.length > 0 || locationInfo.description || locationInfo.address || locationInfo.website_url || (locationInfo.website_urls && locationInfo.website_urls.length > 0));
@@ -794,7 +728,7 @@ const PopupContentBuilder = (() => {
             // matching events but another section does, open to that section
             // instead — otherwise the user lands on a tab full of dimmed,
             // non-matching events.
-            const preferredSection = getDefaultSectionName(eventsAtLocation, {
+            const { defaultSection: preferredSection } = getDefaultSectionAndEvents(eventsAtLocation, {
                 activeFilters,
                 filterFunctions,
                 selectedStartDate
@@ -835,7 +769,7 @@ const PopupContentBuilder = (() => {
             // Only pass forceDisplayEventId to the section that contains the forced event
             const forcedInThisSection = forceDisplayEventId && sectionEvents.some(e => e.id === forceDisplayEventId);
             panel.appendChild(createEventsList(
-                sectionEvents, activeFilters, locationInfo, filterFunctions,
+                sectionEvents, activeFilters, filterFunctions,
                 forcedInThisSection ? forceDisplayEventId : null,
                 selectedStartDate
             ));
@@ -886,21 +820,20 @@ const PopupContentBuilder = (() => {
     }
 
     /**
-     * One-pass version of getDefaultSectionName + section filter + sortEventsForLocation.
-     * Used by MarkerController to compute marker label events without paying for
-     * sortEventsForLocation twice. Returns { defaultSection, sectionEvents } where
-     * sectionEvents is the array of events (not sortData) in popup display order.
+     * Computes the popup's default section ("Events" first, then "Ongoing", then
+     * custom alphabetical — preferring the first section with a tag-matching
+     * event when ctx has filter state) plus that section's events, in one
+     * sortEventsForLocation pass. Used by MarkerController to compute marker
+     * label events and by createLocationPopupContent to pick the default tab.
+     * Returns { defaultSection, sectionEvents } where sectionEvents is the array
+     * of events (not sortData) in popup display order.
      */
     function getDefaultSectionAndEvents(events, ctx) {
         const { sortedEvents } = sortEventsForLocation(events, ctx);
 
         const sectionsSet = new Set();
         for (const e of events) sectionsSet.add(e.section || 'Events');
-        const orderedSections = [...sectionsSet].sort((a, b) => {
-            const orderA = SECTION_ORDER[a] ?? 2;
-            const orderB = SECTION_ORDER[b] ?? 2;
-            return orderA !== orderB ? orderA - orderB : a.localeCompare(b);
-        });
+        const orderedSections = [...sectionsSet].sort(compareSections);
 
         let defaultSection = orderedSections[0] || 'Events';
         if (ctx && ctx.activeFilters) {
@@ -925,14 +858,7 @@ const PopupContentBuilder = (() => {
     return {
         init,
         createLocationPopupContent,
-        createPopupHeader,
-        createEventsList,
         createEventCard,
-        createEventDetail,
-        applyAccentVars,
-        applyEventAccentVars,
-        sortEventsForLocation,
-        getDefaultSectionName,
         getDefaultSectionAndEvents
     };
 })();
