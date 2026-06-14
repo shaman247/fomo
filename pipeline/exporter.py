@@ -10,7 +10,7 @@ import sys
 from datetime import datetime, timedelta
 
 import db
-from constants import FUTURE_WINDOW_DAYS
+from constants import get_active_date_window
 from processor import sublocation_redundant_with_address
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -39,15 +39,25 @@ def classify_event_sections(cursor, connection):
         print("  No events need section classification")
         return
 
+    # Prefetch occurrences for all candidate events in chunked IN(...) queries
+    # (was one per-event query). Group into (start_date, end_date) pairs ordered
+    # by start_date per event, matching the original per-event query shape.
+    occ_by_id = {}
+    for i in range(0, len(event_ids), 1000):
+        chunk = event_ids[i:i + 1000]
+        placeholders = ','.join(['%s'] * len(chunk))
+        cursor.execute(f"""
+            SELECT event_id, start_date, end_date
+            FROM event_occurrences
+            WHERE event_id IN ({placeholders})
+            ORDER BY event_id, start_date
+        """, tuple(chunk))
+        for occ_eid, sd, ed in cursor.fetchall():
+            occ_by_id.setdefault(occ_eid, []).append((sd, ed))
+
     classified = 0
     for event_id in event_ids:
-        cursor.execute("""
-            SELECT start_date, end_date
-            FROM event_occurrences
-            WHERE event_id = %s
-            ORDER BY start_date
-        """, (event_id,))
-        occurrences = cursor.fetchall()
+        occurrences = occ_by_id.get(event_id, [])
 
         if not occurrences:
             continue
@@ -177,8 +187,7 @@ def export_events(cursor):
     output_dir = os.path.join(SCRIPT_DIR, '..', 'src', 'data')
     os.makedirs(output_dir, exist_ok=True)
 
-    current_date = datetime.now().date()
-    future_limit_date = (datetime.now() + timedelta(days=FUTURE_WINDOW_DAYS)).date()
+    current_date, future_limit_date = get_active_date_window()
     day_dates = [current_date + timedelta(days=i) for i in range(NUM_DAY_CHUNKS)]
     last_day = day_dates[-1]
 
@@ -186,14 +195,6 @@ def export_events(cursor):
     # parent organizer (e.g. 133 nycgovparks.org park pages -> one NYC Parks
     # root). All organizer attribution below works on resolved roots.
     parent_map = _load_parent_map(cursor)
-
-    # Build set of (root_website_id, location_id) pairs where the website (or
-    # any of its sibling sites under the same root) IS the venue. Tested at
-    # root granularity because the displayed organizer chip is the root.
-    # NOTE: temporarily unused — the organizer-attribution gate below is disabled
-    # for debugging (every event gets an organizer_id). Kept for an easy revert.
-    cursor.execute("SELECT website_id, location_id FROM website_locations")
-    venue_links = set((_resolve_root(row[0], parent_map), row[1]) for row in cursor.fetchall())
 
     # Get all events with their occurrences (exclude archived and suppressed events)
     # Events must have a location with coordinates to be exported.
@@ -242,6 +243,30 @@ def export_events(cursor):
     for ev_id, src_wid in cursor.fetchall():
         source_sites_by_event.setdefault(ev_id, set()).add(src_wid)
 
+    # Prefetch tags for the exported events in chunked IN(...) queries (was one
+    # per-event query inside the loop). Scoped to the event ids actually being
+    # exported and grouped by event_id. The ORDER BY et.event_id, et.tag_id
+    # reproduces the original per-event query's row order byte-for-byte (the
+    # implicit secondary-index order is (event_id, tag_id)). NOTE: occurrences
+    # and urls are deliberately NOT batched here — their within-event tie order
+    # (equal start_date / equal sort_order) is query-plan-dependent and the
+    # frontend surfaces it (occurrences[0].end after a stable start-sort; the
+    # first URL per domain), so they stay as per-event queries to preserve the
+    # exact shipped JSON. See the per-event SELECTs in the loop below.
+    event_ids = [r[0] for r in event_rows]
+    tags_by_id = {}
+    for i in range(0, len(event_ids), 1000):
+        chunk = event_ids[i:i + 1000]
+        placeholders = ','.join(['%s'] * len(chunk))
+        cursor.execute(f"""
+            SELECT et.event_id, t.name FROM event_tags et
+            JOIN tags t ON et.tag_id = t.id
+            WHERE et.event_id IN ({placeholders})
+            ORDER BY et.event_id, et.tag_id
+        """, tuple(chunk))
+        for r in cursor.fetchall():
+            tags_by_id.setdefault(r[0], []).append(r[1])
+
     all_events = []
     descriptions_by_id = {}  # event_id -> description; shipped as desc companions
     referenced_organizer_ids = set()  # organizer roots emitted on any exported event
@@ -279,11 +304,8 @@ def export_events(cursor):
         if not urls:
             continue
 
-        # Get tags
-        cursor.execute("""
-            SELECT t.name FROM event_tags et JOIN tags t ON et.tag_id = t.id WHERE et.event_id = %s
-        """, (event_id,))
-        tags = [r[0] for r in cursor.fetchall()]
+        # Get tags (prefetched above into tags_by_id)
+        tags = tags_by_id.get(event_id, [])
 
         # Use location coordinates (events no longer have their own coordinates)
         lat = float(row[8]) if row[8] is not None else None
@@ -330,7 +352,12 @@ def export_events(cursor):
         #
         # TEMP (debugging organizer attribution): the primary website is included
         # even when it IS the venue itself. To restore production behavior
-        # (external organizers only), gate the primary on venue_links:
+        # (external organizers only), rebuild venue_links from website_locations
+        # (the set of (root_website_id, location_id) pairs where the site IS the
+        # venue, tested at root granularity since the chip is the root) once
+        # before the per-event loop, then gate the primary on it:
+        #     cursor.execute("SELECT website_id, location_id FROM website_locations")
+        #     venue_links = set((_resolve_root(row[0], parent_map), row[1]) for row in cursor.fetchall())
         #     location_id = row[12]
         #     primary_root = _resolve_root(website_id, parent_map)
         #     primary = primary_root if (primary_root, location_id) not in venue_links else None
@@ -370,31 +397,46 @@ def export_events(cursor):
         FROM locations
         WHERE lat IS NOT NULL AND lng IS NOT NULL
     """)
+    location_rows = cursor.fetchall()
+
+    # Prefetch tags and website URLs for all locations in two bulk queries (was
+    # two per-location queries inside the loop). Cursors are unbuffered, so each
+    # result set is fully drained before the next execute. ORDER BY reproduces
+    # the original per-location ordering: location tags by (location_id, tag_id);
+    # website URLs by (location_id, is_primary DESC, wl.id) so the existing
+    # seen_urls dedup picks the identical survivor per location.
+    loc_tags_by_id = {}
+    cursor.execute("""
+        SELECT lt.location_id, t.name FROM location_tags lt
+        JOIN tags t ON lt.tag_id = t.id
+        ORDER BY lt.location_id, lt.tag_id
+    """)
+    for r in cursor.fetchall():
+        loc_tags_by_id.setdefault(r[0], []).append(r[1])
+
+    loc_urls_by_id = {}
+    cursor.execute("""
+        SELECT wl.location_id, COALESCE(wl.url, w.base_url) as url FROM website_locations wl
+        JOIN websites w ON wl.website_id = w.id
+        ORDER BY wl.location_id, wl.is_primary DESC, wl.id
+    """)
+    for r in cursor.fetchall():
+        loc_urls_by_id.setdefault(r[0], []).append(r[1])
+
     all_locations = []
-    for row in cursor.fetchall():
+    for row in location_rows:
         location_id = row[0]
 
-        # Get tags for this location
-        cursor.execute("""
-            SELECT t.name FROM location_tags lt
-            JOIN tags t ON lt.tag_id = t.id
-            WHERE lt.location_id = %s
-        """, (location_id,))
-        tags = [r[0] for r in cursor.fetchall()]
+        # Get tags for this location (prefetched above into loc_tags_by_id)
+        tags = loc_tags_by_id.get(location_id, [])
 
         # Get website URLs for this location (primary first, then secondaries).
         # Multiple URLs are exported as an array — locations can have e.g. both
         # an official directory page and a venue's own website.
-        cursor.execute("""
-            SELECT COALESCE(wl.url, w.base_url) as url FROM website_locations wl
-            JOIN websites w ON wl.website_id = w.id
-            WHERE wl.location_id = %s
-            ORDER BY wl.is_primary DESC, wl.id
-        """, (location_id,))
+        # (prefetched above into loc_urls_by_id)
         website_urls = []
         seen_urls = set()
-        for r in cursor.fetchall():
-            url = r[0]
+        for url in loc_urls_by_id.get(location_id, []):
             if url and url not in seen_urls:
                 website_urls.append(url)
                 seen_urls.add(url)

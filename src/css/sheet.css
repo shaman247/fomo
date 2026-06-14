@@ -12,9 +12,11 @@
  *   vertically centered and flush with the screen's left edge, shown only
  *   while the sheet is collapsed; the open sheet is dismissed by clicking
  *   empty map space (no "Hide list" button).
- *   The sheet sits BELOW the filter panel (--z-panel) so the floating top bar
- *   renders over it; #results-container gets top padding
- *   (--sheet-content-top, JS-measured) so content clears that bar.
+ *   The sheet is full-height and slides UNDER the transparent top filter
+ *   band (--z-panel > --z-sheet): the sheet surface is visible beneath the
+ *   band's controls, while #results-container is padded down by
+ *   --top-bar-height (the band's measured height, set by JS in Sheet's
+ *   _measureTopOffset) so the scrollable content never overlaps them.
  *
  *   Mobile (max-width: 768px): a bottom sheet, height-driven by JS with snap
  *   points (PEEK/FULL). `.sheet-drag-area` holds the drag grip; `.sheet-detail`
@@ -37,8 +39,8 @@
 
 @media (min-width: 769px) {
     :root {
-        --sheet-width: 380px;          /* live width, driven by JS */
-        --sheet-content-top: 60px;     /* measured top-bar clearance, set by JS */
+        --sheet-width: 420px;          /* live width, driven by JS */
+        --top-bar-height: 48px;        /* measured top-band height, set by JS */
         --sheet-handle-w: 30px;
         --sheet-handle-h: 30px;
     }
@@ -77,7 +79,9 @@
     }
 
     /* The sheet surface lives on #tags-wrapper. Overrides the base panel rules
-       from filter-panel.css. */
+       from filter-panel.css. Surface + base font size match the event popups
+       (.maplibregl-popup-content in popups.css) so the list reads like popup
+       content. */
     #sheet #tags-wrapper {
         position: absolute;
         inset: 0;
@@ -86,21 +90,30 @@
         margin: 0;
         padding: 0;
         overflow: hidden;
-        background-color: color-mix(in srgb, var(--primary-bg) 92%, transparent);
-        backdrop-filter: blur(8px);
+        background-color: color-mix(in srgb, var(--secondary-bg) 95%, transparent);
+        backdrop-filter: blur(3px);
         border: none;
         border-right: 1px solid var(--border-color);
         border-radius: 0;
         box-shadow: var(--popup-shadow);
+        font-size: 19px;
     }
 
-    /* Inner scroll area. Top padding clears the floating top filter bar. */
+    /* Tag chips in search sections: pinned like the popups pin theirs
+       (0.85em of the 19px base), so chips don't inflate with the base. */
+    #sheet #results-container .tag-button {
+        font-size: 0.85em;
+    }
+
+    /* Inner scroll area. The scrollport itself starts below the transparent
+       top band's controls (inset top), so scrolled text clips at that line
+       instead of sliding up beneath the logo / search / date picker. */
     #sheet #results-container {
         position: absolute;
-        inset: 0;
+        inset: var(--top-bar-height) 0 0;
         overflow-y: auto;
         overflow-x: hidden;
-        padding: var(--sheet-content-top) 8px 16px;
+        padding: 8px 8px 16px;
         box-sizing: border-box;
         scrollbar-width: none;
     }

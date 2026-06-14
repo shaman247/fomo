@@ -252,6 +252,28 @@ const Utils = (() => {
         return isNaN(finalDate.getTime()) ? null : finalDate;
     }
 
+    // Calendar-day index (days since epoch) of a Date in APP_TIMEZONE. Lets hot
+    // paths bucket timestamps by local day with plain arithmetic instead of Intl
+    // formatting. The zone offset only changes at DST transitions, so it's
+    // cached per UTC day (probed at that day's noon UTC, like parseDateInZone);
+    // events within an hour of local midnight on a transition day may bucket
+    // one day off — harmless for ranking.
+    const MS_PER_DAY = 86400000;
+    const _dayOffsetMsByUtcDay = new Map();
+    function dayIndexInZone(date) {
+        const ms = date.getTime();
+        if (isNaN(ms)) return NaN;
+        const utcDay = Math.floor(ms / MS_PER_DAY);
+        let offsetMs = _dayOffsetMsByUtcDay.get(utcDay);
+        if (offsetMs === undefined) {
+            const probe = new Date(utcDay * MS_PER_DAY + MS_PER_DAY / 2);
+            const m = getZoneOffset(probe).match(/([+-])(\d{2}):(\d{2})/);
+            offsetMs = m ? (m[1] === '-' ? -1 : 1) * ((+m[2]) * 60 + +m[3]) * 60000 : 0;
+            _dayOffsetMsByUtcDay.set(utcDay, offsetMs);
+        }
+        return Math.floor((ms + offsetMs) / MS_PER_DAY);
+    }
+
     // Today's date in the app timezone as YYYY-MM-DD. Used to pick the matching
     // events.{day}.json chunk regardless of the user's local timezone.
     const _todayFormatter = new Intl.DateTimeFormat('en-CA', {
@@ -590,6 +612,7 @@ const Utils = (() => {
         isValidUrl,
         buildEventDateTime,
         parseDateInZone,
+        dayIndexInZone,
         getTodayInZone,
         getCurrentTheme,
         isWindows,

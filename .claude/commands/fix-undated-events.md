@@ -149,6 +149,8 @@ To verify fixes worked, re-run the pipeline for the fixed websites:
 ./venv/bin/python pipeline/main.py --ids {website_ids}
 ```
 
+**Run this as a FOREGROUND (blocking) call and wait for it to exit — never as a background task, and never end your turn while it runs.** A sub-agent's background processes are killed the moment its turn ends, which strands extracted events unmerged (this exact mistake happened on 2026-06-10 AND 2026-06-11; recovery needs the parent to run `main.py --merge-only`). Do not arm monitors/wakeups to "wait" for it — just block on the call with a generous timeout.
+
 Then re-check for undated events (Step 1). The count should decrease.
 
 ## Step 5: Re-export

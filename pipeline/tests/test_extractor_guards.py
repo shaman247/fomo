@@ -1,5 +1,6 @@
 """Tests for extractor.py reliability guards (variance retry, max_batches
-auto-bump) and the fix_recurring_spans course-shape classifier."""
+auto-bump), the estimate_event_count page-size estimator, and the
+fix_recurring_spans course-shape classifier."""
 
 import importlib.util
 import os
@@ -15,8 +16,10 @@ from extractor import (
     _variance_retry_reason,
     _maybe_auto_bump_max_batches,
     _normalize_extraction_response,
+    estimate_event_count,
     AUTO_MAX_BATCHES_CEILING,
     DEFAULT_MAX_BATCHES,
+    LARGE_PAGE_THRESHOLD,
 )
 
 
@@ -127,6 +130,131 @@ class TestMaybeAutoBumpMaxBatches(unittest.TestCase):
     def test_no_bump_when_not_needed(self):
         cur, conn = FakeCursor(None, []), FakeConnection()
         self.assertIsNone(_maybe_auto_bump_max_batches(cur, conn, self._prep(10), batches_needed=8))
+
+
+class TestEstimateEventCount(unittest.TestCase):
+    """estimate_event_count routes pages to chunked extraction when the
+    estimate exceeds LARGE_PAGE_THRESHOLD. Under-estimation makes single-call
+    mode truncate at its ~8K output-token cap (extraction collapse, e.g.
+    NYC DSA 108->4, Metrograph 87->14, Jacob Burns 38->2 on 2026-06-11), so
+    each per-event signal format must be counted — while staying max-based so
+    healthy small pages are not promoted into the costlier chunked mode."""
+
+    # --- newly counted formats (2026-06-11 collapse bug) ---
+
+    def test_iso_labeled_date_lines_counted(self):
+        # NYC DSA / Action Network calendar style: one `Date: YYYY-MM-DD`
+        # line per event card. Counted unhalved.
+        content = '\n'.join(
+            f'### Event Number {i}\nDate: 2026-06-{(i % 28) + 1:02d}\n'
+            for i in range(60)
+        )
+        self.assertEqual(estimate_event_count(content), 60)
+        self.assertGreater(estimate_event_count(content), LARGE_PAGE_THRESHOLD)
+
+    def test_iso_date_line_label_variants(self):
+        content = ('When: 2026-07-04\n'
+                   '**Date:** 2026-07-05\n'
+                   'Dates: 2026-07-06\n'
+                   '2026-07-07\n')  # bare line-start ISO date
+        self.assertEqual(estimate_event_count(content), 4)
+
+    def test_inline_iso_timestamps_not_counted(self):
+        # Mid-line ISO dates (e.g. Metrograph's "Now time 2026-06-11 12:14:55"
+        # banner) are not per-event signals.
+        content = 'Now time 2026-06-11 12:14:55 Now time local 2026-06-11\n' * 30
+        self.assertEqual(estimate_event_count(content), 0)
+
+    def test_booking_urls_counted_unhalved(self):
+        # Jacob Burns style: one /booking/ link per film-day entry, plus
+        # bare showtime links that carry no countable text.
+        content = '\n'.join(
+            f'[Film Title {i}](https://example.org/booking/film-{i}/)\n'
+            f'[5:20](https://shop.example.org/{i}/1)[7:35](https://shop.example.org/{i}/2)\n'
+            for i in range(60)
+        )
+        self.assertEqual(estimate_event_count(content), 60)
+
+    def test_buy_tickets_links_halved(self):
+        # Metrograph style: one "Buy Tickets" link per showtime, several
+        # showtimes per film — halved to approximate the entry count.
+        content = ('[3:00pm](https://t.example.com/x?id=1 "Buy Tickets")\n'
+                   '[5:10pm](https://t.example.com/x?id=2 "Buy Tickets")\n') * 60
+        self.assertEqual(estimate_event_count(content), 60)
+
+    def test_event_detail_url_markers_counted(self):
+        # Markers injected by our own js_code: exactly one per event card.
+        content = '\n'.join(
+            f'EVENT DETAIL URL: https://example.org/e/{i}\nSome Event {i}\n'
+            for i in range(55)
+        )
+        self.assertEqual(estimate_event_count(content), 55)
+
+    def test_linked_headings_halved(self):
+        # `#### [Title](url)` event cards (Metrograph, Alvin Ailey).
+        content = '\n'.join(
+            f'#### [Event {i}](https://example.org/x/{i})\nDescription text.\n'
+            for i in range(120)
+        )
+        self.assertEqual(estimate_event_count(content), 60)
+
+    def test_plain_and_empty_headings_not_counted(self):
+        content = ('## Quick Links\n'
+                   '### About Us\n'
+                   '## [ ](https://example.org/banner)\n'  # empty link text
+                   '## [Navigation](https://example.org/nav)\n')  # ## excluded
+        self.assertEqual(estimate_event_count(content), 0)
+
+    # --- conservatism: max, not sum ---
+
+    def test_overlapping_signals_take_max_not_sum(self):
+        # 30 cards each carrying a linked heading + ISO date line + ticket
+        # link must estimate ~30, not 30 * 3.
+        content = '\n'.join(
+            f'#### [Event {i}](https://example.org/booking/ev-{i}/)\n'
+            f'Date: 2026-06-{(i % 28) + 1:02d}\n'
+            f'[7:00pm](https://t.example.com/x?id={i} "Buy Tickets")\n'
+            for i in range(30)
+        )
+        self.assertEqual(estimate_event_count(content), 30)
+        self.assertLessEqual(estimate_event_count(content), LARGE_PAGE_THRESHOLD)
+
+    # --- regressions: healthy small pages stay below the threshold ---
+
+    def test_small_month_name_listing_stays_small(self):
+        # Classic small listing: month-name date + View Details + /events/
+        # URL (twice: image link + title link) per card.
+        content = '\n'.join(
+            f'### [Concert {i}](https://example.org/events/concert-{i})\n'
+            f'June {(i % 28) + 1}, 2026 at 7pm\n'
+            f'[View Details](https://example.org/events/concert-{i})\n'
+            for i in range(8)
+        )
+        self.assertLessEqual(estimate_event_count(content), 10)
+
+    def test_small_iso_date_listing_stays_small(self):
+        content = '\n'.join(
+            f'### Workshop {i}\nDate: 2026-07-{i + 1:02d}\n'
+            for i in range(6)
+        )
+        self.assertEqual(estimate_event_count(content), 6)
+
+    def test_small_cinema_listing_stays_small(self):
+        content = '\n'.join(
+            f'[Film {i}](https://example.org/booking/film-{i}/)\n'
+            f'[7:30](https://shop.example.org/{i}/1 "Buy Tickets")\n'
+            for i in range(9)
+        )
+        self.assertEqual(estimate_event_count(content), 9)
+
+    def test_threshold_boundary(self):
+        at_cap = '\n'.join(f'EVENT DETAIL URL: https://x.org/{i}' for i in range(LARGE_PAGE_THRESHOLD))
+        over_cap = '\n'.join(f'EVENT DETAIL URL: https://x.org/{i}' for i in range(LARGE_PAGE_THRESHOLD + 1))
+        self.assertLessEqual(estimate_event_count(at_cap), LARGE_PAGE_THRESHOLD)
+        self.assertGreater(estimate_event_count(over_cap), LARGE_PAGE_THRESHOLD)
+
+    def test_empty_content(self):
+        self.assertEqual(estimate_event_count(''), 0)
 
 
 class TestNormalizeExtractionResponse(unittest.TestCase):

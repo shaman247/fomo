@@ -18,7 +18,7 @@ from pathlib import Path
 import mysql.connector
 
 import db
-from constants import FUTURE_WINDOW_DAYS
+from constants import get_active_date_window
 
 # Maximum retries for deadlock errors
 DEADLOCK_MAX_RETRIES = 3
@@ -148,19 +148,26 @@ def stem_word(word):
     return word
 
 
+# Stop words that don't contribute to event identity.
+_STOP_WORDS = frozenset({'the', 'and', 'for', 'with', 'from', 'into', 'your'})
+
+
+def _is_year(w):
+    """Check if word is a 4-digit year (2000-2099)."""
+    return len(w) == 4 and w.isdigit() and w.startswith('20')
+
+
+def _coord_key(lat, lng):
+    """Build the rounded (lat, lng) tuple used as a coordinate index key."""
+    return (round(float(lat), 5), round(float(lng), 5))
+
+
 def get_significant_words(name, stem=False):
     """Get significant words (3+ chars) from normalized name, excluding stop words and years."""
-    # Stop words that don't contribute to event identity
-    stop_words = {'the', 'and', 'for', 'with', 'from', 'into', 'your'}
-
     norm = normalize_name_for_dedup(name)
     words = norm.split()
 
-    def is_year(w):
-        """Check if word is a 4-digit year (2000-2099)."""
-        return len(w) == 4 and w.isdigit() and w.startswith('20')
-
-    result = set(w for w in words if len(w) >= 3 and w not in stop_words and not is_year(w))
+    result = set(w for w in words if len(w) >= 3 and w not in _STOP_WORDS and not _is_year(w))
     if stem:
         result = set(stem_word(w) for w in result)
     return result
@@ -243,12 +250,11 @@ _LINEUP_MARKERS = {'ft', 'feat', 'featuring', 'w', 'with', 'presents', 'present'
 
 def _ordered_significant_words(name):
     """Like get_significant_words but preserves order (for prefix comparison)."""
-    stop_words = {'the', 'and', 'for', 'with', 'from', 'into', 'your'}
     words = normalize_name_for_dedup(name).split()
     return [
         w for w in words
-        if len(w) >= 3 and w not in stop_words
-        and not (len(w) == 4 and w.isdigit() and w.startswith('20'))
+        if len(w) >= 3 and w not in _STOP_WORDS
+        and not _is_year(w)
     ]
 
 
@@ -824,6 +830,9 @@ def compute_voted_tags(cursor, event_id, current_crawl_tags, curated_tag_set,
     Returns:
         List of tag names that passed the vote
     """
+    def _norm(t):
+        return db.normalize_tag_key(t)
+
     # Count how many crawl runs produced each tag (from already-linked crawl events)
     cursor.execute("""
         SELECT cet.tag, COUNT(DISTINCT es.crawl_event_id) as crawl_count
@@ -871,26 +880,26 @@ def compute_voted_tags(cursor, event_id, current_crawl_tags, curated_tag_set,
     seen = set()
     final_tags = [t for t, _ in curated_survivors]
     for tag in final_tags:
-        seen.add(tag.lower().replace(' ', ''))
+        seen.add(_norm(tag))
     for tag in keyword_tags:
-        if tag.lower().replace(' ', '') not in seen:
+        if _norm(tag) not in seen:
             final_tags.append(tag)
-            seen.add(tag.lower().replace(' ', ''))
+            seen.add(_norm(tag))
 
     # Also derive ancestor (curated) tags from surviving tags
     # This catches curated parents that weren't in crawl_event_tags directly
     # (e.g., "Science" as ancestor of "Civic Tech")
     for tag in list(final_tags):
-        key = tag.lower().replace(' ', '')
+        key = _norm(tag)
         for ancestor in ancestor_map.get(key, set()):
-            anc_key = ancestor.lower().replace(' ', '')
+            anc_key = _norm(ancestor)
             if anc_key not in seen:
                 final_tags.append(ancestor)
                 seen.add(anc_key)
 
     # Fallback: add "Other" if no root-level tag was assigned
     has_root = any(
-        t.lower().replace(' ', '') in root_tags for t in final_tags
+        _norm(t) in root_tags for t in final_tags
     )
     if not has_root and 'other' not in seen:
         final_tags.append('Other')
@@ -923,8 +932,7 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
     Returns:
         Tuple of (new_events_count, merged_count)
     """
-    current_date = datetime.now().date()
-    future_limit_date = (datetime.now() + timedelta(days=FUTURE_WINDOW_DAYS)).date()
+    current_date, future_limit_date = get_active_date_window()
 
     # ── Setup ──
     # Initialize edit logger if available
@@ -1021,16 +1029,12 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
 
         # Index by location_id if available (primary matching method)
         if location_id is not None:
-            if location_id not in existing_events_by_location_id:
-                existing_events_by_location_id[location_id] = []
-            existing_events_by_location_id[location_id].append(event_entry)
+            existing_events_by_location_id.setdefault(location_id, []).append(event_entry)
 
         # Index by coordinates if available (for legacy compatibility)
         if lat is not None and lng is not None:
-            key = (round(float(lat), 5), round(float(lng), 5))
-            if key not in existing_events_by_coords:
-                existing_events_by_coords[key] = []
-            existing_events_by_coords[key].append(event_entry)
+            key = _coord_key(lat, lng)
+            existing_events_by_coords.setdefault(key, []).append(event_entry)
 
         # Also index by normalized location_name (for fallback matching).
         # Track location_id on the entry so the fallback can reject candidates
@@ -1040,9 +1044,7 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
         if location_name:
             loc_key = normalize_name_for_dedup(location_name)
             if loc_key and len(loc_key) >= 3:
-                if loc_key not in existing_events_by_location:
-                    existing_events_by_location[loc_key] = []
-                existing_events_by_location[loc_key].append(
+                existing_events_by_location.setdefault(loc_key, []).append(
                     {**event_entry, 'location_id': location_id}
                 )
 
@@ -1050,9 +1052,7 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
         # Track location_name on the entry so the fallback can avoid merging events
         # at clearly different specific venues.
         if website_id is not None:
-            if website_id not in existing_events_by_website:
-                existing_events_by_website[website_id] = []
-            existing_events_by_website[website_id].append(
+            existing_events_by_website.setdefault(website_id, []).append(
                 {**event_entry, 'location_name': location_name}
             )
 
@@ -1218,7 +1218,7 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
 
         # Fallback: match by coordinates if no location_id match found
         if matched_event_id is None and lat is not None and lng is not None:
-            key = (round(float(lat), 5), round(float(lng), 5))
+            key = _coord_key(lat, lng)
             if key in existing_events_by_coords:
                 matched_event_id = find_best_match(existing_events_by_coords[key])
 
@@ -1292,9 +1292,11 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
         # parks) are the dominant over-merge cause — the per-path guards missed
         # cases routed through the coordinate/website fallbacks or via NULL-location
         # "bridge" crawl_events. This is the authoritative backstop.
+        current_loc_id = None
         if matched_event_id is not None and location_id is not None:
             cursor.execute("SELECT location_id FROM events WHERE id = %s", (matched_event_id,))
             _m = cursor.fetchone()
+            current_loc_id = _m[0] if _m else None
             if _m and _m[0] is not None and _m[0] != location_id:
                 matched_event_id = None
 
@@ -1376,9 +1378,7 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
             # Update location_id if missing or if the new value is the website's
             # linked location (corrects stale fuzzy-match errors from earlier crawls)
             if location_id:
-                cursor.execute("SELECT location_id FROM events WHERE id = %s", (matched_event_id,))
-                result = cursor.fetchone()
-                current_location_id = result[0] if result else None
+                current_location_id = current_loc_id
                 if not current_location_id or (
                     current_location_id != location_id and
                     website_id in website_location_ids and
@@ -1508,32 +1508,24 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
             event_slots[new_event_id] = crawl_event_slots
 
             if location_id is not None:
-                if location_id not in existing_events_by_location_id:
-                    existing_events_by_location_id[location_id] = []
-                existing_events_by_location_id[location_id].append(event_entry)
+                existing_events_by_location_id.setdefault(location_id, []).append(event_entry)
 
             if lat is not None and lng is not None:
-                key = (round(float(lat), 5), round(float(lng), 5))
-                if key not in existing_events_by_coords:
-                    existing_events_by_coords[key] = []
-                existing_events_by_coords[key].append(event_entry)
+                key = _coord_key(lat, lng)
+                existing_events_by_coords.setdefault(key, []).append(event_entry)
 
             if location_name:
                 loc_key = normalize_name_for_dedup(location_name)
                 if loc_key and len(loc_key) >= 3:
-                    if loc_key not in existing_events_by_location:
-                        existing_events_by_location[loc_key] = []
                     # Carry location_id so find_best_match's require_location_id_match
                     # check rejects cross-venue brand-name matches (e.g. "AMC Theatres"
                     # spans every AMC theater).
-                    existing_events_by_location[loc_key].append(
+                    existing_events_by_location.setdefault(loc_key, []).append(
                         {**event_entry, 'location_id': location_id}
                     )
 
             if website_id is not None:
-                if website_id not in existing_events_by_website:
-                    existing_events_by_website[website_id] = []
-                existing_events_by_website[website_id].append(
+                existing_events_by_website.setdefault(website_id, []).append(
                     {**event_entry, 'location_name': location_name}
                 )
 

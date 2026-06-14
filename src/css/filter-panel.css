@@ -231,6 +231,8 @@
 .list-view-scroll {
     display: flex;
     flex-direction: column;
+    /* Match the popup's text rhythm (.maplibre-popup-content) */
+    line-height: 1.1;
 }
 
 /* No separator lines between events. */
@@ -243,12 +245,27 @@
     background-color: var(--tertiary-bg);
 }
 
-/* Brighter, expanded-style colors: the event title uses the vivid accent and the
-   description preview is shown at full opacity (matching the popup hover state).
-   Titles are toned slightly below the popup's full-vivid version: lightness
-   ×0.9, chroma ×0.8. */
+/* Expanded-popup-style colors, matching the popup's expanded event card
+   exactly: full vivid accent for the title, primary text for the description
+   preview, and the popup's compact 1.1 text rhythm. */
 .list-view-scroll .popup-event-card-name {
-    color: oklch(from var(--popup-accent-vivid, var(--summary-open)) calc(l * 0.9) calc(c * 0.8) h);
+    color: var(--popup-accent-vivid, var(--summary-open));
+    /* One line per title; long names ellipsize */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    /* Smaller than the popup's 1em title */
+    font-size: 0.85em;
+}
+
+/* Emoji shrinks with the title (popup's 1.3em × 0.8) and sits on the title's
+   baseline instead of the popup's top alignment. */
+.list-view-scroll .popup-event-card-header {
+    align-items: baseline;
+}
+
+.list-view-scroll .popup-event-emoji {
+    font-size: 1.04em;
 }
 
 .list-view-scroll .popup-event-card:hover .popup-event-card-name {
@@ -256,7 +273,16 @@
 }
 
 .list-view-scroll .popup-event-card-preview {
-    color: var(--secondary-text);
+    color: var(--primary-text);
+    font-size: 0.8em;
+    line-height: 1.1;
+    margin-top: 2px;
+}
+
+/* Keep popups.css's hover rule (which dims the preview back to
+   secondary-text) from overriding the brighter list styling. */
+.list-view-scroll .popup-event-card:hover .popup-event-card-preview {
+    color: var(--primary-text);
 }
 
 .list-view-footer {
@@ -539,26 +565,34 @@ span.flatpickr-weekday {
 }
 
 /* === Desktop Top Bar Layout === */
-/* On desktop, the panel is a horizontal top bar with dropdown results */
+/* On desktop, the panel is a dedicated full-width horizontal band across the
+   top of the screen. The band itself is fully transparent (no background, no
+   blur) — the controls carry their own backgrounds. The expanded left sheet
+   slides UNDER it (full height, sheet.css): the sheet surface shows through
+   beneath the logo / search / date picker, while the sheet's scrollable
+   content is padded down by --top-bar-height so text never overlaps the
+   controls. viewportManager accounts for the band's height when computing
+   the map's visible center. */
 @media (min-width: 769px) {
     #filter-panel {
         width: auto;
         right: 0;
         height: auto;
         overflow: visible;
-        padding: 4px 2px;
-        margin: 4px 6px 0;
-        /* Transparent background — controls get their own bg */
+        padding: 2px 8px;
+        margin: 0;
+        /* Fully transparent — controls get their own bg */
         background-color: transparent;
         backdrop-filter: none;
         border: none;
+        border-radius: 0;
     }
 
     /* Neutralize tags-collapsed on desktop — top bar is always visible */
     #filter-panel.tags-collapsed {
         width: auto;
         height: auto;
-        padding: 4px 2px;
+        padding: 2px 8px;
         overflow: visible;
     }
 
@@ -576,15 +610,15 @@ span.flatpickr-weekday {
         padding: 0;
     }
 
-    /* Logo + search + date picker: aligned with the expanded left sheet.
-       The panel content sits 8px in from the viewport edge (6px margin +
-       2px padding); the group ends 8px short of the sheet's right edge so
-       the date picker keeps a matching right inset. The search input
-       (flex: 1) absorbs the slack. */
+    /* Logo + search + date picker: aligned with the left sheet docked below.
+       The band's content sits 8px in from the viewport edge (panel padding);
+       the group ends 8px short of the sheet's right edge so the date picker
+       keeps a matching right inset. The search input (flex: 1) absorbs the
+       slack. */
     #filter-container > div:first-child {
         flex-shrink: 0;
         gap: 6px;
-        width: calc(var(--sheet-width, 380px) - 16px);
+        width: calc(var(--sheet-width, 420px) - 16px);
         box-sizing: border-box;
     }
 

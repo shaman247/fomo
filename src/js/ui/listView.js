@@ -11,13 +11,15 @@
  * (in the viewport but not visible). They are ranked so that one-off events come before
  * long-running/recurring ones and every location's first event appears before
  * any location's second (round-robin across locations); remaining ties favor
- * events earlier in the active date range, then distance to the map center.
+ * events on earlier days of the active date range (start bucketed to the local
+ * calendar day), then distance to the map center, then exact start time.
  * Duplicate titles collapse to their highest-ranked instance. Capped to keep
  * panning responsive.
  *
  * Each row reuses the popup event card (`PopupContentBuilder.createEventCard`,
  * non-interactive) so formatting matches the location popup, styled like an
- * expanded popup event (vivid title, full-opacity preview — see filter-panel.css).
+ * expanded popup event (vivid title, primary-text preview, compact popup
+ * line spacing — see filter-panel.css).
  * Rows are permanently collapsed: hovering a row highlights the location's marker
  * (ring + label) and clicking it opens that location's popup (desktop: floating
  * popup; mobile: detail mode inside the sheet).
@@ -99,9 +101,9 @@ const ListView = (() => {
 
     /**
      * Epoch ms of the event's soonest occurrence within the active date filter
-     * (falling back to its first occurrence overall). Events earlier in the
-     * date range rank above later ones, both within a location's own ordering
-     * and across locations within a round.
+     * (falling back to its first occurrence overall). Orders a location's own
+     * events exactly; across locations within a round the sort compares its
+     * calendar-day bucket so distance can break same-day ties.
      */
     function nextStartForEvent(event) {
         const matching = event.matching_occurrences;
@@ -189,13 +191,22 @@ const ListView = (() => {
         const distances = state.getLocationDistances() || {};
         const visibleCenter = state.getVisibleCenter();
 
-        const entries = events.map(event => ({
-            event,
-            dist: distanceForEvent(event, distances, visibleCenter),
-            spread: spreadDaysForEvent(event),
-            next: nextStartForEvent(event),
-            rank: 0,
-        }));
+        const entries = events.map(event => {
+            const next = nextStartForEvent(event);
+            return {
+                event,
+                dist: distanceForEvent(event, distances, visibleCenter),
+                spread: spreadDaysForEvent(event),
+                next,
+                // Local-calendar-day bucket of `next`: the cross-location sort
+                // compares days, not exact times, so distance can break ties
+                // among same-day events.
+                nextDay: next === Number.MAX_SAFE_INTEGER
+                    ? next
+                    : Utils.dayIndexInZone(new Date(next)),
+                rank: 0,
+            };
+        });
 
         // Round-robin across locations: order each location's own events
         // (one-offs first, then soonest), so its i-th event competes in
@@ -212,13 +223,15 @@ const ListView = (() => {
         }
 
         // Within each round, one-off events outrank long-running/recurring
-        // ones, then events earlier in the date range outrank later ones;
-        // remaining ties go nearest-first relative to the map center.
+        // ones, then events on earlier days of the date range outrank later
+        // ones; within the same day, nearest to the map center goes first,
+        // with exact start time breaking same-distance ties.
         const sorted = entries.sort((a, b) =>
             (a.rank - b.rank) ||
             (a.spread - b.spread) ||
-            (a.next - b.next) ||
-            (a.dist < b.dist ? -1 : a.dist > b.dist ? 1 : 0));
+            (a.nextDay - b.nextDay) ||
+            (a.dist < b.dist ? -1 : a.dist > b.dist ? 1 : 0) ||
+            (a.next - b.next));
 
         // Collapse duplicate titles — different venues often list the same
         // touring show/series; keep only the highest-ranked instance.

@@ -37,6 +37,26 @@ except ImportError:
     raise
 
 
+def _build_md_generator(filter_threshold, ignore_links):
+    """Build a DefaultMarkdownGenerator with an optional pruning content filter.
+
+    If filter_threshold is explicitly 0 or None, the filter is disabled entirely
+    and raw markdown is used.
+    """
+    if filter_threshold is not None and float(filter_threshold) > 0:
+        threshold = float(filter_threshold)
+        return DefaultMarkdownGenerator(
+            content_filter=PruningContentFilter(
+                threshold=threshold, threshold_type="fixed", min_word_threshold=0
+            ),
+            options={"ignore_links": ignore_links},
+        )
+    # No content filter - use raw markdown
+    return DefaultMarkdownGenerator(
+        options={"ignore_links": ignore_links},
+    )
+
+
 _DATE_OFFSET_RE = re.compile(r'\{\{date([+-]\d+)?\}\}')
 
 
@@ -179,39 +199,30 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
         page_timeout_ms = max(60000, crawl_timeout * 1000)  # At least 60s, scale with crawl_timeout
 
         # Configure markdown generator with optional content filter
-        # If filter_threshold is explicitly 0 or None, disable the filter entirely
-        if filter_threshold is not None and float(filter_threshold) > 0:
-            md_generator = DefaultMarkdownGenerator(
-                content_filter=PruningContentFilter(
-                    threshold=float(filter_threshold), threshold_type="fixed", min_word_threshold=0
-                ),
-                options={"ignore_links": False},
-            )
-        else:
-            # No content filter - use raw markdown
-            md_generator = DefaultMarkdownGenerator(
-                options={"ignore_links": False},
-            )
+        md_generator = _build_md_generator(filter_threshold, ignore_links=False)
 
         # Configure crawler
         # Note: Don't exclude 'form' as some sites wrap content in forms (e.g., Park Slope Parents calendar)
         # Note: Don't exclude 'header' as some sites use <header> inside articles for event titles (e.g., Prospect Park)
-        crawler_config = CrawlerRunConfig(
-            word_count_threshold=5,
-            excluded_tags=[],
-            process_iframes=True,
-            cache_mode=CacheMode.BYPASS,  # Don't use cache for fresh content
-            js_code=js_code,
-            remove_overlay_elements=remove_overlays,
-            delay_before_return_html=delay_seconds,
-            scan_full_page=scan_full_page,
-            scroll_delay=scroll_delay,
-            page_timeout=page_timeout_ms,
-            wait_until='domcontentloaded',  # Use domcontentloaded instead of networkidle for faster/more reliable JS navigation
-            ignore_body_visibility=True,  # Don't skip invisible body elements
-            deep_crawl_strategy=deep_crawl_strategy,
-            markdown_generator=md_generator,
-        )
+        def _make_config(js):
+            return CrawlerRunConfig(
+                word_count_threshold=5,
+                excluded_tags=[],
+                process_iframes=True,
+                cache_mode=CacheMode.BYPASS,  # Don't use cache for fresh content
+                js_code=js,
+                remove_overlay_elements=remove_overlays,
+                delay_before_return_html=delay_seconds,
+                scan_full_page=scan_full_page,
+                scroll_delay=scroll_delay,
+                page_timeout=page_timeout_ms,
+                wait_until='domcontentloaded',  # Use domcontentloaded instead of networkidle for faster/more reliable JS navigation
+                ignore_body_visibility=True,  # Don't skip invisible body elements
+                deep_crawl_strategy=deep_crawl_strategy,
+                markdown_generator=md_generator,
+            )
+
+        crawler_config = _make_config(js_code)
 
         print(f"  Crawling {name} (timeout: {crawl_timeout}s)...")
         combined_markdown = ""
@@ -237,22 +248,7 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
                 # Use a per-URL config when this URL needs js_code different from the
                 # shared website-level config (custom per-URL js or a host-specific add-on).
                 if effective_js != js_code:
-                    url_config = CrawlerRunConfig(
-                        word_count_threshold=5,
-                        excluded_tags=[],
-                        process_iframes=True,
-                        cache_mode=CacheMode.BYPASS,
-                        js_code=effective_js,
-                        remove_overlay_elements=remove_overlays,
-                        delay_before_return_html=delay_seconds,
-                        scan_full_page=scan_full_page,
-                        scroll_delay=scroll_delay,
-                        page_timeout=page_timeout_ms,
-                        wait_until='domcontentloaded',
-                        ignore_body_visibility=True,
-                        deep_crawl_strategy=deep_crawl_strategy,
-                        markdown_generator=md_generator,
-                    )
+                    url_config = _make_config(effective_js)
                 else:
                     url_config = crawler_config
 
@@ -426,17 +422,7 @@ def build_event_crawl_config(website_settings):
     overlays = ws.get('remove_overlay_elements', False)
     sd = ws.get('scroll_delay') or 0.2
 
-    if filter_threshold is not None and float(filter_threshold) > 0:
-        md_generator = DefaultMarkdownGenerator(
-            content_filter=PruningContentFilter(
-                threshold=float(filter_threshold),
-                threshold_type="fixed",
-                min_word_threshold=0,
-            ),
-            options={"ignore_links": True},
-        )
-    else:
-        md_generator = DefaultMarkdownGenerator(options={"ignore_links": True})
+    md_generator = _build_md_generator(filter_threshold, ignore_links=True)
 
     return CrawlerRunConfig(
         word_count_threshold=5,

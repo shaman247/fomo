@@ -531,30 +531,22 @@ def analyze_frequencies(cursor, connection, website_ids=None, dry_run=False, ver
     """
     # Get eligible websites. `crawl_after` is pulled so we can skip sites that
     # already have a future skip-until date set (manually or by a prior run).
+    filter_sql = ''
+    params = ()
     if website_ids:
         placeholders = ','.join(['%s'] * len(website_ids))
-        cursor.execute(f"""
-            SELECT w.id, w.name, w.crawl_frequency, w.crawl_frequency_locked, w.crawl_after,
-                   (SELECT COUNT(*) FROM crawl_results cr
-                    WHERE cr.website_id = w.id
-                      AND cr.status = 'processed'
-                      AND cr.crawled_at >= DATE_SUB(NOW(), INTERVAL {ANALYSIS_WINDOW_DAYS} DAY)) as crawl_count
-            FROM websites w
-            WHERE w.disabled = FALSE
-              AND w.id IN ({placeholders})
-            ORDER BY w.name
-        """, website_ids)
-    else:
-        cursor.execute(f"""
-            SELECT w.id, w.name, w.crawl_frequency, w.crawl_frequency_locked, w.crawl_after,
-                   (SELECT COUNT(*) FROM crawl_results cr
-                    WHERE cr.website_id = w.id
-                      AND cr.status = 'processed'
-                      AND cr.crawled_at >= DATE_SUB(NOW(), INTERVAL {ANALYSIS_WINDOW_DAYS} DAY)) as crawl_count
-            FROM websites w
-            WHERE w.disabled = FALSE
-            ORDER BY w.name
-        """)
+        filter_sql = f'\n              AND w.id IN ({placeholders})'
+        params = tuple(website_ids)
+    cursor.execute(f"""
+        SELECT w.id, w.name, w.crawl_frequency, w.crawl_frequency_locked, w.crawl_after,
+               (SELECT COUNT(*) FROM crawl_results cr
+                WHERE cr.website_id = w.id
+                  AND cr.status = 'processed'
+                  AND cr.crawled_at >= DATE_SUB(NOW(), INTERVAL {ANALYSIS_WINDOW_DAYS} DAY)) as crawl_count
+        FROM websites w
+        WHERE w.disabled = FALSE{filter_sql}
+        ORDER BY w.name
+    """, params)
 
     websites = []
     for row in cursor.fetchall():

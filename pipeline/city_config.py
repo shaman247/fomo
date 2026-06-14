@@ -88,8 +88,12 @@ def extraction_region_rule() -> str:
     return _extraction().get("region_rule", "")
 
 
+def _lower_list(items) -> list:
+    return [s.lower() for s in (items or [])]
+
+
 def generic_location_names() -> list:
-    return [s.lower() for s in (get_config().get("generic_location_names") or [])]
+    return _lower_list(get_config().get("generic_location_names"))
 
 
 def _processor() -> dict:
@@ -97,15 +101,15 @@ def _processor() -> dict:
 
 
 def state_suffixes() -> list:
-    return [s.lower() for s in (_processor().get("state_suffixes") or [])]
+    return _lower_list(_processor().get("state_suffixes"))
 
 
 def city_area_tokens() -> list:
-    return [s.lower() for s in (_processor().get("city_area_tokens") or [])]
+    return _lower_list(_processor().get("city_area_tokens"))
 
 
 def borough_tokens() -> list:
-    return [s.lower() for s in (_processor().get("borough_tokens") or [])]
+    return _lower_list(_processor().get("borough_tokens"))
 
 
 def region_tag_token() -> str:

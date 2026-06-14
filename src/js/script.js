@@ -1055,45 +1055,48 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (locationKey) {
                     this.state.selectedLocationKey = locationKey;
 
-                    // Skip auto-pan during history restore (map is already positioned)
-                    if (!HistoryManager.isRestoring()) {
-                        if (!popup) {
-                            // Bottom sheet (mobile) — pan marker to visible area above the sheet
-                            requestAnimationFrame(() => {
-                                const { filterPanelHeight } = ViewportManager.getFilterPanelDimensions();
-                                const viewportHeight = window.innerHeight;
-                                const sheetHeight = viewportHeight * Sheet.SNAP_PEEK;
-                                const visibleCenter = filterPanelHeight + (viewportHeight - filterPanelHeight - sheetHeight) / 2;
-                                const offsetY = visibleCenter - viewportHeight / 2;
+                    // The push below runs before the deferred fit-pan, so the
+                    // history entry always stores the PRE-pan camera. On
+                    // restore the map jumps back to that camera, so the
+                    // fit-pan must re-run (instantly) or the popup reopens
+                    // cut off. Capture the flag now — it may clear before rAF.
+                    const restoring = HistoryManager.isRestoring();
+                    if (!popup) {
+                        // Bottom sheet (mobile) — pan marker to visible area above the sheet
+                        requestAnimationFrame(() => {
+                            const { filterPanelHeight } = ViewportManager.getFilterPanelDimensions();
+                            const viewportHeight = window.innerHeight;
+                            const sheetHeight = viewportHeight * Sheet.SNAP_PEEK;
+                            const visibleCenter = filterPanelHeight + (viewportHeight - filterPanelHeight - sheetHeight) / 2;
+                            const offsetY = visibleCenter - viewportHeight / 2;
 
-                                this.state.map.easeTo({
-                                    center: [lngLat.lng, lngLat.lat],
-                                    offset: [0, offsetY],
-                                    duration: 300
-                                });
+                            this.state.map.easeTo({
+                                center: [lngLat.lng, lngLat.lat],
+                                offset: [0, offsetY],
+                                duration: restoring ? 0 : 300
                             });
-                        } else {
-                            // Desktop popup — measure and pan to fit
-                            requestAnimationFrame(() => {
-                                const popupElement = popup.getElement();
-                                if (!popupElement) return;
+                        });
+                    } else {
+                        // Desktop popup — measure and pan to fit
+                        requestAnimationFrame(() => {
+                            const popupElement = popup.getElement();
+                            if (!popupElement) return;
 
-                                const contentElement = popupElement.querySelector('.maplibre-popup-content');
-                                const actualWidth = contentElement ? contentElement.offsetWidth : popupElement.offsetWidth;
-                                const actualHeight = contentElement ? contentElement.offsetHeight : popupElement.offsetHeight;
+                            const contentElement = popupElement.querySelector('.maplibre-popup-content');
+                            const actualWidth = contentElement ? contentElement.offsetWidth : popupElement.offsetWidth;
+                            const actualHeight = contentElement ? contentElement.offsetHeight : popupElement.offsetHeight;
 
-                                const panOffset = ViewportManager.calculatePopupPanOffset(
-                                    this.state.map,
-                                    lngLat,
-                                    actualHeight,
-                                    actualWidth
-                                );
+                            const panOffset = ViewportManager.calculatePopupPanOffset(
+                                this.state.map,
+                                lngLat,
+                                actualHeight,
+                                actualWidth
+                            );
 
-                                if (panOffset) {
-                                    this.state.map.panBy([-panOffset.panX, -panOffset.panY], { animate: true, duration: 100 });
-                                }
-                            });
-                        }
+                            if (panOffset) {
+                                this.state.map.panBy([-panOffset.panX, -panOffset.panY], { animate: !restoring, duration: 100 });
+                            }
+                        });
                     }
 
                     // Re-run search to update the UI with the selected location

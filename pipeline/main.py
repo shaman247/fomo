@@ -72,11 +72,13 @@ def acquire_publish_lock(connection, attempts=PUBLISH_LOCK_ATTEMPTS,
                 dblock._set_holder(connection, dblock.LOCK_NAME, "run_pipeline")
             except Exception:
                 pass
+            lock_cur.close()
             return True
         holder = dblock.acquired_by(connection)
         more = "; retrying..." if attempt < attempts else ""
         print(f"  Write lock busy (held by {holder or 'another session'}) — "
               f"attempt {attempt}/{attempts} timed out after {timeout}s{more}")
+    lock_cur.close()
     return False
 
 
@@ -94,7 +96,7 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
                      all websites due for crawling based on crawl_frequency.
         limit: Optional maximum number of websites to crawl.
         use_batch: If True, use Gemini Batch API for extraction (50% cheaper).
-                   If None, defaults to True for full runs, False for --ids runs.
+                   If None, defaults to False (sync API).
     """
     timer = logging_utils.StepTimer()
 
@@ -336,10 +338,7 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
             })
 
         # Resolve batch mode: default to sync (no-batch) — use --batch to opt in
-        if use_batch is not None:
-            effective_batch = use_batch
-        else:
-            effective_batch = False
+        effective_batch = bool(use_batch)
 
         batch_processed_crids = set()  # Track items handled by batch to avoid duplicates
 
@@ -445,6 +444,15 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
 
         total_events = 0
 
+        # Build the per-run processing context ONCE and thread it through every
+        # process_events call — locations/websites/tag data are immutable during
+        # Step 4, so this avoids rebuilding all of them per crawl_result.
+        proc_locations_map = proc_websites_map = proc_tag_context = None
+        if incomplete_extracted or extracted_results:
+            proc_locations_map = processor.build_locations_map(cursor)
+            proc_websites_map = processor.build_websites_map(cursor)
+            proc_tag_context = processor.load_tag_context(cursor)
+
         # First, process incomplete 'extracted' results from previous runs
         if incomplete_extracted:
             print(f"\n  Processing {len(incomplete_extracted)} incomplete 'extracted' result(s)...")
@@ -454,7 +462,10 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
                 original_run_date_str = r['run_date'].strftime('%Y%m%d')
                 event_count = processor.process_events(
                     cursor, connection, r['crawl_result_id'],
-                    r['name'], original_run_date_str
+                    r['name'], original_run_date_str,
+                    locations_map=proc_locations_map,
+                    websites_map=proc_websites_map,
+                    tag_context=proc_tag_context,
                 )
                 total_events += event_count
                 print(f"    - {event_count} events processed")
@@ -466,7 +477,10 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
             result_run_date_str = website_run_date.strftime('%Y%m%d') if website_run_date else run_date_str
             event_count = processor.process_events(
                 cursor, connection, crawl_result_id,
-                website['name'], result_run_date_str
+                website['name'], result_run_date_str,
+                locations_map=proc_locations_map,
+                websites_map=proc_websites_map,
+                tag_context=proc_tag_context,
             )
             total_events += event_count
             print(f"    - {event_count} events processed")
@@ -717,7 +731,7 @@ if __name__ == "__main__":
     elif args.no_batch:
         use_batch = False
     else:
-        use_batch = None  # Let run_pipeline decide based on whether --ids was used
+        use_batch = None  # No explicit flag: run_pipeline defaults to sync
 
     if args.merge_only:
         success = run_merge_only(website_ids)

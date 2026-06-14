@@ -33,6 +33,11 @@ def compute_content_hash(content):
     return hashlib.sha256(content).hexdigest()
 
 
+def _col(row, key, index):
+    """Read a column from either a dict cursor row (by key) or a tuple row (by index)."""
+    return row[key] if isinstance(row, dict) else row[index]
+
+
 # Database Configuration
 DB_CONFIG = {
     'local': {
@@ -81,6 +86,18 @@ def _parse_url_data(url_string):
     return urls
 
 
+_WEBSITES_DUE_SELECT = """
+    SELECT w.id, w.name, w.crawl_frequency, w.selector, w.num_clicks,
+           w.keywords, w.max_pages, w.max_batches, w.notes,
+           w.delay_before_return_html, w.content_filter_threshold, w.scan_full_page,
+           w.remove_overlay_elements, w.javascript_enabled, w.text_mode, w.light_mode,
+           w.use_stealth, w.headed, w.user_agent, w.scroll_delay, w.crawl_timeout, w.process_images, w.base_url,
+           GROUP_CONCAT(CONCAT(wu.url, ':::', IFNULL(wu.js_code, '')) ORDER BY wu.sort_order SEPARATOR '|||') as urls
+    FROM websites w
+    LEFT JOIN website_urls wu ON w.id = wu.website_id
+"""
+
+
 def get_websites_due_for_crawling(cursor, website_ids=None):
     """
     Get websites that are due for crawling based on crawl_frequency.
@@ -99,30 +116,14 @@ def get_websites_due_for_crawling(cursor, website_ids=None):
     if website_ids:
         # When specific IDs are provided, ignore crawl_frequency
         placeholders = ','.join(['%s'] * len(website_ids))
-        cursor.execute(f"""
-            SELECT w.id, w.name, w.crawl_frequency, w.selector, w.num_clicks,
-                   w.keywords, w.max_pages, w.max_batches, w.notes,
-                   w.delay_before_return_html, w.content_filter_threshold, w.scan_full_page,
-                   w.remove_overlay_elements, w.javascript_enabled, w.text_mode, w.light_mode,
-                   w.use_stealth, w.headed, w.user_agent, w.scroll_delay, w.crawl_timeout, w.process_images, w.base_url,
-                   GROUP_CONCAT(CONCAT(wu.url, ':::', IFNULL(wu.js_code, '')) ORDER BY wu.sort_order SEPARATOR '|||') as urls
-            FROM websites w
-            LEFT JOIN website_urls wu ON w.id = wu.website_id
+        cursor.execute(_WEBSITES_DUE_SELECT + f"""
             WHERE w.id IN ({placeholders})
             GROUP BY w.id
             HAVING urls IS NOT NULL
             ORDER BY w.id ASC
         """, website_ids)
     else:
-        cursor.execute("""
-            SELECT w.id, w.name, w.crawl_frequency, w.selector, w.num_clicks,
-                   w.keywords, w.max_pages, w.max_batches, w.notes,
-                   w.delay_before_return_html, w.content_filter_threshold, w.scan_full_page,
-                   w.remove_overlay_elements, w.javascript_enabled, w.text_mode, w.light_mode,
-                   w.use_stealth, w.headed, w.user_agent, w.scroll_delay, w.crawl_timeout, w.process_images, w.base_url,
-                   GROUP_CONCAT(CONCAT(wu.url, ':::', IFNULL(wu.js_code, '')) ORDER BY wu.sort_order SEPARATOR '|||') as urls
-            FROM websites w
-            LEFT JOIN website_urls wu ON w.id = wu.website_id
+        cursor.execute(_WEBSITES_DUE_SELECT + """
             WHERE w.disabled = FALSE
               AND (w.crawl_after IS NULL OR w.crawl_after <= CURDATE())
               AND (w.force_crawl = TRUE
@@ -301,7 +302,7 @@ def find_prior_crawl_with_same_content(cursor, crawl_result_id):
     row = cursor.fetchone()
     if not row:
         return None
-    return row[0] if not isinstance(row, dict) else row['id']
+    return _col(row, 'id', 0)
 
 
 def copy_crawl_events(cursor, connection, src_crawl_result_id, dst_crawl_result_id):
@@ -692,15 +693,24 @@ def archive_outdated_events(cursor, connection, website_id):
                 AND cr.processed_at IS NOT NULL
           )
           AND (
-              -- No future occurrences: archive immediately (past events)
+              -- No current/future occurrences: archive immediately (past events).
+              -- "Current" includes an on-view exhibition whose opening date has
+              -- already passed but whose closing date (end_date) is today or later
+              -- — matching how the merge-load and existing-event queries define a
+              -- live occurrence (start_date OR end_date >= cutoff). Without the
+              -- end_date arm, a still-on-view exhibition with a past opening date
+              -- falls into this branch and is archived immediately, skipping the
+              -- 14-day grace that long-running shows depend on.
               NOT EXISTS (
                   SELECT 1 FROM event_occurrences eo
-                  WHERE eo.event_id = e.id AND eo.start_date >= CURDATE()
+                  WHERE eo.event_id = e.id
+                    AND (eo.start_date >= CURDATE()
+                         OR (eo.end_date IS NOT NULL AND eo.end_date >= CURDATE()))
               )
               OR
               (
-                  -- Has future occurrences: only archive after 14-day grace period
-                  -- (handles rotating calendars that don't always list far-out events)
+                  -- Has current/future occurrences: only archive after 14-day grace
+                  -- period (handles rotating calendars that don't always list far-out events)
                   NOT EXISTS (
                       SELECT 1
                       FROM event_sources es
@@ -757,14 +767,27 @@ def archive_outdated_events(cursor, connection, website_id):
     events_to_archive = cursor.fetchall()
     upcoming_events = [(event_id, name, next_occ) for event_id, name, next_occ in events_to_archive if next_occ]
 
-    # Perform the actual archiving
-    cursor.execute(f"""
-        UPDATE events e
-        SET archived = TRUE
-        WHERE {archive_where}
-    """, archive_params)
+    # Perform the actual archiving by filtering on the id set the SELECT already
+    # materialized, instead of re-evaluating the heavy correlated-subquery
+    # archive_where a second time. This relies on the candidate set being stable
+    # between the SELECT and the UPDATE: they run back-to-back on a single
+    # connection with no intervening commit, and the merge tail holds the
+    # advisory write_lock during archival (CLAUDE.md forbids concurrent
+    # pipelines), so no concurrent writer can flip an event into or out of the
+    # archive-qualifying set underneath us.
+    ids = [r[0] for r in events_to_archive]
+    archived_count = 0
+    if ids:
+        # Chunk the IN-list to stay under max_allowed_packet on large candidate sets.
+        for start in range(0, len(ids), 1000):
+            chunk = ids[start:start + 1000]
+            placeholders = ','.join(['%s'] * len(chunk))
+            cursor.execute(
+                f"UPDATE events SET archived = TRUE WHERE id IN ({placeholders})",
+                chunk
+            )
+            archived_count += cursor.rowcount
 
-    archived_count = cursor.rowcount
     connection.commit()
 
     return archived_count, upcoming_events
@@ -862,7 +885,6 @@ def _load_generic_location_names():
     as event locations — events with these as their only location info should be
     detail-crawled to find the specific venue.
     """
-    import json, os
     import city_config
     tags_path = os.path.join(os.path.dirname(__file__), '..', 'src', 'data', 'tags.json')
     try:
@@ -1113,6 +1135,16 @@ def get_websites_with_tags(cursor):
     return websites_map
 
 
+def normalize_tag_key(name):
+    """Normalize a tag/ancestor/root name to its lookup key (lowercase, no spaces).
+
+    Single source of truth for the tag-key normalization that the tag pipeline
+    repeats across db/processor/merger. The `name or ''` guard yields '' for
+    None; callers that must distinguish a NULL name keep their own conditional.
+    """
+    return (name or '').lower().replace(' ', '')
+
+
 def build_tag_ancestor_map(cursor):
     """Build a complete map: normalized_tag_name -> set of ancestor tag names.
 
@@ -1137,11 +1169,11 @@ def build_tag_ancestor_map(cursor):
     all_children = set()
     all_parents = set()
     for row in edges:
-        parent_name = row['parent_name'] if isinstance(row, dict) else row[0]
-        child_name = row['child_name'] if isinstance(row, dict) else row[1]
-        child_key = child_name.lower().replace(' ', '')
+        parent_name = _col(row, 'parent_name', 0)
+        child_name = _col(row, 'child_name', 1)
+        child_key = normalize_tag_key(child_name)
         all_children.add(child_key)
-        all_parents.add(parent_name.lower().replace(' ', ''))
+        all_parents.add(normalize_tag_key(parent_name))
         if child_key not in direct_parents:
             direct_parents[child_key] = set()
         direct_parents[child_key].add(parent_name)
@@ -1156,7 +1188,7 @@ def build_tag_ancestor_map(cursor):
             if parent in ancestors:
                 continue
             ancestors.add(parent)
-            parent_key = parent.lower().replace(' ', '')
+            parent_key = normalize_tag_key(parent)
             for grandparent in direct_parents.get(parent_key, set()):
                 if grandparent not in ancestors:
                     queue.append(grandparent)
@@ -1180,7 +1212,7 @@ def get_tag_aliases(cursor):
         JOIN tags t ON ta.tag_id = t.id
     """)
     return {
-        row[0].lower().replace(' ', ''): row[1]
+        normalize_tag_key(row[0]): row[1]
         for row in cursor.fetchall()
     }
 
@@ -1225,7 +1257,7 @@ def get_tag_disambiguations(cursor):
     rules = {}
     for row in cursor.fetchall():
         alias = row[0]
-        ctx_name = row[1].lower().replace(' ', '') if row[1] else None
+        ctx_name = normalize_tag_key(row[1]) if row[1] else None
         target_name = row[2]
         priority = row[3]
         rules.setdefault(alias, []).append({
@@ -1234,32 +1266,6 @@ def get_tag_disambiguations(cursor):
             'priority': priority,
         })
     return rules
-
-
-def get_all_tags_with_metadata(cursor):
-    """Get all tags with hierarchy metadata.
-
-    Returns list of dicts: {id, name, emoji, is_quick_filter, display_order, type}
-    """
-    cursor.execute("""
-        SELECT id, name, emoji, is_quick_filter, display_order, type
-        FROM tags
-        ORDER BY display_order IS NULL, display_order, name
-    """)
-    def _row_get(row, key_or_index, index):
-        return row[key_or_index] if isinstance(row, dict) else row[index]
-
-    return [
-        {
-            'id': _row_get(row, 'id', 0),
-            'name': _row_get(row, 'name', 1),
-            'emoji': _row_get(row, 'emoji', 2),
-            'is_quick_filter': bool(_row_get(row, 'is_quick_filter', 3)),
-            'display_order': _row_get(row, 'display_order', 4),
-            'type': _row_get(row, 'type', 5)
-        }
-        for row in cursor.fetchall()
-    ]
 
 
 def upsert_event_tags(cursor, event_id, tag_names, replace=False):
@@ -1301,9 +1307,6 @@ def get_tag_hierarchy_for_export(cursor):
       - tags_list: list of dicts with name, parents, and optional emoji/quickFilter/order
       - keywords_list: list of keyword tag names
     """
-    def _get(row, key, index):
-        return row[key] if isinstance(row, dict) else row[index]
-
     # Get all tags with type='tag' and their parents
     cursor.execute("""
         SELECT t.id, t.name, t.emoji, t.is_quick_filter, t.display_order, t.alt_emoji
@@ -1325,18 +1328,18 @@ def get_tag_hierarchy_for_export(cursor):
     # Build parent map: tag_name -> [parent_names]
     parents_of = {}
     for row in edges:
-        parent_name = _get(row, 'parent_name', 0)
-        child_name = _get(row, 'child_name', 1)
+        parent_name = _col(row, 'parent_name', 0)
+        child_name = _col(row, 'child_name', 1)
         parents_of.setdefault(child_name, []).append(parent_name)
 
     # Build tags list
     tags_list = []
     for row in tag_rows:
-        name = _get(row, 'name', 1)
-        emoji = _get(row, 'emoji', 2)
-        is_quick_filter = _get(row, 'is_quick_filter', 3)
-        display_order = _get(row, 'display_order', 4)
-        alt_emoji = _get(row, 'alt_emoji', 5)
+        name = _col(row, 'name', 1)
+        emoji = _col(row, 'emoji', 2)
+        is_quick_filter = _col(row, 'is_quick_filter', 3)
+        display_order = _col(row, 'display_order', 4)
+        alt_emoji = _col(row, 'alt_emoji', 5)
 
         entry = {'name': name}
         parents = parents_of.get(name, [])

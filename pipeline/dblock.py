@@ -72,16 +72,6 @@ def write_lock(conn, timeout=DEFAULT_TIMEOUT, name=LOCK_NAME, label=None):
         rc.fetchall()
 
 
-def try_write_lock(conn, name=LOCK_NAME):
-    """Non-blocking acquire. Returns True if acquired, False if already held.
-
-    Caller is responsible for RELEASE via `release(conn)` on the SAME connection.
-    """
-    cur = conn.cursor()
-    cur.execute("SELECT GET_LOCK(%s, 0)", (name,))
-    return cur.fetchone()[0] == 1
-
-
 def release(conn, name=LOCK_NAME):
     cur = conn.cursor()
     cur.execute("SELECT RELEASE_LOCK(%s)", (name,))

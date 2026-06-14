@@ -119,16 +119,17 @@ const Sheet = (() => {
     }
 
     /**
-     * Measure the floating top filter bar and push the sheet's scroll content
-     * below it, so the logo / search / chips never overlap the list (desktop).
+     * Measure the top filter band and set --top-bar-height, so the sheet
+     * docks directly below it and never overlaps the logo / search / chips
+     * (desktop).
      */
     function _measureTopOffset() {
         if (!isDesktop()) return;
         const panel = document.getElementById('filter-panel');
         if (!panel) return;
         const rect = panel.getBoundingClientRect();
-        const top = Math.max(48, Math.round(rect.bottom) + 8);
-        document.documentElement.style.setProperty('--sheet-content-top', top + 'px');
+        const height = Math.max(48, Math.round(rect.bottom));
+        document.documentElement.style.setProperty('--top-bar-height', height + 'px');
     }
 
     function _persist() {

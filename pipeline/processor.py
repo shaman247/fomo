@@ -16,7 +16,6 @@ import asyncio
 import time
 import json
 from contextlib import asynccontextmanager
-import os
 import re
 
 import city_config
@@ -28,7 +27,7 @@ import regex
 
 import db
 import crawler
-from constants import FUTURE_WINDOW_DAYS, FUZZY_MATCH_THRESHOLD, PREFIX_MATCH_COVERAGE
+from constants import FUZZY_MATCH_THRESHOLD, PREFIX_MATCH_COVERAGE, get_active_date_window
 from crawler import create_safe_filename
 
 # Blocked emoji characters that render poorly
@@ -204,6 +203,22 @@ def _load_tag_ancestor_map(cursor=None):
     return _tag_ancestor_data
 
 
+def load_tag_context(cursor):
+    """Load the tag-processing context: (tag_rules, ancestor_map, root_tags, disambiguation_rules).
+
+    `tag_rules` has the tag aliases merged into its 'rewrite' dict (aliases
+    override rewrites). The ancestor map comes from _load_tag_ancestor_map, which
+    is process-cached, so repeated calls within a run reuse the same data
+    (tag_hierarchy is immutable mid-run). Consolidates the identical block that
+    process_events and crawl_event_details previously built inline.
+    """
+    tag_rules = db.get_tag_rules(cursor)
+    tag_rules['rewrite'].update(db.get_tag_aliases(cursor))  # aliases override rewrites
+    ancestor_map, root_tags = _load_tag_ancestor_map(cursor)
+    disambiguation_rules = db.get_tag_disambiguations(cursor)
+    return tag_rules, ancestor_map, root_tags, disambiguation_rules
+
+
 # =============================================================================
 # Tag Processing
 # =============================================================================
@@ -220,10 +235,10 @@ def _disambiguate(alias_norm, processed_tags, disambiguation_rules, ancestor_map
     rules = disambiguation_rules.get(alias_norm)
     if not rules:
         return None
-    co_tag_keys = {t.lower().replace(' ', '') for t in processed_tags}
+    co_tag_keys = {db.normalize_tag_key(t) for t in processed_tags}
     # Build a per-co-tag ancestor set so we can count descendants relative to a context
     co_tag_ancestor_sets = {
-        k: {a.lower().replace(' ', '') for a in ancestor_map.get(k, set())}
+        k: {db.normalize_tag_key(a) for a in ancestor_map.get(k, set())}
         for k in co_tag_keys
     }
 
@@ -279,10 +294,21 @@ def process_tags(row_dict, tag_rules, extra_tags=None, ancestor_map=None, root_t
     # Add extra_tags first
     if extra_tags:
         for tag in extra_tags:
-            tag_normalized = tag.lower().replace(" ", "")
+            tag_normalized = db.normalize_tag_key(tag)
             if tag_normalized not in exclude_list and tag_normalized not in seen_tags:
                 processed_tags.append(tag)
                 seen_tags.add(tag_normalized)
+
+    # Region prefix/suffix patterns are constant for the whole call (lru_cached
+    # config); compile once. Empty token => no-op, same as the inline guard.
+    _region_tok = city_config.region_tag_token()
+    if _region_tok:
+        _rt = re.escape(_region_tok)
+        _region_prefix_pat = re.compile(rf'^{_rt}\s+', re.IGNORECASE)
+        _region_suffix_pat = re.compile(rf'\s+{_rt}$', re.IGNORECASE)
+    else:
+        _region_prefix_pat = None
+        _region_suffix_pat = None
 
     for tag in raw_tags:
         # Add spaces in camelCase
@@ -295,7 +321,7 @@ def process_tags(row_dict, tag_rules, extra_tags=None, ancestor_map=None, root_t
         processed_tag = re.sub(r'\bSt\s+([A-Z])', r'St. \1', processed_tag)
 
         # Apply rewrite rules
-        lookup_tag = processed_tag.lower().replace(" ", "")
+        lookup_tag = db.normalize_tag_key(processed_tag)
 
         # Defer ambiguous tags for second-pass resolution once co-tags are known
         if lookup_tag in disambiguation_rules:
@@ -315,13 +341,11 @@ def process_tags(row_dict, tag_rules, extra_tags=None, ancestor_map=None, root_t
         final_tag = re.sub(r'\b([A-Z])&([a-z])\b', lambda m: m.group(1) + '&' + m.group(2).upper(), final_tag)
 
         # Remove region prefix/suffix (e.g. "NYC Comedy" -> "Comedy")
-        _region_tok = city_config.region_tag_token()
-        if _region_tok:
-            _rt = re.escape(_region_tok)
-            final_tag = re.sub(rf'^{_rt}\s+', '', final_tag, flags=re.IGNORECASE)
-            final_tag = re.sub(rf'\s+{_rt}$', '', final_tag, flags=re.IGNORECASE)
+        if _region_prefix_pat is not None:
+            final_tag = _region_prefix_pat.sub('', final_tag)
+            final_tag = _region_suffix_pat.sub('', final_tag)
 
-        final_tag_lookup = final_tag.lower().replace(" ", "")
+        final_tag_lookup = db.normalize_tag_key(final_tag)
         if final_tag_lookup not in exclude_list and final_tag_lookup not in seen_tags:
             processed_tags.append(final_tag)
             seen_tags.add(final_tag_lookup)
@@ -335,7 +359,7 @@ def process_tags(row_dict, tag_rules, extra_tags=None, ancestor_map=None, root_t
         target = _disambiguate(alias_norm, processed_tags, disambiguation_rules, ancestor_map)
         if target is None:
             continue
-        target_norm = target.lower().replace(' ', '')
+        target_norm = db.normalize_tag_key(target)
         if target_norm in seen_tags or target_norm in exclude_list:
             continue
         processed_tags.append(target)
@@ -344,18 +368,18 @@ def process_tags(row_dict, tag_rules, extra_tags=None, ancestor_map=None, root_t
     if ancestor_map:
         ancestors_to_add = set()
         for tag in processed_tags:
-            key = tag.lower().replace(' ', '')
+            key = db.normalize_tag_key(tag)
             for ancestor in ancestor_map.get(key, set()):
-                if ancestor.lower().replace(' ', '') not in seen_tags:
+                if db.normalize_tag_key(ancestor) not in seen_tags:
                     ancestors_to_add.add(ancestor)
         for anc in sorted(ancestors_to_add):
             processed_tags.append(anc)
-            seen_tags.add(anc.lower().replace(' ', ''))
+            seen_tags.add(db.normalize_tag_key(anc))
 
         # Fallback: add "Other" if no root-level tag was assigned
         # (Free/Virtual are cross-cutting and don't count as root tags)
         has_root = any(
-            t.lower().replace(' ', '') in root_tags for t in processed_tags
+            db.normalize_tag_key(t) in root_tags for t in processed_tags
         )
         if not has_root and 'other' not in seen_tags:
             processed_tags.append('Other')
@@ -368,7 +392,7 @@ def process_tags(row_dict, tag_rules, extra_tags=None, ancestor_map=None, root_t
 def filter_by_tag(processed_row, tag_rules):
     """Filters a row based on removable tags."""
     tags_to_remove = set(tag_rules.get('remove', []))
-    event_tags = set(tag.lower().replace(" ", "") for tag in processed_row.get('tags', []))
+    event_tags = set(db.normalize_tag_key(tag) for tag in processed_row.get('tags', []))
     return event_tags.isdisjoint(tags_to_remove)
 
 
@@ -470,7 +494,7 @@ def _url_grounded_in_content(url, crawled_content):
     return any(seg in crawled_content for seg in candidate_segments)
 
 
-def log_rejection(cursor, connection, crawl_result_id, website_id,
+def log_rejection(cursor, crawl_result_id, website_id,
                   rejection_type, stage, event_name=None, event_url=None,
                   start_date=None, end_date=None, details=None):
     """Log an extraction/detail-crawl rejection for later investigation.
@@ -604,19 +628,41 @@ _BOOTH_MARKETING_DESC_RE = re.compile(
     r'\bbooths?\b[^.!?]{0,80}\blearn more\b',
     re.IGNORECASE)
 
+# Childcare-amenity listings: nursery/childcare offered as a convenience
+# DURING another activity at the venue ("Nursery-Preschool Care ... during
+# worship services"), not an attendable event itself. Children's programs and
+# childcare-themed workshops ARE real events ("Toddler Storytime", "Childcare
+# CPR Training", "Preschool Open House", "Kids' Night Out drop-off party"),
+# so two tight gates: the name must consist ENTIRELY of childcare-amenity
+# vocabulary — any other word vetoes the rule (this is what keeps
+# "Babysitting 101 Training Course" and Public Records' "The Nursery: <DJ>"
+# club series alive) — and the description must frame the care as provided
+# during/while parents attend something else.
+_CHILDCARE_AMENITY_NAME_RE = re.compile(
+    r'^(?=.*\b(?:nursery|child\s*care|babysitting)\b)'
+    r'(?:(?:nursery|child\s*care|preschool|babysitting|care|and)\b[\s/&-]*)+$',
+    re.IGNORECASE)
+_CHILDCARE_DURING_DESC_RE = re.compile(
+    r'\bduring\b[^.;!?]{0,60}\b(?:worship|services?|mass|church|meetings?)\b|'
+    r'\bwhile\s+(?:you|parents?|caregivers?|adults?|families)\b[^.;!?]{0,40}'
+    r'\b(?:attend|participate|worship)\b|'
+    r'\b(?:parents?|families|caregivers?)\s+(?:can\s+|may\s+)?attend(?:ing)?\b',
+    re.IGNORECASE)
+
 
 def is_obvious_non_event(name, description=None):
     """Return True if the event is an unmistakable non-event.
 
     Covers closures, calls for submissions/grants, venue rentals, season-pass
     listings, cinema showtime placeholders, SEO spam, fundraising campaigns,
-    submission-call contests, and festival info-booth listings — the kinds of
-    rows that should never reach the map. High precision by design; anything
-    fuzzier belongs in scripts/find_review_candidates.py for human review.
+    submission-call contests, festival info-booth listings, and
+    childcare-amenity listings — the kinds of rows that should never reach
+    the map. High precision by design; anything fuzzier belongs in
+    scripts/find_review_candidates.py for human review.
 
     Most patterns match on the name alone; a few ambiguous categories
-    (contests, booths) also require corroborating description language and
-    never fire when the description is missing.
+    (contests, booths, childcare amenities) also require corroborating
+    description language and never fire when the description is missing.
     """
     if not name:
         return False
@@ -630,6 +676,9 @@ def is_obvious_non_event(name, description=None):
             return True
         if (_BOOTH_NAME_RE.search(name)
                 and _BOOTH_MARKETING_DESC_RE.search(description)):
+            return True
+        if (_CHILDCARE_AMENITY_NAME_RE.match(name.strip())
+                and _CHILDCARE_DURING_DESC_RE.search(description)):
             return True
     return False
 
@@ -830,12 +879,12 @@ def group_event_occurrences(rows, source_url=None):
             return True
         return a[1] == b[1]
 
-    def find_matching_group_key(event_name, row_loc, grouped_events):
+    def find_matching_group_key(event_name, row_loc, grouped_events, normalized_group_keys):
         normalized_event = normalize_name_for_grouping(event_name)
         for existing_key, existing in grouped_events.items():
             if not locations_compatible(row_loc, loc_key(existing)):
                 continue
-            normalized_existing = normalize_name_for_grouping(existing_key)
+            normalized_existing = normalized_group_keys[existing_key]
             if event_name == existing_key or normalized_event == normalized_existing:
                 return existing_key
             if len(normalized_event) >= 5 and len(normalized_existing) >= 5:
@@ -844,6 +893,7 @@ def group_event_occurrences(rows, source_url=None):
         return event_name
 
     grouped_events = {}
+    normalized_group_keys = {}
     for row_dict in rows:
         event_name = row_dict.get('name')
         if not event_name:
@@ -868,7 +918,7 @@ def group_event_occurrences(rows, source_url=None):
             _standardize_time(row_dict.get('end_time', ''))
         ]
 
-        group_key = find_matching_group_key(event_name, loc_key(row_dict), grouped_events)
+        group_key = find_matching_group_key(event_name, loc_key(row_dict), grouped_events, normalized_group_keys)
 
         if group_key not in grouped_events:
             base_event = {k: v for k, v in row_dict.items()
@@ -889,6 +939,7 @@ def group_event_occurrences(rows, source_url=None):
             base_event['urls'] = urls
 
             grouped_events[group_key] = base_event
+            normalized_group_keys[group_key] = normalize_name_for_grouping(group_key)
         else:
             existing_name = grouped_events[group_key]['name']
             if len(event_name) < len(existing_name):
@@ -1632,21 +1683,22 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
         if len(toks) >= 2:
             variant_tokens.append((variant, toks))
 
+    # A bare generic word shouldn't fuzzy-match a specific venue whose name
+    # merely contains it (e.g. "gallery" in "gallery mc"). These depend only on
+    # the normalized loc/subloc + module constant, so compute once.
+    loc_is_generic = normalized_loc in GENERIC_LOCATION_WORDS
+    subloc_is_generic = normalized_subloc in GENERIC_LOCATION_WORDS
+
     if len(full_loc) > 3 or len(normalized_name) > 3:
         for priority, tier in all_tiers:
             for key in tier:
                 if not key.strip():
                     continue
 
-                # A bare generic word shouldn't fuzzy-match a specific venue
-                # whose name merely contains it (e.g. "gallery" in "gallery mc").
-                loc_is_generic = normalized_loc in GENERIC_LOCATION_WORDS
-                subloc_is_generic = normalized_subloc in GENERIC_LOCATION_WORDS
-
                 is_match = (
                     key == normalized_loc or
                     (len(normalized_name) > 3 and key == normalized_name) or
-                    (len(key) > 3 and (full_loc.startswith(key) or full_loc.endswith(key) or key in full_loc)) or
+                    (len(key) > 3 and key in full_loc) or
                     (len(normalized_loc) > 3 and not loc_is_generic and normalized_loc in key) or
                     (len(normalized_subloc) > 3 and not subloc_is_generic and normalized_subloc in key)
                 )
@@ -1758,6 +1810,23 @@ def _parse_json_events(extracted_content):
     except json.JSONDecodeError:
         return None  # Not valid JSON, try markdown fallback
 
+    def _row(event, occ):
+        # Key insertion order matters — these rows flow into json.dumps stored in
+        # crawl_events.raw_data, so the serialized key order must match.
+        return {
+            'name': event.get('name', ''),
+            'location': event.get('location', ''),
+            'sublocation': event.get('sublocation') or '',
+            'start_date': occ.get('start_date', ''),
+            'start_time': occ.get('start_time') or '',
+            'end_date': occ.get('end_date') or '',
+            'end_time': occ.get('end_time') or '',
+            'description': event.get('description', ''),
+            'url': event.get('url') or '',
+            'hashtags': event.get('hashtags', []),  # Keep as list
+            'emoji': event.get('emoji', ''),
+        }
+
     rows = []
     for event in events:
         # Each occurrence becomes a separate row (matching legacy behavior)
@@ -1766,38 +1835,13 @@ def _parse_json_events(extracted_content):
         if not occurrences:
             # Event extracted without date info — store with empty dates
             # so it can be flagged for investigation
-            row = {
-                'name': event.get('name', ''),
-                'location': event.get('location', ''),
-                'sublocation': event.get('sublocation') or '',
-                'start_date': '',
-                'start_time': '',
-                'end_date': '',
-                'end_time': '',
-                'description': event.get('description', ''),
-                'url': event.get('url') or '',
-                'hashtags': event.get('hashtags', []),
-                'emoji': event.get('emoji', ''),
-                'missing_date': True,
-            }
+            row = _row(event, {})
+            row['missing_date'] = True
             rows.append(row)
             continue
 
         for occ in occurrences:
-            row = {
-                'name': event.get('name', ''),
-                'location': event.get('location', ''),
-                'sublocation': event.get('sublocation') or '',
-                'start_date': occ.get('start_date', ''),
-                'start_time': occ.get('start_time') or '',
-                'end_date': occ.get('end_date') or '',
-                'end_time': occ.get('end_time') or '',
-                'description': event.get('description', ''),
-                'url': event.get('url') or '',
-                'hashtags': event.get('hashtags', []),  # Keep as list
-                'emoji': event.get('emoji', ''),
-            }
-            rows.append(row)
+            rows.append(_row(event, occ))
 
     return rows
 
@@ -1844,11 +1888,18 @@ def _parse_markdown_table(extracted_content):
 # Main Processing Function
 # =============================================================================
 
-def process_events(cursor, connection, crawl_result_id, website_name, run_date_str):
+def process_events(cursor, connection, crawl_result_id, website_name, run_date_str,
+                   locations_map=None, websites_map=None, tag_context=None):
     """
     Process extracted events and store in crawl_events table.
 
     Supports both JSON (structured output) and legacy markdown table formats.
+
+    locations_map, websites_map and tag_context are immutable across a single
+    Step-4 run, so a caller processing many crawl_results (e.g. main.py) can build
+    them once and pass them in to avoid rebuilding per result. When omitted they
+    are built internally, preserving standalone-script callers. tag_context is the
+    4-tuple returned by load_tag_context().
 
     Returns:
         Number of events processed
@@ -1882,9 +1933,6 @@ def process_events(cursor, connection, crawl_result_id, website_name, run_date_s
         if row and row[0]:
             blocked_location_names = {name.strip().lower() for name in row[0].split(',')}
 
-    locations_map = build_locations_map(cursor)
-    websites_map = build_websites_map(cursor)
-
     safe_filename = create_safe_filename(website_name)
 
     # Try JSON first, fall back to markdown
@@ -1906,15 +1954,18 @@ def process_events(cursor, connection, crawl_result_id, website_name, run_date_s
                 crawled_content,
             )
 
-    current_date = datetime.now().date()
-    future_limit_date = (datetime.now() + timedelta(days=FUTURE_WINDOW_DAYS)).date()
+    current_date, future_limit_date = get_active_date_window()
 
-    # Get tag rules, aliases, and ancestor map from database
-    tag_rules = db.get_tag_rules(cursor)
-    tag_aliases = db.get_tag_aliases(cursor)
-    tag_rules['rewrite'].update(tag_aliases)  # aliases override rewrites
-    ancestor_map, root_tags = _load_tag_ancestor_map(cursor)
-    disambiguation_rules = db.get_tag_disambiguations(cursor)
+    # Build the per-run context lazily (only after we know there are rows to
+    # process), reusing what the caller passed in. These are immutable across a
+    # Step-4 run, so main.py builds them once and threads them through.
+    if locations_map is None:
+        locations_map = build_locations_map(cursor)
+    if websites_map is None:
+        websites_map = build_websites_map(cursor)
+    if tag_context is None:
+        tag_context = load_tag_context(cursor)
+    tag_rules, ancestor_map, root_tags, disambiguation_rules = tag_context
 
     processed_rows = []
     rejection_counts = {}
@@ -1935,7 +1986,7 @@ def process_events(cursor, connection, crawl_result_id, website_name, run_date_s
         if is_obvious_non_event(row_dict.get('name', ''),
                                 row_dict.get('description', '')):
             log_rejection(
-                cursor, connection, crawl_result_id, website_id,
+                cursor, crawl_result_id, website_id,
                 rejection_type='non_event_junk', stage='extract',
                 event_name=row_dict.get('name'),
                 event_url=(row_dict.get('url') or '').strip() or None,
@@ -1951,7 +2002,7 @@ def process_events(cursor, connection, crawl_result_id, website_name, run_date_s
         event_url = (row_dict.get('url') or '').strip()
         if event_url and crawled_content and not _url_grounded_in_content(event_url, crawled_content):
             log_rejection(
-                cursor, connection, crawl_result_id, website_id,
+                cursor, crawl_result_id, website_id,
                 rejection_type='url_not_in_content', stage='extract',
                 event_name=row_dict.get('name'), event_url=event_url,
                 start_date=(row_dict.get('start_date') or None),
@@ -1966,7 +2017,7 @@ def process_events(cursor, connection, crawl_result_id, website_name, run_date_s
             if not ok:
                 if reason in ('end_in_past', 'start_too_future'):
                     log_rejection(
-                        cursor, connection, crawl_result_id, website_id,
+                        cursor, crawl_result_id, website_id,
                         rejection_type=reason, stage='extract',
                         event_name=row_dict.get('name'), event_url=event_url or None,
                         start_date=(row_dict.get('start_date') or None),
@@ -2064,8 +2115,8 @@ def process_events(cursor, connection, crawl_result_id, website_name, run_date_s
                          occ[2] if len(occ) > 2 and occ[2] else None,
                          occ[3] if len(occ) > 3 else None, i)
                     )
-                except Exception:
-                    pass
+                except Exception as e:
+                    print(f"    - Warning: failed to insert occurrence {occ!r} for crawl_event {crawl_event_id}: {e}")
 
         # Insert tags
         for tag in event_data.get('tags', []):
@@ -2199,7 +2250,7 @@ def apply_crawled_details(cursor, connection, ce_id, data, tag_context):
                     past = parsed_start < (today - timedelta(days=PAST_START_GRACE_DAYS))
                 if past:
                     log_rejection(
-                        cursor, connection, cr_id, ws_id,
+                        cursor, cr_id, ws_id,
                         rejection_type='end_in_past', stage='detail_crawl',
                         event_name=data.get('name'),
                         event_url=data.get('url'),
@@ -2306,7 +2357,6 @@ async def crawl_event_details(cursor, connection, candidates, num_workers=10):
 
     Returns number of events successfully updated.
     """
-    from crawl4ai import AsyncWebCrawler
     import extractor  # Local import to avoid circular dependency with extractor→processor
 
     print(f"\n  Crawling details for {len(candidates)} event(s) with missing descriptions...")
@@ -2316,12 +2366,7 @@ async def crawl_event_details(cursor, connection, candidates, num_workers=10):
     website_settings = db.get_website_crawl_settings(cursor, website_ids)
 
     # Load tag processing context
-    tag_rules = db.get_tag_rules(cursor)
-    tag_aliases = db.get_tag_aliases(cursor)
-    tag_rules['rewrite'].update(tag_aliases)
-    ancestor_map, root_tags = db.build_tag_ancestor_map(cursor)
-    disambiguation_rules = db.get_tag_disambiguations(cursor)
-    tag_context = (tag_rules, ancestor_map, root_tags, disambiguation_rules)
+    tag_context = load_tag_context(cursor)
 
     # Build crawl configs per website (once each)
     crawl_configs = {

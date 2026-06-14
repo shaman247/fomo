@@ -77,9 +77,7 @@ load_dotenv()
 
 try:
     from google import genai
-    from google.genai.types import (
-        InlinedRequest, InlinedResponse, GenerateContentConfig, JobState
-    )
+    from google.genai.types import InlinedRequest, GenerateContentConfig
     GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
     GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.1-flash-lite")
     GEMINI_TIMEOUT = int(os.environ.get("GEMINI_TIMEOUT", "120"))
@@ -675,11 +673,6 @@ def chunk_content(content, events_per_chunk=EVENTS_PER_CHUNK, max_chars=MAX_CHUN
     return size_chunks, 'size'
 
 
-def count_event_markers(content):
-    """Count markdown event headers in content."""
-    return len(re.findall(r'^\s*\d+\.\s*###\s*\[|^###\s*\[', content, re.MULTILINE))
-
-
 # =============================================================================
 # Extraction Functions
 # =============================================================================
@@ -688,6 +681,12 @@ def estimate_event_count(content):
     """
     Estimate the number of events on a page using pattern matching.
     Returns a rough estimate to decide whether to use chunked extraction.
+
+    Signals are combined with max() (not summed) so overlapping signals on the
+    same page don't inflate the estimate and push small pages into the more
+    expensive chunked mode. Under-estimation is the dangerous direction: a
+    many-event page routed to single-call mode hits the ~8K output-token cap
+    and the extraction silently collapses to a fraction of the real events.
     """
     date_count = len(re.findall(
         r'(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2}',
@@ -697,8 +696,44 @@ def estimate_event_count(content):
     event_url_count = len(re.findall(r'/events?/[^/\s"\']+', content))
     listing_url_count = len(re.findall(r'/listings?/[^/\s"\']+', content))
 
+    # ISO-format date lines: calendar exports and synthetic cards emit one
+    # `Date: 2026-06-14` (or a bare `2026-06-14` line start) per event card,
+    # so these are counted unhalved.
+    iso_date_line_count = len(re.findall(
+        r'^[ \t>*_-]*(?:(?:Dates?|When)[:*_ \t]+)?\d{4}-\d{2}-\d{2}\b',
+        content, re.MULTILINE | re.IGNORECASE
+    ))
+
+    # Cinema/box-office listings: each film-day entry links to one /booking/
+    # page (one link per entry, so unhalved), and/or carries one
+    # "Buy Tickets" link per showtime (several showtimes per entry, halved).
+    booking_url_count = len(re.findall(r'/booking/[^/\s"\']+', content))
+    ticket_link_count = len(re.findall(r'Buy\s+Tickets?|Get\s+Tickets?|Book\s+Now', content, re.IGNORECASE))
+
+    # `EVENT DETAIL URL:` markers are injected by our own js_code exactly
+    # once per event card.
+    detail_marker_count = len(re.findall(r'EVENT\s+DETAIL\s+URL:', content))
+
+    # Markdown linked headings (`### [Title](url)` .. `##### [...]`) mark one
+    # event card each on most listing pages; `##` is excluded as it is mostly
+    # navigation. Halved since some sites also use them for non-event sections.
+    linked_heading_count = len(re.findall(
+        r'^[ \t]*(?:[\*\-]\s+|\d+\.\s+)?#{3,5}\s*\[[^\]\s]',
+        content, re.MULTILINE
+    ))
+
     # Dates may appear 2x per event (heading + details), so halve them
-    return max(date_count // 2, view_event_count, event_url_count // 2, listing_url_count // 2)
+    return max(
+        date_count // 2,
+        view_event_count,
+        event_url_count // 2,
+        listing_url_count // 2,
+        iso_date_line_count,
+        booking_url_count,
+        ticket_link_count // 2,
+        detail_marker_count,
+        linked_heading_count // 2,
+    )
 
 
 # Markdown markers that signal the start of a new event card on a listing page.
@@ -789,18 +824,15 @@ def get_enrichment_prompt(event_names, venue_name, request_id="", content_snippe
     """Generate prompt for enriching events with descriptions, hashtags, and emoji."""
     rid_section = f"\n\nIMPORTANT: Set request_id to \"{request_id}\" in your response." if request_id else ""
 
-    if content_snippets:
-        # Include content context for each event
-        events_section_parts = []
-        for name in event_names:
-            snippet = content_snippets.get(name)
-            if snippet:
-                events_section_parts.append(f"- {name}\n  Context: {snippet}")
-            else:
-                events_section_parts.append(f"- {name}")
-        events_section = "\n".join(events_section_parts)
-    else:
-        events_section = "\n".join(f"- {name}" for name in event_names)
+    content_snippets = content_snippets or {}
+    events_section_parts = []
+    for name in event_names:
+        snippet = content_snippets.get(name)
+        if snippet:
+            events_section_parts.append(f"- {name}\n  Context: {snippet}")
+        else:
+            events_section_parts.append(f"- {name}")
+    events_section = "\n".join(events_section_parts)
 
     return f'''For each event at {venue_name}, provide:
 - description: 1-3 sentence description built from words and sentences that actually appear in the event's own Context block. If the Context only has the name, date/time, venue, and links — with no descriptive prose — return EXACTLY "No description available." Do NOT paraphrase the event name. Do NOT write generic filler like "is a local community event" or "visit the official website for more details". Do NOT use background knowledge about the artist, venue, or topic. Each event's description must come from THAT event's Context block, not a neighbor's.
@@ -1000,131 +1032,17 @@ For each event provide: name, location (venue name), occurrences (array of start
 
 CRITICAL DATE RULES:
 - Only return occurrences for SPECIFIC calendar dates EXPLICITLY shown on the page near the event (e.g. "May 7, 2026", "Sat Jun 14", "9/22").
-- EXHIBITIONS: for an art exhibition / gallery show / installation with a stated date range ("March 1 – July 5", "On view through June 30"), return ONE occurrence with start_date = opening date and end_date = closing date. Never collapse the run to a single day, and never stamp today's date as the exhibition date.
+- EXHIBITIONS: for an art exhibition / gallery show / installation with a stated date range ("March 1 – July 5", "On view through June 30"), return ONE occurrence with start_date = opening date and end_date = closing date. Never collapse the run to a single day, and never stamp today's date as the exhibition date. An exhibition whose OPENING date has already passed is STILL on view as long as its closing date is today or later — keep it, using the original (past) opening date as start_date; do NOT null it or skip it because it already opened.
 - RECEPTION vs RUN: a timed opening/closing reception, opening night, or preview is a SEPARATE single-day event, NOT an occurrence of the exhibition. If a page lists both a dated+timed reception and a broader exhibition run, emit TWO events — the reception (one single-day occurrence: its date + time) and the exhibition (one start→end run occurrence) — never the full run as a second occurrence of the reception, and never the reception's time on the run.
 - If an event is described as "monthly", "weekly", "ongoing", "permanent", "recurring", or has no specific date listed, set occurrences=null. Do NOT invent a next-occurrence date.
 - Do NOT default to today's date when no date is listed.
 - Do NOT extract dates from URLs or Google Calendar/iCal links — those often reference past instances. Only use dates visible in the page text adjacent to the event.
-- Past dates (before today) should also be set to null — those events have already happened.
+- Past dates (before today) should also be set to null — those events have already happened. EXCEPTION: a multi-day exhibition / gallery show / installation whose closing date (end_date) is today or later is still on view — keep its original (past) opening date as start_date and its closing date as end_date; do NOT null it.
 - An empty/null occurrences field is much better than a fabricated date.
 {note_section}{rid_section}
 Website content:
 
 {chunk_text}'''
-
-
-async def extract_chunk(chunk_content, current_date_string, notes):
-    """
-    Extract events from a single content chunk.
-
-    Returns a list of simple event dicts, or empty list on error.
-    """
-    prompt = get_chunk_prompt(chunk_content, current_date_string, notes)
-
-    try:
-        response = await asyncio.wait_for(
-            genai_client.aio.models.generate_content(
-                model=GEMINI_MODEL,
-                contents=prompt,
-                config={
-                    "response_mime_type": "application/json",
-                    "response_schema": SimpleEventList,
-                }
-            ),
-            timeout=CHUNK_TIMEOUT
-        )
-        result = json.loads(response.text.strip())
-        return result.get('events', [])
-    except asyncio.TimeoutError:
-        print(f"      Chunk timeout after {CHUNK_TIMEOUT}s")
-        return []
-    except Exception as e:
-        print(f"      Chunk error: {e}")
-        return []
-
-
-async def extract_large_page(url, content, current_date_string, name, notes, max_batches=None):
-    """
-    Chunked extraction for large pages.
-
-    1. Split content into manageable chunks (by events or by size)
-    2. Extract events from each chunk sequentially
-    3. Enrich all events with descriptions/hashtags/emoji in batches
-    4. Combine and return results
-
-    Args:
-        max_batches: Maximum enrichment batches. None uses DEFAULT_MAX_BATCHES.
-
-    Returns the combined result as a JSON string.
-    """
-    if max_batches is None:
-        max_batches = DEFAULT_MAX_BATCHES
-    max_events = max_batches * ENRICHMENT_BATCH_SIZE
-
-    # Split content into chunks using smart chunking
-    chunks, chunk_method = chunk_content(content, EVENTS_PER_CHUNK, MAX_CHUNK_CHARS)
-    print(f"    - Split into {len(chunks)} chunks using {chunk_method}-based chunking")
-
-    # Extract events from each chunk
-    all_simple_events = []
-    skipped_chunks = 0
-    for i, chunk in enumerate(chunks):
-        # Stop extracting chunks once we have enough events for max_batches
-        if len(all_simple_events) >= max_events:
-            skipped_chunks = len(chunks) - i
-            break
-        chunk_events = count_event_markers(chunk)
-        print(f"    - Processing chunk {i + 1}/{len(chunks)} (~{chunk_events} events, {len(chunk)} chars)...")
-        events = await extract_chunk(chunk, current_date_string, notes)
-        if events:
-            print(f"      Got {len(events)} events")
-            all_simple_events.extend(events)
-        else:
-            print(f"      No events extracted")
-
-    if not all_simple_events:
-        return '{"events": []}'
-
-    if skipped_chunks > 0:
-        print(f"    - Skipped {skipped_chunks} remaining chunk(s) (already have {len(all_simple_events)} events)")
-
-    print(f"    - Total from chunks: {len(all_simple_events)} events")
-
-    # Cap events at max_batches to limit API cost
-    total_batches_needed = -(-len(all_simple_events) // ENRICHMENT_BATCH_SIZE)  # ceiling division
-    if total_batches_needed > max_batches:
-        print(f"    - WARNING: [{name}] {len(all_simple_events)} events would need {total_batches_needed} batches, capping at {max_batches} ({max_events} events). "
-              f"Set max_batches in websites table to override.")
-        all_simple_events = all_simple_events[:max_events]
-
-    # Enrich events with descriptions/hashtags/emoji in batches
-    event_names = [e['name'] for e in all_simple_events]
-    num_batches = -(-len(event_names) // ENRICHMENT_BATCH_SIZE)
-    all_enrichments = {}
-
-    for i in range(0, len(event_names), ENRICHMENT_BATCH_SIZE):
-        batch = event_names[i:i + ENRICHMENT_BATCH_SIZE]
-        print(f"    - Enriching batch {i // ENRICHMENT_BATCH_SIZE + 1}/{num_batches} ({len(batch)} events)...")
-        enrichments = await enrich_events_batch(batch, name, content=content)
-        all_enrichments.update(enrichments)
-
-    # Combine simple events with enrichments
-    full_events = []
-    for event in all_simple_events:
-        enrichment = all_enrichments.get(event['name'], {})
-        full_event = {
-            'name': event['name'],
-            'location': event['location'],
-            'sublocation': None,  # Not extracted in chunked pass
-            'occurrences': event.get('occurrences'),
-            'url': event.get('url'),
-            'description': enrichment.get('description', 'No description available.'),
-            'hashtags': enrichment.get('hashtags', ['Event']),
-            'emoji': enrichment.get('emoji', '📅'),
-        }
-        full_events.append(full_event)
-
-    return json.dumps({'events': full_events})
 
 
 def get_prompt(url, page_content, current_date_string, name, notes, existing_events=None, request_id=""):
@@ -1177,7 +1095,7 @@ Based on the website content below, extract all upcoming events. For each event,
   - start_time: Time like "4:00 PM" (optional)
   - end_date: End date if different from start (optional)
   - end_time: End time (optional)
-  EXHIBITIONS: For an art exhibition, gallery show, or installation that runs over a date range (e.g. "March 1 – July 5", "On view through June 30"), create ONE occurrence spanning the run: start_date = opening date, end_date = closing date. Do NOT collapse the run to a single day, and do NOT stamp today's date as the exhibition date. If the page gives no opening or closing date at all (a permanent / date-less display), set occurrences=null instead of inventing a single date.
+  EXHIBITIONS: For an art exhibition, gallery show, or installation that runs over a date range (e.g. "March 1 – July 5", "On view through June 30"), create ONE occurrence spanning the run: start_date = opening date, end_date = closing date. Do NOT collapse the run to a single day, and do NOT stamp today's date as the exhibition date. An exhibition whose OPENING date has already passed is STILL on view as long as its closing date is today or later — keep it, using the original (past) opening date as start_date; do NOT null it or skip it because it already opened. If the page gives no opening or closing date at all (a permanent / date-less display), set occurrences=null instead of inventing a single date.
   RECEPTION vs RUN: A timed opening/closing reception, opening night, or preview is a DISTINCT single-day event — NOT an occurrence of the exhibition it celebrates. When a page describes both a dated, timed reception AND a broader exhibition run (e.g. "Opening reception June 4, 6–8pm" for a show "on view June 4 – July 10"), emit TWO separate events: (1) the reception, with ONE single-day occurrence (its date + time), and (2) the exhibition, with ONE run occurrence (start_date = opening, end_date = closing). Never attach the exhibition's full run as a second occurrence of the reception event, and never put the reception's time on the exhibition run.
 - description: 1-3 sentence description based ONLY on what is stated in the source content. If the listing only has a name/date/time with no further details, use "No description available." Do NOT make up or infer descriptions.
 - url: Specific event URL if available
@@ -1187,7 +1105,7 @@ Based on the website content below, extract all upcoming events. For each event,
 {note_section}{rid_section}
 Rules:
 - Extract ALL events from the page - do not skip or summarize
-- Do NOT extract things that are not attendable public events. Skip: venue/program closures and holiday-closure notices ("Museum Closed", "Park Closes at 5pm", "Office Closed for Juneteenth"); calls for submissions, applications, or grants ("Open Call for Artists", "Submission Deadline", "Micro Grants Round 3"); venue marketing (space/room rentals, "Private Events", "Available for Booking", dining service like "Signature Breakfast"); season passes and ticketing placeholders ("Summer Pass 2026", "Showtimes"); fundraising campaigns and donation-match drives ("Match Campaign", "Giving Day") — an attendable benefit concert or gala IS an event; submit-your-work contests with an entry deadline ("Library Card Art Contest") — a contest held live in front of an audience (trivia, dance, pie-eating) IS an event; info-booth or vendor-table marketing listings inside a festival program ("Our Info Booths"); and content placeholders or unrelated spam. These are not events — leave them out entirely.
+- Do NOT extract things that are not attendable public events. Skip: venue/program closures and holiday-closure notices ("Museum Closed", "Park Closes at 5pm", "Office Closed for Juneteenth"); calls for submissions, applications, or grants ("Open Call for Artists", "Submission Deadline", "Micro Grants Round 3"); venue marketing (space/room rentals, "Private Events", "Available for Booking", dining service like "Signature Breakfast"); season passes and ticketing placeholders ("Summer Pass 2026", "Showtimes"); fundraising campaigns and donation-match drives ("Match Campaign", "Giving Day") — an attendable benefit concert or gala IS an event; submit-your-work contests with an entry deadline ("Library Card Art Contest") — a contest held live in front of an audience (trivia, dance, pie-eating) IS an event; info-booth or vendor-table marketing listings inside a festival program ("Our Info Booths"); childcare offered as an amenity during another activity ("Nursery Care" during worship services, babysitting while parents attend) — a children's program or childcare-related class that is itself the event ("Toddler Storytime", "Babysitting 101 Training", "Preschool Open House") IS an event; and content placeholders or unrelated spam. These are not events — leave them out entirely.
 - {city_config.extraction_region_rule()}
 - Ignore unrelated event sections ("Hot Events", "Similar events", etc.)
 - For recurring events, expand ALL individual dates into the occurrences array
@@ -1281,14 +1199,6 @@ async def prepare_extraction(cursor, crawl_result_id, website_name, notes="",
     website_id = result[0] if result else None
     prep.website_id = website_id
 
-    # Get existing upcoming events from this website
-    existing_events = []
-    if website_id:
-        existing_events = db.get_existing_upcoming_events(cursor, website_id)
-        if existing_events:
-            print(f"    - Found {len(existing_events)} existing upcoming events to include in prompt")
-    prep.existing_events = existing_events
-
     current_date_string = datetime.now().strftime('%Y-%m-%d')
 
     # Extract URL from first line if present
@@ -1340,11 +1250,34 @@ async def prepare_extraction(cursor, crawl_result_id, website_name, notes="",
         else:
             prep.extraction_type = 'single'
             print(f"    - Preparing extraction using {GEMINI_MODEL} ({len(content_to_process)} chars)...")
+
+            # Get existing upcoming events from this website (single-prompt path only —
+            # neither the chunked nor vision prompts consume them, so skip the
+            # expensive query for those heavier-content sites).
+            existing_events = []
+            if website_id:
+                existing_events = db.get_existing_upcoming_events(cursor, website_id)
+                if existing_events:
+                    print(f"    - Found {len(existing_events)} existing upcoming events to include in prompt")
+            prep.existing_events = existing_events
+
             prep.prompt = get_prompt(url, content_to_process, current_date_string,
                                      website_name, notes, existing_events,
                                      request_id=f"cr-{crawl_result_id}")
 
     return prep
+
+
+def _apply_fingerprint_marker_and_status(cursor, connection, prep, copied):
+    """Store the fingerprint-match skip marker and advance the crawl result to
+    'processed' after its crawl_events were copied from a prior identical crawl.
+
+    The caller runs db.copy_crawl_events first (so it can emit its own log line
+    using the returned count) and passes that count here.
+    """
+    marker = f'{{"events": [], "skipped": "fingerprint match: cr-{prep.copy_from_crawl_result_id}"}}'
+    db.update_crawl_result_extracted(cursor, connection, prep.crawl_result_id, marker)
+    db.update_crawl_result_processed(cursor, connection, prep.crawl_result_id, copied)
 
 
 async def execute_extraction_sync(cursor, connection, prep):
@@ -1367,9 +1300,7 @@ async def execute_extraction_sync(cursor, connection, prep):
         )
         reason = (prep.skip_extraction_reason or "identical content").format(count=copied)
         print(f"    - {reason}")
-        marker = f'{{"events": [], "skipped": "fingerprint match: cr-{prep.copy_from_crawl_result_id}"}}'
-        db.update_crawl_result_extracted(cursor, connection, crawl_result_id, marker)
-        db.update_crawl_result_processed(cursor, connection, crawl_result_id, copied)
+        _apply_fingerprint_marker_and_status(cursor, connection, prep, copied)
         return True
 
     # Handle pre-resolved results (e.g., vision with no images)
@@ -1695,36 +1626,18 @@ def is_available():
 # Batch API Functions
 # =============================================================================
 
-def _build_single_request(prep):
-    """Build an InlinedRequest for single-pass extraction."""
+def _build_eventlist_request(prep, contents, req_type):
+    """Build an InlinedRequest for single-pass or vision EventList extraction."""
     request_id = f"cr-{prep.crawl_result_id}"
     return InlinedRequest(
-        contents=prep.prompt,
+        contents=contents,
         config=GenerateContentConfig(
             response_mime_type="application/json",
             response_schema=EventList,
         ),
         metadata={
             "crawl_result_id": str(prep.crawl_result_id),
-            "type": "single",
-            "website_name": prep.website_name,
-            "request_id": request_id,
-        }
-    )
-
-
-def _build_vision_request(prep):
-    """Build an InlinedRequest for vision extraction."""
-    request_id = f"cr-{prep.crawl_result_id}"
-    return InlinedRequest(
-        contents=prep.vision_contents,
-        config=GenerateContentConfig(
-            response_mime_type="application/json",
-            response_schema=EventList,
-        ),
-        metadata={
-            "crawl_result_id": str(prep.crawl_result_id),
-            "type": "vision",
+            "type": req_type,
             "website_name": prep.website_name,
             "request_id": request_id,
         }
@@ -1817,14 +1730,14 @@ def build_batch_requests(preparations):
     for crid, prep in preparations.items():
         label = f"{prep.website_name} (cr-{crid})"
         if prep.extraction_type == 'single':
-            req = _validate_request_size(_build_single_request(prep), label)
+            req = _validate_request_size(_build_eventlist_request(prep, prep.prompt, 'single'), label)
             if req:
                 requests.append(req)
             else:
                 dropped_crids[crid] = (f"Prompt too large (~{len(prep.prompt) // CHARS_PER_TOKEN:,} est. tokens, "
                                        f"limit {MAX_REQUEST_TOKENS:,})")
         elif prep.extraction_type == 'vision':
-            req = _validate_request_size(_build_vision_request(prep), label)
+            req = _validate_request_size(_build_eventlist_request(prep, prep.vision_contents, 'vision'), label)
             if req:
                 requests.append(req)
             else:
@@ -2083,15 +1996,25 @@ def _parse_request_id(response_text):
         return None
 
 
+def _build_request_id_index(requests):
+    """Build a lookup from request_id to request metadata."""
+    id_to_metadata = {}
+    for req in requests:
+        metadata = req.metadata or {}
+        rid = metadata.get("request_id", "")
+        if rid:
+            id_to_metadata[rid] = metadata
+    return id_to_metadata
+
+
 def _resolve_metadata(request_id, id_to_metadata):
     """Look up request metadata from a response's request_id.
 
-    Returns (metadata, matched) tuple. If no match found, returns
-    a fallback metadata dict with crid=0.
+    Returns the metadata dict, or None if no match is found.
     """
-    if request_id and request_id in id_to_metadata:
-        return id_to_metadata[request_id], True
-    return {"crawl_result_id": "0", "type": "", "website_name": "unknown"}, False
+    if request_id:
+        return id_to_metadata.get(request_id)
+    return None
 
 
 def process_batch_responses(requests, responses, preparations):
@@ -2106,22 +2029,15 @@ def process_batch_responses(requests, responses, preparations):
         preparations: dict of {crawl_result_id: PreparedExtraction}
 
     Returns:
-        tuple of (single_results, chunked_events, failed_ids):
+        tuple of (single_results, chunked_events):
         - single_results: {crawl_result_id: json_string} for single/vision
         - chunked_events: {crawl_result_id: [simple_event_dicts]} for chunks
-        - failed_ids: list of crawl_result_ids that completely failed
     """
     # Build lookup from request_id to request metadata
-    id_to_metadata = {}
-    for req in requests:
-        metadata = req.metadata or {}
-        rid = metadata.get("request_id", "")
-        if rid:
-            id_to_metadata[rid] = metadata
+    id_to_metadata = _build_request_id_index(requests)
 
     single_results = {}  # crid -> json string
     chunk_events_by_crid = {}  # crid -> list of simple event dicts
-    failed_crids = set()
     unmatched_count = 0
 
     for i, resp in enumerate(responses):
@@ -2138,9 +2054,9 @@ def process_batch_responses(requests, responses, preparations):
 
             # Match response to request via request_id in the JSON
             request_id = _parse_request_id(response_text)
-            metadata, matched = _resolve_metadata(request_id, id_to_metadata)
+            metadata = _resolve_metadata(request_id, id_to_metadata)
 
-            if not matched:
+            if metadata is None:
                 unmatched_count += 1
                 print(f"    - WARNING: Response {i} has unrecognized request_id: {request_id!r}")
                 continue
@@ -2191,7 +2107,7 @@ def process_batch_responses(requests, responses, preparations):
             # All chunks failed — store empty result
             single_results[crid] = '{"events": []}'
 
-    return single_results, chunk_events_by_crid, list(failed_crids)
+    return single_results, chunk_events_by_crid
 
 
 def process_enrichment_responses(requests, responses, chunked_events, preparations):
@@ -2210,12 +2126,7 @@ def process_enrichment_responses(requests, responses, chunked_events, preparatio
         dict of {crawl_result_id: json_string} with fully enriched events
     """
     # Build lookup from request_id to request metadata
-    id_to_metadata = {}
-    for req in requests:
-        metadata = req.metadata or {}
-        rid = metadata.get("request_id", "")
-        if rid:
-            id_to_metadata[rid] = metadata
+    id_to_metadata = _build_request_id_index(requests)
 
     # Collect enrichments per crawl_result_id
     enrichments_by_crid = {}
@@ -2233,9 +2144,9 @@ def process_enrichment_responses(requests, responses, chunked_events, preparatio
 
             # Match response to request via request_id
             request_id = _parse_request_id(response_text)
-            metadata, matched = _resolve_metadata(request_id, id_to_metadata)
+            metadata = _resolve_metadata(request_id, id_to_metadata)
 
-            if not matched:
+            if metadata is None:
                 print(f"    - WARNING: Enrichment response {i} has unrecognized request_id: {request_id!r}")
                 continue
 
@@ -2268,6 +2179,55 @@ def process_enrichment_responses(requests, responses, chunked_events, preparatio
         print(f"    - {prep.website_name}: Combined {len(events)} events ({enriched_count} enriched)")
 
     return results
+
+
+async def _run_enrichment_phase(enrichment_requests, chunked_events, preparations,
+                                display_name, poll_interval, timeout):
+    """Submit/poll/process the Phase-2 enrichment batch for chunked results.
+
+    When there are no enrichment requests, falls back to combining each crawl
+    result's chunked events with empty enrichments. The caller is responsible
+    for emitting its own (distinct) lead-in log line before calling this.
+
+    Returns:
+        dict of {crawl_result_id: json_string} with fully enriched events
+    """
+    enriched_results = {}
+    if enrichment_requests:
+        phase2_responses = await submit_and_poll_batch(
+            enrichment_requests,
+            display_name=display_name,
+            poll_interval=poll_interval,
+            timeout=timeout,
+        )
+        enriched_results = process_enrichment_responses(
+            enrichment_requests, phase2_responses, chunked_events, preparations
+        )
+    else:
+        for crid, events in chunked_events.items():
+            enriched_results[crid] = _combine_chunked_results(events, {})
+    return enriched_results
+
+
+def _store_batch_results(results_dict, crid_list):
+    """Store extracted batch results and clear their batch_job_name tags.
+
+    Opens and closes its own DB connection (matching the inline blocks it
+    replaces). Returns a list of (crawl_result_id, True) tuples for the stored
+    results, in dict-iteration order.
+    """
+    stored = []
+    conn = db.create_connection()
+    cursor = conn.cursor(buffered=True)
+    try:
+        for crid, result_text in results_dict.items():
+            db.update_crawl_result_extracted(cursor, conn, crid, result_text)
+            stored.append((crid, True))
+        db.clear_batch_job_name(cursor, conn, crid_list)
+    finally:
+        cursor.close()
+        conn.close()
+    return stored
 
 
 async def _process_completed_batch(responses, crid_list, extraction_queue,
@@ -2307,7 +2267,7 @@ async def _process_completed_batch(responses, crid_list, extraction_queue,
 
     # Re-build requests just for metadata matching (not re-submitted)
     batch_requests, _ = build_batch_requests(preparations)
-    single_results, chunked_events, failed_ids = process_batch_responses(
+    single_results, chunked_events = process_batch_responses(
         batch_requests, responses, preparations
     )
 
@@ -2315,39 +2275,36 @@ async def _process_completed_batch(responses, crid_list, extraction_queue,
     enriched_results = {}
     if chunked_events:
         enrichment_requests = build_enrichment_requests(chunked_events, preparations)
+        display_name = None
         if enrichment_requests:
             print(f"\n  Enriching {sum(len(e) for e in chunked_events.values())} events...")
             timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
-            phase2_responses = await submit_and_poll_batch(
-                enrichment_requests,
-                display_name=f"fomo-enrich-{timestamp}",
-                poll_interval=poll_interval,
-                timeout=timeout,
-            )
-            enriched_results = process_enrichment_responses(
-                enrichment_requests, phase2_responses, chunked_events, preparations
-            )
-        else:
-            for crid, events in chunked_events.items():
-                enriched_results[crid] = _combine_chunked_results(events, {})
+            display_name = f"fomo-enrich-{timestamp}"
+        enriched_results = await _run_enrichment_phase(
+            enrichment_requests, chunked_events, preparations,
+            display_name, poll_interval, timeout,
+        )
 
     # Store results and clear batch tracking
     all_batch_results = {**single_results, **enriched_results}
+    results.extend(_store_batch_results(all_batch_results, crid_list))
+
+    return results
+
+
+def _clear_batch_names(crid_list):
+    """Clear the batch_job_name tag for a set of crawl results.
+
+    Owns its own DB connection lifecycle (matching the inline blocks it
+    replaces — no None-check on create_connection()).
+    """
     conn = db.create_connection()
     cursor = conn.cursor(buffered=True)
     try:
-        for crid, result_text in all_batch_results.items():
-            db.update_crawl_result_extracted(cursor, conn, crid, result_text)
-            results.append((crid, True))
-        for crid in failed_ids:
-            db.update_crawl_result_failed(cursor, conn, crid, "Batch extraction failed")
-            results.append((crid, False))
         db.clear_batch_job_name(cursor, conn, crid_list)
     finally:
         cursor.close()
         conn.close()
-
-    return results
 
 
 async def _poll_and_process_resumed_batch(job_name, crid_list, extraction_queue,
@@ -2365,13 +2322,7 @@ async def _poll_and_process_resumed_batch(job_name, crid_list, extraction_queue,
         )
     except Exception as e:
         print(f"  Warning: Could not retrieve batch job {job_name}: {e}")
-        conn = db.create_connection()
-        cursor = conn.cursor(buffered=True)
-        try:
-            db.clear_batch_job_name(cursor, conn, crid_list)
-        finally:
-            cursor.close()
-            conn.close()
+        _clear_batch_names(crid_list)
         return []
 
     state_name = batch_job.state.name if batch_job.state else "UNKNOWN"
@@ -2379,26 +2330,14 @@ async def _poll_and_process_resumed_batch(job_name, crid_list, extraction_queue,
 
     if state_name in ("JOB_STATE_FAILED", "JOB_STATE_CANCELLED"):
         print(f"  Batch {job_name} is {state_name} — will re-prepare these items")
-        conn = db.create_connection()
-        cursor = conn.cursor(buffered=True)
-        try:
-            db.clear_batch_job_name(cursor, conn, crid_list)
-        finally:
-            cursor.close()
-            conn.close()
+        _clear_batch_names(crid_list)
         return []
 
     try:
         responses = await _poll_batch_until_done(batch_job, poll_interval, timeout)
     except RuntimeError as e:
         print(f"  Resumed batch failed: {e}")
-        conn = db.create_connection()
-        cursor = conn.cursor(buffered=True)
-        try:
-            db.clear_batch_job_name(cursor, conn, crid_list)
-        finally:
-            cursor.close()
-            conn.close()
+        _clear_batch_names(crid_list)
         return []
 
     return await _process_completed_batch(
@@ -2445,9 +2384,7 @@ async def _submit_poll_and_process_new_batch(extraction_queue, poll_interval, ti
                 copied = db.copy_crawl_events(
                     cursor, conn, prep.copy_from_crawl_result_id, crid
                 )
-                marker = f'{{"events": [], "skipped": "fingerprint match: cr-{prep.copy_from_crawl_result_id}"}}'
-                db.update_crawl_result_extracted(cursor, conn, crid, marker)
-                db.update_crawl_result_processed(cursor, conn, crid, copied)
+                _apply_fingerprint_marker_and_status(cursor, conn, prep, copied)
                 results.append((crid, True))
                 print(f"    - {item['name']}: identical content to crawl {prep.copy_from_crawl_result_id} — copied {copied} events")
             elif prep.resolved_result is not None:
@@ -2511,7 +2448,7 @@ async def _submit_poll_and_process_new_batch(extraction_queue, poll_interval, ti
         crawl_result_ids=batch_crids,
     )
 
-    single_results, chunked_events, failed_ids = process_batch_responses(
+    single_results, chunked_events = process_batch_responses(
         batch_requests, phase1_responses, preparations
     )
 
@@ -2522,34 +2459,14 @@ async def _submit_poll_and_process_new_batch(extraction_queue, poll_interval, ti
         if enrichment_requests:
             print(f"\n  Phase 2: Enriching {sum(len(e) for e in chunked_events.values())} "
                   f"events in {len(enrichment_requests)} batch(es)...")
-            phase2_responses = await submit_and_poll_batch(
-                enrichment_requests,
-                display_name=f"fomo-enrich-{timestamp}",
-                poll_interval=poll_interval,
-                timeout=timeout,
-            )
-            enriched_results = process_enrichment_responses(
-                enrichment_requests, phase2_responses, chunked_events, preparations
-            )
-        else:
-            for crid, events in chunked_events.items():
-                enriched_results[crid] = _combine_chunked_results(events, {})
+        enriched_results = await _run_enrichment_phase(
+            enrichment_requests, chunked_events, preparations,
+            f"fomo-enrich-{timestamp}", poll_interval, timeout,
+        )
 
     # Store results and clear batch tracking
     all_results = {**single_results, **enriched_results}
-    conn = db.create_connection()
-    cursor = conn.cursor(buffered=True)
-    try:
-        for crid, result_text in all_results.items():
-            db.update_crawl_result_extracted(cursor, conn, crid, result_text)
-            results.append((crid, True))
-        for crid in failed_ids:
-            db.update_crawl_result_failed(cursor, conn, crid, "Batch extraction failed")
-            results.append((crid, False))
-        db.clear_batch_job_name(cursor, conn, batch_crids)
-    finally:
-        cursor.close()
-        conn.close()
+    results.extend(_store_batch_results(all_results, batch_crids))
 
     return results
 

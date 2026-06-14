@@ -284,10 +284,13 @@ class TestRegionConflict(unittest.TestCase):
 
 
 class TestIsObviousNonEvent(unittest.TestCase):
-    """Junk filter: fundraising campaigns, submission-call contests, info booths.
+    """Junk filter: fundraising campaigns, submission-call contests, info
+    booths, childcare amenities.
 
     Positive fixtures are the real name+description of events 157587, 157914,
-    and 158129 (extracted 2026-06-10, hand-suppressed as UNKNOWN)."""
+    and 158129 (extracted 2026-06-10, hand-suppressed as UNKNOWN), plus
+    childcare-amenity events 159310, 363, 20105, and 108296 (church nursery
+    care during worship, hand-suppressed 2026-06-10/11)."""
 
     # --- positive fixtures: must be dropped ---
 
@@ -321,6 +324,39 @@ class TestIsObviousNonEvent(unittest.TestCase):
         self.assertTrue(is_obvious_non_event("North Fork Giving Day", ""))
         self.assertTrue(is_obvious_non_event(
             "Annual Fundraising Campaign 2026", None))
+
+    def test_nursery_care_during_worship(self):
+        # e159310 (Wiggin House) — childcare amenity during worship services,
+        # not an attendable event.
+        self.assertTrue(is_obvious_non_event(
+            "Nursery-Preschool Care",
+            "Our nursery provides a safe, nurturing environment for children "
+            "ages 6 months to 5 years during worship services."))
+
+    def test_nursery_childcare_during_the_service(self):
+        # e363 (All Souls) — "during the worship service" framing.
+        self.assertTrue(is_obvious_non_event(
+            "Nursery and Childcare",
+            "Nursery care provided by professional sitters is available for "
+            "children ages 1-3 during the worship service. Check in at the "
+            "front desk when you arrive for the service."))
+
+    def test_nursery_care_while_parents_attend(self):
+        # e20105 — "Parents can attend worship while their children are
+        # supervised" framing.
+        self.assertTrue(is_obvious_non_event(
+            "Nursery Care",
+            "Safe and professional nursery care provided for infants and "
+            "toddlers during Sunday morning services. Parents can attend "
+            "worship while their children are supervised in a welcoming "
+            "environment."))
+
+    def test_child_care_supporting_families_attending(self):
+        # e108296 — "to support families attending" framing.
+        self.assertTrue(is_obvious_non_event(
+            "Child Care",
+            "Child care services are provided weekly on Sunday mornings to "
+            "support families attending church activities."))
 
     # --- negative fixtures: real events that must NOT be dropped ---
 
@@ -379,12 +415,70 @@ class TestIsObviousNonEvent(unittest.TestCase):
             "Harvest Festival: Food Booths, Games & Live Music",
             "Stop by the food booths and enjoy live music all afternoon."))
 
+    def test_parent_child_classes_kept(self):
+        # Parent-child programs are attendable events — any non-amenity word
+        # in the name vetoes the childcare rule.
+        self.assertFalse(is_obvious_non_event(
+            "Toddler Storytime",
+            "Songs, rhymes, and stories for toddlers and their caregivers."))
+        self.assertFalse(is_obvious_non_event(
+            "Caregiver & Me",
+            "Music and movement for babies while caregivers participate."))
+
+    def test_childcare_workshops_kept(self):
+        # Childcare-themed trainings/classes are real events.
+        self.assertFalse(is_obvious_non_event(
+            "Childcare CPR Training",
+            "Learn infant and child CPR. Certification provided during the "
+            "session for parents, babysitters, and childcare providers."))
+        # e21737 — real fixture.
+        self.assertFalse(is_obvious_non_event(
+            "Babysitting 101 Training Course",
+            "A comprehensive course designed to help teens develop the "
+            "essential skills and responsibility needed to be a successful "
+            "babysitter."))
+        self.assertFalse(is_obvious_non_event(
+            "Infant Care Class for New Parents",
+            "Hands-on infant care basics for expecting and new parents."))
+
+    def test_preschool_open_house_kept(self):
+        self.assertFalse(is_obvious_non_event(
+            "Preschool Open House",
+            "Tour our nursery school classrooms and meet teachers who care "
+            "for children ages 2-5 during the school year."))
+
+    def test_dropoff_program_kept(self):
+        # A drop-off program that is itself the event — "while parents enjoy"
+        # is not during-another-activity-here framing, and the name has
+        # non-amenity words anyway.
+        self.assertFalse(is_obvious_non_event(
+            "Kids' Night Out Drop-Off Party",
+            "Drop the kids off for pizza, games, and a movie while parents "
+            "enjoy a night out."))
+
+    def test_public_records_nursery_club_series_kept(self):
+        # e90185 etc. — "The Nursery" is a club stage at Public Records; the
+        # leading "The" and artist names veto the name gate.
+        self.assertFalse(is_obvious_non_event(
+            "The Nursery: HAAi All Day Long",
+            "Nursery Sundays returns for the season with an all-day set from "
+            "London-based producer and DJ HAAi."))
+
+    def test_nursery_care_without_during_framing_kept(self):
+        # e53674 — amenity-shaped name but no during-another-activity signal
+        # in the description: fail open, leave for human review.
+        self.assertFalse(is_obvious_non_event(
+            "Nursery Care",
+            "Childcare services provided for families during the morning."))
+
     def test_two_signal_rules_require_description(self):
         # Without a corroborating description the ambiguous categories are
         # kept (conservative: a false drop silently loses a real event).
         self.assertFalse(is_obvious_non_event(
             "Children's Library Card Art Contest (PreK-Grade 5)", None))
         self.assertFalse(is_obvious_non_event("L’Alliance Booths", ""))
+        self.assertFalse(is_obvious_non_event("Nursery-Preschool Care", None))
+        self.assertFalse(is_obvious_non_event("Nursery Care", ""))
 
     def test_name_only_signature_still_works(self):
         # Pre-existing single-argument call style remains valid.
