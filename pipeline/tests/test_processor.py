@@ -16,6 +16,7 @@ from processor import (
     _extract_street_address,
     _parse_city_state,
     _region_conflict,
+    apply_crawled_details,
 )
 
 # Test cases: (input, expected_output, description)
@@ -480,10 +481,180 @@ class TestIsObviousNonEvent(unittest.TestCase):
         self.assertFalse(is_obvious_non_event("Nursery-Preschool Care", None))
         self.assertFalse(is_obvious_non_event("Nursery Care", ""))
 
+    def test_casting_call_dropped(self):
+        # e165536 — a casting/recruitment call, not an attendable public event.
+        self.assertTrue(is_obvious_non_event("Fashion Week Queens Casting Call"))
+        self.assertTrue(is_obvious_non_event("Open Casting Call for Short Film"))
+        self.assertTrue(is_obvious_non_event("Models Wanted"))
+        self.assertTrue(is_obvious_non_event("Dancers Needed for Music Video"))
+        self.assertTrue(is_obvious_non_event("Vocalists Sought for New Choir"))
+
+    def test_casting_adjacent_real_events_kept(self):
+        # "Wanted" / "casting" in other contexts must not over-match.
+        self.assertFalse(is_obvious_non_event(
+            "Wanted: Dead or Alive Screening",
+            "A 35mm screening of the 1987 action film."))
+        self.assertFalse(is_obvious_non_event(
+            "The Casting Couch: A Comedy Show",
+            "Stand-up comedy about Hollywood auditions."))
+
+    def test_election_day_marker_dropped(self):
+        # e165769 — bare civic date markers leak from gov/library calendars.
+        self.assertTrue(is_obvious_non_event("Primary Election Day"))
+        self.assertTrue(is_obvious_non_event("Election Day"))
+        self.assertTrue(is_obvious_non_event("General Election Day 2026"))
+        self.assertTrue(is_obvious_non_event("Presidential Primary Day"))
+        self.assertTrue(is_obvious_non_event("Primary Day"))
+
+    def test_election_night_events_kept(self):
+        # Attendable election-night occasions must survive (end-anchored marker).
+        self.assertFalse(is_obvious_non_event(
+            "Election Day Watch Party",
+            "Join us to watch the returns come in with drinks and snacks."))
+        self.assertFalse(is_obvious_non_event(
+            "Election Night Returns Social",
+            "Gather to follow the results together."))
+        self.assertFalse(is_obvious_non_event(
+            "Voter Registration Drive",
+            "Get registered to vote before the deadline."))
+
+    def test_attraction_admission_dropped(self):
+        # e166200 — a zoo's dated general-admission ticket, not a scheduled
+        # event. Name-only (works without a description).
+        self.assertTrue(is_obvious_non_event(
+            "Bergen County Zoo Admission 2026",
+            "Purchase tickets for admission to the Bergen County Zoo, located "
+            "in Van Saun County Park in Paramus."))
+        self.assertTrue(is_obvious_non_event("Bronx Zoo Admission"))
+        self.assertTrue(is_obvious_non_event("Botanical Garden Admission 2026"))
+
+    def test_general_admission_ticket_tier_kept(self):
+        # A show's "General Admission" ticket tier is not attraction admission.
+        self.assertFalse(is_obvious_non_event(
+            "Summer Jazz Series - General Admission",
+            "General admission tickets to the rooftop concert."))
+        self.assertFalse(is_obvious_non_event(
+            "Museum Late: After Hours Party (Admission Included)",
+            "An evening party with DJ, drinks, and gallery access."))
+
+    def test_rewards_membership_marketing_dropped(self):
+        # e166229 — retail loyalty marketing leaked from a store calendar.
+        self.assertTrue(is_obvious_non_event(
+            "Premium & Rewards Members Online Exclusive Bonus $10 Reward on "
+            "Our Biggest Books", None))
+
+    def test_member_occasion_kept(self):
+        # A real member occasion carries an occasion word and no marketing combo.
+        self.assertFalse(is_obvious_non_event(
+            "Rewards Members Holiday Party",
+            "Celebrate the season with fellow members."))
+        self.assertFalse(is_obvious_non_event(
+            "Member Appreciation Night",
+            "An evening of thanks for our members with light bites."))
+
+    def test_test_placeholder_rows_dropped(self):
+        # e166445 — an obvious test/placeholder row.
+        self.assertTrue(is_obvious_non_event("Do not buy tickets test test"))
+        self.assertTrue(is_obvious_non_event("test test"))
+
+    def test_test_word_in_real_event_kept(self):
+        # A lone "test" in a real name must not over-match.
+        self.assertFalse(is_obvious_non_event(
+            "Test Kitchen Cooking Class",
+            "A hands-on cooking class in our test kitchen."))
+        self.assertFalse(is_obvious_non_event(
+            "SAT Test Prep Workshop", "Free practice test and strategy session."))
+
+    def test_standing_attraction_dropped(self):
+        # e166689 / e166201 — a carousel and a water-park splash attraction:
+        # things you ride/visit whenever the venue is open, not scheduled events.
+        self.assertTrue(is_obvious_non_event(
+            "Le Carrousel",
+            "Take a whirl at Le Carrousel in Bryant Park with 14 delightful "
+            "creatures to ride. This carousel is an homage to both European and "
+            "American carousel traditions, revolving to French cabaret music."))
+        self.assertTrue(is_obvious_non_event(
+            "The Splash Zone at The Lakes at Darlington County Park",
+            "Bergen County's newest water attraction. Hop around and climb on "
+            "this obstacle course on the water."))
+
+    def test_attraction_requires_both_signals(self):
+        # Visit-it framing without an attraction noun (and vice versa) is kept.
+        self.assertFalse(is_obvious_non_event(
+            "Swing Dance Social",
+            "Take a whirl on the dance floor with a live band all night."))
+        self.assertFalse(is_obvious_non_event(
+            "Le Carrousel", None))
+
+    def test_attraction_event_at_attraction_kept(self):
+        # A real scheduled event AT a carousel/splash venue keeps (name veto).
+        self.assertFalse(is_obvious_non_event(
+            "Carousel Sing-Along Concert",
+            "Ride the carousel then enjoy live show tunes. Creatures to ride "
+            "for all ages."))
+        self.assertFalse(is_obvious_non_event(
+            "Splash Zone Family Story Hour",
+            "Stories by the water attraction; kids can hop around after."))
+
     def test_name_only_signature_still_works(self):
         # Pre-existing single-argument call style remains valid.
         self.assertTrue(is_obvious_non_event("Open Call for Artists"))
         self.assertFalse(is_obvious_non_event("Jazz Night at the Park"))
+
+
+class _RecordingCursor:
+    """Minimal cursor stub that records executed SQL for assertions."""
+
+    def __init__(self):
+        self.statements = []
+
+    def execute(self, sql, params=None):
+        self.statements.append((sql, params))
+
+    def fetchone(self):
+        return (0,)
+
+
+class _NoopConnection:
+    def commit(self):
+        pass
+
+
+class TestApplyCrawledDetailsEmoji(unittest.TestCase):
+    """The detail crawl must not wipe an existing emoji with an empty result.
+
+    Single-event extraction frequently returns no emoji; writing that NULL over
+    the crawl_event left the merged event blank on the map (e.g. "Poetry Night
+    at Barzakh Café"). The UPDATE should only touch emoji when one was found.
+    """
+
+    _TAG_CONTEXT = ({}, {}, set(), [])  # tag_rules, ancestor_map, root_tags, disambig
+
+    def _run(self, emoji):
+        cursor = _RecordingCursor()
+        apply_crawled_details(
+            cursor, _NoopConnection(), 123,
+            {'description': 'A real description.', 'hashtags': [], 'emoji': emoji},
+            self._TAG_CONTEXT,
+        )
+        # The crawl_events UPDATE is the statement that sets description.
+        update = next(s for s in cursor.statements
+                      if s[0].startswith("UPDATE crawl_events SET"))
+        return update
+
+    def test_empty_emoji_does_not_overwrite(self):
+        sql, params = self._run('')
+        self.assertNotIn("emoji = %s", sql)
+        self.assertEqual(params, ['A real description.', 123])
+
+    def test_blocked_emoji_does_not_overwrite(self):
+        sql, _ = self._run('⬛')
+        self.assertNotIn("emoji = %s", sql)
+
+    def test_real_emoji_is_written(self):
+        sql, params = self._run('🎤')
+        self.assertIn("emoji = %s", sql)
+        self.assertEqual(params, ['A real description.', '🎤', 123])
 
 
 if __name__ == "__main__":

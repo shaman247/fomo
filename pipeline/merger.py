@@ -718,7 +718,7 @@ def _deduplicate_same_name_events(cursor, connection, current_date, edit_logger=
     # alongside the helper so future format-drift can be patched in one place.
     cursor.execute("""
         SELECT LOWER(TRIM(e.name)) AS norm_name, e.website_id, e.id,
-               eo.start_date, eo.start_time
+               eo.start_date, eo.start_time, e.location_id
         FROM events e
         JOIN event_occurrences eo ON eo.event_id = e.id
         WHERE eo.start_date >= %s
@@ -727,9 +727,11 @@ def _deduplicate_same_name_events(cursor, connection, current_date, edit_logger=
     """, (current_date,))
 
     groups = {}
-    for norm_name, website_id, event_id, start_date, start_time in cursor.fetchall():
+    event_location = {}  # event_id -> location_id (for the cross-location guard)
+    for norm_name, website_id, event_id, start_date, start_time, location_id in cursor.fetchall():
         key = (norm_name, website_id, start_date, normalize_time_for_dedup(start_time))
         groups.setdefault(key, set()).add(event_id)
+        event_location[event_id] = location_id
 
     dup_groups = [(key, sorted(ids)) for key, ids in groups.items() if len(ids) > 1]
 
@@ -753,6 +755,45 @@ def _deduplicate_same_name_events(cursor, connection, current_date, edit_logger=
             event_id = merged_into[event_id]
         return event_id
 
+    def _merge_pair_into(keep_id, remove_id):
+        """Fold remove_id into keep_id: move sources/occurrences, delete the dup."""
+        # Transfer event_sources that don't already exist on the keeper
+        cursor.execute("""
+            UPDATE event_sources SET event_id = %s
+            WHERE event_id = %s
+              AND crawl_event_id NOT IN (
+                  SELECT crawl_event_id FROM (
+                      SELECT crawl_event_id FROM event_sources WHERE event_id = %s
+                  ) t
+              )
+        """, (keep_id, remove_id, keep_id))
+
+        # Remove leftover sources
+        cursor.execute("DELETE FROM event_sources WHERE event_id = %s", (remove_id,))
+
+        # Merge any unique occurrences into the keeper
+        cursor.execute("""
+            INSERT IGNORE INTO event_occurrences
+                (event_id, start_date, start_time, end_date, end_time, sort_order)
+            SELECT %s, start_date, start_time, end_date, end_time, sort_order
+            FROM event_occurrences WHERE event_id = %s
+        """, (keep_id, remove_id))
+
+        # Clean up the duplicate
+        cursor.execute("DELETE FROM event_occurrences WHERE event_id = %s", (remove_id,))
+        cursor.execute("DELETE FROM event_urls WHERE event_id = %s", (remove_id,))
+        cursor.execute("DELETE FROM event_tags WHERE event_id = %s", (remove_id,))
+
+        if edit_logger:
+            cursor.execute("SELECT * FROM events WHERE id = %s", (remove_id,))
+            record = cursor.fetchone()
+            if record:
+                col_names = [d[0] for d in cursor.description]
+                edit_logger.log_delete('events', remove_id, dict(zip(col_names, record)))
+
+        cursor.execute("DELETE FROM events WHERE id = %s", (remove_id,))
+        merged_into[remove_id] = keep_id
+
     removed = 0
     for _key, ids in dup_groups:
         live = []
@@ -763,45 +804,31 @@ def _deduplicate_same_name_events(cursor, connection, current_date, edit_logger=
         if len(live) < 2:
             continue
         live.sort()
-        keep_id = live[0]
-        for remove_id in live[1:]:
-            # Transfer event_sources that don't already exist on the keeper
-            cursor.execute("""
-                UPDATE event_sources SET event_id = %s
-                WHERE event_id = %s
-                  AND crawl_event_id NOT IN (
-                      SELECT crawl_event_id FROM (
-                          SELECT crawl_event_id FROM event_sources WHERE event_id = %s
-                      ) t
-                  )
-            """, (keep_id, remove_id, keep_id))
 
-            # Remove leftover sources
-            cursor.execute("DELETE FROM event_sources WHERE event_id = %s", (remove_id,))
+        # Cross-location guard: same-name/time events at DIFFERENT known
+        # location_ids are distinct venues (a recurring program — Open Play,
+        # Zumba, Story Time — running the same hour at multiple library/park
+        # branches), not duplicates. Cluster the live events so each only merges
+        # with location-compatible peers; a NULL location_id is a wildcard that
+        # joins the first located cluster (the inconsistent-extraction case this
+        # dedup exists to catch). Mirrors find_best_match()'s
+        # `require_location_id_match` guard.
+        clusters = []  # each: [keep_id (lowest), cluster_loc, [member_ids...]]
+        for eid in live:  # live is sorted, so each cluster's first member is its keeper
+            loc = event_location.get(eid)
+            for cl in clusters:
+                if cl[1] is None or loc is None or cl[1] == loc:
+                    cl[2].append(eid)
+                    if cl[1] is None and loc is not None:
+                        cl[1] = loc  # pin the cluster to the first known location
+                    break
+            else:
+                clusters.append([eid, loc, [eid]])
 
-            # Merge any unique occurrences into the keeper
-            cursor.execute("""
-                INSERT IGNORE INTO event_occurrences
-                    (event_id, start_date, start_time, end_date, end_time, sort_order)
-                SELECT %s, start_date, start_time, end_date, end_time, sort_order
-                FROM event_occurrences WHERE event_id = %s
-            """, (keep_id, remove_id))
-
-            # Clean up the duplicate
-            cursor.execute("DELETE FROM event_occurrences WHERE event_id = %s", (remove_id,))
-            cursor.execute("DELETE FROM event_urls WHERE event_id = %s", (remove_id,))
-            cursor.execute("DELETE FROM event_tags WHERE event_id = %s", (remove_id,))
-
-            if edit_logger:
-                cursor.execute("SELECT * FROM events WHERE id = %s", (remove_id,))
-                record = cursor.fetchone()
-                if record:
-                    col_names = [d[0] for d in cursor.description]
-                    edit_logger.log_delete('events', remove_id, dict(zip(col_names, record)))
-
-            cursor.execute("DELETE FROM events WHERE id = %s", (remove_id,))
-            merged_into[remove_id] = keep_id
-            removed += 1
+        for keep_id, _cluster_loc, members in clusters:
+            for remove_id in members[1:]:
+                _merge_pair_into(keep_id, remove_id)
+                removed += 1
 
     _retry_on_deadlock(connection.commit)
     return removed
@@ -989,8 +1016,12 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
     # Build location_id -> canonical name so events.location_name stays in sync
     # with locations.name when a venue is resolved (otherwise the AI's raw
     # location string — e.g. an IG handle "@stella34macys" — leaks through).
-    cursor.execute("SELECT id, name FROM locations")
-    location_names_by_id = {row[0]: row[1] for row in cursor.fetchall()}
+    cursor.execute("SELECT id, name, emoji FROM locations")
+    location_rows = cursor.fetchall()
+    location_names_by_id = {row[0]: row[1] for row in location_rows}
+    # Venue emoji fallback: events whose extraction (listing or detail crawl)
+    # returned no emoji inherit their venue's emoji so they never render blank.
+    location_emoji_by_id = {row[0]: row[2] for row in location_rows}
 
     # Websites needing strict name matching: a fuzzy (non-exact) name match must
     # be confirmed by a shared occurrence before merging. Without this, distinct
@@ -1406,28 +1437,37 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                         update_values,
                     )
 
-            # Update description/emoji if existing event has placeholder values
-            replaced_description = False
-            if description and description != 'No description available.':
+            # Backfill placeholder description/emoji from this source. The two
+            # are handled INDEPENDENTLY: an event can have a real description but
+            # a missing emoji (e.g. the detail crawl returned an empty emoji and
+            # overwrote the listing's), so the emoji must be able to backfill
+            # even when the description is already populated — otherwise the
+            # event stays emoji-less forever.
+            cursor.execute(
+                "SELECT description, emoji FROM events WHERE id = %s",
+                (matched_event_id,),
+            )
+            result = cursor.fetchone()
+            current_desc = result[0] if result else None
+            current_emoji = result[1] if result else None
+
+            backfill_fields = []
+            backfill_values = []
+            if (description and description != 'No description available.'
+                    and (not current_desc or current_desc == 'No description available.')):
+                backfill_fields.append("description = %s")
+                backfill_values.append(description)
+            if not current_emoji or current_emoji == '📅':
+                new_emoji = (emoji[:10] if emoji else None) or location_emoji_by_id.get(location_id)
+                if new_emoji and new_emoji != current_emoji:
+                    backfill_fields.append("emoji = %s")
+                    backfill_values.append(new_emoji)
+            if backfill_fields:
+                backfill_values.append(matched_event_id)
                 cursor.execute(
-                    "SELECT description, emoji FROM events WHERE id = %s",
-                    (matched_event_id,),
+                    f"UPDATE events SET {', '.join(backfill_fields)} WHERE id = %s",
+                    backfill_values,
                 )
-                result = cursor.fetchone()
-                current_desc = result[0] if result else None
-                current_emoji = result[1] if result else None
-                if not current_desc or current_desc == 'No description available.':
-                    update_fields = ["description = %s"]
-                    update_values = [description]
-                    if emoji and (not current_emoji or current_emoji == '📅'):
-                        update_fields.append("emoji = %s")
-                        update_values.append(emoji[:10])
-                    update_values.append(matched_event_id)
-                    cursor.execute(
-                        f"UPDATE events SET {', '.join(update_fields)} WHERE id = %s",
-                        update_values,
-                    )
-                    replaced_description = True
 
             # Update tags using majority vote across crawl history
             if tags:
@@ -1448,6 +1488,8 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
             # Create new event
             canonical_loc_name = location_names_by_id.get(location_id) if location_id else None
             effective_loc_name = canonical_loc_name or location_name
+            # Never create an emoji-less event: AI emoji → venue emoji → 📅.
+            effective_emoji = (emoji[:10] if emoji else None) or location_emoji_by_id.get(location_id) or '📅'
             cursor.execute("""
                 INSERT INTO events (name, short_name, description, emoji, location_id, location_name,
                                    sublocation, website_id)
@@ -1456,7 +1498,7 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                 name[:500],
                 short_name[:255] if short_name else None,
                 description,
-                emoji[:10] if emoji else None,
+                effective_emoji,
                 location_id,
                 effective_loc_name[:255] if effective_loc_name else None,
                 sublocation[:255] if sublocation else None,
@@ -1470,7 +1512,7 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                     'name': name[:500],
                     'short_name': short_name[:255] if short_name else None,
                     'description': description,
-                    'emoji': emoji[:10] if emoji else None,
+                    'emoji': effective_emoji,
                     'location_id': location_id,
                     'location_name': effective_loc_name[:255] if effective_loc_name else None,
                     'sublocation': sublocation[:255] if sublocation else None,

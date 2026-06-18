@@ -537,6 +537,12 @@ _NON_EVENT_NAME_PATTERNS = [
     r'^\s*grants?\s*:',
     r'\bmicro[\s-]?grants?\b',
     r'\bgrants?\s+(cycle|round|application|deadline)\b',
+    # Casting / talent-recruitment calls (auditions to be cast or hired, not an
+    # attendable public event — sibling of "open call" above). High precision:
+    # "casting call" is unambiguous; the "<role> wanted/needed/sought" forms
+    # match recruitment notices ("Models Wanted", "Dancers Needed").
+    r'\bcasting call\b',
+    r'\b(models?|actors?|dancers?|performers?|stylists?|extras?|vocalists?|musicians?)\s+(wanted|needed|sought)\b',
     # Closures / cancellations (venue/program notices, not events)
     r'\bclosed\s*[:\|\-—]',
     r'\bclosed\s+(to the public|for|on|due|until|this|next|all)\b',
@@ -562,6 +568,12 @@ _NON_EVENT_NAME_PATTERNS = [
     # Academic-calendar day markers (school/library sources leak these as "events")
     r'^\s*(first|last)\s+day\s+of\s+(the\s+)?(\d{4}\s*[-–/]\s*\d{2,4}\s+)?school\b',
     r'^\s*no\s+school\b',
+    # Civic date markers (election / voting days leak from government & library
+    # calendars as "events"). Anchored to the END of the name so attendable
+    # election-night occasions survive ("Election Day Watch Party", "Election
+    # Returns Social"); only the bare marker is dropped.
+    r'^\s*(primary|general|presidential|municipal|special|run[\s-]?off|local|state|federal|school\s+board|village|town|county|borough)?\s*election\s+day\s*(\d{4})?\s*$',
+    r'^\s*(presidential\s+)?primary\s+(election\s+)?day\s*(\d{4})?\s*$',
     # Donation drop-off notices (a collection, not an attendable event)
     r'\bdonations?\s+(accepted|drop[\s-]?off)\b',
     # Cinema/venue placeholder listing pages
@@ -585,6 +597,22 @@ _NON_EVENT_NAME_PATTERNS = [
     r'\bmatch(ing)?\s+campaign\b',
     r'\b(donation|fundraising|giving|annual|capital)\s+campaign\s*(\d{4})?\s*$',
     r'\bgiving\s+day\s*(\d{4})?\s*$',
+    # Standing physical-attraction admission tickets — a zoo / wildlife park /
+    # water park / botanical garden's general admission sold as a dated "2026"
+    # ticket, not a scheduled event ("Bergen County Zoo Admission 2026"). Gated
+    # to true attraction venues so a show's "General Admission" ticket tier never
+    # matches (only "<attraction-venue> admission").
+    r'\b(zoo|aquarium|safari\s+park|wildlife\s+(?:cent(?:er|re)|preserve|park)|'
+    r'water\s*park|theme\s*park|amusement\s*park|botanical\s+garden|'
+    r'observation\s+deck)\s+admission\b',
+    # Retail loyalty / membership marketing rows leaked from store calendars
+    # ("Premium & Rewards Members Online Exclusive Bonus $10 Reward ..."). A real
+    # member occasion ("Member Appreciation Night") carries an occasion word and
+    # won't pair "members" with bonus/exclusive/reward/offer/deal marketing.
+    r'\b(?:premium|rewards?)\s+members?\b[^.\n]{0,80}\b(?:exclusive|bonus|reward|offer|deal)\b',
+    # Obvious test / placeholder rows ("Do not buy tickets test test").
+    r'\btest\s+test\b',
+    r'^\s*do\s+not\s+buy\b',
 ]
 
 _NON_EVENT_NAME_RE = re.compile('|'.join(_NON_EVENT_NAME_PATTERNS), re.IGNORECASE)
@@ -649,20 +677,71 @@ _CHILDCARE_DURING_DESC_RE = re.compile(
     r'\b(?:parents?|families|caregivers?)\s+(?:can\s+|may\s+)?attend(?:ing)?\b',
     re.IGNORECASE)
 
+# Congregate-meal menu listings: a senior/older-adult center's daily lunch menu
+# leaked one row per dish ("BBQ Pulled Pork", "Roasted Chicken Legs"), where the
+# description is the day's menu rather than an attendable occasion. Real events
+# DO happen at senior centers (concerts, bingo, classes), so two gates: the
+# description must name a meal served at an older-adult/senior center with menu
+# framing ("featuring"/"served with"/"menu"), AND the name must carry no
+# attendable-event word — any such word vetoes the drop so a genuine
+# "Bingo at the Senior Center" survives.
+_CONGREGATE_MEAL_DESC_RE = re.compile(
+    r'(?=.*\b(?:older[\s-]adult|senior)\s+cent(?:er|re)\b)'
+    r'\b(?:breakfast|brunch|lunch|dinner)\b[^.!?]{0,60}'
+    r'\b(?:featuring|served with|menu)\b',
+    re.IGNORECASE)
+_MEAL_ATTENDABLE_NAME_RE = re.compile(
+    r'\b(?:class|workshop|concert|show|bingo|party|social|dance|tour|talk|'
+    r'lecture|meeting|club|game|movie|film|trip|celebration|festival|fair|'
+    r'market|performance|screening|reading|seminar|presentation|learn)\b',
+    re.IGNORECASE)
+# A menu's "featuring" precedes food; a real lunch gathering's precedes a
+# speaker/activity. If the description carries event-content language, it's a
+# genuine occasion (a lunch-and-learn, performance, etc.), not a menu — veto.
+_MEAL_REAL_EVENT_DESC_RE = re.compile(
+    r'\b(?:speakers?|presenters?|presentation|learn|discussion|workshop|'
+    r'seminar|performance|live music|\bdj\b|rsvp|registers?|registration|'
+    r'q&a|screening|demonstration|entertainment|guest)\b',
+    re.IGNORECASE)
+
+# Standing physical attractions described as something you ride or visit
+# whenever the venue is open, rather than a scheduled event — a park's splash
+# pad / water obstacle course, a carousel ("Le Carrousel", "The Splash Zone").
+# The "<attraction-venue> admission" names are dropped on the name above; these
+# carry a plain proper-noun name, so they need a corroborating description: an
+# attraction/ride noun AND visit-it framing. Any attendable-event word in the
+# name vetoes the drop (a "Carousel Concert" or "Splash Pad Story Hour" is a
+# real event), and the rule never fires when the description is missing.
+_ATTRACTION_DESC_RE = re.compile(
+    r'\b(?:water\s+attraction|newest\s+attraction|carr?ousel|'
+    r'splash\s+(?:pad|zone)|obstacle\s+course\s+on\s+the\s+water)\b',
+    re.IGNORECASE)
+_ATTRACTION_VISIT_RE = re.compile(
+    r'\b(?:creatures?\s+to\s+ride|to\s+ride\b|hop\s+(?:on|around)|climb\s+on|'
+    r'take\s+a\s+(?:whirl|spin|ride))\b',
+    re.IGNORECASE)
+_ATTRACTION_NAME_VETO_RE = re.compile(
+    r'\b(?:concert|show|class|workshop|party|social|dance|tour|talk|lecture|'
+    r'meeting|club|game|movie|film|screening|reading|festival|fair|market|'
+    r'performance|celebration|night|series|hour|story\s*time|camp|race|run|'
+    r'meet|fest|recital|jam|mixer|opening|reception|sing-?along)\b',
+    re.IGNORECASE)
+
 
 def is_obvious_non_event(name, description=None):
     """Return True if the event is an unmistakable non-event.
 
     Covers closures, calls for submissions/grants, venue rentals, season-pass
     listings, cinema showtime placeholders, SEO spam, fundraising campaigns,
-    submission-call contests, festival info-booth listings, and
-    childcare-amenity listings — the kinds of rows that should never reach
-    the map. High precision by design; anything fuzzier belongs in
-    scripts/find_review_candidates.py for human review.
+    submission-call contests, festival info-booth listings, childcare-amenity
+    listings, and senior-center congregate-meal menus — the kinds of rows that
+    should never reach the map. High precision by design; anything fuzzier
+    belongs in scripts/find_review_candidates.py for human review.
 
     Most patterns match on the name alone; a few ambiguous categories
-    (contests, booths, childcare amenities) also require corroborating
-    description language and never fire when the description is missing.
+    (contests, booths, childcare amenities, congregate meals) also require
+    corroborating description language and never fire when the description is
+    missing.
     """
     if not name:
         return False
@@ -679,6 +758,14 @@ def is_obvious_non_event(name, description=None):
             return True
         if (_CHILDCARE_AMENITY_NAME_RE.match(name.strip())
                 and _CHILDCARE_DURING_DESC_RE.search(description)):
+            return True
+        if (_CONGREGATE_MEAL_DESC_RE.search(description)
+                and not _MEAL_ATTENDABLE_NAME_RE.search(name)
+                and not _MEAL_REAL_EVENT_DESC_RE.search(description)):
+            return True
+        if (_ATTRACTION_DESC_RE.search(description)
+                and _ATTRACTION_VISIT_RE.search(description)
+                and not _ATTRACTION_NAME_VETO_RE.search(name)):
             return True
     return False
 
@@ -2173,15 +2260,22 @@ def apply_crawled_details(cursor, connection, ce_id, data, tag_context):
     )
     processed_tags = row_dict.get('tags', [])
 
-    # Process emoji
+    # Process emoji. Only overwrite the existing emoji when the detail
+    # extraction actually produced one — single-event extraction frequently
+    # returns an empty emoji, and blindly writing NULL here wiped the emoji the
+    # listing extraction / venue fallback had already set, leaving the merged
+    # event blank on the map.
     emoji = data.get('emoji', '')
     first_emoji = find_first_emoji(emoji) if emoji else None
     if first_emoji and first_emoji in BLOCKED_EMOJI:
         first_emoji = None
 
     # Update crawl_events row
-    update_fields = ["description = %s", "emoji = %s"]
-    update_values = [data['description'], first_emoji]
+    update_fields = ["description = %s"]
+    update_values = [data['description']]
+    if first_emoji:
+        update_fields.append("emoji = %s")
+        update_values.append(first_emoji)
 
     if data.get('location'):
         update_fields.append("location_name = %s")
