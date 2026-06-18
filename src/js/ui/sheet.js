@@ -10,8 +10,8 @@
  *   floating "Show list" handle (#sheet-handle), vertically centered at the
  *   screen's left edge, opens it; it is hidden while the sheet is open — the
  *   open sheet is dismissed by clicking empty map space (MapManager's click
- *   handler calls dismissToMini()). The open/collapsed state persists across
- *   reloads via localStorage (default collapsed). Marker popups stay as
+ *   handler calls dismissToMini()). The sheet always starts collapsed — its
+ *   open state is not persisted across reloads. Marker popups stay as
  *   floating MapLibre popups.
  *
  *   Mobile (≤768px): a bottom sheet with a drag grip and snap points
@@ -35,7 +35,7 @@ const Sheet = (() => {
     // CONSTANTS
     // ========================================
 
-    const STORAGE_KEY_OPEN = 'leftSheetOpen';   // kept from the old left sheet for continuity
+    const STORAGE_KEY_OPEN = 'leftSheetOpen';   // legacy key — only cleared now, no longer written
 
     const SNAP_PEEK = 0.48;          // Content visible
     const SNAP_FULL = 0.85;          // Full content view
@@ -132,12 +132,11 @@ const Sheet = (() => {
         document.documentElement.style.setProperty('--top-bar-height', height + 'px');
     }
 
-    function _persist() {
-        Utils.SafeStorage.setItem(STORAGE_KEY_OPEN, state.desktopOpen ? '1' : '0');
-    }
-
     function _restore() {
-        state.desktopOpen = Utils.SafeStorage.getItem(STORAGE_KEY_OPEN) === '1';
+        // The list view always starts collapsed — its open state is no longer
+        // persisted. Clear any setting left over from when it was.
+        state.desktopOpen = false;
+        Utils.SafeStorage.removeItem(STORAGE_KEY_OPEN);
     }
 
     function _setDesktopOpen(v) {
@@ -146,7 +145,6 @@ const Sheet = (() => {
         state.desktopOpen = next;
         if (state.desktopOpen) _measureTopOffset();
         _applyOpenState();
-        _persist();
         if (changed && state.desktopOpen) _emitBrowseShown();
     }
 

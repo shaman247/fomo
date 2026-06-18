@@ -443,6 +443,21 @@ const Utils = (() => {
                 }
                 return false;
             }
+        },
+
+        /**
+         * Safely remove an item from localStorage
+         * @param {string} key - Storage key
+         * @returns {boolean} True if successful, false otherwise
+         */
+        removeItem(key) {
+            try {
+                localStorage.removeItem(key);
+                return true;
+            } catch (error) {
+                console.warn(`Failed to remove from localStorage (key: ${key}):`, error);
+                return false;
+            }
         }
     };
 
