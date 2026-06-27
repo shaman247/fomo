@@ -320,6 +320,29 @@ const Utils = (() => {
         return altEmoji || '🌐';
     }
 
+    // Matches a single country-flag code unit: a Unicode regional-indicator
+    // symbol (U+1F1E6–U+1F1FF). Flags are pairs of these, but matching each
+    // one individually also clears any stray unpaired indicator.
+    const COUNTRY_FLAG_RE = /[\u{1F1E6}-\u{1F1FF}]/gu;
+
+    /**
+     * Removes country-flag emoji from a title/label string and tidies the
+     * whitespace they leave behind. Flag emoji have no glyph in the map's SDF
+     * label font (so they render as tofu/letter-boxes in marker labels on every
+     * platform) and no glyph in Windows' system emoji font (so they render as
+     * letter-box pairs like "HT" in regular text there). Callers strip them
+     * from map labels everywhere, and from displayed titles on Windows only.
+     */
+    function stripCountryFlagEmoji(str) {
+        if (!str) return str;
+        const stripped = str.replace(COUNTRY_FLAG_RE, '');
+        if (stripped === str) return str;    // no flags present — leave untouched
+        return stripped
+            .replace(/\s+/g, ' ')            // collapse the gaps the flags left
+            .replace(/\s+([,.!?;:])/g, '$1') // drop space orphaned before punctuation
+            .trim();
+    }
+
     /**
      * Normalizes text for accent-insensitive, case-insensitive search.
      * Decomposes accented characters and removes diacritical marks.
@@ -634,6 +657,7 @@ const Utils = (() => {
         isMobileLayout,
         isCountryFlagEmoji,
         resolveDisplayEmoji,
+        stripCountryFlagEmoji,
         normalizeForSearch,
         getDisplayName,
         debounce,

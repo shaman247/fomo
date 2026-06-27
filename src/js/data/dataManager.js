@@ -338,6 +338,15 @@ const DataManager = (() => {
             }
         }
 
+        // On Windows, country-flag emoji inside the title render as letter-box
+        // pairs (e.g. "HT"), so strip them from the display name/short_name at
+        // the source — popups, list rows, and search results all read these.
+        // (Map labels strip flags on every platform; see mapManager.)
+        if (isWindows) {
+            if (restOfEvent.name) restOfEvent.name = Utils.stripCountryFlagEmoji(restOfEvent.name);
+            if (restOfEvent.short_name) restOfEvent.short_name = Utils.stripCountryFlagEmoji(restOfEvent.short_name);
+        }
+
         return {
             id,
             ...restOfEvent,

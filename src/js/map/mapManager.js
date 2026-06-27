@@ -288,7 +288,9 @@ const MapManager = (() => {
     function _buildEventLabel(events) {
         if (!events || events.length === 0) return { name: '', extra: '' };
         const first = events[0];
-        const rawName = (first && (first.short_name || first.name)) || '';
+        // Strip country-flag emoji on every platform: the SDF label font has no
+        // glyph for regional-indicator pairs, so they render as tofu in labels.
+        const rawName = Utils.stripCountryFlagEmoji((first && (first.short_name || first.name)) || '');
         if (!rawName) return { name: '', extra: '' };
 
         // Only truncate when it actually saves space — slicing 23 chars down
