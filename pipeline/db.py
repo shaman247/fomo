@@ -879,23 +879,19 @@ def get_website_locations_map(cursor):
 
 
 def _load_generic_location_names():
-    """Load geotag names from tags.json as a set of generic location names.
+    """Geotag names as a set of generic location names (lowercased).
 
     These are neighborhood/borough/region names that are too vague to be useful
     as event locations — events with these as their only location info should be
-    detail-crawled to find the specific venue.
+    detail-crawled to find the specific venue. Sourced from the city config
+    (config/<FOMO_CITY>.yaml: geotags + generic_location_names), the single home
+    for the region's place names.
     """
     import city_config
-    tags_path = os.path.join(os.path.dirname(__file__), '..', 'src', 'data', 'tags.json')
-    try:
-        with open(tags_path) as f:
-            data = json.load(f)
-        names = {name.lower() for name in data.get('geotags', [])}
-        # Add common city-level names not in geotags (from city config)
-        names.update(city_config.generic_location_names())
-        return names
-    except (FileNotFoundError, json.JSONDecodeError):
-        return set()
+    names = {name.lower() for name in city_config.geotags()}
+    # Add common city-level names not in geotags (from city config).
+    names.update(city_config.generic_location_names())
+    return names
 
 
 def get_detail_crawl_candidates(cursor, website_ids=None):

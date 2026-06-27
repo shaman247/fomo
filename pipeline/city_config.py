@@ -96,6 +96,16 @@ def generic_location_names() -> list:
     return _lower_list(get_config().get("generic_location_names"))
 
 
+def geotags() -> list:
+    """Geographic geotag names (neighborhoods/boroughs/towns), original case.
+
+    Source of truth for the metro region's place names. Consumed by db.py (as
+    generic location names) and by build.js (written into the frontend's
+    generated src/data/tags.json). Callers lowercase as needed.
+    """
+    return list(get_config().get("geotags") or [])
+
+
 def _processor() -> dict:
     return get_config().get("processor") or {}
 

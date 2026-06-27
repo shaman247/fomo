@@ -53,7 +53,7 @@ Location filter (📍 emoji used uniformly across all descendants — borough, c
 - **Manhattan**, **Brooklyn**, **Queens**, **Bronx**, **Staten Island**
 - **Long Island**, **Westchester**, **Hudson Valley**, **Upstate**, **New Jersey**, **Connecticut**
 
-Geographic tags are also listed in `src/data/tags.json` under `geotags` — the frontend uses this list to hide neighborhood names from event tag displays (popups show event types, not locations).
+The geographic place names live in `config/<FOMO_CITY>.yaml` under `geotags` (the single, city-agnostic source of truth, also read by the backend via `city_config.geotags()`). `build.js` writes them into the generated `src/data/tags.json` (gitignored), which the frontend fetches to hide neighborhood names from event tag displays (popups show event types, not locations).
 
 ## Tag Disambiguation (homonyms)
 

@@ -22,14 +22,25 @@ const ASSET_DIRS = ['data', 'images', 'fonts', 'api', 'admin', 'vendor'];
 // still builds a functioning app. Map: live filename -> example filename (both under src/data/).
 const EXAMPLE_DATA_FILES = { 'tag_hierarchy.json': 'tag_hierarchy.example.json' };
 
-// Load the `frontend` block from the city config.
-function loadFrontendConfig() {
+// Load and validate the full city config (frontend block + shared data like geotags).
+function loadCityConfig() {
     const cfg = yaml.parse(fs.readFileSync(CITY_CONFIG_PATH, 'utf8')) || {};
     const fe = cfg.frontend || {};
     if (!fe.map || !fe.map.center) {
         throw new Error(`config/${FOMO_CITY}.yaml is missing a frontend.map.center`);
     }
-    return fe;
+    return cfg;
+}
+
+// The frontend fetches data/tags.json at runtime for the geotag picker and to hide
+// neighborhood names from event tag displays. Its `geotags` are city data, so they
+// live in config/<FOMO_CITY>.yaml (the single source of truth, shared with the
+// backend via city_config.py) and are written here at build time rather than
+// committed. `bgcolors` is a frontend runtime cache, always emitted empty.
+function writeGeneratedTagsJson(cfg) {
+    const geotags = cfg.geotags || [];
+    const out = path.join(SRC, 'data', 'tags.json');
+    fs.writeFileSync(out, JSON.stringify({ geotags, bgcolors: {} }, null, 2) + '\n');
 }
 
 // Runtime values injected as a window.__CITY__ global at the head of the JS bundle,
@@ -99,8 +110,9 @@ function ensureSeededData() {
 async function build(isDev) {
     const startTime = Date.now();
 
-    // Load city/region frontend config (map, timezone, branding).
-    const frontend = loadFrontendConfig();
+    // Load city/region config (map, timezone, branding, shared geotags).
+    const cfg = loadCityConfig();
+    const frontend = cfg.frontend;
 
     // Clean dist/
     if (fs.existsSync(DIST)) {
@@ -220,6 +232,9 @@ async function build(isDev) {
 
     // Seed any missing generated data files before they get symlinked/copied below.
     ensureSeededData();
+
+    // Generate src/data/tags.json from the city config (geotags live in config, not git).
+    writeGeneratedTagsJson(cfg);
 
     // Copy asset directories into dist/
     // Dev: symlinks (fast, live updates); Prod: full copies (self-contained)
