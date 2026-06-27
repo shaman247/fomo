@@ -359,7 +359,150 @@ class TestIsObviousNonEvent(unittest.TestCase):
             "Child care services are provided weekly on Sunday mornings to "
             "support families attending church activities."))
 
+    def test_school_early_dismissal_dropped(self):
+        # e170643 — school-calendar early-dismissal marker (name-only).
+        self.assertTrue(is_obvious_non_event(
+            "Fair Lawn Schools Early Dismissal", None))
+
+    def test_holiday_closure_observance_dropped(self):
+        # e84293 — a community-board office's holiday-closure notice.
+        self.assertTrue(is_obvious_non_event(
+            "Memorial Day",
+            "The office is closed in observance of the holiday."))
+
+    def test_drink_month_promotion_dropped(self):
+        # e170885 — a bar's month-long drink-special marketing period.
+        self.assertTrue(is_obvious_non_event(
+            "Martini Month",
+            "Celebrate Martini Month throughout June with special Tanqueray "
+            "martinis at Medusa Bar."))
+
+    def test_retail_spend_and_get_promotion_dropped(self):
+        # e170900 — a vendor's spend-and-get purchase incentive.
+        self.assertTrue(is_obvious_non_event(
+            "Blackbird Special World Cup Promotion",
+            "Spend $40 with Blackbird at the brewery to receive a free KCBC "
+            "beer 4-pack to go, while supplies last."))
+
+    def test_venue_reopening_announcement_dropped(self):
+        # e170899 — a museum's reopening status notice.
+        self.assertTrue(is_obvious_non_event(
+            "Museum Reopening",
+            "The Neue Galerie, including galleries, shops, and cafés, reopens "
+            "in Autumn 2026 following summer restoration enhancements. Visitors "
+            "are welcomed back to see iconic works of Gustav Klimt."))
+
+    def test_registration_open_suffix_dropped(self):
+        # e171536 — registration-window announcement where the notice is a
+        # suffix, not the start of the name. The start-anchored rule misses it.
+        self.assertTrue(is_obvious_non_event(
+            "Read a Palooza Registration Open",
+            "Registration is now open for our summer reading program."))
+        self.assertTrue(is_obvious_non_event(
+            "Summer Camp Registration Now Open", ""))
+
+    def test_non_library_program_placeholder_dropped(self):
+        # e171539 — library room-booking placeholder ("Non Library Program").
+        self.assertTrue(is_obvious_non_event("Non Library Program", ""))
+        self.assertTrue(is_obvious_non_event("Non-Library Program", None))
+
+    def test_bare_generic_name_no_description_dropped(self):
+        # e171547 — a bare generic one-word name with no description is a
+        # placeholder row the extractor should never have emitted.
+        self.assertTrue(is_obvious_non_event("Music", ""))
+        self.assertTrue(is_obvious_non_event("Program", None))
+        self.assertTrue(is_obvious_non_event("TBD", ""))
+        self.assertTrue(is_obvious_non_event("Untitled", "   "))
+
+    def test_cinema_format_badge_chips_dropped(self):
+        # e173472-e173476 — AMC premium-format / accessibility badge chips that
+        # leak from theater calendars as standalone "events". The whole name is
+        # just the format descriptor. Name-only match (description irrelevant).
+        self.assertTrue(is_obvious_non_event("Dolby Cinema at AMC", None))
+        self.assertTrue(is_obvious_non_event("RealD 3D", ""))
+        self.assertTrue(is_obvious_non_event("Laser at AMC", None))
+        self.assertTrue(is_obvious_non_event("70mm", ""))
+        self.assertTrue(is_obvious_non_event(
+            "Open Caption (On-screen Subtitles)", None))
+        self.assertTrue(is_obvious_non_event("IMAX at AMC", ""))
+        self.assertTrue(is_obvious_non_event("Audio Description", None))
+
     # --- negative fixtures: real events that must NOT be dropped ---
+
+    def test_holiday_celebration_kept(self):
+        # e41561 — a bar's Memorial Day celebration shares the bare holiday
+        # name but reads as an attendable event.
+        self.assertFalse(is_obvious_non_event(
+            "Memorial Day",
+            "Come celebrate the long weekend with us at Rosa's At Park! A "
+            "great way to kick off the summer season with friends."))
+
+    def test_registration_mid_name_kept(self):
+        # "Registration" mid-name (not the start, not a window-open suffix) is a
+        # real attendable event — only bare announcements are dropped.
+        self.assertFalse(is_obvious_non_event(
+            "Open Registration Soccer Tournament",
+            "Sign up your team and compete in our all-day tournament."))
+        self.assertFalse(is_obvious_non_event(
+            "Voter Registration Drive",
+            "Help neighbors register to vote at our community table."))
+
+    def test_bare_generic_name_with_description_kept(self):
+        # A generic one-word title is fine when there is a real description —
+        # the bare-name rule only fires on an empty description.
+        self.assertFalse(is_obvious_non_event(
+            "Music",
+            "An evening of live jazz with the Julia Danielle Quartet."))
+        self.assertFalse(is_obvious_non_event(
+            "Performance",
+            "Object Collection presents a live-film performance piece."))
+
+    def test_generic_word_in_longer_name_kept(self):
+        # The bare-name rule requires a full-string match, so multi-word names
+        # containing a generic word survive even without a description.
+        self.assertFalse(is_obvious_non_event("Music in the Park", ""))
+        self.assertFalse(is_obvious_non_event("Family Program", None))
+
+    def test_real_screening_with_format_suffix_kept(self):
+        # The cinema-badge rule anchors to the whole name, so a real film that
+        # merely carries a format/accessibility tag survives.
+        self.assertFalse(is_obvious_non_event(
+            "Wicked (Open Caption)",
+            "An open-caption screening of the film."))
+        self.assertFalse(is_obvious_non_event("Oppenheimer in 70mm", ""))
+        self.assertFalse(is_obvious_non_event("Avatar: RealD 3D", None))
+        # "Prime" / "Big D" only fire with the AMC qualifier, never bare.
+        self.assertFalse(is_obvious_non_event(
+            "Prime", "A late-night party at the rooftop bar."))
+
+    def test_juneteenth_workshop_kept(self):
+        # e87101 — bare "Juneteenth" name, but the body is an art workshop.
+        self.assertFalse(is_obvious_non_event(
+            "Juneteenth",
+            "Celebrate Juneteenth by creating collaborative art projects that "
+            "honor the holiday."))
+
+    def test_drink_week_tasting_kept(self):
+        # A "<drink> Week" tasting event is attendable — the veto fires.
+        self.assertFalse(is_obvious_non_event(
+            "Negroni Week Tasting",
+            "Join us for a guided tasting of featured Negroni variations all "
+            "week long."))
+
+    def test_band_named_promotion_kept(self):
+        # e82823 — "...Pawn Promotion" is a band in a live-music lineup, not a
+        # retail promo; the description gate keeps it.
+        self.assertFalse(is_obvious_non_event(
+            "Roseblud / Cestari / Cfra / Pawn Promotion",
+            "A live music event featuring performances by Roseblud, Cestari, "
+            "Cfra, and Pawn Promotion. Strictly for attendees 21 and older."))
+
+    def test_grand_reopening_party_kept(self):
+        # An attendable reopening celebration survives via the name veto.
+        self.assertFalse(is_obvious_non_event(
+            "Grand Reopening Party",
+            "Celebrate our reopening after renovation with live music and "
+            "drinks all night."))
 
     def test_attendable_trivia_contest_kept(self):
         self.assertFalse(is_obvious_non_event(

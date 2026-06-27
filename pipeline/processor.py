@@ -568,6 +568,9 @@ _NON_EVENT_NAME_PATTERNS = [
     # Academic-calendar day markers (school/library sources leak these as "events")
     r'^\s*(first|last)\s+day\s+of\s+(the\s+)?(\d{4}\s*[-–/]\s*\d{2,4}\s+)?school\b',
     r'^\s*no\s+school\b',
+    # Early-dismissal / half-day school markers ("Fair Lawn Schools Early
+    # Dismissal"). A fixed school-calendar phrase, never an attendable event.
+    r'\bearly\s+dismissal\b',
     # Civic date markers (election / voting days leak from government & library
     # calendars as "events"). Anchored to the END of the name so attendable
     # election-night occasions survive ("Election Day Watch Party", "Election
@@ -613,9 +616,48 @@ _NON_EVENT_NAME_PATTERNS = [
     # Obvious test / placeholder rows ("Do not buy tickets test test").
     r'\btest\s+test\b',
     r'^\s*do\s+not\s+buy\b',
+    # Registration-window announcements where the notice is a SUFFIX rather than
+    # the start of the name ("Read a Palooza Registration Open", "Summer Camp
+    # Registration Now Open"). The start-anchored rule above misses these. Gated
+    # to the END of the name so events that merely mention registration mid-name
+    # ("Open Registration Soccer Tournament") survive.
+    r'\bregistration\s+(?:is\s+)?(?:now\s+)?opens?\s*!?\s*$',
+    # Library room-booking placeholder leaked as an "event" ("Non Library
+    # Program" = a non-library use of a room; never an attendable program).
+    r'^\s*non[\s-]*library\s+program\s*$',
+    # Cinema "premium offering" / format / accessibility badge chips that leak
+    # from theater calendars (esp. AMC) as standalone "events" — e.g. "Dolby
+    # Cinema at AMC", "RealD 3D", "Laser at AMC", "70mm", "Open Caption
+    # (On-screen Subtitles)". High precision: the ENTIRE name must be just the
+    # format/amenity descriptor. A real screening always carries the film title
+    # too ("Wicked (Open Caption)", "Oppenheimer in 70mm", "Avatar: RealD 3D"),
+    # so anchoring to the whole name leaves those untouched.
+    r'^\s*(?:'
+    r'dolby\s+cinema(?:\s+at\s+amc)?|'
+    r'dolby\s+atmos(?:\s+at\s+amc)?|'
+    r'reald\s*3d|'
+    r'imax(?:\s+(?:at\s+amc|with\s+laser|3d))?|'
+    r'laser\s+at\s+amc|'
+    r'(?:amc\s+prime|prime\s+at\s+amc)|'
+    r'big\s*d|'
+    r'\d{2,3}\s*mm|'
+    r'(?:open|closed)\s+caption(?:ing|s)?(?:\s*\([^)]*\))?(?:\s+at\s+amc)?|'
+    r'audio\s+description(?:\s+at\s+amc)?'
+    r')\s*$',
 ]
 
 _NON_EVENT_NAME_RE = re.compile('|'.join(_NON_EVENT_NAME_PATTERNS), re.IGNORECASE)
+
+# Bare generic single-word names ("Music", "Program", "TBD") carry no event
+# information; combined with a missing description they are placeholder rows the
+# extractor should never have emitted. Only fires when the description is empty
+# (a real event reaching here virtually always has a description), so a richly
+# described event that happens to be titled "Music" is never dropped.
+_BARE_GENERIC_NAME_RE = re.compile(
+    r'(?:music|events?|programs?|performances?|shows?|class(?:es)?|workshops?|'
+    r'sessions?|meetings?|activit(?:y|ies)|general|misc(?:ellaneous)?|untitled|'
+    r'placeholder|n/?a|none|tba|tbd)',
+    re.IGNORECASE)
 
 # Two-signal patterns: the name alone is ambiguous (real attendable events
 # share these words), so a corroborating description signal is required before
@@ -727,6 +769,81 @@ _ATTRACTION_NAME_VETO_RE = re.compile(
     r'meet|fest|recital|jam|mixer|opening|reception|sing-?along)\b',
     re.IGNORECASE)
 
+# Bare holiday-name closure markers: a venue/office calendar leaks a federal
+# holiday as an "event" whose body announces a CLOSURE ("Memorial Day" — "The
+# office is closed in observance of the holiday."), not an attendable occasion.
+# Real holiday programming shares the name ("Memorial Day" BBQ at a bar,
+# "Juneteenth" art workshop, "Independence Day" teaser), so three gates: the
+# name must be ONLY a bare holiday marker (exact-anchored, optional
+# "(observed)"/year), the description must carry closure/observance framing, and
+# any attendable language in the description vetoes the drop. Never fires without
+# a description.
+_HOLIDAY_MARKER_NAME_RE = re.compile(
+    r"^\s*(?:new\s+year'?s?(?:\s+(?:eve|day))?|"
+    r"martin\s+luther\s+king(?:\s+jr\.?)?(?:\s+day)?|mlk(?:\s+jr\.?)?(?:\s+day)?|"
+    r"presidents?'?\s+day|washington'?s?\s+birthday|lincoln'?s?\s+birthday|"
+    r"memorial\s+day|juneteenth|independence\s+day|fourth\s+of\s+july|july\s+4(?:th)?|"
+    r"labor\s+day|columbus\s+day|indigenous\s+peoples'?\s+day|veterans?\s+day|"
+    r"thanksgiving(?:\s+day)?|christmas(?:\s+eve|\s+day)?|halloween|easter(?:\s+sunday)?)"
+    r"\s*(?:\(?observed\)?)?\s*(?:\d{4})?\s*$", re.IGNORECASE)
+_CLOSURE_OBSERVANCE_DESC_RE = re.compile(
+    r"\b(?:closed|will\s+be\s+closed|office\s+closed|closure|"
+    r"no\s+(?:school|classes|programs?|programming|service|services)|"
+    r"in\s+observance|observ(?:ed|ance)\s+of|holiday\s+closure)\b", re.IGNORECASE)
+_HOLIDAY_ATTENDABLE_DESC_VETO_RE = re.compile(
+    r"\b(?:celebrate|celebration|join\s+us|come\s+(?:celebrate|join|out)|party|bbq|"
+    r"cookout|parade|concert|live\s+music|\bdj\b|festival|kick\s+off|kickoff|"
+    r"brunch|dinner|cocktails?|drinks?|special\s+menu|performance|dance)\b",
+    re.IGNORECASE)
+
+# Drink/food "month"/"week" promotions: a bar/restaurant's marketing period
+# ("Martini Month" — "special Tanqueray martinis throughout June"), a span of
+# drink specials rather than a single attendable event. Real events anchor on
+# these too (a "Negroni Week Tasting", a "Burger Month Kickoff Party"), so three
+# gates: name = "<drink/food> month|week", description carries promo-special
+# framing ($price / special / all-month), and any attendable word in name or
+# description vetoes the drop. Weekday forms ("Margarita Mondays") are excluded —
+# those are recurring social events people attend.
+_DRINK_PROMO_NAME_RE = re.compile(
+    r'\b(?:martini|cocktail|margarita|negroni|spritz|wine|whisk(?:e)?y|bourbon|'
+    r'tequila|mezcal|gin|rum|vodka|sangria|champagne|prosecco|beer|cider|sake|'
+    r'oyster|burger|taco|lobster|pizza|pasta|ramen|dumpling|wing|milkshake|sundae)'
+    r'\s+(?:month|week)\b', re.IGNORECASE)
+_PROMO_SPECIAL_DESC_RE = re.compile(
+    r'(?:\$\d+|\bspecials?\b|\bdeals?\b|half[\s-]?off|\bdiscount\b|\bfeatured\b|'
+    r'\ball\s+(?:month|week)\b|throughout\s+(?:the\s+)?(?:month|week|january|'
+    r'february|march|april|may|june|july|august|september|october|november|'
+    r'december))', re.IGNORECASE)
+_PROMO_ATTENDABLE_VETO_RE = re.compile(
+    r'\b(?:party|tasting|dinner|pairing|class|workshop|festival|fest|kickoff|'
+    r'kick-?off|live\s+music|\bdj\b|concert|dance|competition|contest|throwdown|'
+    r'crawl)\b', re.IGNORECASE)
+
+# Retail spend-and-get promotions: a vendor's purchase incentive leaked from a
+# venue calendar ("Blackbird Special World Cup Promotion" — "Spend $40 ...
+# receive a free 4-pack ... while supplies last"). Two gates: name ends in
+# "promo(tion)" and the description carries retail-incentive framing. (Name
+# alone is ambiguous — a band can be named "...Pawn Promotion".)
+_RETAIL_PROMO_NAME_RE = re.compile(r'\bpromo(?:tion)?\s*$', re.IGNORECASE)
+_RETAIL_PROMO_DESC_RE = re.compile(
+    r'(?:spend\s+\$?\d+|while\s+supplies\s+last|receive\s+a\s+free|'
+    r'\bfree\s+\w+.{0,25}\b(?:with|when\s+you)\b|%\s*off|\$\d+\s+(?:off|reward)|'
+    r'purchase\s+\w+.{0,20}\bget\b)', re.IGNORECASE)
+
+# Venue reopening announcements: a "<venue> Reopening" status notice ("Museum
+# Reopening" — "reopens in Autumn 2026 following summer restoration") rather than
+# an attendable event. Two gates plus a veto: name ENDS in "reopening", the
+# description carries reopening-status framing, and event words in the name
+# ("Grand Reopening Party") veto the drop.
+_REOPENING_NAME_RE = re.compile(r'\bre[\s-]?open(?:ing|s)?\s*$', re.IGNORECASE)
+_REOPENING_NAME_VETO_RE = re.compile(
+    r'\b(?:party|celebration|gala|bash|reception|concert|festival|night|tour|'
+    r'preview)\b', re.IGNORECASE)
+_REOPENING_DESC_RE = re.compile(
+    r'\breopen(?:s|ing|ed)?\b.{0,80}\b(?:autumn|spring|summer|fall|winter|\d{4}|'
+    r'following|after|restoration|renovation|renovated|refurbish|closed)\b|'
+    r'welcomed?\s+back', re.IGNORECASE)
+
 
 def is_obvious_non_event(name, description=None):
     """Return True if the event is an unmistakable non-event.
@@ -734,7 +851,8 @@ def is_obvious_non_event(name, description=None):
     Covers closures, calls for submissions/grants, venue rentals, season-pass
     listings, cinema showtime placeholders, SEO spam, fundraising campaigns,
     submission-call contests, festival info-booth listings, childcare-amenity
-    listings, and senior-center congregate-meal menus — the kinds of rows that
+    listings, senior-center congregate-meal menus, registration-window
+    announcements, and bare generic placeholder names — the kinds of rows that
     should never reach the map. High precision by design; anything fuzzier
     belongs in scripts/find_review_candidates.py for human review.
 
@@ -748,6 +866,9 @@ def is_obvious_non_event(name, description=None):
     if _NON_EVENT_NAME_RE.search(name):
         return True
     description = description or ''
+    # Bare generic name with no description at all -> placeholder junk.
+    if not description.strip() and _BARE_GENERIC_NAME_RE.fullmatch(name.strip()):
+        return True
     if description:
         if (_SUBMISSION_CONTEST_NAME_RE.search(name)
                 and not _ATTENDABLE_CONTEST_NAME_RE.search(name)
@@ -766,6 +887,21 @@ def is_obvious_non_event(name, description=None):
         if (_ATTRACTION_DESC_RE.search(description)
                 and _ATTRACTION_VISIT_RE.search(description)
                 and not _ATTRACTION_NAME_VETO_RE.search(name)):
+            return True
+        if (_HOLIDAY_MARKER_NAME_RE.search(name)
+                and _CLOSURE_OBSERVANCE_DESC_RE.search(description)
+                and not _HOLIDAY_ATTENDABLE_DESC_VETO_RE.search(description)):
+            return True
+        if (_DRINK_PROMO_NAME_RE.search(name)
+                and _PROMO_SPECIAL_DESC_RE.search(description)
+                and not _PROMO_ATTENDABLE_VETO_RE.search(name + ' ' + description)):
+            return True
+        if (_RETAIL_PROMO_NAME_RE.search(name)
+                and _RETAIL_PROMO_DESC_RE.search(description)):
+            return True
+        if (_REOPENING_NAME_RE.search(name)
+                and not _REOPENING_NAME_VETO_RE.search(name)
+                and _REOPENING_DESC_RE.search(description)):
             return True
     return False
 

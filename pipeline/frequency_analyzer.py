@@ -6,7 +6,8 @@ for each website, ensuring coverage of events in the next 2 weeks.
 
 Two key signals for frequency:
 1. Posting lead time — how far in advance a site posts new events.
-   If P25 lead time is 5 days, we need to crawl every ~2 days to catch them.
+   If P25 lead time is 8 days, we'd crawl every ~4 days to catch them
+   (subject to a hard 3-day floor — see MIN_FREQUENCY).
 2. Event horizon — how far into the future a crawl's events reach.
    If a crawl only shows events 5 days out, we must crawl within 5 days
    or we'll have a coverage gap.
@@ -39,8 +40,9 @@ import db
 # Minimum completed crawls before auto-adjusting
 MIN_CRAWL_HISTORY = 3
 
-# Frequency bounds (days)
-MIN_FREQUENCY = 1
+# Frequency bounds (days). The floor is 3 days: even sites that post events with
+# very short lead times don't warrant crawling more often than every 3 days.
+MIN_FREQUENCY = 3
 MAX_FREQUENCY = 90
 DEFAULT_FREQUENCY = 7
 
@@ -482,7 +484,10 @@ def _recommend_frequency(lead_times, horizons, new_event_data, stability,
     change_factor = MAX_CHANGE_FACTOR * 2 if very_stale else MAX_CHANGE_FACTOR
 
     if current > 0:
-        max_new = int(current * change_factor)
+        # Floor the increase ceiling at MIN_FREQUENCY so the change-rate clamp can
+        # never pull a recommendation back below the floor (e.g. a legacy 1d site
+        # whose 2x ceiling would otherwise be 2d jumps straight to the 3d floor).
+        max_new = max(MIN_FREQUENCY, int(current * change_factor))
         min_new = max(MIN_FREQUENCY, int(current / MAX_CHANGE_FACTOR))
         if recommended > max_new:
             reasons.append(f"Clamped {recommended}d -> {max_new}d "

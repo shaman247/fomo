@@ -151,6 +151,34 @@ SIMILARITY_TEST_CASES = [
     # substring matched any title containing the word "online").
     ("Parade Registration is online NOW!", "Online: Nothing Stands Alone – A Four Part Course Exploring the Heart Sutra", False),
 
+    # Umbrella name vs enumerated "N of M" series member must NOT merge
+    # (regression 2026-06-24: the bare Broadway run "Schmigadoon" absorbed the
+    # Entertainment Community Fund benefit "Schmigadoon! Producer's Picks
+    # [3 of 4]" via substring matching, polluting the run with foreign URLs).
+    ("Schmigadoon", "Schmigadoon! Producer's Picks [3 of 4]", False),
+    ("Summer Camp", "Summer Camp Session 2 of 8", False),
+    # ...but the same enumerated member across crawls must still merge.
+    ("Schmigadoon! Producer's Picks [3 of 4]", "Schmigadoon! Producer's Picks [3 of 4]", True),
+
+    # Distinct sub-events under a shared generic prefix must NOT merge: core-title
+    # extraction reduces "Early Literacy: ..." to the umbrella head "Early
+    # Literacy", which is contained in the other's core. The DISTINCT subtitles
+    # ("Fine Motor Skills" vs "...Summer Stories") are the tell. Regression
+    # 2026-06-24 (two different NYPL "Early Literacy ..." programs at one branch).
+    ("Early Literacy Process Art: Fine Motor Skills",
+     "Early Literacy: Lapsit and Little Movers Storytime: Summer Stories", False),
+    ("Teen Tech Lab: 3D Printing Basics", "Teen Tech: Robotics Build Workshop", False),
+    # ...but when the SUBTITLES match, it's the same event with a fuller prefix —
+    # must still merge (the umbrella-head gate only blocks divergent subtitles).
+    ("Brooklyn Museum First Saturdays: Live Jazz Set", "First Saturdays: Live Jazz Set", True),
+    ("Williamsburg Lapsit Storytime: Babies and Books", "Lapsit Storytime: Babies and Books", True),
+    # ...and a subtitled "Artist: Tour" vs an unsubtitled "Artist at Venue"
+    # listing is the SAME concert — the gate must not split it (no subtitle on
+    # one side => not an umbrella-head conflation).
+    ("Chet Faker: A Love For Strangers Tour", "Chet Faker at The Rooftop at Pier 17", True),
+    # ...a pure leading prefix is a fuller title of the SAME event — merge.
+    ("Summer Reading Kickoff", "Summer Reading Kickoff Party at the Library", True),
+
     # Edge cases
     ("A", "B", False),  # Single letters
     ("Concert Tonight", "Gallery Opening", False),  # Completely different events
@@ -208,6 +236,13 @@ FALSE_POSITIVE_TEST_CASES = [
     # Bare name EQUALS the head => same event, must still merge (NOT a false positive)
     ("The Monsters", "The Monsters: a Sibling Love Story", False),
     ("Brooklyn Museum", "Brooklyn Museum: First Saturdays", False),
+
+    # Umbrella vs enumerated "N of M" member - should NOT merge (regression
+    # 2026-06-24: "Schmigadoon" absorbing "...Producer's Picks [3 of 4]").
+    ("Schmigadoon", "Schmigadoon! Producer's Picks [3 of 4]", True),
+    ("Summer Camp", "Summer Camp Session 2 of 8", True),
+    # Same enumerated member - NOT a false positive (must still merge)
+    ("Schmigadoon! Producer's Picks [3 of 4]", "Schmigadoon! Producer's Picks [3 of 4]", False),
 ]
 
 

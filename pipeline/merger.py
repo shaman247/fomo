@@ -352,6 +352,22 @@ def _bare_name_vs_distinct_subtitle(bare, specific):
     return True
 
 
+def _series_enumeration_mismatch(norm1, norm2):
+    """One normalized name carries an "N of M" series-member marker and the
+    other does not.
+
+    A bare umbrella name ("Schmigadoon") must not absorb an enumerated member
+    ("Schmigadoon! Producer's Picks [3 of 4]") via loose substring matching —
+    the enumeration is precisely the signal that the longer name is one item of
+    a set, not a fuller title of the same event. Operates on already-normalized
+    names, where "[3 of 4]" has become "3 of 4". Member-vs-member cases (both
+    enumerated) are left to the existing numbered-sequence checks and to the
+    schedule/dedup layers, so this only fires on the umbrella-vs-member shape.
+    """
+    of_re = r'\b\d+\s+of\s+\d+\b'
+    return bool(re.search(of_re, norm1)) != bool(re.search(of_re, norm2))
+
+
 def is_false_positive(name1, name2):
     """
     Check if two "similar" names are actually different events.
@@ -459,6 +475,12 @@ def is_false_positive(name1, name2):
             or _bare_name_vs_distinct_subtitle(name2, name1)):
         return True
 
+    # Umbrella name vs an enumerated "N of M" series member (the colon-less
+    # cousin of the bare/subtitle case): "Schmigadoon" vs "Schmigadoon!
+    # Producer's Picks [3 of 4]". Regression 2026-06-24.
+    if _series_enumeration_mismatch(norm1, norm2):
+        return True
+
     return False
 
 
@@ -532,7 +554,34 @@ def are_names_similar(name1, name2):
                 return True
         if not skip_core_title_match and len(norm_core1) >= 5 and len(norm_core2) >= 5:
             if norm_core1 in norm_core2 or norm_core2 in norm_core1:
-                return True
+                # Containment is only unsafe when the *contained* (shorter) core
+                # is a generic umbrella HEAD left behind by stripping a distinct
+                # subtitle (e.g. "Early Literacy: Lapsit Storytime ..." collapses
+                # to the core "Early Literacy", which is then contained in "Early
+                # Literacy Process Art ..." — two different programs). In that
+                # case, mirror the equality-case rule: only treat them as the
+                # same event when BOTH names carry subtitles AND those subtitles
+                # corroborate. Distinct subtitles => distinct sub-events; a name
+                # with no subtitle (a fuller title or "<core> at <venue>"
+                # listing) still merges as before. Regression 2026-06-24.
+                short_name = name1 if norm_core1 in norm_core2 else name2
+                short_core = norm_core1 if norm_core1 in norm_core2 else norm_core2
+                long_name = name2 if short_name is name1 else name1
+                short_split = _split_on_subtitle_colon(short_name)
+                umbrella_head = (
+                    short_split is not None
+                    and normalize_name_for_dedup(short_split[0]) == short_core
+                    and len(get_significant_words(short_split[1])) >= 2
+                )
+                long_split = _split_on_subtitle_colon(long_name)
+                if umbrella_head and long_split is not None:
+                    short_sub = normalize_name_for_dedup(short_split[1])
+                    long_sub = normalize_name_for_dedup(long_split[1])
+                    if short_sub == long_sub or short_sub in long_sub or long_sub in short_sub:
+                        return True  # same sub-event, fuller prefix — merge
+                    # else: distinct subtitles under a shared head — do not match
+                else:
+                    return True
 
     # Word-based similarity with unstemmed words
     words1 = get_significant_words(name1)
