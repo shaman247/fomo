@@ -99,6 +99,9 @@ scripts/*
 !scripts/fix_recurring_spans.py
 !scripts/audit_event_types.py
 !scripts/sync_format_tags.py
+# Git hooks (canonical source; symlinked into .git/hooks/pre-commit)
+!scripts/git-hooks/
+!scripts/git-hooks/pre-commit
 
 # PHP config with database credentials
 src/api/config.php

@@ -1,0 +1,43 @@
+#!/bin/sh
+# ---------------------------------------------------------------------------
+# Pre-commit guard: the data-entry helper scripts must ALWAYS be committed with
+# an EMPTY array. The real website/location data lives in the database, not in
+# git — committing specific entries pollutes history (and leaked NYC venue data
+# for months before being scrubbed). See CLAUDE.md and the memory note
+# "add_websites/add_locations stay clean".
+#
+# Install (already done once, but to re-link after a fresh clone):
+#   ln -sf ../../scripts/git-hooks/pre-commit .git/hooks/pre-commit
+#
+# Bypass intentionally (rarely needed): git commit --no-verify
+# ---------------------------------------------------------------------------
+
+status=0
+
+check_empty_array() {
+    file="$1"; var="$2"
+    # Only relevant if the file is tracked and present in the index.
+    git ls-files --error-unmatch "$file" >/dev/null 2>&1 || return 0
+    # Count key=>value lines inside the staged `$var = [ ... ];` block, located
+    # by bracket depth so formatting/nested arrays don't fool it. An empty array
+    # has zero such lines.
+    entries=$(git cat-file -p ":$file" 2>/dev/null | awk -v v="$var" '
+        !started && index($0, v" = [") { started = 1 }
+        started {
+            depth += gsub(/\[/, "&") - gsub(/\]/, "&")
+            if ($0 ~ /=>/) k++
+            if (depth <= 0) { print k + 0; exit }
+        }')
+    if [ -n "$entries" ] && [ "$entries" != "0" ]; then
+        echo "✗ pre-commit blocked: $file has a non-empty \$$var array ($entries entries staged)." >&2
+        echo "  These helpers must be committed EMPTY (\$$var = [];) — the data belongs in the DB." >&2
+        echo "  Run the script to insert, then clear the array before committing." >&2
+        echo "  (Override only if you are certain: git commit --no-verify)" >&2
+        status=1
+    fi
+}
+
+check_empty_array scripts/add_websites.php  new_websites
+check_empty_array scripts/add_locations.php new_locations
+
+exit $status
