@@ -248,41 +248,8 @@ fun FomoWebView(
                                 (function() {
                                     var safeAreaTop = $statusBarHeight;
                                     function setAppHeight() {
-                                        var vh = window.innerHeight;
-                                        console.log('DEBUG: Setting --app-height to ' + vh + 'px, --safe-area-top to ' + safeAreaTop + 'px');
-                                        document.documentElement.style.setProperty('--app-height', vh + 'px');
+                                        document.documentElement.style.setProperty('--app-height', window.innerHeight + 'px');
                                         document.documentElement.style.setProperty('--safe-area-top', safeAreaTop + 'px');
-
-                                        // Debug: check filter panel
-                                        var filterPanel = document.getElementById('filter-panel');
-                                        if (filterPanel) {
-                                            var style = window.getComputedStyle(filterPanel);
-                                            var rect = filterPanel.getBoundingClientRect();
-                                            console.log('DEBUG: filter-panel rect: ' + JSON.stringify({
-                                                width: rect.width,
-                                                height: rect.height,
-                                                top: rect.top,
-                                                left: rect.left
-                                            }));
-                                            console.log('DEBUG: filter-panel computed: ' +
-                                                'height=' + style.height +
-                                                ', maxHeight=' + style.maxHeight +
-                                                ', display=' + style.display +
-                                                ', visibility=' + style.visibility +
-                                                ', opacity=' + style.opacity);
-                                        } else {
-                                            console.log('DEBUG: filter-panel NOT FOUND');
-                                        }
-
-                                        // Debug: check map
-                                        var map = document.getElementById('map');
-                                        if (map) {
-                                            var mapRect = map.getBoundingClientRect();
-                                            console.log('DEBUG: map rect: ' + JSON.stringify({
-                                                width: mapRect.width,
-                                                height: mapRect.height
-                                            }));
-                                        }
                                     }
 
                                     // Run immediately and on resize
@@ -293,8 +260,6 @@ fun FomoWebView(
                                     setTimeout(setAppHeight, 100);
                                     setTimeout(setAppHeight, 500);
                                     setTimeout(setAppHeight, 1000);
-
-                                    return 'Viewport fix applied';
                                 })();
                             """.trimIndent(), null)
                         }
@@ -335,7 +300,9 @@ fun FomoWebView(
 
                     webChromeClient = object : WebChromeClient() {
                         override fun onConsoleMessage(consoleMessage: ConsoleMessage?): Boolean {
-                            Log.d("FomoWebView", "${consoleMessage?.messageLevel()}: ${consoleMessage?.message()} [${consoleMessage?.sourceId()}:${consoleMessage?.lineNumber()}]")
+                            if (BuildConfig.DEBUG) {
+                                Log.d("FomoWebView", "${consoleMessage?.messageLevel()}: ${consoleMessage?.message()} [${consoleMessage?.sourceId()}:${consoleMessage?.lineNumber()}]")
+                            }
                             return true
                         }
                     }

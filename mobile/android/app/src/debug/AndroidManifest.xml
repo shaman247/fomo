@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Allow http://10.0.2.2 (emulator) / LAN-IP base URLs during local development.
+         Release builds are HTTPS-only. -->
+    <application android:usesCleartextTraffic="true" />
+
+</manifest>
