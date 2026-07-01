@@ -7,12 +7,12 @@ plugins {
 
 extensions.configure<ApplicationExtension> {
     namespace = "fomocity.fomo.app"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "fomocity.fomo.app"
         minSdk = 26
-        targetSdk = 36
+        targetSdk = 37
         versionCode = 1
         versionName = "1.0.0"
 
@@ -62,7 +62,7 @@ dependencies {
     implementation(libs.androidx.compose.material3)
 
     // SwipeRefreshLayout for pull-to-refresh
-    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
+    implementation(libs.androidx.swiperefreshlayout)
 
     // Testing
     testImplementation(libs.junit)

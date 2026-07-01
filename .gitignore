@@ -189,6 +189,9 @@ mobile/android/.gradle/
 mobile/android/**/build/
 !mobile/android/gradle/wrapper/gradle-wrapper.jar
 
+# Kotlin compiler session data
+mobile/android/.kotlin/
+
 # Local configuration (contains SDK path)
 mobile/android/local.properties
 
