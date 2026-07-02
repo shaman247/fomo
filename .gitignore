@@ -103,6 +103,8 @@ scripts/*
 # Git hooks (canonical source; symlinked into .git/hooks/pre-commit)
 !scripts/git-hooks/
 !scripts/git-hooks/pre-commit
+# App icon generator (renders Android + iOS icons from the adaptive-icon vector)
+!scripts/generate_app_icons.py
 
 # PHP config with database credentials
 src/api/config.php
@@ -116,6 +118,8 @@ database/backups/
 # Screenshots and images
 screenshots/
 *.png
+!mobile/android/play-store-icon.png
+!mobile/ios/fomo/fomo/Assets.xcassets/AppIcon.appiconset/*.png
 *.jpeg
 .playwright-mcp/
 
