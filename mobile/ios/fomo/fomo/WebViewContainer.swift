@@ -64,16 +64,23 @@ struct FomoWebView: UIViewRepresentable {
         configuration.allowsInlineMediaPlayback = true
         configuration.preferences.isElementFullscreenEnabled = true
 
+        // Required (together with WKAppBoundDomains in Info.plist) for Service
+        // Worker support — the site's offline cache. Restricts main-frame
+        // navigation to fomo.nyc; the navigation delegate below sends external
+        // links to Safari, which it did already.
+        configuration.limitsNavigationsToAppBoundDomains = true
+
         // Performance optimizations
         configuration.suppressesIncrementalRendering = false  // Render as content loads
         configuration.allowsAirPlayForMediaPlayback = false   // Disable unused features
 
-        // Share process pool across instances for better memory management
-        configuration.processPool = WKProcessPool()
-
         let webView = WKWebView(frame: .zero, configuration: configuration)
         webView.navigationDelegate = context.coordinator
         webView.uiDelegate = context.coordinator
+        #if DEBUG
+        // Safari Develop-menu inspection (service worker / IndexedDB state).
+        webView.isInspectable = true
+        #endif
         webView.allowsBackForwardNavigationGestures = true
 
         // GPU/rendering optimizations
@@ -139,6 +146,9 @@ struct FomoWebView: UIViewRepresentable {
         }
 
         func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+            // Cancellations (e.g. our own .cancel → open-in-Safari path) are
+            // not failures — never flash the error screen for them.
+            if (error as NSError).code == NSURLErrorCancelled { return }
             DispatchQueue.main.async {
                 if self.parent.isFirstLoad {
                     self.parent.error = error
@@ -147,6 +157,7 @@ struct FomoWebView: UIViewRepresentable {
         }
 
         func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+            if (error as NSError).code == NSURLErrorCancelled { return }
             DispatchQueue.main.async {
                 if self.parent.isFirstLoad {
                     self.parent.error = error
@@ -170,13 +181,18 @@ struct FomoWebView: UIViewRepresentable {
                 return
             }
 
-            // Open external links in Safari
-            if navigationAction.navigationType == .linkActivated {
+            // Open ANY external main-frame navigation in Safari — not just
+            // tapped links but also JS-driven redirects (ticket vendors etc.),
+            // which limitsNavigationsToAppBoundDomains would otherwise hard-fail
+            // with an in-webview error page.
+            if navigationAction.targetFrame?.isMainFrame != false,
+               let scheme = url.scheme?.lowercased(), scheme == "http" || scheme == "https" {
                 UIApplication.shared.open(url)
                 decisionHandler(.cancel)
                 return
             }
 
+            // Cross-origin iframes and non-http schemes handled by the system.
             decisionHandler(.allow)
         }
 

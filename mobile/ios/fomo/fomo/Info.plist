@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Required (together with WKWebViewConfiguration.limitsNavigationsToAppBoundDomains)
+	     for Service Worker support in WKWebView — the web app's offline cache.
+	     Covers subdomains (www.fomo.nyc) automatically. Merged with the
+	     Xcode-generated Info.plist via INFOPLIST_FILE + GENERATE_INFOPLIST_FILE. -->
+	<key>WKAppBoundDomains</key>
+	<array>
+		<string>fomo.nyc</string>
+	</array>
+</dict>
+</plist>

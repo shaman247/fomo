@@ -63,6 +63,11 @@ fomo/
 - [x] Error handling with retry
 - [x] External links open in Safari
 - [x] Swipe-back navigation gesture
+- [x] Offline caching — the site's service worker + IndexedDB layer, enabled in
+      WKWebView via `WKAppBoundDomains` (Info.plist) +
+      `limitsNavigationsToAppBoundDomains` (WebViewContainer). After one online
+      launch, the app starts instantly from cache and works without a connection;
+      fresh events load silently in the background.
 
 ## Future Enhancements
 
@@ -70,4 +75,3 @@ fomo/
 - [ ] Share extension
 - [ ] Home screen widget
 - [ ] App Clips
-- [ ] Offline caching
