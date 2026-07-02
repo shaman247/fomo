@@ -47,10 +47,11 @@ const MapManager = (() => {
         state.mapInstance = mapInstance;
 
         // Add the marker source/layers as soon as the style is parsed. This
-        // fires well before the map's `load`/`idle` events (which also wait on
-        // label glyph PBFs to download), so emoji markers can render without
-        // blocking on the ~0.5 MB of font glyphs. In MapLibre v5 `style.load`
-        // fires on both initial load and setStyle() (theme switch).
+        // fires well before the map's `load`/`idle` events (which wait on tile
+        // downloads), so emoji markers can render early. Labels are drawn
+        // locally via TinySDF from the Inter webfont — no glyph PBF downloads.
+        // In MapLibre v5 `style.load` fires on both initial load and
+        // setStyle() (theme switch).
         mapInstance.on('style.load', _ensureLayers);
 
         // Ensure source/layers exist whenever the map becomes idle, too.
