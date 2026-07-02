@@ -231,8 +231,10 @@ fun FomoWebView(
                             // Stop swipe refresh animation
                             (parent as? SwipeRefreshLayout)?.isRefreshing = false
 
-                            // Get status bar height for safe area inset
-                            val statusBarHeight = view?.rootWindowInsets?.let { insets ->
+                            // Get status bar height for safe area inset.
+                            // Insets are in physical pixels; CSS px are density-scaled,
+                            // so divide by density before handing the value to the page.
+                            val statusBarHeightPx = view?.rootWindowInsets?.let { insets ->
                                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
                                     insets.getInsets(android.view.WindowInsets.Type.statusBars()).top
                                 } else {
@@ -240,6 +242,8 @@ fun FomoWebView(
                                     insets.systemWindowInsetTop
                                 }
                             } ?: 0
+                            val density = view?.resources?.displayMetrics?.density ?: 1f
+                            val statusBarHeight = kotlin.math.ceil(statusBarHeightPx / density).toInt()
 
                             // Fix viewport height for Android WebView
                             // 100vh is unreliable in WebViews - set --app-height CSS variable
