@@ -19,6 +19,63 @@ const DataManager = (() => {
     // ========================================
 
     /**
+     * Fetches the raw response text from the specified URL with comprehensive
+     * error handling. Shared by fetchData/fetchDataHashed.
+     * @param {string} url - The URL to fetch data from
+     * @param {number} timeout - Timeout in milliseconds
+     * @param {Object} [fetchOptions] - Extra fetch() options (e.g. {cache: 'no-cache'})
+     * @returns {Promise<string>} The raw response body text
+     * @throws {Error} Network, timeout, or HTTP errors with user-friendly messages
+     */
+    async function _fetchText(url, timeout, fetchOptions) {
+        // Create an AbortController for timeout handling
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+        let response;
+        try {
+            response = await fetch(url, { ...(fetchOptions || {}), signal: controller.signal });
+            clearTimeout(timeoutId);
+        } catch (fetchError) {
+            clearTimeout(timeoutId);
+
+            // Handle different types of fetch errors
+            if (fetchError.name === 'AbortError') {
+                throw new Error(`Request timed out after ${timeout/1000} seconds. Please check your internet connection and try again.`);
+            } else if (fetchError.message.includes('Failed to fetch') || fetchError.message.includes('NetworkError')) {
+                throw new Error('Unable to connect to the server. Please check your internet connection and try again.');
+            } else {
+                throw new Error(`Network error: ${fetchError.message}`);
+            }
+        }
+
+        // Handle HTTP errors
+        if (!response.ok) {
+            if (response.status === 404) {
+                throw new Error(`Data file not found (404). The requested resource may have been moved or deleted.`);
+            } else if (response.status === 500) {
+                throw new Error(`Server error (500). Please try again later.`);
+            } else if (response.status >= 400 && response.status < 500) {
+                throw new Error(`Client error (${response.status}). Please refresh the page and try again.`);
+            } else if (response.status >= 500) {
+                throw new Error(`Server error (${response.status}). Please try again later.`);
+            } else {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+        }
+
+        return response.text();
+    }
+
+    function _parseJsonText(text) {
+        try {
+            return JSON.parse(text);
+        } catch (parseError) {
+            throw new Error(`Invalid data format received from server. The data may be corrupted.`);
+        }
+    }
+
+    /**
      * Fetches data from the specified URL with comprehensive error handling
      * @param {string} url - The URL to fetch data from
      * @param {number} timeout - Timeout in milliseconds (default: 10000ms)
@@ -27,57 +84,32 @@ const DataManager = (() => {
      */
     async function fetchData(url, timeout = 10000) {
         try {
-            // Create an AbortController for timeout handling
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), timeout);
-
-            let response;
-            try {
-                response = await fetch(url, { signal: controller.signal });
-                clearTimeout(timeoutId);
-            } catch (fetchError) {
-                clearTimeout(timeoutId);
-
-                // Handle different types of fetch errors
-                if (fetchError.name === 'AbortError') {
-                    throw new Error(`Request timed out after ${timeout/1000} seconds. Please check your internet connection and try again.`);
-                } else if (fetchError.message.includes('Failed to fetch') || fetchError.message.includes('NetworkError')) {
-                    throw new Error('Unable to connect to the server. Please check your internet connection and try again.');
-                } else {
-                    throw new Error(`Network error: ${fetchError.message}`);
-                }
-            }
-
-            // Handle HTTP errors
-            if (!response.ok) {
-                if (response.status === 404) {
-                    throw new Error(`Data file not found (404). The requested resource may have been moved or deleted.`);
-                } else if (response.status === 500) {
-                    throw new Error(`Server error (500). Please try again later.`);
-                } else if (response.status >= 400 && response.status < 500) {
-                    throw new Error(`Client error (${response.status}). Please refresh the page and try again.`);
-                } else if (response.status >= 500) {
-                    throw new Error(`Server error (${response.status}). Please try again later.`);
-                } else {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-            }
-
-            // Parse JSON with error handling
-            let data;
-            try {
-                data = await response.json();
-            } catch (parseError) {
-                throw new Error(`Invalid data format received from server. The data may be corrupted.`);
-            }
-
-            return data;
-
+            return _parseJsonText(await _fetchText(url, timeout));
         } catch (error) {
             // Log the error for debugging
             console.error(`Failed to fetch data from ${url}:`, error);
 
             // Re-throw the error for the caller to handle
+            throw error;
+        }
+    }
+
+    /**
+     * Like fetchData, but also returns a content hash of the raw response
+     * text so callers (DataCache write-through, background refresh) can detect
+     * unchanged files without re-comparing payloads.
+     * @param {string} url - The URL to fetch data from
+     * @param {number} timeout - Timeout in milliseconds (default: 10000ms)
+     * @param {Object} [fetchOptions] - Extra fetch() options (e.g. {cache: 'no-cache'})
+     * @returns {Promise<{data: Object, hash: string}>}
+     * @throws {Error} Network, timeout, or parsing errors with user-friendly messages
+     */
+    async function fetchDataHashed(url, timeout = 10000, fetchOptions) {
+        try {
+            const text = await _fetchText(url, timeout, fetchOptions);
+            return { data: _parseJsonText(text), hash: DataCache.hashString(text) };
+        } catch (error) {
+            console.error(`Failed to fetch data from ${url}:`, error);
             throw error;
         }
     }
@@ -765,8 +797,17 @@ const DataManager = (() => {
         // in the hierarchy for grouping/aggregation but are NOT surfaced as
         // selectable chips — only the leaf event-type tags under them are. Derived
         // from the hierarchy so it stays correct if categories change.
+        // Refilled IN PLACE when the Set already exists: FilterPanelUI captures a
+        // reference to it at init, and this runs again in Phase 2 and on every
+        // background data refresh — reassigning would strand that reference.
         const formatChildren = (state.tagChildrenOf && state.tagChildrenOf['Format']) || [];
-        state.structuralFormatTags = new Set(['Format', ...formatChildren]);
+        if (state.structuralFormatTags instanceof Set) {
+            state.structuralFormatTags.clear();
+            state.structuralFormatTags.add('Format');
+            formatChildren.forEach(tag => state.structuralFormatTags.add(tag));
+        } else {
+            state.structuralFormatTags = new Set(['Format', ...formatChildren]);
+        }
 
         // Exclude keywords (tags not in the hierarchy) and structural Format nodes
         // from the browsable/selectable tag list.
@@ -801,6 +842,7 @@ const DataManager = (() => {
 
     return {
         fetchData,
+        fetchDataHashed,
         processInitialData,
         processFullDataAsync,
         applyDescriptions,

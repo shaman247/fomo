@@ -17,6 +17,7 @@ frontend:
   domain: "fomo.nyc"             # "Search fomo.nyc", "About fomo.nyc"
   emoji: "🗽"                     # menu / feedback decoration
   timezone: "America/New_York"   # utils.js: "today" + event-time parsing
+  sw_enabled: true               # offline service worker (false emits a self-unregistering sw.js)
   # Full welcome-modal body (HTML), injected verbatim into #welcome-modal .modal-body.
   welcome_modal: |
     <ul>

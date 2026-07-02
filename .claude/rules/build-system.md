@@ -45,3 +45,11 @@ python scripts/upload_public_html.py   # Upload dist/ to server via FTP
 ```
 
 The upload script tracks file content hashes (MD5) in `scripts/upload_state.json` and only uploads changed files. Use `--force` to upload everything.
+
+## Service worker emission
+
+`build.js` `emitServiceWorker()` renders `src/sw.js` (a template — never served as-is) into `dist/sw.js`, injecting the precache manifest (hashed bundles + versioned vendor + fonts + map styles) and a version hash so any shell change reinstalls the precache. Data JSONs are deliberately NOT SW-cached — the page owns them in IndexedDB (`src/js/data/dataCache.js`). Controls:
+
+- **Dev builds and `frontend.sw_enabled: false`** emit a self-unregistering "killer" sw.js (activate → wipe all SW caches + unregister; IndexedDB untouched) and set `window.__CITY__.swEnabled = false` so the page doesn't register. This is also the production rollback path — deploy a disabled build's sw.js, no app-store release needed.
+- `src/.htaccess` serves `sw.js` with `Cache-Control: no-cache` (mandatory — the blanket 1-year JS rule would otherwise freeze SW updates).
+- `sw.js` sits at the dist root; the index.html JS-concat regex only matches `js/…` paths, so it never joins the app bundle.

@@ -51,3 +51,15 @@ core (constants, utils, historyManager, urlParams) → data → tags → UI → 
 - `variables.css` — CSS custom properties (colors, sizes, breakpoints)
 - `index.css` — entry point, imports all other files
 - Component files: layout, map, filter-panel, tags, popups, sheet, modals, fonts
+
+## Offline caching
+
+Three layers, each owning one resource class (nothing double-cached):
+
+- **Service worker** (`src/sw.js` template → `dist/sw.js`, see build-system.md): precaches the app shell (bundles, vendor, Inter fonts, map styles); runtime-caches protomaps tiles (cache-first, FIFO cap 400, 30-day max age) so visited areas render offline. Passes `data/*.json` through untouched. Registered at the END of `App.init()` (never competes with the critical path), feature-detected (`CITY.swEnabled !== false`).
+- **DataCache** (`src/js/data/dataCache.js`): IndexedDB (`fomo-data-cache`) holding the parsed data files + a `snapshot` meta record (`complete`, `manifestDays`, `savedAt`, per-file `hashes`). `App.init()` decides the session's mode once: a complete + <14-day snapshot → render entirely from cache; otherwise network with write-through, stamped complete at the end of Phase 2 (`_markSnapshotComplete`). Any IDB failure flips a `broken` flag → silent network-only degradation.
+- **Background refresh** (`script.js` `_backgroundRefresh`): cache-mode sessions refetch everything 3 s after init (ALL fetches `{cache:'no-cache'}` — a same-day re-export changes the chunks but not the manifest, so plain fetches would hash stale HTTP-cache bytes). Identical hashes → no-op; otherwise a staged rebuild on a detached state object → `_swapRefreshedState` → re-render preserving filters/search/open popup. `visibilitychange` re-checks hourly and reloads outright when the date rolled over (the date pipeline is fixed at load).
+
+**Swap gotcha**: FilterPanelUI/PopupContentBuilder/TagColorManager capture REFERENCES to `tagDescendantsOf`/`tagParentsOf`/`tagChildrenOf`/`tagEmojiMap`/`hierarchyTagsSet`/`structuralFormatTags`/`geotagsSet` at init — `_swapRefreshedState` refills these in place; reassigning would strand the captured references (and `processTagHierarchy` refills `structuralFormatTags` in place for the same reason).
+
+The native apps (`mobile/ios`, `mobile/android`) inherit all of this through their WebViews; iOS additionally needs `WKAppBoundDomains` + `limitsNavigationsToAppBoundDomains` for the SW half (IndexedDB works regardless). Android needs nothing.

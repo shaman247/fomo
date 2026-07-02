@@ -85,6 +85,8 @@ document.addEventListener('DOMContentLoaded', () => {
             currentFilteredLocations: null, // Locations after tag/date filtering (before search)
             organizersById: {}, // Organizer data keyed by website ID
             isInitialLoad: true, // Track if we're in initial load phase
+            dataFromCache: false, // Whether this session rendered from the DataCache snapshot
+            todayStr: null, // Today's date (in the city timezone) captured at load
         },
 
         /**
@@ -191,8 +193,10 @@ document.addEventListener('DOMContentLoaded', () => {
          */
         async _loadInitialData() {
             // Step 1: Fetch the manifest first — it's tiny (~60 bytes) and tells
-            // us which day-chunk maps to today's NYC date.
-            const manifest = await DataManager.fetchData(this.config.MANIFEST_URL);
+            // us which day-chunk maps to today's NYC date. In cache mode this
+            // (like every _loadDataFile below) reads the IndexedDB snapshot
+            // instead of the network.
+            const manifest = await this._loadDataFile(this.config.MANIFEST_URL);
 
             this.state.manifest = manifest || { days: [] };
             this.state.loadedChunks = new Set();
@@ -201,6 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // the manifest (export is older than NUM_DAY_CHUNKS days), fall
             // back to remainder so the user still sees recent + future events.
             const todayStr = Utils.getTodayInZone();
+            this.state.todayStr = todayStr;
             const dayIndex = (this.state.manifest.days || []).indexOf(todayStr);
             const initChunk = dayIndex >= 0 ? `day${dayIndex}` : this.config.REMAINDER_CHUNK;
             this.state.initChunk = initChunk;
@@ -212,11 +217,11 @@ document.addEventListener('DOMContentLoaded', () => {
             // (~120 KB gz) sat on the critical path *before* the chunk fetch even
             // started, adding a full round-trip + its transfer to time-to-markers.
             const [tagConfig, tagHierarchy, organizersData, initEventData, initLocationData] = await Promise.all([
-                DataManager.fetchData(this.config.TAG_CONFIG_URL),
-                DataManager.fetchData(this.config.TAG_HIERARCHY_URL),
-                DataManager.fetchData(this.config.ORGANIZERS_URL),
-                DataManager.fetchData(`${this.config.DATA_DIR}events.${initChunk}.json`),
-                DataManager.fetchData(`${this.config.DATA_DIR}locations.${initChunk}.json`)
+                this._loadDataFile(this.config.TAG_CONFIG_URL),
+                this._loadDataFile(this.config.TAG_HIERARCHY_URL),
+                this._loadDataFile(this.config.ORGANIZERS_URL),
+                this._loadDataFile(`${this.config.DATA_DIR}events.${initChunk}.json`),
+                this._loadDataFile(`${this.config.DATA_DIR}locations.${initChunk}.json`)
             ]);
             this.state.organizersById = organizersData || {};
 
@@ -412,8 +417,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const fetches = [];
                 for (const chunk of remainingChunks) {
-                    fetches.push(DataManager.fetchData(`${this.config.DATA_DIR}events.${chunk}.json`));
-                    fetches.push(DataManager.fetchData(`${this.config.DATA_DIR}locations.${chunk}.json`));
+                    fetches.push(this._loadDataFile(`${this.config.DATA_DIR}events.${chunk}.json`));
+                    fetches.push(this._loadDataFile(`${this.config.DATA_DIR}locations.${chunk}.json`));
                 }
                 // Description companions download in parallel; applied after the
                 // events are merged (so ids resolve) and before the search index
@@ -507,6 +512,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     indicator.classList.add('done');
                 }
 
+                // Everything fetched this session is now in the DataCache;
+                // verify coverage and stamp the snapshot complete so the NEXT
+                // session can start instantly from cache (fire-and-forget).
+                if (!this.state.dataFromCache) this._markSnapshotComplete();
+
             } catch (error) {
                 if (indicator) indicator.classList.remove('visible');
                 console.error("Failed to load full dataset:", error);
@@ -533,6 +543,16 @@ document.addEventListener('DOMContentLoaded', () => {
          */
         async init() {
             const loadingContainer = document.getElementById('loading-container');
+
+            // Open the on-device data cache and decide the session's data
+            // source ONCE: a complete cached snapshot → render instantly from
+            // IndexedDB (fresh data revalidates in the background afterwards);
+            // otherwise → network with write-through into the cache. One atomic
+            // decision so a render generation never mixes cached and fresh files.
+            this._sessionHashes = new Map();
+            this._cachePutPromises = [];
+            await DataCache.init();
+            this.state.dataFromCache = DataCache.isUsable();
 
             // Parse URL parameters
             const urlParams = this._parseAndCleanUrlParams();
@@ -598,17 +618,23 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (error) {
                 console.error("Failed to initialize app with initial data:", error);
 
+                // Cold cache + offline gets a clearer message than the generic
+                // network error (offline WITH a cached snapshot never lands here).
+                const message = (typeof navigator !== 'undefined' && navigator.onLine === false)
+                    ? "You're offline and no saved events are available yet. Connect to the internet once to enable offline use."
+                    : (error.message || 'Failed to load events. Please try again later.');
+
                 // Display user-friendly error message
                 if (loadingContainer) {
                     const p = loadingContainer.querySelector('p');
                     if (p) {
-                        p.textContent = error.message || 'Failed to load events. Please try again later.';
+                        p.textContent = message;
                     }
                 }
 
                 // Also show a toast notification with the error
                 ToastNotifier.showToast(
-                    error.message || 'Failed to load events. Please try again later.',
+                    message,
                     'error',
                     Constants.UI.TOAST_DURATION_LONG
                 );
@@ -630,6 +656,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // --- Phase 2: Asynchronously Load Full Data ---
             await this._loadFullData(urlParams);
+
+            // --- Offline/refresh wiring (post-critical-path) ---
+            // The service worker registers only now so its shell precache
+            // never competes with the loads above for bandwidth.
+            this._lastRefreshCheck = Date.now();
+            this._registerServiceWorker();
+            if (this.state.dataFromCache) {
+                // Rendered from the snapshot — revalidate against the server
+                // shortly and silently merge any changes (no-op offline).
+                setTimeout(() => this._backgroundRefresh(), 3000);
+            }
+            document.addEventListener('visibilitychange', () => this._onVisibilityRecheck());
         },
 
         /**
@@ -642,7 +680,7 @@ document.addEventListener('DOMContentLoaded', () => {
          */
         _fetchChunkDescriptions(chunks) {
             return Promise.all(chunks.map(c =>
-                DataManager.fetchData(`${this.config.DATA_DIR}events.${c}.desc.json`).catch(() => null)
+                this._loadDataFile(`${this.config.DATA_DIR}events.${c}.desc.json`).catch(() => null)
             ));
         },
 
@@ -672,6 +710,345 @@ document.addEventListener('DOMContentLoaded', () => {
          */
         async _loadChunkDescriptions(chunks, reindex) {
             return this._applyChunkDescriptions(await this._fetchChunkDescriptions(chunks), reindex);
+        },
+
+        // ========================================
+        // OFFLINE CACHE + BACKGROUND REFRESH
+        // ========================================
+
+        /**
+         * Load one data file for the current render generation: from the
+         * DataCache snapshot in cache mode, from the network (with write-
+         * through into the cache) otherwise. A cache miss falls back to the
+         * network for that file — the background refresh reconciles shortly.
+         * @param {string} url - fetch path, e.g. 'data/events.day0.json'
+         * @returns {Promise<Object>} parsed JSON
+         * @private
+         */
+        async _loadDataFile(url) {
+            if (this.state.dataFromCache) {
+                const entry = await DataCache.get(url);
+                if (entry) return entry.data;
+                console.warn(`DataCache miss for ${url}; fetching from network.`);
+                return (await DataManager.fetchDataHashed(url)).data;
+            }
+            const { data, hash } = await DataManager.fetchDataHashed(url);
+            this._sessionHashes.set(url, hash);
+            this._cachePutPromises.push(DataCache.put(url, data, hash));
+            return data;
+        },
+
+        /**
+         * Every file one export generation must contribute before the cached
+         * snapshot may be used offline. Derived from the loaded manifest.
+         * @returns {string[]}
+         * @private
+         */
+        _expectedSnapshotUrls() {
+            const urls = [
+                this.config.MANIFEST_URL,
+                this.config.TAG_CONFIG_URL,
+                this.config.TAG_HIERARCHY_URL,
+                this.config.ORGANIZERS_URL
+            ];
+            const chunks = (this.state.manifest.days || []).map((_, i) => `day${i}`);
+            chunks.push(this.config.REMAINDER_CHUNK);
+            for (const c of chunks) {
+                urls.push(`${this.config.DATA_DIR}events.${c}.json`);
+                urls.push(`${this.config.DATA_DIR}locations.${c}.json`);
+                urls.push(`${this.config.DATA_DIR}events.${c}.desc.json`);
+            }
+            return urls;
+        },
+
+        /**
+         * After a network-mode session has loaded everything (end of Phase 2),
+         * verify the cache actually holds every expected file and stamp the
+         * snapshot complete + record per-file hashes. If anything is missing
+         * (e.g. a desc fetch failed), the stamp is skipped and the next
+         * session simply loads from the network again — self-healing.
+         * @private
+         */
+        async _markSnapshotComplete() {
+            try {
+                await Promise.all(this._cachePutPromises);
+                const expected = this._expectedSnapshotUrls();
+                const present = await DataCache.hasKeys(expected);
+                const hashes = {};
+                for (const url of expected) {
+                    const hash = this._sessionHashes.get(url);
+                    if (!present.has(url) || !hash) return;
+                    hashes[url] = hash;
+                }
+                await DataCache.setMeta({
+                    complete: true,
+                    manifestDays: [...(this.state.manifest.days || [])],
+                    savedAt: Date.now(),
+                    hashes
+                });
+            } catch (error) {
+                console.warn('Could not finalize offline snapshot:', error);
+            }
+        },
+
+        /**
+         * Re-fetch the full dataset and, if anything changed, rebuild the app
+         * state on a detached staging object and swap it in — silently, with
+         * the user's filters/search/open popup preserved. All failures are
+         * swallowed (typically: offline). Runs at most once concurrently.
+         * @private
+         */
+        async _backgroundRefresh() {
+            if (this._refreshInFlight || this.state.isInitialLoad) return;
+            this._refreshInFlight = true;
+            this._lastRefreshCheck = Date.now();
+            try {
+                const fresh = await this._fetchFreshSnapshot();
+
+                // Skip-if-identical: content hashes (not Last-Modified — the
+                // pipeline re-uploads identical bytes) decide whether any
+                // reprocessing/re-render happens at all.
+                const meta = DataCache.getMeta();
+                const cachedHashes = (meta && meta.hashes) || {};
+                const freshUrls = [...fresh.files.keys()];
+                const unchanged = freshUrls.length === Object.keys(cachedHashes).length &&
+                    freshUrls.every(u => fresh.files.get(u).hash === cachedHashes[u]);
+                if (unchanged) {
+                    if (meta) DataCache.setMeta({ ...meta, savedAt: Date.now() });
+                    return;
+                }
+
+                await this._applyFreshSnapshot(fresh);
+                await this._persistFreshSnapshot(fresh);
+            } catch (error) {
+                console.warn('Background data refresh failed (will retry later):', error);
+            } finally {
+                this._refreshInFlight = false;
+            }
+        },
+
+        /**
+         * Fetch manifest + every data file of the current server generation.
+         * Throws if ANY file fails — a partial snapshot is never applied.
+         * @returns {Promise<{manifest: Object, chunks: string[], files: Map}>}
+         * @private
+         */
+        async _fetchFreshSnapshot() {
+            const files = new Map();
+            // EVERY file bypasses the 1-hour HTTP data cache: a same-day
+            // re-export changes the chunk files but NOT the manifest, so a
+            // plain fetch would hash stale HTTP-cache bytes and the refresh
+            // would wrongly conclude nothing changed. no-cache still sends
+            // conditional requests — unchanged files cost a 304, not a body.
+            const fetchOne = async (url) => {
+                const result = await DataManager.fetchDataHashed(url, 30000, { cache: 'no-cache' });
+                files.set(url, result);
+                return result.data;
+            };
+            const manifest = await fetchOne(this.config.MANIFEST_URL);
+            const chunks = ((manifest && manifest.days) || []).map((_, i) => `day${i}`);
+            chunks.push(this.config.REMAINDER_CHUNK);
+            const urls = [this.config.TAG_CONFIG_URL, this.config.TAG_HIERARCHY_URL, this.config.ORGANIZERS_URL];
+            for (const c of chunks) {
+                urls.push(`${this.config.DATA_DIR}events.${c}.json`);
+                urls.push(`${this.config.DATA_DIR}locations.${c}.json`);
+                urls.push(`${this.config.DATA_DIR}events.${c}.desc.json`);
+            }
+            await Promise.all(urls.map(u => fetchOne(u)));
+            return { manifest: manifest || { days: [] }, chunks, files };
+        },
+
+        /**
+         * Rebuild the full app dataset from a fresh snapshot on a detached
+         * staging object (reusing the standard processing pipeline — every
+         * DataManager processor takes `state` as an explicit parameter), then
+         * atomically swap it into the live state and re-render.
+         * @param {{manifest: Object, chunks: string[], files: Map}} fresh
+         * @private
+         */
+        async _applyFreshSnapshot(fresh) {
+            const cfg = this.config;
+            const get = (url) => (fresh.files.get(url) || {}).data;
+
+            const tagConfig = get(cfg.TAG_CONFIG_URL) || {};
+            const tagHierarchy = get(cfg.TAG_HIERARCHY_URL);
+            const organizersById = get(cfg.ORGANIZERS_URL) || {};
+            const hierarchyMaps = DataManager.buildTagHierarchyMaps(tagHierarchy || { tags: [], keywords: [] });
+
+            const allEventData = [];
+            const allLocationData = [];
+            for (const c of fresh.chunks) {
+                allEventData.push(...(get(`${cfg.DATA_DIR}events.${c}.json`) || []));
+                allLocationData.push(...(get(`${cfg.DATA_DIR}locations.${c}.json`) || []));
+            }
+
+            const staging = {
+                tagConfig,
+                geotagsSet: new Set((tagConfig.geotags || []).map(tag => tag.toLowerCase())),
+                organizersById,
+                hierarchyTagsSet: hierarchyMaps.hierarchyTagsSet,
+                tagDescendantsOf: hierarchyMaps.descendantsOf,
+                tagParentsOf: hierarchyMaps.parentsOf,
+                tagChildrenOf: hierarchyMaps.childrenOf,
+                tagEmojiMap: hierarchyMaps.tagEmojiMap
+            };
+            // Organizer emojis render like tag emojis (mirrors _loadInitialData).
+            for (const [id, org] of Object.entries(organizersById)) {
+                const orgTag = Utils.makeOrganizerTag(id);
+                if (orgTag && org && org.emoji) staging.tagEmojiMap[orgTag] = org.emoji;
+            }
+
+            // Empty initial pass initializes the location/event shells through
+            // the same code path the live load uses; the full dataset then
+            // merges with the standard chunked (main-thread-yielding) pipeline.
+            DataManager.processInitialData([], [], staging, cfg);
+            await DataManager.processFullDataAsync(allEventData, allLocationData, staging, cfg);
+            for (const c of fresh.chunks) {
+                DataManager.applyDescriptions(get(`${cfg.DATA_DIR}events.${c}.desc.json`), staging, false);
+            }
+            DataManager.calculateTagFrequencies(staging);
+            DataManager.processTagHierarchy(staging, cfg);
+            await DataManager.buildSearchIndexAsync(staging);
+
+            this._swapRefreshedState(staging, fresh);
+            await this._rerenderAfterRefresh();
+        },
+
+        /** Clear+refill an object in place (identity preserved). @private */
+        _refillObject(target, source) {
+            for (const key of Object.keys(target)) delete target[key];
+            Object.assign(target, source);
+        },
+
+        /** Clear+refill a Set in place (identity preserved). @private */
+        _refillSet(target, source) {
+            target.clear();
+            for (const value of source) target.add(value);
+        },
+
+        /**
+         * Atomically point the live state at the staged dataset. Synchronous
+         * (<1 ms) so no interaction can observe a half-swapped state.
+         *
+         * CRITICAL: FilterPanelUI.init / PopupContentBuilder.init /
+         * TagColorManager.init captured REFERENCES to the hierarchy maps and
+         * Sets — those must be refilled IN PLACE, never reassigned. Everything
+         * else is read live through the shared appState reference.
+         * @private
+         */
+        _swapRefreshedState(staging, fresh) {
+            const s = this.state;
+
+            // In-place refills (references captured by UI modules at init)
+            this._refillObject(s.tagDescendantsOf, staging.tagDescendantsOf);
+            this._refillObject(s.tagParentsOf, staging.tagParentsOf);
+            this._refillObject(s.tagChildrenOf, staging.tagChildrenOf);
+            this._refillObject(s.tagEmojiMap, staging.tagEmojiMap);
+            this._refillSet(s.hierarchyTagsSet, staging.hierarchyTagsSet);
+            this._refillSet(s.structuralFormatTags, staging.structuralFormatTags);
+            this._refillSet(s.geotagsSet, staging.geotagsSet);
+
+            // Straight reassignments (read live via appState)
+            s.manifest = fresh.manifest;
+            s.loadedChunks = new Set(fresh.chunks);
+            s.tagConfig = staging.tagConfig;
+            s.organizersById = staging.organizersById;
+            s.allEvents = staging.allEvents;
+            s.eventsById = staging.eventsById;
+            s.rawLocations = staging.rawLocations;
+            s._rawLocationSeen = staging._rawLocationSeen;
+            s.coordOffsetByVenue = staging.coordOffsetByVenue;
+            s.locationsByLatLng = staging.locationsByLatLng;
+            s.tagColors = staging.tagColors;
+            s.tagFrequencies = staging.tagFrequencies;
+            s.allAvailableTags = staging.allAvailableTags;
+            s.searchableTagsForEmptyTerm = staging.searchableTagsForEmptyTerm;
+            s.searchIndex = staging.searchIndex;
+
+            // Organizer pseudo-tag display names live in a Utils-level registry.
+            Utils.registerOrganizers(s.organizersById);
+
+            // Viewport aggregates were computed against the old dataset.
+            this._viewportCache = null;
+        },
+
+        /**
+         * Re-render after a state swap — mirrors the Phase-2 tail exactly:
+         * date filter + location grouping + tag index rebuild, panel refresh
+         * (preserves user tag selections), then the normal filter/display
+         * pass (preserves search term, viewport, and refreshes any open
+         * popup's content in place).
+         * @private
+         */
+        async _rerenderAfterRefresh() {
+            await MapManager.loadEmojiImagesChunked(this.state.locationsByLatLng);
+            this.updateFilteredEventList({ skipDisplay: true });
+            FilterPanelUI.refreshAvailableTags({
+                allAvailableTags: this.state.allAvailableTags,
+                initialGlobalFrequencies: this.state.tagFrequencies
+            });
+            this.filterAndDisplayEvents();
+        },
+
+        /**
+         * Persist an applied fresh snapshot into the DataCache: one file per
+         * transaction with yields between (the ~9 MB remainder chunk's
+         * structured clone is the expensive part), then the completeness meta.
+         * @private
+         */
+        async _persistFreshSnapshot(fresh) {
+            const hashes = {};
+            for (const [url, file] of fresh.files) {
+                const ok = await DataCache.put(url, file.data, file.hash);
+                if (!ok) return; // cache broken/full — snapshot stays incomplete
+                hashes[url] = file.hash;
+                await new Promise(resolve => setTimeout(resolve, 0));
+            }
+            await DataCache.setMeta({
+                complete: true,
+                manifestDays: [...(fresh.manifest.days || [])],
+                savedAt: Date.now(),
+                hashes
+            });
+        },
+
+        /**
+         * visibilitychange handler for long-lived sessions (the WebView apps
+         * stay resident for days). Crossing midnight invalidates the whole
+         * fixed-at-load date pipeline (config.START_DATE, chunk selection) —
+         * reload outright. Otherwise revalidate data at most hourly.
+         * @private
+         */
+        _onVisibilityRecheck() {
+            if (document.visibilityState !== 'visible' || this.state.isInitialLoad) return;
+            if (this.state.todayStr && Utils.getTodayInZone() !== this.state.todayStr) {
+                window.location.reload();
+                return;
+            }
+            const REFRESH_CHECK_INTERVAL_MS = 60 * 60 * 1000;
+            if (Date.now() - (this._lastRefreshCheck || 0) > REFRESH_CHECK_INTERVAL_MS) {
+                this._backgroundRefresh();
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistration()
+                        .then(reg => reg && reg.update())
+                        .catch(() => {});
+                }
+            }
+        },
+
+        /**
+         * Register the service worker (app-shell + map-tile offline cache).
+         * Deferred to the end of init so the precache never competes with the
+         * critical path. Feature-detected: iOS WKWebView exposes
+         * navigator.serviceWorker only with App-Bound Domains configured.
+         * @private
+         */
+        _registerServiceWorker() {
+            if (!('serviceWorker' in navigator)) return;
+            if (CITY.swEnabled === false) return;
+            // Relative path → correct scope at the origin root in prod and
+            // under a subpath (e.g. localhost/fomo/dist/) in local testing.
+            navigator.serviceWorker.register('sw.js').catch(() => {});
         },
 
         /**
@@ -997,10 +1374,9 @@ document.addEventListener('DOMContentLoaded', () => {
             // markers. We resolve as soon as the base vector tiles for the
             // initial viewport have loaded (geography is painted → no markers
             // over a blank/ocean background) WITHOUT waiting for the map's full
-            // `load` event, which also blocks on the ~0.5 MB of label glyph PBFs.
-            // Labels (street names + marker text) fill in a beat later when the
-            // glyphs arrive; until then the user already has the map + emoji
-            // markers + popups and can pan/zoom freely.
+            // `load` event. (Labels render locally via TinySDF from the Inter
+            // webfont — there are no glyph PBF downloads to wait on — but the
+            // full `load` still trails tile availability.)
             this.state.mapLoadPromise = new Promise((resolve) => {
                 const map = this.state.map;
                 let resolved = false;

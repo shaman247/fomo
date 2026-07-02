@@ -36,3 +36,12 @@ AddType text/json .json
     # HTML: no cache (always serve fresh)
     ExpiresByType text/html "access plus 0 seconds"
 </IfModule>
+
+# Service worker: MUST never be long-cached — the 1-year JS rule above would
+# freeze SW updates (including the kill-switch rescue) on proxies. Browsers
+# default to bypassing the HTTP cache for SW scripts, but don't rely on it.
+<Files "sw.js">
+    <IfModule mod_headers.c>
+        Header set Cache-Control "no-cache, must-revalidate"
+    </IfModule>
+</Files>

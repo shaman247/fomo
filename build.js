@@ -45,7 +45,7 @@ function writeGeneratedTagsJson(cfg) {
 
 // Runtime values injected as a window.__CITY__ global at the head of the JS bundle,
 // so they're available before any IIFE module evaluates.
-function cityPrelude(fe) {
+function cityPrelude(fe, isDev) {
     const b = fe.map.bounds;
     const bounds = b ? { latMin: b.lat_min, latMax: b.lat_max, lngMin: b.lng_min, lngMax: b.lng_max } : null;
     const jsSubset = {
@@ -56,8 +56,65 @@ function cityPrelude(fe) {
             bounds,
         },
         timezone: fe.timezone,
+        // Service worker opt-out: config frontend.sw_enabled: false, or any dev
+        // build (dev also emits the self-unregistering sw.js — see emitServiceWorker).
+        swEnabled: !isDev && fe.sw_enabled !== false,
     };
     return `;window.__CITY__ = ${JSON.stringify(jsSubset)};\n`;
+}
+
+// Emit dist/sw.js from the src/sw.js template: inject the precache manifest
+// (split into immutable hashed/versioned URLs vs unversioned ones the SW must
+// revalidate at install) and a version hash so any shell change produces a
+// byte-different sw.js → the browser reinstalls the precache. Disabled builds
+// (dev, or frontend.sw_enabled: false) emit the same file as a "killer" that
+// wipes all SW caches and unregisters itself — the rescue path for a bad SW.
+function emitServiceWorker({ htmlSource, frontend, jsBundleName, cssBundleName, isDev }) {
+    const disabled = isDev || frontend.sw_enabled === false;
+
+    // Versioned vendor URLs exactly as index.html references them (?v=…).
+    const vendorUrls = [...new Set(
+        [...htmlSource.matchAll(/"(vendor\/[^"]+)"/g)].map(m => m[1])
+    )];
+
+    const immutable = [
+        jsBundleName,
+        cssBundleName,
+        ...vendorUrls,
+        'fonts/inter/InterVariable.woff2',
+        'fonts/inter/InterVariable-Italic.woff2',
+        'images/torch.svg',
+        'images/trumpet.svg',
+    ];
+    // NOTE: fonts/NotoColorEmoji-COLRv1.woff2 (2 MB) is deliberately NOT
+    // precached — it only loads when the user opts into Noto emoji, and the
+    // SW's runtime-static cache picks it up on first use.
+    const revalidate = [
+        'index.html',
+        'about.html',
+        'privacy.html',
+        'data/map-style-light.json',
+        'data/map-style-dark.json',
+    ];
+
+    // Version over everything precache-relevant: bundle names cover JS/CSS
+    // content; style bytes are hashed directly (they're revalidate-class, so
+    // their content doesn't change the manifest itself).
+    const versionHash = crypto.createHash('md5');
+    versionHash.update(JSON.stringify({ immutable, revalidate, disabled }));
+    versionHash.update(htmlSource);
+    for (const style of ['map-style-light.json', 'map-style-dark.json']) {
+        const stylePath = path.join(SRC, 'data', style);
+        if (fs.existsSync(stylePath)) versionHash.update(fs.readFileSync(stylePath));
+    }
+
+    const sw = fs.readFileSync(path.join(SRC, 'sw.js'), 'utf8')
+        .replace('__SW_VERSION__', versionHash.digest('hex').slice(0, 8))
+        .replace('__SW_DISABLED__', String(disabled))
+        .replace('__PRECACHE_IMMUTABLE__', JSON.stringify(immutable))
+        .replace('__PRECACHE_REVALIDATE__', JSON.stringify(revalidate));
+    fs.writeFileSync(path.join(DIST, 'sw.js'), sw);
+    return disabled;
 }
 
 // Replace {{TOKEN}} branding placeholders, then fail the build on any leftover token.
@@ -143,7 +200,7 @@ async function build(isDev) {
         return content;
     }).join('\n;\n');
     // Prepend the city config global so it exists before any module evaluates.
-    const concatenated = cityPrelude(frontend) + flatpickrJs + '\n;\n' + appJs;
+    const concatenated = cityPrelude(frontend, isDev) + flatpickrJs + '\n;\n' + appJs;
 
     // Minify JS in prod, pass through in dev
     let jsContent;
@@ -231,6 +288,9 @@ async function build(isDev) {
     fs.copyFileSync(path.join(SRC, 'privacy.html'), path.join(DIST, 'privacy.html'));
     fs.copyFileSync(path.join(SRC, '.htaccess'), path.join(DIST, '.htaccess'));
 
+    // Emit the service worker (or its self-unregistering "killer" variant).
+    const swDisabled = emitServiceWorker({ htmlSource, frontend, jsBundleName, cssBundleName, isDev });
+
     // Seed any missing generated data files before they get symlinked/copied below.
     ensureSeededData();
 
@@ -263,6 +323,7 @@ async function build(isDev) {
         console.log(`  JS:  ${jsFiles.length} files, ${(originalJsSize / 1024).toFixed(1)} KB → ${(jsBundleSize / 1024).toFixed(1)} KB (${Math.round((1 - jsBundleSize / originalJsSize) * 100)}% smaller)`);
     }
     console.log(`  CSS: ${(cssBundleSize / 1024).toFixed(1)} KB (${cssBundleName})`);
+    console.log(`  SW:  sw.js (${swDisabled ? 'DISABLED — self-unregistering' : 'enabled'})`);
     console.log(`  Output: dist/\n`);
 }
 
