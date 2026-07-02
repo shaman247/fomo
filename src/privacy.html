@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - Fomo NYC</title>
+    <link rel="icon" href="images/torch.svg" type="image/svg+xml">
+    <style>
+        @font-face {
+            font-family: InterVariable;
+            font-style: normal;
+            font-weight: 100 900;
+            font-display: swap;
+            src: url('fonts/inter/InterVariable.woff2') format('woff2');
+        }
+        @font-face {
+            font-family: InterVariable;
+            font-style: italic;
+            font-weight: 100 900;
+            font-display: swap;
+            src: url('fonts/inter/InterVariable-Italic.woff2') format('woff2');
+        }
+
+        :root {
+            font-family: InterVariable, Inter, sans-serif;
+            font-feature-settings: 'liga' 1, 'calt' 1;
+        }
+
+        /* Dark theme (default) */
+        :root,
+        :root[data-theme="dark"] {
+            --primary-bg: #111;
+            --primary-text: #eee;
+            --secondary-text: #bfbfbf;
+            --accent-color: #74b3a5;
+            --accent-hover: #bcf4e8;
+        }
+
+        /* Light theme */
+        :root[data-theme="light"] {
+            --primary-bg: #ebe7df;
+            --primary-text: #222;
+            --secondary-text: #555;
+            --accent-color: #2d7a6a;
+            --accent-hover: #1f5a4d;
+        }
+
+        body {
+            margin: 0;
+            padding: 40px 20px;
+            background-color: var(--primary-bg);
+            color: var(--primary-text);
+            line-height: 1.6;
+            letter-spacing: -0.02em;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: var(--accent-color);
+            margin-top: 40px;
+            margin-bottom: 10px;
+        }
+
+        h2 {
+            color: var(--accent-color);
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        p, li {
+            color: var(--secondary-text);
+            margin-bottom: 15px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        a {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        a:hover {
+            color: var(--accent-hover);
+            text-decoration: underline;
+        }
+
+        .effective-date {
+            font-size: 0.9em;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            display: block;
+            width: 120px;
+            height: auto;
+            margin: 0 0 30px 0;
+        }
+
+        .obfuscated-email {
+            cursor: pointer;
+        }
+    </style>
+    <script>
+        // Apply theme immediately (before DOMContentLoaded) to prevent flash
+        (function() {
+            var savedTheme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // XOR decode function
+            function xorDecode(encoded, key) {
+                var decoded = '';
+                for (var i = 0; i < encoded.length; i++) {
+                    decoded += String.fromCharCode(encoded[i] ^ key.charCodeAt(i % key.length));
+                }
+                return decoded;
+            }
+
+            // Decode obfuscated email addresses
+            document.querySelectorAll('.obfuscated-email').forEach(function(el) {
+                var data = el.getAttribute('data-contact');
+                var key = el.getAttribute('data-key');
+                var codes = data.split(',').map(function(x) { return parseInt(x); });
+                var email = xorDecode(codes, key);
+
+                var link = document.createElement('a');
+                link.href = 'mailto:' + email;
+                link.textContent = email;
+
+                el.parentNode.replaceChild(link, el);
+            });
+        });
+    </script>
+</head>
+<body>
+    <a href="https://fomo.nyc" target="_blank"><img src="images/logo.svg" alt="Fomo NYC Logo" class="logo"></a>
+
+    <h1>Privacy Policy</h1>
+    <p class="effective-date">Effective July 1, 2026</p>
+
+    <p>This policy covers the <a href="https://fomo.nyc">fomo.nyc</a> website and the Fomo NYC mobile apps for iOS and Android. The short version: this is a free, community-built events map. It has no accounts, no ads, no analytics, no tracking cookies, and it never sells or shares your personal information with anyone.</p>
+
+    <h2>What we don't collect</h2>
+    <ul>
+        <li>No accounts or sign-ins — we don't collect names, email addresses, or profiles.</li>
+        <li>No analytics or advertising — there are no trackers, ad networks, or third-party analytics scripts.</li>
+        <li>No cookies are set by the site.</li>
+        <li>We never sell, rent, or share personal information.</li>
+    </ul>
+
+    <h2>What is processed, and where it goes</h2>
+    <ul>
+        <li><strong>Server logs.</strong> Like nearly every website, our hosting provider keeps standard access logs (IP address, browser type, and pages requested). We use them only for security and to keep the site running, and they are routinely rotated.</li>
+        <li><strong>Feedback you send.</strong> If you use the feedback form, we store the message you write, along with your browser type and the page you sent it from, so we can act on it. If you email us instead, we'll have your email address — we use it only to reply.</li>
+        <li><strong>Your location.</strong> If you tap the locate button, your browser or device asks for permission and the map centers on you. Your location is processed entirely on your device — it is never sent to our servers or stored.</li>
+        <li><strong>On-device storage.</strong> The site saves your preferences (such as light/dark theme) and a cache of the public events data on your device so it loads fast and works offline. This data stays on your device; clearing your browser data removes it.</li>
+        <li><strong>Map tiles.</strong> The map itself is served by <a href="https://protomaps.com" target="_blank">Protomaps</a>. When the map loads, your browser requests tile images from their servers, which — like any web request — includes your IP address and the map areas you view. This is the only third-party service the site uses.</li>
+    </ul>
+
+    <h2>The mobile apps</h2>
+    <p>The iOS and Android apps display the same website in a native wrapper. They collect nothing beyond what is described above: no additional permissions, no advertising or analytics SDKs, and no data collection of their own.</p>
+
+    <h2>Children</h2>
+    <p>The service is not directed at children under 13, and we do not knowingly collect personal information from them.</p>
+
+    <h2>Changes to this policy</h2>
+    <p>If our practices change, we'll update this page and its effective date.</p>
+
+    <h2>Contact</h2>
+    <p>Questions? Email <span class="obfuscated-email" data-contact="15,28,5,14,114,86,93,88,9,65,3,22,81" data-key="fomo2025"></span>.</p>
+</body>
+</html>

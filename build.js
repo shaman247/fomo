@@ -226,8 +226,9 @@ async function build(isDev) {
 
     fs.writeFileSync(path.join(DIST, 'index.html'), html);
 
-    // Copy about.html and .htaccess
+    // Copy about.html, privacy.html, and .htaccess
     fs.copyFileSync(path.join(SRC, 'about.html'), path.join(DIST, 'about.html'));
+    fs.copyFileSync(path.join(SRC, 'privacy.html'), path.join(DIST, 'privacy.html'));
     fs.copyFileSync(path.join(SRC, '.htaccess'), path.join(DIST, '.htaccess'));
 
     // Seed any missing generated data files before they get symlinked/copied below.
