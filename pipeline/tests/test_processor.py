@@ -17,6 +17,7 @@ from processor import (
     _parse_city_state,
     _region_conflict,
     apply_crawled_details,
+    get_location_id,
 )
 
 # Test cases: (input, expected_output, description)
@@ -798,6 +799,77 @@ class TestApplyCrawledDetailsEmoji(unittest.TestCase):
         sql, params = self._run('🎤')
         self.assertIn("emoji = %s", sql)
         self.assertEqual(params, ['A real description.', '🎤', 123])
+
+
+def _make_locations_map(entries, website_scoped=None):
+    """Build a minimal locations_map for get_location_id from (name, id) pairs."""
+    names = {}
+    for name, lid in entries:
+        names[_normalize_location_name(name)] = {'id': lid, 'emoji': 'X', 'name': name}
+    scoped = {}
+    for wid, alts in (website_scoped or {}).items():
+        scoped[wid] = {
+            _normalize_location_name(n): {'id': lid, 'emoji': 'X', 'name': n}
+            for n, lid in alts
+        }
+    return {
+        'names': names, 'alternate_names': {}, 'short_names': {}, 'addresses': {},
+        'website_scoped': scoped, 'website_linked': {}, 'city_states': {},
+    }
+
+
+class TestLocationTripwireGuard(unittest.TestCase):
+    """The fuzzy token-overlap tripwire must not fuse two unrelated venues that
+    share only a generic phrase ("X Training Center", "Pier N at Hudson River
+    Park") but differ in a distinctive token. Regression for "Babes!" mapping to
+    DEP Training Center via "BCC training center"."""
+
+    def _id(self, loc, locmap, website_id=None, sub=None, event_name='Some Event'):
+        res = get_location_id(loc, sub, 'site', event_name, locmap, website_id=website_id)
+        return (res or {}).get('id')
+
+    def test_acronym_swap_rejected(self):
+        m = _make_locations_map([('DEP Training Center', 1927)])
+        self.assertIsNone(self._id('BCC training center', m))
+
+    def test_distinct_streetname_rejected(self):
+        m = _make_locations_map([('Maple Street Community Garden', 525)])
+        self.assertIsNone(self._id('Java Street Community Garden', m))
+
+    def test_distinct_number_rejected(self):
+        m = _make_locations_map([('55 Washington Street', 5757)])
+        self.assertIsNone(self._id('100 Washington Street', m))
+
+    def test_distinct_pier_number_rejected(self):
+        m = _make_locations_map([('Pier 66 at Hudson River Park', 4867)])
+        self.assertIsNone(self._id('Pier 25 at Hudson River Park', m))
+
+    def test_typo_still_matches(self):
+        # The tripwire's original purpose — single-char typo recovery.
+        m = _make_locations_map([('Le Petit Versailles', 500)])
+        self.assertEqual(self._id('La Petit Versailles', m), 500)
+
+    def test_saint_abbreviation_still_matches(self):
+        m = _make_locations_map([('St. Nicholas Park', 782)])
+        self.assertEqual(self._id('Saint Nicholas Park', m), 782)
+
+    def test_corporate_suffix_still_matches(self):
+        m = _make_locations_map([('Urbani Truffles USA Corp', 5788)])
+        self.assertEqual(self._id('Urbani Truffles USA Inc', m), 5788)
+
+    def test_hyphen_join_still_matches(self):
+        # "Mid Hudson" vs "Mid-Hudson": normalization joins the hyphen, so the
+        # leftover tokens differ on token count — the guard must reconcile them
+        # via containment ("hudson" ⊂ "midhudson") rather than reject.
+        m = _make_locations_map([('Mid-Hudson Discovery Museum', 4951)])
+        self.assertEqual(self._id('Mid Hudson Discovery Museum', m), 4951)
+
+    def test_website_scoped_alt_resolves_bcc(self):
+        # With the curated per-website alt, the same input now resolves to BCC.
+        m = _make_locations_map(
+            [('DEP Training Center', 1927), ('Brooklyn Comedy Collective', 143)],
+            website_scoped={60: [('BCC training center', 143)]})
+        self.assertEqual(self._id('BCC training center', m, website_id=60), 143)
 
 
 if __name__ == "__main__":

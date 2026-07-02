@@ -24,6 +24,7 @@
 
 # Source plugins — auto-discovered; commit loader + examples, ignore real plugins
 pipeline/sources/*.py
+pipeline/sources/*.json
 !pipeline/sources/__init__.py
 !pipeline/sources/*.example.py
 

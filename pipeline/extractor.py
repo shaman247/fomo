@@ -1164,6 +1164,16 @@ async def prepare_extraction(cursor, crawl_result_id, website_name, notes="",
     # identical content (same SHA-256 hash), reuse its extraction instead of
     # calling Gemini again. Saves significant cost on stale-content sites.
     prior_id = db.find_prior_crawl_with_same_content(cursor, crawl_result_id)
+    if prior_id and _fingerprint_copy_is_suspect(cursor, prior_id):
+        # The cached extraction we'd copy is anomalously low vs the site's
+        # history — the fingerprint-freeze failure mode (one unlucky
+        # under-extraction cached and re-copied forever on a byte-stable page,
+        # mass-archiving still-listed events). Refuse the cache hit and force a
+        # fresh extraction; the freshly extracted result still passes through
+        # the post-extraction variance guard below.
+        print(f"    - ⚠️  FINGERPRINT VARIANCE GUARD: prior crawl {prior_id} extraction is "
+              f"anomalously low vs site history; forcing fresh extraction")
+        prior_id = None
     if prior_id:
         prep.skip_extraction_reason = f"identical content to crawl {prior_id} — copied {{count}} events"
         prep.copy_from_crawl_result_id = prior_id
@@ -1401,6 +1411,65 @@ def _normalize_extraction_response(response_text):
         return response_text, event_count, occurrence_count
     except json.JSONDecodeError:
         return '{"events": []}', 0, 0
+
+
+def _fingerprint_copy_is_suspect(cursor, prior_id):
+    """Guard the content-fingerprint short-circuit against propagating a frozen
+    under-extraction.
+
+    Failure mode (the "fingerprint freeze"): on a byte-stable page, a single
+    unlucky Gemini under-extraction is cached, and every later crawl with the
+    same content_hash copies it verbatim via find_prior_crawl_with_same_content
+    — so the merger keeps archiving real, still-listed events. The ordinary
+    post-extraction variance guard (_variance_retry_reason) can't catch this:
+    the short-circuit runs *before* extraction, and the propagated copies poison
+    a plain trailing median.
+
+    We compare the count we'd copy (the prior crawl's event_count) against the
+    website's typical level, computed as the median of the per-content_hash
+    event counts over recent distinct page states. Deduping by content_hash
+    collapses all the propagated copies into a single vote, so the freeze can't
+    poison the reference no matter how many times it has already been copied.
+
+    Returns True (refuse the cache hit, force a fresh extraction) when the prior
+    count is < half that median, on a site with enough distinct-page history to
+    judge (>= 3 distinct hashes, median >= 4 — tiny/noisy sites are exempt).
+    Fails open (returns False) on any error so extraction is never broken.
+    """
+    try:
+        cursor.execute(
+            "SELECT website_id, event_count FROM crawl_results WHERE id = %s",
+            (prior_id,)
+        )
+        row = cursor.fetchone()
+        if not row or row[0] is None or row[1] is None:
+            return False
+        website_id, prior_count = row[0], row[1]
+
+        # One representative (best) count per distinct content_hash, most-recent
+        # pages first. GROUP BY content_hash collapses the freeze's copies so a
+        # long-running freeze still only contributes one low data point.
+        cursor.execute("""
+            SELECT MAX(event_count) AS cnt
+            FROM crawl_results
+            WHERE website_id = %s AND status = 'processed'
+              AND event_count IS NOT NULL AND content_hash IS NOT NULL
+            GROUP BY content_hash
+            ORDER BY MAX(id) DESC
+            LIMIT 8
+        """, (website_id,))
+        counts = [r[0] for r in cursor.fetchall()]
+        if len(counts) < 3:
+            return False
+
+        median_count = statistics.median(counts)
+        if median_count < 4:
+            return False
+        return prior_count < median_count * 0.5
+    except Exception as e:
+        # The guard must never break extraction — fail open (accept the hit).
+        print(f"    - Fingerprint variance check failed ({e}); accepting cache hit")
+        return False
 
 
 def _variance_retry_reason(cursor, crawl_result_id, new_count):

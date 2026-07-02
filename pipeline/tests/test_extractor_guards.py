@@ -14,6 +14,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from extractor import (
     PreparedExtraction,
     _variance_retry_reason,
+    _fingerprint_copy_is_suspect,
     _maybe_auto_bump_max_batches,
     _normalize_extraction_response,
     estimate_event_count,
@@ -90,6 +91,64 @@ class TestVarianceRetryReason(unittest.TestCase):
             def execute(self, *a, **k):
                 raise RuntimeError("boom")
         self.assertIsNone(_variance_retry_reason(BoomCursor(), 1, new_count=0))
+
+
+class TestFingerprintCopyIsSuspect(unittest.TestCase):
+    """The fingerprint short-circuit must refuse to copy a frozen
+    under-extraction. Reference = median of per-content_hash event counts, so
+    propagated copies (same hash) collapse to one vote and can't poison it."""
+
+    # Blue Note shape: per-hash best counts; freeze = 12, real level ~33.
+    # sorted [12,33,33,37,65] → median 33 → suspect threshold 16.5
+    HEALTHY_HASHES = [(12,), (65,), (37,), (33,), (33,)]
+
+    def test_frozen_low_count_is_suspect(self):
+        cur = FakeCursor((67, 12), self.HEALTHY_HASHES)
+        self.assertTrue(_fingerprint_copy_is_suspect(cur, prior_id=93406))
+
+    def test_zero_count_is_suspect(self):
+        # Topos shape: per-hash counts [0,9,10,5,24] → median 9; prior 0
+        cur = FakeCursor((2656, 0), [(0,), (9,), (10,), (5,), (24,)])
+        self.assertTrue(_fingerprint_copy_is_suspect(cur, prior_id=94136))
+
+    def test_normal_count_not_suspect(self):
+        # A normal 30-event crawl vs median 33 is not a freeze
+        cur = FakeCursor((67, 30), self.HEALTHY_HASHES)
+        self.assertFalse(_fingerprint_copy_is_suspect(cur, prior_id=85455))
+
+    def test_exact_half_median_not_suspect(self):
+        # median 20, prior 10 == half → strict < means NOT suspect
+        cur = FakeCursor((67, 10), [(10,), (20,), (20,), (25,), (18,)])
+        self.assertFalse(_fingerprint_copy_is_suspect(cur, prior_id=1))
+
+    def test_freeze_propagation_does_not_poison_reference(self):
+        # The live table may be full of copied 12s, but dedup-by-hash keeps the
+        # reference distribution intact, so the guard still fires.
+        cur = FakeCursor((67, 12), self.HEALTHY_HASHES)
+        self.assertTrue(_fingerprint_copy_is_suspect(cur, prior_id=95857))
+
+    def test_too_few_distinct_hashes_not_suspect(self):
+        cur = FakeCursor((67, 1), [(40,), (38,)])  # only 2 distinct page states
+        self.assertFalse(_fingerprint_copy_is_suspect(cur, prior_id=1))
+
+    def test_tiny_site_not_suspect(self):
+        # median 3 < 4 → too noisy to judge
+        cur = FakeCursor((9, 0), [(3,), (3,), (2,), (4,)])
+        self.assertFalse(_fingerprint_copy_is_suspect(cur, prior_id=1))
+
+    def test_missing_prior_row_not_suspect(self):
+        cur = FakeCursor(None, self.HEALTHY_HASHES)
+        self.assertFalse(_fingerprint_copy_is_suspect(cur, prior_id=1))
+
+    def test_null_event_count_fails_open(self):
+        cur = FakeCursor((67, None), self.HEALTHY_HASHES)
+        self.assertFalse(_fingerprint_copy_is_suspect(cur, prior_id=1))
+
+    def test_cursor_error_fails_open(self):
+        class BoomCursor:
+            def execute(self, *a, **k):
+                raise RuntimeError("boom")
+        self.assertFalse(_fingerprint_copy_is_suspect(BoomCursor(), prior_id=1))
 
 
 class TestMaybeAutoBumpMaxBatches(unittest.TestCase):

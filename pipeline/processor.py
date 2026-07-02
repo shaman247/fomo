@@ -1221,6 +1221,45 @@ GENERIC_LOCATION_WORDS = {
     'harbor', 'harbour', 'sea', 'dance',
 }
 
+# Leftover tokens that don't distinguish one venue from another, so a mismatch
+# on them shouldn't block the fuzzy token-overlap tripwire: corporate/legal
+# suffixes (Inc vs Corp for the same business) and grammatical connectors.
+_DROPPABLE_LEFTOVER_TOKENS = {
+    'inc', 'corp', 'corporation', 'incorporated', 'llc', 'ltd', 'co', 'lp',
+    'plc', 'company', 'the', 'and', 'of', 'at', 'for', 'a', 'an', 'in', 'on',
+}
+
+
+def _significant_leftovers(tokens):
+    """Keep only tokens that actually identify a venue.
+
+    Drops generic venue-type words ("center", "theater"), corporate/legal
+    suffixes and connectors, and very short non-numeric tokens (abbreviations
+    like "st" for "saint", articles like "la"/"le"). Numbers are always kept —
+    a street/pier number is identifying ("100" vs "55 Washington St").
+    """
+    sig = set()
+    for t in tokens:
+        if t in GENERIC_LOCATION_WORDS or t in _DROPPABLE_LEFTOVER_TOKENS:
+            continue
+        if len(t) >= 3 or t.isdigit():
+            sig.add(t)
+    return sig
+
+
+def _leftover_reconciles(token, others):
+    """True if `token` plausibly refers to the same thing as some token in
+    `others` — a typo (high Levenshtein ratio) or a hyphen-join / containment
+    ("hudson" ⊂ "midhudson"). Used to tell "Saint/St"-style noise apart from a
+    genuine venue-identity conflict ("BCC" vs "DEP", "Java" vs "Maple")."""
+    for other in others:
+        if token in other or other in token:
+            return True
+        if _calculate_levenshtein_ratio(token, other) >= 0.8:
+            return True
+    return False
+
+
 # Sentinel marking a street address shared by 2+ distinct venues in the
 # addresses tier. Address matching skips these — it can't disambiguate which
 # venue an event at that address belongs to.
@@ -1902,9 +1941,10 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
     # cause spurious matches.
     variant_tokens = []
     for variant in location_keys:
-        toks = {t for t in variant.split() if len(t) >= 4}
+        all_toks = variant.split()
+        toks = {t for t in all_toks if len(t) >= 4}
         if len(toks) >= 2:
-            variant_tokens.append((variant, toks))
+            variant_tokens.append((variant, toks, set(all_toks)))
 
     # A bare generic word shouldn't fuzzy-match a specific venue whose name
     # merely contains it (e.g. "gallery" in "gallery mc"). These depend only on
@@ -1931,10 +1971,34 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
                 # This catches single-char typos that defeat substring checks.
                 matched_variants = []
                 if not is_match and variant_tokens:
-                    key_toks = {t for t in key.split() if len(t) >= 4}
-                    for variant, toks in variant_tokens:
-                        if len(toks & key_toks) >= 2:
-                            matched_variants.append(variant)
+                    key_all = set(key.split())
+                    key_toks = {t for t in key_all if len(t) >= 4}
+                    for variant, toks, variant_all in variant_tokens:
+                        if len(toks & key_toks) < 2:
+                            continue
+                        # The ≥2 shared long tokens are frequently a generic
+                        # venue phrase ("training center", "community center",
+                        # "arts center", "X at Hudson River Park"). On its own
+                        # that phrase can pin two unrelated facilities to each
+                        # other when the only thing distinguishing them is a
+                        # short identifier the long-token filter never sees —
+                        # e.g. "BCC training center" vs "DEP training center"
+                        # (bcc/dep are 3 chars), "100/55 Washington Street",
+                        # "Pier 25/66 at Hudson River Park". Honor the tripwire's
+                        # actual purpose (recovering typos / abbreviations like
+                        # "La/Le Petit Versailles", "Saint/St Nicholas Park"): if
+                        # BOTH names carry a *distinctive* leftover token and
+                        # they don't reconcile (typo, abbreviation, or hyphen-
+                        # join), they're different venues — reject.
+                        shared_all = variant_all & key_all
+                        sig_v = _significant_leftovers(variant_all - shared_all)
+                        sig_k = _significant_leftovers(key_all - shared_all)
+                        if sig_v and sig_k and not (
+                            all(_leftover_reconciles(a, sig_k) for a in sig_v)
+                            and all(_leftover_reconciles(b, sig_v) for b in sig_k)
+                        ):
+                            continue
+                        matched_variants.append(variant)
                     if matched_variants:
                         is_match = True
 
