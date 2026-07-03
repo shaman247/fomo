@@ -1,3 +1,14 @@
+# Vanity route: /feedback opens the app with the Submit Feedback modal.
+# FeedbackManager sees the #feedback hash, opens the modal, and replaceState()s
+# the address bar back to the bare domain (same cleanup share links get).
+# NE keeps the '#' literal in the Location header; QSD drops any query string
+# (otherwise it would be appended after the fragment, corrupting the hash).
+# Target is domain-root absolute — matches the production deployment.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^feedback/?$ /#feedback [NC,NE,QSD,R=302,L]
+</IfModule>
+
 # MIME type fixes
 # LiteSpeed compresses text/* by default but not application/json or binary types.
 # Remap JSON to text/json so it gets compressed automatically.
