@@ -6,6 +6,44 @@
     <title>{{SITE_NAME}}</title>
     <link rel="icon" href="images/torch.svg" type="image/svg+xml">
 
+    <!-- Android System WebView glyph fix. Our map styles ship no `glyphs` URL,
+         so MapLibre renders every label locally via its TinySDF fallback, whose
+         canvas is an OffscreenCanvas whenever one is defined. On Android WebView,
+         main-thread OffscreenCanvas 2D text readback comes back blank, so every
+         glyph rasterizes empty and the map shows no labels at all. Desktop works;
+         iOS lacks main-thread OffscreenCanvas and already falls back to a DOM
+         canvas. Probe the readback and, only when it's broken, drop the global so
+         MapLibre uses the DOM-canvas path too. Runs before maplibre-gl.js loads. -->
+    <script>
+    (function () {
+        if (typeof OffscreenCanvas === 'undefined') return;
+        var broken = false;
+        try {
+            var oc = new OffscreenCanvas(24, 24);
+            var ctx = oc.getContext('2d', { willReadFrequently: true });
+            if (!ctx) {
+                broken = true;
+            } else {
+                ctx.textBaseline = 'top';
+                ctx.font = '20px sans-serif';
+                ctx.fillStyle = '#000';
+                ctx.fillText('A', 2, 2);
+                var px = ctx.getImageData(0, 0, 24, 24).data;
+                broken = true;
+                for (var i = 3; i < px.length; i += 4) {
+                    if (px[i] !== 0) { broken = false; break; }
+                }
+            }
+        } catch (e) {
+            broken = true;
+        }
+        if (broken) {
+            try { delete window.OffscreenCanvas; }
+            catch (e) { try { window.OffscreenCanvas = undefined; } catch (e2) {} }
+        }
+    })();
+    </script>
+
     <!-- Warm up the only remaining cross-origin: the map tile/glyph CDN. -->
     <link rel="preconnect" href="https://api.protomaps.com" crossorigin>
     <link rel="dns-prefetch" href="https://api.protomaps.com">

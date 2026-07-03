@@ -155,6 +155,8 @@ xcuserdata/
 
 # Xcode workspaces (auto-generated)
 *.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist
+mobile/ios/**/xcshareddata/WorkspaceSettings.xcsettings
+mobile/ios/**/xcshareddata/xcschemes/
 
 # CocoaPods
 mobile/ios/**/Pods/

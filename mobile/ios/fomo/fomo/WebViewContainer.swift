@@ -86,7 +86,11 @@ struct FomoWebView: UIViewRepresentable {
         // GPU/rendering optimizations
         webView.isOpaque = true                               // Enables compositing optimizations
         webView.scrollView.bounces = false                    // Reduce compositing overhead
-        webView.scrollView.contentInsetAdjustmentBehavior = .automatic
+        // Never let the scroll view add its own safe-area content insets — the
+        // page is edge-to-edge (see .ignoresSafeArea() in FomoApp) and manages
+        // insets itself via CSS env(safe-area-inset-*). .automatic would stack a
+        // second top inset on top of the CSS padding.
+        webView.scrollView.contentInsetAdjustmentBehavior = .never
 
         // Prevent zoom but allow scrolling
         webView.scrollView.maximumZoomScale = 1.0
