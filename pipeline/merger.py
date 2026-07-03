@@ -759,28 +759,46 @@ def _deduplicate_same_name_events(cursor, connection, current_date, edit_logger=
 
     Keeps the oldest event (lowest id) and merges newer duplicates into it.
 
+    ARCHIVED events with future occurrences also join their group, but only as
+    absorb candidates — never keepers. When a site re-lists an event after its
+    row was archived and the fresh extraction maps to a different location row
+    (venue-mapping drift: a corrected alt-name, duplicate location rows, sibling
+    venues), the main matcher's cross-location guard correctly refuses the merge
+    and a new active row is created — leaving a stale archived twin that churns
+    every subsequent run. Folding the archived twin into the active row also
+    moves its event_sources, so the next crawl merges into the survivor instead
+    of resurrecting the stale copy.
+
     Returns the number of duplicate events removed.
     """
     # Fetch candidate (name, website, date, time) tuples and group in Python so
     # we can apply `normalize_time_for_dedup` to start_time. Doing this in SQL
     # would require a hairy REGEXP_REPLACE; doing it in Python keeps the rule
     # alongside the helper so future format-drift can be patched in one place.
+    # Active-but-suppressed events stay excluded (a human hid them; the dedupe
+    # workflow owns those), but archived rows are included regardless of
+    # suppression so stale twins of re-listed events get absorbed.
     cursor.execute("""
         SELECT LOWER(TRIM(e.name)) AS norm_name, e.website_id, e.id,
-               eo.start_date, eo.start_time, e.location_id
+               eo.start_date, eo.start_time, e.location_id,
+               e.archived, e.suppressed, e.location_name
         FROM events e
         JOIN event_occurrences eo ON eo.event_id = e.id
         WHERE eo.start_date >= %s
-          AND e.archived = 0
-          AND e.suppressed = 0
+          AND (e.archived = 1 OR e.suppressed = 0)
     """, (current_date,))
 
     groups = {}
     event_location = {}  # event_id -> location_id (for the cross-location guard)
-    for norm_name, website_id, event_id, start_date, start_time, location_id in cursor.fetchall():
+    event_archived = {}
+    event_loc_name = {}  # event_id -> normalized extracted location_name
+    for (norm_name, website_id, event_id, start_date, start_time, location_id,
+         archived, _suppressed, location_name) in cursor.fetchall():
         key = (norm_name, website_id, start_date, normalize_time_for_dedup(start_time))
         groups.setdefault(key, set()).add(event_id)
         event_location[event_id] = location_id
+        event_archived[event_id] = bool(archived)
+        event_loc_name[event_id] = normalize_name_for_dedup(location_name) if location_name else ''
 
     dup_groups = [(key, sorted(ids)) for key, ids in groups.items() if len(ids) > 1]
 
@@ -843,6 +861,11 @@ def _deduplicate_same_name_events(cursor, connection, current_date, edit_logger=
         cursor.execute("DELETE FROM events WHERE id = %s", (remove_id,))
         merged_into[remove_id] = keep_id
 
+    # Human "not a duplicate" decisions from the dedupe workflow are binding —
+    # never absorb across a dismissed pair.
+    cursor.execute("SELECT event_id_a, event_id_b FROM dedupe_dismissed_pairs")
+    dismissed_pairs = {frozenset(row) for row in cursor.fetchall()}
+
     removed = 0
     for _key, ids in dup_groups:
         live = []
@@ -853,6 +876,10 @@ def _deduplicate_same_name_events(cursor, connection, current_date, edit_logger=
         if len(live) < 2:
             continue
         live.sort()
+        active = [eid for eid in live if not event_archived.get(eid)]
+        stale = [eid for eid in live if event_archived.get(eid)]
+        if not active:
+            continue  # nothing live to absorb into; leave archived twins alone
 
         # Cross-location guard: same-name/time events at DIFFERENT known
         # location_ids are distinct venues (a recurring program — Open Play,
@@ -863,7 +890,7 @@ def _deduplicate_same_name_events(cursor, connection, current_date, edit_logger=
         # dedup exists to catch). Mirrors find_best_match()'s
         # `require_location_id_match` guard.
         clusters = []  # each: [keep_id (lowest), cluster_loc, [member_ids...]]
-        for eid in live:  # live is sorted, so each cluster's first member is its keeper
+        for eid in active:  # active is id-ordered, so each cluster's first member is its keeper
             loc = event_location.get(eid)
             for cl in clusters:
                 if cl[1] is None or loc is None or cl[1] == loc:
@@ -878,6 +905,32 @@ def _deduplicate_same_name_events(cursor, connection, current_date, edit_logger=
             for remove_id in members[1:]:
                 _merge_pair_into(keep_id, remove_id)
                 removed += 1
+
+        # Absorb stale archived twins into a location-compatible active keeper.
+        # Location compatibility is looser here than for active-active merges:
+        # same location_id, NULL on either side, or the same extracted
+        # location_name (the drift case — an identical venue string mapped to
+        # different location rows across crawls). Twins whose extracted venue
+        # strings genuinely differ (multi-branch programs sharing a time slot)
+        # stay untouched.
+        for dead_id in stale:
+            dead_loc = event_location.get(dead_id)
+            dead_loc_name = event_loc_name.get(dead_id, '')
+            for cl in clusters:
+                keep_id = cl[0]
+                if frozenset((keep_id, dead_id)) in dismissed_pairs:
+                    continue
+                loc_compatible = cl[1] is None or dead_loc is None or cl[1] == dead_loc
+                name_compatible = bool(dead_loc_name) and dead_loc_name == event_loc_name.get(keep_id, '')
+                if not (loc_compatible or name_compatible):
+                    continue
+                # Deliberately no suppression propagation: suppressed=1 on an
+                # archived twin almost always means "hidden as a duplicate copy"
+                # (find_duplicate_events --suppress), not "this event is
+                # uninteresting" — copying it would hide the live keeper.
+                _merge_pair_into(keep_id, dead_id)
+                removed += 1
+                break
 
     _retry_on_deadlock(connection.commit)
     return removed
