@@ -333,6 +333,23 @@ CREATE TABLE IF NOT EXISTS event_tags (
     FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Event-tag blocks - (event, tag) pairs a judged audit removed as mis-applied.
+-- Binding, like dedupe_dismissed_pairs: tag writers (db.upsert_event_tags,
+-- backfill_category_tags) skip these so re-crawl tag votes can't re-apply them.
+CREATE TABLE IF NOT EXISTS event_tag_blocks (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    event_id INT UNSIGNED NOT NULL,
+    tag_id INT UNSIGNED NOT NULL,
+    reason VARCHAR(500) DEFAULT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    UNIQUE KEY unique_event_tag_block (event_id, tag_id),
+    INDEX idx_block_event (event_id),
+    INDEX idx_block_tag (tag_id),
+    FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE,
+    FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Tag hierarchy - DAG edges between curated tags (a tag may have multiple parents)
 CREATE TABLE IF NOT EXISTS tag_hierarchy (
     parent_tag_id INT UNSIGNED NOT NULL,

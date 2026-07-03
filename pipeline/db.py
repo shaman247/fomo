@@ -1265,7 +1265,12 @@ def get_tag_disambiguations(cursor):
 
 
 def upsert_event_tags(cursor, event_id, tag_names, replace=False):
-    """Set tags for an event. If replace=True, deletes existing tags first."""
+    """Set tags for an event. If replace=True, deletes existing tags first.
+
+    Pairs in event_tag_blocks are never (re-)inserted — a judged audit removed
+    them as mis-applied, and that decision is binding across re-crawls."""
+    cursor.execute("SELECT tag_id FROM event_tag_blocks WHERE event_id = %s", (event_id,))
+    blocked = {row[0] for row in cursor.fetchall()}
     if replace:
         cursor.execute("DELETE FROM event_tags WHERE event_id = %s", (event_id,))
     for tag in tag_names:
@@ -1280,6 +1285,8 @@ def upsert_event_tags(cursor, event_id, tag_names, replace=False):
             # (see scripts/populate_tag_hierarchy.py).
             cursor.execute("INSERT INTO tags (name, type) VALUES (%s, 'keyword')", (tag[:100],))
             tag_id = cursor.lastrowid
+        if tag_id in blocked:
+            continue
         cursor.execute(
             "INSERT IGNORE INTO event_tags (event_id, tag_id) VALUES (%s, %s)",
             (event_id, tag_id)

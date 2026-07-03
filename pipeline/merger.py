@@ -851,6 +851,13 @@ def _deduplicate_same_name_events(cursor, connection, current_date, edit_logger=
         cursor.execute("DELETE FROM event_urls WHERE event_id = %s", (remove_id,))
         cursor.execute("DELETE FROM event_tags WHERE event_id = %s", (remove_id,))
 
+        # The keeper inherits the twin's crawl history, so judged tag blocks
+        # must carry over or re-crawl votes could re-apply a removed tag.
+        cursor.execute("""
+            INSERT IGNORE INTO event_tag_blocks (event_id, tag_id, reason)
+            SELECT %s, tag_id, reason FROM event_tag_blocks WHERE event_id = %s
+        """, (keep_id, remove_id))
+
         if edit_logger:
             cursor.execute("SELECT * FROM events WHERE id = %s", (remove_id,))
             record = cursor.fetchone()

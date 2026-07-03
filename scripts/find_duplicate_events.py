@@ -253,11 +253,20 @@ def merge_pair(cursor, keep_id, delete_id):
     """, (keep_id, delete_id, keep_id))
     cursor.execute("""
         INSERT IGNORE INTO event_tags (event_id, tag_id)
-        SELECT %s, tag_id FROM event_tags WHERE event_id = %s
-    """, (keep_id, delete_id))
+        SELECT %s, et.tag_id FROM event_tags et
+        WHERE et.event_id = %s
+          AND NOT EXISTS (
+            SELECT 1 FROM event_tag_blocks b
+            WHERE b.event_id = %s AND b.tag_id = et.tag_id
+          )
+    """, (keep_id, delete_id, keep_id))
     cursor.execute("""
         INSERT IGNORE INTO event_sources (event_id, crawl_event_id)
         SELECT %s, crawl_event_id FROM event_sources WHERE event_id = %s
+    """, (keep_id, delete_id))
+    cursor.execute("""
+        INSERT IGNORE INTO event_tag_blocks (event_id, tag_id, reason)
+        SELECT %s, tag_id, reason FROM event_tag_blocks WHERE event_id = %s
     """, (keep_id, delete_id))
     cursor.execute("UPDATE events SET suppressed = 1 WHERE id = %s", (delete_id,))
     cursor.execute("""
