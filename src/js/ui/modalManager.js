@@ -24,13 +24,10 @@ const ModalManager = (() => {
         // Callbacks
         onEmojiFontChange: null,
         onThemeChange: null,
-        onLocationToggle: null,
 
         // DOM references
         settingsModal: null,
-        welcomeModal: null,
-        locationToggle: null,
-        locationStatus: null
+        welcomeModal: null
     };
 
     // ========================================
@@ -69,30 +66,23 @@ const ModalManager = (() => {
      * @param {Object} callbacks - Callback functions
      * @param {Function} callbacks.onEmojiFontChange - Called when emoji font changes
      * @param {Function} callbacks.onThemeChange - Called when theme changes
-     * @param {Function} callbacks.onLocationToggle - Called when location toggle changes
      */
     function initSettingsModal(callbacks = {}) {
         state.onEmojiFontChange = callbacks.onEmojiFontChange;
         state.onThemeChange = callbacks.onThemeChange;
-        state.onLocationToggle = callbacks.onLocationToggle;
 
         const modal = document.getElementById('settings-modal');
         const closeBtn = document.getElementById('settings-close-btn');
         const emojiFontRadios = document.querySelectorAll('input[name="emoji-font"]');
         const themeRadios = document.querySelectorAll('input[name="theme"]');
-        const locationToggle = document.getElementById('use-location-toggle');
-        const locationStatus = document.getElementById('location-status');
 
         if (!modal || !closeBtn || emojiFontRadios.length === 0 || themeRadios.length === 0) return;
 
         state.settingsModal = modal;
-        state.locationToggle = locationToggle;
-        state.locationStatus = locationStatus;
 
         // Load current settings with safe storage
         const savedEmojiFont = Utils.SafeStorage.getItem('emojiFont') || 'system';
         const savedTheme = Utils.SafeStorage.getItem('theme') || 'dark';
-        const savedUseLocation = Utils.SafeStorage.getItem('useLocation') === 'true';
 
         // Set the correct radio buttons based on saved settings
         emojiFontRadios.forEach(radio => {
@@ -107,9 +97,6 @@ const ModalManager = (() => {
         themeRadios.forEach(radio => {
             radio.checked = radio.value === savedTheme;
         });
-        if (locationToggle) {
-            locationToggle.checked = savedUseLocation;
-        }
 
         // Close modal when clicking close button
         closeBtn.addEventListener('click', () => {
@@ -139,17 +126,6 @@ const ModalManager = (() => {
             });
         });
 
-        // Handle location toggle change
-        if (locationToggle) {
-            locationToggle.addEventListener('change', (e) => {
-                const useLocation = e.target.checked;
-                Utils.SafeStorage.setItem('useLocation', useLocation ? 'true' : 'false');
-                if (state.onLocationToggle) {
-                    state.onLocationToggle(useLocation);
-                }
-            });
-        }
-
     }
 
     /**
@@ -170,27 +146,6 @@ const ModalManager = (() => {
         if (modal) {
             modal.classList.remove('show');
         }
-    }
-
-    /**
-     * Updates the location status message in settings
-     * @param {string} message - Status message to display
-     * @param {string} [className] - Optional CSS class ('loading', 'loaded', or empty)
-     */
-    function setLocationStatus(message, className = '') {
-        const statusEl = state.locationStatus || document.getElementById('location-status');
-        if (statusEl) {
-            statusEl.textContent = message;
-            statusEl.className = 'setting-status' + (className ? ' ' + className : '');
-        }
-    }
-
-    /**
-     * Checks if location setting is enabled
-     * @returns {boolean} True if user has enabled location
-     */
-    function isLocationEnabled() {
-        return Utils.SafeStorage.getItem('useLocation') === 'true';
     }
 
     // ========================================
@@ -260,8 +215,6 @@ const ModalManager = (() => {
         // Settings modal
         initSettingsModal,
         openSettingsModal,
-        setLocationStatus,
-        isLocationEnabled,
 
         // Welcome modal
         initWelcomeModal,

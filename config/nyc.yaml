@@ -28,12 +28,6 @@ frontend:
   map:
     center: [40.70424, -73.97086]  # [lat, lng] initial map view
     zoom: 12
-    user_location_zoom: 14
-    bounds:                        # OPTIONAL — omit to accept any geolocation (no region gate)
-      lat_min: 40.49
-      lat_max: 40.92
-      lng_min: -74.26
-      lng_max: -73.70
 
 extraction:
   # extractor.py get_chunk_prompt — the full opening line. {date} is substituted.

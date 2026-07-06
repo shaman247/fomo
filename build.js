@@ -46,14 +46,10 @@ function writeGeneratedTagsJson(cfg) {
 // Runtime values injected as a window.__CITY__ global at the head of the JS bundle,
 // so they're available before any IIFE module evaluates.
 function cityPrelude(fe, isDev) {
-    const b = fe.map.bounds;
-    const bounds = b ? { latMin: b.lat_min, latMax: b.lat_max, lngMin: b.lng_min, lngMax: b.lng_max } : null;
     const jsSubset = {
         map: {
             center: fe.map.center,
             zoom: fe.map.zoom,
-            userLocationZoom: fe.map.user_location_zoom,
-            bounds,
         },
         timezone: fe.timezone,
         // Service worker opt-out: config frontend.sw_enabled: false, or any dev

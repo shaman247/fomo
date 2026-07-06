@@ -104,8 +104,6 @@ document.addEventListener('DOMContentLoaded', () => {
          * @property {Array<string>} TAG_COLOR_PALETTE_LIGHT - Color palette for light theme
          * @property {Array<number>} MAP_INITIAL_VIEW - Initial map center [lat, lng]
          * @property {number} MAP_INITIAL_ZOOM - Initial map zoom level
-         * @property {number} MAP_USER_LOCATION_ZOOM - Zoom level when centering on the user's location
-         * @property {?Object} REGION_BOUNDS - {latMin, latMax, lngMin, lngMax} geolocation bounds, or null to accept any
          * @property {string} MAP_STYLE_DARK - Map style URL for dark theme
          * @property {string} MAP_STYLE_LIGHT - Map style URL for light theme
          * @property {number} MAP_MAX_ZOOM - Maximum zoom level
@@ -137,9 +135,6 @@ document.addEventListener('DOMContentLoaded', () => {
             ],
             MAP_INITIAL_VIEW: CITY.map.center,
             MAP_INITIAL_ZOOM: CITY.map.zoom,
-            MAP_USER_LOCATION_ZOOM: CITY.map.userLocationZoom,
-            // Region bounds for geolocation validation (null => accept any location).
-            REGION_BOUNDS: CITY.map.bounds || null,
             MAP_STYLE_DARK: 'data/map-style-dark.json?v=8',
             MAP_STYLE_LIGHT: 'data/map-style-light.json?v=8',
             MAP_MAX_ZOOM: 20
@@ -277,11 +272,6 @@ document.addEventListener('DOMContentLoaded', () => {
             this.initThemeManager();
             ThemeManager.initTheme();
 
-            // Only request location if user has enabled the setting
-            if (ModalManager.isLocationEnabled()) {
-                this.state.userLocation = await this.getUserLocation();
-            }
-
             this.initMap();
             // Search/filter managers must be ready before the map can fire a
             // moveend→performSearch (which happens during the parallel load).
@@ -341,9 +331,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 onThemeChange: (theme) => {
                     ThemeManager.applyThemeChange(theme);
-                },
-                onLocationToggle: (enabled) => {
-                    this.handleLocationToggle(enabled);
                 }
             });
             // Note: Welcome modal is initialized earlier in init() so it can be closed during loading
@@ -1206,90 +1193,12 @@ document.addEventListener('DOMContentLoaded', () => {
         },
 
         /**
-         * Check if coordinates are within NYC bounds
-         * @param {number} lat - Latitude
-         * @param {number} lng - Longitude
-         * @returns {boolean} True if within the region bounds (or if no bounds configured)
-         * @memberof App
-         */
-        isWithinRegion(lat, lng) {
-            const bounds = this.config.REGION_BOUNDS;
-            if (!bounds) return true; // No region gate configured — accept any location.
-            return lat >= bounds.latMin && lat <= bounds.latMax &&
-                   lng >= bounds.lngMin && lng <= bounds.lngMax;
-        },
-
-        /**
-         * Get user's current location via Geolocation API
-         * Returns null if geolocation is unavailable, denied, or location is outside the region
-         * @returns {Promise<{lat: number, lng: number}|null>}
-         * @memberof App
-         */
-        async getUserLocation() {
-            if (!navigator.geolocation) {
-                return null;
-            }
-
-            try {
-                const position = await new Promise((resolve, reject) => {
-                    navigator.geolocation.getCurrentPosition(resolve, reject, {
-                        enableHighAccuracy: false,
-                        timeout: 5000,
-                        maximumAge: 300000 // Cache for 5 minutes
-                    });
-                });
-
-                const lat = position.coords.latitude;
-                const lng = position.coords.longitude;
-
-                // Only use location if within the configured region
-                if (this.isWithinRegion(lat, lng)) {
-                    return { lat, lng };
-                }
-                return null;
-            } catch (error) {
-                // Geolocation denied or failed - silently fall back to default
-                return null;
-            }
-        },
-
-        /**
-         * Handle location toggle change from settings
-         * Requests geolocation when enabled and recenters the map
-         * @param {boolean} enabled - Whether location is enabled
-         * @memberof App
-         */
-        async handleLocationToggle(enabled) {
-            if (enabled) {
-                ModalManager.setLocationStatus('Locating...', 'loading');
-                const location = await this.getUserLocation();
-
-                if (location) {
-                    this.state.userLocation = location;
-                    // Recenter map to user's location
-                    this.state.map.flyTo({
-                        center: [location.lng, location.lat],
-                        zoom: this.config.MAP_USER_LOCATION_ZOOM,
-                        duration: 1000
-                    });
-                    ModalManager.setLocationStatus('', '');
-                } else {
-                    // Location denied or outside NYC
-                    ModalManager.setLocationStatus('Not available', '');
-                }
-            } else {
-                this.state.userLocation = null;
-                ModalManager.setLocationStatus('', '');
-            }
-        },
-
-        /**
          * Initialize the MapLibre GL map with tiles, controls, and event handlers
          * Sets up map layers, markers, and interactive behaviors
          * @memberof App
          */
         initMap() {
-            // Determine initial view: URL params > user location > default
+            // Determine initial view: URL params > default
             const urlParams = this.state.urlParams || {};
             let initialView, initialZoom;
 
@@ -1297,10 +1206,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 // URL parameters take highest priority
                 initialView = [urlParams.lat, urlParams.lng];
                 initialZoom = urlParams.zoom !== undefined ? urlParams.zoom : this.config.MAP_INITIAL_ZOOM;
-            } else if (this.state.userLocation) {
-                // User location (if within NYC) takes second priority
-                initialView = [this.state.userLocation.lat, this.state.userLocation.lng];
-                initialZoom = this.config.MAP_USER_LOCATION_ZOOM;
             } else {
                 // Fall back to default
                 initialView = this.config.MAP_INITIAL_VIEW;
