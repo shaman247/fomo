@@ -213,7 +213,6 @@
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.8s ease, visibility 0.8s ease;
-    background-color: rgba(0, 0, 0, 0.4);
 }
 
 #welcome-modal.show {
@@ -221,13 +220,24 @@
     visibility: visible;
 }
 
-#welcome-modal .modal-content {
-    position: relative;
+/* Welcome + settings modals: lighter overlay dim, and the same translucent
+   surface treatment as the filter-panel pill controls. */
+#welcome-modal,
+#settings-modal {
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+#welcome-modal .modal-content,
+#settings-modal .modal-content {
     background-color: color-mix(in srgb, var(--primary-bg) 85%, transparent);
     backdrop-filter: blur(3px);
     -webkit-backdrop-filter: blur(3px);
     border: 1px solid var(--border-color);
     border-radius: 22px;
+}
+
+#welcome-modal .modal-content {
+    position: relative;
     animation: none;
     transition: opacity 0.8s ease, transform 0.8s ease;
 }

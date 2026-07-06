@@ -50,10 +50,17 @@
     align-items: center;
     justify-content: center;
     margin-top: 0px;
-    padding: 5px 10px 5px 7px;
-    background-color: transparent;
-    border: 0px solid var(--tertiary-bg);
-    border-radius: 5px;
+    /* Pill treatment matching the search bar / date picker: same bg/border/
+       radius, and padding + logo height chosen so the pill height matches the
+       inputs' (6px pad + 1.2 × 1.08em line ≈ 35px). Horizontal padding is
+       asymmetric on purpose: the torch's vertical shaft sits at ~46% of the
+       image width (the flame flares right), so extra left padding nudges the
+       image halfway toward having the shaft axis on the pill's centerline. */
+    padding: 3px 9.1px 3px 9.7px;
+    background: color-mix(in srgb, var(--primary-bg) 85%, transparent);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
     cursor: pointer;
 }
 
@@ -63,7 +70,7 @@
 }
 
 #logo {
-    height: 34px;
+    height: 27px;
     display: block;
     pointer-events: none;
 }
@@ -73,10 +80,13 @@
     top: 100%;
     left: 0;
     margin-top: 6px;
-    background-color: var(--secondary-bg);
-    border-radius: 5px;
+    /* Same surface treatment as the logo / search / date picker pills */
+    background: color-mix(in srgb, var(--primary-bg) 85%, transparent);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
     box-shadow: var(--popup-shadow);
-    min-width: 216px;
+    min-width: 180px;
     z-index: var(--z-panel-menu);
     overflow: hidden;
 }
@@ -85,18 +95,22 @@
     display: none;
 }
 
+/* Items match the search/date inputs' typography (size, secondary color,
+   tight tracking) and brighten to primary text on hover like the chips. */
 #logo-menu a,
 #logo-menu button {
     display: block;
     width: 100%;
-    padding: 12px 18px;
+    padding: 8px 14px;
     text-decoration: none;
-    color: var(--primary-text);
+    color: var(--secondary-text);
     background: none;
     border: none;
     text-align: left;
     font-family: var(--font-family);
-    font-size: 1.14em;
+    font-size: 1.08em;
+    letter-spacing: -0.03em;
+    line-height: 1.2;
     cursor: pointer;
     transition: background-color 0.2s ease;
 }
@@ -104,11 +118,13 @@
 #logo-menu a:hover,
 #logo-menu button:hover {
     background-color: var(--tertiary-bg);
+    color: var(--primary-text);
 }
 
 #logo-menu a:focus-visible,
 #logo-menu button:focus-visible {
     background-color: var(--tertiary-bg);
+    color: var(--primary-text);
     outline: 2px solid var(--accent-color);
     outline-offset: -2px;
 }
@@ -175,6 +191,13 @@
     justify-content: space-between;
     align-items: center;
     gap: 12px;
+}
+
+/* Inside the controls row the .filter-group margin would skew vertical
+   centering (the row centers margin boxes); spacing there comes from the
+   flex gap instead. */
+#filter-container > div:first-child .filter-group {
+    margin-bottom: 0;
 }
 
 /* Chip bar: selected tags + top unselected curated tags */
@@ -600,11 +623,11 @@ span.flatpickr-weekday {
         opacity: 1;
     }
 
-    /* Filter controls in a single horizontal row. Top-aligned so a wrapped
-       chip bar grows downward without re-centering the controls. */
+    /* Filter controls in a single horizontal row, midlines aligned with the
+       chip bar (which is the tallest item, sized for chip shadows). */
     #filter-container {
         flex-direction: row;
-        align-items: flex-start;
+        align-items: center;
         gap: 14px;
         margin-bottom: 0;
         padding: 0;
@@ -622,10 +645,6 @@ span.flatpickr-weekday {
         box-sizing: border-box;
     }
 
-    #filter-container > div:first-child .filter-group {
-        margin-bottom: 0;
-    }
-
     /* Controls: smaller to match chip bar height on desktop */
     #date-picker,
     #omni-search-input {
@@ -633,10 +652,28 @@ span.flatpickr-weekday {
         font-size: 0.95em;
     }
 
+    /* Logo pill matches the desktop inputs' height
+       (4px pad + 1.2 × 0.95em line ≈ 28px); asymmetric horizontal padding
+       half-centers the torch's shaft axis (see base rule). */
+    #logo-container {
+        padding: 3px 8.2px 3px 8.7px;
+    }
+
+    #logo {
+        height: 20px;
+    }
+
     #date-picker-sizer {
         font-size: 0.95em;
         padding-left: 24px;
         padding-right: 10px;
+    }
+
+    /* Menu items track the desktop top bar's smaller control size */
+    #logo-menu a,
+    #logo-menu button {
+        padding: 7px 12px;
+        font-size: 0.95em;
     }
 
     /* Chip bar: a single row starting right of the left sheet's edge,
@@ -650,8 +687,9 @@ span.flatpickr-weekday {
         overflow-y: hidden;
         -webkit-overflow-scrolling: touch;
         scrollbar-width: none;
-        /* Logo row height (34px logo + 2×5px padding): chips center vertically
-           against the controls, with room so chip shadows aren't clipped. */
+        /* Taller than the chips so their shadows aren't clipped by
+           overflow-y: hidden; the controls center against it via
+           #filter-container's align-items: center. */
         height: 44px;
         align-items: center;
         padding: 0;
@@ -705,10 +743,6 @@ span.flatpickr-weekday {
         top: auto;
         left: 2px;
         margin-top: 0;
-    }
-
-    #logo {
-        height: 29px;
     }
 
     #chip-bar {
