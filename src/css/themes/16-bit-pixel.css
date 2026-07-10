@@ -1,0 +1,96 @@
+/*
+ * Theme: 16-Bit Pixel — "overworld save point"
+ * DB16/PICO-8 lineage: hard corners, offset shadows, pixel font,
+ * pixelated emoji sprites, scanlines over the overworld.
+ */
+
+/* Pixelify Sans (OFL) — fetched lazily, only when this theme's rules apply */
+@font-face {
+    font-family: 'Pixelify Sans';
+    font-style: normal;
+    font-weight: 400 700;
+    font-display: swap;
+    src: url('../fonts/pixelify/PixelifySans-Latin.woff2') format('woff2');
+}
+
+:root[data-theme="16-bit-pixel"] {
+    --font-family: 'Pixelify Sans', Inter, sans-serif;
+    --font-display: 'Pixelify Sans', Inter, sans-serif;
+
+    --primary-bg: #1a1c2c;
+    --secondary-bg: #262b44;
+    --tertiary-bg: #3a4466;
+    --tertiary-hover-bg: #566c86;
+
+    --primary-text: #f4f4f4;
+    --secondary-text: #c0cbdc;
+
+    --accent-color: #38b764;
+    --accent-hover: #a7f070;
+    --secondary-accent-color: #ef7d57;
+    --secondary-accent-hover: #ffcd75;
+
+    --border-color: #566c86;
+    --secondary-border-color: #3a4466;
+
+    --map-bg: #151729;
+    --marker-stroke: #566c86;
+
+    --summary-closed: #b13e53;
+    --summary-open: #ffcd75;
+    --summary-closed-hover: #ff77a8;
+    --summary-open-hover: #ffe0a3;
+
+    /* Every corner is a right angle */
+    --radius-modal: 0px;
+    --radius-pill: 0px;
+    --radius-control: 0px;
+    --radius-pill-sm: 0px;
+    --radius-card: 0px;
+    --radius-btn-lg: 0px;
+    --radius-btn: 0px;
+    --radius-xs: 0px;
+    --radius-round: 0px;
+}
+
+/* Solid pixel sea */
+:root[data-theme="16-bit-pixel"] #map {
+    background: #29366f;
+}
+
+/* Hard sprite chrome: opaque surfaces, 2px borders, offset shadows */
+:root[data-theme="16-bit-pixel"] #logo-container,
+:root[data-theme="16-bit-pixel"] #omni-search-input,
+:root[data-theme="16-bit-pixel"] #date-picker,
+:root[data-theme="16-bit-pixel"] #logo-menu,
+:root[data-theme="16-bit-pixel"] .proto-panel,
+:root[data-theme="16-bit-pixel"] .proto-panel-toggle,
+:root[data-theme="16-bit-pixel"] .modal-content {
+    background: var(--secondary-bg);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: 2px solid var(--border-color);
+    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.55);
+}
+
+:root[data-theme="16-bit-pixel"] .tag-button {
+    border-width: 2px;
+    box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.45);
+}
+
+/* Menu cursor on the selected chip */
+:root[data-theme="16-bit-pixel"] .tag-button.state-selected::before,
+:root[data-theme="16-bit-pixel"] .tag-button.state-required::before {
+    content: '▶ ';
+    font-size: 0.8em;
+}
+
+/* CRT scanlines over the overworld */
+:root[data-theme="16-bit-pixel"] #map-container::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+        transparent 0 2px, rgba(0, 0, 0, 0.08) 2px 3px);
+}

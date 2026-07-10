@@ -1,0 +1,78 @@
+/*
+ * Theme: Newsprint Zine — "photocopy riot"
+ * Xeroxed black-on-newsprint with one loud red; halftone-dithered emoji stamps.
+ */
+
+:root[data-theme="newsprint-zine"] {
+    --font-display: 'Arial Narrow', 'Helvetica Neue Condensed', Impact, sans-serif;
+
+    --primary-bg: #f4f1ea;
+    --secondary-bg: #eae6db;
+    --tertiary-bg: #dbd5c4;
+    --tertiary-hover-bg: #c4bda8;
+
+    --primary-text: #191919;
+    --secondary-text: #3d3d3d;
+
+    --accent-color: #d92b2b;
+    --accent-hover: #a81f1f;
+    --secondary-accent-color: #191919;
+    --secondary-accent-hover: #000000;
+
+    --border-color: #191919;
+    --secondary-border-color: #5a5a5a;
+
+    --map-bg: #edeae2;
+    --marker-stroke: #191919;
+
+    --summary-closed: #d92b2b;
+    --summary-open: #4a443a;
+    --summary-closed-hover: #a81f1f;
+    --summary-open-hover: #191919;
+}
+
+/* Gray harbor, photocopied */
+:root[data-theme="newsprint-zine"] #map {
+    background: linear-gradient(to bottom, #d8d3c4 0%, #cfc9b8 25%, #c2bcaa 100%);
+}
+
+/* Xerox chrome: opaque, inked borders, offset stamp shadows */
+:root[data-theme="newsprint-zine"] #logo-container,
+:root[data-theme="newsprint-zine"] #omni-search-input,
+:root[data-theme="newsprint-zine"] #date-picker,
+:root[data-theme="newsprint-zine"] #logo-menu,
+:root[data-theme="newsprint-zine"] .modal-content {
+    background: var(--primary-bg);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: 1.5px solid #191919;
+    box-shadow: 3px 3px 0 #191919;
+}
+
+:root[data-theme="newsprint-zine"] .tag-button {
+    border-width: 1.5px;
+}
+
+/* Selected chips invert to the riot red */
+:root[data-theme="newsprint-zine"] .tag-button.state-selected,
+:root[data-theme="newsprint-zine"] .tag-button.state-required {
+    background: #d92b2b !important;
+    border-color: #191919 !important;
+    color: #ffffff;
+}
+
+/* Halftone dots over the panel surfaces */
+:root[data-theme="newsprint-zine"] #logo-menu,
+:root[data-theme="newsprint-zine"] #sheet #tags-wrapper {
+    background-image: radial-gradient(circle, rgba(25, 25, 25, 0.14) 0.6px, transparent 0.7px);
+    background-size: 4px 4px;
+}
+
+/* ALL-CAPS masthead voice */
+:root[data-theme="newsprint-zine"] .modal-header h2,
+:root[data-theme="newsprint-zine"] .panel-header h2,
+:root[data-theme="newsprint-zine"] .proto-panel-title {
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    font-weight: 700;
+}

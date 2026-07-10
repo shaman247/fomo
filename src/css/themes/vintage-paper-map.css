@@ -1,0 +1,61 @@
+/*
+ * Theme: Vintage Paper Map — "aged atlas"
+ * Parchment surfaces, cartographic ink, serif voice, antique-plate emoji.
+ */
+
+:root[data-theme="vintage-paper-map"] {
+    --font-family: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, 'Times New Roman', serif;
+    --font-display: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, 'Times New Roman', serif;
+
+    --primary-bg: #efe5cf;
+    --secondary-bg: #e6d9bd;
+    --tertiary-bg: #d9c9a8;
+    --tertiary-hover-bg: #c6b28c;
+
+    --primary-text: #3a2f21;
+    --secondary-text: #5c4c36;
+
+    --accent-color: #8a6f3f;
+    --accent-hover: #6d5527;
+    --secondary-accent-color: #a5533f;
+    --secondary-accent-hover: #7f3a2a;
+
+    --border-color: #a5926c;
+    --secondary-border-color: #b5a37e;
+
+    --map-bg: #e8ddc4;
+    --marker-stroke: #a5926c;
+
+    --summary-closed: #94422f;
+    --summary-open: #6f5a1f;
+    --summary-closed-hover: #6e2c1d;
+    --summary-open-hover: #524211;
+}
+
+/* Sea-glass of old charts */
+:root[data-theme="vintage-paper-map"] #map {
+    background: linear-gradient(to bottom, #b9c7b3 0%, #a8b9a9 25%, #97a998 100%);
+}
+
+/* Double-rule atlas frames on the primary surfaces */
+:root[data-theme="vintage-paper-map"] #logo-menu,
+:root[data-theme="vintage-paper-map"] .modal-content {
+    box-shadow: inset 0 0 0 3px var(--primary-bg), inset 0 0 0 4px var(--border-color);
+}
+
+/* Paper grain (inline SVG turbulence) over panel + modal surfaces */
+:root[data-theme="vintage-paper-map"] .modal-content,
+:root[data-theme="vintage-paper-map"] #logo-menu,
+:root[data-theme="vintage-paper-map"] #sheet #tags-wrapper {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0.35 0 0 0 0 0.28 0 0 0 0 0.16 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Aged-plate vignette on the map */
+:root[data-theme="vintage-paper-map"] #map-container::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(ellipse at center,
+        transparent 50%, rgba(90, 70, 35, 0.22) 100%);
+}

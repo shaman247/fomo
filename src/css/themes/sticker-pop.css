@@ -1,0 +1,67 @@
+/*
+ * Theme: Sticker Pop — "sticker sheet"
+ * Candy pastels, die-cut white-outlined emoji, bouncy rounded chrome.
+ */
+
+:root[data-theme="sticker-pop"] {
+    --font-family: ui-rounded, 'SF Pro Rounded', InterVariable, Inter, sans-serif;
+    --font-display: ui-rounded, 'SF Pro Rounded', InterVariable, Inter, sans-serif;
+
+    --primary-bg: #fdf6ef;
+    --secondary-bg: #ffeef2;
+    --tertiary-bg: #ffdfe9;
+    --tertiary-hover-bg: #ffc4d8;
+
+    --primary-text: #33224a;
+    --secondary-text: #5c4a70;
+
+    --accent-color: #ff5fa2;
+    --accent-hover: #e83e86;
+    --secondary-accent-color: #7a5cff;
+    --secondary-accent-hover: #5f41e0;
+
+    --border-color: #f0b4cc;
+    --secondary-border-color: #e8a4c0;
+
+    --map-bg: #fbf2ea;
+    --marker-stroke: #f0b4cc;
+
+    --summary-closed: #e83e86;
+    --summary-open: #7a5cff;
+    --summary-closed-hover: #c22568;
+    --summary-open-hover: #5f41e0;
+
+    /* Extra bounce */
+    --radius-card: 18px;
+    --radius-modal: 26px;
+    --radius-btn: 10px;
+    --radius-btn-lg: 12px;
+}
+
+/* Swimming-pool sky water */
+:root[data-theme="sticker-pop"] #map {
+    background: linear-gradient(to bottom, #b8e8f5 0%, #a1ddf0 25%, #8fd0e8 100%);
+}
+
+/* Sticker chips: white die-cut border + soft lift */
+:root[data-theme="sticker-pop"] .tag-button {
+    border: 2px solid #ffffff;
+    box-shadow: 0 2px 0 rgba(51, 34, 74, 0.15), 0 0 0 1px var(--border-color);
+}
+
+:root[data-theme="sticker-pop"] .tag-button.state-selected,
+:root[data-theme="sticker-pop"] .tag-button.state-required {
+    border-color: #ffffff !important;
+    box-shadow: 0 3px 0 rgba(51, 34, 74, 0.2),
+        0 0 0 1px color-mix(in srgb, var(--chip-color, var(--accent-color)) 60%, transparent);
+}
+
+/* Confetti dots on panel + welcome modal */
+:root[data-theme="sticker-pop"] #logo-menu,
+:root[data-theme="sticker-pop"] .modal-content {
+    background-image:
+        radial-gradient(circle at 12% 20%, rgba(255, 95, 162, 0.08) 0 6px, transparent 7px),
+        radial-gradient(circle at 78% 12%, rgba(122, 92, 255, 0.08) 0 5px, transparent 6px),
+        radial-gradient(circle at 30% 80%, rgba(255, 210, 63, 0.10) 0 5px, transparent 6px),
+        radial-gradient(circle at 88% 70%, rgba(79, 196, 232, 0.09) 0 6px, transparent 7px);
+}

@@ -1,0 +1,10 @@
+Pixelify Sans — Copyright 2021 The Pixelify Sans Project Authors
+(https://github.com/eifetx/Pixelify-Sans)
+
+Licensed under the SIL Open Font License, Version 1.1 (OFL-1.1).
+Full license text: see src/fonts/OFL.txt in this repository, or
+https://openfontlicense.org
+
+PixelifySans-Latin.woff2 is the latin-subset variable weight (400-700)
+build served by Google Fonts (fonts.gstatic.com), vendored here so the
+16-bit-pixel theme is fully self-hosted.

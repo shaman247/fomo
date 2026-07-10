@@ -30,6 +30,9 @@ const MapManager = (() => {
         // Emoji image tracking
         emojiImagesLoaded: new Set(),
         emojiScale: null, // computed once at first render
+        // Transform recipe the current emoji images were rasterized with
+        // (see _syncEmojiImageEpoch)
+        emojiImagesTransformKey: null,
 
         // Cache for restoring after style.load (theme change)
         sourceDataCache: null,
@@ -414,6 +417,26 @@ const MapManager = (() => {
         state.emojiImagesLoaded.add(imageId);
     }
 
+    /**
+     * Emoji images are rasterized under a theme's transform recipe, and they
+     * can SURVIVE diff-mode setStyle() (MapLibre diffs to the target style
+     * and images aren't style JSON) — so after a theme switch, hasImage()
+     * would happily keep serving stale glyphs. Track the recipe they were
+     * built with and drop them all when it changes.
+     */
+    function _syncEmojiImageEpoch() {
+        const map = state.mapInstance;
+        if (!map) return;
+        const tKey = Themes.transformKey(Utils.getCurrentTheme());
+        if (state.emojiImagesTransformKey === tKey) return;
+        state.emojiImagesTransformKey = tKey;
+        map.listImages()
+            .filter(id => id.startsWith('emoji-'))
+            .forEach(id => map.removeImage(id));
+        state.emojiImagesLoaded.clear();
+        state.emojiScale = null;
+    }
+
     function _uniqueEmojis(locationsByLatLng) {
         const uniqueEmojis = new Set();
         for (const key in locationsByLatLng) {
@@ -425,6 +448,7 @@ const MapManager = (() => {
 
     function loadEmojiImages(locationsByLatLng) {
         if (!state.mapInstance) return;
+        _syncEmojiImageEpoch();
         _uniqueEmojis(locationsByLatLng).forEach(emoji => _addEmojiImage(emoji));
     }
 
@@ -435,6 +459,7 @@ const MapManager = (() => {
      */
     async function loadEmojiImagesChunked(locationsByLatLng) {
         if (!state.mapInstance) return;
+        _syncEmojiImageEpoch();
         const list = [..._uniqueEmojis(locationsByLatLng)];
         const CHUNK = 50;
         for (let i = 0; i < list.length; i += CHUNK) {
@@ -616,7 +641,8 @@ const MapManager = (() => {
         const map = state.mapInstance;
         if (!map || !state.sourceDataCache) return;
 
-        // Reload emoji images
+        // Reload emoji images (dropping stale-transform ones first)
+        _syncEmojiImageEpoch();
         const uniqueEmojis = new Set();
         state.sourceDataCache.features.forEach(f => {
             const eid = f.properties.emojiImageId;
@@ -1051,11 +1077,19 @@ const MapManager = (() => {
 
         // Re-derive baked per-feature colors under the current theme. Marker
         // color first (emoji transforms shift it), then the event-label color
-        // derived from it (theme lightness).
+        // derived from it (theme lightness). Expanded-label features don't
+        // carry emojiImageId — resolve it through their location's icon
+        // feature so their colors re-derive too.
         if (state.sourceDataCache) {
             let changed = false;
-            state.sourceDataCache.features.forEach(f => {
-                const emojiId = f.properties.emojiImageId;
+            const featuresArr = state.sourceDataCache.features;
+            featuresArr.forEach(f => {
+                let emojiId = f.properties.emojiImageId;
+                if (!emojiId) {
+                    const iconFid = state.locationKeyToFeatureId.get(f.properties.locationKey);
+                    const icon = iconFid !== undefined ? featuresArr[iconFid] : null;
+                    emojiId = icon && icon.properties.emojiImageId;
+                }
                 if (emojiId) {
                     const color = TagColorManager.getColorForEmoji(emojiId.slice(6)) || '#444';
                     if (f.properties.color !== color) {

@@ -1,0 +1,61 @@
+/*
+ * Theme: Blueprint — "cyanotype"
+ * Prussian blue sheets, white line-work, drafting grid, pencil-amber accents.
+ */
+
+:root[data-theme="blueprint"] {
+    --primary-bg: #0f2a4a;
+    --secondary-bg: #133354;
+    --tertiary-bg: #1d4470;
+    --tertiary-hover-bg: #2a5c94;
+
+    --primary-text: #dbe9f7;
+    --secondary-text: #a8c4e0;
+
+    --accent-color: #7fd1ff;
+    --accent-hover: #b8e6ff;
+    --secondary-accent-color: #ffd166;
+    --secondary-accent-hover: #ffe3a1;
+
+    --border-color: #3f6ea6;
+    --secondary-border-color: #2f5a8c;
+
+    --map-bg: #0c2440;
+    --marker-stroke: #3f6ea6;
+
+    --summary-closed: #ffd166;
+    --summary-open: #7fd1ff;
+    --summary-closed-hover: #ffe3a1;
+    --summary-open-hover: #b8e6ff;
+}
+
+/* Deep cyanotype wash */
+:root[data-theme="blueprint"] #map {
+    background: linear-gradient(to bottom, #123255 0%, #0e2745 25%, #0b1f38 100%);
+}
+
+/* Drafting grid over the sheet (map) */
+:root[data-theme="blueprint"] #map-container::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+        repeating-linear-gradient(0deg, rgba(127, 209, 255, 0.05) 0 1px, transparent 1px 24px),
+        repeating-linear-gradient(90deg, rgba(127, 209, 255, 0.05) 0 1px, transparent 1px 24px);
+}
+
+/* Technical-annotation voice */
+:root[data-theme="blueprint"] .modal-header h2,
+:root[data-theme="blueprint"] .panel-header h2,
+:root[data-theme="blueprint"] .proto-panel-title {
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+/* Title-block double rule under modal headers */
+:root[data-theme="blueprint"] .modal-header {
+    border-bottom: 1px solid color-mix(in srgb, var(--accent-color) 50%, transparent);
+    box-shadow: 0 3px 0 -1px color-mix(in srgb, var(--accent-color) 30%, transparent);
+    padding-bottom: 8px;
+}

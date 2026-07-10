@@ -38,3 +38,12 @@
 /* === Prototype experiments (all scoped, inert when flags/themes are off) === */
 @import './proto.css';         /* Layout-flag styles (body.proto-*) */
 @import './proto-panel.css';   /* The hidden prototype picker (?proto=1) */
+
+/* Prototype themes — each fully scoped to :root[data-theme="<name>"] */
+@import './themes/warm-cozy.css';
+@import './themes/vintage-paper-map.css';
+@import './themes/neon-night-transit.css';
+@import './themes/16-bit-pixel.css';
+@import './themes/blueprint.css';
+@import './themes/newsprint-zine.css';
+@import './themes/sticker-pop.css';

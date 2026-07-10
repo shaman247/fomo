@@ -1,0 +1,72 @@
+/*
+ * Theme: Neon Night Transit — "last train home"
+ * Deep indigo night, subway signal colors, glowing selections.
+ */
+
+:root[data-theme="neon-night-transit"] {
+    --primary-bg: #0d0b16;
+    --secondary-bg: #151226;
+    --tertiary-bg: #241e3d;
+    --tertiary-hover-bg: #37305c;
+
+    --primary-text: #eae6ff;
+    --secondary-text: #b3accf;
+
+    --accent-color: #00e5c3;
+    --accent-hover: #7dffe8;
+    --secondary-accent-color: #ff4fd8;
+    --secondary-accent-hover: #ff8ae6;
+
+    --border-color: #3d3566;
+    --secondary-border-color: #2f2a52;
+
+    --map-bg: #0a0812;
+    --marker-stroke: #3d3566;
+
+    --summary-closed: #ff5c7a;
+    --summary-open: #ffd60a;
+    --summary-closed-hover: #ff8ba0;
+    --summary-open-hover: #ffe566;
+}
+
+/* Midnight river */
+:root[data-theme="neon-night-transit"] #map {
+    background: linear-gradient(to bottom, #1e2a47 0%, #131a30 25%, #0d1322 100%);
+}
+
+/* Transit signage voice on chips */
+:root[data-theme="neon-night-transit"] .tag-button {
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    font-size: 0.88em;
+}
+
+/* Neon tube glow on selected chips */
+:root[data-theme="neon-night-transit"] .tag-button.state-selected,
+:root[data-theme="neon-night-transit"] .tag-button.state-required {
+    box-shadow:
+        0 0 14px color-mix(in srgb, var(--chip-color, var(--accent-color)) 60%, transparent),
+        inset 0 0 6px color-mix(in srgb, var(--chip-color, var(--accent-color)) 25%, transparent);
+}
+
+/* Transit-line strip across modal headers and the sheet grip */
+:root[data-theme="neon-night-transit"] .modal-content {
+    border-top: 4px solid transparent;
+    background-clip: padding-box;
+    position: relative;
+}
+
+:root[data-theme="neon-night-transit"] .modal-content::before {
+    content: '';
+    position: absolute;
+    top: -4px;
+    left: 0;
+    right: 0;
+    height: 4px;
+    border-radius: var(--radius-modal) var(--radius-modal) 0 0;
+    background: linear-gradient(90deg, #ff4fd8, #ffd60a, #00e5c3, #38b6ff);
+}
+
+:root[data-theme="neon-night-transit"] .sheet-grip {
+    background: linear-gradient(90deg, #ff4fd8, #ffd60a, #00e5c3, #38b6ff);
+}

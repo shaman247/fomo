@@ -1,0 +1,51 @@
+/*
+ * Theme: Warm & Cozy — "amber hour"
+ * Candlelit browns and terracotta; gently sepia'd emoji; soft glows.
+ */
+
+:root[data-theme="warm-cozy"] {
+    --primary-bg: #201713;
+    --secondary-bg: #2b1f17;
+    --tertiary-bg: #3e2d21;
+    --tertiary-hover-bg: #5a4230;
+
+    --primary-text: #f2e6d5;
+    --secondary-text: #cbb69e;
+
+    --accent-color: #e8a25a;
+    --accent-hover: #ffc98a;
+    --secondary-accent-color: #d97f6a;
+    --secondary-accent-hover: #ffa98f;
+
+    --border-color: #5a4534;
+    --secondary-border-color: #463526;
+
+    --map-bg: #1a120d;
+    --marker-stroke: #5a4534;
+
+    --summary-closed: #d96e5a;
+    --summary-open: #e8b45a;
+    --summary-closed-hover: #ff9a85;
+    --summary-open-hover: #ffd98a;
+}
+
+/* Warm dusk water */
+:root[data-theme="warm-cozy"] #map {
+    background: linear-gradient(to bottom, #6b4e38 0%, #3a2a1e 25%, #281c13 100%);
+}
+
+/* Candle-glow on selected chips */
+:root[data-theme="warm-cozy"] .tag-button.state-selected,
+:root[data-theme="warm-cozy"] .tag-button.state-required {
+    box-shadow: 0 0 10px color-mix(in srgb, var(--chip-color, var(--accent-color)) 45%, transparent);
+}
+
+/* Fireside vignette around the map edges */
+:root[data-theme="warm-cozy"] #map-container::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(ellipse at center,
+        transparent 55%, rgba(24, 14, 8, 0.28) 100%);
+}

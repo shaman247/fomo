@@ -79,6 +79,13 @@ dist/
 src/data/*
 !src/data/map-style-dark.json
 !src/data/map-style-light.json
+!src/data/map-style-warm-cozy.json
+!src/data/map-style-vintage-paper-map.json
+!src/data/map-style-neon-night-transit.json
+!src/data/map-style-16-bit-pixel.json
+!src/data/map-style-blueprint.json
+!src/data/map-style-newsprint-zine.json
+!src/data/map-style-sticker-pop.json
 !src/data/tag_hierarchy.example.json
 
 # Scraper dumps (raw payloads, regenerable)
