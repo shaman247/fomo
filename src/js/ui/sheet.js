@@ -140,11 +140,14 @@ const Sheet = (() => {
     function _restore() {
         // The list view always starts collapsed — its open state is no longer
         // persisted. Clear any setting left over from when it was.
-        state.desktopOpen = false;
+        // Docked layout (prototype): the panel is permanent — start open.
+        state.desktopOpen = isDesktop() && ProtoFlags.isOn('layout', 'docked');
         Utils.SafeStorage.removeItem(STORAGE_KEY_OPEN);
     }
 
     function _setDesktopOpen(v) {
+        // Docked layout: nothing may collapse the permanent panel
+        if (!v && isDesktop() && ProtoFlags.isOn('layout', 'docked')) v = true;
         const next = !!v;
         const changed = next !== state.desktopOpen;
         state.desktopOpen = next;
@@ -596,6 +599,16 @@ const Sheet = (() => {
         }
 
         window.addEventListener('resize', _onResize);
+
+        // Docked layout on mobile: start at PEEK (map ~half screen, list
+        // visible) instead of the closed mini strip. No-transition snap so
+        // load doesn't animate.
+        if (!isDesktop() && ProtoFlags.isOn('layout', 'docked')) {
+            state.sheet.classList.add('no-transition');
+            _snapTo(SNAP_PEEK);
+            state.sheet.offsetHeight; // reflow so the transition skip applies
+            state.sheet.classList.remove('no-transition');
+        }
 
         state.initialized = true;
     }

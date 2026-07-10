@@ -59,13 +59,13 @@ const ViewportManager = (() => {
     // ========================================
 
     /**
-     * Gets the dimensions of the filter panel overlay
-     * The panel is a top bar on all layouts, so filterPanelWidth is always 0
-     * (kept in the return shape for compatibility)
-     * Uses hardcoded height during initial load to avoid measurement issues
+     * Gets the dimensions of the overlays covering the map: the top filter
+     * band, plus — under the docked-layout prototype — the permanent left
+     * panel's width. Production keeps filterPanelWidth at 0 (top-bar-only).
+     * Uses hardcoded sizes during initial load to avoid measurement issues.
      *
      * @param {boolean} isInitialLoad - Whether this is during initial app load
-     * @returns {Object} Object with filterPanelWidth (always 0) and filterPanelHeight
+     * @returns {Object} Object with filterPanelWidth and filterPanelHeight
      */
     function getFilterPanelDimensions(isInitialLoad = false) {
         let filterPanelHeight = 0;
@@ -82,7 +82,15 @@ const ViewportManager = (() => {
             }
         }
 
-        return { filterPanelWidth: 0, filterPanelHeight };
+        // Docked layout (desktop): the always-open left panel covers a strip
+        // of the map — visible-center / viewport math must exclude it.
+        let filterPanelWidth = 0;
+        if (!Utils.isMobileLayout() && ProtoFlags.isOn('layout', 'docked')) {
+            const sheet = document.getElementById('sheet');
+            filterPanelWidth = (!isInitialLoad && sheet && sheet.offsetWidth) || 420;
+        }
+
+        return { filterPanelWidth, filterPanelHeight };
     }
 
     // ========================================
@@ -104,14 +112,14 @@ const ViewportManager = (() => {
         const { offsetX, offsetY } = getTileBufferOffset();
 
         // Get filter panel dimensions
-        const { filterPanelHeight } = getFilterPanelDimensions(isInitialLoad);
+        const { filterPanelWidth, filterPanelHeight } = getFilterPanelDimensions(isInitialLoad);
 
         // Get actual viewport dimensions
         const viewportWidth = window.innerWidth;
         const viewportHeight = window.innerHeight;
 
         const visibleCenter = map.unproject([
-            offsetX + viewportWidth / 2,
+            offsetX + filterPanelWidth + (viewportWidth - filterPanelWidth) / 2,
             offsetY + filterPanelHeight + (viewportHeight - filterPanelHeight) / 2
         ]);
         state.visibleCenter = { lat: visibleCenter.lat, lng: visibleCenter.lng };
@@ -173,14 +181,15 @@ const ViewportManager = (() => {
         const { offsetX, offsetY } = getTileBufferOffset();
 
         // Get filter panel dimensions
-        const { filterPanelHeight } = getFilterPanelDimensions(isInitialLoad);
+        const { filterPanelWidth, filterPanelHeight } = getFilterPanelDimensions(isInitialLoad);
 
         // Calculate the corners of the actual visible viewport in map container pixel coordinates
-        // Add buffer offset because the map container is shifted by -50vw, -50vh
-        const topLeftPx = { x: offsetX, y: filterPanelHeight + offsetY };
+        // Add buffer offset because the map container is shifted by -50vw, -50vh.
+        // filterPanelWidth (docked layout) excludes the covered left strip.
+        const topLeftPx = { x: offsetX + filterPanelWidth, y: filterPanelHeight + offsetY };
         const topRightPx = { x: viewportWidth + offsetX, y: filterPanelHeight + offsetY };
         const bottomRightPx = { x: viewportWidth + offsetX, y: viewportHeight + offsetY };
-        const bottomLeftPx = { x: offsetX, y: viewportHeight + offsetY };
+        const bottomLeftPx = { x: offsetX + filterPanelWidth, y: viewportHeight + offsetY };
 
         // Calculate visible center as the midpoint of the visible viewport corners
         // (same result as calculateVisibleCenter, without re-reading layout)
@@ -226,7 +235,7 @@ const ViewportManager = (() => {
 
         // Calculate 90% inset bounds for popup positioning (in screen pixels - still a rectangle)
         const inset = 0.05; // 5% inset on each side = 90% of bounds
-        const effectiveWidth = viewportWidth;
+        const effectiveWidth = viewportWidth - filterPanelWidth;
         const effectiveHeight = viewportHeight - filterPanelHeight;
 
         const insetTopLeft = {

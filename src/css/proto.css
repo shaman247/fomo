@@ -104,3 +104,21 @@ body.proto-chips-minimal .chip-more:hover {
         scrollbar-width: thin;
     }
 }
+
+/* === layout=docked (desktop: permanent panel, map beside it) === */
+
+@media (min-width: 769px) {
+    /* The panel is permanent — no "Show list" handle */
+    body.proto-layout-docked #sheet-handle {
+        display: none !important;
+    }
+
+    /* Opaque surfaces + the existing hairline divider make the map visually
+       start at the panel's right edge */
+    body.proto-layout-docked #sheet #tags-wrapper,
+    body.proto-layout-docked .sheet-detail {
+        background-color: var(--secondary-bg);
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+    }
+}
