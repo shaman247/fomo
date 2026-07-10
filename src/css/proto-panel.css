@@ -1,0 +1,173 @@
+/*
+ * Prototype Picker (ProtoPanel)
+ *
+ * Floating 🎨 toggle + panel listing themes and layout-flag toggles.
+ * Only mounted when ?proto=1 has been set; production never renders it.
+ * Uses the shared pill treatment + tokens so it self-themes.
+ */
+
+.proto-panel-root {
+    position: fixed;
+    right: 12px;
+    top: 45%;
+    z-index: var(--z-proto);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    font-family: var(--font-family);
+}
+
+.proto-panel-toggle {
+    width: 44px;
+    height: 44px;
+    font-size: 22px;
+    line-height: 1;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-pill);
+    background: color-mix(in srgb, var(--primary-bg) 85%, transparent);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    cursor: pointer;
+    box-shadow: var(--toggle-btn-shadow);
+}
+
+.proto-panel {
+    display: none;
+    width: 250px;
+    max-height: min(70vh, 560px);
+    overflow-y: auto;
+    padding: 14px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-pill);
+    background: color-mix(in srgb, var(--primary-bg) 92%, transparent);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: var(--popup-shadow);
+    color: var(--primary-text);
+}
+
+.proto-panel-open .proto-panel {
+    display: block;
+}
+
+.proto-panel-title {
+    font-weight: 600;
+    font-size: 15px;
+    margin-bottom: 10px;
+    color: var(--primary-text);
+}
+
+.proto-panel-heading {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--secondary-text);
+    margin: 12px 0 6px;
+}
+
+.proto-theme-btn {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 7px 10px;
+    margin: 2px 0;
+    border: 1px solid transparent;
+    border-radius: var(--radius-btn-lg);
+    background: none;
+    color: var(--primary-text);
+    font-family: var(--font-family);
+    font-size: 13.5px;
+    text-align: left;
+    cursor: pointer;
+}
+
+.proto-theme-btn:hover {
+    background: var(--tertiary-bg);
+}
+
+.proto-theme-btn[aria-pressed="true"] {
+    border-color: var(--accent-color);
+    background: color-mix(in srgb, var(--accent-color) 14%, transparent);
+}
+
+.proto-theme-badge {
+    font-size: 10px;
+    color: var(--secondary-text);
+    border: 1px solid var(--secondary-border-color);
+    border-radius: var(--radius-xs);
+    padding: 1px 5px;
+    margin-left: 8px;
+}
+
+.proto-flag-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin: 6px 0;
+}
+
+.proto-flag-name {
+    font-size: 12.5px;
+    color: var(--secondary-text);
+}
+
+.proto-flag-values {
+    display: flex;
+    gap: 4px;
+}
+
+.proto-flag-btn {
+    padding: 4px 8px;
+    font-size: 11.5px;
+    font-family: var(--font-family);
+    border: 1px solid var(--secondary-border-color);
+    border-radius: var(--radius-btn);
+    background: none;
+    color: var(--secondary-text);
+    cursor: pointer;
+}
+
+.proto-flag-btn[aria-pressed="true"] {
+    border-color: var(--accent-color);
+    color: var(--primary-text);
+    background: color-mix(in srgb, var(--accent-color) 14%, transparent);
+}
+
+.proto-flag-btn:disabled {
+    opacity: 0.45;
+    cursor: default;
+}
+
+.proto-reload-btn,
+.proto-hide-btn {
+    display: block;
+    width: 100%;
+    margin-top: 10px;
+    padding: 7px 10px;
+    font-size: 12.5px;
+    font-family: var(--font-family);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-btn-lg);
+    background: var(--tertiary-bg);
+    color: var(--primary-text);
+    cursor: pointer;
+}
+
+.proto-reload-btn {
+    border-color: var(--accent-color);
+    background: color-mix(in srgb, var(--accent-color) 18%, transparent);
+}
+
+@media (max-width: 768px) {
+    .proto-panel-root {
+        top: auto;
+        bottom: 96px;
+    }
+
+    .proto-panel {
+        max-height: 55vh;
+    }
+}

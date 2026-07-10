@@ -73,6 +73,18 @@ const URLParams = (() => {
             }
         }
 
+        // Prototype params. Their side effects (persisting flags/theme) run
+        // in ProtoFlags at script-eval time, long before this parse; they're
+        // recognized here so the address-bar cleanup strips them too.
+        const proto = urlParams.get('proto');
+        if (proto === '1' || proto === '0') {
+            params.proto = proto === '1';
+        }
+        const theme = urlParams.get('theme');
+        if (theme !== null && /^[a-z0-9-]{1,32}$/.test(theme)) {
+            params.theme = theme;
+        }
+
         // Log warnings if any validation issues occurred
         if (warnings.length > 0) {
             console.warn('URL parameter validation warnings:', warnings);
@@ -251,6 +263,12 @@ const URLParams = (() => {
 
         if (params.tags && params.tags.length > 0) {
             urlParams.set('tags', params.tags.join(','));
+        }
+
+        // Prototype themes only — dark/light share URLs stay byte-identical
+        // to what they always were.
+        if (params.theme && Themes.isKnown(params.theme) && Themes.resolve(params.theme).proto) {
+            urlParams.set('theme', params.theme);
         }
 
         return `${baseUrl}?${urlParams.toString()}`;

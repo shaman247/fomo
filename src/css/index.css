@@ -37,3 +37,4 @@
 
 /* === Prototype experiments (all scoped, inert when flags/themes are off) === */
 @import './proto.css';         /* Layout-flag styles (body.proto-*) */
+@import './proto-panel.css';   /* The hidden prototype picker (?proto=1) */

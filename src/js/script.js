@@ -349,6 +349,11 @@ document.addEventListener('DOMContentLoaded', () => {
             // Note: Welcome modal is initialized earlier in init() so it can be closed during loading
             FeedbackManager.init();
             this._initProtoFlagListeners();
+            if (ProtoFlags.pickerRequested()) {
+                ProtoPanel.init({
+                    onThemeSelect: (name) => ThemeManager.applyThemeChange(name)
+                });
+            }
         },
 
         /**
@@ -1806,6 +1811,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (selectedTags.length > 0) {
                     params.tags = selectedTags;
+                }
+
+                // Prototype themes travel in share links; dark/light never do
+                const currentTheme = ThemeManager.getCurrentTheme();
+                if (Themes.resolve(currentTheme).proto) {
+                    params.theme = currentTheme;
                 }
 
                 // Generate the shareable URL using URLParams module
