@@ -34,3 +34,6 @@
 @import './popups.css';        /* Location popups with event details */
 @import './sheet.css';         /* Unified list/search sheet (desktop left, mobile bottom) */
 @import './modals.css';        /* Dialogs, settings, and notifications */
+
+/* === Prototype experiments (all scoped, inert when flags/themes are off) === */
+@import './proto.css';         /* Layout-flag styles (body.proto-*) */

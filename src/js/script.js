@@ -338,6 +338,30 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             // Note: Welcome modal is initialized earlier in init() so it can be closed during loading
             FeedbackManager.init();
+            this._initProtoFlagListeners();
+        },
+
+        /**
+         * React to live prototype-flag toggles (from the prototype picker).
+         * `layout` is reload-required and deliberately not handled here.
+         * @memberof App
+         * @private
+         */
+        _initProtoFlagListeners() {
+            document.addEventListener('protoflagschange', (e) => {
+                const { name } = e.detail || {};
+                if (name === 'chips') {
+                    FilterPanelUI.renderChipBar();
+                } else if (name === 'popups') {
+                    // Close whichever popup surface is open so the next marker
+                    // click uses the newly selected routing.
+                    const popup = MapManager.getCurrentPopup();
+                    if (popup) popup.remove();
+                    if (typeof Sheet.closeDetail === 'function' && Sheet.isDetailMode()) {
+                        Sheet.closeDetail();
+                    }
+                }
+            });
         },
 
         /**

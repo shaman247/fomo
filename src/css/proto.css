@@ -1,0 +1,12 @@
+/*
+ * Prototype Layout Flags
+ *
+ * Every rule in this file is scoped under a body.proto-* class set by
+ * ProtoFlags (src/js/core/protoFlags.js). With all flags off, this file
+ * contributes nothing — production rendering must stay pixel-identical.
+ *
+ * Flags:
+ *   body.proto-chips-minimal  — reduced chip bar (?chips=minimal)
+ *   body.proto-popups-panel   — desktop marker details open in the left panel (?popups=panel)
+ *   body.proto-layout-docked  — persistent left panel, map beside it (?layout=docked)
+ */
