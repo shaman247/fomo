@@ -111,6 +111,7 @@ const FilterPanelUI = (() => {
     // ========================================
 
     const CHIP_BAR_RENDER_LIMIT = 100; // max chips rendered; overflow is reachable by scrolling
+    const CHIP_BAR_MINIMAL_LIMIT = 12; // proto chips=minimal: calm top-N + a "More" affordance
     const DESCENDANT_DROPDOWN_LIMIT = 12;
     const DESCENDANT_HOVER_OPEN_DELAY = 250;   // ms before hover opens dropdown
     const DESCENDANT_HOVER_CLOSE_DELAY = 180;  // grace period when leaving chip → dropdown
@@ -310,14 +311,20 @@ const FilterPanelUI = (() => {
             unselectedTags.push({ tag, score });
         }
 
-        // Sort unselected by descending score
-        unselectedTags.sort((a, b) => b.score - a.score);
+        // Sort unselected by descending score; on ties prefer parent tags
+        // (with descendants) so category chips surface in the minimal bar.
+        const hasDesc = (tag) => (state.tagDescendantsOf[tag] && state.tagDescendantsOf[tag].size > 0) ? 1 : 0;
+        unselectedTags.sort((a, b) => b.score - a.score || hasDesc(b.tag) - hasDesc(a.tag));
 
         FilterProfiler.mark('fp:chipbar:scored');
         FilterProfiler.measure('fp:chipbar:score', 'fp:chipbar:start', 'fp:chipbar:scored');
 
-        // 4. Build DOM up to the render limit; overflow scrolls horizontally
-        const unselectedToRender = unselectedTags.slice(0, CHIP_BAR_RENDER_LIMIT);
+        // 4. Build DOM up to the render limit; overflow scrolls horizontally.
+        // The minimal prototype caps hard at a calm top-N — but never while a
+        // search term is active (hiding name-matches mid-search reads broken).
+        const chipsMinimal = !hasSearch && ProtoFlags.isOn('chips', 'minimal');
+        const renderLimit = chipsMinimal ? CHIP_BAR_MINIMAL_LIMIT : CHIP_BAR_RENDER_LIMIT;
+        const unselectedToRender = unselectedTags.slice(0, renderLimit);
 
         // FLIP: capture old chip positions before rebuilding. Only consumed by
         // the animate path below — skip the forced-layout rect reads otherwise.
@@ -350,6 +357,21 @@ const FilterPanelUI = (() => {
             container.appendChild(btn);
         }
 
+        // Minimal mode: trailing "＋ More" pseudo-chip routes into search
+        // (which surfaces the full tag catalog). No data-primary-tag, so the
+        // delegated chip/dropdown handlers ignore it.
+        if (chipsMinimal && unselectedTags.length > unselectedToRender.length) {
+            const more = document.createElement('button');
+            more.type = 'button';
+            more.className = 'tag-button state-unselected chip-more';
+            more.textContent = '＋ More';
+            more.addEventListener('click', () => {
+                const input = document.getElementById('omni-search-input');
+                if (input) input.focus();
+            });
+            container.appendChild(more);
+        }
+
         const hasChips = selectedTagNames.size > 0 || unselectedToRender.length > 0;
         container.style.display = hasChips ? 'flex' : 'none';
 
@@ -369,6 +391,7 @@ const FilterPanelUI = (() => {
         if (animate && oldPositions.size > 0) {
             const chipsToSlide = [];
             for (const chip of container.children) {
+                if (chip.classList.contains('chip-more')) continue; // stable, never animated
                 const tag = chip.dataset.primaryTag;
                 const oldPos = oldPositions.get(tag);
                 const newRect = chip.getBoundingClientRect();
