@@ -1384,7 +1384,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     // fit-pan must re-run (instantly) or the popup reopens
                     // cut off. Capture the flag now — it may clear before rAF.
                     const restoring = HistoryManager.isRestoring();
-                    if (!popup) {
+                    if (!popup && Utils.isMobileLayout()) {
                         // Bottom sheet (mobile) — pan marker to visible area above the sheet
                         requestAnimationFrame(() => {
                             const { filterPanelHeight } = ViewportManager.getFilterPanelDimensions();
@@ -1396,6 +1396,20 @@ document.addEventListener('DOMContentLoaded', () => {
                             this.state.map.easeTo({
                                 center: [lngLat.lng, lngLat.lat],
                                 offset: [0, offsetY],
+                                duration: restoring ? 0 : 300
+                            });
+                        });
+                    } else if (!popup) {
+                        // Desktop panel-detail (popups=panel prototype) —
+                        // center the marker in the region the panel leaves
+                        // uncovered instead of the popup measure+pan fit.
+                        requestAnimationFrame(() => {
+                            const sheetEl = document.getElementById('sheet');
+                            const sheetWidth = (sheetEl && sheetEl.offsetWidth) || 420;
+                            const { filterPanelHeight } = ViewportManager.getFilterPanelDimensions();
+                            this.state.map.easeTo({
+                                center: [lngLat.lng, lngLat.lat],
+                                offset: [sheetWidth / 2, filterPanelHeight / 2],
                                 duration: restoring ? 0 : 300
                             });
                         });

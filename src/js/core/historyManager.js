@@ -124,7 +124,14 @@ const HistoryManager = (() => {
         if (popup) {
             popup.remove();
         } else if (Sheet.isDetailMode()) {
-            Sheet.close();
+            // Desktop panel-detail (popups=panel prototype): back should land
+            // on the open list, not collapse the whole panel. Mobile keeps
+            // the sheet-close behavior.
+            if (!Utils.isMobileLayout() && ProtoFlags.isOn('popups', 'panel')) {
+                Sheet.closeDetail();
+            } else {
+                Sheet.close();
+            }
         }
     }
 

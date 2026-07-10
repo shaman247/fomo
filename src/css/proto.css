@@ -22,3 +22,85 @@ body.proto-chips-minimal .chip-more:hover {
     color: var(--primary-text);
     border-color: var(--accent-color);
 }
+
+/* === popups=panel (desktop detail inside the left sheet) === */
+
+@media (min-width: 769px) {
+    /* Same surface treatment as the browse layer (#tags-wrapper) */
+    body.proto-popups-panel .sheet-detail {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        padding: 0;
+        background-color: color-mix(in srgb, var(--secondary-bg) 95%, transparent);
+        backdrop-filter: blur(3px);
+        -webkit-backdrop-filter: blur(3px);
+        border-right: 1px solid var(--border-color);
+        box-shadow: var(--popup-shadow);
+        font-size: 19px;
+    }
+
+    /* "← Back to list" header, pinned just below the transparent top band */
+    body.proto-popups-panel .sheet-detail-back {
+        position: absolute;
+        top: var(--top-bar-height);
+        left: 0;
+        right: 0;
+        height: 40px;
+        padding: 0 14px;
+        text-align: left;
+        font-family: var(--font-family);
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--accent-color);
+        background: none;
+        border: none;
+        border-bottom: 1px solid var(--secondary-border-color);
+        cursor: pointer;
+    }
+
+    body.proto-popups-panel .sheet-detail-back:hover {
+        color: var(--accent-hover);
+        background: color-mix(in srgb, var(--tertiary-bg) 40%, transparent);
+    }
+
+    body.proto-popups-panel .sheet-detail-body {
+        position: absolute;
+        inset: calc(var(--top-bar-height) + 40px) 0 0;
+        overflow: hidden;
+        padding: 0 6px;
+    }
+
+    /* Popup-content overrides — a deliberate duplicate of the mobile
+       detail-mode block (sheet.css), which lives inside the mobile media
+       query. Both wrapper layers get height:100% so the tab viewport is
+       bounded and panels scroll. */
+    body.proto-popups-panel .sheet-detail .maplibre-popup-content {
+        max-height: none;
+        overflow: hidden;
+        height: 100%;
+        width: auto;
+        background: none;
+        border: none;
+        box-shadow: none;
+        border-radius: 0;
+        padding: 0;
+        font-size: inherit;
+    }
+
+    body.proto-popups-panel .sheet-detail .popup-header {
+        padding: 0;
+    }
+
+    body.proto-popups-panel .sheet-detail .popup-events-list {
+        padding: 0 4px;
+    }
+
+    body.proto-popups-panel .sheet-detail .popup-tab-track {
+        height: 100%;
+    }
+
+    body.proto-popups-panel .sheet-detail .popup-tab-panel {
+        scrollbar-width: thin;
+    }
+}

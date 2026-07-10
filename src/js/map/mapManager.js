@@ -911,6 +911,14 @@ const MapManager = (() => {
             // popup's own closeOnClick) — leave the sheet open. The next empty
             // click, with no popup, collapses/dismisses the sheet.
             if (state.currentPopup) return;
+            // Desktop panel-detail mirrors that two-step: first empty click
+            // exits detail back to the list, the next collapses the sheet.
+            if (!Utils.isMobileLayout() && ProtoFlags.isOn('popups', 'panel') && Sheet.isDetailMode()) {
+                Sheet.closeDetail();
+                return;
+            }
+            // Docked layout: the panel is permanent — never collapse it.
+            if (!Utils.isMobileLayout() && ProtoFlags.isOn('layout', 'docked')) return;
             Sheet.dismissToMini();
         });
     }
@@ -953,9 +961,10 @@ const MapManager = (() => {
         }
         _updateHoverFilter();
 
-        // Mobile: show the popup content inside the sheet (detail mode)
-        const isMobile = Utils.isMobileLayout();
-        if (isMobile && typeof Sheet !== 'undefined') {
+        // Mobile — and desktop under the popups=panel prototype — show the
+        // popup content inside the sheet (detail mode)
+        const useSheetDetail = Utils.isMobileLayout() || ProtoFlags.isOn('popups', 'panel');
+        if (useSheetDetail && typeof Sheet !== 'undefined') {
             state.currentPopup = null;
             state.currentPopupLocationKey = locationKey;
             Sheet.openDetail(locationKey, lngLat, wrapper);

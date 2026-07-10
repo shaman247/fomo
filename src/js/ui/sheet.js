@@ -93,6 +93,11 @@ const Sheet = (() => {
         return !Utils.isMobileLayout();
     }
 
+    /** Whether the sheet surface is on screen at all (either platform). */
+    function _isSheetShowing() {
+        return isDesktop() ? state.desktopOpen : state.currentSnap > 0;
+    }
+
     /** Notify the content layer that the browse content newly became visible. */
     function _emitBrowseShown() {
         if (typeof state.onToggle === 'function') state.onToggle(true);
@@ -188,8 +193,8 @@ const Sheet = (() => {
         _showBrowse();
 
         // Browse content is stale/empty behind the detail layer — repopulate
-        // if the sheet is still open.
-        if (state.currentSnap > 0) _emitBrowseShown();
+        // if the sheet is still open (either platform).
+        if (_isSheetShowing()) _emitBrowseShown();
 
         // Clear marker highlight
         if (typeof MapManager !== 'undefined') {
@@ -425,7 +430,9 @@ const Sheet = (() => {
 
     function close() {
         if (isDesktop()) {
+            // Collapse first so _clearDetail skips the off-screen browse render
             _setDesktopOpen(false);
+            if (state.activeLocationKey) _clearDetail();
         } else {
             _clearAndClose(false);
         }
@@ -434,9 +441,19 @@ const Sheet = (() => {
     function dismissToMini() {
         if (isDesktop()) {
             _setDesktopOpen(false);
+            if (state.activeLocationKey) _clearDetail();
         } else {
             _clearAndClose(true);
         }
+    }
+
+    /**
+     * Exits detail mode back to the browse list, keeping the sheet open.
+     * Desktop panel-detail's "← Back to list" and history restores use this;
+     * a no-op when no detail is active.
+     */
+    function closeDetail() {
+        if (state.activeLocationKey) _clearDetail();
     }
 
     function isOpen() {
@@ -446,8 +463,7 @@ const Sheet = (() => {
     /** Whether the browse content (#results-container) is actually on screen —
      *  the gate for rendering the list view. */
     function isBrowseVisible() {
-        if (isDesktop()) return state.desktopOpen;
-        return state.currentSnap > 0 && !state.activeLocationKey;
+        return _isSheetShowing() && !state.activeLocationKey;
     }
 
     function isDetailMode() {
@@ -463,26 +479,53 @@ const Sheet = (() => {
     }
 
     /**
-     * Shows a location's popup content inside the sheet (mobile detail mode).
+     * Desktop detail gets a "← Back to list" header above the content; the
+     * content itself goes into .sheet-detail-body so updateContent refreshes
+     * can never clobber the header. Mobile keeps the bare content (its exit
+     * affordance is the horizontal swipe).
+     */
+    function _wrapDetailContent(contentElement) {
+        if (!isDesktop()) return contentElement;
+        const frag = document.createDocumentFragment();
+        const back = document.createElement('button');
+        back.type = 'button';
+        back.className = 'sheet-detail-back';
+        back.textContent = '← Back to list';
+        // closeDetail fires popupclose, whose handler owns the history push
+        back.addEventListener('click', () => closeDetail());
+        const body = document.createElement('div');
+        body.className = 'sheet-detail-body';
+        body.appendChild(contentElement);
+        frag.appendChild(back);
+        frag.appendChild(body);
+        return frag;
+    }
+
+    /**
+     * Shows a location's popup content inside the sheet (mobile detail mode;
+     * desktop too under the popups=panel prototype).
      */
     function openDetail(locationKey, lngLat, contentElement) {
         // Already showing this location
-        if (state.activeLocationKey === locationKey && state.currentSnap > 0) return;
+        if (state.activeLocationKey === locationKey && _isSheetShowing()) return;
 
         state.activeLocationKey = locationKey;
         state.activeLngLat = lngLat;
 
         // Set detail content
         state.detailEl.innerHTML = '';
-        state.detailEl.appendChild(contentElement);
+        state.detailEl.appendChild(_wrapDetailContent(contentElement));
         state.detailEl.scrollTop = 0;
         _showDetail();
 
         // Track whether popup has its own tab bar (prevents swipe-to-dismiss)
         state.detailHasPopupTabs = !!contentElement.querySelector('.popup-tab-bar');
 
-        // Open sheet if closed
-        if (state.currentSnap < SNAP_PEEK) {
+        // Open sheet if closed. (Desktop: activeLocationKey is already set,
+        // so the open's browse-shown emit skips the hidden list render.)
+        if (isDesktop()) {
+            _setDesktopOpen(true);
+        } else if (state.currentSnap < SNAP_PEEK) {
             _snapTo(SNAP_PEEK);
         }
 
@@ -498,9 +541,11 @@ const Sheet = (() => {
 
     function updateContent(contentElement) {
         if (!state.activeLocationKey) return;
-        state.detailEl.innerHTML = '';
-        state.detailEl.appendChild(contentElement);
-        state.detailEl.scrollTop = 0;
+        const body = state.detailEl.querySelector('.sheet-detail-body');
+        const target = body || state.detailEl;
+        target.innerHTML = '';
+        target.appendChild(contentElement);
+        target.scrollTop = 0;
         state.detailHasPopupTabs = !!contentElement.querySelector('.popup-tab-bar');
     }
 
@@ -560,6 +605,7 @@ const Sheet = (() => {
         setMap,
         open,
         close,
+        closeDetail,
         dismissToMini,
         isOpen,
         isBrowseVisible,

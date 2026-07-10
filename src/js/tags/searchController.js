@@ -107,6 +107,16 @@ const SearchController = (() => {
                     Sheet.open();
                 }
             }
+
+            // Desktop panel-detail (popups=panel prototype): typing hands the
+            // panel over to the search sections. Only here, on real user
+            // input — popupopen triggers a programmatic performSearch on
+            // every marker click, which must not close the fresh detail.
+            if (searchTerm && !Utils.isMobileLayout()
+                && ProtoFlags.isOn('popups', 'panel')
+                && typeof Sheet !== 'undefined' && Sheet.isDetailMode()) {
+                Sheet.closeDetail();
+            }
         });
 
         state.searchInputDOM.addEventListener('focus', (e) => {
