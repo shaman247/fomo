@@ -54,22 +54,58 @@ const ThemeManager = (() => {
     }
 
     /**
-     * Applies theme change including map style updates and callbacks
-     * This is the main method called when user changes theme in settings
-     *
-     * @param {string} theme - Theme to apply ('dark' or 'light')
+     * Style JSON URL for a theme: its own registry mapStyle, else the
+     * built-in style matching its base.
+     * @param {string} theme - Theme name
+     * @returns {string} Style URL
      */
-    function applyThemeChange(theme) {
+    function _styleUrlFor(theme) {
+        const def = Themes.resolve(theme);
+        if (def.mapStyle) return def.mapStyle;
+        return Themes.baseOf(theme) === 'dark'
+            ? state.config.MAP_STYLE_DARK
+            : state.config.MAP_STYLE_LIGHT;
+    }
+
+    /**
+     * Applies theme change including map style updates and callbacks.
+     * This is the main method called when the user changes theme (settings
+     * modal or prototype picker). Async because themes with a custom webfont
+     * await it before map glyphs rasterize; callers may fire-and-forget.
+     *
+     * @param {string} theme - Theme name from the Themes registry
+     */
+    async function applyThemeChange(theme) {
+        const oldTheme = getCurrentTheme();
+
         // Update theme in DOM and localStorage
         setTheme(theme);
 
-        // Update MapLibre style based on theme
-        if (state.appState && state.appState.map) {
-            const styleUrl = theme === 'dark'
-                ? state.config.MAP_STYLE_DARK
-                : state.config.MAP_STYLE_LIGHT;
-            // Set the new style directly on the MapLibre map
-            state.appState.map.setStyle(styleUrl);
+        // A theme-declared webfont must be resolvable before TinySDF
+        // rasterizes map glyphs, else the atlas bakes fallback glyphs.
+        const def = Themes.resolve(theme);
+        if (def.uiFontLoad && document.fonts && document.fonts.load) {
+            try {
+                await document.fonts.load(def.uiFontLoad);
+            } catch (e) { /* fall back to the stack's next font */ }
+        }
+
+        const map = state.appState && state.appState.map;
+        if (map) {
+            const newUrl = _styleUrlFor(theme);
+            if (newUrl !== _styleUrlFor(oldTheme)) {
+                // Full style swap — MapManager's style.load/idle restore path
+                // re-creates layers, re-rasterizes emoji under the new theme,
+                // and re-applies theme layer properties.
+                map.setStyle(newUrl);
+            } else {
+                // Same style JSON (e.g. two themes sharing a base): never
+                // call setStyle — just re-render what the theme changes.
+                if (Themes.transformKey(theme) !== Themes.transformKey(oldTheme)) {
+                    MapManager.reloadEmojiImages(state.appState.locationsByLatLng || {});
+                }
+                MapManager.applyThemeToLayers();
+            }
         }
 
         // Call optional callback for additional theme change handling
@@ -94,10 +130,7 @@ const ThemeManager = (() => {
      * @returns {string} Style URL for current theme
      */
     function getStyleUrlForCurrentTheme() {
-        const currentTheme = getCurrentTheme();
-        return currentTheme === 'dark'
-            ? state.config.MAP_STYLE_DARK
-            : state.config.MAP_STYLE_LIGHT;
+        return _styleUrlFor(getCurrentTheme());
     }
 
     // ========================================

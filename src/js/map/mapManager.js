@@ -115,7 +115,7 @@ const MapManager = (() => {
                 'icon-padding': 0,
                 'icon-offset': [-8, 0],
                 'text-field': _getTextFieldExpression(),
-                'text-font': ['Inter Regular'],
+                'text-font': _getMarkerTextFont(),
                 'text-size': _getLabelSize(),
                 'text-anchor': 'left',
                 'text-justify': 'left',
@@ -171,7 +171,7 @@ const MapManager = (() => {
                 'icon-ignore-placement': true,
                 'icon-offset': [-8, 0],
                 'text-field': _getTextFieldExpression(),
-                'text-font': ['Inter Regular'],
+                'text-font': _getMarkerTextFont(),
                 'text-size': _getLabelSize(),
                 'text-anchor': 'left',
                 'text-justify': 'left',
@@ -211,18 +211,27 @@ const MapManager = (() => {
     }
 
     function _getLabelColor() {
-        const theme = Utils.getCurrentTheme();
-        return theme === 'dark' ? '#e5e5e5' : '#1a1a1a';
+        const def = Themes.resolve(Utils.getCurrentTheme());
+        if (def.marker && def.marker.label) return def.marker.label;
+        return Utils.getCurrentThemeBase() === 'dark' ? '#e5e5e5' : '#1a1a1a';
     }
 
     function _getHoverLabelColor() {
-        const theme = Utils.getCurrentTheme();
-        return theme === 'dark' ? '#fff' : '#000';
+        const def = Themes.resolve(Utils.getCurrentTheme());
+        if (def.marker && def.marker.hoverLabel) return def.marker.hoverLabel;
+        return Utils.getCurrentThemeBase() === 'dark' ? '#fff' : '#000';
     }
 
     function _getHaloColor() {
-        const theme = Utils.getCurrentTheme();
-        return theme === 'dark' ? '#171717' : '#f0f0f0';
+        const def = Themes.resolve(Utils.getCurrentTheme());
+        if (def.marker && def.marker.halo) return def.marker.halo;
+        return Utils.getCurrentThemeBase() === 'dark' ? '#171717' : '#f0f0f0';
+    }
+
+    /** Marker-label fontstack — themes may swap in their own (e.g. a pixel font). */
+    function _getMarkerTextFont() {
+        const def = Themes.resolve(Utils.getCurrentTheme());
+        return def.mapLabelFont || ['Inter Regular'];
     }
 
     /**
@@ -239,12 +248,12 @@ const MapManager = (() => {
                     ['get', 'locationName'], {},
                     '\n', {},
                     ['get', 'eventLabel'], {
-                        'text-font': ['literal', ['Inter Regular']],
+                        'text-font': ['literal', _getMarkerTextFont()],
                         'text-color': ['get', 'eventLabelColor'],
                         'font-scale': 0.88
                     },
                     ['get', 'eventLabelExtra'], {
-                        'text-font': ['literal', ['Inter Regular']],
+                        'text-font': ['literal', _getMarkerTextFont()],
                         'font-scale': 0.88
                     }
                 ],
@@ -270,8 +279,11 @@ const MapManager = (() => {
         const cacheKey = `${theme}|${hexColor}|${opts.lightness ?? ''}|${opts.chroma ?? ''}`;
         const cached = _labelColorCache.get(cacheKey);
         if (cached !== undefined) return cached;
+        const def = Themes.resolve(theme);
+        const themeL = (def.marker && def.marker.eventLabelL)
+            ?? (Utils.getCurrentThemeBase() === 'dark' ? 74 : 50);
         const hue = ColorUtils.oklchHueFromHex(hexColor || '#888');
-        const targetL = (opts.lightness ?? (theme === 'dark' ? 74 : 50)) / 100;
+        const targetL = (opts.lightness ?? themeL) / 100;
         const targetC = hue === null ? 0 : (opts.chroma ?? 0.06);
         const result = ColorUtils.oklchToHex(targetL, targetC, hue ?? 0);
         if (_labelColorCache.size >= 4096) _labelColorCache.clear(); // safety valve; never expected to hit
@@ -391,7 +403,12 @@ const MapManager = (() => {
         const collisionShift = 8 * dpr;
         ctx.fillText(emoji, canvasSize / 2 + collisionShift, canvasSize / 2);
 
-        const imageData = ctx.getImageData(0, 0, canvasSize, canvasSize);
+        let imageData = ctx.getImageData(0, 0, canvasSize, canvasSize);
+        // Theme emoji treatment (sepia/duotone/pixelate/sticker). The same
+        // spec is applied in TagColorManager.extractColorFromEmoji, so
+        // ring/label colors track the transformed glyph.
+        const transform = Themes.resolve(Utils.getCurrentTheme()).emojiTransform;
+        if (transform) imageData = EmojiTransforms.apply(imageData, transform, dpr);
 
         map.addImage(imageId, imageData, { pixelRatio: dpr });
         state.emojiImagesLoaded.add(imageId);
@@ -637,8 +654,8 @@ const MapManager = (() => {
         }
         _updateHoverFilter();
 
-        // Update theme colors
-        updateThemeColors();
+        // Update theme-dependent layer properties
+        applyThemeToLayers();
     }
 
     // ========================================
@@ -729,7 +746,7 @@ const MapManager = (() => {
                             ['get', 'shortName'], {},
                             '\n', {},
                             name, {
-                                'text-font': ['literal', ['Inter Regular']],
+                                'text-font': ['literal', _getMarkerTextFont()],
                                 'text-color': _toEventLabelColor(icon.properties.color),
                                 'font-scale': 0.88
                             }
@@ -990,23 +1007,62 @@ const MapManager = (() => {
     // THEME
     // ========================================
 
-    function updateThemeColors() {
+    /**
+     * Applies every theme-dependent marker property to the live layers:
+     * label/halo paint colors, the label fontstack (text-field expressions
+     * embed font literals, so those are re-set too), the highlight-ring glow,
+     * and the per-feature marker/event-label colors (re-derived through
+     * TagColorManager so emoji transforms and theme L/C overrides take
+     * effect; for a plain dark↔light switch the derivation is cache-identical
+     * and this is a no-op). Called after style restores and on in-place theme
+     * switches that don't swap the style JSON.
+     */
+    function applyThemeToLayers() {
         const map = state.mapInstance;
         if (!map || !map.getLayer('marker-symbols')) return;
 
+        const def = Themes.resolve(Utils.getCurrentTheme());
+        const font = _getMarkerTextFont();
+
         map.setPaintProperty('marker-symbols', 'text-color', _getLabelColor());
         map.setPaintProperty('marker-symbols', 'text-halo-color', _getHaloColor());
+        map.setLayoutProperty('marker-symbols', 'text-font', font);
+        map.setLayoutProperty('marker-symbols', 'text-field', _getTextFieldExpression());
 
         if (map.getLayer('marker-symbols-hover')) {
             map.setPaintProperty('marker-symbols-hover', 'text-color', _getHoverLabelColor());
             map.setPaintProperty('marker-symbols-hover', 'text-halo-color', _getHaloColor());
+            map.setLayoutProperty('marker-symbols-hover', 'text-font', font);
+            // Any per-event hover override embedded the old font/colors — reset
+            state.hoverLabelEventSig = null;
+            map.setLayoutProperty('marker-symbols-hover', 'text-field', _getTextFieldExpression());
         }
 
-        // Per-section event label color depends on theme (different lightness),
-        // so recompute it from the marker color and re-push the source data.
+        if (map.getLayer('marker-highlight')) {
+            const glow = !!def.ringGlow;
+            map.setPaintProperty('marker-highlight', 'circle-blur', glow ? 0.35 : 0);
+            map.setPaintProperty('marker-highlight', 'circle-stroke-width', [
+                'case',
+                ['boolean', ['feature-state', 'active'], false], glow ? 5 : 4,
+                ['boolean', ['feature-state', 'hover'], false], glow ? 5 : 4,
+                0
+            ]);
+        }
+
+        // Re-derive baked per-feature colors under the current theme. Marker
+        // color first (emoji transforms shift it), then the event-label color
+        // derived from it (theme lightness).
         if (state.sourceDataCache) {
             let changed = false;
             state.sourceDataCache.features.forEach(f => {
+                const emojiId = f.properties.emojiImageId;
+                if (emojiId) {
+                    const color = TagColorManager.getColorForEmoji(emojiId.slice(6)) || '#444';
+                    if (f.properties.color !== color) {
+                        f.properties.color = color;
+                        changed = true;
+                    }
+                }
                 if (f.properties.labelType !== 'expanded') return;
                 const next = _toEventLabelColor(f.properties.color);
                 if (f.properties.eventLabelColor !== next) {
@@ -1064,6 +1120,7 @@ const MapManager = (() => {
         init,
         getMarkerColor,
         toEventLabelColor: _toEventLabelColor,
+        applyThemeToLayers,
         getMap,
         getCurrentPopup,
         getCurrentPopupLocationKey,

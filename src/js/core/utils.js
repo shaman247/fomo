@@ -286,8 +286,16 @@ const Utils = (() => {
 
     // Current UI theme. Reads the DOM as source of truth ('data-theme' is set
     // by ThemeManager); defaults to 'dark' before any theme is applied.
+    // May be any Themes registry name, not just 'dark'/'light'.
     function getCurrentTheme() {
         return document.documentElement.getAttribute('data-theme') || 'dark';
+    }
+
+    // The current theme's base axis ('dark'|'light') — what binary styling
+    // decisions key on. Mirrors the data-theme-base attribute ThemeManager
+    // maintains alongside data-theme.
+    function getCurrentThemeBase() {
+        return document.documentElement.getAttribute('data-theme-base') || 'dark';
     }
 
     // Canonical mobile-layout check. <= so exactly 768px counts as mobile,
@@ -653,6 +661,7 @@ const Utils = (() => {
         dayIndexInZone,
         getTodayInZone,
         getCurrentTheme,
+        getCurrentThemeBase,
         isWindows,
         isMobileLayout,
         isCountryFlagEmoji,

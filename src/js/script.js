@@ -275,6 +275,16 @@ document.addEventListener('DOMContentLoaded', () => {
             this.initThemeManager();
             ThemeManager.initTheme();
 
+            // A startup theme with a custom webfont (e.g. the pixel theme)
+            // must have it loaded before the map bakes its TinySDF glyph
+            // atlas, or labels render in the fallback font until reload.
+            const startupTheme = Themes.resolve(Utils.getCurrentTheme());
+            if (startupTheme.uiFontLoad && document.fonts && document.fonts.load) {
+                try {
+                    await document.fonts.load(startupTheme.uiFontLoad);
+                } catch (e) { /* fall back to the stack's next font */ }
+            }
+
             this.initMap();
             // Search/filter managers must be ready before the map can fire a
             // moveend→performSearch (which happens during the parallel load).

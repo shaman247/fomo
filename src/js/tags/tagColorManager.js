@@ -48,12 +48,14 @@ const TagColorManager = (() => {
     }
 
     /**
-     * Gets the color palette for the current theme
+     * Gets the color palette for the current theme. Prototype themes may
+     * supply their own palette; otherwise the theme's base picks dark/light.
      * @returns {Array<string>} Array of color hex codes
      */
     function getCurrentPalette() {
-        const theme = getCurrentTheme();
-        return theme === 'dark' ? state.darkPalette : state.lightPalette;
+        const def = Themes.resolve(getCurrentTheme());
+        if (def.tagPalette && def.tagPalette.length) return def.tagPalette;
+        return def.base === 'light' ? state.lightPalette : state.darkPalette;
     }
 
     /**
@@ -133,7 +135,20 @@ const TagColorManager = (() => {
         ctx.textBaseline = 'middle';
         ctx.fillText(emoji, size / 2, size / 2);
 
-        const data = ctx.getImageData(0, 0, size, size).data;
+        // Themed rendering knobs: the emoji transform must match what
+        // MapManager._addEmojiImage draws so the derived color tracks the
+        // glyph on screen; L/C pins and the achromatic fallback are also
+        // theme-overridable (e.g. softer rings on parchment).
+        const themeDef = Themes.resolve(Utils.getCurrentTheme());
+        const fallback = themeDef.achromaticFallback || '#8899aa';
+        const targetL = (themeDef.markerOklch && themeDef.markerOklch.L) || MARKER_OKLCH_L;
+        const targetC = (themeDef.markerOklch && themeDef.markerOklch.C) || MARKER_OKLCH_C;
+
+        let imageData = ctx.getImageData(0, 0, size, size);
+        if (themeDef.emojiTransform) {
+            imageData = EmojiTransforms.apply(imageData, themeDef.emojiTransform, 1);
+        }
+        const data = imageData.data;
         const buckets = new Array(36).fill(0);
         const bucketColors = Array.from({length: 36}, () => []);
 
@@ -162,7 +177,7 @@ const TagColorManager = (() => {
             ...bucketColors[best],
             ...bucketColors[(best+1)%36]
         ];
-        if (!nearby.length) return '#8899aa';
+        if (!nearby.length) return fallback;
 
         let sR=0, sG=0, sB=0, sW=0;
         nearby.forEach(c => {
@@ -172,12 +187,12 @@ const TagColorManager = (() => {
         const aR = sR/sW, aG = sG/sW, aB = sB/sW;
 
         // Normalize the dominant color in OKLCH: keep its perceptual hue but pin
-        // lightness and chroma to the fixed targets above. (Theme-independent —
-        // this color is cached per font, not per theme.) If the dominant color is
-        // itself near-gray, the glyph is achromatic (e.g. ⚽) → neutral fallback.
+        // lightness and chroma to the (theme-overridable) targets; cached per
+        // font+theme in getColorForEmoji. If the dominant color is itself
+        // near-gray, the glyph is achromatic (e.g. ⚽) → fallback.
         const avg = ColorUtils.rgbToOklch(aR, aG, aB);
-        if (avg.C < MIN_RESULT_CHROMA) return '#8899aa';
-        return ColorUtils.oklchToHex(MARKER_OKLCH_L, MARKER_OKLCH_C, avg.h);
+        if (avg.C < MIN_RESULT_CHROMA) return fallback;
+        return ColorUtils.oklchToHex(targetL, targetC, avg.h);
     }
 
     /**
@@ -192,7 +207,10 @@ const TagColorManager = (() => {
     function getColorForEmoji(emoji) {
         if (!emoji) return null;
         const font = getActiveEmojiFont();
-        const key = font + '|' + emoji;
+        // Theme participates in the key: emoji transforms and L/C overrides
+        // change the derived color per theme (dark/light share values but
+        // recompute once each — cheap, and keeps invalidation trivial).
+        const key = font + '|' + getCurrentTheme() + '|' + emoji;
         if (state.bgcolors[key]) return state.bgcolors[key];  // cache hit
         const color = extractColorFromEmoji(emoji, font);
         state.bgcolors[key] = color;
@@ -200,11 +218,14 @@ const TagColorManager = (() => {
     }
 
     /**
-     * Resolves a color for a tag via its emoji.
+     * Resolves a color for a tag via its emoji. Themes whose emoji transform
+     * collapses hue (cyanotype, newsprint) opt out with chipColors:'palette'
+     * so chip colors come from their palette and stay distinguishable.
      * @param {string} tag - Tag name
      * @returns {string|null} Color hex code, or null if the tag has no emoji
      */
     function getEmojiBgColor(tag) {
+        if (Themes.resolve(getCurrentTheme()).chipColors === 'palette') return null;
         return getColorForEmoji(state.tagEmojiMap[tag]);
     }
 
