@@ -213,7 +213,7 @@
            as a mini strip at the bottom of the screen — the affordance for
            reopening (tap or drag up). */
         height: 0;
-        min-height: calc(16px + env(safe-area-inset-bottom, 0px));
+        min-height: calc(16px + var(--safe-area-bottom, env(safe-area-inset-bottom, 0px)));
         overflow: hidden;
 
         /* Snap animation */
@@ -297,7 +297,7 @@
         overscroll-behavior: contain;
         touch-action: pan-y;
         padding: 0 10px;
-        padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+        padding-bottom: calc(10px + var(--safe-area-bottom, env(safe-area-inset-bottom, 0px)));
     }
 
     /* Detail content (a tapped marker's popup, swapped with #tags-wrapper) */

@@ -3,7 +3,10 @@
  * Must run before DOMContentLoaded to apply styles early
  */
 (function() {
-    if (navigator.userAgent.includes('FomoApp')) {
+    // Android only: the iOS app's UA also contains "FomoApp", but iOS must NOT
+    // get this class — its .fomo-android-app 36px safe-area fallback undercuts
+    // the real env(safe-area-inset-top) (62px on Dynamic Island iPhones).
+    if (navigator.userAgent.includes('FomoApp') && /Android/i.test(navigator.userAgent)) {
         document.documentElement.classList.add('fomo-android-app');
     }
 })();

@@ -44,6 +44,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import fomocity.fomo.app.ui.theme.FomoTheme
 
@@ -231,41 +233,7 @@ fun FomoWebView(
                             // Stop swipe refresh animation
                             (parent as? SwipeRefreshLayout)?.isRefreshing = false
 
-                            // Get status bar height for safe area inset.
-                            // Insets are in physical pixels; CSS px are density-scaled,
-                            // so divide by density before handing the value to the page.
-                            val statusBarHeightPx = view?.rootWindowInsets?.let { insets ->
-                                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
-                                    insets.getInsets(android.view.WindowInsets.Type.statusBars()).top
-                                } else {
-                                    @Suppress("DEPRECATION")
-                                    insets.systemWindowInsetTop
-                                }
-                            } ?: 0
-                            val density = view?.resources?.displayMetrics?.density ?: 1f
-                            val statusBarHeight = kotlin.math.ceil(statusBarHeightPx / density).toInt()
-
-                            // Fix viewport height for Android WebView
-                            // 100vh is unreliable in WebViews - set --app-height CSS variable
-                            // Also set --safe-area-top for status bar padding
-                            view?.evaluateJavascript("""
-                                (function() {
-                                    var safeAreaTop = $statusBarHeight;
-                                    function setAppHeight() {
-                                        document.documentElement.style.setProperty('--app-height', window.innerHeight + 'px');
-                                        document.documentElement.style.setProperty('--safe-area-top', safeAreaTop + 'px');
-                                    }
-
-                                    // Run immediately and on resize
-                                    setAppHeight();
-                                    window.addEventListener('resize', setAppHeight);
-
-                                    // Run again after delays to catch late layout changes
-                                    setTimeout(setAppHeight, 100);
-                                    setTimeout(setAppHeight, 500);
-                                    setTimeout(setAppHeight, 1000);
-                                })();
-                            """.trimIndent(), null)
+                            view?.let { injectViewportVars(it) }
                         }
 
                         override fun onReceivedError(
@@ -315,6 +283,13 @@ fun FomoWebView(
                     loadUrl(url)
                 }
 
+                // Re-publish the inset CSS variables whenever the system bar
+                // insets change (rotation, gesture vs 3-button nav switch)
+                ViewCompat.setOnApplyWindowInsetsListener(webView) { v, insets ->
+                    injectViewportVars(v as WebView)
+                    insets
+                }
+
                 addView(webView)
                 onWebViewCreated(webView)
 
@@ -324,4 +299,37 @@ fun FomoWebView(
         },
         modifier = modifier
     )
+}
+
+// The page can't measure system bars itself — env(safe-area-inset-*) is always
+// 0 inside an Android WebView — so read the insets natively and hand them to
+// the page as CSS variables. Insets are physical pixels; CSS px are
+// density-scaled, so divide by density first. --app-height works around 100vh
+// being unreliable in WebViews.
+private fun injectViewportVars(webView: WebView) {
+    val insets = ViewCompat.getRootWindowInsets(webView)?.getInsets(
+        WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
+    )
+    val density = webView.resources.displayMetrics.density
+    val safeAreaTop = kotlin.math.ceil((insets?.top ?: 0) / density).toInt()
+    val safeAreaBottom = kotlin.math.ceil((insets?.bottom ?: 0) / density).toInt()
+
+    webView.evaluateJavascript("""
+        (function() {
+            document.documentElement.style.setProperty('--safe-area-top', '${safeAreaTop}px');
+            document.documentElement.style.setProperty('--safe-area-bottom', '${safeAreaBottom}px');
+            function setAppHeight() {
+                document.documentElement.style.setProperty('--app-height', window.innerHeight + 'px');
+            }
+            setAppHeight();
+            if (!window.__appHeightHooked) {
+                window.__appHeightHooked = true;
+                window.addEventListener('resize', setAppHeight);
+            }
+            // Run again after delays to catch late layout changes
+            setTimeout(setAppHeight, 100);
+            setTimeout(setAppHeight, 500);
+            setTimeout(setAppHeight, 1000);
+        })();
+    """.trimIndent(), null)
 }

@@ -603,6 +603,9 @@ span.flatpickr-weekday {
         height: auto;
         overflow: visible;
         padding: 2px 8px;
+        /* iPad app: the WebView is edge-to-edge under the status bar — pad the
+           top bar down by the safe-area inset (0 in desktop browsers). */
+        padding-top: max(2px, var(--safe-area-top, env(safe-area-inset-top, 0px)));
         margin: 0;
         /* Fully transparent — controls get their own bg */
         background-color: transparent;
@@ -616,6 +619,7 @@ span.flatpickr-weekday {
         width: auto;
         height: auto;
         padding: 2px 8px;
+        padding-top: max(2px, var(--safe-area-top, env(safe-area-inset-top, 0px)));
         overflow: visible;
     }
 

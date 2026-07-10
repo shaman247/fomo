@@ -57,7 +57,28 @@ struct FomoWebView: UIViewRepresentable {
     @Binding var isFirstLoad: Bool
     @Binding var error: Error?
 
-    private let fomoURL = URL(string: "https://fomo.nyc")!
+    private let fomoURL: URL = {
+        #if DEBUG
+        // Screenshot/dev override — launch with a deep-link URL, e.g.:
+        //   xcrun simctl launch <udid> fomocity.fomo -fomoURL 'https://fomo.nyc?tags=Music&zoom=13'
+        // Only fomo.nyc URLs are honored; Release builds compile this out.
+        // Read from raw arguments, not UserDefaults — values starting with "(" or
+        // "{" get plist-parsed by the argument domain and come back nil.
+        if let override = FomoWebView.launchArg("fomoURL"),
+           let url = URL(string: override), url.host?.contains("fomo.nyc") == true {
+            return url
+        }
+        #endif
+        return URL(string: "https://fomo.nyc")!
+    }()
+
+    #if DEBUG
+    static func launchArg(_ name: String) -> String? {
+        let args = ProcessInfo.processInfo.arguments
+        guard let i = args.firstIndex(of: "-\(name)"), i + 1 < args.count else { return nil }
+        return args[i + 1]
+    }
+    #endif
 
     func makeUIView(context: Context) -> WKWebView {
         let configuration = WKWebViewConfiguration()
@@ -114,6 +135,19 @@ struct FomoWebView: UIViewRepresentable {
         // Initial load
         webView.load(URLRequest(url: fomoURL))
 
+        #if DEBUG
+        // Screenshot/dev hook — force an orientation, e.g.:
+        //   xcrun simctl launch <udid> fomocity.fomo -fomoOrientation landscape
+        // simctl has no rotate command; this rotates the scene from inside.
+        if let orientation = FomoWebView.launchArg("fomoOrientation") {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene else { return }
+                let mask: UIInterfaceOrientationMask = orientation == "landscape" ? .landscapeRight : .portrait
+                scene.requestGeometryUpdate(.iOS(interfaceOrientations: mask))
+            }
+        }
+        #endif
+
         return webView
     }
 
@@ -147,6 +181,16 @@ struct FomoWebView: UIViewRepresentable {
                 self.parent.isFirstLoad = false
                 self.parent.error = nil
             }
+            #if DEBUG
+            // Screenshot/dev hook — run JS a few seconds after load, e.g.:
+            //   xcrun simctl launch <udid> fomocity.fomo -fomoJS "document.querySelector('.maplibregl-marker')?.click()"
+            // Release builds compile this out.
+            if let js = FomoWebView.launchArg("fomoJS") {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                    webView.evaluateJavaScript(js, completionHandler: nil)
+                }
+            }
+            #endif
         }
 
         func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
