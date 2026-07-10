@@ -141,7 +141,7 @@
         background-color: color-mix(in srgb, var(--primary-bg) 92%, transparent);
         backdrop-filter: blur(8px);
         border: 1px solid var(--border-color);
-        border-radius: 8px;
+        border-radius: var(--radius-btn-lg);
         box-shadow: var(--popup-shadow);
         cursor: grab;
         color: var(--secondary-text);
@@ -223,7 +223,7 @@
         background: color-mix(in srgb, var(--secondary-bg) 95%, transparent);
         backdrop-filter: blur(8px);
         -webkit-backdrop-filter: blur(8px);
-        border-radius: 16px 16px 0 0;
+        border-radius: var(--radius-pill) var(--radius-pill) 0 0;
         border-top: 1px solid var(--border-color);
 
         font-family: var(--font-family);

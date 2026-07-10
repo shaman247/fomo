@@ -29,7 +29,7 @@
     background: color-mix(in srgb, var(--secondary-bg) 95%, transparent);
     backdrop-filter: blur(3px);
     color: var(--primary-text);
-    border-radius: 10px;
+    border-radius: var(--radius-card);
     border: 1px solid var(--border-color);
     width: 480px;
     font-family: var(--font-family);
@@ -59,7 +59,7 @@
     --popup-accent-vivid-hover: color-mix(in oklab, var(--popup-accent-vivid, var(--summary-open)), white 18%);
 }
 
-:root[data-theme="light"] .maplibre-popup-content {
+:root[data-theme-base="light"] .maplibre-popup-content {
     --popup-accent-hover: color-mix(in oklab, var(--popup-accent, var(--accent-color)), black 25%);
     --popup-accent-muted-hover: color-mix(in oklab, var(--popup-accent-muted, var(--accent-color)), black 22%);
     --popup-accent-vivid-hover: color-mix(in oklab, var(--popup-accent-vivid, var(--summary-open)), black 18%);
@@ -73,7 +73,7 @@
     --popup-accent-vivid-hover: color-mix(in oklab, var(--popup-accent-vivid, var(--summary-open)), white 18%);
 }
 
-:root[data-theme="light"] .popup-event-card {
+:root[data-theme-base="light"] .popup-event-card {
     --popup-accent-muted-hover: color-mix(in oklab, var(--popup-accent-muted, var(--accent-color)), black 22%);
     --popup-accent-vivid-hover: color-mix(in oklab, var(--popup-accent-vivid, var(--summary-open)), black 18%);
 }

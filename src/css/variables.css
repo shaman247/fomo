@@ -12,6 +12,21 @@
 :root {
     /* === Typography === */
     --font-family: Inter, sans-serif;
+    /* Display face for headers, chips, and menu items. Resolves to the body
+       font by default; themes override it for a distinct voice. */
+    --font-display: var(--font-family);
+
+    /* === Corner Radii === */
+    /* Themes reshape the whole UI by overriding these (e.g. 16-bit → 0) */
+    --radius-modal: 22px;      /* Modals, the filter panel container */
+    --radius-pill: 16px;       /* Pill controls: logo, inputs, chips */
+    --radius-control: 14px;    /* Map zoom/nav control group */
+    --radius-pill-sm: 12px;    /* Small pills (keyword tags) */
+    --radius-card: 10px;       /* Cards, popups, content wells */
+    --radius-btn-lg: 8px;      /* Larger buttons */
+    --radius-btn: 6px;         /* Small buttons */
+    --radius-xs: 5px;          /* Micro chrome (close buttons, calendar) */
+    --radius-round: 999px;     /* Fully-rounded lozenges */
 
     /* === Base Colors (Dark Theme) === */
     /* Background layers - from darkest to lightest */
@@ -59,6 +74,7 @@
     /* === Z-Index Layers === */
     /* Stacking order from top to bottom: modal > panel > controls > popup > hovered markers > markers */
     --z-modal: 2000;           /* Settings modal, welcome modal */
+    --z-proto: 1500;           /* Prototype picker (above panels, below modals) */
     --z-panel: 1000;           /* Filter panel */
     --z-panel-menu: 1001;      /* Logo menu, dropdowns within panel */
     --z-sheet: 900;            /* Desktop sheet (below the filter panel top bar; mobile uses --z-popup) */

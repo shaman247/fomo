@@ -23,7 +23,7 @@
     background-color: color-mix(in srgb, var(--primary-bg) 85%, transparent);
     backdrop-filter: blur(3px);
     border: 1px solid var(--border-color);
-    border-radius: 22px;
+    border-radius: var(--radius-modal);
     box-sizing: border-box;
     margin-top: 12px;
     margin-left: 12px;
@@ -60,7 +60,7 @@
     background: color-mix(in srgb, var(--primary-bg) 85%, transparent);
     backdrop-filter: blur(8px);
     border: 1px solid var(--border-color);
-    border-radius: 16px;
+    border-radius: var(--radius-pill);
     cursor: pointer;
 }
 
@@ -84,7 +84,7 @@
     background: color-mix(in srgb, var(--primary-bg) 85%, transparent);
     backdrop-filter: blur(8px);
     border: 1px solid var(--border-color);
-    border-radius: 16px;
+    border-radius: var(--radius-pill);
     box-shadow: var(--popup-shadow);
     min-width: 180px;
     z-index: var(--z-panel-menu);
@@ -107,7 +107,7 @@
     background: none;
     border: none;
     text-align: left;
-    font-family: var(--font-family);
+    font-family: var(--font-display);
     font-size: 1.08em;
     letter-spacing: -0.03em;
     line-height: 1.2;
@@ -149,7 +149,7 @@
 }
 
 .panel-header h2 {
-    font-family: var(--font-family);
+    font-family: var(--font-display);
     color: var(--accent-color);
     margin-top: 0;
     text-align: center;
@@ -240,7 +240,7 @@
     background-color: transparent;
     flex-shrink: 0;
     border: 0px solid var(--border-color);
-    border-radius: 10px;
+    border-radius: var(--radius-card);
     padding: 2px;
     margin-bottom: 14px;
 }
@@ -261,7 +261,7 @@
 /* No separator lines between events. */
 .list-view-scroll .popup-event-card {
     padding: 8px 6px;
-    border-radius: 8px;
+    border-radius: var(--radius-btn-lg);
 }
 
 .list-view-scroll .popup-event-card:hover {
@@ -353,7 +353,7 @@
     backdrop-filter: blur(8px);
     border: 1px solid var(--border-color);
     color: var(--secondary-text);
-    border-radius: 16px;
+    border-radius: var(--radius-pill);
     box-sizing: border-box;
     font-family: var(--font-family);
     font-size: 1.08em;
@@ -392,7 +392,7 @@
 /* Third-party date picker component - customized to match app theme */
 .flatpickr-calendar {
     background: var(--secondary-bg);
-    border-radius: 5px;
+    border-radius: var(--radius-xs);
     box-shadow: var(--popup-shadow);
     border: 0;
     color: var(--primary-text);
@@ -566,7 +566,7 @@ span.flatpickr-weekday {
     flex: 1;
     padding: 5px 8px;
     border: 1px solid var(--border-color);
-    border-radius: 6px;
+    border-radius: var(--radius-btn);
     background: transparent;
     color: var(--secondary-text);
     font-family: var(--font-family);

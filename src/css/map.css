@@ -64,7 +64,7 @@
     background-color: color-mix(in srgb, var(--primary-bg) 75%, transparent) !important;
     backdrop-filter: blur(5px);
     border: 1px solid var(--border-color) !important;
-    border-radius: 14px !important;
+    border-radius: var(--radius-control) !important;
     box-shadow: none;
     overflow: hidden;
 }
@@ -89,8 +89,9 @@
     filter: var(--icon-filter, none);
 }
 
-/* Dark theme icon filter to invert icons */
-:root[data-theme="dark"] .maplibregl-ctrl-group button .maplibregl-ctrl-icon {
+/* Dark-base themes invert the control icons (keyed to the theme's base so
+   prototype themes inherit the right direction automatically) */
+:root[data-theme-base="dark"] .maplibregl-ctrl-group button .maplibregl-ctrl-icon {
     filter: invert(1);
 }
 
@@ -132,9 +133,9 @@
     align-items: center;
     gap: 8px;
     padding: 8px 14px;
-    background: var(--color-surface, rgba(20, 20, 20, 0.85));
-    color: var(--color-text-primary, #fff);
-    border-radius: 999px;
+    background: color-mix(in srgb, var(--primary-bg) 87%, transparent);
+    color: var(--primary-text);
+    border-radius: var(--radius-round);
     font-size: 13px;
     line-height: 1;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);

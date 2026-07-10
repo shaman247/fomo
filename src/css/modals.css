@@ -36,7 +36,7 @@
 
 .modal-content {
     background-color: var(--secondary-bg);
-    border-radius: 10px;
+    border-radius: var(--radius-card);
     box-shadow: var(--popup-shadow);
     width: 90%;
     max-width: 540px;
@@ -75,7 +75,7 @@
 
 .modal-header h2 {
     margin: 0;
-    font-family: var(--font-family);
+    font-family: var(--font-display);
     font-size: 1.8em;
     font-weight: 500;
     color: var(--primary-text);
@@ -94,7 +94,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 5px;
+    border-radius: var(--radius-xs);
     transition: background-color 0.2s ease, color 0.2s ease;
 }
 
@@ -233,7 +233,7 @@
     backdrop-filter: blur(3px);
     -webkit-backdrop-filter: blur(3px);
     border: 1px solid var(--border-color);
-    border-radius: 22px;
+    border-radius: var(--radius-modal);
 }
 
 #welcome-modal .modal-content {
@@ -352,7 +352,7 @@
     color: var(--primary-text);
     background-color: var(--tertiary-bg);
     border: 1px solid var(--border-color);
-    border-radius: 6px;
+    border-radius: var(--radius-btn);
     resize: vertical;
     box-sizing: border-box;
     transition: border-color 0.2s ease;
@@ -391,7 +391,7 @@
     color: #fff;
     background-color: var(--accent-color);
     border: none;
-    border-radius: 6px;
+    border-radius: var(--radius-btn);
     cursor: pointer;
     transition: background-color 0.2s ease, opacity 0.2s ease;
 }
@@ -432,7 +432,7 @@
     background: var(--secondary-bg);
     color: var(--primary-text);
     padding: 19px 29px;
-    border-radius: 10px;
+    border-radius: var(--radius-card);
     box-shadow: 0 5px 14px var(--shadow-dark);
     z-index: var(--z-modal);
     opacity: 0;

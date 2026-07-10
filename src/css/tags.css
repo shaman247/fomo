@@ -101,12 +101,12 @@
     align-items: center;
     gap: 4px;
     padding: 4px 8px;
-    border-radius: 16px;
+    border-radius: var(--radius-pill);
     border: 1.5px solid transparent;
     background: var(--tertiary-bg);
     color: var(--secondary-text);
     font-size: 0.95em;
-    font-family: var(--font-family);
+    font-family: var(--font-display);
     letter-spacing: -0.02em;
     cursor: pointer;
     white-space: nowrap;
@@ -231,7 +231,7 @@
     align-items: center;
     gap: 3px;
     padding: 4px 9px;
-    border-radius: 12px;
+    border-radius: var(--radius-pill-sm);
     font-size: 0.95em;
     background-color: color-mix(in srgb, var(--tertiary-bg) 40%, transparent);
     color: var(--secondary-text);

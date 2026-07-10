@@ -41,8 +41,13 @@ const ThemeManager = (() => {
      * @param {string} theme - Theme to apply ('dark' or 'light')
      */
     function setTheme(theme) {
+        // Unknown names (stale storage after a theme was removed) fall back
+        if (!Themes.isKnown(theme)) theme = 'dark';
         const root = document.documentElement;
         root.setAttribute('data-theme', theme);
+        // Base axis for unconverted binary styling (icon inversion, hover
+        // lighten/darken direction) — prototype themes inherit their base's.
+        root.setAttribute('data-theme-base', Themes.baseOf(theme));
 
         // Save theme preference to localStorage
         Utils.SafeStorage.setItem('theme', theme);
