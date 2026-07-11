@@ -283,6 +283,23 @@ async function build(isDev) {
     fs.copyFileSync(path.join(SRC, 'about.html'), path.join(DIST, 'about.html'));
     fs.copyFileSync(path.join(SRC, 'privacy.html'), path.join(DIST, 'privacy.html'));
     fs.copyFileSync(path.join(SRC, '.htaccess'), path.join(DIST, '.htaccess'));
+    if (isDev) {
+        // Dev bundles use STABLE filenames (app.js/app.css), so the 1-year
+        // ExpiresByType cache above would pin a stale bundle in the browser
+        // for anyone serving dist/ through Apache/XAMPP — rebuilds would
+        // appear to do nothing. Force revalidation on everything in dev.
+        // (Prod is safe: bundle filenames are content-hashed.)
+        fs.appendFileSync(path.join(DIST, '.htaccess'), `
+# --- DEV BUILD ONLY (appended by build.js --dev) ---
+# Stable dev filenames + long-lived caches pin stale bundles; disable caching.
+<IfModule mod_headers.c>
+    Header set Cache-Control "no-cache, must-revalidate"
+</IfModule>
+<IfModule mod_expires.c>
+    ExpiresActive Off
+</IfModule>
+`);
+    }
 
     // Emit the service worker (or its self-unregistering "killer" variant).
     const swDisabled = emitServiceWorker({ htmlSource, frontend, jsBundleName, cssBundleName, isDev });

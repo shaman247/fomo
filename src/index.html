@@ -178,9 +178,11 @@
                 <button id="settings-close-btn" class="modal-close-btn" aria-label="Close settings">&times;</button>
             </div>
             <div class="modal-body">
-                <div class="setting-group">
+                <div class="setting-group setting-group-themes">
                     <label class="setting-group-label">Theme</label>
-                    <div class="setting-options">
+                    <!-- Options are rebuilt from the Themes registry at init;
+                         these two are the no-JS fallback -->
+                    <div class="setting-options" id="theme-options">
                         <label class="setting-option">
                             <input type="radio" name="theme" value="dark" checked>
                             <span>Dark</span>
@@ -205,6 +207,8 @@
                     </div>
                     <span id="emoji-font-status" class="setting-status"></span>
                 </div>
+                <!-- Prototype layout experiments — groups built from ProtoFlags at init -->
+                <div id="proto-setting-groups"></div>
             </div>
         </div>
     </div>

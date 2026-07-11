@@ -190,6 +190,41 @@
     color: var(--accent-hover);
 }
 
+/* Theme picker holds the full registry (9+ options) — wrap into rows */
+.setting-group-themes {
+    align-items: flex-start;
+}
+
+.setting-group-themes .setting-group-label {
+    padding-top: 2px;
+}
+
+.setting-group-themes .setting-options {
+    flex-wrap: wrap;
+    row-gap: 10px;
+    column-gap: 14px;
+}
+
+/* Reload affordance for load-time prototype flags (layout) */
+.proto-reload-status {
+    display: block;
+    width: 100%;
+    margin-top: 4px;
+    padding: 8px 12px;
+    font-family: var(--font-family);
+    font-size: 0.95em;
+    color: var(--primary-text);
+    background: color-mix(in srgb, var(--accent-color) 16%, transparent);
+    border: 1px solid var(--accent-color);
+    border-radius: var(--radius-btn-lg);
+    cursor: pointer;
+    text-align: center;
+}
+
+.proto-reload-status:hover {
+    background: color-mix(in srgb, var(--accent-color) 26%, transparent);
+}
+
 /* === Welcome Modal Specific Styles === */
 /* Content formatting for the welcome/about modal */
 #welcome-modal .modal-body p {

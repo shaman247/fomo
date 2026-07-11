@@ -67,12 +67,128 @@ const ModalManager = (() => {
      * @param {Function} callbacks.onEmojiFontChange - Called when emoji font changes
      * @param {Function} callbacks.onThemeChange - Called when theme changes
      */
+    /**
+     * Rebuilds the theme options from the Themes registry so every theme
+     * (built-in + prototypes) is selectable from settings. Falls back to the
+     * static dark/light markup if the container is missing.
+     */
+    function _populateThemeOptions() {
+        const container = document.getElementById('theme-options');
+        if (!container || typeof Themes === 'undefined') return;
+        container.textContent = '';
+        Themes.list().forEach(def => {
+            const label = document.createElement('label');
+            label.className = 'setting-option';
+            const input = document.createElement('input');
+            input.type = 'radio';
+            input.name = 'theme';
+            input.value = def.name;
+            const text = document.createElement('span');
+            text.textContent = def.label;
+            label.appendChild(input);
+            label.appendChild(text);
+            container.appendChild(label);
+        });
+    }
+
+    /**
+     * Builds one setting group per prototype layout flag (ProtoFlags) and
+     * keeps it in sync with changes made elsewhere (the ?proto=1 picker,
+     * docked→popups lock). The `layout` flag is applied at load time, so
+     * changing it surfaces a "Reload now" affordance instead of pretending.
+     */
+    function _buildProtoFlagGroups() {
+        const host = document.getElementById('proto-setting-groups');
+        if (!host || typeof ProtoFlags === 'undefined') return;
+
+        const FLAG_LABELS = { layout: 'Layout', popups: 'Popups', chips: 'Chips' };
+        host.textContent = '';
+
+        ProtoFlags.list().forEach(flag => {
+            const group = document.createElement('div');
+            group.className = 'setting-group';
+            group.dataset.protoFlag = flag.name;
+
+            const groupLabel = document.createElement('label');
+            groupLabel.className = 'setting-group-label';
+            groupLabel.textContent = FLAG_LABELS[flag.name] || flag.name;
+            group.appendChild(groupLabel);
+
+            const options = document.createElement('div');
+            options.className = 'setting-options';
+            flag.values.forEach(value => {
+                const label = document.createElement('label');
+                label.className = 'setting-option';
+                const input = document.createElement('input');
+                input.type = 'radio';
+                input.name = `proto-${flag.name}`;
+                input.value = value;
+                input.addEventListener('change', () => {
+                    ProtoFlags.set(flag.name, value);
+                    if (flag.requiresReload) {
+                        const status = document.getElementById('proto-reload-status');
+                        if (status) status.style.display = '';
+                    }
+                });
+                const text = document.createElement('span');
+                text.textContent = value.charAt(0).toUpperCase() + value.slice(1);
+                label.appendChild(input);
+                label.appendChild(text);
+                options.appendChild(label);
+            });
+            group.appendChild(options);
+            host.appendChild(group);
+        });
+
+        // Reload affordance for load-time flags (hidden until needed)
+        const status = document.createElement('button');
+        status.type = 'button';
+        status.id = 'proto-reload-status';
+        status.className = 'proto-reload-status';
+        status.textContent = '↻ Layout changes apply after a reload — tap to reload';
+        status.style.display = 'none';
+        status.addEventListener('click', () => window.location.reload());
+        host.appendChild(status);
+
+        _syncProtoFlagGroups();
+        document.addEventListener('protoflagschange', _syncProtoFlagGroups);
+    }
+
+    /** Reflects current flag values + lock states onto the radios. */
+    function _syncProtoFlagGroups() {
+        const host = document.getElementById('proto-setting-groups');
+        if (!host || typeof ProtoFlags === 'undefined') return;
+        ProtoFlags.list().forEach(flag => {
+            const group = host.querySelector(`[data-proto-flag="${flag.name}"]`);
+            if (!group) return;
+            group.querySelectorAll('input').forEach(input => {
+                input.checked = input.value === flag.value;
+                input.disabled = !!flag.locked;
+            });
+            group.style.opacity = flag.locked ? '0.5' : '';
+            group.title = flag.locked ? 'Forced by the docked layout' : '';
+        });
+    }
+
+    /** Reflects the active theme onto the theme radios (modal open, changes). */
+    function _syncThemeRadios() {
+        const current = Utils.getCurrentTheme();
+        document.querySelectorAll('input[name="theme"]').forEach(radio => {
+            radio.checked = radio.value === current;
+        });
+    }
+
     function initSettingsModal(callbacks = {}) {
         state.onEmojiFontChange = callbacks.onEmojiFontChange;
         state.onThemeChange = callbacks.onThemeChange;
 
         const modal = document.getElementById('settings-modal');
         const closeBtn = document.getElementById('settings-close-btn');
+
+        // Dynamic sections: full theme registry + prototype layout flags
+        _populateThemeOptions();
+        _buildProtoFlagGroups();
+
         const emojiFontRadios = document.querySelectorAll('input[name="emoji-font"]');
         const themeRadios = document.querySelectorAll('input[name="theme"]');
 
@@ -134,6 +250,10 @@ const ModalManager = (() => {
     function openSettingsModal() {
         const modal = state.settingsModal || document.getElementById('settings-modal');
         if (modal) {
+            // The theme/flags may have changed via the ?proto picker or URL
+            // params since init — reflect reality before showing.
+            _syncThemeRadios();
+            _syncProtoFlagGroups();
             modal.classList.add('show');
         }
     }
