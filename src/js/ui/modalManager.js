@@ -24,11 +24,17 @@ const ModalManager = (() => {
         // Callbacks
         onEmojiFontChange: null,
         onThemeChange: null,
+        getDebugMode: null,
 
         // DOM references
         settingsModal: null,
         welcomeModal: null
     };
+
+    /** Whether debug mode (the "debug" search easter egg) is active. */
+    function _debugEnabled() {
+        return typeof state.getDebugMode === 'function' && !!state.getDebugMode();
+    }
 
     // ========================================
     // SHARED DISMISS WIRING
@@ -62,21 +68,21 @@ const ModalManager = (() => {
     // ========================================
 
     /**
-     * Initializes the settings modal
-     * @param {Object} callbacks - Callback functions
-     * @param {Function} callbacks.onEmojiFontChange - Called when emoji font changes
-     * @param {Function} callbacks.onThemeChange - Called when theme changes
-     */
-    /**
-     * Rebuilds the theme options from the Themes registry so every theme
-     * (built-in + prototypes) is selectable from settings. Falls back to the
-     * static dark/light markup if the container is missing.
+     * Rebuilds the theme options from the Themes registry. Prototype themes
+     * are debug-gated (type "debug" in search to toggle): normally only the
+     * built-in dark/light options show — plus the active theme when it IS a
+     * prototype one, so the checked state never points at a hidden option.
+     * Rebuilt on every modal open; change handling is delegated (init), so
+     * rebuilt radios need no re-wiring.
      */
     function _populateThemeOptions() {
         const container = document.getElementById('theme-options');
         if (!container || typeof Themes === 'undefined') return;
+        const debug = _debugEnabled();
+        const current = Utils.getCurrentTheme();
         container.textContent = '';
         Themes.list().forEach(def => {
+            if (!debug && def.proto && def.name !== current) return;
             const label = document.createElement('label');
             label.className = 'setting-option';
             const input = document.createElement('input');
@@ -96,6 +102,7 @@ const ModalManager = (() => {
      * keeps it in sync with changes made elsewhere (the ?proto=1 picker,
      * docked→popups lock). The `layout` flag is applied at load time, so
      * changing it surfaces a "Reload now" affordance instead of pretending.
+     * Debug-gated like the prototype themes; rebuilt on every modal open.
      */
     function _buildProtoFlagGroups() {
         const host = document.getElementById('proto-setting-groups');
@@ -103,6 +110,7 @@ const ModalManager = (() => {
 
         const FLAG_LABELS = { layout: 'Layout', popups: 'Popups', chips: 'Chips' };
         host.textContent = '';
+        if (!_debugEnabled()) return;
 
         ProtoFlags.list().forEach(flag => {
             const group = document.createElement('div');
@@ -151,7 +159,6 @@ const ModalManager = (() => {
         host.appendChild(status);
 
         _syncProtoFlagGroups();
-        document.addEventListener('protoflagschange', _syncProtoFlagGroups);
     }
 
     /** Reflects current flag values + lock states onto the radios. */
@@ -178,27 +185,37 @@ const ModalManager = (() => {
         });
     }
 
+    /**
+     * Initializes the settings modal
+     * @param {Object} callbacks - Callback functions
+     * @param {Function} callbacks.onEmojiFontChange - Called when emoji font changes
+     * @param {Function} callbacks.onThemeChange - Called when theme changes
+     * @param {Function} [callbacks.getDebugMode] - Returns whether debug mode
+     *   is active (gates the prototype theme/layout options)
+     */
     function initSettingsModal(callbacks = {}) {
         state.onEmojiFontChange = callbacks.onEmojiFontChange;
         state.onThemeChange = callbacks.onThemeChange;
+        state.getDebugMode = callbacks.getDebugMode;
 
         const modal = document.getElementById('settings-modal');
         const closeBtn = document.getElementById('settings-close-btn');
+        const themeOptions = document.getElementById('theme-options');
 
-        // Dynamic sections: full theme registry + prototype layout flags
+        // Dynamic sections: themes + (debug-gated) prototype layout flags.
+        // Rebuilt on every open; handled via delegation below.
         _populateThemeOptions();
         _buildProtoFlagGroups();
+        _syncThemeRadios();
 
         const emojiFontRadios = document.querySelectorAll('input[name="emoji-font"]');
-        const themeRadios = document.querySelectorAll('input[name="theme"]');
 
-        if (!modal || !closeBtn || emojiFontRadios.length === 0 || themeRadios.length === 0) return;
+        if (!modal || !closeBtn || !themeOptions || emojiFontRadios.length === 0) return;
 
         state.settingsModal = modal;
 
         // Load current settings with safe storage
         const savedEmojiFont = Utils.SafeStorage.getItem('emojiFont') || 'system';
-        const savedTheme = Utils.SafeStorage.getItem('theme') || 'dark';
 
         // Set the correct radio buttons based on saved settings
         emojiFontRadios.forEach(radio => {
@@ -209,9 +226,6 @@ const ModalManager = (() => {
                 const label = radio.closest('label');
                 if (label) label.style.opacity = '0.4';
             }
-        });
-        themeRadios.forEach(radio => {
-            radio.checked = radio.value === savedTheme;
         });
 
         // Close modal when clicking close button
@@ -232,16 +246,16 @@ const ModalManager = (() => {
             });
         });
 
-        // Handle theme change
-        themeRadios.forEach(radio => {
-            radio.addEventListener('change', (e) => {
-                const theme = e.target.value;
-                if (state.onThemeChange) {
-                    state.onThemeChange(theme);
-                }
-            });
+        // Handle theme change — delegated, so per-open rebuilds of the
+        // option list need no re-wiring
+        themeOptions.addEventListener('change', (e) => {
+            if (e.target.name === 'theme' && state.onThemeChange) {
+                state.onThemeChange(e.target.value);
+            }
         });
 
+        // Keep flag radios honest when flags change elsewhere (?proto picker)
+        document.addEventListener('protoflagschange', _syncProtoFlagGroups);
     }
 
     /**
@@ -250,10 +264,12 @@ const ModalManager = (() => {
     function openSettingsModal() {
         const modal = state.settingsModal || document.getElementById('settings-modal');
         if (modal) {
-            // The theme/flags may have changed via the ?proto picker or URL
-            // params since init — reflect reality before showing.
+            // Rebuild the dynamic sections: debug mode may have been toggled
+            // since the last open (which gates the prototype options), and
+            // the theme/flags may have changed via the ?proto picker.
+            _populateThemeOptions();
+            _buildProtoFlagGroups();
             _syncThemeRadios();
-            _syncProtoFlagGroups();
             modal.classList.add('show');
         }
     }

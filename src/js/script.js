@@ -344,7 +344,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 onThemeChange: (theme) => {
                     ThemeManager.applyThemeChange(theme);
-                }
+                },
+                // Prototype theme/layout options are debug-gated (type
+                // "debug" in search to toggle)
+                getDebugMode: () => this.state.debugMode
             });
             // Note: Welcome modal is initialized earlier in init() so it can be closed during loading
             FeedbackManager.init();
