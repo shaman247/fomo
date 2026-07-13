@@ -1113,6 +1113,14 @@ def group_event_occurrences(rows, source_url=None):
             if len(normalized_event) >= 5 and len(normalized_existing) >= 5:
                 if normalized_event in normalized_existing or normalized_existing in normalized_event:
                     return existing_key
+        # No location-compatible group matched. If the plain name is already a
+        # key, it belongs to a location-INCOMPATIBLE group (a compatible one
+        # would have matched above) — returning it here would silently merge two
+        # distinct venues that share an event name (e.g. Puzzled Pint's identical
+        # monthly theme running the same night at Farm.One and Beer Authority).
+        # Return a location-scoped key so the two stay separate.
+        if event_name in grouped_events:
+            return (event_name, row_loc)
         return event_name
 
     grouped_events = {}
@@ -1162,7 +1170,10 @@ def group_event_occurrences(rows, source_url=None):
             base_event['urls'] = urls
 
             grouped_events[group_key] = base_event
-            normalized_group_keys[group_key] = normalize_name_for_grouping(group_key)
+            # Key off the event name, not group_key: the latter may be a
+            # (name, loc) tuple for location-disambiguated groups, which
+            # normalize_name_for_grouping can't consume.
+            normalized_group_keys[group_key] = normalize_name_for_grouping(event_name)
         else:
             existing_name = grouped_events[group_key]['name']
             if len(event_name) < len(existing_name):
