@@ -1720,22 +1720,31 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
         total_archived = 0
         total_upcoming_flagged = 0
 
-        for website_id in website_ids:
-            archived_count, upcoming_events = _retry_on_deadlock(db.archive_outdated_events, cursor, connection, website_id)
-            if archived_count > 0:
-                # Get website name for logging
-                cursor.execute("SELECT name FROM websites WHERE id = %s", (website_id,))
-                result = cursor.fetchone()
-                website_name = result[0] if result else f"ID {website_id}"
-                print(f"  Archived {archived_count} outdated event(s) from {website_name}")
-                total_archived += archived_count
+        # Precompute the archival helper temp tables ONCE for the whole loop so
+        # each per-website archive query is a ~1s indexed lookup rather than a
+        # ~35s scan (this loop was the dominant cost of Step 6 — 47min on a full
+        # run). See db.build_archival_temps for the correctness argument.
+        db.build_archival_temps(cursor)
+        try:
+            for website_id in website_ids:
+                archived_count, upcoming_events = _retry_on_deadlock(
+                    db.archive_outdated_events, cursor, connection, website_id, temps_built=True)
+                if archived_count > 0:
+                    # Get website name for logging
+                    cursor.execute("SELECT name FROM websites WHERE id = %s", (website_id,))
+                    result = cursor.fetchone()
+                    website_name = result[0] if result else f"ID {website_id}"
+                    print(f"  Archived {archived_count} outdated event(s) from {website_name}")
+                    total_archived += archived_count
 
-                # Log warnings for upcoming events (rare - may indicate crawl issues)
-                if upcoming_events:
-                    print(f"    ⚠️  WARNING: {len(upcoming_events)} upcoming event(s) archived (may indicate crawl failure):")
-                    for event_id, name, next_occ in upcoming_events:
-                        print(f"        - Event {event_id}: {name} (next: {next_occ})")
-                    total_upcoming_flagged += len(upcoming_events)
+                    # Log warnings for upcoming events (rare - may indicate crawl issues)
+                    if upcoming_events:
+                        print(f"    ⚠️  WARNING: {len(upcoming_events)} upcoming event(s) archived (may indicate crawl failure):")
+                        for event_id, name, next_occ in upcoming_events:
+                            print(f"        - Event {event_id}: {name} (next: {next_occ})")
+                        total_upcoming_flagged += len(upcoming_events)
+        finally:
+            db.drop_archival_temps(cursor)
 
         if total_archived > 0:
             print(f"  Total archived: {total_archived}")
