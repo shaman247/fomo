@@ -17,6 +17,7 @@ import time
 import json
 from contextlib import asynccontextmanager
 import re
+import urllib.parse
 
 import city_config
 import subprocess
@@ -547,8 +548,39 @@ _NON_EVENT_NAME_PATTERNS = [
     r'\bclosed\s*[:\|\-—]',
     r'\bclosed\s+(to the public|for|on|due|until|this|next|all)\b',
     r'\b(museum|library|park|gallery|office|building|city hall|center|centre|garden|gym|pool|branch|store|shop|hall|room\b[^a-z]*\w*)\s+clos(ed|es|ure)\b',
+    # Estate / nature-preserve closure notices, added for the recurring Duke
+    # Farms "Campus Closed" weekly notice (captured as an event 13 times) and
+    # its "Farm Barn Cafe CLOSED" sibling. Same shape as the venue-noun rule
+    # above — the noun must sit immediately before the closure word — plus a
+    # lookahead veto so a real programmed event ABOUT a closure survives
+    # ("Trail Closure Workshop", e166530).
+    r'\b(campus|grounds|farm|trails?|preserve|conservatory|arboretum|zoo|aquarium|caf[eé])'
+    r'\s+clos(ed|es|ure)\b'
+    r'(?!(?:\s+[\w&\'-]+){0,2}\s+(?:workshop|talk|tour|hike|walk|class|meeting|discussion|panel|'
+    r'seminar|celebration|party|festival|program|series|lecture|session))',
     r'\bcloses?\s+(early|today|tonight|at\s+\d|\d)',
-    r'^\s*no\s+[\w\s]*\b(program|programming|class|classes|session|service|meeting)\b[\w\s]*\b(today|tonight|this week)\b',
+    r'^\s*closed\s+(today|tonight|this\s+(?:week|weekend|morning|afternoon|evening))\b',
+    # "No <thing> Today" cancelled-instance notices. The interior character
+    # classes allow hyphens/apostrophes/slashes so compound program names match
+    # ("No Walk-In Class Today", "No Drop-in Open Gym This Week"); the original
+    # `[\w\s]*` form broke on the hyphen in "Walk-In" and let those through.
+    # Both a program noun AND a temporal marker are required, which is what
+    # keeps genuine "No ..." events alive ("No Pants Subway Ride").
+    r'^\s*no\s+[\w\s\-\'/&]{0,40}\b(program|programming|class|classes|session|'
+    r'sessions|service|services|meeting|meetings|practice|rehearsal|'
+    r'story\s*time|open\s*gym|drop[\s-]?in|hours)\b[\w\s\-\'/&]{0,25}\b'
+    r'(today|tonight|this\s+(?:week|weekend|morning|afternoon|evening|month))\b',
+    # Cancelled-instance notices. Venues announce a dead occurrence by editing
+    # the title rather than pulling the row. Three unambiguous shapes only:
+    # a "CANCELLED:" prefix, a trailing "(CANCELLED)" / "- CANCELED" marker,
+    # and an explicit "<X> is/has been cancelled" sentence. A bare "cancel"
+    # anywhere is deliberately NOT matched — real events discuss cancel
+    # culture, cancelled plans, etc.
+    r'^\s*cancell?ed\s*[:\|\-—]',
+    r'[\(\[\-—|]\s*cancell?ed\s*[\)\]]?\s*$',
+    r'\b(?:is|are|has\s+been|have\s+been|was|were)\s+cancell?ed\b',
+    r'^\s*(?:class|classes|session|program|meeting|show|screening|performance|'
+    r'practice|rehearsal|tour|workshop|service|game)e?s?\s+cancell?ed\b',
     # Rentals / venue marketing (selling the space, not hosting an event).
     # NOTE: a bare "RENTAL:" prefix is NOT auto-dropped — venues use it as an
     # internal booking label on public events too (rented-out dance parties,
@@ -622,6 +654,16 @@ _NON_EVENT_NAME_PATTERNS = [
     # to the END of the name so events that merely mention registration mid-name
     # ("Open Registration Soccer Tournament") survive.
     r'\bregistration\s+(?:is\s+)?(?:now\s+)?opens?\s*!?\s*$',
+    # Hiatus / series-paused announcements. A recurring series announces its
+    # break by publishing a DATED row whose title is the announcement ("Summer
+    # Hiatus ... Monthly Saturday Night Swings (Returning in Sep)"), so the
+    # description still describes the real series and can't be used as a gate.
+    # "Hiatus" is essentially never in a genuine event title, but a band can be
+    # named it (Hiatus Kaiyote), so a bare leading "Hiatus" only counts when a
+    # delimiter follows it (announcement punctuation, not a band's second word).
+    r'^\s*(?:summer|winter|spring|fall|autumn|holiday|seasonal)\s+hiatus\b',
+    r'^\s*hiatus\b\s*(?:[:\|\-–—]|\.{2,})',
+    r'\bon\s+hiatus\b',
     # Library room-booking placeholder leaked as an "event" ("Non Library
     # Program" = a non-library use of a room; never an attendable program).
     r'^\s*non[\s-]*library\s+program\s*$',
@@ -648,6 +690,46 @@ _NON_EVENT_NAME_PATTERNS = [
 
 _NON_EVENT_NAME_RE = re.compile('|'.join(_NON_EVENT_NAME_PATTERNS), re.IGNORECASE)
 
+# Cancellation marker in the event's own URL slug. Many CMSes (NYC Parks,
+# Carnegie Hall, Asia Society, Eventbrite, Bowery/Knitting Factory, MCNY, …)
+# announce a cancellation by re-slugging the URL — `/events/2026/07/18/
+# canceled-kids-in-motion-flynn-playground` — while leaving the VISIBLE title
+# untouched. The extractor faithfully reads the clean title, so the event
+# lands looking perfectly live and only a URL inspection reveals it is dead.
+# The existing `CANCELED:`/`CANCELLED:` name-prefix drop in
+# group_event_occurrences never fires on these because the name is clean.
+#
+# Must be a delimited whole word: `canceled`, `cancelled` or `postponed`
+# bounded by `-`, `_`, `/` or end-of-path. That precision matters —
+#   - bare `cancel` would swallow `.../382314-cancel-culture-context-gender...`
+#     (a real NYU panel ABOUT cancel culture),
+#   - no trailing delimiter would swallow `/events/cancelledpitched-through-friends`,
+#   - `rescheduled` is deliberately EXCLUDED: a rescheduled event still happens,
+#     just on a new date, and its listing carries the corrected date.
+# Query strings are stripped before matching so an `?aff=…cancel…` tracking
+# param can never trigger it.
+#
+# Measured over all 241,679 event_urls rows: 36 matches, 36 true cancellations,
+# zero false positives.
+_CANCELLED_URL_SLUG_RE = re.compile(
+    r'[-_/](?:canceled|cancelled|postponed)(?=[-_/]|$)', re.IGNORECASE
+)
+
+
+def is_cancelled_by_url(url):
+    """True if the event URL's path marks it cancelled/postponed.
+
+    Venues that re-slug a cancelled event's URL but keep the original title are
+    the only signal we get that the event is dead; without this the row lands
+    active and indistinguishable from a real listing.
+    """
+    if not url:
+        return False
+    path = re.sub(r'^[a-z]+://[^/]*', '', url.strip(), flags=re.IGNORECASE)
+    path = path.split('?')[0].split('#')[0]
+    return bool(_CANCELLED_URL_SLUG_RE.search(path))
+
+
 # Bare generic single-word names ("Music", "Program", "TBD") carry no event
 # information; combined with a missing description they are placeholder rows the
 # extractor should never have emitted. Only fires when the description is empty
@@ -656,8 +738,40 @@ _NON_EVENT_NAME_RE = re.compile('|'.join(_NON_EVENT_NAME_PATTERNS), re.IGNORECAS
 _BARE_GENERIC_NAME_RE = re.compile(
     r'(?:music|events?|programs?|performances?|shows?|class(?:es)?|workshops?|'
     r'sessions?|meetings?|activit(?:y|ies)|general|misc(?:ellaneous)?|untitled|'
-    r'placeholder|n/?a|none|tba|tbd)',
+    r'placeholder|n/?a|none|tba|tbd|'
+    # Opaque calendar-availability markers. Shared/booking calendars (NYC
+    # Resistor, room-reservation systems) publish these as "events" with no
+    # body — they say the space is taken, not that anything is happening.
+    r'busy|reserved|blocked|booked|occupied|unavailable|hold|on\s+hold|'
+    r'private|closed|maintenance)',
     re.IGNORECASE)
+
+# Placeholder screening rows: a cinema publishes an unannounced slot as
+# "Untitled Movie (Angelika SoHo)" — no title, no description, 20 occurrences —
+# and it comes back every run. The bare "Untitled" case is already covered by
+# _BARE_GENERIC_NAME_RE; this catches the "<format> (<venue>)" shape.
+#
+# Precision comes from requiring "untitled" to LEAD the title and be immediately
+# followed by the format word, plus a blank description. Real films whose titles
+# contain the word survive: "An Untitled Horror Movie" and '"Untitled" Movie'
+# don't lead with it, "Untitled Horror Movie" has a word in between, and
+# "Untitled: A Dance Work" isn't followed by a format word.
+_UNTITLED_PLACEHOLDER_NAME_RE = re.compile(
+    r'^\s*untitled\s+(?:movie|film|feature|screening|event|program|programme|'
+    r'show|performance|concert|exhibit(?:ion)?)\s*(?:\([^)]*\))?\s*$',
+    re.IGNORECASE)
+
+# Descriptions that carry no information. Merged rows use the literal
+# "No description available." placeholder, so an empty-description gate must
+# treat it the same as ''.
+_EMPTY_DESCRIPTION_RE = re.compile(
+    r'^\s*(?:no\s+description(?:\s+available)?\.?|n/?a|none|-+)?\s*$',
+    re.IGNORECASE)
+
+
+def _description_is_blank(description):
+    """True when the description carries no information at all."""
+    return bool(_EMPTY_DESCRIPTION_RE.match(description or ''))
 
 # Two-signal patterns: the name alone is ambiguous (real attendable events
 # share these words), so a corroborating description signal is required before
@@ -778,14 +892,33 @@ _ATTRACTION_NAME_VETO_RE = re.compile(
 # "(observed)"/year), the description must carry closure/observance framing, and
 # any attendable language in the description vetoes the drop. Never fires without
 # a description.
-_HOLIDAY_MARKER_NAME_RE = re.compile(
-    r"^\s*(?:new\s+year'?s?(?:\s+(?:eve|day))?|"
+_HOLIDAY_NAMES = (
+    r"(?:new\s+year'?s?(?:\s+(?:eve|day))?|"
     r"martin\s+luther\s+king(?:\s+jr\.?)?(?:\s+day)?|mlk(?:\s+jr\.?)?(?:\s+day)?|"
     r"presidents?'?\s+day|washington'?s?\s+birthday|lincoln'?s?\s+birthday|"
     r"memorial\s+day|juneteenth|independence\s+day|fourth\s+of\s+july|july\s+4(?:th)?|"
-    r"labor\s+day|columbus\s+day|indigenous\s+peoples'?\s+day|veterans?\s+day|"
+    r"labor\s+day|columbus\s+day|indigenous\s+peoples[’']?\s+day|veterans?\s+day|"
     r"thanksgiving(?:\s+day)?|christmas(?:\s+eve|\s+day)?|halloween|easter(?:\s+sunday)?)"
+)
+_HOLIDAY_MARKER_NAME_RE = re.compile(
+    r"^\s*" + _HOLIDAY_NAMES +
     r"\s*(?:\(?observed\)?)?\s*(?:\d{4})?\s*$", re.IGNORECASE)
+
+# Venue-OPEN holiday notices — the exact inverse of the closure rule above and
+# just as much a non-event ("Columbus Day/Indigenous Peoples' Day | Innisfree
+# Open for Holiday" — "Innisfree is open in observance of..."). It announces the
+# building's hours on a holiday; nothing is scheduled.
+#
+# The danger of any "Open"/"Holiday" rule is eating real programming, so the
+# gates are narrow: the name must contain BOTH a holiday name AND an explicit
+# "open for/on/during <the holiday>" construction (which "Open Studios", "Open
+# House", "July 4th Concert" never produce), the description must carry
+# observance framing, and the same attendable-language veto as the closure rule
+# applies — so "Memorial Day BBQ - We're Open for the Holiday!" survives.
+_HOLIDAY_OPEN_NOTICE_NAME_RE = re.compile(
+    r"\bopen\s+(?:for|on|during)\s+(?:the\s+)?"
+    r"(?:holiday|observance|" + _HOLIDAY_NAMES + r")\b", re.IGNORECASE)
+_HOLIDAY_NAME_ANYWHERE_RE = re.compile(r"\b" + _HOLIDAY_NAMES + r"\b", re.IGNORECASE)
 _CLOSURE_OBSERVANCE_DESC_RE = re.compile(
     r"\b(?:closed|will\s+be\s+closed|office\s+closed|closure|"
     r"no\s+(?:school|classes|programs?|programming|service|services)|"
@@ -845,6 +978,107 @@ _REOPENING_DESC_RE = re.compile(
     r'welcomed?\s+back', re.IGNORECASE)
 
 
+# Standing menu / food-and-drink specials leaked from a bar or restaurant's
+# calendar ("Lunch Specials" — "Daily lunch specials are available Monday
+# through Friday"). Not an occasion: it describes what the kitchen offers
+# whenever it is open. Sibling of the "<drink> Month/Week" promo rule above,
+# which only covers the named-period marketing form.
+#
+# Precision comes from the name being FULLY anchored: the whole title must be
+# "<meal-or-drink> <specials|menu|deals>" and nothing else, so any real event
+# built on the same words survives untouched ("Lunch Specials Tasting Party",
+# "Prix Fixe Dinner with the Chef", "Happy Hour Trivia"). The description must
+# additionally frame it as an ongoing/recurring offer rather than a one-night
+# occasion.
+_MENU_SPECIAL_NAME_RE = re.compile(
+    r'^\s*(?:new\s+|our\s+|daily\s+|weekly\s+|weekday\s+|weekend\s+)?'
+    r'(?:lunch|brunch|dinner|breakfast|drink|food|bar|late[\s-]night|'
+    r'bottomless|prix[\s-]?fixe|happy[\s-]?hour)\s+'
+    r'(?:special(?:s)?|menu|deal(?:s)?|offering(?:s)?)\s*$',
+    re.IGNORECASE)
+_MENU_SPECIAL_DESC_RE = re.compile(
+    r'\b(?:daily|weekly|weekday|every\s+day|all\s+week|seven\s+days)\b'
+    r'[^.!?]{0,50}\b(?:special(?:s)?|menu|deal(?:s)?|offer(?:ed|ing|ings)?|'
+    r'available|served)\b|'
+    r'\b(?:special(?:s)?|menu|deal(?:s)?)\b[^.!?]{0,80}\b(?:monday|tuesday|'
+    r'wednesday|thursday|friday|saturday|sunday|weekdays?|daily|every\s+day|'
+    r'all\s+week)\b',
+    re.IGNORECASE)
+# Any of these in the description means a real, dated occasion is attached and
+# the row is more than a standing menu.
+_MENU_SPECIAL_VETO_RE = re.compile(
+    r'\b(?:live\s+music|\bdj\b|band|concert|performance|trivia|bingo|karaoke|'
+    r'comedy|tasting|class|workshop|party|festival|screening|rsvp|ticket)\b',
+    re.IGNORECASE)
+
+
+# SEO / affiliate listicles injected into a crawled feed. Nine of these landed
+# on the map in July 2026 via website 388 (RA / Resident Advisor's GraphQL feed),
+# each with a real NYC venue attached because the location matcher happily pinned
+# the fake row: "Allstate Insurance Quick Pay — Fastest Bill Pay Method Available
+# 2026", "Progressive Insurance — The Definitive Consumer Guide 2026", ...
+#
+# They all share one shape: the title IS the whole row (description is either the
+# title verbatim or empty), the title ends in the target SEO year, and it carries
+# commercial bill-pay / how-to-guide phrasing. All four gates are required —
+# any single one of them alone would eat real events:
+#   - "How to Apply For Funding" clinics are real, dated, attendable events;
+#   - plenty of real events end in a year ("... (May 2026)");
+#   - plenty of real events have a blank description.
+# The attendable-word veto is the lookahead that saves them (verified: it is what
+# spares the three "Brooklyn Org Application Clinic: How to Apply ... (2026)"
+# rows, the only real events that clear the year+marker gates).
+_SEO_LISTICLE_YEAR_TAIL_RE = re.compile(r'\b(?:20[2-3]\d)\s*[)\]\.]?\s*$')
+_SEO_LISTICLE_MARKER_RE = re.compile(
+    r'\b(?:bill\s*pay|quick\s*pay|auto[\s-]?pay|one[\s-]?time\s+payment|'
+    r'make\s+a\s+payment|pay\s+(?:my|your|online|by\s+phone|without|bill)|'
+    r'how\s+to\s+(?:pay|find|get|cancel|contact|apply|file|claim|save)|'
+    r'ways?\s+to\s+pay|where\s+to\s+find|'
+    r'policy\s+number|account\s+number|routing\s+number|member\s+id|'
+    r'grace\s+period|customer\s+(?:service|support|care)|'
+    r'no\s+(?:account|login|credentials?|sign[\s-]?up|password)\s+'
+    r'(?:needed|required)|'
+    r'without\s+(?:login|logging\s+in|an?\s+account|credentials)|'
+    r'(?:definitive|ultimate|complete|comprehensive|essential|beginner\'?s?)\s+'
+    r'(?:[a-z]+\s+){0,2}guide|'
+    r'step[\s-]by[\s-]step|everything\s+you\s+need\s+to\s+know|'
+    r'\bexplained\b|\blogin\b|\bsign[\s-]?in\b|'
+    r'promo\s+code|coupon\s+code|discount\s+code|free\s+trial|'
+    r'refinance|mortgage\s+rates?|credit\s+score|'
+    r'\bnear\s+me\b)',
+    re.IGNORECASE)
+# Any word that implies somebody shows up somewhere vetoes the drop.
+_SEO_LISTICLE_VETO_RE = re.compile(
+    r'\b(?:party|concert|gig|festival|fest|workshop|class(?:es)?|show(?:case)?|'
+    r'\bdj\b|live|tour|screening|film|movie|market|gala|benefit|night|brunch|'
+    r'dinner|meetup|meeting|conference|summit|panel|talk|lecture|seminar|fair|'
+    r'expo|race|run|walk|yoga|dance|comedy|karaoke|trivia|exhibition|opening|'
+    r'reception|performance|reading|book|game|tournament|camp|retreat|'
+    r'celebration|parade|ceremony|graduation|recital|jam|mixer|social|'
+    r'fundraiser|auction|clinic|training|bootcamp|hackathon|demo\s*day)\b',
+    re.IGNORECASE)
+
+
+def _is_seo_listicle_spam(name, description):
+    """True for affiliate/SEO listicle rows injected into an event feed.
+
+    Four gates, all required: the row is title-only (description empty or a
+    verbatim copy of the title), the title ends in a year, it carries commercial
+    bill-pay/how-to-guide phrasing, and it contains no attendable-event word.
+    """
+    if not name:
+        return False
+    normalized_name = re.sub(r'\s+', ' ', name.strip().lower())
+    normalized_desc = re.sub(r'\s+', ' ', (description or '').strip().lower())
+    if not (_description_is_blank(description) or normalized_name == normalized_desc):
+        return False
+    if not _SEO_LISTICLE_YEAR_TAIL_RE.search(name):
+        return False
+    if not _SEO_LISTICLE_MARKER_RE.search(name):
+        return False
+    return not _SEO_LISTICLE_VETO_RE.search(name)
+
+
 def is_obvious_non_event(name, description=None):
     """Return True if the event is an unmistakable non-event.
 
@@ -867,9 +1101,21 @@ def is_obvious_non_event(name, description=None):
         return True
     description = description or ''
     # Bare generic name with no description at all -> placeholder junk.
-    if not description.strip() and _BARE_GENERIC_NAME_RE.fullmatch(name.strip()):
+    if _description_is_blank(description) and _BARE_GENERIC_NAME_RE.fullmatch(name.strip()):
+        return True
+    # Placeholder "Untitled <format> (<venue>)" screening rows.
+    if _description_is_blank(description) and _UNTITLED_PLACEHOLDER_NAME_RE.match(name):
+        return True
+    # SEO / affiliate listicle spam ("Allstate Insurance Quick Pay — Fastest Bill
+    # Pay Method Available 2026"). Fires with or without a description, so it
+    # cannot live in the `if description:` block below.
+    if _is_seo_listicle_spam(name, description):
         return True
     if description:
+        if (_MENU_SPECIAL_NAME_RE.match(name)
+                and _MENU_SPECIAL_DESC_RE.search(description)
+                and not _MENU_SPECIAL_VETO_RE.search(description)):
+            return True
         if (_SUBMISSION_CONTEST_NAME_RE.search(name)
                 and not _ATTENDABLE_CONTEST_NAME_RE.search(name)
                 and _SUBMISSION_CALL_DESC_RE.search(description)):
@@ -891,6 +1137,11 @@ def is_obvious_non_event(name, description=None):
         if (_HOLIDAY_MARKER_NAME_RE.search(name)
                 and _CLOSURE_OBSERVANCE_DESC_RE.search(description)
                 and not _HOLIDAY_ATTENDABLE_DESC_VETO_RE.search(description)):
+            return True
+        if (_HOLIDAY_OPEN_NOTICE_NAME_RE.search(name)
+                and _HOLIDAY_NAME_ANYWHERE_RE.search(name)
+                and _CLOSURE_OBSERVANCE_DESC_RE.search(description)
+                and not _HOLIDAY_ATTENDABLE_DESC_VETO_RE.search(name + ' ' + description)):
             return True
         if (_DRINK_PROMO_NAME_RE.search(name)
                 and _PROMO_SPECIAL_DESC_RE.search(description)
@@ -924,6 +1175,48 @@ def _canonical_time(hour, minute, is_pm):
     """Build a canonical time string from a 12-hour hour (1-12), minute, and AM/PM."""
     suffix = 'pm' if is_pm else 'am'
     return f'{hour}{suffix}' if minute == 0 else f'{hour}:{minute:02d}{suffix}'
+
+
+_LUMA_HOSTS = ('luma.com', 'lu.ma', 'www.luma.com')
+_LUMA_SLUG = re.compile(r'^[a-z0-9][a-z0-9-]{4,}$', re.I)
+
+
+def absolutize_url(url, source_url):
+    """Resolve an extracted event URL against the page it was extracted from.
+
+    Gemini returns the href as written in the markup, so site-root paths
+    ("/events/2026/05/27/ranger-tot-time") and Luma's bare event slugs ("b8mc6adj") arrive
+    relative. Nothing downstream fixes them: they are stored verbatim, the exporter counts
+    them as a URL, and the frontend's Utils.isValidUrl (http/https only) then skips them —
+    so the event publishes with no link at all. A 2026-07-25 sweep found 2,688 such rows on
+    601 live events, 175 of which had no other URL.
+
+    Returns '' when no absolute URL can be formed, so the caller can drop it rather than
+    store a link that cannot work.
+    """
+    url = (url or '').strip()
+    if not url:
+        return ''
+    # "http://https://real.url" — a scheme glued onto an already-absolute URL.
+    doubled = re.match(r'^https?://(https?://.+)$', url, re.I)
+    if doubled:
+        return doubled.group(1)
+    if re.match(r'^https?://', url, re.I):
+        return url
+    if url.startswith('//'):
+        scheme = urllib.parse.urlparse(source_url or '').scheme or 'https'
+        return f'{scheme}:{url}'
+    if re.match(r'^[a-z][a-z0-9+.-]*:', url, re.I):
+        return ''  # mailto:, tel:, javascript: — not an event page
+    if not source_url:
+        return ''
+    # Luma slugs are global to the site, not relative to the calendar path they were
+    # listed on: /calendar/cal-XXX + "a7oxbpwy" must resolve to luma.com/a7oxbpwy.
+    host = urllib.parse.urlparse(source_url).netloc.lower()
+    if host in _LUMA_HOSTS and '/' not in url and _LUMA_SLUG.match(url):
+        return f'https://luma.com/{url}'
+    resolved = urllib.parse.urljoin(source_url, url)
+    return resolved if re.match(r'^https?://', resolved, re.I) else ''
 
 
 def _standardize_time(time_str):
@@ -1162,7 +1455,7 @@ def group_event_occurrences(rows, source_url=None):
 
             # Prefer event-specific URL over source_url (which is often generic)
             urls = []
-            url = (row_dict.get('url') or '').strip()
+            url = absolutize_url(row_dict.get('url'), source_url)
             if url:
                 urls.append(url)
             if source_url and source_url not in urls:
@@ -1179,7 +1472,7 @@ def group_event_occurrences(rows, source_url=None):
             if len(event_name) < len(existing_name):
                 grouped_events[group_key]['name'] = event_name
 
-            url = (row_dict.get('url') or '').strip()
+            url = absolutize_url(row_dict.get('url'), source_url)
             if url and url not in grouped_events[group_key]['urls']:
                 grouped_events[group_key]['urls'].append(url)
 
@@ -1256,6 +1549,62 @@ def _significant_leftovers(tokens):
         if len(t) >= 3 or t.isdigit():
             sig.add(t)
     return sig
+
+
+def _shares_distinctive_token(a, b):
+    """True if two normalized names share at least one venue-identifying token.
+
+    Generic venue-type words ("rooftop", "plaza", "dance") and connectors are
+    discarded first, so this asks whether the two strings actually name the same
+    thing rather than merely describing the same kind of thing. Used to decide
+    whether a website-scoped alternate name is portable knowledge about a venue
+    ("Prospect Park Picnic House" ↔ "Picnic House") or in-site shorthand that
+    means nothing elsewhere ("The Rooftop" ↔ "Elsewhere").
+    """
+    if not a or not b:
+        return False
+    return bool(_significant_leftovers(set(a.split()))
+                & _significant_leftovers(set(b.split())))
+
+
+# "Play Area (in Spuyten Duyvil Playground), Bronx" — NYC Parks (and its
+# conservancy siblings) name a sub-feature first and put the containing park in
+# an "(in …)" parenthetical. The parenthetical is the only part that names a
+# venue we actually have a row for; see _extract_parenthetical_parent.
+_PARENTHETICAL_PARENT_RE = re.compile(r'\(\s*in\s+([^)]{3,})\)', re.IGNORECASE)
+
+
+def _extract_parenthetical_parent(raw):
+    """Return the normalized parent venue from a "<feature> (in <Parent>)" string.
+
+    NYC Parks emits sub-feature locations like "Main Pool (in Crotona Park)",
+    "Dance Room (in St. John's Recreation Center)" or "Pier 2 (in Brooklyn
+    Bridge Park)". The full string matches nothing (the leading feature name
+    drags prefix coverage below PREFIX_MATCH_COVERAGE and Levenshtein below the
+    fuzzy threshold), so ~57 Parks sub-features re-orphaned to NULL on every
+    crawl. The parenthetical names the park itself, which we do have.
+
+    Returns '' when there is no "(in …)" parenthetical.
+    """
+    if not raw or '(' not in raw:
+        return ''
+    match = _PARENTHETICAL_PARENT_RE.search(raw)
+    if not match:
+        return ''
+    return _normalize_location_name(match.group(1))
+
+
+def _squash_identity(name):
+    """Collapse a name to its bare identity: alphanumerics only, plural dropped.
+
+    Two names squash to the same key only when they are the *same* name written
+    differently — spacing, punctuation, an @handle, a stray apostrophe, a
+    trailing "s". Used by the source-site fallback (Step 6 of get_location_id),
+    which has nothing but the organizer's name to go on and therefore cannot
+    afford a fuzzy threshold. See the comment there.
+    """
+    squashed = re.sub(r'[^a-z0-9]', '', (name or '').lower())
+    return squashed[:-1] if squashed.endswith('s') else squashed
 
 
 def _leftover_reconciles(token, others):
@@ -1508,6 +1857,58 @@ _ADDR_PATTERN = re.compile(
 )
 
 
+# Cross-street suffix on a house address: galleries and theaters write their
+# address as "980 Madison at 76th Street" (loc 333 Gagosian). The cross street's
+# own type token closes the address regex, so the key comes out as
+# "980 madison at 76 st" and never equals the DB form "980 madison ave" — the
+# sublocation then exports redundantly next to the venue address.
+#
+# Stripping " at ..." is only safe when the *house address comes first*: plenty
+# of real sublocations put the address AFTER the preposition ("Studio B at 150 W
+# 42nd St") or use " at " to name a sub-venue ("The Loft at Prince Street",
+# "Audubon Center at the Boathouse"), and those must be left alone. So the strip
+# requires the text to START with a house number.
+_LEADS_WITH_HOUSE_NUMBER_RE = re.compile(r'^\d+(?:-\d+)?[a-z]?\s+\S')
+_CROSS_STREET_SUFFIX_RE = re.compile(r'\s+at\s+.*$')
+
+
+def _strip_cross_street_suffix(s):
+    """Drop a trailing " at <cross street>" clause from a house address."""
+    if s and _LEADS_WITH_HOUSE_NUMBER_RE.match(s):
+        return _CROSS_STREET_SUFFIX_RE.sub('', s).strip()
+    return s
+
+
+# "980 madison" — a house number plus a street name with no street-type token at
+# all, which is what remains once the cross-street clause is stripped. Anchored
+# to the whole string so only a bare address qualifies.
+_TYPELESS_HOUSE_ADDR_RE = re.compile(r"^(\d+)\s+([a-z][a-z0-9.'\- ]{2,})$")
+_TRAILING_STREET_TYPE_RE = re.compile(
+    r'\s+(?:' + '|'.join(_ADDR_STREET_TYPES) + r')$')
+
+
+def _extract_typeless_house_address(s):
+    """Return "<num> <street name>" for a house address written with no street type.
+
+    "980 Madison at 76th Street" → "980 madison". Returns None for anything that
+    still carries a street type (the normal `_extract_street_address_loose` path
+    handles those) or that is not purely a house number plus a name.
+    """
+    if not s:
+        return None
+    s = s.lower().strip()
+    for long, short in _ADDR_LONG_TO_SHORT.items():
+        s = re.sub(r'\b' + long + r'\b', short, s)
+    s = _strip_cross_street_suffix(s)
+    m = _TYPELESS_HOUSE_ADDR_RE.match(s)
+    if not m:
+        return None
+    name = re.sub(r'\s+', ' ', re.sub(r"[.']+", '', m.group(2))).strip()
+    if not name or _TRAILING_STREET_TYPE_RE.search(' ' + name):
+        return None
+    return f"{m.group(1)} {name}"
+
+
 def _extract_street_address_loose(s):
     """Extract first <number> <words> <street-type> match from anywhere in `s`.
 
@@ -1515,16 +1916,27 @@ def _extract_street_address_loose(s):
     name ("Gotham Park, 1 Rose St" → "1 rose st"), trailing apt/suite suffixes,
     word ordinals ("Tenth" → "10th"), hyphenated Queens numbers ("5-52" → "552"),
     apartment-letter on house number ("161A Chrystie" → "161 chrystie st"),
-    Avenue A/B/C/D, and redundant "Bowery St" / "Broadway St".
+    Avenue A/B/C/D, redundant "Bowery St" / "Broadway St", and a trailing
+    " at <cross street>" clause ("980 Madison at 76th Street" → "980 madison").
     """
     if not s:
         return None
     s = s.lower().strip()
+    s = _strip_cross_street_suffix(s)
     for long, short in _ADDR_LONG_TO_SHORT.items():
         s = re.sub(r'\b' + long + r'\b', short, s)
     for word, num in _ADDR_WORD_NUMS.items():
         s = re.sub(r'\b' + word + r'\b', num, s)
     s = re.sub(r'\b([nsew])(\d)', r'\1 \2', s)
+    # Leading room/suite code before the real street address ("122 CC 150 First
+    # Avenue" — room 122CC at 150 1st Ave). Without this the regex latches onto
+    # the room number as the house number and the address never matches the DB
+    # form. Tightly gated: a number plus a 2-4 letter code immediately followed
+    # by another number, and the code must not be a compass directional (so
+    # "150 W 42nd St" is never mistaken for a room code) or a street type.
+    s = re.sub(
+        r'^\s*\d+\s*(?!(?:n|s|e|w|ne|nw|se|sw|no|so|' + '|'.join(_ADDR_STREET_TYPES)
+        + r')\b)[a-z]{2,4}\s+(?=\d)', '', s)
     # Strip apartment-letter glued to house number ("161a chrystie" → "161 chrystie",
     # "626b 10th" → "626 10th") so the regex's `\d+\s+` can match.
     s = re.sub(r'\b(\d+)[a-z](?=\s)', r'\1', s)
@@ -1564,8 +1976,102 @@ def _extract_street_address_loose(s):
     return f"{num} {st}"
 
 
+_INTERSECTION_SPLIT = re.compile(r'\s+(?:&|and|at)\s+|\s*&\s*')
+
+
+def _normalize_street_side(side):
+    """Normalize one side of a cross-street pair, or None if it isn't a street.
+
+    Applies the same long→short / ordinal-word normalization the house-address
+    parser uses, then requires the result to actually name a street: it must
+    carry a street-type token ("ave", "st", "blvd") or be a standalone street
+    name ("Broadway", "Bowery"). That requirement is what keeps "Arts & Crafts
+    Room" from being read as an intersection.
+    """
+    if not side:
+        return None
+    s = side.lower().strip().strip('.,')
+    for long, short in _ADDR_LONG_TO_SHORT.items():
+        s = re.sub(r'\b' + long + r'\b', short, s)
+    for word, num in _ADDR_WORD_NUMS.items():
+        s = re.sub(r'\b' + word + r'\b', num, s)
+    s = re.sub(r'\b(\d+)(st|nd|rd|th)\b', r'\1', s)
+    s = re.sub(r"[.']+", '', s)
+    s = re.sub(r'\s+', ' ', s).strip()
+    if not s:
+        return None
+    tokens = s.split()
+    if not (set(tokens) & (set(_ADDR_STREET_TYPES) | _ADDR_STANDALONE_TYPES)):
+        return None
+    # Drop a leading compass directional: "W 176 st" and "176 st" are the same
+    # cross street, and one side of the pair routinely omits it.
+    if tokens[0] in ('n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw') and len(tokens) > 1:
+        tokens = tokens[1:]
+    return ' '.join(tokens)
+
+
+def _extract_intersection(s):
+    """Extract a cross-street pair from `s` as an order-insensitive key.
+
+    Greenmarkets, park entrances and street fairs are addressed by intersection
+    ("14th St Loop & Avenue A") rather than house number, so the house-address
+    parser returns None for them and any comparison built on it silently fails.
+    Returns a frozenset of the two normalized sides, or None.
+
+    Only the comma-delimited segments are considered, and a segment must split
+    into exactly two street-looking sides — an address like Bay Ridge's
+    "3rd Avenue & 95th Street, Walgreen's Parking, lot 9408 3rd Ave, ..." still
+    yields the intersection from its first segment.
+    """
+    if not s:
+        return None
+    for segment in s.split(','):
+        parts = [p for p in _INTERSECTION_SPLIT.split(segment) if p.strip()]
+        if len(parts) != 2:
+            continue
+        a = _normalize_street_side(parts[0])
+        b = _normalize_street_side(parts[1])
+        if a and b and a != b:
+            return frozenset((a, b))
+    return None
+
+
+def _num_in_building_range(num, lo, hi):
+    """True if house number `num` falls inside the building range `lo`-`hi`.
+
+    A single building spanning several lot numbers is written as a range
+    ("53-83 Water St" = Empire Stores), and a listing may cite any number in
+    that range ("55 Water Street"). Endpoint equality alone misses those, so
+    the interior is accepted too — but only for forms that are unmistakably a
+    range, because Queens-style hyphenated addresses ("5-52 47th Ave") use the
+    same punctuation for something else entirely. Three gates keep them apart:
+
+    - `lo < hi` (a Queens address is frequently the reverse or wildly apart),
+    - equal digit length (Queens glues a short block number to a house number,
+      so "5-52" is excluded while "53-83" passes),
+    - matching parity across lo, hi and num — a real range runs down one side
+      of the street, so every number in it is odd or every one is even.
+    """
+    if not (num and lo and hi):
+        return False
+    if num in (lo, hi):
+        return True
+    if len(lo) != len(hi):
+        return False
+    lo_i, hi_i, num_i = int(lo), int(hi), int(num)
+    if lo_i >= hi_i:
+        return False
+    if not (lo_i % 2 == hi_i % 2 == num_i % 2):
+        return False
+    return lo_i < num_i < hi_i
+
+
 def sublocation_redundant_with_address(sublocation, location_address):
     """True when sublocation is just the venue address (safe to clear).
+
+    Handles both house addresses ("150 1st Ave") and intersection addresses
+    ("14th St Loop & Avenue A" — how greenmarkets and park entrances are
+    addressed); the latter are compared order-insensitively.
 
     Some scrapers (e.g. Posh.vip) put the venue's full street address into
     sublocation. After location matching, that's redundant with the matched
@@ -1580,8 +2086,25 @@ def sublocation_redundant_with_address(sublocation, location_address):
     """
     if not sublocation or not location_address:
         return False
+    # Intersection form ("14th St Loop & Avenue A") — neither side parses as a
+    # house address, so compare cross-street pairs first. Order-insensitive:
+    # "Avenue A & 14th St Loop" is the same corner.
+    sub_x = _extract_intersection(sublocation)
+    if sub_x and sub_x == _extract_intersection(location_address):
+        return True
     sub = _extract_street_address_loose(sublocation)
     addr = _extract_street_address_loose(location_address)
+    # Type-less house address ("980 Madison at 76th Street" → "980 madison")
+    # against the DB's typed form ("980 Madison Ave" → "980 madison ave"): same
+    # number, same street name, the sublocation just omits the street type.
+    # Both the number AND the full street name must match exactly, so this can
+    # only fire on what is literally the venue's own address.
+    if not sub and addr:
+        typeless_sub = _extract_typeless_house_address(sublocation)
+        if typeless_sub:
+            typeless_addr = _TRAILING_STREET_TYPE_RE.sub('', addr)
+            if typeless_addr != addr and typeless_sub == typeless_addr:
+                return True
     if not sub or not addr:
         return False
     if sub == addr:
@@ -1632,10 +2155,10 @@ def sublocation_redundant_with_address(sublocation, location_address):
             return (m.group(1), m.group(2)) if m else (None, None)
         if not sub_suite and not addr_suite:
             a_lo, a_hi = _range_endpoints(location_address)
-            if a_lo and a_hi and s_num in (a_lo, a_hi):
+            if a_lo and a_hi and _num_in_building_range(s_num, a_lo, a_hi):
                 return True
             s_lo, s_hi = _range_endpoints(sublocation)
-            if s_lo and s_hi and a_num in (s_lo, s_hi):
+            if s_lo and s_hi and _num_in_building_range(a_num, s_lo, s_hi):
                 return True
     return False
 
@@ -1760,6 +2283,10 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
            over arbitrary same-brand prefix/fuzzy matches when the name is generic)
       4. Prefix match (location name starts with known name, ≥PREFIX_MATCH_COVERAGE to avoid generics)
       5. Fuzzy match (Levenshtein ratio ≥ FUZZY_MATCH_THRESHOLD)
+      5c. Cross-website exact match on a curated website-scoped alternate name
+          (last resort, unambiguous only — beats leaving the event unmapped)
+      5d. Parenthetical parent venue ("Main Pool (in Crotona Park)" → Crotona
+          Park) — last resort, exact + unambiguous only
       6. Source site fallback (website name matches a location name)
       7. Website-linked location fallback (single-venue website, empty/virtual location_name)
 
@@ -2046,25 +2573,126 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
         if match is not None and match is not _AMBIGUOUS_ADDRESS:
             return make_result(match)
 
+    # Step 5c: Cross-website exact match on a curated website-scoped alternate name.
+    #
+    # A website-scoped alt exists to DISAMBIGUATE a string for one website, so it
+    # is deliberately invisible to the others (Step 1). But when the whole cascade
+    # above has failed, the alternative isn't "a safer match" — it's NULL, which
+    # leaves the event unmapped and spawns a duplicate in the merger. A curated
+    # alt is hand-entered venue knowledge, and an EXACT full-string hit on one is
+    # far better evidence than nothing at all.
+    #
+    # Kept safe by three constraints:
+    #   - runs last (after every global tier, prefix and fuzzy), so it can never
+    #     override or weaken an existing match or guard;
+    #   - exact match only, on primary_search_keys — no prefix, no fuzzy;
+    #   - if the same key is scoped to DIFFERENT locations across websites, that
+    #     string is genuinely ambiguous and we decline rather than coin-flip;
+    #   - the alt must be CORROBORATED by the venue it points at — it has to
+    #     share a distinctive token with the location's own name. Plenty of
+    #     scoped alts are pure in-site shorthand that means nothing anywhere
+    #     else ("Online Event" → NYU, "The Dance Floor" → Lincoln Center, "The
+    #     Rooftop" → Elsewhere, "TODAY Plaza" → Rockefeller Center). Scoping is
+    #     precisely what keeps those contained, so they must stay contained.
+    #
+    # Regression: "Prospect Park Picnic House" (an exact alt of location 6434,
+    # scoped to website 2704) resolved to nothing when the same string arrived
+    # from website 464.
+    scoped_all = locations_map.get('website_scoped', {})
+    if scoped_all:
+        for key in primary_search_keys:
+            hits = []
+            for scoped_website_id, tier in scoped_all.items():
+                if scoped_website_id == website_id:
+                    continue  # already tried in Step 1
+                cand = tier.get(key)
+                if cand is not None:
+                    hits.append(get_first(cand))
+            if not hits:
+                continue
+            ids = {h.get('id') for h in hits}
+            if len(ids) > 1:
+                continue  # ambiguous across websites — decline
+            if conflicts(hits[0]):
+                continue
+            if not _shares_distinctive_token(
+                    key, _normalize_location_name(hits[0].get('name') or '')):
+                continue  # in-site shorthand, not portable venue knowledge
+            return make_result(hits[0])
+
+    # Step 5d: Parenthetical parent venue — "<feature> (in <Parent Venue>)".
+    #
+    # NYC Parks names a sub-feature first ("Main Pool", "Play Area", "Dance
+    # Room", "Pier 2") and puts the venue we actually have a row for inside an
+    # "(in …)" parenthetical. The full string defeats every tier above: the
+    # leading feature drags prefix coverage below PREFIX_MATCH_COVERAGE
+    # ("brooklyn bridge park" covers 0.69 of "pier 2 in brooklyn bridge park")
+    # and the Levenshtein ratio below FUZZY_MATCH_THRESHOLD, so ~57 Parks
+    # sub-features re-orphan to NULL on every crawl and get re-mapped by hand.
+    #
+    # Deliberately LAST-RESORT and deliberately narrow, because the parenthetical
+    # names a *container*, not the venue itself — mapping to it is a coarsening,
+    # correct only when we have nothing better:
+    #   - runs after every global tier, so an exact/prefix/fuzzy hit on the real
+    #     sub-feature (many playgrounds have their own location row) always wins;
+    #   - EXACT normalized match only, no prefix and no fuzzy, so it cannot fuse
+    #     two distinct venues whose names merely resemble each other;
+    #   - declines when the parent name is ambiguous (2+ locations share it) or
+    #     generic ("in the park"), rather than coin-flipping;
+    #   - honors the region-conflict guard like every other tier.
+    parenthetical_parent = (
+        _extract_parenthetical_parent(location_name_raw)
+        or _extract_parenthetical_parent(sublocation_name_raw)
+    )
+    if (parenthetical_parent and len(parenthetical_parent) >= 5
+            and parenthetical_parent not in GENERIC_LOCATION_WORDS):
+        for tier_name in ('names', 'alternate_names', 'short_names'):
+            match = locations_map.get(tier_name, {}).get(parenthetical_parent)
+            if match is None:
+                continue
+            if isinstance(match, list):
+                # Same name at 2+ distinct locations — genuinely ambiguous.
+                if len({m.get('id') for m in match}) > 1:
+                    continue
+            cand = get_first(match)
+            if conflicts(cand):
+                continue
+            return make_result(cand)
+
     # Step 6: Source site fallback (match website name to location)
     # Only fires when no real venue name was extracted — otherwise an event
     # held at a partner venue (e.g., SVA exhibition at Pfizer Building) would
     # silently get pinned to the website's home location.
+    #
+    # This tier guesses a venue from the ORGANIZER's name, with nothing from the
+    # event to corroborate it, so it must be an identity match — not a fuzzy one.
+    # A Levenshtein threshold here is actively harmful: an organizer name is a
+    # brand string, and brands differ from unrelated venues by one or two
+    # characters all the time. Measured over the live locations table, a 0.90
+    # ratio mapped "The Moth" -> "The MOUTH" (a Brooklyn bar), "NJ Botanical
+    # Garden" -> "NY Botanical Garden", "Brooklyn Pride" -> "Brooklyn Bridge",
+    # "Mint Theater Company" -> "Mayi Theater Company" and "Ulster County
+    # Historical Society" -> "Suffolk County Historical Society" — 14 of the 29
+    # sites that relied on the fuzzy path were pinned to the wrong venue.
+    #
+    # So compare on _squash_identity: the names must be the same string once
+    # spacing/punctuation (and a plural 's') are discarded. That still absorbs
+    # every benign way a website name drifts from its venue name — "OpenPlans" /
+    # "Open Plans", "@dearfriendbooks" / "Dear Friend Books", "ITP|IMA" /
+    # "ITP IMA", "Rullo's" / "Rullo’s", "Gallery 54" / "Gallery54" — while a
+    # genuinely different word can no longer sneak through. Real spelling
+    # variants that survive squashing (e.g. "Ave" vs "Avenue") belong in
+    # location_alternate_names, which is checked earlier and is explicit.
     if not normalized_loc:
-        normalized_site = _normalize_location_name(source_site_name)
-        best_score, best_result = -1, None
-
-        for priority, tier in all_tiers:
-            for key in tier:
-                match = tier[key]
-                if isinstance(match, list):
-                    continue
-                score = _calculate_levenshtein_ratio(normalized_site, _normalize_location_name(key))
-                if score >= FUZZY_MATCH_THRESHOLD and (score > best_score or (score == best_score and priority < best_priority)):
-                    best_score, best_priority, best_result = score, priority, match
-
-        if best_result:
-            return make_result(best_result)
+        site_key = _squash_identity(_normalize_location_name(source_site_name))
+        if site_key:
+            for priority, tier in all_tiers:
+                for key in tier:
+                    match = tier[key]
+                    if isinstance(match, list):
+                        continue
+                    if _squash_identity(_normalize_location_name(key)) == site_key:
+                        return make_result(match)
 
     # Step 7: Website-linked location fallback
     # When the location name is virtual/generic (normalized to empty) and the website
@@ -2295,9 +2923,26 @@ def process_events(cursor, connection, crawl_result_id, website_name, run_date_s
             rejection_counts['non_event_junk'] = rejection_counts.get('non_event_junk', 0) + 1
             continue
 
+        event_url = (row_dict.get('url') or '').strip()
+
+        # Cancellation marker in the URL slug: the venue re-slugged the event to
+        # `.../canceled-<title>` (or `.../<title>-postponed`) but left the visible
+        # title clean, so nothing else in the row says the event is dead. Drop it
+        # here rather than letting it land as an active, real-looking listing.
+        if event_url and is_cancelled_by_url(event_url):
+            log_rejection(
+                cursor, crawl_result_id, website_id,
+                rejection_type='cancelled_url_slug', stage='extract',
+                event_name=row_dict.get('name'), event_url=event_url,
+                start_date=(row_dict.get('start_date') or None),
+                end_date=(row_dict.get('end_date') or None),
+                details='URL slug marks the event canceled/postponed',
+            )
+            rejection_counts['cancelled_url_slug'] = rejection_counts.get('cancelled_url_slug', 0) + 1
+            continue
+
         # URL grounding check: if the AI returned a URL that doesn't appear in
         # the crawled content, it's likely a hallucinated event. Log and skip.
-        event_url = (row_dict.get('url') or '').strip()
         if event_url and crawled_content and not _url_grounded_in_content(event_url, crawled_content):
             log_rejection(
                 cursor, crawl_result_id, website_id,
@@ -2447,7 +3092,8 @@ def process_events(cursor, connection, crawl_result_id, website_name, run_date_s
     return event_count
 
 
-def apply_crawled_details(cursor, connection, ce_id, data, tag_context):
+def apply_crawled_details(cursor, connection, ce_id, data, tag_context,
+                          locations_map=None):
     """Apply detail-crawl data to a crawl_event row.
 
     Updates description, emoji, location, sublocation, occurrences, and tags
@@ -2459,6 +3105,11 @@ def apply_crawled_details(cursor, connection, ce_id, data, tag_context):
         ce_id: crawl_event ID
         data: dict from extract_single_event() with description, hashtags, emoji, etc.
         tag_context: tuple of (tag_rules, ancestor_map, root_tags, disambiguation_rules)
+        locations_map: optional map from build_locations_map(). When the detail
+            page supplies a NEW location/sublocation we must re-run location
+            matching on it — the listing-page string that produced the stored
+            location_id is being replaced, and leaving the id behind stranded
+            events at NULL even though the new name resolves cleanly.
     """
     tag_rules, ancestor_map, root_tags, disambiguation_rules = tag_context
 
@@ -2494,6 +3145,31 @@ def apply_crawled_details(cursor, connection, ce_id, data, tag_context):
     if data.get('sublocation'):
         update_fields.append("sublocation = %s")
         update_values.append(data['sublocation'])
+
+    # Re-resolve location_id whenever the detail page replaced the location text.
+    # Only write it when the new text actually matches something — a detail page
+    # naming an unknown venue must not blank out an id the listing crawl earned.
+    if locations_map and (data.get('location') or data.get('sublocation')):
+        cursor.execute(
+            "SELECT ce.crawl_result_id, cr.website_id "
+            "FROM crawl_events ce "
+            "JOIN crawl_results cr ON cr.id = ce.crawl_result_id "
+            "WHERE ce.id = %s",
+            (ce_id,),
+        )
+        row = cursor.fetchone()
+        ce_website_id = row[1] if row else None
+        location_info = get_location_id(
+            (data.get('location') or '').strip(),
+            (data.get('sublocation') or '').strip(),
+            '',
+            (data.get('name') or '').strip(),
+            locations_map,
+            website_id=ce_website_id,
+        )
+        if location_info and location_info.get('id'):
+            update_fields.append("location_id = %s")
+            update_values.append(location_info['id'])
 
     update_values.append(ce_id)
     cursor.execute(
@@ -2673,6 +3349,10 @@ async def crawl_event_details(cursor, connection, candidates, num_workers=10):
     # Load tag processing context
     tag_context = load_tag_context(cursor)
 
+    # Location map for re-resolving location_id when a detail page supplies a
+    # different (usually cleaner) venue name than the listing page did.
+    locations_map = build_locations_map(cursor)
+
     # Build crawl configs per website (once each)
     crawl_configs = {
         ws_id: crawler.build_event_crawl_config(ws)
@@ -2800,7 +3480,8 @@ async def crawl_event_details(cursor, connection, candidates, num_workers=10):
     # Phase 2: Apply DB updates sequentially
     enriched = 0
     for ce_id, name, data in results:
-        apply_crawled_details(cursor, connection, ce_id, data, tag_context)
+        apply_crawled_details(cursor, connection, ce_id, data, tag_context,
+                              locations_map=locations_map)
         enriched += 1
         location_info = f" @ {data['location']}" if data.get('location') else ""
         print(f"    + {name}{location_info}: {data['description'][:80]}...")

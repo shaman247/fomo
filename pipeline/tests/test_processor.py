@@ -12,10 +12,14 @@ from processor import (
     normalize_event_name_caps,
     strip_leading_emoji,
     is_obvious_non_event,
+    is_cancelled_by_url,
     _normalize_location_name,
     _extract_street_address,
+    _extract_street_address_loose,
+    sublocation_redundant_with_address,
     _parse_city_state,
     _region_conflict,
+    _extract_parenthetical_parent,
     apply_crawled_details,
     get_location_id,
 )
@@ -370,6 +374,29 @@ class TestIsObviousNonEvent(unittest.TestCase):
         self.assertTrue(is_obvious_non_event(
             "Memorial Day",
             "The office is closed in observance of the holiday."))
+
+    def test_campus_closure_notice_dropped(self):
+        # e139324 — Duke Farms' recurring weekly closure notice, captured as an
+        # event 13 times before this rule existed.
+        self.assertTrue(is_obvious_non_event(
+            "Campus Closed",
+            "The Duke Farms campus is closed every Sunday & Monday."))
+
+    def test_estate_venue_closure_nouns_dropped(self):
+        for name in ("Grounds Closed", "Trails Closed for Maintenance",
+                     "Farm Closes Early", "Cafe Closed", "Preserve Closure"):
+            with self.subTest(name=name):
+                self.assertTrue(is_obvious_non_event(name, "Notice."))
+
+    def test_closure_noun_words_in_real_events_kept(self):
+        # The noun must sit immediately before the closure word — real events
+        # that merely mention these places must survive.
+        for name in ("Campus Tour", "Farm to Table Dinner",
+                     "Trails & Ales Group Hike", "Closing Reception: New Work",
+                     "Trail Closure Workshop", "Campus Closure Community Meeting",
+                     "Cafe Concert Series", "Behind the Scenes at the Preserve"):
+            with self.subTest(name=name):
+                self.assertFalse(is_obvious_non_event(name, "A real event."))
 
     def test_drink_month_promotion_dropped(self):
         # e170885 — a bar's month-long drink-special marketing period.
@@ -746,6 +773,485 @@ class TestIsObviousNonEvent(unittest.TestCase):
         self.assertFalse(is_obvious_non_event("Jazz Night at the Park"))
 
 
+class TestJunkFilterGaps20260719(unittest.TestCase):
+    """Three non-event shapes that reached the event-type classifier on
+    2026-07-19 because the junk filter had no rule for them.
+
+    Fixtures are the real name+description of events 193783 (NYC Resistor
+    "Busy"), 193866 (Kadampa "No Walk-In Class Today") and 193797 (The Gem
+    Saloon "Lunch Specials")."""
+
+    # --- (a) opaque calendar placeholders ---
+
+    def test_busy_placeholder_dropped(self):
+        # e193783 — NYC Resistor publishes bare "Busy" blocks routinely. The
+        # merged row's description is the placeholder string, which must count
+        # as blank for the bare-generic-name rule.
+        self.assertTrue(is_obvious_non_event("Busy", "No description available."))
+        self.assertTrue(is_obvious_non_event("Busy", ""))
+        self.assertTrue(is_obvious_non_event("Busy", None))
+
+    def test_other_opaque_availability_markers_dropped(self):
+        for name in ("Reserved", "Blocked", "Booked", "On Hold", "Occupied",
+                     "Unavailable", "Private", "Maintenance"):
+            self.assertTrue(is_obvious_non_event(name, ""), name)
+
+    def test_opaque_marker_with_real_description_kept(self):
+        # The rule is gated on a blank description, so a genuine event that
+        # happens to be titled "Busy" survives.
+        self.assertFalse(is_obvious_non_event(
+            "Busy",
+            "An evening of improv from the Busy troupe, with a bar and a "
+            "late-night set."))
+
+    # --- (b) negation / cancellation titles ---
+
+    def test_no_walk_in_class_today_dropped(self):
+        # e193866 — the pre-existing "No <X> Today" rule used `[\w\s]*`, which
+        # could not span the hyphen in "Walk-In", so this slipped through.
+        self.assertTrue(is_obvious_non_event(
+            "No Walk-In Class Today (Chelsea Center)", "No description available."))
+        self.assertTrue(is_obvious_non_event("No Drop-In Open Gym This Week", ""))
+        self.assertTrue(is_obvious_non_event("No Children's Story Time Today", ""))
+
+    def test_cancellation_notices_dropped(self):
+        self.assertTrue(is_obvious_non_event("CANCELLED: Yoga in the Park", "desc"))
+        self.assertTrue(is_obvious_non_event("Canceled - Bird Walk", "desc"))
+        self.assertTrue(is_obvious_non_event("Movie Night (CANCELLED)", "desc"))
+        self.assertTrue(is_obvious_non_event("Book Club - Cancelled", "desc"))
+        self.assertTrue(is_obvious_non_event("Class Cancelled", "desc"))
+        self.assertTrue(is_obvious_non_event(
+            "Tonight's Show Has Been Cancelled", "desc"))
+        self.assertTrue(is_obvious_non_event("Closed Today", "desc"))
+        self.assertTrue(is_obvious_non_event("Closed This Weekend", "desc"))
+
+    def test_legitimate_no_prefixed_events_kept(self):
+        # A leading "No" is common in real event names; the rule requires both
+        # a program noun and a temporal marker precisely so these survive.
+        self.assertFalse(is_obvious_non_event(
+            "No Pants Subway Ride", "Ride the subway without pants."))
+        self.assertFalse(is_obvious_non_event(
+            "No Lights No Lycra", "A dance party in the dark, every Tuesday."))
+        self.assertFalse(is_obvious_non_event(
+            "No Sleep Till Brooklyn: A Beastie Boys Tribute", "Live tribute set."))
+
+    def test_legitimate_cancel_words_kept(self):
+        # "cancel" as subject matter, not as a status marker.
+        self.assertFalse(is_obvious_non_event(
+            "Cancel Culture in Context", "A panel discussion at NYU."))
+        self.assertFalse(is_obvious_non_event(
+            "Cancelled Plans: A Comedy Show", "Standup from local comics."))
+
+    # --- (c) venue marketing / menu items ---
+
+    def test_lunch_specials_dropped(self):
+        # e193797 — The Gem Saloon's standing menu, not an occasion.
+        self.assertTrue(is_obvious_non_event(
+            "Lunch Specials",
+            "Daily lunch specials are available Monday through Friday."))
+        self.assertTrue(is_obvious_non_event(
+            "Happy Hour Specials", "Happy hour specials daily from 4-7pm."))
+        self.assertTrue(is_obvious_non_event(
+            "Dinner Menu", "Our dinner menu is served Tuesday through Sunday."))
+
+    def test_menu_special_needs_recurring_offer_description(self):
+        # A one-night occasion described with the same words is not a menu.
+        self.assertFalse(is_obvious_non_event(
+            "Lunch Specials",
+            "A one-off chef's lunch on July 22 with a live DJ and tasting."))
+
+    def test_menu_special_name_must_be_the_whole_title(self):
+        # Any real event built on the same words carries more in the name.
+        self.assertFalse(is_obvious_non_event(
+            "Lunch Specials Tasting Party",
+            "Daily lunch specials, plus a party Monday through Friday."))
+        self.assertFalse(is_obvious_non_event(
+            "Prix Fixe Dinner with the Chef",
+            "A four-course dinner served daily from our specials menu."))
+        self.assertFalse(is_obvious_non_event(
+            "Happy Hour Trivia",
+            "Trivia every Monday with drink specials all week."))
+
+    # --- regression guard ---
+
+    def test_rental_prefix_still_not_junk(self):
+        # Venues use "RENTAL:" as an internal booking label on public events.
+        # None of the new rules may start dropping these.
+        self.assertFalse(is_obvious_non_event(
+            "RENTAL: Warehouse Dance Party", "A late-night party, doors at 10."))
+        self.assertFalse(is_obvious_non_event("RENTAL: Comedy Showcase", ""))
+
+
+class TestJunkFilterGaps20260720(unittest.TestCase):
+    """Three non-event shapes that reached final classification on 2026-07-20
+    and had to be suppressed by hand.
+
+    Fixtures are the real name+description of events 194190 (Innisfree's
+    venue-OPEN holiday notice), 194432 (a Saturday-swing series' summer-hiatus
+    announcement) and 194509 (an Angelika placeholder screening row)."""
+
+    # --- (a) venue-OPEN holiday notices (inverse of the closure rule) ---
+
+    def test_open_for_holiday_notice_dropped(self):
+        self.assertTrue(is_obvious_non_event(
+            "Columbus Day/Indigenous Peoples’ Day | Innisfree Open for Holiday",
+            "Innisfree is open in observance of Columbus Day/Indigenous "
+            "Peoples’ Day. We invite you to spend the day in reflection on the "
+            "layered histories of this land."))
+
+    def test_other_open_holiday_phrasings_dropped(self):
+        self.assertTrue(is_obvious_non_event(
+            "Memorial Day - Garden Open on the Holiday",
+            "The garden is open in observance of Memorial Day."))
+        self.assertTrue(is_obvious_non_event(
+            "Museum Open for Thanksgiving",
+            "We are open in observance of Thanksgiving Day; no programs are "
+            "scheduled."))
+
+    def test_real_holiday_programming_kept(self):
+        # The whole risk of an "Open"/"Holiday" rule is eating real holiday
+        # events. Each of these must survive.
+        self.assertFalse(is_obvious_non_event(
+            "July 4th Concert on the Green",
+            "Join us for a free concert and fireworks in observance of "
+            "Independence Day."))
+        self.assertFalse(is_obvious_non_event(
+            "Open Studios",
+            "Twenty artists open their studios to the public."))
+        self.assertFalse(is_obvious_non_event(
+            "Preschool Open House",
+            "Tour the classrooms and meet the teachers."))
+        self.assertFalse(is_obvious_non_event(
+            "Memorial Day BBQ - We're Open for the Holiday!",
+            "Come celebrate with us: live music, a cookout and drink specials "
+            "all afternoon."))
+        self.assertFalse(is_obvious_non_event(
+            "Open House on Labor Day",
+            "An open house with tours running all day."))
+
+    def test_open_holiday_rule_needs_a_description(self):
+        self.assertFalse(is_obvious_non_event(
+            "Columbus Day | Innisfree Open for Holiday", None))
+
+    # --- (b) hiatus / series-paused announcements ---
+
+    def test_summer_hiatus_announcement_dropped(self):
+        self.assertTrue(is_obvious_non_event(
+            "Summer Hiatus ... Monthly Saturday Night Swings @ You Should Be "
+            "Dancing...! Nyc (Returning in Sep)",
+            "Monthly Saturday Night Swings features a pre-party intro swing "
+            "lesson followed by a dance party with live band sets and DJ "
+            "music."))
+
+    def test_other_hiatus_phrasings_dropped(self):
+        for name in ("Hiatus - Trivia Night Returns in October",
+                     "Winter Hiatus: Sunday Sessions",
+                     "Open Mic on Hiatus Until Fall"):
+            self.assertTrue(is_obvious_non_event(name, "A description."), name)
+
+    def test_events_that_merely_mention_a_break_kept(self):
+        for name in ("Hiatus Kaiyote", "The Return of Sunday Sessions",
+                     "Summer Series Kickoff", "Coffee Break Social"):
+            self.assertFalse(is_obvious_non_event(name, "A description."), name)
+
+    # --- (c) placeholder "Untitled <format>" screening rows ---
+
+    def test_untitled_movie_placeholder_dropped(self):
+        self.assertTrue(is_obvious_non_event(
+            "Untitled Movie (Angelika SoHo)", "No description available."))
+        self.assertTrue(is_obvious_non_event("Untitled Film", ""))
+        self.assertTrue(is_obvious_non_event("Untitled Event (Village East)", None))
+
+    def test_untitled_placeholder_with_description_kept(self):
+        self.assertFalse(is_obvious_non_event(
+            "Untitled Movie (Angelika SoHo)",
+            "A secret preview screening of an unannounced feature, with a Q&A "
+            "with the director to follow."))
+
+    def test_real_films_containing_untitled_kept(self):
+        for name in ('"Untitled" Movie', "An Untitled Horror Movie",
+                     "Untitled Horror Movie", "Untitled: A Dance Work"):
+            self.assertFalse(is_obvious_non_event(name, ""), name)
+
+
+class TestSeoAffiliateListicleSpam(unittest.TestCase):
+    """Insurance-affiliate SEO listicles injected into website 388's feed
+    (RA / Resident Advisor GraphQL) on 2026-07-22.
+
+    Nine rows cleared all three junk layers and got pinned to real NYC venues;
+    five reached the map (196425-196433) and had to be suppressed by hand. The
+    shape is title-only + year suffix + commercial how-to/bill-pay phrasing.
+    Fixtures are the verbatim names and descriptions.
+    """
+
+    # --- the real spam, description == title ---
+
+    def test_allstate_listicles_dropped(self):
+        for name in (
+            "Allstate Insurance Pay Without Login — No Credentials Needed 2026",
+            "Allstate Insurance One-Time Payment — No Account Needed Guide 2026",
+            "Allstate Insurance Near Me — Locations, Coverage, and Bill Pay 2026",
+            "Allstate Insurance Quick Pay — Fastest Bill Pay Method Available 2026",
+        ):
+            self.assertTrue(is_obvious_non_event(name, name), name)
+
+    def test_progressive_listicles_dropped(self):
+        for name in (
+            "Progressive Insurance Policy Number — Where to Find It and How to Pay 2026",
+            "Progressive Insurance Grace Period — Days Before Cancellation by Policy Type 2026",
+            "Progressive Insurance — The Definitive Consumer Guide 2026",
+        ):
+            self.assertTrue(is_obvious_non_event(name, name), name)
+
+    # --- the same spam with the placeholder description (196429, 196430) ---
+
+    def test_listicles_with_no_description_dropped(self):
+        self.assertTrue(is_obvious_non_event(
+            "Progressive Insurance AutoPay — Setup, Troubleshoot, and Cancel Guide 2026",
+            "No description available."))
+        self.assertTrue(is_obvious_non_event(
+            "Progressive Insurance One-Time Payment — No Account Needed Guide 2026",
+            None))
+
+    # --- negative fixtures: real events that must NOT be dropped ---
+
+    def test_real_how_to_apply_clinic_kept(self):
+        # e13529 / e61055 / e90179 — the ONLY real events in the whole events
+        # table that clear the year-suffix + commercial-marker gates. The
+        # attendable-word veto ("clinic") is what saves them.
+        for month in ("February", "April", "May"):
+            name = ("Brooklyn Org Application Clinic: How to Apply For Funding "
+                    f"From BKO ({month} 2026)")
+            self.assertFalse(is_obvious_non_event(name, name), name)
+
+    def test_year_suffix_alone_does_not_drop(self):
+        for name in ("Winter Jazzfest 2026", "NYC Pride March 2026",
+                     "Open Studios 2026"):
+            self.assertFalse(is_obvious_non_event(name, None), name)
+
+    def test_commercial_marker_alone_does_not_drop(self):
+        # No trailing year -> not the listicle shape.
+        self.assertFalse(is_obvious_non_event(
+            "Insurance Literacy Night — Everything You Need to Know", None))
+
+    def test_marker_plus_year_but_real_description_kept(self):
+        # A genuine description that is not a copy of the title means the row
+        # carries real content; the title-only gate must block the drop.
+        self.assertFalse(is_obvious_non_event(
+            "Progressive Insurance — The Definitive Consumer Guide 2026",
+            "A two-hour evening session in our Bushwick space where a licensed "
+            "broker walks through auto policies line by line. Doors at 7pm."))
+
+    def test_attendable_words_veto_the_drop(self):
+        for name in ("How to Pay Off Debt Workshop 2026",
+                     "Credit Score Clinic 2026",
+                     "Everything You Need to Know About Mortgage Rates: A Talk 2026"):
+            self.assertFalse(is_obvious_non_event(name, name), name)
+
+
+class TestSublocationRedundantWithAddress(unittest.TestCase):
+    """Normalization gaps found on 2026-07-19 — both would have silently
+    dropped a location from future address scans.
+
+    Fixtures are locations 2078 (Empire Stores) and 507 (Mabou Mines)."""
+
+    def test_house_number_inside_building_range(self):
+        # loc 2078 — DB "53-83 Water St" is one building; a listing citing
+        # "55 Water Street" is the same address, not a sub-venue.
+        self.assertTrue(sublocation_redundant_with_address(
+            "55 Water Street", "53-83 Water St"))
+        self.assertTrue(sublocation_redundant_with_address(
+            "81 Water St", "53-83 Water St"))
+
+    def test_range_endpoints_still_match(self):
+        self.assertTrue(sublocation_redundant_with_address(
+            "12 Vestry St", "12-16 Vestry St"))
+        self.assertTrue(sublocation_redundant_with_address(
+            "16 Vestry St", "12-16 Vestry St"))
+        self.assertTrue(sublocation_redundant_with_address(
+            "14 Vestry St", "12-16 Vestry St"))
+
+    def test_range_check_is_symmetric(self):
+        self.assertTrue(sublocation_redundant_with_address(
+            "53-83 Water St", "55 Water St"))
+
+    def test_number_outside_range_not_redundant(self):
+        self.assertFalse(sublocation_redundant_with_address(
+            "91 Water St", "53-83 Water St"))
+        self.assertFalse(sublocation_redundant_with_address(
+            "45 Water St", "53-83 Water St"))
+
+    def test_parity_mismatch_not_redundant(self):
+        # A building range runs down one side of the street, so an even number
+        # is not inside an odd range even though it is numerically between.
+        self.assertFalse(sublocation_redundant_with_address(
+            "54 Water St", "53-83 Water St"))
+
+    def test_queens_hyphenated_address_not_treated_as_range(self):
+        # "5-52 47th Ave" is a Queens house number, not a 5-through-52 range.
+        # Unequal digit lengths and mismatched parity both veto it.
+        self.assertFalse(sublocation_redundant_with_address(
+            "30 47th Ave", "5-52 47th Ave"))
+
+    def test_different_street_never_redundant(self):
+        self.assertFalse(sublocation_redundant_with_address(
+            "55 Main St", "53-83 Water St"))
+
+    def test_leading_room_code_and_ordinal_word(self):
+        # loc 507 — DB "150 1st Ave Second Floor" vs sublocation
+        # "122 CC 150 First Avenue" (room 122CC). Needs both the leading
+        # room-code strip and the First -> 1st ordinal-word normalization.
+        self.assertTrue(sublocation_redundant_with_address(
+            "122 CC 150 First Avenue", "150 1st Ave Second Floor"))
+        self.assertTrue(sublocation_redundant_with_address(
+            "150 First Avenue", "150 1st Ave"))
+
+    def test_room_code_strip_does_not_eat_directional(self):
+        # "150 W 42nd St" must keep its house number — W is a compass
+        # directional, not a room code.
+        self.assertEqual(
+            _extract_street_address_loose("150 W 42nd St"), "150 w 42 st")
+        self.assertFalse(sublocation_redundant_with_address(
+            "150 W 42nd St", "42 W 150th St"))
+
+    def test_real_sub_venue_values_preserved(self):
+        for sub in ("Studio B", "5th Floor", "The Great Hall", "Suite 630"):
+            self.assertFalse(
+                sublocation_redundant_with_address(sub, "150 1st Ave"), sub)
+
+    def test_room_code_strip_does_not_eat_real_house_numbers(self):
+        # A long word after the number is a venue name, not a room code.
+        self.assertEqual(
+            _extract_street_address_loose("122 Community Center Dr"),
+            "122 community center dr")
+        self.assertEqual(
+            _extract_street_address_loose("45 East 20th St"), "45 e 20 st")
+        self.assertFalse(sublocation_redundant_with_address(
+            "45 East 20th St", "150 1st Ave"))
+
+
+class TestCrossStreetSuffixAddresses(unittest.TestCase):
+    """Galleries and theaters address themselves by cross street ("980 Madison
+    at 76th Street" — loc 333 Gagosian, event 97417). The cross street's own
+    type token closed the address regex, so the key came out "980 madison at 76
+    st" and never matched the DB form "980 madison ave"; the sublocation then
+    exported redundantly beside the venue address.
+
+    Verified against all 31,465 (sublocation, address) pairs in the DB: 5 newly
+    redundant, 0 previously-redundant pairs lost."""
+
+    def test_gagosian_cross_street_sublocation_is_redundant(self):
+        self.assertTrue(sublocation_redundant_with_address(
+            "980 Madison at 76th Street",
+            "980 Madison Ave, New York, NY 10075, USA"))
+
+    def test_cross_street_clause_is_stripped(self):
+        self.assertIsNone(_extract_street_address_loose("980 Madison at 76th Street"))
+
+    def test_typeless_house_address_matches_typed_db_form(self):
+        # e93485 / e174275 / e187065 — sublocation drops the street type.
+        self.assertTrue(sublocation_redundant_with_address(
+            "55 Chrystie", "55 Chrystie St, New York, NY 10002, USA"))
+
+    def test_queens_hyphenated_db_form_still_matches(self):
+        # e129834 — DB "5-85 Woodward Ave" glues to "585 woodward ave".
+        self.assertTrue(sublocation_redundant_with_address(
+            "585 Woodward", "5-85 Woodward Ave, Ridgewood, NY 11385, USA"))
+
+    # --- the strip must not eat addresses that legitimately contain " at " ---
+
+    def test_address_after_the_preposition_is_preserved(self):
+        # The house address comes AFTER " at ", so nothing may be stripped.
+        self.assertEqual(
+            _extract_street_address_loose("Studio B at 150 W 42nd St"),
+            "150 w 42 st")
+        self.assertTrue(sublocation_redundant_with_address(
+            "Studio B at 150 W 42nd St", "150 W 42nd St, New York, NY"))
+
+    def test_sub_venue_named_with_at_is_not_an_address(self):
+        for sub, addr in (
+            ("The Loft at Prince Street", "177 Prince St, New York, NY 10012, USA"),
+            ("Audubon Center at the Boathouse", "101 East Dr, Brooklyn, NY 11225, USA"),
+            ("Pier 55 at Hudson River Park",
+             "Little Island, Pier 55 at Hudson River Park, New York, NY 10014, USA"),
+            ("East Drive at Center Drive", "171 East Dr, Brooklyn, NY 11215"),
+        ):
+            self.assertFalse(sublocation_redundant_with_address(sub, addr), sub)
+
+    def test_typed_address_before_the_cross_street_is_unchanged(self):
+        # e76977 — already matched before the fix; must still match.
+        self.assertTrue(sublocation_redundant_with_address(
+            "509 Atlantic Avenue at 3rd Avenue, Downtown Brooklyn",
+            "509 Atlantic Ave, Brooklyn, NY 11217, USA"))
+
+    def test_typeless_match_requires_the_same_number_and_street(self):
+        self.assertFalse(sublocation_redundant_with_address(
+            "982 Madison at 76th Street",
+            "980 Madison Ave, New York, NY 10075, USA"))
+        self.assertFalse(sublocation_redundant_with_address(
+            "980 Lexington at 76th Street",
+            "980 Madison Ave, New York, NY 10075, USA"))
+
+    def test_room_and_floor_sublocations_still_preserved(self):
+        for sub in ("Studio B", "5th Floor", "Suite 630", "Room 4 at the rear"):
+            self.assertFalse(
+                sublocation_redundant_with_address(sub, "150 1st Ave"), sub)
+
+
+class TestIntersectionAddresses(unittest.TestCase):
+    """Greenmarkets and park entrances are addressed by cross street, not house
+    number, so `_extract_street_address_loose` returned None for BOTH sides and
+    the redundant sublocation printed anyway.
+
+    Fixtures are locations 798 (Stuyvesant Town Greenmarket) and 82 (Bay Ridge
+    Greenmarket, whose DB address carries the intersection AND a parking-lot
+    house number)."""
+
+    def test_stuyvesant_town_intersection(self):
+        self.assertTrue(sublocation_redundant_with_address(
+            "14th Street Loop & Avenue A",
+            "14th St Loop & Avenue A, New York, NY 10009, USA"))
+
+    def test_bay_ridge_intersection_behind_a_house_number(self):
+        self.assertTrue(sublocation_redundant_with_address(
+            "3rd Avenue & 95th Street",
+            "3rd Avenue & 95th Street, Walgreen's Parking, "
+            "lot 9408 3rd Ave, Brooklyn, NY 11209, USA"))
+
+    def test_order_insensitive(self):
+        self.assertTrue(sublocation_redundant_with_address(
+            "Avenue A & 14th St Loop", "14th St Loop & Avenue A, New York, NY"))
+
+    def test_and_and_at_separators(self):
+        self.assertTrue(sublocation_redundant_with_address(
+            "3rd Avenue and 95th Street", "3rd Ave & 95th St, Brooklyn, NY"))
+        self.assertTrue(sublocation_redundant_with_address(
+            "3rd Avenue at 95th Street", "3rd Ave & 95th St, Brooklyn, NY"))
+
+    def test_standalone_street_names(self):
+        self.assertTrue(sublocation_redundant_with_address(
+            "Broadway & 176th Street", "Broadway and W 176th St, New York, NY"))
+
+    def test_different_intersection_not_redundant(self):
+        self.assertFalse(sublocation_redundant_with_address(
+            "3rd Avenue & 96th Street", "3rd Ave & 95th St, Brooklyn, NY"))
+        self.assertFalse(sublocation_redundant_with_address(
+            "5th Avenue & 95th Street", "3rd Ave & 95th St, Brooklyn, NY"))
+
+    def test_non_street_ampersand_is_not_an_intersection(self):
+        # Both sides must actually name a street; "Arts & Crafts Room" doesn't.
+        for sub in ("Arts & Crafts Room", "Bar & Lounge", "Ping Pong & Pool"):
+            self.assertFalse(
+                sublocation_redundant_with_address(
+                    sub, "3rd Ave & 95th St, Brooklyn, NY"), sub)
+
+    def test_intersection_does_not_match_a_house_address(self):
+        self.assertFalse(sublocation_redundant_with_address(
+            "3rd Avenue & 95th Street", "150 1st Ave, New York, NY"))
+        self.assertFalse(sublocation_redundant_with_address(
+            "Studio B", "3rd Ave & 95th St, Brooklyn, NY"))
+
+
 class _RecordingCursor:
     """Minimal cursor stub that records executed SQL for assertions."""
 
@@ -870,6 +1376,285 @@ class TestLocationTripwireGuard(unittest.TestCase):
             [('DEP Training Center', 1927), ('Brooklyn Comedy Collective', 143)],
             website_scoped={60: [('BCC training center', 143)]})
         self.assertEqual(self._id('BCC training center', m, website_id=60), 143)
+
+
+class TestCrossWebsiteScopedAltFallback(unittest.TestCase):
+    """An EXACT match on a curated website-scoped alternate name is real venue
+    knowledge. When nothing else in the cascade matched, honoring it for a
+    different website beats returning NULL (which spawns a duplicate event).
+
+    Regression: "Prospect Park Picnic House" (location 6434) had that exact
+    alternate-name row scoped to website 2704, so the same string arriving from
+    website 464 resolved to nothing at all.
+    """
+
+    def _id(self, loc, locmap, website_id=None, sub=None, event_name='Some Event'):
+        res = get_location_id(loc, sub, 'site', event_name, locmap, website_id=website_id)
+        return (res or {}).get('id')
+
+    def test_scoped_alt_resolves_for_other_website(self):
+        m = _make_locations_map(
+            [('Picnic House', 6434), ('Prospect Park', 682)],
+            website_scoped={2704: [('Prospect Park Picnic House', 6434)]})
+        self.assertEqual(
+            self._id('Prospect Park Picnic House', m, website_id=464), 6434)
+
+    def test_scoped_alt_resolves_with_no_website_id(self):
+        m = _make_locations_map(
+            [('Picnic House', 6434)],
+            website_scoped={2704: [('Prospect Park Picnic House', 6434)]})
+        self.assertEqual(self._id('Prospect Park Picnic House', m), 6434)
+
+    def test_owning_website_still_wins(self):
+        m = _make_locations_map(
+            [('Picnic House', 6434)],
+            website_scoped={2704: [('Prospect Park Picnic House', 6434)]})
+        self.assertEqual(
+            self._id('Prospect Park Picnic House', m, website_id=2704), 6434)
+
+    def test_conflicting_scoped_alts_stay_unmatched(self):
+        # The whole point of scoping is disambiguation: if two websites map the
+        # same string to DIFFERENT venues, a cross-website guess is a coin flip.
+        m = _make_locations_map(
+            [('Aardvark Hall', 100), ('Bumblebee Lodge', 200)],
+            website_scoped={10: [('The Annex', 100)],
+                            20: [('The Annex', 200)]})
+        self.assertIsNone(self._id('The Annex', m, website_id=30))
+
+    def test_scoped_alt_does_not_override_exact_global_name(self):
+        # Ordering guard: the new tier runs last, so an exact primary-name match
+        # for a different venue must still win.
+        m = _make_locations_map(
+            [('Picnic House', 6434)],
+            website_scoped={2704: [('Picnic House', 9999)]})
+        self.assertEqual(self._id('Picnic House', m, website_id=464), 6434)
+
+    def test_scoped_alt_requires_exact_match(self):
+        # No partial/prefix credit — an unrelated longer string must not latch on.
+        m = _make_locations_map(
+            [('Somewhere Else', 1)],
+            website_scoped={2704: [('Prospect Park Picnic House', 6434)]})
+        self.assertIsNone(self._id('Prospect Park Bandshell Lawn', m, website_id=464))
+
+
+class TestParentheticalParentVenue(unittest.TestCase):
+    """NYC Parks names a sub-feature first and puts the park we actually have a
+    row for in an "(in …)" parenthetical ("Main Pool (in Crotona Park)"). The
+    full string clears neither the prefix-coverage nor the fuzzy threshold, so
+    ~57 Parks sub-features re-orphaned to NULL on every crawl. The last-resort
+    tier extracts the parenthetical parent — exact + unambiguous only.
+    """
+
+    def _id(self, loc, locmap, website_id=None, sub=None, event_name='Some Event'):
+        res = get_location_id(loc, sub, 'site', event_name, locmap, website_id=website_id)
+        return (res or {}).get('id')
+
+    def test_extract_parent_helper(self):
+        cases = [
+            ('Main Pool (in Crotona Park)', 'crotona park'),
+            ('Play Area (in Spuyten Duyvil Playground), Bronx', 'spuyten duyvil playground'),
+            ("Dance Room (in St. John's Recreation Center), Brooklyn",
+             'st johns recreation center'),
+            # Not an "(in …)" container — a name qualifier. Must not fire.
+            ('Devocion (Williamsburg)', ''),
+            ('Somewhere Else', ''),
+            ('', ''),
+            (None, ''),
+        ]
+        for raw, expected in cases:
+            with self.subTest(raw=raw):
+                self.assertEqual(_extract_parenthetical_parent(raw), expected)
+
+    def test_pool_resolves_to_park(self):
+        m = _make_locations_map([('Crotona Park', 238)])
+        self.assertEqual(self._id('Main Pool (in Crotona Park), Bronx', m), 238)
+
+    def test_pier_resolves_to_park(self):
+        # "brooklyn bridge park" covers only 0.69 of the full string — just under
+        # PREFIX_MATCH_COVERAGE, which is exactly why this used to go NULL.
+        m = _make_locations_map([('Brooklyn Bridge Park', 140)])
+        self.assertEqual(self._id('Pier 2 (in Brooklyn Bridge Park)', m), 140)
+
+    def test_parent_from_sublocation(self):
+        m = _make_locations_map([('Bryant Park', 163)])
+        self.assertEqual(
+            self._id('Le Carrousel', m, sub='Le Carrousel (in Bryant Park)'), 163)
+
+    def test_curated_scoped_alt_still_wins(self):
+        # Ordering guard: the tier runs last, so a curated website-scoped alt on
+        # the full string (the way a sub-feature gets pinned to its own row when
+        # the parent is the wrong answer) must still take precedence.
+        m = _make_locations_map(
+            [('Highland Park', 385)],
+            website_scoped={2: [('Lower Highland Playground (in Highland Park)', 7777)]})
+        self.assertEqual(
+            self._id('Lower Highland Playground (in Highland Park), Queens', m,
+                     website_id=2), 7777)
+
+    def test_named_subfeature_falls_back_to_parent(self):
+        # The convention the ~57 hand-remappings follow: an unresolvable
+        # sub-feature maps to its containing park, not to NULL.
+        m = _make_locations_map([('Highland Park', 385)])
+        self.assertEqual(
+            self._id('Lower Highland Playground (in Highland Park), Queens', m), 385)
+
+    def test_ambiguous_parent_declines(self):
+        # Two distinct venues share the name — a guess would be a coin flip.
+        m = {
+            'names': {'columbus park': [{'id': 11, 'emoji': 'X', 'name': 'Columbus Park'},
+                                        {'id': 22, 'emoji': 'X', 'name': 'Columbus Park'}]},
+            'alternate_names': {}, 'short_names': {}, 'addresses': {},
+            'website_scoped': {}, 'website_linked': {}, 'city_states': {},
+        }
+        self.assertIsNone(self._id('Play Area (in Columbus Park)', m))
+
+    def test_unknown_parent_stays_unmatched(self):
+        # Exact only — no fuzzy/prefix credit, so a park we don't have must not
+        # latch onto a similarly-named one.
+        m = _make_locations_map([('Marine Park', 530)])
+        self.assertIsNone(self._id('Playground 278 (in Maritime Park)', m))
+
+    def test_generic_parenthetical_ignored(self):
+        m = _make_locations_map([('The Gallery at Somewhere', 900)])
+        self.assertIsNone(self._id('Front Room (in gallery)', m))
+
+
+class _DetailCursor:
+    """Cursor stub for apply_crawled_details that answers its lookup queries."""
+
+    def __init__(self, website_id=464):
+        self.statements = []
+        self._website_id = website_id
+        self._next = None
+
+    def execute(self, sql, params=None):
+        self.statements.append((sql, params))
+        s = ' '.join(sql.split()).lower()
+        if 'cr.website_id' in s:
+            self._next = (1, self._website_id)
+        elif s.startswith('select count(*)'):
+            self._next = (0,)
+        else:
+            self._next = None
+
+    def fetchone(self):
+        return self._next
+
+
+class TestApplyCrawledDetailsRelocation(unittest.TestCase):
+    """The detail crawl rewrites location_name/sublocation but historically left
+    location_id alone, so an event whose listing-page location was unmatchable
+    stayed NULL even after the detail page supplied a name that resolves fine.
+
+    Regression: crawl_event 1057326 got location_name "Pelham Fritz Recreation
+    Center" + sublocation "Marcus Garvey Park" from the detail crawl and still
+    exported with no location_id.
+    """
+
+    _TAG_CONTEXT = ({}, {}, set(), [])
+
+    def _update(self, cursor):
+        return next(s for s in cursor.statements
+                    if s[0].startswith("UPDATE crawl_events SET"))
+
+    def test_new_location_name_resolves_location_id(self):
+        cursor = _DetailCursor()
+        locmap = _make_locations_map([('Pelham Fritz Recreation Center', 1970)])
+        apply_crawled_details(
+            cursor, _NoopConnection(), 1057326,
+            {'description': 'd', 'hashtags': [], 'emoji': '',
+             'location': 'Pelham Fritz Recreation Center',
+             'sublocation': 'Marcus Garvey Park'},
+            self._TAG_CONTEXT, locations_map=locmap,
+        )
+        sql, params = self._update(cursor)
+        self.assertIn("location_id = %s", sql)
+        self.assertIn(1970, params)
+
+    def test_unmatched_new_location_does_not_clobber_existing_id(self):
+        cursor = _DetailCursor()
+        locmap = _make_locations_map([('Somewhere Else', 1)])
+        apply_crawled_details(
+            cursor, _NoopConnection(), 1,
+            {'description': 'd', 'hashtags': [], 'emoji': '',
+             'location': 'A Venue We Do Not Know'},
+            self._TAG_CONTEXT, locations_map=locmap,
+        )
+        sql, _ = self._update(cursor)
+        self.assertNotIn("location_id = %s", sql)
+
+    def test_no_location_change_leaves_location_id_alone(self):
+        cursor = _DetailCursor()
+        locmap = _make_locations_map([('Pelham Fritz Recreation Center', 1970)])
+        apply_crawled_details(
+            cursor, _NoopConnection(), 1,
+            {'description': 'd', 'hashtags': [], 'emoji': ''},
+            self._TAG_CONTEXT, locations_map=locmap,
+        )
+        sql, _ = self._update(cursor)
+        self.assertNotIn("location_id = %s", sql)
+
+    def test_missing_locations_map_is_a_noop(self):
+        cursor = _DetailCursor()
+        apply_crawled_details(
+            cursor, _NoopConnection(), 1,
+            {'description': 'd', 'hashtags': [], 'emoji': '',
+             'location': 'Pelham Fritz Recreation Center'},
+            self._TAG_CONTEXT,
+        )
+        sql, _ = self._update(cursor)
+        self.assertNotIn("location_id = %s", sql)
+
+
+class TestIsCancelledByUrl(unittest.TestCase):
+    """Venues signal a cancellation by re-slugging the URL while leaving the
+    visible title clean, so the event otherwise lands looking perfectly live."""
+
+    CANCELLED = [
+        # Leading marker (NYC Parks, Carnegie Hall, Asia Society, Eventbrite…)
+        'https://www.nycgovparks.org/events/2026/07/18/canceled-kids-in-motion-flynn-playground',
+        'https://www.carnegiehall.org/calendar/2026/03/27/cancelled-northeastern-native-arts-festival',
+        'https://asiasociety.org/new-york/events/postponed-aapi-poets-power-and-presence',
+        'https://www.eventbrite.com/e/cancelled-failure-a-work-in-progress-show-tickets-198797',
+        # Relative URL (NYC Parks emits these on some listing pages)
+        '/events/2026/07/03/canceled-low-impact-dance-fitness',
+        # Trailing marker
+        'https://sfxavier.org/event/june-28-5pm-mass-canceled/',
+        'https://industrycity.com/event/a-taste-of-grand-bazaar-postponed/',
+        'https://madmuseum.org/events/between-us-dana-barnes-event-cancelled',
+        # Marker mid-slug
+        'https://salmagundi.org/2026-monotype-party-postponed-summer/',
+    ]
+
+    NOT_CANCELLED = [
+        # A real panel ABOUT cancel culture — bare "cancel" must never match
+        'https://events.nyu.edu/event/382314-cancel-culture-context-gender-and-sexuality',
+        # No delimiter after the word
+        'https://www.caveat.nyc/events/cancelledpitched-through-friends',
+        'https://example.com/events/cancellation-policy-workshop',
+        # Rescheduled events still happen, just on a new date
+        'https://www.ypl.org/event/rescheduled-sing-along-storytime-tati-sabrina-112171',
+        'https://www.eventbrite.com/e/rescheduled-field-meridians-kimjang-party-tickets-197843',
+        # Marker only in the query string / fragment
+        'https://example.com/e/my-show?aff=canceled-promo',
+        'https://example.com/e/my-show#postponed',
+        # Host containing the word must not count — only the path does
+        'https://postponed.example.com/events/my-show',
+        '',
+    ]
+
+    def test_cancelled_urls_detected(self):
+        for url in self.CANCELLED:
+            with self.subTest(url=url):
+                self.assertTrue(is_cancelled_by_url(url))
+
+    def test_live_urls_untouched(self):
+        for url in self.NOT_CANCELLED:
+            with self.subTest(url=url):
+                self.assertFalse(is_cancelled_by_url(url))
+
+    def test_none_is_safe(self):
+        self.assertFalse(is_cancelled_by_url(None))
 
 
 if __name__ == "__main__":
