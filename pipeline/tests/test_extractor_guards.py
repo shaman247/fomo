@@ -13,14 +13,18 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from extractor import (
     PreparedExtraction,
+    SimpleOccurrence,
     _variance_retry_reason,
     _fingerprint_copy_is_suspect,
     _maybe_auto_bump_max_batches,
     _normalize_extraction_response,
+    chunk_content,
+    chunk_content_by_events,
     estimate_event_count,
     AUTO_MAX_BATCHES_CEILING,
     DEFAULT_MAX_BATCHES,
     LARGE_PAGE_THRESHOLD,
+    MAX_CHUNK_CHARS,
 )
 
 
@@ -402,6 +406,96 @@ class TestClassifyCourse(unittest.TestCase):
         occ = [self._occ(date(2026, 7, 6), date(2026, 7, 13), '6pm')]  # 7d < 14
         verdict, _ = self.frs.classify_course('Weekly Course', occ)
         self.assertEqual(verdict, 'skip')
+
+
+class ChunkSizeGuardTests(unittest.TestCase):
+    """The event chunker must cap chunk SIZE, not just marker count.
+
+    A dense listing (a cinema's showtime calendar) can pack `events_per_chunk`
+    markers into a chunk far larger than Gemini can answer in one response; it
+    then drops the tail of that chunk silently. Regression for Film Forum w50,
+    where 50 markers landed in one 34,260-char chunk and 18 of 50 events came back.
+    """
+
+    @staticmethod
+    def _card(i, body_lines=1):
+        body = '\n'.join(f'2026-07-{(i % 28) + 1:02d}: 12:15PM, 2:20PM, 4:30PM'
+                         for _ in range(body_lines))
+        return f'### [FILM {i}](https://example.com/film-{i})\nShowtimes:\n{body}'
+
+    def test_marker_count_still_splits(self):
+        content = '\n'.join(self._card(i) for i in range(120))
+        chunks = chunk_content_by_events(content, events_per_chunk=50)
+        self.assertEqual(len(chunks), 3)
+
+    def test_uncapped_by_default(self):
+        """max_chars=None keeps the historical marker-only behaviour."""
+        content = '\n'.join(self._card(i, body_lines=100) for i in range(12))
+        self.assertGreater(len(content), MAX_CHUNK_CHARS)
+        chunks = chunk_content_by_events(content, events_per_chunk=50)
+        self.assertEqual(len(chunks), 1)
+
+    def test_size_cap_subdivides_dense_chunk(self):
+        """Under the marker limit but over the byte limit -> still splits."""
+        content = '\n'.join(self._card(i, body_lines=100) for i in range(12))
+        chunks = chunk_content_by_events(content, events_per_chunk=50,
+                                         max_chars=MAX_CHUNK_CHARS)
+        self.assertGreater(len(chunks), 1)
+        # Splitting only ever happens at a marker line, so no card is cut in half.
+        for chunk in chunks:
+            self.assertTrue(chunk.lstrip().startswith('### ['))
+
+    def test_split_never_severs_a_single_oversized_event(self):
+        """One event bigger than max_chars has no internal marker to split on."""
+        content = self._card(0, body_lines=4000)
+        self.assertGreater(len(content), MAX_CHUNK_CHARS)
+        chunks = chunk_content_by_events(content, events_per_chunk=50,
+                                         max_chars=MAX_CHUNK_CHARS)
+        self.assertEqual(len(chunks), 1)
+
+    def test_chunk_content_does_not_flip_method(self):
+        """The size guard must not promote a size-chunked page to event-chunked.
+
+        Method selection runs on the UNCAPPED split, so a page with too few
+        markers keeps falling through to size-based chunking as before.
+        """
+        content = self._card(0, body_lines=4000) + '\n' + ('filler paragraph\n\n' * 2000)
+        self.assertGreater(len(content), MAX_CHUNK_CHARS)
+        _, method = chunk_content(content, 50, MAX_CHUNK_CHARS)
+        self.assertEqual(method, 'size')
+
+    def test_chunk_content_applies_cap_on_event_path(self):
+        content = '\n'.join(self._card(i, body_lines=40) for i in range(120))
+        chunks, method = chunk_content(content, 50, MAX_CHUNK_CHARS)
+        self.assertEqual(method, 'events')
+        # Marker-only chunking would have produced exactly 3 oversized chunks.
+        self.assertGreater(len(chunks), 3)
+
+
+class SimpleOccurrenceEndDateTests(unittest.TestCase):
+    """The chunked first-pass schema must be able to express a run range.
+
+    get_chunk_prompt instructs Gemini to return `end_date` for exhibitions, but
+    the structured-output schema omitted the field, so the closing date was
+    silently dropped and every ranged exhibition on a chunked page landed as a
+    single-day event that archived the moment its opening date passed.
+    """
+
+    def test_end_date_field_exists(self):
+        self.assertIn('end_date', SimpleOccurrence.model_fields)
+
+    def test_end_date_round_trips(self):
+        occ = SimpleOccurrence(start_date='2026-06-05', end_date='2026-08-18')
+        self.assertEqual(occ.start_date, '2026-06-05')
+        self.assertEqual(occ.end_date, '2026-08-18')
+
+    def test_end_date_defaults_to_none(self):
+        self.assertIsNone(SimpleOccurrence(start_date='2026-06-05').end_date)
+
+    def test_end_date_uses_the_date_cleaner(self):
+        """Same validator as start_date — junk values become None, not garbage."""
+        self.assertIsNone(SimpleOccurrence(start_date='2026-06-05',
+                                           end_date='ongoing').end_date)
 
 
 if __name__ == '__main__':

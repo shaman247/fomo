@@ -176,6 +176,17 @@ class SimpleOccurrence(BaseModel):
         default=None,
         description="12-hour clock time only, e.g. '8pm', '8:30pm', '10am'."
     )
+    end_date: Optional[str] = Field(
+        default=None,
+        description="Closing date of a CONTINUOUS multi-day run, YYYY-MM-DD. Use ONLY "
+                    "when the page states a range for something that runs every day in "
+                    "between — an art exhibition / gallery show / installation ('On view "
+                    "through July 5' -> end_date 2026-07-05) or a multi-day festival. "
+                    "NEVER use it to summarise a list of separate dates: if the page "
+                    "enumerates individual dates or showtimes (a film's play dates, "
+                    "'Jan 11, 18, 25'), emit ONE occurrence PER DATE with end_date null. "
+                    "Leave null for single-day events."
+    )
     end_time: Optional[str] = Field(
         default=None,
         description="12-hour clock time only, e.g. '10pm'."
@@ -183,6 +194,7 @@ class SimpleOccurrence(BaseModel):
 
     _v_start_date = field_validator('start_date', mode='before')(_clean_extracted_date)
     _v_start_time = field_validator('start_time', mode='before')(_clean_extracted_time)
+    _v_end_date = field_validator('end_date', mode='before')(_clean_extracted_date)
     _v_end_time = field_validator('end_time', mode='before')(_clean_extracted_time)
 
 
@@ -561,12 +573,30 @@ async def extract_with_vision(url, content, current_date_string, name, notes, ba
 # Content Chunking Functions
 # =============================================================================
 
-def chunk_content_by_events(content, events_per_chunk=EVENTS_PER_CHUNK):
+def chunk_content_by_events(content, events_per_chunk=EVENTS_PER_CHUNK,
+                            max_chars=None):
     """
     Split content into chunks based on event markers.
 
     Looks for common event patterns like numbered markdown headers (### [Event Name])
     and splits content so each chunk has approximately events_per_chunk events.
+
+    When `max_chars` is given, a chunk is also closed once it grows past that
+    size. The size guard matters because event density varies enormously: a
+    cinema/box-office page can pack 50 markers plus hundreds of showtime lines
+    into one 34K chunk, and Gemini then exhausts its output budget partway
+    through and silently drops the REST of that chunk's events (Film Forum w50:
+    50 markers in one 34,260-char chunk -> 18 of 50 extracted, while the 428-char
+    tail chunk extracted 3 of 3). Splitting on size keeps each call's output
+    within budget.
+
+    Splits only ever happen AT a marker line, so a single event's content is
+    never cut in half — an oversized run with no internal markers is left intact.
+
+    `max_chars=None` (the default) disables the size guard. chunk_content() uses
+    that uncapped form to decide WHETHER a page is event-chunkable at all, so
+    that adding the guard cannot flip a page from size-based to event-based
+    chunking — it only subdivides pages already on the event path.
 
     Returns a list of content strings, one per chunk.
     """
@@ -574,16 +604,20 @@ def chunk_content_by_events(content, events_per_chunk=EVENTS_PER_CHUNK):
     chunks = []
     current_chunk = []
     event_count = 0
+    current_size = 0
 
     for line in lines:
         # Event marker pattern: numbered list item with ### header, or standalone ### header
         if re.match(r'^\s*\d+\.\s*###\s*\[', line) or line.strip().startswith('### ['):
-            if event_count >= events_per_chunk and current_chunk:
+            oversized = max_chars is not None and current_size >= max_chars
+            if current_chunk and (event_count >= events_per_chunk or oversized):
                 chunks.append('\n'.join(current_chunk))
                 current_chunk = []
                 event_count = 0
+                current_size = 0
             event_count += 1
         current_chunk.append(line)
+        current_size += len(line) + 1
 
     # Add remaining content
     if current_chunk:
@@ -657,11 +691,18 @@ def chunk_content(content, events_per_chunk=EVENTS_PER_CHUNK, max_chars=MAX_CHUN
 
     Returns a tuple of (chunks, method) where method is 'events' or 'size'.
     """
-    # First try event-based chunking
+    # First try event-based chunking. Method selection uses the UNCAPPED split
+    # (marker count only) so the size guard below can never promote a page from
+    # size-based to event-based chunking — it only subdivides pages that were
+    # already going to be event-chunked.
     event_chunks = chunk_content_by_events(content, events_per_chunk)
 
-    # If we got multiple chunks, use them
+    # If we got multiple chunks, use them — but re-split with the size guard when
+    # any chunk is too big for Gemini to answer in one response. The common case
+    # (no oversized chunk) skips the second pass and is byte-for-byte unchanged.
     if len(event_chunks) > 1:
+        if any(len(chunk) > max_chars for chunk in event_chunks):
+            event_chunks = chunk_content_by_events(content, events_per_chunk, max_chars)
         return event_chunks, 'events'
 
     # If single chunk is small enough, use it
@@ -1028,7 +1069,7 @@ def get_chunk_prompt(chunk_text, current_date_string, notes, request_id=""):
     rid_section = f"\n\nIMPORTANT: Set request_id to \"{request_id}\" in your response." if request_id else ""
     return f'''{city_config.extraction_chunk_intro().format(date=current_date_string)}
 
-For each event provide: name, location (venue name), occurrences (array of start_date in YYYY-MM-DD, start_time, end_time), and url if available.
+For each event provide: name, location (venue name), occurrences (array of start_date in YYYY-MM-DD, start_time, end_date, end_time), and url if available.
 
 CRITICAL DATE RULES:
 - Only return occurrences for SPECIFIC calendar dates EXPLICITLY shown on the page near the event (e.g. "May 7, 2026", "Sat Jun 14", "9/22").
@@ -1036,6 +1077,7 @@ CRITICAL DATE RULES:
 - RECEPTION vs RUN: a timed opening/closing reception, opening night, or preview is a SEPARATE single-day event, NOT an occurrence of the exhibition. If a page lists both a dated+timed reception and a broader exhibition run, emit TWO events — the reception (one single-day occurrence: its date + time) and the exhibition (one start→end run occurrence) — never the full run as a second occurrence of the reception, and never the reception's time on the run.
 - If an event is described as "monthly", "weekly", "ongoing", "permanent", "recurring", or has no specific date listed, set occurrences=null. Do NOT invent a next-occurrence date.
 - A LIST of specific calendar dates is NOT "recurring" — when the page enumerates actual dates (e.g. "June 18, June 19, June 20, ...", a film's showtimes across many days, or "Jan 11, 18, 25"), emit EACH listed date as its own occurrence. The null-occurrences rule above applies ONLY when a cadence is described in words ("weekly", "every Thursday") WITHOUT the dates being listed, or when no dates appear at all. A missing start_time NEVER justifies dropping a date that IS shown — set start_time to null and keep the date.
+- NEVER collapse an enumerated list of dates into one start_date/end_date range. end_date is ONLY for something that genuinely runs every day in between (an exhibition run, a multi-day festival). A film playing on 12 listed dates is TWELVE occurrences with end_date null — NOT one occurrence spanning first-to-last. Collapsing is wrong even when the dates look contiguous, and it silently invents dates whenever the list has gaps (a film showing Aug 10-13 and Aug 17-20 must never become Aug 10 -> Aug 20).
 - Do NOT default to today's date when no date is listed.
 - Do NOT extract dates from URLs or Google Calendar/iCal links — those often reference past instances. Only use dates visible in the page text adjacent to the event.
 - Past dates (before today) should also be set to null — those events have already happened. EXCEPTION: a multi-day exhibition / gallery show / installation whose closing date (end_date) is today or later is still on view — keep its original (past) opening date as start_date and its closing date as end_date; do NOT null it.
