@@ -15,7 +15,7 @@ const FOMO_CITY = process.env.FOMO_CITY || 'nyc';
 const CITY_CONFIG_PATH = path.join(__dirname, 'config', `${FOMO_CITY}.yaml`);
 
 // Directories to include in dist/ (everything the server needs)
-const ASSET_DIRS = ['data', 'images', 'fonts', 'api', 'admin', 'vendor'];
+const ASSET_DIRS = ['data', 'images', 'fonts', 'api', 'admin', 'vendor', '.well-known'];
 
 // Generated data files are gitignored (the pipeline rewrites them every run). Each has a
 // committed `<name>.example.json` fallback so a fresh checkout — with no pipeline export yet —
@@ -59,6 +59,18 @@ function cityPrelude(fe, isDev) {
     return `;window.__CITY__ = ${JSON.stringify(jsSubset)};\n`;
 }
 
+// Version a font URL by content hash. Font files keep stable names but are
+// served with a 1-year cache (.htaccess) and precached as immutable by the SW,
+// so changed bytes (e.g. re-frozen OpenType features) would otherwise never
+// reach returning visitors. Used by both the CSS rewrite and the SW manifest
+// so the two always agree.
+function versionedFontUrl(relUrl) {
+    const p = path.join(SRC, relUrl);
+    if (!fs.existsSync(p)) return relUrl;
+    const h = crypto.createHash('md5').update(fs.readFileSync(p)).digest('hex').slice(0, 8);
+    return `${relUrl}?v=${h}`;
+}
+
 // Emit dist/sw.js from the src/sw.js template: inject the precache manifest
 // (split into immutable hashed/versioned URLs vs unversioned ones the SW must
 // revalidate at install) and a version hash so any shell change produces a
@@ -77,8 +89,8 @@ function emitServiceWorker({ htmlSource, frontend, jsBundleName, cssBundleName, 
         jsBundleName,
         cssBundleName,
         ...vendorUrls,
-        'fonts/inter/InterVariable.woff2',
-        'fonts/inter/InterVariable-Italic.woff2',
+        versionedFontUrl('fonts/inter/InterVariable.woff2'),
+        versionedFontUrl('fonts/inter/InterVariable-Italic.woff2'),
         'images/torch.svg',
         'images/trumpet.svg',
     ];
@@ -238,6 +250,8 @@ async function build(isDev) {
 
     // Fix font path: source uses ../fonts/ (relative to css/), but bundled CSS is at root level
     cssContent = cssContent.replace(/\.\.\/fonts\//g, 'fonts/');
+    // Version font URLs by content hash (see versionedFontUrl)
+    cssContent = cssContent.replace(/fonts\/[\w./-]+\.(?:woff2|ttf)/g, versionedFontUrl);
 
     // Generate filenames (content-hashed for prod, stable for dev)
     let jsBundleName, cssBundleName;

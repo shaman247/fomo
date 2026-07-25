@@ -48,6 +48,24 @@
     src: url('../fonts/inter/InterVariable-Italic.woff2') format('woff2');
 }
 
+/* Alias matching the map's MapLibre fontstack name. TinySDF rasterizes
+ * marker/tile labels into a detached canvas using the fontstack name
+ * ("Inter Regular") as the CSS font family — without this alias that
+ * resolves to the system sans-serif, not Inter. Same file as above.
+ * Note: cv05/ss03 are frozen into the woff2 itself (the canvas is detached,
+ * so CSS font-feature-settings can't reach it) — see
+ * scripts/freeze_inter_features.py; re-run it after any Inter upgrade.
+ * font-weight: 450 (not a range) is deliberate: TinySDF requests weight 400,
+ * and matching clamps it onto this face's range, pinning the wght axis at
+ * 450 — the label weight the old 48px PBF glyphs were instanced at. */
+@font-face {
+    font-family: 'Inter Regular';
+    font-style: normal;
+    font-weight: 450;
+    font-display: swap;
+    src: url('../fonts/inter/InterVariable.woff2') format('woff2');
+}
+
 /* === Emoji Font (Optional) === */
 /* Loaded only when .use-noto-emoji class is on body (settings toggle or "noto" Easter egg) */
 /* COLRv1 vector format: supported by Chrome, Edge, Firefox. Safari falls back to system emoji. */
@@ -59,7 +77,8 @@
 
 :root {
     font-family: Inter, sans-serif;
-    font-feature-settings: 'liga' 1, 'calt' 1; /* fix for Chrome */
+    /* liga/calt: Chrome fix; cv05: tailed lowercase l; ss03: round quotes & commas */
+    font-feature-settings: 'liga' 1, 'calt' 1, 'cv05' 1, 'ss03' 1;
 }
 
 @supports (font-variation-settings: normal) {

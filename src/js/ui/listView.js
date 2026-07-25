@@ -271,7 +271,7 @@ const ListView = (() => {
 
         shown.forEach(({ event }) => {
             // Permanently collapsed, non-expanding cards — the list wires its own
-            // hover (highlight the marker, solo its label) and click (open the
+            // hover (highlight the marker and its label) and click (open the
             // location popup). createEventCard tints the title from the event's
             // own emoji color.
             const card = PopupContentBuilder.createEventCard(event, { interactive: false });
@@ -279,7 +279,7 @@ const ListView = (() => {
             const locationKey = event.locationKey;
             if (locationKey) {
                 card.addEventListener('mouseenter', () => {
-                    MapManager.highlightLocationByKey(locationKey, { soloLabel: true, labelEvent: event });
+                    MapManager.highlightLocationByKey(locationKey, { labelEvent: event });
                 });
                 card.addEventListener('mouseleave', () => {
                     MapManager.clearHoverHighlight();

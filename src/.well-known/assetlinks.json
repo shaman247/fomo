@@ -1,0 +1,15 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "fomocity.fomo.app",
+      "sha256_cert_fingerprints": [
+        "6D:91:83:99:27:6F:E3:AB:0D:54:2D:A2:53:AC:4B:D7:D4:50:09:F5:19:14:74:C1:9C:DF:E8:24:16:50:1B:50",
+        "29:92:E0:82:A8:E8:D9:D7:71:96:45:D7:B1:3D:04:F4:16:FB:C0:95:45:0C:C2:DB:92:A6:2B:53:D9:D3:B8:B8"
+      ]
+    }
+  }
+]

@@ -13,6 +13,17 @@
     src: url('../fonts/pixelify/PixelifySans-Latin.woff2') format('woff2');
 }
 
+/* Alias matching this theme's MapLibre fontstack name ("Pixelify Sans
+ * Regular") — TinySDF uses the fontstack name as the canvas font family,
+ * which otherwise resolves to the system sans-serif. */
+@font-face {
+    font-family: 'Pixelify Sans Regular';
+    font-style: normal;
+    font-weight: 400 700;
+    font-display: swap;
+    src: url('../fonts/pixelify/PixelifySans-Latin.woff2') format('woff2');
+}
+
 :root[data-theme="16-bit-pixel"] {
     --font-family: 'Pixelify Sans', Inter, sans-serif;
     --font-display: 'Pixelify Sans', Inter, sans-serif;

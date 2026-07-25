@@ -15,10 +15,6 @@ const MapManager = (() => {
         hoveredFeatureId: null,
         activeFeatureId: null,
 
-        // Whether main-layer labels are hidden so only the hovered location's
-        // label (on the hover layer) shows — see _setLabelSolo()
-        labelSoloActive: false,
-
         // "<locationKey>|<eventName>" while the hover layer's label is
         // overridden to show a specific event (list-row hover), else null
         hoverLabelEventSig: null,
@@ -136,10 +132,7 @@ const MapManager = (() => {
                 'text-color': _getLabelColor(),
                 'text-halo-color': _getHaloColor(),
                 'text-halo-width': 2,
-                'text-halo-blur': 0,
-                // Label-solo mode (list-row hover) toggles text-opacity; kill the
-                // default 300ms paint transition so labels snap instead of fading.
-                'text-opacity-transition': { duration: 0, delay: 0 }
+                'text-halo-blur': 0
             }
         });
 
@@ -194,9 +187,8 @@ const MapManager = (() => {
             }
         });
 
-        // Freshly created layers have default text-opacity (labels visible)
-        // and the default hover text-field (no per-event label override).
-        state.labelSoloActive = false;
+        // Freshly created layers have the default hover text-field (no
+        // per-event label override).
         state.hoverLabelEventSig = null;
         state.layersAdded = true;
     }
@@ -726,20 +718,6 @@ const MapManager = (() => {
     }
 
     /**
-     * Hides (or restores) every main-layer label while keeping the emoji icons,
-     * so the only label on the map is the hovered location's one drawn by the
-     * always-visible hover layer. Paint-property change only — no symbol
-     * re-layout — applied instantly (the layer zeroes out the default
-     * text-opacity paint transition).
-     */
-    function _setLabelSolo(on) {
-        const map = state.mapInstance;
-        if (!map || state.labelSoloActive === on || !map.getLayer('marker-symbols')) return;
-        state.labelSoloActive = on;
-        map.setPaintProperty('marker-symbols', 'text-opacity', on ? 0 : 1);
-    }
-
-    /**
      * Overrides the hover layer's label for `locationKey` so its second line
      * shows `labelEvent`'s name — the desktop list view hovers individual
      * events, which may not be the event the location's default label picked.
@@ -817,17 +795,14 @@ const MapManager = (() => {
      * `hoveredFeatureId` state as real mouse hover, so the two interleave
      * cleanly. No-op if the location has no currently-rendered marker.
      *
-     * With `soloLabel: true`, all other labels on the map are hidden while the
-     * highlight lasts, leaving only this location's label visible. With
-     * `labelEvent`, the label's second line shows that event's name instead of
-     * the location's default label event.
+     * With `labelEvent`, the label's second line shows that event's name
+     * instead of the location's default label event.
      */
-    function highlightLocationByKey(locationKey, { soloLabel = false, labelEvent = null } = {}) {
+    function highlightLocationByKey(locationKey, { labelEvent = null } = {}) {
         const map = state.mapInstance;
         if (!map) return;
         const iconFid = state.locationKeyToFeatureId.get(locationKey);
         if (iconFid === undefined) return;
-        if (soloLabel) _setLabelSolo(true);
         if (labelEvent) _setHoverLabelEvent(locationKey, labelEvent);
         else _clearHoverLabelEvent();
         _setHoveredIcon(iconFid);
@@ -835,7 +810,6 @@ const MapManager = (() => {
 
     /** Clear any hover highlight set via highlightLocationByKey or mouse hover. */
     function clearHoverHighlight() {
-        _setLabelSolo(false);
         _clearHoverLabelEvent();
         _setHoveredIcon(null);
     }

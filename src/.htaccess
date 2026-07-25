@@ -14,6 +14,12 @@
 # Remap JSON to text/json so it gets compressed automatically.
 AddType text/json .json
 
+# Google Play app-link verification requires Content-Type: application/json on
+# /.well-known/assetlinks.json — exempt it from the text/json remap above.
+<Files "assetlinks.json">
+    ForceType application/json
+</Files>
+
 # Apache fallback: enable gzip compression for text-based assets
 <IfModule mod_deflate.c>
     AddOutputFilterByType DEFLATE text/json

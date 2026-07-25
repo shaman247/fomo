@@ -81,14 +81,9 @@ const ThemeManager = (() => {
         // Update theme in DOM and localStorage
         setTheme(theme);
 
-        // A theme-declared webfont must be resolvable before TinySDF
+        // The theme's webfonts must be resolvable before TinySDF
         // rasterizes map glyphs, else the atlas bakes fallback glyphs.
-        const def = Themes.resolve(theme);
-        if (def.uiFontLoad && document.fonts && document.fonts.load) {
-            try {
-                await document.fonts.load(def.uiFontLoad);
-            } catch (e) { /* fall back to the stack's next font */ }
-        }
+        await loadThemeFonts(theme);
 
         const map = state.appState && state.appState.map;
         if (map) {
@@ -112,6 +107,27 @@ const ThemeManager = (() => {
         if (state.onThemeChange) {
             state.onThemeChange(theme);
         }
+    }
+
+    /**
+     * Loads the webfonts a theme needs on the map BEFORE TinySDF bakes its
+     * glyph atlas: the map-label family (an @font-face alias named after the
+     * MapLibre fontstack, e.g. "Inter Regular" — see fonts.css) plus any
+     * theme-declared uiFontLoad. Baking happens once per style load; if the
+     * font isn't loaded yet, labels rasterize in the fallback font until the
+     * next style change.
+     *
+     * @param {string} theme - Theme name from the Themes registry
+     */
+    async function loadThemeFonts(theme) {
+        if (!(document.fonts && document.fonts.load)) return;
+        const def = Themes.resolve(theme);
+        const mapFont = (def.mapLabelFont && def.mapLabelFont[0]) || 'Inter Regular';
+        const loads = [document.fonts.load('400 14px "' + mapFont + '"')];
+        if (def.uiFontLoad) loads.push(document.fonts.load(def.uiFontLoad));
+        try {
+            await Promise.all(loads);
+        } catch (e) { /* fall back to the stack's next font */ }
     }
 
     /**
@@ -173,6 +189,7 @@ const ThemeManager = (() => {
 
         // Theme management
         applyThemeChange,
+        loadThemeFonts,
         getStyleUrlForCurrentTheme,
 
         // Query functions

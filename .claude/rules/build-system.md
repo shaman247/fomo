@@ -27,6 +27,7 @@ paths:
 
 - CSS `@import` chain resolved and minified via `esbuild.build()` with `bundle: true`
 - Font path rewrite: `../fonts/` → `fonts/` (CSS moves from subdir to root in bundle)
+- Font URL versioning: `versionedFontUrl()` appends `?v=<md5(content)>` to every `fonts/*.woff2|ttf` URL in the CSS bundle AND to the font entries in the SW precache manifest (same helper, always in sync). Font filenames are stable but 1-year-cached and SW-precached as immutable — without the version query, changed font bytes (e.g. re-frozen OpenType features via `scripts/freeze_inter_features.py`) would never reach returning visitors.
 
 ## Dev vs Prod
 
