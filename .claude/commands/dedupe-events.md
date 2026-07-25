@@ -20,7 +20,13 @@ This shows:
 - **Exact-name duplicates**: Identical normalized names — safe to auto-suppress
 - **Shared URL duplicates**: Different names but same event URL — review needed (catches re-extractions where the event name changed between crawls, e.g., "Wine Between the Lines: Fermentation is Magic" vs "Wine Between the Lines: A Deep Dive on Natural Wine" sharing the same Eventbrite URL)
 - **Cross-source same date+time duplicates**: Same location, same date AND start_time, but from **different websites** — high signal for cross-source dupes where names diverge completely (e.g. organizer's Luma title vs venue's site title for the same event). Review needed.
+- **Cross-location shared-URL duplicates**: two events that share a specific event URL but sit at **different `location_id`s** — the "location scatter" bug, where one real event became two rows at different venues and renders twice on the map (e.g. a SummerStage concert listed once at "Central Park SummerStage" (loc 3521) and once at generic "Central Park" (loc 192)). The same-location tiers are structurally blind to this. **Default shows only the high-confidence subset (same name AND same date+time); `--review` adds the weaker name-or-time-only pairs.** Review needed — NEVER auto-suppressed.
 - **Summary** of same-source same-time pairs and similar-name pairs (use `--review` to see them)
+
+**Cross-location tier — merge convention & known false positives.** When a cross-location pair IS a dup, merge toward the row at the **more specific** location and drop the generic/wrong one: `merge_pair(cursor, keep=<specific-loc row>, delete=<generic-loc row>)` (e.g. keep the SummerStage row, delete the generic Central Park row). Recurring offenders that are **NOT** dups (dismiss them with `record_dismissal`, they won't resurface):
+- **Same film at different cinema branches** sharing a film-info URL — "Obsession (2026)" at Regal Times Square vs Regal New Roc, "Flow" at Alamo Brooklyn vs Staten Island. The film genuinely plays at both; the shared URL is a film page, not a showtime.
+- **A recurring series that visits multiple venues** — "Queens Jazz Trail Concert: …" at Kupferberg vs a different park, a wellness-walk series at two adjacent park entrances.
+- **Umbrella vs specific** — "BRIC Celebrate Brooklyn!" (the festival) vs "Benefit Show: Royel Otis" (one night of it) share a URL but are an umbrella/child relationship, not a dup — handle per the umbrella rules, don't blind-merge.
 
 ### Auto-suppress exact-name duplicates
 
@@ -34,9 +40,9 @@ This suppresses the higher-ID event from each exact-name pair. (The kept event p
 
 ### Holistic review for ALL review-needed tiers
 
-The remaining three tiers — **shared URL**, **cross-source same date+time**, and **similar-name** — must each be reviewed holistically by Claude. Do not skip any tier and do not use length-based heuristics. The mechanics are identical for all three: fetch fields, decide, apply (merge OR record dismissal).
+The remaining tiers — **shared URL**, **cross-source same date+time**, **cross-location shared-URL**, and **similar-name** — must each be reviewed holistically by Claude. Do not skip any tier and do not use length-based heuristics. The mechanics are identical for all: fetch fields, decide, apply (merge OR record dismissal).
 
-Pairs that have been reviewed and dismissed in a prior run are stored in `dedupe_dismissed_pairs` and automatically filtered out of these three tiers, so the same false positives don't keep resurfacing. Every pair you review and decide is NOT a duplicate must be recorded so the next run skips it.
+Pairs that have been reviewed and dismissed in a prior run are stored in `dedupe_dismissed_pairs` and automatically filtered out of these tiers, so the same false positives don't keep resurfacing. Every pair you review and decide is NOT a duplicate must be recorded so the next run skips it.
 
 Run the script first (without `--review`) to get the cross-source and shared URL lists, then again with `--review` to also see similar-name pairs:
 
@@ -249,7 +255,7 @@ LIMIT 50;
 For simple duplicates (same data, just suppress the duplicate):
 
 ```sql
-UPDATE events SET suppressed = 1 WHERE id IN (...);
+UPDATE events SET suppressed = 1, reviewed = 1 WHERE id IN (...);
 ```
 
 For duplicates where you need to merge data (different occurrences, URLs, or tags):
@@ -270,7 +276,7 @@ INSERT IGNORE INTO event_sources (event_id, crawl_event_id) SELECT <keep_id>, cr
 
 3. **Suppress the duplicate**:
 ```sql
-UPDATE events SET suppressed = 1 WHERE id = <delete_id>;
+UPDATE events SET suppressed = 1, reviewed = 1 WHERE id = <delete_id>;
 ```
 
 4. **Remove duplicate occurrences** on the kept event (after merging):

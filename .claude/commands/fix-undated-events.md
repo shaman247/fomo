@@ -22,11 +22,21 @@ JOIN websites w ON cr.website_id = w.id
 LEFT JOIN crawl_event_occurrences ceo ON ce.id = ceo.crawl_event_id
 WHERE cr.status = 'processed'
   AND ceo.id IS NULL
+  AND ce.created_at >= cr.crawled_at   -- see "stale rows" note below
 GROUP BY w.id, w.name
 ORDER BY undated_events DESC;
 ```
 
 This shows websites with undated events, ordered by count.
+
+> **Always keep the `ce.created_at >= cr.crawled_at` predicate.** `crawl_results`
+> rows are **UPDATEd in place** on re-crawl (`crawled_content` / `crawled_at` are
+> overwritten) while the old `crawl_events` keep pointing at the same row. Without
+> the predicate the query counts undated rows from a *pre-fix* extraction against a
+> `crawl_result` whose current content no longer contains them — so sites you already
+> fixed keep resurfacing as problems. On 2026-07-19 this inflated the count by 35
+> rows (184 → 149) and manufactured two entirely phantom "problem" sites (w4867
+> Edgemere Farm, w425 Brooklyn CB16) that had already been fixed by earlier js_code.
 
 ## Step 2: Investigate Per Website
 

@@ -90,7 +90,14 @@ B) Archival warnings from the log:
 ./venv/bin/python <<'EOF'
 import re
 with open('/tmp/pipeline_run.log') as f: log = f.read()
-pat = re.compile(r'Archived (\d+) outdated event\(s\) from (.+?)\n\s+⚠️\s+WARNING:\s+(\d+) upcoming event\(s\) archived[^\n]*\n((?:\s+- Event \d+:.*\n)+)', re.M)
+# NOTE: main.py prefixes every line with a "[HH:MM:SS] " timestamp, so each line break must
+# tolerate an optional timestamp before the leading whitespace. Without TS, this silently
+# matches nothing and the whole archival-warning arm looks clean (seen 2026-07-18).
+TS = r'(?:\[\d\d:\d\d:\d\d\]\s*)?'
+pat = re.compile(
+    r'Archived (\d+) outdated event\(s\) from (.+?)\n'
+    + TS + r'\s*⚠️\s+WARNING:\s+(\d+) upcoming event\(s\) archived[^\n]*\n'
+    r'((?:' + TS + r'\s*- Event \d+:.*\n)+)', re.M)
 for m in pat.finditer(log):
     eids = re.findall(r'Event (\d+):', m.group(4))
     print(f"  upcoming={int(m.group(3)):3}  {m.group(2).strip()}  events={eids}")

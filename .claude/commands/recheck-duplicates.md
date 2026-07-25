@@ -86,7 +86,7 @@ Decide which shape it is, then fix (always **verify coverage first**):
 - **Redundant umbrella** — a generic row (e.g. "Summer Organ Series", "In-Store Performance")
   whose specific sub-events already exist and **cover all its future dates**. → suppress the umbrella:
   ```python
-  with write_lock(conn): cur.execute("UPDATE events SET suppressed=1 WHERE id=%s", (UMBRELLA_ID,)); conn.commit()
+  with write_lock(conn): cur.execute("UPDATE events SET suppressed=1, reviewed=1 WHERE id=%s", (UMBRELLA_ID,)); conn.commit()
   ```
 - **Date-bled specific** — a *named* event carrying a whole series' dates (e.g. one organist's
   recital listing all 5 nights). → delete the stray occurrences, keep its true date:

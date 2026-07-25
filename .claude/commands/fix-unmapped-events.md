@@ -82,7 +82,7 @@ Common generics: Manhattan (2211), Brooklyn (2208), Queens (2209), Bronx (2212),
 If the event is genuinely outside the coverage area (NYC metro, Long Island, Westchester, Hudson Valley, Northern NJ, Southern CT), suppress it:
 
 ```sql
-UPDATE events SET suppressed = 1 WHERE id = {event_id};
+UPDATE events SET suppressed = 1, reviewed = 1 WHERE id = {event_id};
 ```
 
 Examples: Cinema Tropical events at Houston's MFAH, PEN America events in Miami, Albany career fairs. Note that NJ (including Raritan, Paterson), Long Island, Hudson Valley, and Westchester ARE in scope.

@@ -129,7 +129,8 @@ def audit_dismissed(cur, limit):
         if flag:
             out.append((max(nsim, dsim), flag, nsim, dsim, a, b, reason))
 
-    out.sort(reverse=True)
+    # sort on the scalar prefix only — ties would otherwise compare the event dicts
+    out.sort(key=lambda r: (r[0], r[1], r[2], r[3]), reverse=True)
     print(f"\n=== DISMISSED-PAIR RE-AUDIT ===")
     print(f"{len(pairs)} live dismissed pairs share a date+time; "
           f"{len(out)} look worth a fresh holistic review (showing {min(limit, len(out))}):\n")

@@ -179,24 +179,35 @@ Report: Part A — new span-bearing events scanned N; FIX_SPAN/COURSE_WEEKLY aut
 ### After the parallel batch returns
 
 1. Read each agent's report. Surface any "findings requiring user approval" before continuing.
-2. Run the out-of-area description scan (below) inline. The 2026-05-18 audit found 42 candidates and 1 real out-of-area event (the rest were films/touring performers); treat findings skeptically and require explicit "taking place in <city>" / "Join us in <city> for…" language before suppressing.
+2. Run the out-of-area scan:
 
-```sql
-SELECT e.id, e.name, e.location_name, l.name as mapped_to,
-       SUBSTRING(e.description, 1, 200) as description_preview,
-       w.name as website_name
-FROM events e
-JOIN locations l ON e.location_id = l.id
-LEFT JOIN websites w ON e.website_id = w.id
-WHERE e.archived = FALSE AND e.suppressed = FALSE
-  AND (
-    e.description REGEXP '(^|[^a-zA-Z])(in|across|around|throughout) (Los Angeles|Chicago|San Francisco|Philadelphia|Miami|Seattle|Portland|Austin|Denver|Atlanta|Nashville|Washington D\\.?C\\.?|Houston|Dallas|Detroit|Minneapolis|New Orleans|San Diego|Phoenix|Salt Lake City|Richmond|Raleigh|Charlotte|Tampa|Orlando|Las Vegas|Honolulu|London|Paris|Berlin|Tokyo|Toronto|Montreal|Mexico City)([^a-zA-Z]|$)'
-    OR e.description REGEXP '(Los Angeles|Chicago|San Francisco|Philadelphia|Miami|Seattle|Portland|Austin|Denver|Atlanta|Nashville|Houston|Dallas|Detroit|Minneapolis|New Orleans|San Diego|Phoenix|Salt Lake City|London|Paris|Berlin|Tokyo|Toronto|Montreal|Mexico City) (arts? district|community|creatives?|locals?|area|neighborhood|chapter|region)'
-  )
-ORDER BY w.name, e.id;
+```bash
+./venv/bin/python scripts/find_out_of_area_events.py
 ```
 
-Suppress only events where the description explicitly says "Join us in Philadelphia for..." / "A gathering for Chicago fashion creatives in <Chicago neighborhood>". Keep films set elsewhere, touring performers, and similar references.
+It inspects `sublocation` / `location_name` / `name` against a gazetteer (US
+states, out-of-area US and foreign cities, foreign countries) with an in-area
+whitelist learned from the `locations` table. Read-only; it never suppresses
+anything itself.
+
+Findings come in three tiers:
+
+- **HIGH** — a structured location field names an out-of-area place, or the
+  event name carries an explicit "<City>, <ST|Country>" pair. Usually real
+  (NYU away games, Boston harbor cruises, a Philadelphia club night). Confirm
+  against the event URL, then suppress.
+- **PROPAGATED** — same website + mapped location + suite number as a HIGH hit.
+  This is how the Fabrik Tribeca / Chicago leak was caught: 3 of the 7 events
+  named Chicago outright, the other 4 carried only a bare "Suite 630".
+- **REVIEW** — description-only "taking place in <city>" framing. Weakest tier;
+  read the event before acting.
+
+Keep films set elsewhere, touring performers' bios, and artist origin notes —
+they are not out-of-area. The scan deliberately ignores "based in <city>" in
+descriptions for exactly this reason: on 2026-07-19 the old description-only
+SQL scan returned 45 candidates and 0 real hits, all performer hometowns, while
+missing both genuine clusters (a Mbale City, Uganda fundraiser and the 7 Fabrik
+Chicago events).
 
 ## Step 4: Classify New Event Types
 
