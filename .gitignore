@@ -28,6 +28,18 @@ pipeline/sources/*.json
 !pipeline/sources/__init__.py
 !pipeline/sources/*.example.py
 
+# Tests whose subject is itself gitignored — one per area under
+# pipeline/tests/untracked/ (sources/ for plugin tests, scripts/ for local-only
+# script tests). They import their subject at module scope, so on a checkout
+# without it they ERROR during discovery (`unittest discover` imports every
+# test_*.py) rather than skipping — one missing plugin would fail the whole
+# suite. Put a new test here whenever `git check-ignore` claims its subject.
+#
+# The extra `untracked/` level is load-bearing: discovery imports a test
+# subdirectory as a top-level package, so pipeline/tests/sources/ would shadow
+# the real `sources` package (pipeline/sources) that those very tests import.
+pipeline/tests/untracked/
+
 # Environment variables
 .env
 .env.local
