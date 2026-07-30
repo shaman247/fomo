@@ -58,11 +58,12 @@ Once the task completes, extract the summary and any signals worth triaging from
 grep -E "PIPELINE COMPLETED|PIPELINE FAILED|^Summary:|Websites crawled:|Total events processed:|Total archived:|Total upcoming events archived" /tmp/pipeline_run.log
 
 # Things worth triaging (all aggregated post-hoc, not per-site)
-grep -E "Traceback|WARNING: .* events would need .* batches, capping|upcoming event\(s\) archived" /tmp/pipeline_run.log
+grep -E "Traceback|WARNING: .* events would need .* batches, capping|upcoming event\(s\) archived|Content too large" /tmp/pipeline_run.log
 ```
 
 The pipeline output to look for:
 - **Cap warnings** (`WARNING: N events would need M batches, capping at X`) — high-yield sites that need `max_batches` bumped
+- **Truncation warnings** (`Content too large (N chars), truncating to 300000`) — the payload was cut BEFORE chunking, so those events were never even offered to Gemini. This is a *silent* coverage loss: the site still reports a healthy event count, so nothing else flags it. See the `MAX_CONTENT_CHARS` task in `.claude/scheduled-tasks.md` for the affected-site list and the per-profile override.
 - **Archival warnings** (`⚠️ WARNING: N upcoming event(s) archived`) — review for crawl regressions vs legitimate site rotations
 - **Tracebacks** — fatal errors that need investigation
 - **Total counts** — sanity-check websites crawled, events processed, events archived
@@ -256,17 +257,29 @@ After all sub-agents return, re-export the data and upload to production:
 import sys
 sys.path.insert(0, 'pipeline')
 from db import create_connection
-from exporter import export_events, classify_event_sections
+from exporter import (export_events, export_organizers, export_tag_hierarchy,
+                      classify_event_sections)
 
 conn = create_connection()
 cursor = conn.cursor(buffered=True)
 
 classify_event_sections(cursor, conn)
-export_events(cursor)
+export_stats = export_events(cursor)
+export_tag_hierarchy(cursor)
+# MUST pass export_stats['organizer_root_ids'] — this is what `main.py` does.
+# Calling export_organizers(cursor) with no id set makes it RECOMPUTE from all
+# active events, which is a looser SUPERSET: it lists organizers whose events
+# were never exported (no URL, no location), so the published organizers.json
+# disagrees with the published events. Measured 2026-07-26: 2510 organizers
+# recomputed vs 1627 actually emitted.
+export_organizers(cursor, export_stats['organizer_root_ids'])
 
 cursor.close()
 conn.close()
 ```
+
+> Export the tag hierarchy and organizers too, not just events — otherwise any
+> `event_type` / Format-tag changes from Step 4 never reach the frontend.
 
 Then:
 ```bash

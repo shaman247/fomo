@@ -57,6 +57,10 @@ SKIP_LOCATION_NAMES = {
     # vague geo labels
     'brooklyn, new york', 'midtown, new york', 'manhattan (exact location unspecified)',
     'multiple venues', 'kids', 'offsite', 'no location', 'varies - see monthly newsletter',
+    # bare city labels — carry no venue information, so a "mismatch" against the
+    # pinned venue is meaningless noise (walking-tour sites emit these for every event).
+    'new york', 'new york city', 'nyc', 'new york, ny', 'new york city (exact location unspecified)',
+    'manhattan', 'brooklyn', 'queens', 'bronx', 'staten island',
 }
 
 # Street-intersection patterns: outdoor markets / waste drop-offs / flea markets
