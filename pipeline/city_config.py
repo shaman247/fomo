@@ -128,3 +128,26 @@ def region_tag_token() -> str:
 
 def non_region_place_patterns() -> list:
     return list((get_config().get("review") or {}).get("non_region_places") or [])
+
+
+def coverage() -> dict:
+    """Postal definition of the geographic coverage area.
+
+    Shape (see the `coverage:` block in config/nyc.yaml for the annotated
+    original)::
+
+        {
+          "zip3":      {"NY": ["100", ...], "NJ": [...], "CT": [...]},
+          "zip5_only": {"NJ:079": ["07901", ...]},
+          "bbox":      {"min_lat":, "max_lat":, "min_lng":, "max_lng":},
+        }
+
+    `zip3` is the whitelist: a state absent from it, or a ZIP3 absent from its
+    list, is outside the coverage area. `zip5_only` carves up the ZIP3s that
+    straddle a coverage boundary — for those, only the listed ZIP5s are inside.
+    `bbox` is a coarse lat/lng fallback for addresses with no parseable ZIP.
+
+    Returns {} if the active city config declares no coverage area, which
+    callers must read as "unknown", never as "nothing is covered".
+    """
+    return dict(get_config().get("coverage") or {})

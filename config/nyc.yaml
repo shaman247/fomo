@@ -387,6 +387,113 @@ geotags:
   - "Woodside"
   - "Yonkers"
 
+# Geographic coverage area, expressed in postal geography. This is the machine-
+# readable twin of extraction.region_rule above: that string tells Gemini which
+# counties we cover, this block lets code decide whether a mapped location is
+# inside them. Read via city_config.coverage(); consumed by
+# scripts/find_out_of_area_events.py (mapped-location tier).
+#
+# The coverage area (fomo.nyc): New York City (5 boroughs); Long Island (Nassau,
+# Suffolk incl. the Hamptons); Westchester and Rockland; the Hudson Valley
+# (Dutchess, Orange, Ulster, Putnam); Northern New Jersey (Bergen, Hudson,
+# Essex, Passaic, Union, Middlesex, Monmouth, Ocean); Southern Connecticut
+# (Fairfield County).
+#
+# To amend coverage, edit ONLY this block — add/remove a zip3, or add a zip5
+# carve-out for a ZIP3 that straddles a county line.
+coverage:
+  # First three digits of the ZIP, per state. Anything not listed is OUT.
+  # Each entry names the counties that ZIP3 covers.
+  zip3:
+    NY:
+      - "100"   # Manhattan (New York County)
+      - "101"   # Manhattan (PO boxes / business)
+      - "102"   # Manhattan (PO boxes / business)
+      - "103"   # Staten Island (Richmond)
+      - "104"   # Bronx
+      - "105"   # Westchester (Mount Vernon, Scarsdale) + Putnam (Carmel, Cold Spring)
+      - "106"   # Westchester (White Plains)
+      - "107"   # Westchester (Yonkers)
+      - "108"   # Westchester (New Rochelle)
+      - "109"   # Rockland (Suffern, Nyack) + Orange (Middletown, Monroe)
+      - "110"   # Queens (Glen Oaks) + western Nassau (Great Neck, Port Washington)
+      - "111"   # Queens (Long Island City)
+      - "112"   # Brooklyn (Kings)
+      - "113"   # Queens (Flushing, Forest Hills, Astoria)
+      - "114"   # Queens (Jamaica, Queens Village)
+      - "115"   # Nassau (Mineola, Hempstead)
+      - "116"   # Queens (Far Rockaway)
+      - "117"   # Suffolk (Babylon, Huntington) + south-shore Nassau
+      - "118"   # Nassau (Hicksville, Syosset, Plainview)
+      - "119"   # Suffolk (Riverhead, the Hamptons, Montauk)
+      - "124"   # Ulster (Kingston, Saugerties, Woodstock). See note on 124/125 below.
+      - "125"   # Dutchess (Rhinebeck, Beacon) + Orange (Newburgh) + Ulster (New Paltz)
+      - "126"   # Dutchess (Poughkeepsie)
+    NJ:
+      - "070"   # Essex / Union / Hudson / Middlesex (Newark, Bayonne, Linden)
+      - "071"   # Essex (Newark)
+      - "072"   # Union (Elizabeth)
+      - "073"   # Hudson (Jersey City)
+      - "074"   # Bergen + Passaic (Fair Lawn, Franklin Lakes)
+      - "075"   # Passaic (Paterson)
+      - "076"   # Bergen (Hackensack)
+      - "077"   # Monmouth (Red Bank, Freehold)
+      - "079"   # MIXED — Union half only; see zip5_only below
+      - "085"   # MIXED — Monmouth/Ocean half only; see zip5_only below
+      - "087"   # Ocean (Lakewood, Toms River) + Monmouth (Manasquan)
+      - "088"   # Middlesex (Edison, Perth Amboy) + Somerset
+      - "089"   # Middlesex (New Brunswick)
+    CT:
+      - "066"   # Fairfield (Bridgeport)
+      - "068"   # Fairfield (Norwalk, Greenwich, Danbury, Westport)
+      - "069"   # Fairfield (Stamford)
+  # ZIP3s above that straddle a coverage boundary: ONLY these ZIP5s count as in
+  # coverage; every other ZIP5 sharing that ZIP3 is out. Keyed "<STATE>:<zip3>".
+  zip5_only:
+    # 079 is split between Union County (in) and Morris/Somerset (out): Summit
+    # 07901 is in coverage, Morristown 07960 is not.
+    "NJ:079": ["07901", "07902", "07922", "07974"]   # Summit, New Providence, Berkeley Heights
+    # 085 is mostly Mercer (Princeton/Trenton — out); these are its
+    # Monmouth/Ocean ZIPs (Allentown, Millstone, Jackson, New Egypt).
+    "NJ:085": ["08501", "08510", "08514", "08526", "08527", "08533", "08535", "08555"]
+  # KNOWN GAPS (found 2026-07-30) — two ZIP3s above are MIXED but have no
+  # zip5_only carve-out, so they currently admit counties the coverage spec does
+  # not name. Left as-is deliberately: the blast radius is 2 dormant locations,
+  # and a whitelist carve-out for these would mean enumerating every in-coverage
+  # ZIP5 (a long, error-prone list) rather than the handful that are out.
+  #   * "074" is Bergen + Passaic but ALSO Sussex County (07416 Franklin, 07418
+  #     Glenwood, 07419 Hamburg, 07422 Highland Lakes, 07439 Ogdensburg, 07460
+  #     Stockholm, 07461 Sussex, 07462 Vernon). Sussex is not in the coverage
+  #     spec, and Morris County — closer to NYC — is explicitly excluded via
+  #     NJ:079, so Sussex should be out too. Only 2 locations exist there today
+  #     (#6151 Appalachian Trail West Jersey, #5384 High Point SP), both with 0
+  #     active events. Note 07421 Hewitt / 07456 Ringwood / 07465 Wanaque /
+  #     07480 West Milford are PASSAIC and correctly in.
+  #   * "088" is Middlesex + Somerset + (deliberately) Hunterdon, but ALSO Warren
+  #     County at 08865 Phillipsburg. No Warren locations exist today.
+  # If either starts accruing venues, the clean fix is a new `zip5_exclude` map
+  # (ZIP3 -> ZIP5s that are OUT) rather than inverting these into zip5_only.
+  # w3531 NJ State Parks already excludes both at intake via its venue whitelist.
+  #
+  # Deliberately-kept edge cases, for the next person who reads this list:
+  #   * NY 124/125 include slivers of Greene County (Catskill, Hunter) and
+  #     Columbia County (Hudson, Copake Falls, Germantown). Those counties are
+  #     not named in the coverage spec, but every venue we hold in them sits
+  #     within ~12 miles of the covered Ulster/Dutchess line, so they are kept.
+  #     Columbia County further north — Chatham, Ghent, Kinderhook — falls in
+  #     ZIP3 120/121 (Albany) and is correctly out.
+  #   * NJ 088 includes Somerset and Hunterdon. Somerset (Duke Farms) is ~8
+  #     miles from Middlesex; Hunterdon is further but small. Both kept.
+  # Coarse lat/lng envelope, used ONLY when a location's address has no
+  # parseable "<ST> <ZIP>". It catches gross outliers (upstate NY, New England,
+  # the Mid-Atlantic); it is far too loose to adjudicate a county line, so the
+  # ZIP test above always wins when a ZIP is present.
+  bbox:
+    min_lat: 39.50    # southern Ocean County, NJ
+    max_lat: 42.30    # northern edge of the kept Greene/Columbia strip
+    min_lng: -74.90   # western Orange County, NY / western Union County, NJ
+    max_lng: -71.75   # Montauk Point
+
 processor:
   # processor.py normalize_location_name — trailing state abbreviations/names stripped.
   state_suffixes: [" ny", " nj", " ct", " new york", " new jersey", " connecticut"]
