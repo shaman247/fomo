@@ -3,10 +3,12 @@
 import unittest
 import sys
 import os
+from datetime import date
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+import merger
 from merger import normalize_name_for_dedup, normalize_time_for_dedup, stem_word, get_significant_words, are_names_similar, is_false_positive, extract_core_title
 
 # Test cases for normalize_name_for_dedup: (input, expected_output)
@@ -387,6 +389,132 @@ class TestAreNamesSimilar(unittest.TestCase):
                     are_names_similar(name1, name2),
                     are_names_similar(name2, name1)
                 )
+
+
+class TestDatelessCrawlEventMatching(unittest.TestCase):
+    """A crawl_event carrying NO dates at all (an "Ongoing" exhibition whose
+    detail page is dateless too) must still be able to say "this show is still
+    listed" by linking to its existing event.
+
+    MoMA's `Marcel Duchamp` (e66269) went archived because its crawl_events had
+    zero crawl_event_occurrences: the merger's loader required a future
+    occurrence, so the crawl_event was never even considered, never linked, and
+    archival read the show as absent from the crawl.
+    """
+
+    def setUp(self):
+        # MoMA (location 582) and Gagosian (location 331) both run a show called
+        # "Marcel Duchamp" — the classic wrong-link this matcher must not make.
+        self.by_location_id = {
+            582: [{'id': 66269, 'name': 'Marcel Duchamp'},
+                  {'id': 70001, 'name': 'Frida and Diego: The Last Dream'}],
+            331: [{'id': 194543, 'name': 'Marcel Duchamp'}],
+        }
+        self.by_coords = {}
+        self.by_location = {
+            'museum of modern art moma': [
+                {'id': 66269, 'name': 'Marcel Duchamp', 'location_id': 582}],
+            'moma design store soho': [
+                {'id': 80002, 'name': 'Modern Mural: Nina Chanel Abney', 'location_id': None}],
+        }
+
+        self.by_website = {
+            62: [{'id': 66269, 'name': 'Marcel Duchamp', 'location_name': 'MoMA'},
+                 {'id': 66275, 'name': 'Modern Mural: Nina Chanel Abney',
+                  'location_name': 'MoMA'}],
+            77: [{'id': 90001, 'name': 'Studio Visit', 'location_name': 'North Gallery'},
+                 {'id': 90002, 'name': 'Studio Visit', 'location_name': 'South Gallery'}],
+        }
+
+    def _match(self, name, location_id=None, lat=None, lng=None, location_name=None,
+               website_id=None):
+        return merger._match_dateless_crawl_event(
+            name, location_id, lat, lng, location_name,
+            self.by_location_id, self.by_coords, self.by_location,
+            website_id, self.by_website)
+
+    def test_exact_name_at_the_same_venue_matches(self):
+        self.assertEqual(self._match('Marcel Duchamp', location_id=582), 66269)
+
+    def test_same_name_at_a_different_venue_is_not_matched(self):
+        """The Gagosian show is a different exhibition that happens to share a name."""
+        self.assertEqual(self._match('Marcel Duchamp', location_id=999), None)
+        self.assertNotEqual(self._match('Marcel Duchamp', location_id=331), 66269)
+
+    def test_partial_name_match_is_refused(self):
+        """With no dates there is no second signal, so only exact names count."""
+        self.assertIsNone(self._match('Marcel Duchamp: A Retrospective', location_id=582))
+        self.assertIsNone(self._match('Duchamp', location_id=582))
+
+    def test_case_and_punctuation_are_normalized(self):
+        self.assertEqual(self._match('MARCEL  DUCHAMP!', location_id=582), 66269)
+
+    def test_location_name_tier_matches_when_no_location_id(self):
+        self.assertEqual(
+            self._match('Modern Mural: Nina Chanel Abney',
+                        location_name='MoMA Design Store Soho'),
+            80002)
+
+    def test_location_name_tier_rejects_a_conflicting_location_id(self):
+        """A resolved location_id outranks the raw location_name text: the
+        crawl_event is pinned to venue 999, so MoMA's event is not its show."""
+        self.assertIsNone(
+            self._match('Marcel Duchamp', location_id=999,
+                        location_name='Museum of Modern Art (MoMA)'))
+
+    def test_unknown_venue_without_a_website_matches_nothing(self):
+        self.assertIsNone(self._match('Marcel Duchamp', location_name='Somewhere Else'))
+        self.assertIsNone(self._match('Marcel Duchamp'))
+
+    def test_venueless_row_falls_back_to_a_unique_same_website_name(self):
+        """MoMA's satellite "MoMA Design Store Soho" isn't in `locations`, so the
+        crawl_event has no venue signal at all — but the website has exactly one
+        show by that name."""
+        self.assertEqual(
+            self._match('Modern Mural: Nina Chanel Abney',
+                        location_name='MoMA Design Store Annex', website_id=62),
+            66275)
+
+    def test_website_fallback_refuses_an_ambiguous_name(self):
+        """Two same-named shows at different venues: a dateless row can't choose."""
+        self.assertIsNone(
+            self._match('Studio Visit', location_name='Unknown Annex', website_id=77))
+
+    def test_website_fallback_is_not_used_when_the_venue_is_known(self):
+        """A crawl_event pinned to a venue that has no such show links to nothing —
+        it must not wander to another venue of the same website."""
+        self.assertIsNone(self._match('Marcel Duchamp', location_id=999, website_id=62))
+        # Venue known (MoMA has events under that location_name) but no show by
+        # this name there — must not jump to the same website's other venue.
+        self.assertIsNone(
+            self._match('Modern Mural: Nina Chanel Abney',
+                        location_name='Museum of Modern Art (MoMA)', website_id=62))
+
+    def test_blank_name_matches_nothing(self):
+        self.assertIsNone(self._match('', location_id=582))
+
+
+class TestDatelessUnarchiveGate(unittest.TestCase):
+    """A dateless link may only un-archive an event that is still showable."""
+
+    class FakeCursor:
+        def __init__(self, row):
+            self.row = row
+            self.params = None
+
+        def execute(self, sql, params=None):
+            self.params = params
+
+        def fetchone(self):
+            return self.row
+
+    def test_event_with_a_live_occurrence_may_unarchive(self):
+        cursor = self.FakeCursor((1,))
+        self.assertTrue(merger._event_has_live_occurrence(cursor, 66269, date(2026, 7, 26)))
+
+    def test_event_with_only_past_occurrences_stays_archived(self):
+        cursor = self.FakeCursor(None)
+        self.assertFalse(merger._event_has_live_occurrence(cursor, 66269, date(2026, 7, 26)))
 
 
 if __name__ == "__main__":

@@ -628,16 +628,34 @@ def build_archival_temps(cursor):
     advisory write lock and no crawls are added during archival, so a snapshot taken
     once is identical to re-deriving it per website. CURDATE() is likewise constant
     within a run.
+
+    DISABLED websites are excluded from _ws_latest. `_ws_latest` exists to answer
+    "is this event still listed by the crawl that most recently spoke for its
+    source website?" — a question only an ENABLED website can keep answering. A
+    disabled website is never crawled again, so its final crawl freezes as
+    `latest` forever and the archival query's "no source website's latest crawl
+    still references this event" condition can never be satisfied again: every
+    event that website ever sourced becomes permanently unarchivable (measured:
+    431 non-archived events across 25 disabled websites). Dropping disabled
+    websites here changes nothing for enabled ones — their rows are identical —
+    and only affects events that have a disabled website among their sources.
+    The JOIN also drops crawl_results whose website row no longer exists, which
+    is the same "no live website speaks for this" case.
+
+    Events left with NO enabled source website at all are not reachable from this
+    per-website pass (see archive_dead_source_events).
     """
     cursor.execute("DROP TEMPORARY TABLE IF EXISTS _ws_latest")
     cursor.execute("""
         CREATE TEMPORARY TABLE _ws_latest (website_id INT UNSIGNED PRIMARY KEY, latest DATETIME(6))
-        SELECT website_id, MAX(processed_at) AS latest
-        FROM crawl_results
-        WHERE status IN ('processed', 'extracted')
-          AND processed_at IS NOT NULL
-          AND website_id IS NOT NULL
-        GROUP BY website_id
+        SELECT cr.website_id, MAX(cr.processed_at) AS latest
+        FROM crawl_results cr
+        JOIN websites w ON w.id = cr.website_id
+        WHERE cr.status IN ('processed', 'extracted')
+          AND cr.processed_at IS NOT NULL
+          AND cr.website_id IS NOT NULL
+          AND (w.disabled = FALSE OR w.disabled IS NULL)
+        GROUP BY cr.website_id
     """)
     cursor.execute("DROP TEMPORARY TABLE IF EXISTS _evt_future")
     cursor.execute("""
@@ -842,6 +860,105 @@ def archive_outdated_events(cursor, connection, website_id, temps_built=False):
 
     connection.commit()
 
+    if not temps_built:
+        drop_archival_temps(cursor)
+
+    return archived_count, upcoming_events
+
+
+def archive_dead_source_events(cursor, connection, temps_built=False):
+    """Archive events whose every source website is disabled ("no live source").
+
+    `archive_outdated_events` is driven by the website that was just crawled: its
+    first condition is "this event has a source from website X". An event whose
+    only sources are disabled websites therefore never becomes a candidate —
+    disabled websites are never crawled, so no loop iteration ever runs for them.
+    Excluding disabled websites from _ws_latest (see build_archival_temps) fixes
+    the *multi-source* case (an enabled sibling website can now archive the
+    event), but an event with no enabled source at all needs this sweep, which is
+    keyed on the event rather than on a website.
+
+    Semantics, deliberately conservative:
+    - Requires >= 1 event_sources row backed by a successful crawl. Events with
+      NO event_sources rows at all are also permanently unarchivable (the same
+      "has a source from website X" condition can never hold), but they are a
+      different population — 720 non-archived events today, mostly events whose
+      crawl history was pruned rather than events nobody lists any more — and
+      archiving them is not this function's call to make. They are left alone.
+    - Keeps the 14-day grace for events with a current/future occurrence, using
+      the most recent supporting crawl from ANY source (the same rule as
+      archive_outdated_events). A website disabled today therefore keeps its
+      upcoming events for two more weeks, which is what makes a temporary
+      disable-then-re-enable safe: the merger un-archives on re-match anyway.
+    - The other two future-event guards do not apply: the fresh-crawl count is
+      defined relative to a website that is still being crawled, and a
+      start_too_future rejection can only be recorded by a website that is still
+      being extracted. Neither can ever occur for a dead source.
+
+    Returns (archived_count, upcoming_events) like archive_outdated_events.
+    """
+    if not temps_built:
+        build_archival_temps(cursor)
+
+    # Per-event source state, materialised once: how many of an event's source
+    # websites are still enabled, whether any crawl actually succeeded, and when
+    # it last saw the event. Restricted to non-archived events so this stays a
+    # small scan rather than a walk of all event_sources ever written.
+    cursor.execute("DROP TEMPORARY TABLE IF EXISTS _evt_src_state")
+    cursor.execute("""
+        CREATE TEMPORARY TABLE _evt_src_state (
+            event_id INT UNSIGNED PRIMARY KEY,
+            live_sources INT,
+            supported INT,
+            last_support DATETIME(6)
+        )
+        SELECT es.event_id,
+               SUM(CASE WHEN (w.disabled = FALSE OR w.disabled IS NULL) THEN 1 ELSE 0 END) AS live_sources,
+               SUM(CASE WHEN cr.status IN ('processed', 'extracted')
+                         AND cr.processed_at IS NOT NULL THEN 1 ELSE 0 END) AS supported,
+               MAX(cr.processed_at) AS last_support
+        FROM event_sources es
+        JOIN events e ON e.id = es.event_id AND e.archived = FALSE
+        JOIN crawl_events ce ON ce.id = es.crawl_event_id
+        JOIN crawl_results cr ON cr.id = ce.crawl_result_id
+        JOIN websites w ON w.id = cr.website_id
+        GROUP BY es.event_id
+    """)
+
+    cursor.execute("""
+        SELECT e.id, e.name,
+               (SELECT MIN(eo.start_date)
+                FROM event_occurrences eo
+                WHERE eo.event_id = e.id
+                  AND eo.start_date >= CURDATE()) AS next_occurrence
+        FROM events e
+        JOIN _evt_src_state s ON s.event_id = e.id
+        WHERE e.archived = FALSE
+          AND s.live_sources = 0
+          AND s.supported > 0
+          AND (
+              NOT EXISTS (SELECT 1 FROM _evt_future f WHERE f.event_id = e.id)
+              OR s.last_support < DATE_SUB(NOW(), INTERVAL 14 DAY)
+          )
+    """)
+    events_to_archive = cursor.fetchall()
+    upcoming_events = [(event_id, name, next_occ)
+                       for event_id, name, next_occ in events_to_archive if next_occ]
+
+    ids = [row[0] for row in events_to_archive]
+    archived_count = 0
+    for start in range(0, len(ids), 1000):
+        chunk = ids[start:start + 1000]
+        placeholders = ','.join(['%s'] * len(chunk))
+        cursor.execute(
+            f"UPDATE events SET archived = TRUE WHERE id IN ({placeholders})",
+            chunk
+        )
+        archived_count += cursor.rowcount
+
+    connection.commit()
+
+    cursor.execute("DROP TEMPORARY TABLE IF EXISTS _evt_src_state")
     if not temps_built:
         drop_archival_temps(cursor)
 

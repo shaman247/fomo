@@ -24,6 +24,13 @@ from constants import get_active_date_window
 DEADLOCK_MAX_RETRIES = 3
 DEADLOCK_RETRY_DELAY = 2  # seconds
 
+# How far back a DATELESS crawl_event (no occurrence rows at all) may be picked
+# up by the merger. Dated crawl_events are unbounded — a future occurrence makes
+# them self-limiting — but a dateless one carries no date to age out on, so the
+# window plus the "website's latest crawl" test is the only thing keeping the
+# historical backlog from replaying.
+DATELESS_MERGE_WINDOW_DAYS = 14
+
 
 def _retry_on_deadlock(func, *args, max_retries=DEADLOCK_MAX_RETRIES, **kwargs):
     """Retry a function on MySQL deadlock (error 1213).
@@ -620,6 +627,97 @@ def are_names_similar(name1, name2):
     return False
 
 
+def _match_dateless_crawl_event(name, location_id, lat, lng, location_name,
+                                existing_by_location_id, existing_by_coords,
+                                existing_by_location, website_id=None,
+                                existing_by_website=None):
+    """Match a crawl_event that carries NO dates at all to an existing event.
+
+    Long-running exhibitions are published without dates ("Ongoing", or a
+    "Through Aug 22" line Gemini returns as null/null). The processor keeps such
+    a row (`missing_date`) so the detail crawl can date it later — but when the
+    detail page is dateless too, the crawl_event ends up with zero
+    crawl_event_occurrences rows. Those crawl_events used to be invisible to the
+    merger: the loader required a future occurrence, so they never linked to
+    anything, and archival read the show as absent-from-crawl and archived it
+    while it was still on the page (MoMA's `Marcel Duchamp`, e66269 — 73 sources
+    and archived; six such shows in one 2026-07-26 crawl alone).
+
+    Matching here is deliberately much stricter than the dated path: an EXACT
+    normalized name at the crawl_event's OWN venue, and nothing else. A dated
+    crawl_event can afford fuzzy names and a same-website fallback because a
+    shared occurrence corroborates the guess; a dateless one has no second
+    signal, and a wrong link silently resurrects an unrelated event (two
+    galleries can both run a show called "Marcel Duchamp").
+
+    Returns an event id or None. Never creates anything.
+    """
+    norm_name = normalize_name_for_dedup(name)
+    if not norm_name:
+        return None
+
+    def _exact(candidates, enforce_location_id=False):
+        for existing in candidates:
+            if enforce_location_id and location_id is not None:
+                existing_loc_id = existing.get('location_id')
+                if existing_loc_id is not None and existing_loc_id != location_id:
+                    continue
+            if normalize_name_for_dedup(existing['name']) == norm_name:
+                return existing['id']
+        return None
+
+    if location_id is not None:
+        matched = _exact(existing_by_location_id.get(location_id, []))
+        if matched:
+            return matched
+
+    if lat is not None and lng is not None:
+        matched = _exact(existing_by_coords.get(_coord_key(lat, lng), []))
+        if matched:
+            return matched
+
+    venue_known = location_id is not None
+    if location_name:
+        loc_key = normalize_name_for_dedup(location_name)
+        if loc_key and len(loc_key) >= 3:
+            candidates = existing_by_location.get(loc_key, [])
+            if candidates:
+                venue_known = True
+            matched = _exact(candidates, enforce_location_id=True)
+            if matched:
+                return matched
+
+    # Last tier, only for a crawl_event with NO usable venue signal at all (no
+    # location_id, and a location_name no existing event uses — e.g. MoMA's
+    # "MoMA Design Store Soho", a satellite venue that isn't in `locations`).
+    # Same website + exact name, and ONLY when that pair is unambiguous: if the
+    # site runs two identically-named shows, a dateless row cannot say which one
+    # it is, and guessing would silently merge two venues' events.
+    if not venue_known and website_id is not None and existing_by_website:
+        hits = {existing['id'] for existing in existing_by_website.get(website_id, [])
+                if normalize_name_for_dedup(existing['name']) == norm_name}
+        if len(hits) == 1:
+            return hits.pop()
+
+    return None
+
+
+def _event_has_live_occurrence(cursor, event_id, current_date):
+    """True when the event still has a current or future occurrence.
+
+    Gates the un-archive on a dateless link: "the venue still lists this" is
+    reason enough to record a source, but not to put a finished run back on the
+    map. An archived event with only past occurrences stays archived — its
+    fresh event_sources row simply stops archival from re-firing on it.
+    """
+    cursor.execute(
+        "SELECT 1 FROM event_occurrences WHERE event_id = %s "
+        "  AND (start_date >= %s OR (end_date IS NOT NULL AND end_date >= %s)) LIMIT 1",
+        (event_id, current_date, current_date),
+    )
+    return cursor.fetchone() is not None
+
+
 def source_url_listing_set(cursor, cache, website_id):
     """Return the set of trimmed website_urls for a website (memoized).
     Used to detect when a candidate URL is a generic listing page so we can
@@ -1096,13 +1194,38 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
         LEFT JOIN locations l ON ce.location_id = l.id
         WHERE cr.status = 'processed'
           AND es.id IS NULL
-          AND EXISTS (
-              SELECT 1 FROM crawl_event_occurrences ceo
-              WHERE ceo.crawl_event_id = ce.id
-                AND (ceo.start_date >= %s OR (ceo.end_date IS NOT NULL AND ceo.end_date >= %s))
+          AND (
+              EXISTS (
+                  SELECT 1 FROM crawl_event_occurrences ceo
+                  WHERE ceo.crawl_event_id = ce.id
+                    AND (ceo.start_date >= %s OR (ceo.end_date IS NOT NULL AND ceo.end_date >= %s))
+              )
+              OR (
+                  -- Dateless listing: an "Ongoing" exhibition whose detail page
+                  -- is dateless too ends up with NO occurrence rows at all. It
+                  -- can still say "this show is still listed" by linking to its
+                  -- existing event (see _match_dateless_crawl_event), which is
+                  -- what stops archival from burying long-running shows.
+                  --
+                  -- Tightly bounded on purpose: only from the website's most
+                  -- recent crawl and only recently. ~27k such crawl_events sit
+                  -- in the historical backlog, and replaying those would link
+                  -- long-superseded listings and resurrect finished runs.
+                  NOT EXISTS (
+                      SELECT 1 FROM crawl_event_occurrences ceo2
+                      WHERE ceo2.crawl_event_id = ce.id
+                  )
+                  AND cr.processed_at >= %s
+                  AND cr.id = (
+                      SELECT MAX(cr2.id) FROM crawl_results cr2
+                      WHERE cr2.website_id = cr.website_id
+                        AND cr2.status IN ('processed', 'extracted')
+                  )
+              )
           )
     """
-    merge_params = [current_date, current_date]
+    dateless_cutoff = datetime.now() - timedelta(days=DATELESS_MERGE_WINDOW_DAYS)
+    merge_params = [current_date, current_date, dateless_cutoff]
     if website_ids:
         placeholders = ','.join(['%s'] * len(website_ids))
         merge_query += f" AND cr.website_id IN ({placeholders})"
@@ -1250,8 +1373,14 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                 if start_date >= current_date or (end_date and end_date >= current_date):
                     valid_occurrences.append(occ)
 
-        if not valid_occurrences:
-            # No valid future occurrences, skip
+        # A crawl_event with NO occurrence rows at all is a dateless listing
+        # (see _match_dateless_crawl_event). It is handled on a restricted path:
+        # it may link to an existing event, but never creates one — inventing a
+        # date for an undated listing would drop arbitrary events onto the map.
+        dateless = not occurrences
+
+        if not valid_occurrences and not dateless:
+            # Had dates, none of them current/future — skip
             continue
 
         # Build set of occurrence dates and date ranges for this crawl event
@@ -1346,11 +1475,22 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                         exact_no_overlap_id = existing['id']
             return best_id if best_id is not None else exact_no_overlap_id
 
+        if dateless:
+            # Exact name at this crawl_event's own venue, or nothing. No fuzzy
+            # names, no coordinate-less website fallback, no creation.
+            matched_event_id = _match_dateless_crawl_event(
+                name, location_id, lat, lng, location_name,
+                existing_events_by_location_id, existing_events_by_coords,
+                existing_events_by_location, website_id, existing_events_by_website,
+            )
+            if matched_event_id is None:
+                continue
+
         # Try matching by location_id first (most precise and reliable).
         # Allow no-date-overlap match here only: same venue + exact name is a
         # strong-enough signal to merge a recurring event whose old occurrences
         # have lapsed before the new crawl extracted fresh dates.
-        if location_id is not None and location_id in existing_events_by_location_id:
+        if matched_event_id is None and location_id is not None and location_id in existing_events_by_location_id:
             matched_event_id = find_best_match(
                 existing_events_by_location_id[location_id],
                 allow_no_date_overlap=True,
@@ -1442,11 +1582,16 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
 
         if matched_event_id:
             # Merge with existing event
-            # Un-archive event if it was previously archived (event found in new crawl)
-            cursor.execute(
-                "UPDATE events SET archived = FALSE WHERE id = %s AND archived = TRUE",
-                (matched_event_id,)
-            )
+            # Un-archive event if it was previously archived (event found in new crawl).
+            # A dateless link brings no date of its own, so it may only revive an
+            # event that still has a current/future occurrence — otherwise the
+            # source row is recorded (which is what stops archival re-firing)
+            # while a genuinely finished run stays archived.
+            if not dateless or _event_has_live_occurrence(cursor, matched_event_id, current_date):
+                cursor.execute(
+                    "UPDATE events SET archived = FALSE WHERE id = %s AND archived = TRUE",
+                    (matched_event_id,)
+                )
 
             # Append new occurrences from this crawl that aren't already on the event.
             # Without this, a multi-day run first ingested with one date (e.g. announcement-only)
@@ -1743,6 +1888,21 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                         for event_id, name, next_occ in upcoming_events:
                             print(f"        - Event {event_id}: {name} (next: {next_occ})")
                         total_upcoming_flagged += len(upcoming_events)
+
+            # Events whose every source website is now disabled are unreachable
+            # from the per-website loop above (a disabled website is never
+            # crawled, so no iteration ever runs for it). Sweep them once per
+            # merge. See db.archive_dead_source_events.
+            dead_archived, dead_upcoming = _retry_on_deadlock(
+                db.archive_dead_source_events, cursor, connection, temps_built=True)
+            if dead_archived > 0:
+                print(f"  Archived {dead_archived} event(s) whose source websites are all disabled")
+                total_archived += dead_archived
+                if dead_upcoming:
+                    print(f"    ⚠️  WARNING: {len(dead_upcoming)} upcoming event(s) among them:")
+                    for event_id, name, next_occ in dead_upcoming:
+                        print(f"        - Event {event_id}: {name} (next: {next_occ})")
+                    total_upcoming_flagged += len(dead_upcoming)
         finally:
             db.drop_archival_temps(cursor)
 
