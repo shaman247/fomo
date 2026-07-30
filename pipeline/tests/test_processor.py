@@ -3,12 +3,15 @@
 import unittest
 import sys
 import os
+from datetime import date
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from processor import (
     create_short_name,
+    filter_by_date,
+    group_event_occurrences,
     normalize_event_name_caps,
     strip_leading_emoji,
     is_obvious_non_event,
@@ -20,6 +23,7 @@ from processor import (
     _parse_city_state,
     _region_conflict,
     _extract_parenthetical_parent,
+    _extract_intersection,
     apply_crawled_details,
     get_location_id,
 )
@@ -1307,7 +1311,8 @@ class TestApplyCrawledDetailsEmoji(unittest.TestCase):
         self.assertEqual(params, ['A real description.', '🎤', 123])
 
 
-def _make_locations_map(entries, website_scoped=None):
+def _make_locations_map(entries, website_scoped=None, alternate_names=None,
+                        short_names=None):
     """Build a minimal locations_map for get_location_id from (name, id) pairs."""
     names = {}
     for name, lid in entries:
@@ -1318,10 +1323,71 @@ def _make_locations_map(entries, website_scoped=None):
             _normalize_location_name(n): {'id': lid, 'emoji': 'X', 'name': n}
             for n, lid in alts
         }
+
+    def _tier(pairs):
+        return {
+            _normalize_location_name(n): {'id': lid, 'emoji': 'X', 'name': n}
+            for n, lid in (pairs or [])
+        }
+
     return {
-        'names': names, 'alternate_names': {}, 'short_names': {}, 'addresses': {},
+        'names': names, 'alternate_names': _tier(alternate_names),
+        'short_names': _tier(short_names), 'addresses': {},
         'website_scoped': scoped, 'website_linked': {}, 'city_states': {},
     }
+
+
+class TestExactKeyBeatsHeuristicVariant(unittest.TestCase):
+    """A heuristic suffix-strip/-completion variant must never outrank the key
+    the source actually gave us, in ANY tier.
+
+    Regression: `get_location_id` looped tiers outermost, so the stripped
+    "park slope" variant of "Park Slope Library" matched names["park slope"] —
+    the neighborhood GENERIC — before alternate_names["park slope library"] —
+    the real branch — was consulted. Branches were reachable only when their
+    PRIMARY name was literally "<Neighborhood> Library"; every alt-reachable
+    branch silently dumped its events onto the neighborhood pin. On the
+    2026-07-27 BPL crawl this sent 6 of 6 "Park Slope Library" events to the
+    generic.
+    """
+
+    def _id(self, loc, locmap, website_id=None, sub=None, event_name='Some Event'):
+        res = get_location_id(loc, sub, 'site', event_name, locmap, website_id=website_id)
+        return (res or {}).get('id')
+
+    def test_branch_alt_beats_stripped_neighborhood_generic(self):
+        m = _make_locations_map(
+            [('Park Slope', 2505)],                       # neighborhood generic
+            alternate_names=[('Park Slope Library', 117)])  # the actual branch
+        self.assertEqual(self._id('Park Slope Library', m), 117)
+
+    def test_branch_short_name_also_beats_generic(self):
+        m = _make_locations_map(
+            [('Park Slope', 2505)],
+            short_names=[('Park Slope Library', 117)])
+        self.assertEqual(self._id('Park Slope Library', m), 117)
+
+    def test_renamed_branch_still_wins_via_names_tier(self):
+        # The proven Flatbush fix (rename the branch) must keep working.
+        m = _make_locations_map([('Flatbush', 2425), ('Flatbush Library', 297)])
+        self.assertEqual(self._id('Flatbush Library', m), 297)
+
+    def test_stripped_variant_still_used_when_nothing_exact_matches(self):
+        # The heuristic is demoted, NOT removed: with no "X Library" row
+        # anywhere, stripping to the bare name must still resolve.
+        m = _make_locations_map([('Pleasant Village', 640)])
+        self.assertEqual(self._id('Pleasant Village Community Garden', m), 640)
+
+    def test_room_completion_variant_still_resolves(self):
+        # "Branch, Room" completion (the ' library' suffix ADD) still works.
+        m = _make_locations_map([('Highlawn Library', 388)])
+        self.assertEqual(self._id('Highlawn, Meeting Room', m), 388)
+
+    def test_exact_location_beats_event_name_match(self):
+        # Group order also keeps the event name last, as before.
+        m = _make_locations_map([('Bryant Park', 700), ('Winter Village', 800)])
+        self.assertEqual(
+            self._id('Bryant Park', m, event_name='Winter Village'), 700)
 
 
 class TestLocationTripwireGuard(unittest.TestCase):
@@ -1655,6 +1721,596 @@ class TestIsCancelledByUrl(unittest.TestCase):
 
     def test_none_is_safe(self):
         self.assertFalse(is_cancelled_by_url(None))
+
+
+class _QueuedCursor:
+    """Recording cursor that returns a scripted sequence of fetchone() rows."""
+
+    def __init__(self, rows):
+        self.statements = []
+        self._rows = list(rows)
+
+    def execute(self, sql, params=None):
+        self.statements.append((sql, params))
+
+    def fetchone(self):
+        return self._rows.pop(0) if self._rows else None
+
+
+class TestOpenEndedRunDates(unittest.TestCase):
+    """Open-ended exhibition runs ("Through Aug 22") must survive.
+
+    Gemini returns that shape as an occurrence with a real ``end_date`` and a
+    null ``start_date``. Both date gates used to reject it — ``filter_by_date``
+    threw on ``strptime('')`` and returned ``invalid_date`` (so no crawl_event
+    row was ever created and ``archive_outdated_events`` archived the show as
+    absent-from-crawl), and the detail-crawl occurrence loop skipped it with a
+    bare ``if not start_date: continue``.
+
+    Real regression: MoMA's Marcel Duchamp (event 66269), extracted as
+    ``{"start_date": null, "end_date": "2026-08-22"}`` on crawls 105286 and
+    106453 while moma.org/calendar/exhibitions/5820 was still serving
+    "Through Aug 22".
+    """
+
+    TODAY = date(2026, 7, 26)
+    FUTURE_LIMIT = date(2026, 10, 24)
+
+    def _filter(self, start, end):
+        row = {'name': 'Marcel Duchamp', 'start_date': start, 'end_date': end}
+        ok, reason = filter_by_date(row, self.TODAY, self.FUTURE_LIMIT)
+        return ok, reason, row
+
+    # --- filter_by_date (listing extraction) ---
+
+    def test_open_ended_run_passes_and_backfills_start(self):
+        ok, reason, row = self._filter(None, '2026-08-22')
+        self.assertTrue(ok, reason)
+        self.assertIsNone(reason)
+        self.assertEqual(row['start_date'], '2026-07-26')
+        self.assertEqual(row['end_date'], '2026-08-22')
+
+    def test_empty_string_start_is_treated_the_same(self):
+        ok, _, row = self._filter('', '2026-08-22')
+        self.assertTrue(ok)
+        self.assertEqual(row['start_date'], '2026-07-26')
+
+    def test_run_ending_today_still_passes(self):
+        ok, _, row = self._filter('', '2026-07-26')
+        self.assertTrue(ok)
+        self.assertEqual(row['start_date'], '2026-07-26')
+
+    def test_past_run_is_not_resurrected(self):
+        ok, reason, row = self._filter('', '2026-07-25')
+        self.assertFalse(ok)
+        self.assertEqual(reason, 'end_in_past')
+        self.assertFalse(row['start_date'])
+
+    def test_both_dates_missing_stays_invalid(self):
+        ok, reason, row = self._filter('', '')
+        self.assertFalse(ok)
+        self.assertEqual(reason, 'invalid_date')
+        self.assertFalse(row['start_date'])
+
+    def test_unparseable_end_date_stays_invalid(self):
+        ok, reason, _ = self._filter(None, 'ongoing')
+        self.assertFalse(ok)
+        self.assertEqual(reason, 'invalid_date')
+
+    def test_absurdly_long_open_run_still_rejected(self):
+        ok, reason, _ = self._filter('', '2028-01-01')
+        self.assertFalse(ok)
+        self.assertEqual(reason, 'duration_too_long')
+
+    def test_normal_rows_are_unchanged(self):
+        ok, reason, row = self._filter('2026-08-01', '2026-08-03')
+        self.assertTrue(ok, reason)
+        self.assertEqual(row['start_date'], '2026-08-01')
+        ok, reason, _ = self._filter('2026-06-01', '2026-06-02')
+        self.assertFalse(ok)
+        self.assertEqual(reason, 'end_in_past')
+        ok, reason, _ = self._filter('2027-01-01', '')
+        self.assertFalse(ok)
+        self.assertEqual(reason, 'start_too_future')
+
+    # --- apply_crawled_details (detail crawl) ---
+
+    _TAG_CONTEXT = ({}, {}, set(), [])
+
+    def _occurrence_inserts(self, occurrences):
+        # fetchone() order in apply_crawled_details: existing-occurrence COUNT,
+        # then the (crawl_result_id, website_id) lookup row.
+        cursor = _QueuedCursor([(0,), (77, 62)])
+        apply_crawled_details(
+            cursor, _NoopConnection(), 456,
+            {'description': 'An exhibition.', 'hashtags': [], 'emoji': '',
+             'occurrences': occurrences},
+            self._TAG_CONTEXT,
+        )
+        return [params for sql, params in cursor.statements
+                if sql.startswith("INSERT INTO crawl_event_occurrences")]
+
+    def test_detail_crawl_backfills_open_ended_start(self):
+        inserts = self._occurrence_inserts(
+            [{'start_date': None, 'end_date': '2126-08-22'}])
+        self.assertEqual(len(inserts), 1)
+        self.assertEqual(inserts[0][1], date.today().strftime('%Y-%m-%d'))
+        self.assertEqual(inserts[0][3], '2126-08-22')
+
+    def test_detail_crawl_drops_past_open_ended_run(self):
+        self.assertEqual(
+            self._occurrence_inserts([{'start_date': None, 'end_date': '2020-01-01'}]),
+            [])
+
+    def test_detail_crawl_drops_fully_dateless_occurrence(self):
+        self.assertEqual(
+            self._occurrence_inserts([{'start_date': None, 'end_date': None}]), [])
+        self.assertEqual(
+            self._occurrence_inserts([{'start_date': '', 'end_date': 'someday'}]), [])
+
+    def test_detail_crawl_keeps_normal_occurrences(self):
+        inserts = self._occurrence_inserts(
+            [{'start_date': '2126-05-01', 'start_time': '7:00 PM',
+              'end_date': None, 'end_time': '9:00 PM'}])
+        self.assertEqual(len(inserts), 1)
+        self.assertEqual(inserts[0][1], '2126-05-01')
+        self.assertEqual(inserts[0][2], '7pm')
+        self.assertIsNone(inserts[0][3])
+        self.assertEqual(inserts[0][4], '9pm')
+
+
+class TestDetailCrawlKeepsListingDatesWhenNothingSurvives(unittest.TestCase):
+    """A detail crawl that yields only PAST dates must not wipe the listing date.
+
+    ``apply_crawled_details`` used to ``DELETE FROM crawl_event_occurrences``
+    unconditionally and only then filter the replacements for past dates. When
+    every detail-page occurrence was past, the event was left with ZERO
+    occurrences and the correct listing-derived date was destroyed.
+
+    Real regressions (2026-07-27 run, ~48% of that run's undated events):
+      * AMC ``/movies/<slug>`` detail pages return the film's RELEASE date
+        rather than showtimes, so dated showings silently moved backwards
+        (Chennai Love Story 7/27 -> 7/24, Bad Counselors 7/27 -> 7/22, ...).
+      * The Bitter End's listing gave 2026-08-15..2026-09-25 but the detail
+        crawl returned the same days as 2025, so all were rejected.
+
+    The fix materialises the surviving rows first and only replaces when at
+    least one survives.
+    """
+
+    _TAG_CONTEXT = ({}, {}, set(), [])
+
+    def _statements(self, occurrences):
+        # fetchone() order: existing-occurrence COUNT, then (crawl_result_id, website_id).
+        cursor = _QueuedCursor([(0,), (77, 62)])
+        apply_crawled_details(
+            cursor, _NoopConnection(), 456,
+            {'description': 'A film.', 'hashtags': [], 'emoji': '',
+             'occurrences': occurrences},
+            self._TAG_CONTEXT,
+        )
+        deletes = [p for sql, p in cursor.statements
+                   if sql.startswith("DELETE FROM crawl_event_occurrences")]
+        inserts = [p for sql, p in cursor.statements
+                   if sql.startswith("INSERT INTO crawl_event_occurrences")]
+        rejections = [p for sql, p in cursor.statements
+                      if 'extraction_rejections' in sql]
+        return deletes, inserts, rejections
+
+    def test_all_past_occurrences_leave_existing_rows_untouched(self):
+        deletes, inserts, _ = self._statements(
+            [{'start_date': '2025-08-15', 'end_date': '2025-08-15'},
+             {'start_date': '2025-09-25', 'end_date': '2025-09-25'}])
+        self.assertEqual(deletes, [], "listing occurrences must not be deleted")
+        self.assertEqual(inserts, [])
+
+    def test_all_past_occurrences_are_still_logged_as_rejections(self):
+        _, _, rejections = self._statements(
+            [{'start_date': '2025-08-15', 'end_date': '2025-08-15'}])
+        self.assertTrue(rejections, "dropped occurrences should still be logged")
+
+    def test_single_surviving_occurrence_still_replaces(self):
+        deletes, inserts, _ = self._statements(
+            [{'start_date': '2020-01-01', 'end_date': '2020-01-01'},
+             {'start_date': '2126-05-01', 'end_date': None}])
+        self.assertEqual(len(deletes), 1, "a real replacement must still delete")
+        self.assertEqual(len(inserts), 1)
+        self.assertEqual(inserts[0][1], '2126-05-01')
+
+    def test_replacement_sort_order_is_contiguous_from_zero(self):
+        # The dropped past row must not leave a gap in sort_order.
+        _, inserts, _ = self._statements(
+            [{'start_date': '2020-01-01', 'end_date': '2020-01-01'},
+             {'start_date': '2126-05-01', 'end_date': None},
+             {'start_date': '2126-05-02', 'end_date': None}])
+        self.assertEqual([p[5] for p in inserts], [0, 1])
+
+    def test_fully_dateless_detail_result_does_not_delete(self):
+        deletes, inserts, _ = self._statements(
+            [{'start_date': None, 'end_date': None}])
+        self.assertEqual(deletes, [])
+        self.assertEqual(inserts, [])
+
+
+class TestDatelessTwinDoesNotStarveExhibition(unittest.TestCase):
+    """w3183 (Art Students League) lists each exhibition TWICE — once as a
+    dateless teaser on /events and once with its real run on /exhibitions — so
+    every crawl produces a `occurrences: null` row and a dated row under the
+    same name. group_event_occurrences merges them; the dateless row must not
+    displace the dated occurrence.
+
+    Context: e75011 "Fairfield Porter: What Everyone Knows" starved from
+    2026-06-04 to 2026-07-18 because the dated row was rejected as
+    `end_in_past` (the extractor schema had no `end_date`, so an exhibition
+    opening 2026-06-05 looked like a stale one-day event) and only the dateless
+    twin survived, leaving the crawl_event with zero occurrences. The schema
+    gap was fixed in 1dcd934; this locks in the grouping half.
+    """
+
+    def _group(self, rows):
+        events = group_event_occurrences(rows, 'https://www.artstudentsleague.org/')
+        return {e['name']: [o for o in e['occurrences'] if o[0]] for e in events}
+
+    def test_dated_row_survives_its_dateless_twin(self):
+        name = 'Fairfield Porter: What Everyone Knows'
+        base = {'name': name, 'location': 'Art Students League',
+                'location_id': 1234, 'url': ''}
+        for order in ((0, 1), (1, 0)):
+            rows = [
+                dict(base, start_date='', start_time='', end_date='', end_time='',
+                     missing_date=True),
+                dict(base, start_date='2026-06-05', start_time='',
+                     end_date='2026-08-18', end_time=''),
+            ]
+            rows = [rows[i] for i in order]
+            grouped = self._group(rows)
+            self.assertEqual(list(grouped), [name])
+            self.assertEqual(grouped[name], [['2026-06-05', '', '2026-08-18', '']])
+
+
+class TestJunkFilterGaps20260727(unittest.TestCase):
+    """Non-events that reached the event-type classifier as UNKNOWN on
+    2026-07-27 and had to be suppressed by hand.
+
+    Fixtures are the real names of events 200503 (a film-crew booking notice at
+    La Plaza Cultural), 200728 (a bar's food-holiday promo) and 201030 (a
+    recruitment ad for an ongoing training program).
+    """
+
+    # --- (a) production / location-shoot booking notices (ADDED) ---
+
+    def test_film_shoot_booking_notice_dropped(self):
+        self.assertTrue(is_obvious_non_event("Film Shooting – Happy Accidents"))
+
+    def test_shoot_notice_variants_dropped(self):
+        for name in ("Photo Shoot: Vogue Editorial",
+                     "Video Shoot - Music Video",
+                     "Film Shoot",
+                     "Commercial Shoot | Nike"):
+            self.assertTrue(is_obvious_non_event(name), name)
+
+    def test_private_rental_dropped(self):
+        self.assertTrue(is_obvious_non_event("Private Rental"))
+        self.assertTrue(is_obvious_non_event("Garden Private Booking"))
+
+    def test_real_shoot_classes_survive(self):
+        """The separator requirement is what protects these — a photography
+        class is a genuine event and must not be dropped."""
+        for name in ("Photo Shoot Workshop",
+                     "Video Shoot Basics for Beginners",
+                     "Film Shooting Techniques Class"):
+            self.assertFalse(is_obvious_non_event(name), name)
+
+    def test_film_screenings_unaffected(self):
+        for name in ("Film Screening: Happy Accidents",
+                     "Film Screening – Nosferatu"):
+            self.assertFalse(is_obvious_non_event(name), name)
+
+    def test_bare_rental_prefix_still_editorial(self):
+        """Pre-existing deliberate carve-out: venues use a bare "RENTAL:" prefix
+        on genuinely public events, so it stays an editorial-review case."""
+        self.assertFalse(is_obvious_non_event("RENTAL: Warehouse Dance Party"))
+
+    # --- (b) shapes deliberately NOT added, with the reason ---
+
+    def test_interrogative_recruitment_deliberately_not_dropped(self):
+        """201030 "Are You Interested In Becoming A Tailor..." is junk, but a
+        title-case question is also how libraries and community orgs headline
+        REAL free programs ("Want to Learn Guitar? Free Class"). One instance
+        does not justify a rule with that false-positive surface; it was
+        suppressed editorially instead."""
+        self.assertFalse(is_obvious_non_event(
+            "Are You Interested In Becoming A Tailor Or Fashion Designer?"))
+        self.assertFalse(is_obvious_non_event("Want to Learn Guitar? Free Class"))
+
+    def test_national_food_day_deliberately_not_dropped(self):
+        """200728 "National Chicken Wing Day" was a bar promo with no program,
+        but venues also host genuine themed nights on the same food holidays
+        ("National Margarita Day Party"). Dropping the bare marker would be a
+        coin flip on intent, so this stays editorial."""
+        self.assertFalse(is_obvious_non_event("National Chicken Wing Day"))
+        self.assertFalse(is_obvious_non_event("National Margarita Day Party"))
+
+
+class TestJunkFilterGaps20260726(unittest.TestCase):
+    """Four non-events that reached the event-type classifier as UNKNOWN on
+    2026-07-26 and had to be suppressed by hand.
+
+    Fixtures are the real names/descriptions of events 199661 (PlayCo
+    residency-exchange open call), 199675 (Public Art Fund program
+    announcement), 199703 (a private Javits Center booking) and 200267 (Bethel
+    Woods museum operating hours).
+    """
+
+    # --- (a) "Announcing ..." open calls / application windows ---
+
+    def test_announcing_open_call_dropped(self):
+        self.assertTrue(is_obvious_non_event(
+            "Announcing PlayCo & Švanda Theatre Residency Exchange",
+            "PlayCo and Švanda Theatre are launching a residency exchange for "
+            "playwrights. Applications are open through September 30."))
+
+    def test_accepting_applications_description_dropped(self):
+        self.assertTrue(is_obvious_non_event(
+            "2027 Artist Residency",
+            "We are now accepting applications for the 2027 cycle."))
+
+    def test_open_call_in_description_is_deliberately_not_enough(self):
+        """Backed off: galleries describe REAL exhibitions by how the work was
+        solicited. A bare "open call" in the body matched 5 live events on
+        2026-07-26 (e111902, e180673, e180675, e189495, e194641), so only the
+        pre-existing name-level `open call` rule fires."""
+        self.assertFalse(is_obvious_non_event(
+            "New Voices: Design",
+            "New Voices: Design is an annual open call exhibition showcasing "
+            "the work of eight emerging artists."))
+        self.assertFalse(is_obvious_non_event(
+            "fotofoto gallery Summer Jam Exhibition",
+            "fotofoto gallery presents an Open Call: SUMMER JAM – a Non-Juried "
+            "Exhibition of Photography, Fine Art, Sculpture and more."))
+
+    def test_real_events_that_mention_applying_kept(self):
+        for name, desc in (
+            ("Announcing the Winners: Awards Ceremony",
+             "Join us as we announce this year's winners at a ceremony and reception."),
+            ("Residency Info Session",
+             "Learn how the residency works and how to apply. Refreshments served."),
+            ("Grant Writing Workshop",
+             "A hands-on workshop on writing a strong application."),
+        ):
+            self.assertFalse(is_obvious_non_event(name, desc), name)
+
+    # --- (b) private / not-open-to-the-public bookings ---
+
+    def test_private_event_notice_dropped(self):
+        self.assertTrue(is_obvious_non_event(
+            "FAB5 @ The Jacob Javits Center",
+            "Private event, not open to the public."))
+        self.assertTrue(is_obvious_non_event(
+            "Corporate Holiday Party",
+            "This is a private event and is not open to the public."))
+
+    def test_public_event_mentioning_private_hire_kept(self):
+        for name, desc in (
+            ("Friday Night Jazz",
+             "Live jazz every Friday. The back room is also available for "
+             "private events — email us for details."),
+            ("Holiday Market",
+             "Open to the public all weekend; private shopping appointments "
+             "can be booked in advance."),
+            ("Members Preview",
+             "A private view for members ahead of the public opening."),
+        ):
+            self.assertFalse(is_obvious_non_event(name, desc), name)
+
+    # --- (c) venue operating-hours rows ---
+
+    def test_venue_hours_titles_dropped(self):
+        for name in ("Museum Open Daily",
+                     "Open Daily",
+                     "Gallery Hours",
+                     "Open Daily, April – December",
+                     "Open Daily, April - December",
+                     "Museum Hours"):
+            self.assertTrue(is_obvious_non_event(name, "A description."), name)
+
+    def test_real_events_with_hours_words_kept(self):
+        for name in ("Gallery Hours Happy Hour",
+                     "Open Daily Meditation Practice",
+                     "Happy Hour at the Museum",
+                     "Open Studio Hours with the Artist",
+                     "After Hours at the Museum",
+                     "The Hours",
+                     # e81745: a real exhibition listed under its viewing hours.
+                     "Gallery Hours - New Jersey Birds X New Jersey Artists",
+                     "Museum Hours: A Film by Jem Cohen"):
+            self.assertFalse(is_obvious_non_event(name, "A description."), name)
+
+    def test_schedule_tails_on_hours_titles_still_dropped(self):
+        for name in ("Open Daily, 10 AM - 5 PM",
+                     "Museum Open Daily — year-round",
+                     "Gallery Hours: Tuesday through Sunday"):
+            self.assertTrue(is_obvious_non_event(name, "A description."), name)
+
+    # --- (d) program announcements / save-the-dates ---
+
+    def test_upcoming_year_program_announcement_dropped(self):
+        self.assertTrue(is_obvious_non_event(
+            "Upcoming 2026 Exhibitions",
+            "Public Art Fund is pleased to announce its 2026 season of "
+            "exhibitions across New York City."))
+        self.assertTrue(is_obvious_non_event("Upcoming 2027 Programs", ""))
+
+    def test_save_the_date_rule_was_rejected(self):
+        """Backed off: "Save the Date" is a marketing prefix on real, fully
+        scheduled events. A start-anchored rule matched 7 of 7 live events on
+        2026-07-26, so no rule was added."""
+        for name, desc in (
+            ("Save the Date: Randalls Island Full Moon and Picnic Ride",
+             "A Brompton-only full moon ride to Randalls Island with a moonlit "
+             "picnic."),
+            ("Save the Date: Mid-Autumn Family Festival",
+             "Mooncakes, lanterns, and sweet reunions abound at MOCA's "
+             "Mid-Autumn Family Festival."),
+            ("SAVE THE DATE: A Weekend with Demo Rinpoche",
+             "We are delighted to welcome Demo Rinpoche back to Tibet House."),
+        ):
+            self.assertFalse(is_obvious_non_event(name, desc), name)
+
+    def test_real_events_with_upcoming_or_date_words_kept(self):
+        for name in ("Upcoming Exhibition Opening Reception",
+                     "2026 Exhibitions Curator Talk",
+                     "Date Night Painting Class",
+                     "Speed Dating",
+                     "Save the Whales Beach Cleanup"):
+            self.assertFalse(is_obvious_non_event(name, "A description."), name)
+
+    # --- guard: RENTAL:-prefixed rows are NOT junk (per prior review) ---
+
+    def test_rental_prefixed_rows_still_kept(self):
+        for name in ("RENTAL: Brooklyn Comedy Showcase",
+                     "RENTAL: Private Dance Party"):
+            self.assertFalse(is_obvious_non_event(
+                name, "Doors at 8pm, show at 9pm. Tickets at the door."), name)
+
+
+class TestPrefixTierAmbiguity(unittest.TestCase):
+    """The prefix tier accepts `loc_key.startswith(key + ' ')` at >=70% coverage
+    and used to take the FIRST match in dict order. When a bare name prefixes
+    two different venues that is a coin flip that silently pins events to the
+    wrong county — "first reformed church" covers exactly 0.700 of "first
+    reformed church of nyack" (Rockland) while Brooklyn and Hastings-on-Hudson
+    twins also exist. Ambiguous keys must be rejected, not guessed.
+    """
+
+    def _id(self, loc, locmap, website_id=None, sub=None, event_name='Some Event'):
+        res = get_location_id(loc, sub, 'site', event_name, locmap, website_id=website_id)
+        return (res or {}).get('id')
+
+    def _map(self, names=(), alts=(), **kw):
+        m = _make_locations_map(list(names), **kw)
+        m['alternate_names'] = {
+            _normalize_location_name(n): {'id': lid, 'emoji': 'X', 'name': n}
+            for n, lid in alts
+        }
+        return m
+
+    def test_unambiguous_prefix_still_matches(self):
+        # The tier's reason for existing must survive: one candidate -> match.
+        m = self._map([('First Reformed Church of Nyack', 3678)])
+        self.assertEqual(self._id('First Reformed Church', m), 3678)
+
+    def test_ambiguous_prefix_rejected(self):
+        m = self._map([('First Reformed Church Nyack', 3678),
+                       ('First Reformed Church Zephyr', 4459)])
+        self.assertIsNone(self._id('First Reformed Church', m))
+
+    def test_ambiguous_alt_name_prefix_rejected(self):
+        m = self._map(alts=[('First Reformed Church Nyack', 3678),
+                            ('First Reformed Church Zephyr', 4459)])
+        self.assertIsNone(self._id('First Reformed Church', m))
+
+    def test_ambiguity_in_names_does_not_fall_through_to_alts(self):
+        # If the primary-name tier is a coin flip, an alternate-name hit on the
+        # SAME ambiguous key is just as arbitrary — don't quietly accept it.
+        m = self._map([('First Reformed Church Nyack', 3678),
+                       ('First Reformed Church Zephyr', 4459)],
+                      alts=[('First Reformed Church Vesper', 9001)])
+        self.assertIsNone(self._id('First Reformed Church', m))
+
+    def test_same_location_via_two_keys_is_not_ambiguous(self):
+        # One venue reachable through two keys in the same tier is a single
+        # candidate, not a conflict.
+        m = self._map([('First Reformed Church Nyack', 3678),
+                       ('First Reformed Church Zephyr', 3678)])
+        self.assertEqual(self._id('First Reformed Church', m), 3678)
+
+    def test_duplicate_name_rows_are_ambiguous(self):
+        # build_locations_map stores same-name duplicates as a LIST; taking the
+        # first was the same coin flip.
+        m = _make_locations_map([('Fizzbuzz Meeting Hall', 111)])
+        key = _normalize_location_name('Fizzbuzz Meeting Hall')
+        m['names'][key] = [{'id': 111, 'emoji': 'X', 'name': 'Fizzbuzz Meeting Hall'},
+                           {'id': 222, 'emoji': 'X', 'name': 'Fizzbuzz Meeting Hall'}]
+        self.assertIsNone(self._id('Fizzbuzz Meeting', m))
+
+    def test_short_bare_name_does_not_reach_branch_outposts(self):
+        # Unchanged behaviour worth pinning: "Devocion" covers only 38% of
+        # "devocion williamsburg", so the coverage floor already keeps a short
+        # bare name from picking an arbitrary outpost. The ambiguity rejection
+        # is not what makes this None, and must not change it.
+        m = self._map([('Devocion (Williamsburg)', 801),
+                       ('Devocion (Flatiron)', 802)])
+        self.assertIsNone(self._id('Devocion', m))
+
+    def test_paren_key_is_exempt_from_ambiguity_rejection(self):
+        # The `key + '('` branch has no coverage requirement and is the
+        # deliberate "bare name -> branch" path. Keep it first-wins so the
+        # rejection can't newly-NULL it.
+        m = _make_locations_map([('Zzyzx Coffee', 900)])
+        for raw, lid in (('zzyzx(williamsburg)', 801), ('zzyzx(flatiron)', 802)):
+            m['names'][raw] = {'id': lid, 'emoji': 'X', 'name': raw}
+        self.assertIn(self._id('Zzyzx', m), (801, 802))
+
+    def test_region_conflict_leaves_one_survivor(self):
+        # Two candidates, one filtered out by the state guard, is not ambiguous.
+        m = self._map([('Fizzbuzz Community Center Alpha', 3678),
+                       ('Fizzbuzz Community Center Gamma', 4459)])
+        m['city_states'] = {'hoboken': {'NJ'}, 'new york': {'NY'}}
+        m['names'][_normalize_location_name('Fizzbuzz Community Center Alpha')]['address'] = \
+            'X, Hoboken, NJ 07030, USA'
+        m['names'][_normalize_location_name('Fizzbuzz Community Center Gamma')]['address'] = \
+            'X, New York, NY 10013, USA'
+        self.assertEqual(
+            self._id('Fizzbuzz Community Center, Hoboken', m), 3678)
+
+
+class TestIntersectionJoinerComma(unittest.TestCase):
+    """Google's canonical intersection format puts the comma AFTER the joiner
+    ("7th Ave &, 44th St, Brooklyn, NY"). `_extract_intersection` split on
+    commas first, so that segment became the one-sided "7th Ave &" and was
+    skipped — losing the intersection entirely. Regression: loc 14 (7th Ave
+    Sunset Park Greenmarket) and loc 177 (Carnegie Hall) exported a sublocation
+    that was literally their own DB address rewritten.
+    """
+
+    def test_ampersand_followed_by_comma(self):
+        self.assertEqual(_extract_intersection('7th Ave &, 44th St, Brooklyn, NY 11232, USA'),
+                         frozenset({'7 ave', '44 st'}))
+
+    def test_and_followed_by_comma(self):
+        self.assertEqual(_extract_intersection('57th Street and, 7th Ave, New York, NY, USA'),
+                         frozenset({'57 st', '7 ave'}))
+
+    def test_at_followed_by_comma(self):
+        self.assertEqual(_extract_intersection('Broadway at, W 42nd St, New York, NY'),
+                         frozenset({'broadway', '42 st'}))
+
+    # --- regression guards: the ordinary shapes must be unchanged ---
+
+    def test_plain_intersection_still_parses(self):
+        self.assertEqual(_extract_intersection('14th St Loop & Avenue A'),
+                         frozenset({'14 st loop', 'ave a'}))
+
+    def test_order_is_insensitive(self):
+        self.assertEqual(_extract_intersection('Avenue A & 14th St Loop'),
+                         _extract_intersection('14th St Loop & Avenue A'))
+
+    def test_intersection_in_first_segment_of_longer_address(self):
+        self.assertEqual(
+            _extract_intersection("3rd Avenue & 95th Street, Walgreen's Parking, lot 9408 3rd Ave"),
+            frozenset({'3 ave', '95 st'}))
+
+    def test_house_address_still_none(self):
+        self.assertIsNone(_extract_intersection('541 W 24th St, New York, NY'))
+        self.assertIsNone(_extract_intersection('8 Wyckoff Ave, Brooklyn, NY'))
+
+    def test_room_label_still_none(self):
+        self.assertIsNone(_extract_intersection('Studio B'))
+
+    def test_empty_still_none(self):
+        self.assertIsNone(_extract_intersection(''))
+        self.assertIsNone(_extract_intersection(None))
 
 
 if __name__ == "__main__":

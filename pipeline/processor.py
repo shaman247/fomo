@@ -420,9 +420,31 @@ def filter_by_date(row_dict, current_date, future_limit_date):
     When end_date is absent, allows a PAST_START_GRACE_DAYS grace period
     before rejecting so multi-session events and recently-ended listings
     aren't dropped on day 1.
+
+    Open-ended runs ("Through Aug 22") arrive with an end_date and NO
+    start_date; row_dict['start_date'] is backfilled with today so the row
+    survives (see below).
     """
     start_date_str = (row_dict.get('start_date') or '').strip()
     end_date_str = (row_dict.get('end_date') or '').strip()
+
+    # Open-ended run: an exhibition listed only by its closing date ("Through
+    # Aug 22") comes back from Gemini as {"start_date": null, "end_date":
+    # "2026-08-22"}. strptime('') used to raise here, the row was rejected as
+    # 'invalid_date', and — because a rejected row never becomes a crawl_event —
+    # archive_outdated_events then archived the show as absent-from-crawl while
+    # it was still on the page (MoMA's Marcel Duchamp, e66269, across three
+    # crawls). The run IS happening today, so today is the correct start.
+    # Rows with NEITHER date fall through unchanged and stay 'invalid_date'.
+    if not start_date_str and end_date_str:
+        try:
+            open_run_end = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+        except (ValueError, TypeError):
+            return False, 'invalid_date'
+        if open_run_end < current_date:
+            return False, 'end_in_past'
+        start_date_str = current_date.strftime('%Y-%m-%d')
+        row_dict['start_date'] = start_date_str
 
     try:
         start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
@@ -538,6 +560,52 @@ _NON_EVENT_NAME_PATTERNS = [
     r'^\s*grants?\s*:',
     r'\bmicro[\s-]?grants?\b',
     r'\bgrants?\s+(cycle|round|application|deadline)\b',
+    # Program/initiative announcements that lead with "Announcing ..." — a press
+    # release about a residency, fellowship or partnership, not something you
+    # attend ("Announcing PlayCo & Švanda Theatre Residency Exchange", e199661).
+    # Vetoed when the name also names an attendable occasion, so the announcement
+    # OF an event survives ("Announcing the Winners: Awards Ceremony").
+    r'^\s*announcing\b(?!.*\b(ceremony|reception|party|gala|concert|screening|'
+    r'performance|showcase|festival|opening|premiere|celebration|awards?|night|'
+    r'launch|tour|talk|workshop|class|reading|film|show|club|series|meetup|'
+    r'open\s+house|session)\b)',
+    # Season/program announcements ("Upcoming 2026 Exhibitions", e199675).
+    # Start-anchored so a real event that merely contains the words survives
+    # ("Upcoming Exhibition Opening Reception", "2026 Exhibitions Curator Talk").
+    #
+    # A sibling "Save the Date" prefix rule was tried and REJECTED: it matched
+    # 7 of 7 live events on 2026-07-26 (e138919 Randalls Island Full Moon Ride,
+    # e180036 Art of Fairy Tales Symposium, e186058 Flight Night, e187265 Demo
+    # Rinpoche, e189389 ArtTable Leadership Series, e199776 MOCA Mid-Autumn
+    # Festival, e184215 Brompton Urban Challenge) — venues use "Save the Date"
+    # as a marketing prefix on fully-scheduled events, not as a placeholder.
+    r'^\s*upcoming\s+20\d{2}\b',
+    # Venue operating hours published as an "event" ("Museum Open Daily",
+    # e200267; "Gallery Hours"; "Open Daily, April – December"). The ENTIRE name
+    # must be the hours notice, so real programming that contains the words is
+    # untouched: "Gallery Hours Happy Hour", "Open Daily Meditation Practice",
+    # "After Hours at the Museum", "Open Studio Hours with the Artist".
+    #
+    # Two precision guards learned from the live corpus:
+    #  - a leading venue noun (or the literal "Open Daily") is required, or a
+    #    bare "Hours" would eat the film "The Hours";
+    #  - the optional trailing clause may contain ONLY schedule tokens (months,
+    #    weekdays, numbers, am/pm, "year-round", …). An earlier `.{0,60}` tail
+    #    swallowed "Gallery Hours - New Jersey Birds X New Jersey Artists"
+    #    (e81745), a real exhibition listed by its viewing hours.
+    r'^\s*(?:the\s+)?(?:'
+    r'open\s+daily'
+    r'|(?:museum|gallery|galleries|garden|gardens|shop|store|library|park|zoo|'
+    r'aquarium|conservatory|farm|barn|observatory|planetarium|grounds|'
+    r'visitor\s+cent(?:er|re)|exhibit(?:ion)?s?)\s+'
+    r'(?:open\s+daily|hours(?:\s+of\s+operation)?)'
+    r')(?:\s*[,:–—-]\s*(?:(?:'
+    r'(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*|'
+    r'(?:mon|tues?|wed(?:nes)?|thur?s?|fri|sat(?:ur)?|sun)(?:day)?s?|'
+    r'\d{1,4}(?:st|nd|rd|th)?|[ap]\.?m\.?|noon|midnight|'
+    r'thru|through|to|and|until|year[\s-]?round|daily|weekends?|weekdays?|'
+    r'hours?|closed|open|except|holidays?'
+    r')(?:[\s,:/&–—-]+|$))+)?\s*$',
     # Casting / talent-recruitment calls (auditions to be cast or hired, not an
     # attendable public event — sibling of "open call" above). High precision:
     # "casting call" is unambiguous; the "<role> wanted/needed/sought" forms
@@ -588,6 +656,16 @@ _NON_EVENT_NAME_PATTERNS = [
     # "Point Rental"); leave bare-prefix cases to editorial review.
     r'\b(venue|space|room|hall|studio|facility|point|field|court|table)\s+rental\b',
     r'\bavailable for (booking|rent|hire|private|your)\b',
+    r'\bprivate\s+(rental|booking)\b',
+    # Production / location-shoot booking notices. Community gardens and small
+    # venues post these to warn that a film crew has the space — the venue stays
+    # open and there is nothing to attend ("Film Shooting – Happy Accidents",
+    # event 200503 at La Plaza Cultural, 2026-07-27).
+    # Deliberately requires a SEPARATOR after the shoot phrase, or the phrase to
+    # be the entire name: "Photo Shoot Workshop" and "Video Shoot Basics" are
+    # real classes and must survive. Note "shoot" never matches "screening", so
+    # film screenings are unaffected.
+    r'^\s*(film|photo|video|tv|television|commercial)\s+shoot(ing)?\s*(?:[:\|\-—–]|$)',
     # Season passes / passes-for-sale
     r'\bseason\s*pass\b',
     r'\bsummer\s*pass\b',
@@ -799,6 +877,49 @@ _SUBMISSION_CALL_DESC_RE = re.compile(
     r'\b(now\s+)?accepting\s+(submissions?|entries)\b|'
     r'\bsubmit\s+(your|an?|one|original)\b|'
     r'\bwinning\s+submissions?\b',
+    re.IGNORECASE)
+
+# Calls for applications that only reveal themselves in the DESCRIPTION. The
+# name-level rules above catch "Open Call: ..." titles, but a residency or
+# fellowship is usually titled after the program ("2027 Artist Residency",
+# "Emerging Artists Program") with the call framing in the body. Two gates: the
+# description must use unmistakable call-for-applications language, and the name
+# must not name an attendable occasion (an info session or grant-writing
+# workshop ABOUT applying is a real event).
+#
+# Deliberately NOT included: a bare "open call" / "call for artists" in the
+# description. Galleries routinely describe a real, attendable exhibition by how
+# its work was solicited ("an annual open call exhibition", "presents an Open
+# Call: SUMMER JAM — a Non-Juried Exhibition"), and those phrases matched 5 live
+# events on 2026-07-26 (e111902, e180673, e180675, e189495, e194641). The
+# name-level `\bopen call\b` rule above already covers titles that ARE the call.
+_APPLICATION_CALL_DESC_RE = re.compile(
+    r'\b(?:now\s+)?accepting\s+applications\b|'
+    r'\bapplications?\s+(?:are\s+|is\s+)?(?:now\s+)?(?:open|being\s+accepted)\b|'
+    r'\bapplication\s+(?:deadline|window|period)\b|'
+    r'\bdeadline\s+to\s+apply\b',
+    re.IGNORECASE)
+_ATTENDABLE_OCCASION_NAME_RE = re.compile(
+    r'\b(session|workshop|class|classes|course|reception|ceremony|awards?|party|'
+    r'gala|concert|screening|performance|panel|talk|lecture|tour|festival|'
+    r'showcase|opening|premiere|celebration|meeting|orientation|open\s+house|'
+    r'fair|market|reading|seminar|conference|symposium|brunch|dinner|mixer|'
+    r'social|hike|walk|run|race|game|clinic|demo|demonstration|q\s*&\s*a)\b',
+    re.IGNORECASE)
+
+# Private bookings leaked from a venue's own calendar ("FAB5 @ The Jacob Javits
+# Center" — description: "Private event, not open to the public.", e199703).
+# Both signals are required, which is what keeps a public event that merely
+# mentions private hire alive ("...the back room is also available for private
+# events"), and what keeps "private view"/"private shopping appointment"
+# phrasing out of scope.
+_PRIVATE_BOOKING_DESC_RE = re.compile(
+    r'\bprivate\s+(event|function|booking|rental|party|hire)s?\b', re.IGNORECASE)
+_NOT_PUBLIC_DESC_RE = re.compile(
+    r'\bnot\s+open\s+to\s+the\s+(?:general\s+)?public\b|'
+    r'\bclosed\s+to\s+the\s+(?:general\s+)?public\b|'
+    r'\bnot\s+a\s+public\s+event\b|'
+    r'\binvitation\s+only\b|\binvite[\s-]only\b',
     re.IGNORECASE)
 
 # Festival info-booth sub-listings: an org's marketing booth inside a festival
@@ -1119,6 +1240,12 @@ def is_obvious_non_event(name, description=None):
         if (_SUBMISSION_CONTEST_NAME_RE.search(name)
                 and not _ATTENDABLE_CONTEST_NAME_RE.search(name)
                 and _SUBMISSION_CALL_DESC_RE.search(description)):
+            return True
+        if (_APPLICATION_CALL_DESC_RE.search(description)
+                and not _ATTENDABLE_OCCASION_NAME_RE.search(name)):
+            return True
+        if (_PRIVATE_BOOKING_DESC_RE.search(description)
+                and _NOT_PUBLIC_DESC_RE.search(description)):
             return True
         if (_BOOTH_NAME_RE.search(name)
                 and _BOOTH_MARKETING_DESC_RE.search(description)):
@@ -2025,6 +2152,11 @@ def _extract_intersection(s):
     """
     if not s:
         return None
+    # Google's canonical intersection format puts a comma AFTER the joiner
+    # ("7th Ave &, 44th St, Brooklyn, NY"). Splitting on commas first would
+    # leave the segment "7th Ave &", which yields only one side and is skipped —
+    # so the whole intersection is lost. Pull the joiner back together first.
+    s = re.sub(r'\s*(&|\band\b|\bat\b)\s*,\s*', r' \1 ', s)
     for segment in s.split(','):
         parts = [p for p in _INTERSECTION_SPLIT.split(segment) if p.strip()]
         if len(parts) != 2:
@@ -2349,6 +2481,12 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
     # without this we silently miss the venue. We also try common venue-type
     # suffix completions so a bare "Highlawn" can hit "Highlawn Library".
     # ' park' deliberately omitted: too easily fuzzy-matches "X Parkway".
+    # Heuristic (extraction-recovery) variants are tracked separately from the
+    # keys the source actually gave us. Step 2 tries every EXACT key across all
+    # tiers before it will consider a mangled variant in ANY tier — see the
+    # comment there for why the reverse order silently lost library branches.
+    heuristic_keys = set()
+
     if location_name_raw and ',' in location_name_raw:
         before_comma = _normalize_location_name(location_name_raw.split(',')[0])
         if before_comma and before_comma != normalized_loc and len(before_comma) > 3:
@@ -2356,6 +2494,7 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
                 variant = (before_comma + suffix).strip()
                 if variant and variant not in location_keys:
                     location_keys.append(variant)
+                    heuristic_keys.add(variant)
 
     # Variant: handle generic venue-type suffixes (e.g. "Pleasant Village
     # Community Garden" when DB has "Pleasant Village", or "La Petit Versailles
@@ -2365,6 +2504,7 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
             stripped = normalized_loc[:-len(suffix)].strip()
             if stripped and stripped not in location_keys:
                 location_keys.append(stripped)
+                heuristic_keys.add(stripped)
             break
 
     # All search keys including event name (for exact and fuzzy matching)
@@ -2398,14 +2538,34 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
     # short_names tiers are looser, so a same-named place in a conflicting
     # municipality is rejected via the region-conflict guard (e.g. the global
     # "Columbus Park" alt of Manhattan's park vs a "Columbus Park, Hoboken" event).
-    for tier_name in ['names', 'alternate_names', 'short_names']:
-        tier = locations_map.get(tier_name, {})
-        for key in search_keys:
-            if key in tier:
-                cand = get_first(tier[key])
-                if tier_name != 'names' and conflicts(cand):
-                    continue
-                return make_result(cand)
+    #
+    # Key specificity outranks tier priority. The keys are grouped exact-location
+    # first, then heuristic variants, then the event name, and each GROUP is run
+    # across all three tiers before the next group starts. Tier order is
+    # unchanged within a group, and the groups preserve the original relative
+    # order, so this only ever demotes a mangled key below an exact one.
+    #
+    # Why it matters: the suffix-strip above turns "Park Slope Library" into the
+    # bare "park slope". With tiers looping outermost, that stripped key hit
+    # names["park slope"] — the neighborhood GENERIC — before
+    # alternate_names["park slope library"] — the actual branch — was ever
+    # consulted. A library branch was therefore only reachable if its PRIMARY
+    # name was literally "<Neighborhood> Library"; reachable-by-alt branches
+    # silently dumped their events onto the neighborhood pin. That is the
+    # `location_name_vs_program_name` failure mode, and 31 generic/branch pairs
+    # were exposed to it.
+    exact_loc_keys = [k for k in location_keys if k not in heuristic_keys]
+    variant_loc_keys = [k for k in location_keys if k in heuristic_keys]
+    event_name_keys = [k for k in search_keys if k not in location_keys]
+    for key_group in (exact_loc_keys, variant_loc_keys, event_name_keys):
+        for tier_name in ['names', 'alternate_names', 'short_names']:
+            tier = locations_map.get(tier_name, {})
+            for key in key_group:
+                if key in tier:
+                    cand = get_first(tier[key])
+                    if tier_name != 'names' and conflicts(cand):
+                        continue
+                    return make_result(cand)
 
     # Step 3: Address matching (e.g., "347 Davis Ave" matches location at that address)
     addresses_tier = locations_map.get('addresses', {})
@@ -2450,16 +2610,45 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
         # website-scoped resolution or stay unmatched.
         if key in GENERIC_LOCATION_WORDS:
             continue
-        if len(key) >= 5:
-            for tier_name in ('names', 'alternate_names'):
-                for loc_key, match in locations_map.get(tier_name, {}).items():
-                    if loc_key.startswith(key + '(') or (
-                        loc_key.startswith(key + ' ') and len(key) / len(loc_key) >= PREFIX_MATCH_COVERAGE
-                    ):
-                        cand = get_first(match)
-                        if conflicts(cand):
-                            continue
-                        return make_result(cand)
+        if len(key) < 5:
+            continue
+        for tier_name in ('names', 'alternate_names'):
+            # A branch-suffixed key ("devocion (williamsburg)") is a deliberate
+            # disambiguation of a venue with several outposts, so a bare venue
+            # name legitimately prefixes all of them. Keep first-wins there.
+            paren_hit = None
+            # Coverage-based hits, keyed by location_id so the same venue reached
+            # via several keys counts once.
+            coverage_hits = {}
+            for loc_key, match in locations_map.get(tier_name, {}).items():
+                is_paren = loc_key.startswith(key + '(')
+                is_coverage = (
+                    loc_key.startswith(key + ' ')
+                    and len(key) / len(loc_key) >= PREFIX_MATCH_COVERAGE
+                )
+                if not (is_paren or is_coverage):
+                    continue
+                for cand in (match if isinstance(match, list) else [match]):
+                    if conflicts(cand):
+                        continue
+                    if is_paren:
+                        if paren_hit is None:
+                            paren_hit = cand
+                    else:
+                        coverage_hits.setdefault(cand.get('id'), cand)
+
+            if paren_hit is not None:
+                return make_result(paren_hit)
+            if len(coverage_hits) == 1:
+                return make_result(next(iter(coverage_hits.values())))
+            if len(coverage_hits) > 1:
+                # Ambiguous: this key prefixes 2+ distinct venues at >= coverage
+                # (e.g. "first reformed church" covers exactly 0.700 of "first
+                # reformed church of nyack" AND of a Brooklyn/Hastings twin).
+                # Taking the first is a coin flip that silently mis-pins events
+                # to another county, so reject the whole key and let the caller
+                # fall through to website-scoped/fuzzy resolution or NULL.
+                break
 
     # Step 5: Fuzzy matching across all tiers
     all_tiers = [
@@ -3200,19 +3389,18 @@ def apply_crawled_details(cursor, connection, ce_id, data, tag_context,
             row = cursor.fetchone()
             cr_id, ws_id = (row[0], row[1]) if row else (None, None)
 
-            cursor.execute(
-                "DELETE FROM crawl_event_occurrences WHERE crawl_event_id = %s",
-                (ce_id,),
-            )
-            sort_order = 0
+            # Build the surviving rows BEFORE touching the existing ones.
+            # The DELETE below must not fire until we know at least one detail
+            # occurrence survives date filtering: when a detail page lists only
+            # past dates (a stale page, or one that reports a film's release
+            # date / the wrong year instead of showtimes), deleting first left
+            # the event with ZERO occurrences and destroyed the correct
+            # listing-derived date. Measured 2026-07-27: ~48% of that run's
+            # undated events came from this. Each dropped occurrence is still
+            # logged as an `end_in_past` rejection either way.
+            surviving = []
             for occ in data['occurrences']:
                 start_date = occ.get('start_date')
-                if not start_date:
-                    continue
-                try:
-                    parsed_start = datetime.strptime(str(start_date), '%Y-%m-%d').date()
-                except (ValueError, TypeError):
-                    continue
                 end_date = occ.get('end_date')
                 parsed_end = None
                 if end_date:
@@ -3220,6 +3408,33 @@ def apply_crawled_details(cursor, connection, ce_id, data, tag_context,
                         parsed_end = datetime.strptime(str(end_date), '%Y-%m-%d').date()
                     except (ValueError, TypeError):
                         end_date = None
+
+                if not start_date:
+                    # Open-ended run ("Through Aug 22") — mirror filter_by_date:
+                    # an occurrence with a live end_date and no start_date is a
+                    # show that is running NOW, so today is its start. Without
+                    # this the row was skipped outright and the exhibition lost
+                    # its only occurrence. An occurrence with neither usable
+                    # date is still dropped.
+                    if not parsed_end:
+                        continue
+                    if parsed_end < today:
+                        log_rejection(
+                            cursor, cr_id, ws_id,
+                            rejection_type='end_in_past', stage='detail_crawl',
+                            event_name=data.get('name'),
+                            event_url=data.get('url'),
+                            start_date=None, end_date=end_date,
+                            details=f'crawl_event_id={ce_id} (open-ended run)',
+                        )
+                        continue
+                    parsed_start = today
+                    start_date = today.strftime('%Y-%m-%d')
+                else:
+                    try:
+                        parsed_start = datetime.strptime(str(start_date), '%Y-%m-%d').date()
+                    except (ValueError, TypeError):
+                        continue
 
                 # Filter past occurrences: mirror filter_by_date's policy —
                 # reject immediately when end_date is present and past;
@@ -3246,14 +3461,25 @@ def apply_crawled_details(cursor, connection, ce_id, data, tag_context,
                 if parsed_end and parsed_end == parsed_start:
                     end_date = None
 
+                surviving.append((
+                    start_date, _standardize_time(occ.get('start_time')),
+                    end_date, _standardize_time(occ.get('end_time')),
+                ))
+
+            # Only replace when the detail crawl actually produced usable dates.
+            # If nothing survived, keep whatever the listing page gave us.
+            if surviving:
                 cursor.execute(
-                    "INSERT INTO crawl_event_occurrences "
-                    "(crawl_event_id, start_date, start_time, end_date, end_time, sort_order) "
-                    "VALUES (%s, %s, %s, %s, %s, %s)",
-                    (ce_id, start_date, _standardize_time(occ.get('start_time')),
-                     end_date, _standardize_time(occ.get('end_time')), sort_order),
+                    "DELETE FROM crawl_event_occurrences WHERE crawl_event_id = %s",
+                    (ce_id,),
                 )
-                sort_order += 1
+                for sort_order, (s_date, s_time, e_date, e_time) in enumerate(surviving):
+                    cursor.execute(
+                        "INSERT INTO crawl_event_occurrences "
+                        "(crawl_event_id, start_date, start_time, end_date, end_time, sort_order) "
+                        "VALUES (%s, %s, %s, %s, %s, %s)",
+                        (ce_id, s_date, s_time, e_date, e_time, sort_order),
+                    )
 
     # Replace tags
     cursor.execute(
