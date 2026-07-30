@@ -87,6 +87,7 @@ CREATE TABLE IF NOT EXISTS websites (
     crawl_frequency_locked BOOLEAN DEFAULT FALSE COMMENT 'If true, auto-frequency adjustment is disabled',
     strict_name_match TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'If true, merger only fuses a crawl_event into an existing event on an EXACT name match, or a fuzzy match confirmed by a shared occurrence slot (prevents different recurring programs at a shared generic venue from collapsing; e.g. daily.nyc run clubs)',
     max_batches INT DEFAULT NULL COMMENT 'Override default per-website extraction batch limit (default 3 = 90 events)',
+    max_content_chars INT UNSIGNED DEFAULT NULL COMMENT 'Override extractor.MAX_CONTENT_CHARS (300000) for this site: content past the cap is never offered to Gemini, so a listing longer than the cap silently loses its tail. Raise it only after confirming the truncated tail really holds event cards (not archive/footer boilerplate or a duplicated payload), and raise max_batches to match; may also be set BELOW the default to stop paying for a self-duplicating payload',
     source_type ENUM('primary','aggregator') NOT NULL DEFAULT 'primary' COMMENT 'aggregator sites are cross-referenced manually, not crawled on a regular schedule',
     process_images TINYINT(1) DEFAULT NULL COMMENT 'Run image/vision extraction for this site (e.g. Instagram)',
     user_agent VARCHAR(500) DEFAULT NULL COMMENT 'Per-site User-Agent override (default: constants.get_user_agent())',

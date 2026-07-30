@@ -2,15 +2,22 @@
 auto-bump), the estimate_event_count page-size estimator, and the
 fix_recurring_spans course-shape classifier."""
 
+import asyncio
 import importlib.util
+import json
 import os
 import sys
 import unittest
 from datetime import date
+from types import SimpleNamespace
+from unittest import mock
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+import extractor
+import re
+import site_profiles
 from extractor import (
     PreparedExtraction,
     SimpleOccurrence,
@@ -21,6 +28,7 @@ from extractor import (
     chunk_content,
     chunk_content_by_events,
     estimate_event_count,
+    has_event_evidence,
     AUTO_MAX_BATCHES_CEILING,
     DEFAULT_MAX_BATCHES,
     LARGE_PAGE_THRESHOLD,
@@ -496,6 +504,518 @@ class SimpleOccurrenceEndDateTests(unittest.TestCase):
         """Same validator as start_date — junk values become None, not garbage."""
         self.assertIsNone(SimpleOccurrence(start_date='2026-06-05',
                                            end_date='ongoing').end_date)
+
+
+class TestParseExtractionDirectives(unittest.TestCase):
+    """`[[extraction: ...]]` lines in websites.notes are machine directives, not
+    guidance — they must be parsed out AND stripped before the notes reach a
+    prompt."""
+
+    def test_no_directive_returns_notes_unchanged(self):
+        notes = "Uses Eventbrite for event listings"
+        self.assertEqual(extractor.parse_extraction_directives(notes), (set(), notes))
+
+    def test_empty_notes(self):
+        self.assertEqual(extractor.parse_extraction_directives(''), (set(), ''))
+        self.assertEqual(extractor.parse_extraction_directives(None), (set(), ''))
+
+    def test_directive_is_parsed_and_line_removed(self):
+        notes = ("Uses Eventbrite for event listings.\n"
+                 "[[extraction: force-chunked]] ~30 API cards at 43 KB sit just under "
+                 "LARGE_PAGE_THRESHOLD.\n"
+                 "Ignore the past-events archive.")
+        directives, cleaned = extractor.parse_extraction_directives(notes)
+        self.assertEqual(directives, {extractor.FORCE_CHUNKED_DIRECTIVE})
+        self.assertNotIn('[[extraction', cleaned)
+        self.assertNotIn('LARGE_PAGE_THRESHOLD', cleaned)  # rationale goes too
+        self.assertIn('Uses Eventbrite for event listings.', cleaned)
+        self.assertIn('Ignore the past-events archive.', cleaned)
+
+    def test_tokens_are_normalised_and_comma_separated(self):
+        directives, cleaned = extractor.parse_extraction_directives(
+            "[[Extraction:  Force_Chunked , something-else ]]")
+        self.assertEqual(directives, {'force-chunked', 'something-else'})
+        self.assertEqual(cleaned, '')
+
+    def test_unknown_token_degrades_to_no_override(self):
+        """A typo must not force a mode or raise — callers test membership."""
+        directives, _ = extractor.parse_extraction_directives("[[extraction: force-chunkd]]")
+        self.assertNotIn(extractor.FORCE_CHUNKED_DIRECTIVE, directives)
+
+
+class TestForceChunkedDirective(unittest.TestCase):
+    """w950 Nook: ~30 Eventbrite-API cards, estimate 32-34 (< LARGE_PAGE_THRESHOLD)
+    on 43 KB (< MAX_CHUNK_CHARS * 2) routed the page to a SINGLE call whose output
+    budget cannot hold 30 events, so extracted_content collapsed 28,254 -> 7,290 ->
+    8,383 chars across three crawls. The directive names the site instead of moving
+    the heuristic's cliff for everyone."""
+
+    @staticmethod
+    def _content(n_cards=30):
+        card = ("### [Tour of the Nook {i}](https://www.eventbrite.com/e/{i})\n"
+                "**Date**: 2026-08-{d:02d}\n**Start**: 7:00 PM\n"
+                "**Venue**: Nook, Brooklyn NY\n"
+                + ("Filler copy about the show. " * 45) + "\n"
+                "EVENT DETAIL URL: https://www.eventbrite.com/e/{i}\n\n---\n")
+        return "https://www.eventbrite.com/o/nook-34738528343\n" + "".join(
+            card.format(i=i, d=(i % 28) + 1) for i in range(n_cards))
+
+    def _prepare(self, notes):
+        content = self._content()
+        # Guard the premise: this page really is in the danger band.
+        self.assertLessEqual(estimate_event_count(content), LARGE_PAGE_THRESHOLD)
+        self.assertLess(len(content), MAX_CHUNK_CHARS * 2)
+
+        class FakeDb:
+            @staticmethod
+            def get_crawled_content(cursor, crid):
+                return content
+
+            @staticmethod
+            def find_prior_crawl_with_same_content(cursor, crid):
+                return None
+
+            @staticmethod
+            def get_existing_upcoming_events(cursor, website_id):
+                return []
+
+        with mock.patch.object(extractor, 'db', FakeDb), \
+             mock.patch.object(extractor.site_profiles, 'resolve_notes',
+                               lambda base_url, n: n or ''):
+            return asyncio.run(extractor.prepare_extraction(
+                FakeCursor((950, None), []), 77, 'Nook', notes=notes,
+                base_url='https://www.eventbrite.com/o/nook-34738528343'))
+
+    def test_without_directive_the_danger_band_page_goes_single_call(self):
+        self.assertEqual(self._prepare('Uses Eventbrite for event listings').extraction_type,
+                         'single')
+
+    def test_directive_forces_chunked_extraction(self):
+        prep = self._prepare('Uses Eventbrite for event listings\n'
+                             '[[extraction: force-chunked]] collapses in single-call mode')
+        self.assertEqual(prep.extraction_type, 'chunked')
+        self.assertGreater(len(prep.chunk_prompts), 0)
+
+    def test_directive_text_never_reaches_the_prompt(self):
+        prep = self._prepare('Uses Eventbrite for event listings\n'
+                             '[[extraction: force-chunked]] collapses in single-call mode')
+        self.assertNotIn('[[extraction', prep.notes)
+        self.assertIn('Uses Eventbrite', prep.notes)
+        for prompt in prep.chunk_prompts:
+            self.assertNotIn('[[extraction', prompt)
+
+
+class TestNoEventsVetoEvidenceGuard(unittest.TestCase):
+    """`prepare_extraction`'s "no events" short-circuit is a PAGE-level veto:
+    one empty widget anywhere in the first 15K chars suppresses the whole
+    document, Gemini is never called, and the crawl is stored as a healthy
+    0-event result.
+
+    Regression: w618 Freshkills renders a populated Tribe widget followed by an
+    empty embedded Eventbrite widget whose i18n string is "No Upcoming Events at
+    this time." — four consecutive good crawls (100144, 101658, 103843, …) were
+    discarded before a per-site js_code workaround landed on 2026-07-26.
+
+    `has_event_evidence` is the guard: the veto may only fire when the page
+    shows no positive sign of real events.
+    """
+
+    TODAY = date(2026, 7, 20)
+
+    # Verbatim shape of the Freshkills page: three dated Tribe cards, then an
+    # empty Eventbrite widget.
+    FRESHKILLS = (
+        "# Upcoming Events\n"
+        "Sat 25\n###  Terrapin Workshop w/ Staten Island Zoo \n"
+        "July 25, 2026 @ 10:00 am - 12:00 pm \n"
+        "Sat 25\n###  City of Water Day: Wings Over Water Walk \n"
+        "July 25, 2026 @ 11:00 am - 1:00 pm \n"
+        "Sat 25\n###  City of Water Day Kayak Tour \n"
+        "July 25, 2026 @ 5:00 pm - 8:00 pm \n"
+        "# Upcoming Events\n### No Upcoming Events at this time.\n"
+    )
+
+    # A genuinely empty calendar: navigation, a past-events archive, a footer.
+    EMPTY_PAGE = (
+        "# Events\nThere are no upcoming events.\n"
+        "## Past events\nMarch 4, 2019 — Annual Meeting\n"
+        "January 12, 2020 — Winter Social\n"
+        "© 2026 Some Organization. All rights reserved.\n"
+    )
+
+    def _evidence(self, content):
+        return has_event_evidence(content, today=self.TODAY)
+
+    def test_populated_widget_beats_the_empty_one(self):
+        self.assertTrue(self._evidence(self.FRESHKILLS))
+
+    def test_genuinely_empty_page_has_no_evidence(self):
+        self.assertFalse(self._evidence(self.EMPTY_PAGE))
+
+    def test_detail_url_markers_count_as_evidence(self):
+        self.assertTrue(self._evidence(
+            "No upcoming events\nEVENT DETAIL URL: https://example.org/e/1\n"))
+
+    def test_populated_squarespace_json_still_counts(self):
+        # The pre-existing narrow escape hatch must keep working.
+        self.assertTrue(self._evidence(
+            '{"upcoming":[{"title":"A Show"}],'
+            '"msg":"There are no upcoming events at this time."}'))
+
+    def test_a_single_stray_future_date_is_not_evidence(self):
+        self.assertFalse(self._evidence(
+            "No upcoming events scheduled. Our next season is announced on "
+            "December 1, 2026."))
+
+    def test_iso_and_numeric_dates_count(self):
+        self.assertTrue(self._evidence(
+            "No events scheduled\n2026-08-04 Opening\n2026-08-11 Closing\n"))
+        self.assertTrue(self._evidence(
+            "No events scheduled\n8/4/2026 Opening\n8/11/2026 Closing\n"))
+
+    def test_only_past_dates_are_not_evidence(self):
+        self.assertFalse(self._evidence(
+            "No upcoming events\nArchive: June 1, 2019 / June 8, 2019 / "
+            "June 15, 2019 / 2020-01-01\n"))
+
+    def test_repeated_same_day_cards_count(self):
+        # Freshkills' three cards all fall on one date — distinctness must not
+        # be required, only the number of dated mentions.
+        self.assertTrue(self._evidence(
+            "No upcoming events\nJuly 25, 2026 @ 10:00 am\nJuly 25, 2026 @ 5:00 pm\n"))
+
+    def test_empty_content_is_safe(self):
+        self.assertFalse(self._evidence(''))
+        self.assertFalse(self._evidence(None))
+
+
+# ---------------------------------------------------------------------------
+# "All chunks failed" must not be stored as a healthy zero
+# ---------------------------------------------------------------------------
+
+class _FakeModels:
+    """Stands in for genai_client.aio.models with scripted per-call outcomes."""
+
+    def __init__(self, outcomes):
+        self.outcomes = list(outcomes)
+        self.calls = 0
+
+    async def generate_content(self, **kwargs):
+        outcome = self.outcomes[min(self.calls, len(self.outcomes) - 1)]
+        self.calls += 1
+        if isinstance(outcome, Exception):
+            raise outcome
+        return SimpleNamespace(text=outcome)
+
+
+class _FakeGenaiClient:
+    def __init__(self, outcomes):
+        self.aio = SimpleNamespace(models=_FakeModels(outcomes))
+
+
+class ChunkedFailureTestBase(unittest.TestCase):
+
+    def _prep(self, chunks=3):
+        prep = PreparedExtraction(crawl_result_id=99, website_name='Test Site',
+                                  extraction_type='chunked')
+        prep.max_batches = 3
+        prep.website_id = 7
+        prep.content = 'content'
+        prep.chunk_prompts = [f'chunk prompt {i}' for i in range(chunks)]
+        return prep
+
+    def _run_chunked(self, outcomes, chunks=3):
+        async def _noop_enrich(names, website_name, content=None):
+            return {}
+        with mock.patch.object(extractor, 'genai_client', _FakeGenaiClient(outcomes)), \
+             mock.patch.object(extractor, 'enrich_events_batch', _noop_enrich):
+            return asyncio.run(extractor._execute_chunked_sync(self._prep(chunks)))
+
+
+class TestChunkedExtractionFailureIsNotAZero(ChunkedFailureTestBase):
+    """A ~2-minute Gemini outage on 2026-07-21 stored 21 crawl_results across 15
+    websites as status='processed', event_count=0 — wiping their last good crawl
+    and leaving them days stale. Every chunk had raised."""
+
+    def test_all_chunks_erroring_raises(self):
+        with self.assertRaises(extractor.ChunkedExtractionFailure):
+            self._run_chunked([RuntimeError('503 Service Unavailable')])
+
+    def test_all_chunks_timing_out_raises(self):
+        with self.assertRaises(extractor.ChunkedExtractionFailure):
+            self._run_chunked([asyncio.TimeoutError()])
+
+    def test_genuinely_empty_chunks_still_return_an_empty_result(self):
+        """An empty calendar is a real answer — it must stay a healthy zero."""
+        result = self._run_chunked(['{"events": []}'])
+        self.assertEqual(json.loads(result), {"events": []})
+
+    def test_zero_events_with_one_erroring_chunk_raises(self):
+        """A zero assembled from a partly-errored run proves nothing about the page."""
+        with self.assertRaises(extractor.ChunkedExtractionFailure):
+            self._run_chunked([RuntimeError('503'), '{"events": []}', '{"events": []}'])
+
+    def test_events_from_a_surviving_chunk_are_kept(self):
+        event = ('{"events": [{"name": "Concert", "location": "Venue", '
+                 '"occurrences": [{"start_date": "2026-08-01"}], "url": null}]}')
+        result = self._run_chunked([RuntimeError('503'), event, '{"events": []}'])
+        self.assertEqual(len(json.loads(result)['events']), 1)
+
+    def test_error_message_names_the_failure(self):
+        with self.assertRaises(extractor.ChunkedExtractionFailure) as ctx:
+            self._run_chunked([RuntimeError('503 Service Unavailable')])
+        self.assertIn('503', str(ctx.exception))
+
+
+class TestVisionExtractionFailureIsNotAZero(unittest.TestCase):
+    """Same defect class on the vision path: the API error was swallowed and
+    stored as an empty extraction."""
+
+    def _prep(self):
+        prep = PreparedExtraction(crawl_result_id=99, website_name='Test Site',
+                                  extraction_type='vision')
+        prep.vision_contents = ['prompt']
+        return prep
+
+    def test_vision_api_error_raises(self):
+        with mock.patch.object(extractor, 'genai_client',
+                               _FakeGenaiClient([RuntimeError('503')])):
+            with self.assertRaises(extractor.ExtractionCallFailure):
+                asyncio.run(extractor._generate_extraction_response(self._prep(), None, None))
+
+
+class TestExtractEventsMarksTheCrawlFailed(unittest.TestCase):
+    """The failure must reach the DB as status='failed' (which preserves
+    crawled_content for same-day `main.py --ids` recovery) rather than as a
+    successful empty extraction."""
+
+    def test_chunk_failure_is_stored_as_failed(self):
+        recorded = {}
+
+        class FakeDb:
+            @staticmethod
+            def update_crawl_result_failed(cursor, connection, crid, message):
+                recorded['crid'] = crid
+                recorded['message'] = message
+
+            @staticmethod
+            def update_crawl_result_extracted(*args, **kwargs):
+                recorded['extracted'] = args
+
+        async def _prepare(*args, **kwargs):
+            prep = PreparedExtraction(crawl_result_id=42, website_name='Test Site',
+                                      extraction_type='chunked')
+            return prep
+
+        async def _execute(cursor, connection, prep):
+            raise extractor.ChunkedExtractionFailure('all 4 chunk request(s) failed: 503')
+
+        with mock.patch.object(extractor, 'db', FakeDb), \
+             mock.patch.object(extractor, 'prepare_extraction', _prepare), \
+             mock.patch.object(extractor, 'execute_extraction_sync', _execute), \
+             mock.patch.object(extractor, 'GEMINI_API_KEY', 'key'), \
+             mock.patch.object(extractor, 'genai_client', object()):
+            ok = asyncio.run(extractor.extract_events(None, None, 42, 'Test Site'))
+
+        self.assertFalse(ok)
+        self.assertEqual(recorded.get('crid'), 42)
+        self.assertIn('503', recorded.get('message', ''))
+        self.assertNotIn('extracted', recorded)
+
+
+class TestBatchPathChunkFailures(unittest.TestCase):
+    """The batch path had the same hole: a chunked crawl result whose chunk
+    responses all errored was stored as '{"events": []}'."""
+
+    def _prep(self, crid, extraction_type='chunked'):
+        prep = PreparedExtraction(crawl_result_id=crid, website_name=f'Site {crid}',
+                                  extraction_type=extraction_type)
+        prep.max_batches = 3
+        return prep
+
+    def _request(self, crid, chunk_index=0):
+        return SimpleNamespace(metadata={
+            'crawl_result_id': str(crid),
+            'type': 'chunk',
+            'chunk_index': str(chunk_index),
+            'website_name': f'Site {crid}',
+            'request_id': f'cr-{crid}-chunk-{chunk_index}',
+        })
+
+    def _error_response(self, message='503 Service Unavailable'):
+        return SimpleNamespace(error=SimpleNamespace(message=message), response=None)
+
+    def _ok_response(self, crid, chunk_index=0, events='[]'):
+        text = ('{"request_id": "cr-%d-chunk-%d", "events": %s}'
+                % (crid, chunk_index, events))
+        return SimpleNamespace(error=None, response=SimpleNamespace(text=text))
+
+    def test_all_chunk_responses_errored_is_reported_as_failed(self):
+        preparations = {5: self._prep(5)}
+        requests = [self._request(5, 0), self._request(5, 1)]
+        responses = [self._error_response(), self._error_response()]
+        single, chunked, failed = extractor.process_batch_responses(
+            requests, responses, preparations)
+        self.assertNotIn(5, single)
+        self.assertIn(5, failed)
+
+    def test_chunks_that_answered_empty_are_not_a_failure(self):
+        preparations = {5: self._prep(5)}
+        requests = [self._request(5, 0)]
+        responses = [self._ok_response(5, 0, events='[]')]
+        single, chunked, failed = extractor.process_batch_responses(
+            requests, responses, preparations)
+        self.assertEqual(failed, {})
+        self.assertEqual(chunked.get(5), [])
+
+    def test_failed_crids_are_written_as_failed_not_stored(self):
+        stored, failed_marks = [], []
+
+        class FakeDb:
+            @staticmethod
+            def create_connection():
+                return SimpleNamespace(cursor=lambda **kw: SimpleNamespace(close=lambda: None),
+                                       close=lambda: None)
+
+            @staticmethod
+            def update_crawl_result_extracted(cursor, conn, crid, text):
+                stored.append(crid)
+
+            @staticmethod
+            def update_crawl_result_failed(cursor, conn, crid, message):
+                failed_marks.append((crid, message))
+
+            @staticmethod
+            def clear_batch_job_name(cursor, conn, crids):
+                pass
+
+        with mock.patch.object(extractor, 'db', FakeDb):
+            results = extractor._store_batch_results(
+                {1: '{"events": []}'}, [1, 5], failed_crids={5: 'chunk failure'})
+
+        self.assertEqual(stored, [1])
+        self.assertEqual(failed_marks, [(5, 'chunk failure')])
+        self.assertIn((5, False), results)
+
+
+class TestPerProfileMaxContentChars(unittest.TestCase):
+    """`MAX_CONTENT_CHARS` guards against runaway extraction on HTML pages that
+    carry years of archives. A structured API source builds its own payload, so
+    the same truncation just silently drops real events: RA's 90-day NYC feed is
+    ~620K chars (977 events) and was cut to 300K, losing half - and ~22% even at
+    the old 30-day window. The override lets such a source raise it without
+    weakening the default for everyone else.
+    """
+
+    def test_default_applies_to_unknown_host(self):
+        self.assertEqual(
+            site_profiles.max_content_chars_for('https://example.org/events', 300000), 300000)
+
+    def test_none_url_falls_back_to_default(self):
+        self.assertEqual(site_profiles.max_content_chars_for(None, 300000), 300000)
+
+    def test_profile_override_wins(self):
+        prof = site_profiles.SiteProfile(
+            name='t', host_re=re.compile(r'^bigfeed\.test$'), max_content_chars=900000)
+        site_profiles.PROFILES.append(prof)
+        try:
+            self.assertEqual(
+                site_profiles.max_content_chars_for('https://bigfeed.test/x', 300000), 900000)
+        finally:
+            site_profiles.PROFILES.remove(prof)
+
+    def test_profile_without_override_uses_default(self):
+        prof = site_profiles.SiteProfile(
+            name='t2', host_re=re.compile(r'^plainfeed\.test$'))
+        site_profiles.PROFILES.append(prof)
+        try:
+            self.assertEqual(
+                site_profiles.max_content_chars_for('https://plainfeed.test/x', 300000), 300000)
+        finally:
+            site_profiles.PROFILES.remove(prof)
+
+
+class TestPerWebsiteMaxContentChars(unittest.TestCase):
+    """Plain `websites` rows (no source plugin) hit the same silent loss: BPL,
+    NYC Parks, NYPL and New York Cares all crawl past 300K and had their tails —
+    real event cards — dropped before Gemini ever saw them. `websites.
+    max_content_chars` is the per-site override for those, and it wins over the
+    plugin default because it is the more specific decision. It may also be set
+    BELOW the default (a payload that duplicates itself is not worth paying for
+    twice).
+    """
+
+    def test_website_override_raises_the_default(self):
+        self.assertEqual(
+            site_profiles.max_content_chars_for('https://example.org/events', 300000, 800000),
+            800000)
+
+    def test_website_override_can_lower_the_default(self):
+        self.assertEqual(
+            site_profiles.max_content_chars_for('https://example.org/events', 300000, 120000),
+            120000)
+
+    def test_website_override_beats_profile_override(self):
+        prof = site_profiles.SiteProfile(
+            name='t3', host_re=re.compile(r'^bothfeed\.test$'), max_content_chars=700000)
+        site_profiles.PROFILES.append(prof)
+        try:
+            self.assertEqual(
+                site_profiles.max_content_chars_for('https://bothfeed.test/x', 300000, 450000),
+                450000)
+        finally:
+            site_profiles.PROFILES.remove(prof)
+
+    def test_null_website_override_falls_back_to_profile_then_default(self):
+        prof = site_profiles.SiteProfile(
+            name='t4', host_re=re.compile(r'^feedonly\.test$'), max_content_chars=700000)
+        site_profiles.PROFILES.append(prof)
+        try:
+            # NULL column (the common case) leaves the profile in charge...
+            self.assertEqual(
+                site_profiles.max_content_chars_for('https://feedonly.test/x', 300000, None),
+                700000)
+            # ...and a plain site with neither keeps the global default.
+            self.assertEqual(
+                site_profiles.max_content_chars_for('https://example.org/x', 300000, None),
+                300000)
+        finally:
+            site_profiles.PROFILES.remove(prof)
+
+    def test_prepare_extraction_truncates_at_the_websites_column(self):
+        """End-to-end wiring: the column travels from `websites` to the cut."""
+        content = ''.join(f'### [Event {i}](https://plain.test/e/{i})\nAugust {i % 28 + 1}, 2026 '
+                          f'at Some Venue. {"filler " * 40}\n\n' for i in range(1200))
+        self.assertGreater(len(content), 400000)
+
+        class FakeDb:
+            @staticmethod
+            def get_crawled_content(cursor, crid):
+                return content
+
+            @staticmethod
+            def find_prior_crawl_with_same_content(cursor, crid):
+                return None
+
+        class FakeCursor:
+            """Answers the (website_id, max_content_chars) lookup."""
+            def execute(self, sql, params=None):
+                pass
+
+            def fetchone(self):
+                return (4, 400000)
+
+            def fetchall(self):
+                return []
+
+        with mock.patch.object(extractor, 'db', FakeDb):
+            prep = asyncio.run(extractor.prepare_extraction(
+                FakeCursor(), 1, 'Plain Site', base_url='https://plain.test/events',
+                max_batches=30))
+
+        self.assertIsNone(prep.error)
+        self.assertEqual(prep.extraction_type, 'chunked')
+        self.assertEqual(len(prep.content), 400000)
 
 
 if __name__ == '__main__':

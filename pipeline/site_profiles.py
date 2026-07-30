@@ -46,6 +46,12 @@ class SiteProfile:
 
     # --- extraction behavior (extractor.py) ---
     extraction_notes: Optional[str] = None                   # prepended to the website notes
+    # Overrides extractor.MAX_CONTENT_CHARS for this source. That guard exists to
+    # stop runaway extraction on HTML pages carrying years of archives; a
+    # structured API source builds its own payload and has no archive to run
+    # away with, so truncating it just silently drops real events. Extraction
+    # cost stays bounded by websites.max_batches either way.
+    max_content_chars: Optional[int] = None
     image_fetch_headers: dict = field(default_factory=dict)  # extra HTTP headers downloading images
     image_host_substrs: tuple = ()      # full-URL substrings selecting image_fetch_headers
 
@@ -181,6 +187,24 @@ def resolve_notes(base_url, notes) -> str:
     if prefix:
         return f"{prefix}\n\n{notes}".rstrip() if notes else prefix
     return notes or ""
+
+
+def max_content_chars_for(base_url, default: int, website_override=None) -> int:
+    """Per-site override for the pre-extraction content truncation limit.
+
+    Precedence, most specific first:
+      1. `websites.max_content_chars` (an explicit per-website decision, made
+         after inspecting what actually sits past the cut — it can also be set
+         BELOW the default to stop paying for a payload that duplicates itself);
+      2. the source plugin's `SiteProfile.max_content_chars`;
+      3. the global `extractor.MAX_CONTENT_CHARS` default.
+    """
+    if website_override:
+        return int(website_override)
+    p = resolve_profile(base_url)
+    if p and p.max_content_chars:
+        return p.max_content_chars
+    return default
 
 
 def image_headers_for(image_url) -> dict:

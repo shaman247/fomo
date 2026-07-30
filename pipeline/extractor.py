@@ -14,7 +14,7 @@ import os
 import re
 import statistics
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import date, datetime
 from io import BytesIO
 from typing import Optional
 from urllib.parse import urljoin
@@ -300,6 +300,33 @@ CHARS_PER_TOKEN = 3  # conservative estimate (Gemini tokenizer averages ~3 chars
 # (the largest legitimate prompt is ~55K tokens, so 100K gives ~2x headroom for growth
 # while still catching runaway inputs well before they hit the API limit).
 MAX_REQUEST_TOKENS = int(os.environ.get("MAX_REQUEST_TOKENS", "100000"))
+
+
+# =============================================================================
+# Extraction failure signals
+# =============================================================================
+
+class ExtractionCallFailure(RuntimeError):
+    """A Gemini call failed outright, so this extraction produced no answer.
+
+    The distinction that matters downstream is "the page has no events" versus
+    "we never got to ask". Both used to be stored as `{"events": []}` with
+    status='processed', which is a lie the rest of the pipeline believes: the
+    zero becomes the website's newest successful crawl, so it wipes the site's
+    last good result, feeds archival as evidence that every event is gone, and
+    hides the outage from triage. On 2026-07-21 a ~2-minute Gemini outage stored
+    21 such zeros across 15 websites; 16 of them were still stale five days
+    later.
+
+    Raising instead routes the result to db.update_crawl_result_failed
+    (status='failed'), which preserves crawled_content — so `main.py --ids <id>`
+    can re-extract the same content the same day without re-crawling — and keeps
+    the poisoned zero out of archival.
+    """
+
+
+class ChunkedExtractionFailure(ExtractionCallFailure):
+    """A chunked extraction returned nothing because its chunk calls failed."""
 
 
 # =============================================================================
@@ -777,6 +804,100 @@ def estimate_event_count(content):
     )
 
 
+# =============================================================================
+# "No events" veto guard
+# =============================================================================
+#
+# The `no_events_patterns` short-circuit in prepare_extraction is a PAGE-level
+# veto: a literal "No Upcoming Events" anywhere in the first 15K chars stops
+# Gemini being called at all and stores a bare `{"events": []}`. That is exactly
+# right for a genuinely empty calendar (it saves real Gemini spend) and exactly
+# wrong for a page that renders a POPULATED widget plus a second empty one —
+# the empty widget's i18n string vetoes the whole document and the crawl looks
+# like a perfectly healthy 0-event result.
+#
+# Measured failure: w618 Freshkills renders three dated Tribe cards followed by
+# an embedded Eventbrite widget reading "No Upcoming Events at this time.";
+# four consecutive good crawls were discarded before a per-site js_code
+# workaround landed on 2026-07-26.
+#
+# has_event_evidence() is the guard. It is deliberately conservative — measured
+# over 60 days of crawls (26,597 results) the veto fired 206 times and this
+# guard spares only 9 of them, all three websites verified as real false
+# vetoes (618 Freshkills, 4123 Scenic Hudson, 995 The Nonbinarian Bookstore).
+# The remaining 197 are cleanly separated: 196 have ZERO future-dated mentions.
+
+# Injected by our own js_code / source plugins, exactly once per event card.
+_DETAIL_URL_MARKER_RE = re.compile(r'EVENT\s+DETAIL\s+URL:', re.IGNORECASE)
+
+# Fully-qualified dates (day AND year). A bare "July 25" is not enough — page
+# furniture and past-event archives are full of those; a year pins the mention
+# to a specific day we can test against today.
+_MONTH_ABBREVS = {
+    'jan': 1, 'feb': 2, 'mar': 3, 'apr': 4, 'may': 5, 'jun': 6,
+    'jul': 7, 'aug': 8, 'sep': 9, 'oct': 10, 'nov': 11, 'dec': 12,
+}
+_MONTH_DAY_YEAR_RE = re.compile(
+    r'\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+'
+    r'(\d{1,2})(?:st|nd|rd|th)?,?\s+(20\d{2})\b', re.IGNORECASE)
+_ISO_DATE_RE = re.compile(r'\b(20\d{2})-(\d{1,2})-(\d{1,2})\b')
+_NUMERIC_DATE_RE = re.compile(r'\b(\d{1,2})/(\d{1,2})/(20\d{2})\b')
+
+# Two dated mentions, not two DISTINCT dates: a one-day festival legitimately
+# lists several cards on the same date (Freshkills' three City of Water Day
+# events all read "July 25, 2026").
+MIN_DATED_MENTIONS_FOR_EVIDENCE = 2
+
+
+def _future_dated_mentions(content, today=None):
+    """Count fully-qualified date mentions that are today or later."""
+    today = today or datetime.now().date()
+    count = 0
+    for m in _MONTH_DAY_YEAR_RE.finditer(content):
+        try:
+            parsed = date(int(m.group(3)), _MONTH_ABBREVS[m.group(1).lower()[:3]],
+                          int(m.group(2)))
+        except (ValueError, KeyError):
+            continue
+        if parsed >= today:
+            count += 1
+    for rx, order in ((_ISO_DATE_RE, (1, 2, 3)), (_NUMERIC_DATE_RE, (3, 1, 2))):
+        for m in rx.finditer(content):
+            try:
+                parsed = date(int(m.group(order[0])), int(m.group(order[1])),
+                              int(m.group(order[2])))
+            except ValueError:
+                continue
+            if parsed >= today:
+                count += 1
+    return count
+
+
+def has_event_evidence(page_content, today=None):
+    """True when the page shows positive evidence that real events are listed.
+
+    Used to veto the veto: `prepare_extraction`'s "no events" short-circuit must
+    not fire on a page that is visibly full of events. Three signals, any one of
+    which is enough:
+
+      1. `EVENT DETAIL URL:` markers — emitted once per card by our own js_code
+         and source plugins, so their presence is unambiguous.
+      2. A populated Squarespace `?format=json` `upcoming[]` array. Squarespace
+         embeds the i18n string "There are no upcoming events at this time."
+         even when the array is full; this was the original narrow escape hatch.
+      3. At least MIN_DATED_MENTIONS_FOR_EVIDENCE fully-qualified dates (day +
+         year) that are today or later. Past-only dates don't count — a
+         genuinely empty calendar with a past-events archive still gets vetoed.
+    """
+    if not page_content:
+        return False
+    if _DETAIL_URL_MARKER_RE.search(page_content):
+        return True
+    if '"upcoming":[{' in page_content:
+        return True
+    return _future_dated_mentions(page_content, today) >= MIN_DATED_MENTIONS_FOR_EVIDENCE
+
+
 # Markdown markers that signal the start of a new event card on a listing page.
 # Covers `### [...]`, `#### [...]`, and bulleted/numbered variants like
 # `* ### [...]` or `1. ### [...]`.
@@ -1160,6 +1281,57 @@ Website content:
 {page_content}'''
 
 
+# =============================================================================
+# Per-site extraction directives
+# =============================================================================
+#
+# `websites.notes` (plus a SiteProfile's extraction_notes, which resolve_notes
+# prepends to it) is the only site-scoped text every extraction path already
+# receives, so it doubles as the place to record an EXPLICIT per-site override
+# of the automatic single-vs-chunked mode choice. A directive is a line of the
+# form
+#
+#     [[extraction: force-chunked]] optional free-text rationale
+#
+# The whole line is stripped from the notes before they are handed to Gemini,
+# so a directive never leaks into a prompt as if it were guidance.
+#
+# WHY this exists: mode selection is a heuristic (estimate_event_count >
+# LARGE_PAGE_THRESHOLD, or content > MAX_CHUNK_CHARS * 2). A site whose real
+# event count sits just under the threshold on content just under 2x the chunk
+# size — w950 Nook: ~30 Eventbrite-API cards, estimate 32-34, 43 KB — is routed
+# to a single call whose ~8K output-token budget cannot hold 30 full events, so
+# the extraction collapses to a random fraction (28,254 -> 7,290 -> 8,383 chars
+# over three crawls, 14 of ~30 events surviving). Nudging the heuristic's inputs
+# (padding the estimate, lowering the threshold) would move that cliff for every
+# site; naming the site that needs chunking does not.
+FORCE_CHUNKED_DIRECTIVE = 'force-chunked'
+
+_EXTRACTION_DIRECTIVE_RE = re.compile(
+    r'^[ \t]*\[\[[ \t]*extraction[ \t]*:([^\]\n]*)\]\].*$', re.MULTILINE | re.IGNORECASE)
+
+
+def parse_extraction_directives(notes):
+    """Split `[[extraction: ...]]` directive lines out of a site's notes.
+
+    Returns (directives, notes_without_directive_lines). Directives are
+    lower-cased, `_`-normalised tokens; a line may carry several, comma
+    separated. Unknown tokens are returned as-is and simply ignored by callers,
+    so a typo degrades to "no override" rather than an exception.
+    """
+    if not notes or not _EXTRACTION_DIRECTIVE_RE.search(notes):
+        return set(), notes or ""
+    directives = set()
+    for match in _EXTRACTION_DIRECTIVE_RE.finditer(notes):
+        for token in match.group(1).split(','):
+            token = token.strip().lower().replace('_', '-')
+            if token:
+                directives.add(token)
+    cleaned = _EXTRACTION_DIRECTIVE_RE.sub('', notes)
+    cleaned = re.sub(r'\n{3,}', '\n\n', cleaned).strip()
+    return directives, cleaned
+
+
 async def prepare_extraction(cursor, crawl_result_id, website_name, notes="",
                               use_vision=False, base_url="", max_batches=None):
     """
@@ -1181,6 +1353,8 @@ async def prepare_extraction(cursor, crawl_result_id, website_name, notes="",
         PreparedExtraction with all data needed for execution
     """
     notes = site_profiles.resolve_notes(base_url, notes)
+    # Directives are stripped here, before the notes reach ANY prompt builder.
+    directives, notes = parse_extraction_directives(notes)
 
     prep = PreparedExtraction(
         crawl_result_id=crawl_result_id,
@@ -1231,25 +1405,34 @@ async def prepare_extraction(cursor, crawl_result_id, website_name, notes="",
         "no upcoming events",
         "no events scheduled",
     ]
-    # Guard against false positives in Squarespace ?format=json payloads, which
-    # embed the i18n string "There are no upcoming events at this time." even when
-    # the upcoming[] array is populated. A non-empty "upcoming":[{ array means there
-    # ARE events, so don't trust the no-events shortcut.
-    has_populated_json_events = '"upcoming":[{' in page_content
+    # The veto is page-level, so a single empty widget can suppress an entire
+    # document that also renders a populated one (w618 Freshkills: three dated
+    # Tribe cards followed by an empty embedded Eventbrite widget). Only trust
+    # the shortcut when the page shows no positive evidence of real events —
+    # see has_event_evidence() for the three signals and their calibration.
+    page_has_event_evidence = has_event_evidence(page_content)
     content_lower = page_content[:15000].lower()  # Only check first 15K chars
     for pattern in no_events_patterns:
-        if pattern in content_lower and not has_populated_json_events:
+        if pattern in content_lower:
+            if page_has_event_evidence:
+                print(f"    - Page says '{pattern}' but also shows real event "
+                      f"evidence — ignoring the no-events shortcut")
+                break
             prep.resolved_result = '{"events": []}'
             print(f"    - Page explicitly states no events ('{pattern}'), skipping extraction")
             return prep
 
-    # Get website_id for this crawl result
+    # Get website_id (and its content-cap override) for this crawl result
     cursor.execute(
-        "SELECT website_id FROM crawl_results WHERE id = %s",
+        """SELECT cr.website_id, w.max_content_chars
+             FROM crawl_results cr
+             LEFT JOIN websites w ON w.id = cr.website_id
+            WHERE cr.id = %s""",
         (crawl_result_id,)
     )
     result = cursor.fetchone()
     website_id = result[0] if result else None
+    website_max_content_chars = result[1] if result else None
     prep.website_id = website_id
 
     current_date_string = datetime.now().strftime('%Y-%m-%d')
@@ -1259,10 +1442,17 @@ async def prepare_extraction(cursor, crawl_result_id, website_name, notes="",
     url = url or ""
     prep.url = url
 
-    # Hard limit on content size to prevent runaway extraction
-    if len(content_to_process) > MAX_CONTENT_CHARS:
-        print(f"    - Content too large ({len(content_to_process)} chars), truncating to {MAX_CONTENT_CHARS}")
-        content_to_process = content_to_process[:MAX_CONTENT_CHARS]
+    # Hard limit on content size to prevent runaway extraction. Structured API
+    # sources can raise it via their SiteProfile — truncating a payload we built
+    # ourselves silently drops real events rather than trimming an archive.
+    # Plain websites raise (or lower) it via websites.max_content_chars, which
+    # wins over the plugin default; both are per-site decisions made after
+    # checking what actually sits past the cut.
+    max_chars = site_profiles.max_content_chars_for(
+        base_url or url, MAX_CONTENT_CHARS, website_max_content_chars)
+    if len(content_to_process) > max_chars:
+        print(f"    - Content too large ({len(content_to_process)} chars), truncating to {max_chars}")
+        content_to_process = content_to_process[:max_chars]
 
     # Decide extraction approach and build prompts
     if use_vision:
@@ -1283,12 +1473,20 @@ async def prepare_extraction(cursor, crawl_result_id, website_name, notes="",
 
     else:
         estimated_events = estimate_event_count(content_to_process)
-        use_two_pass = estimated_events > LARGE_PAGE_THRESHOLD or len(content_to_process) > MAX_CHUNK_CHARS * 2
+        forced_chunked = FORCE_CHUNKED_DIRECTIVE in directives
+        use_two_pass = (forced_chunked
+                        or estimated_events > LARGE_PAGE_THRESHOLD
+                        or len(content_to_process) > MAX_CHUNK_CHARS * 2)
 
         if use_two_pass:
             prep.extraction_type = 'chunked'
             prep.max_batches = max_batches if max_batches is not None else DEFAULT_MAX_BATCHES
-            print(f"    - Large page detected (~{estimated_events} events, {len(content_to_process)} chars), preparing chunked extraction...")
+            if forced_chunked:
+                print(f"    - [[extraction: force-chunked]] for {website_name} "
+                      f"(~{estimated_events} events, {len(content_to_process)} chars), "
+                      f"preparing chunked extraction...")
+            else:
+                print(f"    - Large page detected (~{estimated_events} events, {len(content_to_process)} chars), preparing chunked extraction...")
 
             # Split content into chunks and build prompts
             chunks, chunk_method = chunk_content(content_to_process, EVENTS_PER_CHUNK, MAX_CHUNK_CHARS)
@@ -1373,7 +1571,13 @@ async def execute_extraction_sync(cursor, connection, prep):
         retry_reason = _variance_retry_reason(cursor, prep.crawl_result_id, event_count)
         if retry_reason:
             print(f"    - ⚠️  VARIANCE GUARD: {retry_reason}; retrying extraction once...")
-            retry_text = await _generate_extraction_response(prep, cursor, connection)
+            try:
+                retry_text = await _generate_extraction_response(prep, cursor, connection)
+            except ExtractionCallFailure as e:
+                # The retry hit the API wall; the first attempt is still a real
+                # answer, so keep it rather than failing the whole crawl result.
+                print(f"    - Variance retry could not reach the API ({e}); keeping first attempt")
+                retry_text = None
             retry_text, retry_count, retry_occ = _normalize_extraction_response(retry_text)
             if retry_count > event_count:
                 print(f"    - Variance retry recovered {retry_count} events (first attempt: {event_count}); keeping retry")
@@ -1407,12 +1611,17 @@ async def _generate_extraction_response(prep, cursor, connection):
                 timeout=GEMINI_TIMEOUT * 2
             )
             return response.text.strip()
+        # A failed vision call is the same lie as a failed chunk: the images were
+        # never read, so an empty result says nothing about the post. Fail the
+        # crawl result instead of storing a zero (see ExtractionCallFailure).
         except asyncio.TimeoutError:
             print(f"    - Vision extraction timeout after {GEMINI_TIMEOUT * 2}s")
-            return '{"events": []}'
+            raise ExtractionCallFailure(
+                f"vision extraction timed out after {GEMINI_TIMEOUT * 2}s")
         except Exception as e:
             print(f"    - Vision extraction error: {e}")
-            return '{"events": []}'
+            raise ExtractionCallFailure(
+                f"vision extraction failed: {e or type(e).__name__}")
 
     if prep.extraction_type == 'chunked':
         return await _execute_chunked_sync(prep, cursor, connection)
@@ -1575,11 +1784,15 @@ async def _execute_chunked_sync(prep, cursor=None, connection=None):
     # Extract events from each chunk
     all_simple_events = []
     skipped_chunks = 0
+    attempted_chunks = 0
+    failed_chunks = 0
+    last_chunk_error = None
     for i, chunk_prompt in enumerate(prep.chunk_prompts):
         if len(all_simple_events) >= max_events:
             skipped_chunks = len(prep.chunk_prompts) - i
             break
         print(f"    - Processing chunk {i + 1}/{len(prep.chunk_prompts)}...")
+        attempted_chunks += 1
         try:
             response = await asyncio.wait_for(
                 genai_client.aio.models.generate_content(
@@ -1600,11 +1813,26 @@ async def _execute_chunked_sync(prep, cursor=None, connection=None):
             else:
                 print(f"      No events extracted")
         except asyncio.TimeoutError:
+            failed_chunks += 1
+            last_chunk_error = f"timeout after {CHUNK_TIMEOUT}s"
             print(f"      Chunk timeout after {CHUNK_TIMEOUT}s")
         except Exception as e:
+            failed_chunks += 1
+            last_chunk_error = str(e) or type(e).__name__
             print(f"      Chunk error: {e}")
 
     if not all_simple_events:
+        # Nothing came back. Only call that an empty page when every chunk we
+        # asked actually ANSWERED "no events" — a zero assembled from chunks
+        # that raised is evidence about the API, not about the page, and storing
+        # it as a successful extraction wipes the site's last good crawl and
+        # feeds archival (see ChunkedExtractionFailure). One erroring chunk is
+        # enough to disqualify the zero: whatever that chunk covered is simply
+        # unknown.
+        if failed_chunks:
+            raise ChunkedExtractionFailure(
+                f"{failed_chunks}/{attempted_chunks} chunk request(s) failed and no chunk "
+                f"returned events (last error: {last_chunk_error})")
         return '{"events": []}'
 
     if skipped_chunks > 0:
@@ -2141,9 +2369,12 @@ def process_batch_responses(requests, responses, preparations):
         preparations: dict of {crawl_result_id: PreparedExtraction}
 
     Returns:
-        tuple of (single_results, chunked_events):
+        tuple of (single_results, chunked_events, failed_crids):
         - single_results: {crawl_result_id: json_string} for single/vision
         - chunked_events: {crawl_result_id: [simple_event_dicts]} for chunks
+        - failed_crids: {crawl_result_id: error_message} for chunked results
+          whose chunk responses ALL failed — to be stored as status='failed'
+          rather than as an empty extraction (see ChunkedExtractionFailure)
     """
     # Build lookup from request_id to request metadata
     id_to_metadata = _build_request_id_index(requests)
@@ -2213,13 +2444,22 @@ def process_batch_responses(requests, responses, preparations):
         else:
             print(f"    - {prep.website_name}: {len(events)} events from chunks")
 
-    # Check for chunked crids with zero events (all chunks failed)
+    # Chunked crids that produced no chunk output AT ALL. A chunk that answered
+    # "no events" still registers its (empty) list above, so reaching this point
+    # means every chunk response for the crawl result errored, went unmatched or
+    # was unparseable — nothing was ever read of the page. That is a failed
+    # extraction, not an empty calendar: storing '{"events": []}' here made the
+    # dead crawl the website's newest successful result and fed archival with it.
+    failed_crids = {}
     for crid, prep in preparations.items():
         if prep.extraction_type == 'chunked' and crid not in chunk_events_by_crid and crid not in single_results:
-            # All chunks failed — store empty result
-            single_results[crid] = '{"events": []}'
+            failed_crids[crid] = (
+                f"Extraction failed: no chunk response could be processed for "
+                f"{prep.website_name} (batch extraction)")
+            print(f"    - ⚠️  {prep.website_name}: every chunk response failed; "
+                  f"marking crawl result {crid} failed (content preserved for re-extraction)")
 
-    return single_results, chunk_events_by_crid
+    return single_results, chunk_events_by_crid, failed_crids
 
 
 def process_enrichment_responses(requests, responses, chunked_events, preparations):
@@ -2321,12 +2561,16 @@ async def _run_enrichment_phase(enrichment_requests, chunked_events, preparation
     return enriched_results
 
 
-def _store_batch_results(results_dict, crid_list):
+def _store_batch_results(results_dict, crid_list, failed_crids=None):
     """Store extracted batch results and clear their batch_job_name tags.
 
     Opens and closes its own DB connection (matching the inline blocks it
-    replaces). Returns a list of (crawl_result_id, True) tuples for the stored
-    results, in dict-iteration order.
+    replaces). Returns a list of (crawl_result_id, ok) tuples — True for stored
+    extractions, False for crawl results marked failed — in dict-iteration order.
+
+    `failed_crids` ({crid: error_message}) are written as status='failed' rather
+    than stored: their extraction never produced an answer, and 'failed' keeps
+    crawled_content around for `main.py --ids` re-extraction.
     """
     stored = []
     conn = db.create_connection()
@@ -2335,6 +2579,9 @@ def _store_batch_results(results_dict, crid_list):
         for crid, result_text in results_dict.items():
             db.update_crawl_result_extracted(cursor, conn, crid, result_text)
             stored.append((crid, True))
+        for crid, error_msg in (failed_crids or {}).items():
+            db.update_crawl_result_failed(cursor, conn, crid, error_msg)
+            stored.append((crid, False))
         db.clear_batch_job_name(cursor, conn, crid_list)
     finally:
         cursor.close()
@@ -2379,7 +2626,7 @@ async def _process_completed_batch(responses, crid_list, extraction_queue,
 
     # Re-build requests just for metadata matching (not re-submitted)
     batch_requests, _ = build_batch_requests(preparations)
-    single_results, chunked_events = process_batch_responses(
+    single_results, chunked_events, failed_crids = process_batch_responses(
         batch_requests, responses, preparations
     )
 
@@ -2399,7 +2646,7 @@ async def _process_completed_batch(responses, crid_list, extraction_queue,
 
     # Store results and clear batch tracking
     all_batch_results = {**single_results, **enriched_results}
-    results.extend(_store_batch_results(all_batch_results, crid_list))
+    results.extend(_store_batch_results(all_batch_results, crid_list, failed_crids))
 
     return results
 
@@ -2560,7 +2807,7 @@ async def _submit_poll_and_process_new_batch(extraction_queue, poll_interval, ti
         crawl_result_ids=batch_crids,
     )
 
-    single_results, chunked_events = process_batch_responses(
+    single_results, chunked_events, failed_crids = process_batch_responses(
         batch_requests, phase1_responses, preparations
     )
 
@@ -2578,7 +2825,7 @@ async def _submit_poll_and_process_new_batch(extraction_queue, poll_interval, ti
 
     # Store results and clear batch tracking
     all_results = {**single_results, **enriched_results}
-    results.extend(_store_batch_results(all_results, batch_crids))
+    results.extend(_store_batch_results(all_results, batch_crids, failed_crids))
 
     return results
 
