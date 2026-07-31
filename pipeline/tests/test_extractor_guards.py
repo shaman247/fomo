@@ -922,6 +922,129 @@ class TestForceChunkedDirective(unittest.TestCase):
         for prompt in prep.chunk_prompts:
             self.assertNotIn('[[extraction', prompt)
 
+    def test_records_cap_directive_subdivides_and_stays_out_of_the_prompt(self):
+        prep = self._prepare('Uses Eventbrite for event listings\n'
+                             '[[extraction: force-chunked, max-records-per-chunk=10]] dense cards')
+        self.assertEqual(prep.extraction_type, 'chunked')
+        # 30 cards, capped at 10 per chunk -> at least 3 prompts.
+        self.assertGreaterEqual(len(prep.chunk_prompts), 3)
+        for prompt in prep.chunk_prompts:
+            self.assertNotIn('[[extraction', prompt)
+
+    def test_without_the_records_cap_the_same_page_is_not_subdivided(self):
+        """True negative: the cap is opt-in, so the default path is unchanged."""
+        plain = self._prepare('Uses Eventbrite for event listings\n'
+                              '[[extraction: force-chunked]] dense cards')
+        capped = self._prepare('Uses Eventbrite for event listings\n'
+                               '[[extraction: force-chunked, max-records-per-chunk=10]] dense')
+        self.assertLess(len(plain.chunk_prompts), len(capped.chunk_prompts))
+
+
+class TestRecordsPerChunkOverride(unittest.TestCase):
+    """`max-records-per-chunk=N` parsing. A malformed value must degrade to
+    "no override" like every other directive, never raise."""
+
+    def test_parsed(self):
+        directives, _ = extractor.parse_extraction_directives(
+            '[[extraction: max-records-per-chunk=25]]')
+        self.assertEqual(extractor.records_per_chunk_override(directives), 25)
+
+    def test_absent(self):
+        directives, _ = extractor.parse_extraction_directives('[[extraction: force-chunked]]')
+        self.assertIsNone(extractor.records_per_chunk_override(directives))
+
+    def test_alongside_other_directives(self):
+        directives, _ = extractor.parse_extraction_directives(
+            '[[extraction: force-chunked, max_records_per_chunk=12]]')
+        self.assertIn(extractor.FORCE_CHUNKED_DIRECTIVE, directives)
+        self.assertEqual(extractor.records_per_chunk_override(directives), 12)
+
+    def test_malformed_values_degrade(self):
+        for bad in ('max-records-per-chunk=', 'max-records-per-chunk=abc',
+                    'max-records-per-chunk=0', 'max-records-per-chunk=-5',
+                    'max-records-per-chunk'):
+            directives, _ = extractor.parse_extraction_directives(f'[[extraction: {bad}]]')
+            self.assertIsNone(extractor.records_per_chunk_override(directives), bad)
+
+
+class CapRecordsPerChunkTests(unittest.TestCase):
+    """The records cap subdivides an output-heavy chunk at record boundaries.
+
+    A chunk's response size scales with its record COUNT, not its char count:
+    Film Forum w50 packs 50 dated showtime cards into 8,426 chars and three films
+    (AMERICAN PACHUCO, THE THIRD MAN, WHITE NIGHTS) only come back when that
+    chunk is split. Measured global cost is why this is opt-in — see
+    RECORDS_PER_CHUNK_DIRECTIVE.
+    """
+
+    @staticmethod
+    def _records(n, prefix='### [Film {i}](https://example.com/{i})'):
+        return '\n'.join(
+            (prefix + '\nShowtimes: August {d}, 2026 at 6:15pm\nRated R.').format(
+                i=i, d=(i % 28) + 1)
+            for i in range(n))
+
+    def test_dense_chunk_is_subdivided(self):
+        chunks = [self._records(50)]
+        out = extractor.cap_records_per_chunk(chunks, 25)
+        self.assertEqual(len(out), 2)
+        for piece in out:
+            n = sum(1 for l in piece.split('\n') if extractor._is_heading_line(l))
+            self.assertLessEqual(n, 25)
+
+    def test_pieces_are_balanced(self):
+        out = extractor.cap_records_per_chunk([self._records(50)], 30)
+        counts = [sum(1 for l in p.split('\n') if extractor._is_heading_line(l))
+                  for p in out]
+        self.assertEqual(counts, [25, 25])  # not 30/20
+
+    def test_split_only_ever_happens_at_a_heading(self):
+        out = extractor.cap_records_per_chunk([self._records(50)], 10)
+        for piece in out[1:]:
+            self.assertTrue(extractor._is_heading_line(piece.split('\n')[0]))
+        for piece in out[:-1]:
+            self.assertFalse(extractor._is_heading_line(_last_nonblank(piece)))
+
+    def test_content_is_preserved(self):
+        content = self._records(50)
+        out = extractor.cap_records_per_chunk([content], 7)
+        self.assertEqual(re.sub(r'\s+', '', ''.join(out)),
+                         re.sub(r'\s+', '', content))
+
+    def test_sparse_chunks_are_returned_unchanged(self):
+        """True negative: content already under the cap is untouched, object
+        identity and all."""
+        chunks = [self._records(9), self._records(3)]
+        self.assertEqual(extractor.cap_records_per_chunk(chunks, 25), chunks)
+
+    def test_no_cap_is_a_passthrough(self):
+        chunks = [self._records(80)]
+        self.assertIs(extractor.cap_records_per_chunk(chunks, None), chunks)
+        self.assertIs(extractor.cap_records_per_chunk(chunks, 0), chunks)
+
+    def test_never_exceeds_max_chars_or_severs_after_chunk_content(self):
+        """Composes with the size path: the cap only ever shrinks chunks, so the
+        carry's guarantees survive it."""
+        # Bulleted headings: invisible to chunk_content_by_events' narrow marker,
+        # so this page really does take the size path (the Elsewhere w75 shape).
+        content = '\n\n'.join(
+            f'  * ### [Show {i}](https://example.com/{i})\n'
+            f'**Fri, September {(i % 28) + 1}, 2026 at 6:00 PM**\n'
+            + ('Doors at five. ' * 20)
+            for i in range(600))
+        chunks, method = chunk_content(content, 50, MAX_CHUNK_CHARS)
+        self.assertEqual(method, 'size')
+        capped = extractor.cap_records_per_chunk(chunks, 10)
+        self.assertGreater(len(capped), len(chunks))
+        for piece in capped:
+            self.assertLessEqual(len(piece), MAX_CHUNK_CHARS)
+        for piece in capped[:-1]:
+            self.assertFalse(extractor._is_heading_line(_last_nonblank(piece)))
+        for piece in capped[1:]:
+            self.assertTrue(extractor._is_heading_line(piece.split('\n')[0]))
+        self.assertEqual(re.sub(r'\s+', '', ''.join(capped)),
+                         re.sub(r'\s+', '', ''.join(chunks)))
+
 
 class TestNoEventsVetoEvidenceGuard(unittest.TestCase):
     """`prepare_extraction`'s "no events" short-circuit is a PAGE-level veto:

@@ -899,6 +899,39 @@ def chunk_content_by_size(content, max_chars=MAX_CHUNK_CHARS):
     return chunks
 
 
+def cap_records_per_chunk(chunks, max_records):
+    """Subdivide any chunk holding more than `max_records` record headings.
+
+    A post-pass, deliberately: it runs after whichever chunker produced the list,
+    splits ONLY at heading lines, and never grows a chunk — so it cannot sever a
+    record, cannot fight `chunk_content_by_size`'s trailing-record carry, and
+    cannot push a chunk past `max_chars`. Pieces are balanced (13/13/13 rather
+    than 25/25/1) so no piece is left with a token-budget cliff of its own.
+
+    `max_records` falsy -> the chunk list is returned unchanged (the default;
+    see RECORDS_PER_CHUNK_DIRECTIVE for why this is opt-in).
+    """
+    if not max_records:
+        return chunks
+
+    out = []
+    for chunk in chunks:
+        lines = chunk.split('\n')
+        starts = [i for i, line in enumerate(lines) if _is_heading_line(line)]
+        if len(starts) <= max_records:
+            out.append(chunk)
+            continue
+        n_pieces = -(-len(starts) // max_records)          # ceil
+        per_piece = -(-len(starts) // n_pieces)            # balanced
+        cuts = [starts[k] for k in range(per_piece, len(starts), per_piece)]
+        prev = 0
+        for cut in cuts:
+            out.append('\n'.join(lines[prev:cut]))
+            prev = cut
+        out.append('\n'.join(lines[prev:]))
+    return out
+
+
 def chunk_content(content, events_per_chunk=EVENTS_PER_CHUNK, max_chars=MAX_CHUNK_CHARS):
     """
     Smart chunking that tries event markers first, then falls back to size-based chunking.
@@ -1496,6 +1529,26 @@ Website content:
 # site; naming the site that needs chunking does not.
 FORCE_CHUNKED_DIRECTIVE = 'force-chunked'
 
+# `[[extraction: max-records-per-chunk=25]]` — subdivide any chunk holding more
+# than N record headings, splitting only AT a heading so no record is cut.
+#
+# WHY this is opt-in rather than a global cap: a chunk's OUTPUT size scales with
+# its record COUNT, not its char count, so a compact 8K chunk holding 50 dense
+# showtime cards can overrun the response budget while a 30K chunk holding 10
+# records is fine. But measured A/B over the 10 densest real crawls (47-51
+# records in the biggest chunk) — same content, same prompt, only the cap
+# changing — a global cap of 30 moved distinct extracted events 1465 -> 1466
+# (+0.1%) while chunk count went 48 -> 88 (+83%). Nine of the ten were
+# bit-identical. Corpus-wide a cap of 30 would cost +47% Gemini calls per run.
+# Only Film Forum w50 measurably benefits (63 -> 66 distinct, reproducible over
+# 4 reps: AMERICAN PACHUCO, THE THIRD MAN, WHITE NIGHTS come back only when its
+# 50-record/8.4K chunk is split), which is exactly the shape the per-site
+# directive exists for. Name the site; don't move the cliff for everyone.
+RECORDS_PER_CHUNK_DIRECTIVE = 'max-records-per-chunk'
+
+_RECORDS_PER_CHUNK_RE = re.compile(
+    rf'^{RECORDS_PER_CHUNK_DIRECTIVE}=(\d+)$')
+
 _EXTRACTION_DIRECTIVE_RE = re.compile(
     r'^[ \t]*\[\[[ \t]*extraction[ \t]*:([^\]\n]*)\]\].*$', re.MULTILINE | re.IGNORECASE)
 
@@ -1519,6 +1572,21 @@ def parse_extraction_directives(notes):
     cleaned = _EXTRACTION_DIRECTIVE_RE.sub('', notes)
     cleaned = re.sub(r'\n{3,}', '\n\n', cleaned).strip()
     return directives, cleaned
+
+
+def records_per_chunk_override(directives):
+    """Read `max-records-per-chunk=N` out of a site's directives.
+
+    Returns the positive int, or None when absent or malformed (a typo degrades
+    to "no override", consistent with every other directive).
+    """
+    for token in directives:
+        match = _RECORDS_PER_CHUNK_RE.match(token)
+        if match:
+            value = int(match.group(1))
+            if value > 0:
+                return value
+    return None
 
 
 async def prepare_extraction(cursor, crawl_result_id, website_name, notes="",
@@ -1679,6 +1747,13 @@ async def prepare_extraction(cursor, crawl_result_id, website_name, notes="",
 
             # Split content into chunks and build prompts
             chunks, chunk_method = chunk_content(content_to_process, EVENTS_PER_CHUNK, MAX_CHUNK_CHARS)
+            records_cap = records_per_chunk_override(directives)
+            if records_cap:
+                capped = cap_records_per_chunk(chunks, records_cap)
+                if len(capped) != len(chunks):
+                    print(f"    - [[extraction: {RECORDS_PER_CHUNK_DIRECTIVE}={records_cap}]] "
+                          f"subdivided {len(chunks)} chunks into {len(capped)}")
+                chunks = capped
             print(f"    - Split into {len(chunks)} chunks using {chunk_method}-based chunking")
 
             prep.content = content_to_process  # Store for enrichment context
