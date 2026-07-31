@@ -346,6 +346,69 @@ class TestIsFalsePositive(unittest.TestCase):
                 )
 
 
+class TestFanShowingIsFalsePositive(unittest.TestCase):
+    """A cinema "Fan Event" is a separately ticketed showing on its own date, listed
+    alongside the film's regular run under a nearly identical name. Merging the two
+    unions their occurrences and leaves the survivor holding two sort_order=0 URLs,
+    so the primary ticket link becomes non-deterministic and often wrong.
+
+    The guard is deliberately narrow — screening-FORMAT variants of the same showing
+    must keep merging, and the bare word "fan" appears in plenty of ordinary titles.
+    """
+
+    FAN_SHOWING_SPLITS = [
+        ("Legend of the White Dragon", "Legend of the White Dragon Fan Event"),
+        ("Super Troopers 3", "Super Troopers 3: Special Broken Lizard Fan Event"),
+        ("Scary Movie", "Scary Movie Opening Night Fan Event"),
+        ("Supergirl", "Supergirl Fan First Screenings"),
+        ("Dune: Part Three", "Dune: Part Three Fan Screening"),
+        ("Wicked: For Good", "Wicked: For Good Fan Premiere"),
+    ]
+
+    MUST_STILL_MERGE = [
+        # Screening-format variants of the same showing (memory:
+        # merger_cinema_format_parens_false_match) — no fan marker on either side.
+        ("Spider-Man: Brand New Day", "Spider-Man: Brand New Day (Open Cap/Eng Sub)"),
+        ("The Odyssey", "The Odyssey (IMAX)"),
+        ("PAW Patrol: The Dino Movie", "PAW Patrol: The Dino Movie (3D)"),
+        # Both sides carry the fan marker — same showing, differently punctuated.
+        ("Legend of the White Dragon Fan Event", "Legend of the White Dragon - Fan Event"),
+        # "fan" as an ordinary word, not a showing marker.
+        ("Met Opera Live in HD: Cosi Fan Tutte", "Met Opera: Live in HD Cosi Fan Tutte"),
+        ("When Sh*t Hits the Fan - Broken Heart Dharma",
+         "Online: When Sh*t Hits the Fan – Broken Heart Dharma"),
+        ("World Cup 26 Fan Village", "World Cup 26 Fan Village at Rockefeller Center"),
+    ]
+
+    def test_fan_showing_splits_from_regular_run(self):
+        for regular, fan in self.FAN_SHOWING_SPLITS:
+            with self.subTest(regular=regular, fan=fan):
+                self.assertTrue(
+                    is_false_positive(regular, fan),
+                    f"{fan!r} is a distinct showing and must not merge into {regular!r}"
+                )
+                self.assertFalse(
+                    are_names_similar(regular, fan),
+                    f"{fan!r} must not be treated as similar to {regular!r}"
+                )
+
+    def test_guard_is_symmetric(self):
+        for regular, fan in self.FAN_SHOWING_SPLITS:
+            with self.subTest(regular=regular, fan=fan):
+                self.assertEqual(
+                    is_false_positive(regular, fan),
+                    is_false_positive(fan, regular),
+                )
+
+    def test_guard_does_not_split_legitimate_pairs(self):
+        for name1, name2 in self.MUST_STILL_MERGE:
+            with self.subTest(name1=name1, name2=name2):
+                self.assertFalse(
+                    is_false_positive(name1, name2),
+                    f"{name1!r} vs {name2!r} must NOT be flagged as a false positive"
+                )
+
+
 class TestAreNamesSimilar(unittest.TestCase):
     """Tests for the are_names_similar function."""
 
@@ -515,6 +578,94 @@ class TestDatelessUnarchiveGate(unittest.TestCase):
     def test_event_with_only_past_occurrences_stays_archived(self):
         cursor = self.FakeCursor(None)
         self.assertFalse(merger._event_has_live_occurrence(cursor, 66269, date(2026, 7, 26)))
+
+
+class TestSinglePrimaryUrl(unittest.TestCase):
+    """`exporter` orders an event's URLs by `sort_order` alone, so two rows at
+    sort_order = 0 make the published link query-plan-dependent — the user gets
+    whichever the optimizer happens to return first.
+
+    Regal exposed this: 139 live events carried two sort_order = 0 rows because
+    the merger inserts every new event-specific detail URL at 0 without looking
+    at the incumbent primary. `_demote_other_primary_urls` makes the incoming
+    URL the sole primary and pushes the incumbents to the end of the ordering.
+    """
+
+    class FakeCursor:
+        """Just enough of event_urls to exercise the guard's three statements."""
+
+        def __init__(self, rows):
+            # rows: list of dicts with id / event_id / sort_order
+            self.rows = rows
+            self._result = []
+
+        def execute(self, sql, params=None):
+            s = ' '.join(sql.split())
+            if s.startswith('SELECT id FROM event_urls WHERE event_id = %s AND sort_order = 0'):
+                self._result = [(r['id'],) for r in
+                                sorted(self.rows, key=lambda r: r['id'])
+                                if r['event_id'] == params[0] and r['sort_order'] == 0]
+            elif s.startswith('SELECT COALESCE(MAX(sort_order), 0)'):
+                orders = [r['sort_order'] for r in self.rows if r['event_id'] == params[0]]
+                self._result = [(max(orders) if orders else 0,)]
+            elif s.startswith('UPDATE event_urls SET sort_order = %s WHERE id = %s'):
+                for r in self.rows:
+                    if r['id'] == params[1]:
+                        r['sort_order'] = params[0]
+                self._result = []
+            else:  # pragma: no cover - guard should issue nothing else
+                raise AssertionError('unexpected SQL: ' + s)
+
+        def fetchall(self):
+            return self._result
+
+        def fetchone(self):
+            return self._result[0] if self._result else None
+
+    def _rows(self, spec, event_id=1):
+        return [{'id': i, 'event_id': event_id, 'sort_order': so}
+                for i, so in spec]
+
+    def test_incumbent_primary_is_demoted_before_a_new_one_is_inserted(self):
+        rows = self._rows([(10, 0), (11, 1)])
+        cursor = self.FakeCursor(rows)
+        self.assertEqual(merger._demote_other_primary_urls(cursor, 1), 1)
+        self.assertEqual({r['id']: r['sort_order'] for r in rows}, {10: 2, 11: 1})
+
+    def test_several_incumbents_get_distinct_ranks(self):
+        """All-at-0 rows must not merely be moved to a single shared value —
+        that would leave the same ambiguity one rank down."""
+        rows = self._rows([(10, 0), (11, 0), (12, 0)])
+        cursor = self.FakeCursor(rows)
+        self.assertEqual(merger._demote_other_primary_urls(cursor, 1), 3)
+        self.assertEqual(sorted(r['sort_order'] for r in rows), [1, 2, 3])
+
+    def test_keep_id_stays_primary(self):
+        """The promote branch keeps the row it is about to promote at 0."""
+        rows = self._rows([(10, 0), (11, 0)])
+        cursor = self.FakeCursor(rows)
+        self.assertEqual(merger._demote_other_primary_urls(cursor, 1, keep_id=11), 1)
+        self.assertEqual({r['id']: r['sort_order'] for r in rows}, {10: 1, 11: 0})
+
+    def test_no_primary_row_is_a_no_op(self):
+        rows = self._rows([(10, 1), (11, 2)])
+        cursor = self.FakeCursor(rows)
+        self.assertEqual(merger._demote_other_primary_urls(cursor, 1), 0)
+        self.assertEqual({r['id']: r['sort_order'] for r in rows}, {10: 1, 11: 2})
+
+    def test_other_events_are_untouched(self):
+        rows = self._rows([(10, 0)]) + self._rows([(20, 0)], event_id=2)
+        cursor = self.FakeCursor(rows)
+        merger._demote_other_primary_urls(cursor, 1)
+        self.assertEqual({r['id']: r['sort_order'] for r in rows}, {10: 1, 20: 0})
+
+    def test_demoted_row_lands_after_the_listing_url_rank(self):
+        """A listing URL sits at 99; the demoted primary must sort after it so it
+        cannot become the fallback link ahead of a real detail page."""
+        rows = self._rows([(10, 0), (11, 99)])
+        cursor = self.FakeCursor(rows)
+        merger._demote_other_primary_urls(cursor, 1)
+        self.assertEqual({r['id']: r['sort_order'] for r in rows}, {10: 100, 11: 99})
 
 
 if __name__ == "__main__":

@@ -27,6 +27,7 @@ from extractor import (
     _normalize_extraction_response,
     chunk_content,
     chunk_content_by_events,
+    chunk_content_by_size,
     estimate_event_count,
     has_event_evidence,
     AUTO_MAX_BATCHES_CEILING,
@@ -478,6 +479,323 @@ class ChunkSizeGuardTests(unittest.TestCase):
         self.assertEqual(method, 'events')
         # Marker-only chunking would have produced exactly 3 oversized chunks.
         self.assertGreater(len(chunks), 3)
+
+
+def _last_nonblank(text):
+    for line in reversed(text.split('\n')):
+        if line.strip():
+            return line
+    return ''
+
+
+class ChunkBySizeHeadingBoundaryTests(unittest.TestCase):
+    """The SIZE path must never end a chunk on a markdown heading.
+
+    `chunk_content_by_events` only recognises `### [` markers, so almost every
+    real listing shape (bulleted `* ### [Title](url)`, `# [Title](url)`,
+    unlinked `### Title`) falls through to `chunk_content_by_size`, which knows
+    nothing about event records. Measured over 3 days of crawls, 24 chunk
+    boundaries landed on a bare heading line across 15 websites: the event's
+    name went to Gemini in one chunk and its date in the next, and the record
+    came back with `occurrences: null` (Elsewhere w75 "Klingande", cr 108131).
+    """
+
+    HEADINGS = [
+        '  * ### [Klingande](https://example.com/klingande)',   # bulleted (w75)
+        '# [Rhythm & Booze](https://example.com/rb)',            # h1 link (Barbès w358)
+        '#### [Late Show](https://example.com/late)',            # h4 link
+        '### Members Preview',                                   # unlinked
+        '1. ### [Numbered Show](https://example.com/n)',          # numbered
+    ]
+
+    @staticmethod
+    def _record(heading, i):
+        return (f'{heading}\n\n'
+                f'**Fri, September {(i % 28) + 1}, 2026 at 6:00 PM**\n\n'
+                f'{"Doors at 5. " * 20}\n')
+
+    def _page(self, heading, n=400):
+        return '\n\n'.join(self._record(heading, i) for i in range(n))
+
+    def test_no_chunk_ends_on_a_heading(self):
+        for heading in self.HEADINGS:
+            with self.subTest(heading=heading):
+                content = self._page(heading)
+                self.assertGreater(len(content), MAX_CHUNK_CHARS)
+                chunks = chunk_content_by_size(content, MAX_CHUNK_CHARS)
+                self.assertGreater(len(chunks), 1)
+                for chunk in chunks[:-1]:
+                    self.assertFalse(
+                        extractor._is_heading_line(_last_nonblank(chunk)),
+                        f'chunk ended on a heading: {_last_nonblank(chunk)!r}')
+
+    def test_orphaned_heading_leads_the_next_chunk(self):
+        """The peeled heading must show up at the head of the next chunk, with
+        its date line, not be dropped."""
+        heading = '  * ### [Klingande](https://example.com/klingande)'
+        # Pad so a boundary is forced to land right after a heading.
+        body = '**Fri, September 4, 2026 at 6:00 PM**'
+        # Sized so the filler + heading exactly fill a chunk and the date line
+        # is what tips it over -- the Elsewhere w75 shape.
+        filler = 'x' * (MAX_CHUNK_CHARS - len(heading) - 8)
+        content = f'{filler}\n\n{heading}\n\n{body}\n\nmore text here'
+        self.assertGreater(len(content), MAX_CHUNK_CHARS)
+        self.assertEqual(_legacy_chunk_by_size(content, MAX_CHUNK_CHARS)[0][-len(heading):],
+                         heading)  # the bug this test pins
+        chunks = chunk_content_by_size(content, MAX_CHUNK_CHARS)
+        self.assertGreater(len(chunks), 1)
+        self.assertNotIn(heading, chunks[0])
+        self.assertIn(heading, chunks[1])
+        self.assertIn(body, chunks[1])
+
+    def test_by_line_path_no_blank_lines(self):
+        """The Alamo Brooklyn shape (cr 108283): a document with NO blank lines
+        at all, so the whole page is one paragraph and the cap splits it BY
+        LINE. That is what severed `### The Untouchables` from its
+        `Showtimes: August 5, 2026 at 6:15pm` line."""
+        lines = []
+        for i in range(1200):
+            lines.append(f'### The Untouchables {i}')
+            lines.append(f'Federal Agent Eliot Ness. Showtimes: August {(i % 28) + 1}, 2026 at 6:15pm')
+            lines.append('Rated R. 119 min. ' * 3)
+        content = '\n'.join(lines)
+        self.assertNotIn('\n\n', content)
+        self.assertGreater(len(content), MAX_CHUNK_CHARS)
+        chunks = chunk_content_by_size(content, MAX_CHUNK_CHARS)
+        self.assertGreater(len(chunks), 1)
+        for chunk in chunks[:-1]:
+            self.assertFalse(extractor._is_heading_line(_last_nonblank(chunk)))
+        # Every heading keeps its showtime line in the same chunk.
+        for chunk in chunks:
+            lines = chunk.split('\n')
+            for idx, line in enumerate(lines):
+                if line.startswith('### The Untouchables'):
+                    self.assertLess(idx + 1, len(lines), 'heading stranded at chunk end')
+                    self.assertTrue(lines[idx + 1].startswith('Federal Agent'),
+                                    f'showtime line severed from {line!r}')
+
+    def test_content_is_preserved(self):
+        content = self._page(self.HEADINGS[0])
+        chunks = chunk_content_by_size(content, MAX_CHUNK_CHARS)
+        self.assertEqual(re.sub(r'\s+', '', ''.join(chunks)),
+                         re.sub(r'\s+', '', content))
+
+    def test_true_negative_content_that_already_chunked_correctly(self):
+        """A page whose boundaries never land on a heading must come out
+        byte-for-byte identical to the pre-fix chunker."""
+        paragraphs = []
+        for i in range(600):
+            paragraphs.append(f'Paragraph {i}. ' + ('lorem ipsum dolor sit amet ' * 12))
+        content = '\n\n'.join(paragraphs)
+        self.assertGreater(len(content), MAX_CHUNK_CHARS)
+        chunks = chunk_content_by_size(content, MAX_CHUNK_CHARS)
+        self.assertEqual(chunks, _legacy_chunk_by_size(content, MAX_CHUNK_CHARS))
+
+    def test_small_content_untouched(self):
+        content = 'short page\n\n### [Show](https://example.com/s)'
+        self.assertEqual(chunk_content_by_size(content, MAX_CHUNK_CHARS), [content])
+
+    def test_all_heading_chunk_is_not_dropped(self):
+        """A run that is nothing BUT headings has nothing to keep — it must be
+        emitted rather than carried forever."""
+        content = '\n\n'.join(f'### [Show {i}](https://example.com/{i})'
+                              for i in range(4000))
+        chunks = chunk_content_by_size(content, MAX_CHUNK_CHARS)
+        self.assertEqual(re.sub(r'\s+', '', ''.join(chunks)),
+                         re.sub(r'\s+', '', content))
+
+
+def _legacy_chunk_by_size(content, max_chars):
+    """The pre-2026-07-31 chunk_content_by_size, for true-negative comparison."""
+    if len(content) <= max_chars:
+        return [content]
+    chunks = []
+    paragraphs = re.split(r'\n\n+', content)
+    current_chunk = []
+    current_size = 0
+    for para in paragraphs:
+        para_size = len(para) + 2
+        if para_size > max_chars:
+            if current_chunk:
+                chunks.append('\n\n'.join(current_chunk))
+                current_chunk = []
+                current_size = 0
+            line_chunk = []
+            line_size = 0
+            for line in para.split('\n'):
+                if line_size + len(line) + 1 > max_chars and line_chunk:
+                    chunks.append('\n'.join(line_chunk))
+                    line_chunk = []
+                    line_size = 0
+                line_chunk.append(line)
+                line_size += len(line) + 1
+            if line_chunk:
+                chunks.append('\n'.join(line_chunk))
+        elif current_size + para_size > max_chars and current_chunk:
+            chunks.append('\n\n'.join(current_chunk))
+            current_chunk = [para]
+            current_size = para_size
+        else:
+            current_chunk.append(para)
+            current_size += para_size
+    if current_chunk:
+        chunks.append('\n\n'.join(current_chunk))
+    return chunks
+
+
+class ChunkBySizeRecordBoundaryTests(unittest.TestCase):
+    """Chunks must not end mid-record either — one line past the heading is the
+    same bug (Alamo Brooklyn w3253 "Where is the Friend's House?": heading +
+    synopsis closed the chunk, `Showtimes: August 21, 2026 at 12:30pm` opened the
+    next one). Everything after a closing chunk's last heading is carried
+    forward, so every chunk after the first starts at a record boundary.
+    """
+
+    @staticmethod
+    def _record(i):
+        return (f'### [Show {i}](https://example.com/show-{i})\n'
+                f'A synopsis line that is long enough to matter. {"detail " * 12}\n'
+                f'Showtimes: August {(i % 28) + 1}, 2026 at 6:15pm')
+
+    def test_every_chunk_starts_at_a_record(self):
+        content = '\n\n'.join(self._record(i) for i in range(400))
+        chunks = chunk_content_by_size(content, MAX_CHUNK_CHARS)
+        self.assertGreater(len(chunks), 1)
+        for chunk in chunks[1:]:
+            self.assertTrue(extractor._is_heading_line(chunk.split('\n')[0]),
+                            f'chunk did not start at a record: {chunk[:120]!r}')
+
+    def test_showtime_line_never_leaves_its_heading(self):
+        content = '\n\n'.join(self._record(i) for i in range(400))
+        for chunk in chunk_content_by_size(content, MAX_CHUNK_CHARS):
+            lines = [l for l in chunk.split('\n') if l.strip()]
+            for idx, line in enumerate(lines):
+                if line.startswith('### [Show '):
+                    self.assertLess(idx + 2, len(lines) + 1)
+                    self.assertTrue(
+                        any(l.startswith('Showtimes:') for l in lines[idx + 1:idx + 3]),
+                        f'record severed after {line!r}')
+
+    def test_oversized_record_falls_back_to_heading_peel(self):
+        """A record longer than the carry cap must not ping-pong whole chunks —
+        it falls back to peeling just the heading."""
+        cap = int(MAX_CHUNK_CHARS * extractor.CARRY_CAP_FRACTION)
+        huge_tail = '\n'.join('body line ' * 8 for _ in range(2000))
+        self.assertGreater(len(huge_tail), cap)
+        content = ('### [Opening Act](https://example.com/a)\n' + huge_tail + '\n\n'
+                   + huge_tail + '\n\n' + huge_tail)
+        chunks = chunk_content_by_size(content, MAX_CHUNK_CHARS)
+        for chunk in chunks:
+            self.assertLessEqual(len(chunk), MAX_CHUNK_CHARS)
+        self.assertEqual(re.sub(r'\s+', '', ''.join(chunks)),
+                         re.sub(r'\s+', '', content))
+
+    def test_carry_never_pushes_a_chunk_over_the_cap(self):
+        """A paragraph too big to share a chunk with the carry puts the carry
+        back rather than overflowing."""
+        heading = '### [Late Show](https://example.com/late)'
+        record_tail = '\n'.join(f'detail line {i}' for i in range(200))
+        filler = 'y' * (MAX_CHUNK_CHARS - len(heading) - len(record_tail) - 40)
+        giant_para = 'z' * (MAX_CHUNK_CHARS - 100)
+        content = (f'{filler}\n\n{heading}\n{record_tail}\n\n{giant_para}\n\ntail')
+        chunks = chunk_content_by_size(content, MAX_CHUNK_CHARS)
+        for chunk in chunks:
+            self.assertLessEqual(len(chunk), MAX_CHUNK_CHARS)
+        self.assertEqual(re.sub(r'\s+', '', ''.join(chunks)),
+                         re.sub(r'\s+', '', content))
+
+    def test_split_trailing_record_helper(self):
+        cap = 10_000
+        text = ('intro\n### [A](u)\nbody of A\n### [B](u)\nbody of B')
+        kept, carried = extractor._split_trailing_record(text, cap)
+        self.assertEqual(kept, 'intro\n### [A](u)\nbody of A')
+        self.assertEqual(carried, '### [B](u)\nbody of B')
+
+    def test_split_trailing_record_carries_the_heading_run(self):
+        """A section banner travels with the record it introduces."""
+        text = 'intro\n### [A](u)\nbody\n## Wednesday\n### [B](u)\nbody of B'
+        kept, carried = extractor._split_trailing_record(text, 10_000)
+        self.assertEqual(kept, 'intro\n### [A](u)\nbody')
+        self.assertEqual(carried, '## Wednesday\n### [B](u)\nbody of B')
+
+    def test_split_trailing_record_no_heading(self):
+        text = 'just\nplain\nlines'
+        self.assertEqual(extractor._split_trailing_record(text, 10_000), (text, ''))
+
+    def test_split_trailing_record_heading_first_line(self):
+        """Nothing to keep -> no carry (the chunk IS one record)."""
+        text = '### [A](u)\nbody of A'
+        self.assertEqual(extractor._split_trailing_record(text, 10_000), (text, ''))
+
+
+class ChunkBySizeOversizedLineTests(unittest.TestCase):
+    """A single line longer than max_chars used to become one whole chunk.
+
+    Measured over crawl run 293+: Skinny Dennis w4832 handed Gemini a single
+    303,877-char chunk (a minified `?format=json` calendar dump on one line)
+    and got 3 events back; Climate Cafe w489 178,332; Columbia w708 176,239.
+    """
+
+    def test_single_giant_line_is_split(self):
+        line = 'word ' * 40000  # ~200K on one line
+        content = f'intro paragraph\n\n{line}\n\ntail paragraph'
+        chunks = chunk_content_by_size(content, MAX_CHUNK_CHARS)
+        self.assertGreater(len(chunks), 1)
+        for chunk in chunks:
+            self.assertLessEqual(len(chunk), MAX_CHUNK_CHARS)
+        self.assertEqual(re.sub(r'\s+', '', ''.join(chunks)),
+                         re.sub(r'\s+', '', content))
+
+    def test_minified_json_splits_between_records(self):
+        """The real shape of these pages: one line of minified JSON. Cuts should
+        land between records (`},{`) rather than mid-object."""
+        records = ','.join(
+            '{"id":%d,"name":"Event %d","startDate":"2026-08-%02d","description":"%s"}'
+            % (i, i, (i % 28) + 1, 'x' * 400)
+            for i in range(200))
+        line = '{"events":[' + records + ']}'
+        content = f'https://example.com/calendar?format=json\n\n{line}'
+        self.assertGreater(len(line), MAX_CHUNK_CHARS)
+        chunks = chunk_content_by_size(content, MAX_CHUNK_CHARS)
+        for chunk in chunks:
+            self.assertLessEqual(len(chunk), MAX_CHUNK_CHARS)
+        # Every chunk after the first starts a fresh JSON object.
+        for chunk in chunks[1:]:
+            self.assertTrue(chunk.lstrip().startswith('{'), chunk[:80])
+        self.assertEqual(re.sub(r'\s+', '', ''.join(chunks)),
+                         re.sub(r'\s+', '', content))
+
+    def test_unbreakable_line_still_capped(self):
+        """No whitespace and no record boundary (a 300K URL): hard-cut rather
+        than emit an oversized chunk."""
+        line = 'https://example.com/x?' + ('a' * 120000)
+        content = f'intro\n\n{line}'
+        chunks = chunk_content_by_size(content, MAX_CHUNK_CHARS)
+        for chunk in chunks:
+            self.assertLessEqual(len(chunk), MAX_CHUNK_CHARS)
+        self.assertEqual(''.join(chunks).replace('\n', ''),
+                         content.replace('\n', ''))
+
+    def test_normal_lines_are_not_split(self):
+        content = '\n\n'.join('a normal line of text ' * 20 for _ in range(400))
+        chunks = chunk_content_by_size(content, MAX_CHUNK_CHARS)
+        self.assertEqual(chunks, _legacy_chunk_by_size(content, MAX_CHUNK_CHARS))
+
+
+class HeadingLineDetectionTests(unittest.TestCase):
+    """_is_heading_line is deliberately broader than _EVENT_HEADING_RE."""
+
+    def test_recognised_shapes(self):
+        for line in ['# [T](u)', '## [T](u)', '### [T](u)', '#### [T](u)',
+                     '##### T', '  * ### [T](u)', '1. ### [T](u)',
+                     '- ## [T](u)', '\t### T']:
+            self.assertTrue(extractor._is_heading_line(line), line)
+
+    def test_non_headings(self):
+        for line in ['plain text', '**Fri, September 4, 2026 at 6:00 PM**',
+                     '###notaheading', '', '   ', 'a # b',
+                     '####### seven hashes is not a heading']:
+            self.assertFalse(extractor._is_heading_line(line), line)
 
 
 class SimpleOccurrenceEndDateTests(unittest.TestCase):

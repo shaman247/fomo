@@ -278,6 +278,11 @@ CHUNK_TIMEOUT = 300
 # Maximum characters per chunk when falling back to character-based chunking
 MAX_CHUNK_CHARS = 30000
 
+# Largest trailing partial record chunk_content_by_size will carry into the next
+# chunk, as a fraction of MAX_CHUNK_CHARS. The carry leads the next chunk, so it
+# has to leave that chunk room to hold real content.
+CARRY_CAP_FRACTION = 0.25
+
 # Hard limit on total content size before extraction (characters).
 # Pages exceeding this will be truncated. 300K chars ≈ 10 chunks of 30K,
 # accommodating multi-week event aggregators like NYC Parks date-windowed
@@ -653,6 +658,126 @@ def chunk_content_by_events(content, events_per_chunk=EVENTS_PER_CHUNK,
     return chunks
 
 
+# A markdown heading line, in every shape a crawled listing actually uses:
+# `# [Title](url)`, `### [Title](url)`, `#### Title`, and bulleted/numbered
+# variants like `  * ### [Title](url)` or `1. ### [Title](url)`.
+# Deliberately broader than _EVENT_HEADING_RE (which requires a link and `##`+)
+# because this is used only to decide where NOT to cut, where a false positive
+# costs nothing.
+_HEADING_LINE_RE = re.compile(r'^[ \t]*(?:[\*\-]\s+|\d+\.\s+)?#{1,6}\s+\S')
+
+
+def _is_heading_line(line):
+    return bool(_HEADING_LINE_RE.match(line))
+
+
+def _split_trailing_heading(text):
+    """Peel a trailing run of heading lines off `text`.
+
+    Returns `(kept, carried)`. `carried` is the trailing heading run (plus any
+    blank lines around it) that must NOT be left at the end of a chunk, because
+    a chunk ending on an event's heading puts that event's date/body in the
+    NEXT chunk and Gemini then emits a name with `occurrences: null`.
+
+    Returns `(text, '')` when the last non-blank line isn't a heading, or when
+    the whole chunk is headings (nothing left to keep).
+    """
+    lines = text.split('\n')
+    i = len(lines) - 1
+    while i >= 0 and not lines[i].strip():
+        i -= 1
+    if i < 0 or not _is_heading_line(lines[i]):
+        return text, ''
+
+    # Walk back over a run of consecutive headings (blank lines allowed between).
+    start = i
+    j = i
+    while j >= 0:
+        if _is_heading_line(lines[j]):
+            start = j
+        elif lines[j].strip():
+            break
+        j -= 1
+
+    if start == 0:
+        return text, ''
+    return '\n'.join(lines[:start]), '\n'.join(lines[start:])
+
+
+def _split_trailing_record(text, cap):
+    """Peel the trailing PARTIAL RECORD off `text`.
+
+    A chunk that ends a few lines after an event's heading strands the rest of
+    that event (typically its date line) in the next chunk — the same failure as
+    a chunk ending on the heading itself, just one line later (Alamo Brooklyn
+    w3253 "Where is the Friend's House?": heading + synopsis closed the chunk and
+    `Showtimes: August 21, 2026 at 12:30pm` opened the next one).
+
+    Carries everything from the last heading — extended back over any run of
+    consecutive headings above it — into the next chunk, so every chunk after
+    the first STARTS on a record boundary. Falls back to `_split_trailing_heading`
+    when that tail is bigger than `cap` (a very long record would otherwise
+    ping-pong whole chunks forward).
+    """
+    lines = text.split('\n')
+    last = None
+    for idx, line in enumerate(lines):
+        if _is_heading_line(line):
+            last = idx
+    if last is None:
+        return text, ''
+
+    # Extend back over consecutive headings so a section banner travels with the
+    # record it introduces (`## Wednesday` + `### [Show](url)`).
+    start = last
+    j = last - 1
+    while j >= 0:
+        if _is_heading_line(lines[j]):
+            start = j
+        elif lines[j].strip():
+            break
+        j -= 1
+
+    if start == 0:
+        return text, ''
+    carried = '\n'.join(lines[start:])
+    kept = '\n'.join(lines[:start])
+    if len(carried) > cap or not kept.strip():
+        return _split_trailing_heading(text)
+    return kept, carried
+
+
+def _split_long_line(line, max_chars):
+    """Split a single line that is itself longer than `max_chars`.
+
+    Without this, one gigantic line is appended whole and yields one gigantic
+    chunk (measured: a 303,877-char single-line JSON dump from Skinny Dennis
+    w4832 that Gemini answered with 3 events). Prefers a record boundary
+    (`},{` in a minified JSON payload — the shape every one of these pages
+    has), then whitespace, and only hard-cuts when neither exists.
+    """
+    if len(line) + 1 <= max_chars:
+        return [line]
+
+    pieces = []
+    remaining = line
+    floor = int(max_chars * 0.5)
+    while len(remaining) + 1 > max_chars:
+        window = remaining[:max_chars - 1]
+        cut = window.rfind('},{')
+        if cut >= floor:
+            cut += 2  # keep `},` with the piece we're closing
+        else:
+            cut = window.rfind(' ')
+            if cut < floor:
+                cut = max_chars - 1
+        pieces.append(remaining[:cut])
+        remaining = remaining[cut:].lstrip()
+    if remaining:
+        pieces.append(remaining)
+    return pieces
+
+
 def chunk_content_by_size(content, max_chars=MAX_CHUNK_CHARS):
     """
     Split content into chunks by character count, breaking at paragraph boundaries.
@@ -660,17 +785,62 @@ def chunk_content_by_size(content, max_chars=MAX_CHUNK_CHARS):
     Used as fallback when event markers aren't found. Tries to split at double
     newlines (paragraphs) to keep related content together.
 
+    Two invariants this path is responsible for, both learned the hard way:
+
+    1. *A chunk never ends mid-record.* This path knows nothing about event
+       records, so a paragraph/line boundary can land right after an event's
+       heading and strand its date in the next chunk (Elsewhere w75 "Klingande":
+       chunk 1 ended `  * ### [Klingande](…)`, chunk 2 began
+       `**Fri, September 4, 2026 …**`, extraction returned the name with
+       `occurrences: null`). Whatever sits after the last heading of a closing
+       chunk is carried into the next one, so every chunk after the first STARTS
+       at a record boundary — the same guarantee `chunk_content_by_events` gives,
+       without changing which pages take which path.
+    2. *No chunk exceeds `max_chars`.* A single line longer than the cap used to
+       be appended whole; `_split_long_line` breaks it up instead.
+
     Returns a list of content strings, one per chunk.
     """
     if len(content) <= max_chars:
         return [content]
 
+    # A carried tail leads the next chunk, so cap it well below max_chars.
+    carry_cap = max(1, int(max_chars * CARRY_CAP_FRACTION))
+
     chunks = []
+    carry = ['']  # trailing partial record deferred from the previous chunk
+
+    def emit(text):
+        """Close a chunk, holding back its trailing partial record."""
+        kept, carried = _split_trailing_record(text, carry_cap)
+        if carried and kept.strip():
+            chunks.append(kept)
+            carry[0] = carried
+        else:
+            chunks.append(text)
+            carry[0] = ''
+
+    def put_carry_back():
+        """Undo the last carry when the next unit cannot share a chunk with it.
+
+        Re-attaching is better than emitting a record fragment on its own; this
+        only fires for a paragraph so large that carry + paragraph exceed the cap.
+        """
+        if carry[0] and chunks:
+            chunks[-1] = chunks[-1] + '\n' + carry[0]
+            carry[0] = ''
+
     # Split by paragraphs (double newlines)
     paragraphs = re.split(r'\n\n+', content)
 
     current_chunk = []
     current_size = 0
+
+    def seed_paragraph_chunk():
+        nonlocal current_chunk, current_size
+        current_chunk = [carry[0]] if carry[0] else []
+        current_size = (len(carry[0]) + 2) if carry[0] else 0
+        carry[0] = ''
 
     for para in paragraphs:
         para_size = len(para) + 2  # +2 for the newlines we'll add back
@@ -679,28 +849,43 @@ def chunk_content_by_size(content, max_chars=MAX_CHUNK_CHARS):
         if para_size > max_chars:
             # First, save current chunk if any
             if current_chunk:
-                chunks.append('\n\n'.join(current_chunk))
+                emit('\n\n'.join(current_chunk))
                 current_chunk = []
                 current_size = 0
+                if carry[0] and len(carry[0]) + 1 + len(para) > max_chars:
+                    # The line splitter below re-packs anyway, so only put the
+                    # carry back when it cannot lead even one line of this
+                    # paragraph.
+                    first_line = para.split('\n', 1)[0]
+                    if len(carry[0]) + 1 + len(first_line) + 1 > max_chars:
+                        put_carry_back()
 
             # Split large paragraph by lines
-            lines = para.split('\n')
-            line_chunk = []
-            line_size = 0
-            for line in lines:
-                if line_size + len(line) + 1 > max_chars and line_chunk:
-                    chunks.append('\n'.join(line_chunk))
-                    line_chunk = []
-                    line_size = 0
-                line_chunk.append(line)
-                line_size += len(line) + 1
+            line_chunk = [carry[0]] if carry[0] else []
+            line_size = (len(carry[0]) + 1) if carry[0] else 0
+            carry[0] = ''
+            for line in para.split('\n'):
+                for piece in _split_long_line(line, max_chars):
+                    if line_size + len(piece) + 1 > max_chars and line_chunk:
+                        emit('\n'.join(line_chunk))
+                        if carry[0] and len(carry[0]) + len(piece) + 2 > max_chars:
+                            put_carry_back()
+                        line_chunk = [carry[0]] if carry[0] else []
+                        line_size = (len(carry[0]) + 1) if carry[0] else 0
+                        carry[0] = ''
+                    line_chunk.append(piece)
+                    line_size += len(piece) + 1
             if line_chunk:
-                chunks.append('\n'.join(line_chunk))
+                emit('\n'.join(line_chunk))
+            seed_paragraph_chunk()
         elif current_size + para_size > max_chars and current_chunk:
             # Save current chunk and start new one
-            chunks.append('\n\n'.join(current_chunk))
-            current_chunk = [para]
-            current_size = para_size
+            emit('\n\n'.join(current_chunk))
+            if carry[0] and len(carry[0]) + 2 + para_size > max_chars:
+                put_carry_back()
+            seed_paragraph_chunk()
+            current_chunk.append(para)
+            current_size += para_size
         else:
             current_chunk.append(para)
             current_size += para_size
@@ -708,6 +893,8 @@ def chunk_content_by_size(content, max_chars=MAX_CHUNK_CHARS):
     # Add remaining content
     if current_chunk:
         chunks.append('\n\n'.join(current_chunk))
+    elif carry[0]:
+        chunks.append(carry[0])
 
     return chunks
 
@@ -1199,6 +1386,7 @@ CRITICAL DATE RULES:
 - If an event is described as "monthly", "weekly", "ongoing", "permanent", "recurring", or has no specific date listed, set occurrences=null. Do NOT invent a next-occurrence date.
 - A LIST of specific calendar dates is NOT "recurring" — when the page enumerates actual dates (e.g. "June 18, June 19, June 20, ...", a film's showtimes across many days, or "Jan 11, 18, 25"), emit EACH listed date as its own occurrence. The null-occurrences rule above applies ONLY when a cadence is described in words ("weekly", "every Thursday") WITHOUT the dates being listed, or when no dates appear at all. A missing start_time NEVER justifies dropping a date that IS shown — set start_time to null and keep the date.
 - NEVER collapse an enumerated list of dates into one start_date/end_date range. end_date is ONLY for something that genuinely runs every day in between (an exhibition run, a multi-day festival). A film playing on 12 listed dates is TWELVE occurrences with end_date null — NOT one occurrence spanning first-to-last. Collapsing is wrong even when the dates look contiguous, and it silently invents dates whenever the list has gaps (a film showing Aug 10-13 and Aug 17-20 must never become Aug 10 -> Aug 20).
+- ONE LISTING PER URL: two listings with DIFFERENT event URLs are DIFFERENT events — never fuse them into one, no matter how similar their titles are. Titles that differ only by a qualifier or suffix ("Early Access", "Fan Event", "Special Preview", "(Sensory)", "(Open Cap/Eng Sub)", "3D", "25th Anniversary", a screening-format or accessibility tag) are separate ticketed listings: emit EACH as its own event, using that listing's OWN url and ONLY the dates shown under that listing. Never move a date from one listing onto another, and never pair one listing's title with another listing's url. Only listings that share the SAME url may be combined into a single event.
 - Do NOT default to today's date when no date is listed.
 - Do NOT extract dates from URLs or Google Calendar/iCal links — those often reference past instances. Only use dates visible in the page text adjacent to the event.
 - Past dates (before today) should also be set to null — those events have already happened. EXCEPTION: a multi-day exhibition / gallery show / installation whose closing date (end_date) is today or later is still on view — keep its original (past) opening date as start_date and its closing date as end_date; do NOT null it.
@@ -1272,6 +1460,7 @@ Rules:
 - Do NOT extract things that are not attendable public events. Skip: venue/program closures and holiday-closure notices ("Museum Closed", "Park Closes at 5pm", "Office Closed for Juneteenth"); calls for submissions, applications, or grants ("Open Call for Artists", "Submission Deadline", "Micro Grants Round 3"); casting calls and talent-recruitment notices ("Casting Call", "Models Wanted", "Dancers Needed"); civic date markers ("Election Day", "Primary Day", "Election Day 2026") — an attendable election-night watch party IS an event; venue marketing (space/room rentals, "Private Events", "Available for Booking", dining service like "Signature Breakfast"); season passes and ticketing placeholders ("Summer Pass 2026", "Showtimes"); fundraising campaigns and donation-match drives ("Match Campaign", "Giving Day") — an attendable benefit concert or gala IS an event; submit-your-work contests with an entry deadline ("Library Card Art Contest") — a contest held live in front of an audience (trivia, dance, pie-eating) IS an event; info-booth or vendor-table marketing listings inside a festival program ("Our Info Booths"); childcare offered as an amenity during another activity ("Nursery Care" during worship services, babysitting while parents attend) — a children's program or childcare-related class that is itself the event ("Toddler Storytime", "Babysitting 101 Training", "Preschool Open House") IS an event; and content placeholders or unrelated spam. These are not events — leave them out entirely.
 - {city_config.extraction_region_rule()}
 - Ignore unrelated event sections ("Hot Events", "Similar events", etc.)
+- ONE LISTING PER URL: two listings with DIFFERENT event URLs are DIFFERENT events — never fuse them into one, no matter how similar their titles are. Titles that differ only by a qualifier or suffix ("Early Access", "Fan Event", "Special Preview", "(Sensory)", "(Open Cap/Eng Sub)", "3D", "25th Anniversary", a screening-format or accessibility tag) are separate ticketed listings: emit EACH as its own event, using that listing's OWN url and ONLY the dates shown under that listing. Never move a date from one listing onto another, and never pair one listing's title with another listing's url. Only listings that share the SAME url may be combined into a single event.
 - For recurring events, expand ALL individual dates into the occurrences array
 - If no events are found, return an empty events list
 - IMPORTANT: Do NOT fabricate or guess dates. If a listing has no date information on the page, set occurrences to null.

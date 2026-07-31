@@ -70,6 +70,24 @@ _FORMAT_TAGS = {
 }
 
 
+# A "Fan Event" / "Fan First Screening" is a SEPARATELY ticketed, separately dated
+# showing that a cinema chain lists alongside the film's regular run under a nearly
+# identical name ("Legend of the White Dragon Fan Event" on Aug 28, then "Legend of
+# the White Dragon" Aug 29 - Sep 2). Without this guard the two fuse, the merger
+# unions their occurrences, and the survivor ends up holding two sort_order = 0
+# URLs — one of which points at the wrong ticket listing.
+#
+# Deliberately narrow: the marker word must be followed by a showing noun. A bare
+# \bfan\b also matches "Cosi Fan Tutte", "When Sh*t Hits the Fan" and "World Cup
+# Fan Village", which measurably broke legitimate merges. Screening-FORMAT variants
+# of the same showing (3D, IMAX, "(Open Cap/Eng Sub)") carry no fan marker and are
+# unaffected — they must keep merging.
+_FAN_SHOWING_RE = re.compile(
+    r'\bfan\s+(?:first\s+)?'
+    r'(?:event|screening|preview|premiere|celebration|party|night)s?\b'
+)
+
+
 def _strip_format_parentheticals(name):
     """Drop ()/[] groups whose alpha tokens are all screening-format tags."""
     def repl(match):
@@ -386,6 +404,7 @@ def is_false_positive(name1, name2):
     - Early vs Late sets
     - Different episode numbers
     - Different set/part/volume numbers (Set 1 vs Set 2)
+    - A cinema "Fan Event" / "Fan First Screening" vs the film's regular run
     - Different sports opponents
     - A bare/umbrella name vs a more specific "Head: Subtitle" sibling
     """
@@ -411,6 +430,11 @@ def is_false_positive(name1, name2):
 
     # Early vs Late sets
     if ("early" in norm1) != ("early" in norm2) or ("late" in norm1) != ("late" in norm2):
+        return True
+
+    # A fan event / fan first screening vs the film's regular run — a distinct,
+    # separately ticketed showing on its own date (see _FAN_SHOWING_RE).
+    if bool(_FAN_SHOWING_RE.search(norm1)) != bool(_FAN_SHOWING_RE.search(norm2)):
         return True
 
     # Different numbered nights/sessions
@@ -728,6 +752,36 @@ def source_url_listing_set(cursor, cache, website_id):
         cursor.execute("SELECT url FROM website_urls WHERE website_id = %s", (website_id,))
         cache[website_id] = {row[0].rstrip('/') for row in cursor.fetchall()}
     return cache[website_id]
+
+
+def _demote_other_primary_urls(cursor, event_id, keep_id=None):
+    """Ensure at most one `event_urls` row for `event_id` keeps sort_order = 0.
+
+    The exporter orders an event's URLs by `sort_order` alone, so two rows at 0
+    make the published link query-plan-dependent — the user can get either one.
+    Call this immediately BEFORE promoting/inserting a new primary URL: every
+    other row currently at 0 is pushed to the end of the ordering (max + 1, 2, …)
+    so the incoming URL is the sole primary and the demoted ones keep a stable,
+    distinct rank instead of all colliding on one value.
+    """
+    cursor.execute(
+        "SELECT id FROM event_urls WHERE event_id = %s AND sort_order = 0 ORDER BY id",
+        (event_id,),
+    )
+    stale = [row[0] for row in cursor.fetchall() if row[0] != keep_id]
+    if not stale:
+        return 0
+    cursor.execute(
+        "SELECT COALESCE(MAX(sort_order), 0) FROM event_urls WHERE event_id = %s",
+        (event_id,),
+    )
+    next_order = cursor.fetchone()[0]
+    for row_id in stale:
+        next_order += 1
+        cursor.execute(
+            "UPDATE event_urls SET sort_order = %s WHERE id = %s", (next_order, row_id)
+        )
+    return len(stale)
 
 
 def _merge_occurrences_into_event(cursor, event_id, new_occurrences):
@@ -1639,11 +1693,17 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
 
                     if already_present:
                         # Promote existing matching URL to sort_order=0
+                        _demote_other_primary_urls(
+                            cursor, matched_event_id, keep_id=already_present[0]
+                        )
                         cursor.execute(
                             "UPDATE event_urls SET sort_order = 0 WHERE id = %s",
                             (already_present[0],)
                         )
                     else:
+                        # Only one row may hold sort_order=0 — the exporter breaks
+                        # ties arbitrarily, so demote any incumbent primary first.
+                        _demote_other_primary_urls(cursor, matched_event_id)
                         cursor.execute(
                             "INSERT INTO event_urls (event_id, url, sort_order) VALUES (%s, %s, 0)",
                             (matched_event_id, trimmed_url)

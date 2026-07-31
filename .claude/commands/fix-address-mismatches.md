@@ -22,22 +22,18 @@ Run the scan from a Python script — the matcher logic lives in `pipeline/proce
 
 ```python
 import sys; sys.path.insert(0, 'pipeline')
-import re
 from collections import defaultdict
 from db import create_connection
-from processor import _extract_street_address_loose, sublocation_redundant_with_address
+from processor import (
+    sublocation_looks_like_address,
+    sublocation_redundant_with_address,
+)
 
-# A "real" address-style sublocation starts with a number AND contains a
-# street-type token. Plain sub-venue values like "Studio B" or "5th Floor"
-# don't match this pattern and are skipped.
-STARTS_NUM = re.compile(r'^\s*\d+')
-STREET_TYPE = re.compile(
-    r'\b(st|ave|blvd|dr|rd|pl|ct|ln|pkwy|hwy|street|avenue|boulevard|drive|'
-    r'road|place|court|lane|parkway|highway|broadway|bowery|way|sq|square|'
-    r'terrace|tpke|turnpike)\b\.?', re.IGNORECASE)
-
-def looks_like_street_address(s):
-    return bool(s and STARTS_NUM.match(s) and STREET_TYPE.search(s))
+# `sublocation_looks_like_address` decides whether the text claims a street
+# address at all. Plain sub-venue values ("Studio B", "5th Floor") are skipped,
+# and so are the ones that merely *start* with a number while naming a door or
+# a room ("65th Street Entrance", "14TH ST. Mainstage", "24th floor terrace") —
+# no address fix can ever resolve those, so they are not candidates.
 
 conn = create_connection()
 cur = conn.cursor(dictionary=True)
@@ -55,7 +51,7 @@ cur.execute("""
 
 by_loc = defaultdict(list)
 for r in cur.fetchall():
-    if not looks_like_street_address(r['sublocation']):
+    if not sublocation_looks_like_address(r['sublocation']):
         continue
     if sublocation_redundant_with_address(r['sublocation'], r['loc_address']):
         continue  # matcher already handles this at export
@@ -138,7 +134,9 @@ Re-run Step 1 and confirm the fixed locations have dropped off the list.
 
 If the scan flags a venue where the DB address and sublocation are the *same* address but written differently (e.g. word ordinals, hyphenated Queens numbers, suite/floor suffixes, leading venue names in the DB address), and the existing `_extract_street_address_loose` doesn't normalize them to the same form, the matcher itself needs a tweak — not the data. Look at `_extract_street_address_loose` / `sublocation_redundant_with_address` in `pipeline/processor.py`. Add a test case to `/tmp/test_loose.py` first, get it passing, then re-export.
 
-Common normalization gaps that have been added historically: `Tenth` → `10th`, `5-52` → `552`, leading `<Venue Name>, <addr>`, trailing `Suite 605A` / `#1A` / `2nd floor`, `Broadway` / `Bowery` as standalone street names, trailing punctuation on `St.`.
+Common normalization gaps that have been added historically: `Tenth` → `10th`, `5-52` → `552`, leading `<Venue Name>, <addr>`, trailing `Suite 605A` / `#1A` / `2nd floor`, `Broadway` / `Bowery` as standalone street names, trailing punctuation on `St.`, bare street names (`27th Street` vs `537 W 27th St`), the block form (`2nd Avenue between 90th & 91st Streets` vs `90th St & 2nd Ave`), and corridor ranges (`69th Street to 89th Street` vs `37th Ave & 79th St`).
+
+Tests live in `pipeline/tests/test_processor.py` (`TestBareStreetNames`, `TestStreetBlockAndRangeForms`, `TestSublocationLooksLikeAddress`). Add the case there, get it passing, then re-export.
 
 ## Notes
 

@@ -24,6 +24,10 @@ from processor import (
     _region_conflict,
     _extract_parenthetical_parent,
     _extract_intersection,
+    _bare_street_name,
+    _extract_street_block,
+    _street_range_sides,
+    sublocation_looks_like_address,
     apply_crawled_details,
     get_location_id,
 )
@@ -1256,6 +1260,204 @@ class TestIntersectionAddresses(unittest.TestCase):
             "Studio B", "3rd Ave & 95th St, Brooklyn, NY"))
 
 
+class TestBareStreetNames(unittest.TestCase):
+    """A sublocation that names only the street the venue is already on says
+    strictly less than the venue's address, but neither side parsed as a house
+    address so the text survived to the map and inflated every run of the
+    /fix-address-mismatches scan.
+
+    Fixtures are locations 1470 (Gowanus Dredgers Bunker, "19th St." vs
+    "2 19th St") and 8842 (Central Rock Gym Chelsea, "27th Street" vs
+    "537 W 27th St")."""
+
+    def test_bare_street_against_house_address(self):
+        self.assertTrue(sublocation_redundant_with_address(
+            "19th St.", "2 19th St, Brooklyn, NY 11232, USA"))
+        self.assertTrue(sublocation_redundant_with_address(
+            "27th Street", "537 W 27th St, New York, NY 10001"))
+
+    def test_directional_is_ignored_on_either_side(self):
+        self.assertTrue(sublocation_redundant_with_address(
+            "West 21st Street", "522 W 21st St, New York, NY 10011, USA"))
+        self.assertTrue(sublocation_redundant_with_address(
+            "12th St", "Highlawn Ave & W 12th St, Brooklyn, NY 11223, USA"))
+
+    def test_street_only_db_address(self):
+        # loc 5305 — an Open Street's address is the corridor itself.
+        self.assertTrue(sublocation_redundant_with_address(
+            "34th Avenue, Jackson Heights", "34th Ave, Queens, NY 11372, USA"))
+
+    def test_named_street_and_standalone_street(self):
+        self.assertTrue(sublocation_redundant_with_address(
+            "Water Grant Street", "71 Water Grant St, Yonkers, NY 10701, USA"))
+        self.assertTrue(sublocation_redundant_with_address(
+            "Rose St", "Gotham Park, 1 Rose St, New York, NY 10038, USA"))
+
+    # --- a house number is never a bare street name ---
+
+    def test_house_numbers_are_not_bare_street_names(self):
+        for addr in ("112 W 34th St", "34-12 36th Ave", "626B 10th Ave"):
+            self.assertIsNone(_bare_street_name(addr), addr)
+
+    def test_queens_hyphenated_address_survives(self):
+        # "34-12 36th Ave" must still parse as a house address, and must not
+        # collapse onto every other event on 36th Ave.
+        self.assertEqual(
+            _extract_street_address_loose("34-12 36th Ave"), "3412 36 ave")
+        self.assertFalse(sublocation_redundant_with_address(
+            "34-12 36th Ave", "5-11 36th Ave, Queens, NY 11106"))
+        self.assertTrue(sublocation_redundant_with_address(
+            "34-12 36th Ave", "34-12 36th Ave, Astoria, NY 11106, USA"))
+
+    def test_apartment_letter_house_number_survives(self):
+        self.assertEqual(
+            _extract_street_address_loose("626B 10th Ave"), "626 10 ave")
+        self.assertFalse(sublocation_redundant_with_address(
+            "626B 10th Ave", "800 10th Ave, New York, NY 10019"))
+
+    def test_directional_house_address_is_not_a_street_name(self):
+        self.assertFalse(sublocation_redundant_with_address(
+            "112 W 34th St", "300 W 34th St, New York, NY 10001"))
+
+    # --- true negatives: real detail that must keep publishing ---
+
+    def test_sub_venue_qualifiers_are_preserved(self):
+        for sub in ("40th Street Plaza", "14th Street corridor",
+                    "71st Street Soccer Field", "87th Street Lawn",
+                    "95th Street Compost Compound"):
+            self.assertIsNone(_bare_street_name(sub), sub)
+
+    def test_room_after_the_comma_is_preserved(self):
+        # The comma tail must be a place qualifier, not content.
+        self.assertIsNone(_bare_street_name("Adams Street, Multipurpose Room"))
+        self.assertFalse(sublocation_redundant_with_address(
+            "Adams Street, Multipurpose Room", "9 Adams St, Brooklyn, NY 11201, USA"))
+        self.assertIsNone(_bare_street_name(
+            "Centre Street, Domino Park, Rockefeller Center, Buffalo"))
+
+    def test_different_street_is_not_redundant(self):
+        # loc 1957 Shoelace Park — the sublocation names a cross street the
+        # venue's address does not.
+        self.assertFalse(sublocation_redundant_with_address(
+            "227th Street",
+            "Shoelace Park, East 233rd St. &, Bronx Riv Pkwy, Bronx, NY 10467, USA"))
+        self.assertFalse(sublocation_redundant_with_address(
+            "9th St.", "200 4th Ave, Brooklyn, NY 11217, USA"))
+
+
+class TestStreetBlockAndRangeForms(unittest.TestCase):
+    """GrowNYC addresses every greenmarket as a block ("2nd Avenue between 90th
+    & 91st Streets") while the DB carries the corner ("90th St & 2nd Ave"), and
+    Jackson Heights' corridor locations are addressed at a mid-block
+    intersection while the sublocation restates the whole range.
+
+    Fixtures: locations 727, 494, 111, 428, 669 (greenmarkets), 8884 (17th St
+    Open Street), 8936 (E 100th St Open Street), 8345 / 8547 (Jackson Heights
+    corridors)."""
+
+    def test_greenmarket_block_forms(self):
+        for sub, addr in (
+            ("2nd Avenue between 90th & 91st Streets",
+             "90th Street &, 2nd Ave, New York, NY 10128, USA"),
+            ("149th Street between Park & Morris Avenues",
+             "149th St &, Park Ave, Bronx, NY 10451, USA"),
+            ("14th Avenue between 49th & 50th Streets",
+             "14th Ave &, 50th St, Brooklyn, NY 11219, USA"),
+            ("79th Street between 34th Ave & Northern Boulevard",
+             "34th Ave & 79th Street &, 80th St, Jackson Heights, NY 11372, USA"),
+            ("192nd Street between Grand Concourse & Valentine Avenue",
+             "192nd St &, Grand Concourse, Bronx, NY 10458, USA"),
+        ):
+            self.assertTrue(sublocation_redundant_with_address(sub, addr), sub)
+
+    def test_shared_plural_street_type_is_distributed(self):
+        # "49th & 50th Streets" — the type applies to both sides.
+        self.assertEqual(
+            _extract_street_block("14th Avenue between 49th & 50th Streets"),
+            ("14 ave", ["49 st", "50 st"]))
+        self.assertEqual(
+            _extract_street_block("149th Street between Park & Morris Avenues"),
+            ("149 st", ["park ave", "morris ave"]))
+
+    def test_parenthesised_and_and_separated_blocks(self):
+        self.assertTrue(sublocation_redundant_with_address(
+            "100th St. (between Lexington & 3rd Aves)",
+            "Lexington Ave & E 100th St, New York, NY 10029, USA"))
+        self.assertTrue(sublocation_redundant_with_address(
+            "17th Street between 5th Ave. and 6th Ave.",
+            "5th Ave & 17th St, Brooklyn, NY 11215, USA"))
+        self.assertTrue(sublocation_redundant_with_address(
+            "Decatur Street btw Howard Ave and Saratoga Ave, Brooklyn",
+            "Howard Ave & Decatur St, Brooklyn, NY 11233"))
+
+    def test_block_must_share_the_main_street(self):
+        # Right block shape, wrong corridor.
+        self.assertFalse(sublocation_redundant_with_address(
+            "5th Avenue between 90th & 91st Streets",
+            "90th Street &, 2nd Ave, New York, NY 10128, USA"))
+        # Right corridor, neither cross street matches.
+        self.assertFalse(sublocation_redundant_with_address(
+            "2nd Avenue between 40th & 41st Streets",
+            "90th Street &, 2nd Ave, New York, NY 10128, USA"))
+
+    def test_block_does_not_fire_against_a_house_address(self):
+        self.assertFalse(sublocation_redundant_with_address(
+            "8th St. between Aves C and D",
+            "Green Oasis, 370 E 8th St, New York, NY 10009, USA"))
+
+    def test_corridor_range_covers_the_addressed_corner(self):
+        self.assertTrue(sublocation_redundant_with_address(
+            "69th Street to 89th Street", "37th Ave & 79th St, Queens, NY 11372, USA"))
+        self.assertTrue(sublocation_redundant_with_address(
+            "69th Street to 89th Street", "79th St & Northern Blvd, Queens, NY 11372, USA"))
+
+    def test_range_outside_the_address_is_not_redundant(self):
+        self.assertFalse(sublocation_redundant_with_address(
+            "69th Street to 89th Street", "37th Ave & 95th St, Queens, NY 11372, USA"))
+
+    def test_range_requires_matching_street_types(self):
+        # "5th Ave to 9th Ave" must not match an intersection at 7th *Street*.
+        self.assertFalse(sublocation_redundant_with_address(
+            "5th Avenue to 9th Avenue", "Berry St & 7th St, Brooklyn, NY 11211"))
+
+    def test_hyphen_is_not_a_range_separator(self):
+        # Queens house numbers use the same punctuation.
+        self.assertIsNone(_street_range_sides("34-12 36th Ave"))
+        self.assertIsNone(_street_range_sides("5-52 47th Ave"))
+
+
+class TestSublocationLooksLikeAddress(unittest.TestCase):
+    """The /fix-address-mismatches scan's candidate filter. Text that merely
+    starts with a number and mentions a street type is not necessarily an
+    address — "65th Street Entrance" and "14TH ST. Mainstage" name a door and a
+    room, and no address fix can ever resolve them, so they sat in the
+    candidate list run after run."""
+
+    def test_entrance_and_room_labels_are_not_addresses(self):
+        for sub in ("65th Street Entrance", "42nd Street Entrance",
+                    "24th floor terrace", "14TH ST. Mainstage",
+                    "14TH ST. Upstairs", "1st floor (39th Ave entrance)",
+                    "40th Street Plaza", "95th Street Compost Compound",
+                    "68th Street Campus", "86th Street Side of Neue Galerie"):
+            self.assertFalse(sublocation_looks_like_address(sub), sub)
+
+    def test_house_addresses_are_always_addresses(self):
+        for sub in ("112 W 34th St", "34-12 36th Ave", "626B 10th Ave",
+                    "6 River Terrace", "1514 Townsend Ave, Bronx",
+                    "529 5th Ave, Floor 2", "8 W 38th St 3rd Floor, Warhol Room"):
+            self.assertTrue(sublocation_looks_like_address(sub), sub)
+
+    def test_street_forms_without_a_house_number_still_count(self):
+        for sub in ("19th St.", "27th Street", "116th Street and Riverside Drive",
+                    "69th Street to 89th Street",
+                    "2nd Avenue between 90th & 91st Streets"):
+            self.assertTrue(sublocation_looks_like_address(sub), sub)
+
+    def test_plain_sub_venues_are_not_addresses(self):
+        for sub in ("Studio B", "5th Floor", "The Great Hall", "Suite 630", ""):
+            self.assertFalse(sublocation_looks_like_address(sub), sub)
+
+
 class _RecordingCursor:
     """Minimal cursor stub that records executed SQL for assertions."""
 
@@ -2311,6 +2513,87 @@ class TestIntersectionJoinerComma(unittest.TestCase):
     def test_empty_still_none(self):
         self.assertIsNone(_extract_intersection(''))
         self.assertIsNone(_extract_intersection(None))
+
+
+class TestContainmentGroupingRespectsEventUrls(unittest.TestCase):
+    """Cinema chains list a film's advance/format screenings as SEPARATE
+    ticketed detail pages whose titles contain the base title. Before
+    2026-07-31 `group_event_occurrences`' substring-containment branch fused
+    them at the same venue, kept the SHORTER name and the FIRST url, and
+    unioned the dates — so every Regal site published the regular run's
+    showtimes pointing at the "Early Access" ticket page (e193986,
+    HO00022109 vs the run's HO00021331).
+
+    Containment now additionally requires URL agreement. Exact-name grouping is
+    untouched, so a series listed once per date with per-date URLs still
+    collapses into one event.
+    """
+
+    SRC = 'https://www.regmovies.com/theatres/regal-ronkonkoma-0632'
+    BASE = 'https://www.regmovies.com/events/regal-ronkonkoma-0632-'
+
+    def _group(self, rows):
+        events = group_event_occurrences(rows, self.SRC)
+        return {e['name']: e for e in events}
+
+    def _row(self, name, url, date):
+        return {'name': name, 'location': 'Regal Ronkonkoma', 'location_id': 5940,
+                'url': url, 'start_date': date, 'start_time': '',
+                'end_date': '', 'end_time': ''}
+
+    def test_early_access_stays_separate_from_the_regular_run(self):
+        rows = [
+            self._row('PAW Patrol: The Dino Movie-Early Access', self.BASE + 'HO00022109', '2026-08-08'),
+            self._row('PAW Patrol: The Dino Movie', self.BASE + 'HO00021331', '2026-08-13'),
+            self._row('PAW Patrol: The Dino Movie', self.BASE + 'HO00021331', '2026-08-14'),
+        ]
+        grouped = self._group(rows)
+        self.assertEqual(sorted(grouped), [
+            'PAW Patrol: The Dino Movie', 'PAW Patrol: The Dino Movie-Early Access'])
+        run = grouped['PAW Patrol: The Dino Movie']
+        self.assertEqual(run['urls'][0], self.BASE + 'HO00021331')
+        self.assertEqual([o[0] for o in run['occurrences']], ['2026-08-13', '2026-08-14'])
+        early = grouped['PAW Patrol: The Dino Movie-Early Access']
+        self.assertEqual(early['urls'][0], self.BASE + 'HO00022109')
+        self.assertEqual([o[0] for o in early['occurrences']], ['2026-08-08'])
+
+    def test_fan_event_sibling_keeps_its_own_url(self):
+        rows = [
+            self._row('Legend of the White Dragon Fan Event', self.BASE + 'HO00022001', '2026-08-28'),
+            self._row('Legend of the White Dragon', self.BASE + 'HO00021938', '2026-08-29'),
+        ]
+        grouped = self._group(rows)
+        self.assertEqual(len(grouped), 2)
+        self.assertEqual(grouped['Legend of the White Dragon']['urls'][0],
+                         self.BASE + 'HO00021938')
+
+    def test_same_name_with_per_date_urls_still_groups(self):
+        """The Boat Yard (w5207) links each week of a weekly series to its own
+        dated detail page. Names are identical, so containment never runs."""
+        rows = [
+            {'name': 'Family Night', 'location': 'The Boat Yard', 'location_id': 9050,
+             'url': 'https://theboatyardny.com/event/family-night-2026-08-04/',
+             'start_date': '2026-08-04', 'start_time': '4pm', 'end_date': '', 'end_time': ''},
+            {'name': 'Family Night', 'location': 'The Boat Yard', 'location_id': 9050,
+             'url': 'https://theboatyardny.com/event/family-night-2026-08-11/',
+             'start_date': '2026-08-11', 'start_time': '4pm', 'end_date': '', 'end_time': ''},
+        ]
+        grouped = self._group(rows)
+        self.assertEqual(list(grouped), ['Family Night'])
+        self.assertEqual(len(grouped['Family Night']['occurrences']), 2)
+
+    def test_containment_without_urls_still_groups(self):
+        """A dateless teaser row with no url must still merge into its dated
+        twin (TestDatelessTwinDoesNotStarveExhibition's shape)."""
+        rows = [
+            {'name': 'Fairfield Porter', 'location': 'Art Students League',
+             'location_id': 1234, 'url': '', 'start_date': '', 'start_time': '',
+             'end_date': '', 'end_time': ''},
+            {'name': 'Fairfield Porter: What Everyone Knows', 'location': 'Art Students League',
+             'location_id': 1234, 'url': '', 'start_date': '2026-06-05', 'start_time': '',
+             'end_date': '2026-08-18', 'end_time': ''},
+        ]
+        self.assertEqual(len(self._group(rows)), 1)
 
 
 if __name__ == "__main__":

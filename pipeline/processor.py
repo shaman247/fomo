@@ -1522,7 +1522,28 @@ def group_event_occurrences(rows, source_url=None):
             return True
         return a[1] == b[1]
 
-    def find_matching_group_key(event_name, row_loc, grouped_events, normalized_group_keys):
+    def urls_compatible(row_url, existing_urls):
+        """Gate for the substring-containment branch only: two listings that
+        carry DIFFERENT event URLs are different ticketed events, so a shorter
+        name must not swallow a longer one across a URL boundary.
+
+        Measured failure (2026-07-31, every Regal site): the chain lists
+        "PAW Patrol: The Dino Movie-Early Access" (HO00022109, Aug 8) and
+        "PAW Patrol: The Dino Movie" (HO00021331, Aug 13-20) as separate
+        detail pages. Containment fused them, the shorter name won, and the
+        regular run's eight showtimes inherited the Early Access ticket URL —
+        the same shape for "… Fan Event" and "(Sensory)" siblings.
+
+        Deliberately permissive: a missing URL on either side still groups, and
+        exact / normalized-equal names never reach this check, so a series
+        listed once per date with per-date URLs (The Boat Yard's "Family Night"
+        at /event/family-night-<date>/) still collapses into one event."""
+        if not row_url or not existing_urls:
+            return True
+        return row_url in existing_urls
+
+    def find_matching_group_key(event_name, row_loc, row_url, grouped_events,
+                                normalized_group_keys, group_event_urls):
         normalized_event = normalize_name_for_grouping(event_name)
         for existing_key, existing in grouped_events.items():
             if not locations_compatible(row_loc, loc_key(existing)):
@@ -1532,6 +1553,8 @@ def group_event_occurrences(rows, source_url=None):
                 return existing_key
             if len(normalized_event) >= 5 and len(normalized_existing) >= 5:
                 if normalized_event in normalized_existing or normalized_existing in normalized_event:
+                    if not urls_compatible(row_url, group_event_urls.get(existing_key)):
+                        continue
                     return existing_key
         # No location-compatible group matched. If the plain name is already a
         # key, it belongs to a location-INCOMPATIBLE group (a compatible one
@@ -1545,6 +1568,9 @@ def group_event_occurrences(rows, source_url=None):
 
     grouped_events = {}
     normalized_group_keys = {}
+    # Event-specific URLs per group (source_url excluded) — the containment
+    # branch consults these via urls_compatible.
+    group_event_urls = {}
     for row_dict in rows:
         event_name = row_dict.get('name')
         if not event_name:
@@ -1569,7 +1595,12 @@ def group_event_occurrences(rows, source_url=None):
             _standardize_time(row_dict.get('end_time', ''))
         ]
 
-        group_key = find_matching_group_key(event_name, loc_key(row_dict), grouped_events, normalized_group_keys)
+        row_url = absolutize_url(row_dict.get('url'), source_url)
+        group_key = find_matching_group_key(
+            event_name, loc_key(row_dict), row_url, grouped_events,
+            normalized_group_keys, group_event_urls)
+        if row_url:
+            group_event_urls.setdefault(group_key, set()).add(row_url)
 
         if group_key not in grouped_events:
             base_event = {k: v for k, v in row_dict.items()
@@ -1959,8 +1990,12 @@ def _region_conflict(raw_text, candidate_info, city_states):
 
 
 _ADDR_STREET_TYPES = sorted(
+    # "concourse" is here for the Bronx's Grand Concourse, which greenmarket
+    # and park addresses name as a cross street ("192nd St & Grand Concourse",
+    # loc 669). Without it the side doesn't read as a street at all and the
+    # whole intersection is discarded.
     {'st', 'ave', 'blvd', 'dr', 'rd', 'pl', 'ct', 'ln', 'pkwy', 'hwy',
-     'broadway', 'bowery', 'way', 'sq', 'terrace', 'tpke'},
+     'broadway', 'bowery', 'way', 'sq', 'terrace', 'tpke', 'concourse'},
     key=len, reverse=True,
 )
 # Street names that can stand alone with no preceding name word (e.g. "350 Bowery").
@@ -1981,6 +2016,14 @@ _ADDR_WORD_NUMS = {
 _ADDR_PATTERN = re.compile(
     r'(\d+(?:-\d+)?)\s+(?:([\w.&\'\- ]+?)\s+)?(' + '|'.join(_ADDR_STREET_TYPES) + r')\b\.?',
     re.IGNORECASE,
+)
+# Abbreviated and spelled-out street types together — "does this text mention a
+# street at all?" See `sublocation_looks_like_address`.
+_ADDR_TYPE_WORDS = sorted(
+    set(_ADDR_STREET_TYPES) | {
+        'street', 'avenue', 'boulevard', 'drive', 'road', 'place', 'court',
+        'lane', 'parkway', 'highway', 'square', 'turnpike'},
+    key=len, reverse=True,
 )
 
 
@@ -2168,6 +2211,282 @@ def _extract_intersection(s):
     return None
 
 
+def _extract_intersection_pairs(s):
+    """Every cross-street pair named in `s`, as a set of frozensets.
+
+    Looser than `_extract_intersection`, which only reads a segment that splits
+    into exactly two sides. A greenmarket sitting mid-block is addressed with
+    three streets ("34th Ave & 79th Street &, 80th St" — loc 428 Jackson
+    Heights) and that segment yields nothing under the strict rule. Here every
+    unordered pair is returned instead.
+
+    Only the block/range comparisons use this: both are anchored by a street
+    the sublocation named explicitly, so the extra pairs can never fire alone.
+    """
+    if not s:
+        return frozenset()
+    # Same joiner-comma repair as `_extract_intersection` ("7th Ave &, 44th St").
+    s = re.sub(r'\s*(&|\band\b|\bat\b)\s*,\s*', r' \1 ', s)
+    pairs = set()
+    for segment in s.split(','):
+        sides = []
+        for part in _INTERSECTION_SPLIT.split(segment):
+            if not part.strip():
+                continue
+            side = _normalize_street_side(part)
+            if side:
+                sides.append(side)
+        for i in range(len(sides)):
+            for j in range(i + 1, len(sides)):
+                if sides[i] != sides[j]:
+                    pairs.add(frozenset((sides[i], sides[j])))
+    return pairs
+
+
+# A house number leads the text: "112 W 34th St", "34-12 36th Ave" (Queens),
+# "626B 10th Ave". Matched on lowercased text. This is the gate that keeps the
+# bare-street-name rule below from ever swallowing a real building number —
+# "19th St." does NOT match (the ordinal suffix is glued to the digits), while
+# every one of those three does.
+_HOUSE_NUMBER_LEAD_RE = re.compile(r'^\s*\d+(?:-\d+)?[a-z]?\s')
+# The whole (normalized) text is a street and nothing else: an optional one- or
+# two-word name, or a number, followed by the street type. "40th Street Plaza"
+# and "14th Street corridor" deliberately fail — those name a spot inside a
+# venue and stay on the map.
+_BARE_STREET_RE = re.compile(
+    r"^(\d+|[a-z][a-z'\-]*(?:\s+[a-z][a-z'\-]*)?)\s+("
+    + '|'.join(_ADDR_STREET_TYPES) + r')$')
+_NUMBERED_STREET_RE = re.compile(
+    r'^(\d+)\s+(' + '|'.join(_ADDR_STREET_TYPES) + r')$')
+
+
+# A comma-separated tail that is only a place qualifier: a state, a ZIP, a
+# country, or a metro place name. Anything else after the comma is content
+# ("Adams Street, Multipurpose Room" names a room; "Centre Street, Domino Park,
+# Rockefeller Center, ..." lists other venues) and must keep the text from
+# reading as a bare street name.
+_PLACE_QUALIFIER_RE = re.compile(
+    r'^(?:usa?|u\.s\.a?\.?|ny|n\.y\.|nj|ct)$'
+    r'|^(?:ny|nj|ct)\s+\d{5}(?:-\d{4})?$'
+    r'|^\d{5}(?:-\d{4})?$')
+_place_qualifiers = None
+
+
+def _is_place_qualifier(segment):
+    """True when a trailing comma segment only says *where*, not *what*."""
+    global _place_qualifiers
+    seg = segment.strip().lower().rstrip('.')
+    if not seg:
+        return True
+    if _PLACE_QUALIFIER_RE.match(seg):
+        return True
+    if _place_qualifiers is None:
+        _place_qualifiers = (
+            {g.lower() for g in city_config.geotags()}
+            | set(city_config.city_area_tokens())
+            | {s.strip() for s in city_config.state_suffixes()})
+    return seg in _place_qualifiers
+
+
+def _bare_street_name(s):
+    """Normalized street name when `s` names a street and carries no address.
+
+    "19th St." → "19 st", "27th Street" → "27 st", "34th Avenue, Jackson
+    Heights" → "34 ave", "W 27th St" → "27 st".
+
+    Returns None as soon as a house number leads the text — "112 W 34th St",
+    "34-12 36th Ave" and "626B 10th Ave" are addresses, not bare street names —
+    and also for anything carrying more than the street ("40th Street Plaza",
+    "65th Street Entrance"), which is sub-venue detail worth keeping. Only a
+    place-qualifier tail (", Jackson Heights", ", Brooklyn, NY 11249, USA") is
+    allowed past the comma.
+    """
+    if not s:
+        return None
+    segments = s.lower().split(',')
+    seg = segments[0].strip()
+    if not seg or _HOUSE_NUMBER_LEAD_RE.match(seg):
+        return None
+    if not all(_is_place_qualifier(t) for t in segments[1:]):
+        return None
+    name = _normalize_street_side(seg)
+    if not name:
+        return None
+    if name in _ADDR_STANDALONE_TYPES:
+        return name
+    return name if _BARE_STREET_RE.match(name) else None
+
+
+def _address_street_names(address):
+    """Every street named by `address`, normalized the cross-street way.
+
+    "537 W 27th St, New York, NY" → {"w 27 st", "27 st"}; "5th Ave & 17th St,
+    Brooklyn" → {"5 ave", "17 st"}; "34th Ave, Queens, NY 11372" → {"34 ave"}.
+    Built from the three parsers that already exist so a street is recognized
+    the same way whether it appears with a house number, in an intersection, or
+    on its own.
+    """
+    names = set()
+    if not address:
+        return names
+    key = _extract_street_address_loose(address)
+    if key:
+        m = re.match(r'^\d+\s+(.+)$', key)
+        if m:
+            street = m.group(1)
+            names.add(street)
+            # One side of a comparison routinely omits the compass directional.
+            names.add(re.sub(r'^(?:n|s|e|w|ne|nw|se|sw)\s+', '', street))
+    for pair in _extract_intersection_pairs(address):
+        names.update(pair)
+    for segment in address.split(','):
+        bare = _bare_street_name(segment)
+        if bare:
+            names.add(bare)
+    return names
+
+
+# "<main street> between <A> & <B>" — how GrowNYC writes every greenmarket
+# ("2nd Avenue between 90th & 91st Streets") and how community boards write an
+# Open Street block. "btw"/"bet" are the abbreviations that turn up in the wild.
+_BETWEEN_SPLIT = re.compile(r'\s+(?:between|btwn?\.?|bet\.)\s+')
+_CROSS_PAIR_SPLIT = re.compile(r'\s*(?:&|\band\b|\bto\b|/)\s*')
+# A plural street type at the end of the second side applies to BOTH sides:
+# "49th & 50th Streets" means 49th Street and 50th Street. Without
+# redistributing it the first side carries no street type and is rejected.
+_SHARED_PLURAL_TYPES = {
+    'streets': 'st', 'sts': 'st', 'avenues': 'ave', 'aves': 'ave',
+    'boulevards': 'blvd', 'blvds': 'blvd', 'roads': 'rd', 'places': 'pl',
+    'drives': 'dr', 'lanes': 'ln', 'courts': 'ct',
+}
+_SHARED_PLURAL_RE = re.compile(
+    r'\b(' + '|'.join(_SHARED_PLURAL_TYPES) + r')\b\.?\s*$', re.IGNORECASE)
+# "69th Street to 89th Street" — a block range along one corridor. A bare "-"
+# is deliberately excluded: that is Queens house-number punctuation.
+_STREET_RANGE_SPLIT = re.compile(r'\s*(?:\bto\b|\bthrough\b|\bthru\b|–|—)\s*')
+
+
+def _split_cross_street_pair(text):
+    """Split "90th & 91st Streets" into ["90 st", "91 st"], or None."""
+    parts = [p.strip() for p in _CROSS_PAIR_SPLIT.split(text) if p.strip()]
+    if len(parts) != 2:
+        return None
+    shared = None
+    m = _SHARED_PLURAL_RE.search(parts[1])
+    if m:
+        shared = _SHARED_PLURAL_TYPES[m.group(1).lower()]
+        parts[1] = (parts[1][:m.start()].strip() + ' ' + shared).strip()
+    sides = []
+    for part in parts:
+        side = _normalize_street_side(part)
+        if not side and shared:
+            side = _normalize_street_side(part + ' ' + shared)
+        if not side:
+            return None
+        sides.append(side)
+    return sides if sides[0] != sides[1] else None
+
+
+def _extract_street_block(s):
+    """Parse "<main street> between <A> & <B>" into (main, [a, b]), or None.
+
+    The main street must be bare — a house number in front means the text is
+    already a full address and the normal address path handles it.
+    """
+    if not s:
+        return None
+    text = re.sub(r'\s+', ' ', s.lower().replace('(', ' ').replace(')', ' ')).strip()
+    parts = _BETWEEN_SPLIT.split(text, maxsplit=1)
+    if len(parts) != 2:
+        return None
+    main = _bare_street_name(parts[0])
+    if not main:
+        return None
+    sides = _split_cross_street_pair(parts[1].split(',')[0])
+    if not sides:
+        return None
+    return main, sides
+
+
+def _street_range_sides(s):
+    """Parse "69th Street to 89th Street" into ("st", 69, 89), or None."""
+    if not s:
+        return None
+    parts = [p.strip() for p in _STREET_RANGE_SPLIT.split(s.lower().strip())
+             if p.strip()]
+    if len(parts) != 2:
+        return None
+    ends = []
+    for part in parts:
+        side = _normalize_street_side(part)
+        m = _NUMBERED_STREET_RE.match(side) if side else None
+        if not m:
+            return None
+        ends.append((m.group(2), int(m.group(1))))
+    (type_a, lo), (type_b, hi) = ends
+    if type_a != type_b or lo >= hi:
+        return None
+    return type_a, lo, hi
+
+
+def _street_range_covers(sublocation, location_address):
+    """True for "69th Street to 89th Street" against an address inside it.
+
+    Corridor locations (Jackson Heights' 37th Ave and Northern Blvd, loc 8345 /
+    8547) are named for the block range they run along and addressed at an
+    intersection in the middle of it, so a sublocation restating the range adds
+    nothing the location already says. Deliberately narrow: the sublocation
+    must be *only* the range, both ends must be numbered streets of the same
+    type, and the address must name an intersection whose same-type numbered
+    street falls inside the range.
+    """
+    rng = _street_range_sides(sublocation)
+    if not rng:
+        return False
+    st_type, lo, hi = rng
+    for pair in _extract_intersection_pairs(location_address):
+        for side in pair:
+            m = _NUMBERED_STREET_RE.match(side)
+            if m and m.group(2) == st_type and lo <= int(m.group(1)) <= hi:
+                return True
+    return False
+
+
+def sublocation_looks_like_address(sublocation):
+    """True when a sublocation is street-address-shaped enough to compare.
+
+    The /fix-address-mismatches scan asks "does this sublocation claim an
+    address that disagrees with the venue's?", so it must first decide whether
+    the text claims an address at all. Starting with a digit and containing a
+    street-type word is not enough: "65th Street Entrance", "14TH ST.
+    Mainstage" and "24th floor terrace" all pass that test while naming a door
+    or a room, and they then sit in the candidate list forever because no
+    address fix can ever resolve them.
+
+    The gate is structural rather than a list of banned nouns: text leading
+    with a house number is always an address, and text without one only counts
+    if it parses as a street form we recognize (a bare street name, an
+    intersection, a between-block, or a block range). A label like "24th floor
+    terrace" parses as none of them.
+
+    This does NOT feed the exporter — labels are useful detail and keep
+    publishing; it only keeps them out of the wrong-address scan.
+    """
+    if not sublocation:
+        return False
+    text = sublocation.lower().strip()
+    if not re.match(r'^\d', text):
+        return False
+    if not re.search(r'\b(' + '|'.join(_ADDR_TYPE_WORDS) + r')\b\.?', text):
+        return False
+    if _HOUSE_NUMBER_LEAD_RE.match(text):
+        return True
+    return bool(_bare_street_name(sublocation)
+                or _extract_intersection(sublocation)
+                or _extract_street_block(sublocation)
+                or _street_range_sides(sublocation))
+
+
 def _num_in_building_range(num, lo, hi):
     """True if house number `num` falls inside the building range `lo`-`hi`.
 
@@ -2201,9 +2520,12 @@ def _num_in_building_range(num, lo, hi):
 def sublocation_redundant_with_address(sublocation, location_address):
     """True when sublocation is just the venue address (safe to clear).
 
-    Handles both house addresses ("150 1st Ave") and intersection addresses
-    ("14th St Loop & Avenue A" — how greenmarkets and park entrances are
-    addressed); the latter are compared order-insensitively.
+    Handles house addresses ("150 1st Ave"), intersection addresses ("14th St
+    Loop & Avenue A" — how greenmarkets and park entrances are addressed,
+    compared order-insensitively), bare street names ("27th Street" against
+    "537 W 27th St"), the between-block form ("2nd Avenue between 90th & 91st
+    Streets" against "90th Street & 2nd Ave") and the corridor block range
+    ("69th Street to 89th Street" against "37th Ave & 79th St").
 
     Some scrapers (e.g. Posh.vip) put the venue's full street address into
     sublocation. After location matching, that's redundant with the matched
@@ -2223,6 +2545,27 @@ def sublocation_redundant_with_address(sublocation, location_address):
     # "Avenue A & 14th St Loop" is the same corner.
     sub_x = _extract_intersection(sublocation)
     if sub_x and sub_x == _extract_intersection(location_address):
+        return True
+    # Bare street name ("27th Street", "19th St.") against an address that is
+    # already on that street ("537 W 27th St", "2 19th St"). The sublocation
+    # names no house number, so it says strictly less than the address does.
+    # `_bare_street_name` refuses anything leading with a house number, which
+    # is what keeps "112 W 34th St" / "34-12 36th Ave" / "626B 10th Ave" out.
+    bare = _bare_street_name(sublocation)
+    if bare and bare in _address_street_names(location_address):
+        return True
+    # "<main> between <A> & <B>" (GrowNYC's greenmarket block form) against the
+    # corner the address names ("2nd Avenue between 90th & 91st Streets" vs
+    # "90th Street & 2nd Ave"). Anchored on the main street, so a block on some
+    # other street can't match.
+    block = _extract_street_block(sublocation)
+    if block:
+        main, sides = block
+        addr_pairs = _extract_intersection_pairs(location_address)
+        if any(frozenset((main, side)) in addr_pairs for side in sides):
+            return True
+    # Corridor block range ("69th Street to 89th Street") around the address.
+    if _street_range_covers(sublocation, location_address):
         return True
     sub = _extract_street_address_loose(sublocation)
     addr = _extract_street_address_loose(location_address)
