@@ -471,8 +471,23 @@ coverage:
   #     07480 West Milford are PASSAIC and correctly in.
   #   * "088" is Middlesex + Somerset + (deliberately) Hunterdon, but ALSO Warren
   #     County at 08865 Phillipsburg. No Warren locations exist today.
-  # If either starts accruing venues, the clean fix is a new `zip5_exclude` map
-  # (ZIP3 -> ZIP5s that are OUT) rather than inverting these into zip5_only.
+  #   * "070" is Essex/Union/Hudson/Middlesex but ALSO reaches MORRIS County at
+  #     07005 Boonton (and the other Morris ZIPs in 070xx). Morris is NOT in the
+  #     coverage prose, and 07960 Morristown is explicitly excluded via the
+  #     NJ:079 zip5_only whitelist — so admitting Morris through 070 is
+  #     inconsistent with both. MEASURED 2026-08-01: the entire exposure is
+  #     **2 locations / 4 live events**, both in Boonton 07005 — loc 9119
+  #     Pyramid Mountain Natural Historic Area (3) and loc 8830 Myrtle Ave &
+  #     Main St (1). Left admitted for now because the blast radius is 4 events
+  #     and Boonton is ~27 miles from Manhattan, i.e. arguably metro; this is a
+  #     product-scope call, not a data bug.
+  #     **It decides w4725 Morris County Park Commission:** that site is
+  #     currently geofiltered down to its two 070-admitted venues (Pyramid
+  #     Mountain, Tourne). If Morris is ruled OUT, w4725's whitelist becomes
+  #     empty and disabling it is the correct move (archive its events first —
+  #     see `disabled_website_blocks_archival`).
+  # If any of these starts accruing venues, the clean fix is a new `zip5_exclude`
+  # map (ZIP3 -> ZIP5s that are OUT) rather than inverting these into zip5_only.
   # w3531 NJ State Parks already excludes both at intake via its venue whitelist.
   #
   # Deliberately-kept edge cases, for the next person who reads this list:
