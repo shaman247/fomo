@@ -289,8 +289,24 @@ CARRY_CAP_FRACTION = 0.25
 # crawls. Prevents runaway extraction on pages with huge archives.
 MAX_CONTENT_CHARS = 300000
 
-# Maximum number of images to process for vision extraction
-MAX_VISION_IMAGES = 10
+# Maximum number of images to process for vision extraction.
+# Sized to cover a full picnob Instagram bundle (12 posts = 12 flyers) plus a
+# little headroom (LTV Studios w1969 carries 14). At 10 this silently dropped
+# the last 2 posts of EVERY 12-post bundle. Genuinely image-dense pages exist
+# (Lucky 13 Saloon crawls 69-83 images) and are deliberately still capped —
+# sending 80 images costs ~20K input tokens for a page whose captions already
+# carry the dates — but the drop is now logged instead of silent.
+MAX_VISION_IMAGES = 14
+
+# Maximum page text included in the vision prompt (characters).
+# The vision prompt is NOT image-only: it carries the page text alongside the
+# flyers, and on Instagram the dates live in the captions, not on the image.
+# This was 2000, which discarded ~87% of a ~15K-char picnob bundle and made
+# vision mode structurally blind to the field it needed — measured at -38%
+# events vs text mode over 43 bundles (p=0.0005). Sized against real
+# vision-mode crawls (max observed 22,896 chars) and aligned with
+# MAX_CHUNK_CHARS, the established single-call text budget.
+MAX_VISION_TEXT_CHARS = 30000
 
 # Maximum image dimension (images will be resized if larger)
 MAX_IMAGE_DIMENSION = 1024
@@ -493,7 +509,12 @@ async def prepare_vision_content(content, base_url=None, max_images=MAX_VISION_I
     if not image_urls:
         return None, 0
 
-    # Limit number of images
+    # Limit number of images. Dropping images drops whole posts, so say so —
+    # this used to be silent and cost every 12-post picnob bundle its last 2.
+    if len(image_urls) > max_images:
+        print(f"    - ⚠️  {len(image_urls)} images found but only the first "
+              f"{max_images} are sent to vision — {len(image_urls) - max_images} "
+              f"dropped (MAX_VISION_IMAGES)")
     image_urls = image_urls[:max_images]
 
     # Download and encode images concurrently
@@ -511,6 +532,14 @@ async def prepare_vision_content(content, base_url=None, max_images=MAX_VISION_I
                 }
             })
 
+    # A download failure is invisible to Gemini — it just never sees the post.
+    # Expired IG CDN signatures fail this way in bulk (see the picnob memory),
+    # so surface the shortfall rather than letting it look like a thin page.
+    failed = len(image_urls) - len(image_parts)
+    if failed:
+        print(f"    - ⚠️  {failed} of {len(image_urls)} images failed to download "
+              f"for vision (expired CDN signatures?) — those posts are unread")
+
     return image_parts, len(image_parts)
 
 
@@ -521,30 +550,35 @@ def get_vision_prompt(url, text_content, current_date_string, name, notes, reque
 
     return f'''Today's date is {current_date_string}. We are extracting events from {name} ({url}).
 
-I'm showing you images from this venue's events page. These images are event flyers/posters that contain event information.
+You have TWO sources for this venue's events: the page text below, and the
+attached images (event flyers/posters). Use BOTH. Many events appear only in the
+text, many only on a flyer, and some in both — extract the union, once each.
 
-For EACH event flyer/image, extract:
-- name: The event name shown in the image
+For EACH event you find in EITHER source, extract:
+- name: The event name
 - location: The venue name (default to "{name}" if not specified)
-- occurrences: Array of dates/times. Look for dates in the images (e.g., "January 16, 2026" or "Jan 16 - Feb 14"). Each occurrence has:
+- occurrences: Array of dates/times, read from the text or the image (e.g., "January 16, 2026" or "Jan 16 - Feb 14"). Each occurrence has:
   - start_date: Date in YYYY-MM-DD format
   - start_time: Time if shown (e.g., "6:00 PM")
   - end_date: End date if this is a multi-day event/exhibition
   - end_time: End time if shown
-- description: Brief description of the event based on what you see. If the image provides no descriptive details beyond the event name, use "No description available." Do NOT fabricate.
-- url: Leave as null unless shown in image
+- description: Brief description based on the text and image. If neither gives detail beyond the event name, use "No description available." Do NOT fabricate.
+- url: The event's own link if the text gives one, else null
 - hashtags: 4-7 CamelCase tags. Always include at least one category (Music, Nightlife, Comedy, Art, Theater, Dance, Film, Literature, Community, Family, Wellness, Education, Outdoor, Sports, Games). Add Free if free, Virtual if online. Then granular tags.
 - emoji: A single emoji representing the event
 {note_section}
 Rules:
-- Extract events from ALL the flyer images provided
+- Cover BOTH sources: every flyer image provided AND the full page text below
+- Do not list the same event twice because it appears in both — merge it
 - Only include events that appear to be upcoming (after {current_date_string})
 - For art exhibitions, the start_date is opening day and end_date is closing day
 - If you can't read a date clearly, skip that event
 - Gallery hours (like "Wed-Sat 1-6pm") are NOT start/end times - those are for visitors
 {rid_section}
-Additional text content from the page (for reference):
-{text_content[:2000] if text_content else "No additional text"}'''
+Page text (authoritative for dates — the flyer images are often undated, and on
+social feeds the date/time is stated in the caption rather than on the image.
+Where the text and an image disagree, prefer the text):
+{text_content[:MAX_VISION_TEXT_CHARS] if text_content else "No additional text"}'''
 
 
 async def extract_with_vision(url, content, current_date_string, name, notes, base_url=None):

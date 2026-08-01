@@ -1208,6 +1208,101 @@ class TestChunkedExtractionFailureIsNotAZero(ChunkedFailureTestBase):
         self.assertIn('503', str(ctx.exception))
 
 
+class TestVisionPromptCarriesTheFullPageText(unittest.TestCase):
+    """The vision prompt used to end with `{text_content[:2000]}`, which threw
+    away ~87% of a ~15K-char picnob Instagram bundle. Instagram states event
+    dates in the CAPTION, not on the flyer, so vision mode was structurally
+    blind to the field it needed — measured at -38% events vs text mode across
+    43 bundles (sign test p=0.0005). The prompt must carry a real bundle whole.
+    """
+
+    # Largest vision-mode crawl actually observed in 30 days of production.
+    REAL_BUNDLE_CHARS = 22896
+
+    def _prompt(self, text):
+        return extractor.get_vision_prompt(
+            'https://www.instagram.com/venue/', text, '2026-08-01',
+            'Venue', '', request_id='cr-1')
+
+    def test_cap_covers_a_full_real_bundle(self):
+        self.assertGreater(extractor.MAX_VISION_TEXT_CHARS, self.REAL_BUNDLE_CHARS)
+
+    def test_full_bundle_survives_verbatim(self):
+        # A caption late in the bundle is exactly what the old 2000-char cut lost.
+        bundle = ('x' * (self.REAL_BUNDLE_CHARS - 40)) + ' KARAOKE FRIDAY 9pm'
+        prompt = self._prompt(bundle)
+        self.assertIn('KARAOKE FRIDAY 9pm', prompt)
+        self.assertIn(bundle, prompt)
+
+    def test_the_old_2000_char_cut_is_gone(self):
+        marker = 'DATELINE-AUG-14'
+        text = ('a' * 5000) + marker
+        self.assertIn(marker, self._prompt(text))
+
+    def test_runaway_input_is_still_capped(self):
+        prompt = self._prompt('z' * (extractor.MAX_VISION_TEXT_CHARS * 3))
+        self.assertLess(len(prompt), extractor.MAX_VISION_TEXT_CHARS * 2)
+
+    def test_prompt_directs_gemini_at_both_sources(self):
+        # Framing matters: the old prompt said "For EACH event flyer/image",
+        # which tells the model to enumerate images and ignore the captions.
+        prompt = self._prompt('some page text')
+        self.assertIn('BOTH', prompt)
+        self.assertNotIn('For EACH event flyer/image', prompt)
+
+    def test_empty_text_is_still_handled(self):
+        # Genuinely image-only sources (w1969 LTV Studios: 9 flyers, 263 chars)
+        # must keep working — they are the case vision exists for.
+        self.assertIn('No additional text', self._prompt(''))
+
+
+class TestVisionImageCapCoversAFullBundle(unittest.TestCase):
+    """MAX_VISION_IMAGES=10 silently dropped the last 2 posts of every 12-post
+    picnob bundle — a straight coverage loss on every vision-mode IG site."""
+
+    def test_cap_covers_a_twelve_post_bundle(self):
+        self.assertGreaterEqual(extractor.MAX_VISION_IMAGES, 12)
+
+    def _run(self, n_urls, max_images):
+        content = '\n'.join(f'![Post {i} flyer](https://cdn.test/{i}.jpg)'
+                            for i in range(n_urls))
+        with mock.patch.object(extractor, 'download_and_encode_image',
+                               new=mock.AsyncMock(return_value=('b64', 'image/jpeg'))):
+            return asyncio.run(extractor.prepare_vision_content(
+                content, 'https://cdn.test/', max_images=max_images))
+
+    def test_all_twelve_posts_reach_gemini(self):
+        parts, count = self._run(12, extractor.MAX_VISION_IMAGES)
+        self.assertEqual(count, 12)
+        self.assertEqual(len(parts), 12)
+
+    def test_dropping_images_is_logged_not_silent(self):
+        with mock.patch('builtins.print') as p:
+            self._run(20, 14)
+        logged = ' '.join(str(c) for c in p.call_args_list)
+        self.assertIn('MAX_VISION_IMAGES', logged)
+        self.assertIn('6', logged)  # 20 - 14 dropped
+
+    def test_no_warning_when_nothing_is_dropped(self):
+        with mock.patch('builtins.print') as p:
+            self._run(12, 14)
+        self.assertNotIn('MAX_VISION_IMAGES',
+                         ' '.join(str(c) for c in p.call_args_list))
+
+    def test_failed_downloads_are_surfaced(self):
+        # Expired IG CDN signatures fail this way in bulk and used to look
+        # exactly like a thin page.
+        content = '\n'.join(f'![Post {i}](https://cdn.test/{i}.jpg)' for i in range(4))
+        results = [('b64', 'image/jpeg'), (None, None), (None, None), ('b64', 'image/jpeg')]
+        with mock.patch.object(extractor, 'download_and_encode_image',
+                               new=mock.AsyncMock(side_effect=results)):
+            with mock.patch('builtins.print') as p:
+                parts, count = asyncio.run(
+                    extractor.prepare_vision_content(content, 'https://cdn.test/'))
+        self.assertEqual(count, 2)
+        self.assertIn('failed to download', ' '.join(str(c) for c in p.call_args_list))
+
+
 class TestVisionExtractionFailureIsNotAZero(unittest.TestCase):
     """Same defect class on the vision path: the API error was swallowed and
     stored as an empty extraction."""
