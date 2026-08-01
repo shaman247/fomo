@@ -1341,6 +1341,22 @@ async def extract_single_event(event_name, content):
         f'details". Do NOT use background knowledge about the artist, venue, '
         f'or topic. If you would only be guessing, return "No description '
         f'available." instead.\n\n'
+        f'NOT A DESCRIPTION — admission boilerplate and venue marketing. Ticketing '
+        f'sites and venue pages pad every event with the same house copy. It is '
+        f'about the TICKET or the VENUE, not about this event, so it must never '
+        f'become the description. Ignore: door/show times and "front bar opens" '
+        f'notes; age limits and ID/passport policy; RSVP, capacity or door-discretion '
+        f'policy; ticket-tier, seating or lounge perks (e.g. "Preferred Mezzanine '
+        f'includes access to..."); bottle service, table sales and VIP contact '
+        f'addresses; refund, exchange and resale terms; minimum-purchase, tax and '
+        f'gratuity rules; dress code; and the venue\'s code of conduct or '
+        f'safer-space / anti-discrimination statement. Also ignore boilerplate that '
+        f'describes the PLACE or the promoter rather than this event — a venue\'s '
+        f'own blurb about its history, capacity, view, atmosphere, menu or lineup '
+        f'of "legends who played here", and an organizer\'s "we are the world\'s '
+        f'largest community of..." pitch. If everything on the page is that kind of '
+        f'text, return exactly "No description available." — no description is '
+        f'better than a description of the wrong thing.\n\n'
         f'CRITICAL: Only return occurrences for SPECIFIC calendar dates that are '
         f'EXPLICITLY stated on the page. If the page describes a permanent '
         f'exhibit, ongoing installation, recurring schedule (e.g. "Fridays 7pm"), '
@@ -1415,6 +1431,7 @@ For each event provide: name, location (venue name), occurrences (array of start
 CRITICAL DATE RULES:
 - Only return occurrences for SPECIFIC calendar dates EXPLICITLY shown on the page near the event (e.g. "May 7, 2026", "Sat Jun 14", "9/22").
 - EXHIBITIONS: for an art exhibition / gallery show / installation with a stated date range ("March 1 – July 5", "On view through June 30"), return ONE occurrence with start_date = opening date and end_date = closing date. Never collapse the run to a single day, and never stamp today's date as the exhibition date. An exhibition whose OPENING date has already passed is STILL on view as long as its closing date is today or later — keep it, using the original (past) opening date as start_date; do NOT null it or skip it because it already opened.
+- CLOSING DATE ONLY: if the page gives a closing date but NO opening date ("Through August 31, 2026", "Until Sept 4", "On view through June 30"), still return ONE occurrence — set end_date to that closing date and leave start_date null. An end-only occurrence is valid and expected here. Do NOT set occurrences=null just because the opening date is missing: the run is still on view, and nulling it drops the event entirely.
 - RECEPTION vs RUN: a timed opening/closing reception, opening night, or preview is a SEPARATE single-day event, NOT an occurrence of the exhibition. If a page lists both a dated+timed reception and a broader exhibition run, emit TWO events — the reception (one single-day occurrence: its date + time) and the exhibition (one start→end run occurrence) — never the full run as a second occurrence of the reception, and never the reception's time on the run.
 - If an event is described as "monthly", "weekly", "ongoing", "permanent", "recurring", or has no specific date listed, set occurrences=null. Do NOT invent a next-occurrence date.
 - A LIST of specific calendar dates is NOT "recurring" — when the page enumerates actual dates (e.g. "June 18, June 19, June 20, ...", a film's showtimes across many days, or "Jan 11, 18, 25"), emit EACH listed date as its own occurrence. The null-occurrences rule above applies ONLY when a cadence is described in words ("weekly", "every Thursday") WITHOUT the dates being listed, or when no dates appear at all. A missing start_time NEVER justifies dropping a date that IS shown — set start_time to null and keep the date.
@@ -1448,9 +1465,19 @@ def get_prompt(url, page_content, current_date_string, name, notes, existing_eve
         # Trim occurrences to max 3 per event — we only need these for naming
         # consistency, not full scheduling data. This prevents prompt bloat from
         # highly-recurring events (e.g., library programs with 100s of occurrences).
+        #
+        # `description` is dropped for the same reason it is dropped from the
+        # detail-crawl prompt: showing Gemini a previous description invites it
+        # to COPY that description onto a new event instead of deriving one from
+        # the page. That turns any bad description into a self-perpetuating loop
+        # — observed on w1066 Refuge, where the venue's marketing blurb kept
+        # reappearing verbatim on every new party even though the Eventbrite
+        # collection page contains no prose at all. The block exists for naming
+        # consistency; descriptions must always come from the page content.
         trimmed = []
         for ev in existing_events:
-            trimmed_ev = {k: v for k, v in ev.items() if k != 'occurrences'}
+            trimmed_ev = {k: v for k, v in ev.items()
+                          if k not in ('occurrences', 'description')}
             occs = ev.get('occurrences', [])
             trimmed_ev['occurrences'] = occs[:3]
             trimmed.append(trimmed_ev)
@@ -1480,7 +1507,7 @@ Based on the website content below, extract all upcoming events. For each event,
   - start_time: Time like "4:00 PM" (optional)
   - end_date: End date if different from start (optional)
   - end_time: End time (optional)
-  EXHIBITIONS: For an art exhibition, gallery show, or installation that runs over a date range (e.g. "March 1 – July 5", "On view through June 30"), create ONE occurrence spanning the run: start_date = opening date, end_date = closing date. Do NOT collapse the run to a single day, and do NOT stamp today's date as the exhibition date. An exhibition whose OPENING date has already passed is STILL on view as long as its closing date is today or later — keep it, using the original (past) opening date as start_date; do NOT null it or skip it because it already opened. If the page gives no opening or closing date at all (a permanent / date-less display), set occurrences=null instead of inventing a single date.
+  EXHIBITIONS: For an art exhibition, gallery show, or installation that runs over a date range (e.g. "March 1 – July 5", "On view through June 30"), create ONE occurrence spanning the run: start_date = opening date, end_date = closing date. Do NOT collapse the run to a single day, and do NOT stamp today's date as the exhibition date. An exhibition whose OPENING date has already passed is STILL on view as long as its closing date is today or later — keep it, using the original (past) opening date as start_date; do NOT null it or skip it because it already opened. If the page gives a CLOSING date but no opening date ("Through August 31, 2026", "Until Sept 4"), still return ONE occurrence: end_date = that closing date, start_date = null. An end-only occurrence is valid and expected — do NOT set occurrences=null just because the opening date is missing. Only if the page gives no opening AND no closing date at all (a permanent / date-less display), set occurrences=null instead of inventing a single date.
   RECEPTION vs RUN: A timed opening/closing reception, opening night, or preview is a DISTINCT single-day event — NOT an occurrence of the exhibition it celebrates. When a page describes both a dated, timed reception AND a broader exhibition run (e.g. "Opening reception June 4, 6–8pm" for a show "on view June 4 – July 10"), emit TWO separate events: (1) the reception, with ONE single-day occurrence (its date + time), and (2) the exhibition, with ONE run occurrence (start_date = opening, end_date = closing). Never attach the exhibition's full run as a second occurrence of the reception event, and never put the reception's time on the exhibition run.
 - description: 1-3 sentence description based ONLY on what is stated in the source content. If the listing only has a name/date/time with no further details, use "No description available." Do NOT make up or infer descriptions.
 - url: Specific event URL if available
