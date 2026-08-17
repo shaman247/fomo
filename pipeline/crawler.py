@@ -41,6 +41,11 @@ BOT_CHALLENGE_MARKERS = (
     'attention required! | cloudflare',
     'just a moment...',
     'please enable cookies',
+    # CollectiveAccess/Pawtucket's own throttle (kentlergallery.org and friends):
+    # "Please confirm that you are not a robot" + a reCAPTCHA, served at ~1.5KB of
+    # markdown — well past MIN_CRAWL_CONTENT_SIZE, so it would otherwise land as a
+    # healthy 0-event crawl and archive the site's live listings.
+    'confirm that you are not a robot',
 )
 
 # Cloudflare's 5xx interstitials are the same class of problem: the origin (or
@@ -176,8 +181,10 @@ def resolve_url_templates(url):
 
     Supported placeholders:
         {{month}}           - current month name, lowercase (e.g. "february")
+        {{month_num}}       - current month, zero-padded number (e.g. "02")
         {{year}}            - current year (e.g. "2026")
         {{next_month}}      - next month name, lowercase
+        {{next_month_num}}  - next month, zero-padded number (handles Dec→Jan)
         {{next_month_year}} - year of the next month (handles Dec→Jan rollover)
         {{date}}            - today's date in ISO format (YYYY-MM-DD)
         {{date+N}}          - today + N days, ISO format (e.g. {{date+7}})
@@ -194,8 +201,10 @@ def resolve_url_templates(url):
     next_month_date = (now.replace(day=1) + timedelta(days=32)).replace(day=1)
     replacements = {
         '{{month}}': now.strftime('%B').lower(),
+        '{{month_num}}': now.strftime('%m'),
         '{{year}}': str(now.year),
         '{{next_month}}': next_month_date.strftime('%B').lower(),
+        '{{next_month_num}}': next_month_date.strftime('%m'),
         '{{next_month_year}}': str(next_month_date.year),
     }
     for placeholder, value in replacements.items():

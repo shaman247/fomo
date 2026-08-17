@@ -40,6 +40,7 @@ import db
 import crawler
 from crawler import get_browser_key
 import extractor
+import llm_providers
 import processor
 import merger
 import exporter
@@ -80,6 +81,47 @@ def acquire_publish_lock(connection, attempts=PUBLISH_LOCK_ATTEMPTS,
               f"attempt {attempt}/{attempts} timed out after {timeout}s{more}")
     lock_cur.close()
     return False
+
+
+def run_public_dataset_export(cursor, force=False):
+    """Weekly public NDJSON dataset export → upload to public_html/exports/.
+
+    Gated on the newest local dated snapshot in exports/ being ≥ 7 days old
+    (the local dated files are the scheduling state — no separate marker).
+    Non-fatal to the pipeline: on upload failure the fresh snapshot is deleted
+    so the gate stays open and the next run retries.
+    """
+    if not force and not exporter.should_export_public_dataset():
+        return True
+
+    print("  Weekly public dataset export is due — generating NDJSON snapshots...")
+    stats = exporter.export_public_datasets(cursor)
+    success = uploader.upload_public_dataset(
+        stats['upcoming']['path'], stats['past']['path'], stats['manifest_path'])
+    if success:
+        print(f"\n✓ Public datasets uploaded ({stats['upcoming']['events']} upcoming, "
+              f"{stats['past']['events']} past events)\n")
+    else:
+        # The dated upcoming snapshot is the scheduling state — discard it so
+        # the gate stays open and the next pipeline run retries.
+        os.remove(stats['upcoming']['path'])
+        print("\n✗ Public dataset upload failed — snapshot discarded; "
+              "will retry on the next pipeline run\n")
+    return success
+
+
+def run_export_dataset_only():
+    """Standalone forced public dataset export (main.py --export-dataset)."""
+    connection = db.create_connection()
+    if not connection:
+        print("Failed to connect to database")
+        return False
+    cursor = connection.cursor(buffered=True)
+    try:
+        return run_public_dataset_export(cursor, force=True)
+    finally:
+        cursor.close()
+        connection.close()
 
 
 def _merge_only_hint(website_ids):
@@ -305,8 +347,18 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
 
         print(f"\n✓ Crawled {len(crawl_results)} website(s)\n")
 
-        # STEP 3: Extract events using Gemini AI
-        step("STEP 3: Extracting Events with Gemini AI")
+        # STEP 3: Extract events using the configured AI providers
+        step("STEP 3: Extracting Events with AI")
+        # Each AI path is independently provider-selectable; print the mapping so
+        # a run's logs record which model actually produced its events. The
+        # `--batch` path is Gemini-only regardless (see llm_providers).
+        _summary = llm_providers.provider_summary()
+        if llm_providers.providers_in_use() != {llm_providers.GEMINI}:
+            print("  Extraction providers: "
+                  + ", ".join(f"{path}={model}" for path, _prov, model in _summary))
+        for _path, _prov in llm_providers.unconfigured_paths(extractor.genai_client):
+            print(f"  ⚠️  WARNING: {_path} path is set to {_prov} but it is not "
+                  f"configured — those extractions will fail.")
 
         extracted_results = []
 
@@ -546,6 +598,9 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
             print("\n✗ Data upload failed\n")
             return False
 
+        # STEP 8b: Weekly public dataset export (non-fatal — retries next run)
+        run_public_dataset_export(cursor)
+
         # STEP 9: Adjust crawl frequencies based on historical data
         step("STEP 9: Adjusting Crawl Frequencies")
 
@@ -656,6 +711,9 @@ def run_merge_only(website_ids=None):
             return False
         print("\n✓ Data upload completed\n")
 
+        # Weekly public dataset export (non-fatal — retries next run)
+        run_public_dataset_export(cursor)
+
         print(f"{'='*60}")
         print("MERGE-ONLY RUN COMPLETED SUCCESSFULLY")
         print(f"{'='*60}\n")
@@ -704,6 +762,12 @@ Examples:
         help='Skip crawl/extract/process; only merge pending crawl_events, then export + upload. '
              'Recovers interrupted runs without re-crawling.'
     )
+    parser.add_argument(
+        '--export-dataset',
+        action='store_true',
+        help='Force the public NDJSON dataset export + upload to public_html/exports/ '
+             '(normally runs weekly as part of the pipeline tail), then exit.'
+    )
     batch_group = parser.add_mutually_exclusive_group()
     batch_group.add_argument(
         '--batch',
@@ -733,7 +797,9 @@ if __name__ == "__main__":
     else:
         use_batch = None  # No explicit flag: run_pipeline defaults to sync
 
-    if args.merge_only:
+    if args.export_dataset:
+        success = run_export_dataset_only()
+    elif args.merge_only:
         success = run_merge_only(website_ids)
     else:
         success = asyncio.run(run_pipeline(website_ids, args.limit, use_batch))

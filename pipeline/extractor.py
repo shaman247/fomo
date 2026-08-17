@@ -27,6 +27,7 @@ from pydantic import BaseModel, Field, field_validator
 import city_config
 import constants
 import db
+import llm_providers
 import site_profiles
 from processor import _standardize_time, extract_url_from_content
 
@@ -260,6 +261,21 @@ EVENTS_PER_CHUNK = 50
 # Batch size for enrichment (second pass)
 ENRICHMENT_BATCH_SIZE = 30
 
+# Smallest batch an enrichment failure will subdivide to before giving up.
+#
+# A batch of 30 wordy events can overrun the model's output budget; the response
+# comes back `incomplete` and `enrich_events_batch` used to drop the WHOLE batch,
+# leaving all 30 events with "No description available." and no tags. Measured on
+# the 2026-08-10 run: 14 of 185 batches failed that way, blanking 95 of 749 new
+# events (12.7%) — a silent quality tax, since the events still merge fine.
+#
+# Halving on failure is the right shape because the cause is cumulative output
+# length: most batches are fine and only the wordy tail needs subdividing (the
+# same reasoning as `[[extraction: max-records-per-chunk=N]]`). The floor exists
+# because below it the problem is one pathological event, which splitting cannot
+# fix — so we stop paying for calls and let that small group degrade.
+ENRICHMENT_MIN_BATCH = 4
+
 # Default maximum number of enrichment batches for large pages
 # Limits API cost by capping how many events get enriched
 # Can be overridden per-website via the max_batches column
@@ -274,6 +290,19 @@ AUTO_MAX_BATCHES_CEILING = 40
 
 # Timeout per chunk (seconds) - increased for large pages that can't be chunked
 CHUNK_TIMEOUT = 300
+
+# Absolute ceiling on raw extracted records in one chunked run. The max_batches
+# budget counts DISTINCT NAMES (what enrichment charges for), which leaves the
+# raw record count unbounded in principle — a daily-recurring event can emit one
+# record per date. This is the runaway guard, set far above anything observed
+# (worst real case ~3.5 records per distinct name), so it should never bind.
+CHUNK_RECORD_CEILING = int(os.environ.get("CHUNK_RECORD_CEILING", "5000"))
+
+# Timeout for a single-event detail-page extraction (seconds). Deliberately
+# short: Step 5 fans these out across every candidate event, so a slow call is
+# better abandoned than allowed to stall the batch. Reasoning models spend more
+# wall time per call than Gemini does, hence the env override.
+DETAIL_TIMEOUT = int(os.environ.get("DETAIL_TIMEOUT", "60"))
 
 # Maximum characters per chunk when falling back to character-based chunking
 MAX_CHUNK_CHARS = 30000
@@ -600,22 +629,13 @@ async def extract_with_vision(url, content, current_date_string, name, notes, ba
     # Build prompt
     prompt_text = get_vision_prompt(url, content, current_date_string, name, notes)
 
-    # Build multimodal content: text prompt + images
-    contents = [prompt_text] + image_parts
-
     try:
-        response = await asyncio.wait_for(
-            genai_client.aio.models.generate_content(
-                model=GEMINI_MODEL,
-                contents=contents,
-                config={
-                    "response_mime_type": "application/json",
-                    "response_schema": EventList,
-                }
-            ),
-            timeout=GEMINI_TIMEOUT * 2  # Double timeout for vision
+        response_text = await llm_providers.generate_structured(
+            prompt_text, EventList, GEMINI_TIMEOUT * 2,  # Double timeout for vision
+            provider=llm_providers.provider_for('vision'),
+            images=image_parts,
+            gemini_client=genai_client, gemini_model=GEMINI_MODEL,
         )
-        response_text = response.text.strip()
 
         # Validate JSON
         try:
@@ -627,10 +647,7 @@ async def extract_with_vision(url, content, current_date_string, name, notes, ba
 
         return response_text
 
-    except asyncio.TimeoutError:
-        print(f"    - Vision extraction timeout after {GEMINI_TIMEOUT * 2}s")
-        return '{"events": []}'
-    except Exception as e:
+    except llm_providers.ProviderCallFailure as e:
         print(f"    - Vision extraction error: {e}")
         return '{"events": []}'
 
@@ -1281,32 +1298,41 @@ async def enrich_events_batch(event_names, venue_name, content=None):
     prompt = get_enrichment_prompt(event_names, venue_name, content_snippets=content_snippets)
 
     try:
-        response = await asyncio.wait_for(
-            genai_client.aio.models.generate_content(
-                model=GEMINI_MODEL,
-                contents=prompt,
-                config={
-                    "response_mime_type": "application/json",
-                    "response_schema": EnrichmentBatch,
-                }
-            ),
-            timeout=GEMINI_TIMEOUT
+        # Soft failure on purpose: a failed enrichment leaves the events with
+        # "No description available." rather than failing the whole extraction,
+        # which is the pre-existing contract for this call.
+        response_text = await llm_providers.generate_structured(
+            prompt, EnrichmentBatch, GEMINI_TIMEOUT,
+            provider=llm_providers.provider_for('enrichment'),
+            gemini_client=genai_client, gemini_model=GEMINI_MODEL,
         )
-        result = json.loads(response.text.strip())
-        out = {}
-        for item in result.get('enrichments', []):
-            desc = (item.get('description') or '').strip()
-            if _looks_like_boilerplate_fabrication(desc):
-                desc = 'No description available.'
-            out[item.get('name', '')] = {
-                'description': desc,
-                'hashtags': item.get('hashtags', []),
-                'emoji': item.get('emoji', '📅'),
-            }
-        return out
+        result = json.loads(response_text)
     except Exception as e:
-        print(f"    - Enrichment batch error: {e}")
+        # The dominant failure here is an over-long batch overrunning the output
+        # budget, which takes every event in the batch down with it. Split and
+        # retry so only the genuinely oversized group degrades — see
+        # ENRICHMENT_MIN_BATCH. Bounded: halving terminates at the floor.
+        if len(event_names) > ENRICHMENT_MIN_BATCH:
+            mid = len(event_names) // 2
+            print(f"    - Enrichment batch of {len(event_names)} failed ({e}); "
+                  f"retrying as {mid} + {len(event_names) - mid}")
+            first = await enrich_events_batch(event_names[:mid], venue_name, content)
+            second = await enrich_events_batch(event_names[mid:], venue_name, content)
+            return {**first, **second}
+        print(f"    - Enrichment batch error ({len(event_names)} events): {e}")
         return {}
+
+    out = {}
+    for item in result.get('enrichments', []):
+        desc = (item.get('description') or '').strip()
+        if _looks_like_boilerplate_fabrication(desc):
+            desc = 'No description available.'
+        out[item.get('name', '')] = {
+            'description': desc,
+            'hashtags': item.get('hashtags', []),
+            'emoji': item.get('emoji', '📅'),
+        }
+    return out
 
 
 class SingleEventExtraction(BaseModel):
@@ -1358,7 +1384,7 @@ async def extract_single_event(event_name, content):
     Returns dict with 'description', 'hashtags', 'emoji', and optionally
     'location', 'sublocation', 'occurrences', or None on failure.
     """
-    if not genai_client:
+    if not llm_providers.is_configured(llm_providers.provider_for('detail'), genai_client):
         return None
 
     current_date = datetime.now().strftime("%Y-%m-%d")
@@ -1415,18 +1441,14 @@ async def extract_single_event(event_name, content):
     )
 
     try:
-        response = await asyncio.wait_for(
-            genai_client.aio.models.generate_content(
-                model=GEMINI_MODEL,
-                contents=prompt,
-                config={
-                    "response_mime_type": "application/json",
-                    "response_schema": SingleEventExtraction,
-                },
-            ),
-            timeout=30,
+        # Soft failure on purpose: returning None just skips enriching this one
+        # event from its detail page, which is the pre-existing contract.
+        response_text = await llm_providers.generate_structured(
+            prompt, SingleEventExtraction, DETAIL_TIMEOUT,
+            provider=llm_providers.provider_for('detail'),
+            gemini_client=genai_client, gemini_model=GEMINI_MODEL,
         )
-        data = json.loads(response.text.strip())
+        data = json.loads(response_text)
         desc = data.get('description', '').strip().strip('"')
         if not desc or 'No description available' in desc:
             return None
@@ -1467,13 +1489,14 @@ CRITICAL DATE RULES:
 - EXHIBITIONS: for an art exhibition / gallery show / installation with a stated date range ("March 1 – July 5", "On view through June 30"), return ONE occurrence with start_date = opening date and end_date = closing date. Never collapse the run to a single day, and never stamp today's date as the exhibition date. An exhibition whose OPENING date has already passed is STILL on view as long as its closing date is today or later — keep it, using the original (past) opening date as start_date; do NOT null it or skip it because it already opened.
 - CLOSING DATE ONLY: if the page gives a closing date but NO opening date ("Through August 31, 2026", "Until Sept 4", "On view through June 30"), still return ONE occurrence — set end_date to that closing date and leave start_date null. An end-only occurrence is valid and expected here. Do NOT set occurrences=null just because the opening date is missing: the run is still on view, and nulling it drops the event entirely.
 - RECEPTION vs RUN: a timed opening/closing reception, opening night, or preview is a SEPARATE single-day event, NOT an occurrence of the exhibition. If a page lists both a dated+timed reception and a broader exhibition run, emit TWO events — the reception (one single-day occurrence: its date + time) and the exhibition (one start→end run occurrence) — never the full run as a second occurrence of the reception, and never the reception's time on the run.
-- If an event is described as "monthly", "weekly", "ongoing", "permanent", "recurring", or has no specific date listed, set occurrences=null. Do NOT invent a next-occurrence date.
+- A STATED DATE ALWAYS WINS OVER A RECURRENCE RULE. If the listing shows a specific calendar date for the event (e.g. "**When**: Sun, Aug 9 at 8:00pm"), emit that date as an occurrence — even when the event's name or description ALSO states a cadence ("Monthly", "Second Mondays", "second Sunday of every month", "every Tuesday", "weekly"). The date printed on the page is ground truth; the cadence is only extra context, and dropping the date deletes the event entirely. Emit ONLY the date(s) actually shown — never extrapolate the cadence into further dates the page does not list.
+- If an event is described as "monthly", "weekly", "ongoing", "permanent", or "recurring" AND no specific calendar date appears anywhere in its listing, set occurrences=null. Same for a listing with no date at all. Do NOT invent a next-occurrence date.
 - A LIST of specific calendar dates is NOT "recurring" — when the page enumerates actual dates (e.g. "June 18, June 19, June 20, ...", a film's showtimes across many days, or "Jan 11, 18, 25"), emit EACH listed date as its own occurrence. The null-occurrences rule above applies ONLY when a cadence is described in words ("weekly", "every Thursday") WITHOUT the dates being listed, or when no dates appear at all. A missing start_time NEVER justifies dropping a date that IS shown — set start_time to null and keep the date.
 - NEVER collapse an enumerated list of dates into one start_date/end_date range. end_date is ONLY for something that genuinely runs every day in between (an exhibition run, a multi-day festival). A film playing on 12 listed dates is TWELVE occurrences with end_date null — NOT one occurrence spanning first-to-last. Collapsing is wrong even when the dates look contiguous, and it silently invents dates whenever the list has gaps (a film showing Aug 10-13 and Aug 17-20 must never become Aug 10 -> Aug 20).
 - ONE LISTING PER URL: two listings with DIFFERENT event URLs are DIFFERENT events — never fuse them into one, no matter how similar their titles are. Titles that differ only by a qualifier or suffix ("Early Access", "Fan Event", "Special Preview", "(Sensory)", "(Open Cap/Eng Sub)", "3D", "25th Anniversary", a screening-format or accessibility tag) are separate ticketed listings: emit EACH as its own event, using that listing's OWN url and ONLY the dates shown under that listing. Never move a date from one listing onto another, and never pair one listing's title with another listing's url. Only listings that share the SAME url may be combined into a single event.
 - Do NOT default to today's date when no date is listed.
 - Do NOT extract dates from URLs or Google Calendar/iCal links — those often reference past instances. Only use dates visible in the page text adjacent to the event.
-- Past dates (before today) should also be set to null — those events have already happened. EXCEPTION: a multi-day exhibition / gallery show / installation whose closing date (end_date) is today or later is still on view — keep its original (past) opening date as start_date and its closing date as end_date; do NOT null it.
+- Past dates (before today) should also be set to null — those events have already happened. EXCEPTION — ANY event that is STILL IN PROGRESS: if a multi-day event has a stated END date of today or later, keep it even though it started in the past — use its original (past) start_date and its stated end_date, and do NOT null it. This is NOT limited to exhibitions: a conference, symposium, workshop series, festival, residency, class run or camp that opened before today but ends today or later is still happening and must be kept. Only null a multi-day event once its END date is also in the past.
 - An empty/null occurrences field is much better than a fabricated date.
 {note_section}{rid_section}
 Website content:
@@ -1825,7 +1848,8 @@ async def prepare_extraction(cursor, crawl_result_id, website_name, notes="",
             ]
         else:
             prep.extraction_type = 'single'
-            print(f"    - Preparing extraction using {GEMINI_MODEL} ({len(content_to_process)} chars)...")
+            single_model = llm_providers.model_label(llm_providers.single_call_provider())
+            print(f"    - Preparing extraction using {single_model} ({len(content_to_process)} chars)...")
 
             # Get existing upcoming events from this website (single-prompt path only —
             # neither the chunked nor vision prompts consume them, so skip the
@@ -1851,7 +1875,10 @@ def _apply_fingerprint_marker_and_status(cursor, connection, prep, copied):
     The caller runs db.copy_crawl_events first (so it can emit its own log line
     using the returned count) and passes that count here.
     """
-    marker = f'{{"events": [], "skipped": "fingerprint match: cr-{prep.copy_from_crawl_result_id}"}}'
+    # The marker substring is shared with db.find_prior_crawl_with_same_content,
+    # which uses it to refuse to chain a reuse onto another reuse.
+    marker = (f'{{"events": [], {constants.FINGERPRINT_COPY_MARKER}'
+              f'{prep.copy_from_crawl_result_id}"}}')
     db.update_crawl_result_extracted(cursor, connection, prep.crawl_result_id, marker)
     db.update_crawl_result_processed(cursor, connection, prep.crawl_result_id, copied)
 
@@ -1923,30 +1950,23 @@ async def _generate_extraction_response(prep, cursor, connection):
     path's max_batches auto-bump.
     """
     if prep.extraction_type == 'vision':
+        # vision_contents is [prompt_text, *image_parts]; the provider layer
+        # takes the prompt and images separately so it can shape each provider's
+        # multimodal payload.
+        prompt_text, image_parts = prep.vision_contents[0], prep.vision_contents[1:]
         try:
-            response = await asyncio.wait_for(
-                genai_client.aio.models.generate_content(
-                    model=GEMINI_MODEL,
-                    contents=prep.vision_contents,
-                    config={
-                        "response_mime_type": "application/json",
-                        "response_schema": EventList,
-                    }
-                ),
-                timeout=GEMINI_TIMEOUT * 2
+            return await llm_providers.generate_structured(
+                prompt_text, EventList, GEMINI_TIMEOUT * 2,
+                provider=llm_providers.provider_for('vision'),
+                images=image_parts,
+                gemini_client=genai_client, gemini_model=GEMINI_MODEL,
             )
-            return response.text.strip()
         # A failed vision call is the same lie as a failed chunk: the images were
         # never read, so an empty result says nothing about the post. Fail the
         # crawl result instead of storing a zero (see ExtractionCallFailure).
-        except asyncio.TimeoutError:
-            print(f"    - Vision extraction timeout after {GEMINI_TIMEOUT * 2}s")
-            raise ExtractionCallFailure(
-                f"vision extraction timed out after {GEMINI_TIMEOUT * 2}s")
-        except Exception as e:
+        except llm_providers.ProviderCallFailure as e:
             print(f"    - Vision extraction error: {e}")
-            raise ExtractionCallFailure(
-                f"vision extraction failed: {e or type(e).__name__}")
+            raise ExtractionCallFailure(f"vision extraction failed: {e}")
 
     if prep.extraction_type == 'chunked':
         return await _execute_chunked_sync(prep, cursor, connection)
@@ -1957,18 +1977,23 @@ async def _generate_extraction_response(prep, cursor, connection):
         error_msg = f"Prompt too large (~{estimated_tokens:,} est. tokens, limit {MAX_REQUEST_TOKENS:,})"
         print(f"    ⚠️  ERROR: {error_msg}, skipping extraction")
         raise RuntimeError(error_msg)
-    response = await asyncio.wait_for(
-        genai_client.aio.models.generate_content(
-            model=GEMINI_MODEL,
-            contents=prep.prompt,
-            config={
-                "response_mime_type": "application/json",
-                "response_schema": EventList,
-            }
-        ),
-        timeout=GEMINI_TIMEOUT
-    )
-    return response.text.strip()
+    # The single-call path is provider-selectable (see llm_providers); chunked,
+    # vision, enrichment and detail-crawl calls remain Gemini-only.
+    #
+    # Wrapping the failure in ExtractionCallFailure is what lets the variance
+    # guard above keep a good first attempt when only the retry hits the API
+    # wall — a bare exception here would propagate out of
+    # execute_extraction_sync and fail a crawl result we already had an answer
+    # for.
+    try:
+        return await llm_providers.generate_structured(
+            prep.prompt, EventList, GEMINI_TIMEOUT,
+            provider=llm_providers.single_call_provider(),
+            gemini_client=genai_client, gemini_model=GEMINI_MODEL,
+        )
+    except llm_providers.ProviderCallFailure as e:
+        print(f"    - Single-call extraction error: {e}")
+        raise ExtractionCallFailure(str(e))
 
 
 def _normalize_extraction_response(response_text):
@@ -2098,49 +2123,80 @@ def _variance_retry_reason(cursor, crawl_result_id, new_count):
         return None
 
 
+def _distinct_names_in_order(events):
+    """Event names, de-duplicated, first-seen order preserved.
+
+    Matched EXACTLY, because that is the key `_combine_chunked_results` uses to
+    look enrichment back up — normalising here would strand records whose name
+    differs only in case from the one we enriched.
+    """
+    seen, out = set(), []
+    for event in events:
+        name = event.get('name')
+        if name and name not in seen:
+            seen.add(name)
+            out.append(name)
+    return out
+
+
 async def _execute_chunked_sync(prep, cursor=None, connection=None):
     """Execute chunked extraction synchronously (individual API calls).
 
     cursor/connection enable the max_batches auto-bump when the chunk yield
     exceeds the website's cap; omit them (e.g. in tests) to disable the bump.
+
+    The max_batches budget is denominated in DISTINCT EVENT NAMES, not raw
+    extracted records, because that is what it actually pays for: enrichment is
+    name-keyed (see `_combine_chunked_results`), so N records sharing a name
+    cost one enrichment slot between them, not N.
+
+    Counting raw records instead made the cap sensitive to a model's grouping
+    style rather than to a page's size. A model that emits one record per date
+    (gpt-5.6-luna) rather than one record with many occurrences (gemini) tripped
+    the cap early and SKIPPED WHOLE CHUNKS: Prospect Park stopped after 5 of 7
+    chunks and lost a third of the page's events, while auto-bumping the site's
+    max_batches on what was never real growth — the same 168 records were only
+    51 distinct events. Deduplicating also cuts real enrichment calls on the
+    existing provider (that page: 98 records -> 51 names, 4 batches -> 2).
     """
     max_events = prep.max_batches * ENRICHMENT_BATCH_SIZE
 
     # Extract events from each chunk
     all_simple_events = []
+    seen_names = set()
     skipped_chunks = 0
     attempted_chunks = 0
     failed_chunks = 0
     last_chunk_error = None
     for i, chunk_prompt in enumerate(prep.chunk_prompts):
-        if len(all_simple_events) >= max_events:
+        if len(seen_names) >= max_events:
             skipped_chunks = len(prep.chunk_prompts) - i
+            break
+        # Records per name are unbounded in principle (a daily-recurring event
+        # can emit one per date), so keep an absolute ceiling as a runaway
+        # guard. Sized far above anything observed (worst real case ~3.5
+        # records per name) so it never binds in normal operation.
+        if len(all_simple_events) >= CHUNK_RECORD_CEILING:
+            skipped_chunks = len(prep.chunk_prompts) - i
+            print(f"    - ⚠️  Record ceiling {CHUNK_RECORD_CEILING} reached "
+                  f"({len(seen_names)} distinct names); skipping remaining chunks")
             break
         print(f"    - Processing chunk {i + 1}/{len(prep.chunk_prompts)}...")
         attempted_chunks += 1
         try:
-            response = await asyncio.wait_for(
-                genai_client.aio.models.generate_content(
-                    model=GEMINI_MODEL,
-                    contents=chunk_prompt,
-                    config={
-                        "response_mime_type": "application/json",
-                        "response_schema": SimpleEventList,
-                    }
-                ),
-                timeout=CHUNK_TIMEOUT
+            response_text = await llm_providers.generate_structured(
+                chunk_prompt, SimpleEventList, CHUNK_TIMEOUT,
+                provider=llm_providers.provider_for('chunked'),
+                gemini_client=genai_client, gemini_model=GEMINI_MODEL,
             )
-            result = json.loads(response.text.strip())
+            result = json.loads(response_text)
             events = result.get('events', [])
             if events:
                 print(f"      Got {len(events)} events")
                 all_simple_events.extend(events)
+                seen_names.update(e['name'] for e in events if e.get('name'))
             else:
                 print(f"      No events extracted")
-        except asyncio.TimeoutError:
-            failed_chunks += 1
-            last_chunk_error = f"timeout after {CHUNK_TIMEOUT}s"
-            print(f"      Chunk timeout after {CHUNK_TIMEOUT}s")
         except Exception as e:
             failed_chunks += 1
             last_chunk_error = str(e) or type(e).__name__
@@ -2160,27 +2216,59 @@ async def _execute_chunked_sync(prep, cursor=None, connection=None):
                 f"returned events (last error: {last_chunk_error})")
         return '{"events": []}'
 
+    if failed_chunks:
+        # A PARTIAL failure is the same evidence problem as a total one, and it
+        # used to slip through here because `all_simple_events` was non-empty:
+        # the crawl stored `status='processed'` with a healthy-looking
+        # event_count carrying only the chunks that happened to answer, and
+        # archival then treated everything in the failed chunks as delisted.
+        #
+        # On 2026-08-04 a rate-limit storm made this common and it silently
+        # under-extracted 23 sites — NYC SAPO Block Parties 12 events against a
+        # 150 median, NYC Trivia League 22 vs 152, New York Cares 78 vs 136 —
+        # none of which appeared in any failure list, because a partial failure
+        # logs nothing at all. They had to be found by comparing each site's
+        # count against its own trailing median, weeks of coverage later.
+        #
+        # Failing closed costs one crawl cycle of freshness and nothing else:
+        # the result is stored `failed` with `crawled_content` preserved, so it
+        # stays out of `_ws_latest` (no wrongful archival) and
+        # `main.py --ids <id>` re-extracts it without re-crawling.
+        raise ChunkedExtractionFailure(
+            f"{failed_chunks}/{attempted_chunks} chunk request(s) failed; discarding the "
+            f"{len(all_simple_events)} event(s) from the surviving chunks rather than "
+            f"storing a truncated extraction (last error: {last_chunk_error})")
+
     if skipped_chunks > 0:
         print(f"    - Skipped {skipped_chunks} remaining chunk(s) (already have {len(all_simple_events)} events)")
 
     print(f"    - Total from chunks: {len(all_simple_events)} events")
 
+    # One enrichment slot per distinct name — duplicates would resolve to the
+    # same enrichment entry anyway, so sending them again is pure waste.
+    event_names = _distinct_names_in_order(all_simple_events)
+    if len(event_names) != len(all_simple_events):
+        print(f"    - {len(all_simple_events)} records -> {len(event_names)} distinct events")
+
     # Cap events at max_batches to limit API cost — but first try to auto-raise
     # the website's cap (triage previously did this by hand every run it fired).
-    total_batches_needed = -(-len(all_simple_events) // ENRICHMENT_BATCH_SIZE)
+    total_batches_needed = -(-len(event_names) // ENRICHMENT_BATCH_SIZE)
     if total_batches_needed > prep.max_batches and cursor is not None and connection is not None:
         bumped = _maybe_auto_bump_max_batches(cursor, connection, prep, total_batches_needed)
         if bumped:
             prep.max_batches = bumped
             max_events = bumped * ENRICHMENT_BATCH_SIZE
     if total_batches_needed > prep.max_batches:
-        print(f"    - WARNING: [{prep.website_name}] {len(all_simple_events)} events would need {total_batches_needed} batches, "
+        print(f"    - WARNING: [{prep.website_name}] {len(event_names)} events would need {total_batches_needed} batches, "
               f"capping at {prep.max_batches} ({max_events} events). "
               f"Set max_batches in websites table to override.")
-        all_simple_events = all_simple_events[:max_events]
+        event_names = event_names[:max_events]
+        # Drop the records belonging to the names we cut, so we never emit an
+        # event the enrichment pass was never asked about.
+        kept = set(event_names)
+        all_simple_events = [e for e in all_simple_events if e.get('name') in kept]
 
     # Enrich events with descriptions/hashtags/emoji in batches
-    event_names = [e['name'] for e in all_simple_events]
     num_batches = -(-len(event_names) // ENRICHMENT_BATCH_SIZE)
     all_enrichments = {}
 
@@ -2206,6 +2294,10 @@ def _maybe_auto_bump_max_batches(cursor, connection, prep, batches_needed):
     Chunk extraction stops early once the current cap's event budget is reached,
     so a single bump may not cover the site's full listing — the next run starts
     with the raised cap and converges over a few runs.
+
+    `batches_needed` is derived from DISTINCT event names, so a bump now means
+    the site genuinely grew rather than that a model changed how it groups dates
+    into records (see _execute_chunked_sync).
     """
     if not prep.website_id:
         return None
@@ -2259,8 +2351,12 @@ async def extract_events(cursor, connection, crawl_result_id, website_name, note
     Returns:
         True if successful, False otherwise
     """
-    if not GEMINI_API_KEY or not genai_client:
-        print("    - Skipping extraction: Gemini API not configured")
+    # Gemini is only required for paths still pointed at it, so a fully-migrated
+    # deployment can run without a Gemini key.
+    missing = llm_providers.unconfigured_paths(genai_client)
+    if missing:
+        detail = ", ".join(f"{path}->{prov}" for path, prov in missing)
+        print(f"    - Skipping extraction: provider not configured for {detail}")
         return False
 
     prep = await prepare_extraction(cursor, crawl_result_id, website_name, notes,

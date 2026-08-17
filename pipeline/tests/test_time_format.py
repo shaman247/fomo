@@ -36,6 +36,17 @@ STANDARDIZE_CASES = [
     ('00:30', '12:30am'),
     ('12:00', '12pm'),
     ('14:30', '2:30pm'),
+    # HH:MM:SS (MySQL TIME / ISO clock strings). Left unhandled these fell through
+    # verbatim and accumulated as duplicate twin occurrence rows beside their own
+    # 12-hour form — 79 of them by 2026-08-02.
+    ('19:30:00', '7:30pm'),
+    ('19:30:45', '7:30pm'),
+    ('00:15:00', '12:15am'),
+    ('12:00:00', '12pm'),
+    ('7:30:00pm', '7:30pm'),
+    ('07:30:00 PM', '7:30pm'),
+    # still ambiguous once the seconds are dropped — preserved, not guessed
+    ('06:30:00', '06:30'),
     # bare HH (leading zero or hour >= 13 unambiguous; 0 -> midnight, 12 -> noon)
     ('08', '8am'),
     ('20', '8pm'),

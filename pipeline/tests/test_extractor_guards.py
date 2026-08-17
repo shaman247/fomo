@@ -1134,24 +1134,33 @@ class TestNoEventsVetoEvidenceGuard(unittest.TestCase):
 # "All chunks failed" must not be stored as a healthy zero
 # ---------------------------------------------------------------------------
 
-class _FakeModels:
-    """Stands in for genai_client.aio.models with scripted per-call outcomes."""
+class _FakeProviderCall:
+    """Stands in for `llm_providers.generate_structured` with scripted outcomes.
+
+    These guards must patch the PROVIDER SEAM, not `extractor.genai_client`.
+    Every extraction path now routes through `llm_providers.generate_structured`,
+    so once `EXTRACTION_PROVIDER=openai` the genai_client patch was bypassed
+    entirely: the chunked guards stopped exercising anything and instead issued
+    REAL API calls (14 tests went from 0.004s to 133s, 11 of them failing).
+    Patching here keeps them meaningful under either provider.
+
+    `generate_structured` is contracted to raise `ProviderCallFailure` rather
+    than return a partial answer, so exception outcomes are wrapped the way a
+    real provider would wrap them.
+    """
 
     def __init__(self, outcomes):
         self.outcomes = list(outcomes)
         self.calls = 0
 
-    async def generate_content(self, **kwargs):
+    async def __call__(self, prompt, schema, timeout, provider, images=None,
+                       gemini_client=None, gemini_model=None):
         outcome = self.outcomes[min(self.calls, len(self.outcomes) - 1)]
         self.calls += 1
         if isinstance(outcome, Exception):
-            raise outcome
-        return SimpleNamespace(text=outcome)
-
-
-class _FakeGenaiClient:
-    def __init__(self, outcomes):
-        self.aio = SimpleNamespace(models=_FakeModels(outcomes))
+            raise extractor.llm_providers.ProviderCallFailure(
+                str(outcome) or type(outcome).__name__)
+        return outcome
 
 
 class ChunkedFailureTestBase(unittest.TestCase):
@@ -1168,7 +1177,9 @@ class ChunkedFailureTestBase(unittest.TestCase):
     def _run_chunked(self, outcomes, chunks=3):
         async def _noop_enrich(names, website_name, content=None):
             return {}
-        with mock.patch.object(extractor, 'genai_client', _FakeGenaiClient(outcomes)), \
+        fake = _FakeProviderCall(outcomes)
+        with mock.patch.object(extractor.llm_providers, 'generate_structured', fake), \
+             mock.patch.object(extractor, 'genai_client', object()), \
              mock.patch.object(extractor, 'enrich_events_batch', _noop_enrich):
             return asyncio.run(extractor._execute_chunked_sync(self._prep(chunks)))
 
@@ -1196,16 +1207,144 @@ class TestChunkedExtractionFailureIsNotAZero(ChunkedFailureTestBase):
         with self.assertRaises(extractor.ChunkedExtractionFailure):
             self._run_chunked([RuntimeError('503'), '{"events": []}', '{"events": []}'])
 
-    def test_events_from_a_surviving_chunk_are_kept(self):
+    def test_events_from_a_surviving_chunk_are_DISCARDED(self):
+        # CONTRACT CHANGE (2026-08-04): this used to assert the surviving
+        # chunk's events were kept. They are not any more — a partial failure is
+        # the same evidence problem as a total one, and keeping the survivors
+        # stored a truncated extraction as a healthy `processed` row, which
+        # archival then read as "everything else was delisted". That silently
+        # under-extracted 23 sites during a rate-limit storm.
+        # See TestPartialChunkFailureFailsClosed for the full rationale.
         event = ('{"events": [{"name": "Concert", "location": "Venue", '
                  '"occurrences": [{"start_date": "2026-08-01"}], "url": null}]}')
-        result = self._run_chunked([RuntimeError('503'), event, '{"events": []}'])
-        self.assertEqual(len(json.loads(result)['events']), 1)
+        with self.assertRaises(extractor.ChunkedExtractionFailure):
+            self._run_chunked([RuntimeError('503'), event, '{"events": []}'])
 
     def test_error_message_names_the_failure(self):
         with self.assertRaises(extractor.ChunkedExtractionFailure) as ctx:
             self._run_chunked([RuntimeError('503 Service Unavailable')])
         self.assertIn('503', str(ctx.exception))
+
+
+class ChunkedNameBudgetTests(unittest.TestCase):
+    """The max_batches budget counts DISTINCT NAMES, not raw records.
+
+    Counting records made the cap sensitive to how a model groups dates. A model
+    emitting one record per date rather than one record with many occurrences
+    tripped the cap early and skipped whole chunks: Prospect Park stopped after
+    5 of 7 chunks and lost a third of the page, while auto-bumping max_batches
+    on 168 records that were only 51 distinct events.
+    """
+
+    def _prep(self, chunks, max_batches=3):
+        prep = PreparedExtraction(crawl_result_id=99, website_name='Test Site',
+                                  extraction_type='chunked')
+        prep.max_batches = max_batches
+        prep.website_id = 7
+        prep.content = 'content'
+        prep.chunk_prompts = [f'chunk prompt {i}' for i in range(chunks)]
+        return prep
+
+    @staticmethod
+    def _chunk(*records):
+        return json.dumps({'events': [
+            {'name': n, 'location': 'Venue',
+             'occurrences': [{'start_date': d}], 'url': None}
+            for n, d in records]})
+
+    def _run(self, outcomes, chunks, max_batches=3):
+        """Returns (parsed result, list of enrichment batches, chunks attempted)."""
+        batches = []
+
+        async def _capture_enrich(names, website_name, content=None):
+            batches.append(list(names))
+            return {n: {'description': f'D {n}', 'hashtags': ['T'], 'emoji': '🎵'}
+                    for n in names}
+
+        fake = _FakeProviderCall(outcomes)
+        with mock.patch.object(extractor.llm_providers, 'generate_structured', fake), \
+             mock.patch.object(extractor, 'genai_client', object()), \
+             mock.patch.object(extractor, 'enrich_events_batch', _capture_enrich):
+            out = asyncio.run(
+                extractor._execute_chunked_sync(self._prep(chunks, max_batches)))
+        return json.loads(out), batches, fake.calls
+
+    def test_many_records_few_names_does_not_skip_chunks(self):
+        # 40 records per chunk but only 2 distinct names; budget is 3*30 = 90
+        # names. Counting records would trip the cap after chunk 3.
+        chunk = self._chunk(*[('Daily Tour' if i % 2 else 'Free Meals',
+                               f'2026-08-{i % 28 + 1:02d}') for i in range(40)])
+        result, batches, calls = self._run([chunk], chunks=5)
+        self.assertEqual(calls, 5, "every chunk should have been extracted")
+        self.assertEqual(len(result['events']), 200, "all records kept")
+        self.assertEqual(batches, [['Free Meals', 'Daily Tour']])
+
+    def test_enrichment_receives_each_name_once(self):
+        chunk = self._chunk(('Show', '2026-08-01'), ('Show', '2026-08-02'),
+                            ('Show', '2026-08-03'), ('Other', '2026-08-01'))
+        _result, batches, _calls = self._run([chunk], chunks=2)
+        self.assertEqual(batches, [['Show', 'Other']])
+
+    def test_every_record_sharing_a_name_gets_the_enrichment(self):
+        chunk = self._chunk(('Show', '2026-08-01'), ('Show', '2026-08-02'))
+        result, _batches, _calls = self._run([chunk], chunks=1)
+        self.assertEqual(len(result['events']), 2)
+        for event in result['events']:
+            self.assertEqual(event['description'], 'D Show')
+            self.assertEqual(event['emoji'], '🎵')
+
+    def test_distinct_names_over_budget_still_cap(self):
+        # 40 distinct names against a 1-batch (30-name) budget.
+        chunk = self._chunk(*[(f'Event {i}', '2026-08-01') for i in range(40)])
+        result, batches, _calls = self._run([chunk], chunks=1, max_batches=1)
+        self.assertEqual(len(batches), 1)
+        self.assertEqual(len(batches[0]), 30)
+        names = {e['name'] for e in result['events']}
+        self.assertEqual(len(names), 30)
+
+    def test_capped_run_emits_no_unenriched_event(self):
+        # Records whose name was cut must be dropped, not shipped with the
+        # 'No description available.' placeholder the enrichment never saw.
+        chunk = self._chunk(*[(f'Event {i}', '2026-08-01') for i in range(40)])
+        result, batches, _calls = self._run([chunk], chunks=1, max_batches=1)
+        enriched = set(batches[0])
+        for event in result['events']:
+            self.assertIn(event['name'], enriched)
+
+    def test_chunks_stop_once_distinct_names_reach_the_budget(self):
+        # 30 fresh names per chunk against a 1-batch budget: chunk 1 fills it.
+        chunks_out = [self._chunk(*[(f'C{c} Event {i}', '2026-08-01')
+                                    for i in range(30)]) for c in range(4)]
+        _result, _batches, calls = self._run(chunks_out, chunks=4, max_batches=1)
+        self.assertEqual(calls, 1)
+
+    def test_record_ceiling_stops_a_runaway(self):
+        chunk = self._chunk(*[('Same Event', f'2026-08-{i % 28 + 1:02d}')
+                              for i in range(60)])
+        with mock.patch.object(extractor, 'CHUNK_RECORD_CEILING', 100):
+            result, _batches, calls = self._run([chunk], chunks=10)
+        self.assertLess(calls, 10, "ceiling should have stopped the run")
+        self.assertLessEqual(len(result['events']), 160)
+
+    def test_auto_bump_is_driven_by_names_not_records(self):
+        # 120 records, 4 distinct names, 3-batch cap. Records would demand 4
+        # batches and bump the site; names need 1 and must not.
+        chunk = self._chunk(*[(f'Event {i % 4}', f'2026-08-{i % 28 + 1:02d}')
+                              for i in range(120)])
+        bumps = []
+
+        async def _noop_enrich(names, website_name, content=None):
+            return {}
+
+        with mock.patch.object(extractor.llm_providers, 'generate_structured',
+                               _FakeProviderCall([chunk])), \
+             mock.patch.object(extractor, 'genai_client', object()), \
+             mock.patch.object(extractor, 'enrich_events_batch', _noop_enrich), \
+             mock.patch.object(extractor, '_maybe_auto_bump_max_batches',
+                               lambda *a, **k: bumps.append(a) or None):
+            asyncio.run(extractor._execute_chunked_sync(
+                self._prep(1), cursor=object(), connection=object()))
+        self.assertEqual(bumps, [], "a grouping-style change is not site growth")
 
 
 class TestVisionPromptCarriesTheFullPageText(unittest.TestCase):
@@ -1314,8 +1453,9 @@ class TestVisionExtractionFailureIsNotAZero(unittest.TestCase):
         return prep
 
     def test_vision_api_error_raises(self):
-        with mock.patch.object(extractor, 'genai_client',
-                               _FakeGenaiClient([RuntimeError('503')])):
+        with mock.patch.object(extractor.llm_providers, 'generate_structured',
+                               _FakeProviderCall([RuntimeError('503')])), \
+             mock.patch.object(extractor, 'genai_client', object()):
             with self.assertRaises(extractor.ExtractionCallFailure):
                 asyncio.run(extractor._generate_extraction_response(self._prep(), None, None))
 
@@ -1552,6 +1692,137 @@ class TestPerWebsiteMaxContentChars(unittest.TestCase):
         self.assertIsNone(prep.error)
         self.assertEqual(prep.extraction_type, 'chunked')
         self.assertEqual(len(prep.content), 400000)
+
+
+class TestPartialChunkFailureFailsClosed(unittest.TestCase):
+    """A PARTIAL chunk failure must not be stored as a healthy success.
+
+    The all-chunks-failed guard only fires when `all_simple_events` is empty, so
+    chunk 1 succeeding while chunks 2..N died produced a `status='processed'`
+    row with a healthy-looking event_count carrying a fraction of the page —
+    and archival then treated everything in the failed chunks as delisted.
+    A rate-limit storm on 2026-08-04 made this common and silently
+    under-extracted 23 sites (NYC SAPO 12 vs a 150 median, NYC Trivia 22 vs 152,
+    New York Cares 78 vs 136). A partial failure logs nothing, so they were only
+    found by comparing each site against its own trailing median.
+
+    Failing closed costs one crawl cycle: the result is stored `failed` with
+    content preserved, stays out of `_ws_latest`, and `main.py --ids` recovers it.
+    """
+
+    def _prep(self, chunks):
+        prep = PreparedExtraction(crawl_result_id=99, website_name='Test Site',
+                                  extraction_type='chunked')
+        prep.max_batches = 3
+        prep.website_id = 7
+        prep.content = 'content'
+        prep.chunk_prompts = [f'chunk prompt {i}' for i in range(chunks)]
+        return prep
+
+    def _run(self, outcomes, chunks=3):
+        async def _noop_enrich(names, website_name, content=None):
+            return {}
+        fake = _FakeProviderCall(outcomes)
+        with mock.patch.object(extractor.llm_providers, 'generate_structured', fake), \
+             mock.patch.object(extractor, 'genai_client', object()), \
+             mock.patch.object(extractor, 'enrich_events_batch', _noop_enrich):
+            return asyncio.run(extractor._execute_chunked_sync(self._prep(chunks)))
+
+    @staticmethod
+    def _events(*names):
+        return json.dumps({'events': [
+            {'name': n, 'location': 'Venue', 'url': None,
+             'occurrences': [{'start_date': '2026-08-01'}]} for n in names]})
+
+    def test_one_failed_chunk_discards_the_partial_result(self):
+        # chunk 1 answers, chunk 2 raises, chunk 3 answers -> must NOT return
+        # a 2-chunk extraction as if the page only had those events.
+        with self.assertRaises(extractor.ChunkedExtractionFailure):
+            self._run([self._events('A'), RuntimeError('503'), self._events('B')])
+
+    def test_error_message_reports_what_was_discarded(self):
+        with self.assertRaises(extractor.ChunkedExtractionFailure) as ctx:
+            self._run([self._events('A', 'B'), RuntimeError('503'), self._events('C')])
+        msg = str(ctx.exception)
+        self.assertIn('chunk request(s) failed', msg)
+        self.assertIn('discarding', msg)
+        self.assertIn('503', msg)
+
+    def test_all_chunks_succeeding_still_returns_events(self):
+        out = self._run([self._events('A'), self._events('B'), self._events('C')])
+        names = [e['name'] for e in json.loads(out)['events']]
+        self.assertEqual(sorted(names), ['A', 'B', 'C'])
+
+    def test_genuinely_empty_page_is_still_a_healthy_zero(self):
+        # Every chunk ANSWERED "no events" — that is a real empty calendar and
+        # must not be turned into a failure by this change.
+        out = self._run(['{"events": []}'])
+        self.assertEqual(json.loads(out), {'events': []})
+
+    def test_budget_skipped_chunks_are_not_treated_as_failures(self):
+        # Chunks skipped because the name budget was reached are deliberate, not
+        # errors — they must not trip the new guard.
+        many = self._events(*[f'Event {i}' for i in range(95)])
+        out = self._run([many], chunks=5)
+        self.assertGreater(len(json.loads(out)['events']), 0)
+
+
+class ChunkPromptStatedDateBeatsRecurrenceTests(unittest.TestCase):
+    """A date printed on the page must survive a recurrence rule.
+
+    w5156 pools.events prints an absolute date per listing (`**When**: Sun,
+    Aug 9 at 8:00pm`) AND a cadence in the body ("second Sunday of every
+    month", "Second Mondays") or the name ("Monthly ..."). The old chunk prompt
+    said `If an event is described as "monthly", "weekly", ... set
+    occurrences=null`, and the model applied it to listings that DID carry a
+    date — occurrences came back null, the merger filtered them as dateless,
+    and the site contributed nothing. Measured on the stored crawl (109715,
+    real prompt + SimpleEventList, gpt-5.6-luna): only 2 of 6 trials returned
+    all four dates before the clause change, 6 of 6 after.
+
+    Behavioural verification was empirical (this is a prompt-string fix); these
+    tests only pin the clause into the built prompt so it cannot be dropped or
+    silently reverted to the unconditional form.
+    """
+
+    def _prompt(self):
+        return extractor.get_chunk_prompt(
+            '### [Wonderville Karaoke](https://example.com/k)\n'
+            '**When**: Sun, Aug 9 at 8:00pm\n'
+            'Come down on the second Sunday of every month.\n',
+            '2026-08-04', notes='', request_id='cr-1-chunk-0')
+
+    def test_stated_date_wins_clause_is_present(self):
+        prompt = self._prompt()
+        self.assertIn('A STATED DATE ALWAYS WINS OVER A RECURRENCE RULE', prompt)
+
+    def test_clause_names_the_cadence_phrasings_that_triggered_the_drop(self):
+        prompt = self._prompt()
+        for phrase in ('Monthly', 'Second Mondays', 'second Sunday of every month',
+                       'every Tuesday'):
+            self.assertIn(phrase, prompt)
+
+    def test_null_rule_is_conditioned_on_the_absence_of_a_date(self):
+        """The null instruction must never again be unconditional — a cadence
+        word alone may not null a listing that shows a date."""
+        prompt = self._prompt()
+        self.assertNotIn(
+            '- If an event is described as "monthly", "weekly", "ongoing", '
+            '"permanent", "recurring", or has no specific date listed, '
+            'set occurrences=null.', prompt)
+        null_rule = next(
+            line for line in prompt.split('\n')
+            if line.startswith('- If an event is described as "monthly"'))
+        self.assertIn('AND no specific calendar date appears anywhere', null_rule)
+        self.assertIn('occurrences=null', null_rule)
+
+    def test_cadence_is_not_licence_to_extrapolate_extra_dates(self):
+        """Guard against the opposite failure: the merger unions occurrences,
+        so an invented recurrence expansion would be permanent."""
+        prompt = self._prompt()
+        self.assertIn('never extrapolate the cadence into further dates the page '
+                      'does not list', prompt)
+        self.assertIn('Do NOT invent a next-occurrence date.', prompt)
 
 
 if __name__ == '__main__':
