@@ -6,6 +6,7 @@ Exports events from the database to JSON files for the website.
 
 import json
 import os
+import re
 import sys
 from datetime import datetime, timedelta
 
@@ -97,6 +98,93 @@ def get_active_locations(events, all_locations):
         if loc.get('lat') is not None and loc.get('lng') is not None
         and (round(loc['lat'], 5), round(loc['lng'], 5)) in active_coords
     ]
+
+
+# Day-precision dates embedded in an event URL. Recurring programs on Tribe,
+# Squarespace and their kin publish one dated permalink per occurrence
+# (`/event/chair-yoga/2026-08-11/`), and the merger pools them all onto the one
+# event — so the URL list carries a mix of past and upcoming links.
+#
+# A bare year is NOT a date: `/long-play-2026`, `/summer-2026` and
+# `/member-mornings-iris-van-herpen-2026` are slugs, and reading them as
+# January 1st would rank a live URL as expired. Both patterns therefore require
+# day precision. (`MM-DD-YYYY` is matched second so `2026-08-15` can't be read
+# as a month.)
+#
+# The separator must be the SAME on both sides, or Brooklyn Museum's
+# `…/member-mornings-iris-van-herpen-2026/08-15-2026` reads its slug's year
+# together with the US date's month and day ("2026/08-15") and lands on the
+# wrong year whenever the two disagree.
+_URL_DATE_PATTERNS = (
+    re.compile(r'(?<!\d)(20\d{2})([-/])(\d{1,2})\2(\d{1,2})(?!\d)'),   # YYYY-MM-DD
+    re.compile(r'(?<!\d)(\d{1,2})([-/])(\d{1,2})\2(20\d{2})(?!\d)'),   # MM-DD-YYYY
+)
+
+
+def _url_host(url):
+    """Lowercased hostname without `www.`, or '' when it cannot be parsed."""
+    match = re.match(r'^https?://([^/?#]+)', (url or '').strip(), re.I)
+    if not match:
+        return ''
+    host = match.group(1).split('@')[-1].split(':')[0].lower()
+    return host[4:] if host.startswith('www.') else host
+
+
+def url_embedded_date(url):
+    """The day-precision date a URL names, or None when it names no date."""
+    for index, pattern in enumerate(_URL_DATE_PATTERNS):
+        match = pattern.search(url or '')
+        if not match:
+            continue
+        try:
+            if index == 0:
+                year, month, day = (int(match.group(1)), int(match.group(3)),
+                                    int(match.group(4)))
+            else:
+                month, day, year = (int(match.group(1)), int(match.group(3)),
+                                    int(match.group(4)))
+            return datetime(year, month, day).date()
+        except ValueError:
+            return None
+    return None
+
+
+def order_event_urls(urls, current_date):
+    """Return `urls` with a usable click-through link first.
+
+    The frontend links `urls[0]`, and `event_urls.sort_order` alone does not
+    identify it: ties are common (116 live events held more than one
+    `sort_order = 0` row on 2026-08-17) and, worse, the primary goes stale on
+    its own — a dated occurrence permalink that was the next occurrence when it
+    was merged is in the past a week later. Measured 2026-08-17: 16 live
+    exported events published a past-dated primary while holding a future-dated
+    sibling (e.g. Brooklyn Museum's `…/08-15-2026` ahead of `…/09-19-2026`).
+
+    Only a *demonstrably* expired head is moved: if the first URL carries a
+    day-precision date before today and another URL **on the same host** carries
+    one on or after today, the earliest such upcoming URL leads instead.
+    Everything else keeps the incoming order, so undated links and single-URL
+    events are untouched, and no URL is ever dropped.
+
+    The same-host condition is the over-merge guard. Two of the 16 measured
+    events were cross-site merges wearing a URL-ranking costume — e139847 held
+    an expired `nypl.org` Chair Yoga link beside an upcoming *NYC Parks* one,
+    a different program at a different organization — and promoting across
+    hosts would hand those events a link to somebody else's event.
+    """
+    if len(urls) < 2:
+        return list(urls)
+    head_date = url_embedded_date(urls[0])
+    if head_date is None or head_date >= current_date:
+        return list(urls)
+    head_host = _url_host(urls[0])
+    upcoming = [(url_embedded_date(u), i, u) for i, u in enumerate(urls[1:], 1)
+                if _url_host(u) == head_host]
+    upcoming = [t for t in upcoming if t[0] is not None and t[0] >= current_date]
+    if not upcoming:
+        return list(urls)
+    _, winner_index, winner = min(upcoming)
+    return [winner] + [u for i, u in enumerate(urls) if i != winner_index]
 
 
 def _occurrence_dates(occurrences):
@@ -296,11 +384,14 @@ def export_events(cursor):
         if not occurrences:
             continue
 
-        # Get URLs — events without any URL are not shown on fomo.nyc
+        # Get URLs — events without any URL are not shown on fomo.nyc.
+        # `sort_order` is not unique per event, so `id` breaks the tie
+        # deterministically instead of leaving it to the query plan; then
+        # `order_event_urls` moves an expired dated permalink off the front.
         cursor.execute("""
-            SELECT url FROM event_urls WHERE event_id = %s ORDER BY sort_order
+            SELECT url FROM event_urls WHERE event_id = %s ORDER BY sort_order, id
         """, (event_id,))
-        urls = [r[0] for r in cursor.fetchall()]
+        urls = order_event_urls([r[0] for r in cursor.fetchall()], current_date)
         if not urls:
             continue
 
@@ -638,3 +729,364 @@ def export_organizers(cursor, organizer_ids=None):
         json.dump(organizers, f, separators=(',', ':'), ensure_ascii=False)
 
     print(f"  Exported {len(organizers)} organizers to organizers.json")
+
+
+# ---------------------------------------------------------------------------
+# Public dataset export (NDJSON)
+#
+# Weekly, consumer-facing snapshots served from /exports/ on the website (see
+# uploader.upload_public_dataset): `events-upcoming.ndjson` (the active event
+# window, same eligibility as the frontend export) and `events-past.ndjson`
+# (a rolling window of recently-ended occurrences, archived events included).
+# One JSON object per line, stable documented schema. Unlike the frontend
+# chunks above, this format only changes additively — bump
+# PUBLIC_EXPORT_SCHEMA_VERSION on any breaking change.
+# ---------------------------------------------------------------------------
+
+PUBLIC_EXPORT_SCHEMA_VERSION = 1
+PUBLIC_EXPORT_DIR = os.path.join(SCRIPT_DIR, '..', 'exports')
+# Dated upcoming snapshots kept, locally and on the server (8 ≈ two months).
+PUBLIC_EXPORT_RETENTION = 8
+PUBLIC_EXPORT_INTERVAL_DAYS = 7
+# The past dataset covers occurrences that ended within this many days.
+PUBLIC_EXPORT_PAST_DAYS = 28
+
+_DATED_EXPORT_RE = re.compile(r'^events-upcoming-(\d{4}-\d{2}-\d{2})\.ndjson$')
+
+
+def _list_dated_exports(export_dir):
+    """Sorted (date_str, filename) pairs for dated snapshots in export_dir."""
+    if not os.path.isdir(export_dir):
+        return []
+    found = []
+    for name in os.listdir(export_dir):
+        m = _DATED_EXPORT_RE.match(name)
+        if m:
+            found.append((m.group(1), name))
+    return sorted(found)
+
+
+def should_export_public_dataset(today=None, export_dir=PUBLIC_EXPORT_DIR):
+    """True when the newest local dated snapshot is missing or ≥ 7 days old.
+
+    The local dated files ARE the scheduling state: a failed upload deletes the
+    fresh snapshot (see main.py), so the next pipeline run retries.
+    """
+    today = today or datetime.now().date()
+    dated = _list_dated_exports(export_dir)
+    if not dated:
+        return True
+    try:
+        newest = datetime.strptime(dated[-1][0], '%Y-%m-%d').date()
+    except ValueError:
+        return True
+    return (today - newest).days >= PUBLIC_EXPORT_INTERVAL_DAYS
+
+
+def _filter_dedupe_occurrences(rows, keep):
+    """Filter occurrence rows with `keep(start_date, effective_end)` and
+    collapse duplicates; returns dicts sorted by (start_date, start_time).
+
+    rows: (start_date, start_time, end_date, end_time) tuples (dates as date
+    objects, times as canonical strings or None).
+
+    Two collapse rules:
+    - exact duplicates (same four fields) are merged;
+    - a multi-day span fully contained in another span with the same times is
+      dropped (legacy artifact: exhibitions accumulate overlapping span rows,
+      e.g. 06-01→07-05 alongside 06-04→07-05).
+    """
+    in_window = []
+    seen = set()
+    for sd, st, ed, et in rows:
+        if not sd:
+            continue
+        effective_end = ed if ed else sd
+        if not keep(sd, effective_end):
+            continue
+        key = (sd, st or None, ed, et or None)
+        if key in seen:
+            continue
+        seen.add(key)
+        in_window.append((sd, st or None, ed, et or None))
+
+    # Containment collapse among multi-day spans sharing start/end times.
+    spans = [(sd, st, ed, et) for (sd, st, ed, et) in in_window if ed and ed > sd]
+    contained = set()
+    for a in spans:
+        for b in spans:
+            if a is b or b in contained:
+                continue
+            if (a[1], a[3]) == (b[1], b[3]) and a[0] <= b[0] and b[2] <= a[2] \
+                    and (a[0], a[2]) != (b[0], b[2]):
+                contained.add(b)
+
+    result = [
+        {
+            'start_date': sd.isoformat(),
+            'start_time': st,
+            'end_date': ed.isoformat() if ed else None,
+            'end_time': et,
+        }
+        for (sd, st, ed, et) in in_window if (sd, st, ed, et) not in contained
+    ]
+    result.sort(key=lambda o: (o['start_date'], o['start_time'] or ''))
+    return result
+
+
+def dedupe_public_occurrences(rows, current_date, future_limit_date):
+    """Occurrences overlapping the active window [current_date, future_limit_date]."""
+    return _filter_dedupe_occurrences(
+        rows, lambda sd, end: sd <= future_limit_date and end >= current_date)
+
+
+def dedupe_past_occurrences(rows, current_date, lookback_days=PUBLIC_EXPORT_PAST_DAYS):
+    """Occurrences that ENDED within the last `lookback_days` days.
+
+    Strictly before `current_date` — an ongoing occurrence (end today or later)
+    belongs to the upcoming dataset, not the past one.
+    """
+    earliest = current_date - timedelta(days=lookback_days)
+    return _filter_dedupe_occurrences(
+        rows, lambda sd, end: earliest <= end < current_date)
+
+
+def write_ndjson(records, path):
+    """Write records as UTF-8 NDJSON (one compact JSON object per line)."""
+    with open(path, 'w', encoding='utf-8') as f:
+        for record in records:
+            f.write(json.dumps(record, separators=(',', ':'), ensure_ascii=False))
+            f.write('\n')
+
+
+def export_public_datasets(cursor, export_date=None, export_dir=PUBLIC_EXPORT_DIR):
+    """Export the public NDJSON dataset snapshots (upcoming + past).
+
+    Writes exports/events-upcoming-YYYY-MM-DD.ndjson (dated snapshot of the
+    active window; local snapshots beyond PUBLIC_EXPORT_RETENTION are pruned),
+    exports/events-past.ndjson (occurrences that ended within the last
+    PUBLIC_EXPORT_PAST_DAYS days), and a manifest.json sidecar.
+
+    Upcoming eligibility mirrors the frontend export: active window, not
+    archived/suppressed, mapped to a location with coordinates, at least one
+    URL, aggregator trust gate. The past dataset uses the same rules except
+    archived events are INCLUDED — ended events get archived once their source
+    stops listing them, and they are precisely the past dataset's subject. An
+    event straddling today appears in both files, its occurrences split.
+
+    Returns {'upcoming': {...}, 'past': {...}, 'manifest_path': ...}.
+    """
+    export_date = export_date or datetime.now().date()
+    os.makedirs(export_dir, exist_ok=True)
+
+    current_date, future_limit_date = get_active_date_window()
+    past_earliest = current_date - timedelta(days=PUBLIC_EXPORT_PAST_DAYS)
+    parent_map = _load_parent_map(cursor)
+
+    cursor.execute("""
+        SELECT e.id, e.name, e.short_name, e.description, e.emoji,
+               e.event_type, e.location_name, e.sublocation, e.website_id,
+               l.id, l.name, l.address, l.lat, l.lng, e.archived
+        FROM events e
+        JOIN locations l ON e.location_id = l.id
+        LEFT JOIN websites w ON e.website_id = w.id
+        WHERE l.lat IS NOT NULL AND l.lng IS NOT NULL
+          AND e.suppressed = FALSE
+          AND (
+            w.id IS NULL
+            OR w.source_type = 'primary'
+            OR w.disabled = FALSE
+            OR EXISTS (
+                SELECT 1 FROM event_sources es
+                JOIN crawl_events ce ON es.crawl_event_id = ce.id
+                JOIN crawl_results cr ON ce.crawl_result_id = cr.id
+                JOIN websites w2 ON cr.website_id = w2.id
+                WHERE es.event_id = e.id AND w2.source_type = 'primary'
+            )
+          )
+    """)
+    event_rows = cursor.fetchall()
+    event_ids = [r[0] for r in event_rows]
+
+    # Bulk prefetches (chunked IN(...)): occurrences, tags, urls. Row order
+    # within an event doesn't need to match the frontend export — records are
+    # re-sorted deterministically below.
+    occurrences_by_id = {}
+    tags_by_id = {}
+    urls_by_id = {}
+    for i in range(0, len(event_ids), 1000):
+        chunk = event_ids[i:i + 1000]
+        placeholders = ','.join(['%s'] * len(chunk))
+        cursor.execute(f"""
+            SELECT event_id, start_date, start_time, end_date, end_time
+            FROM event_occurrences
+            WHERE event_id IN ({placeholders})
+            ORDER BY event_id, start_date, start_time
+        """, tuple(chunk))
+        for eid, sd, st, ed, et in cursor.fetchall():
+            occurrences_by_id.setdefault(eid, []).append((sd, st, ed, et))
+        cursor.execute(f"""
+            SELECT et.event_id, t.name FROM event_tags et
+            JOIN tags t ON et.tag_id = t.id
+            WHERE et.event_id IN ({placeholders})
+            ORDER BY et.event_id, et.tag_id
+        """, tuple(chunk))
+        for eid, tag in cursor.fetchall():
+            tags_by_id.setdefault(eid, []).append(tag)
+        cursor.execute(f"""
+            SELECT event_id, url FROM event_urls
+            WHERE event_id IN ({placeholders})
+            ORDER BY event_id, sort_order, id
+        """, tuple(chunk))
+        for eid, url in cursor.fetchall():
+            urls_by_id.setdefault(eid, []).append(url)
+
+    # Source websites per event (merged events carry several), for organizer
+    # attribution — same resolution as the frontend export.
+    source_sites_by_event = {}
+    cursor.execute("""
+        SELECT es.event_id, cr.website_id
+        FROM event_sources es
+        JOIN crawl_events ce ON es.crawl_event_id = ce.id
+        JOIN crawl_results cr ON ce.crawl_result_id = cr.id
+        WHERE cr.website_id IS NOT NULL
+    """)
+    for ev_id, src_wid in cursor.fetchall():
+        source_sites_by_event.setdefault(ev_id, set()).add(src_wid)
+
+    upcoming_records = []
+    past_records = []
+    referenced_roots = set()
+    organizer_ids_by_event = {}
+    for row in event_rows:
+        (event_id, name, short_name, description, emoji, event_type,
+         location_name, sublocation, website_id,
+         loc_id, loc_name, loc_address, lat, lng, archived) = row
+
+        occ_rows = occurrences_by_id.get(event_id, [])
+        # Archived events are excluded from the upcoming dataset (their source
+        # no longer lists them) but are the past dataset's bread and butter.
+        upcoming_occ = [] if archived else dedupe_public_occurrences(
+            occ_rows, current_date, future_limit_date)
+        past_occ = dedupe_past_occurrences(occ_rows, current_date)
+        if not upcoming_occ and not past_occ:
+            continue
+
+        urls = order_event_urls(urls_by_id.get(event_id, []), current_date)
+        if not urls:
+            continue  # events without any URL are not shown on the site
+
+        location = {
+            'location_id': loc_id,
+            'name': loc_name or location_name,
+            'lat': float(lat),
+            'lng': float(lng),
+        }
+        if loc_address:
+            location['address'] = loc_address
+        if sublocation and not sublocation_redundant_with_address(sublocation, loc_address):
+            location['sublocation'] = sublocation
+
+        base = {
+            'event_id': event_id,
+            'name': name,
+            'location': location,
+            'urls': urls,
+            'tags': tags_by_id.get(event_id, []),
+        }
+        if short_name and short_name != name:
+            base['short_name'] = short_name
+        if event_type:
+            base['event_type'] = event_type
+        if emoji:
+            base['emoji'] = emoji
+        if description:
+            base['description'] = description
+
+        organizer_ids = []
+        if website_id:
+            organizer_ids.append(_resolve_root(website_id, parent_map))
+        for src_wid in sorted(source_sites_by_event.get(event_id, set())):
+            root = _resolve_root(src_wid, parent_map)
+            if root not in organizer_ids:
+                organizer_ids.append(root)
+        organizer_ids_by_event[event_id] = organizer_ids
+        referenced_roots.update(organizer_ids)
+
+        if upcoming_occ:
+            upcoming_records.append(dict(base, occurrences=upcoming_occ))
+        if past_occ:
+            past_records.append(dict(base, occurrences=past_occ))
+
+    # Resolve organizer roots to names/urls; aggregators (Eventbrite, RA, …)
+    # are platforms, not organizers, and are excluded — matching organizers.json.
+    organizers_by_root = {}
+    if referenced_roots:
+        placeholders = ','.join(['%s'] * len(referenced_roots))
+        cursor.execute(f"""
+            SELECT w.id, w.name, w.base_url FROM websites w
+            WHERE w.source_type <> 'aggregator' AND w.id IN ({placeholders})
+        """, tuple(referenced_roots))
+        for wid, wname, wurl in cursor.fetchall():
+            org = {'name': wname}
+            if wurl:
+                org['url'] = wurl
+            organizers_by_root[wid] = org
+
+    for record in upcoming_records + past_records:
+        organizers = [organizers_by_root[oid]
+                      for oid in organizer_ids_by_event[record['event_id']]
+                      if oid in organizers_by_root]
+        if organizers:
+            record['organizers'] = organizers
+
+    for records in (upcoming_records, past_records):
+        records.sort(key=lambda r: (r['occurrences'][0]['start_date'], r['event_id']))
+
+    upcoming_filename = f"events-upcoming-{export_date.isoformat()}.ndjson"
+    upcoming_path = os.path.join(export_dir, upcoming_filename)
+    write_ndjson(upcoming_records, upcoming_path)
+
+    past_filename = 'events-past.ndjson'
+    past_path = os.path.join(export_dir, past_filename)
+    write_ndjson(past_records, past_path)
+
+    manifest = {
+        'schema_version': PUBLIC_EXPORT_SCHEMA_VERSION,
+        'generated_at': datetime.now().astimezone().isoformat(timespec='seconds'),
+        'update_cadence': 'weekly',
+        'attribution': 'Data from fomo.nyc',
+        'datasets': {
+            'upcoming': {
+                'file': 'events-upcoming.ndjson',
+                'latest_snapshot': upcoming_filename,
+                'event_count': len(upcoming_records),
+                'window': {'from': current_date.isoformat(),
+                           'to': future_limit_date.isoformat()},
+            },
+            'past': {
+                'file': past_filename,
+                'event_count': len(past_records),
+                'window': {'from': past_earliest.isoformat(),
+                           'to': (current_date - timedelta(days=1)).isoformat()},
+            },
+        },
+    }
+    manifest_path = os.path.join(export_dir, 'manifest.json')
+    with open(manifest_path, 'w', encoding='utf-8') as f:
+        json.dump(manifest, f, indent=2, ensure_ascii=False)
+
+    # Prune local dated snapshots beyond retention (newest kept).
+    dated = _list_dated_exports(export_dir)
+    for _, old_name in dated[:-PUBLIC_EXPORT_RETENTION]:
+        os.remove(os.path.join(export_dir, old_name))
+
+    print(f"  Exported {len(upcoming_records)} upcoming events to exports/{upcoming_filename}")
+    print(f"  Exported {len(past_records)} past events to exports/{past_filename}")
+    return {
+        'upcoming': {'events': len(upcoming_records), 'filename': upcoming_filename,
+                     'path': upcoming_path},
+        'past': {'events': len(past_records), 'filename': past_filename,
+                 'path': past_path},
+        'manifest_path': manifest_path,
+    }
