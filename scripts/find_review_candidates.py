@@ -229,7 +229,15 @@ PATTERNS = [
             SELECT DISTINCT e.id FROM events e
             WHERE e.archived = 0 AND e.reviewed = 0
               AND (
-                e.name REGEXP '(Sale|Shop|Store|Boutique)$'
+                -- The leading (^|space|hyphen) is load-bearing: a bare
+                -- '(Sale|Shop|Store|Boutique)$' matches the TAIL of ordinary words and
+                -- flooded this queue with real programming — "Workshop" (235 rows),
+                -- "Bishop" ("An Evening with Kelly Bishop"), "Bookshop"/"Bookstore"
+                -- (author events at Astoria Bookshop, Greenlight Bookstore) and
+                -- "Restore" ("Women Who Restore"). Measured 2026-08-16: 267 matches
+                -- → 26, and every dropped row ended in one of those words. The hyphen
+                -- alternative keeps genuinely-hyphenated shops ("Rex's Dino-Store").
+                e.name REGEXP '(^|[[:space:]]|-)(Sale|Shop|Store|Boutique)$'
                 OR e.name LIKE '%Grand Opening%'
                 OR e.name LIKE '%Now Open%'
                 OR e.name LIKE '%% Off%'
@@ -568,6 +576,47 @@ PATTERNS = [
         # moment the AI also assigns Community/Tacos/etc. This catches the rest.
         # The programming guard keeps a genuinely-programmed weekly night (live
         # music, DJ, trivia) from being flagged even if mistagged "Weekly Special".
+        #
+        # THIS PATTERN OWNS THE WEEKDAY FOOD/DRINK-SPECIAL CLASS. An automatic
+        # drop in processor.is_obvious_non_event was prototyped for it twice and
+        # rejected both times (see the rejected-siblings block there): the call
+        # is a venue-by-venue judgment, not a fact — "Whiskey Wednesday" (18533)
+        # and "Happy Hour Friday" (139462) were reviewed and KEPT while the
+        # near-identical "Taco Tuesday" (210703) and "Steak Monday" (138556)
+        # were reviewed and suppressed. Keep it here, where the call stays
+        # visible and reversible.
+        #
+        # 2026-08-17: the offer gate now also accepts "Special(s)" in the NAME.
+        # The 2026-08-11 classifier found Bear Mountain Inn's (w4738) standing
+        # weekly offerings — e216685 "Tuesday Burger Special", e216686 "Cellar
+        # Wine Wednesdays", e216689 "Sunday Brunch at Restaurant 1915" — and the
+        # scheduled task asked for exactly one thing: make sure THIS pattern
+        # surfaces the family reliably, since an automatic processor rule for it
+        # is a documented rejection. It did not. All three cleared the cadence
+        # gate, but e216685's body is pure value-marketing with no number and no
+        # literal "special" ("Big flavors, bigger value ... Available open to
+        # close every Tuesday") — the word lives only in its title.
+        #
+        # Measured: cadence + name-"Special" + the programming veto matches 7
+        # events DB-wide, ALL of them dining specials and ZERO reviewed-and-kept
+        # (4 already suppressed by hand, 3 untouched). A widening keyed on
+        # dining vocabulary instead ("bottles", "our legendary", "prix fixe")
+        # was prototyped in the same pass and REJECTED: its one net-new match
+        # was e204628 "Gumpy", a real Legendary Locals music night that the
+        # programming veto failed to spare.
+        #
+        # 2026-08-09: the "specials" description gate was too literal to catch
+        # Greenwood Park's rows ("$5 tacos and half-price margaritas ... every
+        # Tuesday", "Buy any burger and get a free beer on Mondays") — they
+        # state the offer without ever using the word "special", so all three
+        # reached the map and were hand-suppressed at classification. Gate
+        # widened to bare price-offer language, and the programming guard
+        # extended in the same pass so the widening doesn't sweep in real weekly
+        # nights (verified spared: "Wednesday Pinball League", "Thursgay"
+        # aperitivo night, "Bingo Wednesday", "Throwback Sing-Along Bottomless
+        # Brunch"). Blank-description rows like "Sunday Funday" (215105) stay
+        # deliberately uncovered — "Sunday Funday" is a real party name at
+        # plenty of venues and the name alone carries no signal.
         'id': 31,
         'name': 'Recurring dining/drink specials (no programming)',
         'query': r"""
@@ -580,14 +629,17 @@ PATTERNS = [
                 )
                 OR (
                   e.description REGEXP '(weekly|every (mon|tues|wednes|thurs|fri|satur|sun)day|on (mon|tues|wednes|thurs|fri|satur|sun)days?)'
-                  AND e.description REGEXP '[[:<:]]specials?[[:>:]]'
+                  AND (
+                    e.description REGEXP '([[:<:]]specials?[[:>:]]|\\$[0-9]|half[ -]?price|half[ -]?off|[0-9]+% off|[[:<:]]buy[[:>:]].{0,30}[[:<:]]get[[:>:]])'
+                    OR e.name REGEXP '[[:<:]]specials?[[:>:]]'
+                  )
                 )
               )
               AND (
                 e.description IS NULL
                 OR e.description = ''
                 OR e.description = 'No description available.'
-                OR e.description NOT REGEXP '(perform|live music|live act|dj |featuring|guest |host|comedian|comedy|trivia|karaoke|workshop|class|tour|reading|talk|panel|dance|fireworks|parade|watch party|screening|game|tournament|festival|celebration|programming)'
+                OR e.description NOT REGEXP '(perform|live music|live act|dj |featuring|guest |host|comedian|comedy|trivia|karaoke|workshop|class|tour|reading|talk|panel|dance|fireworks|parade|watch party|screening|game|tournament|festival|celebration|programming|bingo|league|sing-?along|open mic|jam|quiz|aperitivo|book club|movie|film|concert|show)'
               )
         """,
     },
@@ -609,6 +661,114 @@ PATTERNS = [
             SELECT DISTINCT e.id FROM events e
             WHERE e.archived = 0 AND e.reviewed = 0
               AND e.name REGEXP '[[:<:]](open([[:space:]]+for)?|public)[[:space:]]+bowling[[:>:]]'
+        """,
+    },
+    {
+        # Ticket giveaways/distributions for an event happening SOMEWHERE ELSE.
+        # Three "Shakespeare in the Park … Free Tickets Giveaway" rows reached
+        # the map from three Queens Public Library branches on 2026-08-05 (the
+        # play is in Central Park), and were only caught downstream by the
+        # event-type classifier labelling them UNKNOWN.
+        #
+        # This is REVIEW-ONLY on purpose — it was prototyped as an automatic
+        # `is_obvious_non_event` rule and rejected. Of 6 DB-wide matches,
+        # e191251 "Free Shakespeare in the Park Ticket Giveaway" at Snug Harbor
+        # is a REAL attendable in-person distribution event. A promo notice and
+        # a distribution event are not separable from the text, so a human
+        # decides. See the rejection note in processor.is_obvious_non_event.
+        'id': 33,
+        'name': 'Ticket giveaway/distribution (event is elsewhere)',
+        'query': r"""
+            SELECT DISTINCT e.id FROM events e
+            WHERE e.archived = 0 AND e.reviewed = 0
+              AND e.name REGEXP '[[:<:]](free[[:space:]]+)?tickets?[[:space:]]+giveaway[[:>:]]'
+        """,
+    },
+    {
+        # Standing food/drink features branded as their own name ("Taco
+        # Tuesday", "Jerk Fest"), which the processor's _MENU_SPECIAL_NAME_RE
+        # misses because it expects a literal "Lunch Specials" shape.
+        #
+        # Also REVIEW-ONLY by measurement: gating on the dining-offer
+        # description alone matched 109 events DB-wide, many of them real —
+        # "Soul Supper - Live Motown & Soul Dining Experience", the immersive
+        # murder mystery "Speakeasy, Die Softly", the "Month Of Love" jazz
+        # series, a community potluck. A multi-course meal is a very common
+        # COMPONENT of a real event, so the programming veto below is wide and
+        # a human still makes the call.
+        'id': 34,
+        'name': 'Standing food/drink feature (no programming)',
+        'query': r"""
+            SELECT DISTINCT e.id FROM events e
+            WHERE e.archived = 0 AND e.reviewed = 0
+              AND e.description REGEXP '(all[- ]you[- ]can[- ]eat|prix[- ]?fixe|(two|three|four|multi)[- ]course|dining experience|offers a choice of)'
+              AND e.description NOT REGEXP '(dj|live|perform|artist|musician|band|comedy|comedian|trivia|bingo|karaoke|screening|concert|class|workshop|tasting|tour|potluck|immersive|murder mystery|ticket|rsvp|fundrais|benefit|gala)'
+              AND e.name NOT REGEXP '(party|gala|concert|show|festival|series|supper club|dinner party|celebration|new year|valentine)'
+        """,
+    },
+    {
+        # Awareness-observance titles ("National … Day/Week", "World … Day")
+        # published as events when nothing is actually being held — either a
+        # park conservancy inviting you to visit on your own ("Fort Tryon Park
+        # is the perfect place to celebrate National Walk Your Dog Week") or a
+        # bar hanging a promo on the calendar ("National Chicken Wing Day").
+        # Raised by the 2026-07-16 run's Step 4, which suppressed four by hand.
+        #
+        # REVIEW-ONLY by measurement, and emphatically so: as an automatic
+        # `is_obvious_non_event` rule the bare title shape matched 75 events
+        # DB-wide and the large majority are REAL programming — World Tai Chi
+        # Day at Bryant Park (free instruction), National Trails Day (a hike),
+        # World Fish Migration Day (seining the Harlem River), National
+        # Scrabble Day, World Circus Day. Scoping it to the Parks source that
+        # raised it does not rescue it either: Fort Tryon's own "National
+        # Wildflower Week" and "World Migratory Bird Day" are guided tours and
+        # bird walks. Only the DESCRIPTION separates junk from real, and only
+        # fuzzily, so a human decides. See the rejection note in
+        # processor.is_obvious_non_event.
+        #
+        # The programming veto below is what keeps this queue small (9 live
+        # candidates vs 13 on the bare title shape) — widen it, don't narrow it.
+        'id': 35,
+        'name': 'Awareness observance with no programming',
+        'query': r"""
+            SELECT DISTINCT e.id FROM events e
+            WHERE e.archived = 0 AND e.reviewed = 0
+              AND e.name REGEXP '^(national|world|international)[[:space:]].+[[:space:]](day|week|month)$'
+              AND COALESCE(e.description,'') NOT REGEXP '(join|guided|instruct|demonstrat|[[:<:]]tour|[[:<:]]walk|hike|workshop|class|register|rsvp|ticket|perform|speaker|activit|station|seine|volunteer|screening|concert|party|festival)'
+        """,
+    },
+    {
+        # A bookable party PACKAGE with no rental vocabulary. e217188 "Pool
+        # Birthday Party" (Commonpoint Bronx, w3027): "120 minute pool party.
+        # Party host, pool space, and party decor is provided." It is a facility
+        # rental, but it never says "rental", "reserve", "booking" or "room", so
+        # every `is_obvious_non_event` booking arm misses it. The only tell is
+        # that it is described in AMENITIES SUPPLIED terms — "X is provided",
+        # a duration, a host.
+        #
+        # REVIEW-ONLY by measurement, and this is the disposition the scheduled
+        # task asked for if precision was not compelling. Both gates are very
+        # live in isolation over all 191,070 events: the party-noun name gate
+        # alone matches 186 rows (10 live, 2 reviewed-and-KEPT — "Homeboy
+        # Steve's Birthday Party with The Blue Chieftains", "Commonpoint Bronx
+        # Back-to-School Pool Party", a free family event at the SAME venue);
+        # the amenities description gate alone matches 974 rows (102 live, 94
+        # reviewed-and-KEPT — every D&D one-shot "where all materials are
+        # provided", every drop-in drawing session).
+        #
+        # Their conjunction matches exactly ONE row DB-wide (e217188 itself,
+        # already suppressed), 0 reviewed-and-kept. One row of yield resting on
+        # two words that carry hundreds of real events between them is the same
+        # shape as the refuted "dark night" arm, so it does not go in the
+        # processor — it goes here, where the call stays visible and reversible.
+        'id': 36,
+        'name': 'Amenities-supplied party package (facility rental)',
+        'query': r"""
+            SELECT DISTINCT e.id FROM events e
+            WHERE e.archived = 0 AND e.reviewed = 0
+              AND e.name REGEXP '[[:<:]](birthday|anniversary|graduation|corporate|kids?|children.?s?|teen|pool|private|group)[[:space:]]+part(y|ies)[[:>:]]'
+              AND e.description REGEXP '((is|are)[[:space:]]+provided|we[[:space:]]+provide|party[[:space:]]+host|party[[:space:]]+decor)'
+              AND e.description NOT REGEXP '(perform|live music|dj|band|comedian|comedy|screening|concert|festival|fundrais|benefit|ticket|rsvp|open to the public|all ages welcome|free)'
         """,
     },
 ]

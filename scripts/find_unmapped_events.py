@@ -45,14 +45,36 @@ SKIP_LOCATION_NAMES = {
     'no location provided', 'off campus', 'various', 'not provided',
     'zoom/online', 'live on zoom', 'via webex platform', 'virtual/online workshop',
     'off-site', 'main stage', 'open streets program',
+    'virtual on zoom', 'zoom virtual meeting', 'zoom (from your home)',
+    'varies', 'varies by session', 'see the flyer', 'please see the flyer.',
+    'nyc (to be confirmed)', 'hidden until attendee is approved',
+    'location visible to members', 'location to be revealed',
+    'location to be determined', 'details tba', 'around the boroughs',
+    'citywide', 'teams', 'nyc multiple locations', 'various nyc locations',
+    'various historic sites', 'new york (exact location unspecified)',
     'remote', 'google meet', 'google hangouts', 'microsoft teams', 'your phone',
     'online streaming', 'online through zoom', 'online live', 'online streaming, new york',
     'various locations', 'various sites', 'multiple locations', 'virtual/online events',
+    'various nyc venues', 'the pier',
     'secret brooklyn location', 'tba - open air', 'details tba.', 'please see the flyer',
     # theater chain brand names (events correctly mapped to specific theaters)
     'amc theatres', 'amc theater', 'amc theatre', 'regal cinemas', 'regal cinema',
+    # aggregator/host ORG names that the source emits as location_name for every
+    # listing — the real venue arrives from the listing body, so a "mismatch"
+    # against it is meaningless (NYC Service, New York Cares, Hudson County…).
+    'nyc service', 'new york cares', 'nyc parks greenthumb', 'bowery boys walks',
+    'hudson county, nj, hudson county, new jersey',
+    'black health matters', 'harlem week inc.', 'harlem week inc',
+    'monmouth county park system', 'union county park', 'union county parks',
+    # chain "pick a branch" strings — the real branch comes from the listing URL
+    'total wine & more | multiple locations, nearby',
+    # remote venue/event named only because the mapped venue is BROADCASTING or
+    # performing AT it (cinema simulcasts, marathon-route performances)
+    'xfinity mobile arena', 'nyc marathon', 'tcs new york city marathon',
     # generic sublocation labels (room/area within mapped venue)
     'the rooftop', 'full venue', 'poolside', 'main hall', 'main room',
+    'play area', 'playground', 'multi-use room', 'parking lot',
+    'main pool', 'our tent',
     'concert hall', 'screen 1', 'community board office - conference room',
     # vague geo labels
     'brooklyn, new york', 'midtown, new york', 'manhattan (exact location unspecified)',
@@ -61,12 +83,54 @@ SKIP_LOCATION_NAMES = {
     # pinned venue is meaningless noise (walking-tour sites emit these for every event).
     'new york', 'new york city', 'nyc', 'new york, ny', 'new york city (exact location unspecified)',
     'manhattan', 'brooklyn', 'queens', 'bronx', 'staten island',
+    'east side, new york, ny', 'west side, new york, ny',
+    # bare avenue/street names — the mapped venue is the market/plaza ON that
+    # street, so the "mismatch" is just the street name minus the venue name.
+    '4th avenue', 'atlantic avenue', 'broad street',
+    # room/area descriptors, tabling spots, and one-off series names that sit
+    # inside the mapped venue
+    'cafe area', 'deadass', 'manhattan venue',
+    'montefiore organ/tissue donation', 'montefiore organ/ tissue donation',
+    # neighborhood labels that are NOT generic_location rows (so the placeholder
+    # check below can't catch them) but still carry no venue information
+    'red hook',
+    # host ORG emitted as the venue by its own site
+    'community-word project',
+    # chain branch names — the real branch comes from the listing body/URL.
+    # Skip-listing (rather than aliasing) is deliberate: an alt would silently
+    # hijack every other branch of the chain to this one venue.
+    'td bank',
+}
+
+# Websites whose feed emits the HOST/PARTNER ORG as `location_name` for every
+# listing, by design — the real venue lives in a different field. New York Cares
+# is the clearest case: its session API carries the venue in `Location_Name__tl`
+# while `Community_Partner_Name__tl` (the partner charity: KEEN New York, City
+# Harvest, Achilles International, BloomAgainBklyn…) is what gets extracted. A
+# MISMATCHED verdict against a partner name is meaningless, and the partner list
+# is open-ended, so skip the class for these sources rather than enumerating
+# every charity in SKIP_LOCATION_NAMES.
+SKIP_MISMATCH_WEBSITES = {
+    'New York Cares',
+    'NYC Service',
 }
 
 # Street-intersection patterns: outdoor markets / waste drop-offs / flea markets
 # whose location_name names the street but whose mapping to a specific venue is
 # correct.
 SKIP_LOCATION_NAME_SUBSTRINGS = (' between ', ' btwn ')
+
+# Prefixes for "location withheld until later" labels. Resident Advisor in
+# particular emits a long tail of unique strings ('TBA - Secret Bedstuy Loft',
+# 'TBA - WAREHOUSE TBA', 'TBA - Brooklyn Open Air', …) that can never resolve to
+# a venue; matching the prefix keeps them out of the queue without listing each.
+SKIP_LOCATION_NAME_PREFIXES = (
+    'tba -', 'tba-', 'tba —', 'tba, ', 'location tba', 'location to be announced',
+    'location announced', 'location annouced', 'venue tba', 'venue not specified',
+    'private residence', 'secret location',
+    # 'Online, 7–9 PM' and friends — an online label with a time tacked on
+    'online,', 'online -', 'online (', 'virtual,', 'virtual -',
+)
 
 ISSUE_ORDER = ('NO_LOCATION', 'GENERIC', 'MISMATCHED')
 
@@ -99,11 +163,30 @@ def load_data(cursor, website_filter=None):
     for row in cursor.fetchall():
         alts_by_loc[row['location_id']].append((row['alternate_name'], row['website_id']))
 
+    # Cache the placeholder names so classify() can recognise a location_name
+    # that is merely a neighborhood/borough label. Populated here (rather than
+    # returned) so the (events, alts_by_loc) contract stays intact for callers.
+    cursor.execute("SELECT name FROM locations WHERE generic_location = 1")
+    _GENERIC_NAMES.clear()
+    _GENERIC_NAMES.update(
+        n for n in (_normalize_location_name(r['name'] or '') for r in cursor.fetchall()) if n
+    )
+
     return events, alts_by_loc
 
 
-def classify(event, alts_by_loc):
-    """Return one of NO_LOCATION / GENERIC / MISMATCHED / None."""
+# Normalized names of every generic_location=1 row; filled by load_data().
+_GENERIC_NAMES = set()
+
+
+def classify(event, alts_by_loc, generic_names=None):
+    """Return one of NO_LOCATION / GENERIC / MISMATCHED / None.
+
+    `generic_names` is the set of normalized names of every generic_location=1
+    row. A location_name that merely repeats a neighborhood/borough placeholder
+    ('Greenpoint', 'Harlem', 'Red Hook', 'Times Square') carries no venue
+    information, so it can never contradict the specific venue it is pinned to.
+    """
     if event['location_id'] is None:
         return 'NO_LOCATION'
 
@@ -114,10 +197,18 @@ def classify(event, alts_by_loc):
     if len(location_name) < 3:
         return None
 
+    if (event['website_name'] or '') in SKIP_MISMATCH_WEBSITES:
+        return None
+
     ln_lower = location_name.lower()
     if ln_lower in SKIP_LOCATION_NAMES:
         return None
+    if _normalize_location_name(location_name) in (
+            _GENERIC_NAMES if generic_names is None else generic_names):
+        return None
     if any(s in ln_lower for s in SKIP_LOCATION_NAME_SUBSTRINGS):
+        return None
+    if ln_lower.startswith(SKIP_LOCATION_NAME_PREFIXES):
         return None
 
     n_loc = _normalize_location_name(location_name)

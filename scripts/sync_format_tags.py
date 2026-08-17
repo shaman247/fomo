@@ -8,7 +8,7 @@ Two phases (run both by default):
   --build   Ensure the tag nodes + hierarchy edges exist:
               Format (root)
                 └─ Performance / Participatory / Browsable / Social / Gathering / Excursions
-                     └─ the 32 event-type leaves
+                     └─ the 33 event-type leaves
             Promotes keyword tags to curated (type='tag'), fills missing emojis,
             and wires edges. Idempotent.
 
@@ -17,7 +17,7 @@ Two phases (run both by default):
             category + Format root are (re)applied; stale Format-axis rows are
             cleared first so reclassifications are reflected.
 
-Authoritative vs union: 24 of the 32 leaves are Format-only nodes — their
+Authoritative vs union: 25 of the 33 leaves are Format-only nodes — their
 membership becomes EXACTLY event_type. The other 8 (Concert, Sports, Reading,
 Workshop, Fitness, Volunteer, Party, Festival) also exist as content-genre nodes
 with their own subtrees, so they are multi-parented (kept under their genre root
@@ -140,12 +140,22 @@ def sync_event_tags(cur, conn):
         ins.append((eid, leaf_id[etype]))
         ins.append((eid, cat_id[type_cat[etype]]))
         ins.append((eid, root))
-    cur.executemany(
-        "INSERT IGNORE INTO event_tags (event_id, tag_id) VALUES (%s,%s)", ins
-    )
+    # Insert in chunks. mysql-connector's executemany collapses the whole list
+    # into ONE multi-row INSERT statement, so a single call scales with the
+    # active-event count and eventually exceeds `max_allowed_packet` — which it
+    # did on 2026-08-06 at ~26.5K active events (~79.6K tuples), aborting the
+    # sync AFTER the wipe DELETE had run. The DELETE rolled back with the failed
+    # transaction so no data was lost, but the sync silently did nothing.
+    # Chunking keeps each statement small and bounded regardless of DB size.
+    CHUNK = 5000
+    for i in range(0, len(ins), CHUNK):
+        cur.executemany(
+            "INSERT IGNORE INTO event_tags (event_id, tag_id) VALUES (%s,%s)",
+            ins[i:i + CHUNK],
+        )
     conn.commit()
     print(f"  sync: wiped {wiped} stale Format rows; applied to {len(rows)} active events "
-          f"({len(ins)} tag rows inserted, dupes ignored)")
+          f"({len(ins)} tag rows inserted in chunks of {CHUNK}, dupes ignored)")
 
 
 def print_stats(cur):

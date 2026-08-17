@@ -67,7 +67,13 @@ def gen_monthly_nth_weekday(first, weekday, ordinal, end):
 
 # Continuously-on-view events: a long span is CORRECT for these; their discrete
 # dates are receptions/markers, not the only days they're open. Never touch them.
-EXHIBITION_KW = ('exhibition', 'on view', 'on display', 'available for viewing',
+# NOTE the bare stem 'exhibit' (not 'exhibition'): galleries write "the exhibit
+# features..." as often as "exhibition", and the longer form let ev214863 "Then
+# and Now" (Lagstein Gallery) reach COURSE_WEEKLY as a 28-day same-weekday span
+# — applying would have replaced a continuous show with 5 invented Sundays.
+# 'exhibit' subsumes exhibition/exhibits/exhibiting and only ever pushes an
+# event toward LIKELY_OK, which is the safe direction.
+EXHIBITION_KW = ('exhibit', 'on view', 'on display', 'available for viewing',
                  'retrospective', 'installation', 'survey of', 'biennial', 'group show',
                  'solo show', 'now on view')
 
@@ -77,6 +83,30 @@ RECUR_RE = re.compile(
     r'\b(weekly|bi-?weekly|monthly|every (?:other )?(?:week|month|mon|tues|wednes|thurs|fri|satur|sun)\w*|'
     r'each (?:week|month)|recurring|mondays|tuesdays|wednesdays|thursdays|fridays|saturdays|sundays)\b',
     re.I)
+
+# Weekday names STATED in the text, used to contradict a weekday inferred from a
+# span's endpoints.
+#
+# COURSE_WEEKLY reads the meeting day off the span endpoints, and accepts a
+# recurrence keyword as corroboration. Those two can disagree, and when they do the
+# endpoints are the ones lying: e215602 "2026 Williamsburg Softball Fall League"
+# runs Oct 1 -> Dec 10, both THURSDAYS, while its own description says games are
+# "on Sundays ONLY" (Oct 1 / Dec 10 are administrative season bounds, not game
+# days). The keyword "Sundays" corroborated the shape, so the fix would have
+# confidently written 11 Thursday dates for a league that never plays Thursdays.
+#
+# So: if the text names weekdays at all, an inferred day that is not among them is
+# a contradiction, not a match. Stated evidence beats inferred structure.
+WEEKDAY_NAMES = {'monday': 0, 'tuesday': 1, 'wednesday': 2, 'thursday': 3,
+                 'friday': 4, 'saturday': 5, 'sunday': 6}
+STATED_WEEKDAY_RE = re.compile(
+    r'\b(mon|tues|wednes|thurs|fri|satur|sun)day s?\b'.replace(' ', ''), re.I)
+
+
+def stated_weekdays(blob):
+    """Set of weekday numbers explicitly named in the text (empty if none)."""
+    return {WEEKDAY_NAMES[m.group(0).lower().rstrip('s')]
+            for m in STATED_WEEKDAY_RE.finditer(blob)}
 # Multi-session PROGRAM signal — a thing that meets on specific (sparse) days but
 # was captured as one range: camps, intensives, clinics, multi-week courses. The
 # fix is judgment: make discrete from source, or accept.
@@ -102,6 +132,35 @@ REVIEW_SPAN_MIN = 4   # surface spans > 4 days (>=5) in --review; auto-fix still
 # course-plausible lengths: >= 2 weeks (3+ sessions), <= ~6 months (a semester).
 COURSE_SPAN_MIN_DAYS = 14
 COURSE_SPAN_MAX_DAYS = 190
+
+# An EXPLICIT session count: "six-week after-school course", "8-week workshop",
+# "12 weeks". Only used to license the multi-weekday arc below, where the
+# endpoints alone can't tell a weekly course from a continuous run.
+NWEEK_RE = re.compile(
+    r'\b(\d{1,2}|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)'
+    r'[-\s]?weeks?\b', re.I)
+_WEEK_WORDS = {'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5, 'six': 6,
+               'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10, 'eleven': 11, 'twelve': 12}
+# Programs that run EVERY day of their range — camps, daily practice series,
+# Mon-Fri sessions. Their endpoints legitimately fall on different weekdays, so
+# they are the main hazard for the arc path and are vetoed there outright.
+DAILY_RE = re.compile(
+    r'\b(camps?|daily|every ?day|all[- ]day|all week|week-?long|'
+    r'days? a week|weekdays?|mon(?:day)?s?\s*(?:-|–|—|to|through|thru)\s*fri(?:day)?s?)\b',
+    re.I)
+
+
+def stated_week_count(blob):
+    """The explicit week count in an "N-week course" phrase, or None.
+
+    Returns None when the text states more than one distinct count ("a six-week
+    course with two weeks off") — an ambiguous claim is no claim.
+    """
+    found = set()
+    for m in NWEEK_RE.finditer(blob):
+        tok = m.group(1).lower()
+        found.add(int(tok) if tok.isdigit() else _WEEK_WORDS[tok])
+    return found.pop() if len(found) == 1 else None
 
 
 def classify(eid, name, occ, description=''):
@@ -136,16 +195,53 @@ def classify(eid, name, occ, description=''):
                          if (not o['end_date'] or (o['end_date'] - o['start_date']).days <= 2)),
             'spans': spans}
 
+    verdict = None
     if same_weekday and all(g % 7 == 0 for g in gaps):
         if 6 <= med <= 8:
-            return 'weekly', info
-        if 13 <= med <= 15:
-            return 'biweekly', info
-    if same_weekday and 27 <= med <= 35:
-        return 'monthly', info
+            verdict = 'weekly'
+        elif 13 <= med <= 15:
+            verdict = 'biweekly'
+        elif 27 <= med <= 29:
+            # A 4-WEEKLY rhythm, NOT calendar-monthly. These are only
+            # distinguishable by the generator you then run: the nth-weekday-of-month
+            # generator drifts to 35-day gaps and invents dates a 28-day series
+            # never has (ev196587 "Mahjong Parlor" gained a bogus 2026-08-28 that
+            # way). Keep the step at exactly 28.
+            verdict = 'four_weekly'
+    if verdict is None and same_weekday and 27 <= med <= 35:
+        verdict = 'monthly'
     # NOTE: a "same day-of-month" verdict was tried but every match was an
     # exhibition with monthly markers, never a real meeting — dropped as unsafe.
-    return 'skip', {'reason': f'irregular cadence med={med} gaps={gaps} same_wd={same_weekday}'}
+    if verdict is None:
+        return 'skip', {'reason': f'irregular cadence med={med} gaps={gaps} same_wd={same_weekday}'}
+
+    # EVIDENCE GUARD: a cadence model is only trustworthy if it explains every
+    # date we actually observed. If the generator's own rhythm omits an observed
+    # date, the model is wrong and any date it *adds* is an invention — refuse
+    # rather than write fabricated occurrences. (Filling an observed GAP is still
+    # fine: the generated series is a superset of the evidence there.)
+    missing = unexplained_observed(verdict, info)
+    if missing:
+        return 'skip', {'reason': f'{verdict} cadence does not explain observed dates '
+                                  f'{[str(d) for d in missing]} (gaps={gaps} med={med})'}
+    return verdict, info
+
+
+def unexplained_observed(verdict, info):
+    """Observed discrete dates the generated cadence fails to produce.
+
+    Only dates inside the generator's own range are considered — dates past
+    `end` (span_end / the crawl future window) are out of scope by construction,
+    not evidence against the model.
+    """
+    disc = info.get('disc') or []
+    if not disc:
+        return []
+    gen = set(generated_series(verdict, info))
+    if not gen:
+        return []
+    last = max(gen)
+    return [d for d in disc if disc[0] <= d <= last and d not in gen]
 
 
 def classify_course(name, occ, description=''):
@@ -160,6 +256,11 @@ def classify_course(name, occ, description=''):
     Program/camp keywords deliberately do NOT corroborate: summer programs and
     camps run DAILY, so a same-weekday span + "program" is usually not weekly.
     Exhibition/continuous keywords veto.
+
+    A course meeting on TWO weekdays ("six-week course, Tuesdays and
+    Wednesdays") ends on a different weekday than it starts; that shape is
+    accepted only under the much stricter gate below, and info['wds'] then
+    carries both weekdays so the generator emits both series.
 
     Even matches are NOT blanket-applied — a timed same-weekday span can still be
     a non-weekly series (e.g. a bar's "UFC PPVs" quarter with a 1pm time), so the
@@ -176,29 +277,78 @@ def classify_course(name, occ, description=''):
     days = (o['end_date'] - o['start_date']).days
     if not (COURSE_SPAN_MIN_DAYS <= days <= COURSE_SPAN_MAX_DAYS):
         return 'skip', {'reason': f'span {days}d outside course bounds'}
-    if o['start_date'].weekday() != o['end_date'].weekday():
-        return 'skip', {'reason': 'span endpoints on different weekdays'}
     has_time = bool(o['start_time'])
     has_kw = bool(RECUR_RE.search(blob))
+    wds = [o['start_date'].weekday()]
+    arc = False
+    if o['start_date'].weekday() != o['end_date'].weekday():
+        # A course that meets on TWO weekdays ends on a different weekday than
+        # it starts ("six-week after-school course", Tuesdays AND Wednesdays,
+        # Oct 13 -> Nov 18 — ev208309). Rejecting that outright lost those; but
+        # a different-weekday span is far more often a festival or a daily camp,
+        # so accept only the tightest shape that cannot invent a session:
+        #   * an EXPLICIT week count N that equals ceil(days/7) — the range is
+        #     exactly N weeks of a weekly rhythm, which is what keeps festivals
+        #     and open-ended runs out (they don't state N, or N doesn't match);
+        #   * a published clock time (daily programs and continuous runs rarely
+        #     put one on the range);
+        #   * no daily-program keyword (camp / Mon-Fri / "daily");
+        #   * endpoint weekdays ADJACENT, so BOTH are observed session days and
+        #     nothing between them is invented. A Mon->Fri arc is a camp; a
+        #     Mon->Wed arc would have to fabricate a Tuesday that no source
+        #     published, which is exactly what the evidence guard forbids.
+        n = stated_week_count(blob)
+        if n is None:
+            return 'skip', {'reason': 'span endpoints on different weekdays, no stated week count'}
+        weeks = -(-days // 7)  # ceil
+        if n != weeks:
+            return 'skip', {'reason': f'different-weekday span: stated {n} weeks != ceil({days}d/7)={weeks}'}
+        if not has_time:
+            return 'skip', {'reason': 'different-weekday span with no clock time'}
+        if DAILY_RE.search(blob):
+            return 'skip', {'reason': 'different-weekday span with daily-program keyword'}
+        if o['end_date'].weekday() != (o['start_date'].weekday() + 1) % 7:
+            return 'skip', {'reason': 'different-weekday span endpoints are not adjacent weekdays'}
+        wds.append(o['end_date'].weekday())
+        arc = True
     if not (has_time or has_kw):
         return 'skip', {'reason': 'no time and no explicit recurrence keyword'}
-    info = {'disc': [], 'wd': o['start_date'].weekday(),
+    # Stated weekdays veto an inferred one that contradicts them. The endpoints
+    # are structure; a named day is evidence, and evidence wins. Without this the
+    # generator writes sessions on a day the source explicitly excludes — see
+    # STATED_WEEKDAY_RE for the softball league that would have got 11 Thursdays.
+    stated = stated_weekdays(blob)
+    if stated and not (set(wds) & stated):
+        names = sorted(n for n, i in WEEKDAY_NAMES.items() if i in stated)
+        got = sorted(n for n, i in WEEKDAY_NAMES.items() if i in set(wds))
+        return 'skip', {'reason': f'span endpoints are {"/".join(got)} but the text '
+                                  f'states {"/".join(names)} — contradicted'}
+    info = {'disc': [], 'wd': wds[0], 'wds': wds,
             'span_start': o['start_date'], 'span_end': o['end_date'],
             'time': (o['start_time'], o['end_time']),
-            'signal': ('time' if has_time else '') + ('+kw' if has_kw else '')}
+            'signal': ('time' if has_time else '') + ('+kw' if has_kw else '')
+                      + (f'+{len(wds)}-weekday arc' if arc else '')}
     return 'course_weekly', info
 
 
-def planned_dates(verdict, info):
+def generated_series(verdict, info):
+    """The dates the cadence model produces on its own, WITHOUT unioning in the
+    observed discrete dates. This is what the evidence guard tests: unioning
+    first would hide a generator that disagrees with what the source published."""
     if verdict == 'course_weekly':
         # Expand the full published series (span_end is the course's real last
-        # session — don't truncate to the crawl future-window).
+        # session — don't truncate to the crawl future-window). A course that
+        # meets on more than one weekday carries every weekday of its arc in
+        # info['wds']; stepping a flat 7 days from span_start would emit only
+        # the first weekday and SILENTLY DROP the rest (ev208309 would have
+        # lost all 6 of its Wednesdays).
         out = []
-        d = info['span_start']
-        while d <= info['span_end']:
-            out.append(d)
-            d += timedelta(days=7)
-        return out
+        for wd in info.get('wds') or [info['span_start'].weekday()]:
+            d = info['span_start'] + timedelta(days=(wd - info['span_start'].weekday()) % 7)
+            while d <= info['span_end']:
+                out.append(d)
+                d += timedelta(days=7)
+        return sorted(out)
     disc = info['disc']
     first = disc[0]
     end = min(info['span_end'], WINDOW_END)
@@ -206,6 +356,8 @@ def planned_dates(verdict, info):
         step = 7
     elif verdict == 'biweekly':
         step = 14
+    elif verdict == 'four_weekly':
+        step = 28
     elif verdict == 'monthly':
         ordinal = nth_weekday(first)
         return gen_monthly_nth_weekday(first, info['wd'], ordinal, end)
@@ -230,7 +382,13 @@ def planned_dates(verdict, info):
     while d <= end:
         out.append(d)
         d = d + timedelta(days=step)
-    return sorted(set(out) | set(disc))
+    return sorted(set(out))
+
+
+def planned_dates(verdict, info):
+    """The dates the event should end up with: the generated series plus the
+    observed discrete dates it was built from (never drop published evidence)."""
+    return sorted(set(generated_series(verdict, info)) | set(info.get('disc') or []))
 
 
 def categorize_for_review(eid, name, occ, description=''):
@@ -363,6 +521,124 @@ def show_events(cur, ids):
         print()
 
 
+# Short envelope spans: 2-4 days. Below SPAN_THRESHOLD, so the main scan above
+# never sees them, and `fix_single_occasion_events.py` parks them in REVIEW when
+# the name happens to look single-occasion. That gap let e209894 "The Premiere
+# Interface" (BRIC) render on 11/04 — it carried points on 11/03 and 11/05 plus
+# an 11/03->11/05 envelope, and the class does not meet on the 4th.
+#
+# The map error per event is small (1-3 phantom days rather than 70), but the
+# shape is identical to FIX_SPAN and a 2-3 day run is a very ordinary way to
+# publish a short course or a two-night bill.
+SHORT_SPAN_MIN_DAYS = 2
+SHORT_SPAN_MAX_DAYS = 4
+
+
+def find_redundant_short_spans(cur, recent_only=False, ids=None):
+    """Short spans that cover no date the event's discrete points don't already have.
+
+    Returns [(event_id, name, occurrence_id, start, end)].
+
+    The redundancy test is the whole safety argument, and it is exact rather than
+    heuristic: expand the span day by day and require EVERY day to be present as a
+    discrete point. Then deleting the span cannot change what renders — the same
+    days are still covered — so this is pure de-duplication.
+
+    A span that adds even ONE day is left alone, because that is the shape of a
+    genuine multi-day run: a Mon-Fri summer camp publishes 5 points and a 4-day
+    span, and the span legitimately fills days the points skip. Measured over the
+    live corpus: 55 redundant vs 71 date-adding, and every camp landed on the
+    date-adding side.
+    """
+    where = ["e.archived=0", "e.suppressed=0"]
+    params = []
+    if recent_only:
+        where.append("(e.created_at >= (NOW() - INTERVAL 1 DAY)"
+                     " OR e.updated_at >= (NOW() - INTERVAL 1 DAY))")
+    if ids:
+        where.append("e.id IN (%s)" % ",".join(["%s"] * len(ids)))
+        params.extend(ids)
+    cur.execute("SELECT e.id, e.name, o.id oid, o.start_date, o.end_date, "
+                "o.start_time, o.end_time "
+                "FROM events e JOIN event_occurrences o ON o.event_id=e.id "
+                "WHERE " + " AND ".join(where), tuple(params))
+    per_event = {}
+    for r in cur.fetchall():
+        per_event.setdefault(r['id'], {'name': r['name'], 'rows': []})['rows'].append(r)
+
+    out = []
+    for eid, data in per_event.items():
+        rows = data['rows']
+        point_rows = [r for r in rows
+                      if not r['end_date'] or (r['end_date'] - r['start_date']).days <= 1]
+        points = {r['start_date'] for r in point_rows}
+        if len(points) < 2:
+            continue
+        for r in rows:
+            if not r['end_date']:
+                continue
+            length = (r['end_date'] - r['start_date']).days
+            if not (SHORT_SPAN_MIN_DAYS <= length <= SHORT_SPAN_MAX_DAYS):
+                continue
+            covered, d = set(), r['start_date']
+            while d <= r['end_date']:
+                covered.add(d)
+                d += timedelta(days=1)
+            if covered - points:
+                continue
+            # The span may carry a clock time the points lack (Richmond County
+            # Fair: span "12pm", points blank). Deleting it would silently drop
+            # that time, so hand back the point rows that should inherit it.
+            inherit = []
+            if r['start_time']:
+                inherit = [p['oid'] for p in point_rows
+                           if p['start_date'] in covered and not p['start_time']]
+            out.append((eid, data['name'], r['oid'], r['start_date'], r['end_date'],
+                        r['start_time'], r['end_time'], inherit))
+    return sorted(out)
+
+
+def short_span_scan(conn, cur, apply_changes=False, recent_only=False, ids=None, exclude=None):
+    """Review (default) or delete redundant 2-4 day envelope spans."""
+    hits = find_redundant_short_spans(cur, recent_only=recent_only, ids=ids)
+    if exclude:
+        hits = [h for h in hits if h[0] not in exclude]
+    scope = " created/updated in the last day" if recent_only else ""
+    print(f"\nRedundant short ({SHORT_SPAN_MIN_DAYS}-{SHORT_SPAN_MAX_DAYS}d) envelope "
+          f"spans{scope}: {len(hits)} across {len({h[0] for h in hits})} events.\n")
+    for eid, name, oid, sd, ed, st, _et, inherit in hits:
+        note = f"   [time {st!r} -> {len(inherit)} point(s)]" if inherit else ""
+        print(f"  e{eid:<7} occ{oid:<8} {sd} -> {ed}  {name[:52]}{note}")
+    if not hits:
+        return
+    if not apply_changes:
+        print(f"\n(dry run — nothing written. Re-run with --short-spans --apply)")
+        return
+    # Delete by explicit occurrence id, never by a DATEDIFF range: the range form
+    # used by the long-span path would also take sibling spans on the same event
+    # that were NOT proved redundant.
+    inherited = 0
+    with write_lock(conn):
+        for eid, _name, oid, _sd, _ed, st, et, inherit in hits:
+            for pid in inherit:
+                # `inherit` was computed against the ORIGINAL rows, so when one
+                # event has several redundant spans carrying DIFFERENT times
+                # (e165319: a 5pm span and a 6pm span over the same days) a naive
+                # write lets the last one silently overwrite the first. Re-assert
+                # the blank test in SQL so this is first-writer-wins and stable.
+                cur.execute("UPDATE event_occurrences SET start_time=%s, "
+                            "end_time=COALESCE(NULLIF(end_time,''),%s) "
+                            "WHERE id=%s AND (start_time IS NULL OR start_time='')",
+                            (st, et or '', pid))
+                inherited += cur.rowcount
+            cur.execute('DELETE FROM event_occurrences WHERE id=%s', (oid,))
+            cur.execute('UPDATE events SET section=NULL WHERE id=%s', (eid,))
+        conn.commit()
+    print(f"\n[APPLIED] Deleted {len(hits)} redundant short span(s) across "
+          f"{len({h[0] for h in hits})} events; propagated a time onto {inherited} "
+          f"point(s) that would otherwise have lost it; section reset.")
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--apply', action='store_true', help='write changes (default is dry-run)')
@@ -371,7 +647,12 @@ def main():
     ap.add_argument('--show', help='comma-separated event ids: print full occurrence+description detail and exit (review aid)')
     ap.add_argument('--skipped', action='store_true', help='also list candidates that were skipped, with the reason')
     ap.add_argument('--review', action='store_true', help='broad scan: bucket ALL span-bearing events into review categories (FIX_SPAN / RECURRING_RANGE / INVERSE) and exit')
-    ap.add_argument('--new', action='store_true', help='with --review: restrict to events created/updated in the last day (envelope spans just added by the current run)')
+    ap.add_argument('--new', action='store_true', help='restrict to events created/updated in the last day (envelope spans just added by the current run). Scopes --review, the dry run AND --apply.')
+    ap.add_argument('--short-spans', action='store_true',
+                    help=f'scan for REDUNDANT {SHORT_SPAN_MIN_DAYS}-{SHORT_SPAN_MAX_DAYS} day '
+                         'envelope spans (below the main threshold, so the normal scan misses '
+                         'them). Only spans covering no date the discrete points already have '
+                         'are listed. Combine with --apply to delete them.')
     args = ap.parse_args()
 
     conn = create_connection()
@@ -381,10 +662,26 @@ def main():
         show_events(cur, [int(x) for x in args.show.split(',')])
         return
 
+    if args.short_spans:
+        short_span_scan(
+            conn, cur,
+            apply_changes=args.apply,
+            recent_only=args.new,
+            ids=[int(x) for x in args.ids.split(',')] if args.ids else None,
+            exclude=set(int(x) for x in args.exclude.split(',')) if args.exclude else None,
+        )
+        return
+
     if args.review:
         ids = [int(x) for x in args.ids.split(',')] if args.ids else None
         review_scan(cur, recent_only=args.new, ids=ids)
         return
+
+    # --new must scope the APPLY path too, not just --review. Without this an
+    # `--apply --new` silently writes across the entire backlog (the flag reads
+    # as "only this run's events" and is used that way by /run-pipeline).
+    recent_sql = (" AND (e.created_at >= (NOW() - INTERVAL 1 DAY)"
+                  " OR e.updated_at >= (NOW() - INTERVAL 1 DAY))") if args.new else ""
 
     cur.execute('''
         SELECT e.id, e.name, e.description FROM events e
@@ -393,7 +690,7 @@ def main():
                       AND o.end_date IS NOT NULL AND DATEDIFF(o.end_date,o.start_date)>%s)
           AND (SELECT COUNT(*) FROM event_occurrences o2 WHERE o2.event_id=e.id
                AND (o2.end_date IS NULL OR DATEDIFF(o2.end_date,o2.start_date)<=2)) >= 3
-    ''', (SPAN_THRESHOLD,))
+    ''' + recent_sql, (SPAN_THRESHOLD,))
     events = cur.fetchall()
     if args.ids:
         keep = set(int(x) for x in args.ids.split(','))
@@ -432,7 +729,7 @@ def main():
           AND EXISTS (SELECT 1 FROM event_occurrences o WHERE o.event_id=e.id
                       AND o.end_date IS NOT NULL
                       AND DATEDIFF(o.end_date,o.start_date) BETWEEN %s AND %s)
-    ''', (COURSE_SPAN_MIN_DAYS, COURSE_SPAN_MAX_DAYS))
+    ''' + recent_sql, (COURSE_SPAN_MIN_DAYS, COURSE_SPAN_MAX_DAYS))
     course_events = cur.fetchall()
     if args.ids:
         keep = set(int(x) for x in args.ids.split(','))
