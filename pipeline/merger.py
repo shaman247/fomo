@@ -12,7 +12,7 @@ import time
 import unicodedata
 from collections import Counter
 from datetime import date as date_type, datetime, timedelta
-from math import ceil
+from math import ceil, cos, radians
 from pathlib import Path
 
 import mysql.connector
@@ -108,9 +108,22 @@ def normalize_name_for_dedup(name):
     ascii_name = ''.join(c for c in nfkd if not unicodedata.combining(c))
 
     no_underscores = ascii_name.replace('_', '')
-    # Replace punctuation with spaces (not just remove) to avoid word concatenation
-    # e.g., "Alice/Bob" should become "Alice Bob", not "AliceBob"
-    no_punct = re.sub(r'[^\w\s]', ' ', no_underscores.strip().lower())
+
+    # Apostrophes are DELETED, not spaced. The generic punctuation pass below turns
+    # every mark into a space, which splits a possessive into two tokens and makes
+    # "Women's" ("women s") a different key from "Womens" — so the same title from
+    # two feeds, one of which drops the apostrophe, never matched. Sources disagree
+    # about apostrophes constantly ("Hell's Kitchen"/"Hells Kitchen", "Joe Turner's
+    # Come and Gone", "Kid's Crafternoon"), including curly vs straight within one
+    # site. Measured over all 189,187 events: 11,476 names change key but only 33
+    # groups newly fuse, and every one is a genuine possessive variant of the same
+    # title. Contractions are unaffected either way ("Rock 'n' Roll" already matched
+    # "Rock n Roll", and still does).
+    no_apostrophes = re.sub(r"['‘’ʼ´`]", '', no_underscores)
+
+    # Replace remaining punctuation with spaces (not just remove) to avoid word
+    # concatenation, e.g. "Alice/Bob" should become "Alice Bob", not "AliceBob"
+    no_punct = re.sub(r'[^\w\s]', ' ', no_apostrophes.strip().lower())
     normalized = re.sub(r'\s+', ' ', no_punct).strip()
     return normalized
 
@@ -187,15 +200,258 @@ def _coord_key(lat, lng):
     return (round(float(lat), 5), round(float(lng), 5))
 
 
-def get_significant_words(name, stem=False):
-    """Get significant words (3+ chars) from normalized name, excluding stop words and years."""
-    norm = normalize_name_for_dedup(name)
-    words = norm.split()
+def _significant_tokens(name):
+    """Ordered significant tokens of `name` — the shared basis of every name tier.
 
-    result = set(w for w in words if len(w) >= 3 and w not in _STOP_WORDS and not _is_year(w))
+    Tokens under 3 characters are dropped as noise, EXCEPT purely numeric ones,
+    which are kept. A short number is almost never noise: it is usually the whole
+    discriminator between two otherwise identical names. Under the blanket 3-char
+    floor, "Rugby Clinic (Ages 3-6)" and "Rugby Clinic (Ages 7-12)" both reduced
+    to {ages, clinic, rugby} — literally the same name to every word-based tier —
+    and BPCA events 212806/215628 genuinely cross-merged (both rows ended up
+    holding both cohorts' sources) and had to be repaired by hand. Same shape for
+    "Week 1"/"Week 2", "Level 2"/"Level 5", "(Grades 3-5)"/"(Grades 6-8)",
+    "Program 12"/"Program 14" and 2-digit room numbers — 3-digit numbers already
+    cleared the floor, which is why "Meeting Room 201" vs "305" never had the bug.
+
+    Two exceptions keep the exemption from firing on numbers that are NOT
+    discriminators:
+
+    - Years, as before. "Fall Festival 2025"/"2026" is a republication, and the
+      schedule layers own that call.
+    - A short number in the name's LEADING run of digits. On this corpus a
+      leading bare number is an extraction artifact, not part of the title:
+      Partiful's discover page prefixes an RSVP count ("39 ⁂ release party ⁂"
+      and "47 ⁂ release party ⁂" are the same Partiful URL on the same date),
+      and NYC DSA's canvass feed prefixes a per-day count ("4 Candidate
+      Canvasses" / "119 Candidate Canvasses"). Making those significant split one
+      event into one row per crawl. Only SHORT leading numbers are dropped, so
+      this exception never removes a token the old rule kept.
+
+    Measured with `_drop_shared_numbers` over all 32,402 distinct (event, source
+    crawl_event) name pairs reachable via event_sources — pairs of live events
+    are a selection-bias trap, they are live precisely because they did NOT merge
+    (.scratch/numtok_measure.py, 2026-08-16). 270 pairs stop matching, 32,131 are
+    unaffected, 1 newly matches (a correct one). Hand-labelled, the stops are 105
+    age/grade cohorts, 42 numbered weeks/sessions/classes, 36 showtime or date
+    variants, 20 numbered programs/episodes, 13 class levels and 55 assorted —
+    ~15 of the 270 are genuine same-event pairs and the rest are distinct events.
+    The blanket exemption without the leading-run carve-out stopped 271 but 56 of
+    its stop lines were the Partiful/DSA artifact shape, i.e. real regressions.
+    A lost correct merge degrades to a duplicate event that /dedupe-events
+    catches; a wrong merge writes another cohort's dates onto a live event, so
+    the trade is deliberately biased toward blocking.
+    """
+    toks = normalize_name_for_dedup(name).split()
+    lead = 0
+    while lead < len(toks) and toks[lead].isdigit():
+        lead += 1
+    out = []
+    for i, w in enumerate(toks):
+        if w in _STOP_WORDS or _is_year(w):
+            continue
+        if w.isdigit():
+            if len(w) < 3 and i < lead:
+                continue
+            # Zero-padding is a formatting choice, not a different number: the
+            # same yacht party is listed as "... - August 8" and "... | Aug 08".
+            out.append(w.lstrip('0') or '0')
+        elif len(w) >= 3:
+            out.append(w)
+    return out
+
+
+def get_significant_words(name, stem=False):
+    """Get significant words from a normalized name (see `_significant_tokens`)."""
+    result = set(_significant_tokens(name))
     if stem:
         result = set(stem_word(w) for w in result)
     return result
+
+
+def _subtitle_content_words(text):
+    """Significant words of a subtitle, minus the short bare numbers that
+    `_significant_tokens` newly admits.
+
+    Used by the two "does this subtitle carry real distinguishing content?"
+    tests, which must stay at their pre-numeric-token behaviour. A subtitle that
+    is only a date or an installment number ("Reading Rhythms Lower Manhattan:
+    July 27") is a per-occurrence label, not a distinct sub-event, and the bare
+    series name must still be able to absorb it — same reasoning as
+    `_trailing_date_token`. Longer numbers are left in, because they are part of
+    the title ("TechConnect: Podcasting 101 A&B" really is a different class from
+    "TechConnect In-Person: Open Lab") and the old rule counted them.
+    """
+    return set(w for w in get_significant_words(text)
+               if not (w.isdigit() and len(w) < 3))
+
+
+def _drop_shared_numbers(words1, words2):
+    """Remove numeric tokens the two word sets AGREE on, before the ratio tiers.
+
+    Numbers are kept as significant tokens so that a *disagreement* can break a
+    match (see `_significant_tokens`), but an *agreement* on a number is weak
+    evidence of same-eventness: a venue's calendar repeats the same times, dates
+    and age bands across every listing it publishes. Left in the numerator, a
+    shared number pushes unrelated siblings over the Jaccard / containment
+    thresholds — "Sunday June 21 | the Alex Owen Quartet" vs "Sunday June 21 |
+    DJ Dance" (two acts, one night) and "FRI 8 & 9:30 - Igor Lumpert w/Drew
+    Gress, Jeff Miles, Tom Rainey" vs "...w/Drew Gress, Damion Reid" both cross
+    0.75 containment on the shared "21" / "8" / "9" alone.
+
+    Dropping shared numbers from both sides makes the whole numeric-token change
+    purely restrictive: every ratio is <= what it was before the change, so no
+    pair that fails to match today starts matching. The subset tier upstream is
+    deliberately left alone — it compares whole sets, so a shared number cannot
+    manufacture a match there, while a one-sided number correctly breaks
+    containment. Measured 2026-08-16: this removes all 19 name-tier merges the
+    exemption would otherwise have created, of which ~6 were wrong.
+    """
+    shared = set(w for w in (words1 & words2) if w.isdigit())
+    if not shared:
+        return words1, words2
+    return words1 - shared, words2 - shared
+
+
+def _subset_match(words1, words2, name1, name2, stem=False):
+    """Word-set subset test, guarded against one-word names swallowing longer ones.
+
+    A name that reduces to a SINGLE significant word is a subset of every other
+    name containing that word, so an unguarded subset test merges unrelated
+    events that merely share a common noun: "Block by Block" (-> {block}, since
+    "by" is a stop word and the set collapses the repeat) matched "Brooklyn
+    Botanic Garden Block Party 2026" and dragged a May-Oct exhibition's date
+    range onto a one-evening party.
+
+    But the single-word case is genuinely load-bearing — it is how a bare
+    headliner or title picks up its fuller listing ("Yoga" <- "Yoga with Nicole
+    and ShapeUp NYC", "SYTE" <- "SYTE, Von Stearns", "QED" <- 40 crawl_events).
+    Over every (event, source crawl_event) name pair on the live corpus, 21 such
+    merges are correct and 16 are wrong, so refusing them all is worse than
+    allowing them all.
+
+    What separates the two is POSITION, not rarity (corpus frequency does not
+    separate them: "yoga" appears in 128 live names and is right, "block"
+    appears in 158 and is wrong). A real title match leads the longer name --
+    "Yoga with Nicole...", "SYTE, Von Stearns", "QED: A conversation..." -- while
+    a coincidental shared noun sits in the middle or at the end: "Brooklyn
+    Botanic Garden [Block] Party", "Boy [Band] Brunch", "Graduating Student
+    [Exhibition]". Requiring the lone word to be the longer name's first
+    significant token keeps 17 of the 21 and blocks 12 of the 16. The 4 it costs
+    (OLMO, BINI, Conspirare, "Outdoor Yoga...") degrade to a duplicate event,
+    which /dedupe-events catches -- strictly milder than wrong dates on a live
+    event.
+
+    Equal word sets are always allowed: "The Moth" vs "Moth" differ only in stop
+    words, and the substring branch upstream can't catch them (it needs 5+
+    chars). Regression 2026-08-04.
+    """
+    if not (words1.issubset(words2) or words2.issubset(words1)):
+        return False
+    if words1 == words2 or min(len(words1), len(words2)) >= 2:
+        return True
+
+    # Exactly one significant word on the smaller side — demand it leads the
+    # longer name.
+    lone = next(iter(words1 if len(words1) < len(words2) else words2))
+    longer = name2 if len(words1) < len(words2) else name1
+    leading = _ordered_significant_words(longer)
+    if stem:
+        leading = [stem_word(w) for w in leading]
+    return bool(leading) and leading[0] == lone
+
+
+# ── URL identity ──────────────────────────────────────────────────────────────
+# A crawl_event's URL is the one piece of identity the SOURCE controls: a venue
+# publishing the same event twice publishes it at the same link. Everything else
+# the merger matches on (location_id, coordinates, location_name) is our own
+# inference and drifts run to run — a listing page yields "Greenwich Village"
+# while the detail page yields "Father Demo Square", `processor.get_location_id`
+# resolves them to different rows, the cross-location guard refuses the match,
+# and a duplicate event row is created and then archived as an orphan. Measured
+# on the live corpus: 861 currently-coexisting event pairs are that shape.
+#
+# Query strings are KEPT (minus tracking params) because on several platforms
+# the query IS the identity (`?event=`, `?performanceId=`); stripping it would
+# fuse distinct events behind one path.
+_URL_TRACKING_PARAM_RE = re.compile(
+    r'^(?:utm_[a-z_]+|fbclid|gclid|msclkid|mc_cid|mc_eid|_ga|igshid)$', re.I
+)
+
+# Host aliases that serve the SAME page under two names, applied after the
+# scheme and a leading `www.` are stripped. `api.lu.ma` is a different service
+# (JSON endpoint) and must not be folded, hence the `(?=[/?]|$)` anchor.
+_HOST_ALIASES = (
+    (re.compile(r'^lu\.ma(?=[/?]|$)', re.I), 'luma.com'),
+)
+
+# Guards on the URL-identity tier, all three calibrated against the live corpus
+# (see the write-up in .claude/scheduled-tasks.md):
+#  - a URL carrying more than this many distinct normalized event names is a
+#    LISTING page, not an event page. Painting Lounge's rezclick root carries
+#    190 names across two real branches; without the cap the tier fuses the
+#    Harlem and Midtown studios' identically-named classes (80 bad pairs).
+URL_IDENTITY_MAX_DISTINCT_NAMES = 2
+#  - two venues further apart than this are different places even when the name,
+#    website, URL and schedule all agree. A run club that meets in two parks
+#    (w4860) and a cinema chain's two branches (Nitehawk Williamsburg vs
+#    Prospect Park, 6.2 km) are the shapes this blocks; at 3 km the run clubs
+#    come back.
+URL_IDENTITY_MAX_KM = 2.0
+
+
+def normalize_url_for_identity(url):
+    """Canonicalize a URL for identity comparison.
+
+    Drops the fragment and tracking-only query params, the scheme, a leading
+    `www.`, and the trailing slash; sorts the surviving query params so
+    parameter order can't split one event in two. Returns '' for a falsy URL.
+
+    Host aliases that address the SAME page are folded to one spelling
+    (`_HOST_ALIASES`) — `lu.ma` 301s to `luma.com`, but the two strings made 3
+    of 10 Luma slug collisions invisible to this tier on 2026-08-17.
+    `processor.absolutize_url` now canonicalizes at ingest; this keeps the tier
+    correct for the rows written before that and for any path that bypasses it.
+    """
+    if not url:
+        return ''
+    cleaned = url.strip().split('#')[0]
+    cleaned = re.sub(r'^https?://', '', cleaned, flags=re.I)
+    cleaned = re.sub(r'^www\.', '', cleaned, flags=re.I)
+    for alias_re, canonical in _HOST_ALIASES:
+        cleaned, count = alias_re.subn(canonical, cleaned, count=1)
+        if count:
+            break
+    if '?' in cleaned:
+        base, query = cleaned.split('?', 1)
+        kept = sorted(
+            p for p in query.split('&')
+            if p and not _URL_TRACKING_PARAM_RE.match(p.split('=')[0])
+        )
+        cleaned = base + ('?' + '&'.join(kept) if kept else '')
+    return cleaned.rstrip('/').lower()
+
+
+def _locations_within(loc_a, loc_b, coords, max_km=URL_IDENTITY_MAX_KM):
+    """True when two location_ids denote the same or a nearby place.
+
+    Unknown on either side (NULL location, or a location row without
+    coordinates) counts as compatible — that is the venue-mapping-drift case
+    this exists to rescue. Distance is an equirectangular approximation, which
+    is exact enough at metro scale and avoids a trig-heavy haversine in a
+    per-crawl_event loop.
+    """
+    if loc_a is None or loc_b is None or loc_a == loc_b:
+        return True
+    a = coords.get(loc_a)
+    b = coords.get(loc_b)
+    if not a or not b or a[0] is None or b[0] is None:
+        return True
+    lat_a, lng_a = float(a[0]), float(a[1])
+    lat_b, lng_b = float(b[0]), float(b[1])
+    dy = (lat_a - lat_b) * 111.0
+    dx = (lng_a - lng_b) * 111.0 * cos(radians((lat_a + lat_b) / 2))
+    return (dx * dx + dy * dy) ** 0.5 < max_km
 
 
 def strip_common_prefixes(name):
@@ -230,6 +486,31 @@ def strip_common_prefixes(name):
     return result.strip()
 
 
+# Heads that are a DELIVERY MODE or a generic category, never an event's identity.
+# A "<head>: <subtitle>" name whose head is one of these must keep its subtitle:
+# collapsing it hands the containment tiers downstream a high-collision core that
+# matches every other listing sharing the same house prefix. This is not a
+# theoretical risk — "In-Person:" / "Online:" is NYPL's and BPL's house prefix, so
+# reducing "In-Person: Searching Bloomberg: One-on-One" to "In-Person" fused
+# unrelated library programs into one event (regression 2026-08-17).
+#
+# Compared against BOTH the raw lowercase head and its normalized form, because
+# the same head is punctuated differently across sources ("In-Person", "In Person",
+# "IN PERSON!").
+_GENERIC_CORE_TITLE_HEADS = {
+    'online', 'virtual', 'zoom', 'free', 'webinar', 'workshop', 'class', 'live',
+    'in person', 'inperson', 'hybrid', 'in library', 'in branch', 'remote',
+}
+
+
+def _is_generic_core_head(main_title):
+    """True when a pre-colon head carries no event identity of its own."""
+    lowered = main_title.strip().lower()
+    if lowered in _GENERIC_CORE_TITLE_HEADS:
+        return True
+    return normalize_name_for_dedup(main_title) in _GENERIC_CORE_TITLE_HEADS
+
+
 def extract_core_title(name):
     """
     Extract the core title by removing common presenter prefixes and subtitles.
@@ -245,10 +526,18 @@ def extract_core_title(name):
     result = strip_common_prefixes(name)
 
     # Common presenter patterns to remove
+    # The \b after each marker is load-bearing: without it the pattern matches
+    # INSIDE a longer word, so "Tax Preparation Presentation" lost everything up
+    # to "Present" and returned the core "ation" — which the containment tier
+    # then found inside "English Conversation Group" and merged two unrelated BPL
+    # programs. Likewise "FOSSS Guided Music Production Session: Beginner" ->
+    # "Session". Regression 2026-08-17.
     presenter_patterns = [
-        r'^.+?\s+presents?\s*:?\s*',       # "X Presents: " or "X Present "
-        r'^.+?\s+productions?\s*:?\s*',    # "X Productions: "
-        r'^hosted\s+by\s+.+?:\s*',         # "Hosted by X: " (requires colon)
+        r'^.+?\s+presents?\b\s*:?\s*',       # "X Presents: " or "X Present "
+        r'^.+?\s+productions?\s*:\s*',       # "X Productions: " (colon required —
+                                             # "Music Production Session" is a
+                                             # title, not a presenter credit)
+        r'^hosted\s+by\s+.+?:\s*',           # "Hosted by X: " (requires colon)
     ]
 
     for pattern in presenter_patterns:
@@ -258,11 +547,10 @@ def extract_core_title(name):
     # generic delivery/category word). "Online: <subtitle>" must not collapse
     # to "Online", because the substring check downstream would then match any
     # title containing the word "online".
-    GENERIC_PREFIXES = {'online', 'virtual', 'zoom', 'free', 'webinar', 'workshop', 'class', 'live'}
     if ':' in result:
         parts = result.split(':', 1)
         main_title = parts[0].strip()
-        if len(main_title) >= 5 and main_title.lower() not in GENERIC_PREFIXES:
+        if len(main_title) >= 5 and not _is_generic_core_head(main_title):
             result = main_title
 
     return result.strip()
@@ -275,12 +563,7 @@ _LINEUP_MARKERS = {'ft', 'feat', 'featuring', 'w', 'with', 'presents', 'present'
 
 def _ordered_significant_words(name):
     """Like get_significant_words but preserves order (for prefix comparison)."""
-    words = normalize_name_for_dedup(name).split()
-    return [
-        w for w in words
-        if len(w) >= 3 and w not in _STOP_WORDS
-        and not _is_year(w)
-    ]
+    return _significant_tokens(name)
 
 
 def _split_on_subtitle_colon(name):
@@ -340,7 +623,7 @@ def _bare_name_vs_distinct_subtitle(bare, specific):
     # Confession") is just a fuller title of the same event, so don't split it —
     # that structure is otherwise indistinguishable from "<presenter> <core>:
     # <sub-event>" by name alone, and over-firing would create duplicate events.
-    if len(get_significant_words(subtitle)) < 2:
+    if len(_subtitle_content_words(subtitle)) < 2:
         return False
 
     nbare = normalize_name_for_dedup(bare)
@@ -377,6 +660,64 @@ def _bare_name_vs_distinct_subtitle(bare, specific):
     return True
 
 
+# A private booking is never the public class it is booked on. Studios that take
+# private parties publish them in the same feed with the class title appended
+# ("Private Party - Ryan W. / NYU - Starry Night Over Empire State Building",
+# w1190 Painting Lounge), so the public name is a literal SUBSTRING of the
+# private one and every containment tier fuses them — putting a stranger's
+# private booking's dates on a public class. The marker is the identity.
+_PRIVATE_BOOKING_RE = re.compile(
+    r'\b(?:private\s+(?:part(?:y|ies)|events?|bookings?|class(?:es)?|groups?|sessions?|lessons?)'
+    r'|buyouts?|corporate\s+(?:events?|part(?:y|ies)|bookings?))\b'
+)
+
+
+# Spelled-out installment numbers, canonicalized to digits so "Session One" and
+# "Session 1" stay the same session.
+_SPELLED_NUMBERS = {
+    'one': '1', 'two': '2', 'three': '3', 'four': '4', 'five': '5', 'six': '6',
+    'seven': '7', 'eight': '8', 'nine': '9', 'ten': '10', 'eleven': '11', 'twelve': '12',
+}
+
+
+# Skill-level words. A class series published one row per level ("High Beginner
+# Level English Conversation Classes: We Speak NYC" vs "Intermediate Level ...")
+# differs by exactly ONE token out of seven, so every ratio tier — and the 75%
+# asymmetric-containment tier in particular — reads the siblings as one event and
+# fuses two different classes (regression 2026-08-17, NYPL/BPL "We Speak NYC").
+# The level word IS the identity of such a listing, the same way "Men's"/"Women's"
+# is for a sport.
+_LEVEL_WORDS_RE = re.compile(
+    r'\b(beginner|beginners|beginning|intermediate|advanced|novice|basics?|introductory|intro|expert)\b'
+)
+# Spelling variants of ONE level must canonicalize together, or the guard splits
+# a listing from itself ("Computer Basics" vs BPL's "Computer Basic").
+_LEVEL_CANONICAL = {
+    'beginners': 'beginner', 'beginning': 'beginner',
+    'basics': 'basic', 'introductory': 'intro',
+}
+
+
+def _level_words(norm):
+    return set(_LEVEL_CANONICAL.get(w, w) for w in _LEVEL_WORDS_RE.findall(norm))
+
+
+def _level_variant_mismatch(norm1, norm2):
+    """Two names that each name a skill LEVEL, and name different ones.
+
+    Requires a level word on BOTH sides: a bare "Excel Class" against "Excel
+    Class: Advanced" is the ordinary fuller-title shape and must still merge.
+    Subset relations are also allowed through ("Advanced Beginner Ballet" vs
+    "Beginner Ballet" is one listing described twice), so only a genuine
+    disagreement — beginner vs intermediate — blocks the match.
+    """
+    levels1 = _level_words(norm1)
+    levels2 = _level_words(norm2)
+    if not (levels1 and levels2):
+        return False
+    return not (levels1 <= levels2 or levels2 <= levels1)
+
+
 def _series_enumeration_mismatch(norm1, norm2):
     """One normalized name carries an "N of M" series-member marker and the
     other does not.
@@ -393,6 +734,55 @@ def _series_enumeration_mismatch(norm1, norm2):
     return bool(re.search(of_re, norm1)) != bool(re.search(of_re, norm2))
 
 
+# A trailing date/enumeration suffix ("Joonbug Dusk 08/02", "Ambient Music
+# (2/3)") is the house style on Resident Advisor and posh.vip promoter feeds and
+# on multi-session class listings: the SAME series name is republished once per
+# date with the date appended. `get_significant_words` keeps only tokens of 3+
+# chars, so "08/02" normalizes to "08 02" and BOTH halves are dropped — the
+# suffix was invisible to every name rule, and two listings differing ONLY by it
+# looked identical. That is how event 167515 ("Joonbug Dusk") swallowed 5 RA
+# listings that already had rows 167517-167520 of their own.
+#
+# Slash and dot forms only, and the dot form must be zero-padded MM.DD:
+#  - a hyphen range ("Ages 12-16", "Free Community Basketball ... Ages 11-14") is
+#    far more often an age/level band than a date on this corpus,
+#  - unpadded dots would read "Vol. 2.5" as February 5th.
+_TRAILING_DATE_RE = re.compile(
+    r'(?:^|[\s\-–—|,:(\[])'
+    r'(?:'
+    r'(?P<m1>\d{1,2})/(?P<d1>\d{1,2})'   # 8/16, 08/02, (2/3)
+    r'|(?P<m2>\d{2})\.(?P<d2>\d{2})'     # 06.12
+    r')'
+    r'(?:[/.]\d{2,4})?'                  # optional /YY, /YYYY, .YY year tail
+    r'\s*[)\]]?\s*$'
+)
+
+
+def _trailing_date_token(name):
+    """Return a canonical 'MMDD' when `name` ENDS in a date-like suffix, else None.
+
+    Deliberately anchored to the end of the name: a date embedded mid-name
+    ("9/11 Memorial Tour") is part of the title, not a per-night discriminator.
+    A name that is nothing but a date returns None — there is no series name to
+    discriminate within.
+    """
+    if not name:
+        return None
+    stripped = name.strip()
+    match = _TRAILING_DATE_RE.search(stripped)
+    if not match:
+        return None
+    if match.group('m1') is not None:
+        month, day = int(match.group('m1')), int(match.group('d1'))
+    else:
+        month, day = int(match.group('m2')), int(match.group('d2'))
+    if not (1 <= month <= 12 and 1 <= day <= 31):
+        return None
+    if not stripped[:match.start()].strip():
+        return None
+    return '%02d%02d' % (month, day)
+
+
 def is_false_positive(name1, name2):
     """
     Check if two "similar" names are actually different events.
@@ -404,6 +794,7 @@ def is_false_positive(name1, name2):
     - Early vs Late sets
     - Different episode numbers
     - Different set/part/volume numbers (Set 1 vs Set 2)
+    - Different trailing date suffixes ("... 08/02" vs "... 08/16")
     - A cinema "Fan Event" / "Fan First Screening" vs the film's regular run
     - Different sports opponents
     - A bare/umbrella name vs a more specific "Head: Subtitle" sibling
@@ -411,12 +802,28 @@ def is_false_positive(name1, name2):
     norm1 = normalize_name_for_dedup(name1)
     norm2 = normalize_name_for_dedup(name2)
 
+    # Two listings that differ only by a trailing date suffix are different
+    # nights of one series, never the same event. Fires only when BOTH names
+    # carry a suffix: a bare series name ("Joonbug Dusk") against a dated
+    # listing ("Joonbug Dusk 08/02") is the ordinary fuller-title shape and
+    # still merges — the merger requires an overlapping date there anyway, so a
+    # bare name can only absorb the night it actually shares dates with, while
+    # two dated siblings by construction name two different nights.
+    date1 = _trailing_date_token(name1)
+    date2 = _trailing_date_token(name2)
+    if date1 and date2 and date1 != date2:
+        return True
+
     # Different gendered sports events (Men's vs Women's)
-    # Use word boundaries to avoid false matches on substrings (e.g., "documentary" contains "men")
-    has_men1 = bool(re.search(r'\bmen\b', norm1))
-    has_men2 = bool(re.search(r'\bmen\b', norm2))
-    has_women1 = bool(re.search(r'\bwomen\b', norm1))
-    has_women2 = bool(re.search(r'\bwomen\b', norm2))
+    # Use word boundaries to avoid false matches on substrings (e.g., "documentary" contains "men").
+    # The optional trailing s is required because normalization now DELETES apostrophes, so
+    # "Men's" arrives here as the single token "mens" rather than "men s" — without it this
+    # guard silently stopped firing and "NYU Men's Basketball" matched "NYU Women's Basketball".
+    # "womens" cannot satisfy \bmens?\b: the char before "mens" inside it is a word char.
+    has_men1 = bool(re.search(r'\bmens?\b', norm1))
+    has_men2 = bool(re.search(r'\bmens?\b', norm2))
+    has_women1 = bool(re.search(r'\bwomens?\b', norm1))
+    has_women2 = bool(re.search(r'\bwomens?\b', norm2))
     if has_men1 != has_men2 or has_women1 != has_women2:
         return True
 
@@ -451,13 +858,20 @@ def is_false_positive(name1, name2):
     if ep1 and ep2 and ep1.group(1) != ep2.group(1):
         return True
 
-    # Different set/part/volume numbers (Set 1 vs Set 2, Part 1 vs Part 2, Vol. 2 vs Vol. 3)
+    # Different set/part/volume numbers (Set 1 vs Set 2, Part 1 vs Part 2, Vol. 2 vs Vol. 3).
+    # Spelled-out ordinals count too and canonicalize to the digit, because
+    # libraries and studios write "Session One" / "Session Two" (BPL's "First
+    # Five Years: Story and Play", w4) while sports write "Rounds 1 & 2" —
+    # digits-only left those siblings merging on the shared series name.
     for keyword in ['set', 'part', 'vol', 'volume', 'chapter', 'session', 'round']:
-        numbered_pattern = rf'\b{keyword}\.?\s*(\d+)'
+        numbered_pattern = rf'\b{keyword}s?\.?\s*(\d+|{"|".join(_SPELLED_NUMBERS)})\b'
         match1 = re.search(numbered_pattern, norm1, re.IGNORECASE)
         match2 = re.search(numbered_pattern, norm2, re.IGNORECASE)
-        if match1 and match2 and match1.group(1) != match2.group(1):
-            return True
+        if match1 and match2:
+            num1 = _SPELLED_NUMBERS.get(match1.group(1).lower(), match1.group(1))
+            num2 = _SPELLED_NUMBERS.get(match2.group(1).lower(), match2.group(1))
+            if num1 != num2:
+                return True
 
     # Different standalone sequence numbers after pipe/dash separators (e.g., "| Wednesday Set 2 | 10:30 pm")
     # Catches "...| 1 |..." vs "...| 2 |..." style numbering
@@ -510,6 +924,17 @@ def is_false_positive(name1, name2):
     # cousin of the bare/subtitle case): "Schmigadoon" vs "Schmigadoon!
     # Producer's Picks [3 of 4]". Regression 2026-06-24.
     if _series_enumeration_mismatch(norm1, norm2):
+        return True
+
+    # Sibling class listings that differ only by skill level. Regression
+    # 2026-08-17 (NYPL/BPL "We Speak NYC" English conversation classes).
+    if _level_variant_mismatch(norm1, norm2):
+        return True
+
+    # A private booking vs the public class it names (see _PRIVATE_BOOKING_RE).
+    # Fires only when ONE side is marked private: two private parties named the
+    # same way are left to the other rules. Regression 2026-08-17 (w1190).
+    if bool(_PRIVATE_BOOKING_RE.search(norm1)) != bool(_PRIVATE_BOOKING_RE.search(norm2)):
         return True
 
     return False
@@ -602,7 +1027,7 @@ def are_names_similar(name1, name2):
                 umbrella_head = (
                     short_split is not None
                     and normalize_name_for_dedup(short_split[0]) == short_core
-                    and len(get_significant_words(short_split[1])) >= 2
+                    and len(_subtitle_content_words(short_split[1])) >= 2
                 )
                 long_split = _split_on_subtitle_colon(long_name)
                 if umbrella_head and long_split is not None:
@@ -620,13 +1045,14 @@ def are_names_similar(name1, name2):
 
     if words1 and words2:
         # If one set of words is a subset of the other
-        if words1.issubset(words2) or words2.issubset(words1):
+        if _subset_match(words1, words2, name1, name2):
             return True
 
         # Jaccard similarity >= 70%
-        intersection = words1 & words2
-        union = words1 | words2
-        if len(intersection) / len(union) >= 0.7:
+        ratio1, ratio2 = _drop_shared_numbers(words1, words2)
+        intersection = ratio1 & ratio2
+        union = ratio1 | ratio2
+        if union and len(intersection) / len(union) >= 0.7:
             return True
 
     # Try with stemmed words to catch variations like residency/residence
@@ -634,9 +1060,14 @@ def are_names_similar(name1, name2):
     stemmed2 = get_significant_words(name2, stem=True)
 
     if stemmed1 and stemmed2:
-        if stemmed1.issubset(stemmed2) or stemmed2.issubset(stemmed1):
+        if _subset_match(stemmed1, stemmed2, name1, name2, stem=True):
             return True
 
+        # Both ratio tiers below run on the number-agnostic sets; a name that is
+        # nothing but numbers the other side also has carries no evidence at all.
+        stemmed1, stemmed2 = _drop_shared_numbers(stemmed1, stemmed2)
+        if not (stemmed1 and stemmed2):
+            return False
         intersection = stemmed1 & stemmed2
         union = stemmed1 | stemmed2
         if len(intersection) / len(union) >= 0.7:
@@ -726,6 +1157,70 @@ def _match_dateless_crawl_event(name, location_id, lat, lng, location_name,
     return None
 
 
+def _match_by_url_identity(name, url, website_id, location_id, crawl_event_slots,
+                           existing_by_url, url_name_counts, listing_url_keys,
+                           location_coords):
+    """Match a crawl_event to an existing event by SHARED URL — the tier that is
+    deliberately exempt from the cross-location guard.
+
+    Every other tier infers identity from a venue we resolved ourselves, so a
+    listing page and a detail page describing the same event to different
+    location rows never match, a duplicate is created, and the orphan is
+    archived on the next run. The URL comes straight from the source and does
+    not drift, so it can carry identity across a location disagreement.
+
+    Because it bypasses the guard that stops the dominant over-merge (same
+    program at many branches), every other signal is held at maximum strictness:
+
+    - same website, and a URL that is NOT one of the website's crawl/listing
+      URLs (those are shared by every event on the site),
+    - the URL must carry at most URL_IDENTITY_MAX_DISTINCT_NAMES distinct
+      normalized event names — more than that and it is a listing page we simply
+      failed to recognise as one,
+    - EXACT normalized name equality, never fuzzy similarity,
+    - a shared occurrence SLOT (date + canonicalized start time), not merely an
+      overlapping date range — two showtimes of one film on one day are distinct
+      events and share a date but not a slot,
+    - the two locations must be the same, unknown, or within
+      URL_IDENTITY_MAX_KM of each other.
+
+    When several events qualify, one sitting at the crawl_event's OWN location
+    wins over a merely-nearby one (a cinema whose two branch rows both ended up
+    holding one branch's URL must not have the wrong branch picked), and ties
+    break to the lowest id so the choice is deterministic and prefers the oldest
+    row. Returns an event id, or None.
+    """
+    if not url or website_id is None or not crawl_event_slots:
+        return None
+    url_key = normalize_url_for_identity(url)
+    if not url_key:
+        return None
+    index_key = (website_id, url_key)
+    if index_key in listing_url_keys:
+        return None
+    if url_name_counts.get(index_key, 0) > URL_IDENTITY_MAX_DISTINCT_NAMES:
+        return None
+
+    norm_name = normalize_name_for_dedup(name)
+    if not norm_name:
+        return None
+
+    best = None  # (0 if same location_id else 1, event_id)
+    for existing in existing_by_url.get(index_key, []):
+        if normalize_name_for_dedup(existing['name']) != norm_name:
+            continue
+        if not (crawl_event_slots & existing['slots']):
+            continue
+        existing_loc_id = existing.get('location_id')
+        if not _locations_within(location_id, existing_loc_id, location_coords):
+            continue
+        rank = (0 if (location_id is not None and existing_loc_id == location_id) else 1,
+                existing['id'])
+        if best is None or rank < best:
+            best = rank
+    return best[1] if best else None
+
+
 def _event_has_live_occurrence(cursor, event_id, current_date):
     """True when the event still has a current or future occurrence.
 
@@ -752,6 +1247,64 @@ def source_url_listing_set(cursor, cache, website_id):
         cursor.execute("SELECT url FROM website_urls WHERE website_id = %s", (website_id,))
         cache[website_id] = {row[0].rstrip('/') for row in cursor.fetchall()}
     return cache[website_id]
+
+
+def _norm_location_label(name):
+    """Conservative comparison form for a location LABEL — case/whitespace only.
+
+    Deliberately NOT `normalize_name_for_dedup`: this decides whether a stored
+    label is byte-for-byte our own copy of a `locations.name`, so anything
+    fuzzier ("The Foo" ≡ "Foo") would start matching source-written strings.
+    """
+    return (name or '').strip().lower()
+
+
+def resolve_stale_location_name(stored_name, current_location_id, location_names_by_id,
+                                source_location_ids, source_raw_names):
+    """Return the canonical name `events.location_name` should be rewritten to, or None.
+
+    THE BUG: `location_name` is set to `locations.name` of the then-current
+    `location_id` on event CREATION only. The merge path refreshes it only when it
+    is NULL/'Not specified'/''. So once an event's `location_id` is corrected —
+    by a later merge, by `/fix-unmapped-events`, by a repin script — the displayed
+    label FREEZES at the *previous* location's canonical name.
+
+    THE NAIVE FIX WAS MEASURED AND REJECTED (2026-08-09): refreshing from
+    `locations.name` on every merge overwrites correct, more-specific EXTRACTED
+    labels with a generic row name. A global scan found 3874 events (106 live)
+    where `location_name` merely equals the `locations.name` of some *other*
+    location row, and that population is dominated by legitimate coincidences —
+    a source that genuinely wrote "Harlem" / "Park Slope" / "Chelsea", which also
+    happen to be neighborhood rows in `locations`.
+
+    THE DISCRIMINATOR: rewrite only when the stored label is provably OUR OWN
+    canonical copy rather than a source string, i.e. both of:
+      1. no crawl_event feeding this event ever emitted that raw string
+         (`source_raw_names`) — if any source wrote it, the label is the
+         source's, not ours, and must stand; and
+      2. the label exactly equals `locations.name` of a location one of this
+         event's own crawl_events resolved to (`source_location_ids`) — the
+         "frozen at the previous location's canonical name" signature proven on
+         the SAPO block parties.
+    Measured on live data: 3874 rows pass the naive test, 39 live rows pass this
+    one, and hand-inspection of all 39 found no correct label rewritten.
+    """
+    if not current_location_id:
+        return None
+    canonical = location_names_by_id.get(current_location_id)
+    if not canonical:
+        return None
+    stored = _norm_location_label(stored_name)
+    if not stored or stored in ('not specified',):
+        return None
+    if stored == _norm_location_label(canonical):
+        return None  # already in sync
+    if any(stored == _norm_location_label(raw) for raw in source_raw_names):
+        return None  # a source wrote this exact string — it is not our copy
+    if any(stored == _norm_location_label(location_names_by_id.get(lid))
+           for lid in source_location_ids if lid):
+        return canonical
+    return None
 
 
 def _demote_other_primary_urls(cursor, event_id, keep_id=None):
@@ -957,6 +1510,46 @@ def _deduplicate_same_name_events(cursor, connection, current_date, edit_logger=
     if not dup_groups:
         return 0
 
+    # URL identity for the archived-twin absorption below: a stale twin that
+    # shares the keeper's event URL is the same event however its venue string
+    # happened to resolve. Same guards as the URL-identity tier — the website's
+    # own listing URLs and URLs carrying many distinct event names are excluded,
+    # because those are shared by every event on the site and would fuse a
+    # multi-branch program's twins. See _match_by_url_identity.
+    dup_ids = sorted({eid for _key, ids in dup_groups for eid in ids})
+    event_url_keys = {}
+    url_key_names = {}
+    listing_url_keys = set()
+    cursor.execute("SELECT website_id, url FROM website_urls")
+    for site_id, site_url in cursor.fetchall():
+        key = normalize_url_for_identity(site_url)
+        if key:
+            listing_url_keys.add((site_id, key))
+    placeholders = ','.join(['%s'] * len(dup_ids))
+    cursor.execute(f"""
+        SELECT eu.event_id, eu.url, e.website_id, e.name
+        FROM event_urls eu
+        JOIN events e ON e.id = eu.event_id
+        WHERE eu.event_id IN ({placeholders})
+    """, tuple(dup_ids))
+    for event_id, event_url, site_id, event_name in cursor.fetchall():
+        key = normalize_url_for_identity(event_url)
+        if not key or site_id is None:
+            continue
+        index_key = (site_id, key)
+        if index_key in listing_url_keys:
+            continue
+        event_url_keys.setdefault(event_id, set()).add(index_key)
+        url_key_names.setdefault(index_key, set()).add(
+            normalize_name_for_dedup(event_name or '')
+        )
+    shared_url_keys = {
+        k for k, names in url_key_names.items()
+        if len(names) <= URL_IDENTITY_MAX_DISTINCT_NAMES
+    }
+    cursor.execute("SELECT id, lat, lng FROM locations")
+    location_coords = {row[0]: (row[1], row[2]) for row in cursor.fetchall()}
+
     # An event has multiple occurrences, so the same event id can appear in
     # several (name, website, date, time) groups. When duplicate rows of the
     # same name span different dates (e.g. a gallery artwork re-extracted across
@@ -1067,21 +1660,29 @@ def _deduplicate_same_name_events(cursor, connection, current_date, edit_logger=
 
         # Absorb stale archived twins into a location-compatible active keeper.
         # Location compatibility is looser here than for active-active merges:
-        # same location_id, NULL on either side, or the same extracted
+        # same location_id, NULL on either side, the same extracted
         # location_name (the drift case — an identical venue string mapped to
-        # different location rows across crawls). Twins whose extracted venue
-        # strings genuinely differ (multi-branch programs sharing a time slot)
-        # stay untouched.
+        # different location rows across crawls), or a shared event URL at a
+        # nearby venue (the same drift seen from the source's side, which is the
+        # only signal that survives when BOTH the location row and the extracted
+        # venue string changed). Twins whose extracted venue strings genuinely
+        # differ AND that sit at unrelated venues (multi-branch programs sharing
+        # a time slot) stay untouched.
         for dead_id in stale:
             dead_loc = event_location.get(dead_id)
             dead_loc_name = event_loc_name.get(dead_id, '')
+            dead_urls = event_url_keys.get(dead_id, set())
             for cl in clusters:
                 keep_id = cl[0]
                 if frozenset((keep_id, dead_id)) in dismissed_pairs:
                     continue
                 loc_compatible = cl[1] is None or dead_loc is None or cl[1] == dead_loc
                 name_compatible = bool(dead_loc_name) and dead_loc_name == event_loc_name.get(keep_id, '')
-                if not (loc_compatible or name_compatible):
+                url_compatible = (
+                    bool(dead_urls & event_url_keys.get(keep_id, set()) & shared_url_keys)
+                    and _locations_within(dead_loc, cl[1], location_coords)
+                )
+                if not (loc_compatible or name_compatible or url_compatible):
                     continue
                 # Deliberately no suppression propagation: suppressed=1 on an
                 # archived twin almost always means "hidden as a duplicate copy"
@@ -1302,12 +1903,17 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
     # Build location_id -> canonical name so events.location_name stays in sync
     # with locations.name when a venue is resolved (otherwise the AI's raw
     # location string — e.g. an IG handle "@stella34macys" — leaks through).
-    cursor.execute("SELECT id, name, emoji FROM locations")
+    cursor.execute("SELECT id, name, emoji, lat, lng FROM locations")
     location_rows = cursor.fetchall()
     location_names_by_id = {row[0]: row[1] for row in location_rows}
+    # Reverse index used only as a cheap pre-filter for the stale-label refresh
+    # below: a label that matches no location row at all can never be our copy.
+    location_norm_names = {_norm_location_label(row[1]) for row in location_rows}
     # Venue emoji fallback: events whose extraction (listing or detail crawl)
     # returned no emoji inherit their venue's emoji so they never render blank.
     location_emoji_by_id = {row[0]: row[2] for row in location_rows}
+    # Coordinates for the URL-identity tier's proximity guard.
+    location_coords = {row[0]: (row[3], row[4]) for row in location_rows}
 
     # Websites needing strict name matching: a fuzzy (non-exact) name match must
     # be confirmed by a shared occurrence before merging. Without this, distinct
@@ -1397,13 +2003,67 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
             if start_date and end_date:
                 event_date_ranges[event_id].append((start_date, end_date))
 
+    # ── Build the URL-identity index (see _match_by_url_identity) ──
+    # (website_id, normalized url) -> candidate events, plus the number of
+    # distinct normalized event names behind that URL (the listing-page tell)
+    # and the set of keys that ARE the website's own crawl/listing URLs.
+    existing_events_by_url = {}
+    url_key_names = {}
+    listing_url_keys = set()
+    cursor.execute("SELECT website_id, url FROM website_urls")
+    for row in cursor.fetchall():
+        key = normalize_url_for_identity(row[1])
+        if key:
+            listing_url_keys.add((row[0], key))
+    if event_ids_with_future:
+        placeholders = ','.join(['%s'] * len(event_ids_with_future))
+        cursor.execute(f"""
+            SELECT eu.event_id, eu.url, e.name, e.website_id, e.location_id
+            FROM event_urls eu
+            JOIN events e ON e.id = eu.event_id
+            WHERE eu.event_id IN ({placeholders})
+        """, tuple(event_ids_with_future))
+        for event_id, event_url, event_name, event_website_id, event_location_id in cursor.fetchall():
+            if event_website_id is None or not event_name:
+                continue
+            url_key = normalize_url_for_identity(event_url)
+            if not url_key:
+                continue
+            index_key = (event_website_id, url_key)
+            url_key_names.setdefault(index_key, set()).add(
+                normalize_name_for_dedup(event_name)
+            )
+            slots = event_slots.get(event_id)
+            if not slots:
+                continue
+            existing_events_by_url.setdefault(index_key, []).append({
+                'id': event_id,
+                'name': event_name,
+                'location_id': event_location_id,
+                'slots': slots,
+            })
+    url_key_name_counts = {k: len(v) for k, v in url_key_names.items()}
+
     # ── Match crawl events to existing events or create new ones ──
     new_events_count = 0
     merged_count = 0
     source_url_lookup_cache = {}  # website_id -> set of trimmed listing URLs
 
+    # Imported here, not at module scope, to keep `merger` importable without
+    # pulling in crawl4ai (processor -> crawler) — same reason as
+    # `_standardize_time` below.
+    from processor import canonicalize_luma_host
+
     for ce_row in new_crawl_events:
         ce_id, name, short_name, description, emoji, location_name, sublocation, location_id, url, website_id, lat, lng = ce_row
+
+        # Host aliases must be folded before the URL is compared to, or stored
+        # alongside, an event's existing links: `already_present` below is an
+        # exact string match, so an un-canonicalized `lu.ma/<slug>` would insert
+        # a second row for a page the event already links to (and demote the
+        # canonical one off sort_order 0). New crawls are canonicalized by
+        # `processor.absolutize_url`; this covers crawl_events written before it.
+        url = canonicalize_luma_host(url)
 
         if not name:
             continue
@@ -1634,6 +2294,34 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
             if _m and _m[0] is not None and _m[0] != location_id:
                 matched_event_id = None
 
+        # URL-identity tier — the ONE tier exempt from the guard above, and the
+        # last one to run, so it only ever rescues a crawl_event that would
+        # otherwise have created a duplicate row (it can never steal a match
+        # another tier already made). Its own guards are stricter than any other
+        # tier's; see _match_by_url_identity. Dateless crawl_events carry no
+        # slots and are deliberately out of scope.
+        if matched_event_id is None and not dateless:
+            matched_event_id = _match_by_url_identity(
+                name, url, website_id, location_id, crawl_event_slots,
+                existing_events_by_url, url_key_name_counts, listing_url_keys,
+                location_coords,
+            )
+            if matched_event_id is not None and location_id is not None:
+                cursor.execute("SELECT location_id FROM events WHERE id = %s", (matched_event_id,))
+                _m = cursor.fetchone()
+                current_loc_id = _m[0] if _m else None
+
+        # A dateless crawl_event that HAD a match and lost it to the cross-location
+        # guard above must not fall through to the create-new branch: it carries no
+        # occurrences, so the new event would be created with ZERO occurrence rows —
+        # invisible on the map (the exporter needs a date) yet still absorbing
+        # event_sources, participating in dedup, and counting against archival. The
+        # no-match case already `continue`s inside the dateless block; this closes the
+        # guard-rejected case so the rule "a dateless listing never creates an event"
+        # holds on every path.
+        if dateless and matched_event_id is None:
+            continue
+
         if matched_event_id:
             # Merge with existing event
             # Un-archive event if it was previously archived (event found in new crawl).
@@ -1722,6 +2410,7 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
 
             # Update location_id if missing or if the new value is the website's
             # linked location (corrects stale fuzzy-match errors from earlier crawls)
+            effective_location_id = current_loc_id
             if location_id:
                 current_location_id = current_loc_id
                 if not current_location_id or (
@@ -1730,15 +2419,18 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                     location_id in website_location_ids[website_id]
                 ):
                     cursor.execute("UPDATE events SET location_id = %s WHERE id = %s", (location_id, matched_event_id))
+                    effective_location_id = location_id
 
             # Update location_name/sublocation if currently missing or placeholder
+            cursor.execute(
+                "SELECT location_name, location_id FROM events WHERE id = %s",
+                (matched_event_id,),
+            )
+            result = cursor.fetchone()
+            current_loc = result[0] if result else None
+            if result and result[1] is not None:
+                effective_location_id = result[1]
             if location_name and location_name not in ('Not specified', ''):
-                cursor.execute(
-                    "SELECT location_name FROM events WHERE id = %s",
-                    (matched_event_id,),
-                )
-                result = cursor.fetchone()
-                current_loc = result[0] if result else None
                 if not current_loc or current_loc in ('Not specified', ''):
                     update_fields = ["location_name = %s"]
                     update_values = [location_name]
@@ -1749,6 +2441,38 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                     cursor.execute(
                         f"UPDATE events SET {', '.join(update_fields)} WHERE id = %s",
                         update_values,
+                    )
+                    current_loc = location_name
+
+            # Refresh a POPULATED-but-STALE location_name. The label is only
+            # rewritten when it is provably our own copy of some *other*
+            # location's canonical name rather than a string a source wrote —
+            # see resolve_stale_location_name for the discriminator and for why
+            # the unconditional refresh was measured and rejected on 2026-08-09.
+            # The cheap in-memory pre-filter below keeps the extra query off the
+            # ~92% of merges whose label matches no location row at all.
+            if (current_loc and effective_location_id
+                    and _norm_location_label(current_loc) in location_norm_names
+                    and _norm_location_label(current_loc)
+                        != _norm_location_label(location_names_by_id.get(effective_location_id))):
+                cursor.execute("""
+                    SELECT ce.location_id, ce.location_name
+                    FROM event_sources es
+                    JOIN crawl_events ce ON ce.id = es.crawl_event_id
+                    WHERE es.event_id = %s
+                """, (matched_event_id,))
+                src_rows = cursor.fetchall()
+                src_loc_ids = [r[0] for r in src_rows]
+                src_raw_names = [r[1] for r in src_rows]
+                src_raw_names.append(location_name)  # this crawl_event's raw string
+                refreshed = resolve_stale_location_name(
+                    current_loc, effective_location_id, location_names_by_id,
+                    src_loc_ids, src_raw_names,
+                )
+                if refreshed:
+                    cursor.execute(
+                        "UPDATE events SET location_name = %s WHERE id = %s",
+                        (refreshed[:255], matched_event_id),
                     )
 
             # Backfill placeholder description/emoji from this source. The two
@@ -1884,6 +2608,22 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                 existing_events_by_website.setdefault(website_id, []).append(
                     {**event_entry, 'location_name': location_name}
                 )
+
+                # Keep the URL index current too: within a single merge the
+                # listing crawl_event and the detail crawl_event of the SAME
+                # event arrive back to back, so without this the pair that the
+                # URL tier exists to fuse would still create two rows.
+                new_url_key = normalize_url_for_identity(url)
+                if new_url_key and crawl_event_slots:
+                    index_key = (website_id, new_url_key)
+                    names_at_key = url_key_names.setdefault(index_key, set())
+                    names_at_key.add(norm_name)
+                    url_key_name_counts[index_key] = len(names_at_key)
+                    existing_events_by_url.setdefault(index_key, []).append({
+                        **event_entry,
+                        'location_id': location_id,
+                        'slots': crawl_event_slots,
+                    })
 
             new_events_count += 1
 

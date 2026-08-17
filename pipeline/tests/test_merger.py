@@ -19,7 +19,27 @@ NORMALIZE_TEST_CASES = [
 
     # Punctuation removal
     ("Event - With Dashes", "event with dashes"),
-    ("What's Happening?", "what s happening"),
+
+    # Apostrophes are DELETED, not spaced, so a possessive matches the
+    # apostrophe-less spelling of the same title. This case previously expected
+    # "what s happening" — changed deliberately when the possessive-mismatch bug
+    # was fixed (sources disagree about apostrophes on the same event name).
+    ("What's Happening?", "whats happening"),
+    ("Hell's Kitchen", "hells kitchen"),
+    ("Hells Kitchen", "hells kitchen"),
+    ("Women's Day", "womens day"),
+    ("Womens Day", "womens day"),
+    # Curly apostrophe (U+2019) — what most CMSes emit — normalizes identically
+    ("Kid’s Crafternoon", "kids crafternoon"),
+    ("Kids Crafternoon", "kids crafternoon"),
+    # Plural possessive
+    ("Writers' Circle", "writers circle"),
+    ("Writer's Circle", "writers circle"),
+    # Contractions were already fine and must stay that way
+    ("Rock 'n' Roll", "rock n roll"),
+    ("Rock n Roll", "rock n roll"),
+    # An apostrophe must not glue two real words together
+    ("Alice/Bob", "alice bob"),
 
     # Underscore removal
     ("Event_Name", "eventname"),
@@ -97,6 +117,29 @@ CORE_TITLE_TEST_CASES = [
     ("Online: Nothing Stands Alone", "Online: Nothing Stands Alone"),
     ("Virtual: Yoga Class", "Virtual: Yoga Class"),
     ("Workshop: Photography 101", "Workshop: Photography 101"),
+
+    # "In-Person:" / "In Person:" is NYPL's and BPL's house prefix — a delivery
+    # mode, never a title. Collapsing it handed the containment tiers the core
+    # "In-Person", which matched every other library program sharing the prefix
+    # and fused unrelated classes into one event (regression 2026-08-17).
+    ("In-Person: Searching Bloomberg: One-on-One", "In-Person: Searching Bloomberg: One-on-One"),
+    ("In Person: Friday Open Lab - Databases", "In Person: Friday Open Lab - Databases"),
+    ("IN PERSON: Open Lab", "IN PERSON: Open Lab"),
+    ("Hybrid: Book Club", "Hybrid: Book Club"),
+    # A real head that merely CONTAINS a delivery word still collapses.
+    ("Class Act: The Musical", "Class Act"),
+
+    # The presenter patterns must not match INSIDE a word. Without a word
+    # boundary "Tax Preparation Presentation" reduced to the core "ation",
+    # which the containment tier found inside "English CONVERSATION Group" and
+    # merged two unrelated BPL programs (event 26789). Likewise "Production"
+    # only introduces a presenter when a colon follows it, or "FOSSS Guided
+    # Music Production Session: Beginner" reduces to "Session" and fuses with
+    # every other session listing. Regression 2026-08-17.
+    ("Tax Preparation Presentation", "Tax Preparation Presentation"),
+    ("Special Monday Movie Presentation: Origin", "Special Monday Movie Presentation"),
+    ("FOSSS Guided Music Production Session: Beginner", "FOSSS Guided Music Production Session"),
+    ("Digital Music Production Workshop", "Digital Music Production Workshop"),
 ]
 
 # Test cases for are_names_similar: (name1, name2, should_match)
@@ -181,6 +224,65 @@ SIMILARITY_TEST_CASES = [
     # ...a pure leading prefix is a fuller title of the SAME event — merge.
     ("Summer Reading Kickoff", "Summer Reading Kickoff Party at the Library", True),
 
+    # Two unrelated NYPL programs sharing the house prefix "In-Person" / "In
+    # Person" must NOT merge. `extract_core_title` used to reduce the subtitled
+    # one to the core "In-Person", which the containment tier then found inside
+    # ANY other title starting with the prefix; the 2026-06-24 umbrella-head gate
+    # missed it because it only bit when BOTH names carried a colon, and NYPL
+    # routinely writes the prefix without one. Regression 2026-08-17 — this
+    # fused ~18 live library events across w3/w4.
+    ("In-Person An Introduction to the Business Center and Its Resources",
+     "In-Person: Searching Bloomberg: One-on-One", False),
+    ("In Person: Friday Open Lab - Databases",
+     "In Person - We Speak NYC English Conversation Classes", False),
+    ("Money Matters [In-Person Financial Coaching with NYLAG at the Business Center]",
+     "In-Person: Excel Open Lab", False),
+    # ...but the SAME program across two crawls still merges, prefix noise and all.
+    ("In-Person: Microsoft Excel for Beginners",
+     "*In-Person: Microsoft Excel for Beginners", True),
+    ("In-Person: Open Lab", "In Person - Open Lab", True),
+
+    # Sibling class listings that differ only by skill level are different
+    # classes. Six of seven stemmed tokens are shared, so the 75% asymmetric
+    # containment tier fused them (regression 2026-08-17: this is what
+    # over-merged the "We Speak NYC" English conversation classes).
+    ("High Beginner Level English Conversation Classes: We Speak NYC",
+     "Intermediate Level English Conversation Classes: We Speak NYC", False),
+    ("Online: Beginner Level English Conversation Classes",
+     "Online: Advanced Level English Conversation Classes", False),
+    ("Mah Jongg Beginner (6-week workshop)", "Mah Jongg Intermediate (6-week workshop)", False),
+    # ...but spelling variants of ONE level are the same class ("Computer
+    # Basics" vs BPL's "Computer Basic"), and a level word on only one side is
+    # the ordinary fuller-title shape.
+    ("Computer Basics", "Computer Basic", True),
+    ("West Coast Swing Beginner Boot Camp", "West Coast Swing for Beginners", True),
+    ("Excel Class", "Excel Class: Advanced", True),
+
+    # Garbage core titles from a word-internal presenter match must not fuse
+    # unrelated programs (event 26789 / 124725, regression 2026-08-17).
+    ("English Conversation Group", "Tax Preparation Presentation", False),
+    ("Immigrant Job Support (one-on-one) Sessions",
+     "FOSSS Guided Music Production Session: Beginner", False),
+    # ...and a real presenter credit still collapses to the core title.
+    ("Manhattan Theatre Club Presents The Monsters", "The Monsters", True),
+    ("BAM Productions: Dance Performance", "Dance Performance", True),
+
+    # A private booking must never merge into the public class it names. w1190
+    # Painting Lounge publishes both in one feed, and the public title is a
+    # literal substring of the private one, so every containment tier fused
+    # them — crawl_event 1227898 landed on the public class 67670 and put a
+    # stranger's party date on it. Regression 2026-08-17.
+    ("Starry Night Over Empire State Building",
+     "Private Party - Ryan W. / NYU - Starry Night Over Empire State Building", False),
+    ("Indivisible Western Queens Meeting", "Private event (Indivisible Western Queens Meeting)", False),
+    # ...but two private bookings are left to the ordinary rules.
+    ("Private Event", "Private Events", True),
+
+    # Spelled-out installment numbers are installment numbers (event 187715).
+    ("First Five Years: Story and Play - Session One",
+     "First Five Years: Story and Play - Session Two", False),
+    ("Junk Journal Meetup at YTB! (Session One)", "Junk Journal Meetup at YTB! (Session 1)", True),
+
     # Edge cases
     ("A", "B", False),  # Single letters
     ("Concert Tonight", "Gallery Opening", False),  # Completely different events
@@ -245,6 +347,36 @@ FALSE_POSITIVE_TEST_CASES = [
     ("Summer Camp", "Summer Camp Session 2 of 8", True),
     # Same enumerated member - NOT a false positive (must still merge)
     ("Schmigadoon! Producer's Picks [3 of 4]", "Schmigadoon! Producer's Picks [3 of 4]", False),
+
+    # Different skill levels of one class series - should NOT merge
+    # (regression 2026-08-17, NYPL/BPL "We Speak NYC" conversation classes).
+    ("High Beginner Level English Conversation Classes: We Speak NYC",
+     "Intermediate Level English Conversation Classes: We Speak NYC", True),
+    ("Beginner Latin (Samba) with Tatiana Keegan", "Intermediate Latin (Samba) with Tatiana Keegan", True),
+    ("Intro to Oil Painting - Summer '26", "Oil Painting - Intermediate/Advanced - Summer '26", True),
+    ("Intro to Hip Hop (Absolute Beginner)", "Hip Hop (Advanced Beginner)", True),
+    # Spelling variants of the same level - NOT a false positive
+    ("Computer Basics", "Computer Basic", False),
+    ("West Coast Swing Beginner Boot Camp", "West Coast Swing for Beginners", False),
+    ("Advanced Beginner Ballet", "Beginner Ballet", False),
+    # A level word on only ONE side is a fuller title, not a disagreement
+    ("Excel Class", "Excel Class: Advanced", False),
+
+    # Private booking vs the public class it names (w1190, 2026-08-17)
+    ("Starry Night Over Empire State Building",
+     "Private Party - Ryan W. / NYU - Starry Night Over Empire State Building", True),
+    ("Private Party - Jennifer L. / Group Outting - Starry Night Over Manhattan",
+     "Starry Night over Manhattan", True),
+    ("Private Event", "Private Events", False),
+
+    # Spelled-out installment numbers, canonicalized against digits
+    ("First Five Years: Story and Play - Session One",
+     "First Five Years: Story and Play - Session Two", True),
+    ("Tots For Sculpture | Shifting Shapes: Session One",
+     "Tots For Sculpture | Shifting Shapes: Session Two", True),
+    ("NYU Golf at Stith Invitational - Round 3",
+     "NYU Golf at Stith Invitational - Rounds One and Two", True),
+    ("Junk Journal Meetup at YTB! (Session One)", "Junk Journal Meetup at YTB! (Session 1)", False),
 ]
 
 
@@ -331,10 +463,37 @@ class TestIsFalsePositive(unittest.TestCase):
                     f"Expected is_false_positive({name1!r}, {name2!r}) = {expected_fp}"
                 )
 
+    def test_gendered_guard_survives_apostrophe_deletion(self):
+        """Men's vs Women's must stay distinct in every apostrophe spelling.
+
+        Normalization deletes apostrophes, so "Men's" reaches this guard as the
+        single token "mens". A guard matching only \\bmen\\b stops firing on the
+        possessive form — which is the form these listings almost always use —
+        and lets men's and women's fixtures merge into one event.
+        """
+        for men, women in [
+            ("Men's Tennis Tournament", "Women's Tennis Tournament"),
+            ("Mens Tennis Tournament", "Womens Tennis Tournament"),
+            ("Men’s Tennis Tournament", "Women’s Tennis Tournament"),
+            ("Men Tennis Tournament", "Women Tennis Tournament"),
+        ]:
+            with self.subTest(men=men, women=women):
+                self.assertTrue(is_false_positive(men, women))
+                self.assertFalse(are_names_similar(men, women))
+
+    def test_gendered_guard_does_not_overreach(self):
+        """The optional trailing s must not fire on unrelated words."""
+        # "documentary"/"commencement" contain "men" but are not gendered events;
+        # identical names must never be called a false positive.
+        for name in ["Documentary Night", "Commencement Ceremony", "Menswear Pop-Up"]:
+            with self.subTest(name=name):
+                self.assertFalse(is_false_positive(name, name))
+
     def test_symmetry(self):
         """False positive detection should be symmetric."""
         test_pairs = [
             ("NYU Men's Basketball", "NYU Women's Basketball"),
+            ("NYU Mens Basketball", "NYU Women's Basketball"),
             ("Show 6:00 PM", "Show 8:00 PM"),
             ("Twin Peaks Ep. 1", "Twin Peaks Ep. 2"),
         ]
@@ -437,6 +596,80 @@ class TestAreNamesSimilar(unittest.TestCase):
                 self.assertFalse(
                     are_names_similar(name1, name2),
                     f"Expected {name1!r} vs {name2!r} to NOT match (false positive)"
+                )
+
+    def test_single_word_name_must_lead_the_longer_name(self):
+        """A lone significant word only matches when it LEADS the other name.
+
+        Regression 2026-08-04: "Block by Block" normalizes to the word set
+        {block} ("by" is a stop word, the set collapses the repeat), which is a
+        subset of {brooklyn, botanic, garden, block, party}. The BBG exhibition
+        (May 23 - Oct 25) merged into the one-evening Block Party and kept a
+        finished event on the map for three extra months.
+
+        The single-word subset itself is load-bearing (see _subset_match), so the
+        guard is positional: a shared word buried mid-name is coincidence, a
+        shared word at the front is a title.
+        """
+        buried = [  # shared word is NOT the longer name's first significant word
+            ("Brooklyn Botanic Garden Block Party 2026", "Block by Block"),
+            ("A Midsummer Night's Dream", "The Dream"),
+            ("Queer Book Club Meetup", "Meetup #29"),
+            ("Graduating Student Exhibition", "An Exhibit"),
+            ("Boy Band Brunch with The Boy Band Project", "The the Band Band"),
+            ("Ari Kiki", "The Kiki"),
+            ("Board Game Cafe'", "Game On!"),
+            ("Live Jazz at Nook", "Nook"),
+        ]
+        for name1, name2 in buried:
+            with self.subTest(name1=name1, name2=name2):
+                self.assertFalse(
+                    are_names_similar(name1, name2),
+                    f"Expected {name1!r} vs {name2!r} to NOT match "
+                    f"(lone shared word is buried in the longer name)"
+                )
+
+    def test_leading_single_word_still_matches(self):
+        """A bare headliner/title still picks up its fuller listing.
+
+        These are the merges the guard above must not cost us — refusing every
+        single-word subset would break all of them.
+        """
+        leading = [
+            ("Yoga", "Yoga with Nicole and ShapeUp NYC"),
+            ("SYTË, Von Stearns", "SYTË"),
+            ("OGUZ", "OGUZ with Stan Christ & Guests"),
+            ("QED: A conversation about math education", "QED"),
+            ("Alok", "Alok presents Rave The World"),
+            ("Tournaments", "Tournament Play"),          # stemmed side
+            ("Baby & Me Storytime", "Baby and Me"),
+            # Equal word sets: differ only in stop words, and too short for the
+            # 5-char substring branch upstream to catch.
+            ("The Moth", "Moth"),
+        ]
+        for name1, name2 in leading:
+            with self.subTest(name1=name1, name2=name2):
+                self.assertTrue(
+                    are_names_similar(name1, name2),
+                    f"Expected {name1!r} vs {name2!r} to match"
+                )
+
+    def test_single_word_rule_is_symmetric(self):
+        """Argument order must not change the verdict.
+
+        find_best_match calls are_names_similar(crawl_name, event_name), but the
+        same pair is reached in both orders across the merge tiers.
+        """
+        pairs = [
+            ("Brooklyn Botanic Garden Block Party 2026", "Block by Block"),
+            ("Yoga", "Yoga with Nicole and ShapeUp NYC"),
+            ("Graduating Student Exhibition", "An Exhibit"),
+        ]
+        for name1, name2 in pairs:
+            with self.subTest(name1=name1, name2=name2):
+                self.assertEqual(
+                    are_names_similar(name1, name2),
+                    are_names_similar(name2, name1),
                 )
 
     def test_symmetry(self):
@@ -666,6 +899,537 @@ class TestSinglePrimaryUrl(unittest.TestCase):
         cursor = self.FakeCursor(rows)
         merger._demote_other_primary_urls(cursor, 1)
         self.assertEqual({r['id']: r['sort_order'] for r in rows}, {10: 100, 11: 99})
+
+
+class TestTrailingDateToken(unittest.TestCase):
+    """A trailing MM/DD is the per-night discriminator on RA / posh.vip feeds.
+
+    `get_significant_words` drops tokens shorter than 3 chars, so "08/02"
+    normalized to "08 02" and both halves vanished — two listings differing ONLY
+    by their date suffix looked identical (event 167515 swallowed 5 RA listings
+    that already had rows of their own).
+    """
+
+    def test_slash_forms(self):
+        self.assertEqual(merger._trailing_date_token("Joonbug Dusk 08/02"), "0802")
+        self.assertEqual(merger._trailing_date_token("Joonbug Dusk 8/2"), "0802")
+        self.assertEqual(merger._trailing_date_token("$5 Friday Family Fun 8/14"), "0814")
+        self.assertEqual(merger._trailing_date_token("Ailey in London - 9/15/26"), "0915")
+        self.assertEqual(merger._trailing_date_token("Ambient Music (2/3)"), "0203")
+        self.assertEqual(merger._trailing_date_token("voguing 101 w/ zenith • (9/15)"), "0915")
+
+    def test_padded_dot_form(self):
+        self.assertEqual(merger._trailing_date_token("Lyra Rooftop Party 06.12.26"), "0612")
+        self.assertEqual(merger._trailing_date_token("NYC Summer Boat Series - 05.09"), "0509")
+
+    def test_hyphen_ranges_are_not_dates(self):
+        """"Ages 12-16" is an age band, not December 16th — the hyphen form is
+        deliberately not recognised."""
+        self.assertIsNone(merger._trailing_date_token("Free Filmmaking Lab: Ages 12-16"))
+        self.assertIsNone(merger._trailing_date_token("Junior Youth Modern (ages 11-12)"))
+
+    def test_unpadded_dot_is_not_a_date(self):
+        """Requiring MM.DD zero-padding keeps "Vol. 2.5" from reading as Feb 5."""
+        self.assertIsNone(merger._trailing_date_token("Mixtape Vol. 2.5"))
+
+    def test_embedded_date_is_part_of_the_title(self):
+        self.assertIsNone(merger._trailing_date_token("9/11 Memorial Tour"))
+        self.assertIsNone(merger._trailing_date_token("The 9/11 Museum After Hours"))
+
+    def test_impossible_dates_rejected(self):
+        self.assertIsNone(merger._trailing_date_token("Studio 13/40"))
+        self.assertIsNone(merger._trailing_date_token("Room 24/99"))
+
+    def test_bare_date_has_no_series_name(self):
+        self.assertIsNone(merger._trailing_date_token("08/02"))
+
+
+class TestTrailingDateSuffixMatching(unittest.TestCase):
+
+    def test_different_date_suffixes_never_match(self):
+        """The reproduced 167515 bug."""
+        self.assertFalse(are_names_similar(
+            "Joonbug Presents: Dusk Rooftop Party at The Crown 08/02",
+            "Joonbug Presents: Dusk Rooftop Party at The Crown 08/16"))
+        self.assertTrue(is_false_positive("Joonbug Dusk 08/02", "Joonbug Dusk 08/16"))
+
+    def test_long_names_differing_only_by_date(self):
+        """Word-overlap rules alone would still fuse these — 5 shared tokens push
+        Jaccard over 0.7 — so the suffix has to be a hard false-positive."""
+        self.assertFalse(are_names_similar(
+            "DSA Running Club - Chinatown Office Loop (05/26/26)",
+            "DSA Running Club - Chinatown Office Loop (06/02/26)"))
+
+    def test_session_enumeration_is_a_discriminator(self):
+        """"(1/3)" vs "(2/3)" are separate sessions of one class series."""
+        self.assertFalse(are_names_similar("Ambient Music (2/3)", "Ambient Music (3/3)"))
+        self.assertFalse(are_names_similar("Learn To Play Mahjong (1/3)",
+                                           "Learn To Play Mahjong (3/3)"))
+
+    def test_bare_series_name_still_matches_a_dated_listing(self):
+        """Deliberate: only ONE side carries a suffix, which is the ordinary
+        fuller-title shape. The merger still requires an overlapping date, so a
+        bare name can only absorb the night it actually shares dates with."""
+        self.assertTrue(are_names_similar("Joonbug Presents: Dusk Rooftop Party",
+                                          "Joonbug Presents: Dusk Rooftop Party 08/02"))
+
+    def test_identical_suffixes_still_match(self):
+        self.assertTrue(are_names_similar("Joonbug Presents: Dusk Rooftop Party 08/02",
+                                          "Joonbug Presents: Dusk Rooftop Party at The Crown 08/02"))
+
+    def test_undated_names_are_unaffected(self):
+        self.assertTrue(are_names_similar("The Monsters", "The Monsters: a Sibling Love Story"))
+        self.assertFalse(are_names_similar("Jazz Night", "Comedy Brunch"))
+
+
+class TestShortNumbersAreSignificant(unittest.TestCase):
+    """A short number is the whole discriminator between two identical names.
+
+    The 3-char floor dropped every token under 3 chars, so "Rugby Clinic (Ages
+    3-6)" and "Rugby Clinic (Ages 7-12)" both reduced to {ages, clinic, rugby}
+    and BPCA events 212806/215628 genuinely cross-merged (both rows ended up
+    holding both cohorts' event_sources) and had to be repaired by hand.
+    """
+
+    def test_age_cohorts_are_distinct(self):
+        """The reproduced 212806/215628 bug."""
+        self.assertNotEqual(get_significant_words("Rugby Clinic (Ages 3-6)"),
+                            get_significant_words("Rugby Clinic (Ages 7-12)"))
+        self.assertFalse(are_names_similar("Rugby Clinic (Ages 3-6)",
+                                           "Rugby Clinic (Ages 7-12)"))
+        self.assertFalse(are_names_similar("Basketball Clinic (Ages 3-5)",
+                                           "Basketball Clinic (Ages 6-10)"))
+        self.assertFalse(are_names_similar("Children's Soccer (Ages 3-5)",
+                                           "Children's Soccer (Ages 6-10)"))
+
+    def test_numbered_weeks_levels_and_programs_are_distinct(self):
+        self.assertFalse(are_names_similar("Swingiversity 201 [Week 1 of 8]",
+                                           "Swingiversity 201 [Week 3 of 8]"))
+        self.assertFalse(are_names_similar("Program 12 - Shorts", "Program 14 - Shorts"))
+        self.assertFalse(are_names_similar(
+            "CQ – Saturday – Level 1 – (4 – 8 years) – 12:00PM-12:45PM",
+            "CQ – Saturday – Level 3 – (5 – 9 years) – 12:00PM-12:45PM"))
+
+    def test_trailing_mm_dd_suffixes_stay_distinct(self):
+        """Already guarded by `_trailing_date_token`; pinned here because the
+        numeric tokens are now the second line of defence for the same shape."""
+        self.assertFalse(are_names_similar("Joonbug Dusk 08/14", "Joonbug Dusk 08/02"))
+        self.assertFalse(are_names_similar("Ambient Music (2/3)", "Ambient Music (1/3)"))
+
+    def test_years_are_still_dropped(self):
+        self.assertNotIn("2026", get_significant_words("Fall Festival 2026"))
+
+    def test_stop_words_and_short_non_numbers_still_dropped(self):
+        self.assertEqual(get_significant_words("A is the an"), set())
+
+
+class TestShortNumbersDoNotBreakLegitimateMerges(unittest.TestCase):
+    """The regressions the measurement hunted for — a name-rule change cuts both
+    ways, and a legitimate pair differing only by a stray number must still merge.
+    """
+
+    def test_leading_bare_number_is_an_artifact_not_a_discriminator(self):
+        """Partiful's discover page prefixes an RSVP count and NYC DSA's canvass
+        feed a per-day count. "39 ⁂ release party ⁂" and "47 ⁂ release party ⁂"
+        are the same Partiful URL on the same date."""
+        self.assertTrue(are_names_similar("39 ⁂ release party ⁂", "47 ⁂ release party ⁂"))
+        self.assertTrue(are_names_similar("4 Candidate Canvasses", "119 Candidate Canvasses"))
+        self.assertTrue(are_names_similar(
+            "56 Lotería Pride", "Lotería Pride Hosted by Iranipapi Sponsored by ASSET*"))
+        self.assertTrue(are_names_similar("2 Day Balboa Crash Course/Fundamentals",
+                                          "Balboa CRASH Course / Fundamentals w/ Sara-Sofia Rentas"))
+
+    def test_fuller_title_with_an_extra_number_still_merges(self):
+        """One-sided numbers break set containment, not the subset tier."""
+        self.assertTrue(are_names_similar("Yoga", "Yoga 2"))
+        self.assertTrue(are_names_similar("Level 2 Improv Class", "Level 2 Improv Class with Brook"))
+
+    def test_zero_padding_is_not_a_different_number(self):
+        self.assertTrue(are_names_similar(
+            "Sunset Latin & Reggaeton Yacht Party - August 8",
+            "Sunset Latin & Reggaeton Yacht Party at Skyport Marina | Aug 08"))
+
+    def test_a_date_only_subtitle_is_not_distinguishing_content(self):
+        """A bare series name must still absorb its own dated listing — the same
+        call the `_trailing_date_token` comment makes."""
+        self.assertTrue(are_names_similar("NEW VENUE! Reading Rhythms Lower Manhattan: July 27",
+                                          "Reading Rhythms Lower Manhattan"))
+
+    def test_a_shared_number_cannot_manufacture_a_match(self):
+        """Numbers block a match but never create one: two acts on one night at
+        one venue share the date tokens and nothing else."""
+        self.assertFalse(are_names_similar("Sunday June 21 | the Alex Owen Quartet",
+                                           "Sunday June 21 | DJ Dance"))
+        self.assertFalse(are_names_similar(
+            "FRI 8 & 9:30 - Igor Lumpert w/Drew Gress, Jeff Miles, Tom Rainey",
+            "FRI 8 & 9:30 - Igor Lumpert w/Drew Gress, Damion Reid"))
+
+
+class TestNormalizeUrlForIdentity(unittest.TestCase):
+
+    def test_scheme_www_slash_and_fragment_are_dropped(self):
+        self.assertEqual(
+            merger.normalize_url_for_identity("https://www.Example.com/Events/Foo/#tickets"),
+            "example.com/events/foo")
+        self.assertEqual(merger.normalize_url_for_identity("http://example.com/events/foo"),
+                         "example.com/events/foo")
+
+    def test_tracking_params_dropped_but_real_query_kept(self):
+        """The query is the identity on several platforms — Alamo Drafthouse's
+        `?cinemaId=` is the ONLY thing separating its Brooklyn and Staten Island
+        listings of the same film — so only tracking params may be stripped."""
+        self.assertEqual(
+            merger.normalize_url_for_identity("https://drafthouse.com/show/blow-out?cinemaId=2101&utm_source=x"),
+            "drafthouse.com/show/blow-out?cinemaid=2101")
+        self.assertNotEqual(
+            merger.normalize_url_for_identity("https://drafthouse.com/show/blow-out?cinemaId=2101"),
+            merger.normalize_url_for_identity("https://drafthouse.com/show/blow-out?cinemaId=2102"))
+
+    def test_param_order_does_not_split_one_event(self):
+        self.assertEqual(
+            merger.normalize_url_for_identity("https://x.com/e?b=2&a=1"),
+            merger.normalize_url_for_identity("https://x.com/e?a=1&b=2"))
+
+    def test_empty(self):
+        self.assertEqual(merger.normalize_url_for_identity(None), "")
+        self.assertEqual(merger.normalize_url_for_identity(""), "")
+
+    def test_luma_short_host_folds_into_the_canonical_one(self):
+        """`lu.ma/<slug>` 301s to `luma.com/<slug>` — one page, two strings.
+
+        The Luma calendar injector emits `lu.ma` while embeds and cross-listing
+        sites emit `luma.com`, so 3 of the 10 Luma slug collisions measured on
+        2026-08-17 were invisible to this tier (e.g. Fabrik DUMBO's
+        `luma.com/84fec4e2` vs Unmuted's `lu.ma/84fec4e2`)."""
+        canonical = merger.normalize_url_for_identity("https://luma.com/84fec4e2")
+        self.assertEqual(canonical, "luma.com/84fec4e2")
+        for variant in ("https://lu.ma/84fec4e2",
+                        "http://lu.ma/84fec4e2/",
+                        "https://www.lu.ma/84fec4e2",
+                        "https://LU.MA/84fec4e2#tickets"):
+            with self.subTest(variant=variant):
+                self.assertEqual(merger.normalize_url_for_identity(variant), canonical)
+
+    def test_luma_api_host_is_not_folded(self):
+        """api.lu.ma is the JSON endpoint, a different resource from the page."""
+        self.assertEqual(
+            merger.normalize_url_for_identity("https://api.lu.ma/url?url=pubkey-jj3u"),
+            "api.lu.ma/url?url=pubkey-jj3u")
+        self.assertNotEqual(
+            merger.normalize_url_for_identity("https://api.lu.ma/url?url=pubkey-jj3u"),
+            merger.normalize_url_for_identity("https://luma.com/url?url=pubkey-jj3u"))
+
+    def test_lookalike_hosts_are_not_folded(self):
+        for url in ("https://notlu.ma/84fec4e2", "https://lu.market/84fec4e2"):
+            with self.subTest(url=url):
+                self.assertNotIn("luma.com", merger.normalize_url_for_identity(url))
+
+
+class TestLocationsWithin(unittest.TestCase):
+    COORDS = {
+        1: ('40.730000', '-73.997000'),   # Father Demo Square
+        2: ('40.733000', '-74.002000'),   # Greenwich Village, ~0.5 km away
+        3: ('40.660000', '-73.969000'),   # Prospect Park, ~8 km away
+        4: (None, None),
+    }
+
+    def test_same_or_unknown_is_compatible(self):
+        self.assertTrue(merger._locations_within(1, 1, self.COORDS))
+        self.assertTrue(merger._locations_within(None, 3, self.COORDS))
+        self.assertTrue(merger._locations_within(3, None, self.COORDS))
+        self.assertTrue(merger._locations_within(1, 4, self.COORDS))
+
+    def test_near_and_far(self):
+        self.assertTrue(merger._locations_within(1, 2, self.COORDS))
+        self.assertFalse(merger._locations_within(1, 3, self.COORDS))
+
+
+class TestUrlIdentityTier(unittest.TestCase):
+    """The tier is exempt from the merger's cross-location guard, so every other
+    signal is held at maximum strictness. Each test removes exactly one."""
+
+    COORDS = TestLocationsWithin.COORDS
+    URL = "https://www.boweryboyswalks.com/walking-tours/greenwich-village-history-walking-tour"
+    KEY = ("boweryboyswalks.com/walking-tours/greenwich-village-history-walking-tour")
+    SLOTS = {("2026-08-12", "2pm")}
+
+    def _index(self, name="The Hidden History of Greenwich Village", location_id=1,
+               slots=None, event_id=100):
+        return {(495, self.KEY): [{
+            'id': event_id, 'name': name, 'location_id': location_id,
+            'slots': slots if slots is not None else set(self.SLOTS),
+        }]}
+
+    def _match(self, index=None, counts=None, listing=None, name="The Hidden History of Greenwich Village",
+               url=None, website_id=495, location_id=2, slots=None):
+        return merger._match_by_url_identity(
+            name, url if url is not None else self.URL, website_id, location_id,
+            slots if slots is not None else set(self.SLOTS),
+            index if index is not None else self._index(),
+            counts if counts is not None else {(495, self.KEY): 1},
+            listing if listing is not None else set(),
+            self.COORDS,
+        )
+
+    def test_matches_across_a_location_disagreement(self):
+        """The whole point: the listing page said "Greenwich Village" and the
+        detail page said "Father Demo Square", so no other tier survives the
+        cross-location guard and a duplicate row is created and then archived."""
+        self.assertEqual(self._match(), 100)
+
+    def test_listing_url_is_refused(self):
+        self.assertIsNone(self._match(listing={(495, self.KEY)}))
+
+    def test_url_carrying_many_names_is_refused(self):
+        """Painting Lounge's rezclick root carries 190 distinct event names
+        across two real studios; without the cap the tier fuses the branches."""
+        self.assertIsNone(self._match(counts={(495, self.KEY): 3}))
+
+    def test_fuzzy_name_is_refused(self):
+        self.assertIsNone(self._match(name="The Hidden History of Greenwich Village Food Tour"))
+
+    def test_exact_name_ignores_punctuation_and_case(self):
+        self.assertEqual(self._match(name="the hidden history of GREENWICH village!"), 100)
+
+    def test_shared_date_without_a_shared_slot_is_refused(self):
+        """Two showtimes of one film on one day share a date but not a slot."""
+        self.assertIsNone(self._match(slots={("2026-08-12", "7pm")}))
+
+    def test_distant_venue_is_refused(self):
+        """A run club that meets in two parks (w4860) publishes one club page,
+        one name and one weekly slot for both meeting points."""
+        self.assertIsNone(self._match(index=self._index(location_id=3)))
+
+    def test_unlocated_crawl_event_is_allowed(self):
+        self.assertEqual(self._match(location_id=None), 100)
+
+    def test_other_website_does_not_match(self):
+        self.assertIsNone(self._match(website_id=496))
+
+    def test_no_slots_means_no_match(self):
+        """Dateless crawl_events are out of scope — they carry no schedule to
+        corroborate a cross-location merge."""
+        self.assertIsNone(self._match(slots=set()))
+
+    def test_same_location_candidate_beats_a_nearer_lower_id(self):
+        """Two branch rows can both end up holding one branch's URL; the branch
+        the crawl_event actually names must win over the lowest id."""
+        index = {(495, self.KEY): [
+            {'id': 100, 'name': 'X', 'location_id': 2, 'slots': set(self.SLOTS)},
+            {'id': 200, 'name': 'X', 'location_id': 1, 'slots': set(self.SLOTS)},
+        ]}
+        self.assertEqual(self._match(index=index, name='X', location_id=1), 200)
+        self.assertEqual(self._match(index=index, name='X', location_id=2), 100)
+
+    def test_missing_url_or_website(self):
+        self.assertIsNone(self._match(url=""))
+        self.assertIsNone(self._match(website_id=None))
+
+
+class TestDatelessNeverCreatesAnEvent(unittest.TestCase):
+    """A dateless crawl_event carries no occurrences, so any event it creates has
+    ZERO `event_occurrences` rows — invisible on the map (the exporter needs a
+    date) yet still absorbing `event_sources`, participating in dedup, and
+    counting against archival. `merge_crawl_events` must therefore reach its
+    create-new branch only with `dateless` false.
+
+    Two paths inside the function can leave a dateless crawl_event unmatched: the
+    dateless matcher returning None (guarded since the matcher was added), and the
+    global cross-location guard nulling a match the matcher DID make (unguarded
+    until 2026-08-13 — that hole created 834 zero-occurrence rows). The check is
+    structural because the create-new branch sits ~600 lines into a DB-driven loop
+    with no unit-test seam; what matters is that BOTH `continue` guards survive a
+    refactor of the matching tiers.
+    """
+
+    def _merge_source(self):
+        import ast
+        import inspect
+        tree = ast.parse(inspect.getsource(merger))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.FunctionDef) and node.name == 'merge_crawl_events':
+                return node
+        self.fail("merge_crawl_events not found in merger.py")
+
+    @staticmethod
+    def _is_bare_continue(if_node):
+        import ast
+        return len(if_node.body) == 1 and isinstance(if_node.body[0], ast.Continue)
+
+    def test_guard_rejected_dateless_match_does_not_fall_through(self):
+        """The cross-location guard nulls `matched_event_id` AFTER the dateless
+        matcher succeeded. Without a top-level `if dateless and matched_event_id
+        is None: continue`, that crawl_event lands in the create-new branch."""
+        import ast
+        found = any(
+            isinstance(node, ast.If)
+            and self._is_bare_continue(node)
+            and {'dateless', 'matched_event_id'} <= {
+                n.id for n in ast.walk(node.test) if isinstance(n, ast.Name)}
+            for node in ast.walk(self._merge_source())
+        )
+        self.assertTrue(found,
+            "merge_crawl_events lost the `if dateless and matched_event_id is None: "
+            "continue` guard — a dateless crawl_event whose match is rejected by the "
+            "cross-location guard will create a zero-occurrence event again."
+        )
+
+    def test_the_dateless_no_match_guard_also_survives(self):
+        """The other hole: the dateless matcher itself returning None. That guard
+        lives INSIDE `if dateless:` so it does not name `dateless` in its own test
+        — match on the nesting, or this silently passes on the unrelated
+        `not valid_occurrences and not dateless` skip a few lines earlier."""
+        import ast
+        dateless_blocks = [
+            node for node in ast.walk(self._merge_source())
+            if isinstance(node, ast.If)
+            and isinstance(node.test, ast.Name) and node.test.id == 'dateless'
+        ]
+        self.assertTrue(dateless_blocks, "the `if dateless:` matching block is gone")
+        self.assertTrue(
+            any(self._is_bare_continue(inner)
+                for block in dateless_blocks
+                for inner in ast.walk(block) if isinstance(inner, ast.If)),
+            "the `if dateless:` block no longer short-circuits when "
+            "_match_dateless_crawl_event returns None."
+        )
+
+
+class TestResolveStaleLocationName(unittest.TestCase):
+    """`events.location_name` is written from `locations.name` on event CREATION
+    but never refreshed on merge, so a later `location_id` correction leaves the
+    label frozen at the PREVIOUS location's canonical name.
+
+    Every case below is drawn from the live scan run before the fix shipped:
+    the REWRITE cases are real stale rows, the SKIP cases are the coincidence
+    class that killed the naive "always refresh from locations.name" version —
+    a source that genuinely wrote a neighborhood generic's name."""
+
+    LOCATIONS = {
+        2425: 'Flatbush',
+        2505: 'Park Slope',
+        2385: 'Chelsea',
+        4727: 'Kadampa Meditation Center NYC',
+        7390: 'Trinity Lutheran Church of Manhattan',
+        100: 'Flatbush Library',
+        101: 'BPL Park Slope',
+        102: 'Kadampa Meditation Center NYC',
+        103: 'The Sheen Center for Thought & Culture',
+        104: 'Trinity Lutheran Church of Staten Island',
+    }
+
+    def resolve(self, stored, current_loc_id, source_loc_ids, source_raw_names):
+        return merger.resolve_stale_location_name(
+            stored, current_loc_id, self.LOCATIONS, source_loc_ids, source_raw_names
+        )
+
+    # ── rewrite: the label is our own copy of a previous location's name ──
+
+    def test_rewrites_label_frozen_at_previous_location(self):
+        """ev 144834: pinned to Flatbush Library, still labelled 'Flatbush'
+        because the first crawl_event resolved to the neighborhood row 2425.
+        No source ever wrote the bare word."""
+        self.assertEqual(
+            self.resolve('Flatbush', 100, [2425, 100], ['Flatbush Library']),
+            'Flatbush Library',
+        )
+
+    def test_rewrites_park_slope_label(self):
+        """ev 192836 / 198467 — same shape via BPL's branch pages."""
+        self.assertEqual(
+            self.resolve('Park Slope', 101, [2505], ['Park Slope Library']),
+            'BPL Park Slope',
+        )
+
+    def test_rewrites_when_previous_location_was_a_sibling_venue(self):
+        """ev 193577: an alt-name hijack was repaired by moving location_id from
+        the Manhattan church to the Staten Island one; the label never moved."""
+        self.assertEqual(
+            self.resolve('Trinity Lutheran Church of Manhattan', 104, [7390],
+                         ['Trinity Evangelical Lutheran Church, Staten Island']),
+            'Trinity Lutheran Church of Staten Island',
+        )
+
+    def test_rewrites_umbrella_label_after_branch_split(self):
+        """ev 139214: branch classes split off the KMC umbrella row 4727."""
+        self.assertEqual(
+            self.resolve('Kadampa Meditation Center NYC', 103, [4727],
+                         ['KMC NYC Main Center Chelsea']),
+            'The Sheen Center for Thought & Culture',
+        )
+
+    def test_comparison_ignores_case_and_surrounding_whitespace(self):
+        self.assertEqual(
+            self.resolve('  flatbush  ', 100, [2425], ['Flatbush Library']),
+            'Flatbush Library',
+        )
+
+    # ── skip: the coincidence class the naive fix would have destroyed ──
+
+    def test_skips_when_a_source_wrote_the_label_itself(self):
+        """The 3464-row majority: the extractor genuinely emitted 'Chelsea'.
+        That is the source's label, not our copy — it must stand even though it
+        also happens to be the name of location row 2385."""
+        self.assertIsNone(
+            self.resolve('Chelsea', 102, [2385, 102], ['Chelsea', 'Kadampa Meditation Center NYC'])
+        )
+
+    def test_skips_when_only_the_incoming_crawl_event_wrote_the_label(self):
+        """The corroborating source can be THIS merge's crawl_event."""
+        self.assertIsNone(self.resolve('Park Slope', 101, [2505], ['Park Slope']))
+
+    def test_skips_when_label_matches_no_location_the_event_resolved_to(self):
+        """A label equal to some unrelated location row's name is not evidence
+        that WE wrote it — the task's proposed global 'equals some other row'
+        test alone would have rewritten 3874 rows on this signal."""
+        self.assertIsNone(self.resolve('Chelsea', 100, [2425], ['Flatbush Library']))
+
+    def test_skips_when_label_already_matches_the_current_location(self):
+        self.assertIsNone(self.resolve('Flatbush Library', 100, [2425], ['Flatbush Library']))
+
+    def test_skips_free_text_labels(self):
+        """Anything that is not verbatim some location row's name is a source
+        string by construction and is never touched."""
+        self.assertIsNone(
+            self.resolve('Flatbush Library, Large Meeting Room', 100, [2425], ['Flatbush Library'])
+        )
+
+    def test_skips_unmapped_events_and_placeholders(self):
+        self.assertIsNone(self.resolve('Flatbush', None, [2425], []))
+        self.assertIsNone(self.resolve('Not specified', 100, [2425], []))
+        self.assertIsNone(self.resolve('', 100, [2425], []))
+        self.assertIsNone(self.resolve(None, 100, [2425], []))
+
+    def test_skips_when_current_location_id_is_unknown(self):
+        self.assertIsNone(self.resolve('Flatbush', 999999, [2425], []))
+
+    def test_tolerates_null_source_location_ids(self):
+        """crawl_events that never resolved a venue carry location_id NULL."""
+        self.assertIsNone(self.resolve('Flatbush', 100, [None, None], ['Flatbush Library']))
+
+
+class TestMergeRefreshesStaleLocationName(unittest.TestCase):
+    """Structural pin: the merge path must actually call the discriminator, and
+    must not regress to refreshing `location_name` unconditionally."""
+
+    def _merge_source(self):
+        import ast
+        import inspect
+        return ast.parse(inspect.getsource(merger.merge_crawl_events))
+
+    def test_merge_path_calls_resolve_stale_location_name(self):
+        import ast
+        calls = [
+            node for node in ast.walk(self._merge_source())
+            if isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id == 'resolve_stale_location_name'
+        ]
+        self.assertTrue(
+            calls,
+            "merge_crawl_events no longer consults resolve_stale_location_name — "
+            "a corrected location_id will freeze location_name again."
+        )
 
 
 if __name__ == "__main__":
