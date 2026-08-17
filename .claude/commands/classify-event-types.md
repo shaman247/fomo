@@ -4,7 +4,7 @@ Populate the `events.event_type` column by classifying events against a fixed
 taxonomy. The classifier runs as Claude (no Gemini call), reading event name +
 description + venue + tags + occurrence shape and assigning one type per event.
 
-## Taxonomy (32 types + Other catch-all, 6 categories)
+## Taxonomy (33 types + Other catch-all, 6 categories)
 
 > The exact storable label strings are also defined in `pipeline/event_types.py`
 > (`VALID_EVENT_TYPES`) — the machine-readable single source of truth. When you
@@ -38,6 +38,7 @@ tags** (e.g. no `Dance` type — a dance show is `Theater Show` + `Dance` tag).
 - **Exhibition** — gallery/museum show with a defined open run. Static single-piece installations you view at your own pace live here too. (A *scripted, sensory, time-slotted* environment you move through is `Immersive Experience`, not Exhibition.)
 - **Open House** — venue opens normally-gated space (museum free Fridays, school open house, open studios, artist-residency open hours)
 - **Market** — vendor-driven commerce: flea market, greenmarket, craft bazaar, vendor fair. Attendee browses to buy.
+- **Fair** — booth/table-walking convening where the attendee circulates among many exhibitors to gather information, meet representatives, or sign up: career/job fair, college or grad-school fair, resource or benefits fair, volunteer fair, health fair. Different from `Market` (vendors selling goods — a fair's tables recruit and inform rather than transact), `Exhibition` (curated works on view, not staffed booths), `Open House` (one venue opening its own doors, not many organizations convening in a hall), and `Festival` (multi-act programming sprawl — a "street fair" or "renaissance faire" is `Festival`/`Community Celebration` despite the name).
 - **Pop-Up** — venue hosts a one-off guest artist/vendor that doesn't fit the Market pattern: tattoo day at a bar, food pop-up at a brewery, plant giveaway, pet portrait session at a café. Different from `Market` (single guest, not vendor sprawl) and `Workshop` (no instruction).
 - **Immersive Experience** — a ticketed, time-slotted, multi-sensory environment or scenario the attendee is enveloped in: museum overnights, dining-in-the-dark, scent/sensory journeys, interactive narrative installations, immersive wellness retreats. Different from `Exhibition` (self-paced viewing of works on a run), `Theater Show` (no billed stage performance), and `Tour` (not place-learning). The event is sold as an "experience."
 
@@ -61,7 +62,7 @@ tags** (e.g. no `Dance` type — a dance show is `Theater Show` + `Dance` tag).
 - **Outing** — group outdoor activity not framed as instruction or place-learning: social bike ride, group skate, casual group walk
 
 ### Catch-all
-- **Other** — Use ONLY when an event is genuinely a real event but none of the 32 types above describe its structure. Prefer the closest-fitting real type over `Other` whenever defensible. If `Other` accumulates a recurring pattern (3+ events of the same shape), the taxonomy probably needs a new type — flag it for review. Do NOT use `Other` for junk rows (closures, submission calls, marketing) — those go to `UNKNOWN`.
+- **Other** — Use ONLY when an event is genuinely a real event but none of the 33 types above describe its structure. Prefer the closest-fitting real type over `Other` whenever defensible. If `Other` accumulates a recurring pattern (3+ events of the same shape), the taxonomy probably needs a new type — flag it for review. Do NOT use `Other` for junk rows (closures, submission calls, marketing) — those go to `UNKNOWN`.
 
 ## Decision rules
 
@@ -88,6 +89,14 @@ tags** (e.g. no `Dance` type — a dance show is `Theater Show` + `Dance` tag).
 8. **Open House** is for normally-gated venues throwing open the doors (museum
    free hours, school open house, artist-residency open studios). `Exhibition`
    is when there's a curated show on view. `Market` is when vendors are selling.
+   `Fair` is when many organizations staff tables to recruit/inform.
+   **Fair vs Market vs Festival — go by what the tables are for, not the word
+   "fair" in the name.** Tables recruiting, advising, or signing people up
+   (career, college, grad school, volunteer, health, benefits, resource,
+   housing, camp) → `Fair`. Tables selling goods (craft fair, vendor fair,
+   holiday market, book fair with a sales floor) → `Market`. Street
+   fairs/festivals, renaissance faires, county fairs with rides and stages →
+   `Festival` or `Community Celebration`.
 9. **Benefit/Gala vs Party vs Concert:**
    - If billed as fundraiser **with mixed program** (cocktail hour + auction +
      speeches + performance) → `Benefit`
@@ -152,7 +161,7 @@ sweep in Mode B above is the sustaining mechanism for now.
 
 `Concert`, `Theater Show`, `Comedy Show`, `Screening`, `Sports`, `Reading`,
 `Class`, `Workshop`, `Camp`, `Fitness`, `Game`, `Open Practice`, `Volunteer`, `Drop-In Service`,
-`Exhibition`, `Open House`, `Market`, `Pop-Up`, `Immersive Experience`,
+`Exhibition`, `Open House`, `Market`, `Fair`, `Pop-Up`, `Immersive Experience`,
 `Club Night`, `Party`, `Benefit`, `Watch Party`, `Festival`, `Community Celebration`,
 `Talk`, `Service`, `Ceremony`, `Civic Meeting`, `Discussion Group`,
 `Tour`, `Outing`,

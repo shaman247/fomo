@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS locations (
     lng DECIMAL(10, 6),
     emoji VARCHAR(10),
     alt_emoji VARCHAR(10) COMMENT 'Fallback shown on Windows when emoji is a country flag (the system emoji font has no flag glyphs)',
-    generic_location TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'If true, a broad area/neighborhood rather than a specific venue (always uses pushpin emoji)',
+    generic_location TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'If true, the row names a whole outdoor public open space or street corridor (park, plaza, beach, greenway, boardwalk, neighborhood) rather than a bounded venue. Review-tooling only: the exporter never selects it and no frontend code reads it. NOT an emoji rule - generic rows keep their own emoji (parks stay tree/beach/ferry); the pushpin convention applies to NEIGHBORHOOD rows specifically.',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 

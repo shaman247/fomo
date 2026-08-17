@@ -47,7 +47,14 @@ cur.execute("""
     WHERE e.archived = 0 AND e.suppressed = 0
       AND e.sublocation IS NOT NULL AND e.sublocation != ''
       AND l.address IS NOT NULL  AND l.address != ''
+      AND l.generic_location = 0
 """)
+
+# `generic_location = 1` rows (neighborhoods, parks, corridors) are filtered out in
+# SQL, not just skipped during triage: on those rows the sublocation is *supposed*
+# to carry the specific spot, so they can never be a fix. Flipping a park/corridor
+# row to `generic_location = 1` is therefore the durable way to retire it from this
+# scan — before this filter existed they kept reappearing every run.
 
 by_loc = defaultdict(list)
 for r in cur.fetchall():
@@ -76,7 +83,9 @@ conn.close()
 
 Walk the list top-down. For each location:
 
-1. **Skip if `generic_location = 1`** — the sublocation is meant to give the specific spot within a neighborhood/park; that's correct.
+1. **`generic_location = 1` rows never reach you** — Step 1 filters them in SQL. If a
+   park/corridor/neighborhood row keeps surfacing, the fix is to flip its
+   `generic_location` flag, not to re-triage it every run.
 2. **Skip if the venue is known to span multiple addresses or sites** (Gagosian, Kadampa Meditation Center, P.P.O.W Gallery, Manhattan Community Boards that meet at rotating venues, etc.).
 3. **Skip if the DB and sublocation are the same building from different streets** (corner addresses). You can usually tell by checking that the lat/lng matches both addresses.
 4. **Otherwise it's a candidate fix** — most likely the DB has a stale or wrong address. Several events from different sources agreeing on the same alternate address is a strong signal.

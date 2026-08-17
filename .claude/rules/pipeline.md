@@ -18,6 +18,21 @@ All intermediate data lives in the database (not files).
 
 - Small pages are extracted in a single AI call
 - Large pages are chunked, events extracted per chunk, then enriched in batches of 30
+- **Provider split** (`pipeline/llm_providers.py`): five AI paths are individually provider-selectable via `EXTRACTION_PROVIDER` (`gemini` | `openai`, default `gemini`), or `EXTRACTION_PROVIDER_<PATH>` for one path. Measured 2026-08-03 against real crawl results:
+
+  | path | verdict | on `openai` |
+  |---|---|---|
+  | single | tie | ✅ switchable — 8/10 sites gave identical (name, date) sets |
+  | enrichment | tie | ✅ switchable — same enriched counts, no-desc rate, emoji coverage |
+  | detail | tie | ✅ switchable — identical descriptions/tags/emoji/occurrences on sample |
+  | chunked | tie *(after the name-budget fix)* | ✅ switchable — 57 names / 185 name-date pairs from both |
+  | vision | **regression** | ❌ **pinned to Gemini** |
+
+  **vision** is pinned in `llm_providers.GEMINI_PINNED`, which the blanket `EXTRACTION_PROVIDER` switch deliberately does not reach (a per-path override still does). Luna misreads stylized flyer typography: on Lucky 13 Saloon (crawl 109123) it read a FUNGBLADE flyer as "Fungicide", took the promoter as the event name on a Circus of Power bill, and invented a band on a Crashing Wayward flyer — three of three flyers checked against the images, all three of which Gemini read correctly. This path carries the Instagram-first venues, where the event name exists *only* on the flyer. **Verify any vision change by downloading the flyers and reading them, not by diffing the two models' outputs.**
+
+  `--batch` is Gemini-only and does NOT go through `llm_providers` (it builds `InlinedRequest`s directly), so a batch run and a sync run can extract the same page with different models. Batch is not the default.
+- **The `max_batches` budget counts DISTINCT EVENT NAMES, not extracted records** (`_execute_chunked_sync`). Enrichment is name-keyed — `_combine_chunked_results` looks it up by `event['name']` — so N records sharing a name cost one enrichment slot between them, not N. Counting raw records made the cap sensitive to a model's *grouping style* rather than a page's size: a model emitting one record per date instead of one record with many occurrences tripped the cap early and **skipped whole chunks** (Prospect Park: 5 of 7 chunks, 34 distinct names vs 57), while auto-bumping the site's `max_batches` on growth that never happened. Names are matched exactly, since that is the enrichment lookup key. This also cuts real enrichment calls on Gemini (same page: 110 records → 57 names, 4 batches → 2). `CHUNK_RECORD_CEILING` (default 5000) is the runaway guard on raw records, which the name budget no longer bounds.
+- **Reasoning effort** (`OPENAI_REASONING_EFFORT`, default `low`): `low` is the floor. It matches `medium` exactly across the sites tested at ~half the latency, but `none` collapsed Muhlenberg Library from 19 events to 2 while looking fine on three other pages. Never calibrate this on one page.
 - `websites.max_batches` overrides the default limit per-website (default: 3 batches = 90 events)
 - **Auto-bump**: when a chunked extraction exceeds the cap, the sync path raises `websites.max_batches` in place to `ceil(N/30)+1` (ceiling 40) and persists it (`extractor._maybe_auto_bump_max_batches`) — unless the site was deliberately throttled below the default of 3, which is respected. Chunk extraction stops early at the old cap's budget, so coverage converges over a couple of runs.
 - **Variance guard**: if a sync extraction yields < half the website's trailing-median event count while the crawled content size is within ±20% of its median, the extraction is retried once and the better result kept (`extractor._variance_retry_reason`). Protects against Gemini per-run yield swings (observed 4→24 on identical content) cascading into false archivals.
@@ -60,10 +75,27 @@ Some events get "No description available." because the listing page lacked deta
 - `city_config.py` — Loads `config/<FOMO_CITY>.yaml` (default `nyc`); all city-specific strings (extraction-prompt geography/intro, generic location names, processor token lists, scoring calibration examples). `import city_config`
 - `site_profiles.py` — Generic per-platform registry; auto-discovers site-specific crawl plugins from `pipeline/sources/*.py`.
 - `crawler.py` — Web crawling with Crawl4AI (listing pages + individual event URLs), browser config/grouping; consults `site_profiles` for skip/inject-js/custom-fetch
-- `extractor.py` — Gemini AI event extraction (full pages + single event detail crawl); prompt city-bits from `city_config`
+- `extractor.py` — AI event extraction (full pages + single event detail crawl); prompt city-bits from `city_config`
+- `llm_providers.py` — provider-agnostic structured JSON generation for the **single-call path only** (see Provider split above); translates any provider error into `ProviderCallFailure`, which `extractor` re-raises as `ExtractionCallFailure` so a failed call is stored as `status='failed'` (content preserved) rather than an events-less zero
 - `processor.py` — Markdown parsing, text utilities, tag processing, detail crawl orchestration (Step 5); location/tag token lists from `city_config`
 - `merger.py` — Event deduplication
-- `exporter.py` — JSON export to per-day chunks (`events.day0..day3.json` + `events.remainder.json`, matching `locations.*.json` and `events.*.desc.json` description companions, plus `organizers.json` and `manifest.json` mapping day index → calendar date)
-- `uploader.py` — FTP upload
+- `exporter.py` — JSON export to per-day chunks (`events.day0..day3.json` + `events.remainder.json`, matching `locations.*.json` and `events.*.desc.json` description companions, plus `organizers.json` and `manifest.json` mapping day index → calendar date). Also the weekly public NDJSON dataset (see below).
+- `uploader.py` — FTP upload (`upload()` for the frontend data files; `upload_public_dataset()` for the NDJSON export, which uses the `PUBLIC_HTML_FTP_USER` account since the data account is chrooted away from `public_html/`)
 - `db.py` — Database connection and all DB operations
 - `frequency_analyzer.py` — Crawl frequency analysis
+
+## Public NDJSON dataset export (weekly)
+
+Two consumer-facing datasets served at `https://fomo.nyc/exports/`:
+
+- **`events-upcoming.ndjson`** — the active event window (today → +90d), same eligibility as the frontend export. Dated snapshots `events-upcoming-YYYY-MM-DD.ndjson` alongside (last 8 kept, locally and remotely).
+- **`events-past.ndjson`** — occurrences that **ended** within the last 28 days (`PUBLIC_EXPORT_PAST_DAYS`), **archived events included** (ended events get archived once sources stop listing them — they're the point of this file). Stable file only, no dated snapshots. An event straddling today appears in both files with its occurrences split; an ongoing span (ends in the future) is upcoming, never past.
+- **`manifest.json`** — schema_version, generated_at, per-dataset file/event_count/window.
+
+One JSON object per line: `event_id, name, [short_name], [event_type], [emoji], [description], location{location_id, name, [address], [sublocation], lat, lng}, occurrences[{start_date, start_time, end_date, end_time}], urls[], tags[], [organizers[{name, url}]]`.
+
+- Runs automatically in the pipeline tail (Step 8b, also in `--merge-only`) when the newest dated upcoming snapshot in local `exports/` is ≥ 7 days old — **the local dated files are the scheduling state**; a failed upload deletes the fresh snapshot so the next run retries. Non-fatal to the pipeline.
+- Force anytime: `./venv/bin/python pipeline/main.py --export-dataset`.
+- Eligibility (both datasets): not suppressed, mapped location with coordinates, ≥ 1 URL, aggregator trust gate; upcoming additionally requires not archived. Organizer attribution resolves to roots and drops aggregators, like `organizers.json`. Occurrences are deduped (exact + contained same-time spans).
+- **The schema only changes additively** — bump `exporter.PUBLIC_EXPORT_SCHEMA_VERSION` on any breaking change. Tests: `pipeline/tests/test_public_export.py`.
+- The pre-existing one-off `june_events.ndjson` / `june_events.csv` also live in remote `exports/` — unrelated to this pipeline, left in place.

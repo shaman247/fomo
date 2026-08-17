@@ -37,7 +37,15 @@ extraction:
   # extractor.py get_prompt hashtag-guidance tail.
   tag_avoidance: "Avoid location-specific or NYC-redundant tags."
   # extractor.py get_prompt: the full metro-geography rule bullet (verbatim).
-  region_rule: "Only include events in the NYC metro area within the next 3 months. The NYC metro area includes: all five NYC boroughs; Long Island (Nassau, Suffolk, the Hamptons); Westchester and Rockland counties; the Hudson Valley (Dutchess, Orange, Ulster, Putnam); Northern New Jersey (Bergen, Hudson, Essex, Passaic, Union, Middlesex, Monmouth, Ocean); and Southern Connecticut (Fairfield County). Skip events at venues outside this metro region (e.g. Philadelphia, Boston, Chicago, LA, Europe, etc.)."
+  # KEEP THIS COUNTY LIST IN SYNC WITH THE `coverage:` BLOCK BELOW. This prose is
+  # the extractor's FIRST filter — an event this rule tells Gemini to skip is
+  # dropped before the ZIP-based `coverage:` test ever sees it, so a county that
+  # is in `coverage:` but missing here is a SILENT coverage loss, not a
+  # belt-and-braces double check. Fixed 2026-08-12: Morris, Somerset and
+  # Hunterdon were deliberately IN under `coverage:` (see the ZIP3 078/079/088
+  # notes) but omitted here, which contradicted w4725 Morris County Park
+  # Commission being a legitimate source across its whole footprint.
+  region_rule: "Only include events in the NYC metro area within the next 3 months. The NYC metro area includes: all five NYC boroughs; Long Island (Nassau, Suffolk, the Hamptons); Westchester and Rockland counties; the Hudson Valley (Dutchess, Orange, Ulster, Putnam); Northern and Central New Jersey (Bergen, Hudson, Essex, Passaic, Union, Morris, Middlesex, Somerset, Hunterdon, Monmouth, Ocean); and Southern Connecticut (Fairfield County). Skip events at venues outside this metro region (e.g. Philadelphia, Boston, Chicago, LA, Europe, etc.)."
 
 # db.py _load_generic_location_names() — city-level names added on top of the geotags list below.
 generic_location_names:
@@ -136,12 +144,14 @@ geotags:
   - "Dyker Heights"
   - "East Elmhurst"
   - "East Flatbush"
+  - "East Flushing"
   - "East Hampton"
   - "East Harlem"
   - "East Meadow"
   - "East New York"
   - "East Village"
   - "East Williamsburg"
+  - "Eastchester"
   - "Edenwald"
   - "Edgemere"
   - "Edgewater"
@@ -168,6 +178,7 @@ geotags:
   - "Fort Lee"
   - "Fort Montgomery"
   - "Fort Totten"
+  - "Foxhurst"
   - "Freeport"
   - "Fresh Meadows"
   - "Freshkills Park"
@@ -191,6 +202,7 @@ geotags:
   - "Hamilton Heights"
   - "Harlem"
   - "Hawthorne"
+  - "Heartland Village"
   - "Hell's Kitchen"
   - "Herald Square"
   - "Highbridge"
@@ -228,6 +240,8 @@ geotags:
   - "Lyndhurst"
   - "Manhattan"
   - "Manhattan Beach"
+  - "Manor Heights"
+  - "Mapleton"
   - "Maplewood"
   - "Marine Park"
   - "Mariners Harbor"
@@ -237,6 +251,7 @@ geotags:
   - "Melville"
   - "Metuchen"
   - "Middle Village"
+  - "Midland Beach"
   - "Midtown"
   - "Midtown East"
   - "Midtown West"
@@ -269,6 +284,7 @@ geotags:
   - "NoHo"
   - "NoMad"
   - "Nolita"
+  - "North Corona"
   - "North Riverdale"
   - "Northport"
   - "Norwalk"
@@ -281,12 +297,15 @@ geotags:
   - "Ozone Park"
   - "Palisades Park"
   - "Paramus"
+  - "Park Hill"
   - "Park Slope"
   - "Parkchester"
   - "Passaic County"
   - "Pelham"
   - "Pelham Bay"
   - "Pelham Bay Park"
+  - "Pelham Gardens"
+  - "Port Morris"
   - "Port Richmond"
   - "Poughkeepsie"
   - "Prince's Bay"
@@ -429,6 +448,10 @@ coverage:
       - "124"   # Ulster (Kingston, Saugerties, Woodstock). See note on 124/125 below.
       - "125"   # Dutchess (Rhinebeck, Beacon) + Orange (Newburgh) + Ulster (New Paltz)
       - "126"   # Dutchess (Poughkeepsie)
+      - "127"   # Sullivan (Bethel/Woodstock site, Monticello, Livingston Manor,
+                #   Narrowsburg). Added 2026-08-05 on an explicit product call:
+                #   Sullivan is not in the original coverage prose, but Bethel
+                #   Woods is a major regional draw. Un-suppressed 68 events.
     NJ:
       - "070"   # Essex / Union / Hudson / Middlesex (Newark, Bayonne, Linden)
       - "071"   # Essex (Newark)
@@ -438,7 +461,9 @@ coverage:
       - "075"   # Passaic (Paterson)
       - "076"   # Bergen (Hackensack)
       - "077"   # Monmouth (Red Bank, Freehold)
-      - "079"   # MIXED — Union half only; see zip5_only below
+      - "078"   # MIXED — Morris half only; see zip5_only below (the rest is
+                #   Warren + Sussex, which stay out)
+      - "079"   # MIXED — Union + Morris only; see zip5_only below
       - "085"   # MIXED — Monmouth/Ocean half only; see zip5_only below
       - "087"   # Ocean (Lakewood, Toms River) + Monmouth (Manasquan)
       - "088"   # Middlesex (Edison, Perth Amboy) + Somerset
@@ -450,9 +475,21 @@ coverage:
   # ZIP3s above that straddle a coverage boundary: ONLY these ZIP5s count as in
   # coverage; every other ZIP5 sharing that ZIP3 is out. Keyed "<STATE>:<zip3>".
   zip5_only:
-    # 079 is split between Union County (in) and Morris/Somerset (out): Summit
-    # 07901 is in coverage, Morristown 07960 is not.
-    "NJ:079": ["07901", "07902", "07922", "07974"]   # Summit, New Providence, Berkeley Heights
+    # 078 is Morris (IN, as of 2026-08-05) + Warren + Sussex (both OUT). These
+    # are its Morris ZIP5s; Hackettstown 07840 and Belvidere 07823 are WARREN
+    # and stay out, as does all of Sussex (Newton 07860, Andover 07821, ...).
+    "NJ:078": ["07801", "07803", "07834", "07836", "07842", "07845", "07847",
+               "07849", "07850", "07852", "07853", "07856", "07857", "07866",
+               "07869", "07876", "07878", "07885"]
+    # 079 is Union (in) + Morris (in, as of 2026-08-05) + Somerset (out).
+    # Somerset's 079xx — Far Hills 07931, Gladstone 07934, Basking Ridge 07920,
+    # Bernardsville 07924, Peapack 07977 — stays out; it reaches coverage
+    # through 088 instead (see the edge-case note below).
+    "NJ:079": ["07901", "07902", "07922", "07974",                 # Union: Summit, New Providence, Berkeley Heights
+               "07926", "07927", "07928", "07930", "07932", "07933",
+               "07935", "07936", "07940", "07945", "07946", "07950",
+               "07960", "07961", "07962", "07963", "07970", "07976",
+               "07980", "07981", "07999"]                          # Morris: Morristown, Madison, Chatham, Whippany, ...
     # 085 is mostly Mercer (Princeton/Trenton — out); these are its
     # Monmouth/Ocean ZIPs (Allentown, Millstone, Jackson, New Egypt).
     "NJ:085": ["08501", "08510", "08514", "08526", "08527", "08533", "08535", "08555"]
@@ -471,21 +508,12 @@ coverage:
   #     07480 West Milford are PASSAIC and correctly in.
   #   * "088" is Middlesex + Somerset + (deliberately) Hunterdon, but ALSO Warren
   #     County at 08865 Phillipsburg. No Warren locations exist today.
-  #   * "070" is Essex/Union/Hudson/Middlesex but ALSO reaches MORRIS County at
-  #     07005 Boonton (and the other Morris ZIPs in 070xx). Morris is NOT in the
-  #     coverage prose, and 07960 Morristown is explicitly excluded via the
-  #     NJ:079 zip5_only whitelist — so admitting Morris through 070 is
-  #     inconsistent with both. MEASURED 2026-08-01: the entire exposure is
-  #     **2 locations / 4 live events**, both in Boonton 07005 — loc 9119
-  #     Pyramid Mountain Natural Historic Area (3) and loc 8830 Myrtle Ave &
-  #     Main St (1). Left admitted for now because the blast radius is 4 events
-  #     and Boonton is ~27 miles from Manhattan, i.e. arguably metro; this is a
-  #     product-scope call, not a data bug.
-  #     **It decides w4725 Morris County Park Commission:** that site is
-  #     currently geofiltered down to its two 070-admitted venues (Pyramid
-  #     Mountain, Tourne). If Morris is ruled OUT, w4725's whitelist becomes
-  #     empty and disabling it is the correct move (archive its events first —
-  #     see `disabled_website_blocks_archival`).
+  #   * "070" reaching MORRIS County at 07005 Boonton — RESOLVED 2026-08-05.
+  #     This was flagged as an inconsistency (070 admitted Morris while NJ:079
+  #     excluded Morristown). Morris is now deliberately IN, via the 078/079
+  #     whitelists above, so 070's Morris ZIPs are consistent rather than a gap.
+  #     w4725 Morris County Park Commission is consequently a legitimate source
+  #     across its whole footprint, not just its two 070-admitted venues.
   # If any of these starts accruing venues, the clean fix is a new `zip5_exclude`
   # map (ZIP3 -> ZIP5s that are OUT) rather than inverting these into zip5_only.
   # w3531 NJ State Parks already excludes both at intake via its venue whitelist.

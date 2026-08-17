@@ -28,12 +28,12 @@ Curated tags are organized into a DAG (directed acyclic graph) via the `tag_hier
 The "what is the event *about*?" (content/genre) axis. Each root has 2-4 levels of specificity beneath it. Roots, roughly largest-subtree first (exact descendant counts drift constantly — don't treat these as authoritative):
 - **Music**, **Community**, **Art**, **Education**, **Wellness**, **Nightlife**, **Theater**, **Film**, **Literature**, **Sports**, **Outdoor**, **Comedy**, **Dance**, **Family**, **Games**
 
-### Format (1 root → 6 categories → 32 types)
-The "what is the attendee *doing*?" (structural) axis — mirrors `events.event_type` (see `.claude/rules/database-schema.md` and `pipeline/event_types.py`). One `Format` 🎫 root → six category tags (Performance, Participatory, Browsable, Social, Gathering, **Outings**) → the 32 type leaves (Concert, Workshop, Tour, …). Category tag names match the taxonomy category names exactly, with one unavoidable exception: the `Outing` category would collide with the `Outing` leaf (`tags.name` is UNIQUE), so the category tag is **"Outings"** (plural) while the leaf stays "Outing".
+### Format (1 root → 6 categories → 33 types)
+The "what is the attendee *doing*?" (structural) axis — mirrors `events.event_type` (see `.claude/rules/database-schema.md` and `pipeline/event_types.py`). One `Format` 🎫 root → six category tags (Performance, Participatory, Browsable, Social, Gathering, **Outings**) → the 33 type leaves (Concert, Workshop, Tour, …). Category tag names match the taxonomy category names exactly, with one unavoidable exception: the `Outing` category would collide with the `Outing` leaf (`tags.name` is UNIQUE), so the category tag is **"Outings"** (plural) while the leaf stays "Outing".
 
-- Membership is driven from `event_type`, not content keywords — `scripts/sync_format_tags.py` rebuilds `event_tags` for the family (run automatically in `/run-pipeline` Step 4). 24 leaves are Format-only and **authoritative** (membership == `event_type` exactly). 8 leaves (**Concert, Sports, Reading, Workshop, Fitness, Volunteer, Party, Festival**) also exist as content-genre nodes with their own subtrees, so they are **multi-parented** (under their genre root AND Format) and their membership is the **union** of content + `event_type` (additive, to keep the genre subtrees' ancestor invariant). `Sports` is the loosest — its content children (Swimming, Esports…) span formats; splitting genre-Sports from format-Sports is a possible future cleanup.
-- Search aliases (`tag_aliases`) map natural terms to the leaves (gig→Concert, standup→Comedy Show, gala→Benefit, …).
-- **Only the 32 leaf type tags are shown as selectable chips.** The `Format` root + 6 category tags are structural-only (kept for grouping/aggregation, hidden from the chip bar and search). The frontend derives the hidden set as `{'Format'} ∪ childrenOf('Format')` in `DataManager.processTagHierarchy` (`state.structuralFormatTags`), excludes it from `allAvailableTags`, and guards the descendant-dropdown padding in `filterPanelUI._getSortedDescendants`. Event popups already show leaf tags only via the exporter's `display_tags`.
+- Membership is driven from `event_type`, not content keywords — `scripts/sync_format_tags.py` rebuilds `event_tags` for the family (run automatically in `/run-pipeline` Step 4). 25 leaves are Format-only and **authoritative** (membership == `event_type` exactly). 8 leaves (**Concert, Sports, Reading, Workshop, Fitness, Volunteer, Party, Festival**) also exist as content-genre nodes with their own subtrees, so they are **multi-parented** (under their genre root AND Format) and their membership is the **union** of content + `event_type` (additive, to keep the genre subtrees' ancestor invariant). `Sports` is the loosest — its content children (Swimming, Esports…) span formats; splitting genre-Sports from format-Sports is a possible future cleanup.
+- Search aliases (`tag_aliases`) map natural terms to the leaves (gig→Concert, standup→Comedy Show, gala→Benefit, career fair→Fair, …).
+- **Only the 33 leaf type tags are shown as selectable chips.** The `Format` root + 6 category tags are structural-only (kept for grouping/aggregation, hidden from the chip bar and search). The frontend derives the hidden set as `{'Format'} ∪ childrenOf('Format')` in `DataManager.processTagHierarchy` (`state.structuralFormatTags`), excludes it from `allAvailableTags`, and guards the descendant-dropdown padding in `filterPanelUI._getSortedDescendants`. Event popups already show leaf tags only via the exporter's `display_tags`.
 
 ### Venue Types (19 roots, parallel hierarchy)
 The "what kind of place is the event at?" axis. These are deliberately separate from event types — a jazz show at a museum is `Jazz` (event) + `Museum` (venue), not nested.
@@ -44,6 +44,16 @@ Most venue roots have small subtrees (1–4 children) — venue tags are usually
 
 ### Virtual
 Delivery method filter. Children: Online, Live Stream, Online Learning, Online Talk, Webinar, Zoom, Virtual Tour, Virtual Yoga.
+
+**Product policy (user ruling, 2026-08-16) — virtual events are mapped, not hidden:**
+
+> "If a virtual event is associated with an organizer with a physical location, it should be mapped to that location. It is common for organizations to do a mix of in-person and virtual events; these should all be listed together, with a 'Virtual' tag on the virtual events for easy filtering if needed."
+
+Consequences:
+- A Zoom/online event pinned to its organizer's venue is **correct and intended**, not a geography bug. Do **not** suppress virtual events, and do **not** invent a shared "Virtual" location row — organizations' online and in-person programming belongs on the same pin.
+- Every virtual-only event must carry the `Virtual` root (plus the most specific fitting child), because that tag is the *only* thing that lets a user filter them out.
+- **`events.location_name` is the ground truth** for delivery method — it is the raw string from the source page. `locations.name` says where the organizer is, not how you attend. Never infer "in person" from a physical `location_id`; see the matching warning in `.claude/commands/audit-event-tags.md`.
+- Genuine **hybrid** rows ("Online & In-Person", "Mary Chapel (IN PERSON) / Zoom") happen in person *and* stream — they are not virtual-only and must not be swept up by virtual-only passes.
 
 ### Free
 Pricing filter. Children: Free Comedy. (Most free-event signal lives in the `Free` keyword/alias layer rather than curated children.)

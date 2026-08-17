@@ -58,12 +58,35 @@ Once the task completes, extract the summary and any signals worth triaging from
 grep -E "PIPELINE COMPLETED|PIPELINE FAILED|^Summary:|Websites crawled:|Total events processed:|Total archived:|Total upcoming events archived" /tmp/pipeline_run.log
 
 # Things worth triaging (all aggregated post-hoc, not per-site)
-grep -E "Traceback|WARNING: .* events would need .* batches, capping|upcoming event\(s\) archived|Content too large" /tmp/pipeline_run.log
+grep -E "Traceback|WARNING: .* events would need .* batches, capping|upcoming event\(s\) archived|Content too large|injection skipped|chunk request\(s\) failed" /tmp/pipeline_run.log
 ```
 
 The pipeline output to look for:
 - **Cap warnings** (`WARNING: N events would need M batches, capping at X`) — high-yield sites that need `max_batches` bumped
-- **Truncation warnings** (`Content too large (N chars), truncating to 300000`) — the payload was cut BEFORE chunking, so those events were never even offered to Gemini. This is a *silent* coverage loss: the site still reports a healthy event count, so nothing else flags it. See the `MAX_CONTENT_CHARS` task in `.claude/scheduled-tasks.md` for the affected-site list and the per-profile override.
+- **Truncation warnings** (`Content too large (N chars), truncating to 300000`) — the payload was cut BEFORE chunking, so those events were never even offered to Gemini. This is a *silent* coverage loss: the site still reports a healthy event count, so nothing else flags it. Background is in `## MAX_CONTENT_CHARS silently truncates 13 high-volume sites before extraction` — now in **`.claude/completed-tasks.md`**, not scheduled-tasks.
+  **The log line does not name the site** (extraction runs 10 workers, so the output interleaves). Find the offenders from the DB instead:
+  ```sql
+  SELECT cr.website_id, w.name, CHAR_LENGTH(cr.crawled_content) AS chars, cr.event_count
+  FROM crawl_results cr JOIN websites w ON w.id = cr.website_id
+  WHERE cr.crawled_at >= NOW() - INTERVAL 6 HOUR AND CHAR_LENGTH(cr.crawled_content) > 300000
+  ORDER BY chars DESC;
+  ```
+  Then confirm the dropped tail actually holds events before acting — slice `crawled_content[300000:]` and look. The fix is `UPDATE websites SET max_content_chars = <N>` (resolution order: `websites.max_content_chars` → the source plugin's `SiteProfile.max_content_chars` → the global default; see `site_profiles.max_content_chars_for`). A plugin-backed site may already be covered by its profile and need nothing — w388 RA runs 697K chars and extracts 848 events fine.
+- **Degraded js_code injections** — a site whose js_code fetches its data via a synchronous XHR can fall
+  back to the raw server-rendered page. The crawl still reports `processed` with a healthy-looking count, so
+  nothing else flags it: NYPL silently lost 80% of its coverage this way (915 → 178 events) because
+  `text_mode` defaulted on and blocked the XHR; `text_mode=0, light_mode=0` restored it.
+  **The `injection skipped` string in the grep above is a WEAK signal — only 6 of 34 sync-XHR injections
+  write a fail-safe message at all** (audited 2026-08-04), so a silent no-op usually logs nothing.
+  The reliable check is a **shape test**: extract each `js_code`'s own injected `<h1>` literal and assert it
+  appears in `crawl_results.crawled_content`. That is mechanical and covers every site; see
+  `## Audit sync-XHR js_code sites for silent text_mode degradation` in `.claude/scheduled-tasks.md`.
+  **Do not flip `text_mode` without the symptom** — 33 of 34 sync-XHR sites work fine on the default, and
+  the one structural candidate (w104) turned out to be byte-identical under both settings.
+- **Chunk failures** (`N/M chunk request(s) failed`) — since 2026-08-04 a PARTIAL chunk failure fails
+  closed (stored `failed`, content preserved) instead of silently storing a truncated extraction.
+  A non-trivial count here is real signal about chunk reliability that used to be invisible; recover
+  with `main.py --ids <ids>` and investigate the cause rather than reverting the guard.
 - **Archival warnings** (`⚠️ WARNING: N upcoming event(s) archived`) — review for crawl regressions vs legitimate site rotations
 - **Tracebacks** — fatal errors that need investigation
 - **Total counts** — sanity-check websites crawled, events processed, events archived
