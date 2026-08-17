@@ -10,6 +10,11 @@ struct FomoApp: App {
                 // pads the filter panel / sheet down. Insetting the top here would
                 // leave a blank strip above the WebView and zero out the CSS inset.
                 .ignoresSafeArea()
+                #if DEBUG
+                // Screenshot hook: hide the native status bar, e.g.
+                //   xcrun simctl launch <udid> fomocity.fomo -fomoHideStatusBar 1
+                .statusBarHidden(ProcessInfo.processInfo.arguments.contains("-fomoHideStatusBar"))
+                #endif
         }
     }
 }

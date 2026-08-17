@@ -36,6 +36,13 @@ function standardize_time($timeStr): string {
     $s = preg_replace('/(est|edt|pst|pdt|mst|mdt|cst|cdt|et|pt|mt|ct)$/', '', $s);
     if ($s === '') return '';
 
+    // Drop a seconds field ('19:30:00' -> '19:30', '7:30:00pm' -> '7:30pm'). None of
+    // the patterns below match HH:MM:SS, so without this it falls through verbatim
+    // and lands beside its own canonical 12-hour form as a duplicate.
+    if (preg_match('/^(\d{1,2}:\d{2}):[0-5]\d(am|pm)?$/', $s, $m)) {
+        $s = $m[1] . ($m[2] ?? '');
+    }
+
     // 12-hour form: '7pm', '7:30pm'
     if (preg_match('/^(\d{1,2})(?::(\d{2}))?(am|pm)$/', $s, $m)) {
         $h = (int)$m[1];

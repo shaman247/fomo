@@ -140,10 +140,24 @@ struct FomoWebView: UIViewRepresentable {
         //   xcrun simctl launch <udid> fomocity.fomo -fomoOrientation landscape
         // simctl has no rotate command; this rotates the scene from inside.
         if let orientation = FomoWebView.launchArg("fomoOrientation") {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            // The request is racily rejected ("windowing mode does not allow")
+            // right after launch on iOS 26 simulators — keep retrying until the
+            // scene actually reports the wanted orientation.
+            var ticks = 0
+            Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in
+                ticks += 1
                 guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene else { return }
-                let mask: UIInterfaceOrientationMask = orientation == "landscape" ? .landscapeRight : .portrait
-                scene.requestGeometryUpdate(.iOS(interfaceOrientations: mask))
+                let wantLandscape = orientation == "landscape"
+                if scene.interfaceOrientation.isLandscape == wantLandscape || ticks > 30 {
+                    NSLog("fomoOrientation: settled at \(scene.interfaceOrientation.rawValue) after \(ticks)s")
+                    timer.invalidate()
+                    return
+                }
+                let mask: UIInterfaceOrientationMask = wantLandscape ? .landscapeRight : .portrait
+                scene.requestGeometryUpdate(.iOS(interfaceOrientations: mask)) { error in
+                    NSLog("fomoOrientation: geometry update rejected: \(error)")
+                }
+                scene.keyWindow?.rootViewController?.setNeedsUpdateOfSupportedInterfaceOrientations()
             }
         }
         #endif
