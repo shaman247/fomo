@@ -21,7 +21,9 @@ except ImportError:
     print("Install it with: pip install mysql-connector-python")
     sys.exit(1)
 
-from constants import MAX_PAGES_DEFAULT, FUTURE_WINDOW_DAYS
+from constants import (MAX_PAGES_DEFAULT, FUTURE_WINDOW_DAYS,
+                       FINGERPRINT_MAX_REUSE_DAYS, FINGERPRINT_COPY_MARKER,
+                       CRAWL_EVENT_PASS_WINDOW_SECONDS)
 
 
 def compute_content_hash(content):
@@ -183,7 +185,45 @@ def get_or_create_crawl_run(cursor, connection, run_date):
 
 
 def create_crawl_result(cursor, connection, crawl_run_id, website_id, filename):
-    """Create a new crawl result record."""
+    """Create (or reuse) this website's crawl_results row for the run.
+
+    `filename` comes from `crawler.create_safe_filename(website['name'])`, and the
+    table's only uniqueness is `unique_run_file (crawl_run_id, filename)`. Reusing a
+    row per (run, website) is deliberate — a same-day re-crawl overwrites in place
+    rather than piling on (see the `DELETE FROM crawl_events` note in
+    `processor.py`). But two DIFFERENT websites can share a NAME, and 28 such pairs
+    exist among enabled crawlable sites (w180/w3501 "Caveat", w116/w4474 "The DL",
+    w818/w4483 "Cafe Erzulie", …). When both were due in the same run, the second
+    one's `ON DUPLICATE KEY UPDATE` handed it the FIRST website's row: its crawl
+    content overwrote the other site's, attributed to the wrong `website_id`, while
+    the loser got a `last_crawled_at` stamp with no crawl_result of its own —
+    suppressing its scheduling and starving its events of sources. So resolve by
+    (run, website) FIRST, and only disambiguate the filename when another website in
+    this run already owns it. Existing rows keep their filenames, so this is a no-op
+    for every site that is not in a name collision.
+    """
+    cursor.execute(
+        "SELECT id FROM crawl_results WHERE crawl_run_id = %s AND website_id = %s"
+        " ORDER BY id DESC LIMIT 1",
+        (crawl_run_id, website_id)
+    )
+    row = cursor.fetchone()
+    if row:
+        cursor.execute(
+            "UPDATE crawl_results SET status = 'pending' WHERE id = %s", (row[0],)
+        )
+        connection.commit()
+        return row[0]
+
+    cursor.execute(
+        "SELECT website_id FROM crawl_results WHERE crawl_run_id = %s AND filename = %s",
+        (crawl_run_id, filename)
+    )
+    row = cursor.fetchone()
+    if row and row[0] != website_id:
+        base, dot, ext = filename.rpartition('.')
+        filename = f"{base}_w{website_id}{dot}{ext}" if dot else f"{filename}_w{website_id}"
+
     cursor.execute(
         """INSERT INTO crawl_results (crawl_run_id, website_id, filename, status, created_at)
            VALUES (%s, %s, %s, 'pending', NOW())
@@ -285,6 +325,20 @@ def find_prior_crawl_with_same_content(cursor, crawl_result_id):
     Used to short-circuit extraction when a crawl produces identical content
     to a previous successful crawl — we copy its events instead of re-running
     the AI extractor.
+
+    Two conditions bound the reuse, and they only work together:
+
+    * the prior crawl must have been REALLY EXTRACTED, not itself a copy
+      (`FINGERPRINT_COPY_MARKER`), and
+    * that extraction must be newer than `FINGERPRINT_MAX_REUSE_DAYS`.
+
+    The age bound alone is useless: every crawl writes a fresh row carrying the
+    same content_hash, so the newest twin is always young and the chain refreshes
+    itself forever. Skipping copies anchors the bound to the real extraction, so a
+    byte-stable page genuinely re-reads once per cycle. That matters because the
+    page may be frozen but the active date window is not — an event beyond
+    FUTURE_WINDOW_DAYS when the hash was first cached was rejected as
+    `start_too_future` and, without this, is never re-offered.
     """
     cursor.execute("""
         SELECT cr_prior.id
@@ -295,10 +349,14 @@ def find_prior_crawl_with_same_content(cursor, crawl_result_id):
          AND cr_prior.id < cr_curr.id
          AND cr_prior.status = 'processed'
          AND cr_prior.event_count IS NOT NULL
+         AND cr_prior.crawled_at >= (NOW() - INTERVAL %s DAY)
+         AND COALESCE(cr_prior.extracted_content, '') NOT LIKE %s
         WHERE cr_curr.id = %s AND cr_curr.content_hash IS NOT NULL
         ORDER BY cr_prior.id DESC
         LIMIT 1
-    """, (crawl_result_id,))
+    """, (FINGERPRINT_MAX_REUSE_DAYS,
+          f'%{FINGERPRINT_COPY_MARKER}%',
+          crawl_result_id))
     row = cursor.fetchone()
     if not row:
         return None
@@ -307,10 +365,30 @@ def find_prior_crawl_with_same_content(cursor, crawl_result_id):
 
 def copy_crawl_events(cursor, connection, src_crawl_result_id, dst_crawl_result_id):
     """
-    Copy all crawl_events (and their occurrences) from one crawl_result to another.
+    Copy a crawl_result's crawl_events (and their occurrences) to another.
 
     Used when a fresh crawl produced identical content to a previous successful
     crawl — we reuse the prior extraction without re-calling Gemini.
+
+    Only the source's LATEST processing pass is copied. `processor.process_events`
+    now replaces a crawl_result's rows instead of appending to them, so a source
+    written after that fix always holds exactly one pass and this is a no-op. It
+    matters for the ones written before it: `create_crawl_result` reuses the same
+    `crawl_results` row when a website is re-crawled inside one crawl run, and the
+    old insert loop stacked the second pass's events on top of the first's — 237
+    crawl_results in the month before the fix, 223 of them with duplicated
+    (name, url) pairs, and `FINGERPRINT_MAX_REUSE_DAYS` keeps them copyable for 30
+    days. w1981 cr-113663 (17 rows at 06:53, 21 more at 09:24) was copied whole
+    into cr-114811 on 2026-08-17, reproducing all 38.
+
+    A pass boundary is a gap in `created_at`: one pass writes its rows in a single
+    loop (1,033 rows for w3 took one second), a re-crawl is minutes or hours later.
+
+    Deliberately NOT a duplicate-name check. Refusing the cache hit whenever the
+    source holds a duplicated (name, url) would fire on 395 of 10,276 single-pass
+    crawl_results (3.8%) — extractions that legitimately emit one record per date
+    against a shared listing URL — and it would pay for a fresh extraction rather
+    than use the good half of the cached one.
 
     Returns the number of crawl_events copied.
     """
@@ -320,12 +398,43 @@ def copy_crawl_events(cursor, connection, src_crawl_result_id, dst_crawl_result_
                location_id, url, raw_data, content_hash
         FROM crawl_events
         WHERE crawl_result_id = %s
+          AND created_at >= COALESCE((
+                SELECT MAX(created_at) - INTERVAL %s SECOND
+                FROM crawl_events WHERE crawl_result_id = %s
+              ), '1970-01-01')
         ORDER BY id
-    """, (src_crawl_result_id,))
+    """, (src_crawl_result_id, CRAWL_EVENT_PASS_WINDOW_SECONDS, src_crawl_result_id))
     src_events = cursor.fetchall()
 
     if not src_events:
         return 0
+
+    # The DESTINATION is replaced, not appended to — the same invariant
+    # `processor.process_events` enforces on the extraction path.
+    #
+    # Limiting the SOURCE to its latest pass (above) is not enough on its own: the
+    # destination row can already hold events too, because `create_crawl_result` is
+    # `ON DUPLICATE KEY UPDATE` and re-crawling a website on a day it was already
+    # crawled REUSES its `crawl_results` row. The fingerprint path returns early in
+    # `process_events`, before that function's own replace, so nothing else clears
+    # the destination.
+    #
+    # Observed 2026-08-17: w1981 cr-114811 held 21 rows from the 05:46 run, then a
+    # targeted `--ids 1981` re-crawl at 09:35 fingerprint-matched and copied 21 more
+    # in — 42 rows for an `event_count` of 21, reproducing the very doubling the
+    # process_events fix had just removed.
+    #
+    # `event_sources.crawl_event_id` is ON DELETE CASCADE, so this drops the
+    # superseded pass's source links; the merge that follows re-links every event the
+    # copied pass still lists. Guarded by the `if not src_events` return above, so a
+    # copy that would write nothing can never strip the destination bare.
+    cursor.execute(
+        "DELETE FROM crawl_events WHERE crawl_result_id = %s", (dst_crawl_result_id,)
+    )
+    superseded = cursor.rowcount or 0
+    if superseded:
+        print(f"    - Replaced {superseded} crawl_events on crawl_result "
+              f"{dst_crawl_result_id} before copying")
 
     id_map = {}
     for row in src_events:
@@ -665,12 +774,44 @@ def build_archival_temps(cursor):
         WHERE start_date >= CURDATE()
            OR (end_date IS NOT NULL AND end_date >= CURDATE())
     """)
+    # Websites whose ONLY crawl source is Instagram — the picnob-sourced venues.
+    # A website that also carries a real calendar URL is deliberately excluded:
+    # that URL yields a genuine "no longer listed" signal, so normal archival
+    # applies (3 of 316 IG-carrying sites are mixed like this).
+    #
+    # The crawl source is `website_urls` when the site has any rows there, and
+    # `websites.base_url` when it has none. The base_url fallback is NOT cosmetic:
+    # picnob resolves a handle to its website by base_url alone
+    # (`picnob_to_pipeline.py`: WHERE base_url IN (.../handle/, .../handle)), so
+    # an IG website never needs a website_urls row to be scraped, and 43 of the
+    # 356 IG-only sites have none. Grouping over website_urls alone silently
+    # dropped every one of them — a website with zero rows produces no group at
+    # all, so it could never appear here. That is exactly how event 193156
+    # "Atkinson Beach Club" (w3963 Ke-nee-go-keshek, zero website_urls rows) kept
+    # re-archiving on 07-31 / 08-03 / 08-09 while the 313 sites the guard did
+    # reach stopped churning entirely.
+    #
+    # The LEFT JOIN keeps one NULL-url row for a site with no website_urls, so
+    # COALESCE falls through to base_url; COUNT(*) = SUM(... LIKE ...) demands
+    # every source be Instagram, and a NULL base_url makes the LIKE NULL, which
+    # SUM skips — so a site with neither a URL nor a base_url is excluded rather
+    # than vacuously exempted.
+    cursor.execute("DROP TEMPORARY TABLE IF EXISTS _ws_ig_only")
+    cursor.execute("""
+        CREATE TEMPORARY TABLE _ws_ig_only (website_id INT UNSIGNED PRIMARY KEY)
+        SELECT w.id AS website_id
+        FROM websites w
+        LEFT JOIN website_urls wu ON wu.website_id = w.id
+        GROUP BY w.id
+        HAVING COUNT(*) = SUM(COALESCE(wu.url, w.base_url) LIKE '%instagram.com%')
+    """)
 
 
 def drop_archival_temps(cursor):
     """Drop the archival helper temp tables built by build_archival_temps."""
     cursor.execute("DROP TEMPORARY TABLE IF EXISTS _ws_latest")
     cursor.execute("DROP TEMPORARY TABLE IF EXISTS _evt_future")
+    cursor.execute("DROP TEMPORARY TABLE IF EXISTS _ws_ig_only")
 
 
 def archive_outdated_events(cursor, connection, website_id, temps_built=False):
@@ -817,6 +958,72 @@ def archive_outdated_events(cursor, connection, website_id, temps_built=False):
                         AND er.rejection_type = 'start_too_future'
                         AND er.created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY)
                         AND er.event_name = e.name
+                  )
+                  -- ... AND the event is not sourced EXCLUSIVELY from Instagram
+                  -- feeds. All three guards above share one premise: that absence
+                  -- from a source's latest crawl means the source stopped listing
+                  -- the event. That premise does not hold for Instagram. A picnob
+                  -- bundle is the FIRST PAGE of a handle's grid (12 posts), so an
+                  -- announcement scrolls out of view purely because the venue kept
+                  -- posting — the event is still on, the post just aged out. The
+                  -- guards can't tell the difference and simply delay the wrong
+                  -- answer: 191217 "Luna Pink Performance" and 189114 "Tonights
+                  -- Special" were archived by this mechanism on 07-31, un-archived
+                  -- by triage, then re-archived identically on 08-03 and 08-06 —
+                  -- 191217 while its occurrence was TODAY.
+                  --
+                  -- So for an IG-only-sourced event with a future occurrence,
+                  -- absence is not evidence: hold it until its last occurrence has
+                  -- passed, at which point the NOT EXISTS _evt_future branch above
+                  -- archives it immediately on the next merge. An event that ALSO
+                  -- has a non-Instagram source is untouched by this — that source's
+                  -- silence is real evidence, so it archives on the normal rules.
+                  --
+                  -- The accepted cost: an IG series that genuinely ENDS lingers
+                  -- until its last occurrence passes. That is bounded in practice
+                  -- because IG occurrence tails are short — over the 300 live
+                  -- IG-only events on 2026-08-09 the median last occurrence was
+                  -- +14d, p90 +65d, max +138d, with no open-ended spans. It is
+                  -- deliberately NOT bounded by "last confirmed within M days":
+                  -- the post aging out of the 12-post window is the whole failure,
+                  -- so a recency bound only re-delays the wrong answer, which the
+                  -- 14-day grace above already demonstrated it does. Nor by "next
+                  -- occurrence within N days", which would drop protection exactly
+                  -- for one-offs announced months ahead (the events most certain to
+                  -- scroll out of view) while never binding on a weekly series at
+                  -- all. The escape hatch for a dead venue is to disable the
+                  -- website: archive_dead_source_events carries no IG exemption and
+                  -- reaps its events on the normal 14-day grace.
+                  --
+                  -- The exemption is additionally capped by a 180-day horizon so it
+                  -- can never run away: it holds only while the event still has a
+                  -- live occurrence inside that window, and past it normal archival
+                  -- resumes. A no-op today at every horizon tested (90 / 180 / 365
+                  -- each still cover all 300 live IG-only events) and comfortably
+                  -- clear of FUTURE_WINDOW_DAYS = 90, the furthest out the processor
+                  -- will accept a start date at all — so it cannot bite a
+                  -- legitimately extracted event. It exists so a future extraction
+                  -- bug synthesizing a multi-year IG span cannot mint a permanently
+                  -- unarchivable event.
+                  AND (
+                      EXISTS (
+                          SELECT 1
+                          FROM event_sources es
+                          JOIN crawl_events ce ON es.crawl_event_id = ce.id
+                          JOIN crawl_results cr ON ce.crawl_result_id = cr.id
+                          WHERE es.event_id = e.id
+                            AND cr.website_id NOT IN (
+                                SELECT website_id FROM _ws_ig_only
+                            )
+                      )
+                      OR NOT EXISTS (
+                          SELECT 1
+                          FROM event_occurrences eo
+                          WHERE eo.event_id = e.id
+                            AND eo.start_date <= DATE_ADD(CURDATE(), INTERVAL 180 DAY)
+                            AND (eo.start_date >= CURDATE()
+                                 OR (eo.end_date IS NOT NULL AND eo.end_date >= CURDATE()))
+                      )
                   )
               )
           )
@@ -1082,6 +1289,15 @@ def get_detail_crawl_candidates(cursor, website_ids=None):
                      apply, so a manual `--ids` run does NOT re-crawl the entire
                      historical backlog of orphaned/exhausted crawl_events.
 
+    `ce.created_at >= cr.crawled_at` drops SUPERSEDED rows. `crawl_results` are
+    UPDATEd in place, so a re-crawl leaves the previous run's `crawl_events`
+    still pointing at the same row with an older `created_at`; without this the
+    step spends its budget enriching rows the merger will never read. Measured
+    2026-08-05: 98 of 1533 candidates (6.4%) were superseded — w224 Park Avenue
+    Armory 18, w369 Museum of the Moving Image 18, w3 NYPL 12. On the w224
+    re-crawl that day all 28 fresh rows came out at `detail_crawl_attempts = 0`
+    while 17 superseded ones got 1.
+
     Returns list of (ce_id, name, url, website_id) tuples, deduped so each
     distinct (website_id, url) is crawled at most once per run.
     """
@@ -1104,6 +1320,7 @@ def get_detail_crawl_candidates(cursor, website_ids=None):
             AND w.skip_reenrichment = 0
             AND ce.detail_crawl_attempts < 2
             AND cr.crawled_at >= DATE_SUB(NOW(), INTERVAL 14 DAY)
+            AND ce.created_at >= cr.crawled_at
             AND cr.website_id IN ({placeholders})
         """
         cursor.execute(query, list(website_ids))
@@ -1120,6 +1337,7 @@ def get_detail_crawl_candidates(cursor, website_ids=None):
             AND w.skip_reenrichment = 0
             AND ce.detail_crawl_attempts < 2
             AND cr.crawled_at >= DATE_SUB(NOW(), INTERVAL 14 DAY)
+            AND ce.created_at >= cr.crawled_at
         """)
     rows = cursor.fetchall()
 
