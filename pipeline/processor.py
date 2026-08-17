@@ -34,6 +34,40 @@ from crawler import create_safe_filename
 # Blocked emoji characters that render poorly
 BLOCKED_EMOJI = {'⬜', '□', '◻', '⬛', '■', '▪', '▫', '◼', '◾', '◽', '◿', '▢', '▣', '▤', '▥', '▦', '▧', '▨', '▩'}
 
+# Delivery-method detection from the raw source `location` string (stored as
+# `events.location_name`). Per `.claude/rules/tag-system.md` §Virtual, virtual
+# events are still pinned to their organizer's venue, so `location_name` — not
+# `locations.name` — is the only reliable signal, and the `Virtual` tag is what
+# lets users filter them. Ordered: first match wins for the leaf; the `Virtual`
+# root is always added on top of it.
+# Patterns are regexes matched against the lowercased location string.
+VIRTUAL_LOCATION_PATTERNS = [
+    (r'\bzoom\b(?!\s*room)', 'Zoom'),          # "Zoom", "Via Zoom Platform"; not the "Zoom Room" gyms
+    (r'\bwebinars?\b', 'Webinar'),
+    (r'live\s*stream|livestream|streaming', 'Live Stream'),
+    (r'\bvirtual\s+tour\b', 'Virtual Tour'),
+    (r'\bonline\b|microsoft\s+teams|\bms\s+teams\b|google\s+meet|\bwebex\b|google\s+hangouts?',
+     'Online'),
+    (r'\bvirtual\b|\bremote(?:ly)?\b', None),  # root only — no platform named
+]
+
+
+def virtual_tags_for_location(location_str):
+    """Returns the Virtual-family tags implied by a raw source location string.
+
+    Returns [] when the string names no online delivery, else ['Virtual'] plus
+    at most one platform/format leaf. Hybrids ("Online & In-Person") are
+    intentionally included: they *are* attendable online, and the `Virtual` tag
+    is a delivery filter, not an exclusivity claim.
+    """
+    loc = (location_str or '').lower()
+    if not loc:
+        return []
+    for pattern, leaf in VIRTUAL_LOCATION_PATTERNS:
+        if re.search(pattern, loc):
+            return ['Virtual', leaf] if leaf else ['Virtual']
+    return []
+
 
 # =============================================================================
 # Text Processing Utilities
@@ -634,10 +668,24 @@ _NON_EVENT_NAME_PATTERNS = [
     # `[\w\s]*` form broke on the hyphen in "Walk-In" and let those through.
     # Both a program noun AND a temporal marker are required, which is what
     # keeps genuine "No ..." events alive ("No Pants Subway Ride").
+    #
+    # Dark-night notices are the same shape with a performance noun and a
+    # HOLIDAY instead of "today": a venue announces it is not programming over a
+    # long weekend ("No Shows - Labor Day Weekend", e214750 Brooklyn Comedy
+    # Collective, which reached the map and was hand-suppressed at
+    # classification on 2026-08-09). Both extensions are required together — a
+    # bare `^No Show` would eat 54 Below's real cabaret **"No Show"** (e20967),
+    # and it is the temporal marker that spares it. Measured over all 183,900
+    # events: the noun+holiday extension adds exactly ONE match (214750), loses
+    # none of the 10 the pattern already had, and leaves "No Show" untouched.
     r'^\s*no\s+[\w\s\-\'/&]{0,40}\b(program|programming|class|classes|session|'
     r'sessions|service|services|meeting|meetings|practice|rehearsal|'
+    r'show|shows|performance|performances|screening|screenings|matinee|matinees|'
     r'story\s*time|open\s*gym|drop[\s-]?in|hours)\b[\w\s\-\'/&]{0,25}\b'
-    r'(today|tonight|this\s+(?:week|weekend|morning|afternoon|evening|month))\b',
+    r'(today|tonight|this\s+(?:week|weekend|morning|afternoon|evening|month)|'
+    r'(?:labor|memorial|presidents?\'?|columbus|veterans?|independence|'
+    r'new\s+year\'?s?)\s+day(?:\s+weekend)?|thanksgiving|christmas|halloween|'
+    r'easter|holiday\s+weekend)\b',
     # Cancelled-instance notices. Venues announce a dead occurrence by editing
     # the title rather than pulling the row. Three unambiguous shapes only:
     # a "CANCELLED:" prefix, a trailing "(CANCELLED)" / "- CANCELED" marker,
@@ -850,6 +898,30 @@ _EMPTY_DESCRIPTION_RE = re.compile(
 def _description_is_blank(description):
     """True when the description carries no information at all."""
     return bool(_EMPTY_DESCRIPTION_RE.match(description or ''))
+
+
+def _description_adds_nothing(name, description):
+    """True when the description is blank OR merely repeats the title.
+
+    Several junk gates below are deliberately conditioned on "no description",
+    because a described row is usually a real event someone bothered to write up.
+    But a feed that echoes the title into the description defeats that gate while
+    adding no information at all — e2​16438 "Patron Reservation - O'Connor" carried
+    the description "Patron Reservation - O'Connor" and so slipped a rule that
+    matched its name exactly. `_is_seo_listicle_spam` already treats a
+    title-verbatim description as title-only for the same reason; this shares that
+    definition instead of restating it per-rule.
+
+    Deliberately strict: only an exact match after whitespace/case normalisation
+    counts. A description that merely STARTS with the title ("Patron Reservation -
+    O'Connor. Join us for…") is real content and must not be treated as blank.
+    """
+    if _description_is_blank(description):
+        return True
+    if not name:
+        return False
+    norm = lambda s: re.sub(r'\s+', ' ', (s or '').strip().lower())
+    return norm(name) == norm(description)
 
 # Two-signal patterns: the name alone is ambiguous (real attendable events
 # share these words), so a corroborating description signal is required before
@@ -1073,6 +1145,161 @@ _PROMO_ATTENDABLE_VETO_RE = re.compile(
     r'kick-?off|live\s+music|\bdj\b|concert|dance|competition|contest|throwdown|'
     r'crawl)\b', re.IGNORECASE)
 
+# National FOOD/DRINK holiday marketing posts ("National Fajita Day" — "Come
+# grab some sizzling goodness for National Fajita Day!", e221838 w868 Hudson
+# Blue, hand-suppressed at classification on 2026-08-17). A bar or restaurant
+# hangs a hashtag holiday on its normal service: nothing is programmed, nothing
+# starts, you just eat there that day. Sibling of the `<drink> Month/Week` promo
+# rule above, which covers the named-period form.
+#
+# **A name-only version of this rule was measured and REFUTED on 2026-07-27**
+# (test_processor.TestJunkFilterGaps20260727
+# .test_national_food_day_deliberately_not_dropped): a bare "National Chicken
+# Wing Day" with no body is a coin flip on intent, because venues do host real
+# themed nights on the same food holidays. That ruling stands — this rule adds
+# the second signal it was missing and fires ONLY on a body written as dining
+# marketing ("Come grab…", "Buy one, get one", "$5 pours"). A bare marker with
+# no description still survives, and so does one whose body describes a party.
+# The narrowing costs 7 of the 30 name matches (30 → 23) and is the right
+# direction. It also catches e200728, the row the 2026-07-27 pass suppressed by
+# hand — that one's body is "Come grab some wings…", i.e. it always had the
+# second signal the refuted name-only rule could not see.
+#
+# The load-bearing gate is that the WHOLE name is "National <food/drink> Day"
+# and the qualifier comes from a closed food/drink list. The national-day family
+# at large is overwhelmingly real programming — National Trails Day, National
+# Cleanup Day, National Zoo Day, National Superhero Day, National Scrabble Day,
+# National Seed Swap Day, National Honey Bee Day, National Youth Takeover Day —
+# so nothing but the food/drink axis may decide this. Anything appended to the
+# title means a real occasion was built on the holiday and the anchor spares it:
+# "National Ice Cream Day at the Carousel" (Prospect Park), "National Pizza Day
+# Dinner", "National Chicken Finger Day Challenge", "Whispering Angel Rosé
+# Tasting – National Rosé Day". A trailing dash clause is allowed ONLY because
+# e221838 arrived with its own description glued onto the title.
+#
+# Measured over all 190,989 events: 30 name matches, all 30 bar/restaurant promos
+# from five venues (w868, w1348, w1349, w1199, w5057), ZERO real events; 23 of
+# them also clear the description gate and are what this rule drops. Zero of the
+# nine a human has already reviewed were KEPT — all nine were suppressed by hand,
+# the opposite of the "Whiskey Wednesday" weekday-special precedent (see
+# test_junk_filter_calendar_non_events.TestWeekdayFoodSpecialsStayUnfiltered),
+# where the reviewed row was deliberately kept. The one still live (e191338
+# "National Drink Beer Day", w1349) is a correct kill the suppression pass has
+# not reached. Foods NOT on the list keep their
+# rows: "National Oreo Day" at Chelsea Market and 'National "Tziki" Day' are real
+# and are spared by omission, which is the intended failure direction.
+_FOOD_DRINK_HOLIDAY_NOUN = (
+    r'(?:'
+    r'pizza|taco|fajita|burrito|nacho(?:s)?|guacamole|quesadilla|empanada(?:s)?|'
+    r'burger|cheeseburger|hamburger|hot\s*dog|meatball(?:s)?|'
+    r'chicken\s+(?:wing|finger|tender|nugget)s?|wing(?:s)?|'
+    r'french\s+fr(?:y|ies)|tater\s+tot(?:s)?|'
+    r'pasta|spaghetti|lasagna|ramen|dumpling(?:s)?|sushi|steak|bbq|barbecue|'
+    r'oyster(?:s)?|lobster|shrimp|'
+    r'bagel|pretzel|pancake(?:s)?|waffle(?:s)?|french\s+toast|'
+    r'donut(?:s)?|doughnut(?:s)?|cookie(?:s)?|brownie(?:s)?|cupcake(?:s)?|'
+    r'ice\s*cream|gelato|sundae|milkshake|dessert|cheesecake|'
+    r'wine\s+and\s+cheese|wine\s*&\s*cheese|'
+    r'margarita|martini|mojito|daiquiri|pi(?:n|ñ)a\s+colada|sangria|'
+    r'cocktail(?:s)?|mimosa|bloody\s+mary|old\s+fashioned|negroni|spritz|'
+    r'whisk(?:e)?y(?:\s+sour)?|bourbon|scotch|rum|vodka|gin|tequila|mezcal|sake|'
+    r'wine|prosecco|champagne|beer|ipa|lager|stout|cider|'
+    r'espresso|latte|boba|bubble\s+tea|iced\s+tea'
+    r')'
+)
+# Optional flavour/colour qualifiers ("Vanilla Ice Cream", "Red Wine"). Kept
+# separate from the noun list so the list stays a list of foods.
+_FOOD_HOLIDAY_NAME_RE = re.compile(
+    r'^\s*national\s+'
+    r'(?:(?:drink|eat|sip)\s+)?'
+    r'(?:(?:vanilla|chocolate|strawberry|red|white|ros(?:e|é)|sparkling|iced|'
+    r'frozen|craft|dark|spicy)\s+){0,2}'
+    + _FOOD_DRINK_HOLIDAY_NOUN +
+    r'\s+day\s*[!.]?'
+    r'(?:\s*[-–—:]\s*.{0,160})?'      # e221838 glued its description onto the title
+    r'\s*$',
+    re.IGNORECASE)
+# The second signal: the body reads as dining marketing rather than an occasion.
+# Deliberately does NOT accept a blank description — that is the exact case the
+# 2026-07-27 refutation covers.
+_FOOD_HOLIDAY_DESC_RE = re.compile(
+    r'\bcome\s+(?:on\s+)?(?:grab|in|down|by|celebrate|enjoy|try|sip|taste|indulge)\b|'
+    r'\bgrab\s+(?:a|an|some|your|yourself)\b|'
+    r'\bstop\s+(?:by|in)\b|'
+    r'\bjoin\s+us\b[^.!?]{0,70}\b(?:grab|sip|try|enjoy|indulge|drink|taste|order|'
+    r'bite|glass|pour|pours|slice)\b|'
+    r'\bsip\s+on\b|\bindulge\b|'
+    r'\bbuy\s+one\b|\bwhile\s+supplies\s+last\b|'
+    r'\bspecial(?:ty)?\s+(?:drink|cocktail|menu|food|pricing)|'
+    r'\$\d|\bhalf[\s-]?off\b|\bbogo\b|'
+    r'\bour\s+(?:bartenders|kitchen|chefs?)\b|'
+    r'\bhappy\s+hour\b',
+    re.IGNORECASE)
+# Any real programming hung on the holiday keeps the row. Measured to fire on
+# none of the 30 name matches, so it costs no yield and covers the realistic
+# failure mode (a venue that turns the holiday into an actual party one year).
+_FOOD_HOLIDAY_VETO_RE = re.compile(
+    r'\b(?:party|tasting|pairing|class|workshop|demo(?:nstration)?|festival|fest|'
+    r'live\s+music|\bdj\b|band|concert|screening|film|comedy|trivia|karaoke|'
+    r'bingo|tour|parade|hike|volunteer|ranger|market|pop[\s-]?up|competition|'
+    r'contest|challenge|fundraiser|benefit|ticket(?:s|ed)?|rsvp|register|'
+    r'registration|guest\s+chef|cook[\s-]?off)\b',
+    re.IGNORECASE)
+
+# (6) Ticketing upsell PRODUCTS. A venue's ticket store publishes its packages
+# and bundles on the same feed as its exhibitions, so a thing you BUY reaches the
+# extractor looking like a thing you ATTEND. Raised by the 2026-08-17
+# classification pass, which could only label two ARTECHOUSE (w1166) rows
+# UNKNOWN: e222525 "VIP & Date Night Packages" and e222526 "ARTECHOUSE x Color
+# Factory Experience Bundle" ("Both tickets must be redeemed within 30 days of
+# purchase"). The venue's genuine exhibitions already exist as their own rows, so
+# these add nothing but a duplicate pin. The same shape recurs across the
+# corpus — Empire State Building "Birthday Celebration Packages", SUMMIT "Spring
+# Bundle", ArtTable "VIP Pass Packages".
+#
+# Two gates plus a veto, per this block's convention:
+#   - the NAME must END on "package(s)" / "bundle(s)". The tail anchor is
+#     load-bearing: "VIP package" appears INSIDE plenty of real listings (Bear
+#     Mountain's "Magical Princess Brunch" offers "an optional VIP package"), and
+#     only a title that ends on the product noun IS the product.
+#   - the DESCRIPTION must read as a purchase product: the package/bundle
+#     "includes"/"provides" a ticket or access, must be "redeemed", is a
+#     "pre-order", names an "availability window" or an "anytime ticket".
+#   - the VETO spares the two real-event families that clear both gates.
+#
+# The veto is measured, not decorative. Over all 191,070 events only 17 titles
+# end on package/bundle, and TWO of them are real: e21299 "Buster Keaton Shorts
+# Package" (a cinema shorts PROGRAMME — `shorts`/`films` veto) and e23209 "LIU
+# Cares Week: Care in Every Package" (a care-package packing drive — `come
+# together`/`participate`/`donate`/`drive` veto). A bare name-tail rule would
+# have killed both.
+#
+# Measured over all 191,070 events plus 134,254 crawl_events from the last 21
+# days: 8 net-new events and 2 net-new crawl_events, every one a purchase
+# product or a private-hire package. ZERO live, ZERO reviewed-and-kept, ZERO
+# false positives. Known accepted miss (fail-safe): e205218, the February
+# ARTECHOUSE bundle whose body is pure marketing copy with no purchase term.
+_TICKET_PRODUCT_NAME_RE = re.compile(
+    r'\b(?:packages?|bundles?)\s*[.!]?\s*$', re.IGNORECASE)
+_TICKET_PRODUCT_DESC_RE = re.compile(
+    r'\b(?:package|packages|bundle|bundles|tickets?)\b[^.!?]{0,80}'
+    r'\b(?:includes?|provides?|grants?|offers?)\b'
+    r'|\b(?:includes?|provides?|grants?|offers?)\b[^.!?]{0,80}'
+    r'\b(?:ticket|tickets|admission|access|entry|pass|passes)\b'
+    r'|\bmust\s+be\s+redeemed\b|\bredeem(?:ed|able)?\b[^.!?]{0,40}\bpurchase\b'
+    r'|\bdays?\s+of\s+purchase\b|\bpre-?order\b'
+    r'|\bavailability\s+window\b|\banytime\s+ticket\b'
+    r'|\badd[\s-]?on\b[^.!?]{0,40}\b(?:ticket|purchase|price)\b',
+    re.IGNORECASE)
+_TICKET_PRODUCT_VETO_RE = re.compile(
+    r'\b(?:short(?:s)?|film(?:s)?|feature|screening|double\s+feature|'
+    r'programme?\s+of|retrospective|'
+    r'come\s+together|participate|volunteer|donate|drive|'
+    r'performance|concert|band|\bdj\b|live\s+music|'
+    r'workshop|class(?:es)?|lecture|panel|reading|tour\b|'
+    r'parade|festival)\b',
+    re.IGNORECASE)
+
 # Retail spend-and-get promotions: a vendor's purchase incentive leaked from a
 # venue calendar ("Blackbird Special World Cup Promotion" — "Spend $40 ...
 # receive a free 4-pack ... while supplies last"). Two gates: name ends in
@@ -1131,6 +1358,357 @@ _MENU_SPECIAL_VETO_RE = re.compile(
     r'\b(?:live\s+music|\bdj\b|band|concert|performance|trivia|bingo|karaoke|'
     r'comedy|tasting|class|workshop|party|festival|screening|rsvp|ticket)\b',
     re.IGNORECASE)
+
+
+# Shapes that reached the map and only got caught downstream, by the event-type
+# classifier labelling them UNKNOWN. Same two-signal conservatism as the block
+# above: each needs a corroborating description, so a miss just falls through to
+# find_review_candidates.py. Every candidate here was measured over the whole
+# events table before shipping — most of the batch failed that bar and is
+# recorded as rejected below.
+
+# (1) Library room-booking placeholders. Public LibCal/EventKeeper calendars
+# expose patron room reservations alongside real programming
+# ("Patron Reservation - Furbacher.", e210295). Always nameless-of-content, so
+# a blank description is required — a described "Room Reservation Workshop"
+# survives.
+_ROOM_RESERVATION_NAME_RE = re.compile(
+    r'^\s*(?:patron|room|study\s+room|meeting\s+room|space|equipment)\s+reservation\b',
+    re.IGNORECASE)
+
+# Opening-hours notices. Library and museum calendars publish their own hours as
+# calendar rows — "Library open 9 AM - 5 PM", body "Library will be open 9 AM to
+# 5 PM for Columbus Day". Nothing is happening; the building is merely unlocked.
+#
+# This is the mirror image of the existing CLOSURE family (which is already
+# filtered): a holiday that changes the hours gets published either way round,
+# and only the "closed" half was covered.
+#
+# "open" is a very live word, so a CLOCK TIME is the load-bearing gate — not the
+# word "open" and not a trailing preposition. A precision audit over all 185,367
+# events proved how narrow this has to be: an earlier draft that accepted
+# `open … (until|from|for)` swept up "Open for Bowling!" (a real Brooklyn Bowl
+# session, 6 rows), "Open for cocktails" (Zinc Bar), "Open for Ops", and even
+# "Open Forum" — where `for` matched the first three letters of "Forum".
+#
+# So: the name must state open/closed AND carry an explicit clock time, and must
+# contain no attendable-event word. "Open for Bowling!" has no clock time and is
+# spared; "Library open 9 AM - 5 PM" is caught.
+#
+# Note the CLOSED half of this shape is already handled by the closure family
+# above; this exists for the "open" half, which was the uncovered mirror image.
+_HOURS_NOTICE_NAME_RE = re.compile(
+    r'^\s*(?:the\s+)?'
+    r'(?:library|museum|gallery|building|office|branch|center|centre|store|shop|'
+    r'garden|park|pool|rink|cafe|kitchen|desk|lobby|front\s+desk)?\s*'
+    r'(?:will\s+be\s+|is\s+|are\s+)?'
+    r'(?:open|closed|closing|opening\s+hours|hours)\b'
+    r'[^A-Za-z0-9]{0,4}'
+    r'\d{1,2}(?::\d{2})?\s*(?:am|pm|a\.m\.|p\.m\.)\b'   # an explicit clock time
+    r'.{0,60}$',
+    re.IGNORECASE)
+# Anything implying a gathering vetoes the drop, even with a clock time present.
+_HOURS_NOTICE_VETO_RE = re.compile(
+    r'\b(?:mic|house|studios?|reception|rehearsal|swim|play|gym|skate|practice|'
+    r'run|call|casting|audition|tour|class|workshop|reading|concert|show|party|'
+    r'market|fair|meeting|talk|screening|social|bowling|cocktails?|forum|ops)\b',
+    re.IGNORECASE)
+
+
+def _is_hours_notice(name, description=None):
+    """True for a bare opening/closing-hours announcement, not an event."""
+    if not name:
+        return False
+    if _HOURS_NOTICE_VETO_RE.search(name):
+        return False
+    return bool(_HOURS_NOTICE_NAME_RE.match(name.strip()))
+
+# (2) "On this Day:" historical archival posts. Park conservancies publish these
+# alongside real programming — they narrate a past anniversary ("On October 12,
+# 1935, Fort Tryon Park was officially dedicated…") and no gathering is being
+# held. All 5 in the DB come from w82 Fort Tryon Park Conservancy; two reached
+# the map and were hand-suppressed at classification on 2026-08-05.
+#
+# Two gates, per this block's convention. The historical gate is what makes the
+# rule about archival posts rather than about the phrase: a future event simply
+# *titled* "On This Day" carries no past year and no commemoration language.
+# The veto is the second safety net, so a conservancy that ever turns one of
+# these into an actual guided anniversary walk keeps it.
+# Verified over all 180,262 events (.scratch/on_this_day_verify.py): 5 name
+# matches, 5 suppressed, 0 false positives, 0 spared.
+_ARCHIVAL_ON_THIS_DAY_NAME_RE = re.compile(
+    r'^\s*on\s+this\s+day\b\s*[:—–-]', re.IGNORECASE)
+# Year range starts at 1500: colonial-era anniversaries are exactly what these
+# posts narrate, and e218929 ("On this Day: Margaret Corbin's Birthday", born
+# **1751**) slipped through the original 18xx/19xx/20xx range and had to be
+# caught downstream by the event-type classifier on 2026-08-14. Re-verified
+# over all 188,480 events after widening: still only the 7 genuine archival
+# posts match the name gate, 0 false positives.
+_ARCHIVAL_HISTORICAL_DESC_RE = re.compile(
+    r'\b(?:1[5-9]\d{2}|20[0-2]\d)\b|\b(?:anniversar|commemorat)\w*',
+    re.IGNORECASE)
+_ARCHIVAL_GATHERING_VETO_RE = re.compile(
+    r'\b(?:join\s+us|rsvp|register|registration|tickets?|admission|'
+    r'workshop|class|guided|meet\s+(?:us|at)|performance|screening|'
+    r'doors\s+open|refreshments)\b', re.IGNORECASE)
+
+# (3) Academic / registrar calendar milestones. University and community-college
+# feeds publish their whole academic calendar as "events": add/drop deadlines,
+# tuition-refund cutoffs, pass/fail request windows, term start dates, final-exam
+# periods. Nobody attends a deadline. Seven LIU rows had to be hand-suppressed at
+# classification on 2026-08-06 and e214913 on 2026-08-09; NYU and Bronx CC emit
+# the same shape continuously.
+#
+# NAME-ONLY on purpose (unlike the two-signal rules above): these rows are
+# usually description-less, and where a description exists it just restates the
+# deadline ("The deadline for students to drop or add courses"), so it carries
+# no independent signal. The precision instead comes from the phrases themselves
+# being registrar jargon plus an attendable-occasion veto over the NAME.
+#
+# The veto is what keeps this off real programming, and it is not decoration:
+#  - "Classes Resume, Town Hall (Dance and Music Recitals)" (e78067) is a real
+#    recital and is spared by `recitals?` — note the plural, the singular form
+#    missed it;
+#  - the singular "final exam" was DROPPED from the exam arm because it eats
+#    "Final Exam Horror Trivia, No. 39" (e154254, a real NYChorror trivia
+#    night). Only the plural "final examinations"/"final exams" and the explicit
+#    "final exam period/schedule/week" forms are matched.
+#  - `registration begins/opens` was likewise DROPPED: it hits real library
+#    sign-up programming ("2026 Summer Reading Program Registration Begins",
+#    "Adult Summer Reading Registration Begins!") and half of its matches were
+#    already covered by the start-anchored registration rule above.
+#  - "<term/session> begins/ends" was DROPPED: it hits "Bronx Bops Weekday
+#    Session Start" (e39357), a real children's music program's first day.
+#
+# Measured over all 183,900 events (.scratch/jf_final2.py): 71 matches, ALL of
+# them registrar/school-calendar markers (NYU 33, Bronx CC 25, LIU 9,
+# Mind-Builders 2, Ballet Tech 1, plus NYC Events' "Primary Election - Last Day
+# to Register to Vote"), and exactly ONE currently-live row — 117776 "Last Day
+# of Summer 2026 5W1 Instruction / Final Exams" — which is itself junk. Zero
+# false positives. Of the 408 live events from academic-named websites, this is
+# the only one that fires, so real university lectures/concerts are untouched.
+_ACADEMIC_MILESTONE_NAME_RE = re.compile(
+    r'\bclasses\s+(?:begin|begins|start|starts|end|ends|resume|resumes)\b'
+    r'|\bno\s+classes\b'
+    r'|\blast\s+class(?:es)?(?:\s+meeting)?\b(?=\s*[/,:&-]|\s*$)'
+    r'|\bfinal\s+exam(?:ination)?s\b'
+    r'|\bfinal\s+exam(?:ination)?\s+(?:period|schedule|week)\b'
+    r'|\b(?:last|final)\s+day\s+(?:to|for)\s+[\w/\s]{0,30}?'
+    r'(?:add|drop|withdraw|withdrawal|enroll|register|registration|refund|'
+    r'pass\s*/?\s*fail|audit)\b'
+    r'|\b(?:drop\s*/\s*add|add\s*/\s*drop)\b'
+    r'|\bpass\s*/?\s*fail\s+(?:grade\s+)?option\b'
+    r'|^\s*week(?:end|day)\s+session\s+[a-z0-9]\s*:',
+    re.IGNORECASE)
+_ACADEMIC_ATTENDABLE_VETO_RE = re.compile(
+    r'\b(?:recitals?|ceremon(?:y|ies)|commencement|graduation|convocation|'
+    r'part(?:y|ies)|receptions?|concerts?|festivals?|celebrations?|'
+    r'open\s+house|orientation|fairs?|showcases?|performances?|screenings?|'
+    r'exhibit(?:ion)?s?|tours?|talks?|lectures?|panels?|workshops?|'
+    r'trivia|quiz|comedy|games?|socials?|mixers?|brunch|dinners?|breakfast|bbq|'
+    r'town\s+hall|study\s+(?:break|jam|session)|meet\s*(?:&|and)\s*greet|'
+    r'rall(?:y|ies)|march|fundraiser|auction|clinic|camp)\b',
+    re.IGNORECASE)
+
+# Take-home / grab-and-go kit distributions. Libraries publish "Grab & Go:
+# <craft>" / "Adult Take-Home Craft" rows where patrons pick up a kit at the
+# desk and do the activity at home — nobody attends anything, so they are not
+# map events. Three reached `events` from w3530 (BCCLS) on 2026-08-14 and were
+# only caught downstream by the event-type classifier labelling them Other
+# (219397, 219412, 219497).
+#
+# Three gates: the pickup idiom in the NAME, a kit/craft word in name or
+# description, and pickup corroboration in the DESCRIPTION. The veto spares
+# in-person programming that merely sends attendees home with the result:
+# "Indoor Spring: Learn Grow and Take Home Plants" is a real 4-session class
+# and is spared by `session`/`join us`.
+#
+# Verified over all 188,480 events: 105 fires, every one a genuine kit
+# distribution (13 live, all kits — including the three above); 0 false
+# positives. Known safe misses: kit rows whose description omits any pickup
+# word ("Grab & Go: Blackout Poetry Kits" — body is just the activity blurb).
+#
+# 2026-08-17 WIDENING (e221467 "Take-n-Make!", w3 Roosevelt Island Library,
+# raised by the 2026-08-16 classification pass). The arm missed it twice over:
+#
+#   (a) The NAME idiom list was too literal. `grab\s*(?:&|and|n)\s*go` cannot
+#       match a HYPHENATED separator, so "Grab-and-Go Craft", "Grab 'n Go" and
+#       "Kids Create Grab-and-Go" all fell through; and the whole "Take & Make"
+#       / "Take n Make" / "Take & Create" family — the same libraries' other
+#       house style for the identical thing — had no pattern at all. Both
+#       separators are now `[-–\s]*` and the take-<verb> family is spelled out.
+#
+#   (b) The `join us` veto is now SOFT. e221467's body is "Join us at the
+#       Roosevelt Island Library World Cup Celebration to pick up some fun craft
+#       materials to take home while supplies last!" — a kit pickup that happens
+#       to open with the branch's stock invitation. `join us` alone is far too
+#       weak to prove somebody attends something, so it only vetoes when the
+#       body carries no UNAMBIGUOUS distribution phrase ("while supplies last",
+#       "first come first served", "pick up a …", "available for pickup"). The
+#       hard veto (workshop/class/session/instructor/…) is untouched and still
+#       spares "Indoor Spring: Learn Grow and Take Home Plants", the real
+#       4-session class this arm was originally tuned around.
+#
+# Re-measured over all 191,070 events plus 134,254 crawl_events from the last 21
+# days: the widening fires on 14 NET-NEW events (1 live, e210845 "August Take &
+# Make - Paint by Number", a correct kill) and 4 net-new crawl_events. Every one
+# is a library kit pickup. ZERO false positives, ZERO reviewed-and-kept rows.
+_TAKE_HOME_KIT_NAME_RE = re.compile(
+    r'\b(?:'
+    r'grab\s*[-–\s]*(?:&(?:amp;)?|and|\'?n\'?|’n’)\s*[-–\s]*go'
+    r'|take\s*[-–\s]*(?:&(?:amp;)?|and|\'?n\'?|’n’)\s*[-–\s]*'
+    r'(?:make|create|craft|bake|go)'
+    r'|take[\s-]?home'
+    r')\b', re.IGNORECASE)
+_TAKE_HOME_KIT_SIGNAL_RE = re.compile(
+    r'\b(?:kits?|crafts?)\b', re.IGNORECASE)
+_TAKE_HOME_KIT_DESC_RE = re.compile(
+    r'\b(?:kits?|pick\s*-?\s*up|supplies\s+last|take\s+home)\b', re.IGNORECASE)
+# HARD veto: words that assert an actual gathering. Never overridden.
+_TAKE_HOME_KIT_VETO_RE = re.compile(
+    r'\b(?:workshop|class|session|together|in[\s-]?person|'
+    r'demonstration|instructor|learn\s+how)\b', re.IGNORECASE)
+# SOFT veto: boilerplate invitation language that says nothing about attending.
+_TAKE_HOME_KIT_SOFT_VETO_RE = re.compile(r'\bjoin\s+us\b', re.IGNORECASE)
+# Distribution phrases that are unambiguous enough to override the SOFT veto.
+_TAKE_HOME_KIT_PICKUP_RE = re.compile(
+    r'\bwhile\s+(?:the\s+)?supplies\s+last\b|\bwhile\s+they\s+last\b|'
+    r'\bfirst\s+come,?\s+first\s+serve[d]?\b|'
+    r'\bpick\s*-?\s*up\s+(?:a|an|one|some|your|free|,)|'
+    r'\bpick\s+up\b[^.!?]{0,60}\bto\s+take\s+home\b|'
+    r'\bavailable\s+(?:for\s+)?pick\s*-?\s*up\b',
+    re.IGNORECASE)
+
+# Program-deadline notices: "<program> Ends!" rows whose body is a submit-your-
+# logs reminder ("Please SUBMIT all Summer Reading logs by AUGUST 17!"), not a
+# wrap-up gathering. e219452 (w3530) reached the map this way on 2026-08-14.
+#
+# The NAME gate requires a program noun before "Ends" — a bare `ends$` matched
+# the film "It Ends" seven times over the events table, so the noun is
+# load-bearing, not decoration. The description gate requires deadline
+# language, and the veto spares an actual end-of-program party ("celebrate",
+# "prizes awarded"). Verified over all 188,480 events: 3 name matches, 1 fire
+# (219452 itself); the other two are description-less echoes already handled
+# manually.
+_PROGRAM_DEADLINE_NAME_RE = re.compile(
+    r'\b(?:reading|program|challenge|registration)\s+ends!?\s*$', re.IGNORECASE)
+_PROGRAM_DEADLINE_DESC_RE = re.compile(
+    r'\b(?:submit|deadline|last\s+day\s+to|logs?\s+by)\b', re.IGNORECASE)
+_PROGRAM_DEADLINE_VETO_RE = re.compile(
+    r'\b(?:party|celebration|celebrate|join\s+us|performance|concert|ceremony|'
+    r'prizes?\s+awarded)\b', re.IGNORECASE)
+
+# (4) Facility-closure notices. Parks, golf courses, schools and community-board
+# calendars publish "<facility> Closed" as a dated row ("Hendricks Field Golf
+# Course Closed", "Francis A Byrne Golf Course Closed", w Essex County Parks).
+# The `_NON_EVENT_NAME_RE` closure family above only covers a fixed list of venue
+# nouns ("museum|library|park|…  clos(ed|es|ure)") and the punctuated
+# "Closed: …" / "Closed for …" forms, so a facility it has never heard of keeps
+# coming back: the extractor re-creates the row every run and a human re-
+# suppresses it. This is a CHURN cost, not a correctness bug — none of these are
+# on the map.
+#
+# Two gates, per this block's convention: the word anywhere in the name, plus a
+# corroborating description. A blank description counts as corroboration
+# (`_description_adds_nothing`) because "No description available." is the common
+# shape here — these rows say nothing beyond the closure itself.
+#
+# The description gate is what makes it safe, and it is keyed on `closed|closure`
+# only — never `closing`/`closes`. That is what spares the real events that
+# merely contain the word: 8452 "Closed Curtain" (the Jafar Panahi film), 42435
+# "Saidah Gets Closure", 50432 "Poetic Closure" (a poetry workshop), and the
+# early-closing HOURS notices whose bodies say the venue "will close early".
+#
+# `closed(?!\s*caption)` is REQUIRED, not decoration: BCCLS runs a real "Closed
+# Captioning Film Club", which a bare `closed` matched — the same false positive
+# was hit and fixed on 2026-08-05 in the w3530 admin-marker regex.
+#
+# The name veto covers the two families that are about something OTHER than the
+# facility being shut: an early-closing hours change ("Early Closure: 2 PM
+# Saturday, January 31" — the venue is open, just for fewer hours) and a real
+# event whose SIGN-UP has closed ("Drag Story Hour … (Registration Closed)").
+# Both would otherwise fire on a blank description.
+#
+# Known accepted misses (fail-safe, not bugs): "Closed For Private Event"
+# (38318, 60244) whose bodies say "unavailable"/"not open"; "Mid-Winter Recess
+# (Bms Closed, Open for Makeups)". Missing junk is the right failure direction.
+_CLOSURE_NOTICE_NAME_RE = re.compile(
+    r'\b(?:closed(?!\s*caption)|closure)\b', re.IGNORECASE)
+_CLOSURE_NOTICE_NAME_VETO_RE = re.compile(
+    r'\bearly\s+clos(?:ure|ing|ed|es)\b|\bclos(?:ing|ed|es)\s+early\b'
+    r'|\b(?:registration|application|applications|submission|submissions|'
+    r'entries|entry|rsvps?|ticket|tickets|voting|nominations?)\s+'
+    r'clos(?:ed|es|ure|ing)\b',
+    re.IGNORECASE)
+_CLOSURE_NOTICE_DESC_RE = re.compile(r'\b(?:closed|closure)\b', re.IGNORECASE)
+
+
+def _is_closure_notice(name, description=None):
+    """True for a "<facility> Closed" notice, not an event."""
+    if not name:
+        return False
+    if not _CLOSURE_NOTICE_NAME_RE.search(name):
+        return False
+    if _CLOSURE_NOTICE_NAME_VETO_RE.search(name):
+        return False
+    description = description or ''
+    return bool(_description_adds_nothing(name, description)
+                or _CLOSURE_NOTICE_DESC_RE.search(description))
+
+
+# Sibling shapes prototyped here and DELIBERATELY REJECTED — they cannot be made
+# precise enough for this function, so they live in
+# scripts/find_review_candidates.py (human review) instead.
+# Measured over all 179,767 events (180,262 for the observance rule):
+#
+#   awareness-observance titles ("National … Day/Week", "World … Day") — filed
+#     as the sibling of (2) above, and it is the opposite verdict. 75 matches
+#     and the large majority are REAL programming: World Tai Chi Day at Bryant
+#     Park (free instruction + demonstrations), National Trails Day (a hike),
+#     World Fish Migration Day (seining the Harlem River), National Scrabble
+#     Day, World Circus Day, International Women's Day. Scoping it to the
+#     Parks/conservancy source that raised it does NOT rescue it — Fort Tryon's
+#     own "National Wildflower Week" and "World Migratory Bird Day" are guided
+#     tours and bird walks. The two genuine junk rows (190775, 190776) differ
+#     only in the DESCRIPTION: they invite you to visit the park on your own
+#     ("the perfect place to celebrate", "take a moment to recharge") with no
+#     gathering. That distinction is far too fuzzy for this function.
+#
+#   ticket giveaways ("… Free Tickets Giveaway") — 6 hits, but e191251 "Free
+#     Shakespeare in the Park Ticket Giveaway" at Snug Harbor is a REAL,
+#     attendable in-person ticket-distribution event. A promo notice and a
+#     distribution event are not separable from the text.
+#
+#   standing food/drink features ("Taco Tuesday", "Jerk Fest") — a
+#     dining-offer description gate caught **109 rows, many of them real
+#     events**: "Soul Supper - Live Motown & Soul Dining Experience", the
+#     immersive murder mystery "Speakeasy, Die Softly" (three-course meal
+#     included), the "Month Of Love" jazz series, a community potluck. A
+#     three-course meal is a very common *component* of a real event.
+#
+#     RE-TESTED 2026-08-09 in its tightest possible form and REJECTED AGAIN
+#     (.scratch/jf_measure.py). The tight form was: the WHOLE name is
+#     "<menu-item> <Weekday>", the description is a bare price offer
+#     ($N / half-price / "buy X get Y"), and no programming word appears. Over
+#     all 183,900 events it fires on **3 rows** — Greenwood Park's already-
+#     suppressed "Taco Tuesdays" and "Burger Mondays", plus **e18533 "Whiskey
+#     Wednesday" (Mosaic), which is LIVE and `reviewed=1`: a human looked at it
+#     and deliberately kept it.** So the tightest safe rule buys 2 rows and
+#     costs 1 reversal of an explicit editorial decision.
+#     The review record shows the class is a venue-by-venue judgment, not a
+#     fact: `reviewed=1, suppressed=0` on "Taco Tuesday" (e7862, Jungly),
+#     "Martini Monday" (e13254), "Whiskey Wednesday" (e18533) and "Happy Hour
+#     Friday" (e139462, the Aldrich Museum's extended-hours art programming);
+#     `reviewed=1, suppressed=1` on the near-identical "Taco Tuesday" (e210703,
+#     Miss Lily's) and "Steak Monday" (e138556). Near-misses in the same shape
+#     are unambiguously real: "Soup Sunday" (e211561, a free communal meal),
+#     "Taco Tuesday" whose body is "$5 Tacos & Margarita Pitchers + Bingo
+#     Night!". `_DRINK_PROMO_NAME_RE` above already excludes weekday forms for
+#     the same reason. **This class belongs to `/hide-uninteresting-events`**
+#     (find_review_candidates.py pattern 1 + pattern 31), where the call stays
+#     visible and reversible — do not also add it here.
+#
+# Don't re-add either without re-running .scratch/junkfilter_precision.py.
 
 
 # SEO / affiliate listicles injected into a crawled feed. Nine of these landed
@@ -1200,6 +1778,357 @@ def _is_seo_listicle_spam(name, description):
     return not _SEO_LISTICLE_VETO_RE.search(name)
 
 
+# (5) Room-booking-calendar shapes. Some venues publish their internal
+# room-reservation calendar on the same feed as their public programming, so
+# staff meetings, third-party private bookings, maintenance blocks and
+# hours/closure notices all reach the extractor looking like events. BCCLS
+# Libraries (w3530, 77 member libraries on LibCal) is the worst offender: on
+# 2026-08-08 it produced 13 of the 14 rows that the event-type classifier could
+# only label UNKNOWN, and every one had to be hand-suppressed.
+#
+# The arms below were each measured over all 188,480 events before shipping
+# (.scratch/rb_precision2.py): 53 net-new rows, 53 genuine junk, 0 false
+# positives, 1 of them live (186516, below). They are deliberately NOT scoped to
+# w3530 — every arm is anchored tightly enough to measure clean corpus-wide, and
+# the same shapes come from other booking calendars (Glow Cultural Center w3009,
+# ArteVino Studio, 54 Below). Hard-coding a website id here would also break the
+# city-agnostic fork contract in CLAUDE.md.
+#
+# `RENTAL:`-prefixed listings stay OUT of scope, per the existing convention in
+# `_NON_EVENT_NAME_PATTERNS`: venues use that prefix on public events too.
+
+# (5a) Private-booking titles. `_NON_EVENT_NAME_PATTERNS` already covers
+# "private rental" / "private booking"; these are the sibling nouns the same
+# calendars use ("Private Meeting", "Private Session - Up Lift", "Private Event
+# - Girl Scouts", "SUMMIT Private Events"). 40 corpus hits, all of them either a
+# genuine invitation-only booking or the venue advertising its private-hire
+# space; none live.
+#
+# The veto is measured, not decorative: St. Mazie posts "Private Event from
+# 7-9pm + Open to the Public at 9:30pm!" (e73111, `reviewed=1, suppressed=0` —
+# a human deliberately kept it) and e43997. The room is privately booked for
+# part of the night and genuinely public afterwards, so the row is a real
+# listing and must survive.
+# `part(y|ies)` added 2026-08-17 for the rezclick class-booking calendars
+# (Painting Lounge w1190, w28), which publish every reserved slot in the same
+# feed as the public classes: "Private Party - Ryan W. / NYU - Starry Night Over
+# Manhattan (2hr:Midtown:Main)", "Private Party - Amber P. / Galentine's Event",
+# down to a bare "Private Party". Before this the merger folded them into the
+# public class of the same painting; the cross-location guard now detaches them
+# instead, which left them displaying as nothing at all — so drop them at
+# extraction rather than relying on the merger. Measured over all 191,070
+# events: 80 net-new rows, **all** of them bookings, **zero** live, all from
+# those two websites. The existing "open to the public" veto still applies.
+_PRIVATE_BOOKING_NAME_RE = re.compile(
+    r'\bprivate\s+(?:meeting|event|session|function|use|hire|part(?:y|ies))s?\b',
+    re.IGNORECASE)
+_PRIVATE_BOOKING_NAME_VETO_RE = re.compile(
+    r'\bopen\s+to\s+the\s+(?:general\s+)?public\b|\bpublic\s+welcome\b',
+    re.IGNORECASE)
+
+# (5b) Staff-only internal blocks ("Staff event", "Booked for Staff", "Dept Head
+# Mtg."). The whole name must BE the marker — that anchoring is what keeps real
+# programming alive, since "staff" is common inside genuine event titles ("Tech
+# Assistance with Library Staff", e112534, a real one-on-one class). 4 corpus
+# hits, all w3530, none live.
+#
+# A bare `^booked` prefix arm was prototyped and REJECTED: "Booked for the
+# Movies: Inside Out" is a real monthly book-and-film club (6 rows), and "Booked
+# & Busy", "Booked & Brewed", "Booked & Unbothered" are real reading events —
+# 8 false positives against 2 true hits. "Booked for Staff" is caught here only
+# because `staff` closes the name.
+_STAFF_ONLY_BLOCK_NAME_RE = re.compile(
+    r'^\s*(?:booked\s+for\s+)?staff\s*'
+    r'(?:event|meeting|mtg\.?|day|training|development|in[\s-]?service|'
+    r'only|use|retreat|luncheon)?\s*[.!]?\s*$'
+    r'|\b(?:dept|department)\s+heads?\s+(?:mtg\.?|meeting)\b',
+    re.IGNORECASE)
+
+# (5c) Bare private life-occasion bookings ("Wedding", "Baby Shower"). The whole
+# name is the occasion and the body says nothing — a room is booked for somebody
+# else's party. 2 corpus hits: e214016 (w3530) and e186516 "Baby Shower" at Glow
+# Cultural Center (w3009), which was LIVE and is the one row this batch removed
+# from the map; w3009 is the same kind of raw booking calendar ("Private Event
+# 2:00pm - 6:00pm", "Jerry Hold", "Volunteer Interview").
+#
+# Church sacraments are deliberately EXCLUDED. "Communion" (e141704, First
+# Presbyterian) is a real recurring service published with no description, and
+# "Baptism"/"Christening"/"Memorial Service" are the same shape. The list here
+# is only occasions that are private by definition.
+_PRIVATE_OCCASION_NAME_RE = re.compile(
+    r'^\s*(?:the\s+)?(?:'
+    r'wedding(?:\s+(?:reception|ceremony))?|'
+    r'baby\s+shower|bridal\s+shower|wedding\s+shower|'
+    r'rehearsal\s+dinner|engagement\s+party|'
+    r'bar\s+mitzvah|bat\s+mitzvah|'
+    r'funeral|repast|wake'
+    r')\s*[.!]?\s*$',
+    re.IGNORECASE)
+
+# (5d) Maintenance blocks ("Repair Work" — "Community room unavailable for some
+# repair work."). The whole name must be the maintenance phrase plus a
+# work/project noun, which is what spares the very common real programming built
+# on the same words: "Rock Painting", "Watercolor Painting for Adults", "Repair
+# Cafe", "Bike Repair Workshop". 1 corpus hit.
+_MAINTENANCE_BLOCK_NAME_RE = re.compile(
+    r'^\s*(?:building|room|facility|community\s+room|floor|carpet|hvac|'
+    r'boiler|elevator|roof)?\s*'
+    r'(?:repair|repairs|maintenance|renovation|construction|cleaning|painting)\s*'
+    r'(?:work|works|project|day)\s*$',
+    re.IGNORECASE)
+
+# (5e) "No <program>" cancelled-instance notices whose body says nothing ("No
+# Storytime"). The existing `_NON_EVENT_NAME_PATTERNS` negation rule requires
+# BOTH a program noun and a temporal marker ("No Storytime Today"), so the bare
+# form fell through.
+#
+# This is the narrowest possible slice of the `^no <noun>` family that the
+# facility-closure task deliberately deferred as unmeasurable: the ENTIRE name
+# must be "No" plus one program noun from a closed list, AND the description
+# must add nothing. Real events that open with "No" carry more than a program
+# noun ("No Kidding! Comedy", "No Lights No Lycra", "No Pants Subway Ride") and
+# cannot match a full-name anchor. 1 corpus hit. The broader arm — free-form
+# noun phrases, "[CANCELLED]" prefixes — remains unshipped and unmeasured.
+_NO_PROGRAM_NAME_RE = re.compile(
+    r'^\s*no\s+(?:'
+    r'story\s*times?|story\s*hours?|'
+    r'programs?|programming|classes?|sessions?|meetings?|'
+    r'practices?|rehearsals?|services?|'
+    r'(?:baby|toddler|preschool|family|children\'?s?|kids?|teen|adult|'
+    r'morning|evening)\s+'
+    r'(?:story\s*time|story\s*hour|programs?|classes?|sessions?|time)'
+    r')\s*[.!]?\s*$',
+    re.IGNORECASE)
+
+# (5f) Seasonal / weekday HOURS notices ("Summer Hours (2 PM Close)", "Summer
+# Saturday Hours"). `_is_hours_notice` above needs a clock time in the NAME, and
+# these put it in the body instead.
+#
+# The name gate is the load-bearing part and it is deliberately brutal: the
+# whole title must be one to three season/weekday qualifiers plus the word
+# "Hours", optionally trailed by a parenthetical or a short dash clause. A
+# looser draft keyed on "<anything> Hours" plus an hours-y body took **31 false
+# positives out of 33** — "Extended Museum Hours", "Member Morning Hours",
+# "Members-Only Hours", "Open Studio Hours", "Garden Hours with a Garden
+# Educator", "Teen Open Hours", "Friday Extended Hours", "Winter Recess Hours"
+# are all real programming, exactly the "Extended Hours gallery night" the
+# scheduled task warned about. Requiring the qualifier to be the ONLY thing
+# before "Hours" removes every one of them. "Social Worker Office Hours" (a real
+# recurring BCCLS service) cannot match for the same reason.
+#
+# The description must then state the building's hours, and any gathering
+# language vetoes the drop. 2 corpus hits, both w3530.
+_SEASONAL_HOURS_NAME_RE = re.compile(
+    r'^\s*(?:the\s+)?'
+    r'(?:(?:summer|winter|spring|fall|autumn|holiday|seasonal|weekend|weekday|'
+    r'monday|tuesday|wednesday|thursday|friday|saturday|sunday)s?\s+){1,3}'
+    r'hours\b'
+    r'\s*(?:\([^)]{0,40}\)|[-–—:,][^.!?]{0,40})?\s*$',
+    re.IGNORECASE)
+_SEASONAL_HOURS_DESC_RE = re.compile(
+    r'\bclos(?:e|es|ed|ing)\s+(?:at|early|on)\b'
+    r'|\bhours\s+(?:are|will\s+be|:)'
+    r'|\b(?:library|building|branch|museum|office)\b[^.!?]{0,40}'
+    r'\b(?:open|closed?)\b[^.!?]{0,20}\d',
+    re.IGNORECASE)
+_SEASONAL_HOURS_VETO_RE = re.compile(
+    r'\b(?:join\s+us|register|registration|rsvp|workshop|class|performance|'
+    r'concert|screening|tour|drop[\s-]?in|all\s+ages\s+welcome)\b',
+    re.IGNORECASE)
+
+# (5g) Outside organizations booking the room. The calendar row names WHO has the
+# space, not what is happening ("Historical Society", e222076 w3530 Oakland
+# Public Library; "Saddle River Valley Lions Club", e214224; "Girl Scouts",
+# e169811) — the same BCCLS LibCal feed as the rest of this block.
+#
+# Two gates, both required. The whole name must BE an organization name whose
+# head is one of a closed list of civic/fraternal org types, and the description
+# must add nothing: a described row is a real program the org is hosting and
+# survives untouched. Measured over all 190,989 events, the name gate alone hits
+# 14 rows; the blank-description gate cuts that to 5 (e92077, e169811, e210304,
+# e214224 and today's e222076), and every row it drops is a bare booking. Zero
+# of the 5 are live, zero were reviewed-and-kept.
+#
+# What the description gate saves is the point of it: "Yonkers Historical
+# Society" (e99365, e144607) carries "Monthly meeting", "Girl Scouts" (e131176)
+# carries "Join the Girl Scouts for an afternoon gathering held at the Oakland
+# Public Library's Makerspace", "Hawthorne Rotary Club Meeting" (e210893,
+# e222090) carries a joining pitch, and "Troop 3200" (e196602) is a real Girl
+# Scouts camp show — all described, all spared.
+#
+# Deliberately EXCLUDED after measurement: garden clubs ("Our Garden Club" is a
+# real BPL children's program, 8 rows; "Kids Garden Club" is a real w3530 one),
+# bare "Scout"/"Troop N" (e193225 "The Scout" is a Film Forum SCREENING), PTA/PTO
+# and boards of education (public meetings people attend), and craft guilds
+# (library knitting/quilt guilds are open programs).
+_ORG_BOOKING_NAME_RE = re.compile(
+    r'^\s*(?:the\s+)?[\w.,&\'’\- ]{0,40}?\b(?:'
+    r'historical\s+society|genealogical\s+society|preservation\s+society|'
+    r'rotary\s+club|lions\s+club|kiwanis\s+club|optimist\s+club|'
+    r'elks\s+(?:lodge|club)|moose\s+lodge|knights\s+of\s+columbus|'
+    r'american\s+legion(?:\s+post\s*\d*)?|vfw(?:\s+post\s*\d*)?|'
+    r'chamber\s+of\s+commerce|'
+    r'(?:girl|boy|cub)\s+scouts?(?:\s+troop\s*\d*)?'
+    r')\s*(?:meeting)?\s*[.!]?\s*$',
+    re.IGNORECASE)
+# A content word anywhere in the title means the org is PRESENTING something, so
+# the row is a real program even though it ends on the org's name
+# ("Lecture: Bergen County Historical Society").
+_ORG_BOOKING_NAME_VETO_RE = re.compile(
+    r'\b(?:lecture|talk|presentation|program|workshop|class|tour|exhibit(?:ion)?|'
+    r'sale|fair|festival|dinner|breakfast|lunch(?:eon)?|ceremony|awards?|'
+    r'open\s+house|book|film|concert|show|party|celebration|fundraiser|'
+    r'induction|installation)\b',
+    re.IGNORECASE)
+
+# (5h) Month-CALENDAR placeholder rows. A venue's own monthly calendar page gets
+# extracted as if it were an event: "The Stone at The New School: September
+# Calendar" (e221887 w653) — description is boilerplate venue copy, occurrence is
+# the whole month (2026-09-01 → 2026-09-30). **This shape recurs every month** —
+# the June (e158041) and July (e178870) rows are already in the table — and the
+# community-board feeds emit it continuously in the mirrored word order
+# ("Bronx Community Board 11 Calendar - April 2026", e19334; "Bronx Community
+# Board 11 Monthly Calendar - May 2026", e25605, which is LIVE on the map today).
+#
+# The gate is the month qualifier sitting directly on "Calendar" at the end of
+# the title, in either order. That is what separates a calendar-page row from the
+# real events that merely end on the word: 40 events table-wide end in
+# "Calendar", and a bare `calendar$` rule would kill "Back-to-School: Design you
+# Own Calendar" (e217078, LIVE), "What Are You Doing Tonight? How to Start Your
+# Own Events Calendar" (e143159, a real panel) and "Calendar" (e17132, Atom
+# Egoyan's FILM at w986). Requiring the month drops all three.
+#
+# Venue-listing placeholders without a month ("Chelsea Studio Calendar",
+# "Event Calendar", "Brooklyn Music Kitchen Entertainment Calendar" — 20 rows,
+# all junk, all archived) are a DIFFERENT shape and stay unfiltered: the same
+# name gate that catches them catches the film and the two craft programs.
+#
+# Measured over all 190,989 events: 16 matches, 16 calendar-page placeholders,
+# zero real events, zero reviewed-and-kept, 2 of them currently live (e25605,
+# e47673 — both correct kills).
+_MONTH_NAMES = (
+    r'(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|'
+    r'jul(?:y)?|aug(?:ust)?|sep(?:t|tember)?|oct(?:ober)?|nov(?:ember)?|'
+    r'dec(?:ember)?)'
+)
+_MONTH_CALENDAR_NAME_RE = re.compile(
+    r'(?:'
+    #  "... September Calendar", "May 2026 Meeting Calendar", "June 2026 Monthly Calendar"
+    r'\b(?:' + _MONTH_NAMES + r'|monthly)\s+(?:\d{4}\s+)?'
+    r'(?:(?:meeting|monthly|events?|program(?:ming)?)\s+)?calendar'
+    r'|'
+    #  "... Calendar - April 2026", "Monthly Calendar: September"
+    r'\bcalendar\s*[-–—:,]\s*' + _MONTH_NAMES + r'\b(?:\s+\d{4})?'
+    r')\s*[.!]?\s*$',
+    re.IGNORECASE)
+# A calendar someone MAKES is a real craft program, not a listing page.
+_MONTH_CALENDAR_VETO_RE = re.compile(
+    r'\b(?:make|makes|making|maker|create|creating|craft(?:ing)?|diy|'
+    r'design(?:ing)?|decorate|decorating|paint(?:ing)?|collage|print(?:ing)?|'
+    r'scrapbook(?:ing)?|photo|workshop|class|advent)\b',
+    re.IGNORECASE)
+
+
+def _is_private_booking_name(name, description=None):
+    """True for a title that IS a private booking, not an attendable event."""
+    if not name:
+        return False
+    if not _PRIVATE_BOOKING_NAME_RE.search(name):
+        return False
+    return not _PRIVATE_BOOKING_NAME_VETO_RE.search(name + ' ' + (description or ''))
+
+
+def _is_room_reservation(name, description=None):
+    """True for a patron/room-reservation placeholder row.
+
+    The description gate accepts three shapes, all of which say nothing beyond
+    the booking: blank, a verbatim echo of the title, or ANOTHER reservation
+    line. The third case is why e214168 ("Patron Reservation" / "Patron
+    Reservation - Mahjong") slipped the original rule — the body restates the
+    booking with the patron's activity appended, which `_description_adds_nothing`
+    correctly refuses to call an echo.
+    """
+    if not name or not _ROOM_RESERVATION_NAME_RE.match(name):
+        return False
+    if _description_adds_nothing(name, description):
+        return True
+    return bool(_ROOM_RESERVATION_NAME_RE.match((description or '').strip()))
+
+
+def _is_seasonal_hours_notice(name, description=None):
+    """True for a "<season/weekday> Hours" building-hours notice."""
+    if not name or not _SEASONAL_HOURS_NAME_RE.match(name.strip()):
+        return False
+    if _SEASONAL_HOURS_VETO_RE.search(name + ' ' + (description or '')):
+        return False
+    return bool(_SEASONAL_HOURS_DESC_RE.search(description or ''))
+
+
+def _is_org_room_booking(name, description=None):
+    """True for a calendar row whose whole title is the organization holding it."""
+    if not name or not _ORG_BOOKING_NAME_RE.match(name):
+        return False
+    if _ORG_BOOKING_NAME_VETO_RE.search(name):
+        return False
+    return _description_adds_nothing(name, description)
+
+
+def _is_month_calendar_placeholder(name, description=None):
+    """True for a "<Month> Calendar" listing-page row extracted as an event."""
+    if not name or not _MONTH_CALENDAR_NAME_RE.search(name.strip()):
+        return False
+    return not _MONTH_CALENDAR_VETO_RE.search(name)
+
+
+def _is_take_home_kit(name, description=None):
+    """True for a take-home / grab-and-go kit distribution, not a gathering.
+
+    Four gates: the pickup idiom in the NAME, a kit/craft word in either field,
+    pickup corroboration in the DESCRIPTION, and no veto. The veto is two-tier —
+    see the comment block above `_TAKE_HOME_KIT_NAME_RE` for why `join us` alone
+    is not allowed to save a row that also says "while supplies last".
+    """
+    description = description or ''
+    if not name or not description:
+        return False
+    if not _TAKE_HOME_KIT_NAME_RE.search(name):
+        return False
+    if not (_TAKE_HOME_KIT_SIGNAL_RE.search(name)
+            or _TAKE_HOME_KIT_SIGNAL_RE.search(description)):
+        return False
+    if not _TAKE_HOME_KIT_DESC_RE.search(description):
+        return False
+    both = name + ' ' + description
+    if _TAKE_HOME_KIT_VETO_RE.search(both):
+        return False
+    if (_TAKE_HOME_KIT_SOFT_VETO_RE.search(both)
+            and not _TAKE_HOME_KIT_PICKUP_RE.search(description)):
+        return False
+    return True
+
+
+def _is_ticket_product_package(name, description=None):
+    """True for a ticketing upsell product (a package/bundle), not an event.
+
+    See the comment block above `_TICKET_PRODUCT_NAME_RE`.
+    """
+    if not name or not _TICKET_PRODUCT_NAME_RE.search(name):
+        return False
+    description = description or ''
+    if not _TICKET_PRODUCT_DESC_RE.search(description):
+        return False
+    return not _TICKET_PRODUCT_VETO_RE.search(name + ' ' + description)
+
+
+def _is_food_holiday_promo(name, description=None):
+    """True for a "National <food/drink> Day" restaurant marketing post."""
+    if not name or not _FOOD_HOLIDAY_NAME_RE.match(name):
+        return False
+    if not _FOOD_HOLIDAY_DESC_RE.search(description or ''):
+        return False
+    return not _FOOD_HOLIDAY_VETO_RE.search(name + ' ' + (description or ''))
+
+
 def is_obvious_non_event(name, description=None):
     """Return True if the event is an unmistakable non-event.
 
@@ -1207,7 +2136,15 @@ def is_obvious_non_event(name, description=None):
     listings, cinema showtime placeholders, SEO spam, fundraising campaigns,
     submission-call contests, festival info-booth listings, childcare-amenity
     listings, senior-center congregate-meal menus, registration-window
-    announcements, and bare generic placeholder names — the kinds of rows that
+    announcements, academic/registrar calendar milestones (add/drop deadlines,
+    term start dates, exam periods), take-home/grab-and-go kit distributions,
+    program-deadline notices, room-booking-calendar shapes (private bookings,
+    staff-only blocks, private life occasions, maintenance blocks, bare
+    "No <program>" notices, seasonal hours notices, outside-organization
+    bookings titled with the org's own name), month-calendar listing
+    placeholders, "National <food/drink> Day" restaurant promos, ticketing
+    upsell products (packages/bundles), and bare
+    generic placeholder names — the kinds of rows that
     should never reach the map. High precision by design; anything fuzzier
     belongs in scripts/find_review_candidates.py for human review.
 
@@ -1227,15 +2164,95 @@ def is_obvious_non_event(name, description=None):
     # Placeholder "Untitled <format> (<venue>)" screening rows.
     if _description_is_blank(description) and _UNTITLED_PLACEHOLDER_NAME_RE.match(name):
         return True
+    # Library room-booking placeholder. Uses `_description_adds_nothing` rather
+    # than `_description_is_blank`: these feeds echo the title into the body.
+    if _is_room_reservation(name, description):
+        return True
+    # Room-booking-calendar shapes (block 5): private bookings, staff-only
+    # blocks, bare private occasions, maintenance blocks, bare "No <program>"
+    # notices and seasonal hours notices. All fire with or without a
+    # description — a blank body IS the corroboration for most of them — so they
+    # cannot live in the `if description:` block below.
+    if _is_private_booking_name(name, description):
+        return True
+    if _STAFF_ONLY_BLOCK_NAME_RE.search(name):
+        return True
+    if (_PRIVATE_OCCASION_NAME_RE.match(name)
+            and _description_adds_nothing(name, description)):
+        return True
+    if _MAINTENANCE_BLOCK_NAME_RE.match(name):
+        return True
+    if (_NO_PROGRAM_NAME_RE.match(name)
+            and _description_adds_nothing(name, description)):
+        return True
+    if _is_seasonal_hours_notice(name, description):
+        return True
+    # An outside organization's room booking, titled with the org's own name
+    # ("Historical Society", "Saddle River Valley Lions Club"). Requires a body
+    # that adds nothing, so a described program the org hosts survives.
+    if _is_org_room_booking(name, description):
+        return True
+    # "<Month> Calendar" listing-page placeholder ("The Stone at The New School:
+    # September Calendar", "Bronx Community Board 11 Calendar - April 2026").
+    # Name-only by design — the body is venue boilerplate either way.
+    if _is_month_calendar_placeholder(name, description):
+        return True
+    # "National <food/drink> Day" restaurant marketing post. Two signals plus a
+    # veto — a bare marker with no body stays editorial, per the 2026-07-27
+    # refutation. Lives here rather than in the `if description:` block only for
+    # readability; `_is_food_holiday_promo` requires a description of its own.
+    if _is_food_holiday_promo(name, description):
+        return True
+    # "<program> Ends!" deadline notice, corroborated by a body that adds
+    # nothing ("Summer Reading Ends!" / "SUMMER READING ENDS!"). The
+    # deadline-language half of this rule stays in the `if description:` block
+    # below; only the blank/echo half belongs up here.
+    if (_PROGRAM_DEADLINE_NAME_RE.search(name)
+            and _description_adds_nothing(name, description)
+            and not _PROGRAM_DEADLINE_VETO_RE.search(name + ' ' + description)):
+        return True
+    # Opening-hours notice ("Library open 9 AM - 5 PM"). Fires with or without a
+    # description — the body is normally a restatement of the hours.
+    if _is_hours_notice(name, description):
+        return True
+    # Facility-closure notice ("Hendricks Field Golf Course Closed"). Fires with
+    # or without a description — the blank body IS the corroboration here — so it
+    # cannot live in the `if description:` block below.
+    if _is_closure_notice(name, description):
+        return True
+    # Academic/registrar calendar milestone (add/drop deadline, term start, exam
+    # period). Fires with or without a description — these rows are usually
+    # description-less — so it cannot live in the `if description:` block below.
+    if (_ACADEMIC_MILESTONE_NAME_RE.search(name)
+            and not _ACADEMIC_ATTENDABLE_VETO_RE.search(name)):
+        return True
     # SEO / affiliate listicle spam ("Allstate Insurance Quick Pay — Fastest Bill
     # Pay Method Available 2026"). Fires with or without a description, so it
     # cannot live in the `if description:` block below.
     if _is_seo_listicle_spam(name, description):
         return True
     if description:
+        # "On this Day:" archival post narrating a past anniversary, not a gathering.
+        if (_ARCHIVAL_ON_THIS_DAY_NAME_RE.match(name)
+                and _ARCHIVAL_HISTORICAL_DESC_RE.search(description)
+                and not _ARCHIVAL_GATHERING_VETO_RE.search(description)):
+            return True
         if (_MENU_SPECIAL_NAME_RE.match(name)
                 and _MENU_SPECIAL_DESC_RE.search(description)
                 and not _MENU_SPECIAL_VETO_RE.search(description)):
+            return True
+        # Take-home / grab-and-go / take-n-make kit distribution — a pickup, not
+        # a gathering.
+        if _is_take_home_kit(name, description):
+            return True
+        # Ticketing upsell product ("VIP & Date Night Packages", "… Experience
+        # Bundle") — a thing you buy, not a thing you attend.
+        if _is_ticket_product_package(name, description):
+            return True
+        # "<program> Ends!" submit-your-logs deadline notice.
+        if (_PROGRAM_DEADLINE_NAME_RE.search(name)
+                and _PROGRAM_DEADLINE_DESC_RE.search(description)
+                and not _PROGRAM_DEADLINE_VETO_RE.search(name + ' ' + description)):
             return True
         if (_SUBMISSION_CONTEST_NAME_RE.search(name)
                 and not _ATTENDABLE_CONTEST_NAME_RE.search(name)
@@ -1291,6 +2308,11 @@ _TZ_SUFFIX_RE = re.compile(r'(est|edt|pst|pdt|mst|mdt|cst|cdt|et|pt|mt|ct)$')
 _TWELVE_HOUR_RE = re.compile(r'^(\d{1,2})(?::(\d{2}))?(am|pm)$')
 _HHMM_RE = re.compile(r'^(\d{1,2}):(\d{2})$')
 _HH_RE = re.compile(r'^(\d{1,2})$')
+# 'HH:MM:SS' (MySQL TIME columns, ISO clock strings). None of the patterns above
+# match it, so it used to fall through unchanged and land in event_occurrences
+# next to its own canonical 12-hour form — 79 duplicate twin rows accumulated
+# that way. Drop the seconds field and re-run the normal cascade.
+_SECONDS_RE = re.compile(r'^(\d{1,2}:\d{2}):[0-5]\d(am|pm)?$')
 _SENTINEL_TIMES = frozenset({
     '', 'allday', 'allday/varies', 'varioustimes', 'multipletimes', 'tba', 'tbd',
     'none', 'close', 'closing', 'late', 'tbc', 'ongoing', 'sundown', 'sunrise',
@@ -1304,8 +2326,135 @@ def _canonical_time(hour, minute, is_pm):
     return f'{hour}{suffix}' if minute == 0 else f'{hour}:{minute:02d}{suffix}'
 
 
-_LUMA_HOSTS = ('luma.com', 'lu.ma', 'www.luma.com')
+_LUMA_HOSTS = ('luma.com', 'lu.ma', 'www.luma.com', 'www.lu.ma')
 _LUMA_SLUG = re.compile(r'^[a-z0-9][a-z0-9-]{4,}$', re.I)
+
+# `lu.ma/<slug>` and `luma.com/<slug>` are the SAME page — lu.ma 301s to
+# luma.com — but they are different strings, so every URL-keyed comparison
+# (merger's shared-URL identity tier, detail-crawl shared-URL dedup, the
+# `event_urls` uniqueness we rely on) sees two unrelated links. The Luma
+# calendar injector emits `lu.ma` while embeds and other sites emit `luma.com`,
+# so the same event routinely arrives under both hosts: on 2026-08-17, 3 of 10
+# Luma slug collisions were invisible to the dedupe tier for exactly this
+# reason, and 8 live events held both spellings of one link. Canonicalize the
+# short host away at ingest so it is fixed once, for every consumer.
+# `api.lu.ma` is deliberately NOT rewritten — it is a different service (the
+# JSON endpoint), not an alias of the web page.
+_LUMA_CANONICAL_HOST = 'luma.com'
+_LUMA_ALIAS_HOSTS = frozenset({'lu.ma', 'www.lu.ma', 'www.luma.com'})
+
+
+def canonicalize_luma_host(url):
+    """Rewrite `lu.ma` / `www.` Luma links to the canonical `https://luma.com/…`.
+
+    Path, query and fragment are preserved verbatim; non-Luma URLs (including
+    `api.lu.ma`) are returned unchanged.
+    """
+    if not url:
+        return url
+    try:
+        parts = urllib.parse.urlsplit(url)
+    except ValueError:
+        return url
+    if (parts.hostname or '').lower() not in _LUMA_ALIAS_HOSTS:
+        return url
+    if parts.port or parts.username:
+        return url  # not a plain public Luma link; leave it alone
+    return urllib.parse.urlunsplit(
+        ('https', _LUMA_CANONICAL_HOST, parts.path, parts.query, parts.fragment))
+
+# Luma CALENDAR-level endpoints. Luma organizer sources are crawled through the
+# calendar's own JSON endpoint (`api.lu.ma/url?url=<slug>` or
+# `api.lu.ma/calendar/get-items?calendar_api_id=cal-XXX`; a few sit on the
+# `lu.ma/calendar/cal-XXX` page). That payload carries per-event objects AND a
+# pile of calendar-level metadata — `calendar.name`, the host list, and a
+# `tags[]` array of audience labels — and the extractor sometimes reads one of
+# those labels as an event.
+#
+# e208609 "Technologists" (w5111 Fractal Tech) was exactly that: the calendar's
+# own `tags[].name` ("Technologists", `upcoming_event_count: 0`), extracted with
+# `url: null` and no description, then pooled **36 occurrences** scraped from
+# every real Fractal Tech event's times. It false-matched every real Fractal
+# meetup in the dedupe pass.
+#
+# The structural tell is the URL. Every genuine event in the payload carries its
+# own `lu.ma/<slug>` (the slug-expanding `js_code` guarantees it), so a record
+# with no event URL of its own falls back to `source_url` in
+# `group_event_occurrences` and ends up pointing at the calendar endpoint it was
+# extracted FROM. Calendar-level metadata is the only thing that can produce
+# that shape.
+_LUMA_CAL_ID_RE = re.compile(r'^/calendar/(cal-[A-Za-z0-9]+)$')
+
+
+def _luma_calendar_key(url):
+    """Identity of the Luma CALENDAR a URL addresses, or '' if it isn't one.
+
+    Returns a comparable key so an event URL can be tested against the crawl's
+    own source URL: 'slug:<calendar-slug>' or 'cal:<calendar-api-id>'.
+
+    Deliberately NOT a "looks like a Luma calendar" test in isolation —
+    `api.lu.ma/url?url=<slug>` also accepts an *event* slug (e199135 carries a
+    live `api.lu.ma/url?url=pubkey-jj3u`, a real PubKey event whose link is
+    merely the unusable JSON form). Only the comparison against the source URL
+    tells the two apart.
+    """
+    if not url:
+        return ''
+    try:
+        parts = urllib.parse.urlparse(url.strip())
+    except ValueError:
+        return ''
+    host = (parts.hostname or '').lower()
+    path = (parts.path or '').rstrip('/')
+    query = urllib.parse.parse_qs(parts.query or '')
+    if host == 'api.lu.ma':
+        if path == '/url':
+            slug = (query.get('url') or [''])[0].strip().lower()
+            return f'slug:{slug}' if slug else ''
+        if path == '/calendar/get-items':
+            cal_id = (query.get('calendar_api_id') or [''])[0].strip().lower()
+            return f'cal:{cal_id}' if cal_id.startswith('cal-') else ''
+        return ''
+    if host in _LUMA_HOSTS:
+        match = _LUMA_CAL_ID_RE.match(path)
+        if match:
+            return f'cal:{match.group(1).lower()}'
+    return ''
+
+
+def is_luma_calendar_listing_url(url, source_url):
+    """True when an event URL is the Luma calendar endpoint it was crawled from.
+
+    Self-referential by design: the record has no event page of its own, so its
+    "URL" is the listing it came from. `luma.com/user/<handle>` host pages are
+    NOT included — those are a person, not a calendar payload, and both corpus
+    instances are real described events.
+    """
+    key = _luma_calendar_key(url)
+    return bool(key) and key == _luma_calendar_key(source_url)
+
+# Signed-media CDN hosts (Instagram/Facebook photo delivery). The Instagram/picnob
+# path sometimes hands us the post's *image* URL instead of the post permalink; those
+# carry an expiring signature and 404 within weeks, so the event silently loses its
+# only link. Same family as the relative-URL bug below, but time-delayed.
+_SIGNED_CDN_HOST_RE = re.compile(
+    r'(^|\.)(cdninstagram\.com|fbcdn\.net|fbsbx\.com)$', re.I)
+
+
+def is_signed_cdn_url(url):
+    """True for expiring signed-CDN media URLs, which are never event pages."""
+    try:
+        host = (urllib.parse.urlparse(url or '').hostname or '').lower()
+    except ValueError:
+        return False
+    if not host:
+        return False
+    if _SIGNED_CDN_HOST_RE.search(host):
+        return True
+    # Meta's edge nodes are always a first label of `scontent` / `scontent-<pop>`;
+    # matched separately so a future signed host on a new apex is still caught.
+    label = host.split('.')[0]
+    return label == 'scontent' or label.startswith('scontent-')
 
 
 def absolutize_url(url, source_url):
@@ -1320,19 +2469,24 @@ def absolutize_url(url, source_url):
 
     Returns '' when no absolute URL can be formed, so the caller can drop it rather than
     store a link that cannot work.
+
+    Also canonicalizes the Luma short host (`lu.ma` -> `luma.com`, see
+    `canonicalize_luma_host`) so one event page has one spelling everywhere downstream.
     """
     url = (url or '').strip()
     if not url:
         return ''
+    if is_signed_cdn_url(url):
+        return ''  # expiring image CDN link, not an event page
     # "http://https://real.url" — a scheme glued onto an already-absolute URL.
     doubled = re.match(r'^https?://(https?://.+)$', url, re.I)
     if doubled:
-        return doubled.group(1)
+        return canonicalize_luma_host(doubled.group(1))
     if re.match(r'^https?://', url, re.I):
-        return url
+        return canonicalize_luma_host(url)
     if url.startswith('//'):
         scheme = urllib.parse.urlparse(source_url or '').scheme or 'https'
-        return f'{scheme}:{url}'
+        return canonicalize_luma_host(f'{scheme}:{url}')
     if re.match(r'^[a-z][a-z0-9+.-]*:', url, re.I):
         return ''  # mailto:, tel:, javascript: — not an event page
     if not source_url:
@@ -1341,9 +2495,13 @@ def absolutize_url(url, source_url):
     # listed on: /calendar/cal-XXX + "a7oxbpwy" must resolve to luma.com/a7oxbpwy.
     host = urllib.parse.urlparse(source_url).netloc.lower()
     if host in _LUMA_HOSTS and '/' not in url and _LUMA_SLUG.match(url):
-        return f'https://luma.com/{url}'
+        return f'https://{_LUMA_CANONICAL_HOST}/{url}'
     resolved = urllib.parse.urljoin(source_url, url)
-    return resolved if re.match(r'^https?://', resolved, re.I) else ''
+    if is_signed_cdn_url(resolved):
+        return ''
+    if not re.match(r'^https?://', resolved, re.I):
+        return ''
+    return canonicalize_luma_host(resolved)
 
 
 def _standardize_time(time_str):
@@ -1353,6 +2511,7 @@ def _standardize_time(time_str):
         '6:30 PM' -> '6:30pm'
         '6:00pm'  -> '6pm'
         '17:38'   -> '5:38pm'
+        '19:30:00'-> '7:30pm'
         '20'      -> '8pm'
         '08'      -> '8am'
         '1pmest'  -> '1pm'
@@ -1378,6 +2537,11 @@ def _standardize_time(time_str):
     s = _TZ_SUFFIX_RE.sub('', s)
     if not s:
         return ''
+
+    # '19:30:00' -> '19:30', '7:30:00pm' -> '7:30pm'
+    m = _SECONDS_RE.match(s)
+    if m:
+        s = m.group(1) + (m.group(2) or '')
 
     m = _TWELVE_HOUR_RE.match(s)
     if m:
@@ -1683,6 +2847,21 @@ GENERIC_LOCATION_WORDS = {
     'harbor', 'harbour', 'sea', 'dance',
 }
 
+# Tokens that must not PREFIX-MATCH or COLLAPSE-TO a specific venue, but which
+# must still count as *distinctive* when comparing two venue names.
+#
+# "playground" needs the first behaviour and not the second. A bare
+# "Playground" was prefix-matching loc 8914 "Playground One" (a Lower East Side
+# playground) at 10/13 = 0.77 coverage, dragging NYC Parks "Kids In Motion"
+# programs for St. John's Park, Schmul, Elmhurst, Rosemary's and Phil "Scooter"
+# Rizzuto Park onto one unrelated pin. But putting it in GENERIC_LOCATION_WORDS
+# outright ALSO makes it a non-significant leftover in the fuzzy tripwire, which
+# measurably broke "Matthews Muliner Playground" -> loc 7487 (a correct match).
+# Measured A/B over every playground-touching crawl_event: as a bare-token block
+# this fixes 47 mis-pins and newly resolves "Playground, Elmhurst Park" -> 283,
+# with zero regressions.
+BARE_ONLY_GENERIC_WORDS = GENERIC_LOCATION_WORDS | {'playground'}
+
 # Leftover tokens that don't distinguish one venue from another, so a mismatch
 # on them shouldn't block the fuzzy token-overlap tripwire: corporate/legal
 # suffixes (Inc vs Corp for the same business) and grammatical connectors.
@@ -1690,6 +2869,91 @@ _DROPPABLE_LEFTOVER_TOKENS = {
     'inc', 'corp', 'corporation', 'incorporated', 'llc', 'ltd', 'co', 'lp',
     'plc', 'company', 'the', 'and', 'of', 'at', 'for', 'a', 'an', 'in', 'on',
 }
+
+
+# Words that name a KIND of venue rather than a particular venue. Superset of
+# GENERIC_LOCATION_WORDS, used ONLY by the venue-type-swap guard below (which
+# the prefix and fuzzy tiers consult) — these extra words must stay out of
+# GENERIC_LOCATION_WORDS itself, where they would also suppress prefix matching
+# and collapse real venue names ("Picnic House", "Brooklyn Grange Farm") to
+# bare generics.
+_VENUE_TYPE_WORDS = GENERIC_LOCATION_WORDS | {
+    'house', 'church', 'cathedral', 'temple', 'synagogue', 'mosque',
+    'school', 'academy', 'college', 'university', 'institute', 'conservatory',
+    'arena', 'stadium', 'cinema', 'playhouse', 'tavern', 'pub', 'inn',
+    'brewery', 'winery', 'distillery', 'taproom', 'diner', 'bakery',
+    'warehouse', 'factory', 'foundry', 'barn', 'farm', 'beach', 'pier',
+    'playground', 'boathouse', 'firehouse', 'clubhouse', 'greenhouse',
+    'bookstore', 'bookshop', 'arcade', 'casino', 'spa', 'salon', 'showroom',
+    'workshop', 'studios', 'galleries', 'gardens', 'lanes', 'grounds',
+}
+
+
+# Different words for the SAME venue type. A swap between two of these is not a
+# venue-type mismatch: "Housing Works Chelsea Thrift Store" and "Housing Works
+# Chelsea Thrift Shop" are one shop. (Spelling variants like theatre/theater and
+# harbour/harbor already reconcile via _leftover_reconciles; these don't.)
+_TYPE_SYNONYMS = {
+    'store': 'shop', 'shoppe': 'shop', 'bookshop': 'bookstore',
+    'cinema': 'theater', 'theatre': 'theater', 'centre': 'center',
+    'harbour': 'harbor', 'parlour': 'parlor',
+}
+
+
+def _generic_type_swap(leftover_a, leftover_b):
+    """True when two names differ ONLY by a swap of venue-TYPE words.
+
+    "Brooklyn Public Library" vs "Brooklyn Public House": the two names are
+    token-identical apart from one venue-type word each, and those words name
+    different KINDS of place. Levenshtein happily scores that pair over
+    FUZZY_MATCH_THRESHOLD (one word out of three, same length), and the
+    significant-leftover tripwire never fires because at least one of the two
+    differing tokens is a generic venue word, so `sig_v and sig_k` is False.
+
+    A venue-type mismatch is a stronger signal of "different place" than string
+    distance is of "same place", so this is a rejection, not an abstention.
+
+    Deliberately narrow: BOTH sides must have a leftover (a pure subset like
+    "Picnic House" ⊂ "Prospect Park Picnic House" is not a swap), and EVERY
+    leftover on both sides must be a venue-type word (anything distinctive is
+    the existing tripwire's business). Spelling variants of the same type
+    ("theater"/"theatre", "harbor"/"harbour", "studio"/"studios") reconcile and
+    are not a swap.
+    """
+    a = {t for t in leftover_a if t not in _DROPPABLE_LEFTOVER_TOKENS}
+    b = {t for t in leftover_b if t not in _DROPPABLE_LEFTOVER_TOKENS}
+    if not a or not b or a == b:
+        return False
+    if not (a <= _VENUE_TYPE_WORDS and b <= _VENUE_TYPE_WORDS):
+        return False
+    a = {_TYPE_SYNONYMS.get(t, t) for t in a}
+    b = {_TYPE_SYNONYMS.get(t, t) for t in b}
+    if a == b:
+        return False
+    if (all(_leftover_reconciles(x, b) for x in a)
+            and all(_leftover_reconciles(y, a) for y in b)):
+        return False
+    return True
+
+
+def _venue_type_swap_names(a, b):
+    """_generic_type_swap for two whole normalized names.
+
+    "madison square park" vs "madison square garden" — token-identical apart
+    from one venue-type word each. Levenshtein scores that 0.90 exactly.
+    """
+    if not a or not b:
+        return False
+    ta, tb = set(a.split()), set(b.split())
+    shared = ta & tb
+    return _generic_type_swap(ta - shared, tb - shared)
+
+
+def _fuzzy_ratio(candidate, key):
+    """Levenshtein ratio for the fuzzy tier, but 0 for a venue-type swap."""
+    if _venue_type_swap_names(candidate, key):
+        return 0
+    return _calculate_levenshtein_ratio(candidate, key)
 
 
 def _significant_leftovers(tokens):
@@ -1765,6 +3029,40 @@ def _squash_identity(name):
     return squashed[:-1] if squashed.endswith('s') else squashed
 
 
+# Words skipped when building a venue initialism — "Museum of the Moving Image"
+# is MMI, not MOTMI.
+_INITIALISM_STOPWORDS = {'the', 'of', 'and', 'at', 'in', 'for', 'a', 'an', 'on', '&'}
+
+
+def _is_initialism_of(key, venue_name):
+    """True if `key` is an acronym-shaped self-abbreviation of `venue_name`.
+
+    Venues routinely refer to themselves by their initials on their own site
+    ("SRC" on secretrisoclub.com), which the extractor faithfully emits as the
+    location name. Substring and Levenshtein tests both miss that relationship —
+    "src" is neither contained in nor similar to "secret riso club" — so the
+    acronym has to be built explicitly. Deliberately narrow: only bare
+    alphanumeric keys of 2-6 characters, and only an exact initials match.
+    """
+    if not key or not venue_name:
+        return False
+    if len(key) < 2 or len(key) > 6 or not key.isalnum():
+        return False
+    words = [w for w in re.findall(r'[a-z0-9]+', venue_name.lower())
+             if w not in _INITIALISM_STOPWORDS]
+    if len(words) < 2:
+        return False
+    return key.lower() == ''.join(w[0] for w in words)
+
+
+def _single_linked_venue(locations_map, website_id):
+    """The one venue a website is linked to, or None if it isn't single-venue."""
+    if not website_id:
+        return None
+    linked = locations_map.get('website_linked', {}).get(website_id, [])
+    return linked[0] if len(linked) == 1 else None
+
+
 def _leftover_reconciles(token, others):
     """True if `token` plausibly refers to the same thing as some token in
     `others` — a typo (high Levenshtein ratio) or a hyphen-join / containment
@@ -1784,6 +3082,39 @@ def _leftover_reconciles(token, others):
 _AMBIGUOUS_ADDRESS = object()
 
 
+# A trailing postal address on a venue name: a separator, a house number and
+# street, then whatever city/state cruft, anchored by a 5-digit ZIP.
+#
+# The ZIP is the whole point — it is what distinguishes a genuine address tail
+# from a room, stage, branch or cross-street suffix that must be preserved
+# ("Bartow Community Center - Room 31", "Montague Store - 122 Montague St.",
+# "NY - 14TH ST. Mainstage", "Entrance - 34th Avenue between 77th and 78th
+# Streets in Travers Park"). Without it this would shred those.
+_TRAILING_POSTAL_ADDRESS_RE = re.compile(
+    r'\s*[,;:–—-]\s*'                     # separator
+    r'\d+[A-Za-z]?\s+'                    # house number
+    r'[^,]{2,40}?'                        # street
+    r'(?:,[^,]{0,40}?){0,3}'              # optional unit / city / state parts
+    r',?\s*\b\d{5}(?:-\d{4})?\b'          # the ZIP
+    r'[\s,]*(?:USA|United States)?\s*$',
+    re.I)
+
+
+def _strip_trailing_postal_address(name):
+    """Return `name` with a trailing full postal address removed, or `name`.
+
+    Only used as a last-resort retry inside `get_location_id` (see Step 8 there
+    for the measured reason it must not run as an up-front normalization).
+    """
+    if not name:
+        return name
+    stripped = _TRAILING_POSTAL_ADDRESS_RE.sub('', name).strip(' ,;:-–—')
+    # Never reduce a name to nothing, to a bare number, or to a stub.
+    if not stripped or stripped.isdigit() or len(stripped) < 3:
+        return name
+    return stripped
+
+
 def _normalize_location_name(name):
     """Normalizes a location name for matching."""
     if not name:
@@ -1796,6 +3127,15 @@ def _normalize_location_name(name):
     )
     # Normalize "&" and "+" to "and" so "Art & Architecture" matches "Art and Architecture".
     name = re.sub(r'\s*[&+]\s*', ' and ', name)
+
+    # A period used as a separator with no space after it ("St.Albans Library",
+    # "Mt.Vernon Library") would otherwise be *deleted* by the punctuation strip
+    # below and fuse the two words ("stalbans library"), which matches nothing.
+    # Restore the space instead. Deliberately requires two letters on BOTH sides
+    # so initialisms keep collapsing the way they always have ("P.S. 321",
+    # "A.R.T.", "J.F.K." are untouched) and no decimal or version number is
+    # split.
+    name = re.sub(r'(?<=[A-Za-z][A-Za-z])\.(?=[A-Za-z][A-Za-z])', ' ', name)
 
     original_lower = name.lower()
     has_dash_before_borough = any(
@@ -1816,8 +3156,8 @@ def _normalize_location_name(name):
     for ss in state_suffixes:
         if normalized.endswith(ss) and len(normalized) > len(ss) + 1:
             stripped = normalized[:-len(ss)].strip()
-            # See GENERIC_LOCATION_WORDS: don't collapse to a bare generic token.
-            if ' ' not in stripped and stripped in GENERIC_LOCATION_WORDS:
+            # See BARE_ONLY_GENERIC_WORDS: don't collapse to a bare generic token.
+            if ' ' not in stripped and stripped in BARE_ONLY_GENERIC_WORDS:
                 break
             normalized = stripped
             break
@@ -1834,7 +3174,7 @@ def _normalize_location_name(name):
                 # "Gallery Brooklyn" -> "gallery"), which would then exact-match
                 # any unrelated event whose location is just that word. Keep the
                 # borough so the name stays specific.
-                if ' ' not in stripped and stripped in GENERIC_LOCATION_WORDS:
+                if ' ' not in stripped and stripped in BARE_ONLY_GENERIC_WORDS:
                     break
                 normalized = stripped
                 break
@@ -2387,11 +3727,31 @@ def _split_cross_street_pair(text):
     return sides if sides[0] != sides[1] else None
 
 
-def _extract_street_block(s):
+def _cross_pair_tail(tail):
+    """The comma segments of `tail` that still name cross streets.
+
+    Google's formatting can push the second cross street past a comma ("1st Ave
+    &, York Ave, New York, NY 10128, USA"), so keep taking segments until one
+    says only *where* ("New York", "NY 10128", "USA") — anything past that is
+    the address tail, not part of the block.
+    """
+    kept = []
+    for seg in tail.split(','):
+        seg = seg.strip()
+        if not seg or _is_place_qualifier(seg):
+            break
+        kept.append(seg)
+    return ' '.join(kept)
+
+
+def _extract_street_block(s, allow_numbered_main=False):
     """Parse "<main street> between <A> & <B>" into (main, [a, b]), or None.
 
     The main street must be bare — a house number in front means the text is
-    already a full address and the normal address path handles it.
+    already a full address and the normal address path handles it. A DB address
+    written in this same block form drops the ordinal ("82 St between 1st Ave &,
+    York Ave"), which the bare-name parser reads as house number 82; pass
+    `allow_numbered_main=True` when parsing such an address for comparison.
     """
     if not s:
         return None
@@ -2400,9 +3760,11 @@ def _extract_street_block(s):
     if len(parts) != 2:
         return None
     main = _bare_street_name(parts[0])
+    if not main and allow_numbered_main:
+        main = _normalize_street_side(parts[0])
     if not main:
         return None
-    sides = _split_cross_street_pair(parts[1].split(',')[0])
+    sides = _split_cross_street_pair(_cross_pair_tail(parts[1]))
     if not sides:
         return None
     return main, sides
@@ -2564,6 +3926,14 @@ def sublocation_redundant_with_address(sublocation, location_address):
         addr_pairs = _extract_intersection_pairs(location_address)
         if any(frozenset((main, side)) in addr_pairs for side in sides):
             return True
+        # The DB address can be written in that same block form ("82nd Street
+        # between 1st & York Avenues" vs "82 St between 1st Ave &, York Ave,
+        # New York, NY 10128, USA") — same main street, same two cross streets.
+        addr_block = _extract_street_block(location_address,
+                                           allow_numbered_main=True)
+        if (addr_block and addr_block[0] == main
+                and set(addr_block[1]) == set(sides)):
+            return True
     # Corridor block range ("69th Street to 89th Street") around the address.
     if _street_range_covers(sublocation, location_address):
         return True
@@ -2657,6 +4027,15 @@ def build_locations_map(cursor):
         # city (lowercase) -> set of states seen at that city in our data.
         # Learned from location addresses; powers the region-conflict guard.
         'city_states': {},
+        # Keys that were DERIVED rather than curated: every `short_names` entry,
+        # plus any name/alternate_name key that only exists because
+        # _normalize_location_name collapsed the raw string (dropping a borough
+        # or city qualifier). See the brand-family guard in get_location_id.
+        'weak_keys': set(),
+        # normalized bare key -> set of location ids whose own normalized name
+        # EXTENDS it ("smorgasburg" -> {2977, 3016, 3017}). A key with 2+ such
+        # members names a FAMILY of venues, not one venue.
+        'brand_family': {},
     }
 
     locations_data = db.get_all_locations(cursor)
@@ -2674,6 +4053,9 @@ def build_locations_map(cursor):
             # Convert single to list of candidates
             tier[key] = [tier[key], full_info]
 
+    weak_keys = locations_map['weak_keys']
+    strong_keys = set()
+
     for loc in locations_data:
         # Full info for location matching
         full_info = {
@@ -2689,23 +4071,43 @@ def build_locations_map(cursor):
 
         # For names tier, track multiple locations with same name
         add_with_duplicates(locations_map['names'], main_name.lower(), full_info)
+        strong_keys.add(main_name.lower())
         if normalized_main != main_name.lower():
             add_with_duplicates(locations_map['names'], normalized_main, full_info)
+            if _collapse_is_significant(main_name, normalized_main):
+                weak_keys.add(normalized_main)
+
+        # Every prefix of the location's own name, so a bare brand key can be
+        # recognised as naming a FAMILY rather than a venue. Both the raw and
+        # the normalized form are indexed: normalization strips the borough, so
+        # "Alamo Drafthouse Staten Island" normalizes to the bare brand and
+        # would otherwise look like a venue in its own right rather than one
+        # member of the family it shares with the Brooklyn and Downtown rows.
+        for variant in (normalized_main, main_name.lower()):
+            main_tokens = variant.split()
+            for i in range(1, len(main_tokens)):
+                locations_map['brand_family'].setdefault(
+                    ' '.join(main_tokens[:i]), set()).add(loc.get('id'))
 
         # Global alternate names (no website_id) - use full_info to include id
         for alt_name in loc.get('alternate_names', []):
             if alt_name and len(alt_name) >= 3:
                 locations_map['alternate_names'][alt_name.lower()] = full_info
+                strong_keys.add(alt_name.lower())
                 normalized_alt = _normalize_location_name(alt_name)
                 if normalized_alt and len(normalized_alt) >= 3:
                     locations_map['alternate_names'][normalized_alt] = full_info
+                    if _collapse_is_significant(alt_name, normalized_alt):
+                        weak_keys.add(normalized_alt)
 
         short_name = loc.get('short_name', '')
         if short_name and len(short_name) >= 3:
             locations_map['short_names'][short_name.lower()] = full_info
+            weak_keys.add(short_name.lower())
             normalized_short = _normalize_location_name(short_name)
             if normalized_short and len(normalized_short) >= 3:
                 locations_map['short_names'][normalized_short] = full_info
+                weak_keys.add(normalized_short)
 
         # Website-scoped alternate names
         for website_id, scoped_names in loc.get('website_scoped_names', {}).items():
@@ -2736,10 +4138,80 @@ def build_locations_map(cursor):
             elif existing is not _AMBIGUOUS_ADDRESS and existing.get('id') != loc.get('id'):
                 locations_map['addresses'][street_address] = _AMBIGUOUS_ADDRESS
 
+    # A key that some location owns outright is never "weak" — an explicit
+    # curated name or alias states the mapping, and the brand-family guard must
+    # not override a human's deliberate flagship choice.
+    weak_keys -= strong_keys
+
     # Website-linked locations (from website_locations table)
     locations_map['website_linked'] = db.get_website_locations_map(cursor)
 
     return locations_map
+
+
+def _collapse_is_significant(raw, normalized):
+    """True if normalizing `raw` dropped a venue-DISTINGUISHING part of the name.
+
+    `_normalize_location_name` removes punctuation, a leading "The", and a
+    trailing borough/city qualifier. Only the last of those changes which venue
+    the string can refer to, so only it makes the resulting key a *derived* bare
+    key (see `weak_keys`). Measured: without this, the curated alias
+    "The Conference House" -> loc 1479 collapses to "conference house", gets
+    treated as a brand key, and 65 Conference House Museum rows lose their pin
+    to Conference House Park.
+    """
+    lowered = (raw or '').lower()
+    if normalized == lowered:
+        return False
+    return normalized != re.sub(r"^the\s+", "", lowered).strip()
+
+
+def _is_brand_family_key(locations_map, key, cand_id):
+    """True if `key` is a DERIVED bare key that names 2+ same-family venues.
+
+    The bare-`short_name` collision (memory `location_bare_shortname_collision`):
+    three "Smorgasburg <somewhere>" rows exist, one of them carries the bare
+    `short_name` "Smorgasburg", and so it captures every event whose source only
+    said "Smorgasburg" — regardless of which market it was. The same shape
+    appears without any `short_name` at all, because
+    `_normalize_location_name` strips borough/city qualifiers: "Green Room NYC"
+    is indexed under the bare "green room", which then out-ranks the two other
+    Green Rooms. Deleting the offending row's alias does not help — the name
+    just falls through to prefix/fuzzy and lands somewhere else, often worse.
+
+    So the test is on the KEY, not on the row: a key is refused when
+      (a) nothing owns it outright — no location is literally named that and no
+          curated alias spells it out (see `weak_keys` in build_locations_map);
+      (b) it is a strict prefix of the normalized names of 2+ DISTINCT
+          locations, i.e. it names the family rather than a member;
+      (c) the candidate it would return is ITSELF one of those family members.
+
+    (c) is what keeps the rule about brands. Measured over all 62,163 distinct
+    crawl_event location triples, dropping it costs 51 correct rows on one
+    website alone: `short_name` "Montague" belongs to "Books Are Magic (Montague
+    St)", which is not a "Montague …" venue at all — the key merely happens to
+    prefix unrelated Montague Street rows, so it is distinctive shorthand rather
+    than a family label, and must keep resolving.
+
+    Refusing yields None, which `/fix-unmapped-events` surfaces — strictly
+    better than a confidently wrong pin nobody notices on the map.
+    """
+    if key not in locations_map.get('weak_keys', ()):
+        return False
+    family = locations_map.get('brand_family', {}).get(key, ())
+    return len(family) >= 2 and cand_id in family
+
+
+def _is_brand_family_name(locations_map, key):
+    """True if `key` is a derived bare key naming 2+ venues of one family.
+
+    The key-side half of `_is_brand_family_key`, with no candidate to check
+    against — used where the question is "does this string name a family?"
+    rather than "may this candidate answer it?".
+    """
+    if not key or key not in locations_map.get('weak_keys', ()):
+        return False
+    return len(locations_map.get('brand_family', {}).get(key, ())) >= 2
 
 
 def build_websites_map(cursor):
@@ -2747,7 +4219,7 @@ def build_websites_map(cursor):
     return db.get_websites_with_tags(cursor)
 
 
-def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, event_name_raw, locations_map, website_id=None):
+def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, event_name_raw, locations_map, website_id=None, _retry_without_address=False):
     """Finds the best matching location ID for an event.
 
     Matching cascade (checked in priority order, first match wins):
@@ -2900,6 +4372,21 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
     exact_loc_keys = [k for k in location_keys if k not in heuristic_keys]
     variant_loc_keys = [k for k in location_keys if k in heuristic_keys]
     event_name_keys = [k for k in search_keys if k not in location_keys]
+
+    # A single-venue site abbreviating itself must not be captured by an
+    # unrelated location that happens to own that acronym as its whole name.
+    # secretrisoclub.com emits "SRC"; an exact match on names["src"] handed six
+    # events to a DUMBO art space also called SRC, three miles from Bushwick.
+    # Only the extracted location name itself is checked (not the mangled
+    # variants or the event name), and only when the acronym expands to exactly
+    # the venue this website is linked to — so a genuinely different venue named
+    # in full still wins the exact match, as it should.
+    home_venue = _single_linked_venue(locations_map, website_id)
+    home_is_initialism = (
+        home_venue is not None
+        and _is_initialism_of(normalized_loc, home_venue.get('name') or '')
+    )
+
     for key_group in (exact_loc_keys, variant_loc_keys, event_name_keys):
         for tier_name in ['names', 'alternate_names', 'short_names']:
             tier = locations_map.get(tier_name, {})
@@ -2908,6 +4395,13 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
                     cand = get_first(tier[key])
                     if tier_name != 'names' and conflicts(cand):
                         continue
+                    # A derived bare key that names a whole family of venues
+                    # ("smorgasburg", "green room") can't pick a member.
+                    if _is_brand_family_key(locations_map, key, cand.get('id')):
+                        continue
+                    if (home_is_initialism and key == normalized_loc
+                            and cand.get('id') != home_venue.get('id')):
+                        return make_result(home_venue)
                     return make_result(cand)
 
     # Step 3: Address matching (e.g., "347 Davis Ave" matches location at that address)
@@ -2927,15 +4421,35 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
     # onto one location. Prefer the website's own venue. A specific DIFFERENT
     # venue name is already returned by the exact/address steps above, so this
     # only fires for generic/partial names consistent with the linked venue.
-    if website_id and normalized_loc and len(normalized_loc) >= 3:
-        linked = locations_map.get('website_linked', {}).get(website_id, [])
-        if len(linked) == 1:
-            v_name = _normalize_location_name(linked[0].get('name') or '')
-            if v_name and (
-                normalized_loc in v_name or v_name in normalized_loc
-                or _calculate_levenshtein_ratio(normalized_loc, v_name) >= 0.6
-            ):
-                return make_result(linked[0])
+    # An initialism counts as "consistent with the linked venue" too: neither the
+    # substring nor the Levenshtein test relates "src" to "secret riso club", so
+    # without it a self-abbreviating venue falls through to prefix/fuzzy matching
+    # and lands on an arbitrary venue or nothing at all.
+    if home_venue is not None and normalized_loc and len(normalized_loc) >= 3:
+        v_name = _normalize_location_name(home_venue.get('name') or '')
+        consistent = bool(v_name) and (
+            normalized_loc in v_name or v_name in normalized_loc
+            or home_is_initialism
+        )
+        # The Levenshtein arm is the loose one, and on its own it lets a
+        # single-venue website claim a name that plainly belongs to somebody
+        # else: "Books Are Magic" scores 0.69 against "Brooklyn Book Bodega",
+        # so Brooklyn Book Bodega's site would pin the bookstore's readings onto
+        # itself (memory `single_venue_website_authority_claims`). That only
+        # became reachable once Step 2 started declining brand-family keys, so
+        # the veto is scoped to exactly that: a name Step 2 refused because it
+        # names a family of venues is a name that belongs to somebody else, and
+        # unmapped is the honest answer. Deliberately NOT a general "is this a
+        # known venue" test — measured, that also un-pinned 57 Bronx CB9 rows
+        # ("ShopRite Community Room") and every org whose events say "New York
+        # City", which the fallback is there to catch. The substring and
+        # initialism arms are untouched: those describe the home venue itself,
+        # which is the whole point of the tier ("Regal" from one Regal
+        # theater's own site).
+        if not consistent and not _is_brand_family_name(locations_map, normalized_loc):
+            consistent = _calculate_levenshtein_ratio(normalized_loc, v_name) >= 0.6
+        if consistent:
+            return make_result(home_venue)
 
     # Step 4: Prefix matching (e.g., "Devocíon" matches "Devocíon (Williamsburg)")
     # Only use location_keys here to avoid matching event names to unrelated locations
@@ -2951,9 +4465,23 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
         # information — don't let it prefix-match a specific venue like
         # "Gallery MC" or "Studio 525". Such queries should fall through to
         # website-scoped resolution or stay unmatched.
-        if key in GENERIC_LOCATION_WORDS:
+        if key in BARE_ONLY_GENERIC_WORDS:
             continue
         if len(key) < 5:
+            continue
+        # Same reasoning as the Step 2 brand-family guard, applied one tier
+        # lower. The coverage-ambiguity break below only sees the family members
+        # that clear PREFIX_MATCH_COVERAGE, so a family whose members have
+        # uneven name lengths ("bloomingdale" -> "Bloomingdale Park" at 0.71 but
+        # "Bloomingdale School of Music" at 0.43) would otherwise be resolved by
+        # whichever sibling happens to have the shortest name.
+        #
+        # Gated on the SAME weak-key test as Step 2, and measured: without it,
+        # every key that merely prefixes two venue names is refused, which
+        # un-pinned 51 Books Are Magic rows keyed on `short_name` "Montague",
+        # plus BPL "Pacific", "Pratt Library" and "Queens College" — none of
+        # them brand keys, all of them the only sensible answer.
+        if _is_brand_family_name(locations_map, key):
             continue
         for tier_name in ('names', 'alternate_names'):
             # A branch-suffixed key ("devocion (williamsburg)") is a deliberate
@@ -2970,6 +4498,15 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
                     and len(key) / len(loc_key) >= PREFIX_MATCH_COVERAGE
                 )
                 if not (is_paren or is_coverage):
+                    continue
+                # The key reaching this candidate is often a generic-STRIPPED
+                # variant of the source name ("Brooklyn Public Library" ->
+                # "brooklyn public"), which then re-completes with a DIFFERENT
+                # venue-type word ("brooklyn public house", a bar, at 15/21 =
+                # 0.71 coverage). Swapping one venue type for another names a
+                # different kind of place, so the source name itself vetoes the
+                # candidate — see _generic_type_swap.
+                if is_coverage and _venue_type_swap_names(normalized_loc, loc_key):
                     continue
                 for cand in (match if isinstance(match, list) else [match]):
                     if conflicts(cand):
@@ -3072,16 +4609,54 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
                     if matched_variants:
                         is_match = True
 
+                # NOTE: the Step 2 brand-family refusal deliberately does NOT
+                # extend to this tier, which means a bare family name the exact
+                # tier declined can still be answered here (`full_loc` equals
+                # the tier key, so the prefix branch scores it 0.99). Measured
+                # 2026-08-17 over all 62,163 distinct crawl_event location
+                # triples: adding the guard here un-pinned 2,971 rows —
+                # "NYU" (352), "BASEMENT" (257), "Midtown" (213), "Devoción"
+                # (41) — because normalization is lossy on BOTH sides, so a
+                # source that spelled the branch out in full ("Green Room NYC",
+                # 206 rows) is indistinguishable from the bare brand by the
+                # time this tier sees it. The exact tier can tell them apart;
+                # this one cannot, so it must not try.
                 if is_match:
                     if len(normalized_name) > 3 and key == normalized_name:
                         score = 1.0
                     elif len(key) > 3 and (full_loc.startswith(key) or full_loc.endswith(key)) and len(key) / len(full_loc) >= PREFIX_MATCH_COVERAGE:
                         score = 0.9 + (len(key) / len(full_loc)) * 0.09
                     else:
+                        # A source string that differs from the key ONLY by a
+                        # venue-TYPE word ("… Library" vs "… House", "madison
+                        # square park" vs "madison square garden") names a
+                        # different kind of place, so it scores 0 no matter how
+                        # close the Levenshtein ratio is (see _generic_type_swap).
+                        #
+                        # Applied to the SOURCE strings only, never to the
+                        # tripwire's variant list. A/B over all 60,644
+                        # crawl_event (location_name, sublocation, website_id)
+                        # triples, 2026-08-11:
+                        #
+                        #   source strings only : 1 newly-NULL, a real mis-pin
+                        #                         ("The Cornerstone Center",
+                        #                         Harlem -> "Cornerstone Bar",
+                        #                         Mineola)
+                        #   + variants          : 13 newly-NULL, of which 8 were
+                        #                         resolving CORRECTLY
+                        #
+                        # The 8 are venue types that genuinely nest or coincide —
+                        # "Betsy Head Pool"/"Saxon Woods Pool" inside their
+                        # PARKS, "Brooklyn Borough Plaza" at Borough HALL,
+                        # "Crotona Park Tennis House" vs "Crotona Tennis House",
+                        # "Clifton Place Memorial Park and Garden" vs the same
+                        # venue's "… Garden & Park" — plus stripped variants
+                        # manufacturing swaps the real names don't have. Winning
+                        # 5 more mis-pins is not worth un-pinning 8 real venues.
                         score = max(
-                            _calculate_levenshtein_ratio(normalized_loc, key),
-                            _calculate_levenshtein_ratio(full_loc, key),
-                            _calculate_levenshtein_ratio(normalized_name, key) if len(normalized_name) > 3 else 0,
+                            _fuzzy_ratio(normalized_loc, key),
+                            _fuzzy_ratio(full_loc, key),
+                            _fuzzy_ratio(normalized_name, key) if len(normalized_name) > 3 else 0,
                             *(_calculate_levenshtein_ratio(v, key) for v in matched_variants)
                         )
 
@@ -3239,6 +4814,27 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
     # (The former single-venue brand-name fallback is now Step 3.5, which runs
     # before prefix/fuzzy so the authoritative venue wins over arbitrary
     # same-brand prefix matches.)
+
+    # Step 8: retry with a trailing postal address stripped off the venue name.
+    # Sources that render "<Venue>, <full street address ... ZIP>" — posh.vip's
+    # "Pier 78 at Hudson River Park — 455 12th Ave, New York, NY 10018, USA",
+    # Painting Lounge's "Midtown: 40 W 38th St, 2nd Fl, New York NY 10018" —
+    # never match, because the address tail swamps every name comparison.
+    #
+    # This is deliberately a LAST RESORT rather than a normalization step. A/B
+    # over all 30,119 distinct crawl_event location_names (2026-08-05): applying
+    # the strip up front gives 49 wins but **16 regressions** and 3 wrong
+    # re-pins, because when the venue name is not itself a known location the
+    # ADDRESS is the only thing that resolves it (e.g. "Low Plaza, 535 W. 116
+    # St." → loc 467, "Jerome Greene Hall, 435 W. 116 St." → 7537, both via the
+    # address tier). Running it only after everything else has failed keeps all
+    # 49 wins with zero regressions and zero re-pins.
+    if not _retry_without_address and location_name_raw:
+        stripped = _strip_trailing_postal_address(location_name_raw)
+        if stripped and stripped != location_name_raw:
+            return get_location_id(stripped, sublocation_name_raw, source_site_name,
+                                   event_name_raw, locations_map, website_id=website_id,
+                                   _retry_without_address=True)
 
     return None
 
@@ -3473,6 +5069,27 @@ def process_events(cursor, connection, crawl_result_id, website_name, run_date_s
             rejection_counts['cancelled_url_slug'] = rejection_counts.get('cancelled_url_slug', 0) + 1
             continue
 
+        # Luma calendar-level metadata read as an event. `group_event_occurrences`
+        # falls back to `source_url` when a row has no URL of its own, so the
+        # effective URL is computed the same way here. A blank body is the
+        # corroborating signal: e161574 (Accent Sisters) is a real screening
+        # whose only URL is its calendar page, and its description spares it.
+        if source_url and _description_is_blank(row_dict.get('description')):
+            effective_url = absolutize_url(event_url, source_url) or source_url
+            if is_luma_calendar_listing_url(effective_url, source_url):
+                log_rejection(
+                    cursor, crawl_result_id, website_id,
+                    rejection_type='luma_calendar_metadata', stage='extract',
+                    event_name=row_dict.get('name'), event_url=effective_url,
+                    start_date=(row_dict.get('start_date') or None),
+                    end_date=(row_dict.get('end_date') or None),
+                    details='Record has no event URL of its own — points at the '
+                            'Luma calendar endpoint it was extracted from',
+                )
+                rejection_counts['luma_calendar_metadata'] = (
+                    rejection_counts.get('luma_calendar_metadata', 0) + 1)
+                continue
+
         # URL grounding check: if the AI returned a URL that doesn't appear in
         # the crawled content, it's likely a hallucinated event. Log and skip.
         if event_url and crawled_content and not _url_grounded_in_content(event_url, crawled_content):
@@ -3510,10 +5127,11 @@ def process_events(cursor, connection, crawl_result_id, website_name, run_date_s
                                      ancestor_map=ancestor_map, root_tags=root_tags,
                                      disambiguation_rules=disambiguation_rules)
 
-        # Check for virtual events
-        if any(kw in processed_row.get('location', '').lower() for kw in ['virtual', 'online', 'livestream']):
-            if 'Virtual' not in processed_row.get('tags', []):
-                processed_row.setdefault('tags', []).append('Virtual')
+        # Check for virtual events (delivery method comes from the raw source
+        # location string, never from the venue the event is pinned to).
+        for _vtag in virtual_tags_for_location(processed_row.get('location', '')):
+            if _vtag not in processed_row.get('tags', []):
+                processed_row.setdefault('tags', []).append(_vtag)
 
         if not filter_by_tag(processed_row, tag_rules):
             continue
@@ -3547,9 +5165,78 @@ def process_events(cursor, connection, crawl_result_id, website_name, run_date_s
 
     # Group occurrences and create short names
     events = group_event_occurrences(processed_rows, source_url)
+
+    # Last-resort URL: an event with no URL at all is dropped by the exporter, so
+    # a rejected event-specific URL must not be able to turn a real event into an
+    # invisible one. group_event_occurrences already appends `source_url` (the
+    # leading URL line of the crawled content) to every event, which covers the
+    # normal case — Lehman College Art Gallery w885 emits expiring
+    # `scontent.cdninstagram.com` image links as its event URLs, and
+    # `is_signed_cdn_url` drops them, but the events still keep
+    # `https://lehmangallery.org`.
+    #
+    # ~7% of recent crawls carry no leading URL line (Instagram/picnob bundles
+    # and API source plugins build their own markdown header), so `source_url` is
+    # None there and that safety net is absent. Fall back to the website's own
+    # crawl URL, but ONLY for events that would otherwise have none — appending
+    # it unconditionally would staple a raw JSON/API endpoint onto every event of
+    # sites like the SAPO Socrata feed.
+    if not source_url and website_id and any(not e.get('urls') for e in events):
+        cursor.execute(
+            "SELECT url FROM website_urls WHERE website_id = %s "
+            "ORDER BY sort_order, id LIMIT 1", (website_id,)
+        )
+        row = cursor.fetchone()
+        fallback_url = (row[0] if row and not isinstance(row, dict) else
+                        (row['url'] if row else None)) or ''
+        if not fallback_url:
+            cursor.execute("SELECT base_url FROM websites WHERE id = %s", (website_id,))
+            row = cursor.fetchone()
+            fallback_url = (row[0] if row and not isinstance(row, dict) else
+                            (row['base_url'] if row else None)) or ''
+        # Templated multi-date URLs ({{date+3}}) and non-http endpoints are not
+        # linkable, so they are no better than nothing.
+        if fallback_url.startswith(('http://', 'https://')) and '{{' not in fallback_url:
+            for event in events:
+                if not event.get('urls'):
+                    event['urls'] = [fallback_url]
+
     for event in events:
         if 'name' in event:
             event['short_name'] = create_short_name(event['name'])
+
+    # A re-processed crawl_result REPLACES its rows; it does not add to them.
+    #
+    # `db.create_crawl_result` is `ON DUPLICATE KEY UPDATE` on
+    # `unique_run_file (crawl_run_id, filename)`, so re-crawling a website on a
+    # day it has already been crawled REUSES the same `crawl_results` row —
+    # `crawled_content`, `extracted_content`, `event_count` and `merged_at` are
+    # all overwritten in place (see the `merged_at = NULL` note in
+    # `db.update_crawl_result`). This insert loop was the one thing that did not
+    # follow, so the second pass's crawl_events piled on top of the first's.
+    #
+    # w1981 Bronx Council on the Arts, cr-113663: 17 crawl_events written at
+    # 2026-08-14 06:53:48, then the site was re-crawled at 09:24:01 and 21 more
+    # written at 09:24:38 — 38 rows, 23 distinct names, from two Gemini runs over
+    # the same page. It was never a chunked-extraction double-emit; the
+    # `extracted_content` still holds a single clean 26-record extraction.
+    # 237 crawl_results since 2026-07-15 carry rows spanning more than one pass,
+    # 223 of them with duplicated (name, url) pairs.
+    #
+    # `event_sources.crawl_event_id` is ON DELETE CASCADE, so this drops the
+    # superseded pass's source links too — which is the point: the merge that
+    # follows re-links every event the new pass still lists, and an event the new
+    # pass dropped is exactly what the archival guards exist to judge. The delete
+    # is deliberately skipped when the new pass produced nothing to write, so a
+    # re-crawl that extracts zero events can never strip a crawl_result bare.
+    if events:
+        cursor.execute(
+            "DELETE FROM crawl_events WHERE crawl_result_id = %s", (crawl_result_id,)
+        )
+        superseded = cursor.rowcount or 0
+        if superseded:
+            print(f"    - Replaced {superseded} crawl_events from an earlier pass "
+                  f"over crawl_result {crawl_result_id}")
 
     # Store in database
     event_count = 0

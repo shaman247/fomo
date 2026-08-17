@@ -17,6 +17,7 @@ from processor import (
     is_obvious_non_event,
     is_cancelled_by_url,
     _normalize_location_name,
+    _is_initialism_of,
     _extract_street_address,
     _extract_street_address_loose,
     sublocation_redundant_with_address,
@@ -30,7 +31,11 @@ from processor import (
     sublocation_looks_like_address,
     apply_crawled_details,
     get_location_id,
+    build_locations_map,
+    _is_brand_family_key,
+    _venue_type_swap_names,
 )
+import processor
 
 # Test cases: (input, expected_output, description)
 SHORT_NAME_TEST_CASES = [
@@ -1400,6 +1405,25 @@ class TestStreetBlockAndRangeForms(unittest.TestCase):
             "2nd Avenue between 40th & 41st Streets",
             "90th Street &, 2nd Ave, New York, NY 10128, USA"))
 
+    def test_db_address_written_in_the_same_block_form(self):
+        # loc 15 (82nd Street Greenmarket): Google formatted the DB address as
+        # the block itself, with a comma right after the "&" that used to cut
+        # the second cross street off, and dropped the "82nd" ordinal so the
+        # main street read as a house number.
+        self.assertTrue(sublocation_redundant_with_address(
+            "82nd Street between 1st & York Avenues",
+            "82 St between 1st Ave &, York Ave, New York, NY 10128, USA"))
+        self.assertTrue(sublocation_redundant_with_address(
+            "Cortelyou Road btw Argyle Road & Rugby Rd",
+            "Cortelyou Road btw Argyle Road &, Rugby Rd, Brooklyn, NY 11226, USA"))
+        # Same shape, different corridor / different cross streets.
+        self.assertFalse(sublocation_redundant_with_address(
+            "79th Street between 1st & York Avenues",
+            "82 St between 1st Ave &, York Ave, New York, NY 10128, USA"))
+        self.assertFalse(sublocation_redundant_with_address(
+            "82nd Street between 1st & York Avenues",
+            "Union Square W &, E 17th St, New York, NY 10003, USA"))
+
     def test_block_does_not_fire_against_a_house_address(self):
         self.assertFalse(sublocation_redundant_with_address(
             "8th St. between Aves C and D",
@@ -1644,6 +1668,130 @@ class TestLocationTripwireGuard(unittest.TestCase):
             [('DEP Training Center', 1927), ('Brooklyn Comedy Collective', 143)],
             website_scoped={60: [('BCC training center', 143)]})
         self.assertEqual(self._id('BCC training center', m, website_id=60), 143)
+
+
+class TestVenueTypeWordSwap(unittest.TestCase):
+    """Two names that are token-identical apart from one venue-TYPE word each
+    name different KINDS of place, so they must not fuse — however close the
+    Levenshtein ratio gets.
+
+    Regression: with the prefix tier correctly rejecting the ambiguous key
+    "brooklyn public library" (18 BPL branches), the bare string "Brooklyn
+    Public Library" resolved to loc 4195 "Brooklyn Public House" — a bar at 247
+    Dekalb Ave. The significant-leftover tripwire could not see it: one of the
+    two differing tokens ("library") is a generic venue word, so `sig_v and
+    sig_k` is never both-true.
+
+    The veto is deliberately narrow — it compares the SOURCE name against the
+    candidate key, and nothing else. A/B over all 60,644 crawl_event location
+    triples: as shipped it changes exactly one resolution (a genuine mis-pin);
+    extending it to the tripwire's stripped/completed variants took out 8 venues
+    that were resolving correctly, because venue types nest ("Betsy Head Pool"
+    is IN Betsy Head Park, the Book Festival's "Brooklyn Borough Plaza" is at
+    Borough Hall). Those co-location cases are pinned below.
+    """
+
+    def _id(self, loc, locmap, website_id=None, sub=None, event_name='Some Event'):
+        res = get_location_id(loc, sub, 'site', event_name, locmap, website_id=website_id)
+        return (res or {}).get('id')
+
+    # --- the reported case: Library vs House ---------------------------------
+    def test_library_vs_house_rejected(self):
+        # Reaches the candidate through the PREFIX tier: the generic-stripped
+        # variant "brooklyn public" covers 15/21 = 0.71 of "brooklyn public
+        # house" and re-completes with a different venue type.
+        m = _make_locations_map([('Brooklyn Public House', 4195)])
+        self.assertIsNone(self._id('Brooklyn Public Library', m))
+
+    def test_library_still_resolves_when_the_branch_exists(self):
+        # The guard rejects the bar, not the library.
+        m = _make_locations_map([('Brooklyn Public House', 4195)],
+                                alternate_names=[('Brooklyn Public Library', 151)])
+        self.assertEqual(self._id('Brooklyn Public Library', m), 151)
+
+    def test_other_venue_type_swaps_rejected(self):
+        # "The Cornerstone Center" (a Harlem writing-workshop venue) resolved to
+        # "Cornerstone Bar" in MINEOLA — the one resolution this change moves
+        # across the whole crawl_events corpus.
+        self.assertIsNone(
+            self._id('The Cornerstone Center', _make_locations_map([('Cornerstone Bar', 4100)])))
+    def test_swap_rejected_at_the_fuzzy_tier(self):
+        # Same shape reached through the FUZZY tier, where the location name +
+        # sublocation is what scores against the key: "… Thrift Cafe" is not the
+        # "… Thrift Shop" however close the ratio.
+        m = _make_locations_map([('Housing Works Chelsea Thrift Shop', 6475)])
+        self.assertIsNone(self._id('Housing Works', m, sub='Chelsea thrift cafe'))
+        # ...and the same input naming the SAME type still resolves.
+        self.assertEqual(self._id('Housing Works', m, sub='Chelsea thrift shop'), 6475)
+
+    # --- venue types that NEST must still resolve ----------------------------
+    def test_facility_inside_its_park_still_resolves(self):
+        # A pool/pier/plaza sits INSIDE the park it is named after and we have
+        # no row of its own for it, so the park pin is the correct answer.
+        m = _make_locations_map([('Betsy Head Park', 1354)])
+        self.assertEqual(self._id('Betsy Head Pool', m), 1354)
+        m = _make_locations_map([('Saxon Woods Park', 6650)])
+        self.assertEqual(
+            self._id('Saxon Woods Pool', m,
+                     sub='1800 Mamaroneck Avenue, White Plains, NY'), 6650)
+
+    def test_plaza_at_the_hall_still_resolves(self):
+        m = _make_locations_map([('Brooklyn Borough Hall', 136)])
+        self.assertEqual(
+            self._id('Brooklyn Borough Plaza', m, sub='Makers and Creators Area'), 136)
+
+    def test_shop_store_synonym_still_resolves(self):
+        m = _make_locations_map([('Housing Works Chelsea Thrift Shop', 6475)])
+        self.assertEqual(self._id('Housing Works', m, sub='Chelsea thrift store'), 6475)
+
+    # --- same venue type must still match ------------------------------------
+    def test_same_generic_word_still_matches(self):
+        # Identical venue type, one distinctive token differing by a typo: the
+        # tripwire's original purpose, untouched.
+        m = _make_locations_map([('Bushwick Community Center', 900)])
+        self.assertEqual(self._id('Bushwik Community Center', m), 900)
+
+    def test_spelling_variant_of_the_same_type_still_matches(self):
+        # "theater"/"theatre" and "harbor"/"harbour" are the SAME venue type.
+        m = _make_locations_map([('Brooklyn Center Theatre', 901)])
+        self.assertEqual(self._id('Brooklyn Center Theater', m), 901)
+
+    def test_singular_plural_type_still_matches(self):
+        m = _make_locations_map([('Mana Contemporary Studios', 902)])
+        self.assertEqual(self._id('Mana Contemporary Studio', m), 902)
+
+    def test_pure_subset_is_not_a_swap(self):
+        # One side having NO leftover is a prefix/suffix relationship, which the
+        # prefix tier is entitled to resolve.
+        m = _make_locations_map([('Pleasant Village', 640)])
+        self.assertEqual(self._id('Pleasant Village Community Garden', m), 640)
+
+    # --- a genuinely significant leftover keeps the OLD behaviour ------------
+    def test_significant_leftover_still_rejected(self):
+        m = _make_locations_map([('DEP Training Center', 1927)])
+        self.assertIsNone(self._id('BCC training center', m))
+
+    def test_significant_leftover_against_generic_swap_unchanged(self):
+        # "meeting"/"room" vs "library": one leftover is distinctive, so this is
+        # NOT a venue-type swap — the existing suffix-completion behaviour that
+        # resolves "Highlawn, Meeting Room" -> Highlawn Library must survive.
+        m = _make_locations_map([('Highlawn Library', 388)])
+        self.assertEqual(self._id('Highlawn, Meeting Room', m), 388)
+
+    # --- the predicate itself ------------------------------------------------
+    def test_predicate(self):
+        self.assertTrue(_venue_type_swap_names('brooklyn public library',
+                                               'brooklyn public house'))
+        self.assertTrue(_venue_type_swap_names('east river park', 'east river bar'))
+        # same word, spelling variants, subset, distinctive leftovers
+        self.assertFalse(_venue_type_swap_names('east river park', 'east river park'))
+        self.assertFalse(_venue_type_swap_names('brooklyn center theater',
+                                                'brooklyn center theatre'))
+        self.assertFalse(_venue_type_swap_names('picnic house',
+                                                'prospect park picnic house'))
+        self.assertFalse(_venue_type_swap_names('java street community garden',
+                                                'maple street community garden'))
+        self.assertFalse(_venue_type_swap_names('', 'east river bar'))
 
 
 class TestCrossWebsiteScopedAltFallback(unittest.TestCase):
@@ -2229,9 +2377,21 @@ class TestJunkFilterGaps20260727(unittest.TestCase):
         """200728 "National Chicken Wing Day" was a bar promo with no program,
         but venues also host genuine themed nights on the same food holidays
         ("National Margarita Day Party"). Dropping the bare marker would be a
-        coin flip on intent, so this stays editorial."""
+        coin flip on intent, so this stays editorial.
+
+        Still true on the NAME alone. A two-signal descendant of this idea did
+        ship on 2026-08-17 (see test_junk_filter_food_holiday_promos): it
+        requires the body to read as dining marketing, which is the signal this
+        refutation says the bare name lacks. 200728's body — "Come grab some
+        wings on National Chicken Wing Day on July 29th!" — has it."""
         self.assertFalse(is_obvious_non_event("National Chicken Wing Day"))
         self.assertFalse(is_obvious_non_event("National Margarita Day Party"))
+        self.assertFalse(is_obvious_non_event(
+            "National Margarita Day Party",
+            "Come grab a margarita with us and celebrate!"))
+        self.assertTrue(is_obvious_non_event(
+            "National Chicken Wing Day",
+            "Come grab some wings on National Chicken Wing Day on July 29th!"))
 
 
 class TestJunkFilterGaps20260726(unittest.TestCase):
@@ -2594,6 +2754,238 @@ class TestContainmentGroupingRespectsEventUrls(unittest.TestCase):
              'end_date': '2026-08-18', 'end_time': ''},
         ]
         self.assertEqual(len(self._group(rows)), 1)
+
+
+class TestBareGenericTokenBlocklist(unittest.TestCase):
+    """`playground` must block a BARE token from prefix-matching a specific
+    venue, without becoming a non-distinctive token in the fuzzy tripwire.
+
+    Regression: a bare "Playground" prefix-matched loc 8914 "Playground One"
+    (Lower East Side) at 10/13 = 0.77 coverage, dragging NYC Parks "Kids In
+    Motion" programs for St. John's Park, Schmul, Elmhurst, Rosemary's and Phil
+    "Scooter" Rizzuto Park onto one unrelated pin. Putting it in
+    GENERIC_LOCATION_WORDS outright fixed that but BROKE "Matthews Muliner
+    Playground" -> 7487, because the tripwire then treated `playground` as a
+    non-significant leftover. Hence two sets.
+    """
+
+    def _id(self, loc, locmap, website_id=None, sub=None, event_name='Some Event'):
+        res = get_location_id(loc, sub, 'site', event_name, locmap, website_id=website_id)
+        return (res or {}).get('id')
+
+    def test_playground_is_bare_only_not_fully_generic(self):
+        import processor
+        self.assertIn('playground', processor.BARE_ONLY_GENERIC_WORDS)
+        self.assertNotIn('playground', processor.GENERIC_LOCATION_WORDS)
+
+    def test_bare_playground_does_not_prefix_match_a_named_playground(self):
+        m = _make_locations_map([('Playground One', 8914)])
+        self.assertIsNone(self._id('Playground', m))
+
+    def test_named_playground_still_resolves(self):
+        # The token must stay DISTINCTIVE for name-vs-name comparison.
+        m = _make_locations_map([('Matthews Muliner Playground', 7487)])
+        self.assertEqual(self._id('Matthews Muliner Playground', m), 7487)
+
+    def test_two_different_named_playgrounds_do_not_fuse(self):
+        m = _make_locations_map([('Rosemary\'s Playground', 100),
+                                 ('Schmul Playground', 200)])
+        self.assertEqual(self._id("Rosemary's Playground", m), 100)
+        self.assertEqual(self._id('Schmul Playground', m), 200)
+
+    def test_existing_bare_generics_unaffected(self):
+        m = _make_locations_map([('Gallery MC', 300)])
+        self.assertIsNone(self._id('Gallery', m))
+
+
+class TestSelfAbbreviatingVenue(unittest.TestCase):
+    """A single-venue site that calls itself by its initials must resolve to its
+    own venue, not to an unrelated location that owns that acronym as a name.
+
+    Regression: secretrisoclub.com emits "SRC" as the location name. "src" is
+    3 chars, so it never enters `location_keys` and Step 2 (exact) skips it —
+    but Step 5's fuzzy scan compares `key == normalized_loc` against every tier
+    key with no length floor, re-admitting the very match Step 2 excluded. That
+    handed 6 Bushwick events to a DUMBO art space also named "SRC", 3 miles
+    away. Neither the substring nor the Levenshtein test in the single-venue
+    authority step relates "src" to "secret riso club", so the acronym relation
+    has to be spelled out.
+    """
+
+    def _map(self, entries, linked=None):
+        m = _make_locations_map(entries)
+        for wid, (name, lid) in (linked or {}).items():
+            m['website_linked'][wid] = [{'id': lid, 'emoji': 'X', 'name': name}]
+        return m
+
+    def _id(self, loc, locmap, website_id=None, event_name='Some Event'):
+        res = get_location_id(loc, None, 'site', event_name, locmap, website_id=website_id)
+        return (res or {}).get('id')
+
+    def test_acronym_resolves_to_own_venue_not_namesake(self):
+        m = self._map([('SRC', 6501), ('Secret Riso Club', 1566)],
+                      linked={548: ('Secret Riso Club', 1566)})
+        self.assertEqual(self._id('SRC', m, website_id=548), 1566)
+
+    def test_namesake_still_wins_for_its_own_website(self):
+        m = self._map([('SRC', 6501), ('Secret Riso Club', 1566)],
+                      linked={4694: ('SRC', 6501)})
+        self.assertEqual(self._id('SRC', m, website_id=4694), 6501)
+
+    def test_unrelated_website_keeps_the_namesake(self):
+        m = self._map([('SRC', 6501), ('Secret Riso Club', 1566)],
+                      linked={999: ('Somewhere Else', 42)})
+        self.assertEqual(self._id('SRC', m, website_id=999), 6501)
+
+    def test_different_venue_named_in_full_still_wins(self):
+        """The guard must not swallow a genuine off-site event."""
+        m = self._map([('SRC', 6501), ('Secret Riso Club', 1566), ('Alphaville', 2578)],
+                      linked={548: ('Secret Riso Club', 1566)})
+        self.assertEqual(self._id('Alphaville', m, website_id=548), 2578)
+
+    def test_multi_venue_website_is_not_redirected(self):
+        m = _make_locations_map([('SRC', 6501), ('Secret Riso Club', 1566)])
+        m['website_linked'][548] = [
+            {'id': 1566, 'emoji': 'X', 'name': 'Secret Riso Club'},
+            {'id': 7000, 'emoji': 'X', 'name': 'Secret Riso Club Annex'},
+        ]
+        self.assertEqual(self._id('SRC', m, website_id=548), 6501)
+
+    def test_initialism_helper_skips_stopwords(self):
+        self.assertTrue(_is_initialism_of('mmi', 'Museum of the Moving Image'))
+        self.assertTrue(_is_initialism_of('src', 'Secret Riso Club'))
+
+    def test_initialism_helper_rejects_non_acronyms(self):
+        # A single-word name has no initialism to speak of.
+        self.assertFalse(_is_initialism_of('src', 'SRC'))
+        # Too long to be acronym-shaped.
+        self.assertFalse(_is_initialism_of('secretriso', 'Secret Riso Club'))
+        # Not the actual initials.
+        self.assertFalse(_is_initialism_of('bam', 'Secret Riso Club'))
+        self.assertFalse(_is_initialism_of('', 'Secret Riso Club'))
+
+
+
+class TestBrandFamilyKeyGuard(unittest.TestCase):
+    """A DERIVED bare key that names a family of venues must not pick a member.
+
+    Regression (memory `location_bare_shortname_collision`): three
+    "Smorgasburg <somewhere>" rows exist and one of them carries the bare
+    `short_name` "Smorgasburg", so every event whose source only said
+    "Smorgasburg" landed on that one. The same shape appears with no
+    `short_name` at all, because `_normalize_location_name` strips the borough:
+    "Alamo Drafthouse Staten Island" is indexed under the bare brand and
+    captured Downtown Brooklyn's listings. A data fix cannot reach either — the
+    name just falls through to prefix/fuzzy and lands somewhere else — so the
+    exact-match tier now declines and returns None, which
+    /fix-unmapped-events surfaces.
+    """
+
+    def _map(self, locations, website_linked=None):
+        """Build a real locations_map from (id, name, short_name, alts) tuples."""
+        rows = []
+        for lid, name, short_name, alts in locations:
+            rows.append({'id': lid, 'name': name, 'short_name': short_name,
+                         'address': '', 'lat': 1.0, 'lng': 1.0, 'emoji': 'X',
+                         'alternate_names': list(alts or []),
+                         'website_scoped_names': {}})
+        real_all, real_wl = processor.db.get_all_locations, processor.db.get_website_locations_map
+        processor.db.get_all_locations = lambda cursor: rows
+        processor.db.get_website_locations_map = lambda cursor: dict(website_linked or {})
+        try:
+            return build_locations_map(None)
+        finally:
+            processor.db.get_all_locations = real_all
+            processor.db.get_website_locations_map = real_wl
+
+    def _id(self, loc, locmap, website_id=None, sub=None, event_name='Some Event'):
+        res = get_location_id(loc, sub, 'site', event_name, locmap, website_id=website_id)
+        return (res or {}).get('id')
+
+    def test_bare_short_name_no_longer_wins_the_exact_tier(self):
+        m = self._map([
+            (2977, 'Smorgasburg Williamsburg', 'Smorgasburg', []),
+            (3016, 'Smorgasburg World Trade Center', None, []),
+            (3017, 'Smorgasburg Prospect Park', None, []),
+        ])
+        self.assertTrue(_is_brand_family_key(m, 'smorgasburg', 2977))
+        # The fully-qualified names still resolve.
+        self.assertEqual(self._id('Smorgasburg World Trade Center', m), 3016)
+
+    def test_borough_stripped_name_is_a_family_key_too(self):
+        # "Alamo Drafthouse Staten Island" normalizes to the bare brand, so the
+        # Staten Island row used to answer for the whole chain. Now the
+        # branch's own single-venue site claims it instead (Step 3.5).
+        m = self._map([
+            (2624, 'Alamo Drafthouse Staten Island', None, []),
+            (4561, 'Alamo Drafthouse Cinema Brooklyn', None, []),
+        ], website_linked={3253: [{'id': 4561, 'name': 'Alamo Drafthouse Cinema Brooklyn',
+                                   'emoji': 'X'}]})
+        self.assertTrue(_is_brand_family_key(m, 'alamo drafthouse', 2624))
+        self.assertEqual(self._id('Alamo Drafthouse', m, website_id=3253), 4561)
+
+    def test_curated_alias_still_wins_over_the_family(self):
+        # An explicit alias spelling the key out is human knowledge, not a
+        # derived key, so it is never refused.
+        m = self._map([
+            (5307, 'Columbus Park (Chinatown)', None, ['Columbus Park']),
+            (7210, 'Columbus Park (Hackensack)', 'Columbus Park', []),
+        ])
+        self.assertEqual(self._id('Columbus Park', m), 5307)
+
+    def test_leading_article_collapse_is_not_a_family_key(self):
+        # "The Conference House" -> "conference house" only drops an article;
+        # it still names one venue. 65 rows regressed to the wrong pin when
+        # this counted as a derived bare key.
+        m = self._map([
+            (226, 'Conference House Park', None, []),
+            (1479, 'Conference House Museum', None, ['The Conference House']),
+        ])
+        self.assertEqual(self._id('The Conference House', m), 1479)
+
+    def test_distinctive_short_name_that_merely_prefixes_others_still_resolves(self):
+        # `short_name` "Montague" belongs to a venue that is not a "Montague …"
+        # venue at all, so the key labels no family and must keep resolving.
+        m = self._map([
+            (109, 'Books Are Magic (Montague St)', 'Montague', []),
+            (3863, 'Montague Street Bar', None, []),
+            (5090, 'Montague Diner', None, []),
+        ])
+        self.assertEqual(self._id('Montague', m), 109)
+
+    def test_single_venue_site_cannot_fuzzy_claim_a_family_name(self):
+        # Levenshtein("books are magic", "brooklyn book bodega") is 0.69, so
+        # Step 3.5 would hand the bookstore's readings to the other shop.
+        m = self._map([
+            (109, 'Books Are Magic (Montague St)', None, []),
+            (110, 'Books Are Magic (Smith St)', 'Books Are Magic', []),
+            (2200, 'Brooklyn Book Bodega', None, []),
+        ], website_linked={701: [{'id': 2200, 'name': 'Brooklyn Book Bodega', 'emoji': 'X'}]})
+        self.assertNotEqual(self._id('Books Are Magic', m, website_id=701), 2200)
+
+
+class TestPeriodWithoutSpaceNormalization(unittest.TestCase):
+    """A separator period with no space after it must not fuse two words.
+
+    "St.Albans Library" normalized to "stalbans library" and matched nothing,
+    while both "St. Albans Library" and the bare "St.Albans" resolved fine.
+    The same shape recurs for any St./Mt./Ft. venue whose feed omits the space.
+    """
+
+    def test_period_between_words_becomes_a_space(self):
+        self.assertEqual(_normalize_location_name('St.Albans Library'),
+                         _normalize_location_name('St. Albans Library'))
+        self.assertEqual(_normalize_location_name('Mt.Vernon Library'),
+                         'mt vernon library')
+        self.assertEqual(_normalize_location_name('Sisters of St.Joseph'),
+                         'sisters of st joseph')
+
+    def test_initialisms_and_numbers_are_untouched(self):
+        # Single letters on either side keep collapsing the way they always did.
+        self.assertEqual(_normalize_location_name('P.S. 321'), 'ps 321')
+        self.assertEqual(_normalize_location_name('A.R.T./New York'), 'artnew york')
+        self.assertEqual(_normalize_location_name('Pier 9.5 Studio'), 'pier 95 studio')
+
 
 
 if __name__ == "__main__":
