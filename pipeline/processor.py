@@ -13,6 +13,7 @@ Key features:
 """
 
 import asyncio
+import functools
 import time
 import json
 from contextlib import asynccontextmanager
@@ -994,6 +995,63 @@ _NOT_PUBLIC_DESC_RE = re.compile(
     r'\binvitation\s+only\b|\binvite[\s-]only\b',
     re.IGNORECASE)
 
+# Members-only programming — a real occasion, but attendable only by holders of
+# a membership (museum member tours/previews, social-club meetups, coworking
+# member sessions, gym member classes). The map lists attendable PUBLIC events,
+# so these are out of scope, and the title says so itself: venues label them
+# explicitly ("Members-Only Tour: …", "[MEMBERS ONLY] …", "… | MEMBERS ONLY",
+# "(Members Only)", "Fabrik Member Exclusive"). e220070 (Fabrik DUMBO) reached
+# the map and was hand-suppressed on 2026-08-20, joining a long hand-suppression
+# trail (90906, 157004, 173129, 206565, 210142, 223832, 224595, 197142, …).
+#
+# NAME-ONLY on purpose: the phrase in a title is the venue's own access notice.
+# A "members only" phrase in the DESCRIPTION is deliberately NOT matched —
+# museums advertise a members-only preview day inside the body of a fully
+# public exhibition, and "become a member" upsell copy is everywhere.
+#
+# Measured over all 193,909 events: "member(s) only" 146 name matches and
+# "member(s) exclusive" 20 more, every one a true members-only occasion except
+# a single venue NAMED "Members Only" (a West Village lounge, e5405 "New Year's
+# Eve @ Members Only West Village Lounge") — which is what the venue veto is
+# for: the phrase preceded by "@"/"at", or followed by a venue noun, is a place,
+# not an access restriction.
+_MEMBERS_ONLY_NAME_RE = re.compile(
+    r'\bmembers?[\s-]+only\b|\bmembers?[\s-]?exclusive\b', re.IGNORECASE)
+_MEMBERS_ONLY_VENUE_VETO_RE = re.compile(
+    r'[@]\s*members?[\s-]+only\b|\b(?:at|in)\s+members\s+only\b|'
+    r'\bmembers?[\s-]+only\s+(?:lounge|club|bar|tavern|venue|band|nyc)\b',
+    re.IGNORECASE)
+
+# Enrolled-student academic orientations ("New Student Orientation",
+# e207564 w536 Pratt, hand-suppressed on 2026-08-20 with its two siblings) —
+# a closed-audience event for a school's own incoming students, not public
+# programming. NOT the same thing as a public orientation: volunteer/docent
+# orientations are attendable by anyone who wants to volunteer, and the
+# academic-milestone veto above deliberately spares "orientation" for exactly
+# that reason — so this rule is scoped to the STUDENT form only.
+#
+# Two arms:
+#  - the literal "…Student(s) Orientation" phrase in the name (name-only;
+#    3 corpus matches, all true — Pratt ×2, NYU Performance Studies);
+#  - "Orientation" in the name corroborated by a student audience in the
+#    description ("A welcome and orientation day for MFA … students",
+#    e207565, whose name lacks the phrase). The veto spares public
+#    orientations (volunteer/docent/usher/mentor/tutor) and open-enrollment
+#    phrasing ("students of all levels welcome" at a dance studio).
+# Measured over all 193,909 events: the two arms together match 7 rows, all of
+# them school orientations for enrolled students/their families (Pratt ×4,
+# NYU ×3), 0 false positives.
+_STUDENT_ORIENTATION_NAME_RE = re.compile(
+    r"\b(?:new\s+)?students?'?\s+orientation\b", re.IGNORECASE)
+_ORIENTATION_NAME_RE = re.compile(r'\borientation\b', re.IGNORECASE)
+_STUDENT_AUDIENCE_DESC_RE = re.compile(r'\bstudents?\b', re.IGNORECASE)
+_ORIENTATION_PUBLIC_VETO_RE = re.compile(
+    r'\b(?:volunteer|docent|usher|mentor|tutor)s?\b|'
+    r'\ball\s+levels\b|\bbeginners?\s+welcome\b|'
+    r'\bopen\s+to\s+(?:the\s+)?(?:public|all|everyone)\b|'
+    r'\bno\s+experience\b',
+    re.IGNORECASE)
+
 # Festival info-booth sub-listings: an org's marketing booth inside a festival
 # program ("L'Alliance Booths"), not an attendable event. The name must END
 # with "Booths"/"Info Booth(s)" (a name merely containing "booths" mid-phrase
@@ -1144,6 +1202,67 @@ _PROMO_ATTENDABLE_VETO_RE = re.compile(
     r'\b(?:party|tasting|dinner|pairing|class|workshop|festival|fest|kickoff|'
     r'kick-?off|live\s+music|\bdj\b|concert|dance|competition|contest|throwdown|'
     r'crawl)\b', re.IGNORECASE)
+
+# Buy-one-get-one ticket promotions ("Kids' Night on Broadway at Top of the
+# Rock" — "Buy one full-price adult Timed Admission ticket and receive one
+# complimentary youth ticket…", e225309 w41 Rockefeller Center, hand-suppressed
+# on 2026-08-20). Nothing is programmed: the attraction's normal admission is
+# discounted for a few days.
+#
+# The offer must OPEN the description, and that anchor is the entire rule. A
+# BOGO phrase merely present in the body is emphatically NOT junk — 53 events
+# carry one, and they include real programming that happens to advertise a deal
+# ("Missing Movies Double Feature", "DUMBO After Dark", "Karaoke Tuesday with
+# the Fabulous LaMaria", 6 of them live right now). What separates the promo is
+# that the offer is ALL there is: the body opens with the transaction because
+# there is no event to describe first. Anchored, the corpus yields 4 matches
+# over all 193,874 events — a pretzel-day BOGO, "Best Friend Promo!", "July 4
+# Weekend BOGO!" and e225309 — all four promos, none live.
+#
+# The veto is the second safety net for the day a real event leads with its
+# ticket offer and then describes itself.
+_BOGO_OFFER_DESC_RE = re.compile(
+    r'^\s*buy\s+one\b[^.]{0,80}?\b(?:get|receive)\s+one\b', re.IGNORECASE)
+_BOGO_ATTENDABLE_VETO_RE = re.compile(
+    r'\b(?:join\s+us|featuring|performance|performing|live\s+music|\bdj\b|'
+    r'concert|show(?:case)?|screening|class|workshop|tour|doors\s+open|'
+    r'lineup|line-up|hosted\s+by|presents)\b', re.IGNORECASE)
+
+# Standing daily happy hour — a bar's permanent drink-deal window published as a
+# dated row ("Happy Hour & Live Music" — "The venue advertises daily happy hour
+# deals on drinks and food along with live music", e225510 w1290 Don't Tell
+# Mama, hand-suppressed on 2026-08-20). It is the `<drink> Month/Week` promo's
+# nearest sibling: an offer that is true every day, not something that happens.
+#
+# **"Happy hour" in a name is NOT a junk signal and must never become one** —
+# 50 live events are named one right now, and they are named programming: DJ
+# sets ("[happy hour] ✽ she.they.dj ✽"), "Poetry Happy Hour", "Art History
+# Happy Hour", comedy hours, networking mixers, run-club post-run drinks. The
+# discriminator is entirely in the BODY, and specifically in its FREQUENCY: a
+# standing offer describes itself as daily/nightly/every day, which no dated
+# programme ever does. Weekly and monthly forms are deliberately excluded — a
+# weekly happy hour IS a recurring event people show up to ("Sunday Football
+# Happy Hour", "Weekly Happy Hour", "Dumbo Happy Hour" on first Wednesdays,
+# all live), and only the every-single-day form is a pure venue amenity.
+#
+# Measured over all 193,874 events: 14 matches, 0 live, and every one of the 14
+# is a venue's standing happy hour. None of the 50 live "happy hour" events
+# comes within reach of the frequency gate.
+_HAPPY_HOUR_NAME_RE = re.compile(r'\bhappy\s+hour\b', re.IGNORECASE)
+_STANDING_OFFER_DESC_RE = re.compile(
+    r'\b(?:daily|nightly|every\s+day|seven\s+days\s+a\s+week|'
+    r'7\s+days\s+a\s+week)\b', re.IGNORECASE)
+_HAPPY_HOUR_DEAL_DESC_RE = re.compile(
+    r'\b(?:deals?|specials?|discounted)\b|\$\d', re.IGNORECASE)
+
+
+def _is_standing_happy_hour(name, description):
+    """True for a venue's permanent daily happy hour published as an event."""
+    if not name or not description:
+        return False
+    return bool(_HAPPY_HOUR_NAME_RE.search(name)
+                and _STANDING_OFFER_DESC_RE.search(description)
+                and _HAPPY_HOUR_DEAL_DESC_RE.search(description))
 
 # National FOOD/DRINK holiday marketing posts ("National Fajita Day" — "Come
 # grab some sizzling goodness for National Fajita Day!", e221838 w868 Hudson
@@ -1423,6 +1542,44 @@ def _is_hours_notice(name, description=None):
         return False
     return bool(_HOURS_NOTICE_NAME_RE.match(name.strip()))
 
+
+# (1b) Delayed / late opening notices ("Delayed Opening - Staff Development",
+# body "Due to staff development, the library will be opening at 1:00pm" —
+# e225218 w3530 BCCLS, hand-suppressed at classification on 2026-08-20). The
+# building opens late; nothing is programmed. This is the third face of the same
+# operational-calendar shape the closure and hours families already cover, and
+# neither of them reaches it: the hours rule's load-bearing gate is a clock time
+# in the NAME, and these carry the time in the body if anywhere.
+#
+# Two gates, per this block's convention: the delay phrase in the name, plus
+# either a body that adds nothing or one that states the later opening. The
+# hours-notice attendable veto is reused, which is what keeps a gallery's "Late
+# Opening Reception" or a "Late Opening Party" out of reach.
+#
+# Verified over all 193,874 events: 6 name matches, all 6 operational notices
+# (4 NYPL system-wide, 1 museum, plus e225218), 0 live, 0 false positives.
+_DELAYED_OPENING_NAME_RE = re.compile(
+    r'\b(?:delayed|late)\s+opening\b|\bopening\s+(?:late|delayed)\b'
+    r'|\bdelayed\s+open\b', re.IGNORECASE)
+_DELAYED_OPENING_DESC_RE = re.compile(
+    r'\bdelayed\s+opening\b'
+    r'|\b(?:will\s+(?:be\s+)?open(?:ing)?|opens?)\b[^.]{0,40}'
+    r'\b(?:at\s+\d{1,2}|later|delayed|noon)\b',
+    re.IGNORECASE)
+
+
+def _is_delayed_opening_notice(name, description=None):
+    """True for a "<facility> is opening late today" notice, not an event."""
+    if not name:
+        return False
+    if not _DELAYED_OPENING_NAME_RE.search(name):
+        return False
+    if _HOURS_NOTICE_VETO_RE.search(name):
+        return False
+    description = description or ''
+    return bool(_description_adds_nothing(name, description)
+                or _DELAYED_OPENING_DESC_RE.search(description))
+
 # (2) "On this Day:" historical archival posts. Park conservancies publish these
 # alongside real programming — they narrate a past anniversary ("On October 12,
 # 1935, Fort Tryon Park was officially dedicated…") and no gathering is being
@@ -1590,8 +1747,17 @@ _TAKE_HOME_KIT_PICKUP_RE = re.compile(
 # "prizes awarded"). Verified over all 188,480 events: 3 name matches, 1 fire
 # (219452 itself); the other two are description-less echoes already handled
 # manually.
+#
+# Widened 2026-08-20 for the PLURAL/bare form ("Summer Reading Programs End",
+# e225219 w3530, description-less): the noun may be plural and the verb may
+# therefore lose its "s", and the trailing "!" was never required anyway. The
+# program noun stays mandatory for the same reason as before — it is the only
+# thing standing between this rule and the film "It Ends". Re-verified over all
+# 193,874 events: 4 name matches (up from 3), all four are summer-reading
+# wrap-up markers, none live.
 _PROGRAM_DEADLINE_NAME_RE = re.compile(
-    r'\b(?:reading|program|challenge|registration)\s+ends!?\s*$', re.IGNORECASE)
+    r'\b(?:reading|programs?|challenges?|registrations?)\s+ends?!?\s*$',
+    re.IGNORECASE)
 _PROGRAM_DEADLINE_DESC_RE = re.compile(
     r'\b(?:submit|deadline|last\s+day\s+to|logs?\s+by)\b', re.IGNORECASE)
 _PROGRAM_DEADLINE_VETO_RE = re.compile(
@@ -1870,12 +2036,38 @@ _PRIVATE_OCCASION_NAME_RE = re.compile(
 # work/project noun, which is what spares the very common real programming built
 # on the same words: "Rock Painting", "Watercolor Painting for Adults", "Repair
 # Cafe", "Bike Repair Workshop". 1 corpus hit.
+#
+# Second arm added 2026-08-20 for the equipment-work form, which needs no
+# work/project noun to close it ("AV upgrade", e225249 w3530 Wyckoff Public
+# Library, description-less, reached the event-type classifier as UNKNOWN). Same
+# whole-name anchoring, and the systems list is a closed one: the name must be a
+# building-system noun plus a work verb and nothing else, so "Sound Bath",
+# "Lighting Design Workshop" and "Computer Class" cannot match. 1 corpus hit
+# over all 193,874 events, not live.
 _MAINTENANCE_BLOCK_NAME_RE = re.compile(
     r'^\s*(?:building|room|facility|community\s+room|floor|carpet|hvac|'
     r'boiler|elevator|roof)?\s*'
     r'(?:repair|repairs|maintenance|renovation|construction|cleaning|painting)\s*'
-    r'(?:work|works|project|day)\s*$',
+    r'(?:work|works|project|day)\s*$'
+    r'|^\s*(?:a[/\s]?v|audio[\s-]?visual|it|network|wi[\s-]?fi|hvac|boiler|'
+    r'elevator|carpet|server|phone|computer|lighting|sound|electrical|'
+    r'plumbing|security)\s+'
+    r'(?:upgrades?|installation|install|outage|replacement|work|works|'
+    r'repairs?|maintenance)\s*[.!]?\s*$',
     re.IGNORECASE)
+
+# (5f) Staff prep blocks — a room held while someone SETS UP for a program that
+# happens later ("Kindergarten Kick-Off Craft Setup", e225259 w3530 Oakland
+# Public Library, description-less). The row is the prep, not the program.
+#
+# A bare "setup" anywhere in the name is far too broad, so two things scope it:
+# the word must CLOSE the name, and the description must add nothing. Both are
+# load-bearing. Of the 5 tail-anchored corpus matches over all 193,874 events,
+# 4 are real, described events — "Tech Help: Libby Set-Up" (a library class, 2
+# rows), "BKO Volunteer Day: … Unpacking & Store Setup" and "Picnic Set-up"
+# (volunteer shifts people sign up for) — and every one of them is spared by the
+# description gate. That leaves 1 fire: e225259 itself.
+_SETUP_BLOCK_NAME_RE = re.compile(r'\S\s+set[\s-]?up\s*[.!]?\s*$', re.IGNORECASE)
 
 # (5e) "No <program>" cancelled-instance notices whose body says nothing ("No
 # Storytime"). The existing `_NON_EVENT_NAME_PATTERNS` negation rule requires
@@ -2182,6 +2374,11 @@ def is_obvious_non_event(name, description=None):
         return True
     if _MAINTENANCE_BLOCK_NAME_RE.match(name):
         return True
+    # Staff prep block ("… Craft Setup"). The blank/echo body is the second gate
+    # — a described "… Set-Up" is a class or a volunteer shift, not a prep hold.
+    if (_SETUP_BLOCK_NAME_RE.search(name)
+            and _description_adds_nothing(name, description)):
+        return True
     if (_NO_PROGRAM_NAME_RE.match(name)
             and _description_adds_nothing(name, description)):
         return True
@@ -2215,6 +2412,10 @@ def is_obvious_non_event(name, description=None):
     # description — the body is normally a restatement of the hours.
     if _is_hours_notice(name, description):
         return True
+    # Delayed/late opening notice ("Delayed Opening - Staff Development"). Fires
+    # with or without a description, like its closure and hours siblings.
+    if _is_delayed_opening_notice(name, description):
+        return True
     # Facility-closure notice ("Hendricks Field Golf Course Closed"). Fires with
     # or without a description — the blank body IS the corroboration here — so it
     # cannot live in the `if description:` block below.
@@ -2230,6 +2431,17 @@ def is_obvious_non_event(name, description=None):
     # Pay Method Available 2026"). Fires with or without a description, so it
     # cannot live in the `if description:` block below.
     if _is_seo_listicle_spam(name, description):
+        return True
+    # Members-only programming ("Members-Only Tour: …", "… | MEMBERS ONLY").
+    # Name-only: the title is the venue's own access notice. The veto spares
+    # events AT a venue named "Members Only".
+    if (_MEMBERS_ONLY_NAME_RE.search(name)
+            and not _MEMBERS_ONLY_VENUE_VETO_RE.search(name)):
+        return True
+    # Enrolled-student academic orientation, literal-phrase arm ("New Student
+    # Orientation"). Fires with or without a description; the desc-corroborated
+    # arm lives in the `if description:` block below.
+    if _STUDENT_ORIENTATION_NAME_RE.search(name):
         return True
     if description:
         # "On this Day:" archival post narrating a past anniversary, not a gathering.
@@ -2264,6 +2476,13 @@ def is_obvious_non_event(name, description=None):
         if (_PRIVATE_BOOKING_DESC_RE.search(description)
                 and _NOT_PUBLIC_DESC_RE.search(description)):
             return True
+        # School orientation whose name lacks the literal "Student Orientation"
+        # phrase but whose body names the student audience ("A welcome and
+        # orientation day for MFA … students", e207565).
+        if (_ORIENTATION_NAME_RE.search(name)
+                and _STUDENT_AUDIENCE_DESC_RE.search(description)
+                and not _ORIENTATION_PUBLIC_VETO_RE.search(name + ' ' + description)):
+            return True
         if (_BOOTH_NAME_RE.search(name)
                 and _BOOTH_MARKETING_DESC_RE.search(description)):
             return True
@@ -2290,6 +2509,13 @@ def is_obvious_non_event(name, description=None):
         if (_DRINK_PROMO_NAME_RE.search(name)
                 and _PROMO_SPECIAL_DESC_RE.search(description)
                 and not _PROMO_ATTENDABLE_VETO_RE.search(name + ' ' + description)):
+            return True
+        # Buy-one-get-one ticket promotion whose body IS the offer.
+        if (_BOGO_OFFER_DESC_RE.search(description)
+                and not _BOGO_ATTENDABLE_VETO_RE.search(description)):
+            return True
+        # A venue's standing daily happy hour, published as a dated row.
+        if _is_standing_happy_hour(name, description):
             return True
         if (_RETAIL_PROMO_NAME_RE.search(name)
                 and _RETAIL_PROMO_DESC_RE.search(description)):
@@ -3117,8 +3343,24 @@ def _strip_trailing_postal_address(name):
 
 def _normalize_location_name(name):
     """Normalizes a location name for matching."""
+    return _normalize_location_name_parts(name)[0]
+
+
+def _normalize_location_name_parts(name):
+    """Normalize `name`, and report which area qualifier the collapse consumed.
+
+    Returns `(normalized, area_token)`. `area_token` is the
+    `city_config.city_area_tokens()` entry stripped off the END of the name
+    ("Downtown Brooklyn" -> ("downtown", "brooklyn")), or None when nothing was
+    stripped. That token is the ONLY information the collapse destroys which
+    still names a different place, so it is what `_area_qualifier_conflict`
+    needs to tell "Downtown Brooklyn" apart from "Downtown NYC" after both have
+    become the bare key "downtown". Kept as one function with
+    `_normalize_location_name` so the two can never disagree about what was
+    stripped.
+    """
     if not name:
-        return ""
+        return "", None
 
     # Strip diacritics so "Café" matches "Cafe", "Jardín" matches "Jardin".
     name = ''.join(
@@ -3147,11 +3389,13 @@ def _normalize_location_name(name):
 
     if normalized in ['virtual', 'online', 'livestream', 'private residence',
                       'various locations', 'zoom', 'unknown venue']:
-        return ""
+        return "", None
     if len(normalized) > 15 and normalized.startswith('the '):
         normalized = normalized[4:]
 
     # Strip trailing state abbreviations/names (e.g., "Brooklyn, NY" -> "brooklyn")
+    suffixes = city_config.city_area_tokens()
+    area_token = None
     state_suffixes = city_config.state_suffixes()
     for ss in state_suffixes:
         if normalized.endswith(ss) and len(normalized) > len(ss) + 1:
@@ -3160,11 +3404,17 @@ def _normalize_location_name(name):
             if ' ' not in stripped and stripped in BARE_ONLY_GENERIC_WORDS:
                 break
             normalized = stripped
+            # "New York" is both a state suffix and the city's own name, so this
+            # branch — not the area-token loop below — is what consumes it in
+            # "Downtown New York". Record it, or that string stays
+            # indistinguishable from "Downtown Brooklyn". Suffixes that are only
+            # ever states ("ny", "nj") name no area and are not recorded.
+            if ss.strip() in suffixes:
+                area_token = ss.strip()
             break
 
-    suffixes = city_config.city_area_tokens()
     if normalized in suffixes:
-        return ""
+        return "", None
 
     if not has_dash_before_borough:
         for suffix in suffixes:
@@ -3177,9 +3427,10 @@ def _normalize_location_name(name):
                 if ' ' not in stripped and stripped in BARE_ONLY_GENERIC_WORDS:
                     break
                 normalized = stripped
+                area_token = suffix
                 break
 
-    return " ".join(normalized.split())
+    return " ".join(normalized.split()), area_token
 
 
 def _calculate_levenshtein_ratio(s1, s2):
@@ -3292,6 +3543,94 @@ def _parse_city_state(address):
     if state not in _US_STATES:
         return (None, None)
     return (parts[-2].lower(), state)
+
+
+# Sentinel class for the city's own names ("NYC", "New York", "New York City"),
+# which denote the whole city rather than one area inside it. Not a possible
+# normalized token, so it can never collide with a real one.
+_CITY_WIDE_CLASS = '\x00city'
+
+
+def _area_qualifier_class(token):
+    """Collapse equivalent spellings of one area qualifier to a single class.
+
+    "the bronx" and "bronx" are one place; so are the city's own names ("nyc",
+    "new york", "new york city"), which sources use interchangeably. Everything
+    else — each borough, "long island" — is its own class. Derived from the
+    active city config, so no NYC strings live in engine code.
+    """
+    if not token:
+        return None
+    token = re.sub(r'^the\s+', '', token.strip().lower())
+    if token in _city_self_tokens():
+        return _CITY_WIDE_CLASS
+    return token
+
+
+@functools.lru_cache(maxsize=1)
+def _city_self_tokens():
+    """Normalized spellings that name the CITY itself rather than a sub-area."""
+    names = {city_config.city_name(), city_config.city_short(),
+             city_config.metro_name(), city_config.region_tag_token()}
+    out = set()
+    for n in names:
+        n = re.sub(r'[^\w\s]', '', (n or '').lower()).strip()
+        if n:
+            out.add(n)
+            out.add(re.sub(r'\s+city$', '', n).strip())
+    return {t for t in out if t}
+
+
+def _area_qualifier_conflict(raw_text, candidate_info, area_classes=None):
+    """True if the source and the candidate name DIFFERENT area qualifiers.
+
+    `_normalize_location_name` strips a trailing borough/city qualifier, which
+    is what lets a source that only said "Midtown" reach "Midtown Manhattan".
+    But the collapse is lossy on BOTH sides, so it also fuses qualifiers that
+    name different places: "Downtown NYC", "Downtown Manhattan" and "Downtown
+    Brooklyn" all become the bare key "downtown", and every one of them landed
+    on the Downtown Brooklyn geotag.
+
+    The prefix/fuzzy tier cannot use the brand-family guard to tell these apart
+    (see the note there — it un-pinned 2,971 correctly-matched rows, because by
+    the time that tier runs, a spelled-out branch is indistinguishable from a
+    bare brand). This restores exactly the bit that was destroyed instead: it
+    fires ONLY when both sides actually carried a qualifier and the two name
+    different areas. A source that named no area ("Midtown") still resolves, and
+    a source that agrees ("Green Room NYC" -> "Green Room NYC") is untouched.
+
+    `area_classes` maps location_id -> every area a location is CURATED to
+    answer to, gathered in build_locations_map from its name, its global
+    alternate names and its short_name. A curated alias is an explicit
+    statement that a spelling refers to this venue, so "Lower Manhattan"
+    aliased as "Downtown NYC" accepts a source that says "Downtown NYC" —
+    while Downtown Brooklyn, which claims no such alias, still rejects it.
+    """
+    cand_classes = (area_classes or {}).get((candidate_info or {}).get('id'))
+    if cand_classes is None:
+        cand_class = _area_qualifier_class(
+            _normalize_location_name_parts((candidate_info or {}).get('name') or '')[1])
+        cand_classes = {cand_class} if cand_class else set()
+    if not cand_classes or cand_classes == {_CITY_WIDE_CLASS}:
+        # A row we only ever called "<Name> New York" claims the whole city, so
+        # a source naming a borough INSIDE it adds specificity rather than
+        # contradicting: "The Meadows Brooklyn" is "The Meadows New York"
+        # (loc 869, 17 Meadow St, Brooklyn). The reverse is not symmetric and is
+        # handled below — a source saying "Downtown NYC" is VAGUER than a row
+        # specifically named "Downtown Brooklyn", and must not claim it.
+        return False
+    for part in re.split(r'[,/]', raw_text or ''):
+        # A segment carrying a house number is an ADDRESS, not a venue name, so
+        # its trailing city is a postal tail rather than a qualifier — the
+        # comma split alone does not catch "…(between 31st & 32nd Streets) New
+        # York" (loc 3497, whose street address matches exactly).
+        if any(ch.isdigit() for ch in part):
+            continue
+        src_class = _area_qualifier_class(
+            _normalize_location_name_parts(part)[1])
+        if src_class is not None and src_class not in cand_classes:
+            return True
+    return False
 
 
 def _region_conflict(raw_text, candidate_info, city_states):
@@ -4036,6 +4375,10 @@ def build_locations_map(cursor):
         # EXTENDS it ("smorgasburg" -> {2977, 3016, 3017}). A key with 2+ such
         # members names a FAMILY of venues, not one venue.
         'brand_family': {},
+        # location id -> every area qualifier the row is CURATED to answer to,
+        # from its name, its global alternate names and its short_name. Powers
+        # _area_qualifier_conflict; see the note there.
+        'area_classes': {},
     }
 
     locations_data = db.get_all_locations(cursor)
@@ -4067,7 +4410,10 @@ def build_locations_map(cursor):
             'emoji': loc.get('emoji')
         }
         main_name = loc.get('name', '')
-        normalized_main = _normalize_location_name(main_name)
+        normalized_main, main_area = _normalize_location_name_parts(main_name)
+        area_classes = locations_map['area_classes'].setdefault(loc.get('id'), set())
+        if _area_qualifier_class(main_area):
+            area_classes.add(_area_qualifier_class(main_area))
 
         # For names tier, track multiple locations with same name
         add_with_duplicates(locations_map['names'], main_name.lower(), full_info)
@@ -4094,7 +4440,9 @@ def build_locations_map(cursor):
             if alt_name and len(alt_name) >= 3:
                 locations_map['alternate_names'][alt_name.lower()] = full_info
                 strong_keys.add(alt_name.lower())
-                normalized_alt = _normalize_location_name(alt_name)
+                normalized_alt, alt_area = _normalize_location_name_parts(alt_name)
+                if _area_qualifier_class(alt_area):
+                    area_classes.add(_area_qualifier_class(alt_area))
                 if normalized_alt and len(normalized_alt) >= 3:
                     locations_map['alternate_names'][normalized_alt] = full_info
                     if _collapse_is_significant(alt_name, normalized_alt):
@@ -4104,7 +4452,9 @@ def build_locations_map(cursor):
         if short_name and len(short_name) >= 3:
             locations_map['short_names'][short_name.lower()] = full_info
             weak_keys.add(short_name.lower())
-            normalized_short = _normalize_location_name(short_name)
+            normalized_short, short_area = _normalize_location_name_parts(short_name)
+            if _area_qualifier_class(short_area):
+                area_classes.add(_area_qualifier_class(short_area))
             if normalized_short and len(normalized_short) >= 3:
                 locations_map['short_names'][normalized_short] = full_info
                 weak_keys.add(normalized_short)
@@ -4260,11 +4610,19 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
     # guard. Uses the raw strings, not the normalized keys, so the "City, ST" tail
     # and city tokens survive for _region_conflict.
     city_states = locations_map.get('city_states', {})
+    area_classes = locations_map.get('area_classes', {})
     raw_geo = ' '.join(p for p in (location_name_raw, sublocation_name_raw) if p)
 
     def conflicts(info):
-        """True if this candidate's state conflicts with a city named in raw_geo."""
-        return _region_conflict(raw_geo, info, city_states)
+        """True if this candidate names a region/area the source contradicts.
+
+        Two independent guards, both keyed on the RAW source text: a
+        cross-municipality state conflict (`_region_conflict`), and a
+        borough/city qualifier the name-collapse would otherwise have thrown
+        away (`_area_qualifier_conflict`).
+        """
+        return (_region_conflict(raw_geo, info, city_states)
+                or _area_qualifier_conflict(raw_geo, info, area_classes))
 
     # Location-only keys (for prefix matching where event names cause false positives)
     location_keys = []
@@ -4345,6 +4703,16 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
         website_tier = locations_map['website_scoped'][website_id]
         for key in primary_search_keys:
             if key in website_tier:
+                # The ONE thing curation cannot speak for: the key is the
+                # COLLAPSED form, so a curated "Downtown Manhattan" alias also
+                # answers to "Downtown Brooklyn" (both are the bare "downtown").
+                # That is the collapse overreaching, not a mapping anyone chose
+                # — MAS (w494) has exactly this alias, and all 36 of its
+                # "Downtown Brooklyn" rows resolve to Lower Manhattan. Only an
+                # area conflict is checked here; every other heuristic still
+                # yields to the curated mapping.
+                if _area_qualifier_conflict(raw_geo, website_tier[key], area_classes):
+                    continue
                 return make_result(website_tier[key])
 
     # Step 2: Exact matches in global tiers (names, alternate_names, short_names).
@@ -4622,6 +4990,17 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
                 # time this tier sees it. The exact tier can tell them apart;
                 # this one cannot, so it must not try.
                 if is_match:
+                    # Reject an area-conflicting candidate HERE rather than
+                    # only at the end, so the runner-up still gets to win. The
+                    # final check alone returned None whenever the top scorer
+                    # conflicted — e.g. "Downtown Brooklyn" scores the Lower
+                    # Manhattan alias highest, and Downtown Brooklyn itself,
+                    # sitting just below it, never got its turn. The
+                    # region-conflict half stays where it was: falling through
+                    # to a second-best candidate across a state line is exactly
+                    # the guess that guard exists to refuse.
+                    if _area_qualifier_conflict(raw_geo, get_first(tier[key]), area_classes):
+                        continue
                     if len(normalized_name) > 3 and key == normalized_name:
                         score = 1.0
                     elif len(key) > 3 and (full_loc.startswith(key) or full_loc.endswith(key)) and len(key) / len(full_loc) >= PREFIX_MATCH_COVERAGE:
