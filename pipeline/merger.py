@@ -190,6 +190,43 @@ def stem_word(word):
 _STOP_WORDS = frozenset({'the', 'and', 'for', 'with', 'from', 'into', 'your'})
 
 
+# Keywords that turn the SHORT token right after them into a cohort label rather
+# than noise ("Class C", "Part II", "Grades K-2"). See `_significant_tokens`.
+_COHORT_KEYWORDS = frozenset({
+    'class', 'classes', 'section', 'sections', 'level', 'levels',
+    'part', 'parts', 'grade', 'grades', 'group', 'groups', 'room', 'rooms',
+    'unit', 'units', 'series', 'week', 'weeks', 'cohort', 'cohorts',
+    'lesson', 'lessons',
+})
+
+# Short tokens that are connectors, never a cohort label, even directly after a
+# cohort keyword: "SWING Classes w/Margaret Batiuchok", "Marvin's First Day x
+# Brooklyn Book Bodega", "Levels 'n' Stuff". ("a" is deliberately NOT here —
+# "Class A" and "Group A" are real labels.)
+_NOT_COHORT_LABELS = frozenset({'w', 'x', 'n'})
+
+_ROMAN_CHARS = frozenset('ivxlcdm')
+
+
+def _is_cohort_label(word, prev_raw, next_raw):
+    """Is this short token a cohort label ("Class C", "Part II", "Grades K-2")?
+
+    `prev_raw`/`next_raw` are the RAW adjacent tokens, not the surviving
+    significant ones: adjacency is the whole signal, and reading the previous
+    *significant* token instead lets the test cascade down a run of short tokens
+    ("Group S*x" -> "group s x": drop "s", and "x" then sees "group" as its
+    predecessor and gets admitted in its place).
+    """
+    if prev_raw not in _COHORT_KEYWORDS or word in _NOT_COHORT_LABELS:
+        return False
+    if not (len(word) == 1 or all(c in _ROMAN_CHARS for c in word)):
+        return False
+    # A cohort label is ONE token. A run of two short letter tokens is mangled
+    # text — a censored word split at its asterisk ("Navigating Group S*x"), or
+    # an ampersand joining two installments ("Excel Part I & II") — not a label.
+    return not (next_raw and len(next_raw) < 3 and next_raw.isalpha())
+
+
 def _is_year(w):
     """Check if word is a 4-digit year (2000-2099)."""
     return len(w) == 4 and w.isdigit() and w.startswith('20')
@@ -228,19 +265,53 @@ def _significant_tokens(name):
       event into one row per crawl. Only SHORT leading numbers are dropped, so
       this exception never removes a token the old rule kept.
 
-    Measured with `_drop_shared_numbers` over all 32,402 distinct (event, source
-    crawl_event) name pairs reachable via event_sources — pairs of live events
-    are a selection-bias trap, they are live precisely because they did NOT merge
-    (.scratch/numtok_measure.py, 2026-08-16). 270 pairs stop matching, 32,131 are
-    unaffected, 1 newly matches (a correct one). Hand-labelled, the stops are 105
-    age/grade cohorts, 42 numbered weeks/sessions/classes, 36 showtime or date
-    variants, 20 numbered programs/episodes, 13 class levels and 55 assorted —
-    ~15 of the 270 are genuine same-event pairs and the rest are distinct events.
-    The blanket exemption without the leading-run carve-out stopped 271 but 56 of
-    its stop lines were the Partiful/DSA artifact shape, i.e. real regressions.
-    A lost correct merge degrades to a duplicate event that /dedupe-events
-    catches; a wrong merge writes another cohort's dates onto a live event, so
-    the trade is deliberately biased toward blocking.
+    Measured with `_drop_shared_weak_tokens` over all 32,402 distinct (event,
+    source crawl_event) name pairs reachable via event_sources — pairs of live
+    events are a selection-bias trap, they are live precisely because they did
+    NOT merge (.scratch/numtok_measure.py, 2026-08-16). 270 pairs stop matching,
+    32,131 are unaffected, 1 newly matches (a correct one). Hand-labelled, the
+    stops are 105 age/grade cohorts, 42 numbered weeks/sessions/classes, 36
+    showtime or date variants, 20 numbered programs/episodes, 13 class levels and
+    55 assorted — ~15 of the 270 are genuine same-event pairs and the rest are
+    distinct events. The blanket exemption without the leading-run carve-out
+    stopped 271 but 56 of its stop lines were the Partiful/DSA artifact shape,
+    i.e. real regressions. A lost correct merge degrades to a duplicate event
+    that /dedupe-events catches; a wrong merge writes another cohort's dates onto
+    a live event, so the trade is deliberately biased toward blocking.
+
+    A short LETTER is kept under the same reasoning, but only where the name
+    itself says it is a cohort label: directly after a cohort keyword, and
+    subject to `_is_cohort_label`. The letter version of the shape is identical —
+    "... Learn to Swim Level 1 (Class C)" / "(Class D)" / "(Class E)" reduced to
+    byte-identical token lists, so NYC Parks' swim classes fused across class
+    letters, across programs (Children's vs Parent-and-Tots) and even across
+    pools. Unlike a bare number, a bare letter really is noise almost everywhere,
+    which is why the keyword, not the letter, is the trigger.
+
+    Measured the same way over all 32,856 distinct differing pairs
+    (.scratch/shorttok_measure.py, 2026-08-19): 39 pairs stop matching, 32,817
+    are unaffected, 0 newly match. All 39 are distinct events — 36 NYC Parks
+    swim-class cohorts, 2 grade bands ("Kerboom Kidz- Grades K-2" vs "Grades
+    3-5") and "Layer the Walls Part I" vs "Part II" — with no regression left
+    after the `_is_cohort_label` guards. The looser forms measured alongside are
+    the reason for those guards: reading the previous *significant* token instead
+    of the raw one split "HMU Academy: Navigating Group S*x" from its own
+    uncensored crawl, and admitting any short token (not just a letter or roman
+    numeral) after a keyword picks up "Day of", "Week of", "Series of".
+
+    Note this does NOT by itself unfuse the tightest cases: "... Level 1 (Class
+    C)" vs "(Class D)" still matches on a 0.85 Jaccard, where the letter is
+    present but outvoted. The ratio tiers own that; this only guarantees the
+    discriminator reaches them.
+
+    Short MIXED alphanumerics ("3d", "1a", "5k") were measured as a third
+    carve-out and NOT taken: 7 pairs change, and while 5 are genuinely distinct
+    (including a Regal 3D showing that holds the 2D permalink), the change
+    reverses the deliberate cinema policy that screening-FORMAT variants merge
+    (`_FORMAT_TAGS`, `_FAN_SHOWING_RE`) and would make "Movie (3D)" — whose
+    parenthetical `_strip_format_parentheticals` deletes outright — stop matching
+    "Movie 3D". Too marginal, and it belongs in the format-tag layer where both
+    spellings are handled together.
     """
     toks = normalize_name_for_dedup(name).split()
     lead = 0
@@ -258,6 +329,9 @@ def _significant_tokens(name):
             out.append(w.lstrip('0') or '0')
         elif len(w) >= 3:
             out.append(w)
+        elif _is_cohort_label(w, toks[i - 1] if i else '',
+                              toks[i + 1] if i + 1 < len(toks) else ''):
+            out.append(w)
     return out
 
 
@@ -270,8 +344,8 @@ def get_significant_words(name, stem=False):
 
 
 def _subtitle_content_words(text):
-    """Significant words of a subtitle, minus the short bare numbers that
-    `_significant_tokens` newly admits.
+    """Significant words of a subtitle, minus the short tokens that
+    `_significant_tokens` newly admits (bare numbers, and cohort labels).
 
     Used by the two "does this subtitle carry real distinguishing content?"
     tests, which must stay at their pre-numeric-token behaviour. A subtitle that
@@ -282,32 +356,35 @@ def _subtitle_content_words(text):
     the title ("TechConnect: Podcasting 101 A&B" really is a different class from
     "TechConnect In-Person: Open Lab") and the old rule counted them.
     """
-    return set(w for w in get_significant_words(text)
-               if not (w.isdigit() and len(w) < 3))
+    return set(w for w in get_significant_words(text) if len(w) >= 3)
 
 
-def _drop_shared_numbers(words1, words2):
-    """Remove numeric tokens the two word sets AGREE on, before the ratio tiers.
+def _drop_shared_weak_tokens(words1, words2):
+    """Remove short tokens the two word sets AGREE on, before the ratio tiers.
 
-    Numbers are kept as significant tokens so that a *disagreement* can break a
-    match (see `_significant_tokens`), but an *agreement* on a number is weak
-    evidence of same-eventness: a venue's calendar repeats the same times, dates
-    and age bands across every listing it publishes. Left in the numerator, a
-    shared number pushes unrelated siblings over the Jaccard / containment
-    thresholds — "Sunday June 21 | the Alex Owen Quartet" vs "Sunday June 21 |
+    Numbers and cohort labels are kept as significant tokens so that a
+    *disagreement* can break a match (see `_significant_tokens`), but an
+    *agreement* on one is weak evidence of same-eventness: a venue's calendar
+    repeats the same times, dates, age bands and section letters across every
+    listing it publishes. Left in the numerator, a shared number pushes unrelated
+    siblings over the Jaccard / containment thresholds — "Sunday June 21 | the Alex Owen Quartet" vs "Sunday June 21 |
     DJ Dance" (two acts, one night) and "FRI 8 & 9:30 - Igor Lumpert w/Drew
     Gress, Jeff Miles, Tom Rainey" vs "...w/Drew Gress, Damion Reid" both cross
     0.75 containment on the shared "21" / "8" / "9" alone.
 
-    Dropping shared numbers from both sides makes the whole numeric-token change
-    purely restrictive: every ratio is <= what it was before the change, so no
-    pair that fails to match today starts matching. The subset tier upstream is
-    deliberately left alone — it compares whole sets, so a shared number cannot
-    manufacture a match there, while a one-sided number correctly breaks
-    containment. Measured 2026-08-16: this removes all 19 name-tier merges the
-    exemption would otherwise have created, of which ~6 were wrong.
+    Dropping shared short tokens from both sides makes the whole short-token
+    change purely restrictive: every ratio is <= what it was before the change,
+    so no pair that fails to match today starts matching. The subset tier
+    upstream is deliberately left alone — it compares whole sets, so a shared
+    number cannot manufacture a match there, while a one-sided number correctly
+    breaks containment. Measured 2026-08-16: this removes all 19 name-tier merges
+    the numeric exemption would otherwise have created, of which ~6 were wrong.
+    Extended to cohort labels 2026-08-19, where it removes the only 2 merges the
+    letter exemption would have created — both wrong ("Glass in Context Part II:
+    The Rise of the Artist" and "Part II - From Venice to Industrialization" are
+    two different lectures that a shared "ii" pushes over containment).
     """
-    shared = set(w for w in (words1 & words2) if w.isdigit())
+    shared = set(w for w in (words1 & words2) if w.isdigit() or len(w) < 3)
     if not shared:
         return words1, words2
     return words1 - shared, words2 - shared
@@ -1049,7 +1126,7 @@ def are_names_similar(name1, name2):
             return True
 
         # Jaccard similarity >= 70%
-        ratio1, ratio2 = _drop_shared_numbers(words1, words2)
+        ratio1, ratio2 = _drop_shared_weak_tokens(words1, words2)
         intersection = ratio1 & ratio2
         union = ratio1 | ratio2
         if union and len(intersection) / len(union) >= 0.7:
@@ -1063,9 +1140,10 @@ def are_names_similar(name1, name2):
         if _subset_match(stemmed1, stemmed2, name1, name2, stem=True):
             return True
 
-        # Both ratio tiers below run on the number-agnostic sets; a name that is
-        # nothing but numbers the other side also has carries no evidence at all.
-        stemmed1, stemmed2 = _drop_shared_numbers(stemmed1, stemmed2)
+        # Both ratio tiers below run on the sets stripped of shared short
+        # tokens; a name that is nothing but numbers and cohort labels the other
+        # side also has carries no evidence at all.
+        stemmed1, stemmed2 = _drop_shared_weak_tokens(stemmed1, stemmed2)
         if not (stemmed1 and stemmed2):
             return False
         intersection = stemmed1 & stemmed2

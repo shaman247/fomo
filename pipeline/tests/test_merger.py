@@ -1065,6 +1065,65 @@ class TestShortNumbersDoNotBreakLegitimateMerges(unittest.TestCase):
             "FRI 8 & 9:30 - Igor Lumpert w/Drew Gress, Damion Reid"))
 
 
+class TestCohortLabelsAreSignificant(unittest.TestCase):
+    """A short LETTER after a cohort keyword is a cohort label, not noise.
+
+    Same shape as the short-number carve-out: NYC Parks publishes one row per
+    class letter, so "... Learn to Swim Level 1 (Class C)", "(Class D)" and
+    "(Class E)" reduced to byte-identical token lists and e203371 ended up
+    holding the Class D and Class E permalinks. Measured 2026-08-19 over all
+    32,856 distinct (event, source crawl_event) name pairs: 39 stop matching,
+    0 newly match, and all 39 stops are distinct events.
+    """
+
+    def test_class_letter_reaches_the_comparison(self):
+        self.assertIn("c", get_significant_words(
+            "Session 3: Astoria Pool - Learn to Swim Level 1 (Class C)"))
+        self.assertNotEqual(
+            get_significant_words("Session 3: Astoria Pool - Learn to Swim Level 1 (Class C)"),
+            get_significant_words("Session 3: Astoria Pool - Learn to Swim Level 1 (Class D)"))
+
+    def test_distinct_cohorts_stop_merging(self):
+        self.assertFalse(are_names_similar(
+            "Session 1: Astoria Pool - Children's Learn to Swim Level 1 (Class A)",
+            "Session 1: Astoria Pool - Parent and Tots Learn to Swim (Class B)"))
+        self.assertFalse(are_names_similar("Kerboom Kidz- Grades K-2",
+                                           "Kerboom Kidz- Grades 3-5"))
+        self.assertFalse(are_names_similar("Layer the Walls Part II: Mid-Century",
+                                           "Layer the Walls Part I"))
+
+    def test_only_a_letter_or_roman_numeral_after_a_cohort_keyword_counts(self):
+        """The keyword is the trigger, not the letter — a bare short letter is
+        noise almost everywhere else."""
+        self.assertNotIn("b", get_significant_words("Plan B Karaoke"))
+        self.assertNotIn("of", get_significant_words("Day of the Dead Celebration"))
+        # Connectors directly after a keyword are still connectors.
+        self.assertNotIn("w", get_significant_words(
+            "Solo Jazz & SWING Classes w/Margaret Batiuchok NYC"))
+        self.assertNotIn("x", get_significant_words(
+            "Marvin's First Day x Brooklyn Book Bodega"))
+
+    def test_a_run_of_short_letters_is_mangled_text_not_a_label(self):
+        """Measured regressions of the looser rule: a censored word split at its
+        asterisk, and an ampersand joining two installments."""
+        self.assertTrue(are_names_similar("HMU Academy: Navigating Group S*x",
+                                          "HMU Acamdey: Navigating Group Sex"))
+        self.assertTrue(are_names_similar("Intro to Microsoft Excel Part I & II",
+                                          "Learn Microsoft Excel (2 Parts)"))
+
+    def test_a_shared_cohort_label_cannot_manufacture_a_match(self):
+        """Two different lectures in the same Part II must not fuse on the "ii"
+        (`_drop_shared_weak_tokens`)."""
+        self.assertFalse(are_names_similar(
+            "Lecture Series - Glass in Context Part II: The Rise of the Artist",
+            "Lecture Series - Glass in Context: Part II - From Venice to "
+            "Industrialization and Beyond (February)"))
+
+    def test_fuller_title_with_an_extra_cohort_label_still_merges(self):
+        self.assertTrue(are_names_similar("Improv Level 2 Class",
+                                          "Improv Level 2 Class (Section A)"))
+
+
 class TestNormalizeUrlForIdentity(unittest.TestCase):
 
     def test_scheme_www_slash_and_fragment_are_dropped(self):
