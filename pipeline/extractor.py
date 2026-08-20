@@ -1574,7 +1574,7 @@ Based on the website content below, extract all upcoming events. For each event,
 {note_section}{rid_section}
 Rules:
 - Extract ALL events from the page - do not skip or summarize
-- Do NOT extract things that are not attendable public events. Skip: venue/program closures and holiday-closure notices ("Museum Closed", "Park Closes at 5pm", "Office Closed for Juneteenth"); calls for submissions, applications, or grants ("Open Call for Artists", "Submission Deadline", "Micro Grants Round 3"); casting calls and talent-recruitment notices ("Casting Call", "Models Wanted", "Dancers Needed"); civic date markers ("Election Day", "Primary Day", "Election Day 2026") — an attendable election-night watch party IS an event; venue marketing (space/room rentals, "Private Events", "Available for Booking", dining service like "Signature Breakfast"); season passes and ticketing placeholders ("Summer Pass 2026", "Showtimes"); fundraising campaigns and donation-match drives ("Match Campaign", "Giving Day") — an attendable benefit concert or gala IS an event; submit-your-work contests with an entry deadline ("Library Card Art Contest") — a contest held live in front of an audience (trivia, dance, pie-eating) IS an event; info-booth or vendor-table marketing listings inside a festival program ("Our Info Booths"); childcare offered as an amenity during another activity ("Nursery Care" during worship services, babysitting while parents attend) — a children's program or childcare-related class that is itself the event ("Toddler Storytime", "Babysitting 101 Training", "Preschool Open House") IS an event; and content placeholders or unrelated spam. These are not events — leave them out entirely.
+- Do NOT extract things that are not attendable public events. Skip: venue/program closures and holiday-closure notices ("Museum Closed", "Park Closes at 5pm", "Office Closed for Juneteenth"); calls for submissions, applications, or grants ("Open Call for Artists", "Submission Deadline", "Micro Grants Round 3"); casting calls and talent-recruitment notices ("Casting Call", "Models Wanted", "Dancers Needed"); civic date markers ("Election Day", "Primary Day", "Election Day 2026") — an attendable election-night watch party IS an event; venue marketing (space/room rentals, "Private Events", "Available for Booking", dining service like "Signature Breakfast"); season passes and ticketing placeholders ("Summer Pass 2026", "Showtimes"); fundraising campaigns and donation-match drives ("Match Campaign", "Giving Day") — an attendable benefit concert or gala IS an event; submit-your-work contests with an entry deadline ("Library Card Art Contest") — a contest held live in front of an audience (trivia, dance, pie-eating) IS an event; info-booth or vendor-table marketing listings inside a festival program ("Our Info Booths"); childcare offered as an amenity during another activity ("Nursery Care" during worship services, babysitting while parents attend) — a children's program or childcare-related class that is itself the event ("Toddler Storytime", "Babysitting 101 Training", "Preschool Open House") IS an event; members-only programming restricted to a venue's or club's own members ("Members-Only Tour", "Lunch | MEMBERS ONLY", "Fabrik Member Exclusive") — an event anyone can attend by buying a ticket IS an event; a school's orientations for its own enrolled students and their families ("New Student Orientation", "Parent/Family Orientation") — a volunteer orientation open to anyone who wants to volunteer IS an event; and content placeholders or unrelated spam. These are not events — leave them out entirely.
 - {city_config.extraction_region_rule()}
 - Ignore unrelated event sections ("Hot Events", "Similar events", etc.)
 - ONE LISTING PER URL: two listings with DIFFERENT event URLs are DIFFERENT events — never fuse them into one, no matter how similar their titles are. Titles that differ only by a qualifier or suffix ("Early Access", "Fan Event", "Special Preview", "(Sensory)", "(Open Cap/Eng Sub)", "3D", "25th Anniversary", a screening-format or accessibility tag) are separate ticketed listings: emit EACH as its own event, using that listing's OWN url and ONLY the dates shown under that listing. Never move a date from one listing onto another, and never pair one listing's title with another listing's url. Only listings that share the SAME url may be combined into a single event.
@@ -2014,6 +2014,49 @@ def _normalize_extraction_response(response_text):
         return '{"events": []}', 0, 0
 
 
+# Floor rule thresholds for _fingerprint_copy_is_suspect (see its docstring).
+# A copy of <= FLOOR events is suspect when the site reached >= HEALTHY_LEVEL
+# events in >= HEALTHY_STATES of its recent distinct page states OF COMPARABLE
+# SIZE (within SIZE_TOLERANCE, same ±20% notion _variance_retry_reason uses).
+FINGERPRINT_FLOOR_COUNT = 1
+FINGERPRINT_HEALTHY_LEVEL = 4
+FINGERPRINT_HEALTHY_STATES = 2
+FINGERPRINT_SIZE_TOLERANCE = 0.2
+
+
+def _floor_count_confirmed_by_reextraction(cursor, prior_id):
+    """Has this exact page state already been really extracted more than once?
+
+    Bounds the floor rule in _fingerprint_copy_is_suspect. Counts the crawl
+    results for the same website + content_hash that carry a genuine extraction
+    (the fingerprint copies, which just clone a prior result, are excluded via
+    FINGERPRINT_COPY_MARKER — the same marker db.find_prior_crawl_with_same_content
+    uses to refuse chaining a reuse onto a reuse).
+
+    Returns True (accept the copy, stop re-extracting) only when >= 2 independent
+    extractions of these bytes agree the count is at the floor. If any of them
+    reached FINGERPRINT_HEALTHY_LEVEL, the low prior is provably a fluke on
+    identical content, so the floor is NOT confirmed no matter how many runs agree.
+    """
+    cursor.execute("""
+        SELECT COUNT(*), MAX(cr.event_count)
+        FROM crawl_results cr
+        JOIN crawl_results p ON p.id = %s
+        WHERE cr.website_id = p.website_id
+          AND cr.content_hash = p.content_hash
+          AND cr.status = 'processed'
+          AND cr.event_count IS NOT NULL
+          AND COALESCE(cr.extracted_content, '') NOT LIKE %s
+    """, (prior_id, f'%{constants.FINGERPRINT_COPY_MARKER}%'))
+    row = cursor.fetchone()
+    if not row or row[0] is None:
+        return False
+    real_extractions, best_count = row[0], (row[1] or 0)
+    if best_count >= FINGERPRINT_HEALTHY_LEVEL:
+        return False
+    return real_extractions >= 2
+
+
 def _fingerprint_copy_is_suspect(cursor, prior_id):
     """Guard the content-fingerprint short-circuit against propagating a frozen
     under-extraction.
@@ -2032,26 +2075,59 @@ def _fingerprint_copy_is_suspect(cursor, prior_id):
     collapses all the propagated copies into a single vote, so the freeze can't
     poison the reference no matter how many times it has already been copied.
 
-    Returns True (refuse the cache hit, force a fresh extraction) when the prior
-    count is < half that median, on a site with enough distinct-page history to
-    judge (>= 3 distinct hashes, median >= 4 — tiny/noisy sites are exempt).
+    Two rules fire (either one refuses the cache hit), on a site with enough
+    distinct-page history to judge (>= 3 distinct hashes):
+
+    1. MEDIAN rule: the prior count is < half a median of >= 4. Tiny/noisy sites
+       (median < 4) are exempt — their normal swing is indistinguishable from a
+       freeze and re-extracting them every crawl is pure Gemini spend.
+
+    2. FLOOR rule: the prior count is <= FINGERPRINT_FLOOR_COUNT (a 0/1-event
+       copy) while the site reached FINGERPRINT_HEALTHY_LEVEL in at least
+       FINGERPRINT_HEALTHY_STATES of those recent page states *of comparable
+       size*. Rule 1 alone has a blind spot the median can't see past: when a
+       site under-extracts repeatedly across *different* page states (w1776
+       Bloomingdale School of Music: per-state counts 1,0,7,5,7,0,1,1 on a
+       page that stayed 125-127 KB throughout), the dud states are themselves
+       the majority, the median collapses to 1.0, and the median >= 4 exemption
+       then permanently excuses the very site it should catch — a feedback loop.
+
+    The size scoping is what keeps rule 2 honest, and it is not optional: a page
+    that really went quiet usually SHRANK, and its old high-count states were
+    much bigger pages. Comparing only same-size states asks the right question —
+    "has this site ever produced 4+ events from a page this size?" — instead of
+    "was it ever busy?". Measured over the 39 fingerprint skips of the 2026-08-20
+    run, that single condition is the difference between 6 forced re-extractions
+    and 1 (the real freeze); the other 5 sites' pages had collapsed from 40 KB to
+    4 KB, or 122 KB to 1 KB, and their low counts were honest.
+
+    Rule 2 is additionally bounded so it can't re-extract a genuinely-emptied
+    page on every crawl: it asks how many times this exact content state was
+    REALLY extracted (copies excluded). Two independent extractions that both
+    came back at the floor are a confirmation, not a fluke, and the copy is
+    accepted from then on — so a page that truly went quiet costs one extra
+    extraction, once. Conversely, if some earlier real extraction of these same
+    bytes did reach FINGERPRINT_HEALTHY_LEVEL, the low one is provably a fluke.
+
     Fails open (returns False) on any error so extraction is never broken.
     """
     try:
         cursor.execute(
-            "SELECT website_id, event_count FROM crawl_results WHERE id = %s",
+            "SELECT website_id, event_count, LENGTH(crawled_content) "
+            "FROM crawl_results WHERE id = %s",
             (prior_id,)
         )
         row = cursor.fetchone()
         if not row or row[0] is None or row[1] is None:
             return False
-        website_id, prior_count = row[0], row[1]
+        website_id, prior_count, prior_size = row[0], row[1], row[2]
 
         # One representative (best) count per distinct content_hash, most-recent
-        # pages first. GROUP BY content_hash collapses the freeze's copies so a
-        # long-running freeze still only contributes one low data point.
+        # pages first, with that state's page size (identical within a hash).
+        # GROUP BY content_hash collapses the freeze's copies so a long-running
+        # freeze still only contributes one low data point.
         cursor.execute("""
-            SELECT MAX(event_count) AS cnt
+            SELECT MAX(event_count) AS cnt, MAX(LENGTH(crawled_content)) AS size
             FROM crawl_results
             WHERE website_id = %s AND status = 'processed'
               AND event_count IS NOT NULL AND content_hash IS NOT NULL
@@ -2059,14 +2135,26 @@ def _fingerprint_copy_is_suspect(cursor, prior_id):
             ORDER BY MAX(id) DESC
             LIMIT 8
         """, (website_id,))
-        counts = [r[0] for r in cursor.fetchall()]
+        states = cursor.fetchall()
+        counts = [r[0] for r in states]
         if len(counts) < 3:
             return False
 
         median_count = statistics.median(counts)
-        if median_count < 4:
+        if median_count >= 4 and prior_count < median_count * 0.5:
+            return True
+
+        # Floor rule — the polluted-median case.
+        if prior_count > FINGERPRINT_FLOOR_COUNT or not prior_size:
             return False
-        return prior_count < median_count * 0.5
+        healthy_states = sum(
+            1 for cnt, size in states
+            if cnt >= FINGERPRINT_HEALTHY_LEVEL and size
+            and abs(size - prior_size) <= prior_size * FINGERPRINT_SIZE_TOLERANCE
+        )
+        if healthy_states < FINGERPRINT_HEALTHY_STATES:
+            return False
+        return not _floor_count_confirmed_by_reextraction(cursor, prior_id)
     except Exception as e:
         # The guard must never break extraction — fail open (accept the hit).
         print(f"    - Fingerprint variance check failed ({e}); accepting cache hit")

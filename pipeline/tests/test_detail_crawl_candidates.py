@@ -22,6 +22,7 @@ import os
 import sqlite3
 import sys
 import unittest
+from datetime import datetime, timedelta
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -44,9 +45,21 @@ CREATE TABLE website_urls (id INTEGER PRIMARY KEY, website_id INTEGER, url TEXT)
 
 # The crawl_result was re-crawled at this moment; anything created before it is
 # a leftover from the PREVIOUS extraction of the same row.
-RECRAWL_AT = "2026-08-05 06:30:00"
-STALE_AT = "2026-08-05 06:07:33"   # previous run's crawl_events
-FRESH_AT = "2026-08-05 06:31:10"   # this run's crawl_events
+#
+# These MUST be relative to now, not literals. `get_detail_crawl_candidates`
+# also filters `cr.crawled_at >= DATE_SUB(NOW(), INTERVAL 14 DAY)`, so a
+# hardcoded fixture date silently ages out of the candidate window and every
+# test that expects a row starts failing — while the one test that expects an
+# EMPTY set keeps passing, so the suite looks merely "partly broken" rather
+# than stale. That is exactly what happened: the previous literals were
+# 2026-08-05, which fell out of the window on 2026-08-19 and took 4 tests with
+# it. Anchoring to now keeps the fixture inside the window forever.
+_RECRAWL_DT = datetime.now() - timedelta(days=1)
+_FMT = "%Y-%m-%d %H:%M:%S"
+
+RECRAWL_AT = _RECRAWL_DT.strftime(_FMT)
+STALE_AT = (_RECRAWL_DT - timedelta(minutes=22)).strftime(_FMT)   # previous run's crawl_events
+FRESH_AT = (_RECRAWL_DT + timedelta(minutes=1)).strftime(_FMT)    # this run's crawl_events
 
 
 class TestSupersededCrawlEventsExcluded(unittest.TestCase):

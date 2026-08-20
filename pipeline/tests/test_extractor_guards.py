@@ -38,17 +38,24 @@ from extractor import (
 
 
 class FakeCursor:
-    """Routes the two _variance_retry_reason queries to canned results."""
+    """Routes the guards' queries to canned results.
 
-    def __init__(self, current_row, history_rows):
+    `floor_row` answers the third query only _fingerprint_copy_is_suspect's floor
+    rule issues — (real extractions of this content_hash, best count among them).
+    """
+
+    def __init__(self, current_row, history_rows, floor_row=(1, 0)):
         self.current_row = current_row
         self.history_rows = history_rows
+        self.floor_row = floor_row
         self.executed = []
 
     def execute(self, sql, params=None):
         self.executed.append((sql, params))
 
     def fetchone(self):
+        if self.executed and 'JOIN crawl_results p' in self.executed[-1][0]:
+            return self.floor_row
         return self.current_row
 
     def fetchall(self):
@@ -109,52 +116,112 @@ class TestVarianceRetryReason(unittest.TestCase):
 class TestFingerprintCopyIsSuspect(unittest.TestCase):
     """The fingerprint short-circuit must refuse to copy a frozen
     under-extraction. Reference = median of per-content_hash event counts, so
-    propagated copies (same hash) collapse to one vote and can't poison it."""
+    propagated copies (same hash) collapse to one vote and can't poison it.
+    Rows are (event_count, content size); the prior row is
+    (website_id, event_count, content size)."""
 
     # Blue Note shape: per-hash best counts; freeze = 12, real level ~33.
     # sorted [12,33,33,37,65] → median 33 → suspect threshold 16.5
-    HEALTHY_HASHES = [(12,), (65,), (37,), (33,), (33,)]
+    HEALTHY_HASHES = [(12, 60000), (65, 61000), (37, 60500),
+                      (33, 60200), (33, 59800)]
 
     def test_frozen_low_count_is_suspect(self):
-        cur = FakeCursor((67, 12), self.HEALTHY_HASHES)
+        cur = FakeCursor((67, 12, 60000), self.HEALTHY_HASHES)
         self.assertTrue(_fingerprint_copy_is_suspect(cur, prior_id=93406))
 
     def test_zero_count_is_suspect(self):
         # Topos shape: per-hash counts [0,9,10,5,24] → median 9; prior 0
-        cur = FakeCursor((2656, 0), [(0,), (9,), (10,), (5,), (24,)])
+        cur = FakeCursor((2656, 0, 40000),
+                         [(0, 40000), (9, 41000), (10, 40500), (5, 39000),
+                          (24, 42000)])
         self.assertTrue(_fingerprint_copy_is_suspect(cur, prior_id=94136))
 
     def test_normal_count_not_suspect(self):
         # A normal 30-event crawl vs median 33 is not a freeze
-        cur = FakeCursor((67, 30), self.HEALTHY_HASHES)
+        cur = FakeCursor((67, 30, 60000), self.HEALTHY_HASHES)
         self.assertFalse(_fingerprint_copy_is_suspect(cur, prior_id=85455))
 
     def test_exact_half_median_not_suspect(self):
         # median 20, prior 10 == half → strict < means NOT suspect
-        cur = FakeCursor((67, 10), [(10,), (20,), (20,), (25,), (18,)])
+        cur = FakeCursor((67, 10, 60000),
+                         [(10, 60000), (20, 60000), (20, 60000), (25, 60000),
+                          (18, 60000)])
         self.assertFalse(_fingerprint_copy_is_suspect(cur, prior_id=1))
 
     def test_freeze_propagation_does_not_poison_reference(self):
         # The live table may be full of copied 12s, but dedup-by-hash keeps the
         # reference distribution intact, so the guard still fires.
-        cur = FakeCursor((67, 12), self.HEALTHY_HASHES)
+        cur = FakeCursor((67, 12, 60000), self.HEALTHY_HASHES)
         self.assertTrue(_fingerprint_copy_is_suspect(cur, prior_id=95857))
 
     def test_too_few_distinct_hashes_not_suspect(self):
-        cur = FakeCursor((67, 1), [(40,), (38,)])  # only 2 distinct page states
+        # only 2 distinct page states
+        cur = FakeCursor((67, 1, 60000), [(40, 60000), (38, 60000)])
         self.assertFalse(_fingerprint_copy_is_suspect(cur, prior_id=1))
 
     def test_tiny_site_not_suspect(self):
-        # median 3 < 4 → too noisy to judge
-        cur = FakeCursor((9, 0), [(3,), (3,), (2,), (4,)])
+        # median 3 < 4, and no same-size state ever reached 4 twice
+        cur = FakeCursor((9, 0, 8000),
+                         [(3, 8000), (3, 8100), (2, 7900), (4, 8050)])
         self.assertFalse(_fingerprint_copy_is_suspect(cur, prior_id=1))
+
+    # --- floor rule: the polluted-median feedback loop (w1776) ---
+
+    # Bloomingdale School of Music, 2026-08-20: per-state counts 1,0,7,5,7,0,1,1
+    # on a page that stayed 125-127 KB. sorted → median 1.0, so the median rule's
+    # ">= 4" exemption excused the very freeze it should have caught, and the
+    # frozen 1 was copied forward indefinitely.
+    POLLUTED_MEDIAN = [(1, 126388), (0, 125861), (7, 125691), (5, 126105),
+                       (7, 125935), (0, 126002), (1, 126076), (1, 125730)]
+
+    def test_polluted_median_floor_copy_is_suspect(self):
+        cur = FakeCursor((1776, 1, 126388), self.POLLUTED_MEDIAN)
+        self.assertTrue(_fingerprint_copy_is_suspect(cur, prior_id=114318))
+
+    def test_polluted_median_zero_copy_is_suspect(self):
+        cur = FakeCursor((1776, 0, 126388), self.POLLUTED_MEDIAN)
+        self.assertTrue(_fingerprint_copy_is_suspect(cur, prior_id=114318))
+
+    def test_floor_rule_ignores_counts_above_the_floor(self):
+        # 2 events is not the floor: with a median of 1.0 there is no evidence
+        # this is a freeze rather than a quiet week.
+        cur = FakeCursor((1776, 2, 126388), self.POLLUTED_MEDIAN)
+        self.assertFalse(_fingerprint_copy_is_suspect(cur, prior_id=1))
+
+    def test_collapsed_page_size_not_suspect(self):
+        # BWAC w2074: the page shrank 42 KB → 3.5 KB when the gallery emptied.
+        # The old 22-event states are not evidence about a 3.5 KB page.
+        cur = FakeCursor((2074, 0, 3547),
+                         [(0, 3547), (1, 4084), (2, 4551), (2, 4552),
+                          (2, 4577), (2, 4516), (22, 42221), (22, 41316)])
+        self.assertFalse(_fingerprint_copy_is_suspect(cur, prior_id=114312))
+
+    def test_single_healthy_same_size_state_not_suspect(self):
+        # One 4-event state is a fluke, not a level — needs HEALTHY_STATES of them.
+        cur = FakeCursor((99, 0, 60000),
+                         [(0, 60000), (1, 60000), (1, 60000), (4, 60000)])
+        self.assertFalse(_fingerprint_copy_is_suspect(cur, prior_id=1))
+
+    def test_floor_confirmed_by_second_extraction_accepts_copy(self):
+        # Already re-extracted once and it came back at the floor again — that is
+        # a confirmation, so stop paying for a fresh extraction every crawl.
+        cur = FakeCursor((1776, 1, 126388), self.POLLUTED_MEDIAN,
+                         floor_row=(2, 1))
+        self.assertFalse(_fingerprint_copy_is_suspect(cur, prior_id=114318))
+
+    def test_same_bytes_once_extracted_healthy_stays_suspect(self):
+        # These exact bytes previously yielded 7 events, so no number of
+        # agreeing low re-extractions makes the floor credible.
+        cur = FakeCursor((1776, 1, 126388), self.POLLUTED_MEDIAN,
+                         floor_row=(3, 7))
+        self.assertTrue(_fingerprint_copy_is_suspect(cur, prior_id=114318))
 
     def test_missing_prior_row_not_suspect(self):
         cur = FakeCursor(None, self.HEALTHY_HASHES)
         self.assertFalse(_fingerprint_copy_is_suspect(cur, prior_id=1))
 
     def test_null_event_count_fails_open(self):
-        cur = FakeCursor((67, None), self.HEALTHY_HASHES)
+        cur = FakeCursor((67, None, 60000), self.HEALTHY_HASHES)
         self.assertFalse(_fingerprint_copy_is_suspect(cur, prior_id=1))
 
     def test_cursor_error_fails_open(self):
