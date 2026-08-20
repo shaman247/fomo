@@ -361,13 +361,13 @@ const DataManager = (() => {
 
         const locationKey = `${lat},${lng}`;
 
-        // On Windows, replace country flag emojis with location emoji
+        // On Windows, replace country flag emojis with the venue's emoji,
+        // falling back to the globe (via resolveDisplayEmoji) so a flag never
+        // reaches the DOM as letter boxes even when the venue lookup misses.
         let emoji = restOfEvent.emoji;
         if (isWindows && Utils.isCountryFlagEmoji(emoji)) {
             const location = state.locationsByLatLng[locationKey];
-            if (location?.emoji) {
-                emoji = location.emoji;
-            }
+            emoji = Utils.resolveDisplayEmoji(emoji, location?.emoji);
         }
 
         // On Windows, country-flag emoji inside the title render as letter-box
@@ -423,6 +423,11 @@ const DataManager = (() => {
      */
     async function processFullDataAsync(fullEventData, fullLocationData, state, config, onProgress) {
         addRawLocations(fullLocationData, state);
+        // Rebuild the location index BEFORE transforming Phase-2 events:
+        // transformRawEvent's Windows flag-emoji fallback looks up the event's
+        // venue in locationsByLatLng, and without this rebuild the index still
+        // holds only Phase-1 venues (empty in the background-refresh path).
+        buildLocationsIndex(state);
         await appendEventDataChunked(fullEventData, state, config, onProgress);
         // One re-key pass after the full merge so cross-chunk venue collisions
         // (a venue whose siblings only appear in a later chunk) are caught.

@@ -325,7 +325,7 @@ const Utils = (() => {
      */
     function resolveDisplayEmoji(emoji, altEmoji) {
         if (!emoji || !isWindows() || !isCountryFlagEmoji(emoji)) return emoji;
-        return altEmoji || '🌐';
+        return altEmoji || '🌎';
     }
 
     // Matches a single country-flag code unit: a Unicode regional-indicator
