@@ -16,6 +16,31 @@ When the export *still* shows an address-style sublocation, it means one of:
 
 This command finds candidates and fixes only the first category.
 
+## STOP — check for a scheduled move before applying any Category 1 fix
+
+**A venue that is MOVING is not a Category 1 fix, even though it looks exactly like one.** Before
+changing any address, grep `.claude/scheduled-tasks.md` for the venue name:
+
+```bash
+grep -in "<venue name>" .claude/scheduled-tasks.md .claude/completed-tasks.md
+```
+
+If a task governs the move, **follow that task's date and do nothing here** — leave the row alone and
+mention it in your report as "deferred to scheduled task". A `locations` row holds ONE address, so
+moving it early mispins every event still happening at the OLD site, and those are the imminent,
+visible ones. "More events fall after the move than before" is NOT a sufficient reason to move early:
+the pre-move events are days away and on the map right now, while the post-move ones are months out.
+
+**Known repeat offender: Brooklyn Brewery (loc 2349).** It moves from 79 N 11th St to 1 Wythe Ave
+after a farewell party on 2026-08-29. This pass applied the move early on **2026-08-17** and again on
+**2026-08-19**; both were reverted the same day. The tell that it is premature: the venue's own row has
+an event *titled* "Farewell Party: One Last Night at 79 N 11th". Do not move it before its task's
+`Due` date.
+
+Corollary: **a Google geocode that still returns the OLD address is evidence the move has not
+happened yet**, not evidence that our DB is stale. Treat a name-first geocode disagreeing with your
+web-search reading as a reason to stop, not to proceed.
+
 ## Step 1: Find candidates
 
 Run the scan from a Python script — the matcher logic lives in `pipeline/processor.py`:

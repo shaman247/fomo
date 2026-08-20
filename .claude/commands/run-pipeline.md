@@ -9,13 +9,26 @@ Run the full event processing pipeline, investigate any issues, apply fixes, and
 
 ## Coverage Area
 
-Our coverage area is the **NYC metro region**, which includes:
+**`config/nyc.yaml` (the `coverage:` block) is the authority — not this page, and not your sense of what "the NYC metro area" means.** It defines coverage in postal geography (ZIP3 per state, plus ZIP5 carve-outs for ZIP3s that straddle a county line) and is read by code via `city_config.coverage()`. When you are deciding whether a venue is in or out, **test its ZIP against that block**, don't reason from the county or region name:
+
+```bash
+./venv/bin/python -c "
+import sys; sys.path.insert(0,'pipeline'); sys.path.insert(0,'scripts')
+from find_out_of_area_events import CoverageArea
+print(CoverageArea().classify_address('123 Main St, Edison, NJ 08817'))"
+```
+
+Region names are a poor proxy — "Northern New Jersey" reads as excluding Middlesex/Somerset, but ZIP3 088/089 are explicitly IN. Two suppression mistakes of exactly this shape have happened (Edison + South Brunswick NJ, 2026-08-19; see also the `out_of_area_scan_blind_to_mapped` lesson: test ZIPs, not names).
+
+Non-authoritative human summary of what `coverage:` currently admits, to orient you before you check:
 - **New York City** (all five boroughs)
-- **Long Island** (Nassau and Suffolk counties, including the Hamptons)
-- **Westchester County** and **Rockland County**
-- **Hudson Valley** (Dutchess, Orange, Ulster, and Putnam counties)
-- **Northern New Jersey** (Bergen, Hudson, Essex, Passaic, Union, Middlesex, Monmouth, Ocean counties and nearby)
-- **Southern Connecticut** (Fairfield County and nearby)
+- **Long Island** (Nassau and Suffolk, including the Hamptons)
+- **Westchester** and **Rockland**
+- **Hudson Valley** (Dutchess, Orange, Ulster, Putnam) plus **Sullivan** (Bethel Woods) and the kept Greene/Columbia strip near the Ulster/Dutchess line
+- **Northern *and Central* New Jersey** — Bergen, Hudson, Essex, Passaic, Union, **Middlesex**, **Somerset**, **Hunterdon**, Monmouth, Ocean, and **Morris** (via the NJ 078/079 ZIP5 whitelists)
+- **Southern Connecticut** (Fairfield County)
+
+Anything not admitted by the `coverage:` block is out. If the summary above and the config ever disagree, the config wins and this summary is the bug — fix it here rather than editing `coverage:` to match.
 
 Events from touring companies performing at venues **outside** this area (e.g., in Europe, the Midwest, the Deep South) should be archived. Events at venues **within** this area should be kept and mapped to locations.
 

@@ -412,11 +412,19 @@ geotags:
 # inside them. Read via city_config.coverage(); consumed by
 # scripts/find_out_of_area_events.py (mapped-location tier).
 #
-# The coverage area (fomo.nyc): New York City (5 boroughs); Long Island (Nassau,
-# Suffolk incl. the Hamptons); Westchester and Rockland; the Hudson Valley
-# (Dutchess, Orange, Ulster, Putnam); Northern New Jersey (Bergen, Hudson,
-# Essex, Passaic, Union, Middlesex, Monmouth, Ocean); Southern Connecticut
-# (Fairfield County).
+# The coverage area (fomo.nyc), as a human summary of the ZIP3/ZIP5 lists below
+# — the LISTS are authoritative; if this prose and they ever disagree, the prose
+# is the bug. New York City (5 boroughs); Long Island (Nassau, Suffolk incl. the
+# Hamptons); Westchester and Rockland; the Hudson Valley (Dutchess, Orange,
+# Ulster, Putnam) plus Sullivan and the kept Greene/Columbia strip; Northern AND
+# CENTRAL New Jersey (Bergen, Hudson, Essex, Passaic, Union, Middlesex,
+# Somerset, Hunterdon, Morris, Monmouth, Ocean); Southern Connecticut (Fairfield
+# County).
+#
+# Do NOT judge coverage by region name. "Northern New Jersey" reads as excluding
+# Middlesex/Somerset, but ZIP3 088/089 are explicitly IN — that misreading has
+# caused wrongful suppressions (Edison + South Brunswick, 2026-08-19). Test the
+# ZIP: scripts/find_out_of_area_events.py CoverageArea().classify_address(addr).
 #
 # To amend coverage, edit ONLY this block — add/remove a zip3, or add a zip5
 # carve-out for a ZIP3 that straddles a county line.

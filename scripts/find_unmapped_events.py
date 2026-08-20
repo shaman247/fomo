@@ -55,6 +55,9 @@ SKIP_LOCATION_NAMES = {
     'remote', 'google meet', 'google hangouts', 'microsoft teams', 'your phone',
     'online streaming', 'online through zoom', 'online live', 'online streaming, new york',
     'various locations', 'various sites', 'multiple locations', 'virtual/online events',
+    # contentless labels emitted verbatim by a source instead of a venue
+    'unknown', 'no location provided.',
+    'outdoors - open spaces, parks & streets', 'outdoors - open spaces, parks& streets',
     'various nyc venues', 'the pier',
     'secret brooklyn location', 'tba - open air', 'details tba.', 'please see the flyer',
     # theater chain brand names (events correctly mapped to specific theaters)
@@ -74,8 +77,11 @@ SKIP_LOCATION_NAMES = {
     # generic sublocation labels (room/area within mapped venue)
     'the rooftop', 'full venue', 'poolside', 'main hall', 'main room',
     'play area', 'playground', 'multi-use room', 'parking lot',
+    'tennis courts', 'basketball courts', 'turf field', 'athletic field',
     'main pool', 'our tent',
     'concert hall', 'screen 1', 'community board office - conference room',
+    # aggregated nav labels a site emits instead of a venue
+    'online talks webinars performances',
     # vague geo labels
     'brooklyn, new york', 'midtown, new york', 'manhattan (exact location unspecified)',
     'multiple venues', 'kids', 'offsite', 'no location', 'varies - see monthly newsletter',

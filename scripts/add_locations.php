@@ -100,6 +100,8 @@ Example location entry:
       'emoji' => '🎷',
       'alt_emoji' => '🎵',                // Optional, but REQUIRED if 'emoji' is a country flag
                                           //   (flags don't render on Windows — see schema.sql)
+      'generic_location' => 1,            // Optional, default 0. 1 = a neighborhood /
+                                          //   borough / park fallback pin, not a venue.
       'tags' => ['Jazz', 'Live Music', 'Manhattan', 'Greenwich Village'],  // Optional
       'alternate_names' => [              // Optional: extra names the matcher resolves to this location
           'Blue Note Jazz Club',                          // global alternate (website_id = NULL)
@@ -185,11 +187,18 @@ function normalize_loc_name($s) {
 // Detect whether a location entry duplicates an existing one. Matches on, in order:
 //   1. normalized name vs every existing location name,
 //   2. normalized name (or any of the entry's alternate names) vs every existing
-//      alternate name AND existing location name,
+//      GLOBAL (website_id IS NULL) alternate name AND existing location name,
 //   3. identical street address.
 // Returns ['id' => int, 'reason' => string] or null. Exact-name-only matching used
 // to miss real dupes (a new "QED Astoria" sailed past the existing "Q.E.D." at the
 // same address that even carried "QED Astoria" as an alternate name).
+//
+// Website-SCOPED alternate names (website_id IS NOT NULL) are deliberately ignored
+// here. A scoped alternate only claims that name for one website's extractions —
+// it says nothing about the name globally — so it must not block creating a new,
+// globally-named location. This blocked the "Far Rockaway" and "Broad Channel"
+// neighborhood generics (2026-08-19): both names were scoped alternates of website
+// 172's library branches, and 5 events fell back to the generic Queens location.
 function check_exists_pdo($pdo, $loc) {
     // Backward-compat: allow being called with a bare name string.
     if (!is_array($loc)) {
@@ -210,8 +219,9 @@ function check_exists_pdo($pdo, $loc) {
         }
     }
 
-    // 2b. Against existing alternate names.
-    foreach ($pdo->query("SELECT location_id, alternate_name FROM location_alternate_names")->fetchAll(PDO::FETCH_ASSOC) as $r) {
+    // 2b. Against existing GLOBAL alternate names only — see the note above on
+    //     why website-scoped alternates don't count as duplicates.
+    foreach ($pdo->query("SELECT location_id, alternate_name FROM location_alternate_names WHERE website_id IS NULL")->fetchAll(PDO::FETCH_ASSOC) as $r) {
         if (in_array(normalize_loc_name($r['alternate_name']), $norm_candidates, true)) {
             return ['id' => $r['location_id'], 'reason' => "name matches alternate \"{$r['alternate_name']}\" of location {$r['location_id']}"];
         }
@@ -230,8 +240,8 @@ function check_exists_pdo($pdo, $loc) {
 }
 
 function insert_location_pdo($pdo, $loc) {
-    $sql = "INSERT INTO locations (name, short_name, very_short_name, description, address, lat, lng, emoji, alt_emoji)
-            VALUES (:name, :short_name, :very_short_name, :description, :address, :lat, :lng, :emoji, :alt_emoji)";
+    $sql = "INSERT INTO locations (name, short_name, very_short_name, description, address, lat, lng, emoji, alt_emoji, generic_location)
+            VALUES (:name, :short_name, :very_short_name, :description, :address, :lat, :lng, :emoji, :alt_emoji, :generic_location)";
     $stmt = $pdo->prepare($sql);
     $stmt->execute([
         ':name' => $loc['name'],
@@ -243,6 +253,11 @@ function insert_location_pdo($pdo, $loc) {
         ':lng' => $loc['lng'],
         ':emoji' => $loc['emoji'],
         ':alt_emoji' => $loc['alt_emoji'] ?? null,
+        // NOT NULL DEFAULT 0 in the schema: omitting the key keeps a location
+        // specific, so existing callers are unaffected. Set 1 for a
+        // neighborhood / borough / park row that is a fallback pin rather than
+        // a venue — previously this needed a manual follow-up UPDATE.
+        ':generic_location' => empty($loc['generic_location']) ? 0 : 1,
     ]);
     return $pdo->lastInsertId();
 }
@@ -353,6 +368,9 @@ foreach ($new_locations as $loc) {
         echo "  [DRY RUN] Would add: {$loc['name']} {$loc['emoji']}\n";
         echo "            Address: " . ($loc['address'] ?? 'N/A') . "\n";
         echo "            Coords: {$loc['lat']}, {$loc['lng']}\n";
+        if (!empty($loc['generic_location'])) {
+            echo "            Generic location: yes\n";
+        }
         if (!empty($tags)) {
             echo "            Tags: " . implode(', ', $tags) . "\n";
         }
@@ -370,7 +388,8 @@ foreach ($new_locations as $loc) {
         try {
             $new_id = insert_location_pdo($pdo, $loc);
 
-            echo "  ADD: {$loc['name']} {$loc['emoji']} (ID: $new_id)\n";
+            echo "  ADD: {$loc['name']} {$loc['emoji']} (ID: $new_id)"
+                 . (empty($loc['generic_location']) ? '' : ' [generic location]') . "\n";
 
             // Add tags
             if (!empty($tags)) {

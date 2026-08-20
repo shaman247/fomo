@@ -79,13 +79,25 @@ Common generics: Manhattan (2211), Brooklyn (2208), Queens (2209), Bronx (2212),
 
 ### Category D: Out-of-area event — suppress
 
-If the event is genuinely outside the coverage area (NYC metro, Long Island, Westchester, Hudson Valley, Northern NJ, Southern CT), suppress it:
+**The coverage area is defined by `config/nyc.yaml` (`coverage:` block), not by region names.** It is postal: ZIP3 per state, with ZIP5 carve-outs for ZIP3s that straddle a county line. Before suppressing anything for geography, **test the venue's ZIP** rather than judging by county or region:
+
+```bash
+./venv/bin/python -c "
+import sys; sys.path.insert(0,'pipeline'); sys.path.insert(0,'scripts')
+from find_out_of_area_events import CoverageArea
+print(CoverageArea().classify_address('123 Main St, Edison, NJ 08817'))"
+# ('in', 'ZIP NJ 08817')
+```
+
+Only if it comes back `out` (or you cannot find a ZIP and the venue is plainly elsewhere — Houston, Miami, Albany) suppress it:
 
 ```sql
 UPDATE events SET suppressed = 1, reviewed = 1 WHERE id = {event_id};
 ```
 
-Examples: Cinema Tropical events at Houston's MFAH, PEN America events in Miami, Albany career fairs. Note that NJ (including Raritan, Paterson), Long Island, Hudson Valley, and Westchester ARE in scope.
+Examples of genuine out-of-area: Cinema Tropical events at Houston's MFAH, PEN America events in Miami, Albany career fairs.
+
+Do NOT suppress on a region-name hunch. All of Long Island, Westchester, Rockland, the Hudson Valley (incl. Sullivan/Bethel Woods), Fairfield County CT, and **New Jersey well past "Northern NJ"** are in scope — Middlesex (Edison, New Brunswick, South Brunswick), Somerset, Hunterdon and Morris are all admitted by `coverage:`. Two suppression mistakes of exactly this shape have already happened; the region name is not the test, the ZIP is (see the `out_of_area_scan_blind_to_mapped` lesson).
 
 ### Category E: Not an event — suppress
 
