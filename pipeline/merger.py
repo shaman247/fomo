@@ -477,12 +477,45 @@ URL_IDENTITY_MAX_DISTINCT_NAMES = 2
 URL_IDENTITY_MAX_KM = 2.0
 
 
+# A trailing per-OCCURRENCE date segment on an event permalink
+# (`/event/guided-brewery-tour-and-sake-tasting/2026-11-01/`). Tribe and several
+# other calendars mint one of these per date of the SAME event, which split a
+# recurring series into one event row per URL variant.
+_URL_TRAILING_DATE_RE = re.compile(
+    r'^(?P<head>.+/(?P<slug>[^/]*[a-z][^/]*))/'
+    r'\d{4}-\d{2}-\d{2}(?:[t_-]\d{2}[:-]?\d{2})?$'
+)
+# ...but only when what precedes the date is an event SLUG. A per-day listing
+# index (`/events/2026-08-23/`, `/calendar/2026-08-23/`) has the same shape and
+# would collapse to a site-level key shared by every event on the site. The
+# name-diversity guard downstream (`URL_IDENTITY_MAX_DISTINCT_NAMES`) would
+# reject such a key anyway, but folding it here first is cheaper and keeps the
+# key honest for the other callers of this function.
+_URL_LISTING_SEGMENTS = frozenset({
+    'e', 'ev', 'event', 'events', 'calendar', 'calendars', 'cal', 'schedule',
+    'schedules', 'program', 'programs', 'programme', 'programmes', 'whats-on',
+    'agenda', 'day', 'date', 'dates', 'listing', 'listings', 'search', 'p',
+})
+
+
 def normalize_url_for_identity(url):
     """Canonicalize a URL for identity comparison.
 
     Drops the fragment and tracking-only query params, the scheme, a leading
     `www.`, and the trailing slash; sorts the surviving query params so
     parameter order can't split one event in two. Returns '' for a falsy URL.
+
+    A trailing `/YYYY-MM-DD/` segment is dropped as well: it addresses one
+    OCCURRENCE of an event, not a different event, and keeping it split
+    recurring series in two. Industry City's "Guided Brewery Tour and Sake
+    Tasting" ran as two live rows — one holding the August dates, one the
+    September/November ones — purely because the URL variants never met, and
+    the differing location (Brooklyn Kura vs the campus row) then blocked every
+    other tier. Measured over all 281,235 `event_urls` rows on 2026-08-23: 9,163
+    keys change, forming 7,316 newly-shared pairs of which only **5 have both
+    sides live**, and all 5 are genuine duplicates (two Industry City, plus
+    Riverside Park, Downtown Brooklyn Partnership and Prospect Park). The rest
+    are archived rows that were already the same event.
 
     Host aliases that address the SAME page are folded to one spelling
     (`_HOST_ALIASES`) — `lu.ma` 301s to `luma.com`, but the two strings made 3
@@ -506,7 +539,14 @@ def normalize_url_for_identity(url):
             if p and not _URL_TRACKING_PARAM_RE.match(p.split('=')[0])
         )
         cleaned = base + ('?' + '&'.join(kept) if kept else '')
-    return cleaned.rstrip('/').lower()
+    cleaned = cleaned.rstrip('/').lower()
+    # Only on a bare path — a query string means the date may be doing real
+    # routing work, and stripping it could fold two genuinely different pages.
+    if '?' not in cleaned:
+        m = _URL_TRAILING_DATE_RE.match(cleaned)
+        if m and m.group('slug') not in _URL_LISTING_SEGMENTS:
+            cleaned = m.group('head')
+    return cleaned
 
 
 def _locations_within(loc_a, loc_b, coords, max_km=URL_IDENTITY_MAX_KM):

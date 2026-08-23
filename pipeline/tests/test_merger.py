@@ -1153,6 +1153,57 @@ class TestNormalizeUrlForIdentity(unittest.TestCase):
         self.assertEqual(merger.normalize_url_for_identity(None), "")
         self.assertEqual(merger.normalize_url_for_identity(""), "")
 
+    def test_trailing_occurrence_date_is_dropped(self):
+        """Tribe mints one permalink per DATE of the same event.
+
+        Industry City's "Guided Brewery Tour and Sake Tasting" ran as two live
+        rows — one holding the August dates, one the September/November ones —
+        purely because these variants never met on a key.
+        """
+        base = "industrycity.com/event/guided-brewery-tour-and-sake-tasting"
+        for url in (
+            "https://industrycity.com/event/guided-brewery-tour-and-sake-tasting/2026-08-23/",
+            "https://industrycity.com/event/guided-brewery-tour-and-sake-tasting/2026-11-01/",
+            "https://industrycity.com/event/guided-brewery-tour-and-sake-tasting/",
+        ):
+            self.assertEqual(merger.normalize_url_for_identity(url), base, url)
+
+    def test_trailing_datetime_variant_is_dropped(self):
+        self.assertEqual(
+            merger.normalize_url_for_identity("https://x.com/e/summer-fest/2026-08-23T19:00/"),
+            "x.com/e/summer-fest")
+
+    def test_per_day_listing_index_is_left_intact(self):
+        """`/events/2026-08-23/` is a per-day INDEX, not one event's permalink.
+
+        Collapsing it would hand every event on the site a single shared key.
+        The listing-segment guard is what separates it from an event slug.
+        """
+        for url, expected in (
+            ("https://x.com/events/2026-08-23/", "x.com/events/2026-08-23"),
+            ("https://x.com/calendar/2026-08-23/", "x.com/calendar/2026-08-23"),
+            ("https://x.com/e/2026-08-23", "x.com/e/2026-08-23"),
+        ):
+            self.assertEqual(merger.normalize_url_for_identity(url), expected, url)
+
+    def test_date_in_a_query_string_is_not_stripped(self):
+        """A query-string date may be doing real routing work."""
+        self.assertEqual(
+            merger.normalize_url_for_identity("https://x.com/e/show?date=2026-08-23"),
+            "x.com/e/show?date=2026-08-23")
+
+    def test_mid_path_date_is_not_stripped(self):
+        """Only a TRAILING date segment is per-occurrence; a WordPress-style
+        mid-path date is part of the permalink itself."""
+        self.assertEqual(
+            merger.normalize_url_for_identity("https://x.com/blog/2026/08/23/post"),
+            "x.com/blog/2026/08/23/post")
+
+    def test_distinct_slugs_still_differ(self):
+        self.assertNotEqual(
+            merger.normalize_url_for_identity("https://x.com/event/jazz-night/2026-08-23/"),
+            merger.normalize_url_for_identity("https://x.com/event/blues-night/2026-08-23/"))
+
     def test_luma_short_host_folds_into_the_canonical_one(self):
         """`lu.ma/<slug>` 301s to `luma.com/<slug>` — one page, two strings.
 
