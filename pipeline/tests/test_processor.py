@@ -20,6 +20,7 @@ from processor import (
     _is_initialism_of,
     _extract_street_address,
     _extract_street_address_loose,
+    _flatten_house_number,
     sublocation_redundant_with_address,
     _parse_city_state,
     _region_conflict,
@@ -1348,6 +1349,46 @@ class TestBareStreetNames(unittest.TestCase):
             "Shoelace Park, East 233rd St. &, Bronx Riv Pkwy, Bronx, NY 10467, USA"))
         self.assertFalse(sublocation_redundant_with_address(
             "9th St.", "200 4th Ave, Brooklyn, NY 11217, USA"))
+
+
+class TestQueensHyphenatedHouseNumbers(unittest.TestCase):
+    """Queens/Bronx block-lot addresses ("180-04 State Rd") lose their zero pad
+    freely in source text. Before 2026-08-23 the key was built by deleting the
+    hyphen, so "180-04" -> 18004 but "180-4" -> 1804 and the redundancy check
+    reported a false mismatch on loc 10077 (Roxbury 9/11 Memorial)."""
+
+    def test_missing_zero_pad_normalizes_to_the_padded_form(self):
+        self.assertEqual(_flatten_house_number('180-4'), '18004')
+        self.assertEqual(_flatten_house_number('180-04'), '18004')
+
+    def test_unpadded_and_padded_addresses_share_a_key(self):
+        for unpadded, padded in (
+            ('180-4 State Road', '180-04 State Rd'),
+            ('1-2 Astoria Boulevard', '1-02 Astoria Blvd'),
+        ):
+            self.assertEqual(
+                _extract_street_address_loose(unpadded),
+                _extract_street_address_loose(padded),
+                unpadded)
+
+    def test_roxbury_sublocation_is_redundant_with_its_address(self):
+        # The exact 2026-08-23 finding.
+        self.assertTrue(sublocation_redundant_with_address(
+            '180-4 State Road', '180-04 State Rd, Queens, NY 11412, USA'))
+
+    def test_two_digit_lots_keep_their_existing_key(self):
+        # Already-conventional forms must not shift, or every stored key moves.
+        for num, expected in (
+            ('45-50', '4550'),
+            ('31-10', '3110'),
+            ('5-11', '511'),
+            ('180-04', '18004'),
+        ):
+            self.assertEqual(_flatten_house_number(num), expected, num)
+
+    def test_plain_house_numbers_are_untouched(self):
+        for num in ('150', '1', '9', '1600'):
+            self.assertEqual(_flatten_house_number(num), num)
 
 
 class TestStreetBlockAndRangeForms(unittest.TestCase):

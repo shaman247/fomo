@@ -895,10 +895,63 @@ _EMPTY_DESCRIPTION_RE = re.compile(
     r'^\s*(?:no\s+description(?:\s+available)?\.?|n/?a|none|-+)?\s*$',
     re.IGNORECASE)
 
+# Room-setup instructions in place of a description. A library/community-center
+# booking system exports the room's furniture layout into the description field
+# ("Theatre Style, 40 chairs."), which is contentless in exactly the way an
+# empty string is — it describes the room, never the programming.
+#
+# Treated as BLANK rather than as junk on its own, deliberately. "Senior Movie"
+# (e214155) carries this same description and is a real library screening with a
+# useless body; dropping on the description alone would take it. Feeding the
+# existing blank-description machinery instead means the name still has to carry
+# a junk signal — which is what separates e230446 "Girl Scouts of America" (an
+# org name booking a room -> dropped by `_is_org_room_booking`) from it.
+#
+# Corpus-checked over all 199,302 events: 2 descriptions match, both the
+# "Theatre Style, 40 chairs." shape, 0 false positives.
+_ROOM_SETUP_FRAGMENT_RE = re.compile(
+    r'^\W*(?:'
+    r'(?:theat(?:re|er)|classroom|boardroom|conference|banquet|lecture|'
+    r'u[\s-]?shape[d]?|hollow\s+square|round\s*table|open\s+space)\s*'
+    r'(?:style|setup|set[\s-]?up|seating)?'
+    r'|\d+\s*(?:chairs?|tables?|seats?|rounds?)'
+    r'|no\s+(?:setup|chairs?|tables?)'
+    r'|(?:setup|set[\s-]?up|seating)\s*[:\-]?'
+    r')(?:[\s,;/&+.]+|$)', re.IGNORECASE)
+
+# Cap on how much text the setup rule will consider. A real description that
+# merely opens with seating info ("Theatre style seating. Tonight the quartet
+# plays...") must never be read as blank, and length is the cheap guard.
+_ROOM_SETUP_MAX_CHARS = 120
+
+
+def _is_room_setup_only(description):
+    """True when a description is nothing but room/furniture setup instructions."""
+    if not description:
+        return False
+    remaining = description.strip()
+    if len(remaining) > _ROOM_SETUP_MAX_CHARS:
+        return False
+    matched = False
+    for _ in range(8):
+        m = _ROOM_SETUP_FRAGMENT_RE.match(remaining)
+        if not m:
+            break
+        matched = True
+        remaining = remaining[m.end():]
+    if not matched:
+        return False
+    # Any leftover letter or digit in ANY script is real content. `isalnum`
+    # rather than `[A-Za-z]` because the corpus carries CJK, Bengali and
+    # Cyrillic descriptions that a Latin-only test would call empty.
+    return not any(ch.isalnum() for ch in remaining)
+
 
 def _description_is_blank(description):
     """True when the description carries no information at all."""
-    return bool(_EMPTY_DESCRIPTION_RE.match(description or ''))
+    if _EMPTY_DESCRIPTION_RE.match(description or ''):
+        return True
+    return _is_room_setup_only(description)
 
 
 def _description_adds_nothing(name, description):
@@ -2161,7 +2214,17 @@ _ORG_BOOKING_NAME_RE = re.compile(
     r'american\s+legion(?:\s+post\s*\d*)?|vfw(?:\s+post\s*\d*)?|'
     r'chamber\s+of\s+commerce|'
     r'(?:girl|boy|cub)\s+scouts?(?:\s+troop\s*\d*)?'
-    r')\s*(?:meeting)?\s*[.!]?\s*$',
+    r')'
+    # Optional "of <Affiliation>" tail — national and council-level org names
+    # ("Girl Scouts of America", "Girl Scouts of Northern New Jersey") are the
+    # same bare booking as the bare head, but the original tail stopped at
+    # "meeting" and let them through. Added 2026-08-23 after e230446 reached the
+    # map and was only caught at event-type classification. Re-measured over all
+    # 199,302 events: 3 newly dropped (214080, 216487, 230446), all genuine bare
+    # bookings, 0 false positives — "Girl Scouts of NJ" (e98162) writes up its
+    # meetings and the description gate spares it, exactly as designed.
+    r'(?:\s+of\s+(?:the\s+)?[\w.\'’\- ]{1,40}?)?'
+    r'\s*(?:meeting)?\s*[.!]?\s*$',
     re.IGNORECASE)
 # A content word anywhere in the title means the org is PRESENTING something, so
 # the row is a real program even though it ends on the org's name
@@ -2203,6 +2266,74 @@ _MONTH_NAMES = (
     r'jul(?:y)?|aug(?:ust)?|sep(?:t|tember)?|oct(?:ober)?|nov(?:ember)?|'
     r'dec(?:ember)?)'
 )
+# (5i) Operational notices that a venue's CMS dates like programming. Three
+# shapes, all surfaced 2026-08-22 as UNKNOWN rows that reached the map:
+#
+#   - Early-closing notices ("Greenwich Library Early Close (5pm ET)",
+#     "Bookstore Closing Early", "Early Closing: 2PM"). Name-only by design: the
+#     body is always a real sentence explaining the early close, so a
+#     description gate would spare every one of them. Corpus-checked over all
+#     198,068 events: 20 matches, all genuine closure notices, 0 false
+#     positives. A programmed event never advertises itself by its closing time.
+_EARLY_CLOSE_NAME_RE = re.compile(
+    r'\b(?:early\s+clos(?:e|ing)|clos(?:es|ing)\s+early|will\s+close\s+at|'
+    r'clos(?:ed|ing)\s+at\s+\d)',
+    re.IGNORECASE)
+
+#   - Administrative deadlines ("Last Day to Turn in Reading Logs",
+#     "Photography Show Registration Closes", "Application Deadline"). Adjacent
+#     to the existing submission-call rule, which keys on "Open Call" /
+#     "Submissions:" and misses deadline phrasing. Anchored at the START of the
+#     name so a real program that merely mentions a deadline downstream survives.
+#     Corpus-checked at the final width: 67 matches, all genuine deadlines
+#     (mostly NYU/CUNY registrar milestones already covered in spirit by the
+#     academic-calendar rule), 0 false positives.
+#     Two shapes, anchored at opposite ends, and both anchors are load-bearing.
+#     "Last Day to" / "Deadline" only count at the START, so a real program that
+#     mentions a deadline downstream survives. The registration/submission idiom
+#     only counts at the END: an earlier draft allowed a 50-character prefix and
+#     a unit test immediately caught "Poetry Workshop (registration closes
+#     Friday)" — a real workshop whose title merely names its cutoff. Requiring
+#     the idiom to CLOSE the title keeps "Photography Show Registration Closes"
+#     and "Teen Council Spring 2026 Application Deadline" while sparing it.
+_ADMIN_DEADLINE_NAME_RE = re.compile(
+    r'^\s*(?:last\s+(?:day|chance)\s+to\b|deadline\b)'
+    r'|\b(?:registration|sign[\-\s]?ups?|submissions?|applications?)\s+'
+    r'(?:close|closes|closed|due|deadline|ends)\s*[.!]?\s*$',
+    re.IGNORECASE)
+
+#   - Facility maintenance blocks whose name ENDS on "maintenance"
+#     ("Discovery Lab Maintenance"). The existing
+#     `_MAINTENANCE_BLOCK_NAME_RE` only recognises a fixed prefix vocabulary
+#     (building/room/HVAC/...), so a named room slips it. Tail-anchoring alone
+#     is NOT safe — "Bike Maintenance" and "Car Maintenance" are real library
+#     classes — so this additionally requires the body to be blank or to say the
+#     space is closed/unavailable. Corpus-checked: 1 match, 0 false positives.
+_MAINTENANCE_TAIL_NAME_RE = re.compile(
+    r'^[\w\'\u2019\-&. ]{1,45}\bmaintenance\s*[.!]?\s*$', re.IGNORECASE)
+_MAINTENANCE_CLOSED_DESC_RE = re.compile(
+    r'\b(?:clos(?:ed|ing|es)|unavailable|out\s+of\s+service)\b', re.IGNORECASE)
+
+# (5j) A housing corporation / co-op board booking a public room, titled with the
+# entity's own name ("Huntington Village Coop / Nathan Hale Owners Corp").
+# Deliberately NARROW: an earlier draft keyed on a generic "association|inc|corp"
+# tail and produced 7 false positives out of 10 corpus matches — "Street Tree
+# Care w/ Decatur Block Association" and "Music Storytime With Intersection Music
+# and Arts, Inc." are real programs, and "RVC Civic Association" is exactly the
+# civic engagement the review doc says to KEEP. Only housing/condo entity types
+# are listed here, and a preposition or activity word anywhere vetoes the match.
+# Corpus-checked at this width: 1 match, 0 false positives.
+_HOUSING_CORP_NAME_RE = re.compile(
+    r'^\s*(?:the\s+)?[\w.,&\'\u2019/\- ]{0,60}?\b(?:'
+    r'owners\s+corp\.?(?:oration)?|home\s?owners\s+association|hoa|'
+    r'tenants?\s+association|condominium(?:\s+association)?|'
+    r'co[\-\s]?op(?:erative)?(?:\s+board)?'
+    r')\s*[.!]?\s*$', re.IGNORECASE)
+_HOUSING_CORP_VETO_RE = re.compile(
+    r'\b(?:w/|with|feat\.?|featuring|presented\s+by|hosted\s+by|celebrate|'
+    r'storytime|lecture|talk|workshop|class|tour|sale|fair|festival|party)\b',
+    re.IGNORECASE)
+
 _MONTH_CALENDAR_NAME_RE = re.compile(
     r'(?:'
     #  "... September Calendar", "May 2026 Meeting Calendar", "June 2026 Monthly Calendar"
@@ -2261,6 +2392,70 @@ def _is_org_room_booking(name, description=None):
     if not name or not _ORG_BOOKING_NAME_RE.match(name):
         return False
     if _ORG_BOOKING_NAME_VETO_RE.search(name):
+        return False
+    return _description_adds_nothing(name, description)
+
+
+# (5k) The library "NO <Program>" cancelled-session convention. LibNet/LibCal
+# branches announce a skipped session by prefixing the program's own title with
+# a capitalised "NO" ("NO Senior Movie", "NO Music & Movement"). The existing
+# "No <thing> Today" rule above cannot reach these: it requires a temporal
+# marker ("today", "this week", a holiday), and this convention carries none.
+#
+# Two guards, and BOTH are load-bearing — a bare `^NO ` matched 12 rows corpus-
+# wide of which 9 were real events:
+#   - Case-sensitive, and vetoed when the rest of the title is itself all-caps,
+#     so a shouted title contributes no signal.
+#   - A blank / title-echoing description is REQUIRED. That single gate is what
+#     separates the notices from "NO PICNIC Introduced by filmmaker Philip
+#     Hartman" (a 1985 film, 5 rows) and "NO TE ENAMORES FEST 3" (a Spanish
+#     warehouse party, 3 rows) — every one of those is written up properly.
+#
+# Corpus-checked over all 199,302 events: 2 matches, both genuine cancellation
+# notices (230422, 230474), 0 false positives.
+_NO_PREFIX_CANCELLED_RE = re.compile(r'^\s*NO\s+(?=[^\W\d_])')
+
+
+def _is_no_prefix_cancellation(name, description=None):
+    """True for a library "NO <Program>" skipped-session row with no body."""
+    if not name or not _NO_PREFIX_CANCELLED_RE.match(name):
+        return False
+    rest = _NO_PREFIX_CANCELLED_RE.sub('', name.strip())
+    letters = [c for c in rest if c.isalpha()]
+    # An all-caps remainder means the whole title is shouted; "NO" is then just
+    # part of the styling, not a marker. Too few letters to judge = same veto.
+    if len(letters) < 3 or all(c.isupper() for c in letters):
+        return False
+    return _description_adds_nothing(name, description)
+
+
+def _is_early_close_notice(name, description=None):
+    """True for an early-closing operational notice ("Bookstore Closing Early")."""
+    return bool(name and _EARLY_CLOSE_NAME_RE.search(name))
+
+
+def _is_admin_deadline(name, description=None):
+    """True for an administrative deadline row ("Last Day to ...", "... Registration Closes")."""
+    return bool(name and _ADMIN_DEADLINE_NAME_RE.search(name.strip()))
+
+
+def _is_maintenance_tail_block(name, description=None):
+    """True for "<named room> Maintenance" when the body is blank or says closed.
+
+    The description gate is load-bearing: "Bike Maintenance" is a real class.
+    """
+    if not name or not _MAINTENANCE_TAIL_NAME_RE.match(name.strip()):
+        return False
+    if _description_is_blank(description):
+        return True
+    return bool(_MAINTENANCE_CLOSED_DESC_RE.search(description or ''))
+
+
+def _is_housing_corp_booking(name, description=None):
+    """True for a co-op / owners-corp room booking titled with the entity name."""
+    if not name or not _HOUSING_CORP_NAME_RE.match(name.strip()):
+        return False
+    if _HOUSING_CORP_VETO_RE.search(name):
         return False
     return _description_adds_nothing(name, description)
 
@@ -2388,6 +2583,19 @@ def is_obvious_non_event(name, description=None):
     # ("Historical Society", "Saddle River Valley Lions Club"). Requires a body
     # that adds nothing, so a described program the org hosts survives.
     if _is_org_room_booking(name, description):
+        return True
+    # (5i/5j) Operational notices and housing-corp room bookings — see the regex
+    # block above for the corpus counts behind each of these four gates.
+    if _is_early_close_notice(name, description):
+        return True
+    # (5k) Library "NO <Program>" skipped-session notice with no body.
+    if _is_no_prefix_cancellation(name, description):
+        return True
+    if _is_admin_deadline(name, description):
+        return True
+    if _is_maintenance_tail_block(name, description):
+        return True
+    if _is_housing_corp_booking(name, description):
         return True
     # "<Month> Calendar" listing-page placeholder ("The Stone at The New School:
     # September Calendar", "Bronx Community Board 11 Calendar - April 2026").
@@ -3758,6 +3966,30 @@ def _extract_typeless_house_address(s):
     return f"{m.group(1)} {name}"
 
 
+def _flatten_house_number(num):
+    """Flatten a house number to its comparison key, zero-padding Queens/Bronx
+    hyphenates so the same address written two ways lands on one key.
+
+    Queens and Bronx addresses are `<block>-<lot>` with the lot conventionally
+    written as two digits ("180-04 State Rd", "45-50 Van Dam St"). Sources drop
+    the pad freely, and a bare `.replace('-', '')` then turns "180-04" into
+    `18004` but "180-4" into `1804` — two different keys for one building, so
+    the sublocation-vs-address redundancy check reports a false mismatch. Seen
+    2026-08-23 on loc 10077 (Roxbury 9/11 Memorial), where DB "180-04 State Rd"
+    and source "180-4 State Road" are the same address.
+
+    Padding to the convention's own width is what makes both spellings agree;
+    the *value* of the key does not matter, only that the two forms share it.
+    Segments already two or more digits are untouched, so the range-looking
+    forms that are really block-lot pairs ("5-11 47th Ave") keep the key they
+    have today and no existing match changes.
+    """
+    if '-' not in num:
+        return num
+    block, _, lot = num.partition('-')
+    return block + lot.zfill(2)
+
+
 def _extract_street_address_loose(s):
     """Extract first <number> <words> <street-type> match from anywhere in `s`.
 
@@ -3798,7 +4030,7 @@ def _extract_street_address_loose(s):
     if not m:
         return None
     num, name, st = m.groups()
-    num = num.replace('-', '')
+    num = _flatten_house_number(num)
     # "4140 Broadway & 176th St" — a trailing "& <cross street>" after a
     # standalone street name gets absorbed into the name group ("broadway &
     # 176") with the cross street's type closing the match. The address is
