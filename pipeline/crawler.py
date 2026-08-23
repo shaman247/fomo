@@ -5,6 +5,7 @@ Uses Crawl4AI to crawl event websites and store content in the database.
 """
 
 import asyncio
+import inspect
 import json
 import re
 from datetime import datetime, timedelta
@@ -316,7 +317,14 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
             cursor, connection, crawl_run_id, website['id'], create_safe_filename(name, '.md')
         )
         try:
-            md, n_events = custom_profile.fetcher()
+            # A fetcher may opt into receiving the website's URL list by naming
+            # a `urls` parameter — generic multi-host plugins (libcal/libnet)
+            # need to know which instance to fetch. Zero-arg fetchers (pools,
+            # resy, ...) are called as before.
+            if "urls" in inspect.signature(custom_profile.fetcher).parameters:
+                md, n_events = custom_profile.fetcher(urls=[_url_of(u) for u in urls])
+            else:
+                md, n_events = custom_profile.fetcher()
         except Exception as exc:
             print(f"  ! {name}: {label} fetch failed: {exc}")
             db.update_crawl_result_failed(cursor, connection, crawl_result_id, f"{label}: {exc}")

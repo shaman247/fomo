@@ -57,6 +57,12 @@ SKIP_LOCATION_NAMES = {
     'various locations', 'various sites', 'multiple locations', 'virtual/online events',
     # contentless labels emitted verbatim by a source instead of a venue
     'unknown', 'no location provided.',
+    # library-feed placeholders: the branch/venue is named in the description or
+    # event title, and the reviewer has already pinned each event individually.
+    # The literal string carries no venue info, so a mismatch against it is noise.
+    'bookmobile', 'offsite- please see description',
+    'offsite (venue named in description)',
+    'other offsite location [1]', 'ys dept',
     'outdoors - open spaces, parks & streets', 'outdoors - open spaces, parks& streets',
     'various nyc venues', 'the pier',
     'secret brooklyn location', 'tba - open air', 'details tba.', 'please see the flyer',

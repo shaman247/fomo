@@ -46,6 +46,14 @@ fomo.nyc shows events - things with programming, performances, or specific activ
 - A "Class of 2026" showcase at 54 Below is a public ticketed event. A "Class of 2027 Pickleball Tournament" at a university campus is an internal student event.
 - A "Flex Day" on a school calendar is a schedule notice, not an event. But a movie called "Snow Day" is a real event.
 - "Office Hours" at a library for benefits assistance is a service. "Office Hours" at Berlin (a music venue) is a live show.
+- **"Office Hours" tiebreaker** (settled 2026-08-22 after a review pass found the calls inconsistent):
+  the discriminator is *individual appointment* vs *group program*, not the words "office hours".
+  **Suppress** one-on-one appointment help desks where attendees are served individually and the
+  listing is really a staffed window — "Ask A Tech", "One-on-One Tech Help", "Access Benefits at
+  NYPL - Office hours", "Office Hours Card Set Pick Up", social-work or proctoring slots.
+  **Keep** anything with a group audience or a named host/guest, including an elected official's
+  "Mobile Office Hours" (civic engagement — constituents show up to a scheduled public presence),
+  and any "Office Hours" that is a series name for a show or a hosted studio session.
 
 ## What to Suppress
 
@@ -70,7 +78,7 @@ fomo.nyc shows events - things with programming, performances, or specific activ
 - School schedule notices (flex days, PD days, snow days — the schedule entry itself, not programming during that time)
 - Commercial drop-in recreation (a bowling alley "Open for Bowling!", "Open Bowling", "Public Bowling" — walk-in lanes, not a programmed event)
 - TBA/TBD placeholder events with no actual content
-- Service office hours (benefits assistance, card pickup, literacy help — scheduled services, not events)
+- Service office hours (benefits assistance, card pickup, literacy help — scheduled services, not events). **One-on-one appointment desks only** — see the "Office Hours" tiebreaker above; group programs, named-guest sessions and elected-official mobile office hours are KEPT.
 - Municipal service notices (alternate-side parking suspended/in effect, street cleaning, garbage/recycling pickup schedules, sanitation holiday schedules) — these are city operational notices that community-board calendars republish, not events
 - Cancelled or postponed notices (the notice itself is not an event)
 - Internal campus events (class fundraisers, student-only activities not open to the public)
