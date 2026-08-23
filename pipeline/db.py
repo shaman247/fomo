@@ -363,12 +363,35 @@ def find_prior_crawl_with_same_content(cursor, crawl_result_id):
     return _col(row, 'id', 0)
 
 
-def copy_crawl_events(cursor, connection, src_crawl_result_id, dst_crawl_result_id):
+def copy_crawl_events(cursor, connection, src_crawl_result_id, dst_crawl_result_id,
+                      resolve_location=None):
     """
     Copy a crawl_result's crawl_events (and their occurrences) to another.
 
     Used when a fresh crawl produced identical content to a previous successful
     crawl — we reuse the prior extraction without re-calling Gemini.
+
+    `resolve_location`, when given, is called as
+    `resolve_location(location_name, sublocation, event_name) -> location_id|None`
+    to re-resolve each copied row's pin against TODAY's locations table.
+
+    The content being identical justifies reusing the extraction, but it says
+    nothing about the `locations` table, which changes constantly — venues get
+    added, aliases get corrected, a placeholder row gets split into real ones.
+    Copying `location_id` verbatim froze the pin at whatever the map said the
+    first time the content was seen, and no later pass ever revisited it: NYC-DSA
+    events carried a correct `location_name` of "BAM" pinned to the DSA office
+    row, and Industry City's sub-venues stayed pinned to the campus long after
+    they had their own rows.
+
+    **A NULL from the resolver is ignored and the stored pin kept.** Measured
+    over the 118,892 crawl_events feeding live events on 2026-08-23: re-resolving
+    unconditionally would move 1,311 rows to a different venue (all inspected
+    samples correct — Barrow's Intense off the Industry City campus, the
+    Delacorte off The Public Theater, CocuSocial classes onto their real hotels)
+    and newly pin 1,190, but would also UNPIN 1,437 whose names today's map
+    cannot resolve, dropping those events out of the export entirely. Keeping the
+    stored id when the resolver comes back empty takes every win and no loss.
 
     Only the source's LATEST processing pass is copied. `processor.process_events`
     now replaces a crawl_result's rows instead of appending to them, so a source
@@ -449,6 +472,16 @@ def copy_crawl_events(cursor, connection, src_crawl_result_id, dst_crawl_result_
         else:
             (src_id, name, short_name, description, emoji, location_name,
              sublocation, location_id, url, raw_data, ce_content_hash) = row
+
+        # Re-pin against today's locations table; keep the stored id on a miss.
+        if resolve_location is not None and location_name:
+            try:
+                refreshed = resolve_location(location_name, sublocation, name)
+            except Exception as exc:  # never let a repin bug lose an extraction
+                print(f"    ! location re-resolve failed for {location_name!r}: {exc}")
+                refreshed = None
+            if refreshed is not None:
+                location_id = refreshed
 
         cursor.execute("""
             INSERT INTO crawl_events

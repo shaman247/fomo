@@ -1868,6 +1868,42 @@ async def prepare_extraction(cursor, crawl_result_id, website_name, notes="",
     return prep
 
 
+# Cache for the locations map used by `_location_resolver_for`. Building it is a
+# handful of full-table reads, and a run can copy many fingerprint-matched
+# crawl_results; the table does not change mid-run.
+_LOCATIONS_MAP_CACHE = {}
+
+
+def _location_resolver_for(cursor, website_id):
+    """Build the `resolve_location` callback `db.copy_crawl_events` expects.
+
+    A fingerprint copy reuses an extraction from up to `FINGERPRINT_MAX_REUSE_DAYS`
+    ago, so its pins predate any venue/alias work done since. See the rationale
+    and the measurement in `db.copy_crawl_events`.
+
+    Imported lazily: `processor` imports `db` and `crawler`, and pulling it in at
+    module scope would put `extractor` in the middle of that cycle.
+    """
+    import processor
+
+    if 'map' not in _LOCATIONS_MAP_CACHE:
+        _LOCATIONS_MAP_CACHE['map'] = processor.build_locations_map(cursor)
+    locations_map = _LOCATIONS_MAP_CACHE['map']
+
+    def resolve(location_name, sublocation, event_name):
+        info = processor.get_location_id(
+            (location_name or '').strip(),
+            (sublocation or '').strip(),
+            '',
+            (event_name or '').strip(),
+            locations_map,
+            website_id=website_id,
+        )
+        return info.get('id') if info else None
+
+    return resolve
+
+
 def _apply_fingerprint_marker_and_status(cursor, connection, prep, copied):
     """Store the fingerprint-match skip marker and advance the crawl result to
     'processed' after its crawl_events were copied from a prior identical crawl.
@@ -1899,7 +1935,8 @@ async def execute_extraction_sync(cursor, connection, prep):
     # processor's parse/insert step.
     if prep.copy_from_crawl_result_id is not None:
         copied = db.copy_crawl_events(
-            cursor, connection, prep.copy_from_crawl_result_id, crawl_result_id
+            cursor, connection, prep.copy_from_crawl_result_id, crawl_result_id,
+            resolve_location=_location_resolver_for(cursor, prep.website_id),
         )
         reason = (prep.skip_extraction_reason or "identical content").format(count=copied)
         print(f"    - {reason}")
@@ -3250,7 +3287,8 @@ async def _submit_poll_and_process_new_batch(extraction_queue, poll_interval, ti
             elif prep.copy_from_crawl_result_id is not None:
                 # Fingerprint match — copy events synchronously, no batch entry needed
                 copied = db.copy_crawl_events(
-                    cursor, conn, prep.copy_from_crawl_result_id, crid
+                    cursor, conn, prep.copy_from_crawl_result_id, crid,
+                    resolve_location=_location_resolver_for(cursor, prep.website_id),
                 )
                 _apply_fingerprint_marker_and_status(cursor, conn, prep, copied)
                 results.append((crid, True))
