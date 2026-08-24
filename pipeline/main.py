@@ -629,6 +629,18 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
         print(f"  - Events extracted: {len(extracted_results)}")
         print(f"  - Total events processed: {total_events}")
 
+        # Relative-drop detector: a partial crawl (a cold-start/hydration race
+        # on the first URL, a CF challenge, an extraction outage) stores as
+        # 'processed' and looks healthy — only the count against the previous
+        # crawl gives it away. REPORT ONLY: ~1 in 5 hits is a legitimate drop
+        # (season ended, calendar cleared), so this must never fail closed.
+        try:
+            drops = db.get_coverage_drop_report(cursor, crawl_run_id=crawl_run_id)
+            for line in db.format_coverage_drop_report(drops):
+                print(line)
+        except Exception as e:
+            print(f"  (coverage-drop check skipped: {e})")
+
         # Step timings (slowest first) to surface bottlenecks
         print("\nStep timings (slowest first):")
         for name, secs in sorted(timer.steps, key=lambda s: s[1], reverse=True):

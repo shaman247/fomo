@@ -57,7 +57,7 @@ Some events get "No description available." because the listing page lacked deta
 **Code lives in four modules:**
 - `db.py`: `get_detail_crawl_candidates()` — find and filter candidates; `get_website_crawl_settings()` — per-website settings
 - `crawler.py`: `build_event_crawl_config()` / `crawl_event_url()` / `get_browser_key()` — crawl config, browser grouping
-- `extractor.py`: `extract_single_event()` — Gemini structured output via `SingleEventExtraction` schema
+- `extractor.py`: `extract_single_event()` — Gemini structured output via `SingleEventExtraction` schema. Receives the site's `websites.notes` (directive lines stripped, same as `prepare_extraction`) and the page's own URL, so a per-site directive that shapes the listing extraction shapes this one too — until 2026-08-24 it did not, and a detail page printing a series' whole season re-derived the union of dates the listing pass had been told to split
 - `processor.py`: `crawl_event_details()` — orchestration, parallelism; `apply_crawled_details()` — per-event DB updates
 
 **Filtering (to avoid wasted crawls):**

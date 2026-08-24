@@ -690,6 +690,132 @@ def get_stranded_merge_summary(cursor, website_ids=None):
     return cursor.fetchall()
 
 
+# Relative-drop detector defaults. Tuned on a 90-day backtest (37,814 processed
+# crawls, 91 runs) — see get_coverage_drop_report for the numbers.
+COVERAGE_DROP_MAX_RATIO = 0.5
+COVERAGE_DROP_MIN_ABSOLUTE = 15
+COVERAGE_DROP_REPORT_LIMIT = 15
+
+
+def get_coverage_drop_report(cursor, crawl_run_id=None, since_days=1,
+                             max_ratio=COVERAGE_DROP_MAX_RATIO,
+                             min_absolute_drop=COVERAGE_DROP_MIN_ABSOLUTE):
+    """Find websites whose event_count collapsed against their previous crawl.
+
+    A partial crawl that still returns HTTP 200 stores as `status='processed'`
+    and nothing else notices. The motivating case (2026-08-24, w3 NYPL): the
+    FIRST of nine URLs came back with 940 chars instead of ~1.1 MB — a
+    cold-start/hydration race on the first request of the run — so the site
+    stored 179 events instead of ~950 and looked perfectly healthy. Only the
+    14-day detail-crawl grace kept ~770 events off the archival pile. Same shape
+    as a Cloudflare challenge stored as a successful 0-event crawl, and as the
+    Gemini outage that wrote 0-event crawls across 30 sites on 2026-06-14.
+
+    The cheap general guard is a *relative* drop: compare each crawl against the
+    previous processed crawl of the same website.
+
+    THRESHOLD PROVENANCE — backtested over 90 days (37,814 processed crawls,
+    91 runs) with "did the count recover on any of the next 3 crawls?" as the
+    ground-truth proxy for a transient failure:
+
+        rule                                hits   transient  sustained  precision
+        ratio<0.3, prev>20  (task sketch)    177     130         36        78%
+        ratio<0.5, prev>20                   263     188         58        76%
+        ratio<0.5, drop>=15  (SHIPPED)       287     213         58        79%
+
+    Precision is essentially flat across every threshold tried (73-81%), so
+    tightening the ratio buys no accuracy — it only loses recall. The shipped
+    rule therefore takes the *widest* net that stays quiet: median 2 lines per
+    run, ~5 at the 90th percentile, and 63 on the day of the Gemini outage
+    (which is the correct response to that day). `min_absolute_drop` — not the
+    `prev.event_count > 20` floor of the sketch — is what suppresses small-site
+    jitter, and it does so without blinding the check to a 20-event site that
+    goes to zero.
+
+    NOT a gate. Roughly a fifth of the hits are legitimate: seasons ending,
+    calendars clearing ("CONCLUDED ON AUG. 21"). This reports; it never fails
+    closed. Callers print it, they do not act on it.
+
+    `crawled_content` length is returned as a triage hint rather than used as a
+    filter — the backtest showed it is a bad *gate* (most transient drops are
+    extraction-side, where content length is unchanged, so ANDing it in dropped
+    more true positives than false ones) but an excellent *annotator*: a
+    collapsed content size next to the drop means a partial crawl, while a
+    full-size page with fewer events means the calendar really did empty.
+
+    Args:
+        cursor: Database cursor
+        crawl_run_id: Restrict to one crawl run (what main.py passes). When
+            None, falls back to crawls within the last `since_days` days.
+        since_days: Lookback window when crawl_run_id is None.
+        max_ratio: Flag when now < prev * max_ratio.
+        min_absolute_drop: Flag only when at least this many events were lost.
+
+    Returns:
+        List of (website_id, website_name, now_count, prev_count, now_chars,
+        prev_chars, crawl_result_id, prev_crawl_result_id) tuples, biggest
+        absolute loss first.
+    """
+    scope = ("cr.crawl_run_id = %s" if crawl_run_id is not None
+             else f"cr.crawled_at >= DATE_SUB(NOW(), INTERVAL {int(since_days)} DAY)")
+    query = f"""
+        SELECT cr.website_id, w.name, cr.event_count, prev.event_count,
+               LENGTH(cr.crawled_content), LENGTH(prev.crawled_content),
+               cr.id, prev.id
+        FROM crawl_results cr
+        JOIN websites w ON w.id = cr.website_id
+        JOIN crawl_results prev
+          ON prev.website_id = cr.website_id
+         AND prev.id = (
+             SELECT MAX(p2.id) FROM crawl_results p2
+             WHERE p2.website_id = cr.website_id
+               AND p2.id < cr.id
+               AND p2.status = 'processed'
+         )
+        WHERE cr.status = 'processed'
+          AND {scope}
+          AND prev.event_count > 0
+          AND cr.event_count < prev.event_count * %s
+          AND prev.event_count - cr.event_count >= %s
+        ORDER BY (prev.event_count - cr.event_count) DESC
+    """
+    params = ([crawl_run_id] if crawl_run_id is not None else []) + \
+             [max_ratio, min_absolute_drop]
+    cursor.execute(query, tuple(params))
+    return cursor.fetchall()
+
+
+def format_coverage_drop_report(rows, limit=COVERAGE_DROP_REPORT_LIMIT):
+    """Render get_coverage_drop_report rows as run-summary lines.
+
+    Mirrors the merger's "⚠️  WARNING: N upcoming event(s) archived" style: a
+    warning header, indented detail lines, truncated tail. Returns [] when there
+    is nothing to say so callers can print unconditionally.
+    """
+    if not rows:
+        return []
+
+    def _pct(now, prev):
+        if not prev:
+            return "n/a"
+        return f"{(now - prev) * 100.0 / prev:+.0f}%"
+
+    lines = [f"  ⚠️  WARNING: {len(rows)} website(s) lost most of their events "
+             f"vs. the previous crawl (possible partial crawl):"]
+    for wid, name, now_c, prev_c, now_len, prev_len, _cr_id, _prev_id in rows[:limit]:
+        now_len = now_len or 0
+        prev_len = prev_len or 0
+        lines.append(
+            f"        - w{wid} {name}: {prev_c} → {now_c} events "
+            f"({_pct(now_c, prev_c)}), content {prev_len:,} → {now_len:,} chars "
+            f"({_pct(now_len, prev_len)})")
+    if len(rows) > limit:
+        lines.append(f"        ... and {len(rows) - limit} more")
+    lines.append("      Content collapsed too → partial crawl. Content unchanged → "
+                 "extraction issue or a season that genuinely ended.")
+    return lines
+
+
 def get_crawled_content(cursor, crawl_result_id):
     """Get crawled content for a crawl result."""
     cursor.execute(
@@ -1467,7 +1593,11 @@ def get_website_crawl_settings(cursor, website_ids):
     Returns dict mapping website_id to settings dict with keys:
     delay_before_return_html, content_filter_threshold, scan_full_page,
     remove_overlay_elements, scroll_delay, text_mode, light_mode,
-    use_stealth, headed, user_agent.
+    use_stealth, headed, user_agent, notes.
+
+    `notes` is `websites.notes` verbatim (directives still embedded); the
+    detail crawl injects it into the single-event prompt the same way the
+    listing extraction does.
     """
     if not website_ids:
         return {}
@@ -1476,7 +1606,7 @@ def get_website_crawl_settings(cursor, website_ids):
     cursor.execute(f"""
         SELECT id, delay_before_return_html, content_filter_threshold,
                scan_full_page, remove_overlay_elements, scroll_delay,
-               text_mode, light_mode, use_stealth, headed, user_agent
+               text_mode, light_mode, use_stealth, headed, user_agent, notes
         FROM websites WHERE id IN ({placeholders})
     """, list(website_ids))
 
@@ -1493,6 +1623,7 @@ def get_website_crawl_settings(cursor, website_ids):
             'use_stealth': row[8] if row[8] is not None else False,
             'headed': row[9] if row[9] is not None else False,
             'user_agent': row[10],
+            'notes': row[11] or '',
         }
 
     return settings

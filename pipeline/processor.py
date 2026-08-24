@@ -1048,6 +1048,70 @@ _NOT_PUBLIC_DESC_RE = re.compile(
     r'\binvitation\s+only\b|\binvite[\s-]only\b',
     re.IGNORECASE)
 
+# ...and the one alternative above that stands on its OWN, without a "private
+# event" phrase anywhere in the body. LibCal community-room bookings say it flatly
+# and say nothing else about privacy — e231431 "Community Sponsored: RMA Book
+# Group" (w5242 Greenwich Library) reached the map with the body "This event is
+# not open to the public. This event and the content thereof are neither sponsored
+# nor endorsed by Greenwich Library."
+#
+# ONLY this exact phrase is promoted to a single-signal rule. Measured 2026-08-24
+# over ALL 1,130,648 crawl_events and all 199,916 events:
+#   `not open to the (general) public`  10 crawl rows / 7 distinct, 100% junk —
+#       the Greenwich book group, w2167's private Javits gig, w1771 Orchestra of
+#       St. Luke's private youth recital, w1359 Capitol Theatre closed-for-private,
+#       w1477 Urban Bush Women's two private engagements, w753 "Recirculation
+#       Closed". TWO of them (e57177, e43668) reached the map unsuppressed.
+#   `closed to the (general) public`   152 rows and NOT safe: BCPC's real,
+#       public TGNC Swim Night is described as "swimming in a pool closed to the
+#       public", and the phrase is ordinary prose about a facility.
+#   `invitation only` / `invite-only`  256 rows and NOT safe: Downtown Music
+#       Gallery's 31st-anniversary in-store series, Fabrik's "Breakfast With
+#       Friends", Copland House concerts are all real, listed events.
+#   `neither sponsored nor endorsed`   REFUTED as an arm of its own, see
+#       `_is_not_public_notice`.
+#
+# The veto guards the one shape the corpus does not contain but easily could: a
+# real event with a private PORTION ("the reception afterwards is not open to the
+# public"). It is applied to the sentence carrying the phrase, not the whole body,
+# so a private booking that happens to mention a reception elsewhere still fires.
+_NOT_PUBLIC_STANDALONE_DESC_RE = re.compile(
+    r'\bnot\s+open\s+to\s+the\s+(?:general\s+)?public\b', re.IGNORECASE)
+_NOT_PUBLIC_PARTIAL_VETO_RE = re.compile(
+    r'\b(?:portion|part|parts|segment|section|rehearsals?|receptions?|'
+    r'after[\s-]?part(?:y|ies)|afterparty|backstage|green\s?room|'
+    r'load[\s-]?in|first\s+(?:hour|half)|second\s+half|'
+    r'dinner|q\s*&\s*a|talkback)\b',
+    re.IGNORECASE)
+_SENTENCE_BREAK_RE = re.compile(r'[.;!?]')
+
+
+def _is_not_public_notice(name, description=None):
+    """True when the body states the occasion itself is not open to the public.
+
+    Deliberately a SINGLE-signal rule, unlike the `_PRIVATE_BOOKING_DESC_RE` +
+    `_NOT_PUBLIC_DESC_RE` pair below it: a library community-room booking never
+    calls itself a "private event", it just says it is not open to the public.
+
+    The "neither sponsored nor endorsed by <library>" half of the same LibCal
+    boilerplate was prototyped as its own arm and REFUTED: it is a blanket
+    disclaimer the library staples onto EVERY outside-group booking, including
+    fully public ones. Its 2-row hit set contains e228086 "Community Sponsored:
+    Little Readers, Big Creators", a real, live children's storytime whose body
+    carries the disclaimer and nothing else. Do not add it.
+    """
+    description = description or ''
+    match = _NOT_PUBLIC_STANDALONE_DESC_RE.search(description)
+    if not match:
+        return False
+    start = description.rfind('.', 0, match.start()) + 1
+    for char in ';!?':
+        start = max(start, description.rfind(char, 0, match.start()) + 1)
+    end = _SENTENCE_BREAK_RE.search(description, match.end())
+    sentence = description[start:end.end() if end else len(description)]
+    return not _NOT_PUBLIC_PARTIAL_VETO_RE.search(sentence)
+
+
 # Members-only programming — a real occasion, but attendable only by holders of
 # a membership (museum member tours/previews, social-club meetups, coworking
 # member sessions, gym member classes). The map lists attendable PUBLIC events,
@@ -1851,8 +1915,24 @@ _PROGRAM_DEADLINE_VETO_RE = re.compile(
 # Known accepted misses (fail-safe, not bugs): "Closed For Private Event"
 # (38318, 60244) whose bodies say "unavailable"/"not open"; "Mid-Winter Recess
 # (Bms Closed, Open for Makeups)". Missing junk is the right failure direction.
+#
+# The ANCHORED `Closing: <thing>` alternative is the LibCal/library punctuation
+# form of the same notice ("Closing: Labor Day Weekend 2026", w2014 New York
+# Society Library, e231355 hand-suppressed 2026-08-24). It is anchored to the
+# start of the name and requires the colon/dash immediately after the word,
+# because an unanchored or bare-word `closing` is a trap: 33 of the 37 events
+# whose name starts with "Closing" are real occasions — "Closing Reception",
+# "Closing Party for IDENTITIES", "Closing Night With Juilliard Music",
+# "Closing the Gap: Investor Breakfast" — and mid-name "Closing:" adds
+# "Summer Reading Closing: Myron the Magnificent", "Gallery Closing: …",
+# "Early Closing: 2PM". Measured 2026-08-24 over all 199,916 events: the
+# anchored form matches 4, all four of them w2014 holiday closures (28631
+# Presidents Day, 75335 Easter, 132286 Memorial Day, 231355 Labor Day), 0 false
+# positives. The `closed|closure` description gate below still applies and is
+# what would spare a hypothetical "Closing: Party for <show>".
 _CLOSURE_NOTICE_NAME_RE = re.compile(
-    r'\b(?:closed(?!\s*caption)|closure)\b', re.IGNORECASE)
+    r'\b(?:closed(?!\s*caption)|closure)\b'
+    r'|^\s*closing\s*[:\u2013\u2014-]\s*\S', re.IGNORECASE)
 _CLOSURE_NOTICE_NAME_VETO_RE = re.compile(
     r'\bearly\s+clos(?:ure|ing|ed|es)\b|\bclos(?:ing|ed|es)\s+early\b'
     r'|\b(?:registration|application|applications|submission|submissions|'
@@ -2044,6 +2124,38 @@ _PRIVATE_BOOKING_NAME_RE = re.compile(
 _PRIVATE_BOOKING_NAME_VETO_RE = re.compile(
     r'\bopen\s+to\s+the\s+(?:general\s+)?public\b|\bpublic\s+welcome\b',
     re.IGNORECASE)
+
+# (5a2) A tentative HOLD leaked from a shared room-booking calendar. The
+# organiser blocks the room before the session is confirmed and titles the block
+# "HOLD: <what it might become>"; the feed publishes the placeholder verbatim.
+# This is the [[shared_calendar_leakage]] shape, and until 2026-08-24 it was
+# caught only by hand: NYC Resistor (w716) alone accounts for a hand-suppression
+# trail of 20+ rows, joined by Greenwich Library (e228047) and Yonkers Public
+# Library ("Hold-Devon", "Hold-Peggy Belles" — both room bookings whose entire
+# body is "meeting").
+#
+# TWO SHAPES, both deliberately narrow:
+#   * `Hold<sep>` — the word followed immediately by a colon or dash, any case.
+#   * `HOLD ` — the word in ALL CAPS followed by a space, and the next token must
+#     contain a lowercase letter ("HOLD Kitchen Lithography", e231327). The
+#     lowercase lookahead is what keeps an all-caps real title safe: a site that
+#     upper-cases every name would otherwise donate "HOLD YOUR BREATH".
+#
+# The separator is REQUIRED, not decoration. Measured 2026-08-24 over all 199,916
+# events: `^hold\b` matches 54 and a dozen of them are real — "Hold It Down Nyc",
+# "Hold Me Tight (Serre-moi fort)", "Hold On To Your Butts", "Hold Up Movie Club",
+# "Hold Em In Harlem", "Hold The Phone! & Some Beers", "Hold On To Your Music".
+# The two shapes here match 40 of those 54 and EVERY ONE is a booking placeholder
+# — 0 false positives — with 39 more rows over the last 60 days of crawl_events.
+#
+# `^hold for <thing>` ("Hold for Art Exhibit Installation", e228423) was measured
+# and deliberately LEFT OUT: 2 rows DB-wide, both already suppressed, against a
+# live collision risk with film titles of the "Hold for Ransom" shape, which
+# cinema feeds publish with a blank description. Revisit only if it recurs.
+_HOLD_PLACEHOLDER_NAME_RE = re.compile(
+    r'^\s*(?:HOLD|Hold|hold)'
+    r'(?:\s*[:\u2013\u2014-]\s*\S'
+    r'|(?<=HOLD)\s+(?=\S*[a-z]))')
 
 # (5b) Staff-only internal blocks ("Staff event", "Booked for Staff", "Dept Head
 # Mtg."). The whole name must BE the marker — that anchoring is what keeps real
@@ -2527,7 +2639,8 @@ def is_obvious_non_event(name, description=None):
     term start dates, exam periods), take-home/grab-and-go kit distributions,
     program-deadline notices, room-booking-calendar shapes (private bookings,
     staff-only blocks, private life occasions, maintenance blocks, bare
-    "No <program>" notices, seasonal hours notices, outside-organization
+    "No <program>" notices, seasonal hours notices, tentative shared-calendar
+    HOLD placeholders, outside-organization
     bookings titled with the org's own name), month-calendar listing
     placeholders, "National <food/drink> Day" restaurant promos, ticketing
     upsell products (packages/bundles), and bare
@@ -2561,6 +2674,11 @@ def is_obvious_non_event(name, description=None):
     # description — a blank body IS the corroboration for most of them — so they
     # cannot live in the `if description:` block below.
     if _is_private_booking_name(name, description):
+        return True
+    # Tentative shared-calendar HOLD ("HOLD: Synth Night", "Hold-Peggy Belles").
+    # Name-only by design: the prefix is the booker's own "not confirmed" marker,
+    # and these rows carry a real-looking body as often as a blank one.
+    if _HOLD_PLACEHOLDER_NAME_RE.match(name):
         return True
     if _STAFF_ONLY_BLOCK_NAME_RE.search(name):
         return True
@@ -2680,6 +2798,10 @@ def is_obvious_non_event(name, description=None):
             return True
         if (_APPLICATION_CALL_DESC_RE.search(description)
                 and not _ATTENDABLE_OCCASION_NAME_RE.search(name)):
+            return True
+        # The body says, in the venue's own words, that this occasion is not
+        # open to the public — enough on its own; see `_is_not_public_notice`.
+        if _is_not_public_notice(name, description):
             return True
         if (_PRIVATE_BOOKING_DESC_RE.search(description)
                 and _NOT_PUBLIC_DESC_RE.search(description)):
@@ -5553,6 +5675,126 @@ def _parse_markdown_table(extracted_content):
 # Main Processing Function
 # =============================================================================
 
+# --- Cross-event description bleed: a locative sentence from a SIBLING event ---
+#
+# Multi-record listing pages repeat one house sentence per record — NYPL's is
+# "This event will take place in person at the <Branch> Library." (2,251 of the
+# ~2,340 crawl_events carrying that phrasing are w3). When the extractor chunks
+# such a page it regularly staples one record's sentence onto a sibling record,
+# producing a description that names a venue the event is not at. Measured
+# 2026-08-24: 33 of 173 active w3 events with that phrasing named a branch
+# contradicting their own pin.
+#
+# `location_name` is the reliable field here — on every one of those 33 rows all
+# of the event's crawl_events agreed on the correct branch while carrying the
+# wrong branch in the prose. So when the sentence contradicts `location_name`,
+# the SENTENCE is what is wrong.
+#
+# The repair drops the whole sentence and never rewrites the venue name inside
+# it: the sentence belongs to another record, so patching the name would only
+# make a foreign sentence look correct. The body is left untouched — on these
+# listing pages it is the program's system-wide blurb, shared across branches.
+#
+# WHY THIS IS DELIBERATELY NARROW. A general "description must not name a venue
+# contradicting location_name" check is NOT safe. Backtested 2026-08-24 over the
+# 9,132 crawl_events whose description contains "take(s) place", a loose
+# `takes place ... at <X>` rule fired on 1,272 rows — only 488 of them w3 — and
+# the non-w3 hits were overwhelmingly legitimate prose it would have destroyed:
+#   - date/time tails: "A special opening reception will take place on Saturday,
+#     April 11 at 2pm"  (captures "2pm" as the venue)
+#   - genuine multi-venue copy under a neighborhood pin: "Performances take place
+#     at BAM, Roulette, Public Records"  (pin "Downtown Brooklyn")
+#   - a real venue named under a generic pin: "The event takes place at the
+#     historic Cipriani"  (pin "Manhattan, New York")
+# So the guard matches only the full house form: the subject must be the event
+# itself ("This event/program/class..."), the sentence must carry an explicit
+# in-person/online modality (which is what excludes the date/time tails), and the
+# named venue must contain a capitalized or numbered word. Failure mode is then
+# cheap: the worst a false positive can do is drop one redundant sentence that
+# restates the venue.
+
+_LOCATIVE_ABBREV = re.compile(r'\b(St|Ave|Blvd|Rd|Dr|Mt|Ft|Jr|Sr)\.$')
+
+# "This event will take place in person at the Parkchester Library"
+# The leading char is optional because extraction sometimes clips it ("his
+# event will take place..." was observed on event 224496).
+_LOCATIVE_SENTENCE = re.compile(
+    r'^\W*\w?his\s+(?:event|program|class|workshop|session)\s+'
+    r'(?:will\s+)?takes?\s+place\s+'
+    r'(?:in[-‐-― ]?person|online|virtually)\s*,?\s+'
+    r'(?:at|in)\s+(?:the\s+)?(.+?)\s*[.!?]*$',
+    re.IGNORECASE | re.DOTALL,
+)
+
+# Words too generic to establish that two venue strings are different places.
+_LOCATIVE_STOPWORDS = {
+    'the', 'a', 'an', 'of', 'and', 'at', 'in', 'on', 'for', 'this', 'event',
+    'program', 'class', 'workshop', 'session', 'person', 'online', 'virtually',
+    'library', 'branch', 'center', 'centre', 'room', 'floor', 'building',
+    'auditorium', 'community', 'lab', 'st', 'street', 'ave', 'avenue',
+    'new', 'york', 'nyc', 'public',
+}
+
+
+def _locative_tokens(text):
+    """Significant lowercase word set for comparing two venue strings."""
+    text = (text or '').lower().replace("'", '').replace('’', '')
+    text = re.sub(r'[^a-z0-9 ]', ' ', text)
+    return {w for w in text.split()
+            if len(w) > 1 and w not in _LOCATIVE_STOPWORDS}
+
+
+def _names_a_venue(text):
+    """True when the captured phrase looks like a place name rather than a time
+    or a bare noun — i.e. it has a capitalized or number-led word."""
+    return bool(re.search(r'\b([A-Z][a-zA-Z]|\d+(?:st|nd|rd|th)\b)', text or ''))
+
+
+def _split_sentences(text):
+    """Split on sentence terminators, keeping common abbreviations intact so
+    "St. George Library Center" does not break into two sentences."""
+    out, buf = [], ''
+    for piece in re.split(r'(?<=[.!?])\s+', text):
+        buf = (buf + ' ' + piece).strip() if buf else piece
+        if _LOCATIVE_ABBREV.search(buf):
+            continue
+        out.append(buf)
+        buf = ''
+    if buf:
+        out.append(buf)
+    return out
+
+
+def strip_contradicting_locative(description, location_name):
+    """Drop a "This event will take place in person at <Venue>" sentence whose
+    named venue shares no significant word with `location_name`.
+
+    Returns the description unchanged when nothing contradicts, and None when
+    the contradicting sentence was the ENTIRE description — a NULL description
+    is recoverable (the detail crawl and the merger backfill both fill it in), a
+    confidently wrong venue name is not.
+    """
+    if not description or not location_name:
+        return description
+    here = _locative_tokens(location_name)
+    if not here:
+        return description
+
+    kept, dropped = [], False
+    for sentence in _split_sentences(description.strip()):
+        match = _LOCATIVE_SENTENCE.match(sentence)
+        if match and _names_a_venue(match.group(1)):
+            named = _locative_tokens(match.group(1))
+            if named and not (named & here):
+                dropped = True
+                continue
+        kept.append(sentence)
+
+    if not dropped:
+        return description
+    return ' '.join(kept).strip() or None
+
+
 def process_events(cursor, connection, crawl_result_id, website_name, run_date_str,
                    locations_map=None, websites_map=None, tag_context=None):
     """
@@ -5815,6 +6057,15 @@ def process_events(cursor, connection, crawl_result_id, website_name, run_date_s
     for event in events:
         if 'name' in event:
             event['short_name'] = create_short_name(event['name'])
+        # Drop a locative sentence that belongs to a SIBLING record on the same
+        # listing page (see strip_contradicting_locative above).
+        cleaned = strip_contradicting_locative(
+            event.get('description'), event.get('location'))
+        if cleaned != event.get('description'):
+            print(f"    - Dropped contradicting venue sentence from "
+                  f"{event.get('name', '?')[:60]!r} "
+                  f"(location_name: {event.get('location')})")
+            event['description'] = cleaned
 
     # A re-processed crawl_result REPLACES its rows; it does not add to them.
     #
@@ -6263,6 +6514,10 @@ async def crawl_event_details(cursor, connection, candidates, num_workers=10):
         all work finished before the stall.
         """
         crawl_config = crawl_configs.get(ws_id, crawler.build_event_crawl_config({}))
+        # The site's own extraction notes steer the detail prompt exactly as
+        # they steer the listing prompt. Skipping them here let a per-site
+        # directive win on the listing pass and then get undone by this one.
+        site_notes = website_settings.get(ws_id, {}).get('notes', '') or ''
         for ce_id, name, url, _ in events_by_website[ws_id]:
             async with semaphore:
                 attempted_ids.append(ce_id)
@@ -6273,7 +6528,8 @@ async def crawl_event_details(cursor, connection, candidates, num_workers=10):
                     continue
                 try:
                     data = await asyncio.wait_for(
-                        extractor.extract_single_event(name, content),
+                        extractor.extract_single_event(
+                            name, content, notes=site_notes, url=url),
                         timeout=EXTRACT_TIMEOUT,
                     )
                 except asyncio.TimeoutError:

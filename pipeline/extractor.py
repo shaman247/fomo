@@ -1373,7 +1373,7 @@ class SingleEventExtraction(BaseModel):
     emoji: str = Field(description="Single emoji representing the event")
 
 
-async def extract_single_event(event_name, content):
+async def extract_single_event(event_name, content, notes="", url=""):
     """
     Extract event details from a single event page.
 
@@ -1381,17 +1381,39 @@ async def extract_single_event(event_name, content):
     available." or missing location/times from the listing page. Uses Gemini
     structured output for reliable parsing.
 
+    Args:
+        event_name: name the listing gave this event
+        content: the detail page's crawled text
+        notes: the site's `websites.notes`, injected the same way the listing
+            extraction injects it (`get_prompt`/`get_chunk_prompt`). Without
+            this a per-site directive — "this series prints its whole season
+            on every dated page, date each record only with the date beside
+            its own title" — held for the listing pass and was then thrown
+            away by the detail pass, which re-derived the union.
+        url: the page's own URL. Site notes routinely key off it (Bryant
+            Park's dated series pages carry the installment date in the path),
+            and it is the only signal distinguishing one dated page of a
+            series from another when the body lists them all.
+
     Returns dict with 'description', 'hashtags', 'emoji', and optionally
     'location', 'sublocation', 'occurrences', or None on failure.
     """
     if not llm_providers.is_configured(llm_providers.provider_for('detail'), genai_client):
         return None
 
+    # Strip `[[extraction: ...]]` directive lines exactly as prepare_extraction
+    # does — they steer the listing pipeline, not a prompt.
+    _, notes = parse_extraction_directives(notes or "")
+    note_section = f"IMPORTANT: {notes.strip()}\n\n" if notes and notes.strip() else ""
+    url_section = f'This page\'s URL is {url}\n' if url else ""
+
     current_date = datetime.now().strftime("%Y-%m-%d")
     prompt = (
         f'Today\'s date is {current_date}. '
         f'Extract information about the event "{event_name}" from this web page. '
-        f'Include the venue name if it appears on the page.\n\n'
+        f'Include the venue name if it appears on the page.\n'
+        f'{url_section}\n'
+        f'{note_section}'
         f'CRITICAL — DESCRIPTION: The description MUST be derived from words '
         f'and sentences actually present on the page. If the page only contains '
         f'the event name, date/time, venue, and links (no descriptive prose), '
