@@ -180,10 +180,28 @@ def custom_fetch_profile(urls) -> Optional[SiteProfile]:
 
 # --- extract-level helpers (extractor.py) ---
 
-def resolve_notes(base_url, notes) -> str:
-    """Prepend a profile's extraction_notes to the per-site notes."""
-    p = resolve_profile(base_url)
-    prefix = p.extraction_notes if (p and p.extraction_notes) else None
+def resolve_notes(urls, notes) -> str:
+    """Prepend a profile's extraction_notes to the per-site notes.
+
+    `urls` is a single URL or an iterable of candidate URLs; the first one that
+    matches a profile wins.
+
+    Passing more than the bare `websites.base_url` matters. A plugin is selected
+    at CRAWL time from `website_urls.url`, but base_url is usually the site root,
+    so any profile carrying a `path_substr` silently failed to match here: all
+    117 meetup sites (`/events/`) and all 76 eventbrite `/o/` sites have a
+    base_url without that segment, so their extraction_notes — including
+    "use the EVENT DETAIL URL as the event URL" — never reached the prompt.
+    Measured 2026-08-26: 227 websites across 9 profiles were affected.
+    """
+    if isinstance(urls, str) or urls is None:
+        urls = [urls]
+    prefix = None
+    for u in urls:
+        p = resolve_profile(u)
+        if p and p.extraction_notes:
+            prefix = p.extraction_notes
+            break
     if prefix:
         return f"{prefix}\n\n{notes}".rstrip() if notes else prefix
     return notes or ""

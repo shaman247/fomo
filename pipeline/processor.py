@@ -14,6 +14,7 @@ Key features:
 
 import asyncio
 import functools
+import html
 import time
 import json
 from contextlib import asynccontextmanager
@@ -443,6 +444,47 @@ def filter_by_tag(processed_row, tag_rules):
 # grace and are rejected as soon as end_date < today.
 PAST_START_GRACE_DAYS = 7
 
+# An open-ended RUN (a gallery/museum show listed only by its opening date —
+# "Opened May 28, 2026") has a past start_date and no end_date at all, so the
+# PAST_START_GRACE_DAYS branch below rejected it on day 8 as 'end_in_past'. A
+# rejected row never becomes a crawl_event, so archive_outdated_events then
+# archives a show that is still on the wall (w2322 Figure/Ground, rejected on
+# six consecutive crawls). This is the MIRROR IMAGE of the "Through Aug 22"
+# case handled inside filter_by_date: that one has a real end and no start,
+# this one a real start and no end. A run has no natural end date, so cap it at
+# a horizon that comfortably outlives the crawl cadence and let
+# absence-from-crawl do the archiving when the show actually closes.
+OPEN_RUN_HORIZON_DAYS = 60
+
+# Tags that mark a row as a RUN rather than a one-off occasion. Only these get
+# a past start_date with no end_date read as "still on view" instead of "over";
+# a concert from last month must keep being rejected. Gating on the row's own
+# tags rather than on the dates is what keeps the blast radius tiny: replayed
+# over 144,424 extracted occurrences from 7 days of crawls, this changes 11
+# decisions across 4 events and newly rejects nothing.
+_OPEN_RUN_TAGS = frozenset({
+    'exhibition', 'exhibitions', 'exhibit', 'exhibits',
+    'onview', 'onviewnow', 'installation', 'gallery',
+})
+
+
+def _is_open_ended_run(row_dict):
+    """True when the row's own tags mark it as a gallery/museum run.
+
+    Reads both `hashtags` (raw extractor output, still present at the
+    filter_by_date call site — process_tags pops it later) and `tags`
+    (post-processing), and tolerates either a list or a comma-separated string.
+    """
+    for field in ('hashtags', 'tags'):
+        raw = row_dict.get(field)
+        if not raw:
+            continue
+        values = raw.split(',') if isinstance(raw, str) else raw
+        for tag in values:
+            if str(tag).strip().lower().replace(' ', '').replace('-', '') in _OPEN_RUN_TAGS:
+                return True
+    return False
+
 
 def filter_by_date(row_dict, current_date, future_limit_date):
     """Filters a row based on its start and end dates.
@@ -493,9 +535,19 @@ def filter_by_date(row_dict, current_date, future_limit_date):
             duration_days = (end_date - start_date).days
         else:
             # No explicit end_date: grace period on start_date
-            if start_date < current_date - timedelta(days=PAST_START_GRACE_DAYS):
-                return False, 'end_in_past'
             duration_days = 0
+            if start_date < current_date - timedelta(days=PAST_START_GRACE_DAYS):
+                if not _is_open_ended_run(row_dict):
+                    return False, 'end_in_past'
+                # Open-ended run: real opening date, no closing date. Give it a
+                # bounded horizon anchored on TODAY, so every crawl slides it
+                # forward and the show stays on the map until it actually drops
+                # off the page. The duration_too_long guard below still rejects
+                # a scrape-artifact opening from years ago.
+                open_run_end = current_date + timedelta(days=OPEN_RUN_HORIZON_DAYS)
+                end_date_str = open_run_end.strftime('%Y-%m-%d')
+                row_dict['end_date'] = end_date_str
+                duration_days = (open_run_end - start_date).days
 
         if duration_days > 400:
             return False, 'duration_too_long'
@@ -3174,6 +3226,38 @@ def _sanity_check_end_time(start_time, end_time, source_text):
 # Event Grouping
 # =============================================================================
 
+_HTML_ENTITY_RE = re.compile(r'&(#?[A-Za-z0-9]+);')
+
+
+def unescape_event_name(name):
+    """Decode HTML entities in an extracted event name, case-insensitively.
+
+    Plain `html.unescape` is not enough here because named entities are
+    case-sensitive (`&Euml;` is valid, `&EUML;` is not) and many sources publish
+    their listings in ALL CAPS — Knitting Factory's feed yields
+    `SYT&EUML;, VON STEARNS` and `LA S&EACUTE;CURIT&EACUTE;, YUVEES`, which
+    `html.unescape` leaves untouched and `normalize_event_name_caps` then
+    title-cases into the entity-bearing names that show up in `events.name`.
+    Any entity left standing after the strict pass is retried lowercased, then
+    capitalized; the letter's own case does not survive the title-casing
+    downstream anyway. A bare "&" (as in "Arts & Crafts") never matches.
+    """
+    decoded = html.unescape(name)
+    if '&' not in decoded:
+        return decoded
+
+    def _resolve(match):
+        token = match.group(0)
+        body = match.group(1)
+        for variant in (f'&{body.lower()};', f'&{body.capitalize()};'):
+            out = html.unescape(variant)
+            if out != variant:
+                return out
+        return token
+
+    return _HTML_ENTITY_RE.sub(_resolve, decoded)
+
+
 def normalize_event_name_caps(event_name):
     """Normalizes mostly-caps event names to title case with smart rules.
 
@@ -3295,6 +3379,13 @@ def group_event_occurrences(rows, source_url=None):
         event_name = row_dict.get('name')
         if not event_name:
             continue
+
+        # Decode HTML entities (&aacute; &amp; …) before any grouping or dedupe
+        # comparison, so an entity-encoded name and its decoded twin collapse
+        # into one group instead of racing as duplicates.
+        if '&' in event_name:
+            event_name = unescape_event_name(event_name)
+            row_dict['name'] = event_name
 
         if event_name.upper().startswith(('CANCELED:', 'CANCELLED:', 'KIM:', 'KIM -')):
             continue
@@ -4572,6 +4663,46 @@ def _num_in_building_range(num, lo, hi):
     return lo_i < num_i < hi_i
 
 
+def _street_name_single_typo(sub_key, addr_key):
+    """True when two loose address keys differ only by a one-letter misspelling
+    of a long street name ("111 conselya st" vs "111 conselyea st").
+
+    Some sources (Luma listings for Studio 111 Brooklyn, for example) drop or
+    double a letter in the street name. The house number, the street type and
+    every other word must match exactly, and the one word that differs must be
+    at least 6 characters on both sides and off by a single edit -- short names
+    are excluded on purpose, because real distinct streets can sit one letter
+    apart ("26 Bond St" vs "26 Pond St").
+    """
+    m_sub = re.match(r'^(\d+)\s+(.+)$', sub_key or '')
+    m_addr = re.match(r'^(\d+)\s+(.+)$', addr_key or '')
+    if not m_sub or not m_addr:
+        return False
+    if m_sub.group(1) != m_addr.group(1):
+        return False
+    sub_words = m_sub.group(2).split()
+    addr_words = m_addr.group(2).split()
+    # Same shape: same number of words, and the trailing street type identical.
+    if len(sub_words) != len(addr_words) or len(sub_words) < 2:
+        return False
+    if sub_words[-1] != addr_words[-1]:
+        return False
+    diffs = [(a, b) for a, b in zip(sub_words, addr_words) if a != b]
+    if len(diffs) != 1:
+        return False
+    a, b = diffs[0]
+    if len(a) < 6 or len(b) < 6:
+        return False
+    if any(ch.isdigit() for ch in a + b):
+        return False
+    if abs(len(a) - len(b)) > 1:
+        return False
+    # Levenshtein distance of exactly 1, derived from the shared ratio helper.
+    ratio = _calculate_levenshtein_ratio(a, b)
+    distance = len(a) + len(b) - ratio * (len(a) + len(b))
+    return round(distance) == 1
+
+
 def sublocation_redundant_with_address(sublocation, location_address):
     """True when sublocation is just the venue address (safe to clear).
 
@@ -4646,6 +4777,9 @@ def sublocation_redundant_with_address(sublocation, location_address):
     if not sub or not addr:
         return False
     if sub == addr:
+        return True
+    # One-letter misspelling of a long street name ("conselya" vs "conselyea").
+    if _street_name_single_typo(sub, addr):
         return True
     # Hyphenated suite form ("68117 jay st") vs bare house number ("68 jay st")
     # on the same street. Check both directions.
@@ -4985,10 +5119,35 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
     if len(normalized_loc) > 3 and normalized_loc not in location_keys:
         location_keys.append(normalized_loc)
 
+    # Keys too short for the guard above, admitted to the EXACT tiers only.
+    #
+    # The > 3 floor exists for prefix (Step 4) and fuzzy (Step 5) matching, where
+    # a 2-3 character key matches half the corpus. Applied to the exact tiers as
+    # well, it made every venue whose normalized name is that short unreachable
+    # BY ITS OWN NAME: `_normalize_location_name('OS NYC')` strips the area
+    # qualifier and yields 'os', so no search key was built at all and Steps 1-2
+    # never ran, even though `build_locations_map` indexes the key. Blast radius
+    # when found (2026-08-27): 7 locations (OS NYC, d.b.a., Q.E.D., NYU Brooklyn,
+    # BKK New York, DSK Brooklyn, KRU Brooklyn) plus 46 curated alternate names
+    # dead the same way ('A.I.R.', 'P.I.T.', 'FIT NYC', 'JCC Manhattan', …) —
+    # their events went NULL on every crawl.
+    #
+    # Safe because an EXACT hit is a full-string identity, not a partial one, and
+    # every Step 1/2 guard still applies (area conflict, region conflict,
+    # brand-family, single-venue initialism). Measured over the live corpus the
+    # same day: 86 short keys across the three tiers, and ZERO of them map to
+    # more than one location — so this cannot introduce an ambiguous match. These
+    # keys are deliberately kept OUT of `location_keys`, so prefix and fuzzy
+    # matching still never see them.
+    short_exact_keys = []
+    for candidate in (full_loc, normalized_loc):
+        if candidate and len(candidate) <= 3 and candidate not in short_exact_keys:
+            short_exact_keys.append(candidate)
+
     # Snapshot before adding heuristic variants. The website-scoped tier (Step 1)
     # only consults primary keys — it represents user-curated mappings that take
     # precedence over our extraction-recovery heuristics.
-    primary_search_keys = location_keys.copy()
+    primary_search_keys = location_keys + short_exact_keys
     if len(normalized_name) > 3:
         primary_search_keys.append(normalized_name)
 
@@ -5091,7 +5250,8 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
     # silently dumped their events onto the neighborhood pin. That is the
     # `location_name_vs_program_name` failure mode, and 31 generic/branch pairs
     # were exposed to it.
-    exact_loc_keys = [k for k in location_keys if k not in heuristic_keys]
+    exact_loc_keys = ([k for k in location_keys if k not in heuristic_keys]
+                      + short_exact_keys)
     variant_loc_keys = [k for k in location_keys if k in heuristic_keys]
     event_name_keys = [k for k in search_keys if k not in location_keys]
 
@@ -6336,6 +6496,12 @@ def apply_crawled_details(cursor, connection, ce_id, data, tag_context,
                     past = parsed_end < today
                 else:
                     past = parsed_start < (today - timedelta(days=PAST_START_GRACE_DAYS))
+                    if past and _is_open_ended_run(data):
+                        # Mirror filter_by_date: an open-ended run keeps a
+                        # bounded, crawl-refreshed horizon instead of dying.
+                        past = False
+                        parsed_end = today + timedelta(days=OPEN_RUN_HORIZON_DAYS)
+                        end_date = parsed_end.strftime('%Y-%m-%d')
                 if past:
                     log_rejection(
                         cursor, cr_id, ws_id,

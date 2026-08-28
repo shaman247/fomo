@@ -1102,6 +1102,7 @@ def are_names_similar(name1, name2):
     core1 = extract_core_title(name1)
     core2 = extract_core_title(name2)
     skip_core_title_match = False
+    sibling_subtitles = False
     if core1 and core2:
         norm_core1 = normalize_name_for_dedup(core1)
         norm_core2 = normalize_name_for_dedup(core2)
@@ -1121,6 +1122,36 @@ def are_names_similar(name1, name2):
                         return True
                     # Subtitles don't match - skip core title matching entirely
                     skip_core_title_match = True
+                    # Sibling veto: an equal series HEAD with subtitles whose
+                    # WORDS barely overlap means two sub-events of one program
+                    # ("2026 Oscar Nominated Shorts: Animation" / ": Documentary",
+                    # "Kids in Motion: <playground A>" / "<playground B>",
+                    # "Author Talk with <X>" / "<Y>"). The shared head then
+                    # outvotes the one distinguishing token in the containment
+                    # tiers below (the dominant shape of the 2026-08-19 URL
+                    # contamination, 21 of 37 wrong rows), so those tiers are
+                    # switched off for this pair. Word-level corroboration keeps
+                    # the legitimate variants the raw-substring test above is too
+                    # strict for — an abbreviated lineup vs its full spelling
+                    # ("Khraibani, Matuk, …" ⊂ "Sahar Khraibani, Farid Matuk, …"),
+                    # a lineup that gained acts — by letting >= 0.75 of the
+                    # smaller subtitle's stemmed words vouch for the pair, and the
+                    # symmetric Jaccard tiers stay on either way (they judge whole
+                    # names, so "&" vs "and" formatting twins still merge).
+                    # Measured over all 33,829 distinct (event, crawl_event) name
+                    # pairs (.scratch/nametier_measure.py, 2026-08-27): 498 pairs
+                    # stop matching, 0 newly match. Hand-sampled ~150: dominated
+                    # by genuinely distinct siblings (Oscar-shorts categories,
+                    # library-festival sub-events, NYC Parks playground fleet,
+                    # age cohorts); the losses are typo twins ("Carl Schruz") and
+                    # TBD-vs-resolved World Cup placeholders, which degrade to
+                    # duplicates /dedupe-events catches — the deliberate bias.
+                    sub_words1 = get_significant_words(subtitle1, stem=True)
+                    sub_words2 = get_significant_words(subtitle2, stem=True)
+                    if sub_words1 and sub_words2:
+                        smaller = min(len(sub_words1), len(sub_words2))
+                        if len(sub_words1 & sub_words2) / smaller < 0.75:
+                            sibling_subtitles = True
                 else:
                     return True
             else:
@@ -1162,7 +1193,7 @@ def are_names_similar(name1, name2):
 
     if words1 and words2:
         # If one set of words is a subset of the other
-        if _subset_match(words1, words2, name1, name2):
+        if not sibling_subtitles and _subset_match(words1, words2, name1, name2):
             return True
 
         # Jaccard similarity >= 70%
@@ -1177,7 +1208,7 @@ def are_names_similar(name1, name2):
     stemmed2 = get_significant_words(name2, stem=True)
 
     if stemmed1 and stemmed2:
-        if _subset_match(stemmed1, stemmed2, name1, name2, stem=True):
+        if not sibling_subtitles and _subset_match(stemmed1, stemmed2, name1, name2, stem=True):
             return True
 
         # Both ratio tiers below run on the sets stripped of shared short
@@ -1193,9 +1224,10 @@ def are_names_similar(name1, name2):
 
         # Asymmetric containment: if 75%+ of the shorter name's words appear in the longer
         # Handles cases like "Jam Session" matching "TUES 8pm Jam Session. House band: ..."
-        shorter, longer = (stemmed1, stemmed2) if len(stemmed1) <= len(stemmed2) else (stemmed2, stemmed1)
-        if len(shorter) >= 2 and len(intersection) / len(shorter) >= 0.75:
-            return True
+        if not sibling_subtitles:
+            shorter, longer = (stemmed1, stemmed2) if len(stemmed1) <= len(stemmed2) else (stemmed2, stemmed1)
+            if len(shorter) >= 2 and len(intersection) / len(shorter) >= 0.75:
+                return True
 
     return False
 
@@ -1455,6 +1487,45 @@ def _demote_other_primary_urls(cursor, event_id, keep_id=None):
     return len(stale)
 
 
+# A meridiem-less 1-11 o'clock ('6:50', '7', '7:00'). processor._standardize_time
+# deliberately leaves these alone — a bare '7:00' is as plausibly 7am as 7pm, and
+# guessing PM is the documented trap. But the same showtime routinely arrives twice
+# from one site, once bare and once qualified (Film Forum listed "Late Fame" at
+# both '6:50' and '6:50pm' on 2026-08-07), and the two spellings are different
+# dedupe keys, so both rows land. The bare form carries strictly less information,
+# so it loses to its own am/pm twin exactly the way a dateless row loses to a timed
+# one. No AM/PM is ever inferred: without a twin the bare value is stored unchanged.
+_BARE_CLOCK_RE = re.compile(r'^(\d{1,2})(?::([0-5]\d))?$')
+_QUALIFIED_CLOCK_RE = re.compile(r'^(\d{1,2})(?::([0-5]\d))?(am|pm)$')
+
+
+def _bare_clock_twins(start_time):
+    """The am/pm spellings a bare, meridiem-less start_time could stand for."""
+    m = _BARE_CLOCK_RE.match(start_time or '')
+    if not m:
+        return ()
+    hour = int(m.group(1))
+    if not 1 <= hour <= 11:
+        return ()  # 0/12/13-23 are unambiguous and already canonicalized
+    minute = m.group(2)
+    face = f'{hour}:{minute}' if minute and minute != '00' else str(hour)
+    return (f'{face}am', f'{face}pm')
+
+
+def _qualified_clock_bare_forms(start_time):
+    """The bare spellings that a canonical am/pm start_time supersedes."""
+    m = _QUALIFIED_CLOCK_RE.match(start_time or '')
+    if not m:
+        return ()
+    hour = int(m.group(1))
+    if not 1 <= hour <= 11:
+        return ()
+    minute = m.group(2)
+    if minute and minute != '00':
+        return (f'{hour}:{minute}',)
+    return (str(hour), f'{hour}:00')
+
+
 def _merge_occurrences_into_event(cursor, event_id, new_occurrences):
     """Insert new occurrences into event_occurrences, deduping by (sd, st, ed).
 
@@ -1511,6 +1582,10 @@ def _merge_occurrences_into_event(cursor, event_id, new_occurrences):
         if not new_st and any(s for s in existing_starts):
             continue
 
+        # A bare, meridiem-less clock face loses to its own am/pm twin.
+        if any(twin in existing_starts for twin in _bare_clock_twins(new_st)):
+            continue
+
         key = (sd, new_st, ed)
         if key in existing_by_key:
             existing_et = existing_by_key[key]
@@ -1556,6 +1631,26 @@ def _merge_occurrences_into_event(cursor, event_id, new_occurrences):
                 )
             existing_by_key.pop((sd, '', ed), None)
             existing_starts.discard('')
+
+        # Symmetric case: a qualified time arriving over an already-stored bare
+        # twin. Drop the bare row so the pair collapses whichever order they land.
+        for bare in _qualified_clock_bare_forms(new_st):
+            if bare not in existing_starts:
+                continue
+            if ed is None:
+                cursor.execute(
+                    "DELETE FROM event_occurrences WHERE event_id = %s "
+                    "AND start_date = %s AND start_time = %s AND end_date IS NULL",
+                    (event_id, sd, bare),
+                )
+            else:
+                cursor.execute(
+                    "DELETE FROM event_occurrences WHERE event_id = %s "
+                    "AND start_date = %s AND start_time = %s AND end_date = %s",
+                    (event_id, sd, bare, ed),
+                )
+            existing_by_key.pop((sd, bare, ed), None)
+            existing_starts.discard(bare)
 
         cursor.execute(
             "INSERT INTO event_occurrences (event_id, start_date, start_time, end_date, end_time, sort_order) "

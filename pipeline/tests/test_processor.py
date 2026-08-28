@@ -13,6 +13,7 @@ from processor import (
     filter_by_date,
     group_event_occurrences,
     normalize_event_name_caps,
+    unescape_event_name,
     strip_leading_emoji,
     is_obvious_non_event,
     is_cancelled_by_url,
@@ -1144,6 +1145,45 @@ class TestSublocationRedundantWithAddress(unittest.TestCase):
             "45 East 20th St", "150 1st Ave"))
 
 
+class TestStreetNameSingleTypo(unittest.TestCase):
+    """Luma listings for Studio 111 Brooklyn (loc 7707) spell the street
+    "Conselya St" while the DB has the correct "Conselyea St", so 10 events
+    exported the venue's own address as a sublocation. Tolerate a one-letter
+    misspelling of a LONG street name when the house number and street type
+    match exactly.
+
+    Verified against all 11,033 distinct (sublocation, address) pairs in the
+    DB: 3 newly redundant (all loc 7707), 0 previously-redundant pairs lost --
+    the rule only ever adds a match."""
+
+    def test_dropped_letter_in_long_street_name_is_redundant(self):
+        for sub in ("111 Conselya St Fl 2, Brooklyn",
+                    "111 Conselya St Floor 2, Brooklyn",
+                    "111 Conselya St, Brooklyn"):
+            self.assertTrue(sublocation_redundant_with_address(
+                sub, "111 Conselyea St, 2nd Floor, Brooklyn, NY 11211, USA"),
+                sub)
+
+    def test_short_street_names_one_letter_apart_are_not_merged(self):
+        # Real distinct streets can sit a single edit apart, so the rule
+        # refuses anything under 6 characters.
+        self.assertFalse(sublocation_redundant_with_address(
+            "26 Bond St, Brooklyn", "26 Pond St, Brooklyn"))
+
+    def test_different_house_number_on_same_street_still_differs(self):
+        self.assertFalse(sublocation_redundant_with_address(
+            "319 Columbia Street", "315 Columbia St, Brooklyn, NY 11231, USA"))
+
+    def test_different_street_type_is_not_a_typo(self):
+        self.assertFalse(sublocation_redundant_with_address(
+            "50 Bedford Ave, Brooklyn", "50 Bedford St, New York"))
+
+    def test_directional_suffix_swap_is_not_a_typo(self):
+        self.assertFalse(sublocation_redundant_with_address(
+            "100 Prospect Park West, Brooklyn",
+            "100 Prospect Park East, Brooklyn"))
+
+
 class TestCrossStreetSuffixAddresses(unittest.TestCase):
     """Galleries and theaters address themselves by cross street ("980 Madison
     at 76th Street" — loc 333 Gagosian, event 97417). The cross street's own
@@ -1602,6 +1642,48 @@ def _make_locations_map(entries, website_scoped=None, alternate_names=None,
         'short_names': _tier(short_names), 'addresses': {},
         'website_scoped': scoped, 'website_linked': {}, 'city_states': {},
     }
+
+
+class TestShortNormalizedNamesReachExactTiers(unittest.TestCase):
+    """A venue whose normalized name is <= 3 chars must still be reachable by
+    an EXACT match on its own name.
+
+    The `> 3` floor guards prefix/fuzzy matching, but applied to key-building it
+    meant no search keys were built at all, so Steps 1-2 never ran: 7 locations
+    (OS NYC, d.b.a., Q.E.D., …) and 46 curated alternate names ('P.I.T.',
+    'JCC Manhattan', …) were unreachable by name and their events went NULL on
+    every crawl. Found 2026-08-27; measured 86 short keys live, 0 ambiguous.
+    Short keys stay OUT of prefix/fuzzy matching.
+    """
+
+    def _id(self, loc, locmap, website_id=None):
+        res = get_location_id(loc, None, 'site', 'Some Event', locmap,
+                              website_id=website_id)
+        return (res or {}).get('id')
+
+    def test_short_name_matches_names_tier(self):
+        m = _make_locations_map([('d.b.a.', 2423)])
+        self.assertEqual(self._id('d.b.a.', m), 2423)
+
+    def test_short_name_after_area_strip_matches(self):
+        # "JCC Manhattan" -> "jcc": the area qualifier is stripped, leaving a
+        # 3-char key that the old floor rejected.
+        m = _make_locations_map([], alternate_names=[('JCC Manhattan', 3351)])
+        self.assertEqual(self._id('JCC Manhattan', m), 3351)
+
+    def test_short_key_matches_short_names_tier(self):
+        m = _make_locations_map([], short_names=[('P.I.T.', 883)])
+        self.assertEqual(self._id('P.I.T.', m), 883)
+
+    def test_unknown_short_name_still_unmapped(self):
+        m = _make_locations_map([('Brooklyn Bowl', 42)])
+        self.assertIsNone(self._id('zz', m))
+        self.assertIsNone(self._id('q', m))
+
+    def test_short_key_does_not_prefix_match_a_longer_venue(self):
+        # 'os' must NOT reach "Osteria Brooklyn" — short keys are exact-only.
+        m = _make_locations_map([('Osteria Brooklyn', 77)])
+        self.assertIsNone(self._id('OS NYC', m))
 
 
 class TestExactKeyBeatsHeuristicVariant(unittest.TestCase):
@@ -2250,6 +2332,105 @@ class TestOpenEndedRunDates(unittest.TestCase):
         self.assertEqual(inserts[0][4], '9pm')
 
 
+class TestOpenEndedRunNoCloseDate(unittest.TestCase):
+    """A run listed only by its OPENING date must survive past day 8.
+
+    The mirror image of TestOpenEndedRunDates. That case is "Through Aug 22" —
+    a real end_date and a null start_date. This one is "Opened May 28, 2026" —
+    a real start_date and no end_date at all, which the PAST_START_GRACE_DAYS
+    branch rejected as 'end_in_past' on day 8. A rejected row never becomes a
+    crawl_event, so archive_outdated_events then archived a show that was still
+    on the wall.
+
+    Real regression: "Figure/Ground: Landscapes from the Collection of the
+    Renee & Chaim Gross Foundation" (w2322, event 202080), extracted correctly
+    as {"start_date": "2026-05-28", "end_date": null} on crawls 109558, 112235,
+    116068 and 118308 while rcgrossfoundation.org/exhibitions still said
+    "Opened May 28, 2026" — six logged `end_in_past` rejections, zero events on
+    the map. It sat on the map at all only because of an earlier Gemini
+    hallucination that invented a 2026-08-28 end date.
+
+    The gate is the row's own tags, not the dates: a concert from last month
+    must keep being rejected.
+    """
+
+    TODAY = date(2026, 8, 28)
+    FUTURE_LIMIT = date(2026, 11, 26)
+
+    def _filter(self, start, end, **extra):
+        row = {'name': 'Figure/Ground', 'start_date': start, 'end_date': end}
+        row.update(extra)
+        ok, reason = filter_by_date(row, self.TODAY, self.FUTURE_LIMIT)
+        return ok, reason, row
+
+    def test_open_run_past_start_survives_with_a_bounded_horizon(self):
+        ok, reason, row = self._filter(
+            '2026-05-28', None, hashtags=['Art', 'Exhibition', 'Landscape'])
+        self.assertTrue(ok, reason)
+        self.assertIsNone(reason)
+        self.assertEqual(row['start_date'], '2026-05-28')
+        # Horizon is anchored on TODAY, not on the opening date, so every crawl
+        # slides it forward and a closed show still archives on absence.
+        self.assertEqual(row['end_date'], '2026-10-27')
+
+    def test_untagged_past_one_off_is_still_rejected(self):
+        ok, reason, row = self._filter(
+            '2026-05-28', None, hashtags=['Music', 'Concert'])
+        self.assertFalse(ok)
+        self.assertEqual(reason, 'end_in_past')
+        self.assertIsNone(row['end_date'])
+
+    def test_row_with_no_tags_at_all_is_still_rejected(self):
+        ok, reason, _ = self._filter('2026-05-28', None)
+        self.assertFalse(ok)
+        self.assertEqual(reason, 'end_in_past')
+
+    def test_within_grace_period_is_untouched(self):
+        # Inside PAST_START_GRACE_DAYS nothing changes for anybody, tagged or not.
+        for tags in (['Music'], ['Exhibition']):
+            ok, reason, row = self._filter('2026-08-25', None, hashtags=tags)
+            self.assertTrue(ok, reason)
+            self.assertIsNone(row['end_date'])
+
+    def test_explicit_past_end_date_still_rejected_for_exhibitions(self):
+        # A show that told us when it closed is closed. The escape hatch only
+        # covers rows with NO end_date.
+        ok, reason, _ = self._filter(
+            '2026-05-01', '2026-08-01', hashtags=['Exhibition'])
+        self.assertFalse(ok)
+        self.assertEqual(reason, 'end_in_past')
+
+    def test_stale_run_beyond_the_duration_cap_is_rejected(self):
+        # A years-old opening date is a scrape artifact, not a live show; the
+        # existing 400-day duration guard catches it.
+        ok, reason, _ = self._filter(
+            '2019-01-01', None, hashtags=['Exhibition'])
+        self.assertFalse(ok)
+        self.assertEqual(reason, 'duration_too_long')
+
+    def test_comma_separated_hashtag_string_is_accepted(self):
+        # The TSV/CSV extraction path hands hashtags through as a string.
+        ok, reason, row = self._filter(
+            '2026-05-28', None, hashtags='Art, On View, Landscape')
+        self.assertTrue(ok, reason)
+        self.assertEqual(row['end_date'], '2026-10-27')
+
+    def test_processed_tags_field_also_counts(self):
+        # process_tags pops `hashtags` into `tags`; both spellings must work so
+        # the detail-crawl path (which sees `tags`) behaves the same.
+        ok, reason, row = self._filter(
+            '2026-05-28', None, tags=['Art', 'Exhibition'])
+        self.assertTrue(ok, reason)
+        self.assertEqual(row['end_date'], '2026-10-27')
+
+    def test_through_date_path_is_unaffected(self):
+        # TestOpenEndedRunDates' shape must keep behaving exactly as before.
+        ok, reason, row = self._filter(None, '2026-09-22')
+        self.assertTrue(ok, reason)
+        self.assertEqual(row['start_date'], '2026-08-28')
+        self.assertEqual(row['end_date'], '2026-09-22')
+
+
 class TestDetailCrawlKeepsListingDatesWhenNothingSurvives(unittest.TestCase):
     """A detail crawl that yields only PAST dates must not wipe the listing date.
 
@@ -2357,6 +2538,56 @@ class TestDatelessTwinDoesNotStarveExhibition(unittest.TestCase):
             grouped = self._group(rows)
             self.assertEqual(list(grouped), [name])
             self.assertEqual(grouped[name], [['2026-06-05', '', '2026-08-18', '']])
+
+
+class TestHtmlEntityNamesUnescaped(unittest.TestCase):
+    """Raw HTML entities in extracted names (`Gonz&aacute;lez`) must be decoded
+    before grouping, so an entity-encoded name and its decoded twin collapse
+    into one event instead of racing as duplicates (18 archived/suppressed rows
+    DB-wide carried entity names as of 2026-08-27)."""
+
+    def test_entity_name_collapses_with_decoded_twin(self):
+        rows = [
+            {'name': 'Gonz&aacute;lez Quartet', 'start_date': '2026-09-01',
+             'start_time': '19:00', 'end_date': '', 'end_time': '', 'url': ''},
+            {'name': 'González Quartet', 'start_date': '2026-09-02',
+             'start_time': '19:00', 'end_date': '', 'end_time': '', 'url': ''},
+        ]
+        events = group_event_occurrences(rows)
+        self.assertEqual(len(events), 1)
+        self.assertEqual(events[0]['name'], 'González Quartet')
+
+    def test_plain_ampersand_untouched(self):
+        rows = [{'name': 'Arts & Crafts Fair', 'start_date': '2026-09-01',
+                 'start_time': '', 'end_date': '', 'end_time': '', 'url': ''}]
+        events = group_event_occurrences(rows)
+        self.assertEqual(events[0]['name'], 'Arts & Crafts Fair')
+
+    def test_all_caps_entities_decode(self):
+        # Named entities are case-sensitive, but sources publish ALL CAPS
+        # listings: `html.unescape` alone leaves `&EUML;` raw, and the
+        # title-caser then bakes it into events.name (w30 Knitting Factory).
+        self.assertEqual(unescape_event_name('SYT&EUML;, VON STEARNS'),
+                         'SYTë, VON STEARNS')
+        self.assertEqual(unescape_event_name('LA S&EACUTE;CURIT&EACUTE;, YUVEES'),
+                         'LA SéCURITé, YUVEES')
+
+    def test_bare_ampersand_words_untouched(self):
+        for name in ('Arts & Crafts Fair', 'R&D Lab', 'Rock & Roll'):
+            self.assertEqual(unescape_event_name(name), name)
+
+    def test_numeric_entities_decode(self):
+        self.assertEqual(unescape_event_name('Caf&#233; Night'), 'Café Night')
+
+    def test_all_caps_entity_collapses_with_decoded_twin(self):
+        rows = [
+            {'name': 'SYT&EUML;, VON STEARNS', 'start_date': '2026-09-10',
+             'start_time': '20:00', 'end_date': '', 'end_time': '', 'url': ''},
+            {'name': 'SytË, Von Stearns', 'start_date': '2026-09-11',
+             'start_time': '20:00', 'end_date': '', 'end_time': '', 'url': ''},
+        ]
+        events = group_event_occurrences(rows)
+        self.assertEqual(len(events), 1)
 
 
 class TestJunkFilterGaps20260727(unittest.TestCase):

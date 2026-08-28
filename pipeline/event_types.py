@@ -50,6 +50,7 @@ EVENT_TYPES_BY_CATEGORY = {
     "Social": [
         "Club Night",
         "Party",
+        "Mixer",
         "Benefit",
         "Watch Party",
         "Festival",
@@ -119,7 +120,7 @@ TYPE_EMOJI = {
     "Open Practice": "🔄", "Volunteer": "🤝", "Drop-In Service": "🩺",
     "Exhibition": "🖼️", "Open House": "🚪", "Market": "🛍️", "Fair": "🪧",
     "Pop-Up": "✨", "Immersive Experience": "🌌",
-    "Club Night": "🪩", "Party": "🎉", "Benefit": "🎗️", "Watch Party": "📺",
+    "Club Night": "🪩", "Party": "🎉", "Mixer": "🫂", "Benefit": "🎗️", "Watch Party": "📺",
     "Festival": "🎡", "Community Celebration": "🎊",
     "Talk": "🗣️", "Service": "🙏", "Ceremony": "🎖️", "Civic Meeting": "🏛️",
     "Discussion Group": "💬",

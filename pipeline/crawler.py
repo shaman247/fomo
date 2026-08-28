@@ -141,6 +141,61 @@ def _is_json_api_payload(content):
         return bool(parsed)
     return isinstance(parsed, list)
 
+# --- Luma calendar truncation guard -------------------------------------------
+#
+# `api.lu.ma/url?url=<slug>` hard-caps its `featured_items` array at 20 entries
+# with no pagination and no "has_more" flag, so a calendar with 44 upcoming
+# events answers with 20 and looks perfectly healthy (status='processed',
+# event_count=20). That is silent coverage loss of exactly the
+# crawl_window_coverage_gap shape: nothing downstream can tell a capped calendar
+# from a small one. Found 2026-08-21 on w489 Climate Cafe (20 -> 44 real).
+#
+# The fix per site is to swap the crawl URL to
+# `api.lu.ma/calendar/get-items?calendar_api_id=...&period=future&pagination_limit=100`.
+# This guard exists so the NEXT calendar to grow past 20 announces itself in the
+# run log instead of quietly flattening, rather than waiting for another audit.
+_LUMA_CAP = 20
+
+
+def warn_if_luma_capped(content, website_name):
+    """Print a warning when a crawl body is a Luma feed sitting exactly at the cap.
+
+    Returns True when the warning fired (for tests). Deliberately silent on any
+    other payload shape — this must never add noise to non-Luma crawls.
+    """
+    if not content or 'featured_items' not in content:
+        return False
+    lines = [
+        line for line in content.splitlines()
+        if line.strip()
+        and not _URL_ONLY_LINE_RE.match(line)
+        and not _CODE_FENCE_LINE_RE.match(line)
+    ]
+    payload = '\n'.join(lines).strip()
+    if not payload or payload[0] != '{':
+        return False
+    try:
+        parsed = json.loads(payload)
+    except (ValueError, TypeError):
+        return False
+    if not isinstance(parsed, dict):
+        return False
+    # Both the wrapped ({"kind":"calendar","data":{...}}) and bare shapes.
+    data = parsed.get('data') if isinstance(parsed.get('data'), dict) else parsed
+    items = data.get('featured_items')
+    if not isinstance(items, list) or len(items) != _LUMA_CAP:
+        return False
+    cal = (data.get('calendar') or {}).get('api_id') if isinstance(data.get('calendar'), dict) else None
+    print(
+        f"    - WARNING: Luma feed returned exactly {_LUMA_CAP} featured_items for "
+        f"{website_name} - the api.lu.ma/url?url= endpoint caps at {_LUMA_CAP} and is "
+        f"almost certainly truncating. Swap website_urls.url to "
+        f"https://api.lu.ma/calendar/get-items?calendar_api_id={cal or '<cal-id>'}"
+        f"&period=future&pagination_limit=100 and re-crawl."
+    )
+    return True
+
+
 try:
     from crawl4ai import AsyncWebCrawler, BrowserConfig, CrawlerRunConfig
     from crawl4ai.markdown_generation_strategy import DefaultMarkdownGenerator
@@ -534,6 +589,8 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
                 db.update_crawl_result_failed(cursor, connection, crawl_result_id, error_msg)
                 db.update_website_last_crawled(cursor, connection, website['id'])
                 return None
+
+        warn_if_luma_capped(combined_markdown, name)
 
         # Store crawled content in database
         db.update_crawl_result_crawled(cursor, connection, crawl_result_id, combined_markdown)

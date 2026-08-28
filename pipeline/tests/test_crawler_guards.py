@@ -431,3 +431,51 @@ class TestDetailCrawlChallengeGuard(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class TestLumaCapWarning(unittest.TestCase):
+    """`api.lu.ma/url?url=` caps featured_items at 20 with no has_more flag.
+
+    A capped calendar is indistinguishable from a small one downstream, so the
+    warning at crawl time is the only place the truncation can announce itself.
+    """
+
+    def _payload(self, n, wrapped=True, cal='cal-ABC'):
+        import json as _json
+        body = {'calendar': {'api_id': cal}, 'featured_items': [{'i': i} for i in range(n)]}
+        doc = {'kind': 'calendar', 'data': body} if wrapped else body
+        return 'https://api.lu.ma/url?url=slug\n' + _json.dumps(doc)
+
+    def test_fires_at_exactly_twenty(self):
+        self.assertTrue(crawler.warn_if_luma_capped(self._payload(20), 'Some Calendar'))
+
+    def test_fires_on_unwrapped_shape(self):
+        self.assertTrue(
+            crawler.warn_if_luma_capped(self._payload(20, wrapped=False), 'Some Calendar')
+        )
+
+    def test_silent_below_the_cap(self):
+        self.assertFalse(crawler.warn_if_luma_capped(self._payload(19), 'Some Calendar'))
+
+    def test_silent_above_the_cap(self):
+        """A paginated get-items feed can exceed 20 legitimately - never warn."""
+        self.assertFalse(crawler.warn_if_luma_capped(self._payload(44), 'Some Calendar'))
+
+    def test_silent_on_empty_feed(self):
+        self.assertFalse(crawler.warn_if_luma_capped(self._payload(0), 'Some Calendar'))
+
+    def test_silent_on_non_luma_content(self):
+        for content in ('', None, 'just some markdown', '<h1>featured_items</h1>',
+                        '{"events": []}', 'featured_items but not json'):
+            self.assertFalse(crawler.warn_if_luma_capped(content, 'Some Site'))
+
+    def test_names_the_calendar_id_in_the_fix(self):
+        import io
+        import contextlib
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            crawler.warn_if_luma_capped(self._payload(20, cal='cal-XYZ'), 'Some Calendar')
+        out = buf.getvalue()
+        self.assertIn('cal-XYZ', out)
+        self.assertIn('pagination_limit=100', out)
+        self.assertIn('Some Calendar', out)

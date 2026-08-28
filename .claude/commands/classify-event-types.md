@@ -4,7 +4,7 @@ Populate the `events.event_type` column by classifying events against a fixed
 taxonomy. The classifier runs as Claude (no Gemini call), reading event name +
 description + venue + tags + occurrence shape and assigning one type per event.
 
-## Taxonomy (33 types + Other catch-all, 6 categories)
+## Taxonomy (34 types + Other catch-all, 6 categories)
 
 > The exact storable label strings are also defined in `pipeline/event_types.py`
 > (`VALID_EVENT_TYPES`) — the machine-readable single source of truth. When you
@@ -44,8 +44,12 @@ tags** (e.g. no `Dance` type — a dance show is `Theater Show` + `Dance` tag).
 
 ### Social — open-ended gathering; being among others is the point
 - **Club Night** — DJ-driven late-night dancing. **Weekly recurring DJ + dancing → Club Night** regardless of "Party" in the name.
-- **Party** — themed social gathering, networking mixer, brunch, holiday party. Default Social bucket when nothing else fits.
-- **Benefit** — fundraiser / gala / awards ceremony with a **mixed program** (cocktails + auction + performance + dinner). Different from `Concert` (single billed perf) and `Party` (mixer, no program).
+- **Party** — themed celebratory social gathering: brunch party, holiday party, birthday, dance party that isn't a Club Night. Festive framing is the tell. Default Social bucket when nothing else fits **and the event is celebratory**.
+- **Mixer** — a **hosted, low-key gathering whose purpose is meeting people or being among a group**, with no celebratory or nightlife framing: coffee hours, member receptions, networking events, meet-and-greets, happy hours, speed-dating, newcomer socials, alumni/affinity socials. Typically daytime or early-evening, often organised by an institution (university office, museum membership, library, professional group). Different from `Party` (celebratory/festive — a Mixer is sociable but not a celebration), `Discussion Group` (a facilitated topic is the point — a Mixer has no agenda), `Talk` (no billed speaker), `Community Celebration` (public/civic occasion), and `Open House` (Browsable — touring a space, not meeting people).
+  **Gallery opening / closing / artist receptions are `Mixer`.** They are point-in-time social events where you look at work and meet people; the exhibition's own open run is a separate `Exhibition` row. Do not type a reception `Exhibition`.
+  **Speed dating and singles/friend-matching events are `Mixer`** — meeting people is the entire purpose.
+  **Watch the false friends.** "Happy hour" and "social" in a name are not sufficient: a happy hour with a **billed DJ or live act** is `Club Night`/`Concert`, a **bar crawl** is an `Outing`, a **paddle/hike/kayak social** is `Outing` or `Fitness`, a **co-working session** is `Open Practice`, and something like "Social Media Marketing" is a `Class`/`Talk` that merely contains the word.
+- **Benefit** — fundraiser / gala / awards ceremony with a **mixed program** (cocktails + auction + performance + dinner). Different from `Concert` (single billed perf), `Party` (celebration, no program), and `Mixer` (no fundraising, no program).
 - **Watch Party** — group viewing of a broadcast (World Cup, album listening)
 - **Festival** — multi-act, multi-day curated programming sprawl (film fest, multi-stage music fest, citywide arts week). NOT markets/bazaars (those are `Market`).
 - **Community Celebration** — a public, festive gathering marking a civic, seasonal, or milestone occasion with light mixed programming, open to all ages: anniversary celebrations, "X Day" community/neighborhood days, park/plaza celebrations, holiday family days, seasonal kickoffs ("Summer Celebration", "School's Out"). Different from `Festival` (multi-act/multi-day sprawl — Celebration is typically single-day and occasion-anchored), `Ceremony` (formal ritual observance — Celebration is festive, not ritual), `Party` (adult mixer/nightlife — Celebration is civic/family/public-occasion), and `Benefit` (no fundraising program).
@@ -101,7 +105,8 @@ tags** (e.g. no `Dance` type — a dance show is `Theater Show` + `Dance` tag).
    - If billed as fundraiser **with mixed program** (cocktail hour + auction +
      speeches + performance) → `Benefit`
    - If single billed performance with "benefit" framing → `Concert` or `Theater Show`
-   - If pure mixer/networking/party → `Party`
+   - If pure networking/mixer with no program → `Mixer`
+   - If celebratory party with no program → `Party`
 10. **Civic Meeting vs Discussion Group vs Talk:**
     - Governmental/advocacy agenda → `Civic Meeting`
     - Peer-led topical convening (book club, support group) → `Discussion Group`
@@ -118,7 +123,8 @@ tags** (e.g. no `Dance` type — a dance show is `Theater Show` + `Dance` tag).
     occasion (anniversary, "X Day", park/holiday/seasonal celebration, family
     fun day) → `Community Celebration`. Multi-act/multi-day curated sprawl →
     `Festival`. Formal/ritual civic observance → `Ceremony`. Adult
-    mixer/nightlife → `Party`.
+    celebratory/nightlife → `Party`. Low-key hosted meeting-people gathering
+    (coffee hour, reception, networking) → `Mixer`.
 14. **When two types are plausible**, choose the one that describes the
     *primary attendee experience*.
 
@@ -162,7 +168,7 @@ sweep in Mode B above is the sustaining mechanism for now.
 `Concert`, `Theater Show`, `Comedy Show`, `Screening`, `Sports`, `Reading`,
 `Class`, `Workshop`, `Camp`, `Fitness`, `Game`, `Open Practice`, `Volunteer`, `Drop-In Service`,
 `Exhibition`, `Open House`, `Market`, `Fair`, `Pop-Up`, `Immersive Experience`,
-`Club Night`, `Party`, `Benefit`, `Watch Party`, `Festival`, `Community Celebration`,
+`Club Night`, `Party`, `Mixer`, `Benefit`, `Watch Party`, `Festival`, `Community Celebration`,
 `Talk`, `Service`, `Ceremony`, `Civic Meeting`, `Discussion Group`,
 `Tour`, `Outing`,
 `Other` (genuine event, no taxonomy fit — flag for review),

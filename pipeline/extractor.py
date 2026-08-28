@@ -1695,6 +1695,31 @@ def records_per_chunk_override(directives):
     return None
 
 
+def _profile_candidate_urls(cursor, crawl_result_id, base_url):
+    """URLs to test against the source-plugin registry, most specific first.
+
+    The plugin that shaped this content was chosen from `website_urls.url` at
+    crawl time, so those rows — not `websites.base_url` — are the authoritative
+    signal for which profile's extraction_notes apply. base_url stays as a
+    fallback for sites with no website_urls rows (e.g. Instagram sources).
+    """
+    urls = []
+    try:
+        cursor.execute(
+            """SELECT wu.url FROM website_urls wu
+               JOIN crawl_results cr ON cr.website_id = wu.website_id
+               WHERE cr.id = %s""",
+            (crawl_result_id,),
+        )
+        urls = [r[0] for r in cursor.fetchall() if r and r[0]]
+    except Exception:
+        # Never let prompt decoration break an extraction.
+        urls = []
+    if base_url:
+        urls.append(base_url)
+    return urls
+
+
 async def prepare_extraction(cursor, crawl_result_id, website_name, notes="",
                               use_vision=False, base_url="", max_batches=None):
     """
@@ -1715,7 +1740,8 @@ async def prepare_extraction(cursor, crawl_result_id, website_name, notes="",
     Returns:
         PreparedExtraction with all data needed for execution
     """
-    notes = site_profiles.resolve_notes(base_url, notes)
+    notes = site_profiles.resolve_notes(
+        _profile_candidate_urls(cursor, crawl_result_id, base_url), notes)
     # Directives are stripped here, before the notes reach ANY prompt builder.
     directives, notes = parse_extraction_directives(notes)
 

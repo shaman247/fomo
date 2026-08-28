@@ -62,7 +62,7 @@ SKIP_LOCATION_NAMES = {
     # The literal string carries no venue info, so a mismatch against it is noise.
     'bookmobile', 'offsite- please see description',
     'offsite (venue named in description)',
-    'other offsite location [1]', 'ys dept',
+    'other offsite location [1]', 'ys dept', 'offsite 2',
     'outdoors - open spaces, parks & streets', 'outdoors - open spaces, parks& streets',
     'various nyc venues', 'the pier',
     'secret brooklyn location', 'tba - open air', 'details tba.', 'please see the flyer',
@@ -112,6 +112,40 @@ SKIP_LOCATION_NAMES = {
     # Skip-listing (rather than aliasing) is deliberate: an alt would silently
     # hijack every other branch of the chain to this one venue.
     'td bank',
+    # walking-tour / advocacy ORGS that emit their own name as the venue. Each
+    # event is already pinned to the neighborhood the tour or action covers.
+    'mas tours', 'mas nyc', 'dancing classrooms', 'hands off nyc',
+    'nyc bike + brew', 'nyc bike and brew',
+    # extraction placeholders
+    'not specified in provided content',
+    'new york city metro area (exact location unspecified)',
+    'nyc (venue tba)', 'location in manhattan to be announced.',
+    # citywide multi-venue promotions — no single venue exists
+    'various nyc restaurants',
+    # unhyphenated neighborhood spellings that are not generic_location rows
+    'bedstuy',
+    # nyc.gov street-event permits: location_name is the parade / street-fair
+    # ROUTE, not a venue. The event is pinned to the right neighborhood generic.
+    '11 madison avenue', '118 street', '37 avenue', '5 avenue',
+    'crossbay boulevard', 'hillside avenue', 'st john place',
+    # deliberately-unnamed / address-withheld venues (Partiful DIY shows, private
+    # backyard parties, Meetup series that email the meeting spot to registrants).
+    # The borough/neighborhood generic is the best mapping that will ever exist.
+    'brooklyn diy venue', 'nells, brooklyn', '4106 2nd ave', 'dear summer bbq',
+    'woodbury/plainview area park', 'sent to rsvps, new york',
+    'meatpacking district', 'harlem multiple sites outdoor',
+    # more org / operator / installation names emitted as the venue, already
+    # pinned to the right place
+    'calpulli mexican dance company', 'untapped new york',
+    'fort defiance sidewalk galleries', 'queens waterfront', 'new york harbor',
+    # more generic sub-facility labels (NYC Parks emits these for many parks;
+    # the real park is named in the event title, resolved per event)
+    'lawn', 'handball court',
+    # room descriptor inside an already-mapped venue
+    'community center, room 31',
+    # chain branch with no branch identifier — BPL runs this series at several
+    # stores, so the string must be re-resolved from the page each time
+    'starbucks',
 }
 
 # Websites whose feed emits the HOST/PARTNER ORG as `location_name` for every

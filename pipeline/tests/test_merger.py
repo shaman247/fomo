@@ -1542,5 +1542,163 @@ class TestMergeRefreshesStaleLocationName(unittest.TestCase):
         )
 
 
+class TestSiblingSubtitleVeto(unittest.TestCase):
+    """Equal series head + word-disjoint subtitles = sibling sub-events; the
+    containment tiers must not let the shared head outvote the subtitle.
+    Dominant shape of the 2026-08-19 URL contamination (21 of 37 wrong rows).
+    Measured 2026-08-27 (.scratch/nametier_measure.py): 498 pairs stop, 0 new."""
+
+    def test_distinct_program_categories_do_not_match(self):
+        self.assertFalse(merger.are_names_similar(
+            '2026 Oscar Nominated Shorts: Animation',
+            '2026 Oscar Nominated Shorts: Documentary'))
+
+    def test_distinct_playgrounds_do_not_match(self):
+        self.assertFalse(merger.are_names_similar(
+            'Kids in Motion: Flynn Playground',
+            'Kids in Motion: Willis Playground'))
+
+    def test_distinct_author_talks_do_not_match(self):
+        self.assertFalse(merger.are_names_similar(
+            '67th Street Library Comic Book Festival: Author Talk with Kevin Alvir',
+            '67th Street Library Comic Book Festival: Author Talk with Adam Szym'))
+
+    def test_muhlenberg_cinema_screenings_do_not_match(self):
+        self.assertFalse(merger.are_names_similar(
+            "Muhlenberg Cinema Club: 'Rocky'",
+            "Muhlenberg Cinema Club: 'Cat on a Hot Tin Roof'"))
+
+    def test_abbreviated_lineup_still_matches_full_spelling(self):
+        # Word-level corroboration: subtitle subset (abbreviated vs full names)
+        self.assertTrue(merger.are_names_similar(
+            '30th Showcase Reading: Khraibani, Matuk, Peñaloza, & Salas Rivera',
+            '30th Showcase Reading: Sahar Khraibani, Farid Matuk, Michelle '
+            'Peñaloza, and Roque Raquel Salas Rivera'))
+
+    def test_expanded_lineup_still_matches(self):
+        self.assertTrue(merger.are_names_similar(
+            '4 Years of Paragon: Joey Beltram, WTCHCRFT, LISAS+',
+            '4 Years of Paragon: Joey Beltram, WTCHCRFT, Guillotine, '
+            'Dream + Andi b2b Arvin T, LISAS'))
+
+    def test_formatting_twin_still_matches_via_jaccard(self):
+        # "&" vs "and" twins judge on whole names in the symmetric tiers,
+        # which the veto leaves on.
+        self.assertTrue(merger.are_names_similar(
+            '30th Showcase Reading: Almallah, Shunnarah, Tbakhi, & Tuffaha',
+            '30th Showcase Reading: Almallah, Shunnarah, Tbakhi, and Tuffaha'))
+
+
+class BareClockTwinTests(unittest.TestCase):
+    """A meridiem-less showtime must collapse into its own am/pm twin.
+
+    `processor._standardize_time` leaves a bare 1-11 o'clock alone on purpose
+    (inferring PM from '7:00' is the documented trap), so one site can emit the
+    same screening as both '6:50' and '6:50pm' and the two spellings hash to
+    different dedupe keys. Film Forum's "Late Fame" carried three such twin rows.
+    `_merge_occurrences_into_event` now treats the bare form as strictly less
+    specific — in BOTH arrival orders — without ever guessing a meridiem.
+    """
+
+    class FakeCursor:
+        """Minimal event_occurrences store for _merge_occurrences_into_event."""
+
+        def __init__(self, rows):
+            # rows: (start_date, start_time, end_date, end_time)
+            self.rows = list(rows)
+            self._result = []
+
+        def execute(self, sql, params=None):
+            s = ' '.join(sql.split())
+            if s.startswith('SELECT start_date, start_time, end_date, end_time'):
+                self._result = [(sd, st, ed, et, i)
+                                for i, (sd, st, ed, et) in enumerate(self.rows)]
+            elif s.startswith('INSERT INTO event_occurrences'):
+                _eid, sd, st, ed, et, _so = params
+                self.rows.append((sd, st, ed, et))
+                self._result = []
+            elif s.startswith('DELETE FROM event_occurrences'):
+                if 'end_date IS NULL' in s:
+                    _eid, sd, st = params
+                    ed = None
+                else:
+                    _eid, sd, st, ed = params
+                if 'start_time IS NULL OR start_time' in s:
+                    self.rows = [r for r in self.rows
+                                 if not (r[0] == sd and not r[1] and r[2] == ed)]
+                else:
+                    self.rows = [r for r in self.rows
+                                 if not (r[0] == sd and r[1] == st and r[2] == ed)]
+                self._result = []
+            elif s.startswith('UPDATE event_occurrences SET end_time'):
+                self._result = []
+            else:  # pragma: no cover
+                raise AssertionError('unexpected SQL: ' + s)
+
+        def fetchall(self):
+            return self._result
+
+        def fetchone(self):
+            return self._result[0] if self._result else None
+
+    def _merge(self, existing, incoming):
+        cursor = self.FakeCursor(existing)
+        merger._merge_occurrences_into_event(cursor, 1, incoming)
+        return sorted(cursor.rows, key=lambda r: (r[0], r[1]))
+
+    D = date(2026, 8, 7)
+
+    def test_bare_time_loses_to_its_existing_qualified_twin(self):
+        rows = self._merge([(self.D, '6:50pm', None, '')],
+                           [(self.D, '6:50', None, '')])
+        self.assertEqual(rows, [(self.D, '6:50pm', None, '')])
+
+    def test_qualified_time_evicts_an_existing_bare_twin(self):
+        rows = self._merge([(self.D, '6:50', None, '')],
+                           [(self.D, '6:50pm', None, '')])
+        self.assertEqual(rows, [(self.D, '6:50pm', None, '')])
+
+    def test_am_twin_collapses_too(self):
+        """No meridiem is inferred — either qualified spelling absorbs the bare one."""
+        rows = self._merge([(self.D, '2:25am', None, '')],
+                           [(self.D, '2:25', None, '')])
+        self.assertEqual(rows, [(self.D, '2:25am', None, '')])
+
+    def test_whole_hour_forms_collapse(self):
+        # '7' and '7:00' both normalize through _standardize_time to bare forms
+        # of the same clock face as '7pm'.
+        self.assertEqual(self._merge([(self.D, '7pm', None, '')],
+                                     [(self.D, '7', None, '')]),
+                         [(self.D, '7pm', None, '')])
+        self.assertEqual(self._merge([(self.D, '7:00', None, '')],
+                                     [(self.D, '7pm', None, '')]),
+                         [(self.D, '7pm', None, '')])
+
+    def test_a_different_clock_face_is_not_collapsed(self):
+        rows = self._merge([(self.D, '6:50pm', None, '')],
+                           [(self.D, '7:50', None, '')])
+        self.assertEqual(rows, [(self.D, '6:50pm', None, ''),
+                                (self.D, '7:50', None, '')])
+
+    def test_bare_time_with_no_twin_is_stored_unchanged(self):
+        """The fix must never invent a meridiem."""
+        rows = self._merge([], [(self.D, '6:50', None, '')])
+        self.assertEqual(rows, [(self.D, '6:50', None, '')])
+
+    def test_twelve_and_24_hour_values_are_untouched(self):
+        # '12pm'/'12am' are unambiguous and already canonical; a bare '12'
+        # normalizes to '12pm' upstream, so no bare twin can exist for them.
+        self.assertEqual(merger._bare_clock_twins('12'), ())
+        self.assertEqual(merger._bare_clock_twins('19:30'), ())
+        self.assertEqual(merger._qualified_clock_bare_forms('12pm'), ())
+
+    def test_helper_forms(self):
+        self.assertEqual(merger._bare_clock_twins('6:50'), ('6:50am', '6:50pm'))
+        self.assertEqual(merger._bare_clock_twins('7'), ('7am', '7pm'))
+        self.assertEqual(merger._bare_clock_twins('7:00'), ('7am', '7pm'))
+        self.assertEqual(merger._qualified_clock_bare_forms('6:50pm'), ('6:50',))
+        self.assertEqual(merger._qualified_clock_bare_forms('7am'), ('7', '7:00'))
+
+
 if __name__ == "__main__":
     unittest.main()
