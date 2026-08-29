@@ -177,8 +177,11 @@ class TestDeliberatelyNotCovered(unittest.TestCase):
         self.assertFalse(is_obvious_non_event(
             'Columbus Day / Indigenous People’s Day', 'No description available.'))
 
-    def test_exhibit_installation_is_not_filtered(self):
-        # Filtering this shape risks suppressing genuine exhibition openings.
+    def test_described_exhibit_installation_is_not_filtered(self):
+        # Still not filtered, and now deliberately so: the 2026-08-29 exhibit-
+        # logistics arm (TestExhibitLogistics) covers "installation" ONLY when
+        # the body adds nothing, because filtering a described one risks
+        # suppressing genuine exhibition openings.
         self.assertFalse(is_obvious_non_event(
             'Art Gallery Exhibit INSTALLATION - Artist: Alex Tric',
             'Art exhibit installation will take place in the Main Art Gallery'))
@@ -192,6 +195,155 @@ class TestDeliberatelyNotCovered(unittest.TestCase):
         self.assertFalse(is_obvious_non_event(
             'The Center for Developmental Disabilities, Inc.',
             'Individuals from the Center for Developmental Disabilities, Inc. visit weekly.'))
+
+
+class TestExhibitLogistics(unittest.TestCase):
+    """(5l) Exhibit teardown/installation logistics. Added 2026-08-29.
+
+    Audited over all 204,375 events plus 102,518 crawl_events from the previous
+    14 days: the teardown arm adds 8 event rows / 6 distinct names, every one a
+    genuine logistics row (all archived or hand-suppressed), 0 false positives;
+    the installation arm adds 1 row, 0 false positives. Nothing previously
+    flagged was lost.
+    """
+
+    def test_the_row_that_reached_the_map(self):
+        # e235700, w3530 BCCLS Libraries, hand-suppressed at classification.
+        self.assertTrue(is_obvious_non_event(
+            'Exhibit removal - Suzi Gerace', 'No description available.'))
+
+    def test_teardown_family(self):
+        for name in ('Exhibit removal - Suzi Gerace',
+                     'HAFA - Art display breakdown',
+                     'NAWA Art drop off',
+                     'Photo Show Drop Off',
+                     'Art Pickup',
+                     'Exhibition Take-Down',
+                     'Art De-Installation'):
+            with self.subTest(name=name):
+                self.assertTrue(is_obvious_non_event(name, ''))
+
+    def test_teardown_fires_even_with_a_real_body(self):
+        # These rows routinely explain the move in a full sentence, so a
+        # description gate would spare every one of them.
+        self.assertTrue(is_obvious_non_event(
+            'Art Pickup',
+            "Pick up artwork following the conclusion of the 'Extremes' "
+            'exhibition by Susan Kasson Sloan.'))
+
+    def test_blank_bodied_installation_hold(self):
+        self.assertTrue(is_obvious_non_event(
+            'Hold for Art Exhibit Installation', 'No description available.'))
+
+    def test_real_public_artwork_survives(self):
+        # e199419, live and reviewed. Spared by the installation arm's body gate.
+        self.assertFalse(is_obvious_non_event(
+            'Illumination NYC\u2019s temporary art installation',
+            'Illumination NYC\u2019s temporary art installation immerses visitors in an '
+            'interactive journey through the rich history and diverse cultures '
+            'of the United States.'))
+
+    def test_art_hangs_and_strikes_are_not_filtered(self):
+        # "hang" and "strike" are deliberately absent from the vocabulary.
+        self.assertFalse(is_obvious_non_event(
+            'Teen Art Hang',
+            'An open and creative space for NYC teens to work on thematic art '
+            'projects in a studio setting.'))
+        self.assertFalse(is_obvious_non_event('Teen Art Hang', ''))
+        self.assertFalse(is_obvious_non_event('Art Strike', ''))
+
+    def test_unrelated_drop_offs_survive(self):
+        # The logistics word must sit immediately after the art noun.
+        self.assertFalse(is_obvious_non_event('Art Supply Drop-Off', ''))
+        self.assertFalse(is_obvious_non_event('Art Drop-In Studio', ''))
+
+
+class TestVenueSpaceDesignation(unittest.TestCase):
+    """(5m) A venue room published as an event. Added 2026-08-29.
+
+    Audited over the same 204,375-event + 102,518-crawl_event corpus: 2 matches
+    ("Front Bar @ GP Midtown", "Rooftop @ Exchange Place"), both blank-bodied
+    room rows, 0 false positives.
+    """
+
+    def test_the_row_that_reached_the_map(self):
+        # e235378, w3574 The Grisly Pear Comedy Club.
+        self.assertTrue(is_obvious_non_event(
+            'Front Bar @ GP Midtown', 'No description available.'))
+
+    def test_sibling_shapes(self):
+        for name in ('Rooftop @ Exchange Place',
+                     'Back Room at The Ace Hotel',
+                     'The Patio @ Threes'):
+            with self.subTest(name=name):
+                self.assertTrue(is_obvious_non_event(name, ''))
+
+    def test_a_described_room_row_survives(self):
+        # "The Rooftop at Pier 17 Halloween" is a real party.
+        self.assertFalse(is_obvious_non_event(
+            'The Rooftop at Pier 17 Halloween',
+            'A Halloween party on the Rooftop at Pier 17 with DJs and costumes.'))
+
+    def test_a_program_held_in_the_room_survives(self):
+        # A colon or trailing program word breaks the whole-name anchor.
+        self.assertFalse(is_obvious_non_event(
+            'Studio at the Woods: Adult Ceramics', ''))
+        self.assertFalse(is_obvious_non_event('Bar Trivia at The Long Room', ''))
+        self.assertFalse(is_obvious_non_event('Comedy at the Basement', ''))
+
+
+class TestBareGivenNameDeliberatelyNotFiltered(unittest.TestCase):
+    """e235790 "Kyle" (w3530 BCCLS Libraries) is NOT filtered, on purpose.
+
+    A bare given name with an empty body is a patron room booking at a library
+    and junk in that context, but the shape is indistinguishable from a real
+    listing anywhere else. Measured 2026-08-29 with a 250-name common-first-name
+    list over the 102,518-row recent crawl corpus: 3 matches, and 2 of the 3 are
+    real film screenings — "Laura" at Sag Harbor Cinema (e194372, LIVE) and
+    "Michael" at Rooftop Cinema Club / Nitehawk / Stuart Cinema. Over all 204,375
+    events it also takes "Emma" at Frigid New York. A rule that kills a live
+    screening to catch one library room hold is the wrong trade, so it was not
+    shipped.
+    """
+
+    def test_bare_given_names_survive(self):
+        for name in ('Kyle', 'Laura', 'Michael', 'Emma', 'Carmen', 'Evita'):
+            with self.subTest(name=name):
+                self.assertFalse(
+                    is_obvious_non_event(name, 'No description available.'))
+
+
+class TestCallToArtists(unittest.TestCase):
+    """The `call to artists` arm of `_NON_EVENT_NAME_PATTERNS`. Added 2026-08-29.
+
+    Arts councils use "Call to Artists" and "Call for Artists" interchangeably;
+    only the `for` spelling was matched. Audited over all 204,375 events: the
+    `to` arm adds 6 rows / 5 distinct names, every one a genuine call for
+    entries, 0 false positives.
+    """
+
+    def test_the_row_that_reached_the_map(self):
+        # e235646, w1716 Huntington Arts Council.
+        self.assertTrue(is_obvious_non_event(
+            'The Art Guild presents Call to Artist: Abstract Perspectives: '
+            'Juried Art & Competition',
+            'Deadline: Monday, September 14, 2026 Exhibit Dates: October 4-24'))
+
+    def test_sibling_spellings(self):
+        for name in ('SOAPBOX: A Call To Artists & Performers',
+                     'Call to Artists-The Long Island Fine Art Invitational',
+                     'Huntington Arts Council CALL TO ARTISTS Field Notes',
+                     'Calls for Submissions'):
+            with self.subTest(name=name):
+                self.assertTrue(is_obvious_non_event(name, ''))
+
+    def test_call_for_artists_still_matches(self):
+        self.assertTrue(is_obvious_non_event('Call for Artists 2026', ''))
+
+    def test_unrelated_calls_survive(self):
+        self.assertFalse(is_obvious_non_event('A Call to Action Rally', ''))
+        self.assertFalse(is_obvious_non_event('Curtain Call Cabaret', ''))
+
 
 
 if __name__ == '__main__':

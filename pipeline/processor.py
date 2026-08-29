@@ -640,7 +640,13 @@ def log_rejection(cursor, crawl_result_id, website_id,
 _NON_EVENT_NAME_PATTERNS = [
     # Calls for submissions / applications / grants (not attendable events)
     r'\bopen call\b',
-    r'\bcall for (artists?|art|submissions?|entries|proposals|vendors?|applicants?|papers?|works?)\b',
+    # "Call to Artists" is the same notice as "Call for Artists" — arts councils
+    # use the two interchangeably ("The Art Guild presents Call to Artist:
+    # Abstract Perspectives", e235646 w1716 Huntington Arts Council, which
+    # reached the map and was hand-suppressed at classification on 2026-08-29).
+    # Corpus-checked over all 204,375 events: the `to` arm adds 6 rows /
+    # 5 distinct names, every one a genuine call for entries, 0 false positives.
+    r'\bcalls? (for|to) (artists?|art|submissions?|entries|proposals|vendors?|applicants?|papers?|works?)\b',
     r'\bsubmissions?\s+(period|deadline|window|open|guidelines)\b',
     r'^\s*submissions?\s*:',
     r'\b(now\s+)?accepting\s+(submissions|applications|entries|proposals)\b',
@@ -2498,6 +2504,73 @@ _HOUSING_CORP_VETO_RE = re.compile(
     r'storytime|lecture|talk|workshop|class|tour|sale|fair|festival|party)\b',
     re.IGNORECASE)
 
+# (5l) Exhibit logistics leaked from a gallery / library exhibit calendar. The
+# dates a show is hung and struck get published next to the programming
+# ("Exhibit removal - Suzi Gerace", e235700 w3530 BCCLS Libraries, which reached
+# the map and was hand-suppressed at classification on 2026-08-29; also "HAFA -
+# Art display breakdown", "NAWA Art drop off", "Photo Show Drop Off", "Art
+# Pickup"). Somebody is moving artwork; there is nothing to attend.
+#
+# Two arms, and the split is load-bearing:
+#   - The TEARDOWN family (removal / take-down / de-install / breakdown /
+#     drop-off / pick-up) is unambiguous once it sits immediately after an
+#     art noun, so it matches on the name alone — several of these rows carry a
+#     real sentence ("Pick up artwork following the conclusion of the 'Extremes'
+#     exhibition") and a description gate would spare every one of them.
+#   - "Installation" is NOT unambiguous: "Illumination NYC's temporary art
+#     installation" (e199419) is a real, live public artwork. That arm therefore
+#     also requires a body that adds nothing, which spares it.
+# `strike` and `hang` are deliberately absent: "Art Strike" is a protest and
+# "Teen Art Hang" / "Weekend Art: Sunday Art Hang" are real drop-in programs.
+# Measured over all 204,375 events plus 102,518 crawl_events from the last 14
+# days: teardown arm 8 event rows / 6 distinct names, all genuine logistics
+# rows, 0 false positives; installation arm 1 row ("Hold for Art Exhibit
+# Installation"), 0 false positives.
+_ART_LOGISTICS_NOUN_RE = (
+    r'(?:exhibit(?:ion)?s?|artworks?|art|photo\s+show|show|display)')
+_ART_TEARDOWN_NAME_RE = re.compile(
+    r'\b' + _ART_LOGISTICS_NOUN_RE + r'\s*(?:[-–—:]\s*)?'
+    r'(?:removal|take[\s-]?down|de[\s-]?install(?:ation|s)?|break[\s-]?down|'
+    r'drop[\s-]?off|pick[\s-]?up)\b',
+    re.IGNORECASE)
+_ART_INSTALL_NAME_RE = re.compile(
+    r'\b' + _ART_LOGISTICS_NOUN_RE + r'\s*(?:[-–—:]\s*)?'
+    r'install(?:ation|s)?\b',
+    re.IGNORECASE)
+
+# (5m) A venue's own ROOM, published as a dated event ("Front Bar @ GP Midtown",
+# e235378 w3574 The Grisly Pear Comedy Club — a comedy club listing its front
+# barroom, hand-suppressed at classification on 2026-08-29). Sibling of the
+# `<venue|space|room> rental` rule in `_NON_EVENT_NAME_PATTERNS`, which only
+# fires when the word "rental" is present; here the room designation IS the
+# whole title.
+#
+# Three gates, all load-bearing. The ENTIRE name must be
+# `<room noun> @/at <venue>` — a colon or a trailing program word means it is a
+# real series held in that room ("Studio at the Woods: Adult Ceramics",
+# e192318, is spared by exactly this). The description must add nothing — "The
+# Rooftop at Pier 17 Halloween" is a real party and is spared by exactly this.
+# And the noun list is closed to rooms INSIDE a venue: "studio", "gallery",
+# "hall", "garden" and "space" are deliberately absent because real series are
+# named after them. Measured over all 204,375 events plus 102,518 recent
+# crawl_events: 2 matches ("Front Bar @ GP Midtown", "Rooftop @ Exchange Place"
+# — both blank-bodied room rows), 0 false positives.
+_VENUE_SPACE_QUALIFIER_RE = (
+    r'(?:front|back|rear|main|side|upper|lower|upstairs|downstairs|private|'
+    r'small|big|large|first|second|third)')
+_VENUE_SPACE_NAME_RE = re.compile(
+    r'^\s*(?:the\s+)?(?:'
+    # A bare "Room" only counts when a qualifier names WHICH room, or the rule
+    # would eat a venue or charity called "Room at the Inn".
+    + _VENUE_SPACE_QUALIFIER_RE + r'\s+room'
+    r'|' + _VENUE_SPACE_QUALIFIER_RE + r'?\s*'
+    r'(?:bar\s*room|barroom|bar|lounge|patio|rooftop|roof\s*deck|deck|'
+    r'basement|cellar|mezzanine|balcony|atrium|terrace|parlou?r|den)'
+    r')\s*(?:@|\bat\b)\s*'
+    r'[\w\'’&.\- ]{2,40}\s*[.!]?\s*$',
+    re.IGNORECASE)
+
+
 _MONTH_CALENDAR_NAME_RE = re.compile(
     r'(?:'
     #  "... September Calendar", "May 2026 Meeting Calendar", "June 2026 Monthly Calendar"
@@ -2766,6 +2839,20 @@ def is_obvious_non_event(name, description=None):
     if _is_maintenance_tail_block(name, description):
         return True
     if _is_housing_corp_booking(name, description):
+        return True
+    # (5l) Exhibit teardown logistics ("Exhibit removal - <artist>", "Art
+    # Pickup"). Name-only — these rows often carry a real sentence about the
+    # move — while the ambiguous installation half needs a blank/echo body.
+    if _ART_TEARDOWN_NAME_RE.search(name):
+        return True
+    if (_ART_INSTALL_NAME_RE.search(name)
+            and _description_adds_nothing(name, description)):
+        return True
+    # (5m) A room inside a venue, published as an event ("Front Bar @ GP
+    # Midtown"). The whole-name anchor plus the blank/echo body are what keep
+    # real series held in that room alive.
+    if (_VENUE_SPACE_NAME_RE.match(name)
+            and _description_adds_nothing(name, description)):
         return True
     # "<Month> Calendar" listing-page placeholder ("The Stone at The New School:
     # September Calendar", "Bronx Community Board 11 Calendar - April 2026").
