@@ -1892,5 +1892,127 @@ class ChunkPromptStatedDateBeatsRecurrenceTests(unittest.TestCase):
         self.assertIn('Do NOT invent a next-occurrence date.', prompt)
 
 
+class OccurrenceBudgetChunkingTests(unittest.TestCase):
+    """A chunk's OUTPUT budget, not just its input size.
+
+    w944 The Tiny Cupboard's js_code emitted every upcoming date per club, so a
+    single 3 KB card demanded 60 occurrence objects. `chunk_content` measured
+    only chars and record headings, so 13 such cards landed in one 29 KB chunk
+    demanding ~780 occurrences — and the model returned `occurrences: null` for
+    12 of the 13 (measured 2026-08-30 on the reconstructed payload,
+    gpt-5.6-luna + SimpleEventList). Silently: null is a legal value, the record
+    still counts, and the events simply never reach the map.
+    """
+
+    def _card(self, name, n_dates):
+        dates = '; '.join(f'September {d}, 2026 at 7pm' for d in range(1, n_dates + 1))
+        return f'## {name}\nDates: {dates}\n[Info](https://example.com/e)\n'
+
+    def test_counts_written_out_dates(self):
+        self.assertEqual(extractor.count_date_tokens(
+            'September 6, 2026; Sep 7; Sept. 8; 2026-09-09'), 4)
+
+    def test_counts_month_first_slash_dates(self):
+        self.assertEqual(extractor.count_date_tokens('9/6 and 09/13 and 8/30/26'), 3)
+
+    def test_does_not_count_bare_day_numbers(self):
+        """The estimate errs LOW on purpose: undercounting declines to split
+        (status quo), overcounting would split ordinary pages needlessly."""
+        self.assertEqual(extractor.count_date_tokens('Jan 11, 18, 25'), 1)
+
+    def test_slash_form_does_not_match_versions_prices_or_url_paths(self):
+        self.assertEqual(extractor.count_date_tokens('v1.2/3.4 and 13/45'), 0)
+        self.assertEqual(extractor.count_date_tokens('$1.50/2.00'), 0)
+        # A date inside a URL path is deliberately not counted: the prompt
+        # forbids extracting dates from URLs, so it demands no occurrence.
+        self.assertEqual(extractor.count_date_tokens('/events/2026/08/30/foo'), 0)
+
+    def test_dense_chunk_is_subdivided_under_the_budget(self):
+        chunk = ''.join(self._card(f'Club {i}', 60) for i in range(13))
+        pieces = extractor.cap_occurrences_per_chunk([chunk], budget=250)
+        self.assertGreater(len(pieces), 1)
+        for piece in pieces:
+            self.assertLessEqual(extractor.count_date_tokens(piece), 250)
+
+    def test_subdivision_preserves_every_record(self):
+        chunk = ''.join(self._card(f'Club {i}', 60) for i in range(13))
+        pieces = extractor.cap_occurrences_per_chunk([chunk], budget=250)
+        heads = lambda t: [l for l in t.split('\n') if extractor._is_heading_line(l)]
+        self.assertEqual(sum(len(heads(p)) for p in pieces), len(heads(chunk)))
+        for piece in pieces:
+            self.assertLessEqual(len(piece), extractor.MAX_CHUNK_CHARS)
+
+    def test_page_preamble_is_repeated_onto_every_piece(self):
+        """Pieces that lost the venue/address header came back with the card's
+        `Space:` line as the location instead of the venue name."""
+        preamble = 'The Tiny Cupboard, 10 Cooper Street, Brooklyn, NY 11207.'
+        chunk = preamble + '\n' + ''.join(self._card(f'Club {i}', 60) for i in range(13))
+        pieces = extractor.cap_occurrences_per_chunk([chunk], budget=250)
+        self.assertGreater(len(pieces), 1)
+        for piece in pieces:
+            self.assertTrue(piece.startswith(preamble))
+
+    def test_oversized_preamble_is_not_repeated(self):
+        chunk = ('x' * (extractor.PREAMBLE_CARRY_MAX_CHARS + 1) + '\n'
+                 + ''.join(self._card(f'Club {i}', 60) for i in range(13)))
+        pieces = extractor.cap_occurrences_per_chunk([chunk], budget=250)
+        self.assertGreater(len(pieces), 1)
+        self.assertTrue(pieces[1].lstrip().startswith('## Club'))
+
+    def test_ordinary_listing_is_untouched(self):
+        """Inertness is the whole argument for making this a GLOBAL cap where
+        max-records-per-chunk stayed opt-in."""
+        chunk = ''.join(self._card(f'Show {i}', 2) for i in range(40))
+        self.assertEqual(extractor.cap_occurrences_per_chunk([chunk], budget=250), [chunk])
+
+    def test_single_oversized_record_is_passed_through(self):
+        """Nothing to split at — the shortfall warning covers this residual."""
+        chunk = self._card('One Very Long Run', 300)
+        self.assertEqual(extractor.cap_occurrences_per_chunk([chunk], budget=250), [chunk])
+
+    def test_zero_budget_disables_the_cap(self):
+        chunk = ''.join(self._card(f'Club {i}', 60) for i in range(13))
+        self.assertEqual(extractor.cap_occurrences_per_chunk([chunk], budget=0), [chunk])
+
+
+class DroppedDateWarningTests(unittest.TestCase):
+    """The failure must be LOUD. `occurrences: null` on a record whose source
+    text enumerates dates is a silent data loss — nothing else in the pipeline
+    notices it, because the record still counts toward the site's event total.
+    """
+
+    CHUNK = ('## Catan Club\n'
+             'Dates: September 1, 2026 at 7pm; September 8, 2026 at 7pm\n'
+             '## Chess Club\n'
+             'Dates: September 2, 2026 at 6pm; September 9, 2026 at 6pm\n')
+
+    def test_warns_when_a_dated_record_comes_back_dateless(self):
+        events = [{'name': 'Catan Club', 'occurrences': None},
+                  {'name': 'Chess Club',
+                   'occurrences': [{'start_date': '2026-09-02'}]}]
+        with mock.patch('builtins.print') as p:
+            n = extractor._report_dropped_dates(self.CHUNK, events, 'chunk 1/1')
+        self.assertEqual(n, 1)
+        self.assertIn('DATE DROP', ' '.join(str(c) for c in p.call_args_list))
+
+    def test_silent_when_every_dated_record_kept_its_dates(self):
+        events = [{'name': 'Catan Club', 'occurrences': [{'start_date': '2026-09-01'}]},
+                  {'name': 'Chess Club', 'occurrences': [{'start_date': '2026-09-02'}]}]
+        self.assertEqual(extractor._report_dropped_dates(self.CHUNK, events, 'c'), 0)
+
+    def test_genuinely_dateless_record_does_not_warn(self):
+        """A cadence-only listing SHOULD return null; that is not the bug."""
+        chunk = '## Weekly Open Mic\nEvery Tuesday, no dates listed.\n'
+        events = [{'name': 'Weekly Open Mic', 'occurrences': None}]
+        self.assertEqual(extractor._report_dropped_dates(chunk, events, 'c'), 0)
+
+    def test_matches_a_linked_markdown_heading_to_the_returned_name(self):
+        chunk = ('### [Catan Club](https://example.com/catan)\n'
+                 'Dates: September 1, 2026; September 8, 2026\n')
+        events = [{'name': 'Catan Club', 'occurrences': None}]
+        self.assertEqual(extractor._report_dropped_dates(chunk, events, 'c'), 1)
+
+
+
 if __name__ == '__main__':
     unittest.main()

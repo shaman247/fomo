@@ -1371,6 +1371,164 @@ def _match_by_url_identity(name, url, website_id, location_id, crawl_event_slots
     return best[1] if best else None
 
 
+# ── Sibling-listing veto ──────────────────────────────────────────────────────
+# The one shape the name tiers cannot judge on their own: an UMBRELLA listing
+# (an exhibition, a festival, a program strand) whose title is wholly contained
+# in a sub-event's title. Every containment tier reads that as "the same event,
+# described more fully" and fuses them — and because the umbrella carries a
+# weeks-long run while the sub-event is one evening, the fusion drags the whole
+# span onto a point event.
+#
+# BPL e220817 is the reference case: the exhibition "Machel Montano: Journey of
+# a Soca King" (8/22–9/12) fused onto the talk "Journey of a Soca King:
+# Elizabeth 'Lady' Montano on Machel Montano's Lyrics with Dr. Ottley & Melissa
+# Noel" (8/27, 7–9pm). The exhibition's five significant words are a strict
+# subset of the talk's thirteen, so `_subset_match` matches — and so does the
+# 0.75 asymmetric containment tier at ratio 1.0, which is why vetoing the subset
+# tier alone fixes nothing.
+#
+# Names alone cannot separate this from the legitimate "fuller title of the same
+# event" shape. What CAN separate them is what the SOURCE says, and the veto
+# fires only when all four of these agree:
+#
+#   C  the name relation is LOPSIDED CONTAINMENT — >= 0.75 of the shorter
+#      name's words sit in the longer one (the same threshold the asymmetric
+#      containment tier in `are_names_similar` uses, so the veto covers exactly
+#      the pairs the containment family can reach), the longer adds >= 3 words,
+#      and the shorter is not the longer's leading prefix (that shape is a
+#      fuller title of one event, the exemption `_bare_name_vs_distinct_subtitle`
+#      already makes).
+#   S  the SAME extraction pass also emitted a different row that matches this
+#      event cleanly (similar, and not through containment). That pass already
+#      speaks for the event under its own name, so this lopsided row is a
+#      second, different listing — not a re-spelling of the first.
+#   U  same website, and both sides carry an event-specific permalink, and those
+#      permalinks are disjoint. (Across sites a URL difference is free and
+#      carries no evidence at all, which is why same-website is required.)
+#   T  they share no occurrence SLOT (date + canonical start time). A shared slot
+#      is the merger's strongest same-event corroboration and always wins — it
+#      is also what separates the merges that would inject FOREIGN dates from
+#      the ones that would not.
+#
+# Measured over all 90,500 non-exact (event, source crawl_event) name matches
+# reachable through `event_sources` (.scratch/final2.py, 2026-08-30): 164 links /
+# 144 distinct name pairs stop matching, 0 newly match — 0.18% of the non-exact
+# merges. Hand-labelled: ~120 are genuinely distinct and ~21 are one event under
+# two titles (~4 borderline). The wins are the known over-merge families — an
+# umbrella vs its sub-events (Whitney's "Free Second Sundays" vs its two tours,
+# "Zumba" vs "Ailey Summer Groove Zumba Masterclass", AMC "Private Theatre
+# Rental" vs one film's, plus e220817 itself), NYPL "Early Literacy" siblings,
+# We Speak NYC level variants, Grisly Pear's 8pm/10pm/midnight shows, bookmobile
+# stops at different addresses, #NYTechWeek talks sharing a host suffix. The
+# losses degrade to duplicate events, which /dedupe-events catches; the wins
+# each stop foreign dates landing on a live event. That is the documented bias.
+SIBLING_VETO_MIN_EXTRA_WORDS = 3
+# Mirrors the 0.75 asymmetric-containment tier in `are_names_similar`: below it,
+# the two names disagree too much for any containment tier to have fused them.
+SIBLING_VETO_MIN_CONTAINMENT = 0.75
+
+
+def _url_key_is_event_specific(website_id, url_key, listing_url_keys, url_key_name_counts):
+    """True when a normalized URL key plausibly addresses ONE event on its site.
+
+    Reuses the two tells `_match_by_url_identity` already trusts — the key is
+    not one of the website's own crawl/listing URLs, and it does not carry more
+    distinct event names than a detail page should — plus a host check, because
+    a legacy relative row ("/events/2026/08/01/foo") normalizes to a key that can
+    never equal the absolute spelling of the same page and would read as a
+    spurious difference.
+    """
+    if not url_key:
+        return False
+    host = url_key.split('/', 1)[0].split('?', 1)[0]
+    if '.' not in host:
+        return False
+    if (website_id, url_key) in listing_url_keys:
+        return False
+    return url_key_name_counts.get((website_id, url_key), 0) <= URL_IDENTITY_MAX_DISTINCT_NAMES
+
+
+def _is_containment_match(name_a, name_b, min_extra=SIBLING_VETO_MIN_EXTRA_WORDS,
+                          min_containment=SIBLING_VETO_MIN_CONTAINMENT):
+    """True when the two names meet through LOPSIDED CONTAINMENT: at least
+    `min_containment` of the shorter name's significant words sit in the longer,
+    the longer adds at least `min_extra` words of its own, and the shorter is
+    not the longer's leading significant-word prefix.
+
+    Checked on both the raw and the stemmed word sets — either one showing the
+    shape is enough, because either one is enough to drive the containment tiers
+    in `are_names_similar`.
+
+    The leading-prefix escape is what keeps the common legitimate shape out:
+    "Matinee with Ry Daddy" vs "Matinee w/ Ry Daddy ft: <lineup>" is one show
+    spelled two ways, and it always shares its opening run of words. An umbrella
+    sits elsewhere in the longer title ("Machel Montano: Journey of a Soca King"
+    against "Journey of a Soca King: Elizabeth ... on Machel Montano's Lyrics").
+    """
+    for stem in (False, True):
+        words_a = get_significant_words(name_a, stem=stem)
+        words_b = get_significant_words(name_b, stem=stem)
+        if not words_a or not words_b or words_a == words_b:
+            continue
+        if len(words_a) <= len(words_b):
+            short, long_name, short_words, long_words = name_a, name_b, words_a, words_b
+        else:
+            short, long_name, short_words, long_words = name_b, name_a, words_b, words_a
+        if len(short_words & long_words) / len(short_words) < min_containment:
+            continue
+        if len(long_words - short_words) < min_extra:
+            continue
+        short_ordered = _ordered_significant_words(short)
+        long_ordered = _ordered_significant_words(long_name)
+        if stem:
+            short_ordered = [stem_word(w) for w in short_ordered]
+            long_ordered = [stem_word(w) for w in long_ordered]
+        if short_ordered and long_ordered[:len(short_ordered)] == short_ordered:
+            continue  # leading prefix — a fuller title of the same event
+        return True
+    return False
+
+
+def _sibling_listing_veto(name, url_key, website_id, crawl_event_slots, crawl_event_id,
+                          candidate, candidate_slots, roster,
+                          listing_url_keys, url_key_name_counts, event_url_keys):
+    """Refuse a partial name match that is really an umbrella swallowing a
+    sub-event (or the reverse). See the block comment above for the four
+    conjuncts and the measurement. Exact name matches never reach here.
+    """
+    candidate_name = candidate.get('name') or ''
+    if not candidate_name or not _is_containment_match(name, candidate_name):
+        return False
+
+    # U — same website, both sides addressable, and addressed differently.
+    candidate_website_id = candidate.get('website_id')
+    if website_id is None or candidate_website_id != website_id:
+        return False
+    if not _url_key_is_event_specific(website_id, url_key, listing_url_keys,
+                                      url_key_name_counts):
+        return False
+    candidate_keys = {
+        key for key in event_url_keys.get(candidate['id'], ())
+        if _url_key_is_event_specific(website_id, key, listing_url_keys,
+                                      url_key_name_counts)
+    }
+    if not candidate_keys or url_key in candidate_keys:
+        return False
+
+    # T — a shared slot is same-eventness, whatever the names say.
+    if crawl_event_slots and candidate_slots and (crawl_event_slots & candidate_slots):
+        return False
+
+    # S — this extraction already emitted a clean match for the event.
+    for sibling_id, sibling_name in roster:
+        if sibling_id == crawl_event_id or not sibling_name:
+            continue
+        if (are_names_similar(sibling_name, candidate_name)
+                and not _is_containment_match(sibling_name, candidate_name)):
+            return True
+    return False
+
+
 def _event_has_live_occurrence(cursor, event_id, current_date):
     """True when the event still has a current or future occurrence.
 
@@ -2055,7 +2213,7 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
     merge_query = """
         SELECT ce.id, ce.name, ce.short_name, ce.description, ce.emoji,
                ce.location_name, ce.sublocation, ce.location_id, ce.url,
-               cr.website_id, l.lat, l.lng
+               cr.website_id, l.lat, l.lng, ce.crawl_result_id
         FROM crawl_events ce
         JOIN crawl_results cr ON ce.crawl_result_id = cr.id
         LEFT JOIN event_sources es ON ce.id = es.crawl_event_id
@@ -2161,7 +2319,7 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
     for row in cursor.fetchall():
         event_id, name, location_id, lat, lng, location_name, website_id = row
         event_ids_with_future.add(event_id)
-        event_entry = {'id': event_id, 'name': name}
+        event_entry = {'id': event_id, 'name': name, 'website_id': website_id}
 
         # Index by location_id if available (primary matching method)
         if location_id is not None:
@@ -2222,6 +2380,9 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
     # and the set of keys that ARE the website's own crawl/listing URLs.
     existing_events_by_url = {}
     url_key_names = {}
+    # event_id -> its own normalized URL keys, read by `_sibling_listing_veto`
+    # (which needs the links an event already holds, not just the reverse index).
+    merge_event_url_keys = {}
     listing_url_keys = set()
     cursor.execute("SELECT website_id, url FROM website_urls")
     for row in cursor.fetchall():
@@ -2246,6 +2407,7 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
             url_key_names.setdefault(index_key, set()).add(
                 normalize_name_for_dedup(event_name)
             )
+            merge_event_url_keys.setdefault(event_id, set()).add(url_key)
             slots = event_slots.get(event_id)
             if not slots:
                 continue
@@ -2256,6 +2418,22 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                 'slots': slots,
             })
     url_key_name_counts = {k: len(v) for k, v in url_key_names.items()}
+
+    # ── Roster of every name each pending crawl_result emitted, plus each
+    # event's own URL keys — both read by `_sibling_listing_veto`.
+    pending_result_ids = {row[12] for row in new_crawl_events if row[12] is not None}
+    crawl_result_rosters = {}
+    if pending_result_ids:
+        placeholders = ','.join(['%s'] * len(pending_result_ids))
+        cursor.execute(
+            f"SELECT crawl_result_id, id, name FROM crawl_events "
+            f"WHERE crawl_result_id IN ({placeholders})",
+            tuple(pending_result_ids),
+        )
+        for result_id, sibling_id, sibling_name in cursor.fetchall():
+            if sibling_name:
+                crawl_result_rosters.setdefault(result_id, []).append(
+                    (sibling_id, sibling_name))
 
     # ── Match crawl events to existing events or create new ones ──
     new_events_count = 0
@@ -2268,7 +2446,8 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
     from processor import canonicalize_luma_host
 
     for ce_row in new_crawl_events:
-        ce_id, name, short_name, description, emoji, location_name, sublocation, location_id, url, website_id, lat, lng = ce_row
+        (ce_id, name, short_name, description, emoji, location_name, sublocation,
+         location_id, url, website_id, lat, lng, crawl_result_id) = ce_row
 
         # Host aliases must be folded before the URL is compared to, or stored
         # alongside, an event's existing links: `already_present` below is an
@@ -2316,6 +2495,17 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
         from processor import _standardize_time as _std_time
         crawl_event_slots = {(str(occ[0]), _std_time(occ[1])) for occ in valid_occurrences if occ[0]}
         strict_match = website_id in strict_name_match_ids
+        # Inputs to `_sibling_listing_veto` (see its block comment).
+        ce_url_key = normalize_url_for_identity(url) if url else ''
+        crawl_result_roster = crawl_result_rosters.get(crawl_result_id, ())
+
+        def _sibling_veto(existing):
+            return _sibling_listing_veto(
+                name, ce_url_key, website_id, crawl_event_slots, ce_id,
+                existing, event_slots.get(existing['id'], set()),
+                crawl_result_roster, listing_url_keys, url_key_name_counts,
+                merge_event_url_keys,
+            )
 
         # Get tags for this crawl event
         cursor.execute("SELECT tag FROM crawl_event_tags WHERE crawl_event_id = %s", (ce_id,))
@@ -2396,6 +2586,8 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                         elif best_id is None:
                             if strict_match and not (crawl_event_slots & event_slots.get(existing['id'], set())):
                                 continue  # partial name match unconfirmed by schedule — skip
+                            if _sibling_veto(existing):
+                                continue  # umbrella vs sub-event — see _sibling_listing_veto
                             best_id = existing['id']  # Partial match — keep looking
                 elif allow_no_date_overlap and exact_no_overlap_id is None:
                     if normalize_name_for_dedup(existing['name']) == norm_name:
@@ -2485,6 +2677,9 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                             and normalize_name_for_dedup(existing['name']) != norm_name
                             and not (crawl_event_slots & event_slots.get(existing['id'], set()))):
                         continue
+                    if (normalize_name_for_dedup(existing['name']) != norm_name
+                            and _sibling_veto(existing)):
+                        continue  # umbrella vs sub-event — see _sibling_listing_veto
                     existing_loc_norm = normalize_name_for_dedup(existing.get('location_name') or '') if existing.get('location_name') else ''
                     existing_loc_is_generic = (not existing_loc_norm) or (existing_loc_norm in generic_locs)
                     # Allow merge only if either side is generic, or location_names match

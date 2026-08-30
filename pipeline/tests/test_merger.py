@@ -1700,5 +1700,140 @@ class BareClockTwinTests(unittest.TestCase):
         self.assertEqual(merger._qualified_clock_bare_forms('7am'), ('7', '7:00'))
 
 
+EXHIBITION = 'Machel Montano: Journey of a Soca King'
+TALK = ('Journey of a Soca King: Elizabeth \u201cLady\u201d Montano on Machel '
+        'Montano\u2019s Lyrics with Dr. Ottley & Melissa Noel')
+TALK_RECRAWL = ('Journey of a Soca King: Elizabeth \u201cLady\u201d Montano on Machel '
+                'Montano\u2019s Lyrics with Dr. Rudolph Ottley & Melissa Noel')
+
+
+class TestContainmentMatchShape(unittest.TestCase):
+    """`_is_containment_match` — the name half of the sibling-listing veto."""
+
+    def test_umbrella_inside_subevent_title_is_containment_match(self):
+        # BPL e220817: the exhibition's five significant words are a strict
+        # subset of the talk's, and the talk's extra words are not a suffix of
+        # a shared leading run.
+        self.assertTrue(merger._is_containment_match(EXHIBITION, TALK))
+
+    def test_leading_prefix_is_a_fuller_title_not_containment(self):
+        # "<name>" vs "<name> + more" is the same event spelled out — the same
+        # exemption `_bare_name_vs_distinct_subtitle` makes.
+        self.assertFalse(merger._is_containment_match(
+            'Matinee with Ry Daddy',
+            'Matinee w/ Ry Daddy ft: Daniel Simonsen, Henry Sir, Alingon Mitra'))
+
+    def test_too_few_extra_words_is_not_a_containment_match(self):
+        # A one- or two-word difference is ordinary title drift, not an umbrella.
+        self.assertFalse(merger._is_containment_match('Craft Circle',
+                                                      'Virtual Crafting Circle'))
+        self.assertFalse(merger._is_containment_match(TALK, TALK_RECRAWL))
+
+    def test_near_subset_still_counts(self):
+        # The threshold mirrors the 0.75 asymmetric-containment tier: a sibling
+        # talk that drops one of the umbrella's words is still reachable by it.
+        # (BPL e220820, the second sub-event the strict-subset form missed.)
+        self.assertTrue(merger._is_containment_match(
+            EXHIBITION,
+            'Journey of a Soca King Exhibition Conversation with Elizabeth '
+            '\u201cLady\u201d Montano on King of Soca (Book)'))
+
+    def test_names_that_barely_overlap_are_not_a_containment_match(self):
+        # Below 0.75 no containment tier could have fused them anyway.
+        self.assertFalse(merger._is_containment_match(
+            'C-41 Developing Workshop', 'Advanced Darkroom Printing Intensive'))
+
+
+class TestSiblingListingVeto(unittest.TestCase):
+    """An umbrella listing must not fuse onto a sub-event inside it.
+
+    Reference case (2026-08-30): BPL w74 published the exhibition "Machel
+    Montano: Journey of a Soca King" (8/22\u20139/12) and, in the same crawl, the
+    talk "Journey of a Soca King: Elizabeth 'Lady' Montano ..." (8/27 7pm). The
+    exhibition's words are a strict subset of the talk's, so both `_subset_match`
+    and the 0.75 asymmetric-containment tier fuse them and the three-week span
+    lands on the one-evening talk (e220817).
+    """
+
+    WEBSITE = 74
+    EXHIBITION_URL = 'bklynlibrary.org/exhibitions/machel-montano-journey'
+    TALK_URL = ('bklynlibrary.org/calendar/journey-soca-king-central-library-'
+                'dweck-20260827-0700pm')
+
+    def setUp(self):
+        self.candidate = {'id': 220817, 'name': TALK, 'website_id': self.WEBSITE}
+        self.candidate_slots = {('2026-08-27', '7pm')}
+        self.crawl_slots = {('2026-08-22', '')}
+        # The same extraction pass also emitted the talk itself.
+        self.roster = [(1292759, TALK_RECRAWL), (1292787, EXHIBITION)]
+        self.event_url_keys = {220817: {self.TALK_URL}}
+        self.listing_url_keys = {(self.WEBSITE, 'bklynlibrary.org/calendar')}
+        self.url_key_name_counts = {
+            (self.WEBSITE, self.EXHIBITION_URL): 1,
+            (self.WEBSITE, self.TALK_URL): 1,
+        }
+
+    def _veto(self, name=EXHIBITION, url_key=None, website_id=None,
+              crawl_slots=None, roster=None, event_url_keys=None,
+              candidate=None, candidate_slots=None):
+        return merger._sibling_listing_veto(
+            name,
+            self.EXHIBITION_URL if url_key is None else url_key,
+            self.WEBSITE if website_id is None else website_id,
+            self.crawl_slots if crawl_slots is None else crawl_slots,
+            1292787,
+            self.candidate if candidate is None else candidate,
+            self.candidate_slots if candidate_slots is None else candidate_slots,
+            self.roster if roster is None else roster,
+            self.listing_url_keys,
+            self.url_key_name_counts,
+            self.event_url_keys if event_url_keys is None else event_url_keys,
+        )
+
+    def test_names_still_look_similar_to_the_name_tiers(self):
+        """The veto is needed precisely because no name tier rejects this pair."""
+        self.assertTrue(are_names_similar(EXHIBITION, TALK))
+
+    def test_exhibition_does_not_fuse_onto_the_talk(self):
+        self.assertTrue(self._veto())
+
+    def test_shared_occurrence_slot_wins(self):
+        """A shared date+time is same-eventness whatever the names say."""
+        self.assertFalse(self._veto(crawl_slots={('2026-08-27', '7pm')}))
+
+    def test_no_clean_sibling_in_the_same_extraction_means_no_veto(self):
+        """Without a row that already speaks for the event, this row may BE it."""
+        self.assertFalse(self._veto(roster=[(1292787, EXHIBITION)]))
+
+    def test_shared_permalink_means_no_veto(self):
+        self.assertFalse(self._veto(url_key=self.TALK_URL))
+
+    def test_event_without_its_own_permalink_is_not_vetoed(self):
+        self.assertFalse(self._veto(event_url_keys={}))
+
+    def test_listing_page_url_is_not_evidence(self):
+        self.assertFalse(self._veto(url_key='bklynlibrary.org/calendar'))
+
+    def test_relative_legacy_url_is_not_evidence(self):
+        """A host-less key can never equal the absolute spelling of one page."""
+        self.assertFalse(self._veto(url_key='/exhibitions/machel-montano-journey'))
+
+    def test_url_carrying_many_names_is_not_evidence(self):
+        counts = dict(self.url_key_name_counts)
+        counts[(self.WEBSITE, self.EXHIBITION_URL)] = 40
+        self.url_key_name_counts = counts
+        self.assertFalse(self._veto())
+
+    def test_cross_website_difference_is_free_and_never_vetoes(self):
+        """Two sites always spell a URL differently; that is not evidence."""
+        other = dict(self.candidate, website_id=999)
+        self.assertFalse(self._veto(candidate=other))
+
+    def test_fuller_title_of_the_same_event_still_merges(self):
+        """The re-crawled talk (one extra word, leading run shared) is unaffected."""
+        self.assertFalse(self._veto(name=TALK_RECRAWL, url_key=self.TALK_URL))
+
+
+
 if __name__ == "__main__":
     unittest.main()

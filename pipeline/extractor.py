@@ -307,6 +307,49 @@ DETAIL_TIMEOUT = int(os.environ.get("DETAIL_TIMEOUT", "60"))
 # Maximum characters per chunk when falling back to character-based chunking
 MAX_CHUNK_CHARS = 30000
 
+# Ceiling on the number of DATE TOKENS one chunk may ask the model to turn into
+# occurrences. Enforced by `cap_occurrences_per_chunk`.
+#
+# WHY this exists, and why it is a global cap where `max-records-per-chunk` is
+# deliberately per-site: every existing chunk budget measures the INPUT (chars,
+# record headings) and is blind to the OUTPUT the chunk demands. Those track
+# each other on an ordinary listing — one card, one or two dates — but come
+# apart completely on a card carrying an ENUMERATED DATE LIST, where a single
+# 3 KB record demands 60 occurrence objects.
+#
+# Measured on w944 The Tiny Cupboard (2026-08-30), whose js_code emitted every
+# upcoming date per club. Same content, same prompt, only the number of dates
+# the response had to carry changing:
+#
+#     demanded   returned   result
+#        130        130     ok
+#        480        480     ok
+#        600        233     silent truncation (5/9/10/14 of 60 on 8 cards)
+#        660        660     ok
+#        780        493     silent truncation
+#        780         60     occurrences=null on 12 of 13 records
+#
+# So it is not a hard cliff — it is stochastic degradation that sets in
+# somewhere past ~500 and is severe by ~800. And the way the model degrades is
+# the worst possible one: `occurrences` is nullable, and the prompt tells it a
+# null is better than a fabricated date, so it takes the exit and returns a
+# well-formed record with no dates. The event count stays healthy, nothing
+# raises, and the events silently drop off the map as undated.
+#
+# 250 sits at ~2x margin below the lowest observed failure. Unlike a global
+# record cap — measured at +83% chunks for +0.1% events, which is why
+# RECORDS_PER_CHUNK_DIRECTIVE stayed opt-in — this one is inert on the corpus:
+# over the last 10 days' crawls (1,428 chunks on the chunked path) only 18
+# chunks (1.26%) exceed it, and every one of them is a page in exactly this
+# at-risk shape (BAM 684 date tokens in one chunk, GrowNYC 648, Arts Society of
+# Kingston 526, Alamo Drafthouse 503, Alvin Ailey 431).
+OCCURRENCE_BUDGET_PER_CHUNK = int(os.environ.get("OCCURRENCE_BUDGET_PER_CHUNK", "250"))
+
+# Longest page preamble `cap_occurrences_per_chunk` will repeat onto the pieces
+# it cuts. Big enough for the venue/address header a js_code-built listing puts
+# above its cards; small enough that repeating it is free.
+PREAMBLE_CARRY_MAX_CHARS = 800
+
 # Largest trailing partial record chunk_content_by_size will carry into the next
 # chunk, as a fraction of MAX_CHUNK_CHARS. The carry leads the next chunk, so it
 # has to leave that chunk room to hold real content.
@@ -399,6 +442,7 @@ class PreparedExtraction:
 
     # For 'chunked' type
     chunk_prompts: list = field(default_factory=list)
+    chunks: list = field(default_factory=list)  # raw chunk text, parallel to chunk_prompts
     max_batches: Optional[int] = None
     content: Optional[str] = None  # Original page content for enrichment context
 
@@ -980,6 +1024,91 @@ def cap_records_per_chunk(chunks, max_records):
             out.append('\n'.join(lines[prev:cut]))
             prev = cut
         out.append('\n'.join(lines[prev:]))
+    return out
+
+
+# A calendar date written out in a form a listing actually enumerates:
+# "September 6, 2026", "Sep 6", "Sept. 6", "2026-09-06", "08/30", "8/30/26".
+# Deliberately does NOT match a naked day number, so "Jan 11, 18, 25" counts as
+# one: the estimate errs LOW, and undercounting only means we decline to split
+# (the status quo), whereas overcounting would split ordinary pages needlessly.
+# The slash form is month-first, range-checked, and fenced off from adjacent
+# digits, slashes and decimal points, so it matches `### Sunday - 08/30` but
+# not a version (`v1.2/3.4`), a price, or a date inside a URL path (which the
+# prompt forbids extracting anyway). Measured over 10 days of crawls it adds
+# 0.35pp of chunks.
+_DATE_TOKEN_RE = re.compile(
+    r'\b(?:January|February|March|April|May|June|July|August|September|October|'
+    r'November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sept?|Oct|Nov|Dec)\.?\s+\d{1,2}\b'
+    r'|\b\d{4}-\d{2}-\d{2}\b'
+    r'|(?<![\d/.])(?:0?[1-9]|1[0-2])/(?:0?[1-9]|[12]\d|3[01])(?:/\d{2,4})?(?![\d/]|\.\d)',
+    re.IGNORECASE)
+
+
+def count_date_tokens(text):
+    """How many occurrence objects `text` is likely to demand from the model."""
+    return len(_DATE_TOKEN_RE.findall(text or ''))
+
+
+def cap_occurrences_per_chunk(chunks, budget=OCCURRENCE_BUDGET_PER_CHUNK):
+    """Subdivide any chunk whose text enumerates more than `budget` dates.
+
+    The same post-pass shape as `cap_records_per_chunk` — splits ONLY at heading
+    lines, so it cannot sever a record, and no piece ever exceeds max_chars. The
+    difference is what it budgets: OUTPUT (occurrence objects the response must
+    carry) rather than input size or record count. See
+    OCCURRENCE_BUDGET_PER_CHUNK for the measurements.
+
+    Records are packed greedily, and a piece always takes at least one record —
+    a SINGLE record listing more than `budget` dates cannot be split at a
+    heading and is passed through unchanged (the shortfall warning in
+    `_execute_chunked_sync` is what covers that residual case).
+
+    A short page PREAMBLE (whatever precedes the first heading) is repeated at
+    the head of each piece. That is the one place this differs from
+    `cap_records_per_chunk`, and it is not cosmetic: on w944 the preamble is the
+    line carrying the venue name and street address, and pieces that lost it
+    came back with `location: "game bar or backyard"` — the card's *Space:*
+    line — instead of "The Tiny Cupboard". `max_chars` is still respected.
+    """
+    if not budget:
+        return chunks
+
+    out = []
+    for chunk in chunks:
+        if count_date_tokens(chunk) <= budget:
+            out.append(chunk)
+            continue
+
+        lines = chunk.split('\n')
+        starts = [i for i, line in enumerate(lines) if _is_heading_line(line)]
+        if len(starts) < 2:
+            out.append(chunk)          # nothing to split at
+            continue
+
+        preamble = '\n'.join(lines[:starts[0]]).strip()
+        if len(preamble) > PREAMBLE_CARRY_MAX_CHARS:
+            preamble = ''
+
+        # Record i spans [starts[i], starts[i+1]); the preamble rides along with
+        # the first piece naturally and is repeated onto the rest.
+        bounds = starts + [len(lines)]
+        pieces, cur_start, cur_dates = [], 0, 0
+        for i in range(len(starts)):
+            body = '\n'.join(lines[bounds[i]:bounds[i + 1]])
+            n = count_date_tokens(body)
+            # Cut BEFORE this record when it would blow the budget — but never
+            # emit an empty piece, so the first record of a piece always lands.
+            if cur_start < starts[i] and cur_dates + n > budget:
+                pieces.append('\n'.join(lines[cur_start:starts[i]]))
+                cur_start, cur_dates = starts[i], 0
+            cur_dates += n
+        pieces.append('\n'.join(lines[cur_start:]))
+
+        for j, piece in enumerate(p for p in pieces if p.strip()):
+            if j and preamble and len(piece) + len(preamble) + 1 <= MAX_CHUNK_CHARS:
+                piece = preamble + '\n' + piece
+            out.append(piece)
     return out
 
 
@@ -1886,8 +2015,19 @@ async def prepare_extraction(cursor, crawl_result_id, website_name, notes="",
                     print(f"    - [[extraction: {RECORDS_PER_CHUNK_DIRECTIVE}={records_cap}]] "
                           f"subdivided {len(chunks)} chunks into {len(capped)}")
                 chunks = capped
+
+            # Output budget, applied last so it sees the final piece boundaries.
+            # Inert on ordinary listings; only date-list pages are subdivided.
+            dense = cap_occurrences_per_chunk(chunks)
+            if len(dense) != len(chunks):
+                worst = max(count_date_tokens(c) for c in chunks)
+                print(f"    - Date-dense page ({worst} dates in one chunk, budget "
+                      f"{OCCURRENCE_BUDGET_PER_CHUNK}); subdivided {len(chunks)} "
+                      f"chunks into {len(dense)}")
+            chunks = dense
             print(f"    - Split into {len(chunks)} chunks using {chunk_method}-based chunking")
 
+            prep.chunks = chunks           # raw text, for the shortfall guard
             prep.content = content_to_process  # Store for enrichment context
             prep.chunk_prompts = [
                 get_chunk_prompt(chunk, current_date_string, notes,
@@ -2312,6 +2452,67 @@ def _distinct_names_in_order(events):
     return out
 
 
+def _heading_key(text):
+    """Loose key for matching a returned event name back to its source heading."""
+    text = re.sub(r'^[ \t]*(?:[\*\-]\s+|\d+\.\s+)?#{1,6}\s*', '', text or '')
+    text = re.sub(r'\[([^\]]*)\]\([^)]*\)', r'\1', text)   # markdown link -> label
+    return re.sub(r'[^a-z0-9]+', '', text.lower())
+
+
+def _record_date_counts(chunk):
+    """[(heading_key, heading_text, date_token_count)] for each record in a chunk."""
+    lines = (chunk or '').split('\n')
+    starts = [i for i, line in enumerate(lines) if _is_heading_line(line)]
+    bounds = starts + [len(lines)]
+    out = []
+    for i, s in enumerate(starts):
+        heading = lines[s].strip()
+        body = '\n'.join(lines[bounds[i]:bounds[i + 1]])
+        out.append((_heading_key(heading), heading, count_date_tokens(body)))
+    return out
+
+
+def _report_dropped_dates(chunk, events, label):
+    """Warn LOUDLY when a chunk's records list dates but came back date-less.
+
+    This is the detector for the failure `cap_occurrences_per_chunk` prevents,
+    kept because that cap cannot split a SINGLE record that enumerates too many
+    dates, and because the degradation is stochastic rather than a hard cliff.
+    Without it the failure is invisible: `occurrences: null` is a legal answer,
+    the record still counts toward the site's event count, nothing raises, and
+    the event simply never reaches the map. Warning rather than failing is
+    deliberate — the rest of the chunk is good data, and failing the crawl would
+    trade a date loss for an archival cascade.
+    """
+    counts = _record_date_counts(chunk)
+    if not counts:
+        return 0
+    by_key = {k: (h, n) for k, h, n in counts if k}
+    dropped = []
+    for event in events:
+        if event.get('occurrences'):
+            continue
+        key = _heading_key(event.get('name') or '')
+        if not key:
+            continue
+        hit = by_key.get(key)
+        if hit is None:
+            hit = next((v for k, v in by_key.items()
+                        if k and (k in key or key in k)), None)
+        # 2+ dates: one stray date token in a record's prose is not evidence.
+        if hit and hit[1] >= 2:
+            dropped.append((event.get('name'), hit[1]))
+    if not dropped:
+        return 0
+    lost = sum(n for _, n in dropped)
+    examples = '; '.join(f"{name!r} ({n} dates)" for name, n in dropped[:3])
+    print(f"      ⚠️  DATE DROP in {label}: {len(dropped)} record(s) returned "
+          f"occurrences=null although their source text lists dates "
+          f"(~{lost} dates lost) — {examples}"
+          + (f"; +{len(dropped) - 3} more" if len(dropped) > 3 else ""))
+    return len(dropped)
+
+
 async def _execute_chunked_sync(prep, cursor=None, connection=None):
     """Execute chunked extraction synchronously (individual API calls).
 
@@ -2341,6 +2542,7 @@ async def _execute_chunked_sync(prep, cursor=None, connection=None):
     attempted_chunks = 0
     failed_chunks = 0
     last_chunk_error = None
+    date_dropping_records = 0
     for i, chunk_prompt in enumerate(prep.chunk_prompts):
         if len(seen_names) >= max_events:
             skipped_chunks = len(prep.chunk_prompts) - i
@@ -2368,6 +2570,9 @@ async def _execute_chunked_sync(prep, cursor=None, connection=None):
                 print(f"      Got {len(events)} events")
                 all_simple_events.extend(events)
                 seen_names.update(e['name'] for e in events if e.get('name'))
+                if i < len(prep.chunks):
+                    date_dropping_records += _report_dropped_dates(
+                        prep.chunks[i], events, f"chunk {i + 1}/{len(prep.chunk_prompts)}")
             else:
                 print(f"      No events extracted")
         except Exception as e:
@@ -2414,6 +2619,12 @@ async def _execute_chunked_sync(prep, cursor=None, connection=None):
 
     if skipped_chunks > 0:
         print(f"    - Skipped {skipped_chunks} remaining chunk(s) (already have {len(all_simple_events)} events)")
+
+    if date_dropping_records:
+        print(f"    - ⚠️  {date_dropping_records} record(s) across this page came back "
+              f"date-less despite listing dates; those events will be undated. If this "
+              f"repeats, lower OCCURRENCE_BUDGET_PER_CHUNK or cap the date list this "
+              f"site's js_code emits.")
 
     print(f"    - Total from chunks: {len(all_simple_events)} events")
 
@@ -2588,6 +2799,21 @@ def _build_chunk_requests(prep):
     """
     max_events = prep.max_batches * ENRICHMENT_BATCH_SIZE
     max_chunks = max(1, -(-max_events // EVENTS_PER_CHUNK)) + 1  # ceiling division + headroom
+
+    # That formula assumes every chunk holds EVENTS_PER_CHUNK records. Once a
+    # page has been subdivided — by `max-records-per-chunk` or by the date-token
+    # budget — chunks hold far fewer, and a fixed chunk count would silently
+    # cover less of the page than the same budget covered before the split. Walk
+    # the real per-chunk record counts instead, so the cap stays denominated in
+    # records either way.
+    if prep.chunks and len(prep.chunks) == len(prep.chunk_prompts):
+        covered, needed = 0, 0
+        for chunk in prep.chunks:
+            if covered >= max_events:
+                break
+            covered += max(1, sum(1 for line in chunk.split('\n') if _is_heading_line(line)))
+            needed += 1
+        max_chunks = max(max_chunks, needed + 1)
 
     requests = []
     for i, chunk_prompt in enumerate(prep.chunk_prompts[:max_chunks]):

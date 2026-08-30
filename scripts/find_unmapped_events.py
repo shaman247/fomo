@@ -102,6 +102,8 @@ SKIP_LOCATION_NAMES = {
     # room/area descriptors, tabling spots, and one-off series names that sit
     # inside the mapped venue
     'cafe area', 'deadass', 'manhattan venue',
+    # host ORG's own site emitting a catch-all city label for a multi-studio series
+    'manhattan (various)',
     'montefiore organ/tissue donation', 'montefiore organ/ tissue donation',
     # neighborhood labels that are NOT generic_location rows (so the placeholder
     # check below can't catch them) but still carry no venue information
@@ -126,7 +128,7 @@ SKIP_LOCATION_NAMES = {
     'bedstuy',
     # nyc.gov street-event permits: location_name is the parade / street-fair
     # ROUTE, not a venue. The event is pinned to the right neighborhood generic.
-    '11 madison avenue', '118 street', '37 avenue', '5 avenue',
+    '10 avenue', '11 madison avenue', '118 street', '37 avenue', '5 avenue',
     'crossbay boulevard', 'hillside avenue', 'st john place',
     # deliberately-unnamed / address-withheld venues (Partiful DIY shows, private
     # backyard parties, Meetup series that email the meeting spot to registrants).

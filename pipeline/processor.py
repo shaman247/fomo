@@ -646,7 +646,7 @@ _NON_EVENT_NAME_PATTERNS = [
     # reached the map and was hand-suppressed at classification on 2026-08-29).
     # Corpus-checked over all 204,375 events: the `to` arm adds 6 rows /
     # 5 distinct names, every one a genuine call for entries, 0 false positives.
-    r'\bcalls? (for|to) (artists?|art|submissions?|entries|proposals|vendors?|applicants?|papers?|works?)\b',
+    r'\bcalls? (for|to) (artists?|art|submissions?|entries|proposals|vendors?|applicants?|papers?|works?|artworks?)\b',
     r'\bsubmissions?\s+(period|deadline|window|open|guidelines)\b',
     r'^\s*submissions?\s*:',
     r'\b(now\s+)?accepting\s+(submissions|applications|entries|proposals)\b',
