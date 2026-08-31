@@ -1416,6 +1416,40 @@ def get_website_locations_map(cursor):
     return result
 
 
+# A location_name is "generic" when it is a bare place name (neighborhood,
+# borough, city) rather than a venue. Sources routinely append a state or
+# country, so "New York, NY" and "Midtown, New York" are just as unusable as
+# the bare forms already in the list — but the check is exact string equality,
+# so they slipped through. Measured 2026-08-31: 1,781 crawl_event rows carried
+# a suffixed generic name that no alternate name could resolve, and never
+# became detail-crawl candidates. The Moth (w199) lost every venue this way.
+#
+# The comma is REQUIRED. Without it "Coney Island USA" strips to "coney island"
+# and a real venue (loc 3390, 1208 Surf Ave, 106 events) would be treated as a
+# generic placeholder — 483 rows of pointless detail crawls.
+_REGION_SUFFIX_RE = re.compile(
+    r'^(.*?),\s*(n\.?y\.?|new york|n\.?j\.?|new jersey|c\.?t\.?|conn'
+    r'|connecticut|u\.?s\.?a\.?|u\.?s\.?|united states)$',
+    re.IGNORECASE,
+)
+
+
+def _strip_region_suffix(name):
+    """Strip trailing comma-separated state/country suffixes, repeatedly.
+
+    "Central Park, New York, NY, US" -> "central park". Returns the lowercased
+    name unchanged when nothing is stripped.
+    """
+    prev = None
+    cur = (name or '').strip().lower().rstrip('.')
+    while cur != prev:
+        prev = cur
+        m = _REGION_SUFFIX_RE.match(cur)
+        if m:
+            cur = m.group(1).strip().rstrip(',').strip()
+    return cur
+
+
 def _load_generic_location_names():
     """Geotag names as a set of generic location names (lowercased).
 
@@ -1462,6 +1496,20 @@ def get_detail_crawl_candidates(cursor, website_ids=None):
     """
     generic_locations = _load_generic_location_names()
 
+    # Alternate names that already resolve a suffixed generic string, so the
+    # new suffix arm below does not spend a fetch re-deriving what the matcher
+    # already knows. Loaded before the main query so its fetchall() completes.
+    cursor.execute(
+        "SELECT website_id, LOWER(alternate_name) FROM location_alternate_names"
+    )
+    scoped_alt_names = set()
+    global_alt_names = set()
+    for _alt_website_id, _alt_name in cursor.fetchall():
+        if _alt_website_id is None:
+            global_alt_names.add(_alt_name)
+        else:
+            scoped_alt_names.add((_alt_website_id, _alt_name))
+
     # Query includes location_name so we can filter generic names in Python.
     # has_occurrences flag lets us detect events whose listing page provided
     # no date — those need a detail crawl too, not just events missing a description.
@@ -1501,21 +1549,36 @@ def get_detail_crawl_candidates(cursor, website_ids=None):
     rows = cursor.fetchall()
 
     # Filter to events that actually need detail crawling
-    def needs_detail_crawl(location_name, description, has_occurrences):
+    def needs_detail_crawl(location_name, description, has_occurrences, website_id):
         if not has_occurrences:
             return True
         if description == 'No description available.':
             return True
         if not location_name or location_name == 'Not specified':
             return True
-        if location_name.lower() in generic_locations:
+        lowered = location_name.strip().lower()
+        if lowered in generic_locations:
             return True
+        # Same name carrying a state/country suffix ("New York, NY").
+        #
+        # This arm is guarded by the alternate-name check and the exact arm
+        # above deliberately is NOT. Many sites map a bare neighborhood to
+        # their one venue on purpose (the single-venue authority pattern), and
+        # measured 2026-08-31, 19,589 of the 46,156 rows the exact arm already
+        # catches have such an alt -- guarding it uniformly would silently drop
+        # 42% of existing candidates. Guarding only the new arm keeps existing
+        # behaviour byte-identical while avoiding 295 pointless fetches on
+        # sites whose scoped alt already answers the suffixed form.
+        stripped = _strip_region_suffix(lowered)
+        if stripped != lowered and stripped in generic_locations:
+            if (website_id, lowered) not in scoped_alt_names and lowered not in global_alt_names:
+                return True
         return False
 
     candidates = [
         (ce_id, name, url, website_id)
         for ce_id, name, url, website_id, location_name, description, has_occurrences in rows
-        if needs_detail_crawl(location_name, description, has_occurrences)
+        if needs_detail_crawl(location_name, description, has_occurrences, website_id)
     ]
 
     if not candidates:
