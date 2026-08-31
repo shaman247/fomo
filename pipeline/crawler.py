@@ -97,6 +97,65 @@ def _is_bot_challenge(content):
     return _is_cloudflare_error_page(lowered)
 
 
+# --- Soft 404s: "this page is gone", served as HTTP 200 -----------------------
+#
+# A deleted, disbanded or newly-private Meetup group answers /<slug>/events/ with
+# HTTP 200 and a full ~59 KB page (~4.1 KB once rendered to markdown) whose body
+# reads "Group not found". It clears MIN_CRAWL_CONTENT_SIZE and matches no
+# BOT_CHALLENGE_MARKERS, so it is stored as a perfectly healthy crawl that simply
+# extracted 0 events — forever, with nothing downstream able to tell it apart
+# from a group that genuinely has nothing scheduled (Meetup renders *that* as
+# "Nothing planned yet"). Same silent-failure family as the Cloudflare
+# interstitials above; found on 6 Meetup sites on 2026-08-31.
+#
+# Two things make this class different from a bot challenge, and shape the
+# handling below:
+#   * It is **permanent**, not IP-reputation scored, so it must NOT be retried —
+#     it routes straight to a failed crawl instead of _refetch_past_challenge.
+#   * It is per-URL, so a multi-URL website loses only the dead URL; the crawl
+#     as a whole only fails when nothing survives.
+# Storing it as `failed` is what matters: a failed crawl blocks the merger's
+# archival path and surfaces in the run log, instead of quietly reporting zero.
+#
+# Scoping. Each marker is an exact sentence lifted from the platform's own error
+# body — never a loose substring like "group not found", which appears in
+# Meetup's shipped i18n bundle on *every* group page and would fire on healthy
+# listings the day crawl4ai stops stripping <script> tags. The body must also be
+# small: a real listing page that merely quotes one of these sentences (a blog
+# post about disbanded groups, say) carries far more markup around it.
+#
+# This is a general mechanism, not a Meetup branch, because the *shape* is not
+# Meetup-specific — 200-with-a-tombstone is how most SPA event platforms answer a
+# dead permalink. Adding the next platform is one line in the tuple rather than a
+# new code path, exactly as BOT_CHALLENGE_MARKERS already mixes Cloudflare,
+# Imperva and CollectiveAccess phrases behind one predicate.
+SOFT_404_MARKERS = (
+    # Meetup: group deleted/disbanded (canonical urlname becomes a UUID
+    # tombstone) or switched to private. Both render this same body.
+    "sorry, the group you're looking for doesn't exist",
+)
+
+# Observed Meetup soft-404 bodies are 4.1-4.4 KB of markdown; the smallest real
+# Meetup group page in crawl_results is ~5.9 KB. The ceiling sits above the
+# former and below nothing real that carries these sentences.
+SOFT_404_MAX_CHARS = 8000
+
+# Meetup serves U+2019 in "you're"/"doesn't"; other platforms use ASCII. Fold
+# every apostrophe variant to ' so one marker spelling covers both.
+_APOSTROPHE_VARIANTS = str.maketrans({'\u2019': "'", '\u2018': "'", '\u02bc': "'", '\u00b4': "'"})
+
+
+def _is_soft_404(content):
+    """True if the body is a platform "this no longer exists" page served as 200.
+
+    Permanent by nature: callers must fail the URL rather than retry it.
+    """
+    if not content or len(content) > SOFT_404_MAX_CHARS:
+        return False
+    lowered = content.lower().translate(_APOSTROPHE_VARIANTS)
+    return any(marker in lowered for marker in SOFT_404_MARKERS)
+
+
 # A JSON API feed that legitimately has nothing to serve right now
 # ({"data":{"events":[],"has_next_page":false},"success":true} = 65 bytes) turns
 # into a ~163-byte combined_markdown (the URL line plus the payload) and trips
@@ -466,6 +525,9 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
         # URLs that came back as a bot-challenge interstitial, retried after the
         # timed crawl loop so the backoff doesn't count against crawl_timeout.
         challenged_urls = []
+        # URLs whose page is permanently gone (soft 404 served as HTTP 200).
+        # Never retried — they are dropped and reported in the failure message.
+        soft_404_urls = []
 
         async def crawl_urls():
             """Inner function to crawl all URLs, can be wrapped with timeout."""
@@ -527,6 +589,12 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
                     print(f"    - Challenge/error interstitial ({len(url_content)} chars) - queued for retry")
                     challenged_urls.append((url, url_config))
                     continue
+                if _is_soft_404(url_content):
+                    # Permanent, so no retry: storing it would look like a
+                    # healthy 0-event crawl and let the merger archive on it.
+                    print(f"    - Soft 404 ({len(url_content)} chars) - page no longer exists, discarding")
+                    soft_404_urls.append(url)
+                    continue
                 if url_content:
                     combined_markdown += url + "\n" + url_content
 
@@ -564,10 +632,19 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
             # Distinguish a genuine empty crawl from an unbeaten bot challenge:
             # storing the challenge page as content would look like a successful
             # crawl with 0 events and feed the merger's archival logic.
-            error_msg = (
-                f"Bot challenge / origin error page not cleared after retries ({unresolved_challenges} URL(s))"
-                if unresolved_challenges else "No content retrieved"
-            )
+            if soft_404_urls:
+                # The most actionable diagnosis wins: this one is permanent and
+                # means the source needs a new URL or needs disabling.
+                error_msg = (
+                    f"Soft 404 - page no longer exists ({len(soft_404_urls)} URL(s)): "
+                    + ", ".join(soft_404_urls[:3])
+                )
+            elif unresolved_challenges:
+                error_msg = (
+                    f"Bot challenge / origin error page not cleared after retries ({unresolved_challenges} URL(s))"
+                )
+            else:
+                error_msg = "No content retrieved"
             db.update_crawl_result_failed(
                 cursor, connection, crawl_result_id, error_msg
             )
@@ -758,6 +835,12 @@ async def crawl_event_url(web_crawler, url, crawl_config, timeout=120, user_agen
     """
     content = await _fetch_event_page(web_crawler, url, crawl_config, timeout)
     if not content:
+        return None
+
+    if _is_soft_404(content):
+        # A dead permalink served as 200. Permanent, so unlike a challenge there
+        # is nothing to retry, and it must never be handed to the enricher.
+        print(f"    Soft 404 ({len(content)} chars) for {url} - page no longer exists")
         return None
 
     if not _is_bot_challenge(content):

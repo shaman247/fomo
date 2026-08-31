@@ -20,9 +20,11 @@ from crawler import (
     CLOUDFLARE_ERROR_CODES,
     MIN_CRAWL_CONTENT_SIZE,
     MIN_EVENT_PAGE_SIZE,
+    SOFT_404_MAX_CHARS,
     _is_bot_challenge,
     _is_cloudflare_error_page,
     _is_json_api_payload,
+    _is_soft_404,
 )
 
 
@@ -78,6 +80,74 @@ LEGIT_SMALL_PAGE = (
     "Doors open one hour before showtime. All ages welcome.\n"
     "Our venue is protected by Cloudflare and accessible by subway.\n"
     "Tickets available at the box office or online. No refunds or exchanges.\n"
+)
+
+
+# --- Meetup soft 404 --------------------------------------------------------
+#
+# Verbatim shape of crawl_result 113103 (website 3713, 2026-08-13): the body a
+# deleted/private Meetup group serves at HTTP 200. Stored as a *successful*
+# 4,121-byte, 0-event crawl five times running. Trimmed here (the real body
+# carries the full Meetup footer), but every line is copied from it, curly
+# apostrophes included.
+MEETUP_SOFT_404_BODY = (
+    "https://www.meetup.com/FunCrowd/events/\n"
+    "[Skip to content](https://www.meetup.com/funcrowd/events/#main)\n"
+    "[](https://www.meetup.com/)\n"
+    "Homepage\nEnglish\nLog inSign up\n"
+    "![calendarOrange illustration](https://secure.meetupstatic.com/next/images/"
+    "illustrations/calendar-orange.webp?w=384)\n"
+    "### Group not found\n"
+    "Sorry, the group you\u2019re looking for doesn\u2019t exist\n"
+    ".\nThe people platform\nCreate your own Meetup group.\n"
+    "[Get Started](https://www.meetup.com/start?origin=groups&eventOrigin=page-footer)\n"
+    "Your account\n"
+    "  * [Sign up](https://www.meetup.com/register/?returnUri=https%3A%2F%2Fwww.meetup.com%2Ffuncrowd%2Fevents%2F)\n"
+    "  * [Log in](https://www.meetup.com/login/?returnUri=https%3A%2F%2Fwww.meetup.com%2Ffuncrowd%2Fevents%2F)\n"
+    "  * [Help](https://help.meetup.com/hc)\n"
+    "Discover\n"
+    "  * [Groups](https://www.meetup.com/find/?source=GROUPS)\n"
+    "  * [Events](https://www.meetup.com/find/?source=EVENTS)\n"
+    "  * [Topics](https://www.meetup.com/topics/)\n"
+    "\u00a9 2026 Bending Spoons US Inc.\n"
+    "Made with by\n[Bending Spoons](https://www.bendingspoons.com)\n"
+)
+
+# The page that must NEVER be flagged: crawl_result 100749 (website 4884,
+# 2026-07-12) — a live Meetup group that simply has nothing scheduled. Same
+# chrome, same footer, same illustration; only the message differs. 199 stored
+# Meetup bodies look like this.
+MEETUP_EMPTY_GROUP_BODY = (
+    "https://www.meetup.com/coney-island-volleyball/events/\n"
+    "[Skip to content](https://www.meetup.com/coney-island-volleyball/events/#main)\n"
+    "Homepage\nEnglish\nLog inSign up\n"
+    "# [Coney Island Volleyball](https://www.meetup.com/coney-island-volleyball/)\n"
+    "5.0\u2022[3 ratings](https://www.meetup.com/coney-island-volleyball/feedback-overview/)\n"
+    "[Brooklyn, NY, USA](https://www.meetup.com/find/us--ny--brooklyn/)\n"
+    "[48 members](https://www.meetup.com/coney-island-volleyball/members/)\n"
+    "# Events\n0\n"
+    "[List](https://www.meetup.com/coney-island-volleyball/events/)"
+    "[Calendar](https://www.meetup.com/coney-island-volleyball/events/calendar/)\n"
+    "Upcoming\n"
+    "![calendarOrange illustration](https://secure.meetupstatic.com/next/images/"
+    "illustrations/calendar-orange.webp?w=384)\n"
+    "### Nothing planned yet\n"
+    "No events at the moment. Keep an eye out for when new ones are announced!\n"
+    "Remove ads\n## Similar events nearby\n"
+    "[See all](https://www.meetup.com/find/?source=EVENTS&keywords=Sports+%26+Fitness)\n"
+    "\u00a9 2026 Bending Spoons US Inc.\n"
+    "Made with by\n[Bending Spoons](https://www.bendingspoons.com)\n"
+)
+
+# A live group with events, reduced to the parts that matter here.
+MEETUP_LIVE_GROUP_BODY = (
+    "https://www.meetup.com/astoriarunners/events/\n"
+    "# [Astoria Runners](https://www.meetup.com/astoriarunners/)\n"
+    "# Events\n3\nUpcoming\n"
+    "[Wed, Sep 2, 2026, 7:00 PM EDT\nTrack Tuesday at Astoria Park\n"
+    "Astoria Park \u00b7 Queens, NY\n12 attendees]"
+    "(https://www.meetup.com/astoriarunners/events/315701055/)\n"
+    "\u00a9 2026 Bending Spoons US Inc.\n"
 )
 
 
@@ -428,6 +498,96 @@ class TestDetailCrawlChallengeGuard(unittest.TestCase):
             self.assertEqual(self._run(fake), body)
         refetch.assert_not_awaited()
 
+
+class TestMeetupSoft404Detection(unittest.TestCase):
+    """A deleted/private Meetup group answers 200 with a "Group not found" body.
+
+    It clears MIN_CRAWL_CONTENT_SIZE and matches no BOT_CHALLENGE_MARKERS, so
+    before this guard it was stored as a healthy 0-event crawl — forever, on six
+    websites. Storing it as `failed` is what keeps the merger from archiving on
+    a page that was never really read.
+    """
+
+    def test_real_soft_404_body_is_detected(self):
+        self.assertTrue(_is_soft_404(MEETUP_SOFT_404_BODY))
+
+    def test_soft_404_slips_past_every_preexisting_gate(self):
+        # Regression anchors: this is exactly why it was invisible.
+        self.assertGreater(len(MEETUP_SOFT_404_BODY), MIN_CRAWL_CONTENT_SIZE)
+        self.assertFalse(_is_bot_challenge(MEETUP_SOFT_404_BODY))
+        self.assertFalse(_is_json_api_payload(MEETUP_SOFT_404_BODY))
+
+    def test_ascii_apostrophes_match_too(self):
+        # Meetup serves U+2019; a platform using ' must hit the same marker.
+        ascii_body = MEETUP_SOFT_404_BODY.replace("\u2019", "'")
+        self.assertNotIn("\u2019", ascii_body)
+        self.assertTrue(_is_soft_404(ascii_body))
+
+    def test_case_is_ignored(self):
+        self.assertTrue(_is_soft_404(MEETUP_SOFT_404_BODY.upper()))
+
+    # --- the markers must not fire on anything real ---
+
+    def test_live_group_with_events_is_not_flagged(self):
+        self.assertFalse(_is_soft_404(MEETUP_LIVE_GROUP_BODY))
+
+    def test_empty_but_live_group_is_not_flagged(self):
+        """The whole point: "Nothing planned yet" is a *correct* 0-event crawl."""
+        self.assertFalse(_is_soft_404(MEETUP_EMPTY_GROUP_BODY))
+        self.assertGreater(len(MEETUP_EMPTY_GROUP_BODY), MIN_CRAWL_CONTENT_SIZE)
+
+    def test_bare_group_not_found_substring_is_not_a_marker(self):
+        """"Group not found" ships in Meetup's i18n bundle on every group page.
+
+        Only the full sentence counts, so the guard cannot start firing on
+        healthy listings if <script> stripping ever changes.
+        """
+        body = MEETUP_EMPTY_GROUP_BODY + "\ngroupEvents.groupNotFoundTitle: Group not found\n"
+        self.assertFalse(_is_soft_404(body))
+
+    def test_page_quoting_the_sentence_is_not_flagged_when_large(self):
+        body = MEETUP_SOFT_404_BODY + "x" * SOFT_404_MAX_CHARS
+        self.assertFalse(_is_soft_404(body))
+
+    def test_size_ceiling_clears_the_real_body(self):
+        # The observed bodies are 4.1-4.4 KB; the ceiling must sit above them.
+        self.assertLess(len(MEETUP_SOFT_404_BODY), SOFT_404_MAX_CHARS)
+
+    def test_empty_content_is_not_flagged(self):
+        self.assertFalse(_is_soft_404(""))
+        self.assertFalse(_is_soft_404(None))
+
+    def test_interstitials_are_not_misfiled_as_soft_404s(self):
+        # A challenge is transient and must keep routing to the retry path.
+        self.assertFalse(_is_soft_404(CF_JUST_A_MOMENT_BODY))
+        self.assertFalse(_is_soft_404(CF_502_BODY))
+
+
+class TestDetailCrawlSoft404Guard(unittest.TestCase):
+    """crawl_event_url() must discard a dead permalink without spending retries."""
+
+    def _run(self, fake, **kwargs):
+        return asyncio.run(
+            crawler.crawl_event_url(fake, "https://www.meetup.com/g/events/1/", object(), **kwargs)
+        )
+
+    def test_soft_404_detail_page_is_discarded(self):
+        fake = _FakeCrawler(MEETUP_SOFT_404_BODY)
+        self.assertIsNone(self._run(fake))
+
+    def test_soft_404_is_not_retried(self):
+        """Permanent, unlike a challenge — a refetch would only waste an attempt."""
+        fake = _FakeCrawler(MEETUP_SOFT_404_BODY)
+        with mock.patch.object(
+            crawler, '_refetch_past_challenge',
+            new=mock.AsyncMock(return_value=REAL_EVENT_PAGE),
+        ) as refetch:
+            self.assertIsNone(self._run(fake))
+        refetch.assert_not_awaited()
+
+    def test_live_detail_page_still_returned(self):
+        fake = _FakeCrawler(REAL_EVENT_PAGE)
+        self.assertEqual(self._run(fake), REAL_EVENT_PAGE)
 
 if __name__ == '__main__':
     unittest.main()

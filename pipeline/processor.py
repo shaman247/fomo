@@ -3683,9 +3683,83 @@ def _venue_type_swap_names(a, b):
     return _generic_type_swap(ta - shared, tb - shared)
 
 
+_DIGIT_RUN_RE = re.compile(r'\d+')
+# A whole token that IS a number: bare, zero-padded, or ordinal ("6", "006",
+# "67th"). Anything else containing digits ("21a", "w4") is not treated as one.
+_NUMBER_TOKEN_RE = re.compile(r'^(\d+)(?:st|nd|rd|th)?$')
+
+
+def _token_number(token):
+    """The integer a token denotes, or None if the token is not a number."""
+    m = _NUMBER_TOKEN_RE.match(token) if token else None
+    return int(m.group(1)) if m else None
+
+
+def _numeric_identifiers(name):
+    """The set of numbers a venue name carries, as ints.
+
+    Every digit RUN counts, wherever it sits, so an ordinal or a unit letter
+    contributes its number too ("beach 67th street" -> {67}, "21a clinton" ->
+    {21}) and reads the same as the plain form. Zero-padding is not an identity
+    difference ("P.S. 006" and "PS 6" are the same school), so the runs are
+    compared as integers, not strings.
+    """
+    if not name:
+        return frozenset()
+    return frozenset(int(n) for n in _DIGIT_RUN_RE.findall(name))
+
+
+def _numeric_identity_conflict(a, b):
+    """True when two names carry DIFFERENT numeric identifiers.
+
+    A digit is not a typo. "Pier 6" and "Pier 66 at Hudson River Park" differ by
+    one trailing character, which every edit-distance measure calls a near-match
+    (0.923 here, over the 0.90 threshold) — and they are venues four miles apart
+    in different boroughs. Seven NYC Parks crawl_events for "NYRR Open Run:
+    Brooklyn Bridge Park" were pinned to the Manhattan pier that way (2026-08-31).
+
+    A number in a venue name is an IDENTIFIER, not a spelling: Pier 6/17/57/66,
+    Studio 54/111, Manhattan Community Board 1/11/12, P.S. 15/155, Beach 67/97,
+    Building 77/92. The live corpus holds 22 such families and 816 fuzzy-reachable
+    (ratio >= 0.90 or substring) same-stem pairs, so this is a whole class, not
+    one venue.
+
+    Deliberately narrow in two ways, both of which matter:
+      - a ONE-SIDED number is not a conflict ("Pier 6" vs "Pier 6 at Brooklyn
+        Bridge Park" shares its number; "Brooklyn Bowl, 61 Wythe Ave" vs
+        "Brooklyn Bowl" has a house number the key simply doesn't carry);
+      - a SUBSET is not a conflict either, so a source that adds a street number
+        to a numbered venue ("Pier 17 at 89 South St" vs "Pier 17") still matches.
+
+    Only genuinely divergent number sets are refused.
+
+    Measured 2026-08-31 over all 65,825 distinct crawl_event location rows: 83
+    move, 226 crawl_event rows — 11 re-pinned onto the RIGHT numbered venue
+    (Pier 6 -> BBP not HRP, Pier 2 -> BBP not Pier 26, Pier 76 -> Pier 76 not
+    Pier 84, 37th Ave -> 37th Ave not 35th) and 72 refused into NULL. Sampled by
+    hand, roughly three quarters of the refusals were pins that were plainly
+    WRONG (168 vs 68 Ludlow St, Beach 87th vs Beach 67th, Pier 5 -> Pier 57,
+    Studio 5 -> Studio 54, PS179 -> P.S. 17, Jerome Greene Hall -> Jerome Greene
+    Annex). The rest are a real cost, and they share one shape: an
+    address-shaped curated ALTERNATE name whose number happens to differ
+    ("W 116th Street & Riverside Drive" vs the curated W 120th/W 143rd/W 150th
+    entrances of Riverside Park, 1300 vs a typo'd "1301 Morris Park Ave"). A
+    different house number IS a different address, so the rule is right and the
+    remedy is the missing alternate name, which NULL surfaces in
+    /fix-unmapped-events rather than hiding under a lucky pin.
+    """
+    na, nb = _numeric_identifiers(a), _numeric_identifiers(b)
+    if not na or not nb:
+        return False
+    return not (na <= nb or nb <= na)
+
+
 def _fuzzy_ratio(candidate, key):
-    """Levenshtein ratio for the fuzzy tier, but 0 for a venue-type swap."""
+    """Levenshtein ratio for the fuzzy tier, but 0 for a venue-type swap or a
+    numeric-identifier conflict."""
     if _venue_type_swap_names(candidate, key):
+        return 0
+    if _numeric_identity_conflict(candidate, key):
         return 0
     return _calculate_levenshtein_ratio(candidate, key)
 
@@ -3801,8 +3875,26 @@ def _leftover_reconciles(token, others):
     """True if `token` plausibly refers to the same thing as some token in
     `others` — a typo (high Levenshtein ratio) or a hyphen-join / containment
     ("hudson" ⊂ "midhudson"). Used to tell "Saint/St"-style noise apart from a
-    genuine venue-identity conflict ("BCC" vs "DEP", "Java" vs "Maple")."""
+    genuine venue-identity conflict ("BCC" vs "DEP", "Java" vs "Maple").
+
+    Two NUMBERS reconcile only by VALUE, never by containment: containment
+    reconciled "6" with "66" and "15" with "155", which is one of the ways Pier 6
+    reached Pier 66. Zero-padding ("P.S. 006" / "PS 6") and an ordinal suffix
+    ("Beach 67 Street" / "Beach 67th Street") still reconcile, since both sides
+    denote the same value.
+
+    Deliberately scoped to number-vs-number. A number against an ALPHANUMERIC
+    token is left to the containment rule, because that pairing is how a source's
+    spacing drifts from a curated alternate name rather than how two venues
+    differ — measured, refusing it un-pinned "74 East 4th Street" from La MaMa's
+    "74a East 4th Street" alt, "CB2 Conference Room" from Manhattan CB2, and
+    "Bronx 111E 210th St" from "111 E 210th St"."""
     for other in others:
+        n_tok, n_other = _token_number(token), _token_number(other)
+        if n_tok is not None and n_other is not None:
+            if n_tok == n_other:
+                return True
+            continue
         if token in other or other in token:
             return True
         if _calculate_levenshtein_ratio(token, other) >= 0.8:
@@ -5127,6 +5219,44 @@ def _is_brand_family_key(locations_map, key, cand_id):
     return len(family) >= 2 and cand_id in family
 
 
+# Curated bare ROOM phrases: each names a KIND of room INSIDE some larger venue,
+# never a venue in its own right. A DERIVED key that collapses to one of these
+# (a `short_name`, or a name whose area qualifier normalization stripped)
+# captures every event whose source named only the room. loc 2488
+# "Dance Room NYC" is a real Midtown dance studio, but its bare short_name and
+# its normalized name both index as "dance room", and so it claimed 76 NYC Parks
+# rec-center classes held in a room the feed labels "Dance Room" — the
+# `location_bare_shortname_collision` shape, with no brand family for
+# `_is_brand_family_key` to catch it by.
+#
+# Curated deliberately, NOT derived from GENERIC_LOCATION_WORDS. Measured over
+# every crawl_event location string, the "every token is generic" rule refuses
+# six keys, and three of them must keep resolving: "basement" (Basement NY, 303
+# correct rows from RA alone), "club studio" and "park theater". Only add a
+# phrase here after checking what currently reaches its owner.
+#
+# Refusing yields None, which `/fix-unmapped-events` surfaces — strictly better
+# than a confidently wrong pin nobody notices on the map.
+_BARE_ROOM_PHRASE_KEYS = {
+    'dance room',
+}
+
+
+def _is_bare_room_phrase(locations_map, key, raw_loc_lower):
+    """True if `key` is a curated bare ROOM phrase the source spelled bare.
+
+    Only the COLLAPSED form is refused. A source that spelled the venue out in
+    full ("Dance Room NYC") is naming the studio, not the room it collapses to,
+    so it must still resolve — the refusal is keyed on the raw string, not on
+    the normalized one both spellings share.
+    """
+    if key not in _BARE_ROOM_PHRASE_KEYS:
+        return False
+    if key not in locations_map.get('weak_keys', ()):
+        return False
+    return key == raw_loc_lower
+
+
 def _is_brand_family_name(locations_map, key):
     """True if `key` is a derived bare key naming 2+ venues of one family.
 
@@ -5177,6 +5307,7 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
         Dict with id, emoji keys, or None if no match found.
     """
     normalized_loc = _normalize_location_name(location_name_raw)
+    raw_loc_lower = (location_name_raw or '').strip().lower()
     normalized_subloc = _normalize_location_name(sublocation_name_raw)
     normalized_name = _normalize_location_name(event_name_raw)
     full_loc = f"{normalized_loc} {normalized_subloc}".strip()
@@ -5322,8 +5453,9 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
     # municipality is rejected via the region-conflict guard (e.g. the global
     # "Columbus Park" alt of Manhattan's park vs a "Columbus Park, Hoboken" event).
     #
-    # Key specificity outranks tier priority. The keys are grouped exact-location
-    # first, then heuristic variants, then the event name, and each GROUP is run
+    # Key specificity outranks tier priority. The keys are grouped composite
+    # (name + sublocation) first, then exact-location, then heuristic variants,
+    # then the event name, and each GROUP is run
     # across all three tiers before the next group starts. Tier order is
     # unchanged within a group, and the groups preserve the original relative
     # order, so this only ever demotes a mangled key below an exact one.
@@ -5342,6 +5474,49 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
     variant_loc_keys = [k for k in location_keys if k in heuristic_keys]
     event_name_keys = [k for k in search_keys if k not in location_keys]
 
+    # The SAME principle, one level finer: `full_loc` (location_name +
+    # sublocation) is strictly more specific than `normalized_loc`, so it gets
+    # its own group ahead of the bare name instead of merely sitting first
+    # within a group whose loop puts tiers on the outside.
+    #
+    # Regression this fixes: location_name="Brooklyn Bridge Park",
+    # sublocation="Pier 6" hit names["brooklyn bridge park"] (loc 140, the whole
+    # 85-acre park) before alternate_names["brooklyn bridge park pier 6"]
+    # (loc 10398, the actual pier) was ever consulted — the composite key was
+    # built, it just never got its turn. Every multi-venue campus, park and
+    # complex in the DB is in that shape: the parent's name is always in the
+    # `names` tier, and a child feature's "<parent> <feature>" form is almost
+    # always an ALTERNATE name, so the parent won every time.
+    #
+    # Only an EXACT full-string hit on the composite can win here, and only when
+    # a sublocation exists at all (otherwise full_loc == normalized_loc and this
+    # group is empty), so nothing without a sublocation changes. Measured
+    # 2026-08-31 over all 65,825 distinct crawl_event (location_name,
+    # sublocation, website_id, event_name) rows: 40 move, 470 crawl_event rows,
+    # and every one of them is a RE-PIN onto the more specific feature — zero
+    # newly-NULL. Jazz at Lincoln Center -> The Appel Room, Prospect Park ->
+    # the Audubon Center / Grand Army Plaza entrance, Cornell Tech -> the Tata
+    # Innovation Center, Gagosian -> Gagosian Park & 75, Temple Emanu-El -> the
+    # Streicker Center, Time Out Market -> its Union Square hall.
+    #
+    # It also EXPOSES bad curated alts, because it consults rows nothing reached
+    # before: "Jackie Robinson Park (Bandshell)" pointed at Northern Manhattan
+    # Arts Alliance (the programmer's midtown-Heights office, not the venue) and
+    # would have taken 32 rows with it. That row was corrected, not coded around
+    # — a wrong alt is wrong at every tier, and this one already hijacked the
+    # bare string. Expect more of them; they are data bugs this makes visible.
+    #
+    # NOT done here: making the sublocation a search key ON ITS OWN. That would
+    # let a bare feature name pull an event off its correct parent onto an
+    # unrelated venue that happens to share the feature's name ("Pier 6",
+    # "The Glade", "Studio A"), which is the sibling-hijack risk this whole
+    # family of bugs is about. The composite carries the parent's name with it
+    # and cannot do that.
+    composite_keys = []
+    if normalized_subloc and full_loc != normalized_loc:
+        composite_keys = [k for k in exact_loc_keys if k == full_loc]
+        exact_loc_keys = [k for k in exact_loc_keys if k != full_loc]
+
     # A single-venue site abbreviating itself must not be captured by an
     # unrelated location that happens to own that acronym as its whole name.
     # secretrisoclub.com emits "SRC"; an exact match on names["src"] handed six
@@ -5356,7 +5531,7 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
         and _is_initialism_of(normalized_loc, home_venue.get('name') or '')
     )
 
-    for key_group in (exact_loc_keys, variant_loc_keys, event_name_keys):
+    for key_group in (composite_keys, exact_loc_keys, variant_loc_keys, event_name_keys):
         for tier_name in ['names', 'alternate_names', 'short_names']:
             tier = locations_map.get(tier_name, {})
             for key in key_group:
@@ -5367,6 +5542,10 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
                     # A derived bare key that names a whole family of venues
                     # ("smorgasburg", "green room") can't pick a member.
                     if _is_brand_family_key(locations_map, key, cand.get('id')):
+                        continue
+                    # A derived bare key that names a ROOM rather than a venue
+                    # ("dance room") can't pick the building it sits in.
+                    if _is_bare_room_phrase(locations_map, key, raw_loc_lower):
                         continue
                     if (home_is_initialism and key == normalized_loc
                             and cand.get('id') != home_venue.get('id')):
@@ -5434,7 +5613,8 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
         # information — don't let it prefix-match a specific venue like
         # "Gallery MC" or "Studio 525". Such queries should fall through to
         # website-scoped resolution or stay unmatched.
-        if key in BARE_ONLY_GENERIC_WORDS:
+        if (key in BARE_ONLY_GENERIC_WORDS
+                or _is_bare_room_phrase(locations_map, key, raw_loc_lower)):
             continue
         if len(key) < 5:
             continue
@@ -5533,6 +5713,14 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
             for key in tier:
                 if not key.strip():
                     continue
+                # A curated bare ROOM phrase names a room, not a venue. Unlike
+                # the brand-family refusal (deliberately confined to the exact
+                # tier — see the NOTE below), this list is small and hand-picked
+                # precisely so it CAN be applied here: nothing has ever legitimately
+                # named loc 2488 by its bare "dance room" key, so the fuzzy tier
+                # answering it is pure loss.
+                if _is_bare_room_phrase(locations_map, key, raw_loc_lower):
+                    continue
 
                 is_match = (
                     key == normalized_loc or
@@ -5604,7 +5792,10 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
                         continue
                     if len(normalized_name) > 3 and key == normalized_name:
                         score = 1.0
-                    elif len(key) > 3 and (full_loc.startswith(key) or full_loc.endswith(key)) and len(key) / len(full_loc) >= PREFIX_MATCH_COVERAGE:
+                    elif (len(key) > 3
+                            and (full_loc.startswith(key) or full_loc.endswith(key))
+                            and len(key) / len(full_loc) >= PREFIX_MATCH_COVERAGE
+                            and not _numeric_identity_conflict(full_loc, key)):
                         score = 0.9 + (len(key) / len(full_loc)) * 0.09
                     else:
                         # A source string that differs from the key ONLY by a
@@ -5637,7 +5828,14 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
                             _fuzzy_ratio(normalized_loc, key),
                             _fuzzy_ratio(full_loc, key),
                             _fuzzy_ratio(normalized_name, key) if len(normalized_name) > 3 else 0,
-                            *(_calculate_levenshtein_ratio(v, key) for v in matched_variants)
+                            # The venue-type-swap veto deliberately does not
+                            # reach the variants (measured: 8 real venues
+                            # un-pinned). The numeric one does — a variant is
+                            # still a name, and "pier 6" is not "pier 66"
+                            # however the tripwire reached it.
+                            *(_calculate_levenshtein_ratio(v, key)
+                              for v in matched_variants
+                              if not _numeric_identity_conflict(v, key))
                         )
 
                     if score >= FUZZY_MATCH_THRESHOLD and (score > best_score or (score == best_score and priority < best_priority)):
