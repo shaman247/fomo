@@ -1835,5 +1835,116 @@ class TestSiblingListingVeto(unittest.TestCase):
 
 
 
+class TestSubEventKindVeto(unittest.TestCase):
+    """A run must not swallow its own opening reception / artist talk.
+
+    "<run>" vs "<run> Opening Reception" is invisible to `_is_containment_match`
+    — it adds only two words (under SIBLING_VETO_MIN_EXTRA_WORDS) and leads with
+    the run's exact title, which is the "fuller title of one event" escape that
+    test makes on purpose. So `_sibling_listing_veto` returned False on its first
+    line and every gallery's exhibition absorbed its opening: 11 live events on
+    2026-08-31 (bitforms "ReLensing", BBG "Ancestral Ecologies", Society of
+    Illustrators, Art Students League, Women's Studio Workshop, Putnam Arts
+    Council). Measured over all 33,673 non-exact (event, crawl_event) name pairs
+    reachable through event_sources: 94 pairs (0.28%) take the new shape.
+    """
+
+    WEBSITE = 5255
+    RUN = 'ReLensing'
+    RECEPTION = 'ReLensing Opening Reception'
+    RUN_URL = 'bitforms.art/exhibition/relensing'
+    RSVP_URL = 'luma.com/i5ww495a'
+
+    def setUp(self):
+        self.candidate = {'id': 238010, 'name': self.RUN, 'website_id': self.WEBSITE}
+        self.candidate_slots = {('2026-09-10', '')}
+        self.crawl_slots = {('2026-09-10', '6pm')}
+        self.roster = [(1339393, self.RUN), (1339394, self.RECEPTION)]
+        self.listing_url_keys = {(self.WEBSITE, 'bitforms.art/exhibitions')}
+        self.url_key_name_counts = {
+            (self.WEBSITE, self.RUN_URL): 1,
+            (self.WEBSITE, self.RSVP_URL): 1,
+        }
+        self.event_url_keys = {238010: {self.RUN_URL}}
+
+    def _veto(self, name=None, url_key=None, crawl_slots=None, roster=None,
+              candidate=None, candidate_slots=None, event_url_keys=None):
+        return merger._sibling_listing_veto(
+            self.RECEPTION if name is None else name,
+            self.RSVP_URL if url_key is None else url_key,
+            self.WEBSITE,
+            self.crawl_slots if crawl_slots is None else crawl_slots,
+            1339394,
+            self.candidate if candidate is None else candidate,
+            self.candidate_slots if candidate_slots is None else candidate_slots,
+            self.roster if roster is None else roster,
+            self.listing_url_keys,
+            self.url_key_name_counts,
+            self.event_url_keys if event_url_keys is None else event_url_keys,
+        )
+
+    def test_name_tiers_fuse_the_pair_on_their_own(self):
+        """The veto is needed because the raw-substring tier matches these."""
+        self.assertTrue(are_names_similar(self.RUN, self.RECEPTION))
+
+    def test_containment_test_is_blind_to_this_shape(self):
+        """Why the veto never fired: two extra words, and a leading prefix."""
+        self.assertFalse(merger._is_containment_match(self.RUN, self.RECEPTION))
+
+    def test_reception_does_not_fuse_onto_the_run(self):
+        self.assertTrue(self._veto())
+
+    def test_shared_occurrence_slot_still_wins(self):
+        """T binds both shapes: a one-night show keeps its '(Opening Night)'."""
+        self.assertFalse(self._veto(crawl_slots=self.candidate_slots))
+
+    def test_permalinks_alone_are_enough(self):
+        """U without S — the talk is published in a pass of its own (BBG)."""
+        self.assertTrue(self._veto(roster=[(1339394, self.RECEPTION)]))
+
+    def test_sibling_alone_is_enough(self):
+        """S without U — run and reception both live on listing pages (Putnam).
+
+        Both URLs are the website's own crawl URLs, so neither is a permalink.
+        """
+        listing_only = dict(self.event_url_keys)
+        listing_only[238010] = {'bitforms.art/exhibitions'}
+        self.assertTrue(self._veto(url_key='bitforms.art/exhibitions',
+                                   event_url_keys=listing_only))
+
+    def test_same_permalink_and_no_sibling_does_not_veto(self):
+        """Boffo: one crawl abbreviated 'Will Rawls Artist Talk' to 'Will Rawls'
+        at the SAME URL — a re-spelling, not a satellite."""
+        self.assertFalse(self._veto(url_key=self.RUN_URL,
+                                    roster=[(1339394, self.RECEPTION)]))
+
+    def test_doubled_kind_phrase_is_not_a_sub_event(self):
+        """'Artist Talk - Artist Talk - X' is one listing emitted twice."""
+        self.assertIsNone(merger._subevent_kind_extension(
+            'Artist Talk - America, the Beautiful?',
+            'Artist Talk - Artist Talk - America, the Beautiful?'))
+
+    def test_leading_kind_phrase_is_recognized(self):
+        self.assertEqual(
+            merger._subevent_kind_extension('LIC Morphology',
+                                            'Opening Reception: LIC Morphology'),
+            'opening reception')
+
+    def test_generic_run_nouns_are_filler(self):
+        self.assertEqual(
+            merger._subevent_kind_extension(
+                'Circling In Situ', 'Circling In Situ: Exhibition Opening Reception'),
+            'opening reception')
+
+    def test_bare_opening_is_too_ambiguous_to_split(self):
+        """A greenmarket's 'Opening' is its first market day, not a party."""
+        self.assertIsNone(merger._subevent_kind_extension(
+            'Poe Park Greenmarket', 'Poe Park Greenmarket Opening'))
+
+    def test_ordinary_subtitle_is_not_a_kind_extension(self):
+        self.assertIsNone(merger._subevent_kind_extension(
+            'Hamlet', 'Hamlet: A Tragedy in Five Acts'))
+
+
 if __name__ == "__main__":
     unittest.main()

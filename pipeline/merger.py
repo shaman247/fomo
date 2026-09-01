@@ -1391,6 +1391,10 @@ def _match_by_url_identity(name, url, website_id, location_id, crawl_event_slots
 # event" shape. What CAN separate them is what the SOURCE says, and the veto
 # fires only when all four of these agree:
 #
+# (One name shape DOES separate itself — "<run>" vs "<run> Opening Reception".
+# It arrives through `_subevent_kind_extension` instead of C and needs T plus
+# only ONE of U/S; see that function and `_sibling_listing_veto`'s docstring.)
+#
 #   C  the name relation is LOPSIDED CONTAINMENT — >= 0.75 of the shorter
 #      name's words sit in the longer one (the same threshold the asymmetric
 #      containment tier in `are_names_similar` uses, so the veto covers exactly
@@ -1489,44 +1493,153 @@ def _is_containment_match(name_a, name_b, min_extra=SIBLING_VETO_MIN_EXTRA_WORDS
     return False
 
 
+# ── Sub-event kind suffix ─────────────────────────────────────────────────────
+# A sub-event of a run — an exhibition's opening reception, its artist talk, its
+# press preview — is named by appending (or prepending) the KIND of thing it is
+# to the run's own title. `_is_containment_match` is structurally blind to that
+# shape: "ReLensing Opening Reception" adds only two words (under
+# SIBLING_VETO_MIN_EXTRA_WORDS = 3) and leads with the run's exact title, which
+# is the "fuller title of one event" escape that test makes on purpose. So the
+# sibling veto returned False on its first line and every gallery's exhibition
+# swallowed its own opening — 11 live events on 2026-08-31.
+#
+# The kind phrase is far stronger evidence than the lopsided containment the
+# veto normally judges: "<title>" vs "<title> Opening Reception" names two
+# different happenings, where "<title>" vs "<title>: <lineup>" does not. That is
+# why this shape substitutes for conjunct C and, unlike C, does not need BOTH
+# corroborating conjuncts — see `_sibling_listing_veto` for the T and (U or S)
+# rule it carries instead.
+#
+# Deliberately excluded: bare "opening"/"closing"/"reception"/"preview"/"talk"/
+# "tour". A greenmarket's "Opening" is its first market day, not a party held
+# alongside the season; a film's "Preview" is the film. Those bare words name
+# the thing itself as often as a satellite of it, and the multi-word phrases
+# below carry the distinction without the ambiguity.
+_SUBEVENT_KIND_PHRASES = frozenset({
+    # Receptions and parties held alongside a run
+    'opening reception', 'closing reception', 'artist reception',
+    'artists reception', 'opening celebration', 'closing celebration',
+    'opening party', 'closing party', 'launch party', 'opening night',
+    'closing night', 'vernissage', 'finissage',
+    # Talks, tours and walkthroughs attached to a run
+    'artist talk', 'artists talk', 'gallery talk', 'curator talk',
+    'curators talk', 'curatorial talk', 'artist presentation',
+    'artists presentation', 'artist conversation', 'artists conversation',
+    'curator tour', 'curators tour', 'curator led tour', 'gallery tour',
+    'artist walkthrough', 'artists walkthrough',
+    # Previews and private views ahead of a run
+    'press preview', 'vip preview', 'member preview', 'members preview',
+    'press view', 'private view', 'public opening',
+})
+
+# Dropped from the leftover before it is matched against a kind phrase, so
+# "Art Exhibition Closing Reception: <title>" and "<title> — the Opening
+# Reception" reduce to the phrase itself. Only connectives and the generic
+# nouns for a run; nothing that could name a distinct happening.
+_SUBEVENT_KIND_FILLER = frozenset({
+    'the', 'a', 'an', 'and', 'of', 'for', 'with', 'at', 'to', 'on', 'in',
+    'event', 'events', 'exhibition', 'exhibitions', 'exhibit', 'exhibits',
+    'show', 'shows',
+})
+
+
+def _subevent_kind_extension(name_a, name_b):
+    """Return the kind phrase when one name is the other plus a recognized kind
+    of sub-event, else None.
+
+    Matches both spellings sites use — trailing ("ReLensing Opening Reception")
+    and leading ("Opening Reception: LIC Morphology") — on the normalized names,
+    so punctuation between the title and the phrase is already gone.
+    """
+    norm_a = normalize_name_for_dedup(name_a)
+    norm_b = normalize_name_for_dedup(name_b)
+    if not norm_a or not norm_b or norm_a == norm_b:
+        return None
+    short, long_name = sorted((norm_a, norm_b), key=len)
+
+    if long_name.startswith(short + ' '):
+        leftover = long_name[len(short) + 1:]
+    elif long_name.endswith(' ' + short):
+        leftover = long_name[:-(len(short) + 1)]
+    else:
+        return None
+
+    phrase = ' '.join(w for w in leftover.split() if w not in _SUBEVENT_KIND_FILLER)
+    if phrase not in _SUBEVENT_KIND_PHRASES:
+        return None
+
+    # The shorter name already saying the kind means the longer one is a
+    # DOUBLED spelling of the same listing, not a satellite of it — extractors
+    # re-emit a prefix they already captured ("Artist Talk - America, the
+    # Beautiful?" vs "Artist Talk - Artist Talk - America, the Beautiful?").
+    # Splitting those is the one false-positive family in this shape.
+    if re.search(r'\b' + re.escape(phrase) + r'\b', short):
+        return None
+    return phrase
+
+
 def _sibling_listing_veto(name, url_key, website_id, crawl_event_slots, crawl_event_id,
                           candidate, candidate_slots, roster,
                           listing_url_keys, url_key_name_counts, event_url_keys):
     """Refuse a partial name match that is really an umbrella swallowing a
     sub-event (or the reverse). See the block comment above for the four
     conjuncts and the measurement. Exact name matches never reach here.
+
+    Two name shapes reach the conjuncts, and they carry different weight:
+
+    C  lopsided containment (`_is_containment_match`) — the names alone say
+       nothing, so ALL of U, T and S must corroborate. Unchanged.
+    K  a sub-event KIND extension (`_subevent_kind_extension`) — "<run>" vs
+       "<run> Opening Reception". Here the name itself is the evidence: the
+       phrase states that one is a satellite of the other. T still binds
+       absolutely (a shared slot means one listing however it is spelled), but
+       one corroborating witness is enough — either disjoint permalinks (U) or
+       a clean sibling in the same pass (S). Requiring both left the two
+       commonest real shapes unfixed: a gallery whose run and reception are
+       both reachable only from listing pages has no permalinks to compare (U
+       is unavailable), and a venue that publishes the talk on a different day
+       than the run has no sibling in that pass (S is unavailable).
     """
     candidate_name = candidate.get('name') or ''
-    if not candidate_name or not _is_containment_match(name, candidate_name):
+    if not candidate_name:
+        return False
+    kind_extension = _subevent_kind_extension(name, candidate_name)
+    if not kind_extension and not _is_containment_match(name, candidate_name):
         return False
 
-    # U — same website, both sides addressable, and addressed differently.
-    candidate_website_id = candidate.get('website_id')
-    if website_id is None or candidate_website_id != website_id:
-        return False
-    if not _url_key_is_event_specific(website_id, url_key, listing_url_keys,
-                                      url_key_name_counts):
-        return False
-    candidate_keys = {
-        key for key in event_url_keys.get(candidate['id'], ())
-        if _url_key_is_event_specific(website_id, key, listing_url_keys,
-                                      url_key_name_counts)
-    }
-    if not candidate_keys or url_key in candidate_keys:
-        return False
-
-    # T — a shared slot is same-eventness, whatever the names say.
+    # T — a shared slot is same-eventness, whatever the names say. Binds both
+    # shapes: it is what keeps a one-night show's "(Opening Night)" spelling
+    # attached to the show it is.
     if crawl_event_slots and candidate_slots and (crawl_event_slots & candidate_slots):
         return False
 
+    # U — same website, both sides addressable, and addressed differently.
+    def _disjoint_permalinks():
+        if website_id is None or candidate.get('website_id') != website_id:
+            return False
+        if not _url_key_is_event_specific(website_id, url_key, listing_url_keys,
+                                          url_key_name_counts):
+            return False
+        candidate_keys = {
+            key for key in event_url_keys.get(candidate['id'], ())
+            if _url_key_is_event_specific(website_id, key, listing_url_keys,
+                                          url_key_name_counts)
+        }
+        return bool(candidate_keys) and url_key not in candidate_keys
+
     # S — this extraction already emitted a clean match for the event.
-    for sibling_id, sibling_name in roster:
-        if sibling_id == crawl_event_id or not sibling_name:
-            continue
-        if (are_names_similar(sibling_name, candidate_name)
-                and not _is_containment_match(sibling_name, candidate_name)):
-            return True
-    return False
+    def _clean_sibling_in_pass():
+        for sibling_id, sibling_name in roster:
+            if sibling_id == crawl_event_id or not sibling_name:
+                continue
+            if (are_names_similar(sibling_name, candidate_name)
+                    and not _is_containment_match(sibling_name, candidate_name)):
+                return True
+        return False
+
+    if kind_extension:
+        return _disjoint_permalinks() or _clean_sibling_in_pass()
+    return _disjoint_permalinks() and _clean_sibling_in_pass()
 
 
 def _event_has_live_occurrence(cursor, event_id, current_date):
@@ -1954,13 +2067,40 @@ def _deduplicate_same_name_events(cursor, connection, current_date, edit_logger=
         # Remove leftover sources
         cursor.execute("DELETE FROM event_sources WHERE event_id = %s", (remove_id,))
 
-        # Merge any unique occurrences into the keeper
+        # Merge any unique occurrences into the keeper.
+        #
+        # `INSERT IGNORE` looks like it deduplicates, but event_occurrences has
+        # NO unique index (only PRIMARY, idx_event, idx_start_date,
+        # idx_date_range), so there is nothing for IGNORE to ignore and this
+        # copied the keeper's OWN rows back onto it on every absorption. A
+        # recurring same-name dedup therefore grew byte-identical rows that
+        # differ only in sort_order — 442 redundant rows across 86 live events
+        # by 2026-08-31, and 4,716 rows collapsed by an earlier cleanup that
+        # blamed NULL-vs-'' times and so never found this. NOT EXISTS is the
+        # idiom the event_urls transfer beside this one already uses.
+        #
+        # NULL and '' times are logically the same absent time but differ under
+        # `=`, so both sides are COALESCEd; end_date uses the NULL-safe `<=>`.
+        # The GROUP BY collapses duplicates already present on the source.
         cursor.execute("""
-            INSERT IGNORE INTO event_occurrences
+            INSERT INTO event_occurrences
                 (event_id, start_date, start_time, end_date, end_time, sort_order)
-            SELECT %s, start_date, start_time, end_date, end_time, sort_order
-            FROM event_occurrences WHERE event_id = %s
-        """, (keep_id, remove_id))
+            SELECT %s, src.start_date, src.start_time, src.end_date, src.end_time,
+                   MIN(src.sort_order)
+            FROM event_occurrences src
+            WHERE src.event_id = %s
+              AND NOT EXISTS (
+                  SELECT 1 FROM (
+                      SELECT start_date, start_time, end_date, end_time
+                      FROM event_occurrences WHERE event_id = %s
+                  ) dst
+                  WHERE dst.start_date = src.start_date
+                    AND COALESCE(dst.start_time, '') = COALESCE(src.start_time, '')
+                    AND dst.end_date <=> src.end_date
+                    AND COALESCE(dst.end_time, '') = COALESCE(src.end_time, '')
+              )
+            GROUP BY src.start_date, src.start_time, src.end_date, src.end_time
+        """, (keep_id, remove_id, keep_id))
 
         # Clean up the duplicate
         cursor.execute("DELETE FROM event_occurrences WHERE event_id = %s", (remove_id,))
