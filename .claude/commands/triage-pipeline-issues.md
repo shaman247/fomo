@@ -8,6 +8,7 @@ The pipeline emits two kinds of post-run signals worth investigating:
 
 1. **Crawl failures / timeouts** — `crawl_results.status` is `failed`, `timeout`, or `ERR_ABORTED`, and recent crawls produced zero or tiny content. Distinct from in-run cap warnings (which are extraction issues, not crawl issues).
 2. **Archival warnings** — `⚠️ WARNING: N upcoming event(s) archived` lines. The merger archived events that still have future occurrences. Could be legitimate (event genuinely off the page) or a regression (extractor/crawler/merger bug).
+3. **Partial-crawl / collapse warnings** — `⚠️ WARNING: N website(s) lost most of their events vs. the previous crawl (possible partial crawl)`, emitted from `db.py` in the run's FINAL SUMMARY. The line names the site and both deltas, e.g. `w1970 Long Island Arts Alliance Events: 23 → 0 events (-100%), content 22,485 → 7,776 chars (-65%)`. **These sites are `status='processed'`, so they appear in NEITHER arm above** — this is the only signal that catches a source whose calendar MIGRATED PLATFORMS and is quietly decaying to zero.
 
 Both share the same diagnostic loop: pull recent crawl history, read js_code / max_batches / notes, WebFetch the source, classify, apply allowed fix, verify. So one sub-agent handles both.
 
@@ -23,6 +24,7 @@ Spawn a single `general-purpose` sub-agent with a self-contained brief — it do
 
 Findings from previous /triage-pipeline-issues runs that should shape the agent's behavior:
 
+- **A site can decay to zero while every crawl reads `processed`.** Measured 2026-09-01: w1970's content fell ~36K → 22K → 7,776 chars and 23 → 0 events across three crawls, all `processed`, because its calendar had moved to a Timely iframe. The collapse warning DID name it in the run summary; it was missed because the log grep did not include that pattern. Never treat "not in the failure list and not in the archival warnings" as "healthy".
 - **Single-event archival warnings have a ~43% regression rate on fetchable sources** (audited 2026-05-16 on 18 sites). Do not skip the long tail. Only sites whose own crawl failed in the same run, or whose source URL returns 403 / Cloudflare / login, are unverifiable.
 - **Squarespace `?format=json` js_code injection sometimes silently fails** (intermittent fetch error). When this happens, the native eventlist markdown is still in the crawl content — the extractor *should* pick those up, but Gemini variance sometimes drops events. Un-archive false positives; no code fix.
 - **Tribe Events API js_code is a common regression source.** Slug regexes assume `/events/category/<slug>/` URLs and fail open (returning ALL events) when the page URL differs. Hardcode the category slug, looking it up via `/wp-json/tribe/events/v1/categories`.
@@ -84,6 +86,12 @@ for r in cur.fetchall():
 cur.close(); conn.close()
 EOF
 ```
+
+B2) Partial-crawl / collapse warnings from the log (these sites are `processed`, so query (A) will NOT surface them):
+```
+grep -A3 "lost most of their events" /tmp/pipeline_run.log
+```
+For each site named: pull its `crawl_results` history and compare `CHAR_LENGTH(crawled_content)` across the last ~6 crawls. Use the warning's own discriminator — **content collapsed too → partial crawl or a platform migration; content unchanged → extraction issue or a season that genuinely ended.** If content collapsed, WebFetch the crawl URL and check whether the listing still exists there at all; a landing page that now points at an embedded third-party calendar (Timely, LibCal, Tockify, a Squarespace/Wix widget) means the source MOVED and needs a new crawl target, not a retry. Before concluding "the API broke", note that a well-formed `total: 0` from the old endpoint under a browser UA means the feed is genuinely EMPTY — that is a migration, not the multisite wrong-REST-path shape.
 
 B) Archival warnings from the log:
 ```

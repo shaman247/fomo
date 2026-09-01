@@ -71,7 +71,7 @@ Once the task completes, extract the summary and any signals worth triaging from
 grep -E "PIPELINE COMPLETED|PIPELINE FAILED|^Summary:|Websites crawled:|Total events processed:|Total archived:|Total upcoming events archived" /tmp/pipeline_run.log
 
 # Things worth triaging (all aggregated post-hoc, not per-site)
-grep -E "Traceback|WARNING: .* events would need .* batches, capping|upcoming event\(s\) archived|Content too large|injection skipped|chunk request\(s\) failed" /tmp/pipeline_run.log
+grep -E "Traceback|WARNING: .* events would need .* batches, capping|upcoming event\(s\) archived|lost most of their events|Content too large|injection skipped|chunk request\(s\) failed" /tmp/pipeline_run.log
 ```
 
 The pipeline output to look for:
@@ -100,6 +100,16 @@ The pipeline output to look for:
   closed (stored `failed`, content preserved) instead of silently storing a truncated extraction.
   A non-trivial count here is real signal about chunk reliability that used to be invisible; recover
   with `main.py --ids <ids>` and investigate the cause rather than reverting the guard.
+- **Partial-crawl / collapse warnings** (`⚠️ WARNING: N website(s) lost most of their events vs. the previous crawl`) —
+  emitted from `db.py` in the FINAL SUMMARY, not per-site during the merge, and it names the site plus both
+  deltas: `w1970 Long Island Arts Alliance Events: 23 → 0 events (-100%), content 22,485 → 7,776 chars (-65%)`.
+  **This is the signal that catches a source which MIGRATED PLATFORMS.** Such a site keeps reporting
+  `status='processed'` while its content decays to nothing, so it appears in neither the crawl-failure list
+  nor the archival warnings — its events are still active until a later merge archives them, with nothing
+  explaining why. On 2026-09-01 this line correctly named w1970 (its calendar had moved to a Timely iframe)
+  and was missed only because the grep above did not include it. **Read the line's own discriminator**:
+  content collapsed too → partial crawl or a migration; content unchanged → extraction issue or a season that
+  genuinely ended. Feed every site named here to Step 2 triage.
 - **Archival warnings** (`⚠️ WARNING: N upcoming event(s) archived`) — review for crawl regressions vs legitimate site rotations
 - **Tracebacks** — fatal errors that need investigation
 - **Total counts** — sanity-check websites crawled, events processed, events archived
