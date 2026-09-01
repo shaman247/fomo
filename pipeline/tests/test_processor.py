@@ -3437,5 +3437,77 @@ class TestSameNameGroupingRespectsUnresolvedVenues(unittest.TestCase):
         self.assertEqual(len(events[0]['occurrences']), 2)
 
 
+class TestAreaQualifierRespectsFieldBoundary(unittest.TestCase):
+    """`location_name` and `sublocation` are separate source fields, and the
+    boundary between them is load-bearing for the borough guard.
+
+    `_area_qualifier_conflict` reads the TRAILING qualifier of each `[,/]`
+    segment. The caller used to hand it the two fields SPACE-joined, so a city
+    token stopped being trailing the moment a sublocation followed it:
+    "Ace Hotel New York" + "Lobby" became one segment ending in "Lobby" and the
+    guard saw no qualifier at all. Measured 2026-09-01 — the bare name resolved
+    correctly to the Manhattan row while the same name with ANY sublocation
+    fell through to Ace Hotel BROOKLYN. The same defect was silently sending
+    "Downtown Manhattan" and "Downtown New York" to the Downtown BROOKLYN
+    geotag, which is the exact fusion this guard exists to prevent.
+    """
+
+    def _conflict(self, raw, classes=frozenset({'brooklyn'}), cid=2256,
+                  name='Ace Hotel Brooklyn'):
+        return processor._area_qualifier_conflict(
+            raw, {'id': cid, 'name': name}, {cid: set(classes)})
+
+    def test_bare_city_wide_name_conflicts_with_a_borough_row(self):
+        self.assertTrue(self._conflict('Ace Hotel New York'))
+
+    def test_city_qualifier_is_still_seen_when_a_sublocation_follows(self):
+        """The fix: comma-joined fields keep the qualifier trailing."""
+        self.assertTrue(self._conflict('Ace Hotel New York, Lobby'))
+        self.assertTrue(self._conflict(
+            'Ace Hotel New York, 20 W 29th St, New York, NY 10001, USA'))
+
+    def test_space_joining_the_fields_hides_the_qualifier(self):
+        """Documents the ORIGINAL defect, so the join is never reverted: with
+        the fields run together the guard cannot see "New York" at all."""
+        self.assertFalse(self._conflict('Ace Hotel New York Lobby'))
+
+    def test_agreement_on_a_bare_borough_segment_wins(self):
+        """A source often names the brand city-wide and pins the branch in
+        another field. "Holland Bikes NYC" + "131 Concord Street, Brooklyn" is
+        the exact-address match for the Brooklyn branch, so the bare "Brooklyn"
+        segment must outweigh the vaguer city-wide one — otherwise it lands on
+        the Central Park branch (measured 2026-09-01)."""
+        self.assertFalse(self._conflict(
+            'Holland Bikes NYC, 131 Concord Street, Brooklyn',
+            classes={'brooklyn'}, cid=8839, name='Holland Bikes Brooklyn'))
+
+    def test_a_borough_source_still_rejects_a_different_borough(self):
+        self.assertTrue(self._conflict('Downtown Manhattan, City Hall Park',
+                                       classes={'brooklyn'}, cid=2701,
+                                       name='Downtown Brooklyn'))
+        self.assertTrue(self._conflict(
+            'Downtown New York, Wall Street to Newspaper Row',
+            classes={'brooklyn'}, cid=2701, name='Downtown Brooklyn'))
+
+    def test_candidate_with_no_curated_area_never_conflicts(self):
+        self.assertFalse(self._conflict('Ace Hotel New York, Lobby',
+                                        classes=set()))
+
+    def test_city_wide_candidate_accepts_a_borough_source(self):
+        """A row only ever called "<Name> New York" claims the whole city, so a
+        source naming a borough inside it adds specificity, not contradiction."""
+        self.assertFalse(self._conflict(
+            'The Meadows Brooklyn, Back Room',
+            classes={processor._CITY_WIDE_CLASS}, cid=869,
+            name='The Meadows New York'))
+
+    def test_address_segment_is_not_read_as_a_qualifier(self):
+        """A segment carrying a house number is a postal tail, not a venue
+        qualifier, so it must not create a conflict on its own."""
+        self.assertFalse(self._conflict('Kings Theatre, 1027 Flatbush Ave',
+                                        classes={'brooklyn'}, cid=1,
+                                        name='Kings Theatre Brooklyn'))
+
+
 if __name__ == "__main__":
     unittest.main()

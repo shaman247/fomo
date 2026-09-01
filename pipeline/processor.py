@@ -4286,7 +4286,21 @@ def _area_qualifier_conflict(raw_text, candidate_info, area_classes=None):
         # handled below — a source saying "Downtown NYC" is VAGUER than a row
         # specifically named "Downtown Brooklyn", and must not claim it.
         return False
+    src_classes = set()
     for part in re.split(r'[,/]', raw_text or ''):
+        # A segment that IS an area name on its own ("…, Brooklyn") carries no
+        # venue name for the trailing-qualifier split to strip, so it would
+        # otherwise contribute nothing. Test the whole segment against the
+        # candidate's own curated classes — and use it ONLY to establish
+        # AGREEMENT, never conflict. `_area_qualifier_class` is a normalizer
+        # that echoes anything it does not recognize, so treating a whole
+        # segment as a class in general would invent areas out of venue names
+        # ("city hall park"). Matching against cand_classes is safe because
+        # that set contains only real curated areas for this location, and the
+        # check can only ever cancel a rejection, never add one.
+        whole = _area_qualifier_class(part.strip().lower())
+        if whole is not None and whole in cand_classes:
+            return False
         # A segment carrying a house number is an ADDRESS, not a venue name, so
         # its trailing city is a postal tail rather than a qualifier — the
         # comma split alone does not catch "…(between 31st & 32nd Streets) New
@@ -4295,9 +4309,18 @@ def _area_qualifier_conflict(raw_text, candidate_info, area_classes=None):
             continue
         src_class = _area_qualifier_class(
             _normalize_location_name_parts(part)[1])
-        if src_class is not None and src_class not in cand_classes:
-            return True
-    return False
+        if src_class is not None:
+            src_classes.add(src_class)
+    # AGREEMENT WINS over a vaguer conflicting segment. A source often names
+    # the brand city-wide and then pins the branch in another field:
+    # "Holland Bikes NYC" + "131 Concord Street, Brooklyn" carries both a
+    # city-wide qualifier and "Brooklyn", and the Brooklyn branch (loc 8839) is
+    # the exact address match. Rejecting on the city-wide segment alone sent it
+    # to the Central Park branch instead (measured 2026-09-01). So a conflict
+    # requires that NO segment agrees with the candidate.
+    if src_classes & cand_classes:
+        return False
+    return bool(src_classes)
 
 
 def _region_conflict(raw_text, candidate_info, city_states):
@@ -5392,6 +5415,18 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
     city_states = locations_map.get('city_states', {})
     area_classes = locations_map.get('area_classes', {})
     raw_geo = ' '.join(p for p in (location_name_raw, sublocation_name_raw) if p)
+    # `_area_qualifier_conflict` reads the TRAILING qualifier of each `[,/]`
+    # segment, so a space-join hides the city token whenever a sublocation
+    # follows it: "Ace Hotel New York" + "Lobby" becomes one segment whose
+    # trailing word is "Lobby", the "New York" is no longer trailing, and the
+    # guard sees no qualifier at all. Measured 2026-09-01: bare
+    # "Ace Hotel New York" resolved correctly to the Manhattan row, but the
+    # same name with ANY sublocation fell through to Ace Hotel BROOKLYN.
+    # location_name and sublocation are separate source fields, so keep that
+    # boundary for the qualifier check. `_region_conflict` deliberately still
+    # gets the space-joined form — it parses an address tail, not fields.
+    raw_geo_fields = ', '.join(
+        p for p in (location_name_raw, sublocation_name_raw) if p)
 
     def conflicts(info):
         """True if this candidate names a region/area the source contradicts.
@@ -5402,7 +5437,7 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
         away (`_area_qualifier_conflict`).
         """
         return (_region_conflict(raw_geo, info, city_states)
-                or _area_qualifier_conflict(raw_geo, info, area_classes))
+                or _area_qualifier_conflict(raw_geo_fields, info, area_classes))
 
     # Location-only keys (for prefix matching where event names cause false positives)
     location_keys = []
@@ -5516,7 +5551,7 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
                 # "Downtown Brooklyn" rows resolve to Lower Manhattan. Only an
                 # area conflict is checked here; every other heuristic still
                 # yields to the curated mapping.
-                if _area_qualifier_conflict(raw_geo, website_tier[key], area_classes):
+                if _area_qualifier_conflict(raw_geo_fields, website_tier[key], area_classes):
                     continue
                 return make_result(website_tier[key])
 
@@ -5862,7 +5897,7 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
                     # region-conflict half stays where it was: falling through
                     # to a second-best candidate across a state line is exactly
                     # the guess that guard exists to refuse.
-                    if _area_qualifier_conflict(raw_geo, get_first(tier[key]), area_classes):
+                    if _area_qualifier_conflict(raw_geo_fields, get_first(tier[key]), area_classes):
                         continue
                     if len(normalized_name) > 3 and key == normalized_name:
                         score = 1.0
