@@ -48,8 +48,15 @@ DRIFT_RULES = [
      r"\b(walking tour|garden tour|boat tour|guided tour|birding|bird walk)\b", {"Tour"}),
     ("trivia-style 'comedy' guard (informational)",
      r"\bstand-?up\b", {"Comedy Show", "Open Practice", "Class", "Workshop"}),
+    # "exhibition opening" is deliberately NOT in this pattern. The taxonomy is
+    # explicit that a gallery opening / closing / artist reception is a `Mixer`
+    # -- a point-in-time social event -- while the show's own open run is a
+    # separate `Exhibition` row ("Do not type a reception Exhibition",
+    # classify-event-types.md). Including it made this rule contradict the doc
+    # it audits: on 2026-09-01, 5 of its 6 hits were openings correctly typed
+    # `Mixer` and reported as drift.
     ("exhibition / on view -> Exhibition",
-     r"\b(on view|exhibition opening|now on view)\b", {"Exhibition", "Open House"}),
+     r"\b(on view|now on view)\b", {"Exhibition", "Open House"}),
     ("mass/worship/shabbat -> Service",
      r"\b(sunday mass|holy mass|worship service|shabbat service|vespers)\b", {"Service"}),
 ]

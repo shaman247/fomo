@@ -43,7 +43,7 @@ SKIP_LOCATION_NAMES = {
     'online via zoom', 'livestream', 'live stream', 'tba', 'tbd', 'n/a',
     'hybrid', 'in person', 'in-person', 'not specified', 'location not specified yet',
     'no location provided', 'off campus', 'various', 'not provided',
-    'zoom/online', 'live on zoom', 'via webex platform', 'virtual/online workshop',
+    'zoom/online', 'live on zoom', 'via webex platform', 'virtual/online workshop', 'virtual offering',
     'off-site', 'main stage', 'open streets program', 'online or on-site',
     'virtual on zoom', 'zoom virtual meeting', 'zoom (from your home)',
     'varies', 'varies by session', 'see the flyer', 'please see the flyer.',
