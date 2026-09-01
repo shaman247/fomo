@@ -1070,6 +1070,17 @@ class TestSublocationRedundantWithAddress(unittest.TestCase):
 
     Fixtures are locations 2078 (Empire Stores) and 507 (Mabou Mines)."""
 
+    def test_terrace_abbreviation_matches_spelled_out(self):
+        # loc 4080 — Google writes Battery Park City's address as "6 River
+        # Ter.", the listing writes "6 River Terrace". Same address.
+        self.assertTrue(sublocation_redundant_with_address(
+            "6 River Terrace", "6 River Ter., New York, NY 10282, USA"))
+        self.assertTrue(sublocation_redundant_with_address(
+            "6 River Ter", "6 River Terrace, New York, NY 10282"))
+        # Different house number on the same terrace is still not redundant.
+        self.assertFalse(sublocation_redundant_with_address(
+            "41 River Terrace", "6 River Ter., New York, NY 10282, USA"))
+
     def test_house_number_inside_building_range(self):
         # loc 2078 — DB "53-83 Water St" is one building; a listing citing
         # "55 Water Street" is the same address, not a sub-venue.
@@ -3258,6 +3269,172 @@ class TestPeriodWithoutSpaceNormalization(unittest.TestCase):
         self.assertEqual(_normalize_location_name('A.R.T./New York'), 'artnew york')
         self.assertEqual(_normalize_location_name('Pier 9.5 Studio'), 'pier 95 studio')
 
+
+
+class TestSameNameGroupingRespectsUnresolvedVenues(unittest.TestCase):
+    """A same-named event running at MANY venues must not lose the venues whose
+    location string failed to resolve to a `location_id`.
+
+    Measured 2026-09-01 on DSNY (w594, cr119662): "Community Recycling" is
+    listed at nine sites on nine dates and "SAFE Disposal Events" at five. Five
+    of the fourteen rows did not resolve to a location_id, and every one of
+    those five was absorbed into the first same-named group that HAD resolved —
+    14 extracted events became 9 `crawl_events`. Five real venues (Midland
+    Beach, Elk Lodge #878, Howard Beach Library, Pearl Street Triangle, Breezy
+    Point) disappeared on every run, and Breezy Point's distinctive 9am-12pm
+    slot was published on the Andrew Freedman Home event.
+
+    Cause: `locations_compatible` answers True for an id-vs-name pair because it
+    cannot compare them, and the exact-name branch carried no URL gate (that
+    gate was scoped to substring-containment only). So the location verdict was
+    inconclusive and the name alone decided the merge.
+
+    The exact-name branch now also requires URL agreement WHEN the location
+    comparison was inconclusive. Rows resolving to the same location id are
+    unaffected, so a series listed once per date with per-date URLs still
+    collapses — see the three collapse tests below, which are the behaviours
+    that make the permissive default correct in the first place.
+    """
+
+    SRC = 'https://www.nyc.gov/dsny'
+    CAL = 'https://www.lesecologycenter.org/calendar/'
+
+    def _row(self, name, loc, loc_id, slug, date, start='10:00 AM', end='2:00 PM'):
+        return {'name': name, 'location': loc, 'location_id': loc_id,
+                'url': (self.CAL + slug) if slug else None,
+                'start_date': date, 'start_time': start,
+                'end_date': '', 'end_time': end}
+
+    def test_unresolved_venues_stay_separate_events(self):
+        rows = [
+            self._row('Community Recycling', 'Andrew Freedman Home', 4687,
+                      'the-concourse-andrew-freedman-home/', '2026-09-12'),
+            self._row('Community Recycling', 'Elk Lodge #878', None,
+                      'elmhurst-elks-lodge/', '2026-09-19'),
+            self._row('Community Recycling', 'Breezy Point Athletic Field', None,
+                      'breezy-point/', '2026-09-26', start='9:00 AM', end='12:00 PM'),
+        ]
+        events = group_event_occurrences(rows, self.SRC)
+        self.assertEqual(len(events), 3)
+        self.assertEqual(
+            sorted(e['location'] for e in events),
+            ['Andrew Freedman Home', 'Breezy Point Athletic Field', 'Elk Lodge #878'])
+
+    def test_breezy_points_time_does_not_land_on_another_venue(self):
+        """The user-visible symptom: a wrong-venue occurrence on a live event."""
+        rows = [
+            self._row('Community Recycling', 'Andrew Freedman Home', 4687,
+                      'the-concourse-andrew-freedman-home/', '2026-09-12'),
+            self._row('Community Recycling', 'Breezy Point Athletic Field', None,
+                      'breezy-point/', '2026-09-26', start='9:00 AM', end='12:00 PM'),
+        ]
+        by_loc = {e['location']: e for e in group_event_occurrences(rows, self.SRC)}
+        freedman = by_loc['Andrew Freedman Home']
+        self.assertEqual([o[0] for o in freedman['occurrences']], ['2026-09-12'])
+        self.assertEqual(freedman['urls'][0],
+                         self.CAL + 'the-concourse-andrew-freedman-home/')
+        breezy = by_loc['Breezy Point Athletic Field']
+        self.assertEqual([o[0] for o in breezy['occurrences']], ['2026-09-26'])
+        self.assertEqual(breezy['urls'][0], self.CAL + 'breezy-point/')
+
+    def test_same_resolved_venue_with_per_date_urls_still_collapses(self):
+        """The behaviour the permissive default exists for: one venue, one
+        series, a distinct URL per date."""
+        rows = [
+            {'name': 'Family Night', 'location': 'The Boat Yard', 'location_id': 777,
+             'url': 'https://boatyard.com/event/family-night-2026-09-05/',
+             'start_date': '2026-09-05', 'start_time': '6:00 PM',
+             'end_date': '', 'end_time': '9:00 PM'},
+            {'name': 'Family Night', 'location': 'The Boat Yard', 'location_id': 777,
+             'url': 'https://boatyard.com/event/family-night-2026-09-12/',
+             'start_date': '2026-09-12', 'start_time': '6:00 PM',
+             'end_date': '', 'end_time': '9:00 PM'},
+        ]
+        events = group_event_occurrences(rows, 'https://boatyard.com/events')
+        self.assertEqual(len(events), 1)
+        self.assertEqual([o[0] for o in events[0]['occurrences']],
+                         ['2026-09-05', '2026-09-12'])
+
+    def test_same_unresolved_venue_name_with_per_date_urls_still_collapses(self):
+        """Both sides unresolved but naming the SAME venue is a CONCLUSIVE
+        name-vs-name comparison, so the URL gate never engages."""
+        rows = [
+            {'name': 'Family Night', 'location': 'The Boat Yard', 'location_id': None,
+             'url': 'https://boatyard.com/event/family-night-2026-09-05/',
+             'start_date': '2026-09-05', 'start_time': '6:00 PM',
+             'end_date': '', 'end_time': '9:00 PM'},
+            {'name': 'Family Night', 'location': 'The Boat Yard', 'location_id': None,
+             'url': 'https://boatyard.com/event/family-night-2026-09-12/',
+             'start_date': '2026-09-12', 'start_time': '6:00 PM',
+             'end_date': '', 'end_time': '9:00 PM'},
+        ]
+        events = group_event_occurrences(rows, 'https://boatyard.com/events')
+        self.assertEqual(len(events), 1)
+        self.assertEqual(len(events[0]['occurrences']), 2)
+
+    SAFE = ('https://www.nyc.gov/assets/dsny/site/services/'
+            'harmful-products/safe-disposal-events.page')
+
+    def _safe_row(self, loc, loc_id, date):
+        return {'name': 'SAFE Disposal Events', 'location': loc,
+                'location_id': loc_id, 'url': self.SAFE, 'start_date': date,
+                'start_time': '10:00 AM', 'end_date': '', 'end_time': '4:00 PM'}
+
+    def test_shared_listing_url_still_splits_on_venue_name(self):
+        """The harder half of the same bug. All five "SAFE Disposal Event" rows
+        point at ONE listing URL, so the URL gate cannot separate them; only the
+        venue name can. Midland Beach Parking Lot 8 is the one of the five that
+        does not resolve to a location_id, and it was being absorbed by Union
+        Square Park."""
+        rows = [
+            self._safe_row('Union Square Park, North Plaza', 938, '2026-09-20'),
+            self._safe_row('Cunningham Park', 242, '2026-09-26'),
+            self._safe_row('Floyd Bennett Field', 1491, '2026-10-11'),
+            self._safe_row('Midland Beach Parking Lot 8', None, '2026-10-17'),
+            self._safe_row('Orchard Beach', 6488, '2026-10-24'),
+        ]
+        events = group_event_occurrences(rows, self.SRC)
+        self.assertEqual(len(events), 5)
+        self.assertIn('Midland Beach Parking Lot 8',
+                      [e['location'] for e in events])
+        midland = next(e for e in events
+                       if e['location'] == 'Midland Beach Parking Lot 8')
+        self.assertEqual([o[0] for o in midland['occurrences']], ['2026-10-17'])
+
+    def test_venue_alias_variants_still_collapse(self):
+        """Containment is tolerated so an alias of the SAME venue still groups —
+        this is what keeps the name comparison from over-splitting."""
+        rows = [
+            self._safe_row('Union Square Park', 938, '2026-09-20'),
+            self._safe_row('Union Square Park, North Plaza', None, '2026-10-17'),
+        ]
+        events = group_event_occurrences(rows, self.SRC)
+        self.assertEqual(len(events), 1)
+        self.assertEqual(len(events[0]['occurrences']), 2)
+
+    def test_rows_with_no_location_at_all_still_collapse(self):
+        rows = [
+            {'name': 'Open Mic', 'location': None, 'location_id': None,
+             'url': None, 'start_date': '2026-09-05', 'start_time': '7:00 PM',
+             'end_date': '', 'end_time': '9:00 PM'},
+            {'name': 'Open Mic', 'location': None, 'location_id': None,
+             'url': None, 'start_date': '2026-09-12', 'start_time': '7:00 PM',
+             'end_date': '', 'end_time': '9:00 PM'},
+        ]
+        events = group_event_occurrences(rows, self.SRC)
+        self.assertEqual(len(events), 1)
+        self.assertEqual(len(events[0]['occurrences']), 2)
+
+    def test_missing_urls_still_group_across_an_unresolved_venue(self):
+        """`urls_compatible` stays permissive when a URL is absent, so a source
+        with no per-event URLs behaves exactly as before this change."""
+        rows = [
+            self._row('Story Time', 'Main Library', 55, None, '2026-09-05'),
+            self._row('Story Time', 'Main Library Branch', None, None, '2026-09-12'),
+        ]
+        events = group_event_occurrences(rows, 'https://lib.org/events')
+        self.assertEqual(len(events), 1)
+        self.assertEqual(len(events[0]['occurrences']), 2)
 
 
 if __name__ == "__main__":

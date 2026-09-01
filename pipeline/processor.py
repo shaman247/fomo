@@ -3413,6 +3413,48 @@ def group_event_occurrences(rows, source_url=None):
             return True
         return a[1] == b[1]
 
+    def loc_name(d):
+        """The raw normalized location STRING, kept even when the row also
+        resolved to a location_id — `loc_key` drops it in that case, which is
+        what blinded the id-vs-name comparison below."""
+        return re.sub(r'\s+', ' ', (d.get('location') or '').strip().lower())
+
+    def names_denote_different_places(a_name, b_name):
+        """True only when both sides name a place AND neither name contains the
+        other. Containment is tolerated on purpose so venue ALIASES still group
+        ("Union Square Park" vs "Union Square Park, North Plaza"); it is the
+        genuinely unrelated pair that must not.
+
+        This is the only signal left when a same-named event runs at many venues
+        that all share ONE listing URL, so the URL gate cannot separate them.
+        DSNY's five "SAFE Disposal Event" rows all point at
+        /programs/safe-disposal-events.page, and Midland Beach Parking Lot 8 —
+        the one venue of the five that did not resolve to a location_id — was
+        absorbed by Union Square Park purely because their names were never
+        compared (measured 2026-09-01)."""
+        if not a_name or not b_name:
+            return False
+        return not (a_name == b_name or a_name in b_name or b_name in a_name)
+
+    def locations_conclusive(a, b):
+        """True when the two location keys were actually COMPARABLE — both
+        present and of the same kind (id-vs-id or name-vs-name).
+
+        `locations_compatible` deliberately answers True for the cases it
+        cannot decide (a missing location, or an id on one side and a bare
+        name on the other). That permissiveness is right for letting a row
+        group, but on its own it let an UNRESOLVED venue be swallowed by a
+        same-named resolved one: DSNY's "Community Recycling" runs at nine
+        different sites on nine dates, five resolved to a location_id and four
+        did not, and the four were absorbed into the first resolved group —
+        silently dropping five real venues every run and hanging Breezy Point's
+        9am-12pm slot on the Andrew Freedman Home event (measured 2026-09-01,
+        14 extracted -> 9 crawl_events).
+
+        Callers use this to know when a location verdict is too weak to group
+        on by itself and a second signal (the event URL) has to agree."""
+        return a is not None and b is not None and a[0] == b[0]
+
     def urls_compatible(row_url, existing_urls):
         """Gate for the substring-containment branch only: two listings that
         carry DIFFERENT event URLs are different ticketed events, so a shorter
@@ -3434,13 +3476,38 @@ def group_event_occurrences(rows, source_url=None):
         return row_url in existing_urls
 
     def find_matching_group_key(event_name, row_loc, row_url, grouped_events,
-                                normalized_group_keys, group_event_urls):
+                                normalized_group_keys, group_event_urls,
+                                row_name_loc=''):
         normalized_event = normalize_name_for_grouping(event_name)
         for existing_key, existing in grouped_events.items():
-            if not locations_compatible(row_loc, loc_key(existing)):
+            existing_loc = loc_key(existing)
+            if not locations_compatible(row_loc, existing_loc):
                 continue
+            # `locations_compatible` says True both when the locations agree
+            # and when it simply could not compare them. Those are very
+            # different verdicts, and treating the second as agreement is what
+            # let one venue's event swallow another's. When the verdict is
+            # inconclusive, a matching name alone is not enough — a second
+            # signal has to agree as well.
+            inconclusive = not locations_conclusive(row_loc, existing_loc)
+
+            # Signal 1: the venue names themselves. Works even when every row
+            # shares one listing URL, which is where the URL gate below is
+            # powerless.
+            if inconclusive and names_denote_different_places(
+                    row_name_loc, loc_name(existing)):
+                continue
+
             normalized_existing = normalized_group_keys[existing_key]
             if event_name == existing_key or normalized_event == normalized_existing:
+                # Signal 2: the event URL. Two listings carrying different
+                # event URLs are different events — the same reasoning
+                # `urls_compatible` already applies to the containment branch.
+                # Rows resolving to the SAME location id never reach here, so a
+                # series listed once per date with per-date URLs still collapses.
+                if inconclusive and not urls_compatible(
+                        row_url, group_event_urls.get(existing_key)):
+                    continue
                 return existing_key
             if len(normalized_event) >= 5 and len(normalized_existing) >= 5:
                 if normalized_event in normalized_existing or normalized_existing in normalized_event:
@@ -3496,7 +3563,7 @@ def group_event_occurrences(rows, source_url=None):
         row_url = absolutize_url(row_dict.get('url'), source_url)
         group_key = find_matching_group_key(
             event_name, loc_key(row_dict), row_url, grouped_events,
-            normalized_group_keys, group_event_urls)
+            normalized_group_keys, group_event_urls, loc_name(row_dict))
         if row_url:
             group_event_urls.setdefault(group_key, set()).add(row_url)
 
@@ -4273,8 +4340,14 @@ _ADDR_STREET_TYPES = sorted(
     # and park addresses name as a cross street ("192nd St & Grand Concourse",
     # loc 669). Without it the side doesn't read as a street at all and the
     # whole intersection is discarded.
+    # "ter" is the abbreviated form Google returns for Terrace ("6 River Ter.",
+    # loc 4080). Without it the DB side of the comparison doesn't parse as a
+    # street at all, so "6 River Terrace" never matched "6 River Ter." and the
+    # sublocation exported redundantly. `_ADDR_LONG_TO_SHORT` folds the long
+    # form onto it; 'terrace' stays in the set so `_ADDR_TYPE_WORDS` keeps
+    # recognizing the spelled-out word.
     {'st', 'ave', 'blvd', 'dr', 'rd', 'pl', 'ct', 'ln', 'pkwy', 'hwy',
-     'broadway', 'bowery', 'way', 'sq', 'terrace', 'tpke', 'concourse'},
+     'broadway', 'bowery', 'way', 'sq', 'ter', 'terrace', 'tpke', 'concourse'},
     key=len, reverse=True,
 )
 # Street names that can stand alone with no preceding name word (e.g. "350 Bowery").
@@ -4284,6 +4357,7 @@ _ADDR_LONG_TO_SHORT = {
     'road': 'rd', 'place': 'pl', 'court': 'ct', 'lane': 'ln',
     'parkway': 'pkwy', 'highway': 'hwy', 'east': 'e', 'west': 'w',
     'north': 'n', 'south': 's', 'turnpike': 'tpke', 'square': 'sq',
+    'terrace': 'ter',
     # "Saint Marks Ave" → "St Marks Ave" (matches DB form "St Marks Ave")
     'saint': 'st',
 }
