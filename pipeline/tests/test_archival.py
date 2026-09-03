@@ -67,7 +67,8 @@ class _ShimCursor:
 
 SCHEMA = """
 CREATE TABLE websites (
-    id INTEGER PRIMARY KEY, name TEXT, base_url TEXT, disabled INTEGER DEFAULT 0);
+    id INTEGER PRIMARY KEY, name TEXT, base_url TEXT, disabled INTEGER DEFAULT 0,
+    rotating_listing INTEGER DEFAULT 0);
 CREATE TABLE crawl_results (
     id INTEGER PRIMARY KEY, website_id INTEGER, status TEXT, processed_at TEXT);
 CREATE TABLE crawl_events (id INTEGER PRIMARY KEY, crawl_result_id INTEGER, name TEXT);
@@ -104,10 +105,13 @@ class ArchivalTestBase(unittest.TestCase):
         self.connection.close()
 
     # ── fixture helpers ──
-    def add_website(self, website_id, disabled=False, base_url=None):
+    def add_website(self, website_id, disabled=False, base_url=None,
+                    rotating_listing=False):
         self.connection.execute(
-            "INSERT INTO websites (id, name, base_url, disabled) VALUES (?, ?, ?, ?)",
-            (website_id, f"Website {website_id}", base_url, 1 if disabled else 0))
+            "INSERT INTO websites (id, name, base_url, disabled, rotating_listing) "
+            "VALUES (?, ?, ?, ?, ?)",
+            (website_id, f"Website {website_id}", base_url, 1 if disabled else 0,
+             1 if rotating_listing else 0))
 
     def add_website_url(self, website_id, url):
         """Give a website a crawl URL. A website with no rows here falls back to
@@ -317,6 +321,61 @@ class TestInstagramOnlySourcesKeepFutureEvents(ArchivalTestBase):
         archived, _ = db.archive_outdated_events(self.cursor, self.connection, 1)
         self.assertEqual(archived, 1)
         self.assertEqual(self.archived_ids(), [302])
+
+    def test_rotating_listing_future_event_is_not_archived(self):
+        """`websites.rotating_listing` generalises the IG exemption to any crawl
+        target that is a WINDOW onto a larger set.
+
+        w389 Eventbrite's `/d/ny--new-york/events/` browse page is a ranked,
+        rotating slice of a far larger catalogue: 73 live events against 1,465
+        archived on 2026-09-03. 18 of the 20 archived-but-still-upcoming events
+        were verified live at the source (HTTP 200 + JSON-LD
+        `eventStatus: EventScheduled` with a matching startDate), so their
+        disappearance measured rank, not cancellation.
+        """
+        self.add_website(1, rotating_listing=True)
+        self.add_website_url(1, "https://www.eventbrite.com/d/ny--new-york/events/")
+        self.add_event(310, website_id=1, future_days=16)
+        self._dropped_from_latest_crawl(1, 310)
+        archived, _ = db.archive_outdated_events(self.cursor, self.connection, 1)
+        self.assertEqual(archived, 0)
+        self.assertEqual(self.archived_ids(), [])
+
+    def test_rotating_listing_event_whose_dates_have_passed_is_still_archived(self):
+        """The flag must not mint immortal events — the same bound the IG
+        exemption carries. Once the last occurrence is past, the
+        no-future-occurrence branch archives normally."""
+        self.add_website(1, rotating_listing=True)
+        self.add_website_url(1, "https://www.eventbrite.com/d/ny--new-york/events/")
+        self.add_event(311, website_id=1)  # past occurrence only
+        self._dropped_from_latest_crawl(1, 311)
+        archived, _ = db.archive_outdated_events(self.cursor, self.connection, 1)
+        self.assertEqual(archived, 1)
+        self.assertEqual(self.archived_ids(), [311])
+
+    def test_rotating_listing_does_not_exempt_an_event_with_another_source(self):
+        """A second, non-exempt source's silence IS evidence, so the event
+        archives on the normal rules. This is what keeps the flag from
+        protecting the 1-of-20 w389 events that a venue site also lists."""
+        self.add_website(1, rotating_listing=True)
+        self.add_website_url(1, "https://www.eventbrite.com/d/ny--new-york/events/")
+        self._calendar_site(2)
+        self.add_event(312, website_id=1, future_days=16)
+        self._dropped_from_latest_crawl(1, 312)
+        self._dropped_from_latest_crawl(2, 312)
+        archived, _ = db.archive_outdated_events(self.cursor, self.connection, 1)
+        self.assertEqual(archived, 1)
+        self.assertEqual(self.archived_ids(), [312])
+
+    def test_unflagged_site_is_unaffected(self):
+        """Default 0 must leave every other site on the normal rules."""
+        self.add_website(1, rotating_listing=False)
+        self.add_website_url(1, "https://venue1.com/events")
+        self.add_event(313, website_id=1, future_days=16)
+        self._dropped_from_latest_crawl(1, 313)
+        archived, _ = db.archive_outdated_events(self.cursor, self.connection, 1)
+        self.assertEqual(archived, 1)
+        self.assertEqual(self.archived_ids(), [313])
 
     def test_a_website_with_no_urls_and_no_base_url_is_treated_as_non_instagram(self):
         """Fail-closed: a site with no crawl URL *and* no base_url has nothing

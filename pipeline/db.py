@@ -933,7 +933,10 @@ def build_archival_temps(cursor):
         WHERE start_date >= CURDATE()
            OR (end_date IS NOT NULL AND end_date >= CURDATE())
     """)
-    # Websites whose ONLY crawl source is Instagram — the picnob-sourced venues.
+    # Websites whose absence-from-a-crawl carries NO evidence that an event ended.
+    #
+    # Two populations qualify. First, websites whose ONLY crawl source is
+    # Instagram — the picnob-sourced venues.
     # A website that also carries a real calendar URL is deliberately excluded:
     # that URL yields a genuine "no longer listed" signal, so normal archival
     # applies (3 of 316 IG-carrying sites are mixed like this).
@@ -955,14 +958,27 @@ def build_archival_temps(cursor):
     # every source be Instagram, and a NULL base_url makes the LIKE NULL, which
     # SUM skips — so a site with neither a URL nor a base_url is excluded rather
     # than vacuously exempted.
-    cursor.execute("DROP TEMPORARY TABLE IF EXISTS _ws_ig_only")
+    #
+    # Instagram is not the only source with this shape. `websites.rotating_listing`
+    # marks any other crawl target that is a WINDOW onto a larger set rather than a
+    # complete listing, so absence from the latest crawl is not evidence either.
+    # The first such site is w389 Eventbrite, whose `/d/ny--new-york/events/` browse
+    # page is a ranked, rotating slice of a far larger catalogue: on 2026-09-03 it
+    # held 73 live events against 1,465 archived, and 18 of the 20 archived-but-still-
+    # upcoming events were verified live on Eventbrite itself (HTTP 200 + JSON-LD
+    # `eventStatus: EventScheduled` with a matching startDate). Only set this flag
+    # for a source whose disappearances have actually been checked and found alive —
+    # it is a promise that the crawl cannot see the whole set, not a way to quiet a
+    # site that is genuinely dropping events.
+    cursor.execute("DROP TEMPORARY TABLE IF EXISTS _ws_no_absence_evidence")
     cursor.execute("""
-        CREATE TEMPORARY TABLE _ws_ig_only (website_id INT UNSIGNED PRIMARY KEY)
+        CREATE TEMPORARY TABLE _ws_no_absence_evidence (website_id INT UNSIGNED PRIMARY KEY)
         SELECT w.id AS website_id
         FROM websites w
         LEFT JOIN website_urls wu ON wu.website_id = w.id
         GROUP BY w.id
         HAVING COUNT(*) = SUM(COALESCE(wu.url, w.base_url) LIKE '%instagram.com%')
+            OR MAX(w.rotating_listing) = 1
     """)
 
 
@@ -970,7 +986,7 @@ def drop_archival_temps(cursor):
     """Drop the archival helper temp tables built by build_archival_temps."""
     cursor.execute("DROP TEMPORARY TABLE IF EXISTS _ws_latest")
     cursor.execute("DROP TEMPORARY TABLE IF EXISTS _evt_future")
-    cursor.execute("DROP TEMPORARY TABLE IF EXISTS _ws_ig_only")
+    cursor.execute("DROP TEMPORARY TABLE IF EXISTS _ws_no_absence_evidence")
 
 
 def archive_outdated_events(cursor, connection, website_id, temps_built=False):
@@ -1118,8 +1134,10 @@ def archive_outdated_events(cursor, connection, website_id, temps_built=False):
                         AND er.created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY)
                         AND er.event_name = e.name
                   )
-                  -- ... AND the event is not sourced EXCLUSIVELY from Instagram
-                  -- feeds. All three guards above share one premise: that absence
+                  -- ... AND the event is not sourced EXCLUSIVELY from feeds whose
+                  -- absence carries no evidence (Instagram, plus any website flagged
+                  -- `rotating_listing`; see _ws_no_absence_evidence).
+                  -- All three guards above share one premise: that absence
                   -- from a source's latest crawl means the source stopped listing
                   -- the event. That premise does not hold for Instagram. A picnob
                   -- bundle is the FIRST PAGE of a handle's grid (12 posts), so an
@@ -1131,7 +1149,13 @@ def archive_outdated_events(cursor, connection, website_id, temps_built=False):
                   -- by triage, then re-archived identically on 08-03 and 08-06 —
                   -- 191217 while its occurrence was TODAY.
                   --
-                  -- So for an IG-only-sourced event with a future occurrence,
+                  -- The same holds for a `rotating_listing` site: Eventbrite's
+                  -- city browse page is a ranked slice of a far larger catalogue,
+                  -- so an event leaves it for the same reason an IG post scrolls
+                  -- out of the 12-post grid — rank, not cancellation.
+                  --
+                  -- So for an event sourced only from such feeds with a future
+                  -- occurrence,
                   -- absence is not evidence: hold it until its last occurrence has
                   -- passed, at which point the NOT EXISTS _evt_future branch above
                   -- archives it immediately on the next merge. An event that ALSO
@@ -1172,7 +1196,7 @@ def archive_outdated_events(cursor, connection, website_id, temps_built=False):
                           JOIN crawl_results cr ON ce.crawl_result_id = cr.id
                           WHERE es.event_id = e.id
                             AND cr.website_id NOT IN (
-                                SELECT website_id FROM _ws_ig_only
+                                SELECT website_id FROM _ws_no_absence_evidence
                             )
                       )
                       OR NOT EXISTS (

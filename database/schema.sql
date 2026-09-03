@@ -93,6 +93,7 @@ CREATE TABLE IF NOT EXISTS websites (
     user_agent VARCHAR(500) DEFAULT NULL COMMENT 'Per-site User-Agent override (default: constants.get_user_agent())',
     emoji VARCHAR(8) DEFAULT NULL COMMENT 'Organizer emoji shown in event popups',
     skip_reenrichment TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'Skip detail-crawl re-enrichment (sites whose event URLs consistently fail, e.g. bot-protected ticketing)',
+    rotating_listing TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'Crawl target is a WINDOW onto a larger set (a ranked/rotating browse page), not a complete listing, so absence from the latest crawl is NOT evidence the event ended. Exempts the site''s events from archival while they still have a future occurrence, the same way Instagram-only sites are exempt implicitly. Only set after verifying that disappearing events are actually still live at the source.',
     blocked_location_names TEXT DEFAULT NULL COMMENT 'List of location names to drop (e.g. non-NYC venues from a multi-city feed)',
     parent_website_id INT UNSIGNED DEFAULT NULL COMMENT 'Organizer root this site belongs to (e.g. park pages -> nycgovparks root). NULL = this site IS the organizer. Single-level by convention; exporter resolves chains defensively. May cross domains (a venue''s Instagram row -> the venue''s main site).',
 
