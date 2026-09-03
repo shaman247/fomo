@@ -14,6 +14,8 @@ Usage:
 """
 
 import argparse
+import os
+import re
 import sys
 
 sys.path.insert(0, 'pipeline')
@@ -25,7 +27,144 @@ import city_config
 # abroad, off-region webinars whose mapped venue is the website's default).
 # Word-boundary matched. Loaded from the city config (review.non_region_places).
 NON_NYC_PLACES = city_config.non_region_place_patterns()
-_NON_NYC_REGEXP = "[[:<:]](" + "|".join(NON_NYC_PLACES) + ")[[:>:]]"
+
+# Street-type tokens. A place name immediately followed by one of these is a
+# STREET, not a destination: "200 Nevada Avenue" is a Staten Island address, not
+# a Las Vegas trip (e239627, 2026-09-02). The same trap is waiting on Virginia
+# Ave, Georgia Ave, California Ave, Ohio St, Delaware Ave, Maine Ave... The
+# lookahead is PCRE (MariaDB 10.0.5+); MySQL's older POSIX engine would need a
+# different formulation.
+_STREET_TYPES = ("Ave|Avenue|St|Street|Rd|Road|Pl|Place|Blvd|Boulevard|Ln|Lane"
+                 "|Ct|Court|Dr|Drive|Ter|Terrace|Pkwy|Parkway|Hwy|Highway"
+                 "|Sq|Square|Cir|Circle|Walk|Path|Trail|Row|Alley|Loop|Mews")
+_NON_NYC_REGEXP = ("[[:<:]](" + "|".join(NON_NYC_PLACES) + ")[[:>:]]"
+                   "(?![[:space:]]+(" + _STREET_TYPES + ")[[:>:]])")
+
+# --- pattern 37 --------------------------------------------------------------
+# Two-letter US state abbreviations, split by whether the state is inside the
+# coverage region. Used to read an out-of-region destination out of the EVENT
+# NAME, which is where a touring company puts it ("Ailey II in Des Moines, IA -
+# 10/27/26"). Pattern 23 can never see these: it reads `location_name`, and a
+# tour row either carries the company's home venue there or is unmapped.
+_OUT_STATE_ABBRS = ("AL|AK|AZ|AR|CA|CO|DE|DC|FL|GA|HI|ID|IL|IN|IA|KS|KY|LA|ME"
+                    "|MD|MA|MI|MN|MS|MO|MT|NE|NV|NH|NM|NC|ND|OH|OK|OR|PA|RI"
+                    "|SC|SD|TN|TX|UT|VT|VA|WA|WV|WI|WY")
+_REGION_STATE_ABBRS = "NY|NJ|CT"
+# "in <Capitalized City>, <ST>". The `in|at` + capital-letter anchor is what
+# keeps DJ line-ups and post-nominals out ("...with Laurence H. Miller, MD",
+# "Sean Carroll, OK, Tyler"): matched BINARY so lowercase words ("Knit, Purl,
+# or ..." -> OR) cannot masquerade as a state.
+_NAME_DESTINATION_REGEXP = ("[[:<:]](in|at)[[:space:]]+[A-Z][^,]{1,40},"
+                            "[[:space:]]*(%s)[[:>:]]")
+
+
+
+_CITY_STATE_RE = re.compile(
+    r"\b(?:in|at)\s+([A-Z][^,]{1,40}),\s*([A-Z]{2})\b")
+_ADDRESS_CITY_RE = re.compile(r",\s*([^,]+),\s*(?:NY|NJ|CT)\s+\d{5}")
+_REGION_STATES = {"NY", "NJ", "CT"}
+
+
+def _in_region_city_names(cursor):
+    """Lower-cased city names that are demonstrably inside the coverage area.
+
+    Built postally, never nominally: a `locations` row contributes its city only
+    if CoverageArea says its ZIP is inside the region. Adding a venue in
+    Poughkeepsie therefore teaches this set "poughkeepsie"; adding one in
+    Buffalo teaches it nothing. The config geotags and generic city names are
+    unioned in so that neighbourhoods ("Bay Ridge") and the city's own names
+    ("New York City") resolve without needing a venue to exist there.
+    """
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from find_out_of_area_events import CoverageArea
+
+    area = CoverageArea()
+    cities = {g.strip().lower() for g in city_config.geotags() if g}
+    cities |= {g.strip().lower() for g in city_config.generic_location_names() if g}
+    cursor.execute("SELECT address FROM locations "
+                   "WHERE address IS NOT NULL AND address <> ''")
+    for (address,) in cursor.fetchall():
+        if area.classify_address(address)[0] != 'in':
+            continue
+        m = _ADDRESS_CITY_RE.search(address)
+        if m:
+            cities.add(m.group(1).strip().lower())
+    return cities
+
+
+def _city_is_in_region(city, in_region_cities):
+    """True if `city` (as written in an event name) is a known in-region place.
+
+    Tries progressively shorter tails so that a name carrying a venue prefix
+    ("Tanger Outlets Deer Park") still resolves on its city ("deer park").
+    """
+    city = city.strip().lower().strip('."\'')
+    if city.startswith('the '):
+        city = city[4:]
+    tokens = city.split()
+    for i in range(len(tokens)):
+        if ' '.join(tokens[i:]) in in_region_cities:
+            return True
+    return False
+
+
+_LOOSE_STATE_ZIP_RE = re.compile(r",\s*([A-Z]{2}),\s*(\d{5})")
+
+
+def _location_name_zip_postfilter(cursor, event_ids):
+    """Keep pattern-38 rows whose location_name carries an out-of-region ZIP.
+
+    The ZIP is the ground truth here, not the place name -- the whole point of
+    this arm is that it survives fixes to the name-based ones. `location_name`
+    is free text an extractor wrote, so "Albany, NY, 12208" (comma before the
+    ZIP) is normalised into the "<ST> <ZIP>" shape CoverageArea parses.
+    """
+    if not event_ids:
+        return set()
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from find_out_of_area_events import CoverageArea
+
+    area = CoverageArea()
+    placeholders = ','.join(['%s'] * len(event_ids))
+    cursor.execute(
+        f"SELECT id, location_name FROM events WHERE id IN ({placeholders})",
+        list(event_ids))
+    keep = set()
+    for event_id, location_name in cursor.fetchall():
+        normalised = _LOOSE_STATE_ZIP_RE.sub(r", \1 \2", location_name or '')
+        if area.classify_address(normalised)[0] == 'out':
+            keep.add(event_id)
+    return keep
+
+
+def _name_destination_postfilter(cursor, event_ids):
+    """Keep only the pattern-37 rows whose named destination is out of region.
+
+    An out-of-region state abbreviation settles it on its own. NY/NJ/CT does
+    not -- Westport CT is inside the coverage area and St. Bonaventure NY is
+    not -- so those rows are decided against the postal in-region city list.
+    """
+    if not event_ids:
+        return set()
+    placeholders = ','.join(['%s'] * len(event_ids))
+    cursor.execute(f"SELECT id, name FROM events WHERE id IN ({placeholders})",
+                   list(event_ids))
+    rows = cursor.fetchall()
+    in_region_cities = None
+    keep = set()
+    for event_id, name in rows:
+        m = _CITY_STATE_RE.search(name or '')
+        if not m:
+            continue
+        city, state = m.group(1), m.group(2)
+        if state not in _REGION_STATES:
+            keep.add(event_id)
+            continue
+        if in_region_cities is None:
+            in_region_cities = _in_region_city_names(cursor)
+        if not _city_is_in_region(city, in_region_cities):
+            keep.add(event_id)
+    return keep
 
 
 # Each pattern: id, name, and SQL WHERE clause (applied to events e)
@@ -511,7 +650,14 @@ PATTERNS = [
         # mapped onto a NYC venue because the AI fell back to the website's
         # default location). The venue-name/address/alt-name comparison is what
         # prevents NYC venues that happen to contain a place name (Tibet House,
-        # Japan Society, Washington Square Park) from being flagged.
+        # Japan Society, Washington Square Park) from being flagged, and the
+        # street-type lookahead baked into _NON_NYC_REGEXP is what keeps NYC
+        # streets named after states out ("200 Nevada Avenue", Staten Island).
+        #
+        # This pattern reads `location_name` ONLY, so it is structurally blind
+        # to a touring event that names its destination in the event NAME and
+        # carries the company's home venue in `location_name` (or nothing at
+        # all). Pattern 37 is that arm — do not try to fold it in here.
         'id': 23,
         'name': 'Location outside NYC metro (cultural tours, off-region events)',
         'query': f"""
@@ -617,6 +763,26 @@ PATTERNS = [
         # Brunch"). Blank-description rows like "Sunday Funday" (215105) stay
         # deliberately uncovered — "Sunday Funday" is a real party name at
         # plenty of venues and the name alone carries no signal.
+        #
+        # 2026-09-02: the first gate fires on the ADJECTIVE "special", so
+        # e239440 "Weequahic Storytime" ("Join us every Tuesday for a special
+        # storytime.") tripped it with no dining content whatsoever. The
+        # programming veto had no library or kids-programming vocabulary at
+        # all, so the whole class was exposed, not just that one word — the
+        # veto now carries story time / story hour / read-aloud, toddler and
+        # preschool, craft and knitting sessions, chess and mahjong, tutoring
+        # and literacy, yoga and meditation, lectures and author events, and
+        # age ranges ("ages 3-5"). Measured over all active events the queue
+        # goes 34 -> 26, and every one of the 8 dropped rows is real
+        # programming (story hours, an author night, two exhibition openings,
+        # a mahjong night, a veterans' remembrance).
+        #
+        # NOT added, on purpose: bare "kids", "children" and "family" — "kids
+        # eat free every Tuesday" is precisely the dining special this pattern
+        # exists to catch. Bare "craft" is out for the same reason ("craft beer
+        # specials"), which is why the craft arm requires a session noun. And
+        # "art" can never go in as a bare alternative: it is a substring of
+        # "party".
         'id': 31,
         'name': 'Recurring dining/drink specials (no programming)',
         'query': r"""
@@ -639,7 +805,7 @@ PATTERNS = [
                 e.description IS NULL
                 OR e.description = ''
                 OR e.description = 'No description available.'
-                OR e.description NOT REGEXP '(perform|live music|live act|dj |featuring|guest |host|comedian|comedy|trivia|karaoke|workshop|class|tour|reading|talk|panel|dance|fireworks|parade|watch party|screening|game|tournament|festival|celebration|programming|bingo|league|sing-?along|open mic|jam|quiz|aperitivo|book club|movie|film|concert|show)'
+                OR e.description NOT REGEXP '(perform|live music|live act|dj |featuring|guest |host|comedian|comedy|trivia|karaoke|workshop|class|tour|reading|talk|panel|dance|fireworks|parade|watch party|screening|game|tournament|festival|celebration|programming|bingo|league|sing-?along|open mic|jam|quiz|aperitivo|book club|movie|film|concert|show|story ?time|story ?hour|storytell|storywalk|read[ -]?aloud|toddler|preschool|pre-?k[[:>:]]|puppet|knit|crochet|quilt|sewing|chess|scrabble|mahjong|mah-?jongg|lego|craft(ing)?[ -](hour|time|night|session|program|club|corner|activity)|tutor|homework|literacy|citizenship|yoga|meditat|tai chi|zumba|pilates|lecture|seminar|discussion|author|poetry|support group|volunteer|exhibition|rhyme|circle time|sensory|ages? [0-9]|registration)'
               )
         """,
     },
@@ -771,7 +937,77 @@ PATTERNS = [
               AND e.description NOT REGEXP '(perform|live music|dj|band|comedian|comedy|screening|concert|festival|fundrais|benefit|ticket|rsvp|open to the public|all ages welcome|free)'
         """,
     },
+    {
+        # A touring show that names its destination in the EVENT NAME. Pattern
+        # 23 is structurally blind to these: it reads `location_name`, and a
+        # tour row carries either the company's HOME venue there or nothing.
+        # The 2026-09-02 run hand-suppressed nine Ailey II tour dates --
+        # Charleston WV, Des Moines IA, Danville VA, Marietta OH, Princess Anne
+        # MD, Fairfield IA, Lexington VA, Annapolis MD, plus St. Bonaventure NY
+        # -- and two of them (239474, 239470) had been mis-mapped by
+        # get_location_id onto the Alvin Ailey venue on W 55th St, so nothing
+        # reading the mapped location could have seen them either.
+        #
+        # Matched BINARY, and anchored on "in|at <Capital>". Both are load
+        # bearing. Case-insensitively, ", or" is Oregon and ", me" is Maine
+        # ("Knit, Purl, or Crochet Blankets of Love"); without the in/at anchor
+        # every DJ line-up and post-nominal matches ("Sean Carroll, OK, Tyler",
+        # "with Laurence H. Miller, MD, FAAP"). With both, the out-of-region
+        # arm matches exactly 9 rows DB-wide -- the 9 tour dates, 0 reviewed
+        # and kept.
+        #
+        # The in-region arm (NY/NJ/CT) exists only for St. Bonaventure NY, and
+        # it is the one arm that CANNOT be decided from the name: upstate NY is
+        # out of the coverage area and Westport CT is in it. `_name_destination_postfilter`
+        # settles it postally -- the in-region city list is derived from the
+        # addresses of `locations` rows that pass the CoverageArea ZIP test, per
+        # the standing rule that out-of-area questions are answered by ZIP and
+        # never by name.
+        'id': 37,
+        'name': 'Event name names an out-of-region destination (tour date)',
+        'query': ("""
+            SELECT DISTINCT e.id FROM events e
+            WHERE e.archived = 0 AND e.reviewed = 0
+              AND e.name REGEXP BINARY '"""
+            + _NAME_DESTINATION_REGEXP % (_OUT_STATE_ABBRS + "|" + _REGION_STATE_ABBRS)
+            + "'"),
+        'postfilter': _name_destination_postfilter,
+    },
+    {
+        # `location_name` states an address whose ZIP is outside the coverage
+        # area. Tiny by design -- most extracted location_names are bare venue
+        # names -- but it is the only arm here that cannot be argued with, and
+        # it is deliberately the backstop for the name-based ones. When the
+        # street-type lookahead was added to pattern 23 on 2026-09-02 it
+        # correctly stopped flagging "140 New Scotland Avenue, Albany, NY,
+        # 12208" (Scotland + Avenue), and that row is genuinely out of region
+        # for a reason pattern 23 was never actually reading: ZIP3 122 is
+        # upstate. Matching 1 row DB-wide, 0 reviewed-and-kept.
+        'id': 38,
+        'name': 'location_name carries an out-of-region ZIP',
+        'query': r"""
+            SELECT DISTINCT e.id FROM events e
+            WHERE e.archived = 0 AND e.reviewed = 0
+              AND e.location_name REGEXP '[A-Z][A-Z][^A-Za-z0-9]{1,3}[0-9]{5}'
+        """,
+        'postfilter': _location_name_zip_postfilter,
+    },
 ]
+
+
+def run_pattern(cursor, pattern):
+    """Event ids matched by one pattern, after its optional Python postfilter.
+
+    A postfilter is for the questions SQL cannot answer -- pattern 37 has to
+    decide whether a city named in an event title is inside the coverage area,
+    which is a postal question, not a string one.
+    """
+    cursor.execute(pattern['query'])
+    ids = {row[0] for row in cursor.fetchall()}
+    postfilter = pattern.get('postfilter')
+    if postfilter is not None:
+        ids = postfilter(cursor, ids)
+    return ids
 
 
 def collect_candidates(cursor, pattern_filter=None):
@@ -782,8 +1018,7 @@ def collect_candidates(cursor, pattern_filter=None):
         if pattern_filter is not None and p['id'] != pattern_filter:
             continue
 
-        cursor.execute(p['query'])
-        for (event_id,) in cursor.fetchall():
+        for event_id in run_pattern(cursor, p):
             if event_id not in candidates:
                 candidates[event_id] = []
             candidates[event_id].append(p)
@@ -802,8 +1037,7 @@ def print_counts(cursor, pattern_filter=None):
         if pattern_filter is not None and p['id'] != pattern_filter:
             continue
 
-        cursor.execute(p['query'])
-        ids = {row[0] for row in cursor.fetchall()}
+        ids = run_pattern(cursor, p)
         total_ids |= ids
 
         count = len(ids)

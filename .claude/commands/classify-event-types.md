@@ -32,6 +32,17 @@ tags** (e.g. no `Dance` type — a dance show is `Theater Show` + `Dance` tag).
 - **Game** — structured play with a win condition: trivia, MTG, bingo, scrabble, tournaments, **esports/LAN parties**
 - **Open Practice** — **recurring drop-in participatory with no curriculum or level**: figure drawing, jam session, open mic, social dance practica, meditation sits without religious framing, affinity-group swim/climb/skate sessions
 - **Volunteer** — labor-donation event (food pantry, park cleanup, tax prep, mentoring)
+- **Tasting** — a **guided sampling of food or drink is the main event**: wine/beer/whiskey/sake flights, cheese-and-wine pairings, distillery and cidery tastings, "meet the winemaker" pours, in-store bottle samplings. The attendee is actively sampling and evaluating, which is why this sits in Participatory rather than Browsable.
+  **Boundary rules** (added 2026-09-02 after ~120 events were found split four ways across `Workshop`/`Class`/`Pop-Up`/`Mixer` — the same venue's tastings were landing in different types, which made the Format facet useless for them):
+  - Sampling is the **draw** → `Tasting`, whether or not instruction is explicit. Do NOT split on "was there a teacher": that was the accidental axis that produced the inconsistency.
+  - You **make** something (blend your own, cook, cocktail-building class with a curriculum) → `Workshop`/`Class`.
+  - The tasting is **incidental to a different billed draw** → type the draw: a wine tasting with a billed live act is `Concert`, a ticketed **fundraiser** is `Benefit`, a comedy show called "Tasting Menu" is `Comedy Show`, yoga-plus-food is `Fitness`.
+  - **Not food or drink** → not a `Tasting`. Library "book tasting" programs are `Discussion Group`/`Drop-In Service`.
+  - A **festival**-scale multi-vendor pour (dozens of tables, festival branding) stays `Festival`; a single-venue pour is `Tasting`.
+  - **Tour + tasting** (added 2026-09-02 after the backfill hit this repeatedly): an **on-premises** tour-and-flight at the producer — distillery, winery, sake brewery — is a `Tasting`; a **neighborhood or vehicle** tour that includes tastings (food-cart tour, trolley tour, coffee walking tour, cider-tasting sail) stays `Tour`, because the itinerary is the product.
+  - **Seated multi-course meals are not tastings.** A plated wine dinner, chef's table, or ticketed guest-chef dinner is `Pop-Up`/`Party`/`Class` per its own draw, even when a winemaker presents between courses. The line is **flights and pours vs. a meal**.
+  - **Demonstrations and certifications are not tastings**: a cooking demo with sampling is a `Talk`/`Class`; a server certification course is a `Class`.
+
 - **Drop-In Service** — show up to receive **individualized free service**: legal clinic, mock citizenship interview, drop-in resume help, library tech help, 1:1 consultations (career, design, HR), mobile health van, period pantry, community acupuncture by donation, free haircuts. Different from `Volunteer` (you receive, not give labor) and `Workshop` (no group instruction).
 
 ### Browsable — self-paced consumption of a curated environment
@@ -166,7 +177,7 @@ sweep in Mode B above is the sustaining mechanism for now.
 ## Valid type labels (exact strings for storage)
 
 `Concert`, `Theater Show`, `Comedy Show`, `Screening`, `Sports`, `Reading`,
-`Class`, `Workshop`, `Camp`, `Fitness`, `Game`, `Open Practice`, `Volunteer`, `Drop-In Service`,
+`Class`, `Workshop`, `Tasting`, `Camp`, `Fitness`, `Game`, `Open Practice`, `Volunteer`, `Drop-In Service`,
 `Exhibition`, `Open House`, `Market`, `Fair`, `Pop-Up`, `Immersive Experience`,
 `Club Night`, `Party`, `Mixer`, `Benefit`, `Watch Party`, `Festival`, `Community Celebration`,
 `Talk`, `Service`, `Ceremony`, `Civic Meeting`, `Discussion Group`,

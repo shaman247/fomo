@@ -25,7 +25,7 @@ Buckets (only the first three are printed in full; the rest are `LIKELY_OK`):
 | Bucket | What it is | Action |
 | --- | --- | --- |
 | **FIX_SPAN** | Regular cadence (≥3 discrete, same weekday, 7/14/~30-day gaps) with an **envelope** span. | Auto-fixable — Steps 2–3. |
-| **COURSE_WEEKLY** | A weekly class/course captured as **one bare span** (exactly 1 occurrence, no discrete dates): a 2-week–6-month span whose endpoints fall on the **same weekday**, corroborated by a clock time on the span or an explicit recurrence keyword (e.g. "Bhakti Sastri: Aug 11 – Dec 15, 6:30–8:30pm" → 19 Tuesdays). A **two-weekday arc** (endpoints on *adjacent* weekdays, e.g. Tue → Wed) is also accepted, but only when the text states an explicit week count N that equals `ceil(days/7)`, a clock time is present, and no daily-program keyword appears — that shape expands to both weekday series (6 Tuesdays + 6 Wednesdays), and the note says `+2-weekday arc`. | Apply **per id only**: verify the weekly cadence via `--show` + the event's source URL (a same-weekday span can be a quarterly PPV listing or daily summer program), then `--apply --ids <ids>`. A blanket `--apply` skips these. |
+| **COURSE_WEEKLY** | A weekly class/course captured as **one bare span** (exactly 1 occurrence, no discrete dates): a 2-week–6-month span whose endpoints fall on the **same weekday**, corroborated by a clock time on the span or an explicit recurrence keyword (e.g. "Bhakti Sastri: Aug 11 – Dec 15, 6:30–8:30pm" → 19 Tuesdays). A **two-weekday arc** (endpoints on *adjacent* weekdays, e.g. Tue → Wed) is also accepted, but only when the text states an explicit week count N that equals `ceil(days/7)`, a clock time is present, and no daily-program keyword appears — that shape expands to both weekday series (6 Tuesdays + 6 Wednesdays), and the note says `+2-weekday arc`. | Apply **per id only**: verify the weekly cadence via `--show` + the event's source URL (a same-weekday span can be a quarterly PPV listing, a daily summer program, or a **Tockify `kind: singleton`** — see below), then `--apply --ids <ids>`. A blanket `--apply` skips these. |
 | **RECURRING_RANGE** | A recurring meeting **flattened into a range**: either span-only / ≤2 discrete with a recurrence keyword ("weekly", "Saturdays"), or a regular discrete grid whose span **extends past** the captured dates (the series' tail was caught as a range). | **Manual** — build the real meeting dates from the source page, then delete the span. The discrete dates the auto-fixer would have generated can't be trusted here (break weeks, enrollment-only programs). |
 | **INVERSE** | A continuously-open **exhibition** with a correct span **plus bogus regular discrete dates** layered on (e.g. "Hyunjin Park: Jump", weekly Fridays on a daily-open show). | **Manual** — delete the discrete rows, **keep** the span. |
 | LIKELY_OK | Continuous exhibition/run, or irregular dates. | Leave alone. |
@@ -77,6 +77,33 @@ Or restrict to a hand-approved subset with `--ids`:
 ```bash
 ./venv/bin/python scripts/fix_recurring_spans.py --apply --ids 92589,84169,143466
 ```
+
+### COURSE_WEEKLY false positives — the discriminator is the SOURCE RECORD, never the date shape
+
+A same-weekday span with a clock time is **not** sufficient evidence of a weekly series. Three
+documented shapes produce that exact signature without being weekly:
+
+1. **Quarterly PPV listings.**
+2. **Daily summer programs.**
+3. **A Tockify `kind: singleton` with a mis-entered multi-week end date** (found 2026-09-02).
+   Event 239225 "Singing Guitarist Tom Clancey @ Captain Lawrence Brewing" ran
+   `2026-08-30 2pm → 2026-09-13 5pm` — both endpoints Sunday, same clock time, textbook COURSE_WEEKLY.
+   But the Tockify API record (`calname=rocklandartscalendar`, uid 4729) is **`"kind": "singleton"`,
+   `rid: 0`, with no recurrence rule**, and the artist's own schedule confirmed a single Aug 30
+   booking (he played River Vale CC on Sep 5 and Red Barn Cidery on Sep 12).
+   **Auto-expanding would have invented two shows that do not exist.** Correct fix was to collapse
+   the span to the one real date, not to expand it.
+
+**So: before `--apply --ids` on any COURSE_WEEKLY candidate, open the source record and confirm a
+recurrence actually exists.** For Tockify, fetch the ngevent API (see the `tockify_ngevent_api`
+auto-memory) and check `kind`/`rid`: `singleton` means one event, full stop. For other platforms,
+look for the equivalent recurrence field (Tribe's `recurrence`, an RRULE, "every <weekday>" prose).
+When the source has no recurrence rule, the span is a data-entry error and the fix is to **collapse
+it to the start date**, which is the opposite action from expansion.
+
+Expanding a non-recurring event fabricates listings for shows that were never scheduled — the most
+damaging failure mode this command has, and it is invisible afterwards because the output looks
+exactly like a correctly-expanded series.
 
 For each fixed event the script: deletes the span(s) (>14-day envelopes, or the single 14–190-day span for COURSE_WEEKLY), inserts the cadence dates at the meeting time (COURSE_WEEKLY expands through the span's real end date, not just the export window), and sets `section = NULL` for reclassification. Writes run under the shared DB write lock.
 

@@ -1696,6 +1696,81 @@ class TestShortNormalizedNamesReachExactTiers(unittest.TestCase):
         m = _make_locations_map([('Osteria Brooklyn', 77)])
         self.assertIsNone(self._id('OS NYC', m))
 
+    # ------------------------------------------------------------------
+    # Index side (fixed 2026-09-02). Everything above builds the map by hand
+    # via `_make_locations_map`, which is exactly why it kept passing while the
+    # bug survived: `build_locations_map` applied the SAME `>= 3` floor at four
+    # sites (normalized_main, normalized_alt, normalized_short, website-scoped
+    # alt), so a name normalizing to 1-2 chars was indexed NOWHERE. The query
+    # side built the key 'os' and the index had nothing under it, so #2986
+    # "OS NYC" stayed unreachable and its events went NULL every crawl.
+    #
+    # These tests therefore go through the REAL build_locations_map. A hand-built
+    # map cannot detect an index-side floor.
+    # ------------------------------------------------------------------
+
+    def _real_map(self, locations, website_linked=None):
+        """Build a real locations_map from (id, name, short_name, alts) tuples."""
+        rows = []
+        for lid, name, short_name, alts in locations:
+            rows.append({'id': lid, 'name': name, 'short_name': short_name,
+                         'address': '', 'lat': 1.0, 'lng': 1.0, 'emoji': 'X',
+                         'alternate_names': list(alts or []),
+                         'website_scoped_names': {}})
+        real_all = processor.db.get_all_locations
+        real_wl = processor.db.get_website_locations_map
+        processor.db.get_all_locations = lambda cursor: rows
+        processor.db.get_website_locations_map = lambda cursor: dict(website_linked or {})
+        try:
+            return build_locations_map(None)
+        finally:
+            processor.db.get_all_locations = real_all
+            processor.db.get_website_locations_map = real_wl
+
+    def test_two_char_normalized_name_is_indexed(self):
+        # The reported case: "OS NYC" -> 'os', two chars, under the old floor.
+        m = self._real_map([(2986, 'OS NYC', None, [])])
+        self.assertIn('os', m['names'])
+        self.assertEqual(self._id('OS NYC', m), 2986)
+
+    def test_two_char_normalized_name_matches_both_directions(self):
+        # Stored "OS NYC" and incoming "OS NYC" must both reduce to 'os'...
+        m = self._real_map([(2986, 'OS NYC', None, [])])
+        self.assertEqual(self._id('OS NYC', m), 2986)
+        # ...and the bare / differently-qualified forms reach it too.
+        self.assertEqual(self._id('OS', m), 2986)
+        self.assertEqual(self._id('OS New York', m), 2986)
+
+    def test_two_char_normalized_alternate_name_is_indexed(self):
+        m = self._real_map([(2986, 'Some Longer Venue', None, ['OS NYC'])])
+        self.assertEqual(self._id('OS NYC', m), 2986)
+
+    def test_two_char_normalized_short_name_is_indexed(self):
+        m = self._real_map([(2986, 'Some Longer Venue', 'OS NYC', [])])
+        self.assertEqual(self._id('OS NYC', m), 2986)
+
+    def test_incoming_area_qualifier_still_matches_a_plain_stored_name(self):
+        # The pre-existing behavior the suffix-strip exists FOR, which the fix
+        # must not break: a listing says "Foo NYC", the location row is "Foo".
+        # Multi-word so it clears every length floor on both sides.
+        m = self._real_map([(501, 'Hart Bar', None, [])])
+        self.assertEqual(self._id('Hart Bar NYC', m), 501)
+        self.assertEqual(self._id('Hart Bar Brooklyn', m), 501)
+        # ...and the reverse: stored "<name> NYC", incoming plain.
+        m2 = self._real_map([(502, 'Pocket Bar NYC', None, [])])
+        self.assertEqual(self._id('Pocket Bar NYC', m2), 502)
+        self.assertEqual(self._id('Pocket Bar', m2), 502)
+
+    def test_short_index_key_is_exact_only_never_prefix_or_fuzzy(self):
+        # Widening the index must not widen Steps 4/5, which scan every key in a
+        # tier. A 2-char key is tracked in `short_index_keys` and skipped there,
+        # so no LONGER source name may start resolving to it.
+        m = self._real_map([(2986, 'OS NYC', None, [])])
+        self.assertEqual(m['short_index_keys'], {'os'})
+        for unrelated in ('Oswego Community Center', 'Osteria Brooklyn',
+                          'OSA Gallery', 'Ossining Public Library'):
+            self.assertIsNone(self._id(unrelated, m), unrelated)
+
 
 class TestExactKeyBeatsHeuristicVariant(unittest.TestCase):
     """A heuristic suffix-strip/-completion variant must never outrank the key

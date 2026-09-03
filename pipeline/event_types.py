@@ -30,6 +30,7 @@ EVENT_TYPES_BY_CATEGORY = {
     "Participatory": [
         "Class",
         "Workshop",
+        "Tasting",
         "Camp",
         "Fitness",
         "Game",
@@ -116,7 +117,7 @@ CATEGORY_TAG = {
 TYPE_EMOJI = {
     "Concert": "🎤", "Theater Show": "🎭", "Comedy Show": "😂", "Screening": "🎬",
     "Sports": "🏟️", "Reading": "📖",
-    "Class": "🎓", "Workshop": "🛠️", "Camp": "🏕️", "Fitness": "🏋️", "Game": "🎲",
+    "Class": "🎓", "Workshop": "🛠️", "Tasting": "🍷", "Camp": "🏕️", "Fitness": "🏋️", "Game": "🎲",
     "Open Practice": "🔄", "Volunteer": "🤝", "Drop-In Service": "🩺",
     "Exhibition": "🖼️", "Open House": "🚪", "Market": "🛍️", "Fair": "🪧",
     "Pop-Up": "✨", "Immersive Experience": "🌌",

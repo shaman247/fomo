@@ -646,7 +646,26 @@ _NON_EVENT_NAME_PATTERNS = [
     # reached the map and was hand-suppressed at classification on 2026-08-29).
     # Corpus-checked over all 204,375 events: the `to` arm adds 6 rows /
     # 5 distinct names, every one a genuine call for entries, 0 false positives.
-    r'\bcalls? (for|to) (artists?|art|submissions?|entries|proposals|vendors?|applicants?|papers?|works?|artworks?)\b',
+    #
+    # 2026-09-02: the noun list was too short and had no room for a qualifier,
+    # so the marker being INSIDE the title rather than a prefix was never the
+    # problem -- the words after "for" were. e238812 "Arts on Terry - Call for
+    # Street Artists & Live Painters" and e238813 "CALL FOR MUSIC ... Spotlight
+    # Stage @ Arts on Terry" (both w1970) reached classification and were
+    # hand-suppressed. Two changes: up to two qualifier words may sit between
+    # the preposition and the noun ("Street Artists", "Mural Artists",
+    # "Artisan Vendors", "Visual Artists", "Nonfiction Submissions"), and the
+    # noun list now covers the rest of the disciplines an arts council
+    # solicits. Corpus-checked over all 208,019 events: 33 -> 50 matches, and
+    # all 17 added rows are genuine calls for entries -- 0 false positives.
+    r'\bcalls?\s+(?:for|to)\s+(?:[\w\'-]+[\s-]+){0,2}'
+    r'(?:artists?|art|artworks?|submissions?|entries|proposals|papers?|works?|'
+    r'applicants?|applications?|vendors?|volunteers?|participants?|exhibitors?|'
+    r'sponsors?|nominations?|nominees?|speakers?|panelists?|presenters?|'
+    r'performers?|music|musicians?|bands?|singers?|songwriters?|djs?|dancers?|'
+    r'comedians?|poets?|writers?|authors?|filmmakers?|films?|photographers?|'
+    r'designers?|makers?|chefs?|models?|actors?|painters?|muralists?|curators?|'
+    r'abstracts?|pitches|hosts?)\b',
     r'\bsubmissions?\s+(period|deadline|window|open|guidelines)\b',
     r'^\s*submissions?\s*:',
     r'\b(now\s+)?accepting\s+(submissions|applications|entries|proposals)\b',
@@ -945,6 +964,80 @@ _UNTITLED_PLACEHOLDER_NAME_RE = re.compile(
     r'^\s*untitled\s+(?:movie|film|feature|screening|event|program|programme|'
     r'show|performance|concert|exhibit(?:ion)?)\s*(?:\([^)]*\))?\s*$',
     re.IGNORECASE)
+
+# Serial placeholder rows: a listing whose ENTIRE name is a generic place plus
+# a run number, with nothing else attached. w5147 (Hash House Harriers) posts a
+# "receding hareline" of scheduled runs, and every run whose start venue has not
+# been announced yet comes through as "Nyc #2174" / "Brooklyn #1197" -- no
+# title, no description, and a location that is only the borough. Three of them
+# reached event-type classification on 2026-09-02 and were hand-suppressed.
+#
+# All three legs are required, and each one is carrying weight:
+#  - the prefix must be a GENERIC PLACE, not merely short. "SideQuest IRL #47",
+#    "Beer Mile Special #255", "Queens Black Knights #73" and "Bklyn Mile Track
+#    Workout #2" are all real numbered events with blank descriptions, and a
+#    "<anything> #<n>" rule would eat every one of them.
+#  - the description must be blank. "Nyc #2164" has a real body and is a real
+#    trail.
+#  - the LOCATION must be unspecified. This is the leg that spares the same
+#    name once the venue is announced: "Nyc #2157" at Tompkins Square Park and
+#    "Brooklyn #1187" at Alligator Lounge are the identical title with a real
+#    start point, and they are attendable.
+# Corpus-checked over all 208,019 events: 26 matches, every one a venue-TBA
+# hash run from w5147, 0 from any other website.
+_SERIAL_PLACEHOLDER_NAME_RE = re.compile(r'^\s*(.+?)\s*#\s*\d{1,6}\s*$')
+
+# Location strings that name no venue. The parenthetical is the extractor's own
+# marker ("Manhattan (exact location unspecified)"); the bare words are what
+# booking feeds put in the field when nothing is set.
+_UNSPECIFIED_LOCATION_MARKER_RE = re.compile(
+    r'\(\s*exact location unspecified\s*\)', re.IGNORECASE)
+_BLANK_LOCATION_RE = re.compile(
+    r'^\s*(?:tba|tbd|n/?a|none|unspecified|unknown|-+)?\s*$', re.IGNORECASE)
+
+_GENERIC_PLACE_NAMES = None
+
+
+def _generic_place_names():
+    """Lower-cased place names that are too vague to be a venue.
+
+    The city config's geotags (boroughs, neighbourhoods, towns, regions) plus
+    the city-level generic names. Deliberately the same list db.py uses to
+    decide a location needs a detail crawl -- "too vague to be a venue" and
+    "carries no event information as a title" are the same judgement, and
+    keeping one list keeps the rule city-agnostic. Note it does NOT contain
+    specific venues, so "Tompkins Square Park" is not generic.
+    """
+    global _GENERIC_PLACE_NAMES
+    if _GENERIC_PLACE_NAMES is None:
+        names = {g.strip().lower() for g in city_config.geotags() if g}
+        names |= {g.strip().lower()
+                  for g in city_config.generic_location_names() if g}
+        _GENERIC_PLACE_NAMES = frozenset(n for n in names if n)
+    return _GENERIC_PLACE_NAMES
+
+
+def _location_is_unspecified(location):
+    """True if `location` names no venue at all."""
+    location = (location or '').strip()
+    if _BLANK_LOCATION_RE.match(location):
+        return True
+    if _UNSPECIFIED_LOCATION_MARKER_RE.search(location):
+        return True
+    return location.lower() in _generic_place_names()
+
+
+def _is_serial_placeholder(name, description, location):
+    """True for a "<generic place> #<number>" row with no body and no venue."""
+    if not _description_is_blank(description or ''):
+        return False
+    m = _SERIAL_PLACEHOLDER_NAME_RE.match(name or '')
+    if not m:
+        return False
+    if m.group(1).strip().lower() not in _generic_place_names():
+        return False
+    return _location_is_unspecified(location)
+
 
 # Descriptions that carry no information. Merged rows use the literal
 # "No description available." placeholder, so an empty-description gate must
@@ -2753,7 +2846,7 @@ def _is_food_holiday_promo(name, description=None):
     return not _FOOD_HOLIDAY_VETO_RE.search(name + ' ' + (description or ''))
 
 
-def is_obvious_non_event(name, description=None):
+def is_obvious_non_event(name, description=None, location=None):
     """Return True if the event is an unmistakable non-event.
 
     Covers closures, calls for submissions/grants, venue rentals, season-pass
@@ -2768,15 +2861,18 @@ def is_obvious_non_event(name, description=None):
     HOLD placeholders, outside-organization
     bookings titled with the org's own name), month-calendar listing
     placeholders, "National <food/drink> Day" restaurant promos, ticketing
-    upsell products (packages/bundles), and bare
-    generic placeholder names — the kinds of rows that
+    upsell products (packages/bundles), serial "<place> #<n>" placeholders,
+    and bare generic placeholder names — the kinds of rows that
     should never reach the map. High precision by design; anything fuzzier
     belongs in scripts/find_review_candidates.py for human review.
 
     Most patterns match on the name alone; a few ambiguous categories
     (contests, booths, childcare amenities, congregate meals) also require
     corroborating description language and never fire when the description is
-    missing.
+    missing. `location` is optional and read by exactly one rule -- the serial
+    placeholder rule, which needs it to tell an unannounced run number from the
+    same run number once its start venue is published. Omitting it reads as
+    "no venue", which is what an absent location means.
     """
     if not name:
         return False
@@ -2788,6 +2884,10 @@ def is_obvious_non_event(name, description=None):
         return True
     # Placeholder "Untitled <format> (<venue>)" screening rows.
     if _description_is_blank(description) and _UNTITLED_PLACEHOLDER_NAME_RE.match(name):
+        return True
+    # "<generic place> #<number>", no description, no venue -> a scheduled slot
+    # whose details have not been published yet.
+    if _is_serial_placeholder(name, description, location):
         return True
     # Library room-booking placeholder. Uses `_description_adds_nothing` rather
     # than `_description_is_blank`: these feeds echo the title into the body.
@@ -3662,6 +3762,68 @@ GENERIC_LOCATION_WORDS = {
 # this fixes 47 mis-pins and newly resolves "Playground, Elmhurst Park" -> 283,
 # with zero regressions.
 BARE_ONLY_GENERIC_WORDS = GENERIC_LOCATION_WORDS | {'playground'}
+
+# An explicit delimiter between a parent venue and the specific feature inside
+# it: "Brooklyn Bridge Park — Pier 3 Central Lawn", "Riverside Park - Pier I",
+# "Grand Central Terminal | Vanderbilt Hall". Requires whitespace on both sides
+# so a hyphenated venue name ("Bed-Stuy Restoration Plaza") is never split.
+_PARENT_FEATURE_DELIMITER = re.compile(r'\s+[\u2014\u2013|:-]\s+')
+
+
+def _parent_qualified_feature_key(location_name_raw, locations_map):
+    """Split "<known parent> <delim> <feature>" into (parent_key, feature_key).
+
+    Returns None when the string is not that shape. A source that writes the
+    parent venue's name in front of the feature it is actually naming makes
+    EVERY search key we build carry the parent along, so the only exact hit
+    available is the parent's own name and the event lands on the whole
+    park/campus instead of the pier/lawn/room it is on.
+
+    Deliberately strict, because a bare feature name ("Pier 6", "The Glade",
+    "Studio A") is exactly the string that must never pick a venue on its own:
+    an explicit delimiter is required, and the LEADING half must EXACTLY name a
+    location in the `names` tier — that is what proves it is a parent qualifier
+    rather than an address tail or half of one venue's name. The caller applies
+    two more gates on top; see `_child_of_parent` and the call site.
+    """
+    if not location_name_raw:
+        return None
+    parts = _PARENT_FEATURE_DELIMITER.split(location_name_raw, 1)
+    if len(parts) != 2:
+        return None
+    parent_key = _normalize_location_name(parts[0])
+    if not parent_key or parent_key not in locations_map.get('names', {}):
+        return None
+    feature_key = _normalize_location_name(parts[1])
+    if len(feature_key) <= 3 or feature_key == parent_key:
+        return None
+    return parent_key, feature_key
+
+
+def _child_of_parent(candidate, parent_key):
+    """True if `candidate` is named or addressed as sitting INSIDE `parent_key`.
+
+    The containment gate on the parent-qualified split. Without it the trailing
+    half is merely "the other half", which is not the same thing as "the more
+    specific half" — measured 2026-09-02 over the whole crawl_events corpus, an
+    ungated split produced three mis-pins in 51 changes, every one of them a
+    trailing half that named something BROADER or generic rather than a feature:
+
+        "The Paris Theater - Screen 1"          -> Upstate Films, Rhinebeck
+        "The Perfect Pint — Midtown East"       -> EVEN Hotel Midtown East
+        "St. Paul's Chapel – Columbia University" -> Columbia Maison Francaise
+
+    A real child carries its parent in its own name or street address
+    ("Pier 3 at Brooklyn Bridge Park", "Harbor View Lawn (Brooklyn Bridge
+    Park)", "Painting Lounge (Chelsea)" -> "painting lounge"), and none of the
+    three above do.
+    """
+    for field in ('name', 'address'):
+        text = _normalize_location_name(candidate.get(field) or '')
+        if text and parent_key in text:
+            return True
+    return False
+
 
 # Leftover tokens that don't distinguish one venue from another, so a mismatch
 # on them shouldn't block the fuzzy token-overlap tripwire: corporate/legal
@@ -5111,6 +5273,41 @@ def sublocation_redundant_with_address(sublocation, location_address):
     return False
 
 
+# Length floors for keys admitted to the map's exact tiers. The two must be
+# read together with `short_exact_keys` in `get_location_id`, which is the ONLY
+# thing that can look a short key up.
+#
+# RAW keys (the name/alias exactly as curated) keep the historical floor of 3:
+# a 1-2 character literal venue name carries no identifying information.
+#
+# NORMALIZED keys have no floor, because normalization is what MAKES them
+# short, and dropping them means a venue is unreachable BY ITS OWN NAME.
+# `_normalize_location_name` strips a trailing area qualifier, so the location
+# "OS NYC" (#2986) normalizes to the 2-character "os" — and `get_location_id`
+# also normalizes the incoming "OS NYC" to "os", so "os" is the only key the
+# two sides can ever meet on. The raw "os nyc" key sitting in the map is
+# unreachable: every search key is built from a NORMALIZED string, never the
+# raw one. With the floor applied to both, the stored key was discarded and the
+# query key matched nothing — five events sat at location_id IS NULL and were
+# hand-fixed every run, silently.
+#
+# This is the other half of the 2026-08-27 `short_exact_keys` fix, which taught
+# the QUERY side to build 1-3 character keys but left the MAP side still
+# refusing to index them. It closed the 3-character cases (d.b.a., Q.E.D., NYU
+# Brooklyn, …) and missed the 1-2 character ones, whose comment's claim that
+# "build_locations_map indexes the key" was true only for length 3.
+#
+# Safe because a short key is reachable ONLY by full-string identity: Step 2 is
+# an exact-tier lookup; Step 4 (prefix) requires `len(key) >= 5` on the query
+# side and a `key + ' '`/`key + '('` prefix on the stored side, which a 1-2
+# character stored key can never satisfy; and Step 5 (fuzzy) gates every
+# substring arm on `len(...) > 3`, leaving `key == normalized_loc` as the only
+# arm a short key can trip. Every Step 1/2 guard (area conflict, region
+# conflict, brand-family, bare-room, single-venue initialism) still applies.
+_MIN_RAW_KEY_LEN = 3
+_MIN_NORMALIZED_KEY_LEN = 1
+
+
 def build_locations_map(cursor):
     """Query locations table and build tiered maps for lat/lng enrichment.
 
@@ -5143,13 +5340,24 @@ def build_locations_map(cursor):
         # from its name, its global alternate names and its short_name. Powers
         # _area_qualifier_conflict; see the note there.
         'area_classes': {},
+        # Keys shorter than _MIN_RAW_KEY_LEN, indexed ONLY because normalization
+        # collapsed a longer name onto them ("OS NYC" -> "os"). Before 2026-09-02
+        # they were not in the map at all, so the prefix (Step 4) and fuzzy
+        # (Step 5) tiers have never seen a key this short from the TIER side and
+        # must not start now: both scan every key in a tier, so widening the
+        # index silently widens THEM too, in the one direction the 2026-08-27
+        # query-side fix deliberately left alone. Those two steps skip this set,
+        # which makes their behavior provably identical to before the widening
+        # and confines the change to the exact tiers — where a hit is a
+        # full-string identity, not a guess.
+        'short_index_keys': set(),
     }
 
     locations_data = db.get_all_locations(cursor)
 
-    def add_with_duplicates(tier, key, full_info):
+    def add_with_duplicates(tier, key, full_info, min_len=_MIN_RAW_KEY_LEN):
         """Add to tier, tracking multiple locations with same name."""
-        if not key or len(key) < 3:
+        if not key or len(key) < min_len:
             return
         if key not in tier:
             tier[key] = full_info
@@ -5162,6 +5370,12 @@ def build_locations_map(cursor):
 
     weak_keys = locations_map['weak_keys']
     strong_keys = set()
+    short_index_keys = locations_map['short_index_keys']
+
+    def note_if_short(key):
+        """Record a key too short to have been indexed before the widening."""
+        if key and len(key) < _MIN_RAW_KEY_LEN:
+            short_index_keys.add(key)
 
     for loc in locations_data:
         # Full info for location matching
@@ -5183,7 +5397,9 @@ def build_locations_map(cursor):
         add_with_duplicates(locations_map['names'], main_name.lower(), full_info)
         strong_keys.add(main_name.lower())
         if normalized_main != main_name.lower():
-            add_with_duplicates(locations_map['names'], normalized_main, full_info)
+            add_with_duplicates(locations_map['names'], normalized_main, full_info,
+                                min_len=_MIN_NORMALIZED_KEY_LEN)
+            note_if_short(normalized_main)
             if _collapse_is_significant(main_name, normalized_main):
                 weak_keys.add(normalized_main)
 
@@ -5201,26 +5417,28 @@ def build_locations_map(cursor):
 
         # Global alternate names (no website_id) - use full_info to include id
         for alt_name in loc.get('alternate_names', []):
-            if alt_name and len(alt_name) >= 3:
+            if alt_name and len(alt_name) >= _MIN_RAW_KEY_LEN:
                 locations_map['alternate_names'][alt_name.lower()] = full_info
                 strong_keys.add(alt_name.lower())
                 normalized_alt, alt_area = _normalize_location_name_parts(alt_name)
                 if _area_qualifier_class(alt_area):
                     area_classes.add(_area_qualifier_class(alt_area))
-                if normalized_alt and len(normalized_alt) >= 3:
+                if normalized_alt and len(normalized_alt) >= _MIN_NORMALIZED_KEY_LEN:
                     locations_map['alternate_names'][normalized_alt] = full_info
+                    note_if_short(normalized_alt)
                     if _collapse_is_significant(alt_name, normalized_alt):
                         weak_keys.add(normalized_alt)
 
         short_name = loc.get('short_name', '')
-        if short_name and len(short_name) >= 3:
+        if short_name and len(short_name) >= _MIN_RAW_KEY_LEN:
             locations_map['short_names'][short_name.lower()] = full_info
             weak_keys.add(short_name.lower())
             normalized_short, short_area = _normalize_location_name_parts(short_name)
             if _area_qualifier_class(short_area):
                 area_classes.add(_area_qualifier_class(short_area))
-            if normalized_short and len(normalized_short) >= 3:
+            if normalized_short and len(normalized_short) >= _MIN_NORMALIZED_KEY_LEN:
                 locations_map['short_names'][normalized_short] = full_info
+                note_if_short(normalized_short)
                 weak_keys.add(normalized_short)
 
         # Website-scoped alternate names
@@ -5228,11 +5446,12 @@ def build_locations_map(cursor):
             if website_id not in locations_map['website_scoped']:
                 locations_map['website_scoped'][website_id] = {}
             for alt_name in scoped_names:
-                if alt_name and len(alt_name) >= 3:
+                if alt_name and len(alt_name) >= _MIN_RAW_KEY_LEN:
                     locations_map['website_scoped'][website_id][alt_name.lower()] = full_info
                     normalized_alt = _normalize_location_name(alt_name)
-                    if normalized_alt and len(normalized_alt) >= 3:
+                    if normalized_alt and len(normalized_alt) >= _MIN_NORMALIZED_KEY_LEN:
                         locations_map['website_scoped'][website_id][normalized_alt] = full_info
+                        note_if_short(normalized_alt)
 
         # Index by street address (e.g., "347 davis ave" from "347 Davis Ave, Staten Island, NY").
         # Use full_info so an address match actually resolves a location_id (not
@@ -5453,7 +5672,10 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
     # well, it made every venue whose normalized name is that short unreachable
     # BY ITS OWN NAME: `_normalize_location_name('OS NYC')` strips the area
     # qualifier and yields 'os', so no search key was built at all and Steps 1-2
-    # never ran, even though `build_locations_map` indexes the key. Blast radius
+    # never ran. (`build_locations_map` only indexes such a key for length 3 and
+    # up until 2026-09-02 — see `_MIN_NORMALIZED_KEY_LEN`, which is the other
+    # half of this fix; without it 'os' is built here and still matches
+    # nothing.) Blast radius
     # when found (2026-08-27): 7 locations (OS NYC, d.b.a., Q.E.D., NYU Brooklyn,
     # BKK New York, DSK Brooklyn, KRU Brooklyn) plus 46 curated alternate names
     # dead the same way ('A.I.R.', 'P.I.T.', 'FIT NYC', 'JCC Manhattan', …) —
@@ -5536,6 +5758,11 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
         """Get first item if list, otherwise return as-is."""
         return match[0] if isinstance(match, list) else match
 
+    # Keys the index only carries because normalization collapsed a longer name
+    # onto them. Admitted to the EXACT tiers (Steps 1-2) and to nothing else —
+    # see `short_index_keys` in build_locations_map.
+    short_index_keys = locations_map.get('short_index_keys', frozenset())
+
     # Step 1: Website-scoped alternate names (highest priority, most specific).
     # Uses primary_search_keys, not heuristic variants — user-curated mappings
     # should win, and a per-website override deserves the original input.
@@ -5554,6 +5781,40 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
                 if _area_qualifier_conflict(raw_geo_fields, website_tier[key], area_classes):
                     continue
                 return make_result(website_tier[key])
+
+        # Step 1b: the FEATURE half of a "<Parent venue> — <specific feature>"
+        # string. Measured 2026-09-02: the more specific the source got, the
+        # worse the resolver did — "Brooklyn Bridge Park — Pier 3 Central Lawn"
+        # resolved to the whole 85-acre park (loc 140) while an earlier crawl of
+        # the same page, emitting the bare "Pier 3", resolved correctly to Pier
+        # 3 at Brooklyn Bridge Park. The qualifier was present and being thrown
+        # away, and Step 3.5 (single-venue website authority, w162 is linked to
+        # the park) answered with the parent before prefix/fuzzy saw anything.
+        #
+        # Three gates, because a bare feature key is the string that must never
+        # pick a venue on its own:
+        #   * `_parent_qualified_feature_key` requires an explicit delimiter and
+        #     a leading half that EXACTLY names a location;
+        #   * the lookup is confined to the website-scoped tier, which is
+        #     hand-curated per website — w162 curates "pier 3 central lawn",
+        #     "pier 2 turf", "greenway terrace" precisely for this site. The
+        #     global tiers never see the key: a bare feature name pulling an
+        #     event onto an unrelated venue that happens to share it is the
+        #     sibling-hijack risk documented on `composite_keys` below; and
+        #   * `_child_of_parent` requires the answer to actually sit inside the
+        #     parent, which is what makes the trailing half "more specific"
+        #     rather than merely "the other half".
+        #
+        # Runs AFTER the loop above, so every key the source itself supplied
+        # still wins; this can only ever convert a non-Step-1 result into a
+        # Step 1 one.
+        split = _parent_qualified_feature_key(location_name_raw, locations_map)
+        if split and split[1] in website_tier:
+            parent_key, feature_key = split
+            cand = get_first(website_tier[feature_key])
+            if (_child_of_parent(cand, parent_key)
+                    and not _area_qualifier_conflict(raw_geo_fields, cand, area_classes)):
+                return make_result(cand)
 
     # Step 2: Exact matches in global tiers (names, alternate_names, short_names).
     # The 'names' tier is the location's own primary name (high confidence — a
@@ -5750,6 +6011,9 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
             # via several keys counts once.
             coverage_hits = {}
             for loc_key, match in locations_map.get(tier_name, {}).items():
+                # See `short_index_keys`: never reachable from the tier side.
+                if loc_key in short_index_keys:
+                    continue
                 is_paren = loc_key.startswith(key + '(')
                 is_coverage = (
                     loc_key.startswith(key + ' ')
@@ -5821,6 +6085,9 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
         for priority, tier in all_tiers:
             for key in tier:
                 if not key.strip():
+                    continue
+                # See `short_index_keys`: never reachable from the tier side.
+                if key in short_index_keys:
                     continue
                 # A curated bare ROOM phrase names a room, not a venue. Unlike
                 # the brand-family refusal (deliberately confined to the exact
@@ -6445,7 +6712,8 @@ def process_events(cursor, connection, crawl_result_id, website_name, run_date_s
         # campaigns, submission-call contests, info-booth listings. Drop before
         # they ever become a crawl_event; log so the rejection is auditable.
         if is_obvious_non_event(row_dict.get('name', ''),
-                                row_dict.get('description', '')):
+                                row_dict.get('description', ''),
+                                row_dict.get('location', '')):
             log_rejection(
                 cursor, crawl_result_id, website_id,
                 rejection_type='non_event_junk', stage='extract',
