@@ -80,6 +80,15 @@ cur.execute("""
 # to carry the specific spot, so they can never be a fix. Flipping a park/corridor
 # row to `generic_location = 1` is therefore the durable way to retire it from this
 # scan — before this filter existed they kept reappearing every run.
+#
+# EXCEPT for SAPO street-segment (block party) rows — do NOT flip those.
+# `scripts/tag_block_party_locations.py` deliberately sets `generic_location = 0`
+# on all ~1,065 of them, so that they stop registering as unmapped placeholders in
+# `scripts/find_unmapped_events.py`. Flipping one back to 1 to quiet THIS scan
+# re-breaks THAT one. Retire a block row by adding it to the standing benign table
+# in `.claude/scheduled-tasks.md` instead. (Contradiction found 2026-09-03; the two
+# tools want opposite values of the same flag, and the block-party tooling wins
+# because it owns those rows.)
 
 by_loc = defaultdict(list)
 for r in cur.fetchall():
@@ -111,6 +120,10 @@ Walk the list top-down. For each location:
 1. **`generic_location = 1` rows never reach you** — Step 1 filters them in SQL. If a
    park/corridor/neighborhood row keeps surfacing, the fix is to flip its
    `generic_location` flag, not to re-triage it every run.
+   **Never flip a SAPO street-segment (block party) row**, though — the block-party
+   tooling deliberately holds those at `generic_location = 0` so they don't read as
+   unmapped placeholders elsewhere. Retire those via the standing benign table in
+   `.claude/scheduled-tasks.md`. See the note in the Step 1 query above.
 2. **Skip if the venue is known to span multiple addresses or sites** (Gagosian, Kadampa Meditation Center, P.P.O.W Gallery, Manhattan Community Boards that meet at rotating venues, etc.).
 3. **Skip if the DB and sublocation are the same building from different streets** (corner addresses). You can usually tell by checking that the lat/lng matches both addresses.
 4. **Otherwise it's a candidate fix** — most likely the DB has a stale or wrong address. Several events from different sources agreeing on the same alternate address is a strong signal.

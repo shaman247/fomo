@@ -82,7 +82,8 @@ SKIP_LOCATION_NAMES = {
     'xfinity mobile arena', 'nyc marathon', 'tcs new york city marathon',
     # generic sublocation labels (room/area within mapped venue)
     'the rooftop', 'full venue', 'poolside', 'main hall', 'main room',
-    'play area', 'playground', 'multi-use room', 'parking lot',
+    'play area', 'playground', 'playground area', 'open area',
+    'multi-purpose play area', 'multi-use room', 'parking lot',
     'tennis courts', 'basketball courts', 'turf field', 'athletic field',
     'main pool', 'our tent',
     'concert hall', 'screen 1', 'community board office - conference room',
@@ -98,7 +99,7 @@ SKIP_LOCATION_NAMES = {
     'east side, new york, ny', 'west side, new york, ny',
     # bare avenue/street names — the mapped venue is the market/plaza ON that
     # street, so the "mismatch" is just the street name minus the venue name.
-    '4th avenue', 'atlantic avenue', 'broad street',
+    '4th avenue', 'atlantic avenue', 'broad street', 'lenox avenue',
     # room/area descriptors, tabling spots, and one-off series names that sit
     # inside the mapped venue
     'cafe area', 'deadass', 'manhattan venue',
@@ -148,6 +149,12 @@ SKIP_LOCATION_NAMES = {
     # chain branch with no branch identifier — BPL runs this series at several
     # stores, so the string must be re-resolved from the page each time
     'starbucks',
+    # "we haven't picked/published the room yet" labels. Each event is already
+    # pinned to the host org's own venue (or its neighborhood), which is the best
+    # mapping that will ever exist for them.
+    'no location specified', 'event location coming soon',
+    # multi-venue series run by one operator out of one studio
+    'manhattan and brooklyn venues',
 }
 
 # Websites whose feed emits the HOST/PARTNER ORG as `location_name` for every
@@ -166,7 +173,12 @@ SKIP_MISMATCH_WEBSITES = {
 # Street-intersection patterns: outdoor markets / waste drop-offs / flea markets
 # whose location_name names the street but whose mapping to a specific venue is
 # correct.
-SKIP_LOCATION_NAME_SUBSTRINGS = (' between ', ' btwn ')
+SKIP_LOCATION_NAME_SUBSTRINGS = (
+    ' between ', ' btwn ',
+    # "<neighborhood> location provided upon RSVP" / "address provided upon
+    # registration" — the org withholds the room; the host venue is the pin.
+    'location provided upon', 'provided upon rsvp',
+)
 
 # Prefixes for "location withheld until later" labels. Resident Advisor in
 # particular emits a long tail of unique strings ('TBA - Secret Bedstuy Loft',

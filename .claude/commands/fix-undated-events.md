@@ -38,6 +38,16 @@ This shows websites with undated events, ordered by count.
 > rows (184 → 149) and manufactured two entirely phantom "problem" sites (w4867
 > Edgemere Farm, w425 Brooklyn CB16) that had already been fixed by earlier js_code.
 
+> **Synthetic source rows are a false positive.** Some monthly backfill scripts
+> (`scripts/split_lectures_on_tap_*.py`, `scripts/morgan_to_pipeline.py`) write the
+> `events` / `event_occurrences` rows directly and then create a synthetic
+> `crawl_results` + one `crawl_event` per event purely as an `event_sources` anchor,
+> so archival can fire later. Those crawl_events deliberately have **no**
+> `crawl_event_occurrences` and show up here as a large "problem" site (w731 Lectures
+> on Tap, 22 rows, on 2026-09-03). Tell them apart by `raw_data IS NULL` — a real
+> extraction always fills it — or by checking whether the crawl_event already has an
+> `event_sources` row pointing at a live, dated event. Skip them.
+
 ## Step 2: Investigate Per Website
 
 For each website with undated events, examine what was extracted:
