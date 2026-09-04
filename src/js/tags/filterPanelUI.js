@@ -75,21 +75,13 @@ const FilterPanelUI = (() => {
     }
 
     /**
-     * Determines if the current window is mobile-sized
-     * @returns {boolean} True if window width is at or below mobile breakpoint
-     */
-    function isMobileLayout() {
-        return Utils.isMobileLayout();
-    }
-
-    /**
      * Gets the default section order based on device type
      * Desktop: locations, events, tags
      * Mobile: tags, events, locations
      * @returns {Array<string>} Section order array
      */
     function getDefaultSectionOrder() {
-        return isMobileLayout()
+        return Utils.isMobileLayout()
             ? ['tags', 'events', 'locations', 'organizers']
             : ['locations', 'events', 'tags', 'organizers'];
     }
@@ -347,13 +339,13 @@ const FilterPanelUI = (() => {
 
         // Selected chips first
         for (const [tagName] of selectedTagsWithColors) {
-            const btn = _createChipButton(tagName, true);
+            const btn = _buildChip(tagName, true);
             container.appendChild(btn);
         }
 
         // Unselected chips
         for (const { tag } of unselectedToRender) {
-            const btn = _createChipButton(tag, false);
+            const btn = _buildChip(tag, false);
             container.appendChild(btn);
         }
 
@@ -380,7 +372,7 @@ const FilterPanelUI = (() => {
 
         // Toggling the chip bar's visibility can change the top bar's height —
         // keep the sheet's content offset below it in sync (desktop only).
-        if (!isMobileLayout() && typeof Sheet !== 'undefined') {
+        if (!Utils.isMobileLayout() && typeof Sheet !== 'undefined') {
             Sheet.measureTopOffset();
         }
 
@@ -452,13 +444,6 @@ const FilterPanelUI = (() => {
 
         Utils.appendChipContent(btn, state.tagEmojiMap[tagName], tagName);
         return btn;
-    }
-
-    /**
-     * Creates a chip bar button element
-     */
-    function _createChipButton(tagName, isActive) {
-        return _buildChip(tagName, isActive);
     }
 
     /**
@@ -893,7 +878,7 @@ const FilterPanelUI = (() => {
         _initChipBarWheelScroll();
 
         // Initialize GestureHandler (desktop only — conflicts with horizontal tag scroll on mobile)
-        if (!isMobileLayout()) {
+        if (!Utils.isMobileLayout()) {
             GestureHandler.init({
                 containerDOM: state.resultsContainerDOM,
                 sectionOrder: state.sectionOrder,

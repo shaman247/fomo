@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-"""List scheduled tasks that are due, from .claude/scheduled-tasks.md.
+"""List scheduled tasks that are due, from .claude/scheduled-tasks.md and
+.claude/recurring-checks.md.
 
 The daily /run-pipeline command runs this at Step 0 to find date-triggered
 maintenance tasks (recrawls, annual gate bumps, deferred-site tests, etc.) that
 should be performed today. Detection is deterministic here rather than relying
 on the model eyeballing dates.
 
-Task file format (.claude/scheduled-tasks.md) — one task per `## ` heading:
+Task file format (both files) — one task per `## ` heading:
 
     ## <title>
     - Due: YYYY-MM-DD
@@ -31,10 +32,16 @@ import os
 import re
 import sys
 
-DEFAULT_PATH = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-    ".claude", "scheduled-tasks.md",
+_CLAUDE_DIR = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".claude",
 )
+# Externally gated one-offs live in scheduled-tasks.md; cadence-driven checks in
+# recurring-checks.md. backlog.md (undated engineering work) and decisions.md
+# (settled rulings) are deliberately NOT read here.
+DEFAULT_PATHS = [
+    os.path.join(_CLAUDE_DIR, "scheduled-tasks.md"),
+    os.path.join(_CLAUDE_DIR, "recurring-checks.md"),
+]
 
 FIELD_RE = re.compile(r"^-\s*(Due|Status|Recur)\s*:\s*(.+?)\s*$", re.IGNORECASE)
 # Trailing inline comment in a field value, e.g. "pending   # pending | done".
@@ -97,18 +104,29 @@ def parse_due(val):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--path", default=DEFAULT_PATH)
+    ap.add_argument("--path", action="append", dest="paths",
+                    help="task file to read (repeatable; default: both queue files)")
     ap.add_argument("--all", action="store_true", help="show every task, not just due")
     ap.add_argument("--json", action="store_true", help="machine-readable output")
     args = ap.parse_args()
 
-    if not os.path.exists(args.path):
-        print(f"No scheduled-tasks file at {args.path}", file=sys.stderr)
-        return 1
+    paths = args.paths or DEFAULT_PATHS
+    missing = [p for p in paths if not os.path.exists(p)]
+    if missing:
+        for p in missing:
+            print(f"No task file at {p}", file=sys.stderr)
+        if len(missing) == len(paths):
+            return 1
 
     today = dt.date.today()
-    with open(args.path) as f:
-        tasks = parse_tasks(f.read())
+    tasks = []
+    for p in paths:
+        if p in missing:
+            continue
+        with open(p) as f:
+            for t in parse_tasks(f.read()):
+                t["file"] = os.path.basename(p)
+                tasks.append(t)
 
     rows = []
     for t in tasks:
@@ -117,6 +135,7 @@ def main():
         is_due = status == "pending" and due is not None and due <= today
         rows.append({
             "title": t["title"],
+            "file": t["file"],
             "due": t["due"],
             "status": status,
             "recur": t["recur"],
@@ -140,7 +159,7 @@ def main():
             print(f"{label} (as of {today.isoformat()}): {len(selected)}")
             for r in selected:
                 flag = "DUE" if r["is_due"] else r["status"].upper()
-                print(f"  [{r['due']}] {flag:8} {r['title']}")
+                print(f"  [{r['due']}] {flag:8} {r['title']}  ({r['file']})")
 
     any_due = any(r["is_due"] for r in rows)
     return 0 if any_due else 1

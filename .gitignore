@@ -26,6 +26,7 @@
 pipeline/sources/*.py
 pipeline/sources/*.json
 !pipeline/sources/__init__.py
+!pipeline/sources/_http.py
 !pipeline/sources/*.example.py
 
 # Tests whose subject is itself gitignored — one per area under

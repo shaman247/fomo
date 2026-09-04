@@ -654,6 +654,34 @@ class TestAreNamesSimilar(unittest.TestCase):
                     f"Expected {name1!r} vs {name2!r} to match"
                 )
 
+    def test_stem_only_lone_word_does_not_match_a_long_title(self):
+        """A lone word that matches only after stemming must not swallow a
+        3+ word title.
+
+        Regression 2026-09-04: "It Ends" -> {end} led "The End of Oak Street"
+        and the merger fused two films sharing an Alamo Drafthouse screen week,
+        writing both showtime grids onto one event. Plural/inflection twins of
+        a title's FIRST word are coincidence when the title is long; the
+        two-word leniency ("Tournaments" <- "Tournament Play") stays.
+        """
+        blocked = [
+            ("It Ends", "The End of Oak Street"),
+            ("Groups", "Group Field Trips"),
+            ("Op Ed Fridays", "Friday Night Movie"),
+            ("Baby & Me", "Baby's First Valentine's Day"),
+        ]
+        for name1, name2 in blocked:
+            with self.subTest(name1=name1, name2=name2):
+                self.assertFalse(are_names_similar(name1, name2))
+                self.assertFalse(are_names_similar(name2, name1))
+        kept = [
+            ("Tournaments", "Tournament Play"),
+            ("Legos", "Lego Club"),
+        ]
+        for name1, name2 in kept:
+            with self.subTest(name1=name1, name2=name2):
+                self.assertTrue(are_names_similar(name1, name2))
+
     def test_single_word_rule_is_symmetric(self):
         """Argument order must not change the verdict.
 
@@ -1203,31 +1231,6 @@ class TestNormalizeUrlForIdentity(unittest.TestCase):
         self.assertNotEqual(
             merger.normalize_url_for_identity("https://x.com/event/jazz-night/2026-08-23/"),
             merger.normalize_url_for_identity("https://x.com/event/blues-night/2026-08-23/"))
-
-    def test_luma_short_host_folds_into_the_canonical_one(self):
-        """`lu.ma/<slug>` 301s to `luma.com/<slug>` — one page, two strings.
-
-        The Luma calendar injector emits `lu.ma` while embeds and cross-listing
-        sites emit `luma.com`, so 3 of the 10 Luma slug collisions measured on
-        2026-08-17 were invisible to this tier (e.g. Fabrik DUMBO's
-        `luma.com/84fec4e2` vs Unmuted's `lu.ma/84fec4e2`)."""
-        canonical = merger.normalize_url_for_identity("https://luma.com/84fec4e2")
-        self.assertEqual(canonical, "luma.com/84fec4e2")
-        for variant in ("https://lu.ma/84fec4e2",
-                        "http://lu.ma/84fec4e2/",
-                        "https://www.lu.ma/84fec4e2",
-                        "https://LU.MA/84fec4e2#tickets"):
-            with self.subTest(variant=variant):
-                self.assertEqual(merger.normalize_url_for_identity(variant), canonical)
-
-    def test_luma_api_host_is_not_folded(self):
-        """api.lu.ma is the JSON endpoint, a different resource from the page."""
-        self.assertEqual(
-            merger.normalize_url_for_identity("https://api.lu.ma/url?url=pubkey-jj3u"),
-            "api.lu.ma/url?url=pubkey-jj3u")
-        self.assertNotEqual(
-            merger.normalize_url_for_identity("https://api.lu.ma/url?url=pubkey-jj3u"),
-            merger.normalize_url_for_identity("https://luma.com/url?url=pubkey-jj3u"))
 
     def test_lookalike_hosts_are_not_folded(self):
         for url in ("https://notlu.ma/84fec4e2", "https://lu.market/84fec4e2"):

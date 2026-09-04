@@ -7,6 +7,7 @@ Handles all database connections and CRUD operations for:
 - Crawl events (raw extracted data)
 """
 
+import contextlib
 import hashlib
 import json
 import os
@@ -21,6 +22,7 @@ except ImportError:
     print("Install it with: pip install mysql-connector-python")
     sys.exit(1)
 
+from occurrence_times import standardize_time
 from constants import (MAX_PAGES_DEFAULT, FUTURE_WINDOW_DAYS,
                        FINGERPRINT_MAX_REUSE_DAYS, FINGERPRINT_COPY_MARKER,
                        CRAWL_EVENT_PASS_WINDOW_SECONDS)
@@ -75,6 +77,25 @@ def create_connection():
     except Error as e:
         print(f"Error connecting to database: {e}")
         return None
+
+
+@contextlib.contextmanager
+def cursor_scope(buffered=True):
+    """Open a connection and cursor for one block, closing both on exit.
+
+    Yields ``(cursor, conn)``. Raises ConnectionError when the database is
+    unreachable (``create_connection`` returned None) so a caller fails with a
+    clear message rather than an AttributeError on ``None.cursor``.
+    """
+    conn = create_connection()
+    if conn is None:
+        raise ConnectionError("Could not connect to the database")
+    cursor = conn.cursor(buffered=buffered)
+    try:
+        yield cursor, conn
+    finally:
+        cursor.close()
+        conn.close()
 
 
 def _parse_url_data(url_string):
@@ -504,23 +525,105 @@ def copy_crawl_events(cursor, connection, src_crawl_result_id, dst_crawl_result_
         """, tuple(id_map.keys()))
         occs = cursor.fetchall()
 
+        rows_by_target = {}
         for occ in occs:
             if isinstance(occ, dict):
                 src_event_id = occ['crawl_event_id']
-                values = (id_map[src_event_id], occ['start_date'], occ['start_time'],
-                          occ['end_date'], occ['end_time'], occ['sort_order'])
+                row = (occ['start_date'], occ['start_time'], occ['end_date'],
+                       occ['end_time'], occ['sort_order'])
             else:
                 src_event_id, start_date, start_time, end_date, end_time, sort_order = occ
-                values = (id_map[src_event_id], start_date, start_time, end_date, end_time, sort_order)
-
-            cursor.execute("""
-                INSERT INTO crawl_event_occurrences
-                    (crawl_event_id, start_date, start_time, end_date, end_time, sort_order)
-                VALUES (%s, %s, %s, %s, %s, %s)
-            """, values)
+                row = (start_date, start_time, end_date, end_time, sort_order)
+            rows_by_target.setdefault(id_map[src_event_id], []).append(row)
+        for target_id, rows in rows_by_target.items():
+            insert_crawl_event_occurrences(cursor, target_id, rows)
 
     connection.commit()
     return len(src_events)
+
+
+# ---------------------------------------------------------------------------
+# Occurrence writes. These are THE write boundary for the two occurrence tables:
+# both time columns are canonicalized here (occurrence_times.standardize_time),
+# so a stored time is always a fixed point and readers never re-normalize.
+# ---------------------------------------------------------------------------
+
+def _occurrence_rows(rows):
+    """Normalize caller rows to (start_date, start_time, end_date, end_time, sort_order).
+
+    Accepts 4-tuples (sort_order assigned by position) or 5-tuples."""
+    out = []
+    for i, row in enumerate(rows):
+        start_date, start_time, end_date, end_time = row[:4]
+        sort_order = row[4] if len(row) > 4 else i
+        out.append((start_date, standardize_time(start_time),
+                    end_date or None, standardize_time(end_time), sort_order))
+    return out
+
+
+def insert_crawl_event_occurrences(cursor, crawl_event_id, rows):
+    """Insert occurrence rows for one crawl_event, canonicalizing times.
+
+    Rows are written one at a time so a single malformed row (a date MySQL
+    rejects, say) is reported and skipped rather than failing the batch.
+    Returns the number of rows written.
+    """
+    written = 0
+    for start_date, start_time, end_date, end_time, sort_order in _occurrence_rows(rows):
+        try:
+            cursor.execute(
+                """INSERT INTO crawl_event_occurrences
+                   (crawl_event_id, start_date, start_time, end_date, end_time, sort_order)
+                   VALUES (%s, %s, %s, %s, %s, %s)""",
+                (crawl_event_id, start_date, start_time, end_date, end_time, sort_order),
+            )
+            written += 1
+        except Exception as e:
+            print(f"    - Warning: failed to insert occurrence "
+                  f"{(start_date, start_time, end_date, end_time)!r} "
+                  f"for crawl_event {crawl_event_id}: {e}")
+    return written
+
+
+def insert_event_occurrences(cursor, event_id, rows, ignore=False):
+    """Insert occurrence rows for one event, canonicalizing times.
+
+    `ignore=True` uses INSERT IGNORE (the table has no unique index, so this
+    only swallows constraint errors — it does NOT dedupe; callers own that).
+    """
+    verb = "INSERT IGNORE" if ignore else "INSERT"
+    for start_date, start_time, end_date, end_time, sort_order in _occurrence_rows(rows):
+        cursor.execute(
+            f"{verb} INTO event_occurrences "
+            "(event_id, start_date, start_time, end_date, end_time, sort_order) "
+            "VALUES (%s, %s, %s, %s, %s, %s)",
+            (event_id, start_date, start_time, end_date, end_time, sort_order),
+        )
+
+
+def promote_event_occurrence_end_time(cursor, event_id, start_date, start_time,
+                                      end_date, end_time):
+    """Fill in end_time on the rows of one (start_date, start_time, end_date)
+    key that have none. Times are canonicalized; `end_date=None` addresses the
+    single-day rows."""
+    start_time = standardize_time(start_time)
+    end_time = standardize_time(end_time)
+    if end_date is None:
+        cursor.execute(
+            "UPDATE event_occurrences SET end_time = %s "
+            "WHERE event_id = %s AND start_date = %s "
+            "AND COALESCE(start_time, '') = %s "
+            "AND end_date IS NULL AND COALESCE(end_time, '') = ''",
+            (end_time, event_id, start_date, start_time),
+        )
+    else:
+        cursor.execute(
+            "UPDATE event_occurrences SET end_time = %s "
+            "WHERE event_id = %s AND start_date = %s "
+            "AND COALESCE(start_time, '') = %s "
+            "AND end_date = %s AND COALESCE(end_time, '') = ''",
+            (end_time, event_id, start_date, start_time, end_date),
+        )
 
 
 def set_batch_job_name(cursor, connection, crawl_result_ids, batch_job_name):
@@ -989,6 +1092,23 @@ def drop_archival_temps(cursor):
     cursor.execute("DROP TEMPORARY TABLE IF EXISTS _ws_no_absence_evidence")
 
 
+def _archive_event_ids(cursor, ids):
+    """Flip archived=TRUE for the given event ids; returns the rows changed.
+
+    Chunks the IN-list to stay under max_allowed_packet on large candidate sets.
+    """
+    archived_count = 0
+    for start in range(0, len(ids), 1000):
+        chunk = ids[start:start + 1000]
+        placeholders = ','.join(['%s'] * len(chunk))
+        cursor.execute(
+            f"UPDATE events SET archived = TRUE WHERE id IN ({placeholders})",
+            chunk
+        )
+        archived_count += cursor.rowcount
+    return archived_count
+
+
 def archive_outdated_events(cursor, connection, website_id, temps_built=False):
     """
     Archive events that are no longer found in recent crawls from ANY of their source websites.
@@ -1235,18 +1355,7 @@ def archive_outdated_events(cursor, connection, website_id, temps_built=False):
     # advisory write_lock during archival (CLAUDE.md forbids concurrent
     # pipelines), so no concurrent writer can flip an event into or out of the
     # archive-qualifying set underneath us.
-    ids = [r[0] for r in events_to_archive]
-    archived_count = 0
-    if ids:
-        # Chunk the IN-list to stay under max_allowed_packet on large candidate sets.
-        for start in range(0, len(ids), 1000):
-            chunk = ids[start:start + 1000]
-            placeholders = ','.join(['%s'] * len(chunk))
-            cursor.execute(
-                f"UPDATE events SET archived = TRUE WHERE id IN ({placeholders})",
-                chunk
-            )
-            archived_count += cursor.rowcount
+    archived_count = _archive_event_ids(cursor, [r[0] for r in events_to_archive])
 
     connection.commit()
 
@@ -1335,16 +1444,7 @@ def archive_dead_source_events(cursor, connection, temps_built=False):
     upcoming_events = [(event_id, name, next_occ)
                        for event_id, name, next_occ in events_to_archive if next_occ]
 
-    ids = [row[0] for row in events_to_archive]
-    archived_count = 0
-    for start in range(0, len(ids), 1000):
-        chunk = ids[start:start + 1000]
-        placeholders = ','.join(['%s'] * len(chunk))
-        cursor.execute(
-            f"UPDATE events SET archived = TRUE WHERE id IN ({placeholders})",
-            chunk
-        )
-        archived_count += cursor.rowcount
+    archived_count = _archive_event_ids(cursor, [row[0] for row in events_to_archive])
 
     connection.commit()
 
@@ -1537,39 +1637,26 @@ def get_detail_crawl_candidates(cursor, website_ids=None):
     # Query includes location_name so we can filter generic names in Python.
     # has_occurrences flag lets us detect events whose listing page provided
     # no date — those need a detail crawl too, not just events missing a description.
+    query = """
+        SELECT ce.id, ce.name, ce.url, cr.website_id, ce.location_name, ce.description,
+               EXISTS(SELECT 1 FROM crawl_event_occurrences ceo WHERE ceo.crawl_event_id = ce.id) AS has_occurrences
+        FROM crawl_events ce
+        JOIN crawl_results cr ON ce.crawl_result_id = cr.id
+        JOIN websites w ON cr.website_id = w.id
+        LEFT JOIN event_sources es ON ce.id = es.crawl_event_id
+        WHERE ce.url IS NOT NULL AND ce.url != ''
+        AND es.id IS NULL
+        AND w.skip_reenrichment = 0
+        AND ce.detail_crawl_attempts < 2
+        AND cr.crawled_at >= DATE_SUB(NOW(), INTERVAL 14 DAY)
+        AND ce.created_at >= cr.crawled_at
+    """
+    params = []
     if website_ids:
         placeholders = ','.join(['%s'] * len(website_ids))
-        query = f"""
-            SELECT ce.id, ce.name, ce.url, cr.website_id, ce.location_name, ce.description,
-                   EXISTS(SELECT 1 FROM crawl_event_occurrences ceo WHERE ceo.crawl_event_id = ce.id) AS has_occurrences
-            FROM crawl_events ce
-            JOIN crawl_results cr ON ce.crawl_result_id = cr.id
-            JOIN websites w ON cr.website_id = w.id
-            LEFT JOIN event_sources es ON ce.id = es.crawl_event_id
-            WHERE ce.url IS NOT NULL AND ce.url != ''
-            AND es.id IS NULL
-            AND w.skip_reenrichment = 0
-            AND ce.detail_crawl_attempts < 2
-            AND cr.crawled_at >= DATE_SUB(NOW(), INTERVAL 14 DAY)
-            AND ce.created_at >= cr.crawled_at
-            AND cr.website_id IN ({placeholders})
-        """
-        cursor.execute(query, list(website_ids))
-    else:
-        cursor.execute("""
-            SELECT ce.id, ce.name, ce.url, cr.website_id, ce.location_name, ce.description,
-                   EXISTS(SELECT 1 FROM crawl_event_occurrences ceo WHERE ceo.crawl_event_id = ce.id) AS has_occurrences
-            FROM crawl_events ce
-            JOIN crawl_results cr ON ce.crawl_result_id = cr.id
-            JOIN websites w ON cr.website_id = w.id
-            LEFT JOIN event_sources es ON ce.id = es.crawl_event_id
-            WHERE ce.url IS NOT NULL AND ce.url != ''
-            AND es.id IS NULL
-            AND w.skip_reenrichment = 0
-            AND ce.detail_crawl_attempts < 2
-            AND cr.crawled_at >= DATE_SUB(NOW(), INTERVAL 14 DAY)
-            AND ce.created_at >= cr.crawled_at
-        """)
+        query += f" AND cr.website_id IN ({placeholders})"
+        params = list(website_ids)
+    cursor.execute(query, params)
     rows = cursor.fetchall()
 
     # Filter to events that actually need detail crawling

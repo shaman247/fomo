@@ -55,6 +55,19 @@ class SiteProfile:
     image_fetch_headers: dict = field(default_factory=dict)  # extra HTTP headers downloading images
     image_host_substrs: tuple = ()      # full-URL substrings selecting image_fetch_headers
 
+    # --- platform-wide URL hooks (processor.py / merger.py) ---
+    # Unlike the fields above, these are NOT gated by `matches()`: every hook
+    # sees every URL and must return it unchanged / answer False when the URL
+    # is not this platform's. They exist because a platform can serve one page
+    # under several spellings, or list events from an endpoint that a record
+    # can end up pointing back at.
+    canonicalize_url: Optional[Callable[[str], str]] = None       # fold alias hosts to one spelling
+    absolutize_relative: Optional[Callable[[str, str], Optional[str]]] = None  # (rel, source_url) -> abs or None
+    is_listing_url: Optional[Callable[[str, str], bool]] = None    # (url, source_url): url IS the listing crawled
+    # --- crawl payload check (crawler.py): (content, website_name) -> fired? ---
+    # Called on every stored crawl body; must be silent on other platforms' content.
+    check_crawl_payload: Optional[Callable[[str, str], bool]] = None
+
     def matches(self, url) -> bool:
         if not url:
             return False
@@ -233,3 +246,45 @@ def image_headers_for(image_url) -> dict:
         if p.image_fetch_headers and any(s in image_url for s in p.image_host_substrs):
             return dict(p.image_fetch_headers)
     return {}
+
+
+# --- platform-wide URL hooks (processor.py / merger.py / crawler.py) ---
+
+def canonicalize_url(url):
+    """Fold platform alias hosts to their canonical spelling (lu.ma -> luma.com).
+
+    Applied by every plugin that declares a canonicalizer, in registry order;
+    non-matching URLs pass through unchanged, so this is safe on any URL.
+    """
+    for p in PROFILES:
+        if p.canonicalize_url:
+            url = p.canonicalize_url(url)
+    return url
+
+
+def absolutize_relative(url, source_url):
+    """A plugin's own resolution of a relative URL against its listing page, or
+    None to fall back to urljoin (e.g. bare event slugs that are site-global)."""
+    for p in PROFILES:
+        if p.absolutize_relative:
+            resolved = p.absolutize_relative(url, source_url)
+            if resolved:
+                return resolved
+    return None
+
+
+def is_listing_url(url, source_url):
+    """True when `url` addresses the very listing endpoint `source_url` was
+    crawled from — the shape a listing's own metadata takes when it is
+    misread as an event and falls back to the source URL."""
+    return any(p.is_listing_url and p.is_listing_url(url, source_url) for p in PROFILES)
+
+
+def check_crawl_payload(content, website_name):
+    """Give every plugin a look at a stored crawl body (to warn about a capped
+    or truncated feed, say). Returns True if any plugin fired."""
+    fired = False
+    for p in PROFILES:
+        if p.check_crawl_payload and p.check_crawl_payload(content, website_name):
+            fired = True
+    return fired

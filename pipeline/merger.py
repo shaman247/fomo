@@ -6,11 +6,11 @@ Archives outdated events that are no longer found in recent crawls.
 Logs all changes to the edits table for sync tracking.
 """
 
+import functools
 import re
 import sys
 import time
 import unicodedata
-from collections import Counter
 from datetime import date as date_type, datetime, timedelta
 from math import ceil, cos, radians
 from pathlib import Path
@@ -18,7 +18,11 @@ from pathlib import Path
 import mysql.connector
 
 import db
+import site_profiles
 from constants import get_active_date_window
+
+
+from occurrence_times import standardize_time as _standardize_time
 
 # Maximum retries for deadlock errors
 DEADLOCK_MAX_RETRIES = 3
@@ -100,8 +104,13 @@ def _strip_format_parentheticals(name):
     return re.sub(r'\(([^()]*)\)|\[([^\[\]]*)\]', repl, name)
 
 
+@functools.lru_cache(maxsize=131072)
 def normalize_name_for_dedup(name):
-    """Remove accents, punctuation, underscores, and whitespace; convert to lowercase."""
+    """Remove accents, punctuation, underscores, and whitespace; convert to lowercase.
+
+    Cached: the merge loop re-normalizes every candidate's stored name for
+    every crawl_event it compares against (thousands of times per name).
+    """
     name = _strip_format_parentheticals(name)
     # Normalize unicode to remove accents (é -> e, etc.)
     nfkd = unicodedata.normalize('NFKD', name)
@@ -434,6 +443,20 @@ def _subset_match(words1, words2, name1, name2, stem=False):
     longer = name2 if len(words1) < len(words2) else name1
     leading = _ordered_significant_words(longer)
     if stem:
+        # A lone word that only matches after STEMMING ("It Ends" -> {end},
+        # "Groups" -> {group}, "Op Ed Fridays" -> {friday}) is a plural or
+        # inflection coinciding with the first word of a longer title, not a
+        # bare headliner picking up its listing. Against a 3+ word title that
+        # is always coincidence: "It Ends" fused with "The End of Oak Street"
+        # (two films sharing an Alamo screen week), "Groups" with "Group Field
+        # Trips", "Op Ed Fridays" with "Friday Night Movie". Two-word titles
+        # keep the stemmed leniency ("Tournaments" <- "Tournament Play",
+        # "Legos" <- "Lego Club"). Measured over all 35,075 distinct
+        # (event, crawl_event) name pairs 2026-09-04: 8 pairs flip, 6 wrong
+        # merges blocked, 2 correct lost ("Mathemagics!", "Crafternoons")
+        # which degrade to duplicates /dedupe-events catches.
+        if len(leading) >= 3:
+            return False
         leading = [stem_word(w) for w in leading]
     return bool(leading) and leading[0] == lone
 
@@ -453,13 +476,6 @@ def _subset_match(words1, words2, name1, name2, stem=False):
 # fuse distinct events behind one path.
 _URL_TRACKING_PARAM_RE = re.compile(
     r'^(?:utm_[a-z_]+|fbclid|gclid|msclkid|mc_cid|mc_eid|_ga|igshid)$', re.I
-)
-
-# Host aliases that serve the SAME page under two names, applied after the
-# scheme and a leading `www.` are stripped. `api.lu.ma` is a different service
-# (JSON endpoint) and must not be folded, hence the `(?=[/?]|$)` anchor.
-_HOST_ALIASES = (
-    (re.compile(r'^lu\.ma(?=[/?]|$)', re.I), 'luma.com'),
 )
 
 # Guards on the URL-identity tier, all three calibrated against the live corpus
@@ -517,21 +533,18 @@ def normalize_url_for_identity(url):
     Riverside Park, Downtown Brooklyn Partnership and Prospect Park). The rest
     are archived rows that were already the same event.
 
-    Host aliases that address the SAME page are folded to one spelling
-    (`_HOST_ALIASES`) — `lu.ma` 301s to `luma.com`, but the two strings made 3
-    of 10 Luma slug collisions invisible to this tier on 2026-08-17.
-    `processor.absolutize_url` now canonicalizes at ingest; this keeps the tier
-    correct for the rows written before that and for any path that bypasses it.
+    Platform alias hosts that address the SAME page are folded to one spelling
+    (`site_profiles.canonicalize_url`) — `lu.ma` 301s to `luma.com`, but the two
+    strings made 3 of 10 Luma slug collisions invisible to this tier on
+    2026-08-17. `processor.absolutize_url` now canonicalizes at ingest; this
+    keeps the tier correct for the rows written before that and for any path
+    that bypasses it.
     """
     if not url:
         return ''
-    cleaned = url.strip().split('#')[0]
+    cleaned = site_profiles.canonicalize_url(url.strip()).split('#')[0]
     cleaned = re.sub(r'^https?://', '', cleaned, flags=re.I)
     cleaned = re.sub(r'^www\.', '', cleaned, flags=re.I)
-    for alias_re, canonical in _HOST_ALIASES:
-        cleaned, count = alias_re.subn(canonical, cleaned, count=1)
-        if count:
-            break
     if '?' in cleaned:
         base, query = cleaned.split('?', 1)
         kept = sorted(
@@ -900,6 +913,138 @@ def _trailing_date_token(name):
     return '%02d%02d' % (month, day)
 
 
+# ---------------------------------------------------------------------------
+# is_false_positive: an OR over three families of discriminators. Every rule
+# answers "these two similar-looking names are DIFFERENT events"; none can veto
+# another, so the families and rows are order-independent.
+#
+#  * VALUE discriminators extract a comparable value from each normalized name
+#    and fire when BOTH names carry one and they differ ("Set 1" vs "Set 2").
+#  * FLAG discriminators fire when exactly ONE name carries the marker
+#    ("Women's" vs not, "Fan Event" vs the regular run).
+#  * PAIR predicates are the bespoke rules that need both names at once.
+# ---------------------------------------------------------------------------
+
+def _regex_value(pattern, flags=0, group=0):
+    """Extractor: the matched text (or capture `group`) of `pattern`, else None."""
+    rx = re.compile(pattern, flags)
+
+    def extract(norm):
+        m = rx.search(norm)
+        return m.group(group) if m else None
+    return extract
+
+
+def _numbered_value(keyword):
+    """Extractor for "<keyword> N" where N may be spelled out ("Session Two").
+
+    Libraries and studios write "Session One" / "Session Two" (BPL's "First
+    Five Years: Story and Play", w4) while sports write "Rounds 1 & 2";
+    digits-only left those siblings merging on the shared series name.
+    """
+    rx = re.compile(rf'\b{keyword}s?\.?\s*(\d+|{"|".join(_SPELLED_NUMBERS)})\b', re.IGNORECASE)
+
+    def extract(norm):
+        m = rx.search(norm)
+        if not m:
+            return None
+        return _SPELLED_NUMBERS.get(m.group(1).lower(), m.group(1))
+    return extract
+
+
+def _clock_times(norm):
+    """Every clock time in the name, canonicalized so "8pm" == "8:00pm".
+
+    Bare hours matter: comedy clubs list the same show name at several
+    showtimes ("Friday: Primetime Comedy 8pm / 10pm / 12am"), which are
+    distinct ticketed events. Returns None when the name carries no time.
+    """
+    return frozenset(
+        f'{int(h)}:{mn or "00"}{ap.lower()}'
+        for h, mn, ap in re.findall(r'\b(\d{1,2})(?:\s*(\d{2}))?\s*(am|pm)\b', norm, re.IGNORECASE)
+    ) or None
+
+
+def _times_with_minutes(norm):
+    """Minute-bearing times anywhere in the name ("9 00 pm" after normalization)."""
+    return frozenset(re.findall(r'\b(\d{1,2}\s*\d{2}\s*(?:am|pm))\b', norm, re.IGNORECASE)) or None
+
+
+def _sequence_numbers(norm):
+    """Standalone numbers between pipe/dash separators ("| 1 |" vs "| 2 |")."""
+    return re.findall(r'(?:^|\|)\s*#?\s*(\d+)\s*(?:\||$)', norm) or None
+
+
+def _opponents_differ(a, b):
+    """Sports opponents ("vs X"): different unless one is a prefix/suffix of the other."""
+    return a != b and a not in b and b not in a
+
+
+def _ne(a, b):
+    return a != b
+
+
+_VALUE_DISCRIMINATORS = (
+    # After normalization "6:00 PM" is "600 pm": different showtimes at the end.
+    (_regex_value(r'\d{3,4}\s*(?:am|pm)$', re.IGNORECASE), _ne),
+    (_regex_value(r'night\s*(\d+)', group=1), _ne),
+    (_regex_value(r'ep(?:isode)?\.?\s*(\d+)', re.IGNORECASE, group=1), _ne),
+    *((_numbered_value(kw), _ne)
+      for kw in ('set', 'part', 'vol', 'volume', 'chapter', 'session', 'round')),
+    (_sequence_numbers, _ne),
+    (lambda n: (lambda m: m.group(1).strip() if m else None)(
+        re.search(r'vs\.?\s+(.+?)(?:\s*-|$)', n, re.IGNORECASE)), _opponents_differ),
+    (_times_with_minutes, _ne),
+    (_clock_times, _ne),
+)
+
+# Word boundaries so "documentary" does not match "men". The optional trailing
+# s is required because normalization DELETES apostrophes, so "Men's" arrives
+# as the single token "mens"; "womens" cannot satisfy \bmens?\b.
+_FLAG_DISCRIMINATORS = (
+    re.compile(r'\bmens?\b').search,
+    re.compile(r'\bwomens?\b').search,
+    lambda n: 'early' in n,   # Early vs Late sets
+    lambda n: 'late' in n,
+    # A fan event / fan first screening vs the film's regular run — a distinct,
+    # separately ticketed showing on its own date (see _FAN_SHOWING_RE).
+    _FAN_SHOWING_RE.search,
+    # A private booking vs the public class it names (see _PRIVATE_BOOKING_RE).
+    # Two private parties named the same way are left to the other rules.
+    # Regression 2026-08-17 (w1190).
+    _PRIVATE_BOOKING_RE.search,
+)
+
+
+def _trailing_dates_differ(name1, name2, norm1, norm2):
+    """Two listings that differ only by a trailing date suffix are different
+    nights of one series, never the same event. Fires only when BOTH names carry
+    a suffix: a bare series name ("Joonbug Dusk") against a dated listing
+    ("Joonbug Dusk 08/02") is the ordinary fuller-title shape and still merges —
+    the merger requires an overlapping date there anyway, so a bare name can
+    only absorb the night it actually shares dates with, while two dated
+    siblings by construction name two different nights."""
+    date1 = _trailing_date_token(name1)
+    date2 = _trailing_date_token(name2)
+    return bool(date1 and date2 and date1 != date2)
+
+
+_PAIR_DISCRIMINATORS = (
+    _trailing_dates_differ,
+    # Bare/umbrella name vs a distinct "Head: Subtitle" sibling (both orderings,
+    # since the bare name may be either argument).
+    lambda n1, n2, _a, _b: (_bare_name_vs_distinct_subtitle(n1, n2)
+                            or _bare_name_vs_distinct_subtitle(n2, n1)),
+    # Umbrella name vs an enumerated "N of M" series member (the colon-less
+    # cousin of the bare/subtitle case): "Schmigadoon" vs "Schmigadoon!
+    # Producer's Picks [3 of 4]". Regression 2026-06-24.
+    lambda _1, _2, norm1, norm2: _series_enumeration_mismatch(norm1, norm2),
+    # Sibling class listings that differ only by skill level. Regression
+    # 2026-08-17 (NYPL/BPL "We Speak NYC" English conversation classes).
+    lambda _1, _2, norm1, norm2: _level_variant_mismatch(norm1, norm2),
+)
+
+
 def is_false_positive(name1, name2):
     """
     Check if two "similar" names are actually different events.
@@ -915,144 +1060,24 @@ def is_false_positive(name1, name2):
     - A cinema "Fan Event" / "Fan First Screening" vs the film's regular run
     - Different sports opponents
     - A bare/umbrella name vs a more specific "Head: Subtitle" sibling
+
+    The rules live in the three discriminator tables above.
     """
     norm1 = normalize_name_for_dedup(name1)
     norm2 = normalize_name_for_dedup(name2)
 
-    # Two listings that differ only by a trailing date suffix are different
-    # nights of one series, never the same event. Fires only when BOTH names
-    # carry a suffix: a bare series name ("Joonbug Dusk") against a dated
-    # listing ("Joonbug Dusk 08/02") is the ordinary fuller-title shape and
-    # still merges — the merger requires an overlapping date there anyway, so a
-    # bare name can only absorb the night it actually shares dates with, while
-    # two dated siblings by construction name two different nights.
-    date1 = _trailing_date_token(name1)
-    date2 = _trailing_date_token(name2)
-    if date1 and date2 and date1 != date2:
-        return True
-
-    # Different gendered sports events (Men's vs Women's)
-    # Use word boundaries to avoid false matches on substrings (e.g., "documentary" contains "men").
-    # The optional trailing s is required because normalization now DELETES apostrophes, so
-    # "Men's" arrives here as the single token "mens" rather than "men s" — without it this
-    # guard silently stopped firing and "NYU Men's Basketball" matched "NYU Women's Basketball".
-    # "womens" cannot satisfy \bmens?\b: the char before "mens" inside it is a word char.
-    has_men1 = bool(re.search(r'\bmens?\b', norm1))
-    has_men2 = bool(re.search(r'\bmens?\b', norm2))
-    has_women1 = bool(re.search(r'\bwomens?\b', norm1))
-    has_women2 = bool(re.search(r'\bwomens?\b', norm2))
-    if has_men1 != has_men2 or has_women1 != has_women2:
-        return True
-
-    # Different times at end (different showtimes)
-    # After normalization, "6:00 PM" becomes "600 pm"
-    time_pattern = r'\d{3,4}\s*(?:am|pm)$'
-    time1 = re.search(time_pattern, norm1, re.IGNORECASE)
-    time2 = re.search(time_pattern, norm2, re.IGNORECASE)
-    if time1 and time2 and time1.group() != time2.group():
-        return True
-
-    # Early vs Late sets
-    if ("early" in norm1) != ("early" in norm2) or ("late" in norm1) != ("late" in norm2):
-        return True
-
-    # A fan event / fan first screening vs the film's regular run — a distinct,
-    # separately ticketed showing on its own date (see _FAN_SHOWING_RE).
-    if bool(_FAN_SHOWING_RE.search(norm1)) != bool(_FAN_SHOWING_RE.search(norm2)):
-        return True
-
-    # Different numbered nights/sessions
-    night_pattern = r'night\s*(\d+)'
-    night1 = re.search(night_pattern, norm1)
-    night2 = re.search(night_pattern, norm2)
-    if night1 and night2 and night1.group(1) != night2.group(1):
-        return True
-
-    # Different episodes (Ep. 1 vs Ep. 2, Episode 3 vs Episode 4, etc.)
-    ep_pattern = r'ep(?:isode)?\.?\s*(\d+)'
-    ep1 = re.search(ep_pattern, norm1, re.IGNORECASE)
-    ep2 = re.search(ep_pattern, norm2, re.IGNORECASE)
-    if ep1 and ep2 and ep1.group(1) != ep2.group(1):
-        return True
-
-    # Different set/part/volume numbers (Set 1 vs Set 2, Part 1 vs Part 2, Vol. 2 vs Vol. 3).
-    # Spelled-out ordinals count too and canonicalize to the digit, because
-    # libraries and studios write "Session One" / "Session Two" (BPL's "First
-    # Five Years: Story and Play", w4) while sports write "Rounds 1 & 2" —
-    # digits-only left those siblings merging on the shared series name.
-    for keyword in ['set', 'part', 'vol', 'volume', 'chapter', 'session', 'round']:
-        numbered_pattern = rf'\b{keyword}s?\.?\s*(\d+|{"|".join(_SPELLED_NUMBERS)})\b'
-        match1 = re.search(numbered_pattern, norm1, re.IGNORECASE)
-        match2 = re.search(numbered_pattern, norm2, re.IGNORECASE)
-        if match1 and match2:
-            num1 = _SPELLED_NUMBERS.get(match1.group(1).lower(), match1.group(1))
-            num2 = _SPELLED_NUMBERS.get(match2.group(1).lower(), match2.group(1))
-            if num1 != num2:
-                return True
-
-    # Different standalone sequence numbers after pipe/dash separators (e.g., "| Wednesday Set 2 | 10:30 pm")
-    # Catches "...| 1 |..." vs "...| 2 |..." style numbering
-    seq_pattern = r'(?:^|\|)\s*#?\s*(\d+)\s*(?:\||$)'
-    seq1 = re.findall(seq_pattern, norm1)
-    seq2 = re.findall(seq_pattern, norm2)
-    if seq1 and seq2 and seq1 != seq2:
-        return True
-
-    # Different sports opponents (vs X vs vs Y)
-    vs_pattern = r'vs\.?\s+(.+?)(?:\s*-|$)'
-    vs1 = re.search(vs_pattern, norm1, re.IGNORECASE)
-    vs2 = re.search(vs_pattern, norm2, re.IGNORECASE)
-    if vs1 and vs2:
-        opponent1 = vs1.group(1).strip()
-        opponent2 = vs2.group(1).strip()
-        # If opponents are very different, not a duplicate
-        if opponent1 != opponent2 and opponent1 not in opponent2 and opponent2 not in opponent1:
+    for extract, differs in _VALUE_DISCRIMINATORS:
+        a, b = extract(norm1), extract(norm2)
+        if a and b and differs(a, b):
             return True
 
-    # Different times anywhere in name (catches "9:00 PM" vs "10:30 PM" even when not at end)
-    # After normalization, "9:00 PM" becomes "9 00 pm" and "10:30 PM" becomes "10 30 pm"
-    time_anywhere_pattern = r'\b(\d{1,2}\s*\d{2}\s*(?:am|pm))\b'
-    times1 = set(re.findall(time_anywhere_pattern, norm1, re.IGNORECASE))
-    times2 = set(re.findall(time_anywhere_pattern, norm2, re.IGNORECASE))
-    if times1 and times2 and times1 != times2:
-        return True
+    for has in _FLAG_DISCRIMINATORS:
+        if bool(has(norm1)) != bool(has(norm2)):
+            return True
 
-    # Different clock times incl. bare hours ("8pm" vs "10pm" vs "12am") — the
-    # minute-bearing patterns above miss bare hours. Comedy clubs list the same show
-    # name at multiple showtimes ("Friday: Primetime Comedy 8pm / 10pm / 12am"), which
-    # are distinct ticketed events; without this they merge via stemmed-word containment.
-    # Canonicalize so "8pm" == "8:00pm" (same time, different format) is NOT flagged.
-    def _clock_times(norm):
-        return set(
-            f'{int(h)}:{mn or "00"}{ap.lower()}'
-            for h, mn, ap in re.findall(r'\b(\d{1,2})(?:\s*(\d{2}))?\s*(am|pm)\b', norm, re.IGNORECASE)
-        )
-    ct1, ct2 = _clock_times(norm1), _clock_times(norm2)
-    if ct1 and ct2 and ct1 != ct2:
-        return True
-
-    # Bare/umbrella name vs a distinct "Head: Subtitle" sibling (check both
-    # orderings since the bare name may be either argument).
-    if (_bare_name_vs_distinct_subtitle(name1, name2)
-            or _bare_name_vs_distinct_subtitle(name2, name1)):
-        return True
-
-    # Umbrella name vs an enumerated "N of M" series member (the colon-less
-    # cousin of the bare/subtitle case): "Schmigadoon" vs "Schmigadoon!
-    # Producer's Picks [3 of 4]". Regression 2026-06-24.
-    if _series_enumeration_mismatch(norm1, norm2):
-        return True
-
-    # Sibling class listings that differ only by skill level. Regression
-    # 2026-08-17 (NYPL/BPL "We Speak NYC" English conversation classes).
-    if _level_variant_mismatch(norm1, norm2):
-        return True
-
-    # A private booking vs the public class it names (see _PRIVATE_BOOKING_RE).
-    # Fires only when ONE side is marked private: two private parties named the
-    # same way are left to the other rules. Regression 2026-08-17 (w1190).
-    if bool(_PRIVATE_BOOKING_RE.search(norm1)) != bool(_PRIVATE_BOOKING_RE.search(norm2)):
-        return True
+    for differs in _PAIR_DISCRIMINATORS:
+        if differs(name1, name2, norm1, norm2):
+            return True
 
     return False
 
@@ -1758,7 +1783,7 @@ def _demote_other_primary_urls(cursor, event_id, keep_id=None):
     return len(stale)
 
 
-# A meridiem-less 1-11 o'clock ('6:50', '7', '7:00'). processor._standardize_time
+# A meridiem-less 1-11 o'clock ('6:50', '7', '7:00'). occurrence_times.standardize_time
 # deliberately leaves these alone — a bare '7:00' is as plausibly 7am as 7pm, and
 # guessing PM is the documented trap. But the same showtime routinely arrives twice
 # from one site, once bare and once qualified (Film Forum listed "Late Fame" at
@@ -1807,13 +1832,12 @@ def _merge_occurrences_into_event(cursor, event_id, new_occurrences):
     later sources from clobbering established occurrences when their extractor misreads
     a time (e.g. 12am → 12pm).
 
-    Incoming start_time/end_time strings are canonicalized through
-    processor._standardize_time at the DB-write boundary, so legacy data and any
-    path that bypasses pipeline normalization still lands in canonical form.
+    Incoming start_time/end_time strings are canonicalized (occurrence_times)
+    before the dedupe key is built, and again by the db write helpers, so the
+    key compares strings in a single normalized form.
 
     new_occurrences is an iterable of (start_date, start_time, end_date, end_time, ...).
     """
-    from processor import _standardize_time
     cursor.execute(
         "SELECT start_date, start_time, end_date, end_time, COALESCE(MAX(sort_order), -1) "
         "FROM event_occurrences WHERE event_id = %s "
@@ -1864,22 +1888,7 @@ def _merge_occurrences_into_event(cursor, event_id, new_occurrences):
                 # Existing already has an end_time, or incoming has nothing to add.
                 continue
             # Promote: existing rows for this key have empty end_time; fill them in.
-            if ed is None:
-                cursor.execute(
-                    "UPDATE event_occurrences SET end_time = %s "
-                    "WHERE event_id = %s AND start_date = %s "
-                    "AND COALESCE(start_time, '') = %s "
-                    "AND end_date IS NULL AND COALESCE(end_time, '') = ''",
-                    (new_et, event_id, sd, new_st),
-                )
-            else:
-                cursor.execute(
-                    "UPDATE event_occurrences SET end_time = %s "
-                    "WHERE event_id = %s AND start_date = %s "
-                    "AND COALESCE(start_time, '') = %s "
-                    "AND end_date = %s AND COALESCE(end_time, '') = ''",
-                    (new_et, event_id, sd, new_st, ed),
-                )
+            db.promote_event_occurrence_end_time(cursor, event_id, sd, new_st, ed, new_et)
             existing_by_key[key] = new_et
             continue
 
@@ -1923,11 +1932,7 @@ def _merge_occurrences_into_event(cursor, event_id, new_occurrences):
             existing_by_key.pop((sd, bare, ed), None)
             existing_starts.discard(bare)
 
-        cursor.execute(
-            "INSERT INTO event_occurrences (event_id, start_date, start_time, end_date, end_time, sort_order) "
-            "VALUES (%s, %s, %s, %s, %s, %s)",
-            (event_id, sd, new_st, ed, new_et, next_sort),
-        )
+        db.insert_event_occurrences(cursor, event_id, [(sd, new_st, ed, new_et, next_sort)])
         next_sort += 1
         existing_by_key[key] = new_et
         existing_starts.add(new_st)
@@ -2307,6 +2312,43 @@ def compute_voted_tags(cursor, event_id, current_crawl_tags, curated_tag_set,
     return final_tags
 
 
+def _index_existing_event(indexes, event_id, name, location_id, lat, lng,
+                          location_name, website_id):
+    """Register one event in the four dedup lookup indexes.
+
+    `indexes` is `(by_location_id, by_coords, by_location_name, by_website)`.
+    Used both for the initial load of existing events and for each event the
+    merge creates, so a crawl_event later in the same batch can match it.
+    """
+    by_location_id, by_coords, by_location, by_website = indexes
+    event_entry = {'id': event_id, 'name': name, 'website_id': website_id}
+
+    # location_id is the primary matching method.
+    if location_id is not None:
+        by_location_id.setdefault(location_id, []).append(event_entry)
+
+    # Coordinates, for legacy compatibility.
+    if lat is not None and lng is not None:
+        by_coords.setdefault(_coord_key(lat, lng), []).append(event_entry)
+
+    # Normalized location_name (fallback matching). Carry location_id so the
+    # fallback can reject candidates whose location_id conflicts with the
+    # crawl_event's (AMC theaters all share the brand "AMC Theatres" as a
+    # location_name but are distinct venues with distinct location_ids).
+    if location_name:
+        loc_key = normalize_name_for_dedup(location_name)
+        if loc_key and len(loc_key) >= 3:
+            by_location.setdefault(loc_key, []).append(
+                {**event_entry, 'location_id': location_id})
+
+    # website_id (last-resort fallback for location mismatches). Carry
+    # location_name so the fallback can avoid merging events at clearly
+    # different specific venues.
+    if website_id is not None:
+        by_website.setdefault(website_id, []).append(
+            {**event_entry, 'location_name': location_name})
+
+
 def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
     """
     Merge new crawl_events into the final events table with deduplication.
@@ -2455,40 +2497,14 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
     existing_events_by_location_id = {}  # key: location_id -> list of {id, name}
     existing_events_by_location = {}  # key: normalized location_name -> list of {id, name}
     existing_events_by_website = {}  # key: website_id -> list of {id, name}
+    dedup_indexes = (existing_events_by_location_id, existing_events_by_coords,
+                     existing_events_by_location, existing_events_by_website)
     event_ids_with_future = set()
     for row in cursor.fetchall():
         event_id, name, location_id, lat, lng, location_name, website_id = row
         event_ids_with_future.add(event_id)
-        event_entry = {'id': event_id, 'name': name, 'website_id': website_id}
-
-        # Index by location_id if available (primary matching method)
-        if location_id is not None:
-            existing_events_by_location_id.setdefault(location_id, []).append(event_entry)
-
-        # Index by coordinates if available (for legacy compatibility)
-        if lat is not None and lng is not None:
-            key = _coord_key(lat, lng)
-            existing_events_by_coords.setdefault(key, []).append(event_entry)
-
-        # Also index by normalized location_name (for fallback matching).
-        # Track location_id on the entry so the fallback can reject candidates
-        # whose location_id conflicts with the crawl_event's location_id (e.g.
-        # AMC theaters all share the brand "AMC Theatres" as a location_name
-        # but are distinct venues with distinct location_ids).
-        if location_name:
-            loc_key = normalize_name_for_dedup(location_name)
-            if loc_key and len(loc_key) >= 3:
-                existing_events_by_location.setdefault(loc_key, []).append(
-                    {**event_entry, 'location_id': location_id}
-                )
-
-        # Index by website_id (last-resort fallback for location mismatches).
-        # Track location_name on the entry so the fallback can avoid merging events
-        # at clearly different specific venues.
-        if website_id is not None:
-            existing_events_by_website.setdefault(website_id, []).append(
-                {**event_entry, 'location_name': location_name}
-            )
+        _index_existing_event(
+            dedup_indexes, event_id, name, location_id, lat, lng, location_name, website_id)
 
     print(f"  Loaded {len(event_ids_with_future)} existing events with future occurrences")
 
@@ -2497,7 +2513,6 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
     event_date_ranges = {eid: [] for eid in event_ids_with_future}
     event_slots = {eid: set() for eid in event_ids_with_future}  # {eid: {(date_str, std_time)}}
     if event_ids_with_future:
-        from processor import _standardize_time
         # Use a placeholder approach for large IN clauses
         placeholders = ','.join(['%s'] * len(event_ids_with_future))
         cursor.execute(f"""
@@ -2510,7 +2525,7 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
             event_id, start_date, start_time, end_date = row
             if start_date:
                 event_dates[event_id].add(str(start_date))
-                event_slots[event_id].add((str(start_date), _standardize_time(start_time)))
+                event_slots[event_id].add((str(start_date), start_time or ''))
             if start_date and end_date:
                 event_date_ranges[event_id].append((start_date, end_date))
 
@@ -2575,15 +2590,33 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                 crawl_result_rosters.setdefault(result_id, []).append(
                     (sibling_id, sibling_name))
 
+    # ── Occurrences and tags for every pending crawl_event, prefetched in
+    # chunked IN(...) queries instead of two round trips per crawl_event.
+    pending_ce_ids = [row[0] for row in new_crawl_events]
+    occurrences_by_ce = {}
+    tags_by_ce = {}
+    for i in range(0, len(pending_ce_ids), 1000):
+        chunk = pending_ce_ids[i:i + 1000]
+        placeholders = ','.join(['%s'] * len(chunk))
+        cursor.execute(f"""
+            SELECT crawl_event_id, start_date, start_time, end_date, end_time, sort_order
+            FROM crawl_event_occurrences
+            WHERE crawl_event_id IN ({placeholders})
+            ORDER BY crawl_event_id, start_date, sort_order
+        """, tuple(chunk))
+        for row in cursor.fetchall():
+            occurrences_by_ce.setdefault(row[0], []).append(row[1:])
+        cursor.execute(
+            f"SELECT crawl_event_id, tag FROM crawl_event_tags "
+            f"WHERE crawl_event_id IN ({placeholders}) ORDER BY crawl_event_id, id",
+            tuple(chunk))
+        for ce_id_, tag in cursor.fetchall():
+            tags_by_ce.setdefault(ce_id_, []).append(tag)
+
     # ── Match crawl events to existing events or create new ones ──
     new_events_count = 0
     merged_count = 0
     source_url_lookup_cache = {}  # website_id -> set of trimmed listing URLs
-
-    # Imported here, not at module scope, to keep `merger` importable without
-    # pulling in crawl4ai (processor -> crawler) — same reason as
-    # `_standardize_time` below.
-    from processor import canonicalize_luma_host
 
     for ce_row in new_crawl_events:
         (ce_id, name, short_name, description, emoji, location_name, sublocation,
@@ -2595,19 +2628,12 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
         # a second row for a page the event already links to (and demote the
         # canonical one off sort_order 0). New crawls are canonicalized by
         # `processor.absolutize_url`; this covers crawl_events written before it.
-        url = canonicalize_luma_host(url)
+        url = site_profiles.canonicalize_url(url)
 
         if not name:
             continue
 
-        # Get occurrences for this crawl event
-        cursor.execute("""
-            SELECT start_date, start_time, end_date, end_time, sort_order
-            FROM crawl_event_occurrences
-            WHERE crawl_event_id = %s
-            ORDER BY start_date, sort_order
-        """, (ce_id,))
-        occurrences = cursor.fetchall()
+        occurrences = occurrences_by_ce.get(ce_id, [])
 
         # Filter occurrences by date range
         valid_occurrences = []
@@ -2632,8 +2658,7 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
         # Build set of occurrence dates and date ranges for this crawl event
         crawl_event_dates = set(str(occ[0]) for occ in valid_occurrences if occ[0])
         crawl_event_ranges = [(occ[0], occ[2]) for occ in valid_occurrences if occ[0] and occ[2]]
-        from processor import _standardize_time as _std_time
-        crawl_event_slots = {(str(occ[0]), _std_time(occ[1])) for occ in valid_occurrences if occ[0]}
+        crawl_event_slots = {(str(occ[0]), occ[1] or '') for occ in valid_occurrences if occ[0]}
         strict_match = website_id in strict_name_match_ids
         # Inputs to `_sibling_listing_veto` (see its block comment).
         ce_url_key = normalize_url_for_identity(url) if url else ''
@@ -2647,9 +2672,7 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                 merge_event_url_keys,
             )
 
-        # Get tags for this crawl event
-        cursor.execute("SELECT tag FROM crawl_event_tags WHERE crawl_event_id = %s", (ce_id,))
-        tags = [row[0] for row in cursor.fetchall()]
+        tags = tags_by_ce.get(ce_id, [])
 
         # Check for duplicate in existing events (same location + overlapping dates + similar name)
         matched_event_id = None
@@ -3105,13 +3128,11 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                     'website_id': website_id
                 })
 
-            # Add occurrences — canonicalize times at the boundary.
-            from processor import _standardize_time
-            for i, occ in enumerate(valid_occurrences):
-                cursor.execute("""
-                    INSERT IGNORE INTO event_occurrences (event_id, start_date, start_time, end_date, end_time, sort_order)
-                    VALUES (%s, %s, %s, %s, %s, %s)
-                """, (new_event_id, occ[0], _standardize_time(occ[1]), occ[2], _standardize_time(occ[3]), i))
+            # Add occurrences (times canonicalized by the write helper).
+            db.insert_event_occurrences(
+                cursor, new_event_id,
+                [(occ[0], occ[1], occ[2], occ[3], i) for i, occ in enumerate(valid_occurrences)],
+                ignore=True)
 
             # Add URL
             if url:
@@ -3130,33 +3151,13 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
             )
 
             # Add to lookup indexes for future dedup within this batch
-            event_entry = {'id': new_event_id, 'name': name}
             event_dates[new_event_id] = crawl_event_dates
             event_date_ranges[new_event_id] = crawl_event_ranges
             event_slots[new_event_id] = crawl_event_slots
-
-            if location_id is not None:
-                existing_events_by_location_id.setdefault(location_id, []).append(event_entry)
-
-            if lat is not None and lng is not None:
-                key = _coord_key(lat, lng)
-                existing_events_by_coords.setdefault(key, []).append(event_entry)
-
-            if location_name:
-                loc_key = normalize_name_for_dedup(location_name)
-                if loc_key and len(loc_key) >= 3:
-                    # Carry location_id so find_best_match's require_location_id_match
-                    # check rejects cross-venue brand-name matches (e.g. "AMC Theatres"
-                    # spans every AMC theater).
-                    existing_events_by_location.setdefault(loc_key, []).append(
-                        {**event_entry, 'location_id': location_id}
-                    )
+            _index_existing_event(
+                dedup_indexes, new_event_id, name, location_id, lat, lng, location_name, website_id)
 
             if website_id is not None:
-                existing_events_by_website.setdefault(website_id, []).append(
-                    {**event_entry, 'location_name': location_name}
-                )
-
                 # Keep the URL index current too: within a single merge the
                 # listing crawl_event and the detail crawl_event of the SAME
                 # event arrive back to back, so without this the pair that the

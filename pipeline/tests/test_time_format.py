@@ -12,7 +12,7 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from processor import _standardize_time
+from occurrence_times import standardize_time as _standardize_time
 from extractor import EventOccurrence, SimpleOccurrence
 
 

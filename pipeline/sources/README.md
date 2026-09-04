@@ -38,6 +38,14 @@ PROFILE = SiteProfile(
 - `image_fetch_headers` + `image_host_substrs` — extra HTTP headers when downloading images whose URL contains one of the substrings.
 - `label` — log label (defaults to `name`).
 
+Platform-wide hooks — unlike the fields above these are **not** gated by `host_re`; every hook
+sees every URL/payload and must pass through anything that isn't its platform:
+
+- `canonicalize_url(url) -> url` — fold alias hosts to one spelling (`lu.ma` -> `luma.com`). Applied at ingest and by the merger's URL-identity tier.
+- `absolutize_relative(rel, source_url) -> abs | None` — resolve a relative ref the platform's own way (bare site-global slugs); `None` falls back to `urljoin`.
+- `is_listing_url(url, source_url) -> bool` — `url` IS the listing endpoint `source_url` was crawled from; a URL-less record whose effective URL is the listing gets rejected as listing metadata.
+- `check_crawl_payload(content, website_name) -> bool` — inspect every stored crawl body (warn about a capped feed); return whether it fired.
+
 ## Examples
 
 - `standard_site.example.py` — data-only behaviors (inject_js / notes / headers / skip).

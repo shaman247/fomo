@@ -161,24 +161,6 @@ const DataCache = (() => {
         }
     }
 
-    /**
-     * Read several cached file records in one transaction.
-     * @param {string[]} urls
-     * @returns {Promise<Map<string, Object>>} url → record (missing urls omitted)
-     */
-    async function getMany(urls) {
-        const result = new Map();
-        if (broken || !db) return result;
-        try {
-            const store = db.transaction(FILES_STORE).objectStore(FILES_STORE);
-            const records = await Promise.all(urls.map(u => _req(store.get(u))));
-            records.forEach((rec, i) => { if (rec) result.set(urls[i], rec); });
-        } catch (error) {
-            _markBroken(error);
-            result.clear();
-        }
-        return result;
-    }
 
     /**
      * Which of the given urls exist in the files store. Uses getKey() so the
@@ -279,7 +261,6 @@ const DataCache = (() => {
         isUsable,
         getMeta,
         get,
-        getMany,
         hasKeys,
         put,
         putMany,

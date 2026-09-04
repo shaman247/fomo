@@ -43,6 +43,8 @@ def get_config() -> dict:
 def reset_cache():
     """Clear the cached config (test/verification hook, or after changing FOMO_CITY)."""
     get_config.cache_clear()
+    for accessor in (state_suffixes, city_area_tokens, borough_tokens):
+        accessor.cache_clear()
 
 
 # --- Convenience accessors. Each has a safe default so a partial config
@@ -92,6 +94,11 @@ def _lower_list(items) -> list:
     return [s.lower() for s in (items or [])]
 
 
+# The three processor token lists below are cached: `_normalize_location_name_parts`
+# reads all of them on every call (~85k calls per run). The returned lists are
+# shared, so callers must not mutate them.
+
+
 def generic_location_names() -> list:
     return _lower_list(get_config().get("generic_location_names"))
 
@@ -110,20 +117,37 @@ def _processor() -> dict:
     return get_config().get("processor") or {}
 
 
+@functools.lru_cache(maxsize=1)
 def state_suffixes() -> list:
     return _lower_list(_processor().get("state_suffixes"))
 
 
+@functools.lru_cache(maxsize=1)
 def city_area_tokens() -> list:
     return _lower_list(_processor().get("city_area_tokens"))
 
 
+@functools.lru_cache(maxsize=1)
 def borough_tokens() -> list:
     return _lower_list(_processor().get("borough_tokens"))
 
 
 def region_tag_token() -> str:
     return _processor().get("region_tag_token", "")
+
+
+def _address() -> dict:
+    return _processor().get("address") or {}
+
+
+def address_extra_street_types() -> list:
+    """City-specific street NAMES that act as a street type ("broadway")."""
+    return _lower_list(_address().get("extra_street_types"))
+
+
+def address_standalone_street_names() -> list:
+    """Street names that stand alone with no preceding name word ("350 Bowery")."""
+    return _lower_list(_address().get("standalone_street_names"))
 
 
 def non_region_place_patterns() -> list:

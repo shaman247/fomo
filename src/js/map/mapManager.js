@@ -102,38 +102,44 @@ const MapManager = (() => {
         // Labels are always 2-line. text-allow-overlap:false + text-optional:true
         // means a label that collides is simply dropped (the icon still shows);
         // there is no single-line fallback.
+        // Layout/paint shared by the two symbol layers; each passes only the
+        // placement/overlap flags and colors that differ.
+        const symbolLayout = (overrides) => Object.assign({
+            'icon-image': ['get', 'emojiImageId'],
+            'icon-size': _getIconSize(),
+            'icon-allow-overlap': true,
+            'icon-offset': [-8, 0],
+            'text-field': _getTextFieldExpression(),
+            'text-font': _getMarkerTextFont(),
+            'text-size': _getLabelSize(),
+            'text-anchor': 'left',
+            'text-justify': 'left',
+            'text-offset': [1.4, -0.15],
+            'text-max-width': 50,
+            'text-letter-spacing': 0,
+            'text-line-height': 1.15,
+            'symbol-sort-key': ['get', 'sortKey']
+        }, overrides);
+        const symbolPaint = (textColor, haloWidth) => ({
+            'text-color': textColor,
+            'text-halo-color': _getHaloColor(),
+            'text-halo-width': haloWidth,
+            'text-halo-blur': 0
+        });
+
         map.addLayer({
             id: 'marker-symbols',
             type: 'symbol',
             source: 'markers',
-            layout: {
-                'icon-image': ['get', 'emojiImageId'],
-                'icon-size': _getIconSize(),
-                'icon-allow-overlap': true,
+            layout: symbolLayout({
                 'icon-ignore-placement': false,
                 'icon-padding': 0,
-                'icon-offset': [-8, 0],
-                'text-field': _getTextFieldExpression(),
-                'text-font': _getMarkerTextFont(),
-                'text-size': _getLabelSize(),
-                'text-anchor': 'left',
-                'text-justify': 'left',
-                'text-offset': [1.4, -0.15],
-                'text-max-width': 50,
                 'text-allow-overlap': false,
                 'text-optional': true,
                 'text-ignore-placement': false,
-                'text-padding': 3,
-                'text-letter-spacing': 0,
-                'text-line-height': 1.15,
-                'symbol-sort-key': ['get', 'sortKey']
-            },
-            paint: {
-                'text-color': _getLabelColor(),
-                'text-halo-color': _getHaloColor(),
-                'text-halo-width': 2,
-                'text-halo-blur': 0
-            }
+                'text-padding': 3
+            }),
+            paint: symbolPaint(_getLabelColor(), 2)
         });
 
         // Layer 2: Highlight circle (colored ring on hover/active, above all emojis)
@@ -160,31 +166,12 @@ const MapManager = (() => {
             type: 'symbol',
             source: 'markers',
             filter: ['==', ['get', 'locationKey'], ''], // hidden by default
-            layout: {
-                'icon-image': ['get', 'emojiImageId'],
-                'icon-size': _getIconSize(),
-                'icon-allow-overlap': true,
+            layout: symbolLayout({
                 'icon-ignore-placement': true,
-                'icon-offset': [-8, 0],
-                'text-field': _getTextFieldExpression(),
-                'text-font': _getMarkerTextFont(),
-                'text-size': _getLabelSize(),
-                'text-anchor': 'left',
-                'text-justify': 'left',
-                'text-offset': [1.4, -0.15],
-                'text-max-width': 50,
                 'text-allow-overlap': true,
-                'text-ignore-placement': true,
-                'text-letter-spacing': 0,
-                'text-line-height': 1.15,
-                'symbol-sort-key': ['get', 'sortKey']
-            },
-            paint: {
-                'text-color': _getHoverLabelColor(),
-                'text-halo-color': _getHaloColor(),
-                'text-halo-width': 2.5,
-                'text-halo-blur': 0
-            }
+                'text-ignore-placement': true
+            }),
+            paint: symbolPaint(_getHoverLabelColor(), 2.5)
         });
 
         // Freshly created layers have the default hover text-field (no

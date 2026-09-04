@@ -156,11 +156,19 @@ For these, output `UNKNOWN` and flag for upstream extractor cleanup.
 
 1. Pull a batch of un-classified events (LIMIT 500-1000) with their `name`,
    `short_name`, `description`, `location_name`, `sublocation`, `tags`,
-   `section`, `occ_count`, `span_days`. Write to a JSON file.
+   `section`, `occ_count`, `span_days`. Write to a JSON file **inside a
+   per-run directory**: `.scratch/etypes/<YYYYMMDD-HHMM>/batch<N>.json`.
+   Never reuse a bare `.scratch/etypes/result<N>.json` — a 2026-09-04 run
+   found stale `result1..4.json` from an earlier session there, and a naive
+   "does the file exist" merge would have applied the previous run's labels
+   to this run's event ids.
 2. Spawn a sub-agent: hand it the JSON file path and **this entire command
    prompt**, ask for `[{"id": N, "type": "Label"}, ...]` output written to
-   a result file.
-3. Bulk-update: `UPDATE events SET event_type=%s WHERE id=%s` for each row.
+   `result<N>.json` **in the same per-run directory**.
+3. **Guard before merging:** refuse any result file whose set of ids is not
+   exactly the set of ids in the batch file it was generated from (and whose
+   mtime is older than the batch file). Then bulk-update:
+   `UPDATE events SET event_type=%s WHERE id=%s` for each row.
 4. Repeat until `event_type IS NULL` count is 0.
 
 ### Mode B: Pipeline integration

@@ -95,10 +95,6 @@ Examples of alias types:
 - Borough prefixes: "Brooklyn Comedy" → Comedy, "Queens Nightlife" → Nightlife
 - Plurals: "Musicals" → Musical, "Paintings" → Painting
 
-Key functions:
-- `pipeline/db.py`: `get_tag_aliases(cursor)` — returns `{normalized_alias: canonical_name}` for processing
-- `pipeline/db.py`: `get_tag_aliases_for_export(cursor)` — returns `{tag_name: [aliases]}` for export
-
 ## How Tags Flow
 
 1. **Pipeline extracts keywords** — AI assigns raw keyword tags to crawled events
@@ -110,9 +106,4 @@ Key functions:
 
 ## Key Functions
 
-- `pipeline/db.py`: `build_tag_ancestor_map(cursor)` — BFS transitive closure returning `{tag_id: set(ancestor_ids)}`
-- `pipeline/db.py`: `get_tag_hierarchy_for_export(cursor)` — builds the JSON structure for frontend
-- `pipeline/db.py`: `get_tag_aliases(cursor)` — alias lookup for processing
-- `scripts/populate_tag_hierarchy.py` — manages hierarchy: orphan fixes, intermediate levels, AI classification, geographic hierarchy, emoji assignment, cleanup
 - `scripts/backfill_category_tags.py` — propagates ancestor tags to `event_tags`; run after hierarchy changes
-- `scripts/export_tag_hierarchy_html.py` — generates `scripts/tag_hierarchy.html` for visual inspection

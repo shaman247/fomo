@@ -108,7 +108,6 @@ const ModalManager = (() => {
         const host = document.getElementById('proto-setting-groups');
         if (!host || typeof ProtoFlags === 'undefined') return;
 
-        const FLAG_LABELS = { layout: 'Layout', popups: 'Popups', chips: 'Chips' };
         host.textContent = '';
         if (!_debugEnabled()) return;
 
@@ -119,7 +118,7 @@ const ModalManager = (() => {
 
             const groupLabel = document.createElement('label');
             groupLabel.className = 'setting-group-label';
-            groupLabel.textContent = FLAG_LABELS[flag.name] || flag.name;
+            groupLabel.textContent = flag.label || flag.name;
             group.appendChild(groupLabel);
 
             const options = document.createElement('div');

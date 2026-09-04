@@ -2292,6 +2292,12 @@ class _QueuedCursor:
     def execute(self, sql, params=None):
         self.statements.append((sql, params))
 
+    def executemany(self, sql, seq_of_params):
+        # Recorded one statement per row so assertions see the same rows the
+        # database would.
+        for params in seq_of_params:
+            self.statements.append((sql, params))
+
     def fetchone(self):
         return self._rows.pop(0) if self._rows else None
 

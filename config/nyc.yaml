@@ -563,6 +563,15 @@ processor:
   borough_tokens: ["queens", "bronx", "brooklyn", "manhattan", "staten island"]
   # processor.py — standalone region token stripped from tag / short_name (e.g. "NYC Comedy" -> "Comedy").
   region_tag_token: "NYC"
+  # processor.py address parsing — city-specific street NAMES that behave like a
+  # street type (they carry no "St"/"Ave" suffix). "concourse" is for the Bronx's
+  # Grand Concourse, which greenmarket and park addresses name as a cross street
+  # ("192nd St & Grand Concourse"); without it that side doesn't read as a street
+  # and the whole intersection is discarded.
+  address:
+    extra_street_types: ["broadway", "bowery", "concourse"]
+    # Names that can stand alone with no preceding name word ("350 Bowery").
+    standalone_street_names: ["broadway", "bowery"]
 
 review:
   # scripts/find_review_candidates.py NON_NYC_PLACES — names that, in an event's

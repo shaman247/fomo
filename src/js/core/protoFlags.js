@@ -29,9 +29,9 @@ const ProtoFlags = (() => {
      * math, sheet initial state, history baseline) — live toggling is not safe.
      */
     const DEFS = {
-        layout: { values: ['default', 'docked'], requiresReload: true },
-        popups: { values: ['float', 'panel'], requiresReload: false },
-        chips: { values: ['full', 'minimal'], requiresReload: false }
+        layout: { label: 'Layout', values: ['default', 'docked'], requiresReload: true },
+        popups: { label: 'Popups', values: ['float', 'panel'], requiresReload: false },
+        chips: { label: 'Chips', values: ['full', 'minimal'], requiresReload: false }
     };
 
     const state = {
@@ -111,6 +111,7 @@ const ProtoFlags = (() => {
     function list() {
         return Object.keys(DEFS).map(name => ({
             name,
+            label: DEFS[name].label,
             values: DEFS[name].values,
             value: get(name),
             requiresReload: DEFS[name].requiresReload,

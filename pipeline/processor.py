@@ -30,6 +30,17 @@ import regex
 
 import db
 import crawler
+import site_profiles
+# Occurrence-time canonicalization lives in `occurrence_times` (the single
+# owner, also used by db.py's write helpers and the merger). The underscore
+# aliases keep this module's historical names for callers and scripts.
+from occurrence_times import (
+    standardize_time as _standardize_time,
+    canonical_time as _canonical_time,
+    TWELVE_HOUR_RE as _TWELVE_HOUR_RE,
+    HHMM_RE as _HHMM_RE,
+    HH_RE as _HH_RE,
+)
 from constants import FUZZY_MATCH_THRESHOLD, PREFIX_MATCH_COVERAGE, get_active_date_window
 from crawler import create_safe_filename
 
@@ -2889,6 +2900,241 @@ def _is_food_holiday_promo(name, description=None):
     return not _FOOD_HOLIDAY_VETO_RE.search(name + ' ' + (description or ''))
 
 
+# ---------------------------------------------------------------------------
+# The non-event junk filter is a table of rules, evaluated by `_junk_rule_fires`.
+# Every rule answers "this row is unmistakable junk"; none can veto another,
+# so the table is an OR and row order carries no meaning (the first hit is the
+# one reported). A row is either a declarative regex rule —
+#
+#   name        patterns the NAME must satisfy (all of them), each with how to
+#               apply it: 'search' | 'match' | 'fullmatch'
+#   strip_name  apply the name patterns to name.strip()
+#   desc_mode   what the DESCRIPTION must be: 'any' (not consulted),
+#               'blank' (_description_is_blank), 'adds_nothing'
+#               (_description_adds_nothing — the feed echoes the title into the
+#               body), or 'present' (non-empty; the row needs a body to read)
+#   desc        a pattern the description must satisfy (implies 'present')
+#   vetoes      patterns that must NOT hit, each over 'name', 'desc' or 'both'
+#               (name + ' ' + description)
+#
+# — or a bespoke predicate `pred(name, description, location, sublocation)` for
+# the shapes a regex triple can't express (still gated by desc_mode).
+#
+# High precision by design; anything fuzzier belongs in
+# scripts/find_review_candidates.py for human review.
+# ---------------------------------------------------------------------------
+
+class _JunkRule:
+    __slots__ = ('label', 'name', 'strip_name', 'desc_mode', 'desc', 'vetoes', 'pred')
+
+    def __init__(self, label, name=(), how='search', strip_name=False,
+                 desc_mode='any', desc=None, vetoes=(), pred=None):
+        self.label = label
+        # `name` may be one pattern (applied with `how`) or a tuple of
+        # (pattern, how) pairs when a rule needs several name conditions.
+        if name and not isinstance(name, tuple):
+            name = ((name, how),)
+        self.name = tuple(name)
+        self.strip_name = strip_name
+        self.desc_mode = 'present' if (desc is not None and desc_mode == 'any') else desc_mode
+        self.desc = desc
+        self.vetoes = tuple(vetoes)
+        self.pred = pred
+
+
+def _junk_rule_fires(rule, name, description, location, sublocation):
+    if rule.desc_mode == 'present' and not description:
+        return False
+    if rule.desc_mode == 'blank' and not _description_is_blank(description):
+        return False
+    if rule.desc_mode == 'adds_nothing' and not _description_adds_nothing(name, description):
+        return False
+    if rule.pred is not None:
+        return bool(rule.pred(name, description, location, sublocation))
+    subject = name.strip() if rule.strip_name else name
+    for pattern, how in rule.name:
+        if not getattr(pattern, how)(subject):
+            return False
+    if rule.desc is not None and not rule.desc.search(description):
+        return False
+    for pattern, on in rule.vetoes:
+        text = name if on == 'name' else description if on == 'desc' else name + ' ' + description
+        if pattern.search(text):
+            return False
+    return True
+
+
+def _pred(fn):
+    """Adapt a (name, description) helper to the four-argument pred signature."""
+    return lambda name, description, location, sublocation: fn(name, description)
+
+
+_JUNK_RULES = (
+    # Curated name-only patterns: closures, calls for submissions/grants, venue
+    # rentals, season passes, cinema showtime placeholders, fundraising
+    # campaigns, info-booth listings, … (see _NON_EVENT_NAME_PATTERNS).
+    _JunkRule('non_event_name', _NON_EVENT_NAME_RE),
+    # Holiday closure notice ("Memorial Day-Closed", "Labor Day Holiday").
+    # Fires on the name alone: these carry no description worth reading, and the
+    # required closure cue is what makes it safe. See the regex comment.
+    _JunkRule('holiday_closure', _HOLIDAY_CLOSURE_NAME_RE, how='match', strip_name=True),
+    # Private venue buyout leaking off a room-booking calendar. The signal is the
+    # sublocation; the blank description keeps a real described event safe.
+    _JunkRule('private_buyout_sublocation', desc_mode='blank',
+              pred=lambda n, d, loc, sub: bool(sub and _PRIVATE_BOOKING_SUBLOC_RE.search(sub))),
+    # Bare generic name with no description at all -> placeholder junk.
+    _JunkRule('bare_generic_name', _BARE_GENERIC_NAME_RE, how='fullmatch', strip_name=True,
+              desc_mode='blank'),
+    # Placeholder "Untitled <format> (<venue>)" screening rows.
+    _JunkRule('untitled_placeholder', _UNTITLED_PLACEHOLDER_NAME_RE, how='match', desc_mode='blank'),
+    # "<generic place> #<number>", no description, no venue -> a scheduled slot
+    # whose details have not been published yet.
+    _JunkRule('serial_placeholder',
+              pred=lambda n, d, loc, sub: _is_serial_placeholder(n, d, loc)),
+    # Library room-booking placeholder. Uses `adds_nothing` rather than `blank`:
+    # these feeds echo the title into the body.
+    _JunkRule('room_reservation', pred=_pred(_is_room_reservation)),
+    # Room-booking-calendar shapes (block 5): private bookings, staff-only
+    # blocks, bare private occasions, maintenance blocks, bare "No <program>"
+    # notices and seasonal hours notices. All fire with or without a
+    # description — a blank body IS the corroboration for most of them.
+    _JunkRule('private_booking_name', pred=_pred(_is_private_booking_name)),
+    # Tentative shared-calendar HOLD ("HOLD: Synth Night", "Hold-Peggy Belles").
+    # Name-only by design: the prefix is the booker's own "not confirmed" marker,
+    # and these rows carry a real-looking body as often as a blank one.
+    _JunkRule('hold_placeholder', _HOLD_PLACEHOLDER_NAME_RE, how='match'),
+    _JunkRule('staff_only_block', _STAFF_ONLY_BLOCK_NAME_RE),
+    _JunkRule('private_occasion', _PRIVATE_OCCASION_NAME_RE, how='match', desc_mode='adds_nothing'),
+    _JunkRule('maintenance_block', _MAINTENANCE_BLOCK_NAME_RE, how='match'),
+    # Staff prep block ("… Craft Setup"). The blank/echo body is the second gate
+    # — a described "… Set-Up" is a class or a volunteer shift, not a prep hold.
+    _JunkRule('setup_block', _SETUP_BLOCK_NAME_RE, desc_mode='adds_nothing'),
+    _JunkRule('no_program_notice', _NO_PROGRAM_NAME_RE, how='match', desc_mode='adds_nothing'),
+    _JunkRule('seasonal_hours_notice', pred=_pred(_is_seasonal_hours_notice)),
+    # An outside organization's room booking, titled with the org's own name
+    # ("Historical Society", "Saddle River Valley Lions Club"). Requires a body
+    # that adds nothing, so a described program the org hosts survives.
+    _JunkRule('org_room_booking', pred=_pred(_is_org_room_booking)),
+    # (5i/5j) Operational notices and housing-corp room bookings — see the regex
+    # block above for the corpus counts behind each of these gates.
+    _JunkRule('early_close_notice', pred=_pred(_is_early_close_notice)),
+    # (5k) Library "NO <Program>" skipped-session notice with no body.
+    _JunkRule('no_prefix_cancellation', pred=_pred(_is_no_prefix_cancellation)),
+    _JunkRule('admin_deadline', pred=_pred(_is_admin_deadline)),
+    _JunkRule('maintenance_tail_block', pred=_pred(_is_maintenance_tail_block)),
+    _JunkRule('housing_corp_booking', pred=_pred(_is_housing_corp_booking)),
+    # (5l) Exhibit teardown logistics ("Exhibit removal - <artist>", "Art
+    # Pickup"). Name-only — these rows often carry a real sentence about the
+    # move — while the ambiguous installation half needs a blank/echo body.
+    _JunkRule('art_teardown', _ART_TEARDOWN_NAME_RE),
+    _JunkRule('art_install', _ART_INSTALL_NAME_RE, desc_mode='adds_nothing'),
+    # (5m) A room inside a venue, published as an event ("Front Bar @ GP
+    # Midtown"). The whole-name anchor plus the blank/echo body are what keep
+    # real series held in that room alive.
+    _JunkRule('venue_space_name', _VENUE_SPACE_NAME_RE, how='match', desc_mode='adds_nothing'),
+    # "<Month> Calendar" listing-page placeholder ("The Stone at The New School:
+    # September Calendar", "Bronx Community Board 11 Calendar - April 2026").
+    # Name-only by design — the body is venue boilerplate either way.
+    _JunkRule('month_calendar_placeholder', pred=_pred(_is_month_calendar_placeholder)),
+    # "National <food/drink> Day" restaurant marketing post. Two signals plus a
+    # veto — a bare marker with no body stays editorial, per the 2026-07-27
+    # refutation. `_is_food_holiday_promo` requires a description of its own.
+    _JunkRule('food_holiday_promo', pred=_pred(_is_food_holiday_promo)),
+    # "<program> Ends!" deadline notice: the blank/echo-body half …
+    _JunkRule('program_deadline_bare', _PROGRAM_DEADLINE_NAME_RE, desc_mode='adds_nothing',
+              vetoes=((_PROGRAM_DEADLINE_VETO_RE, 'both'),)),
+    # … and the deadline-language half ("Summer Reading Ends!" with a
+    # submit-your-logs body).
+    _JunkRule('program_deadline_desc', _PROGRAM_DEADLINE_NAME_RE, desc=_PROGRAM_DEADLINE_DESC_RE,
+              vetoes=((_PROGRAM_DEADLINE_VETO_RE, 'both'),)),
+    # Opening-hours notice ("Library open 9 AM - 5 PM"). Fires with or without a
+    # description — the body is normally a restatement of the hours.
+    _JunkRule('hours_notice', pred=_pred(_is_hours_notice)),
+    # Delayed/late opening notice ("Delayed Opening - Staff Development").
+    _JunkRule('delayed_opening_notice', pred=_pred(_is_delayed_opening_notice)),
+    # Facility-closure notice ("Hendricks Field Golf Course Closed"). Fires with
+    # or without a description — the blank body IS the corroboration here.
+    _JunkRule('closure_notice', pred=_pred(_is_closure_notice)),
+    # Academic/registrar calendar milestone (add/drop deadline, term start, exam
+    # period). These rows are usually description-less.
+    _JunkRule('academic_milestone', _ACADEMIC_MILESTONE_NAME_RE,
+              vetoes=((_ACADEMIC_ATTENDABLE_VETO_RE, 'name'),)),
+    # SEO / affiliate listicle spam ("Allstate Insurance Quick Pay — Fastest Bill
+    # Pay Method Available 2026").
+    _JunkRule('seo_listicle_spam', pred=_pred(_is_seo_listicle_spam)),
+    # Members-only programming ("Members-Only Tour: …", "… | MEMBERS ONLY").
+    # Name-only: the title is the venue's own access notice. The veto spares
+    # events AT a venue named "Members Only".
+    _JunkRule('members_only', _MEMBERS_ONLY_NAME_RE,
+              vetoes=((_MEMBERS_ONLY_VENUE_VETO_RE, 'name'),)),
+    # Enrolled-student academic orientation, literal-phrase arm ("New Student
+    # Orientation") …
+    _JunkRule('student_orientation', _STUDENT_ORIENTATION_NAME_RE),
+    # … and the desc-corroborated arm: a name lacking the literal phrase whose
+    # body names the student audience ("A welcome and orientation day for MFA …
+    # students", e207565).
+    _JunkRule('student_orientation_desc', _ORIENTATION_NAME_RE, desc=_STUDENT_AUDIENCE_DESC_RE,
+              vetoes=((_ORIENTATION_PUBLIC_VETO_RE, 'both'),)),
+    # --- rules below need a description to read ---
+    # "On this Day:" archival post narrating a past anniversary, not a gathering.
+    _JunkRule('archival_on_this_day', _ARCHIVAL_ON_THIS_DAY_NAME_RE, how='match',
+              desc=_ARCHIVAL_HISTORICAL_DESC_RE, vetoes=((_ARCHIVAL_GATHERING_VETO_RE, 'desc'),)),
+    _JunkRule('menu_special', _MENU_SPECIAL_NAME_RE, how='match', desc=_MENU_SPECIAL_DESC_RE,
+              vetoes=((_MENU_SPECIAL_VETO_RE, 'desc'),)),
+    # Take-home / grab-and-go / take-n-make kit distribution — a pickup, not a
+    # gathering.
+    _JunkRule('take_home_kit', desc_mode='present', pred=_pred(_is_take_home_kit)),
+    # Ticketing upsell product ("VIP & Date Night Packages", "… Experience
+    # Bundle") — a thing you buy, not a thing you attend.
+    _JunkRule('ticket_product_package', desc_mode='present', pred=_pred(_is_ticket_product_package)),
+    _JunkRule('submission_contest', _SUBMISSION_CONTEST_NAME_RE, desc=_SUBMISSION_CALL_DESC_RE,
+              vetoes=((_ATTENDABLE_CONTEST_NAME_RE, 'name'),)),
+    _JunkRule('application_call', desc=_APPLICATION_CALL_DESC_RE,
+              vetoes=((_ATTENDABLE_OCCASION_NAME_RE, 'name'),)),
+    # The body says, in the venue's own words, that this occasion is not open
+    # to the public — enough on its own; see `_is_not_public_notice`.
+    _JunkRule('not_public_notice', desc_mode='present', pred=_pred(_is_not_public_notice)),
+    _JunkRule('private_booking_desc', (( _PRIVATE_BOOKING_DESC_RE, 'search'),), desc_mode='present',
+              pred=lambda n, d, loc, sub: bool(_PRIVATE_BOOKING_DESC_RE.search(d)
+                                               and _NOT_PUBLIC_DESC_RE.search(d))),
+    _JunkRule('info_booth', _BOOTH_NAME_RE, desc=_BOOTH_MARKETING_DESC_RE),
+    _JunkRule('childcare_amenity', _CHILDCARE_AMENITY_NAME_RE, how='match', strip_name=True,
+              desc=_CHILDCARE_DURING_DESC_RE),
+    _JunkRule('congregate_meal', desc=_CONGREGATE_MEAL_DESC_RE,
+              vetoes=((_MEAL_ATTENDABLE_NAME_RE, 'name'), (_MEAL_REAL_EVENT_DESC_RE, 'desc'))),
+    _JunkRule('attraction_listing', desc_mode='present',
+              pred=lambda n, d, loc, sub: bool(_ATTRACTION_DESC_RE.search(d)
+                                               and _ATTRACTION_VISIT_RE.search(d)
+                                               and not _ATTRACTION_NAME_VETO_RE.search(n))),
+    _JunkRule('holiday_marker_closure', _HOLIDAY_MARKER_NAME_RE, desc=_CLOSURE_OBSERVANCE_DESC_RE,
+              vetoes=((_HOLIDAY_ATTENDABLE_DESC_VETO_RE, 'desc'),)),
+    _JunkRule('holiday_open_notice',
+              ((_HOLIDAY_OPEN_NOTICE_NAME_RE, 'search'), (_HOLIDAY_NAME_ANYWHERE_RE, 'search')),
+              desc=_CLOSURE_OBSERVANCE_DESC_RE,
+              vetoes=((_HOLIDAY_ATTENDABLE_DESC_VETO_RE, 'both'),)),
+    _JunkRule('drink_promo', _DRINK_PROMO_NAME_RE, desc=_PROMO_SPECIAL_DESC_RE,
+              vetoes=((_PROMO_ATTENDABLE_VETO_RE, 'both'),)),
+    # Buy-one-get-one ticket promotion whose body IS the offer.
+    _JunkRule('bogo_offer', desc=_BOGO_OFFER_DESC_RE, vetoes=((_BOGO_ATTENDABLE_VETO_RE, 'desc'),)),
+    # A venue's standing daily happy hour, published as a dated row.
+    _JunkRule('standing_happy_hour', desc_mode='present', pred=_pred(_is_standing_happy_hour)),
+    _JunkRule('retail_promo', _RETAIL_PROMO_NAME_RE, desc=_RETAIL_PROMO_DESC_RE),
+    _JunkRule('reopening_notice', _REOPENING_NAME_RE, desc=_REOPENING_DESC_RE,
+              vetoes=((_REOPENING_NAME_VETO_RE, 'name'),)),
+)
+
+
+def which_junk_rule(name, description=None, location=None, sublocation=None):
+    """Label of the first `_JUNK_RULES` row that fires, or None."""
+    if not name:
+        return None
+    description = description or ''
+    for rule in _JUNK_RULES:
+        if _junk_rule_fires(rule, name, description, location, sublocation):
+            return rule.label
+    return None
+
+
 def is_obvious_non_event(name, description=None, location=None, sublocation=None):
     """Return True if the event is an unmistakable non-event.
 
@@ -2923,370 +3169,10 @@ def is_obvious_non_event(name, description=None, location=None, sublocation=None
     ("Venue Buyout") rather than the name, which is whatever the booker typed.
     That rule additionally requires a blank description, so omitting the
     argument only ever makes the filter more permissive, never less.
+    The rules themselves live in `_JUNK_RULES`.
     """
-    if not name:
-        return False
-    if _NON_EVENT_NAME_RE.search(name):
-        return True
-    # Holiday closure notice ("Memorial Day-Closed", "Labor Day Holiday").
-    # Fires on the name alone: these carry no description worth reading, and the
-    # required closure cue is what makes it safe. See the regex comment.
-    if _HOLIDAY_CLOSURE_NAME_RE.match(name.strip()):
-        return True
-    description = description or ''
-    # Private venue buyout leaking off a room-booking calendar. The signal is the
-    # sublocation; the blank description keeps a real described event safe.
-    if (sublocation and _PRIVATE_BOOKING_SUBLOC_RE.search(sublocation)
-            and _description_is_blank(description)):
-        return True
-    # Bare generic name with no description at all -> placeholder junk.
-    if _description_is_blank(description) and _BARE_GENERIC_NAME_RE.fullmatch(name.strip()):
-        return True
-    # Placeholder "Untitled <format> (<venue>)" screening rows.
-    if _description_is_blank(description) and _UNTITLED_PLACEHOLDER_NAME_RE.match(name):
-        return True
-    # "<generic place> #<number>", no description, no venue -> a scheduled slot
-    # whose details have not been published yet.
-    if _is_serial_placeholder(name, description, location):
-        return True
-    # Library room-booking placeholder. Uses `_description_adds_nothing` rather
-    # than `_description_is_blank`: these feeds echo the title into the body.
-    if _is_room_reservation(name, description):
-        return True
-    # Room-booking-calendar shapes (block 5): private bookings, staff-only
-    # blocks, bare private occasions, maintenance blocks, bare "No <program>"
-    # notices and seasonal hours notices. All fire with or without a
-    # description — a blank body IS the corroboration for most of them — so they
-    # cannot live in the `if description:` block below.
-    if _is_private_booking_name(name, description):
-        return True
-    # Tentative shared-calendar HOLD ("HOLD: Synth Night", "Hold-Peggy Belles").
-    # Name-only by design: the prefix is the booker's own "not confirmed" marker,
-    # and these rows carry a real-looking body as often as a blank one.
-    if _HOLD_PLACEHOLDER_NAME_RE.match(name):
-        return True
-    if _STAFF_ONLY_BLOCK_NAME_RE.search(name):
-        return True
-    if (_PRIVATE_OCCASION_NAME_RE.match(name)
-            and _description_adds_nothing(name, description)):
-        return True
-    if _MAINTENANCE_BLOCK_NAME_RE.match(name):
-        return True
-    # Staff prep block ("… Craft Setup"). The blank/echo body is the second gate
-    # — a described "… Set-Up" is a class or a volunteer shift, not a prep hold.
-    if (_SETUP_BLOCK_NAME_RE.search(name)
-            and _description_adds_nothing(name, description)):
-        return True
-    if (_NO_PROGRAM_NAME_RE.match(name)
-            and _description_adds_nothing(name, description)):
-        return True
-    if _is_seasonal_hours_notice(name, description):
-        return True
-    # An outside organization's room booking, titled with the org's own name
-    # ("Historical Society", "Saddle River Valley Lions Club"). Requires a body
-    # that adds nothing, so a described program the org hosts survives.
-    if _is_org_room_booking(name, description):
-        return True
-    # (5i/5j) Operational notices and housing-corp room bookings — see the regex
-    # block above for the corpus counts behind each of these four gates.
-    if _is_early_close_notice(name, description):
-        return True
-    # (5k) Library "NO <Program>" skipped-session notice with no body.
-    if _is_no_prefix_cancellation(name, description):
-        return True
-    if _is_admin_deadline(name, description):
-        return True
-    if _is_maintenance_tail_block(name, description):
-        return True
-    if _is_housing_corp_booking(name, description):
-        return True
-    # (5l) Exhibit teardown logistics ("Exhibit removal - <artist>", "Art
-    # Pickup"). Name-only — these rows often carry a real sentence about the
-    # move — while the ambiguous installation half needs a blank/echo body.
-    if _ART_TEARDOWN_NAME_RE.search(name):
-        return True
-    if (_ART_INSTALL_NAME_RE.search(name)
-            and _description_adds_nothing(name, description)):
-        return True
-    # (5m) A room inside a venue, published as an event ("Front Bar @ GP
-    # Midtown"). The whole-name anchor plus the blank/echo body are what keep
-    # real series held in that room alive.
-    if (_VENUE_SPACE_NAME_RE.match(name)
-            and _description_adds_nothing(name, description)):
-        return True
-    # "<Month> Calendar" listing-page placeholder ("The Stone at The New School:
-    # September Calendar", "Bronx Community Board 11 Calendar - April 2026").
-    # Name-only by design — the body is venue boilerplate either way.
-    if _is_month_calendar_placeholder(name, description):
-        return True
-    # "National <food/drink> Day" restaurant marketing post. Two signals plus a
-    # veto — a bare marker with no body stays editorial, per the 2026-07-27
-    # refutation. Lives here rather than in the `if description:` block only for
-    # readability; `_is_food_holiday_promo` requires a description of its own.
-    if _is_food_holiday_promo(name, description):
-        return True
-    # "<program> Ends!" deadline notice, corroborated by a body that adds
-    # nothing ("Summer Reading Ends!" / "SUMMER READING ENDS!"). The
-    # deadline-language half of this rule stays in the `if description:` block
-    # below; only the blank/echo half belongs up here.
-    if (_PROGRAM_DEADLINE_NAME_RE.search(name)
-            and _description_adds_nothing(name, description)
-            and not _PROGRAM_DEADLINE_VETO_RE.search(name + ' ' + description)):
-        return True
-    # Opening-hours notice ("Library open 9 AM - 5 PM"). Fires with or without a
-    # description — the body is normally a restatement of the hours.
-    if _is_hours_notice(name, description):
-        return True
-    # Delayed/late opening notice ("Delayed Opening - Staff Development"). Fires
-    # with or without a description, like its closure and hours siblings.
-    if _is_delayed_opening_notice(name, description):
-        return True
-    # Facility-closure notice ("Hendricks Field Golf Course Closed"). Fires with
-    # or without a description — the blank body IS the corroboration here — so it
-    # cannot live in the `if description:` block below.
-    if _is_closure_notice(name, description):
-        return True
-    # Academic/registrar calendar milestone (add/drop deadline, term start, exam
-    # period). Fires with or without a description — these rows are usually
-    # description-less — so it cannot live in the `if description:` block below.
-    if (_ACADEMIC_MILESTONE_NAME_RE.search(name)
-            and not _ACADEMIC_ATTENDABLE_VETO_RE.search(name)):
-        return True
-    # SEO / affiliate listicle spam ("Allstate Insurance Quick Pay — Fastest Bill
-    # Pay Method Available 2026"). Fires with or without a description, so it
-    # cannot live in the `if description:` block below.
-    if _is_seo_listicle_spam(name, description):
-        return True
-    # Members-only programming ("Members-Only Tour: …", "… | MEMBERS ONLY").
-    # Name-only: the title is the venue's own access notice. The veto spares
-    # events AT a venue named "Members Only".
-    if (_MEMBERS_ONLY_NAME_RE.search(name)
-            and not _MEMBERS_ONLY_VENUE_VETO_RE.search(name)):
-        return True
-    # Enrolled-student academic orientation, literal-phrase arm ("New Student
-    # Orientation"). Fires with or without a description; the desc-corroborated
-    # arm lives in the `if description:` block below.
-    if _STUDENT_ORIENTATION_NAME_RE.search(name):
-        return True
-    if description:
-        # "On this Day:" archival post narrating a past anniversary, not a gathering.
-        if (_ARCHIVAL_ON_THIS_DAY_NAME_RE.match(name)
-                and _ARCHIVAL_HISTORICAL_DESC_RE.search(description)
-                and not _ARCHIVAL_GATHERING_VETO_RE.search(description)):
-            return True
-        if (_MENU_SPECIAL_NAME_RE.match(name)
-                and _MENU_SPECIAL_DESC_RE.search(description)
-                and not _MENU_SPECIAL_VETO_RE.search(description)):
-            return True
-        # Take-home / grab-and-go / take-n-make kit distribution — a pickup, not
-        # a gathering.
-        if _is_take_home_kit(name, description):
-            return True
-        # Ticketing upsell product ("VIP & Date Night Packages", "… Experience
-        # Bundle") — a thing you buy, not a thing you attend.
-        if _is_ticket_product_package(name, description):
-            return True
-        # "<program> Ends!" submit-your-logs deadline notice.
-        if (_PROGRAM_DEADLINE_NAME_RE.search(name)
-                and _PROGRAM_DEADLINE_DESC_RE.search(description)
-                and not _PROGRAM_DEADLINE_VETO_RE.search(name + ' ' + description)):
-            return True
-        if (_SUBMISSION_CONTEST_NAME_RE.search(name)
-                and not _ATTENDABLE_CONTEST_NAME_RE.search(name)
-                and _SUBMISSION_CALL_DESC_RE.search(description)):
-            return True
-        if (_APPLICATION_CALL_DESC_RE.search(description)
-                and not _ATTENDABLE_OCCASION_NAME_RE.search(name)):
-            return True
-        # The body says, in the venue's own words, that this occasion is not
-        # open to the public — enough on its own; see `_is_not_public_notice`.
-        if _is_not_public_notice(name, description):
-            return True
-        if (_PRIVATE_BOOKING_DESC_RE.search(description)
-                and _NOT_PUBLIC_DESC_RE.search(description)):
-            return True
-        # School orientation whose name lacks the literal "Student Orientation"
-        # phrase but whose body names the student audience ("A welcome and
-        # orientation day for MFA … students", e207565).
-        if (_ORIENTATION_NAME_RE.search(name)
-                and _STUDENT_AUDIENCE_DESC_RE.search(description)
-                and not _ORIENTATION_PUBLIC_VETO_RE.search(name + ' ' + description)):
-            return True
-        if (_BOOTH_NAME_RE.search(name)
-                and _BOOTH_MARKETING_DESC_RE.search(description)):
-            return True
-        if (_CHILDCARE_AMENITY_NAME_RE.match(name.strip())
-                and _CHILDCARE_DURING_DESC_RE.search(description)):
-            return True
-        if (_CONGREGATE_MEAL_DESC_RE.search(description)
-                and not _MEAL_ATTENDABLE_NAME_RE.search(name)
-                and not _MEAL_REAL_EVENT_DESC_RE.search(description)):
-            return True
-        if (_ATTRACTION_DESC_RE.search(description)
-                and _ATTRACTION_VISIT_RE.search(description)
-                and not _ATTRACTION_NAME_VETO_RE.search(name)):
-            return True
-        if (_HOLIDAY_MARKER_NAME_RE.search(name)
-                and _CLOSURE_OBSERVANCE_DESC_RE.search(description)
-                and not _HOLIDAY_ATTENDABLE_DESC_VETO_RE.search(description)):
-            return True
-        if (_HOLIDAY_OPEN_NOTICE_NAME_RE.search(name)
-                and _HOLIDAY_NAME_ANYWHERE_RE.search(name)
-                and _CLOSURE_OBSERVANCE_DESC_RE.search(description)
-                and not _HOLIDAY_ATTENDABLE_DESC_VETO_RE.search(name + ' ' + description)):
-            return True
-        if (_DRINK_PROMO_NAME_RE.search(name)
-                and _PROMO_SPECIAL_DESC_RE.search(description)
-                and not _PROMO_ATTENDABLE_VETO_RE.search(name + ' ' + description)):
-            return True
-        # Buy-one-get-one ticket promotion whose body IS the offer.
-        if (_BOGO_OFFER_DESC_RE.search(description)
-                and not _BOGO_ATTENDABLE_VETO_RE.search(description)):
-            return True
-        # A venue's standing daily happy hour, published as a dated row.
-        if _is_standing_happy_hour(name, description):
-            return True
-        if (_RETAIL_PROMO_NAME_RE.search(name)
-                and _RETAIL_PROMO_DESC_RE.search(description)):
-            return True
-        if (_REOPENING_NAME_RE.search(name)
-                and not _REOPENING_NAME_VETO_RE.search(name)
-                and _REOPENING_DESC_RE.search(description)):
-            return True
-    return False
+    return which_junk_rule(name, description, location, sublocation) is not None
 
-
-# Canonical time format: compact lowercase 12-hour with no space, no colon-zero.
-# Examples: '7pm', '7:30pm', '11am', '12am' (midnight), '12pm' (noon).
-# Empty/sentinel values normalize to ''.
-_TZ_SUFFIX_RE = re.compile(r'(est|edt|pst|pdt|mst|mdt|cst|cdt|et|pt|mt|ct)$')
-_TWELVE_HOUR_RE = re.compile(r'^(\d{1,2})(?::(\d{2}))?(am|pm)$')
-_HHMM_RE = re.compile(r'^(\d{1,2}):(\d{2})$')
-_HH_RE = re.compile(r'^(\d{1,2})$')
-# 'HH:MM:SS' (MySQL TIME columns, ISO clock strings). None of the patterns above
-# match it, so it used to fall through unchanged and land in event_occurrences
-# next to its own canonical 12-hour form — 79 duplicate twin rows accumulated
-# that way. Drop the seconds field and re-run the normal cascade.
-_SECONDS_RE = re.compile(r'^(\d{1,2}:\d{2}):[0-5]\d(am|pm)?$')
-_SENTINEL_TIMES = frozenset({
-    '', 'allday', 'allday/varies', 'varioustimes', 'multipletimes', 'tba', 'tbd',
-    'none', 'close', 'closing', 'late', 'tbc', 'ongoing', 'sundown', 'sunrise',
-    'sunset', 'dusk', 'dawn',
-})
-
-
-def _canonical_time(hour, minute, is_pm):
-    """Build a canonical time string from a 12-hour hour (1-12), minute, and AM/PM."""
-    suffix = 'pm' if is_pm else 'am'
-    return f'{hour}{suffix}' if minute == 0 else f'{hour}:{minute:02d}{suffix}'
-
-
-_LUMA_HOSTS = ('luma.com', 'lu.ma', 'www.luma.com', 'www.lu.ma')
-_LUMA_SLUG = re.compile(r'^[a-z0-9][a-z0-9-]{4,}$', re.I)
-
-# `lu.ma/<slug>` and `luma.com/<slug>` are the SAME page — lu.ma 301s to
-# luma.com — but they are different strings, so every URL-keyed comparison
-# (merger's shared-URL identity tier, detail-crawl shared-URL dedup, the
-# `event_urls` uniqueness we rely on) sees two unrelated links. The Luma
-# calendar injector emits `lu.ma` while embeds and other sites emit `luma.com`,
-# so the same event routinely arrives under both hosts: on 2026-08-17, 3 of 10
-# Luma slug collisions were invisible to the dedupe tier for exactly this
-# reason, and 8 live events held both spellings of one link. Canonicalize the
-# short host away at ingest so it is fixed once, for every consumer.
-# `api.lu.ma` is deliberately NOT rewritten — it is a different service (the
-# JSON endpoint), not an alias of the web page.
-_LUMA_CANONICAL_HOST = 'luma.com'
-_LUMA_ALIAS_HOSTS = frozenset({'lu.ma', 'www.lu.ma', 'www.luma.com'})
-
-
-def canonicalize_luma_host(url):
-    """Rewrite `lu.ma` / `www.` Luma links to the canonical `https://luma.com/…`.
-
-    Path, query and fragment are preserved verbatim; non-Luma URLs (including
-    `api.lu.ma`) are returned unchanged.
-    """
-    if not url:
-        return url
-    try:
-        parts = urllib.parse.urlsplit(url)
-    except ValueError:
-        return url
-    if (parts.hostname or '').lower() not in _LUMA_ALIAS_HOSTS:
-        return url
-    if parts.port or parts.username:
-        return url  # not a plain public Luma link; leave it alone
-    return urllib.parse.urlunsplit(
-        ('https', _LUMA_CANONICAL_HOST, parts.path, parts.query, parts.fragment))
-
-# Luma CALENDAR-level endpoints. Luma organizer sources are crawled through the
-# calendar's own JSON endpoint (`api.lu.ma/url?url=<slug>` or
-# `api.lu.ma/calendar/get-items?calendar_api_id=cal-XXX`; a few sit on the
-# `lu.ma/calendar/cal-XXX` page). That payload carries per-event objects AND a
-# pile of calendar-level metadata — `calendar.name`, the host list, and a
-# `tags[]` array of audience labels — and the extractor sometimes reads one of
-# those labels as an event.
-#
-# e208609 "Technologists" (w5111 Fractal Tech) was exactly that: the calendar's
-# own `tags[].name` ("Technologists", `upcoming_event_count: 0`), extracted with
-# `url: null` and no description, then pooled **36 occurrences** scraped from
-# every real Fractal Tech event's times. It false-matched every real Fractal
-# meetup in the dedupe pass.
-#
-# The structural tell is the URL. Every genuine event in the payload carries its
-# own `lu.ma/<slug>` (the slug-expanding `js_code` guarantees it), so a record
-# with no event URL of its own falls back to `source_url` in
-# `group_event_occurrences` and ends up pointing at the calendar endpoint it was
-# extracted FROM. Calendar-level metadata is the only thing that can produce
-# that shape.
-_LUMA_CAL_ID_RE = re.compile(r'^/calendar/(cal-[A-Za-z0-9]+)$')
-
-
-def _luma_calendar_key(url):
-    """Identity of the Luma CALENDAR a URL addresses, or '' if it isn't one.
-
-    Returns a comparable key so an event URL can be tested against the crawl's
-    own source URL: 'slug:<calendar-slug>' or 'cal:<calendar-api-id>'.
-
-    Deliberately NOT a "looks like a Luma calendar" test in isolation —
-    `api.lu.ma/url?url=<slug>` also accepts an *event* slug (e199135 carries a
-    live `api.lu.ma/url?url=pubkey-jj3u`, a real PubKey event whose link is
-    merely the unusable JSON form). Only the comparison against the source URL
-    tells the two apart.
-    """
-    if not url:
-        return ''
-    try:
-        parts = urllib.parse.urlparse(url.strip())
-    except ValueError:
-        return ''
-    host = (parts.hostname or '').lower()
-    path = (parts.path or '').rstrip('/')
-    query = urllib.parse.parse_qs(parts.query or '')
-    if host == 'api.lu.ma':
-        if path == '/url':
-            slug = (query.get('url') or [''])[0].strip().lower()
-            return f'slug:{slug}' if slug else ''
-        if path == '/calendar/get-items':
-            cal_id = (query.get('calendar_api_id') or [''])[0].strip().lower()
-            return f'cal:{cal_id}' if cal_id.startswith('cal-') else ''
-        return ''
-    if host in _LUMA_HOSTS:
-        match = _LUMA_CAL_ID_RE.match(path)
-        if match:
-            return f'cal:{match.group(1).lower()}'
-    return ''
-
-
-def is_luma_calendar_listing_url(url, source_url):
-    """True when an event URL is the Luma calendar endpoint it was crawled from.
-
-    Self-referential by design: the record has no event page of its own, so its
-    "URL" is the listing it came from. `luma.com/user/<handle>` host pages are
-    NOT included — those are a person, not a calendar payload, and both corpus
-    instances are real described events.
-    """
-    key = _luma_calendar_key(url)
-    return bool(key) and key == _luma_calendar_key(source_url)
 
 # Signed-media CDN hosts (Instagram/Facebook photo delivery). The Instagram/picnob
 # path sometimes hands us the post's *image* URL instead of the post permalink; those
@@ -3325,8 +3211,8 @@ def absolutize_url(url, source_url):
     Returns '' when no absolute URL can be formed, so the caller can drop it rather than
     store a link that cannot work.
 
-    Also canonicalizes the Luma short host (`lu.ma` -> `luma.com`, see
-    `canonicalize_luma_host`) so one event page has one spelling everywhere downstream.
+    Also folds platform alias hosts to one spelling (`site_profiles.canonicalize_url`,
+    e.g. `lu.ma` -> `luma.com`) so one event page has one spelling everywhere downstream.
     """
     url = (url or '').strip()
     if not url:
@@ -3336,109 +3222,27 @@ def absolutize_url(url, source_url):
     # "http://https://real.url" — a scheme glued onto an already-absolute URL.
     doubled = re.match(r'^https?://(https?://.+)$', url, re.I)
     if doubled:
-        return canonicalize_luma_host(doubled.group(1))
+        return site_profiles.canonicalize_url(doubled.group(1))
     if re.match(r'^https?://', url, re.I):
-        return canonicalize_luma_host(url)
+        return site_profiles.canonicalize_url(url)
     if url.startswith('//'):
         scheme = urllib.parse.urlparse(source_url or '').scheme or 'https'
-        return canonicalize_luma_host(f'{scheme}:{url}')
+        return site_profiles.canonicalize_url(f'{scheme}:{url}')
     if re.match(r'^[a-z][a-z0-9+.-]*:', url, re.I):
         return ''  # mailto:, tel:, javascript: — not an event page
     if not source_url:
         return ''
-    # Luma slugs are global to the site, not relative to the calendar path they were
-    # listed on: /calendar/cal-XXX + "a7oxbpwy" must resolve to luma.com/a7oxbpwy.
-    host = urllib.parse.urlparse(source_url).netloc.lower()
-    if host in _LUMA_HOSTS and '/' not in url and _LUMA_SLUG.match(url):
-        return f'https://{_LUMA_CANONICAL_HOST}/{url}'
+    # A platform may resolve relative refs its own way (Luma's bare event slugs
+    # are site-global, not relative to the calendar path they were listed on).
+    resolved = site_profiles.absolutize_relative(url, source_url)
+    if resolved:
+        return resolved
     resolved = urllib.parse.urljoin(source_url, url)
     if is_signed_cdn_url(resolved):
         return ''
     if not re.match(r'^https?://', resolved, re.I):
         return ''
-    return canonicalize_luma_host(resolved)
-
-
-def _standardize_time(time_str):
-    """Canonicalize a time string to compact lowercase 12-hour form.
-
-    Examples:
-        '6:30 PM' -> '6:30pm'
-        '6:00pm'  -> '6pm'
-        '17:38'   -> '5:38pm'
-        '19:30:00'-> '7:30pm'
-        '20'      -> '8pm'
-        '08'      -> '8am'
-        '1pmest'  -> '1pm'
-        'allday'  -> ''
-        '7pm'     -> '7pm'  (idempotent)
-
-    Ambiguous inputs (bare HH:MM with HH in 1-12, bare HH in 1-12) are returned with
-    whitespace/case normalized but otherwise unchanged — they could be either AM or PM
-    and auto-converting risks corrupting data. Unrecognized strings get the same
-    treatment so manual cleanup can find them via grep.
-    """
-    if time_str is None:
-        return ''
-    s = str(time_str).strip().lower()
-    # Strip whitespace, dots, and underscores ('9_pm' -> '9pm').
-    s = s.replace(' ', '').replace('.', '').replace('_', '')
-    # Collapse single-digit zero minutes ('7:0pm' -> '7pm', '10:0' -> '10').
-    s = re.sub(r':0(?!\d)', '', s)
-    if s in _SENTINEL_TIMES:
-        return ''
-
-    # Strip US timezone suffixes (1pmest, 7pmet, etc.)
-    s = _TZ_SUFFIX_RE.sub('', s)
-    if not s:
-        return ''
-
-    # '19:30:00' -> '19:30', '7:30:00pm' -> '7:30pm'
-    m = _SECONDS_RE.match(s)
-    if m:
-        s = m.group(1) + (m.group(2) or '')
-
-    m = _TWELVE_HOUR_RE.match(s)
-    if m:
-        h = int(m.group(1))
-        mi = int(m.group(2) or 0)
-        if 1 <= h <= 12 and 0 <= mi <= 59:
-            return _canonical_time(h, mi, m.group(3) == 'pm')
-        return s  # malformed (e.g. '13pm'); preserve so it's findable
-
-    m = _HHMM_RE.match(s)
-    if m:
-        h = int(m.group(1))
-        mi = int(m.group(2))
-        if 0 <= h <= 23 and 0 <= mi <= 59:
-            # Unambiguous 24-hour values: hour 0 (midnight), hour 12 (noon), hour 13-23.
-            # Hour 1-11 in HH:MM with no AM/PM is ambiguous; leave alone.
-            if h == 0:
-                return _canonical_time(12, mi, False)
-            if h == 12:
-                return _canonical_time(12, mi, True)
-            if h >= 13:
-                return _canonical_time(h - 12, mi, True)
-            return s
-
-    m = _HH_RE.match(s)
-    if m:
-        raw = m.group(1)
-        h = int(raw)
-        if 0 <= h <= 23:
-            # A leading zero (e.g. '08') is a strong 24-hour signal even for hours 1-12.
-            has_leading_zero = len(raw) >= 2 and raw[0] == '0'
-            if h == 0:
-                return '12am'
-            if h == 12:
-                return '12pm'
-            if h >= 13:
-                return _canonical_time(h - 12, 0, True)
-            if has_leading_zero:
-                return _canonical_time(h, 0, False)  # '08' -> '8am'
-            return s  # bare '6' is ambiguous; leave alone
-
-    return s  # unrecognized; preserve original text (normalized whitespace/case)
+    return site_profiles.canonicalize_url(resolved)
 
 
 _SOURCE_MIDNIGHT_RE = re.compile(r'(?<!\d)12\s*am\b', re.IGNORECASE)
@@ -4322,8 +4126,24 @@ def _normalize_location_name_parts(name):
     return " ".join(normalized.split()), area_token
 
 
+@functools.lru_cache(maxsize=65536)
+def _key_token_sets(key):
+    """(all tokens, tokens of length >= 4) for a locations-map key.
+
+    Keys are constant for a run and every crawl_event's fuzzy tier walks the
+    same keys, so the split is cached rather than redone ~2M times per run.
+    """
+    key_all = frozenset(key.split())
+    return key_all, frozenset(t for t in key_all if len(t) >= 4)
+
+
+@functools.lru_cache(maxsize=200000)
 def _calculate_levenshtein_ratio(s1, s2):
-    """Calculates the Levenshtein distance ratio between two strings."""
+    """Calculates the Levenshtein distance ratio between two strings.
+
+    Cached: the fuzzy tripwire compares each crawl_event name against the same
+    locations-map keys, so ~99% of calls per run repeat an earlier pair.
+    """
     if not s1 or not s2:
         return 0.0
     if len(s1) < len(s2):
@@ -4581,10 +4401,8 @@ def _region_conflict(raw_text, candidate_info, city_states):
 
 
 _ADDR_STREET_TYPES = sorted(
-    # "concourse" is here for the Bronx's Grand Concourse, which greenmarket
-    # and park addresses name as a cross street ("192nd St & Grand Concourse",
-    # loc 669). Without it the side doesn't read as a street at all and the
-    # whole intersection is discarded.
+    # City-specific street NAMES that act as a type ("broadway", "bowery", the
+    # Bronx's "concourse") come from `processor.address` in the city config.
     # "ter" is the abbreviated form Google returns for Terrace ("6 River Ter.",
     # loc 4080). Without it the DB side of the comparison doesn't parse as a
     # street at all, so "6 River Terrace" never matched "6 River Ter." and the
@@ -4592,11 +4410,12 @@ _ADDR_STREET_TYPES = sorted(
     # form onto it; 'terrace' stays in the set so `_ADDR_TYPE_WORDS` keeps
     # recognizing the spelled-out word.
     {'st', 'ave', 'blvd', 'dr', 'rd', 'pl', 'ct', 'ln', 'pkwy', 'hwy',
-     'broadway', 'bowery', 'way', 'sq', 'ter', 'terrace', 'tpke', 'concourse'},
+     'way', 'sq', 'ter', 'terrace', 'tpke'}
+    | set(city_config.address_extra_street_types()),
     key=len, reverse=True,
 )
 # Street names that can stand alone with no preceding name word (e.g. "350 Bowery").
-_ADDR_STANDALONE_TYPES = {'broadway', 'bowery'}
+_ADDR_STANDALONE_TYPES = set(city_config.address_standalone_street_names())
 _ADDR_LONG_TO_SHORT = {
     'avenue': 'ave', 'street': 'st', 'boulevard': 'blvd', 'drive': 'dr',
     'road': 'rd', 'place': 'pl', 'court': 'ct', 'lane': 'ln',
@@ -5807,11 +5626,30 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
     if len(normalized_name) > 3:
         search_keys.append(normalized_name)
 
-    def make_result(info):
-        """Helper to construct result dict."""
+    def make_result(info, step, guard='full'):
+        """Screen a candidate and build the result, or None if a guard refuses it.
+
+        EVERY return path of the cascade goes through here, so a candidate is
+        screened by default and a new guard added to `conflicts` reaches every
+        tier at once (until 2026-09-04 each tier called the guards by hand and
+        four return paths — address, single-venue authority, sublocation
+        address, website fallbacks — called none).
+
+        `guard`: 'full' — region + area-qualifier conflicts (`conflicts`);
+        'area' — only the area-qualifier guard, for the curated website-scoped
+        tiers: the collapse overreaching is the ONE thing curation cannot
+        speak for, every other heuristic yields to the curated mapping.
+        `step` names the tier that answered, carried on the result for
+        diagnostics and A/B measurement.
+        """
+        if guard == 'full' and conflicts(info):
+            return None
+        if guard == 'area' and _area_qualifier_conflict(raw_geo_fields, info, area_classes):
+            return None
         return {
             'id': info.get('id'),
             'emoji': info.get('emoji'),
+            'step': step,
         }
 
     def get_first(match):
@@ -5838,9 +5676,8 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
                 # "Downtown Brooklyn" rows resolve to Lower Manhattan. Only an
                 # area conflict is checked here; every other heuristic still
                 # yields to the curated mapping.
-                if _area_qualifier_conflict(raw_geo_fields, website_tier[key], area_classes):
-                    continue
-                return make_result(website_tier[key])
+                if (result := make_result(website_tier[key], 'website_alt', guard='area')):
+                    return result
 
         # Step 1b: the FEATURE half of a "<Parent venue> — <specific feature>"
         # string. Measured 2026-09-02: the more specific the source got, the
@@ -5873,8 +5710,8 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
             parent_key, feature_key = split
             cand = get_first(website_tier[feature_key])
             if (_child_of_parent(cand, parent_key)
-                    and not _area_qualifier_conflict(raw_geo_fields, cand, area_classes)):
-                return make_result(cand)
+                    and (result := make_result(cand, 'website_alt_feature', guard='area'))):
+                return result
 
     # Step 2: Exact matches in global tiers (names, alternate_names, short_names).
     # The 'names' tier is the location's own primary name (high confidence — a
@@ -5967,8 +5804,6 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
             for key in key_group:
                 if key in tier:
                     cand = get_first(tier[key])
-                    if tier_name != 'names' and conflicts(cand):
-                        continue
                     # A derived bare key that names a whole family of venues
                     # ("smorgasburg", "green room") can't pick a member.
                     if _is_brand_family_key(locations_map, key, cand.get('id')):
@@ -5979,16 +5814,20 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
                         continue
                     if (home_is_initialism and key == normalized_loc
                             and cand.get('id') != home_venue.get('id')):
-                        return make_result(home_venue)
-                    return make_result(cand)
+                        if (result := make_result(home_venue, 'initialism_home')):
+                            return result
+                        continue
+                    if (result := make_result(cand, f'exact_{tier_name}')):
+                        return result
 
     # Step 3: Address matching (e.g., "347 Davis Ave" matches location at that address)
     addresses_tier = locations_map.get('addresses', {})
     for key in search_keys:
         street_addr = _extract_street_address(key)
         match = addresses_tier.get(street_addr) if street_addr else None
-        if match is not None and match is not _AMBIGUOUS_ADDRESS:
-            return make_result(match)
+        if (match is not None and match is not _AMBIGUOUS_ADDRESS
+                and (result := make_result(match, 'address'))):
+            return result
 
     # Step 3.5: Single-venue website authority.
     # When the source website is linked to exactly ONE venue, that venue is
@@ -6026,8 +5865,8 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
         # theater's own site).
         if not consistent and not _is_brand_family_name(locations_map, normalized_loc):
             consistent = _calculate_levenshtein_ratio(normalized_loc, v_name) >= 0.6
-        if consistent:
-            return make_result(home_venue)
+        if consistent and (result := make_result(home_venue, 'single_venue_site')):
+            return result
 
     # Step 4: Prefix matching (e.g., "Devocíon" matches "Devocíon (Williamsburg)")
     # Only use location_keys here to avoid matching event names to unrelated locations
@@ -6070,13 +5909,15 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
             # Coverage-based hits, keyed by location_id so the same venue reached
             # via several keys counts once.
             coverage_hits = {}
+            key_paren = key + '('
+            key_space = key + ' '
             for loc_key, match in locations_map.get(tier_name, {}).items():
                 # See `short_index_keys`: never reachable from the tier side.
                 if loc_key in short_index_keys:
                     continue
-                is_paren = loc_key.startswith(key + '(')
+                is_paren = loc_key.startswith(key_paren)
                 is_coverage = (
-                    loc_key.startswith(key + ' ')
+                    loc_key.startswith(key_space)
                     and len(key) / len(loc_key) >= PREFIX_MATCH_COVERAGE
                 )
                 if not (is_paren or is_coverage):
@@ -6099,10 +5940,11 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
                     else:
                         coverage_hits.setdefault(cand.get('id'), cand)
 
-            if paren_hit is not None:
-                return make_result(paren_hit)
-            if len(coverage_hits) == 1:
-                return make_result(next(iter(coverage_hits.values())))
+            if paren_hit is not None and (result := make_result(paren_hit, 'prefix_branch')):
+                return result
+            if (len(coverage_hits) == 1
+                    and (result := make_result(next(iter(coverage_hits.values())), 'prefix'))):
+                return result
             if len(coverage_hits) > 1:
                 # Ambiguous: this key prefixes 2+ distinct venues at >= coverage
                 # (e.g. "first reformed church" covers exactly 0.700 of "first
@@ -6141,7 +5983,12 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
     loc_is_generic = normalized_loc in GENERIC_LOCATION_WORDS
     subloc_is_generic = normalized_subloc in GENERIC_LOCATION_WORDS
 
-    if len(full_loc) > 3 or len(normalized_name) > 3:
+    # Loop invariants for the per-key checks below.
+    name_is_long = len(normalized_name) > 3
+    loc_is_long = len(normalized_loc) > 3
+    subloc_is_long = len(normalized_subloc) > 3
+
+    if len(full_loc) > 3 or name_is_long:
         for priority, tier in all_tiers:
             for key in tier:
                 if not key.strip():
@@ -6160,10 +6007,10 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
 
                 is_match = (
                     key == normalized_loc or
-                    (len(normalized_name) > 3 and key == normalized_name) or
+                    (name_is_long and key == normalized_name) or
                     (len(key) > 3 and key in full_loc) or
-                    (len(normalized_loc) > 3 and not loc_is_generic and normalized_loc in key) or
-                    (len(normalized_subloc) > 3 and not subloc_is_generic and normalized_subloc in key)
+                    (loc_is_long and not loc_is_generic and normalized_loc in key) or
+                    (subloc_is_long and not subloc_is_generic and normalized_subloc in key)
                 )
 
                 # Token-overlap tripwire: if a variant shares ≥2 long tokens
@@ -6171,8 +6018,7 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
                 # This catches single-char typos that defeat substring checks.
                 matched_variants = []
                 if not is_match and variant_tokens:
-                    key_all = set(key.split())
-                    key_toks = {t for t in key_all if len(t) >= 4}
+                    key_all, key_toks = _key_token_sets(key)
                     for variant, toks, variant_all in variant_tokens:
                         if len(toks & key_toks) < 2:
                             continue
@@ -6226,7 +6072,7 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
                     # the guess that guard exists to refuse.
                     if _area_qualifier_conflict(raw_geo_fields, get_first(tier[key]), area_classes):
                         continue
-                    if len(normalized_name) > 3 and key == normalized_name:
+                    if name_is_long and key == normalized_name:
                         score = 1.0
                     elif (len(key) > 3
                             and (full_loc.startswith(key) or full_loc.endswith(key))
@@ -6263,7 +6109,7 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
                         score = max(
                             _fuzzy_ratio(normalized_loc, key),
                             _fuzzy_ratio(full_loc, key),
-                            _fuzzy_ratio(normalized_name, key) if len(normalized_name) > 3 else 0,
+                            _fuzzy_ratio(normalized_name, key) if name_is_long else 0,
                             # The venue-type-swap veto deliberately does not
                             # reach the variants (measured: 8 real venues
                             # un-pinned). The numeric one does — a variant is
@@ -6278,8 +6124,8 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
                         best_score, best_priority = score, priority
                         best_result = get_first(tier[key])
 
-    if best_result and not conflicts(best_result):
-        return make_result(best_result)
+    if best_result and (result := make_result(best_result, 'fuzzy')):
+        return result
 
     # Step 5b: Sublocation address matching
     # When name-based matching (steps 1-5) fails, try the sublocation as a street address.
@@ -6291,8 +6137,9 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
     if normalized_subloc and len(normalized_subloc) > 3:
         street_addr = _extract_street_address(normalized_subloc)
         match = addresses_tier.get(street_addr) if street_addr else None
-        if match is not None and match is not _AMBIGUOUS_ADDRESS:
-            return make_result(match)
+        if (match is not None and match is not _AMBIGUOUS_ADDRESS
+                and (result := make_result(match, 'sublocation_address'))):
+            return result
 
     # Step 5c: Cross-website exact match on a curated website-scoped alternate name.
     #
@@ -6334,12 +6181,11 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
             ids = {h.get('id') for h in hits}
             if len(ids) > 1:
                 continue  # ambiguous across websites — decline
-            if conflicts(hits[0]):
-                continue
             if not _shares_distinctive_token(
                     key, _normalize_location_name(hits[0].get('name') or '')):
                 continue  # in-site shorthand, not portable venue knowledge
-            return make_result(hits[0])
+            if (result := make_result(hits[0], 'cross_site_alt')):
+                return result
 
     # Step 5d: Parenthetical parent venue — "<feature> (in <Parent Venue>)".
     #
@@ -6375,10 +6221,8 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
                 # Same name at 2+ distinct locations — genuinely ambiguous.
                 if len({m.get('id') for m in match}) > 1:
                     continue
-            cand = get_first(match)
-            if conflicts(cand):
-                continue
-            return make_result(cand)
+            if (result := make_result(get_first(match), 'parenthetical_parent')):
+                return result
 
     # Step 6: Source site fallback (match website name to location)
     # Only fires when no real venue name was extracted — otherwise an event
@@ -6412,8 +6256,9 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
                     match = tier[key]
                     if isinstance(match, list):
                         continue
-                    if _squash_identity(_normalize_location_name(key)) == site_key:
-                        return make_result(match)
+                    if (_squash_identity(_normalize_location_name(key)) == site_key
+                            and (result := make_result(match, 'source_site'))):
+                        return result
 
     # Step 7: Website-linked location fallback
     # When the location name is virtual/generic (normalized to empty) and the website
@@ -6422,8 +6267,8 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
     # Only applies when there's no real venue name to match against.
     if website_id and not normalized_loc:
         linked = locations_map.get('website_linked', {}).get(website_id, [])
-        if len(linked) == 1:
-            return make_result(linked[0])
+        if len(linked) == 1 and (result := make_result(linked[0], 'website_linked')):
+            return result
 
     # (The former single-venue brand-name fallback is now Step 3.5, which runs
     # before prefix/fuzzy so the authoritative venue wins over arbitrary
@@ -6771,87 +6616,63 @@ def process_events(cursor, connection, crawl_result_id, website_name, run_date_s
         # rentals, season passes, showtime placeholders, SEO spam, fundraising
         # campaigns, submission-call contests, info-booth listings. Drop before
         # they ever become a crawl_event; log so the rejection is auditable.
-        if is_obvious_non_event(row_dict.get('name', ''),
-                                row_dict.get('description', ''),
-                                row_dict.get('location', ''),
-                                row_dict.get('sublocation', '')):
+        event_url = (row_dict.get('url') or '').strip()
+
+        def _reject(rejection_type, details=None, url=event_url or None):
+            """Log this row's rejection and bump the per-type tally."""
             log_rejection(
                 cursor, crawl_result_id, website_id,
-                rejection_type='non_event_junk', stage='extract',
-                event_name=row_dict.get('name'),
-                event_url=(row_dict.get('url') or '').strip() or None,
+                rejection_type=rejection_type, stage='extract',
+                event_name=row_dict.get('name'), event_url=url,
                 start_date=(row_dict.get('start_date') or None),
                 end_date=(row_dict.get('end_date') or None),
-                details='Name matched non-event junk pattern',
+                details=details,
             )
-            rejection_counts['non_event_junk'] = rejection_counts.get('non_event_junk', 0) + 1
-            continue
+            rejection_counts[rejection_type] = rejection_counts.get(rejection_type, 0) + 1
 
-        event_url = (row_dict.get('url') or '').strip()
+        junk_rule = which_junk_rule(row_dict.get('name', ''),
+                                    row_dict.get('description', ''),
+                                    row_dict.get('location', ''),
+                                    row_dict.get('sublocation', ''))
+        if junk_rule:
+            _reject('non_event_junk', f'Matched non-event junk rule: {junk_rule}')
+            continue
 
         # Cancellation marker in the URL slug: the venue re-slugged the event to
         # `.../canceled-<title>` (or `.../<title>-postponed`) but left the visible
         # title clean, so nothing else in the row says the event is dead. Drop it
         # here rather than letting it land as an active, real-looking listing.
         if event_url and is_cancelled_by_url(event_url):
-            log_rejection(
-                cursor, crawl_result_id, website_id,
-                rejection_type='cancelled_url_slug', stage='extract',
-                event_name=row_dict.get('name'), event_url=event_url,
-                start_date=(row_dict.get('start_date') or None),
-                end_date=(row_dict.get('end_date') or None),
-                details='URL slug marks the event canceled/postponed',
-            )
-            rejection_counts['cancelled_url_slug'] = rejection_counts.get('cancelled_url_slug', 0) + 1
+            _reject('cancelled_url_slug', 'URL slug marks the event canceled/postponed')
             continue
 
-        # Luma calendar-level metadata read as an event. `group_event_occurrences`
-        # falls back to `source_url` when a row has no URL of its own, so the
-        # effective URL is computed the same way here. A blank body is the
-        # corroborating signal: e161574 (Accent Sisters) is a real screening
-        # whose only URL is its calendar page, and its description spares it.
+        # Listing-level metadata read as an event (a Luma calendar's own
+        # `tags[]`/`name`, say). `group_event_occurrences` falls back to
+        # `source_url` when a row has no URL of its own, so the effective URL is
+        # computed the same way here and tested against the listing endpoint
+        # (`site_profiles.is_listing_url`). A blank body is the corroborating
+        # signal: e161574 (Accent Sisters) is a real screening whose only URL is
+        # its calendar page, and its description spares it.
         if source_url and _description_is_blank(row_dict.get('description')):
             effective_url = absolutize_url(event_url, source_url) or source_url
-            if is_luma_calendar_listing_url(effective_url, source_url):
-                log_rejection(
-                    cursor, crawl_result_id, website_id,
-                    rejection_type='luma_calendar_metadata', stage='extract',
-                    event_name=row_dict.get('name'), event_url=effective_url,
-                    start_date=(row_dict.get('start_date') or None),
-                    end_date=(row_dict.get('end_date') or None),
-                    details='Record has no event URL of its own — points at the '
-                            'Luma calendar endpoint it was extracted from',
-                )
-                rejection_counts['luma_calendar_metadata'] = (
-                    rejection_counts.get('luma_calendar_metadata', 0) + 1)
+            if site_profiles.is_listing_url(effective_url, source_url):
+                _reject('source_listing_metadata',
+                        'Record has no event URL of its own — points at the '
+                        'listing endpoint it was extracted from',
+                        url=effective_url)
                 continue
 
         # URL grounding check: if the AI returned a URL that doesn't appear in
         # the crawled content, it's likely a hallucinated event. Log and skip.
         if event_url and crawled_content and not _url_grounded_in_content(event_url, crawled_content):
-            log_rejection(
-                cursor, crawl_result_id, website_id,
-                rejection_type='url_not_in_content', stage='extract',
-                event_name=row_dict.get('name'), event_url=event_url,
-                start_date=(row_dict.get('start_date') or None),
-                end_date=(row_dict.get('end_date') or None),
-                details='URL path not found in crawled content',
-            )
-            rejection_counts['url_not_in_content'] = rejection_counts.get('url_not_in_content', 0) + 1
+            _reject('url_not_in_content', 'URL path not found in crawled content')
             continue
 
         if not row_dict.get('missing_date'):
             ok, reason = filter_by_date(row_dict, current_date, future_limit_date)
             if not ok:
                 if reason in ('end_in_past', 'start_too_future'):
-                    log_rejection(
-                        cursor, crawl_result_id, website_id,
-                        rejection_type=reason, stage='extract',
-                        event_name=row_dict.get('name'), event_url=event_url or None,
-                        start_date=(row_dict.get('start_date') or None),
-                        end_date=(row_dict.get('end_date') or None),
-                    )
-                    rejection_counts[reason] = rejection_counts.get(reason, 0) + 1
+                    _reject(reason)
                 continue
 
         # Get extra_tags
@@ -7010,28 +6831,20 @@ def process_events(cursor, connection, crawl_result_id, website_name, run_date_s
         )
         crawl_event_id = cursor.lastrowid
 
-        # Insert occurrences
-        for i, occ in enumerate(event_data.get('occurrences', [])):
-            if len(occ) >= 1 and occ[0]:
-                try:
-                    cursor.execute(
-                        """INSERT INTO crawl_event_occurrences
-                           (crawl_event_id, start_date, start_time, end_date, end_time, sort_order)
-                           VALUES (%s, %s, %s, %s, %s, %s)""",
-                        (crawl_event_id, occ[0], occ[1] if len(occ) > 1 else None,
-                         occ[2] if len(occ) > 2 and occ[2] else None,
-                         occ[3] if len(occ) > 3 else None, i)
-                    )
-                except Exception as e:
-                    print(f"    - Warning: failed to insert occurrence {occ!r} for crawl_event {crawl_event_id}: {e}")
+        # Insert occurrences (times canonicalized at the write boundary)
+        db.insert_crawl_event_occurrences(cursor, crawl_event_id, [
+            (occ[0], occ[1] if len(occ) > 1 else None,
+             occ[2] if len(occ) > 2 and occ[2] else None,
+             occ[3] if len(occ) > 3 else None, i)
+            for i, occ in enumerate(event_data.get('occurrences', []))
+            if len(occ) >= 1 and occ[0]
+        ])
 
         # Insert tags
-        for tag in event_data.get('tags', []):
-            if tag:
-                cursor.execute(
-                    "INSERT INTO crawl_event_tags (crawl_event_id, tag) VALUES (%s, %s)",
-                    (crawl_event_id, tag[:100])
-                )
+        tag_rows = [(crawl_event_id, tag[:100]) for tag in event_data.get('tags', []) if tag]
+        if tag_rows:
+            cursor.executemany(
+                "INSERT INTO crawl_event_tags (crawl_event_id, tag) VALUES (%s, %s)", tag_rows)
 
         # Track undated events (extracted without dates from source)
         has_valid_occurrences = any(
@@ -7242,10 +7055,8 @@ def apply_crawled_details(cursor, connection, ce_id, data, tag_context,
                 if parsed_end and parsed_end == parsed_start:
                     end_date = None
 
-                surviving.append((
-                    start_date, _standardize_time(occ.get('start_time')),
-                    end_date, _standardize_time(occ.get('end_time')),
-                ))
+                surviving.append((start_date, occ.get('start_time'),
+                                  end_date, occ.get('end_time')))
 
             # Only replace when the detail crawl actually produced usable dates.
             # If nothing survived, keep whatever the listing page gave us.
@@ -7254,23 +7065,17 @@ def apply_crawled_details(cursor, connection, ce_id, data, tag_context,
                     "DELETE FROM crawl_event_occurrences WHERE crawl_event_id = %s",
                     (ce_id,),
                 )
-                for sort_order, (s_date, s_time, e_date, e_time) in enumerate(surviving):
-                    cursor.execute(
-                        "INSERT INTO crawl_event_occurrences "
-                        "(crawl_event_id, start_date, start_time, end_date, end_time, sort_order) "
-                        "VALUES (%s, %s, %s, %s, %s, %s)",
-                        (ce_id, s_date, s_time, e_date, e_time, sort_order),
-                    )
+                db.insert_crawl_event_occurrences(cursor, ce_id, surviving)
 
     # Replace tags
     cursor.execute(
         "DELETE FROM crawl_event_tags WHERE crawl_event_id = %s",
         (ce_id,),
     )
-    for tag in processed_tags:
-        cursor.execute(
+    if processed_tags:
+        cursor.executemany(
             "INSERT INTO crawl_event_tags (crawl_event_id, tag) VALUES (%s, %s)",
-            (ce_id, tag[:100]),
+            [(ce_id, tag[:100]) for tag in processed_tags],
         )
 
     connection.commit()

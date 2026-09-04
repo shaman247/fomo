@@ -40,15 +40,16 @@ Before crawling, check for date-triggered maintenance tasks that have come due:
 ./venv/bin/python scripts/due_tasks.py
 ```
 
-This reads `.claude/scheduled-tasks.md` and lists tasks whose `Due` date has arrived (`Status: pending`, `Due` <= today). Exit code is 0 if any are due, 1 if none.
+This reads `.claude/scheduled-tasks.md` (externally gated one-offs: season rollovers, reopenings, announcements) **and** `.claude/recurring-checks.md` (cadence-driven audits and health checks) and lists tasks whose `Due` date has arrived (`Status: pending`, `Due` <= today); each line names its file. Exit code is 0 if any are due, 1 if none. It does NOT read `.claude/backlog.md` (undated engineering work) or `.claude/decisions.md` (settled rulings) — those are not date-triggered.
 
 - **If none are due**, proceed to Step 1.
-- **If tasks are due**, open `.claude/scheduled-tasks.md`, and for each due task carry out the actions in its block. These are self-contained (each names the website IDs, commands, SQL, and success criteria). Most are targeted recrawls + verification — run them here via `./venv/bin/python pipeline/main.py --ids <ids>` and confirm the success criteria. If a task adds a **new** crawl source (website or `website_urls` entry), add it now so the main Step 1 run picks it up.
-- **After completing each task**, update its entry in `.claude/scheduled-tasks.md`:
+- **If tasks are due**, open the file named on the line (`.claude/scheduled-tasks.md` or `.claude/recurring-checks.md`), and for each due task carry out the actions in its block. These are self-contained (each names the website IDs, commands, SQL, and success criteria). Most are targeted recrawls + verification — run them here via `./venv/bin/python pipeline/main.py --ids <ids>` and confirm the success criteria. If a task adds a **new** crawl source (website or `website_urls` entry), add it now so the main Step 1 run picks it up.
+- **After completing each task**, update its entry in the file it came from:
   - `Recur: none` → mark `Status: done` and move the whole block to `.claude/completed-tasks.md` (newest at top).
   - `Recur: annual` → bump `Due` forward one year and **keep** `Status: pending` (also update any year literals inside the task's commands, e.g. a `crawl_after` value).
   - `Recur: <N>d` → bump `Due` forward by N days, keep `Status: pending`.
 - If a task needs judgment beyond its documented actions (e.g. a source still isn't published), leave it `pending`, do **not** bump the date, and surface it under "Findings requiring user approval" in the summary.
+- **Filing new work found during the run:** only something that must wait for an external event goes in `scheduled-tasks.md`. A bug or engineering follow-up goes in `.claude/backlog.md` (no date). A new periodic check goes in `recurring-checks.md`. A ruling that should stop future re-investigation goes in `.claude/decisions.md`. Do not give backlog items a `Due` date to make them surface — that is how the queue drifted into a to-do list.
 
 Re-export + upload (Step 5) at the end of the run will publish any event changes these tasks produced.
 
@@ -93,7 +94,7 @@ The pipeline output to look for:
   write a fail-safe message at all** (audited 2026-08-04), so a silent no-op usually logs nothing.
   The reliable check is a **shape test**: extract each `js_code`'s own injected `<h1>` literal and assert it
   appears in `crawl_results.crawled_content`. That is mechanical and covers every site; see
-  `## Audit sync-XHR js_code sites for silent text_mode degradation` in `.claude/scheduled-tasks.md`.
+  `## Audit sync-XHR js_code sites for silent text_mode degradation` in `.claude/recurring-checks.md`.
   **Do not flip `text_mode` without the symptom** — 33 of 34 sync-XHR sites work fine on the default, and
   the one structural candidate (w104) turned out to be byte-identical under both settings.
 - **Chunk failures** (`N/M chunk request(s) failed`) — since 2026-08-04 a PARTIAL chunk failure fails

@@ -29,6 +29,7 @@ from collections import Counter
 from datetime import date, timedelta
 
 sys.path.insert(0, 'pipeline')
+import db
 from db import create_connection
 from dblock import write_lock
 from constants import FUTURE_WINDOW_DAYS
@@ -869,9 +870,7 @@ def main():
                 cur.execute('''DELETE FROM event_occurrences WHERE event_id=%s
                                AND end_date IS NOT NULL AND DATEDIFF(end_date,start_date)>%s''', (eid, SPAN_THRESHOLD))
             # insert missing in-window discrete dates at the cadence time
-            for d in new_dates:
-                cur.execute('''INSERT INTO event_occurrences (event_id,start_date,start_time,end_date,end_time,sort_order)
-                               VALUES (%s,%s,%s,NULL,%s,0)''', (eid, d, st or '', et or ''))
+            db.insert_event_occurrences(cur, eid, [(d, st or '', None, et or '', 0) for d in new_dates])
             # reset section so exporter reclassifies
             cur.execute('UPDATE events SET section=NULL WHERE id=%s', (eid,))
             fixed += 1

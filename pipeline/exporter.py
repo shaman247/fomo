@@ -149,6 +149,41 @@ def url_embedded_date(url):
     return None
 
 
+# Aggregator trust gate, shared by the frontend export and the public dataset:
+# an event is publishable when it has no website, its website is a primary
+# source or still enabled, or at least one of its sources is a primary site.
+# Enabled aggregators (RA, Eventbrite, Partiful, …) are trusted discovery feeds.
+# Expects the `events e` / `LEFT JOIN websites w` aliases.
+_PUBLISHABLE_WEBSITE_GATE = """
+            w.id IS NULL
+            OR w.source_type = 'primary'
+            OR w.disabled = FALSE
+            OR EXISTS (
+                SELECT 1 FROM event_sources es
+                JOIN crawl_events ce ON es.crawl_event_id = ce.id
+                JOIN crawl_results cr ON ce.crawl_result_id = cr.id
+                JOIN websites w2 ON cr.website_id = w2.id
+                WHERE es.event_id = e.id AND w2.source_type = 'primary'
+            )
+"""
+
+
+def _load_source_sites(cursor):
+    """event_id -> set of website_ids that sourced it (merged events carry
+    several). Used to attribute multiple organizer chips per event."""
+    source_sites_by_event = {}
+    cursor.execute("""
+        SELECT es.event_id, cr.website_id
+        FROM event_sources es
+        JOIN crawl_events ce ON es.crawl_event_id = ce.id
+        JOIN crawl_results cr ON ce.crawl_result_id = cr.id
+        WHERE cr.website_id IS NOT NULL
+    """)
+    for ev_id, src_wid in cursor.fetchall():
+        source_sites_by_event.setdefault(ev_id, set()).add(src_wid)
+    return source_sites_by_event
+
+
 def order_event_urls(urls, current_date):
     """Return `urls` with a usable click-through link first.
 
@@ -289,7 +324,7 @@ def export_events(cursor):
     #
     # Aggregator trust gate: enabled aggregators (RA, Eventbrite, Partiful, …) are
     # trusted discovery feeds — keep their events.
-    cursor.execute("""
+    cursor.execute(f"""
         SELECT e.id, e.name, e.short_name, e.description, e.emoji,
                e.location_name, e.sublocation,
                l.name as matched_location_name,
@@ -301,18 +336,7 @@ def export_events(cursor):
         WHERE l.lat IS NOT NULL AND l.lng IS NOT NULL
           AND e.archived = FALSE
           AND e.suppressed = FALSE
-          AND (
-            w.id IS NULL
-            OR w.source_type = 'primary'
-            OR w.disabled = FALSE
-            OR EXISTS (
-                SELECT 1 FROM event_sources es
-                JOIN crawl_events ce ON es.crawl_event_id = ce.id
-                JOIN crawl_results cr ON ce.crawl_result_id = cr.id
-                JOIN websites w2 ON cr.website_id = w2.id
-                WHERE es.event_id = e.id AND w2.source_type = 'primary'
-            )
-          )
+          AND ({_PUBLISHABLE_WEBSITE_GATE})
     """)
 
     event_rows = cursor.fetchall()
@@ -320,29 +344,22 @@ def export_events(cursor):
     # Prefetch the distinct source websites for every event (merged events can
     # carry several). Used to attribute multiple organizer chips per event. The
     # event's own website_id (the merger's primary) is added first below.
-    source_sites_by_event = {}
-    cursor.execute("""
-        SELECT es.event_id, cr.website_id
-        FROM event_sources es
-        JOIN crawl_events ce ON es.crawl_event_id = ce.id
-        JOIN crawl_results cr ON ce.crawl_result_id = cr.id
-        WHERE cr.website_id IS NOT NULL
-    """)
-    for ev_id, src_wid in cursor.fetchall():
-        source_sites_by_event.setdefault(ev_id, set()).add(src_wid)
+    source_sites_by_event = _load_source_sites(cursor)
 
     # Prefetch tags for the exported events in chunked IN(...) queries (was one
     # per-event query inside the loop). Scoped to the event ids actually being
     # exported and grouped by event_id. The ORDER BY et.event_id, et.tag_id
     # reproduces the original per-event query's row order byte-for-byte (the
-    # implicit secondary-index order is (event_id, tag_id)). NOTE: occurrences
-    # and urls are deliberately NOT batched here — their within-event tie order
-    # (equal start_date / equal sort_order) is query-plan-dependent and the
-    # frontend surfaces it (occurrences[0].end after a stable start-sort; the
-    # first URL per domain), so they stay as per-event queries to preserve the
-    # exact shipped JSON. See the per-event SELECTs in the loop below.
+    # implicit secondary-index order is (event_id, tag_id)). URLs are batched
+    # the same way: `ORDER BY sort_order, id` is a total order per event, so
+    # the per-event row order is unchanged. NOTE: occurrences are deliberately
+    # NOT batched — their within-event tie order (equal start_date) is
+    # query-plan-dependent and the frontend surfaces it (occurrences[0].end
+    # after a stable start-sort), so they stay as a per-event query to
+    # preserve the exact shipped JSON. See the per-event SELECT in the loop.
     event_ids = [r[0] for r in event_rows]
     tags_by_id = {}
+    urls_by_id = {}
     for i in range(0, len(event_ids), 1000):
         chunk = event_ids[i:i + 1000]
         placeholders = ','.join(['%s'] * len(chunk))
@@ -354,6 +371,13 @@ def export_events(cursor):
         """, tuple(chunk))
         for r in cursor.fetchall():
             tags_by_id.setdefault(r[0], []).append(r[1])
+        cursor.execute(f"""
+            SELECT event_id, url FROM event_urls
+            WHERE event_id IN ({placeholders})
+            ORDER BY event_id, sort_order, id
+        """, tuple(chunk))
+        for eid, url in cursor.fetchall():
+            urls_by_id.setdefault(eid, []).append(url)
 
     all_events = []
     descriptions_by_id = {}  # event_id -> description; shipped as desc companions
@@ -384,14 +408,10 @@ def export_events(cursor):
         if not occurrences:
             continue
 
-        # Get URLs — events without any URL are not shown on fomo.nyc.
-        # `sort_order` is not unique per event, so `id` breaks the tie
-        # deterministically instead of leaving it to the query plan; then
-        # `order_event_urls` moves an expired dated permalink off the front.
-        cursor.execute("""
-            SELECT url FROM event_urls WHERE event_id = %s ORDER BY sort_order, id
-        """, (event_id,))
-        urls = order_event_urls([r[0] for r in cursor.fetchall()], current_date)
+        # Get URLs (prefetched above, ordered by sort_order then id) — events
+        # without any URL are not shown on fomo.nyc. `order_event_urls` moves an
+        # expired dated permalink off the front.
+        urls = order_event_urls(urls_by_id.get(event_id, []), current_date)
         if not urls:
             continue
 
@@ -883,7 +903,7 @@ def export_public_datasets(cursor, export_date=None, export_dir=PUBLIC_EXPORT_DI
     past_earliest = current_date - timedelta(days=PUBLIC_EXPORT_PAST_DAYS)
     parent_map = _load_parent_map(cursor)
 
-    cursor.execute("""
+    cursor.execute(f"""
         SELECT e.id, e.name, e.short_name, e.description, e.emoji,
                e.event_type, e.location_name, e.sublocation, e.website_id,
                l.id, l.name, l.address, l.lat, l.lng, e.archived
@@ -892,18 +912,7 @@ def export_public_datasets(cursor, export_date=None, export_dir=PUBLIC_EXPORT_DI
         LEFT JOIN websites w ON e.website_id = w.id
         WHERE l.lat IS NOT NULL AND l.lng IS NOT NULL
           AND e.suppressed = FALSE
-          AND (
-            w.id IS NULL
-            OR w.source_type = 'primary'
-            OR w.disabled = FALSE
-            OR EXISTS (
-                SELECT 1 FROM event_sources es
-                JOIN crawl_events ce ON es.crawl_event_id = ce.id
-                JOIN crawl_results cr ON ce.crawl_result_id = cr.id
-                JOIN websites w2 ON cr.website_id = w2.id
-                WHERE es.event_id = e.id AND w2.source_type = 'primary'
-            )
-          )
+          AND ({_PUBLISHABLE_WEBSITE_GATE})
     """)
     event_rows = cursor.fetchall()
     event_ids = [r[0] for r in event_rows]
@@ -943,16 +952,7 @@ def export_public_datasets(cursor, export_date=None, export_dir=PUBLIC_EXPORT_DI
 
     # Source websites per event (merged events carry several), for organizer
     # attribution — same resolution as the frontend export.
-    source_sites_by_event = {}
-    cursor.execute("""
-        SELECT es.event_id, cr.website_id
-        FROM event_sources es
-        JOIN crawl_events ce ON es.crawl_event_id = ce.id
-        JOIN crawl_results cr ON ce.crawl_result_id = cr.id
-        WHERE cr.website_id IS NOT NULL
-    """)
-    for ev_id, src_wid in cursor.fetchall():
-        source_sites_by_event.setdefault(ev_id, set()).add(src_wid)
+    source_sites_by_event = _load_source_sites(cursor)
 
     upcoming_records = []
     past_records = []

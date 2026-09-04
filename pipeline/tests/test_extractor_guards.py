@@ -7,6 +7,7 @@ import importlib.util
 import json
 import os
 import sys
+import contextlib
 import unittest
 from datetime import date
 from types import SimpleNamespace
@@ -1616,9 +1617,9 @@ class TestBatchPathChunkFailures(unittest.TestCase):
 
         class FakeDb:
             @staticmethod
-            def create_connection():
-                return SimpleNamespace(cursor=lambda **kw: SimpleNamespace(close=lambda: None),
-                                       close=lambda: None)
+            @contextlib.contextmanager
+            def cursor_scope(buffered=True):
+                yield SimpleNamespace(), SimpleNamespace()
 
             @staticmethod
             def update_crawl_result_extracted(cursor, conn, crid, text):

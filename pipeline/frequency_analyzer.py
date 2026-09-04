@@ -86,70 +86,66 @@ PERIODICITY_RECENT_DORMANT_CRAWLS = 3       # Last N crawls must all be zero
 PERIODICITY_LEAD_BUFFER_DAYS = 30           # Start crawling this much before predicted next active
 
 
-def _compute_lead_times(cursor, website_id):
-    """
-    Compute posting lead times for a website.
+def _in_clause(ids):
+    return ','.join(['%s'] * len(ids))
 
-    Lead time = event start_date - crawl date (when event was first discovered).
-    Only considers primary sources and events that were in the future at crawl time.
 
-    Returns sorted list of lead time values in days (ascending).
+def _load_lead_times(cursor, website_ids):
+    """website_id -> sorted lead times (days) for events found in the window.
+
+    Lead time = event start_date - crawl date (when the event was first
+    discovered). Only primary sources, only events still in the future at
+    crawl time.
     """
-    cursor.execute("""
-        SELECT DATEDIFF(ceo.start_date, DATE(cr.crawled_at)) as lead_time_days
+    cursor.execute(f"""
+        SELECT cr.website_id, DATEDIFF(ceo.start_date, DATE(cr.crawled_at)) as lead_time_days
         FROM event_sources es
         JOIN crawl_events ce ON es.crawl_event_id = ce.id
         JOIN crawl_results cr ON ce.crawl_result_id = cr.id
         JOIN crawl_event_occurrences ceo ON ceo.crawl_event_id = ce.id
         WHERE es.is_primary = TRUE
-          AND cr.website_id = %s
+          AND cr.website_id IN ({_in_clause(website_ids)})
           AND cr.crawled_at >= DATE_SUB(NOW(), INTERVAL %s DAY)
           AND ceo.start_date >= DATE(cr.crawled_at)
-        ORDER BY lead_time_days
-    """, (website_id, ANALYSIS_WINDOW_DAYS))
+        ORDER BY cr.website_id, lead_time_days
+    """, (*website_ids, ANALYSIS_WINDOW_DAYS))
+    out = {}
+    for wid, lead in cursor.fetchall():
+        out.setdefault(wid, []).append(lead)
+    return out
 
-    return [row[0] for row in cursor.fetchall()]
 
-
-def _compute_event_horizon(cursor, website_id):
-    """
-    Compute the event horizon for each crawl — how far into the future
-    a crawl's events reach.
-
-    For each processed crawl, finds the max start_date across all events
-    and computes days from the crawl date to that furthest event.
-
-    Returns sorted list of horizon values in days (ascending).
-    """
-    cursor.execute("""
-        SELECT MAX(DATEDIFF(ceo.start_date, DATE(cr.crawled_at))) as horizon_days
+def _load_event_horizons(cursor, website_ids):
+    """website_id -> sorted horizons (days from each processed crawl to its
+    furthest-future event)."""
+    cursor.execute(f"""
+        SELECT cr.website_id, MAX(DATEDIFF(ceo.start_date, DATE(cr.crawled_at))) as horizon_days
         FROM crawl_results cr
         JOIN crawl_events ce ON ce.crawl_result_id = cr.id
         JOIN crawl_event_occurrences ceo ON ceo.crawl_event_id = ce.id
-        WHERE cr.website_id = %s
+        WHERE cr.website_id IN ({_in_clause(website_ids)})
           AND cr.status = 'processed'
           AND cr.crawled_at >= DATE_SUB(NOW(), INTERVAL %s DAY)
           AND ceo.start_date >= DATE(cr.crawled_at)
-        GROUP BY cr.id
+        GROUP BY cr.website_id, cr.id
         HAVING horizon_days IS NOT NULL
-        ORDER BY horizon_days
-    """, (website_id, ANALYSIS_WINDOW_DAYS))
+        ORDER BY cr.website_id, horizon_days
+    """, (*website_ids, ANALYSIS_WINDOW_DAYS))
+    out = {}
+    for wid, horizon in cursor.fetchall():
+        out.setdefault(wid, []).append(horizon)
+    return out
 
-    return [row[0] for row in cursor.fetchall()]
 
+def _load_new_event_rates(cursor, website_ids):
+    """website_id -> dict(total_crawls, crawls_with_new_events, rate, crawls).
 
-def _compute_new_event_rate(cursor, website_id):
+    A crawl "found new events" when it discovered events starting within 14
+    days of the crawl date — fresh events we would actually have missed.
+    `crawls` is ordered most recent first (consumed by _compute_stability).
     """
-    Compute the fraction of recent crawls that discovered new near-term events.
-
-    Only counts new events whose start_date is within 14 days of the crawl date.
-    This measures how often a crawl yields fresh events we'd actually miss.
-
-    Returns dict with total_crawls, crawls_with_new_events, rate,
-    and per-crawl details ordered most recent first.
-    """
-    cursor.execute("""
-        SELECT cr.id, cr.crawled_at, cr.event_count,
+    cursor.execute(f"""
+        SELECT cr.website_id, cr.id, cr.crawled_at, cr.event_count,
                COUNT(DISTINCT CASE WHEN es.is_primary = TRUE AND ceo.id IS NOT NULL
                      THEN es.event_id END) as new_events
         FROM crawl_results cr
@@ -158,23 +154,112 @@ def _compute_new_event_rate(cursor, website_id):
             AND ceo.start_date BETWEEN DATE(cr.crawled_at)
                 AND DATE_ADD(DATE(cr.crawled_at), INTERVAL 14 DAY)
         LEFT JOIN event_sources es ON es.crawl_event_id = ce.id
-        WHERE cr.website_id = %s
+        WHERE cr.website_id IN ({_in_clause(website_ids)})
           AND cr.status = 'processed'
           AND cr.crawled_at >= DATE_SUB(NOW(), INTERVAL %s DAY)
-        GROUP BY cr.id
-        ORDER BY cr.crawled_at DESC
-    """, (website_id, ANALYSIS_WINDOW_DAYS))
+        GROUP BY cr.website_id, cr.id
+        ORDER BY cr.website_id, cr.crawled_at DESC
+    """, (*website_ids, ANALYSIS_WINDOW_DAYS))
+    by_site = {}
+    for wid, _cr_id, crawled_at, event_count, new_events in cursor.fetchall():
+        by_site.setdefault(wid, []).append(
+            {'crawled_at': crawled_at, 'event_count': event_count, 'new_events': new_events})
+    out = {}
+    for wid in website_ids:
+        crawls = by_site.get(wid, [])
+        total = len(crawls)
+        with_new = sum(1 for c in crawls if c['new_events'] > 0)
+        out[wid] = {
+            'total_crawls': total,
+            'crawls_with_new_events': with_new,
+            'rate': with_new / total if total > 0 else 0.0,
+            'crawls': crawls,
+        }
+    return out
 
-    rows = cursor.fetchall()
-    crawls = [{'crawled_at': r[1], 'event_count': r[2], 'new_events': r[3]} for r in rows]
-    total = len(crawls)
-    with_new = sum(1 for c in crawls if c['new_events'] > 0)
 
+def _load_content_staleness(cursor, website_ids, recent=30):
+    """website_id -> number of consecutive recent crawls whose content size
+    equals the most recent crawl's (counting back from the newest, up to the
+    last `recent` crawls). Same size strongly correlates with identical
+    content — the page hasn't changed, so those crawls were pure waste."""
+    cursor.execute(f"""
+        SELECT website_id, LENGTH(crawled_content) as content_size
+        FROM crawl_results
+        WHERE website_id IN ({_in_clause(website_ids)})
+          AND status = 'processed'
+          AND crawled_at >= DATE_SUB(NOW(), INTERVAL %s DAY)
+        ORDER BY website_id, id DESC
+    """, (*website_ids, ANALYSIS_WINDOW_DAYS))
+    sizes_by_site = {}
+    for wid, size in cursor.fetchall():
+        sizes = sizes_by_site.setdefault(wid, [])
+        if len(sizes) < recent:
+            sizes.append(size)
+    out = {}
+    for wid, sizes in sizes_by_site.items():
+        consecutive_same = 0
+        for i in range(1, len(sizes)):
+            if sizes[i] == sizes[0]:
+                consecutive_same += 1
+            else:
+                break
+        out[wid] = consecutive_same
+    return out
+
+
+def _load_has_upcoming(cursor, website_ids):
+    """Set of website_ids with active events starting in the next 14 days."""
+    cursor.execute(f"""
+        SELECT DISTINCT e.website_id FROM events e
+        JOIN event_occurrences eo ON e.id = eo.event_id
+        WHERE e.website_id IN ({_in_clause(website_ids)})
+          AND e.archived = FALSE
+          AND eo.start_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 14 DAY)
+    """, tuple(website_ids))
+    return {row[0] for row in cursor.fetchall()}
+
+
+def _load_crawl_histories(cursor, website_ids):
+    """website_id -> chronological [(date, event_count)] over the FULL processed
+    history (periodicity needs as much history as possible, not just the
+    analysis window)."""
+    cursor.execute(f"""
+        SELECT website_id, DATE(crawled_at), event_count
+        FROM crawl_results
+        WHERE website_id IN ({_in_clause(website_ids)}) AND status = 'processed'
+        ORDER BY website_id, crawled_at
+    """, tuple(website_ids))
+    out = {}
+    for wid, d, count in cursor.fetchall():
+        out.setdefault(wid, []).append((d, count))
+    return out
+
+
+def _load_metrics(cursor, website_ids):
+    """Run the six per-metric queries once over all analyzed websites.
+
+    Replaces six queries per website (~13k round trips per run) with six
+    GROUP BY / IN(...) queries. Returns website_id -> dict of raw metric inputs.
+    """
+    if not website_ids:
+        return {}
+    lead_times = _load_lead_times(cursor, website_ids)
+    horizons = _load_event_horizons(cursor, website_ids)
+    new_event_rates = _load_new_event_rates(cursor, website_ids)
+    staleness = _load_content_staleness(cursor, website_ids)
+    has_upcoming = _load_has_upcoming(cursor, website_ids)
+    histories = _load_crawl_histories(cursor, website_ids)
     return {
-        'total_crawls': total,
-        'crawls_with_new_events': with_new,
-        'rate': with_new / total if total > 0 else 0.0,
-        'crawls': crawls,
+        wid: {
+            'lead_times': lead_times.get(wid, []),
+            'horizons': horizons.get(wid, []),
+            'new_event_data': new_event_rates[wid],
+            'content_staleness': staleness.get(wid, 0),
+            'has_upcoming': wid in has_upcoming,
+            'crawl_history': histories.get(wid, []),
+        }
+        for wid in website_ids
     }
 
 
@@ -358,26 +443,6 @@ def _detect_periodicity_from_history(crawl_history, today):
         'cycles_observed': len(cycle_gaps),
         'total_windows': len(windows),
     }
-
-
-def _detect_periodicity(cursor, website_id, today=None):
-    """
-    DB-backed wrapper around _detect_periodicity_from_history.
-
-    Pulls the full processed crawl history for the website (not limited to
-    ANALYSIS_WINDOW_DAYS — periodicity needs as much history as possible).
-    """
-    if today is None:
-        today = date.today()
-
-    cursor.execute("""
-        SELECT DATE(crawled_at), event_count
-        FROM crawl_results
-        WHERE website_id = %s AND status = 'processed'
-        ORDER BY crawled_at
-    """, (website_id,))
-    history = [(row[0], row[1]) for row in cursor.fetchall()]
-    return _detect_periodicity_from_history(history, today)
 
 
 def _recommend_frequency(lead_times, horizons, new_event_data, stability,
@@ -574,8 +639,9 @@ def analyze_frequencies(cursor, connection, website_ids=None, dry_run=False, ver
 
     today = date.today()
 
+    # Pass 1: apply the skip guards, collecting the websites to analyze.
+    eligible = []
     for w in websites:
-        wid = w['id']
         name = w['name']
         current_freq = w['crawl_frequency'] or DEFAULT_FREQUENCY
         current_crawl_after = w['crawl_after']
@@ -609,14 +675,25 @@ def analyze_frequencies(cursor, connection, website_ids=None, dry_run=False, ver
             results['skipped'] += 1
             continue
 
-        # Analyze
-        lead_times = _compute_lead_times(cursor, wid)
-        horizons = _compute_event_horizon(cursor, wid)
-        new_event_data = _compute_new_event_rate(cursor, wid)
+        eligible.append(w)
+
+    # Pass 2: load every metric for the eligible set in six bulk queries, then
+    # score each website from the in-memory inputs.
+    metrics = _load_metrics(cursor, [w['id'] for w in eligible])
+
+    for w in eligible:
+        wid = w['id']
+        name = w['name']
+        current_freq = w['crawl_frequency'] or DEFAULT_FREQUENCY
+        m_in = metrics[wid]
+
+        lead_times = m_in['lead_times']
+        horizons = m_in['horizons']
+        new_event_data = m_in['new_event_data']
         stability = _compute_stability(new_event_data)
-        has_upcoming = _has_upcoming_events(cursor, wid)
-        content_staleness = _compute_content_staleness(cursor, wid)
-        periodicity = _detect_periodicity(cursor, wid, today=today)
+        has_upcoming = m_in['has_upcoming']
+        content_staleness = m_in['content_staleness']
+        periodicity = _detect_periodicity_from_history(m_in['crawl_history'], today)
 
         recommendation = _recommend_frequency(
             lead_times, horizons, new_event_data, stability, has_upcoming, current_freq,

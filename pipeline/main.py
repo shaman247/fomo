@@ -31,8 +31,6 @@ if not os.environ.get('PYTHONUNBUFFERED'):
     sys.stdout.reconfigure(write_through=True)
     sys.stderr.reconfigure(write_through=True)
 
-from crawl4ai import AsyncWebCrawler
-
 import logging_utils
 logging_utils.install()  # Prefix every log line with a timestamp for profiling
 
@@ -567,39 +565,10 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
                   f"    {_merge_only_hint(website_ids)}\n")
             return False
 
-        # STEP 6: Merge crawl_events into final events table and archive outdated events
-        step("STEP 6: Merging Crawl Events and Archiving Outdated Events")
-
-        new_events, merged_events = merger.merge_crawl_events(cursor, connection, website_ids=website_ids)
-        print(f"\n✓ Merged events ({new_events} new, {merged_events} merged)\n")
-
-        # Classify event sections
-        print(f"\n  Classifying event sections...")
-        exporter.classify_event_sections(cursor, connection)
-
-        # STEP 7: Export to JSON from events table
-        step("STEP 7: Exporting Events to JSON")
-
-        print("  Exporting events from database to JSON...")
-        export_stats = exporter.export_events(cursor)
-        exporter.export_tag_hierarchy(cursor)
-        exporter.export_organizers(cursor, export_stats['organizer_root_ids'])
-
-        print("\n✓ Event export completed\n")
-
-        # STEP 8: Upload data files
-        step("STEP 8: Uploading Data")
-
-        success = uploader.upload(use_tls=False)
-
-        if success:
-            print("\n✓ Data upload completed\n")
-        else:
-            print("\n✗ Data upload failed\n")
+        # STEPS 6-8b: merge → classify → export → upload → weekly dataset
+        if not run_publish_tail(cursor, connection, website_ids,
+                                banner=lambda i, title: step(f"STEP {6 + i}: {title}")):
             return False
-
-        # STEP 8b: Weekly public dataset export (non-fatal — retries next run)
-        run_public_dataset_export(cursor)
 
         # STEP 9: Adjust crawl frequencies based on historical data
         step("STEP 9: Adjusting Crawl Frequencies")
@@ -663,6 +632,41 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
         connection.close()
 
 
+def run_publish_tail(cursor, connection, website_ids, banner):
+    """The publish tail shared by a full run and --merge-only:
+    merge → classify sections → export JSON → upload → weekly public dataset.
+
+    `banner(i, title)` prints the header for the i-th stage (merge, export,
+    upload), so each caller keeps its own step-numbering/timing style. The
+    caller must already hold the publish lock.
+
+    Returns False when the upload failed (the run should stop), else True.
+    """
+    banner(0, "Merging Crawl Events and Archiving Outdated Events")
+    new_events, merged_events = merger.merge_crawl_events(cursor, connection, website_ids=website_ids)
+    print(f"\n✓ Merged events ({new_events} new, {merged_events} merged)\n")
+
+    print("\n  Classifying event sections...")
+    exporter.classify_event_sections(cursor, connection)
+
+    banner(1, "Exporting Events to JSON")
+    print("  Exporting events from database to JSON...")
+    export_stats = exporter.export_events(cursor)
+    exporter.export_tag_hierarchy(cursor)
+    exporter.export_organizers(cursor, export_stats['organizer_root_ids'])
+    print("\n✓ Event export completed\n")
+
+    banner(2, "Uploading Data")
+    if not uploader.upload(use_tls=False):
+        print("\n✗ Data upload failed\n")
+        return False
+    print("\n✓ Data upload completed\n")
+
+    # Weekly public dataset export (non-fatal — retries next run)
+    run_public_dataset_export(cursor)
+    return True
+
+
 def run_merge_only(website_ids=None):
     """Run ONLY the merge → classify → export → upload tail. No crawling, no AI.
 
@@ -703,28 +707,10 @@ def run_merge_only(website_ids=None):
                   f"(./venv/bin/python pipeline/dblock.py status).\n")
             return False
 
-        print(f"\n{'='*60}\nMerging Crawl Events and Archiving Outdated Events\n{'='*60}")
-        new_events, merged_events = merger.merge_crawl_events(cursor, connection, website_ids=website_ids)
-        print(f"\n✓ Merged events ({new_events} new, {merged_events} merged)\n")
-
-        print("  Classifying event sections...")
-        exporter.classify_event_sections(cursor, connection)
-
-        print(f"\n{'='*60}\nExporting Events to JSON\n{'='*60}")
-        export_stats = exporter.export_events(cursor)
-        exporter.export_tag_hierarchy(cursor)
-        exporter.export_organizers(cursor, export_stats['organizer_root_ids'])
-        print("\n✓ Event export completed\n")
-
-        print(f"{'='*60}\nUploading Data\n{'='*60}")
-        success = uploader.upload(use_tls=False)
-        if not success:
-            print("\n✗ Data upload failed\n")
+        if not run_publish_tail(
+                cursor, connection, website_ids,
+                banner=lambda i, title: print(f"\n{'='*60}\n{title}\n{'='*60}")):
             return False
-        print("\n✓ Data upload completed\n")
-
-        # Weekly public dataset export (non-fatal — retries next run)
-        run_public_dataset_export(cursor)
 
         print(f"{'='*60}")
         print("MERGE-ONLY RUN COMPLETED SUCCESSFULLY")

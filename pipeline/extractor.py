@@ -29,7 +29,8 @@ import constants
 import db
 import llm_providers
 import site_profiles
-from processor import _standardize_time, extract_url_from_content
+from occurrence_times import standardize_time as _standardize_time
+from processor import extract_url_from_content
 
 
 _DATE_RE = re.compile(r'^\d{4}-\d{2}-\d{2}$')
@@ -766,6 +767,23 @@ def _is_heading_line(line):
     return bool(_HEADING_LINE_RE.match(line))
 
 
+def _extend_back_over_headings(lines, idx):
+    """Index of the first line in the run of consecutive headings ending at `idx`.
+
+    Blank lines between headings are tolerated; the walk stops at the first
+    non-blank, non-heading line. `lines[idx]` is assumed to be a heading.
+    """
+    start = idx
+    j = idx - 1
+    while j >= 0:
+        if _is_heading_line(lines[j]):
+            start = j
+        elif lines[j].strip():
+            break
+        j -= 1
+    return start
+
+
 def _split_trailing_heading(text):
     """Peel a trailing run of heading lines off `text`.
 
@@ -784,16 +802,7 @@ def _split_trailing_heading(text):
     if i < 0 or not _is_heading_line(lines[i]):
         return text, ''
 
-    # Walk back over a run of consecutive headings (blank lines allowed between).
-    start = i
-    j = i
-    while j >= 0:
-        if _is_heading_line(lines[j]):
-            start = j
-        elif lines[j].strip():
-            break
-        j -= 1
-
+    start = _extend_back_over_headings(lines, i)
     if start == 0:
         return text, ''
     return '\n'.join(lines[:start]), '\n'.join(lines[start:])
@@ -824,15 +833,7 @@ def _split_trailing_record(text, cap):
 
     # Extend back over consecutive headings so a section banner travels with the
     # record it introduces (`## Wednesday` + `### [Show](url)`).
-    start = last
-    j = last - 1
-    while j >= 0:
-        if _is_heading_line(lines[j]):
-            start = j
-        elif lines[j].strip():
-            break
-        j -= 1
-
+    start = _extend_back_over_headings(lines, last)
     if start == 0:
         return text, ''
     carried = '\n'.join(lines[start:])
@@ -3097,13 +3098,8 @@ async def _submit_and_poll_single_batch(requests, display_name="fomo-extraction"
 
     # Tag crawl results with batch job name for crash recovery
     if crawl_result_ids:
-        conn = db.create_connection()
-        cursor = conn.cursor(buffered=True)
-        try:
+        with db.cursor_scope() as (cursor, conn):
             db.set_batch_job_name(cursor, conn, crawl_result_ids, batch_job.name)
-        finally:
-            cursor.close()
-            conn.close()
 
     return await _poll_batch_until_done(batch_job, poll_interval, timeout)
 
@@ -3393,9 +3389,7 @@ def _store_batch_results(results_dict, crid_list, failed_crids=None):
     crawled_content around for `main.py --ids` re-extraction.
     """
     stored = []
-    conn = db.create_connection()
-    cursor = conn.cursor(buffered=True)
-    try:
+    with db.cursor_scope() as (cursor, conn):
         for crid, result_text in results_dict.items():
             db.update_crawl_result_extracted(cursor, conn, crid, result_text)
             stored.append((crid, True))
@@ -3403,9 +3397,6 @@ def _store_batch_results(results_dict, crid_list, failed_crids=None):
             db.update_crawl_result_failed(cursor, conn, crid, error_msg)
             stored.append((crid, False))
         db.clear_batch_job_name(cursor, conn, crid_list)
-    finally:
-        cursor.close()
-        conn.close()
     return stored
 
 
@@ -3424,9 +3415,7 @@ async def _process_completed_batch(responses, crid_list, extraction_queue,
 
     # Build preparations for response processing
     preparations = {}
-    conn = db.create_connection()
-    cursor = conn.cursor(buffered=True)
-    try:
+    with db.cursor_scope() as (cursor, conn):
         for crid in crid_list:
             item = queue_by_crid.get(crid)
             if item:
@@ -3437,53 +3426,57 @@ async def _process_completed_batch(responses, crid_list, extraction_queue,
                 )
                 if not prep.error:
                     preparations[crid] = prep
-    finally:
-        cursor.close()
-        conn.close()
 
     if not preparations:
         return results
 
     # Re-build requests just for metadata matching (not re-submitted)
     batch_requests, _ = build_batch_requests(preparations)
+    timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
+    results.extend(await _enrich_and_store(
+        batch_requests, responses, preparations, crid_list,
+        f"fomo-enrich-{timestamp}", poll_interval, timeout,
+    ))
+    return results
+
+
+async def _enrich_and_store(batch_requests, responses, preparations, crid_list,
+                            enrich_display_name, poll_interval, timeout,
+                            log_prefix=''):
+    """Shared tail of both batch paths: process phase-1 responses, run the
+    enrichment phase for chunked results, and store everything.
+
+    Returns:
+        list of (crawl_result_id, success) tuples
+    """
     single_results, chunked_events, failed_crids = process_batch_responses(
         batch_requests, responses, preparations
     )
 
-    # Handle enrichment for chunked results
     enriched_results = {}
     if chunked_events:
         enrichment_requests = build_enrichment_requests(chunked_events, preparations)
-        display_name = None
         if enrichment_requests:
-            print(f"\n  Enriching {sum(len(e) for e in chunked_events.values())} events...")
-            timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
-            display_name = f"fomo-enrich-{timestamp}"
+            print(f"\n  {log_prefix}Enriching {sum(len(e) for e in chunked_events.values())} "
+                  f"events in {len(enrichment_requests)} batch(es)...")
         enriched_results = await _run_enrichment_phase(
             enrichment_requests, chunked_events, preparations,
-            display_name, poll_interval, timeout,
+            enrich_display_name, poll_interval, timeout,
         )
 
     # Store results and clear batch tracking
-    all_batch_results = {**single_results, **enriched_results}
-    results.extend(_store_batch_results(all_batch_results, crid_list, failed_crids))
-
-    return results
+    all_results = {**single_results, **enriched_results}
+    return _store_batch_results(all_results, crid_list, failed_crids)
 
 
 def _clear_batch_names(crid_list):
     """Clear the batch_job_name tag for a set of crawl results.
 
-    Owns its own DB connection lifecycle (matching the inline blocks it
-    replaces — no None-check on create_connection()).
+    Owns its own DB connection lifecycle (db.cursor_scope, which raises if
+    the database is unreachable).
     """
-    conn = db.create_connection()
-    cursor = conn.cursor(buffered=True)
-    try:
+    with db.cursor_scope() as (cursor, conn):
         db.clear_batch_job_name(cursor, conn, crid_list)
-    finally:
-        cursor.close()
-        conn.close()
 
 
 async def _poll_and_process_resumed_batch(job_name, crid_list, extraction_queue,
@@ -3581,16 +3574,11 @@ async def _submit_poll_and_process_new_batch(extraction_queue, poll_interval, ti
 
     # Store pre-resolved results immediately
     if resolved_results:
-        conn = db.create_connection()
-        cursor = conn.cursor(buffered=True)
-        try:
+        with db.cursor_scope() as (cursor, conn):
             for crid, result_text in resolved_results.items():
                 db.update_crawl_result_extracted(cursor, conn, crid, result_text)
                 results.append((crid, True))
                 print(f"    - {preparations[crid].website_name}: Stored pre-resolved result")
-        finally:
-            cursor.close()
-            conn.close()
         for crid in resolved_results:
             del preparations[crid]
 
@@ -3601,18 +3589,13 @@ async def _submit_poll_and_process_new_batch(extraction_queue, poll_interval, ti
     batch_requests, dropped_crids = build_batch_requests(preparations)
 
     if dropped_crids:
-        conn = db.create_connection()
-        cursor = conn.cursor(buffered=True)
-        try:
+        with db.cursor_scope() as (cursor, conn):
             for crid, error_msg in dropped_crids.items():
                 prep = preparations[crid]
                 print(f"    ⚠️  {prep.website_name}: extraction dropped — {error_msg}")
                 db.update_crawl_result_failed(cursor, conn, crid, error_msg)
                 results.append((crid, False))
                 del preparations[crid]
-        finally:
-            cursor.close()
-            conn.close()
 
     if not batch_requests:
         return results
@@ -3628,26 +3611,10 @@ async def _submit_poll_and_process_new_batch(extraction_queue, poll_interval, ti
         crawl_result_ids=batch_crids,
     )
 
-    single_results, chunked_events, failed_crids = process_batch_responses(
-        batch_requests, phase1_responses, preparations
-    )
-
-    # Phase 2: Enrichment for chunked results
-    enriched_results = {}
-    if chunked_events:
-        enrichment_requests = build_enrichment_requests(chunked_events, preparations)
-        if enrichment_requests:
-            print(f"\n  Phase 2: Enriching {sum(len(e) for e in chunked_events.values())} "
-                  f"events in {len(enrichment_requests)} batch(es)...")
-        enriched_results = await _run_enrichment_phase(
-            enrichment_requests, chunked_events, preparations,
-            f"fomo-enrich-{timestamp}", poll_interval, timeout,
-        )
-
-    # Store results and clear batch tracking
-    all_results = {**single_results, **enriched_results}
-    results.extend(_store_batch_results(all_results, batch_crids, failed_crids))
-
+    results.extend(await _enrich_and_store(
+        batch_requests, phase1_responses, preparations, batch_crids,
+        f"fomo-enrich-{timestamp}", poll_interval, timeout, log_prefix='Phase 2: ',
+    ))
     return results
 
 

@@ -19,10 +19,10 @@ This command finds candidates and fixes only the first category.
 ## STOP — check for a scheduled move before applying any Category 1 fix
 
 **A venue that is MOVING is not a Category 1 fix, even though it looks exactly like one.** Before
-changing any address, grep `.claude/scheduled-tasks.md` for the venue name:
+changing any address, grep the task files for the venue name:
 
 ```bash
-grep -in "<venue name>" .claude/scheduled-tasks.md .claude/completed-tasks.md
+grep -in "<venue name>" .claude/scheduled-tasks.md .claude/recurring-checks.md .claude/backlog.md .claude/decisions.md .claude/completed-tasks.md
 ```
 
 If a task governs the move, **follow that task's date and do nothing here** — leave the row alone and
@@ -86,7 +86,7 @@ cur.execute("""
 # on all ~1,065 of them, so that they stop registering as unmapped placeholders in
 # `scripts/find_unmapped_events.py`. Flipping one back to 1 to quiet THIS scan
 # re-breaks THAT one. Retire a block row by adding it to the standing benign table
-# in `.claude/scheduled-tasks.md` instead. (Contradiction found 2026-09-03; the two
+# in `.claude/backlog.md` instead. (Contradiction found 2026-09-03; the two
 # tools want opposite values of the same flag, and the block-party tooling wins
 # because it owns those rows.)
 
@@ -123,7 +123,7 @@ Walk the list top-down. For each location:
    **Never flip a SAPO street-segment (block party) row**, though — the block-party
    tooling deliberately holds those at `generic_location = 0` so they don't read as
    unmapped placeholders elsewhere. Retire those via the standing benign table in
-   `.claude/scheduled-tasks.md`. See the note in the Step 1 query above.
+   `.claude/backlog.md`. See the note in the Step 1 query above.
 2. **Skip if the venue is known to span multiple addresses or sites** (Gagosian, Kadampa Meditation Center, P.P.O.W Gallery, Manhattan Community Boards that meet at rotating venues, etc.).
 3. **Skip if the DB and sublocation are the same building from different streets** (corner addresses). You can usually tell by checking that the lat/lng matches both addresses.
 4. **Otherwise it's a candidate fix** — most likely the DB has a stale or wrong address. Several events from different sources agreeing on the same alternate address is a strong signal.
