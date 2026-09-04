@@ -371,7 +371,7 @@ CREATE TABLE IF NOT EXISTS tag_aliases (
     alias VARCHAR(100) NOT NULL,
 
     PRIMARY KEY (alias),
-    INDEX idx_tag (tag_id),
+    INDEX tag_id (tag_id),
     FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
