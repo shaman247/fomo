@@ -107,6 +107,60 @@ def stated_weekdays(blob):
     """Set of weekday numbers explicitly named in the text (empty if none)."""
     return {WEEKDAY_NAMES[m.group(0).lower().rstrip('s')]
             for m in STATED_WEEKDAY_RE.finditer(blob)}
+
+
+# A weekly course that BREAKS for a holiday states it in prose — "(skipping 11/26
+# for Thanksgiving)", "no class Dec 24". The generator fills a same-weekday span
+# uniformly and cannot see that, so it fabricates a session the venue explicitly
+# cancels. Measured 2026-09-04 on ev241692 (Center for Book Arts, "Riso II"):
+# the source says "four week ... Thursdays, November 19th – December 17th
+# (skipping 11/26 for Thanksgiving)" and the expander emitted 5 Thursdays.
+#
+# The failure is SILENT — the event looks well-formed, just with one extra date —
+# so this is a guard, not a nicety. Two arms, both conservative:
+#   1. drop dates the text explicitly excludes;
+#   2. veto entirely when an explicit session count still disagrees afterwards.
+MONTH_NAMES = {'jan': 1, 'feb': 2, 'mar': 3, 'apr': 4, 'may': 5, 'jun': 6,
+               'jul': 7, 'aug': 8, 'sep': 9, 'oct': 10, 'nov': 11, 'dec': 12}
+# The cue must be close to the date — a bare "except" three sentences away is not
+# evidence about this date. 40 chars covers "skipping 11/26 for Thanksgiving" and
+# "no class on Thursday, December 24th" without spanning clauses.
+SKIP_CUE_RE = re.compile(
+    r'\b(?:skip(?:s|ping|ped)?|no\s+(?:class|session|meeting|workshop)e?s?|'
+    r'except|excluding|dark|off)\b', re.I)
+_MD_SLASH_RE = re.compile(r'\b(\d{1,2})/(\d{1,2})(?:/(\d{2,4}))?\b')
+_MD_NAME_RE = re.compile(
+    r'\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+(\d{1,2})(?:st|nd|rd|th)?\b',
+    re.I)
+
+
+def skipped_dates(blob, span_start, span_end):
+    """Dates the text explicitly excludes from a series, restricted to the span.
+
+    Only dates appearing within SKIP_WINDOW chars AFTER a skip cue count, so an
+    ordinary date mention ("starts November 19th") is never read as an exclusion.
+    Years are inferred from the span, which is what makes a bare "11/26" usable.
+    """
+    SKIP_WINDOW = 40
+    out = set()
+    years = {span_start.year, span_end.year}
+    for cue in SKIP_CUE_RE.finditer(blob):
+        seg = blob[cue.end():cue.end() + SKIP_WINDOW]
+        cands = [(int(m.group(1)), int(m.group(2)), m.group(3)) for m in _MD_SLASH_RE.finditer(seg)]
+        cands += [(MONTH_NAMES[m.group(1).lower()[:3]], int(m.group(2)), None)
+                  for m in _MD_NAME_RE.finditer(seg)]
+        for mon, day, yr in cands:
+            for y in ([int(yr) + 2000 if int(yr) < 100 else int(yr)] if yr else sorted(years)):
+                try:
+                    d = date(y, mon, day)
+                except ValueError:
+                    continue
+                if span_start <= d <= span_end:
+                    out.add(d)
+                    break
+    return out
+
+
 # Multi-session PROGRAM signal — a thing that meets on specific (sparse) days but
 # was captured as one range: camps, intensives, clinics, multi-week courses. The
 # fix is judgment: make discrete from source, or accept.
@@ -323,11 +377,28 @@ def classify_course(name, occ, description=''):
         got = sorted(n for n, i in WEEKDAY_NAMES.items() if i in set(wds))
         return 'skip', {'reason': f'span endpoints are {"/".join(got)} but the text '
                                   f'states {"/".join(names)} — contradicted'}
+    # Holiday / stated break weeks. Drop them from the generated series, then
+    # cross-check against an explicit session count: if the source says "four
+    # week" and we still plan 5, the model disagrees with the publisher and we
+    # must not write it. Vetoing is right here — a fabricated session is worse
+    # than leaving the span for a human, and this bucket already requires
+    # per-id approval.
+    skips = skipped_dates(blob, o['start_date'], o['end_date'])
     info = {'disc': [], 'wd': wds[0], 'wds': wds,
             'span_start': o['start_date'], 'span_end': o['end_date'],
             'time': (o['start_time'], o['end_time']),
+            'skips': skips,
             'signal': ('time' if has_time else '') + ('+kw' if has_kw else '')
-                      + (f'+{len(wds)}-weekday arc' if arc else '')}
+                      + (f'+{len(wds)}-weekday arc' if arc else '')
+                      + (f'+{len(skips)} skipped' if skips else '')}
+    stated_n = stated_week_count(blob)
+    if stated_n is not None and not arc:
+        # (the arc path already required stated_n == ceil(days/7) above)
+        planned_n = len(generated_series('course_weekly', info))
+        if planned_n != stated_n:
+            return 'skip', {'reason': f'stated {stated_n} sessions but the weekly model plans '
+                                      f'{planned_n}{" after dropping " + str(len(skips)) + " stated skip(s)" if skips else ""} '
+                                      f'— publisher disagrees, needs a human'}
     return 'course_weekly', info
 
 
@@ -348,7 +419,8 @@ def generated_series(verdict, info):
             while d <= info['span_end']:
                 out.append(d)
                 d += timedelta(days=7)
-        return sorted(out)
+        # Never emit a session the source explicitly cancels (holiday break weeks).
+        return sorted(set(out) - (info.get('skips') or set()))
     disc = info['disc']
     first = disc[0]
     end = min(info['span_end'], WINDOW_END)

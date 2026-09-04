@@ -894,6 +894,49 @@ _NON_EVENT_NAME_PATTERNS = [
 
 _NON_EVENT_NAME_RE = re.compile('|'.join(_NON_EVENT_NAME_PATTERNS), re.IGNORECASE)
 
+# Holiday CLOSURE notices — "Memorial Day-Closed", "Juneteenth Closure",
+# "Labor Day Holiday". Libraries, museums and schools publish these on the same
+# calendar feed as their programming, so they arrive looking like events.
+#
+# THE CUE IS REQUIRED, and that is the whole design. Measured 2026-09-04 over all
+# 210,814 events: requiring an explicit closure word matches 8 rows, ALL genuine
+# closures (every one had already been archived or hand-suppressed), with zero
+# false positives. Dropping the requirement — matching a BARE holiday name —
+# matches 103 rows and destroys real events: "Mother's Day" is a Troma horror
+# film at Anthology Film Archives, "Easter Sunday" is a service at Holy Trinity
+# Lutheran, "Yom Kippur" is a service at Stephen Wise Free Synagogue, and
+# "Halloween"/"Thanksgiving" are restaurant events at Barking Dog.
+# **Do not relax this to a bare holiday name.** A holiday name alone is a topic,
+# not a closure.
+_HOLIDAY_NAME = (
+    r"new\s*year'?s?(?:\s+day|\s+eve)?|christmas(?:\s+day|\s+eve)?|thanksgiving(?:\s+day)?|"
+    r"labor\s+day|memorial\s+day|independence\s+day|juneteenth|veterans?\s+day|"
+    r"presidents?'?\s*day|columbus\s+day|indigenous\s+peoples?'?\s+day|"
+    r"martin\s+luther\s+king,?\s*jr\.?,?\s*day|mlk\s+day|rosh\s+hashanah|yom\s+kippur|"
+    r"passover|easter(?:\s+sunday|\s+monday)?|good\s+friday|diwali|eid(?:\s+al[- ]\w+)?|"
+    r"lunar\s+new\s+year|chinese\s+new\s+year|halloween|hanukkah|chanukah|"
+    r"valentine'?s?\s+day|st\.?\s*patrick'?s?\s+day|mother'?s?\s+day|father'?s?\s+day"
+)
+_CLOSURE_CUE = (
+    r"closed|closure|closing|holiday|observed|observance|"
+    r"no\s+(?:classes|class|school|programs?|service)"
+)
+_CLOSE_SEP = r"[\s:,–—\-()]*"
+_HOLIDAY_CLOSURE_NAME_RE = re.compile(
+    rf'^\W*(?:(?:{_CLOSURE_CUE}){_CLOSE_SEP})+(?:{_HOLIDAY_NAME}){_CLOSE_SEP}'
+    rf'(?:(?:{_CLOSURE_CUE}){_CLOSE_SEP})*\W*$'
+    rf'|^\W*(?:{_HOLIDAY_NAME}){_CLOSE_SEP}(?:(?:{_CLOSURE_CUE}){_CLOSE_SEP})+\W*$',
+    re.IGNORECASE)
+
+# A venue's own room-booking calendar leaking a PRIVATE BUYOUT as an event. The
+# tell is in the sublocation, not the name — the name is whatever the booker
+# typed ("EDM event with Name DJ", a literal template placeholder). Measured
+# 2026-09-04: 2 rows in 210,814, both genuine private bookings, no false
+# positives. Requires a blank description so a real, described public event held
+# during a buyout is never dropped.
+_PRIVATE_BOOKING_SUBLOC_RE = re.compile(
+    r'\b(?:venue\s+)?buyout\b|\bprivate\s+(?:event|party|booking|rental)s?\b', re.IGNORECASE)
+
 # Cancellation marker in the event's own URL slug. Many CMSes (NYC Parks,
 # Carnegie Hall, Asia Society, Eventbrite, Bowery/Knitting Factory, MCNY, …)
 # announce a cancellation by re-slugging the URL — `/events/2026/07/18/
@@ -2846,7 +2889,7 @@ def _is_food_holiday_promo(name, description=None):
     return not _FOOD_HOLIDAY_VETO_RE.search(name + ' ' + (description or ''))
 
 
-def is_obvious_non_event(name, description=None, location=None):
+def is_obvious_non_event(name, description=None, location=None, sublocation=None):
     """Return True if the event is an unmistakable non-event.
 
     Covers closures, calls for submissions/grants, venue rentals, season-pass
@@ -2859,7 +2902,8 @@ def is_obvious_non_event(name, description=None, location=None):
     staff-only blocks, private life occasions, maintenance blocks, bare
     "No <program>" notices, seasonal hours notices, tentative shared-calendar
     HOLD placeholders, outside-organization
-    bookings titled with the org's own name), month-calendar listing
+    bookings titled with the org's own name), holiday CLOSURE notices,
+    private venue buyouts, month-calendar listing
     placeholders, "National <food/drink> Day" restaurant promos, ticketing
     upsell products (packages/bundles), serial "<place> #<n>" placeholders,
     and bare generic placeholder names — the kinds of rows that
@@ -2873,12 +2917,28 @@ def is_obvious_non_event(name, description=None, location=None):
     placeholder rule, which needs it to tell an unannounced run number from the
     same run number once its start venue is published. Omitting it reads as
     "no venue", which is what an absent location means.
+
+    `sublocation` is likewise optional and read by exactly one rule -- the
+    private-buyout rule, where the booking signal lives in the sublocation
+    ("Venue Buyout") rather than the name, which is whatever the booker typed.
+    That rule additionally requires a blank description, so omitting the
+    argument only ever makes the filter more permissive, never less.
     """
     if not name:
         return False
     if _NON_EVENT_NAME_RE.search(name):
         return True
+    # Holiday closure notice ("Memorial Day-Closed", "Labor Day Holiday").
+    # Fires on the name alone: these carry no description worth reading, and the
+    # required closure cue is what makes it safe. See the regex comment.
+    if _HOLIDAY_CLOSURE_NAME_RE.match(name.strip()):
+        return True
     description = description or ''
+    # Private venue buyout leaking off a room-booking calendar. The signal is the
+    # sublocation; the blank description keeps a real described event safe.
+    if (sublocation and _PRIVATE_BOOKING_SUBLOC_RE.search(sublocation)
+            and _description_is_blank(description)):
+        return True
     # Bare generic name with no description at all -> placeholder junk.
     if _description_is_blank(description) and _BARE_GENERIC_NAME_RE.fullmatch(name.strip()):
         return True
@@ -6713,7 +6773,8 @@ def process_events(cursor, connection, crawl_result_id, website_name, run_date_s
         # they ever become a crawl_event; log so the rejection is auditable.
         if is_obvious_non_event(row_dict.get('name', ''),
                                 row_dict.get('description', ''),
-                                row_dict.get('location', '')):
+                                row_dict.get('location', ''),
+                                row_dict.get('sublocation', '')):
             log_rejection(
                 cursor, crawl_result_id, website_id,
                 rejection_type='non_event_junk', stage='extract',

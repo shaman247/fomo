@@ -22,21 +22,34 @@ JOIN websites w ON cr.website_id = w.id
 LEFT JOIN crawl_event_occurrences ceo ON ce.id = ceo.crawl_event_id
 WHERE cr.status = 'processed'
   AND ceo.id IS NULL
-  AND ce.created_at >= cr.crawled_at   -- see "stale rows" note below
+  AND cr.crawled_at >= NOW() - INTERVAL 24 HOUR   -- REQUIRED: bound to this run
 GROUP BY w.id, w.name
 ORDER BY undated_events DESC;
 ```
 
-This shows websites with undated events, ordered by count.
+This shows websites with undated events **from the current run**, ordered by count.
+Widen the interval only to cover the actual crawl window you are triaging.
 
-> **Always keep the `ce.created_at >= cr.crawled_at` predicate.** `crawl_results`
-> rows are **UPDATEd in place** on re-crawl (`crawled_content` / `crawled_at` are
-> overwritten) while the old `crawl_events` keep pointing at the same row. Without
-> the predicate the query counts undated rows from a *pre-fix* extraction against a
-> `crawl_result` whose current content no longer contains them — so sites you already
-> fixed keep resurfacing as problems. On 2026-07-19 this inflated the count by 35
-> rows (184 → 149) and manufactured two entirely phantom "problem" sites (w4867
-> Edgemere Farm, w425 Brooklyn CB16) that had already been fixed by earlier js_code.
+> **The run-window bound is REQUIRED, and it replaces the old
+> `ce.created_at >= cr.crawled_at` predicate.** That predicate assumed
+> `crawl_results` rows were **UPDATEd in place** on re-crawl, so comparing the
+> crawl_event's creation time against the row's `crawled_at` isolated the latest
+> extraction. **That premise no longer holds** — each crawl now INSERTs a *new*
+> `crawl_results` row (verified 2026-09-04: w3, w4 and w172 each carry 165 rows
+> with 165 distinct `crawled_at`). The predicate is now trivially true for every
+> historical row, so it isolates nothing and the query returns the entire
+> backlog of dead rows from past crawls.
+>
+> Measured 2026-09-04: **unbounded returns 26,398 rows across 1,242 sites; bounded
+> to the run returns 33 rows across 22 sites** — an 800× inflation that reads as a
+> catastrophic backlog when the run's real number is a couple dozen. Keeping the
+> old predicate as well is harmless but pointless; the date bound is what does the
+> work.
+>
+> (Historical note, for why the old predicate existed: on 2026-07-19, back when
+> rows really were updated in place, dropping it inflated the count by 35 rows
+> (184 → 149) and manufactured two phantom "problem" sites — w4867 Edgemere Farm
+> and w425 Brooklyn CB16 — that earlier js_code had already fixed.)
 
 > **Synthetic source rows are a false positive.** Some monthly backfill scripts
 > (`scripts/split_lectures_on_tap_*.py`, `scripts/morgan_to_pipeline.py`) write the
