@@ -152,6 +152,19 @@ def parse_schema_sql():
             if not line or line.startswith('--'):
                 continue
 
+            # Parse a standalone PRIMARY KEY (cols) constraint. Recorded under
+            # the index name 'PRIMARY', which is how information_schema reports
+            # it in get_current_schema, so the two sides compare like for like.
+            # (Without this the line fell through to the column parser and
+            # produced `ADD COLUMN PRIMARY KEY (...)`, which is invalid SQL.)
+            pk_match = re.match(r'PRIMARY\s+KEY\s*\(([^)]+)\)', line, re.IGNORECASE)
+            if pk_match:
+                schema['tables'][table_name]['indexes']['PRIMARY'] = {
+                    'columns': [c.strip() for c in pk_match.group(1).split(',')],
+                    'unique': True
+                }
+                continue
+
             # Parse INDEX/KEY definitions
             idx_match = re.match(
                 r'(?:UNIQUE\s+)?(?:INDEX|KEY)\s+(\w+)\s*\(([^)]+)\)',
@@ -180,8 +193,10 @@ def parse_schema_sql():
                 }
                 continue
 
-            # Skip FOREIGN KEY definitions
-            if line.upper().startswith('FOREIGN KEY'):
+            # Skip FOREIGN KEY and table-level CONSTRAINT / CHECK definitions —
+            # neither is a column, and the column parser would otherwise read
+            # the keyword as a column name.
+            if re.match(r'(FOREIGN\s+KEY|CONSTRAINT|CHECK)\b', line, re.IGNORECASE):
                 continue
 
             # Parse column definitions
@@ -258,7 +273,9 @@ def generate_migrations(current, expected):
         for idx_name, idx_info in expected_table['indexes'].items():
             if idx_name not in current_table['indexes']:
                 cols = ', '.join(idx_info['columns'])
-                if idx_info['unique']:
+                if idx_name == 'PRIMARY':
+                    sql = f"ALTER TABLE {table_name} ADD PRIMARY KEY ({cols})"
+                elif idx_info['unique']:
                     sql = f"ALTER TABLE {table_name} ADD UNIQUE KEY {idx_name} ({cols})"
                 else:
                     sql = f"ALTER TABLE {table_name} ADD INDEX {idx_name} ({cols})"

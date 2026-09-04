@@ -892,49 +892,12 @@ class SimpleOccurrenceEndDateTests(unittest.TestCase):
                                            end_date='ongoing').end_date)
 
 
-class TestParseExtractionDirectives(unittest.TestCase):
-    """`[[extraction: ...]]` lines in websites.notes are machine directives, not
-    guidance — they must be parsed out AND stripped before the notes reach a
-    prompt."""
-
-    def test_no_directive_returns_notes_unchanged(self):
-        notes = "Uses Eventbrite for event listings"
-        self.assertEqual(extractor.parse_extraction_directives(notes), (set(), notes))
-
-    def test_empty_notes(self):
-        self.assertEqual(extractor.parse_extraction_directives(''), (set(), ''))
-        self.assertEqual(extractor.parse_extraction_directives(None), (set(), ''))
-
-    def test_directive_is_parsed_and_line_removed(self):
-        notes = ("Uses Eventbrite for event listings.\n"
-                 "[[extraction: force-chunked]] ~30 API cards at 43 KB sit just under "
-                 "LARGE_PAGE_THRESHOLD.\n"
-                 "Ignore the past-events archive.")
-        directives, cleaned = extractor.parse_extraction_directives(notes)
-        self.assertEqual(directives, {extractor.FORCE_CHUNKED_DIRECTIVE})
-        self.assertNotIn('[[extraction', cleaned)
-        self.assertNotIn('LARGE_PAGE_THRESHOLD', cleaned)  # rationale goes too
-        self.assertIn('Uses Eventbrite for event listings.', cleaned)
-        self.assertIn('Ignore the past-events archive.', cleaned)
-
-    def test_tokens_are_normalised_and_comma_separated(self):
-        directives, cleaned = extractor.parse_extraction_directives(
-            "[[Extraction:  Force_Chunked , something-else ]]")
-        self.assertEqual(directives, {'force-chunked', 'something-else'})
-        self.assertEqual(cleaned, '')
-
-    def test_unknown_token_degrades_to_no_override(self):
-        """A typo must not force a mode or raise — callers test membership."""
-        directives, _ = extractor.parse_extraction_directives("[[extraction: force-chunkd]]")
-        self.assertNotIn(extractor.FORCE_CHUNKED_DIRECTIVE, directives)
-
-
-class TestForceChunkedDirective(unittest.TestCase):
+class TestForceChunkedSetting(unittest.TestCase):
     """w950 Nook: ~30 Eventbrite-API cards, estimate 32-34 (< LARGE_PAGE_THRESHOLD)
     on 43 KB (< MAX_CHUNK_CHARS * 2) routed the page to a SINGLE call whose output
     budget cannot hold 30 events, so extracted_content collapsed 28,254 -> 7,290 ->
-    8,383 chars across three crawls. The directive names the site instead of moving
-    the heuristic's cliff for everyone."""
+    8,383 chars across three crawls. `websites.force_chunked` names the site
+    instead of moving the heuristic's cliff for everyone."""
 
     @staticmethod
     def _content(n_cards=30):
@@ -946,7 +909,7 @@ class TestForceChunkedDirective(unittest.TestCase):
         return "https://www.eventbrite.com/o/nook-34738528343\n" + "".join(
             card.format(i=i, d=(i % 28) + 1) for i in range(n_cards))
 
-    def _prepare(self, notes):
+    def _prepare(self, notes, force_chunked=False, max_records_per_chunk=None):
         content = self._content()
         # Guard the premise: this page really is in the danger band.
         self.assertLessEqual(estimate_event_count(content), LARGE_PAGE_THRESHOLD)
@@ -969,70 +932,89 @@ class TestForceChunkedDirective(unittest.TestCase):
              mock.patch.object(extractor.site_profiles, 'resolve_notes',
                                lambda base_url, n: n or ''):
             return asyncio.run(extractor.prepare_extraction(
-                FakeCursor((950, None), []), 77, 'Nook', notes=notes,
+                FakeCursor((950, None, None, int(force_chunked), max_records_per_chunk), []),
+                77, 'Nook', notes=notes,
                 base_url='https://www.eventbrite.com/o/nook-34738528343'))
 
-    def test_without_directive_the_danger_band_page_goes_single_call(self):
+    def test_without_the_setting_the_danger_band_page_goes_single_call(self):
         self.assertEqual(self._prepare('Uses Eventbrite for event listings').extraction_type,
                          'single')
 
-    def test_directive_forces_chunked_extraction(self):
-        prep = self._prepare('Uses Eventbrite for event listings\n'
-                             '[[extraction: force-chunked]] collapses in single-call mode')
+    def test_force_chunked_column_forces_chunked_extraction(self):
+        prep = self._prepare('Uses Eventbrite for event listings', force_chunked=True)
         self.assertEqual(prep.extraction_type, 'chunked')
         self.assertGreater(len(prep.chunk_prompts), 0)
-
-    def test_directive_text_never_reaches_the_prompt(self):
-        prep = self._prepare('Uses Eventbrite for event listings\n'
-                             '[[extraction: force-chunked]] collapses in single-call mode')
-        self.assertNotIn('[[extraction', prep.notes)
         self.assertIn('Uses Eventbrite', prep.notes)
-        for prompt in prep.chunk_prompts:
-            self.assertNotIn('[[extraction', prompt)
 
-    def test_records_cap_directive_subdivides_and_stays_out_of_the_prompt(self):
-        prep = self._prepare('Uses Eventbrite for event listings\n'
-                             '[[extraction: force-chunked, max-records-per-chunk=10]] dense cards')
+    def test_records_cap_column_subdivides(self):
+        prep = self._prepare('Uses Eventbrite for event listings',
+                             force_chunked=True, max_records_per_chunk=10)
         self.assertEqual(prep.extraction_type, 'chunked')
         # 30 cards, capped at 10 per chunk -> at least 3 prompts.
         self.assertGreaterEqual(len(prep.chunk_prompts), 3)
-        for prompt in prep.chunk_prompts:
-            self.assertNotIn('[[extraction', prompt)
 
     def test_without_the_records_cap_the_same_page_is_not_subdivided(self):
         """True negative: the cap is opt-in, so the default path is unchanged."""
-        plain = self._prepare('Uses Eventbrite for event listings\n'
-                              '[[extraction: force-chunked]] dense cards')
-        capped = self._prepare('Uses Eventbrite for event listings\n'
-                               '[[extraction: force-chunked, max-records-per-chunk=10]] dense')
+        plain = self._prepare('Uses Eventbrite for event listings', force_chunked=True)
+        capped = self._prepare('Uses Eventbrite for event listings',
+                               force_chunked=True, max_records_per_chunk=10)
         self.assertLess(len(plain.chunk_prompts), len(capped.chunk_prompts))
 
+    def test_legacy_directive_line_is_stripped_and_ignored(self):
+        """A stale `[[extraction: …]]` line must neither steer the mode nor
+        reach the prompt — the tripwire strips it with a warning."""
+        prep = self._prepare('Uses Eventbrite for event listings\n'
+                             '[[extraction: force-chunked]] collapses in single-call mode')
+        self.assertEqual(prep.extraction_type, 'single')
+        self.assertNotIn('[[extraction', prep.notes)
+        self.assertIn('Uses Eventbrite', prep.notes)
 
-class TestRecordsPerChunkOverride(unittest.TestCase):
-    """`max-records-per-chunk=N` parsing. A malformed value must degrade to
-    "no override" like every other directive, never raise."""
 
-    def test_parsed(self):
-        directives, _ = extractor.parse_extraction_directives(
-            '[[extraction: max-records-per-chunk=25]]')
-        self.assertEqual(extractor.records_per_chunk_override(directives), 25)
+class TestResolveExtractionSettings(unittest.TestCase):
+    """One resolver, one precedence: `websites` column > plugin default > global."""
 
-    def test_absent(self):
-        directives, _ = extractor.parse_extraction_directives('[[extraction: force-chunked]]')
-        self.assertIsNone(extractor.records_per_chunk_override(directives))
+    def _resolve(self, row, profile=None, override=None):
+        profiles = [profile] if profile else []
+        with mock.patch.object(extractor.site_profiles, 'PROFILES', profiles):
+            return extractor.resolve_extraction_settings(row, ['https://feed.test/x'], override)
 
-    def test_alongside_other_directives(self):
-        directives, _ = extractor.parse_extraction_directives(
-            '[[extraction: force-chunked, max_records_per_chunk=12]]')
-        self.assertIn(extractor.FORCE_CHUNKED_DIRECTIVE, directives)
-        self.assertEqual(extractor.records_per_chunk_override(directives), 12)
+    def _profile(self, **kw):
+        import re as _re
+        return site_profiles.SiteProfile(name='feed', host_re=_re.compile(r'^feed\.test$'), **kw)
 
-    def test_malformed_values_degrade(self):
-        for bad in ('max-records-per-chunk=', 'max-records-per-chunk=abc',
-                    'max-records-per-chunk=0', 'max-records-per-chunk=-5',
-                    'max-records-per-chunk'):
-            directives, _ = extractor.parse_extraction_directives(f'[[extraction: {bad}]]')
-            self.assertIsNone(extractor.records_per_chunk_override(directives), bad)
+    def test_globals_when_nothing_is_set(self):
+        s = self._resolve((4, None, None, 0, None))
+        self.assertEqual((s.max_batches, s.max_content_chars, s.force_chunked, s.max_records_per_chunk),
+                         (extractor.DEFAULT_MAX_BATCHES, extractor.MAX_CONTENT_CHARS, False, None))
+
+    def test_plugin_defaults_fill_in(self):
+        s = self._resolve((4, None, None, 0, None),
+                          self._profile(max_content_chars=900000, force_chunked=True,
+                                        max_records_per_chunk=12))
+        self.assertEqual((s.max_content_chars, s.force_chunked, s.max_records_per_chunk),
+                         (900000, True, 12))
+
+    def test_website_columns_win_over_the_plugin(self):
+        s = self._resolve((4, 7, 50000, 0, 25),
+                          self._profile(max_content_chars=900000, max_records_per_chunk=12))
+        self.assertEqual((s.max_batches, s.max_content_chars, s.max_records_per_chunk),
+                         (7, 50000, 25))
+        # force_chunked is an OR: a plugin that needs chunking keeps it.
+        s = self._resolve((4, None, None, 0, None), self._profile(force_chunked=True))
+        self.assertTrue(s.force_chunked)
+
+    def test_explicit_override_beats_the_column(self):
+        self.assertEqual(self._resolve((4, 7, None, 0, None), override=30).max_batches, 30)
+
+    def test_malformed_values_degrade_to_no_override(self):
+        for bad in (0, -5, 'abc', ''):
+            s = self._resolve((4, bad, bad, 0, bad))
+            self.assertEqual((s.max_batches, s.max_content_chars, s.max_records_per_chunk),
+                             (extractor.DEFAULT_MAX_BATCHES, extractor.MAX_CONTENT_CHARS, None), bad)
+
+    def test_short_rows_from_older_callers_are_padded(self):
+        s = self._resolve((4, None))
+        self.assertEqual(s.max_batches, extractor.DEFAULT_MAX_BATCHES)
 
 
 class CapRecordsPerChunkTests(unittest.TestCase):
@@ -1042,7 +1024,7 @@ class CapRecordsPerChunkTests(unittest.TestCase):
     Film Forum w50 packs 50 dated showtime cards into 8,426 chars and three films
     (AMERICAN PACHUCO, THE THIRD MAN, WHITE NIGHTS) only come back when that
     chunk is split. Measured global cost is why this is opt-in — see
-    RECORDS_PER_CHUNK_DIRECTIVE.
+    `websites.max_records_per_chunk`.
     """
 
     @staticmethod
@@ -1742,12 +1724,13 @@ class TestPerWebsiteMaxContentChars(unittest.TestCase):
                 return None
 
         class FakeCursor:
-            """Answers the (website_id, max_content_chars) lookup."""
+            """Answers the per-site extraction settings lookup
+            (website_id, max_batches, max_content_chars, force_chunked, cap)."""
             def execute(self, sql, params=None):
                 pass
 
             def fetchone(self):
-                return (4, 400000)
+                return (4, None, 400000, 0, None)
 
             def fetchall(self):
                 return []

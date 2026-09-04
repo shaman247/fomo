@@ -272,7 +272,7 @@ ENRICHMENT_BATCH_SIZE = 30
 #
 # Halving on failure is the right shape because the cause is cumulative output
 # length: most batches are fine and only the wordy tail needs subdividing (the
-# same reasoning as `[[extraction: max-records-per-chunk=N]]`). The floor exists
+# same reasoning as `websites.max_records_per_chunk`). The floor exists
 # because below it the problem is one pathological event, which splitting cannot
 # fix — so we stop paying for calls and let that small group degrade.
 ENRICHMENT_MIN_BATCH = 4
@@ -339,7 +339,7 @@ MAX_CHUNK_CHARS = 30000
 #
 # 250 sits at ~2x margin below the lowest observed failure. Unlike a global
 # record cap — measured at +83% chunks for +0.1% events, which is why
-# RECORDS_PER_CHUNK_DIRECTIVE stayed opt-in — this one is inert on the corpus:
+# `max_records_per_chunk` stayed opt-in — this one is inert on the corpus:
 # over the last 10 days' crawls (1,428 chunks on the chunked path) only 18
 # chunks (1.26%) exceed it, and every one of them is a page in exactly this
 # at-risk shape (BAM 684 date tokens in one chunk, GrowNYC 648, Arts Society of
@@ -1005,7 +1005,7 @@ def cap_records_per_chunk(chunks, max_records):
     than 25/25/1) so no piece is left with a token-budget cliff of its own.
 
     `max_records` falsy -> the chunk list is returned unchanged (the default;
-    see RECORDS_PER_CHUNK_DIRECTIVE for why this is opt-in).
+    see `max_records_per_chunk` above for why this is opt-in).
     """
     if not max_records:
         return chunks
@@ -1531,9 +1531,7 @@ async def extract_single_event(event_name, content, notes="", url=""):
     if not llm_providers.is_configured(llm_providers.provider_for('detail'), genai_client):
         return None
 
-    # Strip `[[extraction: ...]]` directive lines exactly as prepare_extraction
-    # does — they steer the listing pipeline, not a prompt.
-    _, notes = parse_extraction_directives(notes or "")
+    notes = _strip_legacy_directives(notes, 'detail page')
     note_section = f"IMPORTANT: {notes.strip()}\n\n" if notes and notes.strip() else ""
     url_section = f'This page\'s URL is {url}\n' if url else ""
 
@@ -1740,22 +1738,19 @@ Website content:
 
 
 # =============================================================================
-# Per-site extraction directives
+# Per-site extraction settings
 # =============================================================================
 #
-# `websites.notes` (plus a SiteProfile's extraction_notes, which resolve_notes
-# prepends to it) is the only site-scoped text every extraction path already
-# receives, so it doubles as the place to record an EXPLICIT per-site override
-# of the automatic single-vs-chunked mode choice. A directive is a line of the
-# form
+# Four knobs shape how a site is extracted, and each has ONE home: a column on
+# `websites`, with a source plugin's SiteProfile supplying a per-platform
+# default underneath it and the module constant underneath that. They are
+# resolved together, once per crawl result, by `resolve_extraction_settings` —
+# there is no directive syntax hidden in `websites.notes` (there was, until
+# 2026-09-04; a stale `[[extraction: …]]` line is now stripped with a warning so
+# it can never reach a prompt).
 #
-#     [[extraction: force-chunked]] optional free-text rationale
-#
-# The whole line is stripped from the notes before they are handed to Gemini,
-# so a directive never leaks into a prompt as if it were guidance.
-#
-# WHY this exists: mode selection is a heuristic (estimate_event_count >
-# LARGE_PAGE_THRESHOLD, or content > MAX_CHUNK_CHARS * 2). A site whose real
+# WHY `force_chunked` exists: mode selection is a heuristic (estimate_event_count
+# > LARGE_PAGE_THRESHOLD, or content > MAX_CHUNK_CHARS * 2). A site whose real
 # event count sits just under the threshold on content just under 2x the chunk
 # size — w950 Nook: ~30 Eventbrite-API cards, estimate 32-34, 43 KB — is routed
 # to a single call whose ~8K output-token budget cannot hold 30 full events, so
@@ -1763,66 +1758,71 @@ Website content:
 # over three crawls, 14 of ~30 events surviving). Nudging the heuristic's inputs
 # (padding the estimate, lowering the threshold) would move that cliff for every
 # site; naming the site that needs chunking does not.
-FORCE_CHUNKED_DIRECTIVE = 'force-chunked'
-
-# `[[extraction: max-records-per-chunk=25]]` — subdivide any chunk holding more
-# than N record headings, splitting only AT a heading so no record is cut.
 #
-# WHY this is opt-in rather than a global cap: a chunk's OUTPUT size scales with
-# its record COUNT, not its char count, so a compact 8K chunk holding 50 dense
-# showtime cards can overrun the response budget while a 30K chunk holding 10
-# records is fine. But measured A/B over the 10 densest real crawls (47-51
-# records in the biggest chunk) — same content, same prompt, only the cap
-# changing — a global cap of 30 moved distinct extracted events 1465 -> 1466
-# (+0.1%) while chunk count went 48 -> 88 (+83%). Nine of the ten were
-# bit-identical. Corpus-wide a cap of 30 would cost +47% Gemini calls per run.
-# Only Film Forum w50 measurably benefits (63 -> 66 distinct, reproducible over
-# 4 reps: AMERICAN PACHUCO, THE THIRD MAN, WHITE NIGHTS come back only when its
-# 50-record/8.4K chunk is split), which is exactly the shape the per-site
-# directive exists for. Name the site; don't move the cliff for everyone.
-RECORDS_PER_CHUNK_DIRECTIVE = 'max-records-per-chunk'
+# WHY `max_records_per_chunk` is opt-in rather than a global cap: a chunk's
+# OUTPUT size scales with its record COUNT, not its char count, so a compact 8K
+# chunk holding 50 dense showtime cards can overrun the response budget while a
+# 30K chunk holding 10 records is fine. But measured A/B over the 10 densest
+# real crawls (47-51 records in the biggest chunk) — same content, same prompt,
+# only the cap changing — a global cap of 30 moved distinct extracted events
+# 1465 -> 1466 (+0.1%) while chunk count went 48 -> 88 (+83%). Nine of the ten
+# were bit-identical. Corpus-wide a cap of 30 would cost +47% Gemini calls per
+# run. Only Film Forum w50 measurably benefits (63 -> 66 distinct, reproducible
+# over 4 reps: AMERICAN PACHUCO, THE THIRD MAN, WHITE NIGHTS come back only when
+# its 50-record/8.4K chunk is split), which is exactly the shape a per-site
+# setting exists for. Name the site; don't move the cliff for everyone.
+#
+# Per-site rationales for the rows that carry a setting live in
+# database/extraction_settings_rationale.md.
 
-_RECORDS_PER_CHUNK_RE = re.compile(
-    rf'^{RECORDS_PER_CHUNK_DIRECTIVE}=(\d+)$')
+@dataclass
+class ExtractionSettings:
+    max_batches: int = DEFAULT_MAX_BATCHES
+    max_content_chars: int = MAX_CONTENT_CHARS
+    force_chunked: bool = False
+    max_records_per_chunk: Optional[int] = None
 
-_EXTRACTION_DIRECTIVE_RE = re.compile(
-    r'^[ \t]*\[\[[ \t]*extraction[ \t]*:([^\]\n]*)\]\].*$', re.MULTILINE | re.IGNORECASE)
 
+def resolve_extraction_settings(website_row, profile_urls, max_batches_override=None):
+    """Resolve the per-site knobs: `websites` column > plugin default > global.
 
-def parse_extraction_directives(notes):
-    """Split `[[extraction: ...]]` directive lines out of a site's notes.
-
-    Returns (directives, notes_without_directive_lines). Directives are
-    lower-cased, `_`-normalised tokens; a line may carry several, comma
-    separated. Unknown tokens are returned as-is and simply ignored by callers,
-    so a typo degrades to "no override" rather than an exception.
+    `website_row` is (website_id, max_batches, max_content_chars, force_chunked,
+    max_records_per_chunk) as selected in prepare_extraction (shorter rows are
+    padded, for older callers). `max_batches_override` is an explicit caller
+    value that beats the column (kept for tests and ad-hoc runs).
     """
-    if not notes or not _EXTRACTION_DIRECTIVE_RE.search(notes):
-        return set(), notes or ""
-    directives = set()
-    for match in _EXTRACTION_DIRECTIVE_RE.finditer(notes):
-        for token in match.group(1).split(','):
-            token = token.strip().lower().replace('_', '-')
-            if token:
-                directives.add(token)
-    cleaned = _EXTRACTION_DIRECTIVE_RE.sub('', notes)
-    cleaned = re.sub(r'\n{3,}', '\n\n', cleaned).strip()
-    return directives, cleaned
+    row = tuple(website_row or ()) + (None,) * 5
+    _wid, db_max_batches, db_max_chars, db_force, db_cap = row[:5]
+    defaults = site_profiles.extraction_defaults(profile_urls)
+
+    def _positive(value):
+        try:
+            value = int(value) if value is not None else None
+        except (TypeError, ValueError):
+            return None
+        return value if value and value > 0 else None
+
+    max_batches = _positive(max_batches_override) or _positive(db_max_batches) or DEFAULT_MAX_BATCHES
+    max_chars = _positive(db_max_chars) or _positive(defaults['max_content_chars']) or MAX_CONTENT_CHARS
+    force_chunked = bool(db_force) or bool(defaults['force_chunked'])
+    cap = _positive(db_cap) or _positive(defaults['max_records_per_chunk'])
+    return ExtractionSettings(max_batches, max_chars, force_chunked, cap)
 
 
-def records_per_chunk_override(directives):
-    """Read `max-records-per-chunk=N` out of a site's directives.
+# Tripwire for the retired notes directive: strip and warn, never prompt.
+_LEGACY_DIRECTIVE_RE = re.compile(
+    r'^[ \t]*\[\[[ \t]*extraction[ \t]*:[^\]\n]*\]\].*$', re.MULTILINE | re.IGNORECASE)
 
-    Returns the positive int, or None when absent or malformed (a typo degrades
-    to "no override", consistent with every other directive).
-    """
-    for token in directives:
-        match = _RECORDS_PER_CHUNK_RE.match(token)
-        if match:
-            value = int(match.group(1))
-            if value > 0:
-                return value
-    return None
+
+def _strip_legacy_directives(notes, website_name):
+    if not notes or not _LEGACY_DIRECTIVE_RE.search(notes):
+        return notes or ""
+    print(f"    - WARNING: {website_name}: websites.notes carries a legacy "
+          f"[[extraction: …]] directive line. Directives moved to the "
+          f"websites.force_chunked / max_records_per_chunk columns on 2026-09-04; "
+          f"the line is ignored (and kept out of the prompt) — move the setting.")
+    cleaned = _LEGACY_DIRECTIVE_RE.sub('', notes)
+    return re.sub(r'\n{3,}', '\n\n', cleaned).strip()
 
 
 def _profile_candidate_urls(cursor, crawl_result_id, base_url):
@@ -1870,10 +1870,9 @@ async def prepare_extraction(cursor, crawl_result_id, website_name, notes="",
     Returns:
         PreparedExtraction with all data needed for execution
     """
-    notes = site_profiles.resolve_notes(
-        _profile_candidate_urls(cursor, crawl_result_id, base_url), notes)
-    # Directives are stripped here, before the notes reach ANY prompt builder.
-    directives, notes = parse_extraction_directives(notes)
+    profile_urls = _profile_candidate_urls(cursor, crawl_result_id, base_url)
+    notes = _strip_legacy_directives(
+        site_profiles.resolve_notes(profile_urls, notes), website_name)
 
     prep = PreparedExtraction(
         crawl_result_id=crawl_result_id,
@@ -1941,9 +1940,10 @@ async def prepare_extraction(cursor, crawl_result_id, website_name, notes="",
             print(f"    - Page explicitly states no events ('{pattern}'), skipping extraction")
             return prep
 
-    # Get website_id (and its content-cap override) for this crawl result
+    # Get website_id and the per-site extraction settings for this crawl result
     cursor.execute(
-        """SELECT cr.website_id, w.max_content_chars
+        """SELECT cr.website_id, w.max_batches, w.max_content_chars,
+                  w.force_chunked, w.max_records_per_chunk
              FROM crawl_results cr
              LEFT JOIN websites w ON w.id = cr.website_id
             WHERE cr.id = %s""",
@@ -1951,8 +1951,8 @@ async def prepare_extraction(cursor, crawl_result_id, website_name, notes="",
     )
     result = cursor.fetchone()
     website_id = result[0] if result else None
-    website_max_content_chars = result[1] if result else None
     prep.website_id = website_id
+    settings = resolve_extraction_settings(result, profile_urls or [base_url], max_batches)
 
     current_date_string = datetime.now().strftime('%Y-%m-%d')
 
@@ -1962,13 +1962,12 @@ async def prepare_extraction(cursor, crawl_result_id, website_name, notes="",
     prep.url = url
 
     # Hard limit on content size to prevent runaway extraction. Structured API
-    # sources can raise it via their SiteProfile — truncating a payload we built
+    # sources raise it via their SiteProfile — truncating a payload we built
     # ourselves silently drops real events rather than trimming an archive.
     # Plain websites raise (or lower) it via websites.max_content_chars, which
     # wins over the plugin default; both are per-site decisions made after
     # checking what actually sits past the cut.
-    max_chars = site_profiles.max_content_chars_for(
-        base_url or url, MAX_CONTENT_CHARS, website_max_content_chars)
+    max_chars = settings.max_content_chars
     if len(content_to_process) > max_chars:
         print(f"    - Content too large ({len(content_to_process)} chars), truncating to {max_chars}")
         content_to_process = content_to_process[:max_chars]
@@ -1992,16 +1991,16 @@ async def prepare_extraction(cursor, crawl_result_id, website_name, notes="",
 
     else:
         estimated_events = estimate_event_count(content_to_process)
-        forced_chunked = FORCE_CHUNKED_DIRECTIVE in directives
+        forced_chunked = settings.force_chunked
         use_two_pass = (forced_chunked
                         or estimated_events > LARGE_PAGE_THRESHOLD
                         or len(content_to_process) > MAX_CHUNK_CHARS * 2)
 
         if use_two_pass:
             prep.extraction_type = 'chunked'
-            prep.max_batches = max_batches if max_batches is not None else DEFAULT_MAX_BATCHES
+            prep.max_batches = settings.max_batches
             if forced_chunked:
-                print(f"    - [[extraction: force-chunked]] for {website_name} "
+                print(f"    - force_chunked set for {website_name} "
                       f"(~{estimated_events} events, {len(content_to_process)} chars), "
                       f"preparing chunked extraction...")
             else:
@@ -2009,11 +2008,11 @@ async def prepare_extraction(cursor, crawl_result_id, website_name, notes="",
 
             # Split content into chunks and build prompts
             chunks, chunk_method = chunk_content(content_to_process, EVENTS_PER_CHUNK, MAX_CHUNK_CHARS)
-            records_cap = records_per_chunk_override(directives)
+            records_cap = settings.max_records_per_chunk
             if records_cap:
                 capped = cap_records_per_chunk(chunks, records_cap)
                 if len(capped) != len(chunks):
-                    print(f"    - [[extraction: {RECORDS_PER_CHUNK_DIRECTIVE}={records_cap}]] "
+                    print(f"    - max_records_per_chunk={records_cap} "
                           f"subdivided {len(chunks)} chunks into {len(capped)}")
                 chunks = capped
 
@@ -3422,7 +3421,6 @@ async def _process_completed_batch(responses, crid_list, extraction_queue,
                 prep = await prepare_extraction(
                     cursor, crid, item['name'], item.get('notes', ''),
                     item.get('use_vision', False), item.get('base_url', ''),
-                    item.get('max_batches')
                 )
                 if not prep.error:
                     preparations[crid] = prep
@@ -3544,7 +3542,6 @@ async def _submit_poll_and_process_new_batch(extraction_queue, poll_interval, ti
             prep = await prepare_extraction(
                 cursor, crid, item['name'], item.get('notes', ''),
                 item.get('use_vision', False), item.get('base_url', ''),
-                item.get('max_batches')
             )
 
             if prep.error:

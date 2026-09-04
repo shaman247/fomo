@@ -384,7 +384,6 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
                 'website': website,
                 'use_vision': website.get('process_images') == 1,
                 'base_url': website.get('base_url', ''),
-                'max_batches': website.get('max_batches')
             })
 
         # Resolve batch mode: default to sync (no-batch) — use --batch to opt in
@@ -454,7 +453,6 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
                             item['name'], item['notes'],
                             use_vision=item.get('use_vision', False),
                             base_url=item.get('base_url', ''),
-                            max_batches=item.get('max_batches')
                         )
                         if success:
                             if item['source'] == 'incomplete':

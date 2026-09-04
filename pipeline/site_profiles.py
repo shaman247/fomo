@@ -52,6 +52,10 @@ class SiteProfile:
     # away with, so truncating it just silently drops real events. Extraction
     # cost stays bounded by websites.max_batches either way.
     max_content_chars: Optional[int] = None
+    # Platform defaults for the other two per-site extraction knobs; the
+    # `websites` columns of the same name win (see extractor.resolve_extraction_settings).
+    force_chunked: bool = False
+    max_records_per_chunk: Optional[int] = None
     image_fetch_headers: dict = field(default_factory=dict)  # extra HTTP headers downloading images
     image_host_substrs: tuple = ()      # full-URL substrings selecting image_fetch_headers
 
@@ -218,6 +222,27 @@ def resolve_notes(urls, notes) -> str:
     if prefix:
         return f"{prefix}\n\n{notes}".rstrip() if notes else prefix
     return notes or ""
+
+
+def extraction_defaults(urls) -> dict:
+    """The first matching profile's per-platform extraction defaults.
+
+    Returns {'max_content_chars', 'force_chunked', 'max_records_per_chunk'};
+    values are None/False when no profile matches or the profile is silent, so
+    the caller (extractor.resolve_extraction_settings) falls through to the
+    global default. `urls` is a single URL or an iterable, most specific first.
+    """
+    if isinstance(urls, str) or urls is None:
+        urls = [urls]
+    for u in urls:
+        p = resolve_profile(u)
+        if p:
+            return {
+                'max_content_chars': p.max_content_chars,
+                'force_chunked': p.force_chunked,
+                'max_records_per_chunk': p.max_records_per_chunk,
+            }
+    return {'max_content_chars': None, 'force_chunked': False, 'max_records_per_chunk': None}
 
 
 def max_content_chars_for(base_url, default: int, website_override=None) -> int:
