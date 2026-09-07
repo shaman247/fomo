@@ -317,7 +317,8 @@ const MapManager = (() => {
         const dim = testSize * 2;
         canvas.width = dim;
         canvas.height = dim;
-        const ctx = canvas.getContext('2d');
+        // This canvas is read back immediately; avoid a GPU readback stall.
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
         ctx.font = `${testSize}px ${fontFamily}`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
@@ -363,7 +364,8 @@ const MapManager = (() => {
         const canvas = document.createElement('canvas');
         canvas.width = canvasSize;
         canvas.height = canvasSize;
-        const ctx = canvas.getContext('2d');
+        // New date ranges can need many uncached glyphs in one click handler.
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
         // Resolve via TagColorManager.getActiveEmojiFont — the single source of
         // truth — so the glyph renders with the same font the marker color was

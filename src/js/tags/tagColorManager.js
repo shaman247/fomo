@@ -129,7 +129,8 @@ const TagColorManager = (() => {
         const canvas = document.createElement('canvas');
         canvas.width = size;
         canvas.height = size;
-        const ctx = canvas.getContext('2d');
+        // Pixel analysis is the output: keep this small canvas on the CPU.
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
         ctx.font = size * 0.85 + 'px ' + (fontFamily || getActiveEmojiFont());
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';

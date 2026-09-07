@@ -1,5 +1,14 @@
 # JavaScript Modules
 
+## Canvas readback performance
+
+Emoji rasterization and color extraction use small 2D canvases whose pixels are
+read immediately. Keep `willReadFrequently: true` on these contexts: default GPU
+readback stalled the first date-range expansion in desktop Chrome, while repeat
+clicks hid the cost through emoji caches. Profile fresh-page interactions as well
+as warm repeats, and measure Event Timing through the next paint, not just the
+synchronous `FilterProfiler` spans. See `.claude/decisions.md` (2026-09-07 INP).
+
 ## 📁 File Organization
 
 ```
