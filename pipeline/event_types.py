@@ -37,6 +37,22 @@ EVENT_TYPES_BY_CATEGORY = {
         "Open Practice",
         "Volunteer",
         "Drop-In Service",
+        # A scheduled sitting where the attendee is formally assessed: SAT/PSAT/
+        # ACT practice exams, certification/licensing exam sessions. Instruction
+        # ABOUT a test ("Citizenship Exam Prep") is a Class, not an Exam.
+        "Exam",
+        # No gathering to attend: you participate on your own time across a
+        # published window, with the venue supplying the prompt, log or
+        # materials (reading challenges, film challenges, decorate-and-return
+        # contests, Inktober drop-ins). An entry-by-submission open call with
+        # no venue-side participation is NOT this -- it is not an event at all
+        # and `processor.is_obvious_non_event` filters it upstream.
+        "Self-Paced Challenge",
+        # In-person voting at a designated poll site -- early-voting days and
+        # Election Day poll hours. A genuine dated civic occurrence with posted
+        # hours; distinct from `Civic Meeting` (no agenda, no convening) and
+        # from `Drop-In Service` (a civic transaction, not a service you receive).
+        "Voting",
     ],
     # Browsable — self-paced consumption of a curated environment
     "Browsable": [
@@ -118,7 +134,8 @@ TYPE_EMOJI = {
     "Concert": "🎤", "Theater Show": "🎭", "Comedy Show": "😂", "Screening": "🎬",
     "Sports": "🏟️", "Reading": "📖",
     "Class": "🎓", "Workshop": "🛠️", "Tasting": "🍷", "Camp": "🏕️", "Fitness": "🏋️", "Game": "🎲",
-    "Open Practice": "🔄", "Volunteer": "🤝", "Drop-In Service": "🩺",
+    "Open Practice": "🔄", "Volunteer": "🤝", "Drop-In Service": "🩺", "Exam": "📝",
+    "Self-Paced Challenge": "🎯", "Voting": "🗳️",
     "Exhibition": "🖼️", "Open House": "🚪", "Market": "🛍️", "Fair": "🪧",
     "Pop-Up": "✨", "Immersive Experience": "🌌",
     "Club Night": "🪩", "Party": "🎉", "Mixer": "🫂", "Benefit": "🎗️", "Watch Party": "📺",

@@ -88,6 +88,34 @@ def _is_cloudflare_error_page(lowered):
     return bool(_CF_ERROR_CODE_RE.search(lowered))
 
 
+# The detectors above all sniff the *body*. But crawl4ai itself already
+# classifies a WAF block as a hard failure and hands back
+# `success=False, error_message="Blocked by anti-bot protection: HTTP 403 with
+# HTML content (919 bytes)"`. Relying on body markers alone missed exactly that
+# case: on 2026-09-05 all 23 of AMC Empire 25's URLs were 403s whose block page
+# rendered to ~15 chars of markdown each, matching no BOT_CHALLENGE_MARKERS. The
+# per-URL header lines then accumulated to 2,300 chars, clearing
+# MIN_CRAWL_CONTENT_SIZE, and a 100%-blocked crawl was stored as `processed`
+# with 0 events. Trust the crawler's own verdict as well as the body.
+BLOCKED_ERROR_MARKERS = (
+    'blocked by anti-bot protection',
+    'http 403',
+    'http 429',
+)
+
+
+def _is_blocked_error(error_message):
+    """True if crawl4ai reported this fetch as a WAF/rate-limit block.
+
+    Same transient, IP-reputation-scored class as BOT_CHALLENGE_MARKERS, so it
+    routes to the same retry-with-backoff path rather than a site setting change.
+    """
+    if not error_message:
+        return False
+    lowered = str(error_message).lower()
+    return any(marker in lowered for marker in BLOCKED_ERROR_MARKERS)
+
+
 def _is_bot_challenge(content):
     """True if content is an interstitial (bot challenge or CF 5xx), not real content."""
     if not content or len(content) > BOT_CHALLENGE_MAX_CHARS:
@@ -460,10 +488,15 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
         # URLs whose page is permanently gone (soft 404 served as HTTP 200).
         # Never retried — they are dropped and reported in the failure message.
         soft_404_urls = []
+        # How many URLs we actually tried, and how many came back as a real
+        # fetch. A crawl where every URL failed must not be storable as healthy.
+        attempted_urls = 0
+        succeeded_urls = 0
+        last_url_error = None
 
         async def crawl_urls():
             """Inner function to crawl all URLs, can be wrapped with timeout."""
-            nonlocal combined_markdown
+            nonlocal combined_markdown, attempted_urls, succeeded_urls, last_url_error
             for url_data in urls:
                 # Handle both dict format (with js_code) and string format (legacy)
                 if isinstance(url_data, dict):
@@ -489,9 +522,19 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
                 print(f"    - Processing {url}")
                 url_content = ""
                 page_count = 0
+                # Did ANY page of this URL come back as a real fetch? A WAF block
+                # still yields a result object with a renderable body, so content
+                # length alone cannot answer this (see _is_blocked_error).
+                url_succeeded = False
+                url_error = None
+                attempted_urls += 1
 
                 for result in await crawler.arun(url=url, config=url_config):
                     page_count += 1
+                    if result and result.success:
+                        url_succeeded = True
+                    elif result and result.error_message:
+                        url_error = result.error_message
                     # Debug: show what we received
                     html_len = len(result.html) if result and result.html else 0
                     has_error = bool(result.error_message) if result else False
@@ -517,6 +560,12 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
                         print(f"      Page {page_count}: fit={fit_len}, raw={raw_len}, using={len(content) if content else 0}")
 
                 print(f"    - Crawled {page_count} page(s), {len(url_content)} chars total")
+                if not url_succeeded and _is_blocked_error(url_error):
+                    # Discard the block page's markdown: appending it is what let
+                    # a fully-blocked crawl look healthy. Retry with backoff below.
+                    print(f"    - Fetch blocked by origin ({str(url_error)[:70]}) - queued for retry")
+                    challenged_urls.append((url, url_config))
+                    continue
                 if _is_bot_challenge(url_content):
                     print(f"    - Challenge/error interstitial ({len(url_content)} chars) - queued for retry")
                     challenged_urls.append((url, url_config))
@@ -527,6 +576,10 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
                     print(f"    - Soft 404 ({len(url_content)} chars) - page no longer exists, discarding")
                     soft_404_urls.append(url)
                     continue
+                if url_succeeded:
+                    succeeded_urls += 1
+                elif url_error:
+                    last_url_error = url_error
                 if url_content:
                     combined_markdown += url + "\n" + url_content
 
@@ -557,6 +610,7 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
             )
             if recovered:
                 combined_markdown += challenged_url + "\n" + recovered
+                succeeded_urls += 1
             else:
                 unresolved_challenges += 1
 
@@ -575,12 +629,37 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
                 error_msg = (
                     f"Bot challenge / origin error page not cleared after retries ({unresolved_challenges} URL(s))"
                 )
+            elif attempted_urls and not succeeded_urls:
+                # Same diagnosis as the all-failed backstop below, reached here
+                # because the failed fetches rendered to nothing at all: name
+                # the failure rather than the symptom.
+                error_msg = f"All {attempted_urls} URL(s) failed to fetch"
+                if last_url_error:
+                    error_msg += f" (last error: {str(last_url_error)[:120]})"
             else:
                 error_msg = "No content retrieved"
             db.update_crawl_result_failed(
                 cursor, connection, crawl_result_id, error_msg
             )
             # Still update last_crawled_at to prevent immediate retry
+            db.update_website_last_crawled(cursor, connection, website['id'])
+            return None
+
+        # Every URL failed, yet something accumulated in combined_markdown. That
+        # something is not content: it is the per-URL header lines (and whatever
+        # a block/error page rendered to), and at ~100 chars per URL a site with
+        # enough URLs clears MIN_CRAWL_CONTENT_SIZE and lands as `processed` with
+        # 0 events — indistinguishable from a healthy site with nothing on. The
+        # merger then has a 0-event "successful" crawl to archive against.
+        # Observed on AMC Empire 25 (w4110) 2026-09-05: 23/23 URLs 403, stored as
+        # processed with 2,300 chars. The blocked-URL branch above now discards
+        # those bodies, so this is the backstop for every other all-fail shape.
+        if attempted_urls and not succeeded_urls:
+            error_msg = f"All {attempted_urls} URL(s) failed to fetch"
+            if last_url_error:
+                error_msg += f" (last error: {str(last_url_error)[:120]})"
+            print(f"    - {error_msg}")
+            db.update_crawl_result_failed(cursor, connection, crawl_result_id, error_msg)
             db.update_website_last_crawled(cursor, connection, website['id'])
             return None
 

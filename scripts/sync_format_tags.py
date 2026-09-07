@@ -8,7 +8,7 @@ Two phases (run both by default):
   --build   Ensure the tag nodes + hierarchy edges exist:
               Format (root)
                 └─ Performance / Participatory / Browsable / Social / Gathering / Excursions
-                     └─ the 33 event-type leaves
+                     └─ the 38 event-type leaves
             Promotes keyword tags to curated (type='tag'), fills missing emojis,
             and wires edges. Idempotent.
 
@@ -17,7 +17,7 @@ Two phases (run both by default):
             category + Format root are (re)applied; stale Format-axis rows are
             cleared first so reclassifications are reflected.
 
-Authoritative vs union: 25 of the 33 leaves are Format-only nodes — their
+Authoritative vs union: 30 of the 38 leaves are Format-only nodes — their
 membership becomes EXACTLY event_type. The other 8 (Concert, Sports, Reading,
 Workshop, Fitness, Volunteer, Party, Festival) also exist as content-genre nodes
 with their own subtrees, so they are multi-parented (kept under their genre root

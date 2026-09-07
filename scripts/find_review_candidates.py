@@ -992,6 +992,36 @@ PATTERNS = [
         """,
         'postfilter': _location_name_zip_postfilter,
     },
+    {
+        # Venue-LESS out-of-region events. Pattern 23 keys off `location_name`,
+        # so a listing whose location is a placeholder ("Location not specified
+        # yet" -- Meetup's literal for an unset venue; "TBA", "TBD", "Not
+        # specified") is invisible to it even when the NAME or DESCRIPTION says
+        # Yosemite, Peru or the Dolomites. Explorer Chicks of NYC (w3727) hid
+        # 11 of 17 out-of-region trips exactly this way on 2026-09-05 and they
+        # were only caught by hand. This arm reads the name/description with
+        # the same word-boundary place list, restricted to placeholder
+        # locations so an in-region event that merely MENTIONS Italy in its
+        # blurb (an Italian film night at a mapped venue) does not fire.
+        # Unmapped rows are included on purpose: they never reach the map, but
+        # they do reach /fix-unmapped-events, which would otherwise spend a
+        # research pass placing a trip to Zion.
+        'id': 39,
+        'name': 'Placeholder location + out-of-region place in name/description',
+        'query': f"""
+            SELECT DISTINCT e.id FROM events e
+            WHERE e.archived = 0 AND e.reviewed = 0
+              AND (
+                e.location_name IS NULL OR e.location_name = ''
+                OR LOWER(e.location_name) IN ('location not specified yet', 'location not specified',
+                    'not specified', 'tba', 'tbd', 'to be announced', 'to be determined',
+                    'location tba', 'location tbd', 'venue tba', 'venue tbd', 'online', 'virtual')
+                OR LOWER(e.location_name) LIKE 'not specified in %'
+                OR LOWER(e.location_name) LIKE 'venue not specified%'
+              )
+              AND (e.name REGEXP '{_NON_NYC_REGEXP}' OR e.description REGEXP '{_NON_NYC_REGEXP}')
+        """,
+    },
 ]
 
 

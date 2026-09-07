@@ -6,8 +6,9 @@ for each website, ensuring coverage of events in the next 2 weeks.
 
 Two key signals for frequency:
 1. Posting lead time — how far in advance a site posts new events.
-   If P25 lead time is 8 days, we'd crawl every ~4 days to catch them
-   (subject to a hard 3-day floor — see MIN_FREQUENCY).
+   If P25 lead time is 8 days, we crawl every ~8 days: one crawl then lands
+   inside most publish->start windows (subject to a hard 4-day floor — see
+   MIN_FREQUENCY and LEAD_TIME_DIVISOR for the measured trade-off).
 2. Event horizon — how far into the future a crawl's events reach.
    If a crawl only shows events 5 days out, we must crawl within 5 days
    or we'll have a coverage gap.
@@ -40,23 +41,31 @@ import db
 # Minimum completed crawls before auto-adjusting
 MIN_CRAWL_HISTORY = 3
 
-# Frequency bounds (days). The floor is 3 days: even sites that post events with
-# very short lead times don't warrant crawling more often than every 3 days.
-MIN_FREQUENCY = 3
+# Frequency bounds (days). The floor is 4 days: even sites that post events with
+# very short lead times don't warrant crawling more often than that. (A 3-day
+# floor put ~800 short-lead sites on a cliff at 3d for +52% crawl budget; 4d
+# with LEAD_TIME_DIVISOR=1 keeps the same coverage for +13% — 2026-09-06 sim.)
+MIN_FREQUENCY = 4
 MAX_FREQUENCY = 90
 DEFAULT_FREQUENCY = 7
 
 # Maximum change factor per adjustment (prevent oscillation)
 MAX_CHANGE_FACTOR = 2.0
 
-# Lookback window for historical analysis (days)
+# Lookback window for historical analysis (days). A site crawled every 90 days
+# has ONE crawl in a 90-day window, so slow sites widen it to
+# WINDOW_FREQUENCY_MULTIPLE x their current frequency — otherwise they return
+# "Insufficient data" forever and can never come back down.
 ANALYSIS_WINDOW_DAYS = 90
+WINDOW_FREQUENCY_MULTIPLE = 4
 
 # Lead time percentile for "safe minimum" calculation
 LEAD_TIME_PERCENTILE = 25
 
-# Crawl at least this many times within the shortest typical posting window
-LEAD_TIME_DIVISOR = 2
+# Crawl interval = P25 lead time / this. 1 = crawl once per typical posting
+# window, which still catches most events; 2 doubled the budget for the same
+# rescue count in the 2026-09-06 simulation.
+LEAD_TIME_DIVISOR = 1
 
 # Consecutive crawls with no new events before relaxing frequency
 STALE_CRAWL_THRESHOLD = 3
@@ -90,32 +99,39 @@ def _in_clause(ids):
     return ','.join(['%s'] * len(ids))
 
 
-def _load_lead_times(cursor, website_ids):
+def _load_lead_times(cursor, website_ids, window):
     """website_id -> sorted lead times (days) for events found in the window.
 
-    Lead time = event start_date - crawl date (when the event was first
-    discovered). Only primary sources, only events still in the future at
-    crawl time.
+    Lead time = an event's FIRST future occurrence - crawl date, taken on the
+    crawl that first discovered it (`event_sources.is_primary` marks creation).
+    One sample per event, not per occurrence, and same-day (0d) samples are
+    dropped: a weekly series otherwise contributes a 0d lead for every
+    upcoming instance and drags the whole site onto the frequency floor.
     """
     cursor.execute(f"""
-        SELECT cr.website_id, DATEDIFF(ceo.start_date, DATE(cr.crawled_at)) as lead_time_days
-        FROM event_sources es
-        JOIN crawl_events ce ON es.crawl_event_id = ce.id
-        JOIN crawl_results cr ON ce.crawl_result_id = cr.id
-        JOIN crawl_event_occurrences ceo ON ceo.crawl_event_id = ce.id
-        WHERE es.is_primary = TRUE
-          AND cr.website_id IN ({_in_clause(website_ids)})
-          AND cr.crawled_at >= DATE_SUB(NOW(), INTERVAL %s DAY)
-          AND ceo.start_date >= DATE(cr.crawled_at)
-        ORDER BY cr.website_id, lead_time_days
-    """, (*website_ids, ANALYSIS_WINDOW_DAYS))
+        SELECT website_id, lead_time_days FROM (
+            SELECT cr.website_id, es.event_id,
+                   DATEDIFF(MIN(ceo.start_date), DATE(cr.crawled_at)) as lead_time_days
+            FROM event_sources es
+            JOIN crawl_events ce ON es.crawl_event_id = ce.id
+            JOIN crawl_results cr ON ce.crawl_result_id = cr.id
+            JOIN crawl_event_occurrences ceo ON ceo.crawl_event_id = ce.id
+            WHERE es.is_primary = TRUE
+              AND cr.website_id IN ({_in_clause(website_ids)})
+              AND cr.crawled_at >= DATE_SUB(NOW(), INTERVAL %s DAY)
+              AND ceo.start_date >= DATE(cr.crawled_at)
+            GROUP BY cr.website_id, es.event_id, cr.id
+        ) t
+        WHERE lead_time_days >= 1
+        ORDER BY website_id, lead_time_days
+    """, (*website_ids, window))
     out = {}
     for wid, lead in cursor.fetchall():
         out.setdefault(wid, []).append(lead)
     return out
 
 
-def _load_event_horizons(cursor, website_ids):
+def _load_event_horizons(cursor, website_ids, window):
     """website_id -> sorted horizons (days from each processed crawl to its
     furthest-future event)."""
     cursor.execute(f"""
@@ -130,23 +146,26 @@ def _load_event_horizons(cursor, website_ids):
         GROUP BY cr.website_id, cr.id
         HAVING horizon_days IS NOT NULL
         ORDER BY cr.website_id, horizon_days
-    """, (*website_ids, ANALYSIS_WINDOW_DAYS))
+    """, (*website_ids, window))
     out = {}
     for wid, horizon in cursor.fetchall():
         out.setdefault(wid, []).append(horizon)
     return out
 
 
-def _load_new_event_rates(cursor, website_ids):
+def _load_new_event_rates(cursor, website_ids, window):
     """website_id -> dict(total_crawls, crawls_with_new_events, rate, crawls).
 
-    A crawl "found new events" when it discovered events starting within 14
-    days of the crawl date — fresh events we would actually have missed.
+    A crawl "found new events" when it LISTED events starting within 14 days
+    of the crawl date — near-term programming that a slower cadence would
+    miss. Any linked source counts, not just `is_primary`: that flag marks the
+    crawl that *created* an event, so filtering on it scored every re-listing
+    as stale and pushed ~1,000 live venues to MAX_FREQUENCY (2026-09-06).
     `crawls` is ordered most recent first (consumed by _compute_stability).
     """
     cursor.execute(f"""
         SELECT cr.website_id, cr.id, cr.crawled_at, cr.event_count,
-               COUNT(DISTINCT CASE WHEN es.is_primary = TRUE AND ceo.id IS NOT NULL
+               COUNT(DISTINCT CASE WHEN es.event_id IS NOT NULL AND ceo.id IS NOT NULL
                      THEN es.event_id END) as new_events
         FROM crawl_results cr
         LEFT JOIN crawl_events ce ON ce.crawl_result_id = cr.id
@@ -159,7 +178,7 @@ def _load_new_event_rates(cursor, website_ids):
           AND cr.crawled_at >= DATE_SUB(NOW(), INTERVAL %s DAY)
         GROUP BY cr.website_id, cr.id
         ORDER BY cr.website_id, cr.crawled_at DESC
-    """, (*website_ids, ANALYSIS_WINDOW_DAYS))
+    """, (*website_ids, window))
     by_site = {}
     for wid, _cr_id, crawled_at, event_count, new_events in cursor.fetchall():
         by_site.setdefault(wid, []).append(
@@ -178,7 +197,7 @@ def _load_new_event_rates(cursor, website_ids):
     return out
 
 
-def _load_content_staleness(cursor, website_ids, recent=30):
+def _load_content_staleness(cursor, website_ids, window, recent=30):
     """website_id -> number of consecutive recent crawls whose content size
     equals the most recent crawl's (counting back from the newest, up to the
     last `recent` crawls). Same size strongly correlates with identical
@@ -190,7 +209,7 @@ def _load_content_staleness(cursor, website_ids, recent=30):
           AND status = 'processed'
           AND crawled_at >= DATE_SUB(NOW(), INTERVAL %s DAY)
         ORDER BY website_id, id DESC
-    """, (*website_ids, ANALYSIS_WINDOW_DAYS))
+    """, (*website_ids, window))
     sizes_by_site = {}
     for wid, size in cursor.fetchall():
         sizes = sizes_by_site.setdefault(wid, [])
@@ -236,18 +255,25 @@ def _load_crawl_histories(cursor, website_ids):
     return out
 
 
-def _load_metrics(cursor, website_ids):
+def _analysis_window(current_frequency):
+    """Lookback (days) for a site at this frequency — see ANALYSIS_WINDOW_DAYS."""
+    return max(ANALYSIS_WINDOW_DAYS,
+               WINDOW_FREQUENCY_MULTIPLE * (current_frequency or DEFAULT_FREQUENCY))
+
+
+def _load_metrics(cursor, website_ids, window=ANALYSIS_WINDOW_DAYS):
     """Run the six per-metric queries once over all analyzed websites.
 
     Replaces six queries per website (~13k round trips per run) with six
     GROUP BY / IN(...) queries. Returns website_id -> dict of raw metric inputs.
+    `window` is the lookback in days; callers group sites by _analysis_window.
     """
     if not website_ids:
         return {}
-    lead_times = _load_lead_times(cursor, website_ids)
-    horizons = _load_event_horizons(cursor, website_ids)
-    new_event_rates = _load_new_event_rates(cursor, website_ids)
-    staleness = _load_content_staleness(cursor, website_ids)
+    lead_times = _load_lead_times(cursor, website_ids, window)
+    horizons = _load_event_horizons(cursor, website_ids, window)
+    new_event_rates = _load_new_event_rates(cursor, website_ids, window)
+    staleness = _load_content_staleness(cursor, website_ids, window)
     has_upcoming = _load_has_upcoming(cursor, website_ids)
     histories = _load_crawl_histories(cursor, website_ids)
     return {
@@ -461,7 +487,7 @@ def _recommend_frequency(lead_times, horizons, new_event_data, stability,
        keep frequency high — 1 event in 40 crawls doesn't justify daily crawling)
     4. Adjust up if site is stable with no new events
     5. Aggressively relax if very stale (10+ consecutive crawls with no new events)
-    6. Set to MAX if no upcoming events and no short-lead history
+    6. Floor at the P25 lead time if there are no upcoming events
     7. Clamp to [MIN, MAX] days
     8. Limit change to 2x in either direction (relaxed to 4x for very stale sites)
     """
@@ -536,10 +562,13 @@ def _recommend_frequency(lead_times, horizons, new_event_data, stability,
                            f"{recommended}d -> {content_floor}d")
             recommended = content_floor
 
-    # No upcoming events with no short-lead history
-    if not has_upcoming and lead_times and min(lead_times) > 7:
-        recommended = MAX_FREQUENCY
-        reasons.append(f"No upcoming events, min lead {min(lead_times)}d")
+    # No upcoming events: don't fall below the cadence that would catch the next
+    # batch. Jumping to MAX_FREQUENCY here stranded 14d-lead venues (Spoke the
+    # Hub, Park Avenue Armory) — an empty calendar at a short-lead venue is a
+    # lull, and the lead time is exactly the interval that survives one.
+    if not has_upcoming and p25_lead_time is not None and p25_lead_time > recommended:
+        recommended = p25_lead_time
+        reasons.append(f"No upcoming events, floor at P25 lead {p25_lead_time}d")
 
     # Clamp to bounds
     recommended = max(MIN_FREQUENCY, min(MAX_FREQUENCY, recommended))
@@ -612,7 +641,9 @@ def analyze_frequencies(cursor, connection, website_ids=None, dry_run=False, ver
                (SELECT COUNT(*) FROM crawl_results cr
                 WHERE cr.website_id = w.id
                   AND cr.status = 'processed'
-                  AND cr.crawled_at >= DATE_SUB(NOW(), INTERVAL {ANALYSIS_WINDOW_DAYS} DAY)) as crawl_count
+                  AND cr.crawled_at >= DATE_SUB(NOW(), INTERVAL GREATEST({ANALYSIS_WINDOW_DAYS},
+                      {WINDOW_FREQUENCY_MULTIPLE} * COALESCE(w.crawl_frequency, {DEFAULT_FREQUENCY})) DAY)
+               ) as crawl_count
         FROM websites w
         WHERE w.disabled = FALSE{filter_sql}
         ORDER BY w.name
@@ -677,9 +708,15 @@ def analyze_frequencies(cursor, connection, website_ids=None, dry_run=False, ver
 
         eligible.append(w)
 
-    # Pass 2: load every metric for the eligible set in six bulk queries, then
-    # score each website from the in-memory inputs.
-    metrics = _load_metrics(cursor, [w['id'] for w in eligible])
+    # Pass 2: load every metric for the eligible set in six bulk queries per
+    # lookback window (slow sites look further back), then score each website
+    # from the in-memory inputs.
+    by_window = {}
+    for w in eligible:
+        by_window.setdefault(_analysis_window(w['crawl_frequency']), []).append(w['id'])
+    metrics = {}
+    for window, ids in by_window.items():
+        metrics.update(_load_metrics(cursor, ids, window))
 
     for w in eligible:
         wid = w['id']

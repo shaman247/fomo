@@ -44,6 +44,12 @@ tags** (e.g. no `Dance` type — a dance show is `Theater Show` + `Dance` tag).
   - **Demonstrations and certifications are not tastings**: a cooking demo with sampling is a `Talk`/`Class`; a server certification course is a `Class`.
 
 - **Drop-In Service** — show up to receive **individualized free service**: legal clinic, mock citizenship interview, drop-in resume help, library tech help, 1:1 consultations (career, design, HR), mobile health van, period pantry, community acupuncture by donation, free haircuts. Different from `Volunteer` (you receive, not give labor) and `Workshop` (no group instruction).
+- **Exam** — a scheduled sitting where the attendee is **formally assessed**: SAT/PSAT/ACT practice exams (in person or proctored online), certification and licensing exam sessions (amateur-radio VE session, civil service, notary). Different from `Class` (instruction *about* a test — "Citizenship Exam Prep", "SAT Prep Course" — is a `Class`, not an `Exam`) and from `Drop-In Service` (you are being measured, not served). An **audition** is not an Exam: it is a selection call, and is typed by what the attendee does on the day.
+- **Self-Paced Challenge** — a program you complete **on your own time across a published window**, with no session to attend: library reading challenges and reading logs, film challenges, "1,000 Books Before Kindergarten", Inktober drop-in prompts, decorate-at-home-and-return contests, photo challenges. The venue supplies the prompt, sheet, log or materials; the dates bound the window, not a gathering.
+  - **The occurrence shape is the tell.** These rows carry a date span or bare dates with **no clock time**. A row with a start *time* is a scheduled session — type it `Workshop`/`Game`/`Class` by what happens in the room, however "Challenge" its name is ("Lego Challenge", "Engineering Challenge: Bridge Builders", "Chess Challenge").
+  - **Boundary with the junk filter (they must agree):** an entry you simply *send in* — an open call with a submission deadline and nothing to do at the venue — is **not an event at all**; `processor.is_obvious_non_event`'s `open_call_contest` rule drops it upstream and it should never reach classification. The line is venue-side participation: "grab a challenge sheet at the library", "pick up your reading log", "stop by every day in October" → `Self-Paced Challenge`; "submit your ideas by December", "deadline to enter" → junk.
+- **Voting** — **in-person voting at a designated poll site**: early-voting days, Election Day poll hours. A genuine dated civic occurrence with posted hours. Different from `Civic Meeting` (a poll site has no agenda and convenes nobody), `Drop-In Service` (a civic transaction you perform, not a service delivered to you), and `Volunteer` (poll-worker *shifts* are `Volunteer`). Voter-registration drives, candidate forums and "know your ballot" sessions are **not** Voting — they are `Drop-In Service`/`Civic Meeting`/`Talk`.
+  - Prefer **one event with one occurrence per voting day** over one event per day. Nine consecutive "Early Voting Oct 24th … Nov 1st" rows for a single poll site is an extraction defect, not nine events.
 
 ### Browsable — self-paced consumption of a curated environment
 - **Exhibition** — gallery/museum show with a defined open run. Static single-piece installations you view at your own pace live here too. (A *scripted, sensory, time-slotted* environment you move through is `Immersive Experience`, not Exhibition.)
@@ -186,6 +192,7 @@ sweep in Mode B above is the sustaining mechanism for now.
 
 `Concert`, `Theater Show`, `Comedy Show`, `Screening`, `Sports`, `Reading`,
 `Class`, `Workshop`, `Tasting`, `Camp`, `Fitness`, `Game`, `Open Practice`, `Volunteer`, `Drop-In Service`,
+`Exam`, `Self-Paced Challenge`, `Voting`,
 `Exhibition`, `Open House`, `Market`, `Fair`, `Pop-Up`, `Immersive Experience`,
 `Club Night`, `Party`, `Mixer`, `Benefit`, `Watch Party`, `Festival`, `Community Celebration`,
 `Talk`, `Service`, `Ceremony`, `Civic Meeting`, `Discussion Group`,

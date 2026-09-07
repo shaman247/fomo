@@ -1709,7 +1709,7 @@ class TestShortNormalizedNamesReachExactTiers(unittest.TestCase):
     # map cannot detect an index-side floor.
     # ------------------------------------------------------------------
 
-    def _real_map(self, locations, website_linked=None):
+    def _real_map(self, locations, website_linked=None, roving=None):
         """Build a real locations_map from (id, name, short_name, alts) tuples."""
         rows = []
         for lid, name, short_name, alts in locations:
@@ -1719,13 +1719,16 @@ class TestShortNormalizedNamesReachExactTiers(unittest.TestCase):
                          'website_scoped_names': {}})
         real_all = processor.db.get_all_locations
         real_wl = processor.db.get_website_locations_map
+        real_rv = processor.db.get_roving_organizer_websites
         processor.db.get_all_locations = lambda cursor: rows
         processor.db.get_website_locations_map = lambda cursor: dict(website_linked or {})
+        processor.db.get_roving_organizer_websites = lambda cursor: set(roving or ())
         try:
             return build_locations_map(None)
         finally:
             processor.db.get_all_locations = real_all
             processor.db.get_website_locations_map = real_wl
+            processor.db.get_roving_organizer_websites = real_rv
 
     def test_two_char_normalized_name_is_indexed(self):
         # The reported case: "OS NYC" -> 'os', two chars, under the old floor.
@@ -3256,11 +3259,14 @@ class TestBrandFamilyKeyGuard(unittest.TestCase):
         real_all, real_wl = processor.db.get_all_locations, processor.db.get_website_locations_map
         processor.db.get_all_locations = lambda cursor: rows
         processor.db.get_website_locations_map = lambda cursor: dict(website_linked or {})
+        real_rv = processor.db.get_roving_organizer_websites
+        processor.db.get_roving_organizer_websites = lambda cursor: set()
         try:
             return build_locations_map(None)
         finally:
             processor.db.get_all_locations = real_all
             processor.db.get_website_locations_map = real_wl
+            processor.db.get_roving_organizer_websites = real_rv
 
     def _id(self, loc, locmap, website_id=None, sub=None, event_name='Some Event'):
         res = get_location_id(loc, sub, 'site', event_name, locmap, website_id=website_id)
@@ -3592,3 +3598,55 @@ class TestAreaQualifierRespectsFieldBoundary(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+
+class TestRovingOrganizerGuard(unittest.TestCase):
+    """`websites.roving_organizer` turns off the Levenshtein arm of Step 3.5.
+
+    Regression 2026-09-04: Lit Society (linked only to Temple Bar) resolved
+    "Penrose Bar" to Temple Bar; CycleBar NYC (linked to the NoHo studio)
+    pinned every other branch to NoHo; NYC DSA turned "Brandworkers Office"
+    into the DSA office. The flag is hand-set (see the `roving_candidates`
+    block comment for why a heuristic was measured and rejected).
+    """
+
+    TEMPLE = {'id': 6447, 'name': 'Temple Bar', 'lat': 40.72, 'lng': -73.99, 'emoji': 'X'}
+
+    def _map(self, roving=()):
+        rows = [{'id': 6447, 'name': 'Temple Bar', 'short_name': None, 'address': '',
+                 'lat': 40.72, 'lng': -73.99, 'emoji': 'X', 'alternate_names': [],
+                 'website_scoped_names': {}}]
+        real = (processor.db.get_all_locations, processor.db.get_website_locations_map,
+                processor.db.get_roving_organizer_websites)
+        processor.db.get_all_locations = lambda cursor: rows
+        processor.db.get_website_locations_map = lambda cursor: {4682: [dict(self.TEMPLE)]}
+        processor.db.get_roving_organizer_websites = lambda cursor: set(roving)
+        try:
+            return build_locations_map(None)
+        finally:
+            (processor.db.get_all_locations, processor.db.get_website_locations_map,
+             processor.db.get_roving_organizer_websites) = real
+
+    def _id(self, loc, m):
+        res = get_location_id(loc, None, 'Lit Society', 'Salon', m, website_id=4682)
+        return (res or {}).get('id')
+
+    def test_unflagged_site_keeps_the_loose_match(self):
+        # The pre-existing behavior: single-venue authority absorbs a near-miss.
+        self.assertEqual(self._id('Penrose Bar', self._map()), 6447)
+
+    def test_flagged_site_refuses_a_venue_that_merely_resembles_home(self):
+        self.assertIsNone(self._id('Penrose Bar', self._map(roving={4682})))
+
+    def test_flagged_site_still_lands_placeholders_on_the_organizer(self):
+        m = self._map(roving={4682})
+        for placeholder in ('Not specified', 'Location TBA', 'Various venues',
+                            'Online', 'Virtual (Zoom)', 'New York City'):
+            with self.subTest(placeholder=placeholder):
+                self.assertEqual(self._id(placeholder, m), 6447)
+
+    def test_flagged_site_keeps_the_substring_arm(self):
+        # A string that describes the home venue itself still resolves to it;
+        # only the loose Levenshtein arm is switched off.
+        self.assertEqual(self._id('Temple', self._map(roving={4682})), 6447)

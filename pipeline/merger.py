@@ -3169,7 +3169,8 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                     names_at_key.add(norm_name)
                     url_key_name_counts[index_key] = len(names_at_key)
                     existing_events_by_url.setdefault(index_key, []).append({
-                        **event_entry,
+                        'id': new_event_id,
+                        'name': name,
                         'location_id': location_id,
                         'slots': crawl_event_slots,
                     })

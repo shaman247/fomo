@@ -155,6 +155,17 @@ SKIP_LOCATION_NAMES = {
     'no location specified', 'event location coming soon',
     # multi-venue series run by one operator out of one studio
     'manhattan and brooklyn venues',
+    # 2026-09-07 unmapped sweep: contentless labels whose events are already
+    # pinned to the right venue. Each was verified against the live page before
+    # being added here, so a "mismatch" against the string is pure noise.
+    'various/artists', 'to be emailed prior to concert.', 'west lobby', 'window',
+    'off site', 'off-site location', 'room 674', 'location not specified',
+    # street with no number: nine distinct Bogart St venues in the DB, so the
+    # bare street can never resolve.
+    'bogart st',
+    # address deliberately withheld by the organizer; the neighborhood/host pin
+    # is the best mapping that will ever exist.
+    'soho sukkah', 'connors elementary school', 'throughout the rivertowns',
 }
 
 # Websites whose feed emits the HOST/PARTNER ORG as `location_name` for every

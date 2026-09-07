@@ -591,3 +591,142 @@ class TestDetailCrawlSoft404Guard(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+# =============================================================================
+# A crawl where EVERY URL was blocked must not be stored as a healthy crawl.
+#
+# AMC Empire 25 (w4110), 2026-09-05: all 23 `showtimes?date=` URLs returned
+# HTTP 403. crawl4ai flagged each as `success=False, error_message="Blocked by
+# anti-bot protection: HTTP 403 with HTML content (919 bytes)"`, but the block
+# page rendered to only ~15 chars of markdown, matching no BOT_CHALLENGE_MARKERS
+# and staying well under BOT_CHALLENGE_MAX_CHARS. The per-URL header lines
+# (`<url>\n<body>`) then summed to 2,300 chars — past MIN_CRAWL_CONTENT_SIZE —
+# so the crawl was stored as `processed` with 0 events. Its live events survived
+# only because the extraction returned 0 and the merger declined to archive on
+# an empty extraction.
+# =============================================================================
+
+BLOCK_ERROR = "Blocked by anti-bot protection: HTTP 403 with HTML content (919 bytes)"
+
+# What AMC's 919-byte block page rendered down to: far too short to trip the
+# size floor on its own, far too generic to match a challenge marker.
+BLOCK_PAGE_MARKDOWN = "Access Denied\n"
+
+
+class TestBlockedErrorDetection(unittest.TestCase):
+    """crawl4ai's own verdict is a signal the body-sniffing guards can't see."""
+
+    def test_amc_block_error_is_detected(self):
+        self.assertTrue(crawler._is_blocked_error(BLOCK_ERROR))
+
+    def test_bare_403_and_429_are_detected(self):
+        self.assertTrue(crawler._is_blocked_error("Unexpected status: HTTP 403"))
+        self.assertTrue(crawler._is_blocked_error("HTTP 429 Too Many Requests"))
+
+    def test_block_page_body_alone_would_not_be_flagged(self):
+        # The whole point: the body guards cannot catch this shape.
+        self.assertFalse(crawler._is_bot_challenge(BLOCK_PAGE_MARKDOWN))
+        self.assertLess(len(BLOCK_PAGE_MARKDOWN), crawler.MIN_CRAWL_CONTENT_SIZE)
+
+    def test_ordinary_errors_are_not_blocks(self):
+        self.assertFalse(crawler._is_blocked_error("net::ERR_CONNECTION_RESET"))
+        self.assertFalse(crawler._is_blocked_error("Page.evaluate: ReferenceError"))
+        self.assertFalse(crawler._is_blocked_error(None))
+        self.assertFalse(crawler._is_blocked_error(""))
+
+    def test_404_is_not_treated_as_a_block(self):
+        # A missing page is permanent; retrying it with backoff is wrong.
+        self.assertFalse(crawler._is_blocked_error("HTTP 404 Not Found"))
+
+
+class _ListCrawler:
+    """AsyncWebCrawler stand-in for crawl_website (which iterates arun's result).
+
+    Serves one queued (body, success, error) per URL, in order.
+    """
+
+    def __init__(self, pages):
+        self._pages = list(pages)
+        self.calls = 0
+
+    async def arun(self, url=None, config=None):
+        self.calls += 1
+        body, success, error = self._pages.pop(0) if self._pages else (None, True, None)
+        result = _FakeResult(body, success=success)
+        result.error_message = error
+        result.html = body or ""
+        return [result]
+
+
+def _run_crawl_website(pages, n_urls):
+    """Drive crawl_website against a mocked DB; return (returned_id, fake_db)."""
+    website = {
+        'id': 4110,
+        'name': 'AMC Empire 25',
+        'urls': [f'https://www.amctheatres.com/x/showtimes?date=2026-09-{d:02d}'
+                 for d in range(1, n_urls + 1)],
+        'crawl_timeout': 600,
+    }
+    fake_db = mock.MagicMock()
+    fake_db.create_crawl_result.return_value = 999
+    with mock.patch.object(crawler, 'db', fake_db), \
+         mock.patch.object(crawler, '_refetch_past_challenge',
+                           new=mock.AsyncMock(return_value=None)):
+        returned = asyncio.run(crawler.crawl_website(
+            _ListCrawler(pages), website, mock.MagicMock(), mock.MagicMock(), 1))
+    return returned, fake_db
+
+
+class TestAllUrlsBlockedCrawl(unittest.TestCase):
+    """The w4110 shape, end to end."""
+
+    def test_all_blocked_crawl_is_failed_not_processed(self):
+        pages = [(BLOCK_PAGE_MARKDOWN, False, BLOCK_ERROR)] * 23
+        returned, fake_db = _run_crawl_website(pages, n_urls=23)
+
+        self.assertIsNone(returned, "a fully blocked crawl must not return a result id")
+        fake_db.update_crawl_result_crawled.assert_not_called()
+        fake_db.update_crawl_result_failed.assert_called_once()
+        # last_crawled_at still advances so the site isn't retried immediately.
+        fake_db.update_website_last_crawled.assert_called_once()
+
+    def test_block_pages_never_reach_stored_content(self):
+        pages = [(BLOCK_PAGE_MARKDOWN, False, BLOCK_ERROR)] * 23
+        _, fake_db = _run_crawl_website(pages, n_urls=23)
+        for call in fake_db.update_crawl_result_crawled.call_args_list:
+            self.assertNotIn('Access Denied', str(call))
+
+    def test_a_partial_block_still_stores_the_good_urls(self):
+        # Only the blocked half is discarded; a site that mostly worked is not
+        # thrown away. This is what keeps the guard from causing coverage loss.
+        good = "# Showtimes\n" + ("A real listing line.\n" * 60)
+        pages = ([(good, True, None)] * 2) + ([(BLOCK_PAGE_MARKDOWN, False, BLOCK_ERROR)] * 2)
+        returned, fake_db = _run_crawl_website(pages, n_urls=4)
+
+        self.assertEqual(returned, 999)
+        fake_db.update_crawl_result_failed.assert_not_called()
+        fake_db.update_crawl_result_crawled.assert_called_once()
+        stored = fake_db.update_crawl_result_crawled.call_args[0][3]
+        self.assertIn('A real listing line.', stored)
+        self.assertNotIn('Access Denied', stored)
+
+    def test_all_urls_failing_without_a_block_verdict_also_fails(self):
+        # The backstop arm: no recognisable block error, but nothing succeeded
+        # either, and the URL header lines alone clear MIN_CRAWL_CONTENT_SIZE.
+        pages = [("x\n", False, "net::ERR_CONNECTION_RESET")] * 23
+        returned, fake_db = _run_crawl_website(pages, n_urls=23)
+
+        self.assertIsNone(returned)
+        fake_db.update_crawl_result_crawled.assert_not_called()
+        fake_db.update_crawl_result_failed.assert_called_once()
+        msg = str(fake_db.update_crawl_result_failed.call_args)
+        self.assertIn('All 23 URL(s) failed', msg)
+
+    def test_healthy_crawl_is_unaffected(self):
+        good = "# Showtimes\n" + ("A real listing line.\n" * 60)
+        returned, fake_db = _run_crawl_website([(good, True, None)] * 3, n_urls=3)
+
+        self.assertEqual(returned, 999)
+        fake_db.update_crawl_result_failed.assert_not_called()
+        fake_db.update_crawl_result_crawled.assert_called_once()

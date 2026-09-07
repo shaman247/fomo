@@ -1238,6 +1238,111 @@ _ATTENDABLE_OCCASION_NAME_RE = re.compile(
     r'social|hike|walk|run|race|game|clinic|demo|demonstration|q\s*&\s*a)\b',
     re.IGNORECASE)
 
+# Open-call contest, the general form. `submission_contest` above requires a
+# creative-work qualifier immediately before "contest"/"competition", which is
+# high precision but blind to the majority of these titles: "Imagine a Better
+# World Contest!" (e245581), "Juvenile Spooky Story Halloween Contest"
+# (e241883), "NYU Faculty Housing Pet Photo Contest" (e203999) — all three had
+# already been suppressed by hand at classification, which is the tell that the
+# name gate, not the concept, was the miss.
+#
+# The non-event property is NOT the word "contest": it is that participation is
+# an ENTRY YOU SEND IN. Nothing happens at a place and there is nothing to
+# attend, so the row is a call for submissions that happens to be titled as a
+# contest. That is why the name gate here may be broad — every one of the three
+# other gates keys on the submission shape:
+#   1. the description must use call-for-entries framing (`_SUBMISSION_CALL_DESC_RE`
+#      plus a bare "Deadline: <date>", the form juried art calls use),
+#   2. the name must not denote an attendable occasion (awards night, finals,
+#      showcase — `_ATTENDABLE_CONTEST_NAME_RE`/`_ATTENDABLE_OCCASION_NAME_RE`),
+#   3. the description must not describe attendance (`_CONTEST_ATTENDANCE_DESC_RE`:
+#      "join us", "stop by", "in person", "pick up", "registration required").
+#
+# Gate 3 is what separates this from the SELF-PACED CHALLENGE event type added
+# 2026-09-06 (`event_types.py`). A library reading/film/decorating challenge is
+# a real, dated program: the venue supplies the log, sheet, prompt or pumpkin
+# and you come get it. Those rows say "Grab a challenge sheet at the Toms River
+# Library" (e226887), "pick up your reading log at the Children's Desk"
+# (e235680), "Stop by the library every day in October" (e241248). A submission
+# call says "Submit your ideas from now until December". The taxonomy types the
+# first family; this rule drops the second, and the two never overlap.
+#
+# Measured over all 214,370 events: 13 rows match, 8 of which existing rules
+# already catch. The 5 this rule adds are e81689 (gARTbage Art Contest),
+# e201551 (Summer Poetry Challenge — "Submit your poem to the Summer Writing
+# Contest"), and e203999/e241883/e245581, the three hand-suppressed rows above.
+# ZERO live, visible events are lost.
+_OPEN_CALL_CONTEST_NAME_RE = re.compile(
+    r'\b(contest|competition|challenge|'
+    r'call\s+(?:for|to)\s+(?:artists?|entries|submissions?|writers?|proposals?))\b',
+    re.IGNORECASE)
+# `_SUBMISSION_CALL_DESC_RE` plus the two forms juried calls use that it lacks:
+# a bare "Deadline: <date>" line, and "entries are due".
+_OPEN_CALL_DESC_RE = re.compile(
+    _SUBMISSION_CALL_DESC_RE.pattern + r'|'
+    r'\bdeadline\s*:\s*\w|'
+    r'\bentries\s+(?:are\s+)?due\b|'
+    r'\bwinning\s+(?:pictures?|entries|photos?)\b',
+    re.IGNORECASE)
+# The body describes SHOWING UP — so whatever the entry mechanism, there is an
+# occasion or a venue-side pickup attached and the row is a real program.
+_CONTEST_ATTENDANCE_DESC_RE = re.compile(
+    r'\bjoin\s+us\b|\bcome\s+(?:to|by|in|down|out)\b|\bstop\s+by\b|'
+    r'\bdrop[\s-]?in\b|\bin[\s-]person\b|\bon\s+stage\b|'
+    r'\btake\s+the\s+stage\b|\bdoors\s+open\b|\bpick\s+up\b|'
+    r'\bregistration\s+(?:required|opens)\b|\bregister\s+(?:here|now|at)\b|'
+    r'\bwe\s+will\s+(?:meet|gather)\b|\bmeet\s+at\b|'
+    # An in-person handoff is venue-side participation, however the entry is
+    # phrased ("submit your name at the desk", "drop your entry at the branch").
+    r'\bat\s+the\s+(?:front\s+|circulation\s+|reference\s+)?'
+    r'(?:desk|branch|library|museum|office|studio)\b',
+    re.IGNORECASE)
+
+# A bare "RENTAL:" prefix is deliberately NOT auto-dropped anywhere in this file
+# -- venues reuse it for genuinely public programming (Brooklyn Comedy Collective
+# lists its comedy shows that way), so the convention is editorial review, not a
+# rule. See the note at `_NON_EVENT_NAME_PATTERNS`. Rules added later have to
+# honour it explicitly rather than inherit it.
+_RENTAL_PREFIX_NAME_RE = re.compile(r'^\s*rental\s*:', re.IGNORECASE)
+
+# Chain-wide / nationwide marketing promotion. Sibling of the `national_food_day`
+# rule below, raised by e245997 "National Lobster Day at Luke’s Lobster"
+# ("Luke’s shacks nationwide are celebrating with $20 Quarter Pound Lobster
+# Rolls"), which that rule cannot see: its name anchor deliberately spares any
+# "National <food> Day AT <venue>" title, because "National Ice Cream Day at the
+# Carousel" is a real Prospect Park occasion. That anchor stays.
+#
+# The property keyed here is different and is not about food at all: the body
+# says the offer runs at EVERY branch of a chain. A promotion the operator is
+# running nationwide is, by its own description, not something programmed at
+# this venue on this date — there is nothing here that is not also in Boston.
+# Three gates: the chain-wide phrase, an actual offer ($N, half off, BOGO,
+# "deal"), and no programming word anywhere in the name or body.
+#
+# "at participating restaurants" is deliberately NOT a chain-wide phrase: that
+# is the Restaurant Week form, a genuine multi-venue citywide occasion (e9006).
+# Measured over all 214,370 events: 4 rows, all correct kills — e16474/e96150
+# ("half-off arcade all day at all of our stores"), e24311 (a mall spend-and-get
+# promo, already hand-suppressed) and e245997. ZERO live, visible events lost.
+_CHAINWIDE_PROMO_DESC_RE = re.compile(
+    r'\b(?:nationwide|chain[\s-]?wide|company[\s-]?wide)\b|'
+    r'\b(?:at\s+)?(?:all|every)\s+(?:of\s+)?(?:our\s+)?(?:participating\s+)?'
+    r'(?:locations?|stores?|shops?|shacks?|branches)\b|'
+    r'\b(?:at\s+)?participating\s+(?:locations?|stores?|shops?|shacks?)\b',
+    re.IGNORECASE)
+_PROMO_OFFER_DESC_RE = re.compile(
+    r'\$\d|\bhalf[\s-]?off\b|\bbogo\b|\bbuy\s+one\b|\b\d+%\s*off\b|'
+    r'\bfree\s+(?:scoop|slice|cone|drink|coffee|donut|doughnut|taco|dessert)\b|'
+    r'\bspecial(?:ty)?\s+(?:menu|pricing|deal)|\bdeal\b|\bpromo(?:tion)?\b|\boffer\b',
+    re.IGNORECASE)
+# Any programming in the body means an occasion was built around the offer.
+_CHAINWIDE_PROMO_VETO_RE = re.compile(
+    r'\b(?:live\s+music|dj|band|concert|performance|trivia|bingo|karaoke|comedy|'
+    r'tasting|class|workshop|party|festival|screening|parade|rsvp|ticket(?:s|ed)?|'
+    r'register|registration|guest\s+chef|cook[\s-]?off|contest|competition|'
+    r'volunteer|fundraiser|benefit|panel|speaker)\b',
+    re.IGNORECASE)
+
 # Private bookings leaked from a venue's own calendar ("FAB5 @ The Jacob Javits
 # Center" — description: "Private event, not open to the public.", e199703).
 # Both signals are required, which is what keeps a public event that merely
@@ -3091,6 +3196,22 @@ _JUNK_RULES = (
               vetoes=((_ATTENDABLE_CONTEST_NAME_RE, 'name'),)),
     _JunkRule('application_call', desc=_APPLICATION_CALL_DESC_RE,
               vetoes=((_ATTENDABLE_OCCASION_NAME_RE, 'name'),)),
+    # Open call titled as a contest/challenge -- an entry you send in, nothing to
+    # attend. Broad name gate, three submission-shape gates. See the block above
+    # for why gate 3 keeps the `Self-Paced Challenge` event type out of it.
+    _JunkRule('open_call_contest', _OPEN_CALL_CONTEST_NAME_RE, desc=_OPEN_CALL_DESC_RE,
+              vetoes=((_ATTENDABLE_CONTEST_NAME_RE, 'name'),
+                      (_ATTENDABLE_OCCASION_NAME_RE, 'name'),
+                      (_CONTEST_ATTENDANCE_DESC_RE, 'desc'))),
+    # Chain-wide / nationwide marketing promotion -- the body says the offer runs
+    # at every branch, so nothing is programmed at this venue on this date.
+    _JunkRule('chainwide_promo', desc=_CHAINWIDE_PROMO_DESC_RE, desc_mode='present',
+              pred=lambda n, d, loc, sub: bool(
+                  _CHAINWIDE_PROMO_DESC_RE.search(d)
+                  and _PROMO_OFFER_DESC_RE.search(d)
+                  and not _ATTENDABLE_OCCASION_NAME_RE.search(n)
+                  and not _RENTAL_PREFIX_NAME_RE.search(n)
+                  and not _CHAINWIDE_PROMO_VETO_RE.search(d))),
     # The body says, in the venue's own words, that this occasion is not open
     # to the public — enough on its own; see `_is_not_public_notice`.
     _JunkRule('not_public_notice', desc_mode='present', pred=_pred(_is_not_public_notice)),
@@ -3634,6 +3755,69 @@ BARE_ONLY_GENERIC_WORDS = GENERIC_LOCATION_WORDS | {'playground'}
 _PARENT_FEATURE_DELIMITER = re.compile(r'\s+[\u2014\u2013|:-]\s+')
 
 
+# "<venue> at <container>" / "<venue> @ <container>". Split on the FIRST
+# connector so "Rose Theater at Jazz at Lincoln Center" keeps the container
+# whole ("jazz at lincoln center" is the location's own name).
+_VENUE_AT_CONTAINER_RE = re.compile(r'\s+(?:at|@)\s+', re.IGNORECASE)
+
+
+def _split_venue_at_container(raw):
+    """'Fort Hamilton Distillery at Industry City' -> ('Fort Hamilton Distillery',
+    'Industry City'); None when the string is not that shape."""
+    if not raw or not raw.strip():
+        return None
+    parts = _VENUE_AT_CONTAINER_RE.split(raw.strip(), 1)
+    if len(parts) != 2:
+        return None
+    venue, container = parts[0].strip(), parts[1].strip()
+    if len(venue) < 2 or len(container) < 2:
+        return None
+    return venue, container
+
+
+def _exact_unambiguous(locations_map, key, website_id, tiers):
+    """The ONE location `key` names exactly in `tiers`, or None.
+
+    Website-scoped keys are consulted first when 'website_scoped' is listed. A
+    key that names 2+ distinct locations, or that is a brand-family key for its
+    candidate ("smorgasburg", "green room"), declines rather than guessing —
+    these are the same refusals Step 2 applies, kept here so the venue-at-
+    container tiers can never resolve a bare key Step 2 would have refused.
+    """
+    if not key:
+        return None
+    for tier_name in tiers:
+        if tier_name == 'website_scoped':
+            if not website_id:
+                continue
+            match = locations_map.get('website_scoped', {}).get(website_id, {}).get(key)
+        else:
+            match = locations_map.get(tier_name, {}).get(key)
+        if match is None:
+            continue
+        cands = match if isinstance(match, list) else [match]
+        if len({c.get('id') for c in cands}) != 1:
+            return None
+        cand = cands[0]
+        if _is_brand_family_key(locations_map, key, cand.get('id')):
+            return None
+        return cand
+    return None
+
+
+def _within_metres(a, b, limit):
+    """True if locations `a` and `b` both carry coordinates within `limit` metres."""
+    try:
+        lat1, lng1 = float(a.get('lat')), float(a.get('lng'))
+        lat2, lng2 = float(b.get('lat')), float(b.get('lng'))
+    except (TypeError, ValueError):
+        return False
+    from math import radians, sin, cos, asin, sqrt
+    dlat, dlng = radians(lat2 - lat1), radians(lng2 - lng1)
+    h = sin(dlat / 2) ** 2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlng / 2) ** 2
+    return 2 * 6371000 * asin(sqrt(h)) <= limit
+
+
 def _parent_qualified_feature_key(location_name_raw, locations_map):
     """Split "<known parent> <delim> <feature>" into (parent_key, feature_key).
 
@@ -3962,6 +4146,116 @@ def _single_linked_venue(locations_map, website_id):
         return None
     linked = locations_map.get('website_linked', {}).get(website_id, [])
     return linked[0] if len(linked) == 1 else None
+
+
+# Roving organizers. Step 3.5 (single-venue website authority) has a
+# Levenshtein arm that accepts any name scoring >= 0.6 against the one venue a
+# website is linked to. For a real venue's own site that is the right loose
+# catch ("Regal" from one Regal's site, "Barbaralee Theater" from The Public).
+# For an ORGANIZER it silently relocates other people's venues: under Lit
+# Society (linked to Temple Bar) "Penrose Bar" resolved to Temple Bar; under
+# CycleBar NYC (linked to the NoHo studio) every other branch landed in NoHo;
+# under NYC DSA every "<Group> Office" became the DSA office. The flag
+# `websites.roving_organizer` turns that arm off for such sites, so an
+# unrecognised venue string stays unmapped (dropped from the map) instead of
+# being wrong on it. Venue-less / placeholder captions still land on the
+# organizer via `_is_venueless_placeholder` + Step 7, per
+# `virtual_events_map_to_organizer_location`.
+#
+# Why a hand-set flag and not a heuristic: it was measured. Over 66,941
+# distinct crawl_events triples (2026-09-04, .scratch/loc0904/), "3+ recent
+# venue strings foreign to the linked venue" flagged 310 websites, then 262
+# after requiring no shared word — and still swept in MoMA, the Whitney, the
+# Public Theater, NYBG, Green-Wood and every museum whose feed names its own
+# rooms, gardens and wings; those sub-spaces are exactly what the Levenshtein
+# arm is for, and "Everett Children's Adventure Garden" is not lexically
+# distinguishable from "Penrose Bar". A person can tell them apart in one
+# look at `roving_candidates`, so that is the contract: the report proposes,
+# the flag decides.
+ROVING_MIN_FOREIGN_VENUES = 3
+ROVING_WINDOW_DAYS = 60
+
+# A location string that names no venue: the extractor's own placeholders and
+# "somewhere in the city" labels. For a roving organizer these still fall
+# back to its linked venue (the organizer's home), which is the policy for
+# venue-less events; only a string that looks like SOMEBODY'S venue is refused.
+_ROVING_PLACEHOLDER_RE = re.compile(
+    r'^(?:not specified|unspecified|location (?:tba|tbd)|tba|tbd|'
+    r'to be (?:announced|determined|confirmed)|various\b.*|multiple\b.*|'
+    r'online\b.*|virtual\b.*|zoom\b.*|livestream\b.*|.*\bcalendar|'
+    r'new york city|nyc|new york)$')
+
+
+_CITY_LEVEL_NAMES = None
+
+
+def _city_level_names():
+    """The city-level generic names only ("new york", "nyc", ...) — NOT the
+    neighbourhood/borough geotags. A bare neighbourhood under a roving
+    organizer is better served by its placemarker row ("Midtown Manhattan
+    (exact location unspecified)") than by the organizer's office: measured
+    2026-09-04, treating geotags as placeholders moved 34 Municipal Art
+    Society "Midtown Manhattan" tours and NYC DSA's "Kew Gardens" meetings
+    onto the organizers' offices."""
+    global _CITY_LEVEL_NAMES
+    if _CITY_LEVEL_NAMES is None:
+        _CITY_LEVEL_NAMES = frozenset(
+            g.strip().lower() for g in city_config.generic_location_names() if g)
+    return _CITY_LEVEL_NAMES
+
+
+def _is_venueless_placeholder(normalized_loc):
+    """True if a normalized location string names no venue (see above)."""
+    if not normalized_loc:
+        return True
+    if normalized_loc in _city_level_names():
+        return True
+    return bool(_ROVING_PLACEHOLDER_RE.match(normalized_loc))
+
+
+def roving_candidates(website_linked, recent_venue_strings,
+                      min_foreign=ROVING_MIN_FOREIGN_VENUES):
+    """Single-linked website ids whose recent crawl_events name `min_foreign`+
+    distinct venues foreign to the linked one — CANDIDATES for the hand-set
+    `websites.roving_organizer` flag (see the block comment above for why the
+    flag is not set from this directly). `scripts/roving_candidates.py` prints
+    them with their venue strings for review.
+    """
+    roving = set()
+    for website_id, linked in (website_linked or {}).items():
+        if len(linked) != 1:
+            continue
+        home = _normalize_location_name(linked[0].get('name') or '')
+        home_tokens = _roving_tokens(home)
+        if not home_tokens:
+            continue
+        foreign = set()
+        for raw in (recent_venue_strings or {}).get(website_id, {}):
+            norm = _normalize_location_name(raw)
+            if not norm or norm in home or home in norm:
+                continue
+            # A string that shares ANY word with the home venue is a room,
+            # wing, garden or department of it ("The Gym at Judson Church",
+            # "AMC Theatres" under AMC Kips Bay, "Everett Children's Adventure
+            # Garden" under the Botanical Garden) — the sub-space shape Step
+            # 3.5 exists to catch. Only a string with no word in common is
+            # evidence of somebody else's venue.
+            if _roving_tokens(norm) & home_tokens:
+                continue
+            foreign.add(norm)
+        if len(foreign) >= min_foreign:
+            roving.add(website_id)
+    return roving
+
+
+_ROVING_STOP = frozenset({'the', 'of', 'at', 'and', 'in', 'on', 'for', 'a', 'an', 'to',
+                          'de', 'la', 'le', 'du', 'des', 'el', 'los', 'las'})
+
+
+def _roving_tokens(normalized):
+    """Words of a normalized venue string that can carry identity (drops
+    articles/prepositions and 1-2 letter fragments)."""
+    return {w for w in normalized.split() if len(w) >= 3 and w not in _ROVING_STOP}
 
 
 def _leftover_reconciles(token, others):
@@ -5187,6 +5481,48 @@ _MIN_RAW_KEY_LEN = 3
 _MIN_NORMALIZED_KEY_LEN = 1
 
 
+def _note_key_collision(locations_map, tier, key, info):
+    """Record (and warn about) an alias/short-name key claimed by two locations.
+
+    `alternate_names` and `short_names` are plain dicts written with
+    `tier[key] = info`, so when two locations carry the same curated alias the
+    later row silently wins and the earlier one loses every crawl string that
+    spelled its alias — last-write-wins (memory: alias_key_collision_last_write_wins).
+    A 2026-09-04 audit found 31 such keys and cleaned them by hand; this makes
+    the next one visible at map-build time instead of weeks later in a
+    mis-pinned event. Same-location repeats (raw and normalized form of one
+    alias) are not collisions. The key still gets overwritten exactly as
+    before — this only reports, it does not change resolution.
+    """
+    prev = locations_map[tier].get(key)
+    if prev is None or prev.get('id') == info.get('id'):
+        return
+    locations_map.setdefault('key_collisions', []).append(
+        (tier, key, prev.get('id'), prev.get('name'), info.get('id'), info.get('name')))
+
+
+def _report_key_collisions(locations_map):
+    """Print the collisions `_note_key_collision` collected while the map was built.
+
+    `alternate_names` collisions are curated data errors and are listed one per
+    line (the 2026-09-04 cleanup left 0; each new one is worth a look).
+    `short_names` collisions are mostly by design -- block-party rows share
+    normalized shorthands like '72nd st' (460 on 2026-09-07) and the tier is
+    weak-keyed precisely so those never decide a pin on their own -- so they
+    get a single count line, not 460 warnings.
+    """
+    collisions = locations_map.get('key_collisions') or []
+    alts = [c for c in collisions if c[0] == 'alternate_names']
+    shorts = [c for c in collisions if c[0] == 'short_names']
+    for _tier, key, pid, pname, nid, nname in alts:
+        print(f"  ⚠️  alternate_names key {key!r} is claimed by locations "
+              f"{pid} ({pname}) and {nid} ({nname}); {nid} wins (last write) -- "
+              f"fix the data (memory: alias_key_collision_last_write_wins)")
+    if shorts:
+        print(f"  ℹ️  {len(shorts)} short_names keys are claimed by 2+ locations "
+              f"(weak keys; expected for block-party shorthands)")
+
+
 def build_locations_map(cursor):
     """Query locations table and build tiered maps for lat/lng enrichment.
 
@@ -5297,12 +5633,14 @@ def build_locations_map(cursor):
         # Global alternate names (no website_id) - use full_info to include id
         for alt_name in loc.get('alternate_names', []):
             if alt_name and len(alt_name) >= _MIN_RAW_KEY_LEN:
+                _note_key_collision(locations_map, 'alternate_names', alt_name.lower(), full_info)
                 locations_map['alternate_names'][alt_name.lower()] = full_info
                 strong_keys.add(alt_name.lower())
                 normalized_alt, alt_area = _normalize_location_name_parts(alt_name)
                 if _area_qualifier_class(alt_area):
                     area_classes.add(_area_qualifier_class(alt_area))
                 if normalized_alt and len(normalized_alt) >= _MIN_NORMALIZED_KEY_LEN:
+                    _note_key_collision(locations_map, 'alternate_names', normalized_alt, full_info)
                     locations_map['alternate_names'][normalized_alt] = full_info
                     note_if_short(normalized_alt)
                     if _collapse_is_significant(alt_name, normalized_alt):
@@ -5310,12 +5648,14 @@ def build_locations_map(cursor):
 
         short_name = loc.get('short_name', '')
         if short_name and len(short_name) >= _MIN_RAW_KEY_LEN:
+            _note_key_collision(locations_map, 'short_names', short_name.lower(), full_info)
             locations_map['short_names'][short_name.lower()] = full_info
             weak_keys.add(short_name.lower())
             normalized_short, short_area = _normalize_location_name_parts(short_name)
             if _area_qualifier_class(short_area):
                 area_classes.add(_area_qualifier_class(short_area))
             if normalized_short and len(normalized_short) >= _MIN_NORMALIZED_KEY_LEN:
+                _note_key_collision(locations_map, 'short_names', normalized_short, full_info)
                 locations_map['short_names'][normalized_short] = full_info
                 note_if_short(normalized_short)
                 weak_keys.add(normalized_short)
@@ -5358,6 +5698,13 @@ def build_locations_map(cursor):
     # Website-linked locations (from website_locations table)
     locations_map['website_linked'] = db.get_website_locations_map(cursor)
 
+    # Organizers / promoters / listers whose one linked row is an office or
+    # home base, flagged by hand (`websites.roving_organizer`). Gates the loose
+    # arm of single-venue authority in Step 3.5; see `roving_candidates` for
+    # why this is a curated flag and not a heuristic.
+    locations_map['roving_websites'] = db.get_roving_organizer_websites(cursor)
+
+    _report_key_collisions(locations_map)
     return locations_map
 
 
@@ -5478,12 +5825,16 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
       3. Address match (normalized street address comparison)
       3.5. Single-venue website authority (a single-venue website's own venue wins
            over arbitrary same-brand prefix/fuzzy matches when the name is generic)
+      3.6. "<venue> at <container>": the venue half exactly names a location that
+           sits inside the container ("Pier 97 at Hudson River Park" → Pier 97)
       4. Prefix match (location name starts with known name, ≥PREFIX_MATCH_COVERAGE to avoid generics)
       5. Fuzzy match (Levenshtein ratio ≥ FUZZY_MATCH_THRESHOLD)
       5c. Cross-website exact match on a curated website-scoped alternate name
           (last resort, unambiguous only — beats leaving the event unmapped)
       5d. Parenthetical parent venue ("Main Pool (in Crotona Park)" → Crotona
           Park) — last resort, exact + unambiguous only
+      5e. "<something> at <container>" where only the container resolves
+          ("Purslane Cafe at Prospect Park Boathouse" → the Boathouse) — same rules as 5d
       6. Source site fallback (website name matches a location name)
       7. Website-linked location fallback (single-venue website, empty/virtual location_name)
 
@@ -5829,6 +6180,58 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
                 and (result := make_result(match, 'address'))):
             return result
 
+    # Step 3.6: "<venue> at <container>" — the LEFT half exactly names a venue.
+    #
+    # Industry City w53 (2026-09-07): once the page carried each event once, the
+    # extractor wrote "Fort Hamilton Distillery at Industry City", "Brooklyn Kura
+    # at Industry City" ... and 16 of 48 rows resolved to NULL — the tenant alias
+    # and the campus name both exist, the combined string matches neither, and
+    # Step 1b only handles curated child alts behind a dash/colon. The shape is
+    # general: "Pier 97 at Hudson River Park", "David H. Koch Theater at
+    # Lincoln Center", "Audubon Center at Prospect Park", "Le Bain @ The
+    # Standard" (233 NULL rows over 60 days had a half that resolves exactly).
+    #
+    # Deliberately exact-only on the venue half (website-scoped, names,
+    # alternate_names — NOT short_names, whose weak keys turn "The Plaza at City
+    # Point" into some other Plaza), with Step 2's ambiguity and brand-family
+    # refusals, and it runs BEFORE Step 3.5 so a single-venue site's authority
+    # cannot hand the park back when the pier was named. When the container
+    # half ALSO resolves, the venue must sit inside it — named/addressed as its
+    # child, or within 1 km — otherwise "Jersey City Theater Center at White
+    # Eagle Hall" (an organization AT a venue) would pin to the organization's
+    # office; that case falls through to Step 5e, which answers the container.
+    venue_at = _split_venue_at_container(location_name_raw)
+    if venue_at:
+        venue_key = _normalize_location_name(venue_at[0])
+        container_key = _normalize_location_name(venue_at[1])
+        if (venue_key and len(venue_key) >= 4 and venue_key not in GENERIC_LOCATION_WORDS
+                and not _is_bare_room_phrase(locations_map, venue_key, raw_loc_lower)):
+            venue = _exact_unambiguous(locations_map, venue_key, website_id,
+                                       ('website_scoped', 'names', 'alternate_names'))
+            if venue:
+                container = _exact_unambiguous(
+                    locations_map, container_key, website_id,
+                    ('website_scoped', 'names', 'alternate_names', 'short_names'))
+                if container is None:
+                    # Nothing to check the venue against, so the venue half
+                    # must be distinctive on its own: two or more tokens and
+                    # not a venue TYPE. Measured 2026-09-07: "The Amphitheater
+                    # at Hebert Von King Park" (typo'd park) otherwise pinned to
+                    # the Coney Island Amphitheater via its bare alias, and
+                    # "Oberon at the New Museum" to an unrelated "Oberon".
+                    inside = (len(venue_key.split()) >= 2
+                              and venue_key not in _VENUE_TYPE_WORDS)
+                else:
+                    # 150 m = the same building or campus block. 1 km was
+                    # measured and is too loose for this city: "Oko Farms @
+                    # Honey's" pinned to the farm's own row a few blocks from
+                    # the bar the event is at.
+                    inside = (container.get('id') == venue.get('id')
+                              or _child_of_parent(venue, container_key)
+                              or _within_metres(venue, container, 150))
+                if inside and (result := make_result(venue, 'venue_at_container')):
+                    return result
+
     # Step 3.5: Single-venue website authority.
     # When the source website is linked to exactly ONE venue, that venue is
     # authoritative for events crawled from it. If the extracted location_name is
@@ -5863,7 +6266,25 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
         # initialism arms are untouched: those describe the home venue itself,
         # which is the whole point of the tier ("Regal" from one Regal
         # theater's own site).
-        if not consistent and not _is_brand_family_name(locations_map, normalized_loc):
+        # Second veto on the same loose arm: a ROVING ORGANIZER (hand-flagged
+        # `websites.roving_organizer`; see the `roving_candidates` block
+        # comment) gets no Levenshtein leniency for a string that looks like a
+        # venue — its linked row is an office or home base, so a name that
+        # merely resembles it is somebody else's venue and unmapped is the
+        # honest answer. Placeholders ("Not specified", "Location TBA",
+        # "Various venues", a bare city name) still fall back to the organizer,
+        # which is the policy for venue-less events. The substring and
+        # initialism arms are untouched (they describe the home venue itself).
+        # Measured 2026-09-04 over all 66,941 distinct crawl_events triples
+        # with the 43 flagged sites: `.scratch/loc0904/ab_result.json`.
+        is_roving = website_id in locations_map.get('roving_websites', ())
+        if is_roving and not consistent and _is_venueless_placeholder(normalized_loc):
+            # The organizer's own placeholder: home venue, explicitly. Left to
+            # the Levenshtein arm this was luck ("not specified" happened to
+            # score 0.6 against "nyc dsa office" and 0 against "temple bar").
+            consistent = True
+        if (not consistent and not is_roving
+                and not _is_brand_family_name(locations_map, normalized_loc)):
             consistent = _calculate_levenshtein_ratio(normalized_loc, v_name) >= 0.6
         if consistent and (result := make_result(home_venue, 'single_venue_site')):
             return result
@@ -6222,6 +6643,22 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
                 if len({m.get('id') for m in match}) > 1:
                     continue
             if (result := make_result(get_first(match), 'parenthetical_parent')):
+                return result
+
+    # Step 5e: "<something> at <container>" — only the CONTAINER half resolves.
+    # The sibling of Step 3.6 and of Step 5d's "(in <Parent>)": "Purslane Cafe
+    # at Prospect Park Boathouse", "Concert Hall at Drew University", "LIRR at
+    # Penn Station". Mapping to the container is a coarsening, so like 5d it is
+    # last-resort (every real tier had its turn), exact + unambiguous only, and
+    # declines generic containers.
+    if venue_at:
+        container_key = _normalize_location_name(venue_at[1])
+        if (container_key and len(container_key) >= 5
+                and container_key not in GENERIC_LOCATION_WORDS):
+            container = _exact_unambiguous(
+                locations_map, container_key, website_id,
+                ('website_scoped', 'names', 'alternate_names', 'short_names'))
+            if container and (result := make_result(container, 'container_of_venue')):
                 return result
 
     # Step 6: Source site fallback (match website name to location)
@@ -6690,12 +7127,27 @@ def process_events(cursor, connection, crawl_result_id, website_name, run_date_s
             if _vtag not in processed_row.get('tags', []):
                 processed_row.setdefault('tags', []).append(_vtag)
 
+        # Both drops below are DESIGNED removals, and both used to be a bare
+        # `continue`: nothing landed in extraction_rejections and the
+        # "Rejected N event(s)" line never mentioned them. On w5236/w5237 the
+        # blocked-location filter removes ~18% of every crawl by design, and
+        # because that was invisible the gap was filed as an extractor bug,
+        # investigated twice, and 61 correctly archived out-of-coverage events
+        # were un-archived as "false archivals" (2026-09-06). Log them like
+        # every other drop in this loop so the summary tells the truth.
         if not filter_by_tag(processed_row, tag_rules):
+            _removed = sorted(
+                set(db.normalize_tag_key(t) for t in processed_row.get('tags', []))
+                & set(tag_rules.get('remove', [])))
+            _reject('filtered_tag',
+                    f"Tag matches websites tag removal rule ({', '.join(_removed)})")
             continue
 
         # Skip events at blocked locations (e.g., Chicago events from multi-city websites)
         event_loc = processed_row.get('location', '').strip().lower()
         if blocked_location_names and any(blocked in event_loc for blocked in blocked_location_names):
+            _reject('blocked_location',
+                    f'Location matches websites.blocked_location_names ({event_loc})')
             continue
 
         # Enrich with location ID

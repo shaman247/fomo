@@ -17,9 +17,18 @@ import sys
 try:
     import mysql.connector
     from mysql.connector import Error
-except ImportError:
-    print("Error: mysql-connector-python is required.")
-    print("Install it with: pip install mysql-connector-python")
+except ImportError as e:
+    # Print the REAL failure. A stale `.scratch/inspect.py` once shadowed the
+    # stdlib `inspect` module for every script run out of `.scratch/`, which
+    # made `import mysql.connector` fail deep inside the connector — and this
+    # guard swallowed that into a wrong install instruction while the venv
+    # was fine the whole time (2026-09-05).
+    print(f"Error: importing mysql.connector failed: {e!r}")
+    if 'mysql' in str(e):
+        print("Install it with: pip install mysql-connector-python")
+    else:
+        print("The connector is probably installed; something else broke the import "
+              "(a scratch file shadowing a stdlib module, e.g. .scratch/inspect.py?).")
     sys.exit(1)
 
 from occurrence_times import standardize_time
@@ -1509,6 +1518,39 @@ def get_all_locations(cursor):
                 locations[location_id]['website_scoped_names'].setdefault(website_id, []).append(alternate_name)
 
     return list(locations.values())
+
+
+def get_roving_organizer_websites(cursor):
+    """Ids of websites flagged `roving_organizer = 1` (see the column comment).
+
+    The flag is curated by hand; `processor.roving_candidates` prints the
+    websites whose recent venue strings suggest it, for a person to confirm.
+    """
+    cursor.execute("SELECT id FROM websites WHERE roving_organizer = 1")
+    return {row[0] for row in cursor.fetchall()}
+
+
+def get_recent_venue_strings(cursor, days=60):
+    """website_id -> {location_name: row_count} over the last `days` of crawl_events.
+
+    Feeds `processor.roving_candidates`, the report that proposes websites for
+    the hand-set `roving_organizer` flag: a source whose recent extractions name
+    several venues foreign to the one venue it is linked to is an organizer /
+    promoter / lister. Raw strings only — the normalization and the "foreign"
+    test live in processor.py next to the tier the flag gates.
+    """
+    cursor.execute("""
+        SELECT cr.website_id, ce.location_name, COUNT(*)
+        FROM crawl_events ce
+        JOIN crawl_results cr ON cr.id = ce.crawl_result_id
+        WHERE cr.crawled_at > NOW() - INTERVAL %s DAY
+          AND ce.location_name IS NOT NULL AND ce.location_name <> ''
+        GROUP BY cr.website_id, ce.location_name
+    """, (days,))
+    result = {}
+    for website_id, location_name, n in cursor.fetchall():
+        result.setdefault(website_id, {})[location_name] = n
+    return result
 
 
 def get_website_locations_map(cursor):

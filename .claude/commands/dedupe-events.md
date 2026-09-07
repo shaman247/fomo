@@ -122,6 +122,18 @@ For each reviewed pair you must do exactly ONE of these:
 
 Every pair must be one or the other. Don't silently skip pairs.
 
+**`merge_pair` is the default for a true duplicate. A bare `UPDATE events SET suppressed = 1` is NOT
+a third option.** Suppressing without merging leaves the hidden row owning `event_sources` and
+`event_urls` the keeper lacks; the keeper then looks under-sourced, the hidden row keeps absorbing
+its crawl_events, and a later "duplicates on the map" audit reports clean while the data is still
+forked. A 2026-09-04 sweep found **883** rows in that state (131 same-name pairs were merged and
+deleted; 450 mixed-name rows remain — see `.claude/backlog.md`). If you genuinely want a row hidden
+but NOT merged (it is a different modality or a sub-event you do not want on the map), that is a
+`record_dismissal` on the pair plus a `suppressed = 1, reviewed = 1` on the row **with the reason
+in the dismissal text** — never a silent suppress. The recurring tripwire in
+`.claude/recurring-checks.md` counts suppressed rows that still own sources while an active
+same-website event shares their URL; that count must not grow.
+
 Wrap the whole apply batch in the cross-session **write lock** (`pipeline/dblock.py`) so a concurrent session can't mutate the same tables at once — this exact workflow has collided with a parallel dedupe before. See CLAUDE.md → Concurrent Sessions.
 
 ```python
@@ -252,13 +264,11 @@ LIMIT 50;
 
 ## Cleanup Procedure
 
-For simple duplicates (same data, just suppress the duplicate):
-
-```sql
-UPDATE events SET suppressed = 1, reviewed = 1 WHERE id IN (...);
-```
-
-For duplicates where you need to merge data (different occurrences, URLs, or tags):
+For a confirmed duplicate, ALWAYS use `merge_pair(cur, keep_id, delete_id)` from
+`scripts/find_duplicate_events.py` (it does every step below in the right order, dedupes the kept
+occurrences, and marks the duplicate `suppressed = 1, reviewed = 1`). Do not hand-suppress a
+duplicate "because the data is the same" — a same-name twin still owns sources that the merger will
+keep routing to it. The raw SQL is kept here only to document what `merge_pair` does:
 
 1. **Merge occurrences** into the event to keep (usually lowest ID or one with location):
 ```sql
@@ -295,7 +305,7 @@ ON o1.event_id = o2.event_id
 
 - The script (`find_duplicate_events.py`) only checks events at the **same location** — use Pattern A for cross-location/cross-source duplicates
 - Shared URL detection filters out generic venue URLs (requires 2+ path segments, shared by ≤3 events) — venue homepages shared by many events are excluded
-- Prefer suppressing over deleting — suppressed events won't appear in the export but the data is preserved
+- Prefer `merge_pair` (which suppresses) over deleting — suppressed events won't appear in the export but the data is preserved. Exception: a same-name, same-location twin whose sources you have merged can be deleted outright (cascade), so the keeper is the only match candidate left for the merger.
 - Prefer keeping the event with a location over one without
 - Prefer keeping the event with a website_id over one without
 - False positive patterns to watch for: numbered series (Night 1/2/3), lettered editions (I/II/III), different showtimes, men's vs women's sports, early vs late sets
