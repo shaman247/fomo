@@ -11,6 +11,11 @@ import sys
 from datetime import datetime, timedelta
 
 import db
+from event_types import EVENT_TYPES_BY_CATEGORY, EVENT_TYPES, separate_format_topics
+from tag_canonicalization import stored_tag_mapping
+from export_chunks import write_remainder_chunks
+from event_icon_assignments import load_assignments, export_icon
+from icon_catalog import resolve_icon
 from constants import get_active_date_window
 from processor import sublocation_redundant_with_address
 
@@ -304,8 +309,10 @@ def export_events(cursor):
     - events.remainder.json — events with at least one occurrence past the last
       day chunk (within the 90-day future window)
     - locations.{chunk}.json — locations referenced by events in that chunk
-    - manifest.json — { days: ["YYYY-MM-DD", …] } so the frontend can pick the
-      chunk matching the user's current date
+    - events.remainderN.json + .desc.json — bounded event/description partitions;
+      all share locations.remainder.json. Legacy remainder files remain available.
+    - manifest.json — { days: ["YYYY-MM-DD", …], remainderChunks: ["remainder0", …] }
+      so the frontend can prioritize the requested day and load the tail in parts
     """
     output_dir = os.path.join(SCRIPT_DIR, '..', 'src', 'data')
     os.makedirs(output_dir, exist_ok=True)
@@ -329,7 +336,7 @@ def export_events(cursor):
                e.location_name, e.sublocation,
                l.name as matched_location_name,
                l.lat, l.lng, e.section, e.website_id, e.location_id,
-               l.address
+               l.address, e.event_type
         FROM events e
         JOIN locations l ON e.location_id = l.id
         LEFT JOIN websites w ON e.website_id = w.id
@@ -340,6 +347,7 @@ def export_events(cursor):
     """)
 
     event_rows = cursor.fetchall()
+    icon_assignments = load_assignments(cursor)
 
     # Prefetch the distinct source websites for every event (merged events can
     # carry several). Used to attribute multiple organizer chips per event. The
@@ -428,6 +436,7 @@ def export_events(cursor):
 
         event = {
             'id': event_id,
+            'event_type': row[14] or 'Other',
             'name': row[1],
             'location': row[7] or row[5],  # matched_location_name or location_name
             'emoji': row[4],
@@ -437,6 +446,9 @@ def export_events(cursor):
             'occurrences': occurrences,
             'urls': urls,
         }
+        icon_id = export_icon({'name': row[1], 'description': row[3], 'tags': tags},
+                              icon_assignments.get(event_id))
+        event['icon_id'] = resolve_icon(event.get('emoji'), icon_id)
         # description is shipped in a companion events.<chunk>.desc.json (loaded
         # after the markers render) — see _write_chunk_files. display_tags
         # (leaf-only tags for popups) is now derived client-side from the tag
@@ -561,6 +573,7 @@ def export_events(cursor):
             loc['tags'] = tags  # display_tags derived client-side from the hierarchy
         if row[4]:
             loc['emoji'] = row[4]
+        loc['icon_id'] = resolve_icon(row[4])
         # alt_emoji is only a Windows fallback for flag emoji (which render as
         # letter boxes there) — pointless to ship otherwise.
         if row[5] and db.is_country_flag_emoji(row[4]):
@@ -610,7 +623,10 @@ def export_events(cursor):
     files_to_write.append(('events.remainder.json', remainder_events))
     files_to_write.append(('events.remainder.desc.json', _desc_map(remainder_events)))
     files_to_write.append(('locations.remainder.json', remainder_locations))
-    files_to_write.append(('manifest.json', {'days': [d.isoformat() for d in day_dates]}))
+    remainder_chunks = write_remainder_chunks(output_dir, remainder_events, descriptions_by_id)
+    files_to_write.append(('manifest.json', {
+        'days': [d.isoformat() for d in day_dates], 'remainderChunks': remainder_chunks,
+    }))
 
     for filename, data in files_to_write:
         with open(os.path.join(output_dir, filename), 'w', encoding='utf-8') as f:
@@ -652,30 +668,35 @@ def export_tag_hierarchy(cursor):
         if aliases:
             tag_entry['aliases'] = aliases
 
-    output = {'tags': tags_list}
+    # Explicit saved associations for both curated tags and keywords. No parent
+    # inheritance or name-based matching at export/render time.
+    try:
+        cursor.execute('SELECT name,emoji,icon_id FROM tags WHERE emoji IS NOT NULL OR icon_id IS NOT NULL')
+        tag_icons = {name: resolve_icon(emoji, icon_id) for name, emoji, icon_id in cursor.fetchall()}
+    except Exception as exc:
+        if getattr(exc, 'errno', None) != 1054:
+            raise
+        tag_icons = {t['name']: resolve_icon(t.get('emoji')) for t in tags_list if t.get('emoji')}
+    for tag in tags_list:
+        if tag['name'] in tag_icons:
+            tag['icon_id'] = tag_icons[tag['name']]
+    # Preserve the legacy DB mirror for pipeline compatibility, but publish formats
+    # separately. A shared topic (e.g. Sports) keeps only its content parents.
+    topics, format_only = separate_format_topics(tags_list)
+    cursor.execute('SELECT id,name,type FROM tags')
+    identity_rows = [{'id': r[0], 'name': r[1], 'type': r[2]} for r in cursor.fetchall()]
+    redirects = stored_tag_mapping(identity_rows, db.get_tag_aliases(cursor),
+        set(db.get_tag_disambiguations(cursor)))
+    output = {'tags': topics, 'icon_ids': tag_icons,
+              'formats': EVENT_TYPES_BY_CATEGORY, 'format_only_tags': sorted(format_only),
+              'tag_redirects': redirects}
+
 
     output_path = os.path.join(output_dir, 'tag_hierarchy.json')
     with open(output_path, 'w', encoding='utf-8') as f:
         json.dump(output, f, separators=(',', ':'), ensure_ascii=False)
 
-    print(f"  Exported {len(tags_list)} tags to tag_hierarchy.json")
-
-    # Warn (don't fail) on flag-emoji locations/tags lacking an alt_emoji — these
-    # render as letter boxes on Windows. Catches AI-curated tags that picked up a
-    # flag emoji since the last publish. See scripts/check_flag_emoji_alt.py.
-    try:
-        scripts_dir = os.path.join(SCRIPT_DIR, '..', 'scripts')
-        if scripts_dir not in sys.path:
-            sys.path.insert(0, scripts_dir)
-        from check_flag_emoji_alt import find_flag_emoji_without_alt
-        problems = find_flag_emoji_without_alt(cursor)
-        if problems:
-            print(f"  WARNING: {len(problems)} flag-emoji record(s) missing alt_emoji "
-                  f"(won't render on Windows):")
-            for p in problems:
-                print(f"    {p['kind']} #{p['id']} {p['emoji']}  {p['name']}")
-    except Exception as e:
-        print(f"  (flag-emoji alt check skipped: {e})")
+    print(f"  Exported {len(topics)} topic tags and {len(EVENT_TYPES)} formats to tag_hierarchy.json")
 
 
 def export_organizers(cursor, organizer_ids=None):
@@ -742,6 +763,7 @@ def export_organizers(cursor, organizer_ids=None):
             org['description'] = row[3]
         if row[4]:
             org['emoji'] = row[4]
+        org['icon_id'] = resolve_icon(row[4])
         organizers[str(row[0])] = org
 
     output_path = os.path.join(output_dir, 'organizers.json')
@@ -915,6 +937,7 @@ def export_public_datasets(cursor, export_date=None, export_dir=PUBLIC_EXPORT_DI
           AND ({_PUBLISHABLE_WEBSITE_GATE})
     """)
     event_rows = cursor.fetchall()
+    icon_assignments = load_assignments(cursor)
     event_ids = [r[0] for r in event_rows]
 
     # Bulk prefetches (chunked IN(...)): occurrences, tags, urls. Row order
@@ -1002,6 +1025,9 @@ def export_public_datasets(cursor, export_date=None, export_dir=PUBLIC_EXPORT_DI
             base['emoji'] = emoji
         if description:
             base['description'] = description
+        icon_id = export_icon({'name': name, 'description': description,
+                               'tags': tags_by_id.get(event_id, [])}, icon_assignments.get(event_id))
+        base['icon_id'] = resolve_icon(emoji, icon_id)
 
         organizer_ids = []
         if website_id:

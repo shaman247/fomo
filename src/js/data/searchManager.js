@@ -92,7 +92,8 @@ const SearchManager = (() => {
             ref: key,
             displayName: Utils.getDisplayName(location),
             emoji: location.emoji,
-            score: score,
+            icon_id: location.icon_id,
+            score: score + DiscoveryRanking.stance('place', DiscoveryRanking.placeKey(location)) * 100,
             isVisible: isVisible
         };
     }
@@ -191,7 +192,8 @@ const SearchManager = (() => {
             ref: event.id,
             displayName,
             emoji: event.emoji,
-            score: score,
+            icon_id: event.icon_id,
+            score: score + DiscoveryRanking.score(event, state.appState.locationsByLatLng[event.locationKey]),
             isVisible: isVisible
         };
     }
@@ -208,7 +210,13 @@ const SearchManager = (() => {
                 if (normalizedText.includes(term)) {
                     const isVisible = visibleEventIds.has(event.id);
                     const isMatching = matchingEventIds.has(event.id);
-                    results.push(scoreEvent(event, isVisible, isMatching, selectedTags));
+                    const result = scoreEvent(event, isVisible, isMatching, selectedTags);
+                    const names = searchIndex?.eventNames?.get(event.id) || [];
+                    // Text relevance precedes proximity/preferences for an explicit query.
+                    result.textMatch = names.includes(term) ? 3
+                        : names.some(name => name.includes(term)) ? 2
+                        : (event.tags || []).some(tag => searchIndex.normalizedTags?.get(tag) === term) ? 1 : 0;
+                    results.push(result);
                 }
             });
         } else {
@@ -276,7 +284,6 @@ const SearchManager = (() => {
      */
     function searchTags(term, dynamicFrequencies) {
         const results = [];
-        const searchIndex = state.appState.searchIndex;
 
         // Empty term: skip geotags via precomputed list. Term: keep all hierarchy tags.
         // (allAvailableTags is already hierarchy-filtered at load — no per-iteration check needed.)
@@ -286,21 +293,22 @@ const SearchManager = (() => {
 
         tagList.forEach(tag => {
             // Use normalized index for matching
-            const normalizedTag = searchIndex?.tags?.get(tag) || tag.toLowerCase();
-            if (normalizedTag.includes(term)) {
+            const match = matchTag(tag, term);
+            if (match.matches) {
                 const visibleFreq = state.appState.visibleTagFrequencies[tag] || 0;
 
                 const score = scoreTagSignal({
                     dynamicFreq: dynamicFrequencies[tag] || 0,
                     visibleFreq,
                     globalFreq: state.appState.tagFrequencies[tag] || 0,
-                    isExactMatch: normalizedTag === term
+                    isExactMatch: match.exact
                 });
 
                 results.push({
                     type: 'tag',
                     ref: tag,
                     score: score,
+                    textMatch: match.exact ? 1 : 0,
                     isVisible: visibleFreq > 0
                 });
             }
@@ -348,6 +356,7 @@ const SearchManager = (() => {
                 ref: id,
                 displayName: org.name,
                 emoji: org.emoji || null,
+                icon_id: org.icon_id,
                 score: score,
                 isVisible: matchCount > 0,
                 eventCount: matchCount
@@ -440,7 +449,9 @@ const SearchManager = (() => {
         hiddenResults.locations.sort((a, b) => (b.score || 0) - (a.score || 0));
 
         // Sort events by score
-        groupedResults.events.sort((a, b) => (b.score || 0) - (a.score || 0));
+        const byRelevance = (a, b) => (b.textMatch || 0) - (a.textMatch || 0)
+            || (b.score || 0) - (a.score || 0);
+        groupedResults.events.sort(byRelevance);
         hiddenResults.events.sort((a, b) => (b.score || 0) - (a.score || 0));
 
         // Filter and sort tags (exclude selected/required/forbidden tags)
@@ -452,7 +463,7 @@ const SearchManager = (() => {
         groupedResults.tags = groupedResults.tags.filter(filterTags);
         hiddenResults.tags = hiddenResults.tags.filter(filterTags);
 
-        groupedResults.tags.sort((a, b) => (b.score || 0) - (a.score || 0));
+        groupedResults.tags.sort(byRelevance);
         hiddenResults.tags.sort((a, b) => (b.score || 0) - (a.score || 0));
 
         // Sort organizers by score
@@ -475,6 +486,14 @@ const SearchManager = (() => {
         state.appState = config.appState;
     }
 
+    // Shared by search suggestions and the chip bar; read current state after refreshes.
+    function matchTag(tag, normalizedTerm) {
+        const terms = state.appState.tagSearchTerms?.[tag]
+            || [state.appState.searchIndex?.tags?.get(tag) || Utils.normalizeForSearch(tag)];
+        return { matches: terms.some(term => term.includes(normalizedTerm)),
+            exact: terms.includes(normalizedTerm) };
+    }
+
     /**
      * Performs a search and returns results
      * @param {string} term - Search term (will be normalized for accent/case-insensitive search)
@@ -495,6 +514,7 @@ const SearchManager = (() => {
         init,
         search,
         groupAndSortResults,
-        scoreTagSignal
+        scoreTagSignal,
+        matchTag
     };
 })();

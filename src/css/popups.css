@@ -191,16 +191,26 @@
     color: var(--popup-accent-vivid-hover, var(--summary-open-hover));
 }
 
-.popup-event-card-datetime {
-    font-size: 0.85em;
-    color: var(--secondary-text);
-    font-style: italic;
+.popup-event-card-metadata {
     display: none;
     margin-top: 1px;
 }
 
-.popup-event-card[data-expanded="true"] .popup-event-card-datetime {
+.popup-event-card[data-expanded="true"] .popup-event-card-metadata {
     display: block;
+}
+
+.event-format-chip {
+    margin-right: 6px;
+    vertical-align: middle;
+    cursor: default;
+}
+
+.popup-event-card-datetime {
+    font-size: 0.85em;
+    color: var(--secondary-text);
+    font-style: italic;
+    vertical-align: middle;
 }
 
 .popup-event-card-datetime .datetime-other {

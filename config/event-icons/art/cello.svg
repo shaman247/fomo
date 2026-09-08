@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+<title>Cello</title><desc>An upright amber cello with rounded shoulders, ebony fingerboard, endpin, and a separate bow.</desc>
+<g transform="translate(6.24 0) scale(.88 1)">
+<path fill="#78909C" d="M52 103h5v18l-2.5 4-2.5-4z"/>
+<path fill="#AD5C36" transform="translate(2 2)" d="M47 34C36 30 25 35 25 45C25 51 29 54 34 56L32 59C38 61 38 68 32 71L29 72C23 77 19 85 20 95C21 107 35 111 52 111C69 111 83 107 84 95C85 85 81 77 75 72L72 71C66 68 66 61 72 59L70 56C75 54 79 51 79 45C79 35 68 30 57 34Z"/>
+<path fill="#E79145" d="M47 34C36 30 25 35 25 45C25 51 29 54 34 56L32 59C38 61 38 68 32 71L29 72C23 77 19 85 20 95C21 107 35 111 52 111C69 111 83 107 84 95C85 85 81 77 75 72L72 71C66 68 66 61 72 59L70 56C75 54 79 51 79 45C79 35 68 30 57 34Z"/>
+<path fill="#F9B766" d="M42 36C34 36 29 39 29 45C29 49 32 52 36 53C32 47 33 41 42 36ZM29 79C21 90 24 101 37 105C28 98 27 88 29 79Z"/>
+<path fill="#C5743F" d="M73 79C81 92 78 102 66 106C80 105 83 92 73 79Z"/>
+<path fill="#AD5C36" d="M47 13h11v30H47z"/>
+<path fill="#37474F" d="M47 18h10l4 49H43z"/>
+<path fill="#546E7A" d="M47 19h3l-2 46h-4z"/>
+<path fill="#AD5C36" d="M46 5c-2 2-2 6-1 9l3 9h9l4-12c2-6-10-10-15-6z"/>
+<path fill="#F9B766" d="M48 6c3-2 8 0 8 3 0 4-5 4-6 1-1 2 0 4 2 5l-4 1c-2-4-3-8 0-10z"/>
+<path fill="#37474F" d="M41 12h7v4h-7c-3 0-3-4 0-4zm15 6h7c3 0 3 4 0 4h-7z"/>
+<path fill="#37474F" d="M40 70c-3-3-6 0-4 4 2 5-2 9-4 13-2 4 1 7 5 4l-1-2c-2 1-3-1-2-3 3-4 6-9 4-13-1-2 0-2 2-1z"/>
+<path fill="#37474F" transform="translate(104 0) scale(-1 1)" d="M40 70c-3-3-6 0-4 4 2 5-2 9-4 13-2 4 1 7 5 4l-1-2c-2 1-3-1-2-3 3-4 6-9 4-13-1-2 0-2 2-1z"/>
+<path fill="#FFCC80" d="M42 77q10-5 20 0v8h-5v-5H47v5h-5z"/>
+<path fill="#37474F" d="M44 89h16l-5 17h-6z"/>
+<path fill="none" stroke="#D8CDC9" stroke-width="1.1" d="M49 23l-2 66m4-66-1 66m3-66 1 66m1-66 2 66"/>
+</g>
+<path fill="none" stroke="#AD7156" stroke-width="4" stroke-linecap="round" d="M100 14q-3 7-3 16l7 78"/>
+<path fill="none" stroke="#F1EDEC" stroke-width="2.5" d="M101 19l9 90"/>
+<path fill="#37474F" d="M102 101l9-1 2 13-9 1z"/>
+<path fill="#B0BEC5" d="M103 102l7-1 1 4-7 1z"/>
+</svg>

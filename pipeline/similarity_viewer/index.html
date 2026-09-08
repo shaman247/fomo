@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Similarity explorer · Internal</title>
+    <link rel="stylesheet" href="/viewer.css">
+    <script src="/viewer.js" defer></script>
+</head>
+<body>
+    <header class="page-header">
+        <div><span class="eyebrow">INTERNAL · OFFLINE MODEL</span><h1>Similarity explorer</h1></div>
+        <p id="model-info">Loading model…</p>
+    </header>
+    <main>
+        <aside class="search-panel" aria-label="Choose an entity">
+            <h2>Start with an entity</h2>
+            <label for="search">Name or database ID</label>
+            <input id="search" type="search" placeholder="Search the entire model" autocomplete="off" autofocus>
+            <label for="search-type">Search in</label>
+            <select id="search-type"><option value="all">All entities</option><option value="place">Places</option><option value="event">Events</option><option value="tag">Curated tags</option><option value="keyword">Keywords</option></select>
+            <p id="search-status" class="muted" role="status">Or choose a starting point below.</p>
+            <div id="search-results" class="search-results"></div>
+            <button id="more-search" class="secondary" hidden>Load more matches</button>
+        </aside>
+        <section class="workspace" aria-label="Similar entities">
+            <section id="selection" class="selection"><span class="eyebrow">EXPLORE THE CONNECTIONS</span><h2>What’s similar?</h2><p>Choose a place, event, or tag to see its nearest neighbors across the full model. Select any result to explore from there.</p></section>
+            <form id="filters" class="filters">
+                <label>Results per type<select id="limit"><option>25</option><option>50</option><option selected>100</option><option>250</option></select></label>
+                <label>Events<select id="events"><option value="active">Active in export</option><option value="all">All modeled events</option><option value="history">Outside active export</option></select></label>
+                <label>Tags<select id="tags"><option value="curated">Curated tags</option><option value="all">Tags + keywords</option><option value="keywords">Keywords only</option></select></label>
+                <label>Vectors<select id="precision"><option value="full">Full precision</option><option value="browser">Browser int8 precision</option></select></label>
+                <label>Minimum cosine<input id="minimum" type="number" value="0" min="-1" max="1" step="0.05"></label>
+            </form>
+            <p class="explanation">Cosine similarity measures how closely two content vectors align. These are raw neighbors from the saved training snapshot, without personal preferences or the chip diversity adjustment. A score is not a probability.</p>
+            <p id="result-status" role="status" class="muted"></p>
+            <div id="neighbors" class="neighbor-grid"></div>
+        </section>
+    </main>
+</body>
+</html>

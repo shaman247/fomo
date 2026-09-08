@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">Go</title>
+  <desc id="desc">Two black stones and one white stone on the intersections of a wooden Go board.</desc>
+  <path fill="#AD7156" d="M16 13h96c7 0 11 4 11 11v88c0 8-5 12-12 12H17c-8 0-13-5-13-12V26c0-8 4-13 12-13z"/>
+  <path fill="#CE8963" d="M5 105h117v8c0 7-5 11-11 11H17c-7 0-12-4-12-11z"/>
+  <path fill="#FFCC80" d="M16 5h96c7 0 11 4 11 11v89c0 7-5 11-12 11H17c-8 0-13-4-13-11V18C4 10 8 5 16 5z"/>
+  <path fill="#FFE0B2" d="M13 11c5-3 23-3 26-1 2 3-11 3-18 7-6 4-8 16-11 15-3-1-2-16 3-21z"/>
+  <path d="M12 9v102m26-102v102m26-102v102m26-102v102m26-102v102M12 9h104M12 34.5h104M12 60h104M12 85.5h104M12 111h104" fill="none" stroke="#AD7156" stroke-width="2.5" stroke-linecap="round"/>
+  <g transform="translate(38 34.5) scale(.666667) translate(-44 -41)">
+  <ellipse cx="44" cy="44" rx="18" ry="17" fill="#AD7156"/>
+  <ellipse cx="44" cy="41" rx="18" ry="17" fill="#2F2F2F"/>
+  <path fill="#5E6367" d="M32 38c0-6 6-11 12-11 5 0 9 2 9 4 0 3-7 1-13 5-5 3-7 6-8 2z"/>
+  </g>
+  <g transform="translate(90 60) scale(.666667) translate(-82 -60)">
+  <ellipse cx="82" cy="63" rx="18" ry="17" fill="#AD7156"/>
+  <ellipse cx="82" cy="60" rx="18" ry="17" fill="#D8CDC9"/>
+  <ellipse cx="81" cy="58" rx="16" ry="15" fill="#F1EDEC"/>
+  <path fill="#FFF" d="M70 55c0-5 5-9 11-9 4 0 7 1 7 3 0 3-5 1-10 4-5 3-8 6-8 2z"/>
+  </g>
+  <g transform="translate(38 85.5) scale(.666667) translate(-44 -79)">
+  <ellipse cx="44" cy="82" rx="18" ry="17" fill="#AD7156"/>
+  <ellipse cx="44" cy="79" rx="18" ry="17" fill="#2F2F2F"/>
+  <path fill="#5E6367" d="M32 76c0-6 6-11 12-11 5 0 9 2 9 4 0 3-7 1-13 5-5 3-7 6-8 2z"/>
+  </g>
+</svg>

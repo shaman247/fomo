@@ -2126,6 +2126,8 @@ def _deduplicate_same_name_events(cursor, connection, current_date, edit_logger=
                 col_names = [d[0] for d in cursor.description]
                 edit_logger.log_delete('events', remove_id, dict(zip(col_names, record)))
 
+        from event_icon_assignments import merge_assignments
+        merge_assignments(cursor, keep_id, remove_id)
         cursor.execute("DELETE FROM events WHERE id = %s", (remove_id,))
         merged_into[remove_id] = keep_id
 
@@ -2256,7 +2258,7 @@ def compute_voted_tags(cursor, event_id, current_crawl_tags, curated_tag_set,
     existing_crawl_count = cursor.fetchone()[0]
 
     # Include current crawl's tags (not yet in event_sources)
-    for tag in current_crawl_tags:
+    for tag in dict.fromkeys(current_crawl_tags):
         if tag:
             tag_counts[tag] = tag_counts.get(tag, 0) + 1
     total_crawls = existing_crawl_count + 1

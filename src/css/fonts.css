@@ -5,7 +5,7 @@
  *
  * Configures the font stack for the application:
  * - Inter/InterVariable as the primary UI font
- * - Noto Color Emoji for consistent emoji rendering (debug mode only)
+ * - Pictograms are bundled artwork rendered by IconManager
  * - Fallback to system sans-serif fonts
  *
  * Variable font support is detected via @supports and used when available.
@@ -67,14 +67,7 @@
 }
 
 /* === Emoji Font (Optional) === */
-/* Loaded only when .use-noto-emoji class is on body (settings toggle or "noto" Easter egg) */
 /* COLRv1 vector format: supported by Chrome, Edge, Firefox. Safari falls back to system emoji. */
-@font-face {
-    font-family: 'Noto Color Emoji';
-    src: url('../fonts/NotoColorEmoji-COLRv1.woff2') format('woff2');
-    font-display: swap;
-}
-
 :root {
     font-family: Inter, sans-serif;
     /* liga/calt: Chrome fix; cv05: tailed lowercase l; ss03: round quotes & commas */
@@ -85,32 +78,4 @@
     :root { font-family: InterVariable, sans-serif; }
 }
 
-/* Apply Noto Color Emoji when debug mode is enabled */
-body.use-noto-emoji,
-body.use-noto-emoji * {
-    font-family: Inter, 'Noto Color Emoji', sans-serif !important;
-}
-
-@supports (font-variation-settings: normal) {
-    body.use-noto-emoji,
-    body.use-noto-emoji * {
-        font-family: InterVariable, 'Noto Color Emoji', sans-serif !important;
-    }
-}
-
-/* Specifically target emoji elements */
-body.use-noto-emoji .popup-header-emoji,
-body.use-noto-emoji .popup-event-emoji {
-    font-family: 'Noto Color Emoji', sans-serif !important;
-}
-
-/* Exclude system emoji preview from Noto font */
-body.use-noto-emoji .emoji-preview-system {
-    font-family: Inter, sans-serif !important;
-}
-
-@supports (font-variation-settings: normal) {
-    body.use-noto-emoji .emoji-preview-system {
-        font-family: InterVariable, sans-serif !important;
-    }
-}
+.inline-icon { vertical-align: -0.15em; }

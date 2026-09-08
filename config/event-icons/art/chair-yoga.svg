@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">Chair yoga</title>
+  <desc id="desc">A person seated on a wooden chair, stretching both arms overhead with feet on the floor.</desc>
+  <path fill="#AD7156" d="M28 62c0-4 7-4 7 0v58h-7zm54 25h7v33h-7z"/>
+  <path fill="#CE8963" d="M27 63c0-4 3-6 6-6h8c4 0 6 3 6 6v21H27z"/>
+  <path fill="#FFCC80" d="M31 62h4v20h-4z"/>
+  <path fill="#AD7156" d="M32 85h59c5 0 7 3 7 6 0 4-2 6-7 6H32c-5 0-7-2-7-6 0-3 2-6 7-6z"/>
+  <path fill="#CE8963" d="M32 85h58c4 0 5 3 1 4H32c-3 0-4-3 0-4z"/>
+  <path fill="#512DA8" d="M58 74l20 7c5 1 7 4 6 10l-7 21h-9l4-23-19-6z"/>
+  <path fill="#99674F" d="M68 109h9v6l6 3c3 2 2 5-2 5H66c-3 0-4-2-2-5z"/>
+  <path fill="#7E57C2" d="M62 72l27 9c6 2 8 5 7 10l-4 21H81l2-22-26-5c-8-3-10-8-6-13z"/>
+  <path fill="#BA8D68" d="M81 109h11v7l9 2c5 1 4 5 0 5H82c-3 0-5-2-4-5z"/>
+  <path fill="#99674F" d="M53 45c-5-7-13-15-13-20 0-6 7-15 12-20 3-3 7 0 5 3L48 25l14 18z"/>
+  <path fill="#BA8D68" d="M69 45c5-7 12-15 12-20 0-6-7-15-12-20-3-3-7 0-5 3l9 17-13 18z"/>
+  <path fill="#99674F" d="M57 35h9v14h-9z"/>
+  <path fill="#26A69A" d="M54 42c5 3 12 3 16 0l4 14-1 20c-7 6-20 6-26 0l2-20z"/>
+  <path fill="#80CBC4" d="M53 50c2-4 4-4 5-1l-2 22c-1 5-4 5-5 1z"/>
+  <path fill="#00897B" d="M66 51c2-5 5-5 5-1l2 25c-4 4-9 5-12 4-4-1 2-4 4-7z"/>
+  <ellipse fill="#BA8D68" cx="61" cy="28" rx="11" ry="14"/>
+  <path fill="#543930" d="M50 29c-5-8-2-19 9-20 10-1 16 8 13 17l-5-10c-4 5-9 6-15 6z"/>
+  <path fill="#6D4C41" d="M53 17c1-5 8-7 12-3 1 2-3 0-6 2-4 3-7 4-6 1z"/>
+  <path fill="none" stroke="#543930" stroke-width="1.5" stroke-linecap="round" d="M54 29q2 2 4 0m6 0q2 2 4 0"/>
+  <path fill="#99674F" d="M59 35h5c1 0 1 2-2 2-2 0-4-2-3-2z"/>
+</svg>

@@ -73,6 +73,20 @@ const URLParams = (() => {
             }
         }
 
+        if (urlParams.has('formats')) {
+            params.formats = (urlParams.get('formats') || '').slice(0, 2000).split(',').map(t => t.trim()).filter(Boolean);
+        }
+
+        if (urlParams.has('neighborhoods')) {
+            try {
+                const raw = urlParams.get('neighborhoods');
+                if (raw.length > 30000) throw new Error('Neighborhood selection too long');
+                const values = JSON.parse(raw);
+                if (!Array.isArray(values) || !values.every(v => typeof v === 'string')) throw new Error('Invalid neighborhoods');
+                params.neighborhoods = values;
+            } catch { warnings.push('Invalid neighborhood selection, ignoring'); }
+        }
+
         // Prototype params. Their side effects (persisting flags/theme) run
         // in ProtoFlags at script-eval time, long before this parse; they're
         // recognized here so the address-bar cleanup strips them too.
@@ -271,6 +285,8 @@ const URLParams = (() => {
             urlParams.set('theme', params.theme);
         }
 
+        if (Array.isArray(params.formats)) urlParams.set('formats', params.formats.join(','));
+        if (Array.isArray(params.neighborhoods)) urlParams.set('neighborhoods', JSON.stringify(params.neighborhoods));
         return `${baseUrl}?${urlParams.toString()}`;
     }
 

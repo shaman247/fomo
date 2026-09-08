@@ -32,6 +32,7 @@ except ImportError as e:
     sys.exit(1)
 
 from occurrence_times import standardize_time
+from tag_canonicalization import normalize_tag_key, canonical_names, resolve_aliases
 from constants import (MAX_PAGES_DEFAULT, FUTURE_WINDOW_DAYS,
                        FINGERPRINT_MAX_REUSE_DAYS, FINGERPRINT_COPY_MARKER,
                        CRAWL_EVENT_PASS_WINDOW_SECONDS)
@@ -1853,6 +1854,7 @@ def get_tag_rules(cursor):
     - 'rewrite': dict mapping pattern -> replacement
     - 'exclude': list of patterns to filter out
     - 'remove': list of patterns that indicate event should be skipped
+    - 'canonical': normalized keys to unambiguous known spellings
     """
     rules = {'rewrite': {}, 'exclude': [], 'remove': []}
 
@@ -1871,6 +1873,7 @@ def get_tag_rules(cursor):
         elif rule_type == 'remove':
             rules['remove'].append(pattern)
 
+    rules['canonical'] = get_canonical_tag_names(cursor)
     return rules
 
 
@@ -1901,14 +1904,12 @@ def get_websites_with_tags(cursor):
     return websites_map
 
 
-def normalize_tag_key(name):
-    """Normalize a tag/ancestor/root name to its lookup key (lowercase, no spaces).
-
-    Single source of truth for the tag-key normalization that the tag pipeline
-    repeats across db/processor/merger. The `name or ''` guard yields '' for
-    None; callers that must distinguish a NULL name keep their own conditional.
-    """
-    return (name or '').lower().replace(' ', '')
+def get_canonical_tag_names(cursor):
+    cursor.execute('SELECT name, type FROM tags')
+    return canonical_names([
+        {'name': _col(row, 'name', 0), 'type': _col(row, 'type', 1)}
+        for row in cursor.fetchall()
+    ])
 
 
 def build_tag_ancestor_map(cursor):
@@ -1970,17 +1971,17 @@ def build_tag_ancestor_map(cursor):
 def get_tag_aliases(cursor):
     """Get tag aliases as a dict mapping normalized alias -> canonical tag name.
 
-    Used during tag processing to replace alias tags with their canonical form.
+    Chains are resolved to their terminal tag. Conflicting normalized targets
+    and cycles raise before processing can silently choose a destination.
     """
     cursor.execute("""
         SELECT ta.alias, t.name
         FROM tag_aliases ta
         JOIN tags t ON ta.tag_id = t.id
     """)
-    return {
-        normalize_tag_key(row[0]): row[1]
-        for row in cursor.fetchall()
-    }
+    return resolve_aliases([
+        (_col(row, 'alias', 0), _col(row, 'name', 1)) for row in cursor.fetchall()
+    ])
 
 
 def get_tag_aliases_for_export(cursor):
@@ -1994,12 +1995,36 @@ def get_tag_aliases_for_export(cursor):
         JOIN tags t ON ta.tag_id = t.id
         ORDER BY t.name, ta.alias
     """)
+    rows = cursor.fetchall()
+    resolved = resolve_aliases([(_col(row, 'alias', 1), _col(row, 'name', 0)) for row in rows])
     aliases_by_tag = {}
-    for row in cursor.fetchall():
-        tag_name = row[0]
-        alias = row[1]
+    for row in rows:
+        alias = _col(row, 'alias', 1)
+        tag_name = resolved[normalize_tag_key(alias)]
         aliases_by_tag.setdefault(tag_name, []).append(alias)
     return aliases_by_tag
+
+
+def upsert_tag_alias(cursor, alias, tag_id):
+    """Validate normalized alias identity before writing; caller holds write_lock.
+
+    Preserve human-readable aliases for frontend phrase search. Invalid cycles or
+    conflicting normalized destinations fail before any mutation is performed.
+    """
+    alias = alias.strip()
+    if not alias or len(alias) > 100:
+        raise ValueError('Tag alias must contain 1–100 characters')
+    cursor.execute('SELECT name FROM tags WHERE id=%s', (tag_id,))
+    row = cursor.fetchone()
+    if not row:
+        raise ValueError(f'Unknown tag id: {tag_id}')
+    target = _col(row, 'name', 0)
+    cursor.execute('SELECT a.alias, t.name FROM tag_aliases a JOIN tags t ON t.id=a.tag_id')
+    pairs = [(_col(r, 'alias', 0), _col(r, 'name', 1)) for r in cursor.fetchall()
+             if _col(r, 'alias', 0).casefold() != alias.casefold()]
+    resolve_aliases([*pairs, (alias, target)])
+    cursor.execute('INSERT INTO tag_aliases (alias,tag_id) VALUES (%s,%s) '
+                   'ON DUPLICATE KEY UPDATE tag_id=VALUES(tag_id)', (alias, tag_id))
 
 
 def get_tag_disambiguations(cursor):

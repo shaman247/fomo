@@ -38,7 +38,7 @@ Centralized theme configuration using CSS custom properties.
 ### [fonts.css](./fonts.css)
 Font loading and typography configuration.
 
-- `@font-face` declarations (Noto Color Emoji)
+- `@font-face` declarations for text fonts; inline artwork alignment
 - Font family setup (Inter/InterVariable)
 - Variable font support detection
 - Emoji font handling for debug mode

@@ -33,7 +33,7 @@ The "what is the attendee *doing*?" (structural) axis — mirrors `events.event_
 
 - Membership is driven from `event_type`, not content keywords — `scripts/sync_format_tags.py` rebuilds `event_tags` for the family (run automatically in `/run-pipeline` Step 4). 30 leaves are Format-only and **authoritative** (membership == `event_type` exactly). 8 leaves (**Concert, Sports, Reading, Workshop, Fitness, Volunteer, Party, Festival**) also exist as content-genre nodes with their own subtrees, so they are **multi-parented** (under their genre root AND Format) and their membership is the **union** of content + `event_type` (additive, to keep the genre subtrees' ancestor invariant). `Sports` is the loosest — its content children (Swimming, Esports…) span formats; splitting genre-Sports from format-Sports is a possible future cleanup.
 - Search aliases (`tag_aliases`) map natural terms to the leaves (gig→Concert, standup→Comedy Show, gala→Benefit, career fair→Fair, …).
-- **Only the 38 leaf type tags are shown as selectable chips.** The `Format` root + 6 category tags are structural-only (kept for grouping/aggregation, hidden from the chip bar and search). The frontend derives the hidden set as `{'Format'} ∪ childrenOf('Format')` in `DataManager.processTagHierarchy` (`state.structuralFormatTags`), excludes it from `allAvailableTags`, and guards the descendant-dropdown padding in `filterPanelUI._getSortedDescendants`. Event popups already show leaf tags only via the exporter's `display_tags`.
+- **Public UI separation (2026-09-08):** the date row has a dedicated FormatSelector, default **All Events**. Its 38 type checkboxes plus Other match exported `event_type` directly, OR within formats and AND with dates/topics. `export_tag_hierarchy` publishes `formats`, `format_only_tags`, and a topic graph with all format-only nodes/parent links removed. The 8 shared topic identities above remain in the topic graph with content parents only (Sports remains a root). `event_types.FORMAT_TOPIC_NAMES` is shared by the exporter and legacy sync; do not infer this set from non-Format parents, because Sports has none. Popups label the format separately. The DB mirror remains for pipeline compatibility; browser filtering no longer relies on that mirror.
 
 ### Venue Types (19 roots, parallel hierarchy)
 The "what kind of place is the event at?" axis. These are deliberately separate from event types — a jazz show at a museum is `Jazz` (event) + `Museum` (venue), not nested.
@@ -85,9 +85,40 @@ Currently split: Avant Garde (Art / Music), Pool (Swimming / Billiards), Open Mi
 The `tag_aliases` table maps variant keyword names to canonical curated tags. Unlike `tag_rules` rewrites (which handle formatting like `18plus` → `18+`), aliases handle semantic equivalence (different names for the same concept).
 
 - **Database**: `tag_aliases(tag_id, alias)` — alias is PK, tag_id FK to `tags.id`
-- **Pipeline**: aliases are merged into the rewrite dict during processing, so `process_tags()` handles them transparently
+- **Pipeline**: `tag_canonicalization.py` resolves alias chains to their terminal target and rejects cycles or conflicting normalized destinations. `process_tags()` resolves rewrite chains, canonicalizes known spellings after CamelCase/region formatting, and defers context-dependent homonyms. Website default tags use the same resolution.
 - **Export**: aliases are included in `tag_hierarchy.json` as an `aliases` field on each tag entry
 - **Frontend**: aliases are indexed for search — typing "bingo night" surfaces the "Bingo" filter
+
+**Alias writes**: use `db.upsert_tag_alias(cursor, alias, tag_id)` under the shared
+`write_lock`. It validates normalized destinations and cycles before writing while
+preserving human-readable alias spelling for phrase search. Do not recreate the
+retired `Benefit → Fundraiser` back-edge: `fundraiser → Benefit` is the current
+Format alias. Existing curated tag identities remain distinct.
+
+**Historical repairs**: `scripts/reconcile_tag_aliases.py` previews alias flattening
+and keyword spelling/alias repairs. Application requires a reviewed config hash,
+new backup/output paths, and the write lock. It reconciles active event tags and
+all crawl history, honors/copies tag blocks, and verifies convergence before
+commit. Curated source tags and contextual homonyms are protected; this is not
+a hierarchy or Format migration. Keep old tag rows so existing names/references
+are not silently deleted.
+
+**Reviewed curated consolidation**: `scripts/consolidate_tag_aliases.py` accepts an
+explicit source→canonical JSON map and requires a preview config hash plus new backup
+for `--apply`. Under `write_lock`, it migrates all event memberships (including archived),
+venue memberships, crawl/website names, incoming aliases, rewrite destinations,
+disambiguation references, and DAG edges. Source IDs remain as keyword rows; blocks
+are retained/copied. Format identities and alias chains in the supplied mapping are
+rejected. The public export includes `tag_redirects` for retired name compatibility;
+Favorites and old tag links migrate to canonical names. See
+[the format/alias implementation](../notes/format-selector-2026-09-08.md).
+
+**Search/filter contract** (2026-09-08): event text search includes event tags,
+including keywords; aliases match canonical tag suggestions and the chip bar.
+Keywords remain excluded from the browsable chip list. Exact event names rank
+ahead of incidental text matches. Inclusion/exclusion share the event + venue +
+organizer tag index; dynamic/viewport counts use the same membership. Preference
+ranking's deliberate avoidance of inherited venue audience tags is separate.
 
 Examples of alias types:
 - Overly specific: "Bingo Night" → Bingo, "DJ Set" → DJ, "Open Mic Night" → Open Mic

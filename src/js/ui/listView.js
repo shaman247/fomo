@@ -56,6 +56,7 @@ const ListView = (() => {
         // Signature of the last-built DOM; render() skips the rebuild when the
         // output would be identical (see render). null = nothing built.
         lastSignature: null,
+        renderVersion: 0,
     };
 
     // ========================================
@@ -195,6 +196,7 @@ const ListView = (() => {
             const next = nextStartForEvent(event);
             return {
                 event,
+                discoveryScore: DiscoveryRanking.score(event, state.getLocationInfo(event.locationKey)),
                 dist: distanceForEvent(event, distances, visibleCenter),
                 spread: spreadDaysForEvent(event),
                 next,
@@ -218,7 +220,7 @@ const ListView = (() => {
             if (group) group.push(entry); else byLocation.set(key, [entry]);
         }
         for (const group of byLocation.values()) {
-            group.sort((a, b) => (a.spread - b.spread) || (a.next - b.next));
+            group.sort((a, b) => (b.discoveryScore - a.discoveryScore) || (a.spread - b.spread) || (a.next - b.next));
             group.forEach((entry, i) => { entry.rank = i; });
         }
 
@@ -227,6 +229,7 @@ const ListView = (() => {
         // ones; within the same day, nearest to the map center goes first,
         // with exact start time breaking same-distance ties.
         const sorted = entries.sort((a, b) =>
+            (b.discoveryScore - a.discoveryScore) ||
             (a.rank - b.rank) ||
             (a.spread - b.spread) ||
             (a.nextDay - b.nextDay) ||
@@ -252,29 +255,38 @@ const ListView = (() => {
         // changes, small pans that don't reorder distance ties). The signature
         // covers every input the non-interactive cards render from: id order,
         // footer total, lazily-merged description presence (descriptions arrive
-        // after the first render), and the theme / emoji font driving the
+        // after the first render), and the theme / artwork revision driving the
         // accent colors. The first-child check forces a rebuild after the
         // container was cleared externally (search takeover, mobile detail mode).
         const signature = (document.documentElement.getAttribute('data-theme') || '') +
-            '|' + (document.body.classList.contains('use-noto-emoji') ? 'noto' : 'sys') +
             '|' + total +
-            '|' + shown.map(({ event }) => event.id + (event.description ? '+' : '')).join(',');
+            '|' + shown.map(({ event }) => event.id + (event.description ? '+' : '') +
+                (typeof IconManager !== 'undefined' ? IconManager.cacheKey(event) : '')).join(',');
         const existing = container.firstElementChild;
         if (signature === state.lastSignature &&
             existing && existing.classList.contains('list-view-scroll')) {
-            container.scrollTop = 0; // every render resets the scroll, skipped or not
             return;
         }
 
         const wrapper = document.createElement('div');
         wrapper.className = 'list-view-scroll';
+        const version = ++state.renderVersion;
+        const scrollTop = container.scrollTop;
+        wrapper.style.minHeight = `${container.scrollHeight}px`;
+        let index = 0;
 
-        shown.forEach(({ event }) => {
+        function appendCard(event) {
             // Permanently collapsed, non-expanding cards — the list wires its own
             // hover (highlight the marker and its label) and click (open the
             // location popup). createEventCard tints the title from the event's
             // own emoji color.
             const card = PopupContentBuilder.createEventCard(event, { interactive: false });
+            card.tabIndex = 0;
+            card.setAttribute('role', 'button');
+            card.setAttribute('aria-label', `Open ${event.name}`);
+            card.addEventListener('keydown', e => {
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); card.click(); }
+            });
 
             const locationKey = event.locationKey;
             if (locationKey) {
@@ -293,25 +305,43 @@ const ListView = (() => {
             }
 
             wrapper.appendChild(card);
-        });
-
-        if (total > RENDER_CAP) {
-            const footer = document.createElement('div');
-            footer.className = 'list-view-footer';
-            footer.textContent = `Showing ${RENDER_CAP} of ${total} events`;
-            wrapper.appendChild(footer);
         }
 
-        container.innerHTML = '';
-        container.appendChild(wrapper);
-        container.scrollTop = 0;
+        function appendBatch() {
+            if (version !== state.renderVersion || wrapper.parentElement !== container) return;
+            const started = performance.now();
+            do {
+                if (index >= shown.length) break;
+                appendCard(shown[index++].event);
+            } while (performance.now() - started < 8);
+            if (index < shown.length) {
+                requestAnimationFrame(() => setTimeout(appendBatch, 0));
+            } else {
+                wrapper.removeAttribute('aria-busy');
+                wrapper.style.minHeight = '';
+                if (total > RENDER_CAP) {
+                    const footer = document.createElement('div');
+                    footer.className = 'list-view-footer';
+                    footer.textContent = `Showing ${RENDER_CAP} of ${total} events`;
+                    wrapper.appendChild(footer);
+                }
+            }
+        }
+
+        // Paint a screenful first; never build all 200 cards in the input task.
+        for (; index < Math.min(12, shown.length); index++) appendCard(shown[index].event);
+        wrapper.setAttribute('aria-busy', String(index < shown.length));
+        container.replaceChildren(wrapper);
+        container.scrollTop = scrollTop;
         state.lastSignature = signature;
+        requestAnimationFrame(() => setTimeout(appendBatch, 0));
     }
 
     /**
      * Clears the list (used when a search term takes over the results container).
      */
     function teardown() {
+        state.renderVersion++;
         state.lastSignature = null;
         const container = state.getContainer();
         if (container) {

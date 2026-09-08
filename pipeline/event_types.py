@@ -109,8 +109,9 @@ CATEGORY_BY_TYPE = {
 
 # --- Tag-system presentation ---------------------------------------------------
 # event_type is mirrored into the curated tag hierarchy as a "Format" root family
-# (Format -> category -> type) so it filters/searches like any tag. These map the
-# taxonomy onto tag nodes. See scripts/sync_format_tags.py.
+# (Format -> category -> type) for pipeline compatibility. The public exporter
+# separates formats from topic browsing; the selector uses event_type directly.
+# These map the taxonomy onto legacy tag nodes. See scripts/sync_format_tags.py.
 
 FORMAT_ROOT_TAG = "Format"
 FORMAT_ROOT_EMOJI = "🎫"
@@ -154,3 +155,18 @@ def is_valid_event_type(value):
 def category_for(event_type):
     """Return the experience category for a type, or None for Other/UNKNOWN."""
     return CATEGORY_BY_TYPE.get(event_type)
+
+# Existing topic identities that also name an event format. Sports is a topic
+# root, so it cannot be detected just by looking for non-Format parents.
+FORMAT_TOPIC_NAMES = frozenset({
+    'Concert', 'Sports', 'Reading', 'Workshop', 'Fitness', 'Volunteer', 'Party', 'Festival',
+})
+
+
+def separate_format_topics(tags):
+    """Return the topic browse graph and format-only names, leaving DB IDs intact."""
+    structural = {value[0] for value in CATEGORY_TAG.values()} | {FORMAT_ROOT_TAG}
+    format_only = structural | (set(EVENT_TYPES) - FORMAT_TOPIC_NAMES)
+    topics = [{**tag, 'parents': [p for p in tag.get('parents', []) if p not in format_only]}
+              for tag in tags if tag['name'] not in format_only]
+    return topics, format_only

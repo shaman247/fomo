@@ -647,6 +647,19 @@ def run_publish_tail(cursor, connection, website_ids, banner):
     print("\n  Classifying event sections...")
     exporter.classify_event_sections(cursor, connection)
 
+    from event_icon_review import refresh_review_state
+    print("  Event icon review state:", refresh_review_state(cursor, apply=True))
+    print("  Final icon choices are made by run-pipeline's agent review step "
+          "(pipeline/event_icon_review.py prepare); heuristics are suggestions only.")
+    from icon_catalog import flag_metadata
+    flag_metadata(cursor)
+    cursor.execute("SELECT COUNT(*) FROM icon_review_queue WHERE status='pending'")
+    pending_icons = cursor.fetchone()[0]
+    if pending_icons:
+        print(f"  Icon artwork review: {pending_icons} unseen/unsupported emoji pending "
+              "(review with pipeline/icon_catalog.py)")
+    connection.commit()
+
     banner(1, "Exporting Events to JSON")
     print("  Exporting events from database to JSON...")
     export_stats = exporter.export_events(cursor)

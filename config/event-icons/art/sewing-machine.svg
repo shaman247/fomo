@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">Sewing machine</title>
+  <desc id="desc">An ivory sewing machine with a pink spool, a needle, and blue fabric under the presser foot.</desc>
+
+  <path fill="#5E6367" d="M84 10h5v23h-5z"/>
+  <path fill="#AD1457" d="M77 15h20v15H77z"/>
+  <path fill="#EC407A" d="M76 13h22v5H76zm2 6h18v9H78zm-2 10h22v5H76z"/>
+  <path fill="#F48FB1" d="M81 19h5v9h-5z"/>
+  <ellipse fill="#B8AAA5" cx="112" cy="56" rx="10" ry="19"/>
+  <ellipse fill="#D8CDC9" cx="115" cy="54" rx="8" ry="17"/>
+  <path fill="#B8B8B8" d="M24 38h68c13 0 19 8 19 20v48H82V67c0-5-3-8-8-8H47v19H17V49c0-7 2-11 7-11z"/>
+  <path fill="#F1EDEC" d="M23 32h68c12 0 17 8 17 20v48H81V63c0-5-3-8-8-8H44v19H15V43c0-7 3-11 8-11z"/>
+  <path fill="#FFF" d="M23 37h28c4 0 5 2 1 3l-22 2c-7 1-7 8-10 8-3 0-3-11 3-13z"/>
+  <path fill="#D8CDC9" d="M96 58c0-7 6-7 6 0v42H88c-3-3 8-3 8-10z"/>
+  <circle fill="#B8AAA5" cx="89" cy="46" r="7"/>
+  <circle fill="#EE534E" cx="88" cy="44" r="6"/>
+  <path fill="#5E6367" d="M27 73h4v24h-4zM23 94h17v4H23z"/>
+  <path fill="#B8B8B8" d="M12 99h103c5 0 8 4 8 8v6c0 6-4 9-10 9H13c-7 0-10-3-10-9v-5c0-6 3-9 9-9z"/>
+  <path fill="#F1EDEC" d="M12 98h102c6 0 9 3 9 7 0 5-3 7-9 7H12c-6 0-9-2-9-7 0-4 3-7 9-7z"/>
+  <path fill="#4FC3F7" d="M19 97h43l8 8v15H29v-14z"/>
+  <path fill="#0288D1" d="M29 106h41v14H29z"/>
+  <path fill="#81D4FA" d="M24 99h33l4 4H28z"/>
+  <path fill="#5E6367" d="M24 94h15v4H24z"/>
+
+</svg>

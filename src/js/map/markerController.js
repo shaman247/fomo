@@ -39,7 +39,9 @@ const MarkerController = (() => {
         const startMs = sortCtx.selectedStartDate ? sortCtx.selectedStartDate.getTime() : 0;
         const endMs = sortCtx.selectedEndDate ? sortCtx.selectedEndDate.getTime() : 0;
         const forceId = sortCtx.forceDisplayEventId || '';
-        return `${startMs}-${endMs}|${forceId}|${parts.join(',')}`;
+        parts.push(`formats:${typeof FormatSelector !== 'undefined' ? JSON.stringify(FormatSelector.selection()) : 'all'}`);
+        parts.push(`neighborhoods:${typeof NeighborhoodSelector !== 'undefined' ? JSON.stringify(NeighborhoodSelector.selection()) : 'all'}`);
+        return `${startMs}-${endMs}|${forceId}|${DiscoveryRanking.revision()}|${parts.join(',')}`;
     }
 
     function _getOrCreateCacheBucket(signature) {
@@ -234,7 +236,8 @@ const MarkerController = (() => {
         MapManager.updateMarkerData(
             labelEventsByKey,
             state.appState.locationsByLatLng,
-            callbacks
+            callbacks,
+            locationsToDisplay
         );
 
         if (FP) {
@@ -324,7 +327,8 @@ const MarkerController = (() => {
         MapManager.updateMarkerData(
             labelEventsByKey,
             state.appState.locationsByLatLng,
-            callbacks
+            callbacks,
+            locationsToDisplay
         );
     }
 
@@ -386,6 +390,7 @@ const MarkerController = (() => {
             currentPopupFilters.sliderStartDate, currentPopupFilters.sliderEndDate,
             forceDisplayEventId || '',
             eventsToDisplay.map(e => e.id).join(','),
+            DiscoveryRanking.revision(),
             relevantTagParts.join('|')
         ].join('§');
 

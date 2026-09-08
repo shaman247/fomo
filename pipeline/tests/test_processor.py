@@ -1628,6 +1628,18 @@ class TestApplyCrawledDetailsEmoji(unittest.TestCase):
         self.assertIn("emoji = %s", sql)
         self.assertEqual(params, ['A real description.', '🎤', 123])
 
+    def test_unseen_detail_emoji_is_preserved_and_queued_with_event_context(self):
+        from unittest.mock import patch
+        cursor = _RecordingCursor()
+        with patch('icon_catalog.unknown_emoji', return_value=True):
+            apply_crawled_details(cursor, _NoopConnection(), 123,
+                {'description': 'A real description.', 'hashtags': [], 'emoji': '🎤', 'name': 'Open mic'},
+                self._TAG_CONTEXT)
+        queued = next(params for sql, params in cursor.statements if 'INSERT INTO icon_review_queue' in sql)
+        self.assertEqual(queued[1:], ('🎤', 'crawl_events', 123, 'Open mic'))
+        update = next(params for sql, params in cursor.statements if sql.startswith('UPDATE crawl_events SET'))
+        self.assertIn('🎤', update)
+
 
 def _make_locations_map(entries, website_scoped=None, alternate_names=None,
                         short_names=None):

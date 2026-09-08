@@ -1,0 +1,3182 @@
+{
+  "schema_version": 1,
+  "event_date": "2026-09-08",
+  "scope": "Publishable database records occurring on this date, including ongoing spans; not independently verified live occurrences.",
+  "reviewed": 2627,
+  "assigned": 118,
+  "fallback": 2509,
+  "deferred": 0,
+  "pending_after": 0,
+  "events_with_opportunities": 299,
+  "suggestions": 319,
+  "concepts": 188,
+  "priority_method": "Editorial judgment of recognition gain, reuse across venues, specificity and silhouette feasibility at 16–32px. Counts are candidate evidence, not guaranteed assignments.",
+  "recommended_next_batch": [
+    {
+      "priority": 1,
+      "concept": "sport-pickleball",
+      "event_ids": [
+        152932,
+        240497,
+        240543,
+        240545,
+        240549,
+        240550,
+        240551,
+        240552,
+        240567,
+        240574,
+        240576,
+        240577,
+        240579,
+        240583
+      ],
+      "venues": [
+        {
+          "name": "Greenbelt Recreation Center",
+          "address": "501 Brielle Ave, Staten Island, NY 10314, USA"
+        },
+        {
+          "name": "PKLYN",
+          "address": "80 4th St, Brooklyn, NY 11231, USA"
+        },
+        {
+          "name": "Velto",
+          "address": "160 Van Brunt St, Brooklyn, NY 11231"
+        }
+      ],
+      "categories": [
+        "sport"
+      ],
+      "labels": [
+        "Pickleball"
+      ],
+      "variants": [
+        {
+          "visual": "A solid rounded rectangular paddle beside a perforated ball.",
+          "rationale": "Paddle and holes distinguish pickleball from tennis.",
+          "existing_alternative": "Tennis racket has strings and tennis ball has no holes; table-tennis paddle lacks the characteristic ball."
+        },
+        {
+          "visual": "Broad squared paddle beside a perforated ball.",
+          "rationale": "Pickleball play or coaching is the defining activity.",
+          "existing_alternative": "Noto table-tennis paddle depicts different paddle proportions and a solid ball; holes establish pickleball."
+        }
+      ],
+      "tags": {
+        "Format": 14,
+        "Sports": 14,
+        "Participatory": 14,
+        "Community": 13,
+        "Pickleball": 12,
+        "Open Practice": 7,
+        "Game": 5,
+        "Games": 5,
+        "Family": 3,
+        "Intermediate": 3,
+        "Professional Development": 3,
+        "Coaching": 3,
+        "Class": 2,
+        "League": 2,
+        "Open Play": 2,
+        "Outdoor": 1,
+        "Free": 1,
+        "DUPR Logged": 1,
+        "Competitive": 1,
+        "Intermediate Advanced": 1,
+        "Competition": 1,
+        "Advanced Beginner": 1,
+        "Beginner": 1,
+        "Competitive Play": 1,
+        "Tennis": 1,
+        "Advanced": 1,
+        "Prizes": 1
+      },
+      "examples": [
+        {
+          "event_id": 152932,
+          "name": "Summer Sports Experience: Pickleball",
+          "emoji": "🎾",
+          "current_icon_id": null,
+          "venue": "Greenbelt Recreation Center",
+          "urls": [
+            "https://www.nyc.gov/main/events/",
+            "https://www.nyc.gov/main/events/?permalinkName=summer-sports-experience-pickleball&id=1109036&sequence=1",
+            "https://www.nyc.gov/main/events/?permalinkName=summer-sports-experience-pickleball&id=1179636&sequence=1",
+            "https://www.nyc.gov/main/events/?permalinkName=summer-sports-experience-pickleball&id=1179696&sequence=1",
+            "https://www.nyc.gov/main/events/?permalinkName=summer-sports-experience-pickleball&id=1179736&sequence=1",
+            "https://www.nyc.gov/main/events/?permalinkName=summer-sports-experience-pickleball&id=1179756&sequence=1",
+            "https://www.nyc.gov/main/events/?permalinkName=summer-sports-experience-pickleball&id=1179776&sequence=1",
+            "https://www.nyc.gov/main/events/?permalinkName=summer-sports-experience-pickleball&id=1179816&sequence=1",
+            "https://www.nyc.gov/main/events/?permalinkName=summer-sports-experience-pickleball&id=1179836&sequence=1",
+            "https://www.nyc.gov/main/events/?permalinkName=summer-sports-experience-pickleball&id=1179896&sequence=1",
+            "https://www.nyc.gov/main/events/?permalinkName=summer-sports-experience-pickleball&id=1241936&sequence=1",
+            "https://www.nycgovparks.org/events/2026/07/29/summer-sports-experience-pickleball1",
+            "https://www.nycgovparks.org/events/2026/08/04/summer-sports-experience-pickleball",
+            "https://www.nycgovparks.org/events/2026/08/07/summer-sports-experience-pickleball",
+            "https://www.nycgovparks.org/events/2026/08/11/summer-sports-experience-pickleball",
+            "https://www.nycgovparks.org/events/2026/08/13/summer-sports-experience-pickleball",
+            "https://www.nycgovparks.org/events/2026/08/18/summer-sports-experience-pickleball",
+            "https://www.nycgovparks.org/events/2026/08/19/summer-sports-experience-pickleball1",
+            "https://www.nycgovparks.org/events/2026/08/25/summer-sports-experience-pickleball",
+            "https://www.nycgovparks.org/events/2026/08/28/summer-sports-experience-pickleball1",
+            "https://www.nycgovparks.org/events/2026/09/01/summer-sports-experience-pickleball",
+            "https://www.nycgovparks.org/events/2026/09/03/summer-sports-experience-pickleball",
+            "https://www.nycgovparks.org/events/2026/09/08/summer-sports-experience-pickleball1"
+          ],
+          "evidence": [
+            "Summer Sports Experience: Pickleball: Summer Sports Experience program participants receive age-appropriate instruction through organized clinics, skill... Tags: Community, Free, Sports, Family, Outdoor, Class, Participatory, Pickleball, Format."
+          ]
+        },
+        {
+          "event_id": 240497,
+          "name": "High Intermediate League (9 Weeks!)",
+          "emoji": "🏓",
+          "current_icon_id": null,
+          "venue": "PKLYN",
+          "urls": [
+            "https://app.courtreserve.com/Online/Events/Details/11868/KYJJ9PL11868542?resId=58694304"
+          ],
+          "evidence": [
+            "High Intermediate League (9 Weeks!): A nine-week high intermediate pickleball league with DUPR logging. The league meets Tuesdays from 7pm to 9pm."
+          ]
+        },
+        {
+          "event_id": 240543,
+          "name": "4 Week Clinic for Beginners",
+          "emoji": "🏓",
+          "current_icon_id": null,
+          "venue": "Velto",
+          "urls": [
+            "https://velto.podplay.app/community/events/019ff7d7-caac-7ffb-8630-8409192f0942",
+            "https://velto.podplay.app/community/events/01a0210f-bf02-7558-92a8-0ed3db57db1e"
+          ],
+          "evidence": [
+            "4 Week Clinic for Beginners: A four-week beginner pickleball clinic covering positioning, split stepping, drives, and forehand dinks through coach-guided drills and demonstrations. Each class is 1.5 hours, and participation is a commitment to the full four-week series."
+          ]
+        },
+        {
+          "event_id": 240545,
+          "name": "Up & Down the River Open Play: Intermediate/Advanced",
+          "emoji": "🏓",
+          "current_icon_id": null,
+          "venue": "Velto",
+          "urls": [
+            "https://velto.podplay.app/community/events/019feccc-a56a-7229-9bf8-c5626d33fb66",
+            "https://velto.podplay.app/community/events/01a03f89-d7d0-7ddf-a513-ab38fe3e87e9",
+            "https://velto.podplay.app/community/events/01a0530e-6f61-777b-b003-0feb4181cf14",
+            "https://velto.podplay.app/community/events/01a05d74-1c22-7883-a19b-0ab76c6019e2",
+            "https://velto.podplay.app/community/events/01a05d93-555b-7883-a1b5-45dcfab58450"
+          ],
+          "evidence": [
+            "Up & Down the River Open Play: Intermediate/Advanced: Up & Down the River brings structure, pressure, and variety to competitive open play, with players rotating through partners and opponents and moving up or down courts based on game results. This session is for experienced intermediate and advanced players comfortable with faster hands, purposeful third shots, resets, counters, and strategic court positioning."
+          ]
+        },
+        {
+          "event_id": 240549,
+          "name": "Up & Down the River Open Play: Beginner/Advanced Beginner",
+          "emoji": "🏓",
+          "current_icon_id": null,
+          "venue": "Velto",
+          "urls": [
+            "https://velto.podplay.app/community/events/019feccd-e468-7006-80ec-2a9d45150e6c",
+            "https://velto.podplay.app/community/events/01a05327-ce4d-7ccc-9831-a1d8447054ec",
+            "https://velto.podplay.app/community/events/01a06315-8177-7883-a3ec-c7362ebc8551"
+          ],
+          "evidence": [
+            "Up & Down the River Open Play: Beginner/Advanced Beginner: Early Bird Credit: First 4 players to sign up will receive $5 in club credits after the session starts. Up & Down the River brings structure, variety, and friendly competition to open play, with players rotating through different partners and opponents and moving up or down courts based on game results. This session is geared toward advanced beginners who understand the rules, can keep score, and are comfortable playing full games; confident beginners who are ready for more structured game experience are also welcome."
+          ]
+        },
+        {
+          "event_id": 240550,
+          "name": "Rise and Rally League",
+          "emoji": "🏓",
+          "current_icon_id": null,
+          "venue": "Velto",
+          "urls": [
+            "https://velto.podplay.app/community/events/019ffcaf-80e5-7ccf-8705-58bbbcdd4310"
+          ],
+          "evidence": [
+            "Rise and Rally League: Rise & Rally is a six week league for advanced beginner and intermediate players who want consistent, well matched games before heading into the workday. Players sign up individually and will be placed on courts based on their DUPR ratings during the first week. Each Tuesday, players will play at least four games to 11, with results entered into DUPR."
+          ]
+        },
+        {
+          "event_id": 240551,
+          "name": "Level Up: Tuesday Night Beginner League",
+          "emoji": "🏓",
+          "current_icon_id": null,
+          "venue": "Velto",
+          "urls": [
+            "https://velto.podplay.app/community/events/019ffcb6-725c-7003-bc6f-00a05e27298d"
+          ],
+          "evidence": [
+            "Level Up: Tuesday Night Beginner League: Level Up is a fun, low-pressure league for beginner players who know the rules and want more experience playing real games. Over six weeks, participants will receive coaching, compete in friendly matches, meet other newer players, and build confidence on the court."
+          ]
+        },
+        {
+          "event_id": 240552,
+          "name": "Up & Down the River Open Play with Coach Bo: Intermediate/High Intermediate",
+          "emoji": "🏓",
+          "current_icon_id": null,
+          "venue": "Velto",
+          "urls": [
+            "https://velto.podplay.app/community/events/01a05d86-309c-7883-a1ac-f68c095db4f3"
+          ],
+          "evidence": [
+            "Up & Down the River Open Play with Coach Bo: Intermediate/High Intermediate: Intermediate/High Intermediate Up & Down the River combines fast, competitive play with live coaching and the challenge of earning your way onto Coach Bo's court. Players rotate partners and opponents through timed games using standard scoring, while Coach Bo provides feedback on decisions such as recognizing attackable balls, resetting under pressure, and moving as a team."
+          ]
+        },
+        {
+          "event_id": 240567,
+          "name": "Drill, Play, & Stay - Bring Your Own Partner",
+          "emoji": "🏓",
+          "current_icon_id": null,
+          "venue": "Velto",
+          "urls": [
+            "https://velto.podplay.app/community/events/019fece3-0b8d-7006-8149-61d25ce9f552"
+          ],
+          "evidence": [
+            "Drill, Play, & Stay - Bring Your Own Partner: Bring your own partner, both you and your partner have to sign up. Drill with each other, or play with others if they are open to playing."
+          ]
+        },
+        {
+          "event_id": 240574,
+          "name": "DUPR Gated Advanced Open Play 4.0+",
+          "emoji": "🏓",
+          "current_icon_id": null,
+          "venue": "Velto",
+          "urls": [
+            "https://velto.podplay.app/community/events/019feccc-3fc0-7006-80e3-1f86a05e3b16",
+            "https://velto.podplay.app/community/events/019fecd0-0fa6-7006-80f3-d51f316d8223",
+            "https://velto.podplay.app/community/events/01a03fa5-0ac4-7440-ae14-ff3fa2efcd69",
+            "https://velto.podplay.app/community/events/01a06315-fce8-7883-a3ed-7f9f763c8826"
+          ],
+          "evidence": [
+            "DUPR Gated Advanced Open Play 4.0+: A competitive DUPR-gated open play for advanced players rated 4.0 or higher. Expect fast-paced advanced games, competitive rallies and strategic point construction, organized scoring and court rotation, and no coach on court."
+          ]
+        },
+        {
+          "event_id": 240576,
+          "name": "DUPR Logged Adv. Beginner Open Play 2.75+",
+          "emoji": "🏓",
+          "current_icon_id": null,
+          "venue": "Velto",
+          "urls": [
+            "https://velto.podplay.app/community/events/019feccd-7f1a-7229-9bfa-0850462fc944",
+            "https://velto.podplay.app/community/events/01a059c8-8462-7554-94ac-15bdfad2ccaa",
+            "https://velto.podplay.app/community/events/01a05db1-3f90-7883-a1c7-5d09cc62c234"
+          ],
+          "evidence": [
+            "DUPR Logged Adv. Beginner Open Play 2.75+: Early Bird Credit: First 4 players to sign up will receive $5 in club credits after the session starts. A hosted, DUPR-logged round robin for advanced beginners, featuring competitive games, system-generated matchups, and players entering their own scores on iPads. Players should know the rules, keep the ball in play, and be working on shot consistency and court positioning."
+          ]
+        },
+        {
+          "event_id": 240577,
+          "name": "DUPR Logged Intermediate Open Play 3.25+",
+          "emoji": "🏓",
+          "current_icon_id": null,
+          "venue": "Velto",
+          "urls": [
+            "https://velto.podplay.app/community/events/019feccc-eb7f-7006-80e7-7961c69a0f66",
+            "https://velto.podplay.app/community/events/01a059c8-f4b2-7554-94ac-e66508c4e66a",
+            "https://velto.podplay.app/community/events/01a05db0-d947-7883-a1c6-998a30fc3186"
+          ],
+          "evidence": [
+            "DUPR Logged Intermediate Open Play 3.25+: A hosted, DUPR-logged round robin for intermediate players rated 3.25 or higher. Games are logged to DUPR, with players entering their own scores on iPads and system-generated matchups."
+          ]
+        },
+        {
+          "event_id": 240579,
+          "name": "Late Night Drill Or Play",
+          "emoji": "🏓",
+          "current_icon_id": null,
+          "venue": "Velto",
+          "urls": [
+            "https://velto.podplay.app/community/events/019fece0-8bd4-7006-813e-469ff185a24b",
+            "https://velto.podplay.app/community/events/019fece5-babc-7006-8154-a0a0e4227aed"
+          ],
+          "evidence": [
+            "Late Night Drill Or Play: Early Bird Credit: First 4 players to sign up will receive $5 in club credits after the session starts. Bring your own partner for a flexible late-night court session; both partners must register separately. Players can drill with their partner at their own pace or play games with other registered pairs when everyone agrees. No coach is on court, balls are available, and players should bring their paddle."
+          ]
+        },
+        {
+          "event_id": 240583,
+          "name": "Intermediate Open Play 3.25+",
+          "emoji": "🏓",
+          "current_icon_id": null,
+          "venue": "Velto",
+          "urls": [
+            "https://velto.podplay.app/community/events/019fecd0-8eb6-7006-80f6-190636ec0a35",
+            "https://velto.podplay.app/community/events/019fecdc-a672-7006-812c-e3bd1bd4f3a5"
+          ],
+          "evidence": [
+            "Intermediate Open Play 3.25+: Intermediate open play for players rated roughly 3.25–3.75, featuring sustained rallies, thoughtful shot selection, consistent dinking, third-shot drops, court positioning, organized scoring, and court rotation. Games are played to 11, win by 2, with 6 players per court and rotating teams."
+          ]
+        }
+      ],
+      "event_count": 14,
+      "venue_count": 3,
+      "catalog_id_exists": false
+    },
+    {
+      "priority": 2,
+      "concept": "activity-interlocking-bricks",
+      "event_ids": [
+        195453,
+        201616,
+        201619,
+        203511,
+        216914,
+        227973,
+        234082,
+        245110
+      ],
+      "venues": [
+        {
+          "name": "Edenwald Library",
+          "address": "1255 E 233rd St, Bronx, NY 10466, USA"
+        },
+        {
+          "name": "George Bruce Library",
+          "address": "518 W 125th St, New York, NY 10027, USA"
+        },
+        {
+          "name": "Glendale Library",
+          "address": "78-60 73rd Pl, Glendale, NY 11385, USA"
+        },
+        {
+          "name": "Morningside Heights Library",
+          "address": "2900 Broadway, New York, NY 10025, USA"
+        },
+        {
+          "name": "Morrisania Library",
+          "address": "610 E 169th St, Bronx, NY 10456, USA"
+        },
+        {
+          "name": "Newfield Branch Library",
+          "address": "755 Central Ave, Bridgeport, CT 06607"
+        },
+        {
+          "name": "Ridgewood Library",
+          "address": "20-12 Madison St, Ridgewood, NY 11385, USA"
+        },
+        {
+          "name": "Todt Hill-Westerleigh Library",
+          "address": "2550 Victory Blvd, Staten Island, NY 10314, USA"
+        }
+      ],
+      "categories": [
+        "activity"
+      ],
+      "labels": [
+        "Interlocking building bricks"
+      ],
+      "variants": [
+        {
+          "visual": "Two brightly colored toy blocks with visible round studs.",
+          "rationale": "LEGO building is explicit and distinct from masonry.",
+          "existing_alternative": "Existing brick represents construction masonry, not toy interlocking blocks; avoid logo branding."
+        },
+        {
+          "visual": "Two brightly colored toy bricks with oversized round studs.",
+          "rationale": "LEGO building is explicit; visible studs distinguish reusable construction toys from masonry.",
+          "existing_alternative": "Existing brick emoji is a masonry brick without studs; puzzle piece represents a different fitting mechanism."
+        },
+        {
+          "visual": "Two toy blocks with round studs snapped together.",
+          "rationale": "Hands-on LEGO play is central; toy blocks clarify the activity.",
+          "existing_alternative": "Masonry brick and castle emoji do not show interlocking toy construction."
+        },
+        {
+          "visual": "Two studded toy bricks snapped together.",
+          "rationale": "LEGO STEAM building is explicit.",
+          "existing_alternative": "Masonry brick emoji does not convey interlocking toy bricks."
+        },
+        {
+          "visual": "Studded toy bricks snapped together.",
+          "rationale": "LEGO is specifically supplied for the building activity.",
+          "existing_alternative": "Masonry brick does not show the toy material; no brand logo needed."
+        },
+        {
+          "visual": "Two colored studded toy blocks joined together.",
+          "rationale": "LEGO building is explicit in title and tags.",
+          "existing_alternative": "Puzzle-piece and masonry-brick emojis depict different objects."
+        }
+      ],
+      "tags": {
+        "Format": 8,
+        "Family": 8,
+        "Participatory": 8,
+        "Building": 7,
+        "LEGO": 7,
+        "Games": 6,
+        "Open Practice": 6,
+        "Kids": 5,
+        "Education": 5,
+        "Children": 4,
+        "STEAM": 4,
+        "Science": 4,
+        "STEM": 4,
+        "Workshop": 2,
+        "Legos": 1,
+        "Free": 1,
+        "Summer Reading": 1,
+        "Creative Play": 1,
+        "Teen Events": 1
+      },
+      "examples": [
+        {
+          "event_id": 195453,
+          "name": "Summer Reading: Legos!",
+          "emoji": "🧱",
+          "current_icon_id": null,
+          "venue": "Ridgewood Library",
+          "urls": [
+            "https://www.queenslibrary.org/event/015858-0426"
+          ],
+          "evidence": [
+            "Summer Reading: Legos!: Get ready for fun with Legos - bring friends or make new ones!"
+          ]
+        },
+        {
+          "event_id": 201616,
+          "name": "Lego Club",
+          "emoji": "🧱",
+          "current_icon_id": null,
+          "venue": "George Bruce Library",
+          "urls": [
+            "https://www.nypl.org/events/programs/2026/07/07/lego-club",
+            "https://www.nypl.org/events/programs/2026/08/04/lego-club",
+            "https://www.nypl.org/events/programs/2026/09/01/lego-club"
+          ],
+          "evidence": [
+            "Lego Club: Join our LEGO Club and work with other legoers to build a masterpiece. We’ll provide the LEGOs, while the kids provide the imagination. Tags: Kids, Family, Education, Games, Children, Open Practice, Building, Participatory, LEGO, Format."
+          ]
+        },
+        {
+          "event_id": 201619,
+          "name": "Lego Club for Kids",
+          "emoji": "🧱",
+          "current_icon_id": null,
+          "venue": "Todt Hill-Westerleigh Library",
+          "urls": [
+            "https://www.nypl.org/events/programs/2026/07/07/lego-club-kids",
+            "https://www.nypl.org/events/programs/2026/08/04/lego-club-kids",
+            "https://www.nypl.org/events/programs/2026/09/01/lego-club-kids"
+          ],
+          "evidence": [
+            "Lego Club for Kids: This program takes place in person at the Todt Hill-Westerleigh Library. Join us for a fun, exciting way to make Lego creations! Explore new ways to build and work alongside your peers to create a unique Lego masterpiece Tags: Kids, Science, Family, Education, Games, Children, STEM, STEAM, Open Practice, Building, Participatory, LEGO, Format."
+          ]
+        },
+        {
+          "event_id": 203511,
+          "name": "Let's Go Lego",
+          "emoji": "🏰",
+          "current_icon_id": null,
+          "venue": "Morningside Heights Library",
+          "urls": [
+            "https://www.nypl.org/events/programs/2026/07/10/clone-clone-clone-clone-lets-go-lego",
+            "https://www.nypl.org/events/programs/2026/08/07/clone-clone-clone-clone-clone-lets-go-lego",
+            "https://www.nypl.org/events/programs/2026/09/01/lets-go-lego"
+          ],
+          "evidence": [
+            "Let's Go Lego: From towering skyscrapers to galactic spaceships, the only limit is your imagination. Join us for an hour of hands-on LEGO play where kids can build, snap, and create together!"
+          ]
+        },
+        {
+          "event_id": 216914,
+          "name": "Lego Time",
+          "emoji": "🧱",
+          "current_icon_id": null,
+          "venue": "Glendale Library",
+          "urls": [
+            "https://www.queenslibrary.org/event/001365-0726"
+          ],
+          "evidence": [
+            "Lego Time: Visit Whitestone Library and enjoy Lego Time! For children ages 6 and up caregivers welcome. Registration not requi Tags: Kids, Family, Games, Open Practice, Building, Participatory, LEGO, Format."
+          ]
+        },
+        {
+          "event_id": 227973,
+          "name": "Lego Challenge",
+          "emoji": "🧱",
+          "current_icon_id": null,
+          "venue": "Newfield Branch Library",
+          "urls": [
+            "https://bportlibrary.libcal.com/event/16494233",
+            "https://bportlibrary.libcal.com/event/16494234",
+            "https://bportlibrary.libcal.com/event/16494235"
+          ],
+          "evidence": [
+            "Lego Challenge: Kids ages 6–12 are invited to build, design, and experiment with creative STEAM challenges using LEGO bricks."
+          ]
+        },
+        {
+          "event_id": 234082,
+          "name": "STEAM: Building",
+          "emoji": "🧱",
+          "current_icon_id": null,
+          "venue": "Edenwald Library",
+          "urls": [
+            "https://www.nypl.org/events/programs/2026/09/01/steam-building",
+            "https://www.nypl.org/events/programs/2026/09/08/steam-building"
+          ],
+          "evidence": [
+            "STEAM: Building: Join us for an afternoon of fun and building! Come build as a team or work on your own creation. We'll provide the LEGOs and other building materials!"
+          ]
+        },
+        {
+          "event_id": 245110,
+          "name": "Steam: Lego Hour",
+          "emoji": "🧩",
+          "current_icon_id": null,
+          "venue": "Morrisania Library",
+          "urls": [
+            "https://www.nypl.org/events/programs/2026/09/08/steam-lego-hour"
+          ],
+          "evidence": [
+            "Steam: Lego Hour: This event will take place in person at the Morrisania Library. Join us for a hands-on building experience where creativity meets critical thinking!"
+          ]
+        }
+      ],
+      "event_count": 8,
+      "venue_count": 8,
+      "catalog_id_exists": false
+    },
+    {
+      "priority": 3,
+      "concept": "equipment-dj-decks",
+      "event_ids": [
+        97902,
+        102886,
+        202388,
+        210251,
+        214595,
+        244891,
+        245392,
+        248465
+      ],
+      "venues": [
+        {
+          "name": "Honey's",
+          "address": "93 Scott Ave, Brooklyn, NY 11237, USA"
+        },
+        {
+          "name": "Nublu 151",
+          "address": "151 Loisaida Ave, New York, NY 10009, USA"
+        },
+        {
+          "name": "Otto's Shrunken Head",
+          "address": "538 E 14th St, New York, NY 10009, USA"
+        },
+        {
+          "name": "Public Hotel",
+          "address": "215 Chrystie St, New York, NY 10002, USA"
+        },
+        {
+          "name": "Shrine World Music Venue",
+          "address": "2271 Adam Clayton Powell Jr Blvd, New York, NY 10030, USA"
+        },
+        {
+          "name": "Silo",
+          "address": "90 Scott Ave, Brooklyn, NY 11237, USA"
+        },
+        {
+          "name": "The Rose",
+          "address": "160 W 25th St, New York, NY 10001, USA"
+        }
+      ],
+      "categories": [
+        "equipment"
+      ],
+      "labels": [
+        "DJ decks",
+        "DJ turntable"
+      ],
+      "variants": [
+        {
+          "visual": "A vinyl platter with tonearm and one large fader.",
+          "rationale": "The defining activity is selecting and mixing recorded music; a platter separates DJ sets from listening.",
+          "existing_alternative": "Headphones and mirror ball already cover listening and nightlife but omit mixing equipment."
+        },
+        {
+          "visual": "A vinyl platter with tonearm and one fader.",
+          "rationale": "Recorded-music mixing is central and a deck distinguishes it from passive listening.",
+          "existing_alternative": "Headphones and mirror ball omit the mixing equipment; no specific deck model is implied."
+        },
+        {
+          "visual": "Two simplified jog wheels flanking a central mixer fader.",
+          "rationale": "Open decks and live DJ mixing have a defining equipment silhouette beyond listening.",
+          "existing_alternative": "Headphones show listening; no turntables/controller in Noto catalog."
+        }
+      ],
+      "tags": {
+        "Music": 8,
+        "Format": 8,
+        "Nightlife": 8,
+        "DJ": 7,
+        "Club Night": 6,
+        "Social": 6,
+        "Open Decks": 3,
+        "Clubbing": 2,
+        "Dance": 2,
+        "Electronic Music": 2,
+        "Participatory": 2,
+        "Free": 2,
+        "Open Practice": 2,
+        "Community": 2,
+        "Punk Rock": 1,
+        "Rock": 1,
+        "Goth": 1,
+        "Hip Hop": 1,
+        "Local D Js": 1,
+        "Live Music": 1,
+        "Techno": 1,
+        "House Music": 1,
+        "Party": 1,
+        "Vinyl": 1,
+        "Digital DJ": 1
+      },
+      "examples": [
+        {
+          "event_id": 97902,
+          "name": "Dark Waters",
+          "emoji": "🌊",
+          "current_icon_id": null,
+          "venue": "Otto's Shrunken Head",
+          "urls": [
+            "https://ottosshrunkenhead.com/pages/events.php"
+          ],
+          "evidence": [
+            "Dark Waters: Monthly DJ night with DJ Paradox and DJ Pitter Pat spinning your favorite goth, punk, and rock from the 80's onward. Tags: Music, Rock, Nightlife, Clubbing, Punk Rock, Club Night, Goth, Format, Social."
+          ]
+        },
+        {
+          "event_id": 102886,
+          "name": "DJ Awesome",
+          "emoji": "🎧",
+          "current_icon_id": null,
+          "venue": "Shrine World Music Venue",
+          "urls": [
+            "https://ra.co/events/2499486",
+            "https://ra.co/events/2499489",
+            "https://ra.co/events/2499490",
+            "https://ra.co/events/2499492",
+            "https://ra.co/events/2499494",
+            "https://ra.co/events/2499495",
+            "https://ra.co/events/2499496",
+            "https://ra.co/events/2499497",
+            "https://ra.co/events/2499498",
+            "https://weepinandawailin.com/"
+          ],
+          "evidence": [
+            "DJ Awesome: DJ mixing old school with new school, ranging from R&B, Hip Hop, Salsa, African music, Reggae, Reggaeton and more. Tags: Music, Dance, Hip Hop, DJ, Nightlife, Club Night, Format, Social."
+          ]
+        },
+        {
+          "event_id": 202388,
+          "name": "Off The Record at PUBLIC Hotel",
+          "emoji": "🏨",
+          "current_icon_id": null,
+          "venue": "Public Hotel",
+          "urls": [
+            "https://ra.co/events/2499420",
+            "https://ra.co/events/2506609",
+            "https://ra.co/events/2506617",
+            "https://ra.co/events/2506784",
+            "https://ra.co/events/2506790",
+            "https://ra.co/events/2506799",
+            "https://ra.co/events/2506802",
+            "https://ra.co/events/2508375",
+            "https://ra.co/events/2508377",
+            "https://ra.co/events/2508380"
+          ],
+          "evidence": [
+            "Off The Record at PUBLIC Hotel: Off The Record is the heart of New York City’s electronic nightlife -- showcasing the city’s top local DJs. The party unfolds inside PUBLIC Hotel’s iconic ART-SPACE across three rooms, each with its Tags: Music, DJ, Nightlife, Electronic Music, Club Night, Local D Js, Format, Social."
+          ]
+        },
+        {
+          "event_id": 210251,
+          "name": "Producer Mondays with Ray Angry & The Council of Goldfinger",
+          "emoji": "🎧",
+          "current_icon_id": null,
+          "venue": "Nublu 151",
+          "urls": [
+            "https://shotgun.live/events/producer-mondays-3",
+            "https://shotgun.live/events/producer-mondays-4",
+            "https://shotgun.live/events/producer-mondays-5",
+            "https://shotgun.live/events/producer-mondays-6",
+            "https://shotgun.live/events/producer-mondays-7"
+          ],
+          "evidence": [
+            "Producer Mondays with Ray Angry & The Council of Goldfinger: Producer Mondays with Ray Angry and The Council of Goldfinger, spinning Frei Speech and Co. Tags: Music, DJ, Nightlife, Clubbing, Club Night, Live Music, Format, Social."
+          ]
+        },
+        {
+          "event_id": 214595,
+          "name": "Open Decks w/ Steen & Club Massive",
+          "emoji": "🎧",
+          "current_icon_id": null,
+          "venue": "Silo",
+          "urls": [
+            "https://link.dice.fm/P1693e701122",
+            "https://ra.co/events/2508328"
+          ],
+          "evidence": [
+            "Open Decks w/ Steen & Club Massive: Hosted by DJ and musician Steen, Open Decks is a creative and fun space where DJs can hang and share their house and techno music live. Hear favorite or original tracks on Silo's front room sound system, a custom 15,000 watt Danley powerhouse."
+          ]
+        },
+        {
+          "event_id": 244891,
+          "name": "Booty After Party w/ D.J. Spanísh FLY & DJ SANNA",
+          "emoji": "💃",
+          "current_icon_id": null,
+          "venue": "Nublu 151",
+          "urls": [
+            "https://shotgun.live/events/booty-after-party-w-d-j-spanish-fly-dj-sanna"
+          ],
+          "evidence": [
+            "Booty After Party w/ D.J. Spanísh FLY & DJ SANNA: No description available. Tags: Music, Dance, Party, DJ, Nightlife, Club Night, Format, Social."
+          ]
+        },
+        {
+          "event_id": 245392,
+          "name": "Extra Spicy Please Open Decks",
+          "emoji": "🌶️",
+          "current_icon_id": null,
+          "venue": "Honey's",
+          "urls": [
+            "https://ra.co/events/2527799"
+          ],
+          "evidence": [
+            "Extra Spicy Please Open Decks: @finding.your.niche presents EXTRA SPICY PLEASE Open Decks (vinyl and/or digital) is back @honeysbrooklyn on Tuesday, September 8, from 6 pm-12 am. We'll have 2 stages this time: the rooftop primarily for digital and winery primarily for vinyl DJs. Tags: Music, Free, DJ, Nightlife, Club Night, Vinyl, Open Decks, Digital DJ, Format, Social."
+          ]
+        },
+        {
+          "event_id": 248465,
+          "name": "Open Decks",
+          "emoji": "🎧",
+          "current_icon_id": null,
+          "venue": "The Rose",
+          "urls": [
+            "https://www.instagram.com/therosenyc/"
+          ],
+          "evidence": [
+            "Open Decks: MatchMyFreq Society presents the next open decks event at The Rose."
+          ]
+        }
+      ],
+      "event_count": 8,
+      "venue_count": 7,
+      "catalog_id_exists": false
+    },
+    {
+      "priority": 4,
+      "concept": "craft-crochet",
+      "event_ids": [
+        116043,
+        187651,
+        195401,
+        201502,
+        206610,
+        225829,
+        227357,
+        243900
+      ],
+      "venues": [
+        {
+          "name": "Fort Hamilton Library",
+          "address": "9424 4th Ave, Brooklyn, NY 11209, USA"
+        },
+        {
+          "name": "Hunters Point Library",
+          "address": "47-40 Center Blvd, Long Island City, NY 11109, USA"
+        },
+        {
+          "name": "Manville Branch Library",
+          "address": "100 S 10th Ave, Manville, NJ 08835"
+        },
+        {
+          "name": "Mosholu Library",
+          "address": "285 E 205th St, Bronx, NY 10467, USA"
+        },
+        {
+          "name": "Priscilla Gardner Main Library",
+          "address": "472 Jersey Ave, Jersey City, NJ 07302"
+        },
+        {
+          "name": "St. Agnes Library",
+          "address": "444 Amsterdam Ave, New York, NY 10024, USA"
+        },
+        {
+          "name": "White Plains Public Library",
+          "address": "100 Martine Ave, White Plains, NY 10601, USA"
+        },
+        {
+          "name": "Windsor Terrace Library",
+          "address": "160 E 5th St, Brooklyn, NY 11218, USA"
+        }
+      ],
+      "categories": [
+        "craft"
+      ],
+      "labels": [
+        "Crochet"
+      ],
+      "variants": [
+        {
+          "visual": "Hook drawing one loop from a small yarn swatch.",
+          "rationale": "Crochet is explicit and a hook distinguishes it from knitting.",
+          "existing_alternative": "Yarn emoji covers fiber but lacks tool and technique."
+        },
+        {
+          "visual": "Hook lifting a yarn loop from a swatch.",
+          "rationale": "Explicit crochet participation merits technique-specific tool.",
+          "existing_alternative": "Yarn covers fiber but cannot distinguish crochet from knitting."
+        },
+        {
+          "visual": "Single hook pulling a loop through a small yarn swatch.",
+          "rationale": "Provided hooks and crochet practice make technique central.",
+          "existing_alternative": "Yarn does not distinguish crochet from knitting."
+        },
+        {
+          "visual": "A single hooked needle pulling a loop from a small swatch.",
+          "rationale": "Crochet is the central named technique; hook separates it from knitting.",
+          "existing_alternative": "Yarn already works broadly but omits the distinctive single hook."
+        },
+        {
+          "visual": "Hook pulling one loop through a small crocheted swatch beside yarn.",
+          "rationale": "Explicit crochet instruction benefits from a hook that distinguishes it from knitting.",
+          "existing_alternative": "Yarn is useful but shared across fiber arts; machine-sewing depicts a different technique."
+        },
+        {
+          "visual": "A hook lifting a loop from a yarn swatch.",
+          "rationale": "Children learn explicit crochet technique.",
+          "existing_alternative": "Yarn alone lacks hook and differs from paired knitting needles."
+        }
+      ],
+      "tags": {
+        "Fiber Arts": 8,
+        "Format": 8,
+        "Crafts": 8,
+        "Art": 8,
+        "Participatory": 8,
+        "Crochet": 8,
+        "Open Practice": 5,
+        "Community": 5,
+        "Knitting": 4,
+        "Adults": 3,
+        "Family": 3,
+        "Workshop": 3,
+        "Free": 2,
+        "Education": 2,
+        "Conversation": 2,
+        "Beginner Friendly": 2,
+        "Kids": 2,
+        "Crafting": 1,
+        "Adult Education": 1,
+        "Youth": 1,
+        "Registration Required": 1
+      },
+      "examples": [
+        {
+          "event_id": 116043,
+          "name": "Stitch At the Library: Crochet & Knit Fun",
+          "emoji": "🧶",
+          "current_icon_id": null,
+          "venue": "St. Agnes Library",
+          "urls": [
+            "https://www.meetup.com/new-york-city-crochet-guild/events/315004568/",
+            "https://www.meetup.com/new-york-city-crochet-guild/events/315261459/",
+            "https://www.meetup.com/new-york-city-crochet-guild/events/315599420/",
+            "https://www.meetup.com/new-york-city-crochet-guild/events/315679045/",
+            "https://www.meetup.com/new-york-city-crochet-guild/events/315789794/",
+            "https://www.meetup.com/new-york-city-crochet-guild/events/316343477/",
+            "https://www.nypl.org/events/programs/2026/08/25/crochet-and-knitting-meetup",
+            "https://www.nypl.org/events/programs/2026/09/08/crochet-and-knitting-meetup"
+          ],
+          "evidence": [
+            "Stitch At the Library: Crochet & Knit Fun: Meet fellow crafters on the 2nd and 4th Tuesday of the month, with assistance from the NYC Crochet Guild. Bring your own yarn, needles, and supplies for a relaxing morning of crafting and sharing creative ideas in a cozy library setting."
+          ]
+        },
+        {
+          "event_id": 187651,
+          "name": "knitting and crochet club",
+          "emoji": "🧶",
+          "current_icon_id": null,
+          "venue": "Fort Hamilton Library",
+          "urls": [
+            "https://www.bklynlibrary.org/node/835064",
+            "https://www.bklynlibrary.org/node/835065",
+            "https://www.bklynlibrary.org/node/835066",
+            "https://www.bklynlibrary.org/node/835067",
+            "https://www.bklynlibrary.org/node/835068",
+            "https://www.bklynlibrary.org/node/835069",
+            "https://www.bklynlibrary.org/node/835070",
+            "https://www.bklynlibrary.org/node/835071",
+            "https://www.bklynlibrary.org/node/835072"
+          ],
+          "evidence": [
+            "knitting and crochet club: Bring your friends, come to join our knitting and crochet club."
+          ]
+        },
+        {
+          "event_id": 195401,
+          "name": "Keep Calm and Carry Yarn: Adult Knitting and Crochet Club",
+          "emoji": "🧣",
+          "current_icon_id": null,
+          "venue": "Hunters Point Library",
+          "urls": [
+            "https://www.queenslibrary.org/event/017904-0526",
+            "https://www.queenslibrary.org/event/020192-0626"
+          ],
+          "evidence": [
+            "Keep Calm and Carry Yarn: Adult Knitting and Crochet Club: Join us for an afternoon of knitting crochet and conversation. Yarn needles and hooks are available to borrow."
+          ]
+        },
+        {
+          "event_id": 201502,
+          "name": "Crochet and Conversation Club",
+          "emoji": "🧶",
+          "current_icon_id": null,
+          "venue": "Mosholu Library",
+          "urls": [
+            "https://www.nypl.org/events/programs/2026/07/07/crochet-and-conversation-club",
+            "https://www.nypl.org/events/programs/2026/08/11/crochet-and-conversation-club",
+            "https://www.nypl.org/events/programs/2026/09/01/crochet-and-conversation-club"
+          ],
+          "evidence": [
+            "Crochet and Conversation Club: This event will take place in person at Mosholu Library. Always wanted to learn how to crochet? Already a crochet master and want a friendly space to work on your projects? Tags: Community, Art, Fiber Arts, Crafts, Crochet, Open Practice, Participatory, Adults, Conversation, Format."
+          ]
+        },
+        {
+          "event_id": 206610,
+          "name": "Beginner Adult Crochet",
+          "emoji": "🧶",
+          "current_icon_id": null,
+          "venue": "Windsor Terrace Library",
+          "urls": [
+            "https://www.bklynlibrary.org/node/835624",
+            "https://www.bklynlibrary.org/node/835632",
+            "https://www.bklynlibrary.org/node/840771",
+            "https://www.bklynlibrary.org/node/840772"
+          ],
+          "evidence": [
+            "Beginner Adult Crochet: Are you new to the world of crochet? Need help mastering the basics? Join us for a beginner-friendly crochet workshop. Please ask at the front desk to sign up."
+          ]
+        },
+        {
+          "event_id": 225829,
+          "name": "Crochet Club for Kids (8 and up)",
+          "emoji": "🧶",
+          "current_icon_id": null,
+          "venue": "Priscilla Gardner Main Library",
+          "urls": [
+            "https://jclibrary.libcal.com/event/17322279",
+            "https://jclibrary.libcal.com/event/17322280"
+          ],
+          "evidence": [
+            "Crochet Club for Kids (8 and up): Come hang out, play with yarn, and up your knitting and crochet game with Ms. Julie and Ms. Aleks!"
+          ]
+        },
+        {
+          "event_id": 227357,
+          "name": "Kids' Crochet Club",
+          "emoji": "🧶",
+          "current_icon_id": null,
+          "venue": "Manville Branch Library",
+          "urls": [
+            "https://sclsnj.libnet.info/event/17009333",
+            "https://sclsnj.libnet.info/event/17209159",
+            "https://sclsnj.libnet.info/event/17209177"
+          ],
+          "evidence": [
+            "Kids' Crochet Club: Learn to crochet with fun, beginner-friendly projects. Registration is encouraged but not required. Materials will be provided. All skill levels welcome!"
+          ]
+        },
+        {
+          "event_id": 243900,
+          "name": "Learn to Crochet - Registration required",
+          "emoji": "🧶",
+          "current_icon_id": null,
+          "venue": "White Plains Public Library",
+          "urls": [
+            "https://calendar.whiteplainslibrary.org/event/17158604"
+          ],
+          "evidence": [
+            "Learn to Crochet - Registration required: Join us to learn the basics of crochet. Registration is required."
+          ]
+        }
+      ],
+      "event_count": 8,
+      "venue_count": 8,
+      "catalog_id_exists": false
+    },
+    {
+      "priority": 5,
+      "concept": "instrument-trombone",
+      "event_ids": [
+        242792,
+        248152
+      ],
+      "venues": [
+        {
+          "name": "Grinton I. Will Library",
+          "address": "1500 Central Park Ave, Yonkers, NY 10710, USA"
+        },
+        {
+          "name": "Smalls Jazz Club",
+          "address": "183 W 10th St, New York, NY 10014, USA"
+        }
+      ],
+      "categories": [
+        "instrument"
+      ],
+      "labels": [
+        "Trombone"
+      ],
+      "variants": [
+        {
+          "visual": "Brass bell with a long U-shaped slide extending forward.",
+          "rationale": "Frank Lacy explicitly plays trombone as bandleader.",
+          "existing_alternative": "Trumpet fallback depicts valves and shorter tubing instead of the defining slide."
+        },
+        {
+          "visual": "Long slide extending beyond a curved brass tube and flared bell.",
+          "rationale": "Trombones are explicitly one of the orchestra sections; slide silhouette offers an instrument distinction beyond trumpet.",
+          "existing_alternative": "Noto trumpet lacks the characteristic extended slide; no trombone in current Noto catalog."
+        }
+      ],
+      "tags": {
+        "Performance": 2,
+        "Music": 2,
+        "Format": 2,
+        "Concert": 2,
+        "Jazz": 2,
+        "Quartet": 1,
+        "Live Music": 1,
+        "Free": 1
+      },
+      "examples": [
+        {
+          "event_id": 242792,
+          "name": "Frank Lacy Quartet",
+          "emoji": "🎺",
+          "current_icon_id": null,
+          "venue": "Smalls Jazz Club",
+          "urls": [
+            "https://www.smallslive.com/events/34018-frank-lacy-quartet/"
+          ],
+          "evidence": [
+            "Frank Lacy Quartet: Frank Lacy performs trombone with Jon Elbaz on piano, James Robbins on bass, and Corey Garcia on drums. The quartet has sets at 6:00 PM and 7:30 PM."
+          ]
+        },
+        {
+          "event_id": 248152,
+          "name": "Library Jazz Band Rehearsal",
+          "emoji": "🎷",
+          "current_icon_id": null,
+          "venue": "Grinton I. Will Library",
+          "urls": [
+            "https://www.ypl.org/event/copy-jazz-band-rehearsal-118011"
+          ],
+          "evidence": [
+            "Library Jazz Band Rehearsal: The 17-piece Library Jazz Band rehearses, and visitors are invited to listen. The orchestra includes saxophones, trumpets, trombones, and a rhythm section."
+          ]
+        }
+      ],
+      "event_count": 2,
+      "venue_count": 2,
+      "catalog_id_exists": false
+    }
+  ],
+  "specific_followups": [
+    {
+      "concept": "instrument-steelpan",
+      "event_ids": [
+        234865
+      ],
+      "venues": [
+        {
+          "name": "Brooklyn Public Library (Central Library)",
+          "address": "10 Grand Army Plz, Brooklyn, NY 11238, USA"
+        }
+      ],
+      "categories": [
+        "instrument"
+      ],
+      "labels": [
+        "Steelpan"
+      ],
+      "variants": [
+        {
+          "visual": "Shallow concave steel pan with a few broad note fields and two short mallets.",
+          "rationale": "Steel pan is explicitly featured; its pitched segmented bowl differs from a snare or long drum.",
+          "existing_alternative": "Noto drum has a cylindrical skin head; oil drum depicts container rather than tuned instrument."
+        }
+      ],
+      "tags": {
+        "Performance": 1,
+        "World Music": 1,
+        "Music": 1,
+        "Format": 1,
+        "Concert": 1,
+        "Family": 1,
+        "Steel Pan": 1,
+        "Caribbean Music": 1,
+        "Community": 1
+      },
+      "examples": [
+        {
+          "event_id": 234865,
+          "name": "Stomp, Clap and Sing with Patrick Davis",
+          "emoji": "🥁",
+          "current_icon_id": null,
+          "venue": "Brooklyn Public Library (Central Library)",
+          "urls": [
+            "https://www.bklynlibrary.org/node/842089"
+          ],
+          "evidence": [
+            "Stomp, Clap and Sing with Patrick Davis: Join us for an unforgettable musical experience featuring the vibrant sounds of the steel pan! This captivating instrument, born in the Caribbean, brings a unique blend of rhythm, melody, and harmony"
+          ]
+        }
+      ],
+      "event_count": 1,
+      "venue_count": 1,
+      "catalog_id_exists": false
+    },
+    {
+      "concept": "instrument-guzheng",
+      "event_ids": [
+        222339
+      ],
+      "venues": [
+        {
+          "name": "Flushing Library",
+          "address": "41-17 Main St, Flushing, NY 11355, USA"
+        }
+      ],
+      "categories": [
+        "instrument"
+      ],
+      "labels": [
+        "Guzheng"
+      ],
+      "variants": [
+        {
+          "visual": "Long low curved zither body with parallel strings and a few prominent movable bridges.",
+          "rationale": "The named interactive guzheng performance/workshop supports a distinctive plucked-zither silhouette.",
+          "existing_alternative": "No guzheng in Noto; music notes lose instrument identity and harp/guitar silhouettes would be structurally misleading."
+        }
+      ],
+      "tags": {
+        "Chinese Culture": 1,
+        "Cultural Heritage": 1,
+        "Music": 1,
+        "Format": 1,
+        "Education": 1,
+        "Guzheng": 1,
+        "Art": 1,
+        "Workshop": 1,
+        "Participatory": 1,
+        "Community": 1
+      },
+      "examples": [
+        {
+          "event_id": 222339,
+          "name": "Discover the Art of Guzheng: Interactive Guzheng Performance & Workshop",
+          "emoji": "🎶",
+          "current_icon_id": null,
+          "venue": "Flushing Library",
+          "urls": [
+            "https://www.queenslibrary.org/event/002600-0826"
+          ],
+          "evidence": [
+            "Discover the Art of Guzheng: Interactive Guzheng Performance & Workshop: Join us for an immersive cultural experience exploring the ancient Chinese Guzheng. This program features live musi"
+          ]
+        }
+      ],
+      "event_count": 1,
+      "venue_count": 1,
+      "catalog_id_exists": false
+    },
+    {
+      "concept": "instrument-kalimba",
+      "event_ids": [
+        130290
+      ],
+      "venues": [
+        {
+          "name": "Greeley Square Park",
+          "address": "Greeley Square Park, Broadway & 6th Ave, New York, NY 10001, USA"
+        }
+      ],
+      "categories": [
+        "instrument"
+      ],
+      "labels": [
+        "Kalimba"
+      ],
+      "variants": [
+        {
+          "visual": "Thumb piano with rounded wooden soundbox and a fan of metal tines.",
+          "rationale": "Explicit kalimba orchestra makes the distinctive tine instrument useful even within an open folk program.",
+          "existing_alternative": "No kalimba in Noto; keyboard or notes cannot show its handheld thumb-plucked form."
+        }
+      ],
+      "tags": {
+        "Music": 1,
+        "Format": 1,
+        "Outdoor": 1,
+        "Free": 1,
+        "Folk Music": 1,
+        "Participatory": 1,
+        "Open Practice": 1,
+        "Community": 1
+      },
+      "examples": [
+        {
+          "event_id": 130290,
+          "name": "Folk Jams in Greeley Square Park",
+          "emoji": "🎶",
+          "current_icon_id": null,
+          "venue": "Greeley Square Park",
+          "urls": [
+            "https://www.nyc.gov/main/events/?permalinkName=folk-jams-in-greeley-square-park&id=1061556&sequence=1",
+            "https://www.nyc.gov/main/events/?permalinkName=folk-jams-in-greeley-square-park&id=1126896&sequence=1",
+            "https://www.nyc.gov/main/events/?permalinkName=folk-jams-in-greeley-square-park&id=1201496&sequence=1",
+            "https://www.nycgovparks.org/events/2026/08/11/folk-jams-in-greeley-square",
+            "https://www.nycgovparks.org/events/2026/08/25/folk-jams-in-greeley-square",
+            "https://www.nycgovparks.org/events/2026/09/08/folk-jams-in-greeley-square"
+          ],
+          "evidence": [
+            "Folk Jams in Greeley Square Park: Join others for bluegrass jams, the kalimba orchestra, or to lend your voice to an impromptu performance."
+          ]
+        }
+      ],
+      "event_count": 1,
+      "venue_count": 1,
+      "catalog_id_exists": false
+    },
+    {
+      "concept": "instrument-double-bass",
+      "event_ids": [
+        219076,
+        229254
+      ],
+      "venues": [
+        {
+          "name": "Cassette",
+          "address": "68-38 Forest Ave, Flushing, NY 11385, USA"
+        },
+        {
+          "name": "Downtown Music Gallery",
+          "address": "13 Monroe St, New York, NY 10002, USA"
+        }
+      ],
+      "categories": [
+        "instrument"
+      ],
+      "labels": [
+        "Double bass",
+        "Double bass / contrabass"
+      ],
+      "variants": [
+        {
+          "visual": "Tall upright bass body with long neck and endpin, one plucking hand cue.",
+          "rationale": "Port Ross explicitly lists doublebass among its live instruments.",
+          "existing_alternative": "Noto violin is small shoulder-held bowed string and lacks upright-bass proportions; guitar is different."
+        },
+        {
+          "visual": "Tall sloped-shoulder upright bass body with long fingerboard and endpin.",
+          "rationale": "The program explicitly bills contrabass in the opening trio; upright-bass silhouette adds real instrument detail.",
+          "existing_alternative": "Existing violin is smaller with different proportions; guitar does not represent bowed/plucked upright bass."
+        }
+      ],
+      "tags": {
+        "Performance": 2,
+        "Music": 2,
+        "Format": 2,
+        "Concert": 2,
+        "21+": 1,
+        "Art": 1,
+        "Folk Music": 1,
+        "Indie": 1,
+        "Indie Folk": 1,
+        "Live Music": 1,
+        "Violin": 1,
+        "In Store Performance": 1,
+        "Baritone Sax": 1
+      },
+      "examples": [
+        {
+          "event_id": 219076,
+          "name": "Port Ross, Dan Carr, Zach Zaitlin, Kai B",
+          "emoji": "🎵",
+          "current_icon_id": null,
+          "venue": "Cassette",
+          "urls": [
+            "https://dice.fm/event/6a7a2392a77a9c0001b2dee5",
+            "https://dice.fm/event/k659e9-port-ross-dan-carr-zach-zaitlin-kai-b-8th-sep-cassette-new-york-city-tickets"
+          ],
+          "evidence": [
+            "Port Ross, Dan Carr, Zach Zaitlin, Kai B: Port Ross are an Indie-folk recording project based in Brooklyn, NY. Their live show is composed of guitar, accordion, violin, and doublebass. For fans of Elliott Smith, Neutral Milk Hotel, The Microphones, and Sufjan Stevens."
+          ]
+        },
+        {
+          "event_id": 229254,
+          "name": "Marc Edwards Presents: James McKain / Evan Palmer / Kevin Shea; Stan Zenkov / Sunjay Jayaram / Paul Sakai; Marc Edwards / Gian Perez / Nathan Chamberlain / Dylan Delgiudice / Takuma Kanaiwa / Ayumi Ishito",
+          "emoji": "🎼",
+          "current_icon_id": null,
+          "venue": "Downtown Music Gallery",
+          "urls": [
+            "https://downtownmusicgallery.com/shows.php"
+          ],
+          "evidence": [
+            "Marc Edwards Presents: James McKain / Evan Palmer / Kevin Shea; Stan Zenkov / Sunjay Jayaram / Paul Sakai; Marc Edwards / Gian Perez / Nathan Chamberlain / Dylan Delgiudice / Takuma Kanaiwa / Ayumi Ishito: Tuesday, September 8th: MARC EDWARDS Presents: 6:30: JAMES McKAIN - Baritone Sax / EVAN PALMER - Contrabass / KEVIN SHEA - Drums 7:30: STAN ZENKOV - Reeds / SUNJAY JAYARAM - Violin / PAUL SAKAI - Drums 8:30: MARC EDWARDS - Drums / GIAN PEREZ, NATHAN CHAMBERLAIN, DYLAN DELGIUDICE, TAKUMA KANAIWA - Guitars / AYUMI ISHITO - Tenor Sax Tags: Music, Concert, Violin, Baritone Sax, In Store Performance, Format, Performance."
+          ]
+        }
+      ],
+      "event_count": 2,
+      "venue_count": 2,
+      "catalog_id_exists": false
+    },
+    {
+      "concept": "instrument-cello",
+      "event_ids": [
+        226386,
+        232262
+      ],
+      "venues": [
+        {
+          "name": "LeFrak Center at Lakeside",
+          "address": "171 East Dr, Brooklyn, NY 11225, USA"
+        },
+        {
+          "name": "Prospect Park",
+          "address": "Prospect Park, Brooklyn, NY, USA"
+        }
+      ],
+      "categories": [
+        "instrument"
+      ],
+      "labels": [
+        "Cello"
+      ],
+      "variants": [
+        {
+          "visual": "Tall bowed-string body with extended endpin and diagonal bow.",
+          "rationale": "Explicit featured live cello music supports instrument discovery while preserving the theater assignment; endpin and proportions distinguish cello.",
+          "existing_alternative": "Noto violin represents another bowed-string instrument and lacks cello scale/endpin; music notes lose instrument identity."
+        },
+        {
+          "visual": "An upright cello with broad waist, endpin and one diagonal bow.",
+          "rationale": "Original live cello music is an explicitly advertised distinguishing part of this theater production.",
+          "existing_alternative": "Violin is a related but differently proportioned instrument; endpin and upright stance could communicate cello at 24px."
+        }
+      ],
+      "tags": {
+        "Performance": 2,
+        "Moliere": 2,
+        "Format": 2,
+        "Outdoor": 2,
+        "Free": 2,
+        "Theater": 2,
+        "Theater Show": 2,
+        "Don Juan": 1,
+        "Music": 1,
+        "Live Music": 1
+      },
+      "examples": [
+        {
+          "event_id": 226386,
+          "name": "Molière in the Park: Don Juan",
+          "emoji": "🎭",
+          "current_icon_id": null,
+          "venue": "Prospect Park",
+          "urls": [
+            "https://www.prospectpark.org/event/moliere-in-the-park-don-juan/2026-09-05/"
+          ],
+          "evidence": [
+            "Molière in the Park: Don Juan: Join Molière in the Park, in partnership with Prospect Park Alliance, for a free production of Molière’s most subversive masterpiece, Don Juan. Following the infamous seducer over a single day of defiance and betrayal, this thrilling production blends comedy, tragedy, and the supernatural. Translated by Stephen Wadsworth and directed by Drama Desk nominee Lucie Tiberghien, featuring live original cello music by Drama Desk nominee Johnathan Moore."
+          ]
+        },
+        {
+          "event_id": 232262,
+          "name": "Molière in the Park presents: Don Juan",
+          "emoji": "🎭",
+          "current_icon_id": null,
+          "venue": "LeFrak Center at Lakeside",
+          "urls": [
+            "https://lakeside.prospectpark.org/master-schedule/",
+            "https://www.instagram.com/lakesideprospectpark/",
+            "https://www.nyc.gov/main/events/?permalinkName=moliere-in-the-park-presents-don-juan&id=1230716&sequence=1",
+            "https://www.nycgovparks.org/events/2026/09/05/molire-in-the-park-presents-don-juan",
+            "https://www.nycgovparks.org/events/2026/09/06/molire-in-the-park-presents-don-juan1"
+          ],
+          "evidence": [
+            "Molière in the Park presents: Don Juan: Molière in the Park presents a full-scale production of DON JUAN at LeFrak Center at Lakeside. The free performances feature live original cello music by Drama Desk-nominated composer Johnathan Moore, and are described as blending comedy, tragedy, and the supernatural. Tags: Music, Theater, Free, Outdoor, Moliere, Live Music, Format, Theater Show, Performance."
+          ]
+        }
+      ],
+      "event_count": 2,
+      "venue_count": 2,
+      "catalog_id_exists": false
+    },
+    {
+      "concept": "instrument-acoustic-guitar",
+      "event_ids": [
+        83580,
+        243447
+      ],
+      "venues": [
+        {
+          "name": "Half Hollow Hills Community Library Melville Branch",
+          "address": "510 Sweet Hollow Rd, Melville, NY 11747"
+        },
+        {
+          "name": "Terra Blues",
+          "address": "149 Bleecker St, New York, NY 10012"
+        }
+      ],
+      "categories": [
+        "instrument"
+      ],
+      "labels": [
+        "Acoustic guitar",
+        "Acoustic/classical guitar"
+      ],
+      "variants": [
+        {
+          "visual": "Rounded hollow guitar body with a prominent sound hole and short fretted neck.",
+          "rationale": "Acoustic performance deserves a visibly hollow-body option.",
+          "existing_alternative": "Noto guitar is an electric guitar; no separate acoustic option in catalog."
+        },
+        {
+          "visual": "Rounded wooden guitar body with central sound hole and short headstock.",
+          "rationale": "Classical guitar performances explicitly identify acoustic classical instrument tradition.",
+          "existing_alternative": "The bundled Noto guitar SVG has a red electric body with pickguard and pickups; classical acoustic guitar needs the hollow wooden body and central sound hole."
+        }
+      ],
+      "tags": {
+        "Performance": 2,
+        "Music": 2,
+        "Format": 2,
+        "Blues": 1,
+        "Theater Show": 1,
+        "Live Music": 1,
+        "Classical Music": 1,
+        "Adults": 1,
+        "Concert": 1,
+        "Guitar": 1
+      },
+      "examples": [
+        {
+          "event_id": 83580,
+          "name": "SaRon Crenshaw Acoustic",
+          "emoji": "🎸",
+          "current_icon_id": null,
+          "venue": "Terra Blues",
+          "urls": [
+            "https://www.terrablues.com/events/cganm6lwdk2sddl-k656x-54f7s-9xt8d-5yjpl-5nn22-8fyd5-28632-xymka-83sw2-tcbaj-9canh-kfgsl-gm253-89632-e8mh7-6d5z2-732zx-y5xwd-r6gwy-242ks-mn3ld-8rt7e-tbk3m",
+            "https://www.terrablues.com/events/cganm6lwdk2sddl-k656x-54f7s-9xt8d-5yjpl-5nn22-8fyd5-28632-xymka-83sw2-tcbaj-9canh-kfgsl-gm253-89632-e8mh7-lesm4-3bkle-dn9t9-zxgme-9jabw",
+            "https://www.terrablues.com/events/cganm6lwdk2sddl-k656x-54f7s-9xt8d-5yjpl-5nn22-8fyd5-28632-xymka-83sw2-tcbaj-9canh-kfgsl-gm253-89632-e8mh7-lesm4-3bkle-dn9t9-zxgme-xx5yy-j9jyy"
+          ],
+          "evidence": [
+            "SaRon Crenshaw Acoustic: SaRon Crenshaw is a powerhouse blues performer known for his dynamic stage presence, including playing guitar with his tongue. This New York-based artist captivates audiences with his mastery of jazz and blues."
+          ]
+        },
+        {
+          "event_id": 243447,
+          "name": "Long Island Classical Guitar Society",
+          "emoji": "🎸",
+          "current_icon_id": null,
+          "venue": "Half Hollow Hills Community Library Melville Branch",
+          "urls": [
+            "https://www.hhhlibrary.org/event/long-island-classical-guitar-society-165492"
+          ],
+          "evidence": [
+            "Long Island Classical Guitar Society: Classical guitar performances."
+          ]
+        }
+      ],
+      "event_count": 2,
+      "venue_count": 2,
+      "catalog_id_exists": false
+    },
+    {
+      "concept": "equipment-binoculars",
+      "event_ids": [
+        150301,
+        191626,
+        216181
+      ],
+      "venues": [
+        {
+          "name": "Bryant Park",
+          "address": "Bryant Park, New York, NY 10018, USA"
+        },
+        {
+          "name": "Huber Woods Park",
+          "address": "25 Browns Dock Rd, Locust, NJ 07760, USA"
+        },
+        {
+          "name": "Prospect Park",
+          "address": "Prospect Park, Brooklyn, NY, USA"
+        }
+      ],
+      "categories": [
+        "equipment"
+      ],
+      "labels": [
+        "Birding binoculars"
+      ],
+      "variants": [
+        {
+          "visual": "Compact paired binocular barrels with large eyepieces and central bridge.",
+          "rationale": "Guided bird observation has a recognizable tool silhouette distinct from the bird itself.",
+          "existing_alternative": "Bird emoji shows subject but not observing; no binoculars option in Noto."
+        }
+      ],
+      "tags": {
+        "Birding": 3,
+        "Outings": 3,
+        "Format": 3,
+        "Education": 3,
+        "Outdoor": 3,
+        "Free": 3,
+        "Community": 3,
+        "Nature": 3,
+        "Tour": 3,
+        "Nature Walk": 2,
+        "Brooklyn": 1,
+        "Neighborhood": 1,
+        "Prospect Park": 1,
+        "Fall Migration": 1,
+        "Walking": 1,
+        "Park": 1,
+        "Wildlife": 1
+      },
+      "examples": [
+        {
+          "event_id": 150301,
+          "name": "Morning Birding Tour",
+          "emoji": "🐦",
+          "current_icon_id": null,
+          "venue": "Bryant Park",
+          "urls": [
+            "https://bryantpark.org/calendar/event/birding-tour-am/2026-06-02",
+            "https://bryantpark.org/calendar/event/birding-tour-am/2026-09-01"
+          ],
+          "evidence": [
+            "Morning Birding Tour: Discover the surprising diversity of birds that call Bryant Park home during migratory season, with guided tours led by environmental educator and urban naturalist Gabriel Willow. Bryant Park is a hotspot for avian visitors and birders alike."
+          ]
+        },
+        {
+          "event_id": 191626,
+          "name": "Prospect Park Fall Migration Tuesday Walks",
+          "emoji": "🐦",
+          "current_icon_id": null,
+          "venue": "Prospect Park",
+          "urls": [
+            "https://brooklynbirdclub.org/event/prospect-park-fall-migration-tuesday-walks-2/2026-09-08/"
+          ],
+          "evidence": [
+            "Prospect Park Fall Migration Tuesday Walks: Walks typically go into early afternoon or later if the birding is great. Leaders may include Ryan Goldberg, Angie Co, and/or Megan Thornton."
+          ]
+        },
+        {
+          "event_id": 216181,
+          "name": "Casual Birder at Huber Woods Park",
+          "emoji": "🦅",
+          "current_icon_id": null,
+          "venue": "Huber Woods Park",
+          "urls": [
+            "http://www.monmouthcountyparks.com/page.aspx?Id=2529"
+          ],
+          "evidence": [
+            "Casual Birder at Huber Woods Park: Join a Park System Naturalist for a laid-back morning bird walk at Huber Woods Park, Middletown. We’ll meander through the park for about an hour and a half to see what birds we can find. Participants should expect to be walking a few miles (2-4) on sometimes uneven or muddy terrain."
+          ]
+        }
+      ],
+      "event_count": 3,
+      "venue_count": 3,
+      "catalog_id_exists": false
+    },
+    {
+      "concept": "craft-knitting",
+      "event_ids": [
+        195395,
+        195401,
+        220626,
+        228115,
+        230326,
+        240593
+      ],
+      "venues": [
+        {
+          "name": "Brooklyn Craft Company",
+          "address": "165 Greenpoint Ave, Brooklyn, NY 11222, USA"
+        },
+        {
+          "name": "Greenburgh Public Library",
+          "address": "300 Tarrytown Rd, Elmsford, NY 10523"
+        },
+        {
+          "name": "Hunters Point Library",
+          "address": "47-40 Center Blvd, Long Island City, NY 11109, USA"
+        },
+        {
+          "name": "Riverfront Library",
+          "address": "1 Larkin Center, Yonkers, NY 10701, USA"
+        },
+        {
+          "name": "Whitestone Library",
+          "address": "151-10 14th Rd, Whitestone, NY 11357, USA"
+        },
+        {
+          "name": "Woolyn",
+          "address": "105 Atlantic Ave, Brooklyn, NY 11201, USA"
+        }
+      ],
+      "categories": [
+        "craft"
+      ],
+      "labels": [
+        "Knitting"
+      ],
+      "variants": [
+        {
+          "visual": "Two needles crossed through a small row of yarn stitches.",
+          "rationale": "Knitting practice explicitly involves a distinct paired-needle technique.",
+          "existing_alternative": "Yarn emoji identifies material only; machine sewing depicts a different activity."
+        },
+        {
+          "visual": "Paired needles holding a small row of stitches.",
+          "rationale": "Casting on knit stitch and binding off are explicit.",
+          "existing_alternative": "Yarn emoji does not depict the paired-needle technique."
+        },
+        {
+          "visual": "Paired needles through a row of stitches.",
+          "rationale": "Knitting practice explicitly defines the event.",
+          "existing_alternative": "Yarn does not distinguish technique."
+        },
+        {
+          "visual": "Two needles holding a small yarn swatch.",
+          "rationale": "Knitting with supplied patterns is one of the two stated activity choices.",
+          "existing_alternative": "Thread/yarn emoji loses technique; sewing machine would be incorrect."
+        },
+        {
+          "visual": "Paired needles holding knit-and-purl stitches.",
+          "rationale": "Class explicitly teaches knit purl cast-on and bind-off.",
+          "existing_alternative": "Yarn lacks the technique distinction."
+        }
+      ],
+      "tags": {
+        "Format": 6,
+        "Art": 6,
+        "Participatory": 6,
+        "Crafts": 6,
+        "Knitting": 5,
+        "Community": 4,
+        "Open Practice": 4,
+        "Adults": 3,
+        "Free": 3,
+        "Fiber Arts": 2,
+        "Class": 2,
+        "Education": 2,
+        "Seniors": 1,
+        "Conversation": 1,
+        "Crochet": 1,
+        "Family": 1,
+        "Beginner Friendly": 1,
+        "Wellness": 1,
+        "Knit and Purl": 1,
+        "Stitch Patterns": 1,
+        "Beginner Class": 1
+      },
+      "examples": [
+        {
+          "event_id": 195395,
+          "name": "Knitting Club",
+          "emoji": "🧶",
+          "current_icon_id": null,
+          "venue": "Whitestone Library",
+          "urls": [
+            "https://www.queenslibrary.org/event/009144-1225",
+            "https://www.queenslibrary.org/event/009145-1225"
+          ],
+          "evidence": [
+            "Knitting Club: Come to Whitestone Library and share your knitting skills with new and old friends! No registration is required."
+          ]
+        },
+        {
+          "event_id": 195401,
+          "name": "Keep Calm and Carry Yarn: Adult Knitting and Crochet Club",
+          "emoji": "🧣",
+          "current_icon_id": null,
+          "venue": "Hunters Point Library",
+          "urls": [
+            "https://www.queenslibrary.org/event/017904-0526",
+            "https://www.queenslibrary.org/event/020192-0626"
+          ],
+          "evidence": [
+            "Keep Calm and Carry Yarn: Adult Knitting and Crochet Club: Join us for an afternoon of knitting crochet and conversation. Yarn needles and hooks are available to borrow."
+          ]
+        },
+        {
+          "event_id": 220626,
+          "name": "Knitting 101",
+          "emoji": "🧶",
+          "current_icon_id": null,
+          "venue": "Brooklyn Craft Company",
+          "urls": [
+            "https://www.brooklyncraftcompany.com/products/open-beginner-knitting"
+          ],
+          "evidence": [
+            "Knitting 101: Whether you're a total beginner or a long-lost knitter who needs a refresher, this workshop covers the basics of turning yarn into fabric. Participants will learn about yarn and needles, how to cast on and start, the knit stitch, and how to bind off to finish any project."
+          ]
+        },
+        {
+          "event_id": 228115,
+          "name": "Knitting with the Evergreen Club",
+          "emoji": "🧶",
+          "current_icon_id": null,
+          "venue": "Greenburgh Public Library",
+          "urls": [
+            "https://greenburghlibrary.libcal.com/event/16376274",
+            "https://greenburghlibrary.libcal.com/event/16376275",
+            "https://greenburghlibrary.libcal.com/event/16376276"
+          ],
+          "evidence": [
+            "Knitting with the Evergreen Club: Come knit with Wendy Wang of the Greenburgh Evergreen Club. Beginners and experts alike are welcome! No registration required."
+          ]
+        },
+        {
+          "event_id": 230326,
+          "name": "Knitting and Coloring for Adults",
+          "emoji": "🧵",
+          "current_icon_id": null,
+          "venue": "Riverfront Library",
+          "urls": [
+            "https://www.ypl.org/event/knitting-and-coloring-adults-95900",
+            "https://www.ypl.org/event/knitting-and-coloring-adults-95901",
+            "https://www.ypl.org/event/knitting-and-coloring-adults-95902"
+          ],
+          "evidence": [
+            "Knitting and Coloring for Adults: Participants can knit or use adult coloring books in the Community Room. All knitting skill levels are welcome, and patterns will be provided."
+          ]
+        },
+        {
+          "event_id": 240593,
+          "name": "Adult Beginning Knitting",
+          "emoji": "🧶",
+          "current_icon_id": null,
+          "venue": "Woolyn",
+          "urls": [
+            "https://woolyn.com/products/beginning-knitting"
+          ],
+          "evidence": [
+            "Adult Beginning Knitting: You’ll learn all the basics of knitting in this 2 part class. You will learn both the knit and purl stitches as well as how to cast on and off."
+          ]
+        }
+      ],
+      "event_count": 6,
+      "venue_count": 6,
+      "catalog_id_exists": false
+    }
+  ],
+  "genre_and_technique_research": [
+    {
+      "concept": "genre-blues",
+      "event_ids": [
+        83580,
+        88573
+      ],
+      "venues": [
+        {
+          "name": "Terra Blues",
+          "address": "149 Bleecker St, New York, NY 10012"
+        }
+      ],
+      "categories": [
+        "genre"
+      ],
+      "labels": [
+        "Blues"
+      ],
+      "variants": [
+        {
+          "visual": "A spare musical phrase with a visibly lowered blue note, without instrument or demographic caricatures.",
+          "rationale": "Explicit blues programming has a genre gap; the abstract blue-note motif needs recognition testing before adoption.",
+          "existing_alternative": "Guitar or music notes remain useful but do not identify blues and should not imply every blues act uses guitar."
+        }
+      ],
+      "tags": {
+        "Blues": 2,
+        "Performance": 2,
+        "Music": 2,
+        "Format": 2,
+        "Theater Show": 2,
+        "Live Music": 2,
+        "Nightlife": 1,
+        "Terra Blues": 1
+      },
+      "examples": [
+        {
+          "event_id": 83580,
+          "name": "SaRon Crenshaw Acoustic",
+          "emoji": "🎸",
+          "current_icon_id": null,
+          "venue": "Terra Blues",
+          "urls": [
+            "https://www.terrablues.com/events/cganm6lwdk2sddl-k656x-54f7s-9xt8d-5yjpl-5nn22-8fyd5-28632-xymka-83sw2-tcbaj-9canh-kfgsl-gm253-89632-e8mh7-6d5z2-732zx-y5xwd-r6gwy-242ks-mn3ld-8rt7e-tbk3m",
+            "https://www.terrablues.com/events/cganm6lwdk2sddl-k656x-54f7s-9xt8d-5yjpl-5nn22-8fyd5-28632-xymka-83sw2-tcbaj-9canh-kfgsl-gm253-89632-e8mh7-lesm4-3bkle-dn9t9-zxgme-9jabw",
+            "https://www.terrablues.com/events/cganm6lwdk2sddl-k656x-54f7s-9xt8d-5yjpl-5nn22-8fyd5-28632-xymka-83sw2-tcbaj-9canh-kfgsl-gm253-89632-e8mh7-lesm4-3bkle-dn9t9-zxgme-xx5yy-j9jyy"
+          ],
+          "evidence": [
+            "SaRon Crenshaw Acoustic: SaRon Crenshaw is a powerhouse blues performer known for his dynamic stage presence, including playing guitar with his tongue. This New York-based artist captivates audiences with his mastery of jazz and blues."
+          ]
+        },
+        {
+          "event_id": 88573,
+          "name": "T Blues Band | Mack / Ajamu",
+          "emoji": "🎸",
+          "current_icon_id": null,
+          "venue": "Terra Blues",
+          "urls": [
+            "https://www.terrablues.com/events/4ljxj53ala7xa8p-pnrb2-fhwz5",
+            "https://www.terrablues.com/events/sbd8k4mmjnhndbf-jgjla-yzyep-2c8wp",
+            "https://www.terrablues.com/events/sbd8k4mmjnhndbf-jgjla-yzyep-2c8wp-zyrdh-ngptz-a7rgz-6hbd5-zgm6a",
+            "https://www.terrablues.com/events/sbd8k4mmjnhndbf-jgjla-yzyep-2c8wp-zyrdh-ngptz-a7rgz-6hbd5-zgm6a-dn9yn"
+          ],
+          "evidence": [
+            "T Blues Band | Mack / Ajamu: The T Blues Band is a rotating blues ensemble featuring Junior Mack and Ajamu, performing authentic and powerful blues music. The band is a nightly feature at Terra Blues that showcases varying groups of talented musicians."
+          ]
+        }
+      ],
+      "event_count": 2,
+      "venue_count": 1,
+      "catalog_id_exists": false
+    },
+    {
+      "concept": "genre-j-pop",
+      "event_ids": [
+        242130,
+        242131
+      ],
+      "venues": [
+        {
+          "name": "Shrine World Music Venue",
+          "address": "2271 Adam Clayton Powell Jr Blvd, New York, NY 10030, USA"
+        }
+      ],
+      "categories": [
+        "genre"
+      ],
+      "labels": [
+        "J-pop"
+      ],
+      "variants": [
+        {
+          "visual": "Stage microphone with a bright star-shaped light cue.",
+          "rationale": "J-pop is explicitly named; stage-pop motif is exploratory and must distinguish musical identity without national flags or costume stereotypes.",
+          "existing_alternative": "Microphone works for singing; star/light motif may be too generic and requires recognition testing across pop genres."
+        }
+      ],
+      "tags": {
+        "Performance": 2,
+        "Pop Music": 2,
+        "Music": 2,
+        "Format": 2,
+        "Concert": 2,
+        "Live Music": 2,
+        "J-Pop": 2,
+        "Film": 1,
+        "Anime": 1
+      },
+      "examples": [
+        {
+          "event_id": 242130,
+          "name": "Yurapico - J-POP",
+          "emoji": "🌟",
+          "current_icon_id": null,
+          "venue": "Shrine World Music Venue",
+          "urls": [
+            "https://www.youtube.com/watch?v=mjHDhpGGA-c"
+          ],
+          "evidence": [
+            "Yurapico - J-POP: Japanese solo idol artist Yurapico, known as “The Most Passionate Idol in the World,” performs internationally and continues her journey toward a global tour."
+          ]
+        },
+        {
+          "event_id": 242131,
+          "name": "Akari Village - JPOP",
+          "emoji": "🎤",
+          "current_icon_id": null,
+          "venue": "Shrine World Music Venue",
+          "urls": [
+            "https://www.shrinenyc.com/"
+          ],
+          "evidence": [
+            "Akari Village - JPOP: East Village JPOP, anime, and city-pop cover band Akari Village performs songs ranging from classic Japanese pop to contemporary artists."
+          ]
+        }
+      ],
+      "event_count": 2,
+      "venue_count": 1,
+      "catalog_id_exists": false
+    },
+    {
+      "concept": "technique-stride-piano",
+      "event_ids": [
+        123434,
+        237585
+      ],
+      "venues": [
+        {
+          "name": "Bryant Park",
+          "address": "Bryant Park, New York, NY 10018, USA"
+        },
+        {
+          "name": "Moynihan Train Hall",
+          "address": "421 8th Ave, New York, NY 10001, USA"
+        }
+      ],
+      "categories": [
+        "other"
+      ],
+      "labels": [
+        "Stride piano"
+      ],
+      "variants": [
+        {
+          "visual": "Keyboard with two separated bass-note positions and a short leaping arc.",
+          "rationale": "Explicit stride piano invites an economical left-hand leap motif distinct from generic piano.",
+          "existing_alternative": "Existing musical keyboard is adequate for piano but has no stride technique cue; small-size legibility uncertain."
+        },
+        {
+          "visual": "Keyboard with a left-hand leap arc between low bass key and chord group.",
+          "rationale": "Pianist explicitly names stride roots alongside New Orleans blues and jazz; distinctive playing pattern merits exploratory treatment.",
+          "existing_alternative": "Keyboard already identifies piano but not stride; motion pattern may be too technical at 16px and needs recognition tests."
+        }
+      ],
+      "tags": {
+        "Performance": 2,
+        "Music": 2,
+        "Format": 2,
+        "Concert": 2,
+        "Jazz": 2,
+        "Piano": 2,
+        "Bryant Park": 1,
+        "Outdoor": 1,
+        "Free": 1,
+        "Blues": 1
+      },
+      "examples": [
+        {
+          "event_id": 123434,
+          "name": "Piano in Bryant Park",
+          "emoji": "🎹",
+          "current_icon_id": null,
+          "venue": "Bryant Park",
+          "urls": [
+            "https://bryantpark.org/calendar/event/piano/2026-08-03",
+            "https://bryantpark.org/calendar/event/piano/2026-08-10",
+            "https://bryantpark.org/calendar/event/piano/2026-08-11",
+            "https://bryantpark.org/calendar/event/piano/2026-08-14",
+            "https://bryantpark.org/calendar/event/piano/2026-08-17",
+            "https://bryantpark.org/calendar/event/piano/2026-08-18",
+            "https://bryantpark.org/calendar/event/piano/2026-08-19",
+            "https://bryantpark.org/calendar/event/piano/2026-08-20",
+            "https://bryantpark.org/calendar/event/piano/2026-08-21",
+            "https://bryantpark.org/calendar/event/piano/2026-08-24",
+            "https://bryantpark.org/calendar/event/piano/2026-08-27",
+            "https://bryantpark.org/calendar/event/piano/2026-08-31",
+            "https://bryantpark.org/calendar/event/piano/2026-09-02",
+            "https://bryantpark.org/calendar/event/piano/2026-09-07",
+            "https://www.nyc.gov/main/events/?permalinkName=piano-in-bryant-park&id=1093116&sequence=1",
+            "https://www.nyc.gov/main/events/?permalinkName=piano-in-bryant-park&id=1093176&sequence=1",
+            "https://www.nyc.gov/main/events/?permalinkName=piano-in-bryant-park&id=1093196&sequence=1",
+            "https://www.nyc.gov/main/events/?permalinkName=piano-in-bryant-park&id=1167156&sequence=1",
+            "https://www.nyc.gov/main/events/?permalinkName=piano-in-bryant-park&id=1167236&sequence=1",
+            "https://www.nyc.gov/main/events/?permalinkName=piano-in-bryant-park&id=1167296&sequence=1",
+            "https://www.nyc.gov/main/events/?permalinkName=piano-in-bryant-park&id=1167336&sequence=1",
+            "https://www.nyc.gov/main/events/?permalinkName=piano-in-bryant-park&id=1167356&sequence=1",
+            "https://www.nyc.gov/main/events/?permalinkName=piano-in-bryant-park&id=1167396&sequence=1",
+            "https://www.nyc.gov/main/events/?permalinkName=piano-in-bryant-park&id=1167436&sequence=1",
+            "https://www.nyc.gov/main/events/?permalinkName=piano-in-bryant-park&id=1167476&sequence=1",
+            "https://www.nyc.gov/main/events/?permalinkName=piano-in-bryant-park&id=1187676&sequence=1",
+            "https://www.nyc.gov/main/events/?permalinkName=piano-in-bryant-park&id=1236736&sequence=1",
+            "https://www.nycgovparks.org/events/2026/07/29/piano-in-bryant-park",
+            "https://www.nycgovparks.org/events/2026/08/03/piano-in-bryant-park",
+            "https://www.nycgovparks.org/events/2026/08/04/piano-in-bryant-park",
+            "https://www.nycgovparks.org/events/2026/08/07/piano-in-bryant-park",
+            "https://www.nycgovparks.org/events/2026/08/10/piano-in-bryant-park",
+            "https://www.nycgovparks.org/events/2026/08/13/piano-in-bryant-park",
+            "https://www.nycgovparks.org/events/2026/08/17/piano-in-bryant-park",
+            "https://www.nycgovparks.org/events/2026/08/19/piano-in-bryant-park",
+            "https://www.nycgovparks.org/events/2026/08/24/piano-in-bryant-park",
+            "https://www.nycgovparks.org/events/2026/08/25/piano-in-bryant-park",
+            "https://www.nycgovparks.org/events/2026/08/28/piano-in-bryant-park",
+            "https://www.nycgovparks.org/events/2026/08/31/piano-in-bryant-park",
+            "https://www.nycgovparks.org/events/2026/09/03/piano-in-bryant-park",
+            "https://www.nycgovparks.org/events/2026/09/07/piano-in-bryant-park",
+            "https://www.nycgovparks.org/events/2026/09/08/piano-in-bryant-park"
+          ],
+          "evidence": [
+            "Piano in Bryant Park: Enjoy live piano music featuring New York's finest musicians playing ragtime, stride, and jazz styles."
+          ]
+        },
+        {
+          "event_id": 237585,
+          "name": "Adam Narimatsu",
+          "emoji": "🎹",
+          "current_icon_id": null,
+          "venue": "Moynihan Train Hall",
+          "urls": [
+            "https://moynihantrainhall.nyc/event/adam-narimatsu-4/"
+          ],
+          "evidence": [
+            "Adam Narimatsu: Adam Narimatsu is a New York City pianist with roots in New Orleans blues, stride, and jazz."
+          ]
+        }
+      ],
+      "event_count": 2,
+      "venue_count": 2,
+      "catalog_id_exists": false
+    },
+    {
+      "concept": "genre-balkan-brass",
+      "event_ids": [
+        81239
+      ],
+      "venues": [
+        {
+          "name": "Barbès",
+          "address": "376 9th St, Brooklyn, NY 11215, USA"
+        }
+      ],
+      "categories": [
+        "genre"
+      ],
+      "labels": [
+        "Balkan brass"
+      ],
+      "variants": [
+        {
+          "visual": "Two flared brass bells and a compact circular beat motif.",
+          "rationale": "Balkan brass is explicitly central; a brass-led motif is grounded here but requires recognition testing and must not imply all Balkan music.",
+          "existing_alternative": "Trumpet is adequate for a brass instrument, but loses the ensemble and regional style; accordion already has Noto art."
+        }
+      ],
+      "tags": {
+        "Brass Band": 1,
+        "World Music": 1,
+        "Music": 1,
+        "Funk": 1,
+        "Balkan Brass": 1,
+        "Format": 1,
+        "Social": 1,
+        "Nightlife": 1,
+        "Jazz": 1,
+        "Party": 1
+      },
+      "examples": [
+        {
+          "event_id": 81239,
+          "name": "Slavic Soul Party",
+          "emoji": "🎺",
+          "current_icon_id": null,
+          "venue": "Barbès",
+          "urls": [
+            "https://www.viewcy.com/event/slavic_soul_party_266",
+            "https://www.viewcy.com/event/slavic_soul_party_268",
+            "https://www.viewcy.com/event/slavic_soul_party_269",
+            "https://www.viewcy.com/event/slavic_soul_party_270",
+            "https://www.viewcy.com/event/slavic_soul_party_274"
+          ],
+          "evidence": [
+            "Slavic Soul Party: Slavic Soul Party! brings fiery Balkan brass, funk grooves, and Roma accordion wizardry to their long-running weekly Tuesday residency."
+          ]
+        }
+      ],
+      "event_count": 1,
+      "venue_count": 1,
+      "catalog_id_exists": false
+    },
+    {
+      "concept": "genre-bluegrass",
+      "event_ids": [
+        130290
+      ],
+      "venues": [
+        {
+          "name": "Greeley Square Park",
+          "address": "Greeley Square Park, Broadway & 6th Ave, New York, NY 10001, USA"
+        }
+      ],
+      "categories": [
+        "genre"
+      ],
+      "labels": [
+        "Bluegrass"
+      ],
+      "variants": [
+        {
+          "visual": "Banjo rim paired with a minimal acoustic pick silhouette.",
+          "rationale": "Explicit bluegrass jam supports genre exploration; motif is instrument-grounded but may not distinguish bluegrass from other folk genres, requiring testing.",
+          "existing_alternative": "Noto banjo already provides a strong instrument alternative and should be considered before commissioning genre art."
+        }
+      ],
+      "tags": {
+        "Music": 1,
+        "Format": 1,
+        "Outdoor": 1,
+        "Free": 1,
+        "Folk Music": 1,
+        "Participatory": 1,
+        "Open Practice": 1,
+        "Community": 1
+      },
+      "examples": [
+        {
+          "event_id": 130290,
+          "name": "Folk Jams in Greeley Square Park",
+          "emoji": "🎶",
+          "current_icon_id": null,
+          "venue": "Greeley Square Park",
+          "urls": [
+            "https://www.nyc.gov/main/events/?permalinkName=folk-jams-in-greeley-square-park&id=1061556&sequence=1",
+            "https://www.nyc.gov/main/events/?permalinkName=folk-jams-in-greeley-square-park&id=1126896&sequence=1",
+            "https://www.nyc.gov/main/events/?permalinkName=folk-jams-in-greeley-square-park&id=1201496&sequence=1",
+            "https://www.nycgovparks.org/events/2026/08/11/folk-jams-in-greeley-square",
+            "https://www.nycgovparks.org/events/2026/08/25/folk-jams-in-greeley-square",
+            "https://www.nycgovparks.org/events/2026/09/08/folk-jams-in-greeley-square"
+          ],
+          "evidence": [
+            "Folk Jams in Greeley Square Park: Join others for bluegrass jams, the kalimba orchestra, or to lend your voice to an impromptu performance."
+          ]
+        }
+      ],
+      "event_count": 1,
+      "venue_count": 1,
+      "catalog_id_exists": false
+    },
+    {
+      "concept": "genre-breakbeat",
+      "event_ids": [
+        223346
+      ],
+      "venues": [
+        {
+          "name": "Bossa Nova Civic Club",
+          "address": "1271 Myrtle Ave, Brooklyn, NY 11221, USA"
+        }
+      ],
+      "categories": [
+        "genre"
+      ],
+      "labels": [
+        "Breakbeat"
+      ],
+      "variants": [
+        {
+          "visual": "Four bold rhythm blocks with one displaced off-grid block and a bass-wave underline.",
+          "rationale": "Breaks and bass are explicitly central; explore a disrupted rhythmic-grid motif without assuming a particular performer instrument.",
+          "existing_alternative": "DJ deck gives format but not broken rhythm; this abstract genre cue needs user testing and may prove too ambiguous."
+        }
+      ],
+      "tags": {
+        "Bass": 1,
+        "Club Night": 1,
+        "Breaks": 1,
+        "Music": 1,
+        "Electronic Music": 1,
+        "Bass Music": 1,
+        "Format": 1,
+        "Social": 1,
+        "Free": 1,
+        "Nightlife": 1
+      },
+      "examples": [
+        {
+          "event_id": 223346,
+          "name": "Breaking Capacity: Headphones Girl, Hector Mamajuana, Hannah Account, PlayPlay",
+          "emoji": "💥",
+          "current_icon_id": null,
+          "venue": "Bossa Nova Civic Club",
+          "urls": [
+            "https://ra.co/events/2515215"
+          ],
+          "evidence": [
+            "Breaking Capacity: Headphones Girl, Hector Mamajuana, Hannah Account, PlayPlay: Breaking Capacity celebrates the disruptive power of breaks and bass. This time we have NYC mainstay Hector Mamajuana (Konkrete Jungle) joi Tags: Music, Free, Nightlife, Electronic Music, Bass Music, Bass, Club Night, Breaks, Format, Social."
+          ]
+        }
+      ],
+      "event_count": 1,
+      "venue_count": 1,
+      "catalog_id_exists": false
+    },
+    {
+      "concept": "genre-city-pop",
+      "event_ids": [
+        242131
+      ],
+      "venues": [
+        {
+          "name": "Shrine World Music Venue",
+          "address": "2271 Adam Clayton Powell Jr Blvd, New York, NY 10030, USA"
+        }
+      ],
+      "categories": [
+        "genre"
+      ],
+      "labels": [
+        "City pop"
+      ],
+      "variants": [
+        {
+          "visual": "Audio cassette paired with a spare stepped skyline and one wave line.",
+          "rationale": "City-pop repertoire is explicitly named; a retro urban recording motif could add information but is a design hypothesis, not universal iconography.",
+          "existing_alternative": "Microphone shows performance only; cassette/skyline must be tested for genre recognition and may instead read as urban nostalgia."
+        }
+      ],
+      "tags": {
+        "Film": 1,
+        "Performance": 1,
+        "Pop Music": 1,
+        "Music": 1,
+        "Format": 1,
+        "Concert": 1,
+        "Anime": 1,
+        "Live Music": 1,
+        "J-Pop": 1
+      },
+      "examples": [
+        {
+          "event_id": 242131,
+          "name": "Akari Village - JPOP",
+          "emoji": "🎤",
+          "current_icon_id": null,
+          "venue": "Shrine World Music Venue",
+          "urls": [
+            "https://www.shrinenyc.com/"
+          ],
+          "evidence": [
+            "Akari Village - JPOP: East Village JPOP, anime, and city-pop cover band Akari Village performs songs ranging from classic Japanese pop to contemporary artists."
+          ]
+        }
+      ],
+      "event_count": 1,
+      "venue_count": 1,
+      "catalog_id_exists": false
+    },
+    {
+      "concept": "genre-early-jazz",
+      "event_ids": [
+        130203
+      ],
+      "venues": [
+        {
+          "name": "Birdland Jazz Club",
+          "address": "315 W 44th St, New York, NY 10036, USA"
+        }
+      ],
+      "categories": [
+        "genre"
+      ],
+      "labels": [
+        "Early jazz"
+      ],
+      "variants": [
+        {
+          "visual": "A compact period recording disc with a syncopated musical phrase.",
+          "rationale": "Program explicitly recreates 1920s jazz; a period-recording motif may help but needs recognition testing and must not stand for all jazz.",
+          "existing_alternative": "Saxophone represents an instrument, not the historically specific ensemble sound."
+        }
+      ],
+      "tags": {
+        "Performance": 1,
+        "Music": 1,
+        "Format": 1,
+        "Concert": 1,
+        "Jazz": 1,
+        "Vince Giordano": 1,
+        "Live Music": 1
+      },
+      "examples": [
+        {
+          "event_id": 130203,
+          "name": "Vince Giordano and the Nighthawks",
+          "emoji": "🎷",
+          "current_icon_id": null,
+          "venue": "Birdland Jazz Club",
+          "urls": [
+            "https://www.birdlandjazz.com/tm-event/vince-giordano-and-the-nighthawks-51/",
+            "https://www.birdlandjazz.com/tm-event/vince-giordano-and-the-nighthawks-53/",
+            "https://www.birdlandjazz.com/tm-event/vince-giordano-and-the-nighthawks-69/",
+            "https://www.birdlandjazz.com/tm-event/vince-giordano-and-the-nighthawks-75/",
+            "https://www.birdlandjazz.com/tm-event/vince-giordano-and-the-nighthawks-77/",
+            "https://www.birdlandjazz.com/tm-event/vince-giordano-and-the-nighthawks/"
+          ],
+          "evidence": [
+            "Vince Giordano and the Nighthawks: GRAMMY Award winner Vince Giordano and his 11-piece band, The Nighthawks, perform an authentic jazz residency recreating the sounds of the 1920s and beyond. The band is well-known for providing period-accurate soundtracks for numerous major film and television productions."
+          ]
+        }
+      ],
+      "event_count": 1,
+      "venue_count": 1,
+      "catalog_id_exists": false
+    },
+    {
+      "concept": "genre-free-jazz",
+      "event_ids": [
+        246714
+      ],
+      "venues": [
+        {
+          "name": "MISE-EN_PLACE",
+          "address": "45 St Nicholas Ave, New York, NY 10026"
+        }
+      ],
+      "categories": [
+        "genre"
+      ],
+      "labels": [
+        "Free jazz"
+      ],
+      "variants": [
+        {
+          "visual": "Three music-note fragments breaking away from a curved score line.",
+          "rationale": "Free jazz is explicitly part of the program identity; an open score could indicate unconstrained group improvisation without privileging saxophone.",
+          "existing_alternative": "Music notes are broad; the escaping-score motif is exploratory and may be too abstract at small sizes."
+        }
+      ],
+      "tags": {
+        "Performance": 1,
+        "Music": 1,
+        "Format": 1,
+        "Concert": 1,
+        "Progressive Rock": 1,
+        "Rock": 1,
+        "Jazz": 1,
+        "Free Jazz": 1,
+        "Experimental Music": 1
+      },
+      "examples": [
+        {
+          "event_id": 246714,
+          "name": "James Paul Nadien’s TYPO!",
+          "emoji": "🎶",
+          "current_icon_id": null,
+          "venue": "MISE-EN_PLACE",
+          "urls": [
+            "https://www.mise-en.org/tuesday-september-8-2026-730-pm-james-paul-nadiens-typo/"
+          ],
+          "evidence": [
+            "James Paul Nadien’s TYPO!: TYPO! features some of New York’s most riveting and original musicians, combining complex and hyperactive compositions with a reckless abandon and group fervor which can take a sharp turn at any given moment. Led by drummer and composer James Paul Nadien, TYPO! is a vehicle for his cutting-edge compositions which are equal parts modernist, progressive rock, and free jazz. Tags: Music, Rock, Jazz, Concert, Progressive Rock, Experimental Music, Free Jazz, Format, Performance."
+          ]
+        }
+      ],
+      "event_count": 1,
+      "venue_count": 1,
+      "catalog_id_exists": false
+    },
+    {
+      "concept": "genre-house",
+      "event_ids": [
+        214595
+      ],
+      "venues": [
+        {
+          "name": "Silo",
+          "address": "90 Scott Ave, Brooklyn, NY 11237, USA"
+        }
+      ],
+      "categories": [
+        "genre"
+      ],
+      "labels": [
+        "House music"
+      ],
+      "variants": [
+        {
+          "visual": "Four evenly spaced beat blocks beneath a short waveform.",
+          "rationale": "House is explicitly shared in this DJ program; rhythmic graphic is exploratory and needs recognition testing against techno.",
+          "existing_alternative": "Headphones/decks identify format, not house; no universal genre silhouette is established."
+        }
+      ],
+      "tags": {
+        "Techno": 1,
+        "House Music": 1,
+        "Open Decks": 1,
+        "Participatory": 1,
+        "Music": 1,
+        "Electronic Music": 1,
+        "Format": 1,
+        "Free": 1,
+        "Nightlife": 1,
+        "DJ": 1,
+        "Open Practice": 1,
+        "Community": 1
+      },
+      "examples": [
+        {
+          "event_id": 214595,
+          "name": "Open Decks w/ Steen & Club Massive",
+          "emoji": "🎧",
+          "current_icon_id": null,
+          "venue": "Silo",
+          "urls": [
+            "https://link.dice.fm/P1693e701122",
+            "https://ra.co/events/2508328"
+          ],
+          "evidence": [
+            "Open Decks w/ Steen & Club Massive: Hosted by DJ and musician Steen, Open Decks is a creative and fun space where DJs can hang and share their house and techno music live. Hear favorite or original tracks on Silo's front room sound system, a custom 15,000 watt Danley powerhouse."
+          ]
+        }
+      ],
+      "event_count": 1,
+      "venue_count": 1,
+      "catalog_id_exists": false
+    },
+    {
+      "concept": "genre-industrial",
+      "event_ids": [
+        223345
+      ],
+      "venues": [
+        {
+          "name": "Bossa Nova Civic Club",
+          "address": "1271 Myrtle Ave, Brooklyn, NY 11221, USA"
+        }
+      ],
+      "categories": [
+        "genre"
+      ],
+      "labels": [
+        "Industrial electronic music"
+      ],
+      "variants": [
+        {
+          "visual": "A gear edge merging into a squared audio waveform.",
+          "rationale": "Industrial music is explicit in tags and machine-themed program; sound plus machinery could separate the genre from mechanical repair.",
+          "existing_alternative": "Gear already exists and is currently used, but alone conveys machinery; validate whether waveform adds useful musical recognition."
+        }
+      ],
+      "tags": {
+        "Club Night": 1,
+        "Music": 1,
+        "Electronic Music": 1,
+        "Format": 1,
+        "Industrial": 1,
+        "Social": 1,
+        "Free": 1,
+        "Nightlife": 1,
+        "Happy Hour": 1,
+        "Live Music": 1
+      },
+      "examples": [
+        {
+          "event_id": 223345,
+          "name": "Maschinenhalle: Night Shift - FT Famine, Moment of Terror, Xsb-R",
+          "emoji": "⚙️",
+          "current_icon_id": null,
+          "venue": "Bossa Nova Civic Club",
+          "urls": [
+            "https://ra.co/events/2513791"
+          ],
+          "evidence": [
+            "Maschinenhalle: Night Shift - FT Famine, Moment of Terror, Xsb-R: MASCHINENHALLE rumbles the first Happy Hour after Labor Day Weekend 2026 at Bossa Nova Civic Club with NIGHT SHIFT, a 3-hr long Symphony of Destruction Tags: Music, Free, Industrial, Nightlife, Electronic Music, Happy Hour, Club Night, Live Music, Format, Social."
+          ]
+        }
+      ],
+      "event_count": 1,
+      "venue_count": 1,
+      "catalog_id_exists": false
+    },
+    {
+      "concept": "genre-latin-bolero",
+      "event_ids": [
+        241917
+      ],
+      "venues": [
+        {
+          "name": "LunÀtico",
+          "address": "486 Halsey St, Brooklyn, NY 11233, USA"
+        }
+      ],
+      "categories": [
+        "genre"
+      ],
+      "labels": [
+        "Latin American bolero"
+      ],
+      "variants": [
+        {
+          "visual": "Microphone beside two linked sustained notes on a gently swaying rhythm line.",
+          "rationale": "Boleros are explicitly the concert focus; explore a song/rhythm motif without conflating Latin bolero with Ravel/Béjart Boléro or assuming instruments.",
+          "existing_alternative": "Music notes remain reasonable; proposed motif is not proven distinctive and requires recognition testing before art."
+        }
+      ],
+      "tags": {
+        "Latin Music": 1,
+        "Performance": 1,
+        "Bolero": 1,
+        "Music": 1,
+        "Format": 1,
+        "Concert": 1,
+        "Jazz": 1,
+        "Live Music": 1
+      },
+      "examples": [
+        {
+          "event_id": 241917,
+          "name": "Sol Liebeskind Boleros Trio",
+          "emoji": "🎵",
+          "current_icon_id": null,
+          "venue": "LunÀtico",
+          "urls": [
+            "https://www.barlunatico.com/calendar/2026/5/28/sol-liebeskind-boleros-trio-k2yac"
+          ],
+          "evidence": [
+            "Sol Liebeskind Boleros Trio: Sol Liebeskind performs music from her album NOCHE NO TE VAYAS, blending classic Latin American boleros with jazz and contemporary influences."
+          ]
+        }
+      ],
+      "event_count": 1,
+      "venue_count": 1,
+      "catalog_id_exists": false
+    },
+    {
+      "concept": "genre-lofi",
+      "event_ids": [
+        190420
+      ],
+      "venues": [
+        {
+          "name": "Van Cortlandt Library",
+          "address": "3882 Cannon Pl, Bronx, NY 10463, USA"
+        }
+      ],
+      "categories": [
+        "genre"
+      ],
+      "labels": [
+        "Lo-fi listening"
+      ],
+      "variants": [
+        {
+          "visual": "Compact cassette with one gently wavering sound line.",
+          "rationale": "Lo-fi is explicitly the listening environment; tape texture motif is a candidate, not a proven genre symbol.",
+          "existing_alternative": "Headphones already communicate listening; cassette concept must outperform them and avoid implying a tape-only event."
+        }
+      ],
+      "tags": {
+        "Lo-fi": 1,
+        "Board Games": 1,
+        "Music": 1,
+        "Format": 1,
+        "Teen Events": 1,
+        "Art": 1,
+        "Family": 1,
+        "Participatory": 1,
+        "Games": 1,
+        "Open Practice": 1,
+        "Crafts": 1,
+        "Community": 1
+      },
+      "examples": [
+        {
+          "event_id": 190420,
+          "name": "Lofi & Chill",
+          "emoji": "🎧",
+          "current_icon_id": null,
+          "venue": "Van Cortlandt Library",
+          "urls": [
+            "https://www.nypl.org/events/programs/2026/07/01/lofi-chill",
+            "https://www.nypl.org/events/programs/2026/08/03/lofi-chill",
+            "https://www.nypl.org/events/programs/2026/08/03/lofi-chill-0",
+            "https://www.nypl.org/events/programs/2026/08/03/lofi-chill-1",
+            "https://www.nypl.org/events/programs/2026/09/01/lofi-chill"
+          ],
+          "evidence": [
+            "Lofi & Chill: Hang out in our Teen Center to vibe with friends and chill out to our lo-fi music. Board games, puzzles, card games, and crafts are available upon request."
+          ]
+        }
+      ],
+      "event_count": 1,
+      "venue_count": 1,
+      "catalog_id_exists": false
+    },
+    {
+      "concept": "genre-neo-soul",
+      "event_ids": [
+        242132
+      ],
+      "venues": [
+        {
+          "name": "Shrine World Music Venue",
+          "address": "2271 Adam Clayton Powell Jr Blvd, New York, NY 10030, USA"
+        }
+      ],
+      "categories": [
+        "genre"
+      ],
+      "labels": [
+        "Neo-soul"
+      ],
+      "variants": [
+        {
+          "visual": "Microphone with a smooth interlocking waveform and two offset beat dots.",
+          "rationale": "Neo-soul is explicitly programmed; explore fluid voice/rhythm imagery without artist-demographic assumptions.",
+          "existing_alternative": "Microphone is adequate for vocals but not genre; this abstract motif is low-confidence until tested against soul/R&B."
+        }
+      ],
+      "tags": {
+        "Performance": 1,
+        "Gospel": 1,
+        "Neo Soul": 1,
+        "Music": 1,
+        "Soul Music": 1,
+        "Format": 1,
+        "Concert": 1,
+        "Sacred Music": 1,
+        "Spirituality": 1,
+        "Wellness": 1,
+        "R&B": 1,
+        "Live Music": 1
+      },
+      "examples": [
+        {
+          "event_id": 242132,
+          "name": "Troy Weekes Live Experience",
+          "emoji": "🎤",
+          "current_icon_id": null,
+          "venue": "Shrine World Music Venue",
+          "urls": [
+            "http://www.instagram.com/troyweekesmusic/?hl=en"
+          ],
+          "evidence": [
+            "Troy Weekes Live Experience: Harlem vocalist, songwriter, actor, dancer, emcee, and podcast host Troy Weekes performs gospel, neo-soul, and R&B."
+          ]
+        }
+      ],
+      "event_count": 1,
+      "venue_count": 1,
+      "catalog_id_exists": false
+    },
+    {
+      "concept": "genre-progressive-rock",
+      "event_ids": [
+        246714
+      ],
+      "venues": [
+        {
+          "name": "MISE-EN_PLACE",
+          "address": "45 St Nicholas Ave, New York, NY 10026"
+        }
+      ],
+      "categories": [
+        "genre"
+      ],
+      "labels": [
+        "Progressive rock"
+      ],
+      "variants": [
+        {
+          "visual": "A guitar beside an asymmetrically stepped rhythm-line motif.",
+          "rationale": "Progressive rock is explicitly part of the described complex compositional identity; explore rhythmic complexity without implying actual meter or instrumentation.",
+          "existing_alternative": "Generic guitar already covers rock broadly; this genre motif is speculative and needs recognition testing before art."
+        }
+      ],
+      "tags": {
+        "Performance": 1,
+        "Music": 1,
+        "Format": 1,
+        "Concert": 1,
+        "Progressive Rock": 1,
+        "Rock": 1,
+        "Jazz": 1,
+        "Free Jazz": 1,
+        "Experimental Music": 1
+      },
+      "examples": [
+        {
+          "event_id": 246714,
+          "name": "James Paul Nadien’s TYPO!",
+          "emoji": "🎶",
+          "current_icon_id": null,
+          "venue": "MISE-EN_PLACE",
+          "urls": [
+            "https://www.mise-en.org/tuesday-september-8-2026-730-pm-james-paul-nadiens-typo/"
+          ],
+          "evidence": [
+            "James Paul Nadien’s TYPO!: TYPO! features some of New York’s most riveting and original musicians, combining complex and hyperactive compositions with a reckless abandon and group fervor which can take a sharp turn at any given moment. Led by drummer and composer James Paul Nadien, TYPO! is a vehicle for his cutting-edge compositions which are equal parts modernist, progressive rock, and free jazz. Tags: Music, Rock, Jazz, Concert, Progressive Rock, Experimental Music, Free Jazz, Format, Performance."
+          ]
+        }
+      ],
+      "event_count": 1,
+      "venue_count": 1,
+      "catalog_id_exists": false
+    },
+    {
+      "concept": "genre-ragtime",
+      "event_ids": [
+        123434
+      ],
+      "venues": [
+        {
+          "name": "Bryant Park",
+          "address": "Bryant Park, New York, NY 10018, USA"
+        }
+      ],
+      "categories": [
+        "genre"
+      ],
+      "labels": [
+        "Ragtime"
+      ],
+      "variants": [
+        {
+          "visual": "Compact keyboard with an offset syncopated pair of notes.",
+          "rationale": "Ragtime is explicitly programmed; rhythm motif may distinguish it but requires user recognition testing.",
+          "existing_alternative": "Existing keyboard identifies instrument, not the syncopated genre."
+        }
+      ],
+      "tags": {
+        "Performance": 1,
+        "Bryant Park": 1,
+        "Music": 1,
+        "Format": 1,
+        "Concert": 1,
+        "Outdoor": 1,
+        "Free": 1,
+        "Jazz": 1,
+        "Piano": 1
+      },
+      "examples": [
+        {
+          "event_id": 123434,
+          "name": "Piano in Bryant Park",
+          "emoji": "🎹",
+          "current_icon_id": null,
+          "venue": "Bryant Park",
+          "urls": [
+            "https://bryantpark.org/calendar/event/piano/2026-08-03",
+            "https://bryantpark.org/calendar/event/piano/2026-08-10",
+            "https://bryantpark.org/calendar/event/piano/2026-08-11",
+            "https://bryantpark.org/calendar/event/piano/2026-08-14",
+            "https://bryantpark.org/calendar/event/piano/2026-08-17",
+            "https://bryantpark.org/calendar/event/piano/2026-08-18",
+            "https://bryantpark.org/calendar/event/piano/2026-08-19",
+            "https://bryantpark.org/calendar/event/piano/2026-08-20",
+            "https://bryantpark.org/calendar/event/piano/2026-08-21",
+            "https://bryantpark.org/calendar/event/piano/2026-08-24",
+            "https://bryantpark.org/calendar/event/piano/2026-08-27",
+            "https://bryantpark.org/calendar/event/piano/2026-08-31",
+            "https://bryantpark.org/calendar/event/piano/2026-09-02",
+            "https://bryantpark.org/calendar/event/piano/2026-09-07",
+            "https://www.nyc.gov/main/events/?permalinkName=piano-in-bryant-park&id=1093116&sequence=1",
+            "https://www.nyc.gov/main/events/?permalinkName=piano-in-bryant-park&id=1093176&sequence=1",
+            "https://www.nyc.gov/main/events/?permalinkName=piano-in-bryant-park&id=1093196&sequence=1",
+            "https://www.nyc.gov/main/events/?permalinkName=piano-in-bryant-park&id=1167156&sequence=1",
+            "https://www.nyc.gov/main/events/?permalinkName=piano-in-bryant-park&id=1167236&sequence=1",
+            "https://www.nyc.gov/main/events/?permalinkName=piano-in-bryant-park&id=1167296&sequence=1",
+            "https://www.nyc.gov/main/events/?permalinkName=piano-in-bryant-park&id=1167336&sequence=1",
+            "https://www.nyc.gov/main/events/?permalinkName=piano-in-bryant-park&id=1167356&sequence=1",
+            "https://www.nyc.gov/main/events/?permalinkName=piano-in-bryant-park&id=1167396&sequence=1",
+            "https://www.nyc.gov/main/events/?permalinkName=piano-in-bryant-park&id=1167436&sequence=1",
+            "https://www.nyc.gov/main/events/?permalinkName=piano-in-bryant-park&id=1167476&sequence=1",
+            "https://www.nyc.gov/main/events/?permalinkName=piano-in-bryant-park&id=1187676&sequence=1",
+            "https://www.nyc.gov/main/events/?permalinkName=piano-in-bryant-park&id=1236736&sequence=1",
+            "https://www.nycgovparks.org/events/2026/07/29/piano-in-bryant-park",
+            "https://www.nycgovparks.org/events/2026/08/03/piano-in-bryant-park",
+            "https://www.nycgovparks.org/events/2026/08/04/piano-in-bryant-park",
+            "https://www.nycgovparks.org/events/2026/08/07/piano-in-bryant-park",
+            "https://www.nycgovparks.org/events/2026/08/10/piano-in-bryant-park",
+            "https://www.nycgovparks.org/events/2026/08/13/piano-in-bryant-park",
+            "https://www.nycgovparks.org/events/2026/08/17/piano-in-bryant-park",
+            "https://www.nycgovparks.org/events/2026/08/19/piano-in-bryant-park",
+            "https://www.nycgovparks.org/events/2026/08/24/piano-in-bryant-park",
+            "https://www.nycgovparks.org/events/2026/08/25/piano-in-bryant-park",
+            "https://www.nycgovparks.org/events/2026/08/28/piano-in-bryant-park",
+            "https://www.nycgovparks.org/events/2026/08/31/piano-in-bryant-park",
+            "https://www.nycgovparks.org/events/2026/09/03/piano-in-bryant-park",
+            "https://www.nycgovparks.org/events/2026/09/07/piano-in-bryant-park",
+            "https://www.nycgovparks.org/events/2026/09/08/piano-in-bryant-park"
+          ],
+          "evidence": [
+            "Piano in Bryant Park: Enjoy live piano music featuring New York's finest musicians playing ragtime, stride, and jazz styles."
+          ]
+        }
+      ],
+      "event_count": 1,
+      "venue_count": 1,
+      "catalog_id_exists": false
+    },
+    {
+      "concept": "genre-stadium-rock",
+      "event_ids": [
+        231763
+      ],
+      "venues": [
+        {
+          "name": "Bowery Palace",
+          "address": "327 Bowery, New York, NY 10003, USA"
+        }
+      ],
+      "categories": [
+        "genre"
+      ],
+      "labels": [
+        "Stadium rock"
+      ],
+      "variants": [
+        {
+          "visual": "Stage-front microphone with two bold radiating speaker-wave arcs.",
+          "rationale": "Explicit stadium-rock sound and high-energy arena-style show supports scale/anthem exploration; actual small venue must not be misrepresented as stadium.",
+          "existing_alternative": "Guitar communicates rock broadly; motif is exploratory and may not be distinguishable from general amplified concerts."
+        }
+      ],
+      "tags": {
+        "Performance": 1,
+        "Music": 1,
+        "Format": 1,
+        "Concert": 1,
+        "Rock": 1,
+        "Live Music": 1
+      },
+      "examples": [
+        {
+          "event_id": 231763,
+          "name": "Matt Kelley & The Big Reveal | Dirty Blond | Gracie Lou",
+          "emoji": "🎸",
+          "current_icon_id": null,
+          "venue": "Bowery Palace",
+          "urls": [
+            "https://www.bowerypalace.com/tm-event/matt-kelley-the-big-reveal-september-residency-2/"
+          ],
+          "evidence": [
+            "Matt Kelley & The Big Reveal | Dirty Blond | Gracie Lou: Matt Kelley & The Big Reveal is a 6-piece NYC based band whose sound and style evokes the stadium rock legends of a bygone era. Led by larger-than-life frontman Matt Kelley, The Big Reveal combines deeply personal lyricism with a massive sound and a raucous, high-energy live show that leaves listeners comparing the band to paragons of rock 'n' roll like Bruce Springsteen & The E Street Band, Queen, and The Killers. Their debut EP, \"The In-Between,\" released December 16th and is available on all streaming platforms."
+          ]
+        }
+      ],
+      "event_count": 1,
+      "venue_count": 1,
+      "catalog_id_exists": false
+    },
+    {
+      "concept": "genre-surf-rock",
+      "event_ids": [
+        210356
+      ],
+      "venues": [
+        {
+          "name": "Rockaway Beach",
+          "address": "Rockaway Beach, Queens, NY, USA"
+        }
+      ],
+      "categories": [
+        "genre"
+      ],
+      "labels": [
+        "Surf rock"
+      ],
+      "variants": [
+        {
+          "visual": "An electric guitar with a broad spring-like reverb ripple behind the body.",
+          "rationale": "The event explicitly teaches surf-rock history; explore the characteristic reverberant-guitar cue without depicting actual surfing. This is a genre concept, not proof of this event instrumentation.",
+          "existing_alternative": "Generic guitar is already available but loses genre; surfer is misleading for listening. Test whether the reverb motif is legible before making art."
+        }
+      ],
+      "tags": {
+        "Beach Party": 1,
+        "Outings": 1,
+        "Surf Rock": 1,
+        "Music": 1,
+        "Format": 1,
+        "Outing": 1,
+        "Outdoor": 1,
+        "Rock": 1,
+        "Live Music": 1
+      },
+      "examples": [
+        {
+          "event_id": 210356,
+          "name": "Surf Rock 101",
+          "emoji": "🏄🏽",
+          "current_icon_id": null,
+          "venue": "Rockaway Beach",
+          "urls": [
+            "https://partiful.com/e/SpQgu67leHjAenzo8U0z?source=discover"
+          ],
+          "evidence": [
+            "Surf Rock 101: Listen and Learn about the history of Surf Rock at our end of summer beach party! Our shuttle will take you from Williamsburg to Rockaway Beach and back. Our Sleeves listening party will be happening on the go! Hop on the bus to Listen and learn about the history of surf rock to get you primed for a day at the beach. Tags: Music, Rock, Outdoor, Surf Rock, Live Music, Outing, Beach Party, Format, Outings."
+          ]
+        }
+      ],
+      "event_count": 1,
+      "venue_count": 1,
+      "catalog_id_exists": false
+    },
+    {
+      "concept": "genre-techno",
+      "event_ids": [
+        214595
+      ],
+      "venues": [
+        {
+          "name": "Silo",
+          "address": "90 Scott Ave, Brooklyn, NY 11237, USA"
+        }
+      ],
+      "categories": [
+        "genre"
+      ],
+      "labels": [
+        "Techno"
+      ],
+      "variants": [
+        {
+          "visual": "Minimal step-sequencer grid with a looping pulse.",
+          "rationale": "Explicit techno program supports a machine-rhythm concept but it must be tested against house/electronic overlap.",
+          "existing_alternative": "Headphones/decks identify DJ activity; the genre motif is not proven or exclusive."
+        }
+      ],
+      "tags": {
+        "Techno": 1,
+        "House Music": 1,
+        "Open Decks": 1,
+        "Participatory": 1,
+        "Music": 1,
+        "Electronic Music": 1,
+        "Format": 1,
+        "Free": 1,
+        "Nightlife": 1,
+        "DJ": 1,
+        "Open Practice": 1,
+        "Community": 1
+      },
+      "examples": [
+        {
+          "event_id": 214595,
+          "name": "Open Decks w/ Steen & Club Massive",
+          "emoji": "🎧",
+          "current_icon_id": null,
+          "venue": "Silo",
+          "urls": [
+            "https://link.dice.fm/P1693e701122",
+            "https://ra.co/events/2508328"
+          ],
+          "evidence": [
+            "Open Decks w/ Steen & Club Massive: Hosted by DJ and musician Steen, Open Decks is a creative and fun space where DJs can hang and share their house and techno music live. Hear favorite or original tracks on Silo's front room sound system, a custom 15,000 watt Danley powerhouse."
+          ]
+        }
+      ],
+      "event_count": 1,
+      "venue_count": 1,
+      "catalog_id_exists": false
+    }
+  ],
+  "consolidation": {
+    "concept_aliases": {
+      "craft-life-drawing": {
+        "to": "craft-figure-drawing",
+        "reason": "Both reviewed proposals depict drawing the human figure from a live model."
+      },
+      "activity-building-bricks": {
+        "to": "activity-interlocking-bricks",
+        "reason": "Both reviewed proposals depict the same studded interlocking toy bricks."
+      },
+      "rakugo": {
+        "to": "format-rakugo",
+        "reason": "Normalize the semantic key for this storytelling performance format."
+      },
+      "genre-stride-piano": {
+        "to": "technique-stride-piano",
+        "category": "other",
+        "reason": "Both describe the same stride piano left-hand technique, kept distinct from ragtime."
+      },
+      "format-choral-singing": {
+        "to": "ensemble-choir",
+        "reason": "Both depict participatory group singing in harmony; retain both visual variants."
+      },
+      "equipment-dj-turntable": {
+        "to": "equipment-dj-decks",
+        "reason": "Both cover active DJ mixing equipment. Keep platter and jog-wheel variants without asserting vinyl hardware."
+      },
+      "equipment-vinyl-record": {
+        "to": "equipment-turntable",
+        "reason": "Both proposals include a record and tonearm for analog listening, distinct from DJ mixing."
+      },
+      "activity-audio-production": {
+        "to": "equipment-digital-audio-workstation",
+        "category": "equipment",
+        "reason": "Both propose an audio-track editing screen for software music production; MIDI sequencing remains a separate technique."
+      },
+      "format-big-band": {
+        "to": "ensemble-big-band",
+        "reason": "Both identify a large jazz ensemble with multiple sections rather than a small combo."
+      }
+    }
+  },
+  "display_changes": [
+    {
+      "id": 102566,
+      "name": "JBL Tuesdays at Dan and John's Wings",
+      "chosen": "trivia",
+      "decision": "assign",
+      "reason": "Jeopardy Bar League is participatory competitive trivia, established by the description.",
+      "evidence": [
+        "JBL Tuesdays at Dan and John's Wings at Dan and John's Wings (Geeks Who Drink): Participate in the Jeopardy! Bar League at Dan and John's Wings. Join fellow trivia enthusiasts every Tuesday for this recurring competition."
+      ],
+      "before": null,
+      "after": "trivia"
+    },
+    {
+      "id": 116153,
+      "name": "JBL Tuesdays at The Office at 68th",
+      "chosen": "trivia",
+      "decision": "assign",
+      "reason": "Jeopardy Bar League is explicitly competitive trivia despite indirect JBL title.",
+      "evidence": [
+        "JBL Tuesdays at The Office at 68th: Jeopardy! Bar League trivia event starting June 23.",
+        "Venue/source: The Office at 68th / Geeks Who Drink"
+      ],
+      "before": null,
+      "after": "trivia"
+    },
+    {
+      "id": 158551,
+      "name": "Yo! MTV Bingo",
+      "chosen": "music-bingo",
+      "decision": "assign",
+      "reason": "Description explicitly calls this music bingo; more specific than proposed ordinary bingo.",
+      "evidence": [
+        "Yo! MTV Bingo: Free music bingo night with prizes. 21+. Free personal pizza with every drink.",
+        "Venue/source: Alligator Lounge / Alligator Lounge"
+      ],
+      "before": "bingo",
+      "after": "music-bingo"
+    },
+    {
+      "id": 225846,
+      "name": "Learn 3D Modelling with Tinkercad",
+      "chosen": "3d-printing",
+      "decision": "assign",
+      "reason": "Tinkercad modeling explicitly proceeds to printing the designed objects on 3D printers.",
+      "evidence": [
+        "Learn 3D Modelling with Tinkercad: Tap into your inner engineer and sign up for this free program! You'll learn how to build 3D objects like nametags using the free Tinkercad program, then print those same objects with our 3D printers. This is an introduction to 3D modeling and printing, so no experience is required.",
+        "Venue/source: Communipaw Branch Library / Jersey City Free Public Library; tags: Workshop, Science, Free, Education, Technology, 3D Printing, Participatory, 3D Modeling, Tinkercad, Format."
+      ],
+      "before": null,
+      "after": "3d-printing"
+    },
+    {
+      "id": 227853,
+      "name": "Longarm Quilting Part 1 & 2",
+      "chosen": "machine-sewing",
+      "decision": "assign",
+      "reason": "Longarm quilting inherently centers a sewing machine despite null heuristic.",
+      "evidence": [
+        "Longarm Quilting Part 1 & 2: This is a two-part class series held on two consecutive Tuesday evenings. Attendance at both classes is required, and registration covers both sessions.",
+        "Venue/source: Hunterdon County Library Headquarters / Hunterdon County Library"
+      ],
+      "before": null,
+      "after": "machine-sewing"
+    },
+    {
+      "id": 231120,
+      "name": "Pole & Aerial Student Showcase",
+      "chosen": "pole-dance",
+      "decision": "assign",
+      "reason": "DROM is explicitly the pole student showcase location; pole performance is central while separate aerial show is elsewhere.",
+      "evidence": [
+        "Pole & Aerial Student Showcase: The showcase consists of two professionally produced shows at two NYC venues. The page identifies the pole student showcase as taking place at DROM and the aerial showcase at The Slipper Room.",
+        "Venue/source: Drom / Body & Pole; tags: Dance, Education, Student Show, Pole Dance, Aerial Dance, Format, Theater Show, Performance."
+      ],
+      "before": null,
+      "after": "pole-dance"
+    },
+    {
+      "id": 242788,
+      "name": "Pole Conditioning - Level 1+",
+      "chosen": "pole-dance",
+      "decision": "assign",
+      "reason": "Pole-conditioning fitness explicitly centers pole practice.",
+      "evidence": [
+        "Pole Conditioning - Level 1+: A Tuesday Pole Conditioning class for Level 1+ students.",
+        "Venue/source: Full Circle Brooklyn / @fullcirclebrooklyn"
+      ],
+      "before": null,
+      "after": "pole-dance"
+    },
+    {
+      "id": 242789,
+      "name": "Pole Level 2",
+      "chosen": "pole-dance",
+      "decision": "assign",
+      "reason": "Spin Pole Level 2 class explicitly centers pole dance despite inconsistent weekday listing.",
+      "evidence": [
+        "Pole Level 2: Spin Pole Level 2+ classes are offered Thursdays at noon and Fridays at 4:30pm during September.",
+        "Venue/source: Full Circle Brooklyn / @fullcirclebrooklyn"
+      ],
+      "before": null,
+      "after": "pole-dance"
+    },
+    {
+      "id": 243598,
+      "name": "Sew Studio with Jen Butler",
+      "chosen": "machine-sewing",
+      "decision": "assign",
+      "reason": "Description explicitly supplies sewing machines for participant projects.",
+      "evidence": [
+        "Sew Studio with Jen Butler: This is a terrific sewing group led by the fabulous designer Jennifer Butler! All sewing-skill levels are welcome. We provide the sewing machines and other materials, but feel free to bring your own machine/project to work on. For ages 12 and up.",
+        "Venue/source: Fairfield Woods Branch Library / Fairfield Public Library"
+      ],
+      "before": null,
+      "after": "machine-sewing"
+    },
+    {
+      "id": 243665,
+      "name": "Sew a Mini Wallet for Teens",
+      "chosen": "machine-sewing",
+      "decision": "assign",
+      "reason": "Teen mini-wallet workshop explicitly uses library sewing machines.",
+      "evidence": [
+        "Sew a Mini Wallet for Teens: Join us to make your very own mini wallet. Follow along with easy step-by-step instructions for cutting out your materials and sewing them together using the library's sewing machines. No sewing machine experience required, and all materials will be provided.",
+        "Venue/source: Ridgefield Library / Ridgefield Library"
+      ],
+      "before": null,
+      "after": "machine-sewing"
+    },
+    {
+      "id": 244299,
+      "name": "Monster of the Week",
+      "chosen": "tabletop-rpg",
+      "decision": "assign",
+      "reason": "Monster of the Week is explicitly a collaborative tabletop role-playing game.",
+      "evidence": [
+        "Monster of the Week at Smithtown Library Kings Park Building (The Smithtown Library): Jump into the supernatural underbelly of our world with tabletop role-playing game Monster of the Week! Create your character, fight monsters, cast spells, and work together to save the day with a group of fellow heroes."
+      ],
+      "before": null,
+      "after": "tabletop-rpg"
+    },
+    {
+      "id": 245141,
+      "name": "Open Sewing Lab",
+      "chosen": "machine-sewing",
+      "decision": "assign",
+      "reason": "Explicit access to Singer Stylist sewing machines for projects makes machine sewing central despite title lacking machine.",
+      "evidence": [
+        "Open Sewing Lab: This event will take place in-person at Parkchester Library. Interested in making your own sewing projects? Access PKR’s Singer Stylist machines for longer sewing projects with YA librarian support.",
+        "Venue/source: Parkchester Library / New York Public Library; tags: Art, Family, Warehouse, Makerspace, Fiber Arts, Crafts, Sewing, Teen Events, Open Practice, Participatory, Creative Projects, Format."
+      ],
+      "before": null,
+      "after": "machine-sewing"
+    }
+  ],
+  "status": "Decisions persisted and local export/build verified. New concepts are not artwork approvals or assignable IDs. No deployment."
+}

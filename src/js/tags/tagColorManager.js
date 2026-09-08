@@ -77,23 +77,6 @@ const TagColorManager = (() => {
         return palette.find(color => !usedColors.has(color)) || null;
     }
 
-    /**
-     * Returns the font-family string for the emoji font currently in use — the
-     * single source of truth for emoji font resolution, also consumed by
-     * MapManager._addEmojiImage when rendering map glyphs. When the user switches
-     * to Noto, the body gets the `use-noto-emoji` class; otherwise the
-     * platform/system emoji font (via `serif` fallback) is used. Sharing one
-     * resolver keeps color extraction on the same font as the rendered glyph,
-     * so the derived color matches it.
-     * @returns {string} CSS font-family
-     */
-    function getActiveEmojiFont() {
-        return (typeof document !== 'undefined' &&
-                document.body && document.body.classList.contains('use-noto-emoji'))
-            ? '"Noto Color Emoji"'
-            : 'serif';
-    }
-
     // OKLCH targets for the final emoji-derived color. Lightness and chroma are
     // pinned (only the hue, found below, varies per emoji) so every marker/chip
     // color reads as equally vivid regardless of hue — the same perceptual
@@ -110,45 +93,11 @@ const TagColorManager = (() => {
     const MIN_PIXEL_L = 0.12;        // reject near-black outline pixels
     const MIN_RESULT_CHROMA = 0.015; // averaged result this gray ⇒ achromatic glyph (⚽) → fallback
 
-    /**
-     * Extracts a dominant color from an emoji by drawing it on canvas and analyzing pixels.
-     * Renders with the active emoji font (system or Noto), so the result tracks the
-     * glyph the viewer actually sees. Callers go through getColorForEmoji, which caches;
-     * this function does the raw extraction.
-     *
-     * The dominant hue is found by clustering pixels into OKLCH hue buckets (weighted
-     * by OKLab chroma²), and the final color is built in OKLCH (see MARKER_OKLCH_*
-     * above) at a pinned lightness/chroma, so brightness/saturation are perceptually
-     * uniform across hues.
-     * @param {string} emoji - Emoji character(s)
-     * @param {string} [fontFamily] - Font to render with; defaults to the active emoji font
-     * @returns {string} Hex color code
-     */
-    function extractColorFromEmoji(emoji, fontFamily) {
-        const size = 64;
-        const canvas = document.createElement('canvas');
-        canvas.width = size;
-        canvas.height = size;
-        // Pixel analysis is the output: keep this small canvas on the CPU.
-        const ctx = canvas.getContext('2d', { willReadFrequently: true });
-        ctx.font = size * 0.85 + 'px ' + (fontFamily || getActiveEmojiFont());
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(emoji, size / 2, size / 2);
-
-        // Themed rendering knobs: the emoji transform must match what
-        // MapManager._addEmojiImage draws so the derived color tracks the
-        // glyph on screen; L/C pins and the achromatic fallback are also
-        // theme-overridable (e.g. softer rings on parchment).
-        const themeDef = Themes.resolve(Utils.getCurrentTheme());
+    // Artwork pixels are already transformed by the active theme.
+    function extractColorFromPixels(imageData, themeDef) {
         const fallback = themeDef.achromaticFallback || '#8899aa';
         const targetL = (themeDef.markerOklch && themeDef.markerOklch.L) || MARKER_OKLCH_L;
         const targetC = (themeDef.markerOklch && themeDef.markerOklch.C) || MARKER_OKLCH_C;
-
-        let imageData = ctx.getImageData(0, 0, size, size);
-        if (themeDef.emojiTransform) {
-            imageData = EmojiTransforms.apply(imageData, themeDef.emojiTransform, 1);
-        }
         const data = imageData.data;
         const buckets = new Array(36).fill(0);
         const bucketColors = Array.from({length: 36}, () => []);
@@ -196,26 +145,10 @@ const TagColorManager = (() => {
         return ColorUtils.oklchToHex(targetL, targetC, avg.h);
     }
 
-    /**
-     * Resolves a color for an emoji, extracting it live from the rendered glyph on
-     * first use and caching the result. There is no precomputed/curated table — the
-     * viewer's own emoji font determines the color. The cache is keyed by font too,
-     * so switching between system and Noto emoji yields (and retains) distinct colors
-     * without stale hits.
-     * @param {string} emoji - Emoji character(s)
-     * @returns {string|null} Color hex code, or null if no emoji given
-     */
+    // Compatibility entry point for callers holding source Unicode. Colors
+    // come from the shared artwork cache; mounted icons supply async updates.
     function getColorForEmoji(emoji) {
-        if (!emoji) return null;
-        const font = getActiveEmojiFont();
-        // Theme participates in the key: emoji transforms and L/C overrides
-        // change the derived color per theme (dark/light share values but
-        // recompute once each — cheap, and keeps invalidation trivial).
-        const key = font + '|' + getCurrentTheme() + '|' + emoji;
-        if (state.bgcolors[key]) return state.bgcolors[key];  // cache hit
-        const color = extractColorFromEmoji(emoji, font);
-        state.bgcolors[key] = color;
-        return color;
+        return IconManager.getColor({ emoji });
     }
 
     /**
@@ -225,8 +158,24 @@ const TagColorManager = (() => {
      * @param {string} tag - Tag name
      * @returns {string|null} Color hex code, or null if the tag has no emoji
      */
+    const tagIconColors = new Map();
+    function tagIconColorKey(tag) {
+        return [IconManager.tagCacheKey(tag), getCurrentTheme()].join('|');
+    }
+    function acceptTagIconColor(tag, color) {
+        if (!color || !IconManager.tagCacheKey(tag)) return null;
+        tagIconColors.set(tagIconColorKey(tag), color);
+        if (tagIconColors.size > 256) tagIconColors.delete(tagIconColors.keys().next().value);
+        if (Themes.resolve(getCurrentTheme()).chipColors === 'palette') return getTagColor(tag);
+        const entry = state.selectedTagsWithColors.find(([name]) => name === tag);
+        if (entry) entry[1] = color;
+        return color;
+    }
     function getEmojiBgColor(tag) {
         if (Themes.resolve(getCurrentTheme()).chipColors === 'palette') return null;
+        if (typeof IconManager !== 'undefined' && IconManager.tagCacheKey(tag)) {
+            return tagIconColors.get(tagIconColorKey(tag)) || '#8899aa';
+        }
         return getColorForEmoji(state.tagEmojiMap[tag]);
     }
 
@@ -363,15 +312,14 @@ const TagColorManager = (() => {
 
         // Color management
         getColorForEmoji,
+        extractColorFromPixels,
         getTagColor,
+        acceptTagIconColor,
         assignColorToTag,
         unassignColorFromTag,
         reassignTagColors,
 
         // Query functions
-        getSelectedTagsWithColors,
-
-        // Emoji font resolution (single source — consumed by MapManager._addEmojiImage)
-        getActiveEmojiFont
+        getSelectedTagsWithColors
     };
 })();

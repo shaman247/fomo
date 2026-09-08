@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+<title>Double bass</title><desc>A dark honey-colored upright bass with sloping shoulders, a long ebony neck, and a hand plucking the strings.</desc>
+<g transform="translate(6.24 0) scale(.88 1)">
+<path fill="#78909C" d="M52 109h5v13h-5z"/>
+<path fill="#955532" transform="translate(2 2)" d="M47 40L43 47L29 59C24 63 24 69 29 73L32 76C36 79 34 83 30 86C24 90 21 95 22 102C23 111 36 114 52 114C68 114 81 111 82 102C83 95 80 90 74 86C70 83 68 79 72 76L75 73C80 69 80 63 75 59L61 47L57 40Z"/>
+<path fill="#CC8745" d="M47 40L43 47L29 59C24 63 24 69 29 73L32 76C36 79 34 83 30 86C24 90 21 95 22 102C23 111 36 114 52 114C68 114 81 111 82 102C83 95 80 90 74 86C70 83 68 79 72 76L75 73C80 69 80 63 75 59L61 47L57 40Z"/>
+<path fill="#EBA65D" d="M43 49L31 61C27 65 29 69 32 71C29 66 35 59 43 49ZM29 90C24 97 25 105 38 109C29 103 28 98 29 90Z"/>
+<path fill="#B16B37" d="M74 90C79 99 77 106 67 110C80 109 82 101 74 90Z"/>
+<path fill="#955532" d="M48 14h10l2 37H46z"/>
+<path fill="#37474F" d="M48 16h9l5 62H43z"/>
+<path fill="#546E7A" d="M48 18h3l-2 57h-5z"/>
+<path fill="#B16B37" d="M46 5c-3 3-1 9 2 15h9l5-10c2-8-11-10-16-5z"/>
+<path fill="#EBA65D" d="M49 5c3-1 7 1 6 4-1 2-4 2-5 0-1 3 1 4 3 5l-5 1c-2-4-2-8 1-10z"/>
+<path fill="#B0BEC5" d="M40 12h9v4h-9c-3 0-3-4 0-4zm16 7h9c3 0 3 4 0 4h-9z"/>
+<path fill="#37474F" d="M39 83c-3-3-6 0-4 4 2 3-2 5-3 8-1 3 1 5 4 3l-1-2c-1 1-2 0-1-1 3-3 4-6 2-9-1-2 0-2 2-1z"/>
+<path fill="#37474F" transform="translate(104 0) scale(-1 1)" d="M39 83c-3-3-6 0-4 4 2 3-2 5-3 8-1 3 1 5 4 3l-1-2c-1 1-2 0-1-1 3-3 4-6 2-9-1-2 0-2 2-1z"/>
+<path fill="#FFCC80" d="M41 87q11-5 22 0v8h-5v-5H46v5h-5z"/>
+<path fill="#37474F" d="M44 98h16l-5 13h-6z"/>
+<path fill="none" stroke="#D8CDC9" stroke-width="1.15" d="M50 23l-3 75m5-75-2 75m4-75v75m2-75 1 75"/>
+</g>
+<path fill="#CE8963" d="M105 51l-18 1-17 9-14 1c-5 0-5 6 0 7l15 1-9 4c-4 2-2 7 2 6l20-7 12-9h11z"/>
+<path fill="#FFCC80" d="M105 48l-18 1-17 9-14 1c-5 0-5 5 0 6l16 1 11-4c-2 4-7 7-13 9l-9 4c-3 1-1 5 2 4l19-7 13-12h12z"/>
+<path fill="#42A5F5" d="M104 46h17v20h-17z"/>
+<path fill="#1E88E5" d="M104 60h17v6h-17z"/>
+</svg>

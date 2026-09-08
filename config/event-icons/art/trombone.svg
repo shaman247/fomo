@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+<title>Trombone</title>
+<g transform="translate(0 17) rotate(42 64 45)">
+<!-- Continuous air path: mouthpiece, lower slide, slide bow, upper slide, rear tuning bow, bell stem. -->
+<path d="M31 60h80c8 0 8-12 0-12H19C4 48 4 28 19 28h34" fill="none" stroke="#B87918" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M31 59h80c6 0 6-10 0-10H19C6 49 6 28 19 28h34" fill="none" stroke="#FBC02D" stroke-width="3.8" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M33 58h76M112 48H19C9 48 7 35 13 30M20 27h31" fill="none" stroke="#FFE082" stroke-width="1.6" stroke-linecap="round"/>
+<!-- The tuning-bow return is directly continuous with the upper slide. -->
+<path d="M33 48v12M43 48v12" fill="none" stroke="#CC921E" stroke-width="3.3"/>
+<path d="M32.5 49v9M42.5 49v9" fill="none" stroke="#FFE082" stroke-width="1.3"/>
+<!-- A tapered bell grows from the upper tube above the closely spaced slide. -->
+<path fill="#FBC02D" d="M47 25c14 0 22-4 31-13v32c-9-9-17-13-31-13z"/>
+<path fill="#FFE082" d="M47 25c14 0 22-4 31-13v7c-11 7-18 8-31 9z"/>
+<path fill="#D9911C" d="M47 30c14 0 22 5 31 14v-7c-9-5-19-8-31-8z"/>
+<ellipse cx="79" cy="28" rx="7" ry="17" fill="#FFCA28"/>
+<ellipse cx="80" cy="28" rx="4.6" ry="13.7" fill="#935124"/>
+<path d="M81 15c2.4 2.4 3.6 7.5 3.6 13s-1.2 11-3.6 13c-1.7-8-1.7-18 0-26z" fill="#BD7725"/>
+<!-- Cup mouthpiece on the open end of the lower slide. -->
+<path d="M23 56h4l5 2h3v4h-3l-5 2h-4z" fill="#B0BEC5"/>
+<path d="M23 56h3v8h-3z" fill="#ECEFF1"/>
+<path d="M27 57.5l5 2h3v1.2h-3l-5-1.4z" fill="#ECEFF1"/>
+</g>
+</svg>

@@ -213,6 +213,20 @@ CREATE TABLE IF NOT EXISTS events (
     FOREIGN KEY (website_id) REFERENCES websites(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Primary event pictograms and preserved manual decisions. NULL manual icon means fallback.
+CREATE TABLE IF NOT EXISTS event_icon_assignments (
+    event_id INT UNSIGNED NOT NULL PRIMARY KEY,
+    icon_id VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin DEFAULT NULL,
+    origin ENUM('rule','manual','agent') NOT NULL,
+    rule_version VARCHAR(64) DEFAULT NULL,
+    input_hash CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+    review_required TINYINT(1) NOT NULL DEFAULT 0,
+    reason TEXT NOT NULL,
+    evidence_json JSON NOT NULL,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_event_icon_event FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Event occurrences (one event can have multiple dates/times)
 CREATE TABLE IF NOT EXISTS event_occurrences (
     id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -302,6 +316,7 @@ CREATE TABLE IF NOT EXISTS dedupe_dismissed_umbrellas (
 CREATE TABLE IF NOT EXISTS tags (
     id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
+    icon_id VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin DEFAULT NULL COMMENT 'Optional custom icon catalog ID; emoji remains the Unicode fallback',
     emoji VARCHAR(10) DEFAULT NULL,
     alt_emoji VARCHAR(10) DEFAULT NULL COMMENT 'Fallback shown on Windows when emoji is a country flag (the system emoji font has no flag glyphs)',
     is_quick_filter TINYINT(1) NOT NULL DEFAULT 0,
@@ -672,3 +687,16 @@ CREATE TABLE IF NOT EXISTS db_write_lock_holder (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;
+CREATE TABLE IF NOT EXISTS icon_review_queue (
+    emoji_hash CHAR(64) CHARACTER SET ascii COLLATE ascii_bin PRIMARY KEY,
+    emoji VARCHAR(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+    source_kind VARCHAR(32) NOT NULL,
+    source_id INT DEFAULT NULL,
+    source_name VARCHAR(500) DEFAULT NULL,
+    observations INT UNSIGNED NOT NULL DEFAULT 1,
+    first_seen TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    last_seen TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    status ENUM('pending','resolved','dismissed') NOT NULL DEFAULT 'pending',
+    review_note TEXT DEFAULT NULL,
+    INDEX idx_icon_review_status (status,last_seen)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">3D printer</title>
+  <desc id="desc">An open-frame 3D printer with a suspended nozzle building an orange layered object.</desc>
+
+  <path fill="#2F2F2F" d="M12 22l9-9h91c7 0 11 4 11 11v91l-10 9H14z"/>
+  <path fill="#B8B8B8" d="M14 22l9-9h88c5 0 9 4 10 9z"/>
+  <path fill="#5E6367" fill-rule="evenodd" d="M15 21h91c7 0 10 4 10 11v84c0 5-3 8-8 8H14c-6 0-9-3-9-8V33c0-8 2-12 6-12zm8 14v65h79V35z"/>
+  <path fill="#B8B8B8" d="M22 45h81v5H22z"/>
+  <path fill="#D8CDC9" d="M23 45h78v2H23z"/>
+  <path fill="#2F2F2F" d="M50 34h29v22H50z"/>
+  <path fill="#B8B8B8" d="M53 33h24v20H53z"/>
+  <path fill="#FFA828" d="M57 53h17v9l-6 7h-5l-6-7z"/>
+  <path fill="#AD7156" d="M64 66h4v10h-4z"/>
+  <path fill="#81D4FA" d="M25 95l10-8h64l7 10-10 9H25z"/>
+  <path fill="#0288D1" d="M25 97h80l-9 9H25z"/>
+  <path fill="#EF6C00" d="M45 92h39v7H45zM49 85h31v7H49zM54 78h21v7H54z"/>
+  <path fill="#FFCC80" d="M54 76h21v4H54zM49 84h31v3H49zM45 92h39v3H45z"/>
+  <path fill="#B8B8B8" d="M15 30c-2 2-2 16 0 17 2 1 3-4 3-11 0-4-1-8-3-6z"/>
+  <path fill="#2F2F2F" d="M78 109h24v9H78z"/>
+  <path fill="#4FC3F7" d="M81 111h11v5H81z"/>
+  <circle fill="#B8B8B8" cx="98" cy="114" r="2"/>
+
+</svg>

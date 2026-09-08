@@ -174,17 +174,13 @@ const FilterManager = (() => {
                 .filter(Boolean);
         }
 
-        // Apply forbidden tag filter.
-        // NOTE: this index-based path checks event + organizer tags only — NOT
-        // location tags, unlike Utils.matchesTagSets (used by the popup sort).
-        // Long-standing divergence, kept as-is to preserve which markers display.
+        // Use the same event + venue + organizer membership as inclusion.
         if (forbiddenTags.length > 0) {
-            const forbiddenTagsSet = new Set(forbiddenTags);
-            filteredEvents = filteredEvents.filter(event => {
-                if (event.tags?.some(tag => forbiddenTagsSet.has(tag))) return false;
-                if (Utils.organizerTagsForEvent(event).some(t => forbiddenTagsSet.has(t))) return false;
-                return true;
-            });
+            const forbiddenIds = new Set();
+            for (const tag of forbiddenTags) {
+                for (const id of state.appState.eventTagIndex[tag] || []) forbiddenIds.add(id);
+            }
+            filteredEvents = filteredEvents.filter(event => !forbiddenIds.has(event.id));
         }
 
         return filteredEvents;
@@ -243,14 +239,10 @@ const FilterManager = (() => {
                     visibleEvents.push(event);
                     visibleLocationKeys.add(event.locationKey);
 
-                    // Calculate tag frequencies with proximity weighting
-                    if (event.tags) {
-                        event.tags.forEach(tag => {
-                            if (!visibleTagFrequencies[tag]) {
-                                visibleTagFrequencies[tag] = 0;
-                            }
-                            visibleTagFrequencies[tag] += 1 + loc.proximityWeight;
-                        });
+                    // Each effective tag counts once, even if event and venue share it.
+                    const tags = Utils.eventFilterTags(event, state.appState.locationsByLatLng[event.locationKey]);
+                    for (const tag of tags) {
+                        visibleTagFrequencies[tag] = (visibleTagFrequencies[tag] || 0) + 1 + loc.proximityWeight;
                     }
                 }
             }

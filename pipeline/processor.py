@@ -29,6 +29,7 @@ from datetime import datetime, timedelta
 import regex
 
 import db
+from tag_canonicalization import resolve_tag_name
 import crawler
 import site_profiles
 # Occurrence-time canonicalization lives in `occurrence_times` (the single
@@ -326,6 +327,7 @@ def process_tags(row_dict, tag_rules, extra_tags=None, ancestor_map=None, root_t
 
     hashtags_field = row_dict.pop('hashtags')
     rewrite_rules = tag_rules.get('rewrite', {})
+    canonical = tag_rules.get('canonical', {})
     exclude_list = set(tag_rules.get('exclude', []))
     disambiguation_rules = disambiguation_rules or {}
 
@@ -342,7 +344,11 @@ def process_tags(row_dict, tag_rules, extra_tags=None, ancestor_map=None, root_t
     # Add extra_tags first
     if extra_tags:
         for tag in extra_tags:
+            tag = resolve_tag_name(tag, rewrite_rules, canonical, disambiguation_rules)
             tag_normalized = db.normalize_tag_key(tag)
+            if tag_normalized in disambiguation_rules:
+                deferred_ambiguous.append(tag_normalized)
+                continue
             if tag_normalized not in exclude_list and tag_normalized not in seen_tags:
                 processed_tags.append(tag)
                 seen_tags.add(tag_normalized)
@@ -376,7 +382,7 @@ def process_tags(row_dict, tag_rules, extra_tags=None, ancestor_map=None, root_t
             deferred_ambiguous.append(lookup_tag)
             continue
 
-        final_tag = rewrite_rules.get(lookup_tag, processed_tag)
+        final_tag = resolve_tag_name(processed_tag, rewrite_rules, canonical, disambiguation_rules)
 
         # Lowercase connecting words
         final_tag = re.sub(r'(?<!^)\b(A|And|Of|The|Or|In|At|On|For|To|With|From|By)\b',
@@ -393,7 +399,12 @@ def process_tags(row_dict, tag_rules, extra_tags=None, ancestor_map=None, root_t
             final_tag = _region_prefix_pat.sub('', final_tag)
             final_tag = _region_suffix_pat.sub('', final_tag)
 
+        # Region/name formatting can expose another alias or split a known name.
+        final_tag = resolve_tag_name(final_tag, rewrite_rules, canonical, disambiguation_rules)
         final_tag_lookup = db.normalize_tag_key(final_tag)
+        if final_tag_lookup in disambiguation_rules:
+            deferred_ambiguous.append(final_tag_lookup)
+            continue
         if final_tag_lookup not in exclude_list and final_tag_lookup not in seen_tags:
             processed_tags.append(final_tag)
             seen_tags.add(final_tag_lookup)
@@ -7283,6 +7294,10 @@ def process_events(cursor, connection, crawl_result_id, website_name, run_date_s
         )
         crawl_event_id = cursor.lastrowid
 
+        from icon_catalog import record_unknown
+        record_unknown(cursor, event_data.get('emoji'), 'crawl_events',
+                       crawl_event_id, event_data.get('name'))
+
         # Insert occurrences (times canonicalized at the write boundary)
         db.insert_crawl_event_occurrences(cursor, crawl_event_id, [
             (occ[0], occ[1] if len(occ) > 1 else None,
@@ -7365,6 +7380,9 @@ def apply_crawled_details(cursor, connection, ce_id, data, tag_context,
     update_fields = ["description = %s"]
     update_values = [data['description']]
     if first_emoji:
+        from icon_catalog import record_unknown
+        record_unknown(cursor, first_emoji, 'crawl_events', ce_id,
+                       data.get('name'))
         update_fields.append("emoji = %s")
         update_values.append(first_emoji)
 

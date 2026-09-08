@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+<title>DJ decks</title><desc>Two large jog wheels and a central crossfader on a compact DJ mixing deck.</desc>
+<rect x="5" y="32" width="118" height="76" rx="10" fill="#30343A"/>
+<rect x="5" y="22" width="118" height="77" rx="10" fill="#555C65"/>
+<path d="M15 25h94" stroke="#808B96" stroke-width="3" stroke-linecap="round"/>
+<circle cx="34" cy="60" r="23" fill="#20262D"/><circle cx="94" cy="60" r="23" fill="#20262D"/>
+<circle cx="34" cy="59" r="18" fill="#9BA8B4"/><circle cx="94" cy="59" r="18" fill="#9BA8B4"/>
+<circle cx="34" cy="59" r="14" fill="#414A53"/><circle cx="94" cy="59" r="14" fill="#414A53"/>
+<path d="M20 54a15 15 0 0 1 18-10m42 10a15 15 0 0 1 18-10" stroke="#DCE6EE" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+<circle cx="34" cy="59" r="5" fill="#4DD0E1"/><circle cx="94" cy="59" r="5" fill="#4DD0E1"/>
+<path d="M59 46v30m10-30v30" stroke="#222A32" stroke-width="3" stroke-linecap="round"/>
+<path d="M56 55h6m4 12h6" stroke="#F1EDEC" stroke-width="4" stroke-linecap="round"/>
+<path d="M48 87h32" stroke="#222A32" stroke-width="5" stroke-linecap="round"/>
+<rect x="59" y="80" width="10" height="13" rx="2" fill="#E1E7EB"/>
+<path fill="#7BDECA" d="M16 84h9v7h-9zm86 0h9v7h-9z"/>
+<circle cx="59" cy="33" r="3.5" fill="#FFCC80"/><circle cx="70" cy="33" r="3.5" fill="#FFCC80"/>
+</svg>

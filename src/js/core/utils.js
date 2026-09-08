@@ -305,42 +305,17 @@ const Utils = (() => {
         return window.innerWidth <= bp;
     }
 
-    function isWindows() {
-        return navigator.platform.toLowerCase().includes('win');
-    }
-
     function isCountryFlagEmoji(str) {
         if (!str || str.length < 2) return false;
         const codePoints = [...str].map(char => char.codePointAt(0));
         return codePoints.every(cp => cp >= 0x1F1E6 && cp <= 0x1F1FF);
     }
 
-    /**
-     * Resolves the emoji to actually display. Country-flag emoji (regional-
-     * indicator pairs) have no glyphs in Windows' system emoji font and render
-     * as two letter boxes (e.g. "IT"). On Windows only, a flag emoji is swapped
-     * for the record's configured `alt_emoji` (a per-location/per-tag fallback);
-     * if none is set it falls back to the globe so a flag never shows as boxes.
-     * On other platforms, and for non-flag emoji, the original is returned.
-     */
-    function resolveDisplayEmoji(emoji, altEmoji) {
-        if (!emoji || !isWindows() || !isCountryFlagEmoji(emoji)) return emoji;
-        return altEmoji || '🌎';
-    }
-
-    // Matches a single country-flag code unit: a Unicode regional-indicator
-    // symbol (U+1F1E6–U+1F1FF). Flags are pairs of these, but matching each
-    // one individually also clears any stray unpaired indicator.
+    // MapLibre's SDF label font has no regional-indicator glyphs. DOM titles
+    // retain their flags and render them through the shared artwork renderer.
     const COUNTRY_FLAG_RE = /[\u{1F1E6}-\u{1F1FF}]/gu;
 
-    /**
-     * Removes country-flag emoji from a title/label string and tidies the
-     * whitespace they leave behind. Flag emoji have no glyph in the map's SDF
-     * label font (so they render as tofu/letter-boxes in marker labels on every
-     * platform) and no glyph in Windows' system emoji font (so they render as
-     * letter-box pairs like "HT" in regular text there). Callers strip them
-     * from map labels everywhere, and from displayed titles on Windows only.
-     */
+    /** Remove flags from map labels and tidy the whitespace left behind. */
     function stripCountryFlagEmoji(str) {
         if (!str) return str;
         const stripped = str.replace(COUNTRY_FLAG_RE, '');
@@ -547,6 +522,10 @@ const Utils = (() => {
      * Tag lists are passed separately (event, location, organizer) so hot
      * callers can reuse existing arrays without concatenating.
      */
+    function eventFilterTags(event, location) {
+        return new Set([...(event.tags || []), ...(location?.tags || []), ...organizerTagsForEvent(event)]);
+    }
+
     function matchesTagSets(eventTags, locationTags, orgTags, selectedTagsSet, requiredTagsSet, forbiddenTagsSet) {
         if (forbiddenTagsSet.size > 0) {
             if (eventTags.some(t => forbiddenTagsSet.has(t))
@@ -590,14 +569,16 @@ const Utils = (() => {
      * .chip-emoji span (when emoji is truthy) followed by the tag's
      * display name as a text node.
      */
-    function appendChipContent(el, emoji, tag) {
-        if (emoji) {
-            const emojiSpan = document.createElement('span');
-            emojiSpan.className = 'chip-emoji';
-            emojiSpan.setAttribute('aria-hidden', 'true');
-            emojiSpan.textContent = emoji;
-            el.appendChild(emojiSpan);
-        }
+    function appendChipContent(el, emoji, tag, { tagIcon = true, iconRecord = null } = {}) {
+        const options = { className: 'chip-emoji event-icon', onAccent: color => {
+            const resolved = tagIcon ? TagColorManager.acceptTagIconColor(tag, color) : color;
+            if (resolved && (el.classList.contains('state-selected') || el.classList.contains('state-required'))) {
+                el.style.setProperty('--chip-color', resolved);
+            }
+        } };
+        if (emoji || iconRecord?.icon_id) el.appendChild(tagIcon
+            ? IconManager.createTagElement(tag, emoji, options)
+            : IconManager.createElement(iconRecord || { emoji }, options));
         el.appendChild(document.createTextNode(getTagDisplayName(tag)));
     }
 
@@ -655,6 +636,7 @@ const Utils = (() => {
         isKnownOrganizerTag,
         organizerTagsForEvent,
         matchesTagSets,
+        eventFilterTags,
         isValidUrl,
         buildEventDateTime,
         parseDateInZone,
@@ -662,10 +644,8 @@ const Utils = (() => {
         getTodayInZone,
         getCurrentTheme,
         getCurrentThemeBase,
-        isWindows,
         isMobileLayout,
         isCountryFlagEmoji,
-        resolveDisplayEmoji,
         stripCountryFlagEmoji,
         normalizeForSearch,
         getDisplayName,

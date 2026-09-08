@@ -1,0 +1,47 @@
+{
+  "icon_id": "game-go",
+  "source_sha256": "b453c10f98a45f6b2ffafbf1b386cf009b23f31c4dece57f443ff25095fe991a",
+  "reviewer_mode": "creator-critical-pass",
+  "blind_recognition": "Not independent: reviewer knew the Go brief and user feedback. Rendered before/after sheets were inspected.",
+  "evidence": {
+    "packet": ".scratch/icon-visual-review/after",
+    "sizes": [
+      16,
+      24,
+      32,
+      128
+    ],
+    "backgrounds": [
+      "light",
+      "dark"
+    ],
+    "reference": "Accepted dominoes icon and prior Go revision"
+  },
+  "issues": [
+    {
+      "severity": "material",
+      "location": "board interior",
+      "observation": "Prior grid occupied only 76 by 76 units within the board, leaving excessive interior margins.",
+      "revision": "Expanded the grid to 104 by 102 units within the existing board silhouette.",
+      "status": "resolved"
+    },
+    {
+      "severity": "material",
+      "location": "stones relative to intersections",
+      "observation": "Prior 36-unit stone diameter exceeded the 19-unit grid pitch and obscured neighboring intersections.",
+      "revision": "Used 24-unit stone diameter on 26 by 25.5-unit pitch, repositioning all stones on intersections.",
+      "status": "resolved"
+    }
+  ],
+  "decision": "pass",
+  "observations": [
+    "Expanded grid remains visible on both backgrounds at 16/24/32 px.",
+    "Black and white stones remain distinct; their scale is coherent with the grid.",
+    "Warm wood, rounded board edges, upper-left highlights and shaded thickness retain the accepted style."
+  ],
+  "limitations": [
+    "Creator critique rather than an independent recognition test.",
+    "Small stone highlights soften at 16 px; the game silhouette remains visible.",
+    "This art-only review covers normal SVG rendering on light/dark backgrounds, not every site-specific transformed theme."
+  ]
+}

@@ -9,6 +9,82 @@ clicks hid the cost through emoji caches. Profile fresh-page interactions as wel
 as warm repeats, and measure Event Timing through the next paint, not just the
 synchronous `FilterProfiler` spans. See `.claude/decisions.md` (2026-09-07 INP).
 
+## Discovery ranking and explicit preferences
+
+`DiscoveryRanking` owns the versioned on-device preference store and exact-match
+scoring. Each matching event ID, place identity, event tag or saved whole phrase
+contributes +1 or -1. Personal counts sort before the bounded 0–6 broad-appeal
+prior (outing-format groups, free tags, extra listing hostnames). The prior is
+an unvalidated popularity proxy, never measured attendance. Tag matches use
+only event tags, avoiding venue-audience spillover. `SimilarityModel` adds a bounded
+offline-trained affinity term and suggested interest chips; see
+[the model documentation](../../pipeline/similarity.md). Exact preferences remain
+stronger than inferred similarity. There is no inferred geographic or transit model.
+
+`PreferenceUI` (shown as ⭐ Favorites) supports all four types, reversal/removal, and term editing. Finder
+results must clear immediately on new input and prioritize exact names; otherwise
+an old suggestion can be selected during the debounce. Stored place identity is
+normalized name plus address because exports currently lack stable venue IDs.
+Coordinate perturbation must not change it; venue renames/address edits remain
+a migration limitation. A profile can hold 200 entries; it stays local to this
+browser and city deployment.
+
+`MapManager` promotes the best eligible event at each place, then selects 20
+places on desktop or 10 on mobile. Other places use translucent, single-color
+dots (frontend.map.dot_color hue) with no hover or click targets; zooming reveals
+them as emoji. Only promoted places receive invisible hit targets.
+Active/hovered places reserve slots within the same cap.
+Dark themes use `DotDensityLayer`: a cached GPU coverage buffer and an OKLCH
+palette raise overlap lightness from .74 to .985 at five overlapping cores,
+with chroma fading toward white and opacity rising from 70% to 99%. Soft
+radial halos expand when zoomed out (4–10 CSS-pixel radius), letting dense
+areas merge into a heat map. Light themes keep native 55% dots.
+The custom layer sits below symbols, excludes promoted places, and releases
+its GPU resources on removal. It rebuilds after context loss or resize.
+Run `node --test src/js/tests/dotDensityLayer.test.cjs` for palette checks.
+The canvas overscans the viewport: use visible window coordinates and exclude
+sheet/filter overlays when choosing candidates, not the backing canvas bounds.
+Recompute after map movement; restore both filters and dot styles after a theme
+swap. Preference revision belongs in popup/label cache signatures.
+
+Popup location/event titles have inline ☆/★ buttons (inactive section-header gray / yellow) at the title's
+inherited font size, toggling Interested on/off.
+An existing negative preference becomes positive on star activation; unfavoriting
+returns it to neutral. Not interested can only be set in the Favorites pane.
+Stars sync with pane changes and expose keyboard-accessible pressed states.
+
+`PreferenceUI` keeps the dialog dimensions fixed within the viewport; search
+suggestions overlay the internally scrolling profile. Interested then Not
+interested each contain Places, Tags, Events and Searches, using shared
+`tag-button` chips with the shared emoji renderer. The pane reuses Settings
+modal surface/header/close styles. Click a chip for move/remove (and saved-search editing),
+or drag it between stance sections with mouse, pen or touch. Dragging preserves
+the entry type; keyboard users have the same actions through the chip editor.
+
+Run `npm run test:discovery` for the scoring, persistence and selection tests.
+Browser verification notes: `.scratch/discovery-implementation/report.md`.
+
+## Keeping interactions responsive
+
+Paint control feedback before filtering and map updates. Queued updates must
+read the latest selection, so rapid clicks coalesce without restoring stale
+state. Event Timing measures that first feedback paint; it does not measure
+when the entire map and list finish updating.
+
+Render the first screen of event cards before yielding, cancel stale batches,
+and preserve scroll on unchanged results. Use elapsed-time budgets for data,
+search indexing and emoji warming: large fixed batches stall slower CPUs.
+Keep the event append and coordinate/lookup rebuild atomic; build a replacement
+search index separately so input never sees a partially built index.
+
+The manifest optionally lists `remainderChunks`. These contain event and
+corresponding description partitions targeting 512 KiB combined raw content;
+an individual event is never split. All partitions share
+`locations.remainder.json`. Load the requested day first, publish nearby days,
+then load the tail. Keep legacy remainder files for cached older bundles, and
+accept older complete offline caches that only contain the legacy remainder.
+Full download time and payload size are separate from perceived responsiveness.
+
 ## 📁 File Organization
 
 ```
@@ -66,7 +142,7 @@ js/
 | **modalManager.js** | Welcome and settings modals |
 | **toastNotifier.js** | Toast notifications |
 | **themeManager.js** | Dark/light theme switching |
-| **emojiManager.js** | Emoji font loading (Noto Color Emoji) |
+| **iconManager.js** | Unified Noto/editorial artwork rendering, lazy decoding, themes and accent colors |
 
 ### Main Application
 | Module | Description |

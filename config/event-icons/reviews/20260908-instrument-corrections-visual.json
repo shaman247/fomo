@@ -1,0 +1,112 @@
+[
+  {
+    "icon_id": "instrument-trombone",
+    "source_sha256": "0bc49e44d264bc17875bc314fe489a9d68662b1cec3fa2b74f1072e635922f4b",
+    "reviewer_mode": "independent-agent",
+    "blind_recognition": "Not blind: subject and earlier draft known.",
+    "evidence": {
+      "packet": ".scratch/icon-corrections-20260908/corrections-v3",
+      "sizes": [
+        16,
+        24,
+        32,
+        128
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "additional": [
+        ".scratch/icon-corrections-20260908/trombone-v1/structural-comparison.png",
+        ".scratch/icon-corrections-20260908/trombone-reference/yamaha-structure.jpg",
+        ".scratch/icon-corrections-20260908/gallery/themes.png"
+      ]
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Mouthpiece/brace detail softens at16px.",
+      "Theme evidence visually inspected; no independent browser interaction test."
+    ],
+    "supersedes": "20260908-expansion-visual.json",
+    "user_feedback": "Original geometry/contours rejected; this record applies only to the revised hash."
+  },
+  {
+    "icon_id": "instrument-cello",
+    "source_sha256": "cc5fd12203c4cda1cc732284dee725b7bba7b3c66f1d7addb05732facaee57a7",
+    "reviewer_mode": "independent-agent",
+    "blind_recognition": "Not blind: subject, earlier drafts, and user contour criticism known.",
+    "evidence": {
+      "packet": ".scratch/icon-corrections-20260908/corrections-v3",
+      "sizes": [
+        16,
+        24,
+        32,
+        128
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "additional": [
+        ".scratch/icon-corrections-20260908/gallery/themes.png"
+      ]
+    },
+    "issues": [
+      {
+        "severity": "material",
+        "location": "Upper f-hole curls near waist rim",
+        "observation": "Prior draft's f-hole/rim collision no longer appears; wood separates hole contours from rim at128px and waist remains continuous at24/32px.",
+        "revision": "Inward narrower f-holes and proportionate12% instrument narrowing applied.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "At16px individual f-holes/strings soften.",
+      "Compact emoji-scale proportions.",
+      "Theme evidence visually inspected; no independent browser interaction test."
+    ],
+    "supersedes": "20260908-expansion-visual.json",
+    "user_feedback": "Original geometry/contours rejected; this record applies only to the revised hash."
+  },
+  {
+    "icon_id": "instrument-double-bass",
+    "source_sha256": "207d4068ba7335e162196b04a202af7665a5f0a47601e503162dffb2ed81034d",
+    "reviewer_mode": "independent-agent",
+    "blind_recognition": "Not blind: subject, earlier drafts, and user contour criticism known.",
+    "evidence": {
+      "packet": ".scratch/icon-corrections-20260908/corrections-v3",
+      "sizes": [
+        16,
+        24,
+        32,
+        128
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "additional": [
+        ".scratch/icon-corrections-20260908/gallery/themes.png"
+      ]
+    },
+    "issues": [
+      {
+        "severity": "material",
+        "location": "F-hole curls at waist below shoulders/hand",
+        "observation": "Both sound holes now sit inside wood; prior black waist nicks are absent at128/24/32px.",
+        "revision": "Inward narrower f-holes and proportionate12% instrument narrowing applied.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "At16px precise plucking cue and bass/cello distinction reduce.",
+      "Hand intentionally enlarged as an activity cue; body compact.",
+      "Theme evidence visually inspected; no independent browser interaction test."
+    ],
+    "supersedes": "20260908-expansion-visual.json",
+    "user_feedback": "Original geometry/contours rejected; this record applies only to the revised hash."
+  }
+]

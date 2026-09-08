@@ -97,7 +97,7 @@ const ThemeManager = (() => {
                 // Same style JSON (e.g. two themes sharing a base): never
                 // call setStyle — just re-render what the theme changes.
                 if (Themes.transformKey(theme) !== Themes.transformKey(oldTheme)) {
-                    MapManager.reloadEmojiImages(state.appState.locationsByLatLng || {});
+                    MapManager.reloadIconImages();
                 }
                 MapManager.applyThemeToLayers();
             }

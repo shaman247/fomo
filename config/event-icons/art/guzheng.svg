@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+<title>Guzheng</title><desc>A long curved Chinese zither with a golden soundboard and separate movable bridges under its strings.</desc>
+
+<path fill="#955C43" d="M6 73c25-12 62-36 91-47q17 3 24 20l-2 9c-24 10-63 34-90 49L7 83z"/>
+<path fill="#AD7156" d="M7 74q16 2 23 20l-1 9L7 83z"/>
+<path fill="#6D4C41" d="M30 94c28-15 65-37 91-48l-2 9c-25 11-63 33-90 49z"/>
+<path fill="#D8A268" d="M6 73c27-14 62-36 91-47q17 3 24 20c-25 11-64 34-91 48Q21 77 6 73z"/>
+<path fill="#F0C68E" d="M17 73c24-13 56-32 79-41q12 3 16 13c-23 10-60 32-82 43Q28 78 17 73z"/>
+<path fill="#7B5041" d="M6 73l10-5q15 6 23 20l-9 6Q21 77 6 73zm82-44 9-3q17 3 24 20l-9 4q-8-15-24-21z"/>
+<path fill="none" stroke="#FFCC80" stroke-width="2" stroke-linecap="round" d="M10 77l18 15m9-1 73-40"/>
+<path fill="#AD7156" d="M42.2 58.5l3-7 4 6-3 1z"/>
+<path fill="#6D4C41" d="M45.2 51.5l4 6-3 1z"/>
+<path fill="none" stroke="#FFF3D6" stroke-width="1.35" stroke-linecap="round" d="M15.1 73.2L45.2 51.5 92.5 32.7"/>
+<path fill="#AD7156" d="M49.2 58.6l3-7 4 6-3 1z"/>
+<path fill="#6D4C41" d="M52.2 51.6l4 6-3 1z"/>
+<path fill="none" stroke="#FFF3D6" stroke-width="1.35" stroke-linecap="round" d="M17.6 75.7L52.2 51.6 95.0 35.2"/>
+<path fill="#AD7156" d="M56.2 58.8l3-7 4 6-3 1z"/>
+<path fill="#6D4C41" d="M59.2 51.8l4 6-3 1z"/>
+<path fill="none" stroke="#FFF3D6" stroke-width="1.35" stroke-linecap="round" d="M20.1 78.2L59.2 51.8 97.5 37.7"/>
+<path fill="#AD7156" d="M63.1 58.9l3-7 4 6-3 1z"/>
+<path fill="#6D4C41" d="M66.1 51.9l4 6-3 1z"/>
+<path fill="none" stroke="#FFF3D6" stroke-width="1.35" stroke-linecap="round" d="M22.6 80.7L66.1 51.9 100.0 40.2"/>
+<path fill="#AD7156" d="M70.1 59.1l3-7 4 6-3 1z"/>
+<path fill="#6D4C41" d="M73.1 52.1l4 6-3 1z"/>
+<path fill="none" stroke="#FFF3D6" stroke-width="1.35" stroke-linecap="round" d="M25.1 83.2L73.1 52.1 102.5 42.7"/>
+<path fill="#AD7156" d="M77.1 59.2l3-7 4 6-3 1z"/>
+<path fill="#6D4C41" d="M80.1 52.2l4 6-3 1z"/>
+<path fill="none" stroke="#FFF3D6" stroke-width="1.35" stroke-linecap="round" d="M27.6 85.7L80.1 52.2 105.0 45.2"/>
+</svg>

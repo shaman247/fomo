@@ -51,10 +51,9 @@ const PopupContentBuilder = (() => {
         const headerWrapper = document.createElement('div');
         headerWrapper.className = 'popup-header';
 
-        const emojiSpan = document.createElement('span');
-        emojiSpan.className = 'popup-header-emoji';
-        emojiSpan.textContent = locationInfo.emoji || '';
-        headerWrapper.appendChild(emojiSpan);
+        headerWrapper.appendChild(IconManager.createElement(locationInfo, {
+            className: 'popup-header-emoji event-icon'
+        }));
 
         const textWrapper = document.createElement('div');
         textWrapper.className = 'popup-header-text';
@@ -62,6 +61,8 @@ const PopupContentBuilder = (() => {
         const locationP = document.createElement('p');
         locationP.className = 'popup-header-location';
         locationP.innerHTML = Utils.formatAndSanitize(locationInfo.name);
+        locationP.append('\u00a0', PreferenceUI.createFavoriteButton('place', DiscoveryRanking.placeKey(locationInfo),
+            [locationInfo.name, locationInfo.address].filter(Boolean).join(' — ')));
         textWrapper.appendChild(locationP);
 
         // Tab bar will be inserted here by the main builder
@@ -512,11 +513,13 @@ const PopupContentBuilder = (() => {
                 distanceFromReference = Math.max(0, distanceFromReference - Constants.TIME.FIVE_DAYS_MS);
             }
 
-            return { event, isMatchingTags, selectedTagMatchCount, startTime, distanceFromReference };
+            return { event, isMatchingTags, selectedTagMatchCount, startTime, distanceFromReference,
+                discoveryScore: DiscoveryRanking.score(event, locInfo) };
         });
 
         sortedEvents.sort((a, b) => {
             if (a.isMatchingTags !== b.isMatchingTags) return b.isMatchingTags - a.isMatchingTags;
+            if (a.discoveryScore !== b.discoveryScore) return b.discoveryScore - a.discoveryScore;
             if (a.selectedTagMatchCount !== b.selectedTagMatchCount) return b.selectedTagMatchCount - a.selectedTagMatchCount;
             return a.distanceFromReference - b.distanceFromReference;
         });
@@ -550,20 +553,11 @@ const PopupContentBuilder = (() => {
         const card = document.createElement('div');
         card.className = 'popup-event-card';
 
-        // Title color comes from the event's own emoji (falls back to the
-        // container's location accent when the event has no emoji).
-        applyEventAccentVars(card, event);
-
-        // Card header: emoji + name
         const header = document.createElement('div');
         header.className = 'popup-event-card-header';
-
-        if (event.emoji) {
-            const emojiSpan = document.createElement('span');
-            emojiSpan.className = 'popup-event-emoji';
-            emojiSpan.textContent = event.emoji;
-            header.appendChild(emojiSpan);
-        }
+        header.appendChild(IconManager.createElement(event, {
+            onAccent: color => setLabelAccentVars(card, color)
+        }));
 
         const info = document.createElement('div');
         info.className = 'popup-event-card-info';
@@ -574,10 +568,22 @@ const PopupContentBuilder = (() => {
         info.appendChild(nameSpan);
 
         header.appendChild(info);
+        if (interactive) nameSpan.append('\u00a0', PreferenceUI.createFavoriteButton('event', String(event.id),
+            [event.name, event.location].filter(Boolean).join(' — ')));
         card.appendChild(header);
 
         if (interactive) {
-            card.appendChild(createEventDatetimeElement(event));
+            const metadata = document.createElement('div');
+            metadata.className = 'popup-event-card-metadata';
+            if (event.event_type) {
+                const formatChip = document.createElement('span');
+                formatChip.className = 'tag-button event-format-chip';
+                formatChip.title = `Format: ${event.event_type}`;
+                Utils.appendChipContent(formatChip, state.tagEmojiMap[event.event_type], event.event_type);
+                metadata.appendChild(formatChip);
+            }
+            metadata.appendChild(createEventDatetimeElement(event));
+            card.appendChild(metadata);
         }
 
         // Description preview (always visible when collapsed)
@@ -607,7 +613,7 @@ const PopupContentBuilder = (() => {
 
         // Toggle expand/collapse on card click
         card.addEventListener('click', (e) => {
-            if (e.target.closest('a, .tag-button, .tag-keyword')) return;
+            if (e.target.closest('a, button, .tag-button, .tag-keyword')) return;
             const isExpanded = card.dataset.expanded === 'true';
             if (isExpanded) {
                 card.dataset.expanded = 'false';
@@ -724,10 +730,8 @@ const PopupContentBuilder = (() => {
             const idx = tabNames.indexOf(previousActiveTab);
             if (idx >= 0) defaultTab = idx;
         } else {
-            // If filters are active and the default section ("Events") has no
-            // matching events but another section does, open to that section
-            // instead — otherwise the user lands on a tab full of dimmed,
-            // non-matching events.
+            // Open the section containing the highest-ranked matching event,
+            // so a promoted exhibition does not land on an unrelated Events tab.
             const { defaultSection: preferredSection } = getDefaultSectionAndEvents(eventsAtLocation, {
                 activeFilters,
                 filterFunctions,
@@ -837,13 +841,8 @@ const PopupContentBuilder = (() => {
 
         let defaultSection = orderedSections[0] || 'Events';
         if (ctx && ctx.activeFilters) {
-            const matchingSections = new Set();
-            for (const d of sortedEvents) {
-                if (d.isMatchingTags) matchingSections.add(d.event.section || 'Events');
-            }
-            for (const s of orderedSections) {
-                if (matchingSections.has(s)) { defaultSection = s; break; }
-            }
+            const best = sortedEvents.find(d => d.isMatchingTags);
+            if (best) defaultSection = best.event.section || 'Events';
         }
 
         const sectionEvents = [];

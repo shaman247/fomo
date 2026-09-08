@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+<title>Pickleball</title><desc>A blue solid paddle with a wrapped grip beside a perforated yellow ball.</desc>
+<g transform="rotate(25 57 58)">
+<path fill="#1D596D" d="M35 5h39c11 0 16 7 16 18v38c0 12-7 20-23 26v23H43V87C27 81 20 73 20 61V23C20 12 25 5 35 5z"/>
+<path fill="#29B6C9" d="M35 9h38c9 0 13 5 13 15v36c0 11-7 18-22 23H45C29 77 24 70 24 60V24c0-10 3-15 11-15z"/>
+<path fill="#7EDCE4" d="M35 14h24c4 0 4 4 0 4H37c-5 0-7 3-7 10v21c0 4-3 4-3 0V26c0-8 2-12 8-12z"/>
+<path fill="#0794A7" d="M77 26c5-5 5 3 5 12v22c0 10-6 16-18 20H48c15-8 23-18 25-30z"/>
+<rect x="42" y="84" width="25" height="35" rx="5" fill="#34383C"/>
+<path d="m44 90 21 4m-21 3 21 4m-21 3 21 4m-21 3 21 4" fill="none" stroke="#646C72" stroke-width="3"/>
+<path fill="#919BA2" d="M44 116h21v4H44z"/>
+</g>
+<circle cx="94" cy="94" r="28" fill="#CE9C12"/>
+<circle cx="92" cy="91" r="27" fill="#FFDA3E"/>
+<path fill="#FFF39B" d="M72 81c3-9 13-13 20-12 3 1 2 4-1 4-8 0-13 5-16 10-2 3-5 1-3-2z"/>
+<g fill="#9B741B"><ellipse cx="84" cy="80" rx="4.5" ry="4"/><ellipse cx="102" cy="81" rx="4" ry="5"/><circle cx="93" cy="95" r="5"/><ellipse cx="75" cy="95" rx="3" ry="5"/><ellipse cx="84" cy="109" rx="4" ry="3"/><ellipse cx="107" cy="102" rx="3.5" ry="5"/></g>
+<g fill="#77581D"><path d="M80 80c1-5 8-5 9 0-3-2-6-2-9 0zM89 95c0-6 9-6 9 0-3-2-6-2-9 0z"/></g>
+</svg>

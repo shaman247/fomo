@@ -18,6 +18,274 @@ frontend:
   emoji: "🗽"                     # menu / feedback decoration
   timezone: "America/New_York"   # utils.js: "today" + event-time parsing
   sw_enabled: true               # offline service worker (false emits a self-unregistering sw.js)
+  # Selector-only grouping and ordering; the database supplies the neighborhoods.
+  # Groups relocate members in this menu only. Directional borough sections are
+  # browsing conventions, not official boundaries; unlisted children stay visible.
+  neighborhood_selector:
+    groups:
+      NYC:
+      - Manhattan
+      - Brooklyn
+      - Queens
+      - Bronx
+      - Staten Island
+      Brooklyn:
+      - North Brooklyn
+      - Northwest Brooklyn
+      - Central Brooklyn
+      - East Brooklyn
+      - South Brooklyn
+      North Brooklyn:
+      - Greenpoint
+      - Williamsburg
+      - Bushwick
+      Northwest Brooklyn:
+      - Downtown Brooklyn
+      - DUMBO
+      - Brooklyn Heights
+      - Vinegar Hill
+      - Navy Yard
+      - Fort Greene
+      - Clinton Hill
+      - Boerum Hill
+      - Cobble Hill
+      - Carroll Gardens
+      - Columbia St
+      - Columbia Waterfront District
+      - Red Hook
+      - Gowanus
+      Central Brooklyn:
+      - Bed-Stuy
+      - Crown Heights
+      - Prospect Heights
+      - Park Slope
+      - Prospect Park
+      - Prospect-Lefferts Gardens
+      - Flatbush
+      - Windsor Terrace
+      - Kensington
+      East Brooklyn:
+      - Brownsville
+      - Ocean Hill
+      - East New York
+      - Cypress Hills
+      - Canarsie
+      - East Flatbush
+      - Flatlands
+      - Bergen Beach
+      - Mill Basin
+      South Brooklyn:
+      - Bay Ridge
+      - Fort Hamilton
+      - Sunset Park
+      - Greenwood Heights
+      - Green-Wood Cemetery
+      - Borough Park
+      - Dyker Heights
+      - Bensonhurst
+      - Bath Beach
+      - Mapleton
+      - Midwood
+      - Gravesend
+      - Homecrest
+      - Sheepshead Bay
+      - Marine Park
+      - Gerritsen Beach
+      - Coney Island
+      - Brighton Beach
+      - Manhattan Beach
+      Queens:
+      - Northwest Queens
+      - Northeast Queens
+      - Central Queens
+      - Southeast Queens
+      - Rockaway
+      Northwest Queens:
+      - Astoria
+      - Long Island City
+      - Sunnyside
+      - Woodside
+      - Jackson Heights
+      - East Elmhurst
+      Northeast Queens:
+      - Flushing
+      - College Point
+      - Whitestone
+      - Bayside
+      - Bay Terrace
+      - Fort Totten
+      - Auburndale
+      - Douglaston
+      - Little Neck
+      - Alley Pond Park
+      - Glen Oaks
+      - Bellerose
+      - Floral Park
+      Central Queens:
+      - Corona
+      - Elmhurst
+      - Flushing Meadows Corona Park
+      - Forest Hills
+      - Rego Park
+      - Kew Gardens
+      - Kew Gardens Hills
+      - Fresh Meadows
+      - Cunningham Park
+      - Pomonok
+      - Hillcrest
+      - Maspeth
+      - Middle Village
+      - Ridgewood
+      - Glendale
+      - Forest Park
+      - Woodhaven
+      Southeast Queens:
+      - Jamaica
+      - Jamaica Estates
+      - Jamaica Hills
+      - South Jamaica
+      - Briarwood
+      - Hollis
+      - Hollis Hills
+      - Holliswood
+      - Queens Village
+      - Cambria Heights
+      - St. Albans
+      - Laurelton
+      - Rosedale
+      - Springfield Gardens
+      - Richmond Hill
+      - Ozone Park
+      - South Ozone Park
+      - Howard Beach
+      - Broad Channel
+      Bronx:
+      - Northwest Bronx
+      - South Bronx
+      - Central Bronx
+      - East Bronx
+      Northwest Bronx:
+      - Riverdale
+      - Kingsbridge
+      - Van Cortlandt Park
+      - Woodlawn
+      - Wakefield
+      - Norwood
+      - Bedford Park
+      - University Heights
+      - Fordham
+      South Bronx:
+      - Mott Haven
+      - Port Morris
+      - Melrose
+      - Morrisania
+      - East Morrisania
+      - Hunts Point
+      - Longwood
+      - Foxhurst
+      - Concourse
+      - Concourse Village
+      - Highbridge
+      - Morris Heights
+      - Mount Eden
+      Central Bronx:
+      - Belmont
+      - Bronx Park
+      - Tremont
+      - East Tremont
+      - Mount Hope
+      - Claremont Village
+      - Crotona Park
+      - West Farms
+      - Allerton
+      - Williamsbridge
+      - Bronxdale
+      - Pelham Parkway
+      East Bronx:
+      - Baychester
+      - Eastchester
+      - Edenwald
+      - Co-op City
+      - Pelham Gardens
+      - Morris Park
+      - Westchester Square
+      - Parkchester
+      - Soundview
+      - Clason Point
+      - Castle Hill
+      - Unionport
+      - Schuylerville
+      - Throgs Neck
+      - Ferry Point Park
+      - Pelham Bay
+      - Pelham Bay Park
+      - City Island
+      Staten Island:
+      - North Shore (Staten Island)
+      - Mid-Island (Staten Island)
+      - South Shore (Staten Island)
+      North Shore (Staten Island):
+      - St. George
+      - Tompkinsville
+      - Stapleton
+      - New Brighton
+      - West Brighton
+      - Randall Manor
+      - Port Richmond
+      - Mariners Harbor
+      - Graniteville
+      - Westerleigh
+      - Grymes Hill
+      - Park Hill
+      - Rosebank
+      - Shore Acres
+      - Silver Lake
+      Mid-Island (Staten Island):
+      - Bull's Head
+      - Castleton Corners
+      - Manor Heights
+      - Heartland Village
+      - New Springville
+      - Travis
+      - Freshkills Park
+      - Todt Hill
+      - Latourette Park
+      - Lighthouse Hill
+      - Egbertville
+      - Richmondtown
+      - Arrochar
+      - South Beach
+      - Midland Beach
+      - New Dorp
+      South Shore (Staten Island):
+      - Oakwood Heights
+      - Great Kills
+      - Great Kills Park
+      - Bay Terrace, Staten Island
+      - Eltingville
+      - Annadale
+      - Arden Heights
+      - Huguenot
+      - Rossville
+      - Woodrow
+      - Charleston
+      - Prince's Bay
+      - Pleasant Plains
+      - Tottenville
+      Manhattan:
+      - Lower Manhattan
+      - Midtown
+      - Upper Manhattan
+      - Upper East Side
+      - Upper West Side
+      - Manhattan Parks & Islands
+      Manhattan Parks & Islands:
+      - Central Park
+      - Governors Island
+      - Randall's Island
+      - Roosevelt Island
+    order: [NYC, New Jersey, Long Island, Westchester, Hudson Valley, Upstate, Connecticut]
+    expanded: [NYC]
   # Full welcome-modal body (HTML), injected verbatim into #welcome-modal .modal-body.
   welcome_modal: |
     <ul>
@@ -28,6 +296,7 @@ frontend:
   map:
     center: [40.70424, -73.97086]  # [lat, lng] initial map view
     zoom: 12
+    dot_color: "#4b7d84"        # Teal used in the torch logo (rgb 75,125,132)
 
 extraction:
   # extractor.py get_chunk_prompt — the full opening line. {date} is substituted.
@@ -62,6 +331,31 @@ generic_location_names:
 #   - Frontend: build.js writes them into the generated src/data/tags.json, which
 #     the map uses to hide neighborhood names from event tag displays.
 geotags:
+  - "Amityville"
+  - "Belleville"
+  - "Berkeley Heights"
+  - "Bridgeport"
+  - "Cranford"
+  - "Flemington"
+  - "Glen Ridge"
+  - "Glen Spey"
+  - "Holmdel"
+  - "Mahwah"
+  - "Mineola"
+  - "Montvale"
+  - "Nesconset"
+  - "New Providence"
+  - "Plainview"
+  - "Point Lookout"
+  - "Point Pleasant"
+  - "Ringwood"
+  - "River Vale"
+  - "Wallington"
+  - "Watchung"
+  - "West Caldwell"
+  - "West Park"
+  - "Westwood"
+  - "Whippany"
   - "Allerton"
   - "Alley Pond Park"
   - "Annadale"
@@ -176,6 +470,8 @@ geotags:
   - "Fort Greene"
   - "Fort Hamilton"
   - "Fort Lee"
+  - "Upper Manhattan"
+  - "Mercer County"
   - "Fort Montgomery"
   - "Fort Totten"
   - "Foxhurst"
@@ -739,3 +1035,396 @@ review:
     - "Swiss Alps"
     - "Slovenia"
     - "Montenegro"
+
+# Reviewed parent assignments; scripts/audit_geographic_hierarchy.py applies these
+# to the DB. Unlisted children keep their existing parents. Borough subdivisions
+# are navigation conventions, not official boundary polygons. County assignments:
+# https://www.nj.gov/state/bac/planning/mapping/quad-maps/mapping-muni-quad-list.shtml
+geographic_hierarchy:
+  groups:
+    Manhattan:
+    - Lower Manhattan
+    - Midtown
+    - Upper Manhattan
+    Lower Manhattan:
+    - Battery Park City
+    - Bowery
+    - Chinatown
+    - Civic Center
+    - East Village
+    - Financial District
+    - Greenwich Village
+    - Hudson Square
+    - Little Italy
+    - Lower East Side
+    - Nolita
+    - SoHo
+    - Tribeca
+    - Two Bridges
+    Greenwich Village:
+    - West Village
+    - NoHo
+    West Village:
+    - Meatpacking District
+    Midtown:
+    - Midtown East
+    - Midtown West
+    - Midtown South
+    Midtown East:
+    - Murray Hill
+    - Sutton Place
+    Midtown West:
+    - Hell's Kitchen
+    - Theater District
+    - Columbus Circle
+    - Hudson Yards
+    Theater District:
+    - Times Square
+    Midtown South:
+    - Chelsea
+    - Flatiron
+    - Gramercy
+    - Kips Bay
+    - NoMad
+    - Union Square
+    - Stuyvesant Town
+    - Herald Square
+    - Garment District
+    - Koreatown
+    Upper Manhattan:
+    - Harlem
+    - Inwood
+    - Washington Heights
+    - Morningside Heights
+    Harlem:
+    - East Harlem
+    West Harlem:
+    - Hamilton Heights
+    Hamilton Heights:
+    - Sugar Hill
+    Williamsburg:
+    - East Williamsburg
+    Park Slope:
+    - South Slope
+    Astoria:
+    - Ditmars Steinway
+    Flushing:
+    - East Flushing
+    Corona:
+    - North Corona
+    Rockaway:
+    - Arverne
+    - Bayswater
+    - Breezy Point
+    - Edgemere
+    - Far Rockaway
+    - Rockaway Beach
+    - Rockaway Park
+    Riverdale:
+    - North Riverdale
+    - Fieldston
+    - Spuyten Duyvil
+    Jersey City:
+    - Newport
+    - Paulus Hook
+    New Jersey:
+    - Mercer County
+    Bergen County:
+    - Allendale
+    - Alpine
+    - Bergenfield
+    - Bogota
+    - Demarest
+    - East Rutherford
+    - Edgewater
+    - Emerson
+    - Englewood
+    - Fair Lawn
+    - Franklin Lakes
+    - Garfield
+    - Glen Rock
+    - Haworth
+    - Hillsdale
+    - Leonia
+    - Lodi
+    - Lyndhurst
+    - Maywood
+    - New Milford, NJ
+    - Oakland
+    - Old Tappan
+    - Palisades Park
+    - Ramsey
+    - Ridgefield Park
+    - Ridgefield, NJ
+    - River Edge
+    - Rutherford
+    - Saddle Brook
+    - Tenafly
+    - Upper Saddle River
+    - Waldwick
+    - Wyckoff NJ
+    - River Vale
+    - Wallington
+    - Westwood
+    - Montvale
+    - Mahwah
+    Hudson County:
+    - Jersey City
+    - Bayonne
+    - Guttenberg
+    - Harrison
+    - Hoboken
+    - Kearny
+    - North Bergen
+    - Secaucus
+    - Union City
+    - Weehawken
+    - West New York
+    Essex County:
+    - Bloomfield
+    - Maplewood
+    - Millburn
+    - Montclair
+    - Newark
+    - Nutley
+    - Roseland
+    - South Orange
+    - West Orange
+    - Glen Ridge
+    - West Caldwell
+    - Belleville
+    Morris County:
+    - Boonton
+    - Denville
+    - East Hanover
+    - Kinnelon
+    - Morristown
+    - Pompton Plains
+    - Whippany
+    Passaic County:
+    - Clifton
+    - Passaic
+    - Paterson
+    - Pompton Lakes
+    - Wayne
+    - Ringwood
+    Union County:
+    - Clark
+    - Elizabeth
+    - Linden
+    - Mountainside
+    - Plainfield
+    - Rahway
+    - Summit
+    - Westfield
+    - Cranford
+    - Berkeley Heights
+    - New Providence
+    Middlesex County:
+    - Edison
+    - Metuchen
+    - New Brunswick
+    - Sewaren
+    - South Brunswick
+    - South Plainfield
+    - Woodbridge
+    Somerset County:
+    - Hillsborough
+    - Montgomery, NJ
+    - Somerville
+    - Watchung
+    Hunterdon County:
+    - Lambertville
+    - Flemington
+    Mercer County:
+    - Lawrence Township
+    Monmouth County:
+    - Asbury Park
+    - Belford
+    - Freehold
+    - Highlands
+    - Long Branch
+    - Manasquan
+    - Red Bank
+    - Tinton Falls
+    - Holmdel
+    Ocean County:
+    - Toms River
+    - Point Pleasant
+    Sussex County:
+    - Vernon
+    Nassau County:
+    - Baldwin
+    - Bellmore
+    - Brookville
+    - East Meadow
+    - Elmont
+    - Franklin Square
+    - Freeport
+    - Garden City
+    - Glen Cove
+    - Great Neck
+    - Hempstead
+    - Hicksville
+    - Kings Point
+    - Levittown
+    - Lido Beach
+    - Locust Valley
+    - Long Beach
+    - Lynbrook
+    - Massapequa
+    - Merrick
+    - Mill Neck
+    - New Hyde Park
+    - Oceanside
+    - Old Westbury
+    - Oyster Bay
+    - Port Washington
+    - Rockville Centre
+    - Roslyn
+    - Roslyn Heights
+    - Seaford
+    - Syosset
+    - Wantagh
+    - Westbury
+    - Woodmere
+    - Mineola
+    - Point Lookout
+    - Plainview
+    Suffolk County:
+    - Babylon
+    - Bay Shore
+    - Bellport
+    - Bohemia
+    - Centerport
+    - Cold Spring Harbor
+    - Commack
+    - Copiague
+    - Deer Park
+    - Dix Hills
+    - East End
+    - East Islip
+    - East Setauket
+    - Edgewood
+    - Fire Island
+    - Greenlawn
+    - Huntington
+    - Huntington Station
+    - Islip
+    - Lindenhurst
+    - Lloyd Harbor
+    - Manorville
+    - Medford
+    - Melville
+    - Northport
+    - Patchogue
+    - Port Jefferson
+    - Ronkonkoma
+    - Sayville
+    - Smithtown
+    - Stony Brook
+    - Upton
+    - Wheatley Heights
+    - Nesconset
+    - Amityville
+    Dutchess County:
+    - Beacon
+    - Hyde Park
+    - Millbrook
+    - Pawling
+    - Pine Plains
+    - Poughkeepsie
+    - Rhinebeck
+    - Staatsburg
+    - Tivoli
+    Putnam County:
+    - Carmel
+    - Cold Spring
+    - Garrison
+    - Mahopac
+    Orange County:
+    - Fort Montgomery
+    - Greenwood Lake
+    - Monroe
+    - Montgomery, NY
+    - New Windsor
+    - Newburgh
+    - Southfields
+    - Tuxedo Park
+    - Walden
+    - Warwick
+    Rockland County:
+    - Nanuet
+    - New City
+    - Nyack
+    - Palisades
+    - Pearl River
+    - Piermont
+    - Pomona
+    - Spring Valley
+    - Stony Point
+    - Suffern
+    - West Nyack
+    Ulster County:
+    - Highland
+    - Kingston
+    - New Paltz
+    - Rosendale
+    - Saugerties
+    - Stone Ridge
+    - Woodstock
+    - West Park
+    Columbia County:
+    - Ancram
+    - Germantown
+    - Hudson
+    Greene County:
+    - Catskill
+    - Haines Falls
+    Fairfield County:
+    - Bethel, CT
+    - Brookfield
+    - Danbury
+    - Darien
+    - Easton
+    - Fairfield
+    - Greenwich
+    - New Canaan
+    - Norwalk
+    - Ridgefield, CT
+    - Stamford
+    - Westport
+    - Bridgeport
+    Greenwich:
+    - Old Greenwich
+    Sullivan County:
+    - Glen Spey
+    East End:
+    - Hamptons
+    - North Fork
+    - Shelter Island
+    - Riverhead
+    Hamptons:
+    - Amagansett
+    - Bridgehampton
+    - East Hampton
+    - Hampton Bays
+    - Montauk
+    - Sag Harbor
+    - Sagaponack
+    - Southampton
+    - Wainscott
+    - Water Mill
+    - Westhampton Beach
+    North Fork:
+    - Greenport
+    - Mattituck
+    - Southold
+  promote:
+  - Fort Lee
+  - Upper Manhattan
+  - Mercer County
+  location_tags:
+  - location_id: 1211
+    expected_name: Weeksville Heritage Center
+    tag: Weeksville

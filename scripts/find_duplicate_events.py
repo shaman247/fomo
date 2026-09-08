@@ -367,6 +367,8 @@ def merge_pair(cursor, keep_id, delete_id):
         INSERT IGNORE INTO event_tag_blocks (event_id, tag_id, reason)
         SELECT %s, tag_id, reason FROM event_tag_blocks WHERE event_id = %s
     """, (keep_id, delete_id))
+    from event_icon_assignments import merge_assignments
+    merge_assignments(cursor, keep_id, delete_id)
     # reviewed=1 alongside suppressed=1: a suppressed row left reviewed=0 is indistinguishable
     # from a real event that some automated pass hid by mistake. On 2026-07-18 that ambiguity had
     # accumulated to 923 suppressed+unreviewed events with FUTURE dates, which took a full audit to

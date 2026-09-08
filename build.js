@@ -50,8 +50,11 @@ function cityPrelude(fe, isDev) {
         map: {
             center: fe.map.center,
             zoom: fe.map.zoom,
+            dot_color: fe.map.dot_color,
         },
         timezone: fe.timezone,
+        neighborhoodSelector: fe.neighborhood_selector || {},
+        domain: fe.domain,
         // Service worker opt-out: config frontend.sw_enabled: false, or any dev
         // build (dev also emits the self-unregistering sw.js — see emitServiceWorker).
         swEnabled: !isDev && fe.sw_enabled !== false,
@@ -94,9 +97,6 @@ function emitServiceWorker({ htmlSource, frontend, jsBundleName, cssBundleName, 
         'images/torch.svg',
         'images/trumpet.svg',
     ];
-    // NOTE: fonts/NotoColorEmoji-COLRv1.woff2 (2 MB) is deliberately NOT
-    // precached — it only loads when the user opts into Noto emoji, and the
-    // SW's runtime-static cache picks it up on first use.
     const revalidate = [
         'index.html',
         'about.html',
@@ -173,6 +173,7 @@ function ensureSeededData() {
 }
 
 async function build(isDev) {
+    require('./config/event-icons/build.cjs').buildIcons();
     const startTime = Date.now();
 
     // Load city/region config (map, timezone, branding, shared geotags).

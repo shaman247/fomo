@@ -79,6 +79,7 @@
                         </button>
                         <div id="logo-menu" class="logo-menu-hidden" role="menu" aria-label="Logo menu">
                             <button type="button" id="settings-btn" role="menuitem">⚙️ Settings</button>
+                            <button type="button" role="menuitem" data-open-interests>⭐ Favorites</button>
                             <button type="button" id="share-view-btn" role="menuitem">🔗 Share this view</button>
                             <button type="button" id="feedback-btn" role="menuitem">💬 Submit feedback</button>
                             <a href="about.html" target="_blank" role="menuitem">{{EMOJI}} About {{DOMAIN}}</a>
@@ -97,6 +98,12 @@
                             <svg class="calendar-icon" xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 0 24 24" width="18px" fill="currentColor" aria-hidden="true"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V9h14v11zM7 11h5v5H7v-5z"/></svg>
                         </div>
                     </div>
+                    <button type="button" id="format-selector-button" popovertarget="format-selector-panel"
+                        aria-haspopup="dialog" aria-expanded="false" aria-controls="format-selector-panel"><span>All Events</span><span aria-hidden="true"> ▾</span></button>
+                    <div id="format-selector-panel" popover="auto" role="dialog" aria-label="Event formats"></div>
+                    <button type="button" id="neighborhood-selector-button" popovertarget="neighborhood-selector-panel"
+                        aria-haspopup="dialog" aria-expanded="false" aria-controls="neighborhood-selector-panel"><span>Everywhere</span><span aria-hidden="true"> ▾</span></button>
+                    <div id="neighborhood-selector-panel" popover="auto" role="dialog" aria-label="Neighborhoods"></div>
                 </div>
                 <div id="chip-bar"></div>
             </div>
@@ -128,6 +135,7 @@
         </button>
 
         <div id="map-container">
+            <div class="discovery-control"><button type="button" data-open-interests>⭐ Favorites</button></div>
             <div id="map-wrapper">
                 <div id="map" role="application" aria-label="Interactive map of NYC events"></div>
             </div>
@@ -139,11 +147,14 @@
         </div>
     </div>
 
-    <!-- Welcome Modal -->
-    <div id="welcome-modal" class="modal" role="dialog" aria-labelledby="welcome-modal-title" aria-modal="true">
+    <div id="filter-update-status" role="status" hidden>Updating events…</div>
+
+    <!-- Nonmodal first-visit introduction; the map remains usable. -->
+    <div id="welcome-modal" class="modal" role="region" aria-label="Welcome">
         <div class="modal-content">
             <div class="modal-body">
                 {{WELCOME_MODAL}}
+                <button type="button" id="welcome-start-btn">Get started</button>
             </div>
         </div>
     </div>
@@ -193,20 +204,6 @@
                         </label>
                     </div>
                 </div>
-                <div class="setting-group">
-                    <label class="setting-group-label">Icons</label>
-                    <div class="setting-options">
-                        <label class="setting-option">
-                            <input type="radio" name="emoji-font" value="system" checked>
-                            <span><span class="emoji-preview emoji-preview-system">🎺</span> Default</span>
-                        </label>
-                        <label class="setting-option">
-                            <input type="radio" name="emoji-font" value="noto">
-                            <span><img src="images/trumpet.svg" alt="🎺" class="emoji-preview-noto" width="20" height="20"> Noto</span>
-                        </label>
-                    </div>
-                    <span id="emoji-font-status" class="setting-status"></span>
-                </div>
                 <!-- Prototype layout experiments — groups built from ProtoFlags at init -->
                 <div id="proto-setting-groups"></div>
             </div>
@@ -228,6 +225,8 @@
     <script src="js/core/urlParams.js"></script>
 
     <!-- Data -->
+    <script src="js/data/similarityModel.js"></script>
+    <script src="js/data/discoveryRanking.js"></script>
     <script src="js/data/filterManager.js"></script>
     <script src="js/data/dataCache.js"></script>
     <script src="js/data/dataManager.js"></script>
@@ -241,19 +240,24 @@
     <script src="js/tags/filterPanelUI.js"></script>
 
     <!-- UI -->
+    <script src="js/ui/preferenceUI.js"></script>
     <script src="js/ui/modalManager.js"></script>
     <script src="js/ui/toastNotifier.js"></script>
     <script src="js/ui/gestureHandler.js"></script>
     <script src="js/ui/sheet.js"></script>
+    <script src="js/core/eventIconCatalog.js"></script>
+    <script src="js/ui/iconManager.js"></script>
     <script src="js/ui/popupContentBuilder.js"></script>
     <script src="js/ui/listView.js"></script>
+    <script src="js/ui/formatSelector.js"></script>
+    <script src="js/ui/neighborhoodSelector.js"></script>
     <script src="js/ui/uiManager.js"></script>
-    <script src="js/ui/emojiManager.js"></script>
     <script src="js/ui/themeManager.js"></script>
     <script src="js/ui/protoPanel.js"></script>
     <script src="js/ui/feedbackManager.js"></script>
 
     <!-- Map -->
+    <script src="js/map/dotDensityLayer.js"></script>
     <script src="js/map/mapManager.js?v=4"></script>
     <script src="js/map/viewportManager.js"></script>
     <script src="js/map/markerController.js?v=4"></script>

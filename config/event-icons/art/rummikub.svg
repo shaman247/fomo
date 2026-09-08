@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">Rummikub</title>
+  <desc id="desc">Three ivory number tiles with a red three, blue seven, and black eleven on a dark rack.</desc>
+  <path fill="#2F2F2F" d="M11 98h105l6 12c2 6-1 11-7 11H12c-7 0-10-4-8-10z"/>
+  <path fill="#B8AAA5" d="M12 22h23c5 0 8 3 8 8v73H6V30c0-5 2-8 6-8z"/>
+  <path fill="#F1EDEC" d="M12 16h23c5 0 8 3 8 8v73H6V24c0-5 2-8 6-8z"/>
+  <path fill="#FFF" d="M11 21c3-2 14-2 16-1 2 2-8 3-11 6-3 3-4 12-6 10-2-1-2-13 1-15z"/>
+  <path fill="#EE534E" d="M13 39h23v7l-9 8c7 0 11 5 11 10 0 8-6 12-14 12-7 0-12-3-13-10h8c1 3 3 4 6 4 4 0 6-2 6-5 0-4-4-6-11-4v-7l9-8H13z"/>
+  <path fill="#B8AAA5" d="M52 19h23c5 0 8 3 8 8v73H46V27c0-5 2-8 6-8z"/>
+  <path fill="#F1EDEC" d="M52 13h23c5 0 8 3 8 8v76H46V21c0-5 2-8 6-8z"/>
+  <path fill="#FFF" d="M51 18c3-2 14-2 16-1 2 2-8 3-11 6-3 3-4 12-6 10-2-1-2-13 1-15z"/>
+  <path fill="#1976D2" d="M53 36h23v7L63 72h-9l14-28H53z"/>
+  <path fill="#B8AAA5" d="M92 22h23c5 0 8 3 8 8v73H86V30c0-5 2-8 6-8z"/>
+  <path fill="#F1EDEC" d="M92 16h23c5 0 8 3 8 8v73H86V24c0-5 2-8 6-8z"/>
+  <path fill="#FFF" d="M91 21c3-2 14-2 16-1 2 2-8 3-11 6-3 3-4 12-6 10-2-1-2-13 1-15z"/>
+  <path fill="#2F2F2F" d="M96 40h6v34h-7V49l-5 3v-8zm16 0h6v34h-7V49l-5 3v-8z"/>
+  <path fill="#5E6367" d="M10 95h108c5 0 7 3 7 7v6H3v-6c0-4 2-7 7-7z"/>
+  <path fill="#848484" d="M12 98h74c5 0 6 2 2 3H14c-5 0-6-2-2-3z"/>
+</svg>

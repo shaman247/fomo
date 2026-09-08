@@ -52,6 +52,8 @@ const HistoryManager = (() => {
             zoom: map.getZoom(),
             selectedLocationKey: cb.getSelectedLocationKey(),
             tags,
+            formats: cb.getFormats?.() ?? null,
+            neighborhoods: cb.getNeighborhoods?.() ?? null,
             dates,
             searchTerm: cb.getSearchTerm(),
             sheet
@@ -80,6 +82,9 @@ const HistoryManager = (() => {
         for (const key of aKeys) {
             if (a.tags[key] !== b.tags[key]) return false;
         }
+
+        if (JSON.stringify(a.formats ?? null) !== JSON.stringify(b.formats ?? null)) return false;
+        if (JSON.stringify(a.neighborhoods ?? null) !== JSON.stringify(b.neighborhoods ?? null)) return false;
 
         // Dates
         if (a.dates.length !== b.dates.length) return false;
@@ -149,7 +154,7 @@ const HistoryManager = (() => {
 
         // 2. Tags — diff and apply changes (silent; UI rebuild deferred)
         const currentTags = cb.getTagStates();
-        const savedTags = historyState.tags || {};
+        const savedTags = Object.fromEntries(Object.entries(historyState.tags || {}).map(([tag, value]) => [cb.canonicalTag?.(tag) || tag, value]));
         let tagsChanged = false;
 
         for (const [tag, tagState] of Object.entries(currentTags)) {
@@ -168,7 +173,12 @@ const HistoryManager = (() => {
         // 3. Dates — set picker, then rebuild the date-filtered event list.
         //    flatpickr.setDate() does NOT trigger onClose, so we call
         //    updateFilteredEventList explicitly.
-        let datesChanged = false;
+        let datesChanged = JSON.stringify(cb.getFormats?.() ?? null) !== JSON.stringify(historyState.formats ?? null);
+        if (datesChanged) cb.setFormats?.(historyState.formats ?? null);
+        if (JSON.stringify(cb.getNeighborhoods?.() ?? null) !== JSON.stringify(historyState.neighborhoods ?? null)) {
+            cb.setNeighborhoods?.(historyState.neighborhoods ?? null);
+            datesChanged = true;
+        }
         const savedDates = historyState.dates || [];
         if (savedDates.length >= 2) {
             const datePicker = cb.getDatePicker();

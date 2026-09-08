@@ -21,6 +21,8 @@ const SearchController = (() => {
      * Module state
      */
     const state = {
+        searchTimer: null,
+        searchVersion: 0,
         // DOM elements
         searchInputDOM: null,
 
@@ -50,11 +52,24 @@ const SearchController = (() => {
         if (state.searchInputDOM) {
             state.searchInputDOM.value = '';
         }
-        if (state.performSearchCallback) {
-            state.performSearchCallback('');
-        }
+        scheduleSearch('');
         if (state.searchInputDOM) {
             state.searchInputDOM.blur();
+        }
+    }
+
+    function scheduleSearch(term) {
+        clearTimeout(state.searchTimer);
+        const version = ++state.searchVersion;
+        const run = () => {
+            if (version === state.searchVersion) state.performSearchCallback?.(term);
+        };
+        if (term) {
+            state.searchTimer = setTimeout(run, Constants.TIME.SEARCH_DEBOUNCE_MS);
+        } else {
+            // The cleared input paints before the map/list reset. Versioning
+            // cancels both a pending typed query and a superseded clear.
+            requestAnimationFrame(() => { state.searchTimer = setTimeout(run, 0); });
         }
     }
 
@@ -82,13 +97,6 @@ const SearchController = (() => {
         // Add keydown handler for Escape
         state.searchInputDOM.addEventListener('keydown', handleSearchKeydown);
 
-        // Debounce search to improve performance (executes after user stops typing)
-        const debouncedSearch = Utils.debounce((searchTerm) => {
-            if (state.performSearchCallback) {
-                state.performSearchCallback(searchTerm);
-            }
-        }, Constants.TIME.SEARCH_DEBOUNCE_MS);
-
         state.searchInputDOM.addEventListener('input', (e) => {
             const searchTerm = e.target.value.toLowerCase();
 
@@ -98,7 +106,7 @@ const SearchController = (() => {
             }
 
             // Debounce regular search
-            debouncedSearch(searchTerm);
+            scheduleSearch(searchTerm);
 
             // On mobile, open the sheet to peek as soon as the user starts
             // typing (renderFilters' auto-open only fires after the debounce)

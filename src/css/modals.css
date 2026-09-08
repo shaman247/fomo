@@ -247,7 +247,7 @@
     display: flex;
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.8s ease, visibility 0.8s ease;
+    transition: opacity 150ms ease, visibility 150ms ease;
 }
 
 #welcome-modal.show {
@@ -257,13 +257,13 @@
 
 /* Welcome + settings modals: lighter overlay dim, and the same translucent
    surface treatment as the filter-panel pill controls. */
-#welcome-modal,
 #settings-modal {
     background-color: rgba(0, 0, 0, 0.4);
 }
 
 #welcome-modal .modal-content,
-#settings-modal .modal-content {
+#settings-modal .modal-content,
+#interests-dialog {
     background-color: color-mix(in srgb, var(--primary-bg) 85%, transparent);
     backdrop-filter: blur(3px);
     -webkit-backdrop-filter: blur(3px);
@@ -274,7 +274,7 @@
 #welcome-modal .modal-content {
     position: relative;
     animation: none;
-    transition: opacity 0.8s ease, transform 0.8s ease;
+    transition: none;
 }
 
 #welcome-modal .modal-body {
@@ -530,4 +530,56 @@
         font-size: 14px;
         padding: 14px 20px;
     }
+}
+
+/* The introduction is a small card; surrounding map controls stay usable. */
+#welcome-modal {
+    box-sizing: border-box;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: transparent;
+    pointer-events: none;
+    align-items: flex-end;
+    justify-content: flex-start;
+    padding: 16px;
+}
+#welcome-modal .modal-content {
+    pointer-events: auto;
+    width: min(360px, calc(100vw - 32px));
+    max-height: 55vh;
+    overflow-y: auto;
+    margin: 0;
+}
+#welcome-modal .modal-body { padding: 16px; }
+#welcome-modal .modal-body li {
+    animation: none;
+    opacity: 1;
+    font-size: 0.95rem;
+}
+#welcome-start-btn {
+    margin-top: 14px;
+    padding: 8px 16px;
+    color: var(--primary-text);
+    background: var(--secondary-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    cursor: pointer;
+    font: inherit;
+}
+#filter-update-status {
+    position: fixed;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 6px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    background: var(--primary-bg);
+    color: var(--primary-text);
+    font-size: 0.8rem;
+    z-index: 20;
+    pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+    #welcome-modal { transition: none; }
 }

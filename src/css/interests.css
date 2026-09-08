@@ -1,0 +1,95 @@
+.discovery-control {
+    position: absolute; top: 86px; right: 12px; z-index: 20;
+    display: flex; flex-direction: column; align-items: flex-end; gap: 4px;
+    pointer-events: none; font-size: 11px;
+}
+.discovery-control button {
+    pointer-events: auto; border: 1px solid var(--border-color); border-radius: 20px;
+    background: var(--primary-bg); color: var(--primary-text); padding: 8px 12px; cursor: pointer;
+}
+#interests-dialog {
+    color: var(--primary-text); width: min(680px, calc(100vw - 32px));
+    height: min(780px, calc(100dvh - 40px)); max-height: calc(100dvh - 40px);
+    max-width: none; padding: 0; box-sizing: border-box; font: inherit;
+}
+#interests-dialog:not([open]) { display: none; }
+#interests-dialog::backdrop { background: rgb(0 0 0 / 40%); backdrop-filter: blur(3px); }
+#interests-dialog .modal-header { flex-shrink: 0; }
+.interests-body { display: flex; flex-direction: column; gap: 12px; flex: 1; min-height: 0; overflow: hidden; }
+#interests-dialog button:not(.tag-button):not(.modal-close-btn), #interests-dialog select, #interests-dialog input {
+    font-family: var(--font-family); font-size: 1.08em; letter-spacing: -0.03em; line-height: 1.2;
+    color: var(--secondary-text); background: color-mix(in srgb, var(--primary-bg) 85%, transparent);
+    border: 1px solid var(--border-color); border-radius: var(--radius-pill); padding: 6px 12px;
+}
+#interests-dialog button, .preference-controls button { cursor: pointer; }
+#interests-dialog :focus-visible { outline: 2px solid var(--accent-color); outline-offset: 2px; }
+.interests-search-area { position: relative; flex-shrink: 0; z-index: 2; }
+.interests-finder { display: flex; gap: 10px; margin-bottom: 8px; }
+.interests-finder label { display: flex; flex-direction: column; gap: 5px; }
+.interests-finder label:last-child { flex: 1; min-width: 0; }
+#interest-finder { width: 100%; box-sizing: border-box; }
+#interests-dialog ul { list-style: none; margin: 0; padding: 0; }
+#interest-suggestions:not([hidden]) {
+    position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+    max-height: min(300px, 40dvh); overflow-y: auto; overscroll-behavior: contain;
+    padding: 8px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-pill-sm);
+    background: var(--primary-bg); box-shadow: 0 8px 24px rgb(0 0 0 / 25%);
+}
+#interest-suggestions li { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 10px 0; }
+#interest-suggestions li + li { border-top: 1px solid var(--border-color); }
+#interest-suggestions li > span:first-child { flex: 1 1 180px; overflow-wrap: anywhere; }
+#interest-suggestions li small { display: block; font-size: 12px; opacity: 0.75; }
+#interest-suggestions .interest-suggestion-chip {
+    max-width: 100%; white-space: normal; overflow-wrap: anywhere; text-align: left;
+}
+#interest-suggestions.is-model-suggestions:not([hidden]) {
+    position: static; display: flex; flex-wrap: wrap; gap: 6px; max-height: 160px;
+    padding: 4px 0; border: 0; box-shadow: none; background: transparent;
+}
+#interest-suggestions.is-model-suggestions li { padding: 0; border: 0; max-width: 100%; }
+#interest-suggestions .interest-suggestions-label { flex-basis: 100%; font-size: 12px; color: var(--secondary-text); }
+#interests-entries { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
+.interest-stance { padding: 10px; border: 2px solid transparent; border-radius: var(--radius-card); }
+.interest-stance + .interest-stance { margin-top: 8px; }
+.interest-stance h3 { font-family: var(--font-display); font-size: 1.14em; font-weight: 500; margin: 0 0 12px; }
+.interest-category { display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 10px; align-items: start; margin: 12px 0; }
+.interest-category h4 { margin: 5px 0; font-size: 0.95em; font-weight: 500; color: var(--secondary-text); }
+.interest-chips { display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; }
+.interest-chips li { display: flex; max-width: 100%; min-width: 0; }
+.interest-chip { max-width: 100%; white-space: normal; overflow-wrap: anywhere; text-align: left; touch-action: none; }
+.interest-empty { padding: 5px 0; color: var(--secondary-text); font-size: 13px; opacity: 0.65; }
+.interest-stance.is-drop-target { border-color: var(--accent-color); background: color-mix(in srgb, var(--accent-color) 12%, transparent); }
+.interest-chip.is-dragging { opacity: 0.35; }
+.interest-drag-ghost { position: absolute; z-index: 10; pointer-events: none; opacity: 0.9; box-shadow: 0 4px 12px rgb(0 0 0 / 25%); }
+#interest-editor:not([hidden]) {
+    position: absolute; bottom: 20px; left: 20px; right: 20px; z-index: 3;
+    padding: 16px; border: 1px solid var(--border-color); border-radius: var(--radius-pill-sm);
+    background: var(--primary-bg); box-shadow: 0 4px 24px rgb(0 0 0 / 25%);
+    max-height: 55%; overflow-y: auto;
+}
+#interest-editor strong { display: block; overflow-wrap: anywhere; margin-bottom: 10px; }
+#interest-editor input { width: 100%; box-sizing: border-box; margin-bottom: 8px; }
+.interest-edit-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+#interests-status { flex-shrink: 0; font-size: 12px; margin: 0; }
+.preference-controls { display: inline-flex; gap: 5px; flex-wrap: wrap; }
+.preference-controls button {
+    padding: 5px 8px; border: 1px solid var(--border-color); border-radius: var(--radius-pill-sm);
+    color: var(--primary-text); background: var(--secondary-bg); font-size: 11px;
+}
+.preference-controls button[aria-pressed="true"] { border-color: var(--primary-text); box-shadow: inset 0 0 0 1px var(--primary-text); font-weight: 700; }
+@media (max-width: 767px) {
+    .discovery-control { top: 88px; right: 8px; }
+    .interest-category { grid-template-columns: 72px minmax(0, 1fr); gap: 8px; }
+    #interest-editor:not([hidden]) { left: 16px; right: 16px; }
+    .preference-controls button { min-height: 32px; }
+}
+
+/* Stars follow the title text at its inherited size and baseline. */
+.favorite-toggle {
+    display: inline-block; width: 1em; padding: 0; margin: 0; vertical-align: baseline;
+    border: none; border-radius: var(--radius-xs); background: transparent;
+    color: #f4c542; font: inherit; line-height: inherit; cursor: pointer;
+}
+.favorite-toggle[aria-pressed="false"] { color: color-mix(in srgb, var(--secondary-text) 70%, transparent); }
+.favorite-toggle:hover { background: color-mix(in srgb, currentColor 12%, transparent); }
+.favorite-toggle:focus-visible { outline: 2px solid #f4c542; outline-offset: 2px; }

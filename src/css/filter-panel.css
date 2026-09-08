@@ -80,15 +80,19 @@
     top: 100%;
     left: 0;
     margin-top: 6px;
+    min-width: 180px;
+    z-index: var(--z-panel-menu);
+    overflow: hidden;
+}
+
+#logo-menu,
+:is(#format-selector-panel, #neighborhood-selector-panel) {
     /* Same surface treatment as the logo / search / date picker pills */
     background: color-mix(in srgb, var(--primary-bg) 85%, transparent);
     backdrop-filter: blur(8px);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-pill);
     box-shadow: var(--popup-shadow);
-    min-width: 180px;
-    z-index: var(--z-panel-menu);
-    overflow: hidden;
 }
 
 #logo-menu.logo-menu-hidden {
@@ -98,7 +102,8 @@
 /* Items match the search/date inputs' typography (size, secondary color,
    tight tracking) and brighten to primary text on hover like the chips. */
 #logo-menu a,
-#logo-menu button {
+#logo-menu button,
+:is(#format-selector-panel, #neighborhood-selector-panel) label {
     display: block;
     width: 100%;
     padding: 8px 14px;
@@ -108,6 +113,7 @@
     border: none;
     text-align: left;
     font-family: var(--font-display);
+    font-weight: 400;
     font-size: 1.08em;
     letter-spacing: -0.03em;
     line-height: 1.2;
@@ -116,7 +122,8 @@
 }
 
 #logo-menu a:hover,
-#logo-menu button:hover {
+#logo-menu button:hover,
+:is(#format-selector-panel, #neighborhood-selector-panel) label:hover {
     background-color: var(--tertiary-bg);
     color: var(--primary-text);
 }
@@ -675,7 +682,8 @@ span.flatpickr-weekday {
 
     /* Menu items track the desktop top bar's smaller control size */
     #logo-menu a,
-    #logo-menu button {
+    #logo-menu button,
+    :is(#format-selector-panel, #neighborhood-selector-panel) label {
         padding: 7px 12px;
         font-size: 0.95em;
     }
@@ -784,3 +792,75 @@ span.flatpickr-weekday {
         display: none;
     }
 }
+
+/* Independent event-format control. Native popover escapes the panel's clipping. */
+:is(#format-selector-button, #neighborhood-selector-button) {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    gap: 3px;
+    max-width: 180px;
+    padding: 6px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-pill);
+    background: color-mix(in srgb, var(--primary-bg) 85%, transparent);
+    color: var(--secondary-text);
+    font: inherit;
+    font-size: 1.08em;
+    line-height: 1.2;
+    letter-spacing: -0.03em;
+    cursor: pointer;
+}
+:is(#format-selector-button, #neighborhood-selector-button) span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:is(#format-selector-button, #neighborhood-selector-button):hover, :is(#format-selector-button, #neighborhood-selector-button)[aria-expanded="true"] { color: var(--primary-text); }
+:is(#format-selector-button, #neighborhood-selector-button):focus-visible, :is(#format-selector-panel, #neighborhood-selector-panel) :focus-visible { outline: 2px solid var(--accent-color); outline-offset: 2px; }
+:is(#format-selector-panel, #neighborhood-selector-panel) {
+    position: fixed;
+    inset: auto;
+    margin: 0;
+    box-sizing: border-box;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+    padding: 0;
+    color: var(--secondary-text);
+    font-family: var(--font-display);
+}
+:is(#format-selector-panel, #neighborhood-selector-panel)::-webkit-scrollbar { display: none; }
+:is(#format-selector-panel, #neighborhood-selector-panel) label { display: flex; align-items: center; gap: 9px; box-sizing: border-box; padding-top: 5px; padding-bottom: 5px; }
+:is(#format-selector-panel, #neighborhood-selector-panel) input { width: 17px; height: 17px; margin: 0; flex-shrink: 0; accent-color: var(--accent-color); }
+.format-selector-group-heading { display: flex; align-items: stretch; }
+.format-selector-group-heading label { flex: 1; }
+.format-selector-children { padding-left: 26px; }
+.format-selector-disclosure { display: flex; align-items: center; justify-content: center; width: 40px; flex-shrink: 0; padding: 0; border: 0; background: none; color: var(--secondary-text); font: inherit; font-size: 1.5em; cursor: pointer; }
+.format-selector-disclosure:hover { background: var(--tertiary-bg); color: var(--primary-text); }
+:is(#format-selector-panel, #neighborhood-selector-panel) .format-selector-disclosure:focus-visible { outline-offset: -2px; }
+.format-selector-disclosure span { display: block; }
+.format-selector-disclosure[aria-expanded="true"] span { transform: rotate(90deg); }
+@media (min-width: 769px) {
+    :is(#format-selector-button, #neighborhood-selector-button) { font-size: .95em; padding: 4px 9px; }
+    #filter-container > div:first-child { width: auto; min-width: calc(var(--sheet-width, 420px) - 16px); }
+    #omni-search-filter { min-width: 120px; }
+}
+@media (max-width: 768px) {
+    #filter-container > div:first-child { display: grid; grid-template-columns: auto minmax(0, .45fr) minmax(0, 1fr) minmax(0, 1.55fr); gap: 6px; }
+    #omni-search-filter { grid-column: 2 / 5; }
+    #date-filter-container { grid-column: 1 / 3; }
+    :is(#format-selector-button, #neighborhood-selector-button) { min-width: 0; max-width: 100%; justify-self: end; font-size: 1em; padding-inline: 8px; }
+}
+
+/* Neighborhood navigation uses the existing selector's typography and colors. */
+#neighborhood-selector-panel .neighborhood-search {
+    box-sizing: border-box;
+    width: 100%;
+    height: auto;
+    margin: 0 0 6px;
+    padding: 8px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--secondary-bg);
+    color: var(--primary-text);
+    font: inherit;
+}
+.neighborhood-empty-message, .selector-empty-message { margin: 8px; color: var(--secondary-text); font-size: .9em; }
+#neighborhood-selector-panel .format-selector-children { padding-left: 16px; }

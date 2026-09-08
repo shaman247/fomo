@@ -2,7 +2,8 @@
   "private": true,
   "scripts": {
     "dev": "node build.js --dev",
-    "build": "node build.js"
+    "build": "node build.js",
+    "test:discovery": "node --test src/js/tests/discoveryRanking.test.cjs"
   },
   "devDependencies": {
     "esbuild": "^0.28.0",

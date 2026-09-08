@@ -54,24 +54,19 @@ const FilterPanelUI = (() => {
         tagParentsOf: {},
         tagChildrenOf: {},
         structuralFormatTags: new Set(),
+        neighborhoodTags: new Set(),
         tagEmojiMap: {},
 
         // Chip bar
         getSelectedTagsWithColors: null
     };
 
-    // Derived caches over state.allAvailableTags, rebuilt at its only two
-    // assignment sites (init, refreshAvailableTags). Tag names are immutable,
-    // so re-normalizing / re-building the Set on every render is pure waste.
-    let _normalizedTagCache = new Map();   // tag -> Utils.normalizeForSearch(tag)
+    // Membership cache rebuilt at init and refreshAvailableTags. Normalized
+    // canonical/alias terms are shared with SearchManager through app state.
     let _availableTagsSet = new Set();
 
     function _rebuildTagCaches() {
         _availableTagsSet = new Set(state.allAvailableTags);
-        _normalizedTagCache = new Map();
-        for (const tag of state.allAvailableTags) {
-            _normalizedTagCache.set(tag, Utils.normalizeForSearch(tag));
-        }
     }
 
     /**
@@ -173,7 +168,7 @@ const FilterPanelUI = (() => {
     /**
      * Toggles a chip bar tag on/off.
      */
-    function _handleChipClick(tagName) {
+    function _handleChipClick(tagName, button) {
         const currentState = TagStateManager.getTagState(tagName);
         const willSelect = currentState === TAG_STATE.UNSELECTED;
         FilterProfiler.start(`chip ${willSelect ? 'select' : 'deselect'} → ${tagName}`);
@@ -192,6 +187,8 @@ const FilterPanelUI = (() => {
             }
         }
 
+        // Update only the clicked control before the queued map/list refresh.
+        if (button) TagStateManager.updateTagVisuals(button, tagName);
         if (state.onFilterChangeCallback) {
             state.onFilterChangeCallback();
         }
@@ -269,9 +266,9 @@ const FilterPanelUI = (() => {
             // When searching, only include tags whose name matches the term
             let exactMatch = false;
             if (hasSearch) {
-                const normalizedTag = _normalizedTagCache.get(tag) ?? Utils.normalizeForSearch(tag);
-                if (!normalizedTag.includes(normalizedSearchTerm)) continue;
-                exactMatch = normalizedTag === normalizedSearchTerm;
+                const match = SearchManager.matchTag(tag, normalizedSearchTerm);
+                if (!match.matches) continue;
+                exactMatch = match.exact;
             }
 
             const freq = state.currentDynamicFrequencies[tag] || 0;
@@ -300,13 +297,14 @@ const FilterPanelUI = (() => {
 
             if (score <= 0) continue;
 
-            unselectedTags.push({ tag, score });
+            unselectedTags.push({ tag, score, exactMatch });
         }
 
         // Sort unselected by descending score; on ties prefer parent tags
         // (with descendants) so category chips surface in the minimal bar.
         const hasDesc = (tag) => (state.tagDescendantsOf[tag] && state.tagDescendantsOf[tag].size > 0) ? 1 : 0;
-        unselectedTags.sort((a, b) => b.score - a.score || hasDesc(b.tag) - hasDesc(a.tag));
+        unselectedTags.sort((a, b) => Number(b.exactMatch) - Number(a.exactMatch)
+            || b.score - a.score || hasDesc(b.tag) - hasDesc(a.tag));
 
         FilterProfiler.mark('fp:chipbar:scored');
         FilterProfiler.measure('fp:chipbar:score', 'fp:chipbar:start', 'fp:chipbar:scored');
@@ -466,7 +464,7 @@ const FilterPanelUI = (() => {
 
         container.addEventListener('click', (e) => {
             const btn = chipFromEvent(e);
-            if (btn) _handleChipClick(btn.dataset.primaryTag);
+            if (btn) _handleChipClick(btn.dataset.primaryTag, btn);
         });
 
         // mouseenter equivalent: skip moves between a chip's own children.
@@ -558,9 +556,8 @@ const FilterPanelUI = (() => {
             candidates.forEach(tag => {
                 if (seen.has(tag)) return;
                 seen.add(tag);
-                // Structural Format nodes (Format root + category tags) are never
-                // shown as chips — only their leaf event-type tags are.
-                if (structural && structural.has(tag)) return;
+                // Format-only nodes belong in the independent format selector.
+                if ((structural && structural.has(tag)) || state.neighborhoodTags.has(tag)) return;
                 const score = _scoreRelatedTag(tag, visibleFreqs);
                 if (score === null) return;
                 layer.push({ tag, score });
@@ -819,7 +816,9 @@ const FilterPanelUI = (() => {
         // this never depends on init ordering.
         state.structuralFormatTags = config.structuralFormatTags
             || new Set(['Format', ...(((config.tagChildrenOf || {})['Format']) || [])]);
+        state.neighborhoodTags = config.neighborhoodTags || new Set();
         state.tagEmojiMap = config.tagEmojiMap || {};
+        state.getEventFilterTags = config.getEventFilterTags || (event => Utils.eventFilterTags(event));
         state.getSelectedTagsWithColors = config.getSelectedTagsWithColors || null;
         state.resultsContainerDOM = config.resultsContainerDOM;
         state.onFilterChangeCallback = config.onFilterChangeCallback;
@@ -937,8 +936,8 @@ const FilterPanelUI = (() => {
             const tagLocationSets = {};
 
             filteredEvents.forEach(event => {
-                if (event.tags && Array.isArray(event.tags) && event.locationKey) {
-                    event.tags.forEach(tag => {
+                if (event.locationKey) {
+                    state.getEventFilterTags(event).forEach(tag => {
                         if (_availableTagsSet.has(tag)) {
                             if (!tagLocationSets[tag]) {
                                 tagLocationSets[tag] = new Set();

@@ -285,10 +285,10 @@ const TagStateManager = (() => {
         button.dataset.resultRef = result.ref;
         button.setAttribute('role', 'listitem');
 
-        const emoji = result.emoji ? `<span class="chip-emoji" aria-hidden="true">${result.emoji}</span>` : '';
         const displayName = result.displayName || result.ref;
         const scoreText = (debugMode && result.score !== undefined) ? ` <span class="debug-score" style="opacity: 0.6; font-size: 0.85em;">[${result.score.toFixed(1)}]</span>` : '';
-        button.innerHTML = `${emoji}${displayName.replace(/<\/?strong>/g, '')}${scoreText}`;
+        button.innerHTML = `${displayName.replace(/<\/?strong>/g, '')}${scoreText}`;
+        button.prepend(IconManager.createElement(result, { className: 'chip-emoji event-icon' }));
         button.setAttribute('aria-label', `${result.type}: ${displayName.replace(/<\/?[^>]+(>|$)/g, '')}`);
 
         button.addEventListener('click', () => {
@@ -392,6 +392,7 @@ const TagStateManager = (() => {
         getTagState,
         getTagStates,
         updateAllTagVisuals,
+        updateTagVisuals,
 
         // Constants
         getTagStateConstants

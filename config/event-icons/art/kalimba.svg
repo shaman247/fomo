@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+<title>Kalimba</title>
+<path fill="#8D523B" d="M28 12h71c8 0 12 6 12 13v77c0 10-7 17-17 17H34c-10 0-17-7-17-17V26c0-8 4-14 11-14z"/>
+<path fill="#CE8963" d="M28 10h69c8 0 12 5 12 12v76c0 9-6 15-15 15H32c-9 0-15-6-15-15V24c0-8 5-14 13-14z"/>
+<path fill="#FFCC80" d="M28 14h67c7 0 10 4 10 10v71c0 8-5 13-13 13H33c-8 0-13-5-13-13V26c0-7 3-12 8-12z"/>
+<path fill="#E6A56F" d="M91 19c-7 20 5 43 0 63-2 9-5 16-2 26h7c8-2 9-8 9-14V24c0-7-6-10-14-10z"/>
+<path d="M27 61c-3 20 4 31 1 40M36 87l1 14M96 79c-4 9-4 17-2 21" fill="none" stroke="#CE8963" stroke-width="2.5" stroke-linecap="round"/>
+<rect x="25" y="28" width="74" height="9" rx="3" fill="#8D523B"/>
+<rect x="25" y="38" width="74" height="7" rx="2" fill="#8D523B"/>
+<path fill="#607D8B" d="M28 24h6v32q0 5-3 5t-3-5z"/>
+<path fill="#ECEFF1" d="M28 24h4v31q0 3-2 3t-2-3z"/>
+<path fill="#B0BEC5" d="M28 51h6v5q0 5-3 5t-3-5z"/>
+<path fill="#607D8B" d="M36 24h6v41q0 5-3 5t-3-5z"/>
+<path fill="#ECEFF1" d="M36 24h4v40q0 3-2 3t-2-3z"/>
+<path fill="#B0BEC5" d="M36 60h6v5q0 5-3 5t-3-5z"/>
+<path fill="#607D8B" d="M44 24h6v50q0 5-3 5t-3-5z"/>
+<path fill="#ECEFF1" d="M44 24h4v49q0 3-2 3t-2-3z"/>
+<path fill="#B0BEC5" d="M44 69h6v5q0 5-3 5t-3-5z"/>
+<path fill="#607D8B" d="M52 24h6v59q0 5-3 5t-3-5z"/>
+<path fill="#ECEFF1" d="M52 24h4v58q0 3-2 3t-2-3z"/>
+<path fill="#B0BEC5" d="M52 78h6v5q0 5-3 5t-3-5z"/>
+<path fill="#607D8B" d="M60 24h6v65q0 5-3 5t-3-5z"/>
+<path fill="#ECEFF1" d="M60 24h4v64q0 3-2 3t-2-3z"/>
+<path fill="#B0BEC5" d="M60 84h6v5q0 5-3 5t-3-5z"/>
+<path fill="#607D8B" d="M68 24h6v58q0 5-3 5t-3-5z"/>
+<path fill="#ECEFF1" d="M68 24h4v57q0 3-2 3t-2-3z"/>
+<path fill="#B0BEC5" d="M68 77h6v5q0 5-3 5t-3-5z"/>
+<path fill="#607D8B" d="M76 24h6v49q0 5-3 5t-3-5z"/>
+<path fill="#ECEFF1" d="M76 24h4v48q0 3-2 3t-2-3z"/>
+<path fill="#B0BEC5" d="M76 68h6v5q0 5-3 5t-3-5z"/>
+<path fill="#607D8B" d="M84 24h6v40q0 5-3 5t-3-5z"/>
+<path fill="#ECEFF1" d="M84 24h4v39q0 3-2 3t-2-3z"/>
+<path fill="#B0BEC5" d="M84 59h6v5q0 5-3 5t-3-5z"/>
+<path fill="#607D8B" d="M92 24h6v31q0 5-3 5t-3-5z"/>
+<path fill="#ECEFF1" d="M92 24h4v30q0 3-2 3t-2-3z"/>
+<path fill="#B0BEC5" d="M92 50h6v5q0 5-3 5t-3-5z"/>
+<rect x="25" y="31" width="74" height="7" rx="3" fill="#78909C"/>
+<rect x="25" y="31" width="74" height="3" rx="1.5" fill="#CFD8DC"/>
+<circle cx="28" cy="34.5" r="2" fill="#546E7A"/>
+<circle cx="96" cy="34.5" r="2" fill="#546E7A"/>
+</svg>

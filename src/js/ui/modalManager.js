@@ -22,7 +22,6 @@ const ModalManager = (() => {
      */
     const state = {
         // Callbacks
-        onEmojiFontChange: null,
         onThemeChange: null,
         getDebugMode: null,
 
@@ -187,13 +186,11 @@ const ModalManager = (() => {
     /**
      * Initializes the settings modal
      * @param {Object} callbacks - Callback functions
-     * @param {Function} callbacks.onEmojiFontChange - Called when emoji font changes
      * @param {Function} callbacks.onThemeChange - Called when theme changes
      * @param {Function} [callbacks.getDebugMode] - Returns whether debug mode
      *   is active (gates the prototype theme/layout options)
      */
     function initSettingsModal(callbacks = {}) {
-        state.onEmojiFontChange = callbacks.onEmojiFontChange;
         state.onThemeChange = callbacks.onThemeChange;
         state.getDebugMode = callbacks.getDebugMode;
 
@@ -207,25 +204,8 @@ const ModalManager = (() => {
         _buildProtoFlagGroups();
         _syncThemeRadios();
 
-        const emojiFontRadios = document.querySelectorAll('input[name="emoji-font"]');
-
-        if (!modal || !closeBtn || !themeOptions || emojiFontRadios.length === 0) return;
-
+        if (!modal || !closeBtn || !themeOptions) return;
         state.settingsModal = modal;
-
-        // Load current settings with safe storage
-        const savedEmojiFont = Utils.SafeStorage.getItem('emojiFont') || 'system';
-
-        // Set the correct radio buttons based on saved settings
-        emojiFontRadios.forEach(radio => {
-            radio.checked = radio.value === savedEmojiFont;
-            // Disable Noto option on unsupported browsers (Safari)
-            if (radio.value === 'noto' && !EmojiManager.isNotoSupported()) {
-                radio.disabled = true;
-                const label = radio.closest('label');
-                if (label) label.style.opacity = '0.4';
-            }
-        });
 
         // Close modal when clicking close button
         closeBtn.addEventListener('click', () => {
@@ -234,16 +214,6 @@ const ModalManager = (() => {
 
         // Close modal when clicking outside or on Escape
         wireDismiss(modal, closeSettingsModal);
-
-        // Handle emoji font change
-        emojiFontRadios.forEach(radio => {
-            radio.addEventListener('change', (e) => {
-                const emojiFont = e.target.value;
-                if (state.onEmojiFontChange) {
-                    state.onEmojiFontChange(emojiFont);
-                }
-            });
-        });
 
         // Handle theme change — delegated, so per-open rebuilds of the
         // option list need no re-wiring
@@ -297,8 +267,11 @@ const ModalManager = (() => {
 
         state.welcomeModal = modal;
 
-        // Close modal when clicking anywhere on it, or on Escape
-        wireDismiss(modal, closeWelcomeModal, { closeOnAnyClick: true });
+        wireDismiss(modal, closeWelcomeModal);
+        document.getElementById('welcome-start-btn')?.addEventListener('click', () => {
+            closeWelcomeModal();
+            document.getElementById('omni-search-input')?.focus();
+        });
     }
 
     /**

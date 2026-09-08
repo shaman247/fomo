@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">Word game tile</title>
+  <desc id="desc">A single warm wooden A tile with a one-point score.</desc>
+  <g transform="rotate(-8 64 64)">
+    <path fill="#AD7156" d="M23 15h82c7 0 11 5 11 12v77c0 9-5 15-13 16l-80-1c-7 0-11-5-11-12V28c0-8 4-13 11-13z"/>
+    <path fill="#CE8963" d="M18 101l91-1 7-7v11c0 9-5 15-13 16l-80-1c-7 0-11-5-11-12V96z"/>
+    <path fill="#FFCC80" d="M24 9c17-1 62-1 80 0 7 0 11 5 11 12v76c0 8-4 12-12 12H24c-8 0-12-4-12-12V22c0-8 4-12 12-13z"/>
+    <path fill="#FFE0B2" d="M22 14c6-2 21-2 24 0 2 2-4 4-13 5-9 1-12 5-13 14-1 7-4 10-5 7-2-6-1-18 2-22 1-2 3-3 5-4z"/>
+    <path fill="#EBAA60" d="M104 76c3-1 5 5 5 12 0 10-3 15-12 16-7 1-16 0-16-2 0-3 10-3 15-8 4-4 5-16 8-18z"/>
+    <path fill="#4E342E" fill-rule="evenodd" transform="translate(-3 0)" d="M50 29h17l22 61H74l-4-13H46l-4 13H28zm0 36h16l-8-24z"/>
+    <path fill="#4E342E" transform="translate(5 2)" d="M91 78h5v19h-5V84l-4 2v-5z"/>
+  </g>
+</svg>

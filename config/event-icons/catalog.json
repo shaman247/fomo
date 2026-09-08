@@ -1,0 +1,230 @@
+{
+  "schema_version": 1,
+  "icons": [
+    {
+      "id": "game-go",
+      "label": "Go",
+      "provider": "custom",
+      "source": "art/go.svg",
+      "fallback_emoji": "🎲",
+      "use_for": "Playing or learning Go, baduk, or weiqi, including clubs with indirect names.",
+      "avoid_for": "Unrelated uses of go; a film, lecture, or mixed game list where Go is not primary."
+    },
+    {
+      "id": "game-dominoes",
+      "label": "Dominoes",
+      "provider": "custom",
+      "source": "art/dominoes.svg",
+      "fallback_emoji": "🎲",
+      "use_for": "Playing or learning dominoes.",
+      "avoid_for": "Domino-brand venues, domino-effect talks, unrelated games."
+    },
+    {
+      "id": "game-scrabble",
+      "label": "Scrabble",
+      "provider": "custom",
+      "source": "art/scrabble.svg",
+      "fallback_emoji": "🔤",
+      "use_for": "Scrabble play, lessons, or tournaments.",
+      "avoid_for": "Generic word games or a mixed-game event without a primary game."
+    },
+    {
+      "id": "game-mtg",
+      "label": "Magic: The Gathering",
+      "provider": "custom",
+      "source": "art/mtg.svg",
+      "fallback_emoji": "🃏",
+      "use_for": "Magic: The Gathering play, drafts, Commander, or tournaments.",
+      "avoid_for": "Stage magic, meeting abbreviations, Pokemon or generic trading-card games."
+    },
+    {
+      "id": "tabletop-rpg",
+      "label": "Tabletop role-playing",
+      "provider": "custom",
+      "source": "art/d20.svg",
+      "fallback_emoji": "🎲",
+      "use_for": "Participatory tabletop role-playing, including D&D, Dungeons & Drafts, campaigns and one-shots.",
+      "avoid_for": "Fantasy films, video games, lectures about RPGs, or beer drafts alone."
+    },
+    {
+      "id": "trivia",
+      "label": "Trivia",
+      "provider": "custom",
+      "source": "art/trivia.svg",
+      "fallback_emoji": "❓",
+      "use_for": "Trivia games and pub quizzes.",
+      "avoid_for": "Lectures, general learning, or incidental trivia in an unrelated event."
+    },
+    {
+      "id": "bingo",
+      "label": "Bingo",
+      "provider": "custom",
+      "source": "art/bingo.svg",
+      "fallback_emoji": "🎲",
+      "use_for": "Number-based or other ordinary bingo, including drag bingo.",
+      "avoid_for": "Music/song identification bingo: prefer music-bingo."
+    },
+    {
+      "id": "music-bingo",
+      "label": "Music bingo",
+      "provider": "custom",
+      "source": "art/music-bingo.svg",
+      "fallback_emoji": "🎵",
+      "use_for": "Bingo played by identifying songs, including Music, Musical, and Mixtape Bingo.",
+      "avoid_for": "Regular bingo with incidental background music; unrelated mixtape performances."
+    },
+    {
+      "id": "machine-sewing",
+      "label": "Machine sewing",
+      "provider": "custom",
+      "source": "art/sewing-machine.svg",
+      "fallback_emoji": "🧵",
+      "use_for": "Sewing-machine classes or activities where machine sewing is central.",
+      "avoid_for": "Hand sewing, knitting, generic fiber arts without machine use."
+    },
+    {
+      "id": "3d-printing",
+      "label": "3D printing",
+      "provider": "custom",
+      "source": "art/3d-printing.svg",
+      "fallback_emoji": "🖨️",
+      "use_for": "3D printing, learning to use 3D printers, or hands-on print fabrication.",
+      "avoid_for": "2D printing, 3D films, generic modeling without printing."
+    },
+    {
+      "id": "game-backgammon",
+      "label": "Backgammon",
+      "provider": "custom",
+      "source": "art/backgammon.svg",
+      "fallback_emoji": "🎲",
+      "use_for": "Playing or learning backgammon.",
+      "avoid_for": "Generic board-game events without backgammon as the primary game."
+    },
+    {
+      "id": "game-rummikub",
+      "label": "Rummikub",
+      "provider": "custom",
+      "source": "art/rummikub.svg",
+      "fallback_emoji": "🎲",
+      "use_for": "Playing or learning Rummikub.",
+      "avoid_for": "Card rummy, slots, or generic tile/board games."
+    },
+    {
+      "id": "pole-dance",
+      "label": "Pole dance",
+      "provider": "custom",
+      "source": "art/pole-dance.svg",
+      "fallback_emoji": "💃",
+      "use_for": "Pole dance, pole fitness, and related participatory classes.",
+      "avoid_for": "Unrelated uses of pole, general dance without a pole."
+    },
+    {
+      "id": "chair-yoga",
+      "label": "Chair yoga",
+      "provider": "custom",
+      "source": "art/chair-yoga.svg",
+      "fallback_emoji": "🧘",
+      "use_for": "Yoga practiced with a chair or explicitly described seated yoga.",
+      "avoid_for": "General yoga or seated exercise that is not yoga."
+    },
+    {
+      "id": "glassblowing",
+      "label": "Glassblowing",
+      "provider": "custom",
+      "source": "art/glassblowing.svg",
+      "fallback_emoji": "🎨",
+      "use_for": "Glassblowing classes, participatory glass shaping with a blowpipe.",
+      "avoid_for": "Fused/stained glass, generic glass art, or unrelated flame work."
+    },
+    {
+      "id": "sport-pickleball",
+      "label": "Pickleball",
+      "provider": "custom",
+      "source": "art/pickleball.svg",
+      "fallback_emoji": "🏓",
+      "use_for": "Pickleball play, practice, lessons, leagues and tournaments.",
+      "avoid_for": "Other paddle/racket sports; mixed sports sessions without primary pickleball."
+    },
+    {
+      "id": "activity-interlocking-bricks",
+      "label": "Interlocking toy bricks",
+      "provider": "custom",
+      "source": "art/building-bricks.svg",
+      "fallback_emoji": "🧱",
+      "use_for": "Building with LEGO or similar interlocking toy bricks, including dedicated building clubs and challenges.",
+      "avoid_for": "Masonry, LEGO films/video games, retail visits, or mixed activities where brick building is incidental."
+    },
+    {
+      "id": "equipment-dj-decks",
+      "label": "DJ decks",
+      "provider": "custom",
+      "source": "art/dj-decks.svg",
+      "fallback_emoji": "🎧",
+      "use_for": "DJ sets, DJ-led dance parties, open decks, turntablism, or hands-on DJ mixing instruction.",
+      "avoid_for": "Passive vinyl listening, live instrumental concerts with incidental DJs, broad festivals, background dinner music, or equipment mentioned only in passing."
+    },
+    {
+      "id": "craft-crochet",
+      "label": "Crochet",
+      "provider": "custom",
+      "source": "art/crochet.svg",
+      "fallback_emoji": "🧶",
+      "use_for": "Crochet instruction, practice, dedicated clubs and projects centered on using a crochet hook.",
+      "avoid_for": "Knitting, machine/hand sewing, yarn displays, or co-primary mixed fiber activities with no crochet focus."
+    },
+    {
+      "id": "instrument-trombone",
+      "label": "Trombone",
+      "provider": "custom",
+      "source": "art/trombone.svg",
+      "fallback_emoji": "🎺",
+      "use_for": "Trombone lessons, recitals, or concerts where an explicitly identified trombonist or trombone ensemble is the featured musical focus.",
+      "avoid_for": "Trumpet, film plots, generic jazz, or one trombone section among a larger mixed ensemble."
+    },
+    {
+      "id": "instrument-steelpan",
+      "label": "Steelpan",
+      "provider": "custom",
+      "source": "art/steelpan.svg",
+      "fallback_emoji": "🥁",
+      "use_for": "Steelpan/steel-drum performances, lessons or participatory sessions where the tuned instrument is central.",
+      "avoid_for": "Oil drums, skin drums, generic Caribbean music or incidental percussion."
+    },
+    {
+      "id": "instrument-kalimba",
+      "label": "Kalimba",
+      "provider": "custom",
+      "source": "art/kalimba.svg",
+      "fallback_emoji": "🎵",
+      "use_for": "Kalimba/thumb-piano performances and lessons where the instrument is central.",
+      "avoid_for": "Keyboard piano, generic folk jams listing kalimba as one optional activity, or unspecified percussion."
+    },
+    {
+      "id": "instrument-guzheng",
+      "label": "Guzheng",
+      "provider": "custom",
+      "source": "art/guzheng.svg",
+      "fallback_emoji": "🎵",
+      "use_for": "Guzheng performances, recitals and workshops where the Chinese plucked zither is central.",
+      "avoid_for": "Harp, guqin, koto, keyboard, generic Chinese music, or incidental ensemble instrumentation."
+    },
+    {
+      "id": "instrument-cello",
+      "label": "Cello",
+      "provider": "custom",
+      "source": "art/cello.svg",
+      "fallback_emoji": "🎻",
+      "use_for": "Cello lessons, recitals, cello-led concerts or ensembles where cello is the central musical focus.",
+      "avoid_for": "Violin, double bass, theater with cello accompaniment, or mixed ensembles listing cello only as one instrument."
+    },
+    {
+      "id": "instrument-double-bass",
+      "label": "Double bass",
+      "provider": "custom",
+      "source": "art/double-bass.svg",
+      "fallback_emoji": "🎻",
+      "use_for": "Acoustic upright bass/contrabass lessons or performances where the double bass is the central musical focus.",
+      "avoid_for": "Electric bass guitar, generic bass music, generic jazz, or supporting bass in a mixed ensemble."
+    }
+  ]
+}

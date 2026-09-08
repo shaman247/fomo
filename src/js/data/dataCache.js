@@ -32,7 +32,8 @@ const DataCache = (() => {
 
     // Bump when the exported data format or the required file set changes in a
     // way old cached snapshots can't satisfy — mismatched snapshots are wiped.
-    const SCHEMA_VERSION = 1;
+    // Formats now require event_type and separate taxonomy metadata.
+    const SCHEMA_VERSION = 4;
 
     // A snapshot older than this is ignored (its 90-day event window has
     // drifted too far; better to eat one slow network start than show it).
@@ -257,6 +258,7 @@ const DataCache = (() => {
     }
 
     return {
+        schemaVersion: SCHEMA_VERSION,
         init,
         isUsable,
         getMeta,

@@ -36,10 +36,7 @@ import event_types as et  # noqa: E402
 # Leaves that double as established content-genre nodes (they have content
 # subtrees). Multi-parented and additive — never wiped — so the genre subtrees
 # and the ancestor invariant stay intact.
-GENRE_HOMONYMS = {
-    "Concert", "Sports", "Reading", "Workshop", "Fitness", "Volunteer",
-    "Party", "Festival",
-}
+GENRE_HOMONYMS = et.FORMAT_TOPIC_NAMES
 
 
 def _tag_id(cur, name):
