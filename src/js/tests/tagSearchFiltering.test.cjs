@@ -146,3 +146,13 @@ test('same-name Ballroom topic and venue identities filter independently and sha
     assert.deepEqual(Array.from(a.FilterManager.filterEventsByTags({'venue:Ballroom':'selected'},[dance,concert]),e=>e.id),[2]);
     assert.equal(a.Utils.getTagDisplayName('venue:Ballroom'),a.Utils.getTagDisplayName('Ballroom'));
 });
+
+test('location aliases are searchable but never displayed', () => {
+    const a = app();
+    a.state.locationsByLatLng['40,-74'] = {name:'KGB Bar', tags:['venue:Bar'], aliases:['The Red Room at KGB']};
+    a.load([{id:1,name:'Jazz trio',tags:['Jazz'],locationKey:'40,-74'}]);
+    assert.equal(a.state.searchIndex.locations.get('40,-74').includes('red room'),true);
+    const hit = a.SearchManager.search('red room',{},[]).find(r=>r.type==='location'&&r.ref==='40,-74');
+    assert.ok(hit);
+    assert.equal(hit.displayName,'KGB Bar');
+});

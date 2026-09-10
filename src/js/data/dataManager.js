@@ -635,7 +635,7 @@ const DataManager = (() => {
 
     function _indexLocationsTagsOrganizers(state) {
         Object.entries(state.locationsByLatLng).forEach(([key, location]) => {
-            const searchableFields = [location.name, location.short_name, ...(location.tags || []).map(Utils.getTagDisplayName), ...(location.keywords || [])].filter(Boolean);
+            const searchableFields = [location.name, location.short_name, ...(location.aliases || []), ...(location.tags || []).map(Utils.getTagDisplayName), ...(location.keywords || [])].filter(Boolean);
             const normalizedText = searchableFields.map(field => Utils.normalizeForSearch(field)).join(' ');
             state.searchIndex.locations.set(key, normalizedText);
         });

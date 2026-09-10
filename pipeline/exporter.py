@@ -92,6 +92,31 @@ def classify_event_sections(cursor, connection):
     print(f"  Classified {classified} events ({ongoing_count} ongoing)")
 
 
+def _alias_key(text):
+    """Case/whitespace-insensitive comparison key for alias dedup."""
+    return ' '.join((text or '').lower().split())
+
+
+def select_location_aliases(name, short_name, alternate_names):
+    """Pick the alternate names worth shipping for frontend search.
+
+    The frontend matches by substring over the location's name + short_name,
+    so an alias already contained in either (or in another kept alias) adds
+    nothing and is dropped. Order and spelling of the first occurrence win.
+    """
+    covered = [_alias_key(name), _alias_key(short_name)]
+    kept = []
+    for alt in alternate_names or []:
+        key = _alias_key(alt)
+        if not key or any(key in c for c in covered if c):
+            continue
+        # A longer alias that contains an already-kept shorter one supersedes it.
+        kept = [k for k in kept if _alias_key(k) not in key]
+        kept.append(alt.strip())
+        covered.append(key)
+    return kept
+
+
 def get_active_locations(events, all_locations):
     """Export only the venues referenced by this chunk's events.
 
@@ -548,6 +573,14 @@ def export_events(cursor):
         else:
             loc_keywords_by_id.setdefault(r[0], []).append(r[1])
 
+    loc_alt_names_by_id = {}
+    cursor.execute("""
+        SELECT location_id, alternate_name FROM location_alternate_names
+        ORDER BY location_id, id
+    """)
+    for r in cursor.fetchall():
+        loc_alt_names_by_id.setdefault(r[0], []).append(r[1])
+
     loc_urls_by_id = {}
     cursor.execute("""
         SELECT wl.location_id, COALESCE(wl.url, w.base_url) as url FROM website_locations wl
@@ -600,6 +633,11 @@ def export_events(cursor):
             loc['very_short_name'] = row[8]
         if row[9]:
             loc['description'] = row[9]
+        # Alternate names ("Red Room" for KGB Bar) so the omni-search can find a
+        # venue by the name people actually use; search-only, never displayed.
+        aliases = select_location_aliases(row[1], row[7], loc_alt_names_by_id.get(location_id))
+        if aliases:
+            loc['aliases'] = aliases
         if website_urls:
             # Keep website_url as the primary for backwards-compat; full list in website_urls.
             loc['website_url'] = website_urls[0]

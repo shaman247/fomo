@@ -187,3 +187,26 @@ class TestWriteNdjson(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class TestSelectLocationAliases(unittest.TestCase):
+    def test_none_or_empty(self):
+        from exporter import select_location_aliases
+        self.assertEqual(select_location_aliases('KGB Bar', None, None), [])
+        self.assertEqual(select_location_aliases('KGB Bar', None, ['', '  ']), [])
+
+    def test_drops_aliases_covered_by_name_or_short_name(self):
+        from exporter import select_location_aliases
+        alts = ['kgb', 'KGB BAR', 'The Bar', 'Red Room']
+        self.assertEqual(select_location_aliases('KGB Bar', 'The Bar', alts), ['Red Room'])
+
+    def test_longer_alias_supersedes_contained_shorter_one(self):
+        from exporter import select_location_aliases
+        alts = ['Red Room', 'The Red Room at KGB', "KGB Bar's Red Room", 'red room']
+        self.assertEqual(select_location_aliases('KGB Bar', None, alts),
+                         ['The Red Room at KGB', "KGB Bar's Red Room"])
+
+    def test_shorter_alias_after_longer_is_dropped(self):
+        from exporter import select_location_aliases
+        self.assertEqual(select_location_aliases('X', None, ['The Red Room at KGB', 'Red Room']),
+                         ['The Red Room at KGB'])
