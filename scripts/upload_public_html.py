@@ -121,8 +121,7 @@ def upload_directory(ftp, local_dir, remote_dir, is_root=True,
         return 0, 0, 0
 
     # Ensure we're in the correct remote directory for this level
-    if remote_dir:
-        ftp.cwd(f"/{remote_dir}")
+    ftp.cwd(f"/{remote_dir}")
 
     # Separate files and directories
     items = sorted(local_path.iterdir())
@@ -156,8 +155,7 @@ def upload_directory(ftp, local_dir, remote_dir, is_root=True,
         total_count += sub_total
 
         # Change back to current directory after processing subdirectory
-        if remote_dir:
-            ftp.cwd(f"/{remote_dir}")
+        ftp.cwd(f"/{remote_dir}")
 
     # Publish parent files only after their nested assets are complete. In
     # particular, similarity/manifest.json must follow its generation directory.

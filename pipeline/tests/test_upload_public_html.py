@@ -66,6 +66,23 @@ class AtomicUploadTests(unittest.TestCase):
         self.assertEqual(current, {})
         self.assertEqual(previous['public_html/events.day0.json'], 'old-hash')
 
+    def test_root_files_return_to_ftp_root_after_nested_assets(self):
+        root = Path(self.directory.name)
+        (root / 'vendor').mkdir()
+        (root / 'vendor' / 'library.js').write_bytes(b'library')
+        ftp = Mock()
+        cwd = '/'
+        published = []
+
+        def change_directory(path):
+            nonlocal cwd
+            cwd = path
+
+        ftp.cwd.side_effect = change_directory
+        ftp.rename.side_effect = lambda source, target: published.append((cwd, target))
+        upload_directory(ftp, root, '')
+        self.assertEqual(published, [('/vendor', 'library.js'), ('/', self.path.name)])
+
 
 if __name__ == '__main__':
     unittest.main()
