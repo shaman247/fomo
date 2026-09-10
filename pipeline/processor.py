@@ -3479,8 +3479,13 @@ def normalize_event_name_caps(event_name):
     return event_name
 
 
-def group_event_occurrences(rows, source_url=None):
-    """Groups event rows by name and consolidates their occurrences."""
+def group_event_occurrences(rows, source_url=None, location_refs=None):
+    """Groups event rows by name and consolidates their occurrences.
+
+    `location_refs`: {location_id -> [reference strings]} (the resolved venue's
+    name, address, aliases) so a MIXED id-vs-name pair can ask whether the bare
+    string is a room of that venue or a rival venue (`_venue_shaped_mismatch`).
+    """
 
     def normalize_name_for_grouping(name):
         if not name:
@@ -3498,16 +3503,29 @@ def group_event_occurrences(rows, source_url=None):
         loc = re.sub(r'\s+', ' ', (d.get('location') or '').strip().lower())
         return ('name', loc) if loc else None
 
-    def locations_compatible(a, b):
+    def locations_compatible(a, b, a_text='', b_text=''):
         """Two rows may group only if their locations don't conflict. A missing
         location, or an id-vs-name mismatch we can't compare, is treated as
         compatible; two different resolved ids (or two different names) are not.
         This stops a generic name ("National Trails Day") from absorbing a
         distinct event at another venue ("...: Highbridge Park Guided Walk")
         purely because one name is a substring of the other."""
-        if a is None or b is None or a[0] != b[0]:
+        if a is None or b is None:
             return True
+        if a[0] != b[0]:
+            # MIXED: one side resolved, the other is a bare string we could not
+            # resolve. Incompatible only when that string is venue-shaped; a
+            # room, placeholder, locality or address of the resolved venue still
+            # groups (see _venue_shaped_mismatch).
+            if a[0] == 'id':
+                return not _venue_shaped_mismatch(b[1], refs_for(a, a_text))
+            return not _venue_shaped_mismatch(a[1], refs_for(b, b_text))
         return a[1] == b[1]
+
+    def refs_for(key, loc_text):
+        refs = [loc_text] if loc_text else []
+        refs.extend((location_refs or {}).get(key[1], ()))
+        return refs
 
     def loc_name(d):
         """The raw normalized location STRING, kept even when the row also
@@ -3577,7 +3595,8 @@ def group_event_occurrences(rows, source_url=None):
         normalized_event = normalize_name_for_grouping(event_name)
         for existing_key, existing in grouped_events.items():
             existing_loc = loc_key(existing)
-            if not locations_compatible(row_loc, existing_loc):
+            if not locations_compatible(row_loc, existing_loc,
+                                        row_name_loc, loc_name(existing)):
                 continue
             # `locations_compatible` says True both when the locations agree
             # and when it simply could not compare them. Those are very
@@ -3590,12 +3609,28 @@ def group_event_occurrences(rows, source_url=None):
             # Signal 1: the venue names themselves. Works even when every row
             # shares one listing URL, which is where the URL gate below is
             # powerless.
-            if inconclusive and names_denote_different_places(
+            # A MIXED pair was just judged by locations_compatible, which asks
+            # the venue-shape question. Re-testing it here with raw containment
+            # is what split rooms and placeholders ("Play Area" vs
+            # "Bloomingdale Playground") off into unmapped crawl_events.
+            mixed = (row_loc is not None and existing_loc is not None
+                     and row_loc[0] != existing_loc[0])
+            if mixed:
+                pass
+            elif inconclusive and names_denote_different_places(
                     row_name_loc, loc_name(existing)):
                 continue
 
             normalized_existing = normalized_group_keys[existing_key]
             if event_name == existing_key or normalized_event == normalized_existing:
+                # A per-date event URL must not keep a ROOM of the resolved
+                # venue out of its own event: nyc.gov emits one
+                # ?permalinkName=...&id=<n> per date, and the dates whose location
+                # string is "Play Area" are mixed pairs (9 unmapped crawl_events
+                # in cr 122926 alone). A venue-shaped mismatch never reaches
+                # here - locations_compatible already rejected it.
+                if mixed:
+                    return existing_key
                 # Signal 2: the event URL. Two listings carrying different
                 # event URLs are different events — the same reasoning
                 # `urls_compatible` already applies to the containment branch.
@@ -4149,6 +4184,107 @@ def _is_initialism_of(key, venue_name):
     if len(words) < 2:
         return False
     return key.lower() == ''.join(w[0] for w in words)
+
+
+# How many linked locations a website may have before the WEAK arms of
+# `_website_home_venue` (token-prefix, lone is_primary) stop trusting it. The
+# strong arms (name identity, name identity after stripping a trailing
+# parenthetical) are self-limiting and ungated: a linked row that carries the
+# organizer's OWN name is the organizer's venue however many branches the site
+# also lists. Measured 2026-09-09 over every 120-day crawl_events group the
+# branch can reach (1,503 groups / 5,197 rows): 6 and 10 are indistinguishable,
+# and removing the gate entirely reintroduces exactly the aggregator mistakes
+# this fallback must not make (GrowNYC's 43 greenmarkets -> Union Square via a
+# lone is_primary, QPL's 52 branches -> QPL Central via prefix).
+HOME_VENUE_MAX_LINKED = 6
+
+# A trailing word that names the FEED rather than the organizer ("NYU Events",
+# "Lincoln Center Presents", "Montefiore Einstein Events Calendar").
+_SITE_NAME_TRAILING_GENERIC = {'events', 'event', 'calendar', 'calendars',
+                               'presents', 'programs', 'tickets'}
+_VENUE_PARENTHETICAL_RE = re.compile(r'\s*\([^()]*\)\s*$')
+
+
+def _site_name_tokens(website_name):
+    toks = _normalize_location_name(website_name or '').split()
+    while len(toks) > 1 and toks[-1] in _SITE_NAME_TRAILING_GENERIC:
+        toks = toks[:-1]
+    return toks
+
+
+def _is_token_prefix(short_toks, long_toks):
+    return (len(short_toks) >= 2 and len(long_toks) > len(short_toks)
+            and long_toks[:len(short_toks)] == short_toks)
+
+
+def _home_name_parts(name):
+    """(squashed identity, area qualifier) for a home-venue name comparison.
+
+    The area qualifier must travel with the key, because `_normalize_location_name`
+    COLLAPSES it: "NYU Brooklyn" normalizes to the bare brand "nyu", which makes
+    it an exact match for the website "NYU Events" and pins all 184 of NYU's
+    virtual/unspecified rows to 370 Jay St instead of Washington Square. That is
+    the bare-brand catch-all (memory `brand_borough_alias_is_bare_brand_catchall`);
+    two names are the same name only when they collapsed the SAME qualifier.
+    """
+    norm, area = _normalize_location_name_parts(name or '')
+    return _squash_identity(norm), area
+
+
+def _website_home_venue(linked, website_name, max_linked=None):
+    """The ORGANIZER'S OWN venue among the several locations a website links to.
+
+    Policy: a venue-less/virtual event maps to the organizer's physical location
+    (`virtual_events_map_to_organizer_location`). Step 7 does that for a
+    single-venue website; this does it for a multi-venue one, which otherwise
+    gets location_id NULL and is never exported at all (`export_events` INNER
+    JOINs locations).
+
+    Arms, strongest first; an arm that matches 2+ linked venues is AMBIGUOUS and
+    aborts the search - between two venues, unmapped is the honest answer:
+      1. the linked venue whose name IS the website's name,
+      2. same, ignoring a trailing parenthetical qualifier
+         ("Long Island University (LIU)", "Brooklyn Public Library (Central Library)"),
+      3. the one whose name is a leading token-prefix of the website's name or
+         vice versa, both sides 2+ tokens ("Riverside Park" <- "Riverside Park
+         Conservancy"; "NYU Tisch Events" -> "NYU Tisch School of the Arts"),
+      4. the single `website_locations.is_primary` row, if exactly one is marked.
+    Arms 3 and 4 additionally require few linked locations (HOME_VENUE_MAX_LINKED).
+
+    Deliberately NOT a Levenshtein threshold: measured over the 145 multi-venue
+    placeholder triples, 0.6-0.7 scores name BRANCHES, not the organizer
+    ("Yonkers Public Library" 0.70 "Grinton I. Will Library", "NJ State Parks"
+    0.69 "Leonardo State Marina", "It's In Queens" 0.62 "Astoria").
+    """
+    if not linked or len(linked) < 2:
+        return None
+    max_linked = HOME_VENUE_MAX_LINKED if max_linked is None else max_linked
+    site_toks = _site_name_tokens(website_name)
+    site_parts = _home_name_parts(' '.join(site_toks))
+
+    def pick(matches):
+        return matches[0] if len(matches) == 1 else None
+
+    if site_parts[0]:
+        if (m := [l for l in linked if _home_name_parts(l.get('name')) == site_parts]):
+            return pick(m)
+        if (m := [l for l in linked
+                  if _home_name_parts(_VENUE_PARENTHETICAL_RE.sub('', l.get('name') or ''))
+                  == site_parts]):
+            return pick(m)
+    if len(linked) > max_linked:
+        return None
+    if site_toks:
+        def _vtoks(loc):
+            vnorm, varea = _normalize_location_name_parts(loc.get('name') or '')
+            return vnorm.split() if varea == site_parts[1] else []
+        if (m := [l for l in linked
+                  if _is_token_prefix(_vtoks(l), site_toks)
+                  or _is_token_prefix(site_toks, _vtoks(l))]):
+            return pick(m)
+    if len(m := [l for l in linked if l.get('is_primary')]) == 1:
+        return m[0]
+    return None
 
 
 def _single_linked_venue(locations_map, website_id):
@@ -5549,6 +5685,11 @@ def build_locations_map(cursor):
         'alternate_names': {},
         'short_names': {},
         'addresses': {},
+        # Same addresses keyed by the LOOSE parser (word ordinals -> numerals,
+        # unit/floor suffixes dropped), so a sublocation spelled "412 Eighth
+        # Ave, 4th flr" still meets a row stored as "412 8th Ave 4th Floor".
+        # Ambiguity is marked the same way; two venues in one building decline.
+        'addresses_loose': {},
         'website_scoped': {},
         # city (lowercase) -> set of states seen at that city in our data.
         # Learned from location addresses; powers the region-conflict guard.
@@ -5700,6 +5841,13 @@ def build_locations_map(cursor):
                 locations_map['addresses'][street_address] = full_info
             elif existing is not _AMBIGUOUS_ADDRESS and existing.get('id') != loc.get('id'):
                 locations_map['addresses'][street_address] = _AMBIGUOUS_ADDRESS
+        loose_address = _extract_street_address_loose(address)
+        if loose_address:
+            existing = locations_map['addresses_loose'].get(loose_address)
+            if existing is None:
+                locations_map['addresses_loose'][loose_address] = full_info
+            elif existing is not _AMBIGUOUS_ADDRESS and existing.get('id') != loc.get('id'):
+                locations_map['addresses_loose'][loose_address] = _AMBIGUOUS_ADDRESS
 
     # A key that some location owns outright is never "weak" — an explicit
     # curated name or alias states the mapping, and the brand-family guard must
@@ -5708,6 +5856,9 @@ def build_locations_map(cursor):
 
     # Website-linked locations (from website_locations table)
     locations_map['website_linked'] = db.get_website_locations_map(cursor)
+    # Organizer names, for the multi-venue home-venue fallback (Step 7b): the
+    # only way to tell an organizer's OWN venue from the other venues it lists.
+    locations_map['website_names'] = db.get_website_names(cursor)
 
     # Organizers / promoters / listers whose one linked row is an office or
     # home base, flagged by hand (`websites.roving_organizer`). Gates the loose
@@ -5734,6 +5885,254 @@ def _collapse_is_significant(raw, normalized):
     if normalized == lowered:
         return False
     return normalized != re.sub(r"^the\s+", "", lowered).strip()
+
+
+# --------------------------------------------------------------------------
+# Venue-shape test for group_event_occurrences (mixed id-vs-name pairs).
+# Backlog 2026-09-07 "group_event_occurrences fuses two venues when only ONE
+# resolves"; measured 2026-09-09 over 2,271 crawl_results: the live damage was
+# the OPPOSITE error - rooms and placeholders ("Play Area", "Venue not
+# specified", "Via Zoom") splitting off into their own unmapped crawl_events,
+# 147 duplicate events in two weeks. SPLIT precision 50/51 distinct combos.
+# `.scratch/backlog0909/group_occ_report.md`.
+# --------------------------------------------------------------------------
+
+# Sub-space / venue-type nouns: words that describe a ROOM, wing, field or
+# facility rather than identify a venue. A string built only from these is a
+# sub-space of whatever venue the sibling row resolved to ("play area",
+# "basketball court", "mainstage theatre"), and these words are also stripped
+# before the shared-identity-token test so "Woolsey Hall at Yale" does not
+# count as related to "Alice Tully Hall" merely because both are halls.
+_SUBSPACE_WORDS = frozenset({
+    'amphitheater', 'amphitheatre', 'annex', 'area', 'arena', 'atrium',
+    'auditorium', 'backyard', 'balcony', 'ballroom', 'bandshell', 'bar',
+    'basement', 'basketball', 'bleachers', 'cafe', 'cafeteria', 'chapel',
+    'classroom', 'concourse', 'conference', 'courtyard', 'court', 'courts',
+    'deck', 'dining', 'diamond', 'downstairs', 'entrance', 'exhibition',
+    'field', 'fields', 'floor', 'foyer', 'front', 'galleries', 'gallery',
+    'garage', 'garden', 'gardens', 'gate', 'greenhouse', 'grounds', 'gym',
+    'gymnasium', 'hall', 'hallway', 'indoor', 'indoors', 'kitchen', 'lawn',
+    'lawns', 'lobby', 'loft', 'lot', 'lounge', 'mainstage', 'meeting',
+    'mezzanine', 'office', 'onsite', 'outdoor', 'outdoors', 'outside',
+    'parking', 'patio', 'pavilion', 'pitch', 'play', 'playground',
+    'playgrounds', 'plaza', 'pool', 'porch', 'rear', 'rink', 'rooftop',
+    'room', 'sanctuary', 'screening', 'space', 'stage', 'stadium', 'studio',
+    'studios', 'terrace', 'theater', 'theatre', 'track', 'upstairs',
+    'veranda', 'wing', 'yard',
+    # Delivery MODE, not a venue: sources publish "At the Garden & Online",
+    # "Audition Essentials, in-person" as the location field.
+    'hybrid', 'inperson', 'livestream', 'livestreamed', 'online', 'person',
+    'remote', 'stream', 'streaming', 'virtual', 'zoom',
+    # Positional / size modifiers that only ever qualify a sub-space
+    # ("Open Area", "Main Lawn", "Upper Gallery", "Great Hall").
+    'all', 'back', 'big', 'central', 'east', 'great', 'large', 'little',
+    'lower', 'main', 'multipurpose', 'north', 'open', 'purpose', 'side',
+    'small', 'south', 'upper', 'west',
+})
+
+# Placeholders that `_is_venueless_placeholder` does NOT cover. Kept local on
+# purpose: that helper also drives get_location_id Step 7 (venueless -> the
+# organizer's own venue) and widening it there is a separate, riskier change.
+_EXTRA_PLACEHOLDER_RE = re.compile(
+    r'^(?:no location|location (?:varies|unknown|pending)|venue(?: tb[adc])?|'
+    r'no venue|in ?person|inperson|hybrid|citywide|'
+    r'various venues|multiple venues|rain (?:location|site)|'
+    r'n ?a|none|unknown)$')
+
+# Phrases that mark a venueless row wherever they appear, not just as the whole
+# string. The extractor itself writes several of them ("Venue not specified in
+# page content", "Unknown (venue index not provided)", w1664 Upstate Films), and
+# sources write "Offsite- please see description" (w3898 Jersey City FPL).
+_PLACEHOLDER_PHRASES = (
+    'not specified', 'not provided', 'not listed', 'not given', 'unspecified',
+    'unknown', 'venue index', 'off site', 'offsite', 'see description',
+    'see website', 'see details', 'please see', 'to be announced',
+    'to be determined', 'to be confirmed', 'varies', 'via zoom', 'tba', 'tbd',
+)
+
+# Generic geographic qualifiers. Stripped before the locality test so
+# "South Williamsburg", "Flatiron District" and "Upper West Side Branch" are
+# recognized as the localities / branch labels they are.
+_GEO_QUALIFIERS = frozenset({
+    'district', 'neighborhood', 'neighbourhood', 'branch', 'area', 'greater',
+    'north', 'south', 'east', 'west', 'upper', 'lower', 'central', 'downtown',
+    'uptown', 'midtown', 'old', 'new', 'the', 'side', 'sides',
+})
+
+# Sub-space head nouns: a SHORT string ending in one of these is a room label
+# ("Dance Room", "Multi-Use Room", "Side Lawn"), never a venue. Deliberately
+# excludes the heads that real venues use ("… Theatre", "… Hall", "… Center"),
+# which is what keeps "Miller Outdoor Theatre" and "Harris Theater" splitting.
+# Deliberately NARROW: only heads that never name a venue in our data. NYC
+# Parks venues really are called "Bloomingdale Playground", "Sheep Meadow",
+# "Astoria Pool", "Wollman Rink", so 'playground'/'lawn'/'pool'/'field' must
+# stay OUT — otherwise one park's event absorbs another park's.
+_ROOM_HEAD_NOUNS = frozenset({
+    'area', 'deck', 'floor', 'kitchen', 'lobby', 'lounge', 'patio', 'porch',
+    'room', 'rooms',
+})
+
+_LOCALITY_NAMES = None
+
+
+def _locality_names():
+    """Bare place names that are a LOCALITY, not a venue: the city/area tokens,
+    the borough tokens, every geotag in the city config (neighbourhoods, towns)
+    and every city we have learned from a location address."""
+    global _LOCALITY_NAMES
+    if _LOCALITY_NAMES is None:
+        names = set()
+        for src in (city_config.generic_location_names(), city_config.geotags(),
+                    city_config.city_area_tokens(), city_config.borough_tokens()):
+            for n in src or ():
+                key = _normalize_location_name(n)
+                if key:
+                    names.add(key)
+                names.add(re.sub(r'[^\w\s]', '', (n or '').strip().lower()))
+        names |= {'new york', 'new york city', 'nyc', 'online', 'virtual'}
+        _LOCALITY_NAMES = frozenset(n for n in names if n)
+    return _LOCALITY_NAMES
+
+
+_ADDR_TYPE_WORD_SET = frozenset(_ADDR_TYPE_WORDS)
+# Spelled-out street types are unambiguous anywhere in the string; the
+# abbreviations are not (see _mentions_street).
+_ADDR_SPELLED = frozenset({
+    'street', 'avenue', 'boulevard', 'road', 'drive', 'place', 'lane',
+    'parkway', 'highway', 'turnpike', 'terrace', 'broadway', 'bowery',
+    'concourse', 'plaza'}) & _ADDR_TYPE_WORD_SET | frozenset({
+    'street', 'avenue', 'boulevard', 'road', 'highway', 'parkway',
+    'turnpike', 'broadway', 'bowery', 'concourse'})
+_ADDR_ABBREV = _ADDR_TYPE_WORD_SET - _ADDR_SPELLED
+
+# Words too weak to prove two strings name the SAME venue: generic geographic
+# and institutional nouns, direction words, street types. Discounted on BOTH
+# sides of the shared-identity-token test — "Midland Beach Parking Lot 8" must
+# not read as a sub-space of "Orchard Beach" merely because both say "beach"
+# (pipeline/tests/test_processor.py TestSameNameGroupingRespectsUnresolvedVenues).
+_WEAK_SHARED_WORDS = frozenset(_SUBSPACE_WORDS) | _ADDR_TYPE_WORD_SET | frozenset({
+    'bay', 'beach', 'bridge', 'building', 'campus', 'center', 'centre',
+    'central', 'church', 'city', 'club', 'commons', 'community', 'county',
+    'creek', 'east', 'green', 'harbor', 'harbour', 'heights', 'hill', 'hills',
+    'house', 'island', 'lake', 'library', 'lower', 'market', 'meadow',
+    'meadows', 'museum', 'new', 'north', 'old', 'park', 'parks', 'place',
+    'point', 'pond', 'public', 'river', 'saint', 'school', 'south', 'square',
+    'state', 'station', 'street', 'temple', 'upper', 'village', 'west',
+    'york',
+})
+
+
+def _mentions_street(normalized):
+    """True when the string names a street, intersection, block or door — the
+    address/entrance shape ("Entrance—Parkside & Ocean Avenues", "86-01
+    Rockaway Beach Boulevard"). Not venue-shaped: either it is the resolved
+    venue's own address written differently, or a door of it.
+
+    Plural street types count: park entrances are named by the cross streets
+    ("Parkside & Ocean Avenues", "West 34th and West 35th Streets")."""
+    words = normalized.split()
+    for i, tok in enumerate(words):
+        base = tok[:-1] if tok.endswith('s') and tok[:-1] in _ADDR_SPELLED else tok
+        if base in _ADDR_SPELLED:
+            return True
+        if base in _ADDR_ABBREV:
+            # "St" is Street only after a number or a street name — "St.
+            # Cecilia Music Center" and "St. John's Rec Center" are venues, and
+            # reading their "st" as Street made every saint-named venue look
+            # like an address. Same trap with Dr / Ct / Pl / Sq.
+            prev = words[i - 1] if i else ''
+            if prev and any(c.isdigit() for c in prev):
+                return True
+    return bool(re.match(r'^\d+(?:-\d+)?\s', normalized))
+
+
+def _depluralize(tokens):
+    return {t[:-1] if len(t) > 3 and t.endswith('s') else t for t in tokens}
+
+
+def _venue_shaped_mismatch(unresolved_text, resolved_refs):
+    """True when `unresolved_text` names a DIFFERENT venue from the resolved
+    row — the only case where a mixed (id vs name) pair must not fuse.
+
+    False (keep fusing) for every shape that is not a rival venue:
+      * collapses to nothing under normalization (virtual / online / bare borough)
+      * a venueless placeholder ("TBD", "no location", "in-person", "offsite")
+      * a bare locality (borough, town, geotag, "new york", "nyc")
+      * fewer than 2 tokens, or no identity-carrying token at all
+      * street / intersection / entrance shaped
+      * built only from sub-space nouns ("play area", "mainstage theatre")
+      * shares any identity token with, or is contained in / contains, one of
+        the resolved side's reference strings (its own location text, name,
+        short_name, alternate names or address) — the room/wing/garden shape
+    """
+    raw = unresolved_text or ''
+    u = _normalize_location_name(raw)
+    if not u:
+        return False
+    # When the RESOLVED row is itself a neighbourhood placemarker (roving
+    # organizers pin to "Tribeca", "Upper East Side"), a locality string on the
+    # other side is the venue's identity, not noise — w3641 Girls Who Meet runs
+    # the same meetup in a different neighbourhood each week. Suppress the
+    # locality exemptions in that case; the token comparison below still lets
+    # "Park Slope" join "Park Slope".
+    resolved_is_locality = any(
+        _normalize_location_name(ref or '') in _locality_names()
+        for ref in (resolved_refs or ()))
+    # Sources write the listing MODE as the venue with a slash or pipe
+    # ("Virtual/Online Workshop", "Mainstage Theatre|New York City Center").
+    # The punctuation strip inside _normalize_location_name welds those words
+    # together ("virtualonline"), which hides them from every token test.
+    split_u = _normalize_location_name(re.sub(r'[/\\|;]+', ' ', raw))
+    for cand in (u, split_u):
+        if not cand:
+            return False
+        if _is_venueless_placeholder(cand) or _EXTRA_PLACEHOLDER_RE.match(cand):
+            return False
+        if not resolved_is_locality and cand in _locality_names():
+            return False
+        if any(ph in cand for ph in _PLACEHOLDER_PHRASES):
+            return False
+    u = split_u or u
+    words = u.split()
+    if len(words) < 2:
+        return False
+    if _mentions_street(u):
+        return False
+    # A locality with a geographic qualifier, or a branch label.
+    core = ' '.join(w for w in words if w not in _GEO_QUALIFIERS
+                    and w not in _SUBSPACE_WORDS)
+    if not resolved_is_locality and (not core or core in _locality_names()):
+        # Nothing but geography and sub-space words left: a locality, a
+        # neighbourhood with a qualifier, or a branch label ("Upper West Side
+        # Branch" under Kadampa Meditation Center Upper West Side).
+        return False
+    toks = _roving_tokens(u)
+    if not toks:
+        return False
+    identity = toks - _SUBSPACE_WORDS
+    if not identity:
+        return False
+    # "<qualifier> room / area / lawn" — a room label, not a venue.
+    if len(words) <= 2 and words[-1] in _ROOM_HEAD_NOUNS:
+        return False
+    strong = toks - _WEAK_SHARED_WORDS
+    for ref in resolved_refs or ():
+        r = _normalize_location_name(ref or '')
+        if not r:
+            continue
+        if u == r or u in r or r in u:
+            return False
+        ref_toks = _roving_tokens(r)
+        ref_identity = ref_toks - _SUBSPACE_WORDS
+        if identity <= ref_toks:
+            return False
+        if ref_identity and ref_identity <= identity:
+            return False
+        # Fold plurals: Duke Farms' "Farm Barn Cafe" must read as part of
+        # "Duke Farms", not as a rival venue.
+        if _depluralize(strong) & _depluralize(ref_toks - _WEAK_SHARED_WORDS):
+            return False
+    return True
 
 
 def _is_brand_family_key(locations_map, key, cand_id):
@@ -5808,6 +6207,21 @@ def _is_bare_room_phrase(locations_map, key, raw_loc_lower):
     if key not in locations_map.get('weak_keys', ()):
         return False
     return key == raw_loc_lower
+
+
+def _location_record_by_id(locations_map, loc_id):
+    """The full location record for `loc_id`, or None.
+
+    The map is keyed by name, not id; this is only called on the rare Step 3.5
+    redirect path, so a linear scan of the primary-name tier is fine.
+    """
+    if loc_id is None:
+        return None
+    for rec in locations_map.get('names', {}).values():
+        first = rec[0] if isinstance(rec, list) else rec
+        if first.get('id') == loc_id:
+            return first
+    return None
 
 
 def _is_brand_family_name(locations_map, key):
@@ -6289,14 +6703,48 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
         # Measured 2026-09-04 over all 66,941 distinct crawl_events triples
         # with the 43 flagged sites: `.scratch/loc0904/ab_result.json`.
         is_roving = website_id in locations_map.get('roving_websites', ())
-        if is_roving and not consistent and _is_venueless_placeholder(normalized_loc):
+        if (not consistent and _is_venueless_placeholder(normalized_loc)
+                and (is_roving or len(normalized_loc.split()) <= 4)):
             # The organizer's own placeholder: home venue, explicitly. Left to
             # the Levenshtein arm this was luck ("not specified" happened to
             # score 0.6 against "nyc dsa office" and 0 against "temple bar").
+            # This is the policy for venue-less events (virtual events map to
+            # the organizer's physical location; Step 7 below does the same for
+            # a string that normalizes to NOTHING). It was gated on roving
+            # organizers only, so "Online (Zoom)" / "Virtual Event" / "Online
+            # event" from an ordinary single-venue site fell to the Levenshtein
+            # arm, failed it, and skipped Step 7 because "online zoom" is not
+            # empty: 297 crawl_events in the 60 days to 2026-09-09 were left
+            # unmapped (and therefore unexported) that way, across 5+ sites.
+            # Capped at 4 tokens for non-roving sites: the placeholder test is
+            # a prefix/keyword test, and "Virtual and Brooklyn Public Library,
+            # Central" names a real venue the fuzzy tier resolves correctly.
+            # Measured 2026-09-09 over the 487 single-venue placeholder
+            # triples: 2,452 rows NULL -> home venue, 0 re-pins.
             consistent = True
         if (not consistent and not is_roving
                 and not _is_brand_family_name(locations_map, normalized_loc)):
             consistent = _calculate_levenshtein_ratio(normalized_loc, v_name) >= 0.6
+            # Third check on the loose arm: the name may be the PREFIX of
+            # exactly one other venue we know ("Dai Bosatsu Zendo" vs "Dai
+            # Bosatsu Zendo Kongo-ji"; "ShopRite Community Room" vs "ShopRite
+            # Community Room (Bruckner Commons)"). Levenshtein 0.71 against the
+            # home venue "New York Zendo" would hand the event to the wrong
+            # zendo; the venue whose name the string literally begins is the
+            # better answer. Only the unique-extender case redirects - two or
+            # more extenders is a brand family and was vetoed above - and a
+            # venue-less placeholder ("New York City") keeps falling back to
+            # the organizer, which is the policy for venue-less events.
+            # Measured 2026-09-09 over all 68,400 triples: 15 triples / 88 rows
+            # change, 11 triples (77 rows) re-pinned to the extending venue,
+            # 4 (10 rows) un-pinned; 0 rows newly NULL that were right before.
+            if consistent and not _is_venueless_placeholder(normalized_loc):
+                _extenders = (set(locations_map.get('brand_family', {}).get(normalized_loc, ()))
+                              - {home_venue.get('id')})
+                if len(_extenders) == 1:
+                    _other = _location_record_by_id(locations_map, next(iter(_extenders)))
+                    if _other is not None and (result := make_result(_other, 'name_extends_unique')):
+                        return result
         if consistent and (result := make_result(home_venue, 'single_venue_site')):
             return result
 
@@ -6572,6 +7020,18 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
         if (match is not None and match is not _AMBIGUOUS_ADDRESS
                 and (result := make_result(match, 'sublocation_address'))):
             return result
+        # The strict parser keeps word ordinals and unit suffixes, so "412
+        # Eighth Ave, 4th flr" never met our "412 8th Ave 4th Floor" row and
+        # the event fell to the website-default pin (Ballroom Hub/Dance
+        # Manhattan, backlog 2026-09-07: every hand re-pin on that URL was
+        # undone by the next crawl). Retry on the loose key; a building with
+        # two venues is AMBIGUOUS here too and declines.
+        loose_addr = _extract_street_address_loose(sublocation_name_raw or normalized_subloc)
+        loose_match = (locations_map.get('addresses_loose', {}).get(loose_addr)
+                       if loose_addr else None)
+        if (loose_match is not None and loose_match is not _AMBIGUOUS_ADDRESS
+                and (result := make_result(loose_match, 'sublocation_address_loose'))):
+            return result
 
     # Step 5c: Cross-website exact match on a curated website-scoped alternate name.
     #
@@ -6616,6 +7076,18 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
             if not _shares_distinctive_token(
                     key, _normalize_location_name(hits[0].get('name') or '')):
                 continue  # in-site shorthand, not portable venue knowledge
+            # A scoped alias is one website's knowledge that ITS "McDonald's"
+            # is the Penn Station branch. That is not portable when the key
+            # names a brand FAMILY of 2+ venues: every other website's bare
+            # "McDonald's" is some other branch (BPL's bookmobile stops at
+            # several). Steps 2/3.5/4/5 already refuse family keys; this tier
+            # was the one path that did not, and it pinned 17 BPL rows to Penn
+            # Station and ~290 "Broadway" rows to Broadway Library (family of
+            # 14). Measured 2026-09-09 over all 68,400 triples: 65 triples /
+            # 421 rows go cross_site_alt -> NULL, all of them such family keys.
+            _fam = locations_map.get('brand_family', {}).get(key, ())
+            if len(_fam) >= 2 and hits[0].get('id') in _fam:
+                continue  # key names a FAMILY of venues, not this member
             if (result := make_result(hits[0], 'cross_site_alt')):
                 return result
 
@@ -6716,6 +7188,38 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
     if website_id and not normalized_loc:
         linked = locations_map.get('website_linked', {}).get(website_id, [])
         if len(linked) == 1 and (result := make_result(linked[0], 'website_linked')):
+            return result
+
+    # Step 7b: the same policy for a MULTI-venue organizer. Step 7 gives up when a
+    # website links more than one location, so an organizer's Zoom/"Not specified"
+    # rows got location_id NULL - and because `export_events` INNER JOINs
+    # locations, an unmapped event is not "a pin we are missing", it silently
+    # never reaches fomo.nyc. Measured 2026-09-09: 1,913 crawl_event rows in 120
+    # days across 48 multi-venue websites, e.g. every "Not specified" row from
+    # Big Reuse and Brooklyn CB6, and "Virtual Parlor Chat" (w748 Harlem One Stop,
+    # five linked venues, whose own venue loc 2369 is one of the five).
+    #
+    # The answer is the organizer's OWN venue, never just "one of the venues it
+    # lists": `_website_home_venue` requires name evidence for all but the
+    # single-`is_primary` case and refuses when two venues match. That is what
+    # keeps aggregators out - w1 nyc.gov (31 linked), w2 NYC Parks (109), NYPL
+    # (70), GrowNYC (43) all resolve to None, where a generic borough pin or
+    # unmapped is the correct outcome.
+    #
+    # The placeholder test (not just "normalizes to nothing") mirrors Step 3.5's
+    # widened single-venue rule, with the same 4-token cap: "Virtual Event" and
+    # "Online (Zoom)" are venue-less, while a longer compound string names a real
+    # venue the fuzzy tier should keep trying to resolve.
+    #
+    # A/B 2026-09-09 over all 1,503 reachable 120-day groups (5,197 rows):
+    # 893 rows / 268 groups / 23 websites NULL -> home venue, 0 re-pins,
+    # 0 rows newly NULL. `.scratch/backlog0909/step7_multi_report.md`.
+    if website_id and _is_venueless_placeholder(normalized_loc) and (
+            not normalized_loc or len(normalized_loc.split()) <= 4):
+        linked = locations_map.get('website_linked', {}).get(website_id, [])
+        home = _website_home_venue(
+            linked, locations_map.get('website_names', {}).get(website_id))
+        if home is not None and (result := make_result(home, 'website_linked_home')):
             return result
 
     # (The former single-venue brand-name fallback is now Step 3.5, which runs
@@ -7049,6 +7553,8 @@ def process_events(cursor, connection, crawl_result_id, website_name, run_date_s
     tag_rules, ancestor_map, root_tags, disambiguation_rules = tag_context
 
     processed_rows = []
+
+    location_refs = {}
     rejection_counts = {}
 
     for row_dict in parsed_rows:
@@ -7173,6 +7679,11 @@ def process_events(cursor, connection, crawl_result_id, website_name, run_date_s
 
         if location_info:
             processed_row['location_id'] = location_info.get('id')
+            # Reference strings for the grouper's venue-shape test (the
+            # resolved venue's own name and address; the row's own location
+            # text is added by the grouper itself).
+            location_refs.setdefault(location_info.get('id'), [
+                location_info.get('name'), location_info.get('address')])
 
         # Process emoji
         first_emoji = find_first_emoji(processed_row.get('emoji', ''))
@@ -7184,7 +7695,8 @@ def process_events(cursor, connection, crawl_result_id, website_name, run_date_s
         processed_rows.append(processed_row)
 
     # Group occurrences and create short names
-    events = group_event_occurrences(processed_rows, source_url)
+    events = group_event_occurrences(processed_rows, source_url,
+                                     location_refs=location_refs)
 
     # Last-resort URL: an event with no URL at all is dropped by the exporter, so
     # a rejected event-specific URL must not be able to turn a real event into an
@@ -7376,9 +7888,14 @@ def apply_crawled_details(cursor, connection, ce_id, data, tag_context,
     if first_emoji and first_emoji in BLOCKED_EMOJI:
         first_emoji = None
 
-    # Update crawl_events row
-    update_fields = ["description = %s"]
-    update_values = [data['description']]
+    # Update crawl_events row. The description is optional: extract_single_event
+    # omits it when the page yielded only a placeholder, and the stored one
+    # (listing text, or a previous enrichment) must not be overwritten by that.
+    update_fields = ["detail_crawl_attempts = detail_crawl_attempts"]  # always-valid SET head
+    update_values = []
+    if data.get('description'):
+        update_fields.append("description = %s")
+        update_values.append(data['description'])
     if first_emoji:
         from icon_catalog import record_unknown
         record_unknown(cursor, first_emoji, 'crawl_events', ce_id,
@@ -7685,7 +8202,9 @@ async def crawl_event_details(cursor, connection, candidates, num_workers=10):
         for ce_id, name, url, _ in events_by_website[ws_id]:
             async with semaphore:
                 attempted_ids.append(ce_id)
-                content = await crawler.crawl_event_url(web_crawler, url, crawl_config)
+                content = await crawler.crawl_event_url(
+                    web_crawler, url, crawl_config,
+                    user_agent=website_settings.get(ws_id, {}).get('user_agent'))
                 heartbeat['last'] = time.monotonic()
                 heartbeat['done'] += 1
                 if not content:
@@ -7771,7 +8290,7 @@ async def crawl_event_details(cursor, connection, candidates, num_workers=10):
                               locations_map=locations_map)
         enriched += 1
         location_info = f" @ {data['location']}" if data.get('location') else ""
-        print(f"    + {name}{location_info}: {data['description'][:80]}...")
+        print(f"    + {name}{location_info}: {(data.get('description') or '(no description; kept existing)')[:80]}...")
 
     print(f"  Detail-crawled {enriched}/{len(candidates)} events")
     return enriched

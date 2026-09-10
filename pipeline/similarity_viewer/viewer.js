@@ -105,7 +105,7 @@
             const data = await getJSON('/api/neighbors', { entity: selected, ...params }, resultAbort.signal);
             if (version !== resultVersion) return;
             renderSelection(data.seed); renderNeighbors(data);
-            $('result-status').textContent = `${data.precision === 'browser' ? 'Browser int8' : 'Full precision'} cosine · highest first · click a result to explore`;
+            $('result-status').textContent = `${data.precision === 'browser' ? 'Browser int8' : 'Full precision'} constituent similarity · highest first · click a result to explore`;
         } catch (error) {
             if (error.name !== 'AbortError' && version === resultVersion) {
                 $('selection').replaceChildren(element('h2', 'Unable to load entity'));

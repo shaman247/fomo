@@ -82,8 +82,12 @@ def upload(remote_dir=None, use_tls=False):
             print(f"Error: Local directory '{local_dir}' does not exist.")
             return False
 
-        # Only upload events*.json and locations*.json files
-        json_files = list(local_path.glob('events*.json')) + list(local_path.glob('locations*.json'))
+        # Publish catalog + inventory with the same data snapshot. The inventory
+        # is uploaded last and only after every payload succeeded.
+        from query_snapshot import write_query_snapshot
+        inventory = write_query_snapshot(local_path)
+        json_files = [local_path / name for name in inventory['files']]
+        json_files += [local_path / 'query.schema.json', local_path / 'query-manifest.json']
 
         if not json_files:
             print(f"Warning: No event or location JSON files found in '{local_dir}'")
@@ -94,6 +98,8 @@ def upload(remote_dir=None, use_tls=False):
         # Upload each JSON file
         uploaded_count = 0
         for json_file in json_files:
+            if json_file.name == 'query-manifest.json' and uploaded_count != len(json_files) - 1:
+                break
             try:
                 filename = json_file.name
                 print(f"  - Uploading {filename}...", end=' ')
@@ -111,7 +117,7 @@ def upload(remote_dir=None, use_tls=False):
 
         # Close FTP connection
         ftp.quit()
-        return True
+        return uploaded_count == len(json_files)
 
     except Exception as e:
         print(f"\nFTP Error: {e}")

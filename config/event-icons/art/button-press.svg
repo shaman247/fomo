@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128"><title>Button making</title><desc>A lever-operated badge press with a round die and a finished colorful pin badge.</desc>
+
+<rect x="10" y="101" width="80" height="14" rx="5" fill="#B84848"/><path d="M15 95h64l11 9H10z" fill="#EF7972"/>
+<path d="M18 90V33c0-12 8-18 20-18h25v17H41c-4 0-6 3-6 7v51z" fill="#C75151"/>
+<path d="M18 87V33c0-12 8-18 20-18h25v8H39c-8 0-13 4-13 12v52z" fill="#F28D83"/>
+<path d="M57 29h11v39H57z" fill="#90A4AE"/><path d="M57 29h4v39h-4z" fill="#DAE5E8"/>
+<path d="m61 26 34-14" fill="none" stroke="#607D8B" stroke-width="8" stroke-linecap="round"/>
+<path d="m90 14 16-7" fill="none" stroke="#37474F" stroke-width="11" stroke-linecap="round"/>
+<circle cx="61" cy="27" r="7" fill="#455A64"/><circle cx="60" cy="25" r="3" fill="#B0BEC5"/>
+<path d="M45 62h35v10c0 8-35 8-35 0z" fill="#78909C"/><ellipse cx="62.5" cy="62" rx="17.5" ry="6" fill="#D5E0E3"/>
+<path d="M42 88h40v10c0 8-40 8-40 0z" fill="#607D8B"/><ellipse cx="62" cy="88" rx="20" ry="7" fill="#B0BEC5"/><ellipse cx="62" cy="88" rx="13" ry="4" fill="#E3EAEC"/>
+<circle cx="98" cy="96" r="22" fill="#D5B05F"/><circle cx="97" cy="93" r="22" fill="#FFE082"/><circle cx="97" cy="93" r="16" fill="#5DBBC5"/>
+<path d="m97 81 3.5 7 8 .8-5.8 5.5 1.5 8-7.2-4-7.2 4 1.5-8-5.8-5.5 8-.8z" fill="#FFF2C0"/>
+</svg>

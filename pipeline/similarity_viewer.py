@@ -11,7 +11,7 @@ from urllib.parse import parse_qs, urlsplit
 
 import numpy as np
 
-from similarity import normalize, unit
+from similarity import closest_constituents, normalize, unit
 
 ROOT = Path(__file__).resolve().parents[1]
 ASSETS = Path(__file__).with_name('similarity_viewer')
@@ -35,6 +35,15 @@ class ModelIndex:
                 raise ValueError('Entity and tag vector dimensions do not match')
             self.vectors = unit(np.concatenate([model['vectors'], model['tag_vectors']]).astype(np.float32))
             keys = list(model['entity_ids']) + ['tag:' + tid for tid in model['tag_ids']]
+            if 'part_offsets' in model:
+                offsets, indices = model['part_offsets'], model['part_indices']
+                if len(offsets) != len(keys) + 1 or offsets[0] != 0 or offsets[-1] != len(indices):
+                    raise ValueError('Invalid constituent offsets')
+                if np.any(np.diff(offsets) < 0) or np.any(indices < 0) or np.any(indices >= len(keys)):
+                    raise ValueError('Invalid constituent indices')
+                self.parts = [indices[start:end].copy() for start, end in zip(offsets, offsets[1:])]
+            else:
+                self.parts = [[i] for i in range(len(keys))]
         if len(keys) != len(self.vectors):
             raise ValueError('Model identifiers and vectors do not match')
         for key in keys:
@@ -50,7 +59,8 @@ class ModelIndex:
                     'emoji': source.get('emoji') or {'event': '🎟️', 'place': '📍', 'tag': '🏷️'}[kind]}
             self.positions[str(key)] = len(self.entities)
             self.entities.append(item)
-        self.has_vector = np.linalg.norm(self.vectors, axis=1) > .01
+        usable = np.linalg.norm(self.vectors, axis=1) > .01
+        self.has_vector = np.array([any(usable[group]) for group in self.parts])
         self.search_text = [normalize(item['name'] + ' ' + item['context']) for item in self.entities]
         self.names = [normalize(item['name']) for item in self.entities]
         self.groups = {kind: np.array([i for i, e in enumerate(self.entities) if e['type'] == kind], dtype=np.int32)
@@ -81,6 +91,7 @@ class ModelIndex:
             raise KeyError('Entity is not in this model snapshot')
         item = self.entities[index]
         return {**self.summary(item), 'description': item['description'],
+                'constituentCount': len(self.parts[index]),
                 'tags': [self.summary(self.entities[self.positions[tag]])
                          for tag in self.attachments[key] if tag in self.positions]}
 
@@ -114,8 +125,8 @@ class ModelIndex:
         index = self.positions[key]
         groups = {}
         matrix = self.quantized if precision == 'browser' else self.vectors
-        # Exact cosine against every entity, not the small chip suggestion shortlist.
-        scores = np.clip(matrix @ matrix[index], -1, 1)
+        # Same maximum-over-constituents rule as the browser, over the full index.
+        scores = np.clip(closest_constituents(matrix, self.parts, matrix[self.parts[index]]), -1, 1)
         for kind, candidates in self.groups.items():
             eligible = []
             if self.has_vector[index]:

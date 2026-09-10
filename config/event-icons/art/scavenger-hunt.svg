@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128"><title>Scavenger hunt</title><desc>A magnifying glass finding a marked clue on a folded route map.</desc>
+<path d="m8 20 34-9 35 10 35-9v84l-35 10-35-10-34 9z" fill="#E8D8AE"/><path d="m8 20 34-9v85l-34 9z" fill="#FFF0C6"/><path d="m77 21 35-9v84l-35 10z" fill="#F7E8BD"/>
+<path d="m17 46 17-6 30 13 26-10 15 5" fill="none" stroke="#91BFB5" stroke-width="9"/>
+<path d="M22 80h10q11 0 11-11V44q0-9 12-9h17" fill="none" stroke="#B28B62" stroke-width="4" stroke-dasharray="5 7" stroke-linecap="round"/>
+<circle cx="80" cy="69" r="24" fill="#BEE5E9" fill-opacity=".8" stroke="#527888" stroke-width="7"/><path d="M62 65q0-13 13-15" fill="none" stroke="#F0FAF5" stroke-width="4" stroke-linecap="round"/>
+<path d="m76 61 12 15m-14-2 15-12" stroke="#CD754D" stroke-width="5" stroke-linecap="round"/>
+<path d="m99 87 21 25q4 5-2 9-5 4-9-1L89 95z" fill="#B17A4E"/><path d="m99 87 21 25q2 4-1 6L95 91z" fill="#E0AA6C"/>
+</svg>

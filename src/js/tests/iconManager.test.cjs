@@ -49,7 +49,7 @@ test('failed assets use embedded fallback; concurrent requests share one decode'
     const requests = [];
     const { manager, catalog } = setup({
         Image: class { set src(value) { this._src = value; requests.push(this); } get src() { return this._src; } },
-        Utils: { getCurrentTheme: () => 'dark' }, Themes: { resolve: () => ({}) },
+        Utils: { getCurrentTheme: () => 'dark' },
         TagColorManager: { extractColorFromPixels: () => '#123456' },
         document: { createElement: () => ({ getContext: () => ({ drawImage() {}, putImageData() {}, getImageData: () => ({ data: new Uint8Array(4) }) }) }) }
     });

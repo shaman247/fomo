@@ -1,0 +1,21 @@
+#structured-search, .structured-search-error {
+    color: var(--primary-text);
+    background: var(--primary-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg, 12px);
+    padding: 12px;
+    margin-top: 8px;
+    max-width: min(600px, calc(100vw - 24px));
+    max-height: 45vh;
+    overflow: auto;
+    font: inherit;
+}
+#structured-search[hidden] { display: none; }
+#structured-search p { margin: 0 0 8px; font-size: .9em; }
+#structured-search .tag-button { margin: 3px; white-space: normal; text-align: left; }
+#structured-search details a { display: block; padding: 6px 0; color: inherit; }
+.structured-query-active #filter-container .filter-group,
+.structured-query-active #format-selector-button,
+.structured-query-active #neighborhood-selector-button,
+.structured-query-active #chip-bar,
+.structured-query-active #expand-filter-panel-button { display: none !important; }

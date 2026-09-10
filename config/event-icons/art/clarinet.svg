@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"><title>Clarinet</title><desc>A straight black clarinet with a single-reed mouthpiece, barrel, silver keywork and flared bell.</desc>
+<g transform="rotate(32 64 64)">
+<path fill="#263238" d="M60 6Q62 3 66 5L70 20L68 28H59L57 20Z"/>
+<path fill="#546E7A" d="M61 8L63 7L65 19H60Z"/>
+<path fill="#D8B66A" d="M58 20H70V23H58Z"/>
+<path fill="#263238" d="M58 27Q64 24 70 27L71 39L70 94Q71 102 81 115Q64 123 47 115Q57 102 58 94L57 39Z"/>
+<path fill="#455A64" d="M59 29H64L63 94Q63 105 54 115L49 114Q58 101 59 94Z"/>
+<path fill="#CFD8DC" d="M57 36H71V39H57ZM58 61H70V64H58ZM58 91H70V94H58Z"/>
+<path fill="none" stroke="#B0BEC5" stroke-width="2" stroke-linecap="round" d="M69 42V89M61 44H69M61 54H69M61 69H69M61 80H69M69 72H74V83M69 86H75V92"/>
+<g fill="#CFD8DC"><circle cx="62" cy="44" r="3.2"/><circle cx="62" cy="54" r="3.2"/><circle cx="62" cy="69" r="3.2"/><circle cx="62" cy="80" r="3.2"/><ellipse cx="74" cy="83" rx="3" ry="2.2"/><ellipse cx="75" cy="92" rx="3" ry="2.2"/></g>
+<g fill="#37474F"><circle cx="62" cy="44" r="1.6"/><circle cx="62" cy="54" r="1.6"/><circle cx="62" cy="69" r="1.6"/><circle cx="62" cy="80" r="1.6"/></g>
+<ellipse cx="64" cy="115" rx="17" ry="6" fill="#546E7A"/><ellipse cx="64" cy="115" rx="13" ry="3.8" fill="#17252B"/>
+</g></svg>

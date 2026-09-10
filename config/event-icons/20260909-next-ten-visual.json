@@ -1,0 +1,184 @@
+[
+  {
+    "icon_id": "activity-photo-editing",
+    "source_sha256": "0e4172b7300c301a2428fa07db1a0f9f8e38015837eb863c070d88d8b86782e0",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent; creator knew the brief. Landscape photo and two attached adjustment sliders remain distinct at 24/32px. At 16px the vertical slider can resemble a control strip; the photo still anchors image editing. Broad corners and upper-left highlights match accepted media icons.",
+    "evidence": {
+      "packet": ".scratch/icon-next-ten-20260909/art-review-01",
+      "native_size_gallery": ".scratch/icon-next-ten-20260909/gallery/icons.png",
+      "runtime_themes": ".scratch/icon-next-ten-20260909/gallery/themes.png",
+      "sizes": [
+        16,
+        24,
+        32,
+        128
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ]
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Small details simplify at 16px; not an independent recognition test."
+    ]
+  },
+  {
+    "icon_id": "craft-still-life-drawing",
+    "source_sha256": "216a160992a75b20c44b7dd99fccb08566c13765321352a3326ef09212f203f4",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent; creator knew the brief. Vase and apple on paper with a separate pencil communicate still-life drawing. Pencil tip, paper edge and fruit remain separated at 24/32px; the fruit leaf softens at 16px. No human model is implied.",
+    "evidence": {
+      "packet": ".scratch/icon-next-ten-20260909/art-review-01",
+      "native_size_gallery": ".scratch/icon-next-ten-20260909/gallery/icons.png",
+      "runtime_themes": ".scratch/icon-next-ten-20260909/gallery/themes.png",
+      "sizes": [
+        16,
+        24,
+        32,
+        128
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ]
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Small details simplify at 16px; not an independent recognition test."
+    ]
+  },
+  {
+    "icon_id": "sport-croquet",
+    "source_sha256": "9749bf17fd1a7646c1e684e5cb609387892881689494861d1e037d2dff048bda",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent; creator knew the brief. Mallet head connects to its handle; ball fits within the open wicket. All three silhouettes stay separate at 24/32px and the wicket remains visible in both themes at 16px. No tennis racket or cricket stumps are implied.",
+    "evidence": {
+      "packet": ".scratch/icon-next-ten-20260909/art-review-01",
+      "native_size_gallery": ".scratch/icon-next-ten-20260909/gallery/icons.png",
+      "runtime_themes": ".scratch/icon-next-ten-20260909/gallery/themes.png",
+      "sizes": [
+        16,
+        24,
+        32,
+        128
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ]
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Small details simplify at 16px; not an independent recognition test."
+    ]
+  },
+  {
+    "icon_id": "place-lighthouse",
+    "source_sha256": "9d478e1680fb4ef2ae63c79ecbc8ca47ca5940d2db57ae728d6a4774464ead2b",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent; creator knew the brief. Striped tower, enclosed lamp and balanced beams read as lighthouse; wave anchors coastal structure. Beams soften at 16px but tower stays distinct in both themes.",
+    "evidence": {
+      "native_size_gallery": ".scratch/icon-next-ten-20260909/gallery-03/icons.png",
+      "runtime_themes": ".scratch/icon-next-ten-20260909/gallery-03/themes.png",
+      "sizes": [
+        16,
+        24,
+        32,
+        128
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "packet": ".scratch/icon-next-ten-20260909/art-review-final"
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Supporting details soften at 16px; not an independent recognition test."
+    ]
+  },
+  {
+    "icon_id": "activity-litter-cleanup",
+    "source_sha256": "9a49f5ec247afa67aef1b433086bfcde3321a5768225cd5c3765952b11a61d00",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent; creator knew the brief. Grabber jaw touches bottle above open waste bag; no floating parts. Bottle and jaw simplify at 16px while collection gesture remains visible at 24/32px.",
+    "evidence": {
+      "native_size_gallery": ".scratch/icon-next-ten-20260909/gallery-03/icons.png",
+      "runtime_themes": ".scratch/icon-next-ten-20260909/gallery-03/themes.png",
+      "sizes": [
+        16,
+        24,
+        32,
+        128
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "packet": ".scratch/icon-next-ten-20260909/art-review-final"
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Supporting details soften at 16px; not an independent recognition test."
+    ]
+  },
+  {
+    "icon_id": "format-planetarium",
+    "source_sha256": "4c01b65cf0ec1e32c96750f279be7a61fbdd48194afc31f4425a48ddd3b96a2a",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent; creator knew the brief. Revised three seats to equal widths and spacing. Dome, ringed planet and seating read as indoor astronomy show. Stars simplify at 16px; dome and seats remain distinct in both themes.",
+    "evidence": {
+      "native_size_gallery": ".scratch/icon-next-ten-20260909/gallery-03/icons.png",
+      "runtime_themes": ".scratch/icon-next-ten-20260909/gallery-03/themes.png",
+      "sizes": [
+        16,
+        24,
+        32,
+        128
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "packet": ".scratch/icon-next-ten-20260909/art-review-final"
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Supporting details soften at 16px; not an independent recognition test."
+    ]
+  },
+  {
+    "icon_id": "sport-track-running",
+    "source_sha256": "abb75a2730f638e11a97f309dc1de5ae9ec23334f9e9d2a8cf827de4b57ff073",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent; creator knew brief. Continuous red oval lanes enclose a green infield with two transverse finish marks. Reads as athletics track at 24/32px; lanes soften at 16px while outer track remains distinct. No railway ties, racing vehicle or stadium stands. Consistent spacing and lower-right shading; no clipping or detached components.",
+    "evidence": {
+      "packet": ".scratch/icon-next-ten-20260909/art-review-final",
+      "native_size_gallery": ".scratch/icon-next-ten-20260909/gallery-final/icons.png",
+      "runtime_themes": ".scratch/icon-next-ten-20260909/gallery-final/themes.png",
+      "sizes": [
+        16,
+        24,
+        32,
+        128
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ]
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Lane details soften at 16px; not independent recognition test."
+    ]
+  }
+]

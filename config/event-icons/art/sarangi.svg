@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128"><title>Sarangi</title><desc>A short-necked bowed sarangi with carved wooden body, pale skin soundboard, main and sympathetic pegs, and a separate bow.</desc>
+<path d="M36 11Q50 5 65 11L65 70 69 75 65 87 69 100 69 117H31V100L36 87 31 75 36 70Z" fill="#8C5B3E"/>
+<path d="M37 13Q49 8 61 13L61 71 65 76 61 87 65 101V114H34V101L39 87 34 76 39 70Z" fill="#BD8C59"/>
+<path d="M42 17Q47 13 50 18V31H42ZM53 18Q56 14 59 18V31H53Z" fill="#593E2F"/>
+<path d="M42 24H29M58 28H73M42 34H29" stroke="#694A35" stroke-width="4"/><g fill="#78503A"><ellipse cx="26" cy="24" rx="5" ry="4"/><ellipse cx="76" cy="28" rx="5" ry="4"/><ellipse cx="26" cy="34" rx="5" ry="4"/></g><path d="M65 44H75" stroke="#6B4735" stroke-width="2"/><ellipse cx="77" cy="44" rx="3.3" ry="2.2" fill="#785039"/><path d="M65 50H75" stroke="#6B4735" stroke-width="2"/><ellipse cx="77" cy="50" rx="3.3" ry="2.2" fill="#785039"/><path d="M65 56H75" stroke="#6B4735" stroke-width="2"/><ellipse cx="77" cy="56" rx="3.3" ry="2.2" fill="#785039"/><path d="M65 62H75" stroke="#6B4735" stroke-width="2"/><ellipse cx="77" cy="62" rx="3.3" ry="2.2" fill="#785039"/><path d="M65 68H75" stroke="#6B4735" stroke-width="2"/><ellipse cx="77" cy="68" rx="3.3" ry="2.2" fill="#785039"/>
+<path d="M36 72L62 72 65 77 60 88 65 101V111H35V101L40 88 35 77Z" fill="#E5D3AA"/><path d="M36 74H42L43 110H35V101L40 88 35 77Z" fill="#F8EAC8"/>
+<path d="M45 35H49V73H43Z" fill="#AD7E51"/>
+<path d="M44 100L44 96Q50 92 57 96L57 100" fill="none" stroke="#F9E7C1" stroke-width="3"/>
+<path d="M44 23L44 108M49 25L50 109M54 29L56 109" stroke="#FAE6B6" stroke-width="1.2" fill="none"/>
+<path d="M57 37L59 108M59 42L61 108M61 48L63 108" stroke="#BCA582" stroke-width=".6" fill="none"/>
+<path d="M43 109H62V114H43Z" fill="#624B36"/>
+<path d="M105 34Q101 66 76 104L69 113" stroke="#694637" stroke-width="4" fill="none" stroke-linecap="round"/>
+<path d="M104 37L73 111" stroke="#E8D5AE" stroke-width="2" fill="none"/>
+<path d="M68 109L73 112 77 104 72 102Z" fill="#473932"/>
+</svg>

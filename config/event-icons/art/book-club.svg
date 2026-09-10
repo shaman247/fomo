@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128"><title>Book club</title><desc>An open book beneath two conversational speech bubbles.</desc>
+<path d="M12 18q0-9 9-9h35q9 0 9 9v19q0 9-9 9H39L24 56l2-10h-5q-9 0-9-9z" fill="#63B8CA"/><path d="M65 25q0-8 8-8h34q9 0 9 8v19q0 8-9 8h-5l2 11-16-11H73q-8 0-8-8z" fill="#B698D1"/>
+<path d="M14 20q0-9 9-9h33q6 0 8 6H26q-8 0-12 9z" fill="#96D7DF"/>
+<path d="M9 67q28-9 55 2 27-11 55-2v45q-28-8-55 3-27-11-55-3z" fill="#427DA7"/><path d="M14 61q28-7 50 5 22-12 50-5v45q-28-7-50 5-22-12-50-5z" fill="#F8E6BD"/><path d="M64 66q22-12 50-5v45q-28-7-50 5z" fill="#E7CFA2"/>
+<path d="M64 69v39" stroke="#BFAB89" stroke-width="3"/>
+<path d="m24 76 27 4m-27 8 27 4m25-12 27-4m-27 16 27-4" stroke="#B49F7C" stroke-width="4" stroke-linecap="round"/>
+</svg>

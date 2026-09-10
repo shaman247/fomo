@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128"><title>Stroller walk</title><desc>A side-profile baby carriage with an attached handle, canopy, frame and two wheels.</desc>
+<path d="m78 83 21-51q2-5 7-5h10" fill="none" stroke="#617A88" stroke-width="6" stroke-linecap="round"/><path d="M107 26h11" stroke="#364C59" stroke-width="9" stroke-linecap="round"/>
+<path d="m36 79 49 27m-13-27-39 27" stroke="#78929D" stroke-width="6" stroke-linecap="round"/>
+<path d="M12 51q0-37 39-38v38z" fill="#6AB8C5"/><path d="M16 46q3-25 27-29v29z" fill="#9FD9DF"/>
+<path d="M12 51h84q-3 33-31 37H43Q16 84 12 51z" fill="#63A4B5"/><path d="M12 51h84l-4 10H15z" fill="#A4D8DC"/><path d="M74 63h17q-7 20-26 25H44q21-5 30-25z" fill="#458798"/>
+<circle cx="33" cy="108" r="12" fill="#435A65"/><circle cx="85" cy="108" r="12" fill="#435A65"/><circle cx="33" cy="108" r="6" fill="#C3D5DA"/><circle cx="85" cy="108" r="6" fill="#C3D5DA"/>
+</svg>

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"><title>Cider pressing</title><desc>A screw press and slatted juice basket beside a red apple.</desc>
+<path d="M19 32h10v79H19zm68 0h10v79H87z" fill="#447F75"/><path d="M19 32h4v79h-4z" fill="#76B7A2"/><rect x="13" y="104" width="90" height="11" rx="4" fill="#315C59"/>
+<rect x="48" y="10" width="10" height="51" rx="3" fill="#9BAFB2"/><path d="m48 24 10-4m-10 13 10-4m-10 13 10-4m-10 13 10-4" stroke="#526E73" stroke-width="2.5"/>
+<rect x="29" y="8" width="49" height="7" rx="3.5" fill="#426E6A"/><rect x="15" y="27" width="86" height="12" rx="4" fill="#4F9588"/>
+<ellipse cx="53" cy="60" rx="25" ry="7" fill="#6E4534"/><path d="M28 60h50l-4 37q-21 9-42 0z" fill="#D79B60"/><path d="m35 65 3 33m8-33 1 35m10-35-1 35m11-35-3 33" stroke="#99643F" stroke-width="3"/>
+<path d="M29 68q24 8 48 0l-1 7q-23 8-46 0zm3 22q21 7 42 0l-1 7q-20 7-40 0z" fill="#5F7779"/><ellipse cx="53" cy="60" rx="23" ry="5" fill="#E9B780"/><path d="M48 50h10v10H48z" fill="#80999C"/>
+<path d="M26 99h56v6H26zm50 0h31v7H76z" fill="#447F75"/><path d="M105 107v7" stroke="#E9A93F" stroke-width="4" stroke-linecap="round"/>
+<path d="M104 68c-4-5-14-4-17 3-6 13 4 25 10 25 3 0 4-2 7-2s4 2 7 2c7-2 13-16 9-24-3-6-10-7-16-4" fill="#E85A51"/><path d="M104 68q-3-9 2-14" stroke="#785341" stroke-width="4" stroke-linecap="round"/><path d="M105 62q1-11 13-9-1 10-13 9" fill="#72A64B"/><path d="M92 75q-2 4-1 8" fill="none" stroke="#FF9A80" stroke-width="4" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,155 @@
+[
+  {
+    "icon_id": "activity-farmers-market",
+    "source_sha256": "563ca49a7f1517bae8ec7ecb0d8cfbe66351e1514e36df6ce74dc69aef0ceb6d",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent; creator knew the concepts. Market stall with produce; clear at 24/32px, striped canopy survives at 16px.",
+    "evidence": {
+      "packet": ".scratch/icon-artwork-20260909/review-v2",
+      "themes": ".scratch/icon-artwork-20260909/gallery/themes.png",
+      "sizes": [
+        16,
+        24,
+        32,
+        128
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "site_theme_variants": 9
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Individual vegetable identity is not retained at 16px; market labels remain useful.",
+      "Pixel/monochrome themes remove supporting color and fine-detail cues."
+    ]
+  },
+  {
+    "icon_id": "format-stand-up-comedy",
+    "source_sha256": "ed813792a866855b388e91256b593882110a6c5a96ee65864b219a915c4bfa66",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent; creator knew the concepts. Laughing face beside microphone; laughter and microphone remain distinct at 24/32px.",
+    "evidence": {
+      "packet": ".scratch/icon-artwork-20260909/review-v2",
+      "themes": ".scratch/icon-artwork-20260909/gallery/themes.png",
+      "sizes": [
+        16,
+        24,
+        32,
+        128
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "site_theme_variants": 9
+    },
+    "issues": [
+      {
+        "severity": "material",
+        "location": "Microphone cord / base, all sizes",
+        "observation": "Initial cable emerged from the side of the angled handle rather than the base.",
+        "revision": "Moved the cable origin to the rotated handle base and curved the loose cord beneath it.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "At 16px the microphone grille and mouth details soften; the combination retains a comedy cue.",
+      "Pixel/monochrome themes remove supporting color and fine-detail cues."
+    ]
+  },
+  {
+    "icon_id": "craft-mending",
+    "source_sha256": "9c5bd1acafc78eb5d35263cc2e1b6dba914b148b3c201b380de0cabf19fd3145",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent; creator knew the concepts. Stitched repair patch with needle; square cloth distinguishes it from the round embroidery hoop.",
+    "evidence": {
+      "packet": ".scratch/icon-artwork-20260909/review-v2",
+      "themes": ".scratch/icon-artwork-20260909/gallery/themes.png",
+      "sizes": [
+        16,
+        24,
+        32,
+        128
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "site_theme_variants": 9
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "At 16px needle-eye/thread details soften; patch silhouette remains.",
+      "Pixel/monochrome themes remove supporting color and fine-detail cues."
+    ]
+  },
+  {
+    "icon_id": "activity-food-rescue",
+    "source_sha256": "e98d8ea4eae57c125d2d5a1e5f65cfed2fb7763c82ba56249a8c418dcc11657a",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent; creator already knew the design and requested changes. A blue food basket passed between warm hands is distinct at 24/32px; its food-and-hands silhouette remains at 16px.",
+    "evidence": {
+      "packet": ".scratch/icon-review-20260909-batch2/food-review",
+      "themes": ".scratch/icon-review-20260909-batch2/gallery/themes.png",
+      "sizes": [
+        16,
+        24,
+        32,
+        128
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "site_theme_variants": 2
+    },
+    "issues": [
+      {
+        "severity": "material",
+        "location": "Arrow and basket palette",
+        "observation": "User requested removal of the arrow and greater basket/hand color separation.",
+        "revision": "Removed arrow, changed basket to blue shades, and shifted the remaining composition upward five units.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Food donation and surplus rescue share a silhouette; use the event label and restrict assignments to documented surplus-food collection.",
+      "At 16px finger and vegetable details soften; the blue basket remains separate from the warm hands.",
+      "Current shared frontend provides light/dark artwork rendering; historical nine-theme evidence applies only to the earlier source hash."
+    ]
+  },
+  {
+    "icon_id": "format-rakugo",
+    "source_sha256": "b1b34e6ddc370561d5886f67c3f1e083caf7f6cff2dbc0e1ce822beb4599c051",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent; creator knew the concepts. Kneeling storyteller, fan and cushion remain separated; facial and towel details are supporting cues.",
+    "evidence": {
+      "packet": ".scratch/icon-artwork-20260909/review-v2",
+      "themes": ".scratch/icon-artwork-20260909/gallery/themes.png",
+      "sizes": [
+        16,
+        24,
+        32,
+        128
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "site_theme_variants": 9
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Without prior familiarity the image can read as a seated fan performer; the event label supplies the named tradition.",
+      "The fan and cushion survive at 16px; facial/towel details do not.",
+      "Pixel/monochrome themes remove supporting color and fine-detail cues."
+    ]
+  }
+]

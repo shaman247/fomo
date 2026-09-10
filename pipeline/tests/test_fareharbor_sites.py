@@ -60,6 +60,9 @@ SITE_URLS = {
     "fareharbor_sail_nyc": [
         "https://sail-nyc.com/public-cruises/",
     ],
+    "fareharbor_eldridgestreet": [
+        "https://fareharbor.com/embeds/book/eldridgestreet/",
+    ],
 }
 
 # URLs that must NEVER resolve to a FareHarbor profile: other FareHarbor companies

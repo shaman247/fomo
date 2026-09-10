@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128"><title>Tanpura</title><desc>A fretless four-string drone lute with a long plain neck, four tuning pegs, large rounded resonator and broad bridge.</desc>
+<g transform="rotate(24 64 64)">
+<path d="M57 77C44 79 33 87 32 101C31 115 44 124 63 124C83 124 96 115 95 101C94 87 81 79 70 77Z" fill="#78472F"/>
+<path d="M57 77C44 79 32 88 32 100C32 113 45 121 63 121C82 121 94 112 93 99C92 86 80 79 70 77Z" fill="#A5673D"/>
+<path d="M57 80C45 83 36 91 36 101C36 111 47 117 58 118C46 107 48 91 57 80Z" fill="#CD9357"/>
+<path d="M55 8Q64 4 72 8L70 88H56Z" fill="#9F653F"/><path d="M57 10H61L60 88H56Z" fill="#C68B54"/>
+<path d="M60 14H50M67 14H78M60 23H50M67 23H78" stroke="#6F4932" stroke-width="3"/>
+<g fill="#6F4932"><ellipse cx="48" cy="14" rx="4" ry="3.5"/><ellipse cx="80" cy="14" rx="4" ry="3.5"/><ellipse cx="48" cy="23" rx="4" ry="3.5"/><ellipse cx="80" cy="23" rx="4" ry="3.5"/></g>
+<path d="M53 102Q64 99 75 102V108H53Z" fill="#EAD3A5"/><path d="M53 107H75V110H53Z" fill="#9A784E"/>
+<path d="M59 28L58 116M62 28L62 117M65 28L66 117M68 28L70 116M59 28L58 14M62 28L59 23M65 28L68 23M68 28L69 14" stroke="#F1D7A3" stroke-width="1" fill="none"/>
+<path d="M55 117Q64 121 74 117" stroke="#E3C58E" stroke-width="3" fill="none"/><path d="M55 28H71" stroke="#E3C58E" stroke-width="2"/>
+</g>
+</svg>

@@ -1619,6 +1619,23 @@ class TestApplyCrawledDetailsEmoji(unittest.TestCase):
         self.assertNotIn("emoji = %s", sql)
         self.assertEqual(params, ['A real description.', 123])
 
+    def test_missing_description_leaves_the_stored_one_alone(self):
+        # extract_single_event omits `description` when the page yielded only a
+        # placeholder; the venue/dates it DID find must still land, and the
+        # stored description must not be overwritten with nothing.
+        cursor = _RecordingCursor()
+        apply_crawled_details(
+            cursor, _NoopConnection(), 123,
+            {'hashtags': [], 'emoji': '', 'location': 'NYC-DSA Office',
+             'sublocation': '14 Jefferson St, New York, NY 10002'},
+            self._TAG_CONTEXT,
+        )
+        sql, params = next(s for s in cursor.statements if s[0].startswith("UPDATE crawl_events SET"))
+        self.assertNotIn("description = %s", sql)
+        self.assertIn("location_name = %s", sql)
+        self.assertIn("sublocation = %s", sql)
+        self.assertEqual(params[:2], ['NYC-DSA Office', '14 Jefferson St, New York, NY 10002'])
+
     def test_blocked_emoji_does_not_overwrite(self):
         sql, _ = self._run('⬛')
         self.assertNotIn("emoji = %s", sql)
@@ -1735,6 +1752,7 @@ class TestShortNormalizedNamesReachExactTiers(unittest.TestCase):
         processor.db.get_all_locations = lambda cursor: rows
         processor.db.get_website_locations_map = lambda cursor: dict(website_linked or {})
         processor.db.get_roving_organizer_websites = lambda cursor: set(roving or ())
+        processor.db.get_website_names = lambda cursor: {}
         try:
             return build_locations_map(None)
         finally:
@@ -3260,8 +3278,9 @@ class TestBrandFamilyKeyGuard(unittest.TestCase):
     /fix-unmapped-events surfaces.
     """
 
-    def _map(self, locations, website_linked=None):
+    def _map(self, locations, website_linked=None, website_names=None):
         """Build a real locations_map from (id, name, short_name, alts) tuples."""
+        self._website_names = website_names
         rows = []
         for lid, name, short_name, alts in locations:
             rows.append({'id': lid, 'name': name, 'short_name': short_name,
@@ -3273,6 +3292,7 @@ class TestBrandFamilyKeyGuard(unittest.TestCase):
         processor.db.get_website_locations_map = lambda cursor: dict(website_linked or {})
         real_rv = processor.db.get_roving_organizer_websites
         processor.db.get_roving_organizer_websites = lambda cursor: set()
+        processor.db.get_website_names = lambda cursor: dict(getattr(self, '_website_names', None) or {})
         try:
             return build_locations_map(None)
         finally:
@@ -3293,6 +3313,154 @@ class TestBrandFamilyKeyGuard(unittest.TestCase):
         self.assertTrue(_is_brand_family_key(m, 'smorgasburg', 2977))
         # The fully-qualified names still resolve.
         self.assertEqual(self._id('Smorgasburg World Trade Center', m), 3016)
+
+    def _scoped_map(self, locations, website_linked=None):
+        """Like _map, but (id, name, short_name, alts, {website_id: [scoped alts]})."""
+        rows = []
+        for lid, name, short_name, alts, scoped in locations:
+            rows.append({'id': lid, 'name': name, 'short_name': short_name,
+                         'address': '', 'lat': 1.0, 'lng': 1.0, 'emoji': 'X',
+                         'alternate_names': list(alts or []),
+                         'website_scoped_names': dict(scoped or {})})
+        real_all, real_wl = processor.db.get_all_locations, processor.db.get_website_locations_map
+        processor.db.get_all_locations = lambda cursor: rows
+        processor.db.get_website_locations_map = lambda cursor: dict(website_linked or {})
+        real_rv = processor.db.get_roving_organizer_websites
+        processor.db.get_roving_organizer_websites = lambda cursor: set()
+        processor.db.get_website_names = lambda cursor: dict(getattr(self, '_website_names', None) or {})
+        try:
+            return build_locations_map(None)
+        finally:
+            processor.db.get_all_locations = real_all
+            processor.db.get_website_locations_map = real_wl
+            processor.db.get_roving_organizer_websites = real_rv
+
+    def test_cross_site_alt_declines_a_brand_family_key(self):
+        # 2026-09-09: a Meetup group's scoped alias "McDonald's" -> Penn Station
+        # branch was reused by Step 5c for EVERY other website, pinning BPL's
+        # bookmobile stops (several different McDonald's) to Penn Station.
+        m = self._scoped_map([
+            (7708, "McDonald's Penn Station", None, [], {4920: ["McDonald's"]}),
+            (8318, "McDonald's Canarsie", None, [], {}),
+            (10582, "McDonald's Flatlands", None, [], {}),
+        ])
+        # The owning website still resolves its own shorthand (Step 1).
+        self.assertEqual(self._id("McDonald's", m, website_id=4920), 7708)
+        # Everyone else gets the honest answer: unmapped.
+        self.assertIsNone(self._id("McDonald's", m, website_id=4))
+        self.assertIsNone(self._id("McDonald's", m))
+
+    def test_cross_site_alt_still_ports_a_single_venue_alias(self):
+        # The guard is scoped to FAMILY keys; a scoped alias that names the only
+        # venue of its kind stays portable (the Prospect Park Picnic House case).
+        m = self._scoped_map([
+            (6434, 'Prospect Park Picnic House', None, [], {2704: ['Picnic House Prospect Park']}),
+            (1, 'Prospect Park', None, [], {}),
+        ])
+        self.assertEqual(self._id('Picnic House Prospect Park', m, website_id=464), 6434)
+
+    def test_single_venue_loose_arm_prefers_the_unique_extending_venue(self):
+        # 2026-09-09: "Dai Bosatsu Zendo" from New York Zendo's site (linked
+        # only to New York Zendo) scored Levenshtein 0.71 against the home venue
+        # and was pinned there, although we hold the zendo the string names.
+        m = self._map([
+            (4732, 'New York Zendo', None, []),
+            (6844, 'Dai Bosatsu Zendo Kongo-ji', None, []),
+        ], website_linked={3484: [{'id': 4732, 'name': 'New York Zendo', 'emoji': 'X'}]})
+        res = get_location_id('Dai Bosatsu Zendo', None, 'new york zendo', 'Sesshin', m, website_id=3484)
+        self.assertEqual((res or {}).get('id'), 6844)
+        self.assertEqual(res.get('step'), 'name_extends_unique')
+
+    def test_single_venue_loose_arm_keeps_the_home_venue_without_an_extender(self):
+        # Nothing else starts with the string: the home venue still wins.
+        m = self._map([
+            (4732, 'New York Zendo', None, []),
+            (99, 'Unrelated Gallery', None, []),
+        ], website_linked={3484: [{'id': 4732, 'name': 'New York Zendo', 'emoji': 'X'}]})
+        res = get_location_id('New Yorker Zendo', None, 'new york zendo', 'Sesshin', m, website_id=3484)
+        self.assertEqual((res or {}).get('id'), 4732)
+
+    def test_single_venue_loose_arm_placeholder_still_falls_back_to_home(self):
+        # "New York City" extends "New York City Center" uniquely, but it is a
+        # venue-less placeholder, so the organizer fallback policy holds.
+        m = self._map([
+            (2, 'New York Botanical Garden', None, []),
+            (3, 'New York City Center', None, []),
+        ], website_linked={105: [{'id': 2, 'name': 'New York Botanical Garden', 'emoji': 'X'}]})
+        res = get_location_id('New York City', None, 'nybg', 'Garden walk', m, website_id=105)
+        self.assertEqual((res or {}).get('id'), 2)
+
+    def test_single_venue_site_placeholder_maps_to_home_venue(self):
+        # Policy: virtual / venue-less events map to the organizer's physical
+        # location. "Online (Zoom)" normalizes to "online zoom" (non-empty), so
+        # Step 7 never saw it and 297 rows in 60 days went unmapped.
+        m = self._map([
+            (3626, 'EFA Robert Blackburn Printmaking Workshop', None, []),
+            (5, 'Some Other Venue', None, []),
+        ], website_linked={3576: [{'id': 3626, 'name': 'EFA Robert Blackburn Printmaking Workshop',
+                                   'emoji': 'X'}]})
+        for placeholder in ('Online (Zoom)', 'Virtual Event', 'Online event', 'Zoom Virtual Meeting'):
+            res = get_location_id(placeholder, None, 'efa rbpmw', 'Woodblock class', m, website_id=3576)
+            self.assertEqual((res or {}).get('id'), 3626, placeholder)
+        # A multi-venue website gets no such fallback (that is the Step 7 gap
+        # tracked separately in the backlog).
+        m2 = self._map([
+            (3626, 'EFA Robert Blackburn Printmaking Workshop', None, []),
+            (5, 'Some Other Venue', None, []),
+        ], website_linked={9: [{'id': 3626, 'name': 'EFA Robert Blackburn Printmaking Workshop', 'emoji': 'X'},
+                               {'id': 5, 'name': 'Some Other Venue', 'emoji': 'X'}]})
+        self.assertIsNone((get_location_id('Online (Zoom)', None, 'x', 'E', m2, website_id=9) or {}).get('id'))
+
+    def test_sublocation_address_matches_on_the_loose_key(self):
+        # 2026-09-07 backlog: "NYC" + "412 Eighth Ave, 4th flr" never met the row
+        # stored as "412 8th Ave 4th Floor" (word ordinal + floor suffix), so the
+        # event fell to the organizer pin and every hand re-pin was undone.
+        rows = [{'id': 10626, 'name': 'Ballroom Hub', 'short_name': None,
+                 'address': '412 8th Ave 4th Floor, New York, NY 10001, USA', 'lat': 1.0, 'lng': 1.0,
+                 'emoji': 'X', 'alternate_names': [], 'website_scoped_names': {}},
+                {'id': 3071, 'name': 'Dance Manhattan', 'short_name': None,
+                 'address': '39 W 14th St #305, New York, NY 10011, USA', 'lat': 1.0, 'lng': 1.0,
+                 'emoji': 'X', 'alternate_names': [], 'website_scoped_names': {}}]
+        real_all, real_wl = processor.db.get_all_locations, processor.db.get_website_locations_map
+        real_rv = processor.db.get_roving_organizer_websites
+        processor.db.get_all_locations = lambda cursor: rows
+        processor.db.get_website_locations_map = lambda cursor: {}
+        processor.db.get_roving_organizer_websites = lambda cursor: set()
+        processor.db.get_website_names = lambda cursor: dict(getattr(self, '_website_names', None) or {})
+        try:
+            m = build_locations_map(None)
+        finally:
+            processor.db.get_all_locations = real_all
+            processor.db.get_website_locations_map = real_wl
+            processor.db.get_roving_organizer_websites = real_rv
+        res = get_location_id('NYC', '412 Eighth Ave, 4th flr, NYC (between W30/31st Streets)',
+                              'dance manhattan', 'Simply Hustle', m, website_id=1248)
+        self.assertEqual((res or {}).get('id'), 10626)
+        self.assertEqual(res.get('step'), 'sublocation_address_loose')
+
+    def test_sublocation_loose_address_declines_a_shared_building(self):
+        # Two venues at one street address differ only by floor: the loose key
+        # collapses them, so it must decline rather than coin-flip.
+        rows = [{'id': 1, 'name': 'Venue A', 'short_name': None,
+                 'address': '412 8th Ave 4th Floor, New York, NY 10001', 'lat': 1.0, 'lng': 1.0,
+                 'emoji': 'X', 'alternate_names': [], 'website_scoped_names': {}},
+                {'id': 2, 'name': 'Venue B', 'short_name': None,
+                 'address': '412 8th Ave 2nd Floor, New York, NY 10001', 'lat': 1.0, 'lng': 1.0,
+                 'emoji': 'X', 'alternate_names': [], 'website_scoped_names': {}}]
+        real_all, real_wl = processor.db.get_all_locations, processor.db.get_website_locations_map
+        real_rv = processor.db.get_roving_organizer_websites
+        processor.db.get_all_locations = lambda cursor: rows
+        processor.db.get_website_locations_map = lambda cursor: {}
+        processor.db.get_roving_organizer_websites = lambda cursor: set()
+        processor.db.get_website_names = lambda cursor: dict(getattr(self, '_website_names', None) or {})
+        try:
+            m = build_locations_map(None)
+        finally:
+            processor.db.get_all_locations = real_all
+            processor.db.get_website_locations_map = real_wl
+            processor.db.get_roving_organizer_websites = real_rv
+        res = get_location_id('NYC', '412 Eighth Ave', 'x', 'E', m, website_id=None)
+        self.assertIsNone((res or {}).get('id'))
 
     def test_borough_stripped_name_is_a_family_key_too(self):
         # "Alamo Drafthouse Staten Island" normalizes to the bare brand, so the
@@ -3662,3 +3830,138 @@ class TestRovingOrganizerGuard(unittest.TestCase):
         # A string that describes the home venue itself still resolves to it;
         # only the loose Levenshtein arm is switched off.
         self.assertEqual(self._id('Temple', self._map(roving={4682})), 6447)
+
+
+class TestMultiVenueHomeVenueFallback(unittest.TestCase):
+    """A venue-less string from a MULTI-venue organizer maps to the organizer's
+    own venue (policy `virtual_events_map_to_organizer_location`), and to nothing
+    at all for an aggregator. Before this, Step 7 required len(linked) == 1, so
+    every such row got location_id NULL and - because export_events INNER JOINs
+    locations - silently never reached the map. Regression for w748 Harlem One
+    Stop ("Virtual Parlor Chat", five linked venues) and for the bare-brand
+    catch-all it must not become (w590 NYU Events -> "NYU Brooklyn").
+    """
+
+    _map = TestBrandFamilyKeyGuard._map
+
+    def _id(self, loc, m, website_id):
+        res = get_location_id(loc, None, 'site', 'Some Event', m, website_id=website_id)
+        return (res or {}).get('id')
+
+    def test_organizers_own_venue_wins_among_five_linked(self):
+        m = self._map(
+            [(2369, 'Harlem One Stop', None, []), (320, 'Fort Washington Park', None, []),
+             (374, 'Harlem River Park', None, []), (2322, 'Lt. Joseph P. Kennedy Community Center', None, []),
+             (2215, 'The Bollinger Forum (Columbia University)', None, [])],
+            website_linked={748: [{'id': 2369, 'name': 'Harlem One Stop', 'emoji': 'X', 'is_primary': True},
+                                  {'id': 320, 'name': 'Fort Washington Park', 'emoji': 'X', 'is_primary': True},
+                                  {'id': 374, 'name': 'Harlem River Park', 'emoji': 'X', 'is_primary': True},
+                                  {'id': 2322, 'name': 'Lt. Joseph P. Kennedy Community Center', 'emoji': 'X', 'is_primary': True},
+                                  {'id': 2215, 'name': 'The Bollinger Forum (Columbia University)', 'emoji': 'X', 'is_primary': False}]},
+            website_names={748: 'Harlem One Stop'})
+        self.assertEqual(self._id('Online Talks Webinars', m, 748), 2369)
+        self.assertEqual(self._id('Not specified', m, 748), 2369)
+        self.assertEqual(self._id('', m, 748), 2369)
+
+    def test_trailing_parenthetical_still_names_the_organizer(self):
+        m = self._map(
+            [(1986, 'Long Island University (LIU)', None, []), (5421, 'LIU Post Campus', None, [])],
+            website_linked={1971: [{'id': 1986, 'name': 'Long Island University (LIU)', 'emoji': 'X'},
+                                   {'id': 5421, 'name': 'LIU Post Campus', 'emoji': 'X'}]},
+            website_names={1971: 'Long Island University'})
+        self.assertEqual(self._id('Virtual Event', m, 1971), 1986)
+
+    def test_area_qualifier_is_not_the_organizers_name(self):
+        m = self._map(
+            [(1914, 'NYU Brooklyn', None, []), (1954, 'New York University (NYU)', None, []),
+             (2437, 'NYU Wagner', None, [])],
+            website_linked={590: [{'id': 1914, 'name': 'NYU Brooklyn', 'emoji': 'X'},
+                                  {'id': 1954, 'name': 'New York University (NYU)', 'emoji': 'X', 'is_primary': True},
+                                  {'id': 2437, 'name': 'NYU Wagner', 'emoji': 'X', 'is_primary': True}]},
+            website_names={590: 'NYU Events'})
+        self.assertIsNone(self._id('Virtual', m, 590))
+
+    def test_aggregator_with_many_venues_gets_nothing(self):
+        linked = [{'id': 1000 + i, 'name': '%dth Street Greenmarket' % (i + 60), 'emoji': 'X',
+                   'is_primary': i == 0} for i in range(12)]
+        m = self._map([(l['id'], l['name'], None, []) for l in linked],
+                      website_linked={386: linked}, website_names={386: 'GrowNYC'})
+        self.assertIsNone(self._id('Virtual', m, 386))
+        self.assertIsNone(self._id('Various locations', m, 386))
+
+    def test_two_matching_venues_is_ambiguous_not_a_guess(self):
+        m = self._map(
+            [(1, 'The Fortune Society - Bronx', None, []), (2, 'The Fortune Society - Harlem', None, [])],
+            website_linked={2538: [{'id': 1, 'name': 'The Fortune Society - Bronx', 'emoji': 'X', 'is_primary': True},
+                                   {'id': 2, 'name': 'The Fortune Society - Harlem', 'emoji': 'X', 'is_primary': True}]},
+            website_names={2538: 'The Fortune Society'})
+        self.assertIsNone(self._id('Not specified', m, 2538))
+
+    def test_single_venue_site_is_unchanged(self):
+        m = self._map([(10, 'MoMath', None, [])],
+                      website_linked={77: [{'id': 10, 'name': 'MoMath', 'emoji': 'X'}]},
+                      website_names={77: 'National Museum of Mathematics'})
+        self.assertEqual(self._id('Online', m, 77), 10)
+
+
+class TestMixedVenueFusionIsVenueShapeAware(unittest.TestCase):
+    """A resolved row and an unresolved one fuse only when the unresolved string
+    is NOT a rival venue (backlog 2026-09-07; measured over 2,271 crawl_results
+    2026-09-09: rooms/placeholders were splitting into unmapped duplicates)."""
+
+    REFS = {2969: ['New Jersey Performing Arts Center', 'NJPAC', '1 Center St'],
+            7121: ['Bloomingdale Playground', None, 'W 105th St']}
+
+    def _group(self, rows, refs=None):
+        return group_event_occurrences(rows, 'https://example.org/events',
+                                       location_refs=refs or self.REFS)
+
+    def _row(self, loc, loc_id, date, url='https://example.org/e/1'):
+        return {'name': 'Program', 'location': loc, 'location_id': loc_id,
+                'url': url, 'start_date': date, 'start_time': '19:30',
+                'end_date': '', 'end_time': ''}
+
+    def test_unresolved_rival_venue_still_splits(self):
+        events = self._group([self._row('NJPAC', 2969, '2026-10-24'),
+                              self._row('Richardson Auditorium in Princeton', None, '2026-10-23')])
+        self.assertEqual(len(events), 2)
+
+    def test_room_of_the_resolved_venue_fuses(self):
+        events = self._group([self._row('Bloomingdale Playground', 7121, '2026-09-10'),
+                              self._row('Play Area', None, '2026-09-12')])
+        self.assertEqual(len(events), 1)
+        self.assertEqual(events[0]['location_id'], 7121)
+
+    def test_per_date_url_does_not_keep_the_room_out(self):
+        events = self._group([self._row('Bloomingdale Playground', 7121, '2026-09-10',
+                                        'https://nyc.gov/e?id=1208976'),
+                              self._row('Play Area', None, '2026-09-12',
+                                        'https://nyc.gov/e?id=1209036')])
+        self.assertEqual(len(events), 1)
+
+    def test_extractor_placeholders_fuse(self):
+        for ph in ('Venue not specified in page content',
+                   'Unknown (venue index not provided)',
+                   'Offsite- please see description', 'Via Zoom', 'In-Person',
+                   'No Location', 'Brooklyn', 'Newark'):
+            events = self._group([self._row('NJPAC', 2969, '2026-10-24'),
+                                  self._row(ph, None, '2026-10-25')])
+            self.assertEqual(len(events), 1, ph)
+
+    def test_address_and_entrance_shapes_fuse(self):
+        for st in ('Entrance\u2014Parkside & Ocean Avenues',
+                   'Bella Abzug Park - between West 34th and West 35th Streets'):
+            self.assertEqual(len(self._group([self._row('NJPAC', 2969, '2026-10-24'),
+                                              self._row(st, None, '2026-10-25')])), 1, st)
+
+    def test_saint_named_venue_is_not_an_address(self):
+        events = self._group([self._row('Alice Tully Hall', 3356, '2026-10-24'),
+                              self._row('St. Cecilia Music Center', None, '2026-10-25')],
+                             refs={3356: ['Alice Tully Hall', None, '1941 Broadway']})
+        self.assertEqual(len(events), 2)
+
+    def test_neighbourhood_pin_vs_other_neighbourhood_splits(self):
+        events = self._group([self._row('Tribeca', 9001, '2026-09-10'),
+                              self._row('Flatiron District', None, '2026-09-17')],
+                             refs={9001: ['Tribeca', None, None]})
+        self.assertEqual(len(events), 2)

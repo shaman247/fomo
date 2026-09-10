@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128"><title>Welding</title>
+<path d="M16 25Q24 11 52 12q27 0 34 18l-7 47-25 20-28-15z" fill="#507F98"/><path d="M16 25Q24 11 52 12l4 76-30-6z" fill="#74A8BB"/><path d="M25 33h49l-4 28H29z" fill="#344854"/><path d="M31 39h36l-2 15H33z" fill="#A7D5D0"/><path d="m34 41 11 0-8 11h-3z" fill="#D0E9DE"/>
+<path d="M10 104h99v12H10z" fill="#8EA1AA"/><path d="M10 103h99v5H10z" fill="#BCCAD0"/><path d="M62 104v12" stroke="#5E7280" stroke-width="3"/>
+<path d="m110 45-17 21" stroke="#E6AE67" stroke-width="12" stroke-linecap="round"/><path d="m110 43-18 22" stroke="#F5CE89" stroke-width="6" stroke-linecap="round"/><path d="m94 64-9 4-10 25" fill="none" stroke="#344854" stroke-width="8" stroke-linejoin="round"/><path d="m75 91-7 11" stroke="#A6B6BE" stroke-width="4"/>
+<path d="m63 101-11-10m16 7-1-15m8 16 12-10" stroke="#F5BD54" stroke-width="4" stroke-linecap="round"/><circle cx="67" cy="104" r="4" fill="#FFF0AD"/>
+</svg>

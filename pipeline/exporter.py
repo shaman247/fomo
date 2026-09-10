@@ -93,16 +93,14 @@ def classify_event_sections(cursor, connection):
 
 
 def get_active_locations(events, all_locations):
-    """Get locations that have events at their coordinates."""
-    active_coords = set(
-        (round(event['lat'], 5), round(event['lng'], 5))
-        for event in events if event.get('lat') and event.get('lng')
-    )
-    return [
-        loc for loc in all_locations
-        if loc.get('lat') is not None and loc.get('lng') is not None
-        and (round(loc['lat'], 5), round(loc['lng'], 5)) in active_coords
-    ]
+    """Export only the venues referenced by this chunk's events.
+
+    Coordinates identify a point, not a venue: unrelated tenants and generic
+    building fallbacks can share the same geocode. Events export their canonical
+    location_id as place_id, so membership must use that foreign key.
+    """
+    active_ids = {event['place_id'] for event in events if event.get('place_id') is not None}
+    return [loc for loc in all_locations if loc['id'] in active_ids]
 
 
 # Day-precision dates embedded in an event URL. Recurring programs on Tribe,
@@ -314,6 +312,9 @@ def export_events(cursor):
     - manifest.json — { days: ["YYYY-MM-DD", …], remainderChunks: ["remainder0", …] }
       so the frontend can prioritize the requested day and load the tail in parts
     """
+    from tag_hierarchy_policy import validate_hierarchy
+    validate_hierarchy(db.get_tag_hierarchy_for_export(cursor))
+
     output_dir = os.path.join(SCRIPT_DIR, '..', 'src', 'data')
     os.makedirs(output_dir, exist_ok=True)
 
@@ -367,18 +368,19 @@ def export_events(cursor):
     # preserve the exact shipped JSON. See the per-event SELECT in the loop.
     event_ids = [r[0] for r in event_rows]
     tags_by_id = {}
+    keywords_by_id = {}
     urls_by_id = {}
     for i in range(0, len(event_ids), 1000):
         chunk = event_ids[i:i + 1000]
         placeholders = ','.join(['%s'] * len(chunk))
         cursor.execute(f"""
-            SELECT et.event_id, t.name FROM event_tags et
+            SELECT et.event_id, t.name, t.type FROM event_tags et
             JOIN tags t ON et.tag_id = t.id
-            WHERE et.event_id IN ({placeholders})
+            WHERE t.scope='event' AND et.event_id IN ({placeholders})
             ORDER BY et.event_id, et.tag_id
         """, tuple(chunk))
         for r in cursor.fetchall():
-            tags_by_id.setdefault(r[0], []).append(r[1])
+            (tags_by_id if r[2] == 'tag' else keywords_by_id).setdefault(r[0], []).append(r[1])
         cursor.execute(f"""
             SELECT event_id, url FROM event_urls
             WHERE event_id IN ({placeholders})
@@ -425,6 +427,7 @@ def export_events(cursor):
 
         # Get tags (prefetched above into tags_by_id)
         tags = tags_by_id.get(event_id, [])
+        keywords = keywords_by_id.get(event_id, [])
 
         # Use location coordinates (events no longer have their own coordinates)
         lat = float(row[8]) if row[8] is not None else None
@@ -437,6 +440,7 @@ def export_events(cursor):
         event = {
             'id': event_id,
             'event_type': row[14] or 'Other',
+            'place_id': row[12],
             'name': row[1],
             'location': row[7] or row[5],  # matched_location_name or location_name
             'emoji': row[4],
@@ -446,9 +450,11 @@ def export_events(cursor):
             'occurrences': occurrences,
             'urls': urls,
         }
-        icon_id = export_icon({'name': row[1], 'description': row[3], 'tags': tags},
+        icon_id = export_icon({'name': row[1], 'description': row[3], 'tags': tags + keywords},
                               icon_assignments.get(event_id))
         event['icon_id'] = resolve_icon(event.get('emoji'), icon_id)
+        if keywords:
+            event['keywords'] = keywords
         # description is shipped in a companion events.<chunk>.desc.json (loaded
         # after the markers render) — see _write_chunk_files. display_tags
         # (leaf-only tags for popups) is now derived client-side from the tag
@@ -529,13 +535,18 @@ def export_events(cursor):
     # website URLs by (location_id, is_primary DESC, wl.id) so the existing
     # seen_urls dedup picks the identical survivor per location.
     loc_tags_by_id = {}
+    loc_keywords_by_id = {}
     cursor.execute("""
-        SELECT lt.location_id, t.name FROM location_tags lt
+        SELECT lt.location_id, t.name, t.type FROM location_tags lt
         JOIN tags t ON lt.tag_id = t.id
+        WHERE t.scope='venue'
         ORDER BY lt.location_id, lt.tag_id
     """)
     for r in cursor.fetchall():
-        loc_tags_by_id.setdefault(r[0], []).append(r[1])
+        if r[2] == 'tag':
+            loc_tags_by_id.setdefault(r[0], []).append('venue:' + r[1])
+        else:
+            loc_keywords_by_id.setdefault(r[0], []).append(r[1])
 
     loc_urls_by_id = {}
     cursor.execute("""
@@ -565,10 +576,13 @@ def export_events(cursor):
                 seen_urls.add(url)
 
         loc = {
+            'id': location_id,
             'name': row[1],
             'lat': float(row[2]),
             'lng': float(row[3]),
         }
+        if loc_keywords_by_id.get(location_id):
+            loc['keywords'] = loc_keywords_by_id[location_id]
         if tags:
             loc['tags'] = tags  # display_tags derived client-side from the hierarchy
         if row[4]:
@@ -626,6 +640,7 @@ def export_events(cursor):
     remainder_chunks = write_remainder_chunks(output_dir, remainder_events, descriptions_by_id)
     files_to_write.append(('manifest.json', {
         'days': [d.isoformat() for d in day_dates], 'remainderChunks': remainder_chunks,
+        'exportedAt': datetime.now().astimezone().isoformat(),
     }))
 
     for filename, data in files_to_write:
@@ -660,6 +675,8 @@ def export_tag_hierarchy(cursor):
     os.makedirs(output_dir, exist_ok=True)
 
     tags_list = db.get_tag_hierarchy_for_export(cursor)
+    from tag_hierarchy_policy import validate_hierarchy
+    validate_hierarchy(tags_list)
 
     # Add aliases to each tag entry
     aliases_by_tag = db.get_tag_aliases_for_export(cursor)
@@ -671,7 +688,7 @@ def export_tag_hierarchy(cursor):
     # Explicit saved associations for both curated tags and keywords. No parent
     # inheritance or name-based matching at export/render time.
     try:
-        cursor.execute('SELECT name,emoji,icon_id FROM tags WHERE emoji IS NOT NULL OR icon_id IS NOT NULL')
+        cursor.execute("SELECT IF(scope='venue',CONCAT('venue:',name),name),emoji,icon_id FROM tags WHERE emoji IS NOT NULL OR icon_id IS NOT NULL")
         tag_icons = {name: resolve_icon(emoji, icon_id) for name, emoji, icon_id in cursor.fetchall()}
     except Exception as exc:
         if getattr(exc, 'errno', None) != 1054:
@@ -683,11 +700,15 @@ def export_tag_hierarchy(cursor):
     # Preserve the legacy DB mirror for pipeline compatibility, but publish formats
     # separately. A shared topic (e.g. Sports) keeps only its content parents.
     topics, format_only = separate_format_topics(tags_list)
-    cursor.execute('SELECT id,name,type FROM tags')
-    identity_rows = [{'id': r[0], 'name': r[1], 'type': r[2]} for r in cursor.fetchall()]
-    redirects = stored_tag_mapping(identity_rows, db.get_tag_aliases(cursor),
+    cursor.execute("SELECT id,IF(scope='venue',CONCAT('venue:',name),name),type,scope FROM tags")
+    identity_rows = [{'id': r[0], 'name': r[1], 'type': r[2], 'scope': r[3]} for r in cursor.fetchall()]
+    redirects = stored_tag_mapping([r for r in identity_rows if r['scope']=='event'], db.get_tag_aliases(cursor),
         set(db.get_tag_disambiguations(cursor)))
+    curated_keys = {t['name'] for t in topics}
+    redirects.update({t['display_name']: t['name'] for t in topics
+                      if t.get('scope') == 'venue' and t['display_name'] not in curated_keys})
     output = {'tags': topics, 'icon_ids': tag_icons,
+              'tag_ids': {r['name']: r['id'] for r in identity_rows},
               'formats': EVENT_TYPES_BY_CATEGORY, 'format_only_tags': sorted(format_only),
               'tag_redirects': redirects}
 

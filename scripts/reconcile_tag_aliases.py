@@ -50,8 +50,8 @@ def select_in(cur, sql, values):
 
 
 def prepare(cur, removed):
-    tags = read(cur, 'SELECT id,name,type FROM tags ORDER BY id')
-    aliases = read(cur, 'SELECT alias,tag_id FROM tag_aliases ORDER BY alias')
+    tags = read(cur, "SELECT id,name,type FROM tags WHERE scope='event' ORDER BY id")
+    aliases = read(cur, "SELECT alias,tag_id FROM tag_aliases WHERE scope='event' ORDER BY alias")
     ambiguity = read(cur, 'SELECT DISTINCT ambiguous_alias FROM tag_disambiguations ORDER BY ambiguous_alias')
     resolved, changes = alias_plan(tags, aliases, removed)
     mapping = stored_tag_mapping(tags, resolved, {r['ambiguous_alias'] for r in ambiguity})
@@ -80,7 +80,7 @@ def backup_rows(cur, plan):
     names = [r['source'] for r in plan['mappings']]
     return {
         'plan':plan,
-        'aliases':read(cur,'SELECT alias,tag_id FROM tag_aliases ORDER BY alias'),
+        'aliases':read(cur,"SELECT alias,tag_id FROM tag_aliases WHERE scope='event' ORDER BY alias"),
         'event_tags':select_in(cur, '''SELECT et.* FROM event_tags et JOIN events e ON e.id=et.event_id
             WHERE e.archived=0 AND e.suppressed=0 AND et.tag_id IN ({placeholders})''', source_ids),
         'crawl_event_tags':select_in(cur, 'SELECT * FROM crawl_event_tags WHERE tag IN ({placeholders})', names),
@@ -93,7 +93,7 @@ def backup_rows(cur, plan):
 
 def apply_plan(cur, plan):
     for alias in plan['remove_aliases']:
-        cur.execute('DELETE FROM tag_aliases WHERE alias=%s',(alias,))
+        cur.execute("DELETE FROM tag_aliases WHERE alias=%s AND scope='event'",(alias,))
     for row in plan['alias_changes']:
         db.upsert_tag_alias(cur,row['alias'],row['to_id'])
     counts = Counter()

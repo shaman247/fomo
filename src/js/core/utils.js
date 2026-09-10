@@ -286,16 +286,8 @@ const Utils = (() => {
 
     // Current UI theme. Reads the DOM as source of truth ('data-theme' is set
     // by ThemeManager); defaults to 'dark' before any theme is applied.
-    // May be any Themes registry name, not just 'dark'/'light'.
     function getCurrentTheme() {
         return document.documentElement.getAttribute('data-theme') || 'dark';
-    }
-
-    // The current theme's base axis ('dark'|'light') — what binary styling
-    // decisions key on. Mirrors the data-theme-base attribute ThemeManager
-    // maintains alongside data-theme.
-    function getCurrentThemeBase() {
-        return document.documentElement.getAttribute('data-theme-base') || 'dark';
     }
 
     // Canonical mobile-layout check. <= so exactly 768px counts as mobile,
@@ -556,10 +548,14 @@ const Utils = (() => {
      * name (with disambiguator) remains the unique identifier — only
      * rendered text is shortened. e.g. "Avant Garde / Music" → "Avant Garde".
      * Organizer pseudo-tags resolve to the organizer's display name.
+     * Venue browsing groups use the configured public label.
      */
     function getTagDisplayName(tag) {
         if (!tag) return tag;
         if (organizerNameMap[tag]) return organizerNameMap[tag];
+        if (tag.startsWith('venue:')) tag = tag.slice(6);
+        const venueLabel = globalThis.__CITY__?.venueSelector?.labels?.[tag];
+        if (venueLabel) return venueLabel;
         const idx = tag.indexOf(' / ');
         return idx === -1 ? tag : tag.slice(0, idx);
     }
@@ -643,7 +639,6 @@ const Utils = (() => {
         dayIndexInZone,
         getTodayInZone,
         getCurrentTheme,
-        getCurrentThemeBase,
         isMobileLayout,
         isCountryFlagEmoji,
         stripCountryFlagEmoji,

@@ -128,9 +128,9 @@ const DiscoveryRanking = (() => {
         add(indexes.place.get(pk));
         // Audience/topic tags come from the event. Do not inherit a venue's
         // audience (a library can host both children's and adult programming).
-        if (indexes.tag.size) new Set((event.tags || []).map(normalize)).forEach(tag => add(indexes.tag.get(tag)));
+        if (indexes.tag.size) new Set([...(event.tags || []), ...(place?.tags || []).filter(tag => tag.startsWith('venue:'))].map(normalize)).forEach(tag => add(indexes.tag.get(tag)));
         if (indexes.term.size) {
-            const fields = [event.name, event.description, event.location, ...(event.tags || [])]
+            const fields = [event.name, event.description, event.location, ...(event.tags || []), ...(event.keywords || [])]
                 .filter(Boolean).map(s => ` ${normalize(s)} `);
             indexes.term.forEach((entry, term) => {
                 if (fields.some(field => field.includes(` ${term} `))) add(entry);

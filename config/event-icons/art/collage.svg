@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128"><title>Collage</title><desc>Torn colored paper and a cut picture assembled into a collage.</desc>
+<path d="m15 19 87-4 9 98-94 5z" fill="#CDA783"/><path d="m11 14 87-4 9 98-94 5z" fill="#F5E5CE"/>
+<path d="m20 29 40-7-4 11 7 6-6 10 8 7-8 13-37-4z" fill="#E76E88"/><path d="m43 84 8-13 11 4 9-6 10 7 14-4 4 23-53 5z" fill="#77AD72"/>
+<g transform="rotate(12 80 52)"><path d="M48 20h63v61H48z" fill="#E3D6BF"/><path d="M45 16h63v61H45z" fill="#FFF8E8"/><path d="M51 22h51v43H51z" fill="#7BC6D8"/><circle cx="89" cy="34" r="7" fill="#FFE184"/><path d="m51 64 17-24 13 13 9-9 12 20z" fill="#3D887A"/><path d="m51 64 17-24 9 17 13-13 12 20z" fill="#5BA78C"/></g>
+<path d="m16 87 11-13 10 3 7-7 11 18-30 15z" fill="#ECBA59"/>
+</svg>

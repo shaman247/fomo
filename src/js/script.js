@@ -304,10 +304,9 @@ document.addEventListener('DOMContentLoaded', () => {
             this.initThemeManager();
             ThemeManager.initTheme();
 
-            // The map-label webfont (and any theme font, e.g. the pixel
-            // theme's) must be loaded before the map bakes its TinySDF glyph
+            // The map-label webfont must be loaded before the map bakes its TinySDF glyph
             // atlas, or labels render in the fallback font until reload.
-            await ThemeManager.loadThemeFonts(Utils.getCurrentTheme());
+            await ThemeManager.loadMapFont();
 
             this.initMap();
             // Search/filter managers must be ready before the map can fire a
@@ -335,6 +334,7 @@ document.addEventListener('DOMContentLoaded', () => {
         _setupUIComponents(urlParams) {
             FormatSelector.configure(this.state.formats);
             NeighborhoodSelector.configure(this.state.tagChildrenOf, this.state.neighborhoodTags);
+            urlParams.tags = (urlParams.tags || []).map(t => this.state.tagRedirects[t] || t);
             const legacyNeighborhoods = (urlParams.tags || []).filter(t => this.state.neighborhoodTags.has(t));
             const legacyFormats = (urlParams.tags || []).filter(t => this.state.formatOnlyTags.has(t));
             urlParams.tags = [...new Set((urlParams.tags || [])
@@ -381,42 +381,10 @@ document.addEventListener('DOMContentLoaded', () => {
             ModalManager.initSettingsModal({
                 onThemeChange: (theme) => {
                     ThemeManager.applyThemeChange(theme);
-                },
-                // Prototype theme/layout options are debug-gated (type
-                // "debug" in search to toggle)
-                getDebugMode: () => this.state.debugMode
+                }
             });
             // Note: Welcome modal is initialized earlier in init() so it can be closed during loading
             FeedbackManager.init();
-            this._initProtoFlagListeners();
-            if (ProtoFlags.pickerRequested()) {
-                ProtoPanel.init({
-                    onThemeSelect: (name) => ThemeManager.applyThemeChange(name)
-                });
-            }
-        },
-
-        /**
-         * React to live prototype-flag toggles (from the prototype picker).
-         * `layout` is reload-required and deliberately not handled here.
-         * @memberof App
-         * @private
-         */
-        _initProtoFlagListeners() {
-            document.addEventListener('protoflagschange', (e) => {
-                const { name } = e.detail || {};
-                if (name === 'chips') {
-                    FilterPanelUI.renderChipBar();
-                } else if (name === 'popups') {
-                    // Close whichever popup surface is open so the next marker
-                    // click uses the newly selected routing.
-                    const popup = MapManager.getCurrentPopup();
-                    if (popup) popup.remove();
-                    if (typeof Sheet.closeDetail === 'function' && Sheet.isDetailMode()) {
-                        Sheet.closeDetail();
-                    }
-                }
-            });
         },
 
         /**
@@ -714,6 +682,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Initialize browser history for back/forward navigation
                 HistoryManager.init(this.state.map, {
+                    getQuery: () => FomoQueries.query(),
+                    getQueryUrl: () => {
+                        try { if (FomoQueries.active()) return FomoQueries.shareUrl(); } catch (_) { /* Large queries still work without a share link. */ }
+                        const url = new URL(location.href); url.searchParams.delete('q'); url.searchParams.delete('qv'); return url.href;
+                    },
+                    restoreQuery: query => FomoQueries.restore(query),
                     getSelectedLocationKey: () => this.state.selectedLocationKey,
                     getTagStates: () => FilterPanelUI.getTagStates(),
                     getFormats: () => FormatSelector.selection(),
@@ -774,6 +748,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // --- Phase 2: Asynchronously Load Full Data ---
             await this._loadFullData(urlParams);
+            FomoQueries.init(this);
 
             // --- Offline/refresh wiring (post-critical-path) ---
             // The service worker registers only now so its shell precache
@@ -1207,7 +1182,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 onThemeChange: (theme) => {
                     // Reassign colors for selected tags with new theme palette
                     TagColorManager.reassignTagColors();
-                    FilterPanelUI.renderChipBar();
+                    FilterPanelUI.refreshTagSelector();
                 }
             });
         },
@@ -1241,6 +1216,7 @@ document.addEventListener('DOMContentLoaded', () => {
          * @param {string} term - The search term
          */
         performSearch(term) {
+            FomoQueries.invalidate();
             const FP = (typeof window !== 'undefined' && window.FilterProfiler) || null;
             const run = () => {
                 const previousTerm = this.state.searchTerm;
@@ -1307,6 +1283,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const run = () => {
                 if (FP) FP.mark('fp:dates:start');
 
+                const structuredEvents = FomoQueries.currentViewEvents();
+                if (structuredEvents) {
+                    this.state.allEventsFilteredByDate = structuredEvents;
+                    this.state.allEventsFilteredByDateAndLocation = structuredEvents;
+                    DataManager.groupEventsByLatLngInDateRange(this.state);
+                    if (!skipDisplay) this.filterAndDisplayEvents();
+                    return;
+                }
                 const selectedDates = this.state.datePickerInstance.selectedDates;
                 if (selectedDates.length < 1) {
                     this.state.allEventsFilteredByDate = [];
@@ -1516,20 +1500,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                 duration: restoring ? 0 : 300
                             });
                         });
-                    } else if (!popup) {
-                        // Desktop panel-detail (popups=panel prototype) —
-                        // center the marker in the region the panel leaves
-                        // uncovered instead of the popup measure+pan fit.
-                        requestAnimationFrame(() => {
-                            const sheetEl = document.getElementById('sheet');
-                            const sheetWidth = (sheetEl && sheetEl.offsetWidth) || 420;
-                            const { filterPanelHeight } = ViewportManager.getFilterPanelDimensions();
-                            this.state.map.easeTo({
-                                center: [lngLat.lng, lngLat.lat],
-                                offset: [sheetWidth / 2, filterPanelHeight / 2],
-                                duration: restoring ? 0 : 300
-                            });
-                        });
                     } else {
                         // Desktop popup — measure and pan to fit
                         requestAnimationFrame(() => {
@@ -1656,7 +1626,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 structuralFormatTags: this.state.structuralFormatTags,
                 neighborhoodTags: this.state.neighborhoodTags,
                 tagEmojiMap: this.state.tagEmojiMap,
-                getSelectedTagsWithColors: () => TagColorManager.getSelectedTagsWithColors(),
                 initialGlobalFrequencies: this.state.tagFrequencies,
                 resultsContainerDOM: this.elements.resultsContainer,
                 onFilterChangeCallback: () => {
@@ -1759,6 +1728,7 @@ document.addEventListener('DOMContentLoaded', () => {
          * @param {Object} [options={}] - Optional configuration
          */
         _requestFilterUpdate(datesChanged = false) {
+            FomoQueries.invalidate();
             this._pendingDateUpdate = this._pendingDateUpdate || datesChanged;
             if (this._filterUpdateQueued) return;
             this._filterUpdateQueued = true;
@@ -1808,9 +1778,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const areaMatches = tagMatches.filter(event =>
                 NeighborhoodSelector.matches(event, this.state.locationsByLatLng[event.locationKey]));
             const formatMatches = tagMatches.filter(FormatSelector.matches);
+            const selectorEvents = (this.state.allEventsFilteredByDate || []).filter(event =>
+                FormatSelector.matches(event) && NeighborhoodSelector.matches(event, this.state.locationsByLatLng[event.locationKey]));
+            TagSelector.updateCounts(selectorEvents, this.state.locationsByLatLng);
+            VenueSelector.updateCounts(selectorEvents, this.state.locationsByLatLng);
             FormatSelector.updateCounts(areaMatches);
             NeighborhoodSelector.updateCounts(formatMatches, this.state.locationsByLatLng);
-            const allMatchingEventsFlatList = areaMatches.filter(FormatSelector.matches);
+            const allMatchingEventsFlatList = FomoQueries.currentViewEvents() ?? areaMatches.filter(FormatSelector.matches);
 
             if (FP) {
                 FP.mark('fp:fade:byTags');
@@ -1966,14 +1940,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 params.formats = FormatSelector.selection();
                 params.neighborhoods = NeighborhoodSelector.selection();
 
-                // Prototype themes travel in share links; dark/light never do
-                const currentTheme = ThemeManager.getCurrentTheme();
-                if (Themes.resolve(currentTheme).proto) {
-                    params.theme = currentTheme;
-                }
-
                 // Generate the shareable URL using URLParams module
-                const shareUrl = URLParams.generateShareUrl(params);
+                const shareUrl = FomoQueries.shareUrl() || URLParams.generateShareUrl(params);
 
                 // Copy to clipboard
                 navigator.clipboard.writeText(shareUrl).then(() => {

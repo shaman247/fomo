@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+<title>Acoustic guitar</title><desc>A six-string wooden acoustic guitar with a round sound hole, dark fingerboard, bridge and three tuning keys on each side.</desc>
+<g transform="rotate(35 64 64)">
+<path fill="#955C43" transform="translate(1.5 2)" d="M57 52C47 47 37 49 35 58C33 65 41 72 40 78C39 83 28 90 29 101C30 113 45 119 64 119C83 119 98 113 99 101C100 90 89 83 88 78C87 72 95 65 93 58C91 49 81 47 71 52Z"/>
+<path fill="#E8AF66" d="M57 52C47 47 37 49 35 58C33 65 41 72 40 78C39 83 28 90 29 101C30 113 45 119 64 119C83 119 98 113 99 101C100 90 89 83 88 78C87 72 95 65 93 58C91 49 81 47 71 52Z"/>
+<path fill="#FFCC80" d="M56 54C46 50 40 53 38 59C36 65 44 73 43 79C41 86 32 92 32 101C33 110 46 116 63 116C47 109 45 88 51 73Z"/>
+<path fill="#CE8963" d="M90 88C99 100 93 109 82 113C91 105 92 98 90 88Z"/>
+<circle cx="64" cy="79" r="12" fill="#AD7156"/>
+<circle cx="64" cy="79" r="10" fill="#FFDC9A"/>
+<circle cx="64" cy="79" r="8.8" fill="#3E2723"/>
+<path fill="#6D4133" d="M77 71C83 75 88 84 85 91C83 96 77 96 74 92L74 86C79 81 80 77 77 71Z"/>
+<path fill="#955C43" d="M57 22H71V62H57Z"/>
+<path fill="#49352E" d="M58 24H70L72 68H56Z"/>
+<path fill="#6D4C41" d="M58 25H61L60 67H56Z"/>
+<path fill="none" stroke="#BCAAA4" stroke-width="1" d="M58 31H70M58 39H70.5M57.5 46H71M57 52H71M57 57H71.5M56.5 62H71.5"/>
+<path fill="#955C43" d="M56 5Q64 2 72 5L74 22L69 27H59L54 22Z"/>
+<path fill="#C68B5E" d="M58 6Q63 4 67 5L68 23H59L56 21Z"/>
+<path fill="none" stroke="#78909C" stroke-width="2.5" d="M53 9H59M53 15H59M53 21H59M69 9H75M69 15H75M69 21H75"/>
+<g fill="#B0BEC5"><rect x="49" y="6.5" width="5" height="5" rx="2"/><rect x="49" y="12.5" width="5" height="5" rx="2"/><rect x="49" y="18.5" width="5" height="5" rx="2"/><rect x="74" y="6.5" width="5" height="5" rx="2"/><rect x="74" y="12.5" width="5" height="5" rx="2"/><rect x="74" y="18.5" width="5" height="5" rx="2"/></g>
+<path fill="#6D4133" d="M52 99Q64 101 76 99L76 106Q64 109 52 106Z"/>
+<path fill="#EED9B5" d="M56 100H72V102H56Z"/>
+<path fill="none" stroke="#E0CCAA" stroke-width=".72" d="M61 25L59 104M62.2 25L61 104M63.4 25L63 104M64.6 25L65 104M65.8 25L67 104M67 25L69 104"/>
+<path fill="#F1EDEC" d="M58 24H70V26H58Z"/>
+<path fill="none" stroke="#D8CDC9" stroke-width=".7" d="M61 24L59 10M62.2 24L59 16M63.4 24L59 22M64.6 24L69 22M65.8 24L69 16M67 24L69 10"/>
+</g></svg>

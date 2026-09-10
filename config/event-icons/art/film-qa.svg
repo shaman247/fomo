@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128"><title>Film screening and Q&amp;A</title>
+<rect x="12" y="35" width="88" height="68" rx="7" fill="#4E6775"/><path d="M12 43h88v10H12z" fill="#344B59"/>
+<g transform="rotate(-10 12 35)"><rect x="12" y="21" width="88" height="21" rx="3" fill="#DAE5E5"/><path d="m22 21 14 0-12 21H12zm28 0h14L52 42H38zm28 0h14L80 42H66z" fill="#566C77"/></g>
+<path d="m29 65 19 11-19 11z" fill="#9BC9D5"/>
+<path d="M67 62h37q15 0 15 14v16q0 14-15 14H89l-14 11v-11h-8q-14 0-14-14V76q0-14 14-14" fill="#D5CAC3"/><path d="M67 58h37q15 0 15 14v16q0 14-15 14H87l-12 11v-11h-8q-14 0-14-14V72q0-14 14-14" fill="#F1EDEC"/><circle cx="71" cy="80" r="4" fill="#65889B"/><circle cx="86" cy="80" r="4" fill="#65889B"/><circle cx="101" cy="80" r="4" fill="#65889B"/>
+</svg>

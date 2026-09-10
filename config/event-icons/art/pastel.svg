@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128"><title>Pastel drawing</title><desc>Three unwrapped blunt pastel sticks above broad dry pigment marks.</desc>
+<path d="M13 91q29-9 88-2l12 9-14 8q-50-9-84 1l-8-8z" fill="#81C8CF"/><path d="M18 105q32-7 76 0l9 8-14 7q-34-7-68 0l-9-7z" fill="#DDA0B2"/>
+<g transform="rotate(-27 37 57)"><rect x="26" y="15" width="20" height="72" rx="3" fill="#C65B76"/><path d="M29 18h7v66h-7z" fill="#ED99AB"/><ellipse cx="36" cy="17" rx="10" ry="5" fill="#F4B1BF"/></g>
+<g transform="rotate(5 64 54)"><rect x="55" y="10" width="20" height="76" rx="3" fill="#CE9746"/><path d="M58 13h7v70h-7z" fill="#F2C76E"/><ellipse cx="65" cy="12" rx="10" ry="5" fill="#FFDE96"/></g>
+<g transform="rotate(30 92 59)"><rect x="82" y="21" width="20" height="67" rx="3" fill="#4E989F"/><path d="M85 24h7v61h-7z" fill="#83D0D1"/><ellipse cx="92" cy="23" rx="10" ry="5" fill="#ADE5E0"/></g>
+</svg>

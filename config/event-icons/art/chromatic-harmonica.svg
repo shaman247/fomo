@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"><title>Chromatic Harmonica</title><desc>A twelve-hole chromatic harmonica with a silver mouthpiece and a projecting round slide button at its right end.</desc>
+<g transform="rotate(-18 64 64)">
+<path fill="#8D6E63" d="M6 48L13 62V80L6 67Z"/><path fill="#AD7156" d="M13 60H105V79H13Z"/>
+<path fill="#D8B66A" d="M6 46H101L107 61H13Z"/>
+<path fill="#B0BEC5" d="M13 77H104L100 82H19Z"/>
+<path fill="#CFD8DC" d="M8 48H100L105 61H14Z"/>
+<path fill="#B0BEC5" d="M17 48Q18 41 24 40H88Q94 40 95 46L101 60H24Q19 59 17 48Z"/>
+<path fill="#ECEFF1" d="M21 44Q23 42 27 42H88Q91 42 92 45L93 48H22Z"/>
+<path fill="#CFD8DC" d="M22 48H93L98 57H25Z"/>
+<path fill="#78909C" d="M25 57H98L101 61H25Z"/>
+<path fill="#B0BEC5" d="M13 61H105V78H15Q12 78 12 75V64Z"/>
+<path fill="#ECEFF1" d="M14 61H105V65H14Z"/>
+<path fill="#607D8B" d="M14 75H104V78H15Z"/>
+<g fill="#263238"><rect x="17" y="65" width="4.8" height="9" rx=".5"/><rect x="24" y="65" width="4.8" height="9" rx=".5"/><rect x="31" y="65" width="4.8" height="9" rx=".5"/><rect x="38" y="65" width="4.8" height="9" rx=".5"/><rect x="45" y="65" width="4.8" height="9" rx=".5"/><rect x="52" y="65" width="4.8" height="9" rx=".5"/><rect x="59" y="65" width="4.8" height="9" rx=".5"/><rect x="66" y="65" width="4.8" height="9" rx=".5"/><rect x="73" y="65" width="4.8" height="9" rx=".5"/><rect x="80" y="65" width="4.8" height="9" rx=".5"/><rect x="87" y="65" width="4.8" height="9" rx=".5"/><rect x="94" y="65" width="4.8" height="9" rx=".5"/></g>
+<path fill="#78909C" d="M105 66H116V71H105Z"/><path fill="#CFD8DC" d="M105 66H116V68H105Z"/>
+<ellipse cx="117" cy="68.5" rx="6" ry="8" fill="#78909C"/><ellipse cx="115.5" cy="67.5" rx="4.5" ry="6.5" fill="#CFD8DC"/><ellipse cx="114" cy="65.5" rx="2" ry="3" fill="#ECEFF1"/>
+<g fill="#78909C"><ellipse cx="13" cy="55" rx="1.8" ry="1.4"/><ellipse cx="101" cy="56" rx="1.8" ry="1.4"/></g>
+</g></svg>

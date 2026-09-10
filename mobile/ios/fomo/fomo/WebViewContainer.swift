@@ -2,6 +2,7 @@ import SwiftUI
 import WebKit
 
 struct WebViewContainer: View {
+    @ObservedObject private var assistant = AssistantSearch.shared
     @State private var isFirstLoad = true
     @State private var error: Error?
 
@@ -48,6 +49,10 @@ struct WebViewContainer: View {
                 .background(Color(.systemBackground))
             }
         }
+        .sheet(isPresented: $assistant.presented) { AssistantSearchSheet() }
+        .onOpenURL { url in
+            assistant.open(url)
+        }
     }
 }
 
@@ -65,11 +70,11 @@ struct FomoWebView: UIViewRepresentable {
         // Read from raw arguments, not UserDefaults — values starting with "(" or
         // "{" get plist-parsed by the argument domain and come back nil.
         if let override = FomoWebView.launchArg("fomoURL"),
-           let url = URL(string: override), url.host?.contains("fomo.nyc") == true {
+           let url = URL(string: override), AssistantSearch.trusted(url) {
             return url
         }
         #endif
-        return URL(string: "https://fomo.nyc")!
+        return URL(string: "https://" + AssistantSearch.domain)!
     }()
 
     #if DEBUG
@@ -82,6 +87,7 @@ struct FomoWebView: UIViewRepresentable {
 
     func makeUIView(context: Context) -> WKWebView {
         let configuration = WKWebViewConfiguration()
+        configuration.userContentController.add(context.coordinator, name: "fomoAssistant")
         configuration.allowsInlineMediaPlayback = true
         configuration.preferences.isElementFullscreenEnabled = true
 
@@ -96,6 +102,7 @@ struct FomoWebView: UIViewRepresentable {
         configuration.allowsAirPlayForMediaPlayback = false   // Disable unused features
 
         let webView = WKWebView(frame: .zero, configuration: configuration)
+        AssistantSearch.shared.webView = webView
         webView.navigationDelegate = context.coordinator
         webView.uiDelegate = context.coordinator
         #if DEBUG
@@ -129,11 +136,15 @@ struct FomoWebView: UIViewRepresentable {
             object: nil,
             queue: .main
         ) { _ in
-            webView.load(URLRequest(url: fomoURL))
+            Task { @MainActor in
+                webView.load(URLRequest(url: AssistantSearch.shared.pendingURL ?? fomoURL))
+                AssistantSearch.shared.pendingURL = nil
+            }
         }
 
         // Initial load
-        webView.load(URLRequest(url: fomoURL))
+        webView.load(URLRequest(url: AssistantSearch.shared.pendingURL ?? fomoURL))
+        AssistantSearch.shared.pendingURL = nil
 
         #if DEBUG
         // Screenshot/dev hook — force an orientation, e.g.:
@@ -175,7 +186,12 @@ struct FomoWebView: UIViewRepresentable {
 
     // MARK: - Coordinator
 
-    class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate {
+    class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate, WKScriptMessageHandler {
+        func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+            guard message.frameInfo.isMainFrame, AssistantSearch.trusted(message.frameInfo.request.url),
+                  let body = message.body as? [String: String], body["action"] == "open" else { return }
+            AssistantSearch.shared.presented = true
+        }
         var parent: FomoWebView
 
         init(_ parent: FomoWebView) {
@@ -238,7 +254,7 @@ struct FomoWebView: UIViewRepresentable {
             }
 
             // Allow fomo.nyc navigation
-            if url.host?.contains("fomo.nyc") == true {
+            if AssistantSearch.trusted(url) {
                 decisionHandler(.allow)
                 return
             }
@@ -268,7 +284,7 @@ struct FomoWebView: UIViewRepresentable {
         ) -> WKWebView? {
             guard let url = navigationAction.request.url else { return nil }
 
-            if url.host?.contains("fomo.nyc") == true {
+            if AssistantSearch.trusted(url) {
                 webView.load(navigationAction.request)
             } else {
                 UIApplication.shared.open(url)

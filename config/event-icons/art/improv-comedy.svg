@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128"><title>Improv comedy</title><desc>Two expressive comic speech faces in a spontaneous exchange.</desc>
+<path d="M10 29q0-13 13-13h40q13 0 13 13v35q0 13-13 13H44L25 90l3-13h-5q-13 0-13-13z" fill="#EAA94E"/><path d="M12 30q0-12 13-12h37q10 0 12 8H28q-10 0-16 9z" fill="#FFD278"/>
+<path d="M58 59q0-12 12-12h37q12 0 12 12v33q0 12-12 12h-5l3 13-20-13H70q-12 0-12-12z" fill="#65AEBE"/><path d="M60 61q0-12 12-12h33q10 0 12 8H76q-10 0-16 9z" fill="#9AD8DC"/>
+<path d="M24 41q5-7 10 0m15 0q5-7 10 0" fill="none" stroke="#775337" stroke-width="4" stroke-linecap="round"/>
+<path d="M28 52h28q-2 15-14 15T28 52z" fill="#775337"/><path d="M32 53h20l-2 5H34z" fill="#FFF6DE"/>
+<circle cx="77" cy="70" r="3" fill="#365B68"/><circle cx="101" cy="70" r="3" fill="#365B68"/><ellipse cx="90" cy="87" rx="7" ry="9" fill="#365B68"/>
+<path d="m97 6 4 9 10 3-10 4-4 9-3-9-10-4 10-3z" fill="#EFAA47"/>
+</svg>

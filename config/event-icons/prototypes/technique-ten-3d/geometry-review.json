@@ -1,0 +1,29 @@
+{
+  "date": "2026-09-09",
+  "scene_sha256": "7b07f265c220c96530fcc573db841712eda14630e834aff3ec87fc66bfc59c85",
+  "projector_sha256": "284ab2906d2f06870d0b774840111b07f480b41b33bd6779f8752e40dcaf9663",
+  "views": [
+    "front",
+    "rear",
+    "left",
+    "right",
+    "top",
+    "icon"
+  ],
+  "reviewer_mode": "creator-critical-pass",
+  "findings": [
+    "Wooden mould/deckle and supported wet paper above a water vat; draining droplets replace hinge-like rods. At 16px, the exact papermaking method is less distinctive than at 24/32px; the wood-frame/vat relationship remains.",
+    "Four attached legs, single stringed console, three pedals and connected pedal rods. Strings/frets are projected centerlines, tuners and knee levers abbreviated. Ten string lines merge at 16px; no piano keys. Generic geometry, not a replica of a manufacturer model.",
+    "Connected brayer at rear edge of inked plate, continuous lifted-paper surface and negative leaf motif. Depth-aware face clipping fixes lost surface details; compact composition improves 16px readability. Plate translucency and curling paper remain simplified.",
+    "Wide convex rocker blade meets a copper plate at its low edge, with ferrule, wooden handle and abbreviated teeth. Fine serrations merge at 16px; it remains a specialist tool-and-plate pictogram, not a universal technique symbol.",
+    "One cropped trouser leg, sock and shoe planted on a low step with riser. The shoe sole meets the platform within 0.0015 scene units. No full-body pose or paired-limb lengths are implied; foot and platform remain distinct at map size.",
+    "Single-sided compact loom, attached pegs, continuous schematic warp return and narrow woven band. Unsupported spare peg removed. Fine warps/leashes soften at 16px; equipment frame and textile stay separate. Not an exact Ashford proprietary peg layout.",
+    "Generic compact roller on paper over a relief block; attached seat pedestal, steering column and drum supports. Drum/tyres meet the print surface within .002 scene units. Paper and colored print cue distinguish the process at 24/32px; at 16px the machine is the strongest cue."
+  ],
+  "limitations": [
+    "Visual multi-view and explicit contact checks, not exhaustive collision detection.",
+    "Projected face occlusion uses depth-plane clipping; ten steel strings and fret markings use projected centerlines on the visible top playing surface.",
+    "Sizing is illustrative and enlarged for pictogram clarity; no exact manufacturer model claimed."
+  ],
+  "decision": "pass"
+}

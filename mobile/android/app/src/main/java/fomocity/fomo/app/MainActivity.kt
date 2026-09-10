@@ -52,6 +52,12 @@ import fomocity.fomo.app.ui.theme.FomoTheme
 class MainActivity : ComponentActivity() {
     private var webView: WebView? = null
 
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        if (isFomoUrl(intent.data)) webView?.loadUrl(intent.data.toString())
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -63,6 +69,7 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     FomoWebViewScreen(
+                        initialUrl = intent.data?.takeIf(::isFomoUrl)?.toString() ?: BuildConfig.BASE_URL,
                         onWebViewCreated = { webView = it },
                         onBackPressedDispatcher = onBackPressedDispatcher
                     )
@@ -86,9 +93,11 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun FomoWebViewScreen(
+    initialUrl: String,
     onWebViewCreated: (WebView) -> Unit,
     onBackPressedDispatcher: androidx.activity.OnBackPressedDispatcher
 ) {
+    var showAssistant by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(true) }
     var hasError by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
@@ -97,7 +106,7 @@ fun FomoWebViewScreen(
     Box(modifier = Modifier.fillMaxSize()) {
         // WebView with SwipeRefresh
         FomoWebView(
-            url = BuildConfig.BASE_URL,
+            url = initialUrl,
             onWebViewCreated = { webView ->
                 webViewInstance = webView
                 onWebViewCreated(webView)
@@ -116,6 +125,12 @@ fun FomoWebViewScreen(
             },
             modifier = Modifier.fillMaxSize()
         )
+
+        if (!isLoading && !hasError) Button(
+            onClick = { showAssistant = true },
+            modifier = Modifier.align(Alignment.BottomStart).padding(16.dp)
+        ) { Text("Find events") }
+        if (showAssistant) AssistantSearchDialog(webViewInstance) { showAssistant = false }
 
         // Loading overlay
         if (isLoading && !hasError) {
@@ -255,8 +270,7 @@ fun FomoWebView(
                             val requestUrl = request?.url?.toString() ?: return false
 
                             // Allow fomo.nyc and local dev server navigation within WebView
-                            val baseUrl = BuildConfig.BASE_URL
-                            if (requestUrl.contains("fomo.nyc") || requestUrl.startsWith(baseUrl)) {
+                            if (isFomoUrl(Uri.parse(requestUrl))) {
                                 return false
                             }
 

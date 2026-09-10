@@ -23,17 +23,11 @@ const ModalManager = (() => {
     const state = {
         // Callbacks
         onThemeChange: null,
-        getDebugMode: null,
 
         // DOM references
         settingsModal: null,
         welcomeModal: null
     };
-
-    /** Whether debug mode (the "debug" search easter egg) is active. */
-    function _debugEnabled() {
-        return typeof state.getDebugMode === 'function' && !!state.getDebugMode();
-    }
 
     // ========================================
     // SHARED DISMISS WIRING
@@ -66,115 +60,6 @@ const ModalManager = (() => {
     // SETTINGS MODAL
     // ========================================
 
-    /**
-     * Rebuilds the theme options from the Themes registry. Prototype themes
-     * are debug-gated (type "debug" in search to toggle): normally only the
-     * built-in dark/light options show — plus the active theme when it IS a
-     * prototype one, so the checked state never points at a hidden option.
-     * Rebuilt on every modal open; change handling is delegated (init), so
-     * rebuilt radios need no re-wiring.
-     */
-    function _populateThemeOptions() {
-        const container = document.getElementById('theme-options');
-        if (!container || typeof Themes === 'undefined') return;
-        const debug = _debugEnabled();
-        const current = Utils.getCurrentTheme();
-        container.textContent = '';
-        Themes.list().forEach(def => {
-            if (!debug && def.proto && def.name !== current) return;
-            const label = document.createElement('label');
-            label.className = 'setting-option';
-            const input = document.createElement('input');
-            input.type = 'radio';
-            input.name = 'theme';
-            input.value = def.name;
-            const text = document.createElement('span');
-            text.textContent = def.label;
-            label.appendChild(input);
-            label.appendChild(text);
-            container.appendChild(label);
-        });
-    }
-
-    /**
-     * Builds one setting group per prototype layout flag (ProtoFlags) and
-     * keeps it in sync with changes made elsewhere (the ?proto=1 picker,
-     * docked→popups lock). The `layout` flag is applied at load time, so
-     * changing it surfaces a "Reload now" affordance instead of pretending.
-     * Debug-gated like the prototype themes; rebuilt on every modal open.
-     */
-    function _buildProtoFlagGroups() {
-        const host = document.getElementById('proto-setting-groups');
-        if (!host || typeof ProtoFlags === 'undefined') return;
-
-        host.textContent = '';
-        if (!_debugEnabled()) return;
-
-        ProtoFlags.list().forEach(flag => {
-            const group = document.createElement('div');
-            group.className = 'setting-group';
-            group.dataset.protoFlag = flag.name;
-
-            const groupLabel = document.createElement('label');
-            groupLabel.className = 'setting-group-label';
-            groupLabel.textContent = flag.label || flag.name;
-            group.appendChild(groupLabel);
-
-            const options = document.createElement('div');
-            options.className = 'setting-options';
-            flag.values.forEach(value => {
-                const label = document.createElement('label');
-                label.className = 'setting-option';
-                const input = document.createElement('input');
-                input.type = 'radio';
-                input.name = `proto-${flag.name}`;
-                input.value = value;
-                input.addEventListener('change', () => {
-                    ProtoFlags.set(flag.name, value);
-                    if (flag.requiresReload) {
-                        const status = document.getElementById('proto-reload-status');
-                        if (status) status.style.display = '';
-                    }
-                });
-                const text = document.createElement('span');
-                text.textContent = value.charAt(0).toUpperCase() + value.slice(1);
-                label.appendChild(input);
-                label.appendChild(text);
-                options.appendChild(label);
-            });
-            group.appendChild(options);
-            host.appendChild(group);
-        });
-
-        // Reload affordance for load-time flags (hidden until needed)
-        const status = document.createElement('button');
-        status.type = 'button';
-        status.id = 'proto-reload-status';
-        status.className = 'proto-reload-status';
-        status.textContent = '↻ Layout changes apply after a reload — tap to reload';
-        status.style.display = 'none';
-        status.addEventListener('click', () => window.location.reload());
-        host.appendChild(status);
-
-        _syncProtoFlagGroups();
-    }
-
-    /** Reflects current flag values + lock states onto the radios. */
-    function _syncProtoFlagGroups() {
-        const host = document.getElementById('proto-setting-groups');
-        if (!host || typeof ProtoFlags === 'undefined') return;
-        ProtoFlags.list().forEach(flag => {
-            const group = host.querySelector(`[data-proto-flag="${flag.name}"]`);
-            if (!group) return;
-            group.querySelectorAll('input').forEach(input => {
-                input.checked = input.value === flag.value;
-                input.disabled = !!flag.locked;
-            });
-            group.style.opacity = flag.locked ? '0.5' : '';
-            group.title = flag.locked ? 'Forced by the docked layout' : '';
-        });
-    }
-
     /** Reflects the active theme onto the theme radios (modal open, changes). */
     function _syncThemeRadios() {
         const current = Utils.getCurrentTheme();
@@ -187,21 +72,14 @@ const ModalManager = (() => {
      * Initializes the settings modal
      * @param {Object} callbacks - Callback functions
      * @param {Function} callbacks.onThemeChange - Called when theme changes
-     * @param {Function} [callbacks.getDebugMode] - Returns whether debug mode
-     *   is active (gates the prototype theme/layout options)
      */
     function initSettingsModal(callbacks = {}) {
         state.onThemeChange = callbacks.onThemeChange;
-        state.getDebugMode = callbacks.getDebugMode;
 
         const modal = document.getElementById('settings-modal');
         const closeBtn = document.getElementById('settings-close-btn');
         const themeOptions = document.getElementById('theme-options');
 
-        // Dynamic sections: themes + (debug-gated) prototype layout flags.
-        // Rebuilt on every open; handled via delegation below.
-        _populateThemeOptions();
-        _buildProtoFlagGroups();
         _syncThemeRadios();
 
         if (!modal || !closeBtn || !themeOptions) return;
@@ -215,16 +93,12 @@ const ModalManager = (() => {
         // Close modal when clicking outside or on Escape
         wireDismiss(modal, closeSettingsModal);
 
-        // Handle theme change — delegated, so per-open rebuilds of the
-        // option list need no re-wiring
+        // Handle changes to the Dark and Light options.
         themeOptions.addEventListener('change', (e) => {
             if (e.target.name === 'theme' && state.onThemeChange) {
                 state.onThemeChange(e.target.value);
             }
         });
-
-        // Keep flag radios honest when flags change elsewhere (?proto picker)
-        document.addEventListener('protoflagschange', _syncProtoFlagGroups);
     }
 
     /**
@@ -233,11 +107,6 @@ const ModalManager = (() => {
     function openSettingsModal() {
         const modal = state.settingsModal || document.getElementById('settings-modal');
         if (modal) {
-            // Rebuild the dynamic sections: debug mode may have been toggled
-            // since the last open (which gates the prototype options), and
-            // the theme/flags may have changed via the ?proto picker.
-            _populateThemeOptions();
-            _buildProtoFlagGroups();
             _syncThemeRadios();
             modal.classList.add('show');
         }
@@ -267,11 +136,8 @@ const ModalManager = (() => {
 
         state.welcomeModal = modal;
 
-        wireDismiss(modal, closeWelcomeModal);
-        document.getElementById('welcome-start-btn')?.addEventListener('click', () => {
-            closeWelcomeModal();
-            document.getElementById('omni-search-input')?.focus();
-        });
+        // Close modal when clicking anywhere on it, or on Escape
+        wireDismiss(modal, closeWelcomeModal, { closeOnAnyClick: true });
     }
 
     /**

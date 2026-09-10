@@ -17,7 +17,7 @@
     --font-display: var(--font-family);
 
     /* === Corner Radii === */
-    /* Themes reshape the whole UI by overriding these (e.g. 16-bit → 0) */
+    /* Shared corner radii */
     --radius-modal: 22px;      /* Modals, the filter panel container */
     --radius-pill: 16px;       /* Pill controls: logo, inputs, chips */
     --radius-control: 14px;    /* Map zoom/nav control group */

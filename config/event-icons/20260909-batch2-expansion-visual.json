@@ -1,0 +1,134 @@
+[
+  {
+    "icon_id": "craft-soldering",
+    "source_sha256": "8cb32173fd1eae931797f9ead6308fba2d538c101401f3f4fe0c6ca86aa4dc01",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent; creator knew the briefs. Iron tip meets the solder pad; iron and green circuit board remain distinct at 16px.",
+    "evidence": {
+      "packet": ".scratch/icon-artwork-batch2-20260909/review-v1",
+      "sizes": [
+        16,
+        24,
+        32,
+        128
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "themes": ".scratch/icon-artwork-batch2-20260909/gallery/themes.png",
+      "site_theme_variants": 2
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "At 16px individual trace/pad details soften; the tool and board remain."
+    ]
+  },
+  {
+    "icon_id": "craft-figure-drawing",
+    "source_sha256": "66730f0f2457bdbee61da26f89bc4d30a124d1e6c63c15e35da7ecafc0a5e85b",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent; creator knew the briefs. Sketchpad, full figure contour and pencil are separated at 24/32px; body outline survives at 16px.",
+    "evidence": {
+      "packet": ".scratch/icon-artwork-batch2-20260909/review-v1",
+      "sizes": [
+        16,
+        24,
+        32,
+        128
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "themes": ".scratch/icon-artwork-batch2-20260909/gallery/themes.png",
+      "site_theme_variants": 2
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Fine anatomy and binding loops simplify at 16px; no individual body type is asserted."
+    ]
+  },
+  {
+    "icon_id": "format-civic-meeting",
+    "source_sha256": "258fd05099bc4095d260aa161f240a9e2deb3964f3740fbc3722282663492697",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent; creator knew the briefs. Two seated people, table and speech balloon remain separated at all target sizes.",
+    "evidence": {
+      "packet": ".scratch/icon-artwork-batch2-20260909/review-v1",
+      "sizes": [
+        16,
+        24,
+        32,
+        128
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "themes": ".scratch/icon-artwork-batch2-20260909/gallery/themes.png",
+      "site_theme_variants": 2
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Can resemble an ordinary meeting; labels and public-governance assignment restrictions distinguish the civic use."
+    ]
+  },
+  {
+    "icon_id": "format-drag-show",
+    "source_sha256": "4190c81fc4e80b4997f14a7b1fc0faa30e81eafed536d20a44725c642e7521df",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent; creator knew the briefs. Purple sculpted wig, stage makeup and sparkle form a coherent theatrical face at 24/32px.",
+    "evidence": {
+      "packet": ".scratch/icon-artwork-batch2-20260909/review-v1",
+      "sizes": [
+        16,
+        24,
+        32,
+        128
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "themes": ".scratch/icon-artwork-batch2-20260909/gallery/themes.png",
+      "site_theme_variants": 2
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "May suggest theatrical makeup or a costumed performer without the label; never infer drag from appearance or audience identity.",
+      "Lashes and small jewelry details simplify at 16px."
+    ]
+  },
+  {
+    "icon_id": "format-cabaret",
+    "source_sha256": "64f8bcfa56b781cbde29cab26e5b17018c0eb91c891b2494557cf42780dc9b43",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent; creator knew the briefs. Open fan and upright microphone remain separate within a warm stage-light shape at 16/24/32px.",
+    "evidence": {
+      "packet": ".scratch/icon-artwork-batch2-20260909/review-v1",
+      "sizes": [
+        16,
+        24,
+        32,
+        128
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "themes": ".scratch/icon-artwork-batch2-20260909/gallery/themes.png",
+      "site_theme_variants": 2
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Can suggest music or burlesque; the event must explicitly establish cabaret.",
+      "Fine microphone grille and fan ribs soften at 16px."
+    ]
+  }
+]

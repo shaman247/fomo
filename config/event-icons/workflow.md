@@ -67,7 +67,7 @@ IDs describe meaning, not a style revision: `game-scrabble` stays stable after a
 
 ## 3. Draw Noto-style SVGs
 
-Use accepted SVGs in [art/](art/) as the working visual reference. Direct SVG editing or code-generated geometry suits this established vector system. Bitmap generation can explore a composition but is not a finished SVG; do not embed a raster in an SVG wrapper. Use projected geometry for a polyhedral die when it improves accuracy.
+Use accepted SVGs in [art/](art/) as the working visual reference. For icons with human figures or non-trivial geometry, create and inspect a 3D scene first, then derive the SVG from its projection. This includes articulated poses, people interacting with instruments/tools, intersecting or occluding objects, and solids whose perspective matters. Follow [3D construction and SVG size](geometry-and-size.md); retain the scene as the source for geometry changes. Simple flat pictograms can use direct SVG editing or code generation, and paint-only revisions can reuse established geometry. Bitmap studies or rendered masks may be intermediates, but the finished SVG must contain vector artwork, not a raster wrapper.
 
 - Use `viewBox="0 0 128 128"`, edge breathing room, simple silhouettes, broad colors, restrained outlines, and upper-left lighting with a few shaded planes.
 - Match visual weight and perspective. Reference colors include ivory `#F1EDEC`/`#D8CDC9`, charcoal `#2F2F2F`, and wood `#FFCC80`/`#CE8963`/`#AD7156`; they are not a mandatory palette for every subject.
@@ -78,7 +78,9 @@ Use accepted SVGs in [art/](art/) as the working visual reference. Direct SVG ed
 
 Render a contact sheet at 16, 24, 32, and a large inspection size beside accepted custom icons and relevant Noto references. Test light/dark backgrounds and site special themes. Inspect rendered output, not just source. Recognition comes before polish: a Rummikub composition resembling a slot machine or a glass bubble resembling a fried egg needs a different silhouette.
 
-Run the automated critical review below and iterate within existing authorization. Preserve accepted SVGs and concise decisions in versioned files; ignored design studies and scratch galleries alone are not durable assets.
+Measure raw and gzip sizes against comparable accepted custom and standard Noto SVGs. Reduce large icons using the [size procedure](geometry-and-size.md#reduce-svg-size), including simpler visible detail and compact fitted curves where appropriate. The build copies source SVG bytes unchanged, so source optimization must happen before final review.
+
+Run the automated critical review below on the final optimized source and iterate within existing authorization. Preserve accepted SVGs, reproducible geometry/export sources, and concise decisions in versioned files; ignored design studies and scratch galleries alone are not durable assets.
 
 **Output:** accepted SVGs, contact sheet, and semantic/design decisions. If only prototyping was requested, stop at that deliverable.
 

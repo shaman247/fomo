@@ -142,3 +142,17 @@ test('configured subsections retain group selection behavior', () => {
     assert.equal(s.matches({tags:['Borough','Village','Quarter']}),false);
     assert.equal(s.groupState('Section').indeterminate,true);
 });
+
+test('venue-scoped geography preserves names, branch exclusions and counts', () => {
+    const s=selector();
+    const scoped=Object.fromEntries(Object.entries(tree).map(([p,c])=>['venue:'+p,c.map(n=>'venue:'+n)]));
+    s.configure(scoped,names.map(n=>'venue:'+n));
+    s.setSelection(['Quarter']);
+    const e={id:1,tags:['Music'],locationKey:'a'};
+    const l={tags:['venue:Borough','venue:Village','venue:Quarter'],keywords:['Jazz']};
+    assert.equal(s.matches(e,l),true);
+    assert.equal(s.label(),'Quarter');
+    s.updateCounts([e],{a:l});
+    assert.equal(s.count('Village'),1);
+    assert.deepEqual([...s.fromLegacyTags(['venue:Village'])].sort(),['Quarter','Village']);
+});

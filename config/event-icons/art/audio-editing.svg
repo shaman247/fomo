@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128"><title>Audio editing</title><desc>An audio waveform split by an editing cursor.</desc>
+<rect x="8" y="19" width="112" height="96" rx="10" fill="#3D526B"/><rect x="8" y="13" width="112" height="96" rx="10" fill="#617F9C"/><path d="M17 23h94v66H17z" fill="#263E54"/>
+<path d="M25 51v11m10-22v33m10-40v46m10-32v20m23-24v28m10-39v49m10-30v10" stroke="#76D2C5" stroke-width="6" stroke-linecap="round"/>
+<path d="M66 29v62" stroke="#FFD274" stroke-width="4"/><path d="m58 26 8 10 8-10z" fill="#FFD274"/><path d="m58 94 8-9 8 9z" fill="#FFD274"/>
+<path d="M23 99h25m34 0h22" stroke="#A6C3D4" stroke-width="4" stroke-linecap="round"/>
+</svg>

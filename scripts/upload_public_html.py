@@ -25,6 +25,7 @@ import json
 import os
 import subprocess
 import sys
+import uuid
 from ftplib import FTP, FTP_TLS
 from pathlib import Path
 from dotenv import load_dotenv
@@ -42,6 +43,22 @@ def get_file_hash(file_path):
         for chunk in iter(lambda: f.read(8192), b''):
             h.update(chunk)
     return h.hexdigest()
+
+
+def upload_file(ftp, local_path, filename):
+    """Publish a complete file by renaming a temporary upload on the same server."""
+    temporary = f'.{filename}.{uuid.uuid4().hex}.upload'
+    try:
+        with open(local_path, 'rb') as file:
+            ftp.storbinary(f'STOR {temporary}', file)
+        # Never fall back to deleting/overwriting the live file if rename fails.
+        ftp.rename(temporary, filename)
+    except Exception:
+        try:
+            ftp.delete(temporary)
+        except Exception:
+            pass
+        raise
 
 
 def ensure_remote_directory(ftp, remote_path):
@@ -105,51 +122,14 @@ def upload_directory(ftp, local_dir, remote_dir, is_root=True,
 
     # Ensure we're in the correct remote directory for this level
     if remote_dir:
-        try:
-            ftp.cwd(f"/{remote_dir}")
-        except Exception as e:
-            print(f"  Warning: Could not change to directory '{remote_dir}': {e}")
+        ftp.cwd(f"/{remote_dir}")
 
     # Separate files and directories
     items = sorted(local_path.iterdir())
     files = [item for item in items if item.is_file()]
     directories = [item for item in items if item.is_dir() and not item.is_symlink()]
 
-    # Upload files first (before any directory changes)
-    for item in files:
-        filename = item.name
-        remote_file_path = f"{remote_dir}/{filename}" if remote_dir else filename
-
-        total_count += 1
-
-        # Get current content hash
-        current_hash = get_file_hash(item)
-        previous_hash = previous_state.get(remote_file_path)
-
-        # Store the current hash in new state
-        new_state[remote_file_path] = current_hash
-
-        # Check if file has changed
-        if not force and previous_hash is not None and current_hash == previous_hash:
-            skipped_count += 1
-            continue
-
-        try:
-            status = "(new)" if previous_hash is None else "(modified)"
-            if force and previous_hash is not None and current_hash == previous_hash:
-                status = "(forced)"
-            print(f"  - Uploading {remote_file_path} {status}...", end=' ', flush=True)
-
-            with open(item, 'rb') as file:
-                ftp.storbinary(f'STOR {filename}', file)
-
-            print("✓")
-            uploaded_count += 1
-
-        except Exception as e:
-            print(f"✗ Error: {e}")
-
-    # Then process subdirectories
+    # Upload nested assets before pointers in this directory.
     for item in directories:
         subdir_name = item.name
         new_remote_dir = f"{remote_dir}/{subdir_name}" if remote_dir else subdir_name
@@ -177,10 +157,43 @@ def upload_directory(ftp, local_dir, remote_dir, is_root=True,
 
         # Change back to current directory after processing subdirectory
         if remote_dir:
-            try:
-                ftp.cwd(f"/{remote_dir}")
-            except Exception as e:
-                print(f"  Warning: Could not change back to directory '{remote_dir}': {e}")
+            ftp.cwd(f"/{remote_dir}")
+
+    # Publish parent files only after their nested assets are complete. In
+    # particular, similarity/manifest.json must follow its generation directory.
+    for item in files:
+        filename = item.name
+        remote_file_path = f"{remote_dir}/{filename}" if remote_dir else filename
+
+        total_count += 1
+
+        # Get current content hash
+        current_hash = get_file_hash(item)
+        previous_hash = previous_state.get(remote_file_path)
+
+        # Check if file has changed
+        if not force and previous_hash is not None and current_hash == previous_hash:
+            new_state[remote_file_path] = current_hash
+            skipped_count += 1
+            continue
+
+        try:
+            status = "(new)" if previous_hash is None else "(modified)"
+            if force and previous_hash is not None and current_hash == previous_hash:
+                status = "(forced)"
+            print(f"  - Uploading {remote_file_path} {status}...", end=' ', flush=True)
+
+            upload_file(ftp, item, filename)
+            new_state[remote_file_path] = current_hash
+
+            print("✓")
+            uploaded_count += 1
+
+        except Exception as e:
+            print(f"✗ Error: {e}")
+            # Stop before publishing dependent files and leave the saved upload
+            # state unchanged so the next run retries this failed publication.
+            raise
 
     return uploaded_count, skipped_count, total_count
 

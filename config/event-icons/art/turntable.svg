@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128"><title>Vinyl turntable</title><desc>A single grooved vinyl record and connected tonearm on a warm wood record player.</desc>
+<rect x="7" y="32" width="114" height="79" rx="9" fill="#925C3F"/><rect x="7" y="23" width="114" height="79" rx="9" fill="#CE9561"/><path d="M17 27h93" stroke="#EDBC86" stroke-width="4" stroke-linecap="round"/>
+<circle cx="49" cy="62" r="33" fill="#303B45"/><circle cx="49" cy="62" r="26" fill="none" stroke="#566570" stroke-width="3"/><circle cx="49" cy="62" r="19" fill="none" stroke="#566570" stroke-width="2"/><circle cx="49" cy="62" r="11" fill="#F19B5B"/><circle cx="49" cy="62" r="3" fill="#F6E6C3"/>
+<circle cx="100" cy="39" r="9" fill="#47535E"/><path d="M100 39v22L75 75" fill="none" stroke="#E3E9EB" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path d="m76 68-12 11 7 7 12-11z" fill="#34414B"/><rect x="99" y="86" width="12" height="8" rx="2" fill="#68C8BC"/>
+</svg>

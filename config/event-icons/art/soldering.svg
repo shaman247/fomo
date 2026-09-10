@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128"><title>Electronics soldering</title><desc>A soldering iron touches a solder pad on a green circuit board.</desc>
+<rect x="9" y="68" width="100" height="48" rx="8" fill="#246750"/><rect x="9" y="63" width="100" height="47" rx="8" fill="#4CA977"/>
+<path d="M21 78h14v11h17m34-22H80v23H69" fill="none" stroke="#A6DC83" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="21" cy="78" r="5" fill="#EFD19A"/><circle cx="95" cy="75" r="5" fill="#EFD19A"/><circle cx="52" cy="89" r="8" fill="#D6E2E4"/><circle cx="52" cy="89" r="3" fill="#658389"/>
+<path d="M105 21c5-15 15-11 15-2v15" fill="none" stroke="#454954" stroke-width="6" stroke-linecap="round"/>
+<g transform="rotate(38 80 53)"><path d="M70 12q10-7 20 0v41H70z" fill="#277B9E"/><path d="M70 13q5-4 9-3v43h-9z" fill="#5AC2D4"/><rect x="66" y="46" width="28" height="12" rx="4" fill="#334751"/><path d="M75 58h10v23H75z" fill="#AEBFC5"/><path d="M75 58h4v23h-4z" fill="#E7ECEE"/><path d="M75 81h10l-5 17z" fill="#657982"/></g>
+</svg>

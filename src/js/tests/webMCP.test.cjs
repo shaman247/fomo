@@ -1,0 +1,23 @@
+const {test} = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const vm = require('node:vm');
+test('optional WebMCP tools delegate to the shared gateway, load context and honor cancellation', async () => {
+    const registered = [], calls = [];
+    const ctx = vm.createContext({ document: { modelContext: { registerTool: async t => registered.push(t) } } });
+    for (const file of ['querySchema.js','webMCP.js']) vm.runInContext(fs.readFileSync(path.join(__dirname,'../query',file),'utf8'),ctx);
+    const adapter=vm.runInContext('FomoWebMCP',ctx);
+    await adapter.register({call: async (message,signal) => { calls.push(message);return {ok:true,result:{method:message.method}}; }});
+    assert.equal(registered.length,7);
+    const contextTool=registered.find(t=>t.name==='fomo_get_context');
+    await contextTool.execute({});
+    assert.deepEqual(calls.map(x=>x.method),['get_catalog_records','get_context']);
+    const apply=registered.find(t=>t.name==='fomo_apply_query');
+    assert.equal(apply.annotations.readOnlyHint,false);
+    assert.ok(apply.inputSchema.$defs.predicate);
+    const reply=JSON.parse(await apply.execute({}, {signal:{aborted:true}}));
+    assert.equal(reply.error.code,'cancelled');assert.equal(calls.length,2);
+    delete ctx.document.modelContext;
+    await adapter.register({call:()=>assert.fail('unsupported browsers must not invoke tools')});
+});

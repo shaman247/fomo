@@ -8,6 +8,7 @@ import asyncio
 import inspect
 import json
 import re
+import urllib.parse
 from datetime import datetime, timedelta
 from crawl4ai import CacheMode
 import db
@@ -114,6 +115,70 @@ def _is_blocked_error(error_message):
         return False
     lowered = str(error_message).lower()
     return any(marker in lowered for marker in BLOCKED_ERROR_MARKERS)
+
+
+# ---------------------------------------------------------------------------
+# Per-host block circuit breaker.
+#
+# A WAF that has decided to 403 us does so for every URL on the host for the
+# rest of the run, and each refused fetch still costs the full page budget
+# (~13s for a JS-rendered page) plus two backoff retries. Ten AMC theatres x 24
+# showtime URLs at that rate monopolised every worker slot on 2026-09-09 06:35:
+# no site finished inside the 300s stall watchdog, the batch was killed, and
+# 0 of 227 sites crawled. The block was not a browser wedge - it was fast
+# failures re-queued faster than anything else could get a turn.
+#
+# So: count consecutive hard blocks per host across the whole process (one
+# pipeline run). The moment a host trips, the site that tripped it spends ONE
+# immediate probe retry on the blocked URL: if that clears (a transient
+# challenge - w81 Center for Fiction 2026-09-09 returned 403 on every first
+# fetch and real pages on every retry) the breaker closes and the crawl
+# continues normally; if it does not, the site's remaining URLs on that host
+# are skipped unfetched and its queued blocked URLs are not retried. Each later
+# website on an open host still gets one probe fetch (plus that one probe
+# retry) - a success clears the breaker. Bounded cost per blocked site: one or
+# two fetches instead of N fetches plus 2N retries. The state is
+# process-scoped, so the next run starts closed.
+# ---------------------------------------------------------------------------
+# How hard the in-loop probe retry tries: one attempt, short backoff. It runs
+# inside the site's crawl_timeout window, unlike the post-loop retry pass.
+PROBE_RETRY_ATTEMPTS = 1
+PROBE_RETRY_BACKOFF = 5
+HOST_BLOCK_TRIP_THRESHOLD = 3
+_host_block_strikes = {}
+
+
+def _host_of(url):
+    try:
+        return (urllib.parse.urlsplit(url).hostname or '').lower()
+    except ValueError:
+        return ''
+
+
+def _record_host_block(url):
+    """Count a hard block against url's host; return the new strike count."""
+    host = _host_of(url)
+    if not host:
+        return 0
+    _host_block_strikes[host] = _host_block_strikes.get(host, 0) + 1
+    if _host_block_strikes[host] == HOST_BLOCK_TRIP_THRESHOLD:
+        print(f"    ⚠️  Host circuit OPEN for {host}: {HOST_BLOCK_TRIP_THRESHOLD} consecutive blocks "
+              f"this run - remaining URLs on this host are skipped (one probe per site)")
+    return _host_block_strikes[host]
+
+
+def _record_host_success(url):
+    """A real fetch from the host closes its breaker (strikes are consecutive)."""
+    _host_block_strikes.pop(_host_of(url), None)
+
+
+def _host_circuit_open(url):
+    return _host_block_strikes.get(_host_of(url), 0) >= HOST_BLOCK_TRIP_THRESHOLD
+
+
+def reset_host_circuits():
+    """Close every breaker (tests; a fresh run starts closed anyway)."""
+    _host_block_strikes.clear()
 
 
 def _is_bot_challenge(content):
@@ -493,6 +558,10 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
         attempted_urls = 0
         succeeded_urls = 0
         last_url_error = None
+        # URLs skipped unfetched because their host's block circuit is open.
+        # Hosts this website has already spent its one probe fetch on.
+        circuit_skipped_urls = []
+        probed_hosts = set()
 
         async def crawl_urls():
             """Inner function to crawl all URLs, can be wrapped with timeout."""
@@ -518,6 +587,17 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
                     url_config = _make_config(effective_js)
                 else:
                     url_config = crawler_config
+
+                host = _host_of(url)
+                if _host_circuit_open(url):
+                    if host in probed_hosts:
+                        print(f"    - Skipping {url}: {host} circuit open "
+                              f"({_host_block_strikes.get(host, 0)} consecutive blocks this run)")
+                        attempted_urls += 1
+                        circuit_skipped_urls.append(url)
+                        continue
+                    print(f"    - {host} circuit open - probing with one fetch")
+                probed_hosts.add(host)
 
                 print(f"    - Processing {url}")
                 url_content = ""
@@ -562,10 +642,32 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
                 print(f"    - Crawled {page_count} page(s), {len(url_content)} chars total")
                 if not url_succeeded and _is_blocked_error(url_error):
                     # Discard the block page's markdown: appending it is what let
-                    # a fully-blocked crawl look healthy. Retry with backoff below.
+                    # a fully-blocked crawl look healthy. Retry with backoff below
+                    # - unless the host's circuit is (now) open. Then probe ONCE,
+                    # right here: a transient challenge clears and closes the
+                    # breaker; a hot block fails and the URL counts as skipped.
+                    _record_host_block(url)
+                    if _host_circuit_open(url):
+                        print(f"    - Fetch blocked by origin ({str(url_error)[:70]}) - circuit open, probing once")
+                        recovered = await _refetch_past_challenge(
+                            url, url_config, website.get('user_agent'),
+                            attempts=PROBE_RETRY_ATTEMPTS, backoff=PROBE_RETRY_BACKOFF,
+                        )
+                        if recovered:
+                            _record_host_success(url)
+                            print(f"    - Probe cleared: {host} circuit closed")
+                            succeeded_urls += 1
+                            combined_markdown += url + "\n" + recovered
+                            continue
+                        _record_host_block(url)
+                        print(f"    - Probe still blocked: skipping the rest of {host} for this site")
+                        circuit_skipped_urls.append(url)
+                        continue
                     print(f"    - Fetch blocked by origin ({str(url_error)[:70]}) - queued for retry")
                     challenged_urls.append((url, url_config))
                     continue
+                if url_succeeded:
+                    _record_host_success(url)
                 if _is_bot_challenge(url_content):
                     print(f"    - Challenge/error interstitial ({len(url_content)} chars) - queued for retry")
                     challenged_urls.append((url, url_config))
@@ -604,6 +706,12 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
         # window above so the backoff sleeps don't truncate the crawl.
         unresolved_challenges = 0
         for challenged_url, challenged_config in challenged_urls:
+            if _host_circuit_open(challenged_url):
+                # The host tripped after this URL was queued; a retry is the
+                # same refused fetch twice more.
+                print(f"    - Not retrying {challenged_url}: host circuit open")
+                circuit_skipped_urls.append(challenged_url)
+                continue
             print(f"    - Retrying challenged URL: {challenged_url}")
             recovered = await _refetch_past_challenge(
                 challenged_url, challenged_config, website.get('user_agent')
@@ -624,6 +732,13 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
                 error_msg = (
                     f"Soft 404 - page no longer exists ({len(soft_404_urls)} URL(s)): "
                     + ", ".join(soft_404_urls[:3])
+                )
+            elif circuit_skipped_urls:
+                skipped_host = _host_of(circuit_skipped_urls[0])
+                error_msg = (
+                    f"Blocked by origin: {skipped_host} circuit open "
+                    f"({_host_block_strikes.get(skipped_host, 0)} consecutive blocks this run); "
+                    f"{len(circuit_skipped_urls)} URL(s) skipped unfetched"
                 )
             elif unresolved_challenges:
                 error_msg = (
@@ -843,9 +958,18 @@ async def crawl_event_url(web_crawler, url, crawl_config, timeout=120, user_agen
     ``_refetch_past_challenge`` recovery the main crawl loop uses (fresh browser,
     ``text_mode``/``light_mode`` off) before giving up.
 
+    Some platforms serve a usable rendering of the same page only under a query
+    flag, so a source plugin may rewrite the URL we FETCH
+    (``site_profiles.detail_fetch_url``). ``url`` itself is untouched: it stays
+    the URL we log, and the URL stored in ``crawl_events`` / published in
+    ``event_urls`` is never derived from anything this function fetched.
+
     Returns the page content (truncated to 12K chars) or None on failure.
     """
-    content = await _fetch_event_page(web_crawler, url, crawl_config, timeout)
+    fetch_url = site_profiles.detail_fetch_url(url)
+    if fetch_url != url:
+        print(f"    Fetching {fetch_url} (stored URL unchanged)")
+    content = await _fetch_event_page(web_crawler, fetch_url, crawl_config, timeout)
     if not content:
         return None
 
@@ -861,7 +985,7 @@ async def crawl_event_url(web_crawler, url, crawl_config, timeout=120, user_agen
     # Spend the retry budget here rather than losing the whole attempt.
     print(f"    Challenge/error interstitial ({len(content)} chars) for {url} - retrying")
     recovered = await _refetch_past_challenge(
-        url, crawl_config, user_agent,
+        fetch_url, crawl_config, user_agent,
         attempts=DETAIL_CHALLENGE_RETRIES,
         backoff=DETAIL_CHALLENGE_BACKOFF,
         timeout=DETAIL_CHALLENGE_TIMEOUT,

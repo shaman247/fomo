@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Custom icon review · Fomo</title>
+  <link rel="stylesheet" href="/variables.css">
+  <link rel="stylesheet" href="/viewer.css">
+  <script src="/viewer.js" defer></script>
+</head>
+<body>
+  <header>
+    <div class="heading"><div><p class="eyebrow">Fomo · Artwork review</p><h1>Custom icons</h1></div><button id="export">Export feedback</button></div>
+    <p>Scan the artwork, flag what needs a 3D redo, and leave a note about what looks wrong.</p>
+    <div class="progress-line"><strong id="progress">Loading icons…</strong><span id="save-state" role="status" aria-live="polite">Feedback saves automatically on this computer.</span><button id="retry" hidden>Retry saving</button></div>
+    <div class="toolbar">
+      <label class="search-label"><span>Find an icon</span><input id="search" type="search" placeholder="Search names or activities…"></label>
+      <label><span>Show</span><select id="filter"><option value="all">All icons</option><option value="unreviewed">Unreviewed</option><option value="redo">3D redo</option><option value="unsure">Unsure</option><option value="good">Looks good</option><option value="notes">With notes</option><option value="changed">Artwork changed</option><option value="prototype">Prototypes</option></select></label>
+      <label><span>Order</span><select id="sort"><option value="name">Name A–Z</option><option value="size">Largest files first</option><option value="catalog">Catalog order</option></select></label>
+      <label><span>Background</span><select id="theme"><option value="light">Light</option><option value="dark">Dark</option></select></label>
+    </div>
+  </header>
+  <main><p id="result-count" class="muted"></p><div id="gallery" class="gallery"></div><p id="empty" hidden>No icons match this view.</p></main>
+  <dialog id="detail" aria-labelledby="detail-title">
+    <div class="dialog-heading"><div><p id="detail-position" class="eyebrow"></p><h2 id="detail-title"></h2></div><button id="close" aria-label="Close inspection">✕</button></div>
+    <div id="detail-art" class="detail-art"></div>
+    <div id="detail-sizes" class="sizes"></div>
+    <p id="detail-meta" class="muted"></p>
+    <div id="detail-choices" class="choices"></div>
+    <label class="note-label">What needs attention?<textarea id="detail-notes" rows="3" maxlength="10000" placeholder="e.g. The left arm crosses through the instrument…"></textarea></label>
+    <p id="detail-save-state" class="muted" role="status" aria-live="polite"></p>
+    <div class="dialog-footer"><button id="prev">← Previous</button><span>← → browse · 1 good · 2 redo · 3 unsure</span><button id="next">Next →</button></div>
+  </dialog>
+</body>
+</html>

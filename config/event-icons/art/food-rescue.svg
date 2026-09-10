@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128"><title>Food rescue</title><desc>Hands pass a blue crate of surplus food.</desc>
+<g transform="translate(0 -5)">
+<path d="m30 61 7-28c3-11 19-12 24-2l7 30z" fill="#D79653"/><path d="m30 58 6-27c2-9 15-11 19-4l6 31z" fill="#FFD18C"/><path d="m40 33 8 4m-11 4 9 5m-11 4 9 5" fill="none" stroke="#C28A4C" stroke-width="3" stroke-linecap="round"/>
+<path d="M74 54c-10-13-5-23 2-14 1-13 11-16 12-8l-3 12c11-9 17-3 10 5l-10 9z" fill="#69B65D"/><path d="M72 50c3-4 16-1 17 3l-9 20c-3 5-6 4-7 0z" fill="#F39735"/>
+<path d="M24 57h80l-6 36H30z" fill="#256887"/><path d="M24 57h80v9H24zm5 16h71l-2 9H30z" fill="#4D9DC1"/><path d="M23 55h82v7H23z" fill="#8AD4E5"/><path d="M35 64h6v29h-6zm51 0h6v29h-6z" fill="#347FA4"/>
+<path d="m8 86 14-8 21 6 16 11c5 5 1 11-5 8l-15-6 13 9h15c6 0 7 8 0 10H42c-8 0-13-6-21-9l-13-3z" fill="#DCA16D"/><path d="m8 82 14-8 21 6 16 11c4 4 0 8-4 6l-18-8 15 13h14c5 0 5 6 0 7H42c-7 0-13-6-21-9l-13-3z" fill="#FFD0A0"/>
+<path d="m120 82-15-8-15 6-12 9c-5 4-1 10 4 7l12-5-9 10H71c-6 0-6 8 0 10h16c8 0 14-6 20-9l13-4z" fill="#B77750"/><path d="m120 78-15-8-15 6-12 9c-4 4 0 8 4 6l12-5-9 10H71c-5 0-5 6 0 7h16c7 0 14-6 20-9l13-4z" fill="#E7AA78"/>
+</g>
+</svg>

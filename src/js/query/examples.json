@@ -1,0 +1,1038 @@
+{
+  "fixtureNotice": "No IDs or locations here are verified live records. The synthetic catalog used by future runtime tests must define the fixture IDs explicitly.",
+  "valid": [
+    {
+      "id": "karaoke-area",
+      "note": "One model-selected interpretation; 05:00 is not a core default.",
+      "query": {
+        "schemaVersion": 1,
+        "cityId": "nyc",
+        "time": {
+          "kind": "windows",
+          "windows": [
+            {
+              "kind": "instant_range",
+              "start": "2026-09-09T20:00:00-04:00",
+              "endExclusive": "2026-09-10T05:00:00-04:00",
+              "timezone": "America/New_York",
+              "relation": "starts"
+            }
+          ]
+        },
+        "groups": [
+          {
+            "anyOf": [
+              {
+                "kind": "tag",
+                "id": "tag:fixture-karaoke",
+                "scope": "event",
+                "includeDescendants": true
+              }
+            ]
+          },
+          {
+            "anyOf": [
+              {
+                "kind": "region",
+                "id": "area:nyc:fixture-south-brooklyn",
+                "includeDescendants": true
+              }
+            ]
+          }
+        ],
+        "exclude": [],
+        "unknownPolicy": "separate",
+        "sort": {
+          "kind": "earliest"
+        },
+        "view": "fit_matches"
+      }
+    },
+    {
+      "id": "karaoke-radius",
+      "note": "Coordinates are fixtures; the model chose exactly one mile.",
+      "query": {
+        "schemaVersion": 1,
+        "cityId": "nyc",
+        "time": {
+          "kind": "windows",
+          "windows": [
+            {
+              "kind": "instant_range",
+              "start": "2026-09-09T20:00:00-04:00",
+              "endExclusive": "2026-09-10T05:00:00-04:00",
+              "timezone": "America/New_York",
+              "relation": "starts"
+            }
+          ]
+        },
+        "groups": [
+          {
+            "anyOf": [
+              {
+                "kind": "tag",
+                "id": "tag:fixture-karaoke",
+                "scope": "event",
+                "includeDescendants": true
+              }
+            ]
+          },
+          {
+            "anyOf": [
+              {
+                "kind": "circle",
+                "center": {
+                  "latitude": 40.65,
+                  "longitude": -73.98
+                },
+                "radiusMeters": 1609.344
+              }
+            ]
+          }
+        ],
+        "exclude": [],
+        "unknownPolicy": "separate",
+        "sort": {
+          "kind": "distance",
+          "origin": {
+            "latitude": 40.65,
+            "longitude": -73.98
+          }
+        },
+        "view": "fit_matches"
+      }
+    },
+    {
+      "id": "boolean-weekend",
+      "query": {
+        "schemaVersion": 1,
+        "cityId": "nyc",
+        "time": {
+          "kind": "windows",
+          "windows": [
+            {
+              "kind": "date_range",
+              "startDate": "2026-09-12",
+              "endDateExclusive": "2026-09-14",
+              "timezone": "America/New_York"
+            }
+          ]
+        },
+        "groups": [
+          {
+            "anyOf": [
+              {
+                "kind": "tag",
+                "id": "tag:fixture-jazz",
+                "scope": "event",
+                "includeDescendants": true
+              },
+              {
+                "kind": "tag",
+                "id": "tag:fixture-blues",
+                "scope": "event",
+                "includeDescendants": true
+              }
+            ]
+          },
+          {
+            "anyOf": [
+              {
+                "kind": "tag",
+                "id": "tag:fixture-outdoor",
+                "scope": "event",
+                "includeDescendants": true
+              }
+            ]
+          },
+          {
+            "anyOf": [
+              {
+                "kind": "region",
+                "id": "area:nyc:fixture-brooklyn",
+                "includeDescendants": true
+              },
+              {
+                "kind": "region",
+                "id": "area:nyc:fixture-queens",
+                "includeDescendants": true
+              }
+            ]
+          }
+        ],
+        "exclude": [
+          {
+            "kind": "tag",
+            "id": "tag:fixture-festival",
+            "scope": "event",
+            "includeDescendants": true
+          }
+        ],
+        "unknownPolicy": "separate",
+        "sort": {
+          "kind": "earliest"
+        },
+        "view": "fit_matches"
+      }
+    },
+    {
+      "id": "followup-tomorrow",
+      "note": "Full replacement of karaoke-area, with all non-time constraints retained.",
+      "query": {
+        "schemaVersion": 1,
+        "cityId": "nyc",
+        "time": {
+          "kind": "windows",
+          "windows": [
+            {
+              "kind": "instant_range",
+              "start": "2026-09-10T20:00:00-04:00",
+              "endExclusive": "2026-09-11T05:00:00-04:00",
+              "timezone": "America/New_York",
+              "relation": "starts"
+            }
+          ]
+        },
+        "groups": [
+          {
+            "anyOf": [
+              {
+                "kind": "tag",
+                "id": "tag:fixture-karaoke",
+                "scope": "event",
+                "includeDescendants": true
+              }
+            ]
+          },
+          {
+            "anyOf": [
+              {
+                "kind": "region",
+                "id": "area:nyc:fixture-south-brooklyn",
+                "includeDescendants": true
+              }
+            ]
+          }
+        ],
+        "exclude": [],
+        "unknownPolicy": "separate",
+        "sort": {
+          "kind": "earliest"
+        },
+        "view": "fit_matches"
+      }
+    },
+    {
+      "id": "literal-phrase",
+      "note": "Requires all published chunks and their descriptions; no natural-language interpretation.",
+      "query": {
+        "schemaVersion": 1,
+        "cityId": "nyc",
+        "time": {
+          "kind": "all_published"
+        },
+        "groups": [
+          {
+            "anyOf": [
+              {
+                "kind": "text",
+                "fields": [
+                  "name",
+                  "description"
+                ],
+                "value": "pottery wheel",
+                "match": "phrase"
+              }
+            ]
+          }
+        ],
+        "exclude": [],
+        "unknownPolicy": "exclude",
+        "sort": {
+          "kind": "earliest"
+        },
+        "view": "fit_matches"
+      }
+    },
+    {
+      "id": "dst-fold",
+      "note": "Different offsets make this a real one-hour interval despite identical wall-clock labels.",
+      "query": {
+        "schemaVersion": 1,
+        "cityId": "nyc",
+        "time": {
+          "kind": "windows",
+          "windows": [
+            {
+              "kind": "instant_range",
+              "start": "2026-11-01T01:30:00-04:00",
+              "endExclusive": "2026-11-01T01:30:00-05:00",
+              "timezone": "America/New_York",
+              "relation": "overlaps"
+            }
+          ]
+        },
+        "groups": [],
+        "exclude": [],
+        "unknownPolicy": "separate",
+        "sort": {
+          "kind": "earliest"
+        },
+        "view": "fit_matches"
+      }
+    }
+  ],
+  "invalidShape": [
+    {
+      "id": "natural-language-preset",
+      "expected": "schema_rejection",
+      "query": {
+        "schemaVersion": 1,
+        "cityId": "nyc",
+        "time": {
+          "kind": "tonight"
+        },
+        "groups": [
+          {
+            "anyOf": [
+              {
+                "kind": "tag",
+                "id": "tag:fixture-karaoke",
+                "scope": "event",
+                "includeDescendants": true
+              }
+            ]
+          },
+          {
+            "anyOf": [
+              {
+                "kind": "region",
+                "id": "area:nyc:fixture-south-brooklyn",
+                "includeDescendants": true
+              }
+            ]
+          }
+        ],
+        "exclude": [],
+        "unknownPolicy": "separate",
+        "sort": {
+          "kind": "earliest"
+        },
+        "view": "fit_matches"
+      }
+    },
+    {
+      "id": "near-me-token",
+      "expected": "schema_rejection",
+      "query": {
+        "schemaVersion": 1,
+        "cityId": "nyc",
+        "time": {
+          "kind": "windows",
+          "windows": [
+            {
+              "kind": "instant_range",
+              "start": "2026-09-09T20:00:00-04:00",
+              "endExclusive": "2026-09-10T05:00:00-04:00",
+              "timezone": "America/New_York",
+              "relation": "starts"
+            }
+          ]
+        },
+        "groups": [
+          {
+            "anyOf": [
+              {
+                "kind": "tag",
+                "id": "tag:fixture-karaoke",
+                "scope": "event",
+                "includeDescendants": true
+              }
+            ]
+          },
+          {
+            "anyOf": [
+              {
+                "kind": "region",
+                "id": "area:nyc:fixture-south-brooklyn",
+                "includeDescendants": true
+              }
+            ]
+          },
+          {
+            "anyOf": [
+              {
+                "kind": "nearMe"
+              }
+            ]
+          }
+        ],
+        "exclude": [],
+        "unknownPolicy": "separate",
+        "sort": {
+          "kind": "earliest"
+        },
+        "view": "fit_matches"
+      }
+    },
+    {
+      "id": "offset-missing",
+      "expected": "schema_rejection",
+      "query": {
+        "schemaVersion": 1,
+        "cityId": "nyc",
+        "time": {
+          "kind": "windows",
+          "windows": [
+            {
+              "kind": "instant_range",
+              "start": "2026-09-09T20:00:00",
+              "endExclusive": "2026-09-10T05:00:00-04:00",
+              "timezone": "America/New_York",
+              "relation": "starts"
+            }
+          ]
+        },
+        "groups": [
+          {
+            "anyOf": [
+              {
+                "kind": "tag",
+                "id": "tag:fixture-karaoke",
+                "scope": "event",
+                "includeDescendants": true
+              }
+            ]
+          },
+          {
+            "anyOf": [
+              {
+                "kind": "region",
+                "id": "area:nyc:fixture-south-brooklyn",
+                "includeDescendants": true
+              }
+            ]
+          }
+        ],
+        "exclude": [],
+        "unknownPolicy": "separate",
+        "sort": {
+          "kind": "earliest"
+        },
+        "view": "fit_matches"
+      }
+    },
+    {
+      "id": "unknown-field",
+      "expected": "schema_rejection",
+      "query": {
+        "schemaVersion": 1,
+        "cityId": "nyc",
+        "time": {
+          "kind": "windows",
+          "windows": [
+            {
+              "kind": "instant_range",
+              "start": "2026-09-09T20:00:00-04:00",
+              "endExclusive": "2026-09-10T05:00:00-04:00",
+              "timezone": "America/New_York",
+              "relation": "starts"
+            }
+          ]
+        },
+        "groups": [
+          {
+            "anyOf": [
+              {
+                "kind": "tag",
+                "id": "tag:fixture-karaoke",
+                "scope": "event",
+                "includeDescendants": true
+              }
+            ]
+          },
+          {
+            "anyOf": [
+              {
+                "kind": "region",
+                "id": "area:nyc:fixture-south-brooklyn",
+                "includeDescendants": true
+              }
+            ]
+          }
+        ],
+        "exclude": [],
+        "unknownPolicy": "separate",
+        "sort": {
+          "kind": "earliest"
+        },
+        "view": "fit_matches",
+        "instructions": "Make it fun"
+      }
+    },
+    {
+      "id": "price-unsupported",
+      "expected": "schema_rejection",
+      "query": {
+        "schemaVersion": 1,
+        "cityId": "nyc",
+        "time": {
+          "kind": "windows",
+          "windows": [
+            {
+              "kind": "instant_range",
+              "start": "2026-09-09T20:00:00-04:00",
+              "endExclusive": "2026-09-10T05:00:00-04:00",
+              "timezone": "America/New_York",
+              "relation": "starts"
+            }
+          ]
+        },
+        "groups": [
+          {
+            "anyOf": [
+              {
+                "kind": "tag",
+                "id": "tag:fixture-karaoke",
+                "scope": "event",
+                "includeDescendants": true
+              }
+            ]
+          },
+          {
+            "anyOf": [
+              {
+                "kind": "region",
+                "id": "area:nyc:fixture-south-brooklyn",
+                "includeDescendants": true
+              }
+            ]
+          },
+          {
+            "anyOf": [
+              {
+                "kind": "price",
+                "max": 20
+              }
+            ]
+          }
+        ],
+        "exclude": [],
+        "unknownPolicy": "separate",
+        "sort": {
+          "kind": "earliest"
+        },
+        "view": "fit_matches"
+      }
+    },
+    {
+      "id": "empty-or-group",
+      "expected": "schema_rejection",
+      "query": {
+        "schemaVersion": 1,
+        "cityId": "nyc",
+        "time": {
+          "kind": "windows",
+          "windows": [
+            {
+              "kind": "instant_range",
+              "start": "2026-09-09T20:00:00-04:00",
+              "endExclusive": "2026-09-10T05:00:00-04:00",
+              "timezone": "America/New_York",
+              "relation": "starts"
+            }
+          ]
+        },
+        "groups": [
+          {
+            "anyOf": [
+              {
+                "kind": "tag",
+                "id": "tag:fixture-karaoke",
+                "scope": "event",
+                "includeDescendants": true
+              }
+            ]
+          },
+          {
+            "anyOf": [
+              {
+                "kind": "region",
+                "id": "area:nyc:fixture-south-brooklyn",
+                "includeDescendants": true
+              }
+            ]
+          },
+          {
+            "anyOf": []
+          }
+        ],
+        "exclude": [],
+        "unknownPolicy": "separate",
+        "sort": {
+          "kind": "earliest"
+        },
+        "view": "fit_matches"
+      }
+    },
+    {
+      "id": "distance-origin-missing",
+      "expected": "schema_rejection",
+      "query": {
+        "schemaVersion": 1,
+        "cityId": "nyc",
+        "time": {
+          "kind": "windows",
+          "windows": [
+            {
+              "kind": "instant_range",
+              "start": "2026-09-09T20:00:00-04:00",
+              "endExclusive": "2026-09-10T05:00:00-04:00",
+              "timezone": "America/New_York",
+              "relation": "starts"
+            }
+          ]
+        },
+        "groups": [
+          {
+            "anyOf": [
+              {
+                "kind": "tag",
+                "id": "tag:fixture-karaoke",
+                "scope": "event",
+                "includeDescendants": true
+              }
+            ]
+          },
+          {
+            "anyOf": [
+              {
+                "kind": "region",
+                "id": "area:nyc:fixture-south-brooklyn",
+                "includeDescendants": true
+              }
+            ]
+          }
+        ],
+        "exclude": [],
+        "unknownPolicy": "separate",
+        "sort": {
+          "kind": "distance"
+        },
+        "view": "fit_matches"
+      }
+    },
+    {
+      "id": "latitude-out-of-range",
+      "expected": "schema_rejection",
+      "query": {
+        "schemaVersion": 1,
+        "cityId": "nyc",
+        "time": {
+          "kind": "windows",
+          "windows": [
+            {
+              "kind": "instant_range",
+              "start": "2026-09-09T20:00:00-04:00",
+              "endExclusive": "2026-09-10T05:00:00-04:00",
+              "timezone": "America/New_York",
+              "relation": "starts"
+            }
+          ]
+        },
+        "groups": [
+          {
+            "anyOf": [
+              {
+                "kind": "tag",
+                "id": "tag:fixture-karaoke",
+                "scope": "event",
+                "includeDescendants": true
+              }
+            ]
+          },
+          {
+            "anyOf": [
+              {
+                "kind": "region",
+                "id": "area:nyc:fixture-south-brooklyn",
+                "includeDescendants": true
+              }
+            ]
+          },
+          {
+            "anyOf": [
+              {
+                "kind": "circle",
+                "center": {
+                  "latitude": 100,
+                  "longitude": -73.98
+                },
+                "radiusMeters": 1000
+              }
+            ]
+          }
+        ],
+        "exclude": [],
+        "unknownPolicy": "separate",
+        "sort": {
+          "kind": "earliest"
+        },
+        "view": "fit_matches"
+      }
+    },
+    {
+      "id": "invalid-calendar-date",
+      "expected": "schema_rejection",
+      "query": {
+        "schemaVersion": 1,
+        "cityId": "nyc",
+        "time": {
+          "kind": "windows",
+          "windows": [
+            {
+              "kind": "date_range",
+              "startDate": "2026-02-30",
+              "endDateExclusive": "2026-03-02",
+              "timezone": "America/New_York"
+            }
+          ]
+        },
+        "groups": [
+          {
+            "anyOf": [
+              {
+                "kind": "tag",
+                "id": "tag:fixture-karaoke",
+                "scope": "event",
+                "includeDescendants": true
+              }
+            ]
+          },
+          {
+            "anyOf": [
+              {
+                "kind": "region",
+                "id": "area:nyc:fixture-south-brooklyn",
+                "includeDescendants": true
+              }
+            ]
+          }
+        ],
+        "exclude": [],
+        "unknownPolicy": "separate",
+        "sort": {
+          "kind": "earliest"
+        },
+        "view": "fit_matches"
+      }
+    }
+  ],
+  "requiresSemanticRejection": [
+    {
+      "id": "reversed-time-window",
+      "expected": "invalid_date",
+      "query": {
+        "schemaVersion": 1,
+        "cityId": "nyc",
+        "time": {
+          "kind": "windows",
+          "windows": [
+            {
+              "kind": "instant_range",
+              "start": "2026-09-09T20:00:00-04:00",
+              "endExclusive": "2026-09-09T19:00:00-04:00",
+              "timezone": "America/New_York",
+              "relation": "starts"
+            }
+          ]
+        },
+        "groups": [
+          {
+            "anyOf": [
+              {
+                "kind": "tag",
+                "id": "tag:fixture-karaoke",
+                "scope": "event",
+                "includeDescendants": true
+              }
+            ]
+          },
+          {
+            "anyOf": [
+              {
+                "kind": "region",
+                "id": "area:nyc:fixture-south-brooklyn",
+                "includeDescendants": true
+              }
+            ]
+          }
+        ],
+        "exclude": [],
+        "unknownPolicy": "separate",
+        "sort": {
+          "kind": "earliest"
+        },
+        "view": "fit_matches"
+      }
+    },
+    {
+      "id": "wrong-zone-offset",
+      "expected": "invalid_timezone_offset",
+      "query": {
+        "schemaVersion": 1,
+        "cityId": "nyc",
+        "time": {
+          "kind": "windows",
+          "windows": [
+            {
+              "kind": "instant_range",
+              "start": "2026-09-09T20:00:00-05:00",
+              "endExclusive": "2026-09-10T05:00:00-04:00",
+              "timezone": "America/New_York",
+              "relation": "starts"
+            }
+          ]
+        },
+        "groups": [
+          {
+            "anyOf": [
+              {
+                "kind": "tag",
+                "id": "tag:fixture-karaoke",
+                "scope": "event",
+                "includeDescendants": true
+              }
+            ]
+          },
+          {
+            "anyOf": [
+              {
+                "kind": "region",
+                "id": "area:nyc:fixture-south-brooklyn",
+                "includeDescendants": true
+              }
+            ]
+          }
+        ],
+        "exclude": [],
+        "unknownPolicy": "separate",
+        "sort": {
+          "kind": "earliest"
+        },
+        "view": "fit_matches"
+      }
+    },
+    {
+      "id": "unknown-zone",
+      "expected": "invalid_timezone_offset",
+      "query": {
+        "schemaVersion": 1,
+        "cityId": "nyc",
+        "time": {
+          "kind": "windows",
+          "windows": [
+            {
+              "kind": "instant_range",
+              "start": "2026-09-09T20:00:00-04:00",
+              "endExclusive": "2026-09-10T05:00:00-04:00",
+              "timezone": "Not/A_Zone",
+              "relation": "starts"
+            }
+          ]
+        },
+        "groups": [
+          {
+            "anyOf": [
+              {
+                "kind": "tag",
+                "id": "tag:fixture-karaoke",
+                "scope": "event",
+                "includeDescendants": true
+              }
+            ]
+          },
+          {
+            "anyOf": [
+              {
+                "kind": "region",
+                "id": "area:nyc:fixture-south-brooklyn",
+                "includeDescendants": true
+              }
+            ]
+          }
+        ],
+        "exclude": [],
+        "unknownPolicy": "separate",
+        "sort": {
+          "kind": "earliest"
+        },
+        "view": "fit_matches"
+      }
+    },
+    {
+      "id": "inverted-latitude-bounds",
+      "expected": "invalid_bounds",
+      "query": {
+        "schemaVersion": 1,
+        "cityId": "nyc",
+        "time": {
+          "kind": "windows",
+          "windows": [
+            {
+              "kind": "instant_range",
+              "start": "2026-09-09T20:00:00-04:00",
+              "endExclusive": "2026-09-10T05:00:00-04:00",
+              "timezone": "America/New_York",
+              "relation": "starts"
+            }
+          ]
+        },
+        "groups": [
+          {
+            "anyOf": [
+              {
+                "kind": "tag",
+                "id": "tag:fixture-karaoke",
+                "scope": "event",
+                "includeDescendants": true
+              }
+            ]
+          },
+          {
+            "anyOf": [
+              {
+                "kind": "region",
+                "id": "area:nyc:fixture-south-brooklyn",
+                "includeDescendants": true
+              }
+            ]
+          },
+          {
+            "anyOf": [
+              {
+                "kind": "bounds",
+                "south": 41,
+                "north": 40,
+                "west": -74,
+                "east": -73
+              }
+            ]
+          }
+        ],
+        "exclude": [],
+        "unknownPolicy": "separate",
+        "sort": {
+          "kind": "earliest"
+        },
+        "view": "fit_matches"
+      }
+    },
+    {
+      "id": "empty-normalized-phrase",
+      "expected": "invalid_schema",
+      "query": {
+        "schemaVersion": 1,
+        "cityId": "nyc",
+        "time": {
+          "kind": "windows",
+          "windows": [
+            {
+              "kind": "instant_range",
+              "start": "2026-09-09T20:00:00-04:00",
+              "endExclusive": "2026-09-10T05:00:00-04:00",
+              "timezone": "America/New_York",
+              "relation": "starts"
+            }
+          ]
+        },
+        "groups": [
+          {
+            "anyOf": [
+              {
+                "kind": "tag",
+                "id": "tag:fixture-karaoke",
+                "scope": "event",
+                "includeDescendants": true
+              }
+            ]
+          },
+          {
+            "anyOf": [
+              {
+                "kind": "region",
+                "id": "area:nyc:fixture-south-brooklyn",
+                "includeDescendants": true
+              }
+            ]
+          },
+          {
+            "anyOf": [
+              {
+                "kind": "text",
+                "fields": [
+                  "name"
+                ],
+                "value": "!!!",
+                "match": "phrase"
+              }
+            ]
+          }
+        ],
+        "exclude": [],
+        "unknownPolicy": "separate",
+        "sort": {
+          "kind": "earliest"
+        },
+        "view": "fit_matches"
+      }
+    },
+    {
+      "id": "wrong-city-for-fixture-context",
+      "expected": "city_mismatch",
+      "query": {
+        "schemaVersion": 1,
+        "cityId": "other-city",
+        "time": {
+          "kind": "windows",
+          "windows": [
+            {
+              "kind": "instant_range",
+              "start": "2026-09-09T20:00:00-04:00",
+              "endExclusive": "2026-09-10T05:00:00-04:00",
+              "timezone": "America/New_York",
+              "relation": "starts"
+            }
+          ]
+        },
+        "groups": [
+          {
+            "anyOf": [
+              {
+                "kind": "tag",
+                "id": "tag:fixture-karaoke",
+                "scope": "event",
+                "includeDescendants": true
+              }
+            ]
+          },
+          {
+            "anyOf": [
+              {
+                "kind": "region",
+                "id": "area:nyc:fixture-south-brooklyn",
+                "includeDescendants": true
+              }
+            ]
+          }
+        ],
+        "exclude": [],
+        "unknownPolicy": "separate",
+        "sort": {
+          "kind": "earliest"
+        },
+        "view": "fit_matches"
+      }
+    }
+  ]
+}

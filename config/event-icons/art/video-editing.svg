@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128"><title>Video editing</title><desc>Two pieces of a film strip separated by an editing cut.</desc>
+<path d="M10 28h46v77H10z" fill="#374856"/><path d="M72 17h46v77H72z" fill="#374856"/>
+<path d="M18 43h30v47H18z" fill="#70BCD4"/><path d="m18 85 9-18 8 8 7-14 6 24z" fill="#367C91"/><circle cx="39" cy="54" r="6" fill="#FFDC7B"/>
+<path d="M80 32h30v47H80z" fill="#CE81A5"/><path d="m80 75 10-26 9 13 11-10v23z" fill="#895783"/>
+<path d="M18 34h7m12 0h10m-29 64h7m12 0h10M80 24h7m12 0h10m-29 63h7m12 0h10" stroke="#D2E2E8" stroke-width="4"/>
+<path d="M64 24v56" stroke="#EFC66E" stroke-width="3" stroke-dasharray="6 5"/>
+<path d="m52 98 22-27m-9 31L47 74" fill="none" stroke="#A8BAC6" stroke-width="5" stroke-linecap="round"/><circle cx="49" cy="104" r="8" fill="none" stroke="#E7A54A" stroke-width="5"/><circle cx="69" cy="110" r="8" fill="none" stroke="#E7A54A" stroke-width="5"/><circle cx="60" cy="91" r="3" fill="#536775"/>
+</svg>

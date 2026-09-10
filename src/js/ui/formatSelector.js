@@ -29,9 +29,6 @@ const FormatSelector = (() => {
             if (panel.matches(':popover-open')) position();
         }
     }
-    function countedLabel(text, format, category) {
-        return `${text} (${category ? categoryCount(category) : format ? count(format) : totalCount})`;
-    }
 
     function configure(categories) {
         groups = { ...(categories || {}), 'Other': ['Other'] };
@@ -99,7 +96,7 @@ const FormatSelector = (() => {
         if (category) input.dataset.category = category;
         else if (format) input.dataset.format = format;
         else input.dataset.allFormats = '';
-        row.append(input, document.createTextNode(countedLabel(text, format, category)));
+        row.append(input, document.createTextNode(text));
         input.addEventListener('change', () => {
             if (category) setGroupSelection(category, input.checked);
             else if (!format) commit(input.checked ? null : []);
@@ -194,9 +191,9 @@ const FormatSelector = (() => {
         const indent = px(panel.querySelector('.format-selector-children'), 'paddingLeft');
         const disclosureWidth = px(panel.querySelector('.format-selector-disclosure'), 'width');
         const contentWidth = Math.max(
-            ...types.map(type => textWidth(countedLabel(type, type)) + indent),
-            ...Object.keys(groups).map(category => textWidth(countedLabel(category, null, category)) + disclosureWidth),
-            textWidth(countedLabel('All Events'))
+            ...types.map(type => textWidth(type) + indent),
+            ...Object.keys(groups).map(category => textWidth(category) + disclosureWidth),
+            textWidth('All Events')
         );
         const width = Math.min(Math.ceil(contentWidth + rowChrome
             + px(panel, 'borderLeftWidth') + px(panel, 'borderRightWidth')), window.innerWidth - 16);

@@ -1998,5 +1998,44 @@ class DroppedDateWarningTests(unittest.TestCase):
 
 
 
+
+class TestSingleEventPlaceholderDescriptionKeepsTheRest(unittest.TestCase):
+    """A placeholder description must not discard the venue and dates.
+
+    4,702 of 22,765 attempted detail crawls in the 14 days to 2026-09-09 came
+    back "No description available." and were dropped wholesale, although the
+    model had returned a clean location and dated occurrences alongside it.
+    """
+
+    def _extract(self, payload):
+        async def fake_generate(*a, **k):
+            return json.dumps(payload)
+        with mock.patch.object(extractor.llm_providers, 'generate_structured', new=fake_generate), \
+             mock.patch.object(extractor, 'genai_client', object()):
+            return asyncio.run(extractor.extract_single_event(
+                'Socialist Feminist October General Meeting', 'x' * 600))
+
+    def test_placeholder_description_keeps_location_and_occurrences(self):
+        res = self._extract({
+            'description': 'No description available.',
+            'location': 'NYC-DSA Office', 'sublocation': '14 Jefferson St, New York, NY 10002',
+            'occurrences': [{'start_date': '2026-10-13', 'start_time': '7pm', 'end_date': None, 'end_time': None}],
+            'hashtags': ['#politics'], 'emoji': '',
+        })
+        self.assertIsNotNone(res)
+        self.assertNotIn('description', res)
+        self.assertEqual(res['location'], 'NYC-DSA Office')
+        self.assertEqual(res['occurrences'][0]['start_date'], '2026-10-13')
+
+    def test_placeholder_with_nothing_else_is_still_none(self):
+        res = self._extract({'description': 'No description available.', 'location': 'not specified',
+                             'occurrences': None, 'hashtags': [], 'emoji': ''})
+        self.assertIsNone(res)
+
+    def test_real_description_is_still_returned(self):
+        res = self._extract({'description': 'Women in Horror - a SocFem general meeting.', 'location': 'NYC-DSA Office',
+                             'occurrences': None, 'hashtags': [], 'emoji': ''})
+        self.assertEqual(res['description'], 'Women in Horror - a SocFem general meeting.')
+
 if __name__ == '__main__':
     unittest.main()

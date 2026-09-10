@@ -17,6 +17,30 @@ const CITY_CONFIG_PATH = path.join(__dirname, 'config', `${FOMO_CITY}.yaml`);
 // Directories to include in dist/ (everything the server needs)
 const ASSET_DIRS = ['data', 'images', 'fonts', 'api', 'admin', 'vendor', '.well-known'];
 
+// Assistant queries must not silently combine files from different exports.
+function emitQueryManifest() {
+    const dir = path.join(SRC, 'data');
+    const manifestPath = path.join(dir, 'manifest.json');
+    if (!fs.existsSync(manifestPath)) return;
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+    const chunks = [...(manifest.days || []).map((_, i) => `day${i}`), ...(manifest.remainderChunks || ['remainder'])];
+    const names = new Set(['manifest.json', 'tag_hierarchy.json', 'organizers.json']);
+    for (const chunk of chunks) {
+        names.add(`events.${chunk}.json`);
+        names.add(`events.${chunk}.desc.json`);
+        names.add(`locations.${chunk.startsWith('remainder') ? 'remainder' : chunk}.json`);
+    }
+    const files = {};
+    for (const name of [...names].sort()) {
+        const file = path.join(dir, name);
+        if (fs.existsSync(file)) files[name] = crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+    }
+    const revision = crypto.createHash('sha256').update(JSON.stringify(files)).digest('hex');
+    fs.writeFileSync(path.join(dir, 'query-manifest.json'), JSON.stringify({ version: 1, cityId: FOMO_CITY,
+        generatedAt: new Date().toISOString(), sourceExportedAt: manifest.exportedAt || null, revision, files }));
+    fs.copyFileSync(path.join(SRC, 'js/query/query.schema.json'), path.join(dir, 'query.schema.json'));
+}
+
 // Generated data files are gitignored (the pipeline rewrites them every run). Each has a
 // committed `<name>.example.json` fallback so a fresh checkout — with no pipeline export yet —
 // still builds a functioning app. Map: live filename -> example filename (both under src/data/).
@@ -28,6 +52,9 @@ function loadCityConfig() {
     const fe = cfg.frontend || {};
     if (!fe.map || !fe.map.center) {
         throw new Error(`config/${FOMO_CITY}.yaml is missing a frontend.map.center`);
+    }
+    if (!fe.filter_roots?.tag?.length || !fe.filter_roots?.venue?.length) {
+        throw new Error(`config/${FOMO_CITY}.yaml needs explicit frontend.filter_roots.tag and .venue`);
     }
     return cfg;
 }
@@ -53,7 +80,11 @@ function cityPrelude(fe, isDev) {
             dot_color: fe.map.dot_color,
         },
         timezone: fe.timezone,
+        cityId: FOMO_CITY,
+        areaIds: fe.area_ids || {},
         neighborhoodSelector: fe.neighborhood_selector || {},
+        venueSelector: fe.venue_selector || {},
+        filterRoots: fe.filter_roots || {},
         domain: fe.domain,
         // Service worker opt-out: config frontend.sw_enabled: false, or any dev
         // build (dev also emits the self-unregistering sw.js — see emitServiceWorker).
@@ -269,6 +300,8 @@ async function build(isDev) {
     // Write bundles
     fs.writeFileSync(path.join(DIST, jsBundleName), jsContent);
     fs.writeFileSync(path.join(DIST, cssBundleName), cssContent);
+
+    emitQueryManifest();
 
     // Transform index.html
     let html = htmlSource;

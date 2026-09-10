@@ -29,7 +29,7 @@ const MapManager = (() => {
         loadedIcons: new Set(),
         pendingIcons: new Set(),
         iconEpoch: 0,
-        iconTransformKey: null,
+        iconTheme: null,
         sourceRefreshScheduled: false,
 
         // Cache for restoring after style.load (theme change)
@@ -210,7 +210,7 @@ const MapManager = (() => {
     function _syncDotTheme() {
         const map = state.mapInstance;
         if (!map?.getLayer('marker-dots')) return;
-        const dark = Utils.getCurrentThemeBase() === 'dark';
+        const dark = Utils.getCurrentTheme() === 'dark';
         if (dark && !map.getLayer('marker-dot-density')) {
             map.addLayer(DotDensityLayer.create(() => ({ places: state.rankedPlaces, promoted: state.promotedPlaces }),
                 window.__CITY__?.map?.dot_color || '#808080'), 'marker-symbols');
@@ -276,27 +276,20 @@ const MapManager = (() => {
     }
 
     function _getLabelColor() {
-        const def = Themes.resolve(Utils.getCurrentTheme());
-        if (def.marker && def.marker.label) return def.marker.label;
-        return Utils.getCurrentThemeBase() === 'dark' ? '#e5e5e5' : '#1a1a1a';
+        return Utils.getCurrentTheme() === 'dark' ? '#e5e5e5' : '#1a1a1a';
     }
 
     function _getHoverLabelColor() {
-        const def = Themes.resolve(Utils.getCurrentTheme());
-        if (def.marker && def.marker.hoverLabel) return def.marker.hoverLabel;
-        return Utils.getCurrentThemeBase() === 'dark' ? '#fff' : '#000';
+        return Utils.getCurrentTheme() === 'dark' ? '#fff' : '#000';
     }
 
     function _getHaloColor() {
-        const def = Themes.resolve(Utils.getCurrentTheme());
-        if (def.marker && def.marker.halo) return def.marker.halo;
-        return Utils.getCurrentThemeBase() === 'dark' ? '#171717' : '#f0f0f0';
+        return Utils.getCurrentTheme() === 'dark' ? '#171717' : '#f0f0f0';
     }
 
-    /** Marker-label fontstack — themes may swap in their own (e.g. a pixel font). */
+    /** Marker-label fontstack. */
     function _getMarkerTextFont() {
-        const def = Themes.resolve(Utils.getCurrentTheme());
-        return def.mapLabelFont || ['Inter Regular'];
+        return ['Inter Regular'];
     }
 
     /**
@@ -330,9 +323,7 @@ const MapManager = (() => {
         const cacheKey = `${theme}|${hexColor}|${opts.lightness ?? ''}|${opts.chroma ?? ''}`;
         const cached = _labelColorCache.get(cacheKey);
         if (cached !== undefined) return cached;
-        const def = Themes.resolve(theme);
-        const themeL = (def.marker && def.marker.eventLabelL)
-            ?? (Utils.getCurrentThemeBase() === 'dark' ? 74 : 50);
+        const themeL = Utils.getCurrentTheme() === 'dark' ? 74 : 50;
         const hue = ColorUtils.oklchHueFromHex(hexColor || '#888');
         const targetL = (opts.lightness ?? themeL) / 100;
         const targetC = hue === null ? 0 : (opts.chroma ?? 0.06);
@@ -438,9 +429,9 @@ const MapManager = (() => {
     }
 
     function _syncIconEpoch() {
-        const key = `${Utils.getCurrentTheme()}|${Themes.transformKey(Utils.getCurrentTheme())}`;
-        if (key === state.iconTransformKey) return;
-        state.iconTransformKey = key;
+        const key = Utils.getCurrentTheme();
+        if (key === state.iconTheme) return;
+        state.iconTheme = key;
         reloadIconImages();
     }
 
@@ -450,7 +441,7 @@ const MapManager = (() => {
         state.iconEpoch++;
         state.pendingIcons.clear();
         state.loadedIcons.clear();
-        state.iconTransformKey = `${Utils.getCurrentTheme()}|${Themes.transformKey(Utils.getCurrentTheme())}`;
+        state.iconTheme = Utils.getCurrentTheme();
         _clearHoverLabelEvent();
         map.listImages().filter(id => id.startsWith('icon-')).forEach(id => map.removeImage(id));
         refreshPromotedMarkers();
@@ -838,14 +829,6 @@ const MapManager = (() => {
             // popup's own closeOnClick) — leave the sheet open. The next empty
             // click, with no popup, collapses/dismisses the sheet.
             if (state.currentPopup) return;
-            // Desktop panel-detail mirrors that two-step: first empty click
-            // exits detail back to the list, the next collapses the sheet.
-            if (!Utils.isMobileLayout() && ProtoFlags.isOn('popups', 'panel') && Sheet.isDetailMode()) {
-                Sheet.closeDetail();
-                return;
-            }
-            // Docked layout: the panel is permanent — never collapse it.
-            if (!Utils.isMobileLayout() && ProtoFlags.isOn('layout', 'docked')) return;
             Sheet.dismissToMini();
         });
     }
@@ -888,9 +871,8 @@ const MapManager = (() => {
         }
         _updateHoverFilter();
 
-        // Mobile — and desktop under the popups=panel prototype — show the
-        // popup content inside the sheet (detail mode)
-        const useSheetDetail = Utils.isMobileLayout() || ProtoFlags.isOn('popups', 'panel');
+        // Mobile shows popup content inside the sheet (detail mode).
+        const useSheetDetail = Utils.isMobileLayout();
         if (useSheetDetail && typeof Sheet !== 'undefined') {
             state.currentPopup = null;
             state.currentPopupLocationKey = locationKey;
@@ -969,21 +951,11 @@ const MapManager = (() => {
     // THEME
     // ========================================
 
-    /**
-     * Applies every theme-dependent marker property to the live layers:
-     * label/halo paint colors, the label fontstack (text-field expressions
-     * embed font literals, so those are re-set too), the highlight-ring glow,
-     * and the per-feature marker/event-label colors (re-derived through
-     * TagColorManager so emoji transforms and theme L/C overrides take
-     * effect; for a plain dark↔light switch the derivation is cache-identical
-     * and this is a no-op). Called after style restores and on in-place theme
-     * switches that don't swap the style JSON.
-     */
+    /** Refreshes marker colors and labels after the map style changes. */
     function applyThemeToLayers() {
         const map = state.mapInstance;
         if (!map || !map.getLayer('marker-symbols')) return;
 
-        const def = Themes.resolve(Utils.getCurrentTheme());
         const font = _getMarkerTextFont();
         _syncIconEpoch();
         _syncDotTheme();
@@ -1001,17 +973,6 @@ const MapManager = (() => {
             state.hoverLabelEventSig = null;
             map.setLayoutProperty('marker-symbols-hover', 'text-field', _getTextFieldExpression());
             map.setLayoutProperty('marker-symbols-hover', 'icon-image', _getIconImageExpression());
-        }
-
-        if (map.getLayer('marker-highlight')) {
-            const glow = !!def.ringGlow;
-            map.setPaintProperty('marker-highlight', 'circle-blur', glow ? 0.35 : 0);
-            map.setPaintProperty('marker-highlight', 'circle-stroke-width', [
-                'case',
-                ['boolean', ['feature-state', 'active'], false], glow ? 5 : 4,
-                ['boolean', ['feature-state', 'hover'], false], glow ? 5 : 4,
-                0
-            ]);
         }
 
         if (state.sourceDataCache) {

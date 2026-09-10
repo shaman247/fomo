@@ -225,6 +225,951 @@
       "fallback_emoji": "🎻",
       "use_for": "Acoustic upright bass/contrabass lessons or performances where the double bass is the central musical focus.",
       "avoid_for": "Electric bass guitar, generic bass music, generic jazz, or supporting bass in a mixed ensemble."
+    },
+    {
+      "id": "instrument-acoustic-guitar",
+      "label": "Acoustic guitar",
+      "provider": "custom",
+      "source": "art/acoustic-guitar.svg",
+      "fallback_emoji": "🎸",
+      "use_for": "Acoustic/classical guitar instruction or performances where acoustic guitar is an explicitly established musical focus.",
+      "avoid_for": "Unspecified or electric guitar, acoustic music without guitar evidence, ukulele, or incidental acoustic guitar in a mixed ensemble."
+    },
+    {
+      "id": "craft-knitting",
+      "label": "Knitting needles",
+      "provider": "custom",
+      "source": "art/knitting.svg",
+      "fallback_emoji": "🧶",
+      "use_for": "Hand-knitting instruction, practice, clubs and projects where needle knitting is primary.",
+      "avoid_for": "Crochet, machine knitting, yarn exhibitions, or co-primary mixed fiber sessions without knitting focus."
+    },
+    {
+      "id": "equipment-binoculars",
+      "label": "Binoculars",
+      "provider": "custom",
+      "source": "art/binoculars.svg",
+      "fallback_emoji": "🐦",
+      "use_for": "Birdwatching, wildlife observation outings or instruction centered on observing with binoculars; the pictogram may represent birding without promising equipment supply.",
+      "avoid_for": "Animal-themed stories or talks without observation, museum kits where binoculars are incidental, general nature walks without birding focus."
+    },
+    {
+      "id": "craft-pottery-wheel",
+      "label": "Pottery wheel",
+      "provider": "custom",
+      "source": "art/pottery-wheel.svg",
+      "fallback_emoji": "🏺",
+      "use_for": "Wheel-throwing pottery lessons, practice and workshops where shaping clay on a pottery wheel is primary.",
+      "avoid_for": "Handbuilding-only sessions, pottery painting, finished ceramic exhibitions, or unrelated wheels."
+    },
+    {
+      "id": "instrument-harmonica",
+      "label": "Harmonica",
+      "provider": "custom",
+      "source": "art/harmonica.svg",
+      "fallback_emoji": "🎵",
+      "use_for": "Harmonica lessons or performances featuring harmonica as a primary instrument.",
+      "avoid_for": "Chromatic-specific sessions with their own icon, incidental supporting harmonica, or generic blues without instrument evidence."
+    },
+    {
+      "id": "craft-embroidery",
+      "label": "Hand embroidery",
+      "provider": "custom",
+      "source": "art/embroidery.svg",
+      "fallback_emoji": "🪡",
+      "use_for": "Hand embroidery and decorative hand-stitching classes, projects or dedicated groups, including cross-stitch when handwork is central.",
+      "avoid_for": "Machine embroidery, ordinary sewing, quilting, or generic crafts without established hand embroidery."
+    },
+    {
+      "id": "craft-cyanotype",
+      "label": "Cyanotype",
+      "provider": "custom",
+      "source": "art/cyanotype.svg",
+      "fallback_emoji": "🎨",
+      "use_for": "Cyanotype printing workshops or experiences explicitly using the blue photographic contact-print process.",
+      "avoid_for": "Unspecified sun prints, blue paintings, unrelated photography, or exhibitions where cyanotype is incidental."
+    },
+    {
+      "id": "instrument-pipe-organ",
+      "label": "Pipe organ",
+      "provider": "custom",
+      "source": "art/pipe-organ.svg",
+      "fallback_emoji": "🎹",
+      "use_for": "Performances or lessons centered on a confirmed pipe organ.",
+      "avoid_for": "Unspecified/electronic/Hammond organs, medical organs, supporting accompaniment where film/service is primary."
+    },
+    {
+      "id": "craft-clay-handbuilding",
+      "label": "Clay handbuilding",
+      "provider": "custom",
+      "source": "art/clay-handbuilding.svg",
+      "fallback_emoji": "🏺",
+      "use_for": "Handbuilding, pinch/coil/slab pottery or hand-shaped clay making where manual clay forming is primary.",
+      "avoid_for": "Wheel-only pottery, painting existing ceramics, pottery exhibitions, or mixed arts with incidental clay."
+    },
+    {
+      "id": "craft-quilting",
+      "label": "Quilting",
+      "provider": "custom",
+      "source": "art/quilting.svg",
+      "fallback_emoji": "🧵",
+      "use_for": "Quilt-making, piecing, quilting instruction or dedicated quilting groups.",
+      "avoid_for": "Knitting, crochet, generic sewing, or quilt exhibitions with no making; mixed fiber programs without quilting focus."
+    },
+    {
+      "id": "craft-origami",
+      "label": "Origami",
+      "provider": "custom",
+      "source": "art/origami.svg",
+      "fallback_emoji": "📄",
+      "use_for": "Origami instruction, practice and paper-folding projects where origami is central.",
+      "avoid_for": "General papercrafts, paper airplanes alone, or discussions/exhibitions without participatory origami."
+    },
+    {
+      "id": "equipment-3d-pen",
+      "label": "3D printing pen",
+      "provider": "custom",
+      "source": "art/3d-pen.svg",
+      "fallback_emoji": "🖊️",
+      "use_for": "Hands-on creation with 3Doodler or another handheld plastic-extrusion drawing pen.",
+      "avoid_for": "Enclosed/gantry 3D printing, ordinary drawing pens, digital modeling without pen fabrication."
+    },
+    {
+      "id": "equipment-digital-cutting-machine",
+      "label": "Digital cutting machine",
+      "provider": "custom",
+      "source": "art/digital-cutting-machine.svg",
+      "fallback_emoji": "✂️",
+      "use_for": "Hands-on desktop blade-cutting machine classes and projects, including Cricut or Silhouette cutting.",
+      "avoid_for": "Software-only layout instruction, ink printing, laser cutting, heat pressing without cutting, or broad makerspaces offering many optional tools."
+    },
+    {
+      "id": "format-storytime",
+      "label": "Read-aloud storytime",
+      "provider": "custom",
+      "source": "art/storytime.svg",
+      "fallback_emoji": "📖",
+      "use_for": "Read-aloud storytime sessions, including their usual songs, rhymes, play and associated crafts when shared stories define the program.",
+      "avoid_for": "Adult oral storytelling without books, independent reading, book discussion, film plots, or broad festivals with incidental storytime."
+    },
+    {
+      "id": "game-canasta",
+      "label": "Canasta",
+      "provider": "custom",
+      "source": "art/canasta.svg",
+      "fallback_emoji": "🃏",
+      "use_for": "Canasta games, lessons and dedicated clubs.",
+      "avoid_for": "Other rummy games, generic cards, mixed Canasta/Mahjong/other games without Canasta focus."
+    },
+    {
+      "id": "game-bridge",
+      "label": "Bridge",
+      "provider": "custom",
+      "source": "art/bridge.svg",
+      "fallback_emoji": "🃏",
+      "use_for": "Contract bridge card play, lessons and dedicated clubs.",
+      "avoid_for": "Physical bridges, bridge tours, other card games, or mixed games without primary bridge."
+    },
+    {
+      "id": "instrument-tuba",
+      "label": "Tuba",
+      "provider": "custom",
+      "source": "art/tuba.svg",
+      "fallback_emoji": "🎺",
+      "use_for": "Tuba lessons or tuba-led performances where the instrument is central.",
+      "avoid_for": "Generic brass bands or incidental tuba section in a larger ensemble."
+    },
+    {
+      "id": "instrument-french-horn",
+      "label": "French horn",
+      "provider": "custom",
+      "source": "art/french-horn.svg",
+      "fallback_emoji": "🎺",
+      "use_for": "French-horn lessons or performances with confirmed featured horn use.",
+      "avoid_for": "Trumpet/trombone, generic horns, or musician biographies that do not establish the instrument used for this program."
+    },
+    {
+      "id": "instrument-uilleann-pipes",
+      "label": "Uilleann pipes",
+      "provider": "custom",
+      "source": "art/uilleann-pipes.svg",
+      "fallback_emoji": "🎵",
+      "use_for": "Uilleann-pipe lessons or performances with confirmed uilleann-pipe focus.",
+      "avoid_for": "Highland bagpipes, unspecified pipes, plumbing or supporting pipes in a broad ensemble."
+    },
+    {
+      "id": "instrument-chromatic-harmonica",
+      "label": "Chromatic harmonica",
+      "provider": "custom",
+      "source": "art/chromatic-harmonica.svg",
+      "fallback_emoji": "🎵",
+      "use_for": "Lessons or performances explicitly featuring chromatic harmonica.",
+      "avoid_for": "Unspecified/diatonic harmonica or supporting chromatic harmonica in a mixed ensemble."
+    },
+    {
+      "id": "instrument-clarinet",
+      "label": "Clarinet",
+      "provider": "custom",
+      "source": "art/clarinet.svg",
+      "fallback_emoji": "🎵",
+      "use_for": "Clarinet lessons or performances featuring clarinet as the primary musical focus.",
+      "avoid_for": "Saxophone, oboe, bass-clarinet-only programs, or supporting clarinet in a mixed ensemble."
+    },
+    {
+      "id": "instrument-ukulele",
+      "label": "Ukulele",
+      "provider": "custom",
+      "source": "art/ukulele.svg",
+      "fallback_emoji": "🎸",
+      "use_for": "Ukulele lessons, dedicated ensembles, open practice or featured ukulele performances.",
+      "avoid_for": "Guitar, generic acoustic music or optional ukulele in mixed instrument sessions."
+    },
+    {
+      "id": "instrument-conga",
+      "label": "Conga",
+      "provider": "custom",
+      "source": "art/conga.svg",
+      "fallback_emoji": "🪘",
+      "use_for": "Conga instruction or performances centered on congas.",
+      "avoid_for": "Djembe, bongo, generic drums, or incidental congas in broad parties and ensembles."
+    },
+    {
+      "id": "instrument-synthesizer",
+      "label": "Synthesizer",
+      "provider": "custom",
+      "source": "art/synthesizer.svg",
+      "fallback_emoji": "🎹",
+      "use_for": "Synthesizer lessons or performances where electronic synthesis is a primary musical focus.",
+      "avoid_for": "Piano, ordinary keyboard accompaniment, DJ mixing or music genres without explicit synthesizer evidence."
+    },
+    {
+      "id": "instrument-recorder",
+      "label": "Recorder",
+      "provider": "custom",
+      "source": "art/recorder.svg",
+      "fallback_emoji": "🪈",
+      "use_for": "Recorder-instrument lessons, ensembles or featured performances.",
+      "avoid_for": "Audio recording equipment, transverse flutes, generic flute ensembles or incidental recorder."
+    },
+    {
+      "id": "instrument-shakuhachi",
+      "label": "Shakuhachi",
+      "provider": "custom",
+      "source": "art/shakuhachi.svg",
+      "fallback_emoji": "🪈",
+      "use_for": "Shakuhachi lessons, ensembles and performances with explicit featured Japanese end-blown bamboo flute.",
+      "avoid_for": "Generic flute or bamboo flute without shakuhachi identity; incidental supporting instrument."
+    },
+    {
+      "id": "format-choir",
+      "label": "Choir",
+      "provider": "custom",
+      "source": "art/choir.svg",
+      "fallback_emoji": "🎶",
+      "use_for": "Choral/choir performances, choir rehearsals and collective singing sessions where a chorus is central.",
+      "avoid_for": "Incidental chorus in musical theater, solo vocals, or broad mixed music events with no choir focus."
+    },
+    {
+      "id": "format-brass-band",
+      "label": "Brass band",
+      "provider": "custom",
+      "source": "art/brass-band.svg",
+      "fallback_emoji": "🎺",
+      "use_for": "Brass-band performances or dedicated brass-band practice.",
+      "avoid_for": "Solo brass, generic bands, jazz big bands better served by their explicit format, or incidental festival sets."
+    },
+    {
+      "id": "format-string-quartet",
+      "label": "String quartet",
+      "provider": "custom",
+      "source": "art/string-quartet.svg",
+      "fallback_emoji": "🎻",
+      "use_for": "Performances or practice explicitly centered on a bowed string quartet.",
+      "avoid_for": "Jazz quartets, generic quartets with unknown instruments, larger string ensembles, or incidental quartet music at a broad event."
+    },
+    {
+      "id": "format-big-band",
+      "label": "Big band",
+      "provider": "custom",
+      "source": "art/big-band.svg",
+      "fallback_emoji": "🎷",
+      "use_for": "Big-band or jazz-orchestra performances, rehearsals and dedicated sessions.",
+      "avoid_for": "Generic jazz, small combos, non-jazz orchestras or brass bands without explicit big-band identity."
+    },
+    {
+      "id": "ensemble-jazz-piano-trio",
+      "label": "Jazz piano trio",
+      "provider": "custom",
+      "source": "art/jazz-piano-trio.svg",
+      "fallback_emoji": "🎹",
+      "use_for": "Jazz performances centered on an explicitly established piano/bass/drums trio.",
+      "avoid_for": "Classical piano/violin/cello trios, generic trios without lineup, or mixed bills where the trio is incidental."
+    },
+    {
+      "id": "craft-bookbinding",
+      "label": "Bookbinding",
+      "provider": "custom",
+      "source": "art/bookbinding.svg",
+      "fallback_emoji": "📚",
+      "use_for": "Hands-on bookbinding, book construction or binding repair instruction and practice.",
+      "avoid_for": "Ordinary reading/writing, book displays, zine content creation without binding, or mixed crafts where binding is incidental."
+    },
+    {
+      "id": "craft-letterpress",
+      "label": "Letterpress",
+      "provider": "custom",
+      "source": "art/letterpress.svg",
+      "fallback_emoji": "🖨️",
+      "use_for": "Letterpress printing instruction or hands-on printing with relief type or letterpress forms.",
+      "avoid_for": "Office printing, screenprinting, generic rubber stamping, or incidental letterpress equipment in a mixed makerspace."
+    },
+    {
+      "id": "equipment-inline-skates",
+      "label": "Inline skating",
+      "provider": "custom",
+      "source": "art/inline-skates.svg",
+      "fallback_emoji": "🛼",
+      "use_for": "Inline skating, rollerblading practice, classes and dedicated outings.",
+      "avoid_for": "Quad roller skating, ice skating, skateboarding or unspecified roller skating."
+    },
+    {
+      "id": "game-pinball",
+      "label": "Pinball",
+      "provider": "custom",
+      "source": "art/pinball.svg",
+      "fallback_emoji": "🎮",
+      "use_for": "Pinball play, leagues, tournaments and dedicated pinball gatherings.",
+      "avoid_for": "Generic arcade events, video games or incidental pinball among many activities."
+    },
+    {
+      "id": "activity-farmers-market",
+      "label": "Farmers market",
+      "provider": "custom",
+      "source": "art/farmers-market.svg",
+      "fallback_emoji": "🥕",
+      "use_for": "Markets primarily selling local farm produce and farm-made food directly to shoppers.",
+      "avoid_for": "Generic flea/craft markets, food festivals, grocery shopping, cooking classes, or incidental produce stalls."
+    },
+    {
+      "id": "format-stand-up-comedy",
+      "label": "Stand-up comedy",
+      "provider": "custom",
+      "source": "art/stand-up-comedy.svg",
+      "fallback_emoji": "🎤",
+      "use_for": "Stand-up comedy shows, spoken comic sets and participatory stand-up open mics.",
+      "avoid_for": "Sketch/improv theater without stand-up, films, generic theater comedy, singing, or comedy only incidental to another activity."
+    },
+    {
+      "id": "craft-mending",
+      "label": "Garment mending",
+      "provider": "custom",
+      "source": "art/mending.svg",
+      "fallback_emoji": "🧵",
+      "use_for": "Repairing, patching or darning worn clothing and fabric; dedicated garment-mending instruction or circles.",
+      "avoid_for": "Decorative embroidery without repair, new garment construction, machine-sewing classes without a repair focus, or generic textile arts."
+    },
+    {
+      "id": "activity-food-rescue",
+      "label": "Food rescue",
+      "provider": "custom",
+      "source": "art/food-rescue.svg",
+      "fallback_emoji": "🍞",
+      "use_for": "Volunteer collection and redistribution of surplus food for community food programs.",
+      "avoid_for": "Shopping, food tastings, general food service/cooking, recycling nonfood materials, or food drives without surplus-food recovery context."
+    },
+    {
+      "id": "format-rakugo",
+      "label": "Rakugo storytelling",
+      "provider": "custom",
+      "source": "art/rakugo.svg",
+      "fallback_emoji": "🎭",
+      "use_for": "Performances or instruction explicitly centered on the Japanese seated comic storytelling form rakugo.",
+      "avoid_for": "Generic storytelling, book storytime, stand-up, theater with incidental rakugo, or Japanese culture without this performance form."
+    },
+    {
+      "id": "craft-soldering",
+      "label": "Electronics soldering",
+      "provider": "custom",
+      "source": "art/soldering.svg",
+      "fallback_emoji": "💡",
+      "use_for": "Hands-on electronics soldering instruction or practice, including through-hole circuit assembly.",
+      "avoid_for": "Welding, metal jewelry soldering, lighting exhibitions, or electronics activities without soldering."
+    },
+    {
+      "id": "craft-figure-drawing",
+      "label": "Figure drawing",
+      "provider": "custom",
+      "source": "art/figure-drawing.svg",
+      "fallback_emoji": "✏️",
+      "use_for": "Participatory life/figure drawing centered on studying and drawing the human body.",
+      "avoid_for": "Portrait-only classes, generic drawing, sculpture or exhibitions without figure-drawing participation."
+    },
+    {
+      "id": "format-civic-meeting",
+      "label": "Civic public meeting",
+      "provider": "custom",
+      "source": "art/civic-meeting.svg",
+      "fallback_emoji": "🏛️",
+      "use_for": "Community-board, municipal committee or public-governance meetings and hearings.",
+      "avoid_for": "Generic discussion groups, advocacy socials, lectures about government, or voting alone."
+    },
+    {
+      "id": "format-drag-show",
+      "label": "Drag performance",
+      "provider": "custom",
+      "source": "art/drag-show.svg",
+      "fallback_emoji": "🎭",
+      "use_for": "Explicit drag performance shows or dedicated drag cabaret.",
+      "avoid_for": "Inferring drag from audience identity, a makeup class, generic dancing, or drag bingo where bingo is primary."
+    },
+    {
+      "id": "format-cabaret",
+      "label": "Cabaret",
+      "provider": "custom",
+      "source": "art/cabaret.svg",
+      "fallback_emoji": "🎭",
+      "use_for": "Explicit cabaret or intimate stage variety performances mixing song, comedy or dance.",
+      "avoid_for": "Generic concerts, stand-up-only shows, film screenings or ordinary nightlife; prefer drag-show when drag defines the program."
+    },
+    {
+      "id": "craft-collage",
+      "label": "Collage",
+      "provider": "custom",
+      "source": "art/collage.svg",
+      "fallback_emoji": "✂️",
+      "use_for": "Participatory collage and paper assemblage using cut or torn images and materials.",
+      "avoid_for": "Viewing collage exhibitions, generic papercraft, origami, bookbinding, or cutting alone."
+    },
+    {
+      "id": "activity-audio-editing",
+      "label": "Audio editing",
+      "provider": "custom",
+      "source": "art/audio-editing.svg",
+      "fallback_emoji": "🎙️",
+      "use_for": "Instruction or practice editing recorded sound, podcasts or audio tracks.",
+      "avoid_for": "Recording without editing, live DJ sets, music listening, or generic podcast performances."
+    },
+    {
+      "id": "activity-video-editing",
+      "label": "Video editing",
+      "provider": "custom",
+      "source": "art/video-editing.svg",
+      "fallback_emoji": "🎬",
+      "use_for": "Video/film editing instruction, montage and hands-on postproduction.",
+      "avoid_for": "Film screenings, shooting video, screenwriting or generic media classes without editing focus."
+    },
+    {
+      "id": "activity-tai-chi",
+      "label": "Tai chi",
+      "provider": "custom",
+      "source": "art/tai-chi.svg",
+      "fallback_emoji": "🧘",
+      "use_for": "Explicit tai chi instruction or participatory practice.",
+      "avoid_for": "General meditation, yoga, qigong-only practice or unspecified martial arts."
+    },
+    {
+      "id": "activity-pilates",
+      "label": "Mat Pilates",
+      "provider": "custom",
+      "source": "art/pilates.svg",
+      "fallback_emoji": "🧘",
+      "use_for": "Explicit mat/bodyweight Pilates instruction and Pilates-led conditioning.",
+      "avoid_for": "Reformer/equipment-only Pilates, general yoga, meditation, or fitness without Pilates focus."
+    },
+    {
+      "id": "activity-composting",
+      "label": "Food-scrap composting",
+      "provider": "custom",
+      "source": "art/composting.svg",
+      "fallback_emoji": "♻️",
+      "use_for": "Food-scrap collection/drop-off or hands-on organic composting instruction and processing.",
+      "avoid_for": "Food rescue for people, general recycling, garden tours without composting focus, or generic sustainability talks."
+    },
+    {
+      "id": "format-book-club",
+      "label": "Book discussion",
+      "provider": "custom",
+      "source": "art/book-club.svg",
+      "fallback_emoji": "📚",
+      "use_for": "Group discussion of books or selected reading, including literary book clubs.",
+      "avoid_for": "Read-aloud storytime, solitary/silent reading, author performances without discussion, bookbinding or writing workshops."
+    },
+    {
+      "id": "craft-watercolor",
+      "label": "Watercolor painting",
+      "provider": "custom",
+      "source": "art/watercolor.svg",
+      "fallback_emoji": "🎨",
+      "use_for": "Participatory watercolor painting or instruction explicitly using watercolors.",
+      "avoid_for": "Viewing watercolor exhibitions, acrylic/oil painting, unspecified painting, or mixed-media sessions without watercolor as primary."
+    },
+    {
+      "id": "format-improv-comedy",
+      "label": "Improv comedy",
+      "provider": "custom",
+      "source": "art/improv-comedy.svg",
+      "fallback_emoji": "🎭",
+      "use_for": "Explicit unscripted comedy scenes, improv shows, classes and participatory improv jams.",
+      "avoid_for": "Prepared stand-up, scripted sketch theater, music improvisation, generic comedy or mixed clown/stand-up formats without improv as primary."
+    },
+    {
+      "id": "format-language-exchange",
+      "label": "Language exchange",
+      "provider": "custom",
+      "source": "art/language-exchange.svg",
+      "fallback_emoji": "🗣️",
+      "use_for": "Reciprocal conversational practice between people learning different languages.",
+      "avoid_for": "Ordinary conversation, book discussion, one-way lectures, translation services or language classes without exchange practice."
+    },
+    {
+      "id": "activity-bicycle-repair",
+      "label": "Bicycle repair",
+      "provider": "custom",
+      "source": "art/bicycle-repair.svg",
+      "fallback_emoji": "🛠️",
+      "use_for": "Bicycle repair workshops, hands-on bike maintenance and fix-your-own-bike sessions.",
+      "avoid_for": "Bike rides, vehicle sales, general tool workshops, motor-vehicle repair or garment mending."
+    },
+    {
+      "id": "activity-scavenger-hunt",
+      "label": "Scavenger hunt",
+      "provider": "custom",
+      "source": "art/scavenger-hunt.svg",
+      "fallback_emoji": "🔎",
+      "use_for": "Participatory clue-finding or scavenger-hunt games at museums, parks or neighborhoods.",
+      "avoid_for": "Guided tours without clue-finding, trivia, map reading classes or ordinary museum browsing."
+    },
+    {
+      "id": "equipment-stroller",
+      "label": "Stroller walk",
+      "provider": "custom",
+      "source": "art/stroller.svg",
+      "fallback_emoji": "👶",
+      "use_for": "Explicit stroller walks, stroller-focused tours and caregiver outings built around babies in strollers.",
+      "avoid_for": "General family events, baby storytime, children’s play or events merely allowing strollers as an access accommodation."
+    },
+    {
+      "id": "equipment-turntable",
+      "label": "Vinyl turntable",
+      "provider": "custom",
+      "source": "art/turntable.svg",
+      "fallback_emoji": "💽",
+      "use_for": "Vinyl record listening, analog playback demonstrations, and vinyl-centered music sessions.",
+      "avoid_for": "Digital music listening, audio editing or DJ performance already better covered by twin decks."
+    },
+    {
+      "id": "equipment-audio-mixing-console",
+      "label": "Audio mixing and recording",
+      "provider": "custom",
+      "source": "art/audio-mixing-console.svg",
+      "fallback_emoji": "🎙️",
+      "use_for": "Hands-on sound-console operation, studio audio engineering, signal mixing and recording instruction.",
+      "avoid_for": "Generic music concerts, DJ sets, passive listening or timeline-based recorded-track editing."
+    },
+    {
+      "id": "format-karaoke",
+      "label": "Karaoke",
+      "provider": "custom",
+      "source": "art/karaoke.svg",
+      "fallback_emoji": "🎤",
+      "use_for": "Participatory karaoke singing along to backing tracks and displayed lyrics.",
+      "avoid_for": "Concert vocals, choir singing, ordinary music open mics, audio recording and spoken-word performance."
+    },
+    {
+      "id": "craft-pastel",
+      "label": "Pastel drawing",
+      "provider": "custom",
+      "source": "art/pastel.svg",
+      "fallback_emoji": "🖍️",
+      "use_for": "Hands-on drawing or painting expressly using dry or soft pastel sticks.",
+      "avoid_for": "Wax crayon coloring, oil-pastel-specific classes, watercolor, unspecified painting or exhibitions of pastel works."
+    },
+    {
+      "id": "activity-block-party",
+      "label": "Block party",
+      "provider": "custom",
+      "source": "art/block-party.svg",
+      "fallback_emoji": "🎉",
+      "use_for": "Neighborhood block parties and community celebrations held on a street closed to traffic.",
+      "avoid_for": "Indoor parties, nightclub events, generic festivals without street-block context, or a band named Block Party."
+    },
+    {
+      "id": "activity-pasta-making",
+      "label": "Pasta making",
+      "provider": "custom",
+      "source": "art/pasta-making.svg",
+      "fallback_emoji": "🍝",
+      "use_for": "Hands-on fresh pasta dough preparation and shaping classes or workshops.",
+      "avoid_for": "Eating pasta, tastings without making, restaurant specials, or mixed cooking programs where pasta making is incidental."
+    },
+    {
+      "id": "activity-tarot",
+      "label": "Tarot",
+      "provider": "custom",
+      "source": "art/tarot.svg",
+      "fallback_emoji": "🔮",
+      "use_for": "Tarot readings, tarot practice or instruction, and exhibitions specifically centered on tarot cards.",
+      "avoid_for": "Ordinary card games, astrology, crystal-ball readings, or broader spiritual programs with incidental tarot."
+    },
+    {
+      "id": "equipment-button-press",
+      "label": "Button making",
+      "provider": "custom",
+      "source": "art/button-press.svg",
+      "fallback_emoji": "🎨",
+      "use_for": "Making pin-back buttons or badges with a button press, including dedicated button-making workshops.",
+      "avoid_for": "Clothing button sewing, digital buttons, generic crafts, or mixed activities without primary badge making."
+    },
+    {
+      "id": "craft-weaving",
+      "label": "Weaving",
+      "provider": "custom",
+      "source": "art/weaving.svg",
+      "fallback_emoji": "🧶",
+      "use_for": "Loom weaving classes or practice where interlaced warp and weft are the defining craft.",
+      "avoid_for": "Knitting, crochet, embroidery, basket or bark weaving, fiber exhibitions without an actual frame-loom activity, or mixed craft studios without a primary technique."
+    },
+    {
+      "id": "activity-photo-editing",
+      "label": "Photo editing",
+      "provider": "custom",
+      "source": "art/photo-editing.svg",
+      "fallback_emoji": "🎨",
+      "use_for": "Still-image editing, photo enhancement, retouching and Photoshop or Lightroom image-editing instruction.",
+      "avoid_for": "Taking photographs, film/video editing, ordinary drawing, or graphic design without image editing."
+    },
+    {
+      "id": "craft-still-life-drawing",
+      "label": "Still-life drawing",
+      "provider": "custom",
+      "source": "art/still-life-drawing.svg",
+      "fallback_emoji": "✏️",
+      "use_for": "Participatory still-life drawing classes and drawing studies explicitly centered on arranged inanimate objects.",
+      "avoid_for": "Figure or portrait drawing, general sketching, painting without drawing, or exhibitions without participation."
+    },
+    {
+      "id": "sport-croquet",
+      "label": "Croquet",
+      "provider": "custom",
+      "source": "art/croquet.svg",
+      "fallback_emoji": "🏏",
+      "use_for": "Croquet play, lessons and dedicated croquet gatherings.",
+      "avoid_for": "Cricket, golf, lawn bowls, tennis, or generic lawn games without primary croquet."
+    },
+    {
+      "id": "place-lighthouse",
+      "label": "Lighthouse",
+      "provider": "custom",
+      "source": "art/lighthouse.svg",
+      "fallback_emoji": "🗼",
+      "use_for": "Tours, visits or programs explicitly centered on a lighthouse and its history.",
+      "avoid_for": "Unrelated towers, skyscrapers, navigation software or coastal events without a lighthouse focus."
+    },
+    {
+      "id": "activity-litter-cleanup",
+      "label": "Litter cleanup",
+      "provider": "custom",
+      "source": "art/litter-cleanup.svg",
+      "fallback_emoji": "♻️",
+      "use_for": "Volunteer litter collection, trash cleanup and community cleanups where collecting discarded waste is a primary task.",
+      "avoid_for": "Composting, food rescue, indoor housecleaning, invasive-plant removal or gardening without an explicit litter-cleanup component."
+    },
+    {
+      "id": "format-planetarium",
+      "label": "Planetarium show",
+      "provider": "custom",
+      "source": "art/planetarium.svg",
+      "fallback_emoji": "🌌",
+      "use_for": "Shows and immersive screenings explicitly presented inside a planetarium dome, including astronomy, fractal and music-laser programs.",
+      "avoid_for": "Outdoor telescope observing, ordinary cinemas, live concerts, observatory tours without a dome show or generic space topics."
+    },
+    {
+      "id": "sport-track-running",
+      "label": "Track running",
+      "provider": "custom",
+      "source": "art/track-running.svg",
+      "fallback_emoji": "🏃🏽",
+      "use_for": "Running workouts, interval training and running events explicitly conducted on an athletics track.",
+      "avoid_for": "Road or trail running, off-track tempo or hill sessions, walking, railway tracks, motor racing, or a club named Track Club whose event is not on a track."
+    },
+    {
+      "id": "activity-food-distribution",
+      "label": "Community food distribution",
+      "provider": "custom",
+      "source": "art/food-distribution.svg",
+      "fallback_emoji": "🧺",
+      "use_for": "Volunteer packing, sorting, delivery or distribution of groceries and pantry food for community support.",
+      "avoid_for": "Commercial food markets, grocery shopping, meal cooking/service, or surplus recovery better represented by food-rescue artwork."
+    },
+    {
+      "id": "format-film-qa",
+      "label": "Film screening and Q&A",
+      "provider": "custom",
+      "source": "art/film-qa.svg",
+      "fallback_emoji": "🎬",
+      "use_for": "Film screenings with an explicit live filmmaker or guest question-and-answer discussion as part of the event.",
+      "avoid_for": "Ordinary screenings, film lectures without screening, generic audience chat, or a Q&A mentioned only for a different occurrence."
+    },
+    {
+      "id": "craft-welding",
+      "label": "Welding",
+      "provider": "custom",
+      "source": "art/welding.svg",
+      "fallback_emoji": "🥽",
+      "use_for": "Hands-on metal welding instruction and practice, or demonstrations explicitly centered on welding metal joints.",
+      "avoid_for": "Electronics soldering, jewelry soldering, glassblowing, general metalwork without welding, or industrial exhibitions without welding activity."
+    },
+    {
+      "id": "equipment-laser-cutter",
+      "label": "Laser cutter",
+      "provider": "custom",
+      "source": "art/laser-cutter.svg",
+      "fallback_emoji": "⚡",
+      "use_for": "Hands-on laser cutting and laser engraving instruction or projects using an enclosed flatbed laser machine.",
+      "avoid_for": "Blade cutters, ink printers, 3D extrusion printers, laser light shows, medical lasers or generic makerspaces without primary laser cutting."
+    },
+    {
+      "id": "cuisine-macarons",
+      "label": "French macarons",
+      "provider": "custom",
+      "source": "art/macarons.svg",
+      "fallback_emoji": "🍪",
+      "use_for": "Events primarily making, decorating or tasting French macarons, or programs explicitly centered on these filled almond sandwich cookies.",
+      "avoid_for": "Coconut macaroons, ordinary cookies, generic pastry classes without macaron focus, or unrelated uses of macaron. "
+    },
+    {
+      "id": "activity-stop-motion",
+      "label": "Stop-motion animation",
+      "provider": "custom",
+      "source": "art/stop-motion.svg",
+      "fallback_emoji": "🎞️",
+      "use_for": "Hands-on stop-motion animation production, frame-by-frame physical animation instruction and related creation workshops.",
+      "avoid_for": "Animation screenings, generic video editing, ordinary filmmaking, motion graphics or digital animation without stop-motion production."
+    },
+    {
+      "id": "craft-pyrography",
+      "label": "Woodburning",
+      "provider": "custom",
+      "source": "art/pyrography.svg",
+      "fallback_emoji": "🔥",
+      "use_for": "Hands-on woodburning/pyrography instruction or practice using a heated pen to mark wood.",
+      "avoid_for": "Fire performances, welding, soldering, drawing with ink, or exhibitions without woodburning participation."
+    },
+    {
+      "id": "craft-linocut",
+      "label": "Linocut printing",
+      "provider": "custom",
+      "source": "art/linocut.svg",
+      "fallback_emoji": "🎨",
+      "use_for": "Participatory linocut relief carving, inking and printing with linoleum blocks.",
+      "avoid_for": "Letterpress type, screenprinting, intaglio, generic printing or exhibitions without linocut making."
+    },
+    {
+      "id": "instrument-hammond-organ",
+      "label": "Hammond organ",
+      "provider": "custom",
+      "source": "art/hammond-organ.svg",
+      "fallback_emoji": "🎹",
+      "use_for": "Lessons or performances explicitly centered on a Hammond/drawbar organ.",
+      "avoid_for": "Pipe organs, unspecified organ, ordinary piano/synth keyboard, or incidental organ in a larger mixed ensemble."
+    },
+    {
+      "id": "activity-cider-pressing",
+      "label": "Cider pressing",
+      "provider": "custom",
+      "source": "art/cider-pressing.svg",
+      "fallback_emoji": "🍎",
+      "use_for": "Apple cider making, pressing demonstrations and hands-on juice extraction.",
+      "avoid_for": "Cider drinking/tastings, apple shopping/picking, brewing without pressing, wine presses or generic farm markets."
+    },
+    {
+      "id": "craft-natural-dyeing",
+      "label": "Natural dyeing",
+      "provider": "custom",
+      "source": "art/natural-dyeing.svg",
+      "fallback_emoji": "🧶",
+      "use_for": "Hands-on preparation and use of natural dyes to color textiles, yarn or fiber.",
+      "avoid_for": "Synthetic tie dye, painting, ordinary cooking, yarn craft without dyeing, or finished textile exhibitions."
+    },
+    {
+      "id": "equipment-vr-headset",
+      "label": "Virtual reality headset",
+      "provider": "custom",
+      "source": "art/vr-headset.svg",
+      "fallback_emoji": "🥽",
+      "use_for": "Hands-on headset-based VR games, travel, demonstrations and immersive experiences.",
+      "avoid_for": "Projection rooms without headsets, ordinary online events, AR-only apps, VR development without headset use, incidental VR in mixed programs, or names containing VR."
+    },
+    {
+      "id": "craft-seed-paper",
+      "label": "Seed paper making",
+      "provider": "custom",
+      "source": "art/seed-paper.svg",
+      "fallback_emoji": "🌱",
+      "use_for": "Making or planting handmade paper with embedded seeds, including dedicated seed-paper workshops.",
+      "avoid_for": "Ordinary papermaking, origami, recycling alone, generic gardening, or finished paper exhibitions."
+    },
+    {
+      "id": "equipment-wind-turbine",
+      "label": "Wind turbine",
+      "provider": "custom",
+      "source": "art/wind-turbine.svg",
+      "fallback_emoji": "⚙️",
+      "use_for": "Wind-turbine building workshops, turbine demonstrations and visits explicitly centered on wind-energy equipment.",
+      "avoid_for": "Storytime about wind turbines, generic renewable energy, aircraft/steam turbines, or incidental turbines in a wider program."
+    },
+    {
+      "id": "instrument-setar",
+      "label": "Persian setar",
+      "provider": "custom",
+      "source": "art/setar.svg",
+      "fallback_emoji": "🎵",
+      "use_for": "Setar lessons, recitals and performances explicitly featuring the Persian setar as a central instrument, including a featured setar/percussion duo.",
+      "avoid_for": "Indian sitar, tar, guitar, generic Persian music, incidental supporting setar in a broad ensemble, or biography-only mentions that do not establish program instrumentation."
+    },
+    {
+      "id": "sport-double-dutch",
+      "label": "Double Dutch",
+      "provider": "custom",
+      "source": "art/double-dutch.svg",
+      "fallback_emoji": "🪢",
+      "use_for": "Double Dutch jump-rope instruction, practice, demonstrations and competitions using two turning ropes.",
+      "avoid_for": "Single-rope skipping, rope knots, dance without jump ropes, or incidental Double Dutch in a mixed festival."
+    },
+    {
+      "id": "instrument-sitar",
+      "label": "Indian sitar",
+      "provider": "custom",
+      "source": "art/sitar.svg",
+      "fallback_emoji": "🎵",
+      "use_for": "Lessons and performances centered on the acoustic Indian sitar with a fretted neck and gourd resonator.",
+      "avoid_for": "Persian setar, fretless tanpura, sarod, electric solid-body zitar, generic Indian music, biography-only or incidental sitar in a broad mixed program."
+    },
+    {
+      "id": "instrument-tanpura",
+      "label": "Tanpura",
+      "provider": "custom",
+      "source": "art/tanpura.svg",
+      "fallback_emoji": "🎵",
+      "use_for": "Tanpura/tambura drone-instrument lessons, demonstrations, or performances explicitly centered on the acoustic Indian drone lute.",
+      "avoid_for": "Sitar, Persian setar/tanbur, Balkan tambura, electronic drone boxes/apps, or routine accompaniment without tanpura focus."
+    },
+    {
+      "id": "instrument-harmonium",
+      "label": "Harmonium",
+      "provider": "custom",
+      "source": "art/harmonium.svg",
+      "fallback_emoji": "🎹",
+      "use_for": "Hand-pumped Indian harmonium instruction or performances featuring harmonium as the central instrument.",
+      "avoid_for": "Piano, Hammond/pipe organs, accordion, European foot-pumped organs, or incidental harmonium accompaniment in a vocal/mixed program."
+    },
+    {
+      "id": "instrument-tabla",
+      "label": "Tabla",
+      "provider": "custom",
+      "source": "art/tabla.svg",
+      "fallback_emoji": "🥁",
+      "use_for": "Tabla lessons, solo/featured tabla performances and dedicated tabla ensembles.",
+      "avoid_for": "Generic drums, mridangam, dholak, conga, or supporting tabla in a program led by vocals or another instrument."
+    },
+    {
+      "id": "instrument-sarangi",
+      "label": "Sarangi",
+      "provider": "custom",
+      "source": "art/sarangi.svg",
+      "fallback_emoji": "🎻",
+      "use_for": "Sarangi lessons, solo recitals and performances centered on the short-necked bowed Indian sarangi.",
+      "avoid_for": "Sarod, violin, esraj/dilruba, Nepalese sarangi variants, biography-only references, or incidental/opening sarangi in a mixed bill centered on another instrument."
+    },
+    {
+      "id": "craft-papermaking",
+      "label": "Hand papermaking",
+      "provider": "custom",
+      "source": "art/papermaking.svg",
+      "fallback_emoji": "📄",
+      "use_for": "Making handmade paper from pulp using a mould and deckle, including workshops and dedicated process demonstrations.",
+      "avoid_for": "Finished-paper displays, exhibition tours or book talks without making or process demonstration; use seed-paper art when plantable seeded paper is central."
+    },
+    {
+      "id": "instrument-pedal-steel",
+      "label": "Pedal steel guitar",
+      "provider": "custom",
+      "source": "art/pedal-steel.svg",
+      "fallback_emoji": "🎸",
+      "use_for": "Learning or featuring pedal steel guitar as the central instrument, including dedicated recitals or workshops.",
+      "avoid_for": "Ordinary guitar, lap steel without pedals, or a mixed band in which pedal steel is merely one accompanying instrument."
+    },
+    {
+      "id": "craft-gel-plate-printing",
+      "label": "Gel-plate printing",
+      "provider": "custom",
+      "source": "art/gel-plate-printing.svg",
+      "fallback_emoji": "🎨",
+      "use_for": "Making monoprints or image transfers with a gel printing plate, including Gelli plate classes.",
+      "avoid_for": "Generic printmaking, linocut, letterpress, cyanotype, and unrelated gelatin or gel products."
+    },
+    {
+      "id": "craft-kumiko",
+      "label": "Kumiko joinery",
+      "provider": "custom",
+      "source": "art/kumiko.svg",
+      "fallback_emoji": "🪵",
+      "use_for": "Making or demonstrating Japanese kumiko fitted wooden lattice joinery.",
+      "avoid_for": "Generic woodworking, basket weaving, printed geometric patterns or unrelated names."
+    },
+    {
+      "id": "craft-mezzotint",
+      "label": "Mezzotint",
+      "provider": "custom",
+      "source": "art/mezzotint.svg",
+      "fallback_emoji": "🎨",
+      "use_for": "Making mezzotint prints or learning the rocker, burnishing and tonal copper-plate technique.",
+      "avoid_for": "Generic engraving, linocut, monotype and finished-art exhibitions without process instruction."
+    },
+    {
+      "id": "instrument-bassoon",
+      "label": "Bassoon",
+      "provider": "custom",
+      "source": "art/bassoon.svg",
+      "fallback_emoji": "🎼",
+      "use_for": "Bassoon instruction and performances where bassoon is a defining featured instrument or the main performer explicitly plays it.",
+      "avoid_for": "Contrabassoon, oboe, clarinet; incidental orchestral parts, composer biography alone, or mixed programs whose defining focus is broader."
+    },
+    {
+      "id": "game-crossword",
+      "label": "Crosswords",
+      "provider": "custom",
+      "source": "art/crossword.svg",
+      "fallback_emoji": "🧩",
+      "use_for": "Solving, constructing or competing in crossword puzzles, including focused clubs and tournaments.",
+      "avoid_for": "Word searches, sudoku, cryptograms, jigsaw puzzles or mixed puzzle programs without a primary crossword focus."
+    },
+    {
+      "id": "activity-step-aerobics",
+      "label": "Step aerobics",
+      "provider": "custom",
+      "source": "art/step-aerobics.svg",
+      "fallback_emoji": "👟",
+      "use_for": "Aerobic exercise using a raised step platform, including classes explicitly named Step Aerobics.",
+      "avoid_for": "General aerobics, stair walks, step dance, or strength exercises without aerobic step-platform context."
+    },
+    {
+      "id": "equipment-inkle-loom",
+      "label": "Inkle weaving",
+      "provider": "custom",
+      "source": "art/inkle-loom.svg",
+      "fallback_emoji": "🧶",
+      "use_for": "Weaving narrow bands on an inkle or Inklette loom, including dedicated equipment classes.",
+      "avoid_for": "Generic tapestry/frame weaving, knitting, or unrelated words containing inkle."
+    },
+    {
+      "id": "craft-steamroller-printing",
+      "label": "Steamroller printing",
+      "provider": "custom",
+      "source": "art/steamroller-printing.svg",
+      "fallback_emoji": "🖨️",
+      "use_for": "Oversized relief printing using a road roller, including dedicated live printing festivals or demonstrations.",
+      "avoid_for": "Road construction, toy vehicles, ordinary office printers and generic printmaking without a large roller."
     }
   ]
 }

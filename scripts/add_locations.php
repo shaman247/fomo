@@ -268,7 +268,7 @@ function add_tags_pdo($pdo, $location_id, $tags) {
 
     foreach ($tags as $tag_name) {
         // Check if tag exists
-        $stmt = $pdo->prepare("SELECT id FROM tags WHERE name = ?");
+        $stmt = $pdo->prepare("SELECT id FROM tags WHERE name = ? AND scope = 'venue'");
         $stmt->execute([$tag_name]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -276,7 +276,7 @@ function add_tags_pdo($pdo, $location_id, $tags) {
             $tag_id = $row['id'];
             $existing_tags[] = $tag_name;
         } else {
-            $stmt = $pdo->prepare("INSERT INTO tags (name, type) VALUES (?, 'tag')");
+            $stmt = $pdo->prepare("INSERT INTO tags (name, type, scope) VALUES (?, 'keyword', 'venue')");
             $stmt->execute([$tag_name]);
             $tag_id = $pdo->lastInsertId();
             $new_tags[] = $tag_name;

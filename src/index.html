@@ -98,14 +98,21 @@
                             <svg class="calendar-icon" xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 0 24 24" width="18px" fill="currentColor" aria-hidden="true"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V9h14v11zM7 11h5v5H7v-5z"/></svg>
                         </div>
                     </div>
-                    <button type="button" id="format-selector-button" popovertarget="format-selector-panel"
-                        aria-haspopup="dialog" aria-expanded="false" aria-controls="format-selector-panel"><span>All Events</span><span aria-hidden="true"> ▾</span></button>
-                    <div id="format-selector-panel" popover="auto" role="dialog" aria-label="Event formats"></div>
-                    <button type="button" id="neighborhood-selector-button" popovertarget="neighborhood-selector-panel"
-                        aria-haspopup="dialog" aria-expanded="false" aria-controls="neighborhood-selector-panel"><span>Everywhere</span><span aria-hidden="true"> ▾</span></button>
-                    <div id="neighborhood-selector-panel" popover="auto" role="dialog" aria-label="Neighborhoods"></div>
+                    <div class="selector-controls">
+                        <button type="button" id="format-selector-button" popovertarget="format-selector-panel"
+                            aria-haspopup="dialog" aria-expanded="false" aria-controls="format-selector-panel"><span>All Events</span><span aria-hidden="true"> ▾</span></button>
+                        <div id="format-selector-panel" popover="auto" role="dialog" aria-label="Event formats"></div>
+                        <button type="button" id="neighborhood-selector-button" popovertarget="neighborhood-selector-panel"
+                            aria-haspopup="dialog" aria-expanded="false" aria-controls="neighborhood-selector-panel"><span>Everywhere</span><span aria-hidden="true"> ▾</span></button>
+                        <div id="neighborhood-selector-panel" popover="auto" role="dialog" aria-label="Neighborhoods"></div>
+                        <button type="button" id="tag-selector-button" popovertarget="tag-selector-panel"
+                            aria-haspopup="dialog" aria-expanded="false" aria-controls="tag-selector-panel"><span>All Tags</span><span aria-hidden="true"> ▾</span></button>
+                        <div id="tag-selector-panel" popover="auto" role="dialog" aria-label="Tags"></div>
+                        <button type="button" id="venue-selector-button" popovertarget="venue-selector-panel"
+                            aria-haspopup="dialog" aria-expanded="false" aria-controls="venue-selector-panel"><span>All Venues</span><span aria-hidden="true"> ▾</span></button>
+                        <div id="venue-selector-panel" popover="auto" role="dialog" aria-label="Venue types"></div>
+                    </div>
                 </div>
-                <div id="chip-bar"></div>
             </div>
             <button id="expand-filter-panel-button" class="initially-hidden collapsed" aria-label="Expand Filter Panel" title="Expand Filter Panel">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="18 15 12 9 6 15"></polyline></svg>
@@ -135,7 +142,6 @@
         </button>
 
         <div id="map-container">
-            <div class="discovery-control"><button type="button" data-open-interests>⭐ Favorites</button></div>
             <div id="map-wrapper">
                 <div id="map" role="application" aria-label="Interactive map of NYC events"></div>
             </div>
@@ -149,12 +155,11 @@
 
     <div id="filter-update-status" role="status" hidden>Updating events…</div>
 
-    <!-- Nonmodal first-visit introduction; the map remains usable. -->
-    <div id="welcome-modal" class="modal" role="region" aria-label="Welcome">
+    <!-- Welcome Modal -->
+    <div id="welcome-modal" class="modal" role="dialog" aria-modal="true" aria-label="Welcome">
         <div class="modal-content">
             <div class="modal-body">
                 {{WELCOME_MODAL}}
-                <button type="button" id="welcome-start-btn">Get started</button>
             </div>
         </div>
     </div>
@@ -189,10 +194,8 @@
                 <button id="settings-close-btn" class="modal-close-btn" aria-label="Close settings">&times;</button>
             </div>
             <div class="modal-body">
-                <div class="setting-group setting-group-themes">
+                <div class="setting-group">
                     <label class="setting-group-label">Theme</label>
-                    <!-- Options are rebuilt from the Themes registry at init;
-                         these two are the no-JS fallback -->
                     <div class="setting-options" id="theme-options">
                         <label class="setting-option">
                             <input type="radio" name="theme" value="dark" checked>
@@ -204,8 +207,6 @@
                         </label>
                     </div>
                 </div>
-                <!-- Prototype layout experiments — groups built from ProtoFlags at init -->
-                <div id="proto-setting-groups"></div>
             </div>
         </div>
     </div>
@@ -216,13 +217,15 @@
 
     <!-- Core -->
     <script src="js/core/constants.js"></script>
-    <script src="js/core/themes.js"></script>
     <script src="js/core/utils.js"></script>
-    <script src="js/core/protoFlags.js"></script>
     <script src="js/core/colorUtils.js"></script>
-    <script src="js/core/emojiTransforms.js"></script>
     <script src="js/core/historyManager.js"></script>
     <script src="js/core/urlParams.js"></script>
+    <script src="js/query/querySchema.js"></script>
+    <script src="js/query/queryCore.js"></script>
+    <script src="js/query/generationContract.js"></script>
+    <script src="js/query/webMCP.js"></script>
+    <script src="js/query/queryGateway.js"></script>
 
     <!-- Data -->
     <script src="js/data/similarityModel.js"></script>
@@ -251,9 +254,9 @@
     <script src="js/ui/listView.js"></script>
     <script src="js/ui/formatSelector.js"></script>
     <script src="js/ui/neighborhoodSelector.js"></script>
+    <script src="js/ui/tagSelector.js"></script>
     <script src="js/ui/uiManager.js"></script>
     <script src="js/ui/themeManager.js"></script>
-    <script src="js/ui/protoPanel.js"></script>
     <script src="js/ui/feedbackManager.js"></script>
 
     <!-- Map -->

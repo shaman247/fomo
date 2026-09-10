@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"><title>Ukulele</title><desc>A compact four-string wooden ukulele with a short neck, four tuning pegs, sound hole and tie bridge.</desc>
+<g transform="rotate(35 64 64)">
+<path fill="#955C43" transform="translate(1.5 2)" d="M57 48C47 43 35 48 35 60C35 67 42 71 41 77C40 85 28 87 28 99C28 114 44 120 64 120C84 120 100 114 100 99C100 87 88 85 87 77C86 71 93 67 93 60C93 48 81 43 71 48Z"/>
+<path fill="#C68B5E" d="M57 48C47 43 35 48 35 60C35 67 42 71 41 77C40 85 28 87 28 99C28 114 44 120 64 120C84 120 100 114 100 99C100 87 88 85 87 77C86 71 93 67 93 60C93 48 81 43 71 48Z"/>
+<path fill="#E8AF76" d="M54 50C45 47 38 53 38 60C38 67 46 73 44 79C43 86 31 91 31 100C31 111 46 117 62 117C46 108 45 84 52 66Z"/>
+<circle cx="64" cy="77" r="11" fill="#F5C890"/><circle cx="64" cy="77" r="8.5" fill="#3E2723"/>
+<path fill="#6D4C41" d="M56 23H72L74 65H54Z"/>
+<path fill="#49352E" d="M59 24H72L74 65H58Z"/>
+<path fill="none" stroke="#BCAAA4" stroke-width="1" d="M56 32H72M56 40H73M55 47H73M55 53H73.5M54.5 58H73.5"/>
+<path fill="#AD7156" d="M54 5Q64 1 74 5L74 19L70 26H58L54 19Z"/><path fill="#CE8963" d="M56 6Q62 3 67 5V23H59L56 18Z"/>
+<path fill="none" stroke="#78909C" stroke-width="3" d="M51 10H60M51 19H60M68 10H77M68 19H77"/>
+<g fill="#B0BEC5"><rect x="47" y="7" width="6" height="6" rx="2"/><rect x="47" y="16" width="6" height="6" rx="2"/><rect x="75" y="7" width="6" height="6" rx="2"/><rect x="75" y="16" width="6" height="6" rx="2"/></g>
+<path fill="#6D4133" d="M51 97H77V105Q64 108 51 105Z"/><path fill="#F1EDEC" d="M55 98H73V101H55Z"/>
+<path fill="none" stroke="#EED9B5" stroke-width="1" d="M60 25L58 104M62.7 25L62 104M65.3 25L66 104M68 25L70 104M60 25L59 10M62.7 25L59 19M65.3 25L69 19M68 25L69 10"/>
+<path fill="#F1EDEC" d="M56 24H72V26H56Z"/>
+</g></svg>

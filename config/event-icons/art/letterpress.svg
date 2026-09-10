@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128"><title>Letterpress</title><desc>A raised metal printing type block beside its inked paper impression.</desc>
+<path d="m44 70 76 3-8 46-82-3z" fill="#B8AAA5"/><path d="m43 65 76 3-8 46-82-3z" fill="#F1EDEC"/>
+<path d="m25 13 56 9 3 65-60-9z" fill="#78909C"/><path d="m81 22 20 20-1 62-16-17z" fill="#455A64"/><path d="m24 78 60 9 16 17-58-8z" fill="#546E7A"/>
+<path d="m25 13 56 9 20 20-58-9z" fill="#C4D4DA"/>
+<path d="m25 14 6 1-1 58-6 5z" fill="#ADC4CD"/>
+<path d="m51 28 10 1 16 46-10-1-3-10-19-3-4 9-10-2zm3 12-6 13 12 2z" fill="#263238" fill-rule="evenodd"/>
+<g transform="translate(73 83) rotate(3) scale(.45)"><path d="M13 0h13l19 53H32l-4-13H11L7 53H-5zm7 13-6 17h11z" fill="#36464D" fill-rule="evenodd"/></g>
+
+
+</svg>

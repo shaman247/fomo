@@ -47,11 +47,13 @@ def remap_edges(edges, mapping):
     return result
 
 
-def prepare(cur, mapping):
-    tags = read(cur, 'SELECT * FROM tags ORDER BY id')
+def prepare(cur, mapping, scope='event'):
+    if scope not in ('event','venue'):
+        raise ValueError('Unknown tag scope')
+    tags = read(cur, 'SELECT * FROM tags WHERE scope=%s ORDER BY id', (scope,))
     byname = {t['name']: t for t in tags}
     protected = set(EVENT_TYPES) | {x[0] for x in CATEGORY_TAG.values()} | {FORMAT_ROOT_TAG}
-    if set(mapping) & protected:
+    if scope == 'event' and set(mapping) & protected:
         raise ValueError('Formats require a separate taxonomy migration')
     if set(mapping) & set(mapping.values()):
         raise ValueError('Mappings must point directly to terminal names')
@@ -59,16 +61,16 @@ def prepare(cur, mapping):
     if missing:
         raise ValueError(f'Unknown names: {missing}')
     ids = {byname[a]['id']: byname[b]['id'] for a, b in mapping.items()}
-    aliases = read(cur, 'SELECT * FROM tag_aliases ORDER BY alias')
+    aliases = read(cur, 'SELECT * FROM tag_aliases WHERE scope=%s ORDER BY alias', (scope,))
     proposed = {a['alias']: ids.get(a['tag_id'], a['tag_id']) for a in aliases}
     proposed.update({a: byname[b]['id'] for a, b in mapping.items()})
     byid = {t['id']: t for t in tags}
     resolve_aliases([(a, byid[i]['name']) for a, i in proposed.items()])
-    edges = read(cur, 'SELECT * FROM tag_hierarchy ORDER BY parent_tag_id,child_tag_id')
+    edges = read(cur, 'SELECT h.* FROM tag_hierarchy h JOIN tags t ON t.id=h.parent_tag_id WHERE t.scope=%s ORDER BY parent_tag_id,child_tag_id', (scope,))
     next_edges = remap_edges([(r['parent_tag_id'], r['child_tag_id']) for r in edges], ids)
     disambiguations = read(cur, 'SELECT * FROM tag_disambiguations ORDER BY id')
     rules = read(cur, 'SELECT * FROM tag_rules ORDER BY id')
-    config = {'mapping': mapping, 'tags': [t for t in tags if t['id'] in set(ids) | set(ids.values())],
+    config = {'scope': scope, 'mapping': mapping, 'tags': [t for t in tags if t['id'] in set(ids) | set(ids.values())],
               'aliases': aliases, 'edges': edges, 'disambiguations': disambiguations, 'rules': rules}
     config_hash = hashlib.sha256(json.dumps(config, sort_keys=True, default=str).encode()).hexdigest()
     counts = Counter()
@@ -76,7 +78,7 @@ def prepare(cur, mapping):
         src, dst = byname[source]['id'], byname[target]['id']
         for table in ['event_tags', 'location_tags']:
             counts[table] += read(cur, f'SELECT COUNT(*) n FROM {table} WHERE tag_id=%s', (src,))[0]['n']
-        for table in ['crawl_event_tags', 'website_tags']:
+        for table in (['crawl_event_tags', 'website_tags'] if scope == 'event' else []):
             counts[table] += read(cur, f'SELECT COUNT(*) n FROM {table} WHERE tag=%s AND BINARY tag=BINARY %s', (source, source))[0]['n']
         counts['curated_sources'] += byname[source]['type'] == 'tag'
     return {'config_hash': config_hash, 'mapping': mapping, 'ids': ids, 'summary': dict(counts),
@@ -85,18 +87,22 @@ def prepare(cur, mapping):
 
 def backup(cur, plan):
     result = dict(plan['config'])
+    scope = plan['config'].get('scope','event')
     ids = sorted(set(plan['ids']) | set(plan['ids'].values()))
+    if not ids:
+        return result
     ph = ','.join(['%s'] * len(ids))
     for table in ['event_tags', 'location_tags', 'event_tag_blocks']:
         result[table] = read(cur, f'SELECT * FROM {table} WHERE tag_id IN ({ph})', ids)
     names = sorted(set(plan['mapping']) | set(plan['mapping'].values()))
     ph = ','.join(['%s'] * len(names))
-    for table in ['crawl_event_tags', 'website_tags']:
+    for table in (['crawl_event_tags', 'website_tags'] if scope == 'event' else []):
         result[table] = read(cur, f'SELECT * FROM {table} WHERE tag IN ({ph})', names)
     return result
 
 
 def apply(cur, plan):
+    scope = plan['config'].get('scope','event')
     counts = Counter()
     byname = {t['name']: t for t in plan['config']['tags']}
     for source, target in plan['mapping'].items():
@@ -118,10 +124,11 @@ def apply(cur, plan):
         counts['location_memberships_added'] += cur.rowcount
         cur.execute('DELETE FROM location_tags WHERE tag_id=%s', (src,))
         counts['location_memberships_retired'] += cur.rowcount
-        for table in ['crawl_event_tags', 'website_tags']:
+        for table in (['crawl_event_tags', 'website_tags'] if scope == 'event' else []):
             cur.execute(f'UPDATE {table} SET tag=%s WHERE tag=%s AND BINARY tag=BINARY %s', (target, source, source))
             counts[table] += cur.rowcount
-        cur.execute('UPDATE tag_rules SET replacement=%s WHERE BINARY replacement=BINARY %s', (target, source))
+        if scope == 'event':
+            cur.execute('UPDATE tag_rules SET replacement=%s WHERE BINARY replacement=BINARY %s', (target, source))
         cur.execute('UPDATE tag_aliases SET tag_id=%s WHERE tag_id=%s', (dst, src))
         db.upsert_tag_alias(cur, source, dst)
         for column in ['context_tag_id', 'target_tag_id']:
@@ -139,6 +146,7 @@ def apply(cur, plan):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--scope', choices=['event','venue'], default='event')
     parser.add_argument('--mapping', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--apply', action='store_true')
@@ -158,14 +166,14 @@ def main():
             cur = conn.cursor(dictionary=True)
             if not args.apply:
                 cur.execute('START TRANSACTION WITH CONSISTENT SNAPSHOT, READ ONLY')
-            plan = prepare(cur, mapping)
+            plan = prepare(cur, mapping, args.scope)
             if args.expect_config and args.expect_config != plan['config_hash']:
                 raise ValueError('Configuration changed: review a fresh preview')
             if args.apply:
                 with args.backup.open('x') as f:
                     json.dump(backup(cur, plan), f, ensure_ascii=False, default=str)
                 plan['applied'] = apply(cur, plan)
-                final = prepare(cur, mapping)
+                final = prepare(cur, mapping, args.scope)
                 if any(final['summary'].values()):
                     raise ValueError(f'Migration did not converge: {final["summary"]}')
                 if final['next_edges'] != sorted((r['parent_tag_id'],r['child_tag_id']) for r in final['config']['edges']):

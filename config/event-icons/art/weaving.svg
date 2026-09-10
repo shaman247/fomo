@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128"><title>Weaving</title><desc>A wooden frame loom with vertical warp threads, a woven colored band, and a shuttle.</desc>
+
+<path d="M17 11h94v108H17zm10 10v88h74V21z" fill="#AD7156" fill-rule="evenodd"/>
+<path d="M32 19v90m13-90v90m13-90v90m13-90v90m13-90v90m13-90v90" stroke="#D6C4A3" stroke-width="3"/>
+<path d="M26 61h76v43H26z" fill="#328D9C"/>
+<path d="M27 67h74m-74 14h74m-74 14h74" stroke="#80CBC4" stroke-width="7"/>
+<path d="M32 61v43m26-43v43m26-43v43" stroke="#C3E4D2" stroke-width="4" stroke-dasharray="7 7"/>
+<path d="M45 68v36m26-36v36m26-36v36" stroke="#C3E4D2" stroke-width="4" stroke-dasharray="7 7"/>
+<path d="M17 11h94v10H17zm0 98h94v10H17z" fill="#FFCC80"/><path d="M17 20h10v89H17z" fill="#EBAE77"/><path d="M101 20h10v89h-10z" fill="#CE8963"/>
+<g transform="rotate(-18 68 49)"><path d="M30 49c10-12 65-12 75 0-10 12-65 12-75 0z" fill="#AD7156"/><path d="M30 45c10-12 65-12 75 0-10 12-65 12-75 0z" fill="#FFCC80"/><path d="M57 38h21v14H57z" fill="#E57373"/><path d="M62 38v14m6-14v14m6-14v14" stroke="#FFB4AA" stroke-width="2"/></g>
+</svg>

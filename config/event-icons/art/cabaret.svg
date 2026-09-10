@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128"><title>Cabaret</title><desc>An open stage fan beside a standing microphone in warm stage light.</desc>
+<path d="M26 13h57l29 98H9z" fill="#FFE5AD"/><ellipse cx="62" cy="110" rx="52" ry="8" fill="#DBAB79"/>
+<path d="M12 60c9-31 52-43 78-11l-27 49z" fill="#972C62"/><path d="M13 57c11-30 50-38 75-11L60 92z" fill="#DF5688"/><path d="m15 55 45 37-27-52m8-3 19 55 3-58m14 7L60 92" fill="none" stroke="#FFBCBC" stroke-width="3" stroke-linejoin="round"/><path d="m17 58 43 34 28-46" fill="none" stroke="#B9376D" stroke-width="5" stroke-linecap="round"/><circle cx="60" cy="92" r="5" fill="#F8CF8C"/>
+<path d="M92 53v55m-14 3h29" fill="none" stroke="#42535B" stroke-width="5" stroke-linecap="round"/><path d="M78 33q0-18 14-18t14 18v12q0 16-14 16T78 45z" fill="#415A67"/><path d="M80 31q0-15 12-15t12 15v12H80z" fill="#ACCBD4"/><path d="M87 20v20m10-20v20m-14-12h18m-20 9h22" fill="none" stroke="#6C949F" stroke-width="3" stroke-linecap="round"/><path d="M75 43v7q0 18 17 18t17-18v-7" fill="none" stroke="#65828E" stroke-width="4" stroke-linecap="round"/>
+</svg>

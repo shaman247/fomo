@@ -1,5 +1,6 @@
 /** Geographic OR filter, independent of event formats and topic tags. */
 const NeighborhoodSelector = (() => {
+    const areaName = name => name.startsWith('venue:') ? name.slice(6) : name;
     let children = {}, roots = [], names = [], branches = new Map();
     let selected = null; // null = all checked; [] = none checked. Both show all areas.
     let panel, button, onChange;
@@ -19,7 +20,7 @@ const NeighborhoodSelector = (() => {
             seen.add(id);
             const matched = new Set();
             for (const tag of [...(event.tags || []), ...(locations[event.locationKey]?.tags || [])]) {
-                for (const name of ancestors.get(tag) || []) matched.add(name);
+                for (const name of ancestors.get(areaName(tag)) || []) matched.add(name);
             }
             for (const name of matched) counts[name] = (counts[name] || 0) + 1;
         }
@@ -40,7 +41,8 @@ const NeighborhoodSelector = (() => {
 
 
     function configure(childrenOf, geographicTags, options = globalThis.__CITY__?.neighborhoodSelector || {}) {
-        const allowed = new Set(geographicTags || []);
+        childrenOf = Object.fromEntries(Object.entries(childrenOf || {}).map(([name, children]) => [areaName(name), children.map(areaName)]));
+        const allowed = new Set([...(geographicTags || [])].map(areaName));
         allowed.delete('Neighborhood');
         const configuredGroups = options.groups || {};
         for (const name of Object.keys(configuredGroups)) allowed.add(name);
@@ -101,6 +103,7 @@ const NeighborhoodSelector = (() => {
         sync();
     }
     function fromLegacyTags(values) {
+        values = values.map(areaName);
         if (values.includes('Neighborhood')) return null;
         return [...new Set(values.flatMap(name => [...(branches.get(name) || [])]))];
     }
@@ -119,7 +122,7 @@ const NeighborhoodSelector = (() => {
     }
     function matches(event, location) {
         if (selected === null || selected.size === 0) return true;
-        const tags = new Set([...(event.tags || []), ...(location?.tags || [])]);
+        const tags = new Set([...(event.tags || []), ...(location?.tags || [])].map(areaName));
         const geographic = [...tags].filter(name => branches.has(name));
         // Ignore inherited borough/region tags when a more specific area is known.
         // Otherwise excluding one neighborhood would still match its checked borough.
@@ -149,7 +152,7 @@ const NeighborhoodSelector = (() => {
         input.type = 'checkbox';
         if (name) input.dataset.neighborhood = name;
         else input.dataset.allNeighborhoods = '';
-        row.append(input, document.createTextNode(`${name || 'Everywhere'} (${name ? count(name) : totalCount})`));
+        row.append(input, document.createTextNode(name || 'Everywhere'));
         input.addEventListener('change', () => {
             if (name) setGroupSelection(name, input.checked);
             else { setSelection(input.checked ? null : []); onChange?.(); }

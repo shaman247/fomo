@@ -21,6 +21,8 @@ The packet includes:
 
 Inspect small icons at their actual displayed size, using native-size crops if the viewer scales a tall sheet. Large previews help diagnose geometry; they cannot prove small-size recognition. Include the real site's special-theme/transformed renderings when relevant; this contact sheet covers only normal artwork on two backgrounds. Do not use old screenshots as evidence for a changed SVG.
 
+For figures and complex geometry, include the scene/camera source and multi-view geometry findings from [3D construction](geometry-and-size.md). Inspect the final styled volumes and projected contacts as well as the underlying skeleton. For size reductions, include before/after raw and gzip measurements and compare the optimized rendering with its previous revision; layer-composite checks do not replace reviewing the fitted SVG.
+
 ## Critique separately from drawing
 
 Use a separate vision-capable reviewer agent when delegation is authorized and available. Give it the packet and this rubric, not the creator's explanation or expected verdict. Otherwise conduct a distinct critical pass in the working agent and record that it was not independent. This fallback is still automated, but it is not a blind independent evaluation. Avoid claiming blind recognition if the reviewer already knows the design or user feedback.
@@ -36,6 +38,7 @@ First inspect the unlabeled image and record what each candidate looks like, con
 | Composition | Does the object use its canvas well, with balanced margins, no clipping, and no unnecessary tiny detail? Distinguish intentional breathing room from wasted interior space. |
 | Noto consistency | Do visual weight, corner treatment, shading, upper-left lighting, depth, and palette fit the accepted neighbors? Does it feel like the same icon family? |
 | Rendering | Are light/dark contrast, transparent edges, highlights, and small-size rasterization clean? Do special-theme variants preserve recognition where used? |
+| Size and simplification | Is raw/gzip size in line with comparable custom and standard Noto icons? Did simplification preserve smooth silhouettes, correct occlusion, face features, and defining details? |
 
 Regression examples inform judgment, not hardcoded pixel thresholds for unrelated icons:
 
@@ -76,6 +79,7 @@ Store a compact record for the final reviewed source hash:
   "reviewer_mode": "independent-agent or creator-critical-pass",
   "blind_recognition": "observed result, or not independent / already known",
   "evidence": {"packet": "path", "sizes": [16, 24, 32, 128], "backgrounds": ["light", "dark"]},
+  "size_bytes": {"raw": 0, "gzip_level_6": 0},
   "issues": [{"severity": "material or minor", "location": "specific feature", "observation": "visible defect", "revision": "action", "status": "resolved or open"}],
   "decision": "pass or revise or blocked",
   "limitations": []
@@ -83,3 +87,5 @@ Store a compact record for the final reviewed source hash:
 ```
 
 Keep large packets in `.scratch/<task>/`; version concise final records under `config/event-icons/reviews/`. A changed source hash invalidates the visual pass and requires fresh rendering/review. Before integration, check each candidate has a pass tied to its current hash. Existing accepted icons are not automatically re-audited unless changed or included in the user's request.
+
+Replace the example byte values with actual measurements. For optimized icons, also record the previous sizes and material simplifications; for 3D-derived icons, link the scene/camera and geometry review evidence.

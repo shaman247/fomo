@@ -1,0 +1,7 @@
+# Optional local semantic encoder. Install in a separate environment, not a live pipeline venv.
+sentence-transformers==6.0.1
+torch==2.14.0
+# Read-only snapshot and city configuration (the isolated runtime has no pipeline packages).
+mysql-connector-python==9.7.0
+PyYAML==6.0.3
+python-dotenv==1.2.2

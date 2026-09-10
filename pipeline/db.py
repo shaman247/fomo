@@ -856,6 +856,21 @@ def get_coverage_drop_report(cursor, crawl_run_id=None, since_days=1,
     collapsed content size next to the drop means a partial crawl, while a
     full-size page with fewer events means the calendar really did empty.
 
+    SURFACE-AWARE BASELINE. A website can be crawled by two different surfaces
+    that produce different content shapes and therefore incomparable counts:
+    the ordinary site crawl (one row per run, filename = safe website name,
+    crawler.create_safe_filename) and the out-of-band Instagram mirror ingest
+    (`picnob_<handle>_<ts>.md`, scripts/picnob_to_pipeline.py). instagram.com
+    URLs are CrawlMode.SKIP, so a mixed website's site crawl never contains the
+    IG posts and its picnob row never contains the calendar. Comparing across
+    the two printed a bogus collapse — w4545 Textile Arts Center on 2026-09-09,
+    "40 -> 6 events", where the 40 was the class calendar and the 6 was that
+    week's IG posts. `crawl_results` has no website_url_id/source column, so
+    the filename prefix is the only available partition key; the *prefix*, not
+    the whole filename, because every picnob row is uniquely timestamped and
+    keying on the full name would blind the check to every IG-sourced website
+    (and lose the baseline on a rename).
+
     Args:
         cursor: Database cursor
         crawl_run_id: Restrict to one crawl run (what main.py passes). When
@@ -884,6 +899,8 @@ def get_coverage_drop_report(cursor, crawl_run_id=None, since_days=1,
              WHERE p2.website_id = cr.website_id
                AND p2.id < cr.id
                AND p2.status = 'processed'
+               AND (SUBSTR(COALESCE(p2.filename, ''), 1, 7) = 'picnob_')
+                 = (SUBSTR(COALESCE(cr.filename, ''), 1, 7) = 'picnob_')
          )
         WHERE cr.status = 'processed'
           AND {scope}
@@ -1562,7 +1579,7 @@ def get_website_locations_map(cursor):
     Only includes locations with valid coordinates.
     """
     cursor.execute("""
-        SELECT wl.website_id, l.id, l.name, l.lat, l.lng, l.emoji
+        SELECT wl.website_id, l.id, l.name, l.lat, l.lng, l.emoji, wl.is_primary
         FROM website_locations wl
         JOIN locations l ON wl.location_id = l.id
         WHERE l.lat IS NOT NULL AND l.lng IS NOT NULL
@@ -1576,7 +1593,9 @@ def get_website_locations_map(cursor):
             'name': row[2],
             'lat': float(row[3]) if row[3] else None,
             'lng': float(row[4]) if row[4] else None,
-            'emoji': row[5]
+            'emoji': row[5],
+            # Offline test fixtures feed 6-column rows through a fake cursor.
+            'is_primary': bool(row[6]) if len(row) > 6 else False,
         }
         result.setdefault(website_id, []).append(loc_info)
 
@@ -1599,6 +1618,13 @@ _REGION_SUFFIX_RE = re.compile(
     r'|connecticut|u\.?s\.?a\.?|u\.?s\.?|united states)$',
     re.IGNORECASE,
 )
+
+
+def get_website_names(cursor):
+    """website_id -> name. Used by the multi-venue home-venue fallback (processor
+    Step 7b), which needs the organizer's own name to recognise its own venue."""
+    cursor.execute("SELECT id, name FROM websites")
+    return {row[0]: row[1] for row in cursor.fetchall()}
 
 
 def _strip_region_suffix(name):
@@ -1905,7 +1931,7 @@ def get_websites_with_tags(cursor):
 
 
 def get_canonical_tag_names(cursor):
-    cursor.execute('SELECT name, type FROM tags')
+    cursor.execute("SELECT name, type FROM tags WHERE scope='event'")
     return canonical_names([
         {'name': _col(row, 'name', 0), 'type': _col(row, 'type', 1)}
         for row in cursor.fetchall()
@@ -1928,6 +1954,7 @@ def build_tag_ancestor_map(cursor):
         FROM tag_hierarchy th
         JOIN tags p ON th.parent_tag_id = p.id
         JOIN tags c ON th.child_tag_id = c.id
+        WHERE p.scope='event' AND c.scope='event'
     """)
     edges = cursor.fetchall()
 
@@ -1978,6 +2005,7 @@ def get_tag_aliases(cursor):
         SELECT ta.alias, t.name
         FROM tag_aliases ta
         JOIN tags t ON ta.tag_id = t.id
+        WHERE ta.scope='event' AND t.scope='event'
     """)
     return resolve_aliases([
         (_col(row, 'alias', 0), _col(row, 'name', 1)) for row in cursor.fetchall()
@@ -1989,19 +2017,17 @@ def get_tag_aliases_for_export(cursor):
 
     Returns dict mapping tag_name -> [alias1, alias2, ...] for tag hierarchy export.
     """
-    cursor.execute("""
-        SELECT t.name, ta.alias
-        FROM tag_aliases ta
-        JOIN tags t ON ta.tag_id = t.id
-        ORDER BY t.name, ta.alias
-    """)
+    from tag_scopes import public_tag_key
+    cursor.execute("SELECT t.name, ta.alias, t.scope FROM tag_aliases ta JOIN tags t ON ta.tag_id=t.id WHERE ta.scope=t.scope ORDER BY t.name, ta.alias")
     rows = cursor.fetchall()
-    resolved = resolve_aliases([(_col(row, 'alias', 1), _col(row, 'name', 0)) for row in rows])
     aliases_by_tag = {}
-    for row in rows:
-        alias = _col(row, 'alias', 1)
-        tag_name = resolved[normalize_tag_key(alias)]
-        aliases_by_tag.setdefault(tag_name, []).append(alias)
+    for scope in ('event', 'venue'):
+        scoped = [r for r in rows if _col(r, 'scope', 2) == scope]
+        resolved = resolve_aliases([(_col(r, 'alias', 1), _col(r, 'name', 0)) for r in scoped])
+        for row in scoped:
+            alias = _col(row, 'alias', 1)
+            key = public_tag_key(resolved[normalize_tag_key(alias)], scope)
+            aliases_by_tag.setdefault(key, []).append(alias)
     return aliases_by_tag
 
 
@@ -2014,17 +2040,18 @@ def upsert_tag_alias(cursor, alias, tag_id):
     alias = alias.strip()
     if not alias or len(alias) > 100:
         raise ValueError('Tag alias must contain 1–100 characters')
-    cursor.execute('SELECT name FROM tags WHERE id=%s', (tag_id,))
+    cursor.execute('SELECT name, scope FROM tags WHERE id=%s', (tag_id,))
     row = cursor.fetchone()
     if not row:
         raise ValueError(f'Unknown tag id: {tag_id}')
     target = _col(row, 'name', 0)
-    cursor.execute('SELECT a.alias, t.name FROM tag_aliases a JOIN tags t ON t.id=a.tag_id')
+    scope = _col(row, 'scope', 1)
+    cursor.execute('SELECT a.alias, t.name FROM tag_aliases a JOIN tags t ON t.id=a.tag_id WHERE a.scope=%s', (scope,))
     pairs = [(_col(r, 'alias', 0), _col(r, 'name', 1)) for r in cursor.fetchall()
              if _col(r, 'alias', 0).casefold() != alias.casefold()]
     resolve_aliases([*pairs, (alias, target)])
-    cursor.execute('INSERT INTO tag_aliases (alias,tag_id) VALUES (%s,%s) '
-                   'ON DUPLICATE KEY UPDATE tag_id=VALUES(tag_id)', (alias, tag_id))
+    cursor.execute('INSERT INTO tag_aliases (alias,tag_id,scope) VALUES (%s,%s,%s) '
+                   'ON DUPLICATE KEY UPDATE tag_id=VALUES(tag_id)', (alias, tag_id, scope))
 
 
 def get_tag_disambiguations(cursor):
@@ -2043,6 +2070,7 @@ def get_tag_disambiguations(cursor):
         FROM tag_disambiguations d
         LEFT JOIN tags ctx ON d.context_tag_id = ctx.id
         JOIN tags tgt ON d.target_tag_id = tgt.id
+        WHERE tgt.scope='event' AND (ctx.id IS NULL OR ctx.scope='event')
         ORDER BY d.ambiguous_alias, d.priority DESC
     """)
     rules = {}
@@ -2071,13 +2099,13 @@ def upsert_event_tags(cursor, event_id, tag_names, replace=False):
     for tag in tag_names:
         if not tag:
             continue
-        cursor.execute("SELECT id FROM tags WHERE name = %s", (tag[:100],))
+        cursor.execute("SELECT id FROM tags WHERE name = %s AND scope='event'", (tag[:100],))
         row = cursor.fetchone()
         tag_id = row[0] if row else None
         if not tag_id:
             # Novel AI-emitted tags are search-only keywords. They become
             # curated ('tag') only when explicitly promoted into the hierarchy
-            # (see scripts/populate_tag_hierarchy.py).
+            # (see scripts/promote_tag.py and tag_hierarchy_policy.py).
             cursor.execute("INSERT INTO tags (name, type) VALUES (%s, 'keyword')", (tag[:100],))
             tag_id = cursor.lastrowid
         if tag_id in blocked:
@@ -2107,7 +2135,7 @@ def get_tag_hierarchy_for_export(cursor):
     """
     # Get all tags with type='tag' and their parents
     cursor.execute("""
-        SELECT t.id, t.name, t.emoji, t.is_quick_filter, t.display_order, t.alt_emoji
+        SELECT t.id, t.name, t.emoji, t.is_quick_filter, t.display_order, t.alt_emoji, t.scope
         FROM tags t
         WHERE t.type = 'tag'
         ORDER BY t.display_order IS NULL, t.display_order, t.name
@@ -2116,10 +2144,11 @@ def get_tag_hierarchy_for_export(cursor):
 
     # Get all hierarchy edges
     cursor.execute("""
-        SELECT p.name AS parent_name, c.name AS child_name
+        SELECT IF(p.scope='venue',CONCAT('venue:',p.name),p.name) AS parent_name, IF(c.scope='venue',CONCAT('venue:',c.name),c.name) AS child_name
         FROM tag_hierarchy th
         JOIN tags p ON th.parent_tag_id = p.id
         JOIN tags c ON th.child_tag_id = c.id
+        WHERE p.scope=c.scope AND p.type='tag' AND c.type='tag'
     """)
     edges = cursor.fetchall()
 
@@ -2130,16 +2159,20 @@ def get_tag_hierarchy_for_export(cursor):
         child_name = _col(row, 'child_name', 1)
         parents_of.setdefault(child_name, []).append(parent_name)
 
+    from tag_scopes import public_tag_key
+
     # Build tags list
     tags_list = []
     for row in tag_rows:
-        name = _col(row, 'name', 1)
+        scope = _col(row, 'scope', 6)
+        display_name = _col(row, 'name', 1)
+        name = public_tag_key(display_name, scope)
         emoji = _col(row, 'emoji', 2)
         is_quick_filter = _col(row, 'is_quick_filter', 3)
         display_order = _col(row, 'display_order', 4)
         alt_emoji = _col(row, 'alt_emoji', 5)
 
-        entry = {'name': name}
+        entry = {'name': name, 'display_name': display_name, 'scope': scope}
         parents = parents_of.get(name, [])
         entry['parents'] = sorted(parents)
         if emoji:

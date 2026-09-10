@@ -21,6 +21,155 @@ frontend:
   # Selector-only grouping and ordering; the database supplies the neighborhoods.
   # Groups relocate members in this menu only. Directional borough sections are
   # browsing conventions, not official boundaries; unlisted children stay visible.
+  # Stable identities for configured geographic groups; retain each ID when renaming a label.
+  area_ids:
+    NYC: "area:nyc"
+    Brooklyn: "area:brooklyn"
+    North Brooklyn: "area:north-brooklyn"
+    Northwest Brooklyn: "area:northwest-brooklyn"
+    Central Brooklyn: "area:central-brooklyn"
+    East Brooklyn: "area:east-brooklyn"
+    South Brooklyn: "area:south-brooklyn"
+    Queens: "area:queens"
+    Northwest Queens: "area:northwest-queens"
+    Northeast Queens: "area:northeast-queens"
+    Central Queens: "area:central-queens"
+    Southeast Queens: "area:southeast-queens"
+    Bronx: "area:bronx"
+    Northwest Bronx: "area:northwest-bronx"
+    South Bronx: "area:south-bronx"
+    Central Bronx: "area:central-bronx"
+    East Bronx: "area:east-bronx"
+    Staten Island: "area:staten-island"
+    North Shore (Staten Island): "area:north-shore-staten-island"
+    Mid-Island (Staten Island): "area:mid-island-staten-island"
+    South Shore (Staten Island): "area:south-shore-staten-island"
+    Manhattan: "area:manhattan"
+    Manhattan Parks & Islands: "area:manhattan-parks-islands"
+  # Explicit venue identities: do not move activity descendants (e.g. Gardening,
+  # Theater, or Book Club) just because they share a venue-related ancestor.
+  # Only these reviewed identities may head the public topic/venue menus.
+  # New curated tags need a parent; changing this list is an explicit root decision.
+  filter_roots:
+    tag: [Art, Comedy, Community, Dance, Education, Family, Film, Free, Games, Literature, Music, Nightlife, Outdoor, Science, Sports, Theater, Virtual, Wellness]
+    venue: [Beverage Venue, Community Center, Cultural Venue, Event Hall, Government, Hospital, Hotel, House of Worship, Meetup Point, Office, Outdoor Venue, School, Shop, Studio, Nightclub, attraction, Fitness & Recreation]
+  venue_selector:
+    # Browsing labels are separate from stable tag identities and topic aliases.
+    labels:
+      # Stable key retained for existing links. Other is only for rare venue
+      # types with no suitable existing category; assignment requires review.
+      attraction: Other
+      Beverage Venue: Food & Drink
+      Cultural Venue: Arts & Culture
+      Outdoor Venue: Outdoor
+    tags:
+    - Beverage Venue
+    - Cultural Venue
+    - Outdoor Venue
+    - Arts Organization
+    - Arts Venue
+    - attraction
+    - Art Gallery
+    - Art Museum
+    - Art School
+    - Art Studio
+    - Arts Center
+    - Bakery
+    - Bar
+    - Beach
+    - Beer Garden
+    - Bookstore
+    - Botanical Garden
+    - Boutique
+    - Brewery
+    - Brooklyn Public Library
+    - Cafe
+    - Childrens Museum
+    - Church
+    - Cocktail Bar
+    - College
+    - Comedy Club
+    - Community Center
+    - Community Garden
+    - Community Space
+    - Concert Hall
+    - Convention Center
+    - Cultural Center
+    - CUNY
+    - Dance Studio
+    - Deli
+    - Distillery
+    - Dive Bar
+    - Event Hall
+    - Farm
+    - Fitness & Recreation
+    - Fitness Studio
+    - Skatepark
+    - Flea Market
+    - Food Hall
+    - Furniture Store
+    - Garden
+    - Gym
+    - Health Center
+    - Historic House
+    - Historic Site
+    - Hospital
+    - Hotel
+    - House of Worship
+    - Indoor Skydiving
+    - Jazz Club
+    - Juice Bar
+    - Library
+    - Lounge
+    - Meetup Point
+    - Microcinema
+    - Mosque
+    - Museum
+    - Music School
+    - Music Venue
+    - Neighborhood Bar
+    - Nightclub
+    - NYPL
+    - Observation Deck
+    - Office
+    - Older Adult Center
+    - Park
+    - Pet Shop
+    - Pier
+    - Plaza
+    - Pool / Swimming
+    - Public Schools
+    - Queens Public Library
+    - Record Store
+    - Recording Studio
+    - Recreation Center
+    - Restaurant
+    - Rooftop
+    - School
+    - Shop
+    - Sports Bar
+    - Sports Field
+    - State Park
+    - Studio
+    - Synagogue
+    - Tea House
+    - Town Hall
+    - University
+    - Wine Bar
+    - Wine Shop
+    - Winery
+    - Yoga Studio
+    - Performance Space
+    - Ballroom
+    - Cathedral
+    - Playground
+    - Green Space
+    - Coworking
+    - Landmark
+    - Historic Building
+    - Cemetery
+    - Speakeasy
+    - Government
   neighborhood_selector:
     groups:
       NYC:
@@ -392,6 +541,7 @@ geotags:
   - "Bronx"
   - "Bronx Park"
   - "Bronxdale"
+  - "Brookhaven"
   - "Brooklyn"
   - "Brooklyn Heights"
   - "Brownsville"
@@ -470,6 +620,7 @@ geotags:
   - "Fort Greene"
   - "Fort Hamilton"
   - "Fort Lee"
+  - "Hampton, NJ"
   - "Upper Manhattan"
   - "Mercer County"
   - "Fort Montgomery"
@@ -486,6 +637,7 @@ geotags:
   - "Gowanus"
   - "Gramercy"
   - "Graniteville"
+  - "Grasmere"
   - "Gravesend"
   - "Great Kills"
   - "Great Kills Park"
@@ -666,6 +818,7 @@ geotags:
   - "Times Square"
   - "Todt Hill"
   - "Tompkinsville"
+  - "Totowa"
   - "Tottenville"
   - "Travis"
   - "Tremont"
@@ -1202,6 +1355,7 @@ geographic_hierarchy:
     - Pompton Plains
     - Whippany
     Passaic County:
+    - Totowa
     - Clifton
     - Passaic
     - Paterson
@@ -1234,6 +1388,7 @@ geographic_hierarchy:
     - Somerville
     - Watchung
     Hunterdon County:
+    - Hampton, NJ
     - Lambertville
     - Flemington
     Mercer County:
@@ -1292,6 +1447,7 @@ geographic_hierarchy:
     - Point Lookout
     - Plainview
     Suffolk County:
+    - Brookhaven
     - Babylon
     - Bay Shore
     - Bellport
@@ -1420,6 +1576,8 @@ geographic_hierarchy:
     - Greenport
     - Mattituck
     - Southold
+    Staten Island:
+    - Grasmere
   promote:
   - Fort Lee
   - Upper Manhattan
@@ -1428,3 +1586,2416 @@ geographic_hierarchy:
   - location_id: 1211
     expected_name: Weeksville Heritage Center
     tag: Weeksville
+
+# Reviewed venue taxonomy repair policy; scripts/audit_venue_taxonomy.py previews/applies it.
+# A name can be curated independently for events and venues. These existing
+# event meanings survive the venue split; all other venue-only event tags
+# become search keywords. Parent names here are event identities.
+tag_scopes:
+  event_parents:
+    Ballroom: [Dance]
+    Government: [Community]
+    Pool / Swimming: [Swimming]
+    Indoor Skydiving: [Sports]
+    Flea Market: [Community]
+
+# Scoped hierarchy repair policy. New findings require review, never auto-promotion.
+tag_hierarchy:
+  structural_roots:
+    event: [Format]
+    venue: [Neighborhood]
+  parents:
+    event:
+      Gallery Reception: [Art]
+      Flea Market: [Community]
+      Indoor Skydiving: [Sports]
+      Competition: [Community]
+      Landmarks: [History]
+    venue:
+      Observation Deck: [Outdoor Venue]
+      Indoor Skydiving: [Fitness & Recreation]
+  demote:
+    event: [Parks and Rec]
+
+venue_taxonomy:
+  aliases:
+    Kids & Family: Family
+    Workshops & Classes: Education
+    Bike Tours: Cycling
+    Parks & Gardens: Park
+    Parks & Nature: Park
+    Government & Public Services: Government
+    Health & Wellness: Health
+    Place of Worship: House of Worship
+    Rec Center: Recreation Center
+  parents:
+    Fitness & Recreation: []
+    Gym: [Fitness & Recreation]
+    Skatepark: [Fitness & Recreation]
+    Recreation Center: [Community Center, Fitness & Recreation]
+    Observation Deck: [Outdoor Venue]
+    Indoor Skydiving: [Fitness & Recreation]
+    Beverage Venue: []
+    Cultural Venue: []
+    Outdoor Venue: []
+    Bar:
+    - Beverage Venue
+    Restaurant:
+    - Beverage Venue
+    Museum:
+    - Cultural Venue
+    Library:
+    - Cultural Venue
+    Cultural Center:
+    - Cultural Venue
+    Historic Site:
+    - Cultural Venue
+    Performance Space:
+    - Cultural Venue
+    Park:
+    - Outdoor Venue
+    Garden:
+    - Outdoor Venue
+    Plaza:
+    - Outdoor Venue
+    CUNY:
+    - University
+    Arts Organization:
+    - Cultural Center
+    Health Center:
+    - Hospital
+    Ballroom: [Event Hall]
+    Convention Center: [Event Hall]
+    Sports Field:
+    - Park
+    Pool / Swimming: [Fitness & Recreation]
+    Rooftop:
+    - Outdoor Venue
+    Cocktail Bar:
+    - Bar
+    Dive Bar:
+    - Bar
+    Sports Bar:
+    - Bar
+    Neighborhood Bar:
+    - Bar
+    Speakeasy:
+    - Bar
+    Music Venue:
+    - Performance Space
+    Concert Hall:
+    - Music Venue
+    Jazz Club:
+    - Music Venue
+    Nightclub: []
+    Comedy Club:
+    - Performance Space
+    Music School:
+    - School
+    Art School:
+    - School
+    Art Studio:
+    - Studio
+    Childrens Museum:
+    - Museum
+    NYPL:
+    - Library
+    Town Hall:
+    - Government
+    Community Garden:
+    - Garden
+    - Park
+    Boutique:
+    - Shop
+    Furniture Store:
+    - Shop
+    Fitness Studio:
+    - Gym
+    - Studio
+    Yoga Studio:
+    - Fitness Studio
+    Cathedral:
+    - Church
+    Brewery:
+    - Beverage Venue
+    Distillery:
+    - Beverage Venue
+    Winery:
+    - Beverage Venue
+    Farm:
+    - Outdoor Venue
+    Microcinema:
+    - Cultural Venue
+    Lounge:
+    - Beverage Venue
+    Historic House:
+    - Historic Building
+    Arts Venue:
+    - Cultural Venue
+    Art Gallery:
+    - Arts Venue
+    Public Schools:
+    - School
+  remove_aliases:
+    Performance Space: Concert Hall
+  location_tags:
+  - location_id: 8839
+    expected_name: Holland Bikes Brooklyn
+    tag: Shop
+  - location_id: 8608
+    expected_name: Holland Bikes Central Park
+    tag: Shop
+  - location_id: 7982
+    expected_name: Pier 26 at Hudson River Park
+    tag: Pier
+
+  # Reviewed venue uses, separate from legacy generic keywords. No automatic
+  # Event Space → Event Hall alias: occasional private hire does not qualify.
+  membership_review:
+    promote:
+    - name: Event Hall
+      emoji: 🏛️
+    - name: Fitness & Recreation
+      emoji: 🏃
+    - name: Skatepark
+      emoji: 🛹
+    retire:
+    - Venue
+    - Event Space
+    - Warehouse
+    - Nightlife Venue
+    parents:
+      Ballroom:
+      - Event Hall
+      Convention Center:
+      - Event Hall
+      Nightclub: []
+      Fitness & Recreation: []
+      Gym:
+      - Fitness & Recreation
+      Pool / Swimming:
+      - Fitness & Recreation
+      Skatepark:
+      - Fitness & Recreation
+      Indoor Skydiving:
+      - Fitness & Recreation
+      Recreation Center:
+      - Community Center
+      - Fitness & Recreation
+    locations:
+    - location_id: 41
+      expected_name: Apollo Theater
+      add:
+      - Music Venue
+      remove: []
+    - location_id: 42
+      expected_name: Arlene's Grocery
+      add:
+      - Music Venue
+      remove: []
+    - location_id: 55
+      expected_name: Astoria World Manor
+      add:
+      - Ballroom
+      - Event Hall
+      remove: []
+    - location_id: 58
+      expected_name: Atolye
+      add:
+      - Music Venue
+      remove: []
+    - location_id: 64
+      expected_name: Avant Gardner
+      add:
+      - Music Venue
+      remove: []
+    - location_id: 65
+      expected_name: Baby's All Right
+      add:
+      - Bar
+      - Music Venue
+      remove: []
+    - location_id: 69
+      expected_name: BAM Strong
+      add:
+      - Performance Space
+      remove: []
+    - location_id: 88
+      expected_name: Beacon Theatre
+      add:
+      - Music Venue
+      remove: []
+    - location_id: 121
+      expected_name: Brick Aux
+      add:
+      - Performance Space
+      - Studio
+      remove: []
+    - location_id: 150
+      expected_name: Brooklyn Paramount
+      add:
+      - Music Venue
+      remove: []
+    - location_id: 153
+      expected_name: Brooklyn Steel
+      add:
+      - Music Venue
+      remove: []
+    - location_id: 154
+      expected_name: Brooklyn Storehouse
+      add:
+      - Event Hall
+      - Music Venue
+      remove: []
+    - location_id: 168
+      expected_name: Cafe Wha?
+      add:
+      - Music Venue
+      remove: []
+    - location_id: 180
+      expected_name: Carroll Hall
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 184
+      expected_name: Caveat
+      add:
+      - Performance Space
+      remove: []
+    - location_id: 207
+      expected_name: City Winery
+      add:
+      - Music Venue
+      remove: []
+    - location_id: 223
+      expected_name: Coney Island Amphitheater
+      add:
+      - Music Venue
+      remove: []
+    - location_id: 241
+      expected_name: Crown Hill Theatre
+      add:
+      - Music Venue
+      - Performance Space
+      remove: []
+    - location_id: 267
+      expected_name: Drom
+      add:
+      - Music Venue
+      remove: []
+    - location_id: 284
+      expected_name: Elsewhere
+      add:
+      - Music Venue
+      - Nightclub
+      remove: []
+    - location_id: 310
+      expected_name: Forest Hills Stadium
+      add:
+      - Music Venue
+      remove: []
+    - location_id: 354
+      expected_name: Gold Sounds
+      add:
+      - Bar
+      - Music Venue
+      remove: []
+    - location_id: 367
+      expected_name: Groove
+      add:
+      - Bar
+      - Music Venue
+      remove: []
+    - location_id: 420
+      expected_name: Irving Plaza
+      add:
+      - Music Venue
+      remove: []
+    - location_id: 423
+      expected_name: Isola Brooklyn
+      add:
+      - Restaurant
+      remove: []
+    - location_id: 430
+      expected_name: Jalopy Theatre
+      add:
+      - Music Venue
+      remove: []
+    - location_id: 434
+      expected_name: Jamaica Performing Arts Center (JPAC)
+      add:
+      - Performance Space
+      remove: []
+    - location_id: 445
+      expected_name: The Public Theater
+      add:
+      - Performance Space
+      remove: []
+    - location_id: 458
+      expected_name: Kings Theatre
+      add:
+      - Music Venue
+      remove: []
+    - location_id: 464
+      expected_name: Night Club 101
+      add:
+      - Music Venue
+      remove: []
+    - location_id: 465
+      expected_name: Knockdown Center
+      add:
+      - Music Venue
+      - Nightclub
+      remove: []
+    - location_id: 474
+      expected_name: Le Poisson Rouge (LPR)
+      add:
+      - Music Venue
+      remove: []
+    - location_id: 481
+      expected_name: Lena Horne Bandshell, Prospect Park
+      add:
+      - Music Venue
+      remove: []
+    - location_id: 488
+      expected_name: Lewis Davis Pavilion
+      add:
+      - Community Space
+      remove: []
+    - location_id: 548
+      expected_name: Mercury Lounge
+      add:
+      - Music Venue
+      remove: []
+    - location_id: 587
+      expected_name: Music Hall of Williamsburg
+      add:
+      - Music Venue
+      remove: []
+    - location_id: 589
+      expected_name: National Sawdust
+      add:
+      - Music Venue
+      remove: []
+    - location_id: 602
+      expected_name: New York City Center
+      add:
+      - Performance Space
+      remove: []
+    - location_id: 621
+      expected_name: Nowadays
+      add:
+      - Nightclub
+      remove: []
+    - location_id: 622
+      expected_name: Nuyorican Poets Cafe
+      add:
+      - Performance Space
+      remove: []
+    - location_id: 660
+      expected_name: Pianos
+      add:
+      - Bar
+      - Music Venue
+      remove: []
+    - location_id: 662
+      expected_name: Pier 17
+      add:
+      - Music Venue
+      remove: []
+    - location_id: 665
+      expected_name: Pine Box Rock Shop
+      add:
+      - Bar
+      - Music Venue
+      remove: []
+    - location_id: 671
+      expected_name: Polygon Brooklyn
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 686
+      expected_name: Public Records
+      add:
+      - Bar
+      - Music Venue
+      remove: []
+    - location_id: 694
+      expected_name: Radio City Music Hall
+      add:
+      - Music Venue
+      remove: []
+    - location_id: 723
+      expected_name: Roulette
+      add:
+      - Music Venue
+      remove: []
+    - location_id: 726
+      expected_name: Rumsey Playfield, Central Park
+      add:
+      - Music Venue
+      remove: []
+    - location_id: 757
+      expected_name: Sounds of Brazil (SOB's)
+      add:
+      - Music Venue
+      remove: []
+    - location_id: 775
+      expected_name: St. George Theatre
+      add:
+      - Music Venue
+      remove: []
+    - location_id: 801
+      expected_name: Sultan Room
+      add:
+      - Bar
+      - Music Venue
+      remove: []
+    - location_id: 815
+      expected_name: Terminal 5
+      add:
+      - Music Venue
+      remove: []
+    - location_id: 823
+      expected_name: The Bitter End
+      add:
+      - Music Venue
+      remove: []
+    - location_id: 824
+      expected_name: The Bowery Ballroom
+      add:
+      - Music Venue
+      remove: []
+    - location_id: 825
+      expected_name: Bowery Palace
+      add:
+      - Music Venue
+      remove: []
+    - location_id: 828
+      expected_name: The Brooklyn Monarch
+      add:
+      - Music Venue
+      remove: []
+    - location_id: 839
+      expected_name: The Delancey
+      add:
+      - Nightclub
+      remove: []
+    - location_id: 853
+      expected_name: The Greene Space
+      add:
+      - Performance Space
+      - Studio
+      remove: []
+    - location_id: 869
+      expected_name: The Meadows
+      add:
+      - Bar
+      - Music Venue
+      remove: []
+    - location_id: 882
+      expected_name: The Owl Music Parlor
+      add:
+      - Music Venue
+      remove: []
+    - location_id: 893
+      expected_name: The Stone
+      add:
+      - Music Venue
+      remove: []
+    - location_id: 923
+      expected_name: Trans-Pecos
+      add:
+      - Music Venue
+      remove: []
+    - location_id: 927
+      expected_name: Tribeca Rooftop + 360°
+      add:
+      - Event Hall
+      - Outdoor Venue
+      - Rooftop
+      remove: []
+    - location_id: 931
+      expected_name: TV Eye
+      add:
+      - Bar
+      - Music Venue
+      remove: []
+    - location_id: 936
+      expected_name: Union Pool
+      add:
+      - Bar
+      - Music Venue
+      remove: []
+    - location_id: 943
+      expected_name: Vanderbilt Hall at Grand Central Terminal
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 956
+      expected_name: Webster Hall
+      add:
+      - Music Venue
+      remove: []
+    - location_id: 968
+      expected_name: White Eagle Hall
+      add:
+      - Music Venue
+      remove: []
+    - location_id: 990
+      expected_name: Xanadu
+      add:
+      - Music Venue
+      remove: []
+    - location_id: 995
+      expected_name: ZeroSpace
+      add:
+      - Event Hall
+      - Studio
+      remove: []
+    - location_id: 1003
+      expected_name: Edison Ballroom
+      add:
+      - Ballroom
+      - Event Hall
+      remove: []
+    - location_id: 1045
+      expected_name: 501 Union
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 1054
+      expected_name: Deity Weddings and Events
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 1055
+      expected_name: The View Event Space
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 1059
+      expected_name: Luo's Events
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 1060
+      expected_name: The Liberty Warehouse
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 1071
+      expected_name: 26 Bridge
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 1072
+      expected_name: Under DUMBO - Event Space NYC
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 1073
+      expected_name: The Dumbo Loft
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 1076
+      expected_name: Duggal Greenhouse
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 1091
+      expected_name: Studio 17 Event Space
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 1116
+      expected_name: The Greenpoint Loft
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 1123
+      expected_name: The Bordone LIC
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 1125
+      expected_name: The Penthouse
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 1128
+      expected_name: Melrose Ballroom
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 1130
+      expected_name: The Sanctuary Roosevelt Island
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 1144
+      expected_name: La Nueva Elegancia
+      add:
+      - Restaurant
+      remove: []
+    - location_id: 1146
+      expected_name: Klub Haus
+      add:
+      - Nightclub
+      remove: []
+    - location_id: 1151
+      expected_name: The Statuary
+      add:
+      - Art Gallery
+      - Music Venue
+      - Performance Space
+      remove: []
+    - location_id: 1167
+      expected_name: Liberty House Wedding & Event
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 1168
+      expected_name: The Factory
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 1200
+      expected_name: The Bishop
+      add:
+      - Bar
+      remove: []
+    - location_id: 1203
+      expected_name: The Candy Factory
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 1216
+      expected_name: Gowanus Loft
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 1219
+      expected_name: Plant 486
+      add:
+      - Shop
+      remove: []
+    - location_id: 1336
+      expected_name: 188 Lafayette Street, SoHo
+      add:
+      - Shop
+      remove:
+      - attraction
+      source: https://www.parasolprojects.com/parasol-188-lafayette
+      reason: Dedicated retail pop-up storefront.
+    - location_id: 1348
+      expected_name: Van Cortlandt Golf House
+      add:
+      - Bar
+      - Cafe
+      remove: []
+    - location_id: 1420
+      expected_name: Civic Hall
+      add:
+      - Coworking
+      remove: []
+    - location_id: 1431
+      expected_name: Rubulad
+      add:
+      - Nightclub
+      remove: []
+    - location_id: 1433
+      expected_name: Market Hotel
+      add:
+      - Music Venue
+      remove: []
+    - location_id: 1447
+      expected_name: 620 Loft & Garden
+      add:
+      - Event Hall
+      - Outdoor Venue
+      - Rooftop
+      remove: []
+    - location_id: 1462
+      expected_name: Bronxlandia
+      add:
+      - Community Space
+      remove: []
+    - location_id: 1470
+      expected_name: Gowanus Dredgers Bunker
+      add:
+      - Community Space
+      remove: []
+    - location_id: 1498
+      expected_name: The Glass House
+      add:
+      - Event Hall
+      - Outdoor Venue
+      - Rooftop
+      remove: []
+    - location_id: 1501
+      expected_name: The Stable Building
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 1513
+      expected_name: La Bodega Studios
+      add:
+      - Art Studio
+      - Studio
+      remove: []
+    - location_id: 1536
+      expected_name: Naumburg Bandshell
+      add:
+      - Music Venue
+      remove: []
+    - location_id: 1596
+      expected_name: The Refectory at Vanderbilt University
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 1918
+      expected_name: Bronx Music Hall
+      add:
+      - Music Venue
+      remove: []
+    - location_id: 1921
+      expected_name: Ziegfeld Ballroom
+      add:
+      - Ballroom
+      - Event Hall
+      remove: []
+    - location_id: 1989
+      expected_name: Brooklyn Expo Center
+      add:
+      - Convention Center
+      - Event Hall
+      remove: []
+    - location_id: 1993
+      expected_name: Hoboken Elks Lodge 74
+      add:
+      - Community Space
+      remove: []
+    - location_id: 2040
+      expected_name: The Peoples' Voice Cafe
+      add:
+      - Music Venue
+      remove: []
+    - location_id: 2041
+      expected_name: Cloud City
+      add:
+      - Art Gallery
+      - Performance Space
+      remove: []
+    - location_id: 2042
+      expected_name: New Ear
+      add:
+      - Music Venue
+      remove: []
+    - location_id: 2048
+      expected_name: Tishman Auditorium
+      add:
+      - Performance Space
+      remove: []
+    - location_id: 2052
+      expected_name: Voorhees Theatre (City Tech)
+      add:
+      - Performance Space
+      remove: []
+    - location_id: 2071
+      expected_name: Masquerade
+      add:
+      - Performance Space
+      remove: []
+    - location_id: 2163
+      expected_name: 120 Walker St
+      add:
+      - attraction
+      remove: []
+    - location_id: 2184
+      expected_name: Ciao Evento
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 2187
+      expected_name: Metropolitan Pavilion
+      add:
+      - Convention Center
+      - Event Hall
+      remove: []
+    - location_id: 2188
+      expected_name: 100 Sutton
+      add:
+      - Event Hall
+      - Studio
+      remove: []
+    - location_id: 2196
+      expected_name: Terrace on the Park
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 2220
+      expected_name: The Times Center
+      add:
+      - Performance Space
+      remove: []
+    - location_id: 2243
+      expected_name: Three West Club
+      add:
+      - Lounge
+      remove: []
+    - location_id: 2255
+      expected_name: City Point Brooklyn
+      add:
+      - Shop
+      remove: []
+    - location_id: 2304
+      expected_name: Da Mikelle Palazzo
+      add:
+      - Ballroom
+      - Event Hall
+      remove: []
+    - location_id: 2314
+      expected_name: American Legion Post 398
+      add:
+      - Community Space
+      remove: []
+    - location_id: 2373
+      expected_name: John A. Paulson Center
+      add:
+      - School
+      - University
+      remove: []
+    - location_id: 2398
+      expected_name: 345 Grand St
+      add:
+      - attraction
+      remove: []
+    - location_id: 2431
+      expected_name: The Altman Building
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 2445
+      expected_name: Interchurch Center
+      add:
+      - Office
+      remove: []
+    - location_id: 2513
+      expected_name: The Makers' Ensemble
+      add:
+      - Performance Space
+      remove: []
+    - location_id: 2515
+      expected_name: The Marquee Astoria
+      add:
+      - Ballroom
+      - Event Hall
+      remove: []
+    - location_id: 2544
+      expected_name: 99 Scott
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 2549
+      expected_name: The 1896
+      add:
+      - Bar
+      - Music Venue
+      remove: []
+    - location_id: 2586
+      expected_name: Life World
+      add:
+      - Performance Space
+      remove: []
+    - location_id: 2643
+      expected_name: Hart Bar
+      add:
+      - Bar
+      - Music Venue
+      remove: []
+    - location_id: 2660
+      expected_name: ARTSPACE
+      add:
+      - Arts Venue
+      - Performance Space
+      remove: []
+    - location_id: 2663
+      expected_name: Rumi
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 2683
+      expected_name: One Hanson Place
+      add:
+      - Event Hall
+      - Landmark
+      remove:
+      - attraction
+      source: https://www.onehansonevents.com/
+      reason: Historic banking hall operated as a dedicated events venue.
+    - location_id: 2687
+      expected_name: The Breakfast Room at Fairfield Inn Times Square South
+      add:
+      - Hotel
+      remove: []
+    - location_id: 2709
+      expected_name: Grand Prospect Hall
+      add:
+      - attraction
+      remove: []
+    - location_id: 2744
+      expected_name: 590 E 83rd St
+      add:
+      - School
+      remove:
+      - attraction
+      source: https://www.brearley.org/contact/
+      reason: Brearley 590 building, distinct from its 610 East 83rd building.
+    - location_id: 2820
+      expected_name: HK Hall
+      add:
+      - Event Hall
+      - Music Venue
+      remove: []
+    - location_id: 2830
+      expected_name: 36 E Broadway
+      add:
+      - attraction
+      remove: []
+    - location_id: 2834
+      expected_name: Boshi's Place
+      add:
+      - Community Space
+      remove: []
+    - location_id: 2844
+      expected_name: Cipriani 42nd Street
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 2850
+      expected_name: Winners Palace Event Hall
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 2883
+      expected_name: The Weylin
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 2914
+      expected_name: The Deep End
+      add:
+      - Restaurant
+      remove: []
+    - location_id: 2941
+      expected_name: Convene at 117 W 46th St
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 2961
+      expected_name: Shrine World Music Venue
+      add:
+      - Bar
+      - Music Venue
+      remove: []
+    - location_id: 2962
+      expected_name: The Broadway
+      add:
+      - Music Venue
+      remove: []
+    - location_id: 2967
+      expected_name: IBeam Brooklyn
+      add:
+      - Music Venue
+      remove: []
+    - location_id: 2972
+      expected_name: The Wellmont Theater
+      add:
+      - Music Venue
+      remove: []
+    - location_id: 2974
+      expected_name: The Stone Pony
+      add:
+      - Music Venue
+      remove: []
+    - location_id: 2978
+      expected_name: Secret Loft
+      add:
+      - Performance Space
+      remove: []
+    - location_id: 3083
+      expected_name: Brooklyn Cannery
+      add:
+      - Bar
+      remove: []
+    - location_id: 3100
+      expected_name: Mayday Space
+      add:
+      - Community Space
+      remove: []
+    - location_id: 3148
+      expected_name: 47 Thames St
+      add:
+      - attraction
+      remove: []
+    - location_id: 3149
+      expected_name: 'Social Cues: The Garden'
+      add:
+      - Lounge
+      remove: []
+    - location_id: 3258
+      expected_name: 248 McKibbin St
+      add:
+      - attraction
+      remove: []
+    - location_id: 3261
+      expected_name: 597 Grand St
+      add:
+      - attraction
+      remove: []
+    - location_id: 3263
+      expected_name: 824 Lexington Ave
+      add:
+      - attraction
+      remove: []
+    - location_id: 3268
+      expected_name: Gambit Works
+      add:
+      - Arts Venue
+      remove: []
+    - location_id: 3270
+      expected_name: Sapientia Initiative
+      add:
+      - Fitness Studio
+      remove: []
+    - location_id: 3297
+      expected_name: Fujitsu AirStage on Broadway
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 3383
+      expected_name: Alfred Lerner Hall
+      add:
+      - School
+      - University
+      remove: []
+    - location_id: 3442
+      expected_name: One Rivington
+      add:
+      - Art Gallery
+      - Performance Space
+      remove: []
+    - location_id: 3482
+      expected_name: 167 E Broadway
+      add:
+      - attraction
+      remove: []
+    - location_id: 3511
+      expected_name: The Tillary Hotel
+      add:
+      - Hotel
+      remove: []
+    - location_id: 3581
+      expected_name: Empire Stage
+      add:
+      - Music Venue
+      remove: []
+    - location_id: 3591
+      expected_name: Capitale
+      add:
+      - Ballroom
+      - Event Hall
+      remove: []
+    - location_id: 3594
+      expected_name: Caribbean Breeze Banquet Hall
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 3595
+      expected_name: 477 Broadway Lofts
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 3597
+      expected_name: Box of Moonlight
+      add:
+      - Performance Space
+      - Studio
+      remove: []
+    - location_id: 3598
+      expected_name: Kestrels
+      add:
+      - Studio
+      remove: []
+    - location_id: 3599
+      expected_name: 22 Wooster St
+      add:
+      - Shop
+      remove:
+      - attraction
+      source: https://22wooster.com/
+      reason: Dedicated retail premises.
+    - location_id: 3600
+      expected_name: 434 E 9th St
+      add:
+      - Shop
+      remove:
+      - attraction
+      source: https://www.elsimarie.com/rsvp
+      reason: Retail storefront used by pop-up designers; no assumption about which current tenant hosted the old
+        event.
+    - location_id: 3601
+      expected_name: 5th St & 47th Ave
+      add:
+      - Meetup Point
+      remove: []
+    - location_id: 3744
+      expected_name: Carriage House
+      add:
+      - Arts Venue
+      remove: []
+    - location_id: 4009
+      expected_name: Medusa Art Studios
+      add:
+      - Arts Venue
+      - Event Hall
+      remove: []
+    - location_id: 4010
+      expected_name: Last Frontier NYC
+      add:
+      - Art Gallery
+      - Performance Space
+      remove: []
+    - location_id: 4119
+      expected_name: Iron23
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 4123
+      expected_name: Kol Yaakov Hall
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 4140
+      expected_name: Pier 36 NYC
+      add:
+      - Convention Center
+      - Event Hall
+      remove: []
+    - location_id: 4165
+      expected_name: The Mezzanine
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 4180
+      expected_name: SCALES
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 4289
+      expected_name: Palladium Times Square
+      add:
+      - Music Venue
+      - Performance Space
+      remove: []
+    - location_id: 4296
+      expected_name: Lavan 641 Midtown
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 4474
+      expected_name: GrowHouse NYC
+      add:
+      - Community Space
+      remove: []
+    - location_id: 4479
+      expected_name: 630SECOND
+      add:
+      - Ballroom
+      - Event Hall
+      remove: []
+    - location_id: 4480
+      expected_name: 15-39 Covert St
+      add:
+      - attraction
+      remove: []
+    - location_id: 4481
+      expected_name: 461 6th St
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 4527
+      expected_name: Verci
+      add:
+      - Community Space
+      remove: []
+    - location_id: 4591
+      expected_name: O'Byrne Chapel at Manhattanville University
+      add:
+      - Church
+      remove: []
+    - location_id: 4593
+      expected_name: Conwell Coffee Hall
+      add:
+      - Cafe
+      remove: []
+    - location_id: 4595
+      expected_name: Caravan of Dreams
+      add:
+      - Restaurant
+      remove: []
+    - location_id: 4596
+      expected_name: Prospect Butcher Co.
+      add:
+      - Shop
+      remove: []
+    - location_id: 4598
+      expected_name: Da Spot NYC
+      add:
+      - Arts Venue
+      remove: []
+    - location_id: 4600
+      expected_name: George F. Baker Jr. House
+      add:
+      - Historic Site
+      remove: []
+    - location_id: 4601
+      expected_name: Davidoff of Geneva (Midtown)
+      add:
+      - Lounge
+      - Shop
+      remove: []
+    - location_id: 4753
+      expected_name: Dobbin St
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 4773
+      expected_name: Brooklyn Roots Collective
+      add:
+      - Event Hall
+      - Music Venue
+      remove: []
+    - location_id: 4782
+      expected_name: Substance Skatepark
+      add:
+      - Skatepark
+      remove:
+      - attraction
+      reason: Indoor skatepark belongs under Fitness & Recreation; do not imply Outdoor.
+      source: https://substanceskatepark.com/pages/locations
+    - location_id: 4790
+      expected_name: TNR Loft
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 4832
+      expected_name: One77
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 4967
+      expected_name: PACIFIC BK
+      add:
+      - Music Venue
+      - Performance Space
+      remove: []
+    - location_id: 4988
+      expected_name: Houghton Hall Arts Community
+      add:
+      - Dance Studio
+      - Performance Space
+      remove: []
+    - location_id: 5032
+      expected_name: Cipriani South Street
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 5095
+      expected_name: Castle Royale
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 5153
+      expected_name: The Prince George Ballroom
+      add:
+      - Ballroom
+      - Event Hall
+      remove: []
+    - location_id: 5158
+      expected_name: The Old American Can Factory
+      add:
+      - Arts Venue
+      remove: []
+    - location_id: 5327
+      expected_name: Maison Projects
+      add:
+      - Community Space
+      remove: []
+    - location_id: 5535
+      expected_name: The Lighthouse at Chelsea Piers
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 5537
+      expected_name: Tashca
+      add:
+      - Restaurant
+      remove:
+      - attraction
+      source: https://tashcanyc.com/
+      reason: Official site identifies a Portuguese restaurant, not a generic event space.
+    - location_id: 5575
+      expected_name: Audible Story House
+      add:
+      - Performance Space
+      remove: []
+    - location_id: 5588
+      expected_name: The Ivory On Park
+      add:
+      - Event Hall
+      - Outdoor Venue
+      - Rooftop
+      remove: []
+    - location_id: 5589
+      expected_name: Hidden Door
+      add:
+      - Office
+      remove: []
+    - location_id: 5688
+      expected_name: 149 W 27th St
+      add:
+      - Office
+      remove: []
+    - location_id: 5689
+      expected_name: 5th House Studios
+      add:
+      - Studio
+      remove: []
+    - location_id: 5726
+      expected_name: 873 Broadway
+      add:
+      - attraction
+      remove: []
+    - location_id: 5971
+      expected_name: Big Apple Ballroom
+      add: []
+      remove:
+      - Ballroom
+    - location_id: 6033
+      expected_name: Down Town Association
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 6077
+      expected_name: Whitby Castle
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 6086
+      expected_name: 583 Park Avenue
+      add:
+      - Ballroom
+      - Event Hall
+      remove: []
+    - location_id: 6110
+      expected_name: Planet X Studios
+      add:
+      - Studio
+      remove: []
+    - location_id: 6111
+      expected_name: Loft at 20 W 23rd St
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 6130
+      expected_name: 190-01 Linden Blvd
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 6197
+      expected_name: Loft in Flatiron
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 6206
+      expected_name: The Ornate Studio
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 6208
+      expected_name: Mi Casa Studios
+      add:
+      - Studio
+      remove: []
+    - location_id: 6212
+      expected_name: 308 W 38th St
+      add:
+      - Shop
+      remove:
+      - attraction
+      source: https://posh.vip/e/electrix-vintage-fillabag-sale-midtown
+      reason: Repeated retail sale location; distinct from the Brooklyn Electrix store.
+    - location_id: 6213
+      expected_name: 70 Scott Ave
+      add:
+      - Nightclub
+      remove: []
+    - location_id: 6214
+      expected_name: 255 Randolph St
+      add:
+      - Nightclub
+      remove: []
+    - location_id: 6409
+      expected_name: Liberty View Farm
+      add:
+      - Farm
+      remove: []
+    - location_id: 6411
+      expected_name: Foundry LIC
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 6429
+      expected_name: The KoKo Lot
+      add:
+      - Outdoor Venue
+      remove: []
+    - location_id: 6434
+      expected_name: Picnic House
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 6440
+      expected_name: The Sixth Floor Loft
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 6500
+      expected_name: Mambroso
+      add:
+      - attraction
+      remove: []
+    - location_id: 6501
+      expected_name: SRC
+      add:
+      - Arts Venue
+      remove: []
+    - location_id: 6556
+      expected_name: Spring Studios
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 6575
+      expected_name: Bird MMXXIII
+      add:
+      - Arts Venue
+      remove: []
+    - location_id: 6584
+      expected_name: Word Play Social
+      add:
+      - Community Space
+      remove: []
+    - location_id: 6666
+      expected_name: Studio Rodrigo
+      add:
+      - Studio
+      remove: []
+    - location_id: 6667
+      expected_name: Loft39
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 6693
+      expected_name: Bell Works
+      add:
+      - Office
+      remove: []
+    - location_id: 6717
+      expected_name: Guastavino's
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 6719
+      expected_name: New Lab
+      add:
+      - Office
+      remove: []
+    - location_id: 6721
+      expected_name: Hotel Trades Council
+      add:
+      - Office
+      remove: []
+    - location_id: 6724
+      expected_name: Bulova Corporate Center
+      add:
+      - Office
+      remove: []
+    - location_id: 6727
+      expected_name: The Malin Chelsea
+      add:
+      - Office
+      remove: []
+    - location_id: 6728
+      expected_name: Solidus Labs
+      add:
+      - Office
+      remove: []
+    - location_id: 6730
+      expected_name: Jay Suites Midtown East
+      add:
+      - Coworking
+      remove: []
+    - location_id: 6735
+      expected_name: Exchange Place Alliance
+      add:
+      - Outdoor Venue
+      remove: []
+    - location_id: 6745
+      expected_name: Tom's Sons International Pleating
+      add:
+      - Studio
+      remove: []
+    - location_id: 6939
+      expected_name: F.M. Kirby Carriage House
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 6947
+      expected_name: The Mansion at West Sayville
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 6958
+      expected_name: Narrowsburg Union
+      add:
+      - Community Space
+      remove: []
+    - location_id: 6972
+      expected_name: Rise LIC
+      add:
+      - Community Space
+      remove:
+      - attraction
+      source: https://riselic.com/building
+      reason: Residential amenity lounge used for small community gatherings.
+    - location_id: 7002
+      expected_name: The Walker Loft
+      add:
+      - Event Hall
+      - Performance Space
+      remove: []
+    - location_id: 7052
+      expected_name: The Harvest Room
+      add:
+      - Event Hall
+      remove:
+      - attraction
+      source: https://gjdc.org/community-engagement/harvest-room/
+      reason: Dedicated rental room for celebrations and meetings.
+    - location_id: 7069
+      expected_name: Meadowlands Racetrack
+      add:
+      - Outdoor Venue
+      remove:
+      - attraction
+      source: https://playmeadowlands.com/about/
+      reason: Outdoor racetrack; no implication that it is a park.
+    - location_id: 7070
+      expected_name: 140 Sussex Ave
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 7073
+      expected_name: 1642 Schlosser St
+      add:
+      - attraction
+      remove: []
+    - location_id: 7148
+      expected_name: Giorgio's Baiting Hollow
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 7156
+      expected_name: 499 President
+      add:
+      - Community Space
+      remove:
+      - attraction
+      source: https://499president.com/amenities/
+      reason: Residential game room used for community meetups; not a public bar or arcade.
+    - location_id: 7348
+      expected_name: Obsidian House NY
+      add:
+      - Nightclub
+      remove: []
+    - location_id: 7373
+      expected_name: Ernest Records
+      add:
+      - Music Venue
+      - Studio
+      remove: []
+    - location_id: 7377
+      expected_name: Sunset Harbour
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 7380
+      expected_name: Angel Orensanz Foundation
+      add:
+      - Event Hall
+      - Performance Space
+      remove: []
+    - location_id: 7384
+      expected_name: Backyard BK
+      add:
+      - Sports Bar
+      remove:
+      - attraction
+      source: https://backyardbarandbilliards.com/williamsburg
+      reason: Backyard Bar & Billiards South Slope, with an address correction from 750 to 740 5th Avenue.
+    - location_id: 7420
+      expected_name: Meatpacking Collective
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 7461
+      expected_name: 190 Bowery
+      add:
+      - Coworking
+      remove: []
+    - location_id: 7488
+      expected_name: Oblique Table
+      add:
+      - Art Studio
+      - Community Space
+      remove:
+      - attraction
+      source: https://www.obli.nyc/story
+      reason: Craft studio and creative community workshops.
+    - location_id: 7530
+      expected_name: Brooklyn Roots Courtyard
+      add:
+      - Outdoor Venue
+      remove: []
+    - location_id: 7540
+      expected_name: GH On The Park
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 7543
+      expected_name: iBoatNYC
+      add:
+      - attraction
+      remove: []
+    - location_id: 7572
+      expected_name: Brooklyn Blizzard Event Space
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 7576
+      expected_name: 3rd & B'zaar
+      add:
+      - Shop
+      remove: []
+    - location_id: 7690
+      expected_name: Heritage Club at Bethpage
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 7714
+      expected_name: Drunken Fruit
+      add:
+      - Beverage Venue
+      remove:
+      - attraction
+      source: https://www.drunkenfruit.com/
+      reason: Food-and-drink tasting venue; no claim that it is a distillery or conventional restaurant.
+    - location_id: 7800
+      expected_name: Kollectiv
+      add:
+      - Fitness Studio
+      remove: []
+    - location_id: 7835
+      expected_name: Luminary
+      add:
+      - Coworking
+      remove: []
+    - location_id: 7845
+      expected_name: The Pool
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 8116
+      expected_name: artXnyc
+      add:
+      - Arts Venue
+      remove: []
+    - location_id: 8272
+      expected_name: The Hanover Manor
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 8273
+      expected_name: Oheka Castle
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 8284
+      expected_name: Lottus Event Center
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 8323
+      expected_name: 36 West 37th Street
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 8340
+      expected_name: 250 Broome St
+      add:
+      - Boutique
+      remove:
+      - attraction
+      source: https://www.twin.nyc/pages/contact
+      reason: T.W.I.N. identifies its Lower East Side clothing store at this address.
+    - location_id: 8347
+      expected_name: 181 11th St (Gowanus)
+      add:
+      - Office
+      remove: []
+    - location_id: 8351
+      expected_name: Event Loft 1505
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 8352
+      expected_name: 660 Utica Ave
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 8353
+      expected_name: 224 Buffalo Ave
+      add:
+      - attraction
+      remove: []
+    - location_id: 8354
+      expected_name: Street Lab Office & Warehouse
+      add:
+      - Office
+      remove:
+      - Community Center
+      - Community Space
+    - location_id: 8367
+      expected_name: The Doubles Club
+      add:
+      - Lounge
+      remove: []
+    - location_id: 8479
+      expected_name: Tulio Ray Studio
+      add:
+      - Studio
+      remove: []
+    - location_id: 8481
+      expected_name: Haute Durvo
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 8495
+      expected_name: Main St Success
+      add:
+      - Coworking
+      remove: []
+    - location_id: 8523
+      expected_name: 371 Canal St
+      add:
+      - Shop
+      remove:
+      - attraction
+      source: https://luma.com/rl3nm5nl
+      reason: The source identifies a retail pop-up selling clothing and accessories.
+    - location_id: 8534
+      expected_name: George Seuffert, Sr. Bandshell
+      add:
+      - Music Venue
+      remove: []
+    - location_id: 8544
+      expected_name: Stony Point Center
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 8588
+      expected_name: 68 White Street
+      add:
+      - Community Space
+      remove:
+      - attraction
+      source: https://luma.com/mo9nawaw
+      reason: Moonrise wellness and social clubhouse, distinct from MoonRise in Brooklyn.
+    - location_id: 8623
+      expected_name: Chef's Dinner Table
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 8749
+      expected_name: Libera
+      add:
+      - Lounge
+      remove: []
+    - location_id: 8757
+      expected_name: Brooklyn Point
+      add:
+      - Beverage Venue
+      remove:
+      - attraction
+      source: https://www.meetresident.com/brooklyn-point
+      reason: Resident operates a demonstration kitchen and chef counter for ticketed dining.
+    - location_id: 8811
+      expected_name: 14B Rooftop
+      add:
+      - Outdoor Venue
+      - Rooftop
+      remove: []
+    - location_id: 8825
+      expected_name: Leonard's Palazzo
+      add:
+      - Ballroom
+      - Event Hall
+      remove: []
+    - location_id: 8836
+      expected_name: One Vanderbilt
+      add:
+      - Office
+      remove: []
+    - location_id: 8837
+      expected_name: 720 Strength
+      add:
+      - Gym
+      remove: []
+    - location_id: 8863
+      expected_name: Pop Up Next Door (Elizabeth)
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 8867
+      expected_name: Fur HQ
+      add:
+      - Office
+      remove: []
+    - location_id: 9102
+      expected_name: 335 Madison Avenue
+      add:
+      - Office
+      remove: []
+    - location_id: 9117
+      expected_name: One Manhattan Square
+      add:
+      - Beverage Venue
+      remove:
+      - attraction
+      source: https://www.meetresident.com/one-manhattan-square
+      reason: Resident operates a communal kitchen and dining lounge for ticketed dining.
+    - location_id: 9141
+      expected_name: ABC Stone (Brooklyn)
+      add:
+      - Shop
+      remove: []
+    - location_id: 9143
+      expected_name: Stone Source (Carlstadt)
+      add:
+      - Shop
+      remove: []
+    - location_id: 9144
+      expected_name: 30 Vandam Street
+      add:
+      - Beverage Venue
+      remove:
+      - attraction
+      source: https://www.nimbuskitchen.com/new-york-city/
+      reason: Shared culinary kitchens with hosted tasting; no assumption of a public restaurant.
+    - location_id: 9180
+      expected_name: Smart Design
+      add:
+      - Studio
+      remove: []
+    - location_id: 9185
+      expected_name: Marina del Rey
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 9200
+      expected_name: 2 Fifth Avenue
+      add:
+      - Community Space
+      remove:
+      - attraction
+      source: https://www.meetup.com/unionsquare/events/315589945/
+      reason: Source explicitly identifies the lobby meeting room/library for community discussion.
+    - location_id: 9340
+      expected_name: Pier Sixty at Chelsea Piers
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 9368
+      expected_name: Lumin Studio
+      add:
+      - Studio
+      remove: []
+    - location_id: 9391
+      expected_name: 39 W 29th St, 3rd Floor
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 9398
+      expected_name: Building 309 (Governors Island)
+      add:
+      - Community Space
+      remove: []
+    - location_id: 9399
+      expected_name: 274 Lenox Avenue
+      add:
+      - attraction
+      remove: []
+    - location_id: 9428
+      expected_name: Convene at 555 Broadway
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 9503
+      expected_name: El Caribe Country Club
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 9504
+      expected_name: Rainbow Room
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 9535
+      expected_name: 15-15 Covert St
+      add:
+      - attraction
+      remove: []
+    - location_id: 9646
+      expected_name: Burbuja Events
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 9717
+      expected_name: Sunfish Studio
+      add:
+      - Studio
+      remove: []
+    - location_id: 9822
+      expected_name: LARPA
+      add:
+      - Performance Space
+      remove: []
+    - location_id: 9829
+      expected_name: Cipriani 25 Broadway
+      add:
+      - Ballroom
+      - Event Hall
+      remove: []
+    - location_id: 9917
+      expected_name: The Craft Studio Tribeca
+      add:
+      - Art Studio
+      remove: []
+    - location_id: 9921
+      expected_name: VESPER
+      add:
+      - Nightclub
+      remove: []
+    - location_id: 9949
+      expected_name: 347 Broome St
+      add:
+      - Shop
+      remove:
+      - attraction
+      source: https://www.popshop.com/347-broome-street/
+      reason: The listed Sohotel storefront is a retail pop-up shop.
+    - location_id: 9961
+      expected_name: Jericho Terrace
+      add:
+      - Ballroom
+      - Event Hall
+      remove: []
+    - location_id: 10069
+      expected_name: 1437 Utica Ave
+      add:
+      - attraction
+      remove: []
+    - location_id: 10142
+      expected_name: Hairstory Studio
+      add:
+      - Studio
+      remove: []
+    - location_id: 10143
+      expected_name: Squarespace HQ
+      add:
+      - Office
+      remove: []
+    - location_id: 10191
+      expected_name: Project Farmhouse
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 10196
+      expected_name: Ideal Glass Atelier
+      add:
+      - Performance Space
+      remove: []
+    - location_id: 10201
+      expected_name: 124 West 36th Street
+      add:
+      - Office
+      remove: []
+    - location_id: 10204
+      expected_name: Chief Flatiron Clubhouse
+      add:
+      - Lounge
+      remove: []
+    - location_id: 10206
+      expected_name: 20 Elizabeth Street
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 10207
+      expected_name: 50 West 23rd Street
+      add:
+      - Office
+      remove: []
+    - location_id: 10210
+      expected_name: Bowery Showroom
+      add:
+      - Shop
+      remove: []
+    - location_id: 10289
+      expected_name: The Lighthouse Brooklyn
+      add:
+      - Event Hall
+      - Performance Space
+      remove: []
+    - location_id: 10319
+      expected_name: Atrium82
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 10404
+      expected_name: The W Loft
+      add:
+      - Event Hall
+      - Outdoor Venue
+      - Rooftop
+      remove: []
+    - location_id: 10417
+      expected_name: Polish American Cultural Association
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 10426
+      expected_name: The Factoria at Charles Point
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 10460
+      expected_name: Studio 121
+      add:
+      - Studio
+      remove: []
+    - location_id: 10461
+      expected_name: Blue Panda Office Spaces
+      add:
+      - Studio
+      remove: []
+    - location_id: 10553
+      expected_name: Jay Conference Bryant Park
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 10594
+      expected_name: Locust Grove (Oak Hill)
+      add:
+      - Music Venue
+      - Outdoor Venue
+      remove: []
+    - location_id: 10645
+      expected_name: Cipriani Wall Street
+      add:
+      - Ballroom
+      - Event Hall
+      remove: []
+    - location_id: 10750
+      expected_name: Gotham Hall
+      add:
+      - Ballroom
+      - Event Hall
+      remove: []
+    - location_id: 10758
+      expected_name: NYC Seminar and Conference Center
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 10763
+      expected_name: 25 Little West 12th Street
+      add:
+      - Arts Venue
+      remove:
+      - attraction
+      source: https://schulzmuseum.org/traveling-exhibitions/
+      reason: Temporary exhibition space, including the Snoopy exhibition.
+    - location_id: 10764
+      expected_name: Spazio Creativo
+      add:
+      - Event Hall
+      remove:
+      - attraction
+      source: https://www.viacarota.com/gatherings
+      reason: Separate space dedicated to private dining and events.
+    - location_id: 10768
+      expected_name: The Malt House (Manhattanville)
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 10769
+      expected_name: The Senate Garage
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 10773
+      expected_name: Westchester Manor
+      add:
+      - Event Hall
+      remove: []
+    - location_id: 10801
+      expected_name: Hit Me Up
+      add:
+      - Community Space
+      remove:
+      - attraction
+      source: https://www.thewalkerloft.com/play
+      reason: Dedicated sixth-floor community loft, per user and event listings.
+    - location_id: 8744
+      expected_name: iFLY Indoor Skydiving - Westchester
+      add:
+      - Indoor Skydiving
+      remove:
+      - attraction
+      reason: Indoor physical recreation belongs under Fitness & Recreation, per user follow-up.
+    - location_id: 1551
+      expected_name: Pier 62 Skatepark
+      add:
+      - Skatepark
+      remove: []
+      reason: Existing outdoor skatepark membership reviewed; retain existing Park/Outdoor memberships.
+    - location_id: 499
+      expected_name: London Planetree Playground
+      add:
+      - Skatepark
+      remove: []
+      reason: Existing outdoor skatepark membership reviewed; retain existing Park/Outdoor memberships.
+    descriptions:
+    - location_id: 2041
+      expected_name: Cloud City
+      expected_description: Williamsburg board game café offering hundreds of games, snacks, drinks, and a gaming
+        community.
+      description: Artist-run arts and performance space at 85 North 1st Street in Williamsburg, hosting theater,
+        art exhibitions, comedy, music, film screenings, and community gatherings.
+      source: https://www.cloudcity.nyc/about.html
+    - location_id: 2040
+      expected_name: The Peoples' Voice Cafe
+      expected_description: Volunteer-run progressive coffeehouse at Judson Memorial Church since 1979 — folk, blues,
+        jazz, spoken word, theater, and dance with a social-justice focus.
+      description: Volunteer-run concert collective founded in 1979, presenting folk, blues, jazz, spoken word, theater,
+        and dance with a social-justice focus. Its performances have been held in Judson Memorial Church's Assembly
+        Hall at 239 Thompson Street since 2021.
+      source: https://peoplesvoicecafe.org/2021fall.html
+    - location_id: 7543
+      expected_name: iBoatNYC
+      expected_description: An intimate East Williamsburg loft and event space at 327 Stagg St in Brooklyn, hosting
+        after-hours house and techno parties, DJ sets, and underground dance events.
+      description: Event address at 327 Stagg Street in East Williamsburg, used for independently promoted after-hours
+        electronic music parties. iBoatNYC is an organizer that has held events here, not the name of the physical
+        venue.
+      source: https://www.eventbrite.com/e/juany-bravo-afters-brooklyn-nyc-tickets-1991707934046
+    - location_id: 2744
+      expected_name: 590 E 83rd St
+      expected_description: Upper East Side venue hosting private events and programming including documentary film
+        screenings, educational gatherings, and community functions in the Yorkville neighborhood.
+      description: The Brearley School’s building at 590 East 83rd Street on the Upper East Side. This school building
+        hosts educational programs, assemblies, performances, and community events; it is separate from the school’s
+        nearby 610 East 83rd Street building.
+      source: https://www.brearley.org/contact/
+    - location_id: 8340
+      expected_name: 250 Broome St
+      expected_description: A Lower East Side building on Broome Street whose loft space hosts independent parties,
+        pop-ups and small gatherings.
+      description: T.W.I.N. (That’s What I Need) is a clothing boutique at 250 Broome Street on the Lower East Side.
+        The shop offers clothing, accessories, styling appointments, and in-store events.
+      source: https://www.twin.nyc/pages/contact
+    - location_id: 8588
+      expected_name: 68 White Street
+      expected_description: A Tribeca event space used for members-only wellness gatherings.
+      description: Moonrise is a wellness clubhouse and social gathering space at 68 White Street in Tribeca, hosting
+        workshops, sound sessions, tea gatherings, and community events. It is distinct from the MoonRise venue in
+        Brooklyn.
+      source: https://luma.com/mo9nawaw
+    - location_id: 5537
+      expected_name: Tashca
+      expected_description: Nolita event space hosting paint-and-sip nights, pop-ups, and creative gatherings.
+      description: Tashca is a Portuguese restaurant and tavern at 151 Elizabeth Street in Nolita, serving shared
+        dishes and hosting private dinners and occasional creative events.
+      source: https://tashcanyc.com/
+    - location_id: 7052
+      expected_name: The Harvest Room
+      expected_description: null
+      description: The Harvest Room is Greater Jamaica Development Corporation’s rental event venue at 90-40 160th
+        Street in Jamaica, Queens. Its flexible room, stage, dance floor, and garden accommodate celebrations, meetings,
+        and community gatherings.
+      source: https://gjdc.org/community-engagement/harvest-room/
+    - location_id: 7488
+      expected_name: Oblique Table
+      expected_description: creative workshop/event space, Murray Hill
+      description: Oblique Table is a creative studio and gathering space in Midtown Manhattan offering hands-on craft
+        workshops, artist-led sessions, and community activities.
+      source: https://www.obli.nyc/story
+    - location_id: 8757
+      expected_name: Brooklyn Point
+      expected_description: Downtown Brooklyn residential tower at City Point whose amenity floors host ticketed chef
+        residencies and multi-course pop-up tasting dinners open to the public.
+      description: Brooklyn Point’s communal demonstration kitchen and chef’s counter at 138 Willoughby Street host
+        Resident’s ticketed chef dinners and private dining events. The dining venue is inside a residential building;
+        attendance is by reservation or invitation.
+      source: https://www.meetresident.com/brooklyn-point
+    - location_id: 9117
+      expected_name: One Manhattan Square
+      expected_description: An 800-foot residential tower on the East River waterfront at the foot of the Manhattan
+        Bridge, with an extensive amenity floor and private lounges. Its event spaces host chef-hosted dinners and
+        live-music evenings booked through Resident.
+      description: One Manhattan Square’s communal demonstration kitchen and lounge at 225 Cherry Street host Resident’s
+        chef dinners, receptions, and private dining events. The venue is inside a residential building; attendance
+        is by reservation or invitation.
+      source: https://www.meetresident.com/one-manhattan-square
+    - location_id: 7384
+      expected_name: Backyard BK
+      expected_description: Indoor/outdoor event venue on 5th Avenue in Greenwood Heights hosting day parties and
+        social events.
+      description: Backyard Bar & Billiards is a South Slope sports bar at 740 Fifth Avenue in Brooklyn, hosting sports
+        viewing, social events, and private gatherings.
+      source: https://backyardbarandbilliards.com/williamsburg
+    - location_id: 6500
+      expected_name: Mambroso
+      expected_description: Flatiron event space at 14 W 23rd St hosting tech-week parties and vinyl listening nights.
+      description: Event address at 14 West 23rd Street in the Flatiron District, previously used for Mambroso gatherings.
+        Mambroso is an organizer whose events take place at multiple venues; a specific permanent venue operator at
+        this address has not been established.
+      source: https://luma.com/mambroso
+    - location_id: 7002
+      expected_name: The Walker Loft
+      expected_description: Versatile event and performance space on the 5th and 6th floors of 120 Walker Street, hosting
+        theater, classes, film screenings, parties, weddings, and private events.
+      description: The Walker Loft is an event and performance venue at 120 Walker Street, 5th Floor, hosting theater,
+        classes, film screenings, weddings, and private gatherings.
+      source: https://www.thewalkerloft.com/play
+    names:
+    - location_id: 7543
+      expected_name: iBoatNYC
+      name: 327 Stagg St
+      source: https://www.eventbrite.com/e/juany-bravo-afters-brooklyn-nyc-tickets-1991707934046
+    - location_id: 2744
+      expected_name: 590 E 83rd St
+      name: The Brearley School (590 Building)
+      source: https://www.brearley.org/contact/
+    - location_id: 8340
+      expected_name: 250 Broome St
+      name: T.W.I.N. (Lower East Side)
+      source: https://www.twin.nyc/pages/contact
+    - location_id: 8588
+      expected_name: 68 White Street
+      name: Moonrise (Tribeca)
+      source: https://luma.com/mo9nawaw
+    - location_id: 7384
+      expected_name: Backyard BK
+      name: Backyard Bar & Billiards (South Slope)
+      source: https://backyardbarandbilliards.com/williamsburg
+    - location_id: 6500
+      expected_name: Mambroso
+      name: 14 W 23rd St
+      source: https://luma.com/mambroso
+    other_review:
+      tag: attraction
+      reviewed_on: '2026-09-09'
+      retain:
+      - location_id: 2163
+        expected_name: 120 Walker St
+        reason: Multi-tenant building fallback; named Hit Me Up events moved to dedicated location. No remaining active
+          events belong on the fallback.
+      - location_id: 10069
+        expected_name: 1437 Utica Ave
+        reason: Reviewed stored events and available sources; the specific tenant or ongoing venue use is not established
+          well enough for a narrower category.
+      - location_id: 9535
+        expected_name: 15-15 Covert St
+        reason: Reviewed stored events and available sources; the specific tenant or ongoing venue use is not established
+          well enough for a narrower category.
+      - location_id: 4480
+        expected_name: 15-39 Covert St
+        reason: Reviewed stored events and available sources; the specific tenant or ongoing venue use is not established
+          well enough for a narrower category.
+      - location_id: 7073
+        expected_name: 1642 Schlosser St
+        reason: Reviewed stored events and available sources; the specific tenant or ongoing venue use is not established
+          well enough for a narrower category.
+      - location_id: 3482
+        expected_name: 167 E Broadway
+        reason: Reviewed stored events and available sources; the specific tenant or ongoing venue use is not established
+          well enough for a narrower category.
+      - location_id: 8353
+        expected_name: 224 Buffalo Ave
+        reason: Reviewed stored events and available sources; the specific tenant or ongoing venue use is not established
+          well enough for a narrower category.
+      - location_id: 3258
+        expected_name: 248 McKibbin St
+        reason: Reviewed stored events and available sources; the specific tenant or ongoing venue use is not established
+          well enough for a narrower category.
+      - location_id: 9399
+        expected_name: 274 Lenox Avenue
+        reason: Reviewed stored events and available sources; the specific tenant or ongoing venue use is not established
+          well enough for a narrower category.
+      - location_id: 7543
+        expected_name: 327 Stagg St
+        reason: Reviewed stored events and available sources; the specific tenant or ongoing venue use is not established
+          well enough for a narrower category.
+      - location_id: 2398
+        expected_name: 345 Grand St
+        reason: Reviewed stored events and available sources; the specific tenant or ongoing venue use is not established
+          well enough for a narrower category.
+      - location_id: 2830
+        expected_name: 36 E Broadway
+        reason: Reviewed stored events and available sources; the specific tenant or ongoing venue use is not established
+          well enough for a narrower category.
+      - location_id: 3148
+        expected_name: 47 Thames St
+        reason: Reviewed stored events and available sources; the specific tenant or ongoing venue use is not established
+          well enough for a narrower category.
+      - location_id: 3261
+        expected_name: 597 Grand St
+        reason: Reviewed stored events and available sources; the specific tenant or ongoing venue use is not established
+          well enough for a narrower category.
+      - location_id: 3263
+        expected_name: 824 Lexington Ave
+        reason: Reviewed stored events and available sources; the specific tenant or ongoing venue use is not established
+          well enough for a narrower category.
+      - location_id: 5726
+        expected_name: 873 Broadway
+        reason: Reviewed stored events and available sources; the specific tenant or ongoing venue use is not established
+          well enough for a narrower category.
+      - location_id: 2709
+        expected_name: Grand Prospect Hall
+        reason: Demolished historical venue with no active events; do not label it as an operating rental hall.
+      - location_id: 6500
+        expected_name: Mambroso
+        reason: Mambroso is a multi-venue organizer; the specific tenant at this former event address is not established.

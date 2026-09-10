@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"><title>Shakuhachi</title><desc>A golden bamboo shakuhachi with an open notched blowing rim, four front finger holes, raised nodes and a slightly flared root end.</desc>
+<g transform="rotate(34 64 64)">
+<path fill="#B47B43" d="M55 10Q63 7 72 10L72 80Q72 102 80 116Q73 122 58 121Q56 107 55 82Z"/>
+<path fill="#E8AF66" d="M56 11H68L68 81Q68 103 75 117Q68 121 59 119Q57 106 56 82Z"/>
+<path fill="#FFCC80" d="M58 14H61L62 81Q62 105 65 119H60Q57 104 58 81Z"/>
+<ellipse cx="63.5" cy="10" rx="8.5" ry="4" fill="#D69B52"/><ellipse cx="63.5" cy="10" rx="5.4" ry="2.6" fill="#6D4C41"/>
+<path fill="#F7CE8B" d="M55 11Q58 14 61 14L64 11L67 14Q70 14 72 11V14Q64 19 55 14Z"/>
+<path fill="#BA8649" d="M54 43Q63 46 73 43V47Q64 50 54 47ZM55 78Q65 81 73 78V82Q65 85 55 82ZM57 103Q68 106 76 102L77 106Q68 110 57 107Z"/>
+<path fill="none" stroke="#F5C890" stroke-width="1.5" d="M55 44Q64 47 72 44M56 79Q65 82 72 79M58 104Q68 107 76 104"/>
+<g fill="#49352E"><ellipse cx="64" cy="56" rx="2.8" ry="3.2"/><ellipse cx="64" cy="69" rx="2.8" ry="3.2"/><ellipse cx="65" cy="88" rx="2.8" ry="3.2"/><ellipse cx="67" cy="99" rx="2.8" ry="3.2"/></g>
+<path fill="none" stroke="#9F723F" stroke-width="2" stroke-linecap="round" d="M60 114L61 119M66 115L67 120M72 113L74 118"/>
+</g></svg>

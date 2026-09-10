@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128"><title>Stand-up comedy</title><desc>A stage microphone beside a laughing face represents spoken comedy.</desc>
+<circle cx="85" cy="49" r="36" fill="#E9A32B"/><circle cx="83" cy="46" r="35" fill="#FFD65B"/><path d="M60 26c6-7 14-10 21-10" fill="none" stroke="#FFF19C" stroke-width="5" stroke-linecap="round"/>
+<path d="M63 40q6-9 12 0m16 0q6-9 12 0" stroke="#79533B" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+<path d="M62 50c11 5 30 5 43 0-2 19-11 25-22 25S65 68 62 50z" fill="#6B3C35"/><path d="M65 52c10 4 27 4 37 0l-3 7H68z" fill="#FFF7E3"/><path d="M72 69c5-6 15-7 23 0-7 6-17 6-23 0z" fill="#EF7979"/>
+<path d="M17 96v10c0 8 6 11 14 11h18" fill="none" stroke="#4C5257" stroke-width="6" stroke-linecap="round"/>
+<g transform="rotate(24 33 61)"><path d="M23 52h20l-2 47c0 7-16 7-16 0z" fill="#343C43"/><path d="M24 55h7l-1 42h-4z" fill="#65737D"/><path d="M25 91h16v6H25z" fill="#7FA4B5"/>
+<rect x="13" y="14" width="40" height="47" rx="20" fill="#78909C"/><path d="M15 33c0-25 34-25 35 0v13c-1 15-35 15-35 0z" fill="#BAC9CF"/><path d="M21 29c2-5 6-8 12-8" stroke="#F1F6F5" stroke-width="4" fill="none" stroke-linecap="round"/>
+<path d="M18 35h31m-31 9h31M27 30v20m11-20v20" stroke="#78909C" stroke-width="3" stroke-linecap="round"/><path d="M16 52h34v6H16z" fill="#526872"/></g>
+</svg>

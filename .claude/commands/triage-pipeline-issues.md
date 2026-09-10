@@ -154,6 +154,13 @@ WHERE e2.name IN (...archived names...) AND e2.archived = 0;
 ```
 If a parent website has the same events active, do not unarchive on the child.
 
+**Never un-archive a `suppressed = 1` row as if it restored visibility.** `suppressed` beats
+`archived`, so flipping `archived` on a suppressed event changes nothing on the map (2026-09-06: 66 of
+76 reported "un-archivals" were suppressed rows). Filter un-archive candidates with `AND suppressed = 0`.
+If a suppressed event looks like it should be visible, that is an editorial decision, not a triage fix:
+test its LOCATION against `config/nyc.yaml` coverage first (the 66 were out-of-area NJ branches hidden on
+purpose) and report it as a finding instead of clearing `suppressed`.
+
 4. **Classify** the issue and pick an action from the allow-list in `triage-pipeline-issues.md`. If no allowed fix applies, mark as a finding for the user.
 
 ## Step 4 — Apply and verify
@@ -188,7 +195,7 @@ Then `./venv/bin/python scripts/upload_public_html.py`.
 - Crawl failures investigated: N
 - Archival warnings investigated: M
 - Durable fixes applied: K
-- Un-archivals applied: J events
+- Un-archivals applied: J events (count `archived = 0 AND suppressed = 0` rows AFTER the update by query — not UPDATE statements issued)
 - Findings requiring user approval: F
 
 ## Per-site outcomes

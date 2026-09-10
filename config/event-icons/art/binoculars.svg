@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+<title>Binoculars</title>
+<path fill="#37474F" d="M34 9h15c4 0 7 4 7 8v18H29V17c0-5 2-8 5-8zm45 0h15c3 0 5 3 5 8v18H72V17c0-4 3-8 7-8z"/>
+<path fill="#607D8B" d="M35 12h12c3 0 4 2 4 5v8H33v-8c0-3 0-5 2-5zm44 0h12c3 0 4 2 4 5v8H77v-8c0-3 0-5 2-5z"/>
+<path fill="#455A64" d="M43 37h42v32H43z"/>
+<path fill="#78909C" d="M45 37h38v11H45z"/>
+<path fill="#263238" d="M57 34h14v23H57z"/>
+<rect x="59" y="32" width="10" height="24" rx="4" fill="#90A4AE"/>
+<path stroke="#607D8B" stroke-width="2" d="M61 36h6m-6 6h6m-6 6h6"/>
+<path fill="#455A64" d="M29 27h19c8 0 13 10 12 21l-4 42H5L15 47c3-13 7-20 14-20z"/>
+<path fill="#607D8B" d="M28 29h11c-8 5-12 15-15 28l-6 26H7l10-36c3-12 6-18 11-18z"/>
+<path fill="#37474F" d="M47 29c10 1 14 11 13 21l-4 40H43l3-39c1-11 0-18 1-22z"/>
+<path fill="#455A64" d="M80 27h19c7 0 11 7 14 20l10 43H72l-4-42c-1-11 4-21 12-21z"/>
+<path fill="#607D8B" d="M80 30h9c-7 7-6 17-5 28l3 31H73l-3-42c0-9 4-15 10-17z"/>
+<path fill="#37474F" d="M100 30c6 3 10 9 13 20l10 40h-12l-8-37c-2-9-4-17-3-23z"/>
+<ellipse cx="30" cy="88" rx="26" ry="25" fill="#263238"/>
+<ellipse cx="98" cy="88" rx="26" ry="25" fill="#263238"/>
+<ellipse cx="30" cy="87" rx="21" ry="20" fill="#78909C"/>
+<ellipse cx="98" cy="87" rx="21" ry="20" fill="#78909C"/>
+<ellipse cx="30" cy="88" rx="17" ry="16" fill="#1565C0"/>
+<ellipse cx="98" cy="88" rx="17" ry="16" fill="#1565C0"/>
+<path fill="#29B6F6" d="M13 88c0-9 8-16 17-16 6 0 11 3 14 7L20 101c-4-3-7-8-7-13zm68 0c0-9 8-16 17-16 6 0 11 3 14 7l-24 22c-4-3-7-8-7-13z"/>
+<path fill="#B3E5FC" d="M19 78c3-3 6-4 10-4 3 0 3 4 1 5l-10 9c-3 2-5 0-4-3 0-3 1-5 3-7zm68 0c3-3 6-4 10-4 3 0 3 4 1 5l-10 9c-3 2-5 0-4-3 0-3 1-5 3-7z"/>
+</svg>

@@ -8,12 +8,15 @@ This app uses a WKWebView to load the fomo.nyc website directly:
 
 - **Identical experience** to the mobile website
 - **Automatic updates** - website changes appear immediately
-- **Extensible** - native features can be added later
+- Native search, fixed saved searches and Shortcuts, calendar editor, and explicit local reminders
+- Optional Foundation Models search on supported Apple Intelligence devices; no hosted fallback
+
+See [structured search integration](../../../../src/js/query/README.md) for setup, platform limitations, and device release checks.
 
 ## Requirements
 
-- macOS with Xcode 15+
-- iOS 17.0+ deployment target
+- macOS with Xcode 26.2 or later
+- iOS 26.2+ deployment target (as configured in the checked-in project)
 
 ## Setup Instructions
 

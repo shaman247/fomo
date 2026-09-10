@@ -1,0 +1,423 @@
+{
+  "date": "2026-09-09",
+  "rounds": 3,
+  "provenance": "Original Noto-style vector geometry. Seven scenes inspected in six views before SVG projection; three flat original designs. No copied SVGs, traced photos, raster wrappers, logos or runtime fonts.",
+  "structural_references": [
+    {
+      "url": "https://mullenguitars.com/guitars-and-prices/",
+      "use": "Single-neck pedal-steel configuration, pedals and knee levers; original simplified geometry."
+    },
+    {
+      "url": "https://data.yamaha.com/files/download/other_assets/9/335929/bassoon_om_en_b0.pdf",
+      "use": "Manufacturer nomenclature and assembly: bell, bass, wing and common boot; bocal distinct from wooden bore."
+    },
+    {
+      "url": "https://www.ashford.co.nz/inkle-looms-texsolv-heddles-hack/",
+      "use": "Warp, pegs and leashes on a compact inkle loom; generic schematic route rather than copied model."
+    },
+    {
+      "url": "https://www.dickblick.com/products/ec-lyons-mezzotint-rockers/",
+      "use": "Curved toothed rocker used on copper/zinc; hardware simplified."
+    },
+    {
+      "url": "https://www.gelliarts.com/",
+      "use": "Gel plate printing process and brayer; no copied brand artwork or logos."
+    },
+    {
+      "url": "https://kumikowoodworking.com/products/category/art-kumiko/",
+      "use": "Kumiko wooden lattice category; original sixfold construction diagram."
+    },
+    {
+      "url": "https://paperslurry.com/blog/2016/02/24/couch-it-papermaking-tutorial-for-embedding-materials",
+      "use": "Mould-supported wet paper and transfer process; original diagram."
+    },
+    {
+      "url": "https://mkad.art/steamroller-print-fest/2026-steamroller-print-fest/",
+      "use": "Organizer confirms oversized linoleum relief prints made with a road roller."
+    }
+  ],
+  "reviews": [
+    {
+      "icon_id": "craft-papermaking",
+      "source_sha256": "ec5d88054806ba70317f71463d876285c70a39f3fd61c66e1f733af06c1fd49a",
+      "reviewer_mode": "creator-critical-pass",
+      "blind_recognition": "Creator knew the subjects; unlabeled native panels were inspected in a distinct critique, not an independent or blind recognition study.",
+      "evidence": {
+        "packet": ".scratch/icon-technique-ten-20260909/review-v3",
+        "sizes": [
+          16,
+          24,
+          32,
+          128
+        ],
+        "backgrounds": [
+          "light",
+          "dark"
+        ],
+        "actual_renderer": ".scratch/icon-technique-ten-20260909/gallery-v3/render-verification.json",
+        "geometry": "prototypes/technique-ten-3d/scene.py"
+      },
+      "size_bytes": {
+        "raw": 3267,
+        "gzip_level_6": 1132,
+        "initial_raw": 8721,
+        "initial_gzip_level_6": 1464
+      },
+      "issues": [
+        {
+          "severity": "material",
+          "location": "draining water",
+          "observation": "First straight drops resembled scanner hinge posts.",
+          "revision": "Replaced straight rods with disconnected tapered droplets.",
+          "status": "resolved"
+        }
+      ],
+      "decision": "pass",
+      "limitations": [
+        "Wooden mould/deckle and supported wet paper above a water vat; draining droplets replace hinge-like rods. At 16px, the exact papermaking method is less distinctive than at 24/32px; the wood-frame/vat relationship remains."
+      ]
+    },
+    {
+      "icon_id": "instrument-pedal-steel",
+      "source_sha256": "1dd049e77bc3f2393c20888093bf8c22a6ffb4a9f6d00b551d82459ed14a58f1",
+      "reviewer_mode": "creator-critical-pass",
+      "blind_recognition": "Creator knew the subjects; unlabeled native panels were inspected in a distinct critique, not an independent or blind recognition study.",
+      "evidence": {
+        "packet": ".scratch/icon-technique-ten-20260909/review-v3",
+        "sizes": [
+          16,
+          24,
+          32,
+          128
+        ],
+        "backgrounds": [
+          "light",
+          "dark"
+        ],
+        "actual_renderer": ".scratch/icon-technique-ten-20260909/gallery-v3/render-verification.json",
+        "geometry": "prototypes/technique-ten-3d/scene.py"
+      },
+      "size_bytes": {
+        "raw": 5271,
+        "gzip_level_6": 1927,
+        "initial_raw": 26956,
+        "initial_gzip_level_6": 3738
+      },
+      "issues": [],
+      "decision": "pass",
+      "limitations": [
+        "Four attached legs, single stringed console, three pedals and connected pedal rods. Strings/frets are projected centerlines, tuners and knee levers abbreviated. Ten string lines merge at 16px; no piano keys. Generic geometry, not a replica of a manufacturer model."
+      ]
+    },
+    {
+      "icon_id": "craft-gel-plate-printing",
+      "source_sha256": "c9970df64b73b8a20f5b7271210859fcf0ca54cc04d4253e8debfa7fa6902ebb",
+      "reviewer_mode": "creator-critical-pass",
+      "blind_recognition": "Creator knew the subjects; unlabeled native panels were inspected in a distinct critique, not an independent or blind recognition study.",
+      "evidence": {
+        "packet": ".scratch/icon-technique-ten-20260909/review-v3",
+        "sizes": [
+          16,
+          24,
+          32,
+          128
+        ],
+        "backgrounds": [
+          "light",
+          "dark"
+        ],
+        "actual_renderer": ".scratch/icon-technique-ten-20260909/gallery-v3/render-verification.json",
+        "geometry": "prototypes/technique-ten-3d/scene.py"
+      },
+      "size_bytes": {
+        "raw": 2898,
+        "gzip_level_6": 1101,
+        "initial_raw": 6649,
+        "initial_gzip_level_6": 1271
+      },
+      "issues": [
+        {
+          "severity": "material",
+          "location": "brayer fork",
+          "observation": "First handle did not connect to both arms.",
+          "revision": "Added a shared crossbar.",
+          "status": "resolved"
+        },
+        {
+          "severity": "material",
+          "location": "plate and paper",
+          "observation": "Average-depth face sorting hid leaf and paper details.",
+          "revision": "Replaced it with per-face depth-plane clipping.",
+          "status": "resolved"
+        },
+        {
+          "severity": "material",
+          "location": "composition",
+          "observation": "Side-by-side plate and brayer left the 16px silhouette too short.",
+          "revision": "Moved brayer to the rear edge and enlarged the composition.",
+          "status": "resolved"
+        }
+      ],
+      "decision": "pass",
+      "limitations": [
+        "Connected brayer at rear edge of inked plate, continuous lifted-paper surface and negative leaf motif. Depth-aware face clipping fixes lost surface details; compact composition improves 16px readability. Plate translucency and curling paper remain simplified."
+      ]
+    },
+    {
+      "icon_id": "craft-kumiko",
+      "source_sha256": "cc88512ee13962379bdf67508bb360290d501a22158542b2509f35a464bf814d",
+      "reviewer_mode": "creator-critical-pass",
+      "blind_recognition": "Creator knew the subjects; unlabeled native panels were inspected in a distinct critique, not an independent or blind recognition study.",
+      "evidence": {
+        "packet": ".scratch/icon-technique-ten-20260909/review-v3",
+        "sizes": [
+          16,
+          24,
+          32,
+          128
+        ],
+        "backgrounds": [
+          "light",
+          "dark"
+        ],
+        "actual_renderer": ".scratch/icon-technique-ten-20260909/gallery-v3/render-verification.json",
+        "geometry": "flat art; no spatial scene required"
+      },
+      "size_bytes": {
+        "raw": 1797,
+        "gzip_level_6": 521,
+        "initial_raw": 1797,
+        "initial_gzip_level_6": 521
+      },
+      "issues": [],
+      "decision": "pass",
+      "limitations": [
+        "Sixfold fitted wooden lattice in a hexagonal frame with a loose notched strip. Edges meet at construction nodes. Fine interior joins soften at 16px; geometric wooden pattern remains recognizable."
+      ]
+    },
+    {
+      "icon_id": "craft-mezzotint",
+      "source_sha256": "e6c210e7c6317b62992c56e8082aa28eac60503eab8249e67063d54b36a2ef0a",
+      "reviewer_mode": "creator-critical-pass",
+      "blind_recognition": "Creator knew the subjects; unlabeled native panels were inspected in a distinct critique, not an independent or blind recognition study.",
+      "evidence": {
+        "packet": ".scratch/icon-technique-ten-20260909/review-v3",
+        "sizes": [
+          16,
+          24,
+          32,
+          128
+        ],
+        "backgrounds": [
+          "light",
+          "dark"
+        ],
+        "actual_renderer": ".scratch/icon-technique-ten-20260909/gallery-v3/render-verification.json",
+        "geometry": "prototypes/technique-ten-3d/scene.py"
+      },
+      "size_bytes": {
+        "raw": 3883,
+        "gzip_level_6": 1354,
+        "initial_raw": 10152,
+        "initial_gzip_level_6": 1661
+      },
+      "issues": [],
+      "decision": "pass",
+      "limitations": [
+        "Wide convex rocker blade meets a copper plate at its low edge, with ferrule, wooden handle and abbreviated teeth. Fine serrations merge at 16px; it remains a specialist tool-and-plate pictogram, not a universal technique symbol."
+      ]
+    },
+    {
+      "icon_id": "instrument-bassoon",
+      "source_sha256": "168c03e12919cff584247b45efd3224c0c8d58ec7cb7aeb820284802958ef0e3",
+      "reviewer_mode": "creator-critical-pass",
+      "blind_recognition": "Creator knew the subjects; unlabeled native panels were inspected in a distinct critique, not an independent or blind recognition study.",
+      "evidence": {
+        "packet": ".scratch/icon-technique-ten-20260909/review-v3",
+        "sizes": [
+          16,
+          24,
+          32,
+          128
+        ],
+        "backgrounds": [
+          "light",
+          "dark"
+        ],
+        "actual_renderer": ".scratch/icon-technique-ten-20260909/gallery-v3/render-verification.json",
+        "geometry": "flat art; no spatial scene required"
+      },
+      "size_bytes": {
+        "raw": 1617,
+        "gzip_level_6": 697,
+        "initial_raw": 1616,
+        "initial_gzip_level_6": 702
+      },
+      "issues": [
+        {
+          "severity": "material",
+          "location": "bocal and reed",
+          "observation": "First reed visually merged into the bell rim.",
+          "revision": "Rerouted the bocal outward and separated the reed.",
+          "status": "resolved"
+        }
+      ],
+      "decision": "pass",
+      "limitations": [
+        "Tall bass/bell joint and shorter wing join into one wooden boot. Curved metal bocal ends in a separate double reed with visible space from the bell. Keys are abbreviated; no contrabassoon folding or oboe silhouette."
+      ]
+    },
+    {
+      "icon_id": "game-crossword",
+      "source_sha256": "f43c039e8249821a3aeb7099ea5be5544945bff97805d85eb2faa1e2c458a082",
+      "reviewer_mode": "creator-critical-pass",
+      "blind_recognition": "Creator knew the subjects; unlabeled native panels were inspected in a distinct critique, not an independent or blind recognition study.",
+      "evidence": {
+        "packet": ".scratch/icon-technique-ten-20260909/review-v3",
+        "sizes": [
+          16,
+          24,
+          32,
+          128
+        ],
+        "backgrounds": [
+          "light",
+          "dark"
+        ],
+        "actual_renderer": ".scratch/icon-technique-ten-20260909/gallery-v3/render-verification.json",
+        "geometry": "flat art; no spatial scene required"
+      },
+      "size_bytes": {
+        "raw": 3061,
+        "gzip_level_6": 530,
+        "initial_raw": 3061,
+        "initial_gzip_level_6": 530
+      },
+      "issues": [],
+      "decision": "pass",
+      "limitations": [
+        "Black-and-white rotationally symmetric illustrative grid with separate yellow pencil. No text or tiny numerals. Grid is a symbol, not a playable crossword; blocks remain visible at 16px."
+      ]
+    },
+    {
+      "icon_id": "activity-step-aerobics",
+      "source_sha256": "2bc1c59f7c24b934ebcee759bf70653f01d6c78bf55f15052abc6de7f16574dc",
+      "reviewer_mode": "creator-critical-pass",
+      "blind_recognition": "Creator knew the subjects; unlabeled native panels were inspected in a distinct critique, not an independent or blind recognition study.",
+      "evidence": {
+        "packet": ".scratch/icon-technique-ten-20260909/review-v3",
+        "sizes": [
+          16,
+          24,
+          32,
+          128
+        ],
+        "backgrounds": [
+          "light",
+          "dark"
+        ],
+        "actual_renderer": ".scratch/icon-technique-ten-20260909/gallery-v3/render-verification.json",
+        "geometry": "prototypes/technique-ten-3d/scene.py"
+      },
+      "size_bytes": {
+        "raw": 2971,
+        "gzip_level_6": 1100,
+        "initial_raw": 8233,
+        "initial_gzip_level_6": 1502
+      },
+      "issues": [
+        {
+          "severity": "material",
+          "location": "cropped leg paint",
+          "observation": "Bare faceted lower-leg crop resembled a wooden dowel.",
+          "revision": "Used a navy trouser crop above the white sock; retained contact geometry.",
+          "status": "resolved"
+        }
+      ],
+      "decision": "pass",
+      "limitations": [
+        "One cropped trouser leg, sock and shoe planted on a low step with riser. The shoe sole meets the platform within 0.0015 scene units. No full-body pose or paired-limb lengths are implied; foot and platform remain distinct at map size."
+      ]
+    },
+    {
+      "icon_id": "equipment-inkle-loom",
+      "source_sha256": "1677e538af10653d07647e29ddde4bca2cebf5e1af72283cbb36ab5d5eb37441",
+      "reviewer_mode": "creator-critical-pass",
+      "blind_recognition": "Creator knew the subjects; unlabeled native panels were inspected in a distinct critique, not an independent or blind recognition study.",
+      "evidence": {
+        "packet": ".scratch/icon-technique-ten-20260909/review-v3",
+        "sizes": [
+          16,
+          24,
+          32,
+          128
+        ],
+        "backgrounds": [
+          "light",
+          "dark"
+        ],
+        "actual_renderer": ".scratch/icon-technique-ten-20260909/gallery-v3/render-verification.json",
+        "geometry": "prototypes/technique-ten-3d/scene.py"
+      },
+      "size_bytes": {
+        "raw": 7835,
+        "gzip_level_6": 2802,
+        "initial_raw": 24059,
+        "initial_gzip_level_6": 3585
+      },
+      "issues": [
+        {
+          "severity": "material",
+          "location": "spare peg",
+          "observation": "One spare peg lacked an upright or brace attachment.",
+          "revision": "Removed the unused peg.",
+          "status": "resolved"
+        }
+      ],
+      "decision": "pass",
+      "limitations": [
+        "Single-sided compact loom, attached pegs, continuous schematic warp return and narrow woven band. Unsupported spare peg removed. Fine warps/leashes soften at 16px; equipment frame and textile stay separate. Not an exact Ashford proprietary peg layout."
+      ]
+    },
+    {
+      "icon_id": "craft-steamroller-printing",
+      "source_sha256": "d575700b5fec644b40ac5143a3ac94177ec8e6536314c158508b2ba5d0339a2a",
+      "reviewer_mode": "creator-critical-pass",
+      "blind_recognition": "Creator knew the subjects; unlabeled native panels were inspected in a distinct critique, not an independent or blind recognition study.",
+      "evidence": {
+        "packet": ".scratch/icon-technique-ten-20260909/review-v3",
+        "sizes": [
+          16,
+          24,
+          32,
+          128
+        ],
+        "backgrounds": [
+          "light",
+          "dark"
+        ],
+        "actual_renderer": ".scratch/icon-technique-ten-20260909/gallery-v3/render-verification.json",
+        "geometry": "prototypes/technique-ten-3d/scene.py"
+      },
+      "size_bytes": {
+        "raw": 4362,
+        "gzip_level_6": 1595,
+        "initial_raw": 12308,
+        "initial_gzip_level_6": 2212
+      },
+      "issues": [
+        {
+          "severity": "material",
+          "location": "seat and steering",
+          "observation": "Seat and steering column were not supported by chassis.",
+          "revision": "Added seat pedestal and extended column to the chassis.",
+          "status": "resolved"
+        }
+      ],
+      "decision": "pass",
+      "limitations": [
+        "Generic compact roller on paper over a relief block; attached seat pedestal, steering column and drum supports. Drum/tyres meet the print surface within .002 scene units. Paper and colored print cue distinguish the process at 24/32px; at 16px the machine is the strongest cue."
+      ]
+    }
+  ]
+}

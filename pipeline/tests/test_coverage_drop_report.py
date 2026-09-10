@@ -31,7 +31,7 @@ SCHEMA = """
 CREATE TABLE websites (id INTEGER PRIMARY KEY, name TEXT);
 CREATE TABLE crawl_results (
     id INTEGER PRIMARY KEY, crawl_run_id INTEGER, website_id INTEGER,
-    status TEXT, event_count INTEGER, crawled_content TEXT,
+    status TEXT, event_count INTEGER, crawled_content TEXT, filename TEXT,
     crawled_at TEXT DEFAULT (datetime('now')));
 """
 
@@ -54,17 +54,19 @@ class CoverageDropReportTest(unittest.TestCase):
             (website_id, name or f"Website {website_id}"))
 
     def add_crawl(self, website_id, event_count, run_id=1, status='processed',
-                  chars=1000):
+                  chars=1000, filename=None):
         """A crawl of `website_id`. Rows are inserted in ascending id, which is
         what the previous-crawl subquery orders on (crawl_results rows are
         created per (run, website) and updated in place, so id order IS crawl
         order)."""
         crawl_id = self._next_id
         self._next_id += 1
+        if filename is None:
+            filename = f"website_{website_id}.md"
         self.connection.execute(
             "INSERT INTO crawl_results (id, crawl_run_id, website_id, status,"
-            " event_count, crawled_content) VALUES (?, ?, ?, ?, ?, ?)",
-            (crawl_id, run_id, website_id, status, event_count, 'x' * chars))
+            " event_count, crawled_content, filename) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (crawl_id, run_id, website_id, status, event_count, 'x' * chars, filename))
         return crawl_id
 
     def report(self, **kwargs):
@@ -242,6 +244,52 @@ class CoverageDropFormatTest(unittest.TestCase):
         self.assertIn("63 website(s)", lines[0])
         self.assertEqual(sum(1 for l in lines if l.strip().startswith("- w")), 15)
         self.assertTrue(any("and 48 more" in l for l in lines))
+
+
+
+class SurfaceAwareBaselineTest(CoverageDropReportTest):
+    """A website crawled by two surfaces (site crawl + picnob Instagram ingest)
+    must only be compared against its own surface's previous row. The w4545
+    Textile Arts Center shape (2026-09-09): 40-event class calendar, then a
+    6-post IG bundle, reported as "40 -> 6 (-85%)" with nothing wrong."""
+
+    def test_instagram_row_does_not_baseline_against_site_crawl(self):
+        self.add_website(4545)
+        self.add_crawl(4545, 40, run_id=1, filename='textile_arts_center.md')
+        self.add_crawl(4545, 6, run_id=2, filename='picnob_textileartscenter_1788000000.md')
+        self.assertEqual(self.report(crawl_run_id=2), [])
+
+    def test_site_crawl_does_not_baseline_against_instagram_row(self):
+        self.add_website(4545)
+        self.add_crawl(4545, 40, run_id=1, filename='picnob_textileartscenter_1788000000.md')
+        self.add_crawl(4545, 6, run_id=2, filename='textile_arts_center.md')
+        self.assertEqual(self.report(crawl_run_id=2), [])
+
+    def test_instagram_collapse_still_fires_across_an_interleaved_site_row(self):
+        # Recall guard: partition on the picnob PREFIX, not the whole filename,
+        # so an IG collapse is still measured against the previous IG row.
+        self.add_website(4545)
+        self.add_crawl(4545, 30, run_id=1, filename='picnob_textileartscenter_1788000000.md')
+        self.add_crawl(4545, 40, run_id=2, filename='textile_arts_center.md')
+        self.add_crawl(4545, 6, run_id=3, filename='picnob_textileartscenter_1788600000.md')
+        rows = self.report(crawl_run_id=3)
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0][3], 30, 'baseline is the previous picnob row, not the site crawl')
+
+    def test_ig_only_site_keeps_its_baseline(self):
+        # Every picnob row carries a unique timestamp; keying on the full
+        # filename would blind the detector to all IG-sourced websites.
+        self.add_website(1264)
+        self.add_crawl(1264, 400, run_id=1, filename='picnob_gasworks_1788000000.md')
+        self.add_crawl(1264, 0, run_id=2, filename='picnob_gasworks_1788600000.md')
+        self.assertEqual(len(self.report(crawl_run_id=2)), 1)
+
+    def test_null_filename_still_compares(self):
+        self.add_website(7)
+        self.add_crawl(7, 400, run_id=1)
+        self.add_crawl(7, 0, run_id=2)
+        self.connection.execute("UPDATE crawl_results SET filename = NULL")
+        self.assertEqual(len(self.report(crawl_run_id=2)), 1)
 
 
 if __name__ == '__main__':

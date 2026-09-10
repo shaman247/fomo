@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"><title>Conga</title><desc>A tall wooden conga drum with a pale rawhide head, curved barrel tapering to an open base, and silver tuning lugs.</desc>
+<path fill="#AD7156" d="M31 24H97C104 52 97 91 85 116Q64 124 43 116C31 91 24 52 31 24Z"/>
+<path fill="#D99F60" d="M33 24H91C98 53 91 90 81 116Q64 121 45 114C34 89 28 50 33 24Z"/>
+<path fill="#FFCC80" d="M35 30H49C40 57 43 91 50 116L45 114C35 89 29 54 35 30Z"/>
+<path fill="none" stroke="#BF824D" stroke-width="1.5" d="M59 37Q55 78 59 119M79 38Q82 78 73 119"/>
+<path fill="#78909C" d="M42 112Q64 120 86 112L84 119Q64 126 44 119Z"/><path fill="#B0BEC5" d="M43 113Q63 120 85 113L84 116Q63 123 44 116Z"/>
+<path fill="#78909C" d="M27 23H101V31Q64 43 27 31Z"/><ellipse cx="64" cy="23" rx="37" ry="13" fill="#B0BEC5"/>
+<ellipse cx="64" cy="21" rx="34" ry="12" fill="#E8CDA7"/><ellipse cx="62" cy="19" rx="30" ry="9" fill="#F7E5C5"/>
+<path fill="none" stroke="#FFF3D7" stroke-width="3" stroke-linecap="round" d="M38 17Q52 10 73 13"/>
+<g fill="#78909C"><path d="M32 33H39V57Q35 63 31 57Z"/><path d="M57 38H65V64Q61 68 57 64Z"/><path d="M88 34H96V58Q92 63 88 58Z"/></g>
+<path fill="none" stroke="#CFD8DC" stroke-width="3" stroke-linecap="round" d="M35 31V54M61 37V60M92 31V54"/>
+<g fill="#455A64"><rect x="31" y="52" width="8" height="5" rx="1"/><rect x="57" y="58" width="8" height="5" rx="1"/><rect x="88" y="52" width="8" height="5" rx="1"/></g></svg>

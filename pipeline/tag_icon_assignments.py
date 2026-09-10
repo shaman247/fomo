@@ -51,13 +51,13 @@ def planned_changes(tags, tag=None, icon=None):
     return changes
 
 
-def read_tags(cursor):
+def read_tags(cursor, scope='event'):
     try:
-        cursor.execute('SELECT id,name,emoji,icon_id,type FROM tags ORDER BY name')
+        cursor.execute('SELECT id,name,emoji,icon_id,type FROM tags WHERE scope=%s ORDER BY name', (scope,))
     except Exception as exc:
         if getattr(exc, 'errno', None) != 1054:
             raise
-        cursor.execute('SELECT id,name,emoji,NULL AS icon_id,type FROM tags ORDER BY name')
+        cursor.execute('SELECT id,name,emoji,NULL AS icon_id,type FROM tags WHERE scope=%s ORDER BY name', (scope,))
     return [dict(zip(('id','name','emoji','icon_id','type'), row)) for row in cursor.fetchall()]
 
 
@@ -67,6 +67,7 @@ def main():
     parser.add_argument('--init-schema', action='store_true')
     parser.add_argument('--export', action='store_true')
     parser.add_argument('--tag')
+    parser.add_argument('--scope', choices=['event','venue'], default='event')
     parser.add_argument('--icon')
     parser.add_argument('--backup', type=Path)
     args = parser.parse_args()
@@ -85,7 +86,7 @@ def main():
             cursor = conn.cursor()
             if args.init_schema:
                 cursor.execute((ROOT/'database/migrations/20260908_tag_icons.sql').read_text())
-            tags = read_tags(cursor)
+            tags = read_tags(cursor, args.scope)
             changes = planned_changes(tags, args.tag, None if args.icon == 'fallback' else args.icon)
             if args.backup:
                 args.backup.parent.mkdir(parents=True, exist_ok=True)

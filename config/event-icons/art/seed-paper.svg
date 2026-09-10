@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128"><title>Seed paper making</title><desc>A thick handmade paper sheet with embedded brown seeds and a green seedling growing from it.</desc>
+<path d="M21 26L103 29 111 108 100 115 20 111 16 100Z" fill="#BEB5AE"/>
+<path d="M18 21L35 23 53 20 72 23 98 21 103 38 101 58 106 77 104 104 85 108 65 105 43 108 19 105 21 83 17 64 20 45Z" fill="#F1EDEC"/>
+<path d="M19 24L35 26 53 23 72 26 98 24 97 32 25 32 23 98 20 99 22 82 19 63 22 46Z" fill="#FFFFFF"/>
+<g fill="#966744"><ellipse cx="34" cy="46" rx="3" ry="5" transform="rotate(-35 34 46)"/><ellipse cx="85" cy="39" rx="3" ry="5" transform="rotate(25 85 39)"/><ellipse cx="38" cy="86" rx="3" ry="5" transform="rotate(25 38 86)"/><ellipse cx="84" cy="90" rx="3" ry="5" transform="rotate(-30 84 90)"/><ellipse cx="90" cy="64" rx="3" ry="5"/><ellipse cx="31" cy="65" rx="3" ry="4"/></g>
+<ellipse cx="62" cy="78" rx="10" ry="5" fill="#B9996B"/>
+<path d="M62 79C61 65 62 48 68 37" fill="none" stroke="#438D50" stroke-width="5" stroke-linecap="round"/>
+<path d="M62 60C46 62 36 51 39 37C54 36 63 45 62 60Z" fill="#58A65A"/><path d="M62 59C50 52 44 45 40 38C39 51 48 61 62 60Z" fill="#388447"/>
+<path d="M64 46C61 30 73 16 89 17C91 32 80 46 64 46Z" fill="#79BE62"/><path d="M64 46C73 40 82 26 88 18C90 32 81 46 64 46Z" fill="#4E9E51"/>
+</svg>

@@ -140,14 +140,11 @@ const Sheet = (() => {
     function _restore() {
         // The list view always starts collapsed — its open state is no longer
         // persisted. Clear any setting left over from when it was.
-        // Docked layout (prototype): the panel is permanent — start open.
-        state.desktopOpen = isDesktop() && ProtoFlags.isOn('layout', 'docked');
+        state.desktopOpen = false;
         Utils.SafeStorage.removeItem(STORAGE_KEY_OPEN);
     }
 
     function _setDesktopOpen(v) {
-        // Docked layout: nothing may collapse the permanent panel
-        if (!v && isDesktop() && ProtoFlags.isOn('layout', 'docked')) v = true;
         const next = !!v;
         const changed = next !== state.desktopOpen;
         state.desktopOpen = next;
@@ -505,8 +502,7 @@ const Sheet = (() => {
     }
 
     /**
-     * Shows a location's popup content inside the sheet (mobile detail mode;
-     * desktop too under the popups=panel prototype).
+     * Shows a location's popup content inside the mobile sheet.
      */
     function openDetail(locationKey, lngLat, contentElement) {
         // Already showing this location
@@ -524,11 +520,8 @@ const Sheet = (() => {
         // Track whether popup has its own tab bar (prevents swipe-to-dismiss)
         state.detailHasPopupTabs = !!contentElement.querySelector('.popup-tab-bar');
 
-        // Open sheet if closed. (Desktop: activeLocationKey is already set,
-        // so the open's browse-shown emit skips the hidden list render.)
-        if (isDesktop()) {
-            _setDesktopOpen(true);
-        } else if (state.currentSnap < SNAP_PEEK) {
+        // Open the mobile sheet if closed.
+        if (state.currentSnap < SNAP_PEEK) {
             _snapTo(SNAP_PEEK);
         }
 
@@ -599,16 +592,6 @@ const Sheet = (() => {
         }
 
         window.addEventListener('resize', _onResize);
-
-        // Docked layout on mobile: start at PEEK (map ~half screen, list
-        // visible) instead of the closed mini strip. No-transition snap so
-        // load doesn't animate.
-        if (!isDesktop() && ProtoFlags.isOn('layout', 'docked')) {
-            state.sheet.classList.add('no-transition');
-            _snapTo(SNAP_PEEK);
-            state.sheet.offsetHeight; // reflow so the transition skip applies
-            state.sheet.classList.remove('no-transition');
-        }
 
         state.initialized = true;
     }

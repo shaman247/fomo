@@ -47,6 +47,8 @@ class _StubCursor:
             self._rows = self._website_locations
         elif 'roving_organizer' in sql:   # hand-flagged organizers: none in this corpus
             self._rows = []
+        elif 'FROM websites' in sql:       # organizer names for Step 7b: none needed here
+            self._rows = []
         else:  # pragma: no cover - build_locations_map grew a new query
             raise AssertionError('unexpected query: %s' % sql)
 

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128"><title>Language exchange</title><desc>Two speech panels with different writing systems above reciprocal arrows.</desc>
+<path d="M9 23q0-10 10-10h42q10 0 10 10v39q0 10-10 10H34L19 84l2-12h-2q-10 0-10-10z" fill="#599BAC"/><path d="M11 24q0-9 10-9h39q8 0 10 7H25q-10 0-14 9z" fill="#8BC8D0"/>
+<path d="M61 45q0-10 10-10h38q10 0 10 10v37q0 10-10 10h-3l3 12-18-12H71q-10 0-10-10z" fill="#9675B5"/><path d="M63 45q0-8 10-8h34q8 0 10 7H77q-9 0-14 8z" fill="#BEA2D4"/>
+<path d="m25 58 11-31h9l11 31h-8l-2-7H35l-2 7zm12-14h7l-3.5-11z" fill="#FFF7E2" fill-rule="evenodd"/>
+<path d="m90 48 2 4M77 57h28M83 58q4 17 22 23M100 58q-5 16-22 23" fill="none" stroke="#FFF7E2" stroke-width="5" stroke-linecap="round"/>
+<path d="M27 94h27v-6l12 10-12 10v-6H27z" fill="#DEAA54"/><path d="M80 110H53v-6l-12 10 12 10v-6h27z" fill="#D08D44"/>
+</svg>

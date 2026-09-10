@@ -1,0 +1,19 @@
+{
+  "description": "Authored new-text probes. These descriptions are not in the training snapshot. Topic labels are test expectations, not inferred from model outputs.",
+  "probes": [
+    {"id":"jazz-a","topic":"Jazz","text":"A saxophone quartet improvises over blues changes and swing standards in an intimate listening room."},
+    {"id":"jazz-b","topic":"Jazz","text":"Piano, upright bass and drums explore bebop compositions in a live trio concert."},
+    {"id":"ceramics-a","topic":"Ceramics","text":"Learn to center wet clay on a spinning wheel and shape your own bowl, then glaze and fire it."},
+    {"id":"ceramics-b","topic":"Ceramics","text":"Build a vase using clay coils and slabs in a hands-on handbuilding workshop."},
+    {"id":"birding-a","topic":"Birding","text":"Bring binoculars for a guided walk identifying migrating warblers by their calls and plumage."},
+    {"id":"birding-b","topic":"Birding","text":"Observe herons and shorebirds with naturalists along the marsh, learning field identification techniques."},
+    {"id":"yoga-a","topic":"Yoga","text":"A gentle practice of sun salutations, standing poses, mindful breathing and a final resting posture."},
+    {"id":"yoga-b","topic":"Yoga","text":"Join an instructor for a slow vinyasa flow with guided breathwork and modifications for beginners."},
+    {"id":"architecture-a","topic":"Architecture","text":"An architect leads a walking tour of modernist buildings, explaining their facades, structural systems and floor plans."},
+    {"id":"architecture-b","topic":"Architecture","text":"Study the restoration of an Art Deco skyscraper, from its original blueprints to the preservation of its historic lobby."},
+    {"id":"folk-a","topic":"Indie Folk","text":"An independent singer-songwriter performs intimate acoustic songs inspired by landscapes and rural life, with fingerpicked guitar and close harmonies."},
+    {"id":"folk-b","topic":"Indie Folk","text":"An evening of contemporary folk songwriting from an independent acoustic duo, with banjo, guitar and vocal harmonies."},
+    {"id":"history-a","topic":"Black History Month","text":"A lecture on African American civil rights organizing, followed by discussion of Black historical figures and their continuing legacy."},
+    {"id":"history-b","topic":"Black History Month","text":"Explore the Harlem Renaissance through the poetry, art and political ideas of Black writers and artists."}
+  ]
+}

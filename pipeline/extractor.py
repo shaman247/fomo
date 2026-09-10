@@ -9,10 +9,12 @@ Uses a two-pass approach for large pages (>50 expected events):
 
 import asyncio
 import base64
+import html
 import json
 import os
 import re
 import statistics
+import unicodedata
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from io import BytesIO
@@ -1308,56 +1310,69 @@ _EVENT_HEADING_RE = re.compile(
 )
 
 
-def extract_content_snippets(event_names, content, snippet_chars=500):
-    """Extract content snippets surrounding each event name from page content.
+_SNIPPET_HEADING_RE = re.compile(
+    r'^[ \t]*(?:[\*\-]\s+|\d+\.\s+)?#{1,6}\s+(.+?)[ \t]*$',
+    re.MULTILINE,
+)
 
-    For each event name, finds its position in the content and extracts the
-    surrounding text bounded by adjacent event headings, so neighboring events'
-    descriptions don't leak into the focal event's context. Returns a dict
-    mapping event names to snippets.
+
+def _snippet_title_key(title):
+    """Ignore presentation punctuation, never words, in event identities."""
+    title = unicodedata.normalize('NFKC', html.unescape(title)).casefold()
+    return ''.join(char for char in title if char.isalnum())
+
+
+def _snippet_text(text):
+    # Images often precede the NEXT card's heading. Neither their captions nor
+    # enormous CDN URLs are descriptive evidence for the current card.
+    # Stop rather than merely remove: dates between a following image and its
+    # heading also belong to the next card (e.g. Emelin's show list).
+    image = re.search(r'^.*!\[', text, flags=re.MULTILINE)
+    if image:
+        text = text[:image.start()]
+    text = re.sub(r'\[([^\]\n]*)\]\([^\n]*?\)', r'\1', text)
+    text = re.sub(r'https?://\S+', '', text)
+    return '\n'.join(line.strip() for line in text.splitlines() if line.strip())
+
+
+def extract_content_snippets(event_names, content, snippet_chars=500):
+    """Return context only for unambiguously identified event heading blocks.
+
+    A title mentioned in another card, image alt text, or navigation is not an
+    identity match. Missing/ambiguous headings deliberately omit context so the
+    enrichment can fall back to detail crawling rather than inventing evidence.
     """
-    if not content:
+    if not content or snippet_chars <= 0:
         return {}
 
-    # Pre-compute heading positions so we can bound each snippet to a single event.
-    heading_positions = sorted({m.start() for m in _EVENT_HEADING_RE.finditer(content)})
-
-    content_lower = content.lower()
-    snippets = {}
-
-    for name in event_names:
-        # Try exact match first, then case-insensitive
-        pos = content.find(name)
-        if pos == -1:
-            pos = content_lower.find(name.lower())
-        if pos == -1:
-            # Try matching first significant words (skip short words)
-            words = [w for w in name.split() if len(w) > 3]
-            if words:
-                # Search for the first long word to get approximate position
-                pos = content_lower.find(words[0].lower())
-
-        if pos == -1:
+    headings = list(_SNIPPET_HEADING_RE.finditer(content))
+    cards = {}
+    for index, heading in enumerate(headings):
+        title = heading.group(1).rstrip('#').strip()
+        # Greedy label permits titles such as ADVENTURE[s]. The URL is used
+        # only to distinguish repeated renderings from different same-name
+        # events; no fuzzy title or first-significant-word fallback is safe.
+        link = re.fullmatch(r'\[(.*)\]\((\S+?)(?:\s+[\"\'].*)?\)', title)
+        url = link.group(2) if link else None
+        title = link.group(1) if link else title
+        if '![' in title:
             continue
+        key = _snippet_title_key(title)
+        end = headings[index + 1].start() if index + 1 < len(headings) else len(content)
+        body = _snippet_text(content[heading.end():end])
+        text = _snippet_text(title) + ('\n' + body if body else '')
+        cards.setdefault(key, []).append((url, text))
 
-        # Find the nearest event heading at/before pos and the next one after.
-        prev_heading = 0
-        next_heading = len(content)
-        for hp in heading_positions:
-            if hp <= pos:
-                prev_heading = hp
-            else:
-                next_heading = hp
-                break
-
-        # Cap by the char budget so very long entries don't dominate the prompt.
-        start = max(prev_heading, pos - snippet_chars // 4)
-        end = min(next_heading, pos + snippet_chars)
-
-        snippet = content[start:end].strip()
-        if snippet:
-            snippets[name] = snippet
-
+    snippets = {}
+    for name in event_names:
+        matches = cards.get(_snippet_title_key(name), [])
+        if not matches:
+            continue
+        identities = {url if url else text for url, text in matches}
+        if len(identities) != 1:
+            continue
+        # Repeated copies with the same explicit URL describe the same card.
+        snippets[name] = matches[0][1][:snippet_chars].strip()
     return snippets
 
 
@@ -1398,7 +1413,7 @@ def get_enrichment_prompt(event_names, venue_name, request_id="", content_snippe
     events_section = "\n".join(events_section_parts)
 
     return f'''For each event at {venue_name}, provide:
-- description: 1-3 sentence description built from words and sentences that actually appear in the event's own Context block. If the Context only has the name, date/time, venue, and links — with no descriptive prose — return EXACTLY "No description available." Do NOT paraphrase the event name. Do NOT write generic filler like "is a local community event" or "visit the official website for more details". Do NOT use background knowledge about the artist, venue, or topic. Each event's description must come from THAT event's Context block, not a neighbor's.
+- description: 1-3 sentence description built from words and sentences that actually appear in the event's own Context block. If there is no Context block, or it only has the name, date/time, venue, and links — with no descriptive prose — return EXACTLY "No description available." Do NOT paraphrase the event name. Do NOT write generic filler like "is a local community event" or "visit the official website for more details". Do NOT use background knowledge about the artist, venue, or topic. Each event's description must come from THAT event's Context block, not a neighbor's.
 - hashtags: 4-7 CamelCase tags. Always include at least one category (Music, Nightlife, Comedy, Art, Theater, Dance, Film, Literature, Community, Family, Wellness, Education, Outdoor, Sports, Games). Add Free if free, Virtual if online. Then granular tags.
 - emoji: Single emoji representing the event
 
@@ -1454,15 +1469,21 @@ async def enrich_events_batch(event_names, venue_name, content=None):
 
     out = {}
     for item in result.get('enrichments', []):
-        desc = (item.get('description') or '').strip()
-        if _looks_like_boilerplate_fabrication(desc):
-            desc = 'No description available.'
-        out[item.get('name', '')] = {
-            'description': desc,
-            'hashtags': item.get('hashtags', []),
-            'emoji': item.get('emoji', '📅'),
-        }
+        out[item.get('name', '')] = _grounded_enrichment(item, content_snippets)
     return out
+
+
+def _grounded_enrichment(item, content_snippets):
+    """An unverified title match cannot authorize a generated description."""
+    desc = (item.get('description') or '').strip()
+    if (not desc or item.get('name') not in (content_snippets or {})
+            or _looks_like_boilerplate_fabrication(desc)):
+        desc = 'No description available.'
+    return {
+        'description': desc,
+        'hashtags': item.get('hashtags', []),
+        'emoji': item.get('emoji', '📅'),
+    }
 
 
 class SingleEventExtraction(BaseModel):
@@ -1599,16 +1620,26 @@ async def extract_single_event(event_name, content, notes="", url=""):
             gemini_client=genai_client, gemini_model=GEMINI_MODEL,
         )
         data = json.loads(response_text)
-        desc = data.get('description', '').strip().strip('"')
-        if not desc or 'No description available' in desc:
-            return None
-        if _looks_like_boilerplate_fabrication(desc):
-            return None
+        desc = (data.get('description') or '').strip().strip('"')
+        # A placeholder or boilerplate description is not a description - but
+        # it is NOT a reason to throw the rest of the record away. The model
+        # routinely returns "No description available." together with a clean
+        # location and dated occurrences (a sparse detail page, an at-capacity
+        # stub with a venue line, a page whose prose is all chrome), and
+        # returning None here discarded the venue and the dates with it: 4,702
+        # of 22,765 attempted detail crawls in the 14 days to 2026-09-09 ended
+        # this way, 72 of them still undated, and w591 NYC-DSA events kept
+        # their listing's "New York City" pin although the detail page said
+        # "NYC-DSA Office, 14 Jefferson St". Keep every field that is real and
+        # omit the description, so the caller leaves the stored one alone.
+        if not desc or 'No description available' in desc or _looks_like_boilerplate_fabrication(desc):
+            desc = None
         result = {
-            'description': desc,
             'hashtags': data.get('hashtags', []),
             'emoji': data.get('emoji', ''),
         }
+        if desc:
+            result['description'] = desc
         # Include location if extracted
         location = data.get('location')
         if location and location.strip().lower() not in ('', 'null', 'not specified', 'none'):
@@ -1620,6 +1651,8 @@ async def extract_single_event(event_name, content, notes="", url=""):
         occurrences = data.get('occurrences')
         if occurrences:
             result['occurrences'] = occurrences
+        if not any(k in result for k in ('description', 'location', 'sublocation', 'occurrences')):
+            return None  # nothing usable on the page - the pre-existing "skip enrichment" contract
         return result
     except Exception as e:
         print(f"    - AI error for {event_name}: {e}")
@@ -3297,6 +3330,7 @@ def process_enrichment_responses(requests, responses, chunked_events, preparatio
 
     # Collect enrichments per crawl_result_id
     enrichments_by_crid = {}
+    contexts_by_crid = {}
 
     for i, resp in enumerate(responses):
         if resp.error:
@@ -3325,14 +3359,16 @@ def process_enrichment_responses(requests, responses, chunked_events, preparatio
 
             if crid not in enrichments_by_crid:
                 enrichments_by_crid[crid] = {}
+                prep = preparations[crid]
+                contexts_by_crid[crid] = extract_content_snippets(
+                    _distinct_names_in_order(chunked_events.get(crid, [])),
+                    prep.content,
+                )
 
             result = json.loads(response_text)
             for item in result.get('enrichments', []):
-                enrichments_by_crid[crid][item.get('name', '')] = {
-                    'description': item.get('description', ''),
-                    'hashtags': item.get('hashtags', []),
-                    'emoji': item.get('emoji', '📅'),
-                }
+                enrichments_by_crid[crid][item.get('name', '')] = _grounded_enrichment(
+                    item, contexts_by_crid[crid])
         except Exception as e:
             print(f"    - WARNING: Error processing enrichment response {i}: {e}")
 

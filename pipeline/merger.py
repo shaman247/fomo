@@ -104,6 +104,25 @@ def _strip_format_parentheticals(name):
     return re.sub(r'\(([^()]*)\)|\[([^\[\]]*)\]', repl, name)
 
 
+def merged_screening_display_name(existing_name, incoming_name):
+    """Remove a format claim when an unqualified listing joins the same film.
+
+    Format variants intentionally share one event. A survivor first created from
+    an open-captioned listing must not advertise every subsequently merged
+    standard showtime as captioned. Preserve format-only runs and meaningful
+    subtitles; only an unqualified version of the exact same title is evidence.
+    """
+    if not existing_name or not incoming_name:
+        return None
+    clean = re.sub(r'\s+', ' ', _strip_format_parentheticals(existing_name)).strip()
+    incoming_clean = re.sub(r'\s+', ' ', _strip_format_parentheticals(incoming_name)).strip()
+    if clean == existing_name.strip() or incoming_clean != incoming_name.strip():
+        return None
+    if normalize_name_for_dedup(clean) != normalize_name_for_dedup(incoming_name):
+        return None
+    return clean
+
+
 @functools.lru_cache(maxsize=131072)
 def normalize_name_for_dedup(name):
     """Remove accents, punctuation, underscores, and whitespace; convert to lowercase.
@@ -1004,6 +1023,9 @@ _VALUE_DISCRIMINATORS = (
 _FLAG_DISCRIMINATORS = (
     re.compile(r'\bmens?\b').search,
     re.compile(r'\bwomens?\b').search,
+    # An explicitly separate beginner-registration cohort must not disappear
+    # into the returning-visitor program sharing its venue and dates.
+    re.compile(r'\bbeginning instruction\b').search,
     lambda n: 'early' in n,   # Early vs Late sets
     lambda n: 'late' in n,
     # A fan event / fan first screening vs the film's regular run — a distinct,
@@ -1014,6 +1036,22 @@ _FLAG_DISCRIMINATORS = (
     # Regression 2026-08-17 (w1190).
     _PRIVATE_BOOKING_RE.search,
 )
+
+
+def _explicit_attendance_mode(name):
+    """Read only a terminal attendance label, never a program's subject."""
+    match = re.search(
+        r"(?:\(|\[|,|\s[-–—]\s)\s*(online|virtual|in[ -]person)\s*[)\]]?\s*$",
+        name or '', re.IGNORECASE,
+    )
+    if not match:
+        return None
+    return 'online' if match.group(1).lower() in ('online', 'virtual') else 'in person'
+
+
+def _attendance_modes_differ(name1, name2, _norm1, _norm2):
+    mode1, mode2 = _explicit_attendance_mode(name1), _explicit_attendance_mode(name2)
+    return bool(mode1 and mode2 and mode1 != mode2)
 
 
 def _trailing_dates_differ(name1, name2, norm1, norm2):
@@ -1030,6 +1068,7 @@ def _trailing_dates_differ(name1, name2, norm1, norm2):
 
 
 _PAIR_DISCRIMINATORS = (
+    _attendance_modes_differ,
     _trailing_dates_differ,
     # Bare/umbrella name vs a distinct "Head: Subtitle" sibling (both orderings,
     # since the bare name may be either argument).
@@ -2386,7 +2425,7 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                                  editor_info=f'crawl_run:{crawl_run_id}' if crawl_run_id else 'crawl')
 
     # ── Pre-load tag voting data ──
-    cursor.execute("SELECT name FROM tags WHERE type = 'tag'")
+    cursor.execute("SELECT name FROM tags WHERE type = 'tag' AND scope='event'")
     curated_tag_set = {row[0] for row in cursor.fetchall()}
     ancestor_map, root_tags = db.build_tag_ancestor_map(cursor)
 
@@ -3055,7 +3094,7 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
             # even when the description is already populated — otherwise the
             # event stays emoji-less forever.
             cursor.execute(
-                "SELECT description, emoji FROM events WHERE id = %s",
+                "SELECT description, emoji, name, short_name, event_type FROM events WHERE id = %s",
                 (matched_event_id,),
             )
             result = cursor.fetchone()
@@ -3064,6 +3103,19 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
 
             backfill_fields = []
             backfill_values = []
+            neutral_name = (merged_screening_display_name(result[2], name)
+                            if result and result[4] == 'Screening' else None)
+            if neutral_name:
+                backfill_fields.append("name = %s")
+                backfill_values.append(neutral_name[:500])
+                # The short label may be an abbreviation of the full title.
+                # The full-name match above already establishes film identity.
+                neutral_short = re.sub(
+                    r'\s+', ' ', _strip_format_parentheticals(result[3] or '')
+                ).strip()
+                if neutral_short and neutral_short != result[3]:
+                    backfill_fields.append("short_name = %s")
+                    backfill_values.append(neutral_short[:255])
             if (description and description != 'No description available.'
                     and (not current_desc or current_desc == 'No description available.')):
                 backfill_fields.append("description = %s")

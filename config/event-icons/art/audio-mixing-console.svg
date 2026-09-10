@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128"><title>Audio mixing console</title><desc>Three separate signal channels with knobs, level meters and broad fader caps on a studio sound console.</desc>
+<path d="M20 23h88l12 80v11H8v-11z" fill="#303C48"/><path d="M20 16h88l12 86H8z" fill="#697C8A"/><path d="M23 20h81" stroke="#A8BEC8" stroke-width="4" stroke-linecap="round"/>
+<rect x="29" y="27" width="70" height="17" rx="3" fill="#253C42"/><path d="M37 39v-6m9 6V31m9 8V30m9 9V33m9 6V29m9 10v-7m9 7v-4" stroke="#76D5B5" stroke-width="4"/>
+<circle cx="36" cy="55" r="5" fill="#F3B574"/><circle cx="64" cy="55" r="5" fill="#83D2D6"/><circle cx="92" cy="55" r="5" fill="#C8A3DB"/>
+<path d="M36 69v25m28-25v25m28-25v25" stroke="#2D3C47" stroke-width="6" stroke-linecap="round"/>
+<rect x="27" y="73" width="18" height="9" rx="2" fill="#F3E5D2"/><rect x="55" y="84" width="18" height="9" rx="2" fill="#F3E5D2"/><rect x="83" y="67" width="18" height="9" rx="2" fill="#F3E5D2"/>
+</svg>

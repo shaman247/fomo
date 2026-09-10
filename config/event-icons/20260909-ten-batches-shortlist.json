@@ -1,0 +1,2151 @@
+{
+  "scope": "1000 distinct events 81280–124869, full-context editorial review",
+  "records": 294,
+  "concepts": 185,
+  "opportunities": [
+    {
+      "concept": "format-support-group",
+      "category": "format",
+      "label": "Peer support group",
+      "visual": "Three seated people in a small open circle",
+      "rationale": "Mutual peer discussion differs from municipal governance; no medical promise.",
+      "existing_alternative": "Retain the event Unicode fallback until a distinct recognizable study passes review.",
+      "event_ids": [
+        82789,
+        82790,
+        88471,
+        95255,
+        101240,
+        101241,
+        101244,
+        101245,
+        102707,
+        102790,
+        104098,
+        106682,
+        106693,
+        108290,
+        108291,
+        114372,
+        122923
+      ]
+    },
+    {
+      "concept": "genre-jazz",
+      "category": "genre",
+      "label": "Jazz",
+      "visual": "A pair of syncopated musical notes with one loose improvisatory flourish.",
+      "rationale": "The genre is explicit, but an instrument-neutral motif remains exploratory and requires recognition tests; avoid treating saxophone as universal jazz.",
+      "existing_alternative": "Noto notes are generic; a saxophone misstates instrumentation when the program does not feature one.",
+      "event_ids": [
+        85201,
+        87579,
+        92549,
+        95064,
+        97438,
+        99059,
+        100095,
+        100519,
+        104799,
+        108421,
+        109434,
+        110465,
+        120348,
+        120458,
+        122638
+      ]
+    },
+    {
+      "concept": "genre-blues",
+      "category": "genre",
+      "label": "Blues",
+      "visual": "A spare musical phrase with a visibly lowered blue note, without instrument or demographic caricatures.",
+      "rationale": "Explicit blues programming has a genre gap; the abstract blue-note motif needs recognition testing before adoption.",
+      "existing_alternative": "Guitar or music notes remain useful but do not identify blues and should not imply every blues act uses guitar.",
+      "event_ids": [
+        83580,
+        86186,
+        86187,
+        89772,
+        91048,
+        99059,
+        99060,
+        113687,
+        113688,
+        113690,
+        119221,
+        120348
+      ]
+    },
+    {
+      "concept": "format-oral-storytelling",
+      "category": "format",
+      "label": "Oral storytelling",
+      "visual": "A speaker profile sending one broad curved speech bubble toward two listeners.",
+      "rationale": "Sharing spoken stories is the defining activity; test separation from general talks without assuming a book or a physical campfire.",
+      "existing_alternative": "Book implies reading; oral storytelling may use no book. Test this motif against a generic talk.",
+      "event_ids": [
+        84177,
+        85148,
+        93436,
+        95243,
+        96248,
+        108528,
+        109815,
+        115086
+      ]
+    },
+    {
+      "concept": "genre-reggaeton",
+      "category": "genre",
+      "label": "Reggaeton",
+      "visual": "A short row of four thick rhythm blocks with contrasting staggered accents above a single music note.",
+      "rationale": "Reggaeton is explicit; a dembow-inspired rhythm motif is exploratory and needs recognition testing, not a claimed universal symbol.",
+      "existing_alternative": "Dance emoji is broad and flags substitute geography for genre; DJ equipment is not evidenced by genre alone.",
+      "event_ids": [
+        90887,
+        98030,
+        98842,
+        102886,
+        109063,
+        113171,
+        113351
+      ]
+    },
+    {
+      "concept": "format-jam-session",
+      "category": "format",
+      "label": "Open jam session",
+      "visual": "Two overlapping music-note bubbles joined by circular exchange arrows.",
+      "rationale": "Shows collaborative improvisation rather than a fixed concert; test whether exchange reads at 24 px.",
+      "existing_alternative": "Music notes identify music but not open participation; saxophone incorrectly implies one instrument.",
+      "event_ids": [
+        97412,
+        99163,
+        100095,
+        100199,
+        101691
+      ]
+    },
+    {
+      "concept": "genre-house",
+      "category": "genre",
+      "label": "House music",
+      "visual": "A compact drum machine with four evenly spaced illuminated beat pads.",
+      "rationale": "Explicit house music supports a four-on-the-floor rhythm exploration; this may read as generic electronic music and needs recognition testing.",
+      "existing_alternative": "DJ decks specify performance equipment, not house; Noto notes are broader still.",
+      "event_ids": [
+        104796,
+        108021,
+        108029,
+        113309
+      ]
+    },
+    {
+      "concept": "genre-rnb",
+      "category": "genre",
+      "label": "R&B",
+      "visual": "Explore a microphone paired with a single smooth looping sound-wave ribbon.",
+      "rationale": "R&B is explicit; exploratory smooth vocal motif is not a proven genre symbol and must be tested.",
+      "existing_alternative": "Noto microphone shows vocals but not genre; avoid assuming saxophone or other instruments.",
+      "event_ids": [
+        86042,
+        89340,
+        90887,
+        102886
+      ]
+    },
+    {
+      "concept": "activity-circuit-training",
+      "category": "activity",
+      "label": "Circuit training",
+      "visual": "Three simple exercise stations around a circular route",
+      "rationale": "Station-based exercise differs from one posture; simplify and test recognition.",
+      "existing_alternative": "Broad fallback does not distinguish this specific supported facet.",
+      "event_ids": [
+        111473,
+        111477,
+        111491
+      ]
+    },
+    {
+      "concept": "activity-dance-fitness",
+      "category": "activity",
+      "label": "Dance fitness",
+      "visual": "Athletic dancer in sneakers taking a broad side step",
+      "rationale": "Exercise movement differs from theatrical solo dancing; avoid implying a branded class.",
+      "existing_alternative": "Broad fallback does not distinguish this supported facet.",
+      "event_ids": [
+        117208,
+        117233,
+        117234
+      ]
+    },
+    {
+      "concept": "dance-perreo",
+      "category": "dance-style",
+      "label": "Perreo dance",
+      "visual": "A grounded solo dancer with bent knees and low rhythmic hip position.",
+      "rationale": "Perreo is explicitly the party dancing, supporting a style exploration; silhouette needs testing against dancehall and generic club dance.",
+      "existing_alternative": "Noto dancer is broad; DJ decks does not depict attendee dance style.",
+      "event_ids": [
+        109063,
+        113171,
+        113351
+      ]
+    },
+    {
+      "concept": "dance-zumba",
+      "category": "activity",
+      "label": "Zumba",
+      "visual": "Athletic dancer in a lateral step with raised bent arms and two beat marks.",
+      "rationale": "Explicit Zumba merits exploring an exercise-dance pose; distinguishability from general dance needs testing.",
+      "existing_alternative": "Existing dancer is formal dress; notes describe music without exercise.",
+      "event_ids": [
+        104433,
+        107764,
+        121217
+      ]
+    },
+    {
+      "concept": "format-poetry-reading",
+      "category": "format",
+      "label": "Poetry reading",
+      "visual": "A short verse page beside a microphone",
+      "rationale": "Performed verse differs from book-storytime and discussion.",
+      "existing_alternative": "Source Unicode fallback remains until distinct art is reviewed.",
+      "event_ids": [
+        93356,
+        97904,
+        97999
+      ]
+    },
+    {
+      "concept": "format-sketch-comedy",
+      "category": "format",
+      "label": "Sketch comedy",
+      "visual": "Two stage figures beside a short script page",
+      "rationale": "Scripted short comic scenes differ from stand-up and improvised scenes.",
+      "existing_alternative": "Retain the event Unicode fallback until a distinct recognizable study passes review.",
+      "event_ids": [
+        82727,
+        115078,
+        115090
+      ]
+    },
+    {
+      "concept": "genre-soul",
+      "category": "genre",
+      "label": "Soul music",
+      "visual": "A record with a rounded call-and-response wave.",
+      "rationale": "Classic and Northern Soul are explicit repertoire; the motif needs testing against funk and R&B and should not imply live vocals.",
+      "existing_alternative": "DJ decks serve the current activity; no existing icon distinguishes soul repertoire.",
+      "event_ids": [
+        89340,
+        108223,
+        112118
+      ]
+    },
+    {
+      "concept": "genre-swing",
+      "category": "genre",
+      "label": "Swing music",
+      "visual": "Explore a music note with a paired long-short rhythmic tail.",
+      "rationale": "Explicit swing/hot-jazz programming merits genre exploration independent of instrument; recognition remains uncertain.",
+      "existing_alternative": "Noto saxophone is not universal swing; music notes lack rhythmic genre identity.",
+      "event_ids": [
+        83550,
+        92730,
+        102608
+      ]
+    },
+    {
+      "concept": "activity-pasta-making",
+      "category": "activity",
+      "label": "Pasta making",
+      "visual": "Two hands shaping a large dough ribbon beside two finished pasta pieces.",
+      "rationale": "Making pasta is an active technique rather than eating a pasta dish; mixed tasting programs are supporting evidence, not automatic exclusive assignments.",
+      "existing_alternative": "Spaghetti depicts the finished food and chef depicts cooking broadly.",
+      "event_ids": [
+        91023,
+        98052
+      ]
+    },
+    {
+      "concept": "activity-tarot",
+      "category": "activity",
+      "label": "Tarot reading",
+      "visual": "Three fanned cards with one large sun and moon emblem.",
+      "rationale": "Explicit tarot reading and instruction needs recognition beyond generic playing cards; test card emblems at16px.",
+      "existing_alternative": "Noto joker and playing-card suits depict gaming rather than tarot; crystal ball suggests different divination.",
+      "event_ids": [
+        95254,
+        98634
+      ]
+    },
+    {
+      "concept": "craft-ikebana",
+      "category": "craft",
+      "label": "Ikebana",
+      "visual": "Three asymmetric stems and one broad flower rising from a shallow low bowl.",
+      "rationale": "Sparse deliberate arrangement differs from a bunch of flowers; the Ohara class supports exploring this arrangement style without claiming every lesson uses this vessel.",
+      "existing_alternative": "Noto bouquet and flower emoji lack the arrangement structure and vessel.",
+      "event_ids": [
+        93275,
+        93276
+      ]
+    },
+    {
+      "concept": "craft-miniature-painting",
+      "category": "craft",
+      "label": "Miniature painting",
+      "visual": "A fine brush touching a small model on a round base",
+      "rationale": "Painting small models differs from life drawing and canvas painting.",
+      "existing_alternative": "Retain source Unicode while specific art remains exploratory.",
+      "event_ids": [
+        104294,
+        112006
+      ]
+    },
+    {
+      "concept": "dance-bachata",
+      "category": "dance-style",
+      "label": "Bachata",
+      "visual": "Two dancers in a close partner hold with one bent stepping knee and a side-to-side motion arc.",
+      "rationale": "Highlights the explicitly named partnered dance; in mixed Latin parties it is a supported facet, and differentiation from other partner dances needs testing.",
+      "existing_alternative": "Noto solo dancer does not show close partner connection.",
+      "event_ids": [
+        93498,
+        103252
+      ]
+    },
+    {
+      "concept": "dance-salsa",
+      "category": "dance-style",
+      "label": "Salsa partner dance",
+      "visual": "Two dancers in open handhold with a clear turning arm and compact stepping legs.",
+      "rationale": "Explicit salsa classes support exploration of partner-step art; style distinction needs recognition testing and cannot rely on stereotyped costume.",
+      "existing_alternative": "Single dancer is broad and does not show the partner turn; no supported catalog dance fits.",
+      "event_ids": [
+        90886,
+        93498
+      ]
+    },
+    {
+      "concept": "dance-swing",
+      "category": "dance-style",
+      "label": "Swing dance",
+      "visual": "Two dancers leaning apart in an open connected-hand rock step.",
+      "rationale": "Swing dancing has a recognizable partnered motion beyond generic dance; test separation at small sizes.",
+      "existing_alternative": "Noto solo dancer omits partnered swing; no corresponding custom.",
+      "event_ids": [
+        83550,
+        124603
+      ]
+    },
+    {
+      "concept": "dance-west-coast-swing",
+      "category": "dance-style",
+      "label": "West Coast Swing",
+      "visual": "Two dancers in an open one-hand connection aligned along a short straight floor slot.",
+      "rationale": "Explicit West Coast Swing differs from broad swing through its slotted form; test small-size separation from other partner dances.",
+      "existing_alternative": "Noto solo dancer and generic swing image do not identify slotted West Coast form.",
+      "event_ids": [
+        108078,
+        108082
+      ]
+    },
+    {
+      "concept": "equipment-studio-lighting",
+      "category": "equipment",
+      "label": "Studio lighting",
+      "visual": "Barn-door lamp on a three-legged stand",
+      "rationale": "Studio lighting equipment differs from household lightbulbs.",
+      "existing_alternative": "Broad fallback does not distinguish this supported facet.",
+      "event_ids": [
+        114951,
+        114956
+      ]
+    },
+    {
+      "concept": "equipment-video-switcher",
+      "category": "equipment",
+      "label": "Video studio production",
+      "visual": "An angled console with three large lit buttons below a split-screen preview.",
+      "rationale": "Studio switching and compositing are specific production practices distinct from camera operation or screening.",
+      "existing_alternative": "Movie camera represents filming broadly and DJ/audio console would depict the wrong controls.",
+      "event_ids": [
+        114949,
+        114956
+      ]
+    },
+    {
+      "concept": "format-burlesque",
+      "category": "format",
+      "label": "Burlesque",
+      "visual": "A pair of overlapping feather fans on a stage base",
+      "rationale": "Explicit burlesque differs from drag and generic dance; feather fan is only representative and needs review.",
+      "existing_alternative": "Source Unicode fallback remains until distinct art is reviewed.",
+      "event_ids": [
+        93379,
+        116141
+      ]
+    },
+    {
+      "concept": "format-clowning",
+      "category": "format",
+      "label": "Clown performance",
+      "visual": "A red nose and expressive stage-face silhouette",
+      "rationale": "Physical clown performance differs from stand-up; avoid costume stereotypes beyond explicit clown context.",
+      "existing_alternative": "Source Unicode fallback remains until distinct art is reviewed.",
+      "event_ids": [
+        91497,
+        91849
+      ]
+    },
+    {
+      "concept": "format-immersive-projection",
+      "category": "format",
+      "label": "Immersive projection art",
+      "visual": "Two walls and floor corner crossed by one luminous projected shape.",
+      "rationale": "Room-scale digital projections distinguish immersive visual art from static images.",
+      "existing_alternative": "Crystal ball or flower reflects subject matter rather than projection environment; 3D-printing is fabrication and unsuitable.",
+      "event_ids": [
+        124356,
+        124357
+      ]
+    },
+    {
+      "concept": "format-kirtan",
+      "category": "format",
+      "label": "Kirtan",
+      "visual": "Two facing vocal profiles with alternating sound arcs.",
+      "rationale": "Music and mantra meditation warrants participatory chanting concept; test distinction from ordinary choir.",
+      "existing_alternative": "Meditation figure omits communal musical chanting; no specific instrument is identified.",
+      "event_ids": [
+        120208,
+        120209
+      ]
+    },
+    {
+      "concept": "format-spoken-word",
+      "category": "format",
+      "label": "Spoken word",
+      "visual": "Microphone beside three flowing spoken lines",
+      "rationale": "Spoken poetry deserves exploration; uncertain distinction from general speech.",
+      "existing_alternative": "Broad fallback does not distinguish this specific supported facet.",
+      "event_ids": [
+        110672,
+        115046
+      ]
+    },
+    {
+      "concept": "game-american-mahjong",
+      "category": "activity",
+      "label": "American Mahjong",
+      "visual": "Three upright tiles beside a simplified horizontal scoring card",
+      "rationale": "Specific American form supported; compare added value against existing Mahjong tile before creating.",
+      "existing_alternative": "Retain the source Unicode until recognizable original artwork is reviewed.",
+      "event_ids": [
+        98038,
+        103266
+      ]
+    },
+    {
+      "concept": "game-catan",
+      "category": "activity",
+      "label": "Catan",
+      "visual": "Three colored hexagonal terrain tiles with one small settlement.",
+      "rationale": "Named Catan play has a distinctive hex-tile/settlement cue; mixed game programs may retain broad icon.",
+      "existing_alternative": "Noto dice/puzzle is generic and current game customs represent other games.",
+      "event_ids": [
+        100547,
+        105052
+      ]
+    },
+    {
+      "concept": "genre-americana",
+      "category": "genre",
+      "label": "Americana music",
+      "visual": "Explore an acoustic sound-hole ring with a branching musical note.",
+      "rationale": "Explicit Americana programming merits genre exploration, but there is no universal symbol and acoustic guitar cannot be assumed as actual lineup.",
+      "existing_alternative": "Noto guitar/notes are broad; motif must distinguish folk/country and not duplicate proposed acoustic-guitar art.",
+      "event_ids": [
+        89772,
+        105902
+      ]
+    },
+    {
+      "concept": "genre-bluegrass",
+      "category": "genre",
+      "label": "Bluegrass music",
+      "visual": "Two simplified acoustic string-instrument necks sharing one open rhythmic arc.",
+      "rationale": "The acoustic ensemble tradition is central; an instrument-neutral genre cue is uncertain and should be tested rather than assuming a banjo is present.",
+      "existing_alternative": "Noto banjo may suggest the genre but would assert unlisted instrumentation; generic music notes lose genre specificity.",
+      "event_ids": [
+        97178,
+        115097
+      ]
+    },
+    {
+      "concept": "genre-city-pop",
+      "category": "genre",
+      "label": "City pop",
+      "visual": "A compact record with a warm geometric city-skyline label",
+      "rationale": "Specific repertoire supported; skyline/record may remain generic and needs recognition testing.",
+      "existing_alternative": "Retain the source Unicode until recognizable original artwork is reviewed.",
+      "event_ids": [
+        98182,
+        104761
+      ]
+    },
+    {
+      "concept": "genre-cuban-music",
+      "category": "genre",
+      "label": "Cuban music",
+      "visual": "Explore paired clave sticks crossed beside a single musical note.",
+      "rationale": "Explicit Cuban music is central; clave motif must be tested and may not distinguish broader Latin forms.",
+      "existing_alternative": "Flag indicates place rather than music; generic notes lose genre, no custom genre art.",
+      "event_ids": [
+        81810,
+        84243
+      ]
+    },
+    {
+      "concept": "genre-dancehall",
+      "category": "genre",
+      "label": "Dancehall",
+      "visual": "Explore a microphone over a compact offbeat rhythm pattern.",
+      "rationale": "The genre is explicitly named in the musical program; this is a prospective genre concept rather than evidence of a specific instrument.",
+      "existing_alternative": "Existing music/dance or instrument emoji remain reasonable; test genre recognition and avoid stereotyped visual shorthand.",
+      "event_ids": [
+        116362,
+        121462
+      ]
+    },
+    {
+      "concept": "genre-disco",
+      "category": "genre",
+      "label": "Disco",
+      "visual": "A faceted mirror ball above two dance rhythm marks",
+      "rationale": "Disco genre explicit; existing mirror-ball Unicode is strong and may make custom redundant.",
+      "existing_alternative": "Retain the source Unicode until recognizable original artwork is reviewed.",
+      "event_ids": [
+        93498,
+        112137
+      ]
+    },
+    {
+      "concept": "genre-funk",
+      "category": "genre",
+      "label": "Funk",
+      "visual": "Explore a bent note over four offset bass-pulse blocks.",
+      "rationale": "Funk is explicitly named in the title, description or program tags. This is a prospective genre motif requiring recognition tests; it does not establish a particular instrument or an exclusive assignment for mixed bills.",
+      "existing_alternative": "Existing notes or actual featured instrument remain appropriate; custom genre art is exploratory rather than a proven recognition improvement.",
+      "event_ids": [
+        89340,
+        108223
+      ]
+    },
+    {
+      "concept": "genre-hip-hop",
+      "category": "genre",
+      "label": "Hip-hop",
+      "visual": "A compact boombox with two broad speaker circles and one strong rhythmic accent.",
+      "rationale": "The genre is explicitly tagged; boombox is an exploratory historical music-culture cue, not a claim that it is on stage, and must be tested beyond generic retro music.",
+      "existing_alternative": "Noto microphone is generic vocal performance; DJ decks imply a DJ role not established by every hip-hop concert.",
+      "event_ids": [
+        108223,
+        116362
+      ]
+    },
+    {
+      "concept": "genre-irish-traditional",
+      "category": "genre",
+      "label": "Traditional Irish music",
+      "visual": "A simple interlaced loop surrounding two musical notes.",
+      "rationale": "Explicit Irish seisiun repertoire supports exploration beyond instrument identity; the knot motif is culturally broad and needs recognition testing, not assumed proof of genre.",
+      "existing_alternative": "Noto violin correctly covers the named fiddle host but does not identify the traditional session repertoire.",
+      "event_ids": [
+        105895,
+        108371
+      ]
+    },
+    {
+      "concept": "genre-j-pop",
+      "category": "genre",
+      "label": "J-pop",
+      "visual": "An original star concert lightstick beside a pop music note",
+      "rationale": "Musical repertoire supported; avoid flag or costume shortcuts; recognition uncertain.",
+      "existing_alternative": "Retain the source Unicode until recognizable original artwork is reviewed.",
+      "event_ids": [
+        98182,
+        104761
+      ]
+    },
+    {
+      "concept": "genre-r-and-b",
+      "category": "genre",
+      "label": "R and B",
+      "visual": "Explore paired smooth music-note curves",
+      "rationale": "Genre deserves exploration without substituting presumed instrumentation.",
+      "existing_alternative": "Existing broad fallback does not distinguish this specific facet.",
+      "event_ids": [
+        108223,
+        112118
+      ]
+    },
+    {
+      "concept": "genre-ragtime",
+      "category": "genre",
+      "label": "Ragtime",
+      "visual": "A bold music note with an offset stepped rhythmic beam over a short pair of alternating beat marks.",
+      "rationale": "Ragtime is explicitly tagged; syncopation motif needs testing and does not assert piano instrumentation.",
+      "existing_alternative": "Piano excludes ensemble ragtime; generic notes lose the rhythmic genre.",
+      "event_ids": [
+        91048,
+        123434
+      ]
+    },
+    {
+      "concept": "activity-astrology",
+      "category": "activity",
+      "label": "Astrology chart workshop",
+      "visual": "A segmented circular chart with three star points",
+      "rationale": "Chart study differs from telescope astronomy; no efficacy claim.",
+      "existing_alternative": "Retain the event Unicode fallback pending a recognizable reviewed study.",
+      "event_ids": [
+        98635
+      ]
+    },
+    {
+      "concept": "activity-cheesemaking",
+      "category": "activity",
+      "label": "Cheesemaking",
+      "visual": "Two hands stretching pale curd above a bowl",
+      "rationale": "Making burrata from curds differs from eating cheese or making pasta.",
+      "existing_alternative": "Retain source Unicode while specific art remains exploratory.",
+      "event_ids": [
+        102747
+      ]
+    },
+    {
+      "concept": "activity-food-pantry",
+      "category": "activity",
+      "label": "Food pantry",
+      "visual": "A food shelf with bread and tins over two supporting hands",
+      "rationale": "Food distribution differs from explicit surplus rescue and meal service.",
+      "existing_alternative": "Retain the event Unicode fallback pending a recognizable reviewed study.",
+      "event_ids": [
+        101118
+      ]
+    },
+    {
+      "concept": "activity-forest-bathing",
+      "category": "activity",
+      "label": "Forest bathing",
+      "visual": "A person pausing between two trees with a small breeze cue",
+      "rationale": "Sensory guided woodland engagement differs from birdwatching and hiking.",
+      "existing_alternative": "Retain the event Unicode fallback until a distinct recognizable study passes review.",
+      "event_ids": [
+        81917
+      ]
+    },
+    {
+      "concept": "activity-hiit",
+      "category": "activity",
+      "label": "High-intensity interval training",
+      "visual": "Stopwatch beside a lunging athlete",
+      "rationale": "Work/rest intervals distinguish HIIT; not all circuits are high intensity.",
+      "existing_alternative": "Broad fallback does not distinguish this supported facet.",
+      "event_ids": [
+        116433
+      ]
+    },
+    {
+      "concept": "activity-hypnosis",
+      "category": "activity",
+      "label": "Hypnosis workshop",
+      "visual": "A reclining head beside a simple focus point",
+      "rationale": "Explore a practice cue without implying clinical efficacy; requires recognition testing.",
+      "existing_alternative": "Existing broad fallback does not distinguish this specific facet.",
+      "event_ids": [
+        107679
+      ]
+    },
+    {
+      "concept": "activity-intensati",
+      "category": "activity",
+      "label": "intenSati",
+      "visual": "Athletic standing pose with a spoken affirmation bubble",
+      "rationale": "Named mind-body cardio needs recognition testing distinct from dance fitness.",
+      "existing_alternative": "Broad fallback does not distinguish this supported facet.",
+      "event_ids": [
+        117232
+      ]
+    },
+    {
+      "concept": "activity-interval-training",
+      "category": "activity",
+      "label": "Interval training",
+      "visual": "Stopwatch with alternating work/rest segments beside an exercise figure",
+      "rationale": "Timing is defining without assuming high impact or intensity.",
+      "existing_alternative": "Broad fallback does not distinguish this supported facet.",
+      "event_ids": [
+        117209
+      ]
+    },
+    {
+      "concept": "activity-lablast",
+      "category": "activity",
+      "label": "LaBlast fitness",
+      "visual": "Athletic figure taking a ballroom-derived solo step",
+      "rationale": "Named ballroom fitness differs from formal partnered dancing; test recognition.",
+      "existing_alternative": "Broad fallback does not distinguish this supported facet.",
+      "event_ids": [
+        124869
+      ]
+    },
+    {
+      "concept": "activity-mixology",
+      "category": "activity",
+      "label": "Cocktail making",
+      "visual": "A cocktail shaker beside a short pouring stream and glass",
+      "rationale": "Preparing cocktails differs from generic drinking.",
+      "existing_alternative": "Retain the event Unicode fallback pending a recognizable reviewed study.",
+      "event_ids": [
+        100524
+      ]
+    },
+    {
+      "concept": "activity-motion-graphics",
+      "category": "activity",
+      "label": "Motion graphics",
+      "visual": "Two offset colored squares along a curved motion path on a screen",
+      "rationale": "Animated graphics differ from cutting live-action footage.",
+      "existing_alternative": "Broad fallback does not distinguish this supported facet.",
+      "event_ids": [
+        114952
+      ]
+    },
+    {
+      "concept": "activity-mozzarella-making",
+      "category": "activity",
+      "label": "Mozzarella making",
+      "visual": "Two hands stretch a broad white curd ribbon over a small bowl.",
+      "rationale": "Mozzarella making is an explicit class facet; the stretching motif needs process reference before final art.",
+      "existing_alternative": "Noto cheese is a finished hard wedge and pizza only depicts the other activity.",
+      "event_ids": [
+        112178
+      ]
+    },
+    {
+      "concept": "activity-pet-adoption",
+      "category": "activity",
+      "label": "Pet adoption",
+      "visual": "Cat and dog silhouettes beside a small welcoming house",
+      "rationale": "Animal adoption differs from pet retail and food rescue.",
+      "existing_alternative": "Source Unicode fallback remains until distinct art is reviewed.",
+      "event_ids": [
+        92591
+      ]
+    },
+    {
+      "concept": "activity-pizza-making",
+      "category": "activity",
+      "label": "Pizza making",
+      "visual": "Two hands stretching a circular dough above a short board.",
+      "rationale": "Pizza dough preparation is an explicit course variant distinct from eating; simplified hands need small-size testing.",
+      "existing_alternative": "Noto pizza slice identifies food but not making; mixed pizza/pasta event may retain broad fallback.",
+      "event_ids": [
+        98052
+      ]
+    },
+    {
+      "concept": "activity-podcast-production",
+      "category": "activity",
+      "label": "Podcast production",
+      "visual": "Microphone beside a short waveform and episode page",
+      "rationale": "End-to-end podcast production includes recording, editing and distribution; no one phase should imply all.",
+      "existing_alternative": "Retain source Unicode while specific art remains exploratory.",
+      "event_ids": [
+        101553
+      ]
+    },
+    {
+      "concept": "activity-restorative-yoga",
+      "category": "activity",
+      "label": "Restorative yoga",
+      "visual": "Reclining figure supported by a broad bolster",
+      "rationale": "Supported rest differs from seated meditation and chair yoga.",
+      "existing_alternative": "Existing broad fallback does not distinguish this specific facet.",
+      "event_ids": [
+        107667
+      ]
+    },
+    {
+      "concept": "activity-seining",
+      "category": "activity",
+      "label": "Seining",
+      "visual": "A broad shallow net between two poles over water",
+      "rationale": "Seining appears in event title; verify actual activity scope before exclusive assignment.",
+      "existing_alternative": "Retain event Unicode until specific art passes recognition and semantic review.",
+      "event_ids": [
+        105989
+      ]
+    },
+    {
+      "concept": "activity-sourdough-baking",
+      "category": "activity",
+      "label": "Sourdough baking",
+      "visual": "Bubbling starter jar beside a scored loaf",
+      "rationale": "Starter fermentation differentiates sourdough technique from general bread.",
+      "existing_alternative": "Broad fallback does not distinguish this supported facet.",
+      "event_ids": [
+        123783
+      ]
+    },
+    {
+      "concept": "activity-stair-climbing",
+      "category": "activity",
+      "label": "Stair exercise",
+      "visual": "Shoe stepping onto three broad stair treads",
+      "rationale": "Stair climbing is explicitly part of workout; not a whole-program assignment.",
+      "existing_alternative": "Broad fallback does not distinguish this supported facet.",
+      "event_ids": [
+        122677
+      ]
+    },
+    {
+      "concept": "activity-tea-ceremony",
+      "category": "activity",
+      "label": "Tea ceremony",
+      "visual": "Matcha bowl beside an upright bamboo whisk.",
+      "rationale": "The ceremonial preparation equipment adds meaning beyond consuming tea.",
+      "existing_alternative": "Noto tea bowl serves the beverage well but does not depict whisking or ceremony.",
+      "event_ids": [
+        93272
+      ]
+    },
+    {
+      "concept": "craft-boatbuilding",
+      "category": "craft",
+      "label": "Boatbuilding",
+      "visual": "An unfinished small wooden hull with two clear ribs and a mallet alongside.",
+      "rationale": "Constructing a vessel is distinct from sailing or rowing and has a recognizable partly-built hull.",
+      "existing_alternative": "Boat depicts the finished vessel; tools alone omit the specialized craft.",
+      "event_ids": [
+        104267
+      ]
+    },
+    {
+      "concept": "craft-bonsai",
+      "category": "craft",
+      "label": "Bonsai",
+      "visual": "A small gnarled tree with tiered foliage and exposed roots in a shallow rectangular tray.",
+      "rationale": "The drop-in lesson explicitly studies bonsai art, history and care; its miniature trained tree is the subject.",
+      "existing_alternative": "Noto potted plant is a leafy houseplant and generic tree omits the shallow bonsai tray and trained shape.",
+      "event_ids": [
+        106629
+      ]
+    },
+    {
+      "concept": "craft-calligraphy",
+      "category": "craft",
+      "label": "Brush calligraphy",
+      "visual": "An upright brush drawing one broad tapered ink stroke on a paper corner.",
+      "rationale": "The thick-to-thin written ink gesture distinguishes lettering from painting without tiny readable characters.",
+      "existing_alternative": "Noto paintbrush shows a tool but not the calligraphic stroke or writing practice.",
+      "event_ids": [
+        97613
+      ]
+    },
+    {
+      "concept": "craft-comic-drawing",
+      "category": "activity",
+      "label": "Comic art",
+      "visual": "Two-panel page with a bold speech bubble and pencil tip.",
+      "rationale": "Character design and panel composition define comics-making rather than superhero subject matter.",
+      "existing_alternative": "Noto superhero only describes one comic genre; pen/page omits comic panels.",
+      "event_ids": [
+        100703
+      ]
+    },
+    {
+      "concept": "craft-fabric-flowers",
+      "category": "craft",
+      "label": "Fabric flower making",
+      "visual": "A three-dimensional fabric blossom with a folded cloth edge and a small petal-shaped cutting form.",
+      "rationale": "The factory tour specifically demonstrates artificial flower construction; supports craft-subject art but is not evidence of attendee hands-on participation.",
+      "existing_alternative": "Flower alone reads as a living plant; sewing machine would imply an unconfirmed process.",
+      "event_ids": [
+        112072
+      ]
+    },
+    {
+      "concept": "craft-fantasy-mapmaking",
+      "category": "craft",
+      "label": "Fantasy mapmaking",
+      "visual": "Ink pen drawing a winding river and mountain on parchment",
+      "rationale": "Making fictional maps differs from following a scavenger route.",
+      "existing_alternative": "Broad fallback does not distinguish this specific supported facet.",
+      "event_ids": [
+        112006
+      ]
+    },
+    {
+      "concept": "craft-fly-tying",
+      "category": "craft",
+      "label": "Fly tying",
+      "visual": "A compact vise holding a curved hook with one feather and a thread spool below.",
+      "rationale": "Tying an artificial fishing fly is a distinct bench craft, not casting or catching fish.",
+      "existing_alternative": "Fishing pole suggests outdoor fishing; sewing needle lacks the hook and vise.",
+      "event_ids": [
+        86721
+      ]
+    },
+    {
+      "concept": "craft-frame-loom-weaving",
+      "category": "craft",
+      "label": "Small-loom weaving",
+      "visual": "A rectangular wooden frame with broad vertical warp threads, a colorful woven band and one shuttle.",
+      "rationale": "Small-loom weaving is explicitly offered; the interlaced warp and shuttle distinguish this supported craft facet from knitting and crochet.",
+      "existing_alternative": "Yarn is generic and needle knitting depicts a different construction method.",
+      "event_ids": [
+        108639
+      ]
+    },
+    {
+      "concept": "craft-plastic-model-building",
+      "category": "craft",
+      "label": "Plastic model building",
+      "visual": "A simple kit-parts sprue beside diagonal nippers",
+      "rationale": "Gunpla kit assembly differs from toy robots and interlocking bricks.",
+      "existing_alternative": "Retain event Unicode until specific art passes recognition and semantic review.",
+      "event_ids": [
+        106632
+      ]
+    },
+    {
+      "concept": "craft-still-life",
+      "category": "craft",
+      "label": "Still-life art",
+      "visual": "A pear and vase beside a drawing page",
+      "rationale": "Object study differs from human figure drawing; technique can be drawing or painting.",
+      "existing_alternative": "Retain the event Unicode fallback pending a recognizable reviewed study.",
+      "event_ids": [
+        99393
+      ]
+    },
+    {
+      "concept": "craft-still-life-drawing",
+      "category": "craft",
+      "label": "Still-life drawing",
+      "visual": "Pencil beside a drawn bowl and fruit",
+      "rationale": "Drawing arranged objects differs from live human figure drawing.",
+      "existing_alternative": "Broad fallback does not distinguish this supported facet.",
+      "event_ids": [
+        124840
+      ]
+    },
+    {
+      "concept": "craft-suminagashi",
+      "category": "craft",
+      "label": "Suminagashi ink marbling",
+      "visual": "A shallow tray with broad concentric ink ripples and a paper corner",
+      "rationale": "Ink marbling differs from collage, painting on canvas and cyanotype.",
+      "existing_alternative": "Retain the source Unicode until recognizable original artwork is reviewed.",
+      "event_ids": [
+        95455
+      ]
+    },
+    {
+      "concept": "craft-weaving",
+      "category": "craft",
+      "label": "Weaving",
+      "visual": "A small frame loom with alternating warp/weft bands and one shuttle.",
+      "rationale": "Weaving is the explicit class technique and differs from knitting or sewing.",
+      "existing_alternative": "Yarn is broad; a warp-and-weft grid provides a clear distinctive process cue without claiming a particular loom model.",
+      "event_ids": [
+        117627
+      ]
+    },
+    {
+      "concept": "cuisine-nikkei",
+      "category": "cuisine",
+      "label": "Nikkei cuisine",
+      "visual": "Two maki rolls next to a bright pepper-sauce swoosh.",
+      "rationale": "The class explicitly combines Peruvian pepper sauces with Japanese sushi; this motif is exploratory and may read as generic spicy sushi.",
+      "existing_alternative": "Noto sushi covers the dish but not the defining Japanese-Peruvian preparation; no flags are needed.",
+      "event_ids": [
+        92016
+      ]
+    },
+    {
+      "concept": "cuisine-uyghur",
+      "category": "cuisine",
+      "label": "Uyghur cuisine",
+      "visual": "Develop a supported dish silhouette after confirming actual menu",
+      "rationale": "Do not substitute a presumed noodle dish or geographic symbol; cuisine is explicit but menu unspecified.",
+      "existing_alternative": "Broad fallback does not distinguish this supported facet.",
+      "event_ids": [
+        117566
+      ]
+    },
+    {
+      "concept": "dance-ballroom",
+      "category": "dance-style",
+      "label": "Ballroom dance",
+      "visual": "A pair of dancers in a broad closed frame.",
+      "rationale": "Mixed ballroom social is defined by partnered frame rather than a single style.",
+      "existing_alternative": "Noto solo dancers omit partner hold; no ballroom custom.",
+      "event_ids": [
+        110095
+      ]
+    },
+    {
+      "concept": "dance-chinese-folk",
+      "category": "dance-style",
+      "label": "Chinese folk dance",
+      "visual": "Explore a partnered or solo flowing step after selecting a documented form",
+      "rationale": "Broad tradition includes varied forms; do not assume costume or fan equipment.",
+      "existing_alternative": "Existing broad fallback does not distinguish this specific facet.",
+      "event_ids": [
+        107763
+      ]
+    },
+    {
+      "concept": "dance-djembe",
+      "category": "dance-style",
+      "label": "Djembe dance",
+      "visual": "Athletic dancer mid-step with a small beat cue, based on verified class movement references.",
+      "rationale": "Djembe is named as a dance-class style; preserve dance rather than infer a drumming lesson.",
+      "existing_alternative": "Long drum depicts instrument, not class movement; ordinary dancer is only broad fallback.",
+      "event_ids": [
+        122648
+      ]
+    },
+    {
+      "concept": "dance-hustle",
+      "category": "dance-style",
+      "label": "Hustle partner dance",
+      "visual": "Two dancers in a compact one-hand connection with a clear turning arm and crossing step.",
+      "rationale": "Hustle is explicitly named alongside salsa; style-specific pose must be verified and tested, and mixed classes are not exclusive assignments.",
+      "existing_alternative": "Generic dancer loses partner technique; salsa artwork should not automatically substitute.",
+      "event_ids": [
+        93498
+      ]
+    },
+    {
+      "concept": "dance-kutiro",
+      "category": "dance-style",
+      "label": "Kutiro dance",
+      "visual": "A grounded dancer with bent knees and outward arms, refined against verified Kutiro movement references.",
+      "rationale": "Explicit Kutiro instruction preserves a rare style opportunity; no unverified cultural costume should be used.",
+      "existing_alternative": "Generic dance emoji is broad; pose distinctiveness requires review before artwork.",
+      "event_ids": [
+        122648
+      ]
+    },
+    {
+      "concept": "dance-lindy-hop",
+      "category": "dance-style",
+      "label": "Lindy Hop",
+      "visual": "Two dancers in an open swing-out hold with bent knees.",
+      "rationale": "Lindy Hop is explicitly taught; a partner swing-out differentiates it from a generic solo dancer.",
+      "existing_alternative": "Existing dancers omit the partnered swing hold; pose needs recognition testing against other swing dances.",
+      "event_ids": [
+        109448
+      ]
+    },
+    {
+      "concept": "dance-line-dance",
+      "category": "dance-style",
+      "label": "Line dance",
+      "visual": "Three simplified legs/feet in a row executing the same side step.",
+      "rationale": "Line formation and synchronized steps distinguish the activity without assuming country music.",
+      "existing_alternative": "Noto cowboy face implies country culture, not dance; solo dancer lacks row formation.",
+      "event_ids": [
+        109831
+      ]
+    },
+    {
+      "concept": "dance-sabar",
+      "category": "dance-style",
+      "label": "Sabar dance",
+      "visual": "A dancer with a high lifted knee and extended opposite arm, developed from reviewed Sabar reference.",
+      "rationale": "Sabar is explicitly named as a taught style; accurate movement pose needs specialist/reference validation.",
+      "existing_alternative": "Generic dressed dancer loses this named movement vocabulary; a drum alone would mislabel dance as instrumental performance.",
+      "event_ids": [
+        122648
+      ]
+    },
+    {
+      "concept": "dance-tai-chi-fan",
+      "category": "dance-style",
+      "label": "Tai chi fan",
+      "visual": "Balanced standing figure with an open fan",
+      "rationale": "Fan implementation distinguishes the named practice from unarmed tai chi.",
+      "existing_alternative": "Existing broad fallback does not distinguish this specific facet.",
+      "event_ids": [
+        107761
+      ]
+    },
+    {
+      "concept": "dance-tango",
+      "category": "dance-style",
+      "label": "Argentine tango dance",
+      "visual": "Two close-embrace dancers with one sharply extended leg.",
+      "rationale": "Tango classes/social dancing have a distinct partnered silhouette.",
+      "existing_alternative": "Noto solo dancer lacks close embrace; no tango custom.",
+      "event_ids": [
+        108601
+      ]
+    },
+    {
+      "concept": "ensemble-jazz-quartet",
+      "category": "format",
+      "label": "Jazz quartet",
+      "visual": "Four music stands with four bold note marks",
+      "rationale": "Four-piece jazz ensemble differs from string quartet; avoid assumed instruments.",
+      "existing_alternative": "Broad fallback does not distinguish this supported facet.",
+      "event_ids": [
+        120354
+      ]
+    },
+    {
+      "concept": "ensemble-salsa-orchestra",
+      "category": "format",
+      "label": "Salsa orchestra",
+      "visual": "Explore a multi-player music stand arrangement",
+      "rationale": "Ensemble is explicit but instruments are unspecified; avoid assuming brass section.",
+      "existing_alternative": "Broad fallback does not distinguish this supported facet.",
+      "event_ids": [
+        116252
+      ]
+    },
+    {
+      "concept": "equipment-amateur-radio",
+      "category": "equipment",
+      "label": "Amateur radio transceiver",
+      "visual": "A compact radio console with a coiled-cord hand microphone and one large tuning dial.",
+      "rationale": "Amateur-radio club is explicit; distinguish two-way communication from broadcast listening without claiming a particular rig.",
+      "existing_alternative": "Noto radio depicts broadcast reception; microphone and console can convey a transceiver.",
+      "event_ids": [
+        96284
+      ]
+    },
+    {
+      "concept": "equipment-arcade-cabinet",
+      "category": "equipment",
+      "label": "Arcade gaming",
+      "visual": "An upright arcade cabinet with a large screen and one protruding control shelf.",
+      "rationale": "Physical arcade play differs from console controllers or tabletop games; do not imply this identifies one branded game.",
+      "existing_alternative": "Joystick is useful but omits the cabinet setting; crown does not identify arcade play.",
+      "event_ids": [
+        104198
+      ]
+    },
+    {
+      "concept": "equipment-audio-cassette",
+      "category": "equipment",
+      "label": "Audio cassette",
+      "visual": "Rectangular cassette with two reel windows",
+      "rationale": "Physical mixtapes differ from vinyl and optical discs; verify actual material before assignment.",
+      "existing_alternative": "Broad fallback does not distinguish this supported facet.",
+      "event_ids": [
+        121836
+      ]
+    },
+    {
+      "concept": "equipment-groovebox",
+      "category": "equipment",
+      "label": "Portable music production device",
+      "visual": "A compact pad grid with four knobs and one broad track strip",
+      "rationale": "Ableton Move class names production hardware; equipment differs from DJ decks and editing-only software.",
+      "existing_alternative": "Retain the source Unicode until recognizable original artwork is reviewed.",
+      "event_ids": [
+        94926
+      ]
+    },
+    {
+      "concept": "equipment-hand-truck",
+      "category": "equipment",
+      "label": "Hand truck",
+      "visual": "Two-wheel upright trolley with a box on its toe plate",
+      "rationale": "Manual cargo movement differs from a delivery truck.",
+      "existing_alternative": "Existing broad fallback does not distinguish this specific facet.",
+      "event_ids": [
+        109632
+      ]
+    },
+    {
+      "concept": "equipment-handheld-game-console",
+      "category": "equipment",
+      "label": "Handheld game console",
+      "visual": "Central screen between two small game controls",
+      "rationale": "Portable console differs from a detached controller; no branding needed.",
+      "existing_alternative": "Broad fallback does not distinguish this supported facet.",
+      "event_ids": [
+        121133
+      ]
+    },
+    {
+      "concept": "equipment-loop-station",
+      "category": "equipment",
+      "label": "Live looping",
+      "visual": "A compact two-foot-switch looper with one large circular repeat arrow.",
+      "rationale": "Live looping is explicitly central to this solo performance; a loop station would distinguish layered real-time sound from a conventional recital. The equipment motif needs recognition testing.",
+      "existing_alternative": "Microphone or cello identifies sound source, while existing repeat arrows omit the performed looping tool.",
+      "event_ids": [
+        118827
+      ]
+    },
+    {
+      "concept": "equipment-silent-disco",
+      "category": "equipment",
+      "label": "Silent headphone event",
+      "visual": "Over-ear headphones with two small music notes",
+      "rationale": "Headphone-delivered sound is explicit; no inference that audience dances.",
+      "existing_alternative": "Retain the event Unicode fallback pending a recognizable reviewed study.",
+      "event_ids": [
+        100072
+      ]
+    },
+    {
+      "concept": "equipment-tarot-cards",
+      "category": "equipment",
+      "label": "Tarot cards",
+      "visual": "Three overlapping illustrated cards with a sun and moon",
+      "rationale": "Tarot subject differs from playing-card suits; exhibition use must not imply readings.",
+      "existing_alternative": "Broad fallback does not distinguish this specific supported facet.",
+      "event_ids": [
+        113685
+      ]
+    },
+    {
+      "concept": "equipment-vinyl-record",
+      "category": "equipment",
+      "label": "Vinyl record",
+      "visual": "A black circular record with two broad concentric grooves and a contrasting center label.",
+      "rationale": "Distinguishes shared vinyl listening from DJ mixing or optical discs.",
+      "existing_alternative": "Noto optical discs and minidisc are different media; DJ decks imply a performance not established by bring-your-own-vinyl.",
+      "event_ids": [
+        120238
+      ]
+    },
+    {
+      "concept": "format-blind-wine-tasting",
+      "category": "format",
+      "label": "Blind wine tasting",
+      "visual": "Wine glass beside a covered unlabelled bottle",
+      "rationale": "Concealed identity distinguishes blind tasting from ordinary wine service.",
+      "existing_alternative": "Broad fallback does not distinguish this supported facet.",
+      "event_ids": [
+        118984
+      ]
+    },
+    {
+      "concept": "format-costume-party",
+      "category": "format",
+      "label": "Costume party",
+      "visual": "Decorative mask beside a party streamer",
+      "rationale": "Costume participation differs from ordinary party; avoid a specific culture or identity.",
+      "existing_alternative": "Broad fallback does not distinguish this supported facet.",
+      "event_ids": [
+        120272
+      ]
+    },
+    {
+      "concept": "format-flea-market",
+      "category": "format",
+      "label": "Flea market",
+      "visual": "Small stall with clothing and a lamp",
+      "rationale": "Secondhand mixed goods differ from farm produce.",
+      "existing_alternative": "Broad fallback does not distinguish this specific supported facet.",
+      "event_ids": [
+        112746
+      ]
+    },
+    {
+      "concept": "format-live-coding",
+      "category": "format",
+      "label": "Live coding creative practice",
+      "visual": "Laptop with a few code brackets and an emerging waveform",
+      "rationale": "The meetup explicitly explores real-time programming with creative works in progress. Code producing a live output distinguishes this from passive computer help; music tag supports sound but does not prove an algorave or DJ format.",
+      "existing_alternative": "Laptop or technologist emoji",
+      "event_ids": [
+        97173
+      ]
+    },
+    {
+      "concept": "format-live-dating-show",
+      "category": "format",
+      "label": "Live dating show",
+      "visual": "Two facing chairs under a small stage spotlight",
+      "rationale": "Distinguishes a staged date from general romance; recognition requires testing.",
+      "existing_alternative": "Existing broad fallback does not distinguish this specific facet.",
+      "event_ids": [
+        108745
+      ]
+    },
+    {
+      "concept": "format-live-podcast",
+      "category": "format",
+      "label": "Live podcast",
+      "visual": "Two desk microphones facing across a table",
+      "rationale": "Live conversation recording differs from stand-up and editing.",
+      "existing_alternative": "Broad fallback does not distinguish this specific supported facet.",
+      "event_ids": [
+        111674
+      ]
+    },
+    {
+      "concept": "format-marionette",
+      "category": "activity",
+      "label": "Marionette puppetry",
+      "visual": "A simple wooden puppet with articulated limbs suspended from a crossbar by two visible strings.",
+      "rationale": "The explicit marionette company and puppetry performance support exploring a puppet silhouette, distinct from human theater.",
+      "existing_alternative": "Noto theater masks lack puppetry construction and there is no dedicated marionette emoji.",
+      "event_ids": [
+        107102
+      ]
+    },
+    {
+      "concept": "format-musical-improv",
+      "category": "format",
+      "label": "Musical improvisational theater",
+      "visual": "Two facing theater profiles exchanging one large musical speech bubble.",
+      "rationale": "The cast creates a full musical from audience prompts; distinguish from scripted musicals and purely spoken improv.",
+      "existing_alternative": "Noto masks and music notes separately omit improvised sung scene-making.",
+      "event_ids": [
+        115097
+      ]
+    },
+    {
+      "concept": "format-poetry-slam",
+      "category": "format",
+      "label": "Poetry slam",
+      "visual": "A microphone beside one large score paddle.",
+      "rationale": "Competitive performed poetry is explicit; test separation from talent contests without relying on tiny poem text.",
+      "existing_alternative": "Noto microphone omits competition; trophy omits spoken poetry.",
+      "event_ids": [
+        92710
+      ]
+    },
+    {
+      "concept": "format-roast-battle",
+      "category": "format",
+      "label": "Comedy roast battle",
+      "visual": "Two facing microphones with one sharp comic speech burst between them.",
+      "rationale": "A head-to-head insult contest differs from ordinary solo stand-up; needs testing to avoid reading as a rap battle.",
+      "existing_alternative": "Fire is metaphorical and single microphone loses the competition format.",
+      "event_ids": [
+        96299
+      ]
+    },
+    {
+      "concept": "format-shadowcast",
+      "category": "format",
+      "label": "Live cinema shadowcast",
+      "visual": "Performer silhouette echoing a figure on a film screen",
+      "rationale": "Live reenactment alongside screening is distinct from regular cinema.",
+      "existing_alternative": "Broad fallback does not distinguish this supported facet.",
+      "event_ids": [
+        115395
+      ]
+    },
+    {
+      "concept": "format-songwriter-round",
+      "category": "format",
+      "label": "Songwriter round",
+      "visual": "Three microphones in a shallow arc around a small circular music mark.",
+      "rationale": "In-the-round alternating songwriters is a specific performance format; arrangement needs testing before art.",
+      "existing_alternative": "Single microphone communicates singing but loses collaborative round format.",
+      "event_ids": [
+        90238
+      ]
+    },
+    {
+      "concept": "format-speed-dating",
+      "category": "format",
+      "label": "Speed dating",
+      "visual": "Two facing speech bubbles with a heart above a small timer.",
+      "rationale": "Timed rotating conversations define the format; heart alone loses the speed-dating mechanism.",
+      "existing_alternative": "Heart suggests romance generally; stopwatch alone suggests athletics.",
+      "event_ids": [
+        101182
+      ]
+    },
+    {
+      "concept": "format-wine-cheese-pairing",
+      "category": "format",
+      "label": "Wine and cheese pairing",
+      "visual": "Wine glass beside a cheese wedge",
+      "rationale": "Combination communicates guided pairing beyond a single ingredient.",
+      "existing_alternative": "Broad fallback does not distinguish this supported facet.",
+      "event_ids": [
+        122912
+      ]
+    },
+    {
+      "concept": "game-azul",
+      "category": "activity",
+      "label": "Azul",
+      "visual": "Four patterned square tiles on a small grid",
+      "rationale": "Tile placement differs from dice games; avoid relying on branding.",
+      "existing_alternative": "Broad fallback does not distinguish this specific supported facet.",
+      "event_ids": [
+        111315
+      ]
+    },
+    {
+      "concept": "game-blood-on-the-clocktower",
+      "category": "activity",
+      "label": "Blood on the Clocktower",
+      "visual": "A clock tower silhouette behind two contrasting role tokens",
+      "rationale": "Named social-deduction game differs from tabletop RPG; original nonspecific art avoids reliance on branded graphics.",
+      "existing_alternative": "Retain the source Unicode until recognizable original artwork is reviewed.",
+      "event_ids": [
+        93474
+      ]
+    },
+    {
+      "concept": "game-carcassonne",
+      "category": "activity",
+      "label": "Carcassonne",
+      "visual": "Three square landscape tiles beside a wooden meeple",
+      "rationale": "Named tile-laying game differs from Go and Catan; mixed games remain broad.",
+      "existing_alternative": "Retain event Unicode until specific art passes recognition and semantic review.",
+      "event_ids": [
+        105052
+      ]
+    },
+    {
+      "concept": "game-codenames",
+      "category": "activity",
+      "label": "Codenames",
+      "visual": "Grid of red and blue word cards with a clue bubble",
+      "rationale": "Team word clues differ from Scrabble letter placement.",
+      "existing_alternative": "Broad fallback does not distinguish this specific supported facet.",
+      "event_ids": [
+        111315
+      ]
+    },
+    {
+      "concept": "game-king-of-tokyo",
+      "category": "activity",
+      "label": "King of Tokyo",
+      "visual": "A monster silhouette beside three large dice",
+      "rationale": "Named game is supported as an option; original monster motif should not imitate branded art.",
+      "existing_alternative": "Retain event Unicode until specific art passes recognition and semantic review.",
+      "event_ids": [
+        105052
+      ]
+    },
+    {
+      "concept": "game-pokemon-tcg",
+      "category": "activity",
+      "label": "Pokemon trading card game",
+      "visual": "Fanned trading cards with a simple creature silhouette on the front.",
+      "rationale": "Pokemon TCG is the primary meetup and differs from MTG and standard cards.",
+      "existing_alternative": "Flower cards are unrelated and MTG custom must not be reused; avoid copying protected game artwork.",
+      "event_ids": [
+        120218
+      ]
+    },
+    {
+      "concept": "game-sorry",
+      "category": "activity",
+      "label": "Sorry board game",
+      "visual": "Colored pawns on a simple home-track board",
+      "rationale": "Track racing differs from chess; test recognition without logo.",
+      "existing_alternative": "Broad fallback does not distinguish this supported facet.",
+      "event_ids": [
+        121137
+      ]
+    },
+    {
+      "concept": "game-splendor",
+      "category": "activity",
+      "label": "Splendor",
+      "visual": "Gem tokens beside a development card",
+      "rationale": "Gem trading differs from generic dice; recognition requires testing.",
+      "existing_alternative": "Broad fallback does not distinguish this specific supported facet.",
+      "event_ids": [
+        111315
+      ]
+    },
+    {
+      "concept": "game-super-smash-bros",
+      "category": "activity",
+      "label": "Platform fighting game",
+      "visual": "Two small fighters over a floating platform with controller cue",
+      "rationale": "Game tournament merits specific gameplay exploration without copying characters.",
+      "existing_alternative": "Broad fallback does not distinguish this supported facet.",
+      "event_ids": [
+        120226
+      ]
+    },
+    {
+      "concept": "game-ticket-to-ride",
+      "category": "activity",
+      "label": "Ticket to Ride",
+      "visual": "A short train route connecting two station dots with a ticket",
+      "rationale": "Named route-building board game is distinct from a real train tour.",
+      "existing_alternative": "Retain event Unicode until specific art passes recognition and semantic review.",
+      "event_ids": [
+        105052
+      ]
+    },
+    {
+      "concept": "game-uno",
+      "category": "activity",
+      "label": "Uno",
+      "visual": "Two overlapping colored cards with a bold reverse-arrow symbol.",
+      "rationale": "Classic Uno and its variants are the actual games.",
+      "existing_alternative": "Joker is a generic standard-deck cue; Uno has a visually distinct color/action-card system.",
+      "event_ids": [
+        121137
+      ]
+    },
+    {
+      "concept": "genre-afro-fusion",
+      "category": "genre",
+      "label": "Afro fusion",
+      "visual": "Interwoven rhythmic note shapes",
+      "rationale": "Named blend has no universal instrument; recognition unproven.",
+      "existing_alternative": "Broad fallback does not distinguish this supported facet.",
+      "event_ids": [
+        120667
+      ]
+    },
+    {
+      "concept": "genre-afro-house",
+      "category": "genre",
+      "label": "Afro house",
+      "visual": "Explore a four-beat grid intertwined with a second offbeat pulse, beside one note.",
+      "rationale": "Explicit Afrohouse merits separate genre record; abstract rhythmic motif must be tested against house/amapiano and avoid ethnic stereotypes.",
+      "existing_alternative": "Generic notes omit genre; proposed house motif is close and may be sufficient.",
+      "event_ids": [
+        121462
+      ]
+    },
+    {
+      "concept": "genre-afrobeat",
+      "category": "genre",
+      "label": "Afrobeat",
+      "visual": "A bold circular groove with three staggered beat blocks and one sustained musical note.",
+      "rationale": "The event explicitly cites West African Afrobeat; repeated interlocking rhythm is a design direction, not a proven genre symbol. Keep distinct from Afrobeats.",
+      "existing_alternative": "Generic drum implies an instrument; geography or nationality cannot identify this genre.",
+      "event_ids": [
+        112032
+      ]
+    },
+    {
+      "concept": "genre-afrobeats",
+      "category": "genre",
+      "label": "Afrobeats",
+      "visual": "Explore an interlocking two-line rhythm pattern beside one music note.",
+      "rationale": "Afrobeats is explicitly the party genre; rhythmic motif must be tested and not reduced to generic African drums or flags.",
+      "existing_alternative": "Noto drum is not a universal Afrobeats identifier; no current custom genre.",
+      "event_ids": [
+        121462
+      ]
+    },
+    {
+      "concept": "genre-amapiano",
+      "category": "genre",
+      "label": "Amapiano",
+      "visual": "Explore a low rounded bass pulse beneath a small keyboard-shaped rhythm block.",
+      "rationale": "Explicit amapiano club programming supports genre exploration; no universal symbol, log-drum-like bass cue is abstract and requires reference/recognition testing.",
+      "existing_alternative": "Noto keyboard/notes are broad; house/decks do not distinguish genre and no actual instrument is inferred.",
+      "event_ids": [
+        121462
+      ]
+    },
+    {
+      "concept": "genre-ambient",
+      "category": "genre",
+      "label": "Ambient music",
+      "visual": "A soft concentric sound-wave halo with one sustained music note.",
+      "rationale": "Ambient listening is explicitly central to the immersive sound; a sustained spacious motif may help but needs recognition testing.",
+      "existing_alternative": "Noto notes/headphones indicate audio generally; DJ decks would imply a different performance emphasis.",
+      "event_ids": [
+        102555
+      ]
+    },
+    {
+      "concept": "genre-bollywood",
+      "category": "genre",
+      "label": "Bollywood music",
+      "visual": "Music note inside a short film strip",
+      "rationale": "Soundtrack repertoire differs from film viewing; test genre specificity.",
+      "existing_alternative": "Broad fallback does not distinguish this specific supported facet.",
+      "event_ids": [
+        113679
+      ]
+    },
+    {
+      "concept": "genre-cajun",
+      "category": "genre",
+      "label": "Cajun music",
+      "visual": "A dancing rhythmic note pair beside a small syncopated beat trail",
+      "rationale": "Specific repertoire named; avoid assuming accordion or ethnicity-based costume.",
+      "existing_alternative": "Retain event Unicode until specific art passes recognition and semantic review.",
+      "event_ids": [
+        105903
+      ]
+    },
+    {
+      "concept": "genre-choro",
+      "category": "genre",
+      "label": "Choro",
+      "visual": "Two intertwined musical phrases drawn as bold curled note stems around one central note.",
+      "rationale": "Choro is the explicit jam focus; melodic interplay motif is exploratory and must pass user recognition testing without claiming a specific instrument.",
+      "existing_alternative": "Flag conveys country rather than genre; unspecified guitar or flute would infer instrumentation.",
+      "event_ids": [
+        112019
+      ]
+    },
+    {
+      "concept": "genre-country",
+      "category": "genre",
+      "label": "Country music",
+      "visual": "Explore a music note integrated into a simple brimmed hat.",
+      "rationale": "Country repertoire is named; hat is only an exploratory convention and recognition testing must avoid treating costume as universal genre identity.",
+      "existing_alternative": "Noto cowboy has no music cue; guitar/banjo do not cover all country performances.",
+      "event_ids": [
+        105630
+      ]
+    },
+    {
+      "concept": "genre-country-rock",
+      "category": "genre",
+      "label": "Country rock",
+      "visual": "Two joined musical notes with a warm rhythmic accent",
+      "rationale": "Genre explicit but instrument-neutral recognition unproven.",
+      "existing_alternative": "Retain event Unicode until specific art passes recognition and semantic review.",
+      "event_ids": [
+        105902
+      ]
+    },
+    {
+      "concept": "genre-darkwave",
+      "category": "genre",
+      "label": "Darkwave",
+      "visual": "A dark musical note with a single smooth wave.",
+      "rationale": "Darkwave is explicitly included in this mixed dark-dance program. The motif is exploratory and requires recognition testing; this does not make it an exclusive icon for the whole mixed night.",
+      "existing_alternative": "Existing music notes/DJ decks do not distinguish genres; avoid treating clothing, ethnicity or an arbitrary instrument as proof.",
+      "event_ids": [
+        98790
+      ]
+    },
+    {
+      "concept": "genre-drone",
+      "category": "genre",
+      "label": "Drone music",
+      "visual": "One long musical tone line with a fading halo",
+      "rationale": "Sustained ambient/drone sound is explicit; do not imply a particular synthesizer.",
+      "existing_alternative": "Retain source Unicode while specific art remains exploratory.",
+      "event_ids": [
+        102555
+      ]
+    },
+    {
+      "concept": "genre-dub",
+      "category": "genre",
+      "label": "Dub",
+      "visual": "One strong musical note repeating into two fading offset echoes beside a large mixing fader.",
+      "rationale": "Dub is explicit; echo and production imagery is an exploratory genre motif, not evidence of a live mixing console.",
+      "existing_alternative": "Music notes omit dub production identity; DJ decks imply a performance method not established here.",
+      "event_ids": [
+        104796
+      ]
+    },
+    {
+      "concept": "genre-edm",
+      "category": "genre",
+      "label": "Electronic dance music",
+      "visual": "Music note above bold beat bars",
+      "rationale": "Genre does not prove synthesizer or DJ equipment; unproven abstract motif.",
+      "existing_alternative": "Broad fallback does not distinguish this specific supported facet.",
+      "event_ids": [
+        112091
+      ]
+    },
+    {
+      "concept": "genre-experimental",
+      "category": "genre",
+      "label": "Experimental music",
+      "visual": "Explore irregular linked sound shapes",
+      "rationale": "No instrument is universal; abstract recognition remains unproven.",
+      "existing_alternative": "Broad fallback does not distinguish this supported facet.",
+      "event_ids": [
+        117874
+      ]
+    },
+    {
+      "concept": "genre-flamenco",
+      "category": "genre",
+      "label": "Flamenco music",
+      "visual": "Rhythmic clapping hands beside a warm rhythmic accent",
+      "rationale": "Flamenco musical form is distinct; do not assume guitar or dance without evidence.",
+      "existing_alternative": "Retain the event Unicode fallback until a distinct recognizable study passes review.",
+      "event_ids": [
+        84243
+      ]
+    },
+    {
+      "concept": "genre-folk",
+      "category": "genre",
+      "label": "Folk music",
+      "visual": "Explore a plucked-string curve beside one plain storytelling note.",
+      "rationale": "Folk is explicitly named in the program.",
+      "existing_alternative": "Generic notes remain valid; this motif needs recognition testing and must not assume acoustic instrumentation.",
+      "event_ids": [
+        89772
+      ]
+    },
+    {
+      "concept": "genre-gospel",
+      "category": "genre",
+      "label": "Gospel music",
+      "visual": "Two singing silhouettes with lifted hands beneath a simple radiant music arc.",
+      "rationale": "Explores the explicitly stated gospel performance identity separately from choir format; it may be confused with general choral celebration and needs recognition testing.",
+      "existing_alternative": "Raised-hands emoji conveys emotion and choir imagery conveys ensemble, but neither specifically communicates gospel.",
+      "event_ids": [
+        120348
+      ]
+    },
+    {
+      "concept": "genre-goth",
+      "category": "genre",
+      "label": "Goth music",
+      "visual": "A dark musical note within a pointed arch.",
+      "rationale": "Goth music is explicitly included in this mixed dark-dance program. The motif is exploratory and requires recognition testing; this does not make it an exclusive icon for the whole mixed night.",
+      "existing_alternative": "Existing music notes/DJ decks do not distinguish genres; avoid treating clothing, ethnicity or an arbitrary instrument as proof.",
+      "event_ids": [
+        97902
+      ]
+    },
+    {
+      "concept": "genre-gqom",
+      "category": "genre",
+      "label": "Gqom",
+      "visual": "Sparse angular beat blocks around a music note",
+      "rationale": "Specific genre deserves preservation; motif requires recognition testing.",
+      "existing_alternative": "Broad fallback does not distinguish this supported facet.",
+      "event_ids": [
+        121462
+      ]
+    },
+    {
+      "concept": "genre-guinean-griot",
+      "category": "genre",
+      "label": "Guinean griot repertoire",
+      "visual": "Interwoven musical phrases",
+      "rationale": "Preserve named Guinean tradition without presuming a kora or costume.",
+      "existing_alternative": "Broad fallback does not distinguish this specific supported facet.",
+      "event_ids": [
+        112018
+      ]
+    },
+    {
+      "concept": "genre-gypsy-jazz",
+      "category": "genre",
+      "label": "Gypsy jazz",
+      "visual": "Explore interlocked swinging music notes",
+      "rationale": "Do not assume guitar or violin; abstract genre motif remains unproven.",
+      "existing_alternative": "Existing broad fallback does not distinguish this specific facet.",
+      "event_ids": [
+        109101
+      ]
+    },
+    {
+      "concept": "genre-hot-jazz",
+      "category": "genre",
+      "label": "Hot jazz / early jazz",
+      "visual": "An acoustic gramophone horn with two lively rising notes.",
+      "rationale": "Hot jazz is explicitly named; this historical motif may wrongly suggest playback at a live concert and requires testing before art selection.",
+      "existing_alternative": "Existing music notes are broad; no specific saxophone or brass ensemble is established.",
+      "event_ids": [
+        83550
+      ]
+    },
+    {
+      "concept": "genre-indie",
+      "category": "genre",
+      "label": "Indie music",
+      "visual": "Explore a hand-drawn note motif",
+      "rationale": "Broad stylistic family has no universal instrument; recognition unproven.",
+      "existing_alternative": "Broad fallback does not distinguish this specific supported facet.",
+      "event_ids": [
+        111166
+      ]
+    },
+    {
+      "concept": "genre-industrial",
+      "category": "genre",
+      "label": "Industrial music",
+      "visual": "A broad gear integrated with a musical note.",
+      "rationale": "Industrial music is explicitly included in this mixed dark-dance program. The motif is exploratory and requires recognition testing; this does not make it an exclusive icon for the whole mixed night.",
+      "existing_alternative": "Existing music notes/DJ decks do not distinguish genres; avoid treating clothing, ethnicity or an arbitrary instrument as proof.",
+      "event_ids": [
+        98790
+      ]
+    },
+    {
+      "concept": "genre-jungle",
+      "category": "genre",
+      "label": "Jungle music",
+      "visual": "A broken rapid beat grid with a looping rhythm trail",
+      "rationale": "Explicit jungle repertoire supports exploration; abstract rhythm cue needs recognition testing.",
+      "existing_alternative": "Retain source Unicode while specific art remains exploratory.",
+      "event_ids": [
+        104796
+      ]
+    },
+    {
+      "concept": "genre-k-pop",
+      "category": "genre",
+      "label": "K-pop",
+      "visual": "A concert lightstick with an original star-shaped head",
+      "rationale": "Fan listening and pop music concept without inferring dance participation or national stereotypes.",
+      "existing_alternative": "Retain the event Unicode fallback until a distinct recognizable study passes review.",
+      "event_ids": [
+        86057
+      ]
+    },
+    {
+      "concept": "genre-latin-house",
+      "category": "genre",
+      "label": "Latin house",
+      "visual": "Dance-beat grid alongside a syncopated percussion mark",
+      "rationale": "Explicit genre facet; not proof of a particular instrument or DJ.",
+      "existing_alternative": "Retain the event Unicode fallback pending a recognizable reviewed study.",
+      "event_ids": [
+        98842
+      ]
+    },
+    {
+      "concept": "genre-lieder",
+      "category": "genre",
+      "label": "Lieder",
+      "visual": "A single singing head beside an open music score",
+      "rationale": "German art-song repertoire is distinct but visual overlap with other vocal music needs testing.",
+      "existing_alternative": "Existing broad fallback does not distinguish this specific facet.",
+      "event_ids": [
+        107753
+      ]
+    },
+    {
+      "concept": "genre-merengue",
+      "category": "genre",
+      "label": "Merengue music",
+      "visual": "Two linked rhythmic notes over a compact alternating pulse",
+      "rationale": "Music named, not necessarily participatory dance; recognition remains exploratory.",
+      "existing_alternative": "Retain the event Unicode fallback pending a recognizable reviewed study.",
+      "event_ids": [
+        98842
+      ]
+    },
+    {
+      "concept": "genre-new-orleans-jazz",
+      "category": "genre",
+      "label": "New Orleans jazz",
+      "visual": "Three interweaving musical lines",
+      "rationale": "Do not infer brass band or instrument from regional style; unproven motif.",
+      "existing_alternative": "Broad fallback does not distinguish this supported facet.",
+      "event_ids": [
+        122385
+      ]
+    },
+    {
+      "concept": "genre-pop",
+      "category": "genre",
+      "label": "Pop music",
+      "visual": "Bold music note with a single rhythmic accent",
+      "rationale": "Avoid assuming vocal or electric instrument; broad genre motif unproven.",
+      "existing_alternative": "Broad fallback does not distinguish this supported facet.",
+      "event_ids": [
+        120348
+      ]
+    },
+    {
+      "concept": "genre-pop-punk",
+      "category": "genre",
+      "label": "Pop-punk",
+      "visual": "An electric guitar pick with a bold jagged edge and a small bright star accent.",
+      "rationale": "The event explicitly plays pop-punk covers; a sharp-edged guitar-pick motif is exploratory and must be tested against generic rock.",
+      "existing_alternative": "Noto guitar covers the instrument but not the energetic pop-punk subgenre.",
+      "event_ids": [
+        115087
+      ]
+    },
+    {
+      "concept": "genre-post-punk",
+      "category": "genre",
+      "label": "Post-punk",
+      "visual": "Angular rhythmic note with a broken geometric beat line",
+      "rationale": "Explicit post-punk repertoire; motif is unproven and must avoid claiming instrumentation.",
+      "existing_alternative": "Retain the event Unicode fallback pending a recognizable reviewed study.",
+      "event_ids": [
+        98790
+      ]
+    },
+    {
+      "concept": "genre-psychedelic-funk",
+      "category": "genre",
+      "label": "Psychedelic funk",
+      "visual": "One thick bass-clef-like rhythm mark inside a broad two-color swirling sound contour.",
+      "rationale": "Psychedelic funk is explicitly central; swirl plus rhythm needs recognition testing and should not imply a featured bass instrument.",
+      "existing_alternative": "Swirl alone is decorative and music notes lose the subgenre; instrument silhouette would overclaim.",
+      "event_ids": [
+        112032
+      ]
+    },
+    {
+      "concept": "genre-punk",
+      "category": "genre",
+      "label": "Punk music",
+      "visual": "Angular jagged musical note",
+      "rationale": "Avoid assuming guitar or fashion; test genre distinction.",
+      "existing_alternative": "Broad fallback does not distinguish this specific supported facet.",
+      "event_ids": [
+        112118
+      ]
+    },
+    {
+      "concept": "genre-punk-rock",
+      "category": "genre",
+      "label": "Punk rock",
+      "visual": "Explore a jagged torn-paper musical note with one broad safety-pin accent.",
+      "rationale": "Explicit punk programming supports genre exploration; visual convention needs recognition testing and does not assert performer costume or instrument.",
+      "existing_alternative": "Noto rock-hand/guitar cover broader rock; no custom punk symbol.",
+      "event_ids": [
+        97902
+      ]
+    },
+    {
+      "concept": "genre-quebecois",
+      "category": "genre",
+      "label": "Quebecois traditional music",
+      "visual": "Explore a circular tune-note motif",
+      "rationale": "Preserve regional repertoire without assuming fiddle or accordion; needs recognition testing.",
+      "existing_alternative": "Existing broad fallback does not distinguish this specific facet.",
+      "event_ids": [
+        108373
+      ]
+    },
+    {
+      "concept": "genre-reggae",
+      "category": "genre",
+      "label": "Reggae",
+      "visual": "Explore two offset chord blocks over one sustained bass curve.",
+      "rationale": "The style is explicitly named in the dance-fitness program. This is a supported musical facet rather than evidence of live performance or exclusive genre focus.",
+      "existing_alternative": "Existing dancer remains reasonable; abstract genre motifs require recognition testing and should not rely on cultural stereotypes.",
+      "event_ids": [
+        102886
+      ]
+    },
+    {
+      "concept": "genre-rock",
+      "category": "genre",
+      "label": "Rock music",
+      "visual": "Strong accented musical note",
+      "rationale": "Electric guitar exists but is not universal evidence; motif requires recognition testing.",
+      "existing_alternative": "Broad fallback does not distinguish this specific supported facet.",
+      "event_ids": [
+        113661
+      ]
+    },
+    {
+      "concept": "genre-rock-and-roll",
+      "category": "genre",
+      "label": "Rock and roll",
+      "visual": "A bold paired musical-note motif with a rhythmic arc",
+      "rationale": "Genre explicit; do not invent guitar instrumentation.",
+      "existing_alternative": "Retain the source Unicode until recognizable original artwork is reviewed.",
+      "event_ids": [
+        97901
+      ]
+    },
+    {
+      "concept": "genre-rockabilly",
+      "category": "genre",
+      "label": "Rockabilly",
+      "visual": "A large music note with a short slap-like double echo at its base.",
+      "rationale": "Rockabilly is named alongside blues and swing. This rhythm motif is exploratory and not a proven genre symbol.",
+      "existing_alternative": "Music notes are an existing improvement over the title-derived chicken; double bass would invent instrument evidence.",
+      "event_ids": [
+        112118
+      ]
+    },
+    {
+      "concept": "genre-salsa",
+      "category": "genre",
+      "label": "Salsa music",
+      "visual": "Explore an interlocking syncopated-note motif",
+      "rationale": "Distinguish musical repertoire from participant dancing; no assumed instrument.",
+      "existing_alternative": "Broad fallback does not distinguish this supported facet.",
+      "event_ids": [
+        116252
+      ]
+    },
+    {
+      "concept": "genre-samba",
+      "category": "genre",
+      "label": "Samba music",
+      "visual": "Explore an interlocking pair of broad rhythmic arcs around one beat.",
+      "rationale": "Samba is explicitly named in the musical program; a genre motif requires recognition testing.",
+      "existing_alternative": "Use an established featured instrument when supported; this opportunity does not establish a particular percussion lineup.",
+      "event_ids": [
+        112019
+      ]
+    },
+    {
+      "concept": "genre-sea-shanty",
+      "category": "genre",
+      "label": "Sea shanties",
+      "visual": "A musical note beside a rope loop and anchor",
+      "rationale": "Maritime song form explicit; could resemble generic nautical music so recognition needs testing.",
+      "existing_alternative": "Retain the source Unicode until recognizable original artwork is reviewed.",
+      "event_ids": [
+        95080
+      ]
+    },
+    {
+      "concept": "genre-soca",
+      "category": "genre",
+      "label": "Soca",
+      "visual": "Explore a broad upbeat pulse with two syncopated accents.",
+      "rationale": "Soca is explicitly included in the musical program, including dance-fitness or mixed-party settings.",
+      "existing_alternative": "Existing music or dance art remains suitable; an abstract motif requires recognition testing and does not imply live instrumentation.",
+      "event_ids": [
+        89340
+      ]
+    },
+    {
+      "concept": "genre-tango",
+      "category": "genre",
+      "label": "Tango music",
+      "visual": "Explore two interlocking musical notes with a strong angular rhythmic tail.",
+      "rationale": "Explicit tango compositions merit a music-genre candidate distinct from dance; motif has uncertain recognition.",
+      "existing_alternative": "Violin and accordion are not universal tango; dancing figure would imply participation rather than concert.",
+      "event_ids": [
+        109434
+      ]
+    },
+    {
+      "concept": "genre-techno",
+      "category": "genre",
+      "label": "Techno",
+      "visual": "Explore four equal beat blocks beneath one sharply simplified electronic waveform.",
+      "rationale": "Explicit techno programming supports rhythm/production genre exploration, with house overlap a known recognition risk.",
+      "existing_alternative": "DJ decks describes equipment, not genre; generic notes omit techno.",
+      "event_ids": [
+        113351
+      ]
+    },
+    {
+      "concept": "genre-zydeco",
+      "category": "genre",
+      "label": "Zydeco",
+      "visual": "A ridged rubboard-and-rhythm study",
+      "rationale": "Genre explicitly named; representative equipment cannot establish live instrumentation without evidence.",
+      "existing_alternative": "Retain event Unicode until specific art passes recognition and semantic review.",
+      "event_ids": [
+        105903
+      ]
+    },
+    {
+      "concept": "instrument-djembe",
+      "category": "instrument",
+      "label": "Djembe",
+      "visual": "A single goblet-shaped wooden hand drum with a broad skin head and simplified rope bands.",
+      "rationale": "The source names making a djembe; this is a supported single-program craft facet within a broader recurring family series, not proof of a featured djembe performance throughout.",
+      "existing_alternative": "Reuse existing Noto long drum U+1FA98 first: rendered reference has a goblet body, rope lacing and broad head matching this proposed silhouette. New custom djembe art is not presently justified.",
+      "event_ids": [
+        117633
+      ]
+    },
+    {
+      "concept": "instrument-jug",
+      "category": "instrument",
+      "label": "Musical jug",
+      "visual": "Rounded handled jug with short neck and a single outgoing sound wave.",
+      "rationale": "The jug-band title makes this unusual musical object relevant; sound wave prevents reading solely as a drink.",
+      "existing_alternative": "Banjo suits string-band side but not jug instrumentation; ordinary jar would lose sound-making use.",
+      "event_ids": [
+        97177
+      ]
+    },
+    {
+      "concept": "instrument-mandolin",
+      "category": "instrument",
+      "label": "Mandolin",
+      "visual": "A small rounded wooden plucked instrument with a short neck, paired strings and a dark soundhole.",
+      "rationale": "The folk duo explicitly lists mandolins, but the incomplete lineup means primary status needs confirmation before assignment. Instrument shape differs from guitar and banjo; specialist recognition is required.",
+      "existing_alternative": "Noto banjo has a membrane body and acoustic-guitar art shows a larger different instrument.",
+      "event_ids": [
+        115097
+      ]
+    },
+    {
+      "concept": "sport-bouldering",
+      "category": "sport",
+      "label": "Bouldering",
+      "visual": "Climber on a low wall above a crash mat",
+      "rationale": "Ropeless short routes differ from roped climbing.",
+      "existing_alternative": "Broad fallback does not distinguish this specific supported facet.",
+      "event_ids": [
+        113428
+      ]
+    },
+    {
+      "concept": "sport-lawn-bowls",
+      "category": "sport",
+      "label": "Lawn bowls",
+      "visual": "Two dark slightly asymmetric bowls approaching a small white jack on a green patch.",
+      "rationale": "Lawn bowls has no pins and needs a different visual from ten-pin bowling.",
+      "existing_alternative": "Bowling ball and pins falsely imply lane bowling.",
+      "event_ids": [
+        86802
+      ]
+    },
+    {
+      "concept": "sport-lead-climbing",
+      "category": "sport",
+      "label": "Lead climbing",
+      "visual": "Climber clipping rope into a quickdraw",
+      "rationale": "Lead clipping is distinct from top-rope climbing.",
+      "existing_alternative": "Broad fallback does not distinguish this specific supported facet.",
+      "event_ids": [
+        113428
+      ]
+    },
+    {
+      "concept": "sport-top-rope-climbing",
+      "category": "sport",
+      "label": "Top-rope climbing",
+      "visual": "Climber with rope over an upper anchor",
+      "rationale": "Anchor above climber distinguishes top-rope setup.",
+      "existing_alternative": "Broad fallback does not distinguish this specific supported facet.",
+      "event_ids": [
+        113428
+      ]
+    },
+    {
+      "concept": "technique-stride-piano",
+      "category": "other",
+      "label": "Stride piano",
+      "visual": "Keyboard with two separated bass-note positions and a short leaping arc.",
+      "rationale": "Explicit stride piano invites an economical left-hand leap motif distinct from generic piano.",
+      "existing_alternative": "Existing musical keyboard is adequate for piano but has no stride technique cue; small-size legibility uncertain.",
+      "event_ids": [
+        123434
+      ]
+    }
+  ]
+}

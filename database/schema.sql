@@ -312,7 +312,9 @@ CREATE TABLE IF NOT EXISTS dedupe_dismissed_umbrellas (
 -- TAGS (Generic - used by locations and events)
 -- ============================================================================
 
--- Tags table - stores unique tag values
+-- Tags are unique within owner scope. After schema setup run
+-- scripts/separate_tag_scopes.py --apply --backup <new-path> to install the
+-- cross-scope assignment/hierarchy/alias guards (also migrates legacy data).
 CREATE TABLE IF NOT EXISTS tags (
     id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
@@ -321,9 +323,10 @@ CREATE TABLE IF NOT EXISTS tags (
     alt_emoji VARCHAR(10) DEFAULT NULL COMMENT 'Fallback shown on Windows when emoji is a country flag (the system emoji font has no flag glyphs)',
     is_quick_filter TINYINT(1) NOT NULL DEFAULT 0,
     display_order INT DEFAULT NULL,
-    type ENUM('tag','keyword') NOT NULL DEFAULT 'keyword' COMMENT 'tag=curated (in hierarchy/filters), keyword=search-only. New AI tags default to keyword; promote via populate_tag_hierarchy.py',
+    type ENUM('tag','keyword') NOT NULL DEFAULT 'keyword' COMMENT 'tag=curated (in hierarchy/filters), keyword=search-only. New AI tags default to keyword; promote explicitly within the owner scope',
 
-    UNIQUE KEY unique_tag_name (name),
+    scope ENUM('event','venue') NOT NULL DEFAULT 'event' COMMENT 'Owner namespace; keywords are also scoped',
+    UNIQUE KEY unique_tag_name_scope (name, scope),
     INDEX idx_name (name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -386,7 +389,8 @@ CREATE TABLE IF NOT EXISTS tag_aliases (
     tag_id INT UNSIGNED NOT NULL,
     alias VARCHAR(100) NOT NULL,
 
-    PRIMARY KEY (alias),
+    scope ENUM('event','venue') NOT NULL DEFAULT 'event',
+    PRIMARY KEY (scope, alias),
     INDEX tag_id (tag_id),
     FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

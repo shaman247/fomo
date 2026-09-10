@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128"><title>Hand embroidery</title><desc>A wooden embroidery hoop holding ivory fabric with a stitched flower, a needle, and pink thread.</desc>
+<path d="M47 13h29v16H47z" fill="#AD7156"/><path d="M47 12h11v16H47zm19 0h11v16H66z" fill="#FFCC80"/><path d="M44 16h36v5H44z" fill="#90A4AE"/><path d="M44 16h35v2H44z" fill="#D9E5E8"/>
+<circle cx="62" cy="72" r="47" fill="#AD7156"/><circle cx="61" cy="69" r="45" fill="#FFCC80"/><circle cx="61" cy="69" r="37" fill="#D8CDC9"/><circle cx="60" cy="68" r="35" fill="#F9F3E8"/>
+<path d="M26 56c4-13 12-20 24-23" fill="none" stroke="#FFE6AF" stroke-width="4" stroke-linecap="round"/>
+<path d="M58 91V63m0 18c-13 0-17-8-17-14 10 1 17 6 17 14m1-7c1-9 6-13 15-13-1 8-6 13-15 13" fill="#83C86D" stroke="#4A9D59" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<g fill="#F48FB1" stroke="#D95586" stroke-width="2.5"><ellipse cx="58" cy="47" rx="7" ry="10"/><ellipse cx="47" cy="55" rx="9" ry="7" transform="rotate(25 47 55)"/><ellipse cx="51" cy="66" rx="7" ry="9" transform="rotate(35 51 66)"/><ellipse cx="66" cy="64" rx="7" ry="9" transform="rotate(-35 66 64)"/><ellipse cx="70" cy="53" rx="10" ry="7" transform="rotate(-20 70 53)"/></g><circle cx="59" cy="57" r="6" fill="#FFD85B"/>
+<path d="M90 91c22 1 30-14 22-25-7-10-17-3-15 3 1 6 12 6 16-2 7-15-3-21-4-32" fill="none" stroke="#E56C9F" stroke-width="3.8" stroke-linecap="round"/>
+<path d="m77 79 27-57c3-6 10-3 7 3z" fill="#78909C"/><path d="m78 77 27-55c2-3 4-2 3 0z" fill="#D9E5E8"/><path d="m106 26-3 6" fill="none" stroke="#546E7A" stroke-width="2" stroke-linecap="round"/>
+</svg>

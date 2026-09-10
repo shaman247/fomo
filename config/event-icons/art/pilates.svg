@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128"><title>Mat Pilates</title><desc>Side profile of a person balancing in a controlled V-sit above an exercise mat, with paired limbs aligned.</desc>
+<path d="m14 105 96-4 10 13-106 6-8-8z" fill="#709CBB"/><path d="m14 105 96-4 5 6-103 6-6-1z" fill="#A4CCDE"/>
+<g transform="translate(0 6)"><path d="m55 83 8 1 14-19 20-29 9 6-20 31-17 23q-5 6-13 1l-9-7z" fill="#9174B8"/>
+<path d="m98 38 4-9q2-5 5-3 3 1 1 6l-3 12z" fill="#E1AF85"/>
+<path d="m29 54 10-4 29 37q-2 10-10 11l-8-5-23-31z" fill="#36A79A"/>
+<path d="m29 54 5-2 25 34 3 9-6-2-25-33z" fill="#76CBB8"/>
+<path d="m31 45 7-2 3 12-8 3z" fill="#E1AF85"/>
+<path d="m37 59 17 14 25-7" fill="none" stroke="#E1AF85" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+<g transform="translate(0 3)"><ellipse cx="29" cy="35" rx="11" ry="14" transform="rotate(-26 29 35)" fill="#E1AF85"/>
+<path d="M20 45C9 41 12 23 23 20c11-3 18 5 18 13l-8-8c-2 8-6 12-13 13z" fill="#654C44"/>
+</g></g></svg>

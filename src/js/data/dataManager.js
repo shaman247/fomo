@@ -67,11 +67,21 @@ const DataManager = (() => {
         return response.text();
     }
 
-    function _parseJsonText(text) {
-        try {
-            return JSON.parse(text);
-        } catch (parseError) {
-            throw new Error(`Invalid data format received from server. The data may be corrupted.`);
+    async function _fetchJson(url, timeout, fetchOptions) {
+        // A cached response or an interrupted publish can contain partial JSON.
+        // Retry parsing failures once with a full network reload, replacing the
+        // HTTP cache entry instead of accepting a 304 for the same broken body.
+        for (let attempt = 0; attempt < 2; attempt++) {
+            const options = attempt ? { ...fetchOptions, cache: 'reload' } : fetchOptions;
+            const text = await _fetchText(url, timeout, options);
+            try {
+                return { data: JSON.parse(text), text };
+            } catch (parseError) {
+                if (attempt) {
+                    throw new Error(`Invalid JSON in ${url} after retrying the download. Please try again shortly.`);
+                }
+                console.warn(`Invalid JSON in ${url}; retrying without cached data.`);
+            }
         }
     }
 
@@ -84,7 +94,7 @@ const DataManager = (() => {
      */
     async function fetchData(url, timeout = 10000) {
         try {
-            return _parseJsonText(await _fetchText(url, timeout));
+            return (await _fetchJson(url, timeout)).data;
         } catch (error) {
             // Log the error for debugging
             console.error(`Failed to fetch data from ${url}:`, error);
@@ -108,8 +118,8 @@ const DataManager = (() => {
         try {
             // Distinguish incompatible payloads in the browser HTTP cache as well as IndexedDB.
             const versionedUrl = `${url}${url.includes('?') ? '&' : '?'}schema=${DataCache.schemaVersion}`;
-            const text = await _fetchText(versionedUrl, timeout, fetchOptions);
-            return { data: _parseJsonText(text), hash: DataCache.hashString(text) };
+            const { data, text } = await _fetchJson(versionedUrl, timeout, fetchOptions);
+            return { data, hash: DataCache.hashString(text) };
         } catch (error) {
             console.error(`Failed to fetch data from ${url}:`, error);
             throw error;
@@ -134,11 +144,11 @@ const DataManager = (() => {
     //
     // Fix, purely in the UI: nudge each venue at a shared coordinate onto its own
     // point on a tiny circle (a few meters) so each gets a distinct locationKey.
-    // Venues are identified by name (locations carry `name`, events carry
-    // `location`); offsets are derived deterministically from the ORIGINAL
-    // coordinate + sorted venue names, so the layout is stable and idempotent
-    // across Phase 1 / Phase 2 loads. Only coordinates shared by 2+ named venues
-    // that actually have events are perturbed — everything else is untouched.
+    // Venues are identified by the exported place_id, with coord+name matching
+    // only for legacy events lacking an ID. Offsets derive deterministically
+    // from the ORIGINAL coordinate + sorted identities. Only coordinates shared
+    // by 2+ venues with events are perturbed. Location metadata always comes from
+    // the event's own venue; a building or sibling tenant must never supply it.
 
     const JITTER_MIN_METERS = 8;          // smallest ring radius (a "very slight" nudge)
     const JITTER_PER_VENUE_METERS = 2.2;  // grow the ring with venue count so points stay separable
@@ -148,42 +158,44 @@ const DataManager = (() => {
     // read as "binary" and silently invisible to grep -I (which once hid a stale call).
     const VENUE_SEP = '\x1f';
 
-    function venueOffsetKey(lat, lng, name) {
-        return `${lat},${lng}${VENUE_SEP}${name || ''}`;
+    function venueIdentity(id, name) {
+        return id != null ? `id:${id}` : `name:${name || ''}`;
+    }
+
+    function venueOffsetKey(lat, lng, identity) {
+        return `${lat},${lng}${VENUE_SEP}${identity}`;
     }
 
     /**
      * Recomputes per-venue coordinate offsets from the current event set.
-     * A coordinate is perturbed only when 2+ distinct named venues have events
-     * there. Stores state.coordOffsetByVenue: venueOffsetKey(origLat, origLng,
-     * name) -> { lat, lng }.
+     * A coordinate is perturbed only when 2+ distinct venues have events there.
+     * Stores venueOffsetKey(origLat, origLng, identity) -> { lat, lng }.
      */
     function computeCoordOffsets(state) {
-        const namesByCoord = new Map(); // "lat,lng" -> Set(name)
+        const identitiesByCoord = new Map(); // "lat,lng" -> Set(venue identity)
         for (const event of state.allEvents) {
-            const name = event.location;
-            if (!name) continue; // events with no venue name can't be disambiguated
+            const identity = venueIdentity(event.place_id, event.location);
             const coordKey = `${event.origLat},${event.origLng}`;
-            let names = namesByCoord.get(coordKey);
-            if (!names) { names = new Set(); namesByCoord.set(coordKey, names); }
-            names.add(name);
+            let identities = identitiesByCoord.get(coordKey);
+            if (!identities) { identities = new Set(); identitiesByCoord.set(coordKey, identities); }
+            identities.add(identity);
         }
 
         const offsets = new Map();
-        for (const [coordKey, nameSet] of namesByCoord) {
-            if (nameSet.size < 2) continue; // no collision — leave it alone
-            const names = [...nameSet].sort(); // sort => order-independent, stable layout
+        for (const [coordKey, identitySet] of identitiesByCoord) {
+            if (identitySet.size < 2) continue; // no collision — leave it alone
+            const identities = [...identitySet].sort(); // order-independent layout
             const commaIdx = coordKey.indexOf(',');
             const baseLat = Number(coordKey.slice(0, commaIdx));
             const baseLng = Number(coordKey.slice(commaIdx + 1));
             const cosLat = Math.max(0.01, Math.cos(baseLat * Math.PI / 180));
-            const radiusM = Math.max(JITTER_MIN_METERS, JITTER_PER_VENUE_METERS * names.length);
-            const n = names.length;
-            names.forEach((name, i) => {
+            const radiusM = Math.max(JITTER_MIN_METERS, JITTER_PER_VENUE_METERS * identities.length);
+            const n = identities.length;
+            identities.forEach((identity, i) => {
                 const angle = (2 * Math.PI * i) / n;
                 const dLat = (radiusM * Math.sin(angle)) / METERS_PER_DEG_LAT;
                 const dLng = (radiusM * Math.cos(angle)) / (METERS_PER_DEG_LAT * cosLat);
-                offsets.set(venueOffsetKey(baseLat, baseLng, name), {
+                offsets.set(venueOffsetKey(baseLat, baseLng, identity), {
                     lat: Number((baseLat + dLat).toFixed(7)),
                     lng: Number((baseLng + dLng).toFixed(7)),
                 });
@@ -193,27 +205,40 @@ const DataManager = (() => {
     }
 
     /**
-     * Rebuilds state.locationsByLatLng from the accumulated raw location list,
-     * applying any per-venue offsets so each venue lands on its own key.
+     * Resolve venue metadata by ID, then put it at the event's display point.
+     * Coordinate-only joins confuse tenants in the same building. Legacy
+     * events without place_id may use an unambiguous coord+name match; an
+     * unknown ID never falls back to some other tenant's metadata.
      */
     function buildLocationsIndex(state) {
         const byKey = {};
+        const byId = new Map();
+        const legacyByKey = new Map();
         const offsets = state.coordOffsetByVenue || new Map();
         for (const location of (state.rawLocations || [])) {
-            if (location.lat == null || location.lng == null) continue;
-            const off = offsets.get(venueOffsetKey(location.lat, location.lng, location.name));
-            const lat = off ? off.lat : location.lat;
-            const lng = off ? off.lng : location.lng;
+            if (location.id != null) byId.set(String(location.id), location);
+            if (location.lat == null || location.lng == null || !location.name) continue;
+            const key = venueOffsetKey(location.lat, location.lng, location.name);
+            // Preserve ambiguity: an address/name cannot distinguish these rows.
+            legacyByKey.set(key, legacyByKey.has(key) ? null : location);
+        }
+        for (const event of (state.allEvents || [])) {
+            const location = event.place_id != null
+                ? byId.get(String(event.place_id))
+                : legacyByKey.get(venueOffsetKey(event.origLat, event.origLng, event.location));
+            if (!location) continue;
+            const off = offsets.get(venueOffsetKey(event.origLat, event.origLng,
+                venueIdentity(event.place_id, event.location)));
+            const lat = off ? off.lat : event.origLat;
+            const lng = off ? off.lng : event.origLng;
             const key = `${lat},${lng}`;
-            if (!byKey[key]) {
-                byKey[key] = off ? { ...location, lat, lng } : location;
-            }
+            if (!byKey[key]) byKey[key] = { ...location, lat, lng };
         }
         state.locationsByLatLng = byKey;
     }
 
     /**
-     * Appends locations to the accumulated raw list, de-duped by coord+name so
+     * Appends locations to the accumulated raw list, de-duped by ID so
      * distinct venues sharing a coordinate are all retained (the legacy
      * first-wins lookup dropped them, which is what hid colliding venues).
      */
@@ -222,7 +247,8 @@ const DataManager = (() => {
         if (!state._rawLocationSeen) state._rawLocationSeen = new Set();
         for (const location of locationData) {
             if (location.lat == null || location.lng == null) continue;
-            const dedupeKey = venueOffsetKey(location.lat, location.lng, location.name);
+            const dedupeKey = location.id != null ? `id:${location.id}`
+                : venueOffsetKey(location.lat, location.lng, location.name);
             if (state._rawLocationSeen.has(dedupeKey)) continue;
             state._rawLocationSeen.add(dedupeKey);
             // Derive leaf-only display_tags client-side (was shipped inline).
@@ -235,7 +261,7 @@ const DataManager = (() => {
 
     /**
      * Re-keys events and rebuilds the location index onto perturbed coordinates
-     * wherever 2+ named venues share an exact coordinate. Idempotent: always
+     * wherever 2+ venues share an exact coordinate. Idempotent: always
      * derives from each event's ORIGINAL coordinate, so it is safe to re-run
      * after the Phase 2 merge brings in more venues.
      * @param {Object} state - Application state
@@ -245,7 +271,8 @@ const DataManager = (() => {
         buildLocationsIndex(state);
         const offsets = state.coordOffsetByVenue;
         for (const event of state.allEvents) {
-            const off = offsets.get(venueOffsetKey(event.origLat, event.origLng, event.location));
+            const off = offsets.get(venueOffsetKey(event.origLat, event.origLng,
+                venueIdentity(event.place_id, event.location)));
             const lat = off ? off.lat : event.origLat;
             const lng = off ? off.lng : event.origLng;
             event.latitude = lat;
@@ -401,11 +428,6 @@ const DataManager = (() => {
      */
     async function processFullDataAsync(fullEventData, fullLocationData, state, config, onProgress) {
         addRawLocations(fullLocationData, state);
-        // Rebuild the location index BEFORE transforming Phase-2 events:
-        // transformRawEvent's Windows flag-emoji fallback looks up the event's
-        // venue in locationsByLatLng, and without this rebuild the index still
-        // holds only Phase-1 venues (empty in the background-refresh path).
-        buildLocationsIndex(state);
         await appendEventDataChunked(fullEventData, state, config, onProgress);
         // One re-key pass after the full merge so cross-chunk venue collisions
         // (a venue whose siblings only appear in a later chunk) are caught.
@@ -595,7 +617,7 @@ const DataManager = (() => {
             event.description, event.location, event.sublocation
         ].filter(Boolean);
         // Tags repeat across thousands of events; normalize each spelling once per index.
-        const tagTerms = (event.tags || []).map(tag => {
+        const tagTerms = [...(event.tags || []), ...(event.keywords || [])].map(tag => {
             let term = state.searchIndex.normalizedTags.get(tag);
             if (term === undefined) {
                 term = Utils.normalizeForSearch(tag);
@@ -613,7 +635,7 @@ const DataManager = (() => {
 
     function _indexLocationsTagsOrganizers(state) {
         Object.entries(state.locationsByLatLng).forEach(([key, location]) => {
-            const searchableFields = [location.name, location.short_name, ...(location.tags || [])].filter(Boolean);
+            const searchableFields = [location.name, location.short_name, ...(location.tags || []).map(Utils.getTagDisplayName), ...(location.keywords || [])].filter(Boolean);
             const normalizedText = searchableFields.map(field => Utils.normalizeForSearch(field)).join(' ');
             state.searchIndex.locations.set(key, normalizedText);
         });
@@ -730,7 +752,9 @@ const DataManager = (() => {
         // Build parent/child maps from flat list
         tags.forEach(tag => {
             hierarchyTagsSet.add(tag.name);
-            tagSearchTerms[tag.name] = [...new Set([tag.name, ...(tag.aliases || [])]
+            const displayName = tag.display_name || tag.name;
+            const venueLabel = globalThis.__CITY__?.venueSelector?.labels?.[displayName];
+            tagSearchTerms[tag.name] = [...new Set([tag.name, displayName, venueLabel, ...(tag.aliases || [])]
                 .filter(Boolean).map(Utils.normalizeForSearch))];
             const emoji = tag.emoji;
             if (emoji) tagEmojiMap[tag.name] = emoji;
@@ -764,7 +788,7 @@ const DataManager = (() => {
         return { childrenOf, parentsOf, descendantsOf, hierarchyTagsSet, tagEmojiMap, tagSearchTerms,
             formats: data.formats || {}, formatOnlyTags: new Set(data.format_only_tags || []),
             tagRedirects: data.tag_redirects || {},
-            neighborhoodTags: new Set(['Neighborhood', ...(descendantsOf.Neighborhood || [])]),
+            neighborhoodTags: new Set(['Neighborhood', 'venue:Neighborhood', ...(descendantsOf.Neighborhood || []), ...(descendantsOf['venue:Neighborhood'] || [])]),
             tagIconMap: { ...(data.icon_ids || {}) } };
     }
 
@@ -837,6 +861,8 @@ const DataManager = (() => {
     return {
         fetchData,
         fetchDataHashed,
+        transformRawEvent,
+        parseOccurrences,
         processInitialData,
         processFullDataAsync,
         applyDescriptions,

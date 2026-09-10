@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128"><title>Quilting</title><desc>A colorful four-patch quilt square with visible seams and a needle pulling thread.</desc>
+<g transform="rotate(-8 64 66)"><rect x="17" y="22" width="95" height="97" rx="7" fill="#B8AAA5"/><rect x="14" y="18" width="95" height="97" rx="7" fill="#F1EDEC"/>
+<path d="M21 25h40v40H21zM61 65h41v43H61z" fill="#4FC3D8"/><path d="M61 25h41v40H61zM21 65h40v43H21z" fill="#EF80AC"/>
+<path d="M21 25h40v40zM61 65h41v43z" fill="#157F9D"/><path d="M61 25h41v40zM21 65h40v43z" fill="#CF558D"/>
+<path d="M20 65h82M61 25v83" stroke="#F9EBD7" stroke-width="3" stroke-dasharray="4 4" fill="none"/><rect x="18" y="22" width="87" height="89" rx="3" stroke="#A68F89" stroke-width="2" stroke-dasharray="4 4" fill="none"/>
+</g><path d="M82 33c10 5 29 2 31-11 1-9-9-13-14-6-4 6 0 12 7 12" stroke="#E56C9F" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+<path d="m73 45 29-30c5-5 9 0 4 4z" fill="#78909C"/><path d="m73 45 30-29c2-2 3-1 1 1z" fill="#DBE4E8"/>
+</svg>

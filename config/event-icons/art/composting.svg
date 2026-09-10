@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128"><title>Composting</title><desc>Vegetable scraps above a green food-scrap collection pail.</desc>
+<path d="M22 53h84l-8 59q-1 7-9 7H39q-8 0-9-7z" fill="#43885C"/><path d="M22 53h19l7 66h-9q-8 0-9-7z" fill="#72B681"/><path d="M94 54h12l-8 58q-1 7-9 7h-4z" fill="#2D674A"/><path d="M29 55v-8q0-22 35-22t35 22v8" fill="none" stroke="#566867" stroke-width="6"/>
+<ellipse cx="64" cy="54" rx="43" ry="9" fill="#A3C8A0"/><ellipse cx="64" cy="55" rx="34" ry="5" fill="#365D43"/>
+<path d="m44 26 22 6-20 27q-3 4-4-1z" fill="#EF9142"/><path d="m43 29 13 4-12 20z" fill="#FFB65D"/>
+<path d="M48 29q-12-11-8-21 13 0 17 17 0-15 12-20 6 13-8 27z" fill="#66A84B"/>
+<path d="M73 42q-2-18 19-22 10 20-12 30z" fill="#91C761"/><path d="m77 46 10-18" stroke="#518A46" stroke-width="3" stroke-linecap="round"/>
+<path d="M52 88q-2-16 25-18 1 26-22 26z" fill="#C6DFA0"/><path d="m49 101 22-22" stroke="#7AA968" stroke-width="4" stroke-linecap="round"/>
+</svg>

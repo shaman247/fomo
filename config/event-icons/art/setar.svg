@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128"><title>Persian setar</title><desc>A small pear-shaped wooden soundbox, long slender fretted neck, four strings and four tuning pegs.</desc>
+<g transform="rotate(31 64 64)">
+<path d="M59 73C50 81 40 94 40 105C40 118 54 123 64 123C77 123 89 116 88 105C87 94 75 81 67 73Z" fill="#9E6648"/>
+<path d="M59 72C50 80 38 92 38 103C38 116 52 121 63 121C75 121 86 115 86 103C86 92 74 80 67 72Z" fill="#D9A261"/>
+<path d="M59 75C51 85 42 95 42 104C42 113 52 118 62 118C50 106 52 92 59 75Z" fill="#F3C983"/>
+<path d="M58 10Q63 7 68 10L67 82H59Z" fill="#916145"/><path d="M59 12H62V81H59Z" fill="#BC8958"/>
+<path d="M56 15H62M56 23H62M65 12H71M65 20H71" stroke="#674C3D" stroke-width="2.5"/>
+<g fill="#654838"><ellipse cx="54" cy="15" rx="3" ry="2.5"/><ellipse cx="54" cy="23" rx="3" ry="2.5"/><ellipse cx="73" cy="12" rx="3" ry="2.5"/><ellipse cx="73" cy="20" rx="3" ry="2.5"/></g><path d="M59 29H67" stroke="#DBC19C" stroke-width="1"/><path d="M59 35H67" stroke="#DBC19C" stroke-width="1"/><path d="M59 41H67" stroke="#DBC19C" stroke-width="1"/><path d="M59 47H67" stroke="#DBC19C" stroke-width="1"/><path d="M59 52H67" stroke="#DBC19C" stroke-width="1"/><path d="M59 57H67" stroke="#DBC19C" stroke-width="1"/><path d="M59 61H67" stroke="#DBC19C" stroke-width="1"/><path d="M59 65H67" stroke="#DBC19C" stroke-width="1"/><path d="M59 69H67" stroke="#DBC19C" stroke-width="1"/><path d="M59 72H67" stroke="#DBC19C" stroke-width="1"/><g fill="#795035"><circle cx="53" cy="90" r="1.7"/><circle cx="49" cy="94" r="1.5"/><circle cx="54" cy="96" r="1.5"/><circle cx="50" cy="100" r="1.4"/></g>
+<path d="M52 106H74V110H52Z" fill="#6D4C35"/><path d="M58 117H69V120H58Z" fill="#805538"/>
+<path d="M60 25L60 15M62 25L60 23M64 25L66 12M66 25L66 20M60 25L60 119M62 25L62 119M64 25L64 119M66 25L66 119" stroke="#FAE4B4" stroke-width=".7" fill="none"/><path d="M58 25H68V27H58Z" fill="#F3DCB8"/>
+</g>
+</svg>

@@ -89,9 +89,8 @@
     filter: var(--icon-filter, none);
 }
 
-/* Dark-base themes invert the control icons (keyed to the theme's base so
-   prototype themes inherit the right direction automatically) */
-:root[data-theme-base="dark"] .maplibregl-ctrl-group button .maplibregl-ctrl-icon {
+/* Dark mode inverts the control icons. */
+:root[data-theme="dark"] .maplibregl-ctrl-group button .maplibregl-ctrl-icon {
     filter: invert(1);
 }
 

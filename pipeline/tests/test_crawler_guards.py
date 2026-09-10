@@ -589,8 +589,6 @@ class TestDetailCrawlSoft404Guard(unittest.TestCase):
         fake = _FakeCrawler(REAL_EVENT_PAGE)
         self.assertEqual(self._run(fake), REAL_EVENT_PAGE)
 
-if __name__ == '__main__':
-    unittest.main()
 
 
 # =============================================================================
@@ -681,6 +679,9 @@ def _run_crawl_website(pages, n_urls):
 class TestAllUrlsBlockedCrawl(unittest.TestCase):
     """The w4110 shape, end to end."""
 
+    def setUp(self):
+        crawler.reset_host_circuits()
+
     def test_all_blocked_crawl_is_failed_not_processed(self):
         pages = [(BLOCK_PAGE_MARKDOWN, False, BLOCK_ERROR)] * 23
         returned, fake_db = _run_crawl_website(pages, n_urls=23)
@@ -730,3 +731,210 @@ class TestAllUrlsBlockedCrawl(unittest.TestCase):
         self.assertEqual(returned, 999)
         fake_db.update_crawl_result_failed.assert_not_called()
         fake_db.update_crawl_result_crawled.assert_called_once()
+
+
+class TestHostBlockCircuitBreaker(unittest.TestCase):
+    """The 2026-09-09 06:35 shape: a 403-hot host must not monopolise the batch.
+
+    Ten AMC theatres x 24 URLs, each refused fetch ~13s plus two retries, meant
+    no site finished inside the stall watchdog and 0/227 sites crawled. The
+    breaker bounds a blocked site to one probe fetch once the host has tripped.
+    """
+
+    GOOD = "# Showtimes\n" + ("A real listing line.\n" * 60)
+
+    def setUp(self):
+        crawler.reset_host_circuits()
+
+    def tearDown(self):
+        crawler.reset_host_circuits()
+
+    def _run(self, pages, n_urls):
+        website = {
+            'id': 4110,
+            'name': 'AMC Empire 25',
+            'urls': [f'https://www.amctheatres.com/x/showtimes?date=2026-09-{d:02d}'
+                     for d in range(1, n_urls + 1)],
+            'crawl_timeout': 600,
+        }
+        fake_db = mock.MagicMock()
+        fake_db.create_crawl_result.return_value = 999
+        fake_crawler = _ListCrawler(pages)
+        refetch = mock.AsyncMock(return_value=None)
+        with mock.patch.object(crawler, 'db', fake_db), \
+             mock.patch.object(crawler, '_refetch_past_challenge', new=refetch):
+            returned = asyncio.run(crawler.crawl_website(
+                fake_crawler, website, mock.MagicMock(), mock.MagicMock(), 1))
+        return returned, fake_db, fake_crawler, refetch
+
+    def test_trips_after_threshold_and_skips_the_rest_unfetched(self):
+        pages = [(BLOCK_PAGE_MARKDOWN, False, BLOCK_ERROR)] * 23
+        returned, fake_db, fake_crawler, refetch = self._run(pages, n_urls=23)
+
+        self.assertIsNone(returned)
+        self.assertEqual(fake_crawler.calls, crawler.HOST_BLOCK_TRIP_THRESHOLD,
+                         "after the threshold every remaining URL must be skipped without a fetch")
+        fake_db.update_crawl_result_failed.assert_called_once()
+        msg = str(fake_db.update_crawl_result_failed.call_args)
+        self.assertIn('circuit open', msg)
+        self.assertIn('www.amctheatres.com', msg)
+        self.assertIn('skipped unfetched', msg)
+
+    def test_open_circuit_suppresses_challenge_retries(self):
+        # The first two blocks are queued for retry; by the time the retry loop
+        # runs the host has tripped, so those are not refetched. The only
+        # refetch is the single in-loop probe on the URL that tripped it.
+        pages = [(BLOCK_PAGE_MARKDOWN, False, BLOCK_ERROR)] * 5
+        _, _, _, refetch = self._run(pages, n_urls=5)
+        self.assertTrue(crawler._host_circuit_open('https://www.amctheatres.com/'))
+        self.assertEqual(refetch.await_count, 1, "one probe retry, then nothing")
+        probe_kwargs = refetch.await_args.kwargs
+        self.assertEqual(probe_kwargs.get('attempts'), crawler.PROBE_RETRY_ATTEMPTS)
+        self.assertEqual(probe_kwargs.get('backoff'), crawler.PROBE_RETRY_BACKOFF)
+
+        _, _, _, refetch = self._run([(BLOCK_PAGE_MARKDOWN, False, BLOCK_ERROR)], n_urls=1)
+        self.assertEqual(refetch.await_count, 1, "a later site: one probe fetch, one probe retry")
+
+    def test_transient_block_that_clears_on_retry_closes_the_circuit(self):
+        # w81 Center for Fiction 2026-09-09: every first fetch 403'd and every
+        # retry returned the real page. The breaker must not turn that into a
+        # lost crawl - the trip's own probe retry clears it and the site
+        # continues, with the queued URLs retried as before.
+        website = {
+            'id': 81, 'name': 'Center for Fiction',
+            'urls': [f'https://centerforfiction.org/calendar/?p={d}' for d in range(1, 6)],
+            'crawl_timeout': 600,
+        }
+        pages = [(BLOCK_PAGE_MARKDOWN, False, BLOCK_ERROR)] * 3 + [(self.GOOD, True, None)] * 2
+        fake_db = mock.MagicMock()
+        fake_db.create_crawl_result.return_value = 999
+        fake_crawler = _ListCrawler(pages)
+        refetch = mock.AsyncMock(return_value=self.GOOD)
+        with mock.patch.object(crawler, 'db', fake_db), \
+             mock.patch.object(crawler, '_refetch_past_challenge', new=refetch):
+            returned = asyncio.run(crawler.crawl_website(
+                fake_crawler, website, mock.MagicMock(), mock.MagicMock(), 1))
+
+        self.assertEqual(returned, 999)
+        self.assertEqual(fake_crawler.calls, 5, "no URL skipped once the probe cleared")
+        self.assertFalse(crawler._host_circuit_open('https://centerforfiction.org/'))
+        # 1 probe (URL 3) + 2 post-loop retries (URLs 1 and 2).
+        self.assertEqual(refetch.await_count, 3)
+        fake_db.update_crawl_result_failed.assert_not_called()
+        stored = fake_db.update_crawl_result_crawled.call_args[0][3]
+        self.assertEqual(stored.count('A real listing line.'), 5 * 60)
+        self.assertNotIn('Access Denied', stored)
+
+    def test_a_later_site_on_a_tripped_host_gets_exactly_one_probe(self):
+        self._run([(BLOCK_PAGE_MARKDOWN, False, BLOCK_ERROR)] * 3, n_urls=3)
+        self.assertTrue(crawler._host_circuit_open('https://www.amctheatres.com/'))
+
+        pages = [(BLOCK_PAGE_MARKDOWN, False, BLOCK_ERROR)] * 24
+        returned, fake_db, fake_crawler, _ = self._run(pages, n_urls=24)
+        self.assertIsNone(returned)
+        self.assertEqual(fake_crawler.calls, 1, "one probe fetch, then skip")
+        fake_db.update_crawl_result_failed.assert_called_once()
+        # last_crawled_at still advances so the site is not retried immediately.
+        fake_db.update_website_last_crawled.assert_called_once()
+
+    def test_a_successful_probe_closes_the_circuit(self):
+        self._run([(BLOCK_PAGE_MARKDOWN, False, BLOCK_ERROR)] * 3, n_urls=3)
+        self.assertTrue(crawler._host_circuit_open('https://www.amctheatres.com/'))
+
+        pages = [(self.GOOD, True, None)] * 4
+        returned, fake_db, fake_crawler, _ = self._run(pages, n_urls=4)
+        self.assertEqual(returned, 999)
+        self.assertEqual(fake_crawler.calls, 4, "a clean probe reopens the host for the rest of the site")
+        self.assertFalse(crawler._host_circuit_open('https://www.amctheatres.com/'))
+        fake_db.update_crawl_result_crawled.assert_called_once()
+
+    def test_strikes_are_consecutive_not_cumulative(self):
+        pages = ([(BLOCK_PAGE_MARKDOWN, False, BLOCK_ERROR)] * 2
+                 + [(self.GOOD, True, None)]
+                 + [(BLOCK_PAGE_MARKDOWN, False, BLOCK_ERROR)] * 2)
+        returned, fake_db, fake_crawler, _ = self._run(pages, n_urls=5)
+        self.assertEqual(fake_crawler.calls, 5, "no trip: the success reset the count")
+        self.assertFalse(crawler._host_circuit_open('https://www.amctheatres.com/'))
+        self.assertEqual(returned, 999)
+        stored = fake_db.update_crawl_result_crawled.call_args[0][3]
+        self.assertIn('A real listing line.', stored)
+        self.assertNotIn('Access Denied', stored)
+
+    def test_other_hosts_are_unaffected(self):
+        self._run([(BLOCK_PAGE_MARKDOWN, False, BLOCK_ERROR)] * 3, n_urls=3)
+        self.assertFalse(crawler._host_circuit_open('https://www.regmovies.com/'))
+
+    def test_non_block_errors_do_not_count(self):
+        pages = [("x\n", False, "net::ERR_CONNECTION_RESET")] * 23
+        _, _, fake_crawler, _ = self._run(pages, n_urls=23)
+        self.assertEqual(fake_crawler.calls, 23)
+        self.assertFalse(crawler._host_circuit_open('https://www.amctheatres.com/'))
+
+
+class _UrlCapturingCrawler(_FakeCrawler):
+    """_FakeCrawler that records every URL handed to arun()."""
+
+    def __init__(self, *bodies, **kw):
+        super().__init__(*bodies, **kw)
+        self.urls = []
+
+    async def arun(self, url=None, config=None):
+        self.urls.append(url)
+        return await super().arun(url=url, config=config)
+
+
+AN_NOWRAPPER_BODY = (
+    "## Socialist Feminist October General Meeting\n"
+    "####  Start: Tuesday, October 13, 2026 at 7:00 PM EDT\n"
+    "####  Location: NYC-DSA Office \u2022 14 Jefferson St, New York, NY 10002 US\n"
+    + "SocFem October GM - Women in Horror!\n" * 20
+)
+
+
+class TestDetailFetchUrlRewrite(unittest.TestCase):
+    """A plugin may rewrite the URL we FETCH; the stored URL must not change."""
+
+    EVENT_URL = "https://actionnetwork.org/events/socfem-october-gm"
+
+    def _run(self, fake, url):
+        return asyncio.run(crawler.crawl_event_url(fake, url, object()))
+
+    def test_no_profile_fetches_the_url_verbatim(self):
+        fake = _UrlCapturingCrawler(REAL_EVENT_PAGE)
+        with mock.patch.object(crawler.site_profiles, 'detail_fetch_url', side_effect=lambda u: u):
+            self.assertEqual(self._run(fake, "https://example.org/e/1"), REAL_EVENT_PAGE)
+        self.assertEqual(fake.urls, ["https://example.org/e/1"])
+
+    def test_rewritten_url_is_fetched_and_content_returned(self):
+        fake = _UrlCapturingCrawler(AN_NOWRAPPER_BODY)
+        with mock.patch.object(crawler.site_profiles, 'detail_fetch_url',
+                               side_effect=lambda u: u + "?nowrapper=true"):
+            self.assertEqual(self._run(fake, self.EVENT_URL), AN_NOWRAPPER_BODY[:12000])
+        self.assertEqual(fake.urls, [self.EVENT_URL + "?nowrapper=true"])
+
+    def test_challenge_refetch_uses_the_rewritten_url(self):
+        fake = _UrlCapturingCrawler(DETAIL_CHALLENGE_BODY)
+        with mock.patch.object(crawler.site_profiles, 'detail_fetch_url',
+                               side_effect=lambda u: u + "?nowrapper=true"), \
+             mock.patch.object(crawler, '_refetch_past_challenge',
+                               new=mock.AsyncMock(return_value=AN_NOWRAPPER_BODY)) as refetch:
+            self.assertEqual(self._run(fake, self.EVENT_URL), AN_NOWRAPPER_BODY[:12000])
+        self.assertEqual(refetch.await_args.args[0], self.EVENT_URL + "?nowrapper=true")
+
+    def test_action_network_profile_rewrites_only_event_pages(self):
+        import site_profiles
+        rewritten = site_profiles.detail_fetch_url(self.EVENT_URL)
+        if rewritten == self.EVENT_URL:
+            self.skipTest("action_network plugin not installed in this checkout (pipeline/sources is local)")
+        self.assertEqual(rewritten, self.EVENT_URL + "?nowrapper=true")
+        self.assertEqual(site_profiles.detail_fetch_url(rewritten), rewritten)
+        self.assertEqual(site_profiles.detail_fetch_url(self.EVENT_URL + "?source=direct_link"),
+                         self.EVENT_URL + "?source=direct_link&nowrapper=true")
+        self.assertEqual(site_profiles.detail_fetch_url("https://actionnetwork.org/forms/x"),
+                         "https://actionnetwork.org/forms/x")
+        self.assertFalse(_is_bot_challenge(AN_NOWRAPPER_BODY))
+        self.assertFalse(_is_soft_404(AN_NOWRAPPER_BODY))
+
+
+if __name__ == '__main__':
+    unittest.main()

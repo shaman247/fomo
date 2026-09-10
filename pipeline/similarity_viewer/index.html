@@ -32,7 +32,7 @@
                 <label>Vectors<select id="precision"><option value="full">Full precision</option><option value="browser">Browser int8 precision</option></select></label>
                 <label>Minimum cosine<input id="minimum" type="number" value="0" min="-1" max="1" step="0.05"></label>
             </form>
-            <p class="explanation">Cosine similarity measures how closely two content vectors align. These are raw neighbors from the saved training snapshot, without personal preferences or the chip diversity adjustment. A score is not a probability.</p>
+            <p class="explanation">Similarity uses the closest constituent pair: distinct venue programs and tag branches stay separate. These are neighbors from the saved training snapshot, without personal preferences or the chip diversity adjustment. A score is not a probability.</p>
             <p id="result-status" role="status" class="muted"></p>
             <div id="neighbors" class="neighbor-grid"></div>
         </section>

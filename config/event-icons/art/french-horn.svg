@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"><title>French Horn</title><desc>A French horn with a circular brass coil, a narrow mouthpiece leadpipe, three rotary valve levers and a broad sideways bell.</desc>
+<path fill="none" stroke="#C58C24" stroke-width="10" stroke-linecap="round" d="M29 15L61 28C106 25 124 73 94 94C69 112 37 92 35 66C33 38 59 26 82 33C108 40 118 78 91 94"/>
+<path fill="none" stroke="#FFD54F" stroke-width="6" stroke-linecap="round" d="M29 14L61 27C105 25 121 72 92 92C69 108 39 91 38 66C36 40 59 29 82 36C106 44 113 78 90 93"/>
+<path fill="none" stroke="#FFE082" stroke-width="2.5" stroke-linecap="round" d="M41 70C35 46 58 29 79 35"/>
+<path fill="#D59A27" d="M93 88C78 100 50 106 25 82L10 116C48 116 75 107 98 96Z"/>
+<path fill="#FFD54F" d="M92 90C71 103 53 107 27 93L18 115C49 113 70 105 96 95Z"/>
+<path fill="#FFE082" d="M88 95Q48 119 18 115L20 111Q48 111 88 95Z"/>
+<ellipse cx="18" cy="99" rx="8" ry="21" transform="rotate(24 18 99)" fill="#FFE082"/><ellipse cx="18" cy="99" rx="4.8" ry="17" transform="rotate(24 18 99)" fill="#A86E1A"/>
+<path fill="none" stroke="#BC8420" stroke-width="7" stroke-linecap="round" d="M58 52L47 70Q43 80 53 84Q61 87 66 79L76 62M68 58L57 78Q54 87 64 90Q72 92 76 84L85 67M79 64L71 82Q67 91 78 94Q87 94 90 84L95 72"/>
+<path fill="none" stroke="#FFD54F" stroke-width="4" stroke-linecap="round" d="M58 52L46 71Q44 78 53 81Q60 84 63 77L73 61M68 58L57 78Q55 84 64 87Q70 89 73 83L82 66M79 64L71 82Q69 89 78 91Q85 91 87 83L92 72"/>
+<path fill="none" stroke="#B0BEC5" stroke-width="3" d="M60 54L68 43M71 60L79 49M82 66L90 55"/>
+<g fill="#ECEFF1"><ellipse cx="68" cy="43" rx="5" ry="2.5" transform="rotate(30 68 43)"/><ellipse cx="79" cy="49" rx="5" ry="2.5" transform="rotate(30 79 49)"/><ellipse cx="90" cy="55" rx="5" ry="2.5" transform="rotate(30 90 55)"/></g>
+<g fill="#FFE082" stroke="#BD8725" stroke-width="2"><circle cx="60" cy="54" r="6"/><circle cx="71" cy="60" r="6"/><circle cx="82" cy="66" r="6"/></g>
+<path fill="#B0BEC5" d="M22 9L31 12L29 19L20 16Z"/><path fill="#ECEFF1" d="M22 9L31 12L30 15L21 12Z"/></svg>

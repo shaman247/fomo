@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"><title>Recorder</title><desc>A straight brown recorder with a cream beaked mouthpiece, rectangular wind window, finger holes and a flared foot.</desc>
+<g transform="rotate(35 64 64)">
+<path fill="#F0DBB6" d="M60 5Q64 3 68 5L72 21V27H56V21Z"/><path fill="#FFF0CF" d="M60 6H64V24H57V20Z"/>
+<path fill="#9C6248" d="M57 25H71L69 43H70V99Q70 108 75 116V121H53V116Q58 108 58 99V43H59Z"/>
+<path fill="#C68B5E" d="M58 27H63V102Q62 112 57 118H53V116Q58 108 58 99V43H59Z"/>
+<path fill="#49352E" d="M61 27H68V34H61Z"/><path fill="#E8AF76" d="M61 35L68 34V39H61Z"/>
+<path fill="#F0DBB6" d="M56 42Q64 40 72 42V47Q64 49 56 47ZM56 97H72V102H56ZM53 117H75V121H53Z"/>
+<path fill="#FFF0CF" d="M56 42H64V46H56ZM56 97H64V100H56ZM53 117H64V119H53Z"/>
+<g fill="#49352E"><circle cx="64" cy="53" r="2.2"/><circle cx="64" cy="61" r="2.2"/><circle cx="64" cy="69" r="2.2"/><circle cx="64" cy="77" r="2.2"/><circle cx="64" cy="85" r="2.2"/><circle cx="62" cy="93" r="1.6"/><circle cx="66" cy="93" r="1.3"/><circle cx="62" cy="108" r="1.6"/><circle cx="66" cy="108" r="1.3"/></g>
+</g></svg>

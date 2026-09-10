@@ -229,6 +229,7 @@ const ListView = (() => {
         // ones; within the same day, nearest to the map center goes first,
         // with exact start time breaking same-distance ties.
         const sorted = entries.sort((a, b) =>
+            ((a.event.queryRank ?? 0) - (b.event.queryRank ?? 0)) ||
             (b.discoveryScore - a.discoveryScore) ||
             (a.rank - b.rank) ||
             (a.spread - b.spread) ||
@@ -240,6 +241,7 @@ const ListView = (() => {
         // touring show/series; keep only the highest-ranked instance.
         const seenTitles = new Set();
         const deduped = sorted.filter(({ event }) => {
+            if (event.queryRank !== undefined) return true;
             const title = (event.name || '').trim().toLowerCase();
             if (!title) return true;
             if (seenTitles.has(title)) return false;

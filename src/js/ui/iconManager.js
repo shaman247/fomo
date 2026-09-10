@@ -3,6 +3,9 @@ const IconManager = (() => {
     const decoded = new Map(), rendered = new Map(), accents = new Map();
     const mounted = new WeakMap(), visible = new WeakSet();
     const MAX_VARIANTS = 128;
+    const packLoads = new Map(), packJobs = [];
+    const pendingPackChoices = new Map();
+    let activePacks = 0;
     let tagIcons = {}, tagEmojis = {}, observing = false, visibilityObserver;
     const own = (object, key) => Object.prototype.hasOwnProperty.call(object, key);
     const canonical = value => (typeof value === 'string' ? value : '').trim().replace(/[\uFE0E\uFE0F]/g, '');
@@ -19,7 +22,7 @@ const IconManager = (() => {
     const tagCacheKey = tag => cacheKey(tagRecord(tag));
     const accentKey = (record, theme) => `${resolve(record).id}|${theme}`;
     function getColor(record, theme = Utils.getCurrentTheme()) {
-        return accents.get(accentKey(record, theme)) || Themes.resolve(theme).achromaticFallback || '#8899aa';
+        return accents.get(accentKey(record, theme)) || '#8899aa';
     }
     // Bound simultaneous downloads when a long list of icons enters view.
     const jobs = [];
@@ -44,11 +47,82 @@ const IconManager = (() => {
         }
         return decoded.get(url);
     }
+    function pumpPacks() {
+        while (activePacks < 3 && packJobs.length) {
+            const { pack, done } = packJobs.shift();
+            activePacks++;
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 8000);
+            // Include body consumption in the deadline, not just the headers.
+            Promise.resolve().then(async () => {
+                const response = await fetch(pack.url, { signal: controller.signal });
+                if (!response.ok) throw Error('Icon pack unavailable');
+                const data = await response.json();
+                if (data?.schemaVersion !== 1 || !data.icons || typeof data.icons !== 'object') {
+                    throw Error('Invalid icon pack');
+                }
+                return data.icons;
+            }).catch(() => null).then(done).finally(() => {
+                clearTimeout(timeout);
+                activePacks--;
+                pumpPacks();
+            });
+        }
+    }
+    function loadPack(id) {
+        const pack = IconCatalog.packs?.[id];
+        if (!pack || typeof fetch !== 'function') return Promise.resolve(null);
+        if (!packLoads.has(pack.url)) {
+            // Keep failure results too: one missing pack must not trigger a
+            // failed HTTP request for every chip. Individual SVGs still work.
+            packLoads.set(pack.url, new Promise(done => { packJobs.push({ pack, done }); pumpPacks(); }));
+        }
+        return packLoads.get(pack.url);
+    }
+    function loadPackedArtwork(descriptor) {
+        return loadPack(descriptor.pack).then(icons => {
+            const entry = icons && own(icons, descriptor.id) && icons[descriptor.id];
+            if (!entry || entry.revision !== descriptor.revision || typeof entry.svg !== 'string') {
+                return load(descriptor.url);
+            }
+            // Data URLs use the existing Image/canvas path and preserve SVG
+            // gradients and palette extraction. Only requested
+            // icons are decoded; the rest of the pack remains plain text.
+            const url = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(entry.svg)}`;
+            return load(url).catch(() => load(descriptor.url));
+        });
+    }
+    function loadArtwork(descriptor) {
+        if (decoded.has(descriptor.url)) return load(descriptor.url);
+        const pack = IconCatalog.packs?.[descriptor.pack];
+        if (!pack || typeof fetch !== 'function') return load(descriptor.url);
+        if (descriptor.pack === 'startup' || packLoads.has(pack.url)) return loadPackedArtwork(descriptor);
+        // Coalesce requests from one render batch. A lone rare icon should not
+        // download its whole group. Use a secondary pack only when it saves
+        // requests and requested artwork covers at least 60% of its gzip size.
+        return new Promise((done, fail) => {
+            if (!pendingPackChoices.has(pack.url)) {
+                const requests = [];
+                pendingPackChoices.set(pack.url, requests);
+                queueMicrotask(() => {
+                    pendingPackChoices.delete(pack.url);
+                    const unique = new Map(requests.map(r => [r.descriptor.id, r.descriptor]));
+                    const requestedBytes = [...unique.values()].reduce((sum, icon) => sum + (icon.gzipBytes || 0), 0);
+                    const usePack = unique.size > 1 && requestedBytes >= pack.gzipBytes * 0.6;
+                    for (const request of requests) {
+                        (usePack ? loadPackedArtwork(request.descriptor) : load(request.descriptor.url))
+                            .then(request.done, request.fail);
+                    }
+                });
+            }
+            pendingPackChoices.get(pack.url).push({ descriptor, done, fail });
+        });
+    }
     function prepare(descriptor, theme = Utils.getCurrentTheme(), mapSprite = false) {
         const dpr = Math.min(window.devicePixelRatio || 1, 2);
         const key = [descriptor.id, descriptor.revision, theme, dpr, mapSprite].join('|');
         if (rendered.has(key)) return rendered.get(key);
-        const promise = load(descriptor.url).catch(() => load(IconCatalog.fallbackUrl)).then(img => {
+        const promise = loadArtwork(descriptor).catch(() => load(IconCatalog.fallbackUrl)).then(img => {
             const size = 64 * dpr;
             const canvas = document.createElement('canvas');
             canvas.width = canvas.height = size;
@@ -56,14 +130,10 @@ const IconManager = (() => {
             // Map sprites reserve the same left-biased collision box as before.
             if (mapSprite) ctx.drawImage(img, 17 * dpr, 9 * dpr, 46 * dpr, 46 * dpr);
             else ctx.drawImage(img, 4 * dpr, 4 * dpr, 56 * dpr, 56 * dpr);
-            let pixels = ctx.getImageData(0, 0, size, size);
-            const definition = Themes.resolve(theme);
-            if (definition.emojiTransform) pixels = EmojiTransforms.apply(pixels, definition.emojiTransform, dpr);
-            ctx.putImageData(pixels, 0, 0);
-            const accent = TagColorManager.extractColorFromPixels(pixels, definition);
+            const pixels = ctx.getImageData(0, 0, size, size);
+            const accent = TagColorManager.extractColorFromPixels(pixels);
             accents.set(`${descriptor.id}|${theme}`, accent);
-            return { url: definition.emojiTransform ? canvas.toDataURL('image/png') : img.src,
-                transformed: !!definition.emojiTransform, accent, pixels, pixelRatio: dpr };
+            return { url: img.src, accent, pixels, pixelRatio: dpr };
         });
         rendered.set(key, promise);
         if (rendered.size > MAX_VARIANTS) rendered.delete(rendered.keys().next().value);
@@ -91,7 +161,7 @@ const IconManager = (() => {
                 img.alt = '';
                 img.width = img.height = 24;
                 img.style.cssText = 'width:100%;height:100%;object-fit:contain;box-sizing:border-box;';
-                if (!result.transformed) img.style.padding = '6.25%';
+                img.style.padding = '6.25%';
                 img.onload = () => {
                     if (!stillCurrent()) return;
                     span.replaceChildren(img);
@@ -157,6 +227,7 @@ const IconManager = (() => {
     function init() {
         if (observing) return;
         observing = true;
+        loadPack('startup');
         hydrate(document.body);
         new MutationObserver(records => {
             for (const record of records) {

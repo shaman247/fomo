@@ -52,6 +52,7 @@ const HistoryManager = (() => {
             zoom: map.getZoom(),
             selectedLocationKey: cb.getSelectedLocationKey(),
             tags,
+            structuredQuery: cb.getQuery?.() ?? null,
             formats: cb.getFormats?.() ?? null,
             neighborhoods: cb.getNeighborhoods?.() ?? null,
             dates,
@@ -66,6 +67,8 @@ const HistoryManager = (() => {
 
     function _statesAreEqual(a, b) {
         if (!a || !b) return false;
+
+        if (JSON.stringify(a.structuredQuery ?? null) !== JSON.stringify(b.structuredQuery ?? null)) return false;
 
         // Map position (with tolerance)
         if (Math.abs(a.lat - b.lat) > 0.00001) return false;
@@ -117,7 +120,7 @@ const HistoryManager = (() => {
         if (_statesAreEqual(state.lastPushedState, newState)) return;
 
         state.lastPushedState = newState;
-        window.history.pushState(newState, '');
+        window.history.pushState(newState, '', state.callbacks.getQueryUrl?.() || location.href);
     }
 
     // ========================================
@@ -129,14 +132,7 @@ const HistoryManager = (() => {
         if (popup) {
             popup.remove();
         } else if (Sheet.isDetailMode()) {
-            // Desktop panel-detail (popups=panel prototype): back should land
-            // on the open list, not collapse the whole panel. Mobile keeps
-            // the sheet-close behavior.
-            if (!Utils.isMobileLayout() && ProtoFlags.isOn('popups', 'panel')) {
-                Sheet.closeDetail();
-            } else {
-                Sheet.close();
-            }
+            Sheet.close();
         }
     }
 
@@ -145,6 +141,7 @@ const HistoryManager = (() => {
 
         state.isRestoringState = true;
         const cb = state.callbacks;
+        cb.restoreQuery?.(historyState.structuredQuery ?? null);
 
         // 1. Map position
         state.map.jumpTo({
@@ -275,6 +272,15 @@ const HistoryManager = (() => {
     // PUBLIC API
     // ========================================
 
+    function replace() {
+        if (!state.initialized) return;
+        const current = _captureState();
+        if (current) {
+            state.lastPushedState = current;
+            window.history.replaceState(current, '', state.callbacks.getQueryUrl?.() || location.href);
+        }
+    }
+
     function isRestoring() {
         return state.isRestoringState;
     }
@@ -282,6 +288,7 @@ const HistoryManager = (() => {
     return {
         init,
         push,
+        replace,
         isRestoring
     };
 })();

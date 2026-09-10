@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128"><title>Tarot</title><desc>Fanned illustrated cards with a large original sun and crescent moon.</desc>
+
+<g transform="rotate(-20 62 72)"><rect x="17" y="23" width="55" height="88" rx="6" fill="#6A4C93"/><rect x="22" y="28" width="45" height="78" rx="3" fill="#BAA3D5"/><path d="m45 44 7 15 16 8-16 8-7 15-7-15-16-8 16-8z" fill="#EEE1F6"/></g>
+<g transform="rotate(15 76 70)"><rect x="48" y="15" width="61" height="95" rx="6" fill="#D2AF6B"/><rect x="48" y="11" width="59" height="95" rx="6" fill="#FFE0A5"/><rect x="54" y="17" width="47" height="83" rx="3" fill="#67519B"/>
+<circle cx="77.5" cy="45" r="13" fill="#FFCE55"/><path d="M77.5 23v4m0 36v4m-22-22h4m36 0h4M62 29l3 3m25 26 3 3m-31 0 3-3m25-26 3-3" stroke="#FFCE55" stroke-width="3.5" stroke-linecap="round"/>
+<path d="M79 74a10 10 0 1 0 9 13c-10 3-17-7-9-13" fill="#F1EDEC"/>
+</g>
+</svg>

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128"><title>Farmers market</title><desc>A striped market canopy shelters a wooden stand of fresh vegetables.</desc>
+<path d="M17 38h8v78h-8zm86 0h8v78h-8z" fill="#AD7156"/><path d="M17 38h4v76h-4zm86 0h4v76h-4z" fill="#FFCC80"/>
+<path d="M18 13h92l13 28H5z" fill="#EF5350"/><path d="M37 13h18l-3 28H29zm36 0h18l8 28H76z" fill="#FFF3DA"/>
+<path d="M18 13h92l-3-5H21z" fill="#FF8A80"/>
+<path d="M5 41h24v8c0 8-24 8-24 0zm47 0h24v8c0 8-24 8-24 0zm47 0h24v8c0 8-24 8-24 0z" fill="#C73B3B"/><path d="M29 41h23v8c0 8-23 8-23 0zm47 0h23v8c0 8-23 8-23 0z" fill="#E0D1B8"/>
+<path d="M5 41h24v5c0 7-24 7-24 0zm47 0h24v5c0 7-24 7-24 0zm47 0h24v5c0 7-24 7-24 0z" fill="#EF5350"/><path d="M29 41h23v5c0 7-23 7-23 0zm47 0h23v5c0 7-23 7-23 0z" fill="#FFF3DA"/>
+<path d="M72 83c-7-13-4-26 3-26 5 0 7 8 7 8 0-14 9-16 12-10 3 6-1 14-1 14 9-9 15-4 11 3l-11 13z" fill="#55A64B"/><path d="m83 84 6-20m-6 20-5-16m7 11 13-8" fill="none" stroke="#91CF69" stroke-width="3.5" stroke-linecap="round"/>
+<path d="M51 66c2-4 14-4 16 0l-7 25c-1 4-5 4-6 0z" fill="#F79430"/><path d="m57 66-4-10m5 9 6-11" stroke="#67AD4C" stroke-width="4" stroke-linecap="round"/>
+<circle cx="38" cy="77" r="14" fill="#DF4D40"/><path d="m37 64-7 4 7 1 4 5 1-7 5-3-7 1-3-5z" fill="#458E47"/><path d="M29 74c0-3 2-5 5-5" stroke="#FF9980" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+<path d="M16 84h97v32H16z" fill="#AD7156"/><path d="M16 84h97v9H16zm0 16h97v9H16z" fill="#E8AD70"/><path d="M13 80h102v8H13z" fill="#FFCC80"/><path d="M25 88h7v28h-7zm72 0h7v28h-7z" fill="#C38857"/>
+</svg>

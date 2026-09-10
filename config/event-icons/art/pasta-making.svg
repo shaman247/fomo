@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128"><title>Pasta making</title><desc>Two hands shape a ribbon of golden pasta dough above a floured wooden board.</desc>
+
+<rect x="16" y="56" width="97" height="57" rx="10" fill="#AD7156"/>
+<rect x="13" y="50" width="100" height="57" rx="9" fill="#CE8963"/>
+<path d="M23 58h78M24 98h39" stroke="#B37B59" stroke-width="3" stroke-linecap="round"/>
+<path d="M39 32C53 44 75 44 89 32l5 15C78 67 50 67 34 47z" fill="#E6AF42"/>
+<path d="M39 28C53 40 75 40 89 28l5 15C78 63 50 63 34 43z" fill="#FFE68A"/>
+<path d="M7 15h14l18 12 10 2c5 1 5 8 0 9l-13-1 10 7c4 3 1 9-3 7L27 40 7 33z" fill="#D99764"/>
+<path d="M7 11h14l18 12 10 2c5 1 5 7 0 8l-14-1 10 7c4 3 1 8-3 6L27 35 7 28z" fill="#FFD0A0"/>
+<path d="M121 15h-14L89 27l-10 2c-5 1-5 8 0 9l13-1-10 7c-4 3-1 9 3 7l16-11 20-7z" fill="#D99764"/>
+<path d="M121 11h-14L89 23l-10 2c-5 1-5 7 0 8l14-1-10 7c-4 3-1 8 3 6l16-10 20-7z" fill="#FFD0A0"/>
+<path d="m27 78 5-3 4 2 5-3 4 3 5-2 4 4-2 4 3 4-3 5-5-1-4 3-5-2-4 2-4-3-4 1-2-5 2-4z" fill="#E6AF42"/>
+<path d="m27 75 5-3 4 2 5-3 4 3 5-2 4 4-2 4 3 4-3 5-5-1-4 3-5-2-4 2-4-3-4 1-2-5 2-4z" fill="#FFE68A"/>
+<ellipse cx="40" cy="81" rx="7" ry="5" fill="#F6CB63"/>
+<path d="m75 73 12 9 12-9 3 5-3 14-12-6-12 6-3-5z" fill="#E6AF42"/>
+<path d="m75 69 12 9 12-9 3 5-3 14-12-6-12 6-3-5z" fill="#FFE68A"/>
+<path d="m86 77 3 1v5l-3 1z" fill="#E6AF42"/>
+</svg>

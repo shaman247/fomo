@@ -5,8 +5,9 @@ const path = require('node:path');
 const vm = require('node:vm');
 const { performance } = require('node:perf_hooks');
 
-function app() {
+function app(venueLabels = {}) {
     const ctx = vm.createContext({ console, performance, setTimeout, Set, Map,
+        __CITY__: {venueSelector: {labels: venueLabels}},
         Constants: { DISTANCE: { MAX_PROXIMITY_METERS: 50000 } },
         DiscoveryRanking: { score: e => e.preferenceScore || 0, stance: () => 0, placeKey: () => '' }
     });
@@ -65,6 +66,20 @@ test('canonical and alias searches yield one chip with exact-match relevance', a
     assert.equal(a.SearchManager.search('live gig',{},[]).some(r=>r.type==='tag'&&r.ref==='Concert'),true);
 });
 
+test('venue browsing labels are searchable and rendered while topic aliases keep their identities', () => {
+    const a = app({'Beverage Venue': 'Food & Drink', 'Cultural Venue': 'Arts & Culture'});
+    const maps = a.DataManager.buildTagHierarchyMaps({tags: [
+        {name: 'Beverage Venue'}, {name: 'Cultural Venue'}, {name: 'Art', aliases: ['Arts & Culture']}
+    ]});
+    a.state.tagSearchTerms = maps.tagSearchTerms;
+    assert.equal(a.SearchManager.matchTag('Beverage Venue', 'food & drink').exact, true);
+    assert.equal(a.SearchManager.matchTag('Cultural Venue', 'arts & culture').exact, true);
+    assert.equal(a.SearchManager.matchTag('Art', 'arts & culture').exact, true);
+    assert.equal(a.Utils.getTagDisplayName('Beverage Venue'), 'Food & Drink');
+    assert.equal(a.Utils.getTagDisplayName('Cultural Venue'), 'Arts & Culture');
+    assert.equal(a.Utils.getTagDisplayName('Art'), 'Art');
+});
+
 test('an exact event name outranks a highly preferred incidental text match', () => {
     const a=app();
     a.load([{id:1,name:'Unrelated',description:'Try bingo tonight',tags:[],preferenceScore:1000},
@@ -103,4 +118,31 @@ test('organizer exclusions and required/forbidden combinations share the index',
     assert.ok(org);
     assert.equal(a.FilterManager.filterEventsByTags({[org]:'required'},[e]).length,1);
     assert.equal(a.FilterManager.filterEventsByTags({Concert:'required',[org]:'forbidden'},[e]).length,0);
+});
+
+test('location Jazz keywords are searchable but never count, include, require or exclude non-Jazz events', () => {
+    const a = app();
+    a.state.locationsByLatLng['40,-74'] = {name:'Music room', tags:['venue:Music Venue'], keywords:['Jazz']};
+    const jazz = {id:1,name:'Jazz trio',tags:['Jazz'],locationKey:'40,-74'};
+    const comedy = {id:2,name:'Stand-up',tags:['Comedy'],keywords:['Improvisation'],locationKey:'40,-74'};
+    a.load([jazz,comedy]);
+    assert.deepEqual(Array.from(a.state.eventTagIndex.Jazz),[1]);
+    for (const mode of ['selected','required']) {
+        assert.deepEqual(Array.from(a.FilterManager.filterEventsByTags({Jazz:mode},[jazz,comedy]), e=>e.id),[1]);
+    }
+    assert.deepEqual(Array.from(a.FilterManager.filterEventsByTags({Jazz:'forbidden'},[jazz,comedy]),e=>e.id),[2]);
+    assert.equal(a.state.searchIndex.locations.get('40,-74').includes('jazz'),true);
+    assert.equal(a.SearchManager.search('improvisation',{},[]).some(r=>r.type==='event'&&r.ref===2),true);
+    assert.equal(a.Utils.eventFilterTags(comedy,a.state.locationsByLatLng['40,-74']).has('Improvisation'),false);
+});
+
+test('same-name Ballroom topic and venue identities filter independently and share their display name', () => {
+    const a=app();
+    a.state.locationsByLatLng['40,-74']={name:'Ballroom',tags:['venue:Ballroom']};
+    const dance={id:1,name:'Dance',tags:['Ballroom']};
+    const concert={id:2,name:'Concert',tags:['Concert'],locationKey:'40,-74'};
+    a.load([dance,concert]);
+    assert.deepEqual(Array.from(a.FilterManager.filterEventsByTags({Ballroom:'selected'},[dance,concert]),e=>e.id),[1]);
+    assert.deepEqual(Array.from(a.FilterManager.filterEventsByTags({'venue:Ballroom':'selected'},[dance,concert]),e=>e.id),[2]);
+    assert.equal(a.Utils.getTagDisplayName('venue:Ballroom'),a.Utils.getTagDisplayName('Ballroom'));
 });

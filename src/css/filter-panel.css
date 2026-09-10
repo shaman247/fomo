@@ -86,7 +86,7 @@
 }
 
 #logo-menu,
-:is(#format-selector-panel, #neighborhood-selector-panel) {
+:is(#format-selector-panel, #neighborhood-selector-panel, #tag-selector-panel, #venue-selector-panel) {
     /* Same surface treatment as the logo / search / date picker pills */
     background: color-mix(in srgb, var(--primary-bg) 85%, transparent);
     backdrop-filter: blur(8px);
@@ -103,7 +103,7 @@
    tight tracking) and brighten to primary text on hover like the chips. */
 #logo-menu a,
 #logo-menu button,
-:is(#format-selector-panel, #neighborhood-selector-panel) label {
+:is(#format-selector-panel, #neighborhood-selector-panel, #tag-selector-panel, #venue-selector-panel) label {
     display: block;
     width: 100%;
     padding: 8px 14px;
@@ -123,7 +123,7 @@
 
 #logo-menu a:hover,
 #logo-menu button:hover,
-:is(#format-selector-panel, #neighborhood-selector-panel) label:hover {
+:is(#format-selector-panel, #neighborhood-selector-panel, #tag-selector-panel, #venue-selector-panel) label:hover {
     background-color: var(--tertiary-bg);
     color: var(--primary-text);
 }
@@ -208,16 +208,6 @@
 }
 
 /* Chip bar: selected tags + top unselected curated tags */
-#chip-bar {
-    display: none; /* shown via JS once tags are loaded */
-    flex-wrap: wrap;
-    gap: 5px;
-    padding: 2px 0;
-    margin-left: -6px;
-    margin-right: -6px;
-    padding-left: 6px;
-    padding-right: 6px;
-}
 
 #date-filter-container {
     display: flex;
@@ -683,35 +673,12 @@ span.flatpickr-weekday {
     /* Menu items track the desktop top bar's smaller control size */
     #logo-menu a,
     #logo-menu button,
-    :is(#format-selector-panel, #neighborhood-selector-panel) label {
+    :is(#format-selector-panel, #neighborhood-selector-panel, #tag-selector-panel, #venue-selector-panel) label {
         padding: 7px 12px;
         font-size: 0.95em;
     }
 
-    /* Chip bar: a single row starting right of the left sheet's edge,
-       horizontally scrollable. Wheel input — vertical included — is mapped to
-       horizontal scroll by FilterPanelUI's chip-bar wheel handler. */
-    #chip-bar {
-        flex: 1;
-        min-width: 0;
-        flex-wrap: nowrap;
-        overflow-x: auto;
-        overflow-y: hidden;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
-        /* Taller than the chips so their shadows aren't clipped by
-           overflow-y: hidden; the controls center against it via
-           #filter-container's align-items: center. */
-        height: 44px;
-        align-items: center;
-        padding: 0;
-        margin-left: 0;
-        margin-right: 0;
-    }
 
-    #chip-bar::-webkit-scrollbar {
-        display: none;
-    }
 
     /* The results live in the sheet (see sheet.css), which hosts #tags-wrapper /
        #results-container — left-docked on desktop, bottom-docked on mobile. */
@@ -757,44 +724,13 @@ span.flatpickr-weekday {
         margin-top: 0;
     }
 
-    #chip-bar {
-        flex-wrap: nowrap;
-        overflow-x: auto;
-        overflow-y: visible;
-        overflow-clip-margin: 10px; /* let chip shadows extend vertically when overflow-x scrolls */
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
-        padding-top: 6px;
-        padding-bottom: 8px;
-        margin-top: -6px;
-        margin-bottom: -8px;
-        max-height: none;
-        /* Negate the filter-panel's 6px horizontal padding so the scroll viewport spans the full screen width */
-        margin-left: -6px;
-        margin-right: -6px;
-        padding-left: 0;
-        padding-right: 0;
-    }
 
-    /* Phantom flex spacers: with gap: 5px, a 1px spacer yields a 6px gutter from the screen edge initially,
-       but scrolls away with the content so chips can slide flush to the edges. */
-    #chip-bar::before,
-    #chip-bar::after {
-        content: '';
-        flex: 0 0 1px;
-    }
 
-    #chip-bar .tag-button {
-        flex-shrink: 0;
-    }
 
-    #chip-bar::-webkit-scrollbar {
-        display: none;
-    }
 }
 
 /* Independent event-format control. Native popover escapes the panel's clipping. */
-:is(#format-selector-button, #neighborhood-selector-button) {
+:is(#format-selector-button, #neighborhood-selector-button, #tag-selector-button, #venue-selector-button) {
     display: inline-flex;
     align-items: center;
     flex-shrink: 0;
@@ -811,10 +747,10 @@ span.flatpickr-weekday {
     letter-spacing: -0.03em;
     cursor: pointer;
 }
-:is(#format-selector-button, #neighborhood-selector-button) span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-:is(#format-selector-button, #neighborhood-selector-button):hover, :is(#format-selector-button, #neighborhood-selector-button)[aria-expanded="true"] { color: var(--primary-text); }
-:is(#format-selector-button, #neighborhood-selector-button):focus-visible, :is(#format-selector-panel, #neighborhood-selector-panel) :focus-visible { outline: 2px solid var(--accent-color); outline-offset: 2px; }
-:is(#format-selector-panel, #neighborhood-selector-panel) {
+:is(#format-selector-button, #neighborhood-selector-button, #tag-selector-button, #venue-selector-button) span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:is(#format-selector-button, #neighborhood-selector-button, #tag-selector-button, #venue-selector-button):hover, :is(#format-selector-button, #neighborhood-selector-button, #tag-selector-button, #venue-selector-button)[aria-expanded="true"] { color: var(--primary-text); }
+:is(#format-selector-button, #neighborhood-selector-button, #tag-selector-button, #venue-selector-button):focus-visible, :is(#format-selector-panel, #neighborhood-selector-panel, #tag-selector-panel, #venue-selector-panel) :focus-visible { outline: 2px solid var(--accent-color); outline-offset: 2px; }
+:is(#format-selector-panel, #neighborhood-selector-panel, #tag-selector-panel, #venue-selector-panel) {
     position: fixed;
     inset: auto;
     margin: 0;
@@ -826,31 +762,31 @@ span.flatpickr-weekday {
     color: var(--secondary-text);
     font-family: var(--font-display);
 }
-:is(#format-selector-panel, #neighborhood-selector-panel)::-webkit-scrollbar { display: none; }
-:is(#format-selector-panel, #neighborhood-selector-panel) label { display: flex; align-items: center; gap: 9px; box-sizing: border-box; padding-top: 5px; padding-bottom: 5px; }
-:is(#format-selector-panel, #neighborhood-selector-panel) input { width: 17px; height: 17px; margin: 0; flex-shrink: 0; accent-color: var(--accent-color); }
+:is(#format-selector-panel, #neighborhood-selector-panel, #tag-selector-panel, #venue-selector-panel)::-webkit-scrollbar { display: none; }
+:is(#format-selector-panel, #neighborhood-selector-panel, #tag-selector-panel, #venue-selector-panel) label { display: flex; align-items: center; gap: 9px; box-sizing: border-box; padding-top: 5px; padding-bottom: 5px; }
+:is(#format-selector-panel, #neighborhood-selector-panel, #tag-selector-panel, #venue-selector-panel) input { width: 17px; height: 17px; margin: 0; flex-shrink: 0; accent-color: var(--accent-color); }
 .format-selector-group-heading { display: flex; align-items: stretch; }
 .format-selector-group-heading label { flex: 1; }
 .format-selector-children { padding-left: 26px; }
 .format-selector-disclosure { display: flex; align-items: center; justify-content: center; width: 40px; flex-shrink: 0; padding: 0; border: 0; background: none; color: var(--secondary-text); font: inherit; font-size: 1.5em; cursor: pointer; }
 .format-selector-disclosure:hover { background: var(--tertiary-bg); color: var(--primary-text); }
-:is(#format-selector-panel, #neighborhood-selector-panel) .format-selector-disclosure:focus-visible { outline-offset: -2px; }
+:is(#format-selector-panel, #neighborhood-selector-panel, #tag-selector-panel, #venue-selector-panel) .format-selector-disclosure:focus-visible { outline-offset: -2px; }
 .format-selector-disclosure span { display: block; }
 .format-selector-disclosure[aria-expanded="true"] span { transform: rotate(90deg); }
 @media (min-width: 769px) {
-    :is(#format-selector-button, #neighborhood-selector-button) { font-size: .95em; padding: 4px 9px; }
+    :is(#format-selector-button, #neighborhood-selector-button, #tag-selector-button, #venue-selector-button) { font-size: .95em; padding: 4px 9px; }
     #filter-container > div:first-child { width: auto; min-width: calc(var(--sheet-width, 420px) - 16px); }
     #omni-search-filter { min-width: 120px; }
 }
 @media (max-width: 768px) {
-    #filter-container > div:first-child { display: grid; grid-template-columns: auto minmax(0, .45fr) minmax(0, 1fr) minmax(0, 1.55fr); gap: 6px; }
-    #omni-search-filter { grid-column: 2 / 5; }
-    #date-filter-container { grid-column: 1 / 3; }
-    :is(#format-selector-button, #neighborhood-selector-button) { min-width: 0; max-width: 100%; justify-self: end; font-size: 1em; padding-inline: 8px; }
+    #filter-container > div:first-child { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 6px; }
+    #omni-search-filter { grid-column: 2; min-width: 0; }
+    #date-filter-container { grid-column: 3; justify-self: end; }
+    :is(#format-selector-button, #neighborhood-selector-button, #tag-selector-button, #venue-selector-button) { min-width: 0; max-width: 100%; justify-self: end; font-size: 1em; padding-inline: 8px; }
 }
 
 /* Neighborhood navigation uses the existing selector's typography and colors. */
-#neighborhood-selector-panel .neighborhood-search {
+:is(#neighborhood-selector-panel, #tag-selector-panel, #venue-selector-panel) .neighborhood-search {
     box-sizing: border-box;
     width: 100%;
     height: auto;
@@ -863,4 +799,16 @@ span.flatpickr-weekday {
     font: inherit;
 }
 .neighborhood-empty-message, .selector-empty-message { margin: 8px; color: var(--secondary-text); font-size: .9em; }
-#neighborhood-selector-panel .format-selector-children { padding-left: 16px; }
+:is(#neighborhood-selector-panel, #tag-selector-panel, #venue-selector-panel) .format-selector-children { padding-left: 16px; }
+
+:is(#tag-selector-panel, #venue-selector-panel) label { min-width: 0; overflow-wrap: anywhere; }
+:is(#tag-selector-panel, #venue-selector-panel) .tag-selector-active { border-bottom: 1px solid var(--border-color); padding-block: 4px; }
+:is(#tag-selector-panel, #venue-selector-panel) .tag-selector-state { margin-left: auto; font-size: .8em; color: var(--secondary-text); }
+@media (max-width: 768px) {
+    #format-selector-button, #neighborhood-selector-button, #tag-selector-button, #venue-selector-button { justify-self: stretch; justify-content: center; }
+}
+
+.selector-controls { display: contents; }
+@media (max-width: 768px) {
+    .selector-controls { display: grid; grid-column: 1 / 4; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+}

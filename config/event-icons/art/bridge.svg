@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+<title>Bridge bidding box and cards</title>
+<path fill="#90A4AE" d="M46 49h61l16 53-16 19H39l-4-58z"/>
+<path fill="#3949AB" d="M47 53h60l13 46-15 15H39l-2-51z"/>
+<path fill="#1A237E" d="M53 57h52l9 34-10 12H45z"/>
+<path fill="#FFB74D" d="M85 23h13c5 0 7 4 8 8l8 58-25 9z"/>
+<path fill="#F48FB1" d="M74 17h15c5 0 8 3 8 8l6 66-28 9z"/>
+<path fill="#B0BEC5" d="M60 12h17c5 0 8 3 8 8l7 75-36 7z"/>
+<path fill="#FFF8E1" d="M54 11h19c5 0 8 3 8 8l7 79-39 2-3-79c0-6 3-10 8-10z"/>
+<path fill="#2F2F2F" d="m56 21 7-4h5v22h-6V25l-6 3z"/>
+<path fill="#2F2F2F" d="M64 45c-4 6-13 11-13 18 0 7 8 10 13 4-1 6-2 9-5 11h13c-3-2-4-5-5-11 6 6 13 3 13-4 0-7-10-12-16-18z"/>
+<path fill="#5C6BC0" d="M37 87h72l-4 29H41z"/>
+<path fill="#7986CB" d="M37 86h73v8H39z"/>
+<path fill="#3949AB" d="m109 87 11 11-15 18z"/>
+<g transform="translate(8 0) rotate(-16 22 65)">
+<rect x="5" y="33" width="33" height="67" rx="5" fill="#B8AAA5"/>
+<rect x="5" y="30" width="33" height="67" rx="5" fill="#F1EDEC"/>
+<path fill="#D32F2F" d="M21 47c-10-12-23 4 0 23 23-19 10-35 0-23z"/>
+</g>
+<g transform="rotate(-4 34 88)">
+<rect x="19" y="58" width="32" height="64" rx="5" fill="#B8AAA5"/>
+<rect x="19" y="54" width="32" height="64" rx="5" fill="#FFF8E1"/>
+<path fill="#2F2F2F" d="M35 69c-4 6-12 10-12 16 0 6 7 9 11 4 0 5-2 8-4 10h11c-3-2-4-5-4-10 5 5 12 2 12-4 0-6-9-10-14-16z"/>
+</g>
+</svg>

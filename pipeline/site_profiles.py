@@ -43,6 +43,13 @@ class SiteProfile:
     skip_reason: Optional[str] = None   # message logged when SKIP
     fetcher: Optional[Callable[[], Tuple[str, int]]] = None  # (markdown, n_events) when CUSTOM
     inject_js: Optional[str] = None     # additive in-page JS appended to the url/website js_code
+    # Rewrite the URL the DETAIL crawl fetches, without touching the URL we
+    # store or publish. Some platforms serve a richer/plainer rendering of the
+    # same page under a query flag, and the detail path (unlike the listing
+    # path) has no js_code lever - build_event_crawl_config deliberately drops
+    # it - so a fetch-time URL rewrite is the only way to reach that rendering.
+    # Must be idempotent and must preserve any existing query string.
+    detail_fetch_url: Optional[Callable[[str], str]] = None
 
     # --- extraction behavior (extractor.py) ---
     extraction_notes: Optional[str] = None                   # prepended to the website notes
@@ -158,6 +165,30 @@ def inject_js_for(url) -> str:
     """Extra in-page JS to append for this URL, or '' if none (meetup)."""
     p = resolve_profile(url)
     return p.inject_js if (p and p.inject_js) else ""
+
+
+def detail_fetch_url(url) -> str:
+    """The URL the detail crawl should FETCH for this event page.
+
+    Crawl-time only. `crawl_events.url` and `event_urls` are never written from
+    this value - `crawler.crawl_event_url` returns content, not a URL, and the
+    only writes to `crawl_events` in the detail path are the field UPDATE in
+    `processor.apply_crawled_details` and the attempt counter - so whatever a
+    plugin appends here can never reach a public link.
+
+    Gated by `matches()` (host + optional path_substr) like `inject_js_for`,
+    and fails soft: a raising or empty-returning plugin leaves the URL alone
+    rather than losing the crawl.
+    """
+    p = resolve_profile(url)
+    if not (p and p.detail_fetch_url):
+        return url
+    try:
+        rewritten = p.detail_fetch_url(url)
+    except Exception as e:
+        print(f"  ! site_profiles: {p.name}.detail_fetch_url failed on {url}: {e}")
+        return url
+    return rewritten or url
 
 
 def is_skip_url(url) -> bool:

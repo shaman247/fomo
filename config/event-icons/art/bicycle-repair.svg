@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128"><title>Bicycle repair</title><desc>A narrow spoked bicycle wheel crossed by a repair wrench.</desc>
+<circle cx="57" cy="70" r="43" fill="none" stroke="#455A64" stroke-width="10"/><circle cx="57" cy="70" r="36" fill="none" stroke="#AEC4CC" stroke-width="3"/>
+<path d="M57 34v72M21 70h72M32 45l50 50M32 95l50-50" stroke="#8DA8B2" stroke-width="3"/>
+<circle cx="57" cy="70" r="7" fill="#647D8A"/><path d="M16 64a42 42 0 0 1 63-30" fill="none" stroke="#72858D" stroke-width="4" stroke-linecap="round"/>
+<path d="m43 110 45-55c-5-11-2-24 8-29l3 16 10 3 10-12c6 14-1 27-15 28l-45 59q-5 6-11 1l-5-4q-3-3 0-7z" fill="#D5964C"/>
+<path d="m43 110 47-57c-6-11-2-22 6-27l3 16 10 3-15 14-43 58q-5 2-8-3z" fill="#F3BE67"/><circle cx="52" cy="112" r="4" fill="#A96C37"/>
+</svg>

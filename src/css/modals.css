@@ -190,41 +190,6 @@
     color: var(--accent-hover);
 }
 
-/* Theme picker holds the full registry (9+ options) — wrap into rows */
-.setting-group-themes {
-    align-items: flex-start;
-}
-
-.setting-group-themes .setting-group-label {
-    padding-top: 2px;
-}
-
-.setting-group-themes .setting-options {
-    flex-wrap: wrap;
-    row-gap: 10px;
-    column-gap: 14px;
-}
-
-/* Reload affordance for load-time prototype flags (layout) */
-.proto-reload-status {
-    display: block;
-    width: 100%;
-    margin-top: 4px;
-    padding: 8px 12px;
-    font-family: var(--font-family);
-    font-size: 0.95em;
-    color: var(--primary-text);
-    background: color-mix(in srgb, var(--accent-color) 16%, transparent);
-    border: 1px solid var(--accent-color);
-    border-radius: var(--radius-btn-lg);
-    cursor: pointer;
-    text-align: center;
-}
-
-.proto-reload-status:hover {
-    background: color-mix(in srgb, var(--accent-color) 26%, transparent);
-}
-
 /* === Welcome Modal Specific Styles === */
 /* Content formatting for the welcome/about modal */
 #welcome-modal .modal-body p {
@@ -247,7 +212,7 @@
     display: flex;
     opacity: 0;
     visibility: hidden;
-    transition: opacity 150ms ease, visibility 150ms ease;
+    transition: opacity 0.8s ease, visibility 0.8s ease;
 }
 
 #welcome-modal.show {
@@ -257,6 +222,7 @@
 
 /* Welcome + settings modals: lighter overlay dim, and the same translucent
    surface treatment as the filter-panel pill controls. */
+#welcome-modal,
 #settings-modal {
     background-color: rgba(0, 0, 0, 0.4);
 }
@@ -274,7 +240,7 @@
 #welcome-modal .modal-content {
     position: relative;
     animation: none;
-    transition: none;
+    transition: opacity 0.8s ease, transform 0.8s ease;
 }
 
 #welcome-modal .modal-body {
@@ -532,40 +498,6 @@
     }
 }
 
-/* The introduction is a small card; surrounding map controls stay usable. */
-#welcome-modal {
-    box-sizing: border-box;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-    background: transparent;
-    pointer-events: none;
-    align-items: flex-end;
-    justify-content: flex-start;
-    padding: 16px;
-}
-#welcome-modal .modal-content {
-    pointer-events: auto;
-    width: min(360px, calc(100vw - 32px));
-    max-height: 55vh;
-    overflow-y: auto;
-    margin: 0;
-}
-#welcome-modal .modal-body { padding: 16px; }
-#welcome-modal .modal-body li {
-    animation: none;
-    opacity: 1;
-    font-size: 0.95rem;
-}
-#welcome-start-btn {
-    margin-top: 14px;
-    padding: 8px 16px;
-    color: var(--primary-text);
-    background: var(--secondary-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 20px;
-    cursor: pointer;
-    font: inherit;
-}
 #filter-update-status {
     position: fixed;
     bottom: 16px;

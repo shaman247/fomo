@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+<title>3D printing pen</title>
+<path fill="#ECEFF1" d="M9 97 82 87l35 23-76 14z"/>
+<path fill="#CFD8DC" d="M9 97v5l32 25 76-14v-3l-76 14z"/>
+<ellipse cx="36" cy="108" rx="22" ry="5" fill="#B0BEC5"/>
+<path fill="none" stroke="#AD1457" stroke-width="8" stroke-linecap="round" d="M55 88c-10 0-9 20-26 20-15 0-20-18-14-32 5-11 20-11 24 0 5 15-9 28-10 32"/>
+<path fill="none" stroke="#F06292" stroke-width="3" stroke-linecap="round" d="M53 87c-10 2-9 18-25 18-12 0-16-16-11-28 4-9 15-9 18-1"/>
+<g transform="rotate(38 82 53)">
+<path fill="none" stroke="#EC407A" stroke-width="5" stroke-linecap="round" d="M82 18V9c0-5-4-7-10-7"/>
+<path fill="#EF6C00" d="M74 15h16c5 0 8 5 7 11l-4 51-7 14h-8l-7-14-5-51c-1-6 3-11 8-11z"/>
+<path fill="#FFA726" d="M73 17h9v70h-3l-7-13-4-48c-1-5 1-8 5-9z"/>
+<path fill="#FFCC80" d="M72 23c0-4 5-4 5 0v30c0 5-4 6-4 0z"/>
+<path fill="#455A64" d="M76 82h12l-3 14h-6z"/>
+<path fill="#90A4AE" d="m77 86 4 1 1 9h-3z"/>
+<rect x="80" y="34" width="12" height="26" rx="6" fill="#AD4E00"/>
+<circle cx="86" cy="41" r="4" fill="#CFD8DC"/>
+<circle cx="86" cy="52" r="4" fill="#CFD8DC"/>
+</g>
+</svg>

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128"><title>Figure drawing</title><desc>A pencil and sketchpad with a standing human figure contour.</desc>
+<path d="M23 14h67q6 0 6 6v94H23q-9 0-9-9V23q0-9 9-9" fill="#B98B63"/><path d="M24 12h65v95H24q-5 0-5-5V19q0-7 5-7" fill="#FFF2DA"/><path d="M25 104h64v5H25z" fill="#DBC7A8"/>
+<path d="M31 9v10m17-10v10M65 9v10M82 9v10" stroke="#627980" stroke-width="5" stroke-linecap="round"/>
+<ellipse cx="54" cy="33" rx="7" ry="9" fill="#E9B595"/><path d="M48 42c-9 3-12 11-11 21l-6 11m29-32c8 6 12 12 12 19l-5 12M48 46c0 12-7 16-6 24l9 7-8 20m17-51c-1 12 5 19 5 26l-7 8 7 17" fill="none" stroke="#7B6961" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M47 42h13l-2 19 4 10-11 5-7-7 5-11z" fill="#E9B595"/>
+<g transform="rotate(25 100 67)"><path d="M93 29h14v65H93z" fill="#F6B443"/><path d="M93 29h5v65h-5z" fill="#FFDC83"/><path d="M102 29h5v65h-5z" fill="#D88B2B"/><path d="M93 94h14l-7 19z" fill="#EBC59A"/><path d="m97 105 3 8 3-8z" fill="#424850"/><rect x="93" y="17" width="14" height="14" rx="4" fill="#E77884"/><path d="M93 29h14v8H93z" fill="#BACBD0"/></g>
+</svg>

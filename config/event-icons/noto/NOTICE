@@ -2,3 +2,9 @@ Noto Emoji artwork, Copyright Google LLC and contributors.
 Upstream https://github.com/googlefonts/noto-emoji at 8998f5dd683424a73e2314a8c1f1e359c19e8742.
 SVG/PNG artwork is distributed under Apache-2.0; see LICENSE.
 Region flag designs originate in upstream third_party/region-flags; see upstream README.
+
+Fomo custom ensemble adaptations (2026-09-08):
+art/brass-band.svg adapts Noto U+1F3BA with an original trombone.
+art/big-band.svg adapts Noto U+1F3B7, U+1F3BA and U+1F941.
+art/jazz-piano-trio.svg adapts Noto U+1F3B9 and U+1F941 with an original bass-clef symbol.
+Modified composition, scale and placement; original Noto copyright and Apache-2.0 license retained.

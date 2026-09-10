@@ -90,7 +90,7 @@ def load_event_counts(cursor, edges, website_gate, date_window):
             JOIN location_tags lt ON lt.location_id=e2.location_id
         ) assigned ON assigned.event_id=e.id
         JOIN tags t ON t.id=assigned.tag_id
-        WHERE e.archived=FALSE AND e.suppressed=FALSE
+        WHERE t.scope='venue' AND t.type='tag' AND e.archived=FALSE AND e.suppressed=FALSE
           AND l.lat IS NOT NULL AND l.lng IS NOT NULL
           AND ({website_gate})
           AND EXISTS (SELECT 1 FROM event_occurrences o WHERE o.event_id=e.id

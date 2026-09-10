@@ -60,8 +60,7 @@ const ViewportManager = (() => {
 
     /**
      * Gets the dimensions of the overlays covering the map: the top filter
-     * band, plus — under the docked-layout prototype — the permanent left
-     * panel's width. Production keeps filterPanelWidth at 0 (top-bar-only).
+     * band. The filter panel covers no horizontal strip of the map.
      * Uses hardcoded sizes during initial load to avoid measurement issues.
      *
      * @param {boolean} isInitialLoad - Whether this is during initial app load
@@ -82,15 +81,7 @@ const ViewportManager = (() => {
             }
         }
 
-        // Docked layout (desktop): the always-open left panel covers a strip
-        // of the map — visible-center / viewport math must exclude it.
-        let filterPanelWidth = 0;
-        if (!Utils.isMobileLayout() && ProtoFlags.isOn('layout', 'docked')) {
-            const sheet = document.getElementById('sheet');
-            filterPanelWidth = (!isInitialLoad && sheet && sheet.offsetWidth) || 420;
-        }
-
-        return { filterPanelWidth, filterPanelHeight };
+        return { filterPanelWidth: 0, filterPanelHeight };
     }
 
     // ========================================
@@ -185,7 +176,6 @@ const ViewportManager = (() => {
 
         // Calculate the corners of the actual visible viewport in map container pixel coordinates
         // Add buffer offset because the map container is shifted by -50vw, -50vh.
-        // filterPanelWidth (docked layout) excludes the covered left strip.
         const topLeftPx = { x: offsetX + filterPanelWidth, y: filterPanelHeight + offsetY };
         const topRightPx = { x: viewportWidth + offsetX, y: filterPanelHeight + offsetY };
         const bottomRightPx = { x: viewportWidth + offsetX, y: viewportHeight + offsetY };

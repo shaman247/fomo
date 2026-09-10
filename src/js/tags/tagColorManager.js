@@ -48,14 +48,11 @@ const TagColorManager = (() => {
     }
 
     /**
-     * Gets the color palette for the current theme. Prototype themes may
-     * supply their own palette; otherwise the theme's base picks dark/light.
+     * Gets the color palette for the current Dark or Light theme.
      * @returns {Array<string>} Array of color hex codes
      */
     function getCurrentPalette() {
-        const def = Themes.resolve(getCurrentTheme());
-        if (def.tagPalette && def.tagPalette.length) return def.tagPalette;
-        return def.base === 'light' ? state.lightPalette : state.darkPalette;
+        return getCurrentTheme() === 'light' ? state.lightPalette : state.darkPalette;
     }
 
     /**
@@ -93,11 +90,10 @@ const TagColorManager = (() => {
     const MIN_PIXEL_L = 0.12;        // reject near-black outline pixels
     const MIN_RESULT_CHROMA = 0.015; // averaged result this gray ⇒ achromatic glyph (⚽) → fallback
 
-    // Artwork pixels are already transformed by the active theme.
-    function extractColorFromPixels(imageData, themeDef) {
-        const fallback = themeDef.achromaticFallback || '#8899aa';
-        const targetL = (themeDef.markerOklch && themeDef.markerOklch.L) || MARKER_OKLCH_L;
-        const targetC = (themeDef.markerOklch && themeDef.markerOklch.C) || MARKER_OKLCH_C;
+    function extractColorFromPixels(imageData) {
+        const fallback = '#8899aa';
+        const targetL = MARKER_OKLCH_L;
+        const targetC = MARKER_OKLCH_C;
         const data = imageData.data;
         const buckets = new Array(36).fill(0);
         const bucketColors = Array.from({length: 36}, () => []);
@@ -137,7 +133,7 @@ const TagColorManager = (() => {
         const aR = sR/sW, aG = sG/sW, aB = sB/sW;
 
         // Normalize the dominant color in OKLCH: keep its perceptual hue but pin
-        // lightness and chroma to the (theme-overridable) targets; cached per
+        // lightness and chroma to the shared targets; cached per
         // font+theme in getColorForEmoji. If the dominant color is itself
         // near-gray, the glyph is achromatic (e.g. ⚽) → fallback.
         const avg = ColorUtils.rgbToOklch(aR, aG, aB);
@@ -152,9 +148,7 @@ const TagColorManager = (() => {
     }
 
     /**
-     * Resolves a color for a tag via its emoji. Themes whose emoji transform
-     * collapses hue (cyanotype, newsprint) opt out with chipColors:'palette'
-     * so chip colors come from their palette and stay distinguishable.
+     * Resolves a color for a tag from its artwork.
      * @param {string} tag - Tag name
      * @returns {string|null} Color hex code, or null if the tag has no emoji
      */
@@ -166,13 +160,11 @@ const TagColorManager = (() => {
         if (!color || !IconManager.tagCacheKey(tag)) return null;
         tagIconColors.set(tagIconColorKey(tag), color);
         if (tagIconColors.size > 256) tagIconColors.delete(tagIconColors.keys().next().value);
-        if (Themes.resolve(getCurrentTheme()).chipColors === 'palette') return getTagColor(tag);
         const entry = state.selectedTagsWithColors.find(([name]) => name === tag);
         if (entry) entry[1] = color;
         return color;
     }
     function getEmojiBgColor(tag) {
-        if (Themes.resolve(getCurrentTheme()).chipColors === 'palette') return null;
         if (typeof IconManager !== 'undefined' && IconManager.tagCacheKey(tag)) {
             return tagIconColors.get(tagIconColorKey(tag)) || '#8899aa';
         }

@@ -166,6 +166,21 @@ SKIP_LOCATION_NAMES = {
     # address deliberately withheld by the organizer; the neighborhood/host pin
     # is the best mapping that will ever exist.
     'soho sukkah', 'connors elementary school', 'throughout the rivertowns',
+    # 2026-09-09 unmapped sweep. Each string was verified against the live source page
+    # before being listed: the event is already pinned as well as it ever can be, and the
+    # string names no resolvable venue (virtual platform, withheld/private address, an
+    # org/agency label, a multi-block street-fair route, or a bare neighborhood/ZIP).
+    'online goto webinar', 'online meeting', 'teams (virtual)', 'zoom webinar',
+    'links will be provided after registration', 'virtual/online events',
+    'a secret private social club', "ami's", 'flower district', 'tbd, brooklyn',
+    'uptown + the bronx (exact location tba)', 'multiple locations around brooklyn',
+    'manhattan & brooklyn', 'manhattan to liberty island', 'check site for details.',
+    'third avenue', '129 atlantic avenue', 'corner of 6th street and 8th avenue',
+    'cadman plaza in brooklyn, across the brooklyn bridge, concluding at foley square, manhattan',
+    'bensonhurst', 'yorkville', 'bronx, ny 10467', 'new york, ny 10007',
+    # ORG/agency names emitted as the venue by their own feed. Each rovers between venues,
+    # so an alt name would mis-pin every future listing.
+    'russian american cultural center', 'union county park system',
 }
 
 # Websites whose feed emits the HOST/PARTNER ORG as `location_name` for every
@@ -179,6 +194,10 @@ SKIP_LOCATION_NAMES = {
 SKIP_MISMATCH_WEBSITES = {
     'New York Cares',
     'NYC Service',
+    # Emits its own shop name as location_name for group rides that actually start at
+    # Ronkonkoma LIRR. Handled here rather than in SKIP_LOCATION_NAMES because
+    # "Principles GI Coffee House" is a legitimate venue (location 2214) for other sources.
+    'Principles GI Coffee House',
 }
 
 # Street-intersection patterns: outdoor markets / waste drop-offs / flea markets

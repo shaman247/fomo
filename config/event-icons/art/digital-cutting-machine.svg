@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+<title>Digital cutting machine</title>
+<path fill="#4DB6AC" d="M18 15h91c7 0 11 5 11 11v51H7V27c0-7 4-12 11-12z"/>
+<path fill="#B2DFDB" d="M18 12h90c7 0 10 5 10 10v29H9V24c0-7 3-12 9-12z"/>
+<path fill="#E0F2F1" d="M20 18h72c4 0 4 4 0 4H22c-4 0-6 3-6 7v11c-4 0-4-2-4-6V25c0-5 3-7 8-7z"/>
+<path fill="#4DB6AC" d="M17 43h93c8 0 13 7 13 15v29c0 6-5 10-11 10H16c-7 0-12-4-12-10V57c0-8 5-14 13-14z"/>
+<path fill="#80CBC4" d="M15 44h92c6 0 12 5 12 12v30H8V56c0-7 2-12 7-12z"/>
+<rect x="20" y="51" width="88" height="29" rx="5" fill="#37474F"/>
+<path stroke="#B0BEC5" stroke-width="5" stroke-linecap="round" d="M23 61h81"/>
+<path fill="#4FC3F7" d="M32 73h57l9 48H24z"/>
+<path fill="#0288D1" d="M24 117h74v6H24z"/>
+<path fill="#FFF9C4" d="M39 80h42l6 31H34z"/>
+<path fill="#4FC3F7" d="M61 90c-8-9-20 3 0 15 20-12 8-24 0-15z"/>
+<rect x="64" y="52" width="21" height="22" rx="5" fill="#ECEFF1"/>
+<path fill="#90A4AE" d="M78 54h6v17c0 2-3 3-6 3z"/>
+<path fill="#607D8B" d="M69 72h10l-4 8h-3z"/>
+<circle cx="111" cy="52" r="3" fill="#00796B"/>
+<path fill="#CE93D8" d="m97 91 3 3c7-8 18 0 11 8l-11 10-11-10c-6-7 1-17 8-11z"/>
+<path fill="#FFF9C4" d="m95 88 3 3c7-8 18 0 11 8l-11 10-11-10c-6-7 1-17 8-11z"/>
+</svg>

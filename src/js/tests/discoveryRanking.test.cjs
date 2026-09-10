@@ -126,3 +126,12 @@ test('retired tag favorites migrate once; an explicit canonical stance wins coll
     const restored = setup(storage.get('fomo.interests.v1:test')).r;
     assert.equal(restored.details({id:9,tags:['Artificial Intelligence']},{}).personal,1);
 });
+
+test('venue preferences use only venue-scoped filters and never location topic keywords', () => {
+    const {r}=setup();
+    r.set('tag','Jazz','Jazz',-1);
+    r.set('tag','venue:Ballroom','Ballroom',1);
+    const comedy={id:55,name:'Comedy',tags:['Comedy']};
+    const venue={...place,tags:['venue:Ballroom'],keywords:['Jazz']};
+    assert.equal(r.details(comedy,venue).personal,1);
+});

@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+<title>Inline skate</title>
+<path fill="#455A64" d="M16 86h96v17H14z"/>
+<path fill="#90A4AE" d="M17 93h95v7H17z"/>
+<g fill="#263238">
+<circle cx="24" cy="108" r="12"/><circle cx="51" cy="108" r="12"/><circle cx="78" cy="108" r="12"/><circle cx="105" cy="108" r="12"/>
+</g>
+<g fill="#FFB74D">
+<circle cx="24" cy="108" r="8"/><circle cx="51" cy="108" r="8"/><circle cx="78" cy="108" r="8"/><circle cx="105" cy="108" r="8"/>
+</g>
+<g fill="#EF6C00">
+<circle cx="24" cy="108" r="3"/><circle cx="51" cy="108" r="3"/><circle cx="78" cy="108" r="3"/><circle cx="105" cy="108" r="3"/>
+</g>
+<path fill="#37474F" d="M20 16c0-6 5-9 11-9h29c7 0 11 5 11 12l-2 28c0 12 7 19 18 24l20 7c8 3 14 7 14 13 0 5-4 8-11 8H21c-8 0-12-6-11-13l9-33z"/>
+<path fill="#546E7A" d="M25 17h27v38c0 9 8 19 15 24l14 10H20c-4 0-5-3-4-8l9-31z"/>
+<path fill="#EC407A" d="M20 20h48v24H19z"/>
+<path fill="#F48FB1" d="M23 20h10v23H21z"/>
+<path fill="#AD1457" d="M20 28h46v9H19z"/>
+<path fill="#CFD8DC" d="M53 25h17v16H53z"/>
+<path fill="#607D8B" d="M58 29h8v8h-8z"/>
+<path fill="#EC407A" d="m25 59 12-2c1 15 11 21 28 26l-7 9H23c-6 0-8-5-6-11z"/>
+<path fill="#78909C" d="M70 66c11 10 22 12 36 17 4 1 8 4 8 7H80L59 72z"/>
+<path stroke="#ECEFF1" stroke-width="4" stroke-linecap="round" d="m58 50 11-2m-9 12 13-3m-7 13 13-4"/>
+<path fill="#263238" d="M11 88c21 6 60 7 109 1v4c0 5-5 8-11 8H21c-7 0-11-4-10-13z"/>
+<path fill="#B0BEC5" d="M20 93h89c5 0 7 2 1 4H23c-5 0-7-4-3-4z"/>
+</svg>

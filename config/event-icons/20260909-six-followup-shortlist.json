@@ -1,0 +1,463 @@
+{
+  "date": "2026-09-09",
+  "scope": "Complete 100-event sequential cohort 157875–162302; 25 suggestions across 23 distinct concepts. Global saved-opportunity report is supporting reach only, not a newly reviewed population-wide ranking.",
+  "implemented": [
+    "activity-food-distribution",
+    "format-film-qa",
+    "craft-welding",
+    "equipment-laser-cutter",
+    "cuisine-macarons",
+    "activity-stop-motion"
+  ],
+  "next_sequential_after_id": 162302,
+  "prioritized": [
+    {
+      "category": "sport",
+      "concept": "sport-petanque",
+      "evidence": [
+        "Pétanque in the Park: Never heard of Pétanque? Our expert friends at NYC's oldest running Pétanque club will teach you.",
+        "Tags: Community, Free, Sports, Outdoor, Games, Game, Participatory, Petanque, Format"
+      ],
+      "existing_alternative": "White circle loses equipment identity; bowling pins misrepresent the game.",
+      "label": "Pétanque",
+      "rationale": "Pétanque uses metal boules and a small jack, distinct from asymmetric lawn bowls and bowling pins.",
+      "visual": "Two metallic grooved boules near a small wooden jack on a tan ground patch.",
+      "event_ids": [
+        161821
+      ],
+      "review": "promising-prototype",
+      "priority": 1,
+      "priority_rationale": "Two grooved metal boules and a small jack have a distinctive compact silhouette; clear improvement over a white circle.",
+      "saved_report_event_count": 2,
+      "saved_report_venue_count": 2
+    },
+    {
+      "concept": "game-catan",
+      "label": "Catan",
+      "category": "activity",
+      "visual": "Three colored hexagonal terrain tiles with one small settlement.",
+      "rationale": "Named Catan play has a distinctive hex-tile/settlement cue; mixed game programs may retain broad icon.",
+      "existing_alternative": "Noto dice/puzzle is generic and current game customs represent other games.",
+      "evidence": [
+        "Catan Club: No description available.",
+        "Tags: Community, Games, Board Games, Game, Participatory, Catan, Format"
+      ],
+      "event_ids": [
+        160826
+      ],
+      "review": "promising-prototype",
+      "priority": 2,
+      "priority_rationale": "Terrain hexagons and a settlement are a promising game cue; verify that geometry is recognizable without logos or a crowded board.",
+      "saved_report_event_count": 4,
+      "saved_report_venue_count": 3
+    },
+    {
+      "category": "equipment",
+      "concept": "equipment-guitar-controller",
+      "evidence": [
+        "Clone Hero (guitar hero) Night: Play clone hero (guitar hero) night.",
+        "Tags: Music, Free, Video Games, Games, Game, Participatory, Guitar Hero, Format, Clone Hero"
+      ],
+      "existing_alternative": "Guitar and gamepad each omit the defining hybrid controller.",
+      "label": "Guitar game controller",
+      "rationale": "Clone Hero explicitly involves rhythm-game play; buttons distinguish it from live guitar.",
+      "visual": "Short guitar-shaped controller with colored fret buttons.",
+      "event_ids": [
+        158001
+      ],
+      "review": "promising-prototype",
+      "priority": 3,
+      "priority_rationale": "Colored fret buttons and a strum bar distinguish rhythm gaming from real guitar performance; keep controls large enough to read.",
+      "saved_report_event_count": 1,
+      "saved_report_venue_count": 1
+    },
+    {
+      "category": "craft",
+      "concept": "craft-carborundum-aquatint",
+      "evidence": [
+        "Carborundum Aquatint // September: Carborundum aquatint is a painterly intaglio process whereby the various strengths of a brushmark are determined by the use of fine or coarse carborundum grit mixed in suspension with acrylic matte or gloss medium. Participants will use chip board, matt board, and plexiglass for the printing plates. Students will create an edition from a single plate as well as an edition from a multi plate image where registration is explained.",
+        "Tags: Visual Arts, Art, Workshop, Education, Printmaking, Participatory, Format, Aquatint"
+      ],
+      "existing_alternative": "Paintbrush alone implies painting; printer suggests digital output, and generic printmaking may omit the named technique.",
+      "label": "Carborundum aquatint",
+      "rationale": "The workshop explicitly uses grit-based intaglio plates; surface texture and plate-to-paper process distinguish it from painting. Fine texture must be simplified and tested.",
+      "visual": "A brush depositing a broad gritty patch on an inked plate beside a clean pulled paper corner.",
+      "event_ids": [
+        159829
+      ],
+      "review": "promising-prototype",
+      "priority": 4,
+      "priority_rationale": "Valuable rare technique; test a gritty plate and pulled print before choosing this over broader intaglio artwork.",
+      "saved_report_event_count": 1,
+      "saved_report_venue_count": 1
+    },
+    {
+      "category": "format",
+      "concept": "format-fashion-show",
+      "evidence": [
+        "dapperQ presents Legacy: Celebrate the 11th year of New York Fashion Week’s largest LGBTQIA+ fashion show, presented by queer style platform dapperQ. The event features a happy hour hosted by Henrietta Hudson, a runway showcase with various designers, and music by M.O.",
+        "Tags: Community, Shop, Music, Art, LGBTQ, Fashion, Nightlife, After Hours, Social Good, NYFW, Format, Theater Show, Performance"
+      ],
+      "existing_alternative": "Dress depicts fashion product; sewing machine depicts production and microphone omits runway display.",
+      "label": "Runway fashion show",
+      "rationale": "Runway presentation is distinct from clothing retail or garment making.",
+      "visual": "A posed walking model on a short perspective runway with two small edge lights.",
+      "event_ids": [
+        161083
+      ],
+      "review": "promising-prototype",
+      "priority": 5,
+      "priority_rationale": "Runway setting adds the event format beyond clothing; strict anatomy, contact and proportion checks required.",
+      "saved_report_event_count": 2,
+      "saved_report_venue_count": 2
+    },
+    {
+      "category": "format",
+      "concept": "format-roast-battle",
+      "evidence": [
+        "Roast Battle League NYC: A curated lineup of New York’s best comedians competing in vicious insult battles affiliated with Jeff Ross and Brian Moses’ Roast Battle League.",
+        "Tags: Comedy, Nightlife, Comedy Show, Roast Battle, Format, Performance"
+      ],
+      "existing_alternative": "Fire is metaphorical and single microphone loses the competition format.",
+      "label": "Comedy roast battle",
+      "rationale": "A head-to-head insult contest differs from ordinary solo stand-up; needs testing to avoid reading as a rap battle.",
+      "visual": "Two facing microphones with one sharp comic speech burst between them.",
+      "event_ids": [
+        161363
+      ],
+      "review": "promising-prototype",
+      "priority": 6,
+      "priority_rationale": "Two facing comic speakers can add competitive exchange beyond the existing stand-up icon; avoid a boxing interpretation.",
+      "saved_report_event_count": 2,
+      "saved_report_venue_count": 2
+    }
+  ],
+  "remaining": [
+    {
+      "concept": "genre-bluegrass",
+      "label": "Bluegrass",
+      "category": "genre",
+      "visual": "An open rhythmic arc linking two simplified acoustic string-instrument necks.",
+      "rationale": "Bluegrass is explicit. This ensemble-inspired visual is exploratory and must not claim a particular featured instrument; recognition testing may favor the existing art.",
+      "existing_alternative": "Banjo is an existing broad genre association but does not establish this event instrumentation; generic notes lose repertoire specificity.",
+      "evidence": [
+        "Michael Daves & Andy Falco: Together, Michael Daves and Andy Falco create a super-picker's paradise, trading hot licks on bluegrass classics and contemporary material alike. They share in the joy of collective improvisation and bring the audience along for a rollercoaster ride of musical positivity and interactive vibes.",
+        "Tags: Music, Concert, Folk Music, Bluegrass, Guitar, Live Music, Format, Performance"
+      ],
+      "event_ids": [
+        157899
+      ],
+      "review": "preserve-exploratory",
+      "priority_rationale": "Preserve explicitly supported repertoire; proposed motif remains exploratory and must not imply an unevidenced on-stage instrument.",
+      "saved_report_event_count": 10,
+      "saved_report_venue_count": 9
+    },
+    {
+      "concept": "activity-dance-fitness",
+      "category": "activity",
+      "label": "Dance fitness",
+      "visual": "Athletic dancer in sneakers taking a broad side step",
+      "rationale": "Exercise movement differs from theatrical solo dancing; avoid implying a branded class.",
+      "existing_alternative": "Broad fallback does not distinguish this supported facet.",
+      "evidence": [
+        "RETRO Dance Fitness: Come dance to classic pop tunes: Top 40, Disco, Electronic and more!",
+        "Tags: Music, Art, Dance, Free, Wellness, Fitness, Retro, Participatory, Format"
+      ],
+      "event_ids": [
+        158294,
+        161822
+      ],
+      "review": "preserve-exploratory",
+      "saved_report_event_count": 6,
+      "saved_report_venue_count": 6
+    },
+    {
+      "concept": "genre-jazz",
+      "label": "Jazz",
+      "category": "genre",
+      "visual": "A pair of syncopated musical notes with one loose improvisatory flourish.",
+      "rationale": "The genre is explicit, but an instrument-neutral motif remains exploratory and requires recognition tests; avoid treating saxophone as universal jazz.",
+      "existing_alternative": "Noto notes are generic; a saxophone misstates instrumentation when the program does not feature one.",
+      "evidence": [
+        "Steven Isaac Rice - At the Corner of Church & Broadway: From the mind and throat of Harlem-based cabaret and club performer Steven Isaac Rice, At the Corner of Church & Broadway is a musical journey telling the story of what inspired this church kid from Atlanta, GA to become the artist he is today. This show consists of Steven's many musical inspirations, including Showtunes, Jazz, Disco, and Gospel songs.",
+        "Tags: Cabaret, Broadway, Music, Jazz, New Music, Concert, Musical Theater, Nightlife, Format, Performance"
+      ],
+      "event_ids": [
+        158902,
+        159970
+      ],
+      "review": "preserve-exploratory",
+      "priority_rationale": "Preserve explicitly supported repertoire; proposed motif remains exploratory and must not imply an unevidenced on-stage instrument.",
+      "saved_report_event_count": 70,
+      "saved_report_venue_count": 51
+    },
+    {
+      "concept": "format-memoir-reading",
+      "category": "format",
+      "label": "Memoir reading",
+      "visual": "A book beside a speaking profile and a small personal portrait.",
+      "rationale": "Creative-nonfiction readings differ from peer book discussion.",
+      "existing_alternative": "Book already represents reading; genre-specific motif needs recognition testing.",
+      "evidence": [
+        "Book Launch: Nita Noveno: A reading and discussion with Nita Noveno regarding her hybrid memoir, Mud on the Moon, featuring a conversation with Gina Apostol.",
+        "Tags: Community, Literature, Author Event, Reading, Writing, Format, Performance"
+      ],
+      "event_ids": [
+        159152
+      ],
+      "review": "existing-emoji-or-icon-first",
+      "priority_rationale": "Existing pencil, boat, book or microphone already communicates much of the concept; demonstrate an actual recognition gain before adding artwork.",
+      "saved_report_event_count": 2,
+      "saved_report_venue_count": 2
+    },
+    {
+      "concept": "activity-coloring",
+      "label": "Coloring",
+      "category": "activity",
+      "visual": "A colored pencil filling a broad outlined flower on a sheet.",
+      "rationale": "Filling existing outlines differs from freehand drawing and painting.",
+      "existing_alternative": "Palette conveys art generally; existing pencil may suffice unless the outlined sheet improves recognition.",
+      "evidence": [
+        "Adult Coloring: Adult coloring may reduce stress and anxiety, improve focus, enhance mindfulness, and promote relaxation and better sleep.",
+        "Tags: Community, Art, Free, Wellness, Crafts, Arts and Crafts, Open Practice, Participatory, Adult Coloring, Format"
+      ],
+      "event_ids": [
+        159526
+      ],
+      "review": "existing-emoji-or-icon-first",
+      "priority_rationale": "Existing pencil, boat, book or microphone already communicates much of the concept; demonstrate an actual recognition gain before adding artwork.",
+      "saved_report_event_count": 1,
+      "saved_report_venue_count": 1
+    },
+    {
+      "category": "format",
+      "concept": "format-vocal-recital",
+      "evidence": [
+        "Carlo Vistoli & Giulio Zappa Recital: Italian singer Carlo Vistoli makes his North American recital debut with a program of arias, art songs, and lieder. Accompanied by pianist Giulio Zappa, the performance takes place in the intimate setting of the Board of Officers Room.",
+        "Tags: Music, Opera, Classical Music, Education, Concert, Recital, Format, Performance"
+      ],
+      "existing_alternative": "Microphone is broad and piano denotes accompaniment; theater masks lose the recital setting.",
+      "label": "Vocal recital",
+      "rationale": "Art-song and aria recital is voice-led; the format differs from full staged opera or a generic band concert.",
+      "visual": "A standing singer beside an open score on a music stand with one broad sound arc.",
+      "event_ids": [
+        159822
+      ],
+      "review": "preserve-exploratory",
+      "saved_report_event_count": 1,
+      "saved_report_venue_count": 1
+    },
+    {
+      "concept": "format-boat-party",
+      "category": "format",
+      "label": "Boat party",
+      "visual": "A compact boat beneath two music notes.",
+      "rationale": "Explicit social parties aboard boats differ from sightseeing.",
+      "existing_alternative": "Boat is already strong; check whether musical detail adds clarity.",
+      "evidence": [
+        "Saturday Evening Boat Cruises: Sunset Serenade: Yacht Cruise on the Hudson: Experience a sensational boat cruise on the Hudson River with vibrant music, top-notch drinks, and panoramic views of the New York City skyline. Dance beneath the stars on the open-air deck or enjoy the climate-controlled interior during this three-hour evening excursion.",
+        "Tags: Music, Hudson River, Party, Outdoor, Nightlife, Boat Cruise, Format, Social"
+      ],
+      "event_ids": [
+        160184
+      ],
+      "review": "existing-emoji-or-icon-first",
+      "priority_rationale": "Existing pencil, boat, book or microphone already communicates much of the concept; demonstrate an actual recognition gain before adding artwork.",
+      "saved_report_event_count": 3,
+      "saved_report_venue_count": 2
+    },
+    {
+      "category": "format",
+      "concept": "format-sound-bath",
+      "evidence": [
+        "Sound Bath at the Greenway Botanical Garden: Join Brooklyn Greenway Initiative for a free Sound Bath Meditation on the elevated boardwalk of the Greenway Botanical Garden.",
+        "Tags: Music, Free, Wellness, Meditation, Sound Bath, Open Practice, Participatory, Mind-Body, Format"
+      ],
+      "existing_alternative": "Seated meditation omits the sound experience and singing-bowl art would assert unsupported instrumentation.",
+      "label": "Sound bath meditation",
+      "rationale": "Sound-bath listening is explicit without named instruments; figure and waves preserve the activity without inventing bowls or gongs.",
+      "visual": "A reclining person on a mat beneath two broad concentric sound arcs.",
+      "event_ids": [
+        160870
+      ],
+      "review": "preserve-exploratory",
+      "consolidation": "Related to activity-sound-bath in earlier batches; consolidate under one sound-meditation family editorially, but preserve the evidence distinction between unspecified sonic practice and explicitly identified singing bowls. No DB fuzzy merge performed.",
+      "saved_report_event_count": 3,
+      "saved_report_venue_count": 3
+    },
+    {
+      "concept": "activity-circuit-training",
+      "category": "activity",
+      "label": "Circuit training",
+      "visual": "Three simple exercise stations around a circular route",
+      "rationale": "Station-based exercise differs from one posture; simplify and test recognition.",
+      "existing_alternative": "Broad fallback does not distinguish this specific supported facet.",
+      "evidence": [
+        "Rise&Restore Circuit Training: This circuit training class combines bodyweight resistance training and conditioning to provide you with a dynamic full body workout.",
+        "Tags: Community, Free, Sports, Wellness, Fitness, Circuit Training, Participatory, Format"
+      ],
+      "event_ids": [
+        161802
+      ],
+      "review": "preserve-exploratory",
+      "saved_report_event_count": 4,
+      "saved_report_venue_count": 4
+    },
+    {
+      "concept": "genre-house",
+      "label": "House music",
+      "category": "genre",
+      "visual": "A compact drum machine with four evenly spaced illuminated beat pads.",
+      "rationale": "Explicit house music supports a four-on-the-floor rhythm exploration; this may read as generic electronic music and needs recognition testing.",
+      "existing_alternative": "DJ decks specify performance equipment, not house; Noto notes are broader still.",
+      "evidence": [
+        "Teksupport: Chris Stussy (open to close) SOLD OUT: Chris Stussy performs an open to close set at the Brooklyn Army Terminal.",
+        "Tags: Music, Nightlife, House Music, Electronic Music, Club Night, Format, Social"
+      ],
+      "event_ids": [
+        162220
+      ],
+      "review": "preserve-exploratory",
+      "priority_rationale": "Preserve explicitly supported repertoire; proposed motif remains exploratory and must not imply an unevidenced on-stage instrument.",
+      "saved_report_event_count": 25,
+      "saved_report_venue_count": 19
+    },
+    {
+      "concept": "genre-surf-rock",
+      "label": "Surf rock",
+      "category": "genre",
+      "visual": "An electric-guitar silhouette with a broad reverb ripple behind its body.",
+      "rationale": "Reverb-drenched instrumental surf rock is explicit; the genre motif needs recognition testing and does not establish a featured guitar assignment.",
+      "existing_alternative": "Music notes are safe; surfing falsely suggests a sport, while generic guitar loses the genre.",
+      "evidence": [
+        "The Bakersfield Breakers: The Bakersfield Breakers perform classic guitar-driven sound of 1950’s Bakersfield and the driving tunes of 1960’s surf rock.",
+        "Tags: Music, Art, Rock, Concert, Vintage, Instrumental, Surf Rock, Live Music, Format, Performance"
+      ],
+      "event_ids": [
+        162291
+      ],
+      "review": "preserve-exploratory",
+      "priority_rationale": "Preserve explicitly supported repertoire; proposed motif remains exploratory and must not imply an unevidenced on-stage instrument.",
+      "saved_report_event_count": 3,
+      "saved_report_venue_count": 2
+    },
+    {
+      "concept": "genre-country-rock",
+      "label": "Country rock",
+      "category": "genre",
+      "visual": "Two joined musical notes with a warm rhythmic accent",
+      "rationale": "Genre explicit but instrument-neutral recognition unproven.",
+      "existing_alternative": "Retain event Unicode until specific art passes recognition and semantic review.",
+      "evidence": [
+        "The Bakersfield Breakers: The Bakersfield Breakers perform classic guitar-driven sound of 1950’s Bakersfield and the driving tunes of 1960’s surf rock.",
+        "Tags: Music, Art, Rock, Concert, Vintage, Instrumental, Surf Rock, Live Music, Format, Performance"
+      ],
+      "event_ids": [
+        162291
+      ],
+      "review": "preserve-exploratory",
+      "priority_rationale": "Preserve explicitly supported repertoire; proposed motif remains exploratory and must not imply an unevidenced on-stage instrument.",
+      "saved_report_event_count": 2,
+      "saved_report_venue_count": 1
+    },
+    {
+      "concept": "genre-rock",
+      "category": "genre",
+      "label": "Rock music",
+      "visual": "Strong accented musical note",
+      "rationale": "Electric guitar exists but is not universal evidence; motif requires recognition testing.",
+      "existing_alternative": "Broad fallback does not distinguish this specific supported facet.",
+      "evidence": [
+        "Mad Staggers (featuring Chris Campion): Chris Campion performs an eclectic mix of original and cover songs.",
+        "Tags: Music, Art, Rock, Concert, Artist Residency, Live Music, Format, Performance"
+      ],
+      "event_ids": [
+        162294
+      ],
+      "review": "preserve-exploratory",
+      "priority_rationale": "Preserve explicitly supported repertoire; proposed motif remains exploratory and must not imply an unevidenced on-stage instrument.",
+      "saved_report_event_count": 3,
+      "saved_report_venue_count": 3
+    },
+    {
+      "concept": "genre-folk",
+      "label": "Folk music",
+      "category": "genre",
+      "visual": "Explore a plucked-string curve beside one plain storytelling note.",
+      "rationale": "Folk is explicitly named in the program.",
+      "existing_alternative": "Generic notes remain valid; this motif needs recognition testing and must not assume acoustic instrumentation.",
+      "evidence": [
+        "James Maddock: NYC-based singer/songwriter James Maddock performs folk and Americana-influenced music.",
+        "Tags: Music, Concert, Folk Music, Americana, Live Music, Format, Performance"
+      ],
+      "event_ids": [
+        162301
+      ],
+      "review": "preserve-exploratory",
+      "priority_rationale": "Preserve explicitly supported repertoire; proposed motif remains exploratory and must not imply an unevidenced on-stage instrument.",
+      "saved_report_event_count": 4,
+      "saved_report_venue_count": 4
+    },
+    {
+      "concept": "genre-americana",
+      "label": "Americana music",
+      "category": "genre",
+      "visual": "Explore an acoustic sound-hole ring with a branching musical note.",
+      "rationale": "Explicit Americana programming merits genre exploration, but there is no universal symbol and acoustic guitar cannot be assumed as actual lineup.",
+      "existing_alternative": "Noto guitar/notes are broad; motif must distinguish folk/country and not duplicate proposed acoustic-guitar art.",
+      "evidence": [
+        "James Maddock: NYC-based singer/songwriter James Maddock performs folk and Americana-influenced music.",
+        "Tags: Music, Concert, Folk Music, Americana, Live Music, Format, Performance"
+      ],
+      "event_ids": [
+        162301
+      ],
+      "review": "preserve-exploratory",
+      "priority_rationale": "Preserve explicitly supported repertoire; proposed motif remains exploratory and must not imply an unevidenced on-stage instrument.",
+      "saved_report_event_count": 4,
+      "saved_report_venue_count": 3
+    },
+    {
+      "concept": "format-spoken-word",
+      "category": "format",
+      "label": "Spoken word",
+      "visual": "Microphone beside three flowing spoken lines",
+      "rationale": "Spoken poetry deserves exploration; uncertain distinction from general speech.",
+      "existing_alternative": "Broad fallback does not distinguish this specific supported facet.",
+      "evidence": [
+        "Puma Perl Band / SoulCake: Poetry and rock and roll performance featuring Puma Perl and friends, plus Joff Wilson's SoulCake.",
+        "Tags: Music, Literature, Rock, Spoken Word, Concert, Live Music, Format, Performance"
+      ],
+      "event_ids": [
+        162302
+      ],
+      "review": "existing-emoji-or-icon-first",
+      "priority_rationale": "Existing pencil, boat, book or microphone already communicates much of the concept; demonstrate an actual recognition gain before adding artwork.",
+      "saved_report_event_count": 4,
+      "saved_report_venue_count": 4
+    },
+    {
+      "concept": "genre-rock-and-roll",
+      "label": "Rock and roll",
+      "category": "genre",
+      "visual": "A bold paired musical-note motif with a rhythmic arc",
+      "rationale": "Genre explicit; do not invent guitar instrumentation.",
+      "existing_alternative": "Retain the source Unicode until recognizable original artwork is reviewed.",
+      "evidence": [
+        "Puma Perl Band / SoulCake: Poetry and rock and roll performance featuring Puma Perl and friends, plus Joff Wilson's SoulCake.",
+        "Tags: Music, Literature, Rock, Spoken Word, Concert, Live Music, Format, Performance"
+      ],
+      "event_ids": [
+        162302
+      ],
+      "review": "preserve-exploratory",
+      "priority_rationale": "Preserve explicitly supported repertoire; proposed motif remains exploratory and must not imply an unevidenced on-stage instrument.",
+      "saved_report_event_count": 2,
+      "saved_report_venue_count": 2
+    }
+  ],
+  "report_population": 31269,
+  "report_reviewed_events": 9919,
+  "report_stale_excluded": 2162,
+  "report_total_concepts": 713
+}

@@ -21,7 +21,7 @@ We use junction tables for fields with multiple values (e.g., event dates/times,
 - `location_instagram` - Links locations to Instagram accounts (location_id, instagram_id)
 - `events` - Events
 - `event_occurrences` - Dates and times for events
-- `tags` - Tags (name, emoji, type). `type` is either `'tag'` (curated, shown in filters) or `'keyword'` (search-only)
+- `tags` - Tags (name, scope, emoji, type), unique by `(name, scope)`. `scope` is `event` or `venue`; names alone are not identities. `type` is either `'tag'` (curated, shown in filters) or `'keyword'` (search-only)
 - `tag_hierarchy` - DAG edges (parent_tag_id, child_tag_id). A tag can have multiple parents.
 - `event_tags` - Links events to tags. Stores **all ancestor tags explicitly** so filtering is a flat set intersection — no tree traversal at query time.
 - `crawl_results` - Stores crawled_content and extracted_content per crawl. Lifecycle timestamps: `crawled_at` → `extracted_at` → `processed_at` → `merged_at` (`status='processed' AND merged_at IS NULL` = extraction succeeded but the merge tail never ran; recover with `main.py --merge-only`)

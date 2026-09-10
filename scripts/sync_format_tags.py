@@ -40,7 +40,7 @@ GENRE_HOMONYMS = et.FORMAT_TOPIC_NAMES
 
 
 def _tag_id(cur, name):
-    cur.execute("SELECT id FROM tags WHERE name=%s", (name,))
+    cur.execute("SELECT id FROM tags WHERE name=%s AND scope='event'", (name,))
     r = cur.fetchone()
     return r[0] if r else None
 
@@ -48,7 +48,7 @@ def _tag_id(cur, name):
 def _ensure_tag(cur, name, emoji):
     """Ensure a curated tag exists. Promote keyword->tag; fill emoji only if empty
     (never overwrite an existing curated emoji). Returns tag id."""
-    cur.execute("SELECT id, type, emoji FROM tags WHERE name=%s", (name,))
+    cur.execute("SELECT id, type, emoji FROM tags WHERE name=%s AND scope='event'", (name,))
     r = cur.fetchone()
     if r:
         tid, typ, em = r
@@ -98,6 +98,13 @@ def build_family(cur, conn):
                     (tid, cid),
                 )
                 (moved if existed else created).append(t)
+    from db import get_tag_hierarchy_for_export
+    from tag_hierarchy_policy import validate_hierarchy
+    try:
+        validate_hierarchy(get_tag_hierarchy_for_export(cur))
+    except Exception:
+        conn.rollback()
+        raise
     conn.commit()
     print(f"  build: root+{len(cat_id)} categories ensured")
     print(f"  moved into Format (sole parent): {len(moved)} -> {sorted(moved)}")
@@ -105,7 +112,13 @@ def build_family(cur, conn):
     print(f"  newly created leaves:            {len(created)} -> {sorted(created)}")
 
 
-def sync_event_tags(cur, conn):
+def sync_event_tags(cur, conn, event_ids=None, commit=True):
+    # Targeted reviewed repairs can share one atomic transaction without
+    # rebuilding unrelated events or committing the caller's partial work.
+    if event_ids is not None:
+        event_ids = sorted(set(event_ids))
+        if not event_ids:
+            return
     root = _tag_id(cur, et.FORMAT_ROOT_TAG)
     cat_id = {cat: _tag_id(cur, tn) for cat, (tn, _) in et.CATEGORY_TAG.items()}
     leaf_id = {t: _tag_id(cur, t) for t in et.EVENT_TYPES}
@@ -121,15 +134,19 @@ def sync_event_tags(cur, conn):
     clean_leaf_ids = [leaf_id[t] for t in et.EVENT_TYPES if t not in GENRE_HOMONYMS]
     wipe_ids = clean_leaf_ids + list(cat_id.values()) + [root]
     fmt = ",".join(["%s"] * len(wipe_ids))
-    cur.execute(f"DELETE FROM event_tags WHERE tag_id IN ({fmt})", wipe_ids)
+    scope_sql = (" AND event_id IN (" + ",".join(["%s"] * len(event_ids)) + ")"
+                 if event_ids is not None else "")
+    cur.execute(f"DELETE FROM event_tags WHERE tag_id IN ({fmt})" + scope_sql,
+                wipe_ids + (event_ids or []))
     wiped = cur.rowcount
 
     # 2) Reapply leaf + category + root from event_type for every active event.
     fmt_t = ",".join(["%s"] * len(et.EVENT_TYPES))
     cur.execute(
         f"SELECT id, event_type FROM events "
-        f"WHERE archived=0 AND suppressed=0 AND event_type IN ({fmt_t})",
-        et.EVENT_TYPES,
+        f"WHERE archived=0 AND suppressed=0 AND event_type IN ({fmt_t})" +
+        scope_sql.replace('event_id', 'id'),
+        list(et.EVENT_TYPES) + (event_ids or []),
     )
     rows = cur.fetchall()
     ins = []
@@ -150,7 +167,8 @@ def sync_event_tags(cur, conn):
             "INSERT IGNORE INTO event_tags (event_id, tag_id) VALUES (%s,%s)",
             ins[i:i + CHUNK],
         )
-    conn.commit()
+    if commit:
+        conn.commit()
     print(f"  sync: wiped {wiped} stale Format rows; applied to {len(rows)} active events "
           f"({len(ins)} tag rows inserted in chunks of {CHUNK}, dupes ignored)")
 
@@ -183,16 +201,25 @@ def main():
     run_all = not (args.build or args.sync)
 
     conn = create_connection()
-    cur = conn.cursor()
-    if run_all or args.build:
-        print("Building Format tag family...")
-        build_family(cur, conn)
-    if run_all or args.sync:
-        print("Syncing event_tags from event_type...")
-        sync_event_tags(cur, conn)
-    if args.stats or run_all:
-        print_stats(cur)
-    conn.close()
+    from dblock import write_lock
+    try:
+        with write_lock(conn, timeout=45, label='sync_format_tags'):
+            try:
+                cur = conn.cursor()
+                if run_all or args.build:
+                    print("Building Format tag family...")
+                    build_family(cur, conn)
+                if run_all or args.sync:
+                    print("Syncing event_tags from event_type...")
+                    sync_event_tags(cur, conn)
+                if args.stats or run_all:
+                    print_stats(cur)
+            except Exception:
+                conn.rollback()
+                raise
+    finally:
+        conn.close()
+
 
 
 if __name__ == "__main__":

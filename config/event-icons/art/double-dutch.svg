@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128"><title>Double Dutch</title><desc>Two turners hold a pair of orange and blue ropes around a central jumper. One rope passes overhead and the other beneath the jumper’s feet.</desc>
+<ellipse cx="64" cy="116" rx="15" ry="3" fill="#B7C4CB"/>
+<path d="M27 61C40 5 88 5 101 61" fill="none" stroke="#EFA137" stroke-width="4" stroke-linecap="round"/>
+<path d="M27 68C39 119 89 119 101 68" fill="none" stroke="#479BC5" stroke-width="4" stroke-linecap="round"/>
+<g id="turner"><path d="M12 79L8 110M18 79L22 110" fill="none" stroke="#4B657D" stroke-width="6" stroke-linecap="round"/><path d="M5 109H11V114H3Q2 111 5 109ZM19 109H25L27 114H19Z" fill="#5E4C42"/>
+<path d="M14 53V62" stroke="#D5A17A" stroke-width="5"/>
+<path d="M10 60L5 80Q14 85 23 80L19 60Z" fill="#E09A57"/><path d="M10 61L6 78 10 79 14 60Z" fill="#F8BD76"/>
+<path d="M14 64L21 72 29 68M18 62L23 66 29 61" fill="none" stroke="#D5A17A" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+<ellipse cx="14" cy="48" rx="7" ry="9" fill="#D5A17A"/><path d="M8 49C4 40 10 36 17 38Q24 39 21 47L18 42 11 43Z" fill="#605047"/></g>
+<g transform="translate(128 0) scale(-1 1)"><path d="M12 79L8 110M18 79L22 110" fill="none" stroke="#4B657D" stroke-width="6" stroke-linecap="round"/><path d="M5 109H11V114H3Q2 111 5 109ZM19 109H25L27 114H19Z" fill="#5E4C42"/>
+<path d="M14 53V62" stroke="#D5A17A" stroke-width="5"/><path d="M10 60L5 80Q14 85 23 80L19 60Z" fill="#E09A57"/><path d="M17 61L19 79 23 80 19 60Z" fill="#F8BD76"/>
+<path d="M14 64L21 72 29 68M18 62L23 66 29 61" fill="none" stroke="#D5A17A" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><ellipse cx="14" cy="48" rx="7" ry="9" fill="#D5A17A"/><path d="M8 49C4 40 10 36 17 38Q24 39 21 47L18 42 11 43Z" fill="#605047"/></g>
+<path d="M58 74L54 85 57 96M70 74L74 85 71 96" fill="none" stroke="#715C9E" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M54 94H60L61 99 51 100Q48 98 51 96ZM68 94H74L77 96Q80 99 77 100L67 99Z" fill="#ECE7E5"/><path d="M51 99L61 98V101H51ZM67 98L77 99V101H67Z" fill="#6E7B86"/>
+<path d="M55 56L47 67 40 59M73 56L81 67 88 59" fill="none" stroke="#B97954" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M60 47H68V56H60Z" fill="#B97954"/>
+<path d="M55 53L59 52Q64 56 69 52L73 54 75 62 71 63 73 76Q64 79 55 76L57 63 53 62Z" fill="#39AA9E"/><path d="M55 55L59 54 58 74 55 74 57 63 53 62Z" fill="#71CFB9"/>
+<ellipse cx="64" cy="40" rx="8" ry="10.5" fill="#B97954"/><path d="M56 43C51 31 57 26 65 27C75 26 76 36 71 42L70 34Q62 37 58 33Z" fill="#493B35"/><circle cx="72" cy="28" r="4.5" fill="#493B35"/>
+</svg>

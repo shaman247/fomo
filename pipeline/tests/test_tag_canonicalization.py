@@ -59,7 +59,7 @@ class TagCanonicalizationTests(unittest.TestCase):
 
     def test_alias_writer_rejects_invalid_update_before_mutation(self):
         cursor=MagicMock()
-        cursor.fetchone.return_value=('Music',)
+        cursor.fetchone.return_value=('Music','event')
         cursor.fetchall.return_value=[('Stand Up','Comedy')]
         with self.assertRaises(TagResolutionError):
             db.upsert_tag_alias(cursor,'standup',7)
@@ -67,7 +67,7 @@ class TagCanonicalizationTests(unittest.TestCase):
 
     def test_alias_export_targets_terminal_tag_and_retains_searchable_spelling(self):
         cursor=MagicMock()
-        cursor.fetchall.return_value=[('Punk','Brooklyn Punk'),('Punk Rock','Punk')]
+        cursor.fetchall.return_value=[('Punk','Brooklyn Punk','event'),('Punk Rock','Punk','event')]
         self.assertEqual(db.get_tag_aliases_for_export(cursor), {'Punk Rock':['Brooklyn Punk','Punk']})
 
     def test_reconciled_duplicate_crawl_rows_do_not_get_multiple_votes(self):

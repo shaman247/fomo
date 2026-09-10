@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"><title>Uilleann Pipes</title><desc>An Irish uilleann half set with a leather air bag connected to elbow bellows, a downward chanter and three drones lying horizontally from their common stock.</desc>
+<path fill="none" stroke="#455A64" stroke-width="5" stroke-linecap="round" d="M55 55Q70 60 83 43"/>
+<path fill="#49352E" d="M85 18Q102 12 110 25L117 43Q112 53 96 54L81 40Z"/>
+<path fill="#AD7156" d="M103 25L117 43Q112 53 96 54L93 43Z"/>
+<path fill="none" stroke="#49352E" stroke-width="2.5" d="M104 30L112 45Q107 49 97 50M105 37L107 45L97 47"/>
+<path fill="#C68B5E" d="M82 18Q96 12 104 24Q111 35 102 43Q90 51 80 40Q73 31 82 18Z"/>
+<path fill="#E8AF76" d="M83 21Q94 16 100 24Q105 31 100 37Q89 44 81 37Q77 30 83 21Z"/>
+<path fill="#6D4133" d="M79 26Q92 20 104 26L106 32Q94 26 78 33Z"/>
+<path fill="#546E7A" d="M19 42C24 36 39 36 46 39L56 29Q62 25 65 30L62 48Q64 55 58 61L57 76C42 86 17 83 12 68C8 56 11 47 19 42Z"/>
+<path fill="#78909C" d="M19 44C27 40 39 40 47 43L57 32Q59 30 60 32L56 49C53 55 46 59 34 60C24 60 17 66 16 71C9 60 12 49 19 44Z"/>
+<path fill="none" stroke="#90A4AE" stroke-width="2" stroke-linecap="round" d="M20 45Q34 40 45 45"/>
+<path fill="#263238" d="M55 68H68V89H55Z"/><path fill="#D8B66A" d="M55 67H59V90H55ZM65 68H69V89H65Z"/>
+<path fill="#37474F" d="M68 70H105V76H68ZM68 79H116V85H68ZM68 88H122V94H68Z"/>
+<path fill="#78909C" d="M70 70H103V72H70ZM70 79H114V81H70ZM70 88H120V90H70Z"/>
+<path fill="#D8B66A" d="M85 70H89V76H85ZM99 69H105V77H99ZM94 79H98V85H94ZM110 78H116V86H110ZM103 88H107V94H103ZM116 87H122V95H116Z"/>
+<g transform="rotate(-13 61 39)"><path fill="#263238" d="M58 34H65L67 114Q63 117 56 114Z"/><path fill="#546E7A" d="M58 36H61L60 112H56Z"/><path fill="#D8B66A" d="M56 35H67V42H56ZM55 110H68V117H55Z"/><g fill="#B0BEC5"><circle cx="62" cy="57" r="1.8"/><circle cx="62" cy="67" r="1.8"/><circle cx="62" cy="77" r="1.8"/><circle cx="62" cy="87" r="1.8"/><circle cx="62" cy="97" r="1.8"/></g></g></svg>

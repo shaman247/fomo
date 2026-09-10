@@ -22,11 +22,10 @@ function harness() {
         requestAnimationFrame: fn => fn(),
         document: { getElementById: id => id === 'map-container' ? { getBoundingClientRect: () => rect } : null },
         Utils: { isMobileLayout: () => false,
-            getCurrentTheme: () => theme, getCurrentThemeBase: () => theme,
+            getCurrentTheme: () => theme,
             stripCountryFlagEmoji: value => value,
             parseLocationKey: key => { const [lat, lng] = key.split(',').map(Number); return { lat, lng }; }
         },
-        Themes: { resolve: () => ({}), transformKey: () => theme },
         ColorUtils: { oklchHueFromHex: () => 30, oklchToHex: () => '#123456' },
         IconManager: {
             resolve: event => ({ id: event?.icon_id || event?.emoji || 'fallback', revision: '1' }),

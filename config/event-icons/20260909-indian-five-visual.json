@@ -1,0 +1,174 @@
+{
+  "date": "2026-09-09",
+  "rounds": 2,
+  "provenance": "Original SVG geometry; accepted setar, Hammond organ and conga used as family references. No copied/traced artwork, embedded photos, logos or fonts.",
+  "structural_references": [
+    {
+      "url": "https://www.metmuseum.org/art/collection/search/503529",
+      "use": "Sitar construction: long fretted neck, main and sympathetic strings, gourd and upper resonator. Museum photograph visually inspected in browser; not copied."
+    },
+    {
+      "url": "https://emuseum.nmmusd.org/objects/4716/tambura",
+      "use": "National Music Museum: four strings, no frets; corroborated by V&A tambura description."
+    },
+    {
+      "url": "https://www.vam.ac.uk/content/exhibitions/display-musical-wonders-of-india/tambura/",
+      "use": "Four open drone strings; tanpura identity distinct from fretted melody lute."
+    },
+    {
+      "url": "https://www.binaswar.com/manual-instruction/",
+      "use": "Manufacturer keyboard, back bellows and front stops; text and instrument photo visually inspected."
+    },
+    {
+      "url": "https://www.metmuseum.org/essays/musical-instruments-of-the-indian-subcontinent",
+      "use": "Bayan metal/pottery and offset syahi versus smaller wooden dahini/dayan. Sarangi skin resonator, three main strings and sympathetic strings."
+    },
+    {
+      "url": "https://www.metmuseum.org/art/collection/search/503204",
+      "use": "Indian sarangi short neck, skin soundboard, main/sympathetic peg banks and bowed technique. Museum photograph visually inspected; not copied."
+    }
+  ],
+  "reviews": [
+    {
+      "icon_id": "instrument-sitar",
+      "source_sha256": "e65adb5c268029ceb40771cba2a1636c7523bca362b67001177a4031308065f1",
+      "reviewer_mode": "creator-critical-pass",
+      "blind_recognition": "Creator knew the subjects; unlabeled native panels were inspected in a distinct critique, not an independent recognition study.",
+      "evidence": {
+        "packet": ".scratch/icon-indian-five-20260909/review-v2",
+        "sizes": [
+          16,
+          24,
+          32,
+          128
+        ],
+        "backgrounds": [
+          "light",
+          "dark"
+        ],
+        "actual_renderer": ".scratch/icon-indian-five-20260909/gallery-v2/render-verification.json"
+      },
+      "issues": [
+        {
+          "severity": "material",
+          "location": "main strings and pegs",
+          "observation": "First draft simplified the main string/peg layout too far.",
+          "revision": "Added seven main string runs and seven main pegs, distinct from the sympathetic peg bank.",
+          "status": "resolved"
+        }
+      ],
+      "decision": "pass",
+      "limitations": [
+        "Seven main strings/pegs, fretted neck and upper resonator checked. Sympathetic peg and fret counts are reduced for pictogram legibility; individual wires merge at 16px. Acoustic gourd sitar, not a solid-body zitar."
+      ]
+    },
+    {
+      "icon_id": "instrument-tanpura",
+      "source_sha256": "11fc0f4114805d2007cea9bdd884406d7bf49d3c923c3f81795fbfd8b8784438",
+      "reviewer_mode": "creator-critical-pass",
+      "blind_recognition": "Creator knew the subjects; unlabeled native panels were inspected in a distinct critique, not an independent recognition study.",
+      "evidence": {
+        "packet": ".scratch/icon-indian-five-20260909/review-v2",
+        "sizes": [
+          16,
+          24,
+          32,
+          128
+        ],
+        "backgrounds": [
+          "light",
+          "dark"
+        ],
+        "actual_renderer": ".scratch/icon-indian-five-20260909/gallery-v2/render-verification.json"
+      },
+      "issues": [],
+      "decision": "pass",
+      "limitations": [
+        "Fretless neck, four strings/pegs and large rounded body checked. At 16px shares the broad lute family with sitar/setar; plain neck, four pegs and absence of an upper resonator distinguish the larger render."
+      ]
+    },
+    {
+      "icon_id": "instrument-harmonium",
+      "source_sha256": "ffbfe6ef0aeda75f26d9a982bc71252a27d1bc7444131ab106a5a37ea946931c",
+      "reviewer_mode": "creator-critical-pass",
+      "blind_recognition": "Creator knew the subjects; unlabeled native panels were inspected in a distinct critique, not an independent recognition study.",
+      "evidence": {
+        "packet": ".scratch/icon-indian-five-20260909/review-v2",
+        "sizes": [
+          16,
+          24,
+          32,
+          128
+        ],
+        "backgrounds": [
+          "light",
+          "dark"
+        ],
+        "actual_renderer": ".scratch/icon-indian-five-20260909/gallery-v2/render-verification.json"
+      },
+      "issues": [
+        {
+          "severity": "material",
+          "location": "keyboard plane",
+          "observation": "First draft keys read vertically against the wooden case.",
+          "revision": "Projected white/black keys onto a sloping top plane continuous with the case perspective.",
+          "status": "resolved"
+        }
+      ],
+      "decision": "pass",
+      "limitations": [
+        "Keyboard plane, black-key groups, stop knobs, rear bellows and body perspective checked against manufacturer layout. Key/stop counts are abstracted; exact reed configuration and model are not claimed."
+      ]
+    },
+    {
+      "icon_id": "instrument-tabla",
+      "source_sha256": "4c5a6ac3b3456eee4fe1ab144dc2c0c7d23e3eec7cc23755ad4a0cd0137b6004",
+      "reviewer_mode": "creator-critical-pass",
+      "blind_recognition": "Creator knew the subjects; unlabeled native panels were inspected in a distinct critique, not an independent recognition study.",
+      "evidence": {
+        "packet": ".scratch/icon-indian-five-20260909/review-v2",
+        "sizes": [
+          16,
+          24,
+          32,
+          128
+        ],
+        "backgrounds": [
+          "light",
+          "dark"
+        ],
+        "actual_renderer": ".scratch/icon-indian-five-20260909/gallery-v2/render-verification.json"
+      },
+      "issues": [],
+      "decision": "pass",
+      "limitations": [
+        "Larger metal bayan with offset syahi and smaller wooden dayan with centered syahi, lacing and tuning blocks checked. Fine leather straps simplify at 16px; no sticks, generic skin drums or identical drum bodies."
+      ]
+    },
+    {
+      "icon_id": "instrument-sarangi",
+      "source_sha256": "accf588b187f20dc0d277a978ac9bde2418914fd1779fc9ee6c85fd026538a1b",
+      "reviewer_mode": "creator-critical-pass",
+      "blind_recognition": "Creator knew the subjects; unlabeled native panels were inspected in a distinct critique, not an independent recognition study.",
+      "evidence": {
+        "packet": ".scratch/icon-indian-five-20260909/review-v2",
+        "sizes": [
+          16,
+          24,
+          32,
+          128
+        ],
+        "backgrounds": [
+          "light",
+          "dark"
+        ],
+        "actual_renderer": ".scratch/icon-indian-five-20260909/gallery-v2/render-verification.json"
+      },
+      "issues": [],
+      "decision": "pass",
+      "limitations": [
+        "Short broad unfretted neck, three melody strings/main pegs, sympathetic-peg bank, pale skin-covered waisted lower body, bridge and separate bow checked against museum reference. Sympathetic strings/pegs are abbreviated; not Nepalese sarangi, sarod or violin."
+      ]
+    }
+  ]
+}

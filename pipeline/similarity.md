@@ -1,165 +1,219 @@
-# Offline similarity model
+# Content similarity and constituent matching
 
-`similarity.py` builds a shared 96-dimensional content space for events, places,
-and tags from a consistent, read-only MariaDB snapshot. It uses the full canonical
-event history, rather than only the currently exported events. No API calls,
-user behavior collection, DB writes, or new database tables are required.
+The model represents user profiles, venue programming, and tags as sets of
+constituents. Matching uses the closest pair, never an aggregate centroid. The
+browser keeps preferences on the device; training reads canonical public event
+content without user behavior, API inference calls, or database writes.
 
-```sh
-./venv/bin/python pipeline/similarity.py
-```
+## Build and refresh
 
-Dependencies: the project venv's NumPy and SciPy. No scikit-learn or model download
-is needed. The active city comes from `FOMO_CITY` and `pipeline/city_config.py`.
-The build generates `src/data/similarity/`; the normal frontend build copies it to
-`dist/data/similarity/`. Publishing uses the existing full-site upload. Training
-and building do not deploy anything. A fresh checkout without model artifacts
-still supports exact preference ranking and interest search.
-
-For reproducible experiments without another database read:
+The production builder uses a local sentence encoder in an isolated environment.
+It does not install packages in the shared pipeline venv:
 
 ```sh
-./venv/bin/python pipeline/similarity.py \
-  --snapshot .scratch/similarity/snapshot.json.gz \
-  --output .scratch/similarity/experiment-public \
-  --workspace .scratch/similarity/experiment
+./venv/bin/python scripts/build_similarity.py --setup
+./venv/bin/python scripts/build_similarity.py \
+  --cases .claude/notes/similarity-relevance.json \
+  --baseline .scratch/similarity-constituents/baseline
+./venv/bin/python pipeline/similarity_health.py --report .scratch/similarity/health.json
 ```
 
-The scratch snapshot is local and gitignored. It includes canonical event/place
-descriptions and tag relationships, with no user, credential or feedback tables.
-Default diagnostics are in `.scratch/similarity/report.json`; the full vectors
-and database entity IDs are in `.scratch/similarity/vectors.npz`.
+Setup installs `pipeline/requirements-similarity.txt` in `.scratch/similarity-runtime`.
+The encoder downloads once into `.scratch/similarity/encoder-cache`. Its weights
+are pinned to `sentence-transformers/all-MiniLM-L6-v2` revision
+`1110a243fdf4706b3f48f1d95db1a4f5529b4d41`; remote model code is disabled. Event text
+is encoded locally. Cached weights load without network metadata requests; only
+missing weights require a download. NumPy/SciPy-only experiments remain available using
+`./venv/bin/python pipeline/similarity.py --encoder lexical`, but that challenger
+regressed in the initial evaluation and is not the recommended release model.
 
-## Training
+The build exports `src/data/similarity/`; the normal frontend build copies it to
+`dist/data/similarity/`. Publishing uses the existing full-site upload. Building
+does not deploy. A checkout without artifacts still supports exact preferences.
+The active deployment comes from `FOMO_CITY` and `pipeline/city_config.py`.
 
-- Read **all** canonical events, places, tags/keywords, their relationships, and
-  the tag hierarchy in a repeatable-read, read-only transaction. Suppressed events
-  are counted in the report but excluded from fitting. Archived events remain.
-  Crawl tables are not extra training documents: they duplicate canonical events.
-- Represent each event/place using its name, the first 1,600 characters of its
-  description, curated tags, and words from its keyword tags. Names receive three
-  word counts, description words one, and tag-name words two. Text receives
-  sublinear term-frequency and corpus inverse-document-frequency weighting.
-- Remove inherited ancestor tags when a more specific tag is attached. Exclude
-  configured geographic tags and the Neighborhood hierarchy from semantic
-  features and tag vectors. Coordinates and addresses are never features.
-  Explicit geographic preferences still work through the exact matcher.
-- Normalize curated-tag and text channels separately, with weights 0.8 and 0.6.
-  Retain all observed curated features and up to 30,000 text features appearing
-  in at least five documents and fewer than 65% of documents.
-- Fit randomized truncated SVD (seed 17, 12 oversampling dimensions, two power
-  iterations), and unit-normalize the projected vectors. Implementation uses
-  [SciPy sparse matrices](https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csr_matrix.html)
-  and [NumPy SVD](https://numpy.org/doc/stable/reference/generated/numpy.linalg.svd.html).
-  No dense all-pairs similarity matrix is materialized.
-- A place vector combines 25% of its intrinsic profile and 75% of its mean event
-  programming. Repeated normalized event names at the same place receive one
-  programming vote. Places without event history use their intrinsic profile.
-  Place audience tags never flow back into event vectors.
-- Tag and keyword vectors are normalized centroids of their attached canonical
-  event/place vectors (place contributions weight 0.25). Unsupported and excluded
-  tags have zero vectors. All tag/keyword vectors remain in the offline artifact;
-  only supported curated tags are exported as suggested interests.
+`--snapshot`, `--output`, and `--workspace` support reproducible candidates. Save
+the previous manifest, report, vectors and snapshot in a separate workspace before
+comparison. `--baseline` must not be the workspace being overwritten. A workspace
+file lock prevents simultaneous builds from changing the same private artifacts.
+A reused snapshot retains its capture timestamp; a new build timestamp does not
+make old data fresh.
 
-This is unsupervised content similarity, not measured popularity or an engagement
-prediction model. Rare tags, broad tags and mixed-program venues can produce
-loose matches. The initial diagnostics are retrieval smoke checks, not a held-out
-relevance benchmark. Changes to weights should be checked against human relevance
-judgments before claiming improvements in recommendation quality.
+## Leaf representations
 
-## Browser behavior
+- Read all canonical events, places, tags, relationships and hierarchy in a
+  repeatable-read, read-only transaction. Include historical events and exclude
+  suppressed events. Raw crawl rows are not additional training documents.
+- Encode each event/place's name, the first 1,600 description characters and
+  curated tag names, subject to the encoder's token limit. Coordinates, addresses,
+  excluded geographic tags and the Neighborhood hierarchy are not features.
+- Encode a tag's own name as its semantic anchor. Unsupported and geographic tags
+  stay unavailable. No invented tag definitions are added to the database.
+- Fit a shared, uncentered 96-dimensional projection of the encoder's 384-dimensional
+  output using the canonical entity corpus. This compresses individual content
+  vectors; it does not average distinct interests or programs. Save the projection
+  for repeatable inference. Model quality is evaluated after this compression.
+- Cache encoder outputs by text plus pinned encoder revision. Subsequent refreshes
+  encode only new or changed text, then rebuild the shared projection and aggregates.
+  Never mix vectors from independently fitted projections.
 
-`SimilarityModel` fetches nothing until a user has a non-search preference or opens
-the interests editor. The core file supplies place and curated-tag vectors first.
-Active-event vectors load in the background in batches of at most 2,048 events,
-with two concurrent requests. Historical-event shards load only for saved event
-preferences absent from the active set. Preferences remain in local storage.
+The lexical challenger retains weighted TF-IDF and randomized SVD for comparison.
+It removes inherited ancestor features, weights curated/text channels 0.8/0.6,
+and retains all curated features plus up to 30,000 supported word features.
 
-The existing `placeKey` normalization (name + address) bridges database place IDs
-to exports that omit IDs. The offline artifact keeps the DB IDs. A renamed place
-currently needs its saved preference reselected; moving to exported stable place
-IDs would remove this existing limitation.
+## Aggregates and scoring
 
-The positive and negative profiles are separately normalized sums of known liked
-and disliked entity vectors. For a unit event vector `e`, inferred affinity is:
+An event has its individual content vector. A place with programming has actual
+canonical event examples; a place without programming uses its intrinsic profile.
+A tag keeps its own semantic anchor, the anchors of all supported descendant
+branches, and examples of its attached events. Ancestor membership is expanded
+without double-counting an entity. Venue audience tags never flow into event
+features or new-event fallback.
+
+The compact mode retains up to **12 event examples per aggregate**. Repeated
+normalized event names at the same location contribute one example, preferring
+active and then more recent records. Deterministic farthest-first selection keeps
+actual examples of distinct programming, rather than generating averaged cluster
+centers. Near-identical examples can stop selection early. All supported descendant
+tag anchors remain; normalized public aliases union constituents and sum support.
+
+This is an approximation to matching every historical event: a small set can miss
+niche programs. `--max-constituents 0` keeps all distinct series for offline comparison
+but substantially increases payloads and work. The user-approved default is compact
+matching. The same maximum-pair rule applies on both sides of a comparison, including
+candidate places/tags and the diversity penalty for suggested interest chips.
+
+Liked and disliked profiles are separate unions of constituent vectors. For event
+or aggregate `x`, compute maximum cosine against each profile, then:
 
 ```
-max(0, dot(e, liked_profile)) - max(0, dot(e, disliked_profile))
+positive_strength = max(0, (closest_positive - 0.35) / 0.65)
+negative_strength = max(0, (closest_negative - 0.55) / 0.45)
+affinity = positive_strength - negative_strength
+rank = 100 * exact_preference_sum + 20 * affinity + existing_baseline
 ```
 
-Its range is [-1, 1]. Ranking is `100 * exact_preference_sum + 20 * affinity +
-existing_baseline`. A one-point exact-preference advantage cannot be reversed
-by the inferred term and baseline. Existing date, search, tag and viewport
-eligibility rules still run before ranking.
+The higher negative threshold limits penalties from generic thematic overlap.
+These are conservative operating defaults, not calibrated probabilities. Thresholds
+are stored in the manifest/core and evaluation report. Exact preferences remain
+stronger than inferred scores. Date, search, tag and viewport eligibility still
+run before ranking. Adding an unrelated preference cannot dilute a previous match.
+Broad profiles are scored in small asynchronous slices; exact ranking is available
+while scores are prepared. Profile edits discard stale work, and score arrival
+invalidates map/list caches.
 
-New events absent from the model use an inverse-support-weighted mean of their
-own known curated-tag vectors. Search phrases remain exact. A missing model,
-unavailable shard, unsupported preference or schema/city mismatch falls back to
-the available exact matches. Loading vectors invalidates cached map/list scores.
+## New events
 
-The empty interest finder suggests eligible loaded places/events or available
-curated tags. It omits every already-rated entity, subtracts negative affinity,
-and applies a cosine redundancy penalty when choosing up to six chips. Profiles
-without usable positive vectors start with coverage-based, diverse suggestions;
-coverage is not presented as popularity. Chips are only saved on explicit action.
+The ordinary crawl → extract → merge → export flow makes new events immediately
+eligible for display and exact preference matching. Before the next model refresh,
+their known tag constituents provide temporary inferred scores, without averaging
+multiple tags. Events with no known semantic tags get no inferred boost or penalty.
+A new-event like/dislike still remains exact-only until that event has a model vector.
+New tags and places likewise need a refresh for full semantic preference propagation.
 
-## Artifact and refresh contract
+The encoder cache makes refreshes incremental at the text-encoding stage. **A
+per-crawl projection/publication hook is not installed**: the ordinary data uploader
+does not publish model shards. Saved projection files enable future incremental
+projection in a fixed generation, but such a hook must update aggregate membership
+and publishing consistently. Until then, weekly/coverage-triggered model refreshes
+and the tag fallback remain the production contract.
 
-Vectors are signed int8, scaled by 127, packed row-major as base64 and renormalized
-after decoding. Every block contains ordered string `ids` and `vectors` fields.
-The core adds corpus support counts for candidate selection. The manifest has a
-schema version, domain, dimension count, content generation, timestamp, active
-chunk list and historical shard list. History shards use `floor(event_id / 2048)`;
-active chunks use consecutive groups, so sparse IDs do not create tiny requests.
+## Artifact and loading contract
 
-Each complete generation lives in an immutable content-digest directory. The
-manifest pointer is replaced last; the previous generation remains usable by
-cached clients. The digest covers vectors, public metadata, entity IDs and active
-IDs. Model artifacts carry no descriptions or private pipeline notes.
+Schema 2 stores signed int8 unit vectors scaled by 127, packed row-major as base64.
+Aggregate blocks have unique string `ids`, `offsets` of length `ids.length + 1`,
+packed constituent vectors, and support counts. Empty ranges represent unavailable
+vectors. The browser renormalizes decoded vectors and interns identical constituents.
+Schema 1 remains readable for rollback; its saved aggregates retain their legacy
+single-vector representation.
 
-Rebuild after substantial database/tag changes and before a frontend release that
-should include them. This command is deliberately independent of every crawl:
-ordinary pipeline runs keep their current cost, and newer events use the fallback
-until the next model build. No recurring automation is installed. Keep old model
-generation directories during deployment; prune them only after cached clients
-can no longer reference them.
+The core includes topic/branch anchors and place metadata. It loads only when a
+semantic preference or interest lookup needs it. Concrete examples load lazily:
 
-## Verification
+- Active events: consecutive chunks of at most 2,048 events, two concurrent requests.
+- Historical saved events: `floor(event_id / 2048)` shards as needed.
+- Venue examples: batches of 128 place identities, fetched for selected or suggested places.
+- Tag examples: batches of 64 tag identities, fetched for selected or suggested tags.
 
-### Internal model explorer
+Aggregate downloads use two workers per request group. Missing shards keep exact
+ranking available and retry on later edits/lookups. Profile and suggestion scoring
+use the same constituent rule. The place key remains normalized name + address;
+renamed venues need their saved preference reselected until stable exported place
+IDs and preference migration are implemented.
+
+Generations are immutable content-digest directories. Build in a private staging
+directory, validate the relevance gate, install complete files, and replace the
+manifest last. Repeated builds verify existing bytes instead of rewriting them.
+The full-site uploader transfers nested assets before parent manifests and stops
+on failure; uploaded files are atomically renamed. Keep workspace and output on
+the same filesystem for atomic directory rename. Retain old generations for cached
+clients and rollback; never prune them during a refresh.
+
+## Quality evaluation and release procedure
+
+The initial corpus-specific judgments are in `.claude/notes/similarity-relevance.json`:
+180 assistant-authored topic judgments across 10 cases, including mixed preferences,
+a parent tag and the known Black History Month false matches. They are regression
+cases, **not independent human preference data**. They include historical candidates;
+frontend date eligibility is tested separately. Some labeled events can also be
+training constituents, so these metrics do not establish out-of-sample quality.
+
+```sh
+./venv/bin/python pipeline/similarity_eval.py \
+  --workspace .scratch/similarity \
+  --cases .claude/notes/similarity-relevance.json \
+  --baseline .scratch/similarity-constituents/baseline \
+  --report .scratch/similarity/evaluation-comparison.json --gate
+```
+
+Metrics include NDCG@5, pairwise ordering accuracy, wrong-first-result rate, and
+per-query rankings. The comparative gate rejects aggregate ranking regressions
+beyond 0.005 or an increased wrong-first-result rate. Without a baseline, it requires
+NDCG@5 ≥ 0.9 and no wrong first result. Inspect per-query regressions too: an overall
+improvement is not proof that every topic improved. Empty or invalid evaluations fail.
+Passing `--cases` to the builder evaluates before replacing the public manifest;
+failed candidates remain inspectable in their private workspace.
+
+Unseen authored text probes are committed separately and use the saved projection
+without refitting. They test cold-start semantics, not human preference satisfaction:
+
+```sh
+.scratch/similarity-runtime/bin/python pipeline/similarity_probes.py \
+  --workspace .scratch/similarity --snapshot .scratch/similarity/snapshot.json.gz \
+  --model-cache .scratch/similarity/encoder-cache --report .scratch/similarity/probes.json
+```
+
+The weekly **Similarity model: freshness, coverage and retrieval review** entry in
+`.claude/recurring-checks.md` is read by `scripts/due_tasks.py` in pipeline Step 0.
+Refresh at least every **7 days**, sooner below **95% active vector coverage** or
+after substantial text/tag changes. Coverage matches IDs and does not detect edited
+text for existing IDs; explicit refreshes after large edits address that limitation.
+
+1. Save the previous model and run a candidate build with the relevance gate.
+2. Run `similarity_health.py`, the tests below and the new-text probes. Health exit
+   codes are 0 healthy, 1 refresh/review, 2 failed audit. Inspect retrieval samples,
+   per-query results, zero vectors, payload sizes and browser scoring time.
+3. Build and audit `dist/data/similarity`, then publish through the authorized
+   full-site release process. Verify the served manifest and referenced shards;
+   a local build is not evidence that production refreshed.
+4. Save review notes and advance the queue by seven days only after the check is
+   complete. Leave failures pending. Roll back by atomically restoring the saved
+   prior manifest and republishing it while retaining all referenced generations.
+
+Expand the benchmark with independent user judgments before treating the measured
+regression-set gains as general recommendation-quality gains.
+
+## Explorer and tests
 
 ```sh
 ./venv/bin/python pipeline/similarity_viewer.py
-```
-
-Open [the local model explorer](http://127.0.0.1:8766/). It reads the saved snapshot,
-report and full-precision vectors in `.scratch/similarity`, including historical
-events and keyword tags. No database connection or retraining is required.
-`--workspace`, `--snapshot` and `--port` support other saved experiments. Restart
-the viewer to load a newly trained model; an open viewer retains its loaded model.
-
-Search any entity by name or database ID, then inspect 25–250 nearest neighbors
-per type. Results show raw cosine scores, and clicking a neighbor changes the
-comparison point. Filters select active/all/outside-active events, curated tags
-or keywords, minimum cosine and full versus browser-int8 precision. The URL
-preserves the selection and filters and supports back/forward navigation. These
-raw neighbors omit the profile weights and suggestion diversity adjustment.
-
-The server binds only to loopback and serves an explicit set of viewer assets and
-read-only API routes. It is an internal local tool, not part of the public website
-bundle or its upload. Full snapshot files are not served. Tags with no learned
-vector remain searchable and show an explanation instead of invented neighbors.
-
-### Tests
-
-```sh
-./venv/bin/python -m unittest pipeline/tests/test_similarity.py
-./venv/bin/python -m unittest pipeline/tests/test_similarity_viewer.py
+./venv/bin/python -m unittest discover -s pipeline/tests -p 'test_similarity*.py'
 node --test src/js/tests/discoveryRanking.test.cjs src/js/tests/similarityModel.test.cjs
 npm run build
 ```
 
-Tests cover historical/suppressed records, geographic exclusion, ancestor
-deduplication, cross-entity retrieval, signed quantization, reproducibility,
-immutable generations, historical preferences, new-event fallback, exact-match
-priority, negative interests, candidate exclusions and failure recovery.
+The loopback-only explorer at http://127.0.0.1:8766 uses the same closest-constituent
+rule, supports full/browser precision, and includes historical events and keywords.
+Restart it after a build. It serves only its explicit viewer/API routes, never raw
+snapshots. Full-precision vectors, constituent indices, report and projection stay
+in `.scratch/similarity`; no descriptions or private notes ship in public artifacts.

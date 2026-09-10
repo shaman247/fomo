@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128"><title>Laser cutter</title>
+<path d="M15 46 24 14h79l10 32z" fill="#607E8C"/><path d="m24 39 6-18h67l6 18z" fill="#9ACFD4"/><path d="m31 22-5 16h12l5-16z" fill="#C8E7E4"/>
+<path d="M14 47h100l7 48-13 16H20L7 95z" fill="#8C9FA6"/><path d="M20 53h88l6 35H14z" fill="#354C5A"/>
+<path d="m30 65 67 0 7 18H24z" fill="#E5BC82"/><path d="M23 56h83" stroke="#B9C9CD" stroke-width="6"/><path d="M57 50h15v15H57z" fill="#74ABB2"/><path d="m59 65 11 0-4 6h-3z" fill="#D3E2DF"/><path d="M65 71v9" stroke="#FFB74F" stroke-width="3"/><path d="M65 80h18" stroke="#AA7247" stroke-width="3" stroke-linecap="round"/><circle cx="65" cy="80" r="3" fill="#FFE7A2"/>
+<path d="M7 88h114v14q0 9-10 9H17q-10 0-10-9z" fill="#688995"/><path d="M7 88h114v7H7z" fill="#B7CBCF"/><rect x="84" y="97" width="19" height="7" rx="2" fill="#B2DDD9"/><path d="M22 111v7m84-7v7" stroke="#3F5863" stroke-width="6"/>
+</svg>

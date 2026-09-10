@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128"><title>Block party</title><desc>A neighborhood street with colorful bunting and a traffic barricade.</desc>
+
+<path d="M35 42h58l25 72H10z" fill="#78909C"/>
+<path d="M58 44h12l10 70H47z" fill="#90A4AE"/>
+<path d="M9 24h29v73H9z" fill="#FFCC80"/><path d="M31 24h7v73h-7z" fill="#D79B66"/>
+<path d="M90 24h29v73H90z" fill="#EF9A9A"/><path d="M112 24h7v73h-7z" fill="#C66F76"/>
+<path d="M7 21h33v8H7z" fill="#FFE0A5"/><path d="M88 21h33v8H88z" fill="#FFB5AB"/>
+<path d="M16 39h10v13H16zm0 22h10v13H16zm81-22h10v13H97zm0 22h10v13H97z" fill="#546E7A"/>
+<path d="M13 24Q64 56 115 24" fill="none" stroke="#66534B" stroke-width="4" stroke-linecap="round"/>
+<path d="m21 29 17 8-13 13z" fill="#EC6C6A"/><path d="m46 39 18 2-10 18z" fill="#FFD45E"/><path d="m73 40 18-4-4 20z" fill="#66BB6A"/><path d="m99 33 15-8 1 21z" fill="#5AB4DB"/>
+<path d="m38 83-8 31h9l7-29zm47 0 9 31h9L93 83z" fill="#455A64"/>
+<rect x="28" y="77" width="73" height="19" rx="3" fill="#F1EDEC"/>
+<path d="m33 77 16 0-13 19h-8v-8zm31 0h16L67 96H51zm31 0h3q3 0 3 3v10l-4 6H82z" fill="#F89843"/>
+<path d="M31 96h67v4H31z" fill="#C6B9B2"/>
+</svg>
