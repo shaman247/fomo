@@ -1,0 +1,23 @@
+{
+  "creator": "Quaternius",
+  "pack": "Universal Base Characters \u2014 Standard (free)",
+  "source": "https://quaternius.com/packs/universalbasecharacters.html",
+  "download_page": "https://quaternius.itch.io/universal-base-characters",
+  "license": "CC0-1.0",
+  "archive_sha256": "fdbf1804c90dfc1ea03e992bff7da2dfd1a79318e13270a660180f9308455f40",
+  "adaptations": [
+    "Removed unused image/texture references from glTF materials; binary geometry and skin weights unchanged.",
+    "Only male/female body and two hair styles retained.",
+    "Runtime poses, 1.45\u00d7 head scale, flat face paint and clothing colors authored locally."
+  ],
+  "files": {
+    "Hair_SimpleParted.bin": "57c6359703a37e346ee38a9c7ba55c8dee761c0a02da99847d06f5a91728f3cc",
+    "Superhero_Female_FullBody.gltf": "7e0819d82e43527259140118cb527f9bc37f80e1f27ad4f6bc14f93f1c193ccb",
+    "Hair_Buns.bin": "4f6d4c010201278483da8d6d46ec40e3beb8d9e679ec2139bed216c561bccd38",
+    "Superhero_Male_FullBody.bin": "459003f9745853ae562a85506a2b94dd56515c1f37728f9fa3d2ce1a3e4cd92f",
+    "Superhero_Female_FullBody.bin": "3a8220a485b33d05d879115a50697728b45a151781106033afb8b8c243fca208",
+    "Hair_Buns.gltf": "3d632355ada69140a7fcb7f8ad3add876c6ab5f003766d07340108d8afee53de",
+    "Superhero_Male_FullBody.gltf": "09f74e4352bf897132280f59736e27b63c42e820d31f9be31ac9136938c6ab41",
+    "Hair_SimpleParted.gltf": "10ae78e76f0d1343991fb5e3c746f40ea5405ff31d7fc2632a963ff553b4ca90"
+  }
+}

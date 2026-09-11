@@ -1,0 +1,70 @@
+{
+  "reviewer_mode": "creator-critical-pass",
+  "geometry_mode": "two-3d-scenes-three-flat-editorial-diagrams",
+  "views": [
+    "front",
+    "rear",
+    "left",
+    "right",
+    "top",
+    "icon"
+  ],
+  "evidence": ".scratch/icon-cycles-20260909/cycle-048/geometry.png",
+  "measurements": ".scratch/icon-cycles-20260909/cycle-048/geometry-measurements.json",
+  "anatomy_checks": ".scratch/icon-cycles-20260909/cycle-048/anatomy-checks.json",
+  "decision": "pass",
+  "findings": [
+    "All18 final geometry views personally inspected: marimba, four-person contra formation and isolated representative rig. Each person uses the same rigidly transformed fixed-length rig. No photos traced. Geometry and projections are original, with source construction relationships documented.",
+    "Marimba has eight naturals and five raised accidentals in2+3grouping. Hollow resonators are open below each bar and closed at lower ends, with increasing length toward bass. Four stand feet meet y0. Simplified rail/cord support and original one-octave size are illustrative; no acoustic tuning or product specification.",
+    "Mallet heads bottom at1.049 meet natural bar tops1.049. Shafts slope to end center1.058 with radius.009, also meeting natural bars. Two lower suspension cords lie within all natural-bar footprints. No hands or operating technique depicted.",
+    "Four contra dancers stand on one floor with32 checked bone lengths: femur.42,tibia.40,upperarm.285,forearm.255 on every side/person. Upperarm radius.039 below thigh.065. Both soles meet floor and all vertices remain above it. Short neck attachments and one flat skin paint per person. Hands remain separated; no false connected grip or exact taught figure.",
+    "Contra projection preserves depth-aware face clipping. Flat paints,half-unit contour tolerance and whole-unit coordinates reduce file size from30390/9268 to10849/3141. This detailed four-person icon is slightly above10KBraw target but below review triggers, retaining four-person formation and limb clarity.",
+    "Verbal-description,phone-podcasting and musical-improv are flat diagrams without three-dimensional physical claims. Artwork in frame is an original generic landscape; phone app is symbolic; speech faces are cartoons, not human anatomy. All are well below size triggers.",
+    "All five final128/32/24/16 light/dark cards and ten actual IconManager variants inspected. Three flat icons and all nine custom/Noto reference source hashes unchanged from initial inspected packet. Creator critical pass with brief knowledge, not independent or blind. No exhaustive collision,acoustic or accessibility-compliance simulation."
+  ],
+  "references": [
+    {
+      "url": "https://bpca.ny.gov/event/son-rompe-pera/",
+      "finding": "Current browser primary read: September24,6\u20138:30,WagnerPark; DJReagonomics6 and band7,freeRSVP. Explicit Mexican marimba/cumbia fusion. Band photo not used as construction evidence."
+    },
+    {
+      "url": "https://hub.yamaha.com/drums/percussion/anatomy-of-a-marimba/",
+      "finding": "Primary text and annotated manufacturer drawing personally inspected. Wooden naturals and raised2+3accidentals, resonators below, long rails and braced legs. Original one-octave model has illustrative dimensions; not a product replica or full performance-range instrument."
+    },
+    {
+      "url": "https://www.yamaha.com/en/musical_instrument_guide/marimba/mechanism/mechanism002.html",
+      "finding": "Primary text read: tubes open below bars and closed at bottom; lower pitches use longer air columns. Structure informed hollow original tubes. Acoustic tuning and exact suspension nodes not simulated; source videos not played."
+    },
+    {
+      "url": "https://posterhouse.org/event/in-person-vibrant-verbal-description-tour-designed-to-be-red/",
+      "finding": "Primary program read: October26,11\u201312:30,educator-led description with questions; registration by email/phone,90minutes. Broadly welcoming with limited space. Art frame plus spoken-sound bubble is original, not a claimed accessibility-certification symbol or promised device."
+    },
+    {
+      "url": "https://posterhouse.org/event/virtual-vibrant-verbal-description-tour-designed-to-be-red/",
+      "finding": "Full current browser program read and flyer personally inspected: October27,4\u20135 on Zoom; reference images/access emailed previous day,cameras off,recording and automated captions; interpretation/CART by request. Source flyer artwork not copied. Generic landscape does not reproduce or claim to represent Indigenous exhibition works."
+    },
+    {
+      "url": "https://bricartsmedia.org/class/make-a-podcast-on-your-phone/",
+      "finding": "Primary program read: record,edit,publish on a phone; two-hour non-certification class,$5. October22,11\u20131 at CentralLibrary; September9/December11virtual.18+ID requirement appears below broadAll field; preserve section distinction. Generic original microphone/waveform app glyph, no product or external microphone claim."
+    },
+    {
+      "url": "https://magnettheater.com/show/60940/",
+      "finding": "Full current primary browser program read: spontaneous musical theater. SeptemberThursday slots6:30,7:30,8:30,9:30,$8 with changing teams. Two original speech faces with open mouths and a note extend accepted improv vocabulary; no claim that a specific scene/song is performed."
+    },
+    {
+      "url": "https://bpca.ny.gov/event/brooklyn-contra-barn-dance/",
+      "finding": "Full current primary browser program and outdoor dance photograph personally inspected: October17,5\u20136,WagnerPark,called beginner lesson and community folk dance in lines. Source photograph shows a large circle at a waterfront event; no person or pose traced. Model is a generic opposing-four formation, not the exact photographed moment or a taught named figure."
+    },
+    {
+      "url": "https://www.brooklyncontra.org/events",
+      "finding": "Primary organizer calendar read for current community/lesson context. Other locations and dates are separate from the BPCA booking; old search snippets were not substituted for current October17event."
+    },
+    {
+      "url": "https://southstreetseaportmuseum.org/stationery-workshop/",
+      "finding": "Primary existing-icon verification read:35notecards,typesetting,ink mixing and19th-century press;211WaterStreet,noon\u20133,lastSaturday/Sunday,$100,ages12+,supplies included,stairs. Supports letterpress choice; date inventory still needs reconciliation."
+    }
+  ],
+  "source_sha256": "f25402f7cb541799b819c929426214a5822b366c1136b02330769b7c42fdc8ec",
+  "projector_sha256": "7c21f784bd84b01cc3a86521a2cc829a46545ce54baee39be8c91ae3b8d8ff96",
+  "planar_source_sha256": "b002e5f4b97925598a2d97f10006ad9b8ef93938c9efb06e8961e65d4205ca3d"
+}

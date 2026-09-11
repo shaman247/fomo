@@ -1,0 +1,193 @@
+[
+  {
+    "icon_id": "craft-poetry-writing",
+    "source_sha256": "52c696895ec7c7ad9c6624ed8a5f55d889476a27bdc01f3bbaf1a8935b83ef6e",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Feather pen over a stanza page.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-012/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-012/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 754,
+      "gzip_level_6": 392
+    },
+    "optimization": {
+      "initial_raw": 754,
+      "initial_gzip_level_6": 392,
+      "final_raw": 754,
+      "final_gzip_level_6": 392
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Quill and separated short stanzas identify poetry composition at24/32px. At16px the stanza gap and feather detail soften into a literary-writing cue. The quill is symbolic, not supplied workshop equipment."
+    ]
+  },
+  {
+    "icon_id": "format-speed-dating",
+    "source_sha256": "d1a7d51c4d28d8e7c9a8eb3e056957d3f0ecdcbd5d57bb82000cc7a09286256b",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Heart-faced stopwatch.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-012/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-012/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 678,
+      "gzip_level_6": 386
+    },
+    "optimization": {
+      "initial_raw": 678,
+      "initial_gzip_level_6": 386,
+      "final_raw": 678,
+      "final_gzip_level_6": 386
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Heart and stopwatch silhouette convey timed dating at24/32px. At16px dial ticks soften but the heart and top timer button remain distinct. No gender pairing or timing duration is implied."
+    ]
+  },
+  {
+    "icon_id": "activity-clothing-swap",
+    "source_sha256": "0caa62c9261ebe527ac09474e0aae958060901b61269269529639dd60613d12b",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Two shirts exchanged in opposite directions.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-012/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-012/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 770,
+      "gzip_level_6": 398
+    },
+    "optimization": {
+      "initial_raw": 723,
+      "initial_gzip_level_6": 362,
+      "final_raw": 770,
+      "final_gzip_level_6": 398
+    },
+    "issues": [
+      {
+        "severity": "material",
+        "location": "exchange arrows",
+        "observation": "Both first-pass arrows led toward the same garment instead of a reciprocal exchange.",
+        "revision": "Reversed lower arrow toward the upper shirt and normalized outer margins.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Two contrasting shirts and opposing arrows convey clothing exchange at24/32px. Arrow direction is less distinct at16px, where two garments remain visible. Garment silhouettes do not prescribe what a swap accepts."
+    ]
+  },
+  {
+    "icon_id": "craft-zine-making",
+    "source_sha256": "a28ab4c892c1b3fc39d1dbcf3ce2db39df079b2a1a7abb2651a8e0a0a7ba013f",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Illustrated handmade booklet with a pencil.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-012/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-012/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 3418,
+      "gzip_level_6": 1196
+    },
+    "optimization": {
+      "initial_raw": 3120,
+      "initial_gzip_level_6": 1173,
+      "final_raw": 3418,
+      "final_gzip_level_6": 1196
+    },
+    "issues": [
+      {
+        "severity": "material",
+        "location": "booklet edges and pencil occlusion",
+        "observation": "Zero-thickness leaves disappeared in front/rear edge views; the pencil was mostly hidden behind the spread.",
+        "revision": "Modeled closed thin page solids, raised the icon camera, thickened the pencil and moved the entire pencil clear of the spread. Reprojected all views.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Illustrated booklet and separate pencil convey making a small publication at24/32px. Staples and text lines are intentionally minor and soften at16px. This representative folded/stapled construction does not claim every zine uses the same binding."
+    ]
+  },
+  {
+    "icon_id": "format-theater-screening",
+    "source_sha256": "fe3047524534eb5eaeb247b6115adcae2258559d15a70de17eb1b7d6302db26c",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Theater masks displayed on a screen.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-012/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-012/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 947,
+      "gzip_level_6": 474
+    },
+    "optimization": {
+      "initial_raw": 947,
+      "initial_gzip_level_6": 474,
+      "final_raw": 947,
+      "final_gzip_level_6": 474
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Comedy/tragedy masks inside a screen identify captured theater at24/32px. Expressions soften at16px; the mask pair and screen outline remain. The screen is symbolic, not an assertion of a venue\u2019s projection equipment or live transmission."
+    ]
+  }
+]

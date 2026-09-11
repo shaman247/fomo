@@ -1,0 +1,1510 @@
+{
+  "date": "2026-09-10",
+  "scope": "Cycle 020: 100 sequential events 200533–201026, no targeted supplements.",
+  "suggestions": 89,
+  "concept_count": 40,
+  "concepts": [
+    {
+      "concept": "craft-acrylic-painting",
+      "label": "Acrylic painting",
+      "category": "craft",
+      "visual": "Opaque paint stroke beside a paint bottle and flat brush.",
+      "rationale": "Organizer explicitly states acrylic medium; test a genuine recognition gain over palette and stencil art.",
+      "existing_alternative": "Use accurate broad Unicode or existing accepted art until a distinctive, structurally reviewed study is ready.",
+      "event_ids": [
+        200846,
+        200847,
+        200850,
+        200859,
+        200860,
+        200861,
+        200862,
+        200863,
+        200864,
+        200865,
+        200866,
+        200867,
+        200869,
+        200870,
+        200871,
+        200872,
+        200873,
+        200874,
+        200875,
+        200876,
+        200877,
+        200878,
+        200879,
+        200880,
+        200881,
+        200882,
+        200883,
+        200884,
+        200885,
+        200886,
+        200887,
+        200888,
+        200889,
+        200890,
+        200891,
+        200892,
+        200893
+      ],
+      "evidence_by_event": {
+        "200846": [
+          "Bridge Over the Creek: No description available.",
+          "Tags: Visual Arts, Art, Workshop, Painting, Bridge, Participatory, Landscape, Format, Creek",
+          "Organizer FAQ explicitly describes supplied stencil tracing as the first step and acrylic paint as the medium; applies to these organizer-run painting classes. Retrieved official indexed text; no exact depicted painting is reproduced. https://www.paintinglounge.com/aboutFAQ.html https://www.rezclick.com/paintinglounge/index.php?flag_menu_index=faq_php"
+        ],
+        "200847": [
+          "Sailing Under a Tropical Moon: A 2-hour workshop depicting a peaceful night sail beneath a moonlit tropical sky.",
+          "Tags: Visual Arts, Art, Workshop, Painting, Sailing, Tropical, Participatory, Format",
+          "Organizer FAQ explicitly describes supplied stencil tracing as the first step and acrylic paint as the medium; applies to these organizer-run painting classes. Retrieved official indexed text; no exact depicted painting is reproduced. https://www.paintinglounge.com/aboutFAQ.html https://www.rezclick.com/paintinglounge/index.php?flag_menu_index=faq_php"
+        ],
+        "200850": [
+          "Spring in Bloom: No description available.",
+          "Tags: Community, Visual Arts, Art, Workshop, Painting, Holiday, Flowers, Spring Festival, Participatory, Format",
+          "Organizer FAQ explicitly describes supplied stencil tracing as the first step and acrylic paint as the medium; applies to these organizer-run painting classes. Retrieved official indexed text; no exact depicted painting is reproduced. https://www.paintinglounge.com/aboutFAQ.html https://www.rezclick.com/paintinglounge/index.php?flag_menu_index=faq_php"
+        ],
+        "200859": [
+          "Blossom Hills: No description available.",
+          "Tags: Visual Arts, Art, Workshop, Painting, Neighborhood, Hills, Participatory, Landscape, Format, Blossoms",
+          "Organizer FAQ explicitly describes supplied stencil tracing as the first step and acrylic paint as the medium; applies to these organizer-run painting classes. Retrieved official indexed text; no exact depicted painting is reproduced. https://www.paintinglounge.com/aboutFAQ.html https://www.rezclick.com/paintinglounge/index.php?flag_menu_index=faq_php"
+        ],
+        "200860": [
+          "Winter Waterfall: No description available.",
+          "Tags: Community, Visual Arts, Art, Workshop, Painting, Education, Waterfall, Winter, Participatory, Landscape, Format",
+          "Organizer FAQ explicitly describes supplied stencil tracing as the first step and acrylic paint as the medium; applies to these organizer-run painting classes. Retrieved official indexed text; no exact depicted painting is reproduced. https://www.paintinglounge.com/aboutFAQ.html https://www.rezclick.com/paintinglounge/index.php?flag_menu_index=faq_php"
+        ],
+        "200861": [
+          "Moonlit Path: No description available.",
+          "Tags: Visual Arts, Art, Workshop, Painting, Participatory, Path, Moonlight, Landscape, Format",
+          "Organizer FAQ explicitly describes supplied stencil tracing as the first step and acrylic paint as the medium; applies to these organizer-run painting classes. Retrieved official indexed text; no exact depicted painting is reproduced. https://www.paintinglounge.com/aboutFAQ.html https://www.rezclick.com/paintinglounge/index.php?flag_menu_index=faq_php"
+        ],
+        "200862": [
+          "Coney Island Sunset: No description available.",
+          "Tags: Brooklyn, Visual Arts, Art, Workshop, Painting, Coney Island, Neighborhood, Sunset, Participatory, Format",
+          "Organizer FAQ explicitly describes supplied stencil tracing as the first step and acrylic paint as the medium; applies to these organizer-run painting classes. Retrieved official indexed text; no exact depicted painting is reproduced. https://www.paintinglounge.com/aboutFAQ.html https://www.rezclick.com/paintinglounge/index.php?flag_menu_index=faq_php"
+        ],
+        "200863": [
+          "Spring Moonrise Over the Dock: No description available.",
+          "Tags: Community, Visual Arts, Art, Workshop, Painting, Holiday, Spring Festival, Participatory, Moonrise, Dock, Format",
+          "Organizer FAQ explicitly describes supplied stencil tracing as the first step and acrylic paint as the medium; applies to these organizer-run painting classes. Retrieved official indexed text; no exact depicted painting is reproduced. https://www.paintinglounge.com/aboutFAQ.html https://www.rezclick.com/paintinglounge/index.php?flag_menu_index=faq_php"
+        ],
+        "200864": [
+          "Moonrise over the Brooklyn Bridge: No description available.",
+          "Tags: Visual Arts, Art, Workshop, Painting, Brooklyn Bridge, Participatory, Moonrise, Format",
+          "Organizer FAQ explicitly describes supplied stencil tracing as the first step and acrylic paint as the medium; applies to these organizer-run painting classes. Retrieved official indexed text; no exact depicted painting is reproduced. https://www.paintinglounge.com/aboutFAQ.html https://www.rezclick.com/paintinglounge/index.php?flag_menu_index=faq_php"
+        ],
+        "200865": [
+          "River Reflections: No description available.",
+          "Tags: Visual Arts, Art, Workshop, Painting, Participatory, Reflections, Landscape, River, Format",
+          "Organizer FAQ explicitly describes supplied stencil tracing as the first step and acrylic paint as the medium; applies to these organizer-run painting classes. Retrieved official indexed text; no exact depicted painting is reproduced. https://www.paintinglounge.com/aboutFAQ.html https://www.rezclick.com/paintinglounge/index.php?flag_menu_index=faq_php"
+        ],
+        "200866": [
+          "Paris Romance: Escape to Paris and paint this sparkling scene of the Eiffel Tower. This painting is inspired by the work of Leonid Afremov.",
+          "Tags: Community, Visual Arts, Art, Workshop, Literature, Painting, Romance, Paris, Participatory, Format",
+          "Organizer FAQ explicitly describes supplied stencil tracing as the first step and acrylic paint as the medium; applies to these organizer-run painting classes. Retrieved official indexed text; no exact depicted painting is reproduced. https://www.paintinglounge.com/aboutFAQ.html https://www.rezclick.com/paintinglounge/index.php?flag_menu_index=faq_php"
+        ],
+        "200867": [
+          "Jim Dine, \"Big Heart\": No description available.",
+          "Tags: Visual Arts, Art, Workshop, Painting, Participatory, Jim Dine, Heart, Format, Big Heart",
+          "Organizer FAQ explicitly describes supplied stencil tracing as the first step and acrylic paint as the medium; applies to these organizer-run painting classes. Retrieved official indexed text; no exact depicted painting is reproduced. https://www.paintinglounge.com/aboutFAQ.html https://www.rezclick.com/paintinglounge/index.php?flag_menu_index=faq_php"
+        ],
+        "200869": [
+          "Sunset in Venice: No description available.",
+          "Tags: Visual Arts, Art, Workshop, Painting, Venice, Sunset, Participatory, Format",
+          "Organizer FAQ explicitly describes supplied stencil tracing as the first step and acrylic paint as the medium; applies to these organizer-run painting classes. Retrieved official indexed text; no exact depicted painting is reproduced. https://www.paintinglounge.com/aboutFAQ.html https://www.rezclick.com/paintinglounge/index.php?flag_menu_index=faq_php"
+        ],
+        "200870": [
+          "Van Gogh, \"Irises In Vase\": No description available.",
+          "Tags: Visual Arts, Art, Workshop, Painting, Still Life, Van Gogh, Flowers, Participatory, Format, Irises",
+          "Organizer FAQ explicitly describes supplied stencil tracing as the first step and acrylic paint as the medium; applies to these organizer-run painting classes. Retrieved official indexed text; no exact depicted painting is reproduced. https://www.paintinglounge.com/aboutFAQ.html https://www.rezclick.com/paintinglounge/index.php?flag_menu_index=faq_php"
+        ],
+        "200871": [
+          "Shopping Spree: No description available.",
+          "Tags: Community, Visual Arts, Art, Workshop, Painting, Shopping, Participatory, Format",
+          "Organizer FAQ explicitly describes supplied stencil tracing as the first step and acrylic paint as the medium; applies to these organizer-run painting classes. Retrieved official indexed text; no exact depicted painting is reproduced. https://www.paintinglounge.com/aboutFAQ.html https://www.rezclick.com/paintinglounge/index.php?flag_menu_index=faq_php"
+        ],
+        "200872": [
+          "Northern Lights Over Cabin in the Snow: Paint the magical aurora borealis dancing over a cozy snow-covered cabin. This workshop covers blending techniques to capture the ethereal glow of the night sky.",
+          "Tags: Visual Arts, Art, Workshop, Painting, Participatory, Northern Lights, Format",
+          "Organizer FAQ explicitly describes supplied stencil tracing as the first step and acrylic paint as the medium; applies to these organizer-run painting classes. Retrieved official indexed text; no exact depicted painting is reproduced. https://www.paintinglounge.com/aboutFAQ.html https://www.rezclick.com/paintinglounge/index.php?flag_menu_index=faq_php"
+        ],
+        "200873": [
+          "Snowy Empire State: No description available.",
+          "Tags: Visual Arts, Art, Workshop, Painting, Participatory, Empire State Building, Format, Snow",
+          "Organizer FAQ explicitly describes supplied stencil tracing as the first step and acrylic paint as the medium; applies to these organizer-run painting classes. Retrieved official indexed text; no exact depicted painting is reproduced. https://www.paintinglounge.com/aboutFAQ.html https://www.rezclick.com/paintinglounge/index.php?flag_menu_index=faq_php"
+        ],
+        "200874": [
+          "Moonlit Path: A 2-hour painting class available on sale at the Chelsea location.",
+          "Tags: Community, Visual Arts, Art, Workshop, Painting, Participatory, Moonlight, Landscape, Format",
+          "Organizer FAQ explicitly describes supplied stencil tracing as the first step and acrylic paint as the medium; applies to these organizer-run painting classes. Retrieved official indexed text; no exact depicted painting is reproduced. https://www.paintinglounge.com/aboutFAQ.html https://www.rezclick.com/paintinglounge/index.php?flag_menu_index=faq_php"
+        ],
+        "200875": [
+          "Empire State Romance: Paint the iconic Empire State Building in a romantic and artistic style.",
+          "Tags: Community, Visual Arts, Art, Workshop, Painting, Education, Participatory, Format",
+          "Organizer FAQ explicitly describes supplied stencil tracing as the first step and acrylic paint as the medium; applies to these organizer-run painting classes. Retrieved official indexed text; no exact depicted painting is reproduced. https://www.paintinglounge.com/aboutFAQ.html https://www.rezclick.com/paintinglounge/index.php?flag_menu_index=faq_php"
+        ],
+        "200876": [
+          "Toast to the City: Celebrate social time with this fun piece depicting two glasses clinking against a glittering city skyline backdrop. Perfect for a celebratory night out.",
+          "Tags: Visual Arts, Art, Workshop, Painting, Participatory, Format",
+          "Organizer FAQ explicitly describes supplied stencil tracing as the first step and acrylic paint as the medium; applies to these organizer-run painting classes. Retrieved official indexed text; no exact depicted painting is reproduced. https://www.paintinglounge.com/aboutFAQ.html https://www.rezclick.com/paintinglounge/index.php?flag_menu_index=faq_php"
+        ],
+        "200877": [
+          "Love Birds: No description available.",
+          "Tags: Visual Arts, Art, Workshop, Literature, Painting, Birds, Romance, Love, Participatory, Love Birds, Format",
+          "Organizer FAQ explicitly describes supplied stencil tracing as the first step and acrylic paint as the medium; applies to these organizer-run painting classes. Retrieved official indexed text; no exact depicted painting is reproduced. https://www.paintinglounge.com/aboutFAQ.html https://www.rezclick.com/paintinglounge/index.php?flag_menu_index=faq_php"
+        ],
+        "200878": [
+          "Amalfi Coast: No description available.",
+          "Tags: Visual Arts, Art, Workshop, Painting, Coastal, Participatory, Seascape, Amalfi Coast, Format",
+          "Organizer FAQ explicitly describes supplied stencil tracing as the first step and acrylic paint as the medium; applies to these organizer-run painting classes. Retrieved official indexed text; no exact depicted painting is reproduced. https://www.paintinglounge.com/aboutFAQ.html https://www.rezclick.com/paintinglounge/index.php?flag_menu_index=faq_php"
+        ],
+        "200879": [
+          "Fall Path: No description available.",
+          "Tags: Community, Visual Arts, Art, Nature, Workshop, Painting, Participatory, Path, Landscape, Autumn, Fall, Format",
+          "Organizer FAQ explicitly describes supplied stencil tracing as the first step and acrylic paint as the medium; applies to these organizer-run painting classes. Retrieved official indexed text; no exact depicted painting is reproduced. https://www.paintinglounge.com/aboutFAQ.html https://www.rezclick.com/paintinglounge/index.php?flag_menu_index=faq_php"
+        ],
+        "200880": [
+          "Sailing to Paradise: No description available.",
+          "Tags: Visual Arts, Art, Workshop, Painting, Sailing, Paradise, Participatory, Seascape, Format",
+          "Organizer FAQ explicitly describes supplied stencil tracing as the first step and acrylic paint as the medium; applies to these organizer-run painting classes. Retrieved official indexed text; no exact depicted painting is reproduced. https://www.paintinglounge.com/aboutFAQ.html https://www.rezclick.com/paintinglounge/index.php?flag_menu_index=faq_php"
+        ],
+        "200881": [
+          "Edvard Munch \"The Scream\": No description available.",
+          "Tags: Visual Arts, Art, Workshop, Painting, Participatory, Format, Edvard Munch, The Scream",
+          "Organizer FAQ explicitly describes supplied stencil tracing as the first step and acrylic paint as the medium; applies to these organizer-run painting classes. Retrieved official indexed text; no exact depicted painting is reproduced. https://www.paintinglounge.com/aboutFAQ.html https://www.rezclick.com/paintinglounge/index.php?flag_menu_index=faq_php"
+        ],
+        "200882": [
+          "Dreamcatcher: A 2-hour guided painting class where participants can create their own version of a dreamcatcher.",
+          "Tags: Community, Visual Arts, Art, Workshop, Painting, Education, Participatory, Dreamcatcher, Format",
+          "Organizer FAQ explicitly describes supplied stencil tracing as the first step and acrylic paint as the medium; applies to these organizer-run painting classes. Retrieved official indexed text; no exact depicted painting is reproduced. https://www.paintinglounge.com/aboutFAQ.html https://www.rezclick.com/paintinglounge/index.php?flag_menu_index=faq_php"
+        ],
+        "200883": [
+          "Paris Romance: Paris Rendezvous is a 2-hour beginner-friendly painting class that captures a romantic evening in Paris. Stencils are provided to help trace the main elements of the painting, though you may choose to paint freehand instead.",
+          "Tags: Visual Arts, Art, Workshop, Literature, Painting, Romance, Paris, Participatory, Format",
+          "Organizer FAQ explicitly describes supplied stencil tracing as the first step and acrylic paint as the medium; applies to these organizer-run painting classes. Retrieved official indexed text; no exact depicted painting is reproduced. https://www.paintinglounge.com/aboutFAQ.html https://www.rezclick.com/paintinglounge/index.php?flag_menu_index=faq_php"
+        ],
+        "200884": [
+          "Palm Island: No description available.",
+          "Tags: Visual Arts, Art, Workshop, Painting, Island, Tropical, Participatory, Format, Palm Island",
+          "Organizer FAQ explicitly describes supplied stencil tracing as the first step and acrylic paint as the medium; applies to these organizer-run painting classes. Retrieved official indexed text; no exact depicted painting is reproduced. https://www.paintinglounge.com/aboutFAQ.html https://www.rezclick.com/paintinglounge/index.php?flag_menu_index=faq_php"
+        ],
+        "200885": [
+          "Pablo Picasso, \"The Kiss\" - Pop Art Style -: No description available.",
+          "Tags: Visual Arts, Art, Workshop, Painting, Pop Art, Participatory, Pablo Picasso, The Kiss, Format",
+          "Organizer FAQ explicitly describes supplied stencil tracing as the first step and acrylic paint as the medium; applies to these organizer-run painting classes. Retrieved official indexed text; no exact depicted painting is reproduced. https://www.paintinglounge.com/aboutFAQ.html https://www.rezclick.com/paintinglounge/index.php?flag_menu_index=faq_php"
+        ],
+        "200886": [
+          "Love Birds in a Heart Tree: No description available.",
+          "Tags: Community, Visual Arts, Art, Nature, Workshop, Painting, Romantic, Participatory, Heart Tree, Love Birds, Format",
+          "Organizer FAQ explicitly describes supplied stencil tracing as the first step and acrylic paint as the medium; applies to these organizer-run painting classes. Retrieved official indexed text; no exact depicted painting is reproduced. https://www.paintinglounge.com/aboutFAQ.html https://www.rezclick.com/paintinglounge/index.php?flag_menu_index=faq_php"
+        ],
+        "200887": [
+          "Spring Waterfall: No description available.",
+          "Tags: Community, Visual Arts, Art, Nature, Workshop, Painting, Waterfall, Holiday, Spring Festival, Participatory, Landscape, Format",
+          "Organizer FAQ explicitly describes supplied stencil tracing as the first step and acrylic paint as the medium; applies to these organizer-run painting classes. Retrieved official indexed text; no exact depicted painting is reproduced. https://www.paintinglounge.com/aboutFAQ.html https://www.rezclick.com/paintinglounge/index.php?flag_menu_index=faq_php"
+        ],
+        "200888": [
+          "Kissing in the Rain in Paris: No description available.",
+          "Tags: Visual Arts, Art, Workshop, Literature, Painting, Romance, Paris, Participatory, Rain, Format",
+          "Organizer FAQ explicitly describes supplied stencil tracing as the first step and acrylic paint as the medium; applies to these organizer-run painting classes. Retrieved official indexed text; no exact depicted painting is reproduced. https://www.paintinglounge.com/aboutFAQ.html https://www.rezclick.com/paintinglounge/index.php?flag_menu_index=faq_php"
+        ],
+        "200889": [
+          "Two Sunflowers: No description available.",
+          "Tags: Community, Brooklyn, Visual Arts, Art, Williamsburg, Nature, Workshop, Painting, Neighborhood, Flowers, Participatory, Sunflowers, Format",
+          "Organizer FAQ explicitly describes supplied stencil tracing as the first step and acrylic paint as the medium; applies to these organizer-run painting classes. Retrieved official indexed text; no exact depicted painting is reproduced. https://www.paintinglounge.com/aboutFAQ.html https://www.rezclick.com/paintinglounge/index.php?flag_menu_index=faq_php"
+        ],
+        "200890": [
+          "Mount Fuji with Cherry Blossoms: A two-hour painting class hosted at the Chelsea location.",
+          "Tags: Visual Arts, Art, Workshop, Painting, Cherry Blossoms, Outdoor, Participatory, Mount Fuji, Format",
+          "Organizer FAQ explicitly describes supplied stencil tracing as the first step and acrylic paint as the medium; applies to these organizer-run painting classes. Retrieved official indexed text; no exact depicted painting is reproduced. https://www.paintinglounge.com/aboutFAQ.html https://www.rezclick.com/paintinglounge/index.php?flag_menu_index=faq_php"
+        ],
+        "200891": [
+          "Spring in Bloom: Welcome the new season by painting a garden filled with vibrant, colorful flowers in full bloom. This cheerful class focuses on fine floral details and using a bright, energetic color palette to celebrate nature. It is a wonderful way to brighten any room.",
+          "Tags: Community, Visual Arts, Art, Workshop, Painting, Holiday, Spring Festival, Participatory, Format",
+          "Organizer FAQ explicitly describes supplied stencil tracing as the first step and acrylic paint as the medium; applies to these organizer-run painting classes. Retrieved official indexed text; no exact depicted painting is reproduced. https://www.paintinglounge.com/aboutFAQ.html https://www.rezclick.com/paintinglounge/index.php?flag_menu_index=faq_php"
+        ],
+        "200892": [
+          "Cosmic Skyline: No description available.",
+          "Tags: Visual Arts, Art, Workshop, Painting, Outdoor, Skyline, Cityscape, Cosmic, Participatory, Format",
+          "Organizer FAQ explicitly describes supplied stencil tracing as the first step and acrylic paint as the medium; applies to these organizer-run painting classes. Retrieved official indexed text; no exact depicted painting is reproduced. https://www.paintinglounge.com/aboutFAQ.html https://www.rezclick.com/paintinglounge/index.php?flag_menu_index=faq_php"
+        ],
+        "200893": [
+          "Desert Sunset: No description available.",
+          "Tags: Visual Arts, Art, Workshop, Painting, Education, Sunset, Participatory, Landscape, Format, Desert",
+          "Organizer FAQ explicitly describes supplied stencil tracing as the first step and acrylic paint as the medium; applies to these organizer-run painting classes. Retrieved official indexed text; no exact depicted painting is reproduced. https://www.paintinglounge.com/aboutFAQ.html https://www.rezclick.com/paintinglounge/index.php?flag_menu_index=faq_php"
+        ]
+      },
+      "source_urls_by_event": {
+        "200846": [
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38928",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38950"
+        ],
+        "200847": [
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38000",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38095",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38096",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38411",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38929",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38947"
+        ],
+        "200850": [
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38884"
+        ],
+        "200859": [
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38945"
+        ],
+        "200860": [
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38948"
+        ],
+        "200861": [
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38934"
+        ],
+        "200862": [
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38895"
+        ],
+        "200863": [
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38951"
+        ],
+        "200864": [
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38897"
+        ],
+        "200865": [
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38898"
+        ],
+        "200866": [
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38093",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38094",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38957"
+        ],
+        "200867": [
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38903"
+        ],
+        "200869": [
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38962",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38986"
+        ],
+        "200870": [
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38907"
+        ],
+        "200871": [
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38967"
+        ],
+        "200872": [
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#37119",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#37120",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38908"
+        ],
+        "200873": [
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38969"
+        ],
+        "200874": [
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#37692",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38914"
+        ],
+        "200875": [
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#37595",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#37601",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#37634",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#37979",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38852"
+        ],
+        "200876": [
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#37161",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#37790",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38108",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38109",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38972"
+        ],
+        "200877": [
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38624",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38920"
+        ],
+        "200878": [
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38974"
+        ],
+        "200879": [
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38915"
+        ],
+        "200880": [
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38916"
+        ],
+        "200881": [
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38856",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#39062"
+        ],
+        "200882": [
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#37721",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38043",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38917"
+        ],
+        "200883": [
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#37294",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#37295",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#37591",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#37987",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38867"
+        ],
+        "200884": [
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38977"
+        ],
+        "200885": [
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38918"
+        ],
+        "200886": [
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38981"
+        ],
+        "200887": [
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38871"
+        ],
+        "200888": [
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38919"
+        ],
+        "200889": [
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38983"
+        ],
+        "200890": [
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#37717",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#37718",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38004",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38922"
+        ],
+        "200891": [
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#36973",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#37138",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#37139",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#37449",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#37450",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#37451",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38984"
+        ],
+        "200892": [
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38985"
+        ],
+        "200893": [
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38806"
+        ]
+      }
+    },
+    {
+      "concept": "craft-cityscape-painting",
+      "label": "Cityscape painting",
+      "category": "craft",
+      "visual": "A brush beside a framed skyline painting.",
+      "rationale": "Explicit building and city subjects differ from natural landscape work.",
+      "existing_alternative": "Landscape icon depicts natural environments; urban sketching implies drawing outdoors.",
+      "event_ids": [
+        200862,
+        200864,
+        200866,
+        200869,
+        200873,
+        200875,
+        200876,
+        200883,
+        200888,
+        200892
+      ],
+      "evidence_by_event": {
+        "200862": [
+          "Coney Island Sunset: No description available.",
+          "Tags: Brooklyn, Visual Arts, Art, Workshop, Painting, Coney Island, Neighborhood, Sunset, Participatory, Format",
+          "Organizer FAQ explicitly describes supplied stencil tracing as the first step and acrylic paint as the medium; applies to these organizer-run painting classes. Retrieved official indexed text; no exact depicted painting is reproduced. https://www.paintinglounge.com/aboutFAQ.html https://www.rezclick.com/paintinglounge/index.php?flag_menu_index=faq_php"
+        ],
+        "200864": [
+          "Moonrise over the Brooklyn Bridge: No description available.",
+          "Tags: Visual Arts, Art, Workshop, Painting, Brooklyn Bridge, Participatory, Moonrise, Format",
+          "Organizer FAQ explicitly describes supplied stencil tracing as the first step and acrylic paint as the medium; applies to these organizer-run painting classes. Retrieved official indexed text; no exact depicted painting is reproduced. https://www.paintinglounge.com/aboutFAQ.html https://www.rezclick.com/paintinglounge/index.php?flag_menu_index=faq_php"
+        ],
+        "200866": [
+          "Paris Romance: Escape to Paris and paint this sparkling scene of the Eiffel Tower. This painting is inspired by the work of Leonid Afremov.",
+          "Tags: Community, Visual Arts, Art, Workshop, Literature, Painting, Romance, Paris, Participatory, Format",
+          "Organizer FAQ explicitly describes supplied stencil tracing as the first step and acrylic paint as the medium; applies to these organizer-run painting classes. Retrieved official indexed text; no exact depicted painting is reproduced. https://www.paintinglounge.com/aboutFAQ.html https://www.rezclick.com/paintinglounge/index.php?flag_menu_index=faq_php"
+        ],
+        "200869": [
+          "Sunset in Venice: No description available.",
+          "Tags: Visual Arts, Art, Workshop, Painting, Venice, Sunset, Participatory, Format",
+          "Organizer FAQ explicitly describes supplied stencil tracing as the first step and acrylic paint as the medium; applies to these organizer-run painting classes. Retrieved official indexed text; no exact depicted painting is reproduced. https://www.paintinglounge.com/aboutFAQ.html https://www.rezclick.com/paintinglounge/index.php?flag_menu_index=faq_php"
+        ],
+        "200873": [
+          "Snowy Empire State: No description available.",
+          "Tags: Visual Arts, Art, Workshop, Painting, Participatory, Empire State Building, Format, Snow",
+          "Organizer FAQ explicitly describes supplied stencil tracing as the first step and acrylic paint as the medium; applies to these organizer-run painting classes. Retrieved official indexed text; no exact depicted painting is reproduced. https://www.paintinglounge.com/aboutFAQ.html https://www.rezclick.com/paintinglounge/index.php?flag_menu_index=faq_php"
+        ],
+        "200875": [
+          "Empire State Romance: Paint the iconic Empire State Building in a romantic and artistic style.",
+          "Tags: Community, Visual Arts, Art, Workshop, Painting, Education, Participatory, Format",
+          "Organizer FAQ explicitly describes supplied stencil tracing as the first step and acrylic paint as the medium; applies to these organizer-run painting classes. Retrieved official indexed text; no exact depicted painting is reproduced. https://www.paintinglounge.com/aboutFAQ.html https://www.rezclick.com/paintinglounge/index.php?flag_menu_index=faq_php"
+        ],
+        "200876": [
+          "Toast to the City: Celebrate social time with this fun piece depicting two glasses clinking against a glittering city skyline backdrop. Perfect for a celebratory night out.",
+          "Tags: Visual Arts, Art, Workshop, Painting, Participatory, Format",
+          "Organizer FAQ explicitly describes supplied stencil tracing as the first step and acrylic paint as the medium; applies to these organizer-run painting classes. Retrieved official indexed text; no exact depicted painting is reproduced. https://www.paintinglounge.com/aboutFAQ.html https://www.rezclick.com/paintinglounge/index.php?flag_menu_index=faq_php"
+        ],
+        "200883": [
+          "Paris Romance: Paris Rendezvous is a 2-hour beginner-friendly painting class that captures a romantic evening in Paris. Stencils are provided to help trace the main elements of the painting, though you may choose to paint freehand instead.",
+          "Tags: Visual Arts, Art, Workshop, Literature, Painting, Romance, Paris, Participatory, Format",
+          "Organizer FAQ explicitly describes supplied stencil tracing as the first step and acrylic paint as the medium; applies to these organizer-run painting classes. Retrieved official indexed text; no exact depicted painting is reproduced. https://www.paintinglounge.com/aboutFAQ.html https://www.rezclick.com/paintinglounge/index.php?flag_menu_index=faq_php"
+        ],
+        "200888": [
+          "Kissing in the Rain in Paris: No description available.",
+          "Tags: Visual Arts, Art, Workshop, Literature, Painting, Romance, Paris, Participatory, Rain, Format",
+          "Organizer FAQ explicitly describes supplied stencil tracing as the first step and acrylic paint as the medium; applies to these organizer-run painting classes. Retrieved official indexed text; no exact depicted painting is reproduced. https://www.paintinglounge.com/aboutFAQ.html https://www.rezclick.com/paintinglounge/index.php?flag_menu_index=faq_php"
+        ],
+        "200892": [
+          "Cosmic Skyline: No description available.",
+          "Tags: Visual Arts, Art, Workshop, Painting, Outdoor, Skyline, Cityscape, Cosmic, Participatory, Format",
+          "Organizer FAQ explicitly describes supplied stencil tracing as the first step and acrylic paint as the medium; applies to these organizer-run painting classes. Retrieved official indexed text; no exact depicted painting is reproduced. https://www.paintinglounge.com/aboutFAQ.html https://www.rezclick.com/paintinglounge/index.php?flag_menu_index=faq_php"
+        ]
+      },
+      "source_urls_by_event": {
+        "200862": [
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38895"
+        ],
+        "200864": [
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38897"
+        ],
+        "200866": [
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38093",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38094",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38957"
+        ],
+        "200869": [
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38962",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38986"
+        ],
+        "200873": [
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38969"
+        ],
+        "200875": [
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#37595",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#37601",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#37634",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#37979",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38852"
+        ],
+        "200876": [
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#37161",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#37790",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38108",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38109",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38972"
+        ],
+        "200883": [
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#37294",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#37295",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#37591",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#37987",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38867"
+        ],
+        "200888": [
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38919"
+        ],
+        "200892": [
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38985"
+        ]
+      }
+    },
+    {
+      "concept": "activity-gross-motor-play",
+      "label": "Gross motor play",
+      "category": "activity",
+      "visual": "Simple hop spots beside a low balance beam.",
+      "rationale": "Jumping, balancing and movement play are explicitly central; no single competitive sport.",
+      "existing_alternative": "Use accurate broad Unicode or existing accepted art until a distinctive, structurally reviewed study is ready.",
+      "event_ids": [
+        200536,
+        200994
+      ],
+      "evidence_by_event": {
+        "200536": [
+          "Little Movers, Big Movements: Jump, balance and hop through play stations designed to support big body movement.",
+          "Tags: Sports, Wellness, Fitness, Family, Games, Movement, Participatory, Format"
+        ],
+        "200994": [
+          "Kids In Motion: Travers Park: The Kids in Motion program engages children in active, outdoors play. A NYC Parks staff member leads four to seven hours of free activities in NYC's playgrounds, including organized sports, games, fitness demos, board games, and more!",
+          "Tags: Free, Sports, Wellness, Fitness, Family, Outdoor, Games, Open Practice, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "200536": [
+          "https://cmom.org/visit/public-programs/"
+        ],
+        "200994": [
+          "https://www.nyc.gov/main/events/?permalinkName=kids-in-motion-travers-park&id=1155376&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=kids-in-motion-travers-park&id=1155436&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=kids-in-motion-travers-park&id=1155516&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=kids-in-motion-travers-park&id=1155576&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=kids-in-motion-travers-park&id=1155596&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=kids-in-motion-travers-park&id=1155616&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=kids-in-motion-travers-park&id=1155676&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=kids-in-motion-travers-park&id=1155696&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=kids-in-motion-travers-park&id=1155756&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=kids-in-motion-travers-park&id=1227736&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=kids-in-motion-travers-park&id=1227776&sequence=1",
+          "https://www.nycgovparks.org/events/2026/07/29/kids-in-motion-travers-park",
+          "https://www.nycgovparks.org/events/2026/08/01/kids-in-motion-travers-park",
+          "https://www.nycgovparks.org/events/2026/08/04/kids-in-motion-travers-park",
+          "https://www.nycgovparks.org/events/2026/08/07/kids-in-motion-travers-park",
+          "https://www.nycgovparks.org/events/2026/08/11/kids-in-motion-travers-park",
+          "https://www.nycgovparks.org/events/2026/08/13/kids-in-motion-travers-park",
+          "https://www.nycgovparks.org/events/2026/08/18/kids-in-motion-travers-park",
+          "https://www.nycgovparks.org/events/2026/08/19/kids-in-motion-travers-park",
+          "https://www.nycgovparks.org/events/2026/08/22/kids-in-motion-travers-park",
+          "https://www.nycgovparks.org/events/2026/08/25/kids-in-motion-travers-park",
+          "https://www.nycgovparks.org/events/2026/09/01/kids-in-motion-travers-park",
+          "https://www.nycgovparks.org/events/2026/09/03/kids-in-motion-travers-park",
+          "https://www.nycgovparks.org/events/2026/09/05/kids-in-motion-travers-park",
+          "https://www.nycgovparks.org/events/2026/09/08/kids-in-motion-travers-park",
+          "https://www.nycgovparks.org/events/2026/09/09/kids-in-motion-travers-park"
+        ]
+      }
+    },
+    {
+      "concept": "format-harold-improv",
+      "label": "Harold improv",
+      "category": "format",
+      "visual": "Three simple scene bubbles connected by a broad returning arc.",
+      "rationale": "Specific long-form improv structure; likely too abstract, preserve for exploration.",
+      "existing_alternative": "Existing broad Unicode remains suitable; specific motif must demonstrate added recognition before new artwork.",
+      "event_ids": [
+        200968,
+        200969
+      ],
+      "evidence_by_event": {
+        "200968": [
+          "Harold Night: Rhubarb & The Mall & suckdog & Hot FM: Your one-stop shop to see UCB’s house improv ensembles perform every Tuesday! Harold Night is UCB’s long-running weekly improv show featuring homegrown teams at the top of their game performing, The Harold.",
+          "Tags: Theater, Comedy, Improv, Harold Night, Comedy Show, Format, Performance"
+        ],
+        "200969": [
+          "Harold Night: Club Gator & Your Girlfriend & The Mall & Rhubarb: Your one-stop shop to see UCB’s house improv ensembles perform every Tuesday! Harold Night is UCB’s long-running weekly improv show featuring homegrown teams at the top of their game performing, The Harold.",
+          "Tags: Theater, Comedy, Improv, Comedy Show, Weekly Show, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "200968": [
+          "https://ucbcomedy.com/show/harold-night-rhubarb-the-mall-suckdog-hot-fm-2026-09-15/"
+        ],
+        "200969": [
+          "https://ucbcomedy.com/show/harold-night-club-gator-your-girlfriend-the-mall-rhubarb-2026-09-22/"
+        ]
+      }
+    },
+    {
+      "concept": "format-museum-sleepover",
+      "label": "Museum sleepover",
+      "category": "format",
+      "visual": "Sleeping bag beneath a moon beside a museum ticket.",
+      "rationale": "Overnight access and sleeping in a museum are explicit; avoid suggesting normal daily admission permits sleeping.",
+      "existing_alternative": "Use accurate broad Unicode or existing accepted art until a distinctive, structurally reviewed study is ready.",
+      "event_ids": [
+        200615,
+        200619
+      ],
+      "evidence_by_event": {
+        "200615": [
+          "Overnights October 10: Sleepover on the legendary Intrepid! Get exclusive night-time access to the ship and Space Shuttle Pavilion, and sleep among the aircraft just like enlisted sailors once did.",
+          "Tags: Museum, History, Family, Education, Aviation, Space Shuttle, Immersive Experience, Cultural Venue, Format, Browsable, Overnight"
+        ],
+        "200619": [
+          "Overnights October 24: Sleepover on the legendary Intrepid! Get exclusive night-time access to the ship and Space Shuttle Pavilion, and sleep among the aircraft just like enlisted sailors once did.",
+          "Tags: Museum, History, Science, Family, Education, Aviation, Space Exploration, Space Shuttle, Immersive Experience, Cultural Venue, Format, Browsable, Overnight"
+        ]
+      },
+      "source_urls_by_event": {
+        "200615": [
+          "https://intrepidmuseum.org/overnights-october-10"
+        ],
+        "200619": [
+          "https://intrepidmuseum.org/overnights-october-24"
+        ]
+      }
+    },
+    {
+      "concept": "sport-road-running",
+      "label": "Road race",
+      "category": "sport",
+      "visual": "Runner crossing a simple road finish stripe.",
+      "rationale": "Road5K/10Kevents differ from track sessions; course distance belongs in text.",
+      "existing_alternative": "Use accurate broad Unicode or existing accepted art until a distinctive, structurally reviewed study is ready.",
+      "event_ids": [
+        200902,
+        200903
+      ],
+      "evidence_by_event": {
+        "200902": [
+          "NYCRUNS Haunted Island 10K: Now in its 15th year, the NYCRUNS Haunted Island 10K is NYC’s most popular Halloween running event! Run in costume or run as yourself, but whatever you do, register sooner rather than later because this race is destined to sell out. Entry includes a ferry ride for you and your guests, your race-entry, an official race shirt, and tasty post-race eats including Halloween candy.",
+          "Tags: Community, Sports, Fitness, Outdoor, Running, Participatory, Halloween, Format"
+        ],
+        "200903": [
+          "NYCRUNS Haunted Island 5K: Now in its 15th year, the NYCRUNS Haunted Island 5K is NYC’s most popular Halloween running event! Run in costume as many do or run as yourself, but whatever you do, register sooner rather than later because this race is destined to sell out.",
+          "Tags: Community, Sports, Fitness, Outdoor, Running, Participatory, Halloween, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "200902": [
+          "https://nycruns.com/race/nycruns-haunted-island-10k",
+          "https://www.govisland.com/things-to-do/events/nycruns-haunted-island-5k-10k"
+        ],
+        "200903": [
+          "https://nycruns.com/race/nycruns-haunted-island-5k",
+          "https://www.govisland.com/things-to-do/events/nycruns-haunted-island-5k"
+        ]
+      }
+    },
+    {
+      "concept": "activity-adaptive-hiking",
+      "label": "Adaptive hiking",
+      "category": "activity",
+      "visual": "Outdoor mobility chair on a broad trail.",
+      "rationale": "Program explicitly provides electric trike or e-push chair training and guided hike; equipment reference and3D contact model required.",
+      "existing_alternative": "Use accurate broad Unicode or existing accepted art until a distinctive, structurally reviewed study is ready.",
+      "event_ids": [
+        200563
+      ],
+      "evidence_by_event": {
+        "200563": [
+          "Adaptive Hikes with ePush and eTrike Chairs: Discover the beauty of the Preserve through our adaptive e-mobility equipment! Each session includes personalized training on our electric trike or e-push wheelchair, followed by a guided 1-mile hike around Swan.",
+          "Tags: Community, Hiking, Accessibility, Wellness, Outdoor, Outing, Format, Outings"
+        ]
+      },
+      "source_urls_by_event": {
+        "200563": [
+          "https://parks.ny.gov/visit/events/adaptive-hikes-epush-etrike-chairs-2",
+          "https://parks.ny.gov/visit/events/adaptive-hikes-epush-etrike-chairs-3"
+        ]
+      }
+    },
+    {
+      "concept": "activity-bodyweight-training",
+      "label": "Bodyweight training",
+      "category": "activity",
+      "visual": "A grounded push-up figure with equal limbs and explicit hand/foot contacts.",
+      "rationale": "Bodyweight circuit differs from yoga and weighted training.",
+      "existing_alternative": "Flexed arm is broad; requires authoritative3D anatomy.",
+      "event_ids": [
+        200996
+      ],
+      "evidence_by_event": {
+        "200996": [
+          "Body-Centric Circuit Training: A low impact bodyweight workout, integrating holistic body empowering movements for improved overall strength and endurance. Align with your mindfulness to support inner strength and to connect with your body for a fulfilling fitness experience. All levels are welcome!",
+          "Tags: Free, Wellness, Fitness, Exercise, Strength Training, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "200996": [
+          "https://www.nyc.gov/main/events/?permalinkName=body-centric-circuit-training&id=1120016&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=body-centric-circuit-training&id=1120036&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=body-centric-circuit-training&id=1120076&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=body-centric-circuit-training&id=1196396&sequence=1",
+          "https://www.nycgovparks.org/events/2026/07/29/bodycentric-circuit-training",
+          "https://www.nycgovparks.org/events/2026/08/12/bodycentric-circuit-training",
+          "https://www.nycgovparks.org/events/2026/08/19/bodycentric-circuit-training",
+          "https://www.nycgovparks.org/events/2026/08/26/bodycentric-circuit-training",
+          "https://www.nycgovparks.org/events/2026/09/02/bodycentric-circuit-training",
+          "https://www.nycgovparks.org/events/2026/09/09/bodycentric-circuit-training",
+          "https://www.nycgovparks.org/events/2026/09/16/bodycentric-circuit-training"
+        ]
+      }
+    },
+    {
+      "concept": "activity-circuit-training",
+      "label": "Circuit training",
+      "category": "activity",
+      "visual": "Three exercise stations organized around a central timer.",
+      "rationale": "Rotating strength/cardio stations define circuit workouts.",
+      "existing_alternative": "Flexed arm or weightlifter omits station progression; equipment inventory needs careful abstraction.",
+      "event_ids": [
+        200996
+      ],
+      "evidence_by_event": {
+        "200996": [
+          "Body-Centric Circuit Training: A low impact bodyweight workout, integrating holistic body empowering movements for improved overall strength and endurance. Align with your mindfulness to support inner strength and to connect with your body for a fulfilling fitness experience. All levels are welcome!",
+          "Tags: Free, Wellness, Fitness, Exercise, Strength Training, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "200996": [
+          "https://www.nyc.gov/main/events/?permalinkName=body-centric-circuit-training&id=1120016&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=body-centric-circuit-training&id=1120036&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=body-centric-circuit-training&id=1120076&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=body-centric-circuit-training&id=1196396&sequence=1",
+          "https://www.nycgovparks.org/events/2026/07/29/bodycentric-circuit-training",
+          "https://www.nycgovparks.org/events/2026/08/12/bodycentric-circuit-training",
+          "https://www.nycgovparks.org/events/2026/08/19/bodycentric-circuit-training",
+          "https://www.nycgovparks.org/events/2026/08/26/bodycentric-circuit-training",
+          "https://www.nycgovparks.org/events/2026/09/02/bodycentric-circuit-training",
+          "https://www.nycgovparks.org/events/2026/09/09/bodycentric-circuit-training",
+          "https://www.nycgovparks.org/events/2026/09/16/bodycentric-circuit-training"
+        ]
+      }
+    },
+    {
+      "concept": "activity-protective-clothing-learning",
+      "label": "Protective clothing exploration",
+      "category": "activity",
+      "visual": "Two different protective headwear silhouettes beside a learning card.",
+      "rationale": "Museum program explores sailor/pilot/astronaut gear; actual handling or costume try-on is unconfirmed.",
+      "existing_alternative": "Use accurate broad Unicode or existing accepted art until a distinctive, structurally reviewed study is ready.",
+      "event_ids": [
+        200616
+      ],
+      "evidence_by_event": {
+        "200616": [
+          "Access Family Program: Dressing for the Job: Intrepid Style (Children): Suit up in style! From sailors to pilots and astronauts, gear isn’t just about looking cool—it’s built for safety, survival and to complete serious missions.",
+          "Tags: Workshop, Science, Family, Education, Aviation, Space, Astronauts, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "200616": [
+          "https://intrepidmuseum.org/access-family-program-dressing-job-intrepid-style-children",
+          "https://intrepidmuseum.org/access-family-program-dressing-job-intrepid-style-teens-adults"
+        ]
+      }
+    },
+    {
+      "concept": "activity-wildlife-coexistence",
+      "label": "Wildlife coexistence learning",
+      "category": "activity",
+      "visual": "Animal paw and a house separated by a respectful-space arc.",
+      "rationale": "Talk focuses on sharing neighborhoods with wildlife and reducing encounters, not guaranteed animal viewing.",
+      "existing_alternative": "Use accurate broad Unicode or existing accepted art until a distinctive, structurally reviewed study is ready.",
+      "event_ids": [
+        200559
+      ],
+      "evidence_by_event": {
+        "200559": [
+          "Coyotes, Bobcats, & Bears, Oh My!: Worried about local coyotes, bobcats, and bears within the Preserve and your neighborhood? Join Preserve Program Coordinator and Leave No Trace Instructor Martha to learn ecology facts and best practices for minimizing your family’s risk.",
+          "Tags: Community, Nature, Wildlife, Family, Education, Outdoor, Gathering, Talk, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "200559": [
+          "https://parks.ny.gov/visit/events/coyotes-bobcats-bears-oh-my-0",
+          "https://parks.ny.gov/visit/events/coyotes-bobcats-bears-oh-my-1"
+        ]
+      }
+    },
+    {
+      "concept": "craft-scale-model-building",
+      "label": "Scale-model / Gunpla building",
+      "category": "craft",
+      "visual": "A rectangular plastic sprue frame with one robot-shaped component and diagonal hobby nippers.",
+      "rationale": "Assembling plastic model kits is structurally different from toy-brick building and the source explicitly names Gunpla and scale models.",
+      "existing_alternative": "Custom interlocking bricks have studs and imply LEGO; Noto robot shows the finished character rather than kit assembly.",
+      "event_ids": [
+        200533
+      ],
+      "evidence_by_event": {
+        "200533": [
+          "My NYC Playground: Design and construct a pretend playground using mixed materials inspired by your favorite parks and outdoor play spaces.",
+          "Tags: Art, Playground, Park, Workshop, Family, Education, Outdoor, Participatory, Outdoor Venue, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "200533": [
+          "https://cmom.org/visit/public-programs/"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-jazz-quartet",
+      "category": "format",
+      "label": "Jazz quartet",
+      "visual": "Four music stands with four bold note marks",
+      "rationale": "Four-piece jazz ensemble differs from string quartet; avoid assumed instruments.",
+      "existing_alternative": "Broad fallback does not distinguish this supported facet.",
+      "event_ids": [
+        200655
+      ],
+      "evidence_by_event": {
+        "200655": [
+          "An Evening of Wine: Join us for an unforgettable evening in the historic Rosen House Music Room. An Evening of Wine, our annual celebration featuring exceptional wines, a specially crafted menu of outstanding food, the company of fellow Caramoor supporters, and a special performance by Bria Skonberg Quartet.",
+          "Tags: Community, Music, Jazz, Food, Concert, Fundraiser, Benefit, Food and Wine, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "200655": [
+          "https://caramoor.org/event/an-evening-of-wine-2026"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-jazz-quintet",
+      "category": "format",
+      "label": "Jazz quintet",
+      "visual": "Five music-stand shapes in a shallow arc with one note.",
+      "rationale": "Explicit quintet configuration deserves exploration without assumed instruments.",
+      "existing_alternative": "Five tiny objects may fail at small sizes; generic music remains safer.",
+      "event_ids": [
+        200723
+      ],
+      "evidence_by_event": {
+        "200723": [
+          "Chilean Jazz Series Vol 2: Claudio Rubio Quintet: Chilean Jazz Series Vol 2 featuring the Claudio Rubio Quintet.",
+          "Tags: Music, Jazz, Concert, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "200723": [
+          "https://shotgun.live/events/chilean-jazz-series-vol-2-claudio-rubio-quintet"
+        ]
+      }
+    },
+    {
+      "concept": "equipment-embroidery-machine",
+      "label": "Embroidery machine",
+      "category": "equipment",
+      "visual": "Compact multi-needle machine head above a fabric hoop.",
+      "rationale": "Dedicated automated embroidery equipment differs from ordinary sewing and hand embroidery.",
+      "existing_alternative": "Hand-embroidery hoop omits machine; ordinary sewing-machine art omits the multi-needle embroidery head.",
+      "event_ids": [
+        200637
+      ],
+      "evidence_by_event": {
+        "200637": [
+          "Machine Stitch: A Talk on Digital Embroidery & Materiality: This artist/designer talk focuses on digital embroidery in creative work, expanding industrial applications to uncover unique human sensitivities of the machine stitch.",
+          "Tags: Visual Arts, Art, Design, Science, Education, Technology, Gathering, Talk, Textiles, Format, Digital Embroidery"
+        ]
+      },
+      "source_urls_by_event": {
+        "200637": [
+          "https://event.newschool.edu/machinestitchatalkondigitalemb"
+        ]
+      }
+    },
+    {
+      "concept": "format-architecture-tour",
+      "label": "Architecture walking tour",
+      "category": "format",
+      "visual": "Building facade beside a dotted walking route.",
+      "rationale": "Architecture interpretation differs from studio artmaking or ordinary city-place identity.",
+      "existing_alternative": "Retain an accurate broad Unicode or accepted icon until a distinct reviewed design is available.",
+      "event_ids": [
+        200541
+      ],
+      "evidence_by_event": {
+        "200541": [
+          "Archtober Campus Tours: Join the Archtober Campus Tours at 'T' Space.",
+          "Tags: Architecture, Art, Tour, Education, Outdoor, Format, Outings"
+        ]
+      },
+      "source_urls_by_event": {
+        "200541": [
+          "https://www.eventbrite.com/e/t-space-reserve-tours-during-archtober-tickets-1994721031301?aff=oddtdtcreator"
+        ]
+      }
+    },
+    {
+      "concept": "format-education-fair",
+      "label": "Education options fair",
+      "category": "format",
+      "visual": "Two school-information stands with graduation-cap signs.",
+      "rationale": "Multiple high-school options and pathways distinguish a fair from one lecture.",
+      "existing_alternative": "Use accurate broad Unicode or existing accepted art until a distinctive, structurally reviewed study is ready.",
+      "event_ids": [
+        200618
+      ],
+      "evidence_by_event": {
+        "200618": [
+          "The Sky is Not the Limit: High School Options for Aerospace, Engineering & Technology: Announcing the inaugural High School Fair at the Intrepid Museum, exploring career pathways in aerospace.",
+          "Tags: Community, Science, Education, High School, Technology, Professional Development, STEM, Gathering, Talk, Engineering, Aerospace, Students, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "200618": [
+          "https://intrepidmuseum.org/sky-not-limit-high-school-options-aerospace-engineering-technology"
+        ]
+      }
+    },
+    {
+      "concept": "format-film-discussion",
+      "label": "Film screening and discussion",
+      "category": "format",
+      "visual": "A movie screen with one broad speech bubble beside it.",
+      "rationale": "The screening explicitly includes a conversation, panel or discussion. This does not by itself establish an audience Q&A.",
+      "existing_alternative": "Film art covers the main activity; a speech balloon could convey the added discussion.",
+      "event_ids": [
+        200831
+      ],
+      "evidence_by_event": {
+        "200831": [
+          "Independent Film with Dylan Skolnick: Marty Mauser, a young man with a dream no one respects, goes to hell and back in pursuit of greatness. Stars Timothée Chalamet, Gwyneth Paltrow, and Odessa A’zion.",
+          "Tags: History, Independent Film, Film, Education, Gathering, Talk, Shaker Movement, Drama / Film, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "200831": [
+          "https://eastmeadow.libcal.com/event/17021875?hs=a",
+          "https://eastmeadow.libcal.com/event/17044291",
+          "https://eastmeadow.libcal.com/event/17358223"
+        ]
+      }
+    },
+    {
+      "concept": "format-fundraising-gala",
+      "label": "Fundraising gala",
+      "category": "format",
+      "visual": "A formal place setting beside a community-heart donation token.",
+      "rationale": "Explicit benefit gala combines formal social gathering and fundraising.",
+      "existing_alternative": "Party or meal emoji is broad; composite may be too busy.",
+      "event_ids": [
+        200655
+      ],
+      "evidence_by_event": {
+        "200655": [
+          "An Evening of Wine: Join us for an unforgettable evening in the historic Rosen House Music Room. An Evening of Wine, our annual celebration featuring exceptional wines, a specially crafted menu of outstanding food, the company of fellow Caramoor supporters, and a special performance by Bria Skonberg Quartet.",
+          "Tags: Community, Music, Jazz, Food, Concert, Fundraiser, Benefit, Food and Wine, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "200655": [
+          "https://caramoor.org/event/an-evening-of-wine-2026"
+        ]
+      }
+    },
+    {
+      "concept": "format-historical-walking-tour",
+      "label": "Historical walking tour",
+      "category": "format",
+      "visual": "Historic facade connected to a short walking route.",
+      "rationale": "Guide narrates estate history during a measured walk; broad building may already suffice.",
+      "existing_alternative": "Use accurate broad Unicode or existing accepted art until a distinctive, structurally reviewed study is ready.",
+      "event_ids": [
+        200560
+      ],
+      "evidence_by_event": {
+        "200560": [
+          "History of Rockwood Hall: Join our Historian, David Teich, on a 2-mile adventure into the past as we explore Rockwood Hall and its rich history through stories of the land and the people who called it home. Former Estate.",
+          "Tags: Community, History, Tour, Education, Outdoor, Walking, Format, Outings"
+        ]
+      },
+      "source_urls_by_event": {
+        "200560": [
+          "https://parks.ny.gov/visit/events/history-rockwood-hall-1",
+          "https://parks.ny.gov/visit/events/history-rockwood-hall-2"
+        ]
+      }
+    },
+    {
+      "concept": "format-participatory-public-art",
+      "label": "Participatory public artwork",
+      "category": "format",
+      "visual": "Several speech/gesture marks joining an outdoor artwork.",
+      "rationale": "Public performance combines multiple media and audience participation without a single craft.",
+      "existing_alternative": "Use accurate broad Unicode or existing accepted art until a distinctive, structurally reviewed study is ready.",
+      "event_ids": [
+        200907
+      ],
+      "evidence_by_event": {
+        "200907": [
+          "Right to Flight: A Public Performance & Participatory Artwork: Right to Flight is a participatory public artwork and performance that responds to the hundreds of thousands of migratory birds killed each year through collisions with New York City's glass buildings. Combining large-scale woven sculpture, performance, sound, costume, memorial-making, and public participation, the project invites audiences to reflect on the intertwined futures of human and more-than-human life in the city.",
+          "Tags: Community, Art, Conservation, Participatory Art, Climate, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "200907": [
+          "https://luma.com/nvcc0tht"
+        ]
+      }
+    },
+    {
+      "concept": "format-tribute-concert",
+      "label": "Tribute concert",
+      "category": "format",
+      "visual": "Two overlapping record silhouettes with one echoing musical note.",
+      "rationale": "Tribute repertoire is a format facet; motif is unproven and must not imitate an artist logo.",
+      "existing_alternative": "Existing broad Unicode remains suitable; specific motif must demonstrate added recognition before new artwork.",
+      "event_ids": [
+        200571
+      ],
+      "evidence_by_event": {
+        "200571": [
+          "Emily Clark’s All-Star Tribute To Bonnie Raitt: w/Emily Clark,Matt,Beck,James Genus,Andy Ezrin,Tony Mason,Giselle Lily",
+          "Tags: Music, Concert, Tribute Band, Bonnie Raitt, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "200571": [
+          "https://bitterend.com/#/events/191466"
+        ]
+      }
+    },
+    {
+      "concept": "format-vintage-furniture-tour",
+      "label": "Vintage furniture store tour",
+      "category": "format",
+      "visual": "A chair and small route linking two shopfronts.",
+      "rationale": "Multi-store exploration differs from furniture making or a single retail listing.",
+      "existing_alternative": "Use accurate broad Unicode or existing accepted art until a distinctive, structurally reviewed study is ready.",
+      "event_ids": [
+        200906
+      ],
+      "evidence_by_event": {
+        "200906": [
+          "Vintage Furniture Store Hop by Home Swap Stories: HOME SWAP STORIES is taking over 4 vintage furniture stores in Brooklyn for Climate Week NYC. Join us for a multi-location event focused on the importance of taking individual action inside your home.",
+          "Tags: Community, Art, Tour, Education, Sustainability, Outdoor, Climate, Format, Outings, Vintage Furniture"
+        ]
+      },
+      "source_urls_by_event": {
+        "200906": [
+          "https://luma.com/x72v3kw4"
+        ]
+      }
+    },
+    {
+      "concept": "format-vocal-quartet",
+      "category": "format",
+      "label": "Vocal quartet",
+      "visual": "Four singing heads in a short row",
+      "rationale": "Adds quartet size beyond choir; four small heads may crowd.",
+      "existing_alternative": "Retain existing broad artwork; verify existing Noto options and recognition gain before new art.",
+      "event_ids": [
+        200654
+      ],
+      "evidence_by_event": {
+        "200654": [
+          "Nobuntu: Nobuntu, the internationally acclaimed female a cappella quartet from Zimbabwe, bring their vibrant artistry to Caramoor for the first time. Their inventive performances range from traditional Zimbabwean songs to Afro Jazz and Gospel, utilizing pure voices along with traditional dance and percussion.",
+          "Tags: Music, World Music, Concert, Vocal Music, Global Music, Format, Performance, Zimbabwean Music"
+        ]
+      },
+      "source_urls_by_event": {
+        "200654": [
+          "https://caramoor.org/event/nobuntu-2026-rhcs"
+        ]
+      }
+    },
+    {
+      "concept": "format-wine-flight",
+      "label": "Guided wine flight",
+      "category": "format",
+      "visual": "Three small tasting glasses in a row with distinct wine colors.",
+      "rationale": "Guided multi-wine tasting is central; motif is illustrative rather than an exact glass count.",
+      "existing_alternative": "Use accurate broad Unicode or existing accepted art until a distinctive, structurally reviewed study is ready.",
+      "event_ids": [
+        200935
+      ],
+      "evidence_by_event": {
+        "200935": [
+          "Bucketlisters Wine Tasting Experience: In partnership with Bucketlisters, experience the ultimate wine tasting experience at City Winery, where our expert winemakers bring the flavors of wine country to the heart of the city. Guided by one of our knowledgeable wine professionals, you’ll enjoy a curated flight of five wines while learning tasting notes, pairing tips, and what makes each pour distinctive. Your ticket also includes an individual cheese and charcuterie plate, making this the perfect outing for date nights, group experiences, or meeting fellow wine lovers.",
+          "Tags: Community, Food, Wine, Nightlife, Tasting, Wine Tasting, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "200935": [
+          "https://tickets.citywinery.com/event/bucketlisters-wine-tasting-experience-e13oab",
+          "https://tickets.citywinery.com/event/bucketlisters-wine-tasting-experience-f2c0fk",
+          "https://tickets.citywinery.com/event/bucketlisters-wine-tasting-experience-fm0yh6",
+          "https://tickets.citywinery.com/event/bucketlisters-wine-tasting-experience-isjwi1",
+          "https://tickets.citywinery.com/event/bucketlisters-wine-tasting-experience-nmo2z8",
+          "https://tickets.citywinery.com/event/bucketlisters-wine-tasting-experience-qydh9u",
+          "https://tickets.citywinery.com/event/bucketlisters-wine-tasting-experience-xuwwgt"
+        ]
+      }
+    },
+    {
+      "concept": "genre-blues",
+      "label": "Blues",
+      "category": "genre",
+      "visual": "Explore a spare bent musical note with a short call-and-response echo mark.",
+      "rationale": "Explicit blues repertoire merits a genre candidate independent of instrument; no proven universal motif, recognition testing required.",
+      "existing_alternative": "Noto guitar or saxophone excludes many blues forms; generic notes omit genre.",
+      "event_ids": [
+        200573
+      ],
+      "evidence_by_event": {
+        "200573": [
+          "Chris Bergson Band W/ Moses Patrou, Matt Clohesy, Diego Voglino: The Chris Bergson Band returns to The Bitter End performing music from their latest albums, East River Blues and Comforts of Home.",
+          "Tags: Music, Family, Concert, All Ages, Blues, Band, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "200573": [
+          "https://bitterend.com/#/events/191331"
+        ]
+      }
+    },
+    {
+      "concept": "genre-disco",
+      "label": "Disco",
+      "category": "genre",
+      "visual": "A faceted mirror ball above two dance rhythm marks",
+      "rationale": "Disco genre explicit; existing mirror-ball Unicode is strong and may make custom redundant.",
+      "existing_alternative": "Retain the source Unicode until recognizable original artwork is reviewed.",
+      "event_ids": [
+        200548
+      ],
+      "evidence_by_event": {
+        "200548": [
+          "Sunday Skate Club: Xanadu’s weekly Sunday night skate party, with a rotating lineup of guest DJs each week.",
+          "Tags: Music, Dance, Party, Roller Skating, Nightlife, Disco, Electronic Music, Skating, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "200548": [
+          "https://link.dice.fm/fe8ad4e706c8?pid=7ffa6eed",
+          "https://link.dice.fm/Mf0da8513efa?pid=7ffa6eed",
+          "https://link.dice.fm/N1bb510ffd5b?pid=7ffa6eed",
+          "https://link.dice.fm/pf145ff36d31?pid=7ffa6eed",
+          "https://link.dice.fm/s96d0ce5cb3f",
+          "https://link.dice.fm/Scdbe9046007?pid=7ffa6eed",
+          "https://link.dice.fm/tecdca468796?pid=7ffa6eed",
+          "https://ra.co/events/2484916",
+          "https://ra.co/events/2484924",
+          "https://ra.co/events/2499935",
+          "https://ra.co/events/2499938",
+          "https://ra.co/events/2515942",
+          "https://ra.co/events/2515999",
+          "https://ra.co/events/2516042"
+        ]
+      }
+    },
+    {
+      "concept": "genre-electronic",
+      "label": "Electronic music",
+      "category": "genre",
+      "visual": "A simple waveform beside one music note.",
+      "rationale": "Explicit electronic repertoire does not establish DJ or synth equipment; abstract motif needs recognition testing.",
+      "existing_alternative": "Existing broad Unicode remains suitable; specific motif must demonstrate added recognition before new artwork.",
+      "event_ids": [
+        200548
+      ],
+      "evidence_by_event": {
+        "200548": [
+          "Sunday Skate Club: Xanadu’s weekly Sunday night skate party, with a rotating lineup of guest DJs each week.",
+          "Tags: Music, Dance, Party, Roller Skating, Nightlife, Disco, Electronic Music, Skating, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "200548": [
+          "https://link.dice.fm/fe8ad4e706c8?pid=7ffa6eed",
+          "https://link.dice.fm/Mf0da8513efa?pid=7ffa6eed",
+          "https://link.dice.fm/N1bb510ffd5b?pid=7ffa6eed",
+          "https://link.dice.fm/pf145ff36d31?pid=7ffa6eed",
+          "https://link.dice.fm/s96d0ce5cb3f",
+          "https://link.dice.fm/Scdbe9046007?pid=7ffa6eed",
+          "https://link.dice.fm/tecdca468796?pid=7ffa6eed",
+          "https://ra.co/events/2484916",
+          "https://ra.co/events/2484924",
+          "https://ra.co/events/2499935",
+          "https://ra.co/events/2499938",
+          "https://ra.co/events/2515942",
+          "https://ra.co/events/2515999",
+          "https://ra.co/events/2516042"
+        ]
+      }
+    },
+    {
+      "concept": "genre-experimental",
+      "category": "genre",
+      "label": "Experimental music",
+      "visual": "Explore irregular linked sound shapes",
+      "rationale": "No instrument is universal; abstract recognition remains unproven.",
+      "existing_alternative": "Broad fallback does not distinguish this supported facet.",
+      "event_ids": [
+        200539
+      ],
+      "evidence_by_event": {
+        "200539": [
+          "Travis Johnson: Try, Kid!: a monthly night of unapproved and experimental music",
+          "Tags: Music, Concert, Nightlife, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "200539": [
+          "https://troostny.com/calendar/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-indie",
+      "category": "genre",
+      "label": "Indie music",
+      "visual": "Explore a hand-drawn note motif",
+      "rationale": "Broad stylistic family has no universal instrument; recognition unproven.",
+      "existing_alternative": "Broad fallback does not distinguish this specific supported facet.",
+      "event_ids": [
+        200578
+      ],
+      "evidence_by_event": {
+        "200578": [
+          "Blue Spruce // Sunday Sauce // Captain Cameleon // Iceland: Live at Gold Sounds ; 44 Wilson Ave off the Morgan L. 21+ Presented by Gold Sounds.",
+          "Tags: Music, Indie, Concert, Nightlife, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "200578": [
+          "https://dice.fm/event/6a66749198f21f000190746e",
+          "https://dice.fm/event/bb9kpo-blue-spruce-sunday-sauce-captain-cameleon-iceland-19th-sep-gold-sounds-new-york-tickets"
+        ]
+      }
+    },
+    {
+      "concept": "genre-jazz",
+      "label": "Jazz",
+      "category": "genre",
+      "visual": "A pair of syncopated musical notes with one loose improvisatory flourish.",
+      "rationale": "The genre is explicit, but an instrument-neutral motif remains exploratory and requires recognition tests; avoid treating saxophone as universal jazz.",
+      "existing_alternative": "Noto notes are generic; a saxophone misstates instrumentation when the program does not feature one.",
+      "event_ids": [
+        200723
+      ],
+      "evidence_by_event": {
+        "200723": [
+          "Chilean Jazz Series Vol 2: Claudio Rubio Quintet: Chilean Jazz Series Vol 2 featuring the Claudio Rubio Quintet.",
+          "Tags: Music, Jazz, Concert, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "200723": [
+          "https://shotgun.live/events/chilean-jazz-series-vol-2-claudio-rubio-quintet"
+        ]
+      }
+    },
+    {
+      "concept": "genre-jump-blues",
+      "label": "Jump blues",
+      "category": "genre",
+      "visual": "Two lively offbeat musical phrases.",
+      "rationale": "Jump blues is explicit in the mixed program; do not infer sax/brass personnel.",
+      "existing_alternative": "Use accurate broad Unicode or existing accepted art until a distinctive, structurally reviewed study is ready.",
+      "event_ids": [
+        200649
+      ],
+      "evidence_by_event": {
+        "200649": [
+          "Danny Lipsitz & His Brass Tacks: Danny Lipsitz leads his band, The Brass Tacks, in a high-energy mishmash of jazz, swing, early rock ‘n’ roll, jump blues, klezmer, and New Orleans music. It’s captivating, feel-good music for people from all walks of life, performed by some of the top musical talent in the world.",
+          "Tags: Community, Music, Dance, Rock, World Music, Jazz, Education, Concert, Klezmer, Swing Music, Swing Dance, Rock and Roll, Cultural Heritage, Swing, Jewish Music, Jump Blues, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "200649": [
+          "https://arthurstavern.nyc/events/danny-lipsitz-his-brass-tacks/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-klezmer",
+      "label": "Klezmer",
+      "category": "genre",
+      "visual": "A short musical phrase with one sweeping bent-note ornament and a dancing rhythmic arc.",
+      "rationale": "Klezmer is explicitly stated, but an instrument-neutral visual is exploratory and may fail genre recognition; do not assume clarinet or violin is present.",
+      "existing_alternative": "Noto violin and accordion would imply unlisted instruments; generic notes lose the stated tradition.",
+      "event_ids": [
+        200649
+      ],
+      "evidence_by_event": {
+        "200649": [
+          "Danny Lipsitz & His Brass Tacks: Danny Lipsitz leads his band, The Brass Tacks, in a high-energy mishmash of jazz, swing, early rock ‘n’ roll, jump blues, klezmer, and New Orleans music. It’s captivating, feel-good music for people from all walks of life, performed by some of the top musical talent in the world.",
+          "Tags: Community, Music, Dance, Rock, World Music, Jazz, Education, Concert, Klezmer, Swing Music, Swing Dance, Rock and Roll, Cultural Heritage, Swing, Jewish Music, Jump Blues, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "200649": [
+          "https://arthurstavern.nyc/events/danny-lipsitz-his-brass-tacks/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-new-orleans-jazz",
+      "category": "genre",
+      "label": "New Orleans jazz",
+      "visual": "Three interweaving musical lines",
+      "rationale": "Do not infer brass band or instrument from regional style; unproven motif.",
+      "existing_alternative": "Broad fallback does not distinguish this supported facet.",
+      "event_ids": [
+        200649
+      ],
+      "evidence_by_event": {
+        "200649": [
+          "Danny Lipsitz & His Brass Tacks: Danny Lipsitz leads his band, The Brass Tacks, in a high-energy mishmash of jazz, swing, early rock ‘n’ roll, jump blues, klezmer, and New Orleans music. It’s captivating, feel-good music for people from all walks of life, performed by some of the top musical talent in the world.",
+          "Tags: Community, Music, Dance, Rock, World Music, Jazz, Education, Concert, Klezmer, Swing Music, Swing Dance, Rock and Roll, Cultural Heritage, Swing, Jewish Music, Jump Blues, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "200649": [
+          "https://arthurstavern.nyc/events/danny-lipsitz-his-brass-tacks/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-rock-and-roll",
+      "label": "Rock and roll",
+      "category": "genre",
+      "visual": "A bold paired musical-note motif with a rhythmic arc",
+      "rationale": "Genre explicit; do not invent guitar instrumentation.",
+      "existing_alternative": "Retain the source Unicode until recognizable original artwork is reviewed.",
+      "event_ids": [
+        200574
+      ],
+      "evidence_by_event": {
+        "200574": [
+          "JoneBones: Twenty years ago, we had a Mardi Gras rock & roll wedding. Somehow we survived.... so we're doing it again. One night only. Old friends. New noise. Questionable decisions.",
+          "Tags: Music, Family, Concert, All Ages, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "200574": [
+          "https://bitterend.com/#/events/185985"
+        ]
+      }
+    },
+    {
+      "concept": "genre-swing",
+      "label": "Swing music",
+      "category": "genre",
+      "visual": "Two bold offset notes joined by a curved long-short rhythmic beam.",
+      "rationale": "Swing repertoire is explicit; explore the rhythm separately from instruments and test recognition.",
+      "existing_alternative": "Generic music notes are safe but broad; a dancing couple could wrongly imply a participatory lesson.",
+      "event_ids": [
+        200649
+      ],
+      "evidence_by_event": {
+        "200649": [
+          "Danny Lipsitz & His Brass Tacks: Danny Lipsitz leads his band, The Brass Tacks, in a high-energy mishmash of jazz, swing, early rock ‘n’ roll, jump blues, klezmer, and New Orleans music. It’s captivating, feel-good music for people from all walks of life, performed by some of the top musical talent in the world.",
+          "Tags: Community, Music, Dance, Rock, World Music, Jazz, Education, Concert, Klezmer, Swing Music, Swing Dance, Rock and Roll, Cultural Heritage, Swing, Jewish Music, Jump Blues, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "200649": [
+          "https://arthurstavern.nyc/events/danny-lipsitz-his-brass-tacks/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-zimbabwean-music",
+      "label": "Zimbabwean vocal traditions",
+      "category": "genre",
+      "visual": "Several interwoven vocal phrases with a small rhythmic accent.",
+      "rationale": "Program explicitly combines Zimbabwean songs, Afro Jazz, gospel and percussion; exact tradition and recognition need further research.",
+      "existing_alternative": "Use accurate broad Unicode or existing accepted art until a distinctive, structurally reviewed study is ready.",
+      "event_ids": [
+        200654
+      ],
+      "evidence_by_event": {
+        "200654": [
+          "Nobuntu: Nobuntu, the internationally acclaimed female a cappella quartet from Zimbabwe, bring their vibrant artistry to Caramoor for the first time. Their inventive performances range from traditional Zimbabwean songs to Afro Jazz and Gospel, utilizing pure voices along with traditional dance and percussion.",
+          "Tags: Music, World Music, Concert, Vocal Music, Global Music, Format, Performance, Zimbabwean Music"
+        ]
+      },
+      "source_urls_by_event": {
+        "200654": [
+          "https://caramoor.org/event/nobuntu-2026-rhcs"
+        ]
+      }
+    },
+    {
+      "concept": "sport-kickboxing",
+      "label": "Kickboxing",
+      "category": "sport",
+      "visual": "A balanced guard and controlled kick pose.",
+      "rationale": "Explicit training discipline; requires anatomical and contact review.",
+      "existing_alternative": "Use accurate broad Unicode or existing accepted art until a distinctive, structurally reviewed study is ready.",
+      "event_ids": [
+        201026
+      ],
+      "evidence_by_event": {
+        "201026": [
+          "Martial Arts Classes at Herald Square Plaza: Train in the heart of Manhattan with our martial arts classes at Herald Square. Open to all experience levels, these high-energy sessions combine Boxing, Muay Thai, and Kickboxing to help you build strength, sharpen technique, and boost confidence, all in a supportive, welcoming environment.",
+          "Tags: Free, Sports, Wellness, Fitness, Boxing, Martial Arts, Participatory, Kickboxing, Muay Thai, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "201026": [
+          "https://www.nyc.gov/main/events/?permalinkName=martial-arts-classes-at-herald-square-plaza&id=1087056&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=martial-arts-classes-at-herald-square-plaza&id=1160236&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=martial-arts-classes-at-herald-square-plaza&id=1160256&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=martial-arts-classes-at-herald-square-plaza&id=1160296&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=martial-arts-classes-at-herald-square-plaza&id=1230236&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=martial-arts-classes-at-herald-square-plaza&id=1230256&sequence=1",
+          "https://www.nycgovparks.org/events/2026/08/04/martial-arts-classes-at-herald-square-plaza",
+          "https://www.nycgovparks.org/events/2026/08/11/martial-arts-classes-at-herald-square-plaza",
+          "https://www.nycgovparks.org/events/2026/08/18/martial-arts-classes-at-herald-square-plaza",
+          "https://www.nycgovparks.org/events/2026/08/25/martial-arts-classes-at-herald-square-plaza",
+          "https://www.nycgovparks.org/events/2026/09/01/martial-arts-classes-at-herald-square-plaza",
+          "https://www.nycgovparks.org/events/2026/09/08/martial-arts-classes-at-herald-square-plaza"
+        ]
+      }
+    },
+    {
+      "concept": "sport-muay-thai",
+      "label": "Muay Thai",
+      "category": "sport",
+      "visual": "A balanced raised-knee guard with wrapped hands.",
+      "rationale": "Explicit named discipline; verify a characteristic safe pose and avoid generic nationality cues.",
+      "existing_alternative": "Use accurate broad Unicode or existing accepted art until a distinctive, structurally reviewed study is ready.",
+      "event_ids": [
+        201026
+      ],
+      "evidence_by_event": {
+        "201026": [
+          "Martial Arts Classes at Herald Square Plaza: Train in the heart of Manhattan with our martial arts classes at Herald Square. Open to all experience levels, these high-energy sessions combine Boxing, Muay Thai, and Kickboxing to help you build strength, sharpen technique, and boost confidence, all in a supportive, welcoming environment.",
+          "Tags: Free, Sports, Wellness, Fitness, Boxing, Martial Arts, Participatory, Kickboxing, Muay Thai, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "201026": [
+          "https://www.nyc.gov/main/events/?permalinkName=martial-arts-classes-at-herald-square-plaza&id=1087056&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=martial-arts-classes-at-herald-square-plaza&id=1160236&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=martial-arts-classes-at-herald-square-plaza&id=1160256&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=martial-arts-classes-at-herald-square-plaza&id=1160296&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=martial-arts-classes-at-herald-square-plaza&id=1230236&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=martial-arts-classes-at-herald-square-plaza&id=1230256&sequence=1",
+          "https://www.nycgovparks.org/events/2026/08/04/martial-arts-classes-at-herald-square-plaza",
+          "https://www.nycgovparks.org/events/2026/08/11/martial-arts-classes-at-herald-square-plaza",
+          "https://www.nycgovparks.org/events/2026/08/18/martial-arts-classes-at-herald-square-plaza",
+          "https://www.nycgovparks.org/events/2026/08/25/martial-arts-classes-at-herald-square-plaza",
+          "https://www.nycgovparks.org/events/2026/09/01/martial-arts-classes-at-herald-square-plaza",
+          "https://www.nycgovparks.org/events/2026/09/08/martial-arts-classes-at-herald-square-plaza"
+        ]
+      }
+    },
+    {
+      "concept": "topic-architectural-terracotta",
+      "label": "Architectural terracotta",
+      "category": "other",
+      "visual": "An ornamental fired-clay cornice above a brick.",
+      "rationale": "Exhibition explicitly focuses on terracotta and brick architectural artifacts, not clay making.",
+      "existing_alternative": "Use accurate broad Unicode or existing accepted art until a distinctive, structurally reviewed study is ready.",
+      "event_ids": [
+        201024
+      ],
+      "evidence_by_event": {
+        "201024": [
+          "Ongoing Museum Exhibit: New York's Brick & Terra Cotta Industries: NYC Parks and the Tottenville Historical Society invite you to visit a unique collection of terracotta artifacts and masonry bricks that chronicle turn-of-the-twentieth-century architectural styles common in New York City and across the United States.",
+          "Tags: Community, Museum, History, Art, Free, Education, Exhibition, Cultural Venue, Format, Browsable"
+        ]
+      },
+      "source_urls_by_event": {
+        "201024": [
+          "https://www.nyc.gov/main/events/?permalinkName=ongoing-museum-exhibit-new-yorks-brick-terra-cotta-industries&id=1091396&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=ongoing-museum-exhibit-new-yorks-brick-terra-cotta-industries&id=1091416&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=ongoing-museum-exhibit-new-yorks-brick-terra-cotta-industries&id=1164636&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=ongoing-museum-exhibit-new-yorks-brick-terra-cotta-industries&id=1164696&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=ongoing-museum-exhibit-new-yorks-brick-terra-cotta-industries&id=1164736&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=ongoing-museum-exhibit-new-yorks-brick-terra-cotta-industries&id=1164756&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=ongoing-museum-exhibit-new-yorks-brick-terra-cotta-industries&id=1164776&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=ongoing-museum-exhibit-new-yorks-brick-terra-cotta-industries&id=1164816&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=ongoing-museum-exhibit-new-yorks-brick-terra-cotta-industries&id=1164836&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=ongoing-museum-exhibit-new-yorks-brick-terra-cotta-industries&id=1164896&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=ongoing-museum-exhibit-new-yorks-brick-terra-cotta-industries&id=1234576&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=ongoing-museum-exhibit-new-yorks-brick-terra-cotta-industries&id=1234596&sequence=1",
+          "https://www.nycgovparks.org/events/2026/08/04/ongoing-museum-exhibit-new-yorks-brick-terra-cotta-industries",
+          "https://www.nycgovparks.org/events/2026/08/07/ongoing-museum-exhibit-new-yorks-brick-terra-cotta-industries",
+          "https://www.nycgovparks.org/events/2026/08/11/ongoing-museum-exhibit-new-yorks-brick-terra-cotta-industries",
+          "https://www.nycgovparks.org/events/2026/08/13/ongoing-museum-exhibit-new-yorks-brick-terra-cotta-industries",
+          "https://www.nycgovparks.org/events/2026/08/18/ongoing-museum-exhibit-new-yorks-brick-terra-cotta-industries",
+          "https://www.nycgovparks.org/events/2026/08/19/ongoing-museum-exhibit-new-yorks-brick-terra-cotta-industries",
+          "https://www.nycgovparks.org/events/2026/08/25/ongoing-museum-exhibit-new-yorks-brick-terra-cotta-industries",
+          "https://www.nycgovparks.org/events/2026/08/28/ongoing-museum-exhibit-new-yorks-brick-terra-cotta-industries",
+          "https://www.nycgovparks.org/events/2026/09/01/ongoing-museum-exhibit-new-yorks-brick-terra-cotta-industries",
+          "https://www.nycgovparks.org/events/2026/09/03/ongoing-museum-exhibit-new-yorks-brick-terra-cotta-industries",
+          "https://www.nycgovparks.org/events/2026/09/08/ongoing-museum-exhibit-new-yorks-brick-terra-cotta-industries"
+        ]
+      }
+    }
+  ],
+  "limitations": "Counts describe this cohort, not population reach. These are grounded prospective studies, not live assignments. Existing artwork may already suffice; exact equipment and genre recognition require further review."
+}

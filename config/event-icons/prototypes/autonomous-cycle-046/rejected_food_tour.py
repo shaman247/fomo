@@ -1,0 +1,4 @@
+from pathlib import Path
+# Original flat editorial diagram. Dotted route is schematic, never geographic.
+p=Path('.scratch/icon-cycles-20260909/cycle-046/art/food-tour.svg')
+p.write_text('''<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"><title>Food tour</title><path d="M24 103H96Q116 103 116 84V74" fill="none" stroke="#72A99C" stroke-width="7" stroke-linecap="round" stroke-dasharray="2 12"/><circle cx="17" cy="103" r="9" fill="#CC9061"/><circle cx="116" cy="65" r="8" fill="#D9AE69"/><circle cx="60" cy="47" r="33" fill="#DCE7E2"/><circle cx="60" cy="47" r="24" fill="#F1F4EB"/><path d="M17 20V40Q17 49 23 49V77M29 20V40Q29 49 23 49M23 20V41" fill="none" stroke="#6F8990" stroke-width="5" stroke-linecap="round"/><path d="M101 19Q90 25 91 48H100V76" fill="none" stroke="#6F8990" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg>\n''')

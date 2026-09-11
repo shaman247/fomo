@@ -1,0 +1,184 @@
+[
+  {
+    "icon_id": "format-live-opera",
+    "source_sha256": "5a49082f8d9d77c5dba656e8491957773d12e641163c87374248414c14a17fcd",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; brief known. Curtained stage with musical score and note.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-076/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-076/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 639,
+      "gzip_level_6": 358
+    },
+    "optimization": {
+      "initial_raw": 639,
+      "initial_gzip_level_6": 358,
+      "final_raw": 639,
+      "final_gzip_level_6": 358
+    },
+    "issues": [],
+    "resolved_issues": [],
+    "decision": "pass",
+    "limitations": [
+      "The label distinguishes live opera from other musical theater. No particular production, cast or set is depicted."
+    ]
+  },
+  {
+    "icon_id": "sport-triathlon",
+    "source_sha256": "c1190ba8daa07fdc08a613312bd45aeb71e353aae7b68d56c74bb05aceecba3d",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; brief known. Three successive panels show swimming, cycling and running symbols.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-076/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-076/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 823,
+      "gzip_level_6": 361
+    },
+    "optimization": {
+      "initial_raw": 823,
+      "initial_gzip_level_6": 361,
+      "final_raw": 823,
+      "final_gzip_level_6": 361
+    },
+    "issues": [],
+    "resolved_issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Three discipline symbols require a label at16px. Applies to the combined triathlon event, not a promise that optional duathlon or aquabike divisions include all three legs."
+    ]
+  },
+  {
+    "icon_id": "activity-housing-development-learning",
+    "source_sha256": "6249bed7d32e58bf019c7b73628105372ded1b1924e94f02a83bfe12be7e7070",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; brief known. Buildings on a lesson card with connected planning stages.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-076/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-076/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 587,
+      "gzip_level_6": 314
+    },
+    "optimization": {
+      "initial_raw": 587,
+      "initial_gzip_level_6": 314,
+      "final_raw": 587,
+      "final_gzip_level_6": 314
+    },
+    "issues": [],
+    "resolved_issues": [],
+    "decision": "pass",
+    "limitations": [
+      "This flat planning diagram depicts learning about housing development, not tenant help, a real project or an approval guarantee."
+    ]
+  },
+  {
+    "icon_id": "format-book-signing",
+    "source_sha256": "f8e9887e095648b1bf898f09c246a42c901663794ec28bef7cbd7bd0e74029ce",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; brief known. Open book bearing an original signing flourish, with a resting pen.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-076/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-076/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 5538,
+      "gzip_level_6": 1573
+    },
+    "optimization": {
+      "initial_raw": 5249,
+      "initial_gzip_level_6": 1497,
+      "final_raw": 5538,
+      "final_gzip_level_6": 1573
+    },
+    "issues": [],
+    "resolved_issues": [
+      "First native review found book/pen/ink too faint. Enlarged cover edge and pen, darkened signing flourish, and replaced raised ink tubes with ribbons following the page surface. Final geometry and native/runtime displays rechecked."
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Fine ink and pen details soften at16px. The label identifies signing; no real signature, cover, promised dedication or photograph is represented."
+    ]
+  },
+  {
+    "icon_id": "format-book-release-party",
+    "source_sha256": "c0c4adfa2d86ed9fa42891ccd4faecd0e9feb6d1550acdd57dcf1c6fcd5aa041",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; brief known. Closed book surrounded by celebratory confetti.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-076/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-076/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 548,
+      "gzip_level_6": 307
+    },
+    "optimization": {
+      "initial_raw": 548,
+      "initial_gzip_level_6": 307,
+      "final_raw": 548,
+      "final_gzip_level_6": 307
+    },
+    "issues": [],
+    "resolved_issues": [],
+    "decision": "pass",
+    "limitations": [
+      "The label distinguishes a book release party from other celebrations. Confetti is symbolic; author attendance and particular party activities are not promised."
+    ]
+  }
+]

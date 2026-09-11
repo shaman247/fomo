@@ -1,0 +1,21 @@
+# Autonomous cycle 005 artwork — September 10, 2026
+
+Five original vector pictograms derived from 100 full-context sequential reviews and two separately reread prior leads. The known catalog and fallback options were considered before selecting these gaps. No tag or place assignments are implied.
+
+| Meaning / stable ID | Grounded event | Cue / gap | Eligibility and exclusions |
+| --- | --- | --- | --- |
+| Art auction / `format-art-auction` | 191326 SCNY benefit | Framed art with a bidding paddle distinguishes bidding from exhibition viewing. | Explicit art auctions and auction previews; not ordinary sales or general fundraising. |
+| Book giveaway / `activity-book-giveaway` | 191380 Community Day | Books in an open distribution box represent take-home distribution. | Explicit free-book giveaways; not donation intake, paid sales, lending or book discussions. |
+| Staged reading / `format-staged-reading` | 191879 Have You Heard | Script stand with a theatrical mask distinguishes a dramatic reading from a fully staged play. | Explicit staged/rehearsed play readings; not ordinary literary readings or script writing. |
+| Live podcast / `format-live-podcast` | 190787 Drop Your Buffs | Paired desktop microphones and a dialogue emblem represent a podcast conversation. | Explicit in-person podcast stage shows; not generic panels, music duets or prerecorded listening. |
+| Sake and cheese pairing / `format-sake-cheese-pairing` | 189529 Brooklyn Kura class | Tokkuri, small cup and cheese wedge distinguish sake from wine pairings. | Explicit sake-and-cheese pairing; not sake alone or a brewery tour alone. |
+
+These are narrow, reusable formats with grounded evidence; counts above are examples rather than population-wide reach estimates. Existing fallback emojis remain respectively framed art, books, theater masks, microphone and sake. Free distribution and live performance are established by event context: the icons are useful shorthand, not independently validated proof of those terms.
+
+`scene.py` creates four authoritative mesh studies; `project.py` uses depth-aware projected face clipping, merges visible regions by paint and simplifies contours to 0.16 viewBox units. `views.py` generates front, rear, left, right, top and icon views. `flat_art.py` draws the art-auction composition as planar emblems. Regenerate from the repository root with the project venv; output is `.scratch/icon-cycles-20260909/cycle-005/art/`. The scene and projector contain no third-party geometry or raster assets.
+
+Book dimensions, covers, page blocks, cardboard flaps, stand support, microphone sockets and capsule contacts are simplified illustrative equipment. Exact products and event serviceware are not promised. The reading-page bottom rests on the tray lip at y=.7075. Both mic bases share y=.01. The dialogue bubble and theatrical mask are graphic emblems, not unsupported physical objects or human figures. Vessels and cheese share y=0; hollow profiles close at their rims and cup liquid stays below its rim. Sake vessel structure was checked against the [Japan Sake and Shochu Makers Association guide](https://japansake.or.jp/sake/en/basic/how-to-serve-sake/cups-vessels/), which describes small ceramic cups and serving vessels. Reference used for structural information; no artwork copied.
+
+The initial microphones resembled ice pops because grille bars were buried in their capsules; visible thicker bars and a dialogue cue resolved this. The initial theatrical badge was too small and was enlarged. A pale cup merged into the sake bottle; leftward separation and blue ceramic paint resolved it. Broad vessel and capsule paint reduced faceted shading. Artwork needs no runtime fonts; the paddle numeral is an outlined path.
+
+See `geometry-review.json` and [hash-bound final review](../../reviews/20260909-autonomous-cycle-005.json). Review is a distinct creator critical pass, not independent or blind. Native 128/32/24/16px cards on light/dark and ten actual IconManager variants were inspected. Fine facial/grille details soften at 16 px; the main cues are clearest at 24/32 px. Final five assets total 17,886 raw / 6,519 deterministic gzip-level-6 bytes, within comparable custom/Noto ranges. This is not a measured transfer or runtime-performance claim.

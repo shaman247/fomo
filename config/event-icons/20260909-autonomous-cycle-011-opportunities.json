@@ -1,0 +1,454 @@
+{
+  "date": "2026-09-10",
+  "scope": "Cycle 011: 100 sequential events 195764–196319, no targeted supplements.",
+  "suggestions": 21,
+  "concept_count": 19,
+  "concepts": [
+    {
+      "concept": "dance-vogue",
+      "label": "Vogue and Vogue Fem",
+      "category": "dance-style",
+      "visual": "Dancer with sharply framed face/arms and an angular full-body pose.",
+      "rationale": "Explicit Vogue/Fem classes support stylized movement imagery; reference review must distinguish it from generic posing.",
+      "existing_alternative": "Sparkles communicate mood but not the dance; no Vogue icon in current catalog.",
+      "event_ids": [
+        196255,
+        196257,
+        196258
+      ],
+      "evidence_by_event": {
+        "196255": [
+          "voguing 101 w/ zenith 🪩 • (9/1): Step into the world of ballroom with Voguing 101! Guided by the legendary, Darius \"Zenith\" Case, this introductory dance class is a full body experience, where you'll learn the fundamentals of voguing.",
+          "Tags: Community, Dance, Wellness, LGBTQ, Education, Class, Participatory, Format"
+        ],
+        "196257": [
+          "voguing 101 w/ zenith 🪩 • (10/6): Step into the world of ballroom with Voguing 101! Guided by the legendary, Darius 'Zenith' Case, this introductory dance class is a full body experience, where you'll learn the fundamentals of voguing.",
+          "Tags: Community, Event Space, Art, Dance, Wellness, LGBTQ, Education, Ballroom, Class, Participatory, Voguing, Format"
+        ],
+        "196258": [
+          "voguing 101 w/ zenith 🪩 • (10/20): Step into the world of ballroom with Voguing 101! Guided by the legendary Darius \"Zenith\" Case, this introductory dance class is a full body experience where you'll learn the fundamentals of voguing.",
+          "Tags: Community, Event Space, Art, Dance, Wellness, LGBTQ, Education, Ballroom, Class, Participatory, Voguing, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "196255": [
+          "https://luma.com/vogue91",
+          "https://luma.com/vogue915"
+        ],
+        "196257": [
+          "https://luma.com/vogue106"
+        ],
+        "196258": [
+          "https://luma.com/vogue1020"
+        ]
+      }
+    },
+    {
+      "concept": "activity-deep-listening",
+      "label": "Deep listening",
+      "category": "activity",
+      "visual": "Ear with a broad concentric sound arc.",
+      "rationale": "Guided interactive listening and sonic meditation differ from a generic concert.",
+      "existing_alternative": "Retain broad Unicode or suitable accepted artwork until recognition and structural review establish a distinct design.",
+      "event_ids": [
+        195862
+      ],
+      "evidence_by_event": {
+        "195862": [
+          "IONE: Artists Studio: IONE returns to the Veterans Room to lead a deep listening exercise, Listening with Dreams, with artistic collaborators to explore the difference between the involuntary nature of hearing and the voluntary, the selective nature of listening through movement, and interactive sonic meditations. In addition to her work as an author, playwright, director, and dream specialist, IONE is also a noted sound artist who with her late partner Pauline Oliveros redefined the boundaries of music making in the development of experimental and electronic art music.",
+          "Tags: Music, Theater, Art, Opera, Performance Art, Sound Art, Experimental Music, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "195862": [
+          "https://www.armoryonpark.org/season-events/2026-season/artists-studio/ione/"
+        ]
+      }
+    },
+    {
+      "concept": "activity-garden-stewardship",
+      "label": "Garden stewardship",
+      "category": "activity",
+      "visual": "A gloved hand beside a small leafy plant and exposed soil.",
+      "rationale": "Hands-on tending differs from viewing plants; use a large hand/leaf silhouette and test whether it adds clarity at 16px.",
+      "existing_alternative": "Existing seedling and potted plant artwork omit hands-on care; avoid inventing a particular supplied tool.",
+      "event_ids": [
+        196014
+      ],
+      "evidence_by_event": {
+        "196014": [
+          "City of Forest Day: Horticulture Community Volunteering: Celebrate City of Forest Day with a horticulture volunteer session all about trees. Join QBG’s horticulture staff for an engaging, educational event where you will learn gardening basics and work hands-on with plants.",
+          "Tags: Community, Education, Gardening, Outdoor, Volunteer, Horticulture, Trees, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "196014": [
+          "https://queensbotanical.org/event/city-of-forest-day-horticulture-community-volunteering/"
+        ]
+      }
+    },
+    {
+      "concept": "activity-sculpture-movement",
+      "label": "Sculpture and movement workshop",
+      "category": "activity",
+      "visual": "Abstract sculpture beside a grounded dancing pose.",
+      "rationale": "Participatory movement responds to sculpture rather than making sculpture.",
+      "existing_alternative": "Retain broad Unicode or suitable accepted artwork until recognition and structural review establish a distinct design.",
+      "event_ids": [
+        195975
+      ],
+      "evidence_by_event": {
+        "195975": [
+          "Sculpture and Movement: An Interactive Workshop with Dance Visions NY: Experience the Sculpture Garden in a whole new way as art comes to life through movement, creativity, and imagination! Join Dance Visions NY for an outdoor workshop and performance exploring sculpture and dance.",
+          "Tags: Community, Art, Workshop, Dance, Family, Education, Outdoor, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "195975": [
+          "https://nassaumuseum.org/programs-and-events/sculpture-and-movement-an-interactive-workshop-with-dance-visions-ny/"
+        ]
+      }
+    },
+    {
+      "category": "equipment",
+      "concept": "equipment-climbing-anchor",
+      "existing_alternative": "Climber conveys sport but omits technical anchor setup; ship anchor would be misleading.",
+      "label": "Climbing anchors",
+      "rationale": "The clinic specifically teaches anchors and cleaning rather than general climbing.",
+      "visual": "Two linked carabiners and a short rope loop forming an anchor.",
+      "event_ids": [
+        196164
+      ],
+      "evidence_by_event": {
+        "196164": [
+          "Top Rope, Sport Anchors & Cleaning: An educational clinic on top rope, sport anchors, and cleaning.",
+          "Tags: Workshop, Sports, Education, Outdoor, Rock Climbing, Climbing, Participatory, Format, Anchors"
+        ]
+      },
+      "source_urls_by_event": {
+        "196164": [
+          "https://app.rockgympro.com/b/widget/?a=offering&offering_guid=b0c44c6278aa49d780f75c6fac5061f5&widget_guid=3cbb4d9a1a0a4b808487c9bbbe1a1924&mode=e&course_guid=f1557e2e4b1681bca8e1115a75201fdb8b4279b6",
+          "https://app.rockgympro.com/b/widget/?a=offering&offering_guid=b0c44c6278aa49d780f75c6fac5061f5&widget_guid=3cbb4d9a1a0a4b808487c9bbbe1a1924&mode=e&course_guid=f1557e2eb74d3943edb9ea5636ccfe9ffe70dd01",
+          "https://app.rockgympro.com/b/widget/?a=offering&offering_guid=b0c44c6278aa49d780f75c6fac5061f5&widget_guid=3cbb4d9a1a0a4b808487c9bbbe1a1924&mode=e&course_guid=f1557e2ed4c1be93b5eec16cb02ece37a114e0ad",
+          "https://bushwick.metrorock.com/outdoor-programs"
+        ]
+      }
+    },
+    {
+      "concept": "format-bicycle-history-tour",
+      "label": "Bicycle history tour",
+      "category": "format",
+      "visual": "Bicycle wheel beside a route map.",
+      "rationale": "Bike-based guided exploration differs from racing; existing bicycle may already suffice.",
+      "existing_alternative": "Retain broad Unicode or suitable accepted artwork until recognition and structural review establish a distinct design.",
+      "event_ids": [
+        196074
+      ],
+      "evidence_by_event": {
+        "196074": [
+          "Open House New York: Cycling Through History and Nature at Floyd Bennett Field: A unique biking tour exploring the past, present, and future of New York City's first municipal airport.",
+          "Tags: Community, History, Free, Sports, Tour, Education, Outdoor, Format, Outings"
+        ]
+      },
+      "source_urls_by_event": {
+        "196074": [
+          "https://www.jbrpc.org/events/2026/10/17/open-house-new-york-cycling-through-history-and-nature-at-floyd-bennett-field"
+        ]
+      }
+    },
+    {
+      "concept": "format-harbor-awards",
+      "label": "Harbor awards benefit",
+      "category": "format",
+      "visual": "Small harbor buoy beside an award ribbon.",
+      "rationale": "Waterfront awards ceremony is not a boat trip; motif may lack reuse.",
+      "existing_alternative": "Retain broad Unicode or suitable accepted artwork until recognition and structural review establish a distinct design.",
+      "event_ids": [
+        195783
+      ],
+      "evidence_by_event": {
+        "195783": [
+          "2026 Heroes of the Harbor: The Waterfront Alliance honors those who have contributed to the vibrancy, sustainability, economy, education, and awareness of the New York and New Jersey harbor area.",
+          "Tags: Community, Festival, Education, Sustainability, Outdoor, Nightlife, Fundraiser, Awards Ceremony, Benefit, Harbor, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "195783": [
+          "https://waterfrontalliance.org/heroes-of-the-harbor/"
+        ]
+      }
+    },
+    {
+      "concept": "format-honey-tasting",
+      "label": "Honey tasting",
+      "category": "format",
+      "visual": "Honey dipper over two small tasting dishes.",
+      "rationale": "Honey sampling is a specific facet of this mixed pollinator day.",
+      "existing_alternative": "Retain broad Unicode or suitable accepted artwork until recognition and structural review establish a distinct design.",
+      "event_ids": [
+        195971
+      ],
+      "evidence_by_event": {
+        "195971": [
+          "Super Family Saturday: Fall Pollinators: Celebrate the amazing world of pollinators during this fun-filled day of exploration and discovery! In keeping with NCMA’s commitment to sustainability and environmental education, families will learn how bees, butterflies, and other pollinators help the Museum’s gardens thrive while supporting healthy ecosystems. Enjoy interactive story time, honey tasting, hands-on artmaking, and meet a native plant expert from the North Shore Audubon Society for an engaging educational experience.",
+          "Tags: Community, Art, Workshop, Family, Education, Outdoor, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "195971": [
+          "https://nassaumuseum.org/programs-and-events/super-family-saturday-fall-pollinators/"
+        ]
+      }
+    },
+    {
+      "concept": "format-literary-festival",
+      "label": "Literary festival",
+      "category": "format",
+      "visual": "Several book spines under a shared gathering canopy.",
+      "rationale": "A mixed festival of books and ideas is broader than one author talk or book club.",
+      "existing_alternative": "Retain broad Unicode or suitable accepted artwork until recognition and structural review establish a distinct design.",
+      "event_ids": [
+        195772
+      ],
+      "evidence_by_event": {
+        "195772": [
+          "JLF New York 2026: Celebrating books, ideas, and dialogue, the Jaipur Literature Festival — described as “the greatest literary show on Earth” returns to New York.",
+          "Tags: Community, Literature, Festival, Education, Dialogue, Books, Format, Social, Ideas"
+        ]
+      },
+      "source_urls_by_event": {
+        "195772": [
+          "https://asiasociety.org/new-york/events/jlf-new-york-2026"
+        ]
+      }
+    },
+    {
+      "concept": "format-living-shoreline-tour",
+      "label": "Living shoreline tour",
+      "category": "format",
+      "visual": "Reed edge and water curve beside a short path.",
+      "rationale": "Tour interprets nature-based shoreline restoration rather than performing restoration.",
+      "existing_alternative": "Retain broad Unicode or suitable accepted artwork until recognition and structural review establish a distinct design.",
+      "event_ids": [
+        196073
+      ],
+      "evidence_by_event": {
+        "196073": [
+          "Open House New York: West Pond Living Shoreline Tour: An immersive walking tour of the West Pond Living Shoreline project showcasing nature-based shoreline restoration.",
+          "Tags: Community, Nature, Free, Tour, Education, Outdoor, Format, Outings"
+        ]
+      },
+      "source_urls_by_event": {
+        "196073": [
+          "https://www.jbrpc.org/events/2026/10/17/open-house-new-york-west-pond-living-shoreline-tour"
+        ]
+      }
+    },
+    {
+      "concept": "format-museum-studio-tour",
+      "label": "Design studio open house",
+      "category": "format",
+      "visual": "Drafting desk seen through an open door.",
+      "rationale": "Architectural practice tours differ from visual-artist studio visits.",
+      "existing_alternative": "Retain broad Unicode or suitable accepted artwork until recognition and structural review establish a distinct design.",
+      "event_ids": [
+        195849
+      ],
+      "evidence_by_event": {
+        "195849": [
+          "Open Studio: Central Park Conservancy: Join ASLA-NY for an Open Studio featuring networking, a firm overview, a studio tour, and light refreshments.",
+          "Tags: Community, Architecture, Visual Arts, Art, Design, Education, Networking, Open House, Format, Browsable"
+        ]
+      },
+      "source_urls_by_event": {
+        "195849": [
+          "https://www.aslany.org/event/open-studio-central-park-conservancy/"
+        ]
+      }
+    },
+    {
+      "category": "format",
+      "concept": "format-orchestra",
+      "existing_alternative": "Noto violin falsely narrows a mixed orchestra; generic score lacks ensemble direction.",
+      "label": "Orchestra",
+      "rationale": "Conductor-and-score imagery represents the full orchestra without privileging one string or brass section; recognition must distinguish conducting from music lessons.",
+      "visual": "A conductor baton over an open music stand with one broad shared musical arc.",
+      "event_ids": [
+        195891
+      ],
+      "evidence_by_event": {
+        "195891": [
+          "The New York Philharmonic and the Soldiers’ Chorus of the U.S. Army Field Band: An iconic orchestra and powerful voices come together for a free musical salute commemorating the 25th anniversary of the September 11 attacks.",
+          "Tags: Community, Music, Free, Classical Music, Orchestra, Concert, Vocal Music, Choral, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "195891": [
+          "https://pacnyc.org/whats-on/the-new-york-philharmonic-and-the-soldiers-chorus-of-the-u-s-army-field-band-simulcast/",
+          "https://pacnyc.org/whats-on/the-new-york-philharmonic-and-the-soldiers-chorus-of-the-u-s-army-field-band/"
+        ]
+      }
+    },
+    {
+      "concept": "format-orchestra-and-chorus",
+      "label": "Orchestra with chorus",
+      "category": "format",
+      "visual": "Shared score between instrumental and singing ensemble cues.",
+      "rationale": "Both orchestra and chorus are explicit co-primary formats; avoid selecting one alone.",
+      "existing_alternative": "Retain broad Unicode or suitable accepted artwork until recognition and structural review establish a distinct design.",
+      "event_ids": [
+        195891
+      ],
+      "evidence_by_event": {
+        "195891": [
+          "The New York Philharmonic and the Soldiers’ Chorus of the U.S. Army Field Band: An iconic orchestra and powerful voices come together for a free musical salute commemorating the 25th anniversary of the September 11 attacks.",
+          "Tags: Community, Music, Free, Classical Music, Orchestra, Concert, Vocal Music, Choral, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "195891": [
+          "https://pacnyc.org/whats-on/the-new-york-philharmonic-and-the-soldiers-chorus-of-the-u-s-army-field-band-simulcast/",
+          "https://pacnyc.org/whats-on/the-new-york-philharmonic-and-the-soldiers-chorus-of-the-u-s-army-field-band/"
+        ]
+      }
+    },
+    {
+      "concept": "format-plant-social",
+      "label": "Houseplant social",
+      "category": "format",
+      "visual": "Two different potted plants flanking a conversation bubble.",
+      "rationale": "Plant-centered social gathering does not by itself prove a swap or potluck meal.",
+      "existing_alternative": "Retain broad Unicode or suitable accepted artwork until recognition and structural review establish a distinct design.",
+      "event_ids": [
+        196221
+      ],
+      "evidence_by_event": {
+        "196221": [
+          "GAY PLANTS! Plant Pot Luck & Social Mixer: GAY PLANTS! HAPPY HOMES! Join us for our first Plant Pot Luck & Social! Share the Joy of having a house plant in your home.",
+          "Tags: Community, Free, Gardening, Networking, Plants, Mixer, Potluck, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "196221": [
+          "https://www.meetup.com/queersocial/events/315775900/",
+          "https://www.meetup.com/queersocial/events/316378868/"
+        ]
+      }
+    },
+    {
+      "concept": "format-public-space-design-tour",
+      "label": "Public-space design tour",
+      "category": "format",
+      "visual": "Bench and tree beside a simple plan sheet.",
+      "rationale": "Designer-led tour explores public/private landscape design rather than gardening.",
+      "existing_alternative": "Retain broad Unicode or suitable accepted artwork until recognition and structural review establish a distinct design.",
+      "event_ids": [
+        195850
+      ],
+      "evidence_by_event": {
+        "195850": [
+          "Pops Hop!: Please join ASLANY, in an organizational collaboration with the Municipal Arts Society of New York, for a special guided tour of three iconic POPS in Midtown Manhattan, led by the visionary landscape architects who designed them. At each site, participants will hear directly from the principal designer about the park’s history, vision, design process, and role in the evolving public/private realm of New York City.",
+          "Tags: Community, Architecture, Art, Tour, Education, Outdoor, Urbanism, Format, Outings"
+        ]
+      },
+      "source_urls_by_event": {
+        "195850": [
+          "https://www.aslany.org/event/pops-hop/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-latin-alternative-rock",
+      "label": "Latin alternative rock",
+      "category": "genre",
+      "visual": "Interlocked rock rhythm marks and vocal phrase, exploratory.",
+      "rationale": "Genre is explicitly described, but motif must avoid assumed instruments.",
+      "existing_alternative": "Retain broad Unicode or suitable accepted artwork until recognition and structural review establish a distinct design.",
+      "event_ids": [
+        196041
+      ],
+      "evidence_by_event": {
+        "196041": [
+          "Elsten Torres: Elsten Torres is a Cuban–New York singer-songwriter, two-time GRAMMY nominee, two-time BMI Award winner, and pioneering voice of the 1990s alternative Latin rock movement. With six Billboard Top 10 hits—including a five-week #1—and a career spanning more than three decades, he continues to captivate audiences with songs that effortlessly bridge English, Spanish, Latin, and rock influences. Celebrating 30 years in music, Torres returns to New York with new music and an unforgettable live performance.",
+          "Tags: Music, Family, Concert, All Ages, Singer Songwriter, Vocal Music, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "196041": [
+          "https://bitterend.com/#/events/190865"
+        ]
+      }
+    },
+    {
+      "category": "genre",
+      "concept": "genre-reggaeton",
+      "existing_alternative": "Noto music notes or fire do not identify the subgenre; existing DJ decks identify equipment but not reggaeton.",
+      "label": "Reggaeton",
+      "rationale": "Explicit reggaeton programming supports a dembow-rhythm motif as an exploratory direction; mixed programs support a genre facet only, and recognition against generic electronic music must be tested.",
+      "visual": "A compact drum-pad grid with a bold alternating four-hit rhythm trail.",
+      "event_ids": [
+        195855
+      ],
+      "evidence_by_event": {
+        "195855": [
+          "Rosa Perreo (21+): Reggaeton & EDM function in NYC.",
+          "Tags: Music, Dance, Nightlife, Reggaeton, Latin Music, Electronic Music, Club Night, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "195855": [
+          "https://posh.vip/e/rosa-perreo-21-7",
+          "https://posh.vip/e/rosa-perreo-21-8",
+          "https://shotgun.live/en/events/rosa-perreo-august-15-at-the-house-of-yes-onyx-room"
+        ]
+      }
+    },
+    {
+      "concept": "genre-video-game-jazz",
+      "label": "Video-game jazz",
+      "category": "genre",
+      "visual": "Musical note over a pixel-shaped melody line.",
+      "rationale": "Game soundtrack reinterpretation is a concert, not gameplay or a screening.",
+      "existing_alternative": "Retain broad Unicode or suitable accepted artwork until recognition and structural review establish a distinct design.",
+      "event_ids": [
+        196028
+      ],
+      "evidence_by_event": {
+        "196028": [
+          "Dearly Beloved: Jazz Impressions of Kingdom Hearts, Final Fantasy & VGM x Eternal Wind Music: Eternal Wind reimagines music for imaginary worlds. \"Dearly Beloved\" on the title screen for Kingdom Hearts, \"To Zanarkand\" and final...",
+          "Tags: Music, Jazz, Concert, Video Game Music, Live Music, Final Fantasy, Format, Performance, Kingdom Hearts"
+        ]
+      },
+      "source_urls_by_event": {
+        "196028": [
+          "https://www.viewcy.com/event/dearly_beloved_jazz_1"
+        ]
+      }
+    },
+    {
+      "category": "activity",
+      "concept": "sport-rappelling",
+      "existing_alternative": "Noto climber faces a wall in ascent and does not clearly depict rappelling.",
+      "label": "Rappelling",
+      "rationale": "The clinic centers controlled rope descent; the leaned-back descending posture differentiates it from ascent.",
+      "visual": "A harnessed figure leaning back from a rock edge on a taut doubled rope.",
+      "event_ids": [
+        196165
+      ],
+      "evidence_by_event": {
+        "196165": [
+          "Rappelling: A clinic focused on rappelling techniques for climbers.",
+          "Tags: Workshop, Sports, Education, Outdoor, Climbing, Participatory, Format, Rappelling"
+        ]
+      },
+      "source_urls_by_event": {
+        "196165": [
+          "https://app.rockgympro.com/b/widget/?a=offering&offering_guid=86aba26262214065a5fc3a5be5e12ea0&widget_guid=3cbb4d9a1a0a4b808487c9bbbe1a1924&mode=e&course_guid=f1557e2e81942838f30bcf056bf04b0c2020b929",
+          "https://app.rockgympro.com/b/widget/?a=offering&offering_guid=86aba26262214065a5fc3a5be5e12ea0&widget_guid=3cbb4d9a1a0a4b808487c9bbbe1a1924&mode=e&course_guid=f1557e2eaf54b16f26edb522d78bdf1cd1d27a98",
+          "https://bushwick.metrorock.com/outdoor-programs"
+        ]
+      }
+    }
+  ],
+  "limitations": "Counts describe this cohort, not population reach. These are grounded prospective studies, not live assignments. Existing artwork may already suffice; exact equipment and genre recognition require further review."
+}

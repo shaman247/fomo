@@ -1,0 +1,11 @@
+{
+  "reviewer_mode": "creator-critical-pass",
+  "source_sha256": "c7cdbc89653d0eb19a359c188829ee3bd7a35f224906af652ccbbf9237ee1508",
+  "method": "Five simple frontal or top-view planar symbolic diagrams; no human pose, dimensional instrument or interacting solid requires a 3D scene.",
+  "findings": [
+    "Screen frames, symbolic overlays, document emblems and template holes use a single planar coordinate system.",
+    "Stencil shows an underlying sheet through holes; pencil is a separate symbol without a falsely depicted grip or contact.",
+    "Route endpoints meet the two pins; separated footprint symbols indicate walking without an anatomical pose."
+  ],
+  "decision": "pass"
+}

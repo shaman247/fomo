@@ -1,0 +1,138 @@
+{
+  "reviewer_mode": "creator-critical-pass",
+  "geometry_mode": "two-authoritative-scenes-and-three-flat-diagrams",
+  "views": [
+    "front",
+    "rear",
+    "left",
+    "right",
+    "top",
+    "icon"
+  ],
+  "evidence": ".scratch/icon-cycles-20260909/cycle-067/geometry.png",
+  "decision": "pass",
+  "findings": [
+    "All12final geometry views personally inspected. Pantry boards support cartons and tins, delivery box rests on ground, open flaps hinge at rims, and bag bottoms rest on its base. Earlier pre-render bag height and face winding were corrected. Added fruit emblem is attached to box face.",
+    "Mineral cluster is supported by its display plinth. Faceted gem has table,crown,girdle,pavilion and rests in a ring seat whose lower edge rests on its plinth. Ring aperture was adjusted to the pavilion cross-section before first visual packet. GIA and Smithsonian text informed structure; no source photograph is claimed.",
+    "Video-game concert, mathematics talk and networking coaching are flat symbolic diagrams. Their score/controller, notation/pointer and contact-card/guidance motifs do not assert a physical human pose or actual event equipment.",
+    "Five128/32/24/16light/dark cards, five accepted and four Noto reference cards, and ten final actual IconManager variants personally inspected. The pantry food cue was revised and the full scene re-rendered. Unchanged candidates/references retained identical artwork.",
+    "All final assets remain below15000raw/5000gzip review triggers. Pantry is the most detailed,9858raw/2639gzip; the added semantic food cue increases size but remains under the approximate10KB detailed-object aim. No broad independent or blind recognition claim."
+  ],
+  "references": [
+    {
+      "event_ids": [
+        220850
+      ],
+      "url": "https://www.njpac.org/event/undertale-the-determination-symphony/",
+      "method": "Primary page text personally inspected",
+      "findings": "Nov7 2026 at3pm and8pm Prudential Hall, Betty Wold Johnson Stage.25-piece orchestra plays soundtrack with gameplay footage. Optional cosplay, not gameplay or contest."
+    },
+    {
+      "event_ids": [
+        220913
+      ],
+      "url": "https://momath.org/math-encounters/",
+      "method": "Primary page text personally inspected",
+      "findings": "Richard Elwes How Big Is Big Oct14 at4pm/7pm, in person635Sixth, free with registration; under16 with adult. Charles Steinhorn introduction. Not physical manipulative workshop."
+    },
+    {
+      "event_ids": [
+        221086
+      ],
+      "url": "https://www.newyorkcares.org/project/a1HVr000003RcsHMAS",
+      "method": "Primary page loaded through network idle and personally read",
+      "findings": "Sep14 10am\u20131pm Manhattan. Project FULL. Unload truck and restock kosher pantry with produce, grains, protein and extras; available to everyone. Specific building not exposed in public details."
+    },
+    {
+      "event_ids": [
+        221087
+      ],
+      "url": "https://www.newyorkcares.org/project/a1HVr000003MSQXMA4",
+      "method": "Primary page loaded through network idle and personally read",
+      "findings": "StreetWise Partners networking-skills volunteer project Sep16 5:30\u20137pm VIRTUAL. No spots, registration closed. Volunteers coach unemployed/underemployed adults; office65Broadway is not attendance venue."
+    },
+    {
+      "event_ids": [
+        220952
+      ],
+      "url": "https://www.eventbrite.com/e/new-york-gems-jewelry-mineral-show-tickets-1998125324634",
+      "method": "Organizer ticket page personally inspected",
+      "findings": "Nov7 10am\u20136pm andNov8 11am\u20135pm, $15 covers both days. Retail/wholesale gems,jewelry,minerals/crystals. Fifth floor; body123W18 versus location125W18. Hourly door prizes; no guaranteed prize."
+    },
+    {
+      "event_ids": [
+        220828
+      ],
+      "url": "https://www.eventbrite.com/e/the-donor-a-live-game-show-to-find-the-perfect-sperm-donor-tickets-1998071889809",
+      "method": "Organizer ticket page personally inspected",
+      "findings": "Sales ended Sep10 8pm, doors7,21+. Live comedy contest, four contestants, hostBrookeFinegold. Littlefield source currently No Events Found. Stale publishability requires investigation; no medical matching-service inference. Not chosen for new artwork this batch."
+    },
+    {
+      "event_ids": [
+        220937
+      ],
+      "url": "https://www.nyswrc.org/annual-conference",
+      "method": "Primary page text personally inspected",
+      "findings": "Wildlife rehabilitation professional conference Nov12\u201315 2026 Ossining; registration opensSep1. Broad licensed-professional education/networking, not bat-only. Exact hotel not visible in read portion."
+    },
+    {
+      "event_ids": [
+        221125
+      ],
+      "url": "https://pier57nyc.com/event/creative-climate-forum/",
+      "method": "Primary venue page personally inspected",
+      "findings": "Sep24 9am\u20138pm Living Room,Daffodil/Seahorse classrooms. Free full-day gathering including panels,workshops,performances,walks,installations. Parent versus child occurrence partition needs review."
+    },
+    {
+      "event_ids": [
+        220848
+      ],
+      "url": "https://www.njpac.org/event/the-bald-and-the-beautiful-live/",
+      "method": "Primary page text personally inspected",
+      "findings": "Nov6 7:30pm Prudential Hall,18+. Trixie/ Katya interview guests across beauty industry live. Current page does not expressly promise a podcast recording."
+    },
+    {
+      "event_ids": [
+        220849
+      ],
+      "url": "https://www.njpac.org/event/niladri-kumaar/",
+      "method": "Primary page text personally inspected",
+      "findings": "Nov6 7:30pm Victoria Theater. Sitar star Kumaar, Talwalkar tabla,Fernandes keys,SambitChatterjee unnamed role. Late Zakir Hussain honoree. Documentary mentioned historically, not a promised screening."
+    },
+    {
+      "event_ids": [
+        220822
+      ],
+      "url": "https://www.bklynlibrary.org/calendar/cbh-talk-life-and-legacy-center-for-brooklyn-20260914-0630pm",
+      "method": "Primary page text personally inspected",
+      "findings": "Sep14 6:30\u20138pm CBH. Joshua Jelly-Schapiro discusses Daylight Come biography with Salamishah Tillet, images and recordings. Belafonte subject, not live guest."
+    },
+    {
+      "event_ids": [
+        220961
+      ],
+      "url": "https://www.bam.org/talks/2026/vibe",
+      "method": "Primary page text personally inspected",
+      "findings": "Oct13 Howard Gilman Opera House, AdamGrant with MalcolmGladwell. Tickets from$52 plus fees, book included, no bundle/member discounts. Book conversation rather than relationship coaching."
+    },
+    {
+      "event_ids": [
+        220952
+      ],
+      "url": "https://www.gia.edu/gia-news-research-value-factors-gem-cutting-styles-definitions",
+      "method": "Primary technical text and search excerpt personally read; no photo inspection claimed",
+      "findings": "Faceted gems share table/crown/girdle/pavilion construction; simplified original octagonal stone, not an exact brilliant-cut facet count or grade."
+    },
+    {
+      "event_ids": [
+        220952
+      ],
+      "url": "https://naturalhistory.si.edu/education/teaching-resources/featured-collections/all-sorts-quartz",
+      "method": "Museum educational text personally read through web result; no photo inspection claimed",
+      "findings": "Quartz commonly has six-sided pencil-shaped crystals; generic original prismatic cluster, not copied specimen or definitive mineral identification."
+    }
+  ],
+  "source_sha256": "09774de976acc55aad92868adaf8e28f8a796b179b7797198afe81686ac635fc",
+  "projector_sha256": "7b56d8ca39af3e882fd86789877524b8d45cb4c5afa3551d3114c67544c8c0f1",
+  "planar_source_sha256": "061796f8f4da33600994b7ff2418c75d6c26cc3bf9b88aae50c6a82776886641"
+}

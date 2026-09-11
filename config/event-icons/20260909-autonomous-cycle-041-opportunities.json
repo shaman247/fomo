@@ -1,0 +1,307 @@
+{
+  "date": "2026-09-10",
+  "scope": "Cycle 041: 100 sequential events 211646–212184, no targeted supplements.",
+  "suggestions": 14,
+  "concept_count": 13,
+  "concepts": [
+    {
+      "concept": "format-circus-show",
+      "label": "Circus show",
+      "category": "format",
+      "visual": "Circus performance ring and balanced show symbols.",
+      "rationale": "General circus spectacle has no confirmed single apparatus.",
+      "existing_alternative": "Keep supported accepted artwork or broad Unicode until a distinctive study passes review.",
+      "event_ids": [
+        211658,
+        211659
+      ],
+      "evidence_by_event": {
+        "211658": [
+          "Ritz Kidz Circus: Showcase: The 2026 Ritz Kidz Circus is a weekend of fun for the whole family. The showcase is followed by a high-flying performance featuring visiting circus professionals on August 15.",
+          "Tags: Theater, Family, Circus, Outdoor, Format, Theater Show, Performance"
+        ],
+        "211659": [
+          "Ritz Kidz Circus: Pro Show: Stake out your spot for a performance from our program coaches and special friends!",
+          "Tags: Community, Theater, Free, Family, Circus, Outdoor, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "211658": [
+          "https://safe-harbors.org/the-ritz-theater/ritzkidzcircus/"
+        ],
+        "211659": [
+          "https://safe-harbors.org/the-ritz-theater/ritzkidzcircus/"
+        ]
+      }
+    },
+    {
+      "concept": "activity-aerial-circus",
+      "label": "Aerial circus practice",
+      "category": "activity",
+      "visual": "A suspended trapeze and practice cue.",
+      "rationale": "Open swing needs apparatus verification before specific art.",
+      "existing_alternative": "Keep supported accepted artwork or broad Unicode until a distinctive study passes review.",
+      "event_ids": [
+        211657
+      ],
+      "evidence_by_event": {
+        "211657": [
+          "Ritz Kidz Circus: Open Swing: A weekend of fun for the whole family, with Open Swing events for ages 10 and older on August 8 and August 15.",
+          "Tags: Community, Theater, Free, Family, Circus, Outdoor, Open Practice, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "211657": [
+          "https://safe-harbors.org/the-ritz-theater/ritzkidzcircus/"
+        ]
+      }
+    },
+    {
+      "concept": "activity-indigenous-gardening",
+      "label": "Indigenous gardening interpretation",
+      "category": "activity",
+      "visual": "Garden bed with conversation bubble.",
+      "rationale": "Avoid pan-Indigenous imagery; exact teaching topic needs contextual review.",
+      "existing_alternative": "Keep supported accepted artwork or broad Unicode until a distinctive study passes review.",
+      "event_ids": [
+        212173
+      ],
+      "evidence_by_event": {
+        "212173": [
+          "Harvest Celebration: Seeds of the Future: A free family experience exploring the stories, traditions, and seasonal rhythms of the Community Garden. Shane Weeks and Tecumseh Ceaser of the Metoac Indigenous Collective will share Indigenous gardening practices, native-plant cultural significance, and sustainable gardening.",
+          "Tags: Community, Free, Family, Education, Gardening, Outdoor, Community Celebration, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "212173": [
+          "https://plantingfields.org/happenings/harvest-celebration/"
+        ]
+      }
+    },
+    {
+      "concept": "activity-parking-day",
+      "label": "Parking-space parklet day",
+      "category": "activity",
+      "visual": "Temporary green space inside a parking-bay outline.",
+      "rationale": "Public-space demonstration differs from ordinary park recreation.",
+      "existing_alternative": "Keep supported accepted artwork or broad Unicode until a distinctive study passes review.",
+      "event_ids": [
+        211754
+      ],
+      "evidence_by_event": {
+        "211754": [
+          "Park(ing) Day!: No description available.",
+          "Tags: Community, Free, Outdoor, Urban Planning, Community Celebration, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "211754": [
+          "https://nyc.streetsblog.org/calendar"
+        ]
+      }
+    },
+    {
+      "concept": "format-album-release-concert",
+      "label": "Album-release concert",
+      "category": "format",
+      "visual": "Music-note stage cue paired with a newly opened album sleeve.",
+      "rationale": "Live performance celebrates a new record.",
+      "existing_alternative": "Record alone implies playback; additional format cue may not justify new art.",
+      "event_ids": [
+        211653
+      ],
+      "evidence_by_event": {
+        "211653": [
+          "Lord Coward Record Release Show.: No description available.",
+          "Tags: Music, Concert, Album Release, Release Show, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "211653": [
+          "https://www.lucindasnyc.com/tm-event/nat-osborns-new-band-lord-coward-album-release-show/"
+        ]
+      }
+    },
+    {
+      "concept": "format-film-music-concert",
+      "label": "Film-music concert",
+      "category": "format",
+      "visual": "Orchestral score paired with film-strip cue.",
+      "rationale": "Live film repertoire is not a concert film or live score synchronized to a screening.",
+      "existing_alternative": "Keep supported accepted artwork or broad Unicode until a distinctive study passes review.",
+      "event_ids": [
+        212148
+      ],
+      "evidence_by_event": {
+        "212148": [
+          "007: James Bond Forever: LENA HALL sings Bond favorites on October 23, 2026.",
+          "Tags: Music, Classical Music, Film, Orchestra, Concert, James Bond, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "212148": [
+          "https://newyorkpops.org/007-james-bond-forever/"
+        ]
+      }
+    },
+    {
+      "concept": "format-jazz-brunch",
+      "label": "Jazz brunch",
+      "category": "format",
+      "visual": "Music cue and meal plate.",
+      "rationale": "Meal and live jazz can be co-primary; exact meal purchase needs verification.",
+      "existing_alternative": "Keep supported accepted artwork or broad Unicode until a distinctive study passes review.",
+      "event_ids": [
+        212165
+      ],
+      "evidence_by_event": {
+        "212165": [
+          "Vinícius Gomes: Bring Brazilian cool to Sunday brunch with São Paulo-born guitarist and composer Vinícius Gomes.",
+          "Tags: Community, Music, Jazz, Festival, Concert, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "212165": [
+          "https://hudsonhall.org/event/jazz-brunch/"
+        ]
+      }
+    },
+    {
+      "concept": "format-performance-rehearsal",
+      "label": "Performance rehearsal",
+      "category": "format",
+      "visual": "Stage cue and repeating practice mark.",
+      "rationale": "Preparation is distinct from an audience-facing performance.",
+      "existing_alternative": "Keep supported accepted artwork or broad Unicode until a distinctive study passes review.",
+      "event_ids": [
+        212140
+      ],
+      "evidence_by_event": {
+        "212140": [
+          "Talent Show Rehearsal with Nydia: Stop by Saturdays at 2pm for rehearsal and performance preparation with multi-talented Nydia.",
+          "Tags: Community, Music, Dance, Comedy, Open Practice, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "212140": [
+          "https://www.instagram.com/ali_forney_connects/"
+        ]
+      }
+    },
+    {
+      "concept": "format-tribute-concert",
+      "label": "Tribute concert",
+      "category": "format",
+      "visual": "Two overlapping record silhouettes with one echoing musical note.",
+      "rationale": "Tribute repertoire is a format facet; motif is unproven and must not imitate an artist logo.",
+      "existing_alternative": "Existing broad Unicode remains suitable; specific motif must demonstrate added recognition before new artwork.",
+      "event_ids": [
+        212164
+      ],
+      "evidence_by_event": {
+        "212164": [
+          "Mino 4 Miles: Multi-instrumentalist Mino Cinélu marks Miles Davis’s centennial with music inspired by the years he spent playing alongside the jazz icon.",
+          "Tags: Community, Music, Jazz, Festival, Concert, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "212164": [
+          "https://hudsonhall.org/event/mino-4-miles/",
+          "https://www.viewcy.com/event/hudson_jazz_festival_1"
+        ]
+      }
+    },
+    {
+      "concept": "genre-blues",
+      "label": "Blues",
+      "category": "genre",
+      "visual": "Explore a spare bent musical note with a short call-and-response echo mark.",
+      "rationale": "Explicit blues repertoire merits a genre candidate independent of instrument; no proven universal motif, recognition testing required.",
+      "existing_alternative": "Noto guitar or saxophone excludes many blues forms; generic notes omit genre.",
+      "event_ids": [
+        211756
+      ],
+      "evidence_by_event": {
+        "211756": [
+          "Jason Dea West: Jason Dea West presents songs from “Louella,” blending blues, folk, and Americana with stories drawn from rural landscapes and his travels as an American troubadour.",
+          "Tags: Music, Concert, Folk Music, Americana, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "211756": [
+          "https://www.viewcy.com/event/jason_dea_west"
+        ]
+      }
+    },
+    {
+      "concept": "genre-hip-hop",
+      "label": "Hip-hop",
+      "category": "genre",
+      "visual": "A compact boombox with two broad speaker circles and one strong rhythmic accent.",
+      "rationale": "The genre is explicitly tagged; boombox is an exploratory historical music-culture cue, not a claim that it is on stage, and must be tested beyond generic retro music.",
+      "existing_alternative": "Noto microphone is generic vocal performance; DJ decks imply a DJ role not established by every hip-hop concert.",
+      "event_ids": [
+        212062
+      ],
+      "evidence_by_event": {
+        "212062": [
+          "Jyoty All Night: From her roots working the door at London clubs to festival stages around the globe, Jyoty has built her charismatic reputation on effortlessly zipping across chasms of style and scene. Known for blending UK grime and hip-hop with danceha",
+          "Tags: Music, Dance, World Music, Hip Hop, Nightlife, Electronic Music, Club Night, All Night, Format, Social, UK Grime"
+        ]
+      },
+      "source_urls_by_event": {
+        "212062": [
+          "https://ra.co/events/2499965"
+        ]
+      }
+    },
+    {
+      "concept": "genre-hypnotic-techno",
+      "label": "Hypnotic techno",
+      "category": "genre",
+      "visual": "One looping concentric pulse circling a simple four-beat sequencer.",
+      "rationale": "The headliner is explicitly associated with hypnotic techno. Repetition and circular pulse offer a testable abstraction; no claim that the motif is uniquely recognizable.",
+      "existing_alternative": "DJ decks serve the set now; the existing spiral conveys hypnosis broadly but not music.",
+      "event_ids": [
+        212088
+      ],
+      "evidence_by_event": {
+        "212088": [
+          "Ignez, Daybreak: Few artists have risen as quickly—or as convincingly—as Ignez. At the forefront of a new generation of hypnotic techno, the Dutch producer and DJ has become one of the scene's most sought-after names through a distinctive sound built on patience, tension, and deep emotional resonance.",
+          "Tags: Music, Techno, DJ, Nightlife, Electronic Music, Club Night, Hypnotic Techno, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "212088": [
+          "https://dice.fm/event/6a7b79f9fdc761000103cd6e",
+          "https://dice.fm/event/yodbl2-ignez-daybreak-24th-sep-signal-new-york-city-tickets",
+          "https://ra.co/events/2503574"
+        ]
+      }
+    },
+    {
+      "concept": "genre-ska",
+      "label": "Ska",
+      "category": "genre",
+      "visual": "A large music note with a simple checkerboard lower panel.",
+      "rationale": "The program explicitly centers ska across eras; a checkered music motif is exploratory and needs recognition testing rather than treating one instrument as the genre.",
+      "existing_alternative": "Existing checker flag resembles motorsport; instrument emoji would invent specific instrumentation.",
+      "event_ids": [
+        212071
+      ],
+      "evidence_by_event": {
+        "212071": [
+          "Out Of Control Army: Out of Control Army takes the stage at SOB’s NYC! Hailing from Mexico City, Mexican ska band OUT OF CONTROL ARMY has become one of the most representative bands of the new global wave of ska music.",
+          "Tags: Music, Concert, Mexican Music, Ska, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "212071": [
+          "https://ra.co/events/2505317",
+          "https://sobs.com/events/out-of-control-army/"
+        ]
+      }
+    }
+  ],
+  "limitations": "Counts describe this cohort, not population reach. These are grounded prospective studies, not live assignments. Existing artwork may already suffice; exact equipment and genre recognition require further review."
+}

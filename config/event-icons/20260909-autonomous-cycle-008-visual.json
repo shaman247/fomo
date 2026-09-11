@@ -1,0 +1,216 @@
+[
+  {
+    "icon_id": "craft-cake-decorating",
+    "source_sha256": "99cd6f8a2c44c386f7b674a50e6e5fb8e87cfecace377d2533463c6b9d532257",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator separately inspected unlabeled native-size cards with prior brief knowledge. Cake being decorated with a piping bag; high confidence at24/32, could resemble a birthday cake at16.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-008/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-008/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 6510,
+      "gzip_level_6": 2425
+    },
+    "optimization": {
+      "initial_raw": 19757,
+      "initial_gzip_level_6": 6377,
+      "final_raw": 6510,
+      "final_gzip_level_6": 2425
+    },
+    "issues": [
+      {
+        "severity": "material",
+        "location": "icing upper surface",
+        "observation": "Inward profile winding culled the cream cap, leaving a pink top.",
+        "revision": "Reversed the icing profile and verified the closed top from six views.",
+        "status": "resolved"
+      },
+      {
+        "severity": "material",
+        "location": "SVG size and frosting",
+        "observation": "Tiny shaded bead fragments inflated the first source to19757 raw/6377gzip.",
+        "revision": "Used flat bead paint and fewer sphere rings, closed microscopic seams and simplified projected regions.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Cake plus piping bag remains clear at24/32px; nozzle and individual frosting deposits soften at16px. This is a tool-use diagram without a depicted hand, not a unsupported human pose. Size and recipe are illustrative."
+    ]
+  },
+  {
+    "icon_id": "craft-gouache",
+    "source_sha256": "9c6eb0f3c2e7e28b8cdd3f12d60f045444c90151fd443578ea7a8f341fd01a66",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator separately inspected unlabeled native-size cards with prior brief knowledge. Paint swatches with tube and brush; medium-specific confidence requires event context.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-008/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-008/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 958,
+      "gzip_level_6": 487
+    },
+    "optimization": {
+      "initial_raw": 958,
+      "initial_gzip_level_6": 487,
+      "final_raw": 958,
+      "final_gzip_level_6": 487
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Opaque swatches, brush and tube suggest paint technique, but gouache cannot be distinguished from all acrylic paints solely by equipment. Apply only with explicit medium evidence."
+    ]
+  },
+  {
+    "icon_id": "activity-journaling",
+    "source_sha256": "b4051be1a35a4d59d0938d62dfe6d1a929ee96dfda30f59e4138c732216f4038",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator separately inspected unlabeled native-size cards with prior brief knowledge. Open notebook with pen; personal writing clear at24/32.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-008/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-008/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 3053,
+      "gzip_level_6": 1150
+    },
+    "optimization": {
+      "initial_raw": 3632,
+      "initial_gzip_level_6": 1299,
+      "final_raw": 3053,
+      "final_gzip_level_6": 1150
+    },
+    "issues": [
+      {
+        "severity": "material",
+        "location": "journal and pen",
+        "observation": "Low camera flattened the page and made the pen too slight at small sizes.",
+        "revision": "Raised camera and enlarged pen radius while retaining page support.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Open personal journal and resting pen remain useful at24/32px; ruled lines and heart soften at16px. It is a personal-writing emblem, not a claim about diary content."
+    ]
+  },
+  {
+    "icon_id": "format-vintage-clothing-market",
+    "source_sha256": "b91c602d67adb4941b9838fe7f1c9d8729adae31fd170189ec2d712385170729",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator separately inspected unlabeled native-size cards with prior brief knowledge. Two garments on a clothes rack with a sale tag; clear clothing market, vintage status not independently recoverable.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-008/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-008/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 5011,
+      "gzip_level_6": 1744
+    },
+    "optimization": {
+      "initial_raw": 7666,
+      "initial_gzip_level_6": 2437,
+      "final_raw": 5011,
+      "final_gzip_level_6": 1744
+    },
+    "issues": [
+      {
+        "severity": "minor",
+        "location": "rack uprights",
+        "observation": "Thin supporting rail softened against dark background at small sizes.",
+        "revision": "Increased upright/rail radii and rechecked hanger contacts.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Garment rack and resale tag indicate clothing shopping; vintage identity relies on event context. Collar, buttons and tag eye soften at16px. Clothes are generic, not historical replicas."
+    ]
+  },
+  {
+    "icon_id": "activity-library-shelving",
+    "source_sha256": "0782aec57e2bedec5d135bca416cab22d66f39f94da0cf1703fc49cf56d35fc7",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator separately inspected unlabeled native-size cards with prior brief knowledge. Bookcase with a book pulled forward; clear library stock, sorting task partly contextual.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-008/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-008/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 4977,
+      "gzip_level_6": 1613
+    },
+    "optimization": {
+      "initial_raw": 7574,
+      "initial_gzip_level_6": 2459,
+      "final_raw": 4977,
+      "final_gzip_level_6": 1613
+    },
+    "issues": [
+      {
+        "severity": "minor",
+        "location": "spine details",
+        "observation": "Two bands per book and volume-based lettering added unnecessary detail.",
+        "revision": "Kept one planar spine band per book; simplified redundant vector fragments.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Bookshelf and pulled-forward book convey organizing stock at24/32px; the sorting offset and spine bands soften at16px. This is not a call-number or preservation-storage specification."
+    ]
+  }
+]

@@ -1,11 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128"><title>Choir</title><desc>Three singers with open mouths share an open musical score.</desc>
-<path d="M13 83V63c0-17 36-17 36 0v20z" fill="#168BAA"/><path d="M45 80V54c0-18 38-18 38 0v26z" fill="#CF558D"/><path d="M79 83V63c0-17 36-17 36 0v20z" fill="#5683B7"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128"><title>Choir</title><desc>Three singers with open mouths sing with floating musical notes.</desc>
+<path d="M13 83V63c0-17 36-17 36 0v34q-18 8-36 0z" fill="#168BAA"/><path d="M45 80V54c0-18 38-18 38 0v39q-19 9-38 0z" fill="#CF558D"/><path d="M79 83V63c0-17 36-17 36 0v34q-18 8-36 0z" fill="#5683B7"/>
 <ellipse cx="31" cy="34" rx="16" ry="20" fill="#7A503C"/><ellipse cx="31" cy="38" rx="13" ry="16" fill="#E4A276"/><path d="M17 31c0-16 28-16 28 0-10 0-13-7-14-10-2 6-7 10-14 10z" fill="#49352E"/>
 <ellipse cx="64" cy="28" rx="16" ry="20" fill="#5B4438"/><ellipse cx="64" cy="33" rx="13" ry="16" fill="#FFD0A7"/><path d="M49 28c0-18 29-18 30 0-11 2-19-3-22-8-1 4-4 7-8 8z" fill="#805133"/>
 <ellipse cx="97" cy="34" rx="16" ry="20" fill="#352F2E"/><ellipse cx="97" cy="39" rx="13" ry="16" fill="#AC7656"/><path d="M82 32c0-18 31-18 30 0-6-3-8-7-12-9-5 6-12 8-18 9z" fill="#352F2E"/>
 <g fill="#49352E"><ellipse cx="31" cy="46" rx="3.5" ry="4.5"/><ellipse cx="64" cy="41" rx="3.5" ry="4.5"/><ellipse cx="97" cy="47" rx="3.5" ry="4.5"/></g>
 <g stroke="#49352E" stroke-width="2" stroke-linecap="round"><path d="M25 36h2m8 0h2m21-5h2m8 0h2m21 6h2m8 0h2"/></g>
-<path d="M9 73c20-7 36-4 55 6 19-10 35-13 55-6v42c-20-5-36-3-55 7-19-10-35-12-55-7z" fill="#34566A"/>
-<path d="M14 68c19-6 34-1 50 8v39c-16-9-31-13-50-8z" fill="#F9F3E8"/><path d="M64 76c17-9 32-14 50-8v39c-18-5-33-1-50 8z" fill="#E3D8CD"/>
-<g fill="#596D78"><path d="M43 84h4v17h-4zM93 82h4v17h-4z"/><ellipse cx="39" cy="101" rx="8" ry="5" transform="rotate(-15 39 101)"/><ellipse cx="89" cy="99" rx="8" ry="5" transform="rotate(-15 89 99)"/></g>
-</svg>
+<g fill="#596D78"><g transform="translate(9 60)"><path d="M0 0h3v21h-3zM2 0q13 2 7 12V7L2 5Z"/><ellipse cx="-3" cy="21" rx="5" ry="3.5"/></g><g transform="translate(117 56)"><path d="M0 0h3v21h-3zM2 0q10 2 5 12V7L2 5Z"/><ellipse cx="-3" cy="21" rx="5" ry="3.5"/></g></g></svg>

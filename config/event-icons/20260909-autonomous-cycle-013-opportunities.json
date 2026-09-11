@@ -1,0 +1,371 @@
+{
+  "date": "2026-09-10",
+  "scope": "Cycle 013: 100 sequential events 196719–197308, no targeted supplements.",
+  "suggestions": 16,
+  "concept_count": 16,
+  "concepts": [
+    {
+      "concept": "activity-communication-practice",
+      "label": "Communication practice",
+      "category": "activity",
+      "visual": "Two speech bubbles with a gently repaired broken line between them.",
+      "rationale": "Practicing apologies and relationship communication differs from target-language conversation classes.",
+      "existing_alternative": "Use accurate current Unicode or accepted artwork until the prospective design has been structurally and visually reviewed.",
+      "event_ids": [
+        197150
+      ],
+      "evidence_by_event": {
+        "197150": [
+          "Apology Tour: How To Say Sorry Effectively: Learn and practice writing or verbally offering sincere and effective apologies that open the doors to healing and forgiveness and help you have a peaceful conscience, a good night's sleep, and possibly even a repaired relationship!",
+          "Tags: Community, Workshop, Wellness, Education, Professional Development, Relationships, Communication, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "197150": [
+          "https://luma.com/ikiakta4"
+        ]
+      }
+    },
+    {
+      "concept": "activity-creative-software",
+      "label": "Creative software workshop",
+      "category": "activity",
+      "visual": "Screen with image, sound and video panels.",
+      "rationale": "Cross-media editing software overview is broader than one editing-specific application.",
+      "existing_alternative": "Use accurate current Unicode or accepted artwork until the prospective design has been structurally and visually reviewed.",
+      "event_ids": [
+        196758
+      ],
+      "evidence_by_event": {
+        "196758": [
+          "Alternatives to Adobe (In Person): Explore affordable alternatives to Adobe Premiere, Photoshop, After Effects and Audition for video, image, animation and audio editing on Mac or PC. This class meets in person at Brooklyn Public Library’s Central Library.",
+          "Tags: Visual Arts, Art, Science, Free, Education, Technology, Graphic Design, Class, Audio Editing, Video Editing, Software, Creative Software, Participatory, Digital Tools, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "196758": [
+          "https://bricartsmedia.org/class/alternatives-to-adobe/",
+          "https://www.bklynlibrary.org/node/828693"
+        ]
+      }
+    },
+    {
+      "concept": "activity-garden-stewardship",
+      "label": "Garden stewardship",
+      "category": "activity",
+      "visual": "A gloved hand beside a small leafy plant and exposed soil.",
+      "rationale": "Hands-on tending differs from viewing plants; use a large hand/leaf silhouette and test whether it adds clarity at 16px.",
+      "existing_alternative": "Existing seedling and potted plant artwork omit hands-on care; avoid inventing a particular supplied tool.",
+      "event_ids": [
+        197120
+      ],
+      "evidence_by_event": {
+        "197120": [
+          "EcoZone 4 Volunteer Crew Open House: Here's a chance to make an ongoing commitment to your community! Join a Prospect Park Alliance EcoZone Volunteer Crew to help Alliance gardeners care for Brooklyn's Backyard!",
+          "Tags: Community, Free, Gardening, Outdoor, Volunteer, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "197120": [
+          "https://www.prospectpark.org/event/ecozone-4-volunteer-crew-open-house-2/2026-08-27/",
+          "https://www.prospectpark.org/event/ecozone-4-volunteer-crew-open-house-2/2026-09-03/",
+          "https://www.prospectpark.org/event/ecozone-4-volunteer-crew-open-house-2/2026-09-10/",
+          "https://www.prospectpark.org/event/ecozone-4-volunteer-crew-open-house-2/2026-09-17/",
+          "https://www.prospectpark.org/event/ecozone-4-volunteer-crew-open-house/2026-08-06/",
+          "https://www.prospectpark.org/event/ecozone-4-volunteer-crew-open-house/2026-08-13/",
+          "https://www.prospectpark.org/event/ecozone-4-volunteer-crew-open-house/2026-08-20/"
+        ]
+      }
+    },
+    {
+      "concept": "activity-meditation-retreat",
+      "label": "Meditation retreat",
+      "category": "activity",
+      "visual": "Quiet walking path and a meditation cushion in one setting.",
+      "rationale": "Retreat mixes sitting, walking and dharma teaching; avoid a single assumed posture.",
+      "existing_alternative": "Use accurate current Unicode or accepted artwork until the prospective design has been structurally and visually reviewed.",
+      "event_ids": [
+        196742
+      ],
+      "evidence_by_event": {
+        "196742": [
+          "October Half-Day Retreat 2026: Silently engaging in sitting and walking meditation, hearing a dharma talk, and connecting with community are wonderful ways to spend a Saturday morning.",
+          "Tags: Community, Wellness, Meditation, Online, Retreat, Open Practice, Dharma Talk, Participatory, Mind-Body, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "196742": [
+          "https://zencare.org/events/october-half-day-retreat-2026"
+        ]
+      }
+    },
+    {
+      "concept": "activity-sensory-nature-exploration",
+      "label": "Sensory nature exploration",
+      "category": "activity",
+      "visual": "Leaf beside an eye, ear and touch marker.",
+      "rationale": "Guided multisensory nature study differs from birding or pond dipping alone.",
+      "existing_alternative": "Use accurate current Unicode or accepted artwork until the prospective design has been structurally and visually reviewed.",
+      "event_ids": [
+        197308
+      ],
+      "evidence_by_event": {
+        "197308": [
+          "Homeschool Adventures: Exploring Nature with all our Senses: This class is a unique opportunity for Homeschoolers to go outside and explore the wonders of nature with experienced environmental educators as their guide. Through hands-on, creative activities, students learn the science behind what they observe and experience.",
+          "Tags: Community, Garden, Family, Education, Outdoor, Class, Participatory, Outdoor Venue, Homeschool, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "197308": [
+          "https://www.reeves-reedarboretum.org/event/homeschool-adventures-senses-sept-11-2026/"
+        ]
+      }
+    },
+    {
+      "concept": "craft-dramatic-writing",
+      "label": "Dramatic writing",
+      "category": "craft",
+      "visual": "Dialogue script between two speech marks.",
+      "rationale": "Writing dramatic dialogue may serve theater or screen; do not presume screenplay format.",
+      "existing_alternative": "Use accurate current Unicode or accepted artwork until the prospective design has been structurally and visually reviewed.",
+      "event_ids": [
+        197307
+      ],
+      "evidence_by_event": {
+        "197307": [
+          "The Art of Writing Great Dialogue: Gain insights in writing better scripts through dialogue.",
+          "Tags: Literature, Free, Education, Gathering, Talk, Writing, Format, Scriptwriting"
+        ]
+      },
+      "source_urls_by_event": {
+        "197307": [
+          "https://freelancersunion.org/hub/"
+        ]
+      }
+    },
+    {
+      "concept": "craft-siddi-quilting",
+      "label": "Siddi quilting",
+      "category": "craft",
+      "visual": "Layered scraps and perimeter running stitches on a quilt corner.",
+      "rationale": "Technique-specific prospect should be researched with practitioners before superseding accepted quilting art.",
+      "existing_alternative": "Use accurate current Unicode or accepted artwork until the prospective design has been structurally and visually reviewed.",
+      "event_ids": [
+        196851
+      ],
+      "evidence_by_event": {
+        "196851": [
+          "Siddi Style Quilting Bee: Learn about the Siddi community and their quilting practices. See Siddi-inspired textiles by Princeton Sankofa Stitchers Modern Quilt Guild. Try out the Siddi quilting technique and contribute to a new quilt.",
+          "Tags: Community, Art, Workshop, Education, Crafts, Quilting, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "196851": [
+          "https://newarkmuseumart.org/event/quilting-bee/",
+          "https://newarkmuseumart.org/event/quilting-bee/?date=202609251230"
+        ]
+      }
+    },
+    {
+      "category": "dance-style",
+      "concept": "dance-ballroom",
+      "existing_alternative": "Existing dancer emojis are solo; compare existing people-dancing artwork before creating another partnered silhouette.",
+      "label": "Ballroom dancing",
+      "rationale": "The event explicitly teaches or practices partnered ballroom dance; closed hold expresses the activity more accurately than a lone dancer.",
+      "visual": "A partnered pair in a clear closed dance hold, with one broad sweeping skirt.",
+      "event_ids": [
+        197070
+      ],
+      "evidence_by_event": {
+        "197070": [
+          "FRI Night BLUE MOON Social & SUN Afternoon TEA Dance w/Zachary Bordonaro of Left Side Leading NYC: Join Zachary Bordonaro of Left Side Leading NYC for a Sunday Afternoon Tea Dance featuring a beginner-friendly class and DJ'd social dancing.",
+          "Tags: Community, Event Space, Dance, Ballroom, Nightlife, Social Dance, Open Practice, Participatory, Tea Dance, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "197070": [
+          "https://dancemanhattan.com/calendar/event/20"
+        ]
+      }
+    },
+    {
+      "concept": "format-architecture-tour",
+      "label": "Architecture walking tour",
+      "category": "format",
+      "visual": "Building facade beside a dotted walking route.",
+      "rationale": "Architecture interpretation differs from studio artmaking or ordinary city-place identity.",
+      "existing_alternative": "Retain an accurate broad Unicode or accepted icon until a distinct reviewed design is available.",
+      "event_ids": [
+        197297
+      ],
+      "evidence_by_event": {
+        "197297": [
+          "Historic District House Tour: Explore select interiors of some of Morristown’s most beautiful private homes. The tour includes Macculloch Hall Historical Museum and other historic properties on and around Macculloch Avenue.",
+          "Tags: Community, Architecture, History, Art, Tour, Education, Outdoor, Format, Outings"
+        ]
+      },
+      "source_urls_by_event": {
+        "197297": [
+          "https://maccullochhall.org/house-tour/",
+          "https://maccullochhall.org/upcoming-events/#!event/2026/10/4/historic-district-house-tour"
+        ]
+      }
+    },
+    {
+      "concept": "format-beer-mile",
+      "label": "Beer mile",
+      "category": "format",
+      "visual": "Running shoe beside a small beer glass.",
+      "rationale": "Beer-mile social running differs from ordinary beer tasting; route/track details must be verified.",
+      "existing_alternative": "Use accurate current Unicode or accepted artwork until the prospective design has been structurally and visually reviewed.",
+      "event_ids": [
+        196842
+      ],
+      "evidence_by_event": {
+        "196842": [
+          "Beer Mile Special #255: A special Beer Mile hash event.",
+          "Tags: Community, Sports, Outdoor, Beer, Outing, Format, Outings, Hashing"
+        ]
+      },
+      "source_urls_by_event": {
+        "196842": [
+          "https://hashnyc.com/"
+        ]
+      }
+    },
+    {
+      "concept": "format-docu-concert",
+      "label": "Documentary concert",
+      "category": "format",
+      "visual": "Screen and performance microphone sharing an archival timeline.",
+      "rationale": "Biographical concert with projections is not necessarily live scoring synchronized to a film.",
+      "existing_alternative": "Use accurate current Unicode or accepted artwork until the prospective design has been structurally and visually reviewed.",
+      "event_ids": [
+        196754
+      ],
+      "evidence_by_event": {
+        "196754": [
+          "The Phil Collins Story: The Phil Collins Story is an all-new docu-concert chronicling the artist's remarkable chart-topping time with Genesis to his multi-Grammy winning solo career and Academy Award-winning work for Disney. This fully produced immersive musical journey stars talent from around the world and features intricate lighting design, state-of-the-art audio and dynamic projections.",
+          "Tags: Music, Concert, Tribute Band, Live Music, Phil Collins, Tribute Show, Format, Performance, Docu Concert"
+        ]
+      },
+      "source_urls_by_event": {
+        "196754": [
+          "https://www.thecapitoltheatre.com/the-capitol-theatre/events/detail/the-phil-collins-story"
+        ]
+      }
+    },
+    {
+      "concept": "format-irish-session",
+      "label": "Traditional Irish session",
+      "category": "format",
+      "visual": "Circle of shared melody marks around an unoccupied chair.",
+      "rationale": "Open traditional-music session differs from a concert with a guaranteed instrument roster.",
+      "existing_alternative": "Use accurate current Unicode or accepted artwork until the prospective design has been structurally and visually reviewed.",
+      "event_ids": [
+        196867
+      ],
+      "evidence_by_event": {
+        "196867": [
+          "Traditional Irish Sessions in the Café (Fall 2026 / Spring 2027): All welcome!",
+          "Tags: Music, Folk Music, Irish Music, Open Practice, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "196867": [
+          "https://irishartscenter.org/event/traditional-irish-sessions-fall-2026-spring-2027"
+        ]
+      }
+    },
+    {
+      "concept": "format-music-trio",
+      "label": "Three-person music ensemble",
+      "category": "format",
+      "visual": "Three linked musical marks without prescribed instrumentation.",
+      "rationale": "Explicit trio need not be piano/bass/drums; preserve lineup neutrality.",
+      "existing_alternative": "Use accurate current Unicode or accepted artwork until the prospective design has been structurally and visually reviewed.",
+      "event_ids": [
+        197299
+      ],
+      "evidence_by_event": {
+        "197299": [
+          "Chris Dave x Meshell Ndegeocello x Eric Gales Trio: No description available.",
+          "Tags: Music, Jazz, Concert, Nightlife, Trio, Chris Dave, Live Music, Blue Note, Format, Performance, Meshell Ndegeocello, Eric Gales"
+        ]
+      },
+      "source_urls_by_event": {
+        "197299": [
+          "https://www.bluenotejazz.com/nyc/tm-event/chris-dave-x-meshell-ndegeocello-x-eric-gales-trio/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-cosmic-country",
+      "label": "Cosmic country",
+      "category": "genre",
+      "visual": "Country rhythm motif with a small orbit-shaped melodic line.",
+      "rationale": "Named cosmic-country blend is distinct from literal astronomy, but genre recognition needs study.",
+      "existing_alternative": "Use accurate current Unicode or accepted artwork until the prospective design has been structurally and visually reviewed.",
+      "event_ids": [
+        196753
+      ],
+      "evidence_by_event": {
+        "196753": [
+          "Daniel Donato's Cosmic Country: Daniel Donato's Cosmic Country has carved out a unique and individualized spot for himself, blending an organic rock band aesthetic with plenty of roadhouse twang, instrumental virtuosity, and melodically infectious songcraft. Bridging Nashville and the Great West, Kentucky and mid-60s northern California, tie-dye and plaid, it is a world of his own and a wide world of musical adventure.",
+          "Tags: Music, Rock, Concert, Cosmic Country, Country, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "196753": [
+          "https://www.thecapitoltheatre.com/the-capitol-theatre/events/detail/daniel-donatos-cosmic-country-1"
+        ]
+      }
+    },
+    {
+      "category": "genre",
+      "concept": "genre-rnb",
+      "existing_alternative": "Noto microphone shows vocals but not genre; avoid assuming saxophone or other instruments.",
+      "label": "R&B",
+      "rationale": "R&B is explicit; exploratory smooth vocal motif is not a proven genre symbol and must be tested.",
+      "visual": "Explore a microphone paired with a single smooth looping sound-wave ribbon.",
+      "event_ids": [
+        197298
+      ],
+      "evidence_by_event": {
+        "197298": [
+          "Inayah: No description available.",
+          "Tags: Music, Concert, Nightlife, R&B, Soul Music, Live Music, Format, Performance, Inayah"
+        ]
+      },
+      "source_urls_by_event": {
+        "197298": [
+          "https://www.bluenotejazz.com/nyc/tm-event/inayah-3/",
+          "https://www.bluenotejazz.com/nyc/tm-event/inayah/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-ska",
+      "label": "Ska",
+      "category": "genre",
+      "visual": "A large music note with a simple checkerboard lower panel.",
+      "rationale": "The program explicitly centers ska across eras; a checkered music motif is exploratory and needs recognition testing rather than treating one instrument as the genre.",
+      "existing_alternative": "Existing checker flag resembles motorsport; instrument emoji would invent specific instrumentation.",
+      "event_ids": [
+        196731
+      ],
+      "evidence_by_event": {
+        "196731": [
+          "THE DOOMSTOMPERS w/ The Abruptors, Ben Basile + Girth Control: New York State of Ska at The Broadway with THE DOOMSTOMPERS, The Abruptors, Ben Basile and Girth Control.",
+          "Tags: Music, Concert, Nightlife, Ska, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "196731": [
+          "https://www.thebroadway.nyc/showcalendar/the-doomstompers-w-the-abruptors-ben-basile-girth-control"
+        ]
+      }
+    }
+  ],
+  "limitations": "Counts describe this cohort, not population reach. These are grounded prospective studies, not live assignments. Existing artwork may already suffice; exact equipment and genre recognition require further review."
+}

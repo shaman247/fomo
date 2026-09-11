@@ -1,0 +1,177 @@
+[
+  {
+    "icon_id": "activity-construction-brick-robotics",
+    "source_sha256": "ba278f62eebeffc951252b9d045d19491a12a715dec8738ff0a7c48dcdcf82d0",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; brief known. Wheeled construction-brick robot with controller and sensor.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-068/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-068/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 8857,
+      "gzip_level_6": 2855
+    },
+    "optimization": {
+      "initial_raw": 8857,
+      "initial_gzip_level_6": 2855,
+      "final_raw": 8857,
+      "final_gzip_level_6": 2855
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Wheels/controller/sensor read at32/24px; studs and cable soften at16px. Label distinguishes robotics from toy-car play. Generic original kit construction, no exact LEGO model or competition promised."
+    ]
+  },
+  {
+    "icon_id": "activity-spreadsheet-skills",
+    "source_sha256": "a6e2a2ff297dd67655f60da1735a3cf0e5c9832a965fdb42cddd708d01e066fb",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; brief known. Spreadsheet grid, formula bar and editing pencil.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-068/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-068/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 811,
+      "gzip_level_6": 416
+    },
+    "optimization": {
+      "initial_raw": 811,
+      "initial_gzip_level_6": 416,
+      "final_raw": 811,
+      "final_gzip_level_6": 416
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Cell grid and pencil survive16px; tiny formula cue softens. No product logo, software version or promised formula."
+    ]
+  },
+  {
+    "icon_id": "activity-reading-recommendations",
+    "source_sha256": "e19c7244940927b1fee7c913705c5afc40a7b4cefd7f5a4b0d0e9410f2609eae",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; brief known. Open book and recommendation check in a speech bubble.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-068/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-068/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 799,
+      "gzip_level_6": 449
+    },
+    "optimization": {
+      "initial_raw": 799,
+      "initial_gzip_level_6": 449,
+      "final_raw": 799,
+      "final_gzip_level_6": 449
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Book and bubble survive16px; personalized recommendation meaning depends on label. No actual title, giveaway or book-club format promised."
+    ]
+  },
+  {
+    "icon_id": "craft-wire-wrapped-jewelry",
+    "source_sha256": "c65e0128e4f938e85d554b096acab5a48efb1444ed4de38592b4a8d3a6cb3aa0",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; brief known. Wire-wrapped bead and round-nose pliers on a work mat.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-068/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-068/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 6225,
+      "gzip_level_6": 2110
+    },
+    "optimization": {
+      "initial_raw": 6225,
+      "initial_gzip_level_6": 2110,
+      "final_raw": 6225,
+      "final_gzip_level_6": 2110
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Pendant and pliers read at32/24px; thin wire turns soften at16px. Label distinguishes wire wrapping from general jewelry. Original illustrative piece, not an executable wirework tutorial or promised class design."
+    ]
+  },
+  {
+    "icon_id": "format-music-documentary",
+    "source_sha256": "15dc4eae070d3e4b89241891de8abcd7cf855512a1747515fdf675fd88adf3c1",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; brief known. Film frame with music notes and interview microphone.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-068/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-068/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 892,
+      "gzip_level_6": 486
+    },
+    "optimization": {
+      "initial_raw": 892,
+      "initial_gzip_level_6": 486,
+      "final_raw": 892,
+      "final_gzip_level_6": 486
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Film/music motif survives16px; interview microphone softens. Label distinguishes nonfiction music biography/history from concert footage alone. No artist or filmmaker attendance promised."
+    ]
+  }
+]

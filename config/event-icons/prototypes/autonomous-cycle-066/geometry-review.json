@@ -1,0 +1,187 @@
+{
+  "reviewer_mode": "creator-critical-pass",
+  "geometry_mode": "two-authoritative-scenes-and-three-flat-diagrams",
+  "views": [
+    "front",
+    "rear",
+    "left",
+    "right",
+    "top",
+    "icon"
+  ],
+  "evidence": ".scratch/icon-cycles-20260909/cycle-066/geometry.png",
+  "decision": "pass",
+  "findings": [
+    "All12final multi-view geometry images personally inspected. Guitar uses a connected seven-string instrument with four/three tuning hardware, nut-to-bridge scale, pickup, tailpiece, smooth bouts and single cutaway. Stand feet meet ground and cradle supports body. Camera roll changes composition, not object geometry.",
+    "Loop pedal has a grounded case, rubber base, attached footplate and hinge, top control/indicator and side sockets. Manufacturer text informs approximate dimensions; actual source photo was not inspected.",
+    "Intaglio diagram places an original line image on a copper-colored plate beside a horizontally reversed paper impression. Park stewardship is a flat tree/tool emblem. Full-album concert is a flat stage/album/microphone diagram. No nontrivial pose or physical contact is asserted by these symbolic diagrams.",
+    "Allfive candidate native128/32/24/16light/dark cards, five accepted and four Noto reference cards, and ten final actual IconManager variants personally inspected. Unchanged candidates and reference sources retained identical artwork after guitar framing revision.",
+    "Initial trio study rejected because guitar with two drums suggested hand percussion and did not reliably communicate guitar/bass/drum-kit. Preserved as an unregistered prototype and prospective opportunity. Full-album concert has explicit primary evidence and replaces it in the five accepted icons.",
+    "Guitar reduced18111/5128 to13021/3762 bytes while preserving defining string topology and broad shapes. It remains more detailed than ordinary pictograms but below raw/gzip review triggers; exact seven-string specificity still needs label at small sizes."
+  ],
+  "references": [
+    {
+      "event_ids": [
+        220731
+      ],
+      "url": "https://www.marineparkalliance.org/event/volunteer-day-14/",
+      "method": "Primary page text personally inspected",
+      "findings": "Sep27 9:30\u201311:30am. Mixed park upkeep: graffiti painting, invasive removal, native planting, litter. Gloves/tools supplied, registration required. Exact meeting place needs registration detail; donation mailing address is not necessarily event location."
+    },
+    {
+      "event_ids": [
+        220734
+      ],
+      "url": "https://www.marineparkalliance.org/event/halloween-volunteer-day/",
+      "method": "Primary page text personally inspected",
+      "findings": "Oct31 9:30\u201311:30am, same mixed park upkeep. Comfortable clothes and optional spooky outfit, gloves/tools supplied, preregistration required. Not costume contest."
+    },
+    {
+      "event_ids": [
+        220814
+      ],
+      "url": "https://www.queenstheatre.org/events/las-anez-ryt7",
+      "method": "Primary page text personally inspected",
+      "findings": "Oct9 8pm, The Cabaret,2hours,$25 including$2ticketfee; TALKBACK shown. Live twin duet with loop pedal, beats and small instruments. Exact pedal model not stated."
+    },
+    {
+      "event_ids": [
+        220785
+      ],
+      "url": "https://www.thedjangonyc.com/events/greg-skaff-6/?selected_date=2026-09-20",
+      "method": "Primary page text personally inspected",
+      "findings": "Sep20 6:30/8pm. Current lineup: Greg Skaff guitar,Ugonna Okegwo bass,Carmen Intorre Jr drums. Album bio mentions Ron Carter/Tootie Heath and a future Jonathan Barber record; those are not current lineup."
+    },
+    {
+      "event_ids": [
+        220790
+      ],
+      "url": "https://www.thedjangonyc.com/events/philippe-lemm-9/?selected_date=2026-09-23",
+      "method": "Primary page text personally inspected",
+      "findings": "Sep23 10:15/11:30pm, explicitly Organ Trio led by drummer Lemm. Other two current musicians/instruments not named. Standard trio biography insufficient to infer guitar or Hammond model."
+    },
+    {
+      "event_ids": [
+        220708
+      ],
+      "url": "https://www.themorgan.org/programs/workshop-intaglio-etching-studio",
+      "method": "Failed primary access; no content inferred",
+      "findings": "Browser returned Cloudflare challenge/empty main and web open failed. No primary class details verified. Saved title identifies intaglio etching workshop but materials,tools,venue,dates and process require later verification."
+    },
+    {
+      "event_ids": [
+        220690
+      ],
+      "url": "https://www.mayoarts.org/shows/zoso/",
+      "method": "Primary page text personally inspected",
+      "findings": "Primary confirms Led Zeppelin tribute,Oct30 8pm,$45\u201379 all-in,no opener/intermission. Saved description instead belongs to preceding Mavericks event; apparent shifted extraction."
+    },
+    {
+      "event_ids": [
+        220691
+      ],
+      "url": "https://www.mayoarts.org/shows/paul-anka/",
+      "method": "Primary page text personally inspected",
+      "findings": "Primary Paul Anka career-spanning vocal concert,Nov3 7:30pm,$91\u2013189all-in. Saved description is Zoso tribute text; its real hit-song text appears on next Art Garfunkel row."
+    },
+    {
+      "event_ids": [
+        220692
+      ],
+      "url": "https://www.mayoarts.org/shows/art-garfunkel/",
+      "method": "Primary page text personally inspected",
+      "findings": "Primary Nov6 8pm,$101\u2013159all-in,Wonderful World tour with band. Saved description contains Paul Anka songs; Garfunkel summary fragment appears on next Rick Steves row. No cancellation shown on inspected current primary page."
+    },
+    {
+      "event_ids": [
+        220693
+      ],
+      "url": "https://www.mayoarts.org/shows/guest-attraction-new-jersey-symphony-rick-steves/",
+      "method": "Primary text inspected unless explicit limitation stated",
+      "findings": "Nov7 2pm/7:30pm,$33\u2013115all-in; RickSteves hosts,NicholasHersh conducts NewJerseySymphony with European imagery and historical commentary. Saved Garfunkel fragment is wrong; this real text was shifted onto Righteous Brothers."
+    },
+    {
+      "event_ids": [
+        220694
+      ],
+      "url": "https://www.mayoarts.org/shows/the-righteous-brothers/",
+      "method": "Primary text inspected unless explicit limitation stated",
+      "findings": "Nov8 3pm,$45\u2013114all-in, BillMedley/BuckyHeard vocal partnership; BobbyHatfield died2003. Saved description is RickSteves symphonic film text,not this concert."
+    },
+    {
+      "event_ids": [
+        220698
+      ],
+      "url": "https://www.mayoarts.org/shows/geoff-tates-operation-mindcrime/",
+      "method": "Primary text inspected unless explicit limitation stated",
+      "findings": "Nov14 8pm,$45\u201379all-in. Progressive metal album Operation:Mindcrime performed in full by GeoffTate and band; saved fragment about NewJersey independence belongs to neighboring ballet program."
+    },
+    {
+      "event_ids": [
+        220765
+      ],
+      "url": "https://www.americancomposers.org/performances-events/virginia-b-toulmin-commission-by-leanna-primiani-with-roco-2",
+      "method": "Primary text inspected unless explicit limitation stated",
+      "findings": "PRIMARY confirms Sep26 5pm TheChurchofStJohntheDivine,HOUSTON TX. ROCO,LeannaPrimiani Visions,conductorDelyanaLazarova. Incorrectly mapped to Manhattan cathedral; high-priority geography contamination,not a NYC program."
+    },
+    {
+      "event_ids": [
+        220774
+      ],
+      "url": "https://www.benedettoguitars.com/product/7-string-bravo-deluxe/",
+      "method": "Primary text inspected unless explicit limitation stated",
+      "findings": "Manufacturer structural reference: seven-string archtop,16inch body2.5inchdeep,25inchscale,2.125inchnut; built-in B7 pickup,ebonytailpiece/bridge/fingerboard/tuningbuttons. This is reference guitar,NOT proof performer owns exact model. Photo link49 identified but NOT yet viewed."
+    },
+    {
+      "event_ids": [
+        220774
+      ],
+      "url": "https://www.seymourduncan.com/artists/ron-jackson",
+      "method": "Primary text inspected unless explicit limitation stated",
+      "findings": "Search snippet lists Benedetto B7 pickup and performer website. Fullpage returned mostly navigation; do not claim performer guitar construction from this alone."
+    },
+    {
+      "event_ids": [
+        220708
+      ],
+      "url": "https://www.metmuseum.org/perspectives/materials-and-techniques-printmaking-etching",
+      "method": "Primary technical text personally read",
+      "findings": "Ink remains in incised plate lines; printed impression reverses the matrix and can show plate mark. Flat diagram uses original generic botanical design. Morgan workshop primary blocked; no exact workshop process claimed."
+    },
+    {
+      "event_ids": [
+        220774
+      ],
+      "url": "https://www.benedettoguitars.com/product/7-string-bravo-deluxe/",
+      "method": "Manufacturer dimensions and product photograph personally inspected in browser screenshot guitar-source.png",
+      "findings": "Approximate16inch body,2.5inch depth,25inch scale; seven strings and four/three tuners, single cutaway, f-holes, pickup, bridge and tailpiece. Original geometry and colors, not traced or a Ron Jackson model attribution."
+    },
+    {
+      "event_ids": [
+        220814
+      ],
+      "url": "https://www.boss.info/global/products/rc-1/specifications/",
+      "method": "Manufacturer specification and manual text personally read; photo attempt did not yield an inspected image",
+      "findings": "73x129x59mm compact envelope, hinged foot switch, level knob, circular loop indicator and side audio sockets. Generic simplified recorder, no device ownership claim."
+    },
+    {
+      "event_ids": [
+        220814
+      ],
+      "url": "https://static.roland.com/assets/media/pdf/RC-1_eng03_W.pdf",
+      "method": "Manufacturer manual text read; PDF screenshot did not display an inspectable image",
+      "findings": "Panel descriptions identify switch, input/output sockets, level control and loop indicator. No operating or electrical advice in artwork."
+    },
+    {
+      "event_ids": [
+        220785
+      ],
+      "url": "https://www.gregskaff.com/discography",
+      "method": "Artist primary text read",
+      "findings": "Re-Up lineup guitar/Skaff,bass/Okegwo,drums/Barber is recording history, not Sep20 current drummer. Current Django source names Intorre. Trio art study deferred after inaccurate hand-drum appearance; no trio assignment."
+    }
+  ],
+  "source_sha256": "de6ad3c5ef545fdd9055677a4c204ae07ab192b22ae8bf2aa6f51c7752044f75",
+  "projector_sha256": "b94d778b7828375307eeadc2311fc0c763f116c7ce464ee1c6f3645636135bc0",
+  "planar_source_sha256": "adf8e0a30b176603fdbc89e167cc3fe086e1088ff510ebe37b1fc1a8de90c592"
+}

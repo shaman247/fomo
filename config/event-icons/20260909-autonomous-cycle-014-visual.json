@@ -1,0 +1,194 @@
+[
+  {
+    "icon_id": "craft-animal-drawing",
+    "source_sha256": "eb9119b9b0b3057d8bf3754ef8879c2376d3c029fb0144e51676ca94b21aa545",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Animal sketch with pencil.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-014/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-014/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 777,
+      "gzip_level_6": 446
+    },
+    "optimization": {
+      "initial_raw": 777,
+      "initial_gzip_level_6": 446,
+      "final_raw": 777,
+      "final_gzip_level_6": 446
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Outlined animal drawing and pencil remain distinct at24/32px; fine bird lines soften at16px. Symbolic bird does not promise a specific species or live animals."
+    ]
+  },
+  {
+    "icon_id": "craft-landscape-painting",
+    "source_sha256": "f70a0659fcdfd5dd350348119616011d7d5a0b766d751f3204fb8d3319f6133b",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Landscape painting with brush.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-014/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-014/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 771,
+      "gzip_level_6": 420
+    },
+    "optimization": {
+      "initial_raw": 771,
+      "initial_gzip_level_6": 420,
+      "final_raw": 771,
+      "final_gzip_level_6": 420
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Landscape picture plus brush identifies painting scenery at24/32px. Small cloud and river detail simplify at16px. Prefer an existing medium-specific icon when the event establishes that medium."
+    ]
+  },
+  {
+    "icon_id": "craft-still-life-painting",
+    "source_sha256": "1a5159e95581046e4ce41f93d717dbf3d193e04e2857c7940be26b434d01f538",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Still-life flower painting with brush.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-014/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-014/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 945,
+      "gzip_level_6": 496
+    },
+    "optimization": {
+      "initial_raw": 945,
+      "initial_gzip_level_6": 496,
+      "final_raw": 945,
+      "final_gzip_level_6": 496
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Flowers and vase within a picture plus brush identify still-life painting at24/32px. At16px flower heads merge into a color cluster. The depiction is a painted subject, not flower arranging."
+    ]
+  },
+  {
+    "icon_id": "activity-monarch-tagging",
+    "source_sha256": "84cada7b867f6dab07c76516f1a6f72d54ebfec6be9f8d43fe80d97faf3814e5",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Monarch butterfly with a circular hindwing tag.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-014/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-014/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 5726,
+      "gzip_level_6": 2224
+    },
+    "optimization": {
+      "initial_raw": 5611,
+      "initial_gzip_level_6": 2167,
+      "final_raw": 5726,
+      "final_gzip_level_6": 2224
+    },
+    "issues": [
+      {
+        "issue": "First-pass hindwing veins radiated from a single root without a closed central cell.",
+        "resolution": "Replaced hindwing network with a closed elongated central cell and branches to the margin; the circular tag remains over the underside hindwing cell.",
+        "status": "resolved"
+      },
+      {
+        "issue": "Revised wing network exposed lost orange regions when the projector buffered a mixed geometry collection.",
+        "resolution": "Projector now recursively extracts polygon faces before paint union and buffering; final light/dark and six-view renders restore the full orange hindwing.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Closed-wing orange butterfly and circular hindwing tag remain visible at24/32px. Fine veins, feet and abstract code disappear at16px; antennae are subdued on dark backgrounds. Explicit tagging context remains necessary. Wing contours, vein branching and spot counts are illustrative, not taxonomic measurements or handling instructions."
+    ]
+  },
+  {
+    "icon_id": "format-yard-sale",
+    "source_sha256": "8aa9a354aad740ac4d30ee9206964c88561d20c8c5e0dbbef3b55267ae545df2",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Household resale table with price tag.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-014/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-014/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 6419,
+      "gzip_level_6": 2202
+    },
+    "optimization": {
+      "initial_raw": 6381,
+      "initial_gzip_level_6": 2205,
+      "final_raw": 6419,
+      "final_gzip_level_6": 2202
+    },
+    "issues": [
+      {
+        "issue": "Numeric geometry review found a .003m gap below the lower book and a small gap between the books.",
+        "resolution": "Lowered book centers to .753m and .799m, making lower cover bottom equal tabletop .730m and upper cover bottom equal lower book top .776m.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Household items on a table with hanging price tag suggest a yard sale at24/32px. At16px mug handle and price marks soften. The contents are representative and do not promise inventory."
+    ]
+  }
+]

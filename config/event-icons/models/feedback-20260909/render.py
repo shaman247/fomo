@@ -9,6 +9,8 @@ import hashlib
 import json
 from pathlib import Path
 import re
+import numpy as np
+from PIL import Image
 from playwright.sync_api import sync_playwright
 from fit_contours import fit_color_regions
 
@@ -30,7 +32,7 @@ import * as THREE from 'three';
 import {createModels} from '/scene.js';
 const api=createModels(THREE);
 for (const file of ['objects.js','people.js']) {
- try {const m=await import('/'+file);m.extend(api);}catch(e){if(!String(e).includes('404'))throw e;}
+ try {const m=await import('/'+file);await m.extend(api);}catch(e){if(!String(e).includes('404'))throw e;}
 }
 const renderer=new THREE.WebGLRenderer({alpha:true,antialias:false,preserveDrawingBuffer:true});
 renderer.setSize(1024,1024);renderer.setClearColor(0,0);
@@ -63,6 +65,8 @@ if not args.fit_only:
             if not name:
                 return r.fulfill(body=html,content_type='text/html')
             path=(ROOT / '.scratch/jazz-trio-3d' / name) if name.startswith('three.') else HERE / name
+            if name.endswith(('GLTFLoader.js','BufferGeometryUtils.js')):
+                path=ROOT/'.scratch/icon-corrections-20260909/assets/three'/Path(name).name
             if path.is_file():return r.fulfill(path=str(path),content_type='text/javascript')
             r.fulfill(status=404,body='404')
         page.route(host+'**',route)
@@ -88,11 +92,20 @@ if not args.render_only:
         folder=out/'models'/id
         projection=json.loads((folder/'projection.json').read_text())
         paths,regions=fit_color_regions(folder/'icon.png', tolerance=.28,min_area=.12,palette_distance=14,eye_centers=projection['eyes'])
+        if id=='craft-pottery-wheel':
+            pixels=np.array(Image.open(folder/'icon.png').convert('RGBA'))
+            warm=(pixels[:,:,0].astype(float)>pixels[:,:,2]*1.25)&(pixels[:,:,3]>0)
+            colors,counts=np.unique(pixels[:,:,:3][warm],axis=0,return_counts=True)
+            base=np.zeros_like(pixels);base[warm,:3]=colors[counts.argmax()];base[warm,3]=255
+            Image.fromarray(base).save(folder/'pot-underpaint.png')
+            under,_=fit_color_regions(folder/'pot-underpaint.png',tolerance=.18,min_area=.12,palette_distance=14)
+            paths=under+paths
         body=re.sub(r'fill="(#[0-9a-f]+)" stroke="\1"',r'color="\1"',''.join(paths))
         body=re.sub(r'l0(?: |(?=-))(-?\d+)',r'v\1',body)
         body=re.sub(r'l(-?\d+) 0(?=[A-Za-z])',r'h\1',body)
+        stroke='2' if id=='craft-pottery-wheel' else '.20'
         title=catalog[id]['label'].replace('&','&amp;')
-        svg=f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="currentColor" stroke="currentColor" stroke-width=".20" stroke-linejoin="round" fill-rule="evenodd"><title>{title}</title><g transform="scale(.25)">{body}</g></svg>\n'
+        svg=f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="currentColor" stroke="currentColor" stroke-width="{stroke}" stroke-linejoin="round" fill-rule="evenodd"><title>{title}</title><g transform="scale(.25)">{body}</g></svg>\n'
         target=out/'candidates'/Path(catalog[id]['source']).name;target.parent.mkdir(exist_ok=True)
         target.write_text(svg)
         print(f'Fitted {id}: {len(svg.encode())} bytes, {regions} regions',flush=True)

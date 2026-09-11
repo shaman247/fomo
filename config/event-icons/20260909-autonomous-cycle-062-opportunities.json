@@ -1,0 +1,1058 @@
+{
+  "date": "2026-09-11",
+  "scope": "Cycle 062: 100 sequential events 219352–219915, no targeted supplements.",
+  "suggestions": 61,
+  "concept_count": 38,
+  "concepts": [
+    {
+      "concept": "genre-fantasy-film",
+      "label": "Fantasy cinema",
+      "category": "genre",
+      "visual": "Film frame holding a restrained fantastical landscape",
+      "rationale": "Exploratory only; avoid mistaking screened fiction for actual magic activity.",
+      "existing_alternative": "Current broad custom or Unicode fallback remains until a distinct grounded pictogram passes review.",
+      "event_ids": [
+        219731,
+        219734,
+        219738,
+        219750,
+        219759,
+        219760,
+        219764,
+        219765,
+        219778,
+        219786,
+        219792,
+        219794,
+        219797,
+        219798,
+        219799,
+        219802,
+        219805,
+        219806,
+        219807,
+        219808
+      ],
+      "evidence_by_event": {
+        "219731": [
+          "Practical Magic 2: Starring Sandra Bullock and Nicole Kidman, Practical Magic 2 returns to a world steeped in moonlit mischief and powerful ancestral magic, as the Owens sisters must confront the dark curse that threatens to unravel their family once and for all in a must-s",
+          "Tags: Manhattan, Community, Lower East Side, Literature, Cinema, Neighborhood, Film, Family, Screening, Fantasy, Open Captions, Magic, Lower Manhattan, Format, Performance"
+        ],
+        "219734": [
+          "Practical Magic 2: Starring Sandra Bullock and Nicole Kidman, Practical Magic 2 returns to a world steeped in moonlit mischief and powerful ancestral magic, as the Owens sisters must confront the dark curse that threatens to unravel their family once and for all.",
+          "Tags: Manhattan, Community, Literature, Cinema, Battery Park City, Neighborhood, Film, Family, Screening, Fantasy, Open Captions, Magic, Lower Manhattan, Format, Performance"
+        ],
+        "219738": [
+          "Practical Magic 2: Starring Sandra Bullock and Nicole Kidman, Practical Magic 2 returns to a world steeped in moonlit mischief and powerful ancestral magic, as the Owens sisters must confront the dark curse that threatens to unravel their family once and for all in a must-s",
+          "Tags: Community, Queens, Literature, Cinema, Neighborhood, Film, Family, Forest Hills, Screening, Fantasy, Open Captions, Magic, Format, Performance"
+        ],
+        "219750": [
+          "Practical Magic 2: Starring Sandra Bullock and Nicole Kidman, Practical Magic 2 returns to a world steeped in moonlit mischief and powerful ancestral magic, as the Owens sisters must confront the dark curse that threatens to unravel their family once and for all in a must-s",
+          "Tags: Bronx, Literature, Cinema, Neighborhood, Concourse, Film, Family, Screening, Fantasy, Horror, Magic, Supernatural, Witchcraft, Drama / Film, Format, Performance"
+        ],
+        "219759": [
+          "Practical Magic 2: Starring Sandra Bullock and Nicole Kidman, Practical Magic 2 returns to a world steeped in moonlit mischief and powerful ancestral magic, as the Owens sisters must confront the dark curse that threatens to unravel their family once and for all in a must-s",
+          "Tags: Community, Staten Island, Literature, Cinema, Neighborhood, Film, Family, Charleston, Screening, Fantasy, Open Captions, Magic, Format, Performance"
+        ],
+        "219760": [
+          "Practical Magic 2: Starring Sandra Bullock and Nicole Kidman, Practical Magic 2 returns to a world steeped in moonlit mischief and powerful ancestral magic, as the Owens sisters confront a dark curse threatening their family.",
+          "Tags: Literature, Cinema, Neighborhood, Film, Family, Long Island, Screening, Fantasy, Magic, Hamptons, East Hampton, Suffolk County, Drama / Film, East End, Format, Performance"
+        ],
+        "219764": [
+          "Practical Magic 2: Starring Sandra Bullock and Nicole Kidman, Practical Magic 2 returns to a world steeped in moonlit mischief and powerful ancestral magic.",
+          "Tags: Literature, Cinema, Neighborhood, Film, Family, Westchester, Screening, Fantasy, Magic, Drama / Film, Mohegan Lake, Format, Performance"
+        ],
+        "219765": [
+          "Practical Magic 2: Starring Sandra Bullock and Nicole Kidman, Practical Magic 2 returns to a world steeped in moonlit mischief and powerful ancestral magic, as the Owens sisters must confront the dark curse that threatens to unravel their family once and for all.",
+          "Tags: Community, Queens, Literature, Cinema, Neighborhood, Film, Family, Glendale, Screening, Fantasy, Open Captions, Magic, Witchcraft, Format, Performance"
+        ],
+        "219778": [
+          "Practical Magic 2: Starring Sandra Bullock and Nicole Kidman, Practical Magic 2 returns to a world steeped in moonlit mischief and powerful ancestral magic.",
+          "Tags: Manhattan, Community, Midtown, Literature, Cinema, Union Square, Neighborhood, Film, Family, Screening, Fantasy, Open Captions, Magic, Midtown South, Witches, Format, Performance"
+        ],
+        "219786": [
+          "Practical Magic 2: Starring Sandra Bullock and Nicole Kidman, Practical Magic 2 returns to a world steeped in moonlit mischief and powerful ancestral magic, as the Owens sisters must confront the dark curse that threatens to unravel their family once and for all in a must-s",
+          "Tags: Literature, Cinema, Neighborhood, Film, Family, Long Island, Screening, Fantasy, Magic, Nassau County, Westbury, Witchcraft, Drama / Film, Format, Performance"
+        ],
+        "219792": [
+          "Practical Magic 2: Starring Sandra Bullock and Nicole Kidman, Practical Magic 2 returns to a world steeped in moonlit mischief and powerful ancestral magic, as the Owens sisters must confront the dark curse that threatens to unravel their family once and for all in a must-s",
+          "Tags: Literature, Cinema, Neighborhood, Film, Family, Long Island, Screening, Fantasy, Magic, Nassau County, Drama / Film, Farmingdale, Format, Performance"
+        ],
+        "219794": [
+          "Practical Magic 2: A 1-hour-50-minute film.",
+          "Tags: Literature, Comedy, Film, Screening, Fantasy, Romance, Format, Performance, Rated PG 13"
+        ],
+        "219797": [
+          "Practical Magic 2: A 1 HR 50 MIN film.",
+          "Tags: Literature, Film, Family, Screening, Movies, Fantasy, Magic, Format, Performance"
+        ],
+        "219798": [
+          "Practical Magic 2: Practical Magic 2 is a 1-hour-50-minute film. Movies start 25–30 minutes after the listed showtime.",
+          "Tags: Theater, Literature, Film, Family, Screening, Fantasy, Romance, Magic, Format, Performance, Reserved Seating"
+        ],
+        "219799": [
+          "Practical Magic 2: No description available.",
+          "Tags: Literature, Comedy, Film, Family, Screening, Fantasy, Magic, Format, Performance"
+        ],
+        "219802": [
+          "Practical Magic 2: No description available.",
+          "Tags: Literature, Cinema, Film, Family, Screening, Fantasy, Magic, Format, Performance"
+        ],
+        "219805": [
+          "Practical Magic 2: No description available.",
+          "Tags: Literature, Film, Family, Screening, Fantasy, Magic, Sequel, Format, Performance"
+        ],
+        "219806": [
+          "Practical Magic 2: A 1-hour-50-minute screening of Practical Magic 2.",
+          "Tags: Literature, Film, Family, Screening, Fantasy, Horror, Magic, Format, Performance"
+        ],
+        "219807": [
+          "Practical Magic 2: A 1-hour-50-minute film.",
+          "Tags: Literature, Film, Family, Screening, Fantasy, Horror, Magic, Supernatural, Format, Performance"
+        ],
+        "219808": [
+          "Practical Magic 2: A film with a runtime of 1 hour 50 minutes.",
+          "Tags: Literature, Film, Family, Screening, Movies, Fantasy, Magic, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "219731": [
+          "https://www.regmovies.com/movies/practical-magic-2-ho00021461",
+          "https://www.regmovies.com/movies/practical-magic-2-open-capeng-sub-ho00022265"
+        ],
+        "219734": [
+          "https://www.regmovies.com/movies/practical-magic-2-ho00021461",
+          "https://www.regmovies.com/movies/practical-magic-2-open-capeng-sub-ho00022265"
+        ],
+        "219738": [
+          "https://www.regmovies.com/movies/practical-magic-2-ho00021461",
+          "https://www.regmovies.com/movies/practical-magic-2-open-capeng-sub-ho00022265"
+        ],
+        "219750": [
+          "https://www.regmovies.com/movies/practical-magic-2-ho00021461"
+        ],
+        "219759": [
+          "https://www.regmovies.com/movies/practical-magic-2-ho00021461",
+          "https://www.regmovies.com/movies/practical-magic-2-open-capeng-sub-ho00022265"
+        ],
+        "219760": [
+          "https://www.regmovies.com/movies/practical-magic-2-ho00021461"
+        ],
+        "219764": [
+          "https://www.regmovies.com/movies/practical-magic-2-ho00021461",
+          "https://www.regmovies.com/movies/practical-magic-2-open-capeng-sub-ho00022265"
+        ],
+        "219765": [
+          "https://www.regmovies.com/movies/practical-magic-2-ho00021461",
+          "https://www.regmovies.com/movies/practical-magic-2-open-capeng-sub-ho00022265"
+        ],
+        "219778": [
+          "https://www.regmovies.com/movies/practical-magic-2-ho00021461",
+          "https://www.regmovies.com/movies/practical-magic-2-open-capeng-sub-ho00022265"
+        ],
+        "219786": [
+          "https://www.regmovies.com/movies/practical-magic-2-ho00021461",
+          "https://www.regmovies.com/movies/practical-magic-2-open-capeng-sub-ho00022265"
+        ],
+        "219792": [
+          "https://www.regmovies.com/movies/practical-magic-2-ho00021461"
+        ],
+        "219794": [
+          "https://www.amctheatres.com/movies/practical-magic-2-77331"
+        ],
+        "219797": [
+          "https://www.amctheatres.com/movies/practical-magic-2-77331"
+        ],
+        "219798": [
+          "https://www.amctheatres.com/movies/practical-magic-2-77331"
+        ],
+        "219799": [
+          "https://www.amctheatres.com/movies/practical-magic-2-77331"
+        ],
+        "219802": [
+          "https://www.amctheatres.com/movies/practical-magic-2-77331"
+        ],
+        "219805": [
+          "https://www.amctheatres.com/movies/practical-magic-2-77331"
+        ],
+        "219806": [
+          "https://www.amctheatres.com/movies/practical-magic-2-77331"
+        ],
+        "219807": [
+          "https://www.amctheatres.com/movies/practical-magic-2-77331"
+        ],
+        "219808": [
+          "https://www.amctheatres.com/movies/practical-magic-2-77331"
+        ]
+      }
+    },
+    {
+      "concept": "activity-hashing",
+      "label": "Hash trail running",
+      "category": "sport",
+      "visual": "Runner following a branching marked trail.",
+      "rationale": "Named Long Island hash suggests the social trail-running tradition; route and rules need recovery.",
+      "existing_alternative": "Runner is broad; track-running art would imply a stadium track.",
+      "event_ids": [
+        219864,
+        219867
+      ],
+      "evidence_by_event": {
+        "219864": [
+          "Naww #395: No description available.",
+          "Tags: Community, Sports, Wellness, Fitness, Outdoor, Participatory, Format, Hashing"
+        ],
+        "219867": [
+          "GGFM #439: Hunter’s Moon: No description available.",
+          "Tags: Community, Free, Sports, Fitness, Outdoor, Participatory, Moon, Format, Hashing"
+        ]
+      },
+      "source_urls_by_event": {
+        "219864": [
+          "https://hashnyc.com/hareline/"
+        ],
+        "219867": [
+          "https://hashnyc.com/hareline/"
+        ]
+      }
+    },
+    {
+      "concept": "format-music-documentary",
+      "label": "Music documentary",
+      "category": "format",
+      "visual": "Film frame with a music note and interview speech bubble.",
+      "rationale": "Nonfiction music films combining interviews, archive and performance, not pure concert recordings.",
+      "existing_alternative": "Retain suitable existing art or Unicode fallback while recognition and exact scope are investigated.",
+      "event_ids": [
+        219385,
+        219780
+      ],
+      "evidence_by_event": {
+        "219385": [
+          "Sara Bareilles: Good Grief: Follows Grammy winner Sara Bareilles as she records her first album in seven years with close friends and f",
+          "Tags: Music, Documentary, Film, Screening, Concert Film, Sara Bareilles, Format, Performance"
+        ],
+        "219780": [
+          "Linkin Park: Unshatter: The hardest part of ending is starting again. After a seven-year hiatus following the devastating loss of their beloved bandmate Chester Bennington, LINKIN PARK'S remaining members struggle to find their way forward. Their shared history and enduring fri",
+          "Tags: Manhattan, Midtown, Music, Cinema, Rock, Union Square, Neighborhood, Documentary, Film, Screening, Concert Film, Midtown South, Format, Performance, Linkin Park"
+        ]
+      },
+      "source_urls_by_event": {
+        "219385": [
+          "https://ticketing.useast.veezi.com/purchase/18242?siteToken=g9nv7hcnrvaex4ctekabp7z9w8",
+          "https://ticketing.useast.veezi.com/purchase/18364?siteToken=g9nv7hcnrvaex4ctekabp7z9w8",
+          "https://www.upstatefilms.org/sara-bareilles-good-grief"
+        ],
+        "219780": [
+          "https://www.regmovies.com/movies/linkin-park-unshatter-ho00022267"
+        ]
+      }
+    },
+    {
+      "concept": "format-signmaking-heritage-tour",
+      "label": "Signmaking heritage tour",
+      "category": "format",
+      "visual": "A raised storefront sign and workshop doorway with guide marker.",
+      "rationale": "Historic sign collection inside an active sign shop differs from general art studio visits and hands-on sign fabrication.",
+      "existing_alternative": "Existing Unicode or broader custom art remains available. This is a prospective study, requiring scope and recognition checks before any assignment.",
+      "event_ids": [
+        219914,
+        219915
+      ],
+      "evidence_by_event": {
+        "219914": [
+          "New York Sign Museum September 11th Tour: Join us at the New York Sign Museum for a tour of our collection located within Noble Signs' manufacturing shop. See the collection and an active sign shop where signs are still made the old-fashioned way, situated in a one-of-a-kind prewar factory space.",
+          "Tags: Community, History, Art, Tour, Education, Format, Outings"
+        ],
+        "219915": [
+          "New York Sign Museum September 13th 1:00pm: Join us at the New York Sign Museum for a tour of the collection located within Noble Signs' manufacturing shop. The collection includes over 40 full-scale rescued storefront signs and dozens of other small pieces and ephemera, alongside an active sign shop where signs are still made the old-fashioned way.",
+          "Tags: Community, History, Art, Tour, Education, Format, Outings"
+        ]
+      },
+      "source_urls_by_event": {
+        "219914": [
+          "https://www.eventbrite.com/e/new-york-sign-museum-september-11th-tour-tickets-1997059004241",
+          "https://www.eventbrite.com/e/new-york-sign-museum-september-11th-tour-tickets-1997059004241?aff=ebdsoporgprofile"
+        ],
+        "219915": [
+          "https://www.eventbrite.com/e/new-york-sign-museum-september-13th-100pm-tickets-1997154573090",
+          "https://www.eventbrite.com/e/new-york-sign-museum-september-13th-100pm-tickets-1997154573090?aff=ebdsoporgprofile"
+        ]
+      }
+    },
+    {
+      "concept": "genre-western-film",
+      "label": "Western film",
+      "category": "genre",
+      "visual": "A cinema frame and wide-brimmed hat.",
+      "rationale": "Explicit western fiction on screen, not actual riding or live reenactment.",
+      "existing_alternative": "Retain suitable existing art or Unicode fallback while recognition and exact scope are investigated.",
+      "event_ids": [
+        219751,
+        219772
+      ],
+      "evidence_by_event": {
+        "219751": [
+          "Angel and the Badman: When feared outlaw Quirt Evans staggers onto a rancher's land with a bullet in his back, he expects a quick death, not mercy. But Penny, the rancher's daughter, offers him a chance at something he's never had: a life beyond violence.",
+          "Tags: Community, Bronx, Cinema, Neighborhood, Concourse, Film, Screening, Open Captions, Classic Film, Romance, Western, Drama / Film, Format, Performance, English Subtitles, Outlaw"
+        ],
+        "219772": [
+          "Angel and the Badman: When feared outlaw Quirt Evans staggers onto a rancher's land with a bullet in his back, he expects a quick death, not mercy. But Penny, the rancher's daughter, offers him a chance at something he's never had: a life beyond violence.",
+          "Tags: New Jersey, Cinema, Neighborhood, Film, Screening, Secaucus, Classic Film, Western, Hudson County, Drama / Film, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "219751": [
+          "https://www.regmovies.com/movies/angel-and-the-badman-ho00022263",
+          "https://www.regmovies.com/movies/angel-and-the-badman-open-capeng-sub-ho00022264"
+        ],
+        "219772": [
+          "https://www.regmovies.com/movies/angel-and-the-badman-ho00022263"
+        ]
+      }
+    },
+    {
+      "concept": "activity-balloon-dating-game",
+      "label": "Balloon dating game",
+      "category": "activity",
+      "visual": "Two balloons and a conversation pair in an elimination-game layout.",
+      "rationale": "Dating game is explicit; do not imply official show affiliation or structured timed rotations.",
+      "existing_alternative": "Existing Unicode or broader custom art remains available. This is a prospective study, requiring scope and recognition checks before any assignment.",
+      "event_ids": [
+        219358
+      ],
+      "evidence_by_event": {
+        "219358": [
+          "Pop the Balloon: Nyc Edition 🎈: I’m not a dating coach or show host, so this is the perfect job for me. Imani, Judith and I are bringing the discourse from YouTube to Herbert Von King Park. No apps or algorithms, just some balloons, strangers, and me not taking things seriously at all. Not affiliated with any real show or business btw 😛.",
+          "Tags: Community, Party, Outdoor, Nightlife, Dating, Singles, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "219358": [
+          "https://partiful.com/e/cCQOx9Dkn5mD7WEW6QYl",
+          "https://partiful.com/e/cCQOx9Dkn5mD7WEW6QYl?source=discover"
+        ]
+      }
+    },
+    {
+      "concept": "activity-book-cover-selfies",
+      "label": "Book-cover selfies",
+      "category": "activity",
+      "visual": "Book held in front of a simple camera viewfinder.",
+      "rationale": "Creative photographs with book covers differ from phone-camera lessons and selfies without books.",
+      "existing_alternative": "Existing Unicode or broader custom art remains available. This is a prospective study, requiring scope and recognition checks before any assignment.",
+      "event_ids": [
+        219577
+      ],
+      "evidence_by_event": {
+        "219577": [
+          "Shelfies: Explore the stacks, find the perfect book cover, and create clever “shelfies!” It's a fun way to acknowledge Banned Books Week, and a reminder that the books on our shelves make events like this...",
+          "Tags: Visual Arts, Art, Photography, Literature, Creative, Banned Books, Banned Books Week, Book Covers"
+        ]
+      },
+      "source_urls_by_event": {
+        "219577": [
+          "https://eastmeadow.libcal.com/event/17406073"
+        ]
+      }
+    },
+    {
+      "concept": "activity-chocolate-making",
+      "label": "Chocolate making",
+      "category": "activity",
+      "visual": "A small chocolate bar mold being filled from a tilted bowl.",
+      "rationale": "Personalized chocolate-bar creation is a participatory process beyond eating chocolate; verify molding equipment before rendering.",
+      "existing_alternative": "Noto chocolate bar depicts finished food, not making; no current custom.",
+      "event_ids": [
+        219701
+      ],
+      "evidence_by_event": {
+        "219701": [
+          "Factory Tour & Chocolate Making: Experience the art of Dominican cacao at Kahkow USA with an immersive factory tour, a behind-the-scenes look at the bean-to-bar chocolate-making process, and the chance to create a personalized chocolate bar to take home.",
+          "Tags: Community, Workshop, Tour, Family, Education, Food, Hands on, Chocolate, Format, Outings, Cacao, Dominican Cacao"
+        ]
+      },
+      "source_urls_by_event": {
+        "219701": [
+          "https://www.localwineevents.com/view/event/factory-tour-chocolate-making/1025804"
+        ]
+      }
+    },
+    {
+      "concept": "activity-esl",
+      "label": "English language learning",
+      "category": "activity",
+      "visual": "Two speech bubbles with outlined A and B.",
+      "rationale": "ESL classes are explicit; letters alone are weak recognition and need language-neutral review.",
+      "existing_alternative": "Existing Unicode or broader custom art remains available. This is a prospective study, requiring scope and recognition checks before any assignment.",
+      "event_ids": [
+        219478
+      ],
+      "evidence_by_event": {
+        "219478": [
+          "English as a Second Language: Mid-Summer Session: Join Ms. Donna for English as a Second Language classes! This class welcomes English students of all levels. This session goes from August 17 to September 25, 2026.",
+          "Tags: Community, Education, Language Learning, Class, Participatory, ESL, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "219478": [
+          "https://bccls.libcal.com/event/17004301",
+          "https://bccls.libcal.com/event/17004304",
+          "https://bccls.libcal.com/event/17004306",
+          "https://bccls.libcal.com/event/17004308",
+          "https://bccls.libcal.com/event/17004311",
+          "https://bccls.libcal.com/event/17004312",
+          "https://bccls.libcal.com/event/17004315",
+          "https://bccls.libcal.com/event/17004316"
+        ]
+      }
+    },
+    {
+      "concept": "activity-hands-on-stem",
+      "label": "Hands-on STEM",
+      "category": "activity",
+      "visual": "A simple gear, block and measuring mark arranged as a workbench.",
+      "rationale": "Broad participatory STEM needs a neutral concept until the actual experiment is known.",
+      "existing_alternative": "Existing Unicode or broader custom art remains available. This is a prospective study, requiring scope and recognition checks before any assignment.",
+      "event_ids": [
+        219572
+      ],
+      "evidence_by_event": {
+        "219572": [
+          "STEM Craft- Grades K-2: Join us for a hands-on STEM activity.",
+          "Tags: Art, Kids, Workshop, Science, Family, Education, Crafts, STEM, Participatory, Hands on Learning, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "219572": [
+          "https://eastmeadow.libcal.com/event/17400097"
+        ]
+      }
+    },
+    {
+      "concept": "activity-library-inspired-creation",
+      "label": "Library-inspired creation",
+      "category": "activity",
+      "visual": "Open book branching into a pencil sketch and journal lines.",
+      "rationale": "Library browsing, journaling and sketching form a combined creative workshop.",
+      "existing_alternative": "Existing Unicode or broader custom art remains available. This is a prospective study, requiring scope and recognition checks before any assignment.",
+      "event_ids": [
+        219375
+      ],
+      "evidence_by_event": {
+        "219375": [
+          "Octopus: Tuesdays with NYPL: Join us at Mulberry Street Library for a fun and low pressure workshop designed to explore the Library's offerings and collections as a catalyst for creativity. Combining a library tour, book browsing, prompted journaling and sketching, and conversation, the Octopus workshop ties together many avenues.",
+          "Tags: Library, Art, Workshop, Literature, Education, Participatory, Writing, Cultural Venue, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "219375": [
+          "https://partiful.com/e/HC85tMBqGYYxQ50pYWje?source=discover"
+        ]
+      }
+    },
+    {
+      "concept": "activity-library-orientation",
+      "label": "Library orientation",
+      "category": "activity",
+      "visual": "Open library doorway, shelving and a short guide arrow.",
+      "rationale": "Introduction to library resources differs from tech assistance and book discussion.",
+      "existing_alternative": "Existing Unicode or broader custom art remains available. This is a prospective study, requiring scope and recognition checks before any assignment.",
+      "event_ids": [
+        219571
+      ],
+      "evidence_by_event": {
+        "219571": [
+          "Introduction to Library Resources: Welcome to the Young Adult Room! Whether you’re a 6th grader, a new East Meadow student, or just haven’t used the library much before, start the school year off strong with an introduction to the YA ...",
+          "Tags: Library, Community, Family, Education, Young Adults, Gathering, Talk, Teen Events, Library Services, Students, Cultural Venue, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "219571": [
+          "https://eastmeadow.libcal.com/event/17405933"
+        ]
+      }
+    },
+    {
+      "concept": "activity-restorative-yoga",
+      "category": "activity",
+      "label": "Restorative yoga",
+      "visual": "Reclining figure supported by a broad bolster",
+      "rationale": "Supported rest differs from seated meditation and chair yoga.",
+      "existing_alternative": "Existing broad fallback does not distinguish this specific facet.",
+      "event_ids": [
+        219877
+      ],
+      "evidence_by_event": {
+        "219877": [
+          "Paws & Poses Restorative Yoga: No description available.",
+          "Tags: Community, Wellness, Fitness, Yoga, Restorative Yoga, Cats, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "219877": [
+          "https://bookeo.com/catcafebk?type=41558H6W79R18A4C60198C"
+        ]
+      }
+    },
+    {
+      "concept": "activity-toy-rail-engineering",
+      "label": "Toy railway engineering",
+      "category": "activity",
+      "visual": "Toy locomotive approaching a small bridge and obstacle block.",
+      "rationale": "Building train obstacle courses differs from riding trains or engineering real infrastructure.",
+      "existing_alternative": "Existing Unicode or broader custom art remains available. This is a prospective study, requiring scope and recognition checks before any assignment.",
+      "event_ids": [
+        219580
+      ],
+      "evidence_by_event": {
+        "219580": [
+          "Railway Engineering- Grades 1-4: Let’s combine the excitement of railway engineering with thespooky fun of Halloween, where teams can work together to build a Halloween themed obstacle course for their trains.",
+          "Tags: Workshop, Science, Family, Education, STEM, Engineering, Participatory, Trains, Halloween, Format, Railway Engineering"
+        ]
+      },
+      "source_urls_by_event": {
+        "219580": [
+          "https://eastmeadow.libcal.com/event/17400284"
+        ]
+      }
+    },
+    {
+      "concept": "activity-yoga-with-cats",
+      "label": "Yoga with cats",
+      "category": "activity",
+      "visual": "A yoga mat with a resting cat beside it.",
+      "rationale": "Cats are part of venue context; no handling promise or specific pose without evidence.",
+      "existing_alternative": "Existing Unicode or broader custom art remains available. This is a prospective study, requiring scope and recognition checks before any assignment.",
+      "event_ids": [
+        219876
+      ],
+      "evidence_by_event": {
+        "219876": [
+          "Caturday Yoga: No description available.",
+          "Tags: Community, Wellness, Fitness, Yoga, Cats, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "219876": [
+          "https://catcafebk.com/yoga"
+        ]
+      }
+    },
+    {
+      "concept": "craft-animal-shelter-donations",
+      "label": "Crafting for animal shelters",
+      "category": "craft",
+      "visual": "Craft supplies beside a paw-marked donation box.",
+      "rationale": "Unspecified donated craft is not necessarily animal enrichment or charity needlework.",
+      "existing_alternative": "Existing Unicode or broader custom art remains available. This is a prospective study, requiring scope and recognition checks before any assignment.",
+      "event_ids": [
+        219584
+      ],
+      "evidence_by_event": {
+        "219584": [
+          "Community Service: Animal Shelter Craft: Earn 1 hour of community service by helping us make a craft to donate to the Town of Hempstead shelter.",
+          "Tags: Community, Art, Family, Volunteer, Crafts, Participatory, Format, Animal Shelter"
+        ]
+      },
+      "source_urls_by_event": {
+        "219584": [
+          "https://eastmeadow.libcal.com/event/17406060"
+        ]
+      }
+    },
+    {
+      "concept": "craft-essay-writing",
+      "label": "Essay writing",
+      "category": "craft",
+      "visual": "Lined sheet with outlined opening/body/closing blocks and pencil.",
+      "rationale": "Essay instruction covers school assignments and applications beyond personal statements.",
+      "existing_alternative": "Existing Unicode or broader custom art remains available. This is a prospective study, requiring scope and recognition checks before any assignment.",
+      "event_ids": [
+        219716
+      ],
+      "evidence_by_event": {
+        "219716": [
+          "Teen Writers Workshop: Tackle a difficult class assignment or craft the perfect college application essay. This free essay writing workshop gives high schoolers and young adults the tools to take writing to the next level. From structuring your argument to finding your unique voice, our expert-led sessions are designed to help you write with confidence. Produced in partnership with Writopia Lab.",
+          "Tags: Workshop, Literature, Free, Family, Education, Teen Events, Participatory, Writing, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "219716": [
+          "https://bryantpark.org/calendar/event/writers-workshop-teens/2026-09-20"
+        ]
+      }
+    },
+    {
+      "concept": "craft-zhuang-patchwork",
+      "label": "Zhuang patchwork",
+      "category": "craft",
+      "visual": "A researched quilt-block arrangement with needle and separate cloth pieces.",
+      "rationale": "Named cultural tradition is explicit; exact pattern requires primary structural study and no invented ethnic motifs.",
+      "existing_alternative": "Existing Unicode or broader custom art remains available. This is a prospective study, requiring scope and recognition checks before any assignment.",
+      "event_ids": [
+        219869
+      ],
+      "evidence_by_event": {
+        "219869": [
+          "Zhuang Patchwork Quilting: This virtual workshop led by Selina Ben explores the history and traditions of Zhuang patchwork quilting. Participants will learn how to construct a traditional Zhuang quilt top block while learning about the cultural significance of the practice.",
+          "Tags: Art, Workshop, Education, Virtual, Fiber Arts, Crafts, Textile Art, Quilting, Participatory, Format, Zhuang Culture"
+        ]
+      },
+      "source_urls_by_event": {
+        "219869": [
+          "https://tatter.org/events/zhuang-patchwork-quilting/"
+        ]
+      }
+    },
+    {
+      "concept": "cuisine-cake-pops",
+      "label": "Cake pops",
+      "category": "cuisine",
+      "visual": "Two rounded decorated cakes on short sticks in a small stand.",
+      "rationale": "Cake pops differ from cupcakes and chocolate truffles; no exact coating or flavor promised.",
+      "existing_alternative": "Existing Unicode or broader custom art remains available. This is a prospective study, requiring scope and recognition checks before any assignment.",
+      "event_ids": [
+        219582
+      ],
+      "evidence_by_event": {
+        "219582": [
+          "Cauldron Cake Pops: With a little magic and a lot of chocolate, we’ll be crafting witch's cauldron cake pops bubbling with Halloween spirit!",
+          "Tags: Community, Art, Workshop, Family, Education, Food, Baking, Cooking Class, Crafts, Cooking, Participatory, Chocolate, Halloween, Format, Cake Pops"
+        ]
+      },
+      "source_urls_by_event": {
+        "219582": [
+          "https://eastmeadow.libcal.com/event/17406107"
+        ]
+      }
+    },
+    {
+      "concept": "cuisine-olive-oil-cake",
+      "label": "Olive-oil cake",
+      "category": "cuisine",
+      "visual": "Plain round cake slice beside a small olive-oil bottle.",
+      "rationale": "Specific culinary ingredient may require label; no exact recipe, serving or dietary claim.",
+      "existing_alternative": "Existing Unicode or broader custom art remains available. This is a prospective study, requiring scope and recognition checks before any assignment.",
+      "event_ids": [
+        219703
+      ],
+      "evidence_by_event": {
+        "219703": [
+          "Hands-On: Olive Oil Cake: In this hands-on format, the Scuola Chef guides participants through preparing Olive Oil Cake. Guests make their own Torta di Olio d'Oliva from scratch, learn about its traditions and culture, and enjoy a seasonal menu alongside a wine pairing.",
+          "Tags: Community, Workshop, Education, Food, Wine, Nightlife, Cooking Class, Italian Cuisine, Wine Tasting, Wine Pairing, Participatory, Format, Olive Oil"
+        ]
+      },
+      "source_urls_by_event": {
+        "219703": [
+          "https://www.localwineevents.com/view/event/hands-on-olive-oil-cake/1025820"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-guitar-trio",
+      "label": "Guitar trio",
+      "category": "format",
+      "visual": "Three equally weighted generic guitar silhouettes.",
+      "rationale": "Three-guitar ensemble is explicit; exact instrument construction requires additional source review.",
+      "existing_alternative": "Existing Unicode or broader custom art remains available. This is a prospective study, requiring scope and recognition checks before any assignment.",
+      "event_ids": [
+        219889
+      ],
+      "evidence_by_event": {
+        "219889": [
+          "California Guitar Trio: For 35 years, California Guitar Trio (CGT) has redefined what a small ensemble can achieve on one stage. The group blends rock, jazz, classical, and global influences, with occasional surf or spaghetti Western twists.",
+          "Tags: Music, Concert, Guitar, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "219889": [
+          "https://www.theiridium.com/Events/california-guitar-trio/september-24th%2C-2026"
+        ]
+      }
+    },
+    {
+      "concept": "format-art-benefit-draw",
+      "label": "Art benefit selection draw",
+      "category": "format",
+      "visual": "Numbered token and framed artwork selected from a row.",
+      "rationale": "Draw order for choosing purchased art differs from bidding; no chance of winning money implied.",
+      "existing_alternative": "Existing Unicode or broader custom art remains available. This is a prospective study, requiring scope and recognition checks before any assignment.",
+      "event_ids": [
+        219883
+      ],
+      "evidence_by_event": {
+        "219883": [
+          "100 Works on Paper BENEFIT 2026: Join us at Kentler's annual 100 WORKS ON PAPER Benefit, celebrating 36 years in Red Hook. More than 100 drawings & prints are donated in support of Kentler's nonprofit mission; every ticket-holder is guaranteed an original artwork. Ticket holders draw a number upon arrival, choose one work of art when their number is called, bid on silent auction items, enjoy local fare, and celebrate with fellow Kentler supporters.",
+          "Tags: Community, Art, Fundraiser, Benefit, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "219883": [
+          "https://kentlergallery.org/Detail/events/593"
+        ]
+      }
+    },
+    {
+      "concept": "format-banned-books-trivia",
+      "label": "Banned-books trivia",
+      "category": "format",
+      "visual": "Open book and question card with a simple crossed-out line.",
+      "rationale": "Clue-based challenge-history trivia differs from a reading or censorship protest.",
+      "existing_alternative": "Existing Unicode or broader custom art remains available. This is a prospective study, requiring scope and recognition checks before any assignment.",
+      "event_ids": [
+        219576
+      ],
+      "evidence_by_event": {
+        "219576": [
+          "Books Under Fire: Banned Books Trivia Game: Work with your team to separate facts from fiction, guess books from the clues, and uncover the surprising reasons books have been challenged or banned over the years.",
+          "Tags: Literature, Games, Trivia, Banned Books, Game, Participatory, Teamwork, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "219576": [
+          "https://eastmeadow.libcal.com/event/17406009"
+        ]
+      }
+    },
+    {
+      "concept": "format-film-matinee",
+      "label": "Movie matinee",
+      "category": "format",
+      "visual": "Film frame and high sun in a restrained corner.",
+      "rationale": "Daytime screening differs from outdoor cinema; ordinary film fallback may suffice.",
+      "existing_alternative": "Existing Unicode or broader custom art remains available. This is a prospective study, requiring scope and recognition checks before any assignment.",
+      "event_ids": [
+        219520
+      ],
+      "evidence_by_event": {
+        "219520": [
+          "Movie Matinee: The Devil Wears Prada 2 2026 PG-13 1h 59m Miranda Priestly navigates her career amid the decline of traditional magazine publishing. She faces off against Emily Charlton, her one-time assistant, now...",
+          "Tags: Literature, Film, Screening, Movies, Movie Matinee, Format, Performance, PG 13"
+        ]
+      },
+      "source_urls_by_event": {
+        "219520": [
+          "https://bccls.libcal.com/event/15346042",
+          "https://bccls.libcal.com/event/15346043",
+          "https://bccls.libcal.com/event/15346044",
+          "https://bccls.libcal.com/event/15346045"
+        ]
+      }
+    },
+    {
+      "concept": "format-mentalism",
+      "category": "format",
+      "label": "Stage mentalism",
+      "visual": "Two head profiles joined by one thought bubble.",
+      "rationale": "Stage mindreading differs from tarot reading.",
+      "existing_alternative": "Crystal ball is broad; thought motif needs recognition testing.",
+      "event_ids": [
+        219389
+      ],
+      "evidence_by_event": {
+        "219389": [
+          "Vinny DePonto: Mind Reader: Join renowned mentalist Vinny DePonto on a journey down the rabbit hole of your own brain. Through artful demonstrations with real audience members, DePonto exhibits techniques to subvert your attention, influence your thoughts, and explore the strange and wonderful wiring of our thoughts.",
+          "Tags: Music, Theater, Live Event, Mentalism, Mind Reading, Immersive Storytelling, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "219389": [
+          "https://ticketing.useast.veezi.com/purchase/18245?siteToken=na3v1gjrn7yss5nkcfsbzazwqg",
+          "https://ticketing.useast.veezi.com/purchase/18246?siteToken=na3v1gjrn7yss5nkcfsbzazwqg",
+          "https://www.upstatefilms.org/vinny-deponto-mind-reader"
+        ]
+      }
+    },
+    {
+      "concept": "format-multi-guitar-concert",
+      "label": "Multi-guitar concert",
+      "category": "format",
+      "visual": "Three distinct guitar silhouettes arranged toward a shared stage.",
+      "rationale": "Multiple guitarists are explicit but acoustic/electric proportions require program evidence.",
+      "existing_alternative": "Existing Unicode or broader custom art remains available. This is a prospective study, requiring scope and recognition checks before any assignment.",
+      "event_ids": [
+        219888
+      ],
+      "evidence_by_event": {
+        "219888": [
+          "A Concert Honoring Pat Martino: Highnote Records and the Alternative Guitar Summit, led by Joel Harrison, celebrated Pat Martino's legacy with music covered by guitarists from today's jazz scene. This show features Oz Noy, Nir Felder, Dave Stryker, Adam Rogers, Paul Bollenbeck, Ed Cherry, Sheryl Bailey, Joel Harrison, Allan Mednard and TBA interpreting Martino's compositions.",
+          "Tags: Music, Jazz, Concert, Tribute Band, Guitar, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "219888": [
+          "https://www.theiridium.com/Events/a-concert-honoring-pat-martino-featuring-nir-felder%2C-oz-noy%2C-dave-stryker%2C-adam-rogers%2C-paul-bollenbeck%2C-ed-cherry%2C-sheryl-bailey%2C-joel-harrison%2C-alain-mednard%2C-rex-abbasi-%26-jeff-miles/september-19th%2C-2026"
+        ]
+      }
+    },
+    {
+      "concept": "format-music-awards-concert",
+      "label": "Music awards concert",
+      "category": "format",
+      "visual": "Music stands and a small award rosette.",
+      "rationale": "Awards and musical performances coexist; no dinner or exact ensemble guaranteed.",
+      "existing_alternative": "Existing Unicode or broader custom art remains available. This is a prospective study, requiring scope and recognition checks before any assignment.",
+      "event_ids": [
+        219901
+      ],
+      "evidence_by_event": {
+        "219901": [
+          "Gala Awards Concert: The concert features the 2026 Career Grant Winners, special appearances by Nathan Meltzer and composer Elaina Stuppler, and The Renaissance String Quartet. Nathan Meltzer will premiere a new work for solo violin by Elaina Stuppler in collaboration with Luna Composition Lab as part of its Luna Lab @10 celebration.",
+          "Tags: Community, Music, Classical Music, Concert, Awards Ceremony, Benefit, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "219901": [
+          "https://www.sdev.org/seasons/2026-27.html"
+        ]
+      }
+    },
+    {
+      "concept": "format-school-open-house",
+      "label": "School open house",
+      "category": "format",
+      "visual": "School building with an open door and welcome path.",
+      "rationale": "School-family orientation differs from admissions decisions and special education advocacy.",
+      "existing_alternative": "Existing Unicode or broader custom art remains available. This is a prospective study, requiring scope and recognition checks before any assignment.",
+      "event_ids": [
+        219868
+      ],
+      "evidence_by_event": {
+        "219868": [
+          "Back to School Night (IN PERSON): An in-person back-to-school night.",
+          "Tags: Community, Family, Education, Open House, In Person, Format, Browsable"
+        ]
+      },
+      "source_urls_by_event": {
+        "219868": [
+          "https://www.ps20m.org/apps/events/"
+        ]
+      }
+    },
+    {
+      "concept": "format-solidarity-film-screening",
+      "label": "Solidarity film screening",
+      "category": "format",
+      "visual": "Screen flanked by small linked hands or community circles.",
+      "rationale": "Political solidarity motivates a screening; avoid country stereotypes or implying a rally.",
+      "existing_alternative": "Existing Unicode or broader custom art remains available. This is a prospective study, requiring scope and recognition checks before any assignment.",
+      "event_ids": [
+        219837
+      ],
+      "evidence_by_event": {
+        "219837": [
+          "Cuba Solidarity Film Screening: \"One Way or Another\" (De Cierta Manera): Come enjoy the first in a series of film screenings in solidarity with Cuba! We will be showing the 1977 romantic drama \"One Way or Another,\" which explores post-revolutionary Havana.",
+          "Tags: Community, Film, Screening, Cuba Solidarity, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "219837": [
+          "https://actionnetwork.org/events/cuba-solidarity-film-screening-one-way-or-another-de-cierta-manera"
+        ]
+      }
+    },
+    {
+      "concept": "game-american-mahjong",
+      "label": "American Mahjong",
+      "category": "activity",
+      "visual": "Three upright tiles beside a simplified horizontal scoring card",
+      "rationale": "Specific American form supported; compare added value against existing Mahjong tile before creating.",
+      "existing_alternative": "Retain the source Unicode until recognizable original artwork is reviewed.",
+      "event_ids": [
+        219456
+      ],
+      "evidence_by_event": {
+        "219456": [
+          "Teach Yourself Mah Jongg - Weekly Monday Morning - NEW: The Teach Yourself Mah Jongg provides a weekly opportunity for teaching yourself the basics of American Mah Jongg at your own pace. The library will provide the book Beginner's Guide to American Mah...",
+          "Tags: Education, Games, Mahjong, Open Practice, Participatory, Beginners, Format, American Mah Jongg"
+        ]
+      },
+      "source_urls_by_event": {
+        "219456": [
+          "https://bccls.libcal.com/event/16899972",
+          "https://bccls.libcal.com/event/16899974",
+          "https://bccls.libcal.com/event/16899976",
+          "https://bccls.libcal.com/event/17564771"
+        ]
+      }
+    },
+    {
+      "concept": "game-headband-guessing",
+      "label": "Headband guessing game",
+      "category": "activity",
+      "visual": "A headband carrying a face-out question card above a simple face.",
+      "rationale": "Headbandz-style deduction uses unseen personal cards, not generic trivia or crafting.",
+      "existing_alternative": "Existing Unicode or broader custom art remains available. This is a prospective study, requiring scope and recognition checks before any assignment.",
+      "event_ids": [
+        219581
+      ],
+      "evidence_by_event": {
+        "219581": [
+          "Custom Headbandz – Teen Led!: Come play an updated, modern version of Headbandz, with custom cards made by your peers!",
+          "Tags: Community, Family, Games, Board Games, Teen Events, Game, Participatory, Format, Peer Led, Headbandz"
+        ]
+      },
+      "source_urls_by_event": {
+        "219581": [
+          "https://eastmeadow.libcal.com/event/17406095"
+        ]
+      }
+    },
+    {
+      "concept": "game-kart-racing",
+      "label": "Game kart racing",
+      "category": "other",
+      "visual": "Compact kart and game controller",
+      "rationale": "Video racing game distinct from real track driving.",
+      "existing_alternative": "Retain appropriate Unicode or broader accepted icon until recognition and structural review pass.",
+      "event_ids": [
+        219574
+      ],
+      "evidence_by_event": {
+        "219574": [
+          "Mario Kart World Hour: Start your engines! Join us for some rounds of Mario Kart World! Race your way to victory! The library has 4 JoyCons/controllers - 4 people may play at a time.",
+          "Tags: Community, Video Games, Family, Games, Game, Mario Kart, Participatory, Nintendo Switch, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "219574": [
+          "https://eastmeadow.libcal.com/event/17406096"
+        ]
+      }
+    },
+    {
+      "concept": "genre-blues-rock",
+      "label": "Blues rock",
+      "category": "genre",
+      "visual": "A bent musical note paired with a strong rhythmic stroke.",
+      "rationale": "Explicit blues-rock classification should not automatically assign an acoustic guitar.",
+      "existing_alternative": "Existing Unicode or broader custom art remains available. This is a prospective study, requiring scope and recognition checks before any assignment.",
+      "event_ids": [
+        219891
+      ],
+      "evidence_by_event": {
+        "219891": [
+          "Dana Fuchs: With her feet planted on both sides of the blues-rock divide, Dana Fuchs is one of the fiercest voices in modern-day roots music. Her newest project, Borrowed Time, digs deep into her southern rock upbringing, saluting the loud, guitar-driven sounds that sound-tracked her childhood years in rural Wildwood, Florida.",
+          "Tags: Music, Rock, Concert, Blues, Blues Rock, Roots Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "219891": [
+          "https://www.theiridium.com/Events/dana-fuchs/october-2nd%2C-2026"
+        ]
+      }
+    },
+    {
+      "concept": "genre-chicago-blues",
+      "label": "Chicago blues",
+      "category": "genre",
+      "visual": "A blue music note and restrained urban brick motif.",
+      "rationale": "Genre is explicit; avoid treating every Chicago event or electric guitar as this tradition.",
+      "existing_alternative": "Existing Unicode or broader custom art remains available. This is a prospective study, requiring scope and recognition checks before any assignment.",
+      "event_ids": [
+        219897
+      ],
+      "evidence_by_event": {
+        "219897": [
+          "Toronzo Cannon: Toronzo Cannon is an internationally beloved Chicago bluesman known for richly detailed, truth-telling original songs, inventive guitar work, and impassioned vocals. His live performances have earned critical praise and enthusiastic fans worldwide.",
+          "Tags: Music, Concert, Blues, Chicago Blues, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "219897": [
+          "https://www.theiridium.com/Events/toronzo-cannon/november-6th%2C-2026"
+        ]
+      }
+    },
+    {
+      "concept": "genre-horror-film",
+      "label": "Horror film",
+      "category": "genre",
+      "visual": "Film strip with restrained spooky silhouette.",
+      "rationale": "Screening is horror without a special live format.",
+      "existing_alternative": "Movie camera remains adequate.",
+      "event_ids": [
+        219779
+      ],
+      "evidence_by_event": {
+        "219779": [
+          "Fangoria Staff Picks: The Faculty: Join us if you dare on the 13th of every month for FANGORIA Staff Picks - a monthly series crafted by the legacy horror brand, with fangtastic films programmed by the bleeding-heart horror curators over at Fango.",
+          "Tags: Manhattan, Midtown, Cinema, Union Square, Neighborhood, Film, Screening, Horror, Classic Film, Cult Classic, Midtown South, Monthly Series, Staff Picks, Fangoria, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "219779": [
+          "https://www.regmovies.com/movies/fangoria-staff-picks-the-faculty-ho00022231"
+        ]
+      }
+    },
+    {
+      "concept": "genre-jump-blues",
+      "label": "Jump blues",
+      "category": "genre",
+      "visual": "Two lively offbeat musical phrases.",
+      "rationale": "Jump blues is explicit in the mixed program; do not infer sax/brass personnel.",
+      "existing_alternative": "Use accurate broad Unicode or existing accepted art until a distinctive, structurally reviewed study is ready.",
+      "event_ids": [
+        219890
+      ],
+      "evidence_by_event": {
+        "219890": [
+          "Roomful of Blues: Roomful of Blues is a world-renowned, horn-powered, houserocking blues band that has been delighting audiences for over 55 years. Their music combines jump, swing, blues, R&B and soul, with a signature horn-heavy sound and larger-than-life vocals.",
+          "Tags: Music, Concert, Blues, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "219890": [
+          "https://www.theiridium.com/Events/roomful-of-blues/september-26th%2C-2026"
+        ]
+      }
+    },
+    {
+      "concept": "genre-smooth-jazz",
+      "label": "Smooth jazz",
+      "category": "genre",
+      "visual": "Soft curved instrumental notes with restrained rhythmic accent.",
+      "rationale": "Explicit smooth-jazz genre with unverified instruments.",
+      "existing_alternative": "Noto notes remain accurate; recognition gap is small.",
+      "event_ids": [
+        219894
+      ],
+      "evidence_by_event": {
+        "219894": [
+          "Brian Simpson: After graduating from Northern Illinois University, keyboardist and composer Brian Simpson relocated to Los Angeles, where he played alongside Gerald Albright and Norman Brown and eventually toured the world with Janet Jackson. His work with George Duke led to touring and production work with artists including James Ingram, Anita Baker, Dave Koz, and Wayman Tisdale.",
+          "Tags: Music, Jazz, Concert, Smooth Jazz, Keyboardist, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "219894": [
+          "https://www.theiridium.com/Events/brian-simpson/october-24th%2C-2026"
+        ]
+      }
+    },
+    {
+      "concept": "technique-fingerstyle-guitar",
+      "label": "Fingerstyle guitar",
+      "category": "craft",
+      "visual": "A close guitar-string field and plucking fingertips.",
+      "rationale": "Technique is explicit; hand geometry, string contacts and acoustic/electric scope require careful review.",
+      "existing_alternative": "Existing Unicode or broader custom art remains available. This is a prospective study, requiring scope and recognition checks before any assignment.",
+      "event_ids": [
+        219896
+      ],
+      "evidence_by_event": {
+        "219896": [
+          "Mike Dawes: Mike Dawes is an English guitarist known for composing, arranging, and performing multiple parts simultaneously on a single guitar. He is regarded as one of the world’s most creative modern fingerstyle guitarists, with a repertoire spanning original viral videos and popular arrangements.",
+          "Tags: Music, Concert, Guitar, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "219896": [
+          "https://www.theiridium.com/Events/mike-dawes/november-1st-2026"
+        ]
+      }
+    }
+  ],
+  "limitations": "Counts describe this cohort, not population reach. These are grounded prospective studies, not live assignments. Existing artwork may already suffice; exact equipment and genre recognition require further review."
+}

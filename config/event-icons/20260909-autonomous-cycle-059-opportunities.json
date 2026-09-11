@@ -1,0 +1,867 @@
+{
+  "date": "2026-09-11",
+  "scope": "Cycle 059: 100 sequential events 218398–218842, no targeted supplements.",
+  "suggestions": 52,
+  "concept_count": 29,
+  "concepts": [
+    {
+      "concept": "format-documentary-screening",
+      "label": "Documentary screening",
+      "category": "format",
+      "visual": "Film frame with a documentary observation lens.",
+      "rationale": "Nonfiction film format merits a clear marker; exact genre recognition needs critique.",
+      "existing_alternative": "Use a suitable broad Unicode or accepted icon until a distinctive reviewed study is available.",
+      "event_ids": [
+        218561,
+        218578,
+        218581,
+        218590,
+        218591,
+        218592,
+        218593,
+        218597
+      ],
+      "evidence_by_event": {
+        "218561": [
+          "Heaven in Stone and Glass: No description available.",
+          "Tags: Architecture, Art, Cinema, Documentary, Film, Education, Screening, Drama / Film, Format, Performance"
+        ],
+        "218578": [
+          "Who Killed Vincent Chin?: Restored by the Academy Film Archive and The Film Foundation, in association with the Museum of Chinese in America.",
+          "Tags: Community, History, Documentary, Film, Education, Screening, Restoration, Asian American Cinema, Format, Performance"
+        ],
+        "218581": [
+          "HA HA Shanghai: HA HA SHANGHAI is an outlier in [Choy’s] oeuvre. Far more personal than most of her other films, this documentary is a family affair that features her mot",
+          "Tags: Cinema, Documentary, Film, Family, Screening, Chinese Cinema, Shanghai, Format, Performance"
+        ],
+        "218590": [
+          "Work in Progress / EN Construcción: Documenting the demolition of homes to make way for the M11 highway in East Lon",
+          "Tags: Documentary, Film, Screening, Urban Change, Format, Performance, Demolition"
+        ],
+        "218591": [
+          "The Gloria of Your Imagination: “In 1964, an enterprising psychologist (Dr. Everett Shostrom) persuaded a 30-year-old waitress and single mother, to take part in filmed psychotherapy sessions, with three of",
+          "Tags: Science, Documentary, Film, Screening, Experimental Film, Psychology, Format, Performance"
+        ],
+        "218592": [
+          "Meishi Street: At the end of SPLITTING, a 1974 film recording of a building “cut” radical sculptor and architect Gordon Matta-Clark made to a",
+          "Tags: Architecture, Art, Cinema, Documentary, Film, Education, Screening, Chinese Cinema, Urban Change, Format, Performance"
+        ],
+        "218593": [
+          "No Other Land: Rather than engendering solidarity and empathy through the dep",
+          "Tags: Community, Activism, Documentary, Film, Social Justice, Screening, Palestine, Format, Performance"
+        ],
+        "218597": [
+          "Demolition / Chaiqian / 拆·迁: Using a waist-high camera pointed at the ground and a drone that follows above, Nadav Assor’s G",
+          "Tags: Cinema, Documentary, Film, Screening, Chinese Cinema, Format, Performance, Demolition"
+        ]
+      },
+      "source_urls_by_event": {
+        "218561": [
+          "https://www.amctheatres.com/movies/heaven-in-stone-and-glass-84371"
+        ],
+        "218578": [
+          "https://www.anthologyfilmarchives.org/film_screenings/calendar?view=list&month=9&year=2026#showing-61873"
+        ],
+        "218581": [
+          "https://www.anthologyfilmarchives.org/film_screenings/calendar?view=list&month=9&year=2026#showing-61876"
+        ],
+        "218590": [
+          "https://www.anthologyfilmarchives.org/film_screenings/calendar?view=list&month=9&year=2026#showing-61955"
+        ],
+        "218591": [
+          "https://www.anthologyfilmarchives.org/film_screenings/calendar?view=list&month=9&year=2026#showing-61946"
+        ],
+        "218592": [
+          "https://www.anthologyfilmarchives.org/film_screenings/calendar?view=list&month=9&year=2026#showing-61957"
+        ],
+        "218593": [
+          "https://www.anthologyfilmarchives.org/film_screenings/calendar?view=list&month=9&year=2026#showing-61959"
+        ],
+        "218597": [
+          "https://www.anthologyfilmarchives.org/film_screenings/calendar?view=list&month=9&year=2026#showing-61965"
+        ]
+      }
+    },
+    {
+      "concept": "format-short-film-program",
+      "label": "Short-film program",
+      "category": "format",
+      "visual": "Three compact film frames on one strip",
+      "rationale": "Multiple short works share one ticket; film Unicode may suffice.",
+      "existing_alternative": "Current broad custom or Unicode fallback remains until a distinct grounded pictogram passes review.",
+      "event_ids": [
+        218596,
+        218599,
+        218600,
+        218601,
+        218603,
+        218605
+      ],
+      "evidence_by_event": {
+        "218596": [
+          "Jennifer Reeves Short Film Pgm: This program is anchored by the 1996 film CHRONIC, which combines documentary and found footage with scripted scenes (featuring Reeves herself, as well as filmmakers Joe Gibbons, Jeannie Liotta, and Joel Schlemowitz) to form an",
+          "Tags: Documentary, Film, Screening, Experimental Film, Short Films, Found Footage, Format, Performance, Jennifer Reeves"
+        ],
+        "218599": [
+          "Rubble on Screen: Short Film Pgm: The final program of the series is comprised of shorts that condense the myriad affects elucidated by the preceding works. Here, the wrecking ball and excavator become central player",
+          "Tags: Film, Screening, Experimental Film, Short Films, Urban Change, Format, Performance, Demolition"
+        ],
+        "218600": [
+          "Valentin Noujaïm Pgm 1: Veiled Struggles: VEILED STRUGGLES: QUEERNESS, COLONIALISM, AND MEMORYValentin NoujaïmOCEANIA2024, 24 min, digital. In French with English subtitles.Sixteen-year-old Najib luxuriates in his summer days of gaming until h",
+          "Tags: Film, Screening, Queer Cinema, Colonialism, Memory, Format, Performance"
+        ],
+        "218601": [
+          "Valentin Noujaïm Pgm 2: RE-Telling: RE-TELLING: OUR GRANDMOTHERS HAVE KNOWNValentin NoujaïmBEFORE SHE FORGETS HELIOPOLIS / AVANT D’OUBLIER HELIOPOLIS2018, 23 min, digital. In French with English subtitles.“My family have begun to forget their",
+          "Tags: Film, Family, Screening, Short Films, French Cinema, Memory, Format, Performance"
+        ],
+        "218603": [
+          "Toney W. Merritt Pgm 1: Psychodramas: PSYCHODRAMAS: MASKED FIGURES / MULTIPLE IDENTITIES",
+          "Tags: Film, Screening, Experimental Film, Short Films, Psychodrama, Format, Performance, Toney W Merritt"
+        ],
+        "218605": [
+          "Toney W. Merritt Pgm 3: Later Work: VISION QUESTS (2009, 15 min, digital) AT EDEN’S HEART (2021, 3 min, digital) BLACK OAK FALLEN (2021, 9 min, digital) A FIRE’S POEM (2022, 4 min, digital) APART – A PART (2024, 6.5 min, digital)",
+          "Tags: Film, Screening, Experimental Film, Short Films, Format, Performance, Toney W Merritt, Digital Film"
+        ]
+      },
+      "source_urls_by_event": {
+        "218596": [
+          "https://www.anthologyfilmarchives.org/film_screenings/calendar?view=list&month=9&year=2026#showing-61952"
+        ],
+        "218599": [
+          "https://www.anthologyfilmarchives.org/film_screenings/calendar?view=list&month=9&year=2026#showing-61971"
+        ],
+        "218600": [
+          "https://www.anthologyfilmarchives.org/film_screenings/calendar?view=list&month=9&year=2026#showing-61990"
+        ],
+        "218601": [
+          "https://www.anthologyfilmarchives.org/film_screenings/calendar?view=list&month=9&year=2026#showing-61992"
+        ],
+        "218603": [
+          "https://www.anthologyfilmarchives.org/film_screenings/calendar?view=list&month=9&year=2026#showing-61927",
+          "https://www.anthologyfilmarchives.org/film_screenings/calendar?view=list&month=9&year=2026#showing-61930"
+        ],
+        "218605": [
+          "https://www.anthologyfilmarchives.org/film_screenings/calendar?view=list&month=9&year=2026#showing-61933"
+        ]
+      }
+    },
+    {
+      "concept": "format-film-double-bill",
+      "label": "Film double bill",
+      "category": "format",
+      "visual": "Two distinct film frames sharing one screen",
+      "rationale": "Paired film programs should not collapse to one subject.",
+      "existing_alternative": "Current broad custom or Unicode fallback remains until a distinct grounded pictogram passes review.",
+      "event_ids": [
+        218571,
+        218573,
+        218576,
+        218586
+      ],
+      "evidence_by_event": {
+        "218571": [
+          "Teach Our Children + Inside Women Inside: This film focuses on the historic 1971 Attica prison rebellion in upstate New York. It targets the conditions that caused prisoners to take drast",
+          "Tags: Community, Activism, Documentary, Film, Social Justice, Screening, Format, Performance, Prison History"
+        ],
+        "218573": [
+          "From Spikes to Spindles + Fei Tien, Goddess in Flight: This raw, gutsy portrait of New York’s Chinatown captures the early days of an emerging consciousness in the community. We see a Chinatown rare",
+          "Tags: Manhattan, Community, Chinatown, Neighborhood, Documentary, Film, Screening, Format, Performance"
+        ],
+        "218576": [
+          "Namibia, Independence Now + Reorienting Africa: This moving film was shot inside refugee settlements in Zambia and Angola in the mid-1980s. It examines how exiled Namibians worked t",
+          "Tags: Cinema, Documentary, Film, Screening, Independence, African Cinema, Refugees, Format, Performance, Namibia"
+        ],
+        "218586": [
+          "MY Last Interview with Éric Rohmer + Gougnette: In 2009, just months before he passed away at the age of 89, Raynal recorded an interview with",
+          "Tags: Documentary, Film, Screening, French Cinema, Interview, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "218571": [
+          "https://www.anthologyfilmarchives.org/film_screenings/calendar?view=list&month=9&year=2026#showing-61857"
+        ],
+        "218573": [
+          "https://www.anthologyfilmarchives.org/film_screenings/calendar?view=list&month=9&year=2026#showing-61860"
+        ],
+        "218576": [
+          "https://www.anthologyfilmarchives.org/film_screenings/calendar?view=list&month=9&year=2026#showing-61865"
+        ],
+        "218586": [
+          "https://www.anthologyfilmarchives.org/film_screenings/calendar?view=list&month=9&year=2026#showing-61898"
+        ]
+      }
+    },
+    {
+      "concept": "format-multidisciplinary-performance",
+      "label": "Multidisciplinary performance",
+      "category": "format",
+      "visual": "Shared stage with word, music and movement cues",
+      "rationale": "Mixed programs lack a single primary mechanism; avoid crowded collage.",
+      "existing_alternative": "Current broad custom or Unicode fallback remains until a distinct grounded pictogram passes review.",
+      "event_ids": [
+        218779,
+        218781,
+        218782,
+        218783
+      ],
+      "evidence_by_event": {
+        "218779": [
+          "Listening to the Living World: A multidisciplinary evening of music, puppetry, theatre, and storytelling that invites audiences to deepen their connection to one another and to the more-than-human world. The program explores ecology, wonder, and evolving relationships with the living world.",
+          "Tags: Community, Music, Theater, Art, Environment, Ecology, Storytelling / Theater, Format, Theater Show, Performance"
+        ],
+        "218781": [
+          "Celebration of Human Rights: What Really Makes Queens Great: An evening of performances celebrating human rights and Queens, featuring dance, theatre, spoken word, and music. The program includes works addressing resilience, racism, social justice, environmental change, and care.",
+          "Tags: Community, Music, Theater, Activism, Literature, Dance, Spoken Word, Social Justice, Human Rights, Format, Theater Show, Performance"
+        ],
+        "218782": [
+          "A Celebration of Diversity: From the World’s Most Diverse Neighborhood: An afternoon of performances celebrating diversity, featuring solo theatre, audiovisual poetry, puppetry, movement, and Indian classical dance. The works explore citizenship, displacement, overlooked histories, migration, motherhood, and unity.",
+          "Tags: Community, Theater, Art, Dance, Family, Puppetry, Diversity, Format, Theater Show, Performance"
+        ],
+        "218783": [
+          "Celebration of Immigration!: An evening of performances exploring migration, identity, belonging, displacement, and resilience through music, spoken word, physical theatre, and dance. The program features artists whose work draws on personal experience, cultural memory, and intercultural connection.",
+          "Tags: Community, Music, Theater, Literature, Dance, Spoken Word, Immigration, Community Support, Migration, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "218779": [
+          "https://onthestage.tickets/show/the-international-human-rights-art-movement/6a54dc30cff301cc043fcfd7/tickets#/select-tickets"
+        ],
+        "218781": [
+          "https://onthestage.tickets/show/the-international-human-rights-art-movement/6a54dc30cff301cc043fcfd7/tickets#/select-tickets"
+        ],
+        "218782": [
+          "https://onthestage.tickets/show/the-international-human-rights-art-movement/6a54dc30cff301cc043fcfd7/tickets#/select-tickets"
+        ],
+        "218783": [
+          "https://onthestage.tickets/show/the-international-human-rights-art-movement/6a54dc30cff301cc043fcfd7/tickets#/select-tickets"
+        ]
+      }
+    },
+    {
+      "concept": "format-experimental-film",
+      "label": "Experimental cinema",
+      "category": "format",
+      "visual": "Projected frame with abstract superimposed forms",
+      "rationale": "Genre abstraction requires recognition work; standard film fallback remains valid.",
+      "existing_alternative": "Current broad custom or Unicode fallback remains until a distinct grounded pictogram passes review.",
+      "event_ids": [
+        218585,
+        218587,
+        218594
+      ],
+      "evidence_by_event": {
+        "218585": [
+          "Deux Fois: “An intentionally elementary meditation on certain primary functions of film, that could be said to be at the roots of film editing as such – expec",
+          "Tags: Cinema, Film, Screening, Experimental Film, French Cinema, Spanish Cinema, Film Editing, Format, Performance"
+        ],
+        "218587": [
+          "Hotel New York: “HOTEL NEW YORK can be seen as a description of a fight; the fight of an immigrant with her new city and the fight of a filmm",
+          "Tags: Community, Film, Immigration, Screening, Community Support, Experimental Film, Drama / Film, Format, Performance"
+        ],
+        "218594": [
+          "When It Was Blue: WHEN IT WAS BLUE rejoices in the splendor of nature as the camera eye traverses land and sea in a montage of diverse ecosystems from the Americas to Iceland and New Zealand.",
+          "Tags: Community, Nature, Film, Environment, Screening, Experimental Film, Ecology, Format, Performance, Jennifer Reeves"
+        ]
+      },
+      "source_urls_by_event": {
+        "218585": [
+          "https://www.anthologyfilmarchives.org/film_screenings/calendar?view=list&month=9&year=2026#showing-61896"
+        ],
+        "218587": [
+          "https://www.anthologyfilmarchives.org/film_screenings/calendar?view=list&month=9&year=2026#showing-61900"
+        ],
+        "218594": [
+          "https://www.anthologyfilmarchives.org/film_screenings/Anthology Film Archives",
+          "https://www.anthologyfilmarchives.org/film_screenings/calendar?view=list&month=9&year=2026#showing-61950"
+        ]
+      }
+    },
+    {
+      "concept": "format-vocal-recital",
+      "label": "Vocal recital",
+      "category": "format",
+      "visual": "A standing singer beside an open score on a music stand with one broad sound arc.",
+      "rationale": "Art-song and aria recital is voice-led; the format differs from full staged opera or a generic band concert.",
+      "existing_alternative": "Microphone is broad and piano denotes accompaniment; theater masks lose the recital setting.",
+      "event_ids": [
+        218777,
+        218778
+      ],
+      "evidence_by_event": {
+        "218777": [
+          "Nyfos Next: Built around the world premiere of Jeremy Beck’s cycle Dorothy Parker Songs, sung by soprano Kerrigan Bigelow, this program also features two Danika Lorén pieces with texts by Parker. Additional artists include Alec Manasse on clarinet and Nathaniel LaNasa on piano.",
+          "Tags: Music, Classical Music, Concert, Vocal Music, World Premiere, Format, Performance"
+        ],
+        "218778": [
+          "Mainstage — First-Name Basis: This program features songs whose titles are given names, ranging from Beethoven’s “Adelaide” and Fauré’s “Lydia” to Noël Coward’s “Nina,” the Beatles’ “Michelle,” and Randy Newman’s “Marie.” It features soprano Christine Taylor Price, mezzo-soprano Megan Moore, baritone Samuel Kidd, and NYFOS’s Steven Blier and Bénédicte Jourdois as pianists and hosts.",
+          "Tags: Music, Classical Music, Concert, Vocal Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "218777": [
+          "https://nyfos.org/nyfos-next/"
+        ],
+        "218778": [
+          "https://www.kaufmanmusiccenter.org/mch/event/new-york-festival-of-song-first-name-basis/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-horror-film",
+      "label": "Horror film",
+      "category": "genre",
+      "visual": "Film strip with restrained spooky silhouette.",
+      "rationale": "Screening is horror without a special live format.",
+      "existing_alternative": "Movie camera remains adequate.",
+      "event_ids": [
+        218604,
+        218761
+      ],
+      "evidence_by_event": {
+        "218604": [
+          "Screamplay: Edgar Allan (Rufus B. Seder) is an aspiring screenwriter who has just come to Hollywood to make it in the movies…only to wind up working as the janitor at a fleabag apartment complex run by the greasy ex-boxer Martin (played by underground film legend George Kuchar). When Edgar begins channeling his frustrati",
+          "Tags: Comedy, Film, Screening, Screenwriting, Filmmaking, Hollywood, George Kuchar, Format, Performance"
+        ],
+        "218761": [
+          "Teenage Sex and Death at Camp Miasma: Jane Schoenbrun’s latest film, TEENAGE SEX AND DEATH AT CAMP MIASMA, opens at Syndicated on August 29.",
+          "Tags: Cinema, Independent Film, Film, Screening, Horror, Queer Cinema, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "218604": [
+          "https://www.anthologyfilmarchives.org/film_screenings/calendar?view=list&month=9&year=2026#showing-61879"
+        ],
+        "218761": [
+          "https://ticketing.useast.veezi.com/purchase/6522?siteToken=dxdq5wzbef6bz2sjqt83ytzn1c",
+          "https://ticketing.useast.veezi.com/purchase/6540?siteToken=dxdq5wzbef6bz2sjqt83ytzn1c",
+          "https://ticketing.useast.veezi.com/purchase/6550?siteToken=dxdq5wzbef6bz2sjqt83ytzn1c",
+          "https://ticketing.useast.veezi.com/purchase/6571?siteToken=dxdq5wzbef6bz2sjqt83ytzn1c",
+          "https://ticketing.useast.veezi.com/purchase/6573?siteToken=dxdq5wzbef6bz2sjqt83ytzn1c",
+          "https://www.instagram.com/syndicatedbk/"
+        ]
+      }
+    },
+    {
+      "category": "genre",
+      "concept": "genre-reggaeton",
+      "existing_alternative": "Noto music notes or fire do not identify the subgenre; existing DJ decks identify equipment but not reggaeton.",
+      "label": "Reggaeton",
+      "rationale": "Explicit reggaeton programming supports a dembow-rhythm motif as an exploratory direction; mixed programs support a genre facet only, and recognition against generic electronic music must be tested.",
+      "visual": "A compact drum-pad grid with a bold alternating four-hit rhythm trail.",
+      "event_ids": [
+        218500,
+        218502
+      ],
+      "evidence_by_event": {
+        "218500": [
+          "Perreo Parrty Boat Parrty (18+) - Latin & Reggaeton Nyc Yacht Cruise: Join a Latin and reggaeton boat party cruise along the Hudson River past the Statue of Liberty, with Manhattan skyline views, live DJs, multiple levels of music, and indoor and outdoor dance floors.",
+          "Tags: Music, Dance, Nightlife, Reggaeton, Latin Music, Club Night, Boat Party, Format, Social"
+        ],
+        "218502": [
+          "Mexican Independence Party @ San Antonios, Lower East Side NYC: Celebrate Mexican Independence Day with nonstop reggaeton, perreo and Mexican energy at San Antonios! VIP Bottle Service and Birthday Reservations Available",
+          "Tags: Music, Dance, Nightlife, Reggaeton, Latin Music, Perreo, Bottle Service, Club Night, Format, Social, Mexican Independence"
+        ]
+      },
+      "source_urls_by_event": {
+        "218500": [
+          "https://posh.vip/e/perreo-parrty-boat-parrty-18-latin-reggaeton-nyc-yacht-cruise",
+          "https://posh.vip/e/perreo-parrty-boat-parrty-18-latin-reggaeton-nyc-yacht-cruise-1",
+          "https://posh.vip/e/perreo-parrty-boat-parrty-18-latin-reggaeton-nyc-yacht-cruise-2",
+          "https://posh.vip/e/perreo-parrty-boat-parrty-18-latin-reggaeton-nyc-yacht-cruise-3",
+          "https://posh.vip/e/perreo-parrty-boat-parrty-18-latin-reggaeton-nyc-yacht-cruise-4",
+          "https://posh.vip/e/perreo-parrty-boat-parrty-18-latin-reggaeton-nyc-yacht-cruise-5",
+          "https://posh.vip/e/the-1-latin-reggaeton-boat-party-nyc-yacht-cruise-27"
+        ],
+        "218502": [
+          "https://posh.vip/e/mexican-independence-party-san-antonios-lower-east-side-nyc",
+          "https://posh.vip/e/mexican-independence-party-san-antonios-lower-east-side-nyc-1"
+        ]
+      }
+    },
+    {
+      "concept": "activity-board-games",
+      "label": "Board-game social",
+      "category": "activity",
+      "visual": "Generic playing board with varied neutral pieces and cards.",
+      "rationale": "Mixed tabletop games without one guaranteed title.",
+      "existing_alternative": "Game die remains acceptable but narrower.",
+      "event_ids": [
+        218444
+      ],
+      "evidence_by_event": {
+        "218444": [
+          "Kids/Teen Game On! Board Games and Puzzles at Clarendon: Play board, card and tabletop games with us at Clarendon Library. Designed for ages 7 and up!",
+          "Tags: Kids, Family, Games, Board Games, Teen Events, Game, Tabletop, Participatory, Puzzle, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "218444": [
+          "https://www.bklynlibrary.org/node/832640",
+          "https://www.bklynlibrary.org/node/832641",
+          "https://www.bklynlibrary.org/node/832642",
+          "https://www.bklynlibrary.org/node/832644"
+        ]
+      }
+    },
+    {
+      "concept": "activity-charity-fiber-crafting",
+      "label": "Charity fiber crafting",
+      "category": "activity",
+      "visual": "Two interlocking yarn loops with a blanket corner",
+      "rationale": "Current knitting and crochet combination has no single matching tool icon.",
+      "existing_alternative": "Current broad custom or Unicode fallback remains until a distinct grounded pictogram passes review.",
+      "event_ids": [
+        218399
+      ],
+      "evidence_by_event": {
+        "218399": [
+          "Knit and Crochet Blankets with Older Adults: Support older adults as they knit and crochet. Swap recipes and stories as you make beautiful blankets for the residents in need.",
+          "Tags: Community, Art, Volunteer, Fiber Arts, Crafts, Seniors, Arts and Crafts, Crochet, Participatory, Older Adults, Knitting, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "218399": [
+          "https://www.newyorkcares.org/project/a1HVr000003SGBNMA4",
+          "https://www.newyorkcares.org/project/a1HVr000003SRbRMAW"
+        ]
+      }
+    },
+    {
+      "concept": "activity-creative-writing",
+      "label": "Creative writing",
+      "category": "activity",
+      "visual": "Pencil beside a page with small branching idea marks.",
+      "rationale": "Prompt-based mixed writing differs from genre-specific instruction.",
+      "existing_alternative": "Writing hand already suits broad scope; avoid duplicating screenplay/poetry icons.",
+      "event_ids": [
+        218536
+      ],
+      "evidence_by_event": {
+        "218536": [
+          "Creative Writing: Co-presented with the Battery Park City Library, writing sessions led by Jon Curley encourage participants to use personal observations to enhance their writing styles. Registration required, please email: registration@bpca.ny.gov. No program 10/12.",
+          "Tags: Library, Community, Literature, Education, Creative Writing, Writing Workshop, Class, Participatory, Writing, Cultural Venue, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "218536": [
+          "https://bpca.ny.gov/event/creative-writing-8-2-2/2026-09-14/",
+          "https://www.nypl.org/events/programs/2026/09/14/creative-writing"
+        ]
+      }
+    },
+    {
+      "concept": "activity-lego-robotics",
+      "category": "activity",
+      "label": "LEGO robotics",
+      "visual": "Compact interlocking-brick robot with wheels and a simple sensor.",
+      "rationale": "Robotics adds programming/motion beyond ordinary brick building.",
+      "existing_alternative": "Brick art serves current assignment; robot emoji lacks construction system.",
+      "event_ids": [
+        218468
+      ],
+      "evidence_by_event": {
+        "218468": [
+          "Stone Avenue Robotics: Stone Avenue is continuing its Robotics program",
+          "Tags: Science, Education, Technology, STEM, Class, Robotics, Participatory, LEGO, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "218468": [
+          "https://www.bklynlibrary.org/node/839667",
+          "https://www.bklynlibrary.org/node/839668",
+          "https://www.bklynlibrary.org/node/839669",
+          "https://www.bklynlibrary.org/node/839670",
+          "https://www.bklynlibrary.org/node/839671"
+        ]
+      }
+    },
+    {
+      "concept": "activity-word-tile-games",
+      "label": "Word-tile games",
+      "category": "activity",
+      "visual": "Several letter tiles in intersecting rows",
+      "rationale": "Scrabble and Bananagrams are both central; one brand-specific board would misstate the set.",
+      "existing_alternative": "Current broad custom or Unicode fallback remains until a distinct grounded pictogram passes review.",
+      "event_ids": [
+        218489
+      ],
+      "evidence_by_event": {
+        "218489": [
+          "Gerritsen Beach Scrabble & Bananagrams: Do you love word games? Join us to play scrabble and/or bananagrams at the library! Intended for ages 18 & up.",
+          "Tags: Games, Game, Word Games, Participatory, Scrabble, Adults, Format, Bananagrams"
+        ]
+      },
+      "source_urls_by_event": {
+        "218489": [
+          "https://www.bklynlibrary.org/node/837875",
+          "https://www.bklynlibrary.org/node/837876",
+          "https://www.bklynlibrary.org/node/842206",
+          "https://www.bklynlibrary.org/node/842207"
+        ]
+      }
+    },
+    {
+      "concept": "craft-woven-mat-stitch",
+      "label": "Korean woven-mat embroidery",
+      "category": "craft",
+      "visual": "A small woven-looking stitched fill held within fabric",
+      "rationale": "Technique needs teacher construction reference; broad embroidery remains adequate.",
+      "existing_alternative": "Current broad custom or Unicode fallback remains until a distinct grounded pictogram passes review.",
+      "event_ids": [
+        218826
+      ],
+      "evidence_by_event": {
+        "218826": [
+          "Korean Embroidery: Woven Mat Stitch and Bridge Stitch: Join instructor Heehwa Jo for a virtual workshop exploring traditional Korean embroidery techniques including mat stitch and impression stitch. This class covers traditional color schemes, historical context, and step-by-step demonstrations for filling large areas and blending colors.",
+          "Tags: Art, Workshop, Education, Virtual, Fiber Arts, Crafts, Textile Art, Participatory, Embroidery, Format, Korean Embroidery"
+        ]
+      },
+      "source_urls_by_event": {
+        "218826": [
+          "https://tatter.org/events/korean-embroidery-woven-mat-stitch-and-bridge-stitch/"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-chamber-orchestra",
+      "label": "Chamber orchestra",
+      "category": "format",
+      "visual": "Compact arc of mixed section stands with conductor.",
+      "rationale": "Small orchestra sits between chamber ensemble and full symphony; actual forces must be verified.",
+      "existing_alternative": "Music fallback until ensemble size known.",
+      "event_ids": [
+        218517
+      ],
+      "evidence_by_event": {
+        "218517": [
+          "Chasing Dreams: Bard East/West Ensemble and China Now Chamber Orchestra: The opening concert of the 9th Annual China Now Music Festival, presented by the US-China Music Institute of the Bard College Conservatory of Music.",
+          "Tags: Community, Music, Classical Music, Festival, Orchestra, Concert, Chamber Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "218517": [
+          "https://www.aaartsalliance.org/events/bard-east-west-ensemble-china-now-chamber-orchestra-at-carnegie-hall",
+          "https://www.carnegiehall.org/calendar/2026/10/02/chasing-dreams-bard-eastwest-ensemble-and-china-now-chamber-orchestra-0730pm"
+        ]
+      }
+    },
+    {
+      "concept": "format-academic-conference",
+      "label": "Academic conference",
+      "category": "format",
+      "visual": "A lecture dais beside a compact multi-session timetable",
+      "rationale": "A two-day mixed academic program is broader than one talk.",
+      "existing_alternative": "Current broad custom or Unicode fallback remains until a distinct grounded pictogram passes review.",
+      "event_ids": [
+        218524
+      ],
+      "evidence_by_event": {
+        "218524": [
+          "Paulo Freire Conference at Columbia University |Edition 2026| Registration: Two days of lectures, panel discussions, poster presentations, and audiovisual screenings on Paulo Freire’s work as a social technology, with concrete outcomes in curricula, teaching methodologies, structural reforms, and the design and implementation of public education policies around the world. The event is bilingual, with programming in Portuguese and English.",
+          "Tags: Community, Literature, Education, Columbia University, Bilingual, Language Learning, Gathering, Talk, Conference, In Person, Format, Paulo Freire"
+        ]
+      },
+      "source_urls_by_event": {
+        "218524": [
+          "https://www.eventbrite.com/e/paulo-freire-conference-at-columbia-university-edition-2026-registration-registration-1993633073189?aff=ebdssbcitybrowse"
+        ]
+      }
+    },
+    {
+      "concept": "format-accessible-museum-tour",
+      "label": "Accessible museum visit",
+      "category": "format",
+      "visual": "Artwork and two welcoming conversation bubbles.",
+      "rationale": "Memory-care access format is explicit; avoid implying clinical treatment or stereotyping visitors.",
+      "existing_alternative": "Retain an accurate broad Unicode or accepted icon until a distinct reviewed design is available.",
+      "event_ids": [
+        218531
+      ],
+      "evidence_by_event": {
+        "218531": [
+          "Whitney Descriptions Online: “Untitled” (America): In front of a window overlooking Hudson river.",
+          "Tags: Community, Art, Accessibility, Free, Education, Virtual, ASL, Gathering, Talk, Untitled America, Access, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "218531": [
+          "https://whitney.org/events/whitney-descriptions-online-untitled-sep12",
+          "https://whitney.org/events/whitney-signs-untitled-america-sep12"
+        ]
+      }
+    },
+    {
+      "concept": "format-book-and-film-program",
+      "label": "Book and film program",
+      "category": "format",
+      "visual": "Open book adjacent to two projected frames",
+      "rationale": "A release plus screenings has a mixed central format.",
+      "existing_alternative": "Current broad custom or Unicode fallback remains until a distinct grounded pictogram passes review.",
+      "event_ids": [
+        218589
+      ],
+      "evidence_by_event": {
+        "218589": [
+          "GO GO GO SLOW (book release event!): This evening features a rare screening of John Smith’s SLOW GLASS (1988-91) – which uses the art of glassmaking as a prism to explore themes of memory and transformation – preceded by Marie Menken’s ode to New York City on speed, GO! GO! GO! (1964). Both films utilize layered imagery, in different ways, to alter our perception of time a",
+          "Tags: Art, Literature, Film, Screening, Experimental Film, Book Release, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "218589": [
+          "https://www.anthologyfilmarchives.org/film_screenings/calendar?view=list&month=9&year=2026#showing-61983"
+        ]
+      }
+    },
+    {
+      "concept": "format-dance-showcase",
+      "label": "Format dance showcase",
+      "category": "format",
+      "visual": "Stage and movement figures",
+      "rationale": "New dance works without an exact style.",
+      "existing_alternative": "Retain appropriate Unicode or broader accepted icon until recognition and structural review pass.",
+      "event_ids": [
+        218774
+      ],
+      "evidence_by_event": {
+        "218774": [
+          "Peridance Presents: Join us for an evening of dance featuring diverse choreographers and Peridance's Artist in Residence.",
+          "Tags: Art, Dance, Choreography, Live Art, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "218774": [
+          "https://www.peridance.com/event-details/peridance-presents-4"
+        ]
+      }
+    },
+    {
+      "concept": "format-dinner-cruise",
+      "label": "Dinner cruise",
+      "category": "format",
+      "visual": "Passenger boat with small plate setting",
+      "rationale": "A meal onboard is central but party-cruise artwork may already suffice.",
+      "existing_alternative": "Current broad custom or Unicode fallback remains until a distinct grounded pictogram passes review.",
+      "event_ids": [
+        218523
+      ],
+      "evidence_by_event": {
+        "218523": [
+          "I'll Take Manhattan Hudson Cruise: Take in the magnificent views of the Manhattan skyline as you cruise down the Hudson River. You'll tap your feet to the beat of the live band while enjoying a sumptuous buffet dinner.",
+          "Tags: Community, Music, Hudson River, Tour, Food, Outdoor, Cruise, Format, Outings"
+        ]
+      },
+      "source_urls_by_event": {
+        "218523": [
+          "https://www.eventbrite.com/e/ill-take-manhattan-hudson-cruise-tickets-1982055957725?aff=ebdssbcitybrowse"
+        ]
+      }
+    },
+    {
+      "concept": "format-indian-classical-dance-showcase",
+      "label": "Indian classical dance showcase",
+      "category": "format",
+      "visual": "Multiple distinct grounded dance poses",
+      "rationale": "Requires references for each named form and careful costume recognition; one tradition cannot stand for all.",
+      "existing_alternative": "Current broad custom or Unicode fallback remains until a distinct grounded pictogram passes review.",
+      "event_ids": [
+        218775
+      ],
+      "evidence_by_event": {
+        "218775": [
+          "Vivarta Arts: Join us for Pravaha: Flowing across Traditions, an enchanting evening that unites three classical Indian dance forms: Bharatanatyam, Kathak, and Odissi. Witness the artistry of Srinidhi Raghavan, Preya Patel, and Trina Sarkar as they bring these distinct traditions to life on one stage.",
+          "Tags: Community, Art, Dance, Culture, Indian Classical Dance, Bharatanatyam, Kathak, Format, Theater Show, Performance, Odissi"
+        ]
+      },
+      "source_urls_by_event": {
+        "218775": [
+          "https://www.peridance.com/event-details/vivarta-arts"
+        ]
+      }
+    },
+    {
+      "concept": "format-piano-recital",
+      "label": "Piano recital",
+      "category": "format",
+      "visual": "Piano keyboard with recital music stand",
+      "rationale": "Actual solo format and instrument type must be verified; keyboard Unicode may suffice.",
+      "existing_alternative": "Current broad custom or Unicode fallback remains until a distinct grounded pictogram passes review.",
+      "event_ids": [
+        218515
+      ],
+      "evidence_by_event": {
+        "218515": [
+          "Ludovico Einaudi: Ludovico Einaudi performs at Stern Auditorium / Perelman Stage.",
+          "Tags: Music, Classical Music, Concert, Piano, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "218515": [
+          "https://www.carnegiehall.org/calendar/2026/10/01/ludovico-einaudi-0800pm"
+        ]
+      }
+    },
+    {
+      "concept": "format-silent-film",
+      "label": "Silent cinema",
+      "category": "format",
+      "visual": "Film frame with an intertitle card",
+      "rationale": "No assumption of organ or live accompaniment; recognition beyond generic film unproven.",
+      "existing_alternative": "Current broad custom or Unicode fallback remains until a distinct grounded pictogram passes review.",
+      "event_ids": [
+        218579
+      ],
+      "evidence_by_event": {
+        "218579": [
+          "EC: the Passion of Joan of Arc: Spiritual rapture and institutional hypocrisy are brought to stark, vivid life in one of the most transcendent achievements of the silent era. Chronicling the trial of Joan of Arc in the final hours leading u",
+          "Tags: Film, Screening, Classic Film, Silent Film, Historical Drama, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "218579": [
+          "https://www.anthologyfilmarchives.org/film_screenings/calendar?view=list&month=9&year=2026#showing-61908"
+        ]
+      }
+    },
+    {
+      "concept": "genre-electronic",
+      "label": "Electronic music",
+      "category": "genre",
+      "visual": "A simple waveform beside one music note.",
+      "rationale": "Explicit electronic repertoire does not establish DJ or synth equipment; abstract motif needs recognition testing.",
+      "existing_alternative": "Existing broad Unicode remains suitable; specific motif must demonstrate added recognition before new artwork.",
+      "event_ids": [
+        218821
+      ],
+      "evidence_by_event": {
+        "218821": [
+          "Apollo Studio presents: Late-night club night at Apollo Studio. Full lineup and tickets on Resident Advisor.",
+          "Tags: Music, Nightlife, Electronic Music, Club Night, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "218821": [
+          "https://ra.co/events/2415383",
+          "https://ra.co/events/2415384",
+          "https://ra.co/events/2415385",
+          "https://ra.co/events/2415387",
+          "https://ra.co/events/2415388",
+          "https://ra.co/events/2415389",
+          "https://ra.co/events/2415390"
+        ]
+      }
+    },
+    {
+      "concept": "genre-fantasy-film",
+      "label": "Fantasy cinema",
+      "category": "genre",
+      "visual": "Film frame holding a restrained fantastical landscape",
+      "rationale": "Exploratory only; avoid mistaking screened fiction for actual magic activity.",
+      "existing_alternative": "Current broad custom or Unicode fallback remains until a distinct grounded pictogram passes review.",
+      "event_ids": [
+        218560
+      ],
+      "evidence_by_event": {
+        "218560": [
+          "Practical Magic 2: No description available.",
+          "Tags: Literature, Film, Family, Screening, Fantasy, Magic, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "218560": [
+          "https://www.amctheatres.com/movies/practical-magic-2-77331"
+        ]
+      }
+    },
+    {
+      "concept": "genre-jazz",
+      "label": "Jazz",
+      "category": "genre",
+      "visual": "A pair of syncopated musical notes with one loose improvisatory flourish.",
+      "rationale": "The genre is explicit, but an instrument-neutral motif remains exploratory and requires recognition tests; avoid treating saxophone as universal jazz.",
+      "existing_alternative": "Noto notes are generic; a saxophone misstates instrumentation when the program does not feature one.",
+      "event_ids": [
+        218798
+      ],
+      "evidence_by_event": {
+        "218798": [
+          "Bri and the Five: No description available.",
+          "Tags: Music, Jazz, Concert, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "218798": [
+          "https://www.thejazzclub.com/events/08-20-26-thursday",
+          "https://www.thejazzclub.com/events/09-12-26-saturday"
+        ]
+      }
+    },
+    {
+      "concept": "genre-persian-pop",
+      "label": "Persian pop",
+      "category": "genre",
+      "visual": "Instrument-neutral contemporary music motif",
+      "rationale": "No specific instrument or national stereotype; may not outperform music Unicode.",
+      "existing_alternative": "Current broad custom or Unicode fallback remains until a distinct grounded pictogram passes review.",
+      "event_ids": [
+        218521
+      ],
+      "evidence_by_event": {
+        "218521": [
+          "Mansour Live in New York City: Experience an unforgettable evening with Mansour, one of the most beloved and enduring voices in Persian pop music. Performing his greatest hits alongside fan favorites from a career spanning more than three decades, Mansour returns with the energy, passion, and stage presence that have made him a favorite of audiences around the world.",
+          "Tags: Music, Concert, In Person, Live Music, Format, Performance, Persian Pop"
+        ]
+      },
+      "source_urls_by_event": {
+        "218521": [
+          "https://www.eventbrite.com/e/mansour-live-in-new-york-city-tickets-1992393871704?aff=ebdssbcitybrowse",
+          "https://www.eventbrite.com/e/mansour-live-in-new-york-city-tickets-1992393871704?aff=ebdssbcitybrowsenightlife"
+        ]
+      }
+    },
+    {
+      "concept": "genre-punk",
+      "category": "genre",
+      "label": "Punk music",
+      "visual": "Angular jagged musical note",
+      "rationale": "Avoid assuming guitar or fashion; test genre distinction.",
+      "existing_alternative": "Broad fallback does not distinguish this specific supported facet.",
+      "event_ids": [
+        218842
+      ],
+      "evidence_by_event": {
+        "218842": [
+          "Sea.Hear.Now: The Offspring: Sea.Hear.Now presents The Offspring “Just the Punk Stuff”. Doors: 7:30 pm Show: 8:30 pm. Tickets are $122 in advance plus applicable fees, $140 at the door plus applicable fees 18+ admitted.",
+          "Tags: Music, Rock, Concert, Punk Rock, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "218842": [
+          "https://www.stoneponyonline.com/events/sea-hear-now-the-offspring/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-science-fiction-film",
+      "label": "Science-fiction cinema",
+      "category": "genre",
+      "visual": "Projected frame with distant spacecraft silhouette",
+      "rationale": "A film-specific framing would distinguish fiction from actual STEM activity.",
+      "existing_alternative": "Current broad custom or Unicode fallback remains until a distinct grounded pictogram passes review.",
+      "event_ids": [
+        218557
+      ],
+      "evidence_by_event": {
+        "218557": [
+          "Colony: No description available.",
+          "Tags: Literature, Cinema, Film, Sci-fi, Screening, Movies, Drama / Film, Format, Performance, Colony"
+        ]
+      },
+      "source_urls_by_event": {
+        "218557": [
+          "https://www.amctheatres.com/movies/colony-83566"
+        ]
+      }
+    }
+  ],
+  "limitations": "Counts describe this cohort, not population reach. These are grounded prospective studies, not live assignments. Existing artwork may already suffice; exact equipment and genre recognition require further review."
+}

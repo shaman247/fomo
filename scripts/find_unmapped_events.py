@@ -181,6 +181,22 @@ SKIP_LOCATION_NAMES = {
     # ORG/agency names emitted as the venue by their own feed. Each rovers between venues,
     # so an alt name would mis-pin every future listing.
     'russian american cultural center', 'union county park system',
+    # 2026-09-11 unmapped sweep. Each string was researched against the live source page
+    # before being listed; none names a venue that can ever resolve, and the event is
+    # already pinned as well as it ever will be.
+    #   org / program name emitted as the venue
+    'spike polite radio show', 'amadou ly foundation', 'bronx poetry house',
+    #   organizer withholds the address until signup/RSVP
+    'tbd / sent to registrants', 'location tbu', 'brooklyn industrial space',
+    'williamsburg rooftop', 'brooklyn, ny',
+    #   private residences (Partiful house shows) — must never get a locations row
+    "1120 st. john's place", '413 e 84th st apt 1 (buzz bartos, kitchin, or imamura)',
+    #   bare ZIP with the real address emailed after signup (NYC Service)
+    'new york, ny 10037', 'queens, ny 11377',
+    #   sub-facility label inside the mapped park, and in-park route endpoints
+    'ballfield 11', 'dinosaur playground to ellington in the park, new york',
+    #   street the PuppetMobile performs on; the event is pinned to the neighborhood
+    '5th avenue',
 }
 
 # Websites whose feed emits the HOST/PARTNER ORG as `location_name` for every

@@ -1,0 +1,32 @@
+{
+  "reviewer_mode": "creator-critical-pass",
+  "views": [
+    "front",
+    "rear",
+    "left",
+    "right",
+    "top",
+    "icon"
+  ],
+  "evidence": ".scratch/icon-cycles-20260909/cycle-013/geometry.png",
+  "findings": [
+    "Four equally dimensioned stool legs reach ground and seat. Apron rails and lower stretchers join the legs; seat bottom equals leg top at .410m. Mallet head bottom equals seat top at .445m and its handle enters the head.",
+    "Separate chisel has overlapping handle/ferrule/blade connections and a planar beveled tip. Its illustrative scale and ground placement were inspected from six views. No person, hand grip or instruction sequence is depicted.",
+    "Handling tray has a closed base, joined rim and thin mat. Camera body bottom .023m equals mat top. Lens components are coaxial and attached to camera front; shutter button contacts the top cap. Material sample rests on the mat and its grooves remain surface-attached.",
+    "Handling sign meets its supported foot at tray rear. Its five-digit handprint is a planar symbol, not a human hand posing over an artifact. Camera and material sample are representative of touch collections.",
+    "The three other designs are direct planar speech/music symbols. Whole final projections and all six views were inspected; no material geometry defect was observed. These observations are not exhaustive collision or material simulation."
+  ],
+  "decision": "pass",
+  "references": [
+    {
+      "url": "https://preservationlongisland.org/historic-furniture-making-demonstration/",
+      "finding": "Presenter demonstrates historical furniture construction and hands-on woodworking with antique tools; chairs/benches and joints are explicit. The stool is a generic representative furniture form."
+    },
+    {
+      "url": "https://movingimage.org/event/touch-object-experience/2026-09-26/",
+      "finding": "Museum staff facilitate handling selected cameras, life masks and workshop materials; generic camera/material examples ground the tray without promising a fixed collection."
+    }
+  ],
+  "source_sha256": "5ff0ee5b8261688210c836e423b5883da4201fa7b2b7d78cf953edf3ff308559",
+  "projector_sha256": "6aa457ff10ad2449bdb4400bf96d5845323ffaf297a7bc2d653cd2e8b05e03a9"
+}

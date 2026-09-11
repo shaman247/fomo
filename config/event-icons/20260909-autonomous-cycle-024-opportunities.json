@@ -1,0 +1,429 @@
+{
+  "date": "2026-09-10",
+  "scope": "Cycle 024: 100 sequential events 202726–203226, no targeted supplements.",
+  "suggestions": 26,
+  "concept_count": 15,
+  "concepts": [
+    {
+      "concept": "genre-pop",
+      "category": "genre",
+      "label": "Pop music",
+      "visual": "Bold music note with a single rhythmic accent",
+      "rationale": "Avoid assuming vocal or electric instrument; broad genre motif unproven.",
+      "existing_alternative": "Broad fallback does not distinguish this supported facet.",
+      "event_ids": [
+        202745,
+        202746,
+        202751,
+        202768,
+        202991
+      ],
+      "evidence_by_event": {
+        "202745": [
+          "Grace Enger – The Satisfied Girl Tour: Singer-songwriter Grace Enger performs as part of The Satisfied Girl Tour, featuring support from Aubory Bugg.",
+          "Tags: Community, Music, Concert, Folk Music, Pop Music, Format, Performance"
+        ],
+        "202746": [
+          "Art of Blue Blood @ ARTMS World Tour: No description available.",
+          "Tags: Music, Concert, Nightlife, Pop Music, Format, Performance"
+        ],
+        "202751": [
+          "Rebecca Black – Exhibitionism on Tour: Rebecca Black is an artist who blazes her own path, known as an undisputed icon of underground music, fashion, and queer art scenes.",
+          "Tags: Community, Music, Concert, Nightlife, Pop Music, Live Music, Format, Performance"
+        ],
+        "202768": [
+          "Be:First: DOORS - 7:00 PM SHOW - 8:00 PM Age Restriction: All Ages",
+          "Tags: Music, Concert, Pop Music, Live Music, Format, Performance"
+        ],
+        "202991": [
+          "00:00 - Pop Songs Night: A pop-focused club night with laser lighting effects. Entry is limited to guests age 21 and over.",
+          "Tags: Music, Dance, Nightlife, Clubbing, Pop Music, Club Night, 21+, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "202745": [
+          "https://www.websterhall.com/events/detail?event_id=1449781"
+        ],
+        "202746": [
+          "https://www.websterhall.com/events/detail?event_id=1523892"
+        ],
+        "202751": [
+          "https://www.websterhall.com/events/detail?event_id=1525099"
+        ],
+        "202768": [
+          "https://www.ticketmaster.com/befirst-new-york-new-york-10-23-2026/event/000064AEC75955A5"
+        ],
+        "202991": [
+          "https://posh.vip/e/0000-pop-songs-night-6",
+          "https://posh.vip/e/0000-pop-songs-night-7"
+        ]
+      }
+    },
+    {
+      "concept": "genre-jazz",
+      "label": "Jazz",
+      "category": "genre",
+      "visual": "A pair of syncopated musical notes with one loose improvisatory flourish.",
+      "rationale": "The genre is explicit, but an instrument-neutral motif remains exploratory and requires recognition tests; avoid treating saxophone as universal jazz.",
+      "existing_alternative": "Noto notes are generic; a saxophone misstates instrumentation when the program does not feature one.",
+      "event_ids": [
+        202787,
+        202788,
+        202789,
+        202790
+      ],
+      "evidence_by_event": {
+        "202787": [
+          "Jazz Vespers: Jonathan Saraga: No description available.",
+          "Tags: Music, Jazz, Gathering, Service, Live Music, Vespers, Format"
+        ],
+        "202788": [
+          "Jazz Vespers: Mike McGinnis: No description available.",
+          "Tags: Music, Jazz, Gathering, Service, Live Music, Vespers, Format"
+        ],
+        "202789": [
+          "Jazz Memorial: James Ulmer: No description available.",
+          "Tags: Community, Music, Memorial, Jazz, Gathering, Service, Live Music, Format"
+        ],
+        "202790": [
+          "Jazz Memorial: Keith Ingham: No description available.",
+          "Tags: Community, Music, Memorial, Jazz, Gathering, Service, Live Music, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "202787": [
+          "https://www.saintpeters.org/events"
+        ],
+        "202788": [
+          "https://www.saintpeters.org/events"
+        ],
+        "202789": [
+          "https://www.saintpeters.org/events"
+        ],
+        "202790": [
+          "https://www.saintpeters.org/events"
+        ]
+      }
+    },
+    {
+      "concept": "genre-country",
+      "label": "Country music",
+      "category": "genre",
+      "visual": "Explore a music note integrated into a simple brimmed hat.",
+      "rationale": "Country repertoire is named; hat is only an exploratory convention and recognition testing must avoid treating costume as universal genre identity.",
+      "existing_alternative": "Noto cowboy has no music cue; guitar/banjo do not cover all country performances.",
+      "event_ids": [
+        202767,
+        202796
+      ],
+      "evidence_by_event": {
+        "202767": [
+          "Carly Pearce - Honest Woman: Up Close - Presented by Conundrum Wines: No description available.",
+          "Tags: Music, Concert, Country Music, Format, Performance"
+        ],
+        "202796": [
+          "Little Big Town: Karen Fairchild, Kimberly Schlapman, Phillip Sweet and Jimi Westbrook are the acclaimed country music group Little Big Town. Their pitch-perfect vocal harmonies have yielded countless GRAMMY®, AMA, ACM, CMT and CMA Awards. They’re headed to NJPAC hot on the heels of their 12th studio album, It’s a Dying Art.",
+          "Tags: Music, Concert, Vocal Music, Vocal Harmony, Country, Heartfelt, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "202767": [
+          "https://www.ticketmaster.com/carly-pearce-honest-woman-up-close-new-york-new-york-10-21-2026/event/000064D2FABF4DED"
+        ],
+        "202796": [
+          "https://www.njpac.org/event/little-big-town/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-folk",
+      "label": "Folk music",
+      "category": "genre",
+      "visual": "Explore a plucked-string curve beside one plain storytelling note.",
+      "rationale": "Folk is explicitly named in the program.",
+      "existing_alternative": "Generic notes remain valid; this motif needs recognition testing and must not assume acoustic instrumentation.",
+      "event_ids": [
+        202745,
+        202752
+      ],
+      "evidence_by_event": {
+        "202745": [
+          "Grace Enger – The Satisfied Girl Tour: Singer-songwriter Grace Enger performs as part of The Satisfied Girl Tour, featuring support from Aubory Bugg.",
+          "Tags: Community, Music, Concert, Folk Music, Pop Music, Format, Performance"
+        ],
+        "202752": [
+          "The Tallest Man on Earth: Kristian Matsson returns as The Tallest Man on Earth with Henry St., his sixth studio album marking the first time he recorded an album in a band setting.",
+          "Tags: Community, Music, Concert, Folk Music, Nightlife, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "202745": [
+          "https://www.websterhall.com/events/detail?event_id=1449781"
+        ],
+        "202752": [
+          "https://www.websterhall.com/events/detail?event_id=1462879"
+        ]
+      }
+    },
+    {
+      "concept": "genre-heavy-metal",
+      "label": "Heavy metal music",
+      "category": "genre",
+      "visual": "Explore a compact angular music note with two lightning-like edges.",
+      "rationale": "Explicit heavy-metal programming supports genre exploration; recognition is unproven and must be tested against rock and electronic music.",
+      "existing_alternative": "Noto guitar and rock-hand sign cover broad rock but do not consistently distinguish metal; no custom genre art.",
+      "event_ids": [
+        202750,
+        202753
+      ],
+      "evidence_by_event": {
+        "202750": [
+          "Igorrr: North American Tour 2026: Igorrr performs on their North American Tour 2026 with Secret Chiefs 3 and Violent Magic Orchestra.",
+          "Tags: Community, Music, Rock, Concert, Heavy Metal, Metal, Live Music, Format, Performance"
+        ],
+        "202753": [
+          "Castle Rat: Summon The Beasts Tour 2026: Castle Rat is a Medieval Fantasy Doom Metal band led by the Rat Queen on a mission to expand and defend 'The Realm' from those who seek to destroy it.",
+          "Tags: Community, Music, Rock, Concert, Heavy Metal, Metal, Doom Metal, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "202750": [
+          "https://www.websterhall.com/events/detail?event_id=1451106"
+        ],
+        "202753": [
+          "https://www.websterhall.com/events/detail?event_id=1471562"
+        ]
+      }
+    },
+    {
+      "concept": "genre-rock",
+      "category": "genre",
+      "label": "Rock music",
+      "visual": "Strong accented musical note",
+      "rationale": "Electric guitar exists but is not universal evidence; motif requires recognition testing.",
+      "existing_alternative": "Broad fallback does not distinguish this specific supported facet.",
+      "event_ids": [
+        202814,
+        202815
+      ],
+      "evidence_by_event": {
+        "202814": [
+          "Nick and the Old Sport | Wifeknife | Whaat | The Retired Saints: No description available.",
+          "Tags: Music, Rock, Concert, Live Music, Bowery Palace, Format, Performance"
+        ],
+        "202815": [
+          "Neutral Snap | Shower Beers | Dana Ives: Neutral Snap performs live with Shower Beers and Dana Ives at Bowery Palace.",
+          "Tags: Music, Rock, Concert, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "202814": [
+          "https://www.bowerypalace.com/tm-event/nick-and-the-old-sport-wifeknife-whaat-the-retired-saints/"
+        ],
+        "202815": [
+          "https://www.bowerypalace.com/tm-event/neutral-snap-shower-beers-dana-ives/"
+        ]
+      }
+    },
+    {
+      "concept": "activity-farm-animal-care",
+      "label": "Farm animal care",
+      "category": "activity",
+      "visual": "Feed bucket and a simple livestock silhouette.",
+      "rationale": "Participants perform varied farm chores and animal walking.",
+      "existing_alternative": "Tractor suggests driving; enrichment-making is narrower than the actual work.",
+      "event_ids": [
+        202938
+      ],
+      "evidence_by_event": {
+        "202938": [
+          "Farmer for An Evening: Join us for an evening on Heckscher Farm to help our farmers with their chores! You’ll get to walk an animal and learn how we provide enrichment for our animals.",
+          "Tags: Community, Garden, Museum, Nature, Workshop, Family, Education, Farm, Outdoor, Hands on, Animal Care, Participatory, Outdoor Venue, Cultural Venue, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "202938": [
+          "https://www.stamfordmuseum.org/event/nights-out-farmer-for-evening/"
+        ]
+      }
+    },
+    {
+      "concept": "dance-balkan-folk",
+      "label": "Balkan folk dance",
+      "category": "dance-style",
+      "visual": "Linked dancers in an open chain, after verifying the actual style and handholds.",
+      "rationale": "Participatory Balkan folk dancing is explicit.",
+      "existing_alternative": "Generic dancer remains suitable; partner art could imply an unsupported hold.",
+      "event_ids": [
+        203046
+      ],
+      "evidence_by_event": {
+        "203046": [
+          "Balkan Wednesdays: Balkan Wednesdays features folk dances and live performances with different musical groups each week at Balkan Cafe NYC.",
+          "Tags: Community, Music, Dance, Nightlife, Folk Dance, Open Practice, Participatory, Balkan, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "203046": [
+          "https://dancemanhattan.com/calendar/event/89"
+        ]
+      }
+    },
+    {
+      "concept": "genre-afrobeat",
+      "label": "Afrobeat",
+      "category": "genre",
+      "visual": "A bold circular groove with three staggered beat blocks and one sustained musical note.",
+      "rationale": "The event explicitly cites West African Afrobeat; repeated interlocking rhythm is a design direction, not a proven genre symbol. Keep distinct from Afrobeats.",
+      "existing_alternative": "Generic drum implies an instrument; geography or nationality cannot identify this genre.",
+      "event_ids": [
+        202749
+      ],
+      "evidence_by_event": {
+        "202749": [
+          "Seun Kuti & Egypt 80: Seun Kuti & Egypt 80 performing live with My Life In Movement at Webster Hall.",
+          "Tags: Music, World Music, Concert, Afrobeats, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "202749": [
+          "https://www.afropop.org/events",
+          "https://www.websterhall.com/events/detail?event_id=1419826"
+        ]
+      }
+    },
+    {
+      "concept": "genre-electronic",
+      "label": "Electronic music",
+      "category": "genre",
+      "visual": "A simple waveform beside one music note.",
+      "rationale": "Explicit electronic repertoire does not establish DJ or synth equipment; abstract motif needs recognition testing.",
+      "existing_alternative": "Existing broad Unicode remains suitable; specific motif must demonstrate added recognition before new artwork.",
+      "event_ids": [
+        202748
+      ],
+      "evidence_by_event": {
+        "202748": [
+          "NOTD: No description available.",
+          "Tags: Music, Dance, Concert, Nightlife, Electronic Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "202748": [
+          "https://www.websterhall.com/events/detail?event_id=1527088"
+        ]
+      }
+    },
+    {
+      "concept": "genre-folk-rock",
+      "category": "genre",
+      "label": "Folk rock",
+      "visual": "Acoustic and electric guitar silhouettes",
+      "rationale": "Explicit folk-rock repertoire blends distinct traditions",
+      "existing_alternative": "Existing guitar emoji; genre silhouette needs clarity",
+      "event_ids": [
+        202754
+      ],
+      "evidence_by_event": {
+        "202754": [
+          "Judah & The Lion: At the beating heart of Nashville band Judah & The Lion is a story of a deeply loyal chosen brotherhood, dating back to 2011 when Judah Akers and Brian MacdDonald became bandmates in college. Judah & The Lion’s newest and sixth album, I Am A Prism, came after a period of soul searching, and in the midst of a welcome joyous new life milestone.",
+          "Tags: Community, Music, Rock, Concert, Folk Music, Folk Rock, Live Music, Nashville Band, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "202754": [
+          "https://www.websterhall.com/events/detail?event_id=1488359"
+        ]
+      }
+    },
+    {
+      "concept": "genre-funk",
+      "label": "Funk",
+      "category": "genre",
+      "visual": "Explore a bent note over four offset bass-pulse blocks.",
+      "rationale": "Funk is explicitly named in the title, description or program tags. This is a prospective genre motif requiring recognition tests; it does not establish a particular instrument or an exclusive assignment for mixed bills.",
+      "existing_alternative": "Existing notes or actual featured instrument remain appropriate; custom genre art is exploratory rather than a proven recognition improvement.",
+      "event_ids": [
+        202797
+      ],
+      "evidence_by_event": {
+        "202797": [
+          "Trombone Shorty & Orleans Avenue with Mavis Staples: Trombone Shorty embodies the heart-pumping, foot-stomping soul of New Orleans, breathing new life into the brass band tradition with a sound that swirls together funk, rock, blues, jazzy improvisational genius and all the joyful swagger of hip hop. Mavis Staples is a national treasure and R&B and gospel powerhouse who adds magic and music to the stage.",
+          "Tags: Music, Jazz, Concert, Brass Band, Format, Performance, Exhilarating, Jazzy"
+        ]
+      },
+      "source_urls_by_event": {
+        "202797": [
+          "https://www.njpac.org/event/trombone-shorty/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-gospel",
+      "label": "Gospel music",
+      "category": "genre",
+      "visual": "Two singing silhouettes with lifted hands beneath a simple radiant music arc.",
+      "rationale": "Explores the explicitly stated gospel performance identity separately from choir format; it may be confused with general choral celebration and needs recognition testing.",
+      "existing_alternative": "Raised-hands emoji conveys emotion and choir imagery conveys ensemble, but neither specifically communicates gospel.",
+      "event_ids": [
+        202797
+      ],
+      "evidence_by_event": {
+        "202797": [
+          "Trombone Shorty & Orleans Avenue with Mavis Staples: Trombone Shorty embodies the heart-pumping, foot-stomping soul of New Orleans, breathing new life into the brass band tradition with a sound that swirls together funk, rock, blues, jazzy improvisational genius and all the joyful swagger of hip hop. Mavis Staples is a national treasure and R&B and gospel powerhouse who adds magic and music to the stage.",
+          "Tags: Music, Jazz, Concert, Brass Band, Format, Performance, Exhilarating, Jazzy"
+        ]
+      },
+      "source_urls_by_event": {
+        "202797": [
+          "https://www.njpac.org/event/trombone-shorty/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-indie",
+      "category": "genre",
+      "label": "Indie music",
+      "visual": "Explore a hand-drawn note motif",
+      "rationale": "Broad stylistic family has no universal instrument; recognition unproven.",
+      "existing_alternative": "Broad fallback does not distinguish this specific supported facet.",
+      "event_ids": [
+        202747
+      ],
+      "evidence_by_event": {
+        "202747": [
+          "Medium Build Presents The King of Having Fun on Tour: Medium Build is partnering with PLUS1 so that $1 from every ticket sold goes to REVERB and their work creating a more sustainable music industry and empowering fans to take action on environmental and social issues.",
+          "Tags: Community, Music, Indie, Concert, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "202747": [
+          "https://www.websterhall.com/events/detail?event_id=1502297"
+        ]
+      }
+    },
+    {
+      "concept": "genre-opera",
+      "label": "Opera",
+      "category": "genre",
+      "visual": "A singing profile framed by one sweeping theater curtain.",
+      "rationale": "Sung drama is explicit; test separation from solo vocal recital and musical theater without stereotyped helmets.",
+      "existing_alternative": "Noto music notes and theater masks separately omit sung drama.",
+      "event_ids": [
+        202900
+      ],
+      "evidence_by_event": {
+        "202900": [
+          "Outdoor Opera: Vespa - a Girl and Her Pet Wasp: An interactive opera by Don DiNicola, performed outdoors in the gardens of Old Stone House.",
+          "Tags: Music, Theater, Art, Free, Opera, Outdoor, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "202900": [
+          "https://theoldstonehouse.org/events/?effe=19255&effe-id=1995209246566"
+        ]
+      }
+    }
+  ],
+  "limitations": "Counts describe this cohort, not population reach. These are grounded prospective studies, not live assignments. Existing artwork may already suffice; exact equipment and genre recognition require further review."
+}

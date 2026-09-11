@@ -1,0 +1,189 @@
+[
+  {
+    "icon_id": "format-shadowcast",
+    "source_sha256": "8b20e83510e4eec85210d9031c6430f6169f9655f8b2e97647fc1bd00cba39fb",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. A person before a screen with the same standing silhouette.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-029/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-029/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 7855,
+      "gzip_level_6": 2574
+    },
+    "optimization": {
+      "initial_raw": 6851,
+      "initial_gzip_level_6": 2366,
+      "final_raw": 7855,
+      "final_gzip_level_6": 2574
+    },
+    "issues": [
+      {
+        "issue": "Fragmented arm/trouser shading and export seams cluttered the small performer; initial eye geometry disappeared behind the face or per-face threshold.",
+        "resolution": "Unified clothing and skin paint, tightened polygon precision, reduced contour simplification, and replaced tiny eye spheres with short front-facing discs anchored to the face. Rechecked all six views and final native sizes.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Live performer beside a matching projected figure distinguishes shadowcast from ordinary cinema at 24/32px. At 16px the live figure becomes small and it can resemble a presentation; label establishes shadowcast. Original neutral pose, clothing and illustrative screen do not promise actual production blocking."
+    ]
+  },
+  {
+    "icon_id": "format-focus-group",
+    "source_sha256": "6e6677bca650f15d61bfa71471c5f5cd9cdb3ce871930f91596cb0c962209491",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Speech bubbles above a clipboard with a question mark.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-029/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-029/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 752,
+      "gzip_level_6": 420
+    },
+    "optimization": {
+      "initial_raw": 752,
+      "initial_gzip_level_6": 420,
+      "final_raw": 752,
+      "final_gzip_level_6": 420
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Two speech bubbles and a research clipboard suggest gathering feedback. At 16px the question mark softens; label distinguishes focus-group research from general discussion. No participant count, demographic identity or therapy service is implied."
+    ]
+  },
+  {
+    "icon_id": "format-comedy-news",
+    "source_sha256": "5717eb474d4f3c6912a730044204d3406c6efdec16476276e83babc3f36d1c31",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Newsprint with a comic smile.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-029/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-029/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 596,
+      "gzip_level_6": 350
+    },
+    "optimization": {
+      "initial_raw": 596,
+      "initial_gzip_level_6": 350,
+      "final_raw": 596,
+      "final_gzip_level_6": 350
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Newspaper columns and a comic smiling emblem suggest comedy news. At 16px the face simplifies; label distinguishes satire from general journalism. No real headline, news organization or production set is copied."
+    ]
+  },
+  {
+    "icon_id": "activity-tree-care",
+    "source_sha256": "ce14f4f847c3a467f44124777ac904801a71177ddd7555e09e4851d4b0f9a498",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Tree in a cared-for urban bed with a small tool.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-029/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-029/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 5197,
+      "gzip_level_6": 1801
+    },
+    "optimization": {
+      "initial_raw": 5540,
+      "initial_gzip_level_6": 1957,
+      "final_raw": 5197,
+      "final_gzip_level_6": 1801
+    },
+    "issues": [
+      {
+        "issue": "Mechanically shaded canopy and fragmented tool/trunk regions were busy; stricter contour export temporarily grew this simple tree to 7290 raw bytes.",
+        "resolution": "Unified canopy volumes and small structural parts into semantic paint regions, preserving the real mulch gap, rooted trunk and grounded tool. Final 5197 raw / 1801 gzip6 bytes; six-view and native-size review repeated.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Tree rooted in a paved soil bed with mulch and a small cultivator suggests tree-bed care at 24/32px. At 16px the tool disappears and it resembles a planted street tree; label is needed for care. No species, municipal dimensions or exact care procedure is promised."
+    ]
+  },
+  {
+    "icon_id": "format-70mm-screening",
+    "source_sha256": "55b676d27a0b70e8dc5d3a9d66b20eb861094f1f92beac34357e49d80efc1d92",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Filmstrip marked 70.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-029/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-029/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 599,
+      "gzip_level_6": 333
+    },
+    "optimization": {
+      "initial_raw": 599,
+      "initial_gzip_level_6": 333,
+      "final_raw": 599,
+      "final_gzip_level_6": 333
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Wide filmstrip with outlined 70 numeral conveys 70mm film. Numerals survive at 16px; label supplies units. Strip holes and frame proportions are symbolic, not an engineering drawing or evidence of digital IMAX."
+    ]
+  }
+]

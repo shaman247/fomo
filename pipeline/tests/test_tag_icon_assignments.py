@@ -35,4 +35,13 @@ class TagIconTests(unittest.TestCase):
         with self.assertRaises(ValueError): planned_changes([row],'Unknown','bingo')
         with self.assertRaises(ValueError): planned_changes([row],'Bingo','unknown')
 
+    def test_reviewed_noto_override_preserves_flag_fallback(self):
+        row=dict(id=977,name='Spanish Language',emoji='🇪🇸',icon_id=None)
+        change=planned_changes([row],'Spanish Language','noto-1f5e3')[0]
+        self.assertEqual(change['icon_id'],'noto-1f5e3')
+        self.assertEqual(change['emoji'],'🇪🇸')
+        self.assertIsNone(row['icon_id'])
+        with self.assertRaises(ValueError):
+            planned_changes([row],'Spanish Language','noto-unreviewed')
+
 if __name__=='__main__':unittest.main()

@@ -50,7 +50,7 @@ export function extend(api) {
   const lip=mesh(g,new THREE.TorusGeometry(13.5,.9,8,48), '#FFD875',[60.3,19,-18]);lip.rotation.y=Math.PI/2;
   rod(g,[-8,5,0],[0,5,0],1.2,C.pale);const mouth=cyl(g,[-9,5,0],3,3,C.pale,1.3);mouth.rotation.z=Math.PI/2;
  }
- {const g=model('craft-pottery-wheel',[.32,.50,1]);cyl(g,[0,6,0],32,12,'#688A98');cyl(g,[0,16,0],8,10,C.ink);cyl(g,[0,23,0],37,4,C.pale);lathe(g,[0,25,0],[[0,0],[13,0],[14,4],[20,12],[23,26],[21,34],[17,39],[17,44]],'#CB8059');cyl(g,[0,69,0],17,2,'#E6A27A');topDisk(g,0,70.2,0,13,'#824D39');}
+ {const g=model('craft-pottery-wheel',[.32,.50,1]);cyl(g,[0,6,0],32,12,'#688A98');cyl(g,[0,16,0],8,10,C.ink);cyl(g,[0,23,0],37,4,C.pale);lathe(g,[0,25,0],[[0,0],...new THREE.CatmullRomCurve3([[13,0],[14,4],[20,12],[23,26],[21,34],[17,39],[17,44]].map(p=>new THREE.Vector3(...p,0))).getPoints(70).map(p=>[p.x,p.y])],'#CB8059');cyl(g,[0,69,0],17,2,'#E6A27A');topDisk(g,0,70.2,0,13,'#824D39');}
  for(const kind of ['composting','natural-dyeing']){
   if(kind==='natural-dyeing')continue;const g=model('activity-'+kind,[.25,.46,1]);
   lathe(g,[0,0,0],[[0,0],[23,0],[27,8],[31,48],[32,51]],'#4E9A7D');cyl(g,[0,51,0],32,3,'#94C7A5');topDisk(g,0,52.7,0,28,'#315849');
@@ -60,9 +60,11 @@ export function extend(api) {
   const rim=new THREE.Mesh(new THREE.TorusGeometry(30,2,10,60,Math.PI),api.helpers.mat('#96CCA8'));rim.rotation.x=Math.PI/2;rim.rotation.z=Math.PI;rim.position.y=53;g.add(rim);
  }
  {const g=model('craft-watercolor',[.25,.85,1]);box(g,6,1,17,81,1,67,C.cream);surfaceRect(g,9,1.8,28,45,21,'#8DCCDD');box(g,-6,5,-24,88,8,29,C.pale);for(let i=0;i<5;i++)box(g,-40+i*17,9.4,-24,12,2,20,['#DE6A78','#F2C150','#7EB86F','#529DBC','#8B74B5'][i]);rod(g,[45,7,-27],[24,4,40],2,'#B7814E');rod(g,[26,4,31],[24,4,40],2.2,C.metal);const tip=mesh(g,new THREE.ConeGeometry(2.8,13,24),'#38768D',[22,4,46]);tip.rotation.x=Math.PI/2;tip.rotation.z=.16;}
- {const g=model('craft-origami',[.50,.22,1]);const pts=[[-8,18,10],[10,16,10],[2,36,0],[0,12,-10],[0,22,0],[-45,50,-30],[28,73,22],[25,28,7],[32,55,7],[40,56,7],[47,46,7],[39,49,7],[35,45,7],[30,21,7],[-42,40,-6],[-12,15,-6]];
-  const faces=[[0,1,2],[0,3,1],[0,2,5],[0,5,3],[1,6,2],[1,3,6],[1,7,8],[1,8,12],[8,9,10],[8,10,11],[8,11,12],[1,12,13],[0,14,15],[0,15,3]];
-  faces.forEach((f,i)=>{const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(f.flatMap(j=>pts[j]),3));geo.computeVertexNormals();mesh(g,geo,['#EE7795','#F8A5B3','#D84F79'][i%3]);});
+ {const g=model('craft-origami',[.25,.55,1]);
+  // Classic paper boat: a central raised fold inside a symmetric folded hull.
+  const pts=[[-50,23,0],[50,23,0],[-29,0,0],[29,0,0],[-24,17,18],[24,17,18],[-24,17,-18],[24,17,-18],[0,43,0],[-29,17,0],[29,17,0]];
+  const faces=[[0,2,4],[2,3,5],[2,5,4],[3,1,5],[0,6,2],[2,6,7],[2,7,3],[3,7,1],[9,10,8],[0,4,9],[1,10,5],[0,9,6],[1,7,10]];
+  faces.forEach((f,i)=>{const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(f.flatMap(j=>pts[j]),3));geo.computeVertexNormals();mesh(g,geo,['#EF8FA9','#E87298','#F8ACC0'][i%3],[0,0,0],true);});
  }
  {const g=model('format-planetarium',[0,.06,1]);
   // Readable cutaway dome, horizon and projector in a front view.

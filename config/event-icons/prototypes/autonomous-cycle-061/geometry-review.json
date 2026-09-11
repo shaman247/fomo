@@ -1,0 +1,73 @@
+{
+  "reviewer_mode": "creator-critical-pass",
+  "geometry_mode": "three-authoritative-scenes-and-two-flat-diagrams",
+  "views": [
+    "front",
+    "rear",
+    "left",
+    "right",
+    "top",
+    "icon"
+  ],
+  "evidence": ".scratch/icon-cycles-20260909/cycle-061/geometry.png",
+  "decision": "pass",
+  "findings": [
+    "All18final scene views personally inspected. Kayak has a real annular-deck opening, attached rim, inner wall, floor and seat. Paddle uses one continuous shaft and two equal blades resting across rear deck; no exact fleet model implied.",
+    "Potato centers meet soil at their bottom radius; fork has four connected tines, shoulder, neck, shaft and open D handle. Tips enter soil. Shortening upper handle/shaft retained supported construction.",
+    "Bonsai tray rests on feet, soil meets roots and continuous curved trunk. Branches reach leaf pads; silhouette and root flare remain atnative sizes. No exact species or tree claimed.",
+    "Allfive native128/32/24/16light/dark cards, five custom and four Noto references, and ten actual IconManager variants personally inspected. Exchange arrows remain reciprocal, school symbol gains clock/windows, and generic recognition limits are recorded."
+  ],
+  "references": [
+    {
+      "url": "https://bkcm.org/event/turning-5-talks-september-16-3/",
+      "finding": "Sep16 virtual6:30\u20138:30 free parent session for children born2022, advocating for kindergarten supports. Hosts Sarah Birnbaum, Greg Cangiano and PALS neuropsychologists. Not a music event or guaranteed legal service."
+    },
+    {
+      "url": "https://bkcm.org/event/turning-5-talks-october-15/",
+      "finding": "Oct15 repeats virtual6:30\u20138:30 Turning5 information, registration required; cohort born2022."
+    },
+    {
+      "url": "https://bkcm.org/event/that-feeling-nov-2026/",
+      "finding": "Nov9 virtual6:30 school-support advocacy webinar; suggested parents of children5\u201314. Actual diagnoses and representation not promised."
+    },
+    {
+      "url": "https://quoguewildliferefuge.org/event/fall-foliage-paddle-tour-on-old-ice-pond/",
+      "finding": "Oct14 4:30\u20136,12+under18withadult,$30/person, single and double kayaks, reservation and weather terms. Generic icon does not identify actual fleet type."
+    },
+    {
+      "url": "https://www.monmouthcountyparks.com/page.aspx?Id=5386",
+      "finding": "Current full page Sep12 10\u201311 Thompson Theater Barn, free complete-puzzle exchange, one token per puzzle. Earlier search snippet was stale. No exact puzzle brand or contents implied."
+    },
+    {
+      "url": "https://www.monmouthcountyparks.com/page.aspx?Id=2530",
+      "finding": "Potato harvesting Sep12\u201313 noon\u20132, weather/field permitting, help dig family crop. Blacksmith Sep13/Oct11/Nov8 1\u20133 at anvil. Piano copy uses turn-of19thcentury despite1890s farm setting; possible source inconsistency, no repair."
+    },
+    {
+      "url": "https://www.monmouthcountyparks.com/page.aspx?Id=2518",
+      "finding": "Bonsai Day Sep13 noon\u20134: displays, demonstrations and experts; admission/parking free. Hands-on class, exact species and pot not guaranteed."
+    },
+    {
+      "url": "https://henderson.ces.ncsu.edu/news/creating-a-bonsai-plant/",
+      "finding": "Structural reference: miniature trained tree, shallow container, soil covering roots, upright and informal-upright styles. Original generic geometry uses soil-root-trunk-branch-leaf contacts, no prescribed care or copied tree."
+    },
+    {
+      "url": "https://minnkota-help.johnsonoutdoors.com/hc/en-us/articles/30823683938967-Anatomy-of-a-Kayak",
+      "finding": "Structural reference identifies bow, stern, hull, keel and cockpit. Not the event fleet. Original generic single-cockpit model omits optional fishing hardware."
+    },
+    {
+      "url": "https://oldtownwatercraft.johnsonoutdoors.com/us/buying-guide/paddles",
+      "finding": "Manufacturer distinguishes kayak and canoe paddles and blade shape. Generic paired-blade kayak paddle and continuous shaft are original simplifications, not product model dimensions."
+    },
+    {
+      "url": "https://industrycity.com/event/family-program-fabric-marbling/",
+      "finding": "Sep12 3\u20136, adults/children6+, all materials; textiles and paper in marbling bath, Lista Studios34 35thSt building4. Textile-led scope retained fallback pending broader art."
+    },
+    {
+      "url": "https://cshwhalingmuseum.app.neoncrm.com/forms/2026-beyond-the-book-washingtons-spies-the-s-registration?event=4367&",
+      "finding": "Web open failed; author attendance remains unverified. No author-conversation icon applied from ambiguous book-description wording."
+    }
+  ],
+  "source_sha256": "255ca437efb8911a6c594d4822de511bd4374ed0c74bb183eec9a3cb16fef3d4",
+  "projector_sha256": "08f6c7b7a7efa8531f792f0e6e47afc0a8e6a965be7ccf7577cc941234c94f14",
+  "planar_source_sha256": "6361f598e7aa1bdbd936d9d77001d8b049c93a800930f2312463895c45214a65"
+}

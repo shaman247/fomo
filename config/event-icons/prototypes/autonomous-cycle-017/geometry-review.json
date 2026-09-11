@@ -1,0 +1,55 @@
+{
+  "reviewer_mode": "creator-critical-pass",
+  "views": [
+    "front",
+    "rear",
+    "left",
+    "right",
+    "top",
+    "icon"
+  ],
+  "evidence": ".scratch/icon-cycles-20260909/cycle-017/geometry.png",
+  "measurements": ".scratch/icon-cycles-20260909/cycle-017/geometry-measurements.json",
+  "independent_render_method": ".scratch/icon-cycles-20260909/cycle-017/dhol-zbuffer-front.png",
+  "findings": [
+    "Dhol has550mm shell length,330mm heads and380mm maximum barrel diameter. Both heads close the ends; hoops meet their rims.24 alternating rope runs follow the exterior with clearance rather than intersecting the shell. Tassels connect to rope junctions; straight thin and heavier curved beaters are separate accessory studies. No performer or gravity-supported playing pose is claimed.",
+    "A separate triangle z-buffer of the dhol front showed no shell hole. Polygon diagnostics found raw valid visible paint area1368.35square SVG units became825.78 after negative buffering. Replaced dilation/erosion with .001unit precision normalization and direct union, then inspected all six final projections. Analytic normal-derived depth planes replace least-squares fits. These fixes apply to this prototype exporter; earlier accepted sources were not regenerated.",
+    "Hoop planes are parallel to each other and perpendicular to the240mm straw. Hoop radii42mm and21mm are intentionally unequal; both bottom tangents are8mm and tape overlaps the straw top. Separate dart has connected symmetric wings and keel. Paper faces are double sided; broad panel colors distinguish folds.",
+    "Three paper leaves share equal area and stock. Lower rail is centered under two equal leaves. Upper pivot includes their combined load and lower-rail mass against the left leaf plus uniform top-rail mass. First-moment residual is recorded; string/paint mass and dynamics are excluded. All strings meet rails and leaf attachment points; upper string continues toward an implied off-frame ceiling.",
+    "The regular icosahedral die has20 triangular faces with equal original edges and rests on one face. Its new connected edge lines preserve recognition. The game-master screen rests on its three lower edges; the tabletop microphone has continuous base/stem/capsule connections. Parts have visible clearance in front, rear, side, top and icon views.",
+    "Close-up magic is a direct planar overhead emblem, with overlapping cards and coin over a mat plus a symbolic glint. It contains no articulated hand or simulated disappearing-object mechanism. Creator critique was separate from construction but not independent or blind."
+  ],
+  "decision": "pass",
+  "references": [
+    {
+      "url": "https://chandrakantha.com/music-and-dance/instrumental-music/indian-instruments/dhol/",
+      "finding": "Musician David Courtney describes the barrel, paired heads, tension systems and Punjabi contrasting beaters. Punjabi dhol photo was visually inspected; no photo, costume or logo copied."
+    },
+    {
+      "url": "https://sonnysingh.squarespace.com/blo",
+      "finding": "Bandleader confirms dhol within the ensemble and the September23 Barzakh show."
+    },
+    {
+      "url": "https://annex.exploratorium.edu/science-explorer/hoopster.html",
+      "finding": "Primary science activity and illustrations explain unequal paper hoops attached to a straight straw."
+    },
+    {
+      "url": "https://www.wavehill.org/calendar/family-art-project-leafy-mobiles-2",
+      "finding": "Primary program describes making suspended paper-leaf mobiles."
+    },
+    {
+      "url": "https://hirshhorn.si.edu/explore/balance-build/",
+      "finding": "Museum maker activity supports original mobiles assembled from lightweight shapes and structural materials; no specific Calder work copied."
+    },
+    {
+      "url": "https://littlefieldnyc.com/event/?wfea_eb_id=1994519599814",
+      "finding": "Primary venue confirms live RPG storytelling before an audience."
+    },
+    {
+      "url": "https://urbanillusionsnyc.com/tickets",
+      "finding": "Primary venue establishes intimate close-up magic, without establishing an exact card or coin routine."
+    }
+  ],
+  "source_sha256": "48bb1be0e30aa4955619b70893c592b6b7eb4f134724b20cdfd0f529cacd0532",
+  "projector_sha256": "1c6dad2996e4edd26348e846a23e56704cf107d72e2d600698e213d1631712c1"
+}

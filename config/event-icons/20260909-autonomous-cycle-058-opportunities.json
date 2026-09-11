@@ -1,0 +1,1161 @@
+{
+  "date": "2026-09-11",
+  "scope": "Cycle 058: 100 sequential events 218121–218394, no targeted supplements.",
+  "suggestions": 58,
+  "concept_count": 47,
+  "concepts": [
+    {
+      "concept": "ensemble-jazz-quartet",
+      "category": "format",
+      "label": "Jazz quartet",
+      "visual": "Four music stands with four bold note marks",
+      "rationale": "Four-piece jazz ensemble differs from string quartet; avoid assumed instruments.",
+      "existing_alternative": "Broad fallback does not distinguish this supported facet.",
+      "event_ids": [
+        218134,
+        218137,
+        218139,
+        218141,
+        218142,
+        218144
+      ],
+      "evidence_by_event": {
+        "218134": [
+          "WED 8 & 9:30 Dezron Douglas 3Peace w/Jaleel Shaw, Glenn Zaleski, Chris Beck: No cover. One drink minimum. Tips for musicians encouraged.",
+          "Tags: Music, Free, Jazz, Concert, Nightlife, Format, Performance"
+        ],
+        "218137": [
+          "SAT 8 & 9:30 - Kevin Sun Quartet Album Release w/Max Light, Walter Stinson, Jon Starks: No cover. One drink minimum. Tips for musicians encouraged.",
+          "Tags: Music, Free, Jazz, Concert, Nightlife, Album Release, Format, Performance"
+        ],
+        "218139": [
+          "WED 8 & 9:30 Mat Maneri MIST album release w/Lucian Ban, Eivind Opsvik, Randy Peterson: No cover. One drink minimum. Tips for musicians encouraged.",
+          "Tags: Music, Free, Jazz, Concert, Nightlife, Album Release, Format, Performance"
+        ],
+        "218141": [
+          "FRI 8 & 9:30 - Noah Preminger w/Julian Shore, Kim Cass, Dan Weiss: No cover. One drink minimum. Tips for musicians encouraged.",
+          "Tags: Music, Free, Jazz, Concert, Nightlife, Format, Performance"
+        ],
+        "218142": [
+          "SAT 8 & 9:30 - Michael Attias BOBOLINKS 4 w/Santiago Leibson, Sean Conly, Satoshi Takeishi: No cover. One drink minimum. Tips for musicians encouraged.",
+          "Tags: Music, Free, Jazz, Concert, Nightlife, Format, Performance"
+        ],
+        "218144": [
+          "WED 8 & 9:30 Oscar Peñas Quartet w/Kevin Sun, Corentin Le Hir, Rodrigo Recabarren: No cover. One drink minimum. Tips for musicians encouraged.",
+          "Tags: Music, Free, Jazz, Concert, Nightlife, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "218134": [
+          "https://www.barbayeux.com/jazz/79nfpj9l9e24mza-k6heb-3h78w"
+        ],
+        "218137": [
+          "https://www.barbayeux.com/jazz/f4pnrttfkdgyck9-ckf4t-ca2m4-r8kw9-mmeyj-4g3rc"
+        ],
+        "218139": [
+          "https://www.barbayeux.com/jazz/79nfpj9l9e24mza-k6heb-3h78w-ss9kd"
+        ],
+        "218141": [
+          "https://www.barbayeux.com/jazz/bsg4lz3rhzc3egx-mfjnz-47sjb-4e67s-xt5a5-6bjcx-cbrpj-e2s8z-ajbg8-ctpzs-c8mfg-727m7-zdpbx-42jss-xlx9x-zhw76-lns7p-fjc6n-ywrkk-gmdbj-j45j2-9cgah-dbegz-gz3aa-ycpns-bh6jp-tnjx6"
+        ],
+        "218142": [
+          "https://www.barbayeux.com/jazz/f4pnrttfkdgyck9-ckf4t-ca2m4-r8kw9-mmeyj-4g3rc-n7b4j"
+        ],
+        "218144": [
+          "https://www.barbayeux.com/jazz/79nfpj9l9e24mza-k6heb-3h78w-ss9kd-kmb8s"
+        ]
+      }
+    },
+    {
+      "concept": "genre-jazz",
+      "label": "Jazz",
+      "category": "genre",
+      "visual": "A pair of syncopated musical notes with one loose improvisatory flourish.",
+      "rationale": "The genre is explicit, but an instrument-neutral motif remains exploratory and requires recognition tests; avoid treating saxophone as universal jazz.",
+      "existing_alternative": "Noto notes are generic; a saxophone misstates instrumentation when the program does not feature one.",
+      "event_ids": [
+        218131,
+        218132,
+        218136
+      ],
+      "evidence_by_event": {
+        "218131": [
+          "FRI 8 & 9:30 - Caleb Wheeler Curtis w/special guest: No cover. One drink minimum. Tips for musicians encouraged.",
+          "Tags: Music, Free, Jazz, Concert, Nightlife, Format, Performance"
+        ],
+        "218132": [
+          "SAT 8 & 9:30 - Arthur Kell: No cover. One drink minimum. Tips for musicians encouraged.",
+          "Tags: Music, Free, Jazz, Concert, Nightlife, Format, Performance"
+        ],
+        "218136": [
+          "FRI 8 & 9:30 - Jerome Sabbagh: No cover. One drink minimum. Tips for musicians encouraged.",
+          "Tags: Music, Free, Jazz, Concert, Nightlife, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "218131": [
+          "https://www.barbayeux.com/jazz/bsg4lz3rhzc3egx-mfjnz-47sjb-4e67s-xt5a5-6bjcx-cbrpj-e2s8z-ajbg8-ctpzs-c8mfg-727m7-zdpbx-42jss-xlx9x-zhw76-lns7p-fjc6n-ywrkk-gmdbj-j45j2-9cgah-dbegz-gz3aa-ycpns"
+        ],
+        "218132": [
+          "https://www.barbayeux.com/jazz/f4pnrttfkdgyck9-ckf4t-ca2m4-r8kw9-mmeyj"
+        ],
+        "218136": [
+          "https://www.barbayeux.com/jazz/bsg4lz3rhzc3egx-mfjnz-47sjb-4e67s-xt5a5-6bjcx-cbrpj-e2s8z-ajbg8-ctpzs-c8mfg-727m7-zdpbx-42jss-xlx9x-zhw76-lns7p-fjc6n-ywrkk-gmdbj-j45j2-9cgah-dbegz-gz3aa-ycpns-bh6jp"
+        ]
+      }
+    },
+    {
+      "concept": "activity-board-games",
+      "label": "Board-game social",
+      "category": "activity",
+      "visual": "Generic playing board with varied neutral pieces and cards.",
+      "rationale": "Mixed tabletop games without one guaranteed title.",
+      "existing_alternative": "Game die remains acceptable but narrower.",
+      "event_ids": [
+        218184,
+        218185
+      ],
+      "evidence_by_event": {
+        "218184": [
+          "Sunday Gaming at The Clubhouse (Spring Rock Golf Range - New Hyde Park): Welcome to the Queens Board Games meetup group. This group is for those who live in Queens County along with surrounding sections of the New York metro area who are interested in board gaming.",
+          "Tags: Community, Neighborhood, Long Island, Games, Board Games, Game, Tabletop, Participatory, New Hyde Park, Format"
+        ],
+        "218185": [
+          "Sunday Gaming at Ben's Deli in the Bay Terrace Shopping Center (TENTATIVE): Welcome to the Queens Board Games meetup group. This group is for those who live in Queens County along with surrounding sections of the New York metro area who are interested in board gaming.",
+          "Tags: Community, Queens, Bay Terrace, Neighborhood, Games, Board Games, Game, Participatory, Format, Sunday Gaming, Tentative"
+        ]
+      },
+      "source_urls_by_event": {
+        "218184": [
+          "https://www.meetup.com/queens-board-gamers-group/events/315966439/",
+          "https://www.meetup.com/queens-board-gamers-group/events/316063571/",
+          "https://www.meetup.com/queens-board-gamers-group/events/316077907/",
+          "https://www.meetup.com/queens-board-gamers-group/events/316172408/"
+        ],
+        "218185": [
+          "https://www.meetup.com/queens-board-gamers-group/events/316077788/",
+          "https://www.meetup.com/queens-board-gamers-group/events/316172756/"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-jazz-trio",
+      "label": "Jazz trio",
+      "category": "format",
+      "visual": "Three music stands with syncopated notes without fixed instruments.",
+      "rationale": "Explicit trio deserves an instrument-neutral concept where configuration is unstated.",
+      "existing_alternative": "General music notes are safer than falsely showing piano bass drums.",
+      "event_ids": [
+        218135,
+        218140
+      ],
+      "evidence_by_event": {
+        "218135": [
+          "THURS 8 & 9:30 Steve Cardenas w/Adam Kolker, Jeremy Stratton: No cover. One drink minimum. Tips for musicians encouraged.",
+          "Tags: Music, Free, Jazz, Concert, Nightlife, Format, Performance"
+        ],
+        "218140": [
+          "THURS 8 & 9:30 Jacob Sacks w/Chet Doxas, Jeremy Stratton: No cover. One drink minimum. Tips for musicians encouraged.",
+          "Tags: Music, Free, Jazz, Concert, Nightlife, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "218135": [
+          "https://www.barbayeux.com/jazz/ddgdt9jhczp92g6-xgmms-pysle-xblyn"
+        ],
+        "218140": [
+          "https://www.barbayeux.com/jazz/ddgdt9jhczp92g6-xgmms-pysle-ezl8k"
+        ]
+      }
+    },
+    {
+      "concept": "format-book-launch",
+      "label": "Book launch",
+      "category": "format",
+      "visual": "New book with a small celebratory ribbon.",
+      "rationale": "Broad launch format when signing versus discussion remains unconfirmed.",
+      "existing_alternative": "Use a supported accepted icon or broad Unicode while a distinctive study is pending.",
+      "event_ids": [
+        218147,
+        218241
+      ],
+      "evidence_by_event": {
+        "218147": [
+          "Danielle Fishel, Will Friedle, and Rider Strong celebrates BOOK MEETS WORLD: No description available.",
+          "Tags: Literature, Author Event, Memoir, Reading, Format, Performance"
+        ],
+        "218241": [
+          "\"Asian Americans in Bilingualism and Bilingual Education: The Long Overdue Voice\": Please join us for this event for the book “Bilingualism and Bilingual Education: The Long Overdue Voice.”",
+          "Tags: Community, Literature, Education, Reading, Book Event, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "218147": [
+          "https://stores.barnesandnoble.com/store/2675?view=grid"
+        ],
+        "218241": [
+          "https://www.gc.cuny.edu/events/asian-americans-bilingualism-and-bilingual-education-long-overdue-voice"
+        ]
+      }
+    },
+    {
+      "category": "genre",
+      "concept": "genre-house",
+      "existing_alternative": "DJ decks specify performance equipment, not house; Noto notes are broader still.",
+      "label": "House music",
+      "rationale": "Explicit house music supports a four-on-the-floor rhythm exploration; this may read as generic electronic music and needs recognition testing.",
+      "visual": "A compact drum machine with four evenly spaced illuminated beat pads.",
+      "event_ids": [
+        218193,
+        218200
+      ],
+      "evidence_by_event": {
+        "218193": [
+          "Refuge Friday: Gorje Hewek + Volen Sentir: Fridays @ Refuge ~Before. During. Afters~ Refuge Hi-Def Dance Club is a 500-cap underground nightclub in East Williamsburg built around sound, energy, and atmosphere. At its core is REX, a custom 4-point system designed by co-founder Crai",
+          "Tags: Brooklyn, Music, East Williamsburg, Dance, Neighborhood, Nightlife, Electronic Music, Club Night, Underground, Dance Club, Format, Social"
+        ],
+        "218200": [
+          "Saturday Daytime: Simon Doty [Extended Set] + EMJIE: Simon Doty returns to Refuge on Saturday, October 3rd for an extended set. The Canadian producer enters a new chapter following the release of Universal Language on Anjunadeep and the launch of his own label, Rec",
+          "Tags: Music, Dance, Nightlife, House Music, Electronic Music, Club Night, Extended Set, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "218193": [
+          "https://ra.co/events/2512672",
+          "https://www.eventbrite.com/e/refuge-friday-gorje-hewek-volen-sentir-lauren-ritter-tickets-1997795577351?aff=odcleoeventsincollection",
+          "https://www.eventbrite.com/e/refuge-friday-gorje-hewek-volen-sentir-tickets-1997795577351?aff=odcleoeventsincollection"
+        ],
+        "218200": [
+          "https://ra.co/events/2514948",
+          "https://www.eventbrite.com/e/saturday-daytime-simon-doty-extended-set-emjie-tickets-1992696100679?aff=odcleoeventsincollection"
+        ]
+      }
+    },
+    {
+      "concept": "activity-aquatic-wildlife-release",
+      "label": "Aquatic wildlife release",
+      "category": "activity",
+      "visual": "Fish returning from an observation container to water.",
+      "rationale": "Organized seasonal aquarium-wildlife return; method and species require primary verification.",
+      "existing_alternative": "Fish fallback is adequate; no fishing or unsupervised release implication.",
+      "event_ids": [
+        218380
+      ],
+      "evidence_by_event": {
+        "218380": [
+          "Release of the Fishes: Join us and bid farewell to our wonderful wildlife ambassadors at the end of our Wetlab season.",
+          "Tags: Community, Wildlife, Family, Education, Outdoor, Aquarium, Community Celebration, Format, Social, Wetlab"
+        ]
+      },
+      "source_urls_by_event": {
+        "218380": [
+          "https://hudsonriverpark.org/visit/events/event/release-of-the-fishes-2026/"
+        ]
+      }
+    },
+    {
+      "concept": "activity-creative-aging-dance",
+      "label": "Creative-aging dance",
+      "category": "activity",
+      "visual": "Grounded gentle dancer with open relaxed arms.",
+      "rationale": "Self-paced expressive dance for older adults, no fixed tradition.",
+      "existing_alternative": "Generic dancer remains suitable; avoid stereotypes or mobility assumptions.",
+      "event_ids": [
+        218174
+      ],
+      "evidence_by_event": {
+        "218174": [
+          "Mindful Movement Class: A free weekly Creative Aging dance class for adults ages 60 and older using gentle dance, music, mindfulness, and creative expression. Participants are invited to move at their own pace while enhancing balance, mobility, creativity, and overall well-being.",
+          "Tags: Community, Dance, Free, Wellness, Fitness, Seniors, Creative Aging, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "218174": [
+          "https://whaanyc.org/event/mindful-movement-class/2026-08-19/",
+          "https://whaanyc.org/event/mindful-movement-class/2026-08-26/",
+          "https://whaanyc.org/event/mindful-movement-class/2026-09-02/",
+          "https://whaanyc.org/event/mindful-movement-class/2026-09-09/",
+          "https://whaanyc.org/event/mindful-movement-class/2026-09-16/"
+        ]
+      }
+    },
+    {
+      "concept": "activity-rope-life-drawing",
+      "label": "Rope and figure-drawing jam",
+      "category": "activity",
+      "visual": "Sketch pad and abstract tied-rope loop.",
+      "rationale": "Consenting rope practitioners also pose for drawing, a combined format.",
+      "existing_alternative": "Drawing fallback misses rope activity; exact anatomy and knot safety need separate references.",
+      "event_ids": [
+        218203
+      ],
+      "evidence_by_event": {
+        "218203": [
+          "Sketchy Rope Jam: The Sketchy Rope Jam is a rope jam where sketching and drawing people in rope is welcome and encouraged. It's a space to play with rope and shibari, as well as to sketch and draw people who are tying. Attendees who tie agree to be sketched by people who have come to draw.",
+          "Tags: Community, Visual Arts, Art, Drawing, Sketching, Open Practice, Participatory, Shibari, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "218203": [
+          "https://www.simpletix.com/e/sketchy-rope-jam-tickets-288360"
+        ]
+      }
+    },
+    {
+      "concept": "activity-trail-maintenance",
+      "category": "activity",
+      "label": "Trail maintenance",
+      "visual": "A trail tool repairing a short path edge",
+      "rationale": "Repairing trails differs from walking or litter collection.",
+      "existing_alternative": "Retain existing broad artwork; verify existing Noto options and recognition gain before new art.",
+      "event_ids": [
+        218305
+      ],
+      "evidence_by_event": {
+        "218305": [
+          "Introduction to Trail Maintenance Workshop: An introductory workshop on trail maintenance.",
+          "Tags: Community, Workshop, Education, Outdoor, Conservation, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "218305": [
+          "https://www.nynjtc.org/calendar"
+        ]
+      }
+    },
+    {
+      "concept": "craft-trinket-dish",
+      "label": "Trinket-dish making",
+      "category": "craft",
+      "visual": "Shallow handmade dish holding two small decorative pieces.",
+      "rationale": "Participants sculpt and embellish a small dish.",
+      "existing_alternative": "Clay-handbuilding artwork already fits; more specific art optional.",
+      "event_ids": [
+        218250
+      ],
+      "evidence_by_event": {
+        "218250": [
+          "Curio Trinket Dishes: Join us for an evening playing with clay! In this curio trinket dish class, you'll have the chance to sculpt a precious, one of a kind trinket dish from premium air dry clay before adorning it with trinkets, beads, mosaic pieces and other curated treasures. The class includes an introduction to the material and tools, an inspiration and ideation session, and time to sculpt alongside other attendees.",
+          "Tags: Community, Art, Workshop, Education, Crafts, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "218250": [
+          "https://luma.com/mppibsp8"
+        ]
+      }
+    },
+    {
+      "concept": "craft-vision-board",
+      "label": "Vision board",
+      "category": "craft",
+      "visual": "A board with grouped aspirational picture tiles and a small star.",
+      "rationale": "Explicit vision-board making has a reusable collage-like planning format.",
+      "existing_alternative": "Collage may fit only when cutting/assembly method is supported; generic paint does not capture reflection.",
+      "event_ids": [
+        218249
+      ],
+      "evidence_by_event": {
+        "218249": [
+          "Collage Club: Autumn Equinox Vision Boards: Collage Club at RecCreate is a therapeutic two hours of cutting and pasting, letting your creativity flow while crafting a found art piece. In this Autumn Equinox Session, the event begins with a meditation inspired by the upcoming season, followed by music and vision boarding; all materials are provided, with a gallery walk to conclude.",
+          "Tags: Community, Visual Arts, Art, Workshop, Wellness, Education, Vision Board, Crafts, Collage Art, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "218249": [
+          "https://luma.com/34kxw41r"
+        ]
+      }
+    },
+    {
+      "concept": "dance-garba",
+      "label": "Garba",
+      "category": "dance-style",
+      "visual": "A dancer with a broad flared skirt and both hands in a clearly visible clapping pose.",
+      "rationale": "Garba is explicitly central to the Navratri party. A clapping dance pose is a candidate direction, requiring recognition testing and avoiding a generic cultural costume shortcut.",
+      "existing_alternative": "Existing dancer is broad and DJ decks capture music delivery rather than the named dance; no sticks should be added without dandiya evidence.",
+      "event_ids": [
+        218312
+      ],
+      "evidence_by_event": {
+        "218312": [
+          "NYC's Garba x Bollywood: A Navratri celebration combining traditional and Bollywood Garba, with Desi DJs mixing traditional Garba rhythms, Bollywood favorites, and high-energy fusion beats.",
+          "Tags: Community, Music, Dance, Film, Party, Nightlife, World Cinema, Club Night, Bollywood, Format, Social, Garba"
+        ]
+      },
+      "source_urls_by_event": {
+        "218312": [
+          "https://230-fifth.com/event/nycs-garba-x-bollywood-230-fifth-rooftop/"
+        ]
+      }
+    },
+    {
+      "concept": "format-architectural-history-talk",
+      "label": "Architectural history talk",
+      "category": "format",
+      "visual": "Lectern beside a historic-building drawing.",
+      "rationale": "Seated building-history lecture differs from a walking tour.",
+      "existing_alternative": "Building emoji gives topic but not talk.",
+      "event_ids": [
+        218186
+      ],
+      "evidence_by_event": {
+        "218186": [
+          "An Unlikely Barn: The Mount Vernon Hotel & Villa Building on the East River: This lecture explores the 1799 building that houses the Mount Vernon Hotel Museum and the concept of villa building on the East River in the late 1700s. Art historian J. Keith Doherty will discuss the structure’s origins and architectural significance.",
+          "Tags: Architecture, History, Art, Education, Gathering, Talk, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "218186": [
+          "https://mvhm.org/event/an-unlikely-barn-the-mount-vernon-hotel-museum-early-villa-building/"
+        ]
+      }
+    },
+    {
+      "concept": "format-artist-themed-dance-party",
+      "label": "Artist-themed dance party",
+      "category": "format",
+      "visual": "Music record with party lights and a fan badge.",
+      "rationale": "Named-artist tribute theme does not promise the artist is present.",
+      "existing_alternative": "Use a supported accepted icon or broad Unicode while a distinctive study is pending.",
+      "event_ids": [
+        218178
+      ],
+      "evidence_by_event": {
+        "218178": [
+          "The Dead Dance [Halloween Party]: Join us for a slightly spooky, Gaga themed, Halloween pop dance party!",
+          "Tags: Music, Dance, Party, Nightlife, Pop Music, Club Night, Halloween, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "218178": [
+          "https://dromnyc.com/event/the-dead-dance-halloween-party/",
+          "https://ra.co/events/2521170"
+        ]
+      }
+    },
+    {
+      "concept": "format-beer-release",
+      "label": "Beer release",
+      "category": "format",
+      "visual": "Beer can andrelease calendar marker.",
+      "rationale": "Explicitcohortcontextsupportsfuturestudy;verifyrecognitionandexactspecificsbeforeassignment.",
+      "existing_alternative": "AccurateUnicodeoracceptedartmayremainappropriate.",
+      "event_ids": [
+        218261
+      ],
+      "evidence_by_event": {
+        "218261": [
+          "Freaky Fourth Friday: August 2026 Release: We’re teaming up with our brewery friends and swapping recipes, releasing a new collab on the fourth Friday of every month. This month its TDH Surf Wax from our friends at Burial, a West Coast IPA brewed with a classic trio of PNW hops giving intense tropical notes.",
+          "Tags: Community, Art, Food, Beer, Collaboration, Beer Release, Pop-Up, Format, Browsable"
+        ]
+      },
+      "source_urls_by_event": {
+        "218261": [
+          "https://otherhalfbrewing.com/event/freaky-fourth-friday-august-2026-release-2026-08-28/"
+        ]
+      }
+    },
+    {
+      "concept": "format-benefit-cocktail-party",
+      "label": "Benefit cocktail reception",
+      "category": "format",
+      "visual": "Reception glass beside a support heart.",
+      "rationale": "Benefit cocktail party need not include a gala dinner or full concert.",
+      "existing_alternative": "Glass does not encode charitable purpose.",
+      "event_ids": [
+        218262
+      ],
+      "evidence_by_event": {
+        "218262": [
+          "The Filomen Sessions: Live at The Grammy Townhouse: A benefit cocktail party celebrating the FMDG Music School, hosted by The Recording Academy’s Accessibility + Disability Network. The school creates a vibrant music education community for people of all ages who are blind and have low vision.",
+          "Tags: Community, Music, Accessibility, Fundraiser, Cocktail Party, Benefit, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "218262": [
+          "https://fmdgmusicschool.org/event/the-filomen-sessions-live-at-the-grammy-townhouse/"
+        ]
+      }
+    },
+    {
+      "concept": "format-climate-expo",
+      "label": "Climate expo",
+      "category": "format",
+      "visual": "Exhibition booths around a globe.",
+      "rationale": "Expo format addresses climate across unspecified exhibits.",
+      "existing_alternative": "Globe is broad but accurate.",
+      "event_ids": [
+        218306
+      ],
+      "evidence_by_event": {
+        "218306": [
+          "Queens Climate Expo: A climate expo at the New York Hall of Science in Corona.",
+          "Tags: Community, Education, Outdoor, Fair, Climate, Format, Browsable"
+        ]
+      },
+      "source_urls_by_event": {
+        "218306": [
+          "https://docs.google.com/forms/d/1rW9-1I66kFFvYALAH6cahS3laS4bjuI9Pm-TjpPr69o/viewform?pli=1&pli=1&fbzx=-73583407890008864&pli=1&edit_requested=true"
+        ]
+      }
+    },
+    {
+      "concept": "format-community-celebration",
+      "label": "Community celebration",
+      "category": "format",
+      "visual": "Gathering circle with modest bunting.",
+      "rationale": "Program celebrates a shared community milestone; specific activity is unknown.",
+      "existing_alternative": "Party popper remains suitable.",
+      "event_ids": [
+        218307
+      ],
+      "evidence_by_event": {
+        "218307": [
+          "Italian Heritage Celebration: An Italian Heritage celebration at Queens Borough Hall in Kew Gardens.",
+          "Tags: Community, Education, Nightlife, Celebration, Cultural Heritage, Community Celebration, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "218307": [
+          "https://docs.google.com/forms/d/1rW9-1I66kFFvYALAH6cahS3laS4bjuI9Pm-TjpPr69o/viewform?pli=1&pli=1&fbzx=-73583407890008864&pli=1&edit_requested=true"
+        ]
+      }
+    },
+    {
+      "concept": "format-cover-band",
+      "label": "Cover-band performance",
+      "category": "format",
+      "visual": "Performance microphone and familiar-song pages.",
+      "rationale": "Band plays covers without guaranteed original artist or audience singing.",
+      "existing_alternative": "Music fallback is suitable; concept recognition uncertain.",
+      "event_ids": [
+        218179
+      ],
+      "evidence_by_event": {
+        "218179": [
+          "The Petty Toms: Your favorite cover band The Petty Toms is back with all those sing-along hits from the 60s to today!",
+          "Tags: Music, Rock, Free, Concert, Pop Music, Pop Rock, Cover Band, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "218179": [
+          "https://dromnyc.com/event/the-petty-toms-6/"
+        ]
+      }
+    },
+    {
+      "concept": "format-daytime-dance-party",
+      "label": "Daytime dance party",
+      "category": "format",
+      "visual": "Dance-floor tile beneath a small sun.",
+      "rationale": "Explicit daytime party timing matters but does not prove DJ hardware.",
+      "existing_alternative": "Notes remain broad and sufficient.",
+      "event_ids": [
+        218199
+      ],
+      "evidence_by_event": {
+        "218199": [
+          "Refuge Saturday Daytime: Ragie Ban: Saturdays @ Refuge ~Before. During. Afters~ Refuge Hi-Def Dance Club is a 500-cap underground nightclub in East Williamsburg built around sound, energy, and atmosphere. At its core is REX, a custom 4-point system designed by co-founder Craig “Sh",
+          "Tags: Music, Dance, Nightlife, Club Night, Sound System, Underground Club, Daytime, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "218199": [
+          "https://ra.co/events/2512987",
+          "https://www.eventbrite.com/e/refuge-saturday-daytime-ragie-ban-tickets-1997637267843?aff=odcleoeventsincollection"
+        ]
+      }
+    },
+    {
+      "concept": "format-expert-panel",
+      "label": "Expert panel discussion",
+      "category": "format",
+      "visual": "Several microphones aligned before an audience-facing conversation panel.",
+      "rationale": "Multiple expert presentations with moderator.",
+      "existing_alternative": "Do not use participant small-group discussion or civic governance automatically.",
+      "event_ids": [
+        218158
+      ],
+      "evidence_by_event": {
+        "218158": [
+          "ICP x ROAR: Reimagining the Image in Fashion and Beauty: A special event about reimagining the image in fashion and beauty.",
+          "Tags: Community, Visual Arts, Art, Photography, Fashion, Gathering, Talk, Beauty, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "218158": [
+          "https://www.icp.org/events/icp-x-roar-reimagining-image-fashion-and-beauty",
+          "https://www.icp.org/index%2ephp/events/icp-x-roar-reimagining-image-fashion-and-beauty"
+        ]
+      }
+    },
+    {
+      "concept": "format-film-drag-preshow",
+      "label": "Film and drag pre-show",
+      "category": "format",
+      "visual": "Film frame beside a small separate live stage.",
+      "rationale": "Drag performance occurs before a movie, not synchronized shadowcast.",
+      "existing_alternative": "Film fallback misses live component.",
+      "event_ids": [
+        218273
+      ],
+      "evidence_by_event": {
+        "218273": [
+          "To Wong Foo, Thanks for Everything! Julie Newmar: The screening includes a live pre-show drag performance by Miss Malice with Daniella Darling, C'était Bontemps and Sherry Poppins.",
+          "Tags: Community, Comedy, LGBTQ, Film, Screening, Nightlife, Drag, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "218273": [
+          "https://nitehawkcinema.com/prospectpark/showtimes/to-wong-foo-thanks-for-everything-julie-newmar-9-14-26-900-pm/"
+        ]
+      }
+    },
+    {
+      "concept": "format-humorous-reading",
+      "label": "Humorous literary readings",
+      "category": "format",
+      "visual": "Open literary page with a modest smiling speech bubble.",
+      "rationale": "Comedy is read as prose rather than stand-up.",
+      "existing_alternative": "Book or smile emoji alone only conveys half the format.",
+      "event_ids": [
+        218121
+      ],
+      "evidence_by_event": {
+        "218121": [
+          "Funny Pages, hosted by Zach Zimmerman and Blythe Roberson: Funny Pages is an evening of readings hosted by Zach Zimmerman and Blythe Roberson, featuring Phoebe Robinson, Stuart Pennebaker, and Mike Drucker.",
+          "Tags: Literature, Comedy, Reading, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "218121": [
+          "https://www.eventbrite.com/e/funny-pages-tickets-1996749025085?aff=oddtdtcreator",
+          "https://www.ptknitwear.com/Tickets%20are%20$10%20and%20available%20through%20eventbrite%20or%20at%20the%20door.%20Doors%20open%20at%206:30%20with%20the%20readings%20starting%20at%207pm.%20Come%20early%20to%20grab%20a%20drink%20at%20our%20cafe,%20browse%20our%20bookshelves,%20and%20laugh%20with%20new%20friends!)_"
+        ]
+      }
+    },
+    {
+      "concept": "format-live-electronic-performance",
+      "label": "Live electronic performance",
+      "category": "format",
+      "visual": "Connected keyboard/controller and synthesizer pads.",
+      "rationale": "Explicit live electronic billing differs from DJ playback.",
+      "existing_alternative": "Notes retain uncertainty; actual rig must be verified.",
+      "event_ids": [
+        218194
+      ],
+      "evidence_by_event": {
+        "218194": [
+          "Refuge Saturday Daytime w/ Rodriguez Jr. (Live): Saturdays @ Refuge ~Before. During. Afters~ Refuge Hi-Def Dance Club is a 500-cap underground nightclub in East Williamsburg built around sound, energy, and atmosphere. At its core is RE",
+          "Tags: Music, Dance, Nightlife, Electronic Music, Club Night, Underground, Live Music, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "218194": [
+          "https://ra.co/events/2512696",
+          "https://ra.co/events/2512972",
+          "https://www.eventbrite.com/e/refuge-saturday-daytime-w-rodriguez-jr-live-igor-vicente-mashrik-tickets-1993641723061?aff=odcleoeventsincollection",
+          "https://www.eventbrite.com/e/refuge-saturday-daytime-w-rodriguez-jr-live-tickets-1993641723061?aff=odcleoeventsincollection"
+        ]
+      }
+    },
+    {
+      "concept": "format-midnight-book-release",
+      "label": "Midnight book release",
+      "category": "format",
+      "visual": "Closed book beneath crescent moon and small celebration marks.",
+      "rationale": "Books release at midnight, distinct from ordinary author conversation.",
+      "existing_alternative": "Book and moon individually omit part of format.",
+      "event_ids": [
+        218145
+      ],
+      "evidence_by_event": {
+        "218145": [
+          "THRESHING DAY Midnight Release Party: No description available.",
+          "Tags: Literature, Party, Nightlife, Book Launch, Midnight Release, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "218145": [
+          "https://stores.barnesandnoble.com/store/2675?view=grid"
+        ]
+      }
+    },
+    {
+      "concept": "format-music-discovery-fair",
+      "label": "Music discovery fair",
+      "category": "format",
+      "visual": "Small music stands and contrasting instrument silhouettes around a fair sign.",
+      "rationale": "Family fair combines listening, trying instruments and making.",
+      "existing_alternative": "Music notes omit interactive multi-activity fair.",
+      "event_ids": [
+        218263
+      ],
+      "evidence_by_event": {
+        "218263": [
+          "WQXR Bronx Classical Kids Fair: Families can experience live performances, arts and crafts, dance and composition workshops, and try out some instruments. The event is free, though RSVPs are encouraged; FMDG will have a stall.",
+          "Tags: Community, Music, Art, Dance, Free, Classical Music, Festival, Family, Education, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "218263": [
+          "https://fmdgmusicschool.org/event/wqxr-bronx-classical-kids-fair/",
+          "https://www.bronxartsensemble.org/event/bronx-classical-kids-fair-2026/"
+        ]
+      }
+    },
+    {
+      "concept": "format-photobook-talk",
+      "label": "Photobook discussion",
+      "category": "format",
+      "visual": "Open book with photographic panels and speech bubble.",
+      "rationale": "Photographer or author discusses a named photobook.",
+      "existing_alternative": "Author-conversation already fits but not visual medium.",
+      "event_ids": [
+        218245
+      ],
+      "evidence_by_event": {
+        "218245": [
+          "Photobook Talk: Liam Kennedy – Shakedown: A photobook talk featuring Liam Kennedy and Shakedown.",
+          "Tags: Community, Visual Arts, Art, Photography, Literature, Reading, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "218245": [
+          "https://www.eventbrite.com/e/photobook-talk-liam-kennedy-shakedown-tickets-1997483544051?aff=oddtdtcreator"
+        ]
+      }
+    },
+    {
+      "concept": "format-social-walk",
+      "label": "Social walking group",
+      "category": "format",
+      "visual": "Two pairs of walking shoes beside a conversation bubble.",
+      "rationale": "Explicit social walks center meeting people through gentle walking.",
+      "existing_alternative": "Hiking boots or stroller art overstates terrain or equipment.",
+      "event_ids": [
+        218282
+      ],
+      "evidence_by_event": {
+        "218282": [
+          "High Line & Hudson Yards Walk (50 & Over): The High Line & Hudson Yards landscape is the perfect location for this popular 50s & Over Social Walk. Participants can get fresh air, exercise, meet people in their age range, and enjoy views, unique architecture, and cutting-edge art. During the walk, attendees are randomly paired and rotate at designated times to meet everyone participating.",
+          "Tags: Community, Wellness, Outdoor, Nightlife, Walking, Dating, Singles, Outing, Format, Outings"
+        ]
+      },
+      "source_urls_by_event": {
+        "218282": [
+          "https://www.eventbrite.com/e/high-line-hudson-yards-walk-50-over-tickets-1976205130744?aff=ebdsoporgprofile",
+          "https://www.eventbrite.com/e/high-line-hudson-yards-walk-50-over-tickets-1996843839678",
+          "https://www.meetup.com/5boroexploration/events/316404003/"
+        ]
+      }
+    },
+    {
+      "concept": "format-sunrise-party",
+      "label": "Sunrise dance party",
+      "category": "format",
+      "visual": "Rising sun behind a dance-floor tile.",
+      "rationale": "Party timing spans sunrise, not nature watching.",
+      "existing_alternative": "Sunrise emoji may misread activity.",
+      "event_ids": [
+        218198
+      ],
+      "evidence_by_event": {
+        "218198": [
+          "Refuge Sunday Sunrise: Serge Devant: Saturdays @ Refuge ~Before. During. Afters~ Refuge Hi-Def Dance Club is a 500-cap underground nightclub in East Williamsburg built around sound, energy, and atmosphere.",
+          "Tags: Music, Dance, Nightlife, Club Night, Underground, Sunrise, Underground Club, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "218198": [
+          "https://ra.co/events/2512984",
+          "https://www.eventbrite.com/e/refuge-sunday-sunrise-serge-devant-tickets-1997796748855?aff=odcleoeventsincollection"
+        ]
+      }
+    },
+    {
+      "concept": "format-vocal-showcase",
+      "label": "Vocal showcase",
+      "category": "format",
+      "visual": "Several microphone silhouettes arranged around a music note.",
+      "rationale": "Singer showcase without implying a choir or exact ensemble count.",
+      "existing_alternative": "Retain suitable existing art or Unicode fallback while recognition and exact scope are investigated.",
+      "event_ids": [
+        218177
+      ],
+      "evidence_by_event": {
+        "218177": [
+          "Vocal Gumbo: Vocal Gumbo and The Village Trip combine their missions for one spectacular night of music at Drom. Vocal Gumbo celebrates the diverse and",
+          "Tags: Community, Music, Concert, Vocal Music, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "218177": [
+          "https://dromnyc.com/event/vocal-gumbo-2/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-classic-rock",
+      "label": "Classic rock",
+      "category": "genre",
+      "visual": "Electric-guitar and compact record motif.",
+      "rationale": "Explicit classic-rock repertoire and covers.",
+      "existing_alternative": "Existing guitar Unicode is appropriate; era is hard to encode.",
+      "event_ids": [
+        218224
+      ],
+      "evidence_by_event": {
+        "218224": [
+          "Chicago: Chicago returns for another year of playing the songs you know and love. Now in our 59th touring season, the group will perform Chicago’s greatest hits.",
+          "Tags: Music, Rock, Concert, Classic Rock, Live Music, Chicago, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "218224": [
+          "https://www.thecapitoltheatre.com/the-capitol-theatre/events/detail/chicago-1"
+        ]
+      }
+    },
+    {
+      "concept": "genre-diasporic-electronic",
+      "label": "Diasporic electronic music",
+      "category": "genre",
+      "visual": "Electronic waveform woven with several archival-record grooves.",
+      "rationale": "Electronic reinterpretation of diasporic archival recordings is explicit.",
+      "existing_alternative": "DJ decks already represent performance; no cultural symbol inferred.",
+      "event_ids": [
+        218302
+      ],
+      "evidence_by_event": {
+        "218302": [
+          "Echoes of the Archive: Four DJs electronically reimagine traditional archival and diasporic music, blending historic recordings from Beirut to Cochabamba into dreamy, dubbed-out textures. The night also features a Yiddish-inspired somatic movement session, performances by Roland Santana and Chaia, and a debut collaborative performance from Omar Ahmad and Solpara.",
+          "Tags: Music, Dance, Concert, Nightlife, Electronic Music, Diaspora, Format, Performance, Diasporic Music"
+        ]
+      },
+      "source_urls_by_event": {
+        "218302": [
+          "https://lightandsound.design/e/091826"
+        ]
+      }
+    },
+    {
+      "concept": "genre-electronic",
+      "label": "Electronic music",
+      "category": "genre",
+      "visual": "A simple waveform beside one music note.",
+      "rationale": "Explicit electronic repertoire does not establish DJ or synth equipment; abstract motif needs recognition testing.",
+      "existing_alternative": "Existing broad Unicode remains suitable; specific motif must demonstrate added recognition before new artwork.",
+      "event_ids": [
+        218195
+      ],
+      "evidence_by_event": {
+        "218195": [
+          "Refuge Thursday: The Drop with Tasha Blank & Friends: Thursdays @ Refuge. Refuge Hi-Def Dance Club is a 500-cap underground nightclub in East Williamsburg built around sound, energy, and atmosphere.",
+          "Tags: Music, Dance, Nightlife, Electronic Music, Club Night, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "218195": [
+          "https://ra.co/events/2512976",
+          "https://www.eventbrite.com/e/refuge-thursday-the-drop-with-tasha-blank-friends-tickets-1992968916679?aff=ebdssbcitybrowse",
+          "https://www.eventbrite.com/e/refuge-thursday-the-drop-with-tasha-blank-friends-tickets-1992968916679?aff=odcleoeventsincollection"
+        ]
+      }
+    },
+    {
+      "concept": "genre-goth",
+      "label": "Goth music",
+      "category": "genre",
+      "visual": "A dark musical note within a pointed arch.",
+      "rationale": "Goth music is explicitly included in this mixed dark-dance program. The motif is exploratory and requires recognition testing; this does not make it an exclusive icon for the whole mixed night.",
+      "existing_alternative": "Existing music notes/DJ decks do not distinguish genres; avoid treating clothing, ethnicity or an arbitrary instrument as proof.",
+      "event_ids": [
+        218176
+      ],
+      "evidence_by_event": {
+        "218176": [
+          "Bat Club – Early Goth Party: If you want to go out dancing and still return your batcave in time for a good night's sleep, join us for a special early version of Bat Clu",
+          "Tags: Music, Dance, DJ, Nightlife, Club Night, Goth, Early Party, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "218176": [
+          "https://dromnyc.com/event/bat-club-early-goth-party/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-hip-hop",
+      "label": "Hip-hop",
+      "category": "genre",
+      "visual": "A compact boombox with two broad speaker circles and one strong rhythmic accent.",
+      "rationale": "The genre is explicitly tagged; boombox is an exploratory historical music-culture cue, not a claim that it is on stage, and must be tested beyond generic retro music.",
+      "existing_alternative": "Noto microphone is generic vocal performance; DJ decks imply a DJ role not established by every hip-hop concert.",
+      "event_ids": [
+        218267
+      ],
+      "evidence_by_event": {
+        "218267": [
+          "Friday Feeling: An early, elevated evening of 80s–00s old school hip-hop & R&B. Join Matinee Social Club for an elevated evening of old school R&B and hip-hop, with dancing amongst a crowd of seasoned party people.",
+          "Tags: Music, Dance, Party, Hip Hop, Nightlife, R&B, Club Night, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "218267": [
+          "https://matinee.club/friday-feeling",
+          "https://www.eventbrite.com/e/friday-feeling-90-00s-hip-hop-rb-tickets-1993023918190?aff=ebdssbcitybrowse"
+        ]
+      }
+    },
+    {
+      "concept": "genre-horror-film",
+      "label": "Horror film",
+      "category": "genre",
+      "visual": "Film strip with restrained spooky silhouette.",
+      "rationale": "Screening is horror without a special live format.",
+      "existing_alternative": "Movie camera remains adequate.",
+      "event_ids": [
+        218221
+      ],
+      "evidence_by_event": {
+        "218221": [
+          "Cult Classics: Screen to Scream: No description available.",
+          "Tags: Film, Screening, Nightlife, Horror, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "218221": [
+          "https://link.dice.fm/r28a7d90186e?pid=443c0988"
+        ]
+      }
+    },
+    {
+      "concept": "genre-indie",
+      "category": "genre",
+      "label": "Indie music",
+      "visual": "Explore a hand-drawn note motif",
+      "rationale": "Broad stylistic family has no universal instrument; recognition unproven.",
+      "existing_alternative": "Broad fallback does not distinguish this specific supported facet.",
+      "event_ids": [
+        218210
+      ],
+      "evidence_by_event": {
+        "218210": [
+          "Tory Silver, Annie Collette, and Julian Cubillos: Tory Silver, earnest n dreamy music out of Pittsburgh, Penna are joined by ny locals Annie Collette and Julian Cubillos.",
+          "Tags: Music, Indie, Concert, Nightlife, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "218210": [
+          "https://dice.fm/event/6a7bb73b7009900001ac7495",
+          "https://dice.fm/event/l8756b-tory-silver-annie-collette-and-julian-cubillos-17th-sep-purgatory-new-york-tickets"
+        ]
+      }
+    },
+    {
+      "concept": "genre-jam-band",
+      "category": "genre",
+      "label": "Jam band",
+      "visual": "Interweaving musical phrases around a note.",
+      "rationale": "Preserve explicit improvised-band repertoire without claiming an open jam.",
+      "existing_alternative": "Notes remain clearer until motif tested.",
+      "event_ids": [
+        218222
+      ],
+      "evidence_by_event": {
+        "218222": [
+          "The String Cheese Incident: The String Cheese Incident has been recognized for their commitment to musical creativity and integrity, community spirit, philanthropic endeavors, and an innovative approach to the business of music. The band has stayed committed to music as a creative endeavor in both its recordings and live performances.",
+          "Tags: Community, Music, Concert, Jam Band, Philanthropy, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "218222": [
+          "https://www.thecapitoltheatre.com/the-capitol-theatre/events/detail/the-string-cheese-incident"
+        ]
+      }
+    },
+    {
+      "concept": "genre-progressive-rock",
+      "category": "genre",
+      "label": "Progressive rock",
+      "visual": "Explore a guitar and asymmetric meter arc without tiny notation.",
+      "rationale": "Genre is explicit; motif needs recognition testing rather than assuming instrument exclusivity.",
+      "existing_alternative": "Guitar supports rock but loses the progressive subgenre.",
+      "event_ids": [
+        218212
+      ],
+      "evidence_by_event": {
+        "218212": [
+          "Peaer, Loadcard, and Fraternal Twin: Loadcard (on tour from Philly) performs their drum-driven blend of prog & punk, joined by legends Peaer and Fraternal Twin. A wonderful night awaits you at Purgatory in Brooklyn.",
+          "Tags: Music, Rock, Concert, Punk Rock, Progressive Rock, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "218212": [
+          "https://dice.fm/event/6a7bb2f218c5cb0001cd152a",
+          "https://dice.fm/event/l8756r-peaer-loadcard-and-fraternal-twin-8th-oct-purgatory-new-york-tickets"
+        ]
+      }
+    },
+    {
+      "concept": "genre-punk",
+      "category": "genre",
+      "label": "Punk music",
+      "visual": "Angular jagged musical note",
+      "rationale": "Avoid assuming guitar or fashion; test genre distinction.",
+      "existing_alternative": "Broad fallback does not distinguish this specific supported facet.",
+      "event_ids": [
+        218212
+      ],
+      "evidence_by_event": {
+        "218212": [
+          "Peaer, Loadcard, and Fraternal Twin: Loadcard (on tour from Philly) performs their drum-driven blend of prog & punk, joined by legends Peaer and Fraternal Twin. A wonderful night awaits you at Purgatory in Brooklyn.",
+          "Tags: Music, Rock, Concert, Punk Rock, Progressive Rock, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "218212": [
+          "https://dice.fm/event/6a7bb2f218c5cb0001cd152a",
+          "https://dice.fm/event/l8756r-peaer-loadcard-and-fraternal-twin-8th-oct-purgatory-new-york-tickets"
+        ]
+      }
+    },
+    {
+      "concept": "genre-regional-mexican",
+      "label": "Regional Mexican music",
+      "category": "genre",
+      "visual": "An instrument-neutral paired musical phrase with a distinctive rhythmic arrangement.",
+      "rationale": "Broad umbrella includes distinct traditions; do not substitute mariachi costume or unverified instruments. Recognition remains exploratory.",
+      "existing_alternative": "Current broad Unicode or exact format fallback remains until distinct useful art is demonstrated.",
+      "event_ids": [
+        218223
+      ],
+      "evidence_by_event": {
+        "218223": [
+          "Alicia Villarreal: Alicia Villarreal began her career in 1995 as the lead vocalist of Grupo Límite, one of the most successful música grupera bands of its generation. In 2001, she launched her solo career with the ranchera-inspired album Soy Lo Prohibido. With more than 10 million albums sold worldwide, she remains one of the most celebrated and influential voices in regional Mexican music.",
+          "Tags: Music, Concert, Latin Music, Live Music, Regional Mexican, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "218223": [
+          "https://www.thecapitoltheatre.com/the-capitol-theatre/events/detail/alicia-villarreal"
+        ]
+      }
+    },
+    {
+      "category": "genre",
+      "concept": "genre-rnb",
+      "existing_alternative": "Noto microphone shows vocals but not genre; avoid assuming saxophone or other instruments.",
+      "label": "R&B",
+      "rationale": "R&B is explicit; exploratory smooth vocal motif is not a proven genre symbol and must be tested.",
+      "visual": "Explore a microphone paired with a single smooth looping sound-wave ribbon.",
+      "event_ids": [
+        218267
+      ],
+      "evidence_by_event": {
+        "218267": [
+          "Friday Feeling: An early, elevated evening of 80s–00s old school hip-hop & R&B. Join Matinee Social Club for an elevated evening of old school R&B and hip-hop, with dancing amongst a crowd of seasoned party people.",
+          "Tags: Music, Dance, Party, Hip Hop, Nightlife, R&B, Club Night, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "218267": [
+          "https://matinee.club/friday-feeling",
+          "https://www.eventbrite.com/e/friday-feeling-90-00s-hip-hop-rb-tickets-1993023918190?aff=ebdssbcitybrowse"
+        ]
+      }
+    },
+    {
+      "concept": "genre-salsa",
+      "category": "genre",
+      "label": "Salsa music",
+      "visual": "Explore an interlocking syncopated-note motif",
+      "rationale": "Distinguish musical repertoire from participant dancing; no assumed instrument.",
+      "existing_alternative": "Broad fallback does not distinguish this supported facet.",
+      "event_ids": [
+        218283
+      ],
+      "evidence_by_event": {
+        "218283": [
+          "NY Salsa All-Stars: Featuring Ray De La Paz, Ray Sepulveda, Frankie Vasquez, Herman Olivera, Jose Mangual, Luisito Quintero, and more.",
+          "Tags: Music, Dance, Concert, Salsa, Latin Music, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "218283": [
+          "https://www.palladiumtimessquare.com/event/ny-salsa-all-stars/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-techno",
+      "label": "Techno",
+      "category": "genre",
+      "visual": "Explore four equal beat blocks beneath one sharply simplified electronic waveform.",
+      "rationale": "Explicit techno programming supports rhythm/production genre exploration, with house overlap a known recognition risk.",
+      "existing_alternative": "DJ decks describes equipment, not genre; generic notes omit techno.",
+      "event_ids": [
+        218196
+      ],
+      "evidence_by_event": {
+        "218196": [
+          "Refuge Friday: Chris Liebing, Akua & Black Asteroid: Fridays @ Refuge ~Before. During. Afters~ Refuge Hi-Def Dance Club is a 500-cap underground nightclub in East Williamsburg built around sound, energy, and atmosphere.",
+          "Tags: Music, Dance, Techno, Nightlife, Electronic Music, Club Night, Underground Club, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "218196": [
+          "https://ra.co/events/2512701",
+          "https://www.eventbrite.com/e/refuge-friday-chris-liebing-akua-black-asteroid-tickets-1997795994599?aff=odcleoeventsincollection"
+        ]
+      }
+    },
+    {
+      "concept": "topic-astrobiology",
+      "label": "Astrobiology",
+      "category": "other",
+      "visual": "Planet and simple molecular motif.",
+      "rationale": "Exploration of potential extraterrestrial life is explicit.",
+      "existing_alternative": "Planet remains useful; no discovery of life is asserted.",
+      "event_ids": [
+        218287
+      ],
+      "evidence_by_event": {
+        "218287": [
+          "The Potential for Life Next Door: The Potential for Life Next Door: The Morning Star Missions to Venus. Join The Explorers Club for a presentation about the missions to Venus.",
+          "Tags: Community, Science, Astronomy, Education, Exploration, Space, Gathering, Talk, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "218287": [
+          "https://www.explorers.org/calendar-of-events/the-potential-for-life-next-door/"
+        ]
+      }
+    },
+    {
+      "concept": "topic-space-physiology",
+      "label": "Space physiology",
+      "category": "other",
+      "visual": "Human outline and orbit path with a small heartbeat.",
+      "rationale": "Talk addresses effects of space habitation on bodies and minds.",
+      "existing_alternative": "Rocket omits physiology; concept is exploratory, no medical claim.",
+      "event_ids": [
+        218288
+      ],
+      "evidence_by_event": {
+        "218288": [
+          "Becoming Martian: How Living in Space Will Change Our Bodies and Minds: Join The Explorers Club to learn about the surprising effects of space habitation on the human body.",
+          "Tags: Community, Science, Astronomy, Education, Exploration, Space, Gathering, Talk, Human Body, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "218288": [
+          "https://www.explorers.org/calendar-of-events/becoming-martian-how-living-in-space-will-change-our-bodies-and-minds/"
+        ]
+      }
+    }
+  ],
+  "limitations": "Counts describe this cohort, not population reach. These are grounded prospective studies, not live assignments. Existing artwork may already suffice; exact equipment and genre recognition require further review."
+}

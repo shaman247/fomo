@@ -1,0 +1,183 @@
+[
+  {
+    "icon_id": "activity-social-needlework",
+    "source_sha256": "2184f806bb23598f0bf1c4b8a0e500d5ca31d331c71b0ba56e09a81a34434e9e",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Mixed yarn tools beside a conversation bubble.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-039/visual-final-v2",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-039/gallery-final-v2/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 848,
+      "gzip_level_6": 446
+    },
+    "optimization": {
+      "initial_raw": 848,
+      "initial_gzip_level_6": 446,
+      "final_raw": 848,
+      "final_gzip_level_6": 446
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Yarn, knitting needles, crochet hook and discussion bubble communicate a social fiber group. At 16 px yarn strands, hook bend and text soften. Label supplies mixed needlework; no lesson, kit or exact project is promised."
+    ]
+  },
+  {
+    "icon_id": "format-graduate-admissions-fair",
+    "source_sha256": "d1be95c4a806baab95755e811e29151776007a872ce10b3f61cd15320306e116",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Graduate cap and program sheets with a question bubble.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-039/visual-final-v2",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-039/gallery-final-v2/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 845,
+      "gzip_level_6": 439
+    },
+    "optimization": {
+      "initial_raw": 845,
+      "initial_gzip_level_6": 439,
+      "final_raw": 845,
+      "final_gzip_level_6": 439
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Academic cap, program information sheets and question bubble communicate exploring graduate study. At 16 px tassel, question mark and document lines soften; label distinguishes admissions fair from graduation or general education advice. No acceptance, scholarship or exact institution is promised."
+    ]
+  },
+  {
+    "icon_id": "activity-museum-discovery-backpack",
+    "source_sha256": "5e02d97f5e0c46a62e9dc39f3e90273d2e0a7a358e2a965f9d942b888f112241",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Museum-themed backpack with journal and binoculars.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-039/visual-final-v2",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-039/gallery-final-v2/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 1143,
+      "gzip_level_6": 529
+    },
+    "optimization": {
+      "initial_raw": 1143,
+      "initial_gzip_level_6": 529,
+      "final_raw": 1143,
+      "final_gzip_level_6": 529
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Backpack with art emblem, journal and binoculars suggests a museum discovery kit. At 16 px picture and journal detail soften; label distinguishes it from school or hiking supplies. Front diagram does not promise exact contents, ownership or an outdoor excursion."
+    ]
+  },
+  {
+    "icon_id": "activity-structural-color",
+    "source_sha256": "ca83acd7210db707fdaaac078851ecc20787abd69cfcc149f5bb5d53a0bc6e4f",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Feather with magnified microscopic optical structure.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-039/visual-final-v2",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-039/gallery-final-v2/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 1191,
+      "gzip_level_6": 507
+    },
+    "optimization": {
+      "initial_raw": 885,
+      "initial_gzip_level_6": 346,
+      "final_raw": 1191,
+      "final_gzip_level_6": 507
+    },
+    "issues": [
+      {
+        "issue": "Initial stand-alone layered structure read as an abstract grid without a natural-color cue.",
+        "resolution": "Added a blue feather and magnified inset. Final current-hash cards and runtime variants rechecked; added geometry increased bytes and tiny optical detail remains label-dependent.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Blue feather with a magnified structure-and-light inset conveys structural color study. At 16 px the inset rays disappear and the feather may resemble a leaf; event label is necessary. Lamellar structure is illustrative, not every mechanism, a precise feather anatomy, species or experiment. Colors are symbolic rather than calibrated wavelengths."
+    ]
+  },
+  {
+    "icon_id": "game-musical-chairs",
+    "source_sha256": "f039b8f483650948b8e2db414cf09a2265a95f4d0061849f72c7fceffdbac7fe",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Two opposed chairs beneath a music note.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-039/visual-final-v2",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-039/gallery-final-v2/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 3615,
+      "gzip_level_6": 1269
+    },
+    "optimization": {
+      "initial_raw": 3615,
+      "initial_gzip_level_6": 1269,
+      "final_raw": 3615,
+      "final_gzip_level_6": 1269
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Two back-to-back chairs and a musical note indicate musical chairs. At 16 px inner legs and note details soften; label distinguishes the game from other music-and-seating activities. Two chairs do not promise two players, exact layout, supplied furniture or a prize."
+    ]
+  }
+]

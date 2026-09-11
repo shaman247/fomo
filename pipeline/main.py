@@ -644,6 +644,20 @@ def run_publish_tail(cursor, connection, website_ids, banner):
     new_events, merged_events = merger.merge_crawl_events(cursor, connection, website_ids=website_ids)
     print(f"\n✓ Merged events ({new_events} new, {merged_events} merged)\n")
 
+    # Fast-path archival for events the grace period is holding open whose own
+    # detail pages are confirmed gone (site unpublished them mid-run). Runs after
+    # the merge because its candidate set depends on the event_sources rows the
+    # merge just wrote; never touches an event a listing still shows.
+    print("  Probing dead links for grace-window events...")
+    try:
+        import liveness_probe
+        probe_stats = liveness_probe.run(cursor, connection)
+        if probe_stats['archived']:
+            print(f"  ✓ Liveness probe archived {probe_stats['archived']} event(s) with dead links")
+    except Exception as e:
+        connection.rollback()
+        print(f"  ⚠️ Liveness probe failed ({type(e).__name__}: {e}); continuing without it")
+
     print("\n  Classifying event sections...")
     exporter.classify_event_sections(cursor, connection)
 

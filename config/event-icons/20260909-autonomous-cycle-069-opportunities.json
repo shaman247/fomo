@@ -1,0 +1,727 @@
+{
+  "date": "2026-09-11",
+  "scope": "Cycle 069: 100 sequential events 221666–221811, no targeted supplements.",
+  "suggestions": 35,
+  "concept_count": 31,
+  "concepts": [
+    {
+      "concept": "format-comedy-history-show",
+      "label": "Comedy history show",
+      "category": "format",
+      "visual": "Historicaltimeline beside comic microphone.",
+      "rationale": "History-themed livecomedy,not factualcertification orwalkingtour.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; future concept is not a live assignment.",
+      "event_ids": [
+        221679,
+        221689,
+        221690
+      ],
+      "evidence_by_event": {
+        "221679": [
+          "Tom D's Big New York Show: Comedian and certified tour guide Tom Delgado takes you on an entertaining tour of NYC with history,...",
+          "Tags: Community, History, Comedy, Education, Live Show, Comedy Show, Live Stream, Format, Performance"
+        ],
+        "221689": [
+          "Drunk Black History - New York Comedy Festival Edition: Drunk Black History celebrates more Black History as part of the 2026 New York Comedy Festival.",
+          "Tags: Community, History, Black History, Comedy, Education, Comedy Show, Cultural Heritage, Live Stream, New York Comedy Festival, Format, Performance"
+        ],
+        "221690": [
+          "Tom D's Big New York Show (Nycf): A tour of NYC featuring history, comedians, trivia, and special guests. Part of the 2026 New York Comedy Festival.",
+          "Tags: History, Comedy, Education, Games, Trivia, Comedy Show, Live Stream, New York Comedy Festival, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "221679": [
+          "https://www.caveat.nyc/events/tom-ds-big-new-york-show-2026-09-05",
+          "https://www.caveat.nyc/events/tom-ds-big-new-york-show-2026-10-03"
+        ],
+        "221689": [
+          "https://www.caveat.nyc/events/drunk-black-history-new-york-comedy-festival-edition-2026-11-07"
+        ],
+        "221690": [
+          "https://www.caveat.nyc/events/tom-ds-big-new-york-show-2026-11-07"
+        ]
+      }
+    },
+    {
+      "concept": "format-cooking-party",
+      "label": "Cooking party",
+      "category": "format",
+      "visual": "Cookingboard and celebration note.",
+      "rationale": "Mixedhands-onfoodmakingandpartyformat,notonepromisedrecipe.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; future concept is not a live assignment.",
+      "event_ids": [
+        221743,
+        221744
+      ],
+      "evidence_by_event": {
+        "221743": [
+          "A Night In Rome – End of Summer Festa!: Transport yourself to the Eternal City for an unforgettable Roman night as summer winds down. This immersive culinary experience features interactive stations where you’ll roll pasta, shake up Roman inspired drinks and eat lots and lots of great food, with a live DJ, on-site sketch artist, and open bar.",
+          "Tags: Community, Cocktails, Music, Party, Education, Food, Nightlife, Cooking Class, Pasta Making, Mixology, Italian Cuisine, Format, Social"
+        ],
+        "221744": [
+          "Neapolitan Disco, Pizza + Pasta Making Party!: Neapolitan Disco is a pasta and pizza-making dance party with a little Naples in the mix. Guests will make fresh pasta and pizza from scratch, take home what they make, and enjoy a menu served by the chef team, an open wine bar, and Italian disco, funk, and Neapolitan music.",
+          "Tags: Community, Music, Dance, Party, Education, Food, Nightlife, Cooking Class, Cooking, Italian Cuisine, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "221743": [
+          "https://www.eventbrite.com/e/a-night-in-rome-end-of-summer-festa-tickets-1997644560656?aff=oddtdtcreator&keep_tld=true"
+        ],
+        "221744": [
+          "https://www.eventbrite.com/e/neapolitan-disco-pasta-pizza-making-dance-party-tickets-1997644718127?aff=oddtdtcreator&keep_tld=true"
+        ]
+      }
+    },
+    {
+      "concept": "format-cross-cultural-music-mashup",
+      "label": "Cross-cultural music collaboration",
+      "category": "format",
+      "visual": "Two distinct musical phrases joining one score.",
+      "rationale": "Explicitmusicaltraditionsmeeting; no stereotypedflagsorunverifiedinstruments.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; future concept is not a live assignment.",
+      "event_ids": [
+        221736,
+        221741
+      ],
+      "evidence_by_event": {
+        "221736": [
+          "GLOBAL MASHUP: Greece Meets Garifuna: KELEPOÚRI and Gogo Norales meet for a high-energy global mashup experience.",
+          "Tags: Music, Dance, World Music, Concert, Nightlife, Format, Performance"
+        ],
+        "221741": [
+          "GLOBAL MASHUP: Hollywood Meets Bollywood: Hollywood and Bollywood musicians share the stage in a meeting of two iconic musical worlds, sounds, rhythms, and energy.",
+          "Tags: Music, Dance, World Music, Concert, Nightlife, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "221736": [
+          "https://www.flushingtownhall.org/show-details/global-mashup-greece-meets-garifuna"
+        ],
+        "221741": [
+          "https://www.flushingtownhall.org/show-details/global-mashup-hollywood-meets-bollywood"
+        ]
+      }
+    },
+    {
+      "concept": "activity-ai-assisted-programming",
+      "label": "AI-assisted programming",
+      "category": "activity",
+      "visual": "Code editor beside a conversational prompt panel.",
+      "rationale": "Softwaremaking through AI agents; not generic AI literacy or a deployment guarantee.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; future concept is not a live assignment.",
+      "event_ids": [
+        221811
+      ],
+      "evidence_by_event": {
+        "221811": [
+          "Vibe Coding Intensive: Build and Launch a Website, App, or Tool: This four-part workshop teaches “Vibe Coding,” using conversational AI agents to create websites, digital works, apps, games, and custom tools. No previous coding experience is required.",
+          "Tags: Visual Arts, Art, Workshop, Science, Digital Art, Education, Technology, Class, Coding, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "221811": [
+          "https://portal.brooklynspark.com/en/events/view/1415774674/vibe-coding-intensive--build-and-launch-a-website--app--or-tool"
+        ]
+      }
+    },
+    {
+      "concept": "activity-plant-health-care",
+      "label": "Plant health care",
+      "category": "activity",
+      "visual": "Plant specimen and diagnostic observation chart.",
+      "rationale": "Urban horticultural management teaching; exact method and hands-on work require source.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; future concept is not a live assignment.",
+      "event_ids": [
+        221733
+      ],
+      "evidence_by_event": {
+        "221733": [
+          "Plant Health Care: This class offers an in-depth examination of cultural management practices to support plant health and biodiversity in urban gardens.",
+          "Tags: Community, Nature, Science, Education, Gardening, Horticulture, Class, Biodiversity, Urban Gardening, Participatory, Plant Health, Format, Urban Gardens"
+        ]
+      },
+      "source_urls_by_event": {
+        "221733": [
+          "https://www.bbg.org/classes/plant_health_care"
+        ]
+      }
+    },
+    {
+      "concept": "art-bioart",
+      "label": "Bioart exhibition",
+      "category": "craft",
+      "visual": "Original cell-culture pattern in an art frame.",
+      "rationale": "Art explicitly involving biology; exact medium needs artist statement.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; future concept is not a live assignment.",
+      "event_ids": [
+        221670
+      ],
+      "evidence_by_event": {
+        "221670": [
+          "Source Materials: A Bioart Exhibit: A group BioArt exhibition at Flux IV, opening on September 18 with an opening reception.",
+          "Tags: Community, Art, Free, Bio Art, Education, Exhibition, Format, Browsable"
+        ]
+      },
+      "source_urls_by_event": {
+        "221670": [
+          "https://www.eventbrite.com/e/source-materials-a-bioart-exhibit-tickets-1994310773208"
+        ]
+      }
+    },
+    {
+      "concept": "art-dance-photography",
+      "label": "Dance photography",
+      "category": "craft",
+      "visual": "Original movement silhouette inside a photo frame.",
+      "rationale": "Photographs of dance,not live performance; figure study would require3D.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; future concept is not a live assignment.",
+      "event_ids": [
+        221705
+      ],
+      "evidence_by_event": {
+        "221705": [
+          "On Location with Artichoke Dance | Robin Michals: On Location with Artichoke Dance is a solo exhibition by Brooklyn-based photographer Robin Michals. Curated by Pam Wong, the exhibit showcases photographs of Artichoke Dance Company performing the Immersive Performance T",
+          "Tags: Community, Visual Arts, Art, Photography, Dance, Exhibition, Format, Browsable"
+        ]
+      },
+      "source_urls_by_event": {
+        "221705": [
+          "https://gowanusdredgers.org/event/on-location-with-artichoke-dance-robin-michals/2026-09-12/",
+          "https://www.artichokedance.org/events/2026/9/12/photography-retrospective-of-gowanus-performance-tours"
+        ]
+      }
+    },
+    {
+      "concept": "art-platinum-photography",
+      "label": "Platinum photography",
+      "category": "craft",
+      "visual": "Monochrome photographic print and process label.",
+      "rationale": "Exhibition of specified platinum prints; no promised making activity.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; future concept is not a live assignment.",
+      "event_ids": [
+        221727
+      ],
+      "evidence_by_event": {
+        "221727": [
+          "Exhibition Opening: Andrea Modica: Italian Story: Join us on September 12th, 2026 at the Alice Austen House for the opening of Andrea Modica: Italian Story, curated by Victoria Munro. The exhibition presents 39 platinum prints made over more than four decades, tracing Modica’s travels throughout Italy and exploring identity, memory, family, and place.",
+          "Tags: Community, Event Space, Art Gallery, Visual Arts, Art, Photography, Gallery Reception, Exhibition, Cultural Venue, Format, Browsable, Arts Venue"
+        ]
+      },
+      "source_urls_by_event": {
+        "221727": [
+          "https://aliceausten.org/events/exhibition-opening-italian-story/"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-guitar-duo",
+      "label": "Guitar duo",
+      "category": "format",
+      "visual": "Two referenced guitars with distinct shared score.",
+      "rationale": "Actualtwo-guitarlineupmustbeverified,notjustrepertoireoriginallyforduo.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; future concept is not a live assignment.",
+      "event_ids": [
+        221755
+      ],
+      "evidence_by_event": {
+        "221755": [
+          "UWS muse: This diverse performance will include music originally for string ensembles and solo Irish harp, but will predominantly feature some of the most loved repertoire originally for solo and duo guitar. The program spans the Renaissance, Baroque and modern periods.",
+          "Tags: Manhattan, Music, Upper West Side, Classical Music, Neighborhood, Concert, Guitar, Format, Performance, Irish Harp"
+        ]
+      },
+      "source_urls_by_event": {
+        "221755": [
+          "https://www.groupmuse.com/events/16935-uws-muse"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-neo-soul-trio",
+      "label": "Neo-soul trio",
+      "category": "format",
+      "visual": "Three researched instrumental roles.",
+      "rationale": "Current instruments must be verified; genre alone doesnotproveconstruction.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; future concept is not a live assignment.",
+      "event_ids": [
+        221697
+      ],
+      "evidence_by_event": {
+        "221697": [
+          "Harrison Kealy / Zac Hoina Trio: Harrison Kealy is an NYC-based band playing indie rock and neo-soul-inspired originals. Zac Hoina is a versatile musician known for collaborative work and energetic live performances.",
+          "Tags: Music, Rock, Indie, Concert, R&B, Soul Music, Indie Rock, Neo Soul, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "221697": [
+          "https://11thstbar.com/new-york-east-village-11th-st-bar-events"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-saxophone-bass-drums",
+      "label": "Saxophone,bass and drums trio",
+      "category": "format",
+      "visual": "Three referenced instruments in balanced arrangement.",
+      "rationale": "No piano; bass construction and saxrange needcurrentevidence.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; future concept is not a live assignment.",
+      "event_ids": [
+        221791
+      ],
+      "evidence_by_event": {
+        "221791": [
+          "Dennis Mitcheltree Trio - Jazz: Dennis Mitcheltree performs on tenor saxophone with Jesse Crawford on bass and Bill McClellan on drums.",
+          "Tags: Music, Jazz, Concert, Saxophone, Trio, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "221791": [
+          "https://silvana-nyc.com/calendar.php"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-violin-piano-duo",
+      "label": "Violin and piano duo",
+      "category": "format",
+      "visual": "Referenced violin beside keyboard.",
+      "rationale": "Exactlytwoinstrumentalroles,notclassicalpianotrio.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; future concept is not a live assignment.",
+      "event_ids": [
+        221756
+      ],
+      "evidence_by_event": {
+        "221756": [
+          "Violin & Piano Duo at Tawny wine bar and cafe!: A salon concert featuring a violin and piano duo.",
+          "Tags: Community, Music, Classical Music, Concert, Piano, Violin, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "221756": [
+          "https://www.groupmuse.com/events/16936-violin-piano-duo-at-tawny-wine-bar-and-cafe"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-vocal-duo-piano",
+      "label": "Vocal duo with piano",
+      "category": "format",
+      "visual": "Two vocal-score marks and piano keyboard.",
+      "rationale": "Two singers plus pianist,notunaccompaniedduoorchoir.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; future concept is not a live assignment.",
+      "event_ids": [
+        221758
+      ],
+      "evidence_by_event": {
+        "221758": [
+          "Brooklyn Recital Series: A recital featuring soprano, countertenor, and piano in a church setting.",
+          "Tags: Community, Music, Classical Music, Education, Concert, Recital, Vocal Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "221758": [
+          "https://www.groupmuse.com/events/16932-brooklyn-recital-series"
+        ]
+      }
+    },
+    {
+      "concept": "equipment-analog-video-mixer",
+      "label": "Analog video mixer",
+      "category": "equipment",
+      "visual": "Small referenced circuit with composite RCA sockets.",
+      "rationale": "Composite-video signal mixing,notaudio desk; circuitry mustbecheckedbeforeart.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; future concept is not a live assignment.",
+      "event_ids": [
+        221810
+      ],
+      "evidence_by_event": {
+        "221810": [
+          "Solder Your Own Gear: The Glitchy Video Mixer: Participants learn to solder and make a beginner video device. Each participant creates a Dirty Video Mixer to take home for composite video experiments.",
+          "Tags: Art, Workshop, Science, Education, Technology, Electronics, Soldering, Participatory, Video, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "221810": [
+          "https://portal.brooklynspark.com/en/events/view/1415774673/solder-your-own-gear--the-glitchy-video-mixer"
+        ]
+      }
+    },
+    {
+      "concept": "format-architecture-history-talk",
+      "label": "Architecture history talk",
+      "category": "format",
+      "visual": "Historical building drawing beside speech mark.",
+      "rationale": "Audiencelecture,notbuildingvisit ordesignworkshop.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; future concept is not a live assignment.",
+      "event_ids": [
+        221725
+      ],
+      "evidence_by_event": {
+        "221725": [
+          "America-bound: Lin Huiyin & Liang Sicheng: No description available.",
+          "Tags: Community, Architecture, History, Art, Culture, Education, Gathering, Talk, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "221725": [
+          "https://chinainstitute.org/event/america-bound-lin-huiyin-liang-sicheng/"
+        ]
+      }
+    },
+    {
+      "concept": "format-awards-watch-party",
+      "label": "Awards watch party",
+      "category": "format",
+      "visual": "TVscreen with symbolicaward.",
+      "rationale": "Broadcastviewing,not actualceremonyadmission.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; future concept is not a live assignment.",
+      "event_ids": [
+        221682
+      ],
+      "evidence_by_event": {
+        "221682": [
+          "Emmys Watch Party!: Celebrate the biggest night in television at Caveat!",
+          "Tags: Community, Nightlife, Live Show, Watch Party, Television, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "221682": [
+          "https://www.caveat.nyc/events/emmys-2026-09-14"
+        ]
+      }
+    },
+    {
+      "concept": "format-experimental-radio-festival",
+      "label": "Experimental radio festival",
+      "category": "format",
+      "visual": "Broadcastwaves and experimental sound-score page.",
+      "rationale": "Multi-eventradioartfestival; actualactivitysplitneedsprimary.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; future concept is not a live assignment.",
+      "event_ids": [
+        221700
+      ],
+      "evidence_by_event": {
+        "221700": [
+          "Avant Radio Festival: WAVE FARM and WFMU and ARTxFM are teaming up to bring you a weekend focused on the creative and experimental nature of radio.",
+          "Tags: Community, Music, Festival, Education, Format, Social, Experimental Radio"
+        ]
+      },
+      "source_urls_by_event": {
+        "221700": [
+          "https://donyc.com/events/2026/11/13/avant-radio-festival-tickets"
+        ]
+      }
+    },
+    {
+      "concept": "format-herbalism-talk",
+      "label": "Herbalism talk",
+      "category": "format",
+      "visual": "Botanicalreferencepage beside discussion mark.",
+      "rationale": "Teachingabout herbs,nothands-onpreparation orhealthclaimendorsement.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; future concept is not a live assignment.",
+      "event_ids": [
+        221723
+      ],
+      "evidence_by_event": {
+        "221723": [
+          "Introduction to Herbal Aphrodisiacs, Rest and Relaxation - Thursday, November 5th: Meet over a dozen herbs to stimulate desires, invite pleasure, enhance deep sleep, and offer body relaxation. Learn tips, tricks, tonics, and tinctures to support relaxation and decompression.",
+          "Tags: Brooklyn, Workshop, Carroll Gardens, Wellness, Neighborhood, Education, Self Care, Herbalism, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "221723": [
+          "https://remediesherbshop.com/classes-events/introduction-to-herbal-aphrodisiacs-rest-and-relaxation-thursday-november-5th/"
+        ]
+      }
+    },
+    {
+      "concept": "format-improvised-presentation-contest",
+      "label": "Improvised presentation contest",
+      "category": "format",
+      "visual": "Slideprojection and competing scorecards.",
+      "rationale": "Audienceprompted slide-deck competition,not wrestlingorformalresearch.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; future concept is not a live assignment.",
+      "event_ids": [
+        221694
+      ],
+      "evidence_by_event": {
+        "221694": [
+          "Sagematch (Nycf): Four contenders. Four talks. One victor. You decide. Part of the 2026 New York Comedy Festival.",
+          "Tags: Community, Comedy, Sports, Games, Competition, Comedy Show, Audience Participation, Talks, New York Comedy Festival, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "221694": [
+          "https://www.caveat.nyc/events/sagematch-nycf-2026-11-11"
+        ]
+      }
+    },
+    {
+      "concept": "format-jazz-festival",
+      "label": "Jazz festival",
+      "category": "format",
+      "visual": "Festivalprogram and musicalscore.",
+      "rationale": "Multiplejazzacts; lineupandinstrumentsnotpresumed.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; future concept is not a live assignment.",
+      "event_ids": [
+        221806
+      ],
+      "evidence_by_event": {
+        "221806": [
+          "9th Annual Washington Heights Jazz Festival: Lineup and more details will be announced on October 1.",
+          "Tags: Community, Music, Jazz, Festival, Nightlife, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "221806": [
+          "https://www.jazzwahi.org/events/9th-annual-washington-heights-jazz-festival"
+        ]
+      }
+    },
+    {
+      "concept": "format-jazz-vocal-concert",
+      "label": "Vocal jazz concert",
+      "category": "format",
+      "visual": "Stage microphone and jazz phrase.",
+      "rationale": "Vocal focus, not a saxophone-only show or fixed vocal count.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        221805
+      ],
+      "evidence_by_event": {
+        "221805": [
+          "Vocal Series: Angelina Miers: The Vocal Series presents jazz singers in an intimate club setting, followed by a Vocal Jam. The featured performance runs from 7:30pm to 8:30pm; suggested donation is $15.",
+          "Tags: Community, Music, Jazz, Concert, Nightlife, Vocal Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "221805": [
+          "https://www.jazzwahi.org/events/vocal-series-briana-swann-xhm8p-6bkzx-cckac-dw5je-lxwm8-9ej23"
+        ]
+      }
+    },
+    {
+      "concept": "format-rock-tribute-band",
+      "label": "Rock tribute band",
+      "category": "format",
+      "visual": "Rock stage emblem beside a tribute program.",
+      "rationale": "Tribute act, not original artist attendance.",
+      "existing_alternative": "Retain suitable existing catalog art or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        221714
+      ],
+      "evidence_by_event": {
+        "221714": [
+          "Pop Rock of The 80s: Tribute to Cyndi Lauper, Pat Benatar & Lisa Stansfield: We want to welcome you to our musical tribute to the ladies of 80s pop rock featuring some of the biggest hits by Cyndi Lauper, Lisa Stansfield, & Pat Benatar! Emilie Surtees & her live dynamic band will be performing some of your favorite 80s tunes by these legendary artists.",
+          "Tags: Music, Rock, Concert, 80s Music, Tribute Band, Pop Music, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "221714": [
+          "https://www.eventbrite.com/e/pop-rock-of-the-80s-tribute-to-cyndi-lauper-pat-benatar-lisa-stansfield-tickets-1997019931373"
+        ]
+      }
+    },
+    {
+      "concept": "format-science-open-house",
+      "label": "Science open house",
+      "category": "format",
+      "visual": "Open laboratory doorway with simple scientific displays.",
+      "rationale": "Mixed lab tours and demonstrations are explicit; no exact experiment or universal lab access.",
+      "existing_alternative": "Unicode or suitable accepted custom artwork remains available. Prospective study requires source and recognition review before live assignment.",
+      "event_ids": [
+        221671
+      ],
+      "evidence_by_event": {
+        "221671": [
+          "First Thursdays at Genspace: RNA: Monthly open house featuring notable members of the Genspace community, with lightning talks followed by an hour of networking and fun.",
+          "Tags: Community, Science, Free, Education, Networking, Open House, Format, Browsable"
+        ]
+      },
+      "source_urls_by_event": {
+        "221671": [
+          "https://www.eventbrite.com/e/first-thursdays-at-genspace-rna-tickets-1997769410084"
+        ]
+      }
+    },
+    {
+      "concept": "format-string-trio",
+      "label": "String trio",
+      "category": "format",
+      "visual": "Three bowed-string necks over two rounded body sizes.",
+      "rationale": "Three string players is an explicit format distinct from quartet; test simplified trio grouping at small size.",
+      "existing_alternative": "Noto violin covers family but quartet would miscount ensemble.",
+      "event_ids": [
+        221757
+      ],
+      "evidence_by_event": {
+        "221757": [
+          "Sublime Strings on the Hudson - 2 violins and cello: A salon concert featuring a string trio with two violins and cello.",
+          "Tags: Community, Music, Classical Music, Concert, Violin, Viola, Cello, String Trio, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "221757": [
+          "https://www.groupmuse.com/events/16933-sublime-strings-on-the-hudson-2-violins-and-cello",
+          "https://www.groupmuse.com/events/16933-sublime-strings-on-the-hudson-violin-cello-and-viola"
+        ]
+      }
+    },
+    {
+      "concept": "genre-dream-pop",
+      "label": "Dream pop",
+      "category": "genre",
+      "visual": "Soft overlapping musical note and sustained wave.",
+      "rationale": "Explicit genre; recognition remains experimental and no instrument is assumed.",
+      "existing_alternative": "Retain a suitable existing icon or Unicode until the prospective concept passes reference and recognition review.",
+      "event_ids": [
+        221668
+      ],
+      "evidence_by_event": {
+        "221668": [
+          "The Oxford Drive Band: The Oxford Drive Band indie rock dream pop. From atmospheric instrumentation, compelling and poetic expression throughout and the stunning vocals that are filled with soul, The Oxford Drive Band takes us on a journey we happily surrender to.",
+          "Tags: Music, Concert, Other, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "221668": [
+          "https://www.freddysbar.com/events/the-oxford-drive-band-1"
+        ]
+      }
+    },
+    {
+      "concept": "genre-motown",
+      "label": "Motown",
+      "category": "genre",
+      "visual": "Explore a record disk with a bold central music note.",
+      "rationale": "Motown is explicitly named in the title, description or program tags. This is a prospective genre motif requiring recognition tests; it does not establish a particular instrument or an exclusive assignment for mixed bills.",
+      "existing_alternative": "Existing notes or actual featured instrument remain appropriate; custom genre art is exploratory rather than a proven recognition improvement.",
+      "event_ids": [
+        221711
+      ],
+      "evidence_by_event": {
+        "221711": [
+          "The Magic of Motown: The Music of The Supremes, The Temptations, & More!: The event is a musical tribute to the soulful sounds of the 60s, featuring Motown hits by The Temptations, The Supremes, The Four Tops, and more. The performance features Emilie Surtees and her high-energy band.",
+          "Tags: Music, Concert, R&B, Soul Music, Motown, In Person, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "221711": [
+          "https://www.eventbrite.com/e/the-magic-of-motown-the-music-of-the-supremes-the-temptations-more-tickets-1997019492059"
+        ]
+      }
+    },
+    {
+      "concept": "genre-progressive-funk",
+      "label": "Progressive funk",
+      "category": "genre",
+      "visual": "Original angularsyncopated musicalphrase.",
+      "rationale": "Genreconceptrequiresrecognitionstudy; exact equipmentunknown.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; future concept is not a live assignment.",
+      "event_ids": [
+        221792
+      ],
+      "evidence_by_event": {
+        "221792": [
+          "Spaghetti Eastern - Progressive Funk: Sal Cataldi’s project blends acid-jazz guitar instrumentals with acoustic ballads in the Nick Drake tradition.",
+          "Tags: Music, Jazz, Funk, Concert, Instrumental, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "221792": [
+          "https://silvana-nyc.com/calendar.php"
+        ]
+      }
+    },
+    {
+      "category": "genre",
+      "concept": "genre-reggaeton",
+      "existing_alternative": "Noto music notes or fire do not identify the subgenre; existing DJ decks identify equipment but not reggaeton.",
+      "label": "Reggaeton",
+      "rationale": "Explicit reggaeton programming supports a dembow-rhythm motif as an exploratory direction; mixed programs support a genre facet only, and recognition against generic electronic music must be tested.",
+      "visual": "A compact drum-pad grid with a bold alternating four-hit rhythm trail.",
+      "event_ids": [
+        221729
+      ],
+      "evidence_by_event": {
+        "221729": [
+          "Reggaeton Rave | Sep 26 | Brooklyn, NY (21+): The first reggaeton and electronic music festival, born in NYC in 2021.",
+          "Tags: Community, Music, Dance, Festival, Nightlife, Reggaeton, Latin Music, Electronic Music, Club Night, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "221729": [
+          "https://posh.vip/e/reggaeton-rave-brooklyn-ny-21-copy",
+          "https://ra.co/events/2522603"
+        ]
+      }
+    },
+    {
+      "concept": "genre-rock-and-roll",
+      "label": "Rock and roll",
+      "category": "genre",
+      "visual": "A bold paired musical-note motif with a rhythmic arc",
+      "rationale": "Genre explicit; do not invent guitar instrumentation.",
+      "existing_alternative": "Retain the source Unicode until recognizable original artwork is reviewed.",
+      "event_ids": [
+        221794
+      ],
+      "evidence_by_event": {
+        "221794": [
+          "Rock 'n' Roll Johnny band: The band performs high-energy rock ’n’ roll and blues originals and well-known covers.",
+          "Tags: Music, Rock, Concert, Blues, Covers, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "221794": [
+          "https://silvana-nyc.com/calendar.php"
+        ]
+      }
+    },
+    {
+      "concept": "genre-roots-rock",
+      "label": "Roots rock",
+      "category": "genre",
+      "visual": "Referenced guitar with spare concertmotif.",
+      "rationale": "Genericfallbackmayalreadybesufficient; exact instrumentneedsevidence.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; future concept is not a live assignment.",
+      "event_ids": [
+        221793
+      ],
+      "evidence_by_event": {
+        "221793": [
+          "The Dirt Nappers - Roots Rock: No description available.",
+          "Tags: Music, Rock, Concert, Roots Rock, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "221793": [
+          "https://silvana-nyc.com/calendar.php"
+        ]
+      }
+    },
+    {
+      "concept": "genre-soul",
+      "label": "Soul music",
+      "category": "genre",
+      "visual": "A record with a rounded call-and-response wave.",
+      "rationale": "Classic and Northern Soul are explicit repertoire; the motif needs testing against funk and R&B and should not imply live vocals.",
+      "existing_alternative": "DJ decks serve the current activity; no existing icon distinguishes soul repertoire.",
+      "event_ids": [
+        221709
+      ],
+      "evidence_by_event": {
+        "221709": [
+          "Soulful Sounds of the 90s: Tribute to Mary J. Blige, Janet Jackson, & More!: A musical tribute to the ladies of 90s Soul: Mary J. Blige, Janet Jackson, and Toni Braxton, featuring vocalist Emilie Surtees and her live band. The performance includes songs such as Mary's \"I'm Going Down,\" Janet's \"Together Again,\" and Toni's \"Un-Break My Heart.",
+          "Tags: Music, Concert, Soul Music, Toni Braxton, Janet Jackson, Format, Performance, Mary J Blige"
+        ]
+      },
+      "source_urls_by_event": {
+        "221709": [
+          "https://www.eventbrite.com/e/soulful-sounds-of-the-90s-tribute-to-mary-j-blige-janet-jackson-more-tickets-1997593941252"
+        ]
+      }
+    }
+  ],
+  "limitations": "Counts describe this cohort, not population reach. These are grounded prospective studies, not live assignments. Existing artwork may already suffice; exact equipment and genre recognition require further review."
+}

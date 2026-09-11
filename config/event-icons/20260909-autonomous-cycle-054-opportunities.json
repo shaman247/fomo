@@ -1,0 +1,1144 @@
+{
+  "date": "2026-09-11",
+  "scope": "Cycle 054: 100 sequential events 217093–217359, no targeted supplements.",
+  "suggestions": 54,
+  "concept_count": 47,
+  "concepts": [
+    {
+      "concept": "format-performance-festival",
+      "label": "Performance festival",
+      "category": "format",
+      "visual": "Small stage with several separated performance marks",
+      "rationale": "A mixed festival needs no invented single apparatus.",
+      "existing_alternative": "Current fallback or broader accepted icon may suffice; keep this prospective until structural and small-size review passes.",
+      "event_ids": [
+        217295,
+        217299,
+        217328
+      ],
+      "evidence_by_event": {
+        "217295": [
+          "M³ Festival 2026: Mutual Mentorship for Musicians (M³), a visionary and non-hierarchical mentorship initiative created by musicians Jen Shyu and Sara Serpa, presents its 5th annual in-person festival featuring groundbreaking composer-performers in jazz, creative, electronic, singer-songwriter, experimental, and traditional music scenes, and beyond. A livestream will be available free of charge at 7pm on the day of the performance and archived for future viewing.",
+          "Tags: Community, Music, Jazz, Festival, Format, Social"
+        ],
+        "217299": [
+          "O+ Kingston Festival 2026: The 15th Annual O+ Festival Kingston brings together art, music, Word, murals, and wellness programming. The festival takes place October 9–11, 2026.",
+          "Tags: Community, Music, Art, Literature, Wellness, Festival, Outdoor, Format, Social"
+        ],
+        "217328": [
+          "Durations 2026 Festival Pass: DURATIONS Festival returns November 9–15 2026 as a week-long, multi-disciplinary exploration of sound and connection. Now in its fifth iteration, the festival features seven days of music, talks, and audiovisual work.",
+          "Tags: Community, Music, Festival, Electronic Music, Experimental Music, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "217295": [
+          "https://m3musicians.org/2026/07/30/nov-7-m%c2%b3-festival-2026/",
+          "https://roulette.org/event/m3-festival-2026/"
+        ],
+        "217299": [
+          "https://opositivefestival.org/kingston/"
+        ],
+        "217328": [
+          "https://dice.fm/event/6a6136397433b500019a4b20",
+          "https://dice.fm/event/6a80321fdc00340001e1c8dd",
+          "https://dice.fm/event/6a80328ecb563a0001068b6d",
+          "https://dice.fm/event/6a8032cac386c2000122dda7",
+          "https://dice.fm/event/6a803413dd1b1600017dec51",
+          "https://dice.fm/event/6a803cc1d7ee9c000178bcbc",
+          "https://dice.fm/event/6a804046f959a800011e0d61",
+          "https://dice.fm/event/6a804103d7ee9c00015f77b8",
+          "https://dice.fm/event/6a8041e1dd1b160001c3261a",
+          "https://dice.fm/event/6a80441ff959a80001d5f249",
+          "https://dice.fm/event/6a804522fbe83300016f108c",
+          "https://dice.fm/event/6a8045d4dd1b16000178b19c",
+          "https://dice.fm/event/6a8049cdd7ee9c00018d2753",
+          "https://dice.fm/event/6a8049edf959a8000141bf66",
+          "https://dice.fm/event/6a80c15b2fc10a000104a76a",
+          "https://dice.fm/event/l87q9r-durations-2026-festival-pass-9th-nov-public-records-new-york-tickets",
+          "https://link.dice.fm/B0381fb292fc",
+          "https://link.dice.fm/O47e7cd9739f",
+          "https://link.dice.fm/Uf3b609e4a5b",
+          "https://ra.co/events/2493855",
+          "https://ra.co/events/2513935",
+          "https://ra.co/events/2513937",
+          "https://ra.co/events/2513938",
+          "https://ra.co/events/2513939",
+          "https://ra.co/events/2513942",
+          "https://ra.co/events/2513944",
+          "https://ra.co/events/2513947",
+          "https://ra.co/events/2513948",
+          "https://ra.co/events/2513950",
+          "https://ra.co/events/2513954"
+        ]
+      }
+    },
+    {
+      "concept": "format-conservation-talk",
+      "label": "Format conservation talk",
+      "category": "format",
+      "visual": "Wildlife image and speech bubbles",
+      "rationale": "Talk about conservation, not wildlife viewing.",
+      "existing_alternative": "Retain appropriate Unicode or broader accepted icon until recognition and structural review pass.",
+      "event_ids": [
+        217104,
+        217317
+      ],
+      "evidence_by_event": {
+        "217104": [
+          "Climate Week NYC: Benefits of the Urban Forest: Learn all about our Urban Forest here in NYC. Typically we think of a forest outside the context of an urban city b",
+          "Tags: Community, Education, Environment, Outdoor, Gathering, Talk, Climate Week, Format, Urban Forest"
+        ],
+        "217317": [
+          "Earth is Our Home – A Conversation Series: Permaculture and Resiliency are gaining ground as the clear answer to Climate Change. Join Opus 40 for a compelling Conversation Series with Masters in Permaculture, Larry Santoyo & Andrew Faust.",
+          "Tags: Community, Activism, Free, Education, Sustainability, Gathering, Talk, Climate Action, Conversation, Format, Permaculture"
+        ]
+      },
+      "source_urls_by_event": {
+        "217104": [
+          "https://www.queenslibrary.org/event/000543-0726"
+        ],
+        "217317": [
+          "https://opus40.org/event/earth-is-our-home-a-conversation-series/2026-08-21/",
+          "https://opus40.org/event/earth-is-our-home-a-conversation-series/2026-08-28/",
+          "https://opus40.org/event/earth-is-our-home-a-conversation-series/2026-09-04/"
+        ]
+      }
+    },
+    {
+      "concept": "format-live-music-dj-party",
+      "label": "Live music and DJ party",
+      "category": "format",
+      "visual": "Band note motif beside record decks.",
+      "rationale": "Co-primary live ensemble and DJ programming, not DJ-only.",
+      "existing_alternative": "Use a supported accepted icon or broad Unicode while a distinctive study is pending.",
+      "event_ids": [
+        217142,
+        217325
+      ],
+      "evidence_by_event": {
+        "217142": [
+          "Low Intervention: Alien D (live), Deep Glens (live), Bryce Hackford (live), + Tetsuro (DJ): Low Intervention is an experimental music series curated by Annie Garlid, which brings together live sets and DJ sets. This edition features Alien D, Deep Glens, Bryce Hackford, and Tetsuro.",
+          "Tags: Community, Music, DJ, Concert, Nightlife, Experimental Music, Live Music, Sliding Scale, Format, Performance"
+        ],
+        "217325": [
+          "Nate Mercereau - FANTASTIC THOUGHTS with special guests, Carlos Niño [DJ Set]: Complementing an already dizzying catalogue of solo releases, collaborations, and production/writing/instrumentation credits, Fantastic Thoughts is Nate Mercereau’s clarion call. The sound of a thousand dams breaking simultaneously. A hootin’ and hollering...",
+          "Tags: Music, DJ, Concert, Nightlife, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217142": [
+          "https://dadabar.nyc/go/events/6668282?feature_id=1003841&occurrence_id=772711548&popup=1"
+        ],
+        "217325": [
+          "https://dice.fm/event/6a70fc76e2b085000190353d",
+          "https://dice.fm/event/eo6pr6-nate-mercereau-fantastic-thoughts-with-special-guests-carlos-nio-dj-set-22nd-oct-public-records-new-york-tickets"
+        ]
+      }
+    },
+    {
+      "concept": "format-retro-dance-party",
+      "label": "1950s–60s dance party",
+      "category": "format",
+      "visual": "A rounded jukebox arch with one broad record window and two glowing side panels.",
+      "rationale": "A 1960s dance party is explicitly named. A jukebox is an exploratory era motif rather than proof of actual playback equipment; test before adoption.",
+      "existing_alternative": "Notes are broad; jukebox silhouette may identify era better than choosing one of several co-primary genres. Test recognition.",
+      "event_ids": [
+        217331,
+        217338
+      ],
+      "evidence_by_event": {
+        "217331": [
+          "Trapped: Travel back in time to a year of great hits.",
+          "Tags: Music, Dance, Nightlife, Throwback Hits, Club Night, Format, Social"
+        ],
+        "217338": [
+          "Come As You Are ['90S Alternative Garden Party]: Come As You Are party is back in the back yard of Meadows. Join us for all the best alternative 90s jams by the likes of Nirvana, Pearl Jam, Smashing Pumpkins, No Doubt, Blur, Alice In Chains, Nine Inch Nails, Oasis, Bjork, Green Day, Red Hot Chili Peppers, Soundgarden, Garbage, Rage Against The Machine, R.E.M., and more, with a bit of pop thrown in for good measure. Requests welcome. Tickets provide access to The Black Parade - Emo Rave in the main room.",
+          "Tags: Music, Nightlife, Alternative, 90s Music, Club Night, Garden Party, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "217331": [
+          "https://www.filthydiamondbk.com/"
+        ],
+        "217338": [
+          "https://brooklynmonarch.kydlabs.com/e/EV52e9c43b-4975-490b-a080-524f58ceb1ea",
+          "https://brooklynmonarch.kydlabs.com/e/EVc1462d4f-be38-43be-85b7-f3ce6dd321c7"
+        ]
+      }
+    },
+    {
+      "concept": "genre-rock",
+      "category": "genre",
+      "label": "Rock music",
+      "visual": "Strong accented musical note",
+      "rationale": "Electric guitar exists but is not universal evidence; motif requires recognition testing.",
+      "existing_alternative": "Broad fallback does not distinguish this specific supported facet.",
+      "event_ids": [
+        217341,
+        217349
+      ],
+      "evidence_by_event": {
+        "217341": [
+          "GILT: Gilt with All Fell Silent and Ghosts of Hope.",
+          "Tags: Music, Rock, Concert, Live Music, Format, Performance"
+        ],
+        "217349": [
+          "Every Avenue x In Her Own Words: The Perfectly Unfamiliar Tour featuring Every Avenue and In Her Own Words, with Fluorescents and Goalkeeper.",
+          "Tags: Music, Rock, Concert, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217341": [
+          "https://brooklynmonarch.kydlabs.com/e/EV105195e1-6b72-42b8-85eb-02bab59e5bac"
+        ],
+        "217349": [
+          "https://brooklynmonarch.kydlabs.com/e/EV46b372ea-15d9-41aa-b355-f6b3e2815209"
+        ]
+      }
+    },
+    {
+      "concept": "genre-singer-songwriter",
+      "label": "Singer-songwriter",
+      "category": "genre",
+      "visual": "Song manuscript beside a neutral microphone.",
+      "rationale": "Named performers and source context support singer-songwriter programming, but exact instruments may vary.",
+      "existing_alternative": "Use a supported accepted icon or broad Unicode while a distinctive study is pending.",
+      "event_ids": [
+        217307,
+        217327
+      ],
+      "evidence_by_event": {
+        "217307": [
+          "Ali Dineen & Adam Falcon Band: Ali Dineen is a songwriter and composer from Queens known for introspective, emotionally driven songs that foster connection and community. Adam Falcon's music ranges from folk to Rhythm 'n' Blues, and he has opened for artists including Roberta Flack, Ruthie Foster, and Danielle Ponder.",
+          "Tags: Music, Concert, Folk Music, Singer Songwriter, Americana, Vocal Music, Format, Performance"
+        ],
+        "217327": [
+          "Flower Face: Flower Face is the moniker of Montreal’s Ruby McKinnon, a songwriter and visual artist whose catalogue traces her evolution from self-produced beginnings.",
+          "Tags: Music, Indie, Concert, Singer Songwriter, Vocal Music, 21+, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217307": [
+          "https://voicestickets.square.site/"
+        ],
+        "217327": [
+          "https://dice.fm/event/69f4df5e60367c00014019e5",
+          "https://dice.fm/event/92776o-flower-face-5th-nov-public-records-new-york-tickets"
+        ]
+      }
+    },
+    {
+      "concept": "activity-child-playgroup",
+      "label": "Child playgroup",
+      "category": "activity",
+      "visual": "Shared soft toys and play mat.",
+      "rationale": "Unstructured play without a single prescribed activity.",
+      "existing_alternative": "Retain the broad fallback while a grounded distinctive study is pending.",
+      "event_ids": [
+        217108
+      ],
+      "evidence_by_event": {
+        "217108": [
+          "Toddler Learning Center: Please join us for our Toddler Learning Center this season! This is a dual-learning program for families with child",
+          "Tags: Kids, Family, Education, Open Practice, Participatory, Toddlers, Early Learning, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "217108": [
+          "https://www.queenslibrary.org/event/001279-0726"
+        ]
+      }
+    },
+    {
+      "concept": "activity-community-building",
+      "label": "Community-building workshop",
+      "category": "activity",
+      "visual": "Linked people nodes beside a personal planning card.",
+      "rationale": "Participants explore community and plan stronger connections; exact facilitated-group structure is unknown.",
+      "existing_alternative": "Retain accurate Unicode or accepted art until a grounded distinct study passes visual review.",
+      "event_ids": [
+        217311
+      ],
+      "evidence_by_event": {
+        "217311": [
+          "how to build more community into your life: An evening designed to foster connection, bonding + belonging. In this session, participants will review what community is and is not, explore healthy expressions of it, identify what role they want community to play in their life, and use the tools offered to map a plan for building more connection into their lived experience.",
+          "Tags: Community, Workshop, Wellness, Education, Connection, Belonging, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "217311": [
+          "https://www.eventbrite.com/e/a-feels-werkshop-how-to-build-more-community-into-your-life-tickets-1989315540332"
+        ]
+      }
+    },
+    {
+      "concept": "craft-chinese-brush-painting",
+      "label": "Chinese brush painting",
+      "category": "craft",
+      "visual": "Brush beside an ink-wash landscape on paper.",
+      "rationale": "Chinese brush-painting class should not be relabeled as specifically Japanese sumi-e.",
+      "existing_alternative": "Retain suitable Unicode or accepted art until a grounded, distinct study passes visual review.",
+      "event_ids": [
+        217205
+      ],
+      "evidence_by_event": {
+        "217205": [
+          "Chinese Ink Painting Class for Beginners: Series II (In Chinese): Offered in Chinese the second series of classes continue the learning. What you will learn: -Introduction to",
+          "Tags: Art, Education, Class, Chinese Language, Participatory, Beginners, Ink Painting, Format, Chinese Ink Painting"
+        ]
+      },
+      "source_urls_by_event": {
+        "217205": [
+          "https://www.queenslibrary.org/event/001104-0726"
+        ]
+      }
+    },
+    {
+      "concept": "craft-model-instrument",
+      "label": "Decorative miniature instrument craft",
+      "category": "craft",
+      "visual": "Small guitar-shaped craft beside a broad paint mark.",
+      "rationale": "Events explicitly make or decorate instrument-shaped craft; do not imply a playable instrument or music lesson.",
+      "existing_alternative": "Retain suitable Unicode or accepted art until a grounded, distinct study passes visual review.",
+      "event_ids": [
+        217096
+      ],
+      "evidence_by_event": {
+        "217096": [
+          "Hispanic Heritage Month: Maraca Decorating Craft Kit: For children ages 6 and up with caregivers. These wooden maracas are in natural colors and you can color them with",
+          "Tags: Art, Workshop, Family, Crafts, Participatory, Hispanic Heritage, Format, Maracas"
+        ]
+      },
+      "source_urls_by_event": {
+        "217096": [
+          "https://www.queenslibrary.org/event/001097-0726"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-mariachi",
+      "label": "Mariachi ensemble",
+      "category": "format",
+      "visual": "Vihuela, trumpet and violin silhouettes grouped together.",
+      "rationale": "A possible representative ensemble study; exact billed instrumentation must still be verified.",
+      "existing_alternative": "Use appropriate accepted art or broad Unicode until a distinctive study is reviewed.",
+      "event_ids": [
+        217102
+      ],
+      "evidence_by_event": {
+        "217102": [
+          "Hispanic Heritage Month: Celebrate with Mariachi Tapatío de Álvaro Paulino: Founded in 1983 Mariachi Tapatio de Álvaro Paulino under the direction of Puebla-born Mexican Álvaro Paulino is co",
+          "Tags: Community, Music, Concert, Mexican Music, Mariachi, Hispanic Heritage, Mexican Culture, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217102": [
+          "https://www.queenslibrary.org/event/000795-0726"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-strings-percussion",
+      "label": "Strings and percussion ensemble",
+      "category": "format",
+      "visual": "String instruments beside one compact percussion symbol.",
+      "rationale": "FAB5 is explicitly string quartet plus percussion; do not omit the fifth role.",
+      "existing_alternative": "Retain accurate Unicode or accepted art until a grounded distinct study passes visual review.",
+      "event_ids": [
+        217312
+      ],
+      "evidence_by_event": {
+        "217312": [
+          "FAB5 @ Chelsea Piers NYC: FAB5 performs at Pier 60, Chelsea Piers for a special Commonweal event.",
+          "Tags: Community, Music, Classical Music, Concert, String Quartet, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217312": [
+          "https://mostlymodernprojects.org/event/fab5-chelsea-piers-nyc/"
+        ]
+      }
+    },
+    {
+      "concept": "format-awards-ceremony",
+      "label": "Awards ceremony",
+      "category": "format",
+      "visual": "Award medallion above a presentation plinth",
+      "rationale": "Recognition ceremony is not necessarily a charitable gala.",
+      "existing_alternative": "Existing Unicode or broader artwork may remain preferable; keep prospective until recognition and construction review.",
+      "event_ids": [
+        217294
+      ],
+      "evidence_by_event": {
+        "217294": [
+          "M³ Luminary award celebration 2026: Join us live or livestreamed on Friday, Nov. 6 for this year’s M³ Luminary Award Celebration at National Jazz Museum in Harlem honoring saxophonist Jessica Jones. The evening hosted by Kavita Shah will feature tributes to Jessica and M³-commissioned world premieres of music films by Cohort 8 artists.",
+          "Tags: Community, Music, Free, Jazz, Virtual, Awards Ceremony, Benefit, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "217294": [
+          "https://m3musicians.org/2026/07/30/nov-6-m%c2%b3-luminary-award-celebration/"
+        ]
+      }
+    },
+    {
+      "concept": "format-childrens-theater",
+      "label": "Children’s theater",
+      "category": "format",
+      "visual": "Small stage curtain with a storybook emblem.",
+      "rationale": "Live children’s stage storytelling differs from animation or an unconfirmed puppet mechanism.",
+      "existing_alternative": "Use appropriate accepted art or broad Unicode until a distinctive study is reviewed.",
+      "event_ids": [
+        217097
+      ],
+      "evidence_by_event": {
+        "217097": [
+          "Hispanic Heritage Month: The Animals of Latin America with Urban Stages: Join Broadway performer Facundo on a musical adventure traveling across Latin America. We’ll start by doing a craft",
+          "Tags: Community, Music, Nature, Latin America, Family, Hispanic Heritage, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217097": [
+          "https://www.queenslibrary.org/event/001041-0726"
+        ]
+      }
+    },
+    {
+      "concept": "format-choral-orchestral",
+      "label": "Choral and orchestral program",
+      "category": "format",
+      "visual": "Vocal score alongside instrumental lines.",
+      "rationale": "Co-primary vocal and instrumental forces.",
+      "existing_alternative": "Use supported accepted art or the current broad Unicode fallback pending a distinct study.",
+      "event_ids": [
+        217290
+      ],
+      "evidence_by_event": {
+        "217290": [
+          "Joy as Resistance: Queer Urban Orchestra opens its 2026–2027 season with music that meets adversity with the power of joy. The program features Beethoven’s Ninth Symphony, with vocal soloists and choirs performing an inclusive update of Schiller’s Ode to Joy, joined by the Brooklyn Treble Choir and the Empire City Men’s Chorus.",
+          "Tags: Community, Music, Classical Music, LGBTQ, Orchestra, Concert, Vocal Music, Choral, LGBTQ Arts, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217290": [
+          "https://www.queerurbanorchestra.org/current-season/"
+        ]
+      }
+    },
+    {
+      "concept": "format-cultural-celebration",
+      "label": "Cultural celebration",
+      "category": "format",
+      "visual": "Simple festive gathering symbol without a culture-specific costume.",
+      "rationale": "Wakanda celebration combines music history dance art food and vendors; no single activity represents all.",
+      "existing_alternative": "Retain accurate Unicode or accepted art until a grounded distinct study passes visual review.",
+      "event_ids": [
+        217302
+      ],
+      "evidence_by_event": {
+        "217302": [
+          "8th Annual Wakanda Celebration: United We Stand: The Wakanda Celebration is an educational community event celebrating African art, history, music, culture, tradition, values, and African pride. The event features live music, dance performances, masquerade displays, a children’s village, African fashion and textiles, a Makonde art exhibition, food, and vendors. Admission is free.",
+          "Tags: Community, Music, Art, Dance, Free, Family, Community Celebration, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "217302": [
+          "http://www.eventbrite.com/e/8th-annual-wakanda-celebration-united-we-stand-tickets-1345223863789?aff=oddtdtcreator"
+        ]
+      }
+    },
+    {
+      "concept": "format-cultural-parade",
+      "label": "Format cultural parade",
+      "category": "format",
+      "visual": "Procession pennants",
+      "rationale": "Community parade with event-specific culture supplied by text.",
+      "existing_alternative": "Existing broader icon or Unicode may suffice; preserve prospective study until semantic and visual validation.",
+      "event_ids": [
+        217296
+      ],
+      "evidence_by_event": {
+        "217296": [
+          "31st Annual Panamanian Day Parade: The 31st Annual Panamanian Day Parade celebrates and honors leaders, educators, artists, and celebrities who have left a cultural footprint on the nation. A morning ceremony takes place at 9:00am before the parade begins at 10:00am.",
+          "Tags: Community, Festival, Parade, Cultural Festival, Community Celebration, Format, Social, Panamanian Culture"
+        ]
+      },
+      "source_urls_by_event": {
+        "217296": [
+          "https://panamanianparade.org/parade-gala/"
+        ]
+      }
+    },
+    {
+      "concept": "format-documentary-screening",
+      "label": "Documentary screening",
+      "category": "format",
+      "visual": "Film frame with a documentary observation lens.",
+      "rationale": "Nonfiction film format merits a clear marker; exact genre recognition needs critique.",
+      "existing_alternative": "Use a suitable broad Unicode or accepted icon until a distinctive reviewed study is available.",
+      "event_ids": [
+        217358
+      ],
+      "evidence_by_event": {
+        "217358": [
+          "Homes Apart: Korea + Bittersweet Survival: Southeast Asian Refugees in America: A program directed by Christine Choy and J.T. Takagi with a runtime of 86 minutes, presented as part of the Christine Choy Retrospective.",
+          "Tags: Documentary, Film, Screening, Retrospective, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217358": [
+          "https://www.dctvny.org/s/firehouse-film/homes-apart-korea-bittersweet-survival-southeast-asian-refugees-in-america-MC7MAZAPNBC5CHXMWWOWDJRSZKWE"
+        ]
+      }
+    },
+    {
+      "concept": "format-dramatic-story-reading",
+      "label": "Performed literary stories",
+      "category": "format",
+      "visual": "Open prose book with a small theatrical spotlight.",
+      "rationale": "Live performance of fictional stories differs from true personal storytelling and poetry.",
+      "existing_alternative": "Book or theater emoji remains useful; no full staged drama assumed.",
+      "event_ids": [
+        217112
+      ],
+      "evidence_by_event": {
+        "217112": [
+          "Stories Alive: The Hanging Stranger: Hear classic stories performed live! Experience thrilling and chilling tales Fridays in September and October durin",
+          "Tags: Theater, Literature, Family, Classic Stories, Storytelling / Theater, Storytelling / Literature, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217112": [
+          "https://www.queenslibrary.org/event/001251-0726"
+        ]
+      }
+    },
+    {
+      "concept": "format-environmental-studies-talk",
+      "label": "Format environmental studies talk",
+      "category": "format",
+      "visual": "Landscape diagram and speech bubble",
+      "rationale": "Academic discussion not outdoors participation.",
+      "existing_alternative": "Existing broader icon or Unicode may suffice; preserve prospective study until semantic and visual validation.",
+      "event_ids": [
+        217103
+      ],
+      "evidence_by_event": {
+        "217103": [
+          "Climate Week NYC: Plants Animals People: Climate Change in New York City (Virtual): Join us for a talk with York Colleges Dr. Monica Mowery to learn about how climate change is reshaping New York Cit",
+          "Tags: Community, Education, Environment, Climate Change, Virtual, Gathering, Talk, Climate Week, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "217103": [
+          "https://www.queenslibrary.org/event/001360-0726"
+        ]
+      }
+    },
+    {
+      "concept": "format-film-festival",
+      "label": "Film festival",
+      "category": "format",
+      "visual": "Filmstrip beside a festival ticket.",
+      "rationale": "Multi-film festival includes screenings and associated panels and awards; no one film format is uniform.",
+      "existing_alternative": "Film emoji remains suitable pending distinct recognition study.",
+      "event_ids": [
+        217291
+      ],
+      "evidence_by_event": {
+        "217291": [
+          "The 16th Annual International Puerto Rican Heritage Film Festival: The festival runs from November 10–15, 2026, featuring over 100 films and shorts. The program also includes an opening night and award ceremony and a “Cafecito con Actores” panel.",
+          "Tags: Community, Film, Festival, Puerto Rican Heritage, Latino Cinema, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "217291": [
+          "https://iprhff.org/"
+        ]
+      }
+    },
+    {
+      "concept": "format-game-development-conference",
+      "label": "Game-development conference",
+      "category": "format",
+      "visual": "Game controller beside a presenter screen.",
+      "rationale": "Online event combines professional talks panels and showcases rather than hands-on coding.",
+      "existing_alternative": "Retain accurate Unicode or accepted art until a grounded distinct study passes visual review.",
+      "event_ids": [
+        217292
+      ],
+      "evidence_by_event": {
+        "217292": [
+          "GDoCExpo 2026: The 11th annual Game Devs of Color Expo is an online conference featuring talks, panels, interviews, an online Social & Community Demo Night, game showcases, and the GDoCExpo Direct. In-person Watch Parties will also connect local communities, with locations to be announced by participating hosts.",
+          "Tags: Community, Festival, Education, Games, Virtual, Game Development, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "217292": [
+          "https://www.gamedevsofcolor.org/"
+        ]
+      }
+    },
+    {
+      "concept": "format-game-social",
+      "label": "Mixed game social",
+      "category": "format",
+      "visual": "Controller, tile and game card beside a conversation bubble.",
+      "rationale": "Co-primary games must not promise one exact game.",
+      "existing_alternative": "Use a suitable broad Unicode or accepted icon until a distinctive reviewed study is available.",
+      "event_ids": [
+        217209
+      ],
+      "evidence_by_event": {
+        "217209": [
+          "IRL: Teen Time: Teens join us for a time to hang out make new friends and play fun games. A perfect opportunity to meet fellow inco",
+          "Tags: Community, Family, Games, Friendship, Teen Events, Open Practice, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "217209": [
+          "https://www.queenslibrary.org/event/000534-0726"
+        ]
+      }
+    },
+    {
+      "concept": "format-historical-walking-tour",
+      "label": "Historical walking tour",
+      "category": "format",
+      "visual": "Historic facade connected to a short walking route.",
+      "rationale": "Guide narrates estate history during a measured walk; broad building may already suffice.",
+      "existing_alternative": "Use accurate broad Unicode or existing accepted art until a distinctive, structurally reviewed study is ready.",
+      "event_ids": [
+        217270
+      ],
+      "evidence_by_event": {
+        "217270": [
+          "Jane Jacobs vs Robert Moses: Follow the story of two New Yorkers who changed the city forever. Best suited for adults and most kids over",
+          "Tags: Community, History, Tour, Education, Outdoor, Urban Planning, Walking Tour, Urban History, Robert Moses, Jane Jacobs, Format, Outings"
+        ]
+      },
+      "source_urls_by_event": {
+        "217270": [
+          "https://fareharbor.com/boweryboyswalks/items/379758/"
+        ]
+      }
+    },
+    {
+      "concept": "format-immersive-theater",
+      "label": "Immersive theater",
+      "category": "format",
+      "visual": "Open doors around a theatrical mask.",
+      "rationale": "Intimate moving encounters differ from a fixed stage; exact layout unconfirmed.",
+      "existing_alternative": "Use a suitable broad Unicode or accepted icon until a distinctive reviewed study is available.",
+      "event_ids": [
+        217298
+      ],
+      "evidence_by_event": {
+        "217298": [
+          "Becoming Hamlet: An innovative participatory theatre experience that invites audiences to step inside Shakespeare's greatest character. A new adaptation by Damon Horowitz, directed by Sybille Bruun.",
+          "Tags: Theater, Shakespeare, New Play, Adaptation, Participatory Theater, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217298": [
+          "https://www.becominghamlet.com/"
+        ]
+      }
+    },
+    {
+      "concept": "format-mixed-open-mic",
+      "label": "Format mixed open mic",
+      "category": "format",
+      "visual": "Microphone with words and music marks",
+      "rationale": "Open performance across multiple media.",
+      "existing_alternative": "Retain appropriate Unicode or broader accepted icon until recognition and structural review pass.",
+      "event_ids": [
+        217258
+      ],
+      "evidence_by_event": {
+        "217258": [
+          "Far Rockaway Open Mic: Share your poetry and other types of writing perform comedy belt karaoke show your online videos or play your own i",
+          "Tags: Community, Music, Literature, Karaoke, Comedy, Poetry, Nightlife, Open Practice, Participatory, Writing, Open Mic / Music, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "217258": [
+          "https://www.queenslibrary.org/event/001977-0826",
+          "https://www.queenslibrary.org/event/017977-0526"
+        ]
+      }
+    },
+    {
+      "concept": "format-music-series",
+      "label": "Rotating live music series",
+      "category": "format",
+      "visual": "Calendar beside musical notes.",
+      "rationale": "Midtown Music has different performers by date; one dated brass-band blurb cannot define every occurrence.",
+      "existing_alternative": "Retain accurate Unicode or accepted art until a grounded distinct study passes visual review.",
+      "event_ids": [
+        217118
+      ],
+      "evidence_by_event": {
+        "217118": [
+          "Midtown Music: Outdoor pop-up performances around the park from NYC's best. On August 12, Triad Brass — a pop-up party brass band of award-winning musicians — plays songs from the seventies, numbers from the noughties, and something for everyone in between.",
+          "Tags: Manhattan, Midtown, Music, Free, Jazz, Neighborhood, Outdoor, Concert, Brass, Ragtime, Instrumental, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217118": [
+          "https://bryantpark.org/calendar/event/midtown-music-in-bryant-patrk/2026-06-24",
+          "https://bryantpark.org/calendar/event/midtown-music-in-bryant-patrk/2026-08-12",
+          "https://bryantpark.org/calendar/event/midtown-music-in-bryant-patrk/2026-08-19",
+          "https://bryantpark.org/calendar/event/midtown-music-in-bryant-patrk/2026-08-26",
+          "https://bryantpark.org/calendar/event/midtown-music-in-bryant-patrk/2026-09-02",
+          "https://bryantpark.org/calendar/event/midtown-music-in-bryant-patrk/2026-09-09",
+          "https://bryantpark.org/calendar/event/midtown-music-in-bryant-patrk/2026-09-16"
+        ]
+      }
+    },
+    {
+      "category": "format",
+      "concept": "format-orchestra",
+      "existing_alternative": "Noto violin falsely narrows a mixed orchestra; generic score lacks ensemble direction.",
+      "label": "Orchestra",
+      "rationale": "Conductor-and-score imagery represents the full orchestra without privileging one string or brass section; recognition must distinguish conducting from music lessons.",
+      "visual": "A conductor baton over an open music stand with one broad shared musical arc.",
+      "event_ids": [
+        217129
+      ],
+      "evidence_by_event": {
+        "217129": [
+          "American Symphony Orchestra: 25th Anniversary of September 11th: American Symphony Orchestra performs a memorial concert on the 25th anniversary of September 11th. While serving as an occasion for remembrance and reflection, the evening’s musical program also celebrates the enduring strength of the human spirit.",
+          "Tags: Community, Music, Memorial, Free, Classical Music, Orchestra, Concert, Virtual, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217129": [
+          "https://bryantpark.org/calendar/event/anniversary-performance/2026-09-11"
+        ]
+      }
+    },
+    {
+      "concept": "format-singer-songwriter-show",
+      "label": "Format singer songwriter show",
+      "category": "format",
+      "visual": "Voice and original-song manuscript",
+      "rationale": "Performance rather than songwriting participation.",
+      "existing_alternative": "Existing broader icon or Unicode may suffice; preserve prospective study until semantic and visual validation.",
+      "event_ids": [
+        217324
+      ],
+      "evidence_by_event": {
+        "217324": [
+          "Jens Lekman - Solo Show: Make a reservation before your show: http://bit.ly/4loDjTg. Adjacent to The Sound Room, The Atrium at Public Records is a plant-based restaurant + cocktail bar serving a globally-inspired collection of dishes, operating Wed–Sat 6–11 pm and Sat–Sun 11–3 pm.",
+          "Tags: Music, Concert, Solo Performance, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217324": [
+          "https://dice.fm/event/6a7637af7c6c260001f186d9",
+          "https://dice.fm/event/6a7de0870d0dd000018a48a7",
+          "https://dice.fm/event/dkd3bv-jens-lekman-solo-show-13th-oct-public-records-new-york-tickets",
+          "https://link.dice.fm/le458b3a588c"
+        ]
+      }
+    },
+    {
+      "concept": "format-surrealist-ball",
+      "label": "Surrealist ball",
+      "category": "format",
+      "visual": "Festive mask beside a mirror with an impossible reflection.",
+      "rationale": "Annual ball explicitly combines dream attire, art installations and performances; no universal icon is established.",
+      "existing_alternative": "Retain accurate Unicode or accepted art until a grounded distinct study passes visual review.",
+      "event_ids": [
+        217143
+      ],
+      "evidence_by_event": {
+        "217143": [
+          "Dada Annual Surrealist Ball: Welcome to DADA's annual surrealist ball. This year's celebration marks the 3rd anniversary of DADA in Ridgewood. You are cordially invited to an evening where reality bends, a Surrealist Ball of masks, mirrors, and dreams. Dream-inspired festive attire is recommended. The evening includes champagne and caviar service, with performances, live music, art installations, and DJs.",
+          "Tags: Music, Theater, Art, Party, Performance Art, DJ, Nightlife, Surrealism, Live Music, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "217143": [
+          "https://dadabar.nyc/go/events/6654901?feature_id=1003841&occurrence_id=771037241&popup=1"
+        ]
+      }
+    },
+    {
+      "concept": "format-variety-show",
+      "label": "Variety show",
+      "category": "format",
+      "visual": "Several contrasting stage symbols.",
+      "rationale": "Mixed acts with no single dominant discipline.",
+      "existing_alternative": "Use supported accepted art or the current broad Unicode fallback pending a distinct study.",
+      "event_ids": [
+        217107
+      ],
+      "evidence_by_event": {
+        "217107": [
+          "Senior Theater Acting Repertory Performance: Join the Senior Theater Acting Repertory for an hour of entertainment! STAR will perform a series of short comedic",
+          "Tags: Community, Theater, Comedy, Seniors, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217107": [
+          "https://www.queenslibrary.org/event/001353-0726"
+        ]
+      }
+    },
+    {
+      "concept": "format-writing-critique",
+      "label": "Format writing critique",
+      "category": "format",
+      "visual": "Manuscript and two feedback bubbles",
+      "rationale": "Participant written-work feedback distinct from book clubs.",
+      "existing_alternative": "Existing broader icon or Unicode may suffice; preserve prospective study until semantic and visual validation.",
+      "event_ids": [
+        217255
+      ],
+      "evidence_by_event": {
+        "217255": [
+          "Write Club: The first rule of Write Club is don’t talk about writing - just write!Write Club is a circle of people who",
+          "Tags: Community, Literature, Creative Writing, Seniors, Open Practice, Participatory, Adults, Writing, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "217255": [
+          "https://www.queenslibrary.org/event/005810-1025"
+        ]
+      }
+    },
+    {
+      "concept": "game-chess",
+      "label": "Chess",
+      "category": "activity",
+      "visual": "Knight and pawn on a small checkerboard",
+      "rationale": "Explicit reviewed activity; requires distinct small-scale recognition.",
+      "existing_alternative": "Broad source fallback retained; no narrower accepted custom fits.",
+      "event_ids": [
+        217329
+      ],
+      "evidence_by_event": {
+        "217329": [
+          "Chess Club & Live Jazz: Play chess and enjoy live music by different artists each week.",
+          "Tags: Music, Games, Game, Live Music, Chess, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "217329": [
+          "https://www.filthydiamondbk.com/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-afrobeat",
+      "label": "Afrobeat",
+      "category": "genre",
+      "visual": "A bold circular groove with three staggered beat blocks and one sustained musical note.",
+      "rationale": "The event explicitly cites West African Afrobeat; repeated interlocking rhythm is a design direction, not a proven genre symbol. Keep distinct from Afrobeats.",
+      "existing_alternative": "Generic drum implies an instrument; geography or nationality cannot identify this genre.",
+      "event_ids": [
+        217134
+      ],
+      "evidence_by_event": {
+        "217134": [
+          "Palava!: Led by drummer Greg Gonzalez, Palava! blends classic Afrobeat with rock, jazz and Afro-Cuban sounds.",
+          "Tags: Music, World Music, Jazz, Concert, Afrobeats, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217134": [
+          "https://radegasthall.com/events-2/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-bass-music",
+      "label": "Bass music",
+      "category": "genre",
+      "visual": "Low-frequency musical wave motif.",
+      "rationale": "Broad bass-music billing; visual must avoid electric-bass instrument confusion.",
+      "existing_alternative": "Existing broad fallback remains usable; proposed motif needs primary research and small-size review.",
+      "event_ids": [
+        217350
+      ],
+      "evidence_by_event": {
+        "217350": [
+          "Seth David’s R&Bass Tour: Closed Sessions Presents Seth David, Superave, AG, and BADTRIP? B2B Subsacred.",
+          "Tags: Music, Concert, Nightlife, Format, Performance, R Bass"
+        ]
+      },
+      "source_urls_by_event": {
+        "217350": [
+          "https://brooklynmonarch.kydlabs.com/e/EV2985deb9-2450-4417-a147-00b8ea98e563"
+        ]
+      }
+    },
+    {
+      "concept": "genre-exotica",
+      "label": "Exotica-inspired music",
+      "category": "genre",
+      "visual": "Explore a soft tropical rhythmic motif without asserting instrumentation.",
+      "rationale": "Xotica Hour evokes tropical beach culture and jazz-fusion soundtracks; genre identity still needs exact program confirmation.",
+      "existing_alternative": "Retain accurate Unicode or accepted art until a grounded distinct study passes visual review.",
+      "event_ids": [
+        217135
+      ],
+      "evidence_by_event": {
+        "217135": [
+          "The Frank LoCrasto Xotica Hour: Frank LoCrasto’s project draws on tropical beach culture and jazz-fusion soundtracks, featuring the Brooklyn-based composer, arranger and keyboardist.",
+          "Tags: Music, Jazz, Concert, Jazz Fusion, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217135": [
+          "https://radegasthall.com/events-2/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-funk",
+      "label": "Funk",
+      "category": "genre",
+      "visual": "Explore a bent note over four offset bass-pulse blocks.",
+      "rationale": "Funk is explicitly named in the title, description or program tags. This is a prospective genre motif requiring recognition tests; it does not establish a particular instrument or an exclusive assignment for mixed bills.",
+      "existing_alternative": "Existing notes or actual featured instrument remain appropriate; custom genre art is exploratory rather than a proven recognition improvement.",
+      "event_ids": [
+        217334
+      ],
+      "evidence_by_event": {
+        "217334": [
+          "The Basil: Live instrumental music featuring soul, funk, and R&B, held every second Saturday.",
+          "Tags: Music, Funk, Concert, Nightlife, R&B, Soul Music, Instrumental, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217334": [
+          "https://www.filthydiamondbk.com/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-jazz-fusion",
+      "label": "Jazz fusion",
+      "category": "genre",
+      "visual": "Explore interlocking improvisational note and electric waveform; recognition unproven.",
+      "rationale": "Explicit genre blend merits exploration without inventing an instrument roster.",
+      "existing_alternative": "Generic music notes omit fusion; a single jazz instrument overstates instrumentation.",
+      "event_ids": [
+        217135
+      ],
+      "evidence_by_event": {
+        "217135": [
+          "The Frank LoCrasto Xotica Hour: Frank LoCrasto’s project draws on tropical beach culture and jazz-fusion soundtracks, featuring the Brooklyn-based composer, arranger and keyboardist.",
+          "Tags: Music, Jazz, Concert, Jazz Fusion, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217135": [
+          "https://radegasthall.com/events-2/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-metal",
+      "label": "Genre metal",
+      "category": "genre",
+      "visual": "Heavy guitar amplifier study",
+      "rationale": "Metal style not established by specific instrument alone.",
+      "existing_alternative": "Existing broader icon or Unicode may suffice; preserve prospective study until semantic and visual validation.",
+      "event_ids": [
+        217351
+      ],
+      "evidence_by_event": {
+        "217351": [
+          "Archgoat: The event features Stress Angel and Malghast.",
+          "Tags: Music, Rock, Concert, Heavy Metal, Metal, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217351": [
+          "https://brooklynmonarch.kydlabs.com/e/EVeef1c9e3-5f9d-4870-984a-a1f6375bbf18"
+        ]
+      }
+    },
+    {
+      "concept": "genre-punk-rock",
+      "label": "Punk rock",
+      "category": "genre",
+      "visual": "Explore a jagged torn-paper musical note with one broad safety-pin accent.",
+      "rationale": "Explicit punk programming supports genre exploration; visual convention needs recognition testing and does not assert performer costume or instrument.",
+      "existing_alternative": "Noto rock-hand/guitar cover broader rock; no custom punk symbol.",
+      "event_ids": [
+        217347
+      ],
+      "evidence_by_event": {
+        "217347": [
+          "Authority Zero - Apocalyptour 2026: Authority Zero - Apocalyptour 2026 with Special Guests Counterpunch.",
+          "Tags: Music, Rock, Concert, Punk Rock, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217347": [
+          "https://brooklynmonarch.kydlabs.com/e/EV1e60fe70-c513-4b58-aa92-b6b60e8c3875"
+        ]
+      }
+    },
+    {
+      "concept": "genre-reggae",
+      "label": "Reggae",
+      "category": "genre",
+      "visual": "Explore two offset chord blocks over one sustained bass curve.",
+      "rationale": "Hector Roots Lewis concert explicitly carries reggae context; do not substitute one stereotyped instrument or country symbol.",
+      "existing_alternative": "Existing dancer remains reasonable; abstract genre motifs require recognition testing and should not rely on cultural stereotypes.",
+      "event_ids": [
+        217132
+      ],
+      "evidence_by_event": {
+        "217132": [
+          "Hector Roots Lewis and The Roots Kru Family (of Chronixx, and “Bob Marley: One Love”, the movie): Hector Lewis is a Jamaican artist and actor whose love for the arts and music began in his hometown parish of St. Catherine, Jamaica.",
+          "Tags: Music, Concert, Reggae, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217132": [
+          "https://radegasthall.com/events-2/"
+        ]
+      }
+    },
+    {
+      "category": "genre",
+      "concept": "genre-rnb",
+      "existing_alternative": "Noto microphone shows vocals but not genre; avoid assuming saxophone or other instruments.",
+      "label": "R&B",
+      "rationale": "R&B is explicit; exploratory smooth vocal motif is not a proven genre symbol and must be tested.",
+      "visual": "Explore a microphone paired with a single smooth looping sound-wave ribbon.",
+      "event_ids": [
+        217334
+      ],
+      "evidence_by_event": {
+        "217334": [
+          "The Basil: Live instrumental music featuring soul, funk, and R&B, held every second Saturday.",
+          "Tags: Music, Funk, Concert, Nightlife, R&B, Soul Music, Instrumental, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217334": [
+          "https://www.filthydiamondbk.com/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-soul",
+      "label": "Soul music",
+      "category": "genre",
+      "visual": "A record with a rounded call-and-response wave.",
+      "rationale": "Classic and Northern Soul are explicit repertoire; the motif needs testing against funk and R&B and should not imply live vocals.",
+      "existing_alternative": "DJ decks serve the current activity; no existing icon distinguishes soul repertoire.",
+      "event_ids": [
+        217334
+      ],
+      "evidence_by_event": {
+        "217334": [
+          "The Basil: Live instrumental music featuring soul, funk, and R&B, held every second Saturday.",
+          "Tags: Music, Funk, Concert, Nightlife, R&B, Soul Music, Instrumental, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217334": [
+          "https://www.filthydiamondbk.com/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-thrash-metal",
+      "label": "Thrash metal",
+      "category": "genre",
+      "visual": "Explore sharp rhythmic strokes beside a fast musical pulse.",
+      "rationale": "Galactic Thrash Metal Invasion names this specific genre; abstraction requires recognition testing.",
+      "existing_alternative": "Retain accurate Unicode or accepted art until a grounded distinct study passes visual review.",
+      "event_ids": [
+        217346
+      ],
+      "evidence_by_event": {
+        "217346": [
+          "Fullminator, Coffin Hex, Finix, Exogeny: Finix Presents Galactic Thrash Metal Invasion with Fullminator, Coffin Hex, Finix, and Exogeny.",
+          "Tags: Music, Rock, Concert, Heavy Metal, Metal, Thrash Metal, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217346": [
+          "https://brooklynmonarch.kydlabs.com/e/EV6efa9187-5c3a-48c8-9231-18f7e1416acf"
+        ]
+      }
+    },
+    {
+      "concept": "instrument-dizi",
+      "label": "Dizi",
+      "category": "instrument",
+      "visual": "Transverse bamboo flute with finger holes and distinct membrane opening.",
+      "rationale": "Current source names dizi/xiao; they must remain separate instrument concepts.",
+      "existing_alternative": "Retain accurate Unicode or accepted art until a grounded distinct study passes visual review.",
+      "event_ids": [
+        217094
+      ],
+      "evidence_by_event": {
+        "217094": [
+          "Culture Bridge: Under the Same Moon-Music Inspired by the Ancient Silk Road: Celebrating the Mid-Autumn Festival and inspired by moon traditions from China and the Arab world this cross-cultur",
+          "Tags: Community, Music, Culture, World Music, Concert, Silk Road, Culture Bridge, Format, Performance, Mid Autumn Festival"
+        ]
+      },
+      "source_urls_by_event": {
+        "217094": [
+          "https://www.queenslibrary.org/event/001317-0726"
+        ]
+      }
+    },
+    {
+      "concept": "instrument-pipa",
+      "label": "Pipa",
+      "category": "instrument",
+      "visual": "Pear-shaped plucked lute with four strings and fretted neck.",
+      "rationale": "Current Ba Ban Silk Road program explicitly features pipa; structural study needed before art.",
+      "existing_alternative": "Retain accurate Unicode or accepted art until a grounded distinct study passes visual review.",
+      "event_ids": [
+        217094
+      ],
+      "evidence_by_event": {
+        "217094": [
+          "Culture Bridge: Under the Same Moon-Music Inspired by the Ancient Silk Road: Celebrating the Mid-Autumn Festival and inspired by moon traditions from China and the Arab world this cross-cultur",
+          "Tags: Community, Music, Culture, World Music, Concert, Silk Road, Culture Bridge, Format, Performance, Mid Autumn Festival"
+        ]
+      },
+      "source_urls_by_event": {
+        "217094": [
+          "https://www.queenslibrary.org/event/001317-0726"
+        ]
+      }
+    },
+    {
+      "concept": "instrument-xiao",
+      "label": "Xiao",
+      "category": "instrument",
+      "visual": "Long end-blown bamboo flute with simple finger holes.",
+      "rationale": "Current source names dizi/xiao; end-blown geometry differs from transverse dizi.",
+      "existing_alternative": "Retain accurate Unicode or accepted art until a grounded distinct study passes visual review.",
+      "event_ids": [
+        217094
+      ],
+      "evidence_by_event": {
+        "217094": [
+          "Culture Bridge: Under the Same Moon-Music Inspired by the Ancient Silk Road: Celebrating the Mid-Autumn Festival and inspired by moon traditions from China and the Arab world this cross-cultur",
+          "Tags: Community, Music, Culture, World Music, Concert, Silk Road, Culture Bridge, Format, Performance, Mid Autumn Festival"
+        ]
+      },
+      "source_urls_by_event": {
+        "217094": [
+          "https://www.queenslibrary.org/event/001317-0726"
+        ]
+      }
+    }
+  ],
+  "limitations": "Counts describe this cohort, not population reach. These are grounded prospective studies, not live assignments. Existing artwork may already suffice; exact equipment and genre recognition require further review."
+}

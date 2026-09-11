@@ -35,7 +35,7 @@ from collections import defaultdict
 from urllib.parse import urlparse
 
 from db import create_connection
-from merger import normalize_name_for_dedup, are_names_similar
+from merger import normalize_name_for_dedup, are_names_similar, _merge_occurrences_into_event
 
 
 def find_duplicates(cursor):
@@ -334,13 +334,16 @@ def merge_pair(cursor, keep_id, delete_id):
     Does NOT touch scalar fields (name, description, emoji, etc.) on keep_id —
     update those separately via apply_field_overrides if needed.
 
-    Dedupes occurrences on the kept event after merge.
+    Reconciles occurrences using the crawler's specificity rules, preserving
+    distinct end dates and filling missing end times. Conflicting known end
+    times retain the keeper's value and require source-verified review.
     """
     cursor.execute("""
-        INSERT IGNORE INTO event_occurrences (event_id, start_date, start_time, end_date, end_time)
-        SELECT %s, start_date, start_time, end_date, end_time
+        SELECT start_date, start_time, end_date, end_time, sort_order
         FROM event_occurrences WHERE event_id = %s
-    """, (keep_id, delete_id))
+        ORDER BY sort_order, id
+    """, (delete_id,))
+    _merge_occurrences_into_event(cursor, keep_id, cursor.fetchall())
     cursor.execute("""
         INSERT INTO event_urls (event_id, url)
         SELECT %s, eu_src.url FROM event_urls eu_src
@@ -380,6 +383,8 @@ def merge_pair(cursor, keep_id, delete_id):
         ON o1.event_id = o2.event_id
            AND o1.start_date = o2.start_date
            AND COALESCE(o1.start_time, '') = COALESCE(o2.start_time, '')
+           AND o1.end_date <=> o2.end_date
+           AND COALESCE(o1.end_time, '') = COALESCE(o2.end_time, '')
            AND o1.id > o2.id
         WHERE o1.event_id = %s
     """, (keep_id,))

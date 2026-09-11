@@ -1,0 +1,1152 @@
+{
+  "date": "2026-09-10",
+  "scope": "Cycle 036: 100 sequential events 209396–209961, no targeted supplements.",
+  "suggestions": 53,
+  "concept_count": 49,
+  "concepts": [
+    {
+      "concept": "format-dream-studies",
+      "label": "Dream studies",
+      "category": "format",
+      "visual": "Dream cloud above a research notebook.",
+      "rationale": "Multidisciplinary dream discussion without making therapeutic or scientific-validity claims.",
+      "existing_alternative": "Use appropriate accepted art or broad Unicode until a distinctive study is reviewed.",
+      "event_ids": [
+        209955,
+        209956,
+        209957
+      ],
+      "evidence_by_event": {
+        "209955": [
+          "Dream Symposium 2026: \"This Jungian Life\" with Lisa Marchiano and Deborah Stewart: The Dream Mapping Project and Dream Library Foundation present Dream Symposium 2026: In Somnis Veritas, exploring truth in today’s algorithmic landscape.",
+          "Tags: Community, Art, Education, Discussion, Gathering, Talk, Dreams, Format"
+        ],
+        "209956": [
+          "Dream Symposium 2026: Weird Studies with Phil Ford and J.F. Martel: The Dream Mapping Project and Dream Library Foundation present Dream Symposium 2026: In Somnis Veritas, exploring truth in today’s algorithmic landscape.",
+          "Tags: Community, Art, Education, Discussion, Gathering, Talk, Dreams, Format"
+        ],
+        "209957": [
+          "Dream Symposium 2026: \"When Animals Dream\" with David Peña-Guzmán & Dr. Kelly Bulkeley, with Live Performance by Yuki Kawahisa: A Dream Symposium 2026 program featuring David Peña-Guzmán, Dr. Kelly Bulkeley, and a live performance by Yuki Kawahisa.",
+          "Tags: Community, Art, Education, Gathering, Talk, Dreams, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "209955": [
+          "https://www.bklynlibrary.org/calendar/dream-symposium-2026-library-for-arts-culture-20260925-0700pm"
+        ],
+        "209956": [
+          "https://www.bklynlibrary.org/calendar/dream-symposium-2026-library-for-arts-culture-20260926-0700pm"
+        ],
+        "209957": [
+          "https://www.bklynlibrary.org/calendar/dream-symposium-2026-when-library-for-arts-culture-20260927-0400pm"
+        ]
+      }
+    },
+    {
+      "concept": "format-album-release",
+      "label": "Album release show",
+      "category": "format",
+      "visual": "Record emerging from a sleeve with a small new-release burst.",
+      "rationale": "Explicit celebration of a newly released recording.",
+      "existing_alternative": "Record Unicode already covers the object.",
+      "event_ids": [
+        209807,
+        209812
+      ],
+      "evidence_by_event": {
+        "209807": [
+          "Boycott Daylight (EP Release), Aster, Underground Sewer Cult: Boycott Daylight is a Brooklyn based indie rock band celebrating the release of their forthcoming EP. Inspired by the likes of Weezer, R.E.M, and Death Cab for a Cutie, Boycott Daylight weaves together atmospheric soundscapes and hooky songwriting.",
+          "Tags: Music, Rock, Indie, Concert, Indie Rock, EP Release, Live Music, Format, Performance"
+        ],
+        "209812": [
+          "Lia Menaker (Album Release), Addi McDaniel, Ari Weissberger: McDaniel - \"a dynamo with a brass-plated voice\" (LA Times) and Ariel Weissberger - a multi-instrumentalist and Board Certified Music Therapist, have a special musical partnership. Collectively they’ve played National Sawdust, The Apollo, BAM Café, Joe’s Pu...",
+          "Tags: Music, Concert, Singer Songwriter, Vocal Music, Album Release, Live Music, 21+, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "209807": [
+          "https://dice.fm/event/2wqb87-boycott-daylight-ep-release-aster-underground-sewer-cult-10th-sep-sleepwalk-new-york-city-tickets",
+          "https://dice.fm/event/6a70f774b3e31c00017d04f0"
+        ],
+        "209812": [
+          "https://dice.fm/event/6a44081ebe8c7a0001fb8d6f",
+          "https://dice.fm/event/ry8weq-lia-menaker-album-release-addi-mcdaniel-ari-weissberger-5th-oct-sleepwalk-new-york-city-tickets",
+          "https://dice.fm/event/ry8weq-lia-menaker-album-release-sir-richard-netwon-addi-mcdaniel-ari-weissberger-5th-oct-sleepwalk-new-york-city-tickets"
+        ]
+      }
+    },
+    {
+      "concept": "genre-indie-pop",
+      "category": "genre",
+      "label": "Indie pop",
+      "visual": "Explore a record with a single irregular star-shaped musical note.",
+      "rationale": "Explicit indie-pop repertoire merits a genre idea without instrument assumptions.",
+      "existing_alternative": "Generic music notes remain safer; proposed motif is unproven and needs recognition testing.",
+      "event_ids": [
+        209808,
+        209809
+      ],
+      "evidence_by_event": {
+        "209808": [
+          "jadeworm (Single Release), Toobin, Hazzard: Hazzard is the New York-based indie pop project of drummer and producer Graham Hazzard. Drawing on the optimistic nostalgia of 2010’s pop auteurs like Toro Y Moi, Troye Sivan, Little Dragon, and Tame Impala.",
+          "Tags: Music, Rock, Concert, Nightlife, Indie Pop, Single Release, Live Music, Format, Performance"
+        ],
+        "209809": [
+          "Pastel Hell, Kristin Flammio & The Pretty Bitchin, Weird Magazines: Pastel Hell is an experimental indie-pop project, with influences ranging from Orange Juice to Elliott Smith. Songs are lyric-forward and combine electronic music with freak-folk and post-punk. Kristin Flammio & The Pretty Bitchin are a Brooklyn-based 4-piece.",
+          "Tags: Music, Rock, Experimental, Concert, Nightlife, Post Punk, Indie Pop, Punk Rock, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "209808": [
+          "https://dice.fm/event/6a70f4f38667bd0001437e99",
+          "https://dice.fm/event/ww9geg-jadeworm-single-release-toobin-hazzard-18th-sep-sleepwalk-new-york-city-tickets"
+        ],
+        "209809": [
+          "https://dice.fm/event/53mqpy-pastel-hell-kristin-flammio-the-pretty-bitchin-weird-magazines-23rd-sep-sleepwalk-new-york-city-tickets",
+          "https://dice.fm/event/6a6a4a4fda6429000160e7a1"
+        ]
+      }
+    },
+    {
+      "concept": "activity-brand-naming",
+      "label": "Brand naming",
+      "category": "activity",
+      "visual": "Blank name card with two idea bubbles.",
+      "rationale": "Professional naming practice without promising logo-design instruction.",
+      "existing_alternative": "Use appropriate accepted art or broad Unicode until a distinctive study is reviewed.",
+      "event_ids": [
+        209775
+      ],
+      "evidence_by_event": {
+        "209775": [
+          "The Business of Naming: A conference for people who make a living making names. From creating community to staying creative (and competitive) to running the business of it all, The Business of Naming is where namers find what it takes to get ahead. A packed day of talks, panels, and quality time alongside the best and brightest in naming.",
+          "Tags: Community, Education, Business, Professional Development, Gathering, Talk, Conference, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "209775": [
+          "https://www.eventbrite.com/e/the-business-of-naming-tickets-1986640382864?aff=ebdssbcitybrowse"
+        ]
+      }
+    },
+    {
+      "concept": "activity-creative-writing",
+      "label": "Creative writing",
+      "category": "activity",
+      "visual": "Pencil beside a page with small branching idea marks.",
+      "rationale": "Prompt-based mixed writing differs from genre-specific instruction.",
+      "existing_alternative": "Writing hand already suits broad scope; avoid duplicating screenplay/poetry icons.",
+      "event_ids": [
+        209720
+      ],
+      "evidence_by_event": {
+        "209720": [
+          "Q&T Community Summer Session: Q&T Community hosts twice-monthly hybrid writing sessions for LGBTQ+ neighbors, held virtually on Zoom and in person at Word Up Community Bookshop. The sessions offer an opportunity to connect with other writers and neighbors, with light refreshments provided.",
+          "Tags: Community, Literature, Education, Discussion Group, Gathering, Writing Group, LGBTQ Community, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "209720": [
+          "https://wordupbooks.com/event/2026-08-10/qt-community-summer-session",
+          "https://wordupbooks.com/event/2026-08-17/qt-community-summer-session",
+          "https://wordupbooks.com/event/2026-08-24/qt-community-summer-session",
+          "https://wordupbooks.com/event/2026-08-31/qt-community-summer-session",
+          "https://wordupbooks.com/event/2026-09-07/qt-community-summer-session"
+        ]
+      }
+    },
+    {
+      "concept": "activity-museum-sketching",
+      "label": "Museum sketching",
+      "category": "activity",
+      "visual": "Sketchbook and pencil beside a gallery frame.",
+      "rationale": "Participatory observation across museum collections is broader than figure or still-life drawing.",
+      "existing_alternative": "Use appropriate accepted art or broad Unicode until a distinctive study is reviewed.",
+      "event_ids": [
+        209675
+      ],
+      "evidence_by_event": {
+        "209675": [
+          "Drop-in Sketching in the Galleries: Experience Cooper Hewitt’s collection and exhibitions through drawing in the galleries of the Design Across Time exhibition. Drawing prompts, seating, and materials will be provided.",
+          "Tags: Visual Arts, Art, Free, Education, Sketching, Open Practice, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "209675": [
+          "https://www.cooperhewitt.org/event/drop-in-sketching-in-the-galleries-08-14-2026/",
+          "https://www.cooperhewitt.org/event/drop-in-sketching-in-the-galleries-09-11-2026/"
+        ]
+      }
+    },
+    {
+      "concept": "activity-sports-coaching",
+      "label": "Sports coaching",
+      "category": "activity",
+      "visual": "Whistle beside a simple tactics board.",
+      "rationale": "Coaching and volunteering differ from competitive participation.",
+      "existing_alternative": "Use appropriate accepted art or broad Unicode until a distinctive study is reviewed.",
+      "event_ids": [
+        209736
+      ],
+      "evidence_by_event": {
+        "209736": [
+          "Volunteer Assistant Coach for Youth Soccer – Sundays in Sunset Park Brooklyn: 06 United Football Club is seeking volunteer assistant coaches for its youth soccer organization. No prior experience is required, training will be provided, and applicants should be committed to helping youth develop fundamental team-sport skills and providing leadership and guidance.",
+          "Tags: Community, Youth, Sports, Volunteer, Professional Development, Soccer, Participatory, Coaching, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "209736": [
+          "https://www.nycservice.org/opportunity/a1qQq000007OVQ8IAO",
+          "https://www.nycservice.org/opportunity/a1qQq000007OVQAIA4",
+          "https://www.nycservice.org/opportunity/a1qQq000007OVQBIA4",
+          "https://www.nycservice.org/opportunity/a1qQq000007OVQCIA4",
+          "https://www.nycservice.org/opportunity/a1qQq000007OVQDIA4",
+          "https://www.nycservice.org/opportunity/a1qQq000007OVQEIA4"
+        ]
+      }
+    },
+    {
+      "concept": "craft-ribbon-upcycling",
+      "label": "Ribbon upcycling",
+      "category": "craft",
+      "visual": "Looped ribbons joined into a small new accessory.",
+      "rationale": "Explicit reuse of ribbon differs from sewing an entire garment.",
+      "existing_alternative": "Use appropriate accepted art or broad Unicode until a distinctive study is reviewed.",
+      "event_ids": [
+        209799
+      ],
+      "evidence_by_event": {
+        "209799": [
+          "Street Works Earth: 2026 Fest: Join Climate Cafe NYC, Climate Psychology Alliance of North America, and Climate Imaginarium for a climate cafe and ribbon upcycling workshop. Participants will process climate emotions and feelings about consumerism while handcrafting accessories, chokers, and more; materials will be provided, including fabric from FABSCRAP and gymnastic ribbons from Rosie of Rosina~Mae's personal archive.",
+          "Tags: Community, Art, Workshop, Festival, Education, Sustainability, Outdoor, DIY, Crafts, Upcycling, Climate, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "209799": [
+          "https://givebutter.com/street-works-earth-2026",
+          "https://luma.com/climate-dc7c"
+        ]
+      }
+    },
+    {
+      "concept": "craft-textile-block-printing",
+      "label": "Textile block printing",
+      "category": "craft",
+      "visual": "Relief block over patterned cloth.",
+      "rationale": "Supplied printing blocks on fabric, without assuming carving or block material.",
+      "existing_alternative": "Use appropriate accepted art or broad Unicode until a distinctive study is reviewed.",
+      "event_ids": [
+        209676
+      ],
+      "evidence_by_event": {
+        "209676": [
+          "How We Make: Repeating Patterns with Gina Gregorio: Join designer Gina Gregorio for a hands-on workshop exploring repetition through collaborative block printing. Participants will use custom-made printing blocks to create patterned fabric inspired by repeating patterns in Cooper Hewitt’s collection.",
+          "Tags: Visual Arts, Art, Design, Workshop, Education, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "209676": [
+          "https://www.cooperhewitt.org/event/how-we-make-repeating-patterns-with-gina-gregorio-09-26-2026/"
+        ]
+      }
+    },
+    {
+      "concept": "dance-contra",
+      "label": "Contra dance",
+      "category": "dance-style",
+      "visual": "Two opposing pairs with a curved exchange arrow, reduced to an open dance-line silhouette.",
+      "rationale": "Contra is explicitly the participatory dance form; formation may distinguish it from tango, but small-size recognition requires testing.",
+      "existing_alternative": "Dancer emoji conveys dance without the contra formation.",
+      "event_ids": [
+        209929
+      ],
+      "evidence_by_event": {
+        "209929": [
+          "Contra Connections 3: An Intermediate Contra Dance Workshop: Join Brooklyn Contra and Alyssa Adkins for an intermediate workshop covering less common contra moves, flourishes, and techniques for smooth, attentive partnered dancing.",
+          "Tags: Workshop, Dance, Education, Nightlife, Social Dance, Contra Dance, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "209929": [
+          "https://www.brooklyncontra.org/events/contra-connections-1-an-intermediate-contra-dance-workshop-72n6t-5t77c"
+        ]
+      }
+    },
+    {
+      "concept": "dance-tango",
+      "label": "Argentine tango",
+      "category": "dance-style",
+      "visual": "Two close-embrace dancers with one sharply extended leg.",
+      "rationale": "Tango classes/social dancing have a distinct partnered silhouette.",
+      "existing_alternative": "Noto solo dancer lacks close embrace; no tango custom.",
+      "event_ids": [
+        209951
+      ],
+      "evidence_by_event": {
+        "209951": [
+          "Tango In America 2026: Frank Valiente Productions presents Tango In America 2026.",
+          "Tags: Music, Dance, Tango, Argentine Tango, Visiting Presenter, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "209951": [
+          "https://www.queenstheatre.org/events/tango-in-america-2026-8l3s"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-mariachi",
+      "label": "Mariachi ensemble",
+      "category": "format",
+      "visual": "Vihuela, trumpet and violin silhouettes grouped together.",
+      "rationale": "A possible representative ensemble study; exact billed instrumentation must still be verified.",
+      "existing_alternative": "Use appropriate accepted art or broad Unicode until a distinctive study is reviewed.",
+      "event_ids": [
+        209902
+      ],
+      "evidence_by_event": {
+        "209902": [
+          "Aida Cuevas & Flor DE Toloache: An exquisite night of women in Mariachi! Aida Cuevas is a chart-topping Mariachi singer known as “The Queen of Ranchera Music” and “The Voice of Mexico.” The event also features Flor de Toloache, an all-female mariachi band based in New York City.",
+          "Tags: Music, Family, Concert, Latin Music, Women in Music, Mariachi, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "209902": [
+          "https://www.lehmancenter.org/events/aida-cuevas"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-orchestra",
+      "label": "Ensemble orchestra",
+      "category": "other",
+      "visual": "Conductor before tiered string wind percussion groups",
+      "rationale": "Full orchestra needs legible ensemble study.",
+      "existing_alternative": "Retain appropriate Unicode or broader accepted icon until recognition and structural review pass.",
+      "event_ids": [
+        209893
+      ],
+      "evidence_by_event": {
+        "209893": [
+          "Beethoven’s “Emperor” & Schubert’s “Great”: New Jersey favorite George Li returns with Beethoven's final and most epic piano concerto, a work of uncommon power and passion, both heroic in scope and striking in its intimacy, paired with Schubert's final symphony. Xian Zhang conducts.",
+          "Tags: Music, Classical Music, Orchestra, Concert, Schubert, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "209893": [
+          "https://www.njsymphony.org/events/detail/beethovens-emperor-schuberts-great"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-rock-trio",
+      "label": "Rock trio",
+      "category": "format",
+      "visual": "Guitar, bass and drum kit in a compact group.",
+      "rationale": "Explicit three-piece instrumentation deserves a study distinct from a jazz piano trio.",
+      "existing_alternative": "Use appropriate accepted art or broad Unicode until a distinctive study is reviewed.",
+      "event_ids": [
+        209811
+      ],
+      "evidence_by_event": {
+        "209811": [
+          "Trash Romantics, Žaltys, Costumes: Trash Romantics is a three-piece alt/punk band comprised of Dariush Tehranfar on guitar/vocals, Lily Wolfrum on bass/vocals, and Jacob DeVito on drums/vocals. Trash Romantics’ sound exists in the muddy trenches between grunge, punk, and alternative sounds.",
+          "Tags: Music, Rock, Concert, Alternative, Punk Rock, Grunge, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "209811": [
+          "https://dice.fm/event/6a6a4896d28c36000193c659",
+          "https://dice.fm/event/l872kl-trash-romantics-altys-costumes-27th-sep-sleepwalk-new-york-city-tickets"
+        ]
+      }
+    },
+    {
+      "concept": "format-architecture-open-house",
+      "label": "Architecture open house",
+      "category": "format",
+      "visual": "Open building facade with a small visiting path.",
+      "rationale": "Public architectural access differs from touring one historic home.",
+      "existing_alternative": "Use appropriate accepted art or broad Unicode until a distinctive study is reviewed.",
+      "event_ids": [
+        209948
+      ],
+      "evidence_by_event": {
+        "209948": [
+          "Open House New York Weekend: Each October, Open House New York Weekend offers access to New York City’s design, culture, and infrastructure by unlocking 300 sites across the city for tours, talks, and exploration. Most sites are open free of charge, welcoming visitors to experience the places that define the city and the people who create and maintain them.",
+          "Tags: Community, Architecture, Art, Education, Outdoor, Open House, Format, Browsable"
+        ]
+      },
+      "source_urls_by_event": {
+        "209948": [
+          "https://ohny.org/activity/2026-ohny-weekend"
+        ]
+      }
+    },
+    {
+      "concept": "format-business-conference",
+      "label": "Business conference",
+      "category": "format",
+      "visual": "Conference agenda and discussion lectern.",
+      "rationale": "Professional conference differs from personal finance or career coaching.",
+      "existing_alternative": "Use appropriate accepted art or broad Unicode until a distinctive study is reviewed.",
+      "event_ids": [
+        209774
+      ],
+      "evidence_by_event": {
+        "209774": [
+          "CEO Summit/Power Lunch - New York City Marriott Marquis: The CEO Success Summit conference is a must attend event for all entrepreneurs & small business owners.",
+          "Tags: Community, Education, Networking, Business, Professional Development, Gathering, Talk, Conference, In Person, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "209774": [
+          "https://www.eventbrite.com/e/ceo-summitpower-lunch-new-york-city-marriott-marquis-tickets-1993150486760?aff=ebdssbcitybrowse"
+        ]
+      }
+    },
+    {
+      "concept": "format-childrens-book-festival",
+      "label": "Children’s book festival",
+      "category": "format",
+      "visual": "Several colorful books with a festival pennant.",
+      "rationale": "Mixed authors, reading and workshops need a broad literary festival motif.",
+      "existing_alternative": "Use appropriate accepted art or broad Unicode until a distinctive study is reviewed.",
+      "event_ids": [
+        209723
+      ],
+      "evidence_by_event": {
+        "209723": [
+          "Uptown Kid Lit 2026: Uptown Kid Lit - Word Up's book festival for kids - returns to celebrate the magic of children's literature and the back-to-school season. Young readers will have the opportunity to meet beloved local authors and illustrators as they present new books, lead story times and activities, readings and discussions, workshops, and games. Held on Pat's Lawn in Inwood Hill Park.",
+          "Tags: Community, Literature, Free, Festival, Family, Education, Outdoor, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "209723": [
+          "https://withfriends.co/event/28517979/Uptown_Kid_Lit_2026",
+          "https://wordupbooks.com/event/2026-09-13/uptown-kid-lit-2026",
+          "https://www.lxnyarts.org/calendar/uptown-kid-lit-2026",
+          "https://www.manhattanbp.nyc.gov/events/uptown-kid-lit/"
+        ]
+      }
+    },
+    {
+      "concept": "format-childrens-theater",
+      "label": "Children’s theater",
+      "category": "format",
+      "visual": "Small stage curtain with a storybook emblem.",
+      "rationale": "Live children’s stage storytelling differs from animation or an unconfirmed puppet mechanism.",
+      "existing_alternative": "Use appropriate accepted art or broad Unicode until a distinctive study is reviewed.",
+      "event_ids": [
+        209900
+      ],
+      "evidence_by_event": {
+        "209900": [
+          "Plim Plim EN Vivo!: Join Plim Plim and all his friends for a magical live adventure at Lehman Center this fall. Filled with music, laughter, colorful characters, and valuable lessons about friendship, kindness, and healthy habits, Plim Plim en Vivo brings the beloved children's phenomenon from the screen to the stage in an exciting interactive experience for the whole family.",
+          "Tags: Music, Theater, Kids, Interactive, Family, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "209900": [
+          "https://www.lehmancenter.org/events/plim-plim-1pm"
+        ]
+      }
+    },
+    {
+      "concept": "format-climate-cafe",
+      "label": "Climate café",
+      "category": "format",
+      "visual": "Conversation bubbles around a leaf and café cup.",
+      "rationale": "Climate-emotion discussion without suggesting clinical therapy.",
+      "existing_alternative": "Use appropriate accepted art or broad Unicode until a distinctive study is reviewed.",
+      "event_ids": [
+        209799
+      ],
+      "evidence_by_event": {
+        "209799": [
+          "Street Works Earth: 2026 Fest: Join Climate Cafe NYC, Climate Psychology Alliance of North America, and Climate Imaginarium for a climate cafe and ribbon upcycling workshop. Participants will process climate emotions and feelings about consumerism while handcrafting accessories, chokers, and more; materials will be provided, including fabric from FABSCRAP and gymnastic ribbons from Rosie of Rosina~Mae's personal archive.",
+          "Tags: Community, Art, Workshop, Festival, Education, Sustainability, Outdoor, DIY, Crafts, Upcycling, Climate, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "209799": [
+          "https://givebutter.com/street-works-earth-2026",
+          "https://luma.com/climate-dc7c"
+        ]
+      }
+    },
+    {
+      "concept": "format-comedy-variety",
+      "label": "Comedy variety",
+      "category": "format",
+      "visual": "Comedy mask with varied performance cues.",
+      "rationale": "Mixed comic performance does not imply stand-up only.",
+      "existing_alternative": "Use appropriate accepted art or broad Unicode until a distinctive study is reviewed.",
+      "event_ids": [
+        209895
+      ],
+      "evidence_by_event": {
+        "209895": [
+          "Los Parceritos Usa Tour: The Los Parceritos Show features Colombian performers delivering a vibrant spectacle filled with laughter, tradition, and unforgettable moments, with LOKILLO and JOTAPÉ.",
+          "Tags: Community, Music, Comedy, Concert, Colombian Culture, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "209895": [
+          "https://www.lehmancenter.org/events/los-parceritos"
+        ]
+      }
+    },
+    {
+      "concept": "format-curator-tour",
+      "label": "Curator tour",
+      "category": "format",
+      "visual": "Gallery frame with a guide’s speech bubble.",
+      "rationale": "Interpretive collection tour differs from handling objects or creating artwork.",
+      "existing_alternative": "Use appropriate accepted art or broad Unicode until a distinctive study is reviewed.",
+      "event_ids": [
+        209673
+      ],
+      "evidence_by_event": {
+        "209673": [
+          "Curator Tour: Design Across Time: In this curator-guided tour of Design Across Time: Exploring the Smithsonian's Design Collection, visitors will explore historic and contemporary design, including recent acquisitions and works newly displayed from storage.",
+          "Tags: Visual Arts, Art, Design, Free, Tour, Education, Museum Tour, Format, Outings"
+        ]
+      },
+      "source_urls_by_event": {
+        "209673": [
+          "https://www.cooperhewitt.org/event/curator-tour-design-across-time-08-12-2026/",
+          "https://www.cooperhewitt.org/event/curator-tour-design-across-time-09-09-2026/"
+        ]
+      }
+    },
+    {
+      "concept": "format-fashion-show",
+      "label": "Runway fashion show",
+      "category": "format",
+      "visual": "A posed walking model on a short perspective runway with two small edge lights.",
+      "rationale": "Runway presentation is distinct from clothing retail or garment making.",
+      "existing_alternative": "Dress depicts fashion product; sewing machine depicts production and microphone omits runway display.",
+      "event_ids": [
+        209873
+      ],
+      "evidence_by_event": {
+        "209873": [
+          "New York Fashion Week Celebrity Designers: NYFW celebrity Designer showcase",
+          "Tags: Community, Art, Fashion, In Person, Celebrity Designers, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "209873": [
+          "https://www.eventbrite.com/e/new-york-fashion-week-celebrity-designers-registration-1979889440614",
+          "https://www.eventbrite.com/e/new-york-fashion-week-celebrity-designers-registration-1979889440614?aff=ebdssbcitybrowse"
+        ]
+      }
+    },
+    {
+      "concept": "format-lecture-in-bar",
+      "label": "Lecture in a bar",
+      "category": "format",
+      "visual": "Talk bubble beside a pub table and glass.",
+      "rationale": "Educational bar programming differs from a crawl or a drinks inclusion.",
+      "existing_alternative": "Use appropriate accepted art or broad Unicode until a distinctive study is reviewed.",
+      "event_ids": [
+        209912
+      ],
+      "evidence_by_event": {
+        "209912": [
+          "Lectures on Tap: Lectures on Tap is an event series where professors and experts give thought-provoking lectures inside bars.",
+          "Tags: Community, Education, Nightlife, Gathering, Talk, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "209912": [
+          "https://radegasthall.com/events-2/"
+        ]
+      }
+    },
+    {
+      "concept": "format-mixed-open-mic",
+      "label": "Format mixed open mic",
+      "category": "format",
+      "visual": "Microphone with words and music marks",
+      "rationale": "Open performance across multiple media.",
+      "existing_alternative": "Retain appropriate Unicode or broader accepted icon until recognition and structural review pass.",
+      "event_ids": [
+        209778
+      ],
+      "evidence_by_event": {
+        "209778": [
+          "The Art Meetup NYC Open Mic & Mixer at Lincoln Center: A live open mic at Lincoln Center featuring music, poetry, spoken word, storytelling, and original performances from NYC artists. The event also offers opportunities to meet musicians, artists, and collaborators.",
+          "Tags: Community, Music, Theater, Art, Workshop, Literature, Free, Education, In Person, Open Practice, Participatory, Open Mic / Music, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "209778": [
+          "https://www.eventbrite.com/e/nyc-open-mic-workshops-at-lincoln-center-tickets-1986007886049?aff=ebdssbcitybrowse",
+          "https://www.eventbrite.com/e/the-art-meetup-nyc-open-mic-mixer-at-lincoln-center-tickets-1986007886049?aff=ebdssbcitybrowse"
+        ]
+      }
+    },
+    {
+      "concept": "format-music-jam",
+      "label": "Music jam",
+      "category": "format",
+      "visual": "Several musical phrases meeting in a shared circle.",
+      "rationale": "Collaborative music-making differs from a fixed concert lineup.",
+      "existing_alternative": "Use appropriate accepted art or broad Unicode until a distinctive study is reviewed.",
+      "event_ids": [
+        209890
+      ],
+      "evidence_by_event": {
+        "209890": [
+          "Monthly Jazz Jam presented by Ridgewood Jazz: Nate Wood in conversation followed by Monthly Jazz Jam session. Curated by Mike Feinberg.",
+          "Tags: Community, Music, Jazz, Concert, Live Music, Format, Performance, Ridgewood Jazz"
+        ]
+      },
+      "source_urls_by_event": {
+        "209890": [
+          "https://dadabar.nyc/go/events/6696811?feature_id=1003841&occurrence_id=775943129&popup=1",
+          "https://pools.events/event/9qw6kRKz/cool/?utm_source=fomo-nyc&utm_medium=api&utm_campaign=nyc_events_feed&utm_content=9qw6kRKz",
+          "https://pools.events/event/DIN5qnIB/cool/?utm_source=fomo-nyc&utm_medium=api&utm_campaign=nyc_events_feed&utm_content=DIN5qnIB"
+        ]
+      }
+    },
+    {
+      "concept": "format-music-open-mic",
+      "label": "Music open mic",
+      "category": "format",
+      "visual": "Microphone with a sign-up sheet and music note.",
+      "rationale": "Open musical participation differs from karaoke tracks or spoken comedy.",
+      "existing_alternative": "Use appropriate accepted art or broad Unicode until a distinctive study is reviewed.",
+      "event_ids": [
+        209526
+      ],
+      "evidence_by_event": {
+        "209526": [
+          "Drop the Mic!: A show for queer artists, featuring live vocals and an open mic for queer artists.",
+          "Tags: Community, Music, Nightlife, Queer Artists, Open Practice, Participatory, Live Vocals, Open Mic / Music, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "209526": [
+          "https://www.instagram.com/sandyjacksnyc/"
+        ]
+      }
+    },
+    {
+      "concept": "format-parade",
+      "label": "Parade",
+      "category": "format",
+      "visual": "A row of celebratory pennants and a broad marching route.",
+      "rationale": "Named cultural parade defines the program.",
+      "existing_alternative": "Flags mark identity but do not show a moving procession; avoid assuming a dance or instrument.",
+      "event_ids": [
+        209743
+      ],
+      "evidence_by_event": {
+        "209743": [
+          "Halloween Parade: A Halloween parade along 37th Avenue from 89th Street to 76th Street.",
+          "Tags: Government, Community, Festival, Outdoor, Community Board, Parade, Queens CB3, Halloween, Community Celebration, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "209743": [
+          "https://queenscb3.cityofnewyork.us/event/halloween-parade-4/"
+        ]
+      }
+    },
+    {
+      "concept": "format-philosophy-talk",
+      "label": "Philosophy talk",
+      "category": "format",
+      "visual": "Question bubble above a lecture page.",
+      "rationale": "Philosophical discussion is not necessarily a book launch.",
+      "existing_alternative": "Use appropriate accepted art or broad Unicode until a distinctive study is reviewed.",
+      "event_ids": [
+        209788
+      ],
+      "evidence_by_event": {
+        "209788": [
+          "Hegel 13/13 with Homi Bhabha: No description available.",
+          "Tags: Literature, Education, Philosophy, Lecture, Gathering, Talk, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "209788": [
+          "https://www.eventbrite.com/e/hegel-1313-with-homi-bhabha-tickets-1977905754355?aff=ebdssbcitybrowse"
+        ]
+      }
+    },
+    {
+      "concept": "format-sensory-museum-session",
+      "label": "Sensory museum session",
+      "category": "format",
+      "visual": "Museum frame with gentle sound and tactile ripples.",
+      "rationale": "Sensory engagement does not grant permission to touch every collection object.",
+      "existing_alternative": "Use appropriate accepted art or broad Unicode until a distinctive study is reviewed.",
+      "event_ids": [
+        209949
+      ],
+      "evidence_by_event": {
+        "209949": [
+          "Sensory Saturday: A program for children ages 4–12 with developmental disabilities, learning disabilities, or autism and their family members, featuring relaxed gallery exploration and contemporary art through touch, sound, and movement.",
+          "Tags: Community, Museum, Art, Accessibility, Family, Education, Open House, Cultural Venue, Format, Browsable"
+        ]
+      },
+      "source_urls_by_event": {
+        "209949": [
+          "https://thealdrich.org/events/sensory-saturday-5"
+        ]
+      }
+    },
+    {
+      "concept": "format-single-release",
+      "label": "Single release",
+      "category": "format",
+      "visual": "Record sleeve with one emphasized track.",
+      "rationale": "Release show for a single differs from a complete album launch.",
+      "existing_alternative": "Use appropriate accepted art or broad Unicode until a distinctive study is reviewed.",
+      "event_ids": [
+        209808
+      ],
+      "evidence_by_event": {
+        "209808": [
+          "jadeworm (Single Release), Toobin, Hazzard: Hazzard is the New York-based indie pop project of drummer and producer Graham Hazzard. Drawing on the optimistic nostalgia of 2010’s pop auteurs like Toro Y Moi, Troye Sivan, Little Dragon, and Tame Impala.",
+          "Tags: Music, Rock, Concert, Nightlife, Indie Pop, Single Release, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "209808": [
+          "https://dice.fm/event/6a70f4f38667bd0001437e99",
+          "https://dice.fm/event/ww9geg-jadeworm-single-release-toobin-hazzard-18th-sep-sleepwalk-new-york-city-tickets"
+        ]
+      }
+    },
+    {
+      "concept": "format-small-business-market",
+      "label": "Small business market",
+      "category": "format",
+      "visual": "Several stall roofs with varied plain product boxes.",
+      "rationale": "Local-business vendors do not necessarily sell handmade items.",
+      "existing_alternative": "Use appropriate accepted art or broad Unicode until a distinctive study is reviewed.",
+      "event_ids": [
+        209877
+      ],
+      "evidence_by_event": {
+        "209877": [
+          "Monthly Small Business Market ... 2nd Saturday's: Shop small businesses at a monthly market featuring local products. Explore fashion and accessories, home décor, candles, skincare, art, and other unique finds from independent brands and local entrepreneurs.",
+          "Tags: Community, Free, Market, Shopping, Small Business, In Person, Format, Browsable, Local Products"
+        ]
+      },
+      "source_urls_by_event": {
+        "209877": [
+          "https://www.eventbrite.com/e/monthly-small-business-market-2nd-saturdays-tickets-1986165154443?aff=ebdssbcitybrowse"
+        ]
+      }
+    },
+    {
+      "concept": "format-tech-career-networking",
+      "label": "Tech career networking",
+      "category": "format",
+      "visual": "Two conversation bubbles with a circuit motif.",
+      "rationale": "Professional tech networking differs from coding instruction or a job guarantee.",
+      "existing_alternative": "Use appropriate accepted art or broad Unicode until a distinctive study is reviewed.",
+      "event_ids": [
+        209776
+      ],
+      "evidence_by_event": {
+        "209776": [
+          "Women in Tech New York City - OutGeekWomen: This event offers a chance to network with accomplished, mid- and senior-level women professionals across diverse IT domains, connect with CTOs and talented development teams, and meet the minds behind tech brands. The event includes short pitches by CTOs and hiring teams, tech discussions, networking, speed interviews, and opportunities to explore local technology companies.",
+          "Tags: Community, Science, Education, Technology, Networking, Professional Development, Gathering, Talk, Women in Tech, In Person, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "209776": [
+          "https://www.eventbrite.com/e/women-in-tech-new-york-city-outgeekwomen-tickets-1224235995819?aff=ebdssbcitybrowse"
+        ]
+      }
+    },
+    {
+      "concept": "format-vj-night",
+      "label": "VJ night",
+      "category": "format",
+      "visual": "Video screen with music notes and playback controls.",
+      "rationale": "Music-video programming differs from a complete concert film or audio-only DJ set.",
+      "existing_alternative": "Use appropriate accepted art or broad Unicode until a distinctive study is reviewed.",
+      "event_ids": [
+        209941
+      ],
+      "evidence_by_event": {
+        "209941": [
+          "VJ Terry The Undead Gay Cowboy: On the second Monday of each month, Terry plays selections from his library of classic disco and soul videos.",
+          "Tags: Music, Free, Nightlife, Disco, Electronic Music, Club Night, Video, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "209941": [
+          "https://mamatriedbk.com/upcoming-events/jr4ypc6c45zr5xs",
+          "https://mamatriedbk.com/upcoming-events/jr4ypc6c45zr5xs-esxpb"
+        ]
+      }
+    },
+    {
+      "concept": "format-work-in-progress-show",
+      "label": "Work in progress show",
+      "category": "format",
+      "visual": "Stage frame with a lightly unfinished sketch edge.",
+      "rationale": "Artists sharing developing work differs from a conventional finished exhibition.",
+      "existing_alternative": "Use appropriate accepted art or broad Unicode until a distinctive study is reviewed.",
+      "event_ids": [
+        209506
+      ],
+      "evidence_by_event": {
+        "209506": [
+          "Artery Nights: And So is Love: Artery Nights is a four-part series of multidisciplinary parties in which local artists try out new and unheard material and collaborate with new people. And So is Love features Alena Spanger, Strugglin’, Winston C.W., and With Strings.",
+          "Tags: Community, Music, Party, Nightlife, Multidisciplinary, Live Music, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "209506": [
+          "https://www.instagram.com/thebrooklynartery/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-afro-peruvian",
+      "label": "Afro-Peruvian music",
+      "category": "genre",
+      "visual": "Interlocking rhythmic notes with a representative cajón shape.",
+      "rationale": "Explicit genre may support a study; exact instruments still need evidence.",
+      "existing_alternative": "Use appropriate accepted art or broad Unicode until a distinctive study is reviewed.",
+      "event_ids": [
+        209952
+      ],
+      "evidence_by_event": {
+        "209952": [
+          "Eva Ayllón with Daniela Darcourt: Eva Ayllón performs with Daniela Darcourt.",
+          "Tags: Music, Dance, Concert, Salsa, Latin Music, Peruvian Music, Visiting Presenter, Afro Peruvian, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "209952": [
+          "https://www.queenstheatre.org/events/eva-ayllon-with-daniela-darcourt-shn2"
+        ]
+      }
+    },
+    {
+      "concept": "genre-bluegrass",
+      "label": "Bluegrass",
+      "category": "genre",
+      "visual": "An open rhythmic arc linking two simplified acoustic string-instrument necks.",
+      "rationale": "Bluegrass is explicit. This ensemble-inspired visual is exploratory and must not claim a particular featured instrument; recognition testing may favor the existing art.",
+      "existing_alternative": "Banjo is an existing broad genre association but does not establish this event instrumentation; generic notes lose repertoire specificity.",
+      "event_ids": [
+        209918
+      ],
+      "evidence_by_event": {
+        "209918": [
+          "Bluegrass to Brooklyn ft Down North Bluegrass: Down North is a progressive trio from New York City’s bluegrass scene, blending traditional bluegrass drive with an evolving original sound.",
+          "Tags: Music, Concert, Folk Music, Bluegrass, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "209918": [
+          "https://radegasthall.com/events-2/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-cuban-music",
+      "label": "Cuban music",
+      "category": "genre",
+      "visual": "Explore paired clave sticks crossed beside a single musical note.",
+      "rationale": "Explicit Cuban music is central; clave motif must be tested and may not distinguish broader Latin forms.",
+      "existing_alternative": "Flag indicates place rather than music; generic notes lose genre, no custom genre art.",
+      "event_ids": [
+        209899
+      ],
+      "evidence_by_event": {
+        "209899": [
+          "Son DE Cuba: Son De Cuba brings the power and artistry of Cuban music to the stage for one unforgettable night. Featuring Isaac Delgado, Alain Pérez, and Daymé Arocena, the event includes world-class musicianship and vibrant performances from all three artists.",
+          "Tags: Music, Dance, World Music, Concert, Salsa, Latin Music, Cuban Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "209899": [
+          "https://www.lehmancenter.org/events/son-de-cuba"
+        ]
+      }
+    },
+    {
+      "concept": "genre-flamenco",
+      "label": "Flamenco music",
+      "category": "genre",
+      "visual": "Rhythmic clapping hands beside a warm rhythmic accent",
+      "rationale": "Flamenco musical form is distinct; do not assume guitar or dance without evidence.",
+      "existing_alternative": "Retain the event Unicode fallback until a distinct recognizable study passes review.",
+      "event_ids": [
+        209953
+      ],
+      "evidence_by_event": {
+        "209953": [
+          "CHARO: Queens Theatre presents CHARO.",
+          "Tags: Music, Dance, Concert, Nightlife, Flamenco, Special Event, Guitar, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "209953": [
+          "https://www.queenstheatre.org/events/charo-5cdn"
+        ]
+      }
+    },
+    {
+      "concept": "genre-freak-folk",
+      "label": "Freak folk",
+      "category": "genre",
+      "visual": "Acoustic song motif with playful irregular note shapes.",
+      "rationale": "Explicit experimental folk blend, with no assumed psychedelic consumption.",
+      "existing_alternative": "Use appropriate accepted art or broad Unicode until a distinctive study is reviewed.",
+      "event_ids": [
+        209809
+      ],
+      "evidence_by_event": {
+        "209809": [
+          "Pastel Hell, Kristin Flammio & The Pretty Bitchin, Weird Magazines: Pastel Hell is an experimental indie-pop project, with influences ranging from Orange Juice to Elliott Smith. Songs are lyric-forward and combine electronic music with freak-folk and post-punk. Kristin Flammio & The Pretty Bitchin are a Brooklyn-based 4-piece.",
+          "Tags: Music, Rock, Experimental, Concert, Nightlife, Post Punk, Indie Pop, Punk Rock, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "209809": [
+          "https://dice.fm/event/53mqpy-pastel-hell-kristin-flammio-the-pretty-bitchin-weird-magazines-23rd-sep-sleepwalk-new-york-city-tickets",
+          "https://dice.fm/event/6a6a4a4fda6429000160e7a1"
+        ]
+      }
+    },
+    {
+      "concept": "genre-grunge",
+      "label": "Grunge",
+      "category": "genre",
+      "visual": "Distressed rhythmic song motif.",
+      "rationale": "Explicit genre without assuming one exact guitar or copying a band identity.",
+      "existing_alternative": "Use appropriate accepted art or broad Unicode until a distinctive study is reviewed.",
+      "event_ids": [
+        209811
+      ],
+      "evidence_by_event": {
+        "209811": [
+          "Trash Romantics, Žaltys, Costumes: Trash Romantics is a three-piece alt/punk band comprised of Dariush Tehranfar on guitar/vocals, Lily Wolfrum on bass/vocals, and Jacob DeVito on drums/vocals. Trash Romantics’ sound exists in the muddy trenches between grunge, punk, and alternative sounds.",
+          "Tags: Music, Rock, Concert, Alternative, Punk Rock, Grunge, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "209811": [
+          "https://dice.fm/event/6a6a4896d28c36000193c659",
+          "https://dice.fm/event/l872kl-trash-romantics-altys-costumes-27th-sep-sleepwalk-new-york-city-tickets"
+        ]
+      }
+    },
+    {
+      "concept": "genre-indie-rock",
+      "category": "genre",
+      "label": "Indie rock",
+      "visual": "Compact guitar and small independent-stage amp",
+      "rationale": "Named indie-rock bills are distinct from broad music",
+      "existing_alternative": "Existing guitar/music emoji; resolve genre visual clarity first",
+      "event_ids": [
+        209807
+      ],
+      "evidence_by_event": {
+        "209807": [
+          "Boycott Daylight (EP Release), Aster, Underground Sewer Cult: Boycott Daylight is a Brooklyn based indie rock band celebrating the release of their forthcoming EP. Inspired by the likes of Weezer, R.E.M, and Death Cab for a Cutie, Boycott Daylight weaves together atmospheric soundscapes and hooky songwriting.",
+          "Tags: Music, Rock, Indie, Concert, Indie Rock, EP Release, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "209807": [
+          "https://dice.fm/event/2wqb87-boycott-daylight-ep-release-aster-underground-sewer-cult-10th-sep-sleepwalk-new-york-city-tickets",
+          "https://dice.fm/event/6a70f774b3e31c00017d04f0"
+        ]
+      }
+    },
+    {
+      "concept": "genre-irish-traditional",
+      "label": "Irish traditional music",
+      "category": "genre",
+      "visual": "A spare fiddle bow crossing a looping musical phrase.",
+      "rationale": "Traditional Irish repertoire with fiddle/guitar tags is explicit; illustrative motif must not imply every Irish program features fiddle and requires recognition testing.",
+      "existing_alternative": "Existing violin fits this event; genre motif is optional and should avoid flags or assumed pipes.",
+      "event_ids": [
+        209928
+      ],
+      "evidence_by_event": {
+        "209928": [
+          "Music and Song with Emma Azelborn and Paper Plane: Emma Azelborn will sing her own tunes and lead the audience in a few songs, while Paper Plane performs Québécois and Irish tunes. Doors are at 7pm and music begins at 7:30pm.",
+          "Tags: Community, Music, Family, Concert, Folk Music, Nightlife, Sing Along, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "209928": [
+          "https://www.brooklyncontra.org/events/go3ahctzp03ago9jyp504dgcl0wx93"
+        ]
+      }
+    },
+    {
+      "concept": "genre-merengue",
+      "label": "Merengue music",
+      "category": "genre",
+      "visual": "Two linked rhythmic notes over a compact alternating pulse",
+      "rationale": "Music named, not necessarily participatory dance; recognition remains exploratory.",
+      "existing_alternative": "Retain the event Unicode fallback pending a recognizable reviewed study.",
+      "event_ids": [
+        209901
+      ],
+      "evidence_by_event": {
+        "209901": [
+          "Milly Quezada & Miriam Cruz: Get ready for an unforgettable night of rhythm, nostalgia, and pure Caribbean energy as Milly Quezada and Miriam Cruz take the stage. Two of the most iconic voices in merengue unite for an electrifying evening featuring passion, sabor, and timeless classics.",
+          "Tags: Music, Dance, Caribbean, Concert, Latin Music, Merengue, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "209901": [
+          "https://www.lehmancenter.org/events/milly-and-miriam"
+        ]
+      }
+    },
+    {
+      "concept": "genre-post-punk",
+      "label": "Post-punk",
+      "category": "genre",
+      "visual": "Angular rhythmic note with a broken geometric beat line",
+      "rationale": "Explicit post-punk repertoire; motif is unproven and must avoid claiming instrumentation.",
+      "existing_alternative": "Retain the event Unicode fallback pending a recognizable reviewed study.",
+      "event_ids": [
+        209809
+      ],
+      "evidence_by_event": {
+        "209809": [
+          "Pastel Hell, Kristin Flammio & The Pretty Bitchin, Weird Magazines: Pastel Hell is an experimental indie-pop project, with influences ranging from Orange Juice to Elliott Smith. Songs are lyric-forward and combine electronic music with freak-folk and post-punk. Kristin Flammio & The Pretty Bitchin are a Brooklyn-based 4-piece.",
+          "Tags: Music, Rock, Experimental, Concert, Nightlife, Post Punk, Indie Pop, Punk Rock, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "209809": [
+          "https://dice.fm/event/53mqpy-pastel-hell-kristin-flammio-the-pretty-bitchin-weird-magazines-23rd-sep-sleepwalk-new-york-city-tickets",
+          "https://dice.fm/event/6a6a4a4fda6429000160e7a1"
+        ]
+      }
+    },
+    {
+      "concept": "genre-punk",
+      "category": "genre",
+      "label": "Punk music",
+      "visual": "Angular jagged musical note",
+      "rationale": "Avoid assuming guitar or fashion; test genre distinction.",
+      "existing_alternative": "Broad fallback does not distinguish this specific supported facet.",
+      "event_ids": [
+        209811
+      ],
+      "evidence_by_event": {
+        "209811": [
+          "Trash Romantics, Žaltys, Costumes: Trash Romantics is a three-piece alt/punk band comprised of Dariush Tehranfar on guitar/vocals, Lily Wolfrum on bass/vocals, and Jacob DeVito on drums/vocals. Trash Romantics’ sound exists in the muddy trenches between grunge, punk, and alternative sounds.",
+          "Tags: Music, Rock, Concert, Alternative, Punk Rock, Grunge, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "209811": [
+          "https://dice.fm/event/6a6a4896d28c36000193c659",
+          "https://dice.fm/event/l872kl-trash-romantics-altys-costumes-27th-sep-sleepwalk-new-york-city-tickets"
+        ]
+      }
+    },
+    {
+      "concept": "genre-quebecois-folk",
+      "label": "Québécois folk",
+      "category": "genre",
+      "visual": "Traditional song sheet with a rhythmic fiddle-like motif.",
+      "rationale": "Regional repertoire needs recognition research before promising a particular instrument.",
+      "existing_alternative": "Use appropriate accepted art or broad Unicode until a distinctive study is reviewed.",
+      "event_ids": [
+        209928
+      ],
+      "evidence_by_event": {
+        "209928": [
+          "Music and Song with Emma Azelborn and Paper Plane: Emma Azelborn will sing her own tunes and lead the audience in a few songs, while Paper Plane performs Québécois and Irish tunes. Doors are at 7pm and music begins at 7:30pm.",
+          "Tags: Community, Music, Family, Concert, Folk Music, Nightlife, Sing Along, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "209928": [
+          "https://www.brooklyncontra.org/events/go3ahctzp03ago9jyp504dgcl0wx93"
+        ]
+      }
+    },
+    {
+      "concept": "genre-ranchera",
+      "label": "Ranchera music",
+      "category": "genre",
+      "visual": "Vocal phrase over a guitar and accordion silhouette; avoid national costume shortcuts.",
+      "rationale": "Mexican ranchera repertoire is explicit with voice, accordion and guitar.",
+      "existing_alternative": "Guitar is a suitable fallback but does not distinguish the sung genre; concept needs recognition testing.",
+      "event_ids": [
+        209902
+      ],
+      "evidence_by_event": {
+        "209902": [
+          "Aida Cuevas & Flor DE Toloache: An exquisite night of women in Mariachi! Aida Cuevas is a chart-topping Mariachi singer known as “The Queen of Ranchera Music” and “The Voice of Mexico.” The event also features Flor de Toloache, an all-female mariachi band based in New York City.",
+          "Tags: Music, Family, Concert, Latin Music, Women in Music, Mariachi, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "209902": [
+          "https://www.lehmancenter.org/events/aida-cuevas"
+        ]
+      }
+    },
+    {
+      "concept": "genre-salsa",
+      "category": "genre",
+      "label": "Salsa music",
+      "visual": "Explore an interlocking syncopated-note motif",
+      "rationale": "Distinguish musical repertoire from participant dancing; no assumed instrument.",
+      "existing_alternative": "Broad fallback does not distinguish this supported facet.",
+      "event_ids": [
+        209898
+      ],
+      "evidence_by_event": {
+        "209898": [
+          "LA Sonora Carruseles: Sonora Carruseles brings its electrifying sound to Lehman Center for an evening of salsa, featuring high-energy performances, infectious rhythms, and chart-topping hits. The Colombian orchestra will perform beloved classics and dance floor favorites in a vibrant celebration of salsa.",
+          "Tags: Music, Dance, Concert, Salsa, Latin Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "209898": [
+          "https://www.lehmancenter.org/events/sonora-carruseles"
+        ]
+      }
+    },
+    {
+      "concept": "genre-soul",
+      "label": "Soul music",
+      "category": "genre",
+      "visual": "A record with a rounded call-and-response wave.",
+      "rationale": "Classic and Northern Soul are explicit repertoire; the motif needs testing against funk and R&B and should not imply live vocals.",
+      "existing_alternative": "DJ decks serve the current activity; no existing icon distinguishes soul repertoire.",
+      "event_ids": [
+        209541
+      ],
+      "evidence_by_event": {
+        "209541": [
+          "Sunday Funday Harlem Soul Party feat. Soul Power Band & C. Kelly Wright: Harlem’s Sunday Soul Party is hosted by the Soul Power Band NYC featuring C. Kelly Wright. The event has no cover charge and is described as running every Sunday all season long.",
+          "Tags: Community, Music, Free, Concert, Nightlife, Soul Music, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "209541": [
+          "https://www.instagram.com/harlemlatenightjazz/"
+        ]
+      }
+    }
+  ],
+  "limitations": "Counts describe this cohort, not population reach. These are grounded prospective studies, not live assignments. Existing artwork may already suffice; exact equipment and genre recognition require further review."
+}

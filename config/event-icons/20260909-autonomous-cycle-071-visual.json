@@ -1,0 +1,187 @@
+[
+  {
+    "icon_id": "activity-cover-letter-writing",
+    "source_sha256": "dfcc339c828913a42877769c92fc254050578a9c88ea993d27a54aa4ddf73e56",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; brief known. Letter emerging from an envelope with writing pencil.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-071/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-071/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 756,
+      "gzip_level_6": 413
+    },
+    "optimization": {
+      "initial_raw": 756,
+      "initial_gzip_level_6": 413,
+      "final_raw": 756,
+      "final_gzip_level_6": 413
+    },
+    "issues": [],
+    "resolved_issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Envelope,letter and pencil survive16px; label distinguishes job cover letters from ordinary correspondence. No employment guarantee."
+    ]
+  },
+  {
+    "icon_id": "activity-browser-privacy",
+    "source_sha256": "9b5069340c2f161264ba14a26633cc29e7ba35844145931f77348f0f41b8cb29",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; brief known. Browser panel with privacy shield,lock and controls.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-071/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-071/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 877,
+      "gzip_level_6": 425
+    },
+    "optimization": {
+      "initial_raw": 877,
+      "initial_gzip_level_6": 425,
+      "final_raw": 877,
+      "final_gzip_level_6": 425
+    },
+    "issues": [],
+    "resolved_issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Browser,shield and controls remain distinct at24/32px; fine sliders soften16px. Label specifies privacy settings,not a declaration of safety or certification."
+    ]
+  },
+  {
+    "icon_id": "craft-paper-flowers",
+    "source_sha256": "3e0ae377f769bfe6751db57a93ae608cccfec223da4b9c82e3f7a99fb8ef2cdb",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; brief known. Ruffled paper flower with stem and folded tissue strip.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-071/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-071/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 5474,
+      "gzip_level_6": 1913
+    },
+    "optimization": {
+      "initial_raw": 3802,
+      "initial_gzip_level_6": 1435,
+      "final_raw": 5474,
+      "final_gzip_level_6": 1913
+    },
+    "issues": [],
+    "resolved_issues": [
+      "Corrected reversed face winding on paper sheets and folded strip so surface shading reveals the folds consistently. Personally reinspected six final views and all native sizes."
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Paper layers and folded strip read at24/32px; fine pleats and stem soften16px. Label differentiates paper craft from a living flower. Generic simplified ruffling is not a cutting pattern or cultural motif copy."
+    ]
+  },
+  {
+    "icon_id": "craft-lantern-making",
+    "source_sha256": "947456d7516488416ac1261ccc91ddb8473f50b8dec8b47e170fc9fdbe97456d",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; brief known. Closed faceted craft lantern with ribs,star and handle.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-071/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-071/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 4355,
+      "gzip_level_6": 1520
+    },
+    "optimization": {
+      "initial_raw": 3595,
+      "initial_gzip_level_6": 1259,
+      "final_raw": 4355,
+      "final_gzip_level_6": 1520
+    },
+    "issues": [],
+    "resolved_issues": [
+      "Initial open cuboid read as a bag. Added decoration and changed view,then replaced the body with a closed tapered octagonal lantern when the ambiguity persisted.",
+      "Final geometry inspection caught a star wider than its facet. Reduced it to fit the actual panel and aligned loop ends with the upper rim. Personally rechecked all six views and native sizes."
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Closed tapered body and framing read as lantern at24/32px; star and fine ribs soften16px. Label specifies making,not flame use or lantern release. Opaque color is a pictogram simplification of film,not physical optical simulation."
+    ]
+  },
+  {
+    "icon_id": "activity-career-exploration",
+    "source_sha256": "3d47388a443d71adea0eb3c0aaedf1b43b8facadb88eb76d8153fe48dfbdb394",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; brief known. Briefcase connected to several possible work pathways.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-071/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-071/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 989,
+      "gzip_level_6": 465
+    },
+    "optimization": {
+      "initial_raw": 989,
+      "initial_gzip_level_6": 465,
+      "final_raw": 989,
+      "final_gzip_level_6": 465
+    },
+    "issues": [],
+    "resolved_issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Branching choices and briefcase remain visible16px; small book/tool marks soften. Label defines career-path exploration rather than individual guidance; no job or training placement promised."
+    ]
+  }
+]

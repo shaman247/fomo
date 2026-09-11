@@ -1,0 +1,195 @@
+[
+  {
+    "icon_id": "craft-miniature-houses",
+    "source_sha256": "8e3c52e1e3ec343c59c3f032275f7317585a4b2d33b025eaee3afb8114cc1047",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Miniature house on base beside paper blank and craft brush.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-028/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-028/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 3043,
+      "gzip_level_6": 1065
+    },
+    "optimization": {
+      "initial_raw": 3019,
+      "initial_gzip_level_6": 1059,
+      "final_raw": 3043,
+      "final_gzip_level_6": 1065
+    },
+    "issues": [
+      {
+        "issue": "Loose paper blank slightly overlapped the display base, and the brush could intersect its thin surface.",
+        "resolution": "Moved the blank fully beside the base and raised brush center to 4.4mm, keeping its lowest surface at or above the 1mm card top. Regenerated six views and final SVG.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "House on display base with loose card blank and brush suggests miniature decorative making at 24/32px. At 16px the craft tools shrink and it may read as a house. Label establishes miniature construction. Original painted windows and doors are decorative surfaces, with no lighting or exact kit promise."
+    ]
+  },
+  {
+    "icon_id": "activity-foam-block-play",
+    "source_sha256": "a6c82e900f4faabcf5aeab5f5ee1875c71b7082a00df2d7bb358813b92ede961",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Loose blue arch, block with real hole, and foam cylinder.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-028/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-028/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 1843,
+      "gzip_level_6": 826
+    },
+    "optimization": {
+      "initial_raw": 1843,
+      "initial_gzip_level_6": 826,
+      "final_raw": 1843,
+      "final_gzip_level_6": 826
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Blue arch, perforated block and loose cylinder convey foam construction play. At 16px through-hole depth softens, and without a child scale cue it may resemble smaller toy blocks. Label establishes oversized foam; no manufacturer logo or specific set is promised."
+    ]
+  },
+  {
+    "icon_id": "activity-oyster-monitoring",
+    "source_sha256": "649856e6678e42eb30d503cbc0564dad14c281b82b327269200bf9b5c534e782",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Closed oyster shell on field clipboard with ruler.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-028/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-028/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 794,
+      "gzip_level_6": 445
+    },
+    "optimization": {
+      "initial_raw": 787,
+      "initial_gzip_level_6": 436,
+      "final_raw": 794,
+      "final_gzip_level_6": 445
+    },
+    "issues": [
+      {
+        "issue": "First circular shell resembled a rosette; the next concentric pear-shaped interior resembled a plant or food.",
+        "resolution": "Changed to an asymmetrical tapered closed shell, neutral tan/gray colors and three layered growth ridges; rechecked final native light/dark cards.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Irregular closed shell with growth ridges, clipboard and ruler suggests oyster field monitoring at 24/32px. At 16px shell ridges soften and the motif can resemble generic specimen measurement. Label is essential for oysters. No pearl, edible flesh, shucking knife or exact sampling kit is shown."
+    ]
+  },
+  {
+    "icon_id": "format-musical-storytelling",
+    "source_sha256": "0548ac477818b075b06752aaf66f51759a8c0881c19c5af78e33cee11b5c07c4",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Spoken story bubble paired with musical notes.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-028/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-028/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 656,
+      "gzip_level_6": 369
+    },
+    "optimization": {
+      "initial_raw": 656,
+      "initial_gzip_level_6": 369,
+      "final_raw": 656,
+      "final_gzip_level_6": 369
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Speech bubble and musical notes convey stories interwoven with music. At 16px it may resemble general musical conversation; label and event context establish musical storytelling. No book, instrument, ritual costume or specific traditional performance gesture is assumed."
+    ]
+  },
+  {
+    "icon_id": "format-comedy-taping",
+    "source_sha256": "d7fd8409083b92cd1c2f8f8e69a7a2bf4d5f0867ea52eacfed86999af78d3954",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Standing microphone and camera with recording and comic cues.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-028/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-028/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 996,
+      "gzip_level_6": 431
+    },
+    "optimization": {
+      "initial_raw": 997,
+      "initial_gzip_level_6": 431,
+      "final_raw": 996,
+      "final_gzip_level_6": 431
+    },
+    "issues": [
+      {
+        "issue": "First camera lens pointed away from the microphone.",
+        "resolution": "Mirrored the camera-facing direction toward the microphone and rechecked native sizes. Body smile remains a symbolic comedy cue, not an actual camera feature.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Camera aimed toward a standing microphone, recording dot and smile motif convey live comedy recording. At 16px smile and recording dot soften; label distinguishes comedy taping from generic recorded performance. Flat emblem does not specify real camera hardware or stage layout."
+    ]
+  }
+]

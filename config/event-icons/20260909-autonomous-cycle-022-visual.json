@@ -1,0 +1,194 @@
+[
+  {
+    "icon_id": "craft-smocking",
+    "source_sha256": "1e57b6dca9fb026049cb653ea64518b8a0c4d7386e211b81232632a814458f01",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Gathered stitched textile swatch.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-022/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-022/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 5445,
+      "gzip_level_6": 2054
+    },
+    "optimization": {
+      "initial_raw": 14101,
+      "initial_gzip_level_6": 4786,
+      "final_raw": 5445,
+      "final_gzip_level_6": 2054
+    },
+    "issues": [
+      {
+        "issue": "Initial textile SVG had excessive geometry and tiny yarn-face shading that did not improve map-size recognition.",
+        "resolution": "Reduced cloth/stitch mesh subdivisions, widened the fine yarn slightly and used one yarn paint. Raw size fell14101to5445bytes while folds and joining stitches remained visible in all six views and native cards.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Folded textile and joining stitches read as dimensional needlework at24/32px. At16px individual stitches soften and it can resemble pleated material or a grid. The label identifies smocking. Regularized folds are representative, not a promised punk-smocking pattern or cloth-tension simulation."
+    ]
+  },
+  {
+    "icon_id": "craft-sun-printing",
+    "source_sha256": "ca1b90228b335252a4f2c5511a9013b094e5c7e9dc688c60d8024ce76f8c5e6f",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Botanical light print with a sun.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-022/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-022/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 739,
+      "gzip_level_6": 426
+    },
+    "optimization": {
+      "initial_raw": 739,
+      "initial_gzip_level_6": 426,
+      "final_raw": 739,
+      "final_gzip_level_6": 426
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Sun and pale botanical impression identify sunlight printing at24/32px. At16px it can resemble a botanical picture; sunlight cue and label matter. Purple is illustrative and does not specify chemistry, cyanotype, exact substrate or final color."
+    ]
+  },
+  {
+    "icon_id": "craft-photograms",
+    "source_sha256": "40b7927c4aaa56fe174f8d5d29528edbfb5419b15715795008b968a8c3f727ab",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Object-shadow print with exposure-light symbol.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-022/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-022/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 700,
+      "gzip_level_6": 395
+    },
+    "optimization": {
+      "initial_raw": 700,
+      "initial_gzip_level_6": 395,
+      "final_raw": 700,
+      "final_gzip_level_6": 395
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Light object silhouettes on dark paper plus an exposure-light symbol suggest camera-less printing at24/32px. At16px the lamp is small and the sheet may read as abstract art. No lens-camera or exact photographic chemistry is implied; negative print is representative."
+    ]
+  },
+  {
+    "icon_id": "format-sketch-comedy",
+    "source_sha256": "7a84839293f1102d2c95d6d821c590f2141925cde7888b26e13e83466d238ee0",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Script page beside a smiling theater mask.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-022/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-022/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 1110,
+      "gzip_level_6": 469
+    },
+    "optimization": {
+      "initial_raw": 1110,
+      "initial_gzip_level_6": 469,
+      "final_raw": 1110,
+      "final_gzip_level_6": 469
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Prepared script beside a comic mask identifies scripted comic scenes at24/32px. At16px it can read as general theater writing; event text distinguishes sketch comedy from improv or a full play. Mask is a flat symbol, not a performer portrait."
+    ]
+  },
+  {
+    "icon_id": "craft-terrarium",
+    "source_sha256": "731eff9bdf2e6153a7452950f9f5875cda11e490d233466e7c594d14178e11ca",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Open glass miniature garden with visible soil.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-022/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-022/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 5632,
+      "gzip_level_6": 2072
+    },
+    "optimization": {
+      "initial_raw": 5493,
+      "initial_gzip_level_6": 1987,
+      "final_raw": 5632,
+      "final_gzip_level_6": 2072
+    },
+    "issues": [
+      {
+        "issue": "Initial succulent leaves appeared flat and too small in the vessel.",
+        "resolution": "Raised the original leaf curves while retaining soil-rooted crowns and bowl clearance; rounded the vessel profile and reinspected all views.",
+        "status": "resolved"
+      },
+      {
+        "issue": "Discrete soil shading produced distracting block-like side patches.",
+        "resolution": "Used broad top/side soil tones in the projector and verified the final hash at native sizes.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Open glass vessel, soil and rooted foliage distinguish terrarium making from an opaque flowerpot at24/32px. At16px individual leaves and rim detail soften; label establishes making rather than viewing. Exact species, vessel shape and closed ecosystem are not promised. Glass optics are schematic."
+    ]
+  }
+]

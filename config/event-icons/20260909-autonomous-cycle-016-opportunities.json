@@ -1,0 +1,359 @@
+{
+  "date": "2026-09-10",
+  "scope": "Cycle 016: 100 sequential events 198886–199149, no targeted supplements.",
+  "suggestions": 17,
+  "concept_count": 15,
+  "concepts": [
+    {
+      "concept": "craft-poetry-inspired-art",
+      "label": "Poetry-inspired visual art",
+      "category": "craft",
+      "visual": "A page of short verse lines transitioning into painted shapes.",
+      "rationale": "Two workshops respond visually to poetry through drawing and other media.",
+      "existing_alternative": "Poetry writing would falsely imply composing poems; ordinary painting omits source text.",
+      "event_ids": [
+        198891,
+        198945
+      ],
+      "evidence_by_event": {
+        "198891": [
+          "The Slow Living Collection: Art & Poetry Workshop Presented by Blank Space Arts Lab (In Chinese): Session 1: Poetry in Paint: Intertwining Lines & Flowing Colors In this opening session, participants will create flowing, interconnected lines inspired by poetry, then add vibrant colors to transform them into expressive artwork.",
+          "Tags: Art, Workshop, Literature, Poetry, Education, Chinese Language, Participatory, Chinese, Format"
+        ],
+        "198945": [
+          "Poetry and the Page: Visualizing the Word: This one day, in-person workshop taught by instructor Maria G. Pisano at Center for Book Arts explores poetry by choosing text, extracting words, and responding visually to it via drawing, collage, printing, and/or painting to transform pages into a creative work of art.",
+          "Tags: Art, Workshop, Literature, Poetry, Education, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "198891": [
+          "https://www.queenslibrary.org/event/000280-0726"
+        ],
+        "198945": [
+          "https://shop.centerforbookarts.org/products/26fwr100i"
+        ]
+      }
+    },
+    {
+      "concept": "format-cemetery-walk",
+      "label": "Cemetery history walk",
+      "category": "format",
+      "visual": "Two grave markers and a walking-path line.",
+      "rationale": "Two tours focus burial history, graves and cemetery symbolism.",
+      "existing_alternative": "Tombstone is already a useful fallback; it lacks the guided historical outing.",
+      "event_ids": [
+        199020,
+        199026
+      ],
+      "evidence_by_event": {
+        "199020": [
+          "Manhattan Cemetery Stroll: This tour explores the burial history and practices of six distinct cultures through time within New York City. Along the way, we’ll decode cemetery symbolism and funerary practices, uncovering the hidden, and sometimes controversial, gravesites of New York.",
+          "Tags: Community, History, Tour, Education, Outdoor, Walking Tour, Format, Outings"
+        ],
+        "199026": [
+          "Green-Wood Cemetery Tour: With great views, amazing architecture, and deep links to the 19th century, visiting Green-Wood Cemetery is an amazing way to step back into the past. This two-hour tour runs the gamut of graves from the “Father of Baseball” to the first Brooklyn casualty of the Civil War to one of the world’s most famous composers and much more.",
+          "Tags: Community, History, Tour, Education, Outdoor, Walking Tour, Green Wood Cemetery, Format, Outings"
+        ]
+      },
+      "source_urls_by_event": {
+        "199020": [
+          "https://fareharbor.com/boweryboyswalks/items/625713/",
+          "https://www.boweryboyswalks.com/walking-tours/manhattan-cemetery-stroll/"
+        ],
+        "199026": [
+          "https://www.boweryboyswalks.com/walking-tours/green-wood-cemetery-tour/"
+        ]
+      }
+    },
+    {
+      "concept": "activity-animal-care-learning",
+      "label": "Animal care learning",
+      "category": "activity",
+      "visual": "Feed scoop and habitat card with a paw symbol.",
+      "rationale": "Junior Keepers includes feeding, care and enrichment as co-primary learning.",
+      "existing_alternative": "Enrichment-making alone would omit broader husbandry; paw prints omit hands-on care.",
+      "event_ids": [
+        199147
+      ],
+      "evidence_by_event": {
+        "199147": [
+          "Junior WILD! Keepers Fall Session I: Established in 2015 with the opening of our Heckscher WILD! exotic animal exhibit, our signature Junior WILD! Keepers program gives participants hands-on experience in the care, feeding and enrichment of our exotic teaching animals.",
+          "Tags: Community, Museum, Nature, Workshop, Wildlife, Family, Education, Outdoor, Class, Hands on, Participatory, Cultural Venue, Format, Exotic Animals"
+        ]
+      },
+      "source_urls_by_event": {
+        "199147": [
+          "https://www.stamfordmuseum.org/event/junior-wild-keepers-fall-session-i/"
+        ]
+      }
+    },
+    {
+      "concept": "activity-live-coded-music",
+      "label": "Live-coded music",
+      "category": "activity",
+      "visual": "Laptop with code brackets and a small musical phrase.",
+      "rationale": "DJ_Dave identifies as a live-code artist; official tour listing matches this Elsewhere date. Verify this show format before applying any future icon.",
+      "existing_alternative": "DJ decks infer a different performance method; plain laptop lacks music.",
+      "event_ids": [
+        199067
+      ],
+      "evidence_by_event": {
+        "199067": [
+          "DJ_Dave: A concert w/ DJ_Dave in The Hall @ Elsewhere in Bushwick on 10.16!",
+          "Tags: Music, Concert, Electronic Music, Pop Music, Format, Performance",
+          "Prospective concept only: performer self-description at https://www.reddit.com/r/audius/comments/19dxmy6 describes live coding music, and https://linktr.ee/dj_dave lists the10_16 New York Elsewhere date. Confirm show mechanism before a future live-code assignment; name alone is not DJ-deck evidence."
+        ]
+      },
+      "source_urls_by_event": {
+        "199067": [
+          "https://www.eventbrite.com/e/dj-dave-tickets-1994581808883",
+          "https://www.eventbrite.com/e/dj-dave-tickets-1994581808883?aff=ebdssbcitybrowse"
+        ]
+      }
+    },
+    {
+      "concept": "craft-asemic-writing",
+      "label": "Asemic book art",
+      "category": "craft",
+      "visual": "An open page carrying deliberate nonalphabetic flowing marks.",
+      "rationale": "Illegible Book introduces asemic writing and hidden/nonlegible books.",
+      "existing_alternative": "Bookbinding implies construction; journaling implies meaningful personal prose.",
+      "event_ids": [
+        198948
+      ],
+      "evidence_by_event": {
+        "198948": [
+          "The Illegible Book: In this virtual workshop for all experience levels, Instructor Shirin Salehi will introduce the participants to non-legible books through an extensive one-month discussion on legibility and hiddenness in artwork in book form. Starting with an introduction on illegibility through examples of Asemic Writing, the instructor will propose works intentionally deciphered, unreadable, and inaccessible, through a selection of case studies of Artist’s books and artworks in order to raise questions on what lies beneath the hidden language.",
+          "Tags: Visual Arts, Art, Workshop, Literature, Education, Book Arts, Virtual, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "198948": [
+          "https://shop.centerforbookarts.org/products/26fat000v"
+        ]
+      }
+    },
+    {
+      "concept": "craft-limp-vellum-binding",
+      "label": "Limp-vellum binding",
+      "category": "craft",
+      "visual": "A pale flexible book cover wrapping a visible sewn text block with two broad laced spine supports.",
+      "rationale": "The class explicitly teaches a non-adhesive flexible parchment structure; distinguish from generic binding through cover and laced supports, with specialist recognition testing required.",
+      "existing_alternative": "Bookbinding art is broader; ordinary hardcover book misstates the flexible construction.",
+      "event_ids": [
+        198941
+      ],
+      "evidence_by_event": {
+        "198941": [
+          "Classic Parchment Limp-Vellum Binding: This in-person class at Center for Book Arts is taught by instructor Ana Cordeiro. The classic limp-vellum emerged from the 1966 flood of Florence as a hero. Completely non-adhesive, this structure has come to us from medieval workshops to show what mechanics alone can do.",
+          "Tags: Art, Workshop, Education, Bookbinding, Crafts, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "198941": [
+          "https://shop.centerforbookarts.org/products/26fbb009i"
+        ]
+      }
+    },
+    {
+      "concept": "craft-natural-ink-making",
+      "label": "Natural ink making",
+      "category": "craft",
+      "visual": "Plant leaves and an ink jar with a small swatch.",
+      "rationale": "Workshop makes inks from food scraps and local plants.",
+      "existing_alternative": "Natural dyeing concerns fiber coloring; ordinary printmaking omits preparing plant-based ink.",
+      "event_ids": [
+        198946
+      ],
+      "evidence_by_event": {
+        "198946": [
+          "Fiber Arts as Book Arts: Kitchen Printing: This virtual workshop is taught by CBA instructor Iviva Olenick. Students will learn how to use food scraps and local plants to make inks for printing on paper and fabric, and how to prepare fabric and paper for printing with natural inks, including tips to prevent excessive bleeding of inks.",
+          "Tags: Art, Workshop, Education, Virtual, Fiber Arts, Crafts, Printing, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "198946": [
+          "https://shop.centerforbookarts.org/products/26ftx103v"
+        ]
+      }
+    },
+    {
+      "concept": "craft-popup-paper",
+      "label": "Pop-up paper engineering",
+      "category": "craft",
+      "visual": "Open book with a single raised folded-paper flower rising from the center.",
+      "rationale": "Pop-up structures have a clear dimensional cue distinct from ordinary paper collage.",
+      "existing_alternative": "Book/flower emojis omit the fold mechanism; 3D-printing is unrelated fabrication.",
+      "event_ids": [
+        198940
+      ],
+      "evidence_by_event": {
+        "198940": [
+          "Miniature Pop-Up Wildflowers with Longstitch Binding: This virtual workshop is taught by CBA instructor Shawn Sheehy. It's rare to see a pop-up book with a sewn binding. It's doable—DESIRABLE, even—to sew up a pop-up book once some structural issues have been addressed. And here's your chance to try it out for yourself!",
+          "Tags: Visual Arts, Art, Workshop, Literature, Education, Book Arts, Virtual, Crafts, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "198940": [
+          "https://shop.centerforbookarts.org/products/26fbb000v"
+        ]
+      }
+    },
+    {
+      "concept": "craft-street-art",
+      "label": "Street art and graffiti",
+      "category": "other",
+      "visual": "A finished wall-art panel with a bold painted curve; avoid a hand actively spraying for exhibition use.",
+      "rationale": "Future street-art subject motif for viewing or making contexts; the current event is an exhibition, so an activity-specific spray-painting icon would mislead.",
+      "existing_alternative": "Palette lacks public-wall/spray context; not all street art is spray paint so the scope needs testing and exclusions.",
+      "event_ids": [
+        199108
+      ],
+      "evidence_by_event": {
+        "199108": [
+          "Art of the Street: Selections from the Elie and Sarah Hirschfeld Collection: See works from the subway walls to the tenement halls in this showcase of works inspired by the streets of New York City. This exhibition celebrates graffiti, street art, public art, and the moments when creative expression bursts out of the walls of traditional institutions into everyday life.",
+          "Tags: Visual Arts, Art, Public Art, Street Art, Exhibition, Format, Browsable"
+        ]
+      },
+      "source_urls_by_event": {
+        "199108": [
+          "https://www.nyhistory.org/exhibitions/art-of-the-street-elie-and-sarah-hirschfeld-collection"
+        ]
+      }
+    },
+    {
+      "concept": "craft-tatakizome",
+      "label": "Tatakizomé plant printing",
+      "category": "craft",
+      "visual": "Leaf under a sheet beside a small mallet.",
+      "rationale": "Natural Dyeing explicitly includes gentle plant hammering.",
+      "existing_alternative": "Natural dyeing is a suitable broad icon but lacks the hammered botanical impression.",
+      "event_ids": [
+        198944
+      ],
+      "evidence_by_event": {
+        "198944": [
+          "Fiber Arts as Book Arts: Natural Dyeing: Participants in this workshop will learn multiple plant-based dyeing and printing methods using kitchen and yard waste, completing two projects which intersect natural dyeing and print-making — bundle dyeing and tatakizomé or gentle plant hammering.",
+          "Tags: Art, Workshop, Education, Virtual, Fiber Arts, Crafts, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "198944": [
+          "https://shop.centerforbookarts.org/products/26ftx100v"
+        ]
+      }
+    },
+    {
+      "concept": "format-comedic-book-adaptation",
+      "label": "Comic book adaptation on stage",
+      "category": "format",
+      "visual": "Open book with comic speech accent on a small stage.",
+      "rationale": "Power Broker Live is a satirical presentation of the book, not a conversation with its author.",
+      "existing_alternative": "Author conversation/staged reading require different evidence; exact delivery needs investigation.",
+      "event_ids": [
+        198926
+      ],
+      "evidence_by_event": {
+        "198926": [
+          "The Power Broker Live: Part 3: Ben Tumin, the satirist profiled in NYT, returns for one last romp through The Power Broker. After sold-out runs of Parts 1 and 2, Ben ends his trilog...",
+          "Tags: Community, Theater, Literature, Comedy, Comedy Show, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "198926": [
+          "https://www.ticketmaster.com/the-power-broker-live-part-3-brooklyn-new-york-09-20-2026/event/300064E71151CB7B"
+        ]
+      }
+    },
+    {
+      "concept": "format-comedy-show-and-tell",
+      "label": "Comedy show and tell",
+      "category": "format",
+      "visual": "Microphone beside a display plinth and speech bubble.",
+      "rationale": "Comedians explicitly adapt school show-and-tell using objects.",
+      "existing_alternative": "Ordinary stand-up may omit the defining presented object; museum touching implies another activity.",
+      "event_ids": [
+        198924
+      ],
+      "evidence_by_event": {
+        "198924": [
+          "Liza Treyger Presents: Show & Tell: Liza Treyger & her comedian friends do show & tell like a spin off the elementary school activity! See what they come up with! Wahoo!! Lineup TBA! Do...",
+          "Tags: Community, Comedy, Comedy Show, Show and Tell, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "198924": [
+          "https://www.ticketmaster.com/liza-treyger-presents-show-tell-brooklyn-new-york-09-13-2026/event/300064F23CCB39A7"
+        ]
+      }
+    },
+    {
+      "concept": "format-dance-theater",
+      "label": "Dance theater",
+      "category": "format",
+      "visual": "Expressive dancer against a simple stage frame.",
+      "rationale": "Dance-theatre spectacle blends choreography, live electronics and cinema.",
+      "existing_alternative": "Contemporary dance does not automatically establish a theater narrative or style.",
+      "event_ids": [
+        199110
+      ],
+      "evidence_by_event": {
+        "199110": [
+          "Blanka Barbara Stahl | UNTOLD Productions: Untold Wajda: Blokowisko (The Estate) A dance-theatre spectacle reviving Andrzej Wajda's lost film: a story of love in an oppressed society, told through live electronics, bold choreography and cinematic video.",
+          "Tags: Theater, Art, Dance, Multimedia, Dance Theatre, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "199110": [
+          "https://lamama.org/untold-wajda-blokowisko-the-estate/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-jazz",
+      "label": "Jazz",
+      "category": "genre",
+      "visual": "A pair of syncopated musical notes with one loose improvisatory flourish.",
+      "rationale": "The genre is explicit, but an instrument-neutral motif remains exploratory and requires recognition tests; avoid treating saxophone as universal jazz.",
+      "existing_alternative": "Noto notes are generic; a saxophone misstates instrumentation when the program does not feature one.",
+      "event_ids": [
+        198888
+      ],
+      "evidence_by_event": {
+        "198888": [
+          "Irwin Hall: Saxophonist, flutist, and bandleader Irwin Hall brings The World Within: The Global Sounds of John Coltrane to The Cutting Room for an immersive evening inspired by the international influences that shaped Coltrane’s music and artistic vision. The project transforms Coltrane’s music into a vibrant live experience filled with expansive arrangements, spontaneous interplay, and global rhythmic textures.",
+          "Tags: Music, Jazz, Concert, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "198888": [
+          "https://wl.seetickets.us/event/irwin-hall/691661?afflky=TheCuttingRoom"
+        ]
+      }
+    },
+    {
+      "concept": "instrument-electric-bass",
+      "label": "Electric bass guitar",
+      "category": "instrument",
+      "visual": "Long-necked bass with pickups and four bold strings; extended-range variants need separate consideration.",
+      "rationale": "Thundercat is explicitly a featured bassist; Ibanez lists his electric bass signature instrument.",
+      "existing_alternative": "Acoustic double-bass icon misstates the instrument; generic guitar misses bass proportions.",
+      "event_ids": [
+        199081
+      ],
+      "evidence_by_event": {
+        "199081": [
+          "Thundercat: Distracted AF Tour: Two-time Grammy Award-winning bassist, songwriter and producer who fluidly blends funk, jazz, R&B and psychedelic pop. Thundercat is the virtuoso bassist & singer Stephen Bruner, a mercurial talent and multi-Grammy award winner.",
+          "Tags: Music, Jazz, Concert, Live Music, Format, Performance",
+          "Future art reference only: https://www.ibanez.com/na/artists/detail/728.html identifies Stephen Thundercat Bruner; https://www.ibanez.com/usa/products/category/electric_basses/ lists his signature electric bass. Does not establish an exact instrument for this show."
+        ]
+      },
+      "source_urls_by_event": {
+        "199081": [
+          "https://us.atgtickets.com/events/thundercat/kings-theatre-brooklyn/"
+        ]
+      }
+    }
+  ],
+  "limitations": "Counts describe this cohort, not population reach. These are grounded prospective studies, not live assignments. Existing artwork may already suffice; exact equipment and genre recognition require further review."
+}

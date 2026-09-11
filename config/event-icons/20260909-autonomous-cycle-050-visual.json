@@ -1,0 +1,189 @@
+[
+  {
+    "icon_id": "format-backstage-tour",
+    "source_sha256": "180a613ce8bf4b065d7f09baa9e4d2e394791d3e5d232a6f08ec1a447d438b34",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Theater curtain with a behind-the-scenes route.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-050/visual-final-v2",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-050/gallery-final-v2/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 834,
+      "gzip_level_6": 414
+    },
+    "optimization": {
+      "initial_raw": 834,
+      "initial_gzip_level_6": 414,
+      "final_raw": 834,
+      "final_gzip_level_6": 414
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Parted curtain with a route turning behind it indicates backstage exploration. At16px the route simplifies; label supplies tour specificity. Flat editorial diagram,not actual architecture,floorplan,admission pass or guaranteed access."
+    ]
+  },
+  {
+    "icon_id": "sport-robot-combat",
+    "source_sha256": "60e862160ead33faa3b1e7431eb4bc90b4d28934ad80d92e5c09fad7a6c30a77",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Opposing small wheeled machines with hinged plates.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-050/visual-final-v2",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-050/gallery-final-v2/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 2537,
+      "gzip_level_6": 877
+    },
+    "optimization": {
+      "initial_raw": 2550,
+      "initial_gzip_level_6": 885,
+      "final_raw": 2537,
+      "final_gzip_level_6": 877
+    },
+    "issues": [
+      {
+        "issue": "First pose hid the plate articulation and resembled two plain toy vehicles.",
+        "resolution": "Rotated the blue plate about its existing hinge in the authoritative scene; retained grounded wheels and opposite orientations. Re-inspected six views and native sizes. Label dependence remains explicit.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Two low wheeled robots with hinged plates face each other on a common pad. At16px plate detail softens and they can resemble other small wheeled machines; label supplies combat context. Original nonfunctional shells,not current entrants,weight-class replicas or an operating design."
+    ]
+  },
+  {
+    "icon_id": "activity-tree-identification",
+    "source_sha256": "e24761e6709830bca9a7cf65c200b60b36ba09481d21818576a2e8752b157f7a",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Leaf study with magnifier.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-050/visual-final-v2",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-050/gallery-final-v2/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 963,
+      "gzip_level_6": 443
+    },
+    "optimization": {
+      "initial_raw": 963,
+      "initial_gzip_level_6": 443,
+      "final_raw": 963,
+      "final_gzip_level_6": 443
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Generic botanical leaf field-sheet and magnifier indicate close identification. At16px veins soften; label supplies tree/shrub rather than general botanical scope. No exact species,physical specimen or supplied guide promised."
+    ]
+  },
+  {
+    "icon_id": "craft-tunnel-book",
+    "source_sha256": "de3a9d4152570e532fa1705a294e9a7a251f3ad0911cfa1830ab45a0febe51d5",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Layered paper landscape with folded sides.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-050/visual-final-v2",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-050/gallery-final-v2/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 3606,
+      "gzip_level_6": 1030
+    },
+    "optimization": {
+      "initial_raw": 3298,
+      "initial_gzip_level_6": 965,
+      "final_raw": 3606,
+      "final_gzip_level_6": 1030
+    },
+    "issues": [
+      {
+        "issue": "Uniform side paint hid accordion folds and read as a solid block.",
+        "resolution": "Alternated broad paper tones across existing folded gusset faces; geometry unchanged. Inspected six views and final native cards.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Four receding original paper scenes with accordion sides indicate a tunnel book. At16px folds and individual layers soften; label distinguishes it from a shadow box or ordinary picture frame. Original geometric landscape,not museum artwork or a cutting template."
+    ]
+  },
+  {
+    "icon_id": "craft-stained-glass",
+    "source_sha256": "5a50be008360c731d6ec1596c4688571831293716106dcd04f9443d6d994c4d0",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Colored glass assembly.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-050/visual-final-v2",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-050/gallery-final-v2/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 632,
+      "gzip_level_6": 356
+    },
+    "optimization": {
+      "initial_raw": 632,
+      "initial_gzip_level_6": 356,
+      "final_raw": 632,
+      "final_gzip_level_6": 356
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Colored glass regions and a separate loose piece indicate glass-art assembly. At16px individual seam shapes soften; label supplies stained-glass context. Does not specify lead,copperfoil,soldering,glue or a guaranteed finished window; source photo depicts mosaic assembly."
+    ]
+  }
+]

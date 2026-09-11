@@ -1,0 +1,37 @@
+{
+  "reviewer_mode": "creator-critical-pass",
+  "views": [
+    "front",
+    "rear",
+    "left",
+    "right",
+    "top",
+    "icon"
+  ],
+  "evidence": ".scratch/icon-cycles-20260909/cycle-015/geometry.png",
+  "measurements": ".scratch/icon-cycles-20260909/cycle-015/geometry-measurements.json",
+  "findings": [
+    "Dance figure has paired femurs .420m, tibias .400m, upper arms .285m and forearms .255m, verified from the inverse-kinematics joints. Foot spacing differs while the bone lengths remain equal. Both shoe soles meet y=0.",
+    "Upper-arm radius .039m is below thigh radius .071m. Continuous skin/sleeves and trousers cover the joints; palms/thumbs connect to wrists. A short neck overlaps shirt and head, leaving about.042m between shirt top and head bottom. Flat skin paint avoids conflicting limb shadows.",
+    "Front, rear, left, right, top and icon projections were checked for arm/torso separation, leg spacing, connected limbs, hair/head fit and grounded shoes. Hair-cap winding was repaired before final review. These are selected geometry checks, not exhaustive collision or choreography validation.",
+    "Bookmobile inherits the previously reviewed original coach construction: continuous floor/body, closed sloping cab, four equal-radius tires at matching axle heights, suspension and bumper. All tires meet y=0. Open-book emblems replace clinic graphics and stay on side panels.",
+    "Resin pendant, coloring sheet and financial-coaching graphics are direct planar emblems. The pendant is an optical illustration of an embedded flower, not a physical resin simulation. No articulated person is hidden inside these graphics."
+  ],
+  "decision": "pass",
+  "references": [
+    {
+      "url": "https://www.zumba.com/en-US/party/classes/class-zumba-gold",
+      "finding": "Official format describes a lower-intensity dance class; a grounded generic pose avoids making jumping universal."
+    },
+    {
+      "url": "https://www.bklynlibrary.org/locations/arlington",
+      "finding": "Primary library page confirms mobile library service while Arlington is closed, including an upcoming Bookmobile event."
+    },
+    {
+      "url": "https://www.artresin.com/blogs/artresin/how-to-make-resin-art-with-dried-flowers",
+      "finding": "Manufacturer describes preserving dried flowers in resin jewelry and other molded objects; artwork uses an original floral pendant emblem."
+    }
+  ],
+  "source_sha256": "dacf1e9a169f1618d0a6ce351589b765008cae7da00b435748a8c533c6b8f603",
+  "projector_sha256": "cffe8355e9759b59073e96df583eb68a85a018baebc384969c6d899caa1a9c3e"
+}

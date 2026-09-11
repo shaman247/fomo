@@ -1,0 +1,183 @@
+[
+  {
+    "icon_id": "format-coworking",
+    "source_sha256": "53329d701207478bcb074712c077a73cd0ce59fa88a7db23d82b1042220281c5",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Two computer workstations with a shared speech bubble.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-041/visual-final-v2",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-041/gallery-final-v2/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 938,
+      "gzip_level_6": 393
+    },
+    "optimization": {
+      "initial_raw": 938,
+      "initial_gzip_level_6": 393,
+      "final_raw": 938,
+      "final_gzip_level_6": 393
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Two equal laptop workstations and a shared conversation bubble indicate coworking. At 16 px screen lines and bubble marks soften; label distinguishes shared work from a computer class. Flat elevation is not a room plan or a promise of provided computers."
+    ]
+  },
+  {
+    "icon_id": "activity-academic-exam-prep",
+    "source_sha256": "c5579ae42d8b57c300d85edcb2cb0aa7dfc5ee1e655463c4d56ce31fc1794995",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Question practice sheet with book and pencil.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-041/visual-final-v2",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-041/gallery-final-v2/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 1128,
+      "gzip_level_6": 449
+    },
+    "optimization": {
+      "initial_raw": 1128,
+      "initial_gzip_level_6": 449,
+      "final_raw": 1128,
+      "final_gzip_level_6": 449
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Practice questions, marked answer bubbles, a study book and pencil indicate exam preparation. At 16 px answer choices soften; label distinguishes study from taking a test or a survey. No score, admission or exact official paper/digital format is promised."
+    ]
+  },
+  {
+    "icon_id": "format-record-fair",
+    "source_sha256": "bb0379f6ffe56b2285faa301eb4523c06f11128c5aa135b9667b7aaa8cdaac79",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Record sleeves and vinyl disc with a shopping tag.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-041/visual-final-v2",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-041/gallery-final-v2/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 908,
+      "gzip_level_6": 395
+    },
+    "optimization": {
+      "initial_raw": 982,
+      "initial_gzip_level_6": 420,
+      "final_raw": 908,
+      "final_gzip_level_6": 395
+    },
+    "issues": [
+      {
+        "issue": "Initial record sleeves were tall rectangles and the tag connector did not visibly meet its hole.",
+        "resolution": "Made all sleeves square and removed the connector, leaving a separate editorial price symbol. Final card and all runtime variants personally rechecked.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Square record sleeves, grooved vinyl disc and a separate price-tag symbol indicate a record fair. At 16 px groove detail and tag lines soften; label distinguishes shopping from listening. Disc is displayed beside sleeves rather than a physical insertion sequence; no exact inventory or format guarantee."
+    ]
+  },
+  {
+    "icon_id": "format-flea-market",
+    "source_sha256": "2b7f0be2fca9f900d05ce156a71b618b74a1ef97843a4c1b12ccec951c0a873e",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Mixed-goods stall with clock and vase.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-041/visual-final-v2",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-041/gallery-final-v2/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 1063,
+      "gzip_level_6": 506
+    },
+    "optimization": {
+      "initial_raw": 1063,
+      "initial_gzip_level_6": 506,
+      "final_raw": 1063,
+      "final_gzip_level_6": 506
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "A market stall displaying a clock and vase indicates mixed collectible goods. At 16 px clock hands and vase bands soften; label distinguishes flea market from the similarly structured makers-market icon. Generic examples do not promise particular vendors, antiques authentication or goods."
+    ]
+  },
+  {
+    "icon_id": "format-architecture-tour",
+    "source_sha256": "1b9c469454ae879cca863daa38de566a7b8de2501d9ec6e821f7872afa5897f7",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Building facade on a route map.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-041/visual-final-v2",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-041/gallery-final-v2/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 904,
+      "gzip_level_6": 471
+    },
+    "optimization": {
+      "initial_raw": 904,
+      "initial_gzip_level_6": 471,
+      "final_raw": 904,
+      "final_gzip_level_6": 471
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "A generic building elevation on a map with a route and pin indicates architecture walking tours. At 16 px windows and route dashes soften; label distinguishes architecture interpretation from general sightseeing. No actual building, route, protected designation or guaranteed interior access is depicted."
+    ]
+  }
+]

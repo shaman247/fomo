@@ -1,0 +1,661 @@
+{
+  "date": "2026-09-10",
+  "scope": "Cycle 050: 100 sequential events 215663–216011, no targeted supplements.",
+  "suggestions": 39,
+  "concept_count": 24,
+  "concepts": [
+    {
+      "concept": "activity-nature-play",
+      "label": "Early-childhood nature play",
+      "category": "activity",
+      "visual": "Simple log,leaf and child-scale exploration motif.",
+      "rationale": "Explicit cohort context supports a future original pictogram; verify current program and recognition before assignment.",
+      "existing_alternative": "Broad Unicode or existing accepted artwork may suffice; no automatic assignment.",
+      "event_ids": [
+        215954,
+        215955,
+        215956,
+        215957,
+        215958
+      ],
+      "evidence_by_event": {
+        "215954": [
+          "Little Wonders: Halloween Fun!! – SOLD OUT: Infants, toddlers and caregivers join our educators to experience the many wonders of Reeves-Reed Arboretum. Hike woodland trails and gardens. Engage in active nature play designed to stimulate your child’s curiosity and inspire a love of the outdoors. Stories, music,",
+          "Tags: Garden, Family, Outdoor, Class, Nature Play, Participatory, Outdoor Venue, Halloween, Format"
+        ],
+        "215955": [
+          "Oaks and Acorns: Pumpkins: Wonder, respect, and love for the natural world will be a great start in these engaging weekly adult and child classes. Take nature hikes, read stories, and create a one-of-a-kind project every week. These are wonderful experiences where children can spend time outdoors.",
+          "Tags: Garden, Family, Education, Outdoor, Class, Participatory, Outdoor Venue, Format, Pumpkins, Nature Hikes"
+        ],
+        "215956": [
+          "Little Wonders: We Love Nature – SOLD OUT: Infants, toddlers and caregivers join our educators to experience the many wonders of Reeves-Reed Arboretum. Hike woodland trails and gardens. Engage in active nature play designed to stimulate your child’s curiosity and inspire a love of the outdoors. Stories, music, and sensorimot",
+          "Tags: Garden, Family, Outdoor, Class, Early Childhood, Nature Play, Participatory, Outdoor Venue, Format"
+        ],
+        "215957": [
+          "Oaks and Acorns: Owls: Wonder, respect, and love for the natural world will be a great start in these engaging weekly adult and child classes. Take nature hikes, read stories, and create a one-of-a-kind project every week. These are wonderful experiences where children can spend time outdoors.",
+          "Tags: Garden, Family, Education, Outdoor, Class, Owls, Participatory, Outdoor Venue, Format, Nature Hikes"
+        ],
+        "215958": [
+          "Little Wonders: Nature as Art – SOLD OUT: Infants, toddlers and caregivers join our educators to experience the many wonders of Reeves-Reed Arboretum. Hike woodland trails and gardens. Engage in active nature play designed to stimulate your child’s curiosity and inspire a love of the outdoors. Stories, music,",
+          "Tags: Community, Garden, Art, Nature, Family, Outdoor, Class, Participatory, Outdoor Venue, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "215954": [
+          "https://www.reeves-reedarboretum.org/event/little-wonders-halloweenfun-october-26-2026/"
+        ],
+        "215955": [
+          "https://www.reeves-reedarboretum.org/event/oaks-and-acorns-pumpkins-morn-october-28-2026/"
+        ],
+        "215956": [
+          "https://www.reeves-reedarboretum.org/event/little-wonders-we-love-nature/"
+        ],
+        "215957": [
+          "https://www.reeves-reedarboretum.org/event/oaks-and-acorns-owls-november-4-2026-morn/"
+        ],
+        "215958": [
+          "https://www.reeves-reedarboretum.org/event/little-wonders-natureart-november-9-2026/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-rock",
+      "category": "genre",
+      "label": "Rock music",
+      "visual": "Strong accented musical note",
+      "rationale": "Electric guitar exists but is not universal evidence; motif requires recognition testing.",
+      "existing_alternative": "Broad fallback does not distinguish this specific supported facet.",
+      "event_ids": [
+        215927,
+        215931,
+        215933,
+        215937,
+        215938
+      ],
+      "evidence_by_event": {
+        "215927": [
+          "Rainbow Kitten Surprise with Common People: Rainbow Kitten Surprise performs as part of Rolling Stone’s Rolling Stone Rock Tour, showcasing the best of the future of rock.",
+          "Tags: Music, Rock, Concert, Format, Performance"
+        ],
+        "215931": [
+          "Movements with Balance and Composure, Midrift, Niis: No description available.",
+          "Tags: Music, Rock, Concert, Format, Performance"
+        ],
+        "215933": [
+          "The Story So Far with The Starting Line, Ultra Q: No description available.",
+          "Tags: Music, Rock, Concert, Format, Performance"
+        ],
+        "215937": [
+          "Blondshell with NoSo, Prewn: $1 from every ticket sold will go to The Ally Coalition’s work supporting homeless and at-risk LGBTQ youth.",
+          "Tags: Community, Music, Rock, Concert, Format, Performance, LGBTQI"
+        ],
+        "215938": [
+          "KINO: KINO is performing a full-scale concert in the United States for the first time, featuring Yuri Kasparyan, Igor Tikhomirov, and Alexander Titov with a restored and digitally remastered voice of Viktor Tsoi.",
+          "Tags: Music, Rock, Concert, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "215927": [
+          "https://www.bowerypresents.com/events/detail?event_id=1535116"
+        ],
+        "215931": [
+          "https://www.bowerypresents.com/events/detail?event_id=1442836"
+        ],
+        "215933": [
+          "https://www.bowerypresents.com/events/detail?event_id=1413452"
+        ],
+        "215937": [
+          "https://www.bowerypresents.com/events/detail?event_id=1448392"
+        ],
+        "215938": [
+          "https://www.bowerypresents.com/events/detail?event_id=1407900"
+        ]
+      }
+    },
+    {
+      "concept": "format-game-social",
+      "label": "Mixed game social",
+      "category": "format",
+      "visual": "Controller, tile and game card beside a conversation bubble.",
+      "rationale": "Co-primary games must not promise one exact game.",
+      "existing_alternative": "Use a suitable broad Unicode or accepted icon until a distinctive reviewed study is available.",
+      "event_ids": [
+        215683,
+        215722,
+        215761
+      ],
+      "evidence_by_event": {
+        "215683": [
+          "Game On!: Join us in our community room for Game On! Come in for video games on our PS4 and Switch, board games, or just to hang out. Snacks and games provided.",
+          "Tags: Community, Video Games, Family, Games, Board Games, Teen Events, Game, Participatory, Nintendo Switch, Snacks, Format"
+        ],
+        "215722": [
+          "Game On!: Join us in our community room for Game On! Come in for video games on our PS4 and Switch, board games, or just to hang out. Snacks and games provided.",
+          "Tags: Community, Video Games, Family, Games, Board Games, Teen Events, Game, Participatory, Nintendo Switch, Snacks, Format"
+        ],
+        "215761": [
+          "Game Day at the Library: Every Thursday at 4pm, join us for an hour dedicated to classic games in the library! Whether you prefer bingo, board games, or cards, we’ve got your game day covered.",
+          "Tags: Community, Games, Nightlife, Board Games, Bingo, Game, Participatory, Adults, Cards, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "215683": [
+          "https://www.nypl.org/events/programs/2026/08/03/game-0",
+          "https://www.nypl.org/events/programs/2026/09/11/game"
+        ],
+        "215722": [
+          "https://www.nypl.org/events/programs/2026/08/06/game",
+          "https://www.nypl.org/events/programs/2026/09/03/game"
+        ],
+        "215761": [
+          "https://www.nypl.org/events/programs/2026/08/06/game-day-library"
+        ]
+      }
+    },
+    {
+      "concept": "genre-electronic",
+      "label": "Electronic music",
+      "category": "genre",
+      "visual": "A simple waveform beside one music note.",
+      "rationale": "Explicit electronic repertoire does not establish DJ or synth equipment; abstract motif needs recognition testing.",
+      "existing_alternative": "Existing broad Unicode remains suitable; specific motif must demonstrate added recognition before new artwork.",
+      "event_ids": [
+        215923,
+        215930,
+        215934
+      ],
+      "evidence_by_event": {
+        "215923": [
+          "Gryffin: Featuring Łaszewo and AR/CO.",
+          "Tags: Community, Music, Festival, Outdoor, Concert, Electronic Music, Live Music, Format, Performance"
+        ],
+        "215930": [
+          "The Avalanches with Erick the Architect, Jessy Lanza (DJ Set): No description available.",
+          "Tags: Music, Concert, Electronic Music, Format, Performance"
+        ],
+        "215934": [
+          "horsegiirL with Dylan Brady, Ren G (DJ Set): No description available.",
+          "Tags: Music, Dance, Concert, Nightlife, Electronic Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "215923": [
+          "https://underthekbridge.org/events/detail?event_id=1364819"
+        ],
+        "215930": [
+          "https://www.bowerypresents.com/events/detail?event_id=1533835"
+        ],
+        "215934": [
+          "https://www.bowerypresents.com/events/detail?event_id=1425715"
+        ]
+      }
+    },
+    {
+      "concept": "format-historic-house-tour",
+      "label": "Historic house tour",
+      "category": "format",
+      "visual": "Historic doorway and route cue",
+      "rationale": "Focuses visiting domestic heritage interiors.",
+      "existing_alternative": "Existing Unicode or broader artwork may remain preferable; keep prospective until recognition and construction review.",
+      "event_ids": [
+        215979,
+        215992
+      ],
+      "evidence_by_event": {
+        "215979": [
+          "Hawkins-Mount House Tours | LI250: As part of LIM’s America at 250 programming, the museum offers special tours of the historic Hawkins-Mount House, an 18th-century homestead associated with American genre painter William Sidney Mount and the American Revolution.",
+          "Tags: Community, History, Tour, Education, Outdoor, Format, Outings"
+        ],
+        "215992": [
+          "Guided House Tour: Healthcare in Tredwell Times: This 60–75-minute tour examines 19th-century diseases, treatments, medical care, and the medical advancements prompted by the Civil War.",
+          "Tags: Community, History, Tour, Wellness, Education, Health, Tours, Healthcare, Format, Outings"
+        ]
+      },
+      "source_urls_by_event": {
+        "215979": [
+          "https://longislandmuseum.org/event/hawkins-mount-house-tours-li250-3/"
+        ],
+        "215992": [
+          "https://www.nycgovparks.org/events/2026/09/18/guided-house-tour-healthcare-in-tredwell-times",
+          "https://www.zeffy.com/en-US/ticketing/guided-house-tour-healthcare-in-tredwell-times-copy"
+        ]
+      }
+    },
+    {
+      "concept": "format-mediumship",
+      "label": "Mediumship demonstration",
+      "category": "format",
+      "visual": "A small stage curtain surrounding two dialogue sparks.",
+      "rationale": "Dedicated demonstration differs from a theatrical play; concept needs recognition study.",
+      "existing_alternative": "Sparkle is broad; avoid supernatural claims as proven outcomes.",
+      "event_ids": [
+        215973,
+        215989
+      ],
+      "evidence_by_event": {
+        "215973": [
+          "Theresa Caputo Live! The Experience: For more than a decade, Theresa Caputo—known worldwide as the Long Island Medium—has touched the lives of millions of fans, comforting supporters when they need it most. Through personal life stories, candid humor, and intimate details about her gift to communicate with those who have passed",
+          "Tags: Theater, Comedy, Mediumship, Live Experience, Storytelling / Theater, Format, Theater Show, Performance"
+        ],
+        "215989": [
+          "Mediumship for Creativity Seasonal Circle with Medium and Author Tiffany Hopkins (Fall Halfway Edition): For centuries, artists and makers have sought to reach beyond the everyday in order to create in communion with the depths of the unconscious, the divine, and the dead. Join Tiff",
+          "Tags: Art, Workshop, Wellness, Education, Creativity, Mediumship, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "215973": [
+          "https://www.bardavon.org/shows/theresa-caputo-live-the-experience/"
+        ],
+        "215989": [
+          "https://www.morbidanatomy.org/events/zhgjh76sxp5s6ms-jj4b3-dtnst-w8stg-25jzt-9gfcr-nhwj7-7z5x6-3g74z-sbgx4-xtab5-34g8d-3nt76-ryp8s-r4tyj-4rz6j"
+        ]
+      }
+    },
+    {
+      "concept": "genre-country",
+      "label": "Country music",
+      "category": "genre",
+      "visual": "Explore a music note integrated into a simple brimmed hat.",
+      "rationale": "Country repertoire is named; hat is only an exploratory convention and recognition testing must avoid treating costume as universal genre identity.",
+      "existing_alternative": "Noto cowboy has no music cue; guitar/banjo do not cover all country performances.",
+      "event_ids": [
+        215936,
+        215952
+      ],
+      "evidence_by_event": {
+        "215936": [
+          "Hudson Westbrook with Kenny Whitmire & Ethan Burdick: No description available.",
+          "Tags: Music, Concert, Country Music, Format, Performance"
+        ],
+        "215952": [
+          "Country Fest: Boots & BBQ: Saddle up and join us for our inaugural Country Fest: Boots and BBQ; a lively fall fundraiser filled with great food, music, and fun all set amongst the beautiful gardens at Reeves-Reed Arboretum! Gather your family, friends, and neighbors for an unforgettable afternoon featuring live country music.",
+          "Tags: Community, Restaurant, Music, Garden, Outdoor, Country Music, Benefit, Outdoor Venue, Format, Social, Beverage Venue"
+        ]
+      },
+      "source_urls_by_event": {
+        "215936": [
+          "https://www.bowerypresents.com/events/detail?event_id=1521759"
+        ],
+        "215952": [
+          "https://www.reeves-reedarboretum.org/event/country-fest-october-3-2026/"
+        ]
+      }
+    },
+    {
+      "concept": "activity-meditation-retreat",
+      "label": "Meditation retreat",
+      "category": "activity",
+      "visual": "Quiet walking path and a meditation cushion in one setting.",
+      "rationale": "Retreat mixes sitting, walking and dharma teaching; avoid a single assumed posture.",
+      "existing_alternative": "Use accurate current Unicode or accepted artwork until the prospective design has been structurally and visually reviewed.",
+      "event_ids": [
+        215969
+      ],
+      "evidence_by_event": {
+        "215969": [
+          "DBZ: Harvest Sesshin: Led by Chigan Roshi, we come together during Harvest Sesshin amid the austere beauty of November on Dai Bosatsu Mountain.",
+          "Tags: Wellness, Meditation, Gathering, Service, Mind-Body, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "215969": [
+          "https://zenstudies.org/event/dbz-harvest-sesshin-2026/"
+        ]
+      }
+    },
+    {
+      "concept": "activity-mixed-crafts",
+      "label": "Mixed crafts",
+      "category": "activity",
+      "visual": "Several distinct craft materials around one work surface.",
+      "rationale": "Do not imply a single medium.",
+      "existing_alternative": "Use supported accepted art or the current broad Unicode fallback pending a distinct study.",
+      "event_ids": [
+        215807
+      ],
+      "evidence_by_event": {
+        "215807": [
+          "Teen Maker Space Fridays: This series happens in-person at the Port Richmond Library Teen Center. On Fridays, the Teen Center becomes a maker hub, offering a different featured activity or access to creator tools. Light refreshments are provided, and the series is open to teens ages 13–18.",
+          "Tags: Art, Science, Family, Education, Warehouse, Technology, Makerspace, Crafts, Teen Events, Open Practice, Creative Art, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "215807": [
+          "https://www.nypl.org/events/programs/2026/08/14/teen-maker-space-fridays",
+          "https://www.nypl.org/events/programs/2026/09/04/teen-maker-space-fridays"
+        ]
+      }
+    },
+    {
+      "concept": "craft-life-casting",
+      "label": "Life casting",
+      "category": "craft",
+      "visual": "Hand mold and cast as an original simple diagram.",
+      "rationale": "Explicit cohort context supports a future original pictogram; verify current program and recognition before assignment.",
+      "existing_alternative": "Broad Unicode or existing accepted artwork may suffice; no automatic assignment.",
+      "event_ids": [
+        215939
+      ],
+      "evidence_by_event": {
+        "215939": [
+          "The American Artists’ Hand Archive: Vanessa Hoheb and Thomas Donahue will discuss their project creating an archive of bronze life hand castings made in collaboration with notable American visual artists, including its recent developments and legacy.",
+          "Tags: History, Visual Arts, Art, Sculpture, Education, Archives, Lecture, Gathering, Talk, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "215939": [
+          "https://generalsociety.org/lecture-schedule/"
+        ]
+      }
+    },
+    {
+      "concept": "craft-paper-puppets",
+      "label": "Paper puppet making",
+      "category": "craft",
+      "visual": "Cut-paper character attached to an explicit rod or hinged tabs after mechanism verification.",
+      "rationale": "Poster Tots and Kids name paper characters but current excerpts omit construction details.",
+      "existing_alternative": "Hand-puppet art would assume a glove mechanism; paper doll versus puppet needs source verification.",
+      "event_ids": [
+        216000
+      ],
+      "evidence_by_event": {
+        "216000": [
+          "Crafternoons: Designing Puppets of Earthly Delights: Inspired by Masterpieces: A Virtual Experience of the Museo del Prado, participants will design puppets inspired by Bosch's The Garden of Earthly Delights. This is part of a series of free, drop-in art workshops for families, kids, and neighbors of all ages.",
+          "Tags: Theater, Art, Workshop, Free, Family, Education, Puppetry, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "216000": [
+          "https://powerhousearts.org/event/crafternoons-designing-puppets-of-earthly-delights"
+        ]
+      }
+    },
+    {
+      "concept": "craft-popup-paper",
+      "label": "Pop-up paper engineering",
+      "category": "craft",
+      "visual": "Open book with a single raised folded-paper flower rising from the center.",
+      "rationale": "Pop-up structures have a clear dimensional cue distinct from ordinary paper collage.",
+      "existing_alternative": "Book/flower emojis omit the fold mechanism; 3D-printing is unrelated fabrication.",
+      "event_ids": [
+        215998
+      ],
+      "evidence_by_event": {
+        "215998": [
+          "Art Where You Are: Creating Emerging Worlds at Abolitionist Place: Participants will create a paper world inspired by Masterpieces: A Virtual Experience of the Museo del Prado. With support from Powerhouse Arts staff, attendees will experiment with paper engineering, folding, layering, and storytelling.",
+          "Tags: Community, Visual Arts, Art, Workshop, Free, Family, Education, Paper Art, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "215998": [
+          "https://powerhousearts.org/event/art-where-you-are-creating-emerging-worlds-at-abolitionist-place"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-symphony-orchestra",
+      "label": "Symphony orchestra",
+      "category": "format",
+      "visual": "Explore simplified strings/brass around one conductor baton.",
+      "rationale": "Orchestra is the central ensemble alongside chorus and soloists.",
+      "existing_alternative": "Choir alone would overselect one section.",
+      "event_ids": [
+        215976
+      ],
+      "evidence_by_event": {
+        "215976": [
+          "Berlioz’s Symphonie fantastique: Louis Langrée conducts the Orchestra of St. Luke’s in Berlioz’s Symphonie fantastique and other works. Tenor Benjamin Bernheim performs as soloist in Berlioz’s song cycle Les nuits d’été.",
+          "Tags: Music, Classical Music, Orchestra, Concert, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "215976": [
+          "https://oslmusic.org/calendar/2026/11/05/berliozs-symphonie-fantastique-8pm/"
+        ]
+      }
+    },
+    {
+      "concept": "equipment-architectural-cornice",
+      "label": "Architectural cornice",
+      "category": "equipment",
+      "visual": "Sheet-metal roofline molding with repeated brackets.",
+      "rationale": "Explicit cohort context supports a future original pictogram; verify current program and recognition before assignment.",
+      "existing_alternative": "Broad Unicode or existing accepted artwork may suffice; no automatic assignment.",
+      "event_ids": [
+        215940
+      ],
+      "evidence_by_event": {
+        "215940": [
+          "Ornamental Cornices: Manhattan’s Sheet-Metal Masterpieces: Henry Hillman will discuss exceptional sheet-metal cornices in New York and other American cities, based on his book Ornamental Cornices. The program is held in partnership with The New York Landmarks Conservancy and the Victorian Society of New York.",
+          "Tags: Architecture, History, Art, Education, Lecture, Gathering, Talk, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "215940": [
+          "https://generalsociety.org/lecture-schedule/"
+        ]
+      }
+    },
+    {
+      "concept": "format-burlesque",
+      "label": "Burlesque",
+      "category": "format",
+      "visual": "A pair of overlapping feather fans on a stage base",
+      "rationale": "Explicit burlesque differs from drag and generic dance; feather fan is only representative and needs review.",
+      "existing_alternative": "Source Unicode fallback remains until distinct art is reviewed.",
+      "event_ids": [
+        215994
+      ],
+      "evidence_by_event": {
+        "215994": [
+          "Razzle Dazzle Burlesque: A burlesque performance at House of Yes.",
+          "Tags: Theater, Art, Dance, Burlesque, Nightlife, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "215994": [
+          "https://shotgun.live/en/events/razzle-dazzle-burlesque-sept-11-2026"
+        ]
+      }
+    },
+    {
+      "concept": "format-comedy-open-mic",
+      "label": "Comedy open mic",
+      "category": "format",
+      "visual": "Microphone and open sign motif",
+      "rationale": "Specific opportunity supported by reviewed context; verify exact technique and recognition before creating.",
+      "existing_alternative": "Current broad fallback remains defensible; avoid unconfirmed equipment or pose.",
+      "event_ids": [
+        215898
+      ],
+      "evidence_by_event": {
+        "215898": [
+          "DBJ Comedy Open Mic: An open mic for performers to showcase talent, test material, and potentially be featured on future DBJ Comedy shows. There is no ticket cover, and doors open at 5:30pm.",
+          "Tags: Comedy, Free, Nightlife, Open Practice, Participatory, Open Mic / Comedy, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "215898": [
+          "https://www.instagram.com/dbjcomedy/"
+        ]
+      }
+    },
+    {
+      "concept": "format-historic-site-tour",
+      "label": "Historic site tour",
+      "category": "format",
+      "visual": "Heritage placard beside a short guided path.",
+      "rationale": "Visiting a historic site without inventing specific architecture.",
+      "existing_alternative": "Use a supported accepted icon or broad Unicode while a distinctive study is pending.",
+      "event_ids": [
+        215921
+      ],
+      "evidence_by_event": {
+        "215921": [
+          "OHNY: Tours are scheduled from 12:30–1:30 PM, 1:30–2:30 PM, and 2:30–3:30 PM.",
+          "Tags: Community, Architecture, Art, Education, Tours, Open House, Format, Browsable"
+        ]
+      },
+      "source_urls_by_event": {
+        "215921": [
+          "https://docs.google.com/document/d/1RW5S9fSgo6puQPiCHNfdoFyFgyK3DKbw/mobilebasic"
+        ]
+      }
+    },
+    {
+      "concept": "format-musical-theater",
+      "label": "Musical theater",
+      "category": "format",
+      "visual": "Stage mask beside a musical score, distinct from a cinema screen.",
+      "rationale": "Fully staged named musicals combine drama and song.",
+      "existing_alternative": "Theater masks are broad; singing microphones alone omit the dramatic format.",
+      "event_ids": [
+        216009
+      ],
+      "evidence_by_event": {
+        "216009": [
+          "Midnight: Set in the American South, MIDNIGHT follows twelve interconnected lives—six Black and six white characters—whose stories unfold through an exhilarating score that blends gospel, pop, R&B, rock, folk, opera, and contemporary musical theatre. As love, loss, prejudice, and hope collide, the boundaries that separate them begin to disappear, revealing a timeless truth: while we don’t choose the roles we’re born into, we do choose who we become.",
+          "Tags: Music, Theater, Drama / Theater, Format, Theater Show, Performance, Todrick Hall"
+        ]
+      },
+      "source_urls_by_event": {
+        "216009": [
+          "https://www.darylroththeatre.com/production/midnight/"
+        ]
+      }
+    },
+    {
+      "concept": "format-podcast-listening-group",
+      "label": "Podcast listening group",
+      "category": "format",
+      "visual": "Audio player with surrounding conversation bubbles.",
+      "rationale": "Explicit cohort context supports a future original pictogram; verify current program and recognition before assignment.",
+      "existing_alternative": "Broad Unicode or existing accepted artwork may suffice; no automatic assignment.",
+      "event_ids": [
+        215894
+      ],
+      "evidence_by_event": {
+        "215894": [
+          "The Listening Club of Brooklyn: The Listening Club of Brooklyn meets every third Tuesday to listen to a story from the Radio Ambulante podcast and share what brings people together as Latin Americans. The event is held completely in Spanish, and native and non-native speakers are welcome.",
+          "Tags: Community, Literature, Culture, Spanish Language, Podcast, Discussion Group, Gathering, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "215894": [
+          "https://www.instagram.com/thebrooklynartery/"
+        ]
+      }
+    },
+    {
+      "concept": "format-sensory-nature-walk",
+      "label": "Sensory nature walk",
+      "category": "format",
+      "visual": "Trail leaf with sound and touch ripples.",
+      "rationale": "Outdoor sensory observation without clinical treatment claims.",
+      "existing_alternative": "Use a supported accepted icon or broad Unicode while a distinctive study is pending.",
+      "event_ids": [
+        215918
+      ],
+      "evidence_by_event": {
+        "215918": [
+          "Climate Week Event: A Newtown Creek Nature Walk scavenger hunt, Mycelium Choir, and Scent Garden event.",
+          "Tags: Community, Outdoor, Climate, Community Celebration, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "215918": [
+          "https://www.holesinthewallcollective.org/imaginedfutures"
+        ]
+      }
+    },
+    {
+      "concept": "format-water-communion",
+      "label": "Water communion",
+      "category": "format",
+      "visual": "Small vessels pouring into one shared bowl;faith context from label.",
+      "rationale": "Explicit cohort context supports a future original pictogram; verify current program and recognition before assignment.",
+      "existing_alternative": "Broad Unicode or existing accepted artwork may suffice; no automatic assignment.",
+      "event_ids": [
+        215996
+      ],
+      "evidence_by_event": {
+        "215996": [
+          "Ingathering & Water Communion: The congregation returns to the Sanctuary for Ingathering & Water Communion with Rev. Micah C. Ma. Attendees are invited to bring a small amount of water from their summer adventures to make holy water together.",
+          "Tags: Community, Wellness, Family, Spirituality, Gathering, Service, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "215996": [
+          "https://www.fuub.org/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-hip-hop",
+      "label": "Hip-hop",
+      "category": "genre",
+      "visual": "A compact boombox with two broad speaker circles and one strong rhythmic accent.",
+      "rationale": "The genre is explicitly tagged; boombox is an exploratory historical music-culture cue, not a claim that it is on stage, and must be tested beyond generic retro music.",
+      "existing_alternative": "Noto microphone is generic vocal performance; DJ decks imply a DJ role not established by every hip-hop concert.",
+      "event_ids": [
+        215929
+      ],
+      "evidence_by_event": {
+        "215929": [
+          "JPEGMAFIA with redveil, matt proxy: No description available.",
+          "Tags: Music, Hip Hop, Concert, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "215929": [
+          "https://www.bowerypresents.com/events/detail?event_id=1431139"
+        ]
+      }
+    },
+    {
+      "category": "genre",
+      "concept": "genre-rnb",
+      "existing_alternative": "Noto microphone shows vocals but not genre; avoid assuming saxophone or other instruments.",
+      "label": "R&B",
+      "rationale": "R&B is explicit; exploratory smooth vocal motif is not a proven genre symbol and must be tested.",
+      "visual": "Explore a microphone paired with a single smooth looping sound-wave ribbon.",
+      "event_ids": [
+        216011
+      ],
+      "evidence_by_event": {
+        "216011": [
+          "Ginuwine: Experience an unforgettable night of smooth vocals, timeless R&B, and undeniable stage presence when Ginuwine takes the stage this fall. Fans can expect an evening filled with classic anthems, romantic slow jams, and the electrifying energy that has made him one of the genre’s most enduring performers.",
+          "Tags: Music, Concert, R&B, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "216011": [
+          "https://www.lehmancenter.org/events/ginuwine"
+        ]
+      }
+    },
+    {
+      "concept": "genre-soft-rock",
+      "label": "Genre soft rock",
+      "category": "genre",
+      "visual": "Mellow band instrument arrangement",
+      "rationale": "Genre recognition may need label; preserve rare idea.",
+      "existing_alternative": "Retain appropriate Unicode or broader accepted icon until recognition and structural review pass.",
+      "event_ids": [
+        215972
+      ],
+      "evidence_by_event": {
+        "215972": [
+          "Orleans: Final Tour: Orleans is best known as the Pop/Rock band that brought you the classic 70s hits Still The One, Dance With Me and Love Takes Time. Now in its 54th year, Orleans has produced a body of work spanning 17+ albums and 4 DVDs.",
+          "Tags: Music, Rock, Concert, Pop Music, Classic Hits, Pop Rock, 70s Music, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "215972": [
+          "https://www.bardavon.org/shows/orleans-final-tour/"
+        ]
+      }
+    }
+  ],
+  "limitations": "Counts describe this cohort, not population reach. These are grounded prospective studies, not live assignments. Existing artwork may already suffice; exact equipment and genre recognition require further review."
+}

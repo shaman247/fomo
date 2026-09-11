@@ -1,0 +1,178 @@
+[
+  {
+    "icon_id": "craft-kintsugi",
+    "source_sha256": "dbfc955f4a3b44ced90e60940ff4b3da5c7170b8871f77500cfa26cf8a2db05d",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent; creator knew intended designs. Unlabeled sheet inspected separately, then native-size cards and actual IconManager renders.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-001/visual-final",
+      "sizes": [
+        16,
+        24,
+        32,
+        128
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-001/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 5691,
+      "gzip_level_6": 2198
+    },
+    "issues": [
+      {
+        "severity": "material",
+        "location": "bowl base and seams",
+        "observation": "Initial geometry omitted degenerate cap faces; first styled seams were weak at small sizes.",
+        "revision": "Robust polygon normals close base; gold seam radius increased and interior uses one pale plane.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Gold joins remain a repair cue at 24/32px; at 16px the bowl is clearer than the exact seam pattern."
+    ]
+  },
+  {
+    "icon_id": "craft-ikebana",
+    "source_sha256": "6068c8d353efc342e4f91fa223e434cc820f4126c82205304edbfc2cb0a69dca",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent; creator knew intended designs. Unlabeled sheet inspected separately, then native-size cards and actual IconManager renders.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-001/visual-final",
+      "sizes": [
+        16,
+        24,
+        32,
+        128
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-001/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 6534,
+      "gzip_level_6": 2374
+    },
+    "issues": [
+      {
+        "severity": "material",
+        "location": "flower volumes and vessel floor",
+        "observation": "Initial spheres had missing caps and round buds obscured flower identity.",
+        "revision": "Robust polygon normals; five-petal flower geometry and broad flat petal paint.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Asymmetric floral silhouette remains visible; individual petals and kenzan details soften at 16px. Represents one illustrative arrangement, not a formal school template."
+    ],
+    "optimization": {
+      "before_raw": 11897,
+      "before_gzip_level_6": 3933,
+      "after_raw": 6534,
+      "after_gzip_level_6": 2374,
+      "change": "Merged faceted petal lighting into broad uniform paint while preserving projected outline and occlusion."
+    }
+  },
+  {
+    "icon_id": "equipment-arcade-cabinet",
+    "source_sha256": "eb2121823fc78e1ca19b4953f5b559e6f977bb51316681b7c4cff5fe10380c8c",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent; creator knew intended designs. Unlabeled sheet inspected separately, then native-size cards and actual IconManager renders.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-001/visual-final",
+      "sizes": [
+        16,
+        24,
+        32,
+        128
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-001/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 4261,
+      "gzip_level_6": 1425
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Tall cabinet remains identifiable at 16px; individual buttons and coin slot do not."
+    ]
+  },
+  {
+    "icon_id": "format-personal-storytelling",
+    "source_sha256": "d260b733ac21697b726326bc29ea4ce43c5c08aa285424b48977aeb403ac33b0",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent; creator knew intended designs. Unlabeled sheet inspected separately, then native-size cards and actual IconManager renders.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-001/visual-final",
+      "sizes": [
+        16,
+        24,
+        32,
+        128
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-001/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 851,
+      "gzip_level_6": 470
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Speech bubble and microphone distinguish spoken performance from book storytime; the image alone cannot distinguish every oral-story genre from an interview. Eligibility is editorial."
+    ]
+  },
+  {
+    "icon_id": "craft-beading",
+    "source_sha256": "647de39b3f60b467eb13156c41645198c35b1b1ae2ea09749156bdc503f18e81",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent; creator knew intended designs. Unlabeled sheet inspected separately, then native-size cards and actual IconManager renders.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-001/visual-final",
+      "sizes": [
+        16,
+        24,
+        32,
+        128
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-001/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 2608,
+      "gzip_level_6": 626
+    },
+    "issues": [
+      {
+        "severity": "material",
+        "location": "needle eye",
+        "observation": "Initial loose thread did not join needle.",
+        "revision": "Continuous thread path joins needle endpoint.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Colored beads remain visible at 16px; needle and holes are supporting detail clearest at 24/32px. Open arc denotes work in progress."
+    ]
+  }
+]

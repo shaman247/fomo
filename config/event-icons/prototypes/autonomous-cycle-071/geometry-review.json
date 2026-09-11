@@ -1,0 +1,140 @@
+{
+  "reviewer_mode": "creator-critical-pass",
+  "geometry_mode": "two-3d-scenes-and-three-flat-diagrams",
+  "views": [
+    "front",
+    "rear",
+    "left",
+    "right",
+    "top",
+    "icon"
+  ],
+  "evidence": ".scratch/icon-cycles-20260909/cycle-071/geometry.png",
+  "decision": "pass",
+  "findings": [
+    "Personally inspected twelve final geometry views,five native128/32/24/16light/dark cards,nine accepted/Noto references and ten actual IconManager variants. Creator critique,not independent or blind.",
+    "Paper flower uses three ruffled tissue layers meeting at a tied centre,an attached stem and an accordion-folded strip. Corrected surface winding makes light direction consistent. Knot and stem provide shared ground support; no human anatomy.",
+    "Lantern has eight continuous ribs,four joined octagonal rings,closed tapered end panels and attached loop. Ground-contact base ring supports the body; star fits the front facet; small enclosed battery light is not a flame. Open cuboid proposals were rejected as bag-like.",
+    "Cover-letter,browser-privacy and career-exploration images are original flat diagrams; no complex physical geometry is claimed for them. Fine symbols need labels at16px.",
+    "Primary QPL event text supports every new scope. Maker tutorial text informed folded-paper construction; no external pictures or videos were viewed or traced. Unavailable library and heritage PDFs are not claimed.",
+    "All final assets remain below15KBraw/5KBgzip triggers. Revised files and earlier evidence are preserved. No unresolved material construction defect seen."
+  ],
+  "references": [
+    {
+      "url": "https://www.queenslibrary.org/event/001583-0726",
+      "findings": "Cover letters Sep17 12:30\u20132 Flushing adults English in person; workshop writes and customizes cover letters,29seats. No job guarantee.",
+      "method": "Primary event body text personally read in browser",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://www.queenslibrary.org/event/001656-0726",
+      "findings": "Browser privacy Sep28 1\u20132:30 Flushing adults Spanish/English; tracking prevention,clear data,site permissions;30seats. No language-course or safety-guarantee claim.",
+      "method": "Primary event body text personally read in browser",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://www.queenslibrary.org/event/001657-0726",
+      "findings": "Browser privacy Chinese/English Sep29 noon\u20131:30 sameplace,30seats; distinct class/date from Spanish.",
+      "method": "Primary event body text personally read in browser",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://www.queenslibrary.org/event/000015-0726",
+      "findings": "Tissue paper flowers Sep29 2\u20133 Auburndale teens/adults/seniors; no registration,first-come. Generic paper flower,not exact cultural motif copied.",
+      "method": "Primary event body text personally read in browser",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://www.queenslibrary.org/event/002775-0826",
+      "findings": "Moon Festival lantern Sep23 3:30\u20135:30 Windsor Park; pipe cleaners,cellophane,mini lights,all supplied;25first-come; Chinese/English; all ages. No flame.",
+      "method": "Primary event body text personally read in browser",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://www.queenslibrary.org/event/001765-0726",
+      "findings": "Career exploration part2 Sep30 5\u20136 Central,teens,hybrid; trades,apprenticeships,alternatives to four-year college.",
+      "method": "Primary event body text personally read in browser",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://www.queenslibrary.org/event/001764-0726",
+      "findings": "Career exploration part1 Sep16 5\u20136 Central,teens,hybrid; interests,skills and potential careers.",
+      "method": "Primary event body text personally read in browser",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://www.queenslibrary.org/event/001581-0726",
+      "findings": "Identifying marketable skills source returns no such a program on SOLR; current date unverified.",
+      "method": "Primary event body text personally read in browser",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://www.queenslibrary.org/event/001296-0726",
+      "findings": "Paper flower craft Sep28 4\u20135 Howard Beach,all ages,no registration. Spring wording stale for September,not automatically seasonal cancellation.",
+      "method": "Primary event body text personally read in browser",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://www.queenslibrary.org/event/002446-0826",
+      "findings": "Community Sewing Day Sep12 1\u20134 Ridgewood with IsaDorvillier; collaborative textile with archive images about extreme heat; supplies provided,sewing experience optional. No machine technique verified.",
+      "method": "Primary event body text personally read in browser",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://www.queenslibrary.org/event/002461-0826",
+      "findings": "Eco-print Sep22 3\u20135 FarRockaway ages6\u201311+adult; leaves tannins on iron-mordanted fabric,two squares onehomeonecommunityquilt; limitedsupplies register. Bundling not explicit.",
+      "method": "Primary event body text personally read in browser",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://www.queenslibrary.org/event/002053-0826",
+      "findings": "Incan suspension-bridge making Sep16 4\u20135:30 LIC ages6\u201311,original structure inspired by rope bridges. Material unknown; not full-size bridge or promised authentic weaving.",
+      "method": "Primary event body text personally read in browser",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://www.queenslibrary.org/event/002058-0826",
+      "findings": "Hacienda making Sep21 2\u20133:30 Whitestone ages6\u201311; courtyard/arch/fountain architecture discussion then miniature structure. Material not confirmed.",
+      "method": "Primary event body text personally read in browser",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://www.queenslibrary.org/event/001464-0726",
+      "findings": "Teen Civic Collective Sep30 5\u20136 Central,free13\u201319,15seats registration; creative/service/community projects,not municipal governance. Specific official-contact training not established.",
+      "method": "Primary event body text personally read in browser",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://hashnyc.com/hareline/",
+      "findings": "NYC Marathon Nov1 7pm95th/Fifth,freewithdues/$3otherwise; scope mayclubgathering,notactualraceentry. RecoveryNov2 7pmTBA,freewithdues/$3otherwise. No exactroute or freepublicclaim.",
+      "method": "Primary listing text read"
+    },
+    {
+      "url": "https://japansociety.org/events/exonemo-terminal-at-nowhere/",
+      "findings": "SoldoutSep15 6:30\u20138:30,NowHere40Lispenard,YoungPatronsCouncilonly freeadvance registration. NotJapanSociety333E47. Sep10\u2013Nov7exhibitiondifferentfromsingleprivatetour. Artistconversationconfirmed; no curatorleaderconfirmed.",
+      "method": "Primary event body text read"
+    },
+    {
+      "url": "https://www.sunshinecraftco.com/blog/2020/3/30/tissue-paper-flowers",
+      "findings": "Maker instructions: stacked tissue accordion folded,rounded ends,center pipe-cleaner tie/stem,layers opened and lifted. Text only; no pictures or video viewed or traced. Generic simplified mesh neednotreproduce exact teaching pattern.",
+      "method": "Primary maker tutorial text read"
+    },
+    {
+      "url": "https://www.queenslibrary.org/event/002602-0826",
+      "findings": "Brittany and Isaac Sep19 2\u20132:30 Woodhaven,all ages. No instrumentation,extra players or explicit duo configuration beyond names.",
+      "method": "Primary body personally read"
+    },
+    {
+      "url": "https://www.queenslibrary.org/event/017751-0526",
+      "findings": "DiscoveryDay Sep26 11\u20133 HuntersPoint lawns,nature/science activities; current primary differs stale street-fair body.",
+      "method": "Primary body personally read"
+    },
+    {
+      "url": "https://www.queenslibrary.org/event/014919-0326",
+      "findings": "Business databases Sep28 10:30\u2013noon Central adults12seats. Group research resources,not individual advice.",
+      "method": "Primary body personally read"
+    }
+  ],
+  "scene_source_sha256": "79a09bd9113481e50337b55acdf170148a25389d2ce0021aca47c5770d92cbe5",
+  "planar_source_sha256": "8ad0de03b659f1d9786da2cd26b54169cfe382f08893d905258e8207bb9d25a9"
+}

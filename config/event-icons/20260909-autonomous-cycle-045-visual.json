@@ -1,0 +1,201 @@
+[
+  {
+    "icon_id": "activity-aerial-hoop",
+    "source_sha256": "2887ed83581c76c6164e52b660cabd855141ced193d523e865e2d1d730125c05",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Hanging aerial ring with upper attachment.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-045/visual-final-v2",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-045/gallery-final-v2/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 4922,
+      "gzip_level_6": 1701
+    },
+    "optimization": {
+      "initial_raw": 4684,
+      "initial_gzip_level_6": 1621,
+      "final_raw": 4922,
+      "final_gzip_level_6": 1701
+    },
+    "issues": [
+      {
+        "issue": "Initial hoop nearly disappeared at16px.",
+        "resolution": "Increased original tube radius from .014 to .030 and strengthened blue paint and strap width. This is an explicit illustrative exaggeration, not product dimensions. Final native/runtime cards and six geometry views inspected.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Suspended circular hoop, tab and strap indicate aerial-hoop equipment. At16px it remains a small ring with suspension cue; label distinguishes it from a pendant or ordinary hoop. No performer, move, exact hardware, overhead anchor or rigging specification is shown."
+    ]
+  },
+  {
+    "icon_id": "equipment-historic-cookstove",
+    "source_sha256": "918a2c2eb911bee11e45b7553d9c4c3b81567c0e9a5832d56a9522d566e4df5b",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Historical range with cooking pot and flue.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-045/visual-final-v2",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-045/gallery-final-v2/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 8662,
+      "gzip_level_6": 2750
+    },
+    "optimization": {
+      "initial_raw": 8471,
+      "initial_gzip_level_6": 2680,
+      "final_raw": 8662,
+      "final_gzip_level_6": 2750
+    },
+    "issues": [
+      {
+        "issue": "Initial flue was capped by the cylinder primitive.",
+        "resolution": "Replaced it with an open hollow lathed tube; top view now shows the opening. This remains an external apparatus study rather than a complete combustion model.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Raised range, cooktop plates, pot, oven and flue indicate historical cooking equipment. At16px doors and pot handles soften. Generic original apparatus is not the exact Longstreet stove, an open hearth or an operating diagram."
+    ]
+  },
+  {
+    "icon_id": "activity-photography-walk",
+    "source_sha256": "126a07ed7d5db512f385b43391a64405eae0270b686d639bcf580e508b8d90d9",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Camera beside a dotted walking route.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-045/visual-final-v2",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-045/gallery-final-v2/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 832,
+      "gzip_level_6": 420
+    },
+    "optimization": {
+      "initial_raw": 832,
+      "initial_gzip_level_6": 420,
+      "final_raw": 832,
+      "final_gzip_level_6": 420
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Camera and dotted route indicate a photography outing. At16px route dots soften; label supplies walking specificity. Generic camera stands for any camera, including phones, without a promised route or device."
+    ]
+  },
+  {
+    "icon_id": "activity-pizza-making",
+    "source_sha256": "443ed71fe8dcbbb47418489f5c2433c26558830e0c95558647636cf6dd762a0f",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Whole pizza and raw dough on/alongside a peel.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-045/visual-final-v2",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-045/gallery-final-v2/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 8710,
+      "gzip_level_6": 2804
+    },
+    "optimization": {
+      "initial_raw": 7977,
+      "initial_gzip_level_6": 2623,
+      "final_raw": 8710,
+      "final_gzip_level_6": 2804
+    },
+    "issues": [
+      {
+        "issue": "Long peel handle reduced pizza size at native marker dimensions.",
+        "resolution": "Shortened the handle, moved to a higher camera and reduced/relocated the separate dough portion. Final supported pizza is larger while the peel remains visible.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Whole pizza on a peel with a separate dough portion suggests preparation. At16px toppings and dough portion soften; label distinguishes making from restaurant food. No recipe, specific oven, supplied peel or dietary suitability is promised."
+    ]
+  },
+  {
+    "icon_id": "craft-play-dough",
+    "source_sha256": "9162e5c96b9ceb335381187c25ac67900e5552c401e8a2d12cd14f600a19a6a5",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Toy roller with colored molded compound and a ball.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-045/visual-final-v2",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-045/gallery-final-v2/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 3756,
+      "gzip_level_6": 1219
+    },
+    "optimization": {
+      "initial_raw": 6054,
+      "initial_gzip_level_6": 1881,
+      "final_raw": 3756,
+      "final_gzip_level_6": 1219
+    },
+    "issues": [
+      {
+        "issue": "Small segmented compound coil was visual clutter; ball support plane had a .0001m numerical offset.",
+        "resolution": "Removed coil and placed ball exactly on the common plane, leaving roller, shaped slab and ball. Raw/gzip6 reduced from6054/1881 to3756/1219. Final native/runtime cards and six views inspected.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Purple shaped compound, teal ball and toy roller indicate modeling play. At16px embossed star and roller handles soften; label distinguishes play dough from food or ceramics. No branded kit, tool inventory or age suitability is promised."
+    ]
+  }
+]

@@ -1,0 +1,195 @@
+[
+  {
+    "icon_id": "craft-needlelace",
+    "source_sha256": "512c45ce819471b55d1b5e73aea895a41a8260345b83af1bcae2d227123ebdd4",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Open looped lace patch beside a threaded sewing needle.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-035/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-035/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 1232,
+      "gzip_level_6": 427
+    },
+    "optimization": {
+      "initial_raw": 3224,
+      "initial_gzip_level_6": 450,
+      "final_raw": 1232,
+      "final_gzip_level_6": 427
+    },
+    "issues": [
+      {
+        "issue": "Initial filler loops repeated identical SVG path attributes25times.",
+        "resolution": "Merged loop subpaths under one shared stroke while preserving identical visible threadwork;3224to1232raw bytes,450to427gzip. Final native-size cards reinspected.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Open lace patch and threaded needle distinguish needlework from a tatting shuttle. Individual filler loops and needle eye soften at16px. The diagram abbreviates stitches and is not a complete sewing sequence or promised finished pattern."
+    ]
+  },
+  {
+    "icon_id": "craft-acrylic-painting",
+    "source_sha256": "662957cab3aaaed3afe4039b0705a4df966d557c8ecf8b781322f91e1d820eff",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Jar-marked acrylic paint, three opaque strokes and a flat brush.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-035/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-035/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 1019,
+      "gzip_level_6": 497
+    },
+    "optimization": {
+      "initial_raw": 1019,
+      "initial_gzip_level_6": 497,
+      "final_raw": 1019,
+      "final_gzip_level_6": 497
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Paint jar, opaque swatches and flat brush distinguish this variant from the accepted watercolor tray and gouache tube. At16px the jar lettering softens; the event label identifies acrylic medium. Container and colors are illustrative, not exact supplied materials."
+    ]
+  },
+  {
+    "icon_id": "craft-oil-painting",
+    "source_sha256": "80cd83bd8533706ff0d70771cf23e0d94b57c635e03b54e8b908632c26f1fcb9",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Oil paint tube, palette with pigment and a palette knife.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-035/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-035/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 1241,
+      "gzip_level_6": 629
+    },
+    "optimization": {
+      "initial_raw": 1239,
+      "initial_gzip_level_6": 631,
+      "final_raw": 1241,
+      "final_gzip_level_6": 629
+    },
+    "issues": [
+      {
+        "issue": "Initial palette thumb opening was opaque cream paint and could read as a pigment dab on dark backgrounds.",
+        "resolution": "Cut a real transparent opening into the palette path using evenodd geometry; rechecked both backgrounds.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Palette, tube and knife identify painting supplies. OIL lettering and the knife soften at16px; event label supplies the precise medium. Other media may be welcome, and the icon does not promise knife instruction or a particular brand."
+    ]
+  },
+  {
+    "icon_id": "activity-emergency-preparedness",
+    "source_sha256": "1105ee7d7b2665875e4ccd34f2f54589a4518d462f841d943e86d28ecf40cccd",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Preparedness backpack, plan and flashlight.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-035/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-035/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 1119,
+      "gzip_level_6": 543
+    },
+    "optimization": {
+      "initial_raw": 1119,
+      "initial_gzip_level_6": 543,
+      "final_raw": 1119,
+      "final_gzip_level_6": 543
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Go bag, flashlight and plan sheet communicate preparedness. At16px plan details soften; the alert badge differentiates the bag from ordinary school supplies. Not an emergency response, complete supply list or guarantee of supplies being handed out."
+    ]
+  },
+  {
+    "icon_id": "format-bar-crawl",
+    "source_sha256": "73ee769e422c6296dee34dac9ac93ae31e6458d73fe694bbb3ab067108c9af95",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Two drinking establishments connected by a dotted walking route.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-035/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-035/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 1210,
+      "gzip_level_6": 545
+    },
+    "optimization": {
+      "initial_raw": 1198,
+      "initial_gzip_level_6": 538,
+      "final_raw": 1210,
+      "final_gzip_level_6": 545
+    },
+    "issues": [
+      {
+        "issue": "Initial dotted route ended in empty space above the second bar.",
+        "resolution": "Extended the route around a rounded corner to end just before the second bar sign. Native-size review confirms a useful connection without overlapping the building.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Two pub fronts and a connecting dotted route indicate a bar crawl. At16px drink signs and route details soften. This does not promise two venues, alcoholic drinks, an exact route or included admission."
+    ]
+  }
+]

@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128"><title>Virtual reality headset</title><desc>An opaque blue-gray VR visor with a padded surround, overhead strap and two tracking cameras.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128"><title>Virtual reality headset</title><desc>An opaque blue-gray VR visor with a padded surround, overhead strap and a clean opaque exterior.</desc>
 <path d="M23 67C8 12 119 8 109 65" fill="none" stroke="#414A55" stroke-width="15"/>
 <path d="M25 44C24 20 99 16 104 42" fill="none" stroke="#697788" stroke-width="5" stroke-linecap="round"/>
 <path d="M55 30Q64 27 74 29L78 62H52Z" fill="#677787"/><path d="M56 31L62 30 62 61H53Z" fill="#8B9AAA"/>
@@ -6,5 +6,5 @@
 <path d="M20 48Q64 38 108 48Q115 50 115 61L111 85Q110 94 99 95H84Q77 95 74 86L71 80H57L54 86Q51 95 44 95H28Q16 94 15 85L11 61Q11 51 20 48Z" fill="#A2B8C9"/>
 <path d="M20 51Q62 42 106 51L107 57Q62 49 19 59Z" fill="#D4E3EC"/>
 <path d="M107 54L111 60 107 84Q106 89 99 90H84Q81 90 77 83L73 77H55L51 87Q48 92 42 92H29L29 95H44Q51 95 54 86L57 80H71L74 86Q77 95 84 95H99Q110 94 111 85L115 61Q114 55 107 54Z" fill="#7893AA"/>
-<g fill="#344758"><circle cx="29" cy="71" r="5"/><circle cx="98" cy="71" r="5"/></g><g fill="#83B9CC"><circle cx="28" cy="70" r="1.7"/><circle cx="97" cy="70" r="1.7"/></g>
+
 </svg>

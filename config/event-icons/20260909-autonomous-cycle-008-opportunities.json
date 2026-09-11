@@ -1,0 +1,914 @@
+{
+  "date": "2026-09-10",
+  "scope": "Cycle 008:100 sequential events193613–194109, no targeted supplements.",
+  "suggestions": 42,
+  "concept_count": 38,
+  "concepts": [
+    {
+      "concept": "format-author-conversation",
+      "label": "Author conversation",
+      "category": "format",
+      "visual": "An open book between two opposing speech bubbles.",
+      "rationale": "Book launch conversations are distinct from participatory book clubs.",
+      "existing_alternative": "Books suffice, but do not signal live author dialogue.",
+      "event_ids": [
+        193660,
+        193719,
+        193720,
+        193803,
+        193805
+      ],
+      "evidence_by_event": {
+        "193660": [
+          "The Home of the Drowned | with Elin Anna Labba: Join us on September 15 for a discussion and presentation on 'The Home of the Drowned' with August Prize-winning Sámi author Elin Anna Labba.",
+          "Tags: Community, Literature, Author Talk, Reading, Sami Culture, Format, Performance"
+        ],
+        "193719": [
+          "Trading Beauty: Art Market Histories from the Altar to the Gallery: Join Valentina Castellani and Tobias Meyer for a conversation celebrating an illustrated survey that traces the evolution of the Western art market from the medieval era to the present day.",
+          "Tags: Event Space, Art Gallery, Art, Literature, Education, Art History, Reading, Book Event, Art Market, Cultural Venue, Gagosian, Format, Performance, Arts Venue"
+        ],
+        "193720": [
+          "The Italian Job by Jason Horowitz in conversation with Maggie Haberman: Join us for a conversation with Jason Horowitz to celebrate his new book, a critical and intimate look at Italy through the eyes of a NYT journalist. He will be in conversation with Maggie Haberman, followed by a signing.",
+          "Tags: Community, Literature, Author Talk, Book Signing, Reading, Journalism, Author Conversation, Italy, Ticketed, Format, Performance"
+        ],
+        "193803": [
+          "That day … 25 years later: Director Claudio Pagliara hosts a conversation with journalists Maria Teresa Cometto and Glauco Maggi on the occasion of the release of their latest book “2001 – 2026 – From Giuliani to Mamdani – New York 25 Years After September 11.”",
+          "Tags: Community, History, Education, Gathering, Talk, Format"
+        ],
+        "193805": [
+          "Italians: A Century of the American Dream: Book presentation of “Between Hospitality, Bans, and Regulation: Immigration Laws and Policies in the United States of America” edited by Giuliano Santangeli Valenzani.",
+          "Tags: Community, History, Literature, Education, Immigration, Community Support, Reading, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "193660": [
+          "https://www.scandinaviahouse.org/event/the-home-of-the-drowned-with-elin-anna-labba/"
+        ],
+        "193719": [
+          "https://www.rizzolibookstore.com/trading-beauty-art-market-histories-altar-gallery"
+        ],
+        "193720": [
+          "https://www.rizzolibookstore.com/italian-job-jason-horowitz-conversation-maggie-habermanticketed"
+        ],
+        "193803": [
+          "https://iicnewyork.esteri.it/en/gli_eventi/calendario/bozza-that-day-25-years-later/"
+        ],
+        "193805": [
+          "https://iicnewyork.esteri.it/en/gli_eventi/calendario/italians-a-century-of-the-american-dream-2/"
+        ]
+      }
+    },
+    {
+      "concept": "activity-folk-archiving",
+      "label": "Folk music archiving",
+      "category": "activity",
+      "visual": "Archival audio reel and catalog card with a song note.",
+      "rationale": "Workshop explicitly addresses folk research and preservation.",
+      "existing_alternative": "Mic alone suggests performance; recording instruction is not established.",
+      "event_ids": [
+        193936
+      ],
+      "evidence_by_event": {
+        "193936": [
+          "A Workshop with the Derek Piotr Fieldwork Archive: A lecture and workshop on folk research, preservation, and the human voice with Derek Piotr.",
+          "Tags: Community, Music, Workshop, Literature, Education, Folk Music, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "193936": [
+          "https://www.viewcy.com/event/a_workshop_with_the_d_1"
+        ]
+      }
+    },
+    {
+      "concept": "activity-garden-stewardship",
+      "label": "Garden stewardship",
+      "category": "activity",
+      "visual": "A gloved hand beside a small leafy plant and exposed soil.",
+      "rationale": "Hands-on tending differs from viewing plants; use a large hand/leaf silhouette and test whether it adds clarity at 16px.",
+      "existing_alternative": "Existing seedling and potted plant artwork omit hands-on care; avoid inventing a particular supplied tool.",
+      "event_ids": [
+        194108
+      ],
+      "evidence_by_event": {
+        "194108": [
+          "Maintain and Revitalize Red Hook Parks: Help steward parks, playgrounds, ball fields, street trees, and many other open spaces in Red Hook. Projects may include weeding, gardening, and litter cleanup.",
+          "Tags: Community, Park, Free, Gardening, Outdoor, Volunteer, Community Service, Park Cleanup, Participatory, Outdoor Venue, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "194108": [
+          "https://www.newyorkcares.org/project/a1HVr000002zMAXMA2",
+          "https://www.newyorkcares.org/project/a1HVr000002zMC9MAM",
+          "https://www.newyorkcares.org/project/a1HVr000002zMFNMA2",
+          "https://www.newyorkcares.org/project/a1HVr000002zMGzMAM",
+          "https://www.newyorkcares.org/project/a1HVr000002zMIbMAM"
+        ]
+      }
+    },
+    {
+      "concept": "activity-jhana-meditation",
+      "label": "Jhana meditation",
+      "category": "activity",
+      "visual": "Seated meditative posture with simple concentration halo; test meaningful differentiation.",
+      "rationale": "Explicit jhana practice merits rare-specialty inventory.",
+      "existing_alternative": "Existing seated meditation emoji is already strong and may be preferable.",
+      "event_ids": [
+        193838
+      ],
+      "evidence_by_event": {
+        "193838": [
+          "Jhourney Jhana Meditation: This is a social event hosted by NYC Jhourney for students of Jhourney meditation retreats, jhana meditators, and those who are curious about jhana meditation. During the meeting we will meditate but there will be no instruction; you're welcome to meditate however you like or to sit quietly for an hour.",
+          "Tags: Community, Wellness, Meditation, Mindfulness, Open Practice, Participatory, Mind-Body, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "193838": [
+          "https://luma.com/326g9e7q",
+          "https://luma.com/gntkytq0",
+          "https://luma.com/plhxncfg"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-jazz-septet",
+      "label": "Jazz septet",
+      "category": "format",
+      "visual": "Seven simplified music stands in a shallow arc, explore count legibility.",
+      "rationale": "Explicit seven-member jazz ensemble merits rare-lineup exploration.",
+      "existing_alternative": "Chamber or big-band motifs omit specific jazz septet identity; count may be too fine.",
+      "event_ids": [
+        193630
+      ],
+      "evidence_by_event": {
+        "193630": [
+          "Samara Joy and Her Septet: A native of the Bronx, Samara Joy is a masterful interpreter of jazz standards who has won multiple Grammy Awards, including Best Jazz Vocal Album for her latest work, Portrait. This performance showcases the intimate, soulful chemistry she has developed with her touring band, the Samara Joy Septet.",
+          "Tags: Music, Jazz, Concert, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "193630": [
+          "https://www.tillescenter.org/event/samara-joy-1"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-pop-trio",
+      "label": "Pop trio",
+      "category": "format",
+      "visual": "Three performance microphones in distinct positions.",
+      "rationale": "Explicit three-person pop group merits lineup inventory.",
+      "existing_alternative": "Generic microphone fits; exact lineup motif requires recognition study.",
+      "event_ids": [
+        194048
+      ],
+      "evidence_by_event": {
+        "194048": [
+          "The Booyah! Kids: The Booyah! Kids are a three piece pop group from NYC. They write heartfelt songs about love and loss.",
+          "Tags: Music, Concert, Pop Music, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "194048": [
+          "https://www.knittingfactory.com/tm-event/the-booyah-kids/"
+        ]
+      }
+    },
+    {
+      "concept": "equipment-experimental-game-controller",
+      "label": "Experimental game controller",
+      "category": "equipment",
+      "visual": "A game display wired to an unconventional large tactile input panel.",
+      "rationale": "Event explicitly features experimental game interfaces.",
+      "existing_alternative": "A conventional arcade cabinet would overstate equipment type; joystick stays useful.",
+      "event_ids": [
+        193801
+      ],
+      "evidence_by_event": {
+        "193801": [
+          "Alt.Ctrl Arcade: A weekend-long arcade of free-to-play indie games featuring a movement that embraces in-person play and experimental interfaces. The event includes expert talks about the math and robotics underpinning game design.",
+          "Tags: Science, Education, Technology, Games, Arcade, Indie Games, Game, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "193801": [
+          "https://movingimage.org/events/list/"
+        ]
+      }
+    },
+    {
+      "concept": "format-comedy-new-material",
+      "label": "Comedy work in progress",
+      "category": "format",
+      "visual": "Stand-up microphone beside a marked-up note card.",
+      "rationale": "Comedians explicitly test brand-new premises and punchlines.",
+      "existing_alternative": "Stand-up icon already fits; new-material motif may be unnecessary.",
+      "event_ids": [
+        193862
+      ],
+      "evidence_by_event": {
+        "193862": [
+          "There's Something Here: Comedians leave their regular sets and perform 100% brand-new material. Come watch the premises and punchlines take shape.",
+          "Tags: Comedy, Comedy Show, New Material, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "193862": [
+          "https://improv.com/brooklyn/event/there%27s+something+here/14262754/",
+          "https://improv.com/brooklyn/event/there%27s+something+here/14305904/",
+          "https://improv.com/brooklyn/event/there%27s+something+here/15019903/",
+          "https://improv.com/brooklyn/event/there%27s+something+here/15019923/",
+          "https://improv.com/brooklyn/event/there%27s+something+here/15019953/",
+          "https://improv.com/brooklyn/event/there%27s+something+here+ft.+michael+longfellow%2c+asha+ward%2c+ismael+loutfi%2c+david+drake%2c+dave+ross%2c+gastor+almonte%2c+and+courtney+maginnis/15019903/",
+          "https://improv.com/brooklyn/event/there%27s+something+here+ft.+usama+siddiquee%2c+jay+jurden%2c+chris+gethard%2c+emmy+blotnick%2c+and+casey+james+salengo/14262754/"
+        ]
+      }
+    },
+    {
+      "concept": "format-comedy-panel",
+      "label": "Comedy panel",
+      "category": "format",
+      "visual": "Two seated speakers with a single comic speech burst.",
+      "rationale": "Panel debate is distinct from solo stand-up; test against generic discussion.",
+      "existing_alternative": "Existing broad Unicode remains suitable; specific motif must demonstrate added recognition before new artwork.",
+      "event_ids": [
+        193861
+      ],
+      "evidence_by_event": {
+        "193861": [
+          "SubwayTakes Live! with Kareem Rahma: Join Kareem Rahma and a panel of comedians and cultural icons for a night of hot takes and strong opinions. Audience members will be able to share and defend personal takes, plus enjoy live music and standup comedy.",
+          "Tags: Music, Comedy, Live Show, Comedy Show, Talk Show, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "193861": [
+          "https://improv.com/brooklyn/event/subwaytakes+live%21+with+kareem+rahma/14261824/",
+          "https://improv.com/brooklyn/event/subwaytakes+live%21+with+kareem+rahma/14261834/",
+          "https://improv.com/brooklyn/event/subwaytakes+live%21+with+kareem+rahma/14261844/",
+          "https://improv.com/brooklyn/event/subwaytakes+live%21+with+kareem+rahma/14279914/",
+          "https://improv.com/brooklyn/event/subwaytakes+live%21+with+kareem+rahma/14279924/"
+        ]
+      }
+    },
+    {
+      "concept": "format-live-game-score",
+      "label": "Game music concert",
+      "category": "format",
+      "visual": "A controller silhouette paired with a conductor baton and music note.",
+      "rationale": "Named game soundtrack concerts can merit a medium-specific concert format.",
+      "existing_alternative": "Controller alone suggests playing and orchestra alone omits the soundtrack medium.",
+      "event_ids": [
+        193613
+      ],
+      "evidence_by_event": {
+        "193613": [
+          "World of Warcraft: Featuring 20 Years of Music.",
+          "Tags: Music, Classical Music, Orchestra, Concert, Games, Orchestral, Gaming Music, Format, Performance, World of Warcraft"
+        ]
+      },
+      "source_urls_by_event": {
+        "193613": [
+          "https://www.prucenter.com/events/world-of-warcraft-20-years-of-music"
+        ]
+      }
+    },
+    {
+      "concept": "format-live-talk-show",
+      "category": "format",
+      "label": "Live talk show",
+      "visual": "Two chairs and desk microphone beneath a stage light.",
+      "rationale": "Live host-and-guest talk shows differ from stand-up sets.",
+      "existing_alternative": "Microphone is broad; avoid implying a particular guest configuration without context.",
+      "event_ids": [
+        193861
+      ],
+      "evidence_by_event": {
+        "193861": [
+          "SubwayTakes Live! with Kareem Rahma: Join Kareem Rahma and a panel of comedians and cultural icons for a night of hot takes and strong opinions. Audience members will be able to share and defend personal takes, plus enjoy live music and standup comedy.",
+          "Tags: Music, Comedy, Live Show, Comedy Show, Talk Show, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "193861": [
+          "https://improv.com/brooklyn/event/subwaytakes+live%21+with+kareem+rahma/14261824/",
+          "https://improv.com/brooklyn/event/subwaytakes+live%21+with+kareem+rahma/14261834/",
+          "https://improv.com/brooklyn/event/subwaytakes+live%21+with+kareem+rahma/14261844/",
+          "https://improv.com/brooklyn/event/subwaytakes+live%21+with+kareem+rahma/14279914/",
+          "https://improv.com/brooklyn/event/subwaytakes+live%21+with+kareem+rahma/14279924/"
+        ]
+      }
+    },
+    {
+      "concept": "format-musical-improv",
+      "label": "Musical improvisational theater",
+      "category": "format",
+      "visual": "Two facing theater profiles exchanging one large musical speech bubble.",
+      "rationale": "The cast creates a full musical from audience prompts; distinguish from scripted musicals and purely spoken improv.",
+      "existing_alternative": "Noto masks and music notes separately omit improvised sung scene-making.",
+      "event_ids": [
+        193769
+      ],
+      "evidence_by_event": {
+        "193769": [
+          "Baby Wants Candy: Baby Wants Candy is a completely improvised musical where every note, song, character, and line of dialogue is created in the moment based on an audience suggestion. It is one of the longest running and most celebrated improv shows in the world, featuring a mix of spontaneously choreographed dance numbers and witty comedy.",
+          "Tags: Theater, Comedy, Improv, Musical Theater, Comedy Show, Musical Improv, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "193769": [
+          "https://www.brooklyncc.com/show-schedule/bwc-8-8",
+          "https://www.brooklyncc.com/show-schedule/bwc-9-12"
+        ]
+      }
+    },
+    {
+      "concept": "format-orchestra",
+      "label": "Orchestra",
+      "category": "format",
+      "visual": "A conductor baton over an open music stand with one broad shared musical arc.",
+      "rationale": "Conductor-and-score imagery represents the full orchestra without privileging one string or brass section; recognition must distinguish conducting from music lessons.",
+      "existing_alternative": "Noto violin falsely narrows a mixed orchestra; generic score lacks ensemble direction.",
+      "event_ids": [
+        193613
+      ],
+      "evidence_by_event": {
+        "193613": [
+          "World of Warcraft: Featuring 20 Years of Music.",
+          "Tags: Music, Classical Music, Orchestra, Concert, Games, Orchestral, Gaming Music, Format, Performance, World of Warcraft"
+        ]
+      },
+      "source_urls_by_event": {
+        "193613": [
+          "https://www.prucenter.com/events/world-of-warcraft-20-years-of-music"
+        ]
+      }
+    },
+    {
+      "concept": "format-polyphonic-singing",
+      "label": "Polyphonic singing",
+      "category": "format",
+      "visual": "Three distinct flowing vocal lines that overlap while remaining separately colored.",
+      "rationale": "Multiple simultaneous vocal lines are central to the explicitly polyphonic program; this technical abstraction needs testing at24px.",
+      "existing_alternative": "Noto notes and generic choir imagery do not distinguish polyphony from unison singing.",
+      "event_ids": [
+        193940
+      ],
+      "evidence_by_event": {
+        "193940": [
+          "Stile Antico: Polyphonic Postcards: The acclaimed vocal ensemble Stile Antico returns with a program offering vivid snapshots of the flourishing cities of Renaissance Europe.",
+          "Tags: Music, Classical Music, Concert, Vocal Music, Vocal Ensemble, Renaissance, Polyphony, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "193940": [
+          "https://events.columbia.edu/cal/event/eventView.do?b=de&calPath=%2Fpublic%2Fcals%2FMainCal&guid=CAL-00bbdb71-9eab6da0-019e-ad70e0d3-0000425devents%40columbia.edu&recurrenceId="
+        ]
+      }
+    },
+    {
+      "concept": "format-tribute-concert",
+      "label": "Tribute concert",
+      "category": "format",
+      "visual": "Two overlapping record silhouettes with one echoing musical note.",
+      "rationale": "Tribute repertoire is a format facet; motif is unproven and must not imitate an artist logo.",
+      "existing_alternative": "Existing broad Unicode remains suitable; specific motif must demonstrate added recognition before new artwork.",
+      "event_ids": [
+        193790
+      ],
+      "evidence_by_event": {
+        "193790": [
+          "Sissies R Us presents: F.A.T. (Fiona, Ani and Tori): A singer-songwriter love fest celebrating the music of Fiona, Ani, and Tori.",
+          "Tags: Community, Cabaret, Music, Rock, Indie, Concert, Nightlife, Singer Songwriter, Indie Rock, Vocal Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "193790": [
+          "https://events.humanitix.com/fatsissies",
+          "https://events.humanitix.com/fatsissies?hxref=srf%3Arow%7Cmodel%3Ablend%7Ccat%3Amusic%7Crpos%3A3%7Ccpos%3A1%7Cgeo%3Aus--ny--new-york&hxchl=mkt-loc",
+          "https://events.humanitix.com/fatsissies?hxref=srf%3Arow%7Cmodel%3Ablend%7Ccat%3Amusic%7Crpos%3A3%7Ccpos%3A2%7Cgeo%3Aus--ny--new-york&hxchl=mkt-loc",
+          "https://events.humanitix.com/fatsissies?hxref=srf%3Arow%7Cmodel%3Ablend%7Ccat%3Amusic%7Crpos%3A3%7Ccpos%3A4%7Cgeo%3Aus--ny--new-york&hxchl=mkt-loc",
+          "https://www.parksidelounge.nyc/calendar/ydny06l6tddada2ibeennjqrskaqj5"
+        ]
+      }
+    },
+    {
+      "concept": "genre-americana",
+      "label": "Americana music",
+      "category": "genre",
+      "visual": "Explore an acoustic sound-hole ring with a branching musical note.",
+      "rationale": "Explicit Americana programming merits genre exploration, but there is no universal symbol and acoustic guitar cannot be assumed as actual lineup.",
+      "existing_alternative": "Noto guitar/notes are broad; motif must distinguish folk/country and not duplicate proposed acoustic-guitar art.",
+      "event_ids": [
+        194049
+      ],
+      "evidence_by_event": {
+        "194049": [
+          "Goodnight, Texas: Goodnight, Texas is a storytelling folk rock band whose strength lies in unexpected sweet spots. They exist at the center of their songwriters’ contrasting styles, at the crossroads of folk and blues and rock ‘n’ roll.",
+          "Tags: Community, Music, Rock, Concert, Folk Music, Americana, Folk Rock, Live Music, Storytelling / Community, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "194049": [
+          "https://www.knittingfactory.com/tm-event/goodnight-texas/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-bluegrass",
+      "label": "Bluegrass",
+      "category": "genre",
+      "visual": "An open rhythmic arc linking two simplified acoustic string-instrument necks.",
+      "rationale": "Bluegrass is explicit. This ensemble-inspired visual is exploratory and must not claim a particular featured instrument; recognition testing may favor the existing art.",
+      "existing_alternative": "Banjo is an existing broad genre association but does not establish this event instrumentation; generic notes lose repertoire specificity.",
+      "event_ids": [
+        193937
+      ],
+      "evidence_by_event": {
+        "193937": [
+          "Damn Tall Buildings: A performance by Brooklyn-based folk-bluegrass band Damn Tall Buildings.",
+          "Tags: Music, Concert, Folk Music, Bluegrass, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "193937": [
+          "https://www.viewcy.com/event/damn_tall_buildings"
+        ]
+      }
+    },
+    {
+      "concept": "genre-dancehall",
+      "label": "Dancehall",
+      "category": "genre",
+      "visual": "Explore a microphone over a compact offbeat rhythm pattern.",
+      "rationale": "The genre is explicitly named in the musical program; this is a prospective genre concept rather than evidence of a specific instrument.",
+      "existing_alternative": "Existing music/dance or instrument emoji remain reasonable; test genre recognition and avoid stereotyped visual shorthand.",
+      "event_ids": [
+        193823
+      ],
+      "evidence_by_event": {
+        "193823": [
+          "Keznamdi: Keznamdi is a Kingston, Jamaica–born singer-songwriter whose reggae foundation is amplified by a global upbringing spanning Tanzania, Ethiopia, and the United States. He developed a sound that bridges reggae, dancehall, and global influences with lyrical purpose, recently winning Best Reggae Album at the 68th Annual GRAMMY Awards.",
+          "Tags: Music, World Music, Concert, Nightlife, Dancehall, Reggae, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "193823": [
+          "https://www.brooklynbowl.com/brooklyn/events/detail/keznamdi-k7vgf_5h7-cm9"
+        ]
+      }
+    },
+    {
+      "concept": "genre-electronic",
+      "label": "Electronic music",
+      "category": "genre",
+      "visual": "A simple waveform beside one music note.",
+      "rationale": "Explicit electronic repertoire does not establish DJ or synth equipment; abstract motif needs recognition testing.",
+      "existing_alternative": "Existing broad Unicode remains suitable; specific motif must demonstrate added recognition before new artwork.",
+      "event_ids": [
+        193708
+      ],
+      "evidence_by_event": {
+        "193708": [
+          "Slow Magic, Maxo, 4evr: A concert w/ Slow Magic in Zone One @ Elsewhere in Bushwick.",
+          "Tags: Music, Concert, Electronic Music, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "193708": [
+          "https://www.eventbrite.com/e/slow-magic-maxo-4evr-tickets-1985581729403"
+        ]
+      }
+    },
+    {
+      "concept": "genre-electronic-rock",
+      "label": "Electronic rock",
+      "category": "genre",
+      "visual": "Explore guitar and sequencer beat motif.",
+      "rationale": "Explicitly mixed live electronic beats and rock instrumentation.",
+      "existing_alternative": "Generic notes already avoid overstating equipment.",
+      "event_ids": [
+        193824
+      ],
+      "evidence_by_event": {
+        "193824": [
+          "BoomBox: Electronic rock duo BoomBox, consisting of brothers Zion Rock Godchaux and Kinsman MacKay, bring heavy organic grooves and soulful beats that penetrate through the dancefloor. Their shows are characterized by a mixture of drum machines and live-mixed computer beats combined with electric guitar riffs and soulful vocals.",
+          "Tags: Music, Dance, Concert, Nightlife, Electronic Music, Electronic Rock, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "193824": [
+          "https://www.brooklynbowl.com/brooklyn/events/detail/boombox-k7vgf_16taeu6"
+        ]
+      }
+    },
+    {
+      "concept": "genre-electropop",
+      "label": "Electronic pop",
+      "category": "genre",
+      "visual": "Small synthesizer with pop vocal microphone, only an exploratory genre motif",
+      "rationale": "Electronic pop is explicit; future art must not imply current confirmed live instrumentation.",
+      "existing_alternative": "Keep the existing Unicode fallback or suitable broader custom icon until distinct artwork is reviewed.",
+      "event_ids": [
+        193713
+      ],
+      "evidence_by_event": {
+        "193713": [
+          "The Femcels, ideasforconversations: A concert w/ The Femcels in Zone One @ Elsewhere.",
+          "Tags: Government, Community, Music, Concert, Electro Pop, Pop Music, Zone One, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "193713": [
+          "https://www.elsewhere.club/events/1988353325321",
+          "https://www.eventbrite.com/e/the-femcels-ideasforconversations-tickets-1988353325321"
+        ]
+      }
+    },
+    {
+      "concept": "genre-experimental",
+      "category": "genre",
+      "label": "Experimental music",
+      "visual": "Explore irregular linked sound shapes",
+      "rationale": "No instrument is universal; abstract recognition remains unproven.",
+      "existing_alternative": "Broad fallback does not distinguish this supported facet.",
+      "event_ids": [
+        194057
+      ],
+      "evidence_by_event": {
+        "194057": [
+          "The Null Club: Known as being the guitarist of Gilla Band as well as a producer, Alan Duggan Borges announces a new project named The Null Club. The project explores genres and styles of music outside of Gilla Band, leaning into noise, techno, experimental hip hop, and post-punk.",
+          "Tags: Music, Rock, Techno, Concert, Nightlife, Electronic Music, Post Punk, Punk Rock, Experimental Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "194057": [
+          "https://www.knittingfactory.com/tm-event/the-null-club/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-folk-rock",
+      "category": "genre",
+      "label": "Folk rock",
+      "visual": "Acoustic and electric guitar silhouettes",
+      "rationale": "Explicit folk-rock repertoire blends distinct traditions",
+      "existing_alternative": "Existing guitar emoji; genre silhouette needs clarity",
+      "event_ids": [
+        194049
+      ],
+      "evidence_by_event": {
+        "194049": [
+          "Goodnight, Texas: Goodnight, Texas is a storytelling folk rock band whose strength lies in unexpected sweet spots. They exist at the center of their songwriters’ contrasting styles, at the crossroads of folk and blues and rock ‘n’ roll.",
+          "Tags: Community, Music, Rock, Concert, Folk Music, Americana, Folk Rock, Live Music, Storytelling / Community, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "194049": [
+          "https://www.knittingfactory.com/tm-event/goodnight-texas/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-indie",
+      "category": "genre",
+      "label": "Indie music",
+      "visual": "Explore a hand-drawn note motif",
+      "rationale": "Broad stylistic family has no universal instrument; recognition unproven.",
+      "existing_alternative": "Broad fallback does not distinguish this specific supported facet.",
+      "event_ids": [
+        193710
+      ],
+      "evidence_by_event": {
+        "193710": [
+          "Elsewhere Presents: Chanel Beads @ Knockdown Center: Elsewhere Presents: Chanel Beads @ Knockdown Center in Maspeth on 10.14!",
+          "Tags: Queens, Music, Free, Maspeth, Indie, Neighborhood, Concert, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "193710": [
+          "https://www.eventbrite.com/e/elsewhere-presents-chanel-beads-knockdown-center-tickets-1990526398040"
+        ]
+      }
+    },
+    {
+      "concept": "genre-k-pop",
+      "label": "K-pop",
+      "category": "genre",
+      "visual": "A concert lightstick with an original star-shaped head",
+      "rationale": "Fan listening and pop music concept without inferring dance participation or national stereotypes.",
+      "existing_alternative": "Retain the event Unicode fallback until a distinct recognizable study passes review.",
+      "event_ids": [
+        193615
+      ],
+      "evidence_by_event": {
+        "193615": [
+          "LE Sserafim: Featuring 2026 LE SSERAFIM TOUR 'PUREFLOW' IN NEWARK.",
+          "Tags: Music, Concert, K-Pop, Pop Music, Format, Performance, Le Sserafim, Pureflow"
+        ]
+      },
+      "source_urls_by_event": {
+        "193615": [
+          "https://www.prucenter.com/events/le-sserafim"
+        ]
+      }
+    },
+    {
+      "concept": "genre-pop",
+      "category": "genre",
+      "label": "Pop music",
+      "visual": "Bold music note with a single rhythmic accent",
+      "rationale": "Avoid assuming vocal or electric instrument; broad genre motif unproven.",
+      "existing_alternative": "Broad fallback does not distinguish this supported facet.",
+      "event_ids": [
+        194048
+      ],
+      "evidence_by_event": {
+        "194048": [
+          "The Booyah! Kids: The Booyah! Kids are a three piece pop group from NYC. They write heartfelt songs about love and loss.",
+          "Tags: Music, Concert, Pop Music, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "194048": [
+          "https://www.knittingfactory.com/tm-event/the-booyah-kids/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-post-punk",
+      "label": "Post-punk",
+      "category": "genre",
+      "visual": "Angular rhythmic note with a broken geometric beat line",
+      "rationale": "Explicit post-punk repertoire; motif is unproven and must avoid claiming instrumentation.",
+      "existing_alternative": "Retain the event Unicode fallback pending a recognizable reviewed study.",
+      "event_ids": [
+        193709
+      ],
+      "evidence_by_event": {
+        "193709": [
+          "Gilla Band, PISS: A concert w/Gilla Band in The Hall @ Elsewhere in Bushwick.",
+          "Tags: Music, Rock, Concert, Post Punk, Punk Rock, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "193709": [
+          "https://www.eventbrite.com/e/gilla-band-piss-tickets-1990043090454"
+        ]
+      }
+    },
+    {
+      "concept": "genre-progressive-rock",
+      "category": "genre",
+      "label": "Progressive rock",
+      "visual": "Explore a guitar and asymmetric meter arc without tiny notation.",
+      "rationale": "Genre is explicit; motif needs recognition testing rather than assuming instrument exclusivity.",
+      "existing_alternative": "Guitar supports rock but loses the progressive subgenre.",
+      "event_ids": [
+        193712
+      ],
+      "evidence_by_event": {
+        "193712": [
+          "Improvement Movement, The Point.: A concert w/ Improvement Movement on The Rooftop @ Elsewhere.",
+          "Tags: Rooftop, Music, Rock, Outdoor, Concert, Progressive Rock, Outdoor Venue, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "193712": [
+          "https://www.eventbrite.com/e/improvement-movement-the-point-tickets-1993540973717"
+        ]
+      }
+    },
+    {
+      "concept": "genre-reggae",
+      "label": "Reggae",
+      "category": "genre",
+      "visual": "Explore two offset chord blocks over one sustained bass curve.",
+      "rationale": "The style is explicitly named in the dance-fitness program. This is a supported musical facet rather than evidence of live performance or exclusive genre focus.",
+      "existing_alternative": "Existing dancer remains reasonable; abstract genre motifs require recognition testing and should not rely on cultural stereotypes.",
+      "event_ids": [
+        193823
+      ],
+      "evidence_by_event": {
+        "193823": [
+          "Keznamdi: Keznamdi is a Kingston, Jamaica–born singer-songwriter whose reggae foundation is amplified by a global upbringing spanning Tanzania, Ethiopia, and the United States. He developed a sound that bridges reggae, dancehall, and global influences with lyrical purpose, recently winning Best Reggae Album at the 68th Annual GRAMMY Awards.",
+          "Tags: Music, World Music, Concert, Nightlife, Dancehall, Reggae, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "193823": [
+          "https://www.brooklynbowl.com/brooklyn/events/detail/keznamdi-k7vgf_5h7-cm9"
+        ]
+      }
+    },
+    {
+      "concept": "genre-reggaeton",
+      "label": "Reggaeton",
+      "category": "genre",
+      "visual": "A short row of four thick rhythm blocks with contrasting staggered accents above a single music note.",
+      "rationale": "Reggaeton is explicit; a dembow-inspired rhythm motif is exploratory and needs recognition testing, not a claimed universal symbol.",
+      "existing_alternative": "Dance emoji is broad and flags substitute geography for genre; DJ equipment is not evidenced by genre alone.",
+      "event_ids": [
+        193616
+      ],
+      "evidence_by_event": {
+        "193616": [
+          "Don Omar: Featuring The Last King World Tour.",
+          "Tags: Music, Concert, Reggaeton, Latin Music, Format, Performance, Don Omar"
+        ]
+      },
+      "source_urls_by_event": {
+        "193616": [
+          "https://www.prucenter.com/events/don-omar"
+        ]
+      }
+    },
+    {
+      "concept": "genre-renaissance",
+      "category": "genre",
+      "label": "Renaissance music",
+      "visual": "A simple early-notation fragment beside a music note",
+      "rationale": "Repertoire is explicit; no universal ensemble or instrument.",
+      "existing_alternative": "Retain existing broad artwork; verify existing Noto options and recognition gain before new art.",
+      "event_ids": [
+        193940
+      ],
+      "evidence_by_event": {
+        "193940": [
+          "Stile Antico: Polyphonic Postcards: The acclaimed vocal ensemble Stile Antico returns with a program offering vivid snapshots of the flourishing cities of Renaissance Europe.",
+          "Tags: Music, Classical Music, Concert, Vocal Music, Vocal Ensemble, Renaissance, Polyphony, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "193940": [
+          "https://events.columbia.edu/cal/event/eventView.do?b=de&calPath=%2Fpublic%2Fcals%2FMainCal&guid=CAL-00bbdb71-9eab6da0-019e-ad70e0d3-0000425devents%40columbia.edu&recurrenceId="
+        ]
+      }
+    },
+    {
+      "concept": "genre-rock",
+      "category": "genre",
+      "label": "Rock music",
+      "visual": "Strong accented musical note",
+      "rationale": "Electric guitar exists but is not universal evidence; motif requires recognition testing.",
+      "existing_alternative": "Broad fallback does not distinguish this specific supported facet.",
+      "event_ids": [
+        193714
+      ],
+      "evidence_by_event": {
+        "193714": [
+          "Melt-Banana, Anarchy 99 DJs, Jackson-Pratt: A concert w/ Melt-Banana in The Hall @ Elsewhere in Bushwick on 9/15. Tickets start at $25. 7pm, 16+. Genre: Rock.",
+          "Tags: Music, Rock, DJ, Concert, Nightlife, The Hall, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "193714": [
+          "https://www.elsewhere.club/events/1994242153966",
+          "https://www.eventbrite.com/e/melt-banana-anarchy-99-djs-jackson-pratt-tickets-1994242153966",
+          "https://www.eventbrite.com/e/melt-banana-special-guests-tickets-1994242153966"
+        ]
+      }
+    },
+    {
+      "concept": "genre-techno",
+      "label": "Techno",
+      "category": "genre",
+      "visual": "Explore four equal beat blocks beneath one sharply simplified electronic waveform.",
+      "rationale": "Explicit techno programming supports rhythm/production genre exploration, with house overlap a known recognition risk.",
+      "existing_alternative": "DJ decks describes equipment, not genre; generic notes omit techno.",
+      "event_ids": [
+        194057
+      ],
+      "evidence_by_event": {
+        "194057": [
+          "The Null Club: Known as being the guitarist of Gilla Band as well as a producer, Alan Duggan Borges announces a new project named The Null Club. The project explores genres and styles of music outside of Gilla Band, leaning into noise, techno, experimental hip hop, and post-punk.",
+          "Tags: Music, Rock, Techno, Concert, Nightlife, Electronic Music, Post Punk, Punk Rock, Experimental Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "194057": [
+          "https://www.knittingfactory.com/tm-event/the-null-club/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-vocal-jazz",
+      "label": "Vocal jazz",
+      "category": "genre",
+      "visual": "Explore a microphone beside one curved improvisatory note.",
+      "rationale": "The jazz program explicitly features a vocalist.",
+      "existing_alternative": "Microphone is a reasonable existing choice; custom vocal-jazz motif needs recognition testing and should not imply a specific instrument lineup.",
+      "event_ids": [
+        193630
+      ],
+      "evidence_by_event": {
+        "193630": [
+          "Samara Joy and Her Septet: A native of the Bronx, Samara Joy is a masterful interpreter of jazz standards who has won multiple Grammy Awards, including Best Jazz Vocal Album for her latest work, Portrait. This performance showcases the intimate, soulful chemistry she has developed with her touring band, the Samara Joy Septet.",
+          "Tags: Music, Jazz, Concert, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "193630": [
+          "https://www.tillescenter.org/event/samara-joy-1"
+        ]
+      }
+    },
+    {
+      "concept": "ritual-ofrenda",
+      "label": "Día de los Muertos ofrenda",
+      "category": "other",
+      "visual": "Tiered remembrance altar with marigolds and a framed remembrance image.",
+      "rationale": "Ofrendas and marigolds are explicit central program elements.",
+      "existing_alternative": "Skull is broad and could suggest Halloween; cultural structure needs source study.",
+      "event_ids": [
+        193821
+      ],
+      "evidence_by_event": {
+        "193821": [
+          "Día de los Muertos: With vibrant marigold blooms and colorful ofrendas, the rich traditions of Mexico’s Día de los Muertos come to the Garden for a celebration of memory, life, and renewal.",
+          "Tags: Community, Art, Culture, Family, Outdoor, Community Celebration, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "193821": [
+          "https://www.nybg.org/event/dia-de-los-muertos/",
+          "https://www.nybg.org/event/upcoming-exhibitions/dia-de-los-muertos/"
+        ]
+      }
+    },
+    {
+      "concept": "science-adaptive-materials",
+      "label": "Adaptive materials",
+      "category": "other",
+      "visual": "A small material strip changing curvature beside a stimulus mark.",
+      "rationale": "Talk explicitly concerns responsive materials.",
+      "existing_alternative": "Light bulb is broad; visual distinction needs testing.",
+      "event_ids": [
+        193809
+      ],
+      "evidence_by_event": {
+        "193809": [
+          "THE COURAGE TO DREAM | Eleonora Tubaldi: Thinking matter: For the series “The Courage to Dream,” Dr. Eleonora Tubaldi discusses “Thinking matter,” a research area exploring materials that exhibit intelligent behavior by adapting to external stimuli.",
+          "Tags: Community, Science, Education, Technology, Gathering, Talk, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "193809": [
+          "https://iicnewyork.esteri.it/en/gli_eventi/calendario/the-courage-to-dream-eleonora-tubaldi-thinking-matter/"
+        ]
+      }
+    },
+    {
+      "concept": "sport-bare-knuckle-boxing",
+      "label": "Bare-knuckle boxing",
+      "category": "activity",
+      "visual": "Two wrapped wrists and bare fists facing each other, requiring anatomy study.",
+      "rationale": "Named bare-knuckle competition differs from gloved boxing.",
+      "existing_alternative": "Fist emoji remains useful; boxing glove is technically inaccurate.",
+      "event_ids": [
+        193617
+      ],
+      "evidence_by_event": {
+        "193617": [
+          "Bare Knuckle Fighting Championship: Featuring BKFC 95.",
+          "Tags: Sports, BKFC, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "193617": [
+          "https://www.prucenter.com/events/bare-knuckle-fighting-championship"
+        ]
+      }
+    },
+    {
+      "concept": "vessel-aircraft-carrier",
+      "label": "Aircraft carrier",
+      "category": "equipment",
+      "visual": "Broad flat flight deck with offset island and tiny aircraft silhouette.",
+      "rationale": "Historic carrier tours have distinctive structural setting.",
+      "existing_alternative": "Ship emoji omits the flight deck; instrument-quality geometry reference needed.",
+      "event_ids": [
+        193819
+      ],
+      "evidence_by_event": {
+        "193819": [
+          "Early Morning Opening: A Day in the Life: Step into historic spaces and learn about the routines aboard an aircraft carrier and how sailors adapted to unexpected or exciting changes aboard.",
+          "Tags: Museum, History, Tour, Family, Education, Aircraft Carrier, Cultural Venue, Format, Outings"
+        ]
+      },
+      "source_urls_by_event": {
+        "193819": [
+          "https://intrepidmuseum.org/early-morning-opening-day-life"
+        ]
+      }
+    }
+  ],
+  "future_studies": [
+    "format-author-conversation",
+    "format-musical-improv",
+    "format-live-game-score",
+    "activity-folk-archiving",
+    "vessel-aircraft-carrier",
+    "ritual-ofrenda"
+  ],
+  "limitations": "Counts describe this cohort, not population reach. Genre and special-format opportunities are exploratory; ordinary Unicode may be sufficient. Clothing and material symbols require explicit event evidence; culture-specific ofrendas and anatomical combat studies require careful references."
+}

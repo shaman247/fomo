@@ -1,0 +1,172 @@
+{
+  "reviewer_mode": "creator-critical-pass",
+  "geometry_mode": "three-3d-scenes-and-two-flat-diagrams",
+  "views": [
+    "front",
+    "rear",
+    "left",
+    "right",
+    "top",
+    "icon"
+  ],
+  "evidence": ".scratch/icon-cycles-20260909/cycle-074/geometry.png",
+  "decision": "pass",
+  "findings": [
+    "Personally inspected final18construction views,five native128/32/24/16light/dark cards,nine accepted/Noto references and ten actual IconManager variants. Creator critique,not independent or blind.",
+    "Robot has three grounded marker tips,a joined wooden triangle/battery support,cross-rail and motor bracket. Motor terminals and battery contacts are joined by wires; eccentric rotor clears the support. Paper traces reach the marker tips.",
+    "Mirror disc rests on cloth. Twelve border loops cross its edge and anchor outside; the tail continues onto cloth. Highlight marks are graphic reflections,not detached objects.",
+    "Ornament has conforming closed folded cloth patches over both hemispheres,a covering equatorial ribbon,visible pin heads and an attached loop. Pin shafts are implicitly buried,not a complete fabrication diagram. Generic radial pattern is original.",
+    "Distinct geometry critique corrected the motor support gap; distinct native critique increased marker prominence and reduced paper dominance. Earlier source/artwork and review evidence are preserved. Final views show coherent joins and occlusion.",
+    "Art-documentary and performed-fiction icons are flat symbolic diagrams. No human anatomy or physical 3D scene is claimed. Fine details and narrow subject recognition need labels16px.",
+    "All files below15KBraw/5KBgzip triggers. Primary event and Exploratorium construction text informed scope; no outside photos,videos or instructional diagrams were viewed or traced.",
+    "Reference hashes unchanged between initial and final packets. No unresolved material geometry,clipping or theme defect seen."
+  ],
+  "references": [
+    {
+      "url": "https://tatter.org/events/shisha-mirrorwork-2/",
+      "checked": "2026-09-11",
+      "method": "Primary webpage text via web tool; no external images or videos viewed.",
+      "findings": "Sep12noon\u20134inperson505Carroll#2B,$150allmaterials. Shahnaz Khan teaches mirror attachment using grid worked open into stitched border. Mirrorwork not shisha smoking. Generic stitch construction,not copied textile motif."
+    },
+    {
+      "url": "https://tatter.org/events/pennsylvania-dutch-quilted-ball/",
+      "checked": "2026-09-11",
+      "method": "Primary webpage text via web tool; no external images or videos viewed.",
+      "findings": "Nov6 6:30\u20138Zoom,$75,recording3months. NO-SEW fabric-scrap ornament despite HandSewnQuiltingSeries boilerplate.3inchcotton/styrofoam/feltball,rectangularcottonpieces,250sequinpins,2headpins,ribbon,scissors,tape,pencil. Do not depict sewing needle or assume suppliesincluded."
+    },
+    {
+      "url": "https://tatter.org/events/kachchh-embroidery/",
+      "checked": "2026-09-11",
+      "method": "Primary webpage text via web tool; no external images or videos viewed.",
+      "findings": "Sep20noon\u20134inperson505Carroll#2B,$150allsupplies. Herringbonefoundation theninterlacingcrosses; Sindhi/Kutch tradition,not simplecross-stitch and not automaticallymirrorwork."
+    },
+    {
+      "url": "https://tatter.org/events/armenian-ourfa-embroidery/",
+      "checked": "2026-09-11",
+      "method": "Primary webpage text via web tool; no external images or videos viewed.",
+      "findings": "Oct29noon\u20132:30Zoom,$75,recording3months,ownfabric/hoop/needle/silk/DMCthreads. Fillingstitchwithdarker/goldoutline;pale floral tradition. Retain embroidery,notcalligraphy or mirrorwork."
+    },
+    {
+      "url": "https://pools.events/event/i7KxzX4f/build-a-happy-little-robot-that-draws-and-take-home/",
+      "checked": "2026-09-11",
+      "method": "Live Playwright rendered body text; URL added query ?i=R6ouE245; no image/video viewed.",
+      "findings": "Current Sep15 7:30pm,45E20thSt,22.47includingfees. OrganizerDareToFailGloriously,popsiclesticks/motors/tape/allpartstakehome,beginner. StoredPubkey85WWashington differs; verifyticketvenuebeforeanyrepair. Noexactkit/motorconfigurationestablished."
+    },
+    {
+      "url": "https://www.exploratorium.edu/sites/default/files/pdfs/scribbling_machines.pdf",
+      "checked": "2026-09-11",
+      "method": "Official maker PDF text/search excerpts; no diagrams or images viewed yet.",
+      "findings": "Maker guide describes battery-connected offset motor with clear rotating space,attachedbase andmarkers leavingjitter traces. Supports generic scribbling-machine mechanics,not exact event kit."
+    },
+    {
+      "url": "https://www.symphonyspace.org/events/eos-raphael-revealed-encore",
+      "checked": "2026-09-11",
+      "method": "Primary webpage text via web tool; no external images or videos viewed.",
+      "findings": "Oct7 1:30LeonardNimoyThalia,93min,member16/senior17/non18plus2fee. PhilGrabsky filmofRaphaelart/exhibition;noRomevisit or livecurator. Primary says2021access/500thanniversary; do not transplant into event year."
+    },
+    {
+      "url": "https://www.symphonyspace.org/events/eos-james-mcneill-whistler",
+      "checked": "2026-09-11",
+      "method": "Primary webpage text via web tool; no external images or videos viewed.",
+      "findings": "Nov12 1:30LeonardNimoyThalia,90min,member16/senior17/non18plus2fee. DavidBickerstafffilm ofTateexhibition,notphysicalNYCWhistlerexhibit."
+    },
+    {
+      "url": "https://www.symphonyspace.org/events/selected-shorts-on-tour-stissing-center-for-arts-and-culture-pine-plains-new-york-2",
+      "checked": "2026-09-11",
+      "method": "Primary webpage text via web tool; no external images or videos viewed.",
+      "findings": "Oct18 3pmStissingCenterPinePlains,45\u201355,120min. Actors GriffinDunne,ColbyMinifie,BhaveshPatel perform fiction;castsubjectchange;recordedpublicradio. Professional literaryperformance,not personaltrue stories or childrenstorytime."
+    },
+    {
+      "url": "https://www.symphonyspace.org/events/type/selected-shorts",
+      "checked": "2026-09-11",
+      "method": "Primary event index search text.",
+      "findings": "Officialseries listsBestAmericanOct21 7pm,PurchaseOct25 3pm,JapanSocietyOct26 7pm. Detailpagesforthese not yetread; do notoverclaimcasts/prices."
+    },
+    {
+      "url": "https://www.symphonyspace.org/events/vp-arab-legends-2",
+      "checked": "2026-09-11",
+      "method": "Primary webpage text via web tool; no external images or videos viewed.",
+      "findings": "Oct17 7pm,150min,60\u2013120,PeterJaySharp2537Broadway,NOTJuilliard60LincolnCenter. MazzikaOrchestraAmalGuermazi,soloistschoir/musicians,notchamber-onlyoroud-specific. Organizersearchsnippet20:00conflicts withvenue19:00; usevenueasobserved."
+    },
+    {
+      "url": "https://www.symphonyspace.org/events/vp-surviving-the-hood",
+      "checked": "2026-09-11",
+      "method": "Primary webpage text via web tool; no external images or videos viewed.",
+      "findings": "Oct13 11:30and18:30two120minshows,PeterJaySharp2537Broadway,NOTJuilliard. Standard55\u201365/student45. Originalfullystagedmusical,notconcertmusical."
+    },
+    {
+      "url": "https://www.symphonyspace.org/events/vp-raphael-ghanem-a-carne-s%C3%B3-cai-no-prato-do-vegano",
+      "checked": "2026-09-11",
+      "method": "Live Playwright body text after web fetch failed.",
+      "findings": "Oct29 19:00and21:30,120min,45\u201370,PeterJaySharp2537Broadway,NOTJuilliard. Portuguesestand-upwithincidentalinteraction,notlanguageclass or crowdfocusproven."
+    },
+    {
+      "url": "https://www.symphonyspace.org/events/vp-you-good-making-nyc-green-and-affordable",
+      "checked": "2026-09-11",
+      "method": "Primary webpage text via web tool; no external images or videos viewed.",
+      "findings": "Sep23 14:00LeonardNimoyThalia90minfreeRSVP. Climate/affordabilitypanelincludesLouiseYeung,DaphanyRoseSanchez,JakeBittle,NoahBernamoff;KoushaNavidarhosts. DISTINCTfrom17:30RewritingClimateStory; sourcepartitionneeded222932."
+    },
+    {
+      "url": "https://www.symphonyspace.org/events/vp-rewriting-the-climate-story-10-years-of-solutions",
+      "checked": "2026-09-11",
+      "method": "Primary webpage text via web tool; no external images or videos viewed.",
+      "findings": "Sep23 17:30LeonardNimoyThalia90minfreeSOLDOUT. ScienceFridaylivepodcastFloraLichtman/AyanaElizabethJohnson+personalstoriesStephSpeirs/JeromeFosterII/JessieBluedorn. DISTINCTfrom14:00panel;notonecontinuousspan."
+    },
+    {
+      "url": "https://www.nationalsawdust.org/event/nicoletta-todesco-the-cockroach-diary",
+      "checked": "2026-09-11",
+      "method": "Primary webpage text via web tool; no external images or videos viewed.",
+      "findings": "Oct20 19:30doors18:30,seated. Voice,classical/electricguitarsongcycleone-womanoperettawithXuanvisuals;notactualcockroach/naturetopic. PagecontainsgenericThisEventHasPassedandrichtextplaceholderdespitefuturedatedheader; donotassumecanceled."
+    },
+    {
+      "url": "https://www.nationalsawdust.org/event/lpr-presents-arkai",
+      "checked": "2026-09-11",
+      "method": "Primary webpage text via web tool; no external images or videos viewed.",
+      "findings": "Oct7 19:30doors18:30,standing. Explicitstringduo;noSTEMclass. GenericThisEventHasPassed/richtextplaceholderappearsdespitefuturedatedheader. Awardsclaimsnotindependentlyverified."
+    },
+    {
+      "url": "https://www.yivo.org/Diamonds-of-the-Night",
+      "checked": "2026-09-11",
+      "method": "Live Playwright body text after web fetch failed.",
+      "findings": "Nov12 19:00,15general10members,YIVO15W16CenterJewishHistory,doors30minprior. FilmfollowedpanelBrent/Lustigova/Tamkin/Feldman;audienceQ&A NOTexplicit.1964/2018referencesfilmhistorynoteventdates."
+    },
+    {
+      "url": "https://www.yivo.org/Yiddish-Theater-Walking-Tour",
+      "checked": "2026-09-11",
+      "method": "Live Playwright body text after web fetch failed.",
+      "findings": "Oct25 11\u201313,$18,meet255GrandNWChrystieGrandSaraDRooseveltPark,endsUnionSquare. NOTYIVO15W16office. GuideSusannahTrubman;theaterhistorytournotfilm-locationtour."
+    },
+    {
+      "url": "https://www.publicartfund.org/programs/view/opening-celebration-for-camille-henrot-dogs/",
+      "checked": "2026-09-11",
+      "method": "Primary rendered page text via web or Playwright; no images/video viewed.",
+      "findings": "OpeningSep9 18\u201319already past; relatedexhibitionthroughAug29 2027. Possibleexhibitionendleakintopartydates;noanimalpolicyconfirmed."
+    },
+    {
+      "url": "https://www.symphonyspace.org/events/selected-shorts-the-best-american-short-stories-2026-with-viet-thanh-nguyen",
+      "checked": "2026-09-11",
+      "method": "Primary rendered page text via web or Playwright; no images/video viewed.",
+      "findings": "Oct21 19:00PeterJaySharp2537Broadway105minnointermission,19\u201343inperson/26livestreamplus5fee. CastTBA;recentreaderlistnotpromisedcast. Radio recording stated."
+    },
+    {
+      "url": "https://www.symphonyspace.org/events/selected-shorts-on-tour-japan-society-3",
+      "checked": "2026-09-11",
+      "method": "Primary rendered page text via web or Playwright; no images/video viewed.",
+      "findings": "Oct26 19:00JapanSociety333E47,20\u201325,60min,ticketsComingSoon. MiekoKawakami WILL NOT APPEAR;actorsperformshortfictionbyherandpeers,castsubjectchange."
+    },
+    {
+      "url": "https://www.symphonyspace.org/events/selected-shorts-on-tour-the-performing-arts-center-of-the-purchase-college-purchase-ny",
+      "checked": "2026-09-11",
+      "method": "Primary rendered page text via web or Playwright; no images/video viewed.",
+      "findings": "Oct25 15:00PurchasePAC,19.75\u201335,90\u2013110min. HostMegWolitzer,MichelleBeck/SusieEssman andmore,castsubjectchange;DBTBAstale."
+    },
+    {
+      "url": "https://berlin.nyc/tm-event/the-rocky-horror-picture-show-live-with-the-new-york-cast-early/",
+      "checked": "2026-09-11",
+      "method": "Primary rendered page text via web or Playwright; no images/video viewed.",
+      "findings": "Oct29 18:30doors18:00Berlin25AvenueA,21+,25.93. ExactshadowcaststagingnotdescribedbeyondliveNewYorkCast;lateeventlinkedseparately. No trailer/images viewed."
+    }
+  ],
+  "scene_source_sha256": "882af9f1eb4eca13c57446deea4a1fec9791da5639e444b028914509b99f90b0",
+  "planar_source_sha256": "f16bd523d25afc5f98b384e3b7e7ccd885b498c0ad3bd73b1aa3a50bdf387caf"
+}

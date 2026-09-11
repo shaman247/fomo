@@ -1,0 +1,195 @@
+[
+  {
+    "icon_id": "cuisine-french-pastry",
+    "source_sha256": "a88e938431a096fde4204d17d340c26cbd02976b667712db92470d6e6e2a3d43",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Layered mille-feuille beside a shell-shaped madeleine.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-034/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-034/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 7839,
+      "gzip_level_6": 2505
+    },
+    "optimization": {
+      "initial_raw": 7668,
+      "initial_gzip_level_6": 2500,
+      "final_raw": 7839,
+      "final_gzip_level_6": 2505
+    },
+    "issues": [
+      {
+        "issue": "Initial madeleine appeared as an unfluted brown oval; later projection carried excessive fragmented path detail.",
+        "resolution": "Corrected radial-face normals, modeled shell grooves and simplified occluded paint contours. Final7839raw/2505gzip versus12517/3780preoptimization, with all native sizes and six views reinspected.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Mille-feuille layers remain visible at16px; secondary madeleine grooves soften. Paired traditional pastries represent the class without promising exact flavors, feathered icing or assortment."
+    ]
+  },
+  {
+    "icon_id": "cuisine-beignets",
+    "source_sha256": "a686eee88549e3a4f30f77174f8d1a069beec7e6071ebac9f2ce264b48d0e6fc",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Three puffed sugar-dusted beignets.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-034/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-034/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 4123,
+      "gzip_level_6": 1530
+    },
+    "optimization": {
+      "initial_raw": 3544,
+      "initial_gzip_level_6": 1380,
+      "final_raw": 4123,
+      "final_gzip_level_6": 1530
+    },
+    "issues": [
+      {
+        "issue": "Initial pastries read as flat iced blocks rather than puffed fried dough.",
+        "resolution": "Rebuilt inflated rounded-square meshes and attached thinner irregular sugar paint; simplified hidden cutouts and overlapped paint regions by0.15px to minimize seams. Final4123raw/1530gzip; tiny edges soften without affecting target-size silhouette.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Puffed square beignets and sugar remain useful at16px; individual sugar edges soften. Representative square shape is not a promise of the class regional style, recipe, filling or quantity."
+    ]
+  },
+  {
+    "icon_id": "format-live-audio-documentary",
+    "source_sha256": "a7601474af30f1cb31e1956112cf51720f5e7eea71cef1c1f758640d838d971a",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Stage curtains, microphone and a recorded-story card.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-034/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-034/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 943,
+      "gzip_level_6": 442
+    },
+    "optimization": {
+      "initial_raw": 936,
+      "initial_gzip_level_6": 443,
+      "final_raw": 943,
+      "final_gzip_level_6": 442
+    },
+    "issues": [
+      {
+        "issue": "Initial angular audio trace resembled an ECG.",
+        "resolution": "Replaced with rounded vertical audio bars on the story card, then rerendered at native sizes and in actual IconManager variants.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Curtains, microphone and audio-story card identify live narrative audio. At16px document lines soften. Label separates documentary from ordinary live podcast or fictional radio. Equipment and staging are symbolic."
+    ]
+  },
+  {
+    "icon_id": "format-research-symposium",
+    "source_sha256": "1671a22008a37917bb124dacf054527923982840335980caca43c36ea2458273",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Podium and research presentation chart.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-034/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-034/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 967,
+      "gzip_level_6": 460
+    },
+    "optimization": {
+      "initial_raw": 967,
+      "initial_gzip_level_6": 460,
+      "final_raw": 967,
+      "final_gzip_level_6": 460
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Podium and research chart identify scholarly presentation. At16px chart detail softens; label separates symposium from an ordinary lecture. Bars are illustrative, not data; actual poster or room layout is not promised."
+    ]
+  },
+  {
+    "icon_id": "activity-housing-assistance",
+    "source_sha256": "c27ad88d4f8f430616f4e2ffdf062f7892f4e312f19bb401abec2eccc77cc02c",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Apartment building, application document and advice bubble.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-034/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-034/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 774,
+      "gzip_level_6": 414
+    },
+    "optimization": {
+      "initial_raw": 774,
+      "initial_gzip_level_6": 414,
+      "final_raw": 774,
+      "final_gzip_level_6": 414
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Apartment building, document and speech bubble identify housing help. At16px document detail softens. No keys, money, approval or guaranteed allocation is represented."
+    ]
+  }
+]

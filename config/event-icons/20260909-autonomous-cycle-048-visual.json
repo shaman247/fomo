@@ -1,0 +1,189 @@
+[
+  {
+    "icon_id": "instrument-marimba",
+    "source_sha256": "420e9645ff4543667a41e244c2404be72d352415b4d68ef3f5dbc3880b102c38",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Wooden-bar tuned percussion instrument on a stand.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-048/visual-final-v2",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-048/gallery-final-v2/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 9686,
+      "gzip_level_6": 3098
+    },
+    "optimization": {
+      "initial_raw": 9706,
+      "initial_gzip_level_6": 3078,
+      "final_raw": 9686,
+      "final_gzip_level_6": 3098
+    },
+    "issues": [
+      {
+        "issue": "Initial mallets floated above lower bars; suspension cords missed shortest-bar footprints.",
+        "resolution": "Lowered heads to meet natural-bar tops and sloped shafts so their ends also meet the bars. Moved lower cords inside every bar footprint. Checked all six final views.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Wooden bars,raised2+3accidentals,resonators and braced stand indicate marimba. At16px individual bars and mallets soften; label distinguishes it from other tuned percussion. Original one-octave model is not a full-range product or promised event instrument. Suspension nodes and tuning are approximate."
+    ]
+  },
+  {
+    "icon_id": "format-verbal-description-tour",
+    "source_sha256": "d699f8db13911d10b3233ec58dd57225805829e89b3ff5c64c49d2e761fb2b33",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Artwork accompanied by a spoken-sound bubble.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-048/visual-final-v2",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-048/gallery-final-v2/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 726,
+      "gzip_level_6": 430
+    },
+    "optimization": {
+      "initial_raw": 726,
+      "initial_gzip_level_6": 430,
+      "final_raw": 726,
+      "final_gzip_level_6": 430
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Framed original landscape and a speech bubble with sound strokes indicate spoken art description. At16px painting detail softens; label supplies the accessible-tour format. This is not an official accessibility symbol, an audio-device promise, or a reproduction of the Indigenous exhibition."
+    ]
+  },
+  {
+    "icon_id": "activity-phone-podcasting",
+    "source_sha256": "6fce6edf43072eebb8e250407edef68fa4a6e28bb7398f513bab3e6e7e10e74a",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Phone with recording and audio glyphs.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-048/visual-final-v2",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-048/gallery-final-v2/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 701,
+      "gzip_level_6": 365
+    },
+    "optimization": {
+      "initial_raw": 701,
+      "initial_gzip_level_6": 365,
+      "final_raw": 701,
+      "final_gzip_level_6": 365
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Phone front with microphone,waveform and record dot indicates phone audio production. At16px waveform details soften; label specifies podcasting. Generic illustrative interface is not a real app or promised supplied equipment."
+    ]
+  },
+  {
+    "icon_id": "format-musical-improv",
+    "source_sha256": "9c8fc19149861fedb832617052477d15e081c1c9a073650346f48d110ce64b89",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Two singing comic speech faces and one musical note.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-048/visual-final-v2",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-048/gallery-final-v2/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 1006,
+      "gzip_level_6": 499
+    },
+    "optimization": {
+      "initial_raw": 1006,
+      "initial_gzip_level_6": 499,
+      "final_raw": 1006,
+      "final_gzip_level_6": 499
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Two expressive speech faces with open mouths and a musical note indicate musical improv. At16px the faces and note remain; label distinguishes spontaneous sung scenes from scripted musicals. No exact song,choreography or accompaniment promised."
+    ]
+  },
+  {
+    "icon_id": "dance-contra",
+    "source_sha256": "6f5bb131a34ef92280f1c8fa8c72925fd7bd6d127de7823b32ca855c4d6d5649",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Four people in an opposing dance formation.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-048/visual-final-v2",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-048/gallery-final-v2/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 10849,
+      "gzip_level_6": 3141
+    },
+    "optimization": {
+      "initial_raw": 30390,
+      "initial_gzip_level_6": 9268,
+      "final_raw": 10849,
+      "final_gzip_level_6": 3141
+    },
+    "issues": [
+      {
+        "issue": "Initial four-person artwork was30390raw/9268gzip6bytes, with fragmented shading.",
+        "resolution": "Used flat paint across continuous clothing and skin, half-unit contour simplification and whole-unit coordinate quantization in the128viewBox. Final10849/3141. Same authoritative joints,layout and occlusion; final native cards and all six formation/isolated-rig views inspected.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Four grounded figures in two opposing pairs indicate interacting community dance. At16px limbs and hands soften; label supplies contra specificity. Original formation shows approaching hands, not a connected grip or named dance figure. No gender roles,partner requirement or required dress implied."
+    ]
+  }
+]

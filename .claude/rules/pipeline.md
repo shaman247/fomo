@@ -51,6 +51,16 @@ All intermediate data lives in the database (not files).
 2. ≥ 2 successful crawls of the website since the event was last seen (protects monthly/annual-cadence sites from one-missed-extraction archival),
 3. no `start_too_future` rejection matching the event's name from that website in the last 14 days — an extraction rejected only for being beyond `FUTURE_WINDOW_DAYS` means the event is still listed on the page (e.g. Storm King's September program crawled in June).
 
+### Dead-link fast path (`pipeline/liveness_probe.py`)
+
+The grace above keeps a dead link on the map for ~2 weeks when a site *unpublishes* an event mid-run (parks.ny.gov, 2026-09-10: Shark Shack vanished from the listing and its page began answering 403 "Oops, lost your way?"). A gone detail page is stronger evidence than a missed listing, so right after the merge the tail probes the events the grace is holding open and archives the ones whose own pages are confirmed gone:
+
+- **Candidates** = active, future occurrence, and some enabled evidence-bearing source website's latest **merged** crawl (`crawl_results.merged_at`, not `processed_at` — a processed-but-unmerged crawl from a concurrent run makes everything it lists look dropped) is newer than the event's last confirmation anywhere. Instagram-only / `rotating_listing` / `skip_reenrichment` sites never count as the dropper. If that crawl still lists one of the event's URLs under another row (split series, re-slug twin) the event is `alive` with no fetch.
+- **Verdict per URL** via the crawl browser with the website's own settings: `dead` on 404/410, a tombstone `<title>` (any status), a soft-404 body, or a redirect to the site root; `unknown` on a bot challenge / 401/403/429/5xx without a tombstone / timeout. A past dated-instance URL (`/event/<slug>/2026-08-27/`) is only evidence together with its undated series page, which is probed too.
+- **Control gate**: one URL the same website's latest crawl lists for a still-active event must come back `alive` in the same run, or every dead verdict for that website is discarded (walls answer every path alike). No control URL = no archival.
+- **Archive** only when every probed URL is dead and the control passed; bypasses the 14-day grace and the stale-sibling rule. Verdicts land in `event_liveness_probes` (rate-limits re-probes to 7 days; explains the archival in triage).
+- **Budget**: 100 events/run, 10 per website (round-robin, soonest next occurrence first), 3 URLs per event, 15-minute wall clock. Standalone: `./venv/bin/python pipeline/liveness_probe.py [--dry-run] [--event-ids a,b]` — an explicit id list bypasses the window and the re-probe interval (manual "probe these now"). First live run 2026-09-10: 100 fetched events → 12 dead (all hand-verified), 3 unknown; ~1,000 events sit in the window at any time, ~25% of them still listed under another row.
+
 ## Detail Crawl (Step 5)
 
 Some events get "No description available." because the listing page lacked details. The detail crawl step crawls their individual event URLs to extract descriptions, tags, and emoji — updating `crawl_events` before the merger reads them.

@@ -1,0 +1,195 @@
+[
+  {
+    "icon_id": "dance-graham",
+    "source_sha256": "b3ef55c760e1cdfd9bb54613fb0771e91a276556e63c4d2e17001d02e6508977",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Seated dancer with bent open knees and rounded torso.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-046/visual-final-v4",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-046/gallery-final-v4/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 7119,
+      "gzip_level_6": 2438
+    },
+    "optimization": {
+      "initial_raw": 7119,
+      "initial_gzip_level_6": 2438,
+      "final_raw": 7119,
+      "final_gzip_level_6": 2438
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Seated rounded-torso figure indicates grounded floorwork. At16px face, hand orientation and contraction cue soften; label and explicit Graham context distinguish this from yoga or generic movement. A still cannot show the breath-led contraction/release cycle."
+    ]
+  },
+  {
+    "icon_id": "equipment-ballet-barre",
+    "source_sha256": "ec16243a92ef1aa4459e063d462e4394b390dc5310b104961dcf90f873ed348f",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Wooden ballet rail on metal feet beside pink soft slippers.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-046/visual-final-v4",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-046/gallery-final-v4/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 6777,
+      "gzip_level_6": 2060
+    },
+    "optimization": {
+      "initial_raw": 5978,
+      "initial_gzip_level_6": 1824,
+      "final_raw": 6777,
+      "final_gzip_level_6": 2060
+    },
+    "issues": [
+      {
+        "issue": "Initial narrow posts and small slippers weakened ballet specificity at16px.",
+        "resolution": "Increased post radius from .028 to .039 and slipper plan scale by1.35; final native cards, runtime themes and six geometry views checked.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Rail, freestanding supports and soft slippers indicate ballet barre work. At16px slipper elastics disappear; label supplies ballet specificity. Slippers are enlarged for clarity; this is not exact venue equipment or pointe training."
+    ]
+  },
+  {
+    "icon_id": "dance-vogue",
+    "source_sha256": "78357d863dabc82c65d1d5907585912f5f0d15fb27673c9ffa8cfbeb1e10adfd",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Grounded standing dancer with arms framing the face.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-046/visual-final-v4",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-046/gallery-final-v4/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 5059,
+      "gzip_level_6": 1709
+    },
+    "optimization": {
+      "initial_raw": 5059,
+      "initial_gzip_level_6": 1709,
+      "final_raw": 5059,
+      "final_gzip_level_6": 1709
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Standing dancer with angular arms framing the face indicates Vogue. At16px fingers and facial detail are simplified; label establishes style. Not a complete description of ballroom culture, every Vogue substyle or a prescribed move."
+    ]
+  },
+  {
+    "icon_id": "activity-knife-skills",
+    "source_sha256": "7c7c10b31400bbfce21b4f6ed115302bae48df61903a80a05f981cfa46ed114d",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Chef knife and cut vegetables on a board.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-046/visual-final-v4",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-046/gallery-final-v4/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 4845,
+      "gzip_level_6": 1437
+    },
+    "optimization": {
+      "initial_raw": 4657,
+      "initial_gzip_level_6": 1383,
+      "final_raw": 4845,
+      "final_gzip_level_6": 1437
+    },
+    "issues": [
+      {
+        "issue": "Initial knife had an overly long handle and blade relative to an8-inch teaching knife, with a small unsupported gap over the board.",
+        "resolution": "Set blade length .2032m and handle .1143m from manufacturer proportions, narrowed board and placed blade bottom directly on board top .024. Rerendered and checked all six views.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Chef knife on a board with cut vegetables suggests culinary knife work. At16px rivets and blade edge soften; label distinguishes knife-skills instruction from general food preparation. No grip, cutting motion or safe-handling instruction is depicted."
+    ]
+  },
+  {
+    "icon_id": "cuisine-swiss-roll",
+    "source_sha256": "156d41413bebf6dc011bffb8373fffc4f0480ad8b1e744c9104ef8160df3cc55",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Rolled chocolate cake with cream spiral and separate slice.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-046/visual-final-v4",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-046/gallery-final-v4/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 7556,
+      "gzip_level_6": 2862
+    },
+    "optimization": {
+      "initial_raw": 24090,
+      "initial_gzip_level_6": 7804,
+      "final_raw": 7556,
+      "final_gzip_level_6": 2862
+    },
+    "issues": [
+      {
+        "issue": "Tubular cream spiral generated oversized SVG; slice originally had cream only on its front cut face.",
+        "resolution": "Replaced dense tube segments with attached surface ribbons; added matching cream to the rear cut face. Rechecked final six views and native/runtime renders. Large first file remains in scratch as size evidence.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Rolled sponge and cream spiral establish a Swiss-roll association. At16px spiral turns soften; the label distinguishes cake from another rolled object. Original illustrative cake and slice do not promise exact decoration, portion, ingredients or dietary suitability. Surface layers are symbolic, not a full volumetric baking model."
+    ]
+  }
+]

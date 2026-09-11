@@ -1,0 +1,4948 @@
+{
+  "snapshot": ".scratch/tag-icon-hierarchy-20260909/snapshot.json",
+  "changes": [
+    {
+      "id": 1532,
+      "name": "Acoustic",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🪕",
+      "icon_id": null,
+      "active_event_count": 72,
+      "location_count": 0,
+      "new_icon_id": "noto-1f3b6",
+      "reason": "Use music artwork for a musical tradition; avoid a national flag, a single religion or an instrument that the broad tag does not establish. Specific genre artwork remains a candidate.",
+      "evidence_event_ids": [
+        80563,
+        84393,
+        86187,
+        89772
+      ]
+    },
+    {
+      "id": 851,
+      "name": "American Art",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🇺🇸",
+      "icon_id": null,
+      "active_event_count": 6,
+      "location_count": 0,
+      "new_icon_id": "noto-1f3a8",
+      "reason": "Use art-medium imagery rather than national, racial-color, dwelling or office-building shorthand.",
+      "evidence_event_ids": [
+        3699,
+        34966,
+        200085,
+        204906
+      ]
+    },
+    {
+      "id": 3830,
+      "name": "American Music",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🇺🇸",
+      "icon_id": null,
+      "active_event_count": 5,
+      "location_count": 0,
+      "new_icon_id": "noto-1f3b6",
+      "reason": "Use music artwork for a musical tradition; avoid a national flag, a single religion or an instrument that the broad tag does not establish. Specific genre artwork remains a candidate.",
+      "evidence_event_ids": [
+        193699,
+        220586,
+        240760,
+        246981
+      ]
+    },
+    {
+      "id": 1929,
+      "name": "Americana",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🇺🇸",
+      "icon_id": null,
+      "active_event_count": 56,
+      "location_count": 0,
+      "new_icon_id": "noto-1f3b6",
+      "reason": "Use music artwork for a musical tradition; avoid a national flag, a single religion or an instrument that the broad tag does not establish. Specific genre artwork remains a candidate.",
+      "evidence_event_ids": [
+        162301,
+        165635,
+        168651,
+        170353
+      ]
+    },
+    {
+      "id": 2702,
+      "name": "Anime",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "👺",
+      "icon_id": null,
+      "active_event_count": 154,
+      "location_count": 0,
+      "new_icon_id": "noto-1f3ac",
+      "reason": "The tengu mask is a specific folklore figure, not the animation medium. Film artwork is an interim choice; a broader animation design remains a candidate.",
+      "evidence_event_ids": [
+        68810,
+        68838,
+        68840,
+        69929
+      ]
+    },
+    {
+      "id": 4618,
+      "name": "Arabic Music",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🪕",
+      "icon_id": null,
+      "active_event_count": 6,
+      "location_count": 0,
+      "new_icon_id": "noto-1f3b6",
+      "reason": "Use music artwork for a musical tradition; avoid a national flag, a single religion or an instrument that the broad tag does not establish. Specific genre artwork remains a candidate.",
+      "evidence_event_ids": [
+        216949,
+        217321,
+        232525,
+        232526
+      ]
+    },
+    {
+      "id": 1156,
+      "name": "Asian American",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🎎",
+      "icon_id": null,
+      "active_event_count": 61,
+      "location_count": 0,
+      "new_icon_id": "noto-1fac2",
+      "reason": "Broad community/cultural identity cannot be fully represented by one national flag, Japanese dolls or a hut. Neutral community artwork is an interim choice; retain as a design candidate.",
+      "evidence_event_ids": [
+        144663,
+        174119,
+        176738,
+        183046
+      ]
+    },
+    {
+      "id": 4767,
+      "name": "Audio Editing",
+      "scope": "event",
+      "type": "keyword",
+      "emoji": null,
+      "icon_id": null,
+      "active_event_count": 5,
+      "location_count": 0,
+      "new_icon_id": "activity-audio-editing",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": [
+        79404,
+        173138,
+        196758,
+        223717
+      ]
+    },
+    {
+      "id": 2064,
+      "name": "Author Event",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🤵",
+      "icon_id": null,
+      "active_event_count": 192,
+      "location_count": 0,
+      "new_icon_id": "noto-1f4da",
+      "reason": "Books represent the author-event topic without a formalwear/gender assumption.",
+      "evidence_event_ids": [
+        159152,
+        166234,
+        170389,
+        173235
+      ]
+    },
+    {
+      "id": 4573,
+      "name": "Balkan Brass",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🎺",
+      "icon_id": null,
+      "active_event_count": 2,
+      "location_count": 0,
+      "new_icon_id": "format-brass-band",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": [
+        81239,
+        213315
+      ]
+    },
+    {
+      "id": 29445,
+      "name": "Bassoon",
+      "scope": "event",
+      "type": "keyword",
+      "emoji": null,
+      "icon_id": null,
+      "active_event_count": 1,
+      "location_count": 0,
+      "new_icon_id": "instrument-bassoon",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": [
+        234306
+      ]
+    },
+    {
+      "id": 184,
+      "name": "Black Art",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "⚫",
+      "icon_id": null,
+      "active_event_count": 1,
+      "location_count": 0,
+      "new_icon_id": "noto-1f3a8",
+      "reason": "Use art-medium imagery rather than national, racial-color, dwelling or office-building shorthand.",
+      "evidence_event_ids": [
+        207506
+      ]
+    },
+    {
+      "id": 1472,
+      "name": "Blues",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🫐",
+      "icon_id": null,
+      "active_event_count": 148,
+      "location_count": 0,
+      "new_icon_id": "noto-1f3b6",
+      "reason": "Replace literal wordplay or unrelated food, drink, house, car, wood or boxing imagery with music pending a more distinctive genre design.",
+      "evidence_event_ids": [
+        80563,
+        83580,
+        86186,
+        86187
+      ]
+    },
+    {
+      "id": 2179,
+      "name": "Book Club",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "👥",
+      "icon_id": null,
+      "active_event_count": 432,
+      "location_count": 0,
+      "new_icon_id": "format-book-club",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": [
+        3244,
+        51158,
+        88428,
+        88429
+      ]
+    },
+    {
+      "id": 43244,
+      "name": "Book Discussion",
+      "scope": "event",
+      "type": "keyword",
+      "emoji": null,
+      "icon_id": null,
+      "active_event_count": 144,
+      "location_count": 0,
+      "new_icon_id": "format-book-club",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": [
+        121132,
+        167124,
+        174150,
+        174152
+      ]
+    },
+    {
+      "id": 6057,
+      "name": "Brazilian Cinema",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🇧🇷",
+      "icon_id": null,
+      "active_event_count": 2,
+      "location_count": 0,
+      "new_icon_id": "noto-1f3ac",
+      "reason": "Cinema artwork identifies the medium; national flags, food, religious buildings and unrelated buildings do not. Soviet Cinema includes Ukrainian film evidence and is not equivalent to modern Russia.",
+      "evidence_event_ids": [
+        229024,
+        233640
+      ]
+    },
+    {
+      "id": 2897,
+      "name": "Brazilian Jazz",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🇧🇷",
+      "icon_id": null,
+      "active_event_count": 1,
+      "location_count": 0,
+      "new_icon_id": "noto-1f3b6",
+      "reason": "Use music artwork for a musical tradition; avoid a national flag, a single religion or an instrument that the broad tag does not establish. Specific genre artwork remains a candidate.",
+      "evidence_event_ids": [
+        248114
+      ]
+    },
+    {
+      "id": 3335,
+      "name": "British Comedy",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🇬🇧",
+      "icon_id": null,
+      "active_event_count": 2,
+      "location_count": 0,
+      "new_icon_id": "noto-1f3ad",
+      "reason": "Comedy/theater artwork describes the form without equating a language or tradition with citizenship.",
+      "evidence_event_ids": [
+        207168,
+        225540
+      ]
+    },
+    {
+      "id": 34036,
+      "name": "Button Making",
+      "scope": "event",
+      "type": "keyword",
+      "emoji": null,
+      "icon_id": null,
+      "active_event_count": 13,
+      "location_count": 0,
+      "new_icon_id": "equipment-button-press",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": [
+        150111,
+        216796,
+        221513,
+        222654
+      ]
+    },
+    {
+      "id": 57,
+      "name": "Cabaret",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🎙️",
+      "icon_id": null,
+      "active_event_count": 145,
+      "location_count": 0,
+      "new_icon_id": "format-cabaret",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": [
+        68762,
+        70636,
+        75918,
+        77887
+      ]
+    },
+    {
+      "id": 22820,
+      "name": "Cabaret Night",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🎤",
+      "icon_id": null,
+      "active_event_count": 0,
+      "location_count": 0,
+      "new_icon_id": "format-cabaret",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": []
+    },
+    {
+      "id": 21924,
+      "name": "Cabaret Show",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "💃",
+      "icon_id": null,
+      "active_event_count": 0,
+      "location_count": 0,
+      "new_icon_id": "format-cabaret",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": []
+    },
+    {
+      "id": 16764,
+      "name": "Carnatic Music",
+      "scope": "event",
+      "type": "keyword",
+      "emoji": null,
+      "icon_id": null,
+      "active_event_count": 1,
+      "location_count": 0,
+      "new_icon_id": "instrument-tanpura",
+      "reason": "User-approved classical-music tag emblem; concert fallback is allowed for Hindustani/Carnatic music, with specific featured instruments preferred.",
+      "evidence_event_ids": [
+        246713
+      ]
+    },
+    {
+      "id": 2317,
+      "name": "Chamber Music",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🏠",
+      "icon_id": null,
+      "active_event_count": 110,
+      "location_count": 0,
+      "new_icon_id": "noto-1f3bc",
+      "reason": "Musical-score artwork represents broad chamber music without a house or an overly narrow string-quartet assumption.",
+      "evidence_event_ids": [
+        152139,
+        165145,
+        165146,
+        173115
+      ]
+    },
+    {
+      "id": 3725,
+      "name": "Chinese Cinema",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🇨🇳",
+      "icon_id": null,
+      "active_event_count": 8,
+      "location_count": 0,
+      "new_icon_id": "noto-1f3ac",
+      "reason": "Cinema artwork identifies the medium; national flags, food, religious buildings and unrelated buildings do not. Soviet Cinema includes Ukrainian film evidence and is not equivalent to modern Russia.",
+      "evidence_event_ids": [
+        215411,
+        215412,
+        215413,
+        218581
+      ]
+    },
+    {
+      "id": 165,
+      "name": "Cinema",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🏛️",
+      "icon_id": null,
+      "active_event_count": 1573,
+      "location_count": 0,
+      "new_icon_id": "noto-1f3ac",
+      "reason": "Cinema artwork identifies the medium; national flags, food, religious buildings and unrelated buildings do not. Soviet Cinema includes Ukrainian film evidence and is not equivalent to modern Russia.",
+      "evidence_event_ids": [
+        58534,
+        88777,
+        132999,
+        151932
+      ]
+    },
+    {
+      "id": 27681,
+      "name": "Civic Meeting",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🏛️",
+      "icon_id": null,
+      "active_event_count": 559,
+      "location_count": 0,
+      "new_icon_id": "format-civic-meeting",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": [
+        19534,
+        48424,
+        48425,
+        54322
+      ]
+    },
+    {
+      "id": 5307,
+      "name": "Classical Dance",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🎻",
+      "icon_id": null,
+      "active_event_count": 3,
+      "location_count": 0,
+      "new_icon_id": "noto-1f483",
+      "reason": "Dance artwork is a broad interim choice; pepper, ballet shoes, violin or meditation do not identify this dance form. Specific dance silhouettes remain candidates.",
+      "evidence_event_ids": [
+        178459,
+        186075,
+        205714
+      ]
+    },
+    {
+      "id": 3785,
+      "name": "Colonial History",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🇺🇸",
+      "icon_id": null,
+      "active_event_count": 3,
+      "location_count": 0,
+      "new_icon_id": "noto-1f4dc",
+      "reason": "History is the tag subject; reviewed examples are not limited to the United States.",
+      "evidence_event_ids": [
+        220132,
+        227901,
+        247767
+      ]
+    },
+    {
+      "id": 1629,
+      "name": "Composting",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🪱",
+      "icon_id": null,
+      "active_event_count": 38,
+      "location_count": 0,
+      "new_icon_id": "activity-composting",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": [
+        86050,
+        86143,
+        100385,
+        105688
+      ]
+    },
+    {
+      "id": 83,
+      "name": "Contemporary Art",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🏢",
+      "icon_id": null,
+      "active_event_count": 167,
+      "location_count": 0,
+      "new_icon_id": "noto-1f3a8",
+      "reason": "Use art-medium imagery rather than national, racial-color, dwelling or office-building shorthand.",
+      "evidence_event_ids": [
+        13280,
+        13820,
+        33305,
+        66273
+      ]
+    },
+    {
+      "id": 6046,
+      "name": "Crossword",
+      "scope": "event",
+      "type": "keyword",
+      "emoji": null,
+      "icon_id": null,
+      "active_event_count": 1,
+      "location_count": 0,
+      "new_icon_id": "game-crossword",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": [
+        219715
+      ]
+    },
+    {
+      "id": 1453,
+      "name": "Dancehall",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🇯🇲",
+      "icon_id": null,
+      "active_event_count": 29,
+      "location_count": 0,
+      "new_icon_id": "noto-1f3b6",
+      "reason": "Use music artwork for a musical tradition; avoid a national flag, a single religion or an instrument that the broad tag does not establish. Specific genre artwork remains a candidate.",
+      "evidence_event_ids": [
+        80082,
+        116362,
+        121462,
+        163900
+      ]
+    },
+    {
+      "id": 68342,
+      "name": "Double Dutch",
+      "scope": "event",
+      "type": "keyword",
+      "emoji": null,
+      "icon_id": null,
+      "active_event_count": 2,
+      "location_count": 0,
+      "new_icon_id": "sport-double-dutch",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": [
+        174824,
+        232808
+      ]
+    },
+    {
+      "id": 1721,
+      "name": "Drag Show",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "👠",
+      "icon_id": null,
+      "active_event_count": 17,
+      "location_count": 0,
+      "new_icon_id": "format-drag-show",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": [
+        57193,
+        119198,
+        149368,
+        187061
+      ]
+    },
+    {
+      "id": 24340,
+      "name": "English Learning",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🇬🇧",
+      "icon_id": null,
+      "active_event_count": 82,
+      "location_count": 0,
+      "new_icon_id": "noto-1f5e3",
+      "reason": "A language is not restricted to the nation on its old flag; use the existing language-learning symbol, not the reciprocal-exchange icon.",
+      "evidence_event_ids": [
+        150077,
+        168137,
+        170012,
+        185292
+      ]
+    },
+    {
+      "id": 20804,
+      "name": "ESL",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🇺🇸",
+      "icon_id": null,
+      "active_event_count": 67,
+      "location_count": 0,
+      "new_icon_id": "noto-1f5e3",
+      "reason": "A language is not restricted to the nation on its old flag; use the existing language-learning symbol, not the reciprocal-exchange icon.",
+      "evidence_event_ids": [
+        26789,
+        150077,
+        151766,
+        151767
+      ]
+    },
+    {
+      "id": 17,
+      "name": "Farmers Market",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🌽",
+      "icon_id": null,
+      "active_event_count": 84,
+      "location_count": 0,
+      "new_icon_id": "activity-farmers-market",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": [
+        17423,
+        17996,
+        17997,
+        17998
+      ]
+    },
+    {
+      "id": 2882,
+      "name": "Figure Drawing",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "👤",
+      "icon_id": null,
+      "active_event_count": 33,
+      "location_count": 0,
+      "new_icon_id": "craft-figure-drawing",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": [
+        49537,
+        83587,
+        88462,
+        94083
+      ]
+    },
+    {
+      "id": 15388,
+      "name": "Food Distribution",
+      "scope": "event",
+      "type": "keyword",
+      "emoji": null,
+      "icon_id": null,
+      "active_event_count": 27,
+      "location_count": 0,
+      "new_icon_id": "activity-food-distribution",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": [
+        118343,
+        145623,
+        149927,
+        152411
+      ]
+    },
+    {
+      "id": 1893,
+      "name": "Food Rescue",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "♻️",
+      "icon_id": null,
+      "active_event_count": 10,
+      "location_count": 0,
+      "new_icon_id": "activity-food-rescue",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": [
+        1989,
+        8865,
+        60192,
+        94453
+      ]
+    },
+    {
+      "id": 3753,
+      "name": "French Cinema",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🇫🇷",
+      "icon_id": null,
+      "active_event_count": 37,
+      "location_count": 0,
+      "new_icon_id": "noto-1f3ac",
+      "reason": "Cinema artwork identifies the medium; national flags, food, religious buildings and unrelated buildings do not. Soviet Cinema includes Ukrainian film evidence and is not equivalent to modern Russia.",
+      "evidence_event_ids": [
+        167501,
+        197134,
+        205237,
+        207172
+      ]
+    },
+    {
+      "id": 4524,
+      "name": "French Culture",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🇫🇷",
+      "icon_id": null,
+      "active_event_count": 5,
+      "location_count": 0,
+      "new_icon_id": "noto-1fac2",
+      "reason": "Broad community/cultural identity cannot be fully represented by one national flag, Japanese dolls or a hut. Neutral community artwork is an interim choice; retain as a design candidate.",
+      "evidence_event_ids": [
+        153327,
+        205107,
+        225925,
+        240801
+      ]
+    },
+    {
+      "id": 5873,
+      "name": "Garage Rock",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🚗",
+      "icon_id": null,
+      "active_event_count": 1,
+      "location_count": 0,
+      "new_icon_id": "noto-1f3b6",
+      "reason": "Replace literal wordplay or unrelated food, drink, house, car, wood or boxing imagery with music pending a more distinctive genre design.",
+      "evidence_event_ids": [
+        239164
+      ]
+    },
+    {
+      "id": 5529,
+      "name": "German Cinema",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🥨",
+      "icon_id": null,
+      "active_event_count": 7,
+      "location_count": 0,
+      "new_icon_id": "noto-1f3ac",
+      "reason": "Cinema artwork identifies the medium; national flags, food, religious buildings and unrelated buildings do not. Soviet Cinema includes Ukrainian film evidence and is not equivalent to modern Russia.",
+      "evidence_event_ids": [
+        221139,
+        238963,
+        238983,
+        242638
+      ]
+    },
+    {
+      "id": 15,
+      "name": "Greenmarket",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🍎",
+      "icon_id": null,
+      "active_event_count": 3,
+      "location_count": 0,
+      "new_icon_id": "activity-farmers-market",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": [
+        18010,
+        96540,
+        220891
+      ]
+    },
+    {
+      "id": 27338,
+      "name": "Hammond Organ",
+      "scope": "event",
+      "type": "keyword",
+      "emoji": null,
+      "icon_id": null,
+      "active_event_count": 1,
+      "location_count": 0,
+      "new_icon_id": "instrument-hammond-organ",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": [
+        178271
+      ]
+    },
+    {
+      "id": 6831,
+      "name": "Hard Bop",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🥊",
+      "icon_id": null,
+      "active_event_count": 1,
+      "location_count": 0,
+      "new_icon_id": "noto-1f3b6",
+      "reason": "Replace literal wordplay or unrelated food, drink, house, car, wood or boxing imagery with music pending a more distinctive genre design.",
+      "evidence_event_ids": [
+        191294
+      ]
+    },
+    {
+      "id": 32264,
+      "name": "Harmonium",
+      "scope": "event",
+      "type": "keyword",
+      "emoji": null,
+      "icon_id": null,
+      "active_event_count": 2,
+      "location_count": 0,
+      "new_icon_id": "instrument-harmonium",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": [
+        246708,
+        246710
+      ]
+    },
+    {
+      "id": 22887,
+      "name": "Hindustani Classical",
+      "scope": "event",
+      "type": "keyword",
+      "emoji": null,
+      "icon_id": null,
+      "active_event_count": 0,
+      "location_count": 0,
+      "new_icon_id": "instrument-tanpura",
+      "reason": "User-approved classical-music tag emblem; concert fallback is allowed for Hindustani/Carnatic music, with specific featured instruments preferred.",
+      "evidence_event_ids": []
+    },
+    {
+      "id": 1546,
+      "name": "House Music",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🏠",
+      "icon_id": null,
+      "active_event_count": 157,
+      "location_count": 0,
+      "new_icon_id": "noto-1f3b6",
+      "reason": "Replace literal wordplay or unrelated food, drink, house, car, wood or boxing imagery with music pending a more distinctive genre design.",
+      "evidence_event_ids": [
+        108021,
+        108029,
+        108035,
+        113309
+      ]
+    },
+    {
+      "id": 44747,
+      "name": "House of Worship",
+      "scope": "event",
+      "type": "keyword",
+      "emoji": "⛪",
+      "icon_id": null,
+      "active_event_count": 2,
+      "location_count": 0,
+      "new_icon_id": "noto-1f6d0",
+      "reason": "Use the generic place-of-worship symbol for this umbrella category; keep named Church, Mosque and Synagogue icons distinct.",
+      "evidence_event_ids": [
+        202023,
+        211428
+      ]
+    },
+    {
+      "id": 5512,
+      "name": "Icelandic Cinema",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🧊",
+      "icon_id": null,
+      "active_event_count": 0,
+      "location_count": 0,
+      "new_icon_id": "noto-1f3ac",
+      "reason": "Cinema artwork identifies the medium; national flags, food, religious buildings and unrelated buildings do not. Soviet Cinema includes Ukrainian film evidence and is not equivalent to modern Russia.",
+      "evidence_event_ids": []
+    },
+    {
+      "id": 340,
+      "name": "Improv",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🎲",
+      "icon_id": null,
+      "active_event_count": 254,
+      "location_count": 0,
+      "new_icon_id": "format-improv-comedy",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": [
+        74106,
+        78272,
+        78273,
+        81432
+      ]
+    },
+    {
+      "id": 1692,
+      "name": "Improv Comedy",
+      "scope": "event",
+      "type": "keyword",
+      "emoji": "🤹",
+      "icon_id": null,
+      "active_event_count": 0,
+      "location_count": 0,
+      "new_icon_id": "format-improv-comedy",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": []
+    },
+    {
+      "id": 4231,
+      "name": "Improv Jam",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🎤",
+      "icon_id": null,
+      "active_event_count": 0,
+      "location_count": 0,
+      "new_icon_id": "format-improv-comedy",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": []
+    },
+    {
+      "id": 4237,
+      "name": "Improv Show",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🎭",
+      "icon_id": null,
+      "active_event_count": 0,
+      "location_count": 0,
+      "new_icon_id": "format-improv-comedy",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": []
+    },
+    {
+      "id": 3332,
+      "name": "Indian Classical",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🇮🇳",
+      "icon_id": null,
+      "active_event_count": 15,
+      "location_count": 0,
+      "new_icon_id": "instrument-tanpura",
+      "reason": "User-approved classical-music tag emblem; concert fallback is allowed for Hindustani/Carnatic music, with specific featured instruments preferred.",
+      "evidence_event_ids": [
+        168937,
+        218017,
+        220849,
+        222912
+      ]
+    },
+    {
+      "id": 2689,
+      "name": "Indian Classical Music",
+      "scope": "event",
+      "type": "keyword",
+      "emoji": null,
+      "icon_id": null,
+      "active_event_count": 0,
+      "location_count": 0,
+      "new_icon_id": "instrument-tanpura",
+      "reason": "User-approved classical-music tag emblem; concert fallback is allowed for Hindustani/Carnatic music, with specific featured instruments preferred.",
+      "evidence_event_ids": []
+    },
+    {
+      "id": 2470,
+      "name": "Indigenous Art",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🛖",
+      "icon_id": null,
+      "active_event_count": 5,
+      "location_count": 0,
+      "new_icon_id": "noto-1f3a8",
+      "reason": "Use art-medium imagery rather than national, racial-color, dwelling or office-building shorthand.",
+      "evidence_event_ids": [
+        101377,
+        186905,
+        193632,
+        216111
+      ]
+    },
+    {
+      "id": 2023,
+      "name": "Indigenous Culture",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🛖",
+      "icon_id": null,
+      "active_event_count": 11,
+      "location_count": 0,
+      "new_icon_id": "noto-1fac2",
+      "reason": "Broad community/cultural identity cannot be fully represented by one national flag, Japanese dolls or a hut. Neutral community artwork is an interim choice; retain as a design candidate.",
+      "evidence_event_ids": [
+        101377,
+        175210,
+        218980,
+        222418
+      ]
+    },
+    {
+      "id": 5727,
+      "name": "Iranian Cinema",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🕌",
+      "icon_id": null,
+      "active_event_count": 2,
+      "location_count": 0,
+      "new_icon_id": "noto-1f3ac",
+      "reason": "Cinema artwork identifies the medium; national flags, food, religious buildings and unrelated buildings do not. Soviet Cinema includes Ukrainian film evidence and is not equivalent to modern Russia.",
+      "evidence_event_ids": [
+        238969,
+        239192
+      ]
+    },
+    {
+      "id": 281,
+      "name": "Italian Culture",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🇮🇹",
+      "icon_id": null,
+      "active_event_count": 16,
+      "location_count": 0,
+      "new_icon_id": "noto-1fac2",
+      "reason": "Broad community/cultural identity cannot be fully represented by one national flag, Japanese dolls or a hut. Neutral community artwork is an interim choice; retain as a design candidate.",
+      "evidence_event_ids": [
+        193802,
+        193806,
+        193808,
+        217503
+      ]
+    },
+    {
+      "id": 1698,
+      "name": "Jam Band",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🍯",
+      "icon_id": null,
+      "active_event_count": 20,
+      "location_count": 0,
+      "new_icon_id": "noto-1f3b6",
+      "reason": "Replace literal wordplay or unrelated food, drink, house, car, wood or boxing imagery with music pending a more distinctive genre design.",
+      "evidence_event_ids": [
+        165311,
+        180331,
+        199942,
+        202713
+      ]
+    },
+    {
+      "id": 5755,
+      "name": "Japanese Art",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🇯🇵",
+      "icon_id": null,
+      "active_event_count": 7,
+      "location_count": 0,
+      "new_icon_id": "noto-1f3a8",
+      "reason": "Use art-medium imagery rather than national, racial-color, dwelling or office-building shorthand.",
+      "evidence_event_ids": [
+        203954,
+        222447,
+        222636,
+        229131
+      ]
+    },
+    {
+      "id": 1885,
+      "name": "Japanese Cinema",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "⛩️",
+      "icon_id": null,
+      "active_event_count": 20,
+      "location_count": 0,
+      "new_icon_id": "noto-1f3ac",
+      "reason": "Cinema artwork identifies the medium; national flags, food, religious buildings and unrelated buildings do not. Soviet Cinema includes Ukrainian film evidence and is not equivalent to modern Russia.",
+      "evidence_event_ids": [
+        159163,
+        175498,
+        182378,
+        199978
+      ]
+    },
+    {
+      "id": 2692,
+      "name": "Japanese Language",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🇯🇵",
+      "icon_id": null,
+      "active_event_count": 5,
+      "location_count": 0,
+      "new_icon_id": "noto-1f5e3",
+      "reason": "A language is not restricted to the nation on its old flag; use the existing language-learning symbol, not the reciprocal-exchange icon.",
+      "evidence_event_ids": [
+        176493,
+        185797,
+        222450,
+        229668
+      ]
+    },
+    {
+      "id": 176,
+      "name": "Karaoke",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🎤",
+      "icon_id": null,
+      "active_event_count": 78,
+      "location_count": 0,
+      "new_icon_id": "format-karaoke",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": [
+        33541,
+        38602,
+        38603,
+        81134
+      ]
+    },
+    {
+      "id": 41291,
+      "name": "Karaoke Show",
+      "scope": "event",
+      "type": "keyword",
+      "emoji": null,
+      "icon_id": null,
+      "active_event_count": 0,
+      "location_count": 0,
+      "new_icon_id": "format-karaoke",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": []
+    },
+    {
+      "id": 1167,
+      "name": "Korean Art",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🇰🇷",
+      "icon_id": null,
+      "active_event_count": 1,
+      "location_count": 0,
+      "new_icon_id": "noto-1f3a8",
+      "reason": "Use art-medium imagery rather than national, racial-color, dwelling or office-building shorthand.",
+      "evidence_event_ids": [
+        182171
+      ]
+    },
+    {
+      "id": 9840,
+      "name": "Korean Cinema",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🥢",
+      "icon_id": null,
+      "active_event_count": 7,
+      "location_count": 0,
+      "new_icon_id": "noto-1f3ac",
+      "reason": "Cinema artwork identifies the medium; national flags, food, religious buildings and unrelated buildings do not. Soviet Cinema includes Ukrainian film evidence and is not equivalent to modern Russia.",
+      "evidence_event_ids": [
+        166617,
+        206540,
+        214332,
+        245900
+      ]
+    },
+    {
+      "id": 77659,
+      "name": "Kumiko",
+      "scope": "event",
+      "type": "keyword",
+      "emoji": null,
+      "icon_id": null,
+      "active_event_count": 1,
+      "location_count": 0,
+      "new_icon_id": "craft-kumiko",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": [
+        188166
+      ]
+    },
+    {
+      "id": 4467,
+      "name": "Language Exchange",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🗣️",
+      "icon_id": null,
+      "active_event_count": 15,
+      "location_count": 0,
+      "new_icon_id": "format-language-exchange",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": [
+        36793,
+        88609,
+        92589,
+        99162
+      ]
+    },
+    {
+      "id": 2885,
+      "name": "Life Drawing",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🧘",
+      "icon_id": null,
+      "active_event_count": 10,
+      "location_count": 0,
+      "new_icon_id": "craft-figure-drawing",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": [
+        101201,
+        107226,
+        159796,
+        190896
+      ]
+    },
+    {
+      "id": 881,
+      "name": "Lighthouse",
+      "scope": "event",
+      "type": "keyword",
+      "emoji": null,
+      "icon_id": null,
+      "active_event_count": 3,
+      "location_count": 0,
+      "new_icon_id": "place-lighthouse",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": [
+        137543,
+        153423,
+        229087
+      ]
+    },
+    {
+      "id": 16228,
+      "name": "Linocut",
+      "scope": "event",
+      "type": "keyword",
+      "emoji": null,
+      "icon_id": null,
+      "active_event_count": 8,
+      "location_count": 0,
+      "new_icon_id": "craft-linocut",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": [
+        225575,
+        233248,
+        233261,
+        236571
+      ]
+    },
+    {
+      "id": 76809,
+      "name": "Litter Cleanup",
+      "scope": "event",
+      "type": "keyword",
+      "emoji": null,
+      "icon_id": null,
+      "active_event_count": 1,
+      "location_count": 0,
+      "new_icon_id": "activity-litter-cleanup",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": [
+        231975
+      ]
+    },
+    {
+      "id": 4246,
+      "name": "Live Improv",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🎭",
+      "icon_id": null,
+      "active_event_count": 0,
+      "location_count": 0,
+      "new_icon_id": "format-improv-comedy",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": []
+    },
+    {
+      "id": 1612,
+      "name": "Long Form Improv",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🎭",
+      "icon_id": null,
+      "active_event_count": 6,
+      "location_count": 0,
+      "new_icon_id": "format-improv-comedy",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": [
+        115094,
+        171513,
+        222055,
+        230641
+      ]
+    },
+    {
+      "id": 14311,
+      "name": "Macarons",
+      "scope": "event",
+      "type": "keyword",
+      "emoji": null,
+      "icon_id": null,
+      "active_event_count": 1,
+      "location_count": 0,
+      "new_icon_id": "cuisine-macarons",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": [
+        182948
+      ]
+    },
+    {
+      "id": 14809,
+      "name": "Master Composter",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "♻️",
+      "icon_id": null,
+      "active_event_count": 0,
+      "location_count": 0,
+      "new_icon_id": "activity-composting",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": []
+    },
+    {
+      "id": 18103,
+      "name": "Mat Pilates",
+      "scope": "event",
+      "type": "keyword",
+      "emoji": null,
+      "icon_id": null,
+      "active_event_count": 0,
+      "location_count": 0,
+      "new_icon_id": "activity-pilates",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": []
+    },
+    {
+      "id": 10585,
+      "name": "Mending",
+      "scope": "event",
+      "type": "keyword",
+      "emoji": null,
+      "icon_id": null,
+      "active_event_count": 16,
+      "location_count": 0,
+      "new_icon_id": "craft-mending",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": [
+        202507,
+        202508,
+        202509,
+        213790
+      ]
+    },
+    {
+      "id": 70888,
+      "name": "Mezzotint",
+      "scope": "event",
+      "type": "keyword",
+      "emoji": null,
+      "icon_id": null,
+      "active_event_count": 1,
+      "location_count": 0,
+      "new_icon_id": "craft-mezzotint",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": [
+        185937
+      ]
+    },
+    {
+      "id": 2619,
+      "name": "Middle Eastern Music",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🪕",
+      "icon_id": null,
+      "active_event_count": 2,
+      "location_count": 0,
+      "new_icon_id": "noto-1f3b6",
+      "reason": "Use music artwork for a musical tradition; avoid a national flag, a single religion or an instrument that the broad tag does not establish. Specific genre artwork remains a candidate.",
+      "evidence_event_ids": [
+        212238,
+        232525
+      ]
+    },
+    {
+      "id": 1077,
+      "name": "Modern Dance",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🧘",
+      "icon_id": null,
+      "active_event_count": 10,
+      "location_count": 0,
+      "new_icon_id": "noto-1f483",
+      "reason": "Dance artwork is a broad interim choice; pepper, ballet shoes, violin or meditation do not identify this dance form. Specific dance silhouettes remain candidates.",
+      "evidence_event_ids": [
+        17788,
+        80077,
+        80080,
+        199623
+      ]
+    },
+    {
+      "id": 5234,
+      "name": "Moroccan Cinema",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🇲🇦",
+      "icon_id": null,
+      "active_event_count": 1,
+      "location_count": 0,
+      "new_icon_id": "noto-1f3ac",
+      "reason": "Cinema artwork identifies the medium; national flags, food, religious buildings and unrelated buildings do not. Soviet Cinema includes Ukrainian film evidence and is not equivalent to modern Russia.",
+      "evidence_event_ids": [
+        247539
+      ]
+    },
+    {
+      "id": 12330,
+      "name": "Natural Dyeing",
+      "scope": "event",
+      "type": "keyword",
+      "emoji": null,
+      "icon_id": null,
+      "active_event_count": 3,
+      "location_count": 0,
+      "new_icon_id": "craft-natural-dyeing",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": [
+        220647,
+        222382,
+        235877
+      ]
+    },
+    {
+      "id": 44428,
+      "name": "Papermaking",
+      "scope": "event",
+      "type": "keyword",
+      "emoji": null,
+      "icon_id": null,
+      "active_event_count": 9,
+      "location_count": 0,
+      "new_icon_id": "craft-papermaking",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": [
+        176819,
+        187113,
+        193638,
+        193639
+      ]
+    },
+    {
+      "id": 1284,
+      "name": "Pasta Making",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🍝",
+      "icon_id": null,
+      "active_event_count": 16,
+      "location_count": 0,
+      "new_icon_id": "activity-pasta-making",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": [
+        91023,
+        94346,
+        98052,
+        180107
+      ]
+    },
+    {
+      "id": 4784,
+      "name": "Photo Editing",
+      "scope": "event",
+      "type": "keyword",
+      "emoji": null,
+      "icon_id": null,
+      "active_event_count": 1,
+      "location_count": 0,
+      "new_icon_id": "activity-photo-editing",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": [
+        125001
+      ]
+    },
+    {
+      "id": 3312,
+      "name": "Piano Recital",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🤵",
+      "icon_id": null,
+      "active_event_count": 9,
+      "location_count": 0,
+      "new_icon_id": "noto-1f3b9",
+      "reason": "Use the instrument named by the tag rather than formalwear.",
+      "evidence_event_ids": [
+        156693,
+        165146,
+        181501,
+        182563
+      ]
+    },
+    {
+      "id": 1093,
+      "name": "Planetarium",
+      "scope": "event",
+      "type": "keyword",
+      "emoji": null,
+      "icon_id": null,
+      "active_event_count": 18,
+      "location_count": 0,
+      "new_icon_id": "format-planetarium",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": [
+        139410,
+        139411,
+        139414,
+        139418
+      ]
+    },
+    {
+      "id": 2216,
+      "name": "Pop Music",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🥤",
+      "icon_id": null,
+      "active_event_count": 230,
+      "location_count": 0,
+      "new_icon_id": "noto-1f3b6",
+      "reason": "Replace literal wordplay or unrelated food, drink, house, car, wood or boxing imagery with music pending a more distinctive genre design.",
+      "evidence_event_ids": [
+        30286,
+        86057,
+        86061,
+        98182
+      ]
+    },
+    {
+      "id": 3262,
+      "name": "Pop Rock",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🍭",
+      "icon_id": null,
+      "active_event_count": 7,
+      "location_count": 0,
+      "new_icon_id": "noto-1f3b6",
+      "reason": "Replace literal wordplay or unrelated food, drink, house, car, wood or boxing imagery with music pending a more distinctive genre design.",
+      "evidence_event_ids": [
+        202671,
+        215972,
+        218179,
+        218854
+      ]
+    },
+    {
+      "id": 3789,
+      "name": "Presidential History",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🇺🇸",
+      "icon_id": null,
+      "active_event_count": 0,
+      "location_count": 0,
+      "new_icon_id": "noto-1f4dc",
+      "reason": "History is the tag subject; reviewed examples are not limited to the United States.",
+      "evidence_event_ids": []
+    },
+    {
+      "id": 75535,
+      "name": "Pyrography",
+      "scope": "event",
+      "type": "keyword",
+      "emoji": null,
+      "icon_id": null,
+      "active_event_count": 2,
+      "location_count": 0,
+      "new_icon_id": "craft-pyrography",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": [
+        172101,
+        247902
+      ]
+    },
+    {
+      "id": 1404,
+      "name": "R&B",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🍷",
+      "icon_id": null,
+      "active_event_count": 120,
+      "location_count": 0,
+      "new_icon_id": "noto-1f3b6",
+      "reason": "Replace literal wordplay or unrelated food, drink, house, car, wood or boxing imagery with music pending a more distinctive genre design.",
+      "evidence_event_ids": [
+        86042,
+        89340,
+        108681,
+        149107
+      ]
+    },
+    {
+      "id": 2258,
+      "name": "Rakugo",
+      "scope": "event",
+      "type": "keyword",
+      "emoji": null,
+      "icon_id": null,
+      "active_event_count": 1,
+      "location_count": 0,
+      "new_icon_id": "format-rakugo",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": [
+        12051
+      ]
+    },
+    {
+      "id": 13677,
+      "name": "Reggae Music",
+      "scope": "event",
+      "type": "keyword",
+      "emoji": "🇯🇲",
+      "icon_id": null,
+      "active_event_count": 0,
+      "location_count": 0,
+      "new_icon_id": "noto-1f3b6",
+      "reason": "Use music artwork for a musical tradition; avoid a national flag, a single religion or an instrument that the broad tag does not establish. Specific genre artwork remains a candidate.",
+      "evidence_event_ids": []
+    },
+    {
+      "id": 2488,
+      "name": "Ritual",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🕉️",
+      "icon_id": null,
+      "active_event_count": 14,
+      "location_count": 0,
+      "new_icon_id": "noto-1f56f",
+      "reason": "Broad ritual includes secular and multiple spiritual practices; one religion is too narrow. Candle is interim, with a more inclusive design candidate.",
+      "evidence_event_ids": [
+        193627,
+        196556,
+        202837,
+        203309
+      ]
+    },
+    {
+      "id": 6102,
+      "name": "Roots Rock",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🪵",
+      "icon_id": null,
+      "active_event_count": 3,
+      "location_count": 0,
+      "new_icon_id": "noto-1f3b6",
+      "reason": "Replace literal wordplay or unrelated food, drink, house, car, wood or boxing imagery with music pending a more distinctive genre design.",
+      "evidence_event_ids": [
+        221793,
+        238105,
+        239165
+      ]
+    },
+    {
+      "id": 2896,
+      "name": "Sacred Music",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "⛪",
+      "icon_id": null,
+      "active_event_count": 10,
+      "location_count": 0,
+      "new_icon_id": "noto-1f3b6",
+      "reason": "Use music artwork for a musical tradition; avoid a national flag, a single religion or an instrument that the broad tag does not establish. Specific genre artwork remains a candidate.",
+      "evidence_event_ids": [
+        57013,
+        120348,
+        162249,
+        189324
+      ]
+    },
+    {
+      "id": 1173,
+      "name": "Salsa",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🌶️",
+      "icon_id": null,
+      "active_event_count": 68,
+      "location_count": 0,
+      "new_icon_id": "noto-1f483",
+      "reason": "Dance artwork is a broad interim choice; pepper, ballet shoes, violin or meditation do not identify this dance form. Specific dance silhouettes remain candidates.",
+      "evidence_event_ids": [
+        90886,
+        93498,
+        103252,
+        116252
+      ]
+    },
+    {
+      "id": 22885,
+      "name": "Sarangi",
+      "scope": "event",
+      "type": "keyword",
+      "emoji": null,
+      "icon_id": null,
+      "active_event_count": 0,
+      "location_count": 0,
+      "new_icon_id": "instrument-sarangi",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": []
+    },
+    {
+      "id": 7897,
+      "name": "Scavenger Hunt",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🔍",
+      "icon_id": null,
+      "active_event_count": 21,
+      "location_count": 0,
+      "new_icon_id": "activity-scavenger-hunt",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": [
+        104954,
+        104955,
+        104957,
+        213359
+      ]
+    },
+    {
+      "id": 3331,
+      "name": "Sitar",
+      "scope": "event",
+      "type": "keyword",
+      "emoji": null,
+      "icon_id": null,
+      "active_event_count": 2,
+      "location_count": 0,
+      "new_icon_id": "instrument-sitar",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": [
+        217412,
+        246709
+      ]
+    },
+    {
+      "id": 17804,
+      "name": "Soviet Cinema",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🇷🇺",
+      "icon_id": null,
+      "active_event_count": 8,
+      "location_count": 0,
+      "new_icon_id": "noto-1f3ac",
+      "reason": "Cinema artwork identifies the medium; national flags, food, religious buildings and unrelated buildings do not. Soviet Cinema includes Ukrainian film evidence and is not equivalent to modern Russia.",
+      "evidence_event_ids": [
+        218568,
+        218569,
+        218572,
+        242653
+      ]
+    },
+    {
+      "id": 4827,
+      "name": "Spanish Comedy",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🇪🇸",
+      "icon_id": null,
+      "active_event_count": 0,
+      "location_count": 0,
+      "new_icon_id": "noto-1f3ad",
+      "reason": "Comedy/theater artwork describes the form without equating a language or tradition with citizenship.",
+      "evidence_event_ids": []
+    },
+    {
+      "id": 977,
+      "name": "Spanish Language",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🇪🇸",
+      "icon_id": null,
+      "active_event_count": 100,
+      "location_count": 0,
+      "new_icon_id": "noto-1f5e3",
+      "reason": "A language is not restricted to the nation on its old flag; use the existing language-learning symbol, not the reciprocal-exchange icon.",
+      "evidence_event_ids": [
+        96299,
+        130756,
+        137019,
+        137514
+      ]
+    },
+    {
+      "id": 4411,
+      "name": "Spanish Music",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🇪🇸",
+      "icon_id": null,
+      "active_event_count": 2,
+      "location_count": 0,
+      "new_icon_id": "noto-1f3b6",
+      "reason": "Use music artwork for a musical tradition; avoid a national flag, a single religion or an instrument that the broad tag does not establish. Specific genre artwork remains a candidate.",
+      "evidence_event_ids": [
+        217053,
+        239162
+      ]
+    },
+    {
+      "id": 339,
+      "name": "Stand-up",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🎤",
+      "icon_id": null,
+      "active_event_count": 109,
+      "location_count": 0,
+      "new_icon_id": "format-stand-up-comedy",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": [
+        9746,
+        9747,
+        9749,
+        27265
+      ]
+    },
+    {
+      "id": 51586,
+      "name": "Stroller Walk",
+      "scope": "event",
+      "type": "keyword",
+      "emoji": null,
+      "icon_id": null,
+      "active_event_count": 1,
+      "location_count": 0,
+      "new_icon_id": "equipment-stroller",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": [
+        169285
+      ]
+    },
+    {
+      "id": 2687,
+      "name": "Tabla",
+      "scope": "event",
+      "type": "keyword",
+      "emoji": null,
+      "icon_id": null,
+      "active_event_count": 7,
+      "location_count": 0,
+      "new_icon_id": "instrument-tabla",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": [
+        246706,
+        246707,
+        246708,
+        246709
+      ]
+    },
+    {
+      "id": 12761,
+      "name": "Tabletop",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🛡️",
+      "icon_id": null,
+      "active_event_count": 154,
+      "location_count": 0,
+      "new_icon_id": "noto-1f3b2",
+      "reason": "Broad tabletop games include board games beyond fantasy role-playing; dice are a broad games symbol, shield and D20 are too narrow.",
+      "evidence_event_ids": [
+        72844,
+        78438,
+        87218,
+        87453
+      ]
+    },
+    {
+      "id": 4682,
+      "name": "Tai Chi",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🧘",
+      "icon_id": null,
+      "active_event_count": 47,
+      "location_count": 0,
+      "new_icon_id": "activity-tai-chi",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": [
+        80421,
+        92546,
+        104434,
+        106639
+      ]
+    },
+    {
+      "id": 5828,
+      "name": "Tap Dance",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🩰",
+      "icon_id": null,
+      "active_event_count": 8,
+      "location_count": 0,
+      "new_icon_id": "noto-1f483",
+      "reason": "Dance artwork is a broad interim choice; pepper, ballet shoes, violin or meditation do not identify this dance form. Specific dance silhouettes remain candidates.",
+      "evidence_event_ids": [
+        170245,
+        213427,
+        217130,
+        220793
+      ]
+    },
+    {
+      "id": 1514,
+      "name": "Tarot",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🔮",
+      "icon_id": null,
+      "active_event_count": 28,
+      "location_count": 0,
+      "new_icon_id": "activity-tarot",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": [
+        95254,
+        98634,
+        113685,
+        139646
+      ]
+    },
+    {
+      "id": 5390,
+      "name": "Turkish Music",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🇹🇷",
+      "icon_id": null,
+      "active_event_count": 6,
+      "location_count": 0,
+      "new_icon_id": "noto-1f3b6",
+      "reason": "Use music artwork for a musical tradition; avoid a national flag, a single religion or an instrument that the broad tag does not establish. Specific genre artwork remains a candidate.",
+      "evidence_event_ids": [
+        168640,
+        191975,
+        212241,
+        212243
+      ]
+    },
+    {
+      "id": 4777,
+      "name": "Video Editing",
+      "scope": "event",
+      "type": "keyword",
+      "emoji": null,
+      "icon_id": null,
+      "active_event_count": 13,
+      "location_count": 0,
+      "new_icon_id": "activity-video-editing",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": [
+        79412,
+        114947,
+        114950,
+        114952
+      ]
+    },
+    {
+      "id": 5788,
+      "name": "Virtual Reality",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🥽",
+      "icon_id": null,
+      "active_event_count": 16,
+      "location_count": 0,
+      "new_icon_id": "equipment-vr-headset",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": [
+        163551,
+        226803,
+        228481,
+        228541
+      ]
+    },
+    {
+      "id": 1626,
+      "name": "Watercolor",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "🎨",
+      "icon_id": null,
+      "active_event_count": 73,
+      "location_count": 0,
+      "new_icon_id": "craft-watercolor",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": [
+        91706,
+        91884,
+        98869,
+        104827
+      ]
+    },
+    {
+      "id": 18140,
+      "name": "Watercolor Painting",
+      "scope": "event",
+      "type": "keyword",
+      "emoji": null,
+      "icon_id": null,
+      "active_event_count": 2,
+      "location_count": 0,
+      "new_icon_id": "craft-watercolor",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": [
+        91706,
+        113544
+      ]
+    },
+    {
+      "id": 2848,
+      "name": "Welding",
+      "scope": "event",
+      "type": "keyword",
+      "emoji": null,
+      "icon_id": null,
+      "active_event_count": 4,
+      "location_count": 0,
+      "new_icon_id": "craft-welding",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": [
+        142078,
+        199817,
+        199820,
+        231162
+      ]
+    },
+    {
+      "id": 1530,
+      "name": "Yiddish Music",
+      "scope": "event",
+      "type": "tag",
+      "emoji": "✡️",
+      "icon_id": null,
+      "active_event_count": 6,
+      "location_count": 0,
+      "new_icon_id": "noto-1f3b6",
+      "reason": "Use music artwork for a musical tradition; avoid a national flag, a single religion or an instrument that the broad tag does not establish. Specific genre artwork remains a candidate.",
+      "evidence_event_ids": [
+        67946,
+        168650,
+        176506,
+        191367
+      ]
+    },
+    {
+      "id": 80556,
+      "name": "American Art",
+      "scope": "venue",
+      "type": "keyword",
+      "emoji": "🇺🇸",
+      "icon_id": null,
+      "active_event_count": 0,
+      "location_count": 2,
+      "new_icon_id": "noto-1f3a8",
+      "reason": "Use art-medium imagery rather than national, racial-color, dwelling or office-building shorthand.",
+      "evidence_event_ids": []
+    },
+    {
+      "id": 80966,
+      "name": "Anime",
+      "scope": "venue",
+      "type": "keyword",
+      "emoji": "👺",
+      "icon_id": null,
+      "active_event_count": 0,
+      "location_count": 2,
+      "new_icon_id": "noto-1f3ac",
+      "reason": "The tengu mask is a specific folklore figure, not the animation medium. Film artwork is an interim choice; a broader animation design remains a candidate.",
+      "evidence_event_ids": []
+    },
+    {
+      "id": 80856,
+      "name": "Asian American",
+      "scope": "venue",
+      "type": "keyword",
+      "emoji": "🎎",
+      "icon_id": null,
+      "active_event_count": 0,
+      "location_count": 5,
+      "new_icon_id": "noto-1fac2",
+      "reason": "Broad community/cultural identity cannot be fully represented by one national flag, Japanese dolls or a hut. Neutral community artwork is an interim choice; retain as a design candidate.",
+      "evidence_event_ids": []
+    },
+    {
+      "id": 79924,
+      "name": "Black Art",
+      "scope": "venue",
+      "type": "keyword",
+      "emoji": "⚫",
+      "icon_id": null,
+      "active_event_count": 0,
+      "location_count": 2,
+      "new_icon_id": "noto-1f3a8",
+      "reason": "Use art-medium imagery rather than national, racial-color, dwelling or office-building shorthand.",
+      "evidence_event_ids": []
+    },
+    {
+      "id": 80915,
+      "name": "Blues",
+      "scope": "venue",
+      "type": "keyword",
+      "emoji": "🫐",
+      "icon_id": null,
+      "active_event_count": 0,
+      "location_count": 3,
+      "new_icon_id": "noto-1f3b6",
+      "reason": "Replace literal wordplay or unrelated food, drink, house, car, wood or boxing imagery with music pending a more distinctive genre design.",
+      "evidence_event_ids": []
+    },
+    {
+      "id": 79802,
+      "name": "Cabaret",
+      "scope": "venue",
+      "type": "keyword",
+      "emoji": "🎙️",
+      "icon_id": null,
+      "active_event_count": 0,
+      "location_count": 17,
+      "new_icon_id": "format-cabaret",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": []
+    },
+    {
+      "id": 80953,
+      "name": "Chamber Music",
+      "scope": "venue",
+      "type": "keyword",
+      "emoji": "🏠",
+      "icon_id": null,
+      "active_event_count": 0,
+      "location_count": 1,
+      "new_icon_id": "noto-1f3bc",
+      "reason": "Musical-score artwork represents broad chamber music without a house or an overly narrow string-quartet assumption.",
+      "evidence_event_ids": []
+    },
+    {
+      "id": 79907,
+      "name": "Cinema",
+      "scope": "venue",
+      "type": "keyword",
+      "emoji": "🏛️",
+      "icon_id": null,
+      "active_event_count": 0,
+      "location_count": 85,
+      "new_icon_id": "noto-1f3ac",
+      "reason": "Cinema artwork identifies the medium; national flags, food, religious buildings and unrelated buildings do not. Soviet Cinema includes Ukrainian film evidence and is not equivalent to modern Russia.",
+      "evidence_event_ids": []
+    },
+    {
+      "id": 80926,
+      "name": "Composting",
+      "scope": "venue",
+      "type": "keyword",
+      "emoji": "🪱",
+      "icon_id": null,
+      "active_event_count": 0,
+      "location_count": 2,
+      "new_icon_id": "activity-composting",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": []
+    },
+    {
+      "id": 79827,
+      "name": "Contemporary Art",
+      "scope": "venue",
+      "type": "keyword",
+      "emoji": "🏢",
+      "icon_id": null,
+      "active_event_count": 0,
+      "location_count": 35,
+      "new_icon_id": "noto-1f3a8",
+      "reason": "Use art-medium imagery rather than national, racial-color, dwelling or office-building shorthand.",
+      "evidence_event_ids": []
+    },
+    {
+      "id": 80929,
+      "name": "Drag Show",
+      "scope": "venue",
+      "type": "keyword",
+      "emoji": "👠",
+      "icon_id": null,
+      "active_event_count": 0,
+      "location_count": 1,
+      "new_icon_id": "format-drag-show",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": []
+    },
+    {
+      "id": 79763,
+      "name": "Farmers Market",
+      "scope": "venue",
+      "type": "keyword",
+      "emoji": "🌽",
+      "icon_id": null,
+      "active_event_count": 0,
+      "location_count": 66,
+      "new_icon_id": "activity-farmers-market",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": []
+    },
+    {
+      "id": 79761,
+      "name": "Greenmarket",
+      "scope": "venue",
+      "type": "keyword",
+      "emoji": "🍎",
+      "icon_id": null,
+      "active_event_count": 0,
+      "location_count": 47,
+      "new_icon_id": "activity-farmers-market",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": []
+    },
+    {
+      "id": 81316,
+      "name": "House of Worship",
+      "scope": "venue",
+      "type": "tag",
+      "emoji": "⛪",
+      "icon_id": null,
+      "active_event_count": 0,
+      "location_count": 195,
+      "new_icon_id": "noto-1f6d0",
+      "reason": "Use the generic place-of-worship symbol for this umbrella category; keep named Church, Mosque and Synagogue icons distinct.",
+      "evidence_event_ids": []
+    },
+    {
+      "id": 80072,
+      "name": "Improv",
+      "scope": "venue",
+      "type": "keyword",
+      "emoji": "🎲",
+      "icon_id": null,
+      "active_event_count": 0,
+      "location_count": 7,
+      "new_icon_id": "format-improv-comedy",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": []
+    },
+    {
+      "id": 80980,
+      "name": "Indian Classical",
+      "scope": "venue",
+      "type": "keyword",
+      "emoji": "🇮🇳",
+      "icon_id": null,
+      "active_event_count": 0,
+      "location_count": 2,
+      "new_icon_id": "instrument-tanpura",
+      "reason": "User-approved classical-music tag emblem; concert fallback is allowed for Hindustani/Carnatic music, with specific featured instruments preferred.",
+      "evidence_event_ids": []
+    },
+    {
+      "id": 80014,
+      "name": "Italian Culture",
+      "scope": "venue",
+      "type": "keyword",
+      "emoji": "🇮🇹",
+      "icon_id": null,
+      "active_event_count": 0,
+      "location_count": 3,
+      "new_icon_id": "noto-1fac2",
+      "reason": "Broad community/cultural identity cannot be fully represented by one national flag, Japanese dolls or a hut. Neutral community artwork is an interim choice; retain as a design candidate.",
+      "evidence_event_ids": []
+    },
+    {
+      "id": 79916,
+      "name": "Karaoke",
+      "scope": "venue",
+      "type": "keyword",
+      "emoji": "🎤",
+      "icon_id": null,
+      "active_event_count": 0,
+      "location_count": 24,
+      "new_icon_id": "format-karaoke",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": []
+    },
+    {
+      "id": 80585,
+      "name": "Lighthouse",
+      "scope": "venue",
+      "type": "keyword",
+      "emoji": null,
+      "icon_id": null,
+      "active_event_count": 0,
+      "location_count": 2,
+      "new_icon_id": "place-lighthouse",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": []
+    },
+    {
+      "id": 80777,
+      "name": "Modern Dance",
+      "scope": "venue",
+      "type": "keyword",
+      "emoji": "🧘",
+      "icon_id": null,
+      "active_event_count": 0,
+      "location_count": 2,
+      "new_icon_id": "noto-1f483",
+      "reason": "Dance artwork is a broad interim choice; pepper, ballet shoes, violin or meditation do not identify this dance form. Specific dance silhouettes remain candidates.",
+      "evidence_event_ids": []
+    },
+    {
+      "id": 80793,
+      "name": "Planetarium",
+      "scope": "venue",
+      "type": "keyword",
+      "emoji": null,
+      "icon_id": null,
+      "active_event_count": 0,
+      "location_count": 2,
+      "new_icon_id": "format-planetarium",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": []
+    },
+    {
+      "id": 80866,
+      "name": "Salsa",
+      "scope": "venue",
+      "type": "keyword",
+      "emoji": "🌶️",
+      "icon_id": null,
+      "active_event_count": 0,
+      "location_count": 1,
+      "new_icon_id": "noto-1f483",
+      "reason": "Dance artwork is a broad interim choice; pepper, ballet shoes, violin or meditation do not identify this dance form. Specific dance silhouettes remain candidates.",
+      "evidence_event_ids": []
+    },
+    {
+      "id": 80679,
+      "name": "Spanish Language",
+      "scope": "venue",
+      "type": "keyword",
+      "emoji": "🇪🇸",
+      "icon_id": null,
+      "active_event_count": 0,
+      "location_count": 2,
+      "new_icon_id": "noto-1f5e3",
+      "reason": "A language is not restricted to the nation on its old flag; use the existing language-learning symbol, not the reciprocal-exchange icon.",
+      "evidence_event_ids": []
+    },
+    {
+      "id": 80071,
+      "name": "Stand-up",
+      "scope": "venue",
+      "type": "keyword",
+      "emoji": "🎤",
+      "icon_id": null,
+      "active_event_count": 0,
+      "location_count": 8,
+      "new_icon_id": "format-stand-up-comedy",
+      "reason": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed.",
+      "evidence_event_ids": []
+    }
+  ],
+  "flag_reviews": [
+    {
+      "id": 851,
+      "scope": "event",
+      "name": "American Art",
+      "emoji": "🇺🇸",
+      "decision": "replace",
+      "reason": "Use art-medium imagery rather than national, racial-color, dwelling or office-building shorthand."
+    },
+    {
+      "id": 2808,
+      "scope": "event",
+      "name": "American History",
+      "emoji": "🇺🇸",
+      "decision": "keep",
+      "reason": "Keep: national flag is directly relevant to this explicitly US historical subject or holiday."
+    },
+    {
+      "id": 3830,
+      "scope": "event",
+      "name": "American Music",
+      "emoji": "🇺🇸",
+      "decision": "replace",
+      "reason": "Use music artwork for a musical tradition; avoid a national flag, a single religion or an instrument that the broad tag does not establish. Specific genre artwork remains a candidate."
+    },
+    {
+      "id": 5554,
+      "scope": "event",
+      "name": "American Revolution",
+      "emoji": "🇺🇸",
+      "decision": "keep",
+      "reason": "Keep: national flag is directly relevant to this explicitly US historical subject or holiday."
+    },
+    {
+      "id": 1929,
+      "scope": "event",
+      "name": "Americana",
+      "emoji": "🇺🇸",
+      "decision": "replace",
+      "reason": "Use music artwork for a musical tradition; avoid a national flag, a single religion or an instrument that the broad tag does not establish. Specific genre artwork remains a candidate."
+    },
+    {
+      "id": 6057,
+      "scope": "event",
+      "name": "Brazilian Cinema",
+      "emoji": "🇧🇷",
+      "decision": "replace",
+      "reason": "Cinema artwork identifies the medium; national flags, food, religious buildings and unrelated buildings do not. Soviet Cinema includes Ukrainian film evidence and is not equivalent to modern Russia."
+    },
+    {
+      "id": 2897,
+      "scope": "event",
+      "name": "Brazilian Jazz",
+      "emoji": "🇧🇷",
+      "decision": "replace",
+      "reason": "Use music artwork for a musical tradition; avoid a national flag, a single religion or an instrument that the broad tag does not establish. Specific genre artwork remains a candidate."
+    },
+    {
+      "id": 3335,
+      "scope": "event",
+      "name": "British Comedy",
+      "emoji": "🇬🇧",
+      "decision": "replace",
+      "reason": "Comedy/theater artwork describes the form without equating a language or tradition with citizenship."
+    },
+    {
+      "id": 3725,
+      "scope": "event",
+      "name": "Chinese Cinema",
+      "emoji": "🇨🇳",
+      "decision": "replace",
+      "reason": "Cinema artwork identifies the medium; national flags, food, religious buildings and unrelated buildings do not. Soviet Cinema includes Ukrainian film evidence and is not equivalent to modern Russia."
+    },
+    {
+      "id": 3785,
+      "scope": "event",
+      "name": "Colonial History",
+      "emoji": "🇺🇸",
+      "decision": "replace",
+      "reason": "History is the tag subject; reviewed examples are not limited to the United States."
+    },
+    {
+      "id": 1453,
+      "scope": "event",
+      "name": "Dancehall",
+      "emoji": "🇯🇲",
+      "decision": "replace",
+      "reason": "Use music artwork for a musical tradition; avoid a national flag, a single religion or an instrument that the broad tag does not establish. Specific genre artwork remains a candidate."
+    },
+    {
+      "id": 24340,
+      "scope": "event",
+      "name": "English Learning",
+      "emoji": "🇬🇧",
+      "decision": "replace",
+      "reason": "A language is not restricted to the nation on its old flag; use the existing language-learning symbol, not the reciprocal-exchange icon."
+    },
+    {
+      "id": 20804,
+      "scope": "event",
+      "name": "ESL",
+      "emoji": "🇺🇸",
+      "decision": "replace",
+      "reason": "A language is not restricted to the nation on its old flag; use the existing language-learning symbol, not the reciprocal-exchange icon."
+    },
+    {
+      "id": 3795,
+      "scope": "event",
+      "name": "Founding Fathers",
+      "emoji": "🇺🇸",
+      "decision": "keep",
+      "reason": "Keep: national flag is directly relevant to this explicitly US historical subject or holiday."
+    },
+    {
+      "id": 3753,
+      "scope": "event",
+      "name": "French Cinema",
+      "emoji": "🇫🇷",
+      "decision": "replace",
+      "reason": "Cinema artwork identifies the medium; national flags, food, religious buildings and unrelated buildings do not. Soviet Cinema includes Ukrainian film evidence and is not equivalent to modern Russia."
+    },
+    {
+      "id": 4524,
+      "scope": "event",
+      "name": "French Culture",
+      "emoji": "🇫🇷",
+      "decision": "replace",
+      "reason": "Broad community/cultural identity cannot be fully represented by one national flag, Japanese dolls or a hut. Neutral community artwork is an interim choice; retain as a design candidate."
+    },
+    {
+      "id": 5560,
+      "scope": "event",
+      "name": "George Washington",
+      "emoji": "🇺🇸",
+      "decision": "keep",
+      "reason": "Keep: national flag is directly relevant to this explicitly US historical subject or holiday."
+    },
+    {
+      "id": 3332,
+      "scope": "event",
+      "name": "Indian Classical",
+      "emoji": "🇮🇳",
+      "decision": "replace",
+      "reason": "User-approved classical-music tag emblem; concert fallback is allowed for Hindustani/Carnatic music, with specific featured instruments preferred."
+    },
+    {
+      "id": 281,
+      "scope": "event",
+      "name": "Italian Culture",
+      "emoji": "🇮🇹",
+      "decision": "replace",
+      "reason": "Broad community/cultural identity cannot be fully represented by one national flag, Japanese dolls or a hut. Neutral community artwork is an interim choice; retain as a design candidate."
+    },
+    {
+      "id": 5755,
+      "scope": "event",
+      "name": "Japanese Art",
+      "emoji": "🇯🇵",
+      "decision": "replace",
+      "reason": "Use art-medium imagery rather than national, racial-color, dwelling or office-building shorthand."
+    },
+    {
+      "id": 2692,
+      "scope": "event",
+      "name": "Japanese Language",
+      "emoji": "🇯🇵",
+      "decision": "replace",
+      "reason": "A language is not restricted to the nation on its old flag; use the existing language-learning symbol, not the reciprocal-exchange icon."
+    },
+    {
+      "id": 1167,
+      "scope": "event",
+      "name": "Korean Art",
+      "emoji": "🇰🇷",
+      "decision": "replace",
+      "reason": "Use art-medium imagery rather than national, racial-color, dwelling or office-building shorthand."
+    },
+    {
+      "id": 5234,
+      "scope": "event",
+      "name": "Moroccan Cinema",
+      "emoji": "🇲🇦",
+      "decision": "replace",
+      "reason": "Cinema artwork identifies the medium; national flags, food, religious buildings and unrelated buildings do not. Soviet Cinema includes Ukrainian film evidence and is not equivalent to modern Russia."
+    },
+    {
+      "id": 3789,
+      "scope": "event",
+      "name": "Presidential History",
+      "emoji": "🇺🇸",
+      "decision": "replace",
+      "reason": "History is the tag subject; reviewed examples are not limited to the United States."
+    },
+    {
+      "id": 9218,
+      "scope": "event",
+      "name": "Presidents Day",
+      "emoji": "🇺🇸",
+      "decision": "keep",
+      "reason": "Keep: national flag is directly relevant to this explicitly US historical subject or holiday."
+    },
+    {
+      "id": 13677,
+      "scope": "event",
+      "name": "Reggae Music",
+      "emoji": "🇯🇲",
+      "decision": "replace",
+      "reason": "Use music artwork for a musical tradition; avoid a national flag, a single religion or an instrument that the broad tag does not establish. Specific genre artwork remains a candidate."
+    },
+    {
+      "id": 522,
+      "scope": "event",
+      "name": "Revolutionary War",
+      "emoji": "🇺🇸",
+      "decision": "keep",
+      "reason": "Keep: national flag is directly relevant to this explicitly US historical subject or holiday."
+    },
+    {
+      "id": 17804,
+      "scope": "event",
+      "name": "Soviet Cinema",
+      "emoji": "🇷🇺",
+      "decision": "replace",
+      "reason": "Cinema artwork identifies the medium; national flags, food, religious buildings and unrelated buildings do not. Soviet Cinema includes Ukrainian film evidence and is not equivalent to modern Russia."
+    },
+    {
+      "id": 4827,
+      "scope": "event",
+      "name": "Spanish Comedy",
+      "emoji": "🇪🇸",
+      "decision": "replace",
+      "reason": "Comedy/theater artwork describes the form without equating a language or tradition with citizenship."
+    },
+    {
+      "id": 977,
+      "scope": "event",
+      "name": "Spanish Language",
+      "emoji": "🇪🇸",
+      "decision": "replace",
+      "reason": "A language is not restricted to the nation on its old flag; use the existing language-learning symbol, not the reciprocal-exchange icon."
+    },
+    {
+      "id": 4411,
+      "scope": "event",
+      "name": "Spanish Music",
+      "emoji": "🇪🇸",
+      "decision": "replace",
+      "reason": "Use music artwork for a musical tradition; avoid a national flag, a single religion or an instrument that the broad tag does not establish. Specific genre artwork remains a candidate."
+    },
+    {
+      "id": 5390,
+      "scope": "event",
+      "name": "Turkish Music",
+      "emoji": "🇹🇷",
+      "decision": "replace",
+      "reason": "Use music artwork for a musical tradition; avoid a national flag, a single religion or an instrument that the broad tag does not establish. Specific genre artwork remains a candidate."
+    },
+    {
+      "id": 80556,
+      "scope": "venue",
+      "name": "American Art",
+      "emoji": "🇺🇸",
+      "decision": "replace",
+      "reason": "Use art-medium imagery rather than national, racial-color, dwelling or office-building shorthand."
+    },
+    {
+      "id": 80980,
+      "scope": "venue",
+      "name": "Indian Classical",
+      "emoji": "🇮🇳",
+      "decision": "replace",
+      "reason": "User-approved classical-music tag emblem; concert fallback is allowed for Hindustani/Carnatic music, with specific featured instruments preferred."
+    },
+    {
+      "id": 80014,
+      "scope": "venue",
+      "name": "Italian Culture",
+      "emoji": "🇮🇹",
+      "decision": "replace",
+      "reason": "Broad community/cultural identity cannot be fully represented by one national flag, Japanese dolls or a hut. Neutral community artwork is an interim choice; retain as a design candidate."
+    },
+    {
+      "id": 80243,
+      "scope": "venue",
+      "name": "Revolutionary War",
+      "emoji": "🇺🇸",
+      "decision": "keep",
+      "reason": "Keep: national flag is directly relevant to this explicitly US historical subject or holiday."
+    },
+    {
+      "id": 80679,
+      "scope": "venue",
+      "name": "Spanish Language",
+      "emoji": "🇪🇸",
+      "decision": "replace",
+      "reason": "A language is not restricted to the nation on its old flag; use the existing language-learning symbol, not the reciprocal-exchange icon."
+    },
+    {
+      "id": 1598,
+      "scope": "event",
+      "name": "Competition",
+      "emoji": "🏁",
+      "decision": "keep",
+      "reason": "Keep: pride/identity, political, tour-guide or competition flag is a relevant non-national symbol."
+    },
+    {
+      "id": 22084,
+      "scope": "event",
+      "name": "DSA",
+      "emoji": "🚩",
+      "decision": "keep",
+      "reason": "Keep: pride/identity, political, tour-guide or competition flag is a relevant non-national symbol."
+    },
+    {
+      "id": 1337,
+      "scope": "event",
+      "name": "Guided Tour",
+      "emoji": "🚩",
+      "decision": "keep",
+      "reason": "Keep: pride/identity, political, tour-guide or competition flag is a relevant non-national symbol."
+    },
+    {
+      "id": 326,
+      "scope": "event",
+      "name": "LGBTQ",
+      "emoji": "🏳️‍🌈",
+      "decision": "keep",
+      "reason": "Keep: pride/identity, political, tour-guide or competition flag is a relevant non-national symbol."
+    },
+    {
+      "id": 2811,
+      "scope": "event",
+      "name": "LGBTQ History",
+      "emoji": "🏳️‍🌈",
+      "decision": "keep",
+      "reason": "Keep: pride/identity, political, tour-guide or competition flag is a relevant non-national symbol."
+    },
+    {
+      "id": 305,
+      "scope": "event",
+      "name": "Queer",
+      "emoji": "🏳️‍🌈",
+      "decision": "keep",
+      "reason": "Keep: pride/identity, political, tour-guide or competition flag is a relevant non-national symbol."
+    },
+    {
+      "id": 5081,
+      "scope": "event",
+      "name": "Queer Community",
+      "emoji": "🏳️‍🌈",
+      "decision": "keep",
+      "reason": "Keep: pride/identity, political, tour-guide or competition flag is a relevant non-national symbol."
+    },
+    {
+      "id": 8234,
+      "scope": "event",
+      "name": "Queer Events",
+      "emoji": "🏳️‍🌈",
+      "decision": "keep",
+      "reason": "Keep: pride/identity, political, tour-guide or competition flag is a relevant non-national symbol."
+    },
+    {
+      "id": 3284,
+      "scope": "event",
+      "name": "Queer History",
+      "emoji": "🏳️‍🌈",
+      "decision": "keep",
+      "reason": "Keep: pride/identity, political, tour-guide or competition flag is a relevant non-national symbol."
+    },
+    {
+      "id": 5017,
+      "scope": "event",
+      "name": "Queer Joy",
+      "emoji": "🏳️‍🌈",
+      "decision": "keep",
+      "reason": "Keep: pride/identity, political, tour-guide or competition flag is a relevant non-national symbol."
+    },
+    {
+      "id": 2154,
+      "scope": "event",
+      "name": "Queer Literature",
+      "emoji": "🏳️‍🌈",
+      "decision": "keep",
+      "reason": "Keep: pride/identity, political, tour-guide or competition flag is a relevant non-national symbol."
+    },
+    {
+      "id": 5691,
+      "scope": "event",
+      "name": "Queer Party",
+      "emoji": "🏳️‍🌈",
+      "decision": "keep",
+      "reason": "Keep: pride/identity, political, tour-guide or competition flag is a relevant non-national symbol."
+    },
+    {
+      "id": 23124,
+      "scope": "event",
+      "name": "Queer Power",
+      "emoji": "🏳️‍🌈",
+      "decision": "keep",
+      "reason": "Keep: pride/identity, political, tour-guide or competition flag is a relevant non-national symbol."
+    },
+    {
+      "id": 7752,
+      "scope": "event",
+      "name": "Queer Space",
+      "emoji": "🏳️‍🌈",
+      "decision": "keep",
+      "reason": "Keep: pride/identity, political, tour-guide or competition flag is a relevant non-national symbol."
+    },
+    {
+      "id": 22187,
+      "scope": "event",
+      "name": "Violet Pride",
+      "emoji": "🏳️‍🌈",
+      "decision": "keep",
+      "reason": "Keep: pride/identity, political, tour-guide or competition flag is a relevant non-national symbol."
+    },
+    {
+      "id": 80902,
+      "scope": "venue",
+      "name": "Guided Tour",
+      "emoji": "🚩",
+      "decision": "keep",
+      "reason": "Keep: pride/identity, political, tour-guide or competition flag is a relevant non-national symbol."
+    },
+    {
+      "id": 80058,
+      "scope": "venue",
+      "name": "LGBTQ",
+      "emoji": "🏳️‍🌈",
+      "decision": "keep",
+      "reason": "Keep: pride/identity, political, tour-guide or competition flag is a relevant non-national symbol."
+    },
+    {
+      "id": 80037,
+      "scope": "venue",
+      "name": "Queer",
+      "emoji": "🏳️‍🌈",
+      "decision": "keep",
+      "reason": "Keep: pride/identity, political, tour-guide or competition flag is a relevant non-national symbol."
+    }
+  ],
+  "opportunities": [
+    {
+      "concept": "tap-shoe",
+      "priority": "high",
+      "gap": "Ballet shoes describe a different technique; generic dancer remains broad.",
+      "visual_concept": "A low-heeled lace-up tap shoe with clearly separated toe and heel metal plates.",
+      "exclusions": "Ballet, tap plumbing, generic footwear.",
+      "tags": [
+        {
+          "id": 5828,
+          "name": "Tap Dance",
+          "scope": "event",
+          "type": "tag",
+          "emoji": "🩰",
+          "active_event_count": 8,
+          "location_count": 0,
+          "event_evidence": [
+            {
+              "id": 170245,
+              "name": "Tap City Awards"
+            },
+            {
+              "id": 213427,
+              "name": "Nicky Giovanni"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "concept": "partner-dance",
+      "priority": "high",
+      "gap": "Pepper, rose, saxophone and solo dancer do not communicate partnered dancing.",
+      "visual_concept": "Start with a neutral two-person social-dance hold; assess separate salsa, tango and swing poses only when distinguishable at chip size.",
+      "exclusions": "No one pose represents every Latin or ballroom tradition; avoid nationality, costume or skin-tone shorthand.",
+      "tags": [
+        {
+          "id": 9210,
+          "name": "Argentine Tango",
+          "scope": "event",
+          "type": "tag",
+          "emoji": "🌹",
+          "active_event_count": 31,
+          "location_count": 0,
+          "event_evidence": [
+            {
+              "id": 109434,
+              "name": "Pedro Giraudo Concerts / Jazz Orchestra & Tango Ensembles"
+            },
+            {
+              "id": 179303,
+              "name": "The Great Tango La Pasión del Tango en Vivo"
+            }
+          ]
+        },
+        {
+          "id": 6894,
+          "name": "Bachata",
+          "scope": "event",
+          "type": "tag",
+          "emoji": "💃",
+          "active_event_count": 14,
+          "location_count": 0,
+          "event_evidence": [
+            {
+              "id": 93498,
+              "name": "The Copacabana Immersive Party"
+            },
+            {
+              "id": 103252,
+              "name": "Rooftop Bachata Party"
+            }
+          ]
+        },
+        {
+          "id": 574,
+          "name": "Ballroom",
+          "scope": "event",
+          "type": "tag",
+          "emoji": "💃",
+          "active_event_count": 18,
+          "location_count": 0,
+          "event_evidence": [
+            {
+              "id": 108099,
+              "name": "Ballroom Beginner Boot Camp"
+            },
+            {
+              "id": 110095,
+              "name": "Borough Ball"
+            }
+          ]
+        },
+        {
+          "id": 4349,
+          "name": "Lindy Hop",
+          "scope": "event",
+          "type": "tag",
+          "emoji": "💃",
+          "active_event_count": 12,
+          "location_count": 0,
+          "event_evidence": [
+            {
+              "id": 109448,
+              "name": "Elena's SWING Practice"
+            },
+            {
+              "id": 134760,
+              "name": "TUESDAYS in Harlem: FREE Swinging Lindy Hop Class!"
+            }
+          ]
+        },
+        {
+          "id": 1173,
+          "name": "Salsa",
+          "scope": "event",
+          "type": "tag",
+          "emoji": "🌶️",
+          "active_event_count": 68,
+          "location_count": 0,
+          "event_evidence": [
+            {
+              "id": 90886,
+              "name": "Salsa Thursdays"
+            },
+            {
+              "id": 93498,
+              "name": "The Copacabana Immersive Party"
+            }
+          ]
+        },
+        {
+          "id": 1208,
+          "name": "Social Dance",
+          "scope": "event",
+          "type": "tag",
+          "emoji": "🤝",
+          "active_event_count": 37,
+          "location_count": 0,
+          "event_evidence": [
+            {
+              "id": 108078,
+              "name": "Flow Fridays"
+            },
+            {
+              "id": 108082,
+              "name": "Soul Sunday"
+            }
+          ]
+        },
+        {
+          "id": 1752,
+          "name": "Swing Dance",
+          "scope": "event",
+          "type": "tag",
+          "emoji": "🎷",
+          "active_event_count": 43,
+          "location_count": 0,
+          "event_evidence": [
+            {
+              "id": 68810,
+              "name": "Studio Ghibli Jazz x Seoyeon Im Quartet"
+            },
+            {
+              "id": 70179,
+              "name": "Danny Lipsitz & The Brass Tacks / Swingin' NYC Gigs"
+            }
+          ]
+        },
+        {
+          "id": 6786,
+          "name": "Tango",
+          "scope": "event",
+          "type": "tag",
+          "emoji": "💃",
+          "active_event_count": 29,
+          "location_count": 0,
+          "event_evidence": [
+            {
+              "id": 108601,
+              "name": "Tango Thursdays"
+            },
+            {
+              "id": 109434,
+              "name": "Pedro Giraudo Concerts / Jazz Orchestra & Tango Ensembles"
+            }
+          ]
+        },
+        {
+          "id": 81050,
+          "name": "Argentine Tango",
+          "scope": "venue",
+          "type": "keyword",
+          "emoji": "🌹",
+          "active_event_count": 0,
+          "location_count": 1,
+          "event_evidence": []
+        },
+        {
+          "id": 80289,
+          "name": "Ballroom",
+          "scope": "venue",
+          "type": "tag",
+          "emoji": "💃",
+          "active_event_count": 0,
+          "location_count": 16,
+          "event_evidence": []
+        },
+        {
+          "id": 80866,
+          "name": "Salsa",
+          "scope": "venue",
+          "type": "keyword",
+          "emoji": "🌶️",
+          "active_event_count": 0,
+          "location_count": 1,
+          "event_evidence": []
+        },
+        {
+          "id": 80879,
+          "name": "Social Dance",
+          "scope": "venue",
+          "type": "keyword",
+          "emoji": "🤝",
+          "active_event_count": 0,
+          "location_count": 4,
+          "event_evidence": []
+        },
+        {
+          "id": 80932,
+          "name": "Swing Dance",
+          "scope": "venue",
+          "type": "keyword",
+          "emoji": "🎷",
+          "active_event_count": 0,
+          "location_count": 1,
+          "event_evidence": []
+        },
+        {
+          "id": 81038,
+          "name": "Tango",
+          "scope": "venue",
+          "type": "keyword",
+          "emoji": "💃",
+          "active_event_count": 0,
+          "location_count": 2,
+          "event_evidence": []
+        }
+      ]
+    },
+    {
+      "concept": "singing-bowl",
+      "priority": "high",
+      "gap": "The bowl emoji reads as food and omits sound-making.",
+      "visual_concept": "Singing bowl with an external mallet and two restrained sound arcs; separate gong opportunity for gong-led programs.",
+      "exclusions": "Do not claim every sound bath uses bowls or assign to food bowls.",
+      "tags": [
+        {
+          "id": 1972,
+          "name": "Sound Bath",
+          "scope": "event",
+          "type": "tag",
+          "emoji": "🥣",
+          "active_event_count": 45,
+          "location_count": 0,
+          "event_evidence": [
+            {
+              "id": 133658,
+              "name": "A SOUND MEDITATION with Alexandre Tannous"
+            },
+            {
+              "id": 160870,
+              "name": "Sound Bath at the Greenway Botanical Garden"
+            }
+          ]
+        },
+        {
+          "id": 80941,
+          "name": "Sound Bath",
+          "scope": "venue",
+          "type": "keyword",
+          "emoji": "🥣",
+          "active_event_count": 0,
+          "location_count": 1,
+          "event_evidence": []
+        }
+      ]
+    },
+    {
+      "concept": "animation",
+      "priority": "high",
+      "gap": "Palette is broad; tengu mask is a particular folklore character.",
+      "visual_concept": "Two offset animation frames with a simple character silhouette and a visible movement change.",
+      "exclusions": "Not one franchise, folklore figure, nationality or live-action filming; existing stop-motion-making icon is too specific.",
+      "tags": [
+        {
+          "id": 1418,
+          "name": "Animation",
+          "scope": "event",
+          "type": "tag",
+          "emoji": "🎨",
+          "active_event_count": 274,
+          "location_count": 0,
+          "event_evidence": [
+            {
+              "id": 68810,
+              "name": "Studio Ghibli Jazz x Seoyeon Im Quartet"
+            },
+            {
+              "id": 68838,
+              "name": "Studio Ghibli VGM & Anime Jazz x Eternal Wind Music"
+            }
+          ]
+        },
+        {
+          "id": 2702,
+          "name": "Anime",
+          "scope": "event",
+          "type": "tag",
+          "emoji": "👺",
+          "active_event_count": 154,
+          "location_count": 0,
+          "event_evidence": [
+            {
+              "id": 68810,
+              "name": "Studio Ghibli Jazz x Seoyeon Im Quartet"
+            },
+            {
+              "id": 68838,
+              "name": "Studio Ghibli VGM & Anime Jazz x Eternal Wind Music"
+            }
+          ]
+        },
+        {
+          "id": 80966,
+          "name": "Anime",
+          "scope": "venue",
+          "type": "keyword",
+          "emoji": "👺",
+          "active_event_count": 0,
+          "location_count": 2,
+          "event_evidence": []
+        }
+      ]
+    },
+    {
+      "concept": "puppetry",
+      "priority": "high",
+      "gap": "Japanese display dolls and a pinata do not identify puppetry.",
+      "visual_concept": "Hand puppet with visible glove cuff; a separate marionette with control bar if event evidence supports it.",
+      "exclusions": "Static ceremonial dolls, pinatas, all theater.",
+      "tags": [
+        {
+          "id": 3144,
+          "name": "Puppet Show",
+          "scope": "event",
+          "type": "tag",
+          "emoji": "🪅",
+          "active_event_count": 1,
+          "location_count": 0,
+          "event_evidence": [
+            {
+              "id": 159840,
+              "name": "Kidfest: Up in Arms—Pirate Song"
+            }
+          ]
+        },
+        {
+          "id": 690,
+          "name": "Puppetry",
+          "scope": "event",
+          "type": "tag",
+          "emoji": "🎎",
+          "active_event_count": 85,
+          "location_count": 0,
+          "event_evidence": [
+            {
+              "id": 107102,
+              "name": "Modern Marionette"
+            },
+            {
+              "id": 156904,
+              "name": "Adventures"
+            }
+          ]
+        },
+        {
+          "id": 80399,
+          "name": "Puppetry",
+          "scope": "venue",
+          "type": "keyword",
+          "emoji": "🎎",
+          "active_event_count": 0,
+          "location_count": 4,
+          "event_evidence": []
+        }
+      ]
+    },
+    {
+      "concept": "risograph",
+      "priority": "medium",
+      "gap": "A gear does not distinguish stencil duplication.",
+      "visual_concept": "Compact duplicator with offset two-color print emerging, clear drum/print slot.",
+      "exclusions": "Office laser printer, letterpress or linocut; reuse only for confirmed Riso.",
+      "tags": [
+        {
+          "id": 2349,
+          "name": "Risograph",
+          "scope": "event",
+          "type": "tag",
+          "emoji": "⚙️",
+          "active_event_count": 4,
+          "location_count": 0,
+          "event_evidence": [
+            {
+              "id": 154343,
+              "name": "Photography in Riso Workshop"
+            },
+            {
+              "id": 198937,
+              "name": "Riso I: Foundations of Risograph Printing"
+            }
+          ]
+        },
+        {
+          "id": 80954,
+          "name": "Risograph",
+          "scope": "venue",
+          "type": "keyword",
+          "emoji": "⚙️",
+          "active_event_count": 0,
+          "location_count": 1,
+          "event_evidence": []
+        }
+      ]
+    },
+    {
+      "concept": "vibraphone",
+      "priority": "medium",
+      "gap": "Generic music notes omit the instrument.",
+      "visual_concept": "Two short rows of metal bars, visible resonator tubes and two mallets.",
+      "exclusions": "Marimba, xylophone, piano; instrument label alone does not make it the event focus.",
+      "tags": [
+        {
+          "id": 4622,
+          "name": "Vibraphone",
+          "scope": "event",
+          "type": "tag",
+          "emoji": "🎶",
+          "active_event_count": 4,
+          "location_count": 0,
+          "event_evidence": [
+            {
+              "id": 223122,
+              "name": "TJG Joyce Wein Mentoring Series: Marcus Gilmore + Ryoma Takenaga"
+            },
+            {
+              "id": 244483,
+              "name": "TJG Joyce Wein Mentoring Series: Marcus Gilmore & Ryoma Takenaga at Louis Armstrong House Museum"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "concept": "chamber-ensemble",
+      "priority": "medium",
+      "gap": "House is literal wordplay; existing quartet and piano-trio art exclude other lineups.",
+      "visual_concept": "A compact grouping of music stands suggesting shared acoustic chamber performance; lineup-neutral if possible.",
+      "exclusions": "Do not imply string quartet or a fixed piano trio.",
+      "tags": [
+        {
+          "id": 2888,
+          "name": "Chamber Ensemble",
+          "scope": "event",
+          "type": "tag",
+          "emoji": "🎻",
+          "active_event_count": 1,
+          "location_count": 0,
+          "event_evidence": [
+            {
+              "id": 196029,
+              "name": "The 2046: A World of Wong Kar Wai"
+            }
+          ]
+        },
+        {
+          "id": 2317,
+          "name": "Chamber Music",
+          "scope": "event",
+          "type": "tag",
+          "emoji": "🏠",
+          "active_event_count": 110,
+          "location_count": 0,
+          "event_evidence": [
+            {
+              "id": 152139,
+              "name": "Notes in Nature: Summer Symphonies"
+            },
+            {
+              "id": 165145,
+              "name": "9/11 Memorial Concert"
+            }
+          ]
+        },
+        {
+          "id": 80953,
+          "name": "Chamber Music",
+          "scope": "venue",
+          "type": "keyword",
+          "emoji": "🏠",
+          "active_event_count": 0,
+          "location_count": 1,
+          "event_evidence": []
+        }
+      ]
+    },
+    {
+      "concept": "music-duo",
+      "priority": "medium",
+      "gap": "Bunny-ear dancers imply an unrelated performance format.",
+      "visual_concept": "Two distinct musical performers or stands, with a music cue; prototype without specifying instruments.",
+      "exclusions": "Dancers, twins, guaranteed guitar duo or singer duo.",
+      "tags": [
+        {
+          "id": 2673,
+          "name": "Acoustic Duo",
+          "scope": "event",
+          "type": "tag",
+          "emoji": "👯",
+          "active_event_count": 0,
+          "location_count": 0,
+          "event_evidence": []
+        },
+        {
+          "id": 4698,
+          "name": "Duo",
+          "scope": "event",
+          "type": "tag",
+          "emoji": "👯",
+          "active_event_count": 12,
+          "location_count": 0,
+          "event_evidence": [
+            {
+              "id": 140048,
+              "name": "Press Play - Jazz Duo"
+            },
+            {
+              "id": 170337,
+              "name": "Shannon & John Walsh"
+            }
+          ]
+        },
+        {
+          "id": 4624,
+          "name": "Jazz Duo",
+          "scope": "event",
+          "type": "tag",
+          "emoji": "👯",
+          "active_event_count": 0,
+          "location_count": 0,
+          "event_evidence": []
+        }
+      ]
+    },
+    {
+      "concept": "genre-blues",
+      "priority": "medium",
+      "gap": "Blueberries are unrelated; music notes lose genre recognition.",
+      "visual_concept": "Explore a restrained blue microphone and string-music motif; validate recognition before accepting any new art.",
+      "exclusions": "Do not substitute harmonica or guitar alone for all blues or imply all blues is sad.",
+      "tags": [
+        {
+          "id": 1472,
+          "name": "Blues",
+          "scope": "event",
+          "type": "tag",
+          "emoji": "🫐",
+          "active_event_count": 148,
+          "location_count": 0,
+          "event_evidence": [
+            {
+              "id": 80563,
+              "name": "Jr Mack Acoustic"
+            },
+            {
+              "id": 83580,
+              "name": "SaRon Crenshaw Acoustic"
+            }
+          ]
+        },
+        {
+          "id": 80915,
+          "name": "Blues",
+          "scope": "venue",
+          "type": "keyword",
+          "emoji": "🫐",
+          "active_event_count": 0,
+          "location_count": 3,
+          "event_evidence": []
+        }
+      ]
+    },
+    {
+      "concept": "genre-house",
+      "priority": "medium",
+      "gap": "A house depicts the word rather than the music.",
+      "visual_concept": "Explore a dancefloor speaker and pulse motif, comparing against existing DJ decks and generic notes.",
+      "exclusions": "Do not promise a DJ, synthesizer or live equipment lineup solely from genre.",
+      "tags": [
+        {
+          "id": 1546,
+          "name": "House Music",
+          "scope": "event",
+          "type": "tag",
+          "emoji": "🏠",
+          "active_event_count": 157,
+          "location_count": 0,
+          "event_evidence": [
+            {
+              "id": 108021,
+              "name": "Azure Day Party"
+            },
+            {
+              "id": 108029,
+              "name": "Those Nights"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "concept": "genre-pop-rnb",
+      "priority": "exploratory",
+      "gap": "Cup, wine, candy, honey and flags misrepresent musical genres; neutral notes are now interim choices.",
+      "visual_concept": "Separate briefs per genre after recognition research; consider a music emblem only if it can distinguish the genre without stereotypes.",
+      "exclusions": "No single vocal, instrument, nation or religion universally defines these categories; do not manufacture arbitrary badges.",
+      "tags": [
+        {
+          "id": 1929,
+          "name": "Americana",
+          "scope": "event",
+          "type": "tag",
+          "emoji": "🇺🇸",
+          "active_event_count": 56,
+          "location_count": 0,
+          "event_evidence": [
+            {
+              "id": 162301,
+              "name": "James Maddock"
+            },
+            {
+              "id": 165635,
+              "name": "Robert Ellis w/ Alicia Blue"
+            }
+          ]
+        },
+        {
+          "id": 1453,
+          "name": "Dancehall",
+          "scope": "event",
+          "type": "tag",
+          "emoji": "🇯🇲",
+          "active_event_count": 29,
+          "location_count": 0,
+          "event_evidence": [
+            {
+              "id": 80082,
+              "name": "Dancehall"
+            },
+            {
+              "id": 116362,
+              "name": "Gyalhattan : A Dancehall/Hip-Hop Party"
+            }
+          ]
+        },
+        {
+          "id": 1698,
+          "name": "Jam Band",
+          "scope": "event",
+          "type": "tag",
+          "emoji": "🍯",
+          "active_event_count": 20,
+          "location_count": 0,
+          "event_evidence": [
+            {
+              "id": 165311,
+              "name": "Jammy Buffet"
+            },
+            {
+              "id": 180331,
+              "name": "The Fatties"
+            }
+          ]
+        },
+        {
+          "id": 2216,
+          "name": "Pop Music",
+          "scope": "event",
+          "type": "tag",
+          "emoji": "🥤",
+          "active_event_count": 230,
+          "location_count": 0,
+          "event_evidence": [
+            {
+              "id": 30286,
+              "name": "Alice's House"
+            },
+            {
+              "id": 86057,
+              "name": "K-Pop: the Hunt IS on"
+            }
+          ]
+        },
+        {
+          "id": 3262,
+          "name": "Pop Rock",
+          "scope": "event",
+          "type": "tag",
+          "emoji": "🍭",
+          "active_event_count": 7,
+          "location_count": 0,
+          "event_evidence": [
+            {
+              "id": 202671,
+              "name": "Surfistas del Sistema"
+            },
+            {
+              "id": 215972,
+              "name": "Orleans: Final Tour"
+            }
+          ]
+        },
+        {
+          "id": 1404,
+          "name": "R&B",
+          "scope": "event",
+          "type": "tag",
+          "emoji": "🍷",
+          "active_event_count": 120,
+          "location_count": 0,
+          "event_evidence": [
+            {
+              "id": 86042,
+              "name": "R&B and Ribs"
+            },
+            {
+              "id": 89340,
+              "name": "The Black Soul Experience"
+            }
+          ]
+        },
+        {
+          "id": 1530,
+          "name": "Yiddish Music",
+          "scope": "event",
+          "type": "tag",
+          "emoji": "✡️",
+          "active_event_count": 6,
+          "location_count": 0,
+          "event_evidence": [
+            {
+              "id": 67946,
+              "name": "Tamar Korn & a Kornucopia"
+            },
+            {
+              "id": 168650,
+              "name": "ELEONORE WEILL - Saturdays in October"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "concept": "oud",
+      "priority": "medium",
+      "gap": "Banjo is the wrong instrument; a neutral music symbol is appropriate for the broad tags.",
+      "visual_concept": "Pear-shaped fretless oud with bent pegbox, for future explicit oud lessons and featured performances.",
+      "exclusions": "Do not auto-assign oud to broad Arabic/Middle Eastern tags; not sitar, setar, tanpura or all regional music.",
+      "tags": [
+        {
+          "id": 4618,
+          "name": "Arabic Music",
+          "scope": "event",
+          "type": "tag",
+          "emoji": "🪕",
+          "active_event_count": 6,
+          "location_count": 0,
+          "event_evidence": [
+            {
+              "id": 216949,
+              "name": "Sounds of Cyprus Dialects: The Greek Turkish and Arabic Experience"
+            },
+            {
+              "id": 217321,
+              "name": "The Brooklyn Nomads | Arabic Songs, Originals, and Stories from Home"
+            }
+          ]
+        },
+        {
+          "id": 16855,
+          "name": "Levantine Music",
+          "scope": "event",
+          "type": "keyword",
+          "emoji": null,
+          "active_event_count": 0,
+          "location_count": 0,
+          "event_evidence": []
+        },
+        {
+          "id": 2619,
+          "name": "Middle Eastern Music",
+          "scope": "event",
+          "type": "tag",
+          "emoji": "🪕",
+          "active_event_count": 2,
+          "location_count": 0,
+          "event_evidence": [
+            {
+              "id": 212238,
+              "name": "The Secret Trio"
+            },
+            {
+              "id": 232525,
+              "name": "ABBAS: Tribute to Mohamed Mounir"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "concept": "cultural-community",
+      "priority": "exploratory",
+      "gap": "Flags, Japanese dolls and huts cannot stand for these broad communities; embracing people remain generic.",
+      "visual_concept": "Explore a neutral shared-story/community motif; seek context-specific concepts rather than a universal ethnic emblem.",
+      "exclusions": "Avoid one national flag, costume, dwelling, religion or phenotype as the definition of a community.",
+      "tags": [
+        {
+          "id": 1156,
+          "name": "Asian American",
+          "scope": "event",
+          "type": "tag",
+          "emoji": "🎎",
+          "active_event_count": 61,
+          "location_count": 0,
+          "event_evidence": [
+            {
+              "id": 144663,
+              "name": "Shared Lines"
+            },
+            {
+              "id": 174119,
+              "name": "Voices Rising: Korean Diaspora Voices in Performance"
+            }
+          ]
+        },
+        {
+          "id": 2426,
+          "name": "Cultural Heritage",
+          "scope": "event",
+          "type": "tag",
+          "emoji": "🏺",
+          "active_event_count": 380,
+          "location_count": 0,
+          "event_evidence": [
+            {
+              "id": 3288,
+              "name": "Bipoc Meetup"
+            },
+            {
+              "id": 12051,
+              "name": "Katsura Sunshine's Rakugo"
+            }
+          ]
+        },
+        {
+          "id": 4524,
+          "name": "French Culture",
+          "scope": "event",
+          "type": "tag",
+          "emoji": "🇫🇷",
+          "active_event_count": 5,
+          "location_count": 0,
+          "event_evidence": [
+            {
+              "id": 153327,
+              "name": "French Social Night How French Are You?"
+            },
+            {
+              "id": 205107,
+              "name": "Gala de L’Alliance New York 2026"
+            }
+          ]
+        },
+        {
+          "id": 2023,
+          "name": "Indigenous Culture",
+          "scope": "event",
+          "type": "tag",
+          "emoji": "🛖",
+          "active_event_count": 11,
+          "location_count": 0,
+          "event_evidence": [
+            {
+              "id": 101377,
+              "name": "Alan Michelson: The Oyster"
+            },
+            {
+              "id": 175210,
+              "name": "Return of the Buffalo: Tatanka Owe Akupi"
+            }
+          ]
+        },
+        {
+          "id": 281,
+          "name": "Italian Culture",
+          "scope": "event",
+          "type": "tag",
+          "emoji": "🇮🇹",
+          "active_event_count": 16,
+          "location_count": 0,
+          "event_evidence": [
+            {
+              "id": 193802,
+              "name": "Hidden Gems of Italy | Le città di pianura"
+            },
+            {
+              "id": 193806,
+              "name": "Hidden Gems of Italy | La vita va così"
+            }
+          ]
+        },
+        {
+          "id": 80856,
+          "name": "Asian American",
+          "scope": "venue",
+          "type": "keyword",
+          "emoji": "🎎",
+          "active_event_count": 0,
+          "location_count": 5,
+          "event_evidence": []
+        },
+        {
+          "id": 80014,
+          "name": "Italian Culture",
+          "scope": "venue",
+          "type": "keyword",
+          "emoji": "🇮🇹",
+          "active_event_count": 0,
+          "location_count": 3,
+          "event_evidence": []
+        }
+      ]
+    },
+    {
+      "concept": "contemporary-dance",
+      "priority": "medium",
+      "gap": "Meditation, acrobatics and violin are weak; generic dancer is broad.",
+      "visual_concept": "An articulated dancer in an expressive uncostumed movement; keep distinct from yoga and ballet.",
+      "exclusions": "No one classical-dance pose covers all traditions; do not infer nationality from costume.",
+      "tags": [
+        {
+          "id": 5307,
+          "name": "Classical Dance",
+          "scope": "event",
+          "type": "tag",
+          "emoji": "🎻",
+          "active_event_count": 3,
+          "location_count": 0,
+          "event_evidence": [
+            {
+              "id": 178459,
+              "name": "Masters at Work I"
+            },
+            {
+              "id": 186075,
+              "name": "Swan Lake: Symphony of Lights"
+            }
+          ]
+        },
+        {
+          "id": 1467,
+          "name": "Contemporary Dance",
+          "scope": "event",
+          "type": "tag",
+          "emoji": "🤸",
+          "active_event_count": 53,
+          "location_count": 0,
+          "event_evidence": [
+            {
+              "id": 71788,
+              "name": "Contemporary Dance with Andrea Murillo"
+            },
+            {
+              "id": 127614,
+              "name": "Contemporary Indian"
+            }
+          ]
+        },
+        {
+          "id": 1077,
+          "name": "Modern Dance",
+          "scope": "event",
+          "type": "tag",
+          "emoji": "🧘",
+          "active_event_count": 10,
+          "location_count": 0,
+          "event_evidence": [
+            {
+              "id": 17788,
+              "name": "Horton"
+            },
+            {
+              "id": 80077,
+              "name": "Limón"
+            }
+          ]
+        },
+        {
+          "id": 80777,
+          "name": "Modern Dance",
+          "scope": "venue",
+          "type": "keyword",
+          "emoji": "🧘",
+          "active_event_count": 0,
+          "location_count": 2,
+          "event_evidence": []
+        }
+      ]
+    },
+    {
+      "concept": "printmaking",
+      "priority": "medium",
+      "gap": "Office printer is broad and often the wrong process.",
+      "visual_concept": "Generic hand press/roller and pulled impression; assess whether a process-neutral printmaking icon is possible.",
+      "exclusions": "Do not replace the category with letterpress, linocut or another single technique.",
+      "tags": [
+        {
+          "id": 8366,
+          "name": "Block Printing",
+          "scope": "event",
+          "type": "tag",
+          "emoji": "🖌️",
+          "active_event_count": 11,
+          "location_count": 0,
+          "event_evidence": [
+            {
+              "id": 213193,
+              "name": "Traditional Block Printing Workshop"
+            },
+            {
+              "id": 237133,
+              "name": "The Art of Block Printing"
+            }
+          ]
+        },
+        {
+          "id": 955,
+          "name": "Printmaking",
+          "scope": "event",
+          "type": "tag",
+          "emoji": "🖨️",
+          "active_event_count": 121,
+          "location_count": 0,
+          "event_evidence": [
+            {
+              "id": 154343,
+              "name": "Photography in Riso Workshop"
+            },
+            {
+              "id": 159829,
+              "name": "Carborundum Aquatint // September"
+            }
+          ]
+        },
+        {
+          "id": 80657,
+          "name": "Printmaking",
+          "scope": "venue",
+          "type": "keyword",
+          "emoji": "🖨️",
+          "active_event_count": 0,
+          "location_count": 4,
+          "event_evidence": []
+        }
+      ]
+    },
+    {
+      "concept": "performance-stage",
+      "priority": "medium",
+      "gap": "Circus tent and classical building obscure the broad stage/performance identity.",
+      "visual_concept": "Small neutral stage opening with a spotlight and no performer-specific props.",
+      "exclusions": "Not circus-only, theater-only, music-only or an individual hosted event.",
+      "tags": [
+        {
+          "id": 86,
+          "name": "Performance Space",
+          "scope": "event",
+          "type": "keyword",
+          "emoji": "🎪",
+          "active_event_count": 1,
+          "location_count": 0,
+          "event_evidence": [
+            {
+              "id": 193669,
+              "name": "Trivia at EastVille Comedy Club & Bar"
+            }
+          ]
+        },
+        {
+          "id": 80,
+          "name": "Performing Arts",
+          "scope": "event",
+          "type": "tag",
+          "emoji": "🏛️",
+          "active_event_count": 140,
+          "location_count": 0,
+          "event_evidence": [
+            {
+              "id": 93379,
+              "name": "Hot & Fresh · Burlesque"
+            },
+            {
+              "id": 101361,
+              "name": "BAAND Together Dance Festival - Ballet Hispánico Performance"
+            }
+          ]
+        },
+        {
+          "id": 79830,
+          "name": "Performance Space",
+          "scope": "venue",
+          "type": "tag",
+          "emoji": "🎪",
+          "active_event_count": 0,
+          "location_count": 293,
+          "event_evidence": []
+        },
+        {
+          "id": 79824,
+          "name": "Performing Arts",
+          "scope": "venue",
+          "type": "keyword",
+          "emoji": "🏛️",
+          "active_event_count": 0,
+          "location_count": 94,
+          "event_evidence": []
+        }
+      ]
+    },
+    {
+      "concept": "heritage-site",
+      "priority": "low",
+      "gap": "Derelict house incorrectly suggests that all historic sites are ruined houses.",
+      "visual_concept": "Landmark/heritage plaque as a category marker, independent of architecture.",
+      "exclusions": "Not every site is a building, monument, ruin or Statue of Liberty.",
+      "tags": [
+        {
+          "id": 415,
+          "name": "Historic Site",
+          "scope": "event",
+          "type": "keyword",
+          "emoji": "🏚️",
+          "active_event_count": 43,
+          "location_count": 0,
+          "event_evidence": [
+            {
+              "id": 139475,
+              "name": "Mansion Tours"
+            },
+            {
+              "id": 139480,
+              "name": "Tour the Historic Home, Dutch Barn and Heritage Garden"
+            }
+          ]
+        },
+        {
+          "id": 80144,
+          "name": "Historic Site",
+          "scope": "venue",
+          "type": "tag",
+          "emoji": "🏚️",
+          "active_event_count": 0,
+          "location_count": 185,
+          "event_evidence": []
+        }
+      ]
+    },
+    {
+      "concept": "ritual",
+      "priority": "exploratory",
+      "gap": "Om is narrower than the category; candle is an interim motif and still not universal.",
+      "visual_concept": "Consider a deliberately neutral gathering/observance motif only after inspecting more secular and spiritual contexts.",
+      "exclusions": "Do not merge religions or claim one sacred symbol represents them all.",
+      "tags": [
+        {
+          "id": 2488,
+          "name": "Ritual",
+          "scope": "event",
+          "type": "tag",
+          "emoji": "🕉️",
+          "active_event_count": 14,
+          "location_count": 0,
+          "event_evidence": [
+            {
+              "id": 193627,
+              "name": "Free Online Talk · The Veiled Moon: A Lunar Eclipse Ritual of Thresholds and Transformation with Mythologist Selena Madden, PhD"
+            },
+            {
+              "id": 196556,
+              "name": "PSNY Virtual Workshop: Writing the Ritual"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "deferred_existing_assets": [
+    {
+      "tags": [
+        "Weaving"
+      ],
+      "reason": "Includes cedar-bark weaving; frame-loom artwork is too specific."
+    },
+    {
+      "tags": [
+        "Pilates"
+      ],
+      "reason": "Broad tag may include reformer work; only Mat Pilates receives the mat icon."
+    },
+    {
+      "tags": [
+        "Stop Motion",
+        "Still Life"
+      ],
+      "reason": "Mixed viewing/making or drawing/painting context; retain broad art rather than applying narrower making/drawing icon."
+    },
+    {
+      "tags": [
+        "Bridge"
+      ],
+      "reason": "Keyword examples include a painting of a physical bridge; do not assign contract-bridge cards without disambiguation."
+    },
+    {
+      "tags": [
+        "Hindustani"
+      ],
+      "reason": "Unqualified word has no active example or music parent; keep unassigned until musical sense is established."
+    },
+    {
+      "tags": [
+        "Laser Cutting"
+      ],
+      "reason": "Includes fiber-laser metal work; available icon depicts an enclosed flatbed cutter."
+    },
+    {
+      "tags": [
+        "Flute"
+      ],
+      "reason": "Existing Noto flute is available; inspect artwork against transverse and other flute contexts before commissioning new art."
+    }
+  ],
+  "method": {
+    "sha256": "bb9deaa9e416ebcd3e3060f95a86a6b4bd650a37f9492892efc9b85d1629b37c",
+    "revision": "925aa2dd29689d6083b530579698803bbcc9b81c",
+    "seed": 20260909,
+    "random_sample_ids": [
+      596,
+      8453,
+      30534,
+      9679,
+      80089,
+      32739,
+      9844,
+      41307,
+      20537,
+      81520,
+      6817,
+      79908,
+      9188,
+      18782,
+      195,
+      36004,
+      81342,
+      42620,
+      1418,
+      80336,
+      81530,
+      3642,
+      11465,
+      80076,
+      19333,
+      81411,
+      81288,
+      34258,
+      41074,
+      893,
+      6140,
+      385,
+      81556,
+      37981,
+      80120,
+      4108,
+      3969,
+      3327,
+      1849,
+      4686,
+      15032,
+      35398,
+      80829,
+      80053,
+      11220,
+      81310,
+      1295,
+      81552,
+      17384,
+      4571,
+      4246,
+      30150,
+      2843,
+      26410,
+      8480,
+      79797,
+      9533,
+      36971,
+      81127,
+      41840,
+      2585,
+      30134,
+      81559,
+      16855,
+      16207,
+      32106,
+      8773,
+      21898,
+      15980,
+      80823,
+      24350,
+      11852,
+      81258,
+      7517,
+      1173,
+      10799,
+      31650,
+      5527,
+      39937,
+      81596,
+      15006,
+      3496,
+      81391,
+      81148,
+      35339,
+      9462,
+      32566,
+      4624,
+      31993,
+      1166,
+      7420,
+      4288,
+      3980,
+      33752,
+      81383,
+      1882,
+      80343,
+      19484,
+      13283,
+      32265
+    ],
+    "tags": 80899,
+    "hierarchy": 4196,
+    "usage": "Distinct active, unsuppressed events of all dates; counts are direct assignments, not inherited or 90-day publishable reach.",
+    "national_flag_rows": 37,
+    "other_flag_rows": 18,
+    "screened_curated_event_tags": 1820,
+    "screened_curated_venue_tags": 766,
+    "hierarchy_note": "4196 rows are curated or participate in at least one hierarchy edge; includes keyword children. Random sample is drawn from this population. Additional precise keyword targets are labeled supplements."
+  },
+  "random_sample_review": [
+    {
+      "id": 596,
+      "name": "Craft Beer",
+      "scope": "event",
+      "route": "keep",
+      "note": "Current pictogram is a reasonable literal or broad category cue; this is not a claim of event-level icon correctness."
+    },
+    {
+      "id": 8453,
+      "name": "Cityscape",
+      "scope": "event",
+      "route": "keep",
+      "note": "Current pictogram is a reasonable literal or broad category cue; this is not a claim of event-level icon correctness."
+    },
+    {
+      "id": 30534,
+      "name": "Garden Dining",
+      "scope": "event",
+      "route": "coverage-gap",
+      "note": "No saved artwork; default calendar does not identify this tag. Check existing category artwork first; do not infer an assignment from ancestors."
+    },
+    {
+      "id": 9679,
+      "name": "Emerging Artist",
+      "scope": "event",
+      "route": "keep",
+      "note": "Current pictogram is a reasonable literal or broad category cue; this is not a claim of event-level icon correctness."
+    },
+    {
+      "id": 80089,
+      "name": "Morrisania",
+      "scope": "venue",
+      "route": "keep",
+      "note": "Current pictogram is a reasonable literal or broad category cue; this is not a claim of event-level icon correctness."
+    },
+    {
+      "id": 32739,
+      "name": "Alumni Mentorship",
+      "scope": "event",
+      "route": "coverage-gap",
+      "note": "No saved artwork; default calendar does not identify this tag. Check existing category artwork first; do not infer an assignment from ancestors."
+    },
+    {
+      "id": 9844,
+      "name": "Party Vibes",
+      "scope": "event",
+      "route": "keep",
+      "note": "Current pictogram is a reasonable literal or broad category cue; this is not a claim of event-level icon correctness."
+    },
+    {
+      "id": 41307,
+      "name": "Academic Satire",
+      "scope": "event",
+      "route": "coverage-gap",
+      "note": "No saved artwork; default calendar does not identify this tag. Check existing category artwork first; do not infer an assignment from ancestors."
+    },
+    {
+      "id": 20537,
+      "name": "Lunch and Learn",
+      "scope": "event",
+      "route": "keep",
+      "note": "Current pictogram is a reasonable literal or broad category cue; this is not a claim of event-level icon correctness."
+    },
+    {
+      "id": 81520,
+      "name": "Montgomery, NJ",
+      "scope": "venue",
+      "route": "keep",
+      "note": "Current pictogram is a reasonable literal or broad category cue; this is not a claim of event-level icon correctness."
+    },
+    {
+      "id": 6817,
+      "name": "Trap Music",
+      "scope": "event",
+      "route": "keep",
+      "note": "Current pictogram is a reasonable literal or broad category cue; this is not a claim of event-level icon correctness."
+    },
+    {
+      "id": 79908,
+      "name": "Greenwich Village",
+      "scope": "venue",
+      "route": "keep",
+      "note": "Current pictogram is a reasonable literal or broad category cue; this is not a claim of event-level icon correctness."
+    },
+    {
+      "id": 9188,
+      "name": "Indie Improv",
+      "scope": "event",
+      "route": "coverage-gap",
+      "note": "No saved artwork; default calendar does not identify this tag. Check existing category artwork first; do not infer an assignment from ancestors."
+    },
+    {
+      "id": 18782,
+      "name": "Galaxy Painting",
+      "scope": "event",
+      "route": "coverage-gap",
+      "note": "No saved artwork; default calendar does not identify this tag. Check existing category artwork first; do not infer an assignment from ancestors."
+    },
+    {
+      "id": 195,
+      "name": "Painting",
+      "scope": "event",
+      "route": "keep",
+      "note": "Current pictogram is a reasonable literal or broad category cue; this is not a claim of event-level icon correctness."
+    },
+    {
+      "id": 36004,
+      "name": "Strength and Flexibility",
+      "scope": "event",
+      "route": "coverage-gap",
+      "note": "No saved artwork; default calendar does not identify this tag. Check existing category artwork first; do not infer an assignment from ancestors."
+    },
+    {
+      "id": 81342,
+      "name": "Columbia County",
+      "scope": "venue",
+      "route": "coverage-gap",
+      "note": "No saved artwork; default calendar does not identify this tag. Check existing category artwork first; do not infer an assignment from ancestors."
+    },
+    {
+      "id": 42620,
+      "name": "Indie Play",
+      "scope": "event",
+      "route": "coverage-gap",
+      "note": "No saved artwork; default calendar does not identify this tag. Check existing category artwork first; do not infer an assignment from ancestors."
+    },
+    {
+      "id": 1418,
+      "name": "Animation",
+      "scope": "event",
+      "route": "review",
+      "note": "Broad or potentially narrow pictogram; candidate/context review needed. No further assignment made."
+    },
+    {
+      "id": 80336,
+      "name": "St. George",
+      "scope": "venue",
+      "route": "keep",
+      "note": "Current pictogram is a reasonable literal or broad category cue; this is not a claim of event-level icon correctness."
+    },
+    {
+      "id": 81530,
+      "name": "East Tremont",
+      "scope": "venue",
+      "route": "keep",
+      "note": "Current pictogram is a reasonable literal or broad category cue; this is not a claim of event-level icon correctness."
+    },
+    {
+      "id": 3642,
+      "name": "Local Business",
+      "scope": "event",
+      "route": "keep",
+      "note": "Current pictogram is a reasonable literal or broad category cue; this is not a claim of event-level icon correctness."
+    },
+    {
+      "id": 11465,
+      "name": "Strategic Planning",
+      "scope": "event",
+      "route": "keep",
+      "note": "Current pictogram is a reasonable literal or broad category cue; this is not a claim of event-level icon correctness."
+    },
+    {
+      "id": 80076,
+      "name": "University",
+      "scope": "venue",
+      "route": "keep",
+      "note": "Current pictogram is a reasonable literal or broad category cue; this is not a claim of event-level icon correctness."
+    },
+    {
+      "id": 19333,
+      "name": "Material Science",
+      "scope": "event",
+      "route": "coverage-gap",
+      "note": "No saved artwork; default calendar does not identify this tag. Check existing category artwork first; do not infer an assignment from ancestors."
+    },
+    {
+      "id": 81411,
+      "name": "Morris County",
+      "scope": "venue",
+      "route": "coverage-gap",
+      "note": "No saved artwork; default calendar does not identify this tag. Check existing category artwork first; do not infer an assignment from ancestors."
+    },
+    {
+      "id": 81288,
+      "name": "Rhinebeck",
+      "scope": "venue",
+      "route": "keep",
+      "note": "Current pictogram is a reasonable literal or broad category cue; this is not a claim of event-level icon correctness."
+    },
+    {
+      "id": 34258,
+      "name": "Intense Drama",
+      "scope": "event",
+      "route": "coverage-gap",
+      "note": "No saved artwork; default calendar does not identify this tag. Check existing category artwork first; do not infer an assignment from ancestors."
+    },
+    {
+      "id": 41074,
+      "name": "Maple Festival",
+      "scope": "event",
+      "route": "coverage-gap",
+      "note": "No saved artwork; default calendar does not identify this tag. Check existing category artwork first; do not infer an assignment from ancestors."
+    },
+    {
+      "id": 893,
+      "name": "Childrens Theater",
+      "scope": "event",
+      "route": "keep",
+      "note": "Current pictogram is a reasonable literal or broad category cue; this is not a claim of event-level icon correctness."
+    },
+    {
+      "id": 6140,
+      "name": "Hands on",
+      "scope": "event",
+      "route": "keep",
+      "note": "Current pictogram is a reasonable literal or broad category cue; this is not a claim of event-level icon correctness."
+    },
+    {
+      "id": 385,
+      "name": "Cherry Blossoms",
+      "scope": "event",
+      "route": "coverage-gap",
+      "note": "No saved artwork; default calendar does not identify this tag. Check existing category artwork first; do not infer an assignment from ancestors."
+    },
+    {
+      "id": 81556,
+      "name": "Health Center",
+      "scope": "venue",
+      "route": "keep",
+      "note": "Current pictogram is a reasonable literal or broad category cue; this is not a claim of event-level icon correctness."
+    },
+    {
+      "id": 37981,
+      "name": "Psychiatry History",
+      "scope": "event",
+      "route": "coverage-gap",
+      "note": "No saved artwork; default calendar does not identify this tag. Check existing category artwork first; do not infer an assignment from ancestors."
+    },
+    {
+      "id": 80120,
+      "name": "Pier",
+      "scope": "venue",
+      "route": "keep",
+      "note": "Current pictogram is a reasonable literal or broad category cue; this is not a claim of event-level icon correctness."
+    },
+    {
+      "id": 4108,
+      "name": "African Dance",
+      "scope": "event",
+      "route": "review",
+      "note": "Broad or potentially narrow pictogram; candidate/context review needed. No further assignment made."
+    },
+    {
+      "id": 3969,
+      "name": "Black Cinema",
+      "scope": "event",
+      "route": "keep",
+      "note": "Current pictogram is a reasonable literal or broad category cue; this is not a claim of event-level icon correctness."
+    },
+    {
+      "id": 3327,
+      "name": "Faith Event",
+      "scope": "event",
+      "route": "coverage-gap",
+      "note": "No saved artwork; default calendar does not identify this tag. Check existing category artwork first; do not infer an assignment from ancestors."
+    },
+    {
+      "id": 1849,
+      "name": "Creative Tech",
+      "scope": "event",
+      "route": "keep",
+      "note": "Current pictogram is a reasonable literal or broad category cue; this is not a claim of event-level icon correctness."
+    },
+    {
+      "id": 4686,
+      "name": "Big Band",
+      "scope": "event",
+      "route": "keep",
+      "note": "Current pictogram is a reasonable literal or broad category cue; this is not a claim of event-level icon correctness."
+    },
+    {
+      "id": 15032,
+      "name": "Hip Hop History",
+      "scope": "event",
+      "route": "coverage-gap",
+      "note": "No saved artwork; default calendar does not identify this tag. Check existing category artwork first; do not infer an assignment from ancestors."
+    },
+    {
+      "id": 35398,
+      "name": "Epic Romance",
+      "scope": "event",
+      "route": "coverage-gap",
+      "note": "No saved artwork; default calendar does not identify this tag. Check existing category artwork first; do not infer an assignment from ancestors."
+    },
+    {
+      "id": 80829,
+      "name": "Summit",
+      "scope": "venue",
+      "route": "coverage-gap",
+      "note": "No saved artwork; default calendar does not identify this tag. Check existing category artwork first; do not infer an assignment from ancestors."
+    },
+    {
+      "id": 80053,
+      "name": "NoHo",
+      "scope": "venue",
+      "route": "keep",
+      "note": "Current pictogram is a reasonable literal or broad category cue; this is not a claim of event-level icon correctness."
+    },
+    {
+      "id": 11220,
+      "name": "Documentary Art",
+      "scope": "event",
+      "route": "coverage-gap",
+      "note": "No saved artwork; default calendar does not identify this tag. Check existing category artwork first; do not infer an assignment from ancestors."
+    },
+    {
+      "id": 81310,
+      "name": "Cold Spring",
+      "scope": "venue",
+      "route": "keep",
+      "note": "Current pictogram is a reasonable literal or broad category cue; this is not a claim of event-level icon correctness."
+    },
+    {
+      "id": 1295,
+      "name": "Support Group",
+      "scope": "event",
+      "route": "keep",
+      "note": "Current pictogram is a reasonable literal or broad category cue; this is not a claim of event-level icon correctness."
+    },
+    {
+      "id": 81552,
+      "name": "Sports Field",
+      "scope": "venue",
+      "route": "review",
+      "note": "Broad or potentially narrow pictogram; candidate/context review needed. No further assignment made."
+    },
+    {
+      "id": 17384,
+      "name": "Cell Biology",
+      "scope": "event",
+      "route": "coverage-gap",
+      "note": "No saved artwork; default calendar does not identify this tag. Check existing category artwork first; do not infer an assignment from ancestors."
+    },
+    {
+      "id": 4571,
+      "name": "Cumbia",
+      "scope": "event",
+      "route": "review",
+      "note": "Broad or potentially narrow pictogram; candidate/context review needed. No further assignment made."
+    },
+    {
+      "id": 4246,
+      "name": "Live Improv",
+      "scope": "event",
+      "route": "existing-custom",
+      "note": "Exact tag concept matches the existing custom pictogram. Tag artwork describes the topic; event eligibility remains separately reviewed."
+    },
+    {
+      "id": 30150,
+      "name": "Queens Trivia",
+      "scope": "event",
+      "route": "coverage-gap",
+      "note": "No saved artwork; default calendar does not identify this tag. Check existing category artwork first; do not infer an assignment from ancestors."
+    },
+    {
+      "id": 2843,
+      "name": "Open Studio",
+      "scope": "event",
+      "route": "keep",
+      "note": "Current pictogram is a reasonable literal or broad category cue; this is not a claim of event-level icon correctness."
+    },
+    {
+      "id": 26410,
+      "name": "Skate Lessons",
+      "scope": "event",
+      "route": "coverage-gap",
+      "note": "No saved artwork; default calendar does not identify this tag. Check existing category artwork first; do not infer an assignment from ancestors."
+    },
+    {
+      "id": 8480,
+      "name": "Jazz Concert",
+      "scope": "event",
+      "route": "keep",
+      "note": "Current pictogram is a reasonable literal or broad category cue; this is not a claim of event-level icon correctness."
+    },
+    {
+      "id": 79797,
+      "name": "Cobble Hill",
+      "scope": "venue",
+      "route": "keep",
+      "note": "Current pictogram is a reasonable literal or broad category cue; this is not a claim of event-level icon correctness."
+    },
+    {
+      "id": 9533,
+      "name": "Holiday Crafts",
+      "scope": "event",
+      "route": "keep",
+      "note": "Current pictogram is a reasonable literal or broad category cue; this is not a claim of event-level icon correctness."
+    },
+    {
+      "id": 36971,
+      "name": "Nature in Winter",
+      "scope": "event",
+      "route": "coverage-gap",
+      "note": "No saved artwork; default calendar does not identify this tag. Check existing category artwork first; do not infer an assignment from ancestors."
+    },
+    {
+      "id": 81127,
+      "name": "Winery",
+      "scope": "venue",
+      "route": "keep",
+      "note": "Current pictogram is a reasonable literal or broad category cue; this is not a claim of event-level icon correctness."
+    },
+    {
+      "id": 41840,
+      "name": "La Blast Fitness",
+      "scope": "event",
+      "route": "coverage-gap",
+      "note": "No saved artwork; default calendar does not identify this tag. Check existing category artwork first; do not infer an assignment from ancestors."
+    },
+    {
+      "id": 2585,
+      "name": "Portraiture",
+      "scope": "event",
+      "route": "keep",
+      "note": "Current pictogram is a reasonable literal or broad category cue; this is not a claim of event-level icon correctness."
+    },
+    {
+      "id": 30134,
+      "name": "Local Trivia",
+      "scope": "event",
+      "route": "coverage-gap",
+      "note": "No saved artwork; default calendar does not identify this tag. Check existing category artwork first; do not infer an assignment from ancestors."
+    },
+    {
+      "id": 81559,
+      "name": "New Windsor",
+      "scope": "venue",
+      "route": "review",
+      "note": "Broad or potentially narrow pictogram; candidate/context review needed. No further assignment made."
+    },
+    {
+      "id": 16855,
+      "name": "Levantine Music",
+      "scope": "event",
+      "route": "coverage-gap",
+      "note": "No saved artwork; default calendar does not identify this tag. Check existing category artwork first; do not infer an assignment from ancestors."
+    },
+    {
+      "id": 16207,
+      "name": "Mycology",
+      "scope": "event",
+      "route": "coverage-gap",
+      "note": "No saved artwork; default calendar does not identify this tag. Check existing category artwork first; do not infer an assignment from ancestors."
+    },
+    {
+      "id": 32106,
+      "name": "Swing Workshop",
+      "scope": "event",
+      "route": "coverage-gap",
+      "note": "No saved artwork; default calendar does not identify this tag. Check existing category artwork first; do not infer an assignment from ancestors."
+    },
+    {
+      "id": 8773,
+      "name": "Melodic House",
+      "scope": "event",
+      "route": "keep",
+      "note": "Current pictogram is a reasonable literal or broad category cue; this is not a claim of event-level icon correctness."
+    },
+    {
+      "id": 21898,
+      "name": "Jazz Live",
+      "scope": "event",
+      "route": "coverage-gap",
+      "note": "No saved artwork; default calendar does not identify this tag. Check existing category artwork first; do not infer an assignment from ancestors."
+    },
+    {
+      "id": 15980,
+      "name": "Escape Room",
+      "scope": "event",
+      "route": "keep",
+      "note": "Current pictogram is a reasonable literal or broad category cue; this is not a claim of event-level icon correctness."
+    },
+    {
+      "id": 80823,
+      "name": "Vinegar Hill",
+      "scope": "venue",
+      "route": "coverage-gap",
+      "note": "No saved artwork; default calendar does not identify this tag. Check existing category artwork first; do not infer an assignment from ancestors."
+    },
+    {
+      "id": 24350,
+      "name": "Advanced English",
+      "scope": "event",
+      "route": "coverage-gap",
+      "note": "No saved artwork; default calendar does not identify this tag. Check existing category artwork first; do not infer an assignment from ancestors."
+    },
+    {
+      "id": 11852,
+      "name": "Urban Mythology",
+      "scope": "event",
+      "route": "coverage-gap",
+      "note": "No saved artwork; default calendar does not identify this tag. Check existing category artwork first; do not infer an assignment from ancestors."
+    },
+    {
+      "id": 81258,
+      "name": "Smithtown",
+      "scope": "venue",
+      "route": "coverage-gap",
+      "note": "No saved artwork; default calendar does not identify this tag. Check existing category artwork first; do not infer an assignment from ancestors."
+    },
+    {
+      "id": 7517,
+      "name": "Fundraising",
+      "scope": "event",
+      "route": "keep",
+      "note": "Current pictogram is a reasonable literal or broad category cue; this is not a claim of event-level icon correctness."
+    },
+    {
+      "id": 1173,
+      "name": "Salsa",
+      "scope": "event",
+      "route": "existing-emoji",
+      "note": "Dance artwork is a broad interim choice; pepper, ballet shoes, violin or meditation do not identify this dance form. Specific dance silhouettes remain candidates."
+    },
+    {
+      "id": 10799,
+      "name": "Agriculture",
+      "scope": "event",
+      "route": "keep",
+      "note": "Current pictogram is a reasonable literal or broad category cue; this is not a claim of event-level icon correctness."
+    },
+    {
+      "id": 31650,
+      "name": "Underground Fashion",
+      "scope": "event",
+      "route": "coverage-gap",
+      "note": "No saved artwork; default calendar does not identify this tag. Check existing category artwork first; do not infer an assignment from ancestors."
+    },
+    {
+      "id": 5527,
+      "name": "Visual Poetry",
+      "scope": "event",
+      "route": "keep",
+      "note": "Current pictogram is a reasonable literal or broad category cue; this is not a claim of event-level icon correctness."
+    },
+    {
+      "id": 39937,
+      "name": "Native Storytelling",
+      "scope": "event",
+      "route": "coverage-gap",
+      "note": "No saved artwork; default calendar does not identify this tag. Check existing category artwork first; do not infer an assignment from ancestors."
+    },
+    {
+      "id": 81596,
+      "name": "Waldwick",
+      "scope": "venue",
+      "route": "coverage-gap",
+      "note": "No saved artwork; default calendar does not identify this tag. Check existing category artwork first; do not infer an assignment from ancestors."
+    },
+    {
+      "id": 15006,
+      "name": "Community Festival",
+      "scope": "event",
+      "route": "coverage-gap",
+      "note": "No saved artwork; default calendar does not identify this tag. Check existing category artwork first; do not infer an assignment from ancestors."
+    },
+    {
+      "id": 3496,
+      "name": "Brooklyn CB4",
+      "scope": "event",
+      "route": "coverage-gap",
+      "note": "No saved artwork; default calendar does not identify this tag. Check existing category artwork first; do not infer an assignment from ancestors."
+    },
+    {
+      "id": 81391,
+      "name": "Fair Lawn",
+      "scope": "venue",
+      "route": "keep",
+      "note": "Current pictogram is a reasonable literal or broad category cue; this is not a claim of event-level icon correctness."
+    },
+    {
+      "id": 81148,
+      "name": "Richmondtown",
+      "scope": "venue",
+      "route": "keep",
+      "note": "Current pictogram is a reasonable literal or broad category cue; this is not a claim of event-level icon correctness."
+    },
+    {
+      "id": 35339,
+      "name": "Innovation Design",
+      "scope": "event",
+      "route": "coverage-gap",
+      "note": "No saved artwork; default calendar does not identify this tag. Check existing category artwork first; do not infer an assignment from ancestors."
+    },
+    {
+      "id": 9462,
+      "name": "NYUWBB",
+      "scope": "event",
+      "route": "coverage-gap",
+      "note": "No saved artwork; default calendar does not identify this tag. Check existing category artwork first; do not infer an assignment from ancestors."
+    },
+    {
+      "id": 32566,
+      "name": "Drawing Studio",
+      "scope": "event",
+      "route": "coverage-gap",
+      "note": "No saved artwork; default calendar does not identify this tag. Check existing category artwork first; do not infer an assignment from ancestors."
+    },
+    {
+      "id": 4624,
+      "name": "Jazz Duo",
+      "scope": "event",
+      "route": "review",
+      "note": "Broad or potentially narrow pictogram; candidate/context review needed. No further assignment made."
+    },
+    {
+      "id": 31993,
+      "name": "Lenten Devotion",
+      "scope": "event",
+      "route": "coverage-gap",
+      "note": "No saved artwork; default calendar does not identify this tag. Check existing category artwork first; do not infer an assignment from ancestors."
+    },
+    {
+      "id": 1166,
+      "name": "Nightlife",
+      "scope": "event",
+      "route": "keep",
+      "note": "Current pictogram is a reasonable literal or broad category cue; this is not a claim of event-level icon correctness."
+    },
+    {
+      "id": 7420,
+      "name": "Death Metal",
+      "scope": "event",
+      "route": "keep",
+      "note": "Current pictogram is a reasonable literal or broad category cue; this is not a claim of event-level icon correctness."
+    },
+    {
+      "id": 4288,
+      "name": "Graduate Admissions",
+      "scope": "event",
+      "route": "keep",
+      "note": "Current pictogram is a reasonable literal or broad category cue; this is not a claim of event-level icon correctness."
+    },
+    {
+      "id": 3980,
+      "name": "Street Dance",
+      "scope": "event",
+      "route": "keep",
+      "note": "Current pictogram is a reasonable literal or broad category cue; this is not a claim of event-level icon correctness."
+    },
+    {
+      "id": 33752,
+      "name": "Improv Skills",
+      "scope": "event",
+      "route": "coverage-gap",
+      "note": "No saved artwork; default calendar does not identify this tag. Check existing category artwork first; do not infer an assignment from ancestors."
+    },
+    {
+      "id": 81383,
+      "name": "Old Westbury",
+      "scope": "venue",
+      "route": "coverage-gap",
+      "note": "No saved artwork; default calendar does not identify this tag. Check existing category artwork first; do not infer an assignment from ancestors."
+    },
+    {
+      "id": 1882,
+      "name": "Experimental Film",
+      "scope": "event",
+      "route": "keep",
+      "note": "Current pictogram is a reasonable literal or broad category cue; this is not a claim of event-level icon correctness."
+    },
+    {
+      "id": 80343,
+      "name": "South Beach",
+      "scope": "venue",
+      "route": "keep",
+      "note": "Current pictogram is a reasonable literal or broad category cue; this is not a claim of event-level icon correctness."
+    },
+    {
+      "id": 19484,
+      "name": "Food Journalism",
+      "scope": "event",
+      "route": "coverage-gap",
+      "note": "No saved artwork; default calendar does not identify this tag. Check existing category artwork first; do not infer an assignment from ancestors."
+    },
+    {
+      "id": 13283,
+      "name": "Infant Development",
+      "scope": "event",
+      "route": "keep",
+      "note": "Current pictogram is a reasonable literal or broad category cue; this is not a claim of event-level icon correctness."
+    },
+    {
+      "id": 32265,
+      "name": "Yoga Teacher Training",
+      "scope": "event",
+      "route": "coverage-gap",
+      "note": "No saved artwork; default calendar does not identify this tag. Check existing category artwork first; do not infer an assignment from ancestors."
+    }
+  ],
+  "completion": {
+    "tag_rows": 149,
+    "event_scope_tags": 125,
+    "venue_scope_tags": 24,
+    "custom": 75,
+    "noto": 74,
+    "event_assignments": 0,
+    "location_assignments": 0,
+    "national_flags_replaced": 30,
+    "status": "Applied to local DB; local hierarchy exported and production build regenerated; not deployed.",
+    "backup": ".scratch/tag-icon-hierarchy-20260909/assignments-before.json",
+    "verification": [
+      "149 persisted choices and exported mappings verified; zero remaining helper changes",
+      "Original emoji/type/name unchanged for every edited row",
+      "5 tag assignment tests, 4 artwork catalog tests, 6 frontend icon/chip tests passed",
+      "Catalog build --check and npm run build passed; dist hierarchy matches src",
+      "62 distinct referenced assets decoded, zero failures",
+      "Production IconManager/Utils chip harness: 16/24/32px, selected/forbidden, desktop dark and 390px mobile light; mounted theme refresh verified"
+    ],
+    "limits": "Tag selector search/selection checked on full map. Visual artwork checks use the production chip renderer in a public-only scratch harness; no full end-to-end popup/Favorites or physical-device pass, new art or performance benchmark."
+  }
+}

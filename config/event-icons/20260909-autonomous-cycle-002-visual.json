@@ -1,0 +1,176 @@
+[
+  {
+    "icon_id": "format-collaborative-painting",
+    "source_sha256": "5f75bc1729b325a63d3460be60e0037a169aa5f2ec06c0884afec6acae4dadb8",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent: creator inspected unlabeled native-size cards with prior knowledge of the briefs.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-002/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-002/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 907,
+      "gzip_level_6": 426
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Adjoining canvases and two brushes read best at 24/32px; at 16px a paired-picture interpretation is possible."
+    ]
+  },
+  {
+    "icon_id": "craft-backlit-tracing",
+    "source_sha256": "d127f6ccc3a5113c7390b8a4071d0eceb15c02ea25d876caf5bb4f35b24fe80c",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent: creator inspected unlabeled native-size cards with prior knowledge of the briefs.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-002/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-002/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 3360,
+      "gzip_level_6": 1202
+    },
+    "issues": [
+      {
+        "severity": "material",
+        "location": "brush support",
+        "observation": "Initial brush was above the support plane.",
+        "revision": "Lowered brush to rest beside board at the common floor plane.",
+        "status": "resolved"
+      },
+      {
+        "severity": "minor",
+        "location": "illumination cue",
+        "observation": "Initial rendering could be read as an ordinary drawing tablet.",
+        "revision": "Added restrained light rays above the illuminated board.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Illumination rays and canvas guides distinguish this from plain painting; tiny guide details soften at 16px. Generic lightboard, not a specific proprietary model."
+    ]
+  },
+  {
+    "icon_id": "craft-needle-felting",
+    "source_sha256": "0f813f8ab4ea72e0e19ac6674bec1fb697bbd714ced12af1086abac5961af8db",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent: creator inspected unlabeled native-size cards with prior knowledge of the briefs.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-002/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-002/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 2375,
+      "gzip_level_6": 941
+    },
+    "issues": [
+      {
+        "severity": "minor",
+        "location": "wool paint",
+        "observation": "Faceted shading fragmented the small fiber silhouette.",
+        "revision": "Unified wool paint while preserving depth-clipped geometry; increased shaft width slightly for raster legibility.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Wool-on-pad and eye-free needle distinguish felting from sewn thread; tiny barbs are not legible at 16px."
+    ],
+    "optimization": {
+      "before_raw": 3443,
+      "before_gzip_level_6": 1285,
+      "after_raw": 2375,
+      "after_gzip_level_6": 941
+    }
+  },
+  {
+    "icon_id": "activity-lockpicking",
+    "source_sha256": "5535d587fe13580d400fe10d93bbdcda093b843f321c3f95e639f0574fcb6dce",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent: creator inspected unlabeled native-size cards with prior knowledge of the briefs.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-002/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-002/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 1005,
+      "gzip_level_6": 472
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Open padlock and separated hook/tension tools are illustrative; tool-tip distinctions soften at 16px."
+    ]
+  },
+  {
+    "icon_id": "activity-repair-cafe",
+    "source_sha256": "84b233bcc02fdad7d128c100da8c525bcdae1a801a12ce04e8af55b65d792797",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent: creator inspected unlabeled native-size cards with prior knowledge of the briefs.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-002/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-002/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 689,
+      "gzip_level_6": 410
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Tools plus a heart indicate community repair; they do not promise particular repair capabilities or refreshments."
+    ]
+  }
+]

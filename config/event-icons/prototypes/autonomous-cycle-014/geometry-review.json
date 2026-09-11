@@ -1,0 +1,33 @@
+{
+  "reviewer_mode": "creator-critical-pass",
+  "views": [
+    "front",
+    "rear",
+    "left",
+    "right",
+    "top",
+    "icon"
+  ],
+  "evidence": ".scratch/icon-cycles-20260909/cycle-014/geometry.png",
+  "findings": [
+    "Four equal table legs meet lawn and underside of tabletop; apron rails join legs. Revised books share exact support planes: lower cover bottom .730m equals tabletop, upper cover bottom .776m equals lower book top. Mug and potted plant bases meet tabletop.",
+    "Mug has a hollow mouth, closed floor and connected C-handle. Pot has an inner lip, floor, soil and attached stem/leaves. Price tag has an actual round aperture and a string returning to a table peg.",
+    "Butterfly has folded paired fore/hind wings, connected abdomen/thorax/head, six legs including reduced front legs, and two clubbed antennae. Opposite wings occupy separate depth planes; only visible underside hindwing carries the tag.",
+    "Revised hindwing veins bound an elongated central cell beneath the circular tag and branch toward the margin. Primary reference establishes underside hindwing placement. This original simplified silhouette is not a taxonomic plate or official tag.",
+    "Animal drawing, landscape painting and still-life painting are planar picture emblems with tools; no implied articulated pose or volumetric object arrangement is being validated inside the drawn images."
+  ],
+  "decision": "pass",
+  "references": [
+    {
+      "url": "https://monarchwatch.org/tagging/",
+      "image": "https://monarchwatch.org/tagging/tag_proper_placement_b.jpg",
+      "finding": "Primary page and placement photograph show lightweight circular tags over the discal cell on the underside of a hindwing; image viewed in browser."
+    },
+    {
+      "url": "https://www.southoldhistorical.org/event-details/yard-sale-benefit",
+      "finding": "Primary listing describes a mixed household yard sale benefiting the museum; it supplies a separate Peconic address, recorded as a metadata finding."
+    }
+  ],
+  "source_sha256": "17ce296c2b4feef7b22a22a5688bfc90a5b98a14e4262a73508439e8d4dd2574",
+  "projector_sha256": "03926fd5eab4eeb3baa4e6121d13713e9d4a4864fc968dce4787f61148a3daa1"
+}

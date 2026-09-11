@@ -1,0 +1,195 @@
+{
+  "reviewer_mode": "creator-critical-pass",
+  "geometry_mode": "four-3d-scenes-and-one-flat-diagram",
+  "views": [
+    "front",
+    "rear",
+    "left",
+    "right",
+    "top",
+    "icon"
+  ],
+  "evidence": ".scratch/icon-cycles-20260909/cycle-078/geometry.png",
+  "decision": "pass",
+  "findings": [
+    "Personally inspected all24 final construction views, all five128/32/24/16px light/dark cards, five accepted custom and four Noto references, and ten actual IconManager variants. Creator critical pass, not blind or independent.",
+    "Four physical scenes share original mesh geometry with their SVG export. Dimensions are representative, not actual event materials. Museum membership is a flat symbolic diagram. No human anatomy modeled.",
+    "Mizuhiki uses continuous three-cord paths and eight interlacing crossings. Offset-strand intersection constraints maintain2.25mm center-height separation for2.2mm cords, with gradual connecting spans and low ground contacts. Color order is maintained. Basic topology informed by maker diagram and instructor text/photo; no source coordinates traced.",
+    "Nerikiri masses and paste leaf contact board. Clay food, tray and divider connect; moved pieces clear the rim. Tool rests beside the tray. Buoy body covers continuous spindle; reflected-face winding fixed, outer paint bands follow body, brush rests on ground.",
+    "Final native and runtime review found no remaining material clipping, stray fragments, floating support or contradictory shading. Tiny knot strands, food texture, paintbrush and card details require labels at16px.",
+    "Initial/final byte counts retained; all five remain below15KBraw/5KBgzip triggers. No decorative detail added solely to spend bytes.",
+    "Primary event scopes distinguish paper cords from rope work, edible paste from pressed sugar and polymer clay, decoration from buoy construction, orientation from member access. Five external primary images inspected: maker knot diagram, instructor finished knot photo, two RESOBOX craft photos and supplier buoy photo. No video, PDF image or source geometry was copied."
+  ],
+  "references": [
+    {
+      "url": "https://resobox.com/event/wasanbon-wagashi-japanese-pressed-sugar-confectionery-september/",
+      "reviewed": "2026-09-11",
+      "finding": "Sept5 noon\u20131:30 is already past;65materials,YukiSakura. Fine sugar pressed in wooden molds, no baking. Distinct from nerikiri despite site category. Investigate liveness, no date repair.",
+      "method": "Primary page text personally read."
+    },
+    {
+      "url": "https://resobox.com/event/mizuhiki-japanese-decorative-knots-gourd-frame-art/",
+      "reviewed": "2026-09-11",
+      "finding": "Sept13 1:30\u20133:30,60materials,SatoiAdams. Gold/silver paper-cord awaji variation forms gourd in frame. Beginner,2hregistrationcutoff,72hcancel. Gourd photograph not successfully viewed.",
+      "method": "Primary page text personally read."
+    },
+    {
+      "url": "https://resobox.com/event/mizuhiki-japanese-decorative-knots-autumn-leaf-knot/",
+      "reviewed": "2026-09-11",
+      "finding": "Oct18 2\u20134,60materials,SatoiAdams; leaf knot follows awaji. Bookmark,brooch or earrings choice. Beginner,2hregistrationcutoff,72hcancel. Leaf photograph not viewed.",
+      "method": "Primary page text personally read."
+    },
+    {
+      "url": "https://resobox.com/event/nerikiri-wagashi-japanese-sculpted-confectionery-cosmos-bellflower-and-ball-chrysanthemum/",
+      "reviewed": "2026-09-11",
+      "finding": "Sept20 2:30\u20134:30 SOLDOUT,90materials,Yuki. Separate5:30 session linked but not opened. Press/pinch/layer edible paste flowers;48hregistrationcutoff. Photo shows pink cosmos,purple five-petal bellflower,yellow scored round chrysanthemum; original icon composition differs.",
+      "method": "Primary page text and referenced image personally inspected; geometry original, not traced.",
+      "image_evidence": ".scratch/icon-cycles-20260909/cycle-078/primary-nerikiri.png"
+    },
+    {
+      "url": "https://resobox.com/event/miniature-food-making-japanese-bento-onigiri-tamagoyaki-karaage/",
+      "reviewed": "2026-09-11",
+      "finding": "Sept27 2\u20134,100materials,recommended10+,apron. Nonedible polymer-clay onigiri,tamagoyaki,karaage,tomato.24hregistrationcutoff. Photo clear hinged bento informs object types only; icon uses original opaque tray,arrangement and tool. No curing instructions verified.",
+      "method": "Primary page text and referenced image personally inspected; geometry original, not traced.",
+      "image_evidence": ".scratch/icon-cycles-20260909/cycle-078/primary-miniature-bento.png"
+    },
+    {
+      "url": "https://mizuhiki.jp/mizuhikiasobi/index.html",
+      "reviewed": "2026-09-11",
+      "finding": "Maker Tsuda basic awaji-knot five-step diagram personally inspected through the exact embedded image. Three-loop interlacing and free ends inform original route, not sampled coordinates. Page recommends1\u20133cords for beginners and usually5+.",
+      "method": "Primary page text and referenced image personally inspected; geometry original, not traced.",
+      "image_evidence": ".scratch/icon-cycles-20260909/cycle-078/primary-awaji.png"
+    },
+    {
+      "url": "https://mizuhiki.jp/manner/mizuhikinituite.html",
+      "reviewed": "2026-09-11",
+      "finding": "Maker explains paper twisted into cord, coated with starch and dried. Technical material reference, not textile macrame.",
+      "method": "Primary page text personally read."
+    },
+    {
+      "url": "https://www.thetech.org/media/ss4dua4k/ttiah-algaestring-2021-mizuhikiknots.pdf",
+      "reviewed": "2026-09-11",
+      "finding": "Primary educational text about awaji/ume knot instructions read. Screenshot tool returned citation only; PDF image NOT viewed. Maker diagram is the visual geometry reference.",
+      "method": "Primary page text personally read."
+    },
+    {
+      "url": "https://cshwhalingmuseum.app.neoncrm.com/forms/2026-wooden-buoys-th-registration-4392",
+      "reviewed": "2026-09-11",
+      "finding": "Sept17 6:30\u20138,doors6:20,crafting6:40,adults21+,35nonmember. Decorate weathered wooden buoy; cocktail/mocktail. Sept25 LobsterDay is theme, not event date.",
+      "method": "Primary page text personally read."
+    },
+    {
+      "url": "https://www.huntingtonarts.org/event/the-whaling-museum-and-education-center-presents-crafts-cocktails-wooden-buoys/",
+      "reviewed": "2026-09-11",
+      "finding": "Organizer listing confirms25members/35public,301MainStreetColdSpringHarbor. Decoration, not carving certified equipment.",
+      "method": "Primary page text personally read."
+    },
+    {
+      "url": "https://www.caseyswood.com/shoppingcart/zen-cart/index.php?main_page=product_info&products_id=2720",
+      "reviewed": "2026-09-11",
+      "finding": "Primary craft supplier describes hand-carved pine buoy,about3inchbody andjustunder1.5inchwidth,variation expected. Photo shows tapered body with long/short axial spindle ends. Original icon enlarges width and omits unneeded cord/hole; not the event kit.",
+      "method": "Primary page text and referenced image personally inspected; geometry original, not traced.",
+      "image_evidence": ".scratch/icon-cycles-20260909/cycle-078/primary-wood-buoy.png"
+    },
+    {
+      "url": "https://www.brooklynmuseum.org/programs/meet-your-membership-september-2026/09-19-2026",
+      "reviewed": "2026-09-11",
+      "finding": "Sept19noon\u20131:30,freeMembers,registrationrequired,standardmemberadmissionbenefits. Coffee/pastries,benefitsorientation thenbriefA.R.T.volunteerguidedhighlights. Throughoutmuseum200EasternPkwy,notvolunteertraining.",
+      "method": "Primary page text personally read."
+    },
+    {
+      "url": "https://www.amnh.org/calendar/member-morning-hours",
+      "reviewed": "2026-09-11",
+      "finding": "Sept26 9\u201310,allmemberlevels/guests,CPW79memberentrancedowncurvingdriveway. Reservationsmax1monthahead. Earlyaccess is NOT orientation; left fallback.",
+      "method": "Primary page text personally read."
+    },
+    {
+      "url": "https://www.baystreet.org/performance/judy-carmichael-trio/",
+      "reviewed": "2026-09-11",
+      "finding": "Oct10 8,JudyCarmichael piano/voice,JohnMerrillguitar,DanBlocksax/clarinet. NOTpiano-bass-drums, keptfallback. RelatedcalendarTheChainOct3 8,WinslowOct17 8,TwinlessOct25 4, not individually opened.",
+      "method": "Primary page text personally read."
+    },
+    {
+      "url": "https://feverup.com/m/708033",
+      "reviewed": "2026-09-11",
+      "finding": "JoeHisaishi: HighlineStringQuartet,AngelOrensanz172Norfolk,60min,doors45,8+under16adult. SelectorSep24/Oct29,6:15shown. Repertory tribute, no artist or projection.",
+      "method": "Primary page text personally read."
+    },
+    {
+      "url": "https://feverup.com/m/708032",
+      "reviewed": "2026-09-11",
+      "finding": "HipHop: HighlineStringQuartet,AngelOrensanzSept24 8:30,60min,doors45,8+under16adult. Rappers are repertory credits.",
+      "method": "Primary page text personally read."
+    },
+    {
+      "url": "https://feverup.com/m/127280",
+      "reviewed": "2026-09-11",
+      "finding": "Halloween: HighlineStringQuartet,HeavenlyRest1085Fifth,60min,doors45close5minprior,8+under16adult. Dates not read from selector; soundtrack arrangements not film.",
+      "method": "Primary page text personally read."
+    },
+    {
+      "url": "https://feverup.com/m/710421",
+      "reviewed": "2026-09-11",
+      "finding": "JuanLuisGuerra: HighlineStringQuartet,Sheen18BleeckerNov6 8:45,60min,doors60,8+under16adult. Unaffiliated tribute, no artist attendance.",
+      "method": "Primary page text personally read."
+    },
+    {
+      "url": "https://feverup.com/m/106521",
+      "reviewed": "2026-09-11",
+      "finding": "TaylorSwift: HighlineStringQuartet,StAnnHolyTrinity157Montague,65min,doors45,8+under16adult. Dates not read from selector; no Swift attendance.",
+      "method": "Primary page text personally read."
+    },
+    {
+      "url": "https://www.dukefarms.org/event/nature-photography-101/",
+      "reviewed": "2026-09-11",
+      "finding": "Oct23 2\u20133:30,25,Toni guidednaturephotographyphone/camera. MeetBEHINDFarmBarnOrientationCenter thenDEPART, supportsphotowalk. Registrationrequired,10%member,48hcancel,accommodationsconditional.",
+      "method": "Primary page text personally read."
+    },
+    {
+      "url": "https://www.dukefarms.org/event/the-extraordinary-caterpillar-screening-discussion/",
+      "reviewed": "2026-09-11",
+      "finding": "Nov12 7pm25,60minfilmthenDrErinTreanoreguestdiscussion. FarmBarnunlessotherwise. DougTallamy recorded subject not live guest. No outdoor-projection evidence.",
+      "method": "Primary page text personally read."
+    },
+    {
+      "url": "https://dromnyc.com/event/tracy-bonhan-the-burdens-of-being-upright-30th-anniversary/",
+      "reviewed": "2026-09-11",
+      "finding": "Nov14doors6:30show7,fullband,21+,20tableminimum. Primary does NOT promise entirealbum. Bonhan title typo vsBonham; keptfallback instead of full-album art.",
+      "method": "Primary page text personally read."
+    },
+    {
+      "url": "https://musubikiln.com/blogs/journal/mizuhiki-experience-creating-beautiful-japanese-knot-art",
+      "reviewed": "2026-09-11",
+      "method": "First-person workshop with Modern Mizuhiki Association instructor; primary text and finished single-cord photograph personally inspected.",
+      "image_evidence": ".scratch/icon-cycles-20260909/cycle-078/primary-awaji-finished.png",
+      "finding": "Awaji has three loops and central crossing; route weaves under/over/under/over and cord colors stay in order. One cord suitable for learning,3or5 common. Original coordinates and colors; no hand copied. Crossings individually offset and solved for physical clearance."
+    }
+  ],
+  "dimensions_and_support": {
+    "mizuhiki": [
+      "Original three-cord awaji-form decorative knot; twisted paper cords, not macrame rope. Maker Tsuda five-step awaji diagram establishes loop/crossing topology, not copied coordinates.",
+      "Cord diameter2.2mm is an illustrative enlargement. Adjacent centerlines2.35mm apart. Ground contacts at low arcs; raised crossing spans rest on the lower bundle. No suspended hands or tools.",
+      "Alternating crossing order follows one continuous open strand; three parallel strands have six free ends. Inspect all six views for crossing separation and clear openings.",
+      "The gourd and leaf workshops use different finished motifs. This generic technique emblem does not promise the exact ornament, color or number of cords supplied."
+    ],
+    "nerikiri": [
+      "Original representative edible-paste flowers44mm and38mm wide,17/30mm tall, on96x57mm board. All sweets contact the board atY3mm. Leaf is joined at board and sweet base.",
+      "Nerikiri primary event photo establishes hand-shaped floral paste, five petals and radial chrysanthemum scoring. No exact flower, tray layout or photograph coordinates reproduced.",
+      "One continuous petal mass and one scored rounded mass; no disconnected petals or floating garnish. Colors are illustrative, not ingredient/allergen claims."
+    ],
+    "miniature-clay-food": [
+      "Representative64x48mm model bento, no human hand. Primary photo and event text confirm miniature polymer-clay rice triangles, egg rolls, fried chicken and tomato.",
+      "All food forms are nonedible clay. Original opaque tray, arrangement and modeling tool differ from photographed clear hinged box; not promised event kit.",
+      "Rice/egg/chicken/tomato bases contact tray atY3mm. Rim and divider join base. Modeling-tool handle contacts ground atY0; pointed end has normal clearance.",
+      "Seaweed-colored bands are surface clay details. Simplified fried-food texture and egg marks soften at16px; label must specify clay craft, not food service."
+    ],
+    "wooden-buoy-decoration": [
+      "Original side-lying buoy body80mm long44mm wide with126mm axial spindle; illustrative proportions informed by supplier hand-carved pine buoy, not exact event material.",
+      "Carved12-sided body, continuous spindle and painted bands share geometry. Broad lower side supports body atY0; spindle has normal clearance. Brush ferrule/bristles shareY0 with lower handle contact.",
+      "Supplier photo shows tapered wooden body with long and short spindle ends. String hole is omitted rather than falsely painting a hole onto solid wood; no cord depicted or event specification promised.",
+      "Paint and brush distinguish decoration from lobster fishing or general buoy equipment. No claim of flotation, navigation safety or seaworthiness."
+    ]
+  },
+  "scene_source_sha256": "670f0f643f726a96b8facd1197b02892429a53dc14d8946edb5dee2bbaa9b272",
+  "planar_source_sha256": "d26656576360360efdc5efeaaba64a4fd515943da1941ac58357a3c535a46644"
+}

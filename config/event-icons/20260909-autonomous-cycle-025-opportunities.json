@@ -1,0 +1,422 @@
+{
+  "date": "2026-09-10",
+  "scope": "Cycle 025: 100 sequential events 203227–203792, no targeted supplements.",
+  "suggestions": 20,
+  "concept_count": 16,
+  "concepts": [
+    {
+      "concept": "genre-indie",
+      "category": "genre",
+      "label": "Indie music",
+      "visual": "Explore a hand-drawn note motif",
+      "rationale": "Broad stylistic family has no universal instrument; recognition unproven.",
+      "existing_alternative": "Broad fallback does not distinguish this specific supported facet.",
+      "event_ids": [
+        203293,
+        203299,
+        203300
+      ],
+      "evidence_by_event": {
+        "203293": [
+          "Empty Country / Strange Pains / Meredith Sheldon: Empty Country / Strange Pains / Meredith Sheldon",
+          "Tags: Music, Indie, Concert, Nightlife, Live Music, Format, Performance"
+        ],
+        "203299": [
+          "Steady Sun, Lena Bartels: Steady Sun is the brainchild of Dylan Nowik, a songwriter and producer who has been quietly making his mark on the worldwide music scene. He has written for and served as the primary guitarist for Clairo’s most recent records; has performed on Jimmy Fallon...",
+          "Tags: Music, Indie, Concert, Songwriting, Songwriters, Live Music, Format, Performance"
+        ],
+        "203300": [
+          "Lobster Tooth Records Presents: Spin, Return Addy, Lovewell, Two Point OH: A NIGHT OF MUSIC PRESENTED BY LOBSTER TOOTH RECORDS",
+          "Tags: Music, Indie, Concert, Nightlife, Live Music, Cassette, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "203293": [
+          "https://dice.fm/event/6a57e634e41fbd0001fa3f69",
+          "https://dice.fm/event/pynxbw-empty-country-strange-pains-meredith-sheldon-3rd-oct-pianos-showroom-new-york-tickets",
+          "https://link.dice.fm/T791eb1ea258?pid=CSLPCEQE"
+        ],
+        "203299": [
+          "https://dice.fm/event/6a68febaf3d42a0001a95cc8",
+          "https://dice.fm/event/xe3xge-steady-sun-lena-bartels-13th-sep-cassette-new-york-city-tickets"
+        ],
+        "203300": [
+          "https://dice.fm/event/6a5691029b7bc300016c68a8",
+          "https://dice.fm/event/nv5rl3-lobster-tooth-records-presents-spin-return-addy-lovewell-two-point-oh-26th-sep-cassette-new-york-city-tickets"
+        ]
+      }
+    },
+    {
+      "concept": "game-chess",
+      "label": "Chess",
+      "category": "activity",
+      "visual": "Knight and pawn on a small checkerboard",
+      "rationale": "Explicit reviewed activity; requires distinct small-scale recognition.",
+      "existing_alternative": "Broad source fallback retained; no narrower accepted custom fits.",
+      "event_ids": [
+        203438,
+        203512
+      ],
+      "evidence_by_event": {
+        "203438": [
+          "Children and Teen Chess Club: Want to learn how to play chess? Or brush up on your existing skills? Join us at Edenwald Library for our Children and Teen Chess Club! All skill levels are welcome!",
+          "Tags: Kids, Family, Games, Teen Events, Game, Chess, Participatory, Format"
+        ],
+        "203512": [
+          "Teen Chess Club @ Tremont!: Think you’ve got the strategy to be a chess champion, or do you just want to learn the basics? Join us for Teen Chess Club, a weekly meet-up for teens of all skill levels.",
+          "Tags: Community, Family, Games, Teen Events, In Person, Game, Chess, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "203438": [
+          "https://www.nypl.org/events/programs/2026/07/02/children-and-teen-chess-club",
+          "https://www.nypl.org/events/programs/2026/08/06/children-and-teen-chess-club",
+          "https://www.nypl.org/events/programs/2026/09/03/children-and-teen-chess-club"
+        ],
+        "203512": [
+          "https://www.nypl.org/events/programs/2026/07/03/teen-chess-club-tremont",
+          "https://www.nypl.org/events/programs/2026/08/07/teen-chess-club-tremont",
+          "https://www.nypl.org/events/programs/2026/09/04/teen-chess-club-tremont",
+          "https://www.nypl.org/events/programs/2026/09/11/teen-chess-club-tremont"
+        ]
+      }
+    },
+    {
+      "concept": "genre-hip-hop",
+      "label": "Hip-hop",
+      "category": "genre",
+      "visual": "A compact boombox with two broad speaker circles and one strong rhythmic accent.",
+      "rationale": "The genre is explicitly tagged; boombox is an exploratory historical music-culture cue, not a claim that it is on stage, and must be tested beyond generic retro music.",
+      "existing_alternative": "Noto microphone is generic vocal performance; DJ decks imply a DJ role not established by every hip-hop concert.",
+      "event_ids": [
+        203241,
+        203242
+      ],
+      "evidence_by_event": {
+        "203241": [
+          "Young Thug: The New Generation Tour with NAV: Young Thug will be bringing The New Generation tour to SummerStage on Sunday, September 13, with support from NAV. The Atlanta-born rapper has been putting out hit songs like “Old English” and “Danny Glover” since bursting onto the scene and has collaborated with stars including J. Cole and Lil Wayne.",
+          "Tags: Music, Hip Hop, Concert, Summer Stage, Live Music, Rap, Format, Performance"
+        ],
+        "203242": [
+          "Rescheduled: Sold Out: Yeat: the Love/Lyfe Tour / Glokk40Spaz: Yeat’s latest album ADL (A Dangerous Lyfe / A Dangerous Love), released just this past Friday, features an all-star list of collaborators ranging from Elton John to 070 Shake to Grimes, showcasing his talent for bringing together unique sounds and pushing the boundaries of his genre. Since 2018, he has gained a huge social media following and a loyal Gen Z fanbase in the process. Glokk40Spaz will support the evening.",
+          "Tags: Music, Hip Hop, Concert, Rap, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "203241": [
+          "https://cityparksfoundation.org/events/young-thug/"
+        ],
+        "203242": [
+          "https://cityparksfoundation.org/events/yeat/"
+        ]
+      }
+    },
+    {
+      "concept": "activity-creative-project-coaching",
+      "label": "Creative project coaching",
+      "category": "activity",
+      "visual": "Project sheet beside consultation bubbles",
+      "rationale": "Specific format supported in reviewed event context; explore reusable art without inventing details.",
+      "existing_alternative": "Current broad fallback remains defensible; new concept requires recognition review.",
+      "event_ids": [
+        203666
+      ],
+      "evidence_by_event": {
+        "203666": [
+          "BYOProject: Need professional and dedicated assistance with your WIP projects? Join us for our BYOProject labs where you will recieve dedicated one-on-one consultation with our Studio Specialist!",
+          "Tags: Recording Studio, Studio, Family, Education, Teen Events, Participatory, One on One, Creative Projects, Media Lab, Format, Drop-In Service"
+        ]
+      },
+      "source_urls_by_event": {
+        "203666": [
+          "https://www.nypl.org/events/programs/2026/08/03/byoproject",
+          "https://www.nypl.org/events/programs/2026/09/07/byoproject"
+        ]
+      }
+    },
+    {
+      "concept": "activity-science-experiments",
+      "label": "Science experiments",
+      "category": "activity",
+      "visual": "Test vessel beside a simple observation chart",
+      "rationale": "Explicit reviewed activity; requires distinct small-scale recognition.",
+      "existing_alternative": "Broad source fallback retained; no narrower accepted custom fits.",
+      "event_ids": [
+        203416
+      ],
+      "evidence_by_event": {
+        "203416": [
+          "STEM Explorers: Join us for an afternoon of STEM exploration. We will discuss science, technology, engineering, and math concepts, then conduct experiments or projects relating to the week's topic.",
+          "Tags: Kids, Workshop, Science, Family, Education, STEM, Participatory, Experiments, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "203416": [
+          "https://www.nypl.org/events/programs/2026/07/02/stem-explorers",
+          "https://www.nypl.org/events/programs/2026/08/06/stem-explorers",
+          "https://www.nypl.org/events/programs/2026/09/03/stem-explorers"
+        ]
+      }
+    },
+    {
+      "concept": "craft-creative-writing",
+      "label": "Creative writing",
+      "category": "craft",
+      "visual": "Draft page with pencil and imaginative speech shape",
+      "rationale": "Specific format supported in reviewed event context; explore reusable art without inventing details.",
+      "existing_alternative": "Current broad fallback remains defensible; new concept requires recognition review.",
+      "event_ids": [
+        203391
+      ],
+      "evidence_by_event": {
+        "203391": [
+          "Creative Writing: Writing and drawing each allow us to imagine freely. Join us to express yourself how you would like! Prizes will be awarded for shared art. In addition, we a",
+          "Tags: Workshop, Literature, Education, Creative Writing, Participatory, Adults, Writing, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "203391": [
+          "https://www.nypl.org/events/programs/2026/07/02/creative-writing",
+          "https://www.nypl.org/events/programs/2026/08/06/creative-writing-0",
+          "https://www.nypl.org/events/programs/2026/09/03/creative-writing"
+        ]
+      }
+    },
+    {
+      "concept": "craft-photocard-making",
+      "label": "Photocard making",
+      "category": "craft",
+      "visual": "Portrait card with decorative border",
+      "rationale": "Specific format supported in reviewed event context; explore reusable art without inventing details.",
+      "existing_alternative": "Current broad fallback remains defensible; new concept requires recognition review.",
+      "event_ids": [
+        203494
+      ],
+      "evidence_by_event": {
+        "203494": [
+          "Teen Art Hour: Join us in person for a fun craft! Our Young Adult library staff will lead you in our craft of the week! On Thursday, July 9th at 3:00PM we'll be teaching our teen patrons how to make their own photocards in the Teen Center.",
+          "Tags: Art, Workshop, Family, Crafts, Teen Events, In Person, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "203494": [
+          "https://www.nypl.org/events/programs/2026/07/09/teen-art-hour",
+          "https://www.nypl.org/events/programs/2026/08/07/teen-art-hour",
+          "https://www.nypl.org/events/programs/2026/08/07/teen-art-hour-1",
+          "https://www.nypl.org/events/programs/2026/09/01/teen-art-hour"
+        ]
+      }
+    },
+    {
+      "concept": "craft-process-art",
+      "label": "Process art",
+      "category": "craft",
+      "visual": "Paint and clay marks without prescribed finished object",
+      "rationale": "Specific format supported in reviewed event context; explore reusable art without inventing details.",
+      "existing_alternative": "Current broad fallback remains defensible; new concept requires recognition review.",
+      "event_ids": [
+        203663
+      ],
+      "evidence_by_event": {
+        "203663": [
+          "Petite Picasso: Arts & Crafts: Process art allows children to explore a variety of materials, including Paint, ink, and clay.",
+          "Tags: Art, Kids, Workshop, Family, Crafts, Arts and Crafts, Participatory, Process Art, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "203663": [
+          "https://www.nypl.org/events/programs/2026/08/03/petite-picasso-arts-crafts",
+          "https://www.nypl.org/events/programs/2026/09/14/petite-picasso-arts-crafts"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-symphony-orchestra",
+      "label": "Symphony orchestra",
+      "category": "format",
+      "visual": "Explore simplified strings/brass around one conductor baton.",
+      "rationale": "Orchestra is the central ensemble alongside chorus and soloists.",
+      "existing_alternative": "Choir alone would overselect one section.",
+      "event_ids": [
+        203229
+      ],
+      "evidence_by_event": {
+        "203229": [
+          "Juilliard Orchestra Conducted by Gemma New: No description available.",
+          "Tags: Music, Classical Music, Orchestra, Concert, Symphony, Juilliard Performance, Format, Performance, Conducted Performance, Gemma New"
+        ]
+      },
+      "source_urls_by_event": {
+        "203229": [
+          "https://www.juilliard.edu/event/185796/juilliard-orchestra-conducted-gemma-new",
+          "https://www.juilliard.edu/event/185796/juilliard-orchestra-conducted-gemma-new?division=All&start_date_from=12/11/22&tags=All",
+          "https://www.juilliard.edu/event/185796/juilliard-orchestra-conducted-gemma-new?start_date_from=04/27/24",
+          "https://www.juilliard.edu/event/185796/juilliard-orchestra-conducted-gemma-new?tags=All&division=1&start_date_from=08/01/2026"
+        ]
+      }
+    },
+    {
+      "concept": "format-cacao-ceremony",
+      "label": "Cacao ceremony",
+      "category": "format",
+      "visual": "Cacao cup with a seed pod and calm gathering motif",
+      "rationale": "Explicit reviewed activity; requires distinct small-scale recognition.",
+      "existing_alternative": "Broad source fallback retained; no narrower accepted custom fits.",
+      "event_ids": [
+        203317
+      ],
+      "evidence_by_event": {
+        "203317": [
+          "Sound Bath and Cacao Ceremony for Discernment and Refinement: A grounding sound bath and heart-opening cacao ceremony exploring September’s themes of discernment and refinement. Rest, reset, and reconnect with clarity as Isabel guides you through a meditative journey design",
+          "Tags: Wellness, Meditation, Sound Bath, Discernment, Open Practice, Cacao Ceremony, Participatory, Mind-Body, Format, Refinement"
+        ]
+      },
+      "source_urls_by_event": {
+        "203317": [
+          "https://mylittlemagicshop.com/products/sound-bath-and-cacao-ceremony-for-discernment-and-refinement"
+        ]
+      }
+    },
+    {
+      "concept": "format-experimental-cinema",
+      "label": "Experimental cinema",
+      "category": "format",
+      "visual": "Film frame with abstract moving shapes",
+      "rationale": "Specific format supported in reviewed event context; explore reusable art without inventing details.",
+      "existing_alternative": "Current broad fallback remains defensible; new concept requires recognition review.",
+      "event_ids": [
+        203294
+      ],
+      "evidence_by_event": {
+        "203294": [
+          "Nothing Happens Film Fest: Ever seen a movie that you really liked but didn’t know how to explain what its about to your friend? Have you spent an inordinate amount of time watching a screensaver & enjoyed it? Do you appreciate the experiential & u...",
+          "Tags: Community, Free, Film, Screening, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "203294": [
+          "https://dice.fm/event/6a5fe95a5c0304000156174c",
+          "https://dice.fm/event/bb9a3k-nothing-happens-film-fest-7th-oct-pianos-showroom-new-york-tickets",
+          "https://link.dice.fm/Je14774e7d19?pid=CSLPCEQE"
+        ]
+      }
+    },
+    {
+      "concept": "game-hopscotch",
+      "label": "Hopscotch",
+      "category": "activity",
+      "visual": "Numbered ground grid with one marker",
+      "rationale": "Specific format supported in reviewed event context; explore reusable art without inventing details.",
+      "existing_alternative": "Current broad fallback remains defensible; new concept requires recognition review.",
+      "event_ids": [
+        203514
+      ],
+      "evidence_by_event": {
+        "203514": [
+          "Play Zone: Come to the Port Richmond library for an hour of playtime! Grab a board game for a one on one challenge, or challenge your friends in active games like hopscotch, ring toss and more!",
+          "Tags: Kids, Family, Games, Board Games, Game, Participatory, Format, Jenga"
+        ]
+      },
+      "source_urls_by_event": {
+        "203514": [
+          "https://www.nypl.org/events/programs/2026/07/10/play-zone",
+          "https://www.nypl.org/events/programs/2026/08/14/play-zone",
+          "https://www.nypl.org/events/programs/2026/09/04/play-zone"
+        ]
+      }
+    },
+    {
+      "concept": "game-pokemon-tcg",
+      "label": "Pokémon trading card game",
+      "category": "activity",
+      "visual": "Two overlapping battle cards with a bold round red-and-white capture-ball motif and a simple energy pip.",
+      "rationale": "Explicit Pokemon TCG deck play is distinct from generic cards and Magic: the Gathering.",
+      "existing_alternative": "Noto joker lacks game identity; game-mtg would be wrong system. Use original small-size art without tiny card text.",
+      "event_ids": [
+        203383
+      ],
+      "evidence_by_event": {
+        "203383": [
+          "Analog Club: Board Gamers & Pokémon Players: This event will take place in person at the Spuyten Duyvil Library. No tech allowed in this entertaining after school club! Join library…",
+          "Tags: Community, Kids, Family, Education, Games, After School, Board Games, Pokemon, Game, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "203383": [
+          "https://www.nypl.org/events/programs/2026/07/02/analog-club-board-gamers-pokemon-players",
+          "https://www.nypl.org/events/programs/2026/08/06/analog-club-board-gamers-pokemon-players",
+          "https://www.nypl.org/events/programs/2026/09/03/analog-club-board-gamers-pokemon-players"
+        ]
+      }
+    },
+    {
+      "concept": "game-ring-toss",
+      "label": "Ring toss",
+      "category": "activity",
+      "visual": "Rings around a short peg",
+      "rationale": "Specific format supported in reviewed event context; explore reusable art without inventing details.",
+      "existing_alternative": "Current broad fallback remains defensible; new concept requires recognition review.",
+      "event_ids": [
+        203514
+      ],
+      "evidence_by_event": {
+        "203514": [
+          "Play Zone: Come to the Port Richmond library for an hour of playtime! Grab a board game for a one on one challenge, or challenge your friends in active games like hopscotch, ring toss and more!",
+          "Tags: Kids, Family, Games, Board Games, Game, Participatory, Format, Jenga"
+        ]
+      },
+      "source_urls_by_event": {
+        "203514": [
+          "https://www.nypl.org/events/programs/2026/07/10/play-zone",
+          "https://www.nypl.org/events/programs/2026/08/14/play-zone",
+          "https://www.nypl.org/events/programs/2026/09/04/play-zone"
+        ]
+      }
+    },
+    {
+      "concept": "genre-breakcore",
+      "label": "Breakcore",
+      "category": "genre",
+      "visual": "A compact step-sequencer pattern with sharply interrupted, uneven beat blocks.",
+      "rationale": "The headline program explicitly names breakcore and 200bpm breakbeats; a rhythm-pattern motif is worth testing but is not a proven genre symbol.",
+      "existing_alternative": "Electronic controls convey production but do not separate breakcore from other electronic music.",
+      "event_ids": [
+        203250
+      ],
+      "evidence_by_event": {
+        "203250": [
+          "Goreshit x Gum.mp3 Live: UK-based breakcore producer goreshit returns to NYC for more 200bpm breakbeat madness. Supported by Gum.mp 3, Océane, yesterdayneverhappened and DJ Stepmania.",
+          "Tags: Music, Concert, Nightlife, Electronic Music, Breakcore, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "203250": [
+          "https://www.markethotel.org/calendar#/events/191758"
+        ]
+      }
+    },
+    {
+      "concept": "genre-jazz",
+      "label": "Jazz",
+      "category": "genre",
+      "visual": "A pair of syncopated musical notes with one loose improvisatory flourish.",
+      "rationale": "The genre is explicit, but an instrument-neutral motif remains exploratory and requires recognition tests; avoid treating saxophone as universal jazz.",
+      "existing_alternative": "Noto notes are generic; a saxophone misstates instrumentation when the program does not feature one.",
+      "event_ids": [
+        203272
+      ],
+      "evidence_by_event": {
+        "203272": [
+          "Jazz Jam: Catch Kelly and the crew at Jazz Jam every 3rd Monday of the month at Don’t Tell Mama!",
+          "Tags: Cabaret, Music, Theater, Jazz, Nightlife, Open Practice, Live Music, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "203272": [
+          "https://www.instagram.com/donttellmamanewyorkcity/"
+        ]
+      }
+    }
+  ],
+  "limitations": "Counts describe this cohort, not population reach. These are grounded prospective studies, not live assignments. Existing artwork may already suffice; exact equipment and genre recognition require further review."
+}

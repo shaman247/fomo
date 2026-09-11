@@ -1,0 +1,641 @@
+{
+  "date": "2026-09-10",
+  "scope": "Cycle007:100 sequential events193225–193612, no targeted supplements.",
+  "suggestions": 29,
+  "concept_count": 22,
+  "concepts": [
+    {
+      "concept": "activity-tech-help",
+      "label": "Personalized tech help",
+      "category": "activity",
+      "visual": "Laptop with a small assistance speech bubble.",
+      "rationale": "Individual troubleshooting differs from a general class.",
+      "existing_alternative": "Computer is already valid; consider whether help cue adds clarity.",
+      "event_ids": [
+        193310,
+        193477,
+        193555,
+        193569
+      ],
+      "evidence_by_event": {
+        "193310": [
+          "One-on-One Tech Help: Walk in with your own device or sign onto one of our computers for personalized assistance from the computer specialist.",
+          "Tags: Science, Education, Technology, Participatory, Tech Help, Adults, Digital Skills, Format, Drop-In Service"
+        ],
+        "193477": [
+          "Bring Your Own Device: Tech Help: If you have any computer questions, please feel free to bring your device to a computer specialist in the Cyber Center!",
+          "Tags: Science, Education, Technology, Participatory, Tech Help, Computer Help, Adults, Format, Drop-In Service"
+        ],
+        "193555": [
+          "Provide Tech Support for Food Access Programming: Support pantry guests with technical help on their devices, including creating or troubleshooting Plentiful accounts and helping with self-attest forms. This role will focus on one-on-one assistance.",
+          "Tags: Community, Science, Education, Technology, Volunteer, Participatory, Tech Support, Food Access, Format"
+        ],
+        "193569": [
+          "Help with Computer Basics at the Library: Connect community members with basic computer skills. You will help them learn to use a mouse, navigate Microsoft Word, connect their devices, set up email, and search the web.",
+          "Tags: Library, Community, Science, Education, Technology, Volunteer, Digital Literacy, Participatory, Computer Skills, Cultural Venue, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "193310": [
+          "https://www.queenslibrary.org/event/019731-0626"
+        ],
+        "193477": [
+          "https://www.queenslibrary.org/event/003005-0826",
+          "https://www.queenslibrary.org/event/010360-0126"
+        ],
+        "193555": [
+          "https://www.newyorkcares.org/project/a1HVr000002Yq2cMAC",
+          "https://www.newyorkcares.org/project/a1HVr000002Yq2VMAS",
+          "https://www.newyorkcares.org/project/a1HVr000002Yq2WMAS",
+          "https://www.newyorkcares.org/project/a1HVr000002Yq2XMAS",
+          "https://www.newyorkcares.org/project/a1HVr000002Yq2YMAS",
+          "https://www.newyorkcares.org/project/a1HVr000002Yq3AMAS",
+          "https://www.newyorkcares.org/project/a1HVr000002Yq3BMAS",
+          "https://www.newyorkcares.org/project/a1HVr000002Yq3CMAS"
+        ],
+        "193569": [
+          "https://www.newyorkcares.org/project/a1HVr000002YqqFMAS",
+          "https://www.newyorkcares.org/project/a1HVr000002YqqGMAS",
+          "https://www.newyorkcares.org/project/a1HVr000002YqqHMAS",
+          "https://www.newyorkcares.org/project/a1HVr000002YqqIMAS",
+          "https://www.newyorkcares.org/project/a1HVr000002YqqJMAS",
+          "https://www.newyorkcares.org/project/a1HVr000002YqqKMAS",
+          "https://www.newyorkcares.org/project/a1HVr000002YqqLMAS",
+          "https://www.newyorkcares.org/project/a1HVr000002YqqMMAS"
+        ]
+      }
+    },
+    {
+      "concept": "activity-donation-sorting",
+      "label": "Donation sorting",
+      "category": "activity",
+      "visual": "Open box with a folded shirt and paired sorting piles.",
+      "rationale": "Household goods distribution differs from food relief.",
+      "existing_alternative": "Box is already valid broadly; clothing cue may narrow too much.",
+      "event_ids": [
+        193517,
+        193580,
+        193586
+      ],
+      "evidence_by_event": {
+        "193517": [
+          "Sort Incoming Donations: Sort incoming donations that will go to women and families facing housing insecurity. Organize donations such as clothing, toiletries, toys, and household essentials.",
+          "Tags: Community, Free, Family, Volunteer, Donations, Participatory, Family Support, Housing Support, Format"
+        ],
+        "193580": [
+          "Provide Holistic Community Care: Show your care for the community and address multiple immediate needs. Set up a community closet, pack meals, and distribute hygiene items.",
+          "Tags: Community, Volunteer, Participatory, Hygiene, Meal Packing, Format"
+        ],
+        "193586": [
+          "Sort, Screen, and Bundle Children's Items: Sort, screen, and bundle children's items that will be donated directly to families in need.",
+          "Tags: Community, Kids, Family, Volunteer, Donations, Donation, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "193517": [
+          "https://www.newyorkcares.org/project/a1HVr000002YqMQMA0"
+        ],
+        "193580": [
+          "https://www.newyorkcares.org/project/a1HVr000002XKNuMAO",
+          "https://www.newyorkcares.org/project/a1HVr000002XKNvMAO",
+          "https://www.newyorkcares.org/project/a1HVr000002XKNwMAO",
+          "https://www.newyorkcares.org/project/a1HVr000002XKNxMAO",
+          "https://www.newyorkcares.org/project/a1HVr000002XKNyMAO",
+          "https://www.newyorkcares.org/project/a1HVr000002XKNzMAO",
+          "https://www.newyorkcares.org/project/a1HVr000002XKO0MAO",
+          "https://www.newyorkcares.org/project/a1HVr000002XKO1MAO"
+        ],
+        "193586": [
+          "https://www.newyorkcares.org/project/a1HVr000003CUdMMAW",
+          "https://www.newyorkcares.org/project/a1HVr000003CUdQMAW",
+          "https://www.newyorkcares.org/project/a1HVr000003CUdRMAW",
+          "https://www.newyorkcares.org/project/a1HVr000003CUdSMAW"
+        ]
+      }
+    },
+    {
+      "concept": "activity-meal-delivery",
+      "label": "Prepared-meal delivery",
+      "category": "activity",
+      "visual": "Covered meal container with a small delivery route mark.",
+      "rationale": "Delivery of prepared meals differs from groceries or volunteer cooking.",
+      "existing_alternative": "Van or lunchbox remains broad; vehicle mode should not be implied.",
+      "event_ids": [
+        193576,
+        193579
+      ],
+      "evidence_by_event": {
+        "193576": [
+          "Deliver Lunch to Housebound Seniors: Transport meals to housebound seniors and deliver them on foot to the surrounding community. You may be climbing stairs to deliver the meals.",
+          "Tags: Community, Free, Volunteer, Seniors, Participatory, Meal Delivery, Format"
+        ],
+        "193579": [
+          "Team Up to Distribute Meals: Distribute grab-and-go meals to local residents. You'll be on your feet for 2 hours, doing light to medium lifting.",
+          "Tags: Community, Free, Volunteer, Participatory, Grab and Go, Meal Distribution, Format, Local Residents"
+        ]
+      },
+      "source_urls_by_event": {
+        "193576": [
+          "https://www.newyorkcares.org/project/a1HVr000002XJysMAG",
+          "https://www.newyorkcares.org/project/a1HVr000002XJytMAG",
+          "https://www.newyorkcares.org/project/a1HVr000002XJyuMAG",
+          "https://www.newyorkcares.org/project/a1HVr000002XJyvMAG",
+          "https://www.newyorkcares.org/project/a1HVr000002XJywMAG",
+          "https://www.newyorkcares.org/project/a1HVr000002XJyxMAG",
+          "https://www.newyorkcares.org/project/a1HVr000002XJyyMAG",
+          "https://www.newyorkcares.org/project/a1HVr000002Ypy2MAC"
+        ],
+        "193579": [
+          "https://www.newyorkcares.org/project/a1HVr000002YqPBMA0",
+          "https://www.newyorkcares.org/project/a1HVr000002YqPDMA0",
+          "https://www.newyorkcares.org/project/a1HVr000002YqPEMA0",
+          "https://www.newyorkcares.org/project/a1HVr000002YqPFMA0",
+          "https://www.newyorkcares.org/project/a1HVr000002YqPGMA0",
+          "https://www.newyorkcares.org/project/a1HVr000002YqPHMA0",
+          "https://www.newyorkcares.org/project/a1HVr000002YqPIMA0",
+          "https://www.newyorkcares.org/project/a1HVr000002YqPKMA0"
+        ]
+      }
+    },
+    {
+      "concept": "dance-zumba",
+      "label": "Zumba",
+      "category": "activity",
+      "visual": "Athletic dancer in a lateral step with raised bent arms and two beat marks.",
+      "rationale": "Explicit Zumba merits exploring an exercise-dance pose; distinguishability from general dance needs testing.",
+      "existing_alternative": "Existing dancer is formal dress; notes describe music without exercise.",
+      "event_ids": [
+        193475,
+        193476
+      ],
+      "evidence_by_event": {
+        "193475": [
+          "Shape Up NYC: Zumba: Join Shape Up instructor Sandra for a fusion of Latin, international, and pop music dancing, which makes for a dynamic and effective workout. These Zumba routines feature aerobic interval training that tones and sculpts the body with easy-to-follow dance steps.",
+          "Tags: Music, Dance, Free, Wellness, Fitness, Zumba, Participatory, Format"
+        ],
+        "193476": [
+          "Shape Up NYC: Zumba: Join Shape Up instructor Ideanna for a fusion of Latin, international, and pop music dancing, which creates a dynamic, exciting, and effective fitness system! These Zumba routines feature aerobic, fitness interval training that tone and sculpt the body with easy-to-follow dance steps.",
+          "Tags: Music, Dance, Wellness, Fitness, Zumba, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "193475": [
+          "https://www.nyc.gov/main/events/?permalinkName=zumba&id=1115216&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=zumba&id=1115416&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=zumba&id=1186076&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=zumba&id=1186276&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=zumba&id=1186476&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=zumba&id=1186636&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=zumba&id=1245516&sequence=1",
+          "https://www.nycgovparks.org/events/2026/07/30/zumba2",
+          "https://www.nycgovparks.org/events/2026/08/13/zumba1",
+          "https://www.nycgovparks.org/events/2026/08/20/zumba1",
+          "https://www.nycgovparks.org/events/2026/09/03/zumba",
+          "https://www.nycgovparks.org/events/2026/09/10/zumba",
+          "https://www.queenslibrary.org/event/013967-0326"
+        ],
+        "193476": [
+          "https://www.nyc.gov/main/events/?permalinkName=zumba&id=1115196&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=zumba&id=1115376&sequence=1",
+          "https://www.nycgovparks.org/events/2026/07/30/zumba",
+          "https://www.queenslibrary.org/event/014305-0326",
+          "https://www.queenslibrary.org/event/020017-0626"
+        ]
+      }
+    },
+    {
+      "concept": "activity-adult-read-aloud",
+      "label": "Adult read-aloud",
+      "category": "activity",
+      "visual": "Open book beside a clear speaking mark without child imagery.",
+      "rationale": "Volunteer reading to adults differs from early-literacy storytime.",
+      "existing_alternative": "Book already works broadly; avoid duplicating poetry reading.",
+      "event_ids": [
+        193550
+      ],
+      "evidence_by_event": {
+        "193550": [
+          "Share Your Love of Reading: Do you love literature? Share what you love by taking a turn reading short stories to the residents of Cobble Hill Health Center.",
+          "Tags: Community, Literature, Volunteer, Seniors, Reading, Participatory, Older Adults, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "193550": [
+          "https://www.newyorkcares.org/project/a1HVr0000030OOnMAM",
+          "https://www.newyorkcares.org/project/a1HVr0000030OQPMA2",
+          "https://www.newyorkcares.org/project/a1HVr0000030OTdMAM"
+        ]
+      }
+    },
+    {
+      "concept": "activity-bingocize",
+      "label": "Bingo and exercise",
+      "category": "activity",
+      "visual": "Bingo card beside a small grounded stretching figure.",
+      "rationale": "Bingo is combined with guided mobility.",
+      "existing_alternative": "Bingo is already useful; requires3D figure review.",
+      "event_ids": [
+        193373
+      ],
+      "evidence_by_event": {
+        "193373": [
+          "Bingocize: Join us for Bingocize which combines the game of Bingo with exercise. Participants will work on their mobility and social interaction.",
+          "Tags: Community, Free, Wellness, Fitness, Games, Nightlife, Bingo, Seniors, Mobility, Exercise, Game, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "193373": [
+          "https://www.queenslibrary.org/event/019088-0626"
+        ]
+      }
+    },
+    {
+      "concept": "activity-creative-writing",
+      "label": "Creative writing",
+      "category": "activity",
+      "visual": "Pencil beside a page with small branching idea marks.",
+      "rationale": "Prompt-based mixed writing differs from genre-specific instruction.",
+      "existing_alternative": "Writing hand already suits broad scope; avoid duplicating screenplay/poetry icons.",
+      "event_ids": [
+        193341
+      ],
+      "evidence_by_event": {
+        "193341": [
+          "Creative Aging: Virtual Creati...: If you enjoy writing creatively, socializing and sharing stories, you will want to join this robust club, moderated by Older Adult Services and co-led by select participants. There will be writing prompts, poetry, personal stories, and time to write and share.",
+          "Tags: Community, Literature, Virtual, Creative Writing, Discussion Group, Seniors, Gathering, Storytelling / Literature, Format, Story Sharing"
+        ]
+      },
+      "source_urls_by_event": {
+        "193341": [
+          "https://www.queenslibrary.org/event/019717-0626"
+        ]
+      }
+    },
+    {
+      "concept": "activity-flower-rescue",
+      "label": "Flower recovery",
+      "category": "activity",
+      "visual": "Cut-flower bouquet entering a simple reuse loop.",
+      "rationale": "Repurposing unsold flowers differs from growing or ikebana.",
+      "existing_alternative": "Bouquet may already suffice; ensure loop does not dominate.",
+      "event_ids": [
+        193558
+      ],
+      "evidence_by_event": {
+        "193558": [
+          "Upcycle Flowers for Vulnerable Populations: Make connections bloom by repurposing unsold and once-used flowers for delivery to vulnerable populations. Load in, strip, and clean donated flowers; prepare bouquets; and help with initial set-up.",
+          "Tags: Community, Art, Sustainability, DIY, Volunteer, Crafts, Upcycling, Flowers, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "193558": [
+          "https://www.newyorkcares.org/project/a1HVr000002YqcVMAS",
+          "https://www.newyorkcares.org/project/a1HVr000002YqcXMAS",
+          "https://www.newyorkcares.org/project/a1HVr000002YqcZMAS",
+          "https://www.newyorkcares.org/project/a1HVr000002YqdHMAS",
+          "https://www.newyorkcares.org/project/a1HVr000002YqdiMAC",
+          "https://www.newyorkcares.org/project/a1HVr000002YqdjMAC",
+          "https://www.newyorkcares.org/project/a1HVr000002YqdJMAS",
+          "https://www.newyorkcares.org/project/a1HVr000002YqdkMAC",
+          "https://www.newyorkcares.org/project/a1HVr000002YqdPMAS"
+        ]
+      }
+    },
+    {
+      "concept": "activity-interpretation",
+      "label": "Language interpretation",
+      "category": "activity",
+      "visual": "Interpreter headset between speech panels with different scripts.",
+      "rationale": "Interpreting spoken language differs from reciprocal learning.",
+      "existing_alternative": "Language-exchange icon would misstate the service; verify headset structure and avoid fixed-script assumptions.",
+      "event_ids": [
+        193552
+      ],
+      "evidence_by_event": {
+        "193552": [
+          "Interpret for New Arrivals to NYC: Use your multilingual skills in Spanish or French to interpret for asylum seekers and migrant workers accessing free onsite resources. You may be asked to provide interpretation support for fellow volunteers.",
+          "Tags: Community, Free, Education, Volunteer, Participatory, New Arrivals, Language Access, Format, Interpretation"
+        ]
+      },
+      "source_urls_by_event": {
+        "193552": [
+          "https://www.newyorkcares.org/project/a1HVr000002Yns6MAC",
+          "https://www.newyorkcares.org/project/a1HVr000002Yns7MAC",
+          "https://www.newyorkcares.org/project/a1HVr000002Yns8MAC",
+          "https://www.newyorkcares.org/project/a1HVr000002Yns9MAC",
+          "https://www.newyorkcares.org/project/a1HVr000002YnsAMAS",
+          "https://www.newyorkcares.org/project/a1HVr000002YnsBMAS",
+          "https://www.newyorkcares.org/project/a1HVr000002YnsCMAS",
+          "https://www.newyorkcares.org/project/a1HVr000002YnsDMAS"
+        ]
+      }
+    },
+    {
+      "concept": "activity-reading-buddies",
+      "label": "Peer reading practice",
+      "category": "activity",
+      "visual": "Two small open books linked by a shared reading line.",
+      "rationale": "Paired learners read to each other rather than attend a performance.",
+      "existing_alternative": "Open book is broad; avoid book-club discussion cue.",
+      "event_ids": [
+        193419
+      ],
+      "evidence_by_event": {
+        "193419": [
+          "Summer at the Library: Reading Buddies: Participants can read to each other for a reduction in their library card fees. All participants should be between 4 years and 21 years old and registration is required at the children's reference desk.",
+          "Tags: Community, Kids, Literature, Family, Education, Reading, Teen Events, Open Practice, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "193419": [
+          "https://www.queenslibrary.org/event/000320-0726",
+          "https://www.queenslibrary.org/event/016997-0526"
+        ]
+      }
+    },
+    {
+      "concept": "activity-wheelchair-companionship",
+      "label": "Wheelchair-assisted stroll",
+      "category": "activity",
+      "visual": "Companion pushing a wheelchair with explicit grips and grounded wheels.",
+      "rationale": "Social outdoor accompaniment differs from seated exercise.",
+      "existing_alternative": "Sun is broad; wheelchair/pusher geometry requires3D review.",
+      "event_ids": [
+        193512
+      ],
+      "evidence_by_event": {
+        "193512": [
+          "Get Outside with Seniors: Enjoy the sun and air in the company of the residents of Cobble Hill Nursing Home. Maneuver residents in their wheelchairs while taking a stroll to neighborhood attractions.",
+          "Tags: Community, Accessibility, Wellness, Outdoor, Volunteer, Seniors, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "193512": [
+          "https://www.newyorkcares.org/project/a1HVr000002jm49MAA",
+          "https://www.newyorkcares.org/project/a1HVr0000039I8rMAE",
+          "https://www.newyorkcares.org/project/a1HVr0000039I8sMAE",
+          "https://www.newyorkcares.org/project/a1HVr0000039IFJMA2"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-violin-cello-duo",
+      "label": "Violin and cello feature",
+      "category": "instrument",
+      "visual": "Violin and cello silhouettes with clearly different sizes.",
+      "rationale": "Joint soloists distinguish a double concerto from one instrumental recital.",
+      "existing_alternative": "Orchestral fallback remains appropriate; do not imply whole ensemble is only two players.",
+      "event_ids": [
+        193606
+      ],
+      "evidence_by_event": {
+        "193606": [
+          "Greenwich Village Orchestra: Friends: The GVO's 40th season opens with a program featuring Pärt's Cantus in Memoriam Benjamin Britten, Brahms' Double Concerto for Violin & Cello, and Elgar's Enigma Variations. This concert features guest soloists Jennifer Frautschi on violin and Edward Arron on cello.",
+          "Tags: Community, Music, Classical Music, Orchestra, Concert, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "193606": [
+          "https://greenwich-village-orchestra.square.site/product/friends/WEPWAYRT5QA7W3DTG4COTEGN",
+          "https://www.mmc.band/calendar-details?recordId=recvq3uDz24LxLxW3"
+        ]
+      }
+    },
+    {
+      "concept": "format-comedy-debate",
+      "label": "Comedy debate",
+      "category": "format",
+      "visual": "Two opposing speech lecterns with theatrical comedy mark.",
+      "rationale": "Mock debate differs from stand-up and civic testimony.",
+      "existing_alternative": "Comedy fallback is broad; avoid official-government imagery.",
+      "event_ids": [
+        193231
+      ],
+      "evidence_by_event": {
+        "193231": [
+          "Abolish Everything: ABOLISH EVERYTHING is a fun, dumb comedy debate show where comedians testify against societal ills.",
+          "Tags: Community, Comedy, Satire, Comedy Show, Debate, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "193231": [
+          "https://caveat.nyc/events/abolish-everything-2026-08-27",
+          "https://www.caveat.nyc/events/abolish-everything-2026-08-27",
+          "https://www.caveat.nyc/events/abolish-everything-2026-09-25",
+          "https://www.caveat.nyc/events/abolish-everything-2026-09-25-7pm"
+        ]
+      }
+    },
+    {
+      "concept": "format-comic-art-interpretation",
+      "label": "Comic art interpretation",
+      "category": "format",
+      "visual": "Framed artwork paired with a laughing speech mark.",
+      "rationale": "Comedy commentary on art differs from making art.",
+      "existing_alternative": "Art emoji is valid broadly; distinctive comic cue needs study.",
+      "event_ids": [
+        193227
+      ],
+      "evidence_by_event": {
+        "193227": [
+          "Modern Whitney: Comedians interpret art, then an expert tells us how close they got",
+          "Tags: Music, Art, Comedy, Education, Live Show, Comedy Show, Live Music, Format, Performance, Interpretation, Art Interpretation"
+        ]
+      },
+      "source_urls_by_event": {
+        "193227": [
+          "https://caveat.nyc/events/modern-whitney-2026-08-08",
+          "https://www.caveat.nyc/events/modern-whitney-2026-08-08",
+          "https://www.caveat.nyc/events/modern-whitney-2026-09-12"
+        ]
+      }
+    },
+    {
+      "concept": "format-concert-opera",
+      "label": "Concert opera",
+      "category": "format",
+      "visual": "Operatic voice mark above an open score without a cinema screen.",
+      "rationale": "Live unstaged opera differs from opera cinema and staged theater.",
+      "existing_alternative": "Music remains broad; mask/voice motif needs recognition study.",
+      "event_ids": [
+        193604
+      ],
+      "evidence_by_event": {
+        "193604": [
+          "The Pearl Fishers: Amore Labs presents a concert presentation of Bizet's The Pearl Fishers, sung in French with an English synopsis and piano accompaniment.",
+          "Tags: Music, Opera, Classical Music, Concert, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "193604": [
+          "https://www.amoreopera.org/productions/the-pearl-fishers"
+        ]
+      }
+    },
+    {
+      "concept": "format-coworking",
+      "category": "format",
+      "label": "Coworking",
+      "visual": "Two laptops facing opposite sides of shared table.",
+      "rationale": "Shared focused working differs from a networking mixer.",
+      "existing_alternative": "Coffee conveys refreshments rather than co-working.",
+      "event_ids": [
+        193424
+      ],
+      "evidence_by_event": {
+        "193424": [
+          "Creative Skills & Entrepreneurship Open Lab: Drop into our Creative Skills & Entrepreneurship Open Lab to work on your creative or business projects in a flexible space.",
+          "Tags: Community, Workshop, Science, Education, Technology, Professional Development, Entrepreneurship, Creative Skills, Participatory, Open Lab, Format, Drop-In Service"
+        ]
+      },
+      "source_urls_by_event": {
+        "193424": [
+          "https://www.queenslibrary.org/event/000588-0726",
+          "https://www.queenslibrary.org/event/001403-0726",
+          "https://www.queenslibrary.org/event/003239-0826"
+        ]
+      }
+    },
+    {
+      "concept": "format-orchestra",
+      "label": "Orchestra",
+      "category": "format",
+      "visual": "A conductor baton over an open music stand with one broad shared musical arc.",
+      "rationale": "Conductor-and-score imagery represents the full orchestra without privileging one string or brass section; recognition must distinguish conducting from music lessons.",
+      "existing_alternative": "Noto violin falsely narrows a mixed orchestra; generic score lacks ensemble direction.",
+      "event_ids": [
+        193606
+      ],
+      "evidence_by_event": {
+        "193606": [
+          "Greenwich Village Orchestra: Friends: The GVO's 40th season opens with a program featuring Pärt's Cantus in Memoriam Benjamin Britten, Brahms' Double Concerto for Violin & Cello, and Elgar's Enigma Variations. This concert features guest soloists Jennifer Frautschi on violin and Edward Arron on cello.",
+          "Tags: Community, Music, Classical Music, Orchestra, Concert, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "193606": [
+          "https://greenwich-village-orchestra.square.site/product/friends/WEPWAYRT5QA7W3DTG4COTEGN",
+          "https://www.mmc.band/calendar-details?recordId=recvq3uDz24LxLxW3"
+        ]
+      }
+    },
+    {
+      "concept": "format-tribute-concert",
+      "label": "Tribute concert",
+      "category": "format",
+      "visual": "Two overlapping record silhouettes with one echoing musical note.",
+      "rationale": "Tribute repertoire is a format facet; motif is unproven and must not imitate an artist logo.",
+      "existing_alternative": "Existing broad Unicode remains suitable; specific motif must demonstrate added recognition before new artwork.",
+      "event_ids": [
+        193605
+      ],
+      "evidence_by_event": {
+        "193605": [
+          "Little Spoon Presents: Music of Bob Marley + More for Kids: The Rock and Roll Playhouse, a family concert series, allows kids to move, play and sing while listening to works from the classic-rock canon. This concert for kids and families shares the music of Bob Marley with a new generation of music lovers.",
+          "Tags: Music, Kids, Free, Family, Concert, Bob Marley, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "193605": [
+          "https://www.brooklynbowl.com/brooklyn/events/detail/little-spoon-presents-music-of-bob-marley-more-for-kids"
+        ]
+      }
+    },
+    {
+      "concept": "genre-reggae",
+      "label": "Reggae",
+      "category": "genre",
+      "visual": "Explore two offset chord blocks over one sustained bass curve.",
+      "rationale": "The style is explicitly named in the dance-fitness program. This is a supported musical facet rather than evidence of live performance or exclusive genre focus.",
+      "existing_alternative": "Existing dancer remains reasonable; abstract genre motifs require recognition testing and should not rely on cultural stereotypes.",
+      "event_ids": [
+        193605
+      ],
+      "evidence_by_event": {
+        "193605": [
+          "Little Spoon Presents: Music of Bob Marley + More for Kids: The Rock and Roll Playhouse, a family concert series, allows kids to move, play and sing while listening to works from the classic-rock canon. This concert for kids and families shares the music of Bob Marley with a new generation of music lovers.",
+          "Tags: Music, Kids, Free, Family, Concert, Bob Marley, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "193605": [
+          "https://www.brooklynbowl.com/brooklyn/events/detail/little-spoon-presents-music-of-bob-marley-more-for-kids"
+        ]
+      }
+    },
+    {
+      "concept": "genre-rnb",
+      "label": "R&B",
+      "category": "genre",
+      "visual": "Explore a microphone paired with a single smooth looping sound-wave ribbon.",
+      "rationale": "R&B is explicit; exploratory smooth vocal motif is not a proven genre symbol and must be tested.",
+      "existing_alternative": "Noto microphone shows vocals but not genre; avoid assuming saxophone or other instruments.",
+      "event_ids": [
+        193612
+      ],
+      "evidence_by_event": {
+        "193612": [
+          "Bryson Tiller: Featuring The Neo Trapsoul Tour.",
+          "Tags: Music, Concert, R&B, Format, Performance, Bryson Tiller"
+        ]
+      },
+      "source_urls_by_event": {
+        "193612": [
+          "https://www.prucenter.com/events/bryson-tiller"
+        ]
+      }
+    },
+    {
+      "concept": "genre-trapsoul",
+      "label": "Trapsoul",
+      "category": "genre",
+      "visual": "Explore restrained vocal-wave and syncopated beat marks.",
+      "rationale": "The tour explicitly names trapsoul and R&B; motif remains exploratory.",
+      "existing_alternative": "Headphones remain broad; avoid assuming a DJ set or stereotyped instrument.",
+      "event_ids": [
+        193612
+      ],
+      "evidence_by_event": {
+        "193612": [
+          "Bryson Tiller: Featuring The Neo Trapsoul Tour.",
+          "Tags: Music, Concert, R&B, Format, Performance, Bryson Tiller"
+        ]
+      },
+      "source_urls_by_event": {
+        "193612": [
+          "https://www.prucenter.com/events/bryson-tiller"
+        ]
+      }
+    },
+    {
+      "concept": "sport-half-marathon",
+      "label": "Half marathon",
+      "category": "sport",
+      "visual": "Running shoe with outlined21.1 distance marker.",
+      "rationale": "Half-marathon distance is defining.",
+      "existing_alternative": "Shoe is already adequate; distance lettering may be weak at16px.",
+      "event_ids": [
+        193608
+      ],
+      "evidence_by_event": {
+        "193608": [
+          "NYCRUNS Falling Leaves Half Marathon: Fall in love with Brooklyn's backyard during prime running season at the NYCRUNS Falling Leaves Half Marathon. Take in the gorgeous fall foliage along our USATF-certified Prospect Park course.",
+          "Tags: Sports, Fitness, Outdoor, Running, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "193608": [
+          "https://nycruns.com/race/nycruns-falling-leaves-half-marathon"
+        ]
+      }
+    }
+  ],
+  "future_studies": [
+    "activity-interpretation",
+    "activity-flower-rescue",
+    "activity-donation-sorting",
+    "activity-reading-buddies",
+    "format-concert-opera"
+  ],
+  "limitations": "Counts represent this cohort, not population reach. Existing Unicode may suffice for broad concepts. Human figures require authoritative3D anatomy; genres and mixed activities must avoid unsupported specificity."
+}

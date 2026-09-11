@@ -1,0 +1,941 @@
+{
+  "date": "2026-09-11",
+  "scope": "Cycle 064: 100 sequential events 220092–220551, no targeted supplements.",
+  "suggestions": 44,
+  "concept_count": 40,
+  "concepts": [
+    {
+      "concept": "format-electronic-music-festival",
+      "label": "Electronic music festival",
+      "category": "format",
+      "visual": "Small stage with abstract electronic waveform and festival flags.",
+      "rationale": "Multi-act festival is broader than a single DJ set or guaranteed stage configuration.",
+      "existing_alternative": "Unicode or suitable accepted custom artwork remains available. Prospective study requires source and recognition review before live assignment.",
+      "event_ids": [
+        220453,
+        220462,
+        220464
+      ],
+      "evidence_by_event": {
+        "220453": [
+          "Here Nor There 2026: Like a blaze in the HudVal sky we are back for our little electronic dance fest down by the river: bigger, longer, louder, deeper. 12 acts making ambient, hip-hop, disco, dub, house, techno, jungle.",
+          "Tags: Community, Music, Dance, Techno, Festival, Outdoor, Electronic Music, Ambient, House, Format, Social"
+        ],
+        "220462": [
+          "City of Gods Festival: Night 1: A city of endless potential. A city of love and dust. A city of revelry and renaissance. For the 8th year, City of Gods takes over Industry City for 2 breathtaking nights.",
+          "Tags: Community, Music, Dance, Festival, Nightlife, Electronic Music, Format, Social"
+        ],
+        "220464": [
+          "City of Gods Festival: Night 2: A city of endless potential. A city of love and dust. A city of revelry and renaissance. For the 8th year, City of Gods takes over Industry City for 2 breathtaking nights.",
+          "Tags: Community, Music, Festival, Nightlife, Electronic Music, Halloween, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "220453": [
+          "https://ra.co/events/2511999"
+        ],
+        "220462": [
+          "https://ra.co/events/2513449",
+          "https://shotgun.live/en/festivals/cityofgods2026"
+        ],
+        "220464": [
+          "https://ra.co/events/2513450"
+        ]
+      }
+    },
+    {
+      "concept": "activity-clown-training",
+      "label": "Clown training",
+      "category": "activity",
+      "visual": "Red stage nose and practice cue card.",
+      "rationale": "Participatory clown training is explicit; no animal circus or medical treatment.",
+      "existing_alternative": "Unicode or suitable accepted custom artwork remains available. Prospective study requires source and recognition review before live assignment.",
+      "event_ids": [
+        220367,
+        220368
+      ],
+      "evidence_by_event": {
+        "220367": [
+          "Comic Gold NYC Clown Intensive 6-Class Weekly Series!: A six-class clown series meeting Tuesday evenings from September 8 through October 13. The series explores openness, honesty, vulnerability, instincts, and finding what is uniquely funny, and all levels are welcome.",
+          "Tags: Theater, Workshop, Comedy, Education, Class, Clowning, Participatory, Format"
+        ],
+        "220368": [
+          "Comic Gold NYC Clown Workshop: A three-hour clown workshop exploring openness, honesty, and vulnerability to uncover what is uniquely funny about each participant. All levels are welcome, including absolute beginners.",
+          "Tags: Theater, Workshop, Comedy, Education, Clowning, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "220367": [
+          "https://www.viewcy.com/event/comic_gold_nyc_clown_4"
+        ],
+        "220368": [
+          "https://www.viewcy.com/event/comic_gold_nyc_clown_5"
+        ]
+      }
+    },
+    {
+      "concept": "genre-techno",
+      "label": "Techno",
+      "category": "genre",
+      "visual": "Explore four equal beat blocks beneath one sharply simplified electronic waveform.",
+      "rationale": "Explicit techno programming supports rhythm/production genre exploration, with house overlap a known recognition risk.",
+      "existing_alternative": "DJ decks describes equipment, not genre; generic notes omit techno.",
+      "event_ids": [
+        220373,
+        220448
+      ],
+      "evidence_by_event": {
+        "220373": [
+          "CRN w / Sharlese + Nick Schiarizzi + Christopher Michael Hefner + SVB: Summer is great and all, but… bring on the darkness please! Fast forward to Saturday September 19, when we have our next (equniox-adjacent) party at @theavalonlounge — FYI it's our last CRN of the year! We are making it count with the one and only SHARLESE!",
+          "Tags: Music, Dance, Techno, Nightlife, Clubbing, Electronic Music, Club Night, Format, Social"
+        ],
+        "220448": [
+          "Merge 5 Year Anniversary: On Friday, 9/18 from 11pm-1pm - we celebrate 5 YEARS OF MERGE! It's been an absolute pleasure to share in this incredible journey with each and everyone of you that continuously stands by the project with so much passion and genuine love fo",
+          "Tags: Music, Techno, Nightlife, Electronic Music, Club Night, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "220373": [
+          "https://ra.co/events/2530062",
+          "https://www.viewcy.com/event/crn_w__sharlese__ni"
+        ],
+        "220448": [
+          "https://ra.co/events/2493731"
+        ]
+      }
+    },
+    {
+      "concept": "activity-bulb-care",
+      "label": "Bulb care",
+      "category": "activity",
+      "visual": "Dormant bulb and seasonal storage tray.",
+      "rationale": "Overwintering and soil management differ from planting-only work.",
+      "existing_alternative": "Unicode or suitable accepted custom artwork remains available. Prospective study requires source and recognition review before live assignment.",
+      "event_ids": [
+        220171
+      ],
+      "evidence_by_event": {
+        "220171": [
+          "Bulb and Soil Workshop: Learn about caring for tender versus hardy bulbs, using bulbs in your garden plan, pest control, and how to overwinter. Create an interplay between bloom times, foliage colors and height, and learn how to manage your garden soil so you have a thriving environment.",
+          "Tags: Community, Workshop, Education, Gardening, Outdoor, Participatory, Format, Bulbs"
+        ]
+      },
+      "source_urls_by_event": {
+        "220171": [
+          "https://snug-harbor.org/event/bulb-and-soil-workshop/?slot_id=22827",
+          "https://snug-harbor.org/event/bulb-and-soil-workshop/?slot_id=23013",
+          "https://snug-harbor.org/event/bulb-and-soil-workshop/?slot_id=23064"
+        ]
+      }
+    },
+    {
+      "concept": "activity-pop-dance-fitness",
+      "label": "Pop dance fitness",
+      "category": "activity",
+      "visual": "Grounded exercise dance pose beside a rhythmic beat.",
+      "rationale": "Pop-led dance workout is explicit but not licensed Zumba or a named dance tradition.",
+      "existing_alternative": "Unicode or suitable accepted custom artwork remains available. Prospective study requires source and recognition review before live assignment.",
+      "event_ids": [
+        220302
+      ],
+      "evidence_by_event": {
+        "220302": [
+          "Dance Fitness- Upbeat Pop!: A 45-minute dance fitness class to your favorite upbeat pop songs!",
+          "Tags: Music, Dance, Wellness, Fitness, Outdoor, Pop Music, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "220302": [
+          "https://www.nyc.gov/main/events/?permalinkName=dance-fitness-upbeat-pop&id=1125016&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=dance-fitness-upbeat-pop&id=1125036&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=dance-fitness-upbeat-pop&id=1125056&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=dance-fitness-upbeat-pop&id=1200596&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=dance-fitness-upbeat-pop&id=1200616&sequence=1"
+        ]
+      }
+    },
+    {
+      "concept": "craft-ceramic-shoe",
+      "label": "Ceramic shoe sculpture",
+      "category": "craft",
+      "visual": "Clay shoe form beside a modeling tool.",
+      "rationale": "Handbuilt ceramic shoe project is explicit; no wearable or branded product promised.",
+      "existing_alternative": "Unicode or suitable accepted custom artwork remains available. Prospective study requires source and recognition review before live assignment.",
+      "event_ids": [
+        220127
+      ],
+      "evidence_by_event": {
+        "220127": [
+          "ArtsLab: Ceramic Superpower Shoe: Join 2024 MAD Artist Studios alumna Michelle Im for a hands-on workshop inspired by the forthcoming exhibition Nike: Form Follows Motion, exploring how footwear can tell stories of innovation, identity, and personal expression. Through ceramic hand building and sculptural design, teens will design, sculpt, and glaze a ceramic shoe that represents their own unique superpower.",
+          "Tags: Art, Workshop, Free, Ceramics, Family, Education, Crafts, Teen Events, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "220127": [
+          "https://madmuseum.org/events/artslab-ceramic-superpower-shoe"
+        ]
+      }
+    },
+    {
+      "concept": "craft-first-person-filmmaking",
+      "label": "First-person filmmaking",
+      "category": "craft",
+      "visual": "Camera frame and first-person narrative document.",
+      "rationale": "Subjective documentary creation differs from screening or basic camera instruction.",
+      "existing_alternative": "Unicode or suitable accepted custom artwork remains available. Prospective study requires source and recognition review before live assignment.",
+      "event_ids": [
+        220119
+      ],
+      "evidence_by_event": {
+        "220119": [
+          "Tell Don’t Show: Adventures in First-Person Filmmaking: A workshop examining how subjective perspectives can complicate documentary films and invite audiences to question their authority. The workshop features Charlie Shackleton, Alan Berliner and Joanna Arnow.",
+          "Tags: Workshop, Documentary, Film, Education, Filmmaking, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "220119": [
+          "https://uniondocs.org/event/tell-dont-show-first-person-filmmaking-2026-10-02/"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-banjo-duo",
+      "label": "Banjo duo",
+      "category": "format",
+      "visual": "Two distinct banjos with a shared musical arc.",
+      "rationale": "Two featured banjo players are explicit; four-string/five-string construction requires source study.",
+      "existing_alternative": "Unicode or suitable accepted custom artwork remains available. Prospective study requires source and recognition review before live assignment.",
+      "event_ids": [
+        220549
+      ],
+      "evidence_by_event": {
+        "220549": [
+          "Cynthia Sayer's Duelin' Banjos: Multi-award-winning artist Cynthia Sayer and her celebrated guest Tony Trischka play banjo in two different musical worlds. For individuals with dementia and their caregivers.",
+          "Tags: Music, Performing Arts, Dance, Concert, Folk Music, Bluegrass, Banjo, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220549": [
+          "https://lincolncenter.org/series/accessibility-at-lincoln-center/cynthia-sayers-duelin-banjos-399"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-vocal-sextet",
+      "label": "Vocal sextet",
+      "category": "format",
+      "visual": "Six equal singing marks over a shared score.",
+      "rationale": "Named six-person group needs confirmed lineup; exact voice ranges remain unknown.",
+      "existing_alternative": "Unicode or suitable accepted custom artwork remains available. Prospective study requires source and recognition review before live assignment.",
+      "event_ids": [
+        220141
+      ],
+      "evidence_by_event": {
+        "220141": [
+          "The Gesualdo Six: Fading: The award-winning Gesualdo Six returns with a program inspired by the ancient service of Compline, which marks the close of the day and the onset of night. This contemplative concert pairs Renaissa",
+          "Tags: Music, Concert, Vocal Music, Renaissance, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220141": [
+          "https://events.columbia.edu/feeder/main/eventsFeed.do?f=y&sort=dtstart.utc:asc&fexpr=(((vpath=%22/public/aliases/Audience/Public%22)))%20and%20(categories.href=%22/public/.bedework/categories/org/UniversityEvents%22)%20and%20(entity_type=%22event%22%7Centity_type=%22todo%22)&skinName=list-rss&count=200"
+        ]
+      }
+    },
+    {
+      "concept": "equipment-high-fidelity-sound-system",
+      "label": "High-fidelity sound system",
+      "category": "equipment",
+      "visual": "A pair of full-range speaker stacks.",
+      "rationale": "Venue sound system is explicit but channel topology and active equipment focus remain unconfirmed.",
+      "existing_alternative": "Unicode or suitable accepted custom artwork remains available. Prospective study requires source and recognition review before live assignment.",
+      "event_ids": [
+        220439
+      ],
+      "evidence_by_event": {
+        "220439": [
+          "Refuge Thursday with Vanjee: Refuge Hi-Def Dance Club is a 500-cap underground nightclub in East Williamsburg built around sound, energy, and atmosphere. At its core is REX, a custom 4-point system designed by co-founder Craig “Shorty” Berna",
+          "Tags: Music, Dance, Nightlife, Electronic Music, Club Night, Underground, Sound System, Dance Club, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "220439": [
+          "https://ra.co/events/2512970",
+          "https://www.eventbrite.com/e/refuge-thursday-vanjee-tickets-1997939461713?aff=odcleoeventsincollection"
+        ]
+      }
+    },
+    {
+      "concept": "format-artist-themed-dance-party",
+      "label": "Artist-themed dance party",
+      "category": "format",
+      "visual": "Music record with party lights and a fan badge.",
+      "rationale": "Named-artist tribute theme does not promise the artist is present.",
+      "existing_alternative": "Use a supported accepted icon or broad Unicode while a distinctive study is pending.",
+      "event_ids": [
+        220444
+      ],
+      "evidence_by_event": {
+        "220444": [
+          "Gorgeous Gorgeous: Celebrating 3 years of The Rise and Fall of a Midwest Princess! Expect extra Chappell mixed in with all your favorite pop girlies all night long. GORGEOUS GORGEOUS is a pop dance party for queer, trans & enby babes and their friends!",
+          "Tags: Community, Music, Dance, Queer, LGBTQ, Nightlife, Dance Party, Pop Music, Queer Nightlife, Club Night, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "220444": [
+          "https://link.dice.fm/Wbb38a062e63?pid=664ba370",
+          "https://ra.co/events/2513662"
+        ]
+      }
+    },
+    {
+      "concept": "format-community-dinner",
+      "label": "Community dinner",
+      "category": "format",
+      "visual": "Shared table with simple plates.",
+      "rationale": "Social dining differs from volunteer meal service and featured-chef menus.",
+      "existing_alternative": "Unicode or suitable accepted custom artwork remains available. Prospective study requires source and recognition review before live assignment.",
+      "event_ids": [
+        220179
+      ],
+      "evidence_by_event": {
+        "220179": [
+          "Dine and Dissert: A Sugary Community Dinner (September 15): Our monthly dinner series is an intimate culinary adventure across NYC curated by Sugary for friends you know and friends you will eventually get to know. This month's dinner features Lungi, which brings the bold, soulful flavors of South India and Sri Lanka to the Upper East Side.",
+          "Tags: Community, Party, Food, Culinary, Nightlife, Indian Cuisine, Dinner, Format, Social, South Indian Cuisine, Sri Lankan Cuisine"
+        ]
+      },
+      "source_urls_by_event": {
+        "220179": [
+          "https://luma.com/xfpa5rhg"
+        ]
+      }
+    },
+    {
+      "concept": "format-curator-led-tour",
+      "label": "Curator-led tour",
+      "category": "format",
+      "visual": "Art frame and guide speech bubble with short path.",
+      "rationale": "Guided exhibition interpretation differs from seated lecture and studio visit.",
+      "existing_alternative": "Unicode or suitable existing art remains available; prospective study only until source and visual review.",
+      "event_ids": [
+        220153
+      ],
+      "evidence_by_event": {
+        "220153": [
+          "Special Curator Tour: Wood and Water: Furniture on Long Island: Join curators Lauren Brincat and Steven Baltsas for a behind-the-scenes look at the making of the exhibition and explore 200 years of Long Island furniture history. Space is limited.",
+          "Tags: History, Tour, Education, Furniture, Format, Outings, Curator"
+        ]
+      },
+      "source_urls_by_event": {
+        "220153": [
+          "https://preservationlongisland.org/special-curator-tour-wood-and-water/"
+        ]
+      }
+    },
+    {
+      "concept": "format-deep-listening-session",
+      "label": "Deep listening session",
+      "category": "format",
+      "visual": "Ear and calm sound waves in a listening room.",
+      "rationale": "Silent shared listening differs from reciprocal song-sharing or therapy.",
+      "existing_alternative": "Unicode or suitable accepted custom artwork remains available. Prospective study requires source and recognition review before live assignment.",
+      "event_ids": [
+        220451
+      ],
+      "evidence_by_event": {
+        "220451": [
+          "Planetarium: Chee Shimizu All Night: Planetarium is an event for listening deeply. We ask everyone who attends to remain silent in the listening area and to step outside the space for any conversations.",
+          "Tags: Music, Wellness, Electronic Music, Watch Party, Ambient, Deep Listening, Listening Room, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "220451": [
+          "https://ra.co/events/2512826"
+        ]
+      }
+    },
+    {
+      "concept": "format-disaster-history-talk",
+      "label": "Disaster history talk",
+      "category": "format",
+      "visual": "Historical document and damaged-building silhouette.",
+      "rationale": "Disaster scholarship differs from live emergency preparedness.",
+      "existing_alternative": "Unicode or suitable accepted custom artwork remains available. Prospective study requires source and recognition review before live assignment.",
+      "event_ids": [
+        220138
+      ],
+      "evidence_by_event": {
+        "220138": [
+          "Scott Knowles - The United States of Disaster: The collapse of the World Trade Towers on September 11, 2001 initiated the most comprehensive research initiative on structures in American history",
+          "Tags: Community, History, Research, Education, Humanities, Gathering, Talk, Format, Disaster Studies"
+        ]
+      },
+      "source_urls_by_event": {
+        "220138": [
+          "https://events.columbia.edu/cal/event/eventView.do?b=de&calPath=%2Fpublic%2Fcals%2FMainCal&guid=CAL-00bbdb70-9feab350-019f-ed4f70d7-000055e7events%40columbia.edu&recurrenceId=",
+          "https://www.eventbrite.com/e/scott-knowles-the-united-states-of-disaster-registration-1997497362382"
+        ]
+      }
+    },
+    {
+      "concept": "format-oral-history-video",
+      "label": "Oral-history video",
+      "category": "format",
+      "visual": "Video frame with speaker and historical document cue.",
+      "rationale": "Recorded historical interview is explicit; no current live presence or venue visit.",
+      "existing_alternative": "Unicode or suitable accepted custom artwork remains available. Prospective study requires source and recognition review before live assignment.",
+      "event_ids": [
+        220221
+      ],
+      "evidence_by_event": {
+        "220221": [
+          "Billy Harper Interview on Life at Westbeth in the ’70s and ’80s: An interview with Billy Harper about life at Westbeth in the 1970s and 1980s.",
+          "Tags: Community, History, Literature, Education, Interview, Exhibition, Format, Browsable"
+        ]
+      },
+      "source_urls_by_event": {
+        "220221": [
+          "https://westbeth.org/event/billy-harper-interview-on-life-at-westbeth-70s-and-80s/"
+        ]
+      }
+    },
+    {
+      "concept": "format-poetry-workshop-open-mic",
+      "label": "Poetry workshop and open mic",
+      "category": "format",
+      "visual": "Writing sheet leading to a microphone.",
+      "rationale": "Mixed series prospect requires exact format confirmation before assignment.",
+      "existing_alternative": "Unicode or suitable accepted custom artwork remains available. Prospective study requires source and recognition review before live assignment.",
+      "event_ids": [
+        220160
+      ],
+      "evidence_by_event": {
+        "220160": [
+          "Yawp 11.13.26: Tickets become available ~1 month before the event.",
+          "Tags: Community, Workshop, Literature, Poetry, Education, Open Practice, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "220160": [
+          "https://brooklynpoets.org/events/all/yawp-111326"
+        ]
+      }
+    },
+    {
+      "concept": "format-public-policy-panel",
+      "label": "Public policy panel",
+      "category": "format",
+      "visual": "Civic document and three discussion bubbles.",
+      "rationale": "Policy discussion is not a governing meeting or actual ballot.",
+      "existing_alternative": "Unicode or suitable accepted custom artwork remains available. Prospective study requires source and recognition review before live assignment.",
+      "event_ids": [
+        220212
+      ],
+      "evidence_by_event": {
+        "220212": [
+          "Ideas for Cutting Bureaucratic Hurdles and Getting Things Done in NYC: Mayor Mamdani’s Commission on Government Efficiency (COGE) has put forward five promising ballot proposals to make city government work better, faster, and more efficiently. But there are numerous other opportunities to eliminate unnecessary bureaucratic hurdles that slow government down, increase costs, and make it harder to get things done in New York—many of which do not require charter changes.",
+          "Tags: Government, Community, Activism, Education, Public Policy, Asian American, Civic Engagement, Cultural Heritage, Gathering, Talk, Academic, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "220212": [
+          "https://aaari.info/event/ideas-for-cutting-bureaucratic-hurdles-and-getting-things-done-in-nyc/",
+          "https://nycfuture.salsalabs.org/bureaucratichurdles0/index.html?eType=EmailBlastContent&eId=df8fa5a8-71fa-46f8-a1df-e7c66e31782e"
+        ]
+      }
+    },
+    {
+      "concept": "format-release-listening-session",
+      "label": "Release listening session",
+      "category": "format",
+      "visual": "Album sleeve and speaker facing a shared listening space.",
+      "rationale": "Passive release listening differs from live performance or reciprocal selection.",
+      "existing_alternative": "Unicode or suitable accepted custom artwork remains available. Prospective study requires source and recognition review before live assignment.",
+      "event_ids": [
+        220454
+      ],
+      "evidence_by_event": {
+        "220454": [
+          "Word Passed the Time - Charlotte Jacobs - Listening Session: An enigmatic slab of pitch-bent esoterica from Brooklyn-by-way-of-Belgium singer, songwriter, and composer Charlotte Jacobs. A single free-flowing, vocal-driven arrangement, “Word Passed the Time” unfolds with a patient, d",
+          "Tags: Music, Free, Experimental, Watch Party, Vocal Music, Experimental Music, Listening Room, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "220454": [
+          "https://ra.co/events/2511781"
+        ]
+      }
+    },
+    {
+      "concept": "format-science-open-house",
+      "label": "Science open house",
+      "category": "format",
+      "visual": "Open laboratory doorway with simple scientific displays.",
+      "rationale": "Mixed lab tours and demonstrations are explicit; no exact experiment or universal lab access.",
+      "existing_alternative": "Unicode or suitable accepted custom artwork remains available. Prospective study requires source and recognition review before live assignment.",
+      "event_ids": [
+        220140
+      ],
+      "evidence_by_event": {
+        "220140": [
+          "Lamont-Doherty Earth Observatory Open House 2026: Join Lamont-Doherty’s Open House! Enjoy lab tours, hands-on Earth science activities, and talks on discoveries from top researchers.",
+          "Tags: Science, Family, Education, Outdoor, Open House, Earth Science, Format, Browsable, Lab Tours"
+        ]
+      },
+      "source_urls_by_event": {
+        "220140": [
+          "http://openhouse.ldeo.columbia.edu/",
+          "https://www.eventbrite.com/e/lamont-doherty-earth-observatory-open-house-2026-registration-1995698954295?aff=oddtdtcreator"
+        ]
+      }
+    },
+    {
+      "concept": "format-social-park-outing",
+      "label": "Social park outing",
+      "category": "format",
+      "visual": "Park path with picnic cloth and conversation cue.",
+      "rationale": "Mixed social exploring is explicit; no single paid inclusion promised.",
+      "existing_alternative": "Unicode or suitable accepted custom artwork remains available. Prospective study requires source and recognition review before live assignment.",
+      "event_ids": [
+        220238
+      ],
+      "evidence_by_event": {
+        "220238": [
+          "Queer Out! Fun & Free Adventure: Carl Schurz Park: Time for another Fun & Free Adventure! Rain or Shine! Explore the Park, See the Art Show, have a picnic, and take a Ferry Ride.... Meet & Make new Friends with us!",
+          "Tags: Community, Art, Free, Outdoor, Picnic, Outing, Format, Outings, Ferry Ride"
+        ]
+      },
+      "source_urls_by_event": {
+        "220238": [
+          "https://www.meetup.com/queersocial/events/316119380/"
+        ]
+      }
+    },
+    {
+      "concept": "format-southeast-asian-speaker-series",
+      "label": "Southeast Asian speaker series",
+      "category": "format",
+      "visual": "Neutral speaking platform and discussion bubbles.",
+      "rationale": "Regional series identity is explicit, but exact topic and speakers practices need research.",
+      "existing_alternative": "Unicode or suitable accepted custom artwork remains available. Prospective study requires source and recognition review before live assignment.",
+      "event_ids": [
+        220154
+      ],
+      "evidence_by_event": {
+        "220154": [
+          "Tropik Talks 2: A SEA Speaker Series featuring Superblooom* and Hardcoresoftcover: A Southeast Asian speaker series featuring Superblooom* and Hardcoresoftcover, hosted by Index and presented by Index Chinatown.",
+          "Tags: Community, Brooklyn, Workshop, Greenpoint, Neighborhood, Education, Gathering, Talk, Speaker Series, Southeast Asian, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "220154": [
+          "https://luma.com/index-wjug",
+          "https://www.index-space.org/programming/tropik-talks-2-a-sea-speaker-series-featuring-superblooom-and-ha-evt-r6sEj3Ko2BmBJC7"
+        ]
+      }
+    },
+    {
+      "concept": "format-trick-or-treat",
+      "label": "Trick-or-treat",
+      "category": "format",
+      "visual": "Small candy bag beside a welcoming doorway.",
+      "rationale": "Halloween activity explicit as one part of a mixed festival.",
+      "existing_alternative": "Unicode or suitable accepted custom artwork remains available. Prospective study requires source and recognition review before live assignment.",
+      "event_ids": [
+        220162
+      ],
+      "evidence_by_event": {
+        "220162": [
+          "All Hallow’s Eve: Halloween Trick-or-Treating in the Village, Pumpkin Carving Contest, Entertainment, Scavenger Hunt, Crafts & more!",
+          "Tags: Art, Family, Outdoor, Games, Nightlife, Entertainment, Crafts, Scavenger Hunt, Halloween, Community Celebration, Format, Social, Trick or Treating, Pumpkin Carving"
+        ]
+      },
+      "source_urls_by_event": {
+        "220162": [
+          "https://dep.nj.gov/event/all-hallows-eve/"
+        ]
+      }
+    },
+    {
+      "concept": "format-zodiac-themed-party",
+      "label": "Zodiac-themed party",
+      "category": "format",
+      "visual": "Zodiac token beside party confetti.",
+      "rationale": "Birthday branding differs from astrology readings or verified prediction.",
+      "existing_alternative": "Unicode or suitable accepted custom artwork remains available. Prospective study requires source and recognition review before live assignment.",
+      "event_ids": [
+        220442
+      ],
+      "evidence_by_event": {
+        "220442": [
+          "Virgo Rising: Virgo - relax. You can plan the pre-game but we'll take care of the dance party. Add \"throw ass\" on your to do list and let's get to celebrating you. Happy birthday to the hottest control freaks we know!",
+          "Tags: Music, Dance, Party, Nightlife, Club Night, Birthday, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "220442": [
+          "https://ra.co/events/2512916",
+          "https://shotgun.live/en/events/virgo-rising-sept-11-2026"
+        ]
+      }
+    },
+    {
+      "concept": "genre-afro-house",
+      "label": "Afro house",
+      "category": "genre",
+      "visual": "Explore a four-beat grid intertwined with a second offbeat pulse, beside one note.",
+      "rationale": "Explicit Afrohouse merits separate genre record; abstract rhythmic motif must be tested against house/amapiano and avoid ethnic stereotypes.",
+      "existing_alternative": "Generic notes omit genre; proposed house motif is close and may be sufficient.",
+      "event_ids": [
+        220466
+      ],
+      "evidence_by_event": {
+        "220466": [
+          "The Reserve December Edition: The Reserve December Edition. DJ Eric Visa is in the house, joining RAAM BAND! This edition is about to light up with culture, rhythm, and real groove. RAAM BAND brings a fusion of Afro-house and timeless vibes",
+          "Tags: Community, Music, Free, Concert, Nightlife, Groove, Afro House, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220466": [
+          "https://ra.co/events/2311259"
+        ]
+      }
+    },
+    {
+      "concept": "genre-afrobeats",
+      "label": "Afrobeats",
+      "category": "genre",
+      "visual": "Explore an interlocking two-line rhythm pattern beside one music note.",
+      "rationale": "Class explicitly combines Afrobeats and R&B music with dance-fitness choreography; avoid assuming a specific dance substyle or DJ role.",
+      "existing_alternative": "Noto drum is not a universal Afrobeats identifier; no current custom genre.",
+      "event_ids": [
+        220143
+      ],
+      "evidence_by_event": {
+        "220143": [
+          "A Perfect Summer w/ Juls: Raised in England and Accra, Juls (Julian Nicco-Annan) takes the smooth stylings of his idols – such as hip-hop heavyweights J Dilla and Swizz Beatz – and pairs them with Afrobeats. He’s credited for pioneering a slow down of the genre – the track ‘Gwarn’.",
+          "Tags: Music, Dance, Free, World Music, Party, Nightlife, Afrobeats, Club Night, 21+, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "220143": [
+          "https://dice.fm/event/6a7b3a9cfb6cf00001f353ae",
+          "https://dice.fm/event/k65gp8-a-perfect-summer-w-juls-25th-sep-deluxx-fluxx-new-york-city-tickets"
+        ]
+      }
+    },
+    {
+      "concept": "genre-alt-folk",
+      "label": "Alternative folk",
+      "category": "genre",
+      "visual": "Acoustic music mark with an off-center rhythmic flourish.",
+      "rationale": "Genre explicit for Lamplight,not necessarily the whole bill.",
+      "existing_alternative": "Unicode or suitable accepted custom artwork remains available. Prospective study requires source and recognition review before live assignment.",
+      "event_ids": [
+        220375
+      ],
+      "evidence_by_event": {
+        "220375": [
+          "Lamplight / The Fascinating Chimera Project / Blue Ranger: Lamplight is the texturally dense, homegrown alt-folk project of multi-disciplinary artist Ian Williams. The Fascinating Chimera Project is a band from New York, and Blue Ranger’s music bridges electronica, soft-folk, and ambient rock.",
+          "Tags: Music, Concert, Pop Music, Dream Pop, Live Music, Alt Folk, Ambient Rock, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220375": [
+          "https://www.viewcy.com/event/lamplight__the_fasci"
+        ]
+      }
+    },
+    {
+      "concept": "genre-ambient-rock",
+      "label": "Ambient rock",
+      "category": "genre",
+      "visual": "Slow music waves and a rhythmic pulse.",
+      "rationale": "Specific genre influence is stated without proving instrument construction.",
+      "existing_alternative": "Unicode or suitable accepted custom artwork remains available. Prospective study requires source and recognition review before live assignment.",
+      "event_ids": [
+        220375
+      ],
+      "evidence_by_event": {
+        "220375": [
+          "Lamplight / The Fascinating Chimera Project / Blue Ranger: Lamplight is the texturally dense, homegrown alt-folk project of multi-disciplinary artist Ian Williams. The Fascinating Chimera Project is a band from New York, and Blue Ranger’s music bridges electronica, soft-folk, and ambient rock.",
+          "Tags: Music, Concert, Pop Music, Dream Pop, Live Music, Alt Folk, Ambient Rock, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220375": [
+          "https://www.viewcy.com/event/lamplight__the_fasci"
+        ]
+      }
+    },
+    {
+      "concept": "genre-deep-house",
+      "label": "Deep house",
+      "category": "genre",
+      "visual": "Explore a rounded bass-wave motif with four separated pulse blocks.",
+      "rationale": "Deep house is explicitly programmed; abstract rhythm imagery is exploratory and must be tested against other electronic genres.",
+      "existing_alternative": "DJ decks indicate performance equipment, not a genre; no proven universal deep-house pictogram.",
+      "event_ids": [
+        220463
+      ],
+      "evidence_by_event": {
+        "220463": [
+          "Ahmed Spins: October 24, Ahmed Spins headlines the Main Hall. Following his label takeover in The Ruins in May, the Deep House Bible co-founder takes the night shift.",
+          "Tags: Music, DJ, Nightlife, House Music, Electronic Music, Deep House, Club Night, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "220463": [
+          "https://link.dice.fm/AhmedSpins-KDC-Oct24",
+          "https://ra.co/events/2508164"
+        ]
+      }
+    },
+    {
+      "concept": "genre-disco",
+      "label": "Disco",
+      "category": "genre",
+      "visual": "A faceted mirror ball above two dance rhythm marks",
+      "rationale": "Disco genre explicit; existing mirror-ball Unicode is strong and may make custom redundant.",
+      "existing_alternative": "Retain the source Unicode until recognizable original artwork is reviewed.",
+      "event_ids": [
+        220441
+      ],
+      "evidence_by_event": {
+        "220441": [
+          "The Disco Express: Roland & Brother Rich, Bustin' Loose, Birdee - Dead Letter No.9: The Disco Express returns to New York for a night dedicated to the records that have shaped dance floors for decades. Buil",
+          "Tags: Music, Dance, DJ, Nightlife, Disco, Electronic Music, Club Night, Vinyl, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "220441": [
+          "https://posh.vip/e/the-disco-express-roland-brother-rich-bustin-loose-birdee-dead-letter-no9",
+          "https://ra.co/events/2512062"
+        ]
+      }
+    },
+    {
+      "concept": "genre-experimental-electronic",
+      "label": "Experimental electronic music",
+      "category": "genre",
+      "visual": "Abstract irregular waveform and electronic tone marks.",
+      "rationale": "Genre is explicit; do not assume live synthesis or DJ mode.",
+      "existing_alternative": "Unicode or suitable accepted custom artwork remains available. Prospective study requires source and recognition review before live assignment.",
+      "event_ids": [
+        220447
+      ],
+      "evidence_by_event": {
+        "220447": [
+          "Good Grief x Protein present: Pavel Milyakov, 7038634357, Rohana, MARBLE RYE, Peregrine: The exact details have been lost to time and memory. Per the records that do remain, on or about July 21st, 2026, the party hereinafter referred to as “",
+          "Tags: Music, Experimental, Nightlife, Electronic Music, Club Night, Underground, Secret Location, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "220447": [
+          "https://ra.co/events/2511658"
+        ]
+      }
+    },
+    {
+      "concept": "genre-experimental-folk",
+      "label": "Experimental folk",
+      "category": "genre",
+      "visual": "Folk music note with layered sonic ribbons.",
+      "rationale": "Environmental collage-folk is explicit for one project; avoid equipment assumptions.",
+      "existing_alternative": "Unicode or suitable accepted custom artwork remains available. Prospective study requires source and recognition review before live assignment.",
+      "event_ids": [
+        220374
+      ],
+      "evidence_by_event": {
+        "220374": [
+          "Whippoorwills / Ethan Azarian / Jack McNutt: Whippoorwills is a new HV enviro-collage-folk project from Saapato and Loamer. Ethan Azarian is described as a Vermont raconteur and Austin singer/songwriter/painter, while Jack McNutt sings and plays simple melodies.",
+          "Tags: Music, Concert, Folk Music, Singer Songwriter, Vocal Music, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220374": [
+          "https://www.viewcy.com/event/whippoorwills__ethan"
+        ]
+      }
+    },
+    {
+      "concept": "genre-fuzz-folk",
+      "label": "Fuzz folk",
+      "category": "genre",
+      "visual": "Warm musical note with a textured halo.",
+      "rationale": "Specific artist self-description; mixed bill may retain fallback.",
+      "existing_alternative": "Unicode or suitable accepted custom artwork remains available. Prospective study requires source and recognition review before live assignment.",
+      "event_ids": [
+        220372
+      ],
+      "evidence_by_event": {
+        "220372": [
+          "Miyaxx (album release) / Elizabeth Celeste: Miyaxx is a duo whose album “Hold Your Ego Out Like a Sun” fuses nighttime fuzz folk with electronic and acoustic elements. Elizabeth Celeste is a musician and photographer in Catskill, NY, a member of Camp Saint Helene, and is currently working on a solo record.",
+          "Tags: Music, Concert, Electronic Music, Album Release, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220372": [
+          "https://www.viewcy.com/event/miyaxx_album_release"
+        ]
+      }
+    },
+    {
+      "concept": "genre-heavy-metal",
+      "label": "Heavy metal music",
+      "category": "genre",
+      "visual": "Explore a compact angular music note with two lightning-like edges.",
+      "rationale": "Explicit heavy-metal programming supports genre exploration; recognition is unproven and must be tested against rock and electronic music.",
+      "existing_alternative": "Noto guitar and rock-hand sign cover broad rock but do not consistently distinguish metal; no custom genre art.",
+      "event_ids": [
+        220371
+      ],
+      "evidence_by_event": {
+        "220371": [
+          "WORLDSUCKS / King In Yellow / Jaelyn / The Entire Earth: The world sucks—but it doesn't have to. WORLDSUCKS is a band born from friendship and fueled by frustration. The lineup also includes King In Yellow, Jaelyn, and The Entire Earth.",
+          "Tags: Music, Rock, Concert, Punk Rock, Heavy Metal, Metal, Hard Rock, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220371": [
+          "https://www.viewcy.com/event/worldsucks__king_in"
+        ]
+      }
+    },
+    {
+      "concept": "genre-indie-rock",
+      "category": "genre",
+      "label": "Indie rock",
+      "visual": "Compact guitar and small independent-stage amp",
+      "rationale": "Named indie-rock bills are distinct from broad music",
+      "existing_alternative": "Existing guitar/music emoji; resolve genre visual clarity first",
+      "event_ids": [
+        220193
+      ],
+      "evidence_by_event": {
+        "220193": [
+          "Kristin Flammio & The Pretty Bitchin’ Live: Kristin Flammio & The Pretty Bitchin’ are scheduled to perform live at Gallery 198 on September 27.",
+          "Tags: Music, Indie, Concert, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220193": [
+          "https://www.gallery198.com"
+        ]
+      }
+    },
+    {
+      "concept": "genre-latin-boogaloo",
+      "label": "Latin boogaloo",
+      "category": "genre",
+      "visual": "A record with two interlocking syncopated beat marks.",
+      "rationale": "Latin Boogaloo is named in the repertoire; explore rhythm without asserting a particular live instrument. Distinction from other dance music remains uncertain.",
+      "existing_alternative": "Current DJ decks are suitable; neither geography nor an arbitrary percussion instrument captures the genre.",
+      "event_ids": [
+        220551
+      ],
+      "evidence_by_event": {
+        "220551": [
+          "New Swing Sextet: No description available.",
+          "Tags: Music, Performing Arts, Dance, Jazz, Concert, Swing Music, Swing Dance, Swing, Live Music, Sextet, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220551": [
+          "https://lincolncenter.org/series/lincoln-center-presents/new-swing-sextet-456"
+        ]
+      }
+    },
+    {
+      "concept": "genre-melodic-techno",
+      "label": "Melodic techno",
+      "category": "genre",
+      "visual": "Sequenced melodic steps over a four-beat rhythm grid",
+      "rationale": "Explicit melodic-techno program supports a subtype lead; assess distinction from general techno.",
+      "existing_alternative": "Keep the existing Unicode fallback or suitable broader custom icon until distinct artwork is reviewed.",
+      "event_ids": [
+        220416
+      ],
+      "evidence_by_event": {
+        "220416": [
+          "Techno Thursday [Melodic2Hard] (Main Room Event, Free with RSVP): Join us for Techno Thursday as we take you on a musical journey from deep and melodic to fast and relentless. We begin the night with hypnotic Melodic Techno, building tension and atmosphe",
+          "Tags: Music, Free, Techno, Nightlife, Electronic Music, Melodic Techno, Club Night, RSVP, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "220416": [
+          "https://link.dice.fm/E5e5586ab18d",
+          "https://ra.co/events/2512773",
+          "https://ra.co/events/2528857"
+        ]
+      }
+    },
+    {
+      "concept": "genre-punk-rock",
+      "label": "Punk rock",
+      "category": "genre",
+      "visual": "Explore a jagged torn-paper musical note with one broad safety-pin accent.",
+      "rationale": "Explicit punk programming supports genre exploration; visual convention needs recognition testing and does not assert performer costume or instrument.",
+      "existing_alternative": "Noto rock-hand/guitar cover broader rock; no custom punk symbol.",
+      "event_ids": [
+        220371
+      ],
+      "evidence_by_event": {
+        "220371": [
+          "WORLDSUCKS / King In Yellow / Jaelyn / The Entire Earth: The world sucks—but it doesn't have to. WORLDSUCKS is a band born from friendship and fueled by frustration. The lineup also includes King In Yellow, Jaelyn, and The Entire Earth.",
+          "Tags: Music, Rock, Concert, Punk Rock, Heavy Metal, Metal, Hard Rock, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220371": [
+          "https://www.viewcy.com/event/worldsucks__king_in"
+        ]
+      }
+    },
+    {
+      "concept": "genre-symphonic-rock",
+      "label": "Symphonic rock",
+      "category": "genre",
+      "visual": "Rock rhythm and orchestral score sharing one motif.",
+      "rationale": "Explicit symphonic influences do not prove live orchestra.",
+      "existing_alternative": "Unicode or suitable accepted custom artwork remains available. Prospective study requires source and recognition review before live assignment.",
+      "event_ids": [
+        220236
+      ],
+      "evidence_by_event": {
+        "220236": [
+          "Copeland — Late Show: Longevity in music comes through pushing yourself and expanding the possibilities of your sound. Copeland’s latest effort, Blushing, is a collection of 11 new tracks that advance and evolve the trio’s sound, blending rock with electronic and symphonic influences.",
+          "Tags: Music, Rock, Concert, Electronic Music, Live Music, Symphonic, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220236": [
+          "https://www.viewcy.com/event/copeland_1"
+        ]
+      }
+    },
+    {
+      "concept": "ritual-eucharist",
+      "label": "Eucharist and communion",
+      "category": "activity",
+      "visual": "A simple chalice beneath a round communion wafer, with a small cross on the wafer.",
+      "rationale": "The service explicitly centers Eucharistic communion; elements distinguish the rite from a church building. Use only for explicitly described communion contexts.",
+      "existing_alternative": "Church identifies location broadly; wine glass implies secular drinking.",
+      "event_ids": [
+        220196
+      ],
+      "evidence_by_event": {
+        "220196": [
+          "Welcome Back Sunday Holy Eucharist Rite I: The Combined Choirs of Grace Church (The Choir of Men and Boys, The Choir of Adults and Girls with High School Singers, and The Adult Choir) will sing at the 11 am service, marking the beginning of the 132nd choral season. Join us for a festive fellowship hour after",
+          "Tags: Community, Music, Wellness, Spirituality, Fellowship, Vocal Music, Gathering, Choral, Service, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "220196": [
+          "https://gracechurchnyc.org/event/holy-eucharist-rite-i-welcome-back-sunday/"
+        ]
+      }
+    }
+  ],
+  "limitations": "Counts describe this cohort, not population reach. These are grounded prospective studies, not live assignments. Existing artwork may already suffice; exact equipment and genre recognition require further review."
+}

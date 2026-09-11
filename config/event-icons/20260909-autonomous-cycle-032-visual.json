@@ -1,0 +1,183 @@
+[
+  {
+    "icon_id": "activity-personal-archiving",
+    "source_sha256": "fd09175383c2cfc8c9a3e3594d10be690707cfaa945119a644886e7602f2f498",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Folder holding a photo and an index card.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-032/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-032/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 853,
+      "gzip_level_6": 486
+    },
+    "optimization": {
+      "initial_raw": 853,
+      "initial_gzip_level_6": 486,
+      "final_raw": 853,
+      "final_gzip_level_6": 486
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Folder, photograph and index card signify personal archives. At16px card lines soften and the label distinguishes preservation from generic file organization. No scanner, cloud service or exact archive material is promised."
+    ]
+  },
+  {
+    "icon_id": "craft-cross-stitch",
+    "source_sha256": "a867a4e5577f002dfc1634f936384b3f29b4d874ae3179e9523dc8172fa7e9af",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Crossed stitches with a sewing needle.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-032/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-032/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 1561,
+      "gzip_level_6": 433
+    },
+    "optimization": {
+      "initial_raw": 3860,
+      "initial_gzip_level_6": 554,
+      "final_raw": 1561,
+      "final_gzip_level_6": 433
+    },
+    "issues": [
+      {
+        "issue": "Initial dense pattern lost stitch clarity at16px; decorative grid holes did not coincide with stitch endpoints.",
+        "resolution": "Reduced13crosses to5larger equal-arm crosses; aligned every endpoint to a grid hole, preserved consistent top diagonal, merged repeated paths and re-rendered native sizes/runtime.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Five equal-arm crosses on a plain gridded support and needle identify crossed-stitch embroidery. At16px the needle and grid holes soften; label distinguishes the stitch technique. Flat front-view diagram is not a complete needle-routing tutorial or a claim that fabric rather than paper is supplied."
+    ]
+  },
+  {
+    "icon_id": "craft-pointed-pen-calligraphy",
+    "source_sha256": "d28066361c8f90cc92fc86f57650c6a8b434a1eaf419ed9562b08708ee6d4fb7",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Pointed nib writing decorative ink strokes.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-032/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-032/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 853,
+      "gzip_level_6": 464
+    },
+    "optimization": {
+      "initial_raw": 853,
+      "initial_gzip_level_6": 464,
+      "final_raw": 853,
+      "final_gzip_level_6": 464
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Pointed nib, slim holder and flowing ink strokes identify pointed-pen lettering. At16px breather/slit soften, while nib and strokes remain visible. Lettering sample is decorative; no font, exact script, kit brand or pen model is promised."
+    ]
+  },
+  {
+    "icon_id": "format-film-location-tour",
+    "source_sha256": "32e8a9a0748a9fefcdfc71085a1a27942bd62c367a430971c6cb59b6fd90fea2",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Clapperboard and map location pin.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-032/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-032/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 879,
+      "gzip_level_6": 463
+    },
+    "optimization": {
+      "initial_raw": 879,
+      "initial_gzip_level_6": 463,
+      "final_raw": 879,
+      "final_gzip_level_6": 463
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Clapperboard, location pin and short map route identify a filming-location visit. At16px dashed route softens, but clapper and pin stay separate. No filming in progress, ghost folklore or mansion entry is promised."
+    ]
+  },
+  {
+    "icon_id": "craft-paper-strip-weaving",
+    "source_sha256": "190707a3290eb2447e8b6a9c0064b122e0c6018d0f43cf192b373d6577658d95",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Wide strips crossing in an alternating woven grid.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-032/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-032/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 1736,
+      "gzip_level_6": 756
+    },
+    "optimization": {
+      "initial_raw": 1736,
+      "initial_gzip_level_6": 756,
+      "final_raw": 1736,
+      "final_gzip_level_6": 756
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Broad alternating colored strips identify sheet-material weaving. At16px over-under pattern remains visible though strip thickness is not. This is generic paper/foam craft, not an assertion of a traditional Peruvian textile pattern or loom technique."
+    ]
+  }
+]

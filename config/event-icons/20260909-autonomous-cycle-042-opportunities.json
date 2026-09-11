@@ -1,0 +1,334 @@
+{
+  "date": "2026-09-10",
+  "scope": "Cycle 042: 100 sequential events 212186–212444, no targeted supplements.",
+  "suggestions": 21,
+  "concept_count": 10,
+  "concepts": [
+    {
+      "concept": "genre-blues",
+      "label": "Blues",
+      "category": "genre",
+      "visual": "Explore a spare bent musical note with a short call-and-response echo mark.",
+      "rationale": "Explicit blues repertoire merits a genre candidate independent of instrument; no proven universal motif, recognition testing required.",
+      "existing_alternative": "Noto guitar or saxophone excludes many blues forms; generic notes omit genre.",
+      "event_ids": [
+        212290,
+        212292,
+        212293,
+        212294,
+        212295,
+        212296,
+        212297,
+        212298,
+        212299
+      ],
+      "evidence_by_event": {
+        "212290": [
+          "Kelton Cooper: Not to be missed, Kelton Cooper unleashes in a solo performance.",
+          "Tags: Music, Concert, Blues, Solo Performance, Live Music, Format, Performance"
+        ],
+        "212292": [
+          "Hazmat Modine: Hazmat Modine runs the gamut of genres and instrumentation. Most of what they play are originals, but they also perform cover versions of Slim Gaillard, Jimmy Rogers, Jaybird Coleman, and Irving Berlin. Lead Wade Schuman will send the audience home humming and stomping after the romping, dynamic and passionately unique experience that is Hazmat Modine.",
+          "Tags: Music, Concert, Blues, Acoustic, Live Music, Format, Performance"
+        ],
+        "212293": [
+          "T Blues Band | Crenshaw / Mack: Comprised of rotating band leaders, the T Blues Band is a nightly, sound-shifting, blues machine. Featuring SaRon Crenshaw, Junior Mack, Mike Nuno (Bass), and Barry Harrison (Percussion).",
+          "Tags: Music, Concert, Nightlife, Blues, Live Music, Format, Performance"
+        ],
+        "212294": [
+          "T Blues Band | French / Mack: Comprised of rotating band leaders, the T Blues Band is a nightly, sound-shifting, blues machine. Featuring Doc French, Jr Mack, Noe Socha (Bass), and Catfish (Percussion).",
+          "Tags: Music, Concert, Nightlife, Blues, Live Music, Format, Performance"
+        ],
+        "212295": [
+          "T Blues Band | Bryan / Mack: Comprised of rotating band leaders, the T Blues Band is a nightly, sound-shifting, blues machine. Featuring Bobby Bryan, Junior Mack, Noe Socha (Bass), and Barry Harrison (Percussion).",
+          "Tags: Music, Concert, Nightlife, Blues, Live Music, Format, Performance"
+        ],
+        "212296": [
+          "T Blues Band | French / Socha: Comprised of rotating band leaders, the T Blues Band is a nightly, sound-shifting, blues machine. Tight knit groups of 4 musicians combine forces to generate the most powerful and authentic blues incarnations around. Featuring Doc French, Noe Socha, Steve Kirsty (Bass), and Warren Grant (Percussion).",
+          "Tags: Music, Concert, Nightlife, Blues, Live Music, Format, Performance"
+        ],
+        "212297": [
+          "T Blues Band | Cooper / Bryan: Comprised of rotating band leaders, the T Blues Band is a nightly, sound-shifting, blues machine. Tight knit groups of 4 musicians combine forces to generate the most powerful and authentic blues incarnations around. Featuring Kelton Cooper, Bobby Bryan, Mike Nuno (Bass), and Catfish (Percussion).",
+          "Tags: Music, Concert, Nightlife, Blues, Live Music, Format, Performance"
+        ],
+        "212298": [
+          "T Blues Band | Cooper / French: Comprised of rotating band leaders, the T Blues Band is a nightly, sound-shifting, blues machine. Tight knit groups of 4 musicians combine forces to generate the most powerful and authentic blues incarnations around. Featuring Kelton Cooper, Doc French, Noe Socha (Bass), and Warren Grant (Percussion).",
+          "Tags: Music, Concert, Nightlife, Blues, Live Music, Format, Performance"
+        ],
+        "212299": [
+          "Michael Powers: Multi-award nominated Blues stalwart Michael Powers returns to Terra Blues. Join us for the singularly visceral experience watching and hearing this dyed-in-the-wool bluesman display his finely-honed and jaw-dropping skills.",
+          "Tags: Music, Concert, Blues, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "212290": [
+          "https://www.terrablues.com/events/99b49p57gpn8pxz-2weam-drrem-zp39n-zdz37-5l58k",
+          "https://www.terrablues.com/events/99b49p57gpn8pxz-2weam-drrem-zp39n-zdz37-5l58k-ayzfc"
+        ],
+        "212292": [
+          "https://www.terrablues.com/events/hazmat-modine-5rycn-chdbl-lcdw2-3zjl5-5yzbn-6wtll-tw4k5-wawfm-2hg96-sydz5-krwza-wyhpj-8xwlx-n2c49-lz7f7-hsakf-59t35-2wne5-xmn7n-3haej-a7sys-ecrga-fhk4m-was4s-e4skz-p5k42-553e8-pmyld",
+          "https://www.terrablues.com/events/hazmat-modine-5rycn-chdbl-lcdw2-3zjl5-5yzbn-6wtll-tw4k5-wawfm-2hg96-sydz5-krwza-wyhpj-8xwlx-n2c49-lz7f7-hsakf-59t35-2wne5-xmn7n-3haej-a7sys-ecrga-fhk4m-was4s-e4skz-p5k42-553e8-yt5r2"
+        ],
+        "212293": [
+          "https://www.terrablues.com/events/3ld4grckbxbgrpw-kg4ft-lzxdt-4n4z9-94pza-3naez-6ns5c-2m3na-jsath-eldwx-4htsz-tasy6-3pwb3-9hygk-8khym-dxssw-lssxr-6rf5m-3hnjf-abxmd-2x3lz-lrae3-2msrj-y45f9-wcl76-jake6"
+        ],
+        "212294": [
+          "https://www.terrablues.com/events/cnr7kb3l8ef4g9r-yp6r7-5zn49"
+        ],
+        "212295": [
+          "https://www.terrablues.com/events/sbd8k4mmjnhndbf-jgjla-yzyep-2c8wp-zyrdh-ngptz-ekdz6"
+        ],
+        "212296": [
+          "https://www.terrablues.com/events/cnr7kb3l8ef4g9r-yp6r7-8nmg8-f478l"
+        ],
+        "212297": [
+          "https://www.terrablues.com/events/sbd8k4mmjnhndbf-jgjla-yzyep-2c8wp-zyrdh-ngptz-a7rgz-xtjcn"
+        ],
+        "212298": [
+          "https://www.terrablues.com/events/cnr7kb3l8ef4g9r-yp6r7-8nmg8-f478l-j8zn8"
+        ],
+        "212299": [
+          "https://www.terrablues.com/events/vf774fbukk5jykjbore0wx4pnnzu94-ddgk5"
+        ]
+      }
+    },
+    {
+      "concept": "format-educator-training",
+      "label": "Educator professional learning",
+      "category": "format",
+      "visual": "Teaching plan and shared learning bubble.",
+      "rationale": "Educators learn to teach rather than attending a child class.",
+      "existing_alternative": "Keep suitable existing artwork or Unicode until a distinctive grounded study passes review.",
+      "event_ids": [
+        212427,
+        212428,
+        212429
+      ],
+      "evidence_by_event": {
+        "212427": [
+          "Introducing Educators to Billion Oyster Project: A virtual one-hour professional learning session introducing educators to Billion Oyster Project.",
+          "Tags: Manhattan, Community, Free, Neighborhood, Education, Environment, Governors Island, Virtual, Professional Development, Gathering, Talk, Teachers, Marine Science, Professional Learning, Format"
+        ],
+        "212428": [
+          "Teaching Outdoors: A professional learning workshop focused on teaching outdoors.",
+          "Tags: Manhattan, Community, Workshop, Neighborhood, Education, Environment, Outdoor, Governors Island, Professional Development, Teachers, Participatory, Professional Learning, New York Harbor, Format, Waterfront Learning"
+        ],
+        "212429": [
+          "Curriculum Workshops: A professional learning curriculum workshop for educators.",
+          "Tags: Manhattan, Community, Workshop, Free, Neighborhood, Education, Environment, Governors Island, Virtual, Professional Development, Teachers, Participatory, Professional Learning, Curriculum, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "212427": [
+          "https://www.billionoysterproject.org/upcoming/date/https-uploads-tickettailorassets-com-c-fill-g-center-h-373-q-85-w-1172-v1-prod-2026-09-17",
+          "https://www.billionoysterproject.org/upcoming/date/introducing-educators-to-billion-oyster-project",
+          "https://www.billionoysterproject.org/upcoming/date/introducing-educators-to-billion-oyster-project-2026-09-17"
+        ],
+        "212428": [
+          "https://www.billionoysterproject.org/upcoming/date/https-uploads-tickettailorassets-com-c-fill-g-center-h-373-q-85-w-1172-v1-prod-2026-09-24-2",
+          "https://www.billionoysterproject.org/upcoming/date/teaching-outdoors-2",
+          "https://www.billionoysterproject.org/upcoming/date/teaching-outdoors-2026-09-24"
+        ],
+        "212429": [
+          "https://www.billionoysterproject.org/upcoming/date/curriculum-workshops-2026-09-29",
+          "https://www.billionoysterproject.org/upcoming/date/curriculum-workshops-2026-10-01",
+          "https://www.billionoysterproject.org/upcoming/date/curriculum-workshops-3",
+          "https://www.billionoysterproject.org/upcoming/date/https-uploads-tickettailorassets-com-c-fill-g-center-h-373-q-85-w-1172-v1-prod-2026-09-29"
+        ]
+      }
+    },
+    {
+      "concept": "format-continuing-legal-education",
+      "label": "Legal education",
+      "category": "format",
+      "visual": "Open law book and small learning certificate",
+      "rationale": "Continuing education is not court attendance or legal counseling.",
+      "existing_alternative": "Current fallback or broader accepted icon may suffice; keep this prospective until structural and small-size review passes.",
+      "event_ids": [
+        212191,
+        212192
+      ],
+      "evidence_by_event": {
+        "212191": [
+          "A Guide to Trademark Law for Artists: This course covers how to establish, maintain, and protect trademark rights. Topics include trademark strength, trademark-owner rights, registration, infringement issues, and common trademark problems affecting artists.",
+          "Tags: Art, Workshop, Education, Virtual, Gathering, Talk, Legal Workshop, Format, Trademark"
+        ],
+        "212192": [
+          "Employment Law for Artists: Updates to the Freelance Isn’t Free Act (CLE): This class covers the New York City and New York State Freelance Isn’t Free Acts, which protect independent contractors when clients fail to pay for work. It discusses workers’ rights, court interpretations, and ways workers can use the laws.",
+          "Tags: Workshop, Education, Freelancers, Virtual, Gathering, Talk, Legal Workshop, Employment Law, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "212191": [
+          "https://vlany.org/event/a-guide-to-trademark-law-for-artists/"
+        ],
+        "212192": [
+          "https://vlany.org/event/26394/"
+        ]
+      }
+    },
+    {
+      "concept": "activity-clothing-upcycling",
+      "label": "Clothing upcycling",
+      "category": "activity",
+      "visual": "Shirt with a large decorative patch and paintbrush.",
+      "rationale": "Painting and repair jointly transform existing garments.",
+      "existing_alternative": "Keep appropriate existing artwork or Unicode until distinct art passes review.",
+      "event_ids": [
+        212352
+      ],
+      "evidence_by_event": {
+        "212352": [
+          "Sewing Upcycling: 6-hr intensive: Join us for a 6-hour intensive sewing upcycling workshop focused on garment transformation. Using secondhand clothing and discarded textiles, participants will explore reworking existing materials into new wearable pieces while learning essential sewing techniques.",
+          "Tags: Community, Art, Workshop, Education, Sustainability, DIY, Fashion, Fiber Arts, Crafts, Sewing, Upcycling, Sustainable Fashion, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "212352": [
+          "https://www.eventbrite.com/e/sewing-upcycling-6-hour-intensive-tickets-1994983013898",
+          "https://www.eventbrite.com/e/sewing-upcycling-6-hour-intensive-tickets-1994983013898?aff=oddtdtcreator"
+        ]
+      }
+    },
+    {
+      "concept": "activity-dance-aerobics",
+      "label": "Dance aerobics",
+      "category": "activity",
+      "visual": "Dance rhythm and movement motif.",
+      "rationale": "Unbranded dance fitness differs from Zumba and step aerobics.",
+      "existing_alternative": "Keep suitable existing artwork or Unicode until a distinctive grounded study passes review.",
+      "event_ids": [
+        212345
+      ],
+      "evidence_by_event": {
+        "212345": [
+          "Bodyroll Workout: Find your inner dancer and get your body moving with pure joy at this cathartic dance aerobics class with VIVA! Low stakes, all fun, and open to all levels. Summer on the Hudson events are free and open to the public.",
+          "Tags: Dance, Free, Wellness, Fitness, Aerobics, Participatory, Dance Aerobics, All Levels, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "212345": [
+          "https://riversideparknyc.org/event/bodyroll-workout-6/2026-09-01/",
+          "https://riversideparknyc.org/event/bodyroll-workout-6/2026-09-08/",
+          "https://riversideparknyc.org/event/bodyroll-workout-6/2026-09-15/",
+          "https://riversideparknyc.org/event/bodyroll-workout-6/2026-09-22/",
+          "https://www.nycgovparks.org/events/2026/09/01/summer-on-the-hudson-bodyroll-workout",
+          "https://www.nycgovparks.org/events/2026/09/08/summer-on-the-hudson-bodyroll-workout"
+        ]
+      }
+    },
+    {
+      "concept": "dance-salsa",
+      "label": "Salsa",
+      "category": "dance-style",
+      "visual": "Two dancers in open handhold with a clear turning arm and compact stepping legs.",
+      "rationale": "Explicit salsa classes support exploration of partner-step art; style distinction needs recognition testing and cannot rely on stereotyped costume.",
+      "existing_alternative": "Single dancer is broad and does not show the partner turn; no supported catalog dance fits.",
+      "event_ids": [
+        212403
+      ],
+      "evidence_by_event": {
+        "212403": [
+          "¡BAILA!: Latin Music Dance Party - The Bronx Charanga: ¡BAILA! returns for its second edition with a live performance by The Bronx Charanga, featuring salsa, cha-cha-cha, and classic Latin dance music. Doors open at 6:30 pm.",
+          "Tags: Music, Dance, Party, Nightlife, Salsa, Latin Music, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "212403": [
+          "https://ci.ovationtix.com/36821/production/1281065"
+        ]
+      }
+    },
+    {
+      "concept": "format-choral-vespers",
+      "label": "Choral vespers",
+      "category": "format",
+      "visual": "Choral score and evening-light symbol.",
+      "rationale": "Liturgical repertoire without inferring exact performer count.",
+      "existing_alternative": "Keep suitable existing artwork or Unicode until a distinctive grounded study passes review.",
+      "event_ids": [
+        212444
+      ],
+      "evidence_by_event": {
+        "212444": [
+          "UConn Collegium Musicum: An Early Renaissance Vespers: PROGRAM Versicle and Response: Deus in adjutorium — Plainchant. Antiphon and Psalm 109: Sacerdos in aeternum/Dixit Dominus — Plainchant.",
+          "Tags: Music, Classical Music, Concert, Vocal Music, Vespers, Format, Performance, Early Renaissance, Plainchant"
+        ]
+      },
+      "source_urls_by_event": {
+        "212444": [
+          "https://events.columbia.edu/cal/event/eventView.do?b=de&calPath=%2Fpublic%2Fcals%2FMainCal&guid=CAL-00bbdb7c-9f4b176f-019f-4c7a1a89-000023baevents%40columbia.edu&recurrenceId=",
+          "https://youtube.com/live/-wraLmvWQFg?feature=share"
+        ]
+      }
+    },
+    {
+      "concept": "format-internship-information",
+      "label": "Internship information session",
+      "category": "format",
+      "visual": "Work folder and question bubble.",
+      "rationale": "Explains a program rather than a job interview or hiring promise.",
+      "existing_alternative": "Keep suitable existing artwork or Unicode until a distinctive grounded study passes review.",
+      "event_ids": [
+        212436
+      ],
+      "evidence_by_event": {
+        "212436": [
+          "CUNY Cultural Corps Info Session: Come to a presentation where you can learn more about this paid internship opportunity for CUNY students directly from the Cultural Corps team.",
+          "Tags: Community, Free, Education, Career, Gathering, Talk, Information Session, Internship, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "212436": [
+          "https://www.csi.cuny.edu/cuny-cultural-corps-info-session"
+        ]
+      }
+    },
+    {
+      "concept": "genre-darkwave",
+      "label": "Darkwave",
+      "category": "genre",
+      "visual": "A dark musical note with a single smooth wave.",
+      "rationale": "Darkwave is explicitly included in this mixed dark-dance program. The motif is exploratory and requires recognition testing; this does not make it an exclusive icon for the whole mixed night.",
+      "existing_alternative": "Existing music notes/DJ decks do not distinguish genres; avoid treating clothing, ethnicity or an arbitrary instrument as proof.",
+      "event_ids": [
+        212239
+      ],
+      "evidence_by_event": {
+        "212239": [
+          "Bushwick Princess and Second Sun Pictures: Darkwave synth pop got its swagger back in the enigmatic single and debut music video, Dead/Basic by the alt-indie trio, Bushwick Princes",
+          "Tags: Music, Dance, Film, Concert, Nightlife, Electronic Music, Synth Pop, Pop Music, Dark Wave, Multisensory, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "212239": [
+          "https://dromnyc.com/event/bushwick-princess-and-second-sun-pictures/",
+          "https://ra.co/events/2507334"
+        ]
+      }
+    },
+    {
+      "concept": "genre-surf-cumbia",
+      "label": "Psychedelic surf cumbia",
+      "category": "genre",
+      "visual": "Rhythmic wave and music motif.",
+      "rationale": "Exact hybrid genre deserves a prospective study without inventing instrumentation.",
+      "existing_alternative": "Keep suitable existing artwork or Unicode until a distinctive grounded study passes review.",
+      "event_ids": [
+        212280
+      ],
+      "evidence_by_event": {
+        "212280": [
+          "The Jaguar: Psychedelic cumbia Surf from NY. The Jaguar is listed for the Miztli Latin Festival and a performance at Barzakh Café.",
+          "Tags: Music, Rock, Free, Concert, Latin Music, Cumbia, Psychedelic, Surf Rock, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "212280": [
+          "https://www.instagram.com/the_jaguar_ny"
+        ]
+      }
+    }
+  ],
+  "limitations": "Counts describe this cohort, not population reach. These are grounded prospective studies, not live assignments. Existing artwork may already suffice; exact equipment and genre recognition require further review."
+}

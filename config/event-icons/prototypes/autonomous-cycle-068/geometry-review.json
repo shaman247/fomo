@@ -1,0 +1,137 @@
+{
+  "reviewer_mode": "creator-critical-pass",
+  "geometry_mode": "two-authoritative-scenes-and-three-flat-diagrams",
+  "views": [
+    "front",
+    "rear",
+    "left",
+    "right",
+    "top",
+    "icon"
+  ],
+  "evidence": ".scratch/icon-cycles-20260909/cycle-068/geometry.png",
+  "decision": "pass",
+  "findings": [
+    "All12final geometry views personally inspected. Robot tires and rear caster meet the ground; axles connect wheels to motor cases; controller studs, chassis, bracket and sensor connect. The cable terminates in the controller and sensor casing. Original generic brick robot, no exact kit replica.",
+    "Pierced bead and continuous wire were translated together to seat on the mat before the first native packet. Pliers grips were raised to the mat surface. Bore stem, bail, stem coils and bead overwrap remain a continuous curve; no detached decorative rings. Round-nose pliers have joined arms and central pivot. The wire pattern is illustrative rather than an instruction diagram.",
+    "Three flat symbolic diagrams depict spreadsheet editing, personalized reading advice and nonfiction music film. No physical human pose asserted.",
+    "Five native128/32/24/16light/dark cards, five accepted custom reference cards, four standard Noto references and ten actual IconManager variants personally inspected. All final sources remain below15000raw/5000gzip; detailed robot8857/2855 and jewelry6225/2110. Fine wire, studs and tiny notation soften at16px; explicit labels carry narrow meaning.",
+    "Official LEGO Education and jewelry supplier text support generic construction terminology. No reference photographs or tutorial videos are claimed as inspected."
+  ],
+  "references": [
+    {
+      "event_ids": [
+        221180
+      ],
+      "url": "https://www.bklynlibrary.org/node/839607",
+      "method": "Primary text personally read",
+      "findings": "Aug19 2\u20133pm in-person Stone Avenue Excel basics; storing/managing/analyzing spreadsheets. Current future occurrence not verified."
+    },
+    {
+      "event_ids": [
+        221180
+      ],
+      "url": "https://www.bklynlibrary.org/node/839644",
+      "method": "Primary text personally read",
+      "findings": "Sep1 2\u20133pm VIRTUAL, second of Monday/Tuesday two-part class, registration closed. Mixed with in-person sources in one event."
+    },
+    {
+      "event_ids": [
+        221180
+      ],
+      "url": "https://www.bklynlibrary.org/node/839615",
+      "method": "Primary text personally read",
+      "findings": "Aug17 2\u20133pm VIRTUAL first of two-part class, registration closed. Link sent morning of class; no login or registration attempted."
+    },
+    {
+      "event_ids": [
+        221188
+      ],
+      "url": "https://www.bklynlibrary.org/node/840040",
+      "method": "Primary text personally read",
+      "findings": "Book Concierge Sep2 3:30\u20135pm Adams Street, tailored books and audiobooks for all ages despite teens tags."
+    },
+    {
+      "event_ids": [
+        221188
+      ],
+      "url": "https://www.bklynlibrary.org/node/840041",
+      "method": "Primary text personally read",
+      "findings": "Same Book Concierge Sep9 3:30\u20135pm. Node840042 showed no readable event content; future date not verified."
+    },
+    {
+      "event_ids": [
+        221192
+      ],
+      "url": "https://www.bklynlibrary.org/node/830542",
+      "method": "Primary text personally read",
+      "findings": "Wire wrapping Sep9 4\u20135pm Williamsburgh,13+,limit8. Beads,wire,pliers,findings/tools onsite; own pliers required only for home practice."
+    },
+    {
+      "event_ids": [
+        221192
+      ],
+      "url": "https://www.bklynlibrary.org/node/830543",
+      "method": "Primary text personally read",
+      "findings": "Same wire-wrapped jewelry program Sep16 4\u20135pm,13+,limit8. Different pieces each week; no specific pendant design promised."
+    },
+    {
+      "event_ids": [
+        221174
+      ],
+      "url": "https://www.bklynlibrary.org/node/839857",
+      "method": "Primary text personally read",
+      "findings": "LEGO SPIKE robotics Aug18 4\u20135pm,9\u201317. Team signup through staff; prepares January2027 Brooklyn Robotics League."
+    },
+    {
+      "event_ids": [
+        221174
+      ],
+      "url": "https://www.bklynlibrary.org/node/839861",
+      "method": "Primary text personally read",
+      "findings": "Same program Sep15 4\u20135pm Park Slope Auditorium. Not actual contest session or animal handling."
+    },
+    {
+      "event_ids": [
+        221625
+      ],
+      "url": "https://wl.seetickets.us/event/horn-from-the-heart-the-paul-butterfield-story/702273?afflky=TheCuttingRoom",
+      "method": "Organizer ticket page personally read",
+      "findings": "Sep16 doors6/show7,$22.68allages. Biographical documentary. Venue$25food/beverage minimum unless ticket says otherwise; first-come seating. No live historical musician appearance."
+    },
+    {
+      "event_ids": [
+        221624
+      ],
+      "url": "https://wl.seetickets.us/event/gregg-allman-the-music-of-my-soul/701006?afflky=TheCuttingRoom",
+      "method": "First7500characters of organizer ticket page personally read; tail not inspected",
+      "findings": "Sep15 doors6/show7,$24.74allages. Full-length music biography documentary, archival performances/interviews; $2ticket share to scholarship/charity. Producer likens experience to concert, but no live Allman performance."
+    },
+    {
+      "event_ids": [
+        221279,
+        221280,
+        221281,
+        221288,
+        221287,
+        221289
+      ],
+      "url": "https://www.thejazzclub.com/events/09-17-26-thursday",
+      "method": "Primary attempts on Sep17/18/24/25 pages returned only readable venue/footer text",
+      "findings": "Private entrance9West56 confirmed. Artist program details not verified; do not infer exact instruments or guests from these reads."
+    },
+    {
+      "url": "https://education.lego.com/en-us/lessons/prime-competition-ready/training-camp-2-playing-with-objects/",
+      "method": "Official educational text personally read; no source photo claimed",
+      "findings": "Practice driving base uses distance sensor, motors and connected cable; optional arm is separate. Generic original robot geometry, no kit replica."
+    },
+    {
+      "url": "https://www.firemountaingems.com/learn/categories/essential-resources/how-tos/SCRTSWRWRKNG-article.html",
+      "method": "Jewelry supplier educational text personally read; video not viewed",
+      "findings": "Wire-wrapped loops, bead overwraps, simple loops and wrapped bails are named techniques. Original generic construction, no design tracing or instructional pattern claim."
+    }
+  ],
+  "source_sha256": "d7f0df4186c501811347e240ccabaaa2fae8de6fb3c51ceeb7910e43cd0b8901",
+  "projector_sha256": "fb4649902fe1989c21832342cfa91e8137c08d6b96466c9670ae57e777f2ae35",
+  "planar_source_sha256": "0995a4351897014533a2a8917158d4edf31117bf67a58f355db2c3d4e8f80534"
+}

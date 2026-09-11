@@ -1,0 +1,599 @@
+{
+  "date": "2026-09-09",
+  "scope": "Cycle 001: 100 fully read records, IDs 188749–189258; counts distinct events, not occurrences.",
+  "suggestions": 35,
+  "concept_count": 21,
+  "concepts": [
+    {
+      "concept": "genre-electronic",
+      "label": "Electronic music",
+      "category": "genre",
+      "visual": "A simple waveform beside one music note.",
+      "rationale": "Explicit electronic repertoire does not establish DJ or synth equipment; abstract motif needs recognition testing.",
+      "existing_alternative": "Existing broad Unicode remains suitable; specific motif must demonstrate added recognition before new artwork.",
+      "event_ids": [
+        188854,
+        189121,
+        189129,
+        189161,
+        189163,
+        189166,
+        189171,
+        189176
+      ],
+      "evidence_by_event": {
+        "188854": [
+          "San Holo - True Love in a Made Up World Tour: San Holo is bringing their TRUE LOVE IN A MADE UP WORLD Fall North America Tour to The Rooftop at Pier 17 with special guests yetep and Leotrix on October 10, 2026.",
+          "Tags: Music, Outdoor, Concert, Electronic Music, Live Music, Format, Performance"
+        ],
+        "189121": [
+          "Darkside: Live performance by DARKSIDE.",
+          "Tags: Music, Concert, Nightlife, Electronic Music, Live Music, Format, Performance, Darkside"
+        ],
+        "189129": [
+          "Elder Island: Live concert featuring Elder Island with Glassio.",
+          "Tags: Music, Concert, Nightlife, Electronic Music, Live Music, Format, Performance"
+        ],
+        "189161": [
+          "Kruder & Dorfmeister with K&D Kicks 30 Anniversary Tour: No description available.",
+          "Tags: Music, Concert, Electronic Music, Live Music, Format, Performance"
+        ],
+        "189163": [
+          "Ninajirachi with MGNA Crrrta: [No stored description]",
+          "Tags: Music, Concert, Electronic Music, Live Music, Format, Performance"
+        ],
+        "189166": [
+          "Mind Enterprises: [No stored description]",
+          "Tags: Music, Concert, Nightlife, Electronic Music, Live Music, Format, Performance"
+        ],
+        "189171": [
+          "oskar med k: No description available.",
+          "Tags: Music, Concert, Nightlife, Electronic Music, Live Music, Format, Performance"
+        ],
+        "189176": [
+          "Overmono: No description available.",
+          "Tags: Music, Concert, Nightlife, Electronic Music, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "188854": [
+          "https://rooftopatpier17.com/events/san-holo-2026/",
+          "https://theseaport.nyc/events/san-holo-at-the-rooftop-at-pier-17/"
+        ],
+        "189121": [
+          "https://www.bowerypresents.com/events/detail?event_id=1389969"
+        ],
+        "189129": [
+          "https://www.bowerypresents.com/events/detail?event_id=1423217"
+        ],
+        "189161": [
+          "https://www.bowerypresents.com/events/detail?event_id=1357385"
+        ],
+        "189163": [
+          "https://www.bowerypresents.com/events/detail?event_id=1434424"
+        ],
+        "189166": [
+          "https://ra.co/events/2469865",
+          "https://www.bowerypresents.com/events/detail?event_id=1471238"
+        ],
+        "189171": [
+          "https://ra.co/events/2469869",
+          "https://www.bowerypresents.com/events/detail?event_id=1374036"
+        ],
+        "189176": [
+          "https://ra.co/events/2446125",
+          "https://www.bowerypresents.com/events/detail?event_id=1444445"
+        ]
+      }
+    },
+    {
+      "concept": "craft-landscape-painting",
+      "category": "craft",
+      "label": "Landscape painting",
+      "visual": "A canvas showing a broad mountain silhouette beside a paintbrush.",
+      "rationale": "The landscape subject is central in explicit painting workshops.",
+      "existing_alternative": "Palette covers painting generally; test added value before new art.",
+      "event_ids": [
+        189207,
+        189250,
+        189257,
+        189258
+      ],
+      "evidence_by_event": {
+        "189207": [
+          "Watercolors: Summer Flowers & Landscapes: Learn the basics of watercolor techniques and create a vibrant summer-inspired landscape.",
+          "Tags: Visual Arts, Art, Workshop, Painting, Education, Watercolor, Participatory, Format"
+        ],
+        "189250": [
+          "Classic Painting: Sunlit Woods: Join our artist instructors as they take you step-by-step through this masterpiece, no art experience required! Our classic canvas events make perfect night out with your date, the girls, or the whole crew.",
+          "Tags: Visual Arts, Art, Workshop, Painting, Family, Education, Participatory, Format"
+        ],
+        "189257": [
+          "Classic Painting: Dockside Dreams: Join our artist instructors as they take you step-by-step through this masterpiece, no art experience required! Our classic canvas events make perfect night out with your date, the girls, or the whole crew.",
+          "Tags: Community, Art, Workshop, Education, Nightlife, Art Workshop, Paint and Sip, Participatory, Classic Painting, Format"
+        ],
+        "189258": [
+          "Classic Painting: Mountaintop Violets: Join our artist instructors as they take you step-by-step through this masterpiece, no art experience required! Our classic canvas events make perfect night out with your date, the girls, or the whole crew.",
+          "Tags: Community, Visual Arts, Art, Workshop, Painting, Family, Education, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "189207": [
+          "https://www.artsclubstudios.com/east-village-events/9-11-26"
+        ],
+        "189250": [
+          "https://www.musepaintbar.com/events/classic-painting-340741"
+        ],
+        "189257": [
+          "https://www.musepaintbar.com/events/classic-painting-340749"
+        ],
+        "189258": [
+          "https://www.musepaintbar.com/events/classic-painting-340752"
+        ]
+      }
+    },
+    {
+      "concept": "genre-rock",
+      "category": "genre",
+      "label": "Rock music",
+      "visual": "Strong accented musical note",
+      "rationale": "Electric guitar exists but is not universal evidence; motif requires recognition testing.",
+      "existing_alternative": "Broad fallback does not distinguish this specific supported facet.",
+      "event_ids": [
+        188852,
+        189058,
+        189128
+      ],
+      "evidence_by_event": {
+        "188852": [
+          "Modest Mouse at The Rooftop at Pier 17: Modest Mouse is coming to The Rooftop at Pier 17, with special guest Caroline Rose, on October 8, 2026. This event is outdoors – rain or shine!",
+          "Tags: Music, Rock, Outdoor, Concert, Live Music, Format, Performance"
+        ],
+        "189058": [
+          "Brad Cole & Bossa Blue: Brad Cole and his collective Bossa Blue perform an eclectic mix of jazz, soul, and rock.",
+          "Tags: Music, Rock, Jazz, Funk, Concert, Soul Music, Format, Performance"
+        ],
+        "189128": [
+          "Unsane with Pissed Jeans, VAZ: Live concert featuring Unsane with Pissed Jeans and VAZ.",
+          "Tags: Music, Rock, Concert, Nightlife, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "188852": [
+          "https://rooftopatpier17.com/events/modest-mouse-2026/",
+          "https://theseaport.nyc/events/modest-mouse-at-the-rooftop-at-pier-17/"
+        ],
+        "189058": [
+          "https://www.viewcy.com/event/brad_cole_w_bossa_bl"
+        ],
+        "189128": [
+          "https://www.bowerypresents.com/events/detail?event_id=1368353"
+        ]
+      }
+    },
+    {
+      "concept": "format-poetry-reading",
+      "label": "Poetry reading",
+      "category": "format",
+      "visual": "A short verse page beside a microphone",
+      "rationale": "Performed verse differs from book-storytime and discussion.",
+      "existing_alternative": "Source Unicode fallback remains until distinct art is reviewed.",
+      "event_ids": [
+        188890,
+        188891
+      ],
+      "evidence_by_event": {
+        "188890": [
+          "Hieu Minh Nguyen: Staying Still w/ Madeleine Cravens: Stegner fellow's latest work.",
+          "Tags: Literature, Poetry, Reading, Loneliness, Format, Performance, Desire"
+        ],
+        "188891": [
+          "Indie Press Spotlight: Wave Books w/ Joshua Beckman, Dorothea Lasky, & Edwin Torres: Join us for an evening celebrating Wave Books with three acclaimed poets reading from their latest collections. The event will feature Joshua Beckman, Dorothea Lasky, and Edwin Torres.",
+          "Tags: Community, Literature, Poetry, Reading, Books, Format, Performance, Indie Press"
+        ]
+      },
+      "source_urls_by_event": {
+        "188890": [
+          "https://stayingstill.eventbrite.com",
+          "https://www.booksaremagic.net/events/5816820260917"
+        ],
+        "188891": [
+          "https://wavebooks.eventbrite.com",
+          "https://www.booksaremagic.net/events/5817020260925"
+        ]
+      }
+    },
+    {
+      "concept": "genre-punk-rock",
+      "label": "Punk rock",
+      "category": "genre",
+      "visual": "Explore a jagged torn-paper musical note with one broad safety-pin accent.",
+      "rationale": "Explicit punk programming supports genre exploration; visual convention needs recognition testing and does not assert performer costume or instrument.",
+      "existing_alternative": "Noto rock-hand/guitar cover broader rock; no custom punk symbol.",
+      "event_ids": [
+        189123,
+        189158
+      ],
+      "evidence_by_event": {
+        "189123": [
+          "Bikini Kill: Live concert featuring Bikini Kill with Downtown Boys.",
+          "Tags: Music, Rock, Concert, Nightlife, Punk Rock, Live Music, Format, Performance, Bikini Kill"
+        ],
+        "189158": [
+          "Bikini Kill with Lambrini Girls: [No stored description]",
+          "Tags: Music, Rock, Concert, Punk Rock, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "189123": [
+          "https://www.bowerypresents.com/events/detail?event_id=1304793"
+        ],
+        "189158": [
+          "https://www.bowerypresents.com/events/detail?event_id=1304767"
+        ]
+      }
+    },
+    {
+      "concept": "activity-burlesque",
+      "label": "Burlesque",
+      "category": "activity",
+      "visual": "Explore a broad theatrical feather fan with three large feather lobes and short handle.",
+      "rationale": "Burlesque show explicitly central; fan is an exploratory performance convention, not a claim that every show uses the prop.",
+      "existing_alternative": "Noto folding fan is paper/slatted, generic dancer omits stage-burlesque identity; recognition testing required. Newly accepted cabaret depicts a mixed stage format; test whether a distinct burlesque cue adds enough value before creating it.",
+      "event_ids": [
+        188749
+      ],
+      "evidence_by_event": {
+        "188749": [
+          "The 23rd Annual Miss Coney Island Pageant: Join us for a night of irreverent homage, a parody pageant like no other celebrating our favorite weirdo wonderland CONEY ISLAND!",
+          "Tags: Community, Brooklyn, Theater, Dance, Coney Island, Neighborhood, Burlesque, Nightlife, Pageant, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "188749": [
+          "https://www.coneyisland.com/event/missconey092626"
+        ]
+      }
+    },
+    {
+      "concept": "activity-trail-maintenance",
+      "category": "activity",
+      "label": "Trail maintenance",
+      "visual": "A trail tool repairing a short path edge",
+      "rationale": "Repairing trails differs from walking or litter collection.",
+      "existing_alternative": "Retain existing broad artwork; verify existing Noto options and recognition gain before new art.",
+      "event_ids": [
+        188939
+      ],
+      "evidence_by_event": {
+        "188939": [
+          "Catskills Trail Crew Workday: A workday with the Catskills Trail Crew.",
+          "Tags: Community, Outdoor, Volunteer, Conservation, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "188939": [
+          "https://www.nynjtc.org/calendar"
+        ]
+      }
+    },
+    {
+      "concept": "craft-cityscape-painting",
+      "category": "craft",
+      "label": "Cityscape painting",
+      "visual": "A canvas with three broad building silhouettes and a brush.",
+      "rationale": "Depicting cityscapes differs from touring city landmarks.",
+      "existing_alternative": "Palette already covers painting; avoid redundant city imagery.",
+      "event_ids": [
+        189248
+      ],
+      "evidence_by_event": {
+        "189248": [
+          "Classic Painting: Brooklyn Bridge Blues: Join our artist instructors as they lead you step-by-step through this locally inspired painting. No prior art experience is required!",
+          "Tags: Community, Visual Arts, Art, Workshop, Painting, Family, Education, Participatory, Local Landscape, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "189248": [
+          "https://www.musepaintbar.com/events/classic-painting-340739"
+        ]
+      }
+    },
+    {
+      "concept": "craft-observational-drawing",
+      "category": "craft",
+      "label": "Observational drawing",
+      "visual": "Pencil beside an abstract sculpture and its drawn outline.",
+      "rationale": "Drawing objects from observation differs from human figure study.",
+      "existing_alternative": "Existing pencil is useful; a specific still-life or object study may add more.",
+      "event_ids": [
+        189218
+      ],
+      "evidence_by_event": {
+        "189218": [
+          "Sketch Wagner Park!: Gather at the newly renovated Wagner Park to capture views of the bay and the Statue of Liberty through sketching. Participants are encouraged to bring their own supplies for this casual, free community meetup.",
+          "Tags: Community, Visual Arts, Art, Free, Outdoor, Drawing, Sketching, Open Practice, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "189218": [
+          "https://www.meetup.com/sketching/events/315467264/"
+        ]
+      }
+    },
+    {
+      "concept": "dance-ballet",
+      "category": "dance-style",
+      "label": "Ballet",
+      "visual": "Grounded dancer in a balanced classical arabesque with simple tutu silhouette.",
+      "rationale": "Ballet posture differs from social-dance emoji.",
+      "existing_alternative": "Existing dancer is usable but does not convey classical ballet.",
+      "event_ids": [
+        189221
+      ],
+      "evidence_by_event": {
+        "189221": [
+          "The Australian Ballet Oscar©: Choreographed by Tony winner Christopher Wheeldon, this New York premiere of the full-length work features a sweeping score by Joby Talbot, played live by the 47-piece Orchestra of St. Luke’s. The ballet brings the life and writings of brilliant humorist Oscar Wilde to the stage in a richly layered portrait of a visionary artist.",
+          "Tags: Music, Theater, Dance, Ballet, Classical Music, Orchestra, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "189221": [
+          "https://oslmusic.org/calendar/2026/10/08/the-australian-ballet-oscar-5-7pm/",
+          "https://oslmusic.org/calendar/2026/10/08/the-australian-ballet-oscar-7pm/"
+        ]
+      }
+    },
+    {
+      "concept": "dance-lindy-hop",
+      "label": "Lindy Hop",
+      "category": "dance-style",
+      "visual": "Two dancers in an open swing-out hold with bent knees.",
+      "rationale": "Lindy Hop is explicitly taught; a partner swing-out differentiates it from a generic solo dancer.",
+      "existing_alternative": "Existing dancers omit the partnered swing hold; pose needs recognition testing against other swing dances.",
+      "event_ids": [
+        188949
+      ],
+      "evidence_by_event": {
+        "188949": [
+          "Nylx 2026: An exciting Lindy Hop weekend exchange where dancers come together to learn, connect, and dance.",
+          "Tags: Community, Workshop, Dance, Education, Swing Dance, Lindy Hop, Open Practice, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "188949": [
+          "https://www.youshouldbedancing.nyc/nylx"
+        ]
+      }
+    },
+    {
+      "concept": "format-70mm-film",
+      "category": "format",
+      "label": "70mm projection",
+      "visual": "A broad film strip with large perforations and a projector beam.",
+      "rationale": "Physical large-format screening differs from production-camera technology.",
+      "existing_alternative": "Existing filmstrip is strong; avoid redundant detail and verify actual projection.",
+      "event_ids": [
+        189193
+      ],
+      "evidence_by_event": {
+        "189193": [
+          "The Odyssey in 70mm: Christopher Nolan’s next film; The Odyssey stars Matt Damon as Odysseys, king of Ithaca, as he embarks on a perilous journey to return home after the Trojan War.",
+          "Tags: Cinema, Film, Family, Screening, Action, Adventure, 70mm, Christopher Nolan, Drama / Film, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "189193": [
+          "https://angelikafilmcenter.com/villageeast/movies/details/the-odyssey",
+          "https://angelikafilmcenter.com/villageeast/movies/details/the-odyssey-in-70mm"
+        ]
+      }
+    },
+    {
+      "concept": "format-collaborative-painting",
+      "label": "Collaborative diptych painting",
+      "category": "format",
+      "visual": "Two adjoining canvases with a single tree or heart shape continuing across their seam.",
+      "rationale": "Each participant paints a separate part intended to hang as one work; joined canvases communicate this explicit format.",
+      "existing_alternative": "Noto palette identifies painting but does not show the shared two-part outcome.",
+      "event_ids": [
+        189252
+      ],
+      "evidence_by_event": {
+        "189252": [
+          "Couple's Art: Celestial Lake: Grab your bestie, your hot date, or your crew and paint this collaborative masterpiece where instructors will show you how to each create part of the painting. Painting solo is also an option, and no art experience is required.",
+          "Tags: Visual Arts, Art, Workshop, Painting, Family, Education, Participatory, Couples Art, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "189252": [
+          "https://www.musepaintbar.com/events/couples-art-340745"
+        ]
+      }
+    },
+    {
+      "concept": "format-vocal-recital",
+      "label": "Vocal recital",
+      "category": "format",
+      "visual": "A standing singer beside an open score on a music stand with one broad sound arc.",
+      "rationale": "Art-song and aria recital is voice-led; the format differs from full staged opera or a generic band concert.",
+      "existing_alternative": "Microphone is broad and piano denotes accompaniment; theater masks lose the recital setting.",
+      "event_ids": [
+        189220
+      ],
+      "evidence_by_event": {
+        "189220": [
+          "Education Benefit: Join host Susan Graham and special guest artist, baritone Quinn Kelsey, for an unforgettable evening of song and conversation at Orchestra of St. Luke’s Education Benefit. This year’s Benefit marks the 50th anniversary of Orchestra of St. Luke’s Education Programs, with proceeds helping to sustain vital musical training and education for young people.",
+          "Tags: Community, Music, Classical Music, Education, Fundraiser, Benefit, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "189220": [
+          "https://oslmusic.org/calendar/2026/10/01/education-benefit-2-6pm/",
+          "https://oslmusic.org/calendar/2026/10/01/education-benefit-6pm/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-americana",
+      "label": "Americana music",
+      "category": "genre",
+      "visual": "Explore an acoustic sound-hole ring with a branching musical note.",
+      "rationale": "Explicit Americana programming merits genre exploration, but there is no universal symbol and acoustic guitar cannot be assumed as actual lineup.",
+      "existing_alternative": "Noto guitar/notes are broad; motif must distinguish folk/country and not duplicate proposed acoustic-guitar art.",
+      "event_ids": [
+        189059
+      ],
+      "evidence_by_event": {
+        "189059": [
+          "James Maddock: Americana singer-songwriter James Maddock performs a set of folk and Americana songs.",
+          "Tags: Music, Concert, Folk Music, Singer Songwriter, Americana, Vocal Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "189059": [
+          "https://www.viewcy.com/event/james_maddock"
+        ]
+      }
+    },
+    {
+      "concept": "genre-flamenco",
+      "label": "Flamenco music",
+      "category": "genre",
+      "visual": "Rhythmic clapping hands beside a warm rhythmic accent",
+      "rationale": "Flamenco musical form is distinct; do not assume guitar or dance without evidence.",
+      "existing_alternative": "Retain the event Unicode fallback until a distinct recognizable study passes review.",
+      "event_ids": [
+        188816
+      ],
+      "evidence_by_event": {
+        "188816": [
+          "Love Flamenco: A flamenco performance presented by Universo Management y Producciones SLU.",
+          "Tags: Music, Theater, Dance, Flamenco, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "188816": [
+          "https://www.queenstheatre.org/events/love-flamenco-m5sx"
+        ]
+      }
+    },
+    {
+      "concept": "genre-folk",
+      "label": "Folk music",
+      "category": "genre",
+      "visual": "Explore a plucked-string curve beside one plain storytelling note.",
+      "rationale": "Folk is explicitly named in the program.",
+      "existing_alternative": "Generic notes remain valid; this motif needs recognition testing and must not assume acoustic instrumentation.",
+      "event_ids": [
+        189059
+      ],
+      "evidence_by_event": {
+        "189059": [
+          "James Maddock: Americana singer-songwriter James Maddock performs a set of folk and Americana songs.",
+          "Tags: Music, Concert, Folk Music, Singer Songwriter, Americana, Vocal Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "189059": [
+          "https://www.viewcy.com/event/james_maddock"
+        ]
+      }
+    },
+    {
+      "concept": "genre-hip-hop",
+      "label": "Hip-hop",
+      "category": "genre",
+      "visual": "A compact boombox with two broad speaker circles and one strong rhythmic accent.",
+      "rationale": "The genre is explicitly tagged; boombox is an exploratory historical music-culture cue, not a claim that it is on stage, and must be tested beyond generic retro music.",
+      "existing_alternative": "Noto microphone is generic vocal performance; DJ decks imply a DJ role not established by every hip-hop concert.",
+      "event_ids": [
+        189173
+      ],
+      "evidence_by_event": {
+        "189173": [
+          "Epik High: No description available.",
+          "Tags: Music, Hip Hop, Concert, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "189173": [
+          "https://www.bowerypresents.com/events/detail?event_id=1480945"
+        ]
+      }
+    },
+    {
+      "concept": "genre-house",
+      "label": "House music",
+      "category": "genre",
+      "visual": "A compact drum machine with four evenly spaced illuminated beat pads.",
+      "rationale": "Explicit house music supports a four-on-the-floor rhythm exploration; this may read as generic electronic music and needs recognition testing.",
+      "existing_alternative": "DJ decks specify performance equipment, not house; Noto notes are broader still.",
+      "event_ids": [
+        189104
+      ],
+      "evidence_by_event": {
+        "189104": [
+          "Amber Sunset Party: Enjoy fireworks, amber skies and live DJs at this weekly rooftop party.",
+          "Tags: Rooftop, Music, Dance, Outdoor, Nightlife, House Music, Electronic Music, Club Night, Outdoor Venue, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "189104": [
+          "https://www.instagram.com/lillistarbk/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-jazz",
+      "label": "Jazz",
+      "category": "genre",
+      "visual": "A pair of syncopated musical notes with one loose improvisatory flourish.",
+      "rationale": "The genre is explicit, but an instrument-neutral motif remains exploratory and requires recognition tests; avoid treating saxophone as universal jazz.",
+      "existing_alternative": "Noto notes are generic; a saxophone misstates instrumentation when the program does not feature one.",
+      "event_ids": [
+        189058
+      ],
+      "evidence_by_event": {
+        "189058": [
+          "Brad Cole & Bossa Blue: Brad Cole and his collective Bossa Blue perform an eclectic mix of jazz, soul, and rock.",
+          "Tags: Music, Rock, Jazz, Funk, Concert, Soul Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "189058": [
+          "https://www.viewcy.com/event/brad_cole_w_bossa_bl"
+        ]
+      }
+    },
+    {
+      "concept": "genre-soul",
+      "label": "Soul music",
+      "category": "genre",
+      "visual": "A record with a rounded call-and-response wave.",
+      "rationale": "Classic and Northern Soul are explicit repertoire; the motif needs testing against funk and R&B and should not imply live vocals.",
+      "existing_alternative": "DJ decks serve the current activity; no existing icon distinguishes soul repertoire.",
+      "event_ids": [
+        189058
+      ],
+      "evidence_by_event": {
+        "189058": [
+          "Brad Cole & Bossa Blue: Brad Cole and his collective Bossa Blue perform an eclectic mix of jazz, soul, and rock.",
+          "Tags: Music, Rock, Jazz, Funk, Concert, Soul Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "189058": [
+          "https://www.viewcy.com/event/brad_cole_w_bossa_bl"
+        ]
+      }
+    }
+  ],
+  "next_studies": [
+    "dance-lindy-hop",
+    "activity-trail-maintenance",
+    "format-collaborative-painting",
+    "format-poetry-reading"
+  ],
+  "limitations": "Artist-name-only genre inferences omitted. Genre and dance motifs need recognizability/geometry studies before creation. No population-wide ranking claim."
+}

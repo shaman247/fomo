@@ -1,0 +1,189 @@
+[
+  {
+    "icon_id": "craft-rubber-stamping",
+    "source_sha256": "b34b61b55ab45eea61dbcd459a626761fad0abcfd04b6b367d632fc77d11a451",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Mounted hand stamp beside an ink impression.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-020/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-020/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 1970,
+      "gzip_level_6": 804
+    },
+    "optimization": {
+      "initial_raw": 1970,
+      "initial_gzip_level_6": 804,
+      "final_raw": 1970,
+      "final_gzip_level_6": 804
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Wood-mounted stamp and separate star impression identify hand stamping at24/32px. At16px the rubber layer and motif soften; text distinguishes craft stamping from document authentication. The actual event stamp design and substrate appearance are not promised."
+    ]
+  },
+  {
+    "icon_id": "craft-cardboard-construction",
+    "source_sha256": "d25538ee68ce6577ecb206ad79f58df5e6ab04300a0e5da48e8a2d6099058079",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Cardboard-style model house with an open folded door.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-020/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-020/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 1911,
+      "gzip_level_6": 761
+    },
+    "optimization": {
+      "initial_raw": 1832,
+      "initial_gzip_level_6": 733,
+      "final_raw": 1911,
+      "final_gzip_level_6": 761
+    },
+    "issues": [
+      {
+        "issue": "The true window opening blended into the similarly colored interior back wall.",
+        "resolution": "Added a darker interior back surface in the authoritative scene, then inspected all six views and final native cards.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Brown folded-panel house, tape and open door suggest cardboard construction at24/32px. At16px it can read as a generic small house; the event label supplies the material/activity. The scale and finished project are illustrative."
+    ]
+  },
+  {
+    "icon_id": "cuisine-ravioli",
+    "source_sha256": "cbd1de83d3ef689db80cfb8a530c438946358c3967cb71e6aa64202f4e10dc4e",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Two square filled pasta pillows.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-020/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-020/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 4162,
+      "gzip_level_6": 1680
+    },
+    "optimization": {
+      "initial_raw": 4411,
+      "initial_gzip_level_6": 1772,
+      "final_raw": 4162,
+      "final_gzip_level_6": 1680
+    },
+    "issues": [
+      {
+        "issue": "The first pasta pieces looked flat and biscuit-like, with poorly separated filling and rim.",
+        "resolution": "Raised the soft filling mound to12.7mm, separated broad center/rim paint and reduced tiny perimeter segments; rechecked geometry and native rendering.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Square pasta pillows with a raised center and crimped border identify ravioli at24/32px. At16px they can resemble small crackers or cushions; the food context matters. No exact filling, cutter or sauce is implied."
+    ]
+  },
+  {
+    "icon_id": "craft-chalk-drawing",
+    "source_sha256": "cec56f6c02e6a98b4f67ba8efd6d748ba6963d685a78056789e97b0d010c6c35",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Flower chalk drawing on a board with loose chalk.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-020/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-020/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 955,
+      "gzip_level_6": 500
+    },
+    "optimization": {
+      "initial_raw": 955,
+      "initial_gzip_level_6": 500,
+      "final_raw": 955,
+      "final_gzip_level_6": 500
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Blunt colored chalk and a drawn flower on slate identify chalk drawing at24/32px. At16px flower detail softens and a classroom-board interpretation remains possible; title resolves participatory craft. It is not the exact library wall."
+    ]
+  },
+  {
+    "icon_id": "craft-erasure-poetry",
+    "source_sha256": "d8276110722dd3615e4205053b98f3ea97c85095d5134e673098c4c203ab5c83",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Page with selected words, blackout bars and a marker.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-020/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-020/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 2937,
+      "gzip_level_6": 641
+    },
+    "optimization": {
+      "initial_raw": 2937,
+      "initial_gzip_level_6": 641,
+      "final_raw": 2937,
+      "final_gzip_level_6": 641
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Retained fragments within blacked-out text and a marker distinguish erasure writing at24/32px. At16px individual letters are not legible and it can read as document redaction; event text establishes poetry. Blackout is representative of erasure, not a guarantee of the workshop method."
+    ]
+  }
+]

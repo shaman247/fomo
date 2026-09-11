@@ -84,6 +84,12 @@ One local Scrabble search reused one SVG request across multiple results and the
 
 ## Offline tag associations
 
+The [September 9 hierarchy audit](../config/event-icons/20260909-tag-hierarchy-review.md)
+applies explicit custom and approved Noto overrides, including tanpura for Indian
+Classical. `tag_icon_assignments.py --scope event|venue --tag NAME --icon ID`
+validates either provider against the approved catalog and preserves `tags.emoji`.
+Use scoped exact edits, not the initial seed, for ongoing maintenance.
+
 The September 8 follow-up corrected the missing Mixtape Bingo title synonym in rule version `event-icons-2`: 27 active events changed from `bingo` to `music-bingo`. The existing `Mixtape Bingo` keyword row (30018) also received an explicit offline `music-bingo` association, bringing the local tag map to 26 entries. This was an editorial edit, not an expansion or rerun of the initial seed. Backups are under `.scratch/mixtape-bingo/`. Regression cases cover ordinary bingo, unrelated mixtape events, ambiguous mixed activities, and description-only mentions.
 
 `tags.icon_id` is the source of truth for custom tag artwork, alongside the existing `tags.emoji`. The column and 25 editorial associations have been applied locally, covering all fifteen icon designs. Both curated tags and precise keyword tags can have an icon; assigning artwork does not promote a keyword or alter hierarchy/filter semantics. Broad Games, Tabletop, Magic, Sewing, and Glass Art tags retain their existing emoji.

@@ -1,0 +1,189 @@
+[
+  {
+    "icon_id": "activity-astrology",
+    "source_sha256": "ecd09bfca7b7fe10b156b5bea4ad307e4a35d66ba34cd61515d556e52f0fba1f",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Segmented celestial chart wheel with sun and crescent.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-025/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-025/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 1832,
+      "gzip_level_6": 431
+    },
+    "optimization": {
+      "initial_raw": 1832,
+      "initial_gzip_level_6": 431,
+      "final_raw": 1832,
+      "final_gzip_level_6": 431
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Segmented chart, sun and crescent communicate astrology at 24/32px; at 16px it can read as a celestial medallion. Label is necessary. Equal sectors and decorative connections are symbolic, not a calculated chart, astronomic instrument or prediction."
+    ]
+  },
+  {
+    "icon_id": "activity-songwriting",
+    "source_sha256": "5d6234cb9d26b8e96b3c98dd2be6daa825ddd0434fc87aa9d96a4d7e787c3112",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Lyric sheet with musical note and pencil.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-025/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-025/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 945,
+      "gzip_level_6": 462
+    },
+    "optimization": {
+      "initial_raw": 945,
+      "initial_gzip_level_6": 462,
+      "final_raw": 945,
+      "final_gzip_level_6": 462
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Music note, lyric strokes and pencil distinguish composing from performing at 24/32px. At 16px the lyric strokes soften. No notation skill, particular instrument or software is promised."
+    ]
+  },
+  {
+    "icon_id": "craft-junk-journaling",
+    "source_sha256": "0bd753b9dc1e3aa2aa5ad03fc671cec72b74ec1be221657c816a9fed4aabf04e",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Notebook decorated with taped found-paper and ticket scraps.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-025/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-025/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 1006,
+      "gzip_level_6": 491
+    },
+    "optimization": {
+      "initial_raw": 1006,
+      "initial_gzip_level_6": 491,
+      "final_raw": 1006,
+      "final_gzip_level_6": 491
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Bound notebook with taped paper and ticket scraps suggests journal assemblage at 24/32px. At 16px tiny scraps merge and may read as a decorated notebook. Contents and binding method are illustrative."
+    ]
+  },
+  {
+    "icon_id": "equipment-menstrual-products",
+    "source_sha256": "861ba523f901202f99f12abbe5312563fff17b4a92c759d299a14ce9f630479c",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Winged pad beside tampon with cord.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-025/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-025/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 898,
+      "gzip_level_6": 493
+    },
+    "optimization": {
+      "initial_raw": 898,
+      "initial_gzip_level_6": 493,
+      "final_raw": 898,
+      "final_gzip_level_6": 493
+    },
+    "issues": [
+      {
+        "issue": "Pale supply boundaries were weak on white at small sizes.",
+        "resolution": "Darkened the pad perimeter, tampon side and attached cord; reinspected current native cards and actual renderer variants.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Winged pad and tampon with attached string identify menstrual supplies. At 16px product interior channels soften and the tampon is small; text establishes distribution context. No brands, anatomy, use instructions or exact kit contents are implied."
+    ]
+  },
+  {
+    "icon_id": "activity-digital-sculpting",
+    "source_sha256": "8bc7b71da31ef47964c60173221194d56d6594e88141ce34b3b54a82c1ee4e65",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Virtual sculpted form inside software window with brush indicator.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-025/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-025/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 1841,
+      "gzip_level_6": 869
+    },
+    "optimization": {
+      "initial_raw": 2367,
+      "initial_gzip_level_6": 1070,
+      "final_raw": 1841,
+      "final_gzip_level_6": 869
+    },
+    "issues": [
+      {
+        "issue": "Initial flat mesh-face lighting created stepped bands across the virtual sculpture.",
+        "resolution": "Computed smooth vertex normals from the same mesh and divided surface triangles at two lighting thresholds. This retains the surface and occlusion while creating broad continuous paint regions; all six views and native sizes rechecked. Correct outward winding was established before the first visual review.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Sculpted virtual form, software window and circular brush marker distinguish digital object editing at 24/32px. At 16px it may read as generic computer graphics or photo editing, requiring the label. The cursor circle is a symbolic UI overlay, not a physically projected brush footprint. No real clay, 3D printing, human anatomy or particular application is promised."
+    ]
+  }
+]

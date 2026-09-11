@@ -1,0 +1,112 @@
+{
+  "reviewer_mode": "creator-critical-pass",
+  "geometry_mode": "five-flat-symbolic-diagrams",
+  "views": [],
+  "evidence": ".scratch/icon-cycles-20260909/cycle-069/visual-final",
+  "decision": "pass",
+  "findings": [
+    "No human figures or complex physical apparatus. Five flat symbolic diagrams use challenge panels,curtains,hearts,dialogue marks,microphone silhouettes,music notes,a theatrical mask and briefcase. No3D scene claimed or needed for these original pictograms.",
+    "Personally inspected five native128/32/24/16light/dark cards,nine accepted/Noto reference cards,and ten actual IconManager variants. Narrow format meanings require labels; fine lettering-like marks soften at16px.",
+    "New crowd-work scope differs from existing audience-question comedyQ&A; musical-comedy act differs from full scripted musicals and improvised sung theater. Careeradvice covers broad professional guidance while resume-only sessions keep existing resume art.",
+    "All sources760\u20131092rawbytes,well below size triggers. No optimization-driven source changes or unresolved material visual defects. Critique is creator-only,not blind or independent."
+  ],
+  "references": [
+    {
+      "event_ids": [
+        221692
+      ],
+      "url": "https://www.caveat.nyc/events/fun-by-design-2026-11-09",
+      "method": "Primary rendered text personally read after networkidle; initial shell-only attempt not evidence",
+      "findings": "Nov9 7pm doors6:30,21+,two designers compete in design challenges. Audience design problems may be answered. $18.76early/$24.41standard/$25door/$11.63stream,no drink minimum."
+    },
+    {
+      "event_ids": [
+        221695
+      ],
+      "url": "https://www.caveat.nyc/events/looking-for-laughs-nycf-2026-11-12",
+      "method": "Primary rendered text personally read",
+      "findings": "Nov12 9:30pm doors9,$22.35standard/$23door21+. Two singles blindfolded on one real date,fourcomics,hostsDouglasWidick/KailaMullady. RelatedSep18/Oct23not sameNYCFoccurrence."
+    },
+    {
+      "event_ids": [
+        221770
+      ],
+      "url": "https://www.broadwaycomedyclub.com/shows/dragos-live-in-new-york-presented-by-the-new-york-city-comedy-festival/",
+      "method": "Primary rendered text personally read",
+      "findings": "Full-hour crowdwork around audience stories. Nov14headerShow7PM conflictsbodydoors7:30/show8.18+,2drinkminimum20%gratuity; promotional/commercialfilmingnotice. Notnecessarilyfullspecialtaping."
+    },
+    {
+      "event_ids": [
+        221767
+      ],
+      "url": "https://www.broadwaycomedyclub.com/shows/adam-and-eyal-musical-comedy-show-presented-by-the-new-york-comedy-festival/",
+      "method": "Primary rendered text personally read",
+      "findings": "Nov12 7pm,comic songs andstand-up.$28.22inclfee18+,2drinkminimum20%gratuity. Artistcomparisonsnotguestbilling;noequipmentclaim."
+    },
+    {
+      "event_ids": [
+        221798
+      ],
+      "url": "https://tisch.nyu.edu/student-affairs/career-development/calendar/AY2027/721PopUp-Sept2026",
+      "method": "Primary rendered text personally read",
+      "findings": "Sep9noonPAST,currentstudentsonly,721Broadwaylobby,noreservation. Broadcareerquestions/resumereview. Futureoccurrencesnotverifiedbythispage."
+    },
+    {
+      "event_ids": [
+        221688
+      ],
+      "url": "https://www.caveat.nyc/events/arguments-and-grievances-nycf-2026-11-06",
+      "method": "Primary rendered text personally read",
+      "findings": "Nov6 9:30doors9,21+. Comediansargueopposingpositionsonabsurdtopics,audiencejudges. Existingdebatescopefits;notlegaladvice."
+    },
+    {
+      "event_ids": [
+        221693
+      ],
+      "url": "https://www.caveat.nyc/events/wrong-a-fcked-up-game-show-nycf-2026-11-09",
+      "method": "Primary rendered text personally read",
+      "findings": "Nov9 9:30doors9,21+,hostJayLightthreecomiccontestants,questions/games/madeuppoints. $27.81standardgreaterthan$25doorasprimarylists;preserveforinvestigation."
+    },
+    {
+      "event_ids": [
+        221694
+      ],
+      "url": "https://www.caveat.nyc/events/sagematch-nycf-2026-11-11",
+      "method": "Primary rendered text personally read",
+      "findings": "Nov11 9:30doors9,$18.76/$20door21+. Fourcompetitorscreateanddeliveron-the-spotslidesfromaudiencetopics. WWE/cagematchmetaphor,notactualsports."
+    },
+    {
+      "event_ids": [
+        221699
+      ],
+      "url": "https://donyc.com/events/2026/9/12/butthole-surfers-hole-truth-and-nothing-butt-tickets",
+      "method": "Aggregator rendered text personally read; organizer format not verified",
+      "findings": "Sep12 7:30\u201310:30,$19,MontyHall,WFMUDJPerroCalientehost. Bodydoesnotconfirmfilmversusband;retainfallbackpendingorganizer."
+    },
+    {
+      "event_ids": [
+        221685
+      ],
+      "url": "https://www.caveat.nyc/events/the-novelizers-cheerful-earful-2026-09-30",
+      "method": "Primary rendered text personally read",
+      "findings": "Sep30 9:30doors9,$27.06/$30door21+. Podcastpresentscomicnovelization/audiobookofT2withimprovisedpretendfilmmakerinterviews.Notoriginalfilmscreeningoractualcrewpromise."
+    },
+    {
+      "event_ids": [
+        221757
+      ],
+      "url": "https://www.groupmuse.com/events/16933-sublime-strings-on-the-hudson-2-violins-and-cello",
+      "method": "Navigation networkidle timeout; complete visible event body personally read",
+      "findings": "Currentheadingviolin,cello,viola; JayJulioViola,ChandlerYuViolin,SummerHuCello.Oct4 6:30EDT,$5reserve+$30+event,BYOB,notwheelchairaccessible,exactaddressonlyapprovedattendees. Storedtwo-violinslineupstale."
+    },
+    {
+      "event_ids": [
+        221719
+      ],
+      "url": "https://bedfordplayhouse.org/special_events/base-camp-parenting/",
+      "method": "Primary rendered text personally read",
+      "findings": "Nov10 7pm60min,liveappearancebybothauthorsSusanBauerfeld/ChrisParrott. Parentingbookdiscussion,notguaranteedhealthoutcomeorpersonaltherapy."
+    }
+  ],
+  "planar_source_sha256": "a60e9467dfff25965bb447c8a2e0f21255131de6a1c1ef8f74eb166d7341c748"
+}

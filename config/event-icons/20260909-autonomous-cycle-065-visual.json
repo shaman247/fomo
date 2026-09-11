@@ -1,0 +1,193 @@
+[
+  {
+    "icon_id": "craft-natural-bundle-dyeing",
+    "source_sha256": "0448d34e3370e3e9fb03d7aa1363bc579cff0baaea45b8a2f779a604e70a9b0e",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; prior brief known. Plant dyestuffs laid on cloth beside a bound fabric roll.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-065/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-065/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 9675,
+      "gzip_level_6": 3209
+    },
+    "optimization": {
+      "initial_raw": 9632,
+      "initial_gzip_level_6": 3226,
+      "final_raw": 9675,
+      "final_gzip_level_6": 3209
+    },
+    "issues": [
+      {
+        "severity": "material",
+        "location": "bundle ground contact",
+        "observation": "Twine loops extended below the original ground plane.",
+        "revision": "Raised the cloth roll so its binding loops support it at ground level.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Roll and cloth remain at24/32px; botanical detail softens at16px and exact bundle-dye method needs label. No exact plant, recipe, dye result or class kit promised."
+    ]
+  },
+  {
+    "icon_id": "craft-macrame",
+    "source_sha256": "47997228804a8a6ec6044c3290aa69ac10e0aafb27a91a17343fc621d50ebed0",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; prior brief known. Suspended knotted cord net with open diamonds and fringe.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-065/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-065/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 8271,
+      "gzip_level_6": 2351
+    },
+    "optimization": {
+      "initial_raw": 18215,
+      "initial_gzip_level_6": 5779,
+      "final_raw": 8271,
+      "final_gzip_level_6": 2351
+    },
+    "issues": [
+      {
+        "severity": "material",
+        "location": "cord continuity and complexity",
+        "observation": "First wraps were separate rings; second design read like isolated bands and exceeded the size-review threshold.",
+        "revision": "Rebuilt as four continuous folded cords forming alternating paired netting, simplified compact knot volumes and reduced projection precision while retaining gaps and fringe.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Net silhouette stays distinct from loom weaving at24/32px; individual knot detail softens at16px. Knot volumes are simplified,not an instructional pattern or claimed knot topology; class project and plant/pot are not promised."
+    ]
+  },
+  {
+    "icon_id": "craft-glass-etching",
+    "source_sha256": "28693a7a93f4286bed21c20f5fd9f63e2510646e2425a5a4410c1fa94c126c52",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; prior brief known. Frosted glass beside a closed supply jar.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-065/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-065/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 5690,
+      "gzip_level_6": 1813
+    },
+    "optimization": {
+      "initial_raw": 5690,
+      "initial_gzip_level_6": 1813,
+      "final_raw": 5690,
+      "final_gzip_level_6": 1813
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Glass and supplies jar remain at16px; frosted motif has lower contrast on light background and exact etching meaning needs label. No chemical product,process or safety instruction implied."
+    ]
+  },
+  {
+    "icon_id": "format-curator-led-art-tour",
+    "source_sha256": "c32e81d3f5b7721e7a660d0b0218f15fad28dd6b9d3ab1e60c1d17db1dd376b1",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; prior brief known. Framed art with an explanation bubble and short route.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-065/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-065/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 958,
+      "gzip_level_6": 462
+    },
+    "optimization": {
+      "initial_raw": 958,
+      "initial_gzip_level_6": 462,
+      "final_raw": 958,
+      "final_gzip_level_6": 462
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Framed artworks and speech bubble remain at24/32px; route softens at16px and curator identity needs label. Generic original art is not a real collection object or access promise."
+    ]
+  },
+  {
+    "icon_id": "format-concert-musical",
+    "source_sha256": "392914080612f297113e146410bbd67ac21f950e408c92526599a75e4923719b",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; prior brief known. Theatrical mask and musical score on a stand inside stage curtains.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-065/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-065/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 1146,
+      "gzip_level_6": 569
+    },
+    "optimization": {
+      "initial_raw": 1146,
+      "initial_gzip_level_6": 569,
+      "final_raw": 1146,
+      "final_gzip_level_6": 569
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Stage,score and theater mask remain at16px; concert musical versus revue depends on the label and assignment scope. No complete staging,cast or actual score promised."
+    ]
+  }
+]

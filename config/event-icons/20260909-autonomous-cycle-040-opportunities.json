@@ -1,0 +1,702 @@
+{
+  "date": "2026-09-10",
+  "scope": "Cycle 040: 100 sequential events 211319–211645, no targeted supplements.",
+  "suggestions": 32,
+  "concept_count": 30,
+  "concepts": [
+    {
+      "concept": "format-book-launch",
+      "label": "Book launch",
+      "category": "format",
+      "visual": "New book with a small celebratory ribbon.",
+      "rationale": "Broad launch format when signing versus discussion remains unconfirmed.",
+      "existing_alternative": "Use a supported accepted icon or broad Unicode while a distinctive study is pending.",
+      "event_ids": [
+        211367,
+        211441
+      ],
+      "evidence_by_event": {
+        "211367": [
+          "Obey in Advance Book Launch Party: Come celebrate the launch of Ginny and Carlos’s new political satire book Obey In Advance with comed...",
+          "Tags: Community, Literature, Comedy, Satire, Book Launch, Reading, Political Satire, Format, Performance"
+        ],
+        "211441": [
+          "Girls Write Now: Metamorphosis Anthology Launch Party: Preorder the anthology here! To truly understand Girls Write Now, zoom out and observe a complex, multidimensional organism, constantly",
+          "Tags: Community, Literature, Book Launch, Reading, Anthology, Publishing, Writing, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "211367": [
+          "https://caveat.nyc/events/obey-in-advance-book-launch-party-2026-09-20",
+          "https://www.caveat.nyc/events/obey-in-advance-book-launch-party-2026-09-20"
+        ],
+        "211441": [
+          "https://girlswritenow.org/event/202611091800-metamorphosis-anthology-launch-party/",
+          "https://mcnallyjackson.com/event/2026-11-04/girls-write-now-metamorphosis-anthology-launch-party"
+        ]
+      }
+    },
+    {
+      "concept": "genre-electronic",
+      "label": "Electronic music",
+      "category": "genre",
+      "visual": "A simple waveform beside one music note.",
+      "rationale": "Explicit electronic repertoire does not establish DJ or synth equipment; abstract motif needs recognition testing.",
+      "existing_alternative": "Existing broad Unicode remains suitable; specific motif must demonstrate added recognition before new artwork.",
+      "event_ids": [
+        211443,
+        211444
+      ],
+      "evidence_by_event": {
+        "211443": [
+          "Marsolo: Club night w/ Marsolo @ Elsewhere in Bushwick on 10.16! Tickets start at $22 • 10:30pm • 21+ | Genre: Electronic",
+          "Tags: Music, Nightlife, Clubbing, Electronic Music, Club Night, 21+, Format, Social"
+        ],
+        "211444": [
+          "Elsewhere Presents: Jam City @ Market Hotel: Elsewhere Presents: Jam City @ Market Hotel in Bushwick on 9.26! Tickets start at $25 • 7pm • 16+ | Genre: Electronic",
+          "Tags: Music, Concert, Electronic Music, Live Music, Market Hotel, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "211443": [
+          "https://ra.co/events/2508103",
+          "https://www.eventbrite.com/e/marsolo-jack-marlow-tickets-1996375604173",
+          "https://www.eventbrite.com/e/marsolo-tickets-1996375604173"
+        ],
+        "211444": [
+          "https://www.eventbrite.com/e/elsewhere-presents-jam-city-market-hotel-tickets-1996119515204"
+        ]
+      }
+    },
+    {
+      "concept": "activity-medicinal-garden",
+      "label": "Medicinal garden workshop",
+      "category": "activity",
+      "visual": "Garden bed and plant-study notebook.",
+      "rationale": "Subject does not establish preparation, ingestion or clinical use.",
+      "existing_alternative": "Retain supported accepted art or broad Unicode pending a distinct grounded study.",
+      "event_ids": [
+        211474
+      ],
+      "evidence_by_event": {
+        "211474": [
+          "Climate Week Medicinal Garden Workshop: Medicinal Garden Workshop at La Plaza Community Garden.",
+          "Tags: Community, Nature, Workshop, Free, Education, Gardening, Participatory, Climate Week, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "211474": [
+          "https://www.eventbrite.com/e/climate-week-medicinal-garden-workshop-tickets-1996355539158"
+        ]
+      }
+    },
+    {
+      "concept": "activity-mindful-writing",
+      "label": "Mindful writing",
+      "category": "activity",
+      "visual": "Writing page with a calm meditation motif.",
+      "rationale": "Combined writing and mindfulness without assuming personal journaling.",
+      "existing_alternative": "Retain supported accepted art or broad Unicode pending a distinct grounded study.",
+      "event_ids": [
+        211319
+      ],
+      "evidence_by_event": {
+        "211319": [
+          "In-Person and Online: Write Like a Buddha – A Workshop Series for All: Combining mindfulness meditation with mindful writing, participants will explore their experiences like a Buddha would. Each week includes a guided meditation and writing practice, along with insights from the Buddha’s core teachings; no meditation or writing experience is required.",
+          "Tags: Literature, Wellness, Education, Meditation, Virtual, Class, Participatory, Mind-Body, Writing, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "211319": [
+          "https://www.nyimc.org/event/write-like-a-buddha/"
+        ]
+      }
+    },
+    {
+      "concept": "activity-nonprofit-formation",
+      "label": "Nonprofit formation",
+      "category": "activity",
+      "visual": "Organization plan and formation documents.",
+      "rationale": "Learning organizational obligations without legal representation promises.",
+      "existing_alternative": "Retain supported accepted art or broad Unicode pending a distinct grounded study.",
+      "event_ids": [
+        211526
+      ],
+      "evidence_by_event": {
+        "211526": [
+          "Forming a Nonprofit Workshop: This workshop covers forming arts-related nonprofit organizations, including legal, ethical, and financial obligations.",
+          "Tags: Community, Workshop, Education, Non Profit, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "211526": [
+          "https://www.artscouncilofrockland.org/rocklandartscalendar/detail/4582/1785384000000"
+        ]
+      }
+    },
+    {
+      "concept": "activity-sign-language-learning",
+      "label": "Sign language learning",
+      "category": "activity",
+      "visual": "Verified manual-language teaching motif.",
+      "rationale": "Specific gestures need anatomical and linguistic review.",
+      "existing_alternative": "Retain supported accepted art or broad Unicode pending a distinct grounded study.",
+      "event_ids": [
+        211608
+      ],
+      "evidence_by_event": {
+        "211608": [
+          "ASL for All: ASL for All is a welcoming, multi-generational class designed for complete beginners and learners of all ages. Participants will cover essential signs, everyday phrases, and deaf culture in an interactive, supportive environment. Taught by Opal Gordon, an educator, advocate, and activist for Deaf Rights.",
+          "Tags: Community, Accessibility, Free, Family, Education, Cultural Heritage, ASL, Class, Deaf Culture, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "211608": [
+          "https://bsec.org/events/asl-for-all/"
+        ]
+      }
+    },
+    {
+      "concept": "craft-natural-ink",
+      "label": "Natural ink making",
+      "category": "craft",
+      "visual": "Plant material and an ink jar beside a brush.",
+      "rationale": "Ink preparation for drawing rather than textile dyeing; exact materials require source review.",
+      "existing_alternative": "Retain supported accepted art or broad Unicode pending a distinct grounded study.",
+      "event_ids": [
+        211388
+      ],
+      "evidence_by_event": {
+        "211388": [
+          "Children & Families: Naturally Spooky Inks: Make ink using toxic plants gathered from Storm King’s landscape, then experiment with these rare colors to create a painting derived from nature.",
+          "Tags: Art, Workshop, Family, Education, Outdoor, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "211388": [
+          "https://stormking.org/events/children-families-spooky-inks/"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-organ-trio",
+      "label": "Organ trio",
+      "category": "format",
+      "visual": "Compact dual keyboard organ console with three small music marks",
+      "rationale": "The program explicitly calls itself Organ After Hours and identifies an organ trio. Organ is a defining ensemble sound but the billed leader plays saxophone, so this supports an ensemble-format candidate rather than exclusive organ solo assignment.",
+      "existing_alternative": "Keyboard or saxophone emoji",
+      "event_ids": [
+        211455
+      ],
+      "evidence_by_event": {
+        "211455": [
+          "Organ Trio Freak-Out! w/ Jimmy Vivino, Rich Pagano, Eric Findland: No description available.",
+          "Tags: Music, Jazz, Family, Concert, All Ages, Organ Trio, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "211455": [
+          "https://bitterend.com/#/events/192530"
+        ]
+      }
+    },
+    {
+      "concept": "format-community-benefit",
+      "label": "Community benefit",
+      "category": "format",
+      "visual": "Community program with supporting donation motif.",
+      "rationale": "Benefit event without formal gala assumptions.",
+      "existing_alternative": "Retain supported accepted art or broad Unicode pending a distinct grounded study.",
+      "event_ids": [
+        211433
+      ],
+      "evidence_by_event": {
+        "211433": [
+          "2026 Fall Benefit: Many Doors, One Mission: Greenwich House’s Fall Benefit will celebrate the organization’s community impact and members of its community who are making a difference. The event will include this year’s honorees and sponsors.",
+          "Tags: Community, Nightlife, Fundraiser, Benefit, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "211433": [
+          "https://greenwichhouse.org/event/2026-fall-benefit-many-doors-one-mission/"
+        ]
+      }
+    },
+    {
+      "concept": "format-dating-show",
+      "label": "Dating show",
+      "category": "format",
+      "visual": "Stage cards and conversational hearts.",
+      "rationale": "Hosted dating entertainment rather than private matchmaking.",
+      "existing_alternative": "Retain supported accepted art or broad Unicode pending a distinct grounded study.",
+      "event_ids": [
+        211365
+      ],
+      "evidence_by_event": {
+        "211365": [
+          "Hot Aur Single: A South Asian Dating Show (That your parents would almost approve of)",
+          "Tags: Community, Comedy, Nightlife, Comedy Show, Dating, Live Stream, South Asian, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "211365": [
+          "https://caveat.nyc/events/hot-aur-single-2026-09-04",
+          "https://www.caveat.nyc/events/hot-aur-single-2026-09-04",
+          "https://www.caveat.nyc/events/hot-aur-single-2026-10-09"
+        ]
+      }
+    },
+    {
+      "concept": "format-farm-dinner",
+      "label": "Farm dinner",
+      "category": "format",
+      "visual": "Set table beside harvest produce.",
+      "rationale": "Hosted farm meal without a featured-chef or tasting-menu assumption.",
+      "existing_alternative": "Retain supported accepted art or broad Unicode pending a distinct grounded study.",
+      "event_ids": [
+        211333
+      ],
+      "evidence_by_event": {
+        "211333": [
+          "Glynwood Farm Dinner with Marion Nestle: Join us for an unforgettable evening at Glynwood for a farm-to-table dinner with special guest Marion Nestle and in honor of her 90th Birthday. Your ticket includes an open bar of beer, wine, cider and non-alcoholic beverages, and a thoughtfully prepared farm-to-table meal.",
+          "Tags: Community, Free, Party, Food, Nightlife, Farm Dinner, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "211333": [
+          "https://www.glynwood.org/events-collection/farm-dinner-nov-4"
+        ]
+      }
+    },
+    {
+      "concept": "format-fashion-runway",
+      "label": "Fashion runway",
+      "category": "format",
+      "visual": "Runway and fashion presentation.",
+      "rationale": "Live clothing presentation rather than garment making.",
+      "existing_alternative": "Retain the broad fallback while a grounded distinctive study is pending.",
+      "event_ids": [
+        211487
+      ],
+      "evidence_by_event": {
+        "211487": [
+          "New York | Fashion Week Luxury Gala | SMGlobal Catwalk Runway Show: Experience one of the most exclusive New York Fashion Week events in New York City. Join SMGlobal Catwalk for a luxury runway show and black-tie fashion gala featuring couture designers, red carpet moments, live entertainment, and an elite fashion audience.",
+          "Tags: Community, Music, Art, Fashion, Nightlife, Black Tie, NYFW, Live Music, Couture, Runway Show, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "211487": [
+          "https://events.humanitix.com/new-york-or-fashion-week-luxury-gala-or-smglobal-catwalk-runway-show",
+          "https://events.humanitix.com/new-york-or-fashion-week-luxury-gala-or-smglobal-catwalk-runway-show?hxref=srf%3Aside%7Cmodel%3Ablend%7Ccpos%3A4%7Cgeo%3Aus--ny--new-york&hxchl=mkt-loc"
+        ]
+      }
+    },
+    {
+      "concept": "format-gallery-reception",
+      "label": "Gallery reception",
+      "category": "format",
+      "visual": "Framed artwork beside a social conversation bubble.",
+      "rationale": "Opening celebration differs from a painting class; no drinks promised.",
+      "existing_alternative": "Use a supported accepted icon or broad Unicode while a distinctive study is pending.",
+      "event_ids": [
+        211601
+      ],
+      "evidence_by_event": {
+        "211601": [
+          "Opening Reception, Sept 17 — “Radiant Nature: The Art of Jan Dilenschneider”: Please join us for the Opening Reception of Radiant Nature: The Art of Jan Dilenschneide r on Thursday, September 17 from 5 – 7 pm in ou",
+          "Tags: Community, Event Space, Art Gallery, Museum, Visual Arts, Art, Nature, Free, Painting, Outdoor, Nature Art, Gallery Reception, Exhibition, Cultural Venue, Format, Browsable, Arts Venue"
+        ]
+      },
+      "source_urls_by_event": {
+        "211601": [
+          "https://www.stamfordmuseum.org/event/opening-reception-radiant-nature-the-art-of-jan-dilenschneider/"
+        ]
+      }
+    },
+    {
+      "concept": "format-garden-tour",
+      "label": "Garden tour",
+      "category": "format",
+      "visual": "Garden path and flower identification sign.",
+      "rationale": "Observation rather than active gardening.",
+      "existing_alternative": "Retain supported accepted art or broad Unicode pending a distinct grounded study.",
+      "event_ids": [
+        211380
+      ],
+      "evidence_by_event": {
+        "211380": [
+          "Urban Park Rangers Heather Garden Highlights: Join the Urban Park Rangers on a stroll through the beautiful Heather Garden as we appreciate the flowers, park history, and bird activity. Celebrate the start of autumn! At 3 acres large, this garden is the largest public garden with unrestricted ac […]",
+          "Tags: Community, Garden, Nature, Free, Tour, Education, Gardening, Outdoor, Birding, Format, Outings"
+        ]
+      },
+      "source_urls_by_event": {
+        "211380": [
+          "https://forttryonpark.org/event/urban-park-rangers-heather-garden-highlights/",
+          "https://www.nyc.gov/main/events/?permalinkName=heather-garden-highlights&id=1203556&sequence=1",
+          "https://www.nycgovparks.org/events/2026/09/13/heather-garden-highlights"
+        ]
+      }
+    },
+    {
+      "concept": "format-journalism-show",
+      "label": "Journalism stage show",
+      "category": "format",
+      "visual": "News page beside a stage microphone.",
+      "rationale": "Live journalism without assumed satire or recording.",
+      "existing_alternative": "Retain supported accepted art or broad Unicode pending a distinct grounded study.",
+      "event_ids": [
+        211363
+      ],
+      "evidence_by_event": {
+        "211363": [
+          "New York Groove: It's a new show about how to be a better New Yorker, from the journalists behind The New York Groove...",
+          "Tags: Community, Comedy, Live Show, Journalism, Gathering, Talk, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "211363": [
+          "https://caveat.nyc/events/new-york-groove-2026-09-01",
+          "https://www.caveat.nyc/events/new-york-groove-2026-09-01",
+          "https://www.caveat.nyc/events/new-york-groove-2026-11-03"
+        ]
+      }
+    },
+    {
+      "concept": "format-literary-award-reception",
+      "label": "Literary award reception",
+      "category": "format",
+      "visual": "Book award with reading and reception motifs.",
+      "rationale": "Mixed literary prize celebration.",
+      "existing_alternative": "Retain supported accepted art or broad Unicode pending a distinct grounded study.",
+      "event_ids": [
+        211394
+      ],
+      "evidence_by_event": {
+        "211394": [
+          "Celebrate Patricia Lockwood, winner of the 2026 Gabe Hudson Prize: McSweeney’s celebrates Patricia Lockwood, winner of the third annual Gabe Hudson Prize for her novel WILL THERE EVER BE ANOTHER YOU. The event includes a reading, remarks, and a festive reception with the author and selection committee.",
+          "Tags: Community, Art, Literature, Reception, Reading, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "211394": [
+          "https://www.paperlesspost.com/go/jkA5vnRcrGvjrDi5pK2n7"
+        ]
+      }
+    },
+    {
+      "concept": "format-meditation-potluck",
+      "label": "Meditation and potluck",
+      "category": "format",
+      "visual": "Shared meal beside a meditation cushion.",
+      "rationale": "Co-primary contemplation and communal food.",
+      "existing_alternative": "Retain supported accepted art or broad Unicode pending a distinct grounded study.",
+      "event_ids": [
+        211320
+      ],
+      "evidence_by_event": {
+        "211320": [
+          "In-Person: BIPOC Sangha Potluck: Join the BIPOC Sangha for an evening of shared dharma practice and a communal meal. This evening is an invitation for us to gather together, hit the pause button, and collectively rest…in community.",
+          "Tags: Community, Wellness, Education, Meditation, Cultural Heritage, BIPOC, Open Practice, Participatory, Mind-Body, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "211320": [
+          "https://www.nyimc.org/event/bipoc-sangha-potluck/"
+        ]
+      }
+    },
+    {
+      "concept": "format-music-open-mic",
+      "label": "Music open mic",
+      "category": "format",
+      "visual": "Microphone with a sign-up sheet and music note.",
+      "rationale": "Open musical participation differs from karaoke tracks or spoken comedy.",
+      "existing_alternative": "Use appropriate accepted art or broad Unicode until a distinctive study is reviewed.",
+      "event_ids": [
+        211645
+      ],
+      "evidence_by_event": {
+        "211645": [
+          "Open Mic Night @ Nyc Planner Addicts HQ! ✨: Who’s ready for part ?",
+          "Tags: Community, Music, Nightlife, Open Practice, Participatory, Open Mic / Music, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "211645": [
+          "https://www.eventbrite.com/e/open-mic-night-nyc-planner-addicts-hq-tickets-1996933375482",
+          "https://www.eventbrite.com/e/open-mic-night-nyc-planner-addicts-hq-tickets-1996933375482?aff=ebdsoporgprofile"
+        ]
+      }
+    },
+    {
+      "concept": "format-overnight-meditation",
+      "label": "Overnight meditation",
+      "category": "format",
+      "visual": "Meditation cushion and night-sky clock.",
+      "rationale": "Overnight practice without sleep accommodation claims.",
+      "existing_alternative": "Retain supported accepted art or broad Unicode pending a distinct grounded study.",
+      "event_ids": [
+        211323
+      ],
+      "evidence_by_event": {
+        "211323": [
+          "In-Person: Practicing Through the Night – A Full Moon Meditation: Join us for the chance to meditate through the night during the full moon this September. This overnight meditation is held in community and structured in the spirit of self-retreat, with most of the night self-guided and participants invited to move between sitting, walking, standing, lying down, or quiet tea meditation.",
+          "Tags: Wellness, Meditation, Full Moon, In Person, Open Practice, Participatory, Mind-Body, Format, Overnight"
+        ]
+      },
+      "source_urls_by_event": {
+        "211323": [
+          "https://www.nyimc.org/event/full-moon-meditation-9-2026/"
+        ]
+      }
+    },
+    {
+      "concept": "format-peking-opera",
+      "label": "Peking opera",
+      "category": "format",
+      "visual": "Respectfully researched performance costume or instrument.",
+      "rationale": "Specific opera tradition requires cultural and geometry research.",
+      "existing_alternative": "Retain supported accepted art or broad Unicode pending a distinct grounded study.",
+      "event_ids": [
+        211393
+      ],
+      "evidence_by_event": {
+        "211393": [
+          "KYF Solo Peking Opera Performance for International Day of Music as part of a livestream event: No description available.",
+          "Tags: Music, Theater, Opera, Virtual, Live Stream, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "211393": [
+          "https://chinesetheatreworks.org/event/kyf-solo-peking-opera-performance-for-international-day-of-music-as-part-of-a-livestream-event/"
+        ]
+      }
+    },
+    {
+      "concept": "format-promenade-performance",
+      "label": "Promenade performance",
+      "category": "format",
+      "visual": "Stage scenes linked by an audience walking route.",
+      "rationale": "Audience moves between performances rather than learning dance.",
+      "existing_alternative": "Retain supported accepted art or broad Unicode pending a distinct grounded study.",
+      "event_ids": [
+        211382
+      ],
+      "evidence_by_event": {
+        "211382": [
+          "National Dance Day Walk & Performance: Celebrate National Dance Day with an immersive walking production. Audience Members Guided Through the Park On Wheelchair Accessible Pathways.",
+          "Tags: Community, Dance, Free, Outdoor, Walking, Accessible, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "211382": [
+          "https://forttryonpark.org/event/national-dance-day-walk-performance/",
+          "https://www.nycgovparks.org/events/2026/09/19/national-dance-day"
+        ]
+      }
+    },
+    {
+      "concept": "format-public-issues-forum",
+      "label": "Public issues forum",
+      "category": "format",
+      "visual": "Several discussion panels and a shared agenda.",
+      "rationale": "Multi-topic panels and networking rather than formal governance.",
+      "existing_alternative": "Retain supported accepted art or broad Unicode pending a distinct grounded study.",
+      "event_ids": [
+        211488
+      ],
+      "evidence_by_event": {
+        "211488": [
+          "The Impact Lounge during Climate/UNGA Week 2026: The Impact Lounge is headed to NYC for two full days of programming during Climate and UNGA Week, with themed programming, engaging sessions, and opportunities to connect. September 22 focuses on climate and community, while September 23 focuses on engaging men and boys and the promotion of healthy masculinities, followed by an evening reception.",
+          "Tags: Community, Education, Sustainability, Networking, Gathering, Talk, Social Good, Climate, Format, Panels, UNGA Week"
+        ]
+      },
+      "source_urls_by_event": {
+        "211488": [
+          "https://events.humanitix.com/impact-lounge-climate-unga-week-2026"
+        ]
+      }
+    },
+    {
+      "concept": "format-religious-education",
+      "label": "Religious education",
+      "category": "format",
+      "visual": "Learning book with context-specific faith material.",
+      "rationale": "Require tradition-specific research rather than generic sacred symbols.",
+      "existing_alternative": "Retain supported accepted art or broad Unicode pending a distinct grounded study.",
+      "event_ids": [
+        211429
+      ],
+      "evidence_by_event": {
+        "211429": [
+          "JCA Pathshala: No description available.",
+          "Tags: Community, Education, Class, Participatory, Jainism, Pathshala, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "211429": [
+          "https://www.nyjaincenter.org/Calendar"
+        ]
+      }
+    },
+    {
+      "concept": "format-series-release",
+      "label": "Series release event",
+      "category": "format",
+      "visual": "Episode frames with a release celebration.",
+      "rationale": "Combined web-series launch programming.",
+      "existing_alternative": "Retain supported accepted art or broad Unicode pending a distinct grounded study.",
+      "event_ids": [
+        211342
+      ],
+      "evidence_by_event": {
+        "211342": [
+          "Slick: The Release Party: Join us during Climate Week NYC for the first-ever public release of SLICK—the award-winning absurdist workplace comedy web series about the employees at a PR agency making Big Oil look good. The event will feature acclaimed comedians, behind-the-scenes stories from the creators and cast, and a look behind the curtain at the real agencies, campaigns and communications tactics that inspired the show.",
+          "Tags: Community, Comedy, Film, Screening, Web Series, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "211342": [
+          "https://littlefieldnyc.com/event/?wfea_eb_id=1996821313301"
+        ]
+      }
+    },
+    {
+      "concept": "format-short-talk-night",
+      "label": "Short-talk night",
+      "category": "format",
+      "visual": "Several short presentation cards.",
+      "rationale": "Multiple informative talks without a research-conference assumption.",
+      "existing_alternative": "Retain supported accepted art or broad Unicode pending a distinct grounded study.",
+      "event_ids": [
+        211370
+      ],
+      "evidence_by_event": {
+        "211370": [
+          "Nerd Nite: Nerd Nite NYC is back at Caveat NYC with three fun-yet-informative presentations!",
+          "Tags: Community, Science, Education, Gathering, Talk, In Person, Presentations, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "211370": [
+          "https://caveat.nyc/events/nerd-nite-2026-10-10",
+          "https://www.caveat.nyc/events/nerd-nite-2026-10-10"
+        ]
+      }
+    },
+    {
+      "concept": "format-teach-in",
+      "label": "Teach-in",
+      "category": "format",
+      "visual": "Several learning cards around a public discussion board.",
+      "rationale": "Educational gathering about social issues.",
+      "existing_alternative": "Retain supported accepted art or broad Unicode pending a distinct grounded study.",
+      "event_ids": [
+        211359
+      ],
+      "evidence_by_event": {
+        "211359": [
+          "Uprising/Downfall: 250 Years of Courage, Repression, and Resistance on the Road to American Democracy: This teach-in, featuring artists, activists, advocates, writers, and scholars, will examine 20th century social movements that advance",
+          "Tags: Community, Activism, Education, Politics, Democracy, Gathering, Talk, Social Movements, Teach in, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "211359": [
+          "https://www.green-wood.com/event/uprising-downfall-250-years-of-courage-repression-and-resistance-on-the-road-to-american-democracy/"
+        ]
+      }
+    },
+    {
+      "concept": "format-textile-culture-talk",
+      "label": "Textile culture talk",
+      "category": "format",
+      "visual": "Woven textile beside a discussion motif.",
+      "rationale": "Learning traditions without hands-on weaving.",
+      "existing_alternative": "Retain supported accepted art or broad Unicode pending a distinct grounded study.",
+      "event_ids": [
+        211609
+      ],
+      "evidence_by_event": {
+        "211609": [
+          "An Evening with Peruvian Master Weaver Nilda Callañaupa Alvarez: Past, Present and Future of Traditional Textiles in the Andes: Preserving Ancestral Memory, Empowering Communities and Sustaining Living Art.",
+          "Tags: Community, Art, Culture, Education, Gathering, Talk, Textiles, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "211609": [
+          "https://www.explorers.org/calendar-of-events/an-evening-with-peruvian-master-weaver-nilda-callanaupa-alvarez/"
+        ]
+      }
+    },
+    {
+      "concept": "format-trolley-tour",
+      "category": "format",
+      "label": "Trolley tour",
+      "visual": "A short windowed sightseeing trolley with large wheels.",
+      "rationale": "Vehicle-based guided sightseeing differs from walking tours.",
+      "existing_alternative": "Tram emoji may suffice if its silhouette fits; evaluate existing Noto first.",
+      "event_ids": [
+        211354
+      ],
+      "evidence_by_event": {
+        "211354": [
+          "The Revolution Continues: Brooklyn’s Black Trailblazers: Celebrating the Black pioneers of Brooklyn, this trolley tour honors the trailblazers at rest in Green-Wood who shaped art, activism, music, and medicine. The tour explores themes that reach beyond the Revolutionary War to examine the broader American experience.",
+          "Tags: Community, History, Free, Tour, Education, Outdoor, Format, Outings, Brooklyn 250"
+        ]
+      },
+      "source_urls_by_event": {
+        "211354": [
+          "https://www.green-wood.com/event/the-revolution-continues-brooklyns-black-trailblazers-2/",
+          "https://www.green-wood.com/event/the-revolution-continues-brooklyns-black-trailblazers/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-dancehall",
+      "label": "Dancehall",
+      "category": "genre",
+      "visual": "Explore a microphone over a compact offbeat rhythm pattern.",
+      "rationale": "The genre is explicitly named in the musical program; this is a prospective genre concept rather than evidence of a specific instrument.",
+      "existing_alternative": "Existing music/dance or instrument emoji remain reasonable; test genre recognition and avoid stereotyped visual shorthand.",
+      "event_ids": [
+        211335
+      ],
+      "evidence_by_event": {
+        "211335": [
+          "Dancehall Forever: This is a party for Dancehall lovers, bringing together the energy, music and dances behind the movement. 90% Dancehall 10% everything else. Music lineup to be announced on socials.",
+          "Tags: Music, Dance, World Music, Party, Nightlife, Dancehall, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "211335": [
+          "https://littlefieldnyc.com/event/?wfea_eb_id=1993152585036",
+          "https://littlefieldnyc.com/event/?wfea_eb_id=1997796060797",
+          "https://littlefieldnyc.com/event/?wfea_eb_id=1999810633438"
+        ]
+      }
+    },
+    {
+      "concept": "genre-folk",
+      "label": "Folk music",
+      "category": "genre",
+      "visual": "Explore a plucked-string curve beside one plain storytelling note.",
+      "rationale": "Folk is explicitly named in the program.",
+      "existing_alternative": "Generic notes remain valid; this motif needs recognition testing and must not assume acoustic instrumentation.",
+      "event_ids": [
+        211344
+      ],
+      "evidence_by_event": {
+        "211344": [
+          "LPR Presents: Carsie Blanton: Carsie Blanton is a songwriter with hooks, chutzpah, and revolutionary optimism. A radical folk artist in the tradition of Woody Guthrie, her infectious melodies and lyrical wit keep listeners rapt while she conjures spirits of vaudeville, campfire singalongs, and punk rock. Blanton and her road-tested band deploy humor, camaraderie, and considerable musical muscle to enroll each audience in a rare vision of hope and solidarity.",
+          "Tags: Music, Concert, Folk Music, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "211344": [
+          "https://littlefieldnyc.com/event/?wfea_eb_id=1992001143042"
+        ]
+      }
+    }
+  ],
+  "limitations": "Counts describe this cohort, not population reach. These are grounded prospective studies, not live assignments. Existing artwork may already suffice; exact equipment and genre recognition require further review."
+}

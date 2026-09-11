@@ -1,0 +1,163 @@
+[
+  {
+    "icon_id": "format-film-riffing",
+    "source_sha256": "acca0f5412d7c294461d3907591066dc20a531e51ac709fe807d1605f2896638",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent: creator inspected unlabeled native-size cards with prior knowledge of the briefs.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-003/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-003/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 739,
+      "gzip_level_6": 413
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Comic speech bubble over a screen reads as film commentary; at 16px facial detail softens. No claim of live local riffers."
+    ]
+  },
+  {
+    "icon_id": "format-opera-screening",
+    "source_sha256": "8114580f9ee62b8211350b75b8f91804bdeab714ee72a5ccb11841f4af5366d5",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent: creator inspected unlabeled native-size cards with prior knowledge of the briefs.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-003/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-003/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 980,
+      "gzip_level_6": 464
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Singing theatrical mask, note and screen jointly signal screened opera; not a portrait or a specific production."
+    ]
+  },
+  {
+    "icon_id": "activity-citizenship-exam-prep",
+    "source_sha256": "71c3a79bb81da093e34146252a454d729e1badc602cbc2ac15f12dce714e6a65",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent: creator inspected unlabeled native-size cards with prior knowledge of the briefs.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-003/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-003/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 960,
+      "gzip_level_6": 485
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Civic study checklist is symbolic preparation, not a representation of the actual exam format or a guarantee of citizenship."
+    ]
+  },
+  {
+    "icon_id": "craft-stencil-tracing",
+    "source_sha256": "d870030ac68509dd485e9c4793512bc1fbbba2cc189c01042c5b20491dc5ddf5",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent: creator inspected unlabeled native-size cards with prior knowledge of the briefs.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-003/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-003/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 885,
+      "gzip_level_6": 483
+    },
+    "issues": [
+      {
+        "severity": "material",
+        "location": "template cutout",
+        "observation": "Single heart read as a greeting card.",
+        "revision": "Replaced heart with four basic template cutouts and a separately traced triangle.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Template cutouts and traced shape distinguish stencil use; small cutout details soften at 16px."
+    ]
+  },
+  {
+    "icon_id": "format-food-walking-tour",
+    "source_sha256": "c352c50ebcdc2d63f39de7e71ee47711d7a3a219c4bd67d494f25c8a5e16f807",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent: creator inspected unlabeled native-size cards with prior knowledge of the briefs.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-003/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-003/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 970,
+      "gzip_level_6": 510
+    },
+    "issues": [
+      {
+        "severity": "material",
+        "location": "route endpoint",
+        "observation": "Initial route did not connect with the second pin.",
+        "revision": "Redrew the planar dashed route to link both stops while retaining separated footprints.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Food pin, route and footprints convey a food walking tour; cutlery is less distinct at 16px than 24/32px."
+    ]
+  }
+]

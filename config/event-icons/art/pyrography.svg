@@ -3,5 +3,5 @@
 <path d="M19 58h25m31 44h21M19 98h15" stroke="#E6AC67" stroke-width="3" stroke-linecap="round"/>
 <path d="M36 97q3-22 30-32-1 24-24 29m-6 3 19-21" fill="none" stroke="#714A36" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
 <path d="M101 17q4-14 15-8" fill="none" stroke="#45535A" stroke-width="5" stroke-linecap="round"/>
-<g transform="rotate(42 83 43)"><rect x="74" y="9" width="19" height="41" rx="8" fill="#3C879E"/><path d="M78 16v26" stroke="#74CBD6" stroke-width="4" stroke-linecap="round"/><rect x="70" y="43" width="27" height="10" rx="4" fill="#344F5A"/><path d="M79 53h9v18h-9z" fill="#ABBEC5"/><path d="M79 53h3v18h-3z" fill="#E5ECEE"/><path d="m79 71 9 0-4.5 14z" fill="#8A6C53"/></g>
+<g transform="rotate(42 83 43)"><rect x="74" y="9" width="19" height="41" rx="8" fill="#3C879E"/><path d="M78 16v26" stroke="#74CBD6" stroke-width="4" stroke-linecap="round"/><rect x="70" y="43" width="27" height="10" rx="4" fill="#344F5A"/><path d="M79 53h9v18h-9z" fill="#ABBEC5"/><path d="M79 53h3v18h-3z" fill="#E5ECEE"/><path d="m79 71 9 0-4.5 14z" fill="#46525B" stroke="#E6ECEC" stroke-width="1.2"/></g>
 </svg>

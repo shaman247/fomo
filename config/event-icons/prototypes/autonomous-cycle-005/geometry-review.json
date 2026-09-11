@@ -1,0 +1,23 @@
+{
+  "reviewer_mode": "creator-critical-pass",
+  "source_sha256": "ba5225450318e5d05e53edcd03786c461b084bb8a0208a75bf65dbd2a55fc8b3",
+  "projector_sha256": "b4fe8609188d173e785616bd97bfdb33a103a3827e14dd7c6983df96c7fbf577",
+  "views": [
+    "front",
+    "rear",
+    "left",
+    "right",
+    "top",
+    "icon"
+  ],
+  "evidence": ".scratch/icon-cycles-20260909/cycle-005/geometry.png",
+  "findings": [
+    "Book pages rest on the box bottom; covers enclose pages, spines connect covers, and flap hinges meet wall tops.",
+    "Reading stand base, pole, panel and lip overlap; script bottom sits on lip top at y=.7075. Mask is a flat theatrical emblem on the page.",
+    "Microphone bases share y=.01; each stand joins its base, socket and capsule. Thick grille strokes project in front of the capsule. Dialogue bubble is a floating symbolic graphic, not a physical object.",
+    "Sake bottle, cup and cheese share y=0. Hollow profiles connect to their exterior rims. Cup liquid lies below rim; cup is separated from the bottle in world space and in projection. Glaze bands are illustrative paint.",
+    "Auction art is a frontal planar emblem composition; no articulated person or equipment scene required."
+  ],
+  "coverage": "Source-coordinate and six-view inspection; not exhaustive collision analysis or independent review.",
+  "decision": "pass"
+}

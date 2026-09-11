@@ -1,0 +1,510 @@
+[
+  {
+    "icon_id": "equipment-tap-shoe",
+    "source_sha256": "4c7a6135bc1e969277fe1a48d40e66cfe8ce2c1d661e22bf1c64504e5e8bfb5d",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent; creator already knew brief. Low lace-up shoe with two metal sole plates; shoe identity survives at 16px, individual fasteners do not.",
+    "evidence": {
+      "packet": ".scratch/tag-gaps-20260910/review-final",
+      "sizes": [
+        16,
+        24,
+        32,
+        128
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "geometry": ".scratch/tag-gaps-20260910/models/equipment-tap-shoe"
+    },
+    "size_bytes": {
+      "raw": 2029,
+      "gzip_level_6": 1060
+    },
+    "previous_size_bytes": {
+      "raw": 2029,
+      "gzip_level_6": 1060
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Low lace-up shoe with two metal sole plates; shoe identity survives at 16px, individual fasteners do not."
+    ],
+    "simplification": "1024px color projection fitted to smooth vector contours at 0.28 SVG-unit tolerance; 0.12 square-unit region filter, 14 RGB palette distance, quarter-unit coordinate storage, projected eye preservation."
+  },
+  {
+    "icon_id": "instrument-singing-bowl",
+    "source_sha256": "1374998fcfabb4f560853141d4f677607397d8502350392e14bc8a577eea3a49",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent; creator already knew brief. Open gold bowl, striker and sound marks; at 16px the striker distinguishes it from a food bowl, while sound marks soften.",
+    "evidence": {
+      "packet": ".scratch/tag-gaps-20260910/review-final",
+      "sizes": [
+        16,
+        24,
+        32,
+        128
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "geometry": ".scratch/tag-gaps-20260910/models/instrument-singing-bowl"
+    },
+    "size_bytes": {
+      "raw": 4492,
+      "gzip_level_6": 2123
+    },
+    "previous_size_bytes": {
+      "raw": 4492,
+      "gzip_level_6": 2123
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Open gold bowl, striker and sound marks; at 16px the striker distinguishes it from a food bowl, while sound marks soften."
+    ],
+    "simplification": "1024px color projection fitted to smooth vector contours at 0.28 SVG-unit tolerance; 0.12 square-unit region filter, 14 RGB palette distance, quarter-unit coordinate storage, projected eye preservation."
+  },
+  {
+    "icon_id": "format-animation",
+    "source_sha256": "e9fa4f5b2ac66051a108c6838aae7daac464c1e1e89a3061c5db2d51f4f3a1e0",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent; creator already knew brief. Two film frames with a ball at different positions; reads as moving-image frames rather than a genre-specific character.",
+    "evidence": {
+      "packet": ".scratch/tag-gaps-20260910/review-final",
+      "sizes": [
+        16,
+        24,
+        32,
+        128
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "geometry": ".scratch/tag-gaps-20260910/models/format-animation"
+    },
+    "size_bytes": {
+      "raw": 4515,
+      "gzip_level_6": 2009
+    },
+    "previous_size_bytes": {
+      "raw": 4515,
+      "gzip_level_6": 2009
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Two film frames with a ball at different positions; reads as moving-image frames rather than a genre-specific character."
+    ],
+    "simplification": "1024px color projection fitted to smooth vector contours at 0.28 SVG-unit tolerance; 0.12 square-unit region filter, 14 RGB palette distance, quarter-unit coordinate storage, projected eye preservation."
+  },
+  {
+    "icon_id": "art-hand-puppet",
+    "source_sha256": "d5a3fbd6efee46082df1b34d42a82d38e08c91356e07b2112650fe7c014bd833",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent; creator already knew brief. Glove body, raised soft arms and cuff; at 16px it can read as a toy or doll, so retain the tag label.",
+    "evidence": {
+      "packet": ".scratch/tag-gaps-20260910/review-final",
+      "sizes": [
+        16,
+        24,
+        32,
+        128
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "geometry": ".scratch/tag-gaps-20260910/models/art-hand-puppet"
+    },
+    "size_bytes": {
+      "raw": 3142,
+      "gzip_level_6": 1613
+    },
+    "previous_size_bytes": {
+      "raw": 3142,
+      "gzip_level_6": 1613
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Glove body, raised soft arms and cuff; at 16px it can read as a toy or doll, so retain the tag label."
+    ],
+    "simplification": "1024px color projection fitted to smooth vector contours at 0.28 SVG-unit tolerance; 0.12 square-unit region filter, 14 RGB palette distance, quarter-unit coordinate storage, projected eye preservation."
+  },
+  {
+    "icon_id": "equipment-risograph",
+    "source_sha256": "a53fdb50b281fbe4a345a3555f282f5be9a409075e2c5583ce8530b00f8f9998",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent; creator already knew brief. Compact duplicator and offset cyan/magenta impression; at 16px only printer identity survives, not process exclusivity.",
+    "evidence": {
+      "packet": ".scratch/tag-gaps-20260910/review-final",
+      "sizes": [
+        16,
+        24,
+        32,
+        128
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "geometry": ".scratch/tag-gaps-20260910/models/equipment-risograph"
+    },
+    "size_bytes": {
+      "raw": 2907,
+      "gzip_level_6": 1436
+    },
+    "previous_size_bytes": {
+      "raw": 2907,
+      "gzip_level_6": 1436
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Compact duplicator and offset cyan/magenta impression; at 16px only printer identity survives, not process exclusivity."
+    ],
+    "simplification": "1024px color projection fitted to smooth vector contours at 0.28 SVG-unit tolerance; 0.12 square-unit region filter, 14 RGB palette distance, quarter-unit coordinate storage, projected eye preservation."
+  },
+  {
+    "icon_id": "instrument-vibraphone",
+    "source_sha256": "76c1dad8b64da9eb576c1bbd1ab90e12209638ee910522ef819cedade4ea5765",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent; creator already knew brief. Metal bars, suspended resonator tubes, pedal and mallets; abbreviated bar count and pitch span, not a playable full-scale keyboard.",
+    "evidence": {
+      "packet": ".scratch/tag-gaps-20260910/review-final",
+      "sizes": [
+        16,
+        24,
+        32,
+        128
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "geometry": ".scratch/tag-gaps-20260910/models/instrument-vibraphone"
+    },
+    "size_bytes": {
+      "raw": 8074,
+      "gzip_level_6": 3762
+    },
+    "previous_size_bytes": {
+      "raw": 8074,
+      "gzip_level_6": 3762
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Metal bars, suspended resonator tubes, pedal and mallets; abbreviated bar count and pitch span, not a playable full-scale keyboard."
+    ],
+    "simplification": "1024px color projection fitted to smooth vector contours at 0.28 SVG-unit tolerance; 0.12 square-unit region filter, 14 RGB palette distance, quarter-unit coordinate storage, projected eye preservation."
+  },
+  {
+    "icon_id": "ensemble-chamber",
+    "source_sha256": "ec1049a7ebc26da2cc12f03f5f3f0bda430e800a7dfa2eb5d42e630373b75ed2",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent; creator already knew brief. Three score stands communicate a small ensemble; a category emblem, not an exact ensemble size. Tiny notes soften at 16px.",
+    "evidence": {
+      "packet": ".scratch/tag-gaps-20260910/review-final",
+      "sizes": [
+        16,
+        24,
+        32,
+        128
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "geometry": ".scratch/tag-gaps-20260910/models/ensemble-chamber"
+    },
+    "size_bytes": {
+      "raw": 2681,
+      "gzip_level_6": 1240
+    },
+    "previous_size_bytes": {
+      "raw": 3329,
+      "gzip_level_6": 1492
+    },
+    "issues": [
+      {
+        "severity": "material",
+        "location": "stand supports",
+        "observation": "V1 had a short gap beneath the desk and thin supports.",
+        "revision": "Extended and thickened support geometry, regrounded chamber stands, rendered and refitted.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Three score stands communicate a small ensemble; a category emblem, not an exact ensemble size. Tiny notes soften at 16px."
+    ],
+    "simplification": "1024px color projection fitted to smooth vector contours at 0.28 SVG-unit tolerance; 0.12 square-unit region filter, 14 RGB palette distance, quarter-unit coordinate storage, projected eye preservation."
+  },
+  {
+    "icon_id": "ensemble-music-duo",
+    "source_sha256": "e83801360b25308a3fe015e955a04a32b888a10eeba04ee53e27eedd3e3dc0a3",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent; creator already knew brief. Two separated score stands; paired silhouette survives at 16px although the connector and score marks soften.",
+    "evidence": {
+      "packet": ".scratch/tag-gaps-20260910/review-final",
+      "sizes": [
+        16,
+        24,
+        32,
+        128
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "geometry": ".scratch/tag-gaps-20260910/models/ensemble-music-duo"
+    },
+    "size_bytes": {
+      "raw": 2304,
+      "gzip_level_6": 1120
+    },
+    "previous_size_bytes": {
+      "raw": 2855,
+      "gzip_level_6": 1316
+    },
+    "issues": [
+      {
+        "severity": "material",
+        "location": "stand supports",
+        "observation": "V1 had a short gap beneath the desk and thin supports.",
+        "revision": "Extended and thickened support geometry, regrounded chamber stands, rendered and refitted.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Two separated score stands; paired silhouette survives at 16px although the connector and score marks soften."
+    ],
+    "simplification": "1024px color projection fitted to smooth vector contours at 0.28 SVG-unit tolerance; 0.12 square-unit region filter, 14 RGB palette distance, quarter-unit coordinate storage, projected eye preservation."
+  },
+  {
+    "icon_id": "instrument-oud",
+    "source_sha256": "083ac9525012e9502be7e3c570a43be20932f97795baa0de0908b62635cb8952",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent; creator already knew brief. Pear-shaped soundboard, bowl back, short fretless neck and bent pegbox; stylized pegs/string courses and rosette lattices, not an exact instrument replica.",
+    "evidence": {
+      "packet": ".scratch/tag-gaps-20260910/review-final",
+      "sizes": [
+        16,
+        24,
+        32,
+        128
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "geometry": ".scratch/tag-gaps-20260910/models/instrument-oud"
+    },
+    "size_bytes": {
+      "raw": 6455,
+      "gzip_level_6": 2976
+    },
+    "previous_size_bytes": {
+      "raw": 6455,
+      "gzip_level_6": 2976
+    },
+    "issues": [
+      {
+        "severity": "material",
+        "location": "bowl back",
+        "observation": "Initial sphere body obscured soundboard and did not share its perimeter.",
+        "revision": "Built a vaulted bowl from rings sharing the pear-shaped soundboard perimeter; inspected five views.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Pear-shaped soundboard, bowl back, short fretless neck and bent pegbox; stylized pegs/string courses and rosette lattices, not an exact instrument replica."
+    ],
+    "simplification": "1024px color projection fitted to smooth vector contours at 0.28 SVG-unit tolerance; 0.12 square-unit region filter, 14 RGB palette distance, quarter-unit coordinate storage, projected eye preservation."
+  },
+  {
+    "icon_id": "craft-printmaking",
+    "source_sha256": "799766cbfc38a306635da157a9e793f9e02e9fad33d79e6d544f83ebe387871b",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent; creator already knew brief. Brayer over an impression; roller and paper stay distinct at 24/32px, the abstract motif is decorative.",
+    "evidence": {
+      "packet": ".scratch/tag-gaps-20260910/review-final",
+      "sizes": [
+        16,
+        24,
+        32,
+        128
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "geometry": ".scratch/tag-gaps-20260910/models/craft-printmaking"
+    },
+    "size_bytes": {
+      "raw": 2772,
+      "gzip_level_6": 1375
+    },
+    "previous_size_bytes": {
+      "raw": 2772,
+      "gzip_level_6": 1375
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Brayer over an impression; roller and paper stay distinct at 24/32px, the abstract motif is decorative."
+    ],
+    "simplification": "1024px color projection fitted to smooth vector contours at 0.28 SVG-unit tolerance; 0.12 square-unit region filter, 14 RGB palette distance, quarter-unit coordinate storage, projected eye preservation."
+  },
+  {
+    "icon_id": "place-performance-stage",
+    "source_sha256": "20111d42d88920f97b3e39034b660b003ac943d48ba4bf04e3114f7dc7498809",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent; creator already knew brief. Empty curtain opening and spotlight; no performer or national motif.",
+    "evidence": {
+      "packet": ".scratch/tag-gaps-20260910/review-final",
+      "sizes": [
+        16,
+        24,
+        32,
+        128
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "geometry": ".scratch/tag-gaps-20260910/models/place-performance-stage"
+    },
+    "size_bytes": {
+      "raw": 1689,
+      "gzip_level_6": 878
+    },
+    "previous_size_bytes": {
+      "raw": 1689,
+      "gzip_level_6": 878
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Empty curtain opening and spotlight; no performer or national motif."
+    ],
+    "simplification": "1024px color projection fitted to smooth vector contours at 0.28 SVG-unit tolerance; 0.12 square-unit region filter, 14 RGB palette distance, quarter-unit coordinate storage, projected eye preservation."
+  },
+  {
+    "icon_id": "place-heritage-site",
+    "source_sha256": "2a2be0fe811c055bbe9241d23d3d59b0daff0b0a7852bf0dd12788625c5f9961",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent; creator already knew brief. Heritage plaque with a conventional column emblem; does not depict the actual site.",
+    "evidence": {
+      "packet": ".scratch/tag-gaps-20260910/review-final",
+      "sizes": [
+        16,
+        24,
+        32,
+        128
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "geometry": ".scratch/tag-gaps-20260910/models/place-heritage-site"
+    },
+    "size_bytes": {
+      "raw": 1925,
+      "gzip_level_6": 936
+    },
+    "previous_size_bytes": {
+      "raw": 1925,
+      "gzip_level_6": 936
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Heritage plaque with a conventional column emblem; does not depict the actual site."
+    ],
+    "simplification": "1024px color projection fitted to smooth vector contours at 0.28 SVG-unit tolerance; 0.12 square-unit region filter, 14 RGB palette distance, quarter-unit coordinate storage, projected eye preservation."
+  },
+  {
+    "icon_id": "dance-partner",
+    "source_sha256": "6f4408817c4aeabf34c3af020a4285fd5d1b33a7b1483d3e1790c3e216a64275",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent; creator already knew brief. Two articulated people in an open two-hand hold; faces simplify at 16px while two separate bodies remain visible.",
+    "evidence": {
+      "packet": ".scratch/tag-gaps-20260910/review-final",
+      "sizes": [
+        16,
+        24,
+        32,
+        128
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "geometry": ".scratch/tag-gaps-20260910/models/dance-partner"
+    },
+    "size_bytes": {
+      "raw": 3880,
+      "gzip_level_6": 2023
+    },
+    "previous_size_bytes": {
+      "raw": 3880,
+      "gzip_level_6": 2023
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Two articulated people in an open two-hand hold; faces simplify at 16px while two separate bodies remain visible."
+    ],
+    "simplification": "1024px color projection fitted to smooth vector contours at 0.28 SVG-unit tolerance; 0.12 square-unit region filter, 14 RGB palette distance, quarter-unit coordinate storage, projected eye preservation."
+  },
+  {
+    "icon_id": "dance-contemporary",
+    "source_sha256": "aea9c761f0948b5ffe0d369b0350c990ae61d1bc42bba003f32fbdbad6b5b2c3",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent; creator already knew brief. Uncostumed dancer with an asymmetric lifted leg and reaching arms; dance/exercise can overlap at 16px, so the tag label remains necessary.",
+    "evidence": {
+      "packet": ".scratch/tag-gaps-20260910/review-final",
+      "sizes": [
+        16,
+        24,
+        32,
+        128
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "geometry": ".scratch/tag-gaps-20260910/models/dance-contemporary"
+    },
+    "size_bytes": {
+      "raw": 2351,
+      "gzip_level_6": 1269
+    },
+    "previous_size_bytes": {
+      "raw": 2351,
+      "gzip_level_6": 1269
+    },
+    "issues": [
+      {
+        "severity": "material",
+        "location": "pose",
+        "observation": "Initial squat resembled a static exercise pose.",
+        "revision": "Raised the pelvis and lifted one leg; adjusted arm target to remain within fixed limb reach; re-rendered five views.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Uncostumed dancer with an asymmetric lifted leg and reaching arms; dance/exercise can overlap at 16px, so the tag label remains necessary."
+    ],
+    "simplification": "1024px color projection fitted to smooth vector contours at 0.28 SVG-unit tolerance; 0.12 square-unit region filter, 14 RGB palette distance, quarter-unit coordinate storage, projected eye preservation."
+  }
+]

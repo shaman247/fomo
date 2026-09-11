@@ -1,9 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128"><title>Origami</title><desc>A folded paper crane with broad angular wings, a long folded neck, and a pointed beak.</desc>
-<path d="m50 73 62-48-22 61-21 9z" fill="#F48FB1"/><path d="m112 25-43 70 21-9z" fill="#CF558D"/>
-<path d="M39 78 46 10 77 76 69 96z" fill="#EF80AC"/><path d="m46 10 31 66-12 14z" fill="#D75A8C"/><path d="m46 10 4 62-11 6z" fill="#FBC5DC"/>
-<path d="m39 78 30 18 47-17-40-4z" fill="#F6ABCA"/><path d="m69 96 47-17-33 7z" fill="#B84279"/>
-<path d="m40 88-16-30 1-22-12-1L5 44l5-17 19-6 11 10-5 25 23 25z" fill="#EC75A5"/>
-<path d="m29 21-4 15-1 22 16 30 9-4-17-29 4-24z" fill="#F7B1D0"/>
-<path d="m10 27 15 9-12-1-8 9z" fill="#C95184"/>
-<path d="m39 78 30 18-12 14-17-22z" fill="#D45D91"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="currentColor" stroke="currentColor" stroke-width=".20" stroke-linejoin="round" fill-rule="evenodd"><title>Origami</title><g transform="scale(.25)"><path color="#f8acc0" d="M121 323c241-3 163 43 268-40l-50-6l50 6l-2-41l-21 6l21-8c-87-10-37 6-132-83l-84 58L24 214l53 21L25 215l96 108ZM356 251l32 30v-15l2 16L356 251ZM127 247l38-32l-38 32ZM128 247h-1l35-24l-34 24ZM126 294l-2 1l-2-43l2 42h2ZM192 301l98-30l-98 30Z"/><path color="#ef8fa9" d="M121 251L24 214l97 109c4-43 3-19 0-72ZM390 355C326 302 366 319 264 321l126 34ZM488 270C379 238 423 232 356 250l33 32v-15l2 16l-1 1v-1C257 267 323 261 192 302c174 20 115-15 199 53l97-86ZM487 270L349 319L487 270ZM485 270l-94 13l94-13ZM390 252l2 32l-2-32ZM348 318l16-13l-16 13v0Z"/><path color="#e87298" d="M124 294l10 1l16-40l-28-3l2 42ZM126 247c38-26 30-11 38-32l-38 32ZM487 270l-96 14l-2-32l2 31l-42 36L487 270ZM122 323l269 32C289 272 366 319 122 323Z"/></g></svg>

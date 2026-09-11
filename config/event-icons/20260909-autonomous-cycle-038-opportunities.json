@@ -1,0 +1,584 @@
+{
+  "date": "2026-09-10",
+  "scope": "Cycle 038: 100 sequential events 210534–210904, no targeted supplements.",
+  "suggestions": 35,
+  "concept_count": 19,
+  "concepts": [
+    {
+      "concept": "format-book-launch",
+      "label": "Book launch",
+      "category": "format",
+      "visual": "New book with a small celebratory ribbon.",
+      "rationale": "Broad launch format when signing versus discussion remains unconfirmed.",
+      "existing_alternative": "Use a supported accepted icon or broad Unicode while a distinctive study is pending.",
+      "event_ids": [
+        210779,
+        210780,
+        210781,
+        210782,
+        210783,
+        210784,
+        210785,
+        210786,
+        210787
+      ],
+      "evidence_by_event": {
+        "210779": [
+          "Book Launch: Perfect Wives, Perfect Lies by Jennifer Anne Gordon: A woman in mourning finds renewed purpose in her fake persona for an online mom group—but membership comes at a killer cost.",
+          "Tags: Literature, Mystery, Horror, Book Launch, Reading, Format, Performance"
+        ],
+        "210780": [
+          "Book Launch: How to Survive Camping: the Ancient Ones by Bonnie Quinn: A horror novel that will appeal to creepy folklore aficionados and spooky story lovers alike.",
+          "Tags: Community, Literature, Education, Horror, Folklore, Book Launch, Cultural Heritage, Reading, Format, Performance"
+        ],
+        "210781": [
+          "Book Launch: Rooted by Leopoldo Goût: A woman's return to Mexico City digs away the layers of her forgotten past and the Aztec gods she awakened in this “blood reckoning.”",
+          "Tags: History, Literature, Education, Horror, Book Launch, Reading, Mythology, Format, Performance"
+        ],
+        "210782": [
+          "Book Launch: We'RE All Going to Die Tonight! by Veronica Bane: A twisty, off-the-rails mystery about seven teens forced to spend a stormy—and deadly—night together.",
+          "Tags: Literature, Mystery, Horror, Book Launch, Reading, Format, Performance"
+        ],
+        "210783": [
+          "Book Launch: Amityville Awakens by Robert P. Ottone: When the Amityville Horror House is demolished, it unleashes terror upon the surrounding community.",
+          "Tags: Literature, Horror, Book Launch, Reading, Supernatural, Format, Performance"
+        ],
+        "210784": [
+          "Book Launch: Crone by Keith Rosson: A haunting story of a father searching for his missing daughter and finding darkness—both human and not—at every turn.",
+          "Tags: Literature, Mystery, Horror, Book Launch, Reading, Format, Performance"
+        ],
+        "210785": [
+          "Book Launch: in the Woods They Wait by Carrie Lee South: A park ranger becomes obsessed with a missing child investigation and the possibility her brother was taken by the same unnatural force.",
+          "Tags: Literature, Mystery, Horror, Book Launch, Reading, Format, Performance"
+        ],
+        "210786": [
+          "Book Launch: the Man of Wind and Moss by Alex Gonzalez: A folk horror tale about six college friends who go on a weekend getaway in the woods—and the supernatural deals they make to survive.",
+          "Tags: Literature, Horror, Book Launch, Reading, Folk Horror, Format, Performance"
+        ],
+        "210787": [
+          "Book Launch: Portrait of a Haunting by Madison Tyler Nelson: After fearing it all her life, a young woman embraces her ability to see ghosts after a murder occurs that appears linked to her past.",
+          "Tags: Literature, Horror, Book Launch, Reading, Ghosts, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "210779": [
+          "https://www.eventbrite.com/e/book-launch-perfect-wives-perfect-lies-by-jennifer-anne-gordon-tickets-1994385814659"
+        ],
+        "210780": [
+          "https://www.eventbrite.com/e/book-launch-how-to-survive-camping-the-ancient-ones-by-bonnie-quinn-tickets-1994387325177",
+          "https://www.eventbrite.com/e/how-to-survive-camping-the-ancient-ones-by-bonnie-quinn-tickets-1994387325177"
+        ],
+        "210781": [
+          "https://www.eventbrite.com/e/book-launch-rooted-by-leopoldo-gout-tickets-1996006320636"
+        ],
+        "210782": [
+          "https://www.eventbrite.com/e/book-launch-were-all-going-to-die-tonight-by-veronica-bane-tickets-1994586835919"
+        ],
+        "210783": [
+          "https://www.eventbrite.com/e/book-launch-amityville-awakens-by-robert-p-ottone-tickets-1994630164516"
+        ],
+        "210784": [
+          "https://www.eventbrite.com/e/book-launch-crone-by-keith-rosson-tickets-1994630231717"
+        ],
+        "210785": [
+          "https://www.eventbrite.com/e/book-launch-in-the-woods-they-wait-by-carrie-lee-south-tickets-1994630377152"
+        ],
+        "210786": [
+          "https://www.eventbrite.com/e/book-launch-the-man-of-wind-and-moss-by-alex-gonzalez-tickets-1994630490491"
+        ],
+        "210787": [
+          "https://www.eventbrite.com/e/book-launch-portrait-of-a-haunting-by-madison-tyler-nelson-tickets-1994631407233"
+        ]
+      }
+    },
+    {
+      "concept": "format-history-class",
+      "label": "History class",
+      "category": "format",
+      "visual": "Historical timeline beside a lesson page.",
+      "rationale": "Learning history is not a current political meeting.",
+      "existing_alternative": "Use supported accepted art or the current broad Unicode fallback pending a distinct study.",
+      "event_ids": [
+        210664,
+        210665,
+        210666,
+        210667
+      ],
+      "evidence_by_event": {
+        "210664": [
+          "NYC DSA Academy - Red New York: Session 2 of 5: Session 2 will examine the movements of the Gilded Age, including the Henry George mayoralty campaign of 1886, District Assembly 49 of the Knights of Labor, the anarchist movement, the Irish Land League, and the Social Gospel. It will also consider whether anti-capitalist resistance in this period was socialist in perspective and why land was important to left-wing movements in the era.",
+          "Tags: Community, History, Education, Politics, Socialism, Class, In Person, Participatory, Format"
+        ],
+        "210665": [
+          "NYC DSA Academy - Red New York: Session 3 of 5: Session 3 will concentrate on the heyday of socialism in the city, including the Socialist Party, the IWW, Black radicalism in Harlem, Greenwich Village cultural radicalism, uprisings of garment workers, and circles of Progressive reform. The session will explore the connection between the era’s “labor question” and cultural rebellion against conventional middle-class values.",
+          "Tags: Community, History, Education, Politics, Socialism, Class, In Person, Participatory, Format"
+        ],
+        "210666": [
+          "NYC DSA Academy - Red New York: Session 4 of 5: Session 4 will examine the Popular Front of the 1930s and 40s, including New York’s Communist Party, CIO unions, Popular Front groups, left institutions, and the cultural imprint of the Popular Front throughout New York. It will also explore the relationship between the left-wing Popular Front and the transformation of the city under Mayor LaGuardia, and what happened to socialism.",
+          "Tags: Community, History, Literature, Education, Politics, Socialism, Class, In Person, Participatory, Format"
+        ],
+        "210667": [
+          "NYC DSA Academy - Red New York: Session 5 of 5: Session 5 explores the shift from labor-centered left-wing politics to radicalism focused on war, race, and gender, including postwar repression, anti-war and student movements, the Black Panthers, the Young Lords, Stonewall, and the feminist movement. It also examines the role of anti-capitalism in this era’s radicalism and its relationship to DSA.",
+          "Tags: Community, History, Education, Politics, Socialism, Class, In Person, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "210664": [
+          "https://actionnetwork.org/events/red-new-york-session-2-of-5"
+        ],
+        "210665": [
+          "https://actionnetwork.org/events/red-new-york-session-3-of-5"
+        ],
+        "210666": [
+          "https://actionnetwork.org/events/red-new-york-session-4-of-5"
+        ],
+        "210667": [
+          "https://actionnetwork.org/events/red-new-york-session-5-of-5"
+        ]
+      }
+    },
+    {
+      "concept": "format-variety-show",
+      "label": "Variety show",
+      "category": "format",
+      "visual": "Several contrasting stage symbols.",
+      "rationale": "Mixed acts with no single dominant discipline.",
+      "existing_alternative": "Use supported accepted art or the current broad Unicode fallback pending a distinct study.",
+      "event_ids": [
+        210534,
+        210628,
+        210750
+      ],
+      "evidence_by_event": {
+        "210534": [
+          "The Late Show: A night of improv, poetry, and more!",
+          "Tags: Theater, Literature, Comedy, Free, Poetry, Improv, Nightlife, Comedy Show, Format, Performance"
+        ],
+        "210628": [
+          "Caroline and Jack present \"The Show\": Caroline and Jack have curated a stunning comedic evening filled with live bits, audience interaction, and even an improvised play. Jack will appear as a filmmaker doing a Q+A with the audience, and Caroline as a live typewriter poet.",
+          "Tags: Theater, Performing Arts, Comedy, Comedy Show, Audience Interaction, Format, Performance"
+        ],
+        "210750": [
+          "Auteurism @ Secret Pour: Auteurism is a monthly showcase dedicated to all four corners of the art world, featuring a myriad of different acts from poets, musicians, ...",
+          "Tags: Music, Art, Literature, Poetry, Concert, Nightlife, Showcase, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "210534": [
+          "https://dumbo.nyc/event/the-late-show-2/",
+          "https://www.theratnyc.com/event-details/the-late-show-2026-08-12-21-00",
+          "https://www.theratnyc.com/event-details/the-late-show-2026-09-09-21-00"
+        ],
+        "210628": [
+          "https://www.eventbrite.com/e/caroline-and-jack-present-the-show-tickets-1996062181718?aff=odwdwdspacecraft"
+        ],
+        "210750": [
+          "https://secretpour.com/events"
+        ]
+      }
+    },
+    {
+      "concept": "activity-early-learning",
+      "label": "Early learning",
+      "category": "activity",
+      "visual": "Simple sorting and motor-play objects.",
+      "rationale": "Broad infant and toddler learning.",
+      "existing_alternative": "Use supported accepted art or the current broad Unicode fallback pending a distinct study.",
+      "event_ids": [
+        210798,
+        210836
+      ],
+      "evidence_by_event": {
+        "210798": [
+          "Baby Start- Birth to 17 months: Come join A Time for Kids, Inc. as we introduce our littlest learners to the wonderful world of library programs. Activities include music, movement, fine and gross motor development and circle time....",
+          "Tags: Music, Family, Education, Movement, Early Childhood, Open Practice, Participatory, Babies, Early Learning, Format"
+        ],
+        "210836": [
+          "Learning is Fun with Miss. Cili- Ages 2- entering Pre-K: Join Miss Cili for a fun, interactive, and educational class enhancing all different motor skills.",
+          "Tags: Family, Education, Class, Early Childhood, Participatory, Motor Skills, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "210798": [
+          "https://eastmeadow.libcal.com/event/16953358",
+          "https://eastmeadow.libcal.com/event/17319516"
+        ],
+        "210836": [
+          "https://eastmeadow.libcal.com/event/17319502"
+        ]
+      }
+    },
+    {
+      "concept": "activity-mixed-crafts",
+      "label": "Mixed crafts",
+      "category": "activity",
+      "visual": "Several distinct craft materials around one work surface.",
+      "rationale": "Do not imply a single medium.",
+      "existing_alternative": "Use supported accepted art or the current broad Unicode fallback pending a distinct study.",
+      "event_ids": [
+        210575,
+        210863
+      ],
+      "evidence_by_event": {
+        "210575": [
+          "Collage Crafting Cloth and Coffee: Join us on alternating Wednesdays for Collage Crafting Cloth and Coffee! Learn to crochet or embroider; create your own stationery or mood board; watercolor and create to your heart's content! Open to all skill levels.",
+          "Tags: Community, Art, Kids, Family, Fiber Arts, Crafts, Crochet, Open Practice, Participatory, Embroidery, Format"
+        ],
+        "210863": [
+          "Crafty Wednesday: Pre-K Crafts: Children and their caregivers can enjoy a different themed craft every week. RSVP required.",
+          "Tags: Art, Workshop, Family, Crafts, Caregivers, Preschool, Participatory, Pre K, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "210575": [
+          "https://www.queenslibrary.org/event/019617-0626"
+        ],
+        "210863": [
+          "https://bccls.libcal.com/event/15740789",
+          "https://bccls.libcal.com/event/15740790",
+          "https://bccls.libcal.com/event/15740791",
+          "https://bccls.libcal.com/event/15740792",
+          "https://bccls.libcal.com/event/15740793",
+          "https://bccls.libcal.com/event/15740794"
+        ]
+      }
+    },
+    {
+      "concept": "genre-hip-hop",
+      "label": "Hip-hop",
+      "category": "genre",
+      "visual": "A compact boombox with two broad speaker circles and one strong rhythmic accent.",
+      "rationale": "The genre is explicitly tagged; boombox is an exploratory historical music-culture cue, not a claim that it is on stage, and must be tested beyond generic retro music.",
+      "existing_alternative": "Noto microphone is generic vocal performance; DJ decks imply a DJ role not established by every hip-hop concert.",
+      "event_ids": [
+        210752,
+        210760
+      ],
+      "evidence_by_event": {
+        "210752": [
+          "A-List Music Showcase @ Secret Pour: We back at it with a special night of #beatsandrhymes @dasessions1 @a_list_showcase presents another Dope night at @secretpour with your hos...",
+          "Tags: Music, Hip Hop, Concert, Nightlife, Beats and Rhymes, Format, Performance"
+        ],
+        "210760": [
+          "Jivin Scientists and Cash Lansky @ Secret Pour: Strange Famous Records and Mellow Music team up to bring you Arizona Hip Hop with Jivin Scientists and Cash Lansky. Boom Bap Beats and class...",
+          "Tags: Music, Hip Hop, Concert, Nightlife, Boom Bap, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "210752": [
+          "https://secretpour.com/events"
+        ],
+        "210760": [
+          "https://secretpour.com/events"
+        ]
+      }
+    },
+    {
+      "concept": "activity-baby-playdate",
+      "label": "Baby playdate",
+      "category": "activity",
+      "visual": "Soft toy and shared play mat.",
+      "rationale": "Open infant play rather than storytime alone.",
+      "existing_alternative": "Use supported accepted art or the current broad Unicode fallback pending a distinct study.",
+      "event_ids": [
+        210838
+      ],
+      "evidence_by_event": {
+        "210838": [
+          "Baby Playdate- Birth to 17 months: Make new friends at our baby playdate. Join us for songs, stories, rhymes, fingerplays and open ended play. For babies up to age 17 months only.",
+          "Tags: Community, Family, Storytime, Playdate, Open Practice, Participatory, Babies, Songs, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "210838": [
+          "https://eastmeadow.libcal.com/event/17319545"
+        ]
+      }
+    },
+    {
+      "concept": "activity-creative-writing",
+      "label": "Creative writing",
+      "category": "activity",
+      "visual": "Pencil beside a page with small branching idea marks.",
+      "rationale": "Prompt-based mixed writing differs from genre-specific instruction.",
+      "existing_alternative": "Writing hand already suits broad scope; avoid duplicating screenplay/poetry icons.",
+      "event_ids": [
+        210827
+      ],
+      "evidence_by_event": {
+        "210827": [
+          "Long Island Writer's Guild: Thinking of writing your memoir; journaling or creating a book? Then Long Island Writers Guild is the place for you. This group has been with us for many, many years. They create a safe and...",
+          "Tags: Community, Literature, Wellness, Discussion Group, Journaling, Memoir, Gathering, Writing, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "210827": [
+          "https://eastmeadow.libcal.com/event/16985409",
+          "https://eastmeadow.libcal.com/event/17358187"
+        ]
+      }
+    },
+    {
+      "concept": "activity-sensory-play",
+      "label": "Sensory play",
+      "category": "activity",
+      "visual": "Contrasting tactile surfaces and simple sound shapes.",
+      "rationale": "Exploration without clinical claims.",
+      "existing_alternative": "Use supported accepted art or the current broad Unicode fallback pending a distinct study.",
+      "event_ids": [
+        210870
+      ],
+      "evidence_by_event": {
+        "210870": [
+          "Drop-In Inclusion Hour: Stop by the children's room to explore books and our special collection of sensory materials for all ages! This program is supported by funds from LibraryLinkNJ as part of the Level Up Your...",
+          "Tags: Community, Family, Inclusion, Sensory Friendly, Sensory Play, Inclusive, Open Practice, Participatory, Books, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "210870": [
+          "https://bccls.libcal.com/event/16832186",
+          "https://bccls.libcal.com/event/16832187",
+          "https://bccls.libcal.com/event/16832188",
+          "https://bccls.libcal.com/event/16832189",
+          "https://bccls.libcal.com/event/16832190",
+          "https://bccls.libcal.com/event/16832191"
+        ]
+      }
+    },
+    {
+      "concept": "activity-social-needlework",
+      "label": "Social needlework",
+      "category": "activity",
+      "visual": "Several fiber tools beside conversation.",
+      "rationale": "Group needlework without one confirmed technique.",
+      "existing_alternative": "Use supported accepted art or the current broad Unicode fallback pending a distinct study.",
+      "event_ids": [
+        210888
+      ],
+      "evidence_by_event": {
+        "210888": [
+          "Drop In Chat and Stitch: Drop-in with your needlework project and join like-minded crafters and share ideas!",
+          "Tags: Community, Art, Fiber Arts, Crafts, Needlework, Open Practice, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "210888": [
+          "https://bccls.libcal.com/event/16138257",
+          "https://bccls.libcal.com/event/16138258",
+          "https://bccls.libcal.com/event/16138259",
+          "https://bccls.libcal.com/event/16138260",
+          "https://bccls.libcal.com/event/16138261",
+          "https://bccls.libcal.com/event/16138262"
+        ]
+      }
+    },
+    {
+      "concept": "format-beat-battle",
+      "label": "Beat battle",
+      "category": "format",
+      "visual": "Competing rhythm pads and judging cards.",
+      "rationale": "Musical competition differs from a collaborative cypher.",
+      "existing_alternative": "Use supported accepted art or the current broad Unicode fallback pending a distinct study.",
+      "event_ids": [
+        210751
+      ],
+      "evidence_by_event": {
+        "210751": [
+          "Supreme BARs @ Secret Pour: The Ultimate MC & Producer Tournament, combing both a beat battle and freestyle rap event in ONE",
+          "Tags: Community, Music, Sports, Hip Hop, Games, Nightlife, Competition, Tournament, Game, Participatory, Freestyle, Rap, Format, Beat Battle"
+        ]
+      },
+      "source_urls_by_event": {
+        "210751": [
+          "https://secretpour.com/events"
+        ]
+      }
+    },
+    {
+      "concept": "format-choral-orchestral",
+      "label": "Choral and orchestral program",
+      "category": "format",
+      "visual": "Vocal score alongside instrumental lines.",
+      "rationale": "Co-primary vocal and instrumental forces.",
+      "existing_alternative": "Use supported accepted art or the current broad Unicode fallback pending a distinct study.",
+      "event_ids": [
+        210686
+      ],
+      "evidence_by_event": {
+        "210686": [
+          "Juilliard415 and Yale Schola Cantorum Conducted by Grete Pedersen | Bach’s \"St. Matthew Passion\": No description available.",
+          "Tags: Music, Classical Music, Orchestra, Concert, Historical, Bach, Format, Performance, Opera Voice"
+        ]
+      },
+      "source_urls_by_event": {
+        "210686": [
+          "https://www.juilliard.edu/event/185811/juilliard415-and-yale-schola-cantorum-conducted-grete-pedersen-bachs-st-matthew",
+          "https://www.juilliard.edu/event/185811/juilliard415-and-yale-schola-cantorum-conducted-grete-pedersen-bachs-st-matthew?start_date_from=03/29/23",
+          "https://www.juilliard.edu/event/185811/juilliard415-and-yale-schola-cantorum-conducted-grete-pedersen-bachs-st-matthew?start_date_from=now&start_date_thru=&division=All&tags=17"
+        ]
+      }
+    },
+    {
+      "concept": "format-community-potluck",
+      "label": "Community potluck",
+      "category": "format",
+      "visual": "Different serving dishes at one table.",
+      "rationale": "Shared meal without guaranteed foods.",
+      "existing_alternative": "Use supported accepted art or the current broad Unicode fallback pending a distinct study.",
+      "event_ids": [
+        210729
+      ],
+      "evidence_by_event": {
+        "210729": [
+          "The People's September Potluck Picnic #2: Hosting these since 2021, welcome to our 5th year of potlucks & picnics for the Muslim community in NY. We'll bring: Pizza, Snacks, Softdrinks, Water. You can bring: Shareable snacks, picnic blankets + lawn chairs, prayer mats so we can pray together, board games, footballs, soccer balls, volleyballs.",
+          "Tags: Community, Party, Family, Outdoor, Picnic, Games, Nightlife, Potluck, Halal, Muslim Community, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "210729": [
+          "https://partiful.com/e/GcR83Qk1znEWBZKLfe93?source=discover"
+        ]
+      }
+    },
+    {
+      "concept": "format-film-discussion",
+      "label": "Film screening and discussion",
+      "category": "format",
+      "visual": "A movie screen with one broad speech bubble beside it.",
+      "rationale": "The screening explicitly includes a conversation, panel or discussion. This does not by itself establish an audience Q&A.",
+      "existing_alternative": "Film art covers the main activity; a speech balloon could convey the added discussion.",
+      "event_ids": [
+        210788
+      ],
+      "evidence_by_event": {
+        "210788": [
+          "The Librarians — Neighborhood Watch w/ Kingston Library & LGBTQ+ Center: More urgent than ever, this documentary spotlights librarians as harbingers of danger for Americans’ First Amendment rights. Screening followed by a discussion between Kingston Library and The Hudson Valley LGBTQ+ Community Center.",
+          "Tags: Community, Film, Education, Screening, LGBTQ Community, Intellectual Freedom, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "210788": [
+          "https://ticketing.useast.veezi.com/purchase/18061?siteToken=g9nv7hcnrvaex4ctekabp7z9w8",
+          "https://www.upstatefilms.org/the-librarians"
+        ]
+      }
+    },
+    {
+      "concept": "format-historic-site-tour",
+      "label": "Historic site tour",
+      "category": "format",
+      "visual": "Heritage placard beside a short guided path.",
+      "rationale": "Visiting a historic site without inventing specific architecture.",
+      "existing_alternative": "Use a supported accepted icon or broad Unicode while a distinctive study is pending.",
+      "event_ids": [
+        210611
+      ],
+      "evidence_by_event": {
+        "210611": [
+          "World Trade Center Walking Tour: Explore the WTC grounds with a longtime docent of the 9/11 Memorial Museum.",
+          "Tags: History, Free, Tour, Education, Outdoor, Walking Tour, Format, Outings"
+        ]
+      },
+      "source_urls_by_event": {
+        "210611": [
+          "https://www.untappedcities.com/world-trade-center-walking-tour/"
+        ]
+      }
+    },
+    {
+      "concept": "format-historic-talk-tour",
+      "label": "Historic talk and tour",
+      "category": "format",
+      "visual": "Interpretive plaque connected to a guided path.",
+      "rationale": "Combined historical discussion and room visit.",
+      "existing_alternative": "Use supported accepted art or the current broad Unicode fallback pending a distinct study.",
+      "event_ids": [
+        210721
+      ],
+      "evidence_by_event": {
+        "210721": [
+          "Pottier & Stymus of New York 1859–1919: Pottier & Stymus, one of the leading cabinetmaking and decorating establishments in New York City during the second half of the nineteenth century, was commissioned by the Seventh Regiment to decorate rooms at the Armory in 1878–1879 at the height of their popularity in Gilded Age New York. Join scholar and historian Walter G. Ritchie for a deep dive into the history, artistry, and decoration of this prominent firm, followed by a tour through two restored company rooms featuring the work of these creative designers and highly skilled craftsmen.",
+          "Tags: History, Art, Education, Gathering, Talk, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "210721": [
+          "https://www.armoryonpark.org/season-events/2026-season/2026-malkin-lecture-series/pottier-stymus-of-new-york-1859-1919/"
+        ]
+      }
+    },
+    {
+      "concept": "format-live-radio-show",
+      "label": "Live radio show",
+      "category": "format",
+      "visual": "Broadcast microphone and on-air dial.",
+      "rationale": "Require explicit live recording or audience event.",
+      "existing_alternative": "Use supported accepted art or the current broad Unicode fallback pending a distinct study.",
+      "event_ids": [
+        210807
+      ],
+      "evidence_by_event": {
+        "210807": [
+          "It Came from the Radio; Hosted by Mark Torres: It Came from the Radio, the official show of the Big Apple Con, is an hour long syndicated entertainment radio show that focuses on the Independent Writer, Artist and Filmmaker airing each and every...",
+          "Tags: Community, Neighborhood, Film, Long Island, Radio, Nightlife, Entertainment, Gathering, Talk, Filmmaker, Guest Speaker, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "210807": [
+          "https://eastmeadow.libcal.com/event/17082689",
+          "https://eastmeadow.libcal.com/event/17346845"
+        ]
+      }
+    },
+    {
+      "concept": "format-mixed-open-mic",
+      "label": "Format mixed open mic",
+      "category": "format",
+      "visual": "Microphone with words and music marks",
+      "rationale": "Open performance across multiple media.",
+      "existing_alternative": "Retain appropriate Unicode or broader accepted icon until recognition and structural review pass.",
+      "event_ids": [
+        210761
+      ],
+      "evidence_by_event": {
+        "210761": [
+          "DSM Live Open Mic & Fundraiser @ Secret Pour: Get your tickets and sign up for the open mic! @melrosamusic @kylebethe_ @secretpour @juliuscarrofcomedy @theirleah ! Let’s go and raise mon...",
+          "Tags: Community, Music, Comedy, Open Practice, Participatory, Open Mic / Music, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "210761": [
+          "https://secretpour.com/events"
+        ]
+      }
+    },
+    {
+      "concept": "format-stress-management-talk",
+      "label": "Stress management talk",
+      "category": "format",
+      "visual": "Discussion bubble above a calm breathing line.",
+      "rationale": "Educational discussion without treatment claims.",
+      "existing_alternative": "Use supported accepted art or the current broad Unicode fallback pending a distinct study.",
+      "event_ids": [
+        210793
+      ],
+      "evidence_by_event": {
+        "210793": [
+          "Stress Management with Bobby Riedel: Stress and anxiety can take its toll on you mentally and emotionally. Digestion, physical pain, “what if” thinking, panic attacks and being in a constant prison of fear, are just a few examples. ...",
+          "Tags: Wellness, Mental Health, Gathering, Talk, Stress Management, Anxiety, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "210793": [
+          "https://eastmeadow.libcal.com/event/17190267",
+          "https://eastmeadow.libcal.com/event/17190281",
+          "https://eastmeadow.libcal.com/event/17190282",
+          "https://eastmeadow.libcal.com/event/17190289",
+          "https://eastmeadow.libcal.com/event/17529107",
+          "https://eastmeadow.libcal.com/event/17529114"
+        ]
+      }
+    }
+  ],
+  "limitations": "Counts describe this cohort, not population reach. These are grounded prospective studies, not live assignments. Existing artwork may already suffice; exact equipment and genre recognition require further review."
+}

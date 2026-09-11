@@ -1,0 +1,1320 @@
+{
+  "date": "2026-09-09",
+  "scope": "Cycle004:100 sequential records190618–191322; no targeted supplements.",
+  "suggestions": 65,
+  "concept_count": 51,
+  "concepts": [
+    {
+      "concept": "ensemble-jazz-quintet",
+      "category": "format",
+      "label": "Jazz quintet",
+      "visual": "Five music-stand shapes in a shallow arc with one note.",
+      "rationale": "Explicit quintet configuration deserves exploration without assumed instruments.",
+      "existing_alternative": "Five tiny objects may fail at small sizes; generic music remains safer.",
+      "event_ids": [
+        191294,
+        191299,
+        191312
+      ],
+      "evidence_by_event": {
+        "191294": [
+          "Bobby Watson Quintet: Legendary alto saxophonist and bandleader Bobby Watson brings his quintet to the stage for an evening of hard bop, soulful swing, and modern jazz rooted in the blues and Kansas City tradition. Watson delivers music full of memorable melodies, deep grooves, and the unmistakable energy of a jazz master still evolving the sound today.",
+          "Tags: Music, Jazz, Concert, Nightlife, Saxophone, Hard Bop, Live Music, Format, Performance, Kansas City Jazz"
+        ],
+        "191299": [
+          "Joe Block Quintet: There is Always Hope Album Release Show: Pianist and composer Joe Block celebrates the release of his Blue Engine Records album There Is Always Hope with an evening of lyrical originals, expressive improvisation, and modern jazz rooted in melody and groove. Recognized as one of “jazz’s most promising young composers,” Block brings a thoughtful, deeply personal approach to the piano that makes this album release show a highlight.",
+          "Tags: Music, Jazz, Concert, Nightlife, Modern Jazz, Piano, Album Release, Live Music, Format, Performance"
+        ],
+        "191312": [
+          "Corcoran Holt Quintet: Freedom of Art Album Release: Bassist, composer, and bandleader Corcoran Holt brings Freedom of Art to Dizzy’s Club for a powerful evening of original music rooted in family, community, and personal history. Shaped by his Washington, D.C. upbringing, his years on the New York jazz scene, and his current life in Phoenix.",
+          "Tags: Community, Music, Jazz, Concert, Nightlife, Album Release, Original Music, Quintet, Bass, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "191294": [
+          "https://ticketing.jazz.org/21309/21310"
+        ],
+        "191299": [
+          "https://ticketing.jazz.org/21338/21339"
+        ],
+        "191312": [
+          "https://ticketing.jazz.org/21483/21484",
+          "https://ticketing.jazz.org/21483/21485"
+        ]
+      }
+    },
+    {
+      "concept": "format-tribute-concert",
+      "label": "Tribute concert",
+      "category": "format",
+      "visual": "Two overlapping record silhouettes with one echoing musical note.",
+      "rationale": "Tribute repertoire is a format facet; motif is unproven and must not imitate an artist logo.",
+      "existing_alternative": "Existing broad Unicode remains suitable; specific motif must demonstrate added recognition before new artwork.",
+      "event_ids": [
+        190731,
+        190912,
+        191298
+      ],
+      "evidence_by_event": {
+        "190731": [
+          "The Linda Ronstadt Experience: The Linda Ronstadt Experience, featuring American Idol star Tristan McIntosh, is a highly acclaimed tribute concert celebrating Linda Ronstadt in the prime of her career. The performance takes audiences on a nostalgic ride through timeless chart-toppers including 'You’re No Good' and 'Blue Bayou'.",
+          "Tags: Music, Concert, Tribute Band, Live Music, Format, Performance"
+        ],
+        "190912": [
+          "Jerry's Middle Finger: California-based Jerry's Middle Finger delivers a Jerry Garcia Band tribute experience, performing and celebrating the music of JGB with energy. The band features lead guitarist Garrett Deloian, drummer Rodney Newman, bassist Son Vo, vocalists Halina Janusz and Lisa Malsberger, and pianist Jon Gold.",
+          "Tags: Community, Music, Concert, Tribute Band, Grateful Dead, Live Music, Jerry Garcia, Format, Performance"
+        ],
+        "191298": [
+          "John Coltrane Centennial Celebration: Celebrate the centennial of John Coltrane with a powerful six-night tribute honoring one of jazz’s most visionary voices, curated by Grammy-winning pianist Geoffrey Keezer. Featuring fresh explorations of landmark works like Crescent, John Coltrane and Johnny Hartman, Blue Train and Expression, this special celebration captures the passion, innovation, and spiritual depth that continue to make Coltrane a defining icon.",
+          "Tags: Music, Jazz, Concert, Nightlife, Tribute Band, John Coltrane, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "190731": [
+          "https://www.theiridium.com/Events/the-linda-ronstadt-experience/september-17th%2C-2026"
+        ],
+        "190912": [
+          "https://www.brooklynbowl.com/brooklyn/events/detail/jerry-s-middle-finger-k7vgf_u50b_9s"
+        ],
+        "191298": [
+          "https://ticketing.jazz.org/21325/21326"
+        ]
+      }
+    },
+    {
+      "concept": "genre-blues",
+      "label": "Blues",
+      "category": "genre",
+      "visual": "Explore a spare bent musical note with a short call-and-response echo mark.",
+      "rationale": "Explicit blues repertoire merits a genre candidate independent of instrument; no proven universal motif, recognition testing required.",
+      "existing_alternative": "Noto guitar or saxophone excludes many blues forms; generic notes omit genre.",
+      "event_ids": [
+        190734,
+        190735,
+        191308
+      ],
+      "evidence_by_event": {
+        "190734": [
+          "SONS OF CREAM, featuring Kofi Baker, Malcolm Bruce, Richard Johnson: Celebrating the iconic music of their fathers, Ginger Baker's son Kofi and Jack Bruce's son Malcolm are joined by Ginger's great nephew Rob Johnson to perform as Sons Of Cream. The band performs blistering, exploratory songs and improvisation stemming from the legacy of their fathers.",
+          "Tags: Music, Rock, Concert, Blues, Live Music, Format, Performance"
+        ],
+        "190735": [
+          "Selwyn Birchwood: Selwyn Birchwood is a blues musician whose band features the pulsating interplay of his blistering guitar with driving baritone sax, delivering a mix of deep blues, rock, funk, and soul.",
+          "Tags: Music, Concert, Blues, Guitar, Live Music, Format, Performance"
+        ],
+        "191308": [
+          "Bluesday: Doug Wamble Blues In The Present Tense: Bluesday at Dizzy’s Club welcomes guitarist, vocalist, and composer Doug Wamble for Memphis in Harlem, an evening rooted in the blues, gospel, soul, and jazz traditions that shaped his sound. With a deep groove and storyteller’s touch, Wamble connects the grit and warmth of Memphis with the swing and sophistication of Harlem, moving from classic blues feeling to modern improvisation.",
+          "Tags: Music, Gospel, Jazz, Wellness, Concert, Spirituality, Nightlife, Blues, Soul Music, Sacred Music, Guitar, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "190734": [
+          "https://www.theiridium.com/Events/-sons-of-cream%2C-featuring-kofi-baker%2C-malcolm-bruce%2C-richard-johnson/september-28th-29th%2C-2026"
+        ],
+        "190735": [
+          "https://www.theiridium.com/Events/selwyn-birchwood/may-24-2026"
+        ],
+        "191308": [
+          "https://ticketing.jazz.org/21465/21466",
+          "https://ticketing.jazz.org/21465/21467"
+        ]
+      }
+    },
+    {
+      "concept": "activity-garden-stewardship",
+      "label": "Garden stewardship",
+      "category": "activity",
+      "visual": "A gloved hand beside a small leafy plant and exposed soil.",
+      "rationale": "Hands-on tending differs from viewing plants; use a large hand/leaf silhouette and test whether it adds clarity at 16px.",
+      "existing_alternative": "Existing seedling and potted plant artwork omit hands-on care; avoid inventing a particular supplied tool.",
+      "event_ids": [
+        190854,
+        191224
+      ],
+      "evidence_by_event": {
+        "190854": [
+          "Compost Beautification Community Volunteer Days: Join the QBG Compost Staff to tour and care for our compost demo site by weeding, mulching, planting, applying compost and gardening.",
+          "Tags: Community, Education, Sustainability, Gardening, Outdoor, Compost, Volunteer, Composting, Participatory, Format"
+        ],
+        "191224": [
+          "Farm Stewardship: Join Snug Harbor for a day of hands-on volunteering at the Heritage Farm to learn how a small-scale urban farm operates and how they support a productive landscape. Volunteers will assist with tasks such as bed building, bed prep, seeding, and weeding.",
+          "Tags: Community, Free, Education, Sustainability, Gardening, Outdoor, Volunteer, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "190854": [
+          "https://queensbotanical.org/event/compost-beautification-community-volunteer-days-15/2026-07-19/",
+          "https://queensbotanical.org/event/compost-beautification-community-volunteer-days-15/2026-08-16/",
+          "https://queensbotanical.org/event/compost-beautification-community-volunteer-days-15/2026-09-20/"
+        ],
+        "191224": [
+          "https://snug-harbor.org/class/farm-stewardship/?slot_id=20755",
+          "https://snug-harbor.org/class/farm-stewardship/?slot_id=20756",
+          "https://snug-harbor.org/class/farm-stewardship/?slot_id=20757",
+          "https://snug-harbor.org/class/farm-stewardship/?slot_id=20758",
+          "https://snug-harbor.org/class/farm-stewardship/?slot_id=20759",
+          "https://snug-harbor.org/class/farm-stewardship/?slot_id=20760",
+          "https://snug-harbor.org/class/farm-stewardship/?slot_id=20761",
+          "https://snug-harbor.org/class/farm-stewardship/?slot_id=20762",
+          "https://snug-harbor.org/class/farm-stewardship/?slot_id=20763",
+          "https://snug-harbor.org/class/farm-stewardship/?slot_id=20764"
+        ]
+      }
+    },
+    {
+      "concept": "format-craft-market",
+      "label": "Makers market",
+      "category": "format",
+      "visual": "Stall canopy above a handmade tag and thread spool.",
+      "rationale": "Independent makers sell handcrafted products.",
+      "existing_alternative": "Shopping bag is already suitable; no claim that all products use thread.",
+      "event_ids": [
+        190859,
+        190860
+      ],
+      "evidence_by_event": {
+        "190859": [
+          "Fall | Dumbo: FAD Market hosts its Fall pop-up series at Empire Stores, featuring a fresh lineup of independent makers, artists, and designers. Discover handcrafted jewelry, apparel, and artisanal goods.",
+          "Tags: Community, Pop Up, Art, Free, Warehouse, Market, Shopping, Makerspace, Crafts, Makers, Format, Browsable"
+        ],
+        "190860": [
+          "Open Streets on Montague: Join FAD Market for a day of shopping and neighborhood fun at the Open Streets event on Montague Street. Discover local makers, artists, and independent small businesses.",
+          "Tags: Community, Art, Free, Market, Shopping, Outdoor, Format, Browsable"
+        ]
+      },
+      "source_urls_by_event": {
+        "190859": [
+          "http://fadmarket.co/fall-empire-stores-dumbo-brooklyn",
+          "https://dumbo.nyc/event/fad-market-fall-pop-up-dumbo/2026-09-12/1/"
+        ],
+        "190860": [
+          "https://fadmarket.co/open-streets-on-montague"
+        ]
+      }
+    },
+    {
+      "concept": "format-parade",
+      "label": "Parade",
+      "category": "format",
+      "visual": "A row of celebratory pennants and a broad marching route.",
+      "rationale": "Named cultural parade defines the program.",
+      "existing_alternative": "Flags mark identity but do not show a moving procession; avoid assuming a dance or instrument.",
+      "event_ids": [
+        190978,
+        190979
+      ],
+      "evidence_by_event": {
+        "190978": [
+          "Queens Hispanic Day Parade: A Hispanic Day parade along 37th Avenue from 69th Street to 89th Street.",
+          "Tags: Government, Community, Festival, Outdoor, Community Board, Parade, Queens CB3, Hispanic Heritage, Community Celebration, Format, Social"
+        ],
+        "190979": [
+          "Queens Dominican Day Parade: A Dominican Day parade along 37th Avenue from 69th Street to 89th Street.",
+          "Tags: Government, Community, Festival, Outdoor, Community Board, Parade, Queens CB3, Dominican Culture, Community Celebration, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "190978": [
+          "https://queenscb3.cityofnewyork.us/event/queens-hispanic-day-parade-3/"
+        ],
+        "190979": [
+          "https://queenscb3.cityofnewyork.us/event/queens-dominican-day-parade-3/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-folk",
+      "label": "Folk music",
+      "category": "genre",
+      "visual": "Explore a plucked-string curve beside one plain storytelling note.",
+      "rationale": "Folk is explicitly named in the program.",
+      "existing_alternative": "Generic notes remain valid; this motif needs recognition testing and must not assume acoustic instrumentation.",
+      "event_ids": [
+        191120,
+        191139
+      ],
+      "evidence_by_event": {
+        "191120": [
+          "The Binoculars: The Binoculars is the Brooklyn-based duo of longtime pals Kaethe Hostetter and Chloë Swantner, celebrating the release of their new album 'Double Whammy'.",
+          "Tags: Music, Indie, Concert, Folk Music, Nightlife, Duo, Live Music, Format, Performance"
+        ],
+        "191139": [
+          "Nathan Salsburg / Eli Smith: A double-bill concert featuring idiosyncratic acoustic guitarist Nathan Salsburg and folk singer/banjo player Eli Smith.",
+          "Tags: Music, Concert, Folk Music, Acoustic, Banjo, Guitar, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "191120": [
+          "https://tockify.com/sunnysmusic/detail/236/1784678400000/1",
+          "https://tockify.com/sunnysmusic/detail/236/1787702400000",
+          "https://tockify.com/sunnysmusic/detail/236/1787702400000/3",
+          "https://tockify.com/sunnysmusic/detail/236/1788912000000"
+        ],
+        "191139": [
+          "https://www.viewcy.com/event/nathan_salsburg__eli"
+        ]
+      }
+    },
+    {
+      "concept": "genre-jazz",
+      "label": "Jazz",
+      "category": "genre",
+      "visual": "A pair of syncopated musical notes with one loose improvisatory flourish.",
+      "rationale": "The genre is explicit, but an instrument-neutral motif remains exploratory and requires recognition tests; avoid treating saxophone as universal jazz.",
+      "existing_alternative": "Noto notes are generic; a saxophone misstates instrumentation when the program does not feature one.",
+      "event_ids": [
+        190732,
+        190877
+      ],
+      "evidence_by_event": {
+        "190732": [
+          "Adam Hawley: Guitarist and Producer Dr. Adam Hawley has burst on to the scene as a celebrated and innovative artist, composer and band leader. In all, Adam’s four albums and work as a producer has spawned an incredible Nineteen Billboard #1 Hits and the 2025 Billboard Artist of the Year!",
+          "Tags: Music, Jazz, Concert, Guitar, Format, Performance"
+        ],
+        "190877": [
+          "The Brian Resnick Jazz Machine: Jazz artist Brian Resnick, known for performances with numerous luminaries, leads his jazz machine.",
+          "Tags: Music, Jazz, Concert, Drums, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "190732": [
+          "https://www.theiridium.com/Events/adam-hawley/september-18-2026"
+        ],
+        "190877": [
+          "https://silvana-nyc.com/calendar.php"
+        ]
+      }
+    },
+    {
+      "concept": "genre-modern-jazz",
+      "label": "Modern jazz",
+      "category": "genre",
+      "visual": "Explore syncopated abstract score marks with one restrained sound wave.",
+      "rationale": "Program explicitly names modern jazz.",
+      "existing_alternative": "Generic music or a featured instrument may remain clearer; abstract motif is unproven.",
+      "event_ids": [
+        191290,
+        191299
+      ],
+      "evidence_by_event": {
+        "191290": [
+          "Isaiah J. Thompson Trio: Award-winning pianist and composer Isaiah J. Thompson brings his trio to the stage for an evening of modern jazz rooted in swing, melody, and soulful storytelling.",
+          "Tags: Music, Dance, Jazz, Concert, Nightlife, Swing Music, Modern Jazz, Swing Dance, Piano, Swing, Trio, Quartet, Format, Performance"
+        ],
+        "191299": [
+          "Joe Block Quintet: There is Always Hope Album Release Show: Pianist and composer Joe Block celebrates the release of his Blue Engine Records album There Is Always Hope with an evening of lyrical originals, expressive improvisation, and modern jazz rooted in melody and groove. Recognized as one of “jazz’s most promising young composers,” Block brings a thoughtful, deeply personal approach to the piano that makes this album release show a highlight.",
+          "Tags: Music, Jazz, Concert, Nightlife, Modern Jazz, Piano, Album Release, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "191290": [
+          "https://ticketing.jazz.org/21290/21291"
+        ],
+        "191299": [
+          "https://ticketing.jazz.org/21338/21339"
+        ]
+      }
+    },
+    {
+      "concept": "genre-soul",
+      "label": "Soul music",
+      "category": "genre",
+      "visual": "A record with a rounded call-and-response wave.",
+      "rationale": "Classic and Northern Soul are explicit repertoire; the motif needs testing against funk and R&B and should not imply live vocals.",
+      "existing_alternative": "DJ decks serve the current activity; no existing icon distinguishes soul repertoire.",
+      "event_ids": [
+        190735,
+        191308
+      ],
+      "evidence_by_event": {
+        "190735": [
+          "Selwyn Birchwood: Selwyn Birchwood is a blues musician whose band features the pulsating interplay of his blistering guitar with driving baritone sax, delivering a mix of deep blues, rock, funk, and soul.",
+          "Tags: Music, Concert, Blues, Guitar, Live Music, Format, Performance"
+        ],
+        "191308": [
+          "Bluesday: Doug Wamble Blues In The Present Tense: Bluesday at Dizzy’s Club welcomes guitarist, vocalist, and composer Doug Wamble for Memphis in Harlem, an evening rooted in the blues, gospel, soul, and jazz traditions that shaped his sound. With a deep groove and storyteller’s touch, Wamble connects the grit and warmth of Memphis with the swing and sophistication of Harlem, moving from classic blues feeling to modern improvisation.",
+          "Tags: Music, Gospel, Jazz, Wellness, Concert, Spirituality, Nightlife, Blues, Soul Music, Sacred Music, Guitar, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "190735": [
+          "https://www.theiridium.com/Events/selwyn-birchwood/may-24-2026"
+        ],
+        "191308": [
+          "https://ticketing.jazz.org/21465/21466",
+          "https://ticketing.jazz.org/21465/21467"
+        ]
+      }
+    },
+    {
+      "concept": "genre-vocal-jazz",
+      "label": "Vocal jazz",
+      "category": "genre",
+      "visual": "Explore a microphone beside one curved improvisatory note.",
+      "rationale": "The jazz program explicitly features a vocalist.",
+      "existing_alternative": "Microphone is a reasonable existing choice; custom vocal-jazz motif needs recognition testing and should not imply a specific instrument lineup.",
+      "event_ids": [
+        191305,
+        191306
+      ],
+      "evidence_by_event": {
+        "191305": [
+          "Paula West: Jazz and cabaret vocalist Paula West brings her rich contralto and masterful storytelling to an evening of song that ranges from the Great American Songbook to reimagined folk, rock, and soul classics. A San Diego native based in San Francisco, she has become a favorite of critics and audiences alike, earning multiple New York Nightlife Awards.",
+          "Tags: Cabaret, Music, Jazz, Concert, Nightlife, Vocal Music, Jazz Vocal, American Songbook, Live Music, Format, Performance"
+        ],
+        "191306": [
+          "Songbook Sundays: Kander & Ebb: Celebrate the unforgettable duo, composer John Kander and lyricist Fred Ebb, behind musical classics Cabaret and Chicago. Created and hosted by Deborah Grace Winer, the Songbook Sundays series brings together top vocalists from Broadway, cabaret, and jazz for a vibrant tour through the Kander & Ebb catalog—from the smoky seduction of “All That Jazz” and the defiant glamour.",
+          "Tags: Cabaret, Broadway, Music, Jazz, Concert, Musical Theater, Nightlife, Songbook, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "191305": [
+          "https://ticketing.jazz.org/21451/21452",
+          "https://ticketing.jazz.org/21451/21457"
+        ],
+        "191306": [
+          "https://ticketing.jazz.org/21458/21459",
+          "https://ticketing.jazz.org/21458/21460"
+        ]
+      }
+    },
+    {
+      "concept": "activity-conversation-practice",
+      "category": "activity",
+      "label": "Conversation practice",
+      "visual": "Two facing speech bubbles containing different-sized voice marks.",
+      "rationale": "Single-language speaking practice differs from reciprocal language exchange.",
+      "existing_alternative": "Flag identifies language context but not participatory conversation; test against general discussion.",
+      "event_ids": [
+        190897
+      ],
+      "evidence_by_event": {
+        "190897": [
+          "French Moment at Barzakh: An open French language exchange with Racine, bringing people together around conversation, culture, and connection. Whether you’re fluent or just starting out, it’s a relaxed space to practice, listen, and speak freely.",
+          "Tags: Community, Culture, Education, Language Learning, Language Exchange, French Language, Open Practice, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "190897": [
+          "https://www.viewcy.com/event/french_moment_at_barz_4",
+          "https://www.viewcy.com/event/french_moment_at_barz_5",
+          "https://www.viewcy.com/event/french_moment_at_barz_6",
+          "https://www.viewcy.com/event/french_moment_at_barz_7",
+          "https://www.viewcy.com/event/french_moment_at_barz_8"
+        ]
+      }
+    },
+    {
+      "concept": "activity-invasive-plant-removal",
+      "label": "Invasive plant removal",
+      "category": "activity",
+      "visual": "Gloved hand lifting a rooted plant from soil.",
+      "rationale": "Wetland restoration explicitly removes or slows invasive plants.",
+      "existing_alternative": "Leaf is broad and litter-picker would misstate the task; figure contact requires 3D study.",
+      "event_ids": [
+        191235
+      ],
+      "evidence_by_event": {
+        "191235": [
+          "Water Stewardship: Protect our freshwater wetlands by clearing trails, safeguarding community access, and restoring the ecological balance. Stewardship focuses on identifying invasive species and utilizing techniques to either slow their growth or remove them.",
+          "Tags: Community, Free, Education, Environment, Outdoor, Volunteer, Stewardship, Environmental Stewardship, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "191235": [
+          "https://snug-harbor.org/class/water-stewardship/?slot_id=18366",
+          "https://snug-harbor.org/class/water-stewardship/?slot_id=18367",
+          "https://snug-harbor.org/class/water-stewardship/?slot_id=18368"
+        ]
+      }
+    },
+    {
+      "concept": "activity-street-photography",
+      "label": "Street photography",
+      "category": "activity",
+      "visual": "A camera framing a simple walking silhouette against one bold street corner.",
+      "rationale": "The class explicitly teaches street shooting rather than general photography; frame and street subject could improve technique recognition.",
+      "existing_alternative": "Camera is broad; city skyline alone misses photography.",
+      "event_ids": [
+        190835
+      ],
+      "evidence_by_event": {
+        "190835": [
+          "Street Photography, BPL: Dive into street photography in a class open to all skill levels and learn from a seasoned pro. Explore iconic photographers while mastering both historical context and practical street shooting techn",
+          "Tags: Visual Arts, Art, Photography, Workshop, Education, Street Photography, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "190835": [
+          "https://bricartsmedia.org/class/street-photography/",
+          "https://www.bklynlibrary.org/node/828692"
+        ]
+      }
+    },
+    {
+      "concept": "activity-trail-maintenance",
+      "category": "activity",
+      "label": "Trail maintenance",
+      "visual": "A trail tool repairing a short path edge",
+      "rationale": "Repairing trails differs from walking or litter collection.",
+      "existing_alternative": "Retain existing broad artwork; verify existing Noto options and recognition gain before new art.",
+      "event_ids": [
+        191235
+      ],
+      "evidence_by_event": {
+        "191235": [
+          "Water Stewardship: Protect our freshwater wetlands by clearing trails, safeguarding community access, and restoring the ecological balance. Stewardship focuses on identifying invasive species and utilizing techniques to either slow their growth or remove them.",
+          "Tags: Community, Free, Education, Environment, Outdoor, Volunteer, Stewardship, Environmental Stewardship, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "191235": [
+          "https://snug-harbor.org/class/water-stewardship/?slot_id=18366",
+          "https://snug-harbor.org/class/water-stewardship/?slot_id=18367",
+          "https://snug-harbor.org/class/water-stewardship/?slot_id=18368"
+        ]
+      }
+    },
+    {
+      "concept": "activity-tree-stewardship",
+      "label": "Tree stewardship",
+      "category": "activity",
+      "visual": "Tree trunk with a protective ring and small care tool.",
+      "rationale": "Hands-on tree and natural-landscape care is explicit.",
+      "existing_alternative": "Tree emoji conveys subject but not stewardship; avoid implying tree felling.",
+      "event_ids": [
+        191226
+      ],
+      "evidence_by_event": {
+        "191226": [
+          "Environmental and Tree Stewardship: Learn about how to care for trees and large areas of natural landscapes. Participants will be outside doing physical work and should wear clothes they do not mind getting dirty and bring a water bottle.",
+          "Tags: Community, Free, Education, Environment, Outdoor, Volunteer, Conservation, Stewardship, Tree Care, Environmental Stewardship, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "191226": [
+          "https://snug-harbor.org/class/environmental-and-tree-stewardship/?slot_id=17574",
+          "https://snug-harbor.org/class/environmental-and-tree-stewardship/?slot_id=21775",
+          "https://snug-harbor.org/class/environmental-and-tree-stewardship/?slot_id=21776",
+          "https://snug-harbor.org/class/environmental-and-tree-stewardship/?slot_id=21777",
+          "https://snug-harbor.org/class/environmental-and-tree-stewardship/?slot_id=21778",
+          "https://snug-harbor.org/class/environmental-and-tree-stewardship/?slot_id=21779",
+          "https://snug-harbor.org/class/environmental-and-tree-stewardship/?slot_id=21780",
+          "https://snug-harbor.org/class/environmental-and-tree-stewardship/?slot_id=21781"
+        ]
+      }
+    },
+    {
+      "concept": "activity-walking-meditation",
+      "label": "Walking meditation",
+      "category": "activity",
+      "visual": "Two slow footprints following a calm open circular path.",
+      "rationale": "Kinhin is explicit alongside zazen; test slow contemplative walking versus hiking.",
+      "existing_alternative": "Noto seated meditator omits walking; ordinary footprints omit contemplative practice.",
+      "event_ids": [
+        190803
+      ],
+      "evidence_by_event": {
+        "190803": [
+          "September Half-Day Retreat 2026: Silently engaging in sitting and walking meditation, hearing a dharma talk, and connecting with community are wonderful ways to spend a Saturday morning.",
+          "Tags: Community, Wellness, Meditation, Gathering, Service, Online, Retreat, Dharma Talk, Mind-Body, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "190803": [
+          "https://zencare.org/events/september-half-day-retreat-2026"
+        ]
+      }
+    },
+    {
+      "concept": "activity-zazen",
+      "label": "Zazen sitting practice",
+      "category": "activity",
+      "visual": "Balanced seated figure on a round zafu cushion with short neck and grounded legs",
+      "rationale": "Explicit Zen sitting practice may benefit from a meditation posture distinct from yoga; requires 3D pose review.",
+      "existing_alternative": "Keep the existing Unicode fallback or suitable broader custom icon until distinct artwork is reviewed.",
+      "event_ids": [
+        190803
+      ],
+      "evidence_by_event": {
+        "190803": [
+          "September Half-Day Retreat 2026: Silently engaging in sitting and walking meditation, hearing a dharma talk, and connecting with community are wonderful ways to spend a Saturday morning.",
+          "Tags: Community, Wellness, Meditation, Gathering, Service, Online, Retreat, Dharma Talk, Mind-Body, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "190803": [
+          "https://zencare.org/events/september-half-day-retreat-2026"
+        ]
+      }
+    },
+    {
+      "concept": "craft-ropework",
+      "label": "Nautical rope craft",
+      "category": "craft",
+      "visual": "Coiled rope and a single decorative knot.",
+      "rationale": "Keepsakes include monkey fist, coaster and wall hanging.",
+      "existing_alternative": "Knot emoji is already precise enough; do not create redundant art without improved recognition.",
+      "event_ids": [
+        191254
+      ],
+      "evidence_by_event": {
+        "191254": [
+          "Knot Tying Workshop: Join us for a hands-on knot-tying craft workshop that weaves creativity with Staten Island’s maritime past. Learn how to make your own nautical keepsake as you choose from a monkey’s fist keychain, a coiled rope coaster, or a decorative wall hanging, all while exploring the fascinating history of Sailors’ Snug Harbor.",
+          "Tags: Community, History, Art, Workshop, Family, Education, Maritime, Crafts, Maritime History, Hands on, Participatory, Snug Harbor, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "191254": [
+          "https://snug-harbor.org/class/knot-tying-workshop/?slot_id=17846"
+        ]
+      }
+    },
+    {
+      "category": "dance-style",
+      "concept": "dance-samba-reggae",
+      "existing_alternative": "Generic dancer loses technique and a drum would infer unlisted instrumentation.",
+      "label": "Samba-reggae dance",
+      "rationale": "Samba-reggae is explicitly named within the movement class; accurate pose research and recognition testing are required, and mixed influences limit exclusive use.",
+      "visual": "A dancer in a grounded wide stance with alternating strong arm sweeps and two broad rhythm arcs.",
+      "event_ids": [
+        190630
+      ],
+      "evidence_by_event": {
+        "190630": [
+          "Brazilian Movement with Maria Assis: Afro-Brazilian dance is a unique and fun combination of Samba reggae from Bahia, Rio de Janeiro, and West African and Latino beats.",
+          "Tags: Community, Music, Dance, Free, Wellness, Fitness, Outdoor, Latin Music, Samba, Participatory, Afro Brazilian, Format, Brazilian Dance, Samba Reggae"
+        ]
+      },
+      "source_urls_by_event": {
+        "190630": [
+          "https://www.nyc.gov/main/events/?permalinkName=brazilian-movement-with-maria-assis&id=1197276&sequence=1",
+          "https://www.nycgovparks.org/events/2026/09/09/brazilian-movement-with-maria-assis",
+          "https://www.thehighline.org/events/brazilian-movement-with-maria-assis/"
+        ]
+      }
+    },
+    {
+      "concept": "dance-zumba",
+      "label": "Zumba",
+      "category": "activity",
+      "visual": "Athletic dancer in a lateral step with raised bent arms and two beat marks.",
+      "rationale": "Explicit Zumba merits exploring an exercise-dance pose; distinguishability from general dance needs testing.",
+      "existing_alternative": "Existing dancer is formal dress; notes describe music without exercise.",
+      "event_ids": [
+        190774
+      ],
+      "evidence_by_event": {
+        "190774": [
+          "Saturday Zumba in the Park: Get ready to move and groove every Saturday morning with Zumba in the Park! Join Grace Bustos for a fun-filled, high-energy dance workout.",
+          "Tags: Dance, Free, Wellness, Fitness, Outdoor, Zumba, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "190774": [
+          "https://forttryonpark.org/event/saturday-zumba-in-the-park/2026-06-27/",
+          "https://forttryonpark.org/event/saturday-zumba-in-the-park/2026-07-18/",
+          "https://forttryonpark.org/event/saturday-zumba-in-the-park/2026-08-01/",
+          "https://forttryonpark.org/event/saturday-zumba-in-the-park/2026-08-15/",
+          "https://forttryonpark.org/event/saturday-zumba-in-the-park/2026-08-22/",
+          "https://forttryonpark.org/event/saturday-zumba-in-the-park/2026-09-05/",
+          "https://forttryonpark.org/event/saturday-zumba-in-the-park/2026-09-12/",
+          "https://www.forttryonparktrust.org/event/saturday-zumba-in-the-park/2026-05-16/",
+          "https://www.nycgovparks.org/events/2026/08/01/zumba-in-the-park",
+          "https://www.nycgovparks.org/events/2026/08/08/zumba-in-the-park",
+          "https://www.nycgovparks.org/events/2026/08/22/zumba-in-the-park",
+          "https://www.nycgovparks.org/events/2026/08/29/zumba-in-the-park",
+          "https://www.nycgovparks.org/events/2026/09/05/zumba-in-the-park"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-cello-piano",
+      "label": "Cello and piano duo",
+      "category": "format",
+      "visual": "Cello and restrained keyboard beside one another.",
+      "rationale": "Both named recital instruments are explicit.",
+      "existing_alternative": "Retain cello-led artwork until a compact duo study improves it.",
+      "event_ids": [
+        191135
+      ],
+      "evidence_by_event": {
+        "191135": [
+          "Cellist Louise Dubin and pianist John Novacek: Live at St. Paul's Chapel — or, watch on YouTube. If you don't have a curre",
+          "Tags: Music, Classical Music, Concert, Piano, Cello, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "191135": [
+          "https://events.columbia.edu/cal/event/eventView.do?b=de&calPath=%2Fpublic%2Fcals%2FMainCal&guid=CAL-00bbdb7c-9f4b176f-019f-4c78d23a-00002399events%40columbia.edu&recurrenceId=",
+          "https://youtube.com/live/Tgmu4kHl8kM"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-jazz-quartet",
+      "category": "format",
+      "label": "Jazz quartet",
+      "visual": "Four music stands with four bold note marks",
+      "rationale": "Four-piece jazz ensemble differs from string quartet; avoid assumed instruments.",
+      "existing_alternative": "Broad fallback does not distinguish this supported facet.",
+      "event_ids": [
+        191293
+      ],
+      "evidence_by_event": {
+        "191293": [
+          "Dayramir González Quartet: Kicking off Hispanic Heritage Month, Afro-Cuban pianist and composer Dayramir González brings his quartet to the stage for a lively night of rhythmic grooves, soaring improvisation, and modern jazz shaped by the spirit of Havana. Blending Afro-Cuban traditions with a contemporary jazz sensibility, González delivers music that is both deeply expressive and full of momentum.",
+          "Tags: Community, Music, Dance, Jazz, Education, Concert, Nightlife, Afro Cuban, Cultural Heritage, Afro Cuban Jazz, Live Music, Hispanic Heritage, Format, Performance, Hispanic Heritage Month"
+        ]
+      },
+      "source_urls_by_event": {
+        "191293": [
+          "https://ticketing.jazz.org/21306/21307"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-sax-piano",
+      "label": "Saxophone and piano duo",
+      "category": "format",
+      "visual": "Two coordinated silhouettes: saxophone and piano keys.",
+      "rationale": "The named two-instrument collaboration is explicit.",
+      "existing_alternative": "Existing generic duo accurately represents count; instrument-specific study must improve recognition without crowding.",
+      "event_ids": [
+        190733
+      ],
+      "evidence_by_event": {
+        "190733": [
+          "Nick Stefanacci & Jay Rowe: Saxophonist Nick Stefanacci and Pianist Jay Rowe unite for a dynamic new jazz concert experience. The collaboration highlights original music, fan favorites, and dynamic interplay between saxophone and piano.",
+          "Tags: Music, Jazz, Concert, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "190733": [
+          "https://www.theiridium.com/Events/nick-stefanacci-%26-jay-rowe---birthday-bash-%26-album-release-show/may-14-2026"
+        ]
+      }
+    },
+    {
+      "concept": "format-crowdfunding-pitch-video",
+      "label": "Crowdfunding pitch video",
+      "category": "format",
+      "visual": "Small film frame with a speech/pitch bubble.",
+      "rationale": "Workshop explicitly creates pitch videos for crowdfunding.",
+      "existing_alternative": "Video camera is broad; test whether the pitch cue distinguishes this from ordinary filmmaking.",
+      "event_ids": [
+        190839
+      ],
+      "evidence_by_event": {
+        "190839": [
+          "BRIC x Seed&Spark: Art of the Pitch Video: This workshop walks participants through how to create a successful, high-quality pitch video that doesn't require a full film crew to make an impact. No filmmaking experience is required to attend this professional development session.",
+          "Tags: Community, Workshop, Free, Film, Education, Professional Development, Participatory, Crowdfunding, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "190839": [
+          "https://bricartsmedia.org/class/bric-x-seedspark-art-of-the-pitch-video-october-13-2026/"
+        ]
+      }
+    },
+    {
+      "concept": "format-lightning-talks",
+      "label": "Short presentation night",
+      "category": "format",
+      "visual": "A lectern beside three stacked slide cards.",
+      "rationale": "Several compact talks differ from a single lecture or trivia.",
+      "existing_alternative": "Existing broad Unicode remains suitable; specific motif must demonstrate added recognition before new artwork.",
+      "event_ids": [
+        190768
+      ],
+      "evidence_by_event": {
+        "190768": [
+          "Nerd Nite: Join us back in Brooklyn at Littlefield for three fun-yet-informative presentations about Westley’s iocaine powder immunity, the world record for visiting all NYC Subway stations, and how to identify real facts from nonsense. Trivia is back too, so bring some pals and win some increasingly adequate prizes.",
+          "Tags: Community, Education, Games, Trivia, Gathering, Talk, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "190768": [
+          "https://littlefieldnyc.com/event/?wfea_eb_id=1993612401359"
+        ]
+      }
+    },
+    {
+      "concept": "format-live-podcast",
+      "category": "format",
+      "label": "Live podcast",
+      "visual": "Two desk microphones facing across a table",
+      "rationale": "Live conversation recording differs from stand-up and editing.",
+      "existing_alternative": "Broad fallback does not distinguish this specific supported facet.",
+      "event_ids": [
+        190787
+      ],
+      "evidence_by_event": {
+        "190787": [
+          "Drop Your Buffs: The Live Show!: Your favorite gay Survivor deep dive is leaving the feed and hitting the stage. Expect an unforgettable night of sharp Survivor discussion, hot takes, VIP guests, and a game of Star or Starless.",
+          "Tags: Community, Music, Theater, Comedy, Nightlife, Live Show, Podcast, Entertainment, Gathering, Talk, Live Music, Survivor, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "190787": [
+          "https://svatheatre.com/events/drop-your-buffs-the-live-show/",
+          "https://www.eventbrite.com/e/drop-your-buffs-the-live-show-tickets-1989426650666?aff=ebdssbcitybrowse",
+          "https://www.eventbrite.com/e/drop-your-buffs-the-live-show-tickets-1989426650666?aff=ebdssbneighborhoodbrowse"
+        ]
+      }
+    },
+    {
+      "concept": "genre-afro-cuban-jazz",
+      "label": "Afro-Cuban jazz",
+      "category": "genre",
+      "visual": "Explore interlocking rhythmic blocks beside piano keys.",
+      "rationale": "Program explicitly names Afro-Cuban traditions and contemporary jazz.",
+      "existing_alternative": "Piano icon identifies leader, while rhythmic genre motif remains exploratory.",
+      "event_ids": [
+        191293
+      ],
+      "evidence_by_event": {
+        "191293": [
+          "Dayramir González Quartet: Kicking off Hispanic Heritage Month, Afro-Cuban pianist and composer Dayramir González brings his quartet to the stage for a lively night of rhythmic grooves, soaring improvisation, and modern jazz shaped by the spirit of Havana. Blending Afro-Cuban traditions with a contemporary jazz sensibility, González delivers music that is both deeply expressive and full of momentum.",
+          "Tags: Community, Music, Dance, Jazz, Education, Concert, Nightlife, Afro Cuban, Cultural Heritage, Afro Cuban Jazz, Live Music, Hispanic Heritage, Format, Performance, Hispanic Heritage Month"
+        ]
+      },
+      "source_urls_by_event": {
+        "191293": [
+          "https://ticketing.jazz.org/21306/21307"
+        ]
+      }
+    },
+    {
+      "concept": "genre-alternative-rap",
+      "label": "Alternative rap",
+      "category": "genre",
+      "visual": "Explore microphone with asymmetric experimental sound blocks.",
+      "rationale": "Modern alternative rap is explicitly the billed focus.",
+      "existing_alternative": "Microphone already conveys vocals; abstract genre design needs recognition testing.",
+      "event_ids": [
+        190772
+      ],
+      "evidence_by_event": {
+        "190772": [
+          "EXOPOCALYPSE TOUR feat. RAV, Teller Bank$, and Fatboi Sharif: Join Rav, Teller Bank$, and Fatboi Sharif for an incredible night of music as they bring their distinct corners of modern alternative rap together on one stage. The event features a lineup of indie heavyweights for a night billed as the EXOPOCALYPSE.",
+          "Tags: Music, Hip Hop, Concert, Live Music, Alternative Rap, Rap, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "190772": [
+          "https://littlefieldnyc.com/event/?wfea_eb_id=1992771358778"
+        ]
+      }
+    },
+    {
+      "concept": "genre-bluegrass",
+      "label": "Bluegrass",
+      "category": "genre",
+      "visual": "An open rhythmic arc linking two simplified acoustic string-instrument necks.",
+      "rationale": "Bluegrass is explicit. This ensemble-inspired visual is exploratory and must not claim a particular featured instrument; recognition testing may favor the existing art.",
+      "existing_alternative": "Banjo is an existing broad genre association but does not establish this event instrumentation; generic notes lose repertoire specificity.",
+      "event_ids": [
+        190770
+      ],
+      "evidence_by_event": {
+        "190770": [
+          "Gangstagrass: Gangstagrass is a bluegrass hip-hop collective that brings people together across political, racial, socioeconomic, geographic, and generational lines. The band features MCs and instrumentalists, creating a unique sound where bluegrass pick and hip-hop cypher traditions unite.",
+          "Tags: Music, Hip Hop, Concert, Folk Music, Americana, Bluegrass, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "190770": [
+          "https://littlefieldnyc.com/event/?wfea_eb_id=1993626108357"
+        ]
+      }
+    },
+    {
+      "concept": "genre-bomba-jazz",
+      "label": "Bomba jazz",
+      "category": "genre",
+      "visual": "Explore a barrel-drum silhouette paired with one restrained brass curve.",
+      "rationale": "The program explicitly names bomba jazz as the featured bandleader’s defining fusion; the combined rhythm/brass motif is exploratory and requires recognition testing.",
+      "existing_alternative": "Trombone now identifies the bandleader’s instrument but cannot alone communicate the named musical fusion.",
+      "event_ids": [
+        191309
+      ],
+      "evidence_by_event": {
+        "191309": [
+          "Papo Vázquez Mighty Pirates Troubadours: Trombonist, composer, and bandleader Papo Vázquez brings his fiery blend of jazz, Latin, and Afro–Puerto Rican traditions to the bandstand for a night of rhythm, soul, and swing. A GRAMMY-nominated NEA Master Artist and pioneer of “bomba jazz,” Vázquez has spent more than four decades shaping the sound of Latin jazz alongside icons.",
+          "Tags: Music, Jazz, Concert, Nightlife, Latin Music, Latin Jazz, Trombone, Live Music, Afro Puerto Rican, Format, Performance, Bomba Jazz"
+        ]
+      },
+      "source_urls_by_event": {
+        "191309": [
+          "https://ticketing.jazz.org/21468/21469",
+          "https://ticketing.jazz.org/21468/21472"
+        ]
+      }
+    },
+    {
+      "concept": "genre-brazilian-music",
+      "label": "Brazilian music",
+      "category": "genre",
+      "visual": "Explore a rhythm-and-melody emblem after specific repertoire research.",
+      "rationale": "Reimagined Gilberto Gil songs and Brazilian rhythms define this concert.",
+      "existing_alternative": "Country flag gives geography; do not infer one instrument or flatten diverse Brazilian styles.",
+      "event_ids": [
+        191291
+      ],
+      "evidence_by_event": {
+        "191291": [
+          "Gaia Wilmer Large Ensemble featuring Mônica Salmaso: Reflections on Gilberto Gil: Saxophonist and composer Gaia Wilmer joins acclaimed Brazilian vocalist Mônica Salmaso for an album release celebration honoring the music of Gilberto Gil. Reimagining Gil’s iconic songs through the rich sound of a large jazz ensemble, the performance blends Brazilian rhythms, sweeping horn arrangements, and expressive vocals into a vibrant tribute to one of Brazil’s most influential artists.",
+          "Tags: Music, World Music, Jazz, Concert, Latin Music, Album Release, Brazilian Music, Large Ensemble, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "191291": [
+          "https://ticketing.jazz.org/21295/21296"
+        ]
+      }
+    },
+    {
+      "concept": "genre-electronic",
+      "label": "Electronic music",
+      "category": "genre",
+      "visual": "A simple waveform beside one music note.",
+      "rationale": "Explicit electronic repertoire does not establish DJ or synth equipment; abstract motif needs recognition testing.",
+      "existing_alternative": "Existing broad Unicode remains suitable; specific motif must demonstrate added recognition before new artwork.",
+      "event_ids": [
+        190722
+      ],
+      "evidence_by_event": {
+        "190722": [
+          "Galantis Presents Midsommar: Galantis presents their Midsommar show at The Rooftop at Pier 17.",
+          "Tags: Music, Outdoor, Concert, Electronic Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "190722": [
+          "https://rooftopatpier17.com/events/galantis-2026/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-funk",
+      "label": "Funk",
+      "category": "genre",
+      "visual": "Explore a bent note over four offset bass-pulse blocks.",
+      "rationale": "Funk is explicitly named in the title, description or program tags. This is a prospective genre motif requiring recognition tests; it does not establish a particular instrument or an exclusive assignment for mixed bills.",
+      "existing_alternative": "Existing notes or actual featured instrument remain appropriate; custom genre art is exploratory rather than a proven recognition improvement.",
+      "event_ids": [
+        190735
+      ],
+      "evidence_by_event": {
+        "190735": [
+          "Selwyn Birchwood: Selwyn Birchwood is a blues musician whose band features the pulsating interplay of his blistering guitar with driving baritone sax, delivering a mix of deep blues, rock, funk, and soul.",
+          "Tags: Music, Concert, Blues, Guitar, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "190735": [
+          "https://www.theiridium.com/Events/selwyn-birchwood/may-24-2026"
+        ]
+      }
+    },
+    {
+      "concept": "genre-gospel",
+      "label": "Gospel music",
+      "category": "genre",
+      "visual": "Two singing silhouettes with lifted hands beneath a simple radiant music arc.",
+      "rationale": "Explores the explicitly stated gospel performance identity separately from choir format; it may be confused with general choral celebration and needs recognition testing.",
+      "existing_alternative": "Raised-hands emoji conveys emotion and choir imagery conveys ensemble, but neither specifically communicates gospel.",
+      "event_ids": [
+        191308
+      ],
+      "evidence_by_event": {
+        "191308": [
+          "Bluesday: Doug Wamble Blues In The Present Tense: Bluesday at Dizzy’s Club welcomes guitarist, vocalist, and composer Doug Wamble for Memphis in Harlem, an evening rooted in the blues, gospel, soul, and jazz traditions that shaped his sound. With a deep groove and storyteller’s touch, Wamble connects the grit and warmth of Memphis with the swing and sophistication of Harlem, moving from classic blues feeling to modern improvisation.",
+          "Tags: Music, Gospel, Jazz, Wellness, Concert, Spirituality, Nightlife, Blues, Soul Music, Sacred Music, Guitar, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "191308": [
+          "https://ticketing.jazz.org/21465/21466",
+          "https://ticketing.jazz.org/21465/21467"
+        ]
+      }
+    },
+    {
+      "concept": "genre-hard-bop",
+      "label": "Hard bop",
+      "category": "genre",
+      "visual": "Explore tightly grouped brass/reed phrases as a rhythmic emblem.",
+      "rationale": "Hard bop is explicit in the sax-led quintet program.",
+      "existing_alternative": "Sax emoji is accurate; genre-specific abstract cue needs recognition testing.",
+      "event_ids": [
+        191294
+      ],
+      "evidence_by_event": {
+        "191294": [
+          "Bobby Watson Quintet: Legendary alto saxophonist and bandleader Bobby Watson brings his quintet to the stage for an evening of hard bop, soulful swing, and modern jazz rooted in the blues and Kansas City tradition. Watson delivers music full of memorable melodies, deep grooves, and the unmistakable energy of a jazz master still evolving the sound today.",
+          "Tags: Music, Jazz, Concert, Nightlife, Saxophone, Hard Bop, Live Music, Format, Performance, Kansas City Jazz"
+        ]
+      },
+      "source_urls_by_event": {
+        "191294": [
+          "https://ticketing.jazz.org/21309/21310"
+        ]
+      }
+    },
+    {
+      "concept": "genre-hip-hop",
+      "label": "Hip-hop",
+      "category": "genre",
+      "visual": "A compact boombox with two broad speaker circles and one strong rhythmic accent.",
+      "rationale": "The genre is explicitly tagged; boombox is an exploratory historical music-culture cue, not a claim that it is on stage, and must be tested beyond generic retro music.",
+      "existing_alternative": "Noto microphone is generic vocal performance; DJ decks imply a DJ role not established by every hip-hop concert.",
+      "event_ids": [
+        190770
+      ],
+      "evidence_by_event": {
+        "190770": [
+          "Gangstagrass: Gangstagrass is a bluegrass hip-hop collective that brings people together across political, racial, socioeconomic, geographic, and generational lines. The band features MCs and instrumentalists, creating a unique sound where bluegrass pick and hip-hop cypher traditions unite.",
+          "Tags: Music, Hip Hop, Concert, Folk Music, Americana, Bluegrass, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "190770": [
+          "https://littlefieldnyc.com/event/?wfea_eb_id=1993626108357"
+        ]
+      }
+    },
+    {
+      "concept": "genre-indie",
+      "category": "genre",
+      "label": "Indie music",
+      "visual": "Explore a hand-drawn note motif",
+      "rationale": "Broad stylistic family has no universal instrument; recognition unproven.",
+      "existing_alternative": "Broad fallback does not distinguish this specific supported facet.",
+      "event_ids": [
+        191120
+      ],
+      "evidence_by_event": {
+        "191120": [
+          "The Binoculars: The Binoculars is the Brooklyn-based duo of longtime pals Kaethe Hostetter and Chloë Swantner, celebrating the release of their new album 'Double Whammy'.",
+          "Tags: Music, Indie, Concert, Folk Music, Nightlife, Duo, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "191120": [
+          "https://tockify.com/sunnysmusic/detail/236/1784678400000/1",
+          "https://tockify.com/sunnysmusic/detail/236/1787702400000",
+          "https://tockify.com/sunnysmusic/detail/236/1787702400000/3",
+          "https://tockify.com/sunnysmusic/detail/236/1788912000000"
+        ]
+      }
+    },
+    {
+      "concept": "genre-instrumental-rock",
+      "label": "Instrumental rock",
+      "category": "genre",
+      "visual": "Guitar with a short expressive melodic wave and no vocal microphone.",
+      "rationale": "Instrumental rock is explicit in this guitar concert.",
+      "existing_alternative": "Existing guitar is suitable; removing microphone alone may not establish the genre to viewers.",
+      "event_ids": [
+        190736
+      ],
+      "evidence_by_event": {
+        "190736": [
+          "Lari Basilio: Lari Basilio will be on the road again with a new live show accompanied by her band as part of her new album release. The concert features the instrumental repertoire of the new and previous albums recorded by the artist, with emphasis on the melodic guitar lines.",
+          "Tags: Music, Rock, Concert, Guitar, Instrumental Rock, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "190736": [
+          "https://www.theiridium.com/Events/lari-basilio/october-9th-%2B10th-2026"
+        ]
+      }
+    },
+    {
+      "concept": "genre-jazz-fusion",
+      "label": "Jazz fusion",
+      "category": "genre",
+      "visual": "Explore interlocking improvisational note and electric waveform; recognition unproven.",
+      "rationale": "Explicit genre blend merits exploration without inventing an instrument roster.",
+      "existing_alternative": "Generic music notes omit fusion; a single jazz instrument overstates instrumentation.",
+      "event_ids": [
+        191301
+      ],
+      "evidence_by_event": {
+        "191301": [
+          "Atom String Quartet: Making a rare U.S. appearance, the Atom String Quartet brings a fresh, genre-blurring sound to the stage, mixing the intimacy of a string quartet with the spontaneity and energy of jazz improvisation. The acclaimed Polish ensemble blends classical music, folk influences, and adventurous rhythms into a performance that feels immersive, accessible, and full of surprise.",
+          "Tags: Music, Classical Music, Jazz, Concert, Nightlife, String Quartet, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "191301": [
+          "https://ticketing.jazz.org/21344/21345"
+        ]
+      }
+    },
+    {
+      "concept": "genre-khayal",
+      "label": "Khayal vocal music",
+      "category": "genre",
+      "visual": "Solo vocal sound arc with a restrained drone-string motif.",
+      "rationale": "Title explicitly identifies the Khayal vocal tradition.",
+      "existing_alternative": "Vocal microphone is valid; genre motif needs structural and cultural recognition study.",
+      "event_ids": [
+        191137
+      ],
+      "evidence_by_event": {
+        "191137": [
+          "The Saamis: preserving an 800-year old vocal tradition of Khayal: 4:30pm–5pm — Meet and greet; 5pm–5:45pm — Pre-concert talk; 6pm–7pm — Concert",
+          "Tags: Community, Music, Education, Concert, Virtual, Cultural Heritage, Khayal, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "191137": [
+          "https://events.columbia.edu/cal/event/eventView.do?b=de&calPath=%2Fpublic%2Fcals%2FMainCal&guid=CAL-00bbdb7c-9f4b176f-019f-4c7ac72c-000023c7events%40columbia.edu&recurrenceId=",
+          "https://youtube.com/live/jI81PNUp98o?feature=share"
+        ]
+      }
+    },
+    {
+      "concept": "genre-pop",
+      "category": "genre",
+      "label": "Pop music",
+      "visual": "Bold music note with a single rhythmic accent",
+      "rationale": "Avoid assuming vocal or electric instrument; broad genre motif unproven.",
+      "existing_alternative": "Broad fallback does not distinguish this supported facet.",
+      "event_ids": [
+        190911
+      ],
+      "evidence_by_event": {
+        "190911": [
+          "Knox: Knox will perform with Emi Grace. The event is for ages 18 and over.",
+          "Tags: Music, Concert, Singer Songwriter, Pop Music, Vocal Music, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "190911": [
+          "https://www.brooklynbowl.com/brooklyn/events/detail/knox-k7vgf_chrd-kg"
+        ]
+      }
+    },
+    {
+      "concept": "genre-post-punk",
+      "label": "Post-punk",
+      "category": "genre",
+      "visual": "Angular rhythmic note with a broken geometric beat line",
+      "rationale": "Explicit post-punk repertoire; motif is unproven and must avoid claiming instrumentation.",
+      "existing_alternative": "Retain the event Unicode fallback pending a recognizable reviewed study.",
+      "event_ids": [
+        190771
+      ],
+      "evidence_by_event": {
+        "190771": [
+          "The Dream Eaters w/ special guests Mary Shelley: The Dream Eaters come home to Brooklyn to make you laugh and cry and vomit all over yourself. Also on the bill: Mary Shelley, an avant-garde post-punk band from Brooklyn.",
+          "Tags: Music, Rock, Concert, Nightlife, Post Punk, Punk Rock, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "190771": [
+          "https://littlefieldnyc.com/event/?wfea_eb_id=1990510956855"
+        ]
+      }
+    },
+    {
+      "concept": "genre-punk-rock",
+      "label": "Punk rock",
+      "category": "genre",
+      "visual": "Explore a jagged torn-paper musical note with one broad safety-pin accent.",
+      "rationale": "Explicit punk programming supports genre exploration; visual convention needs recognition testing and does not assert performer costume or instrument.",
+      "existing_alternative": "Noto rock-hand/guitar cover broader rock; no custom punk symbol.",
+      "event_ids": [
+        190771
+      ],
+      "evidence_by_event": {
+        "190771": [
+          "The Dream Eaters w/ special guests Mary Shelley: The Dream Eaters come home to Brooklyn to make you laugh and cry and vomit all over yourself. Also on the bill: Mary Shelley, an avant-garde post-punk band from Brooklyn.",
+          "Tags: Music, Rock, Concert, Nightlife, Post Punk, Punk Rock, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "190771": [
+          "https://littlefieldnyc.com/event/?wfea_eb_id=1990510956855"
+        ]
+      }
+    },
+    {
+      "concept": "genre-rnb",
+      "label": "R&B",
+      "category": "genre",
+      "visual": "Explore a microphone paired with a single smooth looping sound-wave ribbon.",
+      "rationale": "R&B is explicit; exploratory smooth vocal motif is not a proven genre symbol and must be tested.",
+      "existing_alternative": "Noto microphone shows vocals but not genre; avoid assuming saxophone or other instruments.",
+      "event_ids": [
+        191092
+      ],
+      "evidence_by_event": {
+        "191092": [
+          "4 Lovers Only: Brooklyn: Join us for an intimate night of romance and connection, set to timeless R&B as 4 Lovers Only returns to Ace Hotel Brooklyn.",
+          "Tags: Community, Music, Literature, Party, Nightlife, R&B, Romance, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "191092": [
+          "https://acehotel.com/brooklyn/going-on/4-lovers-only-brooklyn/",
+          "https://www.eventbrite.com/e/4-lovers-only-brooklyn-tickets-1993768311691?aff=ebdssbcitybrowse"
+        ]
+      }
+    },
+    {
+      "concept": "genre-rock",
+      "category": "genre",
+      "label": "Rock music",
+      "visual": "Strong accented musical note",
+      "rationale": "Electric guitar exists but is not universal evidence; motif requires recognition testing.",
+      "existing_alternative": "Broad fallback does not distinguish this specific supported facet.",
+      "event_ids": [
+        190734
+      ],
+      "evidence_by_event": {
+        "190734": [
+          "SONS OF CREAM, featuring Kofi Baker, Malcolm Bruce, Richard Johnson: Celebrating the iconic music of their fathers, Ginger Baker's son Kofi and Jack Bruce's son Malcolm are joined by Ginger's great nephew Rob Johnson to perform as Sons Of Cream. The band performs blistering, exploratory songs and improvisation stemming from the legacy of their fathers.",
+          "Tags: Music, Rock, Concert, Blues, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "190734": [
+          "https://www.theiridium.com/Events/-sons-of-cream%2C-featuring-kofi-baker%2C-malcolm-bruce%2C-richard-johnson/september-28th-29th%2C-2026"
+        ]
+      }
+    },
+    {
+      "concept": "instrument-shofar",
+      "label": "Shofar",
+      "category": "instrument",
+      "visual": "A curved ridged ram horn with flared dark opening and narrow blowing tip.",
+      "rationale": "Explicit shofar blowing needs a natural horn shape different from trumpet/trombone.",
+      "existing_alternative": "Noto trumpet has valves and brass tubing; no shofar custom.",
+      "event_ids": [
+        190910
+      ],
+      "evidence_by_event": {
+        "190910": [
+          "A Musical Celebration of Rosh Hashanah: Celebrate with Rabbi Daniel Brenner and Jeremiah Lockwood for an event featuring music, a traditional service, Torah reading, and a festive Blue Ribbon lunch. The program includes plain-sense explanations of religious aspects, prayer, shofar blowing, and meditation.",
+          "Tags: Community, Music, Education, Nightlife, Celebration, Holiday, Gathering, Service, Format, Rosh Hashanah"
+        ]
+      },
+      "source_urls_by_event": {
+        "190910": [
+          "https://www.brooklynbowl.com/brooklyn/events/detail/a-musical-celebration-of-rosh-hashanah-k7vgf_clftrdf"
+        ]
+      }
+    },
+    {
+      "concept": "instrument-tenor-saxophone",
+      "label": "Tenor saxophone",
+      "category": "instrument",
+      "visual": "Longer curved saxophone body and bell, based on structural reference.",
+      "rationale": "Concert specifically honors the tenor-sax tradition.",
+      "existing_alternative": "Existing saxophone emoji may already suffice; new art must show a useful distinction from other saxophones.",
+      "event_ids": [
+        191313
+      ],
+      "evidence_by_event": {
+        "191313": [
+          "Tenor Legacy with Lew Tabackin: Tenor saxophonist and flutist Lew Tabackin leads Tenor Legacy, a swinging tribute to the great tenor sax masters who shaped his sound and the history of jazz. Tabackin and his ensemble revisit classic tunes and hallmark styles.",
+          "Tags: Music, Jazz, Concert, Nightlife, Tribute Band, Saxophone, Flute, Live Music, Tenor Sax, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "191313": [
+          "https://ticketing.jazz.org/21486/21487",
+          "https://ticketing.jazz.org/21486/21488"
+        ]
+      }
+    },
+    {
+      "concept": "sport-bouldering",
+      "category": "sport",
+      "label": "Bouldering",
+      "visual": "Climber on a low wall above a crash mat",
+      "rationale": "Ropeless short routes differ from roped climbing.",
+      "existing_alternative": "Broad fallback does not distinguish this specific supported facet.",
+      "event_ids": [
+        191006
+      ],
+      "evidence_by_event": {
+        "191006": [
+          "Intermediate Bouldering: An intermediate class focusing on advanced bouldering techniques.",
+          "Tags: Sports, Education, Bouldering, Climbing, Class, Participatory, Intermediate, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "191006": [
+          "https://app.rockgympro.com/b/?&bw=3cbb4d9a1a0a4b808487c9bbbe1a1924",
+          "https://app.rockgympro.com/b/widget/?a=offering&offering_guid=450d2f63d8af4d4781da4c142acf2abe&widget_guid=3cbb4d9a1a0a4b808487c9bbbe1a1924&mode=e&course_guid=f1557e2e296b25962a2ad19fb3b2c694ad933642",
+          "https://app.rockgympro.com/b/widget/?a=offering&offering_guid=450d2f63d8af4d4781da4c142acf2abe&widget_guid=3cbb4d9a1a0a4b808487c9bbbe1a1924&mode=e&course_guid=f1557e2e7ec90f4d2b62b3608ac8df78945add82",
+          "https://app.rockgympro.com/b/widget/?a=offering&offering_guid=450d2f63d8af4d4781da4c142acf2abe&widget_guid=3cbb4d9a1a0a4b808487c9bbbe1a1924&mode=e&course_guid=f1557e2e97c7e5d05046c43a3829c53f36364c7d",
+          "https://app.rockgympro.com/b/widget/?a=offering&offering_guid=450d2f63d8af4d4781da4c142acf2abe&widget_guid=3cbb4d9a1a0a4b808487c9bbbe1a1924&mode=e&course_guid=f1557e2ea0f73200f418a96cb6f17e70a39dc71c",
+          "https://app.rockgympro.com/b/widget/?a=offering&offering_guid=450d2f63d8af4d4781da4c142acf2abe&widget_guid=3cbb4d9a1a0a4b808487c9bbbe1a1924&mode=e&course_guid=f1557e2ebc14b6a8267a140b78b21e5df1355f5b"
+        ]
+      }
+    },
+    {
+      "concept": "sport-lead-climbing",
+      "category": "sport",
+      "label": "Lead climbing",
+      "visual": "Climber clipping rope into a quickdraw",
+      "rationale": "Lead clipping is distinct from top-rope climbing.",
+      "existing_alternative": "Broad fallback does not distinguish this specific supported facet.",
+      "event_ids": [
+        191005
+      ],
+      "evidence_by_event": {
+        "191005": [
+          "Fear of Falling Class: A specialized class designed to help climbers overcome the fear of falling.",
+          "Tags: Sports, Wellness, Education, Climbing, Class, Participatory, Lead Climbing, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "191005": [
+          "https://app.rockgympro.com/b/?&bw=3cbb4d9a1a0a4b808487c9bbbe1a1924",
+          "https://app.rockgympro.com/b/widget/?a=offering&offering_guid=2121d40999b34835a7e678628aca594f&widget_guid=3cbb4d9a1a0a4b808487c9bbbe1a1924&mode=e&course_guid=f1557e2e086ce362a692eb1849888d33648b1bed",
+          "https://app.rockgympro.com/b/widget/?a=offering&offering_guid=2121d40999b34835a7e678628aca594f&widget_guid=3cbb4d9a1a0a4b808487c9bbbe1a1924&mode=e&course_guid=f1557e2e17fdd9b5f258da7da003ac9e6b18a7f0",
+          "https://app.rockgympro.com/b/widget/?a=offering&offering_guid=2121d40999b34835a7e678628aca594f&widget_guid=3cbb4d9a1a0a4b808487c9bbbe1a1924&mode=e&course_guid=f1557e2e70958cc1a532220b54a1d9de176d7be1",
+          "https://app.rockgympro.com/b/widget/?a=offering&offering_guid=2121d40999b34835a7e678628aca594f&widget_guid=3cbb4d9a1a0a4b808487c9bbbe1a1924&mode=e&course_guid=f1557e2e71da78eda93c98814f91160fae43cb3d"
+        ]
+      }
+    },
+    {
+      "concept": "technique-guitar-tapping",
+      "label": "Guitar tapping and touch technique",
+      "category": "activity",
+      "visual": "A close guitar neck with two hands pressing directly onto separated fret positions.",
+      "rationale": "The performer explicitly spotlights touch technique and simultaneous melodic lines; two hands on the fretboard distinguish tapping from ordinary strumming.",
+      "existing_alternative": "Existing guitar identifies the instrument but omits the defining technique; a second tiny guitar may clutter the icon.",
+      "event_ids": [
+        190730
+      ],
+      "evidence_by_event": {
+        "190730": [
+          "Guitar Virtuoso Stanley Jordan, 2 Show, September 11th & 12th: World-renowned guitarist Stanley Jordan, a four-time GRAMMY nominee known for his signature touch technique, will perform at the Iridium in NYC. Jordan will spotlight his extraordinary two-guitar setup that allows him to play melody, harmony, and bass lines simultaneously.",
+          "Tags: Music, Jazz, Concert, Guitar, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "190730": [
+          "https://www.theiridium.com/Events/guitar-virtuoso-stanley-jordan%2C-2-show%2C-september-11th-%26-12th/september-11th-12th-2026"
+        ]
+      }
+    }
+  ],
+  "future_studies": [
+    "format-live-podcast",
+    "activity-street-photography",
+    "activity-tree-stewardship",
+    "dance-samba-reggae",
+    "sport-bouldering"
+  ],
+  "limitations": "Counts are cohort records, not population-wide rankings. Genre and instrument variants remain exploratory; retain suitable existing art. Two unresolved source identities are separately deferred."
+}

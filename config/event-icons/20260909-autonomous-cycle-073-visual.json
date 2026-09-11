@@ -1,0 +1,186 @@
+[
+  {
+    "icon_id": "format-preview-screening",
+    "source_sha256": "a274ea2635e37bb228176c688400219d239f78477ffa6f39bd402cf29b408ab0",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; brief known. Eye/play and forward marker inside film frame.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-073/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-073/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 988,
+      "gzip_level_6": 350
+    },
+    "optimization": {
+      "initial_raw": 988,
+      "initial_gzip_level_6": 350,
+      "final_raw": 988,
+      "final_gzip_level_6": 350
+    },
+    "issues": [],
+    "resolved_issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Eye/play remain visible16px; small advance arrow softens. Label specifies advance viewing,not a clickable player,Q&A or unknown-title guarantee."
+    ]
+  },
+  {
+    "icon_id": "genre-science-fiction-film",
+    "source_sha256": "850943fc0377e4becedcbb438bf4189d94ff57c36829fbe1e3c2f0365af43f21",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; brief known. Ringed planet and star inside film frame.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-073/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-073/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 1239,
+      "gzip_level_6": 431
+    },
+    "optimization": {
+      "initial_raw": 1239,
+      "initial_gzip_level_6": 431,
+      "final_raw": 1239,
+      "final_gzip_level_6": 431
+    },
+    "issues": [],
+    "resolved_issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Planet/frame survive16px. This is a conventional genre symbol,not a claim that every science-fiction film has space travel or ringed planets."
+    ]
+  },
+  {
+    "icon_id": "genre-creature-feature",
+    "source_sha256": "16b29e063789f1356501b47a60147b628ebc013dce6dbcc648d43e16911785bd",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; brief known. Horned fanged monster-face glyph inside film frame.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-073/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-073/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 1075,
+      "gzip_level_6": 395
+    },
+    "optimization": {
+      "initial_raw": 1043,
+      "initial_gzip_level_6": 377,
+      "final_raw": 1075,
+      "final_gzip_level_6": 395
+    },
+    "issues": [],
+    "resolved_issues": [
+      "Replaced cat-like triangular ears with broad outward curling horn silhouette; personally rechecked native sizes and actual theme variants."
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Horned face and fang marks read at24/32px; finer mouth detail softens16px. Label defines fictional creature cinema. Not a real species,cultural demon or copied film character."
+    ]
+  },
+  {
+    "icon_id": "genre-crime-mystery-film",
+    "source_sha256": "830144bdbc8b5dc07efefa20728a5b48f38106bdcb0c17b8135653f68d7eb066",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; brief known. Question mark magnified over a clue card inside film frame.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-073/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-073/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 1295,
+      "gzip_level_6": 430
+    },
+    "optimization": {
+      "initial_raw": 1233,
+      "initial_gzip_level_6": 428,
+      "final_raw": 1295,
+      "final_gzip_level_6": 430
+    },
+    "issues": [],
+    "resolved_issues": [
+      "Replaced the eye inside the lens with a question mark,distinguishing mystery from the preview-eye symbol. Personally rechecked native sizes and themes."
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Lens/frame read16px; clue lines/question details soften. Label specifies narrative crime/mystery,not privacy settings,real investigation or documentary."
+    ]
+  },
+  {
+    "icon_id": "genre-political-satire-film",
+    "source_sha256": "4122d716ad4ee1dbbc1c918dbd1a756412f88dc1de6d0123b41f1dc942ce9d69",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; brief known. Smiling speech bubble over a lectern inside film frame.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-073/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-073/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 1239,
+      "gzip_level_6": 441
+    },
+    "optimization": {
+      "initial_raw": 1239,
+      "initial_gzip_level_6": 441,
+      "final_raw": 1239,
+      "final_gzip_level_6": 441
+    },
+    "issues": [],
+    "resolved_issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Comic speech/lectern read at24/32px; face details soften16px. Label defines political satire cinema,not a rally or statement of audience beliefs. No real politician or human anatomy is depicted."
+    ]
+  }
+]

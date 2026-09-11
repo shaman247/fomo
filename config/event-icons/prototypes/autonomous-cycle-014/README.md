@@ -1,0 +1,11 @@
+# Batch014 artwork studies
+
+Five original icons represent animal drawing, landscape painting, still-life painting, monarch tagging and household yard sales. The three picture emblems are authoritative planar SVGs. `scene.py` is authoritative for the table/items and closed-wing monarch geometry; `project.py` produces simplified SVG projections and `views.py` produces six-view evidence.
+
+The sale scene has four equal supported legs, joined aprons, a hollow mug with attached handle, a potted plant, two closed books and an apertured hanging price tag. A numeric review caught tiny book support gaps, corrected by aligning the bottom cover and stacked cover to their support planes. The butterfly has paired fore/hind wings, six legs with reduced forelegs, two clubbed antennae and a circular tag on the visible underside hindwing. Initial radial hindwing veins were revised into an elongated central cell with branches. The tag is placed over that cell.
+
+[Monarch Watch’s primary guidance](https://monarchwatch.org/tagging/) and its [placement photograph](https://monarchwatch.org/tagging/tag_proper_placement_b.jpg), visually inspected in the browser, ground tag placement. All silhouettes and meshes are original; no photograph, official serial number, logo or external mesh was copied. Veins, white spots and scale are illustrative, not an exact taxonomic model or a handling guide. [The yard-sale organizer](https://www.southoldhistorical.org/event-details/yard-sale-benefit) confirms the format; its differing address is filed separately for investigation. Painting-medium specificity is not inferred from subject titles.
+
+Creator critique is separate from creation but is not independent or blind. Review evidence covers native128/32/24/16light/dark, actual IconManager variants, six geometry views and current-source hashes. Fine markings soften at16px; subject/tool and table/tag silhouettes remain. Geometry and runtime evidence are retained under the batch scratch directory. No exhaustive collision or fabrication simulation is claimed.
+
+A revised network exposed a projector edge case: buffering a mixed geometry collection dropped valid orange wing regions. The local projector now extracts polygon members recursively before paint union. The restored wing and all other final projections were visually rechecked.

@@ -1,0 +1,189 @@
+[
+  {
+    "icon_id": "activity-stage-combat",
+    "source_sha256": "0c5a7035031a30103118e0fcbae9c23021324272efc08d586b853cbdc4a7cc9e",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Two people on a stage with a rehearsed unarmed gesture.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-031/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-031/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 8543,
+      "gzip_level_6": 2892
+    },
+    "optimization": {
+      "initial_raw": 8633,
+      "initial_gzip_level_6": 2918,
+      "final_raw": 8543,
+      "final_gzip_level_6": 2892
+    },
+    "issues": [
+      {
+        "issue": "First symmetric raised-hand pose read too much like ordinary conversation.",
+        "resolution": "Reposed one actor\u2019s arm in the authoritative scene as a separated rehearsal gesture, preserving segment lengths, arm/thigh proportions and supported feet; rechecked all six views.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Two grounded actors rehearse a separated unarmed gesture on a shallow stage. At16px hands soften and it can read as general theater rehearsal; the label establishes stage combat. No strike contact, fighting instructions or exact class pose is promised."
+    ]
+  },
+  {
+    "icon_id": "format-35mm-screening",
+    "source_sha256": "5de66ce0f3857bb62150c7ca189c1d625f480a6573e8b667aba4d9421bf470fd",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Film strip carrying35.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-031/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-031/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 636,
+      "gzip_level_6": 336
+    },
+    "optimization": {
+      "initial_raw": 636,
+      "initial_gzip_level_6": 336,
+      "final_raw": 636,
+      "final_gzip_level_6": 336
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Outlined35 on a film strip distinguishes this format from accepted70mm art. At16px the gauge remains readable; strip is a symbolic cinema emblem, not a scale drawing of sprockets."
+    ]
+  },
+  {
+    "icon_id": "instrument-mandolin",
+    "source_sha256": "c970e7fabf6a4341d6eeff2988e8a8ad40f8a21bfe2fc74ac60942c3d1be3f05",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Small teardrop-bodied mandolin with paired sound holes.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-031/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-031/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 9077,
+      "gzip_level_6": 3166
+    },
+    "optimization": {
+      "initial_raw": 17700,
+      "initial_gzip_level_6": 4996,
+      "final_raw": 9077,
+      "final_gzip_level_6": 3166
+    },
+    "issues": [
+      {
+        "issue": "Mesh strings fragmented the body paint into excessive hidden contours; vertical layout gave the body too little area.",
+        "resolution": "For the checked icon camera only, project the same eight 3D string centerlines over solid underlying paints, after confirming they clear nut, bridge and soundboard. Other views retain full depth clipping. Rotate the entire instrument28degrees in its plane and recheck six views and native sizes.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Teardrop body, paired sound holes, narrow fretted neck, eight tuning buttons and four paired courses identify an A-style mandolin. At16px the strings merge and the label distinguishes it from another small lute. Tilt is a rigid scene transform. No instrument model or ensemble lineup is promised."
+    ]
+  },
+  {
+    "icon_id": "craft-picture-framing",
+    "source_sha256": "6a4d056165e145d38b0e61fda598e02dadfe3bdbfaed5ff6ff5f7330b4fdf108",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Wooden frame components and measuring rule.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-031/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-031/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 681,
+      "gzip_level_6": 377
+    },
+    "optimization": {
+      "initial_raw": 681,
+      "initial_gzip_level_6": 377,
+      "final_raw": 681,
+      "final_gzip_level_6": 377
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Three assembled wooden rails, a detached top rail and measuring rule depict making a frame. At16px the ruler ticks soften; label distinguishes framing from gallery viewing. Flat construction emblem is not an exact joinery instruction."
+    ]
+  },
+  {
+    "icon_id": "equipment-blood-pressure-cuff",
+    "source_sha256": "5ac23b62821079c7ea4cb903da451aa5f5c584b78bee2b07cdb2b9df90080df8",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Cuff connected to a digital monitor.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-031/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-031/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 6436,
+      "gzip_level_6": 2069
+    },
+    "optimization": {
+      "initial_raw": 6436,
+      "initial_gzip_level_6": 2069,
+      "final_raw": 6436,
+      "final_gzip_level_6": 2069
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Rolled cuff, connected air hose and sloped digital monitor represent blood-pressure screening. At16px the cuff and display remain two distinct objects but the idle dashes soften. Label establishes purpose; no brand, ECG, actual reading, diagnosis or supplied device is claimed."
+    ]
+  }
+]

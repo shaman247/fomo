@@ -1,0 +1,209 @@
+[
+  {
+    "icon_id": "equipment-modular-circuits",
+    "source_sha256": "5d2a5c5b965b4f74e1a6c60c63570e160e209460f6e24295402fc35f842690d5",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; prior brief known. Three connected electronic modules with button and light, powered by an external pack.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-059/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-059/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 6312,
+      "gzip_level_6": 1761
+    },
+    "optimization": {
+      "initial_raw": 7381,
+      "initial_gzip_level_6": 1872,
+      "final_raw": 6312,
+      "final_gzip_level_6": 1761
+    },
+    "issues": [
+      {
+        "severity": "material",
+        "location": "circuit composition",
+        "observation": "Initial connected circuit was a narrow horizontal strip.",
+        "revision": "Rotated the complete authoritative scene28degrees for greater canvas coverage without changing contacts.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Generic modular electronics, not an exact branded kit. Tiny feet, snaps and LED soften at16px; connected blocks and power cable remain. Circuit follows manufacturer text; attempted photo captures timed out, so no photo verification is claimed."
+    ]
+  },
+  {
+    "icon_id": "activity-small-business-assistance",
+    "source_sha256": "2df89a647f5a0e40ea47cf81d31937c59be351a1d18c66d828e4442a08faa6f2",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; prior brief known. Shopfront with advice question bubble.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-059/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-059/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 860,
+      "gzip_level_6": 474
+    },
+    "optimization": {
+      "initial_raw": 860,
+      "initial_gzip_level_6": 474,
+      "final_raw": 860,
+      "final_gzip_level_6": 474
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Storefront is a broad small-business symbol, not a promise of physical retail or a particular industry. Question cue distinguishes guidance from shopping; readable label specifies service."
+    ]
+  },
+  {
+    "icon_id": "activity-hygiene-kit-distribution",
+    "source_sha256": "0ac2d4b28bc055edd4611c01223879641273c0c381a81053e9df840d418cd3f9",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; prior brief known. Personal-hygiene pouch with bottle, toothbrush and soap.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-059/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-059/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 4871,
+      "gzip_level_6": 1257
+    },
+    "optimization": {
+      "initial_raw": 4922,
+      "initial_gzip_level_6": 1272,
+      "final_raw": 4871,
+      "final_gzip_level_6": 1257
+    },
+    "issues": [
+      {
+        "severity": "material",
+        "location": "pouch seam",
+        "observation": "Rear gusset endpoint stopped below the back panel edge.",
+        "revision": "Aligned side panel with rear upper edge in the3Dscene.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Bag contents and mechanism are illustrative. Toothbrush/bristles soften at16px; bottle and pouch remain. Program does not guarantee these exact items; no medicine or first-aid cross appears."
+    ]
+  },
+  {
+    "icon_id": "activity-benefits-assistance",
+    "source_sha256": "791314227aa3d8f44940896da487bb90ee306cf5ad30295536654dedc932834d",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; prior brief known. Resource folder and supportive conversation bubble.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-059/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-059/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 682,
+      "gzip_level_6": 412
+    },
+    "optimization": {
+      "initial_raw": 623,
+      "initial_gzip_level_6": 375,
+      "final_raw": 682,
+      "final_gzip_level_6": 412
+    },
+    "issues": [
+      {
+        "severity": "material",
+        "location": "benefits scope",
+        "observation": "Initial house motif suggested housing-only assistance.",
+        "revision": "Replaced house document with a resource folder and support bubble.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Generic resource navigation rather than guaranteed benefits. Folder replaces initial house to avoid suggesting housing-only service. Exact referral and eligibility still require event details."
+    ]
+  },
+  {
+    "icon_id": "format-science-stage-show",
+    "source_sha256": "3a19b30b493aa3b07148819710c40b3bc6638c8b99a31073b8cde486a4551aad",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; prior brief known. Pendulum demonstration within a curtained stage.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-059/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-059/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 4418,
+      "gzip_level_6": 1229
+    },
+    "optimization": {
+      "initial_raw": 3784,
+      "initial_gzip_level_6": 1050,
+      "final_raw": 4418,
+      "final_gzip_level_6": 1229
+    },
+    "issues": [
+      {
+        "severity": "material",
+        "location": "stage silhouette",
+        "observation": "Straight side strips resembled a rectangular picture frame.",
+        "revision": "Changed the authoritative curtain outlines to gathered drapes with ties.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Single pendulum and stage cues remain at32px; cord and curtain ties soften at16px. Requires label for broad science-show meaning; no exact performer apparatus, choreography or chemical experiment claimed."
+    ]
+  }
+]

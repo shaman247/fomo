@@ -1,0 +1,119 @@
+{
+  "reviewer_mode": "creator-critical-pass",
+  "geometry_mode": "five-flat-symbolic-diagrams",
+  "decision": "pass",
+  "findings": [
+    "Personally inspected five final native128/32/24/16light/dark cards,nine accepted/Noto references and ten actual IconManager variants. Creator critique,not independent or blind.",
+    "These are flat graphic symbols,not constructed physical scenes. Frames,eye,lens,planet and lectern are symbolic shapes; monster and smiling speech bubble are invented face glyphs without human body/anatomy. No3D projection is required for this flat pictogram scope.",
+    "Before first native render,corrected the preview arrow direction and occluded the rear planet ring with the disc. These source drafts are preserved; sizes-v1 measures the first reviewed native version.",
+    "Distinct critical review found cat-like monster ears and confusing reuse of an eye in the mystery lens. Changed the silhouette and question mark,then personally rechecked all five native cards and themes.",
+    "All files remain below15KBraw/5KBgzip triggers. Film perforations mark cinema without implying35mm/70mm projection. Narrow genres require labels at16px.",
+    "Primary exhibitor text supports the assignments and screening format; distributor text and film-history essay corroborate creature/political satire genres. No posters,video frames or copyrighted character artwork viewed or traced.",
+    "Reference hashes are identical between initial and final packets. Version1 artwork and evidence preserved. No unresolved material geometry or clipping defect seen."
+  ],
+  "references": [
+    {
+      "url": "https://www.regmovies.com/movies/september-crunchyroll-anime-nights-sneak-peek-ho00022367",
+      "checked": "2026-09-11",
+      "method": "Live Playwright rendered body text after networkidle; no posters or videos viewed.",
+      "findings": "Sept21 release;1h57,Animated,Not rated,2D. First screenings of selected upcoming-season episodes before October streaming availability. No exact episodes,local sessions or guests verified."
+    },
+    {
+      "url": "https://www.regmovies.com/movies/the-lego-batman-movie-3d-batman-day-2026-ho00022378",
+      "checked": "2026-09-11",
+      "method": "Live Playwright rendered body text after networkidle; no posters or videos viewed.",
+      "findings": "Title says3D but SHOWING IN says2D. Sept19 release and1h45. Old2017 theatrical opening appears in synopsis; neither date establishes local session. Choose animation until projection conflict resolved."
+    },
+    {
+      "url": "https://www.regmovies.com/movies/mom2-12-monkeys-ho00022339",
+      "checked": "2026-09-11",
+      "method": "Live Playwright rendered body text after networkidle; no posters or videos viewed.",
+      "findings": "Sept15 release,2h10,Terry Gilliam,Suspense,under17requiresadult,2D. Future pandemic and time-travel premise supports science-fiction film; no public-health activity."
+    },
+    {
+      "url": "https://www.regmovies.com/movies/mom2-tremors-ho00022310",
+      "checked": "2026-09-11",
+      "method": "Live Playwright rendered body text after networkidle; no posters or videos viewed.",
+      "findings": "Sept28 release,1h36,Ron Underwood,Comedy,under13caution,2D. Town threatened by underground creatures; creature-feature scope includes horror-comedy."
+    },
+    {
+      "url": "https://www.regmovies.com/movies/mom2-zodiac-ho00022341",
+      "checked": "2026-09-11",
+      "method": "Live Playwright rendered body text after networkidle; no posters or videos viewed.",
+      "findings": "Sept18 release,2h37,David Fincher,Crime,under17requiresadult,2D. Actors portray investigators/reporters trying to identify killer. Narrative crime film,not documentary."
+    },
+    {
+      "url": "https://www.regmovies.com/movies/mom2-duck-soup-ho00022337",
+      "checked": "2026-09-11",
+      "method": "Live Playwright rendered body text after networkidle; no posters or videos viewed.",
+      "findings": "Sept14 release,1h08,Leo McCarey,Marx brothers,Adventure,Not rated,2D. Fictional ruler of Freedonia launches absurd war; political satire corroborated by film-history essay and distributor comedy context."
+    },
+    {
+      "url": "https://www.regmovies.com/movies/mom2-blade-runner-the-final-cut-ho00022343",
+      "checked": "2026-09-11",
+      "method": "Live Playwright rendered body text after networkidle; no posters or videos viewed.",
+      "findings": "Sept19 release,1h57,Ridley Scott,Harrison Ford/Rutger Hauer,Suspense,under17requiresadult,2D. Explicitly science-fiction/noir Final Cut. Distinct from2049source merged into same records."
+    },
+    {
+      "url": "https://www.regmovies.com/movies/mom2-blade-runner-2049-ho00022344",
+      "checked": "2026-09-11",
+      "method": "Live Playwright rendered body text after networkidle; no posters or videos viewed.",
+      "findings": "Sept19 release,2h44,Denis Villeneuve,Ryan Gosling/Harrison Ford,under17requiresadult,2D. OfficerKsequel30yearsafter firstfilm. Distinctfilm despite same release day; no doublebill confirmed."
+    },
+    {
+      "url": "https://www.regmovies.com/movies/by-any-means-open-capeng-sub-ho00022250",
+      "checked": "2026-09-11",
+      "method": "Live Playwright rendered body text after networkidle; no posters or videos viewed.",
+      "findings": "Sept4 release,1h47,Elegance Bratton,named actors,Crime,under17requiresadult,2D. Captioned product title explicit; mixed regular/captioned sources require occurrence-level partition."
+    },
+    {
+      "url": "https://www.regmovies.com/movies/by-any-means-ho00022249",
+      "checked": "2026-09-11",
+      "method": "Live Playwright rendered body text after networkidle; no posters or videos viewed.",
+      "findings": "Same narrative film/director/runtime as captioned product,regular title. True-story basis does not make it documentary or participatory activism."
+    },
+    {
+      "url": "https://www.regmovies.com/movies/pulp-what-do-you-do-for-an-encore-ho00022383",
+      "checked": "2026-09-11",
+      "method": "Live Playwright rendered body text after networkidle; no posters or videos viewed.",
+      "findings": "Sept24 release,1h46,Garth Jennings,Documentary,Not rated,2D. Narrated band history combines2025concert footage and four decades of archives; music-documentary icon."
+    },
+    {
+      "url": "https://www.regmovies.com/movies/oasis-dont-look-back-in-anger-ho00022385",
+      "checked": "2026-09-11",
+      "method": "Live Playwright rendered body text after networkidle; no posters or videos viewed.",
+      "findings": "Sept11 release,2h04,Will Lovelace/Dylan Southern,Documentary,under17requiresadult,2D. Rehearsal/backstage/onstage and interviews,not concert-only. Text says20years and quoted15years for joint exchange; do not settle conflict here."
+    },
+    {
+      "url": "https://www.regmovies.com/movies/hope-ho00022387",
+      "checked": "2026-09-11",
+      "method": "Live Playwright rendered body text after networkidle; no posters or videos viewed.",
+      "findings": "Sept9 release,2h40,Na Hong-Jin,Action,under17requiresadult,2D. Mysteriouscreature/hunters becomehunted supports creaturefeature. No exactmonsterdesign assumed."
+    },
+    {
+      "url": "https://www.regmovies.com/movies/spirited-away-live-on-stage--ghibli-2026-sub-ho00022363",
+      "checked": "2026-09-11",
+      "method": "Live Playwright rendered body text after networkidle; no posters or videos viewed.",
+      "findings": "Oct1 release,2h55,John Caird,named stage actors,Adventure,Not rated,2D. Capturedstageproduction,not animatedoriginal or a local liveplay."
+    },
+    {
+      "url": "https://lcweb2.loc.gov/static/programs/national-film-preservation-board/documents/duck_soup.pdf",
+      "checked": "2026-09-11",
+      "method": "Web PDF text only; no page images used.",
+      "findings": "William Wolf essay,reprinted from2002collection,discusses political satire and absurd war in Duck Soup. Its interpretation is author opinion,not an official political stance or assumed intent."
+    },
+    {
+      "url": "https://www.universalpicturesathome.com/movies/the-marx-brothers-silver-screen-collection",
+      "checked": "2026-09-11",
+      "method": "Primary distributor search-result text only.",
+      "findings": "Distributor identifies Marx films includingDuckSoup as comedy; no trailer viewed."
+    },
+    {
+      "url": "https://www.universalpicturesathome.com/movies/tremors",
+      "checked": "2026-09-11",
+      "method": "Primary distributor web text and search excerpt only.",
+      "findings": "Man-eating underground creatures support creature-feature scope. Action/Adventure labels do not exclude comedy/horror; no artwork traced."
+    }
+  ],
+  "planar_source_sha256": "d8833697e7b6e3b1f5f11b9d4eaf4391a1759967fed9e14a9dca494083eb49ca"
+}

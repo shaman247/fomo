@@ -1,0 +1,22 @@
+{
+  "reviewer_mode": "creator-critical-pass",
+  "source_sha256": "33983c73925ab1f6e24f7d1a63443a18bd4900eeec8aa8fcfaebd9e3ddbfccce",
+  "projector_sha256": "c63a812a61c91a2d290112c3de85f2275b9be46400287283e3aa18378023bbbe",
+  "views": [
+    "front",
+    "rear",
+    "left",
+    "right",
+    "top",
+    "icon"
+  ],
+  "evidence": ".scratch/icon-cycles-20260909/cycle-009/geometry.png",
+  "findings": [
+    "Live-score screen joins posts and stabilizing feet. Enlarged tilted music desk is connected to mast by mount; score lies just in front of desk surface. Baton grip contacts ledge. Tripod feet share ground region.",
+    "Outdoor screen feet meet lawn top y=.008; chair lower struts overlap it by2mm. Crossed side frames support seat and slanted back. Two empty chairs face screen; crescent is a planar sky emblem.",
+    "All four clinic wheels have radius .42 and center height .42. Body bottom .85 clears wheel tops .84; narrowed1.70m chassis leaves tire lanes clear. Axles join equal wheels and suspension meets floor. Cab has a closed profile; windshield and headlamps follow its surfaces.",
+    "Mural is a solid wall with coplanar paint and mortar markings. Roller back is atz=.009,5mm in front of the mural ground atz=.004. It is a poised tool diagram, not a pressure-contact simulation. A short outer end extends past the wall edge; bent shank and grip are joined. Wall rests ony=0.",
+    "Book/dialogue design is a planar emblem. All final multi-view silhouettes, joins and stated support points were inspected; no exhaustive collision, vehicle engineering or weather/date accuracy claim."
+  ],
+  "decision": "pass"
+}

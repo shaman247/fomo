@@ -1,0 +1,487 @@
+{
+  "date": "2026-09-10",
+  "scope": "Cycle 017: 100 sequential events 199157–199799, no targeted supplements.",
+  "suggestions": 29,
+  "concept_count": 15,
+  "concepts": [
+    {
+      "concept": "format-tribute-concert",
+      "label": "Tribute concert",
+      "category": "format",
+      "visual": "Two overlapping record silhouettes with one echoing musical note.",
+      "rationale": "Tribute repertoire is a format facet; motif is unproven and must not imitate an artist logo.",
+      "existing_alternative": "Existing broad Unicode remains suitable; specific motif must demonstrate added recognition before new artwork.",
+      "event_ids": [
+        199344,
+        199681,
+        199682,
+        199683,
+        199684,
+        199685,
+        199686,
+        199687,
+        199688,
+        199689,
+        199690,
+        199691,
+        199692,
+        199761
+      ],
+      "evidence_by_event": {
+        "199344": [
+          "Tramps Like Us Celebrate Bruce's 77th Birthday: Tramps Like Us Live at Cafe Wha? | Wednesday, September 23rd | Doors 6:30 PM, Show 8:00 PM",
+          "Tags: Community, Music, Concert, Nightlife, Celebration, Tribute Band, Birthday Celebration, Bruce Springsteen, Live Music, Format, Performance"
+        ],
+        "199681": [
+          "Candlelight: Tribute to Michael Jackson: No description available.",
+          "Tags: Music, Classical Music, Concert, Pop Music, Michael Jackson, Live Music, Format, Performance",
+          "Primary verification on2026-09-10: https://feverup.com/m/672602 names Highline String Quartet in Performers. The venue matches the stored listing. This establishes the actual ensemble rather than guessing from Candlelight branding or tribute repertoire."
+        ],
+        "199682": [
+          "Candlelight: Tribute to Drake: No description available.",
+          "Tags: Music, Classical Music, Hip Hop, Concert, Live Music, Drake, Format, Performance",
+          "Primary verification on2026-09-10: https://feverup.com/m/353949 names Highline String Quartet in Performers. The venue matches the stored listing. This establishes the actual ensemble rather than guessing from Candlelight branding or tribute repertoire."
+        ],
+        "199683": [
+          "Candlelight: Tribute to A.R. Rahman: No description available.",
+          "Tags: Music, Classical Music, Concert, Live Music, AR Rahman, Format, Performance",
+          "Primary verification on2026-09-10: https://feverup.com/m/672605 names Highline String Quartet in Performers. The venue matches the stored listing. This establishes the actual ensemble rather than guessing from Candlelight branding or tribute repertoire."
+        ],
+        "199684": [
+          "Candlelight: From Bach to The Beatles: No description available.",
+          "Tags: Music, Classical Music, Concert, Bach, Live Music, The Beatles, Format, Performance",
+          "Primary verification on2026-09-10: https://feverup.com/m/182998 names Highline String Quartet in Performers. The venue matches the stored listing. This establishes the actual ensemble rather than guessing from Candlelight branding or tribute repertoire."
+        ],
+        "199685": [
+          "Candlelight: Ed Sheeran & Coldplay: No description available.",
+          "Tags: Music, Classical Music, Concert, Coldplay, Live Music, Format, Performance, Ed Sheeran",
+          "Primary verification on2026-09-10: https://feverup.com/m/192581 names Highline String Quartet in Performers. The venue matches the stored listing. This establishes the actual ensemble rather than guessing from Candlelight branding or tribute repertoire."
+        ],
+        "199686": [
+          "Candlelight: 90s Hip-Hop on Strings: No description available.",
+          "Tags: Music, Classical Music, Hip Hop, Concert, Live Music, Format, Performance",
+          "Primary verification on2026-09-10: https://feverup.com/m/611285 names Highline String Quartet in Performers. The venue matches the stored listing. This establishes the actual ensemble rather than guessing from Candlelight branding or tribute repertoire."
+        ],
+        "199687": [
+          "Candlelight: The Lord of the Rings: No description available.",
+          "Tags: Music, Classical Music, Concert, Live Music, Lord of the Rings, Format, Performance",
+          "Primary verification on2026-09-10: https://feverup.com/m/525141 names Highline String Quartet in Performers. The venue matches the stored listing. This establishes the actual ensemble rather than guessing from Candlelight branding or tribute repertoire."
+        ],
+        "199688": [
+          "Candlelight: Tribute to Sabrina Carpenter: No description available.",
+          "Tags: Music, Classical Music, Concert, Pop Music, Live Music, Sabrina Carpenter, Format, Performance",
+          "Primary verification on2026-09-10: https://feverup.com/m/683216 names Highline String Quartet in Performers. The venue matches the stored listing. This establishes the actual ensemble rather than guessing from Candlelight branding or tribute repertoire."
+        ],
+        "199689": [
+          "Candlelight: Tribute to Juan Gabriel on Strings: No description available.",
+          "Tags: Music, Classical Music, Concert, Live Music, Format, Performance, Juan Gabriel",
+          "Primary verification on2026-09-10: https://feverup.com/m/487963 names Highline String Quartet in Performers. The venue matches the stored listing. This establishes the actual ensemble rather than guessing from Candlelight branding or tribute repertoire."
+        ],
+        "199690": [
+          "Candlelight: Tribute to Adele: No description available.",
+          "Tags: Music, Classical Music, Concert, Pop Music, Live Music, Format, Performance, Adele",
+          "Primary verification on2026-09-10: https://feverup.com/m/116317 names Highline String Quartet in Performers. The venue matches the stored listing. This establishes the actual ensemble rather than guessing from Candlelight branding or tribute repertoire."
+        ],
+        "199691": [
+          "Candlelight: Tribute to Queen and The Beatles: No description available.",
+          "Tags: Music, Classical Music, Concert, Queen, Live Music, The Beatles, Format, Performance",
+          "Primary verification on2026-09-10: https://feverup.com/m/699985 names Highline String Quartet in Performers. The venue matches the stored listing. This establishes the actual ensemble rather than guessing from Candlelight branding or tribute repertoire."
+        ],
+        "199692": [
+          "Candlelight: Tribute to Fleetwood Mac: No description available.",
+          "Tags: Music, Rock, Classical Music, Concert, Live Music, Fleetwood Mac, Format, Performance",
+          "Primary verification on2026-09-10: https://feverup.com/m/699984 names Highline String Quartet in Performers. The venue matches the stored listing. This establishes the actual ensemble rather than guessing from Candlelight branding or tribute repertoire."
+        ],
+        "199761": [
+          "Moral Kiosk (R.E.M.) & Bastards of Young (Replacements): Moral Kiosk, NYC's original R.E.M. tribute band, play the band's early catalog in its rawest most faithful form; openers Bastards of Young",
+          "Tags: Music, Rock, Concert, Tribute Band, REM, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "199344": [
+          "https://www.eventbrite.com/e/tramps-like-us-celebrate-bruces-77th-birthday-tickets-1990442418856"
+        ],
+        "199681": [
+          "https://feverup.com/m/672602"
+        ],
+        "199682": [
+          "https://feverup.com/m/353949"
+        ],
+        "199683": [
+          "https://feverup.com/m/672605"
+        ],
+        "199684": [
+          "https://feverup.com/m/182998"
+        ],
+        "199685": [
+          "https://feverup.com/m/192581"
+        ],
+        "199686": [
+          "https://feverup.com/m/611285"
+        ],
+        "199687": [
+          "https://feverup.com/m/525141"
+        ],
+        "199688": [
+          "https://feverup.com/m/683216"
+        ],
+        "199689": [
+          "https://feverup.com/m/487963"
+        ],
+        "199690": [
+          "https://feverup.com/m/116317"
+        ],
+        "199691": [
+          "https://feverup.com/m/699985"
+        ],
+        "199692": [
+          "https://feverup.com/m/699984"
+        ],
+        "199761": [
+          "https://littlefieldnyc.com/event/?wfea_eb_id=1994015546176"
+        ]
+      }
+    },
+    {
+      "concept": "format-historic-food-tasting",
+      "label": "Historic food tasting",
+      "category": "format",
+      "visual": "Small tasting plate beside an old recipe folio.",
+      "rationale": "Museum culinary-history tour includes historic recipes reinterpreted today.",
+      "existing_alternative": "Plate is suitable but omits historical interpretation; icon must not imply cooking instruction.",
+      "event_ids": [
+        199713,
+        199714
+      ],
+      "evidence_by_event": {
+        "199713": [
+          "Wining and Dining in 1820s and 1830s NYC: A Culinary History Tour: Learn how guests experienced food and drink at a day hotel like the Mount Vernon Hotel, nestled in the countryside of New York City. A sampling of historic recipes with modern interpretations will be provided during the program.",
+          "Tags: Community, History, Tour, Education, Food, Culinary, Format, Outings"
+        ],
+        "199714": [
+          "Wining & Dining in 1820s & 1830s NYC: Culinary History Tour & Wine Tasting: Join us for this exploration of culinary history followed by a historically-inspired wine tasting! Whet your appetite for a taste of history, and step back in time and learn about the foods and culinary trends of the 1820s and 1830s.",
+          "Tags: Community, History, Tour, Education, Food, Culinary, Nightlife, Tasting, Wine Tasting, Participatory, Format, Outings"
+        ]
+      },
+      "source_urls_by_event": {
+        "199713": [
+          "https://mvhm.org/event/wining-and-dining-in-1820s-and-1830s-nyc-a-culinary-history-tour-2/",
+          "https://www.localwineevents.com/view/event/wining-and-dining-in-1820s-and-1830s-nyc-a-culinary-history-tour/1028652"
+        ],
+        "199714": [
+          "https://mvhm.org/event/wining-dining-in-1820s-1830s-nyc-culinary-history-tour-wine-tasting/",
+          "https://www.localwineevents.com/view/event/wining-dining-in-1820s-1830s-nyc-culinary-history-tour-wine-tasting/1028816"
+        ]
+      }
+    },
+    {
+      "concept": "dance-odissi",
+      "label": "Odissi dance",
+      "category": "dance-style",
+      "visual": "A geometrically grounded dancer in a carefully referenced Odissi pose; avoid generic Indian-dance costume.",
+      "rationale": "Nrityagram explicitly presents Odissi; this tradition deserves distinct structural research.",
+      "existing_alternative": "Contemporary dance and ballet would misstate the named form.",
+      "event_ids": [
+        199624
+      ],
+      "evidence_by_event": {
+        "199624": [
+          "Nrityagram Dance Ensemble KHAṄKHAṆĀ: India’s foremost Odissi dance company, invites audiences on a luminous journey across time with KHAṄKHAṆĀ—the sound of dancing feet.",
+          "Tags: Music, Dance, Live Music, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "199624": [
+          "https://www.joyce.org/performances/nrityagram-dance-ensemble-clk1"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-a-cappella",
+      "label": "A cappella ensemble",
+      "category": "format",
+      "visual": "Several distinct singers sharing one unaccompanied musical phrase.",
+      "rationale": "Treble NYC explicitly presents contemporary a cappella harmony.",
+      "existing_alternative": "Choir is a useful broad choice; avoid introducing a redundant vocal ensemble icon without a visible distinction.",
+      "event_ids": [
+        199768
+      ],
+      "evidence_by_event": {
+        "199768": [
+          "Treble NYC: Celebrate 30 years of harmony and a cappella with an unforgettable 30th Anniversary performance by Treble NYC, New York City’s premier women’s contemporary a cappella group. Founded in 1996, Treble is the longest-running a cappella group in NYC, bringing their signature sound to stages all across New York City for three decades. This special anniversary concert celebrates Treble’s journey with an all-ages brunch show featuring inventive arrangements, powerhouse vocals, and the unmistakable power of the human voice.",
+          "Tags: Community, Music, Concert, Vocal Music, A Cappella, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "199768": [
+          "https://wl.seetickets.us/event/treble-nyc/699706?afflky=TheCuttingRoom"
+        ]
+      }
+    },
+    {
+      "concept": "format-concert-musical",
+      "label": "Musical in concert",
+      "category": "format",
+      "visual": "Open score and vocal microphone within a stage outline.",
+      "rationale": "Come From Away is presented in concert with former company members.",
+      "existing_alternative": "Theater masks are broad; captured screening versus live concert must be resolved separately.",
+      "event_ids": [
+        199206
+      ],
+      "evidence_by_event": {
+        "199206": [
+          "\"Come From Away\" In Concert: A free, one-time-only concert event of the Tony and Olivier Award-winning musical. Former Broadway and national tour company members of Come From Away reunite in honor of the 25th anniversary of 9/11. This 100-minute open-air concert staging will be performed on the World Trade Center campus.",
+          "Tags: Community, Music, Theater, Free, Outdoor, Concert, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "199206": [
+          "https://aaari.info/event/come-from-away-in-concert-simulcast/",
+          "https://pacnyc.org/whats-on/come-from-away-in-concert-simulcast-2/",
+          "https://pacnyc.org/whats-on/come-from-away-in-concert/"
+        ]
+      }
+    },
+    {
+      "concept": "format-gallery-crawl",
+      "label": "Gallery crawl",
+      "category": "format",
+      "visual": "Two small framed works joined by a short walking path.",
+      "rationale": "The tour explicitly visits several galleries and meets directors.",
+      "existing_alternative": "Artist studio visits imply different spaces; a single frame omits movement between galleries.",
+      "event_ids": [
+        199662
+      ],
+      "evidence_by_event": {
+        "199662": [
+          "Gallery Crawl | Upper East Side: ArtsClub invites you to explore the galleries along the Upper East Side’s iconic Museum Mile. Join us for insider access and private tours from gallery directors at various spaces.",
+          "Tags: Art, Tour, Education, Gallery Crawl, Format, Outings"
+        ]
+      },
+      "source_urls_by_event": {
+        "199662": [
+          "https://www.artsclubstudios.com/east-village-events/03-28-26",
+          "https://www.artsclubstudios.com/east-village-events/10-24-26"
+        ]
+      }
+    },
+    {
+      "concept": "format-literary-pub-crawl",
+      "label": "Literary pub crawl",
+      "category": "format",
+      "visual": "Book and pub glass connected by a walking path.",
+      "rationale": "Greenwich Village tour combines literary history and pubs.",
+      "existing_alternative": "Beer alone loses the literary tour, while ordinary pub socials are not equivalent.",
+      "event_ids": [
+        199658
+      ],
+      "evidence_by_event": {
+        "199658": [
+          "GV Literary Pub Crawl: See our events calendar for upcoming tours in-person and virtually, along with other activities and performances shared by our guides.",
+          "Tags: Community, History, Literature, Tour, Education, Outdoor, Nightlife, Walking Tour, Format, Outings"
+        ]
+      },
+      "source_urls_by_event": {
+        "199658": [
+          "https://literarypubcrawl.ticketspice.com/2024-gv-pub-crawl",
+          "https://www.litpubcrawl.com/events/42nyshnfl5chal8-85pjk-k8jzr-gb9rt",
+          "https://www.litpubcrawl.com/events/42nyshnfl5chal8-85pjk-k8jzr-gb9rt-x9x6c-ncb2j-jt5t8-ymake",
+          "https://www.litpubcrawl.com/events/42nyshnfl5chal8-85pjk-k8jzr-gb9rt-x9x6c-ncb2j-jt5t8-ymake-6rh2n",
+          "https://www.litpubcrawl.com/events/42nyshnfl5chal8-85pjk-k8jzr-gb9rt-x9x6c-ncb2j-jt5t8-ymake-6rh2n-e7fa9",
+          "https://www.litpubcrawl.com/events/42nyshnfl5chal8-85pjk-k8jzr-gb9rt-x9x6c-ncb2j-jt5t8-ymake-6rh2n-e7fa9-ckm6r",
+          "https://www.litpubcrawl.com/events/42nyshnfl5chal8-85pjk-k8jzr-gb9rt-x9x6c-ncb2j-jt5t8-ymake-6rh2n-e7fa9-ckm6r-5gw5c",
+          "https://www.litpubcrawl.com/events/gv-literary-pub-crawl-bxazh-zse22-m4nfn-akmc7-dc8ey-e8y3j-xyrsj-ykbrt-nk8s5-xltxm-ycwe9-52dkd-b39kg-bg9tx-pcw9n-4llxg-hflf5-aw9we-e8eeb-j4deh-p6w5f-er6z4-2kek3-bwd8r-cte26-m3kxh-ckfml-7dz45",
+          "https://www.pw.org/literary_events/literary_pub_crawl_in_nyc_greenwich_village_0",
+          "https://www.pw.org/literary_events/literary_pub_crawl_in_nyc_greenwich_village_2",
+          "https://www.pw.org/literary_events/literary_pub_crawl_in_nyc_greenwich_village_5",
+          "https://www.pw.org/literary_events/literary_pub_crawl_in_nyc_greenwich_village_6",
+          "https://www.pw.org/literary_events/literary_pub_crawl_in_nyc_greenwich_village_7",
+          "https://www.pw.org/literary_events/literary_pub_crawl_in_nyc_greenwich_village_8"
+        ]
+      }
+    },
+    {
+      "category": "format",
+      "concept": "format-orchestra",
+      "existing_alternative": "Noto violin falsely narrows a mixed orchestra; generic score lacks ensemble direction.",
+      "label": "Orchestra",
+      "rationale": "Conductor-and-score imagery represents the full orchestra without privileging one string or brass section; recognition must distinguish conducting from music lessons.",
+      "visual": "A conductor baton over an open music stand with one broad shared musical arc.",
+      "event_ids": [
+        199462
+      ],
+      "evidence_by_event": {
+        "199462": [
+          "Juilliard Orchestra Conducted by Jeffrey Milarsky: No description available.",
+          "Tags: Music, Classical Music, Orchestra, Concert, Juilliard Performance, Format, Performance, Conducted Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "199462": [
+          "https://www.juilliard.edu/event/185751/juilliard-orchestra-conducted-jeffrey-milarsky",
+          "https://www.juilliard.edu/event/185751/juilliard-orchestra-conducted-jeffrey-milarsky?tags=All&division=1&start_date_from=08/01/2026"
+        ]
+      }
+    },
+    {
+      "concept": "format-tea-tasting",
+      "label": "Tea tasting",
+      "category": "format",
+      "visual": "Two small cups beside tea leaves and a tasting note.",
+      "rationale": "Culinary history program explicitly ends with tea tasting.",
+      "existing_alternative": "Teapot already works; added art requires clear benefit over ordinary tea service.",
+      "event_ids": [
+        199715
+      ],
+      "evidence_by_event": {
+        "199715": [
+          "Wining & Dining in 1820s and 1830s NYC: Culinary History Tour & Tea Tasting: Join us for an exploration of culinary history in 1820s New York City and then experience a historically-inspired tea tasting!",
+          "Tags: Community, History, Tour, Education, Food, Culinary, Tea Tasting, Format, Outings"
+        ]
+      },
+      "source_urls_by_event": {
+        "199715": [
+          "https://mvhm.org/event/wining-dining-in-1820s-and-1830s-nyc-culinary-history-tour-tea-tasting/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-bhangra",
+      "label": "Bhangra music",
+      "category": "genre",
+      "visual": "Dhol with a bold rhythmic musical accent; avoid implying dance instruction at a concert.",
+      "rationale": "Named Bhangra orchestra and primary performer description establish this musical tradition.",
+      "existing_alternative": "A dhol is a useful primary feature but genre identity extends beyond one instrument.",
+      "event_ids": [
+        199164
+      ],
+      "evidence_by_event": {
+        "199164": [
+          "Bhangra Liberation Orchestra: Bhangra Liberation Orchestra brings their rebellious, joyful dhol and brass-driven music to fortify our hearts on and off the dance floor. Barzakh Café also offers a curated selection of small plates and drinks. Guests are encouraged to arrive early, ease into the evening, and enjoy something from the kitchen or bar before the program begins.",
+          "Tags: Music, Dance, Concert, Bhangra, Live Music, Format, Performance",
+          "Primary verification on2026-09-10: https://sonnysingh.squarespace.com/blo The bandleader names dhol as a defining feature, lists himself on trumpet/dhol/vocals and lists the September23 Barzakh Cafe show."
+        ]
+      },
+      "source_urls_by_event": {
+        "199164": [
+          "https://www.viewcy.com/event/bhangra_liberation_or_1"
+        ]
+      }
+    },
+    {
+      "concept": "genre-ghazal",
+      "label": "Ghazal",
+      "category": "genre",
+      "visual": "An open poetry folio beside a microphone with one flowing musical phrase.",
+      "rationale": "The event explicitly centers Urdu ghazals and explanations of their poetry; combining literary and vocal cues is exploratory and may still be too generic.",
+      "existing_alternative": "Noto microphone or book covers only one facet; accompanying tabla and harmonium must not replace the lead vocal-poetry form.",
+      "event_ids": [
+        199158
+      ],
+      "evidence_by_event": {
+        "199158": [
+          "The Jazz Ghazal Project: The Jazz Ghazal Project brings mid-20th century musical traditions from two continents into direct conversation. In original, one-of-a-kind arrangements, vocalist Kaushik and pianist Sharik Hasan place selections from the Great American Songbook alongside Urdu ghazals from India and Pakistan, revealing how these traditions echo and challenge one another.",
+          "Tags: Community, Music, World Music, Jazz, Concert, South Asian Music, Live Music, Ghazal, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "199158": [
+          "https://www.viewcy.com/event/the_jazz_ghazal_proje_2",
+          "https://www.viewcy.com/event/the_jazz_ghazal_proje_3",
+          "https://www.viewcy.com/event/the_jazz_ghazal_proje_4"
+        ]
+      }
+    },
+    {
+      "concept": "genre-opera",
+      "label": "Opera",
+      "category": "genre",
+      "visual": "A singing profile framed by one sweeping theater curtain.",
+      "rationale": "Sung drama is explicit; test separation from solo vocal recital and musical theater without stereotyped helmets.",
+      "existing_alternative": "Noto music notes and theater masks separately omit sung drama.",
+      "event_ids": [
+        199208
+      ],
+      "evidence_by_event": {
+        "199208": [
+          "TENET: Tenet opens the 2026-2027 season with a fully-staged performance of Claudio Monteverdi's 'Orfeo,' with projections by designer Camilla Tassi. Considered the earliest complete musical drama, 'Orfeo' recounts the Orpheus myth through the libretto of Alessandro Striggio. Can Orfeo's beautiful music move Plutone to release Euridice from the Underworld?",
+          "Tags: Community, Music, Theater, Opera, Classical Music, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "199208": [
+          "https://www.mmc.band/calendar-details?recordId=recGNGfqqeDLPhWyB"
+        ]
+      }
+    },
+    {
+      "concept": "genre-ranchera",
+      "label": "Ranchera music",
+      "category": "genre",
+      "visual": "Vocal phrase over a guitar and accordion silhouette; avoid national costume shortcuts.",
+      "rationale": "Mexican ranchera repertoire is explicit with voice, accordion and guitar.",
+      "existing_alternative": "Guitar is a suitable fallback but does not distinguish the sung genre; concept needs recognition testing.",
+      "event_ids": [
+        199157
+      ],
+      "evidence_by_event": {
+        "199157": [
+          "A Night of Rancheras: Brooklyn based Alida and the Nightshades reimagine the heart wrenching canción ranchera genre (the Mexican blues) through vocals, accordion, and guitar. Experience their passionate renditions of songs by Chavela Vargas, Juan Gabriel and other Latin American classics.",
+          "Tags: Community, Music, Concert, Latin Music, Live Music, Format, Performance, Rancheras"
+        ]
+      },
+      "source_urls_by_event": {
+        "199157": [
+          "https://www.viewcy.com/event/a_night_of_rancheras_1",
+          "https://www.viewcy.com/event/a_night_of_rancheras_2",
+          "https://www.viewcy.com/event/a_night_of_rancheras_3"
+        ]
+      }
+    },
+    {
+      "concept": "instrument-kora",
+      "label": "Kora",
+      "category": "instrument",
+      "visual": "Long neck rising from a skin-covered half-gourd with bridge and two banks of strings.",
+      "rationale": "FlamenKora explicitly combines Mandinka kora and vocals with trumpet and flamenco guitar.",
+      "existing_alternative": "Guitar and harp fallbacks lack the kora bridge, resonator and string arrangement; mixed bill should not automatically select one instrument.",
+      "event_ids": [
+        199766
+      ],
+      "evidence_by_event": {
+        "199766": [
+          "Flamenkora: By sensitively and skillfully interweaving improvised trumpet and flamenco guitar with traditional mandinka kora and vocals from Senegal, FlamenKora creates timeless and enchanting multicultural music; a welcome balm in these troubled times.",
+          "Tags: Music, Dance, World Music, Jazz, Concert, Flamenco, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "199766": [
+          "https://wl.seetickets.us/event/flamenkora/699716?afflky=TheCuttingRoom"
+        ]
+      }
+    },
+    {
+      "concept": "topic-ice-yachting",
+      "label": "Ice yachting",
+      "category": "other",
+      "visual": "Sail on an iceboat frame with three runners.",
+      "rationale": "History talk centers ice yachting rather than water sailing.",
+      "existing_alternative": "Sailboat communicates sail but lacks ice runners; a subject icon must not imply attendees will sail.",
+      "event_ids": [
+        199724
+      ],
+      "evidence_by_event": {
+        "199724": [
+          "Walkway Connections: Ice Yachting in Poughkeepsie: On Sunday, October 18 from 2-3 p.m. at the East Gate Plaza in Poughkeepsie, Brian Reid will talk about the early origins of Ice Yachting on the Hudson River.",
+          "Tags: Community, History, Neighborhood, Education, Outdoor, Gathering, Talk, Hudson Valley, Poughkeepsie, Format, Ice Yachting"
+        ]
+      },
+      "source_urls_by_event": {
+        "199724": [
+          "https://walkway.org/event/walkway-connections-ice-yachting-in-poughkeepsie/"
+        ]
+      }
+    }
+  ],
+  "limitations": "Counts describe this cohort, not population reach. These are grounded prospective studies, not live assignments. Existing artwork may already suffice; exact equipment and genre recognition require further review."
+}

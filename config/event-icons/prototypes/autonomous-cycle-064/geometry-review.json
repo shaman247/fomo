@@ -1,0 +1,85 @@
+{
+  "reviewer_mode": "creator-critical-pass",
+  "geometry_mode": "five-authoritative-scenes",
+  "views": [
+    "front",
+    "rear",
+    "left",
+    "right",
+    "top",
+    "icon"
+  ],
+  "evidence": ".scratch/icon-cycles-20260909/cycle-064/geometry.png",
+  "decision": "pass",
+  "findings": [
+    "All30final geometry views personally inspected. Continuous banana-leaf ribbons alternate at16crossings; reverse winding on rotated ribbons corrected. Broad ribbed material sample rests beside the patch.",
+    "Four curved pepper pods connect through stems and thread to a rack with grounded feet. Fragmented highlights were removed; no exact drying method or food-preparation advice implied.",
+    "Original floral study sits on a thin layered cloth. Bamboo kalam has a cotton reservoir and thread bands; reservoir meets cloth and rear shaft meets lowered support. Generic flower is original, not traced artwork.",
+    "Both fairs use two tables with four equal legs each, attached recruitment signs and grounded information sheets. Career signs carry briefcases; volunteer signs carry hearts. No person geometry or invented institutional logo.",
+    "Allfive final native128/32/24/16light/dark cards, five custom and four Noto reference cards, and ten actual IconManager variants personally inspected. Only pepper changed between the last two packets; unchanged candidate hashes were compared."
+  ],
+  "references": [
+    {
+      "url": "https://madmuseum.org/events/design-happy-hour-banana-leaf-weaving-lindaluz-carrillo",
+      "finding": "PrimarySep17 6\u20138,21+,studio classroom,$40/$35members,openwine/beerbar. Banana leaves and basic sculptural weaving explicit. No artist imagery copied."
+    },
+    {
+      "url": "https://snug-harbor.org/event/pepper-party-drying-peppers/?slot_id=22820",
+      "finding": "PrimarybrowserSep26 1\u20134,SustainabilityCenterformerlyCompostSite,$25,10%student/senior/memberdiscount. Drying/storageworkshop,method unspecified."
+    },
+    {
+      "url": "https://snug-harbor.org/event/americorps-seniors-rsvp-fall-in-love-with-volunteering-2/?slot_id=22773",
+      "finding": "PrimarybrowserSep24 10\u2013noon,BuildingPCommunityHall,55+,freeREGrequired. Multi-organizationvolunteerfairandcampustours."
+    },
+    {
+      "url": "https://opportunities.columbia.edu/career-expo-2026",
+      "finding": "PrimarySep15 9\u20131TheForum601W125th,Columbiajobseekers/employerdepartments,workshops/headshots. Online registration closed; no actual booth architecture promised."
+    },
+    {
+      "url": "https://www.aaartsalliance.org/events/fursat-a-series-of-textile-workshops-and-south-asian-art-history-lectures",
+      "finding": "Sep11/Oct9/Nov6/Dec4 6:30\u20139,not12AMcontinuousspan. VinitVyas art-history lectures and Nikita drawing/kalamkari oncloth,Bedstuyexactaddressnotpublic. One scholarship. Original motif only."
+    },
+    {
+      "url": "https://www.dsource.in/resource/kalamkari-work-srikalahasti/tools-and-raw-materials",
+      "finding": "NID-authored main article describes sharpened bamboo reed wrapped in cotton held by thread and cloth supported on a wooden frame. Header contains unrelated spam links,ignored. Structural tool text only; no imagery or recipe copied."
+    },
+    {
+      "url": "https://handicrafts.nic.in/crafts/All_Crafts/Craft_Categories/Textile/Hand_Block_Printing/kalamkari/KalamkariWebPage.html",
+      "finding": "Government search excerpt corroborates cotton-wrapped bamboo kalam; full open timed out. Do not claim full-page/photo inspection."
+    },
+    {
+      "url": "https://yardandgarden.extension.iastate.edu/faq/how-can-i-dry-hot-peppers",
+      "finding": "Extension structural text describes peppers on rack or connected by heavy thread for hanging. Illustration is symbolic,not instructional guidance or event-specific method."
+    },
+    {
+      "url": "https://harriman.columbia.edu/event/ukrainian-art-music-as-cultural-resilience-recovering-voices-reclaiming-identity/",
+      "finding": "OlehBezborodko discusses music through his own composing/piano/teaching practice,MarkAndryczykmoderates. Oct15 4:15\u20135:45Shulman1219IAB,registerbyOct14 4pm,Zoom/YouTubeoptions. Own-practiceartisttalkscope."
+    },
+    {
+      "url": "https://westbeth.org/event/billy-harper-interview-on-life-at-westbeth-70s-and-80s/",
+      "finding": "ONLINE recording ofJune1 2025interview,aboutMay1980concerts; pagecalendarAug13\u2013Sep30 2026. Not currentphysicalWestbethexhibition."
+    },
+    {
+      "url": "https://aaari.info/26-09-18ferrao/",
+      "finding": "Ferr\u00e3oauthor ofAcrossContinentsbook,Sep18 6\u20137:30Suite1000,25W43rd,inperson/ZoomRSVP. Supportsauthor-conversation."
+    },
+    {
+      "url": "https://lincolncenter.org/series/lincoln-center-presents/new-swing-sextet-456",
+      "finding": "PrimaryLatin jazz/pop/salsa/boogaloo and actualsocialdancefloor invite. Sep18 7:30~90min,freeallages,GAorFastTrack. StoredSwingDance/Jazzlabel needsreview; no trumpet-led inference."
+    },
+    {
+      "url": "https://lincolncenter.org/series/lincoln-center-presents/table-of-silence-project-911-30",
+      "finding": "PrimaryBuglisicontemporarydance ritual remembrance,Sep11 8am50min,freeGA/captionedlivestream; Sep10 7pmdressrehearsalseparate."
+    },
+    {
+      "url": "https://lincolncenter.org/series/accessibility-at-lincoln-center/cynthia-sayers-duelin-banjos-399",
+      "finding": "Sep16 11amrelaxedshow and1pmshowfollowedbyhourworkshop; freeLincolnCenterMomentsregistration. Sayer/Trischkabanjostylesand audiencevote,distinctaccessgroups. BanjoUnicode remains precise."
+    },
+    {
+      "url": "https://rooftopfilms.com/event/rooftop-treasure-hunt/",
+      "finding": "Oct2 10am citywidepuzzlehuntrequiringinpersonvisits; filmsofficeisnotvenue. Paid hints/prizes/end-event. Supports scavengerhunt,notcinema."
+    }
+  ],
+  "source_sha256": "b3dce34eedde78a00b7a6a433512a91828a4f15ff0098eb42777840a6b434687",
+  "projector_sha256": "49f9ecdebcb878cc47870aa04dc2e7dabcd01053e6d357b16a8766ee8e6e79ea"
+}

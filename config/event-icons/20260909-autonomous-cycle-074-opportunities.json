@@ -1,0 +1,1108 @@
+{
+  "date": "2026-09-11",
+  "scope": "Cycle 074: 100 sequential events 222846–223020, no targeted supplements.",
+  "suggestions": 59,
+  "concept_count": 44,
+  "concepts": [
+    {
+      "concept": "activity-preschool-zoo-learning",
+      "label": "Early-childhood zoo learning",
+      "category": "activity",
+      "visual": "Small zoo gateway with picturebook and animal-outline symbols.",
+      "rationale": "Learning with caregiver; species/contact not promised.",
+      "existing_alternative": "Prefer suitable accepted art or Unicode fallback; prospective concepts need source and visual validation before assignment.",
+      "event_ids": [
+        222979,
+        222980,
+        222981,
+        222982,
+        222983,
+        222984,
+        222985,
+        222986,
+        222987,
+        222988,
+        222989,
+        222990
+      ],
+      "evidence_by_event": {
+        "222979": [
+          "9/22 Zoo Babies: Birds: Caregiver and Child class for children ages 18 months to 3 years old.",
+          "Tags: Community, Kids, Nature, Family, Education, Class, In Person, Participatory, Format"
+        ],
+        "222980": [
+          "9/23 Zoo Kids: Birds: Caregiver and Child class for children ages 4 to 6 years old.",
+          "Tags: Community, Kids, Nature, Birds, Family, Education, Outdoor, Class, Participatory, Format"
+        ],
+        "222981": [
+          "9/24 Zoo Babies: Birds: Caregiver and Child class for children ages 18 months to 3 years old.",
+          "Tags: Community, Kids, Nature, Family, Education, Class, In Person, Participatory, Format"
+        ],
+        "222982": [
+          "10/6 Zoo Babies: Reptiles: Caregiver and Child class for children ages 18 months to 3 years old.",
+          "Tags: Community, Kids, Nature, Family, Education, Outdoor, Class, In Person, Participatory, Format"
+        ],
+        "222983": [
+          "10/7 Zoo Kids: Reptiles: Caregiver and Child class for children ages 4 to 6 years old.",
+          "Tags: Community, Nature, Family, Education, Outdoor, Class, In Person, Participatory, Reptiles, Format"
+        ],
+        "222984": [
+          "10/8 Zoo Babies: Reptiles: Caregiver and Child class for children ages 18 months to 3 years old.",
+          "Tags: Community, Kids, Nature, Family, Education, Class, In Person, Participatory, Reptiles, Format"
+        ],
+        "222985": [
+          "10/20 Zoo Babies: Bugs: Caregiver and Child class for children ages 18 months to 3 years old.",
+          "Tags: Community, Kids, Nature, Family, Education, Outdoor, Class, Participatory, Format"
+        ],
+        "222986": [
+          "10/21 Zoo Kids: Bugs: Caregiver and Child class for children ages 4 to 6 years old.",
+          "Tags: Community, Kids, Nature, Family, Education, Outdoor, Class, In Person, Participatory, Format"
+        ],
+        "222987": [
+          "10/22 Zoo Babies: Bugs: Caregiver and Child class for children ages 18 months to 3 years old.",
+          "Tags: Park, Zoo, Family, Education, Outdoor, Class, Insects, Participatory, Outdoor Venue, Bugs, Format"
+        ],
+        "222988": [
+          "11/10 Zoo Babies: Herbivores: Caregiver and Child class for children ages 18 months to 3 years old.",
+          "Tags: Community, Park, Nature, Zoo, Family, Education, Outdoor, Class, Participatory, Outdoor Venue, Format, Herbivores"
+        ],
+        "222989": [
+          "11/11 Zoo Kids: Herbivores: Caregiver and Child class for children ages 4 to 6 years old.",
+          "Tags: Community, Park, Nature, Zoo, Family, Education, Outdoor, Class, Participatory, Outdoor Venue, Format, Herbivores"
+        ],
+        "222990": [
+          "11/12 Zoo Babies: Herbivores: Caregiver and Child class for children ages 18 months to 3 years old.",
+          "Tags: Community, Park, Nature, Zoo, Family, Education, Outdoor, Class, Participatory, Outdoor Venue, Format, Herbivores"
+        ]
+      },
+      "source_urls_by_event": {
+        "222979": [
+          "https://www.eventbrite.com/e/922-zoo-babies-birds-tickets-1997043602173",
+          "https://www.eventbrite.com/e/922-zoo-babies-birds-tickets-1997043602173?aff=ebdsoporgprofile"
+        ],
+        "222980": [
+          "https://www.eventbrite.com/e/923-zoo-kids-birds-tickets-1997055111598",
+          "https://www.eventbrite.com/e/923-zoo-kids-birds-tickets-1997055111598?aff=ebdsoporgprofile"
+        ],
+        "222981": [
+          "https://www.eventbrite.com/e/924-zoo-babies-birds-tickets-1997043761650",
+          "https://www.eventbrite.com/e/924-zoo-babies-birds-tickets-1997043761650?aff=ebdsoporgprofile"
+        ],
+        "222982": [
+          "https://www.eventbrite.com/e/106-zoo-babies-reptiles-tickets-1997044207985",
+          "https://www.eventbrite.com/e/106-zoo-babies-reptiles-tickets-1997044207985?aff=ebdsoporgprofile"
+        ],
+        "222983": [
+          "https://www.eventbrite.com/e/107-zoo-kids-reptiles-tickets-1997055361345",
+          "https://www.eventbrite.com/e/107-zoo-kids-reptiles-tickets-1997055361345?aff=ebdsoporgprofile"
+        ],
+        "222984": [
+          "https://www.eventbrite.com/e/108-zoo-babies-reptiles-tickets-1997044363450",
+          "https://www.eventbrite.com/e/108-zoo-babies-reptiles-tickets-1997044363450?aff=ebdsoporgprofile"
+        ],
+        "222985": [
+          "https://www.eventbrite.com/e/1020-zoo-babies-bugs-tickets-1997044424633",
+          "https://www.eventbrite.com/e/1020-zoo-babies-bugs-tickets-1997044424633?aff=ebdsoporgprofile"
+        ],
+        "222986": [
+          "https://www.eventbrite.com/e/1021-zoo-kids-bugs-tickets-1997056944079",
+          "https://www.eventbrite.com/e/1021-zoo-kids-bugs-tickets-1997056944079?aff=ebdsoporgprofile"
+        ],
+        "222987": [
+          "https://www.eventbrite.com/e/1022-zoo-babies-bugs-tickets-1997044607179"
+        ],
+        "222988": [
+          "https://www.eventbrite.com/e/1110-zoo-babies-herbivores-tickets-1997044803767"
+        ],
+        "222989": [
+          "https://www.eventbrite.com/e/1111-zoo-kids-herbivores-tickets-1997058340255"
+        ],
+        "222990": [
+          "https://www.eventbrite.com/e/1112-zoo-babies-herbivores-tickets-1997045294234"
+        ]
+      }
+    },
+    {
+      "concept": "dance-swing",
+      "label": "Swing dance",
+      "category": "dance-style",
+      "visual": "Two dancers leaning apart in an open connected-hand rock step.",
+      "rationale": "Swing dancing has a recognizable partnered motion beyond generic dance; test separation at small sizes.",
+      "existing_alternative": "Noto solo dancer omits partnered swing; no corresponding custom.",
+      "event_ids": [
+        222995,
+        222996,
+        222997
+      ],
+      "evidence_by_event": {
+        "222995": [
+          "Sunday Sept 13 | The Small Dog Jazz Society: An outdoor swing music concert and dance open to public. The music is live and there is a dance lesson at the start. You can come just for the music or you can bust out your own dancing.",
+          "Tags: Music, Dance, Free, Outdoor, Concert, Swing Dancing, Live Music, Format, Performance"
+        ],
+        "222996": [
+          "Sunday Sept 20 | DJ Dance: Music and Dance Lessons will be provided by DJ SHUFFLEPUCK. Expect some special vintage 1940s style Big Band Swing, 1950s Rhythm & Blues, Jump Blues, all geared for the Swing Dancer in you.",
+          "Tags: Music, Dance, Free, Outdoor, DJ, Nightlife, R&B, Open Practice, Swing Dancing, Participatory, Format"
+        ],
+        "222997": [
+          "Sunday Sept 27 | DJ Dance: Music and Dance Lessons will be provided by DJ SHUFFLEPUCK. Expect some special vintage 1940s style Big Band Swing, 1950s Rhythm & Blues, Jump Blues, all geared for the Swing Dancer in you.",
+          "Tags: Music, Dance, Free, Outdoor, DJ, Nightlife, Open Practice, Swing Dancing, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "222995": [
+          "https://centralparkswings.com/event/sunday-sept-13-dj-dance/"
+        ],
+        "222996": [
+          "https://centralparkswings.com/event/sunday-sept-20-dj-dance/"
+        ],
+        "222997": [
+          "https://centralparkswings.com/event/sunday-sept-27-dj-dance/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-cinematic-soul",
+      "label": "Cinematic instrumental soul",
+      "category": "genre",
+      "visual": "Instrumental score with film-like abstract panels.",
+      "rationale": "Film-score-influenced music,not a film screening or universal saxophone.",
+      "existing_alternative": "Prefer suitable accepted art or Unicode fallback; prospective concepts need source and visual validation before assignment.",
+      "event_ids": [
+        222921,
+        222922
+      ],
+      "evidence_by_event": {
+        "222921": [
+          "Surprise Chef (EARLY SET): Hailing from just outside of Melbourne, Surprise Chef’s music is based on evoking mood; their vivid arrangements utilise time and space to build soundscapes that invite the listener into their world. The quartet’s distinct sound pulls from 70s film scores, hip hop, creating a cinematic and soulful take on instrumental music.",
+          "Tags: Music, Hip Hop, Concert, Soul Music, Instrumental, Cinematic, Early Set, Format, Performance"
+        ],
+        "222922": [
+          "Surprise Chef (LATE SET): Hailing from just outside of Melbourne, Surprise Chef’s music is based on evoking mood; their vivid arrangements utilise time and space to build soundscapes that invite the listener into their world. The quartet’s distinct sound pulls from 70s film scores, hip hop, creating a cinematic and soulful take on instrumental music.",
+          "Tags: Music, Hip Hop, Concert, Soul Music, Instrumental, Cinematic, Late Set, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "222921": [
+          "https://www.nationalsawdust.org/event/surprise-chef-early-set"
+        ],
+        "222922": [
+          "https://www.nationalsawdust.org/event/surprise-chef-late-set"
+        ]
+      }
+    },
+    {
+      "concept": "genre-folk-rock",
+      "category": "genre",
+      "label": "Folk rock",
+      "visual": "Acoustic and electric guitar silhouettes",
+      "rationale": "Explicit folk-rock repertoire blends distinct traditions",
+      "existing_alternative": "Existing guitar emoji; genre silhouette needs clarity",
+      "event_ids": [
+        222903,
+        222919
+      ],
+      "evidence_by_event": {
+        "222903": [
+          "Great Lake Swimmers + Special Guest: From Wainfleet, Ontario to our stage, Great Lake Swimmers brings their signature folk-rock sound and quiet magic to Queens!",
+          "Tags: Music, Rock, Concert, Folk Music, Folk Rock, Format, Performance"
+        ],
+        "222919": [
+          "Bailen: Swim!!! at Your Own Risk Tour: Bailen is a songwriting-forward, indie pop, folk-rock band that has captivated audiences with their musical dynamism and the three-part “blood harmony” of siblings Julia, Daniel, and David Bailen.",
+          "Tags: Music, Rock, Concert, Folk Music, Indie Pop, Folk Rock, Harmony, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "222903": [
+          "https://www.eventbrite.com/e/dada-x-tem-present-great-lake-swimmers-special-guests-tickets-1992074952809?discount=CaughtLight"
+        ],
+        "222919": [
+          "https://www.nationalsawdust.org/event/bailen-swim-at-your-own-risk-tour"
+        ]
+      }
+    },
+    {
+      "concept": "craft-kachchh-embroidery",
+      "label": "Kachchh embroidery",
+      "category": "craft",
+      "visual": "Interlaced crosses on a cloth sample.",
+      "rationale": "Herringbone foundation and woven interlacing differ from simple cross-stitch; construction needs source study.",
+      "existing_alternative": "Prefer suitable accepted art or Unicode fallback; prospective concepts need source and visual validation before assignment.",
+      "event_ids": [
+        222924
+      ],
+      "evidence_by_event": {
+        "222924": [
+          "Kachchh Embroidery: In-person workshop led by Shahnaz Khan.",
+          "Tags: Art, Workshop, Education, Participatory, Textiles, Embroidery, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "222924": [
+          "https://tatter.org/events/kachchh-embroidery/"
+        ]
+      }
+    },
+    {
+      "concept": "craft-ourfa-embroidery",
+      "label": "Ourfa embroidery",
+      "category": "craft",
+      "visual": "Pale filled floral stitching with a dark outline on cloth.",
+      "rationale": "Tradition-specific filling/outlining,not a generic embroidered-flower copy.",
+      "existing_alternative": "Prefer suitable accepted art or Unicode fallback; prospective concepts need source and visual validation before assignment.",
+      "event_ids": [
+        222927
+      ],
+      "evidence_by_event": {
+        "222927": [
+          "Armenian Ourfa Embroidery: Virtual workshop led by Lizzy Vartanian.",
+          "Tags: Art, Workshop, Education, Virtual, Participatory, Embroidery, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "222927": [
+          "https://tatter.org/events/armenian-ourfa-embroidery/"
+        ]
+      }
+    },
+    {
+      "concept": "craft-pineapple-quilt-block",
+      "label": "Pineapple quilt block",
+      "category": "craft",
+      "visual": "Nested geometric fabric strips around a central square.",
+      "rationale": "Patchwork block structure,not pineapple food; exact seam sequence requires research.",
+      "existing_alternative": "Prefer suitable accepted art or Unicode fallback; prospective concepts need source and visual validation before assignment.",
+      "event_ids": [
+        222928
+      ],
+      "evidence_by_event": {
+        "222928": [
+          "Pineapple Quilt Block: Virtual workshop led by Aaron Sanders Head.",
+          "Tags: Art, Workshop, Education, Virtual, Quilting, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "222928": [
+          "https://tatter.org/events/pineapple-quilt-block/"
+        ]
+      }
+    },
+    {
+      "concept": "dance-flamenco",
+      "label": "Flamenco",
+      "category": "dance-style",
+      "visual": "Grounded dancer pose with expressive arms",
+      "rationale": "Supported prospective study; verify exact event technique and small-scale recognition.",
+      "existing_alternative": "Current reviewed fallback remains defensible; do not infer equipment from genre.",
+      "event_ids": [
+        222940
+      ],
+      "evidence_by_event": {
+        "222940": [
+          "Flamenco Certamen USA 2026: Join Flamenco Vivo for the 12th Annual Flamenco Certamen USA! The event provides a spotlight for emerging talent and fosters the continued development and expansion of the flamenco art form. Rising and professional artists compete in three categories, with awards presented at the end of the evening.",
+          "Tags: Community, Dance, Sports, Games, Competition, Flamenco, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "222940": [
+          "https://flamenco-vivo.org/event/flamenco-certamen-usa-2026-october-17/",
+          "https://www.symphonyspace.org/events/vp-flamenco-certamen-usa-2026"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-violin-cello-duo",
+      "label": "Violin and cello feature",
+      "category": "instrument",
+      "visual": "Violin and cello silhouettes with clearly different sizes.",
+      "rationale": "Joint soloists distinguish a double concerto from one instrumental recital.",
+      "existing_alternative": "Orchestral fallback remains appropriate; do not imply whole ensemble is only two players.",
+      "event_ids": [
+        222911
+      ],
+      "evidence_by_event": {
+        "222911": [
+          "Lpr Presents: Arkai: The genre-defying electroacoustic duo ARKAI took the stage. It also showcased how human creativity has always embraced new technology with stirring and inspiring cinematic soundscapes and electrifying virtuosity into epic performances around the world.",
+          "Tags: Music, Science, Technology, Concert, Experimental Music, Electroacoustic, Cinematic, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "222911": [
+          "https://www.nationalsawdust.org/event/lpr-presents-arkai"
+        ]
+      }
+    },
+    {
+      "concept": "format-archive-history-talk",
+      "label": "Archive history talk",
+      "category": "format",
+      "visual": "Archive box beside a speaking bubble.",
+      "rationale": "Lecture about historical records,not making a personal archive.",
+      "existing_alternative": "Prefer suitable accepted art or Unicode fallback; prospective concepts need source and visual validation before assignment.",
+      "event_ids": [
+        222955
+      ],
+      "evidence_by_event": {
+        "222955": [
+          "The YIVO Origins of the Oyneg Shabes Archive: Understanding the Documents of the Hersh Wasser Collection: The Oyneg Shabes archive that Emanuel Ringelblum organized in the Warsaw Ghetto was one of the most successful examples of cultural resistance in all of Nazi-occupied Europe. This talk by Samuel Kassow will discuss the contents of YIVO’s Hersh Wasser Collection and the insights it offers into the workings of the Oyneg Shabes archive.",
+          "Tags: History, Free, Education, Jewish History, Archives, Gathering, Talk, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "222955": [
+          "https://www.yivo.org/Hersh-Wasser"
+        ]
+      }
+    },
+    {
+      "concept": "format-chamber-operetta",
+      "label": "Chamber operetta",
+      "category": "format",
+      "visual": "Small stage and compact vocal score diagram.",
+      "rationale": "Small theatrical songcycle; no orchestra or exactcast promise.",
+      "existing_alternative": "Prefer suitable accepted art or Unicode fallback; prospective concepts need source and visual validation before assignment.",
+      "event_ids": [
+        222916
+      ],
+      "evidence_by_event": {
+        "222916": [
+          "Nicoletta Todesco: The Cockroach Diary: “Where are you going, little cockroach? Your mission—beginning in intimacy, drifting into outer space, and returning to Earth changed.”",
+          "Tags: Theater, Art, Surrealism, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "222916": [
+          "https://www.nationalsawdust.org/event/nicoletta-todesco-the-cockroach-diary"
+        ]
+      }
+    },
+    {
+      "concept": "format-experimental-film",
+      "label": "Experimental cinema",
+      "category": "format",
+      "visual": "Projected frame with abstract superimposed forms",
+      "rationale": "Genre abstraction requires recognition work; standard film fallback remains valid.",
+      "existing_alternative": "Current broad custom or Unicode fallback remains until a distinct grounded pictogram passes review.",
+      "event_ids": [
+        222905
+      ],
+      "evidence_by_event": {
+        "222905": [
+          "Return to Valhalla: Through salvaged artworks, travel videos, and recuperative actions, this essay film traces the scale of the personal against that of the epic. It follows an obsession with a 30-year-old trauma and asks whether what seems fated can be rewritten through history, language, or location.",
+          "Tags: Community, Experimental, Film, Festival, Screening, Digital, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "222905": [
+          "https://queensworldfilmfestival.org/films/return-to-valhalla/"
+        ]
+      }
+    },
+    {
+      "concept": "format-film-discussion",
+      "label": "Film screening and discussion",
+      "category": "format",
+      "visual": "A movie screen with one broad speech bubble beside it.",
+      "rationale": "The screening explicitly includes a conversation, panel or discussion. This does not by itself establish an audience Q&A.",
+      "existing_alternative": "Film art covers the main activity; a speech balloon could convey the added discussion.",
+      "event_ids": [
+        222960
+      ],
+      "evidence_by_event": {
+        "222960": [
+          "Diamonds of the Night: In Jan Němec’s drama *Démanty noci* (*Diamonds of the Night*), two young Jewish men escape from a train taking them to their death. The screening is followed by a panel discussion with Jonathan Brent, Eva Lustigová, Emily Tamkin, and Michael Feldman, and forms part of FestivAL100, an international celebration marking the 100th anniversary of Arnošt Lustig’s birth.",
+          "Tags: Community, History, Film, Education, Jewish History, Screening, Czech New Wave, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "222960": [
+          "https://www.yivo.org/Diamonds-of-the-Night"
+        ]
+      }
+    },
+    {
+      "concept": "format-film-history-talk",
+      "label": "Film history talk",
+      "category": "format",
+      "visual": "Film frame beside a lecture bubble.",
+      "rationale": "Lecture about cinema history,without assuming screening.",
+      "existing_alternative": "Prefer suitable accepted art or Unicode fallback; prospective concepts need source and visual validation before assignment.",
+      "event_ids": [
+        222952
+      ],
+      "evidence_by_event": {
+        "222952": [
+          "The Origins, Flowering, and Documentary Afterlife of Yiddish Cinema: In celebration of YIVO's 101st year, this lecture by J. Hoberman will discuss Yiddish cinema as an international enterprise that created a national cinema without a nation-state. The lecture examines the origins and development of Yiddish cinema, including its relationship to Ashkenazi Jewish audiences and Polish, Soviet, and off-Hollywood American cinema.",
+          "Tags: Community, History, Free, Film, Education, Jewish History, Virtual, Cultural Heritage, Yiddish Culture, Gathering, Talk, Format, Ashkenazi History"
+        ]
+      },
+      "source_urls_by_event": {
+        "222952": [
+          "https://www.yivo.org/YidCiv101-Film"
+        ]
+      }
+    },
+    {
+      "concept": "format-history-seminar",
+      "label": "History seminar",
+      "category": "format",
+      "visual": "Historical document and small discussion marks.",
+      "rationale": "Taught historical study,not language learning based on instructional language.",
+      "existing_alternative": "Prefer suitable accepted art or Unicode fallback; prospective concepts need source and visual validation before assignment.",
+      "event_ids": [
+        222957
+      ],
+      "evidence_by_event": {
+        "222957": [
+          "[FALL2026] Spiritual Resistance in the Warsaw Ghetto: Emanuel Ringelblum and the 'Oyneg-Shabes' Archive: In the fall of 1940, Emanuel Ringelblum convened a meeting to found a secret archive in the Warsaw Ghetto. This Yiddish-language seminar considers the Oyneg-Shabes archive as an act of spiritual and cultural resistance through which the Jews of the Warsaw Ghetto asserted their dignity and their right to author their own history.",
+          "Tags: Community, History, Literature, Education, Jewish Culture, Cultural Heritage, Class, Yiddish, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "222957": [
+          "https://www.yivo.org/FALL2026-OynegShabes"
+        ]
+      }
+    },
+    {
+      "concept": "format-jazz-poetry-performance",
+      "label": "Jazz and poetry performance",
+      "category": "format",
+      "visual": "Verse page and improvisatory musical notes.",
+      "rationale": "Combined spoken text and music,not piano-trio instrumentation.",
+      "existing_alternative": "Prefer suitable accepted art or Unicode fallback; prospective concepts need source and visual validation before assignment.",
+      "event_ids": [
+        222914
+      ],
+      "evidence_by_event": {
+        "222914": [
+          "DVT: Traveling Shoes Experience: Something sacred is crossing the bridge. DVT—the trio of composer Damani Rhodes, vocalist VADIA, and poet Tongo Eisen-Martin—makes its New York City debut at National Sawdust, a collision of jazz, poetry, and soul that doesn't ask you to listen so much as surrender.",
+          "Tags: Music, Literature, Jazz, Poetry, Concert, Soul Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "222914": [
+          "https://www.nationalsawdust.org/event/dvt-traveling-shoes-experience"
+        ]
+      }
+    },
+    {
+      "concept": "format-legal-education",
+      "label": "Legal education",
+      "category": "format",
+      "visual": "Legal document beside lecture marks.",
+      "rationale": "Professional education,not individual legal advice or a claim of CLE credit.",
+      "existing_alternative": "Prefer suitable accepted art or Unicode fallback; prospective concepts need source and visual validation before assignment.",
+      "event_ids": [
+        223001
+      ],
+      "evidence_by_event": {
+        "223001": [
+          "Uniform Special Deposits Act: A Primer on What’s Special About the USDA: The Uniform Special Deposits Act (the “USDA”), promulgated by the Uniform Law Commission in 2023, was recently enacted in New York. The program will explore how the USDA addresses issues involving escrow-like arrangements, payment assurances, creditor rights, and the segregation of funds in financing and transactional structures.",
+          "Tags: Community, Education, Professional Development, Finance, Gathering, Talk, Law, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "223001": [
+          "https://services.nycbar.org/EventDetail?EventKey=_WEB092326"
+        ]
+      }
+    },
+    {
+      "concept": "format-literary-music-salon",
+      "label": "Literature and music salon",
+      "category": "format",
+      "visual": "Poetry/prose pages beside musical note.",
+      "rationale": "Mixed literary/music evening,not a single-genre reading.",
+      "existing_alternative": "Prefer suitable accepted art or Unicode fallback; prospective concepts need source and visual validation before assignment.",
+      "event_ids": [
+        223009
+      ],
+      "evidence_by_event": {
+        "223009": [
+          "Sunday Styles: An evening of poetry, prose, and music with Leemore Malka.",
+          "Tags: Music, Literature, Poetry, Reading, Prose, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "223009": [
+          "https://berlin.nyc/tm-event/sunday-styles-an-evening-of-poetry-prose-music/"
+        ]
+      }
+    },
+    {
+      "concept": "format-one-hit-wonder-tribute",
+      "label": "One-hit-wonder tribute",
+      "category": "format",
+      "visual": "Several single musical notes in separate record circles.",
+      "rationale": "Title-grounded opportunity needing lineup/tribute verification.",
+      "existing_alternative": "Prefer suitable accepted art or Unicode fallback; prospective concepts need source and visual validation before assignment.",
+      "event_ids": [
+        223018
+      ],
+      "evidence_by_event": {
+        "223018": [
+          "Leave A Lasting Mark Presents: “One Hit Wondering”: No description available.",
+          "Tags: Music, Family, Concert, Nightlife, All Ages, Live Music, Format, Performance, One Hit Wonders"
+        ]
+      },
+      "source_urls_by_event": {
+        "223018": [
+          "https://bitterend.com/#/events/194010"
+        ]
+      }
+    },
+    {
+      "concept": "format-open-caption-film",
+      "label": "Open-caption screening",
+      "category": "format",
+      "visual": "A cinema screen with two large caption bars beneath the picture.",
+      "rationale": "Open Captions tags explicitly identify an accessibility format that film imagery alone loses.",
+      "existing_alternative": "Clapperboard and speech bubble do not identify captions displayed to the audience; validate against generic subtitle imagery.",
+      "event_ids": [
+        222852
+      ],
+      "evidence_by_event": {
+        "222852": [
+          "Practical Magic 2: Starring Sandra Bullock and Nicole Kidman, Practical Magic 2 returns to a world steeped in moonlit mischief and powerful ancestral magic, as the Owens sisters must confront the dark curse that threatens to unravel their family once and for all in a must-s",
+          "Tags: Literature, Cinema, Neighborhood, Film, Family, Screening, Fantasy, Magic, Hudson Valley, Poughkeepsie, Witchcraft, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "222852": [
+          "https://www.regmovies.com/movies/practical-magic-2-ho00021461",
+          "https://www.regmovies.com/movies/practical-magic-2-open-capeng-sub-ho00022265"
+        ]
+      }
+    },
+    {
+      "concept": "format-operetta-revue",
+      "label": "Operetta revue",
+      "category": "format",
+      "visual": "Compact score with several aria panels.",
+      "rationale": "Excerpts from multiple operettas/musicals,not one complete work.",
+      "existing_alternative": "Prefer suitable accepted art or Unicode fallback; prospective concepts need source and visual validation before assignment.",
+      "event_ids": [
+        222951
+      ],
+      "evidence_by_event": {
+        "222951": [
+          "Galaxy of Polish Stars - Operetta Varietes: The most beautiful operetta duets and arias in the rhythm of waltz and czardas by Strauss, Lehar, Kalman, etc., and songs from Phantom of the Opera, West Side Story, and My fair Lady - performed by artists representing musical theaters like Polish National Opera, Grand Theater in Lodz, Silesian Opera, and Krakow Opera. Part of the concert will be in Polish.",
+          "Tags: Music, Theater, Opera, Polish Culture, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "222951": [
+          "https://www.symphonyspace.org/events/vp-galaxy-of-polish-stars-operetta-varietes"
+        ]
+      }
+    },
+    {
+      "concept": "format-political-history-talk",
+      "label": "Political history talk",
+      "category": "format",
+      "visual": "Historical document and discussion bubble.",
+      "rationale": "Lecture on past political movements,not current advocacy/rally.",
+      "existing_alternative": "Prefer suitable accepted art or Unicode fallback; prospective concepts need source and visual validation before assignment.",
+      "event_ids": [
+        222958
+      ],
+      "evidence_by_event": {
+        "222958": [
+          "More than a Symbol: The Jewish Labor Bund in History: More so than any other party on the Jewish left, the Jewish Labor Bund holds a particular mystique in the imagination of Jewish leftists, even decades after the Bund in Poland was dissolved. This talk by Joshua Meyers will explore the history of the Bund from its origins through World War II, its relationships with other major political movements, and its legacy in the 21st century.",
+          "Tags: History, Literature, Free, Education, Jewish History, Gathering, Talk, Yiddish, Format, Diaspora Socialism"
+        ]
+      },
+      "source_urls_by_event": {
+        "222958": [
+          "https://www.yivo.org/Bund-in-History"
+        ]
+      }
+    },
+    {
+      "concept": "format-public-sculpture-exhibition",
+      "label": "Public sculpture exhibition",
+      "category": "format",
+      "visual": "Original abstract sculpture on a plaza diagram.",
+      "rationale": "Browsable outdoorart,notguidedwalk or animal encounter.",
+      "existing_alternative": "Prefer suitable accepted art or Unicode fallback; prospective concepts need source and visual validation before assignment.",
+      "event_ids": [
+        222963
+      ],
+      "evidence_by_event": {
+        "222963": [
+          "Dogs: An exhibition by Camille Henrot at Doris C. Freedman Plaza in Central Park. The exhibition opens September 9.",
+          "Tags: Visual Arts, Art, Free, Public Art, Sculpture, Exhibition, Format, Browsable"
+        ]
+      },
+      "source_urls_by_event": {
+        "222963": [
+          "https://www.publicartfund.org/exhibitions/view/camille-henrot-dogs/"
+        ]
+      }
+    },
+    {
+      "concept": "format-sing-along-screening",
+      "category": "format",
+      "label": "Sing-along film",
+      "visual": "Film frame with music notes and lyric bars",
+      "rationale": "Participatory cinema combines film and singing",
+      "existing_alternative": "Film emoji; ordinary karaoke icon would obscure screening",
+      "event_ids": [
+        222946
+      ],
+      "evidence_by_event": {
+        "222946": [
+          "Sing-Along Wicked: Sing-Along with your favorite stars! Wicked, the untold story of the witches of Oz, stars Cynthia Erivo as Elphaba and Ariana Grande as Glinda.",
+          "Tags: Music, Film, Family, Wicked, Screening, Sing Along, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "222946": [
+          "https://www.symphonyspace.org/events/sing-along-wicked"
+        ]
+      }
+    },
+    {
+      "concept": "format-song-cycle-concert",
+      "label": "Song-cycle concert",
+      "category": "format",
+      "visual": "Linked score pages and a vocal note.",
+      "rationale": "Connected songs performed as a work,not every album launch.",
+      "existing_alternative": "Prefer suitable accepted art or Unicode fallback; prospective concepts need source and visual validation before assignment.",
+      "event_ids": [
+        222918
+      ],
+      "evidence_by_event": {
+        "222918": [
+          "Morley — Meditations on The Gift of Awe Record Premiere Celebration: Meditations on the Gift of Awe :: love songs for earth & survival is an immersive, prayerful and celebratory, genre-defying song cycle. This work steadies its sonic gaze on healing and cultivation of calm via vocal soundscapes, rhythm & improvisation.",
+          "Tags: Music, Wellness, Concert, Vocal Music, Improvisational Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "222918": [
+          "https://www.nationalsawdust.org/event/morley-meditations-on-the-gift-of-awe-record-release-celebration"
+        ]
+      }
+    },
+    {
+      "concept": "format-songwriters-round",
+      "label": "Songwriters round",
+      "category": "format",
+      "visual": "Three song pages arranged around a shared microphone.",
+      "rationale": "Prospective only; two names on bill do not prove sharedround format.",
+      "existing_alternative": "Prefer suitable accepted art or Unicode fallback; prospective concepts need source and visual validation before assignment.",
+      "event_ids": [
+        223019
+      ],
+      "evidence_by_event": {
+        "223019": [
+          "Robby Hecht & Antje Duvekot: No description available.",
+          "Tags: Music, Family, Concert, All Ages, Singer Songwriter, Vocal Music, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "223019": [
+          "https://bitterend.com/#/events/193925"
+        ]
+      }
+    },
+    {
+      "concept": "format-staged-musical",
+      "label": "Staged musical",
+      "category": "format",
+      "visual": "Stage curtains with a vocal score.",
+      "rationale": "Fully staged musical theater,not concertmusical,film or generic concert.",
+      "existing_alternative": "Prefer suitable accepted art or Unicode fallback; prospective concepts need source and visual validation before assignment.",
+      "event_ids": [
+        222939
+      ],
+      "evidence_by_event": {
+        "222939": [
+          "Surviving The Hood: Surviving The Hood is an original musical crafted by the dynamic brother-sister duo. This unique production merges elements reminiscent of The Wire and West Side Story, delivering a cinematic, music-infused stage experience that delves into the complex interplay of violence, culture, love, and choice in contemporary urban America.",
+          "Tags: Music, Theater, Visiting Presenter, Original Musical, Drama / Theater, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "222939": [
+          "https://www.symphonyspace.org/events/vp-surviving-the-hood"
+        ]
+      }
+    },
+    {
+      "concept": "format-theater-history-tour",
+      "label": "Theater history walking tour",
+      "category": "format",
+      "visual": "Historic theater fronts linked by a route.",
+      "rationale": "Tour of performance history,not film locations or architecture alone.",
+      "existing_alternative": "Prefer suitable accepted art or Unicode fallback; prospective concepts need source and visual validation before assignment.",
+      "event_ids": [
+        222954
+      ],
+      "evidence_by_event": {
+        "222954": [
+          "Yiddish Theater Walking Tour: Join YIVO Learning and Media Center Educator Susannah Trubman on a two-hour walking tour exploring the heart of what was once a major hub for the sensational, international phenomenon known as Yiddish theater. The tour begins at the former site of Jacob Adler’s Grand Theater and ends in Union Square, with attention paid to sites of past theaters and notable performances.",
+          "Tags: Theater, History, Literature, Tour, Education, Outdoor, Walking Tour, Yiddish Theater, Format, Outings"
+        ]
+      },
+      "source_urls_by_event": {
+        "222954": [
+          "https://www.yivo.org/Yiddish-Theater-Walking-Tour"
+        ]
+      }
+    },
+    {
+      "concept": "format-verse-drama",
+      "label": "Verse drama",
+      "category": "format",
+      "visual": "Drama mask beside a verse manuscript.",
+      "rationale": "Poetic stage drama,not poetry openmic; staging must be verified.",
+      "existing_alternative": "Prefer suitable accepted art or Unicode fallback; prospective concepts need source and visual validation before assignment.",
+      "event_ids": [
+        222948
+      ],
+      "evidence_by_event": {
+        "222948": [
+          "The Cenci: The great English Romantic poet Percy Shelley transports audiences to corrupt and sumptuous Renaissance Rome with a verse drama set within the noble household of Count Cenci, a tyrannical patriarch with a virtuous daughter Beatrice. After a series of brutal events and betrayals, Beatrice concocts a desperate plot to take control of her own destiny.",
+          "Tags: Theater, Literature, Visiting Presenter, Drama / Theater, Format, Theater Show, Performance, Renaissance Rome, Percy Shelley"
+        ]
+      },
+      "source_urls_by_event": {
+        "222948": [
+          "https://www.symphonyspace.org/events/vp-the-cenci"
+        ]
+      }
+    },
+    {
+      "concept": "genre-afro-atlantic-jazz",
+      "label": "Afro-Atlantic jazz",
+      "category": "genre",
+      "visual": "Ocean-link diagram and improvisatory notes.",
+      "rationale": "Cross-Atlantic musical collaboration,not geography-specific instrument stereotype.",
+      "existing_alternative": "Prefer suitable accepted art or Unicode fallback; prospective concepts need source and visual validation before assignment.",
+      "event_ids": [
+        222913
+      ],
+      "evidence_by_event": {
+        "222913": [
+          "Alune Wade & Family Affair / faiith (presented by the JGI): Family Affair, a new album by Senegalese bassist and composer Alune Wade in collaboration with New Orleans's Neighborhood Story Project, is rooted in Afro-Atlantic connections and what they actually sound like when musicians on both sides of the Atlantic meet in a room.",
+          "Tags: Community, Music, Jazz, Concert, Format, Performance, Afro Atlantic, Senegalese Music"
+        ]
+      },
+      "source_urls_by_event": {
+        "222913": [
+          "https://www.nationalsawdust.org/event/alune-wade-family-affair-faiith-presented-by-the-jazz-generations-initiative"
+        ]
+      }
+    },
+    {
+      "concept": "genre-arab-orchestral",
+      "label": "Arab orchestral music",
+      "category": "genre",
+      "visual": "Orchestral score with interwoven melody lines.",
+      "rationale": "Broad orchestra genre without assuming oud or choir centrality.",
+      "existing_alternative": "Prefer suitable accepted art or Unicode fallback; prospective concepts need source and visual validation before assignment.",
+      "event_ids": [
+        222937
+      ],
+      "evidence_by_event": {
+        "222937": [
+          "Arab Legends: Step into an unforgettable evening celebrating the most iconic melodies of the Arab world—brought to life like never before. With Arab Legends, Mazzika Orchestra pays tribute to timeless songs that have shaped generations, reimagined through powerful and refined orchestral arrangements. Blending tradition with modern influences, the program also opens the door to carefully selected international classics, creating a unique musical journey where cultures meet and emotions resonate beyond borders.",
+          "Tags: Music, Classical Music, Orchestra, Concert, Cultural, Arab Music, Orchestral, Visiting Presenter, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "222937": [
+          "https://www.symphonyspace.org/events/vp-arab-legends-2"
+        ]
+      }
+    },
+    {
+      "concept": "genre-art-pop",
+      "label": "Art pop",
+      "category": "genre",
+      "visual": "Abstract pop melody and experimental color shapes.",
+      "rationale": "Genre study; no particular instrument universal.",
+      "existing_alternative": "Prefer suitable accepted art or Unicode fallback; prospective concepts need source and visual validation before assignment.",
+      "event_ids": [
+        222917
+      ],
+      "evidence_by_event": {
+        "222917": [
+          "Francisca Valenzuela: Confessional, raw, poetic-alt-art-pop-piano in Spanish. From Chile to the world. Francisca is one of the boldest and daring artists of her generation in the Spanish language.",
+          "Tags: Community, Music, Culture, Concert, Spanish Language, Piano, Pop Music, Art Pop, Chile, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "222917": [
+          "https://www.nationalsawdust.org/event/francisca-valenzuela"
+        ]
+      }
+    },
+    {
+      "concept": "genre-biblical-drama-film",
+      "label": "Biblical drama cinema",
+      "category": "genre",
+      "visual": "Film frame around a historical scroll symbol.",
+      "rationale": "Narrative religious film,not worship or historical-proof claim.",
+      "existing_alternative": "Prefer suitable accepted art or Unicode fallback; prospective concepts need source and visual validation before assignment.",
+      "event_ids": [
+        222855
+      ],
+      "evidence_by_event": {
+        "222855": [
+          "Daniel and the Fiery Furnace: Daniel and the Fiery Furnace is an epic live-action biblical drama that brings the origin story of the prophet Daniel to life against the backdrop of exile in Babylon. As Daniel rises within a powerful and unforgiving empire, a ruthless king issues a decr",
+          "Tags: History, Cinema, Neighborhood, Film, Education, Screening, Action, Hudson Valley, Poughkeepsie, Drama / Film, Biblical, Format, Performance, Biblical Drama"
+        ]
+      },
+      "source_urls_by_event": {
+        "222855": [
+          "https://www.regmovies.com/movies/daniel-and-the-fiery-furnace-ho00022252"
+        ]
+      }
+    },
+    {
+      "concept": "genre-biographical-documentary",
+      "label": "Biographical documentary",
+      "category": "genre",
+      "visual": "Film frame beside biographical document.",
+      "rationale": "Nonfiction life story,not a fictional biopic or live appearance.",
+      "existing_alternative": "Prefer suitable accepted art or Unicode fallback; prospective concepts need source and visual validation before assignment.",
+      "event_ids": [
+        222856
+      ],
+      "evidence_by_event": {
+        "222856": [
+          "No Limbs, No Limits: The NickV Story: When an Australian family is handed a newborn son with no arms and no legs, they face a choice that will either limit them forever - or change the world. NO LIMBS NO LIMITS is the story of how they chose the world. Born in Melbourne, Australia in 1982 wi",
+          "Tags: Cinema, Neighborhood, Documentary, Film, Family, Screening, Inspiration, Hudson Valley, Poughkeepsie, Biography / Film, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "222856": [
+          "https://www.regmovies.com/movies/no-limbs-no-limits-the-nickv-story-ho00022232"
+        ]
+      }
+    },
+    {
+      "concept": "genre-black-americana",
+      "label": "Black Americana",
+      "category": "genre",
+      "visual": "Interwoven roots-music score lines.",
+      "rationale": "Historically grounded genre label requires instrument-neutral recognition study.",
+      "existing_alternative": "Prefer suitable accepted art or Unicode fallback; prospective concepts need source and visual validation before assignment.",
+      "event_ids": [
+        222950
+      ],
+      "evidence_by_event": {
+        "222950": [
+          "Revelry: Queen Esther: This singer, songwriter, playwright, and fearless storyteller is one of the most compelling voices in contemporary Black Americana. Drawing on her Southern roots—from Atlanta to South Carolina's Lowcountry—she blends blues, jazz, country, soul, folk, and rock into music that reclaims overlooked histories while charting brilliant new territory. A magnetic performer, Queen Esther is celebrated for her powerful voice, rich storytelling, and genre-defying artistry.",
+          "Tags: Community, Music, Jazz, Concert, Soul Music, Black Americana, Storytelling / Community, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "222950": [
+          "https://www.symphonyspace.org/events/revelry-queen-esther-3"
+        ]
+      }
+    },
+    {
+      "concept": "genre-dream-pop",
+      "label": "Dream pop",
+      "category": "genre",
+      "visual": "Soft overlapping musical note and sustained wave.",
+      "rationale": "Explicit genre; recognition remains experimental and no instrument is assumed.",
+      "existing_alternative": "Retain a suitable existing icon or Unicode until the prospective concept passes reference and recognition review.",
+      "event_ids": [
+        222915
+      ],
+      "evidence_by_event": {
+        "222915": [
+          "June McDoom: June McDoom’s debut full-length, Follow the Light, lives in that dream space and then keeps walking, slipping out of time and waking somewhere new, barely familiar enough to feel like home yet wholly your own.",
+          "Tags: Music, Concert, Singer Songwriter, Pop Music, Vocal Music, Dream Pop, Format, Performance, Album"
+        ]
+      },
+      "source_urls_by_event": {
+        "222915": [
+          "https://www.nationalsawdust.org/event/june-mcdoom"
+        ]
+      }
+    },
+    {
+      "concept": "genre-faith-docudrama",
+      "label": "Faith docudrama",
+      "category": "genre",
+      "visual": "Film frame linking documentary and staged-story panels.",
+      "rationale": "Mixed nonfiction/dramatization faithfilm,not devotionalservice.",
+      "existing_alternative": "Prefer suitable accepted art or Unicode fallback; prospective concepts need source and visual validation before assignment.",
+      "event_ids": [
+        222859
+      ],
+      "evidence_by_event": {
+        "222859": [
+          "Adore Him: He Is Here: ADORE HIM is a new docudrama from the executive producer of the record-breaking and Gabriel Award-winning Jesus Thirsts: The Miracle of the Eucharist (Fathom Entertainment/2024) that aims to inspire deeper devotion to Jesus through Eucharistic adoration.",
+          "Tags: Cinema, Wellness, Neighborhood, Documentary, Film, Screening, Spirituality, Faith, Hudson Valley, Poughkeepsie, Format, Performance, Eucharistic Adoration"
+        ]
+      },
+      "source_urls_by_event": {
+        "222859": [
+          "https://www.regmovies.com/movies/adore-him-he-is-here-ho00022215"
+        ]
+      }
+    },
+    {
+      "concept": "genre-fantasy-film",
+      "label": "Fantasy cinema",
+      "category": "genre",
+      "visual": "Film frame holding a restrained fantastical landscape",
+      "rationale": "Exploratory only; avoid mistaking screened fiction for actual magic activity.",
+      "existing_alternative": "Current broad custom or Unicode fallback remains until a distinct grounded pictogram passes review.",
+      "event_ids": [
+        222852
+      ],
+      "evidence_by_event": {
+        "222852": [
+          "Practical Magic 2: Starring Sandra Bullock and Nicole Kidman, Practical Magic 2 returns to a world steeped in moonlit mischief and powerful ancestral magic, as the Owens sisters must confront the dark curse that threatens to unravel their family once and for all in a must-s",
+          "Tags: Literature, Cinema, Neighborhood, Film, Family, Screening, Fantasy, Magic, Hudson Valley, Poughkeepsie, Witchcraft, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "222852": [
+          "https://www.regmovies.com/movies/practical-magic-2-ho00021461",
+          "https://www.regmovies.com/movies/practical-magic-2-open-capeng-sub-ho00022265"
+        ]
+      }
+    },
+    {
+      "concept": "genre-horror-film",
+      "label": "Horror film",
+      "category": "genre",
+      "visual": "Film strip with restrained spooky silhouette.",
+      "rationale": "Screening is horror without a special live format.",
+      "existing_alternative": "Movie camera remains adequate.",
+      "event_ids": [
+        222853
+      ],
+      "evidence_by_event": {
+        "222853": [
+          "Fangoria Staff Picks: The Faculty: Join us if you dare on the 13th of every month for FANGORIA Staff Picks - a monthly series crafted by the legacy horror brand, with fangtastic films programmed by the bleeding-heart horror curators over at Fango. Designed for everyone from casual fans to",
+          "Tags: Cinema, Neighborhood, Film, Screening, Horror, Classic Film, Cult Classic, Hudson Valley, Monthly Series, Poughkeepsie, Fangoria, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "222853": [
+          "https://www.regmovies.com/movies/fangoria-staff-picks-the-faculty-ho00022231"
+        ]
+      }
+    },
+    {
+      "concept": "genre-indian-classical-fusion",
+      "label": "Indian classical fusion",
+      "category": "genre",
+      "visual": "Two interwoven melodic lines with distinct rhythmic accents.",
+      "rationale": "Hybrid style,not pure classical program or universal tanpura.",
+      "existing_alternative": "Prefer suitable accepted art or Unicode fallback; prospective concepts need source and visual validation before assignment.",
+      "event_ids": [
+        222912
+      ],
+      "evidence_by_event": {
+        "222912": [
+          "Raaginder be:coming USA Tour: Raaginder, a San Francisco Bay Area–based violinist, composer, and songwriter, is known for blending the depth of Indian classical music with the textures of R&B, pop, and hip hop to create a sound that is both soulful and contemporary.",
+          "Tags: Music, World Music, Classical Music, Hip Hop, Concert, R&B, Violin, Indian Classical, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "222912": [
+          "https://www.nationalsawdust.org/event/raaginder-be-coming-usa-tour"
+        ]
+      }
+    },
+    {
+      "concept": "genre-jazz",
+      "label": "Jazz",
+      "category": "genre",
+      "visual": "A pair of syncopated musical notes with one loose improvisatory flourish.",
+      "rationale": "The genre is explicit, but an instrument-neutral motif remains exploratory and requires recognition tests; avoid treating saxophone as universal jazz.",
+      "existing_alternative": "Noto notes are generic; a saxophone misstates instrumentation when the program does not feature one.",
+      "event_ids": [
+        222910
+      ],
+      "evidence_by_event": {
+        "222910": [
+          "LPR Presents: John Carroll Kirby: Though Kirby’s background is steeped in jazz, his signature sound blends genres and styles. A sought-after collaborator, he's worked with the likes of Miley Cyrus, Frank Ocean, Harry Styles, and Solana, earning a Song of the Year Grammy nomination in 2023 for his contribution to Steve Lacy’s “Bad Habit.”",
+          "Tags: Music, Jazz, Concert, Live Music, Genre Blending, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "222910": [
+          "https://www.nationalsawdust.org/event/lpr-presents-john-carroll-kirby"
+        ]
+      }
+    },
+    {
+      "concept": "genre-krautrock",
+      "label": "Krautrock",
+      "category": "genre",
+      "visual": "Repeating pulse and interlocking abstract sound loops.",
+      "rationale": "Experimental motorik-oriented genre; avoid flags and assumed instruments.",
+      "existing_alternative": "Prefer suitable accepted art or Unicode fallback; prospective concepts need source and visual validation before assignment.",
+      "event_ids": [
+        222920
+      ],
+      "evidence_by_event": {
+        "222920": [
+          "LPR Presents: Diles que no me maten: For Diles que no me maten, every note is a small step into the unknown. The five-piece Mexico City band have always operated on a first-thought, best-thought basis, drawing on a jam-based, krautrock philosophy to craft intricate constructions; their founding principle of slow, wide-eyed exploration is alive and well.",
+          "Tags: Music, Concert, Jam Band, Experimental Music, Mexico City, Krautrock, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "222920": [
+          "https://www.nationalsawdust.org/event/lpr-presents-diles-que-no-me-maten"
+        ]
+      }
+    },
+    {
+      "concept": "genre-swing",
+      "label": "Swing music",
+      "category": "genre",
+      "visual": "Two bold offset notes joined by a curved long-short rhythmic beam.",
+      "rationale": "Swing repertoire is explicit; explore the rhythm separately from instruments and test recognition.",
+      "existing_alternative": "Generic music notes are safe but broad; a dancing couple could wrongly imply a participatory lesson.",
+      "event_ids": [
+        222995
+      ],
+      "evidence_by_event": {
+        "222995": [
+          "Sunday Sept 13 | The Small Dog Jazz Society: An outdoor swing music concert and dance open to public. The music is live and there is a dance lesson at the start. You can come just for the music or you can bust out your own dancing.",
+          "Tags: Music, Dance, Free, Outdoor, Concert, Swing Dancing, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "222995": [
+          "https://centralparkswings.com/event/sunday-sept-13-dj-dance/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-western-screening",
+      "label": "Western film screening",
+      "category": "genre",
+      "visual": "Film frame with an original western landscape.",
+      "rationale": "Fictional cinema, not riding or historical reenactment.",
+      "existing_alternative": "Use suitable accepted art or Unicode fallback; prospective concept is separate from assignment.",
+      "event_ids": [
+        222860
+      ],
+      "evidence_by_event": {
+        "222860": [
+          "Angel and the Badman: When feared outlaw Quirt Evans staggers onto a rancher's land with a bullet in his back, he expects a quick death, not mercy. But Penny, the rancher's daughter, offers him a chance at something he's never had: a life beyond violence.",
+          "Tags: Cinema, Neighborhood, Film, Screening, Classic Film, Romance, Hudson Valley, Western, Poughkeepsie, Drama / Film, Format, Performance, Outlaw"
+        ]
+      },
+      "source_urls_by_event": {
+        "222860": [
+          "https://www.regmovies.com/movies/angel-and-the-badman-ho00022263"
+        ]
+      }
+    }
+  ],
+  "limitations": "Counts describe this cohort, not population reach. These are grounded prospective studies, not live assignments. Existing artwork may already suffice; exact equipment and genre recognition require further review."
+}

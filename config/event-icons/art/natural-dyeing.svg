@@ -7,5 +7,5 @@
 <path d="M35 53q13 5 28 0l-1 23q-9 7-19 1l-9-3z" fill="#AE79CB"/>
 <path d="m48 56-2 21 10 2 2-24z" fill="#8853AB"/>
 <path d="m40 29-2 36" stroke="#FFF8EF" stroke-width="3" stroke-linecap="round"/>
-<path d="M88 63q-2-23 11-38" fill="none" stroke="#487E50" stroke-width="4" stroke-linecap="round"/><path d="M91 48q-21-1-17-19 17 1 17 19" fill="#8BC066"/><path d="M94 40q-1-18 19-21 1 17-19 21" fill="#59A367"/><path d="M32 82q32 13 65-1" fill="none" stroke="#B5CED1" stroke-width="4" stroke-linecap="round"/>
+<g transform="translate(-17 0) scale(1.15)"><path d="M88 71q-2-31 11-46" fill="none" stroke="#487E50" stroke-width="4" stroke-linecap="round"/><path d="M91 48q-21-1-17-19 17 1 17 19" fill="#8BC066"/><path d="M94 40q-1-18 19-21 1 17-19 21" fill="#59A367"/></g><path d="M32 82q32 13 65-1" fill="none" stroke="#B5CED1" stroke-width="4" stroke-linecap="round"/>
 </svg>

@@ -1,0 +1,184 @@
+[
+  {
+    "icon_id": "craft-book-bedazzling",
+    "source_sha256": "620a7598834d645a0d23de25ce640475d2f3481e53045cd970a5dd3c0c69fa77",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; brief known. Closed book with attached reflective cover stones.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-075/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-075/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 8952,
+      "gzip_level_6": 2788
+    },
+    "optimization": {
+      "initial_raw": 8051,
+      "initial_gzip_level_6": 2536,
+      "final_raw": 8952,
+      "final_gzip_level_6": 2788
+    },
+    "issues": [],
+    "resolved_issues": [
+      "Native critique found stones resembled printed dots. Enlarged border/center stones and added consistent bright upper-bevel facets; rechecked all six construction views,native sizes and actual themes."
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Book silhouette and decoration survive16px; separate facets soften. Label specifies bedazzling,not printed cover art,bookbinding or a promised kit."
+    ]
+  },
+  {
+    "icon_id": "format-presentation-comedy",
+    "source_sha256": "2af692bff4c1e5aa71d33cab799fdfb8d8e44b25eea8f4f1e6c6b4270e8a30c0",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; brief known. Presentation slide with chart and comic face glyph.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-075/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-075/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 673,
+      "gzip_level_6": 336
+    },
+    "optimization": {
+      "initial_raw": 673,
+      "initial_gzip_level_6": 336,
+      "final_raw": 673,
+      "final_gzip_level_6": 336
+    },
+    "issues": [],
+    "resolved_issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Slide/chart/comic face visible24/32px; fine expression softens16px. No branded software or actual data is depicted."
+    ]
+  },
+  {
+    "icon_id": "activity-first-aid-training",
+    "source_sha256": "0960dfc8221f10f57ec0e25a86947f11e951f85f50ffa14bca758fec00950f16",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; brief known. Lesson checklist with a bandage symbol.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-075/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-075/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 595,
+      "gzip_level_6": 338
+    },
+    "optimization": {
+      "initial_raw": 595,
+      "initial_gzip_level_6": 338,
+      "final_raw": 595,
+      "final_gzip_level_6": 338
+    },
+    "issues": [],
+    "resolved_issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Bandage and lesson/checklist visible16px; this is a flat symbol,not a first-aid procedure,certification or promised supplies."
+    ]
+  },
+  {
+    "icon_id": "format-autumn-foliage-walk",
+    "source_sha256": "a4be038530ada00e9ee7ce8a78ee05fbdbb2da15c48b894a7a7afe7a3c14ebe0",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; brief known. Autumn leaf beside a dotted walking route.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-075/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-075/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 541,
+      "gzip_level_6": 315
+    },
+    "optimization": {
+      "initial_raw": 541,
+      "initial_gzip_level_6": 315,
+      "final_raw": 541,
+      "final_gzip_level_6": 315
+    },
+    "issues": [],
+    "resolved_issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Leaf and route visible16px; generic autumn glyph is not a species,exact trail,peak-color or accessibility guarantee."
+    ]
+  },
+  {
+    "icon_id": "format-astronomy-talk",
+    "source_sha256": "6aaf23a9bd0b54116c7206ed6bf4ee3abc4e2c677b85873f49a499f1d01a3772",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; brief known. Astronomy slide with ringed planet and speaking bubble.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-075/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-075/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 709,
+      "gzip_level_6": 367
+    },
+    "optimization": {
+      "initial_raw": 709,
+      "initial_gzip_level_6": 367,
+      "final_raw": 709,
+      "final_gzip_level_6": 367
+    },
+    "issues": [],
+    "resolved_issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Slide/planet/speech read at small sizes; label distinguishes a lecture from observing or a planetarium. Ringed planet is a broad astronomy symbol,not literal content of every lecture."
+    ]
+  }
+]

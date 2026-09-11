@@ -1,0 +1,183 @@
+[
+  {
+    "icon_id": "art-botanical-illustration",
+    "source_sha256": "56024ddb96581ca438ef588a79c7ffcd9db1e408b1c925e732ba030588f51115",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Botanical drawing on paper.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-049/visual-final-v2",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-049/gallery-final-v2/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 866,
+      "gzip_level_6": 462
+    },
+    "optimization": {
+      "initial_raw": 866,
+      "initial_gzip_level_6": 462,
+      "final_raw": 866,
+      "final_gzip_level_6": 462
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Original botanical specimen diagram on a page. At16px flower and leaf detail softens; label supplies illustration context. No exact species, exhibition artwork, gardening or hands-on participation implied."
+    ]
+  },
+  {
+    "icon_id": "format-comedy-qa",
+    "source_sha256": "470aac4525bbe8da0d67cbf20b2e51b71ebadbd825ab61b043dd380a8f7dcf49",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Question speech bubble and laughing response.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-049/visual-final-v2",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-049/gallery-final-v2/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 824,
+      "gzip_level_6": 466
+    },
+    "optimization": {
+      "initial_raw": 824,
+      "initial_gzip_level_6": 466,
+      "final_raw": 824,
+      "final_gzip_level_6": 466
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Outlined question mark and comic speech face indicate audience questions answered humorously. At16px facial detail softens; label distinguishes comedy Q&A from generic chat or interviews. Cartoon face is not anatomical geometry."
+    ]
+  },
+  {
+    "icon_id": "craft-serving-board",
+    "source_sha256": "693938f3c0346a3f6e017119629a796e0207d22e47c82bfd638b36158b25bbca",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Wooden board with hole and pencil.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-049/visual-final-v2",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-049/gallery-final-v2/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 2606,
+      "gzip_level_6": 930
+    },
+    "optimization": {
+      "initial_raw": 2606,
+      "initial_gzip_level_6": 930,
+      "final_raw": 2606,
+      "final_gzip_level_6": 930
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Rounded wood slab with through-hole and resting pencil indicates board making. At16px pencil and grain soften; label supplies woodworking specificity. Original design, no supplied tool, powered technique,food or exact finish promised."
+    ]
+  },
+  {
+    "icon_id": "activity-bodyweight-circuit",
+    "source_sha256": "75c98e3f76cec221875dac0562e01082e768f7ff5816948f5cfea3c92b1faff8",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Exercising person with timer diagram.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-049/visual-final-v2",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-049/gallery-final-v2/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 3412,
+      "gzip_level_6": 1178
+    },
+    "optimization": {
+      "initial_raw": 3412,
+      "initial_gzip_level_6": 1178,
+      "final_raw": 3412,
+      "final_gzip_level_6": 1178
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Grounded partial squat and a separate flat timer diagram indicate timed bodyweight activity. At16px joint detail softens; label supplies circuit format. Not a prescribed routine, exact interval, health advice or promised taught movement."
+    ]
+  },
+  {
+    "icon_id": "equipment-art-cart",
+    "source_sha256": "f603672231bf9f8c3e41ab826d6b48de95e8d377c48b234c1c061c159ebdf7be",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Art-supply trolley.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-049/visual-final-v2",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-049/gallery-final-v2/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 5633,
+      "gzip_level_6": 1800
+    },
+    "optimization": {
+      "initial_raw": 5591,
+      "initial_gzip_level_6": 1789,
+      "final_raw": 5633,
+      "final_gzip_level_6": 1800
+    },
+    "issues": [
+      {
+        "issue": "Paper stacks were2mm and3.5mm above upper and lower tray surfaces in first model.",
+        "resolution": "Lowered both stacks onto their tray surfaces in authoritative scene, then regenerated and re-reviewed all six views and native light/dark renderings.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Original two-tier wheeled supply cart with paper and pencil cup. At16px inventory details soften; label supplies Art Cart specificity. Not a replica of BryantPark equipment or IKEA product; supplies are illustrative and not guaranteed."
+    ]
+  }
+]

@@ -1,0 +1,411 @@
+{
+  "date": "2026-09-10",
+  "scope": "Cycle 014: 100 sequential events 197309–197956, no targeted supplements.",
+  "suggestions": 18,
+  "concept_count": 18,
+  "concepts": [
+    {
+      "concept": "activity-meditation-retreat",
+      "label": "Meditation retreat",
+      "category": "activity",
+      "visual": "Quiet walking path and a meditation cushion in one setting.",
+      "rationale": "Retreat mixes sitting, walking and dharma teaching; avoid a single assumed posture.",
+      "existing_alternative": "Use accurate current Unicode or accepted artwork until the prospective design has been structurally and visually reviewed.",
+      "event_ids": [
+        197323
+      ],
+      "evidence_by_event": {
+        "197323": [
+          "In-Person and Online: Exploring the Power of Forgiveness: Whether it is the betrayals, disappointments, and abandonments experienced in our interpersonal lives, the injustices and tragedies perpetrated in society, or the various ways we have failed to live up to our own or others expectations of ourselves, forgiveness practice can begin to loosen the ropes binding us to the past. It can allow us to come more fully into our hearts and can be a catalyst that transforms bitterness, anger, and grief into compassion and lovingkindness. In this half-day retreat, we will explore our views on forgiveness, what forgiveness is and isn’t, the challenges we face in embarking on this practice, and how forgiveness practice relates to many of the Buddha’s most important teachings.",
+          "Tags: Workshop, Wellness, Education, Meditation, Spirituality, Virtual, Buddhism, In Person, Participatory, Forgiveness, Mind-Body, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "197323": [
+          "https://www.nyimc.org/event/forgiveness/"
+        ]
+      }
+    },
+    {
+      "category": "activity",
+      "concept": "activity-qigong",
+      "existing_alternative": "Noto meditation is seated and yin-yang symbolic; no qigong custom.",
+      "label": "Qigong",
+      "rationale": "Qigong standing breath/movement practice differs from seated meditation; test distinction from tai chi.",
+      "visual": "Upright figure with bent knees and rounded arms held before the chest.",
+      "event_ids": [
+        197823
+      ],
+      "evidence_by_event": {
+        "197823": [
+          "Sound Bath Sunday: This summer, move a little and unfurl a lot with Sound Bath Sundays — a blissful fusion of QiGong and sound healing in the tranquil Duye Moves’ house. Every third Sunday at 12pm, join for an afternoon where gentle movement meets immersive sonic therapy, designed to dissolve stress, soften stored tension, and guide the mind into deep stillness.",
+          "Tags: Community, Wellness, Meditation, Mindfulness, Sound Bath, Qigong, Open Practice, Participatory, Mind-Body, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "197823": [
+          "https://www.govisland.com/things-to-do/events/sound-bath-sunday"
+        ]
+      }
+    },
+    {
+      "concept": "format-artist-conversation",
+      "label": "Artist conversation",
+      "category": "format",
+      "visual": "Artwork beside two speech bubbles.",
+      "rationale": "Conversation about visual art and process differs from author-book discussion or a studio-access tour.",
+      "existing_alternative": "Keep accurate Unicode or accepted artwork until a distinct, grounded and reviewed icon is available.",
+      "event_ids": [
+        197319
+      ],
+      "evidence_by_event": {
+        "197319": [
+          "PHA Artist Salon: Jean Shin: PHA Advocates members and above ($1,500+) are invited to an intimate salon-style reception with artist Jean Shin and PHA Printshop Director Luther Davis. Hosted in the PHA Printshop, the evening will feature an in-depth conversation about their creative process and collaboration on Tidal Reflections , the inaugural PHA Benefit Collector Edition.",
+          "Tags: Community, Art, Education, Gathering, Talk, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "197319": [
+          "https://powerhousearts.org/event/pha-artist-salon-jean-shin"
+        ]
+      }
+    },
+    {
+      "concept": "format-demo-sharing",
+      "label": "Music demo sharing",
+      "category": "format",
+      "visual": "Recorded demo track shared with a peer discussion bubble.",
+      "rationale": "Original-music networking with a chance to play demos differs from a structured listening circle.",
+      "existing_alternative": "Keep accurate Unicode or accepted artwork until a distinct, grounded and reviewed icon is available.",
+      "event_ids": [
+        197483
+      ],
+      "evidence_by_event": {
+        "197483": [
+          "Jesse & Friends: Mix and Mingle: Want to meet the Finneas to your Billie? Come to the Jesse & Friends Mix & Mingle- a meetup for songwriters and producers. When you arrive, place your name in the banger bucket for a chance to play your demo!",
+          "Tags: Community, Music, Party, Networking, Nightlife, Songwriting, Songwriters, Producers, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "197483": [
+          "https://dice.fm/event/6a7fab09d7ee9c0001c4f974",
+          "https://dice.fm/event/ryrkpr-jesse-friends-mix-and-mingle-14th-sep-sleepwalk-new-york-city-tickets",
+          "https://dice.fm/event/xeya5m-jesse-friends-mix-and-mingle-17th-aug-sleepwalk-new-york-city-tickets"
+        ]
+      }
+    },
+    {
+      "concept": "format-innovation-summit",
+      "label": "Technology summit",
+      "category": "format",
+      "visual": "Small stage and several connected idea cards.",
+      "rationale": "A multi-session innovation summit differs from an AI coding workshop.",
+      "existing_alternative": "Keep accurate Unicode or accepted artwork until a distinct, grounded and reviewed icon is available.",
+      "event_ids": [
+        197539
+      ],
+      "evidence_by_event": {
+        "197539": [
+          "Horizons New York: AI + Digital Innovation: A one-day summit in New York City for leaders at the edge of innovation.",
+          "Tags: New Jersey, Science, Neighborhood, Education, Technology, Summit, Artificial Intelligence, Gathering, Talk, Digital Innovation, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "197539": [
+          "https://brainstation.io/horizons/new-york"
+        ]
+      }
+    },
+    {
+      "concept": "format-midnight-cinema",
+      "label": "Midnight cinema",
+      "category": "format",
+      "visual": "Cinema screen beside a small moon.",
+      "rationale": "Late-night screening is a specific format, not evidence the film or venue is outdoors.",
+      "existing_alternative": "Keep accurate Unicode or accepted artwork until a distinct, grounded and reviewed icon is available.",
+      "event_ids": [
+        197587
+      ],
+      "evidence_by_event": {
+        "197587": [
+          "It Ends: Er franchise.",
+          "Tags: Film, Screening, Thriller, Horror, Midnight Screening, Drama / Film, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "197587": [
+          "https://nitehawkcinema.com/prospectpark/movies/it-ends/"
+        ]
+      }
+    },
+    {
+      "category": "format",
+      "concept": "format-sound-bath",
+      "existing_alternative": "Noto meditation/headphones separately convey stillness/audio but not sound-bath format; singing bowls not explicitly established.",
+      "label": "Sound bath",
+      "rationale": "Sound-led relaxation is a defining component distinct from yoga movement; no particular instrument assumed.",
+      "visual": "A relaxed closed-eye head between two broad concentric sound waves.",
+      "event_ids": [
+        197823
+      ],
+      "evidence_by_event": {
+        "197823": [
+          "Sound Bath Sunday: This summer, move a little and unfurl a lot with Sound Bath Sundays — a blissful fusion of QiGong and sound healing in the tranquil Duye Moves’ house. Every third Sunday at 12pm, join for an afternoon where gentle movement meets immersive sonic therapy, designed to dissolve stress, soften stored tension, and guide the mind into deep stillness.",
+          "Tags: Community, Wellness, Meditation, Mindfulness, Sound Bath, Qigong, Open Practice, Participatory, Mind-Body, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "197823": [
+          "https://www.govisland.com/things-to-do/events/sound-bath-sunday"
+        ]
+      }
+    },
+    {
+      "concept": "format-whiskey-flight",
+      "label": "Whiskey flight tasting",
+      "category": "format",
+      "visual": "Several small whiskey glasses on a tasting board.",
+      "rationale": "A comparative whiskey selection is narrower than general spirits; confirm actual tasting-flight format.",
+      "existing_alternative": "Keep accurate Unicode or accepted artwork until a distinct, grounded and reviewed icon is available.",
+      "event_ids": [
+        197345
+      ],
+      "evidence_by_event": {
+        "197345": [
+          "Fine & Rare Tour: Kings makes great entry-level and every day whiskeys alongside some of the most coveted bottles in whiskey. Led by Bourbon Steward and senior tour guide Kelci Koonce, this class is an exploration of allocated, distillery exclusive, and single barrel offerings with a high-level tour of the distillery.",
+          "Tags: Community, Education, Whiskey, Whiskey Tasting, Adults Only, Tasting, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "197345": [
+          "https://fareharbor.com/embeds/book/kingscountydistillery/items/672806/?full-items=yes&flow=470202"
+        ]
+      }
+    },
+    {
+      "concept": "genre-coladera",
+      "label": "Coladera",
+      "category": "genre",
+      "visual": "Rhythmic dance-song motif grounded in Cape Verdean music research.",
+      "rationale": "Program explicitly names coladeras, without a guaranteed instrument lineup.",
+      "existing_alternative": "Keep accurate Unicode or accepted artwork until a distinct, grounded and reviewed icon is available.",
+      "event_ids": [
+        197527
+      ],
+      "evidence_by_event": {
+        "197527": [
+          "Lucibela: Lucibela, a talented singer from Cape Verde, captivates audiences with her rich and expressive vocal style. Part of the Women's Voices Series, she performs traditional Cape Verdean music including lively coladeras and bittersweet mornas. WMI presented Lucibela's 2019 NYC debut, and we are thrilled to welcome her back.",
+          "Tags: Music, World Music, Concert, Live Music, Womens Voices, Format, Performance, Cape Verde"
+        ]
+      },
+      "source_urls_by_event": {
+        "197527": [
+          "https://publictheater.org/performances-jp/2026/l/lucibela-presented-in-partnership-with-wmi/",
+          "https://www.afropop.org/events",
+          "https://www.worldmusicinstitute.org/lucibela-at-joes-pub/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-cosmic-country",
+      "label": "Cosmic country",
+      "category": "genre",
+      "visual": "Country rhythm motif with a small orbit-shaped melodic line.",
+      "rationale": "Named cosmic-country blend is distinct from literal astronomy, but genre recognition needs study.",
+      "existing_alternative": "Use accurate current Unicode or accepted artwork until the prospective design has been structurally and visually reviewed.",
+      "event_ids": [
+        197331
+      ],
+      "evidence_by_event": {
+        "197331": [
+          "Daniel Donato’s Cosmic Country: Daniel Donato presents Cosmic Country, an organic rock band aesthetic with plenty of roadhouse twang that speaks to deep American music heritage.",
+          "Tags: Music, Rock, Concert, Country, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "197331": [
+          "https://www.landmarkonmainstreet.org/event/daniel-donato-cosmic-country/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-death-metal",
+      "label": "Death metal",
+      "category": "genre",
+      "visual": "A broad skull silhouette integrated with one jagged musical-note stem and a short dense waveform.",
+      "rationale": "Death metal is explicitly named; skull-plus-sound direction needs testing to distinguish from horror imagery and other metal styles.",
+      "existing_alternative": "Sign of horns covers metal broadly; skull alone loses the musical genre.",
+      "event_ids": [
+        197403
+      ],
+      "evidence_by_event": {
+        "197403": [
+          "Back From the Dead Fest 6: Back From the Dead 6 We are back In Brooklyn at The Meadows for a 6th year of underground brutality!!! This years headliner is Escuela Grind bringing a punch to the top of the bill with NYDM heavyweights Immortal Suffering as direct support. Two stages again this year of the tri state areas most brutal underground Death Metal and hardcore.",
+          "Tags: Community, Music, Rock, Festival, Concert, Nightlife, Heavy Metal, Hardcore, Metal, Death Metal, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "197403": [
+          "https://brooklynmonarch.kydlabs.com/e/EV02279660-2967-42af-b446-29dd0e0ef47f"
+        ]
+      }
+    },
+    {
+      "concept": "genre-doom-sludge",
+      "label": "Doom and sludge metal",
+      "category": "genre",
+      "visual": "Low descending riff shape with a slow heavy rhythmic beat.",
+      "rationale": "The program explicitly names slow heavy subgenres; artwork needs recognition research.",
+      "existing_alternative": "Keep accurate Unicode or accepted artwork until a distinct, grounded and reviewed icon is available.",
+      "event_ids": [
+        197406
+      ],
+      "evidence_by_event": {
+        "197406": [
+          "...In the Key of Doom: Gav's Heavily Curated presents two evenings of finely tailored doom, sludge, stoner, heavy psych and desert rock. More than just an amazing lineup, \"...In the Key of Doom\" was made for the worshippers of the riff!",
+          "Tags: Music, Rock, Concert, Nightlife, Heavy Metal, Doom Metal, Stoner Rock, Sludge, Heavy Psych, Format, Performance, Desert Rock"
+        ]
+      },
+      "source_urls_by_event": {
+        "197406": [
+          "https://brooklynmonarch.kydlabs.com/e/EV0a58d2ba-07a1-4067-8cee-773269ba0ad1"
+        ]
+      }
+    },
+    {
+      "concept": "genre-industrial",
+      "label": "Industrial music",
+      "category": "genre",
+      "visual": "A broad gear integrated with a musical note.",
+      "rationale": "Industrial music is explicitly included in this mixed dark-dance program. The motif is exploratory and requires recognition testing; this does not make it an exclusive icon for the whole mixed night.",
+      "existing_alternative": "Existing music notes/DJ decks do not distinguish genres; avoid treating clothing, ethnicity or an arbitrary instrument as proof.",
+      "event_ids": [
+        197396
+      ],
+      "evidence_by_event": {
+        "197396": [
+          "The Venom in the Mouth of God Tour: COMBICHRIST w/ Support from Ludovico Technique, Dead Animal Assembly Plant (D.A.A.P.), Fellahin Fall. Sounds by Xris sMack!",
+          "Tags: Music, Industrial, Concert, Nightlife, Electronic Music, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "197396": [
+          "https://brooklynmonarch.kydlabs.com/e/EV19861fe4-18b6-4207-bd2f-1acf7ea18e32"
+        ]
+      }
+    },
+    {
+      "concept": "genre-metalcore",
+      "label": "Metalcore and screamo",
+      "category": "genre",
+      "visual": "Contrasting vocal/riff marks suggesting harsh and melodic sections.",
+      "rationale": "Explicit festival subgenres are promising but need a readable non-stereotyped visual.",
+      "existing_alternative": "Keep accurate Unicode or accepted artwork until a distinct, grounded and reviewed icon is available.",
+      "event_ids": [
+        197409
+      ],
+      "evidence_by_event": {
+        "197409": [
+          "Collective Effort Fest 2026: Collective Effort Fest 2026 - a celebration of the best in screamo, metalcore, grind, mathcore, and doom! Car Bomb, On The Might of Princes, Morning Again, Foxtails, Bandit, Ostraca, Usurp Synapse, Locked In A Vacancy, Massa Nera, .gif from god, Sevencrimsonsuns, Eyelet, Cowardice, mybodywasfoundinahollowtree, Ghola, Thin, starsdontmeananything, Psalm, Humiliate, and Fate Propels The Falling Scythe!",
+          "Tags: Community, Music, Rock, Festival, Metalcore, Grindcore, Screamo, Doom, Mathcore, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "197409": [
+          "https://brooklynmonarch.kydlabs.com/e/EVe4672fda-c067-4b29-90bc-6a6dbf2f504c"
+        ]
+      }
+    },
+    {
+      "concept": "genre-minimalism",
+      "label": "Minimalist concert music",
+      "category": "genre",
+      "visual": "Repeated short musical cells on a compact stave",
+      "rationale": "Reich concert supports a reusable minimalist-music lead; recognition needs evaluation.",
+      "existing_alternative": "Keep the existing Unicode fallback or suitable broader custom icon until distinct artwork is reviewed.",
+      "event_ids": [
+        197526
+      ],
+      "evidence_by_event": {
+        "197526": [
+          "Steve Reich at 90: Bang on a Can, Ensemble Signal, and Carnegie Hall are delighted to celebrate 90 years of Steve Reich with a one-night-only event befitting “the most original musical thinker of our time”, featuring many of the composer’s top collaborators in works that span five decades.",
+          "Tags: Music, Classical Music, Concert, Contemporary Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "197526": [
+          "https://bangonacan.org/events/steve-reich-at-90/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-morna",
+      "label": "Morna",
+      "category": "genre",
+      "visual": "Lyrical sustained melodic phrase grounded in Cape Verdean music research.",
+      "rationale": "Program explicitly names mornas; generic world-music symbols lose the tradition.",
+      "existing_alternative": "Keep accurate Unicode or accepted artwork until a distinct, grounded and reviewed icon is available.",
+      "event_ids": [
+        197527
+      ],
+      "evidence_by_event": {
+        "197527": [
+          "Lucibela: Lucibela, a talented singer from Cape Verde, captivates audiences with her rich and expressive vocal style. Part of the Women's Voices Series, she performs traditional Cape Verdean music including lively coladeras and bittersweet mornas. WMI presented Lucibela's 2019 NYC debut, and we are thrilled to welcome her back.",
+          "Tags: Music, World Music, Concert, Live Music, Womens Voices, Format, Performance, Cape Verde"
+        ]
+      },
+      "source_urls_by_event": {
+        "197527": [
+          "https://publictheater.org/performances-jp/2026/l/lucibela-presented-in-partnership-with-wmi/",
+          "https://www.afropop.org/events",
+          "https://www.worldmusicinstitute.org/lucibela-at-joes-pub/"
+        ]
+      }
+    },
+    {
+      "category": "genre",
+      "concept": "genre-rnb",
+      "existing_alternative": "Noto microphone shows vocals but not genre; avoid assuming saxophone or other instruments.",
+      "label": "R&B",
+      "rationale": "R&B is explicit; exploratory smooth vocal motif is not a proven genre symbol and must be tested.",
+      "visual": "Explore a microphone paired with a single smooth looping sound-wave ribbon.",
+      "event_ids": [
+        197387
+      ],
+      "evidence_by_event": {
+        "197387": [
+          "Brian Mcknight in Concert: Brian McKnight has earned himself a spot in contemporary music history and is one of the most consistent and enduring R&B artists today. In addition to being a singer, songwriter and producer, McKnight is also a multi-instrumentalist who plays nine instruments including piano, guitar, bass, drums, percussions, trombone, tuba, flugelhorn and trumpet. He has released 21 albums to date including 4 consecutive top 10 albums for Motown, with several going 2 and 3 times platinum, and he has sold over 25 million albums worldwide.",
+          "Tags: Music, Concert, R&B, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "197387": [
+          "https://ucpac.org/event/brian-mcknight/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-salsa",
+      "category": "genre",
+      "label": "Salsa music",
+      "visual": "Explore an interlocking syncopated-note motif",
+      "rationale": "Distinguish musical repertoire from participant dancing; no assumed instrument.",
+      "existing_alternative": "Broad fallback does not distinguish this supported facet.",
+      "event_ids": [
+        197386
+      ],
+      "evidence_by_event": {
+        "197386": [
+          "Viaje Tropical – Tony Succar Con Mauricio Mesones: Enjoy a unique experience full of salsa and Latin rhythms with the hits that are taking over YouTube: Viaje Tropical – Tony Succar with Mauricio Mesones.",
+          "Tags: Music, Dance, Concert, Salsa, Latin Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "197386": [
+          "https://ucpac.org/event/viaje-tropical-tony-succar-con-mauricio-mesones/"
+        ]
+      }
+    }
+  ],
+  "limitations": "Counts describe this cohort, not population reach. These are grounded prospective studies, not live assignments. Existing artwork may already suffice; exact equipment and genre recognition require further review."
+}

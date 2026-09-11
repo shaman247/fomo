@@ -1,0 +1,983 @@
+{
+  "date": "2026-09-11",
+  "scope": "Cycle 066: 100 sequential events 220689–220814, no targeted supplements.",
+  "suggestions": 46,
+  "concept_count": 43,
+  "concepts": [
+    {
+      "concept": "format-album-release-concert",
+      "label": "Album-release concert",
+      "category": "format",
+      "visual": "Music-note stage cue paired with a newly opened album sleeve.",
+      "rationale": "Live performance celebrates a new record.",
+      "existing_alternative": "Record alone implies playback; additional format cue may not justify new art.",
+      "event_ids": [
+        220718,
+        220806,
+        220811
+      ],
+      "evidence_by_event": {
+        "220718": [
+          "Bea Miller: Bea Miller presents the MR. PEAKED IN HIGH SCHOOL ALBUM RELEASE SHOWS. Doors open at 6:30 PM and the show starts at 7:30 PM.",
+          "Tags: Music, Concert, Pop Music, Album Release, Format, Performance"
+        ],
+        "220806": [
+          "Sad Pageant Record Release: No description available.",
+          "Tags: Music, Free, Concert, Album Release, Format, Performance"
+        ],
+        "220811": [
+          "Zolephants Record Release: No description available.",
+          "Tags: Music, Free, Concert, Album Release, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220718": [
+          "https://wl.seetickets.us/event/bea-miller/702066?afflky=WhiteEagleHall"
+        ],
+        "220806": [
+          "https://mamatriedbk.com/upcoming-events/sad-pageant"
+        ],
+        "220811": [
+          "https://mamatriedbk.com/upcoming-events/zolephants-record-release"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-jazz-quintet",
+      "category": "format",
+      "label": "Jazz quintet",
+      "visual": "Five music-stand shapes in a shallow arc with one note.",
+      "rationale": "Explicit quintet configuration deserves exploration without assumed instruments.",
+      "existing_alternative": "Five tiny objects may fail at small sizes; generic music remains safer.",
+      "event_ids": [
+        220748,
+        220750
+      ],
+      "evidence_by_event": {
+        "220748": [
+          "Margo's Trio Plus Guests Special Guests: Dezron Douglas and Billy Hart: Margo Staniszewska performs with Bart Hadala and Darryl Yokley, with special guests Dezron Douglas and Billy Hart.",
+          "Tags: Music, Jazz, Concert, Nightlife, Vocal Music, Live Music, Format, Performance"
+        ],
+        "220750": [
+          "Fukushi Tainaka Quintet: Fukushi Tainaka leads a quintet featuring Chihiro Tainaka, Chris Johansen, Marc Devine, and Hide Tanaka.",
+          "Tags: Music, Jazz, Concert, Nightlife, Live Music, Drums, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220748": [
+          "https://resy.com/cities/new-york-ny/venues/five-spot-jazz?seats=2&date=2026-09-11"
+        ],
+        "220750": [
+          "https://resy.com/cities/new-york-ny/venues/five-spot-jazz?seats=2&date=2026-09-13"
+        ]
+      }
+    },
+    {
+      "concept": "dance-bharatanatyam",
+      "label": "Bharatanatyam",
+      "category": "dance-style",
+      "visual": "Referenced grounded dance pose with clear hand and foot contacts.",
+      "rationale": "Primary identifies Bharatanatyam; costume and gesture need specialist visual review.",
+      "existing_alternative": "Use suitable existing catalog artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220735
+      ],
+      "evidence_by_event": {
+        "220735": [
+          "Festival of Lights: Diwali: Pandit Ravi Doobay describes traditions honoring the holy month of Kartika on the Hindu calendar, and Bharatanatyam dancer Sloka Iyengar performs devotional dances.",
+          "Tags: Community, Dance, Free, Community Celebration, Format, Social, Diwali"
+        ]
+      },
+      "source_urls_by_event": {
+        "220735": [
+          "https://www.marineparkalliance.org/event/festival-of-lights-diwali-2/"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-concert-band-chorus",
+      "label": "Concert band and chorus",
+      "category": "format",
+      "visual": "Wind instruments alongside a vocal score.",
+      "rationale": "Mixed concert band and singing ensemble exceeds brass-only scope.",
+      "existing_alternative": "Retain suitable existing catalog art or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220696
+      ],
+      "evidence_by_event": {
+        "220696": [
+          "Free Event: U.S. Army Field Band: The United States Army Field Band is the official touring musical representative of the U.S. Army. The Concert Band and Soldiers’ Chorus present joint concerts featuring programming ranging from orchestral masterworks and operatic arias to Sousa marches, jazz classics, and Broadway musicals.",
+          "Tags: Community, Music, Free, Concert, Concert Band, Military Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220696": [
+          "https://www.mayoarts.org/shows/free-event-us-army-field-band/"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-jazz-bass-quartet",
+      "label": "Bassist-led jazz quartet",
+      "category": "format",
+      "visual": "Bass with three supporting music marks.",
+      "rationale": "Upright versus electric bass and accompaniment must be verified.",
+      "existing_alternative": "Retain suitable existing catalog art or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220787
+      ],
+      "evidence_by_event": {
+        "220787": [
+          "Marcos Varela Quartet: Bassist Marcos Varela has made a name for himself as an in-demand bassist, working with artists like Ingrid Jensen, Billy Hart, Geri Allen, The Mingus Big Band, Antoine Roney, and Nasheet Waits. In 2016, he released his debut album \"San Ygnacio\" on Origin Records to critical acclaim.",
+          "Tags: Music, Jazz, Concert, Quartet, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220787": [
+          "https://www.thedjangonyc.com/events/marcos-varela-8/?selected_date=2026-09-21"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-jazz-drums-quartet",
+      "label": "Drummer-led jazz quartet",
+      "category": "format",
+      "visual": "Drum kit with three supporting instrument marks.",
+      "rationale": "Current quartet roles needed, not prior collaborators.",
+      "existing_alternative": "Retain suitable existing catalog art or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220778
+      ],
+      "evidence_by_event": {
+        "220778": [
+          "Charles Goold Quartet: Charles Goold is one of the city's hardest working jazz drummers of his generation. He graduated from The Juilliard School and has performed with Wynton Marsalis and The Jazz at Lincoln Center Orchestra, Johnny O'Neal, Steve Nelson, Talib Kweli, Ghostface Killah, and Cam’Ron.",
+          "Tags: Music, Jazz, Concert, Live Music, Drums, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220778": [
+          "https://www.thedjangonyc.com/events/charles-goold-11/?selected_date=2026-09-11"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-jazz-drums-trio",
+      "label": "Drummer-led jazz trio",
+      "category": "format",
+      "visual": "Drum kit with two accompanying instrument marks.",
+      "rationale": "Cannot assume piano and bass without lineup.",
+      "existing_alternative": "Retain suitable existing catalog art or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220749
+      ],
+      "evidence_by_event": {
+        "220749": [
+          "Juan Chiavassa Trio: Juan Chiavassa performs with Ojiik and Jonathan Chapman.",
+          "Tags: Music, Jazz, Concert, Nightlife, Live Music, Drums, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220749": [
+          "https://resy.com/cities/new-york-ny/venues/five-spot-jazz?seats=2&date=2026-09-12"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-jazz-guitar-piano-quartet",
+      "label": "Guitar and piano jazz quartet",
+      "category": "format",
+      "visual": "Guitar, piano, bass and drum kit grouped together.",
+      "rationale": "Four current instrumental roles required.",
+      "existing_alternative": "Retain suitable existing catalog art or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220780
+      ],
+      "evidence_by_event": {
+        "220780": [
+          "Tommy Campbell Quartet: Famed drummer Tommy Campbell has worked with everyone from Dizzy Gillespie, John McLaughlin and Sonny Rollins, to Kevin Eubanks, the Mingus Big Band, Dynasty & Orchestra, and his own acclaimed groups. The quartet lineup includes Tommy Campbell on drums, Paul Bollenback on guitar, Jon Davis on piano, and Gianluca Renzi on bass.",
+          "Tags: Music, Jazz, Concert, Quartet, Live Music, Drums, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220780": [
+          "https://www.thedjangonyc.com/events/tommy-campbell-40/?selected_date=2026-09-12"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-jazz-guitar-trio",
+      "label": "Jazz guitar trio",
+      "category": "format",
+      "visual": "A guitar body beside a compact drum and bass-neck cue.",
+      "rationale": "Confirmed guitar/bass/drums trio differs from piano trio; compact ensemble motif needs recognition testing.",
+      "existing_alternative": "Piano-trio art misstates lead instrument, while guitar alone omits format.",
+      "event_ids": [
+        220785
+      ],
+      "evidence_by_event": {
+        "220785": [
+          "Greg Skaff Trio: From the soulful to the swinging, Greg Skaff has earned a reputation as one of the premier guitarists in modern jazz. The lineup features Greg Skaff on guitar, Ugonna Okegwo on bass, and Carmen Intorre, Jr. on drums.",
+          "Tags: Music, Jazz, Concert, Guitar, Trio, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220785": [
+          "https://www.thedjangonyc.com/events/greg-skaff-6/?selected_date=2026-09-20"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-jazz-quartet",
+      "category": "format",
+      "label": "Jazz quartet",
+      "visual": "Four music stands with four bold note marks",
+      "rationale": "Four-piece jazz ensemble differs from string quartet; avoid assumed instruments.",
+      "existing_alternative": "Broad fallback does not distinguish this supported facet.",
+      "event_ids": [
+        220751
+      ],
+      "evidence_by_event": {
+        "220751": [
+          "Steve Millhouse Quartet — The Vinyl Session Album Release Concert: Steve Millhouse presents The Vinyl Session album release concert with Tim Armacost, Allen Farnham, and Adam Nussbaum.",
+          "Tags: Music, Jazz, Concert, Nightlife, Album Release, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220751": [
+          "https://resy.com/cities/new-york-ny/venues/five-spot-jazz?seats=2&date=2026-09-15"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-jazz-sax-quartet",
+      "label": "Saxophone jazz quartet",
+      "category": "format",
+      "visual": "Featured saxophone with three supporting music marks.",
+      "rationale": "Exact accompanying instruments need confirmation before illustration.",
+      "existing_alternative": "Retain suitable existing catalog art or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220792
+      ],
+      "evidence_by_event": {
+        "220792": [
+          "Todd Herbert Quartet: Originally from Evanston, Illinois, saxophonist Todd Herbert is now based in New York City. Over his long, acclaimed career, Herbert has performed as a member of the Freddie Hubbard Quintet, Jimmy Cobb's Legacy Band, the Charles Earland Quartet, and many others. He has recorded extensively and traveled internationally with his own band, the Todd Herbert Quartet.",
+          "Tags: Music, Jazz, Concert, Saxophone, Quartet, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220792": [
+          "https://www.thedjangonyc.com/events/todd-herbert-13/?selected_date=2026-09-24"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-jazz-trumpet-quintet",
+      "label": "Trumpet jazz quintet",
+      "category": "format",
+      "visual": "Trumpet ahead of four music marks.",
+      "rationale": "Other players and instruments need current source evidence.",
+      "existing_alternative": "Retain suitable existing catalog art or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220788
+      ],
+      "evidence_by_event": {
+        "220788": [
+          "Joey Curreri Quintet: Joey Curreri is a jazz trumpeter and composer from Los Angeles, California currently based in New York City. Curreri’s unique artistic outlook stems from the foundations in the trumpet tradition learned from his mentors, jazz luminaries Brian Lynch and Ingrid Jensen, whose creative inspiration has led him to compose music that looks to go beyond the trumpet, generating excitement, harmony, and balance within the orchestration of the small ensemble.",
+          "Tags: Music, Jazz, Concert, Trumpet, Quintet, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220788": [
+          "https://www.thedjangonyc.com/events/joey-curreri-2/?selected_date=2026-09-21"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-latin-jazz-septet",
+      "label": "Latin jazz septet",
+      "category": "format",
+      "visual": "Seven music stands with a Latin jazz score.",
+      "rationale": "Seven-player group; not big band or dance lesson.",
+      "existing_alternative": "Retain suitable existing catalog art or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220783
+      ],
+      "evidence_by_event": {
+        "220783": [
+          "Los Dukes featuring Gabriela Anders: Los Dukes is a new 7-piece band arranged and directed by Gabriela Anders, featuring songs from the Duke Ellington’s catalog done in wildly distinctive Latin American styles: baion, merengue, cha-cha, bolero, reggae, mambo and more. A Latina’s tribute to the music of Duke Ellington, Los Dukes pays loving tribute to the elegant GENIUS of Duke Ellington and includes some of the best Latin Jazz players on the New York scene.",
+          "Tags: Music, Jazz, Concert, Latin Music, Latin Jazz, Duke Ellington, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220783": [
+          "https://www.thedjangonyc.com/events/los-dukes/?selected_date=2026-09-15"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-organ-trio",
+      "label": "Organ trio",
+      "category": "format",
+      "visual": "Compact dual keyboard organ console with three small music marks",
+      "rationale": "The program explicitly calls itself Organ After Hours and identifies an organ trio. Organ is a defining ensemble sound but the billed leader plays saxophone, so this supports an ensemble-format candidate rather than exclusive organ solo assignment.",
+      "existing_alternative": "Keyboard or saxophone emoji",
+      "event_ids": [
+        220790
+      ],
+      "evidence_by_event": {
+        "220790": [
+          "Philippe Lemm Organ Trio: The Philippe Lemm Organ Trio hits the Django stage for Alternative Wednesday programming. The trio's repertoire draws heavily from re-imaginations of jazz standards, ranging from traditional jazz to progressive rock/classical-influenced music.",
+          "Tags: Music, Jazz, Concert, Live Music, Format, Performance, Alternative Wednesday"
+        ]
+      },
+      "source_urls_by_event": {
+        "220790": [
+          "https://www.thedjangonyc.com/events/philippe-lemm-9/?selected_date=2026-09-23"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-sax-guitar-organ-percussion-drums",
+      "label": "Sax, guitar, organ, percussion and drums",
+      "category": "format",
+      "visual": "Five distinct instrumental silhouettes.",
+      "rationale": "Current five-player lineup; organ model not implied.",
+      "existing_alternative": "Retain suitable existing catalog art or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220779
+      ],
+      "evidence_by_event": {
+        "220779": [
+          "Freddy DeBoe Band: Known for his soulful blues and rock & roll saxophone sound, Freddy DeBoe performs locally in NYC as a bandleader. The lineup includes Al Street on guitar, Ben Stivers on organ, Moses Patrou on percussion, and Evan Pazner on drums, with feel-good music made for good times.",
+          "Tags: Music, Rock, Jazz, Concert, Blues, Rock and Roll, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220779": [
+          "https://www.thedjangonyc.com/events/freddy-deboe-band-25/?selected_date=2026-09-11"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-vocal-duo-band",
+      "label": "Vocal duo with band",
+      "category": "format",
+      "visual": "Two microphones in front of supporting music stands.",
+      "rationale": "Two featured vocalists may have accompanying musicians.",
+      "existing_alternative": "Retain suitable existing catalog art or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220694
+      ],
+      "evidence_by_event": {
+        "220694": [
+          "The Righteous Brothers: Lovin’ Feelin’ Farewell Tour: stirring romantic-era anthems with beautiful high-definition cinematography and Rick’s insights into European history.",
+          "Tags: Music, History, Education, Concert, Classic Hits, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220694": [
+          "https://www.mayoarts.org/shows/the-righteous-brothers/"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-vocal-harmony-group",
+      "label": "Vocal harmony group",
+      "category": "format",
+      "visual": "Several coordinated singing phrases.",
+      "rationale": "Actual vocalist count needs confirmation.",
+      "existing_alternative": "Retain suitable existing catalog art or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220754
+      ],
+      "evidence_by_event": {
+        "220754": [
+          "The Womack Sisters: Live performance by The Womack Sisters.",
+          "Tags: Music, Concert, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220754": [
+          "https://www.bowerypresents.com/events/detail?event_id=1542357"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-vocal-piano-trio",
+      "label": "Vocal and piano trio",
+      "category": "format",
+      "visual": "Microphone and keyboard with two supporting instruments.",
+      "rationale": "Other current instrumental roles require confirmation.",
+      "existing_alternative": "Retain suitable existing catalog art or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220791
+      ],
+      "evidence_by_event": {
+        "220791": [
+          "Champian Fulton Trio: With 12 albums to her credit, singer/pianist Champian Fulton is considered one of the most gifted pure jazz musicians of her generation. Among her multiple awards she was recently named Pianist and Vocalist of 2019 by Hot House Magazine Readers Poll.",
+          "Tags: Music, Jazz, Concert, Piano, Vocal Music, Vocalist, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220791": [
+          "https://www.thedjangonyc.com/events/champian-fulton-20/?selected_date=2026-09-24"
+        ]
+      }
+    },
+    {
+      "concept": "format-ballet-repertory",
+      "label": "Ballet repertory",
+      "category": "format",
+      "visual": "Grounded ballet pose with several program panels.",
+      "rationale": "Multiple ballet works, not generic contemporary dance.",
+      "existing_alternative": "Retain suitable existing catalog art or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220697
+      ],
+      "evidence_by_event": {
+        "220697": [
+          "Guest Attraction: New Jersey Ballet presents Red, White and Blue: Celebrate America’s 250th Anniversary with New Jersey Ballet in a powerful evening of dance that captures the spirit, energy, innovation and resilience of the nation through the language of ballet. The program brings together iconic masterworks and bold contemporary voices, including works by Ulysses Dove, George Balanchine and Penny Saunders.",
+          "Tags: Dance, Ballet, Education, Contemporary Dance, American History, New Jersey Ballet, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220697": [
+          "https://www.mayoarts.org/shows/guest-attraction-new-jersey-ballet-presents-red-white-and-blue/"
+        ]
+      }
+    },
+    {
+      "concept": "format-bilingual-family-musical",
+      "label": "Bilingual family musical",
+      "category": "format",
+      "visual": "Theater mask with two speech bubbles and a note.",
+      "rationale": "Live musical in two languages, not language instruction.",
+      "existing_alternative": "Retain suitable existing catalog art or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220732
+      ],
+      "evidence_by_event": {
+        "220732": [
+          "Ricitos and the Three Bears: Teatro SEA presents a bilingual musical adaptation of the Goldilocks story, featuring original songs and themes of compassion, forgiveness, and friendship.",
+          "Tags: Community, Music, Theater, Family, Education, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220732": [
+          "https://www.marineparkalliance.org/event/ricitos-and-the-three-bears/"
+        ]
+      }
+    },
+    {
+      "concept": "format-comedy-showcase",
+      "label": "Comedy showcase",
+      "category": "format",
+      "visual": "Stage microphone beside several performer cards.",
+      "rationale": "Mixed comic bill without stand-up-only claim.",
+      "existing_alternative": "Retain suitable existing catalog art or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220717
+      ],
+      "evidence_by_event": {
+        "220717": [
+          "Chris Gethard: Chris Gethard performs with David Drake and Dina Hashem. Doors open at 7:00 PM and the show starts at 8:00 PM.",
+          "Tags: Comedy, Nightlife, Entertainment, Comedy Show, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220717": [
+          "https://wl.seetickets.us/event/chris-gethard/700880?afflky=WhiteEagleHall"
+        ]
+      }
+    },
+    {
+      "concept": "format-composer-reading-workshop",
+      "label": "Composer reading workshop",
+      "category": "format",
+      "visual": "Orchestral score with revision marks on a stand.",
+      "rationale": "Professional reading and feedback; audience participation requires evidence.",
+      "existing_alternative": "Retain suitable existing catalog art or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220770
+      ],
+      "evidence_by_event": {
+        "220770": [
+          "CoLABoratory Workshop - Malachi Brown: Featured artists and works include Malachi Brown, From Birth.",
+          "Tags: Music, Workshop, Classical Music, Education, Contemporary Music, Composer, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "220770": [
+          "https://www.americancomposers.org/performances-events/colaboratory-workshop---malachi-brown"
+        ]
+      }
+    },
+    {
+      "concept": "format-eighties-party",
+      "label": "Eighties dance party",
+      "category": "format",
+      "visual": "Dance floor with original period-inspired geometric lights.",
+      "rationale": "Decade-themed club party; no promised cassette playback or DJ.",
+      "existing_alternative": "Retain suitable existing catalog art or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220752
+      ],
+      "evidence_by_event": {
+        "220752": [
+          "80S Night with $Tarface & Tyga: An 80s-themed night with $TARFACE and TYGA.",
+          "Tags: Music, Throwback, Club Night, Eighties Night, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "220752": [
+          "https://www.bowerypresents.com/events/detail?event_id=1548451"
+        ]
+      }
+    },
+    {
+      "concept": "format-folklore-puppetry",
+      "label": "Folklore puppetry",
+      "category": "format",
+      "visual": "Storybook and researched puppet silhouette.",
+      "rationale": "Specific manipulation technique must be verified.",
+      "existing_alternative": "Retain suitable existing catalog art or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220730
+      ],
+      "evidence_by_event": {
+        "220730": [
+          "Just for Kids: Owl Loves Angeline: Puppeteer Emmanuel Elpenord performs Owl Loves Angeline, drawing on Haitian folklore and storytelling traditions to explore themes of love, longing, and connection.",
+          "Tags: Theater, Free, Family, Puppetry, Storytelling / Theater, Format, Theater Show, Performance, Haitian Folklore"
+        ]
+      },
+      "source_urls_by_event": {
+        "220730": [
+          "https://www.marineparkalliance.org/event/just-for-kids-owl-loves-angeline/"
+        ]
+      }
+    },
+    {
+      "concept": "format-historic-book-exhibition",
+      "label": "Historic book exhibition",
+      "category": "format",
+      "visual": "Open early printed volume on an exhibition cradle.",
+      "rationale": "Viewing historical books, not bookmaking.",
+      "existing_alternative": "Retain suitable existing catalog art or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220710
+      ],
+      "evidence_by_event": {
+        "220710": [
+          "Exhibition | Graphic Devotions: Late Medieval European Blockbooks: No description available.",
+          "Tags: History, Art, Literature, Education, Manuscripts, Exhibition, Format, Browsable"
+        ]
+      },
+      "source_urls_by_event": {
+        "220710": [
+          "https://www.themorgan.org/exhibitions/blockbooks"
+        ]
+      }
+    },
+    {
+      "concept": "format-literary-family-musical",
+      "label": "Literary family musical",
+      "category": "format",
+      "visual": "Open storybook with theater mask and musical note.",
+      "rationale": "Staged musical adaptation, not ordinary storytime.",
+      "existing_alternative": "Retain suitable existing catalog art or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220721
+      ],
+      "evidence_by_event": {
+        "220721": [
+          "Chicka Chicka Boom Boom: The Musical: Chicka Chicka Boom Boom: The Musical bursts onto the stage in a bright, musical, and joy-filled celebration of letters, words, and imagination that will captivate kids and adults alike. With infectious rhythms, dazzling puppets, lively dancing, and playful audience interaction, this high-energy production transforms the beloved story into a whirlwind of color, creativity, and fun.",
+          "Tags: Theater, Kids, Family, Puppets, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220721": [
+          "https://www.bergenpac.org/events/detail/chicka-chicka-boom-boom"
+        ]
+      }
+    },
+    {
+      "concept": "format-literary-page-stage",
+      "label": "Page and stage program",
+      "category": "format",
+      "visual": "Book beside a theater mask.",
+      "rationale": "Literary performance format needs source confirmation.",
+      "existing_alternative": "Retain suitable existing catalog art or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220705
+      ],
+      "evidence_by_event": {
+        "220705": [
+          "Page and Stage: Robert Louis Stevenson’s “The Strange Case of Dr. Jekyll and Mr. Hyde”: No description available.",
+          "Tags: Theater, Literature, Education, Format, Theater Show, Performance, Robert Louis Stevenson"
+        ]
+      },
+      "source_urls_by_event": {
+        "220705": [
+          "https://www.themorgan.org/programs/page-and-stage-robert-louis-stevensons-strange-case-dr-jekyll-and-mr-hyde"
+        ]
+      }
+    },
+    {
+      "concept": "format-local-history-talk",
+      "label": "Local-history talk",
+      "category": "format",
+      "visual": "Archival city map beside speaking cue",
+      "rationale": "Supported by current full event context; prospective study needs primary construction and small-size recognition review before any assignment.",
+      "existing_alternative": "Existing broad custom or Unicode fallback remains appropriate; narrower imagery must improve recognition without invented format, equipment or audience promises.",
+      "event_ids": [
+        220736
+      ],
+      "evidence_by_event": {
+        "220736": [
+          "The Lott House: Learn about the Lott House, Marine Park’s newest Living Neighborhood Museum, and its plans for interpreting the Lott family and Brooklyn’s history.",
+          "Tags: Community, Museum, History, Free, Education, Gathering, Talk, Cultural Venue, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "220736": [
+          "https://www.marineparkalliance.org/event/the-lott-house/"
+        ]
+      }
+    },
+    {
+      "concept": "format-medical-history-talk",
+      "label": "Format medical history talk",
+      "category": "format",
+      "visual": "Historic manuscript and academic speech bubble",
+      "rationale": "History of medicine, not treatment.",
+      "existing_alternative": "Existing broader icon or Unicode may suffice; preserve prospective study until semantic and visual validation.",
+      "event_ids": [
+        220719
+      ],
+      "evidence_by_event": {
+        "220719": [
+          "Revolutionary Remedies: The Women Who Healed a Nation: Explore the overlooked medical work of women during the American Revolution, including nurses, caregivers, Indigenous healers, and enslaved African women. The program includes a hands-on activity.",
+          "Tags: Community, History, Workshop, Education, Outdoor, Gathering, Talk, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "220719": [
+          "https://parks.ny.gov/visit/events/revolutionary-remedies-women-who-healed-nation"
+        ]
+      }
+    },
+    {
+      "concept": "format-mediumship-stage-show",
+      "label": "Mediumship stage show",
+      "category": "format",
+      "visual": "Stage microphone with a symbolic conversation motif.",
+      "rationale": "Entertainment claims should not imply demonstrated contact or guaranteed reading.",
+      "existing_alternative": "Retain suitable existing catalog art or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220723
+      ],
+      "evidence_by_event": {
+        "220723": [
+          "Theresa Caputo: For more than a decade, Theresa Caputo—known worldwide as the Long Island Medium—has touched the lives of millions of fans, comforting supporters when they need it most. Through personal life stories, candid humor, and intimate details about her gift to communicate with those who have passed on, she delivers healing messages to her audience.",
+          "Tags: Community, Theater, Mediumship, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220723": [
+          "https://www.bergenpac.org/events/detail/theresacaputo"
+        ]
+      }
+    },
+    {
+      "concept": "format-museum-college-night",
+      "label": "Museum college night",
+      "category": "format",
+      "visual": "Museum artwork beside a student access card.",
+      "rationale": "Student-focused museum evening, not admissions fair.",
+      "existing_alternative": "Retain suitable existing catalog art or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220701
+      ],
+      "evidence_by_event": {
+        "220701": [
+          "College Night | Behind the Scenes: No description available.",
+          "Tags: Community, Museum, Art, Education, Open House, College Students, Cultural Venue, Format, Browsable"
+        ]
+      },
+      "source_urls_by_event": {
+        "220701": [
+          "https://www.themorgan.org/programs/college-night-behind-scenes"
+        ]
+      }
+    },
+    {
+      "concept": "format-museum-educator-evening",
+      "label": "Museum educator evening",
+      "category": "format",
+      "visual": "Framed artwork beside a teacher discussion card.",
+      "rationale": "Teacher-focused interpretation, not public artmaking assumed.",
+      "existing_alternative": "Retain suitable existing catalog art or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220700
+      ],
+      "evidence_by_event": {
+        "220700": [
+          "Tarot! Educator Evening: No description available.",
+          "Tags: Art, Workshop, Wellness, Education, Spirituality, Tarot, Teacher Workshop, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "220700": [
+          "https://www.themorgan.org/programs/tarot-educator-evening"
+        ]
+      }
+    },
+    {
+      "concept": "format-music-history-exhibition",
+      "label": "Music-history exhibition",
+      "category": "format",
+      "visual": "Historical score and record in an exhibition case.",
+      "rationale": "Museum viewing, not concert or discussion.",
+      "existing_alternative": "Retain suitable existing catalog art or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220711
+      ],
+      "evidence_by_event": {
+        "220711": [
+          "Exhibition | Ragtime: Cakewalk in Pianoland: No description available.",
+          "Tags: Music, History, Art, Jazz, Education, Ragtime, Exhibition, Format, Browsable"
+        ]
+      },
+      "source_urls_by_event": {
+        "220711": [
+          "https://www.themorgan.org/exhibitions/ragtime",
+          "https://www.themorgan.org/programs/curator-roundtable-ragtime-cakewalk-pianoland"
+        ]
+      }
+    },
+    {
+      "concept": "format-orchestral-premiere",
+      "label": "Orchestral premiere",
+      "category": "format",
+      "visual": "New score on an orchestral conductor stand.",
+      "rationale": "Explicit premiere program, not composer workshop automatically.",
+      "existing_alternative": "Retain suitable existing catalog art or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220769
+      ],
+      "evidence_by_event": {
+        "220769": [
+          "Hello, America: We Gather Here: American Composers Orchestra presents a program featuring works by Daniel Bernard Roumain, Oswald Huỳnh, Alexander Timofeev, Mali Irene, Alex Weiser, and Thea Musgrave, including several world premieres.",
+          "Tags: Music, Classical Music, Orchestra, Concert, American Composers, World Premiere, Orchestral Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220769": [
+          "https://www.americancomposers.org/performances-events/hello-america-we-gather-here"
+        ]
+      }
+    },
+    {
+      "concept": "format-rock-tribute-band",
+      "label": "Rock tribute band",
+      "category": "format",
+      "visual": "Rock stage emblem beside a tribute program.",
+      "rationale": "Tribute act, not original artist attendance.",
+      "existing_alternative": "Retain suitable existing catalog art or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220690
+      ],
+      "evidence_by_event": {
+        "220690": [
+          "Zoso: The Ultimate Led Zeppelin Experience: The Mavericks & Friends feature a decade-spanning version of the band, along with guest singers Emily West and James Otto.",
+          "Tags: Music, Rock, Concert, Format, Performance, Guest Singers"
+        ]
+      },
+      "source_urls_by_event": {
+        "220690": [
+          "https://www.mayoarts.org/shows/zoso/"
+        ]
+      }
+    },
+    {
+      "concept": "format-solo-singer-songwriter",
+      "label": "Solo singer-songwriter",
+      "category": "format",
+      "visual": "Single microphone beside a song manuscript.",
+      "rationale": "Solo set explicit; no guitar type assumed.",
+      "existing_alternative": "Retain suitable existing catalog art or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220758
+      ],
+      "evidence_by_event": {
+        "220758": [
+          "Jeff Tweedy (Solo) with special guest Case Oats: Jeff Tweedy performs solo with special guest Case Oats.",
+          "Tags: Music, Concert, Solo Performance, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220758": [
+          "https://www.bowerypresents.com/events/detail?event_id=1496408"
+        ]
+      }
+    },
+    {
+      "concept": "format-symphonic-travelogue",
+      "label": "Symphonic travelogue",
+      "category": "format",
+      "visual": "Orchestral score beneath a projected landscape.",
+      "rationale": "Narrated travel images and live symphony, not complete film score.",
+      "existing_alternative": "Retain suitable existing catalog art or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220693
+      ],
+      "evidence_by_event": {
+        "220693": [
+          "Guest Attraction: New Jersey Symphony: Rick Steves’ Europe: A Symphonic Journey: tour, he returns to the stage with a body of work that continues to speak to resilience, beauty, and shared humanity.",
+          "Tags: Music, History, Classical Music, Education, Orchestra, Concert, Europe, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220693": [
+          "https://www.mayoarts.org/shows/guest-attraction-new-jersey-symphony-rick-steves/",
+          "https://www.njsymphony.org/events/detail/rick-steves-a-symphonic-journey",
+          "https://www.njsymphony.org/events/detail/rick-steves-europe-a-symphonic-journey"
+        ]
+      }
+    },
+    {
+      "concept": "format-veterans-commemoration",
+      "label": "Veterans commemoration",
+      "category": "format",
+      "visual": "A remembrance wreath and modest service ribbon.",
+      "rationale": "Veterans sunset salute is explicit; avoid national insignia or assuming combat.",
+      "existing_alternative": "Unicode or suitable existing art remains available; prospective study only until source and visual review.",
+      "event_ids": [
+        220737
+      ],
+      "evidence_by_event": {
+        "220737": [
+          "Honoring Veterans: Join Assemblymember Jaime Williams to commemorate women and men from the community who enlisted to protect others.",
+          "Tags: Community, History, Free, Education, Ceremony, Remembrance, Gathering, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "220737": [
+          "https://www.marineparkalliance.org/event/honoring-veterans-2/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-brazilian-jazz",
+      "label": "Brazilian jazz",
+      "category": "genre",
+      "visual": "Syncopated musical phrase beside a jazz score.",
+      "rationale": "Brazilian jazz explicitly stated; no single instrument or national stereotype.",
+      "existing_alternative": "Retain suitable existing catalog art or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220789
+      ],
+      "evidence_by_event": {
+        "220789": [
+          "Helio Alves Trio: Acclaimed Brazilian pianist Helio Alves returns with a tantalizing trio. A native of Sao Paulo, Brazil, Alves combines the rhythmic complexity of modern Brazilian music with the edgy energy of contemporary jazz.",
+          "Tags: Music, World Music, Jazz, Concert, Latin Music, Piano, Contemporary Jazz, Brazilian Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220789": [
+          "https://www.thedjangonyc.com/events/helio-alves-32/?selected_date=2026-09-22"
+        ]
+      }
+    },
+    {
+      "concept": "genre-country-rock",
+      "label": "Country rock",
+      "category": "genre",
+      "visual": "Two joined musical notes with a warm rhythmic accent",
+      "rationale": "Genre explicit but instrument-neutral recognition unproven.",
+      "existing_alternative": "Retain event Unicode until specific art passes recognition and semantic review.",
+      "event_ids": [
+        220689
+      ],
+      "evidence_by_event": {
+        "220689": [
+          "The Mavericks & Friends: The Mavericks & Friends feature a decade-spanning version of the band, along with guest singers Emily West and James Otto. They are returning to the road to perform classics and honor the music left behind by Raul Malo.",
+          "Tags: Music, Rock, Concert, Country Music, Roots Music, Country Rock, Format, Performance, The Mavericks, Guest Singers"
+        ]
+      },
+      "source_urls_by_event": {
+        "220689": [
+          "https://www.mayoarts.org/shows/the-mavericks-and-friends/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-cuban-jazz",
+      "label": "Cuban jazz",
+      "category": "genre",
+      "visual": "Explore clave-like crossed rhythm marks beside one note.",
+      "rationale": "Cuban jazz is explicitly named in the title, description or program tags. This is a prospective genre motif requiring recognition tests; it does not establish a particular instrument or an exclusive assignment for mixed bills.",
+      "existing_alternative": "Existing notes or actual featured instrument remain appropriate; custom genre art is exploratory rather than a proven recognition improvement.",
+      "event_ids": [
+        220784
+      ],
+      "evidence_by_event": {
+        "220784": [
+          "Kali Rodriguez-Peña Quartet: Latin-Grammy nominated Cuban trumpeter and composer Kalí Rodríguez-Peña is one of the leading voices of a young generation of Cuban musicians living in New York City. His sound fuses the traditional motifs of his native Cuba with a passion for jazz classicism influenced by Dizzy Gillespie, Miles Davis and Freddie Hubbard.",
+          "Tags: Music, Jazz, Concert, Latin Music, Trumpet, Cuban Jazz, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220784": [
+          "https://www.thedjangonyc.com/events/kali-rodriguez-10/?selected_date=2026-09-15"
+        ]
+      }
+    },
+    {
+      "concept": "genre-go-go-jazz",
+      "label": "Go-Go and jazz fusion",
+      "category": "genre",
+      "visual": "Percussion pulse intertwined with a jazz phrase.",
+      "rationale": "Requires current musical focus, not formative biography alone.",
+      "existing_alternative": "Retain suitable existing catalog art or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220781
+      ],
+      "evidence_by_event": {
+        "220781": [
+          "The Latona Brothers: Guitarist Andrew Latona grew up outside of Washington, D.C. in the Silver Spring area, steeped in Gospel, Jazz, and Go-Go music. He currently resides in Brooklyn with his brother, Christopher Latona, and they co-lead their own group, The Latona Brothers, paying homage to the experiences that have shaped their musical journeys.",
+          "Tags: Music, Gospel, Jazz, Wellness, Concert, Spirituality, Sacred Music, Live Music, Go Go, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220781": [
+          "https://www.thedjangonyc.com/events/latona-brothers-10/?selected_date=2026-09-09",
+          "https://www.thedjangonyc.com/events/latona-brothers-10/?selected_date=2026-09-12"
+        ]
+      }
+    },
+    {
+      "concept": "instrument-tenor-saxophone",
+      "label": "Tenor saxophone",
+      "category": "instrument",
+      "visual": "Longer curved saxophone body and bell, based on structural reference.",
+      "rationale": "Concert specifically honors the tenor-sax tradition.",
+      "existing_alternative": "Existing saxophone emoji may already suffice; new art must show a useful distinction from other saxophones.",
+      "event_ids": [
+        220786
+      ],
+      "evidence_by_event": {
+        "220786": [
+          "Tad Shull Quartet: Acclaimed saxophonist Tad Shull is a veteran of the New York City jazz scene with a number of highly regarded records on the Criss Cross Jazz label. He's performed in the City’s top venues and is master of the classic tenor sax sound, combining hard swing with an orchestral approach to the horn.",
+          "Tags: Music, Jazz, Concert, Saxophone, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220786": [
+          "https://www.thedjangonyc.com/events/tad-shull-8/?selected_date=2026-09-20"
+        ]
+      }
+    }
+  ],
+  "limitations": "Counts describe this cohort, not population reach. These are grounded prospective studies, not live assignments. Existing artwork may already suffice; exact equipment and genre recognition require further review."
+}

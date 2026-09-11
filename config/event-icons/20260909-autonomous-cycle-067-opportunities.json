@@ -1,0 +1,847 @@
+{
+  "date": "2026-09-11",
+  "scope": "Cycle 067: 100 sequential events 220815–221169, no targeted supplements.",
+  "suggestions": 39,
+  "concept_count": 36,
+  "concepts": [
+    {
+      "concept": "activity-cultural-narrative-workshop",
+      "label": "Cultural narrative workshop",
+      "category": "activity",
+      "visual": "Story cards linked to community symbols.",
+      "rationale": "Participatory examination of cultural narratives, not necessarily personal true-story performance.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        221127,
+        221128,
+        221130
+      ],
+      "evidence_by_event": {
+        "221127": [
+          "Morning Workshop - Cultural Strategies for Dismantling Colonial Narratives: Examine how strategic cultural work can challenge colonial narratives and open space for more just, inclusive, and liberatory ways of thinking and acting. The session is presented by the Human Impacts Institute as part of the Creative Climate Forum.",
+          "Tags: Community, Workshop, Free, Education, Climate Justice, Participatory, Climate, Collective Power, Format"
+        ],
+        "221128": [
+          "Morning Workshop - Culture Igniting Change: Explore how culture can serve as a catalyst for shifting narratives, inspiring action, and building momentum for change. Join the Human Impacts Institute for a powerful session at the Creative Climate Forum.",
+          "Tags: Community, Workshop, Free, Education, Climate Justice, Participatory, Climate, Format, Creative Climate Forum"
+        ],
+        "221130": [
+          "Afternoon Workshop — Cultural Narratives of Connection: Participants will consider how narratives rooted in relationship, responsibility, and reciprocity can support a more regenerative future. This session will examine how cultural storytelling can help people feel more connected to each other, to place, and to the living world.",
+          "Tags: Community, Workshop, Free, Education, Climate Justice, Participatory, Art for Change, Climate, Format, Creative Climate Forum"
+        ]
+      },
+      "source_urls_by_event": {
+        "221127": [
+          "https://www.eventbrite.com/e/morning-workshop-cultural-strategies-for-dismantling-colonial-narratives-tickets-1996275488725?aff=odcleoeventsincollection"
+        ],
+        "221128": [
+          "https://www.eventbrite.com/e/morning-workshop-culture-igniting-change-tickets-1996259116756?aff=odcleoeventsincollection"
+        ],
+        "221130": [
+          "https://www.eventbrite.com/e/afternoon-workshop-cultural-narratives-of-connection-tickets-1996301494509?aff=odcleoeventsincollection"
+        ]
+      }
+    },
+    {
+      "concept": "format-climate-policy-panel",
+      "label": "Climate panel",
+      "category": "format",
+      "visual": "Discussion panel with an environmental topic card.",
+      "rationale": "Audience-facing climate discussion, not a workshop or walk.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        221126,
+        221129
+      ],
+      "evidence_by_event": {
+        "221126": [
+          "Morning Panel — Dismantling, Disrupting, and Deprogramming: Speakers will share bold approaches to mobilizing collective action for a regenerative future for people and the planet. This panel explores how cultural narratives, media strategies, and creative interventions can dismantle harmful systems, disrupt dominant climate narratives, and deprogram extractive mindsets.",
+          "Tags: Community, Free, Education, Gathering, Talk, Climate Justice, Art for Change, Collective Power, Format"
+        ],
+        "221129": [
+          "Afternoon Panel — Regenerating, Restoring, Reconnecting: This panel explores how culture, community, and storytelling can help regenerate what has been broken, restore what has been overlooked, and reconnect people to each other and to the natural world. Speakers will share pathways for healing, repair, and collective action that move us toward a more just and life-affirming future for people and the planet.",
+          "Tags: Community, Free, Education, Gathering, Talk, Climate Justice, Art for Change, Collective Power, Format, Creative Climate Forum"
+        ]
+      },
+      "source_urls_by_event": {
+        "221126": [
+          "https://www.eventbrite.com/e/morning-panel-dismantling-disrupting-and-deprogramming-tickets-1996258049564?aff=odcleoeventsincollection",
+          "https://www.eventbrite.com/e/morning-walk-dismantling-disrupting-and-deprogramming-tickets-1996280557887?aff=odcleoeventsincollection"
+        ],
+        "221129": [
+          "https://www.eventbrite.com/e/afternoon-panel-regenerating-restoring-reconnecting-tickets-1996284391353?aff=odcleoeventsincollection",
+          "https://www.eventbrite.com/e/afternoon-walk-regenerating-restoring-reconnecting-tickets-1996304756265?aff=odcleoeventsincollection"
+        ]
+      }
+    },
+    {
+      "concept": "activity-climate-storytelling",
+      "label": "Climate storytelling workshop",
+      "category": "activity",
+      "visual": "Narrative cards with an environmental motif.",
+      "rationale": "Participatory climate communication; not necessarily autobiographical stories or fact-checking only.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        221131
+      ],
+      "evidence_by_event": {
+        "221131": [
+          "Afternoon Workshop — Climate Storytelling in the Age of Disinformation: Explore how credible storytelling can cut through misinformation and strengthen public trust, on what matters most. This session will explore how credible climate storytelling can cut through misinformation, strengthen public trust, and keep attention focused on what matters most.",
+          "Tags: Community, Workshop, Free, Education, Climate Justice, Participatory, Climate Storytelling, Climate, Storytelling / Community, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "221131": [
+          "https://www.eventbrite.com/e/afternoon-workshop-climate-storytelling-in-the-age-of-disinformation-tickets-1996289481578?aff=odcleoeventsincollection"
+        ]
+      }
+    },
+    {
+      "concept": "activity-early-math-games",
+      "label": "Early mathematics games",
+      "category": "activity",
+      "visual": "Playful number and shape puzzle cards.",
+      "rationale": "Guided early maths games without a required physical kit.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220912
+      ],
+      "evidence_by_event": {
+        "220912": [
+          "Loving Math: An online children’s series for grades K–3 featuring stories, games, and laughter, hosted by Steve Sherman.",
+          "Tags: Kids, Science, Family, Education, Games, Virtual, STEM, Class, Participatory, Mathematics, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "220912": [
+          "https://momath.org/loving/"
+        ]
+      }
+    },
+    {
+      "concept": "activity-parent-baby-yoga",
+      "label": "Parent and baby yoga",
+      "category": "activity",
+      "visual": "Grounded parent and supported infant on adjacent mats.",
+      "rationale": "Infant support and postpartum pose require appropriate anatomy review; no outcome promised.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        221169
+      ],
+      "evidence_by_event": {
+        "221169": [
+          "Parent & Baby Yoga: Learn yoga exercises specifically suited for new parents and babies — newborns through crawling. Please email: registration@bpca.ny.gov to register. No program 5/26.",
+          "Tags: Wellness, Fitness, Family, Yoga, Parenting, New Parents, Participatory, Babies, Parents, Format, Parent and Baby"
+        ]
+      },
+      "source_urls_by_event": {
+        "221169": [
+          "https://bpca.ny.gov/event/parent-baby-yoga-11-2-2-2/",
+          "https://bpca.ny.gov/event/parent-baby-yoga-11-2-2-2/2026-09-14/"
+        ]
+      }
+    },
+    {
+      "concept": "activity-pumpkin-smash",
+      "label": "Pumpkin smash for compost",
+      "category": "activity",
+      "visual": "Broken pumpkin pieces going into a compost container.",
+      "rationale": "Food-scrap processing, not wasteful destruction or a promised tool.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        221107
+      ],
+      "evidence_by_event": {
+        "221107": [
+          "Pumpkin Smash: Squash, smash and smush your post-Halloween pumpkins into compost to help keep our Park beautiful, green and growing.",
+          "Tags: Community, Family, Education, Sustainability, Outdoor, Composting, Community Celebration, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "221107": [
+          "https://hudsonriverpark.org/visit/events/event/pumpkin-smash-2026/"
+        ]
+      }
+    },
+    {
+      "concept": "art-media-installation",
+      "label": "Media installation",
+      "category": "craft",
+      "visual": "Display plane with radio and projected-light motifs.",
+      "rationale": "Time-based installation viewing; exact technology must match context.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        221133
+      ],
+      "evidence_by_event": {
+        "221133": [
+          "Na Mira: No Smoking: Drawing on ritual practices of Korean shamanism and media histories rooted in structural filmmaking, Na Mira explores language, memory, and image-making systems. For Mira’s first solo museum exhibition in New York, the artist is developing a newly commissioned media installation using radio frequencies, infrared heat, and holography.",
+          "Tags: Contemporary Art, Visual Arts, Art, Installation, Multimedia, Media Art, Exhibition, Format, Browsable"
+        ]
+      },
+      "source_urls_by_event": {
+        "221133": [
+          "https://www.moma.org/calendar/exhibitions/5869"
+        ]
+      }
+    },
+    {
+      "concept": "dance-bhangra",
+      "label": "Bhangra",
+      "category": "dance-style",
+      "visual": "A dancer with both arms raised and one bent lifted knee, emphasizing a buoyant step.",
+      "rationale": "Bhangra is explicitly central to the fitness program; test the pose for recognition without relying on ethnic costume.",
+      "existing_alternative": "Flag or generic dancer fails to show the specific movement; drums should not imply unlisted musicians.",
+      "event_ids": [
+        221103
+      ],
+      "evidence_by_event": {
+        "221103": [
+          "Bollywood & Bhangra: Start your Saturday mornings with fitness dance steps for all!",
+          "Tags: Community, Music, Dance, Wellness, Film, Fitness, World Cinema, Bollywood, Bhangra, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "221103": [
+          "https://hudsonriverpark.org/visit/events/event/bollywood-and-bhangra-september-12-2026/"
+        ]
+      }
+    },
+    {
+      "concept": "dance-open-source-forms",
+      "label": "Open Source Forms",
+      "category": "dance-style",
+      "visual": "Grounded exploratory movement pose.",
+      "rationale": "Named somatic improvisation method; movement reference required.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220945
+      ],
+      "evidence_by_event": {
+        "220945": [
+          "Open Source Forms / Dancing the Inner Landscape Workshops with Teresa Smith: In Open Source Forms, participants enter a creative process using embodied imagery, alignment studies, movement exploration, and group improvisation to cultivate connection with their inner and outer environments. The guided improvisational dance class includes partnered bodywork, music and silence, poetic imagery, meditations, and focused improvisation.",
+          "Tags: Workshop, Dance, Education, Improvisational Music, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "220945": [
+          "https://askforarts.org/event/open-source-forms-dancing-the-inner-landscape-workshops-with-teresa-smith/",
+          "https://askforarts.org/event/open-source-forms-dancing-the-inner-landscape-workshops-with-teresa-smith/2026-09-03/",
+          "https://askforarts.org/event/open-source-forms-dancing-the-inner-landscape-workshops-with-teresa-smith/2026-10-01/"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-jam-band",
+      "label": "Jam band",
+      "category": "format",
+      "visual": "Several music stands with an extended phrase.",
+      "rationale": "Band improvisation; actual instrumentation needs evidence.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220903
+      ],
+      "evidence_by_event": {
+        "220903": [
+          "Stack Attack: Featuring Dan Ziluca, Charlie Stack, Dave Sherman, Jon Lanznar, and Sam Altman, formerly of Disco Biscuits.",
+          "Tags: Music, Concert, Jam Band, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220903": [
+          "https://posh.vip/e/stack-attack"
+        ]
+      }
+    },
+    {
+      "concept": "format-agriculture-policy-forum",
+      "label": "Agricultural policy forum",
+      "category": "format",
+      "visual": "Crop emblem beside a discussion program.",
+      "rationale": "Policy conversation, not fieldwork or gardening.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        221161
+      ],
+      "evidence_by_event": {
+        "221161": [
+          "Climate Week NYC: Thriving Farms and Ranches: Food Tank and American Farmland Trust present “Thriving Farms and Ranches” at Climate Week NYC. The discussion will celebrate farmers, policymakers, and visionaries helping farms and ranches thrive, exploring solutions that support producers, protect working lands, and expand economic opportunity.",
+          "Tags: Community, Free, Education, Outdoor, Gathering, Talk, In Person, Climate Week, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "221161": [
+          "https://www.eventbrite.com/e/climate-week-nyc-thriving-farms-and-ranches-tickets-1993617564803?aff=ebdssbcitybrowse"
+        ]
+      }
+    },
+    {
+      "concept": "format-belief-conspiracy-talk",
+      "label": "Belief and conspiracy talk",
+      "category": "format",
+      "visual": "Questioned account beside a discussion bubble.",
+      "rationale": "Critical discussion of beliefs; imagery must not endorse unproven claims.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220824
+      ],
+      "evidence_by_event": {
+        "220824": [
+          "CBH Talk | Why We Want to Believe: UFOs, Aliens, and Us: A discussion of UFOs, aliens, conspiracy theories, government disclosures, and mysterious encounters reported by Navy pilots.",
+          "Tags: Community, Science, Free, Education, Discussion, Gathering, Talk, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "220824": [
+          "https://www.bklynlibrary.org/calendar/cbh-talk-why-we-want-center-for-brooklyn-20261019-0630pm"
+        ]
+      }
+    },
+    {
+      "concept": "format-climate-community-celebration",
+      "label": "Climate community celebration",
+      "category": "format",
+      "visual": "Community gathering with a climate motif.",
+      "rationale": "Broad celebration, not guaranteed advocacy instruction.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220830
+      ],
+      "evidence_by_event": {
+        "220830": [
+          "Let’s Not Die: Come celebrate climate week with us!",
+          "Tags: Community, Education, Environment, Nightlife, Celebration, Climate Week, Community Celebration, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "220830": [
+          "https://littlefieldnyc.com/event/?wfea_eb_id=1997940304233"
+        ]
+      }
+    },
+    {
+      "concept": "format-climate-moral-assembly",
+      "label": "Climate moral assembly",
+      "category": "format",
+      "visual": "Shared environmental statement with speech and song motifs.",
+      "rationale": "Public moral advocacy gathering, not automatically religious worship.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        221124
+      ],
+      "evidence_by_event": {
+        "221124": [
+          "Immorality of Inaction: Voicing Truth on Climate: Join the Center for Earth Ethics for a gathering that will bring people together to give voice to what we know to be true about the catastrophic consequences of allowing the pillage and pollution of the Earth—and what we are called to do about it. Through speech, story and song, the event will invigorate and empower a unified moral community voice.",
+          "Tags: Community, Activism, Free, Education, Gathering, Talk, Climate, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "221124": [
+          "https://luma.com/rv8a7uny"
+        ]
+      }
+    },
+    {
+      "concept": "format-comedy-showcase",
+      "label": "Comedy showcase",
+      "category": "format",
+      "visual": "Stage microphone beside several performer cards.",
+      "rationale": "Mixed comic bill without stand-up-only claim.",
+      "existing_alternative": "Retain suitable existing catalog art or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220901
+      ],
+      "evidence_by_event": {
+        "220901": [
+          "Second Hand Exchange Comedy Show with Jourdain Fisher & Max Manticof ft. Special Guests!: A comedy show with Jourdain Fisher and Max Manticof featuring special guests.",
+          "Tags: Comedy, Comedy Show, Special Guests, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220901": [
+          "https://improv.com/brooklyn/event/second+hand+exchange+comedy+show+with+jourdain+fisher+%26+max+manticof+ft.+special+guests%21/15039803/"
+        ]
+      }
+    },
+    {
+      "concept": "format-comedy-solo-theater",
+      "label": "Solo comic theater",
+      "category": "format",
+      "visual": "Single stage spot and comedy mask.",
+      "rationale": "Solo performance with comedy differs from verified stand-up.",
+      "existing_alternative": "Use suitable existing catalog artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220832
+      ],
+      "evidence_by_event": {
+        "220832": [
+          "Spin Out With Me – An Educational Experience: Devin O’Neill takes the audience on an anxiety spiral using characters, humor, but most of all seriousness.",
+          "Tags: Comedy, Education, Comedy Show, Anxiety, Characters, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220832": [
+          "https://littlefieldnyc.com/event/?wfea_eb_id=1997169974155"
+        ]
+      }
+    },
+    {
+      "concept": "format-competition-winners-recital",
+      "label": "Competition winners recital",
+      "category": "format",
+      "visual": "Award rosette beside a musical score.",
+      "rationale": "Selected winners perform; no live award ceremony promised.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        221140
+      ],
+      "evidence_by_event": {
+        "221140": [
+          "American Masters Music Awards Winners Concert: The American Masters Music Awards presents a concert featuring its award winners.",
+          "Tags: Community, Music, Concert, Awards Ceremony, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "221140": [
+          "https://www.carnegiehall.org/calendar/2026/10/03/american-masters-music-awards-winners-concert-0100pm"
+        ]
+      }
+    },
+    {
+      "concept": "format-experimental-film-series",
+      "label": "Experimental film series",
+      "category": "format",
+      "visual": "Several abstract original film frames.",
+      "rationale": "Screening series, not video production or live performance.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220959
+      ],
+      "evidence_by_event": {
+        "220959": [
+          "Long Live the Underground!: Celebrating Six Decades of The Film-Makers' Cooperative and Millennium Film Workshop: From September 23rd through October 8th, The Museum of Modern Art celebrates the simultaneous 65th anniversary of The Film-Makers' Cooperative and 60th anniversary of Millennium Film Workshop with a series consisting of nine programs of films and video art culled from their shared community of filmmakers and moving image artists.",
+          "Tags: Community, Visual Arts, Art, Film, Festival, Video Art, Experimental Film, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "220959": [
+          "https://film-makerscoop.com/screenings/long-live-the-underground-celebrating-six-decades-of-the-fil"
+        ]
+      }
+    },
+    {
+      "concept": "format-film-math-discussion",
+      "label": "Film and mathematics discussion",
+      "category": "format",
+      "visual": "Film frame beside mathematical chalk marks.",
+      "rationale": "Discussion of mathematical ideas in film; screening must be independently established.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220911
+      ],
+      "evidence_by_event": {
+        "220911": [
+          "Starring Math: The Odyssey: An online Starring Math presentation featuring The Odyssey, hosted by Dr. Tiago Hirth.",
+          "Tags: Film, Education, Virtual, Gathering, Talk, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "220911": [
+          "https://momath.org/starring-math"
+        ]
+      }
+    },
+    {
+      "concept": "format-holiday-rave",
+      "label": "Holiday rave",
+      "category": "format",
+      "visual": "Dance-floor lights with a seasonal ornament.",
+      "rationale": "Holiday EDM party; exact playback equipment requires confirmation.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220866
+      ],
+      "evidence_by_event": {
+        "220866": [
+          "A Very Edm Xmas Rave FT. Drmagdn: No description available.",
+          "Tags: Music, Nightlife, Electronic Music, Club Night, Christmas, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "220866": [
+          "https://www.bowerypalace.com/tm-event/a-very-edm-xmas-rave-ft-drmagdn/"
+        ]
+      }
+    },
+    {
+      "concept": "format-interdisciplinary-public-forum",
+      "label": "Interdisciplinary public forum",
+      "category": "format",
+      "visual": "Panels, workshops and performance on a shared program card.",
+      "rationale": "Mixed public-learning gathering, not research-only symposium.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        221125
+      ],
+      "evidence_by_event": {
+        "221125": [
+          "Creative Climate Forum – Full Day Access: Join us for a free, all-day forum of art, panels, and workshops on urgent creative responses to the climate crisis. This free and public event welcomes artists, youth, educators, community members, advocates, and anyone ready to explore creative tools, build new connections, and take action for a more just and sustainable future.",
+          "Tags: Community, Activism, Art, Free, Education, Sustainability, Gathering, Talk, Climate Action, In Person, Climate, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "221125": [
+          "https://pier57nyc.com/event/creative-climate-forum/",
+          "https://www.eventbrite.com/e/creative-climate-forum-full-day-access-tickets-1995478764702?aff=ebdssbdestsearch"
+        ]
+      }
+    },
+    {
+      "concept": "format-jazz-vespers",
+      "label": "Jazz vespers",
+      "category": "format",
+      "visual": "Musical score beside a worship-service program.",
+      "rationale": "Explicit jazz and worship hybrid; avoid inferring denomination.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220851
+      ],
+      "evidence_by_event": {
+        "220851": [
+          "The Dizzy Gillespie All-Stars Bethany Baptist Church Jazz Vespers: Join us at Bethany Baptist for this free concert combining jazz music and worship. Music is the medium in this special tribute to Newark jazz legend James Moody, featuring The Dizzy Gillespie All-Stars with John Lee, Diego Urcola, Don Braden, Alex Collins and Karl Latham.",
+          "Tags: New Jersey, Music, Free, Jazz, Neighborhood, Concert, Newark, Tribute Band, Gathering, Service, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "220851": [
+          "https://www.njpac.org/event/the-dizzy-gillespie-all-stars-bethany-baptist-church-jazz-vespers/"
+        ]
+      }
+    },
+    {
+      "concept": "format-jazz-vocal-concert",
+      "label": "Vocal jazz concert",
+      "category": "format",
+      "visual": "Stage microphone and jazz phrase.",
+      "rationale": "Vocal focus, not a saxophone-only show or fixed vocal count.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220854
+      ],
+      "evidence_by_event": {
+        "220854": [
+          "Gregory Porter with special guest Madeleine Peyroux: Experience “a jazz singer of thrilling presence, a booming baritone with a gift for earthy refinement and soaring uplift” (New York Times). Gregory Porter sings with passion and compassion, while Madeleine Peyroux has traveled the world and graced the grandest concert halls to “share the magic of music with audiences, connect with people and uplift their spirits.”",
+          "Tags: Music, Jazz, Concert, R&B, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220854": [
+          "https://www.njpac.org/event/gregory-porter/"
+        ]
+      }
+    },
+    {
+      "concept": "format-literacy-policy-panel",
+      "label": "Literacy and reading panel",
+      "category": "format",
+      "visual": "Open book beside discussion microphones.",
+      "rationale": "Reading culture conversation, not a named author’s book launch or participant book club.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220823
+      ],
+      "evidence_by_event": {
+        "220823": [
+          "The Atlantic Festival & The American Reading Crisis: The Atlantic and Brooklyn Public Library present a conversation about the American reading crisis and ways to combat the loss of sustained attention, intellectual curiosity, and shared reading culture.",
+          "Tags: Community, Literature, Free, Education, Discussion, Author Talk, Reading, Gathering, Talk, Conversations, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "220823": [
+          "https://www.bklynlibrary.org/calendar/atlantic-festival-central-library-dweck-20260919-0600pm",
+          "https://www.bklynlibrary.org/node/839042"
+        ]
+      }
+    },
+    {
+      "concept": "format-live-comedy-game-show",
+      "label": "Live comedy game show",
+      "category": "format",
+      "visual": "Stage contestant podiums with a host microphone.",
+      "rationale": "Comic staged contest, not an actual professional matching service or TV screening.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220828
+      ],
+      "evidence_by_event": {
+        "220828": [
+          "The Donor: A Live Game Show to Find the Perfect Sperm Donor: “The Donor” is a live comedy game show created by comedian Sami Schwaeber, inspired by her real-life journey with her wife to find a donor. Four potential donors compete, while a panel judges them on emotional intelligence, smarts, queer ally-ship, and vocal talent. Brooke Finegold hosts, and the show is produced by Carter Lee Iddings.",
+          "Tags: Community, Comedy, LGBTQ, Games, Live Show, Comedy Show, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220828": [
+          "https://littlefieldnyc.com/event/?wfea_eb_id=1998071889809"
+        ]
+      }
+    },
+    {
+      "concept": "format-musical-centenary-tribute",
+      "label": "Musical centenary tribute",
+      "category": "format",
+      "visual": "Anniversary concert program and musical note.",
+      "rationale": "Explicit centenary context; honoree not a living performer by implication.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220853
+      ],
+      "evidence_by_event": {
+        "220853": [
+          "Miles @100 with Jon Faddis & Friends: Celebrate 100 years of Miles Davis with a tribute led by GRAMMY®-nominated trumpeter and bandleader Jon Faddis. The program spotlights Davis’s 1957 album Birth of the Cool and 1959 album Kind of Blue, featuring an all-star ensemble.",
+          "Tags: Music, Jazz, Concert, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220853": [
+          "https://www.njpac.org/event/miles-100/"
+        ]
+      }
+    },
+    {
+      "concept": "format-musical-tribute",
+      "label": "Musical tribute",
+      "category": "format",
+      "visual": "Concert program with a remembrance-style musical emblem.",
+      "rationale": "Honoree need not perform or be living; no complete album assumption.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220940
+      ],
+      "evidence_by_event": {
+        "220940": [
+          "Jeff Slate & Friends Present: A John Lennon Birthday Celebration!: Jeff Slate & Friends Present: A John Lennon Birthday Celebration! Live at Cafe Wha? | Wednesday, September 16th | 5PM Doors, 6PM Show",
+          "Tags: Community, Music, Concert, Nightlife, Celebration, Tribute Band, Birthday Celebration, Live Music, John Lennon, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220940": [
+          "https://www.eventbrite.com/e/jeff-slate-friends-present-a-john-lennon-birthday-celebration-tickets-1997921625364",
+          "https://www.eventbrite.com/e/jeff-slate-friends-present-a-john-lennon-birthday-celebration-tickets-1997921625364?aff=ebdsoporgprofile"
+        ]
+      }
+    },
+    {
+      "concept": "format-professional-conference",
+      "label": "Professional conference",
+      "category": "format",
+      "visual": "Lectern and simple name badge",
+      "rationale": "Professional summit rather than training on a specific tool.",
+      "existing_alternative": "Existing Unicode or broader artwork may remain preferable; keep prospective until recognition and construction review.",
+      "event_ids": [
+        220937
+      ],
+      "evidence_by_event": {
+        "220937": [
+          "New York State Wildlife Rehabilitation Council Annual Conference: The New York State Wildlife Rehabilitation Council's annual conference takes place November 12–15, 2026, in Ossining, New York.",
+          "Tags: Community, Nature, Wildlife, Education, Outdoor, Conservation, Gathering, Talk, Conference, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "220937": [
+          "https://www.nyswrc.org/annual-conference"
+        ]
+      }
+    },
+    {
+      "concept": "format-site-specific-performance",
+      "label": "Site-specific performance",
+      "category": "format",
+      "visual": "Small performing area integrated with a plaza.",
+      "rationale": "Named plaza production needs primary confirmation of site-specific role.",
+      "existing_alternative": "Use suitable existing catalog artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220960
+      ],
+      "evidence_by_event": {
+        "220960": [
+          "Prelude: This free outdoor performance invites audiences to witness moments of connection in NYC.",
+          "Tags: Community, Theater, Free, Outdoor, Connection, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220960": [
+          "https://www.bam.org/theater/2026/prelude"
+        ]
+      }
+    },
+    {
+      "concept": "format-virtual-field-report",
+      "label": "Virtual field report",
+      "category": "format",
+      "visual": "Remote screen beside a field notebook.",
+      "rationale": "Digital exploration update, not in-person travel or a guaranteed interview.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220975
+      ],
+      "evidence_by_event": {
+        "220975": [
+          "Dispatches from the Field: Lee Morgan: Dispatches from the Field is a digital program designed to bring The Explorers Club community closer, wherever they are. This session features Lee Morgan.",
+          "Tags: Community, Education, Exploration, Virtual, Gathering, Talk, Fieldwork, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "220975": [
+          "https://www.explorers.org/calendar-of-events/dispatches-from-the-field-lee-morgan/"
+        ]
+      }
+    },
+    {
+      "concept": "format-waterfront-community-celebration",
+      "label": "Waterfront community celebration",
+      "category": "format",
+      "visual": "Community bunting above a waterfront line.",
+      "rationale": "Broad all-ages waterfront gathering, not guaranteed boating.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        221105
+      ],
+      "evidence_by_event": {
+        "221105": [
+          "Pier 84 Community Celebration: Celebrate the waterfront with all-ages fun, music and more on Hudson River Park’s Pier 84, presented in partnership with the West 44th Better Block Association and Friends of Pier 84.",
+          "Tags: Community, Music, Waterfront, Family, Outdoor, All Ages, Community Celebration, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "221105": [
+          "https://hudsonriverpark.org/visit/events/event/pier-84-community-celebration-september-19-2026/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-afro-brazilian-contemporary",
+      "label": "Contemporary Afro-Brazilian music",
+      "category": "genre",
+      "visual": "Referenced contemporary musical motif.",
+      "rationale": "Specific contemporary genre blend; no universal ethnic instrument stereotype.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220902
+      ],
+      "evidence_by_event": {
+        "220902": [
+          "Bia Ferreira presented by World Music Institute: Bia Ferreira is a Brazilian singer, songwriter, multi-instrumentalist, and artivist known for her powerful voice in contemporary Brazilian music. Her music blends afro-diasporic rhythms, including soul, blues, reggae, and Brazilian influences, while lyrically incorporating “escrevivência” — writing-living that combines autobiography and social criticism.",
+          "Tags: Music, World Music, Concert, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220902": [
+          "https://posh.vip/e/bia-ferreira-presented-by-world-music-institute",
+          "https://worldmusicinstitute.org/bia-ferreira-at-nublu/",
+          "https://www.worldmusicinstitute.org/bia-ferreira-at-nublu/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-alt-pop-rnb",
+      "label": "Alternative pop and R&B",
+      "category": "genre",
+      "visual": "Layered musical phrases and stage microphone.",
+      "rationale": "Genre blend explicit; exact instrument not assumed.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220864
+      ],
+      "evidence_by_event": {
+        "220864": [
+          "Chloe Tang: Chloe Tang returns to NYC with the Hoes Have Feelings Too Tour for an intimate yet explosive night at Bowery Palace. Blending alt-pop, dark R&B, and rock influences, her live show is packed with raw emotion, infectious energy, and the kind of songs you'll be singing long after the lights come up.",
+          "Tags: Music, Rock, Concert, Pop Music, Alternative Pop, Format, Performance, Dark R&B"
+        ]
+      },
+      "source_urls_by_event": {
+        "220864": [
+          "https://www.bowerypalace.com/tm-event/chloe-tang/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-flamenco-concert",
+      "label": "Flamenco concert",
+      "category": "genre",
+      "visual": "Researched guitar and voice motif.",
+      "rationale": "Music performance, not automatically dance participation.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220833
+      ],
+      "evidence_by_event": {
+        "220833": [
+          "LPR Presents: Las Migas: With 20 years of experience and six studio albums, Las Migas, led by guitarist and composer Marta Robles, have established themselves as one of Spain’s most internationally recognised bands. Their new album “Flamencas” is a tribute to the essence and purity of flamenco, reshaped through a more contemporary and powerful lens.",
+          "Tags: Music, Dance, World Music, Concert, Flamenco, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220833": [
+          "https://littlefieldnyc.com/event/?wfea_eb_id=1997571593409"
+        ]
+      }
+    },
+    {
+      "concept": "genre-progressive-rock",
+      "category": "genre",
+      "label": "Progressive rock",
+      "visual": "Explore a guitar and asymmetric meter arc without tiny notation.",
+      "rationale": "Genre is explicit; motif needs recognition testing rather than assuming instrument exclusivity.",
+      "existing_alternative": "Guitar supports rock but loses the progressive subgenre.",
+      "event_ids": [
+        220852
+      ],
+      "evidence_by_event": {
+        "220852": [
+          "BEAT: Belew/Vai/Levin/Bozzio Performing the Music of KING CRIMSON: Following more than 100 acclaimed performances across North and South America, Europe, and Japan, BEAT returns this fall for the last North American tour. Former King Crimson members Adrian Belew and Tony Levin are joined by guitar virtuoso Steve Vai and legendary drummer Terry Bozzio to perform the music of the three landmark 1980s King Crimson albums—Discipline, Beat, and Three of a Perfect Pair.",
+          "Tags: Music, Rock, Concert, Progressive Rock, King Crimson, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220852": [
+          "https://www.njpac.org/event/beat/"
+        ]
+      }
+    },
+    {
+      "concept": "sport-flag-football",
+      "label": "Flag football",
+      "category": "sport",
+      "visual": "Football beside a connected two-flag belt.",
+      "rationale": "Flag-based play, not tackle football.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        221068
+      ],
+      "evidence_by_event": {
+        "221068": [
+          "Summer Sports Experience: Flag Football: Summer Sports Experience is an instructional youth program that teaches sports skills. NYC Parks staff train kids in sports including flag football, and the program covers basic and more advanced techniques.",
+          "Tags: Free, Sports, Family, Education, Outdoor, Class, Participatory, Flag Football, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "221068": [
+          "https://www.nyc.gov/main/events/?permalinkName=summer-sports-experience-flag-football&id=1179356&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=summer-sports-experience-flag-football&id=1179376&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=summer-sports-experience-flag-football&id=1179476&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=summer-sports-experience-flag-football&id=1241596&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=summer-sports-experience-flag-football&id=1241656&sequence=1",
+          "https://www.nycgovparks.org/events/2026/08/25/summer-sports-experience-flag-football",
+          "https://www.nycgovparks.org/events/2026/08/25/summer-sports-experience-flag-football1",
+          "https://www.nycgovparks.org/events/2026/08/28/summer-sports-experience-flag-football",
+          "https://www.nycgovparks.org/events/2026/09/01/summer-sports-experience-flag-football",
+          "https://www.nycgovparks.org/events/2026/09/03/summer-sports-experience-flag-football",
+          "https://www.nycgovparks.org/events/2026/09/08/summer-sports-experience-flag-football",
+          "https://www.nycgovparks.org/events/2026/09/09/summer-sports-experience-flag-football",
+          "https://www.nycgovparks.org/events/2026/09/10/summer-sports-experience-flag-football"
+        ]
+      }
+    }
+  ],
+  "limitations": "Counts describe this cohort, not population reach. These are grounded prospective studies, not live assignments. Existing artwork may already suffice; exact equipment and genre recognition require further review."
+}

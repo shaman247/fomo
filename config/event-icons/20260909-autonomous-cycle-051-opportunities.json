@@ -1,0 +1,586 @@
+{
+  "date": "2026-09-11",
+  "scope": "Cycle 051: 100 sequential events 216013–216679, no targeted supplements.",
+  "suggestions": 27,
+  "concept_count": 24,
+  "concepts": [
+    {
+      "concept": "format-game-social",
+      "label": "Mixed game social",
+      "category": "format",
+      "visual": "Controller, tile and game card beside a conversation bubble.",
+      "rationale": "Co-primary games must not promise one exact game.",
+      "existing_alternative": "Use a suitable broad Unicode or accepted icon until a distinctive reviewed study is available.",
+      "event_ids": [
+        216013,
+        216244
+      ],
+      "evidence_by_event": {
+        "216013": [
+          "Board Game Night in the Bronx: Join the biweekly board game night in the South Bronx to meet people, learn new games, and enjoy a few rounds together. The event features modern board and card games, with no experience required, in a casual, friendly atmosphere.",
+          "Tags: Community, Free, Film, Games, Board Games, Anime, Game, Tabletop, Participatory, Format, Anime Gaming"
+        ],
+        "216244": [
+          "Game Night Wednesdays at Hush Lounge Garden Queens | Every Wednesday: Game Night Wednesdays offers a midweek game night experience at Hush Lounge Garden in Queens.",
+          "Tags: Music, Party, DJ, Games, Nightlife, Game, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "216013": [
+          "https://www.meetup.com/nyc-anime-gaming-meetup/events/315990602/",
+          "https://www.meetup.com/nyc-anime-gaming-meetup/events/316025663/",
+          "https://www.meetup.com/nyc-anime-gaming-meetup/events/316109958/"
+        ],
+        "216244": [
+          "https://mtsproductions.com/event/game-night-wednesdays-hush-lounge-garden-queens-every-wednesday/2026-08-12/",
+          "https://mtsproductions.com/event/game-night-wednesdays-hush-lounge-garden-queens-every-wednesday/2026-08-19/",
+          "https://mtsproductions.com/event/game-night-wednesdays-hush-lounge-garden-queens-every-wednesday/2026-08-26/",
+          "https://mtsproductions.com/event/game-night-wednesdays-hush-lounge-garden-queens-every-wednesday/2026-09-02/",
+          "https://mtsproductions.com/event/rb-thursdays-at-hush-lounge-garden-queens-aug-27/"
+        ]
+      }
+    },
+    {
+      "concept": "format-professional-networking",
+      "label": "Professional networking",
+      "category": "format",
+      "visual": "Two name badges and conversation bubble",
+      "rationale": "Reception connections rather than graduation, interview or lecture.",
+      "existing_alternative": "Current fallback or broader accepted icon may suffice; keep this prospective until structural and small-size review passes.",
+      "event_ids": [
+        216025,
+        216102
+      ],
+      "evidence_by_event": {
+        "216025": [
+          "Monthly Artist Meetup: September 2026: The Monthly Artist Meetup brings artists from Queens and the greater NYC area together to connect and discuss current and upcoming projects and programs.",
+          "Tags: Community, Visual Arts, Art, Party, Networking, Artist Meetup, Creative Support, Format, Social"
+        ],
+        "216102": [
+          "Refresh NYC Coach Gathering: A meetup for a limited group of coaches, including Fabrik members who are coaches.",
+          "Tags: Community, Wellness, Party, Networking, Professional Development, Coaching, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "216025": [
+          "https://events.timely.fun/jxrw1att/event/78457189",
+          "https://www.flushingtownhall.org/show-details/monthly-artist-meetup-september-2026"
+        ],
+        "216102": [
+          "https://luma.com/470qn68v"
+        ]
+      }
+    },
+    {
+      "concept": "genre-jazz",
+      "label": "Jazz",
+      "category": "genre",
+      "visual": "A pair of syncopated musical notes with one loose improvisatory flourish.",
+      "rationale": "The genre is explicit, but an instrument-neutral motif remains exploratory and requires recognition tests; avoid treating saxophone as universal jazz.",
+      "existing_alternative": "Noto notes are generic; a saxophone misstates instrumentation when the program does not feature one.",
+      "event_ids": [
+        216089,
+        216622
+      ],
+      "evidence_by_event": {
+        "216089": [
+          "Kris Davis, Tyshawn Sorey, and Ingrid Laubrock: Pianist Kris Davis, saxophonist Ingrid Laubrock, and drummer Tyshawn Sorey are all award-winning musicians, acclaimed composers, and formidable figures in experimental jazz. Together, they fo",
+          "Tags: Music, Jazz, Concert, Experimental Jazz, Format, Performance"
+        ],
+        "216622": [
+          "Alex Kautz Quartet: Renowned for his musicality, elegance and versatility, Alex Kautz stands out as a distinguished percussionist, educator, and composer. With an unwavering passion for jazz and world music, he has crafted a captivating and distinct musical voice and unique artistic expression.",
+          "Tags: Music, World Music, Jazz, Concert, Percussion, Quartet, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "216089": [
+          "https://events.columbia.edu/feeder/main/eventsFeed.do?f=y&sort=dtstart.utc:asc&fexpr=(((vpath=%22/public/aliases/Audience/Public%22)))%20and%20(categories.href=%22/public/.bedework/categories/org/UniversityEvents%22)%20and%20(entity_type=%22event%22%7Centity_type=%22todo%22)&skinName=list-rss&count=200",
+          "https://www.millertheatre.com/events/kris-davis-tyshawn-sorey-and-ingrid-laubrock"
+        ],
+        "216622": [
+          "https://ticketing.jazz.org/21594/21595"
+        ]
+      }
+    },
+    {
+      "concept": "activity-child-playgroup",
+      "label": "Child playgroup",
+      "category": "activity",
+      "visual": "Shared soft toys and play mat.",
+      "rationale": "Unstructured play without a single prescribed activity.",
+      "existing_alternative": "Retain the broad fallback while a grounded distinctive study is pending.",
+      "event_ids": [
+        216429
+      ],
+      "evidence_by_event": {
+        "216429": [
+          "Toddler Skills: Drop in for some fun! Practice developmental skills for school readiness such as tracing patterns, color, shapes, fine motor skills, eye-hand coordination, etc. Each week will be a different activity.",
+          "Tags: Family, Education, Class, Participatory, Toddlers, Fine Motor Skills, School Readiness, Early Learning, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "216429": [
+          "https://bccls.libcal.com/event/16978697",
+          "https://bccls.libcal.com/event/16978698",
+          "https://bccls.libcal.com/event/17379343",
+          "https://bccls.libcal.com/event/17379344"
+        ]
+      }
+    },
+    {
+      "concept": "activity-drawing-characters",
+      "label": "Character drawing",
+      "category": "activity",
+      "visual": "Original character sketch onpaper.",
+      "rationale": "Explicitcohortcontextsupportsfuturestudy;verifyrecognitionandexactspecificsbeforeassignment.",
+      "existing_alternative": "AccurateUnicodeoracceptedartmayremainappropriate.",
+      "event_ids": [
+        216050
+      ],
+      "evidence_by_event": {
+        "216050": [
+          "Drawing Session — Avatar: The Last Airbender: An online drawing session themed around Avatar: The Last Airbender.",
+          "Tags: Community, Art, Film, Virtual, Anime, Online, Open Practice, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "216050": [
+          "https://www.meetup.com/animesocialnexus/events/315328822/"
+        ]
+      }
+    },
+    {
+      "concept": "activity-library-database-research",
+      "label": "Library database research",
+      "category": "activity",
+      "visual": "Search window with stacked document records.",
+      "rationale": "Research assistance differs from database programming and general computer basics.",
+      "existing_alternative": "Use a suitable broad Unicode or accepted icon until a distinctive reviewed study is available.",
+      "event_ids": [
+        216085
+      ],
+      "evidence_by_event": {
+        "216085": [
+          "Using the Revised United Nations Resources Guide: The United Nations is a global intergovernmental organization with broad missions in peacekeeping, sustainable development, international relations, amongst other important tasks. In this workshop, Joseph A. Torres",
+          "Tags: Workshop, Research, Education, Online, International Relations, Participatory, United Nations, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "216085": [
+          "https://events.columbia.edu/cal/event/eventView.do?b=de&calPath=%2Fpublic%2Fcals%2FMainCal&guid=CAL-00bbdb70-9fd61e72-019f-d807bb37-000038caevents%40columbia.edu&recurrenceId="
+        ]
+      }
+    },
+    {
+      "concept": "activity-mixed-crafts",
+      "label": "Mixed crafts",
+      "category": "activity",
+      "visual": "Several distinct craft materials around one work surface.",
+      "rationale": "Do not imply a single medium.",
+      "existing_alternative": "Use supported accepted art or the current broad Unicode fallback pending a distinct study.",
+      "event_ids": [
+        216466
+      ],
+      "evidence_by_event": {
+        "216466": [
+          "Community Service Club: Need community service time? Never fear! Stop by the library on Thursday, August 13, 20, and 27 from 3 - 4:30pm to earn volunteer time. We will be making cards for lonely elderly folks or coloring for...",
+          "Tags: Community, Art, Education, Volunteer, Crafts, Coloring, Participatory, Cards, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "216466": [
+          "https://bccls.libcal.com/event/17229772",
+          "https://bccls.libcal.com/event/17229773",
+          "https://bccls.libcal.com/event/17229774",
+          "https://bccls.libcal.com/event/17494487",
+          "https://bccls.libcal.com/event/17494488"
+        ]
+      }
+    },
+    {
+      "category": "activity",
+      "concept": "activity-qigong",
+      "existing_alternative": "Noto meditation is seated and yin-yang symbolic; no qigong custom.",
+      "label": "Qigong",
+      "rationale": "Qigong standing breath/movement practice differs from seated meditation; test distinction from tai chi.",
+      "visual": "Upright figure with bent knees and rounded arms held before the chest.",
+      "event_ids": [
+        216428
+      ],
+      "evidence_by_event": {
+        "216428": [
+          "Qigong / Meditation with Tara Farley: Please Register: Space IS Limited: Breathing techniques that support the well-being of the heart Increase the breathing capacity of the lungs Aid in the detoxification of the...",
+          "Tags: Wellness, Fitness, Meditation, Qigong, Breathing, Participatory, Mind-Body, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "216428": [
+          "https://bccls.libcal.com/event/17293584",
+          "https://bccls.libcal.com/event/17293585",
+          "https://bccls.libcal.com/event/17371275",
+          "https://bccls.libcal.com/event/17371280",
+          "https://bccls.libcal.com/event/17371289"
+        ]
+      }
+    },
+    {
+      "concept": "craft-memory-wire-bracelets",
+      "label": "Memory-wire bracelets",
+      "category": "craft",
+      "visual": "Coiledwirebeadedbraceletwithloopedends.",
+      "rationale": "Explicitcohortcontextsupportsfuturestudy;verifyrecognitionandexactspecificsbeforeassignment.",
+      "existing_alternative": "AccurateUnicodeoracceptedartmayremainappropriate.",
+      "event_ids": [
+        216573
+      ],
+      "evidence_by_event": {
+        "216573": [
+          "Memory Wire Bracelets Making for Teens: Learn how to make your own memory wire bracelet. All supplies and tools will be provided. First-come first-served f...",
+          "Tags: Art, Workshop, Family, Crafts, Teen Events, Jewelry Making, Participatory, Format, Bracelets"
+        ]
+      },
+      "source_urls_by_event": {
+        "216573": [
+          "https://www.queenslibrary.org/event/000395-0726"
+        ]
+      }
+    },
+    {
+      "concept": "format-beer-release",
+      "label": "Beer release",
+      "category": "format",
+      "visual": "Beer can andrelease calendar marker.",
+      "rationale": "Explicitcohortcontextsupportsfuturestudy;verifyrecognitionandexactspecificsbeforeassignment.",
+      "existing_alternative": "AccurateUnicodeoracceptedartmayremainappropriate.",
+      "event_ids": [
+        216097
+      ],
+      "evidence_by_event": {
+        "216097": [
+          "Freaky Fourth Friday: August 2026 Release: We’re teaming up with our brewery friends and swapping recipes, releasing a new collab on the fourth Friday of every month. This month it’s TDH Surf Wax from our friends at Burial, a West Coast IPA brewed with a classic trio of PNW hops giving intense tropical notes.",
+          "Tags: Community, Art, Collaboration, Beer Release, Pop-Up, Format, Browsable"
+        ]
+      },
+      "source_urls_by_event": {
+        "216097": [
+          "https://otherhalfbrewing.com/event/freaky-fourth-friday-august-2026-release-2026-08-28/"
+        ]
+      }
+    },
+    {
+      "concept": "format-book-launch",
+      "label": "Book launch",
+      "category": "format",
+      "visual": "New book with a small celebratory ribbon.",
+      "rationale": "Broad launch format when signing versus discussion remains unconfirmed.",
+      "existing_alternative": "Use a supported accepted icon or broad Unicode while a distinctive study is pending.",
+      "event_ids": [
+        216032
+      ],
+      "evidence_by_event": {
+        "216032": [
+          "Book Launch: This Movie Doesn't End the Way We Want by Hailey Piper: A woman haunted by the disappearance of her sister and best friend uncovers the urban legend behind the last film they watched together.",
+          "Tags: Literature, Film, Horror, Book Launch, Reading, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "216032": [
+          "https://www.eventbrite.com/e/book-launch-this-movie-doesnt-end-the-way-we-want-by-hailey-piper-tickets-1996046795698"
+        ]
+      }
+    },
+    {
+      "concept": "format-buddhist-teaching",
+      "label": "Buddhist teaching",
+      "category": "format",
+      "visual": "Open teaching text with a simple dharma-wheel cue",
+      "rationale": "Religious instruction rather than concert implied by textual songs.",
+      "existing_alternative": "Current Unicode or broader accepted artwork may suffice; keep prospective until structure and recognition pass.",
+      "event_ids": [
+        216257
+      ],
+      "evidence_by_event": {
+        "216257": [
+          "Bardo Teachings: an Experiential Journey | with Michael Katz: Michael Katz will present detailed information on the three Bardos of dying, including a Power Point presentation. The presentation covers the outer and inner signs that presage the onset of death, possible realms of rebirth, and teachings on recognizing the real nature of the mind amid change.",
+          "Tags: Wellness, Education, Meditation, Spirituality, Gathering, Talk, Buddhism, Mind-Body, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "216257": [
+          "https://shop.thus.org/products/bardo-teachings-an-experiential-journey-with-michael-katz"
+        ]
+      }
+    },
+    {
+      "concept": "format-choral-orchestral",
+      "label": "Choral and orchestral program",
+      "category": "format",
+      "visual": "Vocal score alongside instrumental lines.",
+      "rationale": "Co-primary vocal and instrumental forces.",
+      "existing_alternative": "Use supported accepted art or the current broad Unicode fallback pending a distinct study.",
+      "event_ids": [
+        216110
+      ],
+      "evidence_by_event": {
+        "216110": [
+          "A Child of Our Time: Sir Michael Tippett’s oratorio explores fear, injustice, division, and hope, drawing on the rise of fascism in Europe and the violence of Kristallnacht.",
+          "Tags: Community, Music, Activism, Classical Music, Social Justice, Concert, Vocal Music, Choral, Oratorio, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "216110": [
+          "https://event.newschool.edu/achildofourtime"
+        ]
+      }
+    },
+    {
+      "concept": "format-community-benefit",
+      "label": "Community benefit",
+      "category": "format",
+      "visual": "Community program with supporting donation motif.",
+      "rationale": "Benefit event without formal gala assumptions.",
+      "existing_alternative": "Retain supported accepted art or broad Unicode pending a distinct grounded study.",
+      "event_ids": [
+        216679
+      ],
+      "evidence_by_event": {
+        "216679": [
+          "Rags: Benefit event.",
+          "Tags: Community, Theater, Fundraiser, Benefit, Drama / Theater, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "216679": [
+          "https://www.classicstage.org/calendar-view/"
+        ]
+      }
+    },
+    {
+      "concept": "format-continuing-legal-education",
+      "label": "Legal education",
+      "category": "format",
+      "visual": "Open law book and small learning certificate",
+      "rationale": "Continuing education is not court attendance or legal counseling.",
+      "existing_alternative": "Current fallback or broader accepted icon may suffice; keep this prospective until structural and small-size review passes.",
+      "event_ids": [
+        216028
+      ],
+      "evidence_by_event": {
+        "216028": [
+          "Hot Topics in Advertising & Marketing Law 2026: This annual program provides an update on the most important developments affecting advertisers over the last year. Marking the 25th anniversary of the program, it will look back at how advertising law has changed over the last twenty-five years and cover current federal, state, and local enforcement actions and priorities, self-regulatory enforcement and guidance, and other hot topics.",
+          "Tags: Community, Education, Advertising, Professional Development, Gathering, Talk, Law, Webinar, Marketing, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "216028": [
+          "https://services.nycbar.org/EventDetail?EventKey=_WEB92326"
+        ]
+      }
+    },
+    {
+      "concept": "format-cultural-parade",
+      "label": "Format cultural parade",
+      "category": "format",
+      "visual": "Procession pennants",
+      "rationale": "Community parade with event-specific culture supplied by text.",
+      "existing_alternative": "Existing broader icon or Unicode may suffice; preserve prospective study until semantic and visual validation.",
+      "event_ids": [
+        216046
+      ],
+      "evidence_by_event": {
+        "216046": [
+          "Día de la Hispanidad: La Nacional celebrates Hispanic Day with a parade that honors the unity and shared heritage of Spanish-speaking nations. The parade marches up Fifth Avenue every October 12th.",
+          "Tags: Community, Free, Culture, Festival, Parade, Spanish Culture, Community Celebration, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "216046": [
+          "https://lanacional.org/ongoing-events#dia-hispanidad"
+        ]
+      }
+    },
+    {
+      "concept": "format-group-skate",
+      "label": "Format group skate",
+      "category": "format",
+      "visual": "Paired skaters with route",
+      "rationale": "Group skating without assuming quad or inline only.",
+      "existing_alternative": "Retain appropriate Unicode or broader accepted icon until recognition and structural review pass.",
+      "event_ids": [
+        216045
+      ],
+      "evidence_by_event": {
+        "216045": [
+          "Wednesday Night Skate NYC: Meet on Wednesday at 8 pm on the south side of Union Square. There is a social skate through the streets of NYC.",
+          "Tags: Community, Free, Sports, Outdoor, Skating, In Person, Outing, Format, Outings"
+        ]
+      },
+      "source_urls_by_event": {
+        "216045": [
+          "https://www.eventbrite.com/e/wednesday-night-skate-nyc-tickets-1997274903000",
+          "https://www.eventbrite.com/e/wednesday-night-skate-nyc-tickets-1997274903000?aff=ebdsoporgprofile"
+        ]
+      }
+    },
+    {
+      "concept": "format-historic-site-tour",
+      "label": "Historic site tour",
+      "category": "format",
+      "visual": "Heritage placard beside a short guided path.",
+      "rationale": "Visiting a historic site without inventing specific architecture.",
+      "existing_alternative": "Use a supported accepted icon or broad Unicode while a distinctive study is pending.",
+      "event_ids": [
+        216341
+      ],
+      "evidence_by_event": {
+        "216341": [
+          "“Weltering in Their Gore” Candlelight Tour: Visit the bloodiest parts of the battlefield illuminated only by laterns and candlelight. Call (732) 462-9616 or email michael.timpanaro@dep.nj.gov for more information. Weather dependent.",
+          "Tags: History, Tour, Education, Outdoor, Nightlife, Candlelight, Halloween, Battlefield, Format, Outings"
+        ]
+      },
+      "source_urls_by_event": {
+        "216341": [
+          "https://dep.nj.gov/event/weltering-in-their-gore-candlelight-tour/"
+        ]
+      }
+    },
+    {
+      "concept": "format-music-open-mic",
+      "label": "Music open mic",
+      "category": "format",
+      "visual": "Microphone with a sign-up sheet and music note.",
+      "rationale": "Open musical participation differs from karaoke tracks or spoken comedy.",
+      "existing_alternative": "Use appropriate accepted art or broad Unicode until a distinctive study is reviewed.",
+      "event_ids": [
+        216617
+      ],
+      "evidence_by_event": {
+        "216617": [
+          "Sunday Musicians Open Mic hosted by Braden Palmer: A Sunday open mic for musicians, with all musicians welcome.",
+          "Tags: Community, Music, Open Practice, Participatory, Open Mic / Music, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "216617": [
+          "https://www.eventbrite.com/e/sunday-musicians-open-mic-hosted-by-braden-palmer-tickets-1986087145115",
+          "https://www.eventbrite.com/e/sunday-musicians-open-mic-hosted-by-braden-palmer-tickets-1986087146118",
+          "https://www.eventbrite.com/e/sunday-musicians-open-mic-hosted-by-braden-palmer-tickets-1986087147121",
+          "https://www.eventbrite.com/e/sunday-musicians-open-mic-hosted-by-braden-palmer-tickets-1986087148124",
+          "https://www.eventbrite.com/e/sunday-musicians-open-mic-hosted-by-braden-palmer-tickets-1986087149127"
+        ]
+      }
+    },
+    {
+      "concept": "format-music-trio",
+      "label": "Three-person music ensemble",
+      "category": "format",
+      "visual": "Three linked musical marks without prescribed instrumentation.",
+      "rationale": "Explicit trio need not be piano/bass/drums; preserve lineup neutrality.",
+      "existing_alternative": "Use accurate current Unicode or accepted artwork until the prospective design has been structurally and visually reviewed.",
+      "event_ids": [
+        216089
+      ],
+      "evidence_by_event": {
+        "216089": [
+          "Kris Davis, Tyshawn Sorey, and Ingrid Laubrock: Pianist Kris Davis, saxophonist Ingrid Laubrock, and drummer Tyshawn Sorey are all award-winning musicians, acclaimed composers, and formidable figures in experimental jazz. Together, they fo",
+          "Tags: Music, Jazz, Concert, Experimental Jazz, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "216089": [
+          "https://events.columbia.edu/feeder/main/eventsFeed.do?f=y&sort=dtstart.utc:asc&fexpr=(((vpath=%22/public/aliases/Audience/Public%22)))%20and%20(categories.href=%22/public/.bedework/categories/org/UniversityEvents%22)%20and%20(entity_type=%22event%22%7Centity_type=%22todo%22)&skinName=list-rss&count=200",
+          "https://www.millertheatre.com/events/kris-davis-tyshawn-sorey-and-ingrid-laubrock"
+        ]
+      }
+    },
+    {
+      "concept": "format-puppetry",
+      "label": "Puppetry",
+      "category": "format",
+      "visual": "A stylized puppet head and articulated shoulders above a small stage edge; choose hand, rod or string control only after source verification.",
+      "rationale": "Puppetry is explicitly featured alongside music; exact control method is unresolved and must not be invented in assignment or final art.",
+      "existing_alternative": "Theater masks lose the puppet medium; toy bear suggests ordinary toys.",
+      "event_ids": [
+        216061
+      ],
+      "evidence_by_event": {
+        "216061": [
+          "Pinocchio and Gepetto's Big Apple Adventure: During the 2026 season, the PuppetMobile will present a fresh take on the classic fairytale Pinocchio written by Julia Darden and directed by Bruce Cannon, with set design by Zlata ...",
+          "Tags: Theater, Free, Family, Outdoor, Puppetry, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "216061": [
+          "https://cityparksfoundation.org/puppetmobile/"
+        ]
+      }
+    },
+    {
+      "concept": "format-signed-music",
+      "label": "Signed music performance",
+      "category": "format",
+      "visual": "Two expressive signing hands beside one large music note and a broad visual rhythm arc.",
+      "rationale": "The artists explicitly integrate sign languages into music performance; this is a performance feature, not an inference from disability. Handshape must be verified and avoid treating one sign as all languages.",
+      "existing_alternative": "Microphone emphasizes audible voice and I-love-you hand alone is not sign-language performance.",
+      "event_ids": [
+        216064
+      ],
+      "evidence_by_event": {
+        "216064": [
+          "Sunday Salon: Deaf Music & Poetry: A screening of the documentary Deaf Jam is followed by a performance from the Deaf Music Ensemble, whose deaf and hard-of-hearing musicians bring music to life through American Sign Language, gesture, and movement. ASL interpretation is provided by Maria Aponte.",
+          "Tags: Community, Music, Accessibility, Film, Education, Concert, Cultural Heritage, ASL, Deaf Culture, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "216064": [
+          "https://ci.ovationtix.com/36821/production/1286054"
+        ]
+      }
+    },
+    {
+      "concept": "format-wine-fair",
+      "label": "Wine fair",
+      "category": "format",
+      "visual": "Wineglass withsmallproducerbooths.",
+      "rationale": "Explicitcohortcontextsupportsfuturestudy;verifyrecognitionandexactspecificsbeforeassignment.",
+      "existing_alternative": "AccurateUnicodeoracceptedartmayremainappropriate.",
+      "event_ids": [
+        216326
+      ],
+      "evidence_by_event": {
+        "216326": [
+          "Raw Wine New York: RAW WINE New York is North America’s leading fair dedicated to organic, biodynamic, and low-intervention wines and drinks. Taking place on 8&9 November 2026 at Industry City, Brooklyn, it brings together hundreds of producers from around the world alongside a highly engaged audience of sommeliers, retailers, importers, chefs, journalists, and w",
+          "Tags: Community, Food, Market, Wine, Nightlife, Wine Tasting, Organic Wine, Biodynamic Wine, Format, Browsable"
+        ]
+      },
+      "source_urls_by_event": {
+        "216326": [
+          "https://industrycity.com/event/raw-wine-new-york/2026-11-08/"
+        ]
+      }
+    },
+    {
+      "concept": "format-wine-tasting",
+      "label": "Wine tasting",
+      "category": "format",
+      "visual": "Several wine glasses in a guided tasting row.",
+      "rationale": "Sampling wine rather than a winery walk or guaranteed full servings.",
+      "existing_alternative": "Use a supported accepted icon or broad Unicode while a distinctive study is pending.",
+      "event_ids": [
+        216171
+      ],
+      "evidence_by_event": {
+        "216171": [
+          "MareMMMa: the Other side Of Tuscany: Tuscany is often celebrated for its rolling hills and iconic wine regions — but along its coast lies a territory with a character all its own. Join Consorzio Vini Maremma, Consorzio Morellino di Scansano, Consorzio Montecucco, and their producers for an exclusive tasting experience dedicated to discovering the other side of Tuscany: Maremma. The program includes a guided masterclass and a walk-around tasting featuring more than 40 wineries.",
+          "Tags: Community, Free, Education, Food, Wine, Nightlife, Tasting, Wine Tasting, Participatory, Tuscany, Format, Maremma"
+        ]
+      },
+      "source_urls_by_event": {
+        "216171": [
+          "https://www.localwineevents.com/view/event/maremmmathe-otherside-of-tuscany/1024267"
+        ]
+      }
+    }
+  ],
+  "limitations": "Counts describe this cohort, not population reach. These are grounded prospective studies, not live assignments. Existing artwork may already suffice; exact equipment and genre recognition require further review."
+}

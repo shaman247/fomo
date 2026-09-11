@@ -1,0 +1,911 @@
+{
+  "date": "2026-09-10",
+  "scope": "Cycle 031: 100 sequential events 205984–206745, no targeted supplements.",
+  "suggestions": 41,
+  "concept_count": 36,
+  "concepts": [
+    {
+      "concept": "activity-astronomy-learning",
+      "label": "Astronomy class",
+      "category": "activity",
+      "visual": "Planet orbit above an open learning book",
+      "rationale": "Instruction can be virtual and does not promise telescopes.",
+      "existing_alternative": "Current fallback or broader accepted icon may suffice; keep this prospective until structural and small-size review passes.",
+      "event_ids": [
+        206013,
+        206014,
+        206015
+      ],
+      "evidence_by_event": {
+        "206013": [
+          "Astronomy 101: Solar System (2026): This course introduces astronomy within the solar system, from heliocentric theories to the...",
+          "Tags: Science, Astronomy, Free, Education, Virtual, Class, Zoom, Participatory, Online Class, Solar System, Format"
+        ],
+        "206014": [
+          "Life and Legacy of Messier (2026): The Life and Legacy of Charles Messier (2026) Thursday, Sept. 17, Online, 7–9 PM New telescope observers quickly learn of a catalog of 110 famous objects that are viewable in the night sky.",
+          "Tags: Science, Astronomy, Education, Virtual, Gathering, Talk, Zoom, Format, Messier Catalog"
+        ],
+        "206015": [
+          "Tour of the Fall Sky (2026): Celebrate the Fall Equinox with us. Coincidentally, it will occur right in the middle of the class at 8:o6 PM ( Eastern Time).",
+          "Tags: Science, Astronomy, Free, Education, Virtual, Class, Zoom, Participatory, Format, Fall Equinox"
+        ]
+      },
+      "source_urls_by_event": {
+        "206013": [
+          "https://aaa.org/event/astronomy-101-solar-system-2026/2026-09-09/"
+        ],
+        "206014": [
+          "https://aaa.org/event/life-and-legacy-of-messier-2026/"
+        ],
+        "206015": [
+          "https://aaa.org/event/tour-of-the-fall-sky-2026/"
+        ]
+      }
+    },
+    {
+      "concept": "art-installation-exhibition",
+      "label": "Installation exhibition",
+      "category": "format",
+      "visual": "Simple freestanding gallery form and viewing cue",
+      "rationale": "Finished spatial art rather than a making workshop.",
+      "existing_alternative": "Current fallback or broader accepted icon may suffice; keep this prospective until structural and small-size review passes.",
+      "event_ids": [
+        206306,
+        206376
+      ],
+      "evidence_by_event": {
+        "206306": [
+          "Teresa Margolles En el lugar de los hechos (At the Scene): In the fall of 2026, MoMA PS1 and The Museum of Modern Art will present the first US survey of Teresa Margolles, featuring several room-sized installations and a new commission. Trained as a forensic pathologist and a photographer, Margolles has created work that examines the implications of transnational violence, with particular attention to the US-Mexico border.",
+          "Tags: Contemporary Art, Visual Arts, Art, Sculpture, Installation, Social Practice, Exhibition, Format, Browsable"
+        ],
+        "206376": [
+          "Echoes of the Ancestral: Elisa Pritzker Solo Exhibition: This solo exhibition by Elisa Pritzker brings together 2D, 3D, and installation works celebrating Hispanic Heritage Month.",
+          "Tags: Event Space, Art Gallery, Visual Arts, Art, Free, Installation Art, Hispanic Heritage, Exhibition, Solo Exhibition, Cultural Venue, Format, Browsable, Arts Venue"
+        ]
+      },
+      "source_urls_by_event": {
+        "206306": [
+          "https://www.momaps1.org/en/programs/760-teresa-margolles"
+        ],
+        "206376": [
+          "https://askforarts.org/event/september-front-gallery/",
+          "https://askforarts.org/event/september-show-front-gallery/2026-09-06/"
+        ]
+      }
+    },
+    {
+      "concept": "format-architecture-tour",
+      "label": "Architecture walking tour",
+      "category": "format",
+      "visual": "Building facade beside a dotted walking route.",
+      "rationale": "Architecture interpretation differs from studio artmaking or ordinary city-place identity.",
+      "existing_alternative": "Retain an accurate broad Unicode or accepted icon until a distinct reviewed design is available.",
+      "event_ids": [
+        206092,
+        206524
+      ],
+      "evidence_by_event": {
+        "206092": [
+          "Architecture Tours: Dive into the Guggenheim New York’s architectural history and iconic design in these hour-long guided tours, available for a limited time.",
+          "Tags: Architecture, Visual Arts, Art, Design, Tour, Education, Format, Outings"
+        ],
+        "206524": [
+          "Guided Tours: Guided tours of Carnegie Hall are available for visitors.",
+          "Tags: Architecture, Music, History, Art, Tour, Education, Tours, Format, Outings"
+        ]
+      },
+      "source_urls_by_event": {
+        "206092": [
+          "https://www.guggenheim.org/event/architecture-tours/2026-10-03"
+        ],
+        "206524": [
+          "https://www.carnegiehall.org/Visit/Tour/Tours"
+        ]
+      }
+    },
+    {
+      "concept": "genre-electronic",
+      "label": "Electronic music",
+      "category": "genre",
+      "visual": "A simple waveform beside one music note.",
+      "rationale": "Explicit electronic repertoire does not establish DJ or synth equipment; abstract motif needs recognition testing.",
+      "existing_alternative": "Existing broad Unicode remains suitable; specific motif must demonstrate added recognition before new artwork.",
+      "event_ids": [
+        205989,
+        205991
+      ],
+      "evidence_by_event": {
+        "205989": [
+          "Société Anonyme: The Scumfrog • Badenov: An electronic music event featuring The Scumfrog and Badenov.",
+          "Tags: Music, Dance, Nightlife, Clubbing, Electronic Music, Club Night, Format, Social"
+        ],
+        "205991": [
+          "Liminal Collective: Flow State with CapybaraZ and More: Liminal Collective's Flow State invites you to tap into the current. Lose yourself in a hypnotic journey of deep grooves, rolling rhythms, and mind-tickling textures as the dance floor becomes a livin",
+          "Tags: Music, Dance, Nightlife, Electronic Music, Deep Grooves, Hypnotic"
+        ]
+      },
+      "source_urls_by_event": {
+        "205989": [
+          "https://shotgun.live/en/events/societe-anonyme-converge-sept-11-2026"
+        ],
+        "205991": [
+          "https://ra.co/events/2502852",
+          "https://shotgun.live/en/events/liminal-collective-sept-19-2026"
+        ]
+      }
+    },
+    {
+      "concept": "activity-ai-literacy",
+      "label": "AI literacy",
+      "category": "activity",
+      "visual": "Laptop with a small linked-node learning diagram",
+      "rationale": "Critical digital learning rather than device troubleshooting or human-like intelligence claims.",
+      "existing_alternative": "Current fallback or broader accepted icon may suffice; keep this prospective until structural and small-size review passes.",
+      "event_ids": [
+        206607
+      ],
+      "evidence_by_event": {
+        "206607": [
+          "DSAIL Study Hall: Digital Skills & AI Literacy: For current Digital Skills & AI Literacy participants- and anyone interested in getting started. Learn more about the DSAIL program here: bklynlib.org/digital-skills",
+          "Tags: Science, Education, Technology, Artificial Intelligence, Adult Education, Digital Skills, AI Literacy"
+        ]
+      },
+      "source_urls_by_event": {
+        "206607": [
+          "https://www.bklynlibrary.org/node/837994",
+          "https://www.bklynlibrary.org/node/839726",
+          "https://www.bklynlibrary.org/node/839727",
+          "https://www.bklynlibrary.org/node/839728"
+        ]
+      }
+    },
+    {
+      "concept": "activity-bodyweight-training",
+      "label": "Bodyweight training",
+      "category": "activity",
+      "visual": "A grounded push-up figure with equal limbs and explicit hand/foot contacts.",
+      "rationale": "Bodyweight circuit differs from yoga and weighted training.",
+      "existing_alternative": "Flexed arm is broad; requires authoritative3D anatomy.",
+      "event_ids": [
+        206737
+      ],
+      "evidence_by_event": {
+        "206737": [
+          "Bootcamp with Speakeasy of Strength: Join Coach Chad from Speakeasy of Strength for free bootcamp classes in Bella Abzug Park on Tuesdays from June to September. The bodyweight HIIT-style class is open to all fitness levels.",
+          "Tags: Community, Free, Wellness, Fitness, Outdoor, High Intensity, Strength Training, Participatory, Bootcamp, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "206737": [
+          "https://www.nyc.gov/main/events/?permalinkName=bootcamp-with-speakeasy-of-strength&id=1121056&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=bootcamp-with-speakeasy-of-strength&id=1121076&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=bootcamp-with-speakeasy-of-strength&id=1121116&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=bootcamp-with-speakeasy-of-strength&id=1197176&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=bootcamp-with-speakeasy-of-strength&id=1197196&sequence=1",
+          "https://www.nycgovparks.org/events/2026/08/04/bootcamp-with-speakeasy-of-strength",
+          "https://www.nycgovparks.org/events/2026/08/11/bootcamp-with-speakeasy-of-strength",
+          "https://www.nycgovparks.org/events/2026/08/18/bootcamp-with-speakeasy-of-strength",
+          "https://www.nycgovparks.org/events/2026/08/25/bootcamp-with-speakeasy-of-strength",
+          "https://www.nycgovparks.org/events/2026/09/01/bootcamp-with-speakeasy-of-strength",
+          "https://www.nycgovparks.org/events/2026/09/08/bootcamp-with-speakeasy-of-strength",
+          "https://www.nycgovparks.org/events/2026/09/15/bootcamp-with-speakeasy-of-strength"
+        ]
+      }
+    },
+    {
+      "concept": "activity-comedy-writing",
+      "label": "Comedy writing",
+      "category": "activity",
+      "visual": "Script page with outlined comic face and editing pencil",
+      "rationale": "Writing sketches rather than a guaranteed stage performance.",
+      "existing_alternative": "Current fallback or broader accepted icon may suffice; keep this prospective until structural and small-size review passes.",
+      "event_ids": [
+        206612
+      ],
+      "evidence_by_event": {
+        "206612": [
+          "Council of Stooges: A Biweekly Sketch and Character Writers Room: Get ready to have a lot of fun!",
+          "Tags: Literature, Comedy, Education, Creative Writing, Sketch Comedy, Writing Workshop, Writing"
+        ]
+      },
+      "source_urls_by_event": {
+        "206612": [
+          "https://www.bklynlibrary.org/node/837304",
+          "https://www.bklynlibrary.org/node/837305",
+          "https://www.bklynlibrary.org/node/837306",
+          "https://www.bklynlibrary.org/node/837307"
+        ]
+      }
+    },
+    {
+      "concept": "activity-email-literacy",
+      "label": "Email basics",
+      "category": "activity",
+      "visual": "Envelope on a simple learning screen",
+      "rationale": "Existing email Unicode is strong; new art should earn distinction from ordinary email.",
+      "existing_alternative": "Current fallback or broader accepted icon may suffice; keep this prospective until structural and small-size review passes.",
+      "event_ids": [
+        206664
+      ],
+      "evidence_by_event": {
+        "206664": [
+          "Get to Know Gmail: Get to know Gmail introduces new users in creating a gmail account and learning about the interface of a gmail account. For older adults and adults with little to no computer experience. This session",
+          "Tags: Science, Education, Technology, Digital Literacy, Computer Basics, Gmail"
+        ]
+      },
+      "source_urls_by_event": {
+        "206664": [
+          "https://www.bklynlibrary.org/node/835348",
+          "https://www.bklynlibrary.org/node/835349",
+          "https://www.bklynlibrary.org/node/839546",
+          "https://www.bklynlibrary.org/node/839547"
+        ]
+      }
+    },
+    {
+      "concept": "activity-restorative-yoga",
+      "category": "activity",
+      "label": "Restorative yoga",
+      "visual": "Reclining figure supported by a broad bolster",
+      "rationale": "Supported rest differs from seated meditation and chair yoga.",
+      "existing_alternative": "Existing broad fallback does not distinguish this specific facet.",
+      "event_ids": [
+        206002
+      ],
+      "evidence_by_event": {
+        "206002": [
+          "Therapeutic Yoga: Movement Lab: We’ll begin and end with restorative support, with a slow, steady practice in between that builds from the ground up into flowing, explorative movement. Like all therapeutic classes, this is open level and choice-based.",
+          "Tags: Wellness, Fitness, Yoga, Movement, Therapy, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "206002": [
+          "https://www.dayayogastudio.com/events-2-1/2026/8/23/pzohl14vj679sbtlxap030ofchxmag",
+          "https://www.dayayogastudio.com/events-2-1/2026/9/20/therapeutic-yoga-movement-lab"
+        ]
+      }
+    },
+    {
+      "concept": "art-print-exhibition",
+      "label": "Print exhibition",
+      "category": "format",
+      "visual": "Framed print impression beside a gallery viewing cue",
+      "rationale": "Finished-art display should not imply participation in printmaking.",
+      "existing_alternative": "Current fallback or broader accepted icon may suffice; keep this prospective until structural and small-size review passes.",
+      "event_ids": [
+        206086
+      ],
+      "evidence_by_event": {
+        "206086": [
+          "Asilah Oui: Robert Blackburn in Morocco: Curated by Imani Congdon, Asilah Oui mobilizes firsthand accounts and never-before-exhibited private collections of prints, photographs and ephemera from the first decade of the Asilah Cultural Moussem.",
+          "Tags: Visual Arts, Art, Free, Printmaking, Exhibition, Format, Browsable"
+        ]
+      },
+      "source_urls_by_event": {
+        "206086": [
+          "https://www.rbpmw-efanyc.org/asilah-oui"
+        ]
+      }
+    },
+    {
+      "concept": "cuisine-sicilian-wine",
+      "label": "Sicilian wine tasting",
+      "category": "cuisine",
+      "visual": "Wine glass beside a simplified island outline",
+      "rationale": "Geographic tasting identity is supported; generic wine Unicode already suffices.",
+      "existing_alternative": "Current fallback or broader accepted icon may suffice; keep this prospective until structural and small-size review passes.",
+      "event_ids": [
+        206171
+      ],
+      "evidence_by_event": {
+        "206171": [
+          "Sicilian Wines: Come to our shop and enjoy a 20% discount on any wine (still or sparkling) and a 15% discount or more on any spirit that's poured the day of tasting.",
+          "Tags: Community, Free, Education, Food, Nightlife, Tasting, Wine Tasting, Italian Wine, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "206171": [
+          "https://www.astorwines.com/event.aspx?eid=1873a4fd-74ed-4d03-a1ac-522df7b14874",
+          "https://www.astorwines.com/event.aspx?eid=dd80e60c-8133-4c4c-aefe-2e3071acbe73",
+          "https://www.astorwines.com/event.aspx?eid=dd80e60c-8133-4c4c-aefe-2e3074acbe73"
+        ]
+      }
+    },
+    {
+      "concept": "dance-bachata",
+      "label": "Bachata",
+      "category": "dance-style",
+      "visual": "Two dancers in a close partner hold with one bent stepping knee and a side-to-side motion arc.",
+      "rationale": "Highlights the explicitly named partnered dance; in mixed Latin parties it is a supported facet, and differentiation from other partner dances needs testing.",
+      "existing_alternative": "Noto solo dancer does not show close partner connection.",
+      "event_ids": [
+        206745
+      ],
+      "evidence_by_event": {
+        "206745": [
+          "Pa' La Calle Wednesdays - Free Salsa and Bachata Dancing: You’re invited to an outdoor Latin dance party in Bella Abzug Park in Hudson Yards. The event starts with a free dance class that alternates between Salsa and Bachata each week, followed by dancing to salsa, bachata, and more.",
+          "Tags: Dance, Free, Education, Outdoor, Salsa, Latin Dance, Dance Class, Bachata"
+        ]
+      },
+      "source_urls_by_event": {
+        "206745": [
+          "https://www.nyc.gov/main/events/?permalinkName=pa-la-calle-wednesdays-free-salsa-and-bachata-dancing&id=1166336&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=pa-la-calle-wednesdays-free-salsa-and-bachata-dancing&id=1166356&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=pa-la-calle-wednesdays-free-salsa-and-bachata-dancing&id=1166396&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=pa-la-calle-wednesdays-free-salsa-and-bachata-dancing&id=1235816&sequence=1",
+          "https://www.nycgovparks.org/events/2026/08/05/pa-la-calle-wednesdays-free-salsa-and-bachata-dancing",
+          "https://www.nycgovparks.org/events/2026/08/12/pa-la-calle-wednesdays-free-salsa-and-bachata-dancing",
+          "https://www.nycgovparks.org/events/2026/08/19/pa-la-calle-wednesdays-free-salsa-and-bachata-dancing",
+          "https://www.nycgovparks.org/events/2026/08/26/pa-la-calle-wednesdays-free-salsa-and-bachata-dancing",
+          "https://www.nycgovparks.org/events/2026/09/02/pa-la-calle-wednesdays-free-salsa-and-bachata-dancing",
+          "https://www.nycgovparks.org/events/2026/09/09/pa-la-calle-wednesdays-free-salsa-and-bachata-dancing",
+          "https://www.nycgovparks.org/events/2026/09/16/pa-la-calle-wednesdays-free-salsa-and-bachata-dancing"
+        ]
+      }
+    },
+    {
+      "concept": "dance-georgian",
+      "label": "Georgian dance",
+      "category": "dance-style",
+      "visual": "Grounded articulated dancer from a verified Georgian dance tradition",
+      "rationale": "Requires original 3D and expert structural/costume references; avoid general pointe-ballet stereotypes.",
+      "existing_alternative": "Current fallback or broader accepted icon may suffice; keep this prospective until structural and small-size review passes.",
+      "event_ids": [
+        206162
+      ],
+      "evidence_by_event": {
+        "206162": [
+          "Sukhishvili: A performance by the Georgian National Ballet Sukhishvili.",
+          "Tags: Dance, Ballet, World Dance, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "206162": [
+          "https://oceanatheater.com/event/sukhishvili-2/",
+          "https://oceanatheater.com/event/sukhishvili/"
+        ]
+      }
+    },
+    {
+      "concept": "dance-salsa",
+      "label": "Salsa",
+      "category": "dance-style",
+      "visual": "Two dancers in open handhold with a clear turning arm and compact stepping legs.",
+      "rationale": "Explicit salsa classes support exploration of partner-step art; style distinction needs recognition testing and cannot rely on stereotyped costume.",
+      "existing_alternative": "Single dancer is broad and does not show the partner turn; no supported catalog dance fits.",
+      "event_ids": [
+        206745
+      ],
+      "evidence_by_event": {
+        "206745": [
+          "Pa' La Calle Wednesdays - Free Salsa and Bachata Dancing: You’re invited to an outdoor Latin dance party in Bella Abzug Park in Hudson Yards. The event starts with a free dance class that alternates between Salsa and Bachata each week, followed by dancing to salsa, bachata, and more.",
+          "Tags: Dance, Free, Education, Outdoor, Salsa, Latin Dance, Dance Class, Bachata"
+        ]
+      },
+      "source_urls_by_event": {
+        "206745": [
+          "https://www.nyc.gov/main/events/?permalinkName=pa-la-calle-wednesdays-free-salsa-and-bachata-dancing&id=1166336&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=pa-la-calle-wednesdays-free-salsa-and-bachata-dancing&id=1166356&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=pa-la-calle-wednesdays-free-salsa-and-bachata-dancing&id=1166396&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=pa-la-calle-wednesdays-free-salsa-and-bachata-dancing&id=1235816&sequence=1",
+          "https://www.nycgovparks.org/events/2026/08/05/pa-la-calle-wednesdays-free-salsa-and-bachata-dancing",
+          "https://www.nycgovparks.org/events/2026/08/12/pa-la-calle-wednesdays-free-salsa-and-bachata-dancing",
+          "https://www.nycgovparks.org/events/2026/08/19/pa-la-calle-wednesdays-free-salsa-and-bachata-dancing",
+          "https://www.nycgovparks.org/events/2026/08/26/pa-la-calle-wednesdays-free-salsa-and-bachata-dancing",
+          "https://www.nycgovparks.org/events/2026/09/02/pa-la-calle-wednesdays-free-salsa-and-bachata-dancing",
+          "https://www.nycgovparks.org/events/2026/09/09/pa-la-calle-wednesdays-free-salsa-and-bachata-dancing",
+          "https://www.nycgovparks.org/events/2026/09/16/pa-la-calle-wednesdays-free-salsa-and-bachata-dancing"
+        ]
+      }
+    },
+    {
+      "concept": "dance-tango",
+      "label": "Argentine tango",
+      "category": "dance-style",
+      "visual": "Two close-embrace dancers with one sharply extended leg.",
+      "rationale": "Tango classes/social dancing have a distinct partnered silhouette.",
+      "existing_alternative": "Noto solo dancer lacks close embrace; no tango custom.",
+      "event_ids": [
+        206690
+      ],
+      "evidence_by_event": {
+        "206690": [
+          "Argentine Tango Class with Karina Romero: Argentine Tango Instructions",
+          "Tags: Dance, Wellness, Fitness, Education, Dance Class, Tango, Argentine Tango, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "206690": [
+          "https://www.bklynlibrary.org/node/835516",
+          "https://www.bklynlibrary.org/node/835517",
+          "https://www.bklynlibrary.org/node/835518",
+          "https://www.bklynlibrary.org/node/835519",
+          "https://www.bklynlibrary.org/node/840688",
+          "https://www.bklynlibrary.org/node/840689",
+          "https://www.bklynlibrary.org/node/840690"
+        ]
+      }
+    },
+    {
+      "concept": "format-continuing-legal-education",
+      "label": "Legal education",
+      "category": "format",
+      "visual": "Open law book and small learning certificate",
+      "rationale": "Continuing education is not court attendance or legal counseling.",
+      "existing_alternative": "Current fallback or broader accepted icon may suffice; keep this prospective until structural and small-size review passes.",
+      "event_ids": [
+        206186
+      ],
+      "evidence_by_event": {
+        "206186": [
+          "Criminal Court 101: The Path of a Case: Not a criminal defense attorney? Come learn the basics of New York City criminal law practice. This CLE will serve as a basic introduction to the criminal law and procedure most frequently encountered during the path of a case in NYC Criminal Courts.",
+          "Tags: Community, Education, Criminal Justice, Gathering, Talk, Law, Webinar, Legal, CLE, Format, Criminal Court"
+        ]
+      },
+      "source_urls_by_event": {
+        "206186": [
+          "https://services.nycbar.org/EventDetail?EventKey=_WEB091626"
+        ]
+      }
+    },
+    {
+      "concept": "format-craft-circle",
+      "label": "Craft circle",
+      "category": "format",
+      "visual": "Several different craft tools around a shared project circle.",
+      "rationale": "Bring-your-own creative work is social across multiple media.",
+      "existing_alternative": "Yarn is narrower than all crafts; a mixed-tool motif may be too detailed.",
+      "event_ids": [
+        206608
+      ],
+      "evidence_by_event": {
+        "206608": [
+          "Keep Calm & Carry Yarn - Sewists Welcome!: Join a group of like-minded folks to knit or crochet (or mending, cross-stitch or embroidery!) for two hours of friendship and community. Bring your handwork project to show off, get inspired, or get",
+          "Tags: Community, Art, Fiber Arts, Crafts, Sewing, Arts and Crafts, Crochet, Knitting"
+        ]
+      },
+      "source_urls_by_event": {
+        "206608": [
+          "https://www.bklynlibrary.org/node/832937",
+          "https://www.bklynlibrary.org/node/832938",
+          "https://www.bklynlibrary.org/node/832939",
+          "https://www.bklynlibrary.org/node/832940",
+          "https://www.bklynlibrary.org/node/832941",
+          "https://www.bklynlibrary.org/node/832942",
+          "https://www.bklynlibrary.org/node/832943"
+        ]
+      }
+    },
+    {
+      "concept": "format-expert-panel",
+      "label": "Expert panel discussion",
+      "category": "format",
+      "visual": "Several microphones aligned before an audience-facing conversation panel.",
+      "rationale": "Multiple expert presentations with moderator.",
+      "existing_alternative": "Do not use participant small-group discussion or civic governance automatically.",
+      "event_ids": [
+        206276
+      ],
+      "evidence_by_event": {
+        "206276": [
+          "Talks of the Town: Principles, Power, and the People: Join the curator and exhibition advisors for a conversation reflecting on the 250th Anniversary of the Declaration of Independence.",
+          "Tags: Community, History, Education, Gathering, Talk, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "206276": [
+          "https://www.historicrichmondtown.org/events/talks-of-the-town-principles-power-and-the-people"
+        ]
+      }
+    },
+    {
+      "concept": "format-fintech-conference",
+      "label": "Financial technology conference",
+      "category": "format",
+      "visual": "Payment card and data nodes beside a presentation cue",
+      "rationale": "Requires confirmed subject; no provider endorsement or actual payment action.",
+      "existing_alternative": "Current fallback or broader accepted icon may suffice; keep this prospective until structural and small-size review passes.",
+      "event_ids": [
+        206187
+      ],
+      "evidence_by_event": {
+        "206187": [
+          "FinTech and Emerging Payment Systems Conference: No description available.",
+          "Tags: Community, Science, Education, Technology, Professional Development, Finance, Gathering, Talk, Conference, Fin Tech, Format, Payments"
+        ]
+      },
+      "source_urls_by_event": {
+        "206187": [
+          "https://services.nycbar.org/EventDetail?EventKey=INS091726"
+        ]
+      }
+    },
+    {
+      "concept": "format-musical-theater",
+      "label": "Musical theater",
+      "category": "format",
+      "visual": "Stage mask beside a musical score, distinct from a cinema screen.",
+      "rationale": "Fully staged named musicals combine drama and song.",
+      "existing_alternative": "Theater masks are broad; singing microphones alone omit the dramatic format.",
+      "event_ids": [
+        206144
+      ],
+      "evidence_by_event": {
+        "206144": [
+          "What You Missed On Glee: Written and directed by Sarah Gordon-Macey and Grant Sparr, What You Missed On Glee is an evening that you Gleeks do not want to miss, featuring music assignments from Sabrina Carpenter for the New Directions.",
+          "Tags: Music, Theater, Comedy, Glee, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "206144": [
+          "https://www.thebeechman.com/events/lbt25-what-you-missed-on-glee",
+          "https://www.thebeechman.com/events/lbt25-what-you-missed-on-gleecexk3rm"
+        ]
+      }
+    },
+    {
+      "concept": "format-performance-festival",
+      "label": "Performance festival",
+      "category": "format",
+      "visual": "Small stage with several separated performance marks",
+      "rationale": "A mixed festival needs no invented single apparatus.",
+      "existing_alternative": "Current fallback or broader accepted icon may suffice; keep this prospective until structural and small-size review passes.",
+      "event_ids": [
+        206098
+      ],
+      "evidence_by_event": {
+        "206098": [
+          "(Rain Day) For the Streets: The Festival of Political Performance: No description available.",
+          "Tags: Community, Music, Theater, Dance, Festival, Format, Social, Rain Day"
+        ]
+      },
+      "source_urls_by_event": {
+        "206098": [
+          "https://laplazacultural.com/events/rain-day-for-the-streets-the-festival-of-political-performance/"
+        ]
+      }
+    },
+    {
+      "concept": "format-professional-networking",
+      "label": "Professional networking",
+      "category": "format",
+      "visual": "Two name badges and conversation bubble",
+      "rationale": "Reception connections rather than graduation, interview or lecture.",
+      "existing_alternative": "Current fallback or broader accepted icon may suffice; keep this prospective until structural and small-size review passes.",
+      "event_ids": [
+        206188
+      ],
+      "evidence_by_event": {
+        "206188": [
+          "Law Student Welcome Reception: Whether you are in your first, second, or third year of law school, or pursuing an LL.M., we invite you to learn about the exciting opportunities and programs offered by New York City’s leading bar association. At this event, you will have the chance to network with fellow law students and attorneys who are active members of City Bar committees. Enjoy drinks and hors d’oeuvres while expanding your network alongside some of the top legal minds in New York City—it’s never too early to get ahead! Opening remarks by Matthew Diller, President of the New York City Bar Association.",
+          "Tags: Community, Free, Education, Networking, Reception, Mixer, Law Students, In Person, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "206188": [
+          "https://services.nycbar.org/EventDetail?EventKey=LSWR091726"
+        ]
+      }
+    },
+    {
+      "concept": "format-prose-reading",
+      "label": "Prose reading",
+      "category": "format",
+      "visual": "Open prose pages with a small speaking mark",
+      "rationale": "Distinguish a performed novella from poetry and book discussion.",
+      "existing_alternative": "Current fallback or broader accepted icon may suffice; keep this prospective until structural and small-size review passes.",
+      "event_ids": [
+        205993
+      ],
+      "evidence_by_event": {
+        "205993": [
+          "Reading: Guadalhorce Leaves Bayonne Forever: Guadalhorce Leaves Bayonne Forever is an experimental novella that takes its name from a John A. Noble painting. Starting at 1:30 PM, this short reading will introduce attendees to the main character, Anibal Guadalhorce, as he works on a Spanish vessel in the early 20th century as a translator.",
+          "Tags: Community, Literature, Free, Education, Reading, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "205993": [
+          "https://noblemaritime.org/events/2026/9/20/reading-guadalhorce-leaves-bayonne-forever"
+        ]
+      }
+    },
+    {
+      "concept": "format-sauna-social",
+      "label": "Sauna social",
+      "category": "format",
+      "visual": "Bench and steam beside a conversation bubble",
+      "rationale": "Needs verified sauna participation; does not imply medical benefit or speed dating.",
+      "existing_alternative": "Current fallback or broader accepted icon may suffice; keep this prospective until structural and small-size review passes.",
+      "event_ids": [
+        206243
+      ],
+      "evidence_by_event": {
+        "206243": [
+          "Williamsburg Lovership: A Singles Social: In a world of lukewarm connections, we prefer to play at the extremes.",
+          "Tags: Community, Wellness, Sauna, Party, Nightlife, Cold Plunge, Singles Social, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "206243": [
+          "https://www.othership.us/events/lovership-singles-social-sauna-ice-bath-williamsburg-nyc",
+          "https://www.othership.us/events/lovership-singles-social-sauna-ice-bath-williamsburg-nyc-tinder"
+        ]
+      }
+    },
+    {
+      "concept": "format-singles-mixer",
+      "label": "Singles mixer",
+      "category": "format",
+      "visual": "Paired conversation bubbles and a small heart",
+      "rationale": "No timed rotations or matching algorithm promised.",
+      "existing_alternative": "Current fallback or broader accepted icon may suffice; keep this prospective until structural and small-size review passes.",
+      "event_ids": [
+        206400
+      ],
+      "evidence_by_event": {
+        "206400": [
+          "Singles Dating Matching using Palantir Data: Proceeds do not go to Peter Thiel All tickets come with a 1 free drink ticket Find the person of y",
+          "Tags: Community, Science, Party, Technology, Nightlife, Dating, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "206400": [
+          "https://pools.events/event/qDMJiwVz/singles-dating-matching-using-palantir-data/",
+          "https://pools.events/event/qDMJiwVz/singles-dating-matching-using-palantir-data/?utm_source=fomo-nyc&utm_medium=api&utm_campaign=nyc_events_feed&utm_content=qDMJiwVz"
+        ]
+      }
+    },
+    {
+      "concept": "format-space-technology-conference",
+      "label": "Space technology conference",
+      "category": "format",
+      "visual": "Satellite beside presentation panels",
+      "rationale": "Engineering discussion rather than a launch or astronomy viewing session.",
+      "existing_alternative": "Current fallback or broader accepted icon may suffice; keep this prospective until structural and small-size review passes.",
+      "event_ids": [
+        206537
+      ],
+      "evidence_by_event": {
+        "206537": [
+          "Space Tech Summit: No description available.",
+          "Tags: Community, Science, Technology, Networking, Business, Professional Development, Space, Gathering, Talk, Innovation, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "206537": [
+          "https://www.eventbrite.com/e/space-tech-summit-tickets-69881985901?aff=ebdssbcitybrowse"
+        ]
+      }
+    },
+    {
+      "concept": "genre-afrobeats",
+      "label": "Afrobeats",
+      "category": "genre",
+      "visual": "Explore an interlocking two-line rhythm pattern beside one music note.",
+      "rationale": "Afrobeats is explicitly the party genre; rhythmic motif must be tested and not reduced to generic African drums or flags.",
+      "existing_alternative": "Noto drum is not a universal Afrobeats identifier; no current custom genre.",
+      "event_ids": [
+        206180
+      ],
+      "evidence_by_event": {
+        "206180": [
+          "Afrofuture Presents: Champion Sound: Afrofuture presents Champion Sound on The Rooftop at Pier 17, featuring DBN Gogo, DJ Obi, SIXTION, DJ LAJ, Kwamz Original, DJ IPOD, DJ RbNice, Sounds of Reality, and special performances by Victony and Bnxn.",
+          "Tags: Music, World Music, Outdoor, Concert, Nightlife, Afrobeats, Format, Performance, Afrofuture"
+        ]
+      },
+      "source_urls_by_event": {
+        "206180": [
+          "https://rooftopatpier17.com/events/afrofuture-2026/",
+          "https://theseaport.nyc/events/afrofuture-at-the-rooftop-at-pier-17/",
+          "https://www.afropop.org/events"
+        ]
+      }
+    },
+    {
+      "concept": "genre-alternative-rock",
+      "label": "Alternative rock",
+      "category": "genre",
+      "visual": "Guitar and asymmetrical sound marks, subject to genre-recognition study",
+      "rationale": "Explicit alternative-rock tags support retaining this genre lead without asserting instrument subtype.",
+      "existing_alternative": "Keep the existing Unicode fallback or suitable broader custom icon until distinct artwork is reviewed.",
+      "event_ids": [
+        206116
+      ],
+      "evidence_by_event": {
+        "206116": [
+          "The Bitter End Presents... Ritual Breaks: Ritual Breaks is the iconic Mutemath rhythm section, Darren King and Roy Mitchell-Cárdenas and multi-instrum...",
+          "Tags: Music, Family, Concert, All Ages, Live Music, Format, Performance, Ritual Breaks"
+        ]
+      },
+      "source_urls_by_event": {
+        "206116": [
+          "https://bitterend.com/#/events/192286"
+        ]
+      }
+    },
+    {
+      "concept": "genre-country",
+      "label": "Country music",
+      "category": "genre",
+      "visual": "Explore a music note integrated into a simple brimmed hat.",
+      "rationale": "Country repertoire is named; hat is only an exploratory convention and recognition testing must avoid treating costume as universal genre identity.",
+      "existing_alternative": "Noto cowboy has no music cue; guitar/banjo do not cover all country performances.",
+      "event_ids": [
+        206118
+      ],
+      "evidence_by_event": {
+        "206118": [
+          "Julie Biens: Julie Biens is a Brooklyn based singer-songwriter blending folk-rock and pop with country inspired storytelling.",
+          "Tags: Music, Family, Concert, All Ages, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "206118": [
+          "https://bitterend.com/#/events/190628"
+        ]
+      }
+    },
+    {
+      "concept": "genre-folk-rock",
+      "category": "genre",
+      "label": "Folk rock",
+      "visual": "Acoustic and electric guitar silhouettes",
+      "rationale": "Explicit folk-rock repertoire blends distinct traditions",
+      "existing_alternative": "Existing guitar emoji; genre silhouette needs clarity",
+      "event_ids": [
+        206118
+      ],
+      "evidence_by_event": {
+        "206118": [
+          "Julie Biens: Julie Biens is a Brooklyn based singer-songwriter blending folk-rock and pop with country inspired storytelling.",
+          "Tags: Music, Family, Concert, All Ages, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "206118": [
+          "https://bitterend.com/#/events/190628"
+        ]
+      }
+    },
+    {
+      "category": "genre",
+      "concept": "genre-house",
+      "existing_alternative": "DJ decks specify performance equipment, not house; Noto notes are broader still.",
+      "label": "House music",
+      "rationale": "Explicit house music supports a four-on-the-floor rhythm exploration; this may read as generic electronic music and needs recognition testing.",
+      "visual": "A compact drum machine with four evenly spaced illuminated beat pads.",
+      "event_ids": [
+        206339
+      ],
+      "evidence_by_event": {
+        "206339": [
+          "In Service Of with MUENFUA: MUENFUA brings a genre-blurring set rooted in R&B, deep house, and global club sounds.",
+          "Tags: Music, World Music, DJ, Nightlife, R&B, House Music, Electronic Music, Global Sounds, Club Night, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "206339": [
+          "https://acehotel.com/brooklyn/going-on/in-service-of-with-muenfua-4/",
+          "https://acehotel.com/brooklyn/going-on/in-service-of-with-muenfua-5/",
+          "https://www.downtownbrooklyn.com/event/in-service-of-with-muenfua/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-motown",
+      "label": "Motown",
+      "category": "genre",
+      "visual": "Explore a record disk with a bold central music note.",
+      "rationale": "Motown is explicitly named in the title, description or program tags. This is a prospective genre motif requiring recognition tests; it does not establish a particular instrument or an exclusive assignment for mixed bills.",
+      "existing_alternative": "Existing notes or actual featured instrument remain appropriate; custom genre art is exploratory rather than a proven recognition improvement.",
+      "event_ids": [
+        206004
+      ],
+      "evidence_by_event": {
+        "206004": [
+          "Catholic Charities 9th Annual Benefit Concert for the Homeless with That Motown Band: Catholic Charities 9th Annual Benefit Concert for the Homeless with That Motown Band – VIP tickets include a pre-show recepti",
+          "Tags: Community, Music, Concert, Fundraiser, Motown, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "206004": [
+          "https://ucpac.org/event/catholic-charities-9th-annual-benefit-concert-for-the-homeless-with-that-motown-band/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-pansori",
+      "label": "Pansori",
+      "category": "genre",
+      "visual": "Original vocalist with fan beside percussion cue",
+      "rationale": "Future traditional-form study; do not automatically apply a solo singer/drummer to a contemporary seven-member hybrid band.",
+      "existing_alternative": "Current fallback or broader accepted icon may suffice; keep this prospective until structural and small-size review passes.",
+      "event_ids": [
+        206181
+      ],
+      "evidence_by_event": {
+        "206181": [
+          "Leenalchi: Leenalchi is a seven-member alternative band from Seoul, celebrated for their striking visuals and innovative sound that blends Korea’s pansori storytelling tradition with bass-forward grooves, rhythmic percussion, and pop vocal styles reminiscent of the Talking Heads. The band will be celebrating the release of their debut EP, Here Comes That Crow, on David Byrne’s Luaka Bop label.",
+          "Tags: Music, Dance, World Music, Funk, Concert, Alternative, Korean Music, Live Music, Next Gen, Format, Performance, Pansori"
+        ]
+      },
+      "source_urls_by_event": {
+        "206181": [
+          "https://pioneerworks.org/programs/leenalchi",
+          "https://www.worldmusicinstitute.org/leenalchi-at-pioneer-works/"
+        ]
+      }
+    },
+    {
+      "category": "genre",
+      "concept": "genre-rnb",
+      "existing_alternative": "Noto microphone shows vocals but not genre; avoid assuming saxophone or other instruments.",
+      "label": "R&B",
+      "rationale": "R&B is explicit; exploratory smooth vocal motif is not a proven genre symbol and must be tested.",
+      "visual": "Explore a microphone paired with a single smooth looping sound-wave ribbon.",
+      "event_ids": [
+        206339
+      ],
+      "evidence_by_event": {
+        "206339": [
+          "In Service Of with MUENFUA: MUENFUA brings a genre-blurring set rooted in R&B, deep house, and global club sounds.",
+          "Tags: Music, World Music, DJ, Nightlife, R&B, House Music, Electronic Music, Global Sounds, Club Night, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "206339": [
+          "https://acehotel.com/brooklyn/going-on/in-service-of-with-muenfua-4/",
+          "https://acehotel.com/brooklyn/going-on/in-service-of-with-muenfua-5/",
+          "https://www.downtownbrooklyn.com/event/in-service-of-with-muenfua/"
+        ]
+      }
+    },
+    {
+      "concept": "science-electromagnetic-spectrum",
+      "label": "Electromagnetic astronomy",
+      "category": "other",
+      "visual": "A wave traversing a broad colored spectrum beside a star",
+      "rationale": "Represents multiwavelength study, not microscope equipment.",
+      "existing_alternative": "Current fallback or broader accepted icon may suffice; keep this prospective until structural and small-size review passes.",
+      "event_ids": [
+        206016
+      ],
+      "evidence_by_event": {
+        "206016": [
+          "Multiwavelengths- central to astronomy research (2026): An in-depth examination of the wave families in the Electromagnetic Spectrum – of which visible light is a part– and other emissions from space studied by astronomers.",
+          "Tags: Science, Astronomy, Research, Education, Virtual, Astrophysics, Class, Online, Participatory, Format, Electromagnetic Spectrum"
+        ]
+      },
+      "source_urls_by_event": {
+        "206016": [
+          "https://aaa.org/event/multiwavelengths-vital-to-astronomy-research-2026/2026-10-19/"
+        ]
+      }
+    },
+    {
+      "concept": "sport-disc-golf",
+      "label": "Disc golf",
+      "category": "sport",
+      "visual": "Flying disc approaching a chained target basket",
+      "rationale": "Exact sport requires basket geometry; existing flying-disc emoji remains usable.",
+      "existing_alternative": "Current fallback or broader accepted icon may suffice; keep this prospective until structural and small-size review passes.",
+      "event_ids": [
+        206582
+      ],
+      "evidence_by_event": {
+        "206582": [
+          "Clean Up a Park and Play Disc Golf!: Volunteer with the New York City Disc Golf Association to help steward Highland Park — pick up litter, clear paths, and make the space more enjoyable for everyone, then stay to play disc golf.",
+          "Tags: Community, Sports, Outdoor, Community Service, Park Cleanup, Disc Golf, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "206582": [
+          "https://www.newyorkcares.org/project/a1HVr000003P6gPMAS",
+          "https://www.newyorkcares.org/project/a1HVr000003SFqPMAW",
+          "https://www.nycgovparks.org/events/2026/08/30/its-my-park-at-highland-park"
+        ]
+      }
+    }
+  ],
+  "limitations": "Counts describe this cohort, not population reach. These are grounded prospective studies, not live assignments. Existing artwork may already suffice; exact equipment and genre recognition require further review."
+}

@@ -1,0 +1,182 @@
+[
+  {
+    "icon_id": "activity-digital-illustration",
+    "source_sha256": "d0f5071301be3ba86221ef00e52a8aa4fe397f491d8c575298b6064232268a2d",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; brief known. Drawing canvas,paint stroke and stylus.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-072/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-072/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 765,
+      "gzip_level_6": 417
+    },
+    "optimization": {
+      "initial_raw": 765,
+      "initial_gzip_level_6": 417,
+      "final_raw": 765,
+      "final_gzip_level_6": 417
+    },
+    "issues": [],
+    "resolved_issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Digital drawing needs its label to distinguish it from broader design; no particular app or device promised."
+    ]
+  },
+  {
+    "icon_id": "format-startup-pitch-feedback",
+    "source_sha256": "2787d4b1f35c8c2a22dff00124c099e2f34cbb58974148bd5802ad401d233de5",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; brief known. Idea presentation board with feedback bubble.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-072/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-072/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 712,
+      "gzip_level_6": 404
+    },
+    "optimization": {
+      "initial_raw": 712,
+      "initial_gzip_level_6": 404,
+      "final_raw": 712,
+      "final_gzip_level_6": 404
+    },
+    "issues": [],
+    "resolved_issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Presentation and feedback remain at24/32px; fine bulb details soften16px. Label specifies startup critique,not funding."
+    ]
+  },
+  {
+    "icon_id": "craft-press-on-nails",
+    "source_sha256": "28bd575058d6224f5c8efe89eda408409656f913ddc27624e5ed06dc791ebace",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; brief known. Five removable curved nail tips and a closed polish bottle.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-072/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-072/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 6141,
+      "gzip_level_6": 1780
+    },
+    "optimization": {
+      "initial_raw": 6141,
+      "initial_gzip_level_6": 1780,
+      "final_raw": 6141,
+      "final_gzip_level_6": 1780
+    },
+    "issues": [],
+    "resolved_issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Bottle and separate tips read at24/32px; tiny tip shapes soften16px and the exact removable-nail meaning requires the label. No fingers,chemistry,UV lamp or exact class kit promised."
+    ]
+  },
+  {
+    "icon_id": "activity-headshot-session",
+    "source_sha256": "9ca77cdaf36b360bf61c07d273b4e6e0dfc04d17aa0c7b56e0d86b24c774c88f",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; brief known. Portrait crop frame and camera.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-072/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-072/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 765,
+      "gzip_level_6": 433
+    },
+    "optimization": {
+      "initial_raw": 765,
+      "initial_gzip_level_6": 433,
+      "final_raw": 765,
+      "final_gzip_level_6": 433
+    },
+    "issues": [],
+    "resolved_issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Profile and camera remain visible16px; crop marks soften. This is a flat avatar symbol,not anatomical pose artwork. No prints,retouching or licensing promised."
+    ]
+  },
+  {
+    "icon_id": "format-historic-house-tour",
+    "source_sha256": "031648f027f02c358791f790033bb1cc78870a17a6372d813876673a5e83bea7",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; brief known. House facade with route marks and history clock.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-072/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-072/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 844,
+      "gzip_level_6": 419
+    },
+    "optimization": {
+      "initial_raw": 844,
+      "initial_gzip_level_6": 419,
+      "final_raw": 844,
+      "final_gzip_level_6": 419
+    },
+    "issues": [],
+    "resolved_issues": [],
+    "decision": "pass",
+    "limitations": [
+      "House and clock remain visible16px; route dots soften. Clock is a history symbol,not opening hours. Generic facade is not a site reconstruction,floorplan or accessibility guarantee."
+    ]
+  }
+]

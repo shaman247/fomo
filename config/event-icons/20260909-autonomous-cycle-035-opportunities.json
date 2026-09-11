@@ -1,0 +1,1070 @@
+{
+  "date": "2026-09-10",
+  "scope": "Cycle 035: 100 sequential events 208876–209378, no targeted supplements.",
+  "suggestions": 53,
+  "concept_count": 42,
+  "concepts": [
+    {
+      "concept": "genre-jazz",
+      "label": "Jazz",
+      "category": "genre",
+      "visual": "A pair of syncopated musical notes with one loose improvisatory flourish.",
+      "rationale": "The genre is explicit, but an instrument-neutral motif remains exploratory and requires recognition tests; avoid treating saxophone as universal jazz.",
+      "existing_alternative": "Noto notes are generic; a saxophone misstates instrumentation when the program does not feature one.",
+      "event_ids": [
+        208880,
+        208889,
+        209074,
+        209075
+      ],
+      "evidence_by_event": {
+        "208880": [
+          "Darrian Ford: In his long overdue return to the Laurie Beechman Theater, vocalist Darrian Ford presents Something More. With warmth, humor, and honesty, Ford explores the desires that unite us all: more love, more freedom, more abundance, more joy, more purpose and a deeper connection to ourselves and one another. The show features Jazz, Soul music and Musical Theater.",
+          "Tags: Music, Theater, Jazz, Soul Music, Format, Theater Show, Performance"
+        ],
+        "208889": [
+          "Jackie Draper: Jackie Draper returns to the Laurie Beechman Theatre with a new show, “Legrand Legacy – Keep the Music Playing!” The show includes songs in English and French spanning Michel Legrand’s variety of styles and collaborators.",
+          "Tags: Music, Theater, Jazz, French Music, Format, Theater Show, Performance, Michel Legrand"
+        ],
+        "209074": [
+          "Briana Swann: No description available.",
+          "Tags: Music, Jazz, Concert, Format, Performance"
+        ],
+        "209075": [
+          "Sounds of The Jazz Club: No description available.",
+          "Tags: Music, Jazz, Concert, Nightlife, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "208880": [
+          "https://www.thebeechman.com/events/lbt25-darrian-ford"
+        ],
+        "208889": [
+          "https://www.thebeechman.com/events/lbt25-jackie-draper"
+        ],
+        "209074": [
+          "https://www.thejazzclub.com/events/08-18-26-tuesday",
+          "https://www.thejazzclub.com/events/09-22-26-tuesday"
+        ],
+        "209075": [
+          "https://www.thejazzclub.com/events/08-18-26-tuesday",
+          "https://www.thejazzclub.com/events/08-19-26-wednesday",
+          "https://www.thejazzclub.com/events/08-25-26",
+          "https://www.thejazzclub.com/events/09-01-26-tuesday",
+          "https://www.thejazzclub.com/events/09-09-26-wednesday",
+          "https://www.thejazzclub.com/events/09-16-26-wednesday"
+        ]
+      }
+    },
+    {
+      "concept": "genre-showtunes",
+      "label": "Genre showtunes",
+      "category": "genre",
+      "visual": "Theatrical songbook",
+      "rationale": "Musical-theater song selections.",
+      "existing_alternative": "Existing broader icon or Unicode may suffice; preserve prospective study until semantic and visual validation.",
+      "event_ids": [
+        208879,
+        208880,
+        208902,
+        208903
+      ],
+      "evidence_by_event": {
+        "208879": [
+          "Goldie Dver: The Rhythm of Life: MAC Award winner Goldie Dver returns to The Laurie Beechman Theatre in The Rhythm of Life: The Dorothy Fields Songbook. Featuring familiar classics and rarities, the evening celebrates the legacy of Broadway and the American Songbook’s greatest female lyricist.",
+          "Tags: Cabaret, Broadway, Music, Theater, Musical Theater, Nightlife, American Songbook, Format, Theater Show, Performance"
+        ],
+        "208880": [
+          "Darrian Ford: In his long overdue return to the Laurie Beechman Theater, vocalist Darrian Ford presents Something More. With warmth, humor, and honesty, Ford explores the desires that unite us all: more love, more freedom, more abundance, more joy, more purpose and a deeper connection to ourselves and one another. The show features Jazz, Soul music and Musical Theater.",
+          "Tags: Music, Theater, Jazz, Soul Music, Format, Theater Show, Performance"
+        ],
+        "208902": [
+          "Jordan and Michelle: In their show Tricks and Treats, Michelle Dowdy and Jordan Wolfe take audiences on a musical journey through macabre songs, including pop/rock, movies and musicals, jazz, and Jordan’s original music.",
+          "Tags: Cabaret, Music, Theater, Nightlife, Halloween, Format, Theater Show, Performance"
+        ],
+        "208903": [
+          "Madelaine Warren: Acclaimed vocalist Madelaine Warren encores her highly-praised show WARREN SINGS FIELDS, a celebration of one of the finest and most prolific lyricists of the 20th century, Dorothy Fields, whose remarkable career spanned 50 years. The musically diverse program features songs from Tin Pan Alley, stage and film, and is a collaboration with Christopher Denny and Barry Kleinbort, with Tom Hubbard on bass.",
+          "Tags: Cabaret, Music, Theater, Nightlife, Vocal Performance, Vocal Music, Vocalist, Live Music, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "208879": [
+          "https://www.thebeechman.com/events/goldie-dver-the-rhythm-of-life"
+        ],
+        "208880": [
+          "https://www.thebeechman.com/events/lbt25-darrian-ford"
+        ],
+        "208902": [
+          "https://www.thebeechman.com/events/lbt25-jordan-and-michelle"
+        ],
+        "208903": [
+          "https://www.thebeechman.com/events/lbt25-madelaine-warrenmnwxljk"
+        ]
+      }
+    },
+    {
+      "concept": "format-game-social",
+      "label": "Mixed game social",
+      "category": "format",
+      "visual": "Controller, tile and game card beside a conversation bubble.",
+      "rationale": "Co-primary games must not promise one exact game.",
+      "existing_alternative": "Use a suitable broad Unicode or accepted icon until a distinctive reviewed study is available.",
+      "event_ids": [
+        209044,
+        209082,
+        209289
+      ],
+      "evidence_by_event": {
+        "209044": [
+          "@CupsNConvos HALLOWEEN Gamenight! Oct. 30th!: Shots for the first 25 people in costume!",
+          "Tags: Games, Nightlife, Game, Participatory, Halloween, Format"
+        ],
+        "209082": [
+          "Game Night Social (Free Drink, Ping Pong, Pool, DJ): GAME NIGHT SOCIAL W/ COMPLIMENTARY PING PONG, POOL, DJ, & FREE DRINK! Ladies get a FREE",
+          "Tags: Music, Free, DJ, Games, Ping Pong, Nightlife, Game, Participatory, Pool / Billiards, Format, Free Drink"
+        ],
+        "209289": [
+          "Teen Game Time: Need to unwind after a long week? Join us for Teen Game Time, and play your favorite games on xBox, PS5, or even some old school board games & puzzles. For ages 13 & up",
+          "Tags: Video Games, Family, Games, Board Games, Teen Events, Game, Participatory, Puzzle, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "209044": [
+          "https://posh.vip/e/cupsnconvos-halloween-gamenight"
+        ],
+        "209082": [
+          "https://www.meetup.com/5boroexploration/events/315933512/",
+          "https://www.meetup.com/5boroexploration/events/315939291/",
+          "https://www.meetup.com/5boroexploration/events/316283468/",
+          "https://www.meetup.com/5boroexploration/events/316331419/"
+        ],
+        "209289": [
+          "https://www.nypl.org/events/programs/2026/08/07/teen-game-time",
+          "https://www.nypl.org/events/programs/2026/09/04/teen-game-time"
+        ]
+      }
+    },
+    {
+      "concept": "craft-plein-air",
+      "label": "Plein-air painting",
+      "category": "craft",
+      "visual": "Portable easel with a small landscape canvas and sun beyond its edge.",
+      "rationale": "Outdoor observational painting is a clear equipment/environment format distinct from indoor studio painting.",
+      "existing_alternative": "Palette communicates painting generally but not outdoor easel practice.",
+      "event_ids": [
+        208953,
+        208959
+      ],
+      "evidence_by_event": {
+        "208953": [
+          "Plein Air Painting with Nancy Reed Jones | Sept. 2026: Students will learn all the fundamentals of how to create beautiful paintings outdoors. Using a limited palette, stu",
+          "Tags: Visual Arts, Art, Painting, Education, Outdoor, Class, Participatory, Plein Air, Format"
+        ],
+        "208959": [
+          "Plein Air Painting Process: Fall Foliage with Shawn Dell Joyce: Learn how painters determine what to paint and create a composition, then try your hand at the same approach from s",
+          "Tags: Visual Arts, Art, Workshop, Painting, Education, Outdoor, Participatory, Fall Foliage, Plein Air, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "208953": [
+          "https://wallkill.art/event/plein-air-painting-with-nancy-reed-jones-sept-2026/"
+        ],
+        "208959": [
+          "https://wallkill.art/event/plein-air-painting-process-fall-foliage-with-shawn-dell-joyce/"
+        ]
+      }
+    },
+    {
+      "concept": "format-singalong",
+      "label": "Singalong",
+      "category": "format",
+      "visual": "Shared lyric sheet and connected singing notes.",
+      "rationale": "Explicit audience singing without karaoke screens or formal choir.",
+      "existing_alternative": "Use a suitable broad Unicode or accepted icon until a distinctive reviewed study is available.",
+      "event_ids": [
+        208895,
+        209071
+      ],
+      "evidence_by_event": {
+        "208895": [
+          "Avery Sommers: “FOR SENTIMENTAL REASONS” is a mix of personal stories, Broadway, including a brief video of the performer’s first Broadway show (Ain't Misbehavin'), and a sing-a-long section featuring hits from the 60's and a tribute to Neil Sedaka. Avery is thrilled to be joined by longtime friend and MD, Doyle Newmyer, on piano. Don't miss Avery's new recording of IF - available on all streaming platforms.",
+          "Tags: Broadway, Music, Theater, Musical Theater, Format, Theater Show, Performance"
+        ],
+        "209071": [
+          "Kindie Rock: Enjoy rocking live music as our dynamic roster of family-friendly performers lead little ones in dynamic movement and spirited sing-a-longs!",
+          "Tags: Music, Kids, Dance, Family, Concert, Sing Along, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "208895": [
+          "https://www.thebeechman.com/events/lbt25-avery-sommers"
+        ],
+        "209071": [
+          "https://bpca.ny.gov/event/kindie-rock-13-2-2/2026-09-02/",
+          "https://bpca.ny.gov/news/events/?selected_id=10013827",
+          "https://bpca.ny.gov/news/events/?selected_id=10013828"
+        ]
+      }
+    },
+    {
+      "concept": "genre-soul",
+      "label": "Soul music",
+      "category": "genre",
+      "visual": "A record with a rounded call-and-response wave.",
+      "rationale": "Classic and Northern Soul are explicit repertoire; the motif needs testing against funk and R&B and should not imply live vocals.",
+      "existing_alternative": "DJ decks serve the current activity; no existing icon distinguishes soul repertoire.",
+      "event_ids": [
+        208876,
+        208880
+      ],
+      "evidence_by_event": {
+        "208876": [
+          "The Blues, black & white: Join us to hear the music and stories of the women and men who lived and sang the blues, from Ma Rainey and Billie Holiday to W C Handy, Muddy Waters and B. B. King. This performance also includes songs from trailblazing superstars like Aretha Franklin, James Brown, and Tina Turner.",
+          "Tags: Music, Theater, Blues, Soul Music, Format, Theater Show, Performance"
+        ],
+        "208880": [
+          "Darrian Ford: In his long overdue return to the Laurie Beechman Theater, vocalist Darrian Ford presents Something More. With warmth, humor, and honesty, Ford explores the desires that unite us all: more love, more freedom, more abundance, more joy, more purpose and a deeper connection to ourselves and one another. The show features Jazz, Soul music and Musical Theater.",
+          "Tags: Music, Theater, Jazz, Soul Music, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "208876": [
+          "https://www.thebeechman.com/events/the-blues-black-white"
+        ],
+        "208880": [
+          "https://www.thebeechman.com/events/lbt25-darrian-ford"
+        ]
+      }
+    },
+    {
+      "concept": "activity-bodyweight-circuit",
+      "label": "Bodyweight circuit training",
+      "category": "activity",
+      "visual": "Several simple exercise stations around a circular path.",
+      "rationale": "Bodyweight circuit excludes implied dumbbells, step platforms or a specific routine.",
+      "existing_alternative": "Use a suitable broad Unicode or accepted icon until a distinctive reviewed study is available.",
+      "event_ids": [
+        209115
+      ],
+      "evidence_by_event": {
+        "209115": [
+          "Bodyweight Circuit Training: Bodyweight Circuit Training is an energetic yet low impact exercise class that combines cardio and body weight strength exercises for a full body workout. Modifications make the class open to all fitness levels.",
+          "Tags: Free, Wellness, Fitness, Outdoor, Exercise, Shape Up, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "209115": [
+          "https://www.nycgovparks.org/events/2026/08/08/bodyweight-circuit-training1",
+          "https://www.nycgovparks.org/events/2026/08/15/bodyweight-circuit-training1",
+          "https://www.nycgovparks.org/events/2026/08/22/bodyweight-circuit-training1",
+          "https://www.nycgovparks.org/events/2026/08/29/bodyweight-circuit-training1",
+          "https://www.nycgovparks.org/events/2026/09/05/bodyweight-circuit-training1",
+          "https://www.nycgovparks.org/events/2026/09/12/bodyweight-circuit-training"
+        ]
+      }
+    },
+    {
+      "concept": "activity-library-database-research",
+      "label": "Library database research",
+      "category": "activity",
+      "visual": "Search window with stacked document records.",
+      "rationale": "Research assistance differs from database programming and general computer basics.",
+      "existing_alternative": "Use a suitable broad Unicode or accepted icon until a distinctive reviewed study is available.",
+      "event_ids": [
+        209222
+      ],
+      "evidence_by_event": {
+        "209222": [
+          "In Person: Friday Open Lab - Databases: Work with a Bronx Library Center staff member Open Lab: One-on-One Assistance / Database Assistance, in English and Spanish.",
+          "Tags: Science, Education, Technology, Bilingual, Language Learning, Participatory, Databases, Format, Drop-In Service"
+        ]
+      },
+      "source_urls_by_event": {
+        "209222": [
+          "https://www.nypl.org/events/programs/2026/08/07/person-friday-open-lab-databases",
+          "https://www.nypl.org/events/programs/2026/08/21/person-friday-open-lab-databases",
+          "https://www.nypl.org/events/programs/2026/09/04/person-friday-open-lab-databases",
+          "https://www.nypl.org/events/programs/2026/09/11/person-friday-open-lab-databases"
+        ]
+      }
+    },
+    {
+      "concept": "activity-nature-writing",
+      "label": "Nature writing",
+      "category": "activity",
+      "visual": "Notebook with leaf and pencil.",
+      "rationale": "Outdoor observation followed by writing exercises is explicit.",
+      "existing_alternative": "Use a suitable broad Unicode or accepted icon until a distinctive reviewed study is available.",
+      "event_ids": [
+        209368
+      ],
+      "evidence_by_event": {
+        "209368": [
+          "World Migratory Bird Day: Walk & Workshop: Join us for World Migratory Bird Day at the Climate Imaginarium. Catch the ferry to join fellow birders for a guided nature walk, followed by a creative writing workshop at the Climate Imaginarium; after the walk, participants will share notes and get creative with writing exercises and art activities.",
+          "Tags: Community, Nature, Workshop, Tour, Education, Outdoor, Birding, Format, Outings"
+        ]
+      },
+      "source_urls_by_event": {
+        "209368": [
+          "https://luma.com/4fjrqdlc",
+          "https://www.govisland.com/things-to-do/events/world-migratory-bird-day-walk-workshop"
+        ]
+      }
+    },
+    {
+      "concept": "activity-observational-drawing",
+      "label": "Observational drawing",
+      "category": "activity",
+      "visual": "Sketchpad and pencil facing a simple observed object.",
+      "rationale": "Mixed still life, interiors and figures require broader drawing-from-life art.",
+      "existing_alternative": "Use a suitable broad Unicode or accepted icon until a distinctive reviewed study is available.",
+      "event_ids": [
+        208957
+      ],
+      "evidence_by_event": {
+        "208957": [
+          "Int/Adv Drawing with William Noonan | Oct. 2026: This class is appropriate for artists who possess a basic understanding of the principles of drawing from life. Subjects like form,",
+          "Tags: Visual Arts, Art, Education, Drawing, Figure Drawing, Class, Participatory, Intermediate, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "208957": [
+          "https://wallkill.art/event/int-adv-drawing-with-william-noonan-oct-2026/"
+        ]
+      }
+    },
+    {
+      "concept": "activity-vinyasa-yoga",
+      "label": "Vinyasa flow yoga",
+      "category": "activity",
+      "visual": "A person in downward-facing dog on a mat with one broad flowing movement arc.",
+      "rationale": "The explicitly flowing posture practice differs from the seated meditation emoji; exact Vinyasa versus general yoga recognition must be tested.",
+      "existing_alternative": "Noto lotus pose and chair-yoga custom art show different body positions.",
+      "event_ids": [
+        209137
+      ],
+      "evidence_by_event": {
+        "209137": [
+          "Yoga: Connect with yourself in Yoga, a class to be enjoyed by all. Experience a fun and light-hearted, mid-intensity flow that will move you seamlessly from Sun Salutation to a final peak pose. We focus on inversions and breath work to ensure you leave class feeling challenged and balanced. Mats are recommended but not required.",
+          "Tags: Free, Wellness, Fitness, Yoga, Exercise, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "209137": [
+          "https://www.nyc.gov/main/events/?permalinkName=yoga&id=1185016&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=yoga&id=1185316&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=yoga&id=1185416&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=yoga&id=1244736&sequence=1",
+          "https://www.nycgovparks.org/events/2026/08/11/yoga",
+          "https://www.nycgovparks.org/events/2026/08/18/yoga",
+          "https://www.nycgovparks.org/events/2026/08/25/yoga",
+          "https://www.nycgovparks.org/events/2026/09/01/yoga",
+          "https://www.nycgovparks.org/events/2026/09/15/yoga"
+        ]
+      }
+    },
+    {
+      "concept": "craft-ceramic-glazing",
+      "label": "Ceramic glazing",
+      "category": "craft",
+      "visual": "A wide brush laying one glossy blue band across a cream ceramic bowl.",
+      "rationale": "Glazing is explicitly one of two studio options and concerns surface treatment rather than forming clay. The combined session should remain broad; test confusion with ordinary pottery painting.",
+      "existing_alternative": "Pottery and handbuilding icons depict a vessel or clay shaping; palette misses the ceramic coating process.",
+      "event_ids": [
+        208910
+      ],
+      "evidence_by_event": {
+        "208910": [
+          "Community Ceramics - Handbuilding or Glazing: Community ceramics sessions offering handbuilding or glazing.",
+          "Tags: Art, Ceramics, Education, Crafts, Open Practice, Handbuilding, Glazing, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "208910": [
+          "http://www.tinyartssupply.com/pages/calendar"
+        ]
+      }
+    },
+    {
+      "concept": "craft-paint-by-numbers",
+      "label": "Paint by numbers",
+      "category": "craft",
+      "visual": "Outlined canvas cells, a few numbered regions and brush.",
+      "rationale": "Primary says supplied pre-sketched canvas and paint-by-numbers approach.",
+      "existing_alternative": "Use a suitable broad Unicode or accepted icon until a distinctive reviewed study is available.",
+      "event_ids": [
+        208958
+      ],
+      "evidence_by_event": {
+        "208958": [
+          "Colorful Pet Portraits with Shawn Dell Joyce: Learn an interesting approach to making a colorful and realistic pet portrait! Your canvas will be pre-sketched.",
+          "Tags: Visual Arts, Art, Workshop, Painting, Education, Acrylic Painting, Participatory, Pet Portraits, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "208958": [
+          "https://wallkill.art/event/colorful-pet-portraits-with-shawn-dell-joyce/"
+        ]
+      }
+    },
+    {
+      "concept": "craft-pet-portrait-painting",
+      "label": "Pet portrait painting",
+      "category": "craft",
+      "visual": "Small cat-or-dog painted canvas beside a brush.",
+      "rationale": "Explicit painted pet portraits; do not imply a live animal model.",
+      "existing_alternative": "Use a suitable broad Unicode or accepted icon until a distinctive reviewed study is available.",
+      "event_ids": [
+        208958
+      ],
+      "evidence_by_event": {
+        "208958": [
+          "Colorful Pet Portraits with Shawn Dell Joyce: Learn an interesting approach to making a colorful and realistic pet portrait! Your canvas will be pre-sketched.",
+          "Tags: Visual Arts, Art, Workshop, Painting, Education, Acrylic Painting, Participatory, Pet Portraits, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "208958": [
+          "https://wallkill.art/event/colorful-pet-portraits-with-shawn-dell-joyce/"
+        ]
+      }
+    },
+    {
+      "concept": "dance-line-dance",
+      "label": "Line dance",
+      "category": "dance-style",
+      "visual": "Three simplified legs/feet in a row executing the same side step.",
+      "rationale": "Line formation and synchronized steps distinguish the activity without assuming country music.",
+      "existing_alternative": "Noto cowboy face implies country culture, not dance; solo dancer lacks row formation.",
+      "event_ids": [
+        209064
+      ],
+      "evidence_by_event": {
+        "209064": [
+          "Nyc Party: Beginner Nite: Our monthly Beginner Nite is geared toward beginners and first-timers. The party includes two beginner lessons and dances from the in-studio beginner class series, with open floor requests all night.",
+          "Tags: Community, Dance, Family, Nightlife, Class, Beginner Friendly, Participatory, Line Dance, Beginners, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "209064": [
+          "https://www.scuff.us/performances/3pgmdnv6",
+          "https://www.scuff.us/performances/ljpl6trz",
+          "https://www.scuff.us/performances/qvbazhjn"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-jazz-quartet",
+      "category": "format",
+      "label": "Jazz quartet",
+      "visual": "Four music stands with four bold note marks",
+      "rationale": "Four-piece jazz ensemble differs from string quartet; avoid assumed instruments.",
+      "existing_alternative": "Broad fallback does not distinguish this supported facet.",
+      "event_ids": [
+        208945
+      ],
+      "evidence_by_event": {
+        "208945": [
+          "Alex Minasian Quartet: Alex Minasian has established himself as a versatile pianist and educator in a wide variety of musical genres. He studied with some of the greatest pianists in jazz history and has shared the stage with legends including Arturo Sandoval, ?uestlove, James Ingram, Sam Moore, Curtis Fuller, Hank Jones, Clark Terry, and Little Anthony and the Imperials.",
+          "Tags: Music, Jazz, Concert, Piano, Quartet, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "208945": [
+          "https://www.thedjangonyc.com/events/alex-minasian-12/?selected_date=2026-09-05",
+          "https://www.thedjangonyc.com/events/alex-minasian-13/?selected_date=2026-10-10"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-jazz-quintet",
+      "category": "format",
+      "label": "Jazz quintet",
+      "visual": "Five music-stand shapes in a shallow arc with one note.",
+      "rationale": "Explicit quintet configuration deserves exploration without assumed instruments.",
+      "existing_alternative": "Five tiny objects may fail at small sizes; generic music remains safer.",
+      "event_ids": [
+        208937
+      ],
+      "evidence_by_event": {
+        "208937": [
+          "Abe Fogle Band: Lineup: Abe Fogle on drums/vocals, Geoff Mattoon on woodwinds, BD Lenz on guitar, Jeff Miller on keyboards, and Gary Foote on bass. Drummer Abe Fogle has been touring the world and recording with iconic artists for over three decades, with his playing heard with Rob Thomas, D'Angelo, Kool & The Gang, and others.",
+          "Tags: Music, Jazz, Concert, Live Music, Drums, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "208937": [
+          "https://www.thedjangonyc.com/events/abe-fogle-5/?selected_date=2026-08-19",
+          "https://www.thedjangonyc.com/events/abe-fogle-6/?selected_date=2026-09-16"
+        ]
+      }
+    },
+    {
+      "concept": "format-anime-party",
+      "label": "Format anime party",
+      "category": "format",
+      "visual": "Original animation-style star and party cue",
+      "rationale": "Anime theme not necessarily screening or cosplay.",
+      "existing_alternative": "Existing broader icon or Unicode may suffice; preserve prospective study until semantic and visual validation.",
+      "event_ids": [
+        209079
+      ],
+      "evidence_by_event": {
+        "209079": [
+          "Sexy Nerds: Anime Skyline: Sexy Nerds: Anime Skyline is a rooftop party celebrating anime, cosplay, gaming, comics, art, music, dancing, and community. The event welcomes geeks, nerds, otakus, and weebs looking to connect and make new friends.",
+          "Tags: Community, Music, Dance, Film, Party, Games, Nightlife, Anime, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "209079": [
+          "https://230-fifth.com/event/sexy-nerds-anime-skyline-230-fifth-rooftop-2/",
+          "https://230-fifth.com/event/sexy-nerds-anime-skyline-230-fifth-rooftop-3/"
+        ]
+      }
+    },
+    {
+      "concept": "format-autobiographical-theater",
+      "label": "Autobiographical theater",
+      "category": "format",
+      "visual": "Personal memoir sheet within a solo stage frame.",
+      "rationale": "One-person enacted personal history may benefit from a theatrical format marker.",
+      "existing_alternative": "Use a suitable broad Unicode or accepted icon until a distinctive reviewed study is available.",
+      "event_ids": [
+        208930
+      ],
+      "evidence_by_event": {
+        "208930": [
+          "Lost in Del Valle: A New York actor finds himself in Texas prison on a drug charge and is offered protection by an inmate from the Texas Aryan Brotherhood in exchange for acting lessons. Ned Van Zandt tells a tale spanning the Chelsea Hotel in the 1970s, the LA music scene, and a Texas correctional facility in this genre-bending dark comedy directed by Amir Arison.",
+          "Tags: Theater, Comedy, Solo Performance, Drama / Theater, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "208930": [
+          "https://www.sohoplayhouse.com/see-a-show/lost-in-del-valle"
+        ]
+      }
+    },
+    {
+      "concept": "format-car-show",
+      "label": "Car show",
+      "category": "format",
+      "visual": "Displayed car with small exhibit placard.",
+      "rationale": "Car display differs from racing or driving lessons.",
+      "existing_alternative": "Use a suitable broad Unicode or accepted icon until a distinctive reviewed study is available.",
+      "event_ids": [
+        209059
+      ],
+      "evidence_by_event": {
+        "209059": [
+          "Long Island Car Show: We will be open for food and drink for the Long Island car show!",
+          "Tags: Community, Outdoor, Nightlife, Special Event, Exhibition, Cars, Format, Browsable"
+        ]
+      },
+      "source_urls_by_event": {
+        "209059": [
+          "https://theboatyardny.com/event/e7634c949ac8long-island-car-show-2026-09-27/"
+        ]
+      }
+    },
+    {
+      "concept": "format-cocktail-tasting",
+      "label": "Cocktail tasting",
+      "category": "format",
+      "visual": "Three small differently shaped tasting glasses on a tray.",
+      "rationale": "A tasting flight differs from hands-on mixing; specific recipes remain illustrative.",
+      "existing_alternative": "Use a suitable broad Unicode or accepted icon until a distinctive reviewed study is available.",
+      "event_ids": [
+        208897
+      ],
+      "evidence_by_event": {
+        "208897": [
+          "Broadway Barfly LIVE!: If you love Broadway and a great cocktail, then Broadway Barfly is the show for you! Comic, actor, singer, and YouTube creator Robert Driemeyer takes you on a stimulating musical adventure through Broadway's fabled nightlife, stirring up spirited songs and saucy stories of classic cocktails and their connections to the Great White Way. The show includes an optional tasting flight of cocktails set to tunes ranging from Cole Porter to Katy Perry, with surprise guest appearances possible.",
+          "Tags: Cocktails, Broadway, Music, Theater, Comedy, Musical Theater, Nightlife, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "208897": [
+          "https://www.thebeechman.com/events/broadway-barfly-live-"
+        ]
+      }
+    },
+    {
+      "concept": "format-comedy-competition",
+      "label": "Comedy competition",
+      "category": "format",
+      "visual": "Comedy microphone and judging score cards.",
+      "rationale": "Explicit contestants, judges and title awards differ from ordinary stand-up.",
+      "existing_alternative": "Use a suitable broad Unicode or accepted icon until a distinctive reviewed study is available.",
+      "event_ids": [
+        208899
+      ],
+      "evidence_by_event": {
+        "208899": [
+          "Ladies of Laughter: The 2026 Ladies of Laughter national competition includes 10 women chosen to perform before industry judges for theater bookings, publicity and the Ladies of Laughter Title(s). The show is hosted by 2024 Ladies of Laughter National Professional Competition winner, Poppy Champlin.",
+          "Tags: Community, Theater, Comedy, Sports, Games, Competition, Comedy Show, Women in Comedy, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "208899": [
+          "https://www.thebeechman.com/events/lbt25-ladies-of-laughter"
+        ]
+      }
+    },
+    {
+      "concept": "format-concert-musical",
+      "label": "Musical in concert",
+      "category": "format",
+      "visual": "Open score and vocal microphone within a stage outline.",
+      "rationale": "Come From Away is presented in concert with former company members.",
+      "existing_alternative": "Theater masks are broad; captured screening versus live concert must be resolved separately.",
+      "event_ids": [
+        208888
+      ],
+      "evidence_by_event": {
+        "208888": [
+          "The Fartiste: The New York International Fringe Festival’s award-winning sensation returns for an explosive 20th Anniversary Concert celebration. The Fartiste brings the true story of Joseph Pujol, a 19th-century French baker who becomes the highest-paid headliner at the Moulin Rouge by turning flatulence into high art, to the stage with roaring laughter and brassy cabaret tunes.",
+          "Tags: Cabaret, Music, Theater, Comedy, Nightlife, Fringe Festival, Musical / Theater, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "208888": [
+          "https://www.thebeechman.com/events/the-fartiste"
+        ]
+      }
+    },
+    {
+      "concept": "format-cosplay-social",
+      "label": "Cosplay social",
+      "category": "format",
+      "visual": "Costume mask with a social speech bubble.",
+      "rationale": "Participant character costumes are distinct from screening animation.",
+      "existing_alternative": "Use a suitable broad Unicode or accepted icon until a distinctive reviewed study is available.",
+      "event_ids": [
+        209079
+      ],
+      "evidence_by_event": {
+        "209079": [
+          "Sexy Nerds: Anime Skyline: Sexy Nerds: Anime Skyline is a rooftop party celebrating anime, cosplay, gaming, comics, art, music, dancing, and community. The event welcomes geeks, nerds, otakus, and weebs looking to connect and make new friends.",
+          "Tags: Community, Music, Dance, Film, Party, Games, Nightlife, Anime, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "209079": [
+          "https://230-fifth.com/event/sexy-nerds-anime-skyline-230-fifth-rooftop-2/",
+          "https://230-fifth.com/event/sexy-nerds-anime-skyline-230-fifth-rooftop-3/"
+        ]
+      }
+    },
+    {
+      "concept": "format-craft-social",
+      "label": "Format craft social",
+      "category": "format",
+      "visual": "Craft supplies and conversation bubble",
+      "rationale": "Mixed craft-making social without fixed technique.",
+      "existing_alternative": "Existing broader icon or Unicode may suffice; preserve prospective study until semantic and visual validation.",
+      "event_ids": [
+        209284
+      ],
+      "evidence_by_event": {
+        "209284": [
+          "Friday Crafternoon: Join staff of the Stavros Niarchos Foundation Library for two hours of freeform crafting and conversation.",
+          "Tags: Community, Art, Family, Crafts, Paper Craft, Open Practice, Participatory, Adults, Conversation, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "209284": [
+          "https://www.nypl.org/events/programs/2026/08/07/friday-crafternoon-draft",
+          "https://www.nypl.org/events/programs/2026/09/04/friday-crafternoon-draft"
+        ]
+      }
+    },
+    {
+      "concept": "format-digital-makerspace",
+      "label": "Digital makerspace lab",
+      "category": "format",
+      "visual": "Workbench grouping digital camera, fabrication tool and tablet.",
+      "rationale": "Co-primary digital creation tools make a mixed lab distinct from single-device instruction.",
+      "existing_alternative": "Use a suitable broad Unicode or accepted icon until a distinctive reviewed study is available.",
+      "event_ids": [
+        209267
+      ],
+      "evidence_by_event": {
+        "209267": [
+          "Teen Tech Time: Open Lab: This event will take place in person at Hunts Point Library. Teen Tech Time is a chance to learn how to use the Teen Center’s 3D printers, digital cameras, iPads, and more!",
+          "Tags: Community, Science, Family, Education, Technology, Teen Events, Open Practice, 3D Printing, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "209267": [
+          "https://www.nypl.org/events/programs/2026/08/07/teen-tech-time-open-lab",
+          "https://www.nypl.org/events/programs/2026/08/14/teen-tech-time-open-lab",
+          "https://www.nypl.org/events/programs/2026/08/21/teen-tech-time-open-lab",
+          "https://www.nypl.org/events/programs/2026/08/28/teen-tech-time-open-lab",
+          "https://www.nypl.org/events/programs/2026/09/04/teen-tech-time-open-lab",
+          "https://www.nypl.org/events/programs/2026/09/11/teen-tech-time-open-lab"
+        ]
+      }
+    },
+    {
+      "concept": "format-documentary-screening",
+      "label": "Documentary screening",
+      "category": "format",
+      "visual": "Film frame with a documentary observation lens.",
+      "rationale": "Nonfiction film format merits a clear marker; exact genre recognition needs critique.",
+      "existing_alternative": "Use a suitable broad Unicode or accepted icon until a distinctive reviewed study is available.",
+      "event_ids": [
+        208996
+      ],
+      "evidence_by_event": {
+        "208996": [
+          "Powwow People: This vérité-style documentary follows the lived experience of a contemporary Native gathering.",
+          "Tags: Community, Documentary, Film, Screening, Native Culture, Format, Performance, Native Gathering"
+        ]
+      },
+      "source_urls_by_event": {
+        "208996": [
+          "https://www.bam.org/film/2026/powwow-people"
+        ]
+      }
+    },
+    {
+      "concept": "format-family-concert",
+      "label": "Format family concert",
+      "category": "format",
+      "visual": "Stage music and varied-size audience symbols",
+      "rationale": "Family-friendly concert not child music instruction.",
+      "existing_alternative": "Existing broader icon or Unicode may suffice; preserve prospective study until semantic and visual validation.",
+      "event_ids": [
+        209071
+      ],
+      "evidence_by_event": {
+        "209071": [
+          "Kindie Rock: Enjoy rocking live music as our dynamic roster of family-friendly performers lead little ones in dynamic movement and spirited sing-a-longs!",
+          "Tags: Music, Kids, Dance, Family, Concert, Sing Along, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "209071": [
+          "https://bpca.ny.gov/event/kindie-rock-13-2-2/2026-09-02/",
+          "https://bpca.ny.gov/news/events/?selected_id=10013827",
+          "https://bpca.ny.gov/news/events/?selected_id=10013828"
+        ]
+      }
+    },
+    {
+      "concept": "format-immersive-theater",
+      "label": "Immersive theater",
+      "category": "format",
+      "visual": "Open doors around a theatrical mask.",
+      "rationale": "Intimate moving encounters differ from a fixed stage; exact layout unconfirmed.",
+      "existing_alternative": "Use a suitable broad Unicode or accepted icon until a distinctive reviewed study is available.",
+      "event_ids": [
+        208927
+      ],
+      "evidence_by_event": {
+        "208927": [
+          "Peek-a-Boo: River's Edge Theatre Company brings back its wild and hauntingly provocative immersive show, inspired by the hidden Peek-a-Boo flats of Tarrytown, NY. The production features intimate encounters, voyeuristic thrills, deeply human performances, and extra secret scenes.",
+          "Tags: Theater, Immersive Experience, Drama / Theater, Format, Browsable"
+        ]
+      },
+      "source_urls_by_event": {
+        "208927": [
+          "https://www.riversedgetheatre.com/onstage"
+        ]
+      }
+    },
+    {
+      "concept": "format-live-musical",
+      "label": "Live musical theater",
+      "category": "format",
+      "visual": "Theater masks and singing notes beside a stage.",
+      "rationale": "Fully staged musical differs from audience songwriting or ordinary vocal concerts.",
+      "existing_alternative": "Use a suitable broad Unicode or accepted icon until a distinctive reviewed study is available.",
+      "event_ids": [
+        208886
+      ],
+      "evidence_by_event": {
+        "208886": [
+          "Drafts: The Musical: Drafts: the Musical is a coming of age new musical about music majors in a songwriting class. They are given a one word prompt and have to write a song with that prompt in 24 hours. This show features a singer/songwriter score about how music can help us express ourselves when words can’t.",
+          "Tags: Music, Theater, Original Art, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "208886": [
+          "https://www.thebeechman.com/events/lbt25-drafts-the-musical"
+        ]
+      }
+    },
+    {
+      "concept": "format-mobile-art-program",
+      "label": "Mobile art program",
+      "category": "format",
+      "visual": "Portable art cart with paper and brushes.",
+      "rationale": "Traveling art program needs a motif distinct from a lending bookmobile.",
+      "existing_alternative": "Use a suitable broad Unicode or accepted icon until a distinctive reviewed study is available.",
+      "event_ids": [
+        209189
+      ],
+      "evidence_by_event": {
+        "209189": [
+          "ARTmobile in Sunset Park!: Brooklyn Public Library & Residency Unlimited invite you to celebrate another Season of ARTmobile, a free arts program, available to Brooklyn residents!",
+          "Tags: Community, Art, Free, Family, Outdoor, Pop-Up, Format, Browsable, AR Tmobile"
+        ]
+      },
+      "source_urls_by_event": {
+        "209189": [
+          "https://www.bklynlibrary.org/node/817845",
+          "https://www.bklynlibrary.org/node/817846"
+        ]
+      }
+    },
+    {
+      "concept": "format-singer-songwriter-show",
+      "label": "Format singer songwriter show",
+      "category": "format",
+      "visual": "Voice and original-song manuscript",
+      "rationale": "Performance rather than songwriting participation.",
+      "existing_alternative": "Existing broader icon or Unicode may suffice; preserve prospective study until semantic and visual validation.",
+      "event_ids": [
+        208997
+      ],
+      "evidence_by_event": {
+        "208997": [
+          "Jake Manzi, Ambrose Getz, Ellie Macphee: Jake Manzi is a Los Angeles based singer/songwriter, raised in Western Massachusetts. With a subtle touch for turning up pure song-stuff out of life, channeling the likes of Marshall Crenshaw and Tom Petty, of Lucinda Williams and Bruce Springsteen, Manzi...",
+          "Tags: Music, Indie, Concert, Singer Songwriter, Vocal Music, Live Music, 21+, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "208997": [
+          "https://dice.fm/event/6a7102ccdff850000104dbf2",
+          "https://dice.fm/event/ryr6qw-jake-manzi-ambrose-getz-ellie-macphee-14th-oct-sleepwalk-new-york-city-tickets"
+        ]
+      }
+    },
+    {
+      "concept": "format-solo-theater",
+      "label": "Solo theater",
+      "category": "format",
+      "visual": "Single spotlight over one neutral performance figure.",
+      "rationale": "Explicit solo show does not prove comedy or song; anatomy review required.",
+      "existing_alternative": "Use a suitable broad Unicode or accepted icon until a distinctive reviewed study is available.",
+      "event_ids": [
+        208882
+      ],
+      "evidence_by_event": {
+        "208882": [
+          "Tori Baroni: Tori Baroni is bringing her highly requested, long awaited solo show, “A Little Too Much,” to the New York City stage. The performance includes references to mental health and SA.",
+          "Tags: Music, Theater, Comedy, Solo Performance, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "208882": [
+          "https://www.thebeechman.com/events/lbt25-tori-baroni"
+        ]
+      }
+    },
+    {
+      "concept": "format-tribute-concert",
+      "label": "Tribute concert",
+      "category": "format",
+      "visual": "Two overlapping record silhouettes with one echoing musical note.",
+      "rationale": "Tribute repertoire is a format facet; motif is unproven and must not imitate an artist logo.",
+      "existing_alternative": "Existing broad Unicode remains suitable; specific motif must demonstrate added recognition before new artwork.",
+      "event_ids": [
+        208891
+      ],
+      "evidence_by_event": {
+        "208891": [
+          "Charlie High: Charlie High revives Judy Garland’s legendary Carnegie Hall concert through his own lens with a streamlined selection from Garland’s iconic set. Backed by a four-piece band led by music director Drew Wutke, Charlie brings the music back to the spotlight, honoring Judy Garland and the historic 1961 concert.",
+          "Tags: Cabaret, Music, Theater, Nightlife, Judy Garland, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "208891": [
+          "https://www.thebeechman.com/events/lbt25-charlie-high"
+        ]
+      }
+    },
+    {
+      "concept": "format-winery-tour",
+      "label": "Winery tour",
+      "category": "format",
+      "visual": "Wine barrel, glass and short walking route.",
+      "rationale": "Touring a winery differs from a single stationary wine tasting.",
+      "existing_alternative": "Use a suitable broad Unicode or accepted icon until a distinctive reviewed study is available.",
+      "event_ids": [
+        209022
+      ],
+      "evidence_by_event": {
+        "209022": [
+          "Harvest Tour & Tasting: A harvest-themed wine tour and tasting experience.",
+          "Tags: Community, Education, Food, Wine, Nightlife, Tasting, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "209022": [
+          "https://fareharbor.com/bkwinery/items/749249/",
+          "https://fareharbor.com/bkwinery/items/749249/availability/2137397392/book/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-afro-latin",
+      "label": "Afro-Latin music",
+      "category": "genre",
+      "visual": "Rhythmic paired notes with an interlocking rhythm motif.",
+      "rationale": "Explicit regional blend; do not infer drums or a national identity from genre alone.",
+      "existing_alternative": "Use a suitable broad Unicode or accepted icon until a distinctive reviewed study is available.",
+      "event_ids": [
+        208939
+      ],
+      "evidence_by_event": {
+        "208939": [
+          "People of Earth: People of Earth is a global music collective set on blurring the barriers between the great art forms of the terrestrial sphere, creating an explosive blend of the music of Cuba, Puerto Rico, Brazil and beyond. The collective’s musicians represent more than 8 different nationalities and have played with artists including Gloria Estefan, Ruben Blades, and the New York Philharmonic.",
+          "Tags: Music, World Music, Jazz, Concert, Latin Music, Cuban Music, Brazilian Music, Puerto Rican Music, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "208939": [
+          "https://www.thedjangonyc.com/events/people-of-earth-27/?selected_date=2026-08-25",
+          "https://www.thedjangonyc.com/events/people-of-earth-28/?selected_date=2026-09-29"
+        ]
+      }
+    },
+    {
+      "concept": "genre-blues",
+      "label": "Blues",
+      "category": "genre",
+      "visual": "Explore a spare bent musical note with a short call-and-response echo mark.",
+      "rationale": "Explicit blues repertoire merits a genre candidate independent of instrument; no proven universal motif, recognition testing required.",
+      "existing_alternative": "Noto guitar or saxophone excludes many blues forms; generic notes omit genre.",
+      "event_ids": [
+        208876
+      ],
+      "evidence_by_event": {
+        "208876": [
+          "The Blues, black & white: Join us to hear the music and stories of the women and men who lived and sang the blues, from Ma Rainey and Billie Holiday to W C Handy, Muddy Waters and B. B. King. This performance also includes songs from trailblazing superstars like Aretha Franklin, James Brown, and Tina Turner.",
+          "Tags: Music, Theater, Blues, Soul Music, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "208876": [
+          "https://www.thebeechman.com/events/the-blues-black-white"
+        ]
+      }
+    },
+    {
+      "concept": "genre-bossa-nova",
+      "label": "Bossa nova",
+      "category": "genre",
+      "visual": "Syncopated notes over a relaxed curved rhythm line.",
+      "rationale": "Explicit bossa repertoire; avoid claiming a guitar or specific ensemble.",
+      "existing_alternative": "Use a suitable broad Unicode or accepted icon until a distinctive reviewed study is available.",
+      "event_ids": [
+        209054
+      ],
+      "evidence_by_event": {
+        "209054": [
+          "Ron Drotos and Friends: Join jazz pianist and Broadway veteran Ron Drotos, along with vocalists Lina Koutrakos, Dorian Woodruff, and Juliet Ewing, for an evening of jazz, bossas, ballads, and a touch of blues. Plus a few musical surprises!",
+          "Tags: Cabaret, Music, Jazz, Concert, Nightlife, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "209054": [
+          "https://www.pangeanyc.com/show/cabaret-room-ron-drotos-and-friends-700pm-2/",
+          "https://www.pangeanyc.com/show/cabaret-room-ron-drotos-and-friends-700pm/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-indie-rock",
+      "category": "genre",
+      "label": "Indie rock",
+      "visual": "Compact guitar and small independent-stage amp",
+      "rationale": "Named indie-rock bills are distinct from broad music",
+      "existing_alternative": "Existing guitar/music emoji; resolve genre visual clarity first",
+      "event_ids": [
+        208988
+      ],
+      "evidence_by_event": {
+        "208988": [
+          "Man/Woman/Chainsaw: Man/Woman/Chainsaw are Billy Ward (vocals, guitars), Emmie-Mae Avery (vocals, keys/synths), Vera Leppänen (vocals, bass), Clio Starwood (violin) and Lola Cherry (drums). A precociously talented band from London, they have been described as one of the most exciting and unpredictable young acts in the capital, both joyous and raucous in equal measures.",
+          "Tags: Music, Rock, Indie, Concert, Nightlife, Indie Rock, Live Music, Format, Performance, London Band"
+        ]
+      },
+      "source_urls_by_event": {
+        "208988": [
+          "https://www.knittingfactory.com/tm-event/man-woman-chainsaw/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-latin-jazz",
+      "label": "Latin jazz",
+      "category": "genre",
+      "visual": "Explore interlocking rhythmic marks without a stereotyped featured instrument.",
+      "rationale": "Program explicitly combines Latin music and Jazz tags.",
+      "existing_alternative": "Music notes remain valid; genre recognition is unproven.",
+      "event_ids": [
+        208896
+      ],
+      "evidence_by_event": {
+        "208896": [
+          "Maximo: Experience the mesmerizing vocal artistry of international sensation Maximo Marcuso for one night only. From Broadway Showtunes to breathtaking romantic pop standards, reimagined Contemporary Classics, Latin Jazz, Opera Arias, he does it all. Accompanying Maximo will be musical director Michael Orland.",
+          "Tags: Cabaret, Broadway, Music, Opera, Jazz, Concert, Musical Theater, Nightlife, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "208896": [
+          "https://www.thebeechman.com/events/lbt25-maximo"
+        ]
+      }
+    },
+    {
+      "concept": "genre-weimar-cabaret",
+      "label": "Weimar cabaret",
+      "category": "genre",
+      "visual": "Historical cabaret song sheet and intimate stage lamp.",
+      "rationale": "Explicit1920s/1930s Weimar repertoire; do not imply a fixed instrument or costume.",
+      "existing_alternative": "Use a suitable broad Unicode or accepted icon until a distinctive reviewed study is available.",
+      "event_ids": [
+        208894
+      ],
+      "evidence_by_event": {
+        "208894": [
+          "Artemisia LeFay: Returning to the repertoire of her beloved Weimar Republic, acclaimed dark kabarett chanteuse Artemisia LeFay comes to the mystery-infused stage of The Beechman Theater with a selection of pieces to illustrate and instruct through the universal language of music. Joined by double bassist Clayton Thompson and pianist Renee Guerrero, she performs songs and stories from the 1920s and 1930s.",
+          "Tags: Cabaret, Music, Theater, Nightlife, Weimar Republic, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "208894": [
+          "https://www.thebeechman.com/events/lbt25-artemisia-lefay"
+        ]
+      }
+    },
+    {
+      "concept": "instrument-drum-kit",
+      "category": "instrument",
+      "label": "Drum kit",
+      "visual": "Bass drum with raised cymbal and one snare silhouette.",
+      "rationale": "Featured jazz drummer differs from single hand drum.",
+      "existing_alternative": "Existing drum emoji is usable but does not show kit setup.",
+      "event_ids": [
+        208937
+      ],
+      "evidence_by_event": {
+        "208937": [
+          "Abe Fogle Band: Lineup: Abe Fogle on drums/vocals, Geoff Mattoon on woodwinds, BD Lenz on guitar, Jeff Miller on keyboards, and Gary Foote on bass. Drummer Abe Fogle has been touring the world and recording with iconic artists for over three decades, with his playing heard with Rob Thomas, D'Angelo, Kool & The Gang, and others.",
+          "Tags: Music, Jazz, Concert, Live Music, Drums, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "208937": [
+          "https://www.thedjangonyc.com/events/abe-fogle-5/?selected_date=2026-08-19",
+          "https://www.thedjangonyc.com/events/abe-fogle-6/?selected_date=2026-09-16"
+        ]
+      }
+    }
+  ],
+  "limitations": "Counts describe this cohort, not population reach. These are grounded prospective studies, not live assignments. Existing artwork may already suffice; exact equipment and genre recognition require further review."
+}

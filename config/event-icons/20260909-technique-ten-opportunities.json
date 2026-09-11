@@ -1,0 +1,191 @@
+{
+  "date": "2026-09-09",
+  "scope": "42-record targeted supplement, not a random population sample",
+  "suggestions": 12,
+  "concept_count": 10,
+  "concepts": [
+    {
+      "category": "genre",
+      "concept": "genre-americana",
+      "existing_alternative": "Existing acoustic-guitar art applies when that instrument defines the program; a genre motif must add recognition without implying unevidenced instrumentation.",
+      "label": "Americana music",
+      "rationale": "Explicit Americana programming merits genre exploration, but there is no universal symbol and acoustic guitar cannot be assumed as actual lineup.",
+      "visual": "Explore an acoustic sound-hole ring with a branching musical note.",
+      "event_ids": [
+        184009
+      ],
+      "evidence_by_event": {
+        "184009": [
+          "The Kicking Horse: The Kicking Horse is a dynamic New York City trio composed of singer-songwriter Aimee Bayles, guitar player Tristan Clark and Rob Ritchie on pedal steel. The band brings together a diverse range of musical influences, from soulful folk to classic rock, Americana, and jazz, to create a sound that is both fresh and deeply rooted in a rich musical heritage.",
+          "Tags: Music, Free, Concert, Nightlife, Groove, Live Music, Format, Performance"
+        ]
+      }
+    },
+    {
+      "category": "genre",
+      "concept": "genre-experimental",
+      "existing_alternative": "Broad fallback does not distinguish this supported facet.",
+      "label": "Experimental music",
+      "rationale": "No instrument is universal; abstract recognition remains unproven.",
+      "visual": "Explore irregular linked sound shapes",
+      "event_ids": [
+        185973
+      ],
+      "evidence_by_event": {
+        "185973": [
+          "Katherine Young: BIOMES (Album Release): Bassoonist/composer joins forces with Olivia Block, Ben LaMar Gay, Brian Chase, and Yarn/Wire to celebrate a new Chaikin release.",
+          "Tags: Music, Experimental, Concert, Album Release, Format, Performance",
+          "Official program https://roulette.org/event/biomes-album-release-katherine-young/ lists three distinct program components and Young on electronics/bassoon; checked 2026-09-09."
+        ]
+      }
+    },
+    {
+      "concept": "game-word-search",
+      "label": "Word search",
+      "category": "activity",
+      "visual": "Letter grid with one diagonal word circled; lettering would need outlined shapes.",
+      "rationale": "Explicit word-search programs differ from crosswords; small text readability needs testing.",
+      "existing_alternative": "Existing puzzle piece remains adequate for mixed sessions; crossword black cells imply a different game.",
+      "event_ids": [
+        217037,
+        245308
+      ],
+      "evidence_by_event": {
+        "217037": [
+          "Hispanic Heritage Month Crossword Puzzles & Word Searches: Celebrate Hispanic Heritage Month with crossword puzzles and word searches at Arverne Library!",
+          "Tags: Family, Games, Game, Participatory, Hispanic Heritage, Puzzle, Format, Word Search"
+        ],
+        "245308": [
+          "Puzzle Playground: Come by with your friends in the Young Adult room for a full hour and test your puzzle solving skills. We will have crosswords, word searches, sudoku, cryptogram, connections and more.",
+          "Tags: Family, Games, Teen Events, Open Practice, Participatory, Puzzle, Format"
+        ]
+      }
+    },
+    {
+      "concept": "format-orchestra",
+      "label": "Orchestra",
+      "category": "format",
+      "visual": "Conductor baton over a broad semicircle of music stands.",
+      "rationale": "Explicit orchestral multi-work program lacks an ensemble-specific icon; preserve without assuming a single instrument.",
+      "existing_alternative": "Music score is appropriate; the bassoon icon would overemphasize one concerto.",
+      "event_ids": [
+        234306
+      ],
+      "evidence_by_event": {
+        "234306": [
+          "Rouvali Conducts Schubert’s Great Symphony: Program To Include: Price / Orch. Still’s Dances in the Canebrakes, Kevin Puts’s Bassoon Concerto, and Schubert’s Symphony No. 9, Great. Artists include Santtu-Matias Rouvali and Judith LeClair.",
+          "Tags: Music, Classical Music, Orchestra, Concert, Schubert, Orchestral, Bassoon, World Premiere, Format, Performance, Kevin Puts"
+        ]
+      }
+    },
+    {
+      "concept": "genre-ambient",
+      "label": "Ambient music",
+      "category": "genre",
+      "visual": "A soft continuous sound-wave ribbon with widely spaced pulses.",
+      "rationale": "Official program describes a meditative ambient musical direction; abstract motif must be tested for recognition.",
+      "existing_alternative": "Music notes and bassoon are valid; no universal genre symbol is established.",
+      "event_ids": [
+        237281
+      ],
+      "evidence_by_event": {
+        "237281": [
+          "Joy Guidry: Five Prayers in Five Movements // A Space for Sound (Rena Anakwe): Bassoonist melds sound, spirit, and radical self-expression, opened by solo improvisations on tapes, voice, synths, and samples.",
+          "Tags: Community, Music, Experimental, Concert, Improvisational Music, Format, Performance",
+          "Official presenter https://roulette.org/event/joy-guidry-five-prayers-in-five-movements/ explicitly describes bassoon blended with electronics and names Guidry on bassoon; checked 2026-09-09."
+        ]
+      }
+    },
+    {
+      "concept": "equipment-tape-loop",
+      "label": "Tape-loop performance",
+      "category": "equipment",
+      "visual": "Compact tape reels with a continuous loop running around a guide.",
+      "rationale": "Opening performer explicitly uses handmade cassette loops; preserve the distinctive performance equipment.",
+      "existing_alternative": "Cassette emoji depicts playback storage, while loop path may add process recognition.",
+      "event_ids": [
+        237281
+      ],
+      "evidence_by_event": {
+        "237281": [
+          "Joy Guidry: Five Prayers in Five Movements // A Space for Sound (Rena Anakwe): Bassoonist melds sound, spirit, and radical self-expression, opened by solo improvisations on tapes, voice, synths, and samples.",
+          "Tags: Community, Music, Experimental, Concert, Improvisational Music, Format, Performance",
+          "Official presenter https://roulette.org/event/joy-guidry-five-prayers-in-five-movements/ explicitly describes bassoon blended with electronics and names Guidry on bassoon; checked 2026-09-09."
+        ]
+      }
+    },
+    {
+      "category": "craft",
+      "concept": "craft-cake-decorating",
+      "existing_alternative": "Existing cake emoji is already strong; separate art only if decorating activity proves a useful distinction.",
+      "label": "Cake decorating",
+      "rationale": "Participants decorate edible cakes; an applied decoration cue conveys making beyond a finished slice. Avoid needle imagery because embroidery is metaphorical here.",
+      "visual": "A small cake top with a spoon placing a short curved row of bright sprinkles.",
+      "event_ids": [
+        243274
+      ],
+      "evidence_by_event": {
+        "243274": [
+          "Cake Embroidery: Try the viral social media edible craft! Use confectioner's sprinkles to \"embroider\" designs onto your own mini sheet cake. Feel free to bring a reference photo to work off of, or choose from one of..",
+          "Tags: Community, Art, Workshop, Education, Food, Cooking Class, Cooking, Cake Decorating, Participatory, Format, Edible Craft"
+        ]
+      }
+    },
+    {
+      "category": "activity",
+      "concept": "game-sudoku",
+      "existing_alternative": "Jigsaw omits number logic; verify the visible grid does not imply a malformed puzzle.",
+      "label": "Sudoku",
+      "rationale": "Sudoku is explicitly offered among the mixed puzzles.",
+      "visual": "A clear square grid with heavier subgrid rules and three separated large numerals.",
+      "event_ids": [
+        245191,
+        245308
+      ],
+      "evidence_by_event": {
+        "245191": [
+          "Adult Puzzle Hour: Love puzzles? Come enjoy a variety of puzzles with other puzzle lovers. We’ll have sheets of word puzzles like crosswords, number puzzles like Sudoku, and jigsaw puzzles available.",
+          "Tags: Community, Games, Open Practice, Participatory, Format"
+        ],
+        "245308": [
+          "Puzzle Playground: Come by with your friends in the Young Adult room for a full hour and test your puzzle solving skills. We will have crosswords, word searches, sudoku, cryptogram, connections and more.",
+          "Tags: Family, Games, Teen Events, Open Practice, Participatory, Puzzle, Format"
+        ]
+      }
+    },
+    {
+      "concept": "game-cryptogram",
+      "label": "Cryptogram puzzle",
+      "category": "activity",
+      "visual": "Two rows of paired cipher glyphs with a small key.",
+      "rationale": "Cryptograms explicitly offered among mixed puzzles; preserve the substitution-puzzle concept.",
+      "existing_alternative": "Crossword art claims a different puzzle; generic puzzle piece is acceptable.",
+      "event_ids": [
+        245308
+      ],
+      "evidence_by_event": {
+        "245308": [
+          "Puzzle Playground: Come by with your friends in the Young Adult room for a full hour and test your puzzle solving skills. We will have crosswords, word searches, sudoku, cryptogram, connections and more.",
+          "Tags: Family, Games, Teen Events, Open Practice, Participatory, Puzzle, Format"
+        ]
+      }
+    },
+    {
+      "concept": "craft-pulp-painting",
+      "label": "Pulp painting",
+      "category": "craft",
+      "visual": "Colored paper pulp poured from a small cup onto a wet sheet in a deckle.",
+      "rationale": "Hands-on pulp painting is explicitly offered; colored pulp is the medium rather than paint brushed on dry paper.",
+      "existing_alternative": "New papermaking art serves the broader process; finer technique may not need a separate icon.",
+      "event_ids": [
+        247496
+      ],
+      "evidence_by_event": {
+        "247496": [
+          "Community Studio Day: Tours, Demos & Experience Pulp Painting: This free afternoon in the Brooklyn Navy Yard offers studio and gallery access, demonstrations of sheet forming and couching, hands-on pulp painting, and guided studio, gallery, and archive tours hosted by guest artists and Dieu Donné staff.",
+          "Tags: Community, Art, Workshop, Free, Education, Open House, Hands on, Studio Tour, Papermaking, Format, Browsable"
+        ]
+      }
+    }
+  ]
+}

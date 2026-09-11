@@ -1,0 +1,429 @@
+{
+  "date": "2026-09-10",
+  "scope": "Cycle 022: 100 sequential events 201965–202337, no targeted supplements.",
+  "suggestions": 24,
+  "concept_count": 16,
+  "concepts": [
+    {
+      "concept": "genre-jazz",
+      "label": "Jazz",
+      "category": "genre",
+      "visual": "A pair of syncopated musical notes with one loose improvisatory flourish.",
+      "rationale": "The genre is explicit, but an instrument-neutral motif remains exploratory and requires recognition tests; avoid treating saxophone as universal jazz.",
+      "existing_alternative": "Noto notes are generic; a saxophone misstates instrumentation when the program does not feature one.",
+      "event_ids": [
+        201999,
+        202000,
+        202001,
+        202002
+      ],
+      "evidence_by_event": {
+        "201999": [
+          "Steve Davis “We See” Sextet: Acclaimed trombonist and composer Steve Davis leads his celebrated “We See” sextet, featuring an all-star lineup celebrating the release of Steve Davis Meets Hank Jones, Volume 2.",
+          "Tags: Music, Jazz, Concert, Format, Performance"
+        ],
+        "202000": [
+          "Steve Turre All-Star Sextet featuring Jon Faddis, James Carter & ELEW: Steve Turre, renowned modern master of the trombone and seashells, leads a momentous, all-star sextet with special guests Jon Faddis on trumpet, James Carter on saxophone, and ELEW on piano.",
+          "Tags: Music, Jazz, Concert, Live Music, Format, Performance"
+        ],
+        "202001": [
+          "Walter Smith III CMA Premiere Ensemble feat. Jason Moran, Matt Stevens, Matt Brewer and Bill Stewart: Acclaimed tenor saxophonist and composer Walter Smith III returns to Smoke, debuting a phenomenal group featuring pianist Jason Moran, guitarist Matt Stevens, bassist Matt Brewer, and drummer Bill Stewart. Smith will premiere a major new work commissioned through Chamber Music America's prestigious New Jazz Works program, supported by the Doris Duke Foundation. One of the most compelling voices in contemporary jazz, Smith has spent nearly two decades at the forefront of the music as both a bandleader and sought-after collaborator.",
+          "Tags: Music, Jazz, Concert, Live Music, Format, Performance"
+        ],
+        "202002": [
+          "Mark Turner Quartet – Patternmaster ECM Records Release: Tenor saxophonist Mark Turner makes his Smoke debut as a leader with his quartet featuring trumpeter Jason Palmer, bassist Joe Martin, and drummer Jonathan Pinson, celebrating the New York release of his ECM recording Patternmaster.",
+          "Tags: Music, Jazz, Concert, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "201999": [
+          "https://tickets.smokejazz.com/r/steve-davis-we-see-sextet-feat-renee-rosnes-eddie-henderson-and-more"
+        ],
+        "202000": [
+          "https://tickets.smokejazz.com/r/steve-turre-all-star-sextet-feat-jon-faddis-james-carter-elew"
+        ],
+        "202001": [
+          "https://tickets.smokejazz.com/r/walter-smith-iii-cma-premiere-ensemble-feat-jason-moran-matt-stevens-matt-brewer-and-bill-stewart"
+        ],
+        "202002": [
+          "https://tickets.smokejazz.com/r/mark-turner-quartet-patternmaster-ecm-records-release"
+        ]
+      }
+    },
+    {
+      "concept": "genre-indie-rock",
+      "category": "genre",
+      "label": "Indie rock",
+      "visual": "Compact guitar and small independent-stage amp",
+      "rationale": "Named indie-rock bills are distinct from broad music",
+      "existing_alternative": "Existing guitar/music emoji; resolve genre visual clarity first",
+      "event_ids": [
+        201989,
+        201990,
+        201992
+      ],
+      "evidence_by_event": {
+        "201989": [
+          "Mt. Joy: Celebrating 10 Years of Mt. Joy",
+          "Tags: Music, Rock, Indie, Concert, Indie Rock, Live Music, Format, Performance"
+        ],
+        "201990": [
+          "Two Door Cinema Club: Tourist History 15th Anniversary Show",
+          "Tags: Music, Rock, Indie, Concert, Indie Rock, Live Music, Format, Performance"
+        ],
+        "201992": [
+          "beabadoobee: The Powerlines Tour",
+          "Tags: Music, Rock, Indie, Concert, Indie Rock, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "201989": [
+          "https://www.msg.com/events-tickets/mt-joy-madison-square-garden-september-2026/3B0063769EF534BD"
+        ],
+        "201990": [
+          "https://www.msg.com/events-tickets/two-door-cinema-club-phantogram-strfkr-friendly-fires-madison-square-garden-september-2026/3B006443D9B0CE61"
+        ],
+        "201992": [
+          "https://www.msg.com/events-tickets/beabadoobee-wisp-madison-square-garden-october-2026/3B0064D1CF355790"
+        ]
+      }
+    },
+    {
+      "concept": "genre-electronic",
+      "label": "Electronic music",
+      "category": "genre",
+      "visual": "A simple waveform beside one music note.",
+      "rationale": "Explicit electronic repertoire does not establish DJ or synth equipment; abstract motif needs recognition testing.",
+      "existing_alternative": "Existing broad Unicode remains suitable; specific motif must demonstrate added recognition before new artwork.",
+      "event_ids": [
+        202020,
+        202021
+      ],
+      "evidence_by_event": {
+        "202020": [
+          "SOL At 1 Hotel: October 18th 2026: 1 hotel Summer Experience Returns Every Sunday May-Oct.",
+          "Tags: Music, Nightlife, Electronic Music, Club Night, Summer Series, Format, Social"
+        ],
+        "202021": [
+          "SOL At 1 Hotel: October 25th 2026: 1 hotel Summer Experience Returns Every Sunday May-Oct.",
+          "Tags: Music, Nightlife, Electronic Music, Club Night, Summer Series, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "202020": [
+          "https://posh.vip/e/sol-at-1-hotel-october-11th-2026-1"
+        ],
+        "202021": [
+          "https://posh.vip/e/sol-at-1-hotel-october-25th-2026"
+        ]
+      }
+    },
+    {
+      "category": "genre",
+      "concept": "genre-house",
+      "existing_alternative": "DJ decks specify performance equipment, not house; Noto notes are broader still.",
+      "label": "House music",
+      "rationale": "Explicit house music supports a four-on-the-floor rhythm exploration; this may read as generic electronic music and needs recognition testing.",
+      "visual": "A compact drum machine with four evenly spaced illuminated beat pads.",
+      "event_ids": [
+        201970,
+        201995
+      ],
+      "evidence_by_event": {
+        "201970": [
+          "ABOVE(TEN) 1 Hotel Rooftop: Saturday October 24th: Join us all summer 2026 at the world renowned 1 Hotel Brooklyn Bridge!",
+          "Tags: Rooftop, Lounge, Music, Outdoor, Nightlife, Clubbing, House Music, Electronic Music, Club Night, Outdoor Venue, Summer Series, Format, Social, Beverage Venue"
+        ],
+        "201995": [
+          "Daft Disko [french house & disco party]: Daft Disko returns to Jersey City. Join us for a night of French house & disco inspired by Daft Punk, Stardust, Breakbot, and many more with DJ Winnie Wanders.",
+          "Tags: Music, Dance, Nightlife, Disco, Electronic Music, Club Night, French House, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "201970": [
+          "https://posh.vip/e/aboveten-1-hotel-after-dark-saturday-october-24th",
+          "https://posh.vip/e/aboveten-1-hotel-rooftop-saturday-october-24th"
+        ],
+        "201995": [
+          "https://wl.seetickets.us/event/daft-disko-french-house-and-disco-party/697355?afflky=WhiteEagleHall"
+        ]
+      }
+    },
+    {
+      "category": "genre",
+      "concept": "genre-rnb",
+      "existing_alternative": "Noto microphone shows vocals but not genre; avoid assuming saxophone or other instruments.",
+      "label": "R&B",
+      "rationale": "R&B is explicit; exploratory smooth vocal motif is not a proven genre symbol and must be tested.",
+      "visual": "Explore a microphone paired with a single smooth looping sound-wave ribbon.",
+      "event_ids": [
+        201977,
+        201988
+      ],
+      "evidence_by_event": {
+        "201977": [
+          "RN'Vibrations: @ Jolene Sound Room: RN'VIBRATIONS is back- R&B all night. Classics, New R&B, sing alongs, & sex songs . For VIP table service please TEXT 646-248-9037",
+          "Tags: Music, Dance, Party, Nightlife, R&B, Club Night, Twenty One Plus, Format, Social"
+        ],
+        "201988": [
+          "Bryson Tiller: The Neo Trapsoul Tour",
+          "Tags: Music, Concert, R&B, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "201977": [
+          "https://posh.vip/e/rnvibrations-14",
+          "https://posh.vip/e/rnvibrations-15"
+        ],
+        "201988": [
+          "https://www.msg.com/events-tickets/bryson-tiller-majid-jordan-ty-dolla-ign-austin-millz-madison-square-garden-september-2026/3B0064B57BD021FE"
+        ]
+      }
+    },
+    {
+      "concept": "activity-balloon-twisting",
+      "label": "Balloon twisting",
+      "category": "activity",
+      "visual": "A simple connected balloon animal with consistent tube junctions.",
+      "rationale": "Balloon animal artist is explicitly invited, though secondary to storytime.",
+      "existing_alternative": "Retain accurate broad Unicode or accepted art until a distinct study passes geometry and native-size review.",
+      "event_ids": [
+        202014
+      ],
+      "evidence_by_event": {
+        "202014": [
+          "DRAGON DOG: Story Time with Suzanne Lang: Join us for a very special edition of our weekly story time, as author Suzanne Lang reads us her book, DRAGON DOG. We will also have a visit from Jason Davidson, a balloon animal artist!",
+          "Tags: Community, Literature, Free, Family, Storytime, Reading, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "202014": [
+          "https://www.eventbrite.com/e/1994834203803?aff=oddtdtcreator"
+        ]
+      }
+    },
+    {
+      "concept": "activity-face-painting",
+      "label": "Face painting",
+      "category": "activity",
+      "visual": "Small paint palette beside a cheek with one simple motif.",
+      "rationale": "Festival explicitly offers face painting; a future scene would require verified face/brush contact.",
+      "existing_alternative": "Retain accurate broad Unicode or accepted art until a distinct study passes geometry and native-size review.",
+      "event_ids": [
+        202078
+      ],
+      "evidence_by_event": {
+        "202078": [
+          "Halloween Fest: Get ready for what’s in store, Halloween Fest is back with more! Dress up in your best costumes and join us on Saturday, October 25 from 12:00–4:00pm. Enjoy spooky stories, face painting, family-friendly games, and more. Halloween Fest is free to all, no RSVP required.",
+          "Tags: Community, Free, Family, Outdoor, Games, Halloween, Community Celebration, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "202078": [
+          "https://www.fortgreenepark.org/calendar/halloween-fest-2026"
+        ]
+      }
+    },
+    {
+      "concept": "equipment-greenhouse",
+      "label": "Greenhouse",
+      "category": "equipment",
+      "visual": "A transparent gabled plant house with joined frame and leafy benches.",
+      "rationale": "Glass-house tours and propagation programs can be distinguished from general outdoor gardening.",
+      "existing_alternative": "Retain accurate broad Unicode or accepted art until a distinct study passes geometry and native-size review.",
+      "event_ids": [
+        202250
+      ],
+      "evidence_by_event": {
+        "202250": [
+          "Glass House Tour: On the Glass House Tour, see where Snug Harbor overwinters its exotic plants, like aquatic tropical and plants from the Tropical Border. You'll also get a sneak peek at the cuttings and seedlings started for next year's summer displays and our collection of winter flowering bulbs. This event is rain or shine.",
+          "Tags: Community, Garden, Tour, Family, Education, Outdoor, Plants, Tours, Snug Harbor, Outdoor Venue, Format, Outings"
+        ]
+      },
+      "source_urls_by_event": {
+        "202250": [
+          "https://snug-harbor.org/event/glass-house-tour/?slot_id=19179"
+        ]
+      }
+    },
+    {
+      "concept": "format-craft-circle",
+      "label": "Craft circle",
+      "category": "format",
+      "visual": "Several different craft tools around a shared project circle.",
+      "rationale": "Bring-your-own creative work is social across multiple media.",
+      "existing_alternative": "Yarn is narrower than all crafts; a mixed-tool motif may be too detailed.",
+      "event_ids": [
+        202050
+      ],
+      "evidence_by_event": {
+        "202050": [
+          "Queer Craft Night: Be gay, do crafts! Bring your projects and any snacks to share and meet other queer makers in the neighborhood. All genders and orientations welcome.",
+          "Tags: Community, Art, Free, Queer, LGBTQ, Nightlife, Crafts, Open Practice, Participatory, Format, Queer Makers"
+        ]
+      },
+      "source_urls_by_event": {
+        "202050": [
+          "https://acorncraftshop.com/products/queer-craft-night?variant=48789659910363",
+          "https://acorncraftshop.com/products/queer-craft-night?variant=49072312156379"
+        ]
+      }
+    },
+    {
+      "concept": "genre-alternative-rock",
+      "label": "Alternative rock",
+      "category": "genre",
+      "visual": "Guitar and asymmetrical sound marks, subject to genre-recognition study",
+      "rationale": "Explicit alternative-rock tags support retaining this genre lead without asserting instrument subtype.",
+      "existing_alternative": "Keep the existing Unicode fallback or suitable broader custom icon until distinct artwork is reviewed.",
+      "event_ids": [
+        201991
+      ],
+      "evidence_by_event": {
+        "201991": [
+          "Gorillaz: The Mountain Tour",
+          "Tags: Music, Rock, Concert, Alternative Rock, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "201991": [
+          "https://www.msg.com/events-tickets/gorillaz-little-simz-deltron-3030-madison-square-garden-september-2026/3B0064599DDAA6E6"
+        ]
+      }
+    },
+    {
+      "concept": "genre-disco",
+      "label": "Disco",
+      "category": "genre",
+      "visual": "A faceted mirror ball above two dance rhythm marks",
+      "rationale": "Disco genre explicit; existing mirror-ball Unicode is strong and may make custom redundant.",
+      "existing_alternative": "Retain the source Unicode until recognizable original artwork is reviewed.",
+      "event_ids": [
+        201995
+      ],
+      "evidence_by_event": {
+        "201995": [
+          "Daft Disko [french house & disco party]: Daft Disko returns to Jersey City. Join us for a night of French house & disco inspired by Daft Punk, Stardust, Breakbot, and many more with DJ Winnie Wanders.",
+          "Tags: Music, Dance, Nightlife, Disco, Electronic Music, Club Night, French House, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "201995": [
+          "https://wl.seetickets.us/event/daft-disko-french-house-and-disco-party/697355?afflky=WhiteEagleHall"
+        ]
+      }
+    },
+    {
+      "concept": "genre-pop",
+      "category": "genre",
+      "label": "Pop music",
+      "visual": "Bold music note with a single rhythmic accent",
+      "rationale": "Avoid assuming vocal or electric instrument; broad genre motif unproven.",
+      "existing_alternative": "Broad fallback does not distinguish this supported facet.",
+      "event_ids": [
+        201984
+      ],
+      "evidence_by_event": {
+        "201984": [
+          "Harry Styles: Together, Together: Harry Styles returns to The Garden with 30 shows between August 26 and October 31 as part of his Together, Together world tour.",
+          "Tags: Music, Concert, Pop Music, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "201984": [
+          "https://www.msg.com/events-tickets/harry-styles-jamie-xx-madison-square-garden-2026/3B0064350404814E",
+          "https://www.msg.com/events-tickets/harry-styles-jamie-xx-madison-square-garden-2026/3B00643504B581EB"
+        ]
+      }
+    },
+    {
+      "category": "genre",
+      "concept": "genre-reggaeton",
+      "existing_alternative": "Noto music notes or fire do not identify the subgenre; existing DJ decks identify equipment but not reggaeton.",
+      "label": "Reggaeton",
+      "rationale": "Explicit reggaeton programming supports a dembow-rhythm motif as an exploratory direction; mixed programs support a genre facet only, and recognition against generic electronic music must be tested.",
+      "visual": "A compact drum-pad grid with a bold alternating four-hit rhythm trail.",
+      "event_ids": [
+        201965
+      ],
+      "evidence_by_event": {
+        "201965": [
+          "Cabros Chicos - Reggaeton Halloween | Halloween Parrty 🎃 (18+): Special 18+ Event - Two Floors of Music.",
+          "Tags: Music, Dance, Nightlife, Reggaeton, Latin Music, Club Night, Halloween, Format, Social, Two Floors"
+        ]
+      },
+      "source_urls_by_event": {
+        "201965": [
+          "https://posh.vip/e/cabros-chicos-halloween-perreo-halloween-parrty-18"
+        ]
+      }
+    },
+    {
+      "concept": "genre-trapsoul",
+      "label": "Trapsoul",
+      "category": "genre",
+      "visual": "Explore restrained vocal-wave and syncopated beat marks.",
+      "rationale": "The tour explicitly names trapsoul and R&B; motif remains exploratory.",
+      "existing_alternative": "Headphones remain broad; avoid assuming a DJ set or stereotyped instrument.",
+      "event_ids": [
+        201988
+      ],
+      "evidence_by_event": {
+        "201988": [
+          "Bryson Tiller: The Neo Trapsoul Tour",
+          "Tags: Music, Concert, R&B, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "201988": [
+          "https://www.msg.com/events-tickets/bryson-tiller-majid-jordan-ty-dolla-ign-austin-millz-madison-square-garden-september-2026/3B0064B57BD021FE"
+        ]
+      }
+    },
+    {
+      "concept": "instrument-conch-shell",
+      "label": "Conch-shell music",
+      "category": "instrument",
+      "visual": "A verified spiral shell with a cut blowing aperture, viewed obliquely.",
+      "rationale": "Named musician explicitly performs on seashells; investigate exact shell and embouchure before drawing.",
+      "existing_alternative": "Retain accurate broad Unicode or accepted art until a distinct study passes geometry and native-size review.",
+      "event_ids": [
+        202000
+      ],
+      "evidence_by_event": {
+        "202000": [
+          "Steve Turre All-Star Sextet featuring Jon Faddis, James Carter & ELEW: Steve Turre, renowned modern master of the trombone and seashells, leads a momentous, all-star sextet with special guests Jon Faddis on trumpet, James Carter on saxophone, and ELEW on piano.",
+          "Tags: Music, Jazz, Concert, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "202000": [
+          "https://tickets.smokejazz.com/r/steve-turre-all-star-sextet-feat-jon-faddis-james-carter-elew"
+        ]
+      }
+    },
+    {
+      "concept": "ritual-eucharist",
+      "label": "Eucharist and communion",
+      "category": "activity",
+      "visual": "A simple chalice beneath a round communion wafer, with a small cross on the wafer.",
+      "rationale": "The service explicitly centers Eucharistic communion; elements distinguish the rite from a church building. Use only for explicitly described communion contexts.",
+      "existing_alternative": "Church identifies location broadly; wine glass implies secular drinking.",
+      "event_ids": [
+        202023
+      ],
+      "evidence_by_event": {
+        "202023": [
+          "The Celebration of the Holy Eucharist: Deep prayer, heartfelt worship, and a communion table set for all. Come as you are but leave transformed.",
+          "Tags: Community, Church, Religion, Gathering, Service, House of Worship, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "202023": [
+          "https://epiphanynyc.org/worship"
+        ]
+      }
+    }
+  ],
+  "limitations": "Counts describe this cohort, not population reach. These are grounded prospective studies, not live assignments. Existing artwork may already suffice; exact equipment and genre recognition require further review."
+}

@@ -8,7 +8,8 @@ edits one tag. All writes/exports use the shared lock. Nothing is uploaded.
 import argparse
 import json
 from pathlib import Path
-from event_icons import ROOT, ICON_IDS
+from event_icons import ROOT
+from icon_catalog import catalog
 
 # One-time editorial seed; never consulted by the frontend or ordinary exports.
 INITIAL = {
@@ -35,7 +36,7 @@ def planned_changes(tags, tag=None, icon=None):
     if tag is not None:
         if tag not in by_name:
             raise ValueError('Tag does not exist: ' + tag)
-        if icon is not None and icon not in ICON_IDS:
+        if icon is not None and icon not in catalog()[0]:
             raise ValueError('Unknown icon ID: ' + icon)
         targets = {tag: icon}
     else:

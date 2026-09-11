@@ -1,0 +1,320 @@
+{
+  "date": "2026-09-10",
+  "scope": "Cycle 015: 100 sequential events 197958–198883, no targeted supplements.",
+  "suggestions": 14,
+  "concept_count": 10,
+  "concepts": [
+    {
+      "concept": "craft-cityscape-painting",
+      "label": "Cityscape painting",
+      "category": "craft",
+      "visual": "A brush beside a framed skyline painting.",
+      "rationale": "Explicit building and city subjects differ from natural landscape work.",
+      "existing_alternative": "Landscape icon depicts natural environments; urban sketching implies drawing outdoors.",
+      "event_ids": [
+        197959,
+        197960,
+        197961,
+        197965
+      ],
+      "evidence_by_event": {
+        "197959": [
+          "Snowy Empire State: No description available.",
+          "Tags: Visual Arts, Art, Workshop, Painting, Participatory, Format, Snow"
+        ],
+        "197960": [
+          "Stars Over Paris: A two-and-a-half-hour painting class held in Williamsburg.",
+          "Tags: Community, Visual Arts, Art, Workshop, Painting, Paris, Participatory, Format"
+        ],
+        "197961": [
+          "Fireworks Over Empire State Building: A view of New York City's most iconic building during a beautiful 4th of July fireworks display.",
+          "Tags: Visual Arts, Art, Workshop, Painting, Fireworks, Participatory, Empire State Building, Format"
+        ],
+        "197965": [
+          "Amalfi Coast: No description available.",
+          "Tags: Visual Arts, Art, Workshop, Painting, Coastal, Participatory, Amalfi Coast, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "197959": [
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38809"
+        ],
+        "197960": [
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#37332",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#37469",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38810"
+        ],
+        "197961": [
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38540",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38757",
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38815"
+        ],
+        "197965": [
+          "https://www.rezclick.com/paintinglounge/index.php?page=classes#38827"
+        ]
+      }
+    },
+    {
+      "concept": "activity-circuit-training",
+      "label": "Circuit training",
+      "category": "activity",
+      "visual": "Three exercise stations organized around a central timer.",
+      "rationale": "Rotating strength/cardio stations define circuit workouts.",
+      "existing_alternative": "Flexed arm or weightlifter omits station progression; equipment inventory needs careful abstraction.",
+      "event_ids": [
+        198186,
+        198191
+      ],
+      "evidence_by_event": {
+        "198186": [
+          "Fit Club Circuit Training: A total-body fitness class that blends cardio, functional training, movement, breathing, and mindset work to help build strength, confidence, resilience, and accountability in a motivating community environment.",
+          "Tags: Free, Wellness, Fitness, Outdoor, Circuit Training, Exercise, Participatory, Format"
+        ],
+        "198191": [
+          "Strength & Cardio Circuit Training: This circuit training class combines bodyweight resistance training and conditioning to provide you with a dynamic full body workout. Whether you are a beginner or looking for a challenge; this class for all fitness levels and modifications are always provided. Come engage in exercises that target all muscle groups, get your heart pumping, and connect with people in your community!",
+          "Tags: Community, Free, Wellness, Fitness, Exercise, Strength Training, Participatory, Cardio, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "198186": [
+          "https://www.nyc.gov/main/events/?permalinkName=fit-club-circuit-training&id=1126756&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=fit-club-circuit-training&id=1126776&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=fit-club-circuit-training&id=1126796&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=fit-club-circuit-training&id=1201276&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=fit-club-circuit-training&id=1201296&sequence=1",
+          "https://www.nycgovparks.org/events/2026/07/24/fit-club-circuit-training",
+          "https://www.nycgovparks.org/events/2026/07/31/fit-club-circuit-training",
+          "https://www.nycgovparks.org/events/2026/08/07/fit-club-circuit-training",
+          "https://www.nycgovparks.org/events/2026/08/14/fit-club-circuit-training",
+          "https://www.nycgovparks.org/events/2026/08/21/fit-club-circuit-training",
+          "https://www.nycgovparks.org/events/2026/08/22/fit-club-circuit-training",
+          "https://www.nycgovparks.org/events/2026/08/29/fit-club-circuit-training",
+          "https://www.nycgovparks.org/events/2026/09/05/fit-club-circuit-training",
+          "https://www.nycgovparks.org/events/2026/09/12/fit-club-circuit-training"
+        ],
+        "198191": [
+          "https://www.nyc.gov/main/events/?permalinkName=strength-cardio-circuit-training&id=1175476&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=strength-cardio-circuit-training&id=1175516&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=strength-cardio-circuit-training&id=1175536&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=strength-cardio-circuit-training&id=1238996&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=strength-cardio-circuit-training&id=1239016&sequence=1",
+          "https://www.nycgovparks.org/events/2026/07/26/strength-cardio-circuit-training1",
+          "https://www.nycgovparks.org/events/2026/08/02/strength-cardio-circuit-training",
+          "https://www.nycgovparks.org/events/2026/08/02/strength-cardio-circuit-training1",
+          "https://www.nycgovparks.org/events/2026/08/09/strength-cardio-circuit-training",
+          "https://www.nycgovparks.org/events/2026/08/16/strength-cardio-circuit-training",
+          "https://www.nycgovparks.org/events/2026/08/16/strength-cardio-circuit-training1",
+          "https://www.nycgovparks.org/events/2026/08/23/strength-cardio-circuit-training",
+          "https://www.nycgovparks.org/events/2026/08/30/strength-cardio-circuit-training",
+          "https://www.nycgovparks.org/events/2026/09/06/strength-cardio-circuit-training",
+          "https://www.nycgovparks.org/events/2026/09/13/strength-cardio-circuit-training",
+          "https://www.nycgovparks.org/events/2026/09/20/strength-cardio-circuit-training"
+        ]
+      }
+    },
+    {
+      "concept": "activity-oyster-monitoring",
+      "label": "Oyster monitoring",
+      "category": "activity",
+      "visual": "An oyster shell beside a measuring ruler.",
+      "rationale": "Estuary program explicitly mentions measuring and cleaning oysters; a specific field-science opportunity.",
+      "existing_alternative": "Pond dipping requires netting evidence; oyster food icon implies eating.",
+      "event_ids": [
+        198574
+      ],
+      "evidence_by_event": {
+        "198574": [
+          "Nature in your Neighborhood with New York State Parks and Recreation: Friday July 24: Estuary - explore the wonders of the estuary by observing critters measuring and cleaning oysters and more.",
+          "Tags: Community, Nature, Workshop, Science, Family, Education, Outdoor, Participatory, Format, Estuary"
+        ]
+      },
+      "source_urls_by_event": {
+        "198574": [
+          "https://www.queenslibrary.org/event/018092-0526"
+        ]
+      }
+    },
+    {
+      "concept": "craft-literature-inspired-painting",
+      "label": "Literature-inspired painting",
+      "category": "craft",
+      "visual": "A small open book beside a brush and picture.",
+      "rationale": "Art club paints projects inspired by staff-selected books.",
+      "existing_alternative": "Author talk/book club do not capture artmaking; technique remains unknown.",
+      "event_ids": [
+        198689
+      ],
+      "evidence_by_event": {
+        "198689": [
+          "Adult Art Club: You're invited to the Eastchester Adult Art Club! Meet every Friday in our community room, where patrons 18+ can create painted canvas projects, each of which has a theme drawn from staff-recommended book selections on display.",
+          "Tags: Community, Visual Arts, Art, Literature, Painting, Reading, Open Practice, Participatory, Adults, Format, Book Inspired"
+        ]
+      },
+      "source_urls_by_event": {
+        "198689": [
+          "https://www.nypl.org/events/programs/2026/07/03/clone-adult-art-club",
+          "https://www.nypl.org/events/programs/2026/08/07/adult-art-club",
+          "https://www.nypl.org/events/programs/2026/09/04/adult-art-club",
+          "https://www.nypl.org/events/programs/2026/09/11/adult-art-club-pages-color"
+        ]
+      }
+    },
+    {
+      "concept": "craft-vision-board",
+      "label": "Vision board",
+      "category": "craft",
+      "visual": "A board with grouped aspirational picture tiles and a small star.",
+      "rationale": "Explicit vision-board making has a reusable collage-like planning format.",
+      "existing_alternative": "Collage may fit only when cutting/assembly method is supported; generic paint does not capture reflection.",
+      "event_ids": [
+        198123
+      ],
+      "evidence_by_event": {
+        "198123": [
+          "Tell Me More: A Community Craft Night & resource sharing series: Featuring NEW MOON VISION BOARDS followed by “The Joy of Ranting”, a mixed medium open mic guest hosted by @timshea101 Sign up starts at 8:45PM, show starts around 9PM. Impress us with your weird and win $5",
+          "Tags: Community, Art, Workshop, Education, Crafts, Resource Sharing, Open Practice, Craft Night, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "198123": [
+          "https://pools.events/event/nA3Ez0G3/tell-me-more-a-community-craft-night-resource-sharing-series/",
+          "https://pools.events/event/TkaBDfqD/tell-me-more-a-community-craft-night-resource-sharing-series/",
+          "https://pools.events/event/TkaBDfqD/tell-me-more-a-community-craft-night-resource-sharing-series/?utm_source=fomo-nyc&utm_medium=api&utm_campaign=nyc_events_feed&utm_content=TkaBDfqD",
+          "https://www.footlightunderground.com"
+        ]
+      }
+    },
+    {
+      "concept": "dance-line-dance",
+      "label": "Line dance",
+      "category": "dance-style",
+      "visual": "Three simplified legs/feet in a row executing the same side step.",
+      "rationale": "Line formation and synchronized steps distinguish the activity without assuming country music.",
+      "existing_alternative": "Noto cowboy face implies country culture, not dance; solo dancer lacks row formation.",
+      "event_ids": [
+        198211
+      ],
+      "evidence_by_event": {
+        "198211": [
+          "Full Fit Line Dance: Join us for this synchronized line dancing class! Come work every muscle group and increase your cardiovascular endurance while stepping to soulful dance sounds.",
+          "Tags: Community, Dance, Free, Wellness, Fitness, Exercise, Participatory, Line Dance, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "198211": [
+          "https://www.nyc.gov/main/events/?permalinkName=full-fit-line-dance&id=1127756&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=full-fit-line-dance&id=1127776&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=full-fit-line-dance&id=1127796&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=full-fit-line-dance&id=1127816&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=full-fit-line-dance&id=1202136&sequence=1",
+          "https://www.nycgovparks.org/events/2026/07/30/full-fit-line-dance",
+          "https://www.nycgovparks.org/events/2026/08/06/full-fit-line-dance",
+          "https://www.nycgovparks.org/events/2026/08/13/full-fit-line-dance",
+          "https://www.nycgovparks.org/events/2026/08/20/full-fit-line-dance",
+          "https://www.nycgovparks.org/events/2026/08/27/full-fit-line-dance",
+          "https://www.nycgovparks.org/events/2026/09/03/full-fit-line-dance",
+          "https://www.nycgovparks.org/events/2026/09/10/full-fit-line-dance"
+        ]
+      }
+    },
+    {
+      "concept": "format-fitness-open-house",
+      "label": "Fitness open house",
+      "category": "format",
+      "visual": "An open gym doorway and welcome card.",
+      "rationale": "Tours, trial classes and membership introduction form a distinct open-house format.",
+      "existing_alternative": "Stadium or single exercise overstates a particular activity.",
+      "event_ids": [
+        198222
+      ],
+      "evidence_by_event": {
+        "198222": [
+          "Bring a Friend Friday at Ocean Breeze Athletic Complex: Bring a Friend Friday occurs on the last Friday of each month! Members are encouraged to bring their friends down to Ocean Breeze to see all of the amenities and special events that Ocean Breeze has to offer! Take a tour, participate in a group fitness class, & sign-up for a membership on the same day!",
+          "Tags: Community, Free, Sports, Wellness, Fitness, Track and Field, Walking, Seniors, Exercise, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "198222": [
+          "https://www.nyc.gov/main/events/?permalinkName=bring-a-friend-friday-at-ocean-breeze-athletic-complex&id=1055576&sequence=1",
+          "https://www.nycgovparks.org/events/2026/07/31/bring-a-friend-friday-at-ocean-breeze-athletic-complex",
+          "https://www.nycgovparks.org/events/2026/08/28/bring-a-friend-friday-at-ocean-breeze-athletic-complex"
+        ]
+      }
+    },
+    {
+      "concept": "format-social-walk",
+      "label": "Social walking group",
+      "category": "format",
+      "visual": "Two pairs of walking shoes beside a conversation bubble.",
+      "rationale": "Explicit social walks center meeting people through gentle walking.",
+      "existing_alternative": "Hiking boots or stroller art overstates terrain or equipment.",
+      "event_ids": [
+        198883
+      ],
+      "evidence_by_event": {
+        "198883": [
+          "CGWW Weekly Walk: Join City Girls Who Walk for their weekly Sunday stroll through Central Park to get outside, move your body, and make new friends.",
+          "Tags: Community, Wellness, Fitness, Outdoor, Outing, Format, Outings, Walking Club"
+        ]
+      },
+      "source_urls_by_event": {
+        "198883": [
+          "https://www.instagram.com/citygirlswhowalk/"
+        ]
+      }
+    },
+    {
+      "category": "activity",
+      "concept": "game-dance-dance-revolution",
+      "existing_alternative": "Noto controller/dancer omit arrow dance pad; no current custom rhythm-game icon.",
+      "label": "Dance Dance Revolution",
+      "rationale": "Explicit DDR open play has distinctive floor-controller equipment, unlike general dancing.",
+      "visual": "A square dance pad with four bold directional arrow panels.",
+      "event_ids": [
+        198334
+      ],
+      "evidence_by_event": {
+        "198334": [
+          "Free Dance Dance Revolution Open Play: No description available.",
+          "Tags: Dance, Free, Video Games, Family, Games, Arcade, Open Play, Game, Participatory, Format, Dance Dance Revolution"
+        ]
+      },
+      "source_urls_by_event": {
+        "198334": [
+          "https://tinycupboardgames.com/meetups-groups"
+        ]
+      }
+    },
+    {
+      "concept": "genre-jazz",
+      "label": "Jazz",
+      "category": "genre",
+      "visual": "A pair of syncopated musical notes with one loose improvisatory flourish.",
+      "rationale": "The genre is explicit, but an instrument-neutral motif remains exploratory and requires recognition tests; avoid treating saxophone as universal jazz.",
+      "existing_alternative": "Noto notes are generic; a saxophone misstates instrumentation when the program does not feature one.",
+      "event_ids": [
+        198067
+      ],
+      "evidence_by_event": {
+        "198067": [
+          "Jam Session Hosted By Carlos Abadie: Carlos Abadie / Trumpet, Matt Knoegel / Tenor Sax, Silvano Monasterios / Piano, Alex \"Apolo\" Ayala / Bass, Joel Mateo / Drums.",
+          "Tags: Music, Jazz, Trumpet, Open Practice, Live Music, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "198067": [
+          "https://www.smallslive.com/events/33096-jam-session-hosted-by-carlos-abadie/",
+          "https://www.smallslive.com/events/33431-jam-session-hosted-by-carlos-abadie/",
+          "https://www.smallslive.com/events/33431-jam-session-hosted-by-carlos-abadies-latin-jazz-express/",
+          "https://www.smallslive.com/events/33432-jam-session-hosted-by-carlos-abadie/",
+          "https://www.smallslive.com/events/33433-jam-session-hosted-by-carlos-abadie/",
+          "https://www.smallslive.com/events/33434-jam-session-hosted-by-carlos-abadie/",
+          "https://www.smallslive.com/events/33814-jam-session-hosted-by-carlos-abadies-the-quintet/",
+          "https://www.smallslive.com/events/33815-jam-session-hosted-by-carlos-abadie/",
+          "https://www.smallslive.com/events/33816-jam-session-hosted-by-carlos-abadie/"
+        ]
+      }
+    }
+  ],
+  "limitations": "Counts describe this cohort, not population reach. These are grounded prospective studies, not live assignments. Existing artwork may already suffice; exact equipment and genre recognition require further review."
+}

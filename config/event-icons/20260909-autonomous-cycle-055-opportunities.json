@@ -1,0 +1,833 @@
+{
+  "date": "2026-09-11",
+  "scope": "Cycle 055: 100 sequential events 217362–217546, no targeted supplements.",
+  "suggestions": 43,
+  "concept_count": 34,
+  "concepts": [
+    {
+      "concept": "format-cultural-celebration",
+      "label": "Cultural celebration",
+      "category": "format",
+      "visual": "Simple festive gathering symbol without a culture-specific costume.",
+      "rationale": "Wakanda celebration combines music history dance art food and vendors; no single activity represents all.",
+      "existing_alternative": "Retain accurate Unicode or accepted art until a grounded distinct study passes visual review.",
+      "event_ids": [
+        217368,
+        217470,
+        217481
+      ],
+      "evidence_by_event": {
+        "217368": [
+          "Shabbat Dinner in the Sukkah: Celebrate Sukkot and Shabbat with Y Parent in an evening filled with music, crafts, and planting followed by a pizza dinner.",
+          "Tags: Community, Music, Family, Community Celebration, Format, Social"
+        ],
+        "217470": [
+          "Back to School Bash: Join Marquis Studios to celebrate another year of inclusive arts programs in NYC Public Schools. Music, dancing, food, drinks and more! Featuring live music from Marquis Studios Teaching Artist Gabriel Globus-Hoenich and People of Earth.",
+          "Tags: Community, Music, Art, Dance, Family, Live Music, Arts Education, Back to School, Community Celebration, Format, Social"
+        ],
+        "217481": [
+          "Autumn Moon Festival: When the moon is full, mankind is one! The Autumn Moon Festival is one of the most important holidays in the Chinese calendar. Come together to be transported away with legends and traditional experiences, including performances and demonstrations, and crafts for all ages.",
+          "Tags: Community, Art, Culture, Family, Education, Outdoor, Crafts, Cultural Heritage, Community Celebration, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "217368": [
+          "https://operations.daxko.com/Online/5428/ProgramsV2/OfferingDetails.mvc?program_id=TMP29257&offering_id=SES510419&location_id=B785"
+        ],
+        "217470": [
+          "https://dumbo.nyc/event/back-to-school-bash/"
+        ],
+        "217481": [
+          "https://snug-harbor.org/event/autumn-moon-festival-2/?slot_id=22762",
+          "https://www.nycgovparks.org/events/2026/09/19/autumn-moon-festival"
+        ]
+      }
+    },
+    {
+      "concept": "format-live-music-dj-party",
+      "label": "Live music and DJ party",
+      "category": "format",
+      "visual": "Band note motif beside record decks.",
+      "rationale": "Co-primary live ensemble and DJ programming, not DJ-only.",
+      "existing_alternative": "Use a supported accepted icon or broad Unicode while a distinctive study is pending.",
+      "event_ids": [
+        217392,
+        217416,
+        217417
+      ],
+      "evidence_by_event": {
+        "217392": [
+          "Dark Dazey, Scared, DJ Female and Heinrich: No description available.",
+          "Tags: Music, DJ, Concert, Nightlife, Format, Performance, Dark Dazey, Scared, DJ Female, Heinrich"
+        ],
+        "217416": [
+          "Sarah Orloff | DJ Kuro: Live performance featuring Sarah Orloff and DJ Kuro.",
+          "Tags: Music, DJ, Concert, Nightlife, Live Music, Format, Performance"
+        ],
+        "217417": [
+          "Dollar Roses + Kadoleaf DJ Set: An event featuring Dollar Roses and a Kadoleaf DJ set.",
+          "Tags: Music, DJ, Concert, Nightlife, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217392": [
+          "https://www.knittingfactory.com/tm-event/dark-dazey-scared-dj-female-and-heinrich/"
+        ],
+        "217416": [
+          "https://berlin.nyc/tm-event/sarah-orloff-dj-kuro/"
+        ],
+        "217417": [
+          "https://berlin.nyc/tm-event/dollar-roses-kadoleaf-dj-set/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-indie-rock",
+      "category": "genre",
+      "label": "Indie rock",
+      "visual": "Compact guitar and small independent-stage amp",
+      "rationale": "Named indie-rock bills are distinct from broad music",
+      "existing_alternative": "Existing guitar/music emoji; resolve genre visual clarity first",
+      "event_ids": [
+        217422,
+        217426,
+        217428
+      ],
+      "evidence_by_event": {
+        "217422": [
+          "Sofie Royer: A concert w/Sofie Royer in Zone One @ Elsewhere in Bushwick on 11.10! Tickets start at $20 • 7pm • 16+ | Genre: Indie",
+          "Tags: Government, Community, Music, Indie, Concert, Zone One, Live Music, Format, Performance"
+        ],
+        "217426": [
+          "Lime Garden: A concert w/ Lime Garden in Zone One @ Elsewhere in Bushwick on 11.07! Tickets start at $20 • 7pm • 16+ | Genre: Indie, Alternative",
+          "Tags: Music, Indie, Concert, Alternative, Live Music, Format, Performance"
+        ],
+        "217428": [
+          "Deerhoof, Mercy, My Trio: A concert w/ Deerhoof in The Hall @ Elsewhere in Bushwick on 11.5! Tickets start at $25 • 7pm • 16+ | Genre: Rock, Indie",
+          "Tags: Music, Rock, Indie, Concert, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217422": [
+          "https://www.eventbrite.com/e/sofie-royer-tickets-1995697933241"
+        ],
+        "217426": [
+          "https://www.eventbrite.com/e/lime-garden-tickets-1985145677159",
+          "https://www.eventbrite.com/e/lime-garden-tickets-1991242169933"
+        ],
+        "217428": [
+          "https://www.eventbrite.com/e/deerhoof-mercy-my-trio-tickets-1992954959934"
+        ]
+      }
+    },
+    {
+      "concept": "format-masquerade",
+      "label": "Masquerade party",
+      "category": "format",
+      "visual": "Half-mask beside broad party ribbon",
+      "rationale": "Costumed gathering rather than staged play.",
+      "existing_alternative": "Existing Unicode or broader artwork may remain preferable; keep prospective until recognition and construction review.",
+      "event_ids": [
+        217402,
+        217429
+      ],
+      "evidence_by_event": {
+        "217402": [
+          "The Black Lodge Ball: Halloween with Cinema Paradiso: This Halloween, The Red Pavilion becomes a portal to a world both wonderful and strange. Enter The Black Lodge Ball, a haunting...",
+          "Tags: Cinema, Film, Nightlife, Ball, Club Night, Costume Party, Cinema Paradiso, Halloween, Format, Social"
+        ],
+        "217429": [
+          "Out & Abt - Halloween Edition: Club night w/ Out & Abt @ Elsewhere in Bushwick on 10.29! Tickets start at $15 • 10:30pm • 21+ | Genre: Dance, Queer",
+          "Tags: Community, Dance, Queer, LGBTQ, Nightlife, Clubbing, Club Night, Halloween, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "217402": [
+          "https://www.viewcy.com/event/the_black_lodge_ball_1"
+        ],
+        "217429": [
+          "https://www.eventbrite.com/e/out-abt-halloween-edition-tickets-1996989228540"
+        ]
+      }
+    },
+    {
+      "concept": "genre-rock",
+      "category": "genre",
+      "label": "Rock music",
+      "visual": "Strong accented musical note",
+      "rationale": "Electric guitar exists but is not universal evidence; motif requires recognition testing.",
+      "existing_alternative": "Broad fallback does not distinguish this specific supported facet.",
+      "event_ids": [
+        217423,
+        217425
+      ],
+      "evidence_by_event": {
+        "217423": [
+          "ADULT. + A Place To Bury Strangers, Kill Alters: A concert w/ ADULT. + A Place To Bury Strangers in The Hall @ Elsewhere in Bushwick on 11.9! Tickets start at $30 • 7pm • 16+ | Genre: Rock",
+          "Tags: Music, Rock, Concert, The Hall, Live Music, Format, Performance"
+        ],
+        "217425": [
+          "Arde Bogotá: A concert w/ Arde Bogotá in The Hall @ Elsewhere in Bushwick on 11.08! Tickets start at $45 • 7pm • 16+ | Genre: Rock",
+          "Tags: Music, Rock, Concert, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217423": [
+          "https://www.eventbrite.com/e/adult-a-place-to-bury-strangers-kill-alters-tickets-1989618769298"
+        ],
+        "217425": [
+          "https://www.eventbrite.com/e/arde-bogota-tickets-1990883722808"
+        ]
+      }
+    },
+    {
+      "concept": "genre-singer-songwriter",
+      "label": "Singer-songwriter",
+      "category": "genre",
+      "visual": "Song manuscript beside a neutral microphone.",
+      "rationale": "Named performers and source context support singer-songwriter programming, but exact instruments may vary.",
+      "existing_alternative": "Use a supported accepted icon or broad Unicode while a distinctive study is pending.",
+      "event_ids": [
+        217388,
+        217400
+      ],
+      "evidence_by_event": {
+        "217388": [
+          "Devon Church, Adeline Hotel, Avery Friedman: Adeline Hotel is Dan Knishkowy and friends. Their new record \"Away Together\" is on its way in the fall of 2018. Inspired by Bert Jansch and This Is The Kit, the group is described as \"wonderfully ragged\" and \"like Wilco fronted by Will Oldham.",
+          "Tags: Music, Rock, Indie, Concert, Singer Songwriter, Indie Rock, Vocal Music, Live Music, Format, Performance"
+        ],
+        "217400": [
+          "Joseph Keckler: Joseph Keckler shares a special solo evening of his songs, both new and familiar. In honor of the season, he will offer a selection of...",
+          "Tags: Music, Concert, Songwriting, Solo Performance, Songwriters, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217388": [
+          "https://www.knittingfactory.com/tm-event/devon-church-adeline-hotel-avery-friedman/"
+        ],
+        "217400": [
+          "https://www.viewcy.com/event/joseph_keckler_presen"
+        ]
+      }
+    },
+    {
+      "concept": "activity-early-childhood-dance",
+      "label": "Early-childhood dance",
+      "category": "activity",
+      "visual": "Young dancers taking simple grounded rhythmic steps.",
+      "rationale": "Requires age-appropriate body proportions without assuming caregiver participation.",
+      "existing_alternative": "Existing appropriate Unicode or broader dance fallback retained until distinct art is reviewed.",
+      "event_ids": [
+        217505
+      ],
+      "evidence_by_event": {
+        "217505": [
+          "Parole Danzanti (Dancing Words): A bilingual creative movement workshop for children ages 2 to 5 that uses dance, music, and play to introduce young children to Italian. The workshop is created and led by dancer, multidisciplinary artist, and educator Arianna Stendardo Gamble.",
+          "Tags: Community, Workshop, Dance, Italian Culture, Family, Education, Cultural Heritage, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "217505": [
+          "https://iicnewyork.esteri.it/en/gli_eventi/calendario/parole-danzanti-dancing-words-3/"
+        ]
+      }
+    },
+    {
+      "concept": "activity-puppet-making",
+      "label": "Puppet making",
+      "category": "activity",
+      "visual": "An unfinished puppet and craft materials, pending technique evidence.",
+      "rationale": "Puppet construction is explicit but mechanism and materials vary.",
+      "existing_alternative": "Keep the event fallback until a scoped, recognizable original motif is verified.",
+      "event_ids": [
+        217540
+      ],
+      "evidence_by_event": {
+        "217540": [
+          "Puppet Tea Party with Stacey Gordon in person: Puppeteer and performer Stacey Gordon (Julia on Sesame Street ) leads this interactive workshop for all ages. Drink pretend tea, eat pretend pastries, make a real puppet craft, listen to a story, laugh, and play along as everyone enjoys the magic of puppetry!",
+          "Tags: Theater, Art, Workshop, Interactive, Family, Education, Puppetry, Crafts, Participatory, Storytelling / Theater, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "217540": [
+          "https://movingimage.org/event/puppet-tea-party/"
+        ]
+      }
+    },
+    {
+      "concept": "activity-puppetry-training",
+      "label": "Puppetry training",
+      "category": "activity",
+      "visual": "A puppet with a simple instructional cue; mechanism to be researched.",
+      "rationale": "General puppetry instruction does not establish hand, rod, string or shadow technique.",
+      "existing_alternative": "Keep the event fallback until a scoped, recognizable original motif is verified.",
+      "event_ids": [
+        217546
+      ],
+      "evidence_by_event": {
+        "217546": [
+          "Puppeteering at MoMI: Puppeteer Brian T. Carson leads free workshops exploring the fundamentals of the art form, open to all ages and skill levels. Drop-in program, no RSVP required. Free admission.",
+          "Tags: Theater, Workshop, Free, Family, Education, Puppetry, All Ages, Open Practice, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "217546": [
+          "https://movingimage.org/event/puppeteering-at-momi-2026/"
+        ]
+      }
+    },
+    {
+      "concept": "craft-book-proposal",
+      "label": "Book proposal writing",
+      "category": "activity",
+      "visual": "An outlined manuscript beside a proposal folder.",
+      "rationale": "Preparing a publishing proposal differs from general creative writing.",
+      "existing_alternative": "Keep the event fallback until a scoped, recognizable original motif is verified.",
+      "event_ids": [
+        217409
+      ],
+      "evidence_by_event": {
+        "217409": [
+          "Nonfiction Book Proposals and the Publishing Process: This workshop will set you on the path to put together a nonfiction book proposal, get your proposal published, and learn the ins and outs of the publishing process. It covers developing your idea, composing a book proposal, finding an agent, and what happens when your book is bought.",
+          "Tags: Workshop, Literature, Education, Non Fiction, Publishing, Participatory, Writing, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "217409": [
+          "https://brooklynbrainery.com/courses/nonfiction-book-proposals-and-the-publishing-process"
+        ]
+      }
+    },
+    {
+      "concept": "format-album-release",
+      "label": "Album release show",
+      "category": "format",
+      "visual": "Record emerging from a sleeve with a small new-release burst.",
+      "rationale": "Explicit celebration of a newly released recording.",
+      "existing_alternative": "Record Unicode already covers the object.",
+      "event_ids": [
+        217389
+      ],
+      "evidence_by_event": {
+        "217389": [
+          "East of the Sun EP Release Party: No description available.",
+          "Tags: Music, Party, Nightlife, EP Release, Live Music, Release Party, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "217389": [
+          "https://www.knittingfactory.com/tm-event/east-of-the-sun-ep-release-party/"
+        ]
+      }
+    },
+    {
+      "concept": "format-artist-demonstration",
+      "label": "Artist demonstration",
+      "category": "format",
+      "visual": "Artist work in progress in an open exhibition area.",
+      "rationale": "Observation does not guarantee hands-on participation.",
+      "existing_alternative": "Retain the broad fallback while a grounded distinctive study is pending.",
+      "event_ids": [
+        217543
+      ],
+      "evidence_by_event": {
+        "217543": [
+          "Henson-Inspired Art: Live Artist Demo: Join artists Louis Henry Mitchell, Richard Gomez, and Dave Hulteen, Jr. for this free live art-making session. Free with RSVP . Seating is first come, first served.",
+          "Tags: Art, Free, Gathering, Talk, Jim Henson, Live Art, Artist Demo, Format, Henson Inspired"
+        ]
+      },
+      "source_urls_by_event": {
+        "217543": [
+          "https://movingimage.org/event/henson-inspired-art/"
+        ]
+      }
+    },
+    {
+      "concept": "format-artist-panel",
+      "label": "Artist panel",
+      "category": "format",
+      "visual": "Gallery frame with several conversation bubbles.",
+      "rationale": "Public artist discussion differs from participant small-group work.",
+      "existing_alternative": "Use a supported accepted icon or broad Unicode while a distinctive study is pending.",
+      "event_ids": [
+        217544
+      ],
+      "evidence_by_event": {
+        "217544": [
+          "Panel: Inspired by Jim Henson: Puppeteers Martin P. Robinson, Ryan Dillon, Stephanie D’Abruzzo, John Tartaglia, and Peter Linz discuss Jim Henson’s legacy and his continuing influence on the puppetry community. Panel will be approximately 45 minutes.",
+          "Tags: Community, Theater, Family, Education, Puppetry, Gathering, Talk, Jim Henson, Panel, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "217544": [
+          "https://movingimage.org/event/inspired-by-jim-henson/",
+          "https://movingimage.org/event/inspired-by-jim/"
+        ]
+      }
+    },
+    {
+      "concept": "format-comedy-variety",
+      "label": "Comedy variety",
+      "category": "format",
+      "visual": "Comedy mask with varied performance cues.",
+      "rationale": "Mixed comic performance does not imply stand-up only.",
+      "existing_alternative": "Use appropriate accepted art or broad Unicode until a distinctive study is reviewed.",
+      "event_ids": [
+        217477
+      ],
+      "evidence_by_event": {
+        "217477": [
+          "“Humor Eterno” Con Nany Peña Y Felipe Polanco: ¡Nany Peña y Felipe Polanco “Boruga” regresan a Nueva York con Humor Eterno! Los icónicos de La Escuelota, la comedia dominicana más exitosa de todos los tiempos, juntos nuevamente en el Broadway Comedy Club para celebrar una trayectoria que sigue más viva que nunca. Nany y Boruga traen nuevo material, stand-up, imitaciones musicales y esos momentos inolvidables que solo ellos saben crear sobre un escenario.",
+          "Tags: Comedy, Comedy Show, Format, Performance, Comedy En Español, Dominican Comedy"
+        ]
+      },
+      "source_urls_by_event": {
+        "217477": [
+          "https://www.broadwaycomedyclub.com/shows/humor-eterno-con-nany-pena-y-felipe-polanco/"
+        ]
+      }
+    },
+    {
+      "concept": "format-experimental-cinema",
+      "label": "Experimental cinema",
+      "category": "format",
+      "visual": "Film frame with abstract moving shapes",
+      "rationale": "Specific format supported in reviewed event context; explore reusable art without inventing details.",
+      "existing_alternative": "Current broad fallback remains defensible; new concept requires recognition review.",
+      "event_ids": [
+        217541
+      ],
+      "evidence_by_event": {
+        "217541": [
+          "60 Years of Jim Henson’s Time Piece: In 1965, Jim Henson made Time Piece , an experimental nine-minute short film that tells what he called “the story of Everyman, frustrated by the typical tasks of a typical day.” The film opens with a man—played by Henson—in a hospital bed.",
+          "Tags: Art, Film, Screening, Experimental Film, Short Films, Jim Henson, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217541": [
+          "https://movingimage.org/event/60-years-of-jim-hensons-time-piece/"
+        ]
+      }
+    },
+    {
+      "concept": "format-fan-social",
+      "label": "Fan social",
+      "category": "format",
+      "visual": "A fan keepsake beside a small conversation group.",
+      "rationale": "Organized social gatherings centered on shared fandom, without implying a live performance.",
+      "existing_alternative": "Keep the event fallback until a scoped, recognizable original motif is verified.",
+      "event_ids": [
+        217537
+      ],
+      "evidence_by_event": {
+        "217537": [
+          "Puppet Prom: Join MoMI and special guests to kick off our Henson Birthday Celebration weekend with a bang! Enjoy a DJ and dancing, mask-making, and birthday treats with your fellow fans. Dress up or dress down, and puppets welcome! Free with RSVP.",
+          "Tags: Community, Dance, Free, Party, Puppets, Nightlife, Jim Henson, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "217537": [
+          "https://movingimage.org/event/puppet-prom/"
+        ]
+      }
+    },
+    {
+      "concept": "format-film-discussion",
+      "label": "Film screening and discussion",
+      "category": "format",
+      "visual": "A movie screen with one broad speech bubble beside it.",
+      "rationale": "The screening explicitly includes a conversation, panel or discussion. This does not by itself establish an audience Q&A.",
+      "existing_alternative": "Film art covers the main activity; a speech balloon could convey the added discussion.",
+      "event_ids": [
+        217533
+      ],
+      "evidence_by_event": {
+        "217533": [
+          "Climate Film Festival Opening Night: House of Fish: Co-presented with Science on Screen. Followed by a discussion with director Santiago Burin des Roziers and reception. At the crossroads of art, activism, and the ocean lies the extraordinary story of Paolo Fan.",
+          "Tags: Community, Activism, Art, Documentary, Film, Screening, Climate, Ocean, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217533": [
+          "https://movingimage.org/event/climate-film-festival-opening-night/"
+        ]
+      }
+    },
+    {
+      "concept": "format-historical-walking-tour",
+      "label": "Historical walking tour",
+      "category": "format",
+      "visual": "Historic facade connected to a short walking route.",
+      "rationale": "Guide narrates estate history during a measured walk; broad building may already suffice.",
+      "existing_alternative": "Use accurate broad Unicode or existing accepted art until a distinctive, structurally reviewed study is ready.",
+      "event_ids": [
+        217397
+      ],
+      "evidence_by_event": {
+        "217397": [
+          "Coney Island Walking Tours: Coney Island Walking Tours take place every Saturday and Sunday. Tickets and further information are available through the linked tour page.",
+          "Tags: Community, Tour, Education, Outdoor, Walking Tour, Format, Outings"
+        ]
+      },
+      "source_urls_by_event": {
+        "217397": [
+          "https://www.coneyisland.com/tours"
+        ]
+      }
+    },
+    {
+      "concept": "format-panel-discussion",
+      "label": "Format panel discussion",
+      "category": "format",
+      "visual": "Three tabletop microphones and conversation field",
+      "rationale": "Panel rather than adversarial debate; count illustrative.",
+      "existing_alternative": "Existing broader icon or Unicode may suffice; preserve prospective study until semantic and visual validation.",
+      "event_ids": [
+        217458
+      ],
+      "evidence_by_event": {
+        "217458": [
+          "Music Sets You Free by Ryuichi Sakamoto: A celebration of the life and legacy of renowned musician and composer, Ryuichi Sakamoto. Join us for a panel conversation with Arto Lindsay, Dedekind Cut, and Sam Bett to celebrate the release of the candid and beautiful memoir of one of the world's most influential electronic composors. The conversation will be moderated by Sasha Frere-Jones, followed by a signing.",
+          "Tags: Music, Literature, Electronic Music, Book Signing, Memoir, Gathering, Talk, Ryuichi Sakamoto, Format, Panel Conversation"
+        ]
+      },
+      "source_urls_by_event": {
+        "217458": [
+          "https://www.rizzolibookstore.com/music-sets-you-free-ryuichi-sakamoto"
+        ]
+      }
+    },
+    {
+      "concept": "format-product-design-talk",
+      "label": "Product design discussion",
+      "category": "format",
+      "visual": "A product sketch and discussion bubble.",
+      "rationale": "Discussion of design and merchandising production, not selling or making during the event.",
+      "existing_alternative": "Keep the event fallback until a scoped, recognizable original motif is verified.",
+      "event_ids": [
+        217545
+      ],
+      "evidence_by_event": {
+        "217545": [
+          "Henson Products – The Inside Story: Join special guests for the inside scoop on how your favorite merch gets made! Be sure to check out some incredible Henson collectibles from our vendors in the Swa(m)p Meet. Panel will be approximately 45 minutes. Free with RSVP . Seating is first come, first served.",
+          "Tags: Community, Free, Education, Merchandise, Gathering, Talk, Jim Henson, Collectibles, Panel, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "217545": [
+          "https://movingimage.org/event/henson-products-the-inside-story/"
+        ]
+      }
+    },
+    {
+      "concept": "format-prose-reading",
+      "label": "Prose reading",
+      "category": "format",
+      "visual": "Open prose pages with a small speaking mark",
+      "rationale": "Distinguish a performed novella from poetry and book discussion.",
+      "existing_alternative": "Current fallback or broader accepted icon may suffice; keep this prospective until structural and small-size review passes.",
+      "event_ids": [
+        217387
+      ],
+      "evidence_by_event": {
+        "217387": [
+          "The Astorian Reading: No description available.",
+          "Tags: Literature, Nightlife, Live Reading, Reading, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217387": [
+          "https://www.knittingfactory.com/tm-event/the-astorian-reading/"
+        ]
+      }
+    },
+    {
+      "concept": "format-puppetry-history-tour",
+      "label": "Puppetry-history walk",
+      "category": "format",
+      "visual": "A puppet silhouette paired with a walking route.",
+      "rationale": "Guided outdoor interpretation of puppetry history differs from musician-site tours.",
+      "existing_alternative": "Keep the event fallback until a scoped, recognizable original motif is verified.",
+      "event_ids": [
+        217538
+      ],
+      "evidence_by_event": {
+        "217538": [
+          "Sing-Along & Stroll-Along with Heather Henson: Join Heather Henson, Joe Hennes (ToughPigs), and friends to celebrate Jim Henson’s birthday with a musical walking tour through Jim and Jane’s New York City. Bring your homemade puppets, instruments, and don your best Muppet attire (and walking shoes) for a morning full of puppet surprises, singing, and games.",
+          "Tags: Community, Music, Theater, Tour, Family, Education, Outdoor, Puppetry, Games, Walking Tour, Jim Henson, Sing Along, Format, Outings"
+        ]
+      },
+      "source_urls_by_event": {
+        "217538": [
+          "https://movingimage.org/event/sing-along-stroll-along/2026-09-25/"
+        ]
+      }
+    },
+    {
+      "concept": "format-rooftop-party",
+      "label": "Format rooftop party",
+      "category": "format",
+      "visual": "Roof terrace and party pennant",
+      "rationale": "Nightlife location format; no DJ guarantee.",
+      "existing_alternative": "Existing broader icon or Unicode may suffice; preserve prospective study until semantic and visual validation.",
+      "event_ids": [
+        217367
+      ],
+      "evidence_by_event": {
+        "217367": [
+          "Sukkot Under the Stars for 20s & 30s: Celebrate Sukkot with other 20s and 30s under the stars in 14Y’s rooftop sukkah with skyline views, an open bar, and tasty bites.",
+          "Tags: Community, Party, Education, Jewish Culture, Nightlife, Jewish Life, Cultural Heritage, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "217367": [
+          "https://operations.daxko.com/online/5428/ProgramsV2/Events.mvc/offering?guid=611c7a46-8b69-11f1-99eb-00505692171b"
+        ]
+      }
+    },
+    {
+      "concept": "format-singles-mixer",
+      "label": "Singles mixer",
+      "category": "format",
+      "visual": "Paired conversation bubbles and a small heart",
+      "rationale": "No timed rotations or matching algorithm promised.",
+      "existing_alternative": "Current fallback or broader accepted icon may suffice; keep this prospective until structural and small-size review passes.",
+      "event_ids": [
+        217474
+      ],
+      "evidence_by_event": {
+        "217474": [
+          "Book Crush: Sapphic Dating Social: Sapphic Book Crush is a singles night for queer women and nonbinary readers at Book Club Bar — everyone in the room is single, everyone came to meet someone, and the shelves break the ice.",
+          "Tags: Community, LGBTQ, Nightlife, Dating, Mixer, Sapphic, Singles, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "217474": [
+          "https://www.eventbrite.com/e/book-crush-sapphic-dating-social-at-book-club-bar-bushwick-tickets-1997161856876?aff=oddtdtcreator&keep_tld=true",
+          "https://www.eventbrite.com/e/sapphic-book-crush-queer-singles-night-at-book-club-bar-bushwick-tickets-1997161856876?aff=oddtdtcreator"
+        ]
+      }
+    },
+    {
+      "concept": "format-tribute-band",
+      "label": "Format tribute band",
+      "category": "format",
+      "visual": "Stage microphone and tribute-star motif",
+      "rationale": "Tribute rather than original artist appearance.",
+      "existing_alternative": "Existing broader icon or Unicode may suffice; preserve prospective study until semantic and visual validation.",
+      "event_ids": [
+        217452
+      ],
+      "evidence_by_event": {
+        "217452": [
+          "70's McCartney w/Rennie Pincus,Colin Taber,Allie Kenny,Dave Gantenbein,Vin D'Agostino: Featuring Rennie Pincus, Colin Taber, Allie Kenny, Dave Gantenbein, and Vin D'Agostino.",
+          "Tags: Music, Family, Concert, All Ages, Tribute Band, Live Music, Format, Performance, McCartney"
+        ]
+      },
+      "source_urls_by_event": {
+        "217452": [
+          "https://bitterend.com/#/events/193564"
+        ]
+      }
+    },
+    {
+      "concept": "format-work-in-progress-show",
+      "label": "Work in progress show",
+      "category": "format",
+      "visual": "Stage frame with a lightly unfinished sketch edge.",
+      "rationale": "Artists sharing developing work differs from a conventional finished exhibition.",
+      "existing_alternative": "Use appropriate accepted art or broad Unicode until a distinctive study is reviewed.",
+      "event_ids": [
+        217369
+      ],
+      "evidence_by_event": {
+        "217369": [
+          "LABAlive I: First Name: Join us for an evening of interdisciplinary art featuring works in progress and public premieres inspired by Jewish text study and the theme of “Name.”",
+          "Tags: Art, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217369": [
+          "https://operations.daxko.com/online/5428/ProgramsV2/Events.mvc/offering?guid=9bd0a01b-8c49-11f1-99ee-00505692a808"
+        ]
+      }
+    },
+    {
+      "concept": "genre-afro-caribbean",
+      "label": "Afro-Caribbean music",
+      "category": "genre",
+      "visual": "Explore a rhythm motif without naming a particular instrument.",
+      "rationale": "Broad explicit regional musical traditions need recognition research, not an assumed drum.",
+      "existing_alternative": "Keep the event fallback until a scoped, recognizable original motif is verified.",
+      "event_ids": [
+        217521
+      ],
+      "evidence_by_event": {
+        "217521": [
+          "SOULSA - Afro-Caribbean: SOULSA performs a modern fusion of Afro-Caribbean rhythms and modern rock music.",
+          "Tags: Community, Music, Dance, World Music, Education, Concert, Cultural Heritage, Afro Caribbean, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217521": [
+          "https://silvana-nyc.com/calendar.php"
+        ]
+      }
+    },
+    {
+      "concept": "genre-country",
+      "label": "Country music",
+      "category": "genre",
+      "visual": "Explore a music note integrated into a simple brimmed hat.",
+      "rationale": "Country repertoire is named; hat is only an exploratory convention and recognition testing must avoid treating costume as universal genre identity.",
+      "existing_alternative": "Noto cowboy has no music cue; guitar/banjo do not cover all country performances.",
+      "event_ids": [
+        217498
+      ],
+      "evidence_by_event": {
+        "217498": [
+          "Micky and the Motorcars (Acoustic) / Jason Eady: Micky and the Motorcars (Acoustic) / Jason Eady Live at Cafe Wha? | Wednesday, October 7th | 5:00PM Doors, 6:00PM Show",
+          "Tags: Music, Concert, Nightlife, Acoustic, Country Music, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217498": [
+          "https://www.eventbrite.com/e/micky-and-the-motorcars-acoustic-jason-eady-tickets-1997157368451"
+        ]
+      }
+    },
+    {
+      "concept": "genre-electronic",
+      "label": "Electronic music",
+      "category": "genre",
+      "visual": "A simple waveform beside one music note.",
+      "rationale": "Explicit electronic repertoire does not establish DJ or synth equipment; abstract motif needs recognition testing.",
+      "existing_alternative": "Existing broad Unicode remains suitable; specific motif must demonstrate added recognition before new artwork.",
+      "event_ids": [
+        217427
+      ],
+      "evidence_by_event": {
+        "217427": [
+          "Emancipator: A concert w/ Emancipator in The Hall @ Elsewhere in Bushwick on 11.06! Tickets start at $25 • 7pm • 16+ | Genre: Electronic",
+          "Tags: Music, Concert, Electronic Music, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217427": [
+          "https://www.eventbrite.com/e/emancipator-tickets-1995465318484"
+        ]
+      }
+    },
+    {
+      "concept": "genre-guitar-pop",
+      "label": "Guitar pop",
+      "category": "genre",
+      "visual": "Explore a guitar and compact pop-note motif.",
+      "rationale": "Explicit guitar-pop repertoire; distinguish actual guitar instrumentation from a broad genre tag.",
+      "existing_alternative": "Keep the event fallback until a scoped, recognizable original motif is verified.",
+      "event_ids": [
+        217391
+      ],
+      "evidence_by_event": {
+        "217391": [
+          "Graham Hunt, Tanner York: Graham Hunt’s music combines breakbeats, anthemic choruses, synth runs, and acoustic guitars. His album *Try Not To Laugh* draws on the everyday Midwest experience and blends influences associated with the Dust Brothers, Paul Westerberg, Guided By Voices, and Happy Mondays.",
+          "Tags: Music, Rock, Indie, Concert, Indie Rock, Pop Music, Live Music, Guitar Pop, 21+, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217391": [
+          "https://www.knittingfactory.com/tm-event/graham-hunt-tanner-york/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-pop",
+      "category": "genre",
+      "label": "Pop music",
+      "visual": "Bold music note with a single rhythmic accent",
+      "rationale": "Avoid assuming vocal or electric instrument; broad genre motif unproven.",
+      "existing_alternative": "Broad fallback does not distinguish this supported facet.",
+      "event_ids": [
+        217424
+      ],
+      "evidence_by_event": {
+        "217424": [
+          "Kyle Hume: A concert w/ Kyle Hume in Zone One @ Elsewhere in Bushwick on 11.08! Tickets start at $25 • 7pm • 16+ | Genre: Pop",
+          "Tags: Government, Community, Music, Concert, Pop Music, Zone One, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217424": [
+          "https://www.eventbrite.com/e/kyle-hume-tickets-1985726645852"
+        ]
+      }
+    },
+    {
+      "concept": "genre-soul",
+      "label": "Soul music",
+      "category": "genre",
+      "visual": "A record with a rounded call-and-response wave.",
+      "rationale": "Classic and Northern Soul are explicit repertoire; the motif needs testing against funk and R&B and should not imply live vocals.",
+      "existing_alternative": "DJ decks serve the current activity; no existing icon distinguishes soul repertoire.",
+      "event_ids": [
+        217520
+      ],
+      "evidence_by_event": {
+        "217520": [
+          "Zoe Moff - Latin Soul Duo: No description available.",
+          "Tags: Music, Concert, Latin, Soul Music, Duo, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217520": [
+          "https://silvana-nyc.com/calendar.php"
+        ]
+      }
+    },
+    {
+      "concept": "instrument-electric-sitar",
+      "label": "Electric sitar / zitar",
+      "category": "instrument",
+      "visual": "A verified electric zitar body and neck with pickup detail.",
+      "rationale": "Electric zitar differs structurally from the acoustic gourd sitar; reference and recognition work needed.",
+      "existing_alternative": "Keep the event fallback until a scoped, recognizable original motif is verified.",
+      "event_ids": [
+        217412
+      ],
+      "evidence_by_event": {
+        "217412": [
+          "Niladri Kumaar: Sitar maestro Niladri Kumaar presents an innovative program featuring his electric sitar, original compositions, and selections connected to his work with Zakir Hussain. He will be joined by Agnelo Fernandes, Sambit Chatterjee, and Satyajit Talwalkar.",
+          "Tags: Music, World Music, Concert, Sitar, Indian Music, Format, Performance, Counterpoint Series"
+        ]
+      },
+      "source_urls_by_event": {
+        "217412": [
+          "https://www.worldmusicinstitute.org/niladri-kumar-at-adler-hall/"
+        ]
+      }
+    },
+    {
+      "concept": "ritual-eucharist",
+      "label": "Eucharist and communion",
+      "category": "activity",
+      "visual": "A simple chalice beneath a round communion wafer, with a small cross on the wafer.",
+      "rationale": "The service explicitly centers Eucharistic communion; elements distinguish the rite from a church building. Use only for explicitly described communion contexts.",
+      "existing_alternative": "Church identifies location broadly; wine glass implies secular drinking.",
+      "event_ids": [
+        217463
+      ],
+      "evidence_by_event": {
+        "217463": [
+          "9-11 Memorial Mass: A Mass to commemorate the 25th anniversary of the tragedy of the 9-11 terror attacks on our nation. A moment of gathering will follow Mass.",
+          "Tags: Community, Memorial, History, Education, Catholic, Remembrance, Gathering, Service, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "217463": [
+          "https://sfxavier.org/event/9-11-memorial-mass/"
+        ]
+      }
+    }
+  ],
+  "limitations": "Counts describe this cohort, not population reach. These are grounded prospective studies, not live assignments. Existing artwork may already suffice; exact equipment and genre recognition require further review."
+}

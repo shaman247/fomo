@@ -1,0 +1,629 @@
+{
+  "date": "2026-09-10",
+  "scope": "Cycle 026: 100 sequential events 203793–204087, no targeted supplements.",
+  "suggestions": 36,
+  "concept_count": 22,
+  "concepts": [
+    {
+      "concept": "genre-jazz",
+      "label": "Jazz",
+      "category": "genre",
+      "visual": "A pair of syncopated musical notes with one loose improvisatory flourish.",
+      "rationale": "The genre is explicit, but an instrument-neutral motif remains exploratory and requires recognition tests; avoid treating saxophone as universal jazz.",
+      "existing_alternative": "Noto notes are generic; a saxophone misstates instrumentation when the program does not feature one.",
+      "event_ids": [
+        203793,
+        203794,
+        203865,
+        203867,
+        203870,
+        203872,
+        203926,
+        203927,
+        203928,
+        204040,
+        204055
+      ],
+      "evidence_by_event": {
+        "203793": [
+          "New Amsterdam presents Charlotte Greve - WATERBODIES & Kaoru Watanabe - THE ARCH Release Show: Join Charlotte Greve and Kaoru Watanabe to celebrate the release of their new albums, WATERBODIES and The Arch, at Public Records. Released by New Amsterdam Records as part of their 2026 selections, these works will be performed live on...",
+          "Tags: Music, Jazz, Concert, Album Release, Live Music, New Amsterdam Records, Format, Performance"
+        ],
+        "203794": [
+          "Mark Guiliana - Beat Music: Born out of relentless exploration of rhythm and sonic textures, BEAT MUSIC pulses with an electrifying fusion of jazz, electronic, and experimental sounds, captivating audiences worldwide with its dynamic and innovative performances.",
+          "Tags: Music, Jazz, Experimental, Concert, Nightlife, Electronic Music, Live Music, Format, Performance"
+        ],
+        "203865": [
+          "Evening Jazz Cruise Aboard Manhattan: Join us aboard one of our 1920s style Manhattan yachts and witness the city's beauty and elegance, while enjoying some festive live jazz! On this cruise you may hear anything from jazz standards by Gershwin, Cole Porter and Duke Ellington, to new renditions of Motown songs, R&B grooves, original pieces, swing style jazz and hits from today!",
+          "Tags: Music, Jazz, Concert, Live Music, Cruise, Format, Performance"
+        ],
+        "203867": [
+          "City Lights Serenade Cruise: Vocalist & Live Band!: Experience a magical evening on the water as our live jazz band and vocalist take center stage! Enjoy timeless Broadway ballads, romantic standards, and favorites from beloved crooners, plus jazzy renditions of pop, Neo-soul, and R&B hits. Perfect for date nights or an Only in NYC adventure, this 1.5-hour cruise pairs romantic tunes of our time with stunning views the NYC skyline.",
+          "Tags: Music, Jazz, Concert, Nightlife, Live Jazz, Vocal Music, Vocalist, Date Night, Cruise, Format, Performance"
+        ],
+        "203870": [
+          "Live Jazz Sail in NY Harbor: See the the grand NYC Skyline lit up at night or a magnificent New York Harbor Sunset while our veteran sea-legged Jazz trio serenades you!!",
+          "Tags: Music, Jazz, Outdoor, Concert, Sailing, Sunset, Harbor, Format, Performance"
+        ],
+        "203872": [
+          "The Cait Jones Trio Jazz Cruise: Sail Away with the 'Swing' Style Jazz Vocalist, Cait Jones. Join us aboard one of our 1920s style Manhattan yachts and witness the city's beauty and elegance, while enjoying some festive live jazz!",
+          "Tags: Music, Jazz, Outdoor, Concert, Live Music, Cruise, Format, Performance"
+        ],
+        "203926": [
+          "Kevin Hays - Album Release: Kevin Hays - piano Kenny Wollesen - drums (9/11, 1st set) Ben Wendel - saxophone (9/11, 2nd set) Gilad Hekselman - guitar (9/12, 1st set) Craig Taborn - keys (9/12, 2nd set) Sets at 7pm + 9pm ET",
+          "Tags: Music, Jazz, Concert, Piano, Album Release, Format, Performance"
+        ],
+        "203927": [
+          "Wolfgang Muthspiel - Solo: Wolfgang Muthspiel - guitar Sets at 7pm + 9pm ET",
+          "Tags: Music, Jazz, Concert, Guitar, Solo, Format, Performance"
+        ],
+        "203928": [
+          "Thana Alexa: Thana Alexa - vocals/compositions Alejandra Sofia - keys/vocals JC Maillard - guitar/vocals Jacqueline Acevedo - percussion/vocals Sets at 7pm + 9pm ET",
+          "Tags: Music, Jazz, Concert, Vocals, Format, Performance"
+        ],
+        "204040": [
+          "JazzFest 2026: Jazz is back at BRIC! The 12th Annual BRIC JazzFest returns October 16-17 with two nights of community-centered radical joy, honoring jazz’s roots and the artists carrying it forward.",
+          "Tags: Community, Music, Jazz, Festival, Afro Latin Jazz, Live Music, BRIC, Format, Social"
+        ],
+        "204055": [
+          "Jazz in the Gallery - The Maurice Sedacca Trio: A jazz performance by The Maurice Sedacca Trio in the gallery.",
+          "Tags: Music, Jazz, Concert, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "203793": [
+          "https://dice.fm/event/6a5bd65c35929b0001e5d33b",
+          "https://dice.fm/event/ryry6q-new-amsterdam-presents-charlotte-greve-waterbodies-kaoru-watanabe-the-arch-release-show-14th-oct-public-records-new-york-tickets",
+          "https://www.newamrecords.org/events/2026/10/14/charlotte-greve-and-kaoru-watanabe-album-release-show"
+        ],
+        "203794": [
+          "https://dice.fm/event/6a5bc58a63439b00019579fd",
+          "https://dice.fm/event/nvpvo8-mark-guiliana-beat-music-24th-oct-public-records-new-york-tickets"
+        ],
+        "203865": [
+          "https://fareharbor.com/sail-nyc/items/25957/"
+        ],
+        "203867": [
+          "https://fareharbor.com/sail-nyc/items/451138/"
+        ],
+        "203870": [
+          "https://fareharbor.com/sail-nyc/items/56320/"
+        ],
+        "203872": [
+          "https://fareharbor.com/sail-nyc/items/732665/"
+        ],
+        "203926": [
+          "https://jazzgallery.org/calendar/kevin-hays-sept-11-12-2026"
+        ],
+        "203927": [
+          "https://jazzgallery.org/calendar/wolfgang-muthspiel-sept-25-2026"
+        ],
+        "203928": [
+          "https://jazzgallery.org/calendar/thana-alexa-sept-26-2026"
+        ],
+        "204040": [
+          "https://bricartsmedia.org/event/jazzfest-2026/",
+          "https://www.downtownbrooklyn.com/event/jazzfest-2026/"
+        ],
+        "204055": [
+          "https://westburyarts.app.neoncrm.com/nx/portal/neonevents/events?path=%2Fportal%2Fevents%2F51260"
+        ]
+      }
+    },
+    {
+      "concept": "genre-indie-rock",
+      "category": "genre",
+      "label": "Indie rock",
+      "visual": "Compact guitar and small independent-stage amp",
+      "rationale": "Named indie-rock bills are distinct from broad music",
+      "existing_alternative": "Existing guitar/music emoji; resolve genre visual clarity first",
+      "event_ids": [
+        203817,
+        203819,
+        203827
+      ],
+      "evidence_by_event": {
+        "203817": [
+          "Iceblynk, Lovina Falls, The Lookout Honeys: Iceblynk was formed in the Summer of 2019 by guitarist Martin Newman, vocalist Andrea Lynn and bassist James Newman. Following the release of their single 'Enter the Sky' the band was joined by drummer Rachel Fischer and wrote and recorded their 2024 singl...",
+          "Tags: Music, Rock, Indie, Concert, Nightlife, Indie Rock, Live Music, Format, Performance"
+        ],
+        "203819": [
+          "Hollow Bastion, Savanna Ruth, Wulfer, Untitled Freak: Hollow Bastion blends indie rock with folk textures, dreamy atmospheres, and lo-fi bedroom pop roots. Teagan has cited musical influences ranging from indie acts like Japanese Breakfast, Wilco, and Hop Along to video game soundtracks like Final Fantasy and...",
+          "Tags: Music, Rock, Indie, Concert, Folk Music, Indie Rock, Lo-fi, Live Music, Format, Performance"
+        ],
+        "203827": [
+          "Julez and the Rollerz: Lineup includes Julez & The Rollerz, WifeKnife, and Lady Lychee. This is a 21+ event.",
+          "Tags: Music, Rock, Indie, Concert, Nightlife, Band, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "203817": [
+          "https://dice.fm/event/6a5fc27d3d046f00015b85c0",
+          "https://dice.fm/event/ww9vgg-iceblynk-lovina-falls-the-lookout-honeys-17th-sep-sleepwalk-new-york-city-tickets"
+        ],
+        "203819": [
+          "https://dice.fm/event/6a55338d065a600001afce5b",
+          "https://dice.fm/event/g53875-hollow-bastion-savanna-ruth-wulfer-untitled-freak-30th-sep-sleepwalk-new-york-city-tickets"
+        ],
+        "203827": [
+          "https://dice.fm/event/6a4c6043485fa00001b006cb",
+          "https://dice.fm/event/g53ala-julez-and-the-rollerz-12th-sep-alphaville-new-york-tickets",
+          "https://dice.fm/event/g53ala-julez-and-the-rollerz-wifeknife-lady-lychee-12th-sep-alphaville-new-york-tickets"
+        ]
+      }
+    },
+    {
+      "concept": "genre-electronic",
+      "label": "Electronic music",
+      "category": "genre",
+      "visual": "A simple waveform beside one music note.",
+      "rationale": "Explicit electronic repertoire does not establish DJ or synth equipment; abstract motif needs recognition testing.",
+      "existing_alternative": "Existing broad Unicode remains suitable; specific motif must demonstrate added recognition before new artwork.",
+      "event_ids": [
+        203794,
+        203826
+      ],
+      "evidence_by_event": {
+        "203794": [
+          "Mark Guiliana - Beat Music: Born out of relentless exploration of rhythm and sonic textures, BEAT MUSIC pulses with an electrifying fusion of jazz, electronic, and experimental sounds, captivating audiences worldwide with its dynamic and innovative performances.",
+          "Tags: Music, Jazz, Experimental, Concert, Nightlife, Electronic Music, Live Music, Format, Performance"
+        ],
+        "203826": [
+          "Jasno Swarez, Pegzilla, Spitshine: Jasno Swarez, Pegzilla, and Spitshine performing live at Alphaville.",
+          "Tags: Music, Concert, Nightlife, Electronic Music, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "203794": [
+          "https://dice.fm/event/6a5bc58a63439b00019579fd",
+          "https://dice.fm/event/nvpvo8-mark-guiliana-beat-music-24th-oct-public-records-new-york-tickets"
+        ],
+        "203826": [
+          "https://dice.fm/event/6a59017959933e0001e59433",
+          "https://dice.fm/event/avxbm2-jasno-swarez-pegzilla-spitshine-11th-sep-alphaville-new-york-tickets"
+        ]
+      }
+    },
+    {
+      "concept": "genre-indie",
+      "category": "genre",
+      "label": "Indie music",
+      "visual": "Explore a hand-drawn note motif",
+      "rationale": "Broad stylistic family has no universal instrument; recognition unproven.",
+      "existing_alternative": "Broad fallback does not distinguish this specific supported facet.",
+      "event_ids": [
+        203804,
+        203828
+      ],
+      "evidence_by_event": {
+        "203804": [
+          "Fleur Geurl w/ Isabel Shaye and Caroline Kuhn: Fleur Geurl is celebrating the release of her newest album with a full band performance. She feels lucky to be sharing the stage with artists as talented as Isabel and Caroline and promises it will be a real treat.",
+          "Tags: Music, Indie, Concert, Album Release, Live Music, Format, Performance, Full Band"
+        ],
+        "203828": [
+          "Daisy Chain, Tea Eater: Daisy Chain, Tea Eater with special guest.",
+          "Tags: Music, Indie, Concert, Nightlife, Live Music, Tea Eater, Format, Performance, Daisy Chain"
+        ]
+      },
+      "source_urls_by_event": {
+        "203804": [
+          "https://dice.fm/event/6a42a43440daf30001a1db62",
+          "https://dice.fm/event/xey533-fleur-geurl-w-isabel-shaye-and-caroline-kuhn-10th-sep-purgatory-new-york-tickets"
+        ],
+        "203828": [
+          "https://dice.fm/event/6a5bbef9d218a50001b10cca",
+          "https://dice.fm/event/bb9b5k-daisy-chain-tea-eater-16th-sep-alphaville-new-york-tickets",
+          "https://dice.fm/event/bb9b5k-daisy-chain-tea-eater-nite-music-16th-sep-alphaville-new-york-tickets"
+        ]
+      }
+    },
+    {
+      "concept": "activity-business-finance",
+      "label": "Business finance learning",
+      "category": "activity",
+      "visual": "Business ledger with presentation chart",
+      "rationale": "Supported prospective study; verify exact event technique and small-scale recognition.",
+      "existing_alternative": "Current reviewed fallback remains defensible; do not infer equipment from genre.",
+      "event_ids": [
+        204037
+      ],
+      "evidence_by_event": {
+        "204037": [
+          "TD Financial Literacy for Creatives - Small Business Essentials: Please join us at BRIC on Monday, September 14th to learn financial skills for creatives living at the intersection of art and small business. Featuring representatives from TD, Financial Literacy for Creatives: Small Business Essentials is a practical course designed to help creative entrepreneurs understand business planning, financial statements, credit, and banking essentials for small business success.",
+          "Tags: Community, Workshop, Free, Education, Professional Development, Small Business, Financial Literacy, Creatives, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "204037": [
+          "https://bricartsmedia.org/class/td-bank-financial-literacy-for-creatives-small-business-essentials-2/"
+        ]
+      }
+    },
+    {
+      "concept": "activity-letter-writing",
+      "label": "Letter writing",
+      "category": "activity",
+      "visual": "Envelope with handwritten sheet and pen",
+      "rationale": "Supported prospective study; verify exact event technique and small-scale recognition.",
+      "existing_alternative": "Current reviewed fallback remains defensible; do not infer equipment from genre.",
+      "event_ids": [
+        203918
+      ],
+      "evidence_by_event": {
+        "203918": [
+          "Letter Writing to Political Prisoners: This community event provides materials for individuals to write letters to political prisoners and prisoners of war. The activity aims to foster human connection and combat the isolation experienced by those in the prison system.",
+          "Tags: Community, Activism, Literature, Free, Education, Volunteer, Letter Writing, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "203918": [
+          "https://withfriends.events/event/3INm4Unv/letter-writing-to-political-prisoners-at-ridgewood-commons/"
+        ]
+      }
+    },
+    {
+      "concept": "craft-creative-writing",
+      "label": "Creative writing",
+      "category": "craft",
+      "visual": "Draft page with pencil and imaginative speech shape",
+      "rationale": "Specific format supported in reviewed event context; explore reusable art without inventing details.",
+      "existing_alternative": "Current broad fallback remains defensible; new concept requires recognition review.",
+      "event_ids": [
+        204013
+      ],
+      "evidence_by_event": {
+        "204013": [
+          "Make Meaning Workshop: Moving from Loss to Found: Join Alexandra Vassilaros for a 5-week journey on Wednesday evenings in writing and compassionate community building.",
+          "Tags: Community, Literature, Wellness, Education, Writing Workshop, Community Engagement, Class, Grief Support, Online, Participatory, Compassion, Writing, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "204013": [
+          "https://zencare.org/events/make-meaning-workshop"
+        ]
+      }
+    },
+    {
+      "concept": "dance-flamenco",
+      "label": "Flamenco",
+      "category": "dance-style",
+      "visual": "Grounded dancer pose with expressive arms",
+      "rationale": "Supported prospective study; verify exact event technique and small-scale recognition.",
+      "existing_alternative": "Current reviewed fallback remains defensible; do not infer equipment from genre.",
+      "event_ids": [
+        204064
+      ],
+      "evidence_by_event": {
+        "204064": [
+          "En Comunidad: Flamenco at Socrates Sculpture Park: Flamenco Latino, and Flamenco Vivo Carlota Santana will co-present two immersive, site specific performances at Socrates Sculpture Park.",
+          "Tags: Community, Theater, Dance, Outdoor, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "204064": [
+          "https://www.flushingtownhall.org/show-details/en-comunidad-flamenco-at-socrates-sculpture-park"
+        ]
+      }
+    },
+    {
+      "concept": "dance-swing",
+      "label": "Swing dance",
+      "category": "dance-style",
+      "visual": "Two dancers leaning apart in an open connected-hand rock step.",
+      "rationale": "Swing dancing has a recognizable partnered motion beyond generic dance; test separation at small sizes.",
+      "existing_alternative": "Noto solo dancer omits partnered swing; no corresponding custom.",
+      "event_ids": [
+        203842
+      ],
+      "evidence_by_event": {
+        "203842": [
+          "Swing Dance with Older Adults: Volunteer to help lead a swing dance session with older adults — dancing, music, and conversation.",
+          "Tags: Community, Music, Dance, Volunteer, Swing Dance, Seniors, Participatory, Older Adults, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "203842": [
+          "https://www.newyorkcares.org/project/a1HVr0000030OobMAE",
+          "https://www.newyorkcares.org/project/a1HVr0000030OrpMAE"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-saxophone-trio",
+      "label": "Saxophone trio",
+      "category": "format",
+      "visual": "Saxophone, bass and drum trio emblem",
+      "rationale": "Supported prospective study; verify exact event technique and small-scale recognition.",
+      "existing_alternative": "Current reviewed fallback remains defensible; do not infer equipment from genre.",
+      "event_ids": [
+        203929
+      ],
+      "evidence_by_event": {
+        "203929": [
+          "Jacques Schwarz-Bart RESISTANCE Album Release: Jacques Schwarz-Bart - sax tenor Or Bareket - bass Elé Howell - drums Sets at 7pm + 9pm ET",
+          "Tags: Music, Jazz, Concert, Album Release, Saxophone, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "203929": [
+          "https://jazzgallery.org/calendar/jacques-schwarz-bart-sept-30-2026"
+        ]
+      }
+    },
+    {
+      "concept": "format-burlesque",
+      "label": "Burlesque",
+      "category": "format",
+      "visual": "A pair of overlapping feather fans on a stage base",
+      "rationale": "Explicit burlesque differs from drag and generic dance; feather fan is only representative and needs review.",
+      "existing_alternative": "Source Unicode fallback remains until distinct art is reviewed.",
+      "event_ids": [
+        203818
+      ],
+      "evidence_by_event": {
+        "203818": [
+          "Last Chance Dancers: UN Dia Normal: An all Latine lineup of burlesque and drag performed to the album Un Día Normal by Juanes played on vinyl. Curated by Butter Pecan Burlesque and co-presented with Last Chance Dancers.",
+          "Tags: Community, Theater, Dance, Burlesque, Nightlife, Drag, Club Night, Latine, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "203818": [
+          "https://dice.fm/event/6a6501505eb38e000198488c",
+          "https://dice.fm/event/nvpml5-last-chance-dancers-un-dia-normal-18th-sep-sleepwalk-new-york-city-tickets"
+        ]
+      }
+    },
+    {
+      "concept": "format-shadow-puppetry",
+      "label": "Shadow puppetry",
+      "category": "format",
+      "visual": "Backlit screen and rod puppet silhouette",
+      "rationale": "Supported prospective study; verify exact event technique and small-scale recognition.",
+      "existing_alternative": "Current reviewed fallback remains defensible; do not infer equipment from genre.",
+      "event_ids": [
+        204043
+      ],
+      "evidence_by_event": {
+        "204043": [
+          "Tiger Tales at Museum of Chinese in America (MOCA): No description available.",
+          "Tags: Community, Theater, Art, Family, Puppetry, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "204043": [
+          "https://chinesetheatreworks.org/event/tiger-tales-at-museum-of-chinese-in-america-moca/"
+        ]
+      }
+    },
+    {
+      "concept": "format-wine-cheese-pairing",
+      "category": "format",
+      "label": "Wine and cheese pairing",
+      "visual": "Wine glass beside a cheese wedge",
+      "rationale": "Combination communicates guided pairing beyond a single ingredient.",
+      "existing_alternative": "Broad fallback does not distinguish this supported facet.",
+      "event_ids": [
+        203864
+      ],
+      "evidence_by_event": {
+        "203864": [
+          "Champagne, Wine, Cheese & Caviar Pairing Cruise: As you cruise aboard one of our classic Manhattan yachts, you will be able to take in all the beauty the New York City skyline has to offer while relaxing in our grand observatory. This cruise has limited capacity to create an intimate, comfortable and quiet NY Harbor cruise. The pairing plate will including 3 artisan cheeses, honey or jam, & flatbreads to complement these tasty bubbles!",
+          "Tags: Community, Tour, Food, Outdoor, Nightlife, Tasting, Wine Tasting, Cheese Pairing, Participatory, Cruise, Caviar, Format, Outings"
+        ]
+      },
+      "source_urls_by_event": {
+        "203864": [
+          "https://fareharbor.com/sail-nyc/items/266859/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-emo",
+      "label": "Emo",
+      "category": "genre",
+      "visual": "A dark guitar pick with one broad broken-heart cutout.",
+      "rationale": "The concert explicitly features emo repertoire; the emotional music motif is exploratory, not an audience stereotype, and needs recognition testing.",
+      "existing_alternative": "Noto broken heart conveys emotion alone, and guitar conveys generic rock.",
+      "event_ids": [
+        203807
+      ],
+      "evidence_by_event": {
+        "203807": [
+          "Bury Your Memories: Bury Your Memories is back for their 12th edition of their festival, bringing together the emo and alternative community for a good cause with proceeds towards the Bushwick Ayuda Mutua.",
+          "Tags: Community, Music, Rock, Concert, Fundraiser, Alternative, Emo, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "203807": [
+          "https://dice.fm/event/6a5e9417aa82e300011e3706",
+          "https://dice.fm/event/yodynx-bury-your-memories-26th-sep-purgatory-new-york-tickets"
+        ]
+      }
+    },
+    {
+      "concept": "genre-experimental",
+      "category": "genre",
+      "label": "Experimental music",
+      "visual": "Explore irregular linked sound shapes",
+      "rationale": "No instrument is universal; abstract recognition remains unproven.",
+      "existing_alternative": "Broad fallback does not distinguish this supported facet.",
+      "event_ids": [
+        203806
+      ],
+      "evidence_by_event": {
+        "203806": [
+          "PROBLEMS, Anand Wilder, Bubblegum Octopus, and Videopunks: My name is Darren Keen. I am from Chicago and I do the one person band called PROBLEMS.",
+          "Tags: Music, Indie, Concert, Nightlife, Experimental Music, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "203806": [
+          "https://dice.fm/event/6a51219692151d000174ae81",
+          "https://dice.fm/event/6d8lbb-problems-anand-wilder-bubblegum-octopus-and-videopunks-23rd-sep-purgatory-new-york-tickets"
+        ]
+      }
+    },
+    {
+      "concept": "genre-funk",
+      "label": "Funk",
+      "category": "genre",
+      "visual": "Explore a bent note over four offset bass-pulse blocks.",
+      "rationale": "Funk is explicitly named in the title, description or program tags. This is a prospective genre motif requiring recognition tests; it does not establish a particular instrument or an exclusive assignment for mixed bills.",
+      "existing_alternative": "Existing notes or actual featured instrument remain appropriate; custom genre art is exploratory rather than a proven recognition improvement.",
+      "event_ids": [
+        204029
+      ],
+      "evidence_by_event": {
+        "204029": [
+          "Trombone Shorty & Orleans Avenue: Trombone Shorty is described as an ambassador for New Orleans music known for ecstatic live performances and a blend of rock, funk, soul, jazz, blues, hip-hop, and Caribbean influences. The event also features Abraham Alexander, whose soulful fusion of blues, folk, and gospel has captivated audiences around the world.",
+          "Tags: Music, Jazz, Funk, Concert, Soul Music, Live Music, New Orleans Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "204029": [
+          "https://www.thecapitoltheatre.com/the-capitol-theatre/events/detail/trombone-shorty-orleans-avenue"
+        ]
+      }
+    },
+    {
+      "concept": "genre-heavy-metal",
+      "label": "Heavy metal music",
+      "category": "genre",
+      "visual": "Explore a compact angular music note with two lightning-like edges.",
+      "rationale": "Explicit heavy-metal programming supports genre exploration; recognition is unproven and must be tested against rock and electronic music.",
+      "existing_alternative": "Noto guitar and rock-hand sign cover broad rock but do not consistently distinguish metal; no custom genre art.",
+      "event_ids": [
+        203797
+      ],
+      "evidence_by_event": {
+        "203797": [
+          "Cowardice, Oldest Sea, Chainlacing, Mercy Ruin: SAINT VITUS PRESENTS Cowardice, Oldest Sea, Chainlacing, Mercy Ruin. This is a 21+ event Presented by Saint Vitus Presents.",
+          "Tags: Music, Rock, Concert, Nightlife, Heavy Metal, Metal, Live Music, 21+, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "203797": [
+          "https://dice.fm/event/2wqm36-cowardice-oldest-sea-chainlacing-mercy-ruin-11th-sep-gold-sounds-new-york-tickets",
+          "https://dice.fm/event/6a677beb417bab00013a298a",
+          "https://link.dice.fm/xb33dc1d2966?pid=5456a411"
+        ]
+      }
+    },
+    {
+      "concept": "genre-indie-pop",
+      "category": "genre",
+      "label": "Indie pop",
+      "visual": "Explore a record with a single irregular star-shaped musical note.",
+      "rationale": "Explicit indie-pop repertoire merits a genre idea without instrument assumptions.",
+      "existing_alternative": "Generic music notes remain safer; proposed motif is unproven and needs recognition testing.",
+      "event_ids": [
+        203805
+      ],
+      "evidence_by_event": {
+        "203805": [
+          "Jeanines, Trinket, time thief, and The Rainclouds: Jeanines return to their old stomping grounds, accompanied by time thief, Trinket, and The Rainclouds for a great night of jangle and indie pop.",
+          "Tags: Music, Rock, Concert, Nightlife, Indie Pop, Live Music, Jangle Pop, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "203805": [
+          "https://dice.fm/event/6a5e8cbcb0cffd00013db010",
+          "https://dice.fm/event/bb9vxk-jeanines-trinket-time-thief-and-the-rainclouds-19th-sep-purgatory-new-york-tickets"
+        ]
+      }
+    },
+    {
+      "concept": "genre-jangle-pop",
+      "label": "Jangle pop",
+      "category": "genre",
+      "visual": "Shimmering short-note motif",
+      "rationale": "Supported prospective study; verify exact event technique and small-scale recognition.",
+      "existing_alternative": "Current reviewed fallback remains defensible; do not infer equipment from genre.",
+      "event_ids": [
+        203805
+      ],
+      "evidence_by_event": {
+        "203805": [
+          "Jeanines, Trinket, time thief, and The Rainclouds: Jeanines return to their old stomping grounds, accompanied by time thief, Trinket, and The Rainclouds for a great night of jangle and indie pop.",
+          "Tags: Music, Rock, Concert, Nightlife, Indie Pop, Live Music, Jangle Pop, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "203805": [
+          "https://dice.fm/event/6a5e8cbcb0cffd00013db010",
+          "https://dice.fm/event/bb9vxk-jeanines-trinket-time-thief-and-the-rainclouds-19th-sep-purgatory-new-york-tickets"
+        ]
+      }
+    },
+    {
+      "concept": "genre-lo-fi",
+      "label": "Lo-fi",
+      "category": "genre",
+      "visual": "Soft textured waveform",
+      "rationale": "Supported prospective study; verify exact event technique and small-scale recognition.",
+      "existing_alternative": "Current reviewed fallback remains defensible; do not infer equipment from genre.",
+      "event_ids": [
+        203819
+      ],
+      "evidence_by_event": {
+        "203819": [
+          "Hollow Bastion, Savanna Ruth, Wulfer, Untitled Freak: Hollow Bastion blends indie rock with folk textures, dreamy atmospheres, and lo-fi bedroom pop roots. Teagan has cited musical influences ranging from indie acts like Japanese Breakfast, Wilco, and Hop Along to video game soundtracks like Final Fantasy and...",
+          "Tags: Music, Rock, Indie, Concert, Folk Music, Indie Rock, Lo-fi, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "203819": [
+          "https://dice.fm/event/6a55338d065a600001afce5b",
+          "https://dice.fm/event/g53875-hollow-bastion-savanna-ruth-wulfer-untitled-freak-30th-sep-sleepwalk-new-york-city-tickets"
+        ]
+      }
+    },
+    {
+      "concept": "genre-rock",
+      "category": "genre",
+      "label": "Rock music",
+      "visual": "Strong accented musical note",
+      "rationale": "Electric guitar exists but is not universal evidence; motif requires recognition testing.",
+      "existing_alternative": "Broad fallback does not distinguish this specific supported facet.",
+      "event_ids": [
+        203829
+      ],
+      "evidence_by_event": {
+        "203829": [
+          "Bad Static, 3 The Hardway, T@B GRRRL, Brea Fournier and the Dream Ballet: Bad Static, 3 The Hardway, T@B GRRRL, Brea Fournier and the Dream Ballet",
+          "Tags: Music, Rock, Concert, Underground, Live Music, Alphaville, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "203829": [
+          "https://dice.fm/event/6a336da52a5398000185bd8e",
+          "https://dice.fm/event/v32wol-bad-static-3-the-hardway-tb-grrrl-brea-fournier-and-the-dream-ballet-2nd-oct-alphaville-new-york-tickets"
+        ]
+      }
+    },
+    {
+      "concept": "genre-vocal-jazz",
+      "label": "Vocal jazz",
+      "category": "genre",
+      "visual": "Explore a microphone beside one curved improvisatory note.",
+      "rationale": "The jazz program explicitly features a vocalist.",
+      "existing_alternative": "Microphone is a reasonable existing choice; custom vocal-jazz motif needs recognition testing and should not imply a specific instrument lineup.",
+      "event_ids": [
+        203942
+      ],
+      "evidence_by_event": {
+        "203942": [
+          "Dominique Fils-Aimé: Two-time JUNO Award-winning Montreal singer-songwriter Dominique Fils-Aimé has established herself as one of today’s leading voices in vocal jazz. Her latest album, Our Roots Run Deep (2023), earned the 2024 JUNO Award for Vocal Jazz Album of the Year as well as the 2024 Félix Award for Best Jazz Album at ADISQ, affirming the importance of her artistic vision at the crossroads of jazz, soul, and blues.",
+          "Tags: Music, Jazz, Concert, Blues, Singer Songwriter, Soul Music, Vocal Music, Jazz Vocal, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "203942": [
+          "https://lpr.com/lpr_events/dfa26nyc/",
+          "https://www.afropop.org/events"
+        ]
+      }
+    }
+  ],
+  "limitations": "Counts describe this cohort, not population reach. These are grounded prospective studies, not live assignments. Existing artwork may already suffice; exact equipment and genre recognition require further review."
+}

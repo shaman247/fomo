@@ -1,0 +1,188 @@
+[
+  {
+    "icon_id": "game-prize-wheel",
+    "source_sha256": "f7954665dc4a03e89ba9e077a11c3b4f189579a856c2e12c8fc27e00ea2a2568",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Colored prize wheel on a stand.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-019/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-019/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 6290,
+      "gzip_level_6": 2304
+    },
+    "optimization": {
+      "initial_raw": 6290,
+      "initial_gzip_level_6": 2304,
+      "final_raw": 6290,
+      "final_gzip_level_6": 2304
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Colored radial wheel, fixed pointer and stand distinguish a prize wheel at24/32px. Pegs and pointer soften at16px; event text separates it from a Ferris wheel. Original generic mechanism is not a replica of Wheel of Fortune stage equipment."
+    ]
+  },
+  {
+    "icon_id": "craft-fascinators",
+    "source_sha256": "9bafb82173360cb8ea379f6dd439a479b41bfb012f55942ac23b91854075fd77",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Sculptural looped felt headpiece on an oval base.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-019/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-019/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 3063,
+      "gzip_level_6": 1235
+    },
+    "optimization": {
+      "initial_raw": 3074,
+      "initial_gzip_level_6": 1287,
+      "final_raw": 3063,
+      "final_gzip_level_6": 1235
+    },
+    "issues": [
+      {
+        "issue": "Initial narrow felt loops became edge-on hairlines and read as hoops.",
+        "resolution": "Broadened the felt to52/43mm, lowered loop heights to87/57mm and rotated both loops in the authoritative scene.",
+        "status": "resolved"
+      },
+      {
+        "issue": "The base surface winding exposed the underside clip in the top projection.",
+        "resolution": "Corrected dome surface orientation and rechecked all six views and final native-size cards.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Broad sculpted felt loops sit on an oval percher base at24/32px. At16px it reads as an ornamental small hat; the label establishes fascinator making. No wearer, fit or exact class project is promised."
+    ]
+  },
+  {
+    "icon_id": "craft-duct-tape",
+    "source_sha256": "aeb76e341f1987db16fdf523f3a8775bfca7eb653d862f2cd9189918c877f42c",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Colored roll of wide tape with an unwound strip.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-019/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-019/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 2869,
+      "gzip_level_6": 1146
+    },
+    "optimization": {
+      "initial_raw": 2869,
+      "initial_gzip_level_6": 1146,
+      "final_raw": 2869,
+      "final_gzip_level_6": 1146
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "A wide blue tape roll and tangent free strip identify tape crafts at24/32px. Cloth-backing marks soften at16px; label distinguishes duct tape from other tapes. The camera angle hides the support surface through the deep core, whose open geometry is confirmed in the top view. No finished carrier design is promised."
+    ]
+  },
+  {
+    "icon_id": "craft-pressed-flowers",
+    "source_sha256": "4ae9aac239d5d48c7fcd30fc97f4b6e055de332ab8a87611a9cb1f93233088dd",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Flower bookmark with a loose botanical sprig.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-019/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-019/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 1302,
+      "gzip_level_6": 565
+    },
+    "optimization": {
+      "initial_raw": 1302,
+      "initial_gzip_level_6": 565,
+      "final_raw": 1302,
+      "final_gzip_level_6": 565
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Botanical bookmark and loose flattened sprig suggest pressed-flower crafts at24/32px. At16px stems and ribbon soften; event text distinguishes preserved botanical craft from floral illustration. No plant species or preservation procedure is implied."
+    ]
+  },
+  {
+    "icon_id": "craft-card-making",
+    "source_sha256": "57707789d6a4458b3006c6b656b7a13e05bff701aa7aaae3fd7ca9390ca76bd6",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Open handmade greeting card with a painting brush.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-019/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-019/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 739,
+      "gzip_level_6": 411
+    },
+    "optimization": {
+      "initial_raw": 739,
+      "initial_gzip_level_6": 411,
+      "final_raw": 739,
+      "final_gzip_level_6": 411
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Open greeting card, heart and brush identify card decoration at24/32px. Fine writing marks soften at16px. The generic motif does not represent a required holiday design."
+    ]
+  }
+]

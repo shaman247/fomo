@@ -215,16 +215,19 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             this.state.loadedChunks = new Set();
 
-            // Step 2: Prefer the URL's requested day, then today. If neither is in
-            // the manifest (export is older than NUM_DAY_CHUNKS days), fall
-            // back to remainder so the user still sees recent + future events.
+            // Step 2: Load complete coverage of the URL's date range (or today).
+            // Dates outside the manifest's day files require the tail partitions.
             const todayStr = Utils.getTodayInZone();
             this.state.todayStr = todayStr;
-            const requestedDate = this.state.urlParams?.start ? URLParams.formatDate(this.state.urlParams.start) : todayStr;
-            const days = this.state.manifest.days || [];
-            const dayIndex = days.indexOf(requestedDate) >= 0 ? days.indexOf(requestedDate) : days.indexOf(todayStr);
-            const initChunks = dayIndex >= 0 ? [`day${dayIndex}`]
-                : this._dataChunks(this.state.manifest).filter(c => c.startsWith('remainder'));
+            const urlStart = this.state.urlParams?.start;
+            const urlEnd = this.state.urlParams?.end;
+            const end = urlEnd ? URLParams.formatDate(urlEnd) : null;
+            const start = urlStart && (!end || end >= todayStr)
+                ? URLParams.formatDate(urlStart) : todayStr;
+            // Publish the complete requested date range on the first render.
+            // Other dates can load without replacing this view afterwards.
+            const requestedStart = start < todayStr ? todayStr : start;
+            const initChunks = this._chunksForDates(requestedStart, end && end >= requestedStart ? end : requestedStart);
             this.state.initChunks = initChunks;
             initChunks.forEach(c => this.state.loadedChunks.add(c));
 
@@ -555,13 +558,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         FP.measure('fp:p2:iconScheduling', 'fp:p2:searchIndex', 'fp:p2:emoji');
                     }
 
-                    this.updateFilteredEventList({ skipDisplay: true });
-                    // Lightweight refresh — preserves user selections made during Phase 1
-                    // and avoids re-instantiating SectionRenderer / GestureHandler / etc.
-                    FilterPanelUI.refreshAvailableTags({
-                        allAvailableTags: this.state.allAvailableTags,
-                        initialGlobalFrequencies: this.state.tagFrequencies
-                    });
+                    // Background arrivals become visible on the next interaction.
+                    // Keep the current map/list stable while other dates load.
+                    this._dataViewPending = true;
                     if (profile) {
                         FP.mark('fp:p2:initPanel');
                         FP.measure('fp:p2:filterList+refreshPanel', 'fp:p2:emoji', 'fp:p2:initPanel');
@@ -575,7 +574,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         newlyAvailable.forEach(tag => pendingUrlTags.delete(tag));
                     }
 
-                    this.filterAndDisplayEvents();
+                    // A date change made during loading is an outstanding user
+                    // request: fulfil it once, with its complete date coverage.
+                    if (this._waitingForDateChunks && this._selectedDateChunksReady()) {
+                        this.filterAndDisplayEvents();
+                    }
                     if (profile) {
                         FP.mark('fp:p2:render');
                         FP.measure('fp:p2:filterAndDisplayEvents', 'fp:p2:initPanel', 'fp:p2:render');
@@ -843,6 +846,23 @@ document.addEventListener('DOMContentLoaded', () => {
             return [...(manifest?.days || []).map((_, i) => `day${i}`), ...tail];
         },
 
+        _chunksForDates(start, end = start) {
+            const days = this.state.manifest?.days || [];
+            const chunks = days.flatMap((day, i) => day >= start && day <= end ? [`day${i}`] : []);
+            const dayCount = Math.round((Date.parse(end) - Date.parse(start)) / 86400000) + 1;
+            if (chunks.length < dayCount || !days.length) {
+                chunks.push(...this._dataChunks(this.state.manifest).filter(c => c.startsWith('remainder')));
+            }
+            return chunks;
+        },
+
+        _selectedDateChunksReady() {
+            const dates = this.state.datePickerInstance?.selectedDates || [];
+            if (!dates.length) return true;
+            return this._chunksForDates(URLParams.formatDate(dates[0]), URLParams.formatDate(dates[1] || dates[0]))
+                .every(c => this.state.loadedChunks.has(c) || (c.startsWith('remainder') && this.state.loadedChunks.has('remainder')));
+        },
+
         /** Every file required before the loaded snapshot may be used offline. */
         _expectedSnapshotUrls() {
             const urls = [
@@ -1020,7 +1040,7 @@ document.addEventListener('DOMContentLoaded', () => {
             await DataManager.buildSearchIndexAsync(staging);
 
             this._swapRefreshedState(staging, fresh);
-            await this._rerenderAfterRefresh();
+            this._dataViewPending = true;
         },
 
         /** Clear+refill an object in place (identity preserved). @private */
@@ -1088,24 +1108,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Viewport aggregates were computed against the old dataset.
             this._viewportCache = null;
-        },
-
-        /**
-         * Re-render after a state swap — mirrors the Phase-2 tail exactly:
-         * date filter + location grouping + tag index rebuild, panel refresh
-         * (preserves user tag selections), then the normal filter/display
-         * pass (preserves search term, viewport, and refreshes any open
-         * popup's content in place).
-         * @private
-         */
-        async _rerenderAfterRefresh() {
-            // Artwork is loaded lazily for visible icons by IconManager.
-            this.updateFilteredEventList({ skipDisplay: true });
-            FilterPanelUI.refreshAvailableTags({
-                allAvailableTags: this.state.allAvailableTags,
-                initialGlobalFrequencies: this.state.tagFrequencies
-            });
-            this.filterAndDisplayEvents();
         },
 
         /**
@@ -1221,6 +1223,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const run = () => {
                 const previousTerm = this.state.searchTerm;
                 this.state.searchTerm = term;
+
+                if (this._dataViewPending) {
+                    this.filterAndDisplayEvents();
+                    return;
+                }
 
                 if (FP) FP.mark('fp:search:start');
                 // No term + debug off: renderFilters takes the ListView branch
@@ -1369,7 +1376,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 maxZoom: this.config.MAP_MAX_ZOOM,
                 attributionControl: false,
                 dragPan: false, // Disable initially, re-enable without inertia below
-                fadeDuration: 0 // No crossfade on label collision changes
+                // Brief native symbol fades keep filtering and map movement smooth.
+                fadeDuration: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 150
             });
 
             // Re-enable drag pan without inertia (momentum after releasing)
@@ -1537,6 +1545,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 // ready. Skip during init — the explicit filterAndDisplayEvents()
                 // at the end of init() performs the first render.
                 if (this.state.isInitialLoad) return;
+                if (this._dataViewPending) {
+                    this.filterAndDisplayEvents();
+                    return;
+                }
                 const FP = (typeof window !== 'undefined' && window.FilterProfiler) || null;
                 const run = () => {
                     if (FP) FP.mark('fp:moveend:start');
@@ -1750,6 +1762,19 @@ document.addEventListener('DOMContentLoaded', () => {
         },
 
         filterAndDisplayEvents(options = {}) {
+            if (!this._selectedDateChunksReady()) {
+                this._waitingForDateChunks = true;
+                return;
+            }
+            this._waitingForDateChunks = false;
+            if (this._dataViewPending) {
+                this._dataViewPending = false;
+                this.updateFilteredEventList({ skipDisplay: true });
+                FilterPanelUI.refreshAvailableTags({
+                    allAvailableTags: this.state.allAvailableTags,
+                    initialGlobalFrequencies: this.state.tagFrequencies
+                });
+            }
             if (!this.state.datePickerInstance) {
                 console.warn("filterAndDisplayEvents called before datePicker is initialized.");
                 return;

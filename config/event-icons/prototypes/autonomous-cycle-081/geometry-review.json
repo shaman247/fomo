@@ -1,0 +1,181 @@
+{
+  "reviewer_mode": "creator-critical-pass",
+  "geometry_mode": "two-3d-scenes-three-flat-symbols",
+  "views": [
+    "front",
+    "rear",
+    "left",
+    "right",
+    "top",
+    "icon"
+  ],
+  "decision": "pass",
+  "findings": [
+    "Personally inspected all12final geometry views,five final native128/32/24/16px light/dark cards,nine accepted/Noto references and ten final actual IconManager variants.",
+    "Balloon construction established from manufacturer instructions and instructor finished photo. Ten connected inflated sections and nozzle; equal mirrored front/rear leg endpoints,paired ears/legs curve apart in depth. Simplified proportions,not a claim of exact real balloon recipe.",
+    "First nonplanar mesh produced uneven projection; curved surfaces triangulated. Initial three-tone shading remained patchy,so final two-tone highlights and contour tolerance. Some minor polygonal highlight edges at128px; clear coherent small-size silhouette.",
+    "Tower uses five supported180mmrises/260mmtreads,620mmwide,top-mounted flag. Flag printing is one-sided; rear blank. No figures,handrail or claimed real building geometry.",
+    "Other three are flat original symbolic diagrams. Cinema frame follows accepted genre peers. Identity bust is a pictographic mark,not a physical figure.",
+    "All files below15KBraw/5KBgzip review triggers. Initial/final measured and refreshed custom/Noto comparisons saved."
+  ],
+  "references": [
+    {
+      "url": "https://www.nypl.org/events/programs/2026/09/11/balloon-bending-bonanza",
+      "findings": "Browser primary:Sept11 3:15\u20134,Huguenot830Huguenot,ages6\u201312,in person,registration closed,balloons/pumps provided. Beginner inflate,tie,twist; no particular animal promised.",
+      "inspection": "Primary text read; no source images or videos inspected.",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://www.esbnyc.com/2026-esb-run-up",
+      "findings": "Oct6 8PM,86flights1576stairs1050ft. Lottery openedJune22; current entry availability not confirmed. Indoor stair race,not outdoor road race.",
+      "inspection": "Primary text read; no source images or videos inspected.",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://www.littlechurch.org/concerts",
+      "findings": "MiddaySept23 1PM series with older FrenchFanfares/May20 boilerplate. ConcordianSept25 7:30,OctoberfestOct25 4,OHNYOct17/18. Evensong says SundayNov9 3PM although2026Nov9 isMonday: mixed-year evidence. Amahl SundayJan4 also conflicts with linked2027Jan3 listing.",
+      "inspection": "Primary text read; no source images or videos inspected.",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://cathedral.org/worship/weekly-services/choral-evensong/",
+      "findings": "Anglican sung evening prayer uses Scripture,psalms,hymns and prayers led by choir. DC service times are not NYC event times.",
+      "inspection": "Primary text read; no source images or videos inspected.",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://asia.qualatex.com/en-us/education/balloon-basics/",
+      "findings": "Indexed manufacturer text describes260balloon,unfilledtail,locked muzzle/ear/neck/front-leg/body/rear-leg sections. Equal two-inch front/rear leg bubbles; no detailed construction copied from images. Browser connections reset.",
+      "inspection": "Indexed primary instructional text read; browser image access failed; no image or video seen.",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://newskillsacademy.co.uk/module/module-13-how-to-make-a-balloon-dog",
+      "findings": "Public module explains inflation,locks,neck/body and paired legs. Finished mint-green balloon dog photo used to assess connected inflated sections,ears,muzzle and tail. Original model,not traced.",
+      "inspection": "Primary text and finished photo personally inspected in primary-balloon-dog.png. No videos inspected.",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://thedoors.com/news/the-doors-film-2",
+      "findings": "Band primary historical production announcement:OliverStone narrative aboutJimMorrison;ValKilmer playsMorrison with actors playing band members. Supports music biopic,not music documentary. Historical release wording does not establish current local dates.",
+      "inspection": "Primary text read; no source images or videos inspected.",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://www.regmovies.com/movies/fall-2-deadpoint-ho00021825",
+      "findings": "Actual Regal browser:98min,Sept2release,Adventure,2D,PG13. Jax/Luce trapped after rockslide on high Thailand cliff. Narrative survival,not real climbing. Local screening dates need cinema selection.",
+      "inspection": "Primary text read; no source images or videos inspected.",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://www.thechurchsagharbor.org/event-calendar/exhibition-opening-reception-discussion-dear-mazie-amber-esseiva-jessica-bell-brown",
+      "findings": "Oct3 5\u20137:30 at48MadisonSagHarbor. Curatorial discussion5\u20136 costs10/memberfreeRSVP;reception6\u20137:30freeallnoRSVP. AmazaLeeMeredith legacy and commissioned contemporary work. Do not flatten admission rules.",
+      "inspection": "Primary text read; no source images or videos inspected.",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://www.thechurchsagharbor.org/event-calendar/marty-beller-twists-turns-breakthroughs-recording-touring-composing-career",
+      "findings": "Oct16 6\u20137:30,40/20student12\u201318/30member. Interactive career lecture andQ&A with drummer/composer,not a fullTheyMightBeGiants concert.",
+      "inspection": "Primary text read; no source images or videos inspected.",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://www.thechurchsagharbor.org/event-calendar/insight-sunday-stella-sands-codebreakers-wordhunter-mystery",
+      "findings": "Oct18 noon\u20131:30,10/memberfreeRSVP. Author writing conversation aboutWordhunter andCodebreakers,QA and signing; books available. Aug11publication date is not event date.",
+      "inspection": "Primary text read; no source images or videos inspected.",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://gemsny.org/event/concordian-dawn-6/",
+      "findings": "Browser primary:Sept25 7:30,20,1E29. Medieval repertoire includesHildegard,RomandeFauvel,CarminaBurana,Dunstable,Byttering. No precise instrumental lineup or complete opera confirmed.",
+      "inspection": "Primary text read; no source images or videos inspected.",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://ticketstripe.com/octoberfestatcot2026",
+      "findings": "Oct25 4. BachCoffeeCantata andTelemannSchulmeister,choir members,singers,period ensemble,ClaudiaDumschat harpsichord/conductor. Not beer festival. LinkedMiddaySept30/Oct14Americana andAmahlJan3 conflict with portions of church aggregate boilerplate.",
+      "inspection": "Primary text read; no source images or videos inspected.",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://www.instantseats.com/index.cfm?fuseaction=home.event&eventID=96FA145E-C326-850D-1B7D2B62355C6F61",
+      "findings": "ParkAveOperaOct11 2PMdoors1:30,90min sneak-peek opera concert gala,free soldout. RogerMalouf conducts,JestinPieper piano,five singers; not evidence of complete staging or fundraising.",
+      "inspection": "Primary text read; no source images or videos inspected.",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://www.instantseats.com/index.cfm?fuseaction=home.event&eventID=59D65BDA-A7E6-4D7B-754910022A40FB3E",
+      "findings": "NiCoriOct4 2doors1:30,75+min,30+4.60fees. Youth scholarship cabaret fundraiser,ShaneTurner accompaniment,DiogoRamirez guest,two-drink minimum.",
+      "inspection": "Primary text read; no source images or videos inspected.",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://www.instantseats.com/index.cfm?fuseaction=home.event&eventID=9BF553D7-0E02-3228-1538E4ED94EC7700",
+      "findings": "RussellMossOct8 7:30,75+min,35+5.20advance/40door,two drinks. Fivepiece band:trumpet,drums,sax,bass,piano plusMoss andguestHannahCeleste. Personal stories with song; orchestra here not symphonic.",
+      "inspection": "Primary text read; no source images or videos inspected.",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://www.instantseats.com/index.cfm?fuseaction=home.event&eventID=315A3B89-BA05-321D-F7A1578CA23776E3",
+      "findings": "FlyBoysSept11doors6,preshowJonathanBurns6:45,show7,90min30\u201335plusfees,two drinks. Three male vocalists performing mashup medleys; swing/80srepertoire. Not a guaranteed big band or borrowed film characters.",
+      "inspection": "Primary text read; no source images or videos inspected.",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://www.instantseats.com/index.cfm?fuseaction=home.event&eventID=D0B36EAC-E004-5FDC-54FC8CC0D4B4BC77",
+      "findings": "BoundForBroadwaySept16 7,75min25\u201335plusfees,two drinks. Monthly professional musical-theater vocal showcase withMC/music director and guest star,not a complete scripted musical or audition.",
+      "inspection": "Primary text read; no source images or videos inspected.",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://www.instantseats.com/index.cfm?fuseaction=home.event&eventID=F42001DC-ED83-E6FC-C5D136C2388A7592",
+      "findings": "QuinnLemley aggregates two distinct shows:SwingingHotTomatoJune4/Sept17/Dec10;RitaHayworthJuly16/Oct22. Sept17doors6/show6:30,90min40\u201355plusfees,25minimum. Variabletrio/quartet plusguitar; do not merge program descriptions indiscriminately.",
+      "inspection": "Primary text read; no source images or videos inspected.",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://www.instantseats.com/index.cfm?fuseaction=home.event&eventID=847E1F8C-075A-CDBD-87340A90C07D35A1",
+      "findings": "RandyEdelmanOct2 9:30doors9,75min35+5.20. Piano/voice and stories behind his screen music; his piano becomes orchestra is figurative. Sidebar separately listsOct3,not proof of identicaltime details.",
+      "inspection": "Primary text read; no source images or videos inspected.",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://www.instantseats.com/index.cfm?fuseaction=home.event&eventID=758CFBDB-FC63-A1DD-4C7DC1A80224A778",
+      "findings": "TruantsOct23 7:30,120min25+4fees,two drinks. Pre1968BritishInvasion/garage/psychedelic/folkrockcovers. Drums,two guitars,bass,keys andvocals. PaulShaffer was pastMayguest,not promised here.",
+      "inspection": "Primary text read; no source images or videos inspected.",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://www.instantseats.com/index.cfm?fuseaction=home.event&eventID=83F9F558-FD6C-228A-C5E857E1BB74F3E9",
+      "findings": "ReturntoNerdlandOct2 6:30doors6,75min25+4fees,two drinks. MarcSegan humorous original songs,grand piano and singalongs;guestJohnForster. Primary calls funny cabaret; not STEM lecture or film.",
+      "inspection": "Primary text read; no source images or videos inspected.",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://www.eventbrite.com/e/kevin-mcdonald-my-stupid-career-tickets-1997894136143",
+      "findings": "Nov1 7:30\u20139doors7,21+. Personal career stories,part talk/one-mancomedy plusaudienceQA; no musical performance established.",
+      "inspection": "Primary text read; no source images or videos inspected.",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://www.eventbrite.com/e/aparna-nancherla-is-tryingagain-tickets-1997802986512",
+      "findings": "Oct11 5\u20136:30doors4:30,21+,soldout. Working on new comedy bits with friends. Two supplied slugs share sameEventbriteID; updatedshowtitle verified.",
+      "inspection": "Primary text read; no source images or videos inspected.",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://www.eventbrite.com/e/emil-wakim-tickets-1998162424601",
+      "findings": "Sept11 10\u201311:30doors9:30,21+,soldout. Organizer explicitly calls standupcomedian; screen credits are biography,not this show format.",
+      "inspection": "Primary text read; no source images or videos inspected.",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://www.eventbrite.com/e/sienna-hubert-ross-friends-tickets-1997945876901",
+      "findings": "Nov12 7:30\u20139doors7,21+,NYComedyFestival. Sparse night-with-friends description does not specify standupversusvariety; retain fallback until program confirmed.",
+      "inspection": "Primary text read; no source images or videos inspected.",
+      "date": "2026-09-11"
+    }
+  ],
+  "scene_sha256": "7fb805cd19066cd36915405662fc840d3b0bd0ade200a8100b256a4d7a16658f",
+  "project_sha256": "1288948cde3158d3cb210a7136de8900a23877855304ef38e935fe8528349001"
+}

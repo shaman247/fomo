@@ -80,10 +80,28 @@ search index separately so input never sees a partially built index.
 The manifest optionally lists `remainderChunks`. These contain event and
 corresponding description partitions targeting 512 KiB combined raw content;
 an individual event is never split. All partitions share
-`locations.remainder.json`. Load the requested day first, publish nearby days,
-then load the tail. Keep legacy remainder files for cached older bundles, and
-accept older complete offline caches that only contain the legacy remainder.
-Full download time and payload size are separate from perceived responsiveness.
+`locations.remainder.json`. Load the complete requested date range first, then
+load other days and the tail in the background. Keep legacy remainder files for
+cached older bundles, and accept older complete offline caches that only contain
+the legacy remainder. Full download time and payload size are separate from
+perceived responsiveness.
+
+Background data and artwork must not reshuffle the current view. Defer data-driven
+map/list refreshes until the next search, filter change, or map movement. If a user
+selects dates still loading, keep the previous view until all requested chunks
+arrive, then publish once. Do not publish each partial batch of that request.
+
+Map sprites reserve fixed-size transparent slots. Fill them with `updateImage`
+and update accent colors with feature-state; never call GeoJSON `setData` when an
+image finishes. Replacing unchanged marker data restarts symbol collision
+placement and makes unrelated labels flicker. Clear resolved accent state when
+generated feature IDs are reassigned or the theme changes.
+Artwork may decode after the native placement fade has finished: animate its
+sprite alpha on arrival. Cached icons can also skip native fades after bucket
+reloads, so newly promoted cached markers need a feature-state opacity fade.
+Keep existing markers and shared sprite pixels unchanged during that fade. Browser checks on
+2026-09-11 reduced startup source replacements from seven to one, and a search
+from four to one; background downloads produced no subsequent replacements.
 
 ## 📁 File Organization
 

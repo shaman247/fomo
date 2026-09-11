@@ -1,0 +1,209 @@
+[
+  {
+    "icon_id": "craft-wet-felting",
+    "source_sha256": "91c812e47eb630ce7d553515775fd33bc9bcc4ef8307bea8259afff426759d18",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Wool-like textile pad on a working mat with soap and a water cue.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-010/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-010/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 5294,
+      "gzip_level_6": 1985
+    },
+    "optimization": {
+      "initial_raw": 6998,
+      "initial_gzip_level_6": 2495,
+      "final_raw": 5294,
+      "final_gzip_level_6": 1985
+    },
+    "issues": [
+      {
+        "severity": "material",
+        "location": "wool surface",
+        "observation": "Crossed pale strips resembled a tied ribbon rather than loose fibers.",
+        "revision": "Replaced X with four tapered wool wisps; simplified mat shading and aligned soap base with ribs.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Wool pad, soap and water distinguish wet processing from needle felting at24/32px, with supporting context needed to distinguish it from textile washing. Fine fibers and foam soften at16px; the droplet is an emblem."
+    ]
+  },
+  {
+    "icon_id": "activity-sushi-making",
+    "source_sha256": "1ad402d8ef165da4965bfc4dc9e3ee0bd1a99f584c43f2aa4607c3717f90f35c",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Roll preparation on a bamboo mat with a separate cut maki piece.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-010/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-010/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 6544,
+      "gzip_level_6": 2569
+    },
+    "optimization": {
+      "initial_raw": 10877,
+      "initial_gzip_level_6": 3869,
+      "final_raw": 6544,
+      "final_gzip_level_6": 2569
+    },
+    "issues": [
+      {
+        "severity": "material",
+        "location": "roll end and mat",
+        "observation": "Initial left end was dark-capped and one side of the roll lacked a rice/filling cross section. Dense thin bamboo slats inflated source bytes.",
+        "revision": "Added both filled ends, raised the camera, thickened slats and simplified their shading while retaining perpendicular bindings and support contacts.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Sushi roll cross sections plus bamboo working mat identify preparation at24/32px. Binding threads and individual fillings soften at16px. Dimensions, fillings and exact number of pieces are illustrative."
+    ]
+  },
+  {
+    "icon_id": "activity-pond-dipping",
+    "source_sha256": "57e720af4deed275459be348490e67e27fe894113de7b4fd03d12709d7a13199",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. A dipping net paired with a shallow water tray.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-010/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-010/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 3455,
+      "gzip_level_6": 1470
+    },
+    "optimization": {
+      "initial_raw": 5951,
+      "initial_gzip_level_6": 2250,
+      "final_raw": 3455,
+      "final_gzip_level_6": 1470
+    },
+    "issues": [
+      {
+        "severity": "material",
+        "location": "hoop and tray clearance",
+        "observation": "Initial mesh and hoop weakened at small dark-theme sizes; grip intersected the back tray rim in side view.",
+        "revision": "Thickened hoop and mesh, unified hoop paint and shifted tray4cm forward to clear the posed grip.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Net plus water observation tray distinguishes aquatic dipping from rod angling at24/32px. Mesh and organism mark soften at16px, especially on dark backgrounds. It is a posed equipment diagram, not an unsupported human pose or species identification."
+    ]
+  },
+  {
+    "icon_id": "craft-comic-drawing",
+    "source_sha256": "c457e7609e9e8ca4314a386d54c3805e196987a7554ec720075ea92050e695fe",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. A comic panel page and drawing pencil.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-010/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-010/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 993,
+      "gzip_level_6": 478
+    },
+    "optimization": {
+      "initial_raw": 993,
+      "initial_gzip_level_6": 478,
+      "final_raw": 993,
+      "final_gzip_level_6": 478
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Panel page, speech balloon and pencil identify comic drawing at24/32px. Text bars and minor panel decoration soften at16px. Comic genres are not restricted to the decorative star motif."
+    ]
+  },
+  {
+    "icon_id": "cuisine-cider",
+    "source_sha256": "878daf09d6622d6f47a11d8715ca3b5623e8201767063e9481e07e005a4a7c8b",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Three small amber-filled tasting glasses and an apple on a flight board.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-010/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-010/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 4849,
+      "gzip_level_6": 1852
+    },
+    "optimization": {
+      "initial_raw": 6782,
+      "initial_gzip_level_6": 2466,
+      "final_raw": 4849,
+      "final_gzip_level_6": 1852
+    },
+    "issues": [
+      {
+        "severity": "material",
+        "location": "liquid overlay and apple",
+        "observation": "Overlay crossed glass facets causing a jagged lower fill edge. Initial liquid radius exceeded the modeled inner wall, and apple bottom hovered above board.",
+        "revision": "Aligned overlay segments to32 glass facets, reduced liquid radii inside inner profile and lowered apple4mm to the board surface.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Amber tasting glasses and apple cue convey cider tasting at24/32px. At16px the apple leaf and glass-wall detail soften. Three glasses are symbolic and do not assert sample count, recipe, alcohol level or equipment; transparent glass is stylized with opaque surface paint."
+    ]
+  }
+]

@@ -1,0 +1,150 @@
+{
+  "reviewer_mode": "creator-critical-pass",
+  "geometry_mode": "two-3d-scenes-and-three-flat-diagrams",
+  "views": [
+    "front",
+    "side",
+    "top",
+    "rear",
+    "three-quarter",
+    "icon"
+  ],
+  "evidence": ".scratch/icon-cycles-20260909/cycle-070/geometry.png",
+  "decision": "pass",
+  "findings": [
+    "Personally inspected twelve final geometry views,two scenes; five native128/32/24/16light/dark cards,nine accepted/Noto reference cards,and ten actual IconManager variants. Creator review,not independent or blind.",
+    "Wax pendant contains real cut-through central and chain holes. Wooden handle rests on ground and joins the steel carving blade. Shavings rest on the same plane. Generic carving model,not a copied class design.",
+    "Two hollow cupping vessels contain fitted coffee surfaces below their rims. Bases rest on ground. Concave spoon bowl joins a curved handle with ground contacts; no liquid-wall intersections seen. Sage recoloring restores small-size contrast.",
+    "Three flat diagrams use a race bib and finish motif,a parade banner with fully supported pennants,and communication bubbles with briefcase. No human figures or complex apparatus requiring3D in these flat diagrams.",
+    "RioGrande tool construction and BaristaHustle protocol text were read; no external photographs or PDF illustrations were viewed or traced. SCA PDF retrieval failed and is not claimed as evidence.",
+    "Fine details soften at16px and labels carry narrow meanings. All sources below15KBraw/5KBgzip triggers; no unresolved material visual defects."
+  ],
+  "references": [
+    {
+      "event_ids": [
+        221820
+      ],
+      "url": "https://luma.com/0wtzi6wx",
+      "method": "Primary rendered text personally read",
+      "findings": "Sep25 6\u20139:30pm,$145,18+,KatherineWu,20GrandAve6thfloor. Guests carve jewelrywax;18inchsterlingchainincluded. FinalsilvercastingOPTIONAL,separatelyinvoicedsilvercost,professionallycast/polished,mailed5\u20136weeksafterpayment. No moltenmetalcastingonsitepromised. Beginner,waiver,nonrefundable;newsletter/photoconsentterms."
+    },
+    {
+      "event_ids": [
+        222058
+      ],
+      "url": "https://nycruns.com/race/nycruns-go-nuts-for-donuts-10k",
+      "method": "Primary rendered text personally read,first8500characters",
+      "findings": "Nov14 2026,arrival7:30/start9:30,GovernorsIslandColonelsRow,two loops. Bib/ferryforrunnersandguests/shirt/donutincluded;shirt sizesnotguaranteed. CurrentthroughOct14$40.50member/$45nonmember;laterprices. Coursewarnsagainsthandcycle/wheelchairsdueturns,nostrollers/dogs. Generic bib/route pictogram appropriate,nottrackrunning."
+    },
+    {
+      "event_ids": [
+        222250
+      ],
+      "url": "https://www.localwineevents.com/view/event/intelligentsia-coffee---ny-coffee-lab-public-cupping/1026116",
+      "method": "Aggregator rendered text personally read",
+      "findings": "Sep4 12:30\u20131:30PAST,from$28.52,114Christopher. Coffeecomparisonandsingle-originlearning,takehomecoffee. OrganizerlinkEventbrite1997188552724."
+    },
+    {
+      "event_ids": [
+        222250
+      ],
+      "url": "https://www.eventbrite.com/e/1997188552724",
+      "method": "Organizer rendered text personally read",
+      "findings": "Sep4eventENDED. RelatedsameorganizerPublicCuppingSep18 12:30from$28.52at114Christopher. Needfollowfutureeventlinkbeforeclaimingfullfuturedate/details."
+    },
+    {
+      "event_ids": [
+        221849
+      ],
+      "url": "https://www.manhattanbp.nyc.gov/events/32nd-annual-mexican-independence-day-parade-nyc-2026/",
+      "method": "Government primary calendar rendered text personally read",
+      "findings": "Sep20noonFREE,stepoffMadisonAve/E38th,proceedssouthtoE27th. DatabaseBIDoffice29E61notroute. Heritagecelebrationopenallbackgrounds;noexactfloat/instrumentpromised."
+    },
+    {
+      "event_ids": [
+        222330
+      ],
+      "url": "https://www.queenslibrary.org/event/003374-0826",
+      "method": "Primary rendered text personally read",
+      "findings": "Oct1 12:30\u20132pmEnglish,inpersonFlushing,adults,30seatslisted. Workplaceprofessionalcommunication,conveyingideas/relationships. Registrationperoccurrenceifrequired;nojobguarantee."
+    },
+    {
+      "event_ids": [
+        222330
+      ],
+      "url": "https://www.queenslibrary.org/event/001580-0726",
+      "method": "Primary rendered response personally read",
+      "findings": "No such program onSOLR; noeventdetailsverifiedfromoldnode."
+    },
+    {
+      "event_ids": [
+        222250
+      ],
+      "url": "https://www.eventbrite.com/e/intelligentsia-coffee-ny-coffee-lab-public-cupping-tickets-1997191834540",
+      "method": "Currentorganizerpagepersonallyread",
+      "findings": "Sep18 12:30\u20132:30(twohours),114Christopher,inperson,coffeepanelandtakehomechoice. Refundsupto7days. OlderSep4onehourrecordnotcurrentduration."
+    },
+    {
+      "event_ids": [],
+      "url": "https://www.riogrande.com/product/wolf-wax-carving-tools-set-of-18/700321GP/",
+      "method": "Suppliertechnicaltextpersonallyread; no photos/video claimed",
+      "findings": "Waxcarvingtoolssteelprofileswithbeechwoodhandles; setincludesknives,hollowers,scribes,roundandtriangulartips;152.4x9.5mmdimensions. Originalgenerictoolgeometry,noexactmodeltracing."
+    },
+    {
+      "event_ids": [
+        221851
+      ],
+      "url": "https://www.manhattanbp.nyc.gov/events/dyckman-5k-2/",
+      "method": "Governmentprimarytextpersonallyread",
+      "findings": "Oct3 8\u201310am,247DyckmanSt,$60,run/walkcourse,7thanniversary,medals/shirts/timekeeping. Notathleticstrack."
+    },
+    {
+      "event_ids": [
+        222059
+      ],
+      "url": "https://nycruns.com/race/nycruns-go-nuts-for-donuts-5k",
+      "method": "Organizertextpersonallyreadfirst7500chars",
+      "findings": "Nov15 9:30start7:30arrival,oneislandloop;10Kpreviousday. ThroughOct14$45member/$50nonmember,not10Kprice. Bib/ferry/shirt/donutincluded; sizesnotguaranteed."
+    },
+    {
+      "event_ids": [
+        221890
+      ],
+      "url": "https://event.newschool.edu/autumnreunionconcert",
+      "method": "Primarytextpersonallyreadfirst7500chars",
+      "findings": "Oct2 7pmfreepluslivestream,ArnieLawrenceHall55W13notgeneral66W12. PianoKellaway,bassGoldsby,drumsClarke. Alumni/collaboratorsnotguests; producerGlasserisnotfourthbandmember."
+    },
+    {
+      "event_ids": [
+        221888
+      ],
+      "url": "https://event.newschool.edu/masterclassahmedabdullah",
+      "method": "Primarytextpersonallyread",
+      "findings": "Sep15 2pmfree,TheresaLang55W13. AhmedAbdullahawardceremonythenSunRamusicmasterclass,brass/compositionreadinglecture-demo. SunRaislateinfluence,notperformer."
+    },
+    {
+      "event_ids": [
+        221888
+      ],
+      "url": "https://event.newschool.edu/autumnreunionmasterclass",
+      "method": "Primarytextpersonallyreadfirst6500chars",
+      "findings": "DIFFERENTprogramOct1 6pm,ArnieLawrenceHall55W13,Kellaway/Goldsby/Clarkepianotrio,studentssitin,freestream. Two unrelatedmasterclassesmergedunderSunRatitle; needsourcepartitionrepairlater."
+    },
+    {
+      "event_ids": [
+        221867
+      ],
+      "url": "https://meditationinnewyork.org/melodious-drum/",
+      "method": "Primarytextpersonallyread",
+      "findings": "Sep29 5:30\u20139pmDorjeShugdenpuja;experiencedpractitionersrecommended,newcomerscontactstafffirst;vegetarianofferingoptional. MelodiousDrumritualnamenotconfirmeddruminstrument. Religiousclaimsreportedonly."
+    },
+    {
+      "event_ids": [],
+      "url": "https://www.baristahustle.com/wp-content/uploads/2024/01/Barista-Hustle-Cupping-Protocols-10_01_2024.pdf",
+      "method": "PrimaryPDFtextpersonallyreadsetup/breakcrustsections; noillustrationtracing",
+      "findings": "Comparablecuppingbowls,labeling,samplingwithspoonsandrinsepractice. Genericoriginalbowls/spoon,not promisedcertificationorintelligentsiaprotocol. TwoSCAPDFattempts404,noSCAstandardclaimed."
+    }
+  ],
+  "scene_source_sha256": "506e2fd0978e33c3ba191a307b785ab9dadab99510b73bb0646c3a2e76048ebd",
+  "planar_source_sha256": "c7bb42c54da37b8bf852a41f9e8c0acd063fc33006043a2fd5b7033be732b4d7"
+}

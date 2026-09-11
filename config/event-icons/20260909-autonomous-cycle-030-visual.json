@@ -1,0 +1,189 @@
+[
+  {
+    "icon_id": "activity-language-learning",
+    "source_sha256": "d4b307c3a26ca024fd967b062f2f01c0e741f15e7abbc32d8d0afc60a4ac6e4f",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Textbook with a literacy character and speech bubble.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-030/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-030/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 744,
+      "gzip_level_6": 420
+    },
+    "optimization": {
+      "initial_raw": 678,
+      "initial_gzip_level_6": 382,
+      "final_raw": 744,
+      "final_gzip_level_6": 420
+    },
+    "issues": [
+      {
+        "issue": "First textbook/bubble composition resembled existing book-discussion art too closely.",
+        "resolution": "Added an outlined literacy cue to one page and retained one instructional speech bubble; checked native sizes against conversation-practice, book-club and author-conversation art.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Textbook, outlined literacy cue and speech bubble suggest structured language learning. At 16px it remains close to general literacy education, so the label establishes a language course. The conventional A is not an identifier of the actual language or an assertion that Yiddish uses Latin script. No national flag is used."
+    ]
+  },
+  {
+    "icon_id": "format-ghost-tour",
+    "source_sha256": "e67eaba7866b57b0aeb7fc17d855ed6eea8f5a3c708bda773cc147373c5f1202",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Friendly ghost and folded route map.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-030/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-030/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 752,
+      "gzip_level_6": 408
+    },
+    "optimization": {
+      "initial_raw": 752,
+      "initial_gzip_level_6": 408,
+      "final_raw": 752,
+      "final_gzip_level_6": 408
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Ghost above a route map conveys ghost touring. At 16px the route softens, but map and ghost remain separated. This is a symbolic folklore-tour emblem, not a claim that ghosts exist or a representation of the actual walking route. Also suitable for guided indoor haunted-history tours."
+    ]
+  },
+  {
+    "icon_id": "activity-forest-bathing",
+    "source_sha256": "c51b9ceec3a5fb5b3d41c1938a85be1454ba3d2997ea913f66532a6e7c646efc",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Person standing in a small wooded clearing.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-030/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-030/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 6769,
+      "gzip_level_6": 2364
+    },
+    "optimization": {
+      "initial_raw": 6769,
+      "initial_gzip_level_6": 2364,
+      "final_raw": 6769,
+      "final_gzip_level_6": 2364
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Grounded standing person between trees suggests pausing in a wooded setting. At 16px it can resemble a general nature outing; label establishes mindful forest immersion. No literal bathing, yoga posture, strenuous hiking or health outcome is promised."
+    ]
+  },
+  {
+    "icon_id": "art-victorian-hairwork",
+    "source_sha256": "cc6e58fee1d4d747df446f89549515a011e7af55279df1ee66520eb96912ba0a",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Framed looped floral hairwork-style keepsake.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-030/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-030/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 3436,
+      "gzip_level_6": 627
+    },
+    "optimization": {
+      "initial_raw": 3436,
+      "initial_gzip_level_6": 627,
+      "final_raw": 3436,
+      "final_gzip_level_6": 627
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Framed sepia looped floral ornament suggests a historical keepsake. At 16px individual loops soften and the object could be mistaken for a framed wreath or necklace; label is essential for hairwork. Original planar ornament is not a copied museum object, weaving chart or claim that all hairwork is mourning art."
+    ]
+  },
+  {
+    "icon_id": "format-fundraising-gala",
+    "source_sha256": "331bc5f3dd0a44c21d6955a7c26eb00a3ec6c790e62a24d16dd97a36b57ca301",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Donation heart, slot and formal-event bow tie.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-030/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-030/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 609,
+      "gzip_level_6": 363
+    },
+    "optimization": {
+      "initial_raw": 626,
+      "initial_gzip_level_6": 357,
+      "final_raw": 609,
+      "final_gzip_level_6": 363
+    },
+    "issues": [
+      {
+        "issue": "First heart-and-bow-tie invitation resembled a wedding invitation.",
+        "resolution": "Replaced the invitation with a clear donation-slot emblem and heart, retaining a restrained formal-event cue. Rechecked native sizes and actual runtime themes.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Heart above a donation-slot emblem with bow tie and sparkle conveys fundraising with a formal-event cue. At 16px it may read as a general charity event; label distinguishes a gala. Symbolic box does not promise cash collection, a dress code, dinner, auction or a specific beneficiary."
+    ]
+  }
+]

@@ -1,0 +1,206 @@
+[
+  {
+    "icon_id": "format-concert-film",
+    "source_sha256": "6ffe876219fe5fa94f2c8560537cca59fe8560196f6447cab857756ca8e42b46",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Music displayed on a playback screen with small curtains.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-036/visual-final-v2",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-036/gallery-final-v2/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 799,
+      "gzip_level_6": 397
+    },
+    "optimization": {
+      "initial_raw": 796,
+      "initial_gzip_level_6": 396,
+      "final_raw": 799,
+      "final_gzip_level_6": 397
+    },
+    "issues": [
+      {
+        "issue": "Initial play triangle faced left.",
+        "resolution": "Reversed it to the conventional right-facing playback triangle and reviewed the corrected native-size render.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "A music screen with curtains and a right-facing play symbol indicates a recorded concert. At 16 px the small play symbol and curtains soften; the label distinguishes concert film from other music video. No live artist appearance is promised."
+    ]
+  },
+  {
+    "icon_id": "activity-escape-room",
+    "source_sha256": "63542a0dd733ed1b42a170e3ad1271a47b32e4f5def7b214010cdff3ca3f2f2a",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Puzzle-marked door beside a timer.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-036/visual-final-v2",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-036/gallery-final-v2/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 780,
+      "gzip_level_6": 412
+    },
+    "optimization": {
+      "initial_raw": 891,
+      "initial_gzip_level_6": 435,
+      "final_raw": 780,
+      "final_gzip_level_6": 412
+    },
+    "issues": [
+      {
+        "issue": "Initial floating arrow was unnecessary and the cross-like puzzle mark could suggest medical signage.",
+        "resolution": "Removed the arrow and rebuilt a clear jigsaw silhouette with a top tab and side indentations.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Door, jigsaw piece and timer indicate a puzzle-room activity. Fine jigsaw indentations soften at 16 px. The pictured door is symbolic; the actual event says the room remains unlocked. No exact room puzzles or emergency-exit instruction implied."
+    ]
+  },
+  {
+    "icon_id": "format-food-truck",
+    "source_sha256": "19cf43eb63f2f22ff73c61ec3c408ba9b8e351170e980b21614d70cda3582260",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Compact food-service truck with attached open hatch.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-036/visual-final-v2",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-036/gallery-final-v2/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 9895,
+      "gzip_level_6": 2765
+    },
+    "optimization": {
+      "initial_raw": 9463,
+      "initial_gzip_level_6": 2637,
+      "final_raw": 9895,
+      "final_gzip_level_6": 2765
+    },
+    "issues": [
+      {
+        "issue": "Initial body and cab solids intersected wheel volumes.",
+        "resolution": "Modeled open wheel wells with 0.05 m radial clearance and narrowed the chassis to clear tire inner faces. Rechecked all six views.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Service window, raised hatch and four grounded wheels identify a food truck. At 16 px the plate/utensil sign and struts soften; the vehicle and window remain useful. Generic illustrative truck, not a particular vendor, menu or event confirmation."
+    ]
+  },
+  {
+    "icon_id": "craft-fly-tying",
+    "source_sha256": "07db3b9f9cf90b8540069529b3362697f7535800660c151008201892e4308417",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Compact bench vise holding a feathered hook and hanging bobbin.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-036/visual-final-v2",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-036/gallery-final-v2/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 11326,
+      "gzip_level_6": 3035
+    },
+    "optimization": {
+      "initial_raw": 10222,
+      "initial_gzip_level_6": 2754,
+      "final_raw": 11326,
+      "final_gzip_level_6": 3035
+    },
+    "issues": [
+      {
+        "issue": "Initial tall stand used too much of the canvas, leaving the fly too small.",
+        "resolution": "Shortened the exposed stem and translated the complete connected upper assembly downward by 0.14 m. Hook, jaws, feather, thread and bobbin retain their contacts. Six views and all native sizes rechecked.",
+        "status": "resolved"
+      },
+      {
+        "issue": "Reducing hidden cylindrical segments did not reduce final projected bytes.",
+        "resolution": "Kept the readable geometry and recorded actual final size instead of claiming a compression win. Projection unites occluded paints and simplifies contours to 0.2 px.",
+        "status": "documented"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Compact vise, clamped hook, feather and hanging thread bobbin indicate fly tying. At 16 px the individual hook eye and thread soften; the label supplies the specialized craft. This does not promise a particular fly pattern, vise model or hands-on kit; dedicated demonstrations qualify."
+    ]
+  },
+  {
+    "icon_id": "format-singalong",
+    "source_sha256": "aa1dc60faf315873c6044ba0f6801ab6f7e97e9779aec1ea3ac051d828e43af0",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Open shared lyric book with two musical phrases.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-036/visual-final-v2",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-036/gallery-final-v2/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 896,
+      "gzip_level_6": 424
+    },
+    "optimization": {
+      "initial_raw": 896,
+      "initial_gzip_level_6": 424,
+      "final_raw": 896,
+      "final_gzip_level_6": 424
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Shared lyric book and separate musical phrases indicate communal singing. At 16 px lyric lines and lower sound arcs soften. Label separates singalong from formal choir, karaoke or a music book; no actual book, song list or supplied lyrics promised."
+    ]
+  }
+]

@@ -1,0 +1,185 @@
+[
+  {
+    "icon_id": "craft-intaglio-printmaking",
+    "source_sha256": "4745228498041295f395a50196accca934b3d4cf5280b1d8471ffc62695aca3a",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; brief already known. A metal plate and reversed paper impression.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-066/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-066/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 935,
+      "gzip_level_6": 409
+    },
+    "optimization": {
+      "initial_raw": 935,
+      "initial_gzip_level_6": 409,
+      "final_raw": 935,
+      "final_gzip_level_6": 409
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Mirrored design and paper remain clear at24/32px; incised-line method needs label, especially16px. Original generic botanical design, not copied artwork. No promised process or class materials."
+    ]
+  },
+  {
+    "icon_id": "activity-park-stewardship",
+    "source_sha256": "b3a1e49417c8fc52294590a4ca9d9dc63559d719afaa83fa7fa493df18480c3d",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; brief already known. A park tree with planting and painting tools.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-066/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-066/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 913,
+      "gzip_level_6": 480
+    },
+    "optimization": {
+      "initial_raw": 913,
+      "initial_gzip_level_6": 480,
+      "final_raw": 913,
+      "final_gzip_level_6": 480
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Tree and mixed tools remain at24/32px; individual tool details soften at16px. Symbolic park-care emblem does not promise exact tasks or equipment."
+    ]
+  },
+  {
+    "icon_id": "equipment-loop-pedal",
+    "source_sha256": "9cd7c64ba05dc85e48413d409a6aec87c51f6904a525320a0a6900d3b4eadcc5",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; brief already known. A compact musical foot pedal with loop display.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-066/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-066/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 5779,
+      "gzip_level_6": 1682
+    },
+    "optimization": {
+      "initial_raw": 5779,
+      "initial_gzip_level_6": 1682,
+      "final_raw": 5779,
+      "final_gzip_level_6": 1682
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Pad and knob remain at16px; exact looping function needs label. No brand, model, cabling or artist-owned device promised."
+    ]
+  },
+  {
+    "icon_id": "instrument-seven-string-guitar",
+    "source_sha256": "692d44e12d30b101a0391288e8c6638f2d0ed2ebf3859e6df305c799903b0414",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; brief already known. An archtop guitar with connected strings and tuning hardware.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-066/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-066/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 13021,
+      "gzip_level_6": 3762
+    },
+    "optimization": {
+      "initial_raw": 18111,
+      "initial_gzip_level_6": 5128,
+      "final_raw": 13021,
+      "final_gzip_level_6": 3762
+    },
+    "issues": [
+      {
+        "severity": "material",
+        "location": "guitar detail, support and framing",
+        "observation": "Initial source exceeded size-review trigger and narrow vertical composition underused the canvas; stand rods extended below the original ground plane.",
+        "revision": "Merged string and hardware paint, simplified projected regions and fret count, corrected cradle and ground contacts, and rolled the orthographic camera30degrees while preserving geometry.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Guitar silhouette remains at16px; seven individual strings and tuners require the larger preview and semantic label. Original approximate archtop and display stand, not a manufacturer replica or promised artist model. Camera roll improves canvas use without changing physical pose."
+    ]
+  },
+  {
+    "icon_id": "format-full-album-concert",
+    "source_sha256": "97c9bf682cc8f859e1507c9e1662b0fade4fc0d5070c76cdcf8b88d45c5b67d5",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; brief already known. An album and record presented with stage curtains and microphone.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-066/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-066/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 991,
+      "gzip_level_6": 442
+    },
+    "optimization": {
+      "initial_raw": 991,
+      "initial_gzip_level_6": 442,
+      "final_raw": 991,
+      "final_gzip_level_6": 442
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Record and stage remain at16px; full-album performance versus ordinary album-release concert depends on explicit text scope. Vinyl is a symbolic album cue, not promised playback or merchandise."
+    ]
+  }
+]

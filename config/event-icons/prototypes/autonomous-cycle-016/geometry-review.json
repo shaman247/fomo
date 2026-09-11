@@ -1,0 +1,44 @@
+{
+  "reviewer_mode": "creator-critical-pass",
+  "views": [
+    "front",
+    "rear",
+    "left",
+    "right",
+    "top",
+    "icon"
+  ],
+  "evidence": ".scratch/icon-cycles-20260909/cycle-016/geometry.png",
+  "findings": [
+    "Three paper sections have continuous folded leaves and pass-through stitching at four stations per section. Cover lower edges meet ground; paper begins6mm above and is attached by thread. Half-cylinder winding was corrected. Diagram is illustrative, not a complete stitch instruction.",
+    "Four joined sleeve boards form a rectangular cavity. Interior depth54mm clears48mm book by3mm each side;244mm inner height clears240mm book. Book bottom meets sleeve floor at6mm; partly withdrawn book overlaps and is supported by sleeve. Extended page block meets inner spine atx=.148m and covers atz=\u00b1.022m.",
+    "Marbling tray has joined floor and four walls. Bath top26mm lies below43mm rim. Rake bar bottom43mm rests across both rims; nine equal tines descend to22mm into bath. Matching sample sheet rests separately on the ground; no fluid simulation.",
+    "Cardboard tunnel has continuous inner/outer walls and annular ends:85mm outer radius matches center height, giving ground contact. Tube bore is open and inner wall remains visible obliquely. Separate cardboard stocks rest on ground. Paw sign foot, stem and card overlap; paw is a planar category emblem.",
+    "Applique is an authoritative direct planar SVG with two applied shapes, intact backing, edge stitching and a symbolic needle. No articulated sewing hand or implied active needle contact. All six geometry views and native-size final projections were inspected; these checks are not exhaustive collision or material simulation."
+  ],
+  "decision": "pass",
+  "references": [
+    {
+      "url": "https://tatter.org/events/applique/",
+      "finding": "Primary class describes attaching fabric shapes to foundation cloth and needle-turn hand applique."
+    },
+    {
+      "url": "https://shop.centerforbookarts.org/products/26fbb112i",
+      "finding": "Primary workshop describes nonadhesive multisection long-stitch binding. Three linked maker photos were visually inspected for exposed spine runs and folded paper/cover relationships."
+    },
+    {
+      "url": "https://shop.centerforbookarts.org/products/26fbm202i",
+      "finding": "Primary workshop specifies a fitted four-sided lined slipcase; linked workshop photograph was inspected. Generic sleeve does not copy that exact project."
+    },
+    {
+      "url": "https://shop.centerforbookarts.org/products/26fpt100i",
+      "finding": "Primary course describes acrylic pigments on a thickened water bath, combed patterns and transfer to paper."
+    },
+    {
+      "url": "https://www.rspca.org.uk/adviceandwelfare/pets/rodents/guineapigs/behaviour",
+      "finding": "Broad category reference includes tunnels and enrichment objects; no species suitability or exact project is asserted."
+    }
+  ],
+  "source_sha256": "e4365cfc9eaf079ec8fb1d6fdc2492a70f83ef3b383ce7d1c5d28ff020d1f144",
+  "projector_sha256": "9b920de99e4f1079835a4c62091345f9bb4a3ec23677ccd0c1f861b17f290f8f"
+}

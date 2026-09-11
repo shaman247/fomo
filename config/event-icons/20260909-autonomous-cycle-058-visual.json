@@ -1,0 +1,193 @@
+[
+  {
+    "icon_id": "activity-hydroponics",
+    "source_sha256": "94d92b1fddac8efcc2a3ac2b11807b62970af5e07d99a561538dfd264ab2cd68",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; prior brief known. Plant with exposed roots in a nutrient reservoir and an air pump.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-058/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-058/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 8782,
+      "gzip_level_6": 2501
+    },
+    "optimization": {
+      "initial_raw": 8782,
+      "initial_gzip_level_6": 2501,
+      "final_raw": 8782,
+      "final_gzip_level_6": 2501
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Foreground tank wall and water are cut away to expose roots; this is not a literal transparent reservoir. Leaves are generic and bubbles/roots soften at16px. The actual hydroponic system and crop require the event label."
+    ]
+  },
+  {
+    "icon_id": "craft-beaded-barrette",
+    "source_sha256": "52eb74986fac79c2baf4a15348a7e4f4a522f1ed027042ebb7bcca86a52a243f",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; prior brief known. Beaded hair clip with an open clasp.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-058/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-058/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 5771,
+      "gzip_level_6": 1939
+    },
+    "optimization": {
+      "initial_raw": 6024,
+      "initial_gzip_level_6": 1905,
+      "final_raw": 5771,
+      "final_gzip_level_6": 1939
+    },
+    "issues": [
+      {
+        "severity": "material",
+        "location": "barrette composition",
+        "observation": "Horizontal narrow clip occupied too little canvas height.",
+        "revision": "Rotated the entire authoritative3Dassembly36degrees, preserving hinge, clasp and bead contacts.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Open lower arm and beads remain separate at32px; fine clasp hardware softens at16px. Five beads and a French-style mechanism are illustrative rather than guaranteed workshop materials or output."
+    ]
+  },
+  {
+    "icon_id": "format-museum-sleepover",
+    "source_sha256": "c4426c22a090ada07f17529aa6c9643a47d7aea4d703f4c3cc9ad9beb906ae97",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; prior brief known. Museum building and moon beside an elongated sleeping bag.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-058/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-058/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 874,
+      "gzip_level_6": 492
+    },
+    "optimization": {
+      "initial_raw": 822,
+      "initial_gzip_level_6": 451,
+      "final_raw": 874,
+      "final_gzip_level_6": 492
+    },
+    "issues": [
+      {
+        "severity": "material",
+        "location": "sleeping-bag proportions",
+        "observation": "Short broad bag resembled a backpack.",
+        "revision": "Narrowed and lengthened the flat sleeping-bag diagram; pillow opening and zipper remain visible.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Sleeping-bag detail softens at16px; museum and night cues remain. The building is a generic institution symbol, not AMNH architecture, and no sleeping position or supplied bedding is promised."
+    ]
+  },
+  {
+    "icon_id": "activity-admissions-counseling",
+    "source_sha256": "7bafbeff8735d41be2e5399618c334922566e086eb9e45cbe2e9f69f5c61e2f1",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; prior brief known. Academic application page and a question bubble.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-058/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-058/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 820,
+      "gzip_level_6": 438
+    },
+    "optimization": {
+      "initial_raw": 820,
+      "initial_gzip_level_6": 438,
+      "final_raw": 820,
+      "final_gzip_level_6": 438
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Uses the established academic-cap/question grammar of the graduate-admissions-fair icon, with one application page emphasizing advice. Labels distinguish counseling from fairs; no admission decision, financial award or fee waiver is implied."
+    ]
+  },
+  {
+    "icon_id": "format-boat-tour",
+    "source_sha256": "45d5d6acf50253c1ea129470251f69dcf9058ba310c6a849bf83e0707874b7f3",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; prior brief known. Passenger vessel beneath a route-map card.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-058/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-058/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 6422,
+      "gzip_level_6": 2009
+    },
+    "optimization": {
+      "initial_raw": 6422,
+      "initial_gzip_level_6": 2009,
+      "final_raw": 6422,
+      "final_gzip_level_6": 2009
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Reuses our original passenger-vessel geometry from cycle021 with new route-map overlay. Windows and rails soften at16px but vessel, water and map remain distinct. Map is symbolic; actual vessel, route and propulsion are unverified."
+    ]
+  }
+]

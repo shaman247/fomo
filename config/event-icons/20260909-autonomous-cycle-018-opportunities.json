@@ -1,0 +1,410 @@
+{
+  "date": "2026-09-10",
+  "scope": "Cycle 018: 100 sequential events 199800–200356, no targeted supplements.",
+  "suggestions": 22,
+  "concept_count": 15,
+  "concepts": [
+    {
+      "concept": "format-community-welcome",
+      "label": "Community welcome desk",
+      "category": "format",
+      "visual": "Welcoming check-in desk and name/check mark.",
+      "rationale": "Volunteers greet customers and assist check-in at community hubs.",
+      "existing_alternative": "Handshake is suitable; food-distribution art would overstate tasks when no sorting or handing out groceries is stated.",
+      "event_ids": [
+        200277,
+        200278,
+        200281,
+        200282
+      ],
+      "evidence_by_event": {
+        "200277": [
+          "Support a Community Hub!: Ensure customers have a smooth and welcoming experience at a Community Hub. Tasks include greeting customers and assisting with the check-in process.",
+          "Tags: Community, Volunteer, Community Support, Participatory, Community Hub, Food Access, Format, Customer Support"
+        ],
+        "200278": [
+          "Support a Community Hub!: Ensure customers have a smooth and welcoming experience at a Community Hub. Tasks include greeting customers and assisting with the check-in process.",
+          "Tags: Community, Volunteer, Community Support, Participatory, Community Hub, Food Access, Format, Customer Support"
+        ],
+        "200281": [
+          "Support a Community Hub!: Support customers at a neighborhood Community Hub! Ensure customers have a smooth, dignified, and welcoming experience when arriving to receive grocery bags.",
+          "Tags: Community, Volunteer, Community Support, Participatory, Community Hub, Food Access, Format, Customer Support"
+        ],
+        "200282": [
+          "Support a Community Hub!: Support customers at a neighborhood Community Hub! Ensure customers have a smooth, dignified, and welcoming experience when arriving to receive grocery bags.",
+          "Tags: Community, Volunteer, Community Support, Participatory, Community Hub, Food Access, Format, Customer Support"
+        ]
+      },
+      "source_urls_by_event": {
+        "200277": [
+          "https://www.newyorkcares.org/project/a1HVr000002xlplMAA",
+          "https://www.newyorkcares.org/project/a1HVr0000032dwPMAQ",
+          "https://www.newyorkcares.org/project/a1HVr000003CvLlMAK"
+        ],
+        "200278": [
+          "https://www.newyorkcares.org/project/a1HVr0000032e2rMAA",
+          "https://www.newyorkcares.org/project/a1HVr000003CtevMAC",
+          "https://www.newyorkcares.org/project/a1HVr000003CtYTMA0"
+        ],
+        "200281": [
+          "https://www.newyorkcares.org/project/a1HVr0000032eIzMAI",
+          "https://www.newyorkcares.org/project/a1HVr000003Cuj3MAC"
+        ],
+        "200282": [
+          "https://www.newyorkcares.org/project/a1HVr0000032dy2MAA",
+          "https://www.newyorkcares.org/project/a1HVr000003Cv8rMAC"
+        ]
+      }
+    },
+    {
+      "concept": "format-tribute-concert",
+      "label": "Tribute concert",
+      "category": "format",
+      "visual": "Two overlapping record silhouettes with one echoing musical note.",
+      "rationale": "Tribute repertoire is a format facet; motif is unproven and must not imitate an artist logo.",
+      "existing_alternative": "Existing broad Unicode remains suitable; specific motif must demonstrate added recognition before new artwork.",
+      "event_ids": [
+        200162,
+        200163,
+        200164
+      ],
+      "evidence_by_event": {
+        "200162": [
+          "Dizzy Gillespie Birthday with Jon Faddis: Dizzy’s Club celebrates trumpet legend Dizzy Gillespie with a joyful birthday tribute led by one of his most dazzling protégés, Jon Faddis. Faddis brings his brilliant high-register command, deep feel for bebop, and infectious stage energy to a handpicked band exploring Gillespie favorites.",
+          "Tags: Music, Jazz, Concert, Nightlife, Trumpet, Tribute Band, Bebop, Live Music, Birthday Tribute, Format, Performance"
+        ],
+        "200163": [
+          "Carl Allen’s Messengers of Jazz - A Tribute to Art Blakey’s Jazz Messengers: The spirit of Art Blakey and the Jazz Messengers comes roaring back to life in this electrifying tribute led by master drummer Carl Allen, whom Blakey once named an \"honorary Messenger.\"",
+          "Tags: Music, Jazz, Concert, Nightlife, Tribute Band, Live Music, Format, Performance, Art Blakey, Jazz Messengers"
+        ],
+        "200164": [
+          "Jacob Chung’s Coltrane Celebration: Jacob Chung joins the ranks of Dizzy's Late Night Sessions wihile honoring John Coltrane with a centtennial celebration.",
+          "Tags: Music, Jazz, Concert, Nightlife, Late Night, Saxophone, John Coltrane, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "200162": [
+          "https://ticketing.jazz.org/21549/21550"
+        ],
+        "200163": [
+          "https://ticketing.jazz.org/21552/21553"
+        ],
+        "200164": [
+          "https://ticketing.jazz.org/21576/21577"
+        ]
+      }
+    },
+    {
+      "concept": "craft-paper-puppets",
+      "label": "Paper puppet making",
+      "category": "craft",
+      "visual": "Cut-paper character attached to an explicit rod or hinged tabs after mechanism verification.",
+      "rationale": "Poster Tots and Kids name paper characters but current excerpts omit construction details.",
+      "existing_alternative": "Hand-puppet art would assume a glove mechanism; paper doll versus puppet needs source verification.",
+      "event_ids": [
+        200322,
+        200324
+      ],
+      "evidence_by_event": {
+        "200322": [
+          "Poster Tots: Paper Puppets: Très mignon! Trailblazing female design duo Lefor-Openo created an iconic cartoon style in their posters, as highlighted in our exhibition Cuteness, Conservatism, & Consumption: Lefor-Openo and Postwar France. Lefor Openo’s signature characters are the template for this month’s Poster Tots workshop...",
+          "Tags: Art, Kids, Workshop, Free, Family, Education, Participatory, Poster Tots, Format, Paper Puppets"
+        ],
+        "200324": [
+          "Poster Kids: Dames en Papier: Très mignon! Trailblazing female design duo Lefor-Openo created an iconic cartoon style in their posters, as highlighted in our exhibition Cuteness, Conservatism, & Consumption: Lefor-Openo and Postwar France. Lefor-Openo’s signature characters are the template for this month’s Poster Kids workshop...",
+          "Tags: Art, Kids, Workshop, Family, Education, Participatory, Format, Poster Kids"
+        ]
+      },
+      "source_urls_by_event": {
+        "200322": [
+          "https://posterhouse.org/event/poster-tots-paper-puppets/"
+        ],
+        "200324": [
+          "https://posterhouse.org/event/poster-kids-dames-en-papier/"
+        ]
+      }
+    },
+    {
+      "concept": "format-sketch-comedy",
+      "label": "Sketch comedy",
+      "category": "format",
+      "visual": "Short script pages beside paired comic stage masks.",
+      "rationale": "Prepared sketches are explicitly named and differ from unscripted improv.",
+      "existing_alternative": "Theater masks work broadly; improv art would misstate scripted material.",
+      "event_ids": [
+        200226,
+        200228
+      ],
+      "evidence_by_event": {
+        "200226": [
+          "Your Father and I: The Violent Diamonds of Sketch Comedy!",
+          "Tags: Theater, Comedy, Sketch Comedy, Comedy Show, Format, Performance"
+        ],
+        "200228": [
+          "Emerson Laughs Back: Celebrate the 10th Anniversary of Emerson College’s Comedic Arts major with almuni who put that degree to good use! Join us for a night of jokes and gags as Emersonians over the years perform stand-up and more, as we recognize some of the funniest alumns in New York City, keeping that classic comedic Emerson spirit alive and well!",
+          "Tags: Community, Theater, Comedy, Improv, Sketch Comedy, Comedy Show, Alumni, Format, Performance, Emerson College"
+        ]
+      },
+      "source_urls_by_event": {
+        "200226": [
+          "https://thepit-nyc.com/events/your-father-and-i/"
+        ],
+        "200228": [
+          "https://thepit-nyc.com/events/emerson/"
+        ]
+      }
+    },
+    {
+      "concept": "activity-bug-hunt",
+      "label": "Bug habitat exploration",
+      "category": "activity",
+      "visual": "Magnifier over a small insect and leaf-litter habitat.",
+      "rationale": "Children hunt hidden habitats and learn about local bugs.",
+      "existing_alternative": "Ladybug is clear but omits the search/exploration format.",
+      "event_ids": [
+        200344
+      ],
+      "evidence_by_event": {
+        "200344": [
+          "Bug Buddies: Household Bugs: Calling all curious kids! Join our 2026 Bug Buddies classes to meet the six-legged (and more!) neighbors who share our world. We’ll hunt for hidden habitats, learn about bug superpowers, and demystify the most misunderstood group of friends!",
+          "Tags: Community, Nature, Family, Education, Class, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "200344": [
+          "https://www.queensfarm.org/event/bug-buddies-household-bugs/"
+        ]
+      }
+    },
+    {
+      "concept": "activity-hashing",
+      "label": "Hash trail running",
+      "category": "sport",
+      "visual": "Runner following a branching marked trail.",
+      "rationale": "Named Long Island hash suggests the social trail-running tradition; route and rules need recovery.",
+      "existing_alternative": "Runner is broad; track-running art would imply a stadium track.",
+      "event_ids": [
+        199975
+      ],
+      "evidence_by_event": {
+        "199975": [
+          "Amityville Horror Hash LIL #153: A Halloween-themed Long Island hash.",
+          "Tags: Community, Sports, Fitness, Outdoor, Participatory, Halloween, Format, Hashing"
+        ]
+      },
+      "source_urls_by_event": {
+        "199975": [
+          "https://hashnyc.com/"
+        ]
+      }
+    },
+    {
+      "concept": "activity-mycology",
+      "label": "Fungi exploration",
+      "category": "activity",
+      "visual": "Mushroom and magnifier beside a decaying leaf.",
+      "rationale": "Fabulous Fungi class addresses decomposition and fungal ecology.",
+      "existing_alternative": "Mushroom is suitable; a new symbol must add a clear observation or study cue.",
+      "event_ids": [
+        200346
+      ],
+      "evidence_by_event": {
+        "200346": [
+          "Composting Series: Fabulous Fungi: Do YOU want to be a planet protector? Join our Composting series to discover the dirt on turning scraps into soil, explore the whole cycle of decay and regrowth, and unlock the secrets of nature’s recycling system.",
+          "Tags: Community, Free, Education, Sustainability, Composting, Class, Participatory, Fungi, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "200346": [
+          "https://www.queensfarm.org/event/composting-series-fabulous-fungi/"
+        ]
+      }
+    },
+    {
+      "concept": "activity-reiki",
+      "label": "Reiki practice",
+      "category": "activity",
+      "visual": "Two open hands hovering above a simple clothed shoulder outline.",
+      "rationale": "Practitioner hand placement distinguishes the stated practice from seated meditation; motif should describe activity without claiming medical efficacy.",
+      "existing_alternative": "Noto palms show hands alone, meditation depicts a different posture; no Reiki custom.",
+      "event_ids": [
+        200275
+      ],
+      "evidence_by_event": {
+        "200275": [
+          "Reiki Share – Community Healing Circle: Our monthly Reiki Share is a gentle, nurturing community gathering designed for anyone who loves energy healing — whether you’re an attuned Reiki practitioner, a student currently learning, or someone simply curious about this beautiful modality. In this 90-minute in-person circle, participants take turns giving and receiving Reiki in small groups or pairs.",
+          "Tags: Community, Free, Wellness, Energy Healing, Reiki, Open Practice, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "200275": [
+          "https://mylittlemagicshop.com/collections/events/products/reiki-share-community-healing-circle-7",
+          "https://mylittlemagicshop.com/products/reiki-share-community-healing-circle-11"
+        ]
+      }
+    },
+    {
+      "concept": "activity-trick-or-treat",
+      "label": "Trick-or-treating",
+      "category": "activity",
+      "visual": "Handled candy bag with wrapped sweets and a pumpkin motif.",
+      "rationale": "Children follow mapped candy stops around estate grounds.",
+      "existing_alternative": "Pumpkin already conveys Halloween but omits collecting treats.",
+      "event_ids": [
+        199832
+      ],
+      "evidence_by_event": {
+        "199832": [
+          "Trick-or-Treat Weekend: On October 17th and 18th, join us for a special family-friendly weekend of trick-or-treating at Lyndhurst! This year, children’s trick-or-treating will take place on the grounds of our historic estate, nestled amongst the spooky trees and winding pathways. Wear your Halloween costume and bring your treat bag, and stop for candy at the designated spots along our map.",
+          "Tags: Community, Family, Outdoor, Halloween, Community Celebration, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "199832": [
+          "https://lyndhurst.org/events/trick-or-treat-weekend/"
+        ]
+      }
+    },
+    {
+      "concept": "craft-sheet-metal",
+      "label": "Sheet-metal fabrication",
+      "category": "craft",
+      "visual": "Bent sheet with a crisp right-angle fold beside compact snips.",
+      "rationale": "Sheet fabrication has distinctive folded material geometry beyond generic tools.",
+      "existing_alternative": "Wrench implies assembly; machine-sewing and 3D-printing are different processes; specific tool model not established.",
+      "event_ids": [
+        199818
+      ],
+      "evidence_by_event": {
+        "199818": [
+          "Sheet Metal 101 Basic Use and Safety: In this Basic Use and Safety workshop, students will learn how to safely set up and use a variety of sheet metal fabrication tools.",
+          "Tags: Community, Art, Workshop, Education, Warehouse, Makerspace, Crafts, Metalworking, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "199818": [
+          "https://www.eventbrite.com/e/everything-but-sheet-metal-101-bus-basic-use-and-safety-tickets-1995123582342",
+          "https://www.eventbrite.com/e/everything-but-sheet-metal-101-bus-basic-use-and-safety-tickets-1995123890263",
+          "https://www.eventbrite.com/e/sheet-metal-101-bus-basic-use-and-safety-tickets-1995133377640",
+          "https://www.eventbrite.com/e/sheet-metal-101-bus-basic-use-and-safety-tickets-1995133377640?aff=oddtdcreator",
+          "https://www.eventbrite.com/e/sheet-metal-101-bus-basic-use-and-safety-tickets-1995133377640?aff=oddtdtcreator"
+        ]
+      }
+    },
+    {
+      "concept": "dance-random-play",
+      "label": "Random play dance",
+      "category": "dance-style",
+      "visual": "Dancers responding to alternating music snippets, with grounded poses.",
+      "rationale": "Cosplay Random Play Dance names the participatory format; precise rules need source recovery.",
+      "existing_alternative": "Generic dancer is appropriate while choreography and selection mechanism are unknown.",
+      "event_ids": [
+        199933
+      ],
+      "evidence_by_event": {
+        "199933": [
+          "Cosplay Random Play Dance: No description available.",
+          "Tags: Community, Dance, Film, Outdoor, Anime, Open Practice, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "199933": [
+          "https://www.meetup.com/animesocialnexus/events/315563839/"
+        ]
+      }
+    },
+    {
+      "concept": "equipment-serger",
+      "label": "Serger sewing",
+      "category": "equipment",
+      "visual": "Compact overlock machine with multiple thread cones and a finished fabric edge.",
+      "rationale": "Sewing safety class explicitly includes serger edge finishing.",
+      "existing_alternative": "Machine sewing is suitable but lacks the multiple-thread overlock mechanism.",
+      "event_ids": [
+        199823
+      ],
+      "evidence_by_event": {
+        "199823": [
+          "Basic Use and Safety: Sewing Machine: Learn how to safely set up and use the industrial and home sewing machine, as well as serger for finishing fabric edges! In this single, 1hr Basic Safety and Use workshop, students will learn how to safely set up and use the industrial and home sewing machine, as well as serger for finishing fabric edges. We will cover basic machine maintenance as well.",
+          "Tags: Community, Art, Workshop, Education, Warehouse, Makerspace, Fiber Arts, Crafts, Sewing, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "199823": [
+          "https://www.eventbrite.com/e/basic-use-and-safety-sewing-machine-tickets-1995106610579",
+          "https://www.eventbrite.com/e/basic-use-and-safety-sewing-machine-tickets-1995106610579?aff=oddtdtcreator",
+          "https://www.eventbrite.com/e/basic-use-and-safety-sewing-machine-tickets-1995106801149",
+          "https://www.eventbrite.com/e/basic-use-and-safety-sewing-machine-tickets-1999411529708"
+        ]
+      }
+    },
+    {
+      "concept": "format-gallery-talk",
+      "label": "Gallery talk",
+      "category": "format",
+      "visual": "Framed artwork beside a compact spoken explanation mark.",
+      "rationale": "Educator discusses an individual painting in its gallery.",
+      "existing_alternative": "Frame omits interpretation; author conversation and active art making are different formats.",
+      "event_ids": [
+        200156
+      ],
+      "evidence_by_event": {
+        "200156": [
+          "Gallery Talk: Closer Look at Goya's \"Forge\": An educator leads a brief gallery talk on Goya's \"Forge.\"",
+          "Tags: Museum, Art, Education, Gathering, Talk, Cultural Venue, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "200156": [
+          "https://www.frick.org/calendar?trumbaEmbed=view%3Devent%26eventid%3D202717434",
+          "https://www.frick.org/calendar?trumbaEmbed=view%3Devent%26eventid%3D205421883"
+        ]
+      }
+    },
+    {
+      "concept": "format-parade",
+      "label": "Parade",
+      "category": "format",
+      "visual": "A row of celebratory pennants and a broad marching route.",
+      "rationale": "Named cultural parade defines the program.",
+      "existing_alternative": "Flags mark identity but do not show a moving procession; avoid assuming a dance or instrument.",
+      "event_ids": [
+        199999
+      ],
+      "evidence_by_event": {
+        "199999": [
+          "Festival of the Flowers Parade: A Festival of the Flowers parade along 37th Avenue from 69th Street to 89th Street.",
+          "Tags: Government, Community, Festival, Outdoor, Community Board, Parade, Queens CB3, Flowers, Community Celebration, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "199999": [
+          "https://queenscb3.cityofnewyork.us/event/festival-of-the-flowers-parade/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-jamtronica",
+      "label": "Jamtronica",
+      "category": "genre",
+      "visual": "Electronic controls paired with live band instrumentation and a looping phrase.",
+      "rationale": "Dizgo explicitly blends jamtronica, funk and psychedelic rock.",
+      "existing_alternative": "Guitar or notes remain broad; do not assume all acts are DJ sets.",
+      "event_ids": [
+        199942
+      ],
+      "evidence_by_event": {
+        "199942": [
+          "Space Bacon & Dizgo w/ DJ Greenie of Lotus: Space Bacon is a Brooklyn-based future jam quartet that weaves composition and improvisation through an ever-changing landscape. Dizgo redefines the live experience by blending jamtronica with funk, deep-groove soul, and psychedelic rock. DJ Greenie, the powerhouse drummer for Lotus, brings his electrifying alter ego to the stage for a high-energy set.",
+          "Tags: Music, Dance, Funk, Concert, Nightlife, Jam Band, Electronic Music, Live Music, Format, Performance, Jamtronica"
+        ]
+      },
+      "source_urls_by_event": {
+        "199942": [
+          "https://www.brooklynbowl.com/brooklyn/events/detail/space-bacon-dizgo-w-dj-greenie-k7vgf_udxr1ge"
+        ]
+      }
+    }
+  ],
+  "limitations": "Counts describe this cohort, not population reach. These are grounded prospective studies, not live assignments. Existing artwork may already suffice; exact equipment and genre recognition require further review."
+}

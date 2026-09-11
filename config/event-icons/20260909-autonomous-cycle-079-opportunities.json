@@ -1,0 +1,1431 @@
+{
+  "date": "2026-09-11",
+  "scope": "Cycle 079: 100 sequential events 223808–224129, no targeted supplements.",
+  "suggestions": 65,
+  "concept_count": 60,
+  "concepts": [
+    {
+      "concept": "activity-college-application-volunteering",
+      "label": "College-application volunteer",
+      "category": "activity",
+      "visual": "An application page with a support heart.",
+      "rationale": "Volunteer role advising students; not unrestricted student drop-in or admission guarantee.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        223924,
+        223928
+      ],
+      "evidence_by_event": {
+        "223924": [
+          "College Prep: Drop in College Support: Help students through the college application process. Work with high schoolers on additional support they may need on the topics you have already covered in other sessions.",
+          "Tags: Community, Education, Volunteer, Professional Development, Mentorship, Participatory, College Prep, Youth Support, Students, Format"
+        ],
+        "223928": [
+          "College Prep: Introduction to College Process Workshop: This is the first project of a College Prep program. Help students in their college discovery process. Work with highschoolers to figure out where they want to go to college.",
+          "Tags: Community, Workshop, Education, Volunteer, Professional Development, Mentorship, Zoom, Participatory, College Prep, Youth Support, Students, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "223924": [
+          "https://www.newyorkcares.org/project/a1HVr000003TMcvMAG"
+        ],
+        "223928": [
+          "https://www.newyorkcares.org/project/a1HVr000003PUM9MAO",
+          "https://www.newyorkcares.org/project/a1HVr000003SicHMAS"
+        ]
+      }
+    },
+    {
+      "concept": "activity-sensory-art-exploration",
+      "label": "Sensory art exploration",
+      "category": "activity",
+      "visual": "A set of contrasting original texture panels.",
+      "rationale": "Material exploration, not necessarily a sensory bin, unrestricted art handling or therapy.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        223860,
+        223862
+      ],
+      "evidence_by_event": {
+        "223860": [
+          "Art for Tots (Ages 1–2): Opposites: Join us for programs designed for children and their caregivers. Art for Tots (1–2) is designed for our youngest learners and focuses on material exploration using all of your senses.",
+          "Tags: Art, Workshop, Family, Education, Sensory Art, Participatory, Toddlers, Early Learning, Format"
+        ],
+        "223862": [
+          "Art for Tots (Ages 3–4): Opposites: Join us for programs designed for children and their caregivers. Art for Tots (1–2) is designed for our youngest learners and focuses on material exploration using all of your senses.",
+          "Tags: Art, Workshop, Family, Education, Sensory Art, Preschool, Participatory, Early Learning, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "223860": [
+          "https://www.noguchi.org/museum/calendar/event/2026-09-22-1030-art-for-tots-ages-1-2-opposites/"
+        ],
+        "223862": [
+          "https://www.noguchi.org/museum/calendar/event/2026-09-27-1030-art-for-tots-ages-3-4-opposites/"
+        ]
+      }
+    },
+    {
+      "concept": "format-costume-party",
+      "category": "format",
+      "label": "Costume party",
+      "visual": "Decorative mask beside a party streamer",
+      "rationale": "Costume participation differs from ordinary party; avoid a specific culture or identity.",
+      "existing_alternative": "Broad fallback does not distinguish this supported facet.",
+      "event_ids": [
+        223883,
+        223884
+      ],
+      "evidence_by_event": {
+        "223883": [
+          "The Off-Site Party -Halloween Eve: The party that highlights your energy! This event is 21+. VIP table service is available by text.",
+          "Tags: Music, Dance, Party, Nightlife, Clubbing, Costume Party, Halloween, Twenty One Plus, Format, Social"
+        ],
+        "223884": [
+          "Good Vibrations: Saints & Sinners Halloween party @ Brooklyn Roots Collective: The party that highlights your energy! This event is 21+. VIP table service is available by text.",
+          "Tags: Music, Dance, Party, Nightlife, Costume Party, Halloween, Twenty One Plus, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "223883": [
+          "https://posh.vip/e/offsite"
+        ],
+        "223884": [
+          "https://posh.vip/e/good-vibrations-35"
+        ]
+      }
+    },
+    {
+      "concept": "format-dance-party",
+      "label": "Dance party",
+      "category": "format",
+      "visual": "A rhythmic party motif without promised apparatus.",
+      "rationale": "Social dancing does not prove DJ decks or a specific dance genre.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        223815,
+        223968
+      ],
+      "evidence_by_event": {
+        "223815": [
+          "FUTCH: No description available.",
+          "Tags: Music, Dance, Party, Nightlife, Clubbing, Club Night, Format, Social"
+        ],
+        "223968": [
+          "00:00 - PH Nyc: This event will feature laser lighting effects.",
+          "Tags: Music, Dance, Nightlife, Clubbing, Club Night, 21+, Format, Social, Laser Lighting"
+        ]
+      },
+      "source_urls_by_event": {
+        "223815": [
+          "https://www.3dollarbillbk.com/rsvp/2026/10/29/futch"
+        ],
+        "223968": [
+          "https://posh.vip/e/0000-ph-nyc-1"
+        ]
+      }
+    },
+    {
+      "concept": "format-decade-dance-party",
+      "label": "Decade dance party",
+      "category": "format",
+      "visual": "A dance music card with an era-themed record motif.",
+      "rationale": "Nostalgia repertoire, not exact age eligibility or a guaranteed DJ configuration.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        223929,
+        223932
+      ],
+      "evidence_by_event": {
+        "223929": [
+          "Matinee 2K: An early, all out 2000's dance party for 30+. Matinee 2k is a celebration of 2000s and some late 90s musical nostalgia, featuring all the hits and all the genres.",
+          "Tags: Music, Dance, Nightlife, Club Night, Millennial, Y2K, 2000s, Format, Social"
+        ],
+        "223932": [
+          "This IS 40Ish: A celebration of the 40ish lifestyle with hits from the 80s, 90s, & 00s. An open format mix of all your favorite hits from the 80s, 90s, & 2000s.",
+          "Tags: Music, Dance, Nightlife, Pizza, Dance Party, Throwback Hits, Club Night, Format, Social, 40 Plus"
+        ]
+      },
+      "source_urls_by_event": {
+        "223929": [
+          "https://matinee.club/matinee-2k#events"
+        ],
+        "223932": [
+          "https://matinee.club/this-is-40ish#events"
+        ]
+      }
+    },
+    {
+      "concept": "activity-campus-resource-navigation",
+      "label": "Campus resource navigation",
+      "category": "activity",
+      "visual": "A campus resource page with a navigation cursor.",
+      "rationale": "Learning institutional resources; exact room and delivery mode must be verified.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        223866
+      ],
+      "evidence_by_event": {
+        "223866": [
+          "Campus Navigation - Exploring Hunter's Website: The Office of Advising hosts workshops on campus resources and web navigation, along with select majors and degree requirements, to help first-year students build momentum.",
+          "Tags: Workshop, Education, Participatory, First Year Students, Format, Advising, Campus Resources, Web Navigation"
+        ]
+      },
+      "source_urls_by_event": {
+        "223866": [
+          "https://www.hunter.cuny.edu/event/campus-navigation-exploring-hunters-website/"
+        ]
+      }
+    },
+    {
+      "concept": "activity-community-picnic-volunteering",
+      "label": "Community picnic volunteer",
+      "category": "activity",
+      "visual": "A picnic setup checklist with a support heart.",
+      "rationale": "Volunteer setup, service and socializing, not general picnic attendee admission.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        223927
+      ],
+      "evidence_by_event": {
+        "223927": [
+          "Host a Picnic in the Park for LGBTQ+ Older Adults: Celebrate the end of summer with a picnic in the park for LGBTQ+ older adults. Help set up, serve boxed lunches and refreshments, keep areas clean, and have a fun time socializing with participants!",
+          "Tags: Community, LGBTQ, Family, Outdoor, Picnic, Volunteer, Seniors, Participatory, Older Adults, LGBTQ Community, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "223927": [
+          "https://www.newyorkcares.org/project/a1HVr000003HJMHMA4"
+        ]
+      }
+    },
+    {
+      "concept": "activity-consensual-combat-play",
+      "label": "Consensual combat-play class",
+      "category": "activity",
+      "visual": "A neutral negotiation card with an abstract resistance motif.",
+      "rationale": "Explicit adult kink class; not boxing, stage combat, clinical care or a combat tutorial.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        223808
+      ],
+      "evidence_by_event": {
+        "223808": [
+          "HMU Academy: Fight Me - Kinky Combat: Fight Me! is a hands-on workshop exploring consensual struggle, physical resistance, wrestling, takedowns, and controlled combat-inspired play within kink and power-exchange scenes. The class covers negotiation, communication, body mechanics, partner exercises, takedown safety, resistance, and controlled striking.",
+          "Tags: Community, Workshop, Sports, Queer, Wellness, LGBTQ, Education, Nightlife, Kink, In Person, Participatory, Format, Consent, Combat Play"
+        ]
+      },
+      "source_urls_by_event": {
+        "223808": [
+          "https://www.eventbrite.com/e/hmu-academy-fight-me-knky-combat-tickets-1998260951297",
+          "https://www.eventbrite.com/e/hmu-academy-fight-me-knky-combat-tickets-1998260951297?aff=ebdsoporgprofile",
+          "https://www.eventbrite.com/e/hmu-academy-fight-me-knky-combat-tickets-1998260951297?aff=oddtdtcreator"
+        ]
+      }
+    },
+    {
+      "concept": "activity-creative-practice-coaching",
+      "label": "Creative-practice coaching",
+      "category": "activity",
+      "visual": "A sketchbook and reflective dialogue bubble.",
+      "rationale": "Creative-process guidance, not a guaranteed craft medium or clinical intervention.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        223837
+      ],
+      "evidence_by_event": {
+        "223837": [
+          "Shape/Shift: The Artist's Way, In Practice + 1:1 Coaching: An event hosted by Lover LLC and presented by Index Greenpoint.",
+          "Tags: Community, Brooklyn, Art, Workshop, Greenpoint, Neighborhood, Education, Professional Development, Participatory, Coaching, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "223837": [
+          "https://www.index-space.org/programming/shape-shift-the-artist-s-way-in-practice-1-1-coaching-evt-CV5pcfAeKOA1nTe"
+        ]
+      }
+    },
+    {
+      "concept": "activity-feng-shui-learning",
+      "label": "Feng shui learning",
+      "category": "activity",
+      "visual": "A researched spatial harmony diagram.",
+      "rationale": "Cultural/philosophical instruction, not verified health, financial or predictive outcomes.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        224064
+      ],
+      "evidence_by_event": {
+        "224064": [
+          "Feng Shui and I Ching: A Feng Shui course, based on I-Ching's principles, particularly the concepts of Yin & Yang, Five Elements and Three Cycles. Participants will be able to understand the purpose of Feng Shui and how it",
+          "Tags: Community, Wellness, Education, Chinese Culture, Philosophy, Cultural Heritage, Class, Feng Shui, Participatory, I Ching, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "224064": [
+          "https://www.bklynlibrary.org/node/828303",
+          "https://www.bklynlibrary.org/node/828304"
+        ]
+      }
+    },
+    {
+      "concept": "activity-guided-hike",
+      "label": "Guided hike",
+      "category": "activity",
+      "visual": "A trail path with a leader route marker.",
+      "rationale": "Generic hiking Unicode may suffice; no exact route, difficulty or equipment guarantee.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        223911
+      ],
+      "evidence_by_event": {
+        "223911": [
+          "North Point and Escarpment Trail Guided Hike: A guided hike on the North Point and Escarpment Trail.",
+          "Tags: Community, Hiking, Tour, Education, Outdoor, Guided Hike, Format, Outings"
+        ]
+      },
+      "source_urls_by_event": {
+        "223911": [
+          "https://www.nynjtc.org/calendar"
+        ]
+      }
+    },
+    {
+      "concept": "activity-guided-meditation",
+      "label": "Guided meditation",
+      "category": "activity",
+      "visual": "A calm listening ring with a gentle guidance mark.",
+      "rationale": "General meditation Unicode often suffices; do not imply medical benefit or a specific tradition.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        223844
+      ],
+      "evidence_by_event": {
+        "223844": [
+          "Daily Lunchtime Meditation | with Annie Bien, Tony Pham, and Nick Shopa | September: Monday through Friday, join 45–60 minute meditation sessions led by meditation teachers Annie Bien, Tony Pham, and Nick Shopa. The non-denominational sessions focus on quieting the mind, focusing the quiet mind, using the focused mind for analysis, and creating and upholding a positive vision and outlook on the world; the class is intended for beginners and those with a regular practice.",
+          "Tags: Community, Wellness, Meditation, Mindfulness, Virtual, Online, Open Practice, Participatory, Mind-Body, Hybrid, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "223844": [
+          "https://shop.thus.org/products/daily-lunchtime-meditation-with-annie-bien-tony-pham-and-nick-shopa-thus"
+        ]
+      }
+    },
+    {
+      "concept": "activity-mindful-drawing",
+      "label": "Mindful drawing",
+      "category": "activity",
+      "visual": "An original sketch sheet and calm attention ring.",
+      "rationale": "Drawing as reflective activity; not necessarily urban observation or clinical therapy.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        224085
+      ],
+      "evidence_by_event": {
+        "224085": [
+          "Sit & Sketch: A Mindful Drawing Workshop at Hancock Community Backyard Park: Join a librarian from Macon Library at Hancock Community Backyard Park for a morning drawing and a",
+          "Tags: Community, Visual Arts, Art, Workshop, Wellness, Outdoor, Drawing, Mindfulness, Participatory, Mind-Body, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "224085": [
+          "https://www.bklynlibrary.org/node/840431",
+          "https://www.bklynlibrary.org/node/840436",
+          "https://www.bklynlibrary.org/node/840437"
+        ]
+      }
+    },
+    {
+      "concept": "activity-mindful-hike",
+      "label": "Mindful hike",
+      "category": "activity",
+      "visual": "A trail with a calm attention ring.",
+      "rationale": "Guided reflective hiking, not a medical treatment or necessarily forest-bathing instruction.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        223858
+      ],
+      "evidence_by_event": {
+        "223858": [
+          "Wander in Wonder: Experience the beauty of autumn on a guided nature hike designed to help you slow down, reconnect, and be present. Call (609) 726-1191 or email Lisa.Ziff-Riley@dep.nj.gov for more information. Please […]",
+          "Tags: Hiking, Tour, Wellness, Outdoor, Mindfulness, Nature Hike, Mind-Body, Autumn, Format, Outings"
+        ]
+      },
+      "source_urls_by_event": {
+        "223858": [
+          "https://dep.nj.gov/event/wander-in-wonder/"
+        ]
+      }
+    },
+    {
+      "concept": "activity-mixed-fitness",
+      "label": "Mixed fitness",
+      "category": "activity",
+      "visual": "Several neutral movement activity tiles.",
+      "rationale": "Multiple exercise modalities; no single method, equipment or prescribed routine promised.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        224021
+      ],
+      "evidence_by_event": {
+        "224021": [
+          "IronStrength: At these special Healthy on the Hudson classes, you can join the IronStrength® method, which includes everything from dance, Pilates, yoga, barre and HIIT.",
+          "Tags: Dance, Wellness, Fitness, Yoga, Pilates, High Intensity, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "224021": [
+          "https://hudsonriverpark.org/visit/events/event/ironstrength-september-23-2026/"
+        ]
+      }
+    },
+    {
+      "concept": "activity-older-adult-social-volunteering",
+      "label": "Older-adult social volunteer",
+      "category": "activity",
+      "visual": "A community activity card and assistance heart.",
+      "rationale": "Supports an older-adult gathering; no participant age applied automatically to volunteers.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        223925
+      ],
+      "evidence_by_event": {
+        "223925": [
+          "Support an '80s Theme Prom for Older Adults: Celebrate the end of summer with a Golden Prom for older adults, a fun and social event where volunteers and older adults (ages 55+) interact through dancing, crafts, games, snacks, and general conversation.",
+          "Tags: Community, Dance, Games, Volunteer, Participatory, Older Adults, Format, 1980s Theme"
+        ]
+      },
+      "source_urls_by_event": {
+        "223925": [
+          "https://www.newyorkcares.org/project/a1HVr000003BJjxMAG"
+        ]
+      }
+    },
+    {
+      "concept": "activity-power-dynamic-communication",
+      "label": "Power-dynamic communication",
+      "category": "activity",
+      "visual": "Two dialogue cards and a mutually linked agreement mark.",
+      "rationale": "Adult relationship education; no promised healing, coercion or inferred attendee identity.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        223809
+      ],
+      "evidence_by_event": {
+        "223809": [
+          "HMU Academy: How to Build a D/s Dynamic: This workshop explores how to co-create a power dynamic rooted in trust, intention, and healing.",
+          "Tags: Community, Workshop, Queer, Wellness, LGBTQ, Education, Nightlife, Relationships, Kink, In Person, Participatory, Format, Consent"
+        ]
+      },
+      "source_urls_by_event": {
+        "223809": [
+          "https://www.eventbrite.com/e/hmu-academy-how-to-build-a-ds-dynamic-tickets-1998302251828",
+          "https://www.eventbrite.com/e/hmu-academy-how-to-build-a-ds-dynamic-tickets-1998302251828?aff=oddtdtcreator"
+        ]
+      }
+    },
+    {
+      "concept": "activity-professional-outreach",
+      "label": "Professional outreach coaching",
+      "category": "activity",
+      "visual": "A message card connected to a conversation.",
+      "rationale": "Practical outreach and follow-up, not ordinary email literacy or guaranteed employment.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        223835
+      ],
+      "evidence_by_event": {
+        "223835": [
+          "How to Build Relationships That Open Doors: A practical workshop on cold email, direct messages, making clear asks, using research and AI authentically, following up, and turning outreach into meaningful relationships.",
+          "Tags: Community, Workshop, Education, Networking, Career, Professional Development, Communication, Participatory, Linked in, Format, Cold Email"
+        ]
+      },
+      "source_urls_by_event": {
+        "223835": [
+          "https://luma.com/jbzz2rbx"
+        ]
+      }
+    },
+    {
+      "concept": "activity-resident-event-escort",
+      "label": "Resident event escort volunteer",
+      "category": "activity",
+      "visual": "A neutral room-to-auditorium assistance path.",
+      "rationale": "Volunteers accompany residents within a facility; no wheelchair or vehicle assumed.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        223922
+      ],
+      "evidence_by_event": {
+        "223922": [
+          "Transport Older Adult Residents to a Concert: Promote cultural enrichment, social engagement, and emotional well-being through music to older adult residents. Transport older adults from their room/unit to the facility’s auditorium.",
+          "Tags: Community, Music, Accessibility, Volunteer, Seniors, Participatory, Cultural Enrichment, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "223922": [
+          "https://www.newyorkcares.org/project/a1HVr000003Nb6rMAC",
+          "https://www.newyorkcares.org/project/a1HVr000003Nb6uMAC"
+        ]
+      }
+    },
+    {
+      "concept": "activity-school-age-multisport",
+      "label": "School-age multisport",
+      "category": "activity",
+      "visual": "Several sport symbols on a play card.",
+      "rationale": "School-age mixed sports; preschool-only artwork is too narrow and exact rotation not guaranteed.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        224024
+      ],
+      "evidence_by_event": {
+        "224024": [
+          "Children's Sports (Ages 6-10): Develop your coordination and balance, practice your hitting, catching, and game play! Practice the basics of various sports with fun and challenging games and drills for all levels. Closed-toe shoes required.",
+          "Tags: Kids, Free, Sports, Wellness, Fitness, Family, Outdoor, Games, Class, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "224024": [
+          "https://bpca.ny.gov/event/childrens-sports-ages-6-10-4/2026-08-25/",
+          "https://bpca.ny.gov/event/childrens-sports-ages-6-10-4/2026-09-15/",
+          "https://bpca.ny.gov/news/events/?selected_id=10013375",
+          "https://bpca.ny.gov/news/events/?selected_id=10013376",
+          "https://bpca.ny.gov/news/events/?selected_id=10013377"
+        ]
+      }
+    },
+    {
+      "concept": "activity-writing-from-art",
+      "label": "Writing from art",
+      "category": "activity",
+      "visual": "An art frame linked to a writing page.",
+      "rationale": "Writing prompted by artworks; not necessarily poetry, memoir or drawing.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        223861
+      ],
+      "evidence_by_event": {
+        "223861": [
+          "Wordplay: Explore the words, texts, and archival documents of Isamu Noguchi and use writing as a tool for engaging with Noguchi’s sculptures.",
+          "Tags: History, Visual Arts, Art, Workshop, Literature, Free, Sculpture, Education, Archives, Participatory, Writing, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "223861": [
+          "https://www.noguchi.org/museum/calendar/event/2026-09-26-1500-wordplay/"
+        ]
+      }
+    },
+    {
+      "concept": "activity-youth-soccer",
+      "label": "Youth soccer skills",
+      "category": "activity",
+      "visual": "A soccer ball and simple training markers.",
+      "rationale": "Youth drills, not professional match viewing; age and equipment require explicit evidence.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        224022
+      ],
+      "evidence_by_event": {
+        "224022": [
+          "Children's Soccer (Ages 6-10): Practice the fundamentals of soccer with fun and challenging exercises, drills, and scrimmages for all skill levels. Closed-toe shoes required.",
+          "Tags: Kids, Free, Sports, Family, Outdoor, Class, Soccer, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "224022": [
+          "https://bpca.ny.gov/event/childrens-soccer-ages-6-10-5-2/2026-08-24/",
+          "https://bpca.ny.gov/event/childrens-soccer-ages-6-10-5-2/2026-08-31/",
+          "https://bpca.ny.gov/event/childrens-soccer-ages-6-10-5-2/2026-09-14/",
+          "https://bpca.ny.gov/news/events/?selected_id=10013311",
+          "https://bpca.ny.gov/news/events/?selected_id=10013312"
+        ]
+      }
+    },
+    {
+      "concept": "craft-nature-art",
+      "label": "Nature art",
+      "category": "craft",
+      "visual": "An original art sheet with natural-material silhouettes.",
+      "rationale": "Materials and collecting permissions must be confirmed; not automatically collage or botanical drawing.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        223850
+      ],
+      "evidence_by_event": {
+        "223850": [
+          "Nature’s Canvas: Bring your creative skills to Liberty State Park and express your natural side as we learn about some of nature’s most captivating creations. You can also make a nature work […]",
+          "Tags: Community, Art, Nature, Workshop, Education, Outdoor, Nature Art, Crafts, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "223850": [
+          "https://dep.nj.gov/event/natures-canvas-4/"
+        ]
+      }
+    },
+    {
+      "concept": "craft-xerox-art",
+      "label": "Photocopier art",
+      "category": "craft",
+      "visual": "An original copy-art sheet with a copier-process mark.",
+      "rationale": "Art using photocopy reproduction, distinct from every printmaking technique.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        224014
+      ],
+      "evidence_by_event": {
+        "224014": [
+          "Open Studio: Postcards, Prints, and Paper: Spend an evening looking, making, and experimenting at El Museo. Inspired by Teddy Sandoval and the Butch Gardens School of Art, this Open Studio combines a guided gallery experience with postcard-making, Xerox art, collage, and other paper-based artmaking activities.",
+          "Tags: Community, Visual Arts, Art, Workshop, Free, Education, Paper Art, In Person, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "224014": [
+          "https://www.eventbrite.com/e/open-studio-postcards-prints-and-paper-tickets-1992002664593?aff=ebdssbcitybrowse"
+        ]
+      }
+    },
+    {
+      "concept": "format-arts-education-benefit",
+      "label": "Arts-education benefit",
+      "category": "format",
+      "visual": "An art-learning page with a support heart.",
+      "rationale": "Fundraiser supports arts education; event itself may be a party rather than a class or gala.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        223839
+      ],
+      "evidence_by_event": {
+        "223839": [
+          "2026 Fall Arts Education Benefit: The 2026 Fall Arts Education Benefit includes an Artists Eye Conversation and a Tuxedo Park Benefit Party. Admission is listed from $250–$295.",
+          "Tags: Community, Art, Education, Fundraiser, Benefit, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "223839": [
+          "https://www.edwardhopperhouse.org/artseducation-ellissothebys-2026.html"
+        ]
+      }
+    },
+    {
+      "concept": "format-childrens-art-making",
+      "label": "Children’s art making",
+      "category": "format",
+      "visual": "Original mixed art-tool symbols on a child-program card.",
+      "rationale": "Generic art Unicode may suffice; no medium, age or supplied tool promised without evidence.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        224092
+      ],
+      "evidence_by_event": {
+        "224092": [
+          "Kids Create: Come make something with us at Saratoga Library. Designed for ages 6-12. Children ages 5 and under must be accompanied by their grown up.",
+          "Tags: Art, Kids, Workshop, Family, Education, DIY, Crafts, Arts and Crafts, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "224092": [
+          "https://www.bklynlibrary.org/node/836170",
+          "https://www.bklynlibrary.org/node/842274",
+          "https://www.bklynlibrary.org/node/842275"
+        ]
+      }
+    },
+    {
+      "concept": "format-community-arts-festival",
+      "label": "Community arts festival",
+      "category": "format",
+      "visual": "Several art and performance tiles under a festival banner.",
+      "rationale": "Mixed disciplines; no one craft or specific workshop promised.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        223872
+      ],
+      "evidence_by_event": {
+        "223872": [
+          "Pollinator PK Arts Festival: The Pollinator Festival is a weekend-long celebration of creativity, community, and growth in Poughkeepsie. Activities include hands-on workshops, mini demonstrations, short performances, and creative activities connected to the arts, horticulture, food, wellness, and the natural world.",
+          "Tags: Community, Art, Workshop, Wellness, Festival, Family, Education, Outdoor, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "223872": [
+          "https://www.scenichudson.org/events/pollinator-pk-arts-festival/",
+          "https://www.scenichudson.org/events/pollinator-pk-arts-festival/2026-09-12/"
+        ]
+      }
+    },
+    {
+      "concept": "format-cooperative-town-hall",
+      "label": "Cooperative town hall",
+      "category": "format",
+      "visual": "Member dialogue bubbles around a cooperative emblem.",
+      "rationale": "Member organizational discussion, not municipal governance or disclosure of private survey data.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        223824
+      ],
+      "evidence_by_event": {
+        "223824": [
+          "Town Hall: A virtual town hall to discuss the results of the Coop’s member demographic survey and brainstorm next steps to increase diversity among members. Pre-registration is required; a Zoom link will be shared with those who register.",
+          "Tags: Community, Activism, Education, Virtual, Diversity, Civic Engagement, Gathering, Zoom, Civic Meeting, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "223824": [
+          "https://linewaitersgazette.com/event/town-hall/"
+        ]
+      }
+    },
+    {
+      "concept": "format-creativity-talk",
+      "label": "Creativity talk",
+      "category": "format",
+      "visual": "An idea mark on a lecture bubble.",
+      "rationale": "Discussion of creative practice; artist-talk art may already suffice.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        223838
+      ],
+      "evidence_by_event": {
+        "223838": [
+          "Why We Create, and Don’t Create: An event hosted by Avanti Singh and presented by Index Chinatown.",
+          "Tags: Community, Brooklyn, Art, Workshop, Greenpoint, Neighborhood, Education, Creativity, Gathering, Talk, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "223838": [
+          "https://luma.com/index-wgrj",
+          "https://www.index-space.org/programming/why-we-create-and-don-t-create-evt-mhk1SFdmE6OtJu0"
+        ]
+      }
+    },
+    {
+      "concept": "format-creator-live-show",
+      "label": "Creator live show",
+      "category": "format",
+      "visual": "A stage card with a creator conversation motif.",
+      "rationale": "Requires clearer performance structure before artwork can improve a generic stage fallback.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        223816
+      ],
+      "evidence_by_event": {
+        "223816": [
+          "The BoyGirl Experience LIVE: A live BoyGirl Experience event.",
+          "Tags: Music, Theater, Nightlife, Live Music, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "223816": [
+          "https://www.3dollarbillbk.com/rsvp/2026/11/13/the-boygirl-experience-live"
+        ]
+      }
+    },
+    {
+      "concept": "format-economic-justice-training",
+      "label": "Economic-justice training",
+      "category": "format",
+      "visual": "A learning card with balanced resource symbols.",
+      "rationale": "Educational summit/workshops, not necessarily public governance or original research.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        223873
+      ],
+      "evidence_by_event": {
+        "223873": [
+          "DAY ONE Learning Center Economic Justice Summit: DAY ONE Learning Center will host an Economic Justice Summit including training, seminars, and workshops for staff and stakeholders to learn about the struggles of youth in Poughkeepsie.",
+          "Tags: Community, Activism, Workshop, Education, Social Justice, Gathering, Talk, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "223873": [
+          "https://www.scenichudson.org/events/day-one-learning-center-economic-justice-summit/"
+        ]
+      }
+    },
+    {
+      "concept": "format-festival-after-party",
+      "label": "Festival after-party",
+      "category": "format",
+      "visual": "A festival ticket beside a late party burst.",
+      "rationale": "Separate after-party admission, not automatic inclusion in the main festival.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        223813
+      ],
+      "evidence_by_event": {
+        "223813": [
+          "Out & Abt: Official All Things Go After Party: The official All Things Go after party.",
+          "Tags: Music, Dance, Party, Nightlife, After Party, Club Night, Format, Social, All Things Go"
+        ]
+      },
+      "source_urls_by_event": {
+        "223813": [
+          "https://www.3dollarbillbk.com/rsvp/2026/9/25/out-amp-abt-official-all-things-go-after-party"
+        ]
+      }
+    },
+    {
+      "concept": "format-field-science-talk",
+      "label": "Field-science talk",
+      "category": "format",
+      "visual": "A field observation card beside a lecture bubble.",
+      "rationale": "Research presentation, not a live expedition or animal encounter.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        223886
+      ],
+      "evidence_by_event": {
+        "223886": [
+          "Life Ascending: Life Ascending: Extreme Animals and Scientific Exploration in the High Andes.",
+          "Tags: Community, Science, Wildlife, Education, Outdoor, Exploration, Gathering, Talk, Format, Andes"
+        ]
+      },
+      "source_urls_by_event": {
+        "223886": [
+          "https://www.explorers.org/calendar-of-events/life-ascending/"
+        ]
+      }
+    },
+    {
+      "concept": "format-food-agriculture-film-festival",
+      "label": "Food and agriculture film festival",
+      "category": "format",
+      "visual": "Film strips around an original crop symbol.",
+      "rationale": "Film program about food systems; no live farming, Q&A or public access implied.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        224020
+      ],
+      "evidence_by_event": {
+        "224020": [
+          "Climate Week NYC: Food and Agriculture Film Festival: Join Food Tank, Halter, The Rockefeller Foundation, and Groundswell for the “Food & Agriculture Film Festival” at WNYC-NPR Studios’ The Greene Space in New York City for an exclusive, invitation-only event as part of Climate Week NYC. The event will showcase short films and documentaries highlighting the people, innovations, and ideas transforming the food system, with film, conversation, a live musical performance, lunch, and a networking reception.",
+          "Tags: Community, Film, Networking, Screening, In Person, Climate, Format, Performance, Food and Agriculture"
+        ]
+      },
+      "source_urls_by_event": {
+        "224020": [
+          "https://www.eventbrite.com/e/climate-week-nyc-food-and-agriculture-film-festival-tickets-1996512342160?aff=ebdssbcitybrowse"
+        ]
+      }
+    },
+    {
+      "concept": "format-food-challenge-run",
+      "label": "Food-challenge run",
+      "category": "format",
+      "visual": "A running route passing a food checkpoint.",
+      "rationale": "Explicit eating-and-running challenge; no medical suitability or fixed food quantity inferred.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        224010
+      ],
+      "evidence_by_event": {
+        "224010": [
+          "16th Annual NYC Pizza Run: The NYC Pizza Run is a challenge in which participants aim to complete a 5K run while stopping to eat two slices of pizza along the route. A portion of the proceeds will be donated to Breakthrough T1D.",
+          "Tags: Community, Sports, Fitness, Food, Outdoor, Running, Pizza, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "224010": [
+          "https://www.eventbrite.com/e/16th-annual-nyc-pizza-run-tickets-1995478167917?aff=ebdssbcitybrowse"
+        ]
+      }
+    },
+    {
+      "concept": "format-garden-party",
+      "label": "Garden party",
+      "category": "format",
+      "visual": "Garden leaves with a social gathering mark.",
+      "rationale": "Garden celebration, not necessarily planting, volunteer work or harvest.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        224025
+      ],
+      "evidence_by_event": {
+        "224025": [
+          "Fall Garden Party: Gardeners can celebrate the end of summer and say hello to the cooler days of autumn in the Children’s Garden. Activity with Local Nature Lab and garden treats to share. All are welcome!",
+          "Tags: Community, Free, Family, Gardening, Outdoor, Autumn, Community Celebration, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "224025": [
+          "https://bpca.ny.gov/event/fall-garden-party/"
+        ]
+      }
+    },
+    {
+      "concept": "format-historic-trail-hike",
+      "label": "Historic-trail hike",
+      "category": "format",
+      "visual": "A hiking route passing a small archival-site mark.",
+      "rationale": "Outdoor historic trail interpretation, not guaranteed building entry.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        223910
+      ],
+      "evidence_by_event": {
+        "223910": [
+          "Trail Treasures: Cornish Estate Guided Hike: A guided hike exploring the Cornish Estate trail treasures.",
+          "Tags: Community, History, Hiking, Tour, Education, Outdoor, Guided Hike, Format, Outings"
+        ]
+      },
+      "source_urls_by_event": {
+        "223910": [
+          "https://www.nynjtc.org/calendar"
+        ]
+      }
+    },
+    {
+      "concept": "format-mixed-craft-circle",
+      "label": "Mixed craft circle",
+      "category": "format",
+      "visual": "Different craft project cards in a shared circle.",
+      "rationale": "Bring-your-own mixed projects, not exclusively needlework or guided instruction.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        223874
+      ],
+      "evidence_by_event": {
+        "223874": [
+          "Craft Circle: Hudson Valley professionals with a passion for crafting, scrapbooking, or creative arts can bring a journal, notebook, or scrapbook and join hosts Karen Williams and Kadiyah Lodge for a free Craft Circle Meetup.",
+          "Tags: Community, Art, Free, Networking, Meetup, Crafts, Open Practice, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "223874": [
+          "https://www.scenichudson.org/events/craft-circle-3/"
+        ]
+      }
+    },
+    {
+      "concept": "format-multi-band-show",
+      "label": "Multi-band show",
+      "category": "format",
+      "visual": "Several separate act cards around a concert note.",
+      "rationale": "Multiple acts do not establish a musical duo or one combined ensemble.",
+      "existing_alternative": "Current Unicode or the individually reviewed accepted icon remains suitable until original candidate artwork is researched and passes native-size review.",
+      "event_ids": [
+        223842
+      ],
+      "evidence_by_event": {
+        "223842": [
+          "Bby Kell / Backend / Lackvill / EA TJ / + more: No description available.",
+          "Tags: Music, Family, Concert, All Ages, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "223842": [
+          "https://www.thetranspecos.com/#/events/194001"
+        ]
+      }
+    },
+    {
+      "concept": "format-photo-prompt-improv",
+      "label": "Photo-prompt improv",
+      "category": "format",
+      "visual": "An original snapshot linked to an improvised dialogue bubble.",
+      "rationale": "Audience-photo-inspired performance; not photography instruction or blanket image-use permission.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        223915
+      ],
+      "evidence_by_event": {
+        "223915": [
+          "Spaghetti Presents: One-Hour Photo: World-famous improv team, Spaghetti, is back by popular demand (mostly theirs), and they want to snoop through your camera roll. In One-Hour Photo, Spaghetti will ask each member of the audience to send a safe-for-work photo they've taken, pick one photo at random, interview the photographer about it, and perform improv comedy based on the photo and interview.",
+          "Tags: Theater, Comedy, Improv, Comedy Show, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "223915": [
+          "https://magnettheater.com/show/60962",
+          "https://magnettheater.com/show/61071"
+        ]
+      }
+    },
+    {
+      "concept": "format-pirate-family-day",
+      "label": "Pirate family day",
+      "category": "format",
+      "visual": "A playful original pirate pennant with craft/activity marks.",
+      "rationale": "Mixed themed celebration; no particular hunt, vessel or costume guaranteed.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        223855
+      ],
+      "evidence_by_event": {
+        "223855": [
+          "Pirate Day: Happy International Talk Like a Pirate Day, maytees! Join the crew of the Leonardo State Marina Nature Center as we embark on a day filled with Pirate crafts, hunts for […]",
+          "Tags: Art, Park, Family, Outdoor, Crafts, Pirates, Outdoor Venue, Community Celebration, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "223855": [
+          "https://dep.nj.gov/event/pirate-day/"
+        ]
+      }
+    },
+    {
+      "concept": "format-poetry-hike",
+      "label": "Poetry hike",
+      "category": "format",
+      "visual": "A walking path joining a poetry page.",
+      "rationale": "Explicit hike and participatory poetry; neither competitive judging nor a precise route implied.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        223857
+      ],
+      "evidence_by_event": {
+        "223857": [
+          "Poe-Tree in the Park Night Hike: Leaves, Lyrics & Verse: Enjoy a sunset hike and participate in a poetry slam in the forest. Beatniks Welcome! Bring a chair or mat to sit on. *Starts at 7:00 PM* Call (609) 726-1191 […]",
+          "Tags: Community, Hiking, Literature, Poetry, Outdoor, Nightlife, Poetry Slam, Night Hike, Open Practice, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "223857": [
+          "https://dep.nj.gov/event/poe-tree-in-the-park-night-hike-leaves-lyrics-verse/"
+        ]
+      }
+    },
+    {
+      "concept": "format-public-lands-celebration",
+      "label": "Public-lands celebration",
+      "category": "format",
+      "visual": "Park landscape with a community celebration mark.",
+      "rationale": "Public land event, not necessarily stewardship volunteering or unlimited access.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        223856
+      ],
+      "evidence_by_event": {
+        "223856": [
+          "Celebrate National Public Lands Day at Caven Point: Explore the wonders of Caven Point as we open this very special area for the fall and winter seasons. We'll have nature walks and art programs to participate in as […]",
+          "Tags: Community, Art, Outdoor, Nature Walk, Community Celebration, Format, Social, Public Lands, Caven Point"
+        ]
+      },
+      "source_urls_by_event": {
+        "223856": [
+          "https://dep.nj.gov/event/celebrate-national-public-lands-day-at-caven-point/"
+        ]
+      }
+    },
+    {
+      "concept": "format-restaurant-social",
+      "label": "Restaurant social",
+      "category": "format",
+      "visual": "Dining table place symbols arranged for conversation.",
+      "rationale": "Social meal, not a cooking lesson, tasting menu or guaranteed included food.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        223821
+      ],
+      "evidence_by_event": {
+        "223821": [
+          "Ramen Azuma Social: No description available.",
+          "Tags: Community, Food, Nightlife, Outing, Format, Outings"
+        ]
+      },
+      "source_urls_by_event": {
+        "223821": [
+          "https://www.meetup.com/animesocialnexus/events/316161752/",
+          "https://www.meetup.com/animesocialnexus/events/316286502/"
+        ]
+      }
+    },
+    {
+      "concept": "format-sensory-friendly-museum-opening",
+      "label": "Sensory-friendly museum opening",
+      "category": "format",
+      "visual": "Museum access card and quiet-hour clock.",
+      "rationale": "Explicit facilitated access program; do not promise a universally quiet or fully accessible environment.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        223881
+      ],
+      "evidence_by_event": {
+        "223881": [
+          "Early Morning Opening: To the Stars! Space Exploration: Dreaming of the stars? Explore the incredible history of the U.S. space program and let your imagination take off as you envision the next great leaps in space exploration -- all before the Museum opens to the public.",
+          "Tags: Museum, History, Science, Astronomy, Family, Education, Space Exploration, Space, Open House, Format, Browsable"
+        ]
+      },
+      "source_urls_by_event": {
+        "223881": [
+          "https://intrepidmuseum.org/early-morning-opening-stars-space-exploration"
+        ]
+      }
+    },
+    {
+      "concept": "format-sports-management-conference",
+      "label": "Sports-management conference",
+      "category": "format",
+      "visual": "Conference presentation with a sports organization diagram.",
+      "rationale": "Sports business/administration, not playing sports or an admissions fair.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        223875
+      ],
+      "evidence_by_event": {
+        "223875": [
+          "2026 Columbia University Sports Management Conference: Please reach out to Danny Hagenlocher at dh3117@columbia.edu before purchase for an",
+          "Tags: Community, Sports, Education, Gathering, Talk, Conference, Format, Sports Management"
+        ]
+      },
+      "source_urls_by_event": {
+        "223875": [
+          "https://events.columbia.edu/cal/event/eventView.do?b=de&calPath=%2Fpublic%2Fcals%2FMainCal&guid=CAL-00bbdb70-a00ebfdc-01a0-10d68cbd-0000424aevents%40columbia.edu&recurrenceId=",
+          "https://sps.columbia.edu/events/2026-columbia-university-sports-management-conference"
+        ]
+      }
+    },
+    {
+      "concept": "format-student-recital",
+      "label": "Student recital",
+      "category": "format",
+      "visual": "Music stand beside a graduation-like program card without a degree claim.",
+      "rationale": "Explicit student performance showcase.",
+      "existing_alternative": "Instrument Unicode already reflects subject.",
+      "event_ids": [
+        223825
+      ],
+      "evidence_by_event": {
+        "223825": [
+          "Suzuki Solo Recitals: No description available.",
+          "Tags: Community, Music, Education, Concert, Recital, Suzuki, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "223825": [
+          "https://musicconservatory.org/events/suzuki-solo-recitals-5/"
+        ]
+      }
+    },
+    {
+      "concept": "format-support-program-planning",
+      "label": "Support-program planning",
+      "category": "format",
+      "visual": "A discussion group drafting a support plan.",
+      "rationale": "Planning a future program, not attendance at the support group itself.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        223870
+      ],
+      "evidence_by_event": {
+        "223870": [
+          "Planning Meeting of Mentorship & Support for Fathers/Expectant Fathers: Dutchess County Youth Services Division Commissioner Karmen Smallwood is hosting a meeting to develop a support group for current and expectant fathers.",
+          "Tags: Community, Family, Education, Meeting, Gathering, Civic Meeting, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "223870": [
+          "https://www.scenichudson.org/events/planning-meeting-of-mentorship-support-for-fathers-expectant-fathers-2/",
+          "https://www.scenichudson.org/events/planning-meeting-of-mentorship-support-for-fathers-expectant-fathers-3/"
+        ]
+      }
+    },
+    {
+      "concept": "format-women-entrepreneur-networking",
+      "label": "Women entrepreneur networking",
+      "category": "format",
+      "visual": "Professional contact cards with an exchange motif.",
+      "rationale": "Explicit program audience; no inference about individual attendees and existing networking art may suffice.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        223834
+      ],
+      "evidence_by_event": {
+        "223834": [
+          "September | Dreamers & Doers IRL Connection Day: A day of in-person connection for women entrepreneurs featuring a mix-and-mingle period, a facilitated Real Talk roundtable, coworking, and informal conversations.",
+          "Tags: Community, Free, Party, Networking, Professional Development, Connection, Entrepreneurship, Women, Women Entrepreneurs, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "223834": [
+          "https://luma.com/zk70jqeh"
+        ]
+      }
+    },
+    {
+      "concept": "game-blood-on-the-clocktower",
+      "label": "Blood on the Clocktower",
+      "category": "activity",
+      "visual": "A clock tower silhouette behind two contrasting role tokens",
+      "rationale": "Named social-deduction game differs from tabletop RPG; original nonspecific art avoids reliance on branded graphics.",
+      "existing_alternative": "Retain the source Unicode until recognizable original artwork is reviewed.",
+      "event_ids": [
+        223823
+      ],
+      "evidence_by_event": {
+        "223823": [
+          "Blood on the Clocktower!: No description available.",
+          "Tags: Community, Games, Nightlife, Game, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "223823": [
+          "https://www.meetup.com/animesocialnexus/events/316176896/"
+        ]
+      }
+    },
+    {
+      "concept": "game-mahjong",
+      "label": "Mahjong",
+      "category": "activity",
+      "visual": "Researched neutral tile grouping distinct from any unverified rules variant.",
+      "rationale": "Dedicated Unicode may suffice; no American/Chinese rules or supplied tile set inferred.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        224081
+      ],
+      "evidence_by_event": {
+        "224081": [
+          "Learn & Play Mahjong: Learn & Play Mahjong!",
+          "Tags: Education, Games, Board Games, Mahjong, Adult Education, Game, Tabletop, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "224081": [
+          "https://www.bklynlibrary.org/node/834293",
+          "https://www.bklynlibrary.org/node/837961"
+        ]
+      }
+    },
+    {
+      "concept": "genre-anime-film",
+      "label": "Anime screening",
+      "category": "genre",
+      "visual": "An original animated film frame.",
+      "rationale": "Explicit anime film; no copied character or universal national-style assumption.",
+      "existing_alternative": "Current Unicode or the individually reviewed accepted icon remains suitable until original candidate artwork is researched and passes native-size review.",
+      "event_ids": [
+        224110
+      ],
+      "evidence_by_event": {
+        "224110": [
+          "Princess Mononoke - Studio Ghibli Fest 2026: No description available.",
+          "Tags: Film, Screening, Animation, Fantasy, Anime, Format, Performance, Princess Mononoke"
+        ]
+      },
+      "source_urls_by_event": {
+        "224110": [
+          "https://www.amctheatres.com/movies/princess-mononoke-studio-ghibli-fest-2026-83593"
+        ]
+      }
+    },
+    {
+      "concept": "genre-corridos",
+      "label": "Corridos",
+      "category": "genre",
+      "visual": "A short unfolded lyric sheet with one broad musical note and a simple narrative path joining two large points.",
+      "rationale": "Corridos are explicitly programmed; narrative-song motif is exploratory and needs testing, without implying a particular band instrument or costume.",
+      "existing_alternative": "Guitar and accordion would infer unlisted instrumentation; country flag is not genre identity.",
+      "event_ids": [
+        223974
+      ],
+      "evidence_by_event": {
+        "223974": [
+          "Ritmos: Sabado de Parranda - Colombian Salsa, Vallenato Reggaeton Party NYC: Enjoy small bites (tapas), Guaro & handcrafted Colombian cocktails, with salsa, cumbia, corridos, vallenato and reggaeton playing throughout the night. The event features $8 Margaritas until 9 PM and additional Happy Hour Specials.",
+          "Tags: Music, Dance, Colombian, Nightlife, Salsa, Reggaeton, Latin Music, Club Night, Vallenato, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "223974": [
+          "https://posh.vip/e/colombia-vs-mexico-soccer-game-watch-party-at-ritmos-60-salsa-bar",
+          "https://posh.vip/e/colombia-vs-mexico-soccer-game-watch-party-at-ritmos-60-salsa-bar-1",
+          "https://posh.vip/e/mexico-v-usa-soccer-game-watch-party-at-ritmos-60-salsa-bar",
+          "https://posh.vip/e/mexico-v-usa-soccer-game-watch-party-at-ritmos-60-salsa-bar-1",
+          "https://posh.vip/e/ritmos-sabado-de-parranda-colombian-salsa-vallenato-reggaeton-party-nyc-24",
+          "https://posh.vip/e/ritmos-sabado-de-parranda-colombian-salsa-vallenato-reggaeton-party-nyc-5",
+          "https://posh.vip/e/ritmos-sabado-de-parranda-colombian-salsa-vallenato-reggaeton-party-nyc-6",
+          "https://posh.vip/e/ritmos-sabado-de-parranda-colombian-salsa-vallenato-reggaeton-party-nyc-7",
+          "https://posh.vip/e/ritmos-sabado-de-parranda-colombian-salsa-vallenato-reggaeton-party-nyc-8",
+          "https://posh.vip/e/salsa-saturdays-labor-day-weekend-latin-colombian-party-nyc-1"
+        ]
+      }
+    },
+    {
+      "concept": "genre-drama-film",
+      "label": "Drama cinema",
+      "category": "genre",
+      "visual": "An original expressive narrative film frame.",
+      "rationale": "Broad drama often better served by film Unicode; title alone cannot establish film identity.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        224103
+      ],
+      "evidence_by_event": {
+        "224103": [
+          "Buddy: No description available.",
+          "Tags: Cinema, Film, Screening, Movies, Drama / Film, Format, Performance, Buddy"
+        ]
+      },
+      "source_urls_by_event": {
+        "224103": [
+          "https://www.amctheatres.com/movies/buddy-83749"
+        ]
+      }
+    },
+    {
+      "category": "genre",
+      "concept": "genre-reggaeton",
+      "existing_alternative": "Noto music notes or fire do not identify the subgenre; existing DJ decks identify equipment but not reggaeton.",
+      "label": "Reggaeton",
+      "rationale": "Explicit reggaeton programming supports a dembow-rhythm motif as an exploratory direction; mixed programs support a genre facet only, and recognition against generic electronic music must be tested.",
+      "visual": "A compact drum-pad grid with a bold alternating four-hit rhythm trail.",
+      "event_ids": [
+        223974
+      ],
+      "evidence_by_event": {
+        "223974": [
+          "Ritmos: Sabado de Parranda - Colombian Salsa, Vallenato Reggaeton Party NYC: Enjoy small bites (tapas), Guaro & handcrafted Colombian cocktails, with salsa, cumbia, corridos, vallenato and reggaeton playing throughout the night. The event features $8 Margaritas until 9 PM and additional Happy Hour Specials.",
+          "Tags: Music, Dance, Colombian, Nightlife, Salsa, Reggaeton, Latin Music, Club Night, Vallenato, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "223974": [
+          "https://posh.vip/e/colombia-vs-mexico-soccer-game-watch-party-at-ritmos-60-salsa-bar",
+          "https://posh.vip/e/colombia-vs-mexico-soccer-game-watch-party-at-ritmos-60-salsa-bar-1",
+          "https://posh.vip/e/mexico-v-usa-soccer-game-watch-party-at-ritmos-60-salsa-bar",
+          "https://posh.vip/e/mexico-v-usa-soccer-game-watch-party-at-ritmos-60-salsa-bar-1",
+          "https://posh.vip/e/ritmos-sabado-de-parranda-colombian-salsa-vallenato-reggaeton-party-nyc-24",
+          "https://posh.vip/e/ritmos-sabado-de-parranda-colombian-salsa-vallenato-reggaeton-party-nyc-5",
+          "https://posh.vip/e/ritmos-sabado-de-parranda-colombian-salsa-vallenato-reggaeton-party-nyc-6",
+          "https://posh.vip/e/ritmos-sabado-de-parranda-colombian-salsa-vallenato-reggaeton-party-nyc-7",
+          "https://posh.vip/e/ritmos-sabado-de-parranda-colombian-salsa-vallenato-reggaeton-party-nyc-8",
+          "https://posh.vip/e/salsa-saturdays-labor-day-weekend-latin-colombian-party-nyc-1"
+        ]
+      }
+    },
+    {
+      "concept": "genre-vallenato",
+      "label": "Vallenato",
+      "category": "genre",
+      "visual": "Interlocking music phrases with a rhythmic accent.",
+      "rationale": "Vallenato is explicit in party repertoire; avoid showing a live accordionist without performance evidence.",
+      "existing_alternative": "Retain accurate Unicode or existing accepted art until a distinctive reviewed study is ready.",
+      "event_ids": [
+        223974
+      ],
+      "evidence_by_event": {
+        "223974": [
+          "Ritmos: Sabado de Parranda - Colombian Salsa, Vallenato Reggaeton Party NYC: Enjoy small bites (tapas), Guaro & handcrafted Colombian cocktails, with salsa, cumbia, corridos, vallenato and reggaeton playing throughout the night. The event features $8 Margaritas until 9 PM and additional Happy Hour Specials.",
+          "Tags: Music, Dance, Colombian, Nightlife, Salsa, Reggaeton, Latin Music, Club Night, Vallenato, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "223974": [
+          "https://posh.vip/e/colombia-vs-mexico-soccer-game-watch-party-at-ritmos-60-salsa-bar",
+          "https://posh.vip/e/colombia-vs-mexico-soccer-game-watch-party-at-ritmos-60-salsa-bar-1",
+          "https://posh.vip/e/mexico-v-usa-soccer-game-watch-party-at-ritmos-60-salsa-bar",
+          "https://posh.vip/e/mexico-v-usa-soccer-game-watch-party-at-ritmos-60-salsa-bar-1",
+          "https://posh.vip/e/ritmos-sabado-de-parranda-colombian-salsa-vallenato-reggaeton-party-nyc-24",
+          "https://posh.vip/e/ritmos-sabado-de-parranda-colombian-salsa-vallenato-reggaeton-party-nyc-5",
+          "https://posh.vip/e/ritmos-sabado-de-parranda-colombian-salsa-vallenato-reggaeton-party-nyc-6",
+          "https://posh.vip/e/ritmos-sabado-de-parranda-colombian-salsa-vallenato-reggaeton-party-nyc-7",
+          "https://posh.vip/e/ritmos-sabado-de-parranda-colombian-salsa-vallenato-reggaeton-party-nyc-8",
+          "https://posh.vip/e/salsa-saturdays-labor-day-weekend-latin-colombian-party-nyc-1"
+        ]
+      }
+    },
+    {
+      "concept": "genre-vocal-jazz",
+      "label": "Vocal jazz",
+      "category": "genre",
+      "visual": "Explore a microphone beside one curved improvisatory note.",
+      "rationale": "The jazz program explicitly features a vocalist.",
+      "existing_alternative": "Microphone is a reasonable existing choice; custom vocal-jazz motif needs recognition testing and should not imply a specific instrument lineup.",
+      "event_ids": [
+        224026
+      ],
+      "evidence_by_event": {
+        "224026": [
+          "Imani Rousselle: No description available.",
+          "Tags: Music, Jazz, Concert, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "224026": [
+          "https://www.thejazzclub.com/events/09-26-26-saturday"
+        ]
+      }
+    },
+    {
+      "concept": "instrument-piano",
+      "label": "Piano",
+      "category": "instrument",
+      "visual": "An original researched acoustic piano silhouette.",
+      "rationale": "Dedicated piano Unicode already exists; exact solo/ensemble format should not be assumed.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        224028
+      ],
+      "evidence_by_event": {
+        "224028": [
+          "Kelly Green: No description available.",
+          "Tags: Music, Jazz, Concert, Piano, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "224028": [
+          "https://www.thejazzclub.com/events/09-29-26-tuesday"
+        ]
+      }
+    },
+    {
+      "concept": "yoga-flow",
+      "label": "Flow yoga",
+      "category": "activity",
+      "visual": "A restrained movement sequence studied from primary instruction.",
+      "rationale": "No arbitrary poses, universal accommodation or health outcome; Unicode may suffice.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        223954
+      ],
+      "evidence_by_event": {
+        "223954": [
+          "Yoga: Connect with yourself in Yoga with Nicole, a class to be enjoyed by all. Experience a fun and light-hearted, mid-intensity flow that connects breath to movement as you flow through poses, with modifications for everyone. Class will focus on mobility and stability to ensure you leave feeling challenged, balanced, and relaxed.",
+          "Tags: Free, Wellness, Fitness, Meditation, Yoga, Exercise, Shape Up, Participatory, Mind-Body, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "223954": [
+          "https://www.bklynlibrary.org/node/831003",
+          "https://www.bklynlibrary.org/node/831004",
+          "https://www.bklynlibrary.org/node/841136",
+          "https://www.nyc.gov/main/events/?permalinkName=yoga&id=1185216&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=yoga&id=1245116&sequence=1",
+          "https://www.nycgovparks.org/events/2026/08/28/yoga1",
+          "https://www.nycgovparks.org/events/2026/09/04/yoga1",
+          "https://www.nycgovparks.org/events/2026/09/11/yoga1"
+        ]
+      }
+    },
+    {
+      "concept": "yoga-hatha",
+      "label": "Hatha yoga",
+      "category": "activity",
+      "visual": "A researched balanced standing pose, if a pose can distinguish the practice.",
+      "rationale": "Existing yoga Unicode may suffice; anatomy and support must be modeled before making art.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        223937
+      ],
+      "evidence_by_event": {
+        "223937": [
+          "Hatha Flow: This outdoor class combines gentle movement and mediation to help you reconnect with your breath, body, and surroundings. Expect grounding, accessible practice focused on mindful movement, presence, and ease. All level welcome. Please bring a mat.",
+          "Tags: Free, Wellness, Fitness, Outdoor, Yoga, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "223937": [
+          "https://www.nyc.gov/main/events/?permalinkName=hatha-flow&id=1129596&sequence=1",
+          "https://www.nycgovparks.org/events/2026/08/23/hatha-flow",
+          "https://www.nycgovparks.org/events/2026/09/06/hatha-flow",
+          "https://www.nycgovparks.org/events/2026/09/20/hatha-flow"
+        ]
+      }
+    }
+  ],
+  "limitations": "Counts describe this cohort, not population reach. These are grounded prospective studies, not live assignments. Existing artwork may already suffice; exact equipment and genre recognition require further review."
+}

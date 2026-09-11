@@ -1,0 +1,989 @@
+{
+  "date": "2026-09-11",
+  "scope": "Cycle 056: 100 sequential events 217547–217945, no targeted supplements.",
+  "suggestions": 54,
+  "concept_count": 36,
+  "concepts": [
+    {
+      "concept": "format-tribute-concert",
+      "label": "Tribute concert",
+      "category": "format",
+      "visual": "Two overlapping record silhouettes with one echoing musical note.",
+      "rationale": "Tribute repertoire is a format facet; motif is unproven and must not imitate an artist logo.",
+      "existing_alternative": "Existing broad Unicode remains suitable; specific motif must demonstrate added recognition before new artwork.",
+      "event_ids": [
+        217834,
+        217838,
+        217845,
+        217848,
+        217857,
+        217859,
+        217860
+      ],
+      "evidence_by_event": {
+        "217834": [
+          "54 Sings Noah Kahan: The Great Divide: The scenic hillside is bordered by autumn trees and forested mountains, capturing the rustic, outdoorsy spirit of Noah Kahan’s The Great Divide.",
+          "Tags: Music, Concert, Format, Performance, Noah Kahan"
+        ],
+        "217838": [
+          "Good 4 U, Babe!: The Discography of Dan Nigro: Glowing pink and purple text on a dark background reads: “Good 4 U, Babe!: The Discography of Dan Nigro.”",
+          "Tags: Music, Concert, Format, Performance, Discography, Dan Nigro"
+        ],
+        "217845": [
+          "¡Pa’l Bosque!: Honoring Stephen Sondheim: The mood is mysterious and inviting, celebrating Sondheim’s legacy in Pa’l Bosque.",
+          "Tags: Music, Concert, Stephen Sondheim, Format, Performance"
+        ],
+        "217848": [
+          "54 Sings Sabrina Carpenter: A pink stage curtain patterned with hearts features the text “54 Sings Sabrina Carpenter” in white and light pink cursive and script fonts, celebrating the music of Sabrina Carpenter center stage.",
+          "Tags: Music, Concert, Pop Music, Sabrina Carpenter, Format, Performance"
+        ],
+        "217857": [
+          "54 Sings Together, Together: A Harry Styles Celebration: A colorful, glittery background with a disco ball in the center.",
+          "Tags: Community, Music, Concert, Nightlife, Celebration, Pop Music, Harry Styles, Format, Performance"
+        ],
+        "217859": [
+          "Martina Barta - What The World Needs Now Is Love: A Burt Bacharach Tribute: Martina Barta, in a sleeveless dark teal velvet dress, sits on a stool against a plain gray background. She rests her chin on her hand, looking confidently at the camera.",
+          "Tags: Music, Concert, Tribute Band, Burt Bacharach, Format, Performance, Martina Barta"
+        ],
+        "217860": [
+          "54 Sings Jeff Buckley: It’s Never Over: A dark silhouette of a musician with a guitar stands before a microphone against an orange background. Text reads: “54 Sings Jeff Buckley: It’s Never Over.”",
+          "Tags: Music, Concert, Tribute Band, Jeff Buckley, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217834": [
+          "https://54below.org/events/54-sings-noah-kahan-the-great-divide/"
+        ],
+        "217838": [
+          "https://54below.org/events/good-4-u-babe-the-discography-of-dan-nigro/"
+        ],
+        "217845": [
+          "https://54below.org/events/pal-bosque-honoring-stephen-sondheim/"
+        ],
+        "217848": [
+          "https://54below.org/events/54-sings-sabrina-carpenter/"
+        ],
+        "217857": [
+          "https://54below.org/events/54-sings-together-together-a-harry-styles-celebration/"
+        ],
+        "217859": [
+          "https://54below.org/events/martina-barta-what-the-world-needs-now-is-love-a-burt-bacharach-tribute/"
+        ],
+        "217860": [
+          "https://54below.org/events/54-sings-jeff-buckley-its-never-over/"
+        ]
+      }
+    },
+    {
+      "concept": "format-music-documentary",
+      "label": "Music documentary",
+      "category": "format",
+      "visual": "Film frame with a music note and interview speech bubble.",
+      "rationale": "Nonfiction music films combining interviews, archive and performance, not pure concert recordings.",
+      "existing_alternative": "Retain suitable existing art or Unicode fallback while recognition and exact scope are investigated.",
+      "event_ids": [
+        217627,
+        217751,
+        217758,
+        217782
+      ],
+      "evidence_by_event": {
+        "217627": [
+          "Linkin Park: Unshatter: The hardest part of ending is starting again",
+          "Tags: Music, Rock, Film, Screening, Concert Film, Format, Performance, Linkin Park"
+        ],
+        "217751": [
+          "Linkin Park: Unshatter: The hardest part of ending is starting again. After a seven-year hiatus following the devastating loss of their beloved bandmate Chester Bennington, LINKIN PARK'S remaining members struggle to find their way forward.",
+          "Tags: Manhattan, Midtown, Music, Theater District, Cinema, Rock, Neighborhood, Documentary, Film, Screening, Times Square, Midtown West, Format, Performance, Linkin Park"
+        ],
+        "217758": [
+          "Linkin Park: Unshatter: The hardest part of ending is starting again. After a seven-year hiatus following the devastating loss of their beloved bandmate Chester Bennington, LINKIN PARK'S remaining members struggle to find their way forward. Their shared history and enduring fri",
+          "Tags: Music, Cinema, Rock, Documentary, Film, Screening, Format, Performance, Linkin Park"
+        ],
+        "217782": [
+          "Linkin Park: Unshatter: The hardest part of ending is starting again. After a seven-year hiatus following the devastating loss of their beloved bandmate Chester Bennington, LINKIN PARK'S remaining members struggle to find their way forward. Their shared history and enduring fri",
+          "Tags: Music, Cinema, Rock, Neighborhood, Documentary, Film, Long Island, Screening, Nassau County, Westbury, Format, Performance, Linkin Park"
+        ]
+      },
+      "source_urls_by_event": {
+        "217627": [
+          "https://drafthouse.com/show/linkin-park-unshatter?cinemaId=2101"
+        ],
+        "217751": [
+          "https://www.regmovies.com/movies/linkin-park-unshatter-ho00022267"
+        ],
+        "217758": [
+          "https://www.regmovies.com/movies/linkin-park-unshatter-ho00022267"
+        ],
+        "217782": [
+          "https://www.regmovies.com/movies/linkin-park-unshatter-ho00022267"
+        ]
+      }
+    },
+    {
+      "concept": "format-musical-theater",
+      "label": "Musical theater",
+      "category": "format",
+      "visual": "Stage mask beside a musical score, distinct from a cinema screen.",
+      "rationale": "Fully staged named musicals combine drama and song.",
+      "existing_alternative": "Theater masks are broad; singing microphones alone omit the dramatic format.",
+      "event_ids": [
+        217685,
+        217686,
+        217852
+      ],
+      "evidence_by_event": {
+        "217685": [
+          "if you bury me: Presented as a part of the 2026 Prism Festival of New Queer Musicals.",
+          "Tags: Music, Theater, Art, Queer Art, Format, Theater Show, Performance"
+        ],
+        "217686": [
+          "Mystical Tether: Presented as a part of the 2026 Prism Festival of New Queer Musicals.",
+          "Tags: Music, Theater, Art, Queer Art, Format, Theater Show, Performance"
+        ],
+        "217852": [
+          "Kid of New York: A groundbreaking coming-of-age musical that follows a young boy lost in the labyrinth of the subway on his way home from school. As the city unfolds around him, he meets a parade of unforgettable New Yorkers—dazzling, dangerous, and deeply human.",
+          "Tags: Theater, Film, Family, Coming of Age, Musical / Film, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217685": [
+          "https://www.eventbrite.com/e/if-you-bury-me-tickets-1997478307388",
+          "https://www.eventbrite.com/e/if-you-bury-me-tickets-1997478415712"
+        ],
+        "217686": [
+          "https://www.eventbrite.com/e/mystical-tether-tickets-1997479658429",
+          "https://www.eventbrite.com/e/mystical-tether-tickets-1997479745690"
+        ],
+        "217852": [
+          "https://54below.org/events/kid-of-new-york/"
+        ]
+      }
+    },
+    {
+      "concept": "format-decade-music-revue",
+      "label": "Decade-themed music revue",
+      "category": "format",
+      "visual": "A songbook and stylized date tab without a particular decade.",
+      "rationale": "Nostalgia-era repertoire concert; date-specific recognition remains exploratory.",
+      "existing_alternative": "Retain suitable existing art or Unicode fallback while recognition and exact scope are investigated.",
+      "event_ids": [
+        217840,
+        217853
+      ],
+      "evidence_by_event": {
+        "217840": [
+          "Nostalgia Bait: For the 2000s Kids: A collage for 2000s kids with icons like lips, CD, high-top sneakers, and doodles.",
+          "Tags: Community, Music, Culture, Concert, Nostalgia, 2000s, Format, Performance"
+        ],
+        "217853": [
+          "That's So 70s: A Trip Back To Peace, Love And Rock 'N’ Roll: Large white text reads “THAT’S SO 70s” over a warm, faded photo background. Below, “A Trip Back To Peace, Love, and Rock 'n' Roll.”",
+          "Tags: Community, Music, Rock, Culture, Concert, Nostalgia, Rock and Roll, 1970s, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217840": [
+          "https://54below.org/events/nostalgia-bait-for-the-2000s-kids/"
+        ],
+        "217853": [
+          "https://54below.org/events/thats-so-70s-a-trip-back-to-peace-love-and-rock-n-roll-2/"
+        ]
+      }
+    },
+    {
+      "concept": "format-fan-screening",
+      "label": "Fan screening",
+      "category": "format",
+      "visual": "A cinema frame with a small audience fan badge.",
+      "rationale": "Special fan presentation, with extra activities requiring verification.",
+      "existing_alternative": "Retain suitable existing art or Unicode fallback while recognition and exact scope are investigated.",
+      "event_ids": [
+        217807,
+        217808
+      ],
+      "evidence_by_event": {
+        "217807": [
+          "The Twilight Saga: New Moon: The next chapter begins.",
+          "Tags: Literature, Film, Screening, Fantasy, Romance, Fan Event, Format, Performance"
+        ],
+        "217808": [
+          "Twilight (2008): When you can live forever, what do you live for?",
+          "Tags: Literature, Film, Screening, Fantasy, Romance, Fan Event, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217807": [
+          "https://drafthouse.com/show/the-twilight-saga-the-twilight-saga-new-moon-fan-screening?cinemaId=2102"
+        ],
+        "217808": [
+          "https://drafthouse.com/show/the-twilight-saga-twilight-2008-fan-event?cinemaId=2102"
+        ]
+      }
+    },
+    {
+      "concept": "format-musical-concert",
+      "label": "Musical in concert",
+      "category": "format",
+      "visual": "Open score and microphone in front of a short theater curtain.",
+      "rationale": "Concert presentation of a musical without claiming full sets or staging.",
+      "existing_alternative": "Retain suitable existing art or Unicode fallback while recognition and exact scope are investigated.",
+      "event_ids": [
+        217831,
+        217843
+      ],
+      "evidence_by_event": {
+        "217831": [
+          "Ben Franklin In Paris: No description available.",
+          "Tags: Music, Theater, Format, Theater Show, Performance"
+        ],
+        "217843": [
+          "Litusical the Movie Musical by Adam Azrieli and Payton Daly: No description available.",
+          "Tags: Film, Concert, Movie Musical, Format, Performance, Adam Azrieli, Payton Daly"
+        ]
+      },
+      "source_urls_by_event": {
+        "217831": [
+          "https://54below.org/events/ben-franklin-in-paris-in-concert/"
+        ],
+        "217843": [
+          "https://54below.org/events/litusical-the-musical-by-adam-azrieli-and-payton-daly/"
+        ]
+      }
+    },
+    {
+      "concept": "format-theater-song-revue",
+      "label": "Theater-song revue",
+      "category": "format",
+      "visual": "A song sheet beneath a small stage curtain.",
+      "rationale": "Concert program of theater songs without a fully staged musical.",
+      "existing_alternative": "Retain suitable existing art or Unicode fallback while recognition and exact scope are investigated.",
+      "event_ids": [
+        217836,
+        217854
+      ],
+      "evidence_by_event": {
+        "217836": [
+          "Defying Sanity Volume 2: Breaking the Canon: No description available.",
+          "Tags: Music, Concert, Format, Performance"
+        ],
+        "217854": [
+          "Sam Fazio: My BroadWay: No description available.",
+          "Tags: Broadway, Music, Concert, Musical Theater, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217836": [
+          "https://54below.org/events/defying-sanity-volume-2-breaking-the-canon/"
+        ],
+        "217854": [
+          "https://54below.org/events/sam-fazio-my-broadway/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-docudrama",
+      "label": "Docudrama",
+      "category": "genre",
+      "visual": "A film frame divided into a document and performance mask.",
+      "rationale": "Screened dramatization of nonfiction subjects; not live instruction or actual worship.",
+      "existing_alternative": "Retain suitable existing art or Unicode fallback while recognition and exact scope are investigated.",
+      "event_ids": [
+        217759,
+        217783
+      ],
+      "evidence_by_event": {
+        "217759": [
+          "Adore Him: He Is Here: ADORE HIM is a new docudrama from the executive producer of the record-breaking and Gabriel Award-winning Jesus Thirsts: The Miracle of the Eucharist (Fathom Entertainment/2024) that aims to inspire deeper devotion to Jesus through Eucharistic adoration.",
+          "Tags: Cinema, Wellness, Documentary, Film, Screening, Spirituality, Faith, Format, Performance"
+        ],
+        "217783": [
+          "Adore Him: He Is Here: ADORE HIM is a new docudrama from the executive producer of the record-breaking and Gabriel Award-winning Jesus Thirsts: The Miracle of the Eucharist (Fathom Entertainment/2024) that aims to inspire deeper devotion to Jesus through Eucharistic adoration.",
+          "Tags: Cinema, Wellness, Neighborhood, Documentary, Film, Long Island, Screening, Spirituality, Faith, Nassau County, Westbury, Docudrama, Format, Performance, Eucharistic Adoration"
+        ]
+      },
+      "source_urls_by_event": {
+        "217759": [
+          "https://www.regmovies.com/movies/adore-him-he-is-here-ho00022215"
+        ],
+        "217783": [
+          "https://www.regmovies.com/movies/adore-him-he-is-here-ho00022215"
+        ]
+      }
+    },
+    {
+      "concept": "genre-kaiju-film",
+      "label": "Kaiju film",
+      "category": "genre",
+      "visual": "A giant-creature silhouette contained within a film frame.",
+      "rationale": "Giant-monster cinema fiction, not real animals or a game.",
+      "existing_alternative": "Retain suitable existing art or Unicode fallback while recognition and exact scope are investigated.",
+      "event_ids": [
+        217626,
+        217809
+      ],
+      "evidence_by_event": {
+        "217626": [
+          "Destroy All Monsters: Monsters of mass destruction",
+          "Tags: Film, Sci-fi, Screening, Classic Film, Kaiju, Monsters, Format, Performance"
+        ],
+        "217809": [
+          "Destroy All Monsters: Monsters of mass destruction.",
+          "Tags: Film, Sci-fi, Screening, Classic, Monsters, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217626": [
+          "https://drafthouse.com/show/destroy-all-monsters?cinemaId=2101"
+        ],
+        "217809": [
+          "https://drafthouse.com/show/destroy-all-monsters?cinemaId=2102"
+        ]
+      }
+    },
+    {
+      "concept": "genre-western-film",
+      "label": "Western film",
+      "category": "genre",
+      "visual": "A cinema frame and wide-brimmed hat.",
+      "rationale": "Explicit western fiction on screen, not actual riding or live reenactment.",
+      "existing_alternative": "Retain suitable existing art or Unicode fallback while recognition and exact scope are investigated.",
+      "event_ids": [
+        217760,
+        217769
+      ],
+      "evidence_by_event": {
+        "217760": [
+          "Angel and the Badman: When feared outlaw Quirt Evans staggers onto a rancher's land with a bullet in his back, he expects a quick death, not mercy. But Penny, the rancher's daughter, offers him a chance at something he's never had: a life beyond violence. However, the past doe",
+          "Tags: Community, Cinema, Film, Screening, Open Captions, Classic Film, Romance, Western, Drama / Film, Format, Performance, English Subtitles"
+        ],
+        "217769": [
+          "Angel and the Badman: When feared outlaw Quirt Evans staggers onto a rancher's land with a bullet in his back, he expects a quick death, not mercy. But Penny, the rancher's daughter, offers him a chance at something he's never had: a life beyond violence. However, the past doe",
+          "Tags: Cinema, Neighborhood, Film, Long Island, Screening, Classic Film, Romance, Western, Nassau County, Lynbrook, Drama / Film, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217760": [
+          "https://www.regmovies.com/movies/angel-and-the-badman-ho00022263",
+          "https://www.regmovies.com/movies/angel-and-the-badman-open-capeng-sub-ho00022264"
+        ],
+        "217769": [
+          "https://www.regmovies.com/movies/angel-and-the-badman-ho00022263"
+        ]
+      }
+    },
+    {
+      "concept": "activity-community-health-screening",
+      "label": "Community health screening",
+      "category": "activity",
+      "visual": "A simple check-in clipboard and diagnostic sample symbol, pending actual offered tests.",
+      "rationale": "Public screening services need exact service verification; no diagnosis or result guarantee.",
+      "existing_alternative": "Retain suitable existing art or Unicode fallback while recognition and exact scope are investigated.",
+      "event_ids": [
+        217564
+      ],
+      "evidence_by_event": {
+        "217564": [
+          "BOP-ping Around: CAMBA’s Brooklyn Outreach and Prevention [BOP] Programs will be partnering with Project STAY to offer rapid HIV/STI testing at Brooklyn Community Pride Center every other Friday. Bopping Around will have game nights, support groups, movie nights, bingo, job readiness courses, and much more.",
+          "Tags: Community, Free, Wellness, LGBTQ, Health, Support Group, Participatory, Format, Drop-In Service, HIV Testing"
+        ]
+      },
+      "source_urls_by_event": {
+        "217564": [
+          "https://www.lgbtbrooklyn.org/event-details/bop-ping-around-7",
+          "https://www.lgbtbrooklyn.org/event-details/bop-ping-around-8"
+        ]
+      }
+    },
+    {
+      "concept": "activity-paper-shredding",
+      "label": "Paper shredding service",
+      "category": "activity",
+      "visual": "Paper feeding into a shredder with separated strips below.",
+      "rationale": "Community document destruction where explicitly offered; not a guarantee of data-security certification.",
+      "existing_alternative": "Retain suitable existing art or Unicode fallback while recognition and exact scope are investigated.",
+      "event_ids": [
+        217691
+      ],
+      "evidence_by_event": {
+        "217691": [
+          "Community Recycling Event - Howard Beach: This event accepts working and non-working electronic equipment, clean and dry textiles, and also includes paper shredding.",
+          "Tags: Community, Art, Sustainability, Recycling, Fiber Arts, Crafts, Textile Art, Electronics Recycling, Participatory, Format, Drop-In Service, Paper Shredding"
+        ]
+      },
+      "source_urls_by_event": {
+        "217691": [
+          "https://www.lesecologycenter.org/calendar/howard-beach-library/",
+          "https://www1.nyc.gov/site/dsny/events/community-recycling-event-howard-beach/1193776/1"
+        ]
+      }
+    },
+    {
+      "concept": "activity-playground-games",
+      "label": "Playground games",
+      "category": "activity",
+      "visual": "A playground ball and simple game markings.",
+      "rationale": "Mixed playground sports and games, without claiming one sport or preschool-only ages.",
+      "existing_alternative": "Retain suitable existing art or Unicode fallback while recognition and exact scope are investigated.",
+      "event_ids": [
+        217721
+      ],
+      "evidence_by_event": {
+        "217721": [
+          "Kids In Motion: Beach 59th Street Playground: Join NYC Parks staff in free activities in NYC's playgrounds, including organized sports, games, fitness d...",
+          "Tags: Community, Park, Kids, Free, Sports, Wellness, Fitness, Family, Outdoor, Games, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "217721": [
+          "https://www.nyc.gov/main/events/?permalinkName=kids-in-motion-beach-59th-street-playground&id=1134776&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=kids-in-motion-beach-59th-street-playground&id=1134796&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=kids-in-motion-beach-59th-street-playground&id=1134816&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=kids-in-motion-beach-59th-street-playground&id=1134976&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=kids-in-motion-beach-59th-street-playground&id=1135016&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=kids-in-motion-beach-59th-street-playground&id=1135076&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=kids-in-motion-beach-59th-street-playground&id=1135096&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=kids-in-motion-beach-59th-street-playground&id=1135156&sequence=1",
+          "https://www.nyc.gov/main/events/?permalinkName=kids-in-motion-beach-59th-street-playground&id=1208156&sequence=1",
+          "https://www.nycgovparks.org/events/2026/07/29/kids-in-motion-beach-59th-street-playground",
+          "https://www.nycgovparks.org/events/2026/07/30/kids-in-motion-beach-59th-street-playground",
+          "https://www.nycgovparks.org/events/2026/08/01/kids-in-motion-beach-59th-street-playground",
+          "https://www.nycgovparks.org/events/2026/08/04/kids-in-motion-beach-59th-street-playground",
+          "https://www.nycgovparks.org/events/2026/08/05/kids-in-motion-beach-59th-street-playground",
+          "https://www.nycgovparks.org/events/2026/08/07/kids-in-motion-beach-59th-street-playground",
+          "https://www.nycgovparks.org/events/2026/08/08/kids-in-motion-beach-59th-street-playground",
+          "https://www.nycgovparks.org/events/2026/08/11/kids-in-motion-beach-59th-street-playground",
+          "https://www.nycgovparks.org/events/2026/08/13/kids-in-motion-beach-59th-street-playground",
+          "https://www.nycgovparks.org/events/2026/08/15/kids-in-motion-beach-59th-street-playground",
+          "https://www.nycgovparks.org/events/2026/08/18/kids-in-motion-beach-59th-street-playground",
+          "https://www.nycgovparks.org/events/2026/08/19/kids-in-motion-beach-59th-street-playground",
+          "https://www.nycgovparks.org/events/2026/08/22/kids-in-motion-beach-59th-street-playground",
+          "https://www.nycgovparks.org/events/2026/08/25/kids-in-motion-beach-59th-street-playground",
+          "https://www.nycgovparks.org/events/2026/08/26/kids-in-motion-beach-59th-street-playground",
+          "https://www.nycgovparks.org/events/2026/08/27/kids-in-motion-beach-59th-street-playground",
+          "https://www.nycgovparks.org/events/2026/08/28/kids-in-motion-beach-59th-street-playground",
+          "https://www.nycgovparks.org/events/2026/09/01/kids-in-motion-beach-59th-street-playground",
+          "https://www.nycgovparks.org/events/2026/09/02/kids-in-motion-beach-59th-street-playground",
+          "https://www.nycgovparks.org/events/2026/09/03/kids-in-motion-beach-59th-street-playground",
+          "https://www.nycgovparks.org/events/2026/09/04/kids-in-motion-beach-59th-street-playground",
+          "https://www.nycgovparks.org/events/2026/09/08/kids-in-motion-beach-59th-street-playground",
+          "https://www.nycgovparks.org/events/2026/09/09/kids-in-motion-beach-59th-street-playground",
+          "https://www.nycgovparks.org/events/2026/09/10/kids-in-motion-beach-59th-street-playground",
+          "https://www.nycgovparks.org/events/2026/09/11/kids-in-motion-beach-59th-street-playground"
+        ]
+      }
+    },
+    {
+      "concept": "format-art-retrospective",
+      "label": "Art retrospective",
+      "category": "format",
+      "visual": "Two art frames joined by a short timeline.",
+      "rationale": "Historical survey exhibition viewing, not hands-on making.",
+      "existing_alternative": "Retain suitable existing art or Unicode fallback while recognition and exact scope are investigated.",
+      "event_ids": [
+        217645
+      ],
+      "evidence_by_event": {
+        "217645": [
+          "Celebrating Sixty Years of China Institute Gallery: 1966-2026: Founded in 1966, the China Institute Gallery has presented the history of Chinese art from antiquity to the present through exhibitions. The masterworks featured in this exhibition include jades, bronze vessels, Chinese ceramics, calligraphy, and architecture.",
+          "Tags: Community, Visual Arts, Art, Culture, Education, Chinese Art, Exhibition, Format, Browsable"
+        ]
+      },
+      "source_urls_by_event": {
+        "217645": [
+          "https://www.aaartsalliance.org/events/celebrating-sixty-years-of-china-institute-gallery-1966-2026"
+        ]
+      }
+    },
+    {
+      "concept": "format-benefit-concert",
+      "label": "Benefit concert",
+      "category": "format",
+      "visual": "A stage microphone beside a small community-support heart.",
+      "rationale": "Concert raising support for a cause; no gala dinner or auction promised.",
+      "existing_alternative": "Retain suitable existing art or Unicode fallback while recognition and exact scope are investigated.",
+      "event_ids": [
+        217839
+      ],
+      "evidence_by_event": {
+        "217839": [
+          "Broadway Undressed with Tom Guthrie and Landon Stovall: A Benefit for The Door: No description available.",
+          "Tags: Community, Broadway, Theater, Musical Theater, Fundraiser, Benefit, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "217839": [
+          "https://54below.org/events/cover-me-with-tom-guthrie-and-landon-stovall-a-benefit-for-the-door/"
+        ]
+      }
+    },
+    {
+      "concept": "format-college-music-showcase",
+      "label": "College music showcase",
+      "category": "format",
+      "visual": "Two campus pennants beside a music note.",
+      "rationale": "Billed college-affiliated musical showcase; no choir or competition assumed.",
+      "existing_alternative": "Retain suitable existing art or Unicode fallback while recognition and exact scope are investigated.",
+      "event_ids": [
+        217851
+      ],
+      "evidence_by_event": {
+        "217851": [
+          "The 11th Annual Harvard-Yale Cantata: A banner reads “11th Annual Harvard-Yale Cantata,” with the Harvard crest on the left, the Yale crest on the right, and a gradient background fading from dark red to dark blue.",
+          "Tags: Music, Concert, Vocal Music, Format, Performance, Harvard Yale"
+        ]
+      },
+      "source_urls_by_event": {
+        "217851": [
+          "https://54below.org/events/the-11th-annual-harvard-yale-cantata/"
+        ]
+      }
+    },
+    {
+      "concept": "format-creative-social",
+      "label": "Creative social",
+      "category": "format",
+      "visual": "A small conversation bubble beside mixed making tools.",
+      "rationale": "Social creative-play gathering with method unspecified; no particular craft promised.",
+      "existing_alternative": "Retain suitable existing art or Unicode fallback while recognition and exact scope are investigated.",
+      "event_ids": [
+        217575
+      ],
+      "evidence_by_event": {
+        "217575": [
+          "Creative Night: A public GUMBO event focused on creative play and socializing.",
+          "Tags: Community, Party, Games, Nightlife, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "217575": [
+          "https://gumbonyc.org/events"
+        ]
+      }
+    },
+    {
+      "concept": "format-documentary-screening",
+      "label": "Documentary screening",
+      "category": "format",
+      "visual": "Film frame with a documentary observation lens.",
+      "rationale": "Nonfiction film format merits a clear marker; exact genre recognition needs critique.",
+      "existing_alternative": "Use a suitable broad Unicode or accepted icon until a distinctive reviewed study is available.",
+      "event_ids": [
+        217766
+      ],
+      "evidence_by_event": {
+        "217766": [
+          "No Limbs, No Limits: The NickV Story: When an Australian family is handed a newborn son with no arms and no legs, they face a choice that will either limit them forever - or change the world. NO LIMBS NO LIMITS is the story of how they chose the world.",
+          "Tags: Cinema, Neighborhood, Documentary, Film, Family, Long Island, Screening, Inspiration, Suffolk County, Biography / Film, Ronkonkoma, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217766": [
+          "https://www.regmovies.com/movies/no-limbs-no-limits-the-nickv-story-ho00022232"
+        ]
+      }
+    },
+    {
+      "concept": "format-family-performer-concert",
+      "label": "Family performer concert",
+      "category": "format",
+      "visual": "A small varied-size group behind one concert microphone.",
+      "rationale": "A family of performers is billed; this does not establish family-audience suitability.",
+      "existing_alternative": "Retain suitable existing art or Unicode fallback while recognition and exact scope are investigated.",
+      "event_ids": [
+        217861
+      ],
+      "evidence_by_event": {
+        "217861": [
+          "Matt Cavenaugh, Jenny Powers, And The Cavenaugh Powers Family: A girl in a sparkly dress and pink cowboy hat sings on a kitchen island as the Cavenaugh Powers Family—Matt Cavenaugh, Jenny Powers, and their kids—jam along with kitchen tools in their modern kitchen.",
+          "Tags: Music, Family, Concert, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217861": [
+          "https://54below.org/events/matt-cavenaugh-jenny-powers-and-the-cavenaugh-powers-family/"
+        ]
+      }
+    },
+    {
+      "concept": "format-film-music-concert",
+      "label": "Film-music concert",
+      "category": "format",
+      "visual": "Orchestral score paired with film-strip cue.",
+      "rationale": "Live film repertoire is not a concert film or live score synchronized to a screening.",
+      "existing_alternative": "Keep supported accepted artwork or broad Unicode until a distinctive study passes review.",
+      "event_ids": [
+        217549
+      ],
+      "evidence_by_event": {
+        "217549": [
+          "Henson Music in the Courtyard: Enjoy a free performance of instrumental music from films that have captured the hearts of audiences for decades. From beloved classics like “The Rainbow Connection” to the playful and poignant melodies of The Muppet Show and Fraggle Rock , the band John Koozin and the Neighborhood pays homage to the creativity and joy that",
+          "Tags: Music, Free, Concert, Instrumental, Jim Henson, Muppets, Film Music, Live Music, Format, Performance, Courtyard"
+        ]
+      },
+      "source_urls_by_event": {
+        "217549": [
+          "https://movingimage.org/event/henson-music-in-the-courtyard-2026/"
+        ]
+      }
+    },
+    {
+      "concept": "format-film-retrospective",
+      "label": "Film retrospective",
+      "category": "format",
+      "visual": "Several offset cinema frames with a short timeline.",
+      "rationale": "A curated retrospective of films; no Q&A or film-stock format implied.",
+      "existing_alternative": "Retain suitable existing art or Unicode fallback while recognition and exact scope are investigated.",
+      "event_ids": [
+        217644
+      ],
+      "evidence_by_event": {
+        "217644": [
+          "Christine Choy Retrospective: Third World Newsreel presents a major fall retrospective honoring Christine Choy, co-founder of Third World Newsreel and an iconic figure in Asian American documentary. The retrospective brings nine of her works, including newly preserved films, to the big screen and runs at Anthology Film Archives and DCTV’s Firehouse Cinema.",
+          "Tags: Community, History, Documentary, Film, Education, Screening, Asian American, Preservation, Cultural Heritage, Retrospective, Asian American Cinema, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217644": [
+          "https://aaari.info/event/christine-choy-retrospective/",
+          "https://www.aaartsalliance.org/events/christine-choy-retrospective",
+          "https://www.twn.org/exhibition/christine-choy-retrospective"
+        ]
+      }
+    },
+    {
+      "concept": "format-holiday-theater",
+      "label": "Holiday theater",
+      "category": "format",
+      "visual": "A stage curtain with a small seasonal ornament.",
+      "rationale": "Seasonal scripted theater; not a worship service or a specific staging.",
+      "existing_alternative": "Retain suitable existing art or Unicode fallback while recognition and exact scope are investigated.",
+      "event_ids": [
+        217688
+      ],
+      "evidence_by_event": {
+        "217688": [
+          "The Town That Sucked at Christmas: Holly isn't that nice, but nice doesn't cut it if you want to be the best. And Holly desperately wants to be the best.",
+          "Tags: Community, Theater, Comedy, Holiday, Christmas, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217688": [
+          "https://www.eventbrite.com/e/the-town-that-sucked-at-christmas-tickets-1997513336160",
+          "https://www.eventbrite.com/e/the-town-that-sucked-at-christmas-tickets-1997513359229"
+        ]
+      }
+    },
+    {
+      "concept": "format-new-song-showcase",
+      "label": "New-song showcase",
+      "category": "format",
+      "visual": "Fresh manuscript page beside a stage microphone.",
+      "rationale": "Audience concert presenting newly written songs, not songwriting instruction.",
+      "existing_alternative": "Retain suitable existing art or Unicode fallback while recognition and exact scope are investigated.",
+      "event_ids": [
+        217833
+      ],
+      "evidence_by_event": {
+        "217833": [
+          "Write Out Loud: From Contest to Concert Volume 8: No description available.",
+          "Tags: Music, Concert, Songwriting, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217833": [
+          "https://54below.org/events/write-out-loud-from-contest-to-concert-volume-8/"
+        ]
+      }
+    },
+    {
+      "concept": "format-pop-song-revue",
+      "label": "Pop-song revue",
+      "category": "format",
+      "visual": "Grouped song sheets and stage microphone.",
+      "rationale": "Live popular-song repertoire revue, not actual attendance by original recording artists.",
+      "existing_alternative": "Retain suitable existing art or Unicode fallback while recognition and exact scope are investigated.",
+      "event_ids": [
+        217832
+      ],
+      "evidence_by_event": {
+        "217832": [
+          "5For You Page: A Night of Viral Moments!: No description available.",
+          "Tags: Music, Concert, Nightlife, Format, Performance, Viral Moments"
+        ]
+      },
+      "source_urls_by_event": {
+        "217832": [
+          "https://54below.org/events/5for-you-page-a-night-of-viral-moments/"
+        ]
+      }
+    },
+    {
+      "concept": "format-queer-comedy",
+      "label": "Queer comedy program",
+      "category": "format",
+      "visual": "Explore a comedy-stage cue with a small pride accent.",
+      "rationale": "Explicit queer comedy context; never infer individual identities from the lineup.",
+      "existing_alternative": "Retain suitable existing art or Unicode fallback while recognition and exact scope are investigated.",
+      "event_ids": [
+        217817
+      ],
+      "evidence_by_event": {
+        "217817": [
+          "Demonic Homosexual Possession: The Erik Martini Hour: Featuring Roxanne Ruth.",
+          "Tags: Comedy, Nightlife, Comedy Show, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217817": [
+          "https://www.eventbrite.com/e/demonic-homosexual-possession-the-erik-martini-hour-tickets-1997051384450?aff=odwdwdspacecraft"
+        ]
+      }
+    },
+    {
+      "concept": "format-singles-mixer",
+      "label": "Singles mixer",
+      "category": "format",
+      "visual": "Paired conversation bubbles and a small heart",
+      "rationale": "No timed rotations or matching algorithm promised.",
+      "existing_alternative": "Current fallback or broader accepted icon may suffice; keep this prospective until structural and small-size review passes.",
+      "event_ids": [
+        217646
+      ],
+      "evidence_by_event": {
+        "217646": [
+          "East & Southeast Asian / Asian-American High-End Singles Mixer NYC: East & Southeast Asian singles mixer for professionals in their 30s, 40s & 50s, curated by a NYC matchmaker. The event features a curated guest list, guided conversation moments, and a warm, low-pressure atmosphere.",
+          "Tags: Community, Party, Education, Networking, Asian American, Nightlife, Cultural Heritage, Mixer, Singles Event, Social Networking, Southeast Asian, Format, Social, East Asian"
+        ]
+      },
+      "source_urls_by_event": {
+        "217646": [
+          "https://www.aaartsalliance.org/events/east-southeast-asian-asian-american-high-end-singles-mixer-nyc-06e5ca9a-ba4e-4cb5-9620-a525afae4d2c"
+        ]
+      }
+    },
+    {
+      "concept": "format-solo-theater",
+      "label": "Solo theater",
+      "category": "format",
+      "visual": "Single spotlight over one neutral performance figure.",
+      "rationale": "Explicit solo show does not prove comedy or song; anatomy review required.",
+      "existing_alternative": "Use a suitable broad Unicode or accepted icon until a distinctive reviewed study is available.",
+      "event_ids": [
+        217560
+      ],
+      "evidence_by_event": {
+        "217560": [
+          "Latinx Heritage Month Celebration: Dreaming and the City: This celebration features art, storytelling, and community, including Dreaming and the City, a new one-woman play by Amalia Oliva Rojas. The performance explores immigrant experience, identity, belonging, memory, and life between cultures and generations.",
+          "Tags: Community, Theater, Art, Latinx Heritage, Storytelling / Community, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217560": [
+          "https://www.hunter.cuny.edu/event/latinx-heritage-month-celebration-dreaming-and-the-city/"
+        ]
+      }
+    },
+    {
+      "concept": "format-spatial-audio-listening",
+      "label": "Spatial audio listening",
+      "category": "format",
+      "visual": "A central listening point surrounded by broad sound arcs.",
+      "rationale": "Multichannel listening without asserting exactly four channels or a literal speaker count.",
+      "existing_alternative": "Retain suitable existing art or Unicode fallback while recognition and exact scope are investigated.",
+      "event_ids": [
+        217918
+      ],
+      "evidence_by_event": {
+        "217918": [
+          "Bent Ecos - Wood & Light Album Release: Multichannel Listening Session: Wood & Light plus other original selections - presented in a bespoke spatial mix. The album, Wood & Light, takes its name from the moment where natural material is illuminated - when the grain, imperfections, and quiet elegance of wood become newly visible.",
+          "Tags: Music, Art, Experimental, Concert, Album Release, Listening Room, Spatial Audio, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217918": [
+          "https://ra.co/events/2511017"
+        ]
+      }
+    },
+    {
+      "concept": "format-television-song-revue",
+      "label": "TV-song revue",
+      "category": "format",
+      "visual": "A music note beside an unbranded television silhouette.",
+      "rationale": "Live performances of television-associated songs, not watching TV.",
+      "existing_alternative": "Retain suitable existing art or Unicode fallback while recognition and exact scope are investigated.",
+      "event_ids": [
+        217858
+      ],
+      "evidence_by_event": {
+        "217858": [
+          "54 Sings The Music of Scrubs Vol. 2: No description available.",
+          "Tags: Music, Concert, Format, Performance, Scrubs"
+        ]
+      },
+      "source_urls_by_event": {
+        "217858": [
+          "https://54below.org/events/54-sings-the-music-of-scrubs-vol-2/"
+        ]
+      }
+    },
+    {
+      "concept": "format-themed-song-revue",
+      "label": "Themed song revue",
+      "category": "format",
+      "visual": "Song pages grouped around a stage microphone.",
+      "rationale": "A unifying song-program theme, exact repertoire verified per event.",
+      "existing_alternative": "Retain suitable existing art or Unicode fallback while recognition and exact scope are investigated.",
+      "event_ids": [
+        217849
+      ],
+      "evidence_by_event": {
+        "217849": [
+          "Femme Fatale: Songs For Girls With Teeth: Gothic, metallic text reads “Femme Fatale: Songs For Girls With Teeth” over a sparkling black background with vertical, shimmering streaks, creating a dramatic and mysterious effect that perfectly captures the allure of femme fatale mystique.",
+          "Tags: Music, Gothic, Concert, Femme Fatale, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217849": [
+          "https://54below.org/events/femme-fatale-songs-for-girls-with-teeth/"
+        ]
+      }
+    },
+    {
+      "concept": "format-vocal-showcase",
+      "label": "Vocal showcase",
+      "category": "format",
+      "visual": "Several microphone silhouettes arranged around a music note.",
+      "rationale": "Singer showcase without implying a choir or exact ensemble count.",
+      "existing_alternative": "Retain suitable existing art or Unicode fallback while recognition and exact scope are investigated.",
+      "event_ids": [
+        217846
+      ],
+      "evidence_by_event": {
+        "217846": [
+          "Voices of Empowerment Take Center Stage: No description available.",
+          "Tags: Community, Music, Activism, Concert, Empowerment, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217846": [
+          "https://54below.org/events/voices-of-empowerment-take-center-stage/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-absurdist-theater",
+      "label": "Absurdist theater",
+      "category": "genre",
+      "visual": "An offset stage doorway and masks, recognition study required.",
+      "rationale": "Explicit absurdist staged work; no automatic stand-up or sketch classification.",
+      "existing_alternative": "Retain suitable existing art or Unicode fallback while recognition and exact scope are investigated.",
+      "event_ids": [
+        217570
+      ],
+      "evidence_by_event": {
+        "217570": [
+          "Delirium: Delirium is Igor Golyak’s bold new adaptation of Eugène Ionesco’s Frenzy for Two. A couple is locked in an endless argument while the world outside collapses into chaos, as the boundaries between reality and delusion dissolve.",
+          "Tags: Theater, Comedy, Adaptation, Absurdist Comedy, Drama / Theater, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217570": [
+          "https://www.downtownbrooklyn.com/event/delirium/2026-09-08/",
+          "https://www.downtownbrooklyn.com/event/delirium/2026-09-10/",
+          "https://www.downtownbrooklyn.com/event/delirium/2026-09-11/",
+          "https://www.downtownbrooklyn.com/event/delirium/2026-09-25/"
+        ]
+      }
+    },
+    {
+      "category": "genre",
+      "concept": "genre-house",
+      "existing_alternative": "DJ decks specify performance equipment, not house; Noto notes are broader still.",
+      "label": "House music",
+      "rationale": "Explicit house music supports a four-on-the-floor rhythm exploration; this may read as generic electronic music and needs recognition testing.",
+      "visual": "A compact drum machine with four evenly spaced illuminated beat pads.",
+      "event_ids": [
+        217938
+      ],
+      "evidence_by_event": {
+        "217938": [
+          "Funk On Mars: First Transmission: Funk On Mars is a new music collective built around house, techno, and the people who love getting lost in space and time. Strangers don’t stay strangers for long.",
+          "Tags: Community, Music, Techno, Funk, Nightlife, House Music, Electronic Music, Club Night, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "217938": [
+          "https://ra.co/events/2510926"
+        ]
+      }
+    },
+    {
+      "concept": "genre-musical-theater-hip-hop",
+      "label": "Musical-theater / hip-hop fusion",
+      "category": "genre",
+      "visual": "Explore a theater-song page with a rhythmic microphone cue.",
+      "rationale": "Explicit repertoire fusion, not a dance class or open rap cypher.",
+      "existing_alternative": "Retain suitable existing art or Unicode fallback while recognition and exact scope are investigated.",
+      "event_ids": [
+        217855
+      ],
+      "evidence_by_event": {
+        "217855": [
+          "Manny Houston: At The Corner Of Broadway And Hip Hop: No description available.",
+          "Tags: Broadway, Music, Hip Hop, Concert, Musical Theater, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "217855": [
+          "https://54below.org/events/manny-houston-at-the-corner-of-broadway-and-hip-hop/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-techno",
+      "label": "Techno",
+      "category": "genre",
+      "visual": "Explore four equal beat blocks beneath one sharply simplified electronic waveform.",
+      "rationale": "Explicit techno programming supports rhythm/production genre exploration, with house overlap a known recognition risk.",
+      "existing_alternative": "DJ decks describes equipment, not genre; generic notes omit techno.",
+      "event_ids": [
+        217938
+      ],
+      "evidence_by_event": {
+        "217938": [
+          "Funk On Mars: First Transmission: Funk On Mars is a new music collective built around house, techno, and the people who love getting lost in space and time. Strangers don’t stay strangers for long.",
+          "Tags: Community, Music, Techno, Funk, Nightlife, House Music, Electronic Music, Club Night, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "217938": [
+          "https://ra.co/events/2510926"
+        ]
+      }
+    },
+    {
+      "concept": "instrument-banjo",
+      "label": "Banjo",
+      "category": "instrument",
+      "visual": "Verified round membrane body, neck and strings, peg layout researched before drawing.",
+      "rationale": "Banjo is explicitly named but playing role must be confirmed; structure varies by type.",
+      "existing_alternative": "Retain suitable existing art or Unicode fallback while recognition and exact scope are investigated.",
+      "event_ids": [
+        217550
+      ],
+      "evidence_by_event": {
+        "217550": [
+          "Henson Sing-Along with Lucas Ross presented by The American Banjo Museum: Join musician Lucas Ross, banjo adviser to Kermit the Frog, for a sing-along session of Henson favorites. The program will be approximately one hour.",
+          "Tags: Community, Music, Family, Folk Music, Banjo, Jim Henson, Sing Along, Open Practice, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "217550": [
+          "https://movingimage.org/event/henson-sing-along-with-lucas-ross/"
+        ]
+      }
+    }
+  ],
+  "limitations": "Counts describe this cohort, not population reach. These are grounded prospective studies, not live assignments. Existing artwork may already suffice; exact equipment and genre recognition require further review."
+}

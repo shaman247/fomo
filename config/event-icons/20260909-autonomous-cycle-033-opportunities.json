@@ -1,0 +1,1307 @@
+{
+  "date": "2026-09-10",
+  "scope": "Cycle 033: 100 sequential events 207490–208325, no targeted supplements.",
+  "suggestions": 63,
+  "concept_count": 53,
+  "concepts": [
+    {
+      "concept": "format-political-education",
+      "label": "Format political education",
+      "category": "format",
+      "visual": "Discussion table and civic history book",
+      "rationale": "Political study separate from board meetings.",
+      "existing_alternative": "Retain appropriate Unicode or broader accepted icon until recognition and structural review pass.",
+      "event_ids": [
+        208281,
+        208282,
+        208283,
+        208284
+      ],
+      "evidence_by_event": {
+        "208281": [
+          "NYC DSA Academy - Red New York: Session 1 of 5: Session 1 of the NYC DSA Academy course Red New York will provide some measure of why New York has earned its reputation as the country's Red City. It will introduce for class discussion the largest questions about the city's radicalism that the rest of the sessions will explore in greater detail.",
+          "Tags: Community, History, Education, Politics, Socialism, Class, In Person, Participatory, Format"
+        ],
+        "208282": [
+          "NYC DSA Academy - Frankfurt School & Fascism Session 2 of 4: This is session 2 of a 4-part course titled 'The Frankfurt School on the Far Right: Critical Theory and Fascism' instructed by Jeremy Cohan. The course reviews core writings of the Frankfurt School on the far right, focusing on Theodor Adorno and analyzing how fascist agitation works and the social psychology behind it.",
+          "Tags: Community, Education, Politics, Socialism, Class, Political Education, In Person, Participatory, Format, Fascism, Frankfurt School"
+        ],
+        "208283": [
+          "NYC DSA Academy - Frankfurt School & Fascism Session 3 of 4: This is Session 3 of 4 for the NYC DSA Academy course on the Frankfurt School and Fascism, taught by Jeremy Cohan. The course reviews core writings of the school on the far right, exploring how fascist agitation works and the social psychology of those tempted to follow far-right agitators.",
+          "Tags: Community, Education, Politics, Socialism, Class, Political Education, In Person, Participatory, Format, Fascism"
+        ],
+        "208284": [
+          "NYC DSA Academy - Frankfurt School & Fascism Session 4 of 4: This course will review some of the core writings of the Frankfurt School on the far right, mostly but not exclusively focusing on the writings of Theodor Adorno. We will explore the analysis in these works of how fascist agitation works, as well as the social psychology of those tempted to follow far right agitators.",
+          "Tags: Community, Education, Politics, Socialism, Class, Political Education, In Person, Participatory, Format, Fascism"
+        ]
+      },
+      "source_urls_by_event": {
+        "208281": [
+          "https://actionnetwork.org/events/red-new-york-session-1-of-5"
+        ],
+        "208282": [
+          "https://actionnetwork.org/events/nyc-dsa-academy-frankfurt-school-fascism-session-2",
+          "https://actionnetwork.org/events/nyc-dsa-academy-frankfurt-school-fascism-session-2-of-4"
+        ],
+        "208283": [
+          "https://actionnetwork.org/events/nyc-dsa-academy-frankfurt-school-fascism-session-3-of-4"
+        ],
+        "208284": [
+          "https://actionnetwork.org/events/nyc-dsa-academy-frankfurt-school-fascism-session-4-of-4"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-orchestra",
+      "label": "Ensemble orchestra",
+      "category": "other",
+      "visual": "Conductor before tiered string wind percussion groups",
+      "rationale": "Full orchestra needs legible ensemble study.",
+      "existing_alternative": "Retain appropriate Unicode or broader accepted icon until recognition and structural review pass.",
+      "event_ids": [
+        207544,
+        207549,
+        207581
+      ],
+      "evidence_by_event": {
+        "207544": [
+          "Oswald Huỳnh with the American Composers Orchestra at Carnegie Hall: Tonight, hear the legendary American Composers Orchestra and conductor Kedrick Armstrong premiere five new works by exciting American composers, including CAG’s very own Oswald Huỳnh.",
+          "Tags: Music, Theater, Classical Music, Film, Orchestra, Concert, Premiere, Format, Performance"
+        ],
+        "207549": [
+          "American Classical Orchestra: Turning the Key: The ACO with Artistic Director Thomas Crawford opens its Celebrate Beethoven! series at Lincoln Center on September 17 with Turning the Key, a performance of Haydn’s Lord Nelson Mass featuring soprano Shelén Hughes Camacho and Beethoven’s Symphony No. 1.",
+          "Tags: Music, Classical Music, Orchestra, Concert, Period Instruments, Format, Performance"
+        ],
+        "207581": [
+          "New York Repertory Orchestra: New York Repertory Orchestra performs a program featuring works by Rautavaara, MartinÃ¯Â¿Â½, and Rachmaninoff, with soprano Kendra Berentsen.",
+          "Tags: Community, Music, Classical Music, Orchestra, Concert, Rachmaninoff, Format, Performance, Rautavaara"
+        ]
+      },
+      "source_urls_by_event": {
+        "207544": [
+          "https://www.concertartists.org/cag-in-nyc/oswald-hunh-with-the-american-composers-orchestra-at-carnegie-hall"
+        ],
+        "207549": [
+          "https://gemsny.org/event/american-classical-orchestra-10/",
+          "https://lincolncenter.org/venue/alice-tully-hall/turning-the-key-577"
+        ],
+        "207581": [
+          "https://www.mmc.band/calendar-details?recordId=recVk9kjArQq0P7i7"
+        ]
+      }
+    },
+    {
+      "concept": "format-concert-film",
+      "label": "Format concert film",
+      "category": "format",
+      "visual": "Screen and music stage",
+      "rationale": "Recorded musical concert shown in cinema.",
+      "existing_alternative": "Retain appropriate Unicode or broader accepted icon until recognition and structural review pass.",
+      "event_ids": [
+        208180,
+        208184
+      ],
+      "evidence_by_event": {
+        "208180": [
+          "Juan Gabriel: Mi Primer Bellas Artes (Spanish): Mexico's most iconic concert comes to U.S. theaters on September 15th, celebrating Mexican Independence Day and commemorating the 10th anniversary of Juan Gabriel's passing. Experience his legendary first performance at Mexico City's \"Palacio de Bellas",
+          "Tags: Community, Music, Cinema, Culture, Neighborhood, Film, Long Island, Screening, Spanish Language, Concert Film, Mexican Culture, Suffolk County, Deer Park, Format, Performance"
+        ],
+        "208184": [
+          "Juan Gabriel: Mi Primer Bellas Artes (Spanish): Plot unknown",
+          "Tags: Community, Music, Cinema, Culture, Neighborhood, Film, Westchester, Screening, Spanish Language, Concert Film, Spanish, Mexican Culture, New Rochelle, Format, Performance, Juan Gabriel"
+        ]
+      },
+      "source_urls_by_event": {
+        "208180": [
+          "https://www.regmovies.com/movies/juan-gabriel-mi-primer-bellas-artes-spanish-ho00022168"
+        ],
+        "208184": [
+          "https://www.regmovies.com/movies/juan-gabriel-mi-primer-bellas-artes-spanish-ho00022168"
+        ]
+      }
+    },
+    {
+      "concept": "format-exhibition-opening",
+      "label": "Format exhibition opening",
+      "category": "format",
+      "visual": "Gallery picture and welcome ribbon",
+      "rationale": "Opening reception separate from full exhibition.",
+      "existing_alternative": "Retain appropriate Unicode or broader accepted icon until recognition and structural review pass.",
+      "event_ids": [
+        207495,
+        207538
+      ],
+      "evidence_by_event": {
+        "207495": [
+          "Exhibition Opening Party: The Landscape Architecture of Lawrence Halprin: ABC Stone, TCLF, and ASLA-NY are celebrating the opening of TCLF’s, The Landscape Architecture of Lawrence Halprin, a traveling photographic exhibition about the life and work of landscape architect Lawrence Halprin.",
+          "Tags: Community, Visual Arts, Art, Design, Party, Education, Nightlife, Mixer, Format, Social"
+        ],
+        "207538": [
+          "A Vivid Blur Reception: Reception for the A Vivid Blur exhibition.",
+          "Tags: Art, Free, Education, Nightlife, Reception, Mixer, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "207495": [
+          "https://www.aslany.org/event/exhibition-opening-partythe-landscape-architecture-of-lawrence-halprin/"
+        ],
+        "207538": [
+          "https://sva.edu/events/a-vivid-blur"
+        ]
+      }
+    },
+    {
+      "concept": "genre-americana",
+      "label": "Americana music",
+      "category": "genre",
+      "visual": "Explore an acoustic sound-hole ring with a branching musical note.",
+      "rationale": "Explicit Americana programming merits genre exploration, but there is no universal symbol and acoustic guitar cannot be assumed as actual lineup.",
+      "existing_alternative": "Noto guitar/notes are broad; motif must distinguish folk/country and not duplicate proposed acoustic-guitar art.",
+      "event_ids": [
+        207503,
+        207722
+      ],
+      "evidence_by_event": {
+        "207503": [
+          "Brooklyn Americana Music Festival: The 12th Annual Brooklyn Americana Music Festival September 10 – 13. Four nights. Four venues. Dozens of bands. Hosted by Jan Bell.",
+          "Tags: Community, Music, Free, Festival, Folk Music, Americana, Country, Live Music, Format, Social"
+        ],
+        "207722": [
+          "Bandits on the Run: Bandits on the Run is an indie-folk-pop-americana outfit consisting of three lead singers who also play guitar, cello, suitcase drum, accordion, and various toy instruments.",
+          "Tags: Music, Rock, Concert, Folk Music, Americana, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "207503": [
+          "https://dumbo.nyc/event/brooklyn-americana-music-festival/"
+        ],
+        "207722": [
+          "https://caramoor.org/event/bandits-on-the-run-2026-rhcs"
+        ]
+      }
+    },
+    {
+      "concept": "genre-jazz",
+      "label": "Jazz",
+      "category": "genre",
+      "visual": "A pair of syncopated musical notes with one loose improvisatory flourish.",
+      "rationale": "The genre is explicit, but an instrument-neutral motif remains exploratory and requires recognition tests; avoid treating saxophone as universal jazz.",
+      "existing_alternative": "Noto notes are generic; a saxophone misstates instrumentation when the program does not feature one.",
+      "event_ids": [
+        207587,
+        207719
+      ],
+      "evidence_by_event": {
+        "207587": [
+          "The Cellar Series + Jazz with Alistair Johnston!: Live jazz performance by Alistair Johnston as part of The Cellar Series.",
+          "Tags: Music, Jazz, Concert, Nightlife, Live Music, Cellar Series, Format, Performance"
+        ],
+        "207719": [
+          "Linda EPO: Linda EPO’s musical journey is a testament to the rich tapestry of her Mexican and Haitian heritage, reflected in the vibrant fusion of genres that define her sound. Growing up amidst the diverse musical landscape of New York City, Linda’s artistry transcends borders, captivating audiences worldwide with an eclectic repertoire spanning jazz, funk, R&B, Caribbean, and Latin music.",
+          "Tags: Music, World Music, Jazz, Funk, Concert, R&B, Latin Music, Caribbean Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "207587": [
+          "https://www.stmazie.com/events/the-cellar-series-jazz-with-alistair-johnston-2/",
+          "https://www.stmazie.com/events/the-cellar-series-jazz-with-alistair-johnston/"
+        ],
+        "207719": [
+          "https://arthurstavern.nyc/events/linda-epo/"
+        ]
+      }
+    },
+    {
+      "category": "genre",
+      "concept": "genre-rnb",
+      "existing_alternative": "Noto microphone shows vocals but not genre; avoid assuming saxophone or other instruments.",
+      "label": "R&B",
+      "rationale": "R&B is explicit; exploratory smooth vocal motif is not a proven genre symbol and must be tested.",
+      "visual": "Explore a microphone paired with a single smooth looping sound-wave ribbon.",
+      "event_ids": [
+        207588,
+        207719
+      ],
+      "evidence_by_event": {
+        "207588": [
+          "New Orleans Jazz, Rhythm & Blues with Bill Malchow!: New Orleans jazz, rhythm and blues with Bill Malchow.",
+          "Tags: Music, Jazz, Concert, Nightlife, Blues, New Orleans Jazz, Live Music, Format, Performance"
+        ],
+        "207719": [
+          "Linda EPO: Linda EPO’s musical journey is a testament to the rich tapestry of her Mexican and Haitian heritage, reflected in the vibrant fusion of genres that define her sound. Growing up amidst the diverse musical landscape of New York City, Linda’s artistry transcends borders, captivating audiences worldwide with an eclectic repertoire spanning jazz, funk, R&B, Caribbean, and Latin music.",
+          "Tags: Music, World Music, Jazz, Funk, Concert, R&B, Latin Music, Caribbean Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "207588": [
+          "https://www.stmazie.com/events/new-orleans-jazz-rhythm-blues-with-bill-malchow-2/",
+          "https://www.stmazie.com/events/new-orleans-jazz-rhythm-blues-with-bill-malchow/"
+        ],
+        "207719": [
+          "https://arthurstavern.nyc/events/linda-epo/"
+        ]
+      }
+    },
+    {
+      "concept": "activity-aquatic-bioblitz",
+      "label": "Activity aquatic bioblitz",
+      "category": "activity",
+      "visual": "Aquatic wildlife and field tally card",
+      "rationale": "Participant biodiversity survey without assuming netting.",
+      "existing_alternative": "Retain appropriate Unicode or broader accepted icon until recognition and structural review pass.",
+      "event_ids": [
+        207642
+      ],
+      "evidence_by_event": {
+        "207642": [
+          "AquaBlitz 2026: Get your hands wet at a local AquaBlitz event in your area! Discover what’s living in the creek and your watershed. Help a team of biologists collect data on fish, plants, amphibians, and other cool critters.",
+          "Tags: Community, Nature, Free, Education, Outdoor, Volunteer, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "207642": [
+          "https://www.scenichudson.org/events/aquablitz-2026/2026-09-13/"
+        ]
+      }
+    },
+    {
+      "concept": "activity-creative-writing",
+      "label": "Creative writing",
+      "category": "activity",
+      "visual": "Pencil beside a page with small branching idea marks.",
+      "rationale": "Prompt-based mixed writing differs from genre-specific instruction.",
+      "existing_alternative": "Writing hand already suits broad scope; avoid duplicating screenplay/poetry icons.",
+      "event_ids": [
+        207789
+      ],
+      "evidence_by_event": {
+        "207789": [
+          "Creative Writing and Reminiscing: As part of DOROT’s Lasting Impressions programming, this weekly writing group will encourage participants to explore different ways of telling their stories in any given genre. Each week, we will read and discuss a poem or short story, and then respond to a writing prompt related to that piece. By emphasizing spontaneity and writing intuitively, this workshop will empower authors to find new ways to express themselves.",
+          "Tags: Community, Art, Workshop, Literature, Education, Virtual, Class, Participatory, Writing, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "207789": [
+          "https://www.dorotusa.org/event/creative-writing-and-reminiscing-20260804/",
+          "https://www.dorotusa.org/event/creative-writing-and-reminiscing-20260811/",
+          "https://www.dorotusa.org/event/creative-writing-and-reminiscing-20260818/",
+          "https://www.dorotusa.org/event/creative-writing-and-reminiscing-20260825/",
+          "https://www.dorotusa.org/event/creative-writing-and-reminiscing-20260901/",
+          "https://www.dorotusa.org/event/creative-writing-and-reminiscing-20260908/"
+        ]
+      }
+    },
+    {
+      "concept": "activity-instrument-discovery",
+      "label": "Activity instrument discovery",
+      "category": "activity",
+      "visual": "Several instrument silhouettes",
+      "rationale": "Child exploration across instruments.",
+      "existing_alternative": "Retain appropriate Unicode or broader accepted icon until recognition and structural review pass.",
+      "event_ids": [
+        208048
+      ],
+      "evidence_by_event": {
+        "208048": [
+          "Summer at the Library Kickoff: Music and Me: Children will have the opportunity to play and be exposed to a variety of musical instruments including a guitar an...",
+          "Tags: Music, Kids, Workshop, Family, Summer, Participatory, Instruments, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "208048": [
+          "https://www.queenslibrary.org/event/015695-0426"
+        ]
+      }
+    },
+    {
+      "concept": "activity-live-painting",
+      "label": "Activity live painting",
+      "category": "activity",
+      "visual": "Easel brush and audience",
+      "rationale": "Live art creation as spectator entertainment.",
+      "existing_alternative": "Retain appropriate Unicode or broader accepted icon until recognition and structural review pass.",
+      "event_ids": [
+        207498
+      ],
+      "evidence_by_event": {
+        "207498": [
+          "Dumbo Happy Hour: Dumbo Archway Party: PLAZA PARTY in the Dumbo Archway Plaza featuring a DJ Set by Producer Plug + Big Boo, Live Painting by AWE, and happy hour specials across 14 bars throughout Dumbo with collectible stickers.",
+          "Tags: Community, Music, Visual Arts, Art, Painting, Party, DJ, Nightlife, Happy Hour, Live Painting, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "207498": [
+          "https://dumbo.nyc/event/dumbo-happy-hour-dumbo-archway-party-2/",
+          "https://dumbo.nyc/event/dumbo-happy-hour-dumbo-archway-party-3/",
+          "https://dumbo.nyc/event/dumbo-happy-hour-dumbo-archway-party/"
+        ]
+      }
+    },
+    {
+      "concept": "activity-somatic-education",
+      "label": "Somatic education",
+      "category": "activity",
+      "visual": "Grounded gently moving figure with a body-awareness cue",
+      "rationale": "Do not imply yoga, specific medical benefit or an unverified pose.",
+      "existing_alternative": "Current Unicode or broader accepted artwork may suffice; keep prospective until structure and recognition pass.",
+      "event_ids": [
+        207807
+      ],
+      "evidence_by_event": {
+        "207807": [
+          "Hanna Somatic Education: Continued Exploration: In these classes, you'll learn about patterns we all hold because of muscles that have become chronically tight. Together, we will explore Hanna Somatic Exercises you can do to get out of pain and regain ease and joy in your movements. Hanna Somatic Education is a safe, gentle, and intuitive approach to relaxing tight and painful muscles.",
+          "Tags: Workshop, Wellness, Fitness, Education, Health, Participatory, Somatic Education, Hybrid, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "207807": [
+          "https://events.weill.cornell.edu/event/hanna-somatic-education-continued-exploration-3456"
+        ]
+      }
+    },
+    {
+      "concept": "craft-general-woodworking",
+      "label": "Craft general woodworking",
+      "category": "craft",
+      "visual": "Timber with saw and plane",
+      "rationale": "General woodcraft distinct from one promised furniture project.",
+      "existing_alternative": "Retain appropriate Unicode or broader accepted icon until recognition and structural review pass.",
+      "event_ids": [
+        208309
+      ],
+      "evidence_by_event": {
+        "208309": [
+          "Youth After-School Intro to Woodworking: Teens ages 13–18 can learn woodworking from expert boat builder Max Smith in this six-week after-school course at HRMM.",
+          "Tags: Youth, Art, Family, Education, Outdoor, Crafts, Woodworking, Class, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "208309": [
+          "https://www.instagram.com/hudsonrivermaritimemuseum/"
+        ]
+      }
+    },
+    {
+      "concept": "craft-mirror-making",
+      "label": "Craft mirror making",
+      "category": "craft",
+      "visual": "Mirror frame and reflective center",
+      "rationale": "Making mirrors differs from viewing an exhibition.",
+      "existing_alternative": "Retain appropriate Unicode or broader accepted icon until recognition and structural review pass.",
+      "event_ids": [
+        207537
+      ],
+      "evidence_by_event": {
+        "207537": [
+          "A Vivid Blur Exhibition: An exhibition presented by SVA Galleries.",
+          "Tags: Visual Arts, Art, Free, Education, Exhibition, Format, Browsable"
+        ]
+      },
+      "source_urls_by_event": {
+        "207537": [
+          "https://sva.edu/events/a-vivid-blur",
+          "https://sva.edu/events/a-vivid-blur-mirror-making-workshop"
+        ]
+      }
+    },
+    {
+      "concept": "dance-cuban-modern",
+      "label": "Cuban modern dance",
+      "category": "dance-style",
+      "visual": "A dancer in a grounded wide stance with a curved torso and strong opposing arm sweep, finalized from the taught technique.",
+      "rationale": "The class explicitly names Cuban Modern Dance; actual movement reference and recognition testing are necessary rather than flag or costume shorthand.",
+      "existing_alternative": "Generic dancer omits technique and national flag describes geography, not movement.",
+      "event_ids": [
+        207975
+      ],
+      "evidence_by_event": {
+        "207975": [
+          "Cuban Modern Dance: A beginner Cuban Modern Dance class held in-studio.",
+          "Tags: Dance, Education, Modern Dance, Dance Class, Class, Cuban Dance, Participatory, Drop in, Format, Drop in Class, Public Class"
+        ]
+      },
+      "source_urls_by_event": {
+        "207975": [
+          "https://clients.mindbodyonline.com/ws.asp?sclassid=2146835457&sDate=8/16/2026&studioid=851&sType=-117",
+          "https://clients.mindbodyonline.com/ws.asp?sclassid=2146835457&sDate=8/2/2026&studioid=851&sType=-117",
+          "https://clients.mindbodyonline.com/ws.asp?sclassid=2146835457&sDate=8/23/2026&studioid=851&sType=-117",
+          "https://clients.mindbodyonline.com/ws.asp?sclassid=2146835457&sDate=8/30/2026&studioid=851&sType=-117",
+          "https://clients.mindbodyonline.com/ws.asp?sclassid=2146835457&sDate=8/9/2026&studioid=851&sType=-117",
+          "https://clients.mindbodyonline.com/ws.asp?sclassid=2146835477&sDate=8/12/2026&studioid=851&sType=-117",
+          "https://clients.mindbodyonline.com/ws.asp?sclassid=2146835477&sDate=8/19/2026&studioid=851&sType=-117",
+          "https://clients.mindbodyonline.com/ws.asp?sclassid=2146835477&sDate=8/5/2026&studioid=851&sType=-117",
+          "https://clients.mindbodyonline.com/ws.asp?sclassid=2146836347&sDate=9/13/2026&studioid=851&sType=-117",
+          "https://clients.mindbodyonline.com/ws.asp?sclassid=2146836347&sDate=9/6/2026&studioid=851&sType=-117"
+        ]
+      }
+    },
+    {
+      "concept": "dance-regency-country",
+      "label": "Dance regency country",
+      "category": "dance-style",
+      "visual": "Paired dancers in a set",
+      "rationale": "Country dance formation requires primary movement references.",
+      "existing_alternative": "Retain appropriate Unicode or broader accepted icon until recognition and structural review pass.",
+      "event_ids": [
+        207712
+      ],
+      "evidence_by_event": {
+        "207712": [
+          "Free Workshop: Jane Austen's Country Dance: Returning by popular demand! Step into the flirtatious world of Jane Austen's ballroom. Students will join Amy Frey in learning the elements of Regency country dance, including The Duke of Kent's Waltz, the Haymaker's Jig, and the Hole in the Wall (and maybe some witty banter along the way!)",
+          "Tags: Community, Workshop, Dance, Free, Education, Jane Austen, Participatory, Regency Dance, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "207712": [
+          "https://www.bartowpellmansionmuseum.org/events/free-workshop-jane-austens-country-dance-3/",
+          "https://www.bronxarts.org/events/free-workshop-jane-austens-country-dance-2026-10-25.html"
+        ]
+      }
+    },
+    {
+      "concept": "dance-swing",
+      "label": "Swing dance",
+      "category": "dance-style",
+      "visual": "Two dancers leaning apart in an open connected-hand rock step.",
+      "rationale": "Swing dancing has a recognizable partnered motion beyond generic dance; test separation at small sizes.",
+      "existing_alternative": "Noto solo dancer omits partnered swing; no corresponding custom.",
+      "event_ids": [
+        207632
+      ],
+      "evidence_by_event": {
+        "207632": [
+          "JAZZ & GIN: Speakeasy Soiree @URBANE ARTS CLUB / Monthly Fridays, Brooklyn NY: Each month features NYC's best swing bands and DJs, classic burlesque, craft cocktails, and a free dance lesson. The Club's 1,200 sq ft ballroom boasts wooden floors, plus a lounge and gallery.",
+          "Tags: Music, Dance, Jazz, Party, Nightlife, Swing Dance, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "207632": [
+          "https://dancemanhattan.com/calendar/event/76",
+          "https://www.eventbrite.com/e/jazz-gin-a-speakeasy-soiree-july-24th-tickets-1989886092870?aff=oddtdtcreator",
+          "https://www.eventbrite.com/e/spooky-jazz-gin-a-speakeasy-soiree-oct-30th-tickets-1996645978871?aff=oddtdtcreator",
+          "https://www.prohibitionproductions.com/jazz-and-gin"
+        ]
+      }
+    },
+    {
+      "concept": "dance-tango",
+      "label": "Argentine tango",
+      "category": "dance-style",
+      "visual": "Two close-embrace dancers with one sharply extended leg.",
+      "rationale": "Tango classes/social dancing have a distinct partnered silhouette.",
+      "existing_alternative": "Noto solo dancer lacks close embrace; no tango custom.",
+      "event_ids": [
+        207635
+      ],
+      "evidence_by_event": {
+        "207635": [
+          "La Entrega Argentine Tango Marathon: La Entrega Tango Marathon celebrates its 6th year with 30 hours of dancing in Ironbound, Newark, NJ, featuring live music with Entre Mundos and vocalist Juan Villarreal, alongside five international DJs.",
+          "Tags: New Jersey, Music, Dance, Neighborhood, Newark, Tango, Milonga, Argentine Tango, Open Practice, Live Music, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "207635": [
+          "https://dancemanhattan.com/calendar/event/298"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-piano-quintet",
+      "label": "Ensemble piano quintet",
+      "category": "other",
+      "visual": "Piano with string quartet",
+      "rationale": "Five-player chamber instrumentation.",
+      "existing_alternative": "Retain appropriate Unicode or broader accepted icon until recognition and structural review pass.",
+      "event_ids": [
+        207545
+      ],
+      "evidence_by_event": {
+        "207545": [
+          "Nathan Meltzer, violin & The Green Room Ensemble with Eleanor Alberga at National Sawdust: The Green Room Ensemble is thrilled to present the U.S. Premiere performance cycle of Eleanor Alberga’s Three String Quartets, along with the World Premiere of her Second Piano Quintet with the composer herself at the piano.",
+          "Tags: Music, Classical Music, Film, Concert, String Quartet, Premiere, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "207545": [
+          "https://www.concertartists.org/cag-in-nyc/nathan-meltzer-the-green-room-ensemble-with-eleanor-alberga-at-national-sawdust",
+          "https://www.nationalsawdust.org/event/eleanor-alberga-the-string-quartet-cycle"
+        ]
+      }
+    },
+    {
+      "concept": "format-art-history-talk",
+      "label": "Art-history talk",
+      "category": "format",
+      "visual": "Artwork slide beside a conversation bubble",
+      "rationale": "Discussion of art history rather than making or gallery opening.",
+      "existing_alternative": "Current Unicode or broader accepted artwork may suffice; keep prospective until structure and recognition pass.",
+      "event_ids": [
+        207574
+      ],
+      "evidence_by_event": {
+        "207574": [
+          "Art Histories, Across and Within: The Rockefeller Collection at Asia Society: Join us for a conversation about the fascinating insights they can reveal into the innovations and human connections forged in the globally connected premodern world.",
+          "Tags: Community, History, Art, Education, Art History, Cultural Heritage, Cultural Exchange, Gathering, Talk, Conversation, Format, Rockefeller Collection"
+        ]
+      },
+      "source_urls_by_event": {
+        "207574": [
+          "https://asiasociety.org/new-york/events/art-histories-across-and-within-rockefeller-collection-asia-society"
+        ]
+      }
+    },
+    {
+      "concept": "format-awards-ceremony",
+      "label": "Awards ceremony",
+      "category": "format",
+      "visual": "Award medallion above a presentation plinth",
+      "rationale": "Recognition ceremony is not necessarily a charitable gala.",
+      "existing_alternative": "Existing Unicode or broader artwork may remain preferable; keep prospective until recognition and construction review.",
+      "event_ids": [
+        207572
+      ],
+      "evidence_by_event": {
+        "207572": [
+          "The Last Girl Awards: Join us for a conversation and reception with top human rights activists, artists and writers: a rare and inspiring opportunity to be in the room with global changemakers redefining what freedom means.",
+          "Tags: Community, Activism, Art, Education, Human Rights, Awards Ceremony, Panel, Benefit, Writers, Changemakers, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "207572": [
+          "https://asiasociety.org/new-york/events/last-girl-awards-1"
+        ]
+      }
+    },
+    {
+      "concept": "format-buddhist-teaching",
+      "label": "Buddhist teaching",
+      "category": "format",
+      "visual": "Open teaching text with a simple dharma-wheel cue",
+      "rationale": "Religious instruction rather than concert implied by textual songs.",
+      "existing_alternative": "Current Unicode or broader accepted artwork may suffice; keep prospective until structure and recognition pass.",
+      "event_ids": [
+        207930
+      ],
+      "evidence_by_event": {
+        "207930": [
+          "The One Hundred Thousand Songs of Milarepa and The Mahamudra of Tara | with Khenpo Könchok Tashi Rinpoche: Tibet House US is honored to welcome Khenpo Könchok Tashi Rinpoche for a three-part series on The One Hundred Thousand Songs of Milarepa and The Mahamudra of Tara.",
+          "Tags: Wellness, Education, Meditation, Spirituality, Class, Buddhism, Participatory, Mind-Body, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "207930": [
+          "https://shop.thus.org/products/the-one-hundred-thousand-songs-of-milarepa-and-the-mahamudra-of-tara-with-khenpo-konchok-tashi-rinpoche"
+        ]
+      }
+    },
+    {
+      "concept": "format-burlesque",
+      "label": "Burlesque",
+      "category": "format",
+      "visual": "A pair of overlapping feather fans on a stage base",
+      "rationale": "Explicit burlesque differs from drag and generic dance; feather fan is only representative and needs review.",
+      "existing_alternative": "Source Unicode fallback remains until distinct art is reviewed.",
+      "event_ids": [
+        207632
+      ],
+      "evidence_by_event": {
+        "207632": [
+          "JAZZ & GIN: Speakeasy Soiree @URBANE ARTS CLUB / Monthly Fridays, Brooklyn NY: Each month features NYC's best swing bands and DJs, classic burlesque, craft cocktails, and a free dance lesson. The Club's 1,200 sq ft ballroom boasts wooden floors, plus a lounge and gallery.",
+          "Tags: Music, Dance, Jazz, Party, Nightlife, Swing Dance, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "207632": [
+          "https://dancemanhattan.com/calendar/event/76",
+          "https://www.eventbrite.com/e/jazz-gin-a-speakeasy-soiree-july-24th-tickets-1989886092870?aff=oddtdtcreator",
+          "https://www.eventbrite.com/e/spooky-jazz-gin-a-speakeasy-soiree-oct-30th-tickets-1996645978871?aff=oddtdtcreator",
+          "https://www.prohibitionproductions.com/jazz-and-gin"
+        ]
+      }
+    },
+    {
+      "concept": "format-conservation-talk",
+      "label": "Format conservation talk",
+      "category": "format",
+      "visual": "Wildlife image and speech bubbles",
+      "rationale": "Talk about conservation, not wildlife viewing.",
+      "existing_alternative": "Retain appropriate Unicode or broader accepted icon until recognition and structural review pass.",
+      "event_ids": [
+        207710
+      ],
+      "evidence_by_event": {
+        "207710": [
+          "Green Parrots: A Conversation with Morad Tahbaz: On Friday, September 18th, hear from Morad Tahbaz, conservationist and founder of the Persian Wildlife Heritage Foundation, in celebration of wildlife conservation.",
+          "Tags: Community, Wildlife, Education, Environment, Outdoor, Conservation, Gathering, Talk, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "207710": [
+          "https://www.explorers.org/calendar-of-events/green-parrots-a-conversation-with-morad-tahbaz/"
+        ]
+      }
+    },
+    {
+      "concept": "format-countertenor-recital",
+      "label": "Countertenor recital",
+      "category": "format",
+      "visual": "Voice ribbon above a score with an upper-register cue",
+      "rationale": "Vocal range is not a stereotyped body type; recognition unproven.",
+      "existing_alternative": "Current Unicode or broader accepted artwork may suffice; keep prospective until structure and recognition pass.",
+      "event_ids": [
+        207723
+      ],
+      "evidence_by_event": {
+        "207723": [
+          "Iestyn Davies, countertenor & Oliver Wass, harp: Celebrated British countertenor Iestyn Davies returns to the Music Room with Oliver Wass, the first harpist ever to win the prestigious Guildhall Gold Medal, for a recital of works by Dowland, Purcell, Handel, Gluck, Monteverdi and more.",
+          "Tags: Music, Classical Music, Concert, Vocal Music, Baroque Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "207723": [
+          "https://caramoor.org/event/iestyn-davies-2026-rhcs"
+        ]
+      }
+    },
+    {
+      "concept": "format-dance-history-discussion",
+      "label": "Dance-history discussion",
+      "category": "format",
+      "visual": "Linked dance-history cards with conversation bubble",
+      "rationale": "Lineage discussion rather than actual dance performance.",
+      "existing_alternative": "Current Unicode or broader accepted artwork may suffice; keep prospective until structure and recognition pass.",
+      "event_ids": [
+        207711
+      ],
+      "evidence_by_event": {
+        "207711": [
+          "Studies Project: Root Work – Mapping Our Black Dance Lineage: Studies Project session focusing on mapping Black dance lineage in community with Black Dance Change Makers.",
+          "Tags: Community, Workshop, Dance, Free, Education, Discussion Group, Gathering, Black Dance, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "207711": [
+          "https://movementresearch.org/events/1450/"
+        ]
+      }
+    },
+    {
+      "concept": "format-dance-showcase",
+      "label": "Format dance showcase",
+      "category": "format",
+      "visual": "Stage and movement figures",
+      "rationale": "New dance works without an exact style.",
+      "existing_alternative": "Retain appropriate Unicode or broader accepted icon until recognition and structural review pass.",
+      "event_ids": [
+        207506
+      ],
+      "evidence_by_event": {
+        "207506": [
+          "Legacies in Action: 2026 DWB Fellowship Show: You don’t want to miss witnessing the new works in development by our 2026 Dancing While Black (DWB) Fellows. These six artists have been gathering monthly since March to build community with one another and master teachers in the field. This showing of new works is intended to support the ongoing innovation of their creative practice and process.",
+          "Tags: Community, Music, Theater, Performing Arts, Art, Dance, Black Art, Concert, Creative Art, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "207506": [
+          "https://events.humanitix.com/legacies-in-action-2026-dwb-fellowship-show",
+          "https://events.humanitix.com/legacies-in-action-2026-dwb-fellowship-show?hxref=srf%3Arow%7Cmodel%3Ablend%7Crpos%3A1%7Ccpos%3A8%7Cgeo%3Aus--ny--new-york&hxchl=mkt-loc"
+        ]
+      }
+    },
+    {
+      "concept": "format-day-camp",
+      "label": "Format day camp",
+      "category": "format",
+      "visual": "Daytime activity backpack and sun",
+      "rationale": "School holiday care, not overnight tent camping.",
+      "existing_alternative": "Retain appropriate Unicode or broader accepted icon until recognition and structural review pass.",
+      "event_ids": [
+        207504
+      ],
+      "evidence_by_event": {
+        "207504": [
+          "Day Camp for Children: DAY CAMP AT SPEAKITALY NYC Sept 21st – Yom Kippur The school holiday calendar doesn’t necessarily reflect the days off adults have so: SpeakItaly comes in help! Leave your kid(s) in a safe place where you can have peace of mind and keep working.",
+          "Tags: Community, Kids, Family, Education, Camp, Participatory, Day Camp, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "207504": [
+          "https://dumbo.nyc/event/day-camp-for-children/"
+        ]
+      }
+    },
+    {
+      "concept": "format-environmental-discovery-center",
+      "label": "Environmental discovery center",
+      "category": "format",
+      "visual": "Aquarium tank beside a leaf and educational display",
+      "rationale": "Mixed indoor nature exploration rather than an outdoor hike.",
+      "existing_alternative": "Current Unicode or broader accepted artwork may suffice; keep prospective until structure and recognition pass.",
+      "event_ids": [
+        208034
+      ],
+      "evidence_by_event": {
+        "208034": [
+          "Open Hours at the Environmental Education Center (Weekends): Explore Brooklyn Bridge Park like never before during open hours at the Environmental Education Center. The Environmental Education Center is open for free, drop-in hours at 99 Plymouth Street in Dumbo, Brooklyn! Get to know Brooklyn Bridge Park with monthly educational themes, a 250 gallon aquarium filled with critters from the East River, a 10’ scale model of Brooklyn Bridge Park, crafts, a reading corner, and much more.",
+          "Tags: Community, Free, Family, Education, Environment, Brooklyn Bridge Park, Outdoor, Open House, Environmental Education, Format, Browsable"
+        ]
+      },
+      "source_urls_by_event": {
+        "208034": [
+          "https://brooklynbridgepark.org/event/open-hours-at-the-environmental-education-center-weekends-august-1/",
+          "https://brooklynbridgepark.org/event/open-hours-at-the-environmental-education-center-weekends-august-23/",
+          "https://brooklynbridgepark.org/event/open-hours-at-the-environmental-education-center-weekends-august-29/",
+          "https://brooklynbridgepark.org/event/open-hours-at-the-environmental-education-center-weekends-august-8/",
+          "https://brooklynbridgepark.org/event/open-hours-at-the-environmental-education-center-weekends-september-12/",
+          "https://brooklynbridgepark.org/event/open-hours-at-the-environmental-education-center-weekends-september-5/"
+        ]
+      }
+    },
+    {
+      "concept": "format-fashion-conversation",
+      "label": "Fashion conversation",
+      "category": "format",
+      "visual": "Garment sketch card and conversation bubble",
+      "rationale": "Designer discussion rather than sewing or a runway show.",
+      "existing_alternative": "Current Unicode or broader accepted artwork may suffice; keep prospective until structure and recognition pass.",
+      "event_ids": [
+        208286
+      ],
+      "evidence_by_event": {
+        "208286": [
+          "Fashion Icons with Fern Mallis: Iris van Herpen: Fern Mallis presents a Fashion Icons conversation with Iris van Herpen.",
+          "Tags: Community, Art, Education, Fashion, Gathering, Talk, Conversation, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "208286": [
+          "https://www.92ny.org/event/fashion-icons-iris-van-herpen"
+        ]
+      }
+    },
+    {
+      "concept": "format-flash-mob",
+      "label": "Format flash mob",
+      "category": "format",
+      "visual": "Synchronized group in public plaza",
+      "rationale": "Optional group performance, no particular style implied.",
+      "existing_alternative": "Retain appropriate Unicode or broader accepted icon until recognition and structural review pass.",
+      "event_ids": [
+        207863
+      ],
+      "evidence_by_event": {
+        "207863": [
+          "Central Park Flash Mob & Picnic: Participate in a flash mob, film some dance trends, or just hang out and meet new friends at Dance Social Club's first anniversary! Celebrate the DSC anniversary with new and old friends with optional dance activities, blankets, snacks, and games.",
+          "Tags: Community, Dance, Party, Outdoor, Picnic, Games, Flash Mob, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "207863": [
+          "https://partiful.com/e/gswPIm9sJNqNHLMRy2tG?source=discover"
+        ]
+      }
+    },
+    {
+      "concept": "format-group-skate",
+      "label": "Format group skate",
+      "category": "format",
+      "visual": "Paired skaters with route",
+      "rationale": "Group skating without assuming quad or inline only.",
+      "existing_alternative": "Retain appropriate Unicode or broader accepted icon until recognition and structural review pass.",
+      "event_ids": [
+        207536
+      ],
+      "evidence_by_event": {
+        "207536": [
+          "NYC Wednesday Night Skate Season Finale: NYC's largest group skate, rolling spring through autumn. This particular Wednesday is the Halloween week season finale, which means costumes and an extra big group!",
+          "Tags: Community, Sports, Wellness, Fitness, Outdoor, Roller Skating, Nightlife, Costumes, Skating, Halloween, Outing, Intermediate, Format, Outings"
+        ]
+      },
+      "source_urls_by_event": {
+        "207536": [
+          "https://empireskate.org/events/nyc-wednesday-night-skate-season-finale-2026-10-28t20-00-00-",
+          "https://www.google.com/calendar/event?eid=NnJobGlrZmRodjhyazY1ZzZwcWJqYnFrM21fMjAyNjEwMjJUMDAwMDAwWiBpNDQ2bjF1NGMzOHB0b2w4YTF2OTZmb3F1Z0Bn",
+          "https://www.google.com/calendar/event?eid=NnJobGlrZmRodjhyazY1ZzZwcWJqYnFrM21fMjAyNjEwMjlUMDAwMDAwWiBpNDQ2bjF1NGMzOHB0b2w4YTF2OTZmb3F1Z0Bn"
+        ]
+      }
+    },
+    {
+      "concept": "format-live-opera",
+      "label": "Live opera",
+      "category": "format",
+      "visual": "Stage singer and score under a theatre arch",
+      "rationale": "Live voice/drama differs from opera cinema.",
+      "existing_alternative": "Current Unicode or broader accepted artwork may suffice; keep prospective until structure and recognition pass.",
+      "event_ids": [
+        207512
+      ],
+      "evidence_by_event": {
+        "207512": [
+          "Bite-Sized Opera: Just A Taste Of Carmen: An unforgettable evening of music, storytelling, cocktails, and community featuring an original adaptation of Bizet's Carmen through the symbolism of tarot. Join Creative OPERAtions and 3BR Distillery for this immersive performance supporting the Feed the Soul initiative.",
+          "Tags: Cocktails, Music, Theater, Opera, Wellness, Spirituality, Nightlife, Tarot, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "207512": [
+          "https://events.humanitix.com/bite-sized-opera-just-a-taste-of-carmen",
+          "https://events.humanitix.com/bite-sized-opera-just-a-taste-of-carmen?hxref=srf%3Arow%7Cmodel%3Ablend%7Ccat%3Amusic%7Crpos%3A3%7Ccpos%3A6%7Cgeo%3Aus--ny--new-york&hxchl=mkt-loc"
+        ]
+      }
+    },
+    {
+      "concept": "format-mixed-open-mic",
+      "label": "Format mixed open mic",
+      "category": "format",
+      "visual": "Microphone with words and music marks",
+      "rationale": "Open performance across multiple media.",
+      "existing_alternative": "Retain appropriate Unicode or broader accepted icon until recognition and structural review pass.",
+      "event_ids": [
+        207727
+      ],
+      "evidence_by_event": {
+        "207727": [
+          "Easy Paradise Open Mic @ Private Curtain: An open mic for comedians, musicians, poets, writers and performers of any other inclination.",
+          "Tags: Community, Music, Literature, Comedy, Open Practice, Participatory, Open Mic / Music, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "207727": [
+          "https://redroomnyc.com/event/easy-paradise-open-mic-private-curtain-17/",
+          "https://redroomnyc.com/event/easy-paradise-open-mic-private-curtain-18/",
+          "https://redroomnyc.com/event/easy-paradise-open-mic-private-curtain-19/",
+          "https://redroomnyc.com/event/easy-paradise-open-mic-private-curtain-21/",
+          "https://redroomnyc.com/event/easy-paradise-open-mic-private-curtain-22/",
+          "https://redroomnyc.com/event/easy-paradise-open-mic-private-curtain-23/"
+        ]
+      }
+    },
+    {
+      "concept": "format-puppetry",
+      "label": "Puppetry",
+      "category": "format",
+      "visual": "A stylized puppet head and articulated shoulders above a small stage edge; choose hand, rod or string control only after source verification.",
+      "rationale": "Puppetry is explicitly featured alongside music; exact control method is unresolved and must not be invented in assignment or final art.",
+      "existing_alternative": "Theater masks lose the puppet medium; toy bear suggests ordinary toys.",
+      "event_ids": [
+        208194
+      ],
+      "evidence_by_event": {
+        "208194": [
+          "David Liebe Hart / Schimaeras: An eclectic outsider music and puppetry performance featuring Tim & Eric's David Liebe Hart with Jonah Mociun, alongside space cowboy Schimaeras.",
+          "Tags: Music, Comedy, Family, Puppetry, Concert, Storytelling / Theater, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "208194": [
+          "https://www.viewcy.com/event/david_liebe_hart__sc"
+        ]
+      }
+    },
+    {
+      "concept": "format-signed-music",
+      "label": "Signed music performance",
+      "category": "format",
+      "visual": "Two expressive signing hands beside one large music note and a broad visual rhythm arc.",
+      "rationale": "The artists explicitly integrate sign languages into music performance; this is a performance feature, not an inference from disability. Handshape must be verified and avoid treating one sign as all languages.",
+      "existing_alternative": "Microphone emphasizes audible voice and I-love-you hand alone is not sign-language performance.",
+      "event_ids": [
+        207721
+      ],
+      "evidence_by_event": {
+        "207721": [
+          "Big Ocean: BIG OCEAN is the world's first K-pop group composed of artists who are hard of hearing, redefining what performance and accessibility can look like on a global stage. Since their debut in 2024, the trio has gained international recognition for seamlessly incorporating Korean Sign Language (KSL), American Sign Language (ASL), and visual storytelling into their performances, proving that music can be experienced far beyond sound.",
+          "Tags: Community, Music, Accessibility, Concert, K-Pop, Pop Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "207721": [
+          "https://caramoor.org/event/big-ocean-2026"
+        ]
+      }
+    },
+    {
+      "concept": "format-silent-disco",
+      "label": "Format silent disco",
+      "category": "format",
+      "visual": "Three colored headphone channels",
+      "rationale": "Headphone listening dance format.",
+      "existing_alternative": "Retain appropriate Unicode or broader accepted icon until recognition and structural review pass.",
+      "event_ids": [
+        207858
+      ],
+      "evidence_by_event": {
+        "207858": [
+          "XIST Silent Disco: Silent Disco at Crystal Lake Get ready for a night of music, dancing, and good vibes hosted by XIST! Join us at Crystal Lake from 7–11 PM for a one-of-a-kind silent disco experience.",
+          "Tags: Music, Dance, DJ, Nightlife, Club Night, Silent Disco, Dancing, Giveaways, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "207858": [
+          "https://partiful.com/e/isSoh1u4vdxJ8bz5YJxh?source=discover"
+        ]
+      }
+    },
+    {
+      "concept": "format-sufi-rhythm-gathering",
+      "label": "Sufi rhythm gathering",
+      "category": "format",
+      "visual": "Percussion circle with repeated pulse and movement cue",
+      "rationale": "Requires regional/instrument verification; no generic universal drum.",
+      "existing_alternative": "Current Unicode or broader accepted artwork may suffice; keep prospective until structure and recognition pass.",
+      "event_ids": [
+        207558
+      ],
+      "evidence_by_event": {
+        "207558": [
+          "Dhamal: DHAMĀL is a percussion-led Sufi rhythm gathering rooted in South Punjabi and Sindhi traditions, where listening naturally spills into movement. The evening begins with a focused set before opening into a shared space shaped by repetition, pulse, and collective energy.",
+          "Tags: Community, Music, Dance, Concert, Cultural, Percussion, Sufi, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "207558": [
+          "https://www.viewcy.com/event/dhamal_1",
+          "https://www.viewcy.com/event/dhamal_2"
+        ]
+      }
+    },
+    {
+      "concept": "format-vegan-market",
+      "label": "Format vegan market",
+      "category": "format",
+      "visual": "Plant-food stalls and leaf",
+      "rationale": "Vegan prepared foods and products differ from produce markets.",
+      "existing_alternative": "Retain appropriate Unicode or broader accepted icon until recognition and structural review pass.",
+      "event_ids": [
+        207980
+      ],
+      "evidence_by_event": {
+        "207980": [
+          "Planted Market (with Summer Salsa): This monthly market, held alongside the Sunset Salsa series, is a vegan-focused market featuring 20+ local vendors offering plant-based dishes, desserts, and specialty products in a vibrant outdoor marketplace setting.",
+          "Tags: Community, Dance, Free, Market, Outdoor, Vegan, Salsa, Format, Browsable"
+        ]
+      },
+      "source_urls_by_event": {
+        "207980": [
+          "https://www.downtownbrooklyn.com/event/summer-sunset-salsa-planted-market/",
+          "https://www.downtownbrooklyn.com/event/summer-sunset-salsa-planted-market/2026-07-09/",
+          "https://www.downtownbrooklyn.com/event/summer-sunset-salsa-planted-market/2026-08-06/",
+          "https://www.downtownbrooklyn.com/event/summer-sunset-salsa-planted-market/2026-09-03/",
+          "https://www.downtownbrooklyn.com/event/summer-sunset-salsa-planted-market/2026-10-01/"
+        ]
+      }
+    },
+    {
+      "concept": "game-american-mahjong",
+      "label": "American Mahjong",
+      "category": "activity",
+      "visual": "Three upright tiles beside a simplified horizontal scoring card",
+      "rationale": "Specific American form supported; compare added value against existing Mahjong tile before creating.",
+      "existing_alternative": "Retain the source Unicode until recognizable original artwork is reviewed.",
+      "event_ids": [
+        208057
+      ],
+      "evidence_by_event": {
+        "208057": [
+          "Mah Jong for Beginners: American Mah Jong will be offered for beginners.",
+          "Tags: Community, Games, Mahjong, Game, Participatory, Beginners, Adults, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "208057": [
+          "https://www.queenslibrary.org/event/001236-0726"
+        ]
+      }
+    },
+    {
+      "concept": "game-kart-racing",
+      "label": "Game kart racing",
+      "category": "other",
+      "visual": "Compact kart and game controller",
+      "rationale": "Video racing game distinct from real track driving.",
+      "existing_alternative": "Retain appropriate Unicode or broader accepted icon until recognition and structural review pass.",
+      "event_ids": [
+        208074
+      ],
+      "evidence_by_event": {
+        "208074": [
+          "Mario Kart on Nintendo Switch: Face off with your friends in a game of Mario Kart every Friday afternoon! Feel free to bring your own joycons if you have them. This program is intended for children ages 6 and up - younger children must be accompanied by a caregiver.",
+          "Tags: Kids, Video Games, Family, Games, Game, Mario Kart, Participatory, Nintendo Switch, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "208074": [
+          "https://www.queenslibrary.org/event/001147-0726",
+          "https://www.queenslibrary.org/event/002920-0826"
+        ]
+      }
+    },
+    {
+      "concept": "genre-caribbean",
+      "label": "Genre caribbean",
+      "category": "genre",
+      "visual": "Regional rhythm ensemble study",
+      "rationale": "Musical region alone insufficient for instrument specificity; research narrower style.",
+      "existing_alternative": "Retain appropriate Unicode or broader accepted icon until recognition and structural review pass.",
+      "event_ids": [
+        207719
+      ],
+      "evidence_by_event": {
+        "207719": [
+          "Linda EPO: Linda EPO’s musical journey is a testament to the rich tapestry of her Mexican and Haitian heritage, reflected in the vibrant fusion of genres that define her sound. Growing up amidst the diverse musical landscape of New York City, Linda’s artistry transcends borders, captivating audiences worldwide with an eclectic repertoire spanning jazz, funk, R&B, Caribbean, and Latin music.",
+          "Tags: Music, World Music, Jazz, Funk, Concert, R&B, Latin Music, Caribbean Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "207719": [
+          "https://arthurstavern.nyc/events/linda-epo/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-country",
+      "label": "Country music",
+      "category": "genre",
+      "visual": "Explore a music note integrated into a simple brimmed hat.",
+      "rationale": "Country repertoire is named; hat is only an exploratory convention and recognition testing must avoid treating costume as universal genre identity.",
+      "existing_alternative": "Noto cowboy has no music cue; guitar/banjo do not cover all country performances.",
+      "event_ids": [
+        207503
+      ],
+      "evidence_by_event": {
+        "207503": [
+          "Brooklyn Americana Music Festival: The 12th Annual Brooklyn Americana Music Festival September 10 – 13. Four nights. Four venues. Dozens of bands. Hosted by Jan Bell.",
+          "Tags: Community, Music, Free, Festival, Folk Music, Americana, Country, Live Music, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "207503": [
+          "https://dumbo.nyc/event/brooklyn-americana-music-festival/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-funk",
+      "label": "Funk",
+      "category": "genre",
+      "visual": "Explore a bent note over four offset bass-pulse blocks.",
+      "rationale": "Funk is explicitly named in the title, description or program tags. This is a prospective genre motif requiring recognition tests; it does not establish a particular instrument or an exclusive assignment for mixed bills.",
+      "existing_alternative": "Existing notes or actual featured instrument remain appropriate; custom genre art is exploratory rather than a proven recognition improvement.",
+      "event_ids": [
+        207719
+      ],
+      "evidence_by_event": {
+        "207719": [
+          "Linda EPO: Linda EPO’s musical journey is a testament to the rich tapestry of her Mexican and Haitian heritage, reflected in the vibrant fusion of genres that define her sound. Growing up amidst the diverse musical landscape of New York City, Linda’s artistry transcends borders, captivating audiences worldwide with an eclectic repertoire spanning jazz, funk, R&B, Caribbean, and Latin music.",
+          "Tags: Music, World Music, Jazz, Funk, Concert, R&B, Latin Music, Caribbean Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "207719": [
+          "https://arthurstavern.nyc/events/linda-epo/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-indie-folk",
+      "label": "Indie folk",
+      "category": "genre",
+      "visual": "Explore a restrained acoustic-song emblem.",
+      "rationale": "Indie folk is explicitly the billed musical direction.",
+      "existing_alternative": "Guitar already conveys common instrumentation; no unsupported costume or performer stereotype.",
+      "event_ids": [
+        207722
+      ],
+      "evidence_by_event": {
+        "207722": [
+          "Bandits on the Run: Bandits on the Run is an indie-folk-pop-americana outfit consisting of three lead singers who also play guitar, cello, suitcase drum, accordion, and various toy instruments.",
+          "Tags: Music, Rock, Concert, Folk Music, Americana, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "207722": [
+          "https://caramoor.org/event/bandits-on-the-run-2026-rhcs"
+        ]
+      }
+    },
+    {
+      "concept": "genre-k-pop",
+      "label": "K-pop",
+      "category": "genre",
+      "visual": "A concert lightstick with an original star-shaped head",
+      "rationale": "Fan listening and pop music concept without inferring dance participation or national stereotypes.",
+      "existing_alternative": "Retain the event Unicode fallback until a distinct recognizable study passes review.",
+      "event_ids": [
+        207721
+      ],
+      "evidence_by_event": {
+        "207721": [
+          "Big Ocean: BIG OCEAN is the world's first K-pop group composed of artists who are hard of hearing, redefining what performance and accessibility can look like on a global stage. Since their debut in 2024, the trio has gained international recognition for seamlessly incorporating Korean Sign Language (KSL), American Sign Language (ASL), and visual storytelling into their performances, proving that music can be experienced far beyond sound.",
+          "Tags: Community, Music, Accessibility, Concert, K-Pop, Pop Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "207721": [
+          "https://caramoor.org/event/big-ocean-2026"
+        ]
+      }
+    },
+    {
+      "concept": "genre-new-orleans-jazz",
+      "category": "genre",
+      "label": "New Orleans jazz",
+      "visual": "Three interweaving musical lines",
+      "rationale": "Do not infer brass band or instrument from regional style; unproven motif.",
+      "existing_alternative": "Broad fallback does not distinguish this supported facet.",
+      "event_ids": [
+        207588
+      ],
+      "evidence_by_event": {
+        "207588": [
+          "New Orleans Jazz, Rhythm & Blues with Bill Malchow!: New Orleans jazz, rhythm and blues with Bill Malchow.",
+          "Tags: Music, Jazz, Concert, Nightlife, Blues, New Orleans Jazz, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "207588": [
+          "https://www.stmazie.com/events/new-orleans-jazz-rhythm-blues-with-bill-malchow-2/",
+          "https://www.stmazie.com/events/new-orleans-jazz-rhythm-blues-with-bill-malchow/"
+        ]
+      }
+    },
+    {
+      "category": "genre",
+      "concept": "genre-reggaeton",
+      "existing_alternative": "Noto music notes or fire do not identify the subgenre; existing DJ decks identify equipment but not reggaeton.",
+      "label": "Reggaeton",
+      "rationale": "Explicit reggaeton programming supports a dembow-rhythm motif as an exploratory direction; mixed programs support a genre facet only, and recognition against generic electronic music must be tested.",
+      "visual": "A compact drum-pad grid with a bold alternating four-hit rhythm trail.",
+      "event_ids": [
+        207490
+      ],
+      "evidence_by_event": {
+        "207490": [
+          "Cabros Chicos - Halloween Anual Parrty 🎃| Reggaeton Parrty (18+): Special 18+ Event - Two Floors of Music.",
+          "Tags: Music, Dance, Nightlife, Reggaeton, Latin Music, Club Night, Halloween, Format, Social, Annual Party"
+        ]
+      },
+      "source_urls_by_event": {
+        "207490": [
+          "https://posh.vip/e/cabros-chicos-halloween-anual-parrty-reggaeton-parrty-18"
+        ]
+      }
+    },
+    {
+      "concept": "genre-soft-rock",
+      "label": "Genre soft rock",
+      "category": "genre",
+      "visual": "Mellow band instrument arrangement",
+      "rationale": "Genre recognition may need label; preserve rare idea.",
+      "existing_alternative": "Retain appropriate Unicode or broader accepted icon until recognition and structural review pass.",
+      "event_ids": [
+        207720
+      ],
+      "evidence_by_event": {
+        "207720": [
+          "The Sea Suite: The Sea Suite is a Brooklyn-based cover band channeling the smooth grooves and big hooks of the ‘70s and ‘80s into a live experience that’s equal parts nostalgic and electric. With a setlist packed with soft rock, pop, R&B, and soul classics, the Sea Suite brings an iconic era of music to life with their own fresh energy.",
+          "Tags: Music, Concert, R&B, Soul Music, Pop Music, Cover Band, Live Music, Soft Rock, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "207720": [
+          "https://arthurstavern.nyc/events/the-sea-suite/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-soul",
+      "label": "Soul music",
+      "category": "genre",
+      "visual": "A record with a rounded call-and-response wave.",
+      "rationale": "Classic and Northern Soul are explicit repertoire; the motif needs testing against funk and R&B and should not imply live vocals.",
+      "existing_alternative": "DJ decks serve the current activity; no existing icon distinguishes soul repertoire.",
+      "event_ids": [
+        207720
+      ],
+      "evidence_by_event": {
+        "207720": [
+          "The Sea Suite: The Sea Suite is a Brooklyn-based cover band channeling the smooth grooves and big hooks of the ‘70s and ‘80s into a live experience that’s equal parts nostalgic and electric. With a setlist packed with soft rock, pop, R&B, and soul classics, the Sea Suite brings an iconic era of music to life with their own fresh energy.",
+          "Tags: Music, Concert, R&B, Soul Music, Pop Music, Cover Band, Live Music, Soft Rock, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "207720": [
+          "https://arthurstavern.nyc/events/the-sea-suite/"
+        ]
+      }
+    },
+    {
+      "concept": "instrument-grand-piano",
+      "label": "Grand piano",
+      "category": "instrument",
+      "visual": "Plausible grand-piano body, keyboard and supported lid.",
+      "rationale": "Explicit piano repertoire; verify actual piano type for art.",
+      "existing_alternative": "Keyboard Unicode avoids guessing grand versus upright.",
+      "event_ids": [
+        207724
+      ],
+      "evidence_by_event": {
+        "207724": [
+          "Jonathan Biss, piano: Pianist Jonathan Biss is recognized globally for his impeccable taste and formidable technique, and is particularly renowned for his deep engagement with the music of Beethoven.",
+          "Tags: Music, Classical Music, Education, Concert, Recital, Piano, Chamber Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "207724": [
+          "https://caramoor.org/event/jonathan-biss-2026-rhcs"
+        ]
+      }
+    },
+    {
+      "concept": "instrument-lute",
+      "label": "Instrument lute",
+      "category": "instrument",
+      "visual": "Round-backed lute with angled pegbox",
+      "rationale": "Distinct from guitar/oud; structural study required.",
+      "existing_alternative": "Retain appropriate Unicode or broader accepted icon until recognition and structural review pass.",
+      "event_ids": [
+        207580
+      ],
+      "evidence_by_event": {
+        "207580": [
+          "TENET: While separated in life by 300 years, John Dowland and Benjamin Britten shared masterful gifts for setting poetry to music and this program honors their contributions to our musical landscape. This intimate program for two singers, lute, and harp reveals the engaging simplicity of the human voice’s ability to tell stories and capture the imagination of listeners.",
+          "Tags: Community, Music, Classical Music, Concert, Vocal Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "207580": [
+          "https://www.mmc.band/calendar-details?recordId=recWbSemN37nL2msi"
+        ]
+      }
+    },
+    {
+      "concept": "sport-road-marathon",
+      "label": "Road marathon",
+      "category": "sport",
+      "visual": "Road route with runner and finish ribbon",
+      "rationale": "Road running differs from track exercise; exact route not shown.",
+      "existing_alternative": "Current Unicode or broader accepted artwork may suffice; keep prospective until structure and recognition pass.",
+      "event_ids": [
+        208321
+      ],
+      "evidence_by_event": {
+        "208321": [
+          "2026 TCS New York City Marathon: Studio in a School is proud to be an official charity partner of the 2026 TCS New York City Marathon. Supporters are encouraged to join Team Studio to run through the iconic city streets in support of students’ creativity and learning.",
+          "Tags: Community, Sports, Fitness, Outdoor, Running, Fundraiser, Marathon, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "208321": [
+          "http://tcsnycmarathon.org/",
+          "https://fortunesociety.org/event-show/2026-tcs-new-york-city-marathon/",
+          "https://studioinaschool.org/join-studio-for-the-2026-tcs-new-york-city-marathon/"
+        ]
+      }
+    }
+  ],
+  "limitations": "Counts describe this cohort, not population reach. These are grounded prospective studies, not live assignments. Existing artwork may already suffice; exact equipment and genre recognition require further review."
+}

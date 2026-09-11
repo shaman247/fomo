@@ -1,0 +1,195 @@
+[
+  {
+    "icon_id": "craft-resin-jewelry",
+    "source_sha256": "8d99c3cd85f3ff27f3913a6ca23fdbd4438e262633e6535eec5c549e91540f42",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Floral resin pendant with droplet.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-015/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-015/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 919,
+      "gzip_level_6": 457
+    },
+    "optimization": {
+      "initial_raw": 974,
+      "initial_gzip_level_6": 499,
+      "final_raw": 919,
+      "final_gzip_level_6": 457
+    },
+    "issues": [
+      {
+        "issue": "Initial broad pendant and large bail resembled a handbag.",
+        "resolution": "Changed body to a tall oval pendant with a smaller jewelry bail; rechecked native sizes.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Floral pendant and liquid drop suggest resin jewelry at24/32px. The small bail and stem soften at16px. Resin rather than glass still requires event context; image is not a handling instruction."
+    ]
+  },
+  {
+    "icon_id": "craft-coloring-pages",
+    "source_sha256": "1405288d191c1897d2755629e6996a2133f4c1be4ae5a2fd859a203c7640c0b8",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Partly colored outline page and crayon.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-015/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-015/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 852,
+      "gzip_level_6": 453
+    },
+    "optimization": {
+      "initial_raw": 852,
+      "initial_gzip_level_6": 453,
+      "final_raw": 852,
+      "final_gzip_level_6": 453
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Partly colored flower outline and crayon distinguish coloring pages at24/32px. Fine outline detail softens at16px but page/tool remain."
+    ]
+  },
+  {
+    "icon_id": "dance-zumba",
+    "source_sha256": "907ba8b4224d2c711d5b52473dc0b7259eff5c74f1d7df6cae4a40f86d7253fa",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Grounded athletic dance to music.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-015/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-015/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 2724,
+      "gzip_level_6": 1108
+    },
+    "optimization": {
+      "initial_raw": 2804,
+      "initial_gzip_level_6": 1142,
+      "final_raw": 2724,
+      "final_gzip_level_6": 1108
+    },
+    "issues": [
+      {
+        "issue": "First pose was stiff and the short-hair cap rendered incompletely because its face winding was inward.",
+        "resolution": "Corrected hair-cap face orientation, lowered one bent arm and offset foot spacing while preserving identical paired bone lengths and ground contacts.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Athletic dancer, sneakers and music notes represent dance fitness at24/32px. A pose alone cannot identify the Zumba brand; assignment requires explicit named-class evidence. Fine facial and hand features disappear at16px. Grounded stance does not promise specific choreography, impact level or accommodations."
+    ]
+  },
+  {
+    "icon_id": "equipment-bookmobile",
+    "source_sha256": "a904c6135e7358c308580ce1562981c6dcffb039d6ee4824c26db3f10c44a546",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Library vehicle with open-book emblem.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-015/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-015/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 4424,
+      "gzip_level_6": 1616
+    },
+    "optimization": {
+      "initial_raw": 4424,
+      "initial_gzip_level_6": 1616,
+      "final_raw": 4424,
+      "final_gzip_level_6": 1616
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Library coach and open-book side emblem remain clear at24/32px. Page lines and tiny headlights soften at16px; bookmobile identification needs the event label at that size. Generic vehicle is not a particular fleet model."
+    ]
+  },
+  {
+    "icon_id": "activity-financial-coaching",
+    "source_sha256": "b9c664172db43a3c9978665145faecabf0b75709a86d9bd74f8c28a0a7c6235b",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Financial conversation and budgeting tools.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-015/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-015/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 893,
+      "gzip_level_6": 465
+    },
+    "optimization": {
+      "initial_raw": 761,
+      "initial_gzip_level_6": 436,
+      "final_raw": 893,
+      "final_gzip_level_6": 465
+    },
+    "issues": [
+      {
+        "issue": "Initial checkmark could suggest a promised successful outcome.",
+        "resolution": "Replaced the checkmark with a neutral coin emblem; retained calculator and conversation bubbles.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Calculator, conversation bubbles and coin symbolize money-management coaching at24/32px. Small keys/coin marks soften at16px. There is no claim of financial improvement, investment returns or debt relief."
+    ]
+  }
+]

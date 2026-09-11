@@ -1,0 +1,85 @@
+{
+  "reviewer_mode": "creator-critical-pass",
+  "views": [
+    "front",
+    "rear",
+    "left",
+    "right",
+    "top",
+    "icon"
+  ],
+  "evidence": ".scratch/icon-cycles-20260909/cycle-030/geometry.png",
+  "measurements": ".scratch/icon-cycles-20260909/cycle-030/geometry-measurements.json",
+  "decision": "pass",
+  "findings": [
+    "Authoritative forest scene reuses a verified standing-body construction with original new clothing colors and a new wooded layout. Person is about 1.64m tall; upper-arm radius 41mm is smaller than thigh 71mm, neck is short and both leg segment lengths are equal. Shoes contact ground y=0.",
+    "Two tree trunks extend below the ground plane; attached branches enter their canopies. Side/top views show the person separated from both trees, and the front/rear views show supported feet and continuous clothing. Roots and floor establish support without floating props. Tree heights around 2.48 and 2.80m are illustrative, not site measurements.",
+    "Face discs stay on the live person\u2019s face, clothing uses coherent broad paint and projection retains depth clipping. Forest SVG is 6769 raw / 2364 gzip6 bytes, within the detailed custom-figure range; no additional size reduction was necessary.",
+    "Four other icons are deliberately flat pictograms. Hairwork is an original planar looped floral ornament, not a construction diagram or copied historical lyre. Gala revised from wedding-like invitation to fundraising emblem; language learning revised to separate it from existing book discussion.",
+    "Final 128/32/24/16px light/dark candidates, ten actual IconManager variants, five accepted peers and four pinned Noto references were personally inspected. Creator critical pass with prior brief knowledge; not independent or blind."
+  ],
+  "references": [
+    {
+      "url": "https://www.yivo.org/FALL2026-Intermediate1",
+      "finding": "Primary page read in Chrome confirms a live Zoom course in Yiddish and English, with textbook chapters, vocabulary, grammar, listening, reading and writing. This is broader than conversation-only practice or exchange."
+    },
+    {
+      "url": "https://boroughsofthedead.com/tours/ghostly-women-of-greenwich-village/",
+      "finding": "Primary organizer confirms a 90-minute haunted-history walking tour and Manuel Plaza, 35 E4 Street start; stored museum address differs and is logged. Icon route is symbolic."
+    },
+    {
+      "url": "https://www.marineparkalliance.org/events/list/",
+      "finding": "Primary current event list confirms October 3 forest bathing with Tasha LaDonna, mindful sensory connection and a Salt Marsh Nature Center meeting point. Direct detail-page fetch failed."
+    },
+    {
+      "url": "https://www.marineparkalliance.org/wp-content/uploads/2026/04/Marine-Park-Alliance-Summer-2026-Calendar.pdf",
+      "finding": "Primary summer-program text describes the same instructor using slow immersion walking, sensory invitations, breathwork and reflection. This informs the general activity, not the October date or exact pose."
+    },
+    {
+      "url": "https://www.morbidanatomy.org/events/2026/9/24/y6auigaj6j6yllk4n9z7qgwn4uwm61-42bwm",
+      "finding": "Primary event confirms September 27 opening of an expanded library with nearly fifty Victorian hairwork pieces donated from Leila\u2019s Hair Museum. URL date differs; tattoo-neighbor offers are separate."
+    },
+    {
+      "url": "https://www.metmuseum.org/art/collection/search/903057",
+      "finding": "Primary museum page and object photograph visually inspected in Chrome. Historical human-hair floral loops and wire form a framed lyre-shaped wreath; the icon uses an original simplified non-lyre floral design. The page describes hair from living and deceased family members."
+    },
+    {
+      "url": "https://gardens.si.edu/collections/explore/object/hac_1988.024.001-.003",
+      "finding": "Indexed primary Smithsonian record identifies hair garlands made with human hair, wire, thread and fabric. Direct fetch failed; no Smithsonian image is claimed as viewed."
+    },
+    {
+      "url": "https://daisyjoplingfoundation.org/mevents/4th-annual-around-the-world-with-daisy-gala/",
+      "finding": "Primary gala page confirms October 4, 2026 at Abbey Inn and Spa; ticket status is now on sale, unlike the stored pre-sale announcement."
+    },
+    {
+      "url": "https://opus40.org/event/2026-fall-gala/",
+      "finding": "Primary October 10 gala page explicitly identifies proceeds supporting preservation and programming. No fixed meal/dress-code promise used in artwork. Its 50-years-since-1978 statement conflicts with 2026 and is logged."
+    },
+    {
+      "url": "https://www.freddysbar.com/events/daniels-and-baker-folk-and-more-duo",
+      "finding": "Complete primary program read in Chrome continues beyond the truncated stored text: mandolins, fiddle, guitars and duo vocals. Existing music-duo art is more accurate than promoting one instrument; mandolin remains prospective."
+    },
+    {
+      "url": "https://gingoldgroup.org/productions/village-wooingby-george-bernard-shaw/",
+      "finding": "Primary confirms special salon production at House of the Redeemer, not a staged reading or performance at the Gingold office. Masks retained and venue conflict logged."
+    },
+    {
+      "url": "https://www.bergenpac.org/events/detail/andy-cohen",
+      "finding": "Primary conversation event includes a pre-signed copy of Andy\u2019s Bravo Scrapbook, supporting author-conversation artwork despite omitted book title in stored description."
+    },
+    {
+      "url": "https://www.bergenpac.org/events/detail/movie-screening-of-high-fidelity-with-john-cusack",
+      "finding": "Primary confirms actor appearance plus film screening but provides only biography, with no explicit audience Q&A. Retained cinema fallback instead of inferring Q&A."
+    },
+    {
+      "url": "https://poetshouse.org/event/seminar-garcia-lorca-poet-in-new-york-ricardo-alberto-maldonado/",
+      "finding": "Primary read in Chrome confirms guided reading of a named collection over three Zoom Thursdays, October 15/22/29, 7\u20138:30pm. Existing selected-reading group art fits; missing Virtual and wrong office pin logged."
+    },
+    {
+      "url": "https://www.lightwiretheater.com/about",
+      "finding": "Primary company result describes electroluminescent character construction; primary Tortoise and Hare production matches stored text. Mechanism-specific future study is retained instead of hand-puppet assignment."
+    }
+  ],
+  "source_sha256": "b4ba4754a03c4b6e85a84ffbbdd83bef3c7b6e973ecfcc1866af5f21d89405fc",
+  "projector_sha256": "ea1b3b475f8df6cbdf36c508ccc399ccbdbae8aeb0451706fe5cc0ae989f28f7"
+}

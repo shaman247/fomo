@@ -1,0 +1,1296 @@
+{
+  "date": "2026-09-11",
+  "scope": "Cycle 065: 100 sequential events 220552–220688, no targeted supplements.",
+  "suggestions": 59,
+  "concept_count": 58,
+  "concepts": [
+    {
+      "concept": "genre-experimental-electronic",
+      "label": "Experimental electronic music",
+      "category": "genre",
+      "visual": "Abstract irregular waveform and electronic tone marks.",
+      "rationale": "Genre is explicit; do not assume live synthesis or DJ mode.",
+      "existing_alternative": "Unicode or suitable accepted custom artwork remains available. Prospective study requires source and recognition review before live assignment.",
+      "event_ids": [
+        220579,
+        220580
+      ],
+      "evidence_by_event": {
+        "220579": [
+          "FUJI|||||||||||TA & Ka Baird / Actress / Team Rolfes: No description available.",
+          "Tags: Music, Performing Arts, Art, Dance, Concert, Electronic Music, Experimental Music, Multimedia, Live Music, Format, Performance"
+        ],
+        "220580": [
+          "claire rousay & Martyna Basta / Keith \"Giant Claw\" Rankin & Julek ploski: No description available.",
+          "Tags: Music, Performing Arts, Dance, Concert, Electronic Music, Experimental Music, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220579": [
+          "https://lincolncenter.org/series/lincoln-center-presents/fujiororororororta-andamp-ka-baird-actress-team-rolfes"
+        ],
+        "220580": [
+          "https://lincolncenter.org/series/lincoln-center-presents/claire-rousay-andamp-martyna-basta-keith-andquotgiant-clawandquot-rankin-andamp-julek-ploski"
+        ]
+      }
+    },
+    {
+      "concept": "activity-acting-masterclass",
+      "label": "Acting masterclass",
+      "category": "activity",
+      "visual": "Script and director feedback marks.",
+      "rationale": "Participatory direction/critique differs from audience-only theater and improv.",
+      "existing_alternative": "Use suitable existing catalog artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220603
+      ],
+      "evidence_by_event": {
+        "220603": [
+          "HB Premier Masterclass: Acting with Reed Birney: Join Reed Birney, Tony Award-winning actor of stage and screen, for HB Studio's inaugural Premier Master Class. This two-day master class offers actors hands-on direction and critique on material of their choice, including monologues, scenes, audition pieces, songs, and original work.",
+          "Tags: Theater, Workshop, Education, Master Class, Acting, Class, Participatory, Observation, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "220603": [
+          "https://hbstudio.coursestorm.com/course/hb-premier-masterclass-acting-with-reed-birney",
+          "https://hbstudio.coursestorm.com/course/observer-access-hb-premier-masterclass-acting-with-reed-birney"
+        ]
+      }
+    },
+    {
+      "concept": "activity-sundae-making",
+      "label": "Sundae making",
+      "category": "activity",
+      "visual": "Ice-cream dish beside toppings and spoon.",
+      "rationale": "Hands-on construction explicit; no branded menu or exact toppings promise.",
+      "existing_alternative": "Use suitable existing catalog artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220680
+      ],
+      "evidence_by_event": {
+        "220680": [
+          "Learn to Create Over the Top Sundaes: Join Joe Cald",
+          "Tags: Community, Workshop, Education, Food, Dessert, Hands on, In Person, Ice Cream, Participatory, Format, Sundaes"
+        ]
+      },
+      "source_urls_by_event": {
+        "220680": [
+          "https://www.meetup.com/culinary-enthusiasts-of-nyc/events/316087188/",
+          "https://www.meetup.com/nyc-foodie-explorers/events/316087202/",
+          "https://www.meetup.com/nyc-foodies/events/316087337/"
+        ]
+      }
+    },
+    {
+      "concept": "art-rod-puppet",
+      "label": "Rod puppetry",
+      "category": "craft",
+      "visual": "Small articulated puppet with connected control rods.",
+      "rationale": "Newspaper/chopstick puppet suggests study; exact manipulation must be confirmed.",
+      "existing_alternative": "Use suitable existing catalog artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220595
+      ],
+      "evidence_by_event": {
+        "220595": [
+          "De Papel: Silencio Blanco.",
+          "Tags: Music, Theater, Performing Arts, Contemporary Art, Visual Arts, Art, Dance, Family, Puppetry, Live Music, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220595": [
+          "https://lincolncenter.org/series/lincoln-center-presents/de-papel-848"
+        ]
+      }
+    },
+    {
+      "concept": "craft-elastic-waist-skirt",
+      "label": "Skirt sewing",
+      "category": "craft",
+      "visual": "Fabric skirt with gathered waistband beside sewing cue.",
+      "rationale": "Explicit finished garment; no promised fabric or fit.",
+      "existing_alternative": "Use suitable existing catalog artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220624
+      ],
+      "evidence_by_event": {
+        "220624": [
+          "Sewing 101 - Make a Skirt: For total beginners--if you've been wanting to learn to sew or you haven't touched a machine in years, this is the class for you. In just one session we'll walk you through the basics; you'll leave class with a finished elastic-waisted skirt.",
+          "Tags: Art, Family, Education, Fiber Arts, Crafts, Sewing, Class, Beginner Friendly, Participatory, Garment Making, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "220624": [
+          "https://www.brooklyncraftcompany.com/products/sewing-101-make-a-skirt"
+        ]
+      }
+    },
+    {
+      "concept": "craft-faux-leather-journal",
+      "label": "Faux-leather journal binding",
+      "category": "craft",
+      "visual": "Soft-cover sewn journal with visible folded signatures.",
+      "rationale": "Synthetic cover and handbinding,not animal leather or journaling instruction.",
+      "existing_alternative": "Use suitable existing catalog artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220625
+      ],
+      "evidence_by_event": {
+        "220625": [
+          "Bookbinding 101: DIY Journals: Come learn how to make your very own hand-bound, softcover faux leather journal. In this class, students will cover basic bookbinding techniques and terminology, from sizing and folding paper to the final assembly process.",
+          "Tags: Art, Wellness, Education, Bookbinding, DIY, Journaling, Crafts, Class, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "220625": [
+          "https://www.brooklyncraftcompany.com/products/bookbinding-101-diy-journal"
+        ]
+      }
+    },
+    {
+      "concept": "craft-felted-animal-sculpture",
+      "label": "Felted animal sculpture",
+      "category": "craft",
+      "visual": "Small wool animal beside felting needle.",
+      "rationale": "Miniature pet made from wool,not live-animal handling.",
+      "existing_alternative": "Use suitable existing catalog artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220636
+      ],
+      "evidence_by_event": {
+        "220636": [
+          "Needle Felted Pets: Sculpt 3D works of art out of wool! In just 2.5 hours you can learn the craft of needle felting and create a simple, mini version of your fave pet. The workshop covers needle-felting basics, forming raw wool fibers into shapes, and replicating a specific animal of your choice.",
+          "Tags: Art, Workshop, Family, Education, Fiber Arts, Crafts, Needle Felting, Beginner Friendly, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "220636": [
+          "https://www.brooklyncraftcompany.com/products/greenpoint-workshop-needle-felted-pets"
+        ]
+      }
+    },
+    {
+      "concept": "craft-floral-stitch-sampler",
+      "label": "Floral stitch sampler",
+      "category": "craft",
+      "visual": "Embroidery hoop with distinct flower stitches.",
+      "rationale": "Textile embroidery rather than botanical illustration.",
+      "existing_alternative": "Use suitable existing catalog artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220639
+      ],
+      "evidence_by_event": {
+        "220639": [
+          "Floral Embroidery: Learn how to add texture and depth to needlework while making a floral stitch sampler. Led by Brooklyn-based embroidery artist Angela Stewart, the workshop covers transferring a printed image to fabric and creating fishbone stitch, stem stitch, woven wheel, and French knots.",
+          "Tags: Art, Workshop, Education, Fiber Arts, Crafts, Needlework, Participatory, Embroidery, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "220639": [
+          "https://www.brooklyncraftcompany.com/products/embroidery-ii-florals-and-texture"
+        ]
+      }
+    },
+    {
+      "concept": "craft-granny-square-bag",
+      "label": "Granny-square crochet bag",
+      "category": "craft",
+      "visual": "Joined crochet squares forming a bag.",
+      "rationale": "Original generic openwork; do not copy Tom-a-tote proprietary motif.",
+      "existing_alternative": "Use suitable existing catalog artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220644
+      ],
+      "evidence_by_event": {
+        "220644": [
+          "Crochet 102: Tom-a-tote!: Make your very own Tom-a-tote, the latest pattern from Brooklyn Craft Company. In one three-hour session, participants learn to stitch tomato motif squares and get the 411 on bag construction, including crocheting granny stitch, creating granny motifs, crocheting in the round, connecting squares, and making a bag strap.",
+          "Tags: Art, Workshop, Education, Fiber Arts, Crafts, Class, Crochet, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "220644": [
+          "https://www.brooklyncraftcompany.com/products/crochet-102-tom-a-tote"
+        ]
+      }
+    },
+    {
+      "concept": "craft-granny-square-crochet",
+      "label": "Granny-square crochet",
+      "category": "craft",
+      "visual": "Crochet hook and openwork square.",
+      "rationale": "Crochet rounds and joining explicitly described; no copied commercial pattern.",
+      "existing_alternative": "Use suitable existing catalog artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220627
+      ],
+      "evidence_by_event": {
+        "220627": [
+          "Crochet 102: Granny Squares: Take your beginner crochet skills to the next level as you master the classic granny square—in a modern way! In one three-hour session, you'll learn the basic granny stitch, how to crochet in the round, how to connect squares to create blankets and accessories, how to experiment with color combinations, and how to choose the right yarn.",
+          "Tags: Art, Workshop, Education, Fiber Arts, Crafts, Class, Crochet, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "220627": [
+          "https://www.brooklyncraftcompany.com/products/crochet-granny-squares"
+        ]
+      }
+    },
+    {
+      "concept": "craft-jacket-sewing",
+      "label": "Jacket sewing",
+      "category": "craft",
+      "visual": "Open-front garment and collar pattern pieces.",
+      "rationale": "Jacket construction,not costume performance; class session count disputed.",
+      "existing_alternative": "Use suitable existing catalog artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220652
+      ],
+      "evidence_by_event": {
+        "220652": [
+          "5-Week Sewing Course - Ilford Jacket: Join us to make a Friday Pattern Co. Ilford Jacket in this 5-week course. Under the guidance of a resident sewing expert, participants will learn the basics of shirt and jacket construction and several garment-sewing essentials.",
+          "Tags: Art, Education, Fiber Arts, Crafts, Sewing, Class, Participatory, Intermediate, Garment Making, Format, Garment Sewing"
+        ]
+      },
+      "source_urls_by_event": {
+        "220652": [
+          "https://www.brooklyncraftcompany.com/products/greenpoint-workshop-4-week-sewing-course-ilford-jacket"
+        ]
+      }
+    },
+    {
+      "concept": "craft-jumpsuit-sewing",
+      "label": "Jumpsuit sewing",
+      "category": "craft",
+      "visual": "Full-length garment pattern with joined bodice and legs.",
+      "rationale": "Intermediate garment course; exact machine use remains unconfirmed.",
+      "existing_alternative": "Use suitable existing catalog artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220649
+      ],
+      "evidence_by_event": {
+        "220649": [
+          "Sew a Jumpsuit (4 Parts): Join us to make an Open Studio Patterns Bumper Jumper in this 4-part course. Under the guidance of resident sewing experts, participants will learn the basics of jumpsuit construction and several garment-sewing essentials. Intermediate sewing experience is required; this is not a learn-to-sew class.",
+          "Tags: Art, Workshop, Education, Fiber Arts, Crafts, Sewing, Class, Participatory, Intermediate, Garment Making, Format, Garment Sewing, Jumpsuit"
+        ]
+      },
+      "source_urls_by_event": {
+        "220649": [
+          "https://www.brooklyncraftcompany.com/products/sew-a-jumpsuit-3-parts"
+        ]
+      }
+    },
+    {
+      "concept": "craft-knitted-bandana",
+      "label": "Knitted bandana",
+      "category": "craft",
+      "visual": "Triangular knitted scarf with shaped edges.",
+      "rationale": "Knitting decreases/increases,not sewing or copied brand pattern.",
+      "existing_alternative": "Use suitable existing catalog artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220658
+      ],
+      "evidence_by_event": {
+        "220658": [
+          "Knitting 102: Billie Bandana: Bring your knitting to the next level with this jaunty bandana! In this 3-hour workshop, participants will work on the Billie Bandana by Studio Faden and learn how to increase, decrease, make elegant edges with slipped stitches, and follow an intermediate knitting pattern while understanding knitting terminology and abbreviations. Beginner knitting skills, including the knit stitch and casting on, are required.",
+          "Tags: Art, Workshop, Education, Fiber Arts, Crafts, Class, Participatory, Knitting, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "220658": [
+          "https://www.brooklyncraftcompany.com/products/knitting-102-billie-bandana"
+        ]
+      }
+    },
+    {
+      "concept": "craft-lined-tote-sewing",
+      "label": "Lined tote sewing",
+      "category": "craft",
+      "visual": "Open tote revealing contrasting lining and straps.",
+      "rationale": "Sewn lined bag,not shopping event.",
+      "existing_alternative": "Use suitable existing catalog artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220631
+      ],
+      "evidence_by_event": {
+        "220631": [
+          "Sewing 101 - Tote Bag: For total beginners, this one-session class covers sewing-machine basics, accurate fabric cutting, pinning and sewing seams, creating a lining, and attaching straps. Participants leave with a finished, lined tote bag and an understanding of sewing fundamentals.",
+          "Tags: Art, Workshop, Family, Education, Fiber Arts, Crafts, Sewing, Class, Hands on, Beginner Friendly, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "220631": [
+          "https://www.brooklyncraftcompany.com/products/sewing-101-tote-bag"
+        ]
+      }
+    },
+    {
+      "concept": "craft-log-cabin-patchwork",
+      "label": "Log-cabin patchwork",
+      "category": "craft",
+      "visual": "Offset concentric fabric strips around a square.",
+      "rationale": "Explicit quilt-block construction; generic original block not instructor pattern copy.",
+      "existing_alternative": "Use suitable existing catalog artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220623
+      ],
+      "evidence_by_event": {
+        "220623": [
+          "Beginner Patchwork: In this four-hour workshop, instructor Diana Rogers introduces beginner patchwork, the process of sewing small pieces of fabric together to make a larger composition. Students will learn to design and assemble a log cabin quilt block, cut and assemble fabric pieces, iron in quilting, and work toward making a small quilt top.",
+          "Tags: Art, Workshop, Education, Fiber Arts, Crafts, Sewing, Quilting, Participatory, Format, Patchwork"
+        ]
+      },
+      "source_urls_by_event": {
+        "220623": [
+          "https://www.brooklyncraftcompany.com/products/beginner-patchwork"
+        ]
+      }
+    },
+    {
+      "concept": "craft-pajama-pants-sewing",
+      "label": "Pajama-pants sewing",
+      "category": "craft",
+      "visual": "Soft trouser pattern with waistband and hem.",
+      "rationale": "Pattern-based sewing,not generic sleepover.",
+      "existing_alternative": "Use suitable existing catalog artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220659
+      ],
+      "evidence_by_event": {
+        "220659": [
+          "Sew Pajama Pants (1 day): In this confident-beginner workshop, participants learn to sew a pair of flannel pajama pants from start to finish. The class covers working from a commercial pattern, measuring for fit, fabric preparation, garment construction, and making a waistband and hem.",
+          "Tags: Art, Workshop, Family, Education, Fiber Arts, Crafts, Sewing, Beginner Friendly, Participatory, Format, Garment Sewing"
+        ]
+      },
+      "source_urls_by_event": {
+        "220659": [
+          "https://www.brooklyncraftcompany.com/products/sew-pajama-pants"
+        ]
+      }
+    },
+    {
+      "concept": "craft-pressed-flower-coasters",
+      "label": "Pressed-flower coasters",
+      "category": "craft",
+      "visual": "Pressed botanicals sandwiched in edged transparent squares.",
+      "rationale": "Acrylic sheets and copper foil explicit,not resin or firing.",
+      "existing_alternative": "Use suitable existing catalog artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220653
+      ],
+      "evidence_by_event": {
+        "220653": [
+          "Pressed Flower Coasters: Join us for an evening of crafty floral fun! In this 1.5 hour workshop, students will make a set of up to 4 coasters using pressed flowers, greenery, acrylic sheets, and decorative copper foils.",
+          "Tags: Art, Workshop, Family, Education, Crafts, Beginner Friendly, Flowers, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "220653": [
+          "https://www.brooklyncraftcompany.com/products/galentines-day-pressed-flower-coasters"
+        ]
+      }
+    },
+    {
+      "concept": "craft-sock-knitting",
+      "label": "Sock knitting",
+      "category": "craft",
+      "visual": "Knitted sock on needles with heel shape.",
+      "rationale": "Advanced heel shaping and grafting explicit; no copied pattern.",
+      "existing_alternative": "Use suitable existing catalog artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220651
+      ],
+      "evidence_by_event": {
+        "220651": [
+          "Knitting 104: Sock Knitting: Learn to knit socks in this three-part advanced workshop using the “A Simple Sock” pattern by instructor Lili Tobias. Participants will learn techniques including magic loop knitting, making and turning a heel flap, picking up stitches, shaping with decreases, grafting with Kitchener Stitch, and following a sock pattern.",
+          "Tags: Art, Workshop, Education, Fiber Arts, Crafts, Class, Participatory, Advanced Skills, Knitting, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "220651": [
+          "https://www.brooklyncraftcompany.com/products/greenpoint-workshop-sock-knitting"
+        ]
+      }
+    },
+    {
+      "concept": "craft-trouser-sewing",
+      "label": "Trouser sewing",
+      "category": "craft",
+      "visual": "Trouser pattern pieces beside fabric.",
+      "rationale": "Pattern-based garment construction,not laundry or wardrobe swap.",
+      "existing_alternative": "Use suitable existing catalog artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220650
+      ],
+      "evidence_by_event": {
+        "220650": [
+          "Intro to Garment Sewing - Free Range Slacks (Weeknights, 3 parts): If you want to learn to sew from a pattern, gain an understanding of garment construction, and begin sewing your own clothes, this is the workshop for you! In this three-evening workshop, you'll sew a super-cute pair of Free Range Slacks, custom made to fit your body. These slacks feature an elastic waist, front pockets, and either a tapered or wide leg.",
+          "Tags: Art, Workshop, Education, Fiber Arts, Crafts, Pattern Making, Sewing, Class, Participatory, Garment Making, Format, Garment Sewing"
+        ]
+      },
+      "source_urls_by_event": {
+        "220650": [
+          "https://www.brooklyncraftcompany.com/products/greenpoint-workshop-intro-to-garment-sewing-free-range-slacks-weeknights-3-parts"
+        ]
+      }
+    },
+    {
+      "concept": "craft-zipper-pillow-sewing",
+      "label": "Zipper-pillow sewing",
+      "category": "craft",
+      "visual": "Cushion cover with visible zipper and fabric.",
+      "rationale": "Machine-sewn cushion,not upholstery frame construction.",
+      "existing_alternative": "Use suitable existing catalog artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220660
+      ],
+      "evidence_by_event": {
+        "220660": [
+          "Sew a Zipper Pillow: Whether you're a sewing newbie or a confident beginner wanting to tackle zipper projects, this class teaches sewing basics while participants make a custom cushion. The class covers sewing machine basics, cutting fabric accurately, pinning and sewing seams, and installing a zipper.",
+          "Tags: Art, Workshop, Family, Education, DIY, Fiber Arts, Crafts, Sewing, Beginner Friendly, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "220660": [
+          "https://www.brooklyncraftcompany.com/products/sew-a-zipper-pillow"
+        ]
+      }
+    },
+    {
+      "concept": "craft-zipper-pouch-sewing",
+      "label": "Zipper-pouch sewing",
+      "category": "craft",
+      "visual": "Lined pouch with open zipper and squared bottom.",
+      "rationale": "Explicit sewing construction; machine type not assumed.",
+      "existing_alternative": "Use suitable existing catalog artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220655
+      ],
+      "evidence_by_event": {
+        "220655": [
+          "Sew Zipper Pouches: Whether you're a confident beginner wanting to tackle zipper projects, or a more advanced sewist wanting to dip your toes into bag making, this class is for you. Participants will make two lined zipper pouches while learning how to cut fabric accurately, sew seams, create linings, sew a squared flat bag bottom, and install a zipper.",
+          "Tags: Art, Workshop, Education, Fiber Arts, Crafts, Sewing, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "220655": [
+          "https://www.brooklyncraftcompany.com/products/sew-zipper-pouches"
+        ]
+      }
+    },
+    {
+      "concept": "dance-bharatanatyam",
+      "label": "Bharatanatyam",
+      "category": "dance-style",
+      "visual": "Referenced grounded dance pose with clear hand and foot contacts.",
+      "rationale": "Primary identifies Bharatanatyam; costume and gesture need specialist visual review.",
+      "existing_alternative": "Use suitable existing catalog artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220593
+      ],
+      "evidence_by_event": {
+        "220593": [
+          "Ragamala Dance Company: A Living Lineage: No description available.",
+          "Tags: Community, Music, Theater, Performing Arts, Dance, Education, Virtual, Cultural Heritage, Zoom, Indian Dance, Live Music, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220593": [
+          "https://lincolncenter.org/series/accessibility-at-lincoln-center/ragamala-dance-company-a-living-lineage"
+        ]
+      }
+    },
+    {
+      "concept": "dance-flamenco",
+      "label": "Flamenco",
+      "category": "dance-style",
+      "visual": "Grounded dancer pose with expressive arms",
+      "rationale": "Supported prospective study; verify exact event technique and small-scale recognition.",
+      "existing_alternative": "Current reviewed fallback remains defensible; do not infer equipment from genre.",
+      "event_ids": [
+        220596
+      ],
+      "evidence_by_event": {
+        "220596": [
+          "ALBA Musik: Contemporary Flamenco: No description available.",
+          "Tags: Music, Performing Arts, Dance, Concert, Contemporary Music, Flamenco, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220596": [
+          "https://lincolncenter.org/series/lincoln-center-presents/alba-musik-contemporary-flamenco-767"
+        ]
+      }
+    },
+    {
+      "concept": "dance-house",
+      "label": "House dance",
+      "category": "dance-style",
+      "visual": "Sneakered dancer in a low jacking posture with separated bent knees.",
+      "rationale": "House footwork and jacking are the taught subject; pose needs recognition testing against general street dance.",
+      "existing_alternative": "Noto dancer does not communicate house footwork; DJ decks describes music production rather than class.",
+      "event_ids": [
+        220563
+      ],
+      "evidence_by_event": {
+        "220563": [
+          "House Dance: Roots & Movement: No description available.",
+          "Tags: Music, Theater, Performing Arts, Dance, Live Music, House Dance, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220563": [
+          "https://lincolncenter.org/series/lincoln-center-presents/house-dance-roots-andamp-movement-252"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-piano-sax-percussion",
+      "label": "Piano, saxophone and percussion trio",
+      "category": "format",
+      "visual": "Piano,saxophone and hand percussion grouped together.",
+      "rationale": "Exact primary lineup differs from standard piano/bass/drums trio.",
+      "existing_alternative": "Use suitable existing catalog artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220567
+      ],
+      "evidence_by_event": {
+        "220567": [
+          "Living Memories: A Sonic Journey Through San Juan Hill: Mathis Picard",
+          "Tags: Community, Music, Theater, History, Performing Arts, Art, Dance, Education, Sound Art, Live Music, Exhibition, Format, Browsable"
+        ]
+      },
+      "source_urls_by_event": {
+        "220567": [
+          "https://lincolncenter.org/series/lincoln-center-presents/living-memories-a-sonic-journey-through-san-juan-hill-734"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-string-quartet-vocal-trio",
+      "label": "String quartet and vocal trio",
+      "category": "format",
+      "visual": "Four bowed-string marks beside three singing marks.",
+      "rationale": "Explicit collaborative lineup; players should be structurally researched before artwork.",
+      "existing_alternative": "Use suitable existing catalog artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220683
+      ],
+      "evidence_by_event": {
+        "220683": [
+          "Vitamin String Quartet & Girl Named Tom: The Crazy Ordinary World Tour: The world-renowned ensemble Vitamin String Quartet joins forces with the captivating harmonies of acclaimed vocal trio Girl Named Tom to bring their genre-defying arrangements to stages across the U.S. Enjoy music-making at its highest level, with reimagined classics and modern hits, stunning performances, and unforgettable collaborative moments.",
+          "Tags: Music, Classical Music, Concert, Folk Music, String Quartet, Pop Music, Folk Pop, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220683": [
+          "https://www.mayoarts.org/shows/vitamin-string-quartet-girl-named-tom-the-crazy-ordinary-world-tour/"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-violin-string-ensemble",
+      "label": "Violin with string ensemble",
+      "category": "format",
+      "visual": "Violin soloist motif ahead of multiple music stands.",
+      "rationale": "Soloist with backing ensemble; no fixed quartet count.",
+      "existing_alternative": "Use suitable existing catalog artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220598
+      ],
+      "evidence_by_event": {
+        "220598": [
+          "Nemanja Radulović & Double Sens: No description available.",
+          "Tags: Music, Performing Arts, Dance, Classical Music, Concert, Violin, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220598": [
+          "https://lincolncenter.org/series/lincoln-center-presents/nemanja-radulovic-andamp-double-sens-66"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-vocal-quartet",
+      "label": "Vocal quartet",
+      "category": "format",
+      "visual": "Four equal singing marks.",
+      "rationale": "Group performance suggests vocal harmony; exact four-person lineup needs confirmation.",
+      "existing_alternative": "Use suitable existing catalog artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220611
+      ],
+      "evidence_by_event": {
+        "220611": [
+          "THOSE GIRLS – Celebrating 10 years!: Join THOSE GIRLS as they celebrate ten years of music, friendship, harmony, and humor. Expect favorite songs from throughout the years, new stories, plenty of laughter, and a mix of pop, swing, classic rock, and Broadway tunes.",
+          "Tags: Community, Cabaret, Broadway, Music, Comedy, Concert, Musical Theater, Nightlife, Celebration, Pop Music, Harmony, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220611": [
+          "https://www.pangeanyc.com/show/cabaret-room-those-girls-celebrating-10-years-700pm/"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-voice-piano-duo",
+      "label": "Voice and piano duo",
+      "category": "format",
+      "visual": "Microphone and piano sharing a stage.",
+      "rationale": "Duo explicit; exact instrument requires primary confirmation.",
+      "existing_alternative": "Use suitable existing catalog artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220610
+      ],
+      "evidence_by_event": {
+        "220610": [
+          "An Evening with Haley Driver and Cyrus Chestnut: Join Haley Driver and Cyrus Chestnut for a journey through jazz and the American songbook, featuring selections from Driver’s EP and original musical arrangements by Chestnut. The duo has performed together across the country and will perform together again in New York City.",
+          "Tags: Music, Jazz, Concert, American Songbook, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220610": [
+          "https://www.pangeanyc.com/show/cabaret-room-an-evening-with-haley-driver-and-cyrus-chestnut-700pm/"
+        ]
+      }
+    },
+    {
+      "concept": "format-accessible-performance-workshop",
+      "label": "Performance and facilitated workshop",
+      "category": "format",
+      "visual": "Stage motif beside hands-on discussion cards.",
+      "rationale": "Access and audience eligibility must be explicit; no universal accessibility claim.",
+      "existing_alternative": "Use suitable existing catalog artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220577
+      ],
+      "evidence_by_event": {
+        "220577": [
+          "A Sonic Journey Through San Juan Hill with Mathis Picard: No description available.",
+          "Tags: Music, Performing Arts, Art, Dance, Jazz, Concert, Sound Art, Live Music, San Juan Hill, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220577": [
+          "https://lincolncenter.org/series/accessibility-at-lincoln-center/a-sonic-journey-through-san-juan-hill-with-mathis-picard-492"
+        ]
+      }
+    },
+    {
+      "concept": "format-acoustic-band-concert",
+      "label": "Acoustic band concert",
+      "category": "format",
+      "visual": "Unamplified-instrument music motif on a stage.",
+      "rationale": "Acoustic arrangement does not identify exact instrument set or absence of amplification.",
+      "existing_alternative": "Use suitable existing catalog artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220686
+      ],
+      "evidence_by_event": {
+        "220686": [
+          "Toad the Wet Sprocket: Rings: The Acoustic Tour: One of the most successful alternative rock bands, Toad the Wet Sprocket is known for melodic hits such as “Walk on the Ocean,” “All I Want” and “Fall Down.” This acoustic concert reimagines their classic songs and fan favorites, marking the enduring growth of their musical journey.",
+          "Tags: Music, Rock, Concert, Acoustic, Alternative Rock, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220686": [
+          "https://www.mayoarts.org/shows/toad-the-wet-sprocket/"
+        ]
+      }
+    },
+    {
+      "concept": "format-anniversary-benefit",
+      "label": "Anniversary benefit",
+      "category": "format",
+      "visual": "Anniversary ribbon and support-heart motif.",
+      "rationale": "Fundraising celebration without gala or meal assumption.",
+      "existing_alternative": "Use suitable existing catalog artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220681
+      ],
+      "evidence_by_event": {
+        "220681": [
+          "Bac Is 10: In 2016, a group of young Black artists asked how the arts could play a more meaningful role in creating a just world. Ten years later, Broadway Advocacy Coalition celebrates a decade of impact while raising support for the next chapter of its work, honoring “The Original Cast & Crew” that made it possible.",
+          "Tags: Community, Theater, Benefit, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "220681": [
+          "https://www.bwayadvocacycoalition.org/events/bac-is-10"
+        ]
+      }
+    },
+    {
+      "concept": "format-chamber-duets",
+      "label": "Chamber duet program",
+      "category": "format",
+      "visual": "Two score stands with short shared musical line.",
+      "rationale": "Changing instrumental duets,not one fixed instrumental pair or full orchestra.",
+      "existing_alternative": "Use suitable existing catalog artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220589
+      ],
+      "evidence_by_event": {
+        "220589": [
+          "Orchestra in Miniature: No description available.",
+          "Tags: Music, Performing Arts, Dance, Classical Music, Orchestra, Concert, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220589": [
+          "https://lincolncenter.org/series/lincoln-center-presents/orchestra-in-miniature-848"
+        ]
+      }
+    },
+    {
+      "concept": "format-comedy-solo-theater",
+      "label": "Solo comic theater",
+      "category": "format",
+      "visual": "Single stage spot and comedy mask.",
+      "rationale": "Solo performance with comedy differs from verified stand-up.",
+      "existing_alternative": "Use suitable existing catalog artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220575
+      ],
+      "evidence_by_event": {
+        "220575": [
+          "LOL: Laughing Out Lonely: No description available.",
+          "Tags: Music, Theater, Performing Arts, Dance, Comedy, Comedy Show, Solo Performance, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220575": [
+          "https://lincolncenter.org/series/lincoln-center-presents/lol-laughing-out-lonely-701"
+        ]
+      }
+    },
+    {
+      "concept": "format-composer-song-tribute",
+      "label": "Composer song tribute",
+      "category": "format",
+      "visual": "Historical songbook and stage microphone.",
+      "rationale": "Stories and songs celebrate composer catalog,not purely historical lecture.",
+      "existing_alternative": "Use suitable existing catalog artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220615
+      ],
+      "evidence_by_event": {
+        "220615": [
+          "The Songs and Loves of Irving Berlin: Join “incredible storyteller” Lisa Faith Phillips, the divine singer Deanna Kirk, and the brilliant John Di Martino on piano for a “wildly entertaining” evening weaving funny and touching tales of Irving Berlin’s life and loves with his beautiful songs. The evening will end with a crowd-pleasing sing-along.",
+          "Tags: Cabaret, Music, Family, Concert, Nightlife, Sing Along, Irving Berlin, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220615": [
+          "https://www.pangeanyc.com/show/cabaret-room-the-songs-and-loves-of-irving-berlin-700pm-2/"
+        ]
+      }
+    },
+    {
+      "concept": "format-dance-film-screening",
+      "label": "Dance-film screening",
+      "category": "format",
+      "visual": "Film frame around a movement silhouette.",
+      "rationale": "Screening dance is not live dance.",
+      "existing_alternative": "Use suitable existing catalog artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220576
+      ],
+      "evidence_by_event": {
+        "220576": [
+          "Moving Body – Moving Image: No description available.",
+          "Tags: Music, Performing Arts, Visual Arts, Art, Dance, Film, Screening, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220576": [
+          "https://lincolncenter.org/series/lincoln-center-presents/moving-body-andndash-moving-image-185"
+        ]
+      }
+    },
+    {
+      "concept": "format-dance-live-score",
+      "label": "Dance with live score",
+      "category": "format",
+      "visual": "Stage dance motif beside musician score.",
+      "rationale": "Live accompanying musician explicitly interacts with choreography.",
+      "existing_alternative": "Use suitable existing catalog artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220587
+      ],
+      "evidence_by_event": {
+        "220587": [
+          "Ambrose Akinmusire and Aszure Barton: A a: A b | B E N D.",
+          "Tags: Music, Theater, Performing Arts, Art, Dance, Jazz, Live Music, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220587": [
+          "https://lincolncenter.org/series/lincoln-center-presents/ambrose-akinmusire-and-aszure-barton"
+        ]
+      }
+    },
+    {
+      "concept": "format-family-song-legacy-concert",
+      "label": "Family song legacy concert",
+      "category": "format",
+      "visual": "Two generations of song pages sharing a microphone.",
+      "rationale": "Living artist performs family catalog; deceased artist not a live copresenter.",
+      "existing_alternative": "Use suitable existing catalog artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220687
+      ],
+      "evidence_by_event": {
+        "220687": [
+          "Croce Plays Croce: Join A.J. Croce and his band for a special performance celebrating the timeless songs of his father, Jim Croce, alongside favorites from A.J.’s own acclaimed catalog. The show features a blend of Jim Croce’s legendary songs and A.J.’s own acclaimed originals, connected through stories, humor, and remarkable musicianship.",
+          "Tags: Music, Rock, Concert, Blues, Singer Songwriter, Vocal Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220687": [
+          "https://www.mayoarts.org/shows/croce-plays-croce/"
+        ]
+      }
+    },
+    {
+      "concept": "format-historical-document-reading",
+      "label": "Historical document reading",
+      "category": "format",
+      "visual": "Archival page presented at a reading stand.",
+      "rationale": "Historical voices reading needs confirmed documentary-reading format.",
+      "existing_alternative": "Use suitable existing catalog artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220594
+      ],
+      "evidence_by_event": {
+        "220594": [
+          "Voices of a People's History: No description available.",
+          "Tags: Community, Music, Theater, History, Performing Arts, Literature, Dance, Education, Reading, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220594": [
+          "https://lincolncenter.org/series/lincoln-center-presents/voices-of-a-peopleand39s-history-145"
+        ]
+      }
+    },
+    {
+      "concept": "format-immersive-mystery-walk",
+      "label": "Immersive mystery walk",
+      "category": "format",
+      "visual": "Lantern-lit route and theatrical mystery document.",
+      "rationale": "Guided live-action fiction differs from factual ghost history or formal escape-room mechanics.",
+      "existing_alternative": "Use suitable existing catalog artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220670
+      ],
+      "evidence_by_event": {
+        "220670": [
+          "The Headless Horseman Files: Immerse yourself in this Sleepy Hollow whodunit and decide for yourself what really happened to Ichabod Crane. Follow your guide on a mysterious 45-minute walk through the historic grounds of Sleepy Hollow’s Philipsburg Manor, where you’ll step into a chilling, live-action 18th-century whodunit.",
+          "Tags: Theater, Neighborhood, Interactive, Family, Outdoor, Westchester, Immersive Experience, Sleepy Hollow, Halloween, Format, Browsable"
+        ]
+      },
+      "source_urls_by_event": {
+        "220670": [
+          "https://hudsonvalley.org/events/the-headless-horseman-files/"
+        ]
+      }
+    },
+    {
+      "concept": "format-latin-dance-theater",
+      "label": "Latin dance theater",
+      "category": "format",
+      "visual": "Grounded dance silhouette framed by stage curtains.",
+      "rationale": "Urban staged choreography needs source confirmation of particular Latin forms.",
+      "existing_alternative": "Use suitable existing catalog artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220574
+      ],
+      "evidence_by_event": {
+        "220574": [
+          "Urban Love Suite: Directed and Choreographed by Sekou McMiller.",
+          "Tags: Music, Theater, Performing Arts, Dance, Choreography, Urban Dance, Love, Live Music, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220574": [
+          "https://lincolncenter.org/series/lincoln-center-presents/urban-love-suite-865"
+        ]
+      }
+    },
+    {
+      "concept": "format-live-game-show",
+      "label": "Live game show",
+      "category": "format",
+      "visual": "A broad segmented prize wheel with a pointer and small buzzer.",
+      "rationale": "Audience contestants spin and solve puzzles for prizes; television-style play differs from trivia.",
+      "existing_alternative": "Ferris wheel misstates the object and bingo uses different rules.",
+      "event_ids": [
+        220682
+      ],
+      "evidence_by_event": {
+        "220682": [
+          "Wheel of Fortune LIVE! – America’s Game®: Contestants are randomly selected from the audience to join the host onstage for a chance to spin a replica of the iconic Wheel, solve puzzles, and win prizes including trips to Paris and Hawaii or up to $10,000 in cash. Fans can also audition on-site for the chance to appear as a contestant on a future episode of the TV show.",
+          "Tags: Music, Theater, Family, Games, Live Music, Format, Theater Show, Performance, Wheel of Fortune"
+        ]
+      },
+      "source_urls_by_event": {
+        "220682": [
+          "https://www.mayoarts.org/shows/wheel-of-fortune-live/"
+        ]
+      }
+    },
+    {
+      "concept": "format-memorial-concert",
+      "label": "Memorial concert",
+      "category": "format",
+      "visual": "Music note alongside a remembrance ribbon.",
+      "rationale": "Memorial musical celebration does not establish choir or religion.",
+      "existing_alternative": "Use suitable existing catalog artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220571
+      ],
+      "evidence_by_event": {
+        "220571": [
+          "Over My Head I Hear Freedom in the Air: A Celebration of the Life and Legacy of Bernice Johnson Reagon",
+          "Tags: Community, Music, History, Performing Arts, Dance, Education, Concert, Freedom, Legacy, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220571": [
+          "https://lincolncenter.org/series/lincoln-center-presents/over-my-head-i-hear-freedom-in-the-air-604"
+        ]
+      }
+    },
+    {
+      "concept": "format-multidisciplinary-arts-festival",
+      "label": "Multidisciplinary arts festival",
+      "category": "format",
+      "visual": "Music,theater and art emblems on a festival card.",
+      "rationale": "Mixed weekend arts cannot imply one medium.",
+      "existing_alternative": "Use suitable existing catalog artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220560
+      ],
+      "evidence_by_event": {
+        "220560": [
+          "Contemporary Portugal at Lincoln Center: A Weekend of Contemporary Portuguese Arts",
+          "Tags: Community, Music, Performing Arts, Contemporary Art, Visual Arts, Art, Dance, Concert, Live Music, Format, Performance, Portugal, Portuguese Arts"
+        ]
+      },
+      "source_urls_by_event": {
+        "220560": [
+          "https://lincolncenter.org/series/lincoln-center-presents/contemporary-portugal-at-lincoln-center-79"
+        ]
+      }
+    },
+    {
+      "concept": "format-musical-comedy",
+      "label": "Musical comedy",
+      "category": "format",
+      "visual": "Music note beside a laughing theatrical face.",
+      "rationale": "Comic songs differ from spoken stand-up.",
+      "existing_alternative": "Existing broad Unicode remains suitable; specific motif must demonstrate added recognition before new artwork.",
+      "event_ids": [
+        220684
+      ],
+      "evidence_by_event": {
+        "220684": [
+          "Meredith Willson’s The Music Man: Meredith Willson’s six-time, Tony Award-winning musical comedy follows traveling salesman Harold Hill as he cons the people of River City, Iowa, into buying instruments and uniforms for a boys’ band. His plans are foiled when he falls for Marian, the librarian, and the production is described as a family-friendly story.",
+          "Tags: Broadway, Theater, Family, Musical Theater, Musical Comedy, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220684": [
+          "https://www.mayoarts.org/shows/the-music-man/"
+        ]
+      }
+    },
+    {
+      "concept": "format-musical-theater-revue",
+      "label": "Stage-song revue",
+      "category": "format",
+      "visual": "Theater mask beside several song sheets.",
+      "rationale": "Concert of stage songs differs from a complete musical.",
+      "existing_alternative": "Use suitable existing catalog artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220555
+      ],
+      "evidence_by_event": {
+        "220555": [
+          "Bilingual Broadway EN VIVO: No description available.",
+          "Tags: Broadway, Music, Theater, Performing Arts, Dance, Education, Musical Theater, Bilingual, Language Learning, Live Music, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220555": [
+          "https://lincolncenter.org/series/lincoln-center-presents/bilingual-broadway-en-vivo-517"
+        ]
+      }
+    },
+    {
+      "concept": "format-piano-orchestra-collaboration",
+      "label": "Piano and orchestra collaboration",
+      "category": "format",
+      "visual": "Keyboard with shared orchestral score.",
+      "rationale": "Piano plus orchestra and guests exceeds solo or trio representation.",
+      "existing_alternative": "Use suitable existing catalog artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220582
+      ],
+      "evidence_by_event": {
+        "220582": [
+          "Hania Rani presents Non-Fiction: featuring Sinfonia Varsovia and Księżyc.",
+          "Tags: Music, Performing Arts, Dance, Concert, Piano, Contemporary Music, Live Music, Piano Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220582": [
+          "https://lincolncenter.org/series/lincoln-center-presents/hania-rani-presents-non-fiction"
+        ]
+      }
+    },
+    {
+      "concept": "format-site-specific-performance",
+      "label": "Site-specific performance",
+      "category": "format",
+      "visual": "Small performing area integrated with a plaza.",
+      "rationale": "Named plaza production needs primary confirmation of site-specific role.",
+      "existing_alternative": "Use suitable existing catalog artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220569
+      ],
+      "evidence_by_event": {
+        "220569": [
+          "PLAZA: Created by Andrew Schneider",
+          "Tags: Music, Theater, Performing Arts, Contemporary Art, Visual Arts, Art, Dance, Concert, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220569": [
+          "https://lincolncenter.org/series/lincoln-center-presents/plaza-374"
+        ]
+      }
+    },
+    {
+      "concept": "format-virtual-film-screening",
+      "label": "Virtual film screening",
+      "category": "format",
+      "visual": "Film frame inside a computer screen.",
+      "rationale": "Remote screening does not imply a physical cinema.",
+      "existing_alternative": "Use suitable existing catalog artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220583
+      ],
+      "evidence_by_event": {
+        "220583": [
+          "Relaxed Virtual Screening of San Juan Hill: Manhattan’s Lost Neighborhood: A Film by Stanley Nelson.",
+          "Tags: Music, History, Performing Arts, Dance, Documentary, Film, Education, Screening, Virtual, Zoom, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220583": [
+          "https://lincolncenter.org/series/lincoln-center-presents/relaxed-virtual-screening-of-san-juan-hill-manhattanandrsquos-lost-neighborhood-693"
+        ]
+      }
+    },
+    {
+      "concept": "genre-afro-cuban-percussion",
+      "label": "Afro-Cuban percussion",
+      "category": "genre",
+      "visual": "A carefully researched set of distinct percussion instruments.",
+      "rationale": "Cuban percussion is stated but exact featured instruments require structural research.",
+      "existing_alternative": "Use suitable existing catalog artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220578
+      ],
+      "evidence_by_event": {
+        "220578": [
+          "Brenda Navarrete: No description available.",
+          "Tags: Music, Performing Arts, Dance, World Music, Concert, Latin Music, Percussion, Cuban Music, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220578": [
+          "https://lincolncenter.org/series/lincoln-center-presents/brenda-navarrete-259"
+        ]
+      }
+    },
+    {
+      "concept": "genre-bossa-nova-indie",
+      "label": "Bossa nova and indie fusion",
+      "category": "genre",
+      "visual": "Interleaved gently syncopated musical phrases.",
+      "rationale": "Artist described as blending bossa,jazz,indie and rock; no exact instrument guarantee.",
+      "existing_alternative": "Use suitable existing catalog artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220572
+      ],
+      "evidence_by_event": {
+        "220572": [
+          "Mei Semones: No description available.",
+          "Tags: Music, Performing Arts, Dance, Concert, Singer Songwriter, Vocal Music, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220572": [
+          "https://lincolncenter.org/series/lincoln-center-presents/mei-semones-849"
+        ]
+      }
+    },
+    {
+      "concept": "genre-choro",
+      "label": "Choro",
+      "category": "genre",
+      "visual": "Two intertwined musical phrases drawn as bold curled note stems around one central note.",
+      "rationale": "Choro is the explicit jam focus; melodic interplay motif is exploratory and must pass user recognition testing without claiming a specific instrument.",
+      "existing_alternative": "Flag conveys country rather than genre; unspecified guitar or flute would infer instrumentation.",
+      "event_ids": [
+        220556
+      ],
+      "evidence_by_event": {
+        "220556": [
+          "Água de Moringa and Mariana Baltar: No description available.",
+          "Tags: Music, Performing Arts, Dance, World Music, Concert, Latin Music, Brazilian Music, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220556": [
+          "https://lincolncenter.org/series/lincoln-center-presents/andaacutegua-de-moringa-and-mariana-baltar-829"
+        ]
+      }
+    },
+    {
+      "concept": "genre-hip-hop",
+      "label": "Hip-hop",
+      "category": "genre",
+      "visual": "A compact boombox with two broad speaker circles and one strong rhythmic accent.",
+      "rationale": "The genre is explicitly tagged; boombox is an exploratory historical music-culture cue, not a claim that it is on stage, and must be tested beyond generic retro music.",
+      "existing_alternative": "Noto microphone is generic vocal performance; DJ decks imply a DJ role not established by every hip-hop concert.",
+      "event_ids": [
+        220588
+      ],
+      "evidence_by_event": {
+        "220588": [
+          "Topaz Jones: No description available.",
+          "Tags: Music, Performing Arts, Dance, Hip Hop, Concert, Contemporary Music, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220588": [
+          "https://lincolncenter.org/series/lincoln-center-presents/topaz-jones-640"
+        ]
+      }
+    },
+    {
+      "concept": "genre-horror-screening",
+      "label": "Horror film screening",
+      "category": "genre",
+      "visual": "Film frame with a shadow silhouette.",
+      "rationale": "Genre-specific screening; avoid plot imagery suggesting real violence.",
+      "existing_alternative": "Use suitable existing catalog artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220591
+      ],
+      "evidence_by_event": {
+        "220591": [
+          "Friday the 13th Part VIII: Jason Takes Manhattan: No description available.",
+          "Tags: Music, Performing Arts, Dance, Film, Screening, Horror, Classic Film, Cult Classic, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220591": [
+          "https://lincolncenter.org/series/lincoln-center-presents/friday-the-13th-part-viii-jason-takes-manhattan-729"
+        ]
+      }
+    },
+    {
+      "concept": "genre-indigenous-contemporary-music",
+      "label": "Indigenous contemporary music",
+      "category": "genre",
+      "visual": "Contemporary musical motif with space for artist-specific context.",
+      "rationale": "Broad identity is not a universal visual tradition; further artist-led scope work needed.",
+      "existing_alternative": "Use suitable existing catalog artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220565
+      ],
+      "evidence_by_event": {
+        "220565": [
+          "Elisapie: No description available.",
+          "Tags: Music, Performing Arts, Dance, Concert, Singer Songwriter, Vocal Music, Indigenous Music, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220565": [
+          "https://lincolncenter.org/series/lincoln-center-presents/elisapie-906"
+        ]
+      }
+    },
+    {
+      "category": "genre",
+      "concept": "genre-rnb",
+      "existing_alternative": "Noto microphone shows vocals but not genre; avoid assuming saxophone or other instruments.",
+      "label": "R&B",
+      "rationale": "R&B is explicit; exploratory smooth vocal motif is not a proven genre symbol and must be tested.",
+      "visual": "Explore a microphone paired with a single smooth looping sound-wave ribbon.",
+      "event_ids": [
+        220553
+      ],
+      "evidence_by_event": {
+        "220553": [
+          "Gathering: An R&B Story with Marcus Machado & Friends: No description available.",
+          "Tags: Music, Performing Arts, Dance, Concert, R&B, Live Music, Storytelling / Theater, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220553": [
+          "https://lincolncenter.org/series/lincoln-center-presents/gathering-an-randampb-story-with-marcus-machado-andamp-friends-83"
+        ]
+      }
+    },
+    {
+      "concept": "genre-soul",
+      "label": "Soul music",
+      "category": "genre",
+      "visual": "A record with a rounded call-and-response wave.",
+      "rationale": "Classic and Northern Soul are explicit repertoire; the motif needs testing against funk and R&B and should not imply live vocals.",
+      "existing_alternative": "DJ decks serve the current activity; no existing icon distinguishes soul repertoire.",
+      "event_ids": [
+        220554
+      ],
+      "evidence_by_event": {
+        "220554": [
+          "What You Won't Do For Love: No description available.",
+          "Tags: Music, Performing Arts, Dance, Concert, R&B, Soul Music, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "220554": [
+          "https://lincolncenter.org/series/lincoln-center-presents/what-you-wonand39t-do-for-love-193"
+        ]
+      }
+    },
+    {
+      "concept": "ritual-community-ofrenda",
+      "label": "Community ofrenda",
+      "category": "other",
+      "visual": "Community altar with flowers and mementos.",
+      "rationale": "Day of the Dead altar,not generic Halloween or calavera craft; cultural construction requires reference.",
+      "existing_alternative": "Use suitable existing catalog artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        220592
+      ],
+      "evidence_by_event": {
+        "220592": [
+          "Día de Muertos Celebration: Featuring Guachinangos and a Community Ofrenda.",
+          "Tags: Community, Music, Theater, Performing Arts, Dance, Family, Education, Cultural Heritage, Cultural Celebration, Live Music, Community Celebration, Format, Social, Dia De Muertos, Day of the Dead"
+        ]
+      },
+      "source_urls_by_event": {
+        "220592": [
+          "https://lincolncenter.org/series/lincoln-center-presents/dandiacutea-de-muertos-celebration-740"
+        ]
+      }
+    }
+  ],
+  "limitations": "Counts describe this cohort, not population reach. These are grounded prospective studies, not live assignments. Existing artwork may already suffice; exact equipment and genre recognition require further review."
+}

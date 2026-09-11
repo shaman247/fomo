@@ -1,0 +1,177 @@
+[
+  {
+    "icon_id": "format-listening-circle",
+    "source_sha256": "d16bdd1e619672cbe8d736dfb79e1b1c0106551248f61aedd03d9e275a47d914",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Shared phone music and listening bubbles.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-013/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-013/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 991,
+      "gzip_level_6": 507
+    },
+    "optimization": {
+      "initial_raw": 991,
+      "initial_gzip_level_6": 507,
+      "final_raw": 991,
+      "final_gzip_level_6": 507
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Phone music and two sharing bubbles distinguish recorded-song sharing at24/32px. At16px staff lines and small sound detail soften; the phone and shared music remain. It symbolizes participatory listening, not a clinical treatment."
+    ]
+  },
+  {
+    "icon_id": "format-roast-battle",
+    "source_sha256": "8cefec43c3b017ef7fa05aae24906f21af089cc6c10c3b38fe5fca29accb6410",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Two comic speech faces exchanging jokes, with a sharp comic accent.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-013/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-013/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 741,
+      "gzip_level_6": 389
+    },
+    "optimization": {
+      "initial_raw": 741,
+      "initial_gzip_level_6": 389,
+      "final_raw": 741,
+      "final_gzip_level_6": 389
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Two smiling speech bubbles and a comic bolt suggest reciprocal comic sparring at24/32px. At16px the small bolt softens. The graphic alone does not prove competition; explicit roast-battle event context is required."
+    ]
+  },
+  {
+    "icon_id": "activity-museum-object-handling",
+    "source_sha256": "33728060ac79317e8d1776a4b2ea49cd2a6031d903cce81004bf91aac7b0d651",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Selected tactile museum objects on a tray with a handprint sign.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-013/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-013/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 4892,
+      "gzip_level_6": 1692
+    },
+    "optimization": {
+      "initial_raw": 4892,
+      "initial_gzip_level_6": 1692,
+      "final_raw": 4892,
+      "final_gzip_level_6": 1692
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Camera-shaped object, material sample and handprint sign identify supervised touch-object exploration at24/32px. Hand digits and material grooves soften at16px. Objects are representative and the icon does not authorize touching unselected exhibits."
+    ]
+  },
+  {
+    "icon_id": "craft-furniture-making",
+    "source_sha256": "a32f3a1e694b1295d8dffc9202d1948fb0f63ffe7510f19b5689e9944e3d11e6",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Furniture stool and woodworking tools.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-013/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-013/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 3417,
+      "gzip_level_6": 1247
+    },
+    "optimization": {
+      "initial_raw": 3417,
+      "initial_gzip_level_6": 1247,
+      "final_raw": 3417,
+      "final_gzip_level_6": 1247
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Joined wooden stool, mallet and chisel convey furniture work at24/32px. At16px fine grain and blade details soften, but furniture and tool silhouettes remain. Neither a specific historical replica nor a particular class project is promised."
+    ]
+  },
+  {
+    "icon_id": "format-small-group-discussion",
+    "source_sha256": "f727bdfea0b8c9534e912ff5a06b3b6fcc53d536de8756577ce7b6d38d484cc0",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind: creator inspected unlabeled native-size cards with prior brief knowledge. Participant discussion around a common question.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-013/visual-final",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-013/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 727,
+      "gzip_level_6": 426
+    },
+    "optimization": {
+      "initial_raw": 727,
+      "initial_gzip_level_6": 426,
+      "final_raw": 727,
+      "final_gzip_level_6": 426
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Three separate speech bubbles organized around a shared question identify group discussion at24/32px. Small text-like lines soften at16px. Three bubbles are symbolic, not a required group size."
+    ]
+  }
+]

@@ -1,0 +1,94 @@
+{
+  "reviewer_mode": "creator-critical-pass",
+  "geometry_mode": "five-flat-symbolic-diagrams",
+  "views": [],
+  "decision": "pass",
+  "findings": [
+    "Personally inspected all five128/32/24/16px light/dark cards, five accepted custom and four Noto reference cards, and ten actual IconManager variants. Creator critique, not blind or independent.",
+    "These are flat symbols, not physical objects or human figures. No nontrivial geometry requires a3D scene. Housing, court, charts, note, heart and laurel marks are original.",
+    "No clipping, conflicting shading, stray fragments or material alignment defect found. Tribute star overlaps the music emblem deliberately; showcase speech bubble sits in front of its symbolic screen. Native16px details soften and all narrow meanings need text labels.",
+    "All five files below15KBraw/5KBgzip thresholds; initial and final source are unchanged. Lightweight geometry retained without adding decorative details.",
+    "Primary pages support the five scopes and exclusions. The Housing Court and tenant-rights illustrations provide no legal instructions; the chart contains no actual data. No outside photographs, videos, diagrams or artist designs viewed or traced."
+  ],
+  "references": [
+    {
+      "url": "https://www.nyc.gov/site/hpd/events/rights-know-your-rights-market-rate-apartments-tenants-and-good-cause-protection/1043616/1",
+      "checked": "2026-09-11",
+      "method": "Live browser networkidle body",
+      "findings": "Sep24 noon\u20131:30. Tenant-rights education by HPD for current NYC tenants. Page lists990PelhamParkwaySouth plus Zoom registration; attendance mode needs reconciliation. No individual legal advice asserted; public joining credentials omitted from notes."
+    },
+    {
+      "url": "https://www.nyc.gov/site/hpd/events/housing-court-what-to-expect/1117316/1",
+      "checked": "2026-09-11",
+      "method": "Live browser networkidle body",
+      "findings": "Sep28 noon\u20132Zoom. Housing Court Answers teaches process, case types and where to find help for tenants/owners. Explicitly not legal advice. Online event is not an in-person Lower Manhattan meeting."
+    },
+    {
+      "url": "https://nycpitpopup.org/event/climate-week-macaulay-honors-fall-datathon-showcase-day-one/",
+      "checked": "2026-09-11",
+      "method": "Live browser body",
+      "findings": "Sep24 2\u20136, opening day ofSep24\u201326 series. Nine finalist teams present completed data/mapping projects publicly after a300-plus-student competition, with OpenPlans on day1. OculusShop53SouthConcourseMainFloorC2,185Greenwich. Air-quality conclusions are organizer claims, not independently verified scientific findings or depicted chart data."
+    },
+    {
+      "url": "https://jazz.org/concert/eddie-palmieri-experience-an-all-star-celebration/",
+      "checked": "2026-09-11",
+      "method": "Primary venue web text",
+      "findings": "Nov13/14 7:30RoseTheater,6:30preconcert lecture. Honors Eddie Palmieri1936\u20132025 through music by alumni, directed by LouisFouche/LuquesCurtis with BrianLynch,ConradHerwig,HermanOlivera,NelsonGonzalez and others. Honoree does not appear. Membership/subscription and10:45Dizzys text is additional promotion, not the concert time."
+    },
+    {
+      "url": "https://www.thetownhall.org/event/jay-electronica-and-friends-benefit-concert-3",
+      "checked": "2026-09-11",
+      "method": "Live browser body",
+      "findings": "Nov15 8pmTownHall123W43. Benefit concert supports youth initiatives inSTEM,wellbeing,anti-bullying,technology and sports. Recipient organization and exact proceeds fraction are not specified; these causes are not services offered to attendees."
+    },
+    {
+      "url": "https://www.thetownhall.org/event/difficult-people-the-movie-a-live-table-read",
+      "checked": "2026-09-11",
+      "method": "Primary venue web text",
+      "findings": "Nov3 7pmTownHall, public cast table read of a comedy screenplay, not a movie screening. Listed actors include JulieKlausner,BillyEichner,AndreaMartin,JamesUrbaniak,ShakinaNayfack,DerrickBaskin,GaboureySidibe. Comic aside about Emeril is not factual biographical evidence or an instruction."
+    },
+    {
+      "url": "https://www.thetownhall.org/event/ny-comedy-festival-presents-sht-show-hosted-by-jordan-klepper",
+      "checked": "2026-09-11",
+      "method": "Primary venue web text",
+      "findings": "Nov14 7pm,doors6. JordanKlepper hosts satirical news panel with games/bits. Host biography is separate from current show activities; no guest roster confirmed."
+    },
+    {
+      "url": "https://jazz.org/concert/vamos-a-gozar-a-webop-latin-jazz-family-party/",
+      "checked": "2026-09-11",
+      "method": "Primary venue web text",
+      "findings": "Sep26 10:30/12:30ErtegunAtriumGA. WeBop Family Jazz Band leads young listeners in movement/hands-on music with mambo,cha-cha,samba,rumba repertory. Exact age range unstated. Generic late-nightDizzys paragraph is not another child-event occurrence."
+    },
+    {
+      "url": "https://lincolncenter.org/series/lincoln-center-presents/music-and-creativity",
+      "checked": "2026-09-11",
+      "method": "Live browser body; web parser exceeded content limit",
+      "findings": "Nov14 1pm about1hLeFrakLobbyDavidGeffenHall10LincolnCenter. All ages create graphic scores together with NYPhilharmonic musicians/teaching artists, then hear them. Free first-come admission or FastTrack opening priorMonday noon. Workshop, not stored Talk; no music experience required. No images or score examples viewed."
+    },
+    {
+      "url": "https://lincolncenter.org/series/lincoln-center-presents/create-athon-mural-making-graffiti-style-561",
+      "checked": "2026-09-11",
+      "method": "Live browser body",
+      "findings": "Nov15 1pm about2.5hClarkStudioTheater165W65seventhfloor. DAZE helps teens/young adults design individual canvas tags integrated into one mural. Free first-come/FastTrack. Actual tools/spray paint not promised. Generic10LincolnCenter location is wrong for this session."
+    },
+    {
+      "url": "https://www.thetownhall.org/event/nasser-al-rayess",
+      "checked": "2026-09-11",
+      "method": "Live browser body",
+      "findings": "Oct31 7pm. No event description or exact comedy format; retain fallback rather than infer stand-up from performer familiarity. Concert/Music classification unsupported by page body."
+    },
+    {
+      "url": "https://www.eventbrite.com/e/judy-blume-a-life-by-mark-oppenheimer-registration-1997059705338",
+      "checked": "2026-09-11",
+      "method": "Live organizer Eventbrite body",
+      "findings": "Sep24 6:30NAC15GramercyParkSouth,in person. MarkOppenheimer presents biography JudyBlume:ALife. Blume is subject, not a promised guest. Page biography omitted from stored description; actual discussion format should remain accurately described."
+    },
+    {
+      "url": "https://www.eventbrite.com/e/jaipur-nac-sonya-rhie-mace-in-conversation-with-molly-emma-aitken-tickets-1997060905929",
+      "checked": "2026-09-11",
+      "method": "Live organizer Eventbrite body",
+      "findings": "Sep29 11amNAC,session1PahariPaintings:ArtandStories. SonyaRhieMace/MollyEmmaAitken discuss17th\u201319th-century painting, artists/patrons/exchange. No named book is identified; art-history talk fits better than author-conversation. Generic two-event JLF summary obscures this specific session."
+    }
+  ],
+  "planar_source_sha256": "6938178766ddc25c6fe0dd851c6f3a9f804535e32b25b5401f4f2c413b89a114"
+}
