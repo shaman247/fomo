@@ -1,0 +1,189 @@
+[
+  {
+    "icon_id": "craft-hot-foil-stamping",
+    "source_sha256": "f349291405933eae4b5d64ce86b82640bacb0bdd09fa1e1fea13066b677b932a",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; brief known. Lever-operated bench press with gold foil on paper below a raised heated head.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-082/visual-final",
+      "geometry": "config/event-icons/prototypes/autonomous-cycle-082/geometry-review.json",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-082/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 9010,
+      "gzip_level_6": 2455
+    },
+    "optimization": {
+      "initial_raw": 9722,
+      "initial_gzip_level_6": 2681,
+      "final_raw": 9010,
+      "final_gzip_level_6": 2455
+    },
+    "issues": [],
+    "resolved_issues": [
+      "Increased projectedcontour tolerance from.20 to.38 toreduce redundantvertices;unchangedphysicalmodel. Finalnativecard andruntimepersonallyreinspected."
+    ],
+    "decision": "pass",
+    "limitations": [
+      "At16px broad bench-machine silhouette may resemble other presses;goldfoil andlabel distinguish purpose. Small spring/control details soften. No exactmachine guarantee or operatinginstructions."
+    ]
+  },
+  {
+    "icon_id": "craft-iron-gall-ink",
+    "source_sha256": "c5627eff4f3c62a5bb7f07d5114b98b0ef4a4c269243044eb1b4c41bae2e89d4",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; brief known. Organic leaf plus metal symbol above dark ink droplet and drawn stroke.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-082/visual-final",
+      "geometry": "config/event-icons/prototypes/autonomous-cycle-082/geometry-review.json",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-082/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 807,
+      "gzip_level_6": 395
+    },
+    "optimization": {
+      "initial_raw": 807,
+      "initial_gzip_level_6": 395,
+      "final_raw": 807,
+      "final_gzip_level_6": 395
+    },
+    "issues": [],
+    "resolved_issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Flat processdiagram needslabel foriron-gall chemistry;not a testedrecipe,exactmetal/plantingredient or proof of permanence. Fineplus/metalmarkssoftenat16px."
+    ]
+  },
+  {
+    "icon_id": "format-verbatim-theater",
+    "source_sha256": "202d20b645a93a8054553da69b7f39ed5e6b64575e235c700748d59669b68ed6",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; brief known. Quoted transcript between theatrical curtains.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-082/visual-final",
+      "geometry": "config/event-icons/prototypes/autonomous-cycle-082/geometry-review.json",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-082/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 562,
+      "gzip_level_6": 350
+    },
+    "optimization": {
+      "initial_raw": 562,
+      "initial_gzip_level_6": 350,
+      "final_raw": 562,
+      "final_gzip_level_6": 350
+    },
+    "issues": [],
+    "resolved_issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Verbatim distinction needslabel;quote/page remainsvisible at24/32,smalllines softenat16. Not a promise ofaccuratelegaltranscription oractualcourtaccess."
+    ]
+  },
+  {
+    "icon_id": "format-typography-talk",
+    "source_sha256": "0ade29704cc9fe96684da261743d6e548e9f9c0fc3018b8e7225dc2c7952255f",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; brief known. Large and small letterforms inside a speech bubble.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-082/visual-final",
+      "geometry": "config/event-icons/prototypes/autonomous-cycle-082/geometry-review.json",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-082/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 608,
+      "gzip_level_6": 387
+    },
+    "optimization": {
+      "initial_raw": 608,
+      "initial_gzip_level_6": 387,
+      "final_raw": 608,
+      "final_gzip_level_6": 387
+    },
+    "issues": [],
+    "resolved_issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Generic LatinAa denotes typography;doesnotrepresent Indigenousscripts or promise teaching thoseletters. Baseline dashes softenat16px."
+    ]
+  },
+  {
+    "icon_id": "format-film-festival",
+    "source_sha256": "3db52c2f95ff0930525dd0bf30f98887dad175583ddf19a1b58f82934863796b",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; brief known. Cinema frame with stacked screening tiles and festival pennants.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-082/visual-final",
+      "geometry": "config/event-icons/prototypes/autonomous-cycle-082/geometry-review.json",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-082/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 683,
+      "gzip_level_6": 381
+    },
+    "optimization": {
+      "initial_raw": 683,
+      "initial_gzip_level_6": 381,
+      "final_raw": 683,
+      "final_gzip_level_6": 381
+    },
+    "issues": [],
+    "resolved_issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Pennants are symbolicfestivalcue,notguaranteeddecorations,awards ornumberoffilms. Small stackedtiles needlabel to distinguish ordinarycinema."
+    ]
+  }
+]

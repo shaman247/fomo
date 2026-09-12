@@ -1,0 +1,138 @@
+{
+  "reviewer_mode": "creator-critical-pass",
+  "geometry_mode": "one-3d-study-four-flat-symbols",
+  "views": [
+    "front",
+    "rear",
+    "left",
+    "right",
+    "top",
+    "icon"
+  ],
+  "decision": "pass",
+  "findings": [
+    "Initial and final six-view geometry sheets inspected. Generic typewriter approximately 33 cm wide including knobs, 27 cm deep and 15 cm high without paper. Four feet support chassis; three key banks connect through stems; carriage supports transverse platen with two knobs, connected return lever, bail and two paper rollers. Paper reaches roller tangent.",
+    "Chassis winding and paper contact were corrected in the authoritative scene before the initial inspected sheet. Final key facet simplification and paint retain support points and occlusion. Internal mechanical linkages omitted; no full mechanism simulation claimed.",
+    "Four original flat symbols represent rehearsal script, election-volunteer training checklist, Forum Theatre facilitation and campus doorway/map marker. No anatomy or complex volumes used in these four.",
+    "Five native-size cards, nine accepted custom/Noto reference cards and ten final IconManager variants inspected. Four flat source hashes unchanged after typewriter optimization.",
+    "Museum dimensions and construction are text-only references. Local museum capture was blocked and manual diagrams were not inspected. Generic proportions are approximate, not a model-specific reconstruction."
+  ],
+  "references": [
+    {
+      "url": "https://noblemaritime.org/events/2026/10/11/type-in-typing-in-the-neo-analog-age",
+      "checked": "2026-09-11",
+      "method": "Primary webpage text read in browser",
+      "finding": "Oct 11 12:30–4:30, Noble Building D, ages 6+ with adults. Talk 12:30, poet 2–4, speed contest 3. Manual/portable machines and IBM Selectric. Bring-your-own condition evaluation is not guaranteed repair. Museum pay what you wish; under 10 free."
+    },
+    {
+      "url": "https://calpullidance.org/tour-dates",
+      "checked": "2026-09-11",
+      "method": "Primary webpage text read in browser",
+      "finding": "Calendar body exposed no actual events or dates. Not evidence confirming a particular occurrence."
+    },
+    {
+      "url": "https://www.brooklynmusicschool.org/calendar-and-events/calpulli-mexican-dance-company-open-rehearsal",
+      "checked": "2026-09-11",
+      "method": "Primary webpage text read in browser",
+      "finding": "Oct 5 7–8 free RSVP, Dia de Muertos open rehearsal combining Mexican folkloric and contemporary movement and live music, 126 St Felix. Compare against LaGuardia event placement before treating as same occurrence."
+    },
+    {
+      "url": "https://www.handsoffnyc.com/calendar/ik2tf0dgfjjjvyyzseh16eqa4wvuk6",
+      "checked": "2026-09-11",
+      "method": "Primary webpage text read in browser",
+      "finding": "Sept 16 6–9 virtual Zoom, Common Cause NY poll monitor training for new and experienced volunteers, voter assistance and de-escalation. Primaries wording may be stale. No registration submitted."
+    },
+    {
+      "url": "https://www.handsoffnyc.com/calendar/ik2tf0dgfjjjvyyzseh16eqa4wvuk6-wj67s",
+      "checked": "2026-09-11",
+      "method": "Primary webpage text read in browser",
+      "finding": "Oct 3 1–4; not marked virtual in title. Mobilize RSVP linked but not opened. Stored Virtual location remains unverified; primaries wording may be stale."
+    },
+    {
+      "url": "https://www.tonyc.nyc/2026level2",
+      "checked": "2026-09-11",
+      "method": "Primary webpage text read in browser",
+      "finding": "Nov 17/24/Dec 1, Tuesday 6–8:30 PM ET, Midtown exact site unstated. $165–300, experienced facilitators, all three sessions expected. Apply by Oct 4, notification Oct 9. Footer WHEN 12:30 conflicts with body 6 PM. Masks strongly encouraged unless negative test within 24 hours. No application submitted."
+    },
+    {
+      "url": "https://www.sjny.edu/long-island/about/news-events/events/item/8628",
+      "checked": "2026-09-11",
+      "method": "Primary webpage text read in browser",
+      "finding": "Oct 25 10 AM, 155 West Roe Patchogue; admissions/program information, faculty, Student Center and Danzi tours, financial-aid specialists, RSVP."
+    },
+    {
+      "url": "https://www.sjny.edu/about/news-events/events/item/8619",
+      "checked": "2026-09-11",
+      "method": "Primary webpage text read in browser",
+      "finding": "Nov 15 10:30 AM, 245 Clinton Brooklyn; admissions/aid workshop, clubs fair, faculty, students, campus/athletics and off-campus housing tours. Separate campus from Long Island."
+    },
+    {
+      "url": "https://www.kinosaito.org/5ya",
+      "checked": "2026-09-11",
+      "method": "Primary webpage text read in browser",
+      "finding": "Sept 19 3–7 anniversary, $25 guests/free members, Peekskill shuttles. Sustainability-project toast 3:30; Jack Arthur Wood artist-practice talk and brief Q&A 4:45. Stored Landscape Art in Age of Climate Change title differs from current program. Other double-neck-guitar performances are separate program items."
+    },
+    {
+      "url": "https://bethanyarts.org/calendar/awfoa111326/",
+      "checked": "2026-09-11",
+      "method": "Primary webpage text read in browser",
+      "finding": "Nov 13 10–1, $20, ages 55+, all levels, registration. Varied monoprints with water-based inks/paints on paper/fabric; smooth-plate monotype method not confirmed."
+    },
+    {
+      "url": "https://shotgun.live/en/events/lips-rocky-horror-oct-8-2026",
+      "checked": "2026-09-11",
+      "method": "Primary webpage text read in browser",
+      "finding": "Oct 8 6:30–9:30, doors 6:30/show 7:15, seating not guaranteed after 7:30, 21+, House of Yes 2 Wyckoff. Fully live reimagining; no projected film stated, so not a confirmed shadowcast."
+    },
+    {
+      "url": "https://powerhousearena.com/events/book-launch-at-columbus-circle-whole-earth-farming-in-conversation-with-roy-steiner/",
+      "checked": "2026-09-11",
+      "method": "Primary webpage text read in browser",
+      "finding": "Whole Earth Farming author is Hugh Locke, not stored Darren Smith. Sept 24 7–9 at Columbus Circle with Roy Steiner; footer 28 Adams is DUMBO bookstore address, not event-specific Manhattan venue."
+    },
+    {
+      "url": "https://pioneerworks.org/programs/eiko-ishibashi",
+      "checked": "2026-09-11",
+      "method": "Primary webpage text read in browser",
+      "finding": "GIFT by Ryusuke Hamaguchi with live Eiko Ishibashi score, Nov 12 doors 7/show 8 Main Hall. Drive My Car appears in biography, not screening program."
+    },
+    {
+      "url": "https://www.sjny.edu/about/news-events/events/item/10553",
+      "checked": "2026-09-11",
+      "method": "Primary webpage text read in browser",
+      "finding": "Eric Ripert Mindful Cooking, Oct 6 7:30, Tuohy Hall 245 Clinton, $38 book included. Discussion, Q&A and signing; not cooking instruction."
+    },
+    {
+      "url": "https://www.nycballet.com/season-and-tickets/calendar",
+      "checked": "2026-09-11",
+      "method": "Primary webpage text read in browser",
+      "finding": "Read exposed season-by-date header and David H. Koch Theater footer, but no occurrence details. Does not verify sparse workshop dates or repertoire."
+    },
+    {
+      "url": "https://sopercussion.com/events/tim-thomas-memorial-concert-at-roulette-nyc/",
+      "checked": "2026-09-11",
+      "method": "Primary webpage text read in browser",
+      "finding": "Sept 15 8 PM, Roulette 509 Atlantic; primary typo Brooklyn NJ 11217. Mixed saxophone, viola, djembe, string quartet and percussion honor community member Tim Thomas. No evidence program consists of his compositions; Tribute Band tag unsupported."
+    },
+    {
+      "url": "https://sopercussion.com/events/so-laboratories-cenk-ergun-and-collaborators/",
+      "checked": "2026-09-11",
+      "method": "Primary webpage text read in browser",
+      "finding": "Oct 22 doors 7:30, suggested $15, 20 Grand #205. Composed/structured improvisation, movement, text and spatial sound. European places are biographies. VR subtext does not promise audience headsets."
+    },
+    {
+      "url": "https://sopercussion.com/events/steve-reichs-drumming-at-92ny-nyc/",
+      "checked": "2026-09-11",
+      "method": "Primary webpage text read in browser",
+      "finding": "Oct 28 7:30, 92NY 1395 Lexington. Drumming with Sō Percussion and guests celebrates Reich’s 90th birthday and legacy; no honoree attendance promised."
+    },
+    {
+      "url": "https://americanhistory.si.edu/collections/object/nmah_849923",
+      "checked": "2026-09-11",
+      "method": "Primary webpage text read in browser",
+      "finding": "Museum text describes 1920s Corona Special, three-row QWERTY, folding carriage, metal/plastic, 30.48 × 26.67 × 12.7 cm. Original model uses approximate scale and generic construction, not a replica. Museum photo was not inspected: local screenshot showed a block page. Royal manual image/download attempts also failed and were not counted as visual evidence."
+    }
+  ],
+  "scene_sha256": "3f1acfb1e9d70e085035e5b022f55fa99fde6bd1d781316c926dbb11f9a880d4",
+  "project_sha256": "3dd5bd9ffac2bf0b7ba8f3d37376a538b97ad63db9a0f84ca3fbb10bee5ec94c"
+}

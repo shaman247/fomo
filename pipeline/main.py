@@ -82,12 +82,12 @@ def acquire_publish_lock(connection, attempts=PUBLISH_LOCK_ATTEMPTS,
 
 
 def run_public_dataset_export(cursor, force=False):
-    """Weekly public NDJSON dataset export → upload to public_html/exports/.
+    """Public NDJSON dataset export → upload to public_html/exports/.
 
-    Gated on the newest local dated snapshot in exports/ being ≥ 7 days old
-    (the local dated files are the scheduling state — no separate marker).
-    Non-fatal to the pipeline: on upload failure the fresh snapshot is deleted
-    so the gate stays open and the next run retries.
+    The automatic weekly run was disabled 2026-09-12: the publish tail no
+    longer calls this. It is only reached via `main.py --export-dataset`
+    (force=True). The 7-day gate on the newest local dated snapshot in
+    exports/ is kept for a future re-enable.
     """
     if not force and not exporter.should_export_public_dataset():
         return True
@@ -563,7 +563,7 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
                   f"    {_merge_only_hint(website_ids)}\n")
             return False
 
-        # STEPS 6-8b: merge → classify → export → upload → weekly dataset
+        # STEPS 6-8: merge → classify → export → upload
         if not run_publish_tail(cursor, connection, website_ids,
                                 banner=lambda i, title: step(f"STEP {6 + i}: {title}")):
             return False
@@ -632,7 +632,7 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
 
 def run_publish_tail(cursor, connection, website_ids, banner):
     """The publish tail shared by a full run and --merge-only:
-    merge → classify sections → export JSON → upload → weekly public dataset.
+    merge → classify sections → export JSON → upload.
 
     `banner(i, title)` prints the header for the i-th stage (merge, export,
     upload), so each caller keeps its own step-numbering/timing style. The
@@ -687,8 +687,8 @@ def run_publish_tail(cursor, connection, website_ids, banner):
         return False
     print("\n✓ Data upload completed\n")
 
-    # Weekly public dataset export (non-fatal — retries next run)
-    run_public_dataset_export(cursor)
+    # The weekly public NDJSON dataset export is DISABLED (2026-09-12) — it no
+    # longer runs automatically here. Run it by hand with --export-dataset.
     return True
 
 

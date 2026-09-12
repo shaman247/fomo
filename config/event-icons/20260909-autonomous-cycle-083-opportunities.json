@@ -1,0 +1,1431 @@
+{
+  "date": "2026-09-11",
+  "scope": "Cycle 083: 100 sequential events 224748–225050, no targeted supplements.",
+  "suggestions": 67,
+  "concept_count": 62,
+  "concepts": [
+    {
+      "concept": "format-multi-band-show",
+      "label": "Multi-band show",
+      "category": "format",
+      "visual": "Several separate act cards around a concert note.",
+      "rationale": "Multiple acts do not establish a musical duo or one combined ensemble.",
+      "existing_alternative": "Current Unicode or the individually reviewed accepted icon remains suitable until original candidate artwork is researched and passes native-size review.",
+      "event_ids": [
+        224749,
+        224750,
+        224792
+      ],
+      "evidence_by_event": {
+        "224749": [
+          "Lighthearted, Kate Stephenson: No description available.",
+          "Tags: Music, Concert, Nightlife, Format, Performance, Lighthearted, Kate Stephenson"
+        ],
+        "224750": [
+          "Jessica Lea Mayfield, Rachel Bobbitt: No description available.",
+          "Tags: Music, Concert, Nightlife, Live Music, Format, Performance, Jessica Lea Mayfield, Rachel Bobbitt"
+        ],
+        "224792": [
+          "Marshy, Lockimara, Little Slugger: No description available.",
+          "Tags: Music, Concert, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "224749": [
+          "https://www.knittingfactory.com/tm-event/lighthearted-kate-stephenson/"
+        ],
+        "224750": [
+          "https://www.knittingfactory.com/tm-event/jessica-lea-mayfield-rachel-bobbitt/"
+        ],
+        "224792": [
+          "https://dice.fm/event/6a835b2b91dc54000103d159",
+          "https://dice.fm/event/7dxw2p-marshy-lockimara-little-slugger-21st-sep-sleepwalk-new-york-city-tickets"
+        ]
+      }
+    },
+    {
+      "concept": "activity-library-database-research",
+      "label": "Library database research",
+      "category": "activity",
+      "visual": "Search window with stacked document records.",
+      "rationale": "Research assistance differs from database programming and general computer basics.",
+      "existing_alternative": "Use a suitable broad Unicode or accepted icon until a distinctive reviewed study is available.",
+      "event_ids": [
+        224805,
+        224808
+      ],
+      "evidence_by_event": {
+        "224805": [
+          "Introduction to Tibetan Studies Resources: This workshop will provide an overview of Tibetan Studies related resource and research tools at Columbia University Libraries and beyond.",
+          "Tags: Workshop, Literature, Research, Education, Libraries, Online, Participatory, Format, Tibetan Studies"
+        ],
+        "224808": [
+          "Introduction to Tibetan Studies Resources: This workshop will provide an overview of Tibetan Studies related resource and research tools at Columbia University Libraries and beyond.",
+          "Tags: Workshop, Literature, Education, Libraries, Participatory, Format, Tibetan Studies"
+        ]
+      },
+      "source_urls_by_event": {
+        "224805": [
+          "https://scienceandsociety.columbia.edu/node/32"
+        ],
+        "224808": [
+          "https://events.columbia.edu/cal/event/eventView.do?b=de&calPath=%2Fpublic%2Fcals%2FMainCal&guid=CAL-00bbdb70-a00ebfdc-01a0-11122a9c-00004c67events%40columbia.edu&recurrenceId="
+        ]
+      }
+    },
+    {
+      "concept": "craft-plein-air",
+      "label": "Plein-air painting",
+      "category": "craft",
+      "visual": "Portable easel with a small landscape canvas and sun beyond its edge.",
+      "rationale": "Outdoor observational painting is a clear equipment/environment format distinct from indoor studio painting.",
+      "existing_alternative": "Palette communicates painting generally but not outdoor easel practice.",
+      "event_ids": [
+        224758,
+        224954
+      ],
+      "evidence_by_event": {
+        "224758": [
+          "Fall Plein Air Painting: Join us for an enriching outdoor painting workshop where every student creates their own unique masterpiece. Set against the inspiring backdrop of Lasdon Public Gardens, this En Plein Air experience—named for the French phrase meaning “in the open air”",
+          "Tags: Visual Arts, Art, Park, Workshop, Painting, Education, Outdoor, Participatory, Outdoor Venue, Plein Air, Format"
+        ],
+        "224954": [
+          "Plein Air Workshop: This workshop explores plein air painting, an approach conducted in the open air and shaped by changing weather, light, and time constraints.",
+          "Tags: Visual Arts, Art, Workshop, Painting, Education, Outdoor, Participatory, Plein Air, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "224758": [
+          "https://parksevents.westchestercountyny.gov/event/fall-plein-air-painting/2026-10-02/"
+        ],
+        "224954": [
+          "https://calendar.time.ly/z8y13yt7/event/78426375",
+          "https://longislandartsalliance.org/li-arts-events/"
+        ]
+      }
+    },
+    {
+      "concept": "format-biology-seminar",
+      "label": "Biology seminar",
+      "category": "format",
+      "visual": "Abstract cell diagram inside a lecture bubble.",
+      "rationale": "Research seminar without claiming a specific experiment or result.",
+      "existing_alternative": "Use a suitable accepted icon or Unicode fallback until this prospective concept has validated artwork.",
+      "event_ids": [
+        224804,
+        224807
+      ],
+      "evidence_by_event": {
+        "224804": [
+          "Seminar - Philipp Schiffer: University of Cologne. Host: Oliver Hobert. Contact: Dept. of Biological Sciences 212-854-4581",
+          "Tags: Science, Research, Education, Columbia University, Biology, Gathering, Talk, Seminar, Format"
+        ],
+        "224807": [
+          "Seminar - Gideon Bradburd: University of Michigan. Host: Molly Przeworski.",
+          "Tags: Science, Education, Biology, Gathering, Talk, Seminar, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "224804": [
+          "https://events.columbia.edu/cal/event/eventView.do?b=de&calPath=%2Fpublic%2Fcals%2FMainCal&guid=CAL-00bbdb70-a013e630-01a0-15f4cc9c-00004306events%40columbia.edu&recurrenceId=",
+          "https://events.columbia.edu/feeder/main/eventsFeed.do?f=y&sort=dtstart.utc:asc&fexpr=(((vpath=%22/public/aliases/Audience/Public%22)))%20and%20(categories.href=%22/public/.bedework/categories/org/UniversityEvents%22)%20and%20(entity_type=%22event%22%7Centity_type=%22todo%22)&skinName=list-rss&count=200"
+        ],
+        "224807": [
+          "https://events.columbia.edu/feeder/main/eventsFeed.do?f=y&sort=dtstart.utc:asc&fexpr=(((vpath=%22/public/aliases/Audience/Public%22)))%20and%20(categories.href=%22/public/.bedework/categories/org/UniversityEvents%22)%20and%20(entity_type=%22event%22%7Centity_type=%22todo%22)&skinName=list-rss&count=200"
+        ]
+      }
+    },
+    {
+      "concept": "activity-dance-teacher-training",
+      "label": "Dance teacher training",
+      "category": "activity",
+      "visual": "Movement diagram beside a lesson-plan card.",
+      "rationale": "Dance pedagogy for educators without claiming a specific style.",
+      "existing_alternative": "Use a suitable accepted icon or Unicode fallback until this prospective concept has validated artwork.",
+      "event_ids": [
+        224833
+      ],
+      "evidence_by_event": {
+        "224833": [
+          "FREE Introductory Workshop: Join us for a FREE introduction to the NDI Method! Explore NDI’s approach to dance education and unlock your teaching potential in this dynamic workshop. Workshop highlights include experiencing the NDI Method through a dance class featuring live music, learning tools to become more confident and effective in teaching, and exploring creative classroom management strategies.",
+          "Tags: Workshop, Dance, Free, Education, Teacher Training, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "224833": [
+          "https://www.nationaldance.org/en/events/free-introductory-workshops"
+        ]
+      }
+    },
+    {
+      "concept": "activity-guided-meditation",
+      "label": "Guided meditation",
+      "category": "activity",
+      "visual": "A calm listening ring with a gentle guidance mark.",
+      "rationale": "General meditation Unicode often suffices; do not imply medical benefit or a specific tradition.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        224925
+      ],
+      "evidence_by_event": {
+        "224925": [
+          "Letting Go of Fear, Anxiety and Panic (Harlem Branch): The focus of the retreat is on how to let go of fear, anxiety & panic. In this retreat, through short teachings and guided meditations, Edwin will show how we can begin to establish a peaceful place in ou",
+          "Tags: Harlem, Workshop, Wellness, Meditation, Retreat, Mental Wellbeing, Participatory, Guided Meditation, Mind-Body, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "224925": [
+          "https://meditationinnewyork.org/event/letting-go-of-fear-anxiety-and-panic-harlem-branch/"
+        ]
+      }
+    },
+    {
+      "concept": "activity-photography-career",
+      "label": "Photography career development",
+      "category": "activity",
+      "visual": "Camera beside a portfolio and professional-path marker.",
+      "rationale": "Career masterclass, not necessarily hands-on camera instruction.",
+      "existing_alternative": "Use a suitable accepted icon or Unicode fallback until this prospective concept has validated artwork.",
+      "event_ids": [
+        224761
+      ],
+      "evidence_by_event": {
+        "224761": [
+          "ICP x ROAR: A Master Class in Building a Multi-decade Photography Legacy: A master class on building a multi-decade photography legacy.",
+          "Tags: Community, Visual Arts, Art, Photography, Workshop, Education, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "224761": [
+          "https://www.icp.org/events/icp-x-roar-master-class-building-multi-decade-photography-legacy"
+        ]
+      }
+    },
+    {
+      "concept": "activity-student-advising",
+      "label": "Student advising",
+      "category": "activity",
+      "visual": "Student service card beside a question bubble.",
+      "rationale": "Support questions for enrolled students distinct from admissions.",
+      "existing_alternative": "Use a suitable accepted icon or Unicode fallback until this prospective concept has validated artwork.",
+      "event_ids": [
+        224890
+      ],
+      "evidence_by_event": {
+        "224890": [
+          "Tisch International Student Monthly Meeting: Please join Tisch Academic Services for our monthly virtual question and answer session addressing the needs and concerns of the Tisch International Student community.",
+          "Tags: Community, Education, International Students, Virtual, Q&A, Gathering, Talk, Online, Student Affairs, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "224890": [
+          "https://tisch.nyu.edu/student-affairs/events/international-student-monthly-meeting2"
+        ]
+      }
+    },
+    {
+      "concept": "activity-tea-ceremony",
+      "label": "Tea ceremony",
+      "category": "activity",
+      "visual": "Matcha bowl beside an upright bamboo whisk.",
+      "rationale": "The ceremonial preparation equipment adds meaning beyond consuming tea.",
+      "existing_alternative": "Noto tea bowl serves the beverage well but does not depict whisking or ceremony.",
+      "event_ids": [
+        224835
+      ],
+      "evidence_by_event": {
+        "224835": [
+          "Japanese Tea Ceremony: Urasenke members host a special Peace Bell tea ceremony to commemorate the International Day of Peace. The gathering begins at the Gateway Bell and is followed by a workshop and demonstration.",
+          "Tags: Community, Art, Workshop, Culture, Education, Ceremony, Gathering, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "224835": [
+          "https://secure.qgiv.com/for/clawor/event/teaceremony/"
+        ]
+      }
+    },
+    {
+      "concept": "activity-trick-or-treat",
+      "label": "Trick-or-treating",
+      "category": "activity",
+      "visual": "Handled candy bag with wrapped sweets and a pumpkin motif.",
+      "rationale": "Children follow mapped candy stops around estate grounds.",
+      "existing_alternative": "Pumpkin already conveys Halloween but omits collecting treats.",
+      "event_ids": [
+        224759
+      ],
+      "evidence_by_event": {
+        "224759": [
+          "Trick-or-Treating @ Hilltop Hanover Farm: Visit the animals and explore the historic sites of Hilltop Hanover Farm as you trick-or-treat at our barn doors! Treats will be available while supplies last; costumes are encouraged!",
+          "Tags: Garden, Park, Family, Farm, Outdoor, Outdoor Venue, Halloween, Community Celebration, Format, Social, Trick or Treating"
+        ]
+      },
+      "source_urls_by_event": {
+        "224759": [
+          "https://parksevents.westchestercountyny.gov/event/trick-or-treating-hilltop-hanover-farm-2/"
+        ]
+      }
+    },
+    {
+      "concept": "activity-youth-strength",
+      "label": "Youth strength training",
+      "category": "activity",
+      "visual": "Small exercise mat with paired age-neutral movement marks.",
+      "rationale": "Coached games and bodyweight fundamentals without assuming timed circuits.",
+      "existing_alternative": "Use a suitable accepted icon or Unicode fallback until this prospective concept has validated artwork.",
+      "event_ids": [
+        224823
+      ],
+      "evidence_by_event": {
+        "224823": [
+          "Outdoor Strength for Teenagers with Trinity Gym: This free outdoor youth strength-training session is for ages 11–15. Participants will learn strength-training fundamentals through games, partner activities, and bodyweight exercises.",
+          "Tags: Community, Youth, Free, Sports, Wellness, Fitness, Outdoor, Strength Training, Youth Fitness, Participatory, Teenagers, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "224823": [
+          "https://www.hunterspointparks.org/events/outdoor-strength-for-teenagers-with-trinity-gym",
+          "https://www.hunterspointparks.org/events/outdoor-strength-for-teenagers-with-trinity-gym-94wjg",
+          "https://www.hunterspointparks.org/events/outdoor-strength-for-teenagers-with-trinity-gym-94wjg-mw72b-w4dzz"
+        ]
+      }
+    },
+    {
+      "concept": "craft-headband-making",
+      "label": "Headband making",
+      "category": "craft",
+      "visual": "Curved headband with a cut-paper decorative attachment.",
+      "rationale": "Wearable headband craft, with material and motif specific to the event.",
+      "existing_alternative": "Use a suitable accepted icon or Unicode fallback until this prospective concept has validated artwork.",
+      "event_ids": [
+        224773
+      ],
+      "evidence_by_event": {
+        "224773": [
+          "MOCACREATE: Hopping into the School Year with Teaching Artist Yu Rong: Learn about the Jade Rabbit on the Moon through a Chinese legend and make rabbit-themed headbands. Bunnies and Beyond will also share information about rabbit adoption and care.",
+          "Tags: Community, Art, Workshop, Family, Education, Chinese Culture, Asian American, Crafts, Cultural Heritage, Academic, Participatory, Storytelling / Community, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "224773": [
+          "https://aaari.info/event/mocacreate-hopping-into-the-school-year-with-teaching-artist-yu-rong/",
+          "https://www.mocanyc.org/event/mocacreate-hopping-into-the-school-year-with-teaching-artist-yu-rong/"
+        ]
+      }
+    },
+    {
+      "concept": "craft-natural-paint",
+      "label": "Natural paint making",
+      "category": "craft",
+      "visual": "Earth pigment mounds beside a mixing dish and brush.",
+      "rationale": "Preparing paints from natural materials; ingredients remain to verify.",
+      "existing_alternative": "Use a suitable accepted icon or Unicode fallback until this prospective concept has validated artwork.",
+      "event_ids": [
+        224813
+      ],
+      "evidence_by_event": {
+        "224813": [
+          "Ecological Cities Natural Paint Workshop: No description available.",
+          "Tags: Community, Art, Workshop, Education, Environment, Ecology, Participatory, Format, Natural Paint"
+        ]
+      },
+      "source_urls_by_event": {
+        "224813": [
+          "https://laplazacultural.com/events/ecological-cities-natural-paint-workshop/"
+        ]
+      }
+    },
+    {
+      "concept": "craft-supported-cotton-spinning",
+      "label": "Supported cotton spinning",
+      "category": "craft",
+      "visual": "Thin tahkli shaft, low brass whorl and wound cotton.",
+      "rationale": "Cotton spinning on a supported spindle rather than wool drop spinning.",
+      "existing_alternative": "Use a suitable accepted icon or Unicode fallback until this prospective concept has validated artwork.",
+      "event_ids": [
+        225047
+      ],
+      "evidence_by_event": {
+        "225047": [
+          "Oko Farms - Make Your Own Yarn: A hands-on yarn-making workshop presented by Oko Farms.",
+          "Tags: Community, Art, Workshop, Education, Sustainability, Outdoor, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "225047": [
+          "https://honeys.nyc/event/oko-farms-make-your-own-yarn",
+          "https://www.okofarms.org/cotton-spinning"
+        ]
+      }
+    },
+    {
+      "concept": "format-art-song-recital",
+      "label": "Art-song recital",
+      "category": "format",
+      "visual": "Vocal score with piano keys and a sung phrase.",
+      "rationale": "Song recital,not opera staging or choir; no fixed number of singers.",
+      "existing_alternative": "Retain suitable accepted artwork or Unicode; this is prospective and requires primary scope and visual validation.",
+      "event_ids": [
+        224781
+      ],
+      "evidence_by_event": {
+        "224781": [
+          "RISING STARS: Musica Viva NY presents Opera’s Next Generation: Musica Viva NY presents the young artists of two of the world’s great opera houses for an extraordinary evening of emerging talent. Bringing together artists from the Metropolitan Opera’s Lindemann Young Artist Development",
+          "Tags: Music, Opera, Classical Music, Concert, Emerging Artist, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "224781": [
+          "https://allsoulsnyc.org/event/rising-stars-musica-viva-ny-presents-operas-next-generation/"
+        ]
+      }
+    },
+    {
+      "concept": "format-arts-education-benefit",
+      "label": "Arts-education benefit",
+      "category": "format",
+      "visual": "An art-learning page with a support heart.",
+      "rationale": "Fundraiser supports arts education; event itself may be a party rather than a class or gala.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        224834
+      ],
+      "evidence_by_event": {
+        "224834": [
+          "Jacques' Art Nest: Fall 2026: Jacques’ Art Nests are unique and intimate evenings featuring professionals at the height of their artistry performing alongside the Children of NDI.",
+          "Tags: Community, Art, Dance, Benefit, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "224834": [
+          "https://www.nationaldance.org/en/events/2026-fall-art-nest"
+        ]
+      }
+    },
+    {
+      "concept": "format-author-showcase",
+      "label": "Authors showcase",
+      "category": "format",
+      "visual": "Several distinct book spines above a shared stage line.",
+      "rationale": "Multiple writers presenting work, with exact readings or discussion to verify.",
+      "existing_alternative": "Use a suitable accepted icon or Unicode fallback until this prospective concept has validated artwork.",
+      "event_ids": [
+        224852
+      ],
+      "evidence_by_event": {
+        "224852": [
+          "Hunter Authors Showcase: Celebrate National Authors Day and honor the incredible creativity of Hunter alumni writers with a vibrant showcase of authors and networking with alumni writers and creatives.",
+          "Tags: Community, Literature, Networking, Author Event, Reading, Alumni, Alumni Events, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "224852": [
+          "https://www.hunter.cuny.edu/event/hunter-authors-showcase/"
+        ]
+      }
+    },
+    {
+      "concept": "format-benefit-lunch",
+      "label": "Benefit luncheon",
+      "category": "format",
+      "visual": "Place setting beside a donation-heart mark.",
+      "rationale": "Fundraising lunch, without guaranteeing a gala or performance.",
+      "existing_alternative": "Use a suitable accepted icon or Unicode fallback until this prospective concept has validated artwork.",
+      "event_ids": [
+        224871
+      ],
+      "evidence_by_event": {
+        "224871": [
+          "Legacy Lunch at BAXTER ST: A special benefit lunch in support of BAXTER ST honoring the work and enduring legacy of Nona Faustine. The event will mark the first presentation of the Nona Faustine Artist Award, providing direct support to future generations of artists.",
+          "Tags: Community, Art, Fundraiser, Benefit, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "224871": [
+          "https://www.baxterst.org/events/legacy-lunch-at-baxter-st/"
+        ]
+      }
+    },
+    {
+      "concept": "format-book-anniversary",
+      "label": "Book anniversary celebration",
+      "category": "format",
+      "visual": "Book with a small celebratory ribbon.",
+      "rationale": "Anniversary of a published book, not necessarily a launch or signing.",
+      "existing_alternative": "Use a suitable accepted icon or Unicode fallback until this prospective concept has validated artwork.",
+      "event_ids": [
+        224816
+      ],
+      "evidence_by_event": {
+        "224816": [
+          "Book Event: \"Dreaming on Purpose\" by Ariane Hunter: Two years since _Dreaming on Purpose_ dropped. Come celebrate. _Dreaming on Purpose: A Manifesto for Black Women on Taking the Leap, Building Your Dreams, and Being Your Own Boss_ is a care-centered career roadmap for Black millennial women done with outdated career norms and ready to center their own desires. Ariane Hunter wrote the book she needed when she was still figuring out how to want things out loud. Featured in CNBC, Business Insider, and Fast Company. Whether you're starting out or starting over, this is the book for turning dreams into reality without burning yourself out to do it.",
+          "Tags: Community, Literature, Author Event, Reading, Black Women, Books, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "224816": [
+          "https://www.cafeconlibrosbk.com/event-info/book-event-dreaming-on-purpose-by-ariane-hunter"
+        ]
+      }
+    },
+    {
+      "concept": "format-business-summit",
+      "label": "Business summit",
+      "category": "format",
+      "visual": "Meeting table symbol with a compact rising chart.",
+      "rationale": "Economic-impact conference; exact agenda and venue need verification.",
+      "existing_alternative": "Use a suitable accepted icon or Unicode fallback until this prospective concept has validated artwork.",
+      "event_ids": [
+        224770
+      ],
+      "evidence_by_event": {
+        "224770": [
+          "NGLCCNY 2026 Summit: Our Economic Impact: Register Now for NGLCCNY 2026 Summit September 16, 10:00 AM to 5:00 PM Registration is now live for the NGLCCNY 2026 Summit: Our Economic Impact, bringing together LGBTQ+ and allied businesses, corporate partners, nonprofit leaders,",
+          "Tags: Government, Community, LGBTQ, Education, Networking, Community Board, Business, Professional Development, Gathering, Talk, Economic Impact, Manhattan CB11, Format, LGBTQ Business"
+        ]
+      },
+      "source_urls_by_event": {
+        "224770": [
+          "https://www.google.com/calendar/event?eid=NWNpMDZpM2YwZTlwZ2wyZmcwdWRvc2I3cXQgY19hZWo2NmE3NTd1YTdoNDZrc2ZhNTR0bTFhc0Bn"
+        ]
+      }
+    },
+    {
+      "concept": "format-character-party",
+      "label": "Character party",
+      "category": "format",
+      "visual": "Costume crown beside party pennants.",
+      "rationale": "Character entertainment without claiming official franchise affiliation.",
+      "existing_alternative": "Use a suitable accepted icon or Unicode fallback until this prospective concept has validated artwork.",
+      "event_ids": [
+        224891
+      ],
+      "evidence_by_event": {
+        "224891": [
+          "The Grandest Princess Ball Ever: A magical fairytale where children meet beloved Disney princesses with singing, dancing, games, and desserts.",
+          "Tags: Kids, Dance, Desserts, Party, Family, Games, Princesses, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "224891": [
+          "https://grandestprincessballever.com/get-tickets.php?utm_source=discovery&utm_medium=listing&utm_campaign=46229"
+        ]
+      }
+    },
+    {
+      "concept": "format-civic-dialogue",
+      "label": "Civic dialogue",
+      "category": "format",
+      "visual": "Two speech bubbles over a short reading sheet.",
+      "rationale": "Guided discussion of civic life is not an official governance meeting.",
+      "existing_alternative": "Keep appropriate existing artwork or Unicode until distinct art passes review.",
+      "event_ids": [
+        224855
+      ],
+      "evidence_by_event": {
+        "224855": [
+          "Civic Participation in the Mamdani Era: A Conversation with Hunter Alums Sideya Sherman and Ahmed Tigani: Promoting Civil Discourse & Intellectual Dialogue Series Civic Participation in the Mamdani Era: A Conversation with Hunter Alums S",
+          "Tags: Community, Activism, Civic Engagement, Gathering, Talk, Alumni, Conversation, Civil Discourse, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "224855": [
+          "https://www.hunter.cuny.edu/event/civic-participation-in-the-mamdani-era-a-conversation-with-hunter-alums-sideya-sherman-and-ahmed-tigani/"
+        ]
+      }
+    },
+    {
+      "concept": "format-civil-service-careers",
+      "label": "Civil service career information",
+      "category": "format",
+      "visual": "Briefcase beside a public-building doorway and information bubble.",
+      "rationale": "Public employment pathways rather than a job fair or guaranteed placement.",
+      "existing_alternative": "Use a suitable accepted icon or Unicode fallback until this prospective concept has validated artwork.",
+      "event_ids": [
+        224884
+      ],
+      "evidence_by_event": {
+        "224884": [
+          "New York State Civil Service 101: The New York State Department of Civil Service Centers for Careers in Government (CCG) provides support and information to help individuals obtain meaningful and rewarding public service careers with New York State government.",
+          "Tags: Government, Community, Free, Education, Career, Gathering, Talk, Information Session, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "224884": [
+          "https://www.csi.cuny.edu/new-york-state-civil-service-101"
+        ]
+      }
+    },
+    {
+      "concept": "format-climate-model-panel",
+      "label": "Climate modeling panel",
+      "category": "format",
+      "visual": "Globe grid with multiple discussion bubbles.",
+      "rationale": "Discussion of climate models; full agenda still needs verification.",
+      "existing_alternative": "Use a suitable accepted icon or Unicode fallback until this prospective concept has validated artwork.",
+      "event_ids": [
+        224803
+      ],
+      "evidence_by_event": {
+        "224803": [
+          "Climate models panel: Join us for",
+          "Tags: Community, Education, Columbia University, Gathering, Talk, Climate, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "224803": [
+          "https://events.columbia.edu/feeder/main/eventsFeed.do?f=y&sort=dtstart.utc:asc&fexpr=(((vpath=%22/public/aliases/Audience/Public%22)))%20and%20(categories.href=%22/public/.bedework/categories/org/UniversityEvents%22)%20and%20(entity_type=%22event%22%7Centity_type=%22todo%22)&skinName=list-rss&count=200"
+        ]
+      }
+    },
+    {
+      "concept": "format-climate-policy-panel",
+      "label": "Climate panel",
+      "category": "format",
+      "visual": "Discussion panel with an environmental topic card.",
+      "rationale": "Audience-facing climate discussion, not a workshop or walk.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        225048
+      ],
+      "evidence_by_event": {
+        "225048": [
+          "Lead Locally Panel Discussion: No description available.",
+          "Tags: Community, Education, Discussion, Gathering, Talk, Panel, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "225048": [
+          "https://honeys.nyc/event/lead-locally-panel-discussion"
+        ]
+      }
+    },
+    {
+      "concept": "format-community-concert",
+      "label": "Community concert",
+      "category": "format",
+      "visual": "Shared stage line with music notes.",
+      "rationale": "Neighborhood music performance without assuming participatory jam.",
+      "existing_alternative": "Use a suitable accepted icon or Unicode fallback until this prospective concept has validated artwork.",
+      "event_ids": [
+        224832
+      ],
+      "evidence_by_event": {
+        "224832": [
+          "Ndi Jamz: An evening with NDI’s extraordinary team of musicians, celebrating the organization’s dedication to live music.",
+          "Tags: Music, Dance, Concert, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "224832": [
+          "https://www.nationaldance.org/en/events/ndi-jamz"
+        ]
+      }
+    },
+    {
+      "concept": "format-composer-spotlight",
+      "label": "Composer spotlight concert",
+      "category": "format",
+      "visual": "Concert score with a single highlighted composer card.",
+      "rationale": "Program foregrounds one composers work; the composer need not perform.",
+      "existing_alternative": "Prefer suitable accepted art or Unicode fallback; prospective only until primary research and visual review pass.",
+      "event_ids": [
+        224859
+      ],
+      "evidence_by_event": {
+        "224859": [
+          "Hunter Jazz Presents Scott Robinson - Reach for Tomorrow: Multi-instrumentalist Scott Robinson will premiere the first movement of his one-man symphonic work at Hunter College's Lang Recital Hall. He will present the completed movement, discuss his process, and take questions from the audience.",
+          "Tags: Music, Performing Arts, Free, Jazz, Concert, Format, Performance, Scott Robinson"
+        ]
+      },
+      "source_urls_by_event": {
+        "224859": [
+          "https://www.hunter.cuny.edu/event/hunter-jazz-presents-scott-robinson-reach-for-tomorrow/"
+        ]
+      }
+    },
+    {
+      "concept": "format-concert-debut",
+      "label": "Concert debut",
+      "category": "format",
+      "visual": "Stage spotlight above a single fresh performance card.",
+      "rationale": "First headline appearance, without inferring a record release.",
+      "existing_alternative": "Use a suitable accepted icon or Unicode fallback until this prospective concept has validated artwork.",
+      "event_ids": [
+        225049
+      ],
+      "evidence_by_event": {
+        "225049": [
+          "Furtado Global Presents: Sea Rae: Searae makes her headline show debut at Honey's.",
+          "Tags: Music, Concert, Nightlife, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "225049": [
+          "https://honeys.nyc/event/furtado-presents-sea-rae",
+          "https://link.dice.fm/r0bf1b03335e"
+        ]
+      }
+    },
+    {
+      "concept": "format-concert-opera",
+      "label": "Concert opera",
+      "category": "format",
+      "visual": "Operatic voice mark above an open score without a cinema screen.",
+      "rationale": "Live unstaged opera differs from opera cinema and staged theater.",
+      "existing_alternative": "Music remains broad; mask/voice motif needs recognition study.",
+      "event_ids": [
+        224810
+      ],
+      "evidence_by_event": {
+        "224810": [
+          "Concert Premiere of Macabéa: A Steinway Artist, Novacek teaches piano and chamber music at Mannes School of Music in New York City. Live at St. Paul's Chapel—or, watch on YouTube.",
+          "Tags: Music, Opera, Classical Music, Concert, Virtual, Live Stream, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "224810": [
+          "https://events.columbia.edu/cal/event/eventView.do?b=de&calPath=%2Fpublic%2Fcals%2FMainCal&guid=CAL-00bbdb71-9eab6da0-019e-ad35c2bb-00003a4fevents%40columbia.edu&recurrenceId="
+        ]
+      }
+    },
+    {
+      "concept": "format-creator-variety-show",
+      "label": "Creator variety show",
+      "category": "format",
+      "visual": "Stage with story, game and comic symbols.",
+      "rationale": "Live creator-led mixed entertainment; no exact prank or audience interaction promised.",
+      "existing_alternative": "Prefer suitable accepted art or Unicode fallback; prospective only until primary research and visual review pass.",
+      "event_ids": [
+        224867
+      ],
+      "evidence_by_event": {
+        "224867": [
+          "All Hours with Kwame & Friends: A one-night-only performance scheduled for Tuesday, September 22, 2026, at Newhouse Theater.",
+          "Tags: Theater, Live Show, One Night Only, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "224867": [
+          "https://www.lct.org/shows/all-hours-with-kwame-friends/"
+        ]
+      }
+    },
+    {
+      "concept": "format-diaspora-club-night",
+      "label": "Diaspora club night",
+      "category": "format",
+      "visual": "Dance-floor tiles with overlapping rhythm marks.",
+      "rationale": "Diasporic music programming; avoid national flags or assumed single genre.",
+      "existing_alternative": "Use a suitable accepted icon or Unicode fallback until this prospective concept has validated artwork.",
+      "event_ids": [
+        225050
+      ],
+      "evidence_by_event": {
+        "225050": [
+          "Caótica: Caótica is a global club party in Brooklyn specializing in beautiful chaos and diasporic sounds, co-run by Riobamba and Ushka.",
+          "Tags: Community, Music, Dance, Party, Nightlife, Clubbing, Diaspora, Club Night, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "225050": [
+          "https://honeys.nyc/event/event-20260804-173248"
+        ]
+      }
+    },
+    {
+      "concept": "format-ethics-talk",
+      "label": "Ethics talk",
+      "category": "format",
+      "visual": "Balanced philosophical propositions in a lecture bubble.",
+      "rationale": "Ethical discussion, not legal advice, a judgment or combat instruction.",
+      "existing_alternative": "Current Unicode or the individually reviewed accepted icon remains suitable until original candidate artwork is researched and passes native-size review.",
+      "event_ids": [
+        224800
+      ],
+      "evidence_by_event": {
+        "224800": [
+          "September Ethics Grand Rounds (Hybrid event): Can ICE Detain Without Doctors? Dual Loyalty vs. The Hippocratic Oath in Immigration Detention",
+          "Tags: Community, Wellness, Education, Health, Immigration, Ethics, Community Support, Gathering, Talk, Healthcare, Hybrid, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "224800": [
+          "https://events.columbia.edu/cal/event/eventView.do?b=de&calPath=%2Fpublic%2Fcals%2FMainCal&guid=CAL-00bbdb70-9fb20d96-019f-b4ba0441-00004ddcevents%40columbia.edu&recurrenceId="
+        ]
+      }
+    },
+    {
+      "concept": "format-experimental-film",
+      "label": "Experimental cinema",
+      "category": "format",
+      "visual": "Projected frame with abstract superimposed forms",
+      "rationale": "Genre abstraction requires recognition work; standard film fallback remains valid.",
+      "existing_alternative": "Current broad custom or Unicode fallback remains until a distinct grounded pictogram passes review.",
+      "event_ids": [
+        224862
+      ],
+      "evidence_by_event": {
+        "224862": [
+          "\"(...) [a.k.a. Ellipses]\" by Stan Brakhage: Join the screening of Stan Brakhage's (...) [a.k.a. ELLIPSES], presented by Andrew Reichel.",
+          "Tags: Art, Film, Screening, Experimental Film, Stan Brakhage, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "224862": [
+          "https://film-makerscoop.com/screenings/aka-ellipses-by-stan-brakhage"
+        ]
+      }
+    },
+    {
+      "concept": "format-family-cinema-series",
+      "label": "Family cinema series",
+      "category": "format",
+      "visual": "Cinema frame with repeated calendar tabs.",
+      "rationale": "Recurring family screenings, not automatically a festival.",
+      "existing_alternative": "Use a suitable accepted icon or Unicode fallback until this prospective concept has validated artwork.",
+      "event_ids": [
+        225011
+      ],
+      "evidence_by_event": {
+        "225011": [
+          "Film Forum JR.: No description available.",
+          "Tags: Film, Family, Screening, Film Series, Film Forum, Film Forum Jr, Kids Cinema, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "225011": [
+          "https://filmforum.org/series/film-forum-jr.-series-page"
+        ]
+      }
+    },
+    {
+      "concept": "format-family-music-theater",
+      "label": "Family music theater",
+      "category": "format",
+      "visual": "Stage, song note and story page.",
+      "rationale": "Live family storytelling with music and interactive play, not necessarily opera.",
+      "existing_alternative": "Use a suitable accepted icon or Unicode fallback until this prospective concept has validated artwork.",
+      "event_ids": [
+        224815
+      ],
+      "evidence_by_event": {
+        "224815": [
+          "Yunie’s Magical Adventure: A Musical Dreamscape for the Whole Family: A North American Premiere presented by Korean Cultural Center New York, MIRI Opera and New York Classical Players. Admission is free, and pre-registration is required.",
+          "Tags: Music, Theater, Free, Film, Family, Korean Culture, Premiere, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "224815": [
+          "https://www.koreanculture.org/performing-arts/2026/9/25/yunies-magical-adventure-a-musical-dreamscape-for-the-whole-family"
+        ]
+      }
+    },
+    {
+      "concept": "format-film-tasting",
+      "label": "Film taste-along",
+      "category": "format",
+      "visual": "Film strip alongside small tasting bites linked by timing dots.",
+      "rationale": "Food is eaten at synchronized screen moments, distinct from passive cinema or cooking.",
+      "existing_alternative": "Film fallback omits timed food participation.",
+      "event_ids": [
+        224902
+      ],
+      "evidence_by_event": {
+        "224902": [
+          "“Big Night” Film Event: The Big Night film event features trivia, food, and cocktails.",
+          "Tags: Community, Cocktails, Film, Food, Screening, Games, Nightlife, Trivia, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "224902": [
+          "https://checkout.square.site/merchant/9J9J4HGCF4QC7/checkout/PQWTE7XRYUJGQ42L7JINY77S"
+        ]
+      }
+    },
+    {
+      "concept": "format-historical-commemoration",
+      "label": "Historical commemoration",
+      "category": "format",
+      "visual": "An archival date panel and commemorative wreath.",
+      "rationale": "Commemorates an event without automatically promising reenactment.",
+      "existing_alternative": "Prefer suitable accepted art or Unicode fallback; prospective only until primary research and visual review pass.",
+      "event_ids": [
+        224774
+      ],
+      "evidence_by_event": {
+        "224774": [
+          "Essex Remembers: Commemorating the 25th Anniversary of the 9/11 Tragedy: A solemn ceremony commemorating the 25th anniversary of the 9/11 tragedy. The ceremony also will be streamed live on EssexCountyNJ.org.",
+          "Tags: Community, Memorial, History, Education, Virtual, Ceremony, Gathering, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "224774": [
+          "https://essexcountyparks.org/parks/eagle-rock-reservation/calendar/essex-remembers-commemorating-the-20th-anniversary-of-the-9-11-tragedy"
+        ]
+      }
+    },
+    {
+      "concept": "format-ice-cream-popup",
+      "label": "Ice-cream popup",
+      "category": "format",
+      "visual": "Ice-cream cup beneath a temporary stall canopy.",
+      "rationale": "Retail/tasting popup rather than making ice cream.",
+      "existing_alternative": "Use a suitable accepted icon or Unicode fallback until this prospective concept has validated artwork.",
+      "event_ids": [
+        225023
+      ],
+      "evidence_by_event": {
+        "225023": [
+          "Sunday Scoops with Graza and Ogechi Egonu: Sunday Scoops with Graza and Ogechi Egonu, from 1PM to 3PM.",
+          "Tags: Community, Pop Up, Food, Outdoor, Pop-Up, Format, Browsable"
+        ]
+      },
+      "source_urls_by_event": {
+        "225023": [
+          "https://mccarrenparkhouse.com/events"
+        ]
+      }
+    },
+    {
+      "concept": "format-literary-reading",
+      "label": "Literary reading",
+      "category": "format",
+      "visual": "Open prose page with a spoken-line bubble.",
+      "rationale": "Curated reading,not author discussion,child storytime or participatory open mic.",
+      "existing_alternative": "Retain suitable accepted artwork or Unicode; this is prospective and requires primary scope and visual validation.",
+      "event_ids": [
+        224848
+      ],
+      "evidence_by_event": {
+        "224848": [
+          "Distinguished Writers Series - Karan Mahajan: Join Hunter College's acclaimed Distinguished Writers Series for an evening with award-winning novelist Karan Mahajan, author of The Complex and The Association of Small Bombs. His work has been recognized by The New York Times, the National Book Awards, and Granta.",
+          "Tags: Literature, Education, Hunter College, Reading, Format, Performance, Karan Mahajan, Writers Series"
+        ]
+      },
+      "source_urls_by_event": {
+        "224848": [
+          "https://www.hunter.cuny.edu/event/distinguished-writers-series-karan-mahajan/"
+        ]
+      }
+    },
+    {
+      "concept": "format-live-accompanied-silent-film",
+      "label": "Silent film with live accompaniment",
+      "category": "format",
+      "visual": "Film screen paired with a small keyboard and live music notes",
+      "rationale": "A silent film screening explicitly features live organ accompaniment. Combined film and keyboard imagery distinguishes it from ordinary recorded cinema; instrument construction is unresolved so do not imply pipe organ.",
+      "existing_alternative": "Film or keyboard emoji",
+      "event_ids": [
+        224799
+      ],
+      "evidence_by_event": {
+        "224799": [
+          "A Window on the World: The Global Routes of the Lumière Camera Opera: School of the Arts Film and Media Studies and the Maison Française present a screening of Lumière Co. film footage - 1895–190",
+          "Tags: Art, Cinema, Film, Education, Screening, Lumiere Brothers, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "224799": [
+          "https://events.columbia.edu/cal/event/eventView.do?b=de&calPath=%2Fpublic%2Fcals%2FMainCal&guid=CAL-00bbdb71-a013eaf8-01a0-1557843f-00002b83events%40columbia.edu&recurrenceId=",
+          "https://maisonfrancaise.columbia.edu/events/window-world-global-routes-lumiere-camera-operators",
+          "https://www.lenfest.arts.columbia.edu/fall-2026-events/cinema-across-continents"
+        ]
+      }
+    },
+    {
+      "concept": "format-mixed-craft-circle",
+      "label": "Mixed craft circle",
+      "category": "format",
+      "visual": "Different craft project cards in a shared circle.",
+      "rationale": "Bring-your-own mixed projects, not exclusively needlework or guided instruction.",
+      "existing_alternative": "The individually reviewed existing custom or Unicode choice remains live. This prospective concept needs scope, recognizability and construction review before any new association.",
+      "event_ids": [
+        224795
+      ],
+      "evidence_by_event": {
+        "224795": [
+          "Making & Mending Night: Mending & Making Night takes place on the first and third Tuesdays. Create community, mend clothing, make items by hand, and craft for a better tomorrow.",
+          "Tags: Community, Art, Education, Sustainability, Crafts, Open Practice, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "224795": [
+          "https://nycquakers.org/events/making-mending-night/2026/09/01",
+          "https://nycquakers.org/events/mending-making-night/2026/09/15"
+        ]
+      }
+    },
+    {
+      "concept": "format-multi-band-rock-show",
+      "label": "Multi-band rock show",
+      "category": "format",
+      "visual": "Several band slots on a rock concert bill.",
+      "rationale": "Multiple distinct rock acts; no single trio or fixed instrument roster implied.",
+      "existing_alternative": "Current Unicode or the individually reviewed accepted icon remains suitable until original candidate artwork is researched and passes native-size review.",
+      "event_ids": [
+        224793
+      ],
+      "evidence_by_event": {
+        "224793": [
+          "Honey VHS, Alright Star, Myella: Honey VHS is a Brooklyn-based independent indie folk-rock band formed in Brooklyn in 2025, pulling from folk, blues, classic rock, and alternative influences. Led by singer songwriter Cameron Roberts and guitarist Luca Moneti Schliemann, the group includes...",
+          "Tags: Music, Rock, Indie, Concert, Folk Music, Indie Rock, Folk Rock, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "224793": [
+          "https://dice.fm/event/6a711946b061d800014a2075",
+          "https://dice.fm/event/eo6p86-honey-vhs-alright-star-myella-17th-nov-sleepwalk-new-york-city-tickets"
+        ]
+      }
+    },
+    {
+      "concept": "format-one-act-theater",
+      "label": "One-act theater program",
+      "category": "format",
+      "visual": "Several short script cards framed by a stage.",
+      "rationale": "Multiple short plays, not a cinema festival.",
+      "existing_alternative": "Use a suitable accepted icon or Unicode fallback until this prospective concept has validated artwork.",
+      "event_ids": [
+        224836
+      ],
+      "evidence_by_event": {
+        "224836": [
+          "Sundog Theatre Presents: Scenes from the Staten Island Ferry 2026: Celebrating its 25th production, Sundog Theatre presents six new and original one-act plays about the Staten Island Ferries. This year’s theme is “Anniversary!”",
+          "Tags: Theater, Original Plays, Format, Theater Show, Performance, Staten Island Ferry"
+        ]
+      },
+      "source_urls_by_event": {
+        "224836": [
+          "https://sundogtheatre.org/production/scenes-from-the-staten-island-ferry-2026/"
+        ]
+      }
+    },
+    {
+      "concept": "format-open-caption-film",
+      "label": "Open-caption screening",
+      "category": "format",
+      "visual": "A cinema screen with two large caption bars beneath the picture.",
+      "rationale": "Open Captions tags explicitly identify an accessibility format that film imagery alone loses.",
+      "existing_alternative": "Clapperboard and speech bubble do not identify captions displayed to the audience; validate against generic subtitle imagery.",
+      "event_ids": [
+        224921
+      ],
+      "evidence_by_event": {
+        "224921": [
+          "TONY: Tony is rated R and has a listed runtime of 106 minutes.",
+          "Tags: Community, Accessibility, Film, Screening, Open Captions, Format, Performance, Rated R"
+        ]
+      },
+      "source_urls_by_event": {
+        "224921": [
+          "https://www.cinemavillage.com/showtimes/"
+        ]
+      }
+    },
+    {
+      "concept": "format-orchestra-concert",
+      "label": "Orchestra concert",
+      "category": "format",
+      "visual": "Fan of orchestral score lines with conductor baton.",
+      "rationale": "Large orchestral program,not chamber ensemble or all classical music.",
+      "existing_alternative": "Prefer accepted artwork or Unicode when adequate; prospective studies require primary and visual validation.",
+      "event_ids": [
+        224790
+      ],
+      "evidence_by_event": {
+        "224790": [
+          "Park Avenue Chamber Symphony: Romeo and Juliet (Family Concert), featuring selections from Prokofiev's Romeo and Juliet, vocal selections and Symphonic Dances from Bernstein's West Side Story, and Tchaikovsky's Romeo and Juliet.",
+          "Tags: Community, Music, Classical Music, Orchestra, Concert, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "224790": [
+          "https://www.mmc.band/calendar-details?recordId=recJw4LeWDHns5MAB"
+        ]
+      }
+    },
+    {
+      "concept": "format-participatory-reading",
+      "label": "Participatory reading gathering",
+      "category": "format",
+      "visual": "Several open books around a conversational circle.",
+      "rationale": "Audience reading participation; silent, spoken and open-mic details must be confirmed.",
+      "existing_alternative": "Use a suitable accepted icon or Unicode fallback until this prospective concept has validated artwork.",
+      "event_ids": [
+        224821
+      ],
+      "evidence_by_event": {
+        "224821": [
+          "STAGE BREAK with Astra House: STAGE BREAK is a first-of-its-kind live reading series where EVERYONE reads together. Doors at 6PM, show begins at 6:30PM. 21+ Event Join PAGE BREAK and Astra House Books for a spec...",
+          "Tags: Literature, Live Reading, Reading, Adults Only, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "224821": [
+          "https://mcnallyjackson.com/event/2026-09-29/stage-break-astra-house"
+        ]
+      }
+    },
+    {
+      "concept": "format-photographic-installation",
+      "label": "Photographic installation",
+      "category": "format",
+      "visual": "Overlapping image panels arranged in a gallery corner.",
+      "rationale": "Installation using photographic archives; exact physical construction to verify.",
+      "existing_alternative": "Use a suitable accepted icon or Unicode fallback until this prospective concept has validated artwork.",
+      "event_ids": [
+        224873
+      ],
+      "evidence_by_event": {
+        "224873": [
+          "Milk Teeth: Milk Teeth takes as its starting point a photograph made in 1870 depicting 75 Chinese boys and young men who were trafficked from California to North Adams, Massachusetts. Using archival and original photographs, sculptural works, and an extended fictional text, Allie Tsubota traces interconnected histories of race, immigration, labor, extraction, and photography.",
+          "Tags: Community, Visual Arts, Art, Photography, Sculpture, Immigration, Community Support, Labor, Exhibition, Format, Browsable"
+        ]
+      },
+      "source_urls_by_event": {
+        "224873": [
+          "https://www.baxterst.org/events/milk-teeth/"
+        ]
+      }
+    },
+    {
+      "concept": "format-photography-exhibition",
+      "label": "Photography exhibition",
+      "category": "format",
+      "visual": "Framed photographic landscape beside a gallery label.",
+      "rationale": "Viewing photographs rather than taking them.",
+      "existing_alternative": "Use a suitable accepted icon or Unicode fallback until this prospective concept has validated artwork.",
+      "event_ids": [
+        224874
+      ],
+      "evidence_by_event": {
+        "224874": [
+          "Where To, From Here: Where To, From Here brings together 140 photographs drawn from Azikiwe Mohammed’s ongoing series begun in 2023. Made primarily with Polaroid film, the photographs trace Mohammed’s travels across the United States, documenting people, places, and sites of gathering.",
+          "Tags: Visual Arts, Art, Photography, Travel, Exhibition, Polaroid, Format, Browsable"
+        ]
+      },
+      "source_urls_by_event": {
+        "224874": [
+          "https://www.baxterst.org/events/where-to-from-here/"
+        ]
+      }
+    },
+    {
+      "concept": "format-puppetry",
+      "label": "Puppetry",
+      "category": "format",
+      "visual": "A stylized puppet head and articulated shoulders above a small stage edge; choose hand, rod or string control only after source verification.",
+      "rationale": "Puppetry is explicitly featured alongside music; exact control method is unresolved and must not be invented in assignment or final art.",
+      "existing_alternative": "Theater masks lose the puppet medium; toy bear suggests ordinary toys.",
+      "event_ids": [
+        224876
+      ],
+      "evidence_by_event": {
+        "224876": [
+          "Little Learners: Esther Crow: Move n' Groove with Puppets!: Esther Crow and her handmade puppets present music, early literacy, and fun.",
+          "Tags: Music, Theater, Dance, Free, Family, Early Literacy, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "224876": [
+          "https://www.nypl.org/events/programs/2026/10/02/little-learners-esther-crow-move-n-groove-puppets"
+        ]
+      }
+    },
+    {
+      "concept": "format-record-release-concert",
+      "label": "Record-release concert",
+      "category": "format",
+      "visual": "A new record beside a live-music note.",
+      "rationale": "Release concert does not guarantee the whole album is played.",
+      "existing_alternative": "Current Unicode or the individually reviewed accepted icon remains suitable until original candidate artwork is researched and passes native-size review.",
+      "event_ids": [
+        224748
+      ],
+      "evidence_by_event": {
+        "224748": [
+          "Rebounder - Downtown People Album Release Show: Born and raised in New York City, Dylan and Noah Chenfeld founded Rebounder after playing music together and touring in other people’s bands. Their debut album Downtown People is described as an urbane, effervescent indie rock album inspired by New York City’s music history, alt-pop icons, and literary giants.",
+          "Tags: Music, Rock, Indie, Concert, Indie Rock, Album Release, Format, Performance, Rebounder"
+        ]
+      },
+      "source_urls_by_event": {
+        "224748": [
+          "https://www.knittingfactory.com/tm-event/rebounder-downtown-people-album-release-show/"
+        ]
+      }
+    },
+    {
+      "concept": "format-research-administration",
+      "label": "Research administration talk",
+      "category": "format",
+      "visual": "Research folder with a funding-chart conversation bubble.",
+      "rationale": "Grant portfolios and research program management rather than a laboratory procedure.",
+      "existing_alternative": "Use a suitable accepted icon or Unicode fallback until this prospective concept has validated artwork.",
+      "event_ids": [
+        224806
+      ],
+      "evidence_by_event": {
+        "224806": [
+          "Seminar - Konstantin Salnikow: the Helen Fawcett Distinguished Professor of History Emeritus at the University of California, Berkeley. He writes about the cultural history of modern Europe and has published books on topics ranging from working class religion and education during the industrial revolution to the history of the body",
+          "Tags: Science, Education, Gathering, Talk, Seminar, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "224806": [
+          "https://events.columbia.edu/cal/event/eventView.do?b=de&calPath=%2Fpublic%2Fcals%2FMainCal&guid=CAL-00bbdb70-a013e630-01a0-15f66717-00004310events%40columbia.edu&recurrenceId="
+        ]
+      }
+    },
+    {
+      "concept": "format-run-book-club",
+      "label": "Run and book club",
+      "category": "format",
+      "visual": "Open book beside a running shoe.",
+      "rationale": "Combined running and reading discussion, without implying a race.",
+      "existing_alternative": "Use a suitable accepted icon or Unicode fallback until this prospective concept has validated artwork.",
+      "event_ids": [
+        224819
+      ],
+      "evidence_by_event": {
+        "224819": [
+          "September Run x Book Club: McNally Jackson and Tracksmith have teamed up to create a run club for the literary-minded. Lace up your running shoes! NYC-ba",
+          "Tags: Community, Literature, Sports, Wellness, Fitness, Outdoor, Running, Book Club, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "224819": [
+          "https://mcnallyjackson.com/event/2026-09-27/september-run-x-book-club"
+        ]
+      }
+    },
+    {
+      "concept": "format-social-issue-documentary",
+      "label": "Social issue documentary",
+      "category": "format",
+      "visual": "Film frame beside a small community symbol.",
+      "rationale": "Documentary about social issues; broad symbolic design needs recognition review.",
+      "existing_alternative": "Use a suitable accepted icon or Unicode fallback until this prospective concept has validated artwork.",
+      "event_ids": [
+        224860
+      ],
+      "evidence_by_event": {
+        "224860": [
+          "Special Screening of Sex Work: It’s Just a Job: Sex Work: It’s Just a Job is a powerful, deeply human documentary that centers the voices of sex workers and organizers leading the movement to decr",
+          "Tags: Community, Activism, Documentary, Film, Education, Social Justice, Screening, Civil Discourse, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "224860": [
+          "https://www.hunter.cuny.edu/event/special-screening-of-sex-work-its-just-a-job/"
+        ]
+      }
+    },
+    {
+      "concept": "format-solo-theater",
+      "label": "Solo theater",
+      "category": "format",
+      "visual": "Single spotlight over one neutral performance figure.",
+      "rationale": "Explicit solo show does not prove comedy or song; anatomy review required.",
+      "existing_alternative": "Use a suitable broad Unicode or accepted icon until a distinctive reviewed study is available.",
+      "event_ids": [
+        224919
+      ],
+      "evidence_by_event": {
+        "224919": [
+          "FOMO: Formerly Mormon: The sharply-penned solo-dramedy about a boy finding his way, torn between his Mormon religion and his obsession",
+          "Tags: Theater, Comedy, Film, Religion, Coming of Age, Solo Performance, Drama / Theater, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "224919": [
+          "https://thetanknyc.org/calendar-1/2026/7/28/fomo"
+        ]
+      }
+    },
+    {
+      "concept": "format-songwriters-round",
+      "label": "Songwriters round",
+      "category": "format",
+      "visual": "Three song pages arranged around a shared microphone.",
+      "rationale": "Prospective only; two names on bill do not prove sharedround format.",
+      "existing_alternative": "Prefer suitable accepted art or Unicode fallback; prospective concepts need source and visual validation before assignment.",
+      "event_ids": [
+        224756
+      ],
+      "evidence_by_event": {
+        "224756": [
+          "Stories Sips + Songs: Nashville and New York songwriters share original music in a Nashville-style round with throwback questions between rounds. The event features Risa Binder, Kenny Sharp, Camden West, and NLX.",
+          "Tags: Community, Music, Concert, Songwriting, Songwriters, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "224756": [
+          "https://www.eventbrite.com/e/stories-sips-songs-tickets-1997983901634?aff=oddtdtcreator&keep_tld=true"
+        ]
+      }
+    },
+    {
+      "concept": "format-staged-play",
+      "label": "Staged play",
+      "category": "format",
+      "visual": "Stage curtains and dramatic manuscript symbol.",
+      "rationale": "Fully staged drama,not rehearsed script reading or cinema.",
+      "existing_alternative": "Retain suitable accepted artwork or Unicode; this is prospective and requires primary scope and visual validation.",
+      "event_ids": [
+        224918
+      ],
+      "evidence_by_event": {
+        "224918": [
+          "Queen for a Day: A new play by Tyler Anthony Smith about Halston designing a gown for Elizabeth I.",
+          "Tags: Community, Theater, History, Art, Education, Fashion, New Play, Historical Drama, Royalty, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "224918": [
+          "https://thetanknyc.org/calendar-1/2026/9/4/qfad"
+        ]
+      }
+    },
+    {
+      "concept": "format-tabletop-game-social",
+      "label": "Tabletop games social",
+      "category": "format",
+      "visual": "Several neutral game pieces around a simple table outline.",
+      "rationale": "Unspecified board-game selection rather than a guaranteed game.",
+      "existing_alternative": "Use a suitable accepted icon or Unicode fallback until this prospective concept has validated artwork.",
+      "event_ids": [
+        224957
+      ],
+      "evidence_by_event": {
+        "224957": [
+          "Boardgame Night ! 桌游之夜 with 老赵: Wind down your Thursday night with hand-picked board games and relaxed conversations with friends! Tickets can be used as coupons for in-store purchases. With a collection of over 80 games, Fred will hand-pick 2–3 titles tailored to the group size and everyone's interests.",
+          "Tags: Community, Art Gallery, Art, Film, Games, Board Games, Game, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "224957": [
+          "https://luma.com/7qgfrhn9",
+          "https://luma.com/7wbgq8xq",
+          "https://luma.com/972y1t99",
+          "https://luma.com/a4qi048p",
+          "https://luma.com/t74bfl6u"
+        ]
+      }
+    },
+    {
+      "concept": "format-urban-history-talk",
+      "label": "Urban history talk",
+      "category": "format",
+      "visual": "Old street grid inside a speech bubble.",
+      "rationale": "A presentation about city development, not an outdoor walk.",
+      "existing_alternative": "Use a suitable accepted icon or Unicode fallback until this prospective concept has validated artwork.",
+      "event_ids": [
+        224817
+      ],
+      "evidence_by_event": {
+        "224817": [
+          "The Hidden Story of Manhattan Street Grids: Presented by Barbaralee Diamonstein-Spielvogel: Who knew that Gouverneur Morris—the brilliant, charismatic, and romantic founder who played a central role in shaping the U.S. Const...",
+          "Tags: Community, History, Literature, Free, Education, Urban Planning, Gathering, Talk, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "224817": [
+          "https://mcnallyjackson.com/event/2026-09-15/hidden-story-manhattan-street-grids",
+          "https://theseaport.nyc/events/the-hidden-story-of-manhattan-street-grids-mcnally-jackson/"
+        ]
+      }
+    },
+    {
+      "concept": "format-vintage-popup",
+      "label": "Vintage clothing popup",
+      "category": "format",
+      "visual": "Single garment rack with a small temporary-shop pennant.",
+      "rationale": "Focused vendor popup distinct from multi-dealer market.",
+      "existing_alternative": "Use a suitable accepted icon or Unicode fallback until this prospective concept has validated artwork.",
+      "event_ids": [
+        224760
+      ],
+      "evidence_by_event": {
+        "224760": [
+          "Yves Saint Laurent Vintage Pop-Up: A Yves Saint Laurent vintage pop-up at ICP.",
+          "Tags: Community, Pop Up, Art, Free, Shopping, Fashion, Vintage, Pop-Up, Format, Browsable"
+        ]
+      },
+      "source_urls_by_event": {
+        "224760": [
+          "https://www.icp.org/events/yves-saint-laurent-vintage-pop"
+        ]
+      }
+    },
+    {
+      "concept": "format-wine-cheese-pairing",
+      "category": "format",
+      "label": "Wine and cheese pairing",
+      "visual": "Wine glass beside a cheese wedge",
+      "rationale": "Combination communicates guided pairing beyond a single ingredient.",
+      "existing_alternative": "Broad fallback does not distinguish this supported facet.",
+      "event_ids": [
+        224811
+      ],
+      "evidence_by_event": {
+        "224811": [
+          "Harvest Season Wine & Cheese Class: A class focused on harvest season wine and cheese.",
+          "Tags: Community, Education, Food, Wine, Cheese, Nightlife, Tasting, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "224811": [
+          "https://fareharbor.com/bkwinery/items/753856/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-civic-history-documentary",
+      "label": "Civic-history documentary",
+      "category": "genre",
+      "visual": "Film frame containing an archival city-plan document.",
+      "rationale": "Nonfiction civic history,not current meeting or direct political participation.",
+      "existing_alternative": "Retain suitable accepted artwork or Unicode; this is prospective and requires primary scope and visual validation.",
+      "event_ids": [
+        224858
+      ],
+      "evidence_by_event": {
+        "224858": [
+          "Democracy and Development: Screening of Emergent City: Promoting Civil Discourse & Intellectual Dialogue Series Democracy and Development: Screening of Emergent City We will screen Emergent City, a film by Hunter College Film and Media Chair Kelly Anderson and Jay Arthur Sterrenberg. Cal",
+          "Tags: Community, Documentary, Film, Screening, Politics, Democracy, Urban Development, Civil Discourse, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "224858": [
+          "https://www.hunter.cuny.edu/event/democracy-and-development-screening-of-emergent-city/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-vocal-jazz",
+      "label": "Vocal jazz",
+      "category": "genre",
+      "visual": "Explore a microphone beside one curved improvisatory note.",
+      "rationale": "The jazz program explicitly features a vocalist.",
+      "existing_alternative": "Microphone is a reasonable existing choice; custom vocal-jazz motif needs recognition testing and should not imply a specific instrument lineup.",
+      "event_ids": [
+        224953
+      ],
+      "evidence_by_event": {
+        "224953": [
+          "The Jazz Loft @ Southampton Concert Series - “Things to Come”: The Jazz Loft @ Southampton Concert Series returns to The Avram Theater. “Things to Come” showcases the artistry of Nicole Zuraitis.",
+          "Tags: Music, Jazz, Concert, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "224953": [
+          "https://calendar.time.ly/z8y13yt7/event/78392441",
+          "https://longislandartsalliance.org/li-arts-events/"
+        ]
+      }
+    }
+  ],
+  "limitations": "Counts describe this cohort, not population reach. These are grounded prospective studies, not live assignments. Existing artwork may already suffice; exact equipment and genre recognition require further review."
+}

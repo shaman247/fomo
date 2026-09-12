@@ -1,0 +1,216 @@
+{
+  "reviewer_mode": "creator-critical-pass",
+  "geometry_mode": "two-3d-scenes-three-flat-symbols",
+  "views": [
+    "front",
+    "rear",
+    "left",
+    "right",
+    "top",
+    "icon"
+  ],
+  "decision": "pass",
+  "findings": [
+    "Twelve original geometry views inspected, then all twelve rechecked after the light revision. Cyberdeck case supports two display stanchions, housing and screen; keyboard and maker board lie on top plate. Approximately 15 cm wide, illustrative dimensions.",
+    "Studio light connects through a tilt yoke to telescoping stand and three equally spaced grounded feet with braces. Pivot spans were extended into the lamp body and foot contacts aligned before the first inspected scene.",
+    "Modifier diameter approximately 58 cm and depth 32.7 cm follow manufacturer reference scale. Stand shortened from roughly 1.84 m overall to 1.34 m overall; oblique camera reveals modifier shell rather than a mirror-like frontal circle. No physics simulation or load certification claimed.",
+    "Five native cards, nine accepted/Noto references and ten final IconManager variants inspected. Other four source hashes remained unchanged after the light revision.",
+    "Three original flat symbols cover comics critique, fiction writing and library-card signup. Manufacturer images informed construction but were not traced; no workshop kit or issued card reproduced."
+  ],
+  "references": [
+    {
+      "url": "https://luma.com/4wxkpnke",
+      "facts": "Comics Critique Crew Sept 24, 6:30–8:30 PM, 21-07 41st Avenue Studio 213, elevator to floor 2. PWYW suggested $10. Up to three creators; submit by Sept 20. Attendees prepare feedback; creators may attend without presenting. Masks required.",
+      "event_ids": [
+        225570
+      ],
+      "method": "Primary page text inspected in browser"
+    },
+    {
+      "url": "https://luma.com/6c4pyv3n",
+      "facts": "Separate past Aug 27, 6:30–8:30 PM Comics Critique Crew; submission cutoff Aug 23. Same venue and format, not the September occurrence.",
+      "event_ids": [
+        225570
+      ],
+      "method": "Primary page text inspected in browser"
+    },
+    {
+      "url": "https://luma.com/l3i92gm0",
+      "facts": "Sept 15, 6–9 PM, $200, sold out/waitlist. Exact address hidden until registration; stored NYC Resistor location not verified. Build Raspberry Pi/color-display system, breadboarding and MicroPython. Bring laptop, closed-toe shoes and hair tie if needed. Materials/tools/take-home device and matcha included. No purchase or registration performed.",
+      "event_ids": [
+        225666
+      ],
+      "method": "Primary page text inspected in browser"
+    },
+    {
+      "url": "https://hobokenlibrary.libnet.info/event/17137515",
+      "facts": "Sept 17, noon–2 PM, Grand Street Branch study room, 124 Grand. Social worker provides community referrals and benefits application help; adults/seniors. Existing benefits-assistance icon fits, so no duplicate new icon.",
+      "event_ids": [
+        225670
+      ],
+      "method": "Primary page text inspected in browser"
+    },
+    {
+      "url": "https://jclibrary.libcal.com/event/17261558",
+      "facts": "Library-card signup/renewal drive runs Sept 1–30 at Pavonia, all ages. Base occurrence Sept 1 10–5:30; spin wheel and receive small prize. Stored chance-to-win wording differs; service is not a continuous 24-hour month.",
+      "event_ids": [
+        225822
+      ],
+      "method": "Primary page text inspected in browser"
+    },
+    {
+      "url": "https://jclibrary.libcal.com/event/17350419",
+      "facts": "Sept 19, 1–4 PM, Miller Branch, young adults 12–18, registration required. John Manuel Gomez teaches hands-on lighting and creative exercises. No specific softbox/stand package promised.",
+      "event_ids": [
+        225833
+      ],
+      "method": "Primary page text inspected in browser"
+    },
+    {
+      "url": "https://luma.com/accentisa-zboy",
+      "facts": "Eight Week Fiction Workshop with Will Shih lists Nov 5, 10–11 AM, Zoom; registration closed and no detailed schedule exposed. Physical bookstore mapping is unsupported.",
+      "event_ids": [
+        225592
+      ],
+      "method": "Primary page text inspected in browser"
+    },
+    {
+      "url": "https://luma.com/accentisa-coh3",
+      "facts": "Joss Lake six-week fiction course Oct 8–Nov 12 online. Header 9–11 PM EDT conflicts with Chinese body 9–11:30 New York time. Standard $516, member $464.40, early $494.50. Process exercises, four short pieces and final 750–1,250-word piece; reading The Membranes required. Book plots and instructor biography are not event venues or activities.",
+      "event_ids": [
+        225600
+      ],
+      "method": "Primary page text inspected in browser"
+    },
+    {
+      "url": "https://luma.com/fck0ib6t",
+      "facts": "Linocut 102 Sept 12 noon–5:30: two 2.5-hour sessions and half-hour break. Two-block, two-color registration and printing. $90 standard/$70 access. Floor 2 Studio 213; masks required.",
+      "event_ids": [
+        225575
+      ],
+      "method": "Primary page text inspected in browser"
+    },
+    {
+      "url": "https://luma.com/dvy24vc8",
+      "facts": "Sept 22, 6:30–8:30, $50/$30 access, Studio 213. Breathwork and making a take-home herbal blend. RSVP/masks required. Health claims are organizer wording, not verified efficacy or safety.",
+      "event_ids": [
+        225577
+      ],
+      "method": "Primary page text inspected in browser"
+    },
+    {
+      "url": "https://luma.com/b9vx66eg",
+      "facts": "Shu Cai poetry revision masterclass Sept 26 10 AM–noon GMT+8, equivalent to Sept 25 10 PM–midnight EDT. Zoom, $26.88. Submit one or two pages; 60-minute lecture, 30-minute Q&A and 30-minute participant editing. Film and physical venue tags are misleading.",
+      "event_ids": [
+        225591
+      ],
+      "method": "Primary page text inspected in browser"
+    },
+    {
+      "url": "https://luma.com/3ya4mp0c",
+      "facts": "Dialect Across the Sea Nov 14, 4–6 PM, MOCA 215 Centre, $30.10, host approval required. No detailed practice format exposed; do not infer reciprocal exchange from multilingual title alone.",
+      "event_ids": [
+        225609
+      ],
+      "method": "Primary page text inspected in browser"
+    },
+    {
+      "url": "https://hobokenlibrary.libnet.info/event/17056396",
+      "facts": "Past Aug 25, 10:30–4, Columbus Park pop-up: youth books/returns, card signup, coloring/music; no adult collection. Library source is Hoboken, while stored location is Manhattan Chinatown. Confirm precise Hoboken meeting point and later occurrences.",
+      "event_ids": [
+        225690
+      ],
+      "method": "Primary page text inspected in browser"
+    },
+    {
+      "url": "https://hobokenlibrary.libnet.info/event/17019522",
+      "facts": "Past Sept 8, 2–4 PM, Art in the Park: Faith Ringgold observation activity at Columbus Park. Supplies/weather dependent. Stored Manhattan park is inconsistent with Hoboken program; later themed sessions need separate source checks.",
+      "event_ids": [
+        225693
+      ],
+      "method": "Primary page text inspected in browser"
+    },
+    {
+      "url": "https://hobokenlibrary.libnet.info/event/17018725",
+      "facts": "Past Aug 24 noon–12:30 baby storytime, ages 0–18 months, ResilienCity Park Community Room at 1200 Jefferson. Stored toddler description and 1201 Madison address differ. Later dates need reconciliation.",
+      "event_ids": [
+        225672
+      ],
+      "method": "Primary page text inspected in browser"
+    },
+    {
+      "url": "https://hobokenlibrary.libnet.info/event/17056923",
+      "facts": "Sept 23, 2–4 PM Church Square Park: crafts, lotería, button making and bilingual storytime. Rain location Grand Street Branch. Broad cultural celebration, not one exclusive activity.",
+      "event_ids": [
+        225721
+      ],
+      "method": "Primary page text inspected in browser"
+    },
+    {
+      "url": "https://jclibrary.libcal.com/event/17185749",
+      "facts": "Children’s Craft Afternoons base Sept 1, 3:30–4:30, Marion Branch, ages 6–11, weekly changing craft. No specific technique established.",
+      "event_ids": [
+        225826
+      ],
+      "method": "Primary page text inspected in browser"
+    },
+    {
+      "url": "https://luma.com/3si7560t",
+      "facts": "Redirects to /bdragon: Stine An B-Dragon Suite poetry launch Oct 2, doors 6:30, reading starts 7 followed by conversation/Q&A with Rosanna Young Oh, ends 9. PWYW suggested $5.38. Address 89 Fifth #702 but primary ZIP 10002 conflicts with stored 10003.",
+      "event_ids": [
+        225596
+      ],
+      "method": "Primary page text inspected in browser"
+    },
+    {
+      "url": "https://luma.com/accentisa-i2yf",
+      "facts": "K book launch Oct 25, 3–5 PM, 89 Fifth #702. Standard suggested $8.60 with approval; free only designated members. No author or program details exposed; Free tag too broad.",
+      "event_ids": [
+        225607
+      ],
+      "method": "Primary page text inspected in browser"
+    },
+    {
+      "url": "https://luma.com/accentisa-3azz",
+      "facts": "Rim Battal book event Nov 6, 7–9 PM, 89 Fifth #702. Admission $5.38 with approval or admission/book $22.58. No confirmed author attendance, recital or conversation details.",
+      "event_ids": [
+        225608
+      ],
+      "method": "Primary page text inspected in browser"
+    },
+    {
+      "url": "https://luma.com/xqrqv7y8",
+      "facts": "High Line Buddha Tour Oct 10, 11:30–2 PM, host approval required. No precise meeting point, artwork identity or route exposed; not proof of visiting multiple Buddhist sites.",
+      "event_ids": [
+        225601
+      ],
+      "method": "Primary page text inspected in browser"
+    },
+    {
+      "url": "https://learn.adafruit.com/cyberdeck-bonnet-and-hat?view=all",
+      "facts": "Manufacturer shows keyboard computer with connected display/header assembly; HAT and Bonnet support different board sizes. Used for physical support concept only. New icon is an original generic case/display/keyboard/maker-board layout, not the workshop kit or electrical schematic.",
+      "event_ids": [
+        225666
+      ],
+      "method": "Primary technical text and one small manufacturer photograph personally inspected; no tracing"
+    },
+    {
+      "url": "https://www.manfrotto.com/global-en/aluminum-follow-spot-stand-w-leveling-leg-070bu/",
+      "facts": "Manufacturer describes telescoping light support and braced leg base; photograph shows three grounded legs and braces. Used for physical construction, not a load rating or exact model claim.",
+      "event_ids": [
+        225833
+      ],
+      "method": "Primary manufacturer text and stand photograph personally inspected"
+    },
+    {
+      "url": "https://aputure.com/en-US/products/light-dome-mini-iii",
+      "facts": "Manufacturer gives approximately 58 cm modifier diameter and 32.7 cm depth, Bowens attachment, front diffuser and supported light fixture. Photograph shows shell, diffusion, rear mount and yoke. New generic icon does not claim workshop equipment. Page has inconsistent 16/32-side marketing; geometry is an illustrative 16-sided shell.",
+      "event_ids": [
+        225833
+      ],
+      "method": "Primary manufacturer text and modifier photograph personally inspected"
+    }
+  ],
+  "scene_sha256": "10e01d037fdaf379ad5ec570d68a308820c6f3144d49c8bf11e2f7ade75393d1",
+  "project_sha256": "6b10582bf461203dc7211a139657de29a5fb0426db691964ab7071cce42b5d68"
+}

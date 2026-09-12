@@ -67,7 +67,9 @@ DB connect: `import sys; sys.path.insert(0, 'pipeline'); from db import create_c
 
 ## Step 1 — Build the issue list
 
-A) Crawl failures from this run:
+A) Crawl failures from this run. **Window on `created_at`, never `crawled_at`** — a `failed`/`timeout`
+row has `crawled_at IS NULL`, so a `crawled_at` window silently returns zero failures on every run
+(found 2026-09-12: 5 real failures were invisible to this query).
 ```
 ./venv/bin/python <<'EOF'
 import sys; sys.path.insert(0, 'pipeline')
@@ -77,7 +79,7 @@ cur.execute("""
   SELECT cr.website_id, w.name, cr.status, LENGTH(cr.crawled_content) AS sz,
          cr.event_count, SUBSTRING(cr.error_message,1,120)
   FROM crawl_results cr JOIN websites w ON cr.website_id = w.id
-  WHERE cr.crawled_at >= (NOW() - INTERVAL 12 HOUR)
+  WHERE cr.created_at >= (NOW() - INTERVAL 12 HOUR)
     AND (cr.status IN ('failed','timeout') OR cr.event_count = 0)
   ORDER BY cr.website_id
 """)

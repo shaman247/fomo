@@ -1,0 +1,126 @@
+{
+  "reviewer_mode": "creator-critical-pass",
+  "geometry_mode": "one-3d-scene-four-flat-symbols",
+  "views": [
+    "front",
+    "rear",
+    "left",
+    "right",
+    "top",
+    "icon"
+  ],
+  "decision": "pass",
+  "findings": [
+    "Sixhotpressgeometryviews inspectedbeforefinalSVGexport. Allfive initialnative128/32/24/16lightdarkcards,ninereferences,andtenruntimevariants inspected. Optimizedpressfinalnativecardandalltenruntimeviews rechecked;otherfourhashunchanged.",
+    "Modelweightedbase,verticalupright,headbridge,lever/shaft,slidingram,return spring,heatedtypeholder,parallelplatenandfour supports. Foilabove paper;raisedheadloadingposition. Nooperatororpretendedhumancontacts.",
+    "Approx31cmwide29cmdeep68cmhighgenericpress,notexactCBAequipment. Dieface/platformparallel;connections andstandoffs visibleacrossviews. Powercable,tinytypefacesandinternaldrive omitted;notengineeringvalidation.",
+    "Otherfourdiagramsuseflatmaterialsymbols,quotedscript,letteroutlinesandscreeningtiles. Noanatomicalfigureorcomplexspatialassembly.",
+    "Presscontours simplified9722/2681\u21929010/2455bytes;fine spring detailsoftensbutcontinuity,paper/foil separation andheadclearance survive. Otherflatfilesalreadycompact. Allunder15KBraw/5KBgziptriggers."
+  ],
+  "references": [
+    {
+      "url": "https://shop.centerforbookarts.org/products/26fhs100i",
+      "findings": "Oct24 11\u20135,BirutaAuna;registrationOct11,210+30materials=240. Heat and pressure transfer metallic/pigmentedfoils to paper/bookcloth;machine setup,materialsprovided. No experience required. Exact machine not identified.",
+      "inspection": "Primary text read; no source images or videos inspected.",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://shop.centerforbookarts.org/products/26fpv007i",
+      "findings": "Oct26 6\u20139,JulianSilverman;registrationOct12,105+30=135. Tannin-bearing organic waste and scrapmetal make black ink,thenexpressiveart. No precise ingredient recipe,chemicalanalysis or safetyclaim.",
+      "inspection": "Primary text read; no source images or videos inspected.",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://shop.centerforbookarts.org/products/26fpe103v",
+      "findings": "Nov18 1\u20134ETvirtual,Pisano,registrationNov4. Handstencils/stamps/foundtextures thenfoldedflexagonbook. Tuition15/30/60/80/120,not free;recording30days. Materials required,not automatic kit.",
+      "inspection": "Primary text read; no source images or videos inspected.",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://posterhouse.org/event/indigenous-north-american-type/",
+      "findings": "Nov12 6\u20137:30freeZoom,camerasoff,recording forregistered,automatedCC,ASL/CARTonrequest. KevinKing discussesTypotheque communityresearch,font barriers/preferences andtypeface development. Not on-site museumtour or hands-on lettering.",
+      "inspection": "Primary text read; no source images or videos inspected.",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://events.nyu.edu/event/402064-constitution-day-2026-subject-to-the-jurisdiction-the",
+      "findings": "Sept16 7:30EDTBlackBox82WashingtonSqE. Verbatimperformance fromSupremeCourtoralarguments plusexperts. SameeventIDalsoin2025/inauguration slugs;canonicalidentityrequirescleanup. Not actual court proceedings or legaladvice.",
+      "inspection": "Primary text read; no source images or videos inspected.",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://www.knittingfactory.com/tm-event/junk-dump-film-fest/",
+      "findings": "Sept13 7PM21+,0.00,NightClub101101AveA. Explicit filmfestival; no individual films,screeningcount or guests confirmed.",
+      "inspection": "Primary text read; no source images or videos inspected.",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://www.afmeng.com/Shared_Manuals/Kwikprint/Kwikprint.pdf",
+      "findings": "Kwikprint55/86instructionmanual:leverlowers heatedtypeholder ontofoil laid over substrate on platform;return raiseshead. Platform/typeholder alignment matters. Manualfeeding possible withoutrollfeed. Usedstructuraldescription,notoperating advice.",
+      "inspection": "All six pages primary manual text read; no PDF figures/images inspected.",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://www.upstairsimprinters.com/kwikprint-hot-stamping-machine",
+      "findings": "Supplier/manufacturer describesplatformalignment and heatedtypehead. Photos showvertical support,carriage,lever,return spring,wide heatedholder overlevelplatform,foilabove substrate. Generic originalmodel doesnotclaim exactKwikprintorCBAequipment.",
+      "inspection": "Fullprimarytext and three photos personally inspected:hotstamp-reference-1,2,4.png. Close-up3 wasunloadedred;reloadtimedout. No video or tracing.",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://www.prospectpark.org/event/smorgasburg-matsuri-japan-meets-brooklyn/",
+      "findings": "Japanese guestvendors,resident specials,performances,activities andlimitedomakase-style tastings. Returnedtextdidnotshowdate. Marketfreeentrydoesnotmeanfreemeals.",
+      "inspection": "Primary text read; no source images or videos inspected.",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://greyartmuseum.nyu.edu/exhibitions/by-alison-knowles-a-retrospective-1960-2022",
+      "findings": "Sept9 2026\u2013Jan30 2027,notstoredJan20.200+objects,curatedKarenMoss. Retrospective andseparatecuratortour,panel,walkthrough;fourmergedURLsneedpartition. Museum18CooperSquare;20ismailingaddress. Imagesnotinspected.",
+      "inspection": "Primary text read; no source images or videos inspected.",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://bsidesnyc.org/",
+      "findings": "Oct17 atJohnJay524W59,8AM\u20135PM. Securitycommunityconference withtechnicaltalks,villages,CTFs. Textsaysinformationfree butticketprice/registrationnotchecked;do not claimallactivitiesfree.",
+      "inspection": "Primary text read; no source images or videos inspected.",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://mountgulian.org/events-calendar/",
+      "findings": "WhiteGloveTourSept2/16/30at1PM;noother tours those days. Selectedcollectionhandling afterhouse/grounds;20adult18senior10child,under6/memberfree,reservationrecommended. GenericApril\u2013Octordinarytourtimes do not override specialdates.",
+      "inspection": "Primary text read; no source images or videos inspected.",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://mjhnyc.org/events/jewishgen-subcarpathian-research/",
+      "findings": "Oct11 1\u20132:30,inpersonMuseumStudio. LaraDiamond discussesfamilyreconstruction andJewishGenrecordsearching. Ukraine/EasternEuropeare researchgeography,notvenue;notmedicalDNAadvice.",
+      "inspection": "Primary text read; no source images or videos inspected.",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://www.blackforestbrooklyn.com/oktoberfest",
+      "findings": "SixSaturdaysSept19\u2013Oct24,two locations withvaryingtimes. SmithStreetSept19/Oct17 7\u201310;Sept26/Oct3/10/24 4\u20137. Reservedseatsfrom35+tax includingfirststein/gratuity;under21nonalcoholicsubstitution,10andunder noreservation. Bandindoors;backyardseparate. Notallsixweekendsallhours.",
+      "inspection": "Primary text read; no source images or videos inspected.",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://www.ewg.org/verifiedevents/popup/",
+      "findings": "Oct17\u201318 11\u20135,188Lafayette.20donation,50+brands,samples/fullsizeproducts. Cleaner/safer wording isorganizer claim,notindependently assessed medical or product guidance.",
+      "inspection": "Primary text read; no source images or videos inspected.",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://hudsonhall.org/event/kaleidoscope-chamber-collective/",
+      "findings": "Oct25 3PM,about2hours,50+5fee/studentoptions/under16withadultfree. Horn,two violins,viola,cello,piano;multipleworkschangecombination. Not onefixedpianotrio orstringquartet throughout.",
+      "inspection": "Primary text read; no source images or videos inspected.",
+      "date": "2026-09-11"
+    },
+    {
+      "url": "https://hudsonhall.org/event/aryeh-nussbaum-cohen/",
+      "findings": "Nov8 3PM,countertenor+pianistJohnChurchwell,35+5fee. Lieder,Jewishheritage,Handelarias/Heggie;Deidamia2027production separate. Two-personrecital,notcompleteopera.",
+      "inspection": "Primary text read; no source images or videos inspected.",
+      "date": "2026-09-11"
+    }
+  ],
+  "scene_sha256": "acd368e70351fbf9067e368c9b6f56660a7dcc0b87bb5df17ed6763bb07f1bbf",
+  "project_sha256": "0a348d828917df267c66f419faed4f38665c5a0dced4be5a554794826cbf95dc"
+}

@@ -1,0 +1,198 @@
+[
+  {
+    "icon_id": "craft-diamond-painting",
+    "source_sha256": "db89c4fb70075682c83d3e72c0a4271b99adb5f1af71b0536ecb50ea3cda1793",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; brief known. Faceted mosaic grid and applicator; individual drills soften at 16 px.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-086/visual-final",
+      "geometry": "config/event-icons/prototypes/autonomous-cycle-086/geometry-review.json",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-086/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 2514,
+      "gzip_level_6": 510
+    },
+    "optimization": {
+      "initial_raw": 2514,
+      "initial_gzip_level_6": 510,
+      "final_raw": 2514,
+      "final_gzip_level_6": 510
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Grid may resemble mosaic art generally; applicator and event label establish diamond painting. No exact kit pattern."
+    ]
+  },
+  {
+    "icon_id": "craft-paper-squishy",
+    "source_sha256": "d6f67730106976a63390bb3186f926359f9d1ba52050ba6c6762295655b1565d",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; brief known. Paper sheet and round smiling paper toy; tactile softness requires label.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-086/visual-final",
+      "geometry": "config/event-icons/prototypes/autonomous-cycle-086/geometry-review.json",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-086/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 5020,
+      "gzip_level_6": 1794
+    },
+    "optimization": {
+      "initial_raw": 5020,
+      "initial_gzip_level_6": 1794,
+      "final_raw": 5020,
+      "final_gzip_level_6": 1794
+    },
+    "issues": [
+      {
+        "severity": "material",
+        "location": "Rear geometry view and front shading",
+        "observation": "Initial reversed face winding exposed the smile through the back; per-face shading fragmented the front.",
+        "revision": "Corrected authoritative mesh winding and used flat paper paint; all eighteen views rechecked. Back now occludes face and front is a broad uniform color.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "A still icon cannot demonstrate compressibility and can resemble an emoji sticker. The paper cue and label establish paper-squishy craft; no licensed character."
+    ]
+  },
+  {
+    "icon_id": "craft-lip-balm-making",
+    "source_sha256": "5bf714cfeff7bca7e545c48d9234a3c619193abc9241e9d5d9adcb21e776721a",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; brief known. Open balm tube and detached cap; revised diagonal composition makes the narrow tube more visible.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-086/visual-final",
+      "geometry": "config/event-icons/prototypes/autonomous-cycle-086/geometry-review.json",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-086/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 3481,
+      "gzip_level_6": 1084
+    },
+    "optimization": {
+      "initial_raw": 3467,
+      "initial_gzip_level_6": 1052,
+      "final_raw": 3481,
+      "final_gzip_level_6": 1084
+    },
+    "issues": [
+      {
+        "severity": "material",
+        "location": "Whole silhouette at 16\u201332 px",
+        "observation": "Vertical composition left the narrow tube too slight.",
+        "revision": "Rotated the authoritative orthographic camera 40 degrees; re-rendered geometry, native-size card and all ten IconManager variants.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "At 16 px the container can resemble a cosmetic pencil; visible flat balm tip and detached cap help at 24/32. No recipe, health claim or promised packaging."
+    ]
+  },
+  {
+    "icon_id": "activity-digital-wellness",
+    "source_sha256": "46087e4f40c5d035887ea836f33d54d316736d96a88c892316ad8b89c01d37a5",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; brief known. Phone with pause symbol and clock; screen-time boundaries are clear with label.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-086/visual-final",
+      "geometry": "config/event-icons/prototypes/autonomous-cycle-086/geometry-review.json",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-086/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 620,
+      "gzip_level_6": 322
+    },
+    "optimization": {
+      "initial_raw": 620,
+      "initial_gzip_level_6": 322,
+      "final_raw": 620,
+      "final_gzip_level_6": 322
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "May resemble a phone timer; label distinguishes balanced-use learning from an app feature. No clinical outcome implied."
+    ]
+  },
+  {
+    "icon_id": "activity-3d-modeling",
+    "source_sha256": "9330b0b759eecea2da9b2e1ca0a9eb960206d3e39827b4ed2e5a210acb3c0006",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; brief known. Geometric cube selected inside a modeling window with cursor.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-086/visual-final",
+      "geometry": "config/event-icons/prototypes/autonomous-cycle-086/geometry-review.json",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-086/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 951,
+      "gzip_level_6": 457
+    },
+    "optimization": {
+      "initial_raw": 951,
+      "initial_gzip_level_6": 457,
+      "final_raw": 951,
+      "final_gzip_level_6": 457
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Selection handles soften at 16 px; cube and window survive. No specific CAD software branding or physical printing implied."
+    ]
+  }
+]

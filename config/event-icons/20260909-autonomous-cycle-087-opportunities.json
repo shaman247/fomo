@@ -1,0 +1,1044 @@
+{
+  "date": "2026-09-11",
+  "scope": "Cycle 087: 100 sequential events 225950–226099, no targeted supplements.",
+  "suggestions": 54,
+  "concept_count": 42,
+  "concepts": [
+    {
+      "concept": "format-multi-band-showcase",
+      "label": "Multi-band showcase",
+      "category": "format",
+      "visual": "Several distinct band slots within one stage program.",
+      "rationale": "Explicit cycle 087 context supports this prospective concept; not a live assignment.",
+      "existing_alternative": "Retain existing fallback or accepted broader icon until distinct recognition and scope are validated.",
+      "event_ids": [
+        226036,
+        226042,
+        226051,
+        226052
+      ],
+      "evidence_by_event": {
+        "226036": [
+          "Faded Fest - Ratwithwings: RatWithWings NYC presents Faded Fest with XbongX, In Jest, Iwantmy50dollars, Pottersfield, Jaw Wired Shut, and Myelin’s Sheath.",
+          "Tags: Music, Concert, Nightlife, Live Music, Format, Performance"
+        ],
+        "226042": [
+          "Genitorturers \"Live + Lewd Tour\": The Kingsland Presents GENITORTURERS with special guest Nathan James and GLDN, with Sounds By Valentine.",
+          "Tags: Music, Concert, Nightlife, Format, Performance"
+        ],
+        "226051": [
+          "Thoughts on Bowling: Live performances by Thoughts on Bowling, Computer, Softly, and HummusVacuum, presented by Miles to Go Presents.",
+          "Tags: Music, Concert, Live Music, Format, Performance"
+        ],
+        "226052": [
+          "Arizmenda, Cénotaphe, Flaming Ouroboros, Oldowan Gash, Shāhanshāh: Material World and Born for Burning present Arizmenda, Cénotaphe, Flaming Ouroboros, Oldowan Gash, and Shāhanshāh (شاهنشاه).",
+          "Tags: Music, Concert, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "226036": [
+          "https://brooklynmonarch.kydlabs.com/e/EVe7f7c72d-6ff5-4066-b41a-4cda0f667703"
+        ],
+        "226042": [
+          "https://brooklynmonarch.kydlabs.com/e/EV0aa41947-9a60-434d-befd-7e985fc22dae"
+        ],
+        "226051": [
+          "https://brooklynmonarch.kydlabs.com/e/EVdb49f9d4-696e-4d3b-95fc-0cb72c344a5e"
+        ],
+        "226052": [
+          "https://brooklynmonarch.kydlabs.com/e/EV306c684a-eac4-4a34-8a54-44338dc70e75"
+        ]
+      }
+    },
+    {
+      "concept": "activity-childrens-movement",
+      "label": "Children’s movement play",
+      "category": "activity",
+      "visual": "Simple footprints and a large play ball.",
+      "rationale": "Broad participatory movement without a specified sport or regimen.",
+      "existing_alternative": "Existing broad artwork or Unicode remains usable. This prospective distinction needs independent semantic and small-size review before any new assignment.",
+      "event_ids": [
+        225950,
+        225956,
+        225957
+      ],
+      "evidence_by_event": {
+        "225950": [
+          "In Motion Workshops: No description available.",
+          "Tags: Workshop, Dance, Education, Participatory, Format"
+        ],
+        "225956": [
+          "Family Saturdays: No description available.",
+          "Tags: Community, Workshop, Dance, Family, Education, Participatory, Format"
+        ],
+        "225957": [
+          "Children's Workshops: No description available.",
+          "Tags: Workshop, Dance, Family, Education, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "225950": [
+          "https://www.nycballet.com/season-and-tickets/calendar"
+        ],
+        "225956": [
+          "https://www.nycballet.com/season-and-tickets/calendar"
+        ],
+        "225957": [
+          "https://www.nycballet.com/season-and-tickets/calendar"
+        ]
+      }
+    },
+    {
+      "concept": "dance-ballet",
+      "category": "dance-style",
+      "label": "Ballet",
+      "visual": "Grounded dancer in a balanced classical arabesque with simple tutu silhouette.",
+      "rationale": "Ballet posture differs from social-dance emoji.",
+      "existing_alternative": "Existing dancer is usable but does not convey classical ballet.",
+      "event_ids": [
+        225952,
+        225954,
+        225955
+      ],
+      "evidence_by_event": {
+        "225952": [
+          "Ballet Connections: No description available.",
+          "Tags: Community, Workshop, Dance, Ballet, Education, Participatory, Format"
+        ],
+        "225954": [
+          "Eclectic NYCB I: No description available.",
+          "Tags: Art, Dance, Ballet, Fall 2026, Format, Theater Show, Performance"
+        ],
+        "225955": [
+          "All Balanchine I: No description available.",
+          "Tags: Dance, Ballet, Choreography, Fall 2026, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "225952": [
+          "https://www.nycballet.com/season-and-tickets/calendar"
+        ],
+        "225954": [
+          "https://www.nycballet.com/season-and-tickets/calendar"
+        ],
+        "225955": [
+          "https://www.nycballet.com/season-and-tickets/calendar"
+        ]
+      }
+    },
+    {
+      "concept": "format-experimental-music-showcase",
+      "label": "Experimental music showcase",
+      "category": "format",
+      "visual": "Several abstract sound studies on one stage.",
+      "rationale": "Diverse experimental acts,not guaranteed live electronics or one instrument.",
+      "existing_alternative": "Prefer accepted artwork or Unicode when adequate; prospective studies require primary and visual validation.",
+      "event_ids": [
+        226021,
+        226022,
+        226023
+      ],
+      "evidence_by_event": {
+        "226021": [
+          "Tim Love Lee's Resonant Reflections Part I: Tim Love Lee presents Resonant Reflections, a musical residency inspired by Liz Nielsen’s commissioned installation within the Gridley Chapel, Crystalline Resonance. Part I features a musical performance ranging from pianos broken down and rebuilt into harps by summer camp students to vintage records cherished by avid collectors.",
+          "Tags: Music, Art, Concert, Artist Residency, Format, Performance"
+        ],
+        "226022": [
+          "Tim Love Lee's Resonant Reflections Part II: Tim Love Lee presents Resonant Reflections, a musical residency inspired by Liz Nielsen’s commissioned installation within the Gridley Chapel, Crystalline Resonance. The event features musical performances ranging from pianos rebuilt into harps by summer camp students to vintage records cherished by avid collectors.",
+          "Tags: Community, Music, Art, Outdoor, Concert, Format, Performance"
+        ],
+        "226023": [
+          "Tim Love Lee's Resonant Reflections Part III: Tim Love Lee presents Resonant Reflections, a musical residency inspired by Liz Nielsen’s commissioned installation within the Gridley Chapel, Crystalline Resonance. Part III is one of three special musical performances featuring a wide range of musical styles, from pianos rebuilt into harps by summer camp students to vintage records cherished by avid collectors.",
+          "Tags: Community, Music, Art, Outdoor, Concert, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "226021": [
+          "https://www.wassaicproject.org/events/tim-love-lees-resonant-reflections-part-1"
+        ],
+        "226022": [
+          "https://www.wassaicproject.org/events/tim-love-lees-resonant-reflections-part-ii"
+        ],
+        "226023": [
+          "https://www.wassaicproject.org/events/tim-love-lees-resonant-reflections-part-iii"
+        ]
+      }
+    },
+    {
+      "concept": "format-solo-singer-songwriter",
+      "label": "Solo singer-songwriter",
+      "category": "format",
+      "visual": "Single microphone beside a song manuscript.",
+      "rationale": "Solo set explicit; no guitar type assumed.",
+      "existing_alternative": "Retain suitable existing catalog art or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        226090,
+        226098
+      ],
+      "evidence_by_event": {
+        "226090": [
+          "Dakota Blue: No description available.",
+          "Tags: Music, Concert, Live Music, Format, Performance"
+        ],
+        "226098": [
+          "Richard Peter Morris: Richard Peter Morris is a Jersey Shore-based multi-instrumentalist and songwriter with a deep history in the New York folk scene. He is re-introducing his music to the performance circuit with his new solo album, Gratuitous Grace.",
+          "Tags: Music, Concert, Singer Songwriter, Vocal Music, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "226090": [
+          "https://dakota-blue.com/solo"
+        ],
+        "226098": [
+          "https://www.richardpetermorris.com/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-electronic-dance",
+      "label": "Electronic dance music",
+      "category": "genre",
+      "visual": "A rhythmic waveform with dancing beat marks; equipment-neutral.",
+      "rationale": "Explicit cycle 087 context supports this prospective concept; not a live assignment.",
+      "existing_alternative": "Retain existing fallback or accepted broader icon until distinct recognition and scope are validated.",
+      "event_ids": [
+        226016,
+        226039
+      ],
+      "evidence_by_event": {
+        "226016": [
+          "I Feel Presents: Kino Todo: An event presented by I Feel featuring Kino Todo.",
+          "Tags: Music, Dance, Nightlife, Electronic Music, Club Night, Format, Social"
+        ],
+        "226039": [
+          "Dion Timmer: The Bowery and Meadows After Dark presents Dion Timmer, with Otsukare, Coszmos, Sheez It, and ???.",
+          "Tags: Music, Concert, Nightlife, Electronic Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "226016": [
+          "https://ra.co/events/2522092",
+          "https://shotgun.live/en/events/ifeel-oct-17-2026"
+        ],
+        "226039": [
+          "https://brooklynmonarch.kydlabs.com/e/EV9628f4c3-0a9f-4f56-aff5-465c44b0f9b8"
+        ]
+      }
+    },
+    {
+      "concept": "genre-jazz",
+      "label": "Jazz",
+      "category": "genre",
+      "visual": "A pair of syncopated musical notes with one loose improvisatory flourish.",
+      "rationale": "The genre is explicit, but an instrument-neutral motif remains exploratory and requires recognition tests; avoid treating saxophone as universal jazz.",
+      "existing_alternative": "Noto notes are generic; a saxophone misstates instrumentation when the program does not feature one.",
+      "event_ids": [
+        225973,
+        225977
+      ],
+      "evidence_by_event": {
+        "225973": [
+          "The EarRegulars: Jon-Erik Kellso and the EarRegulars.",
+          "Tags: Music, Jazz, Concert, Live Music, Format, Performance, Ear Regulars"
+        ],
+        "225977": [
+          "The EarRegulars 8-11pm: Jon-Erik Kellso and the EarRegulars return to their regular 8–11pm time slot.",
+          "Tags: Music, Jazz, Concert, Live Music, Format, Performance, Ear Regulars"
+        ]
+      },
+      "source_urls_by_event": {
+        "225973": [
+          "https://www.theearinn.com/music-schedule/2020/2/16/the-earregulars",
+          "https://www.theearinn.com/music-schedule/2021/6/13/jon-erik-kellso-and-the-earregulars-return-on-sundays-in-june-1-330pm-weather-permitting-outdoor-show",
+          "https://www.theearinn.com/music-schedule/2021/6/13/jon-erik-kellso-and-the-earregulars-return-on-sundays-in-june-1-330pm-weather-permitting-outdoor-show-psjj5",
+          "https://www.theearinn.com/music-schedule/2021/6/13/jon-erik-kellso-and-the-earregulars-return-on-sundays-in-june-1-330pm-weather-permitting-outdoor-show-psjj5-jlcfh"
+        ],
+        "225977": [
+          "https://www.theearinn.com/music-schedule/2021/6/27/jon-erik-kellso-and-the-earregulars-return-on-sundays-in-june-1-330pm-weather-permitting-outdoor-show"
+        ]
+      }
+    },
+    {
+      "concept": "activity-accessible-dance-workshop",
+      "label": "Accessible dance workshop",
+      "category": "activity",
+      "visual": "Varied movement paths around an open floor; avoid assumed diagnosis or mobility equipment.",
+      "rationale": "The reviewed event explicitly identifies this activity or format; the proposed distinction needs a separate construction and small-size recognition study.",
+      "existing_alternative": "Keep suitable accepted artwork or Unicode until this prospective concept is reviewed. No new assignment is implied.",
+      "event_ids": [
+        225951
+      ],
+      "evidence_by_event": {
+        "225951": [
+          "Autism-Friendly Access Workshops: No description available.",
+          "Tags: Workshop, Dance, Family, Education, Access Programs, Autism Friendly, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "225951": [
+          "https://www.nycballet.com/season-and-tickets/calendar"
+        ]
+      }
+    },
+    {
+      "concept": "activity-community-canvassing",
+      "label": "Community canvassing",
+      "category": "activity",
+      "visual": "A neighborhood route and conversation cards.",
+      "rationale": "Explicit cycle 087 context supports this prospective concept; not a live assignment.",
+      "existing_alternative": "Retain existing fallback or accepted broader icon until distinct recognition and scope are validated.",
+      "event_ids": [
+        226031
+      ],
+      "evidence_by_event": {
+        "226031": [
+          "Hands Off NYC Community Weekend: Join Hands Off NYC for a community weekend. The Community Weekend of Action is designed to help people get to know their community, share Know Your Rights materials to help keep immigrant communities safe, and build the movement for election defense in the Fall.",
+          "Tags: Community, Activism, Education, Volunteer, Civic Engagement, Immigrant Rights, Know Your Rights, Participatory, Format, Election Defense"
+        ]
+      },
+      "source_urls_by_event": {
+        "226031": [
+          "https://www.handsoffnyc.com/calendar/hands-off-nyc-community-weekend"
+        ]
+      }
+    },
+    {
+      "concept": "activity-freelance-budgeting",
+      "label": "Freelance budgeting",
+      "category": "activity",
+      "visual": "A variable-income chart beside expense envelopes.",
+      "rationale": "Explicit cycle 087 context supports this prospective concept; not a live assignment.",
+      "existing_alternative": "Retain existing fallback or accepted broader icon until distinct recognition and scope are validated.",
+      "event_ids": [
+        226056
+      ],
+      "evidence_by_event": {
+        "226056": [
+          "Build Your Personal Money Map: Financial Foundations for Freelancers: Because irregular income deserves a real plan. The event is online.",
+          "Tags: Community, Workshop, Education, Virtual, Professional Development, Finance, Budgeting, Participatory, Freelancing, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "226056": [
+          "https://freelancersunion.org/hub/"
+        ]
+      }
+    },
+    {
+      "concept": "activity-immigration-rights-learning",
+      "label": "Immigration rights learning",
+      "category": "activity",
+      "visual": "Rights booklet with a dialogue bubble and simple border-line motif.",
+      "rationale": "Educational immigration rights topic differs from tenant law or individual representation.",
+      "existing_alternative": "Current Unicode fallback remains suitable; no accepted custom icon captures this exact distinction. Prospective art requires small-size and semantic review.",
+      "event_ids": [
+        226024
+      ],
+      "evidence_by_event": {
+        "226024": [
+          "VIRTUAL Know Your Rights Training with Hands Off NYC & NYCLU: Join Hands Off NYC and the New York Civil Liberties Union (NYCLU) for a free 90 minutes virtual Know Your Rights training where you'll learn what to do if you see immigration agents — at home or in your community or at a fan zone — and how to protect yourself, your loved ones and your neighbors. The training covers constitutional rights, how to spot ICE and other federal agents, how to respond to ICE encounters, what to keep on hand, and how to mobilize your community.",
+          "Tags: Community, Activism, Workshop, Free, Education, Immigration, Virtual, Community Support, Civic Engagement, Know Your Rights, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "226024": [
+          "https://www.handsoffnyc.com/calendar/know-your-rights-training-with-hands-off-nyc-nyclu-virtual",
+          "https://www.handsoffnyc.com/calendar/know-your-rights-training-with-hands-off-nyc-nyclu-virtual-wjjcg"
+        ]
+      }
+    },
+    {
+      "concept": "craft-floral-arranging",
+      "label": "Floral arranging",
+      "category": "craft",
+      "visual": "Cut flowers being arranged in a broad vase; not a specific tradition.",
+      "rationale": "Explicit cycle 087 context supports this prospective concept; not a live assignment.",
+      "existing_alternative": "Retain existing fallback or accepted broader icon until distinct recognition and scope are validated.",
+      "event_ids": [
+        226003
+      ],
+      "evidence_by_event": {
+        "226003": [
+          "Autumn Garden Centerpiece Floral Workshop with Abby Blatté: Celebrate the changing of the seasons in this hands-on floral design workshop. Drawing inspiration from the rich colors and t",
+          "Tags: Art, Workshop, Education, Crafts, Floral Design, Participatory, Autumn, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "226003": [
+          "https://bethanyarts.org/calendar/floral102426/"
+        ]
+      }
+    },
+    {
+      "concept": "craft-monoprint",
+      "label": "Monoprinting",
+      "category": "craft",
+      "visual": "A hand brayer beside a peeled-back paper corner revealing one bold printed shape.",
+      "rationale": "The one-off ink transfer process differs from painting, drawing and 3D printing.",
+      "existing_alternative": "Noto paintbrush and printer depict different tools and processes.",
+      "event_ids": [
+        226006
+      ],
+      "evidence_by_event": {
+        "226006": [
+          "Art Workshop for Older Adults: Experimental Monoprinting with Instructor Monique Ford: Art Workshop for Older Adults – Experimental Monoprinting with Instructor Monique Ford. Ages: Older Adults & Seniors (55+). Registration required.",
+          "Tags: Art, Workshop, Education, Monoprinting, Participatory, Older Adults, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "226006": [
+          "https://bethanyarts.org/calendar/awfoa111326/"
+        ]
+      }
+    },
+    {
+      "concept": "craft-patchwork-piecing",
+      "label": "Patchwork piecing",
+      "category": "craft",
+      "visual": "Two fabric patches joined by a visible seam.",
+      "rationale": "Explicit cycle 087 context supports this prospective concept; not a live assignment.",
+      "existing_alternative": "Retain existing fallback or accepted broader icon until distinct recognition and scope are validated.",
+      "event_ids": [
+        226055
+      ],
+      "evidence_by_event": {
+        "226055": [
+          "Patchwork Sewing: This beginner-friendly 8-week class is perfect for those new to patchwork or anyone looking to refresh their skills.",
+          "Tags: Art, Fiber Arts, Crafts, Sewing, Class, Participatory, Beginners, Format, Patchwork"
+        ]
+      },
+      "source_urls_by_event": {
+        "226055": [
+          "https://operations.daxko.com/Online/5428/ProgramsV2/OfferingDetails.mvc?program_id=TMP28916&offering_id=SES506775&location_id=B785"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-multi-piano-electronics",
+      "label": "Multiple pianos with electronics",
+      "category": "instrument",
+      "visual": "Multiple grand pianos linked to a playback control; model required.",
+      "rationale": "Explicit cycle 087 context supports this prospective concept; not a live assignment.",
+      "existing_alternative": "Retain existing fallback or accepted broader icon until distinct recognition and scope are validated.",
+      "event_ids": [
+        226073
+      ],
+      "evidence_by_event": {
+        "226073": [
+          "False Harmonics #28: Currawong Project: Pioneer Works presents the world premiere of *get used to it man thats the way we live now*, a work by composer Matthias Kriesberg with electronics by Kevin Larke. The performance features three technology-enhanced Steinway Spirio|r concert grands, five pianists, experimental works by Scriabin, and video art by Huei Lin.",
+          "Tags: Music, Visual Arts, Art, Science, Classical Music, Technology, Concert, Video Art, Piano, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "226073": [
+          "https://pioneerworks.org/programs/false-harmonics-28-currawong-project-by-matthias-kriesberg-and-kevin-larke-feat-han-chen-arseniy"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-saxophone-quartet",
+      "label": "Saxophone quartet",
+      "category": "format",
+      "visual": "Four distinct correctly constructed saxophone sizes in an arc.",
+      "rationale": "Explicit four-sax new-music ensemble; preserve rare instrumentation.",
+      "existing_alternative": "Chamber icon is accurate but less specific; not string quartet.",
+      "event_ids": [
+        225970
+      ],
+      "evidence_by_event": {
+        "225970": [
+          "Sō Laboratories – Elijah Smith’s “Forbidden Oracles” with Nois: Sō Laboratories – Elijah Smith’s “Forbidden Oracles” with Nois Saxophone Quartet",
+          "Tags: Music, Concert, Saxophone, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "225970": [
+          "https://sopercussion.com/events/so-laboratories-elijah-smiths-forbidden-oracles-with-nois/"
+        ]
+      }
+    },
+    {
+      "concept": "ensemble-two-drum-kits",
+      "label": "Two drum kits",
+      "category": "instrument",
+      "visual": "Two distinct compact drum-set silhouettes.",
+      "rationale": "Explicit cycle 087 context supports this prospective concept; not a live assignment.",
+      "existing_alternative": "Retain existing fallback or accepted broader icon until distinct recognition and scope are validated.",
+      "event_ids": [
+        225969
+      ],
+      "evidence_by_event": {
+        "225969": [
+          "Sō Laboratories – Man Forever: Man Forever plays a new composition for two drum kits and percussion.",
+          "Tags: Music, Concert, Percussion, Format, Performance, Drum Kits"
+        ]
+      },
+      "source_urls_by_event": {
+        "225969": [
+          "https://sopercussion.com/events/so-laboratories-man-forever/"
+        ]
+      }
+    },
+    {
+      "concept": "format-academic-department-anniversary",
+      "label": "Academic department anniversary",
+      "category": "format",
+      "visual": "A university doorway and anniversary ribbon.",
+      "rationale": "Explicit cycle 087 context supports this prospective concept; not a live assignment.",
+      "existing_alternative": "Retain existing fallback or accepted broader icon until distinct recognition and scope are validated.",
+      "event_ids": [
+        226072
+      ],
+      "evidence_by_event": {
+        "226072": [
+          "Save the Date: Criminal Justice 20th Anniversary Celebration: This year we're celebrating the 20th anniversary of St. Joseph's University's Criminal Justice Department! We'd love to welcome you back to campus to celebrate this mi",
+          "Tags: Community, Education, Criminal Justice, Community Celebration, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "226072": [
+          "https://www.sjny.edu/about/news-events/events/item/10331"
+        ]
+      }
+    },
+    {
+      "concept": "format-afro-diasporic-ritual-concert",
+      "label": "Afro-diasporic ritual concert",
+      "category": "format",
+      "visual": "An instrument-neutral performance motif; culturally specific design needs further research.",
+      "rationale": "Explicit cycle 087 context supports this prospective concept; not a live assignment.",
+      "existing_alternative": "Retain existing fallback or accepted broader icon until distinct recognition and scope are validated.",
+      "event_ids": [
+        225981
+      ],
+      "evidence_by_event": {
+        "225981": [
+          "Iru Duru Kan Omo Oshún (Violines Para Ochún): Violines Para Ochún is a newly commissioned work led by musical director and master percussionist Omo Aña Louis Bauzó. The performance pays tribute to the Orisha deity Oshún and explores Yoruba spiritual traditions across Nigeria and the African Diaspora. Presented by the Caribbean Cultural Center African Diaspora Institute with Hostos Center for the Arts & Culture.",
+          "Tags: Community, Music, Education, Concert, Cultural Heritage, Caribbean Culture, Afro Diaspora, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "225981": [
+          "https://www.cccadi.org/events/afribembe-2026-underonesun",
+          "https://www.cccadi.org/events/violines",
+          "https://www.cccadi.org/events/violinesparaochun",
+          "https://www.lxnyarts.org/calendar/iru-duru-kan-omo-oshn-violines-para-ocha"
+        ]
+      }
+    },
+    {
+      "concept": "format-club-anniversary",
+      "label": "Club anniversary",
+      "category": "format",
+      "visual": "A club entry and small celebratory star.",
+      "rationale": "Explicit cycle 087 context supports this prospective concept; not a live assignment.",
+      "existing_alternative": "Retain existing fallback or accepted broader icon until distinct recognition and scope are validated.",
+      "event_ids": [
+        226037
+      ],
+      "evidence_by_event": {
+        "226037": [
+          "STIMULATE 18 Year Anniversary: Playing live: SYGYZYX, with a performance by Torro Royale and music by DJs Xris SMack!, DJ Jeffo!, guest DJ Annabel Evil, and Tyranny. The event runs from 10:30pm to 4am.",
+          "Tags: Music, Dance, Nightlife, Club Night, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "226037": [
+          "https://brooklynmonarch.kydlabs.com/e/EV87f372cc-6210-469a-a0fa-af29967d2f3b"
+        ]
+      }
+    },
+    {
+      "concept": "format-contemporary-ballet",
+      "label": "Contemporary ballet",
+      "category": "dance-style",
+      "visual": "A ballet figure in a grounded contemporary pose; geometry study required.",
+      "rationale": "Explicit cycle 087 context supports this prospective concept; not a live assignment.",
+      "existing_alternative": "Retain existing fallback or accepted broader icon until distinct recognition and scope are validated.",
+      "event_ids": [
+        225953
+      ],
+      "evidence_by_event": {
+        "225953": [
+          "Contemporary Choreography I: No description available.",
+          "Tags: Art, Dance, Contemporary Dance, Fall 2026, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "225953": [
+          "https://www.nycballet.com/season-and-tickets/calendar"
+        ]
+      }
+    },
+    {
+      "concept": "format-experimental-music-theatre",
+      "label": "Experimental music theatre",
+      "category": "format",
+      "visual": "A theater frame joining a sound wave and a movement stroke.",
+      "rationale": "Explicit cycle 087 context supports this prospective concept; not a live assignment.",
+      "existing_alternative": "Retain existing fallback or accepted broader icon until distinct recognition and scope are validated.",
+      "event_ids": [
+        225966
+      ],
+      "evidence_by_event": {
+        "225966": [
+          "Sō Laboratories – Cenk Ergün and Collaborators: Cenk Ergün presents an international music theatre collaboration between independent ensembles and performers from Essen and Cologne, and the 3Orangen Kollektiv from Stuttgart and Berlin, altogether with a group of artists from Central Europe.",
+          "Tags: Music, Theater, Concert, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "225966": [
+          "https://sopercussion.com/events/so-laboratories-cenk-ergun-and-collaborators/"
+        ]
+      }
+    },
+    {
+      "concept": "format-festival-launch-party",
+      "label": "Festival launch party",
+      "category": "format",
+      "visual": "An opening festival banner with a party popper.",
+      "rationale": "Explicit cycle 087 context supports this prospective concept; not a live assignment.",
+      "existing_alternative": "Retain existing fallback or accepted broader icon until distinct recognition and scope are validated.",
+      "event_ids": [
+        226061
+      ],
+      "evidence_by_event": {
+        "226061": [
+          "2026 OHNY Weekend Launch Party: A festive event kicking off the 24th Open House New York Weekend. This October, the Launch Party returns to the top of The Woolworth Building to celebrate the 24th Open House New York Weekend.",
+          "Tags: Community, Architecture, Art, Free, Party, Education, Nightlife, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "226061": [
+          "https://ohny.org/activity/2026-launch-party"
+        ]
+      }
+    },
+    {
+      "concept": "format-golf-cart-tour",
+      "label": "Golf-cart tour",
+      "category": "format",
+      "visual": "A compact supported golf cart with route marker; model required.",
+      "rationale": "Explicit cycle 087 context supports this prospective concept; not a live assignment.",
+      "existing_alternative": "Retain existing fallback or accepted broader icon until distinct recognition and scope are validated.",
+      "event_ids": [
+        225991
+      ],
+      "evidence_by_event": {
+        "225991": [
+          "Secret Spots Golf Cart Tour: An intimate golf cart journey through secluded corners, vistas, and hidden treasures of Planting Fields, with groups limited to five guests.",
+          "Tags: Community, Nature, Tour, Outdoor, Outdoor Adventure, Format, Outings"
+        ]
+      },
+      "source_urls_by_event": {
+        "225991": [
+          "https://plantingfields.org/happenings/secret-spots-golf-cart-tour/"
+        ]
+      }
+    },
+    {
+      "concept": "format-historical-reenactment-festival",
+      "label": "Historical reenactment festival",
+      "category": "format",
+      "visual": "A small historic camp and program flag; period equipment requires evidence.",
+      "rationale": "Explicit cycle 087 context supports this prospective concept; not a live assignment.",
+      "existing_alternative": "Retain existing fallback or accepted broader icon until distinct recognition and scope are validated.",
+      "event_ids": [
+        226059
+      ],
+      "evidence_by_event": {
+        "226059": [
+          "Semiquincentennial History Festival: A day of historical reenactments, games, music, performances and demonstrations celebrating America’s 250th anniversary. The festival is presented in collaboration with the Greater East Hampton Chamber of Commerce; attendance is free, with donations welcome.",
+          "Tags: Community, Music, History, Free, Festival, Education, Games, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "226059": [
+          "https://easthamptonhistory.org/events/semiquincentennial-history-festival/"
+        ]
+      }
+    },
+    {
+      "concept": "format-members-governance-meeting",
+      "label": "Members governance meeting",
+      "category": "format",
+      "visual": "A circle of discussion seats with a shared agenda.",
+      "rationale": "Explicit cycle 087 context supports this prospective concept; not a live assignment.",
+      "existing_alternative": "Retain existing fallback or accepted broader icon until distinct recognition and scope are validated.",
+      "event_ids": [
+        226012
+      ],
+      "evidence_by_event": {
+        "226012": [
+          "Members Meeting with Governance Committee: BZC’s Governance Committee and Board will share updates on organizational structure, followed by open dialogue about the transition to a more sangha-led model.",
+          "Tags: Community, Activism, Education, Civic Engagement, Gathering, Civic Meeting, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "226012": [
+          "https://brooklynzen.org/events/event/governance-committee-meeting-2/"
+        ]
+      }
+    },
+    {
+      "concept": "format-memorial-concert",
+      "label": "Memorial concert",
+      "category": "format",
+      "visual": "Music note alongside a remembrance ribbon.",
+      "rationale": "Memorial musical celebration does not establish choir or religion.",
+      "existing_alternative": "Use suitable existing catalog artwork or Unicode fallback; prospective concept is not an assignment.",
+      "event_ids": [
+        225961
+      ],
+      "evidence_by_event": {
+        "225961": [
+          "Sō Laboratories in Memory of Tim Thomas: Sō Percussion celebrates the life of Tim Thomas, who passed away in January of this year. This evening honors his love of music and of the community he was such a positive force within through Sō Laboratories—the series he loved dearly and guided with passion.",
+          "Tags: Community, Music, Memorial, Experimental, Concert, Tribute Band, Percussion, Format, Performance, SōLaboratories"
+        ]
+      },
+      "source_urls_by_event": {
+        "225961": [
+          "https://roulette.org/event/so-laboratories-in-memory-of-tim-thomas/",
+          "https://sopercussion.com/events/tim-thomas-memorial-concert-at-roulette-nyc/"
+        ]
+      }
+    },
+    {
+      "concept": "format-project-completion-celebration",
+      "label": "Project completion celebration",
+      "category": "format",
+      "visual": "A finished project checklist and celebratory ribbon.",
+      "rationale": "Explicit cycle 087 context supports this prospective concept; not a live assignment.",
+      "existing_alternative": "Retain existing fallback or accepted broader icon until distinct recognition and scope are validated.",
+      "event_ids": [
+        226010
+      ],
+      "evidence_by_event": {
+        "226010": [
+          "Completion of our Helen Frankenthaler Climate Initiative Grant: KinoSaito celebrates the completion of its Achieving Decarbonization project, including the installation of high-efficiency HVAC and solar panels. Guests are invited to a toast and to hear about what’s next for the organization’s sustainability efforts.",
+          "Tags: Community, Art, Sustainability, Nightlife, Celebration, Climate, Community Celebration, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "226010": [
+          "https://www.kinosaito.org/5ya"
+        ]
+      }
+    },
+    {
+      "concept": "format-record-label-anniversary",
+      "label": "Record-label anniversary",
+      "category": "format",
+      "visual": "A record-label disk and celebratory ribbon.",
+      "rationale": "Explicit cycle 087 context supports this prospective concept; not a live assignment.",
+      "existing_alternative": "Retain existing fallback or accepted broader icon until distinct recognition and scope are validated.",
+      "event_ids": [
+        226050
+      ],
+      "evidence_by_event": {
+        "226050": [
+          "Numero Group - 23rd Anniversary Celebration: Miles to Go Presents Numero Group - 23rd Anniversary Celebration with Garden Variety, Rye Coalition, and Eldritch Anisette.",
+          "Tags: Music, Rock, Concert, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "226050": [
+          "https://brooklynmonarch.kydlabs.com/e/EV2d6c0b2a-1285-4876-91c7-ec0c0d9978a3"
+        ]
+      }
+    },
+    {
+      "concept": "format-record-release-concert",
+      "label": "Record-release concert",
+      "category": "format",
+      "visual": "A new record beside a live-music note.",
+      "rationale": "Release concert does not guarantee the whole album is played.",
+      "existing_alternative": "Current Unicode or the individually reviewed accepted icon remains suitable until original candidate artwork is researched and passes native-size review.",
+      "event_ids": [
+        226041
+      ],
+      "evidence_by_event": {
+        "226041": [
+          "MX Lonely - EP Release Show: W/ special guests.",
+          "Tags: Music, Concert, EP Release, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "226041": [
+          "https://brooklynmonarch.kydlabs.com/e/EV8355c8d4-4a50-4d28-9d29-fc5c74ab625f"
+        ]
+      }
+    },
+    {
+      "concept": "format-sideshow",
+      "label": "Sideshow",
+      "category": "format",
+      "visual": "A small stage booth; actual act must be established before adding apparatus.",
+      "rationale": "Explicit cycle 087 context supports this prospective concept; not a live assignment.",
+      "existing_alternative": "Retain existing fallback or accepted broader icon until distinct recognition and scope are validated.",
+      "event_ids": [
+        226018
+      ],
+      "evidence_by_event": {
+        "226018": [
+          "Hot Fix Sideshow Presents Blʌck Mvss: A Hot Fix Sideshow presentation featuring Blʌck Mvss.",
+          "Tags: Music, Concert, Nightlife, Electronic Music, Sideshow, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "226018": [
+          "https://shotgun.live/en/events/hot-fix-sideshow-nov-11-12-2026"
+        ]
+      }
+    },
+    {
+      "concept": "format-singer-songwriter-recital",
+      "label": "Singer-songwriter recital",
+      "category": "format",
+      "visual": "Song manuscript and a performance microphone.",
+      "rationale": "Artist-written songs,not a promise of acoustic guitar or a solo lineup.",
+      "existing_alternative": "Retain suitable accepted artwork or Unicode; this is prospective and requires primary scope and visual validation.",
+      "event_ids": [
+        225996
+      ],
+      "evidence_by_event": {
+        "225996": [
+          "Nutsa Shanshiashvili: Live concert by Nutsa Shanshiashvili.",
+          "Tags: Music, Concert, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "225996": [
+          "https://oceanatheater.com/event/nutsa-shanshiashvili/"
+        ]
+      }
+    },
+    {
+      "concept": "format-staged-musical",
+      "label": "Staged musical",
+      "category": "format",
+      "visual": "Stage curtains with a vocal score.",
+      "rationale": "Fully staged musical theater,not concertmusical,film or generic concert.",
+      "existing_alternative": "Prefer suitable accepted art or Unicode fallback; prospective concepts need source and visual validation before assignment.",
+      "event_ids": [
+        226015
+      ],
+      "evidence_by_event": {
+        "226015": [
+          "Lips: Rocky Horror: A performance of Lips: Rocky Horror.",
+          "Tags: Theater, Nightlife, Rocky Horror, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "226015": [
+          "https://shotgun.live/en/events/lips-rocky-horror-oct-8-2026"
+        ]
+      }
+    },
+    {
+      "concept": "genre-art-pop",
+      "label": "Art pop",
+      "category": "genre",
+      "visual": "Abstract pop melody and experimental color shapes.",
+      "rationale": "Genre study; no particular instrument universal.",
+      "existing_alternative": "Prefer suitable accepted art or Unicode fallback; prospective concepts need source and visual validation before assignment.",
+      "event_ids": [
+        226089
+      ],
+      "evidence_by_event": {
+        "226089": [
+          "Matty Frank: Self taught in almost all of his musical and engineering knowledge, multi instrumentalist and vocalist Matty Frank currently creates naturalist art pop for modern druids, infusing every thought with an intangible sparkliness unseen or heard anywhere else. As a lyricist praised for both haunting specificity and relatability, he aims to tap into community and global consciousness through music and visuals.",
+          "Tags: Music, Concert, Singer Songwriter, Vocal Music, Composer, Producer, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "226089": [
+          "https://sites.google.com/view/mattyfrank/home",
+          "https://www.mattyfrankmusic.net/home"
+        ]
+      }
+    },
+    {
+      "concept": "genre-blues",
+      "label": "Blues",
+      "category": "genre",
+      "visual": "Explore a spare bent musical note with a short call-and-response echo mark.",
+      "rationale": "Explicit blues repertoire merits a genre candidate independent of instrument; no proven universal motif, recognition testing required.",
+      "existing_alternative": "Noto guitar or saxophone excludes many blues forms; generic notes omit genre.",
+      "event_ids": [
+        225976
+      ],
+      "evidence_by_event": {
+        "225976": [
+          "Christine Santelli Trio: Roots blues featuring Grammy-nominated artist Jason Green on guitar and Tim Tindall on bass.",
+          "Tags: Music, Concert, Blues, Trio, Live Music, Roots Blues, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "225976": [
+          "https://www.theearinn.com/music-schedule/2020/4/8/christine-santelli-trio",
+          "https://www.theearinn.com/music-schedule/2021/5/3/christine-santelli-trio"
+        ]
+      }
+    },
+    {
+      "category": "genre",
+      "concept": "genre-house",
+      "existing_alternative": "DJ decks specify performance equipment, not house; Noto notes are broader still.",
+      "label": "House music",
+      "rationale": "Explicit house music supports a four-on-the-floor rhythm exploration; this may read as generic electronic music and needs recognition testing.",
+      "visual": "A compact drum machine with four evenly spaced illuminated beat pads.",
+      "event_ids": [
+        226014
+      ],
+      "evidence_by_event": {
+        "226014": [
+          "Space Cats: Doc Martin, Radio Slave, & Yushh: A house techno event featuring Doc Martin, Radio Slave, and Yushh.",
+          "Tags: Music, Dance, Techno, Nightlife, Electronic Music, Club Night, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "226014": [
+          "https://ra.co/events/2533770",
+          "https://shotgun.live/en/events/spacecats-sept-12-2026"
+        ]
+      }
+    },
+    {
+      "concept": "genre-jamtronica",
+      "label": "Jamtronica",
+      "category": "genre",
+      "visual": "Electronic controls paired with live band instrumentation and a looping phrase.",
+      "rationale": "Dizgo explicitly blends jamtronica, funk and psychedelic rock.",
+      "existing_alternative": "Guitar or notes remain broad; do not assume all acts are DJ sets.",
+      "event_ids": [
+        226049
+      ],
+      "evidence_by_event": {
+        "226049": [
+          "Untz Is Dead featuring Allen Aucoin + Blahsum: Untz is Dead is a jamtronica band that reimagines the music of the Grateful Dead through improvisation, electronic grooves, and dance-floor energy led by former Disco Biscuits drummer Allen Aucoin.",
+          "Tags: Music, Dance, Concert, Electronic Music, Format, Performance, Jamtronica"
+        ]
+      },
+      "source_urls_by_event": {
+        "226049": [
+          "https://brooklynmonarch.kydlabs.com/e/EV4f0aef63-711d-406c-9c20-0709b9311e16"
+        ]
+      }
+    },
+    {
+      "concept": "genre-minimalist-music",
+      "label": "Minimalist music",
+      "category": "genre",
+      "visual": "Repeated musical modules shifting gradually.",
+      "rationale": "Explicit cycle 087 context supports this prospective concept; not a live assignment.",
+      "existing_alternative": "Retain existing fallback or accepted broader icon until distinct recognition and scope are validated.",
+      "event_ids": [
+        225968
+      ],
+      "evidence_by_event": {
+        "225968": [
+          "Steve Reich’s Drumming at 92NY (NYC): Sō Percussion: Steve Reich’s Drumming: A 90th birthday celebration event",
+          "Tags: Community, Music, Concert, Nightlife, Celebration, Birthday Celebration, Percussion, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "225968": [
+          "https://sopercussion.com/events/steve-reichs-drumming-at-92ny-nyc/"
+        ]
+      }
+    },
+    {
+      "concept": "genre-rock",
+      "category": "genre",
+      "label": "Rock music",
+      "visual": "Strong accented musical note",
+      "rationale": "Electric guitar exists but is not universal evidence; motif requires recognition testing.",
+      "existing_alternative": "Broad fallback does not distinguish this specific supported facet.",
+      "event_ids": [
+        226045
+      ],
+      "evidence_by_event": {
+        "226045": [
+          "He is Legend: He is Legend performs with In Angles and Excide.",
+          "Tags: Music, Rock, Concert, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "226045": [
+          "https://brooklynmonarch.kydlabs.com/e/EVb09ddff6-6b39-4f58-ab39-04e9c3c254df"
+        ]
+      }
+    },
+    {
+      "concept": "genre-roots-fusion",
+      "label": "Roots fusion",
+      "category": "genre",
+      "visual": "Interwoven musical paths; recognition remains uncertain.",
+      "rationale": "Explicit cycle 087 context supports this prospective concept; not a live assignment.",
+      "existing_alternative": "Retain existing fallback or accepted broader icon until distinct recognition and scope are validated.",
+      "event_ids": [
+        226091
+      ],
+      "evidence_by_event": {
+        "226091": [
+          "Sidecar Agogo: Sidecar Agogo is the vehicle for groove oriented guitar and fiddle-driven compositions which give a nod to bluegrass, Celtic, Latin, afrobeat, jazz and jamband influences.",
+          "Tags: Music, Roots, Concert, Latin, Folk Music, Bluegrass, Jam, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "226091": [
+          "https://www.reverbnation.com/sidecaragogo"
+        ]
+      }
+    },
+    {
+      "concept": "genre-singer-songwriter",
+      "label": "Singer-songwriter",
+      "category": "genre",
+      "visual": "Song manuscript beside a neutral microphone.",
+      "rationale": "Named performers and source context support singer-songwriter programming, but exact instruments may vary.",
+      "existing_alternative": "Use a supported accepted icon or broad Unicode while a distinctive study is pending.",
+      "event_ids": [
+        226097
+      ],
+      "evidence_by_event": {
+        "226097": [
+          "Brandon Batson: Brandon Batson, former songwriter for Burn the Ships, now crafting stripped-down acoustic songs about heartbreak, change, and starting over.",
+          "Tags: Music, Concert, Live Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "226097": [
+          "https://linktr.ee/brandonbatson",
+          "https://www.petescandystore.com/events/brandon-batson-56",
+          "https://www.petescandystore.com/events/brandon-batson-68"
+        ]
+      }
+    },
+    {
+      "concept": "genre-techno",
+      "label": "Techno",
+      "category": "genre",
+      "visual": "Explore four equal beat blocks beneath one sharply simplified electronic waveform.",
+      "rationale": "Explicit techno programming supports rhythm/production genre exploration, with house overlap a known recognition risk.",
+      "existing_alternative": "DJ decks describes equipment, not genre; generic notes omit techno.",
+      "event_ids": [
+        226014
+      ],
+      "evidence_by_event": {
+        "226014": [
+          "Space Cats: Doc Martin, Radio Slave, & Yushh: A house techno event featuring Doc Martin, Radio Slave, and Yushh.",
+          "Tags: Music, Dance, Techno, Nightlife, Electronic Music, Club Night, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "226014": [
+          "https://ra.co/events/2533770",
+          "https://shotgun.live/en/events/spacecats-sept-12-2026"
+        ]
+      }
+    }
+  ],
+  "limitations": "Counts describe this cohort, not population reach. These are grounded prospective studies, not live assignments. Existing artwork may already suffice; exact equipment and genre recognition require further review."
+}

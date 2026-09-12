@@ -92,12 +92,12 @@ Some events get "No description available." because the listing page lacked deta
 - `llm_providers.py` — provider-agnostic structured JSON generation for the **single-call path only** (see Provider split above); translates any provider error into `ProviderCallFailure`, which `extractor` re-raises as `ExtractionCallFailure` so a failed call is stored as `status='failed'` (content preserved) rather than an events-less zero
 - `processor.py` — Markdown parsing, text utilities, tag processing, detail crawl orchestration (Step 5); location/tag token lists from `city_config`
 - `merger.py` — Event deduplication
-- `exporter.py` — JSON export to per-day chunks (`events.day0..day3.json` + `events.remainder.json`, matching `locations.*.json` and `events.*.desc.json` description companions, plus `organizers.json` and `manifest.json` mapping day index → calendar date). Also the weekly public NDJSON dataset (see below).
+- `exporter.py` — JSON export to per-day chunks (`events.day0..day3.json` + `events.remainder.json`, matching `locations.*.json` and `events.*.desc.json` description companions, plus `organizers.json` and `manifest.json` mapping day index → calendar date). Also the public NDJSON dataset (manual only, see below).
 - `uploader.py` — FTP upload (`upload()` for the frontend data files; `upload_public_dataset()` for the NDJSON export, which uses the `PUBLIC_HTML_FTP_USER` account since the data account is chrooted away from `public_html/`)
 - `db.py` — Database connection and all DB operations
 - `frequency_analyzer.py` — Crawl frequency analysis
 
-## Public NDJSON dataset export (weekly)
+## Public NDJSON dataset export (manual — weekly run disabled)
 
 Two consumer-facing datasets served at `https://fomo.nyc/exports/`:
 
@@ -107,8 +107,8 @@ Two consumer-facing datasets served at `https://fomo.nyc/exports/`:
 
 One JSON object per line: `event_id, name, [short_name], [event_type], [emoji], [description], location{location_id, name, [address], [sublocation], lat, lng}, occurrences[{start_date, start_time, end_date, end_time}], urls[], tags[], [organizers[{name, url}]]`.
 
-- Runs automatically in the pipeline tail (Step 8b, also in `--merge-only`) when the newest dated upcoming snapshot in local `exports/` is ≥ 7 days old — **the local dated files are the scheduling state**; a failed upload deletes the fresh snapshot so the next run retries. Non-fatal to the pipeline.
-- Force anytime: `./venv/bin/python pipeline/main.py --export-dataset`.
+- **Automatic weekly run DISABLED 2026-09-12.** The pipeline tail (and `--merge-only`) no longer calls `run_public_dataset_export`; the code, the 7-day gate (`exporter.should_export_public_dataset`, keyed on the newest dated snapshot in local `exports/`) and the tests remain for a future re-enable — restore the single call at the end of `main.run_publish_tail` to turn it back on.
+- Run manually anytime: `./venv/bin/python pipeline/main.py --export-dataset`.
 - Eligibility (both datasets): not suppressed, mapped location with coordinates, ≥ 1 URL, aggregator trust gate; upcoming additionally requires not archived. Organizer attribution resolves to roots and drops aggregators, like `organizers.json`. Occurrences are deduped (exact + contained same-time spans).
 - **The schema only changes additively** — bump `exporter.PUBLIC_EXPORT_SCHEMA_VERSION` on any breaking change. Tests: `pipeline/tests/test_public_export.py`.
 - The pre-existing one-off `june_events.ndjson` / `june_events.csv` also live in remote `exports/` — unrelated to this pipeline, left in place.

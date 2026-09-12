@@ -119,6 +119,17 @@ SKIP_LOCATION_NAMES = {
     # event is already pinned to the neighborhood the tour or action covers.
     'mas tours', 'mas nyc', 'dancing classrooms', 'hands off nyc',
     'nyc bike + brew', 'nyc bike and brew',
+    # membership clubs / hobby societies with no premises of their own. Each
+    # posts from its own site, so the club name arrives as location_name on
+    # every listing while the actual address is emailed after RSVP.
+    'tribeca club', 'lower east side cactus & succulent society',
+    # bare hotel brand — a 'Hilton' alias would be a catch-all across every
+    # Hilton property, and the real one is only ever named in the listing body.
+    'hilton',
+    # contentless venue labels: too generic to ever resolve, and the sources
+    # that emit them (Partiful DIY shows, queer party series) withhold the
+    # address until RSVP.
+    'the basement', 'the location will be revealed on the event date.',
     # extraction placeholders
     'not specified in provided content',
     'new york city metro area (exact location unspecified)',

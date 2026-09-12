@@ -1,0 +1,16 @@
+import json
+from pathlib import Path
+b=Path('.scratch/icon-cycles-20260909/cycle-086');root=Path('config/event-icons')
+rows=[('craft-diamond-painting','Diamond painting','diamond-painting','💎','Creating adhesive mosaic pictures by placing small faceted drills with an applicator, including diamond art clubs.','Gem cutting, gemstone jewelry, conventional brush painting, an exact kit or supplied pattern.'),('craft-paper-squishy','Paper squishy making','paper-squishy','✂️','Making soft stuffed paper squishies and paper fidget toys.','Foam-only toys, slime, plush sewing, a particular licensed character or therapeutic benefit.'),('craft-lip-balm-making','Lip balm making','lip-balm-making','💄','Participatory making and filling of lip balm.','Makeup application alone, medical lip treatment, guaranteed ingredients or a specific supplied container.'),('activity-digital-wellness','Digital wellness','digital-wellness','📱','Learning and discussing balanced technology use, screen-time boundaries and digital habits.','Clinical treatment, phone repair, browser privacy alone, guaranteed health effects or technology bans.'),('activity-3d-modeling','3D modeling','3d-modeling','💻','Constructing virtual three-dimensional objects with modeling and CAD tools, including geometric shape composition.','Physical printing alone, traditional sculpture, 2D drawing, or a guaranteed software package.')]
+entries=[dict(id=i,label=l,provider='custom',source='art/'+f+'.svg',fallback_emoji=em,use_for=u,avoid_for=a) for i,l,f,em,u,a in rows]
+(b/'new-entries.json').write_text(json.dumps(entries,ensure_ascii=False,indent=2)+'\n');c=json.loads((root/'catalog.json').read_text());c['icons'] += [{**e,'source':str((b/e['source']).resolve())} for e in entries];(b/'draft-catalog.json').write_text(json.dumps(c,ensure_ascii=False,indent=2)+'\n')
+diamond='<rect x="15" y="20" width="80" height="92" rx="4" fill="#EAD6B2"/><path fill="#C0AE93" d="M15 103h80v9H15z"/>'
+for row in range(5):
+ for col in range(4):
+  x,y=23+col*16,28+row*15
+  if row==0 and col>1:diamond+=f'<rect x="{x}" y="{y}" width="12" height="11" rx="1" fill="#CFBFA6"/>';continue
+  fill=['#7E9DAD','#D4A561','#83AB93'][(row+col)%3];diamond+=f'<rect x="{x}" y="{y}" width="12" height="11" rx="1" fill="{fill}"/><path fill="#E6D9BD" d="m{x+2} {y+2} 6 0-6 5z"/>'
+diamond+='<path d="m72 37 34-27 10 12-35 27-9-1z" fill="#C68687"/><path d="m81 40 30-25 5 7-35 27-9-1z" fill="#A96972"/><path d="m72 37 9 12-10 4-4-5z" fill="#728E9B"/><path d="m67 48 4 5-6 4-3-4z" fill="#D5C6A9"/>'
+well='<rect x="28" y="10" width="68" height="105" rx="12" fill="#658493"/><rect x="35" y="24" width="54" height="76" rx="4" fill="#A9C6B7"/><path d="M53 17h18M57 107h10" stroke="#DCE2CA" stroke-width="4" stroke-linecap="round"/><rect x="46" y="45" width="10" height="29" rx="2" fill="#F0DBAD"/><rect x="67" y="45" width="10" height="29" rx="2" fill="#F0DBAD"/><circle cx="97" cy="91" r="21" fill="#D6AE67"/><path d="M97 77v14l9 6" fill="none" stroke="#F7E7C6" stroke-width="5" stroke-linecap="round"/>'
+for name,body in [('diamond-painting',diamond),('digital-wellness',well)]: (b/'art'/f'{name}.svg').write_text('<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"><title>'+name+'</title>'+body+'</svg>\n')
+(root/'prototypes/autonomous-cycle-086/planar_art.py').write_text(Path(__file__).read_text())

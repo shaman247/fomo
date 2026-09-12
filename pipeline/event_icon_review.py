@@ -98,13 +98,19 @@ def review_reason(event, row, revision):
     return None
 
 
-def fetch_review_events(cursor, event_date=None):
+def fetch_review_events(cursor, event_date=None, created_since=None):
     events = fetch_events(cursor)  # Full publishable population, no keyword gate.
     if event_date is not None:
         cursor.execute('''SELECT DISTINCT event_id FROM event_occurrences
             WHERE start_date <= %s AND COALESCE(end_date,start_date) >= %s''', (event_date,event_date))
         today_ids = {r[0] for r in cursor.fetchall()}
         events = [e for e in events if e['id'] in today_ids]
+    if created_since is not None:
+        # Scope a review to one run's new events (events.created_at >= date).
+        # Apply never passes this: validation must see the full population.
+        cursor.execute('SELECT id FROM events WHERE created_at >= %s', (created_since,))
+        new_ids = {r[0] for r in cursor.fetchall()}
+        events = [e for e in events if e['id'] in new_ids]
     lookup = {e['id']: e for e in events}
     ids = list(lookup)
     for offset in range(0, len(ids), 1000):
@@ -297,9 +303,11 @@ def main():
     prepare.add_argument('--output', type=Path, required=True)
     prepare.add_argument('--batch-size', type=int, default=100)
     prepare.add_argument('--date', type=date.fromisoformat, help='Only events occurring on this date (YYYY-MM-DD)')
+    prepare.add_argument('--created-since', type=date.fromisoformat, help='Only events created on/after this date (YYYY-MM-DD)')
     opportunities = modes.add_parser('opportunities', help='Read-only backlog from saved agent reviews')
     opportunities.add_argument('--output', type=Path, required=True)
     opportunities.add_argument('--date', type=date.fromisoformat, help='Scope opportunity coverage to this date')
+    opportunities.add_argument('--created-since', type=date.fromisoformat, help='Scope opportunity coverage to events created on/after this date')
     apply = modes.add_parser('apply')
     apply.add_argument('--packet', type=Path, required=True)
     apply.add_argument('--decisions', type=Path, required=True)
@@ -321,7 +329,7 @@ def main():
             if not writing:
                 cursor.execute('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ')
                 cursor.execute('START TRANSACTION WITH CONSISTENT SNAPSHOT, READ ONLY')
-            events, rows = fetch_review_events(cursor, getattr(args,'date',None)), load_assignments(cursor)
+            events, rows = fetch_review_events(cursor, getattr(args,'date',None), getattr(args,'created_since',None)), load_assignments(cursor)
             if args.mode == 'opportunities':
                 report = collect_opportunities(events, rows)
                 report['event_date'] = str(args.date) if args.date else None

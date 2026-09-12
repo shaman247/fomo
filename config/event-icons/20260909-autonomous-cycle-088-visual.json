@@ -1,0 +1,198 @@
+[
+  {
+    "icon_id": "craft-woven-bag",
+    "source_sha256": "c23744beb9dbcc5dd1cfc056929402a047a5a858a44f644d3a0b8de833f86ec9",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; brief known. Checked soft bag with open rim and attached strap.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-088/visual-final",
+      "geometry": "config/event-icons/prototypes/autonomous-cycle-088/geometry-review.json",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-088/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 6176,
+      "gzip_level_6": 2056
+    },
+    "optimization": {
+      "initial_raw": 6150,
+      "initial_gzip_level_6": 2030,
+      "final_raw": 6176,
+      "final_gzip_level_6": 2056
+    },
+    "issues": [
+      {
+        "severity": "material",
+        "location": "Weave pattern and whole silhouette",
+        "observation": "Initial sparse checks resembled dots; high thin strap reduced the bag body at small sizes.",
+        "revision": "Enlarged anchored checker patches, reduced strap rise from 17 to 12.5 cm and widened the continuous strap; re-inspected all six views and native/runtime renders.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Tight weave is a surface abstraction, not simulated yarn topology. At 16 px the checks become texture; label distinguishes making from shopping."
+    ]
+  },
+  {
+    "icon_id": "activity-invasive-plant-identification",
+    "source_sha256": "8e74d9cd1b8780b49f26d7d8caac3b7eb8c14d1103a15410eed425debedacbf5",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; brief known. Plant field card with inspection lens and amber attention symbol.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-088/visual-final",
+      "geometry": "config/event-icons/prototypes/autonomous-cycle-088/geometry-review.json",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-088/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 765,
+      "gzip_level_6": 402
+    },
+    "optimization": {
+      "initial_raw": 746,
+      "initial_gzip_level_6": 407,
+      "final_raw": 765,
+      "final_gzip_level_6": 402
+    },
+    "issues": [
+      {
+        "severity": "material",
+        "location": "Lens meaning compared with accepted tree identification",
+        "observation": "Initial field-card/lens design was too similar to tree identification.",
+        "revision": "Replaced duplicate leaf inside the lens with amber attention triangle; final native card and IconManager variants re-inspected.",
+        "status": "resolved"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Label is essential: no generic leaf establishes invasive status, and the attention sign can also suggest plant-health investigation. No removal or pesticide recommendation."
+    ]
+  },
+  {
+    "icon_id": "activity-product-carbon-footprinting",
+    "source_sha256": "2f800054e59ed2d05767b247d615210398cacf7c23e7c748fb34b44f1b643c27",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; brief known. Product tag with leaf beside a calculator.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-088/visual-final",
+      "geometry": "config/event-icons/prototypes/autonomous-cycle-088/geometry-review.json",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-088/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 630,
+      "gzip_level_6": 375
+    },
+    "optimization": {
+      "initial_raw": 630,
+      "initial_gzip_level_6": 375,
+      "final_raw": 630,
+      "final_gzip_level_6": 375
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "May resemble sustainable-product pricing; label establishes emissions calculation. No certification, regulatory compliance or green claim."
+    ]
+  },
+  {
+    "icon_id": "format-poetry-festival",
+    "source_sha256": "dc20a22ba7260cfcd316407c9f24f7f4e3bba01fb5880deb0f1efc83459dffd0",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; brief known. Book of short verse lines beneath festival bunting.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-088/visual-final",
+      "geometry": "config/event-icons/prototypes/autonomous-cycle-088/geometry-review.json",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-088/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 623,
+      "gzip_level_6": 375
+    },
+    "optimization": {
+      "initial_raw": 623,
+      "initial_gzip_level_6": 375,
+      "final_raw": 623,
+      "final_gzip_level_6": 375
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "Can also read as a literary festival; label supplies poetry specificity. Individual verse lines soften at 16 px."
+    ]
+  },
+  {
+    "icon_id": "activity-financial-literacy",
+    "source_sha256": "08657fa6bd1fe5059d49e292e3d8380f527ed783f1a67d195210c1c1103539c6",
+    "reviewer_mode": "creator-critical-pass",
+    "blind_recognition": "Not independent or blind; brief known. Learning book with a coin.",
+    "evidence": {
+      "packet": ".scratch/icon-cycles-20260909/cycle-088/visual-final",
+      "geometry": "config/event-icons/prototypes/autonomous-cycle-088/geometry-review.json",
+      "sizes": [
+        128,
+        32,
+        24,
+        16
+      ],
+      "backgrounds": [
+        "light",
+        "dark"
+      ],
+      "runtime": ".scratch/icon-cycles-20260909/cycle-088/gallery-final/render-verification.json"
+    },
+    "size_bytes": {
+      "raw": 733,
+      "gzip_level_6": 413
+    },
+    "optimization": {
+      "initial_raw": 733,
+      "initial_gzip_level_6": 413,
+      "final_raw": 733,
+      "final_gzip_level_6": 413
+    },
+    "issues": [],
+    "decision": "pass",
+    "limitations": [
+      "May resemble economics learning generally; label identifies personal money fundamentals. No financial advice or promised outcome."
+    ]
+  }
+]

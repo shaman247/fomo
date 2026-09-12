@@ -1,0 +1,7 @@
+# Autonomous cycle082 artwork
+
+Hot-foil stamping derives from an originalbenchpress mesh inobjects.py/scene.json,withdepth-awareorthographic projection. Structuralreferences:Kwikprint55/86manualtext andthree personallyinspectedsupplierphotos. The generic31×29×68cmmodelhas supportedplaten,paperbeneathfoil,raisedheatedtypeholder,connectedram/leverandreturnspring. Not an exactCBAorKwikprintmodel,operatingguide orengineeringvalidation.
+
+Sixgeometryviews inspectedbeforeart. Contour tolerance.20→.38reduces9722/2681 to9010/2455byteswithout changingmodel. Allnativecards,ninereferencesandtenruntimevariants inspected;optimizedpress rechecked. Creatorcriticalpass,notblindorindependent. At16pxpressneedslabel;fine springdetails soften.
+
+Iron-gallink,verbatimtheater,typographytalkandfilmfestivalarefouroriginalflatdiagrams. Ingredient,scripting,letterformandfestivaldetails aresymbolic,notpromises. LatinAa isgenerictypographynotation,notrepresentationofIndigenouswriting.17primaryrecords supportseparateeventfindings. Unloadedcloseupphotowasnotused;novideosortracing.

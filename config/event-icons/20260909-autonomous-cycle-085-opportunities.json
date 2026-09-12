@@ -1,0 +1,1151 @@
+{
+  "date": "2026-09-11",
+  "scope": "Cycle 085: 100 sequential events 225540–225834, no targeted supplements.",
+  "suggestions": 53,
+  "concept_count": 48,
+  "concepts": [
+    {
+      "concept": "activity-mixed-crafts",
+      "label": "Mixed crafts",
+      "category": "activity",
+      "visual": "Several distinct craft materials around one work surface.",
+      "rationale": "Do not imply a single medium.",
+      "existing_alternative": "Use supported accepted art or the current broad Unicode fallback pending a distinct study.",
+      "event_ids": [
+        225673,
+        225688,
+        225826
+      ],
+      "evidence_by_event": {
+        "225673": [
+          "Kid's Craft: Meet us for a weekly kid's craft program! Perfect for young artists and their caregivers who are eager to learn and create in a friendly, supportive environment.",
+          "Tags: Art, Kids, Workshop, Family, Education, Creativity, Crafts, Creative Learning, Caregivers, Participatory, Format"
+        ],
+        "225688": [
+          "Maker Monday: Join us for crafts at the Grand Street Branch on Mondays!",
+          "Tags: Art, Kids, Workshop, Family, Crafts, Participatory, Format"
+        ],
+        "225826": [
+          "Children's Craft Afternoons: Join us every week for a new craft!",
+          "Tags: Art, Kids, Workshop, Free, Family, Crafts, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "225673": [
+          "https://hobokenlibrary.libnet.info/event/17108436",
+          "https://hobokenlibrary.libnet.info/event/17108443",
+          "https://hobokenlibrary.libnet.info/event/17108517",
+          "https://hobokenlibrary.libnet.info/event/17108543"
+        ],
+        "225688": [
+          "https://hobokenlibrary.libnet.info/event/16950782",
+          "https://hobokenlibrary.libnet.info/event/16950783",
+          "https://hobokenlibrary.libnet.info/event/17132577"
+        ],
+        "225826": [
+          "https://jclibrary.libcal.com/event/17185749",
+          "https://jclibrary.libcal.com/event/17185750"
+        ]
+      }
+    },
+    {
+      "concept": "craft-constraint-poetry",
+      "label": "Constraint-based poetry",
+      "category": "craft",
+      "visual": "Poem page with a simple repeated formal pattern.",
+      "rationale": "Writing exercises explicitly use rules and formal containment.",
+      "existing_alternative": "Existing broad artwork or Unicode remains usable. This prospective distinction needs independent semantic and small-size review before any new assignment.",
+      "event_ids": [
+        225602,
+        225603
+      ],
+      "evidence_by_event": {
+        "225602": [
+          "Six Week Workshop x Courtney Bush | Poem as Container: In this 6-week workshop with poet and filmmaker Courtney Bush, participants will approach poems as containers, building them, breaking them, and writing their way in, out, and through these vessels. The workshop will discuss strategies writers and artists use to build containment structures, examine how form determines how much of the world can fit, and include student poem workshops during the second half of each session.",
+          "Tags: Art Gallery, Art, Workshop, Literature, Poetry, Film, Education, Class, Zoom, Participatory, Format"
+        ],
+        "225603": [
+          "Six Week Poetry Workshop x Lin Tan: A six-week poetry workshop focused on making and not making sense through rule-bound composition, metadata, information architectures, and writing exercises. Participants will study selected books, discuss them, and workshop a writing assignment each week.",
+          "Tags: Art Gallery, Art, Workshop, Literature, Poetry, Film, Education, Class, Zoom, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "225602": [
+          "https://luma.com/bl39kpqy"
+        ],
+        "225603": [
+          "https://luma.com/id46ttj3"
+        ]
+      }
+    },
+    {
+      "concept": "format-artist-inspired-craft",
+      "label": "Artist-inspired craft",
+      "category": "format",
+      "visual": "Reference artwork beside a small work-in-progress panel.",
+      "rationale": "Learning from an artist through unspecified media; do not assume drawing.",
+      "existing_alternative": "Existing broad artwork or Unicode remains usable. This prospective distinction needs independent semantic and small-size review before any new assignment.",
+      "event_ids": [
+        225693,
+        225707
+      ],
+      "evidence_by_event": {
+        "225693": [
+          "Art in the Park: Have you ever wondered exactly what your favorite artists were looking at to make them draw, sculpt, or paint the way they did? Meet HPL in the park and step into the life of a famous artist!",
+          "Tags: Art, Kids, Workshop, Family, Education, Outdoor, Teen Events, Participatory, Format"
+        ],
+        "225707": [
+          "Art Explore: Have you ever wondered exactly what your favorite artists were looking at to make them draw, sculpt, or paint the way they did?",
+          "Tags: Art, Kids, Workshop, Family, Education, Teen Events, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "225693": [
+          "https://hobokenlibrary.libnet.info/event/17019522",
+          "https://hobokenlibrary.libnet.info/event/17020073",
+          "https://hobokenlibrary.libnet.info/event/17020514"
+        ],
+        "225707": [
+          "https://hobokenlibrary.libnet.info/event/17104014",
+          "https://hobokenlibrary.libnet.info/event/17108892"
+        ]
+      }
+    },
+    {
+      "concept": "format-youth-advisory-board",
+      "label": "Youth library advisory group",
+      "category": "format",
+      "visual": "Library book beside three suggestion cards.",
+      "rationale": "Participants help plan library programs and collections; not municipal governance.",
+      "existing_alternative": "Existing broad artwork or Unicode remains usable. This prospective distinction needs independent semantic and small-size review before any new assignment.",
+      "event_ids": [
+        225827,
+        225828
+      ],
+      "evidence_by_event": {
+        "225827": [
+          "Teen Advisory Board: Join the Teen Advisory Board and help shape what happens at your library. Share your ideas, plan events, and recommend books, movies, and activities for other teens while gaining leadership experience and volunteer hours.",
+          "Tags: Community, Free, Family, Education, Volunteer, Professional Development, Gathering, Teen Events, Civic Meeting, Format"
+        ],
+        "225828": [
+          "T.A.B. Meeting: The Teen Advisory Board (TAB) is a group of teens who are interested in making a difference in their library. They volunteer to work together to make the library a better place for teens by putting together programs, talking about books, music, and movies, or suggesting what they like to see in the collection.",
+          "Tags: Library, Community, Family, Education, Professional Development, Gathering, Teen Events, Youth Leadership, Civic Meeting, Cultural Venue, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "225827": [
+          "https://jclibrary.libcal.com/event/16989423",
+          "https://jclibrary.libcal.com/event/16989424"
+        ],
+        "225828": [
+          "https://jclibrary.libcal.com/event/17008184",
+          "https://jclibrary.libcal.com/event/17008185"
+        ]
+      }
+    },
+    {
+      "concept": "activity-childrens-movement",
+      "label": "Children’s movement play",
+      "category": "activity",
+      "visual": "Simple footprints and a large play ball.",
+      "rationale": "Broad participatory movement without a specified sport or regimen.",
+      "existing_alternative": "Existing broad artwork or Unicode remains usable. This prospective distinction needs independent semantic and small-size review before any new assignment.",
+      "event_ids": [
+        225699
+      ],
+      "evidence_by_event": {
+        "225699": [
+          "Move & Play Wednesday: Let's get moving at the Grand Street Branch!",
+          "Tags: Kids, Sports, Fitness, Family, Movement, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "225699": [
+          "https://hobokenlibrary.libnet.info/event/16950901",
+          "https://hobokenlibrary.libnet.info/event/17137272",
+          "https://hobokenlibrary.libnet.info/event/17137273",
+          "https://hobokenlibrary.libnet.info/event/17137275"
+        ]
+      }
+    },
+    {
+      "concept": "activity-fine-motor-play",
+      "label": "Fine-motor play",
+      "category": "activity",
+      "visual": "Large bead, peg and short guided line on an activity mat.",
+      "rationale": "Small hand-movement activities combine multiple crafts; no developmental outcome guaranteed.",
+      "existing_alternative": "Existing broad artwork or Unicode remains usable. This prospective distinction needs independent semantic and small-size review before any new assignment.",
+      "event_ids": [
+        225687
+      ],
+      "evidence_by_event": {
+        "225687": [
+          "Fine Motor Skills Prep: Through hands-on activities such as finger painting, collages, and sensory crafts, children explore creativity while developing fine motor skills, language, and early literacy concepts.",
+          "Tags: Art, Kids, Family, Education, Crafts, Class, Early Literacy, Participatory, Fine Motor Skills, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "225687": [
+          "https://hobokenlibrary.libnet.info/event/17061147",
+          "https://hobokenlibrary.libnet.info/event/17061167",
+          "https://hobokenlibrary.libnet.info/event/17061493"
+        ]
+      }
+    },
+    {
+      "concept": "activity-podcast-production",
+      "label": "Podcast production",
+      "category": "activity",
+      "visual": "Microphone beside a short waveform and episode page",
+      "rationale": "End-to-end podcast production includes recording, editing and distribution; no one phase should imply all.",
+      "existing_alternative": "Retain source Unicode while specific art remains exploratory.",
+      "event_ids": [
+        225779
+      ],
+      "evidence_by_event": {
+        "225779": [
+          "Start Your Podcast from Scratch: Learn how to start your podcast from scratch at the Communipaw Makerspace and Recording Studio. Topics covered: Planning your podcast, recording tips and equipment, basic editing skills and introduction to monetization.",
+          "Tags: Community, Art, Workshop, Free, Education, Warehouse, Makerspace, Podcast, Crafts, Podcasting, Participatory, Adults, Recording, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "225779": [
+          "https://jclibrary.libcal.com/event/17234861",
+          "https://jclibrary.libcal.com/event/17452984"
+        ]
+      }
+    },
+    {
+      "concept": "activity-standup-writing",
+      "label": "Stand-up comedy writing",
+      "category": "activity",
+      "visual": "Microphone beside a draft page with revised joke lines.",
+      "rationale": "Instruction and writing differ from a comedy performance.",
+      "existing_alternative": "Existing broad artwork or Unicode remains usable. This prospective distinction needs independent semantic and small-size review before any new assignment.",
+      "event_ids": [
+        225597
+      ],
+      "evidence_by_event": {
+        "225597": [
+          "线下喜剧实践课4 Week Stand-up Comedy Workshop with Robyn Tony: A four-week stand-up comedy workshop with Robyn Tony.",
+          "Tags: Art Gallery, Art, Workshop, Comedy, Film, Education, Class, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "225597": [
+          "https://luma.com/40c32jpn"
+        ]
+      }
+    },
+    {
+      "concept": "craft-diamond-painting",
+      "label": "Diamond art",
+      "category": "craft",
+      "visual": "A stylus placing one large faceted colored bead onto a small grid of sparkling tiles.",
+      "rationale": "The classes explicitly name diamond art; bead-by-bead assembly differs from painting or jewelry.",
+      "existing_alternative": "Noto gem shows a loose jewel rather than a gridded craft and placement stylus.",
+      "event_ids": [
+        225834
+      ],
+      "evidence_by_event": {
+        "225834": [
+          "YA Diamond Art Workshop: No description available.",
+          "Tags: Art, Workshop, Family, Education, Young Adults, Crafts, Teen Events, Participatory, Diamond Art, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "225834": [
+          "https://jclibrary.libcal.com/event/17186522",
+          "https://jclibrary.libcal.com/event/17186523"
+        ]
+      }
+    },
+    {
+      "concept": "craft-geopoetic-writing",
+      "label": "Geopoetic writing",
+      "category": "craft",
+      "visual": "Writing page with a land contour and pencil.",
+      "rationale": "Place-oriented writing concept; exact workshop method remains to be verified.",
+      "existing_alternative": "Existing broad artwork or Unicode remains usable. This prospective distinction needs independent semantic and small-size review before any new assignment.",
+      "event_ids": [
+        225604
+      ],
+      "evidence_by_event": {
+        "225604": [
+          "Accent Sisters x MoMA Copresent | On Geopoetics with kathy wu (Session One): A writing club event co-presented by Accent Sisters and MoMA.",
+          "Tags: Community, Art Gallery, Art, Literature, Film, Education, Open Practice, Participatory, Writing, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "225604": [
+          "https://luma.com/accentisa-73fm"
+        ]
+      }
+    },
+    {
+      "concept": "craft-oulipo-writing",
+      "label": "Constraint-based OULIPO writing",
+      "category": "craft",
+      "visual": "Text lines passing through a simple rule grid.",
+      "rationale": "Explicit literary constraints and procedural writing; recognition needs testing.",
+      "existing_alternative": "Existing broad artwork or Unicode remains usable. This prospective distinction needs independent semantic and small-size review before any new assignment.",
+      "event_ids": [
+        225595
+      ],
+      "evidence_by_event": {
+        "225595": [
+          "9 Weeks Episodes and Memory Workshop X John Yau: Accent Society has invited John Yau, a veteran of the American poetry scene and art critic, to teach a 9-week workshop exploring memory, identity, personal history, prose poetry, and constraint-based writing methods associated with OULIPO. Students will work toward assembling a manuscript ready for submission and publication.",
+          "Tags: Art Gallery, Art, Workshop, Literature, Poetry, Film, Education, Class, Zoom, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "225595": [
+          "https://luma.com/vs0g3mjy"
+        ]
+      }
+    },
+    {
+      "concept": "craft-poetry-revision",
+      "label": "Poetry revision",
+      "category": "craft",
+      "visual": "Poem lines with one replacement line and pencil.",
+      "rationale": "Editing and revising participant poems is explicitly taught.",
+      "existing_alternative": "Existing broad artwork or Unicode remains usable. This prospective distinction needs independent semantic and small-size review before any new assignment.",
+      "event_ids": [
+        225591
+      ],
+      "evidence_by_event": {
+        "225591": [
+          "Accent Masterclass x 树才 |《诗是改出来的》: A masterclass with 树才 titled 《诗是改出来的》.",
+          "Tags: Event Space, Art Gallery, Art, Workshop, Literature, Poetry, Film, Education, Master Class, Zoom, Participatory, Cultural Venue, Format, Arts Venue"
+        ]
+      },
+      "source_urls_by_event": {
+        "225591": [
+          "https://luma.com/b9vx66eg"
+        ]
+      }
+    },
+    {
+      "concept": "craft-queer-fiction-writing",
+      "label": "Queer fiction writing",
+      "category": "craft",
+      "visual": "Story manuscript with interwoven alternative narrative paths.",
+      "rationale": "Explicit workshop focus without stereotyped identity symbols or a required genre.",
+      "existing_alternative": "Existing broad artwork or Unicode remains usable. This prospective distinction needs independent semantic and small-size review before any new assignment.",
+      "event_ids": [
+        225600
+      ],
+      "evidence_by_event": {
+        "225600": [
+          "6-Week Fiction Workshop x Joss Lake: A six-week fiction writing workshop with Joss Lake focused on queerness and literary technology.",
+          "Tags: Art Gallery, Art, Workshop, Literature, Film, Education, Fiction, Class, Zoom, Participatory, Queer Writing, Writing, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "225600": [
+          "https://luma.com/accentisa-coh3"
+        ]
+      }
+    },
+    {
+      "concept": "craft-two-color-linocut",
+      "label": "Two-color linocut",
+      "category": "craft",
+      "visual": "Two differently inked relief blocks aligned to registration corners.",
+      "rationale": "Separate block layers and registration distinguish the specific technique.",
+      "existing_alternative": "Existing broad artwork or Unicode remains usable. This prospective distinction needs independent semantic and small-size review before any new assignment.",
+      "event_ids": [
+        225575
+      ],
+      "evidence_by_event": {
+        "225575": [
+          "Linocut 102: 2-Color Printing: Taking the basics learned from Linocut 101, participants will explore carving techniques, design strategies for 2-color printing, and registration techniques. This hands-on workshop includes creating registration templates, inking and pulling prints, and making finished prints to take home.",
+          "Tags: Visual Arts, Art, Workshop, Education, Printmaking, Class, Participatory, Linocut, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "225575": [
+          "https://luma.com/fck0ib6t"
+        ]
+      }
+    },
+    {
+      "concept": "dance-salsa",
+      "label": "Salsa",
+      "category": "dance-style",
+      "visual": "Two dancers in open handhold with a clear turning arm and compact stepping legs.",
+      "rationale": "Explicit salsa classes support exploration of partner-step art; style distinction needs recognition testing and cannot rely on stereotyped costume.",
+      "existing_alternative": "Single dancer is broad and does not show the partner turn; no supported catalog dance fits.",
+      "event_ids": [
+        225718
+      ],
+      "evidence_by_event": {
+        "225718": [
+          "Salsa Lesson: Celebrate Hispanic Heritage Month with us at Grand Street!",
+          "Tags: Community, Workshop, Dance, Salsa, Participatory, Hispanic Heritage, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "225718": [
+          "https://hobokenlibrary.libnet.info/event/17137424"
+        ]
+      }
+    },
+    {
+      "concept": "format-anime-club",
+      "label": "Anime appreciation club",
+      "category": "format",
+      "visual": "TV screen with an original animated face and group dialogue mark.",
+      "rationale": "Watching and discussing anime, without copied characters or guaranteed titles.",
+      "existing_alternative": "Existing broad artwork or Unicode remains usable. This prospective distinction needs independent semantic and small-size review before any new assignment.",
+      "event_ids": [
+        225764
+      ],
+      "evidence_by_event": {
+        "225764": [
+          "Anime Appreciation Club: Calling all Tweens & Teens! Do you love to watch anime? At anime club, we will choose anime shows & movies to watch together and do various games, crafts, & other activ",
+          "Tags: Community, Film, Family, Education, Japanese Culture, Games, Watch Party, Cultural Heritage, Anime, Teen Events, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "225764": [
+          "https://jclibrary.libcal.com/event/17175267",
+          "https://jclibrary.libcal.com/event/17175268",
+          "https://jclibrary.libcal.com/event/17175270"
+        ]
+      }
+    },
+    {
+      "concept": "format-architecture-history-talk",
+      "label": "Architecture history talk",
+      "category": "format",
+      "visual": "Historical building drawing beside speech mark.",
+      "rationale": "Audiencelecture,notbuildingvisit ordesignworkshop.",
+      "existing_alternative": "Prefer suitable accepted artwork or Unicode fallback; future concept is not a live assignment.",
+      "event_ids": [
+        225712
+      ],
+      "evidence_by_event": {
+        "225712": [
+          "Exploring Hoboken’s Architecture with Ana Sanchez: September 13th 4pm at the Hoboken Historical Museum",
+          "Tags: Community, Architecture, History, Art, Education, Gathering, Talk, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "225712": [
+          "https://hobokenlibrary.libnet.info/event/16235921"
+        ]
+      }
+    },
+    {
+      "concept": "format-art-lecture-workshop",
+      "label": "Art lecture and workshop",
+      "category": "format",
+      "visual": "Framed artwork and speech bubble beside a making tool.",
+      "rationale": "Interpretive talk followed by hands-on artmaking.",
+      "existing_alternative": "Existing broad artwork or Unicode remains usable. This prospective distinction needs independent semantic and small-size review before any new assignment.",
+      "event_ids": [
+        225697
+      ],
+      "evidence_by_event": {
+        "225697": [
+          "Art with Liz: Lecture and Workshop: Join Art with Liz every week at the Library to learn about classic and contemporary artists, followed by a free art workshop. In-person and live on Zoom & YouTube!",
+          "Tags: Art, Workshop, Free, Education, Virtual, Participatory, Adults, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "225697": [
+          "https://hobokenlibrary.libnet.info/event/17149325",
+          "https://hobokenlibrary.libnet.info/event/17257904",
+          "https://hobokenlibrary.libnet.info/event/17322086"
+        ]
+      }
+    },
+    {
+      "concept": "format-book-launch",
+      "label": "Book launch",
+      "category": "format",
+      "visual": "New book with a small celebratory ribbon.",
+      "rationale": "Broad launch format when signing versus discussion remains unconfirmed.",
+      "existing_alternative": "Use a supported accepted icon or broad Unicode while a distinctive study is pending.",
+      "event_ids": [
+        225607
+      ],
+      "evidence_by_event": {
+        "225607": [
+          "K 书发布会: A book launch for K.",
+          "Tags: Community, Art Gallery, Art, Literature, Free, Film, Book Launch, Reading, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "225607": [
+          "https://luma.com/accentisa-i2yf"
+        ]
+      }
+    },
+    {
+      "concept": "format-community-art-exhibition",
+      "label": "Community art exhibition",
+      "category": "format",
+      "visual": "Two framed works linked by a small community ribbon.",
+      "rationale": "Viewing donated/community artwork differs from a workshop or reception.",
+      "existing_alternative": "Existing broad artwork or Unicode remains usable. This prospective distinction needs independent semantic and small-size review before any new assignment.",
+      "event_ids": [
+        225727
+      ],
+      "evidence_by_event": {
+        "225727": [
+          "Biblioteca Criolla Art Collection Exhibit: This special exhibition features artwork generously donated by talented artists throughout the years, celebrating creativity, cultural heritage, generosity, and the vibrant spirit of our community. Each piece reflects a unique story and represents the lasting connection between art, culture, and community.",
+          "Tags: Community, Art, Free, Education, Cultural Heritage, Exhibit, Exhibition, Format, Browsable, Biblioteca Criolla"
+        ]
+      },
+      "source_urls_by_event": {
+        "225727": [
+          "https://jclibrary.libcal.com/event/17393483",
+          "https://jclibrary.libcal.com/event/17393487",
+          "https://jclibrary.libcal.com/event/17393489",
+          "https://jclibrary.libcal.com/event/17393494",
+          "https://jclibrary.libcal.com/event/17393498"
+        ]
+      }
+    },
+    {
+      "concept": "format-creative-coworking",
+      "label": "Creative coworking",
+      "category": "format",
+      "visual": "Two different art tools beside a shared work table.",
+      "rationale": "Active shared making differs from viewing studio work.",
+      "existing_alternative": "Current Unicode fallback remains suitable; no accepted custom icon captures this exact distinction. Prospective art requires small-size and semantic review.",
+      "event_ids": [
+        225576
+      ],
+      "evidence_by_event": {
+        "225576": [
+          "Open Studio Hours: By popular demand, Queens Collaborative presents Open Studio hours at the Collaboratory. These unstructured hours are for creatives of all levels to journal, paint, or experiment with supplies in the studio; a studio monitor can help orient guests, but the session is without instruction.",
+          "Tags: Community, Art, Education, Open Studio, Open Practice, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "225576": [
+          "https://luma.com/9sdklbru"
+        ]
+      }
+    },
+    {
+      "concept": "format-cultural-garden-party",
+      "label": "Cultural garden party",
+      "category": "format",
+      "visual": "Garden flowers beside bunting and a shared activity table.",
+      "rationale": "Community celebration has several culturally themed activities, not one universal symbol.",
+      "existing_alternative": "Existing broad artwork or Unicode remains usable. This prospective distinction needs independent semantic and small-size review before any new assignment.",
+      "event_ids": [
+        225721
+      ],
+      "evidence_by_event": {
+        "225721": [
+          "Hispanic Heritage Month Garden Party: Join us for a vibrant celebration of culture and community at the Hispanic Heritage Month Garden Party in the park!",
+          "Tags: Community, Family, Outdoor, Hispanic Heritage, Garden Party, Community Celebration, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "225721": [
+          "https://hobokenlibrary.libnet.info/event/17056923"
+        ]
+      }
+    },
+    {
+      "concept": "format-deep-listening-session",
+      "label": "Deep listening session",
+      "category": "format",
+      "visual": "Ear and calm sound waves in a listening room.",
+      "rationale": "Silent shared listening differs from reciprocal song-sharing or therapy.",
+      "existing_alternative": "Unicode or suitable accepted custom artwork remains available. Prospective study requires source and recognition review before live assignment.",
+      "event_ids": [
+        225598
+      ],
+      "evidence_by_event": {
+        "225598": [
+          "Accent Masterclass x 卓梦婷 |《噪音的反面》Listening Session: A two-hour listening session with 卓梦婷 titled 噪音的反面.",
+          "Tags: Event Space, Art Gallery, Music, Art, Workshop, Film, Education, Master Class, Gathering, Talk, Zoom, Listening, Cultural Venue, Format, Arts Venue"
+        ]
+      },
+      "source_urls_by_event": {
+        "225598": [
+          "https://luma.com/gjq89448"
+        ]
+      }
+    },
+    {
+      "concept": "format-dialect-circle",
+      "label": "Dialect circle",
+      "category": "format",
+      "visual": "Three differently shaped speech bubbles around a small circle.",
+      "rationale": "Multiple named language varieties, with participation format still needing verification.",
+      "existing_alternative": "Existing broad artwork or Unicode remains usable. This prospective distinction needs independent semantic and small-size review before any new assignment.",
+      "event_ids": [
+        225609
+      ],
+      "evidence_by_event": {
+        "225609": [
+          "潮州话，客家话，台语 方言角Dialect Across the Sea, featuring Teochew, Hakka, and Taiwanese Hokkien x Moca: A dialect event featuring Teochew, Hakka, and Taiwanese Hokkien, presented with MOCA.",
+          "Tags: Community, Art Gallery, Art, Literature, Culture, Film, Education, Language, Open Practice, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "225609": [
+          "https://luma.com/3ya4mp0c"
+        ]
+      }
+    },
+    {
+      "concept": "format-experimental-music-showcase",
+      "label": "Experimental music showcase",
+      "category": "format",
+      "visual": "Several abstract sound studies on one stage.",
+      "rationale": "Diverse experimental acts,not guaranteed live electronics or one instrument.",
+      "existing_alternative": "Prefer accepted artwork or Unicode when adequate; prospective studies require primary and visual validation.",
+      "event_ids": [
+        225561
+      ],
+      "evidence_by_event": {
+        "225561": [
+          "29 Speedway: Container, Lia Kohl, Qiujiang Levi Lu: A live event featuring Container, Lia Kohl, and Qiujiang Levi Lu.",
+          "Tags: Music, Concert, Experimental Music, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "225561": [
+          "https://restlessnites.com/events/29speedwaycontainerliakohlqiujianglevilu15sep2026"
+        ]
+      }
+    },
+    {
+      "concept": "format-farm-to-table-dinner",
+      "label": "Farm-to-table dinner",
+      "category": "format",
+      "visual": "Dinner plate beside a rooftop garden bed.",
+      "rationale": "Explicit seasonal farm produce and communal multi-course dining.",
+      "existing_alternative": "Existing broad artwork or Unicode remains usable. This prospective distinction needs independent semantic and small-size review before any new assignment.",
+      "event_ids": [
+        225665
+      ],
+      "evidence_by_event": {
+        "225665": [
+          "Sunset Supper with Chef Alfredo Ravelo: An intimate rooftop dining experience celebrating the connection between seasonality, hospitality, and urban agriculture. The evening features a multi-course dinner with Farm-to-Glass beverage pairings, seasonal produce, and communal dining on the farm.",
+          "Tags: Community, Restaurant, Party, Food, Outdoor, Dining, Fine Dining, Rooftop Dining, Farm to Table, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "225665": [
+          "https://luma.com/2ot6k1y9"
+        ]
+      }
+    },
+    {
+      "concept": "format-film-craft-party",
+      "label": "Film and craft party",
+      "category": "format",
+      "visual": "Film frame beside paper shapes and party ribbon.",
+      "rationale": "Themed social event combines watching and making.",
+      "existing_alternative": "Existing broad artwork or Unicode remains usable. This prospective distinction needs independent semantic and small-size review before any new assignment.",
+      "event_ids": [
+        225719
+      ],
+      "evidence_by_event": {
+        "225719": [
+          "Coco Party: Dance, craft, and watch at our Coco party!",
+          "Tags: Art, Dance, Film, Party, Family, Crafts, Format, Social, Coco"
+        ]
+      },
+      "source_urls_by_event": {
+        "225719": [
+          "https://hobokenlibrary.libnet.info/event/17137461"
+        ]
+      }
+    },
+    {
+      "concept": "format-film-literary-program",
+      "label": "Film and literary program",
+      "category": "format",
+      "visual": "Film frame beside open book and reading bubble.",
+      "rationale": "Combined screening and reading is broader than either alone.",
+      "existing_alternative": "Existing broad artwork or Unicode remains usable. This prospective distinction needs independent semantic and small-size review before any new assignment.",
+      "event_ids": [
+        225563
+      ],
+      "evidence_by_event": {
+        "225563": [
+          "Film Screening + Book Launch: A free screening of two short films, a memoir reading, and a sale of the self-published “Book of Prompts” with Magdalene San Millan.",
+          "Tags: Literature, Free, Film, Screening, Book Launch, Reading, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "225563": [
+          "https://restlessnites.com/events/filmscreeningbooklaunch19sep2026"
+        ]
+      }
+    },
+    {
+      "concept": "format-film-music-dialogue",
+      "label": "Film, music and dialogue",
+      "category": "format",
+      "visual": "Film frame with one music note and dialogue bubble.",
+      "rationale": "Mixed program explicitly joins screening, vocal performance and discussion.",
+      "existing_alternative": "Existing broad artwork or Unicode remains usable. This prospective distinction needs independent semantic and small-size review before any new assignment.",
+      "event_ids": [
+        225606
+      ],
+      "evidence_by_event": {
+        "225606": [
+          "Screening: May the Soil Be Everywhere: Join us for a tender and magical evening of memory, migration, and the power of family matriarchs through film, music, and conversation. The evening includes a vocal performance by Mongolian musician Suvda Khereid, a screening of Yehui Zhao’s feature debut, and a post-screening dialogue with Yehui Zhao and multimedia artist Betty Yu.",
+          "Tags: Community, Art Gallery, Music, Art, Documentary, Film, Screening, Arts Culture, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "225606": [
+          "https://luma.com/accentisa-3a9s"
+        ]
+      }
+    },
+    {
+      "concept": "format-game-studies-seminar",
+      "label": "Game studies seminar",
+      "category": "format",
+      "visual": "Game controller beside annotated study pages.",
+      "rationale": "Games are a scholarly subject, not merely played or built.",
+      "existing_alternative": "Existing broad artwork or Unicode remains usable. This prospective distinction needs independent semantic and small-size review before any new assignment.",
+      "event_ids": [
+        225589
+      ],
+      "evidence_by_event": {
+        "225589": [
+          "Everyday Otherwise: Video Games as Method and Metaphor I 8 Weeks Theoretical Seminar + 2 Days Workshop with Sascia Pellegrini: The 8-week seminar explores video games as a way of thinking through everyday life, pairing specific games with readings from media theory and phenomenology. An optional 2-day workshop examines selected games through media theory, phenomenology, feminist thought, and artistic practice, with discussions, reflection, and group activities.",
+          "Tags: Art Gallery, Art, Workshop, Film, Education, Games, Class, Zoom, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "225589": [
+          "https://luma.com/dtq03pqt"
+        ]
+      }
+    },
+    {
+      "concept": "format-library-reading-incentive",
+      "label": "Library reading incentive",
+      "category": "format",
+      "visual": "Borrowed book beside a small treat token.",
+      "rationale": "Checkout-linked encouragement differs from a reading recital or book giveaway.",
+      "existing_alternative": "Existing broad artwork or Unicode remains usable. This prospective distinction needs independent semantic and small-size review before any new assignment.",
+      "event_ids": [
+        225681
+      ],
+      "evidence_by_event": {
+        "225681": [
+          "Feel Good Friday: On Fridays, check out a book and enjoy a sweet treat!",
+          "Tags: Community, Kids, Literature, Family, Reading, Teen Events, Books, Treats"
+        ]
+      },
+      "source_urls_by_event": {
+        "225681": [
+          "https://hobokenlibrary.libnet.info/event/16951049",
+          "https://hobokenlibrary.libnet.info/event/16951050",
+          "https://hobokenlibrary.libnet.info/event/17137296",
+          "https://hobokenlibrary.libnet.info/event/17137297"
+        ]
+      }
+    },
+    {
+      "concept": "format-literary-themed-party",
+      "label": "Literary-themed party",
+      "category": "format",
+      "visual": "A book surrounded by party marks.",
+      "rationale": "Literature-themed social event, not an author appearance or actual funeral.",
+      "existing_alternative": "Current Unicode or the individually reviewed accepted icon remains suitable until original candidate artwork is researched and passes native-size review.",
+      "event_ids": [
+        225724
+      ],
+      "evidence_by_event": {
+        "225724": [
+          "Percy Jackson: Join us for an epic Percy Jackson Party as we celebrate the upcoming release with a journey to Ancient Greece!",
+          "Tags: Literature, Party, Family, Games, Nightlife, Ancient Greece, Percy Jackson, Format, Social"
+        ]
+      },
+      "source_urls_by_event": {
+        "225724": [
+          "https://hobokenlibrary.libnet.info/event/17057038"
+        ]
+      }
+    },
+    {
+      "concept": "format-makerspace-open-hours",
+      "label": "Makerspace open hours",
+      "category": "format",
+      "visual": "Open doorway beside a broad maker-tool emblem.",
+      "rationale": "Facility availability does not promise a specific tool or instruction.",
+      "existing_alternative": "Existing broad artwork or Unicode remains usable. This prospective distinction needs independent semantic and small-size review before any new assignment.",
+      "event_ids": [
+        225758
+      ],
+      "evidence_by_event": {
+        "225758": [
+          "Open Hours 10am - 4pm: No description available.",
+          "Tags: Library, Community, Open House, Open Hours, Creative Art, Adults, Cultural Venue, Format, Browsable"
+        ]
+      },
+      "source_urls_by_event": {
+        "225758": [
+          "https://jclibrary.libcal.com/event/16953880",
+          "https://jclibrary.libcal.com/event/16953881",
+          "https://jclibrary.libcal.com/event/16953883"
+        ]
+      }
+    },
+    {
+      "concept": "format-mixed-comedy-theater",
+      "label": "Mixed comedy theater",
+      "category": "format",
+      "visual": "Two theater program cards, one script and one spontaneous speech mark.",
+      "rationale": "Double bill includes scripted farce and improv.",
+      "existing_alternative": "Existing broad artwork or Unicode remains usable. This prospective distinction needs independent semantic and small-size review before any new assignment.",
+      "event_ids": [
+        225540
+      ],
+      "evidence_by_event": {
+        "225540": [
+          "The Importance of Being British: You are cordially invited to \"The Importance of Being British,\" a double-feature evening of witty British comedy. The night begins with \"Bath Time,\" a fully improvised Jane Austen novel, followed by \"Tondown Castle,\" an original one-act farce set at a 1920s English country estate.",
+          "Tags: Theater, Comedy, Improv, Sketch Comedy, Comedy Show, British Comedy, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "225540": [
+          "https://magnettheater.com/show/60898"
+        ]
+      }
+    },
+    {
+      "concept": "format-mixed-game-night",
+      "label": "Mixed game night",
+      "category": "format",
+      "visual": "Board-game die beside controller and a role-play card.",
+      "rationale": "Explicit mix of digital, board and role-playing games.",
+      "existing_alternative": "Existing broad artwork or Unicode remains usable. This prospective distinction needs independent semantic and small-size review before any new assignment.",
+      "event_ids": [
+        225739
+      ],
+      "evidence_by_event": {
+        "225739": [
+          "Fun Fridays Game Night!: A relaxed game night for kids featuring video games, classic board games, and role-playing adventures such as Dungeons & Dragons.",
+          "Tags: Video Games, Family, Games, Board Games, Game, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "225739": [
+          "https://jclibrary.libcal.com/event/16793878",
+          "https://jclibrary.libcal.com/event/16793879",
+          "https://jclibrary.libcal.com/event/16793880"
+        ]
+      }
+    },
+    {
+      "concept": "format-pop-up-library",
+      "label": "Pop-up library",
+      "category": "format",
+      "visual": "Portable book display with a return slot and library card.",
+      "rationale": "Temporary lending service, without assuming a vehicle.",
+      "existing_alternative": "Existing broad artwork or Unicode remains usable. This prospective distinction needs independent semantic and small-size review before any new assignment.",
+      "event_ids": [
+        225690
+      ],
+      "evidence_by_event": {
+        "225690": [
+          "Columbus Park Pop-Up Library: Welcome to our Pop-Up Library",
+          "Tags: Library, Community, Kids, Family, Outdoor, Teen Events, Participatory, Cultural Venue, Format, Drop-In Service, Pop Up Library"
+        ]
+      },
+      "source_urls_by_event": {
+        "225690": [
+          "https://hobokenlibrary.libnet.info/event/17056396",
+          "https://hobokenlibrary.libnet.info/event/17056397",
+          "https://hobokenlibrary.libnet.info/event/17056398"
+        ]
+      }
+    },
+    {
+      "concept": "format-prevention-coalition",
+      "label": "Community prevention coalition",
+      "category": "format",
+      "visual": "Three partner cards linked around a protective arc.",
+      "rationale": "Professional/community prevention coordination differs from survivor peer support.",
+      "existing_alternative": "Existing broad artwork or Unicode remains usable. This prospective distinction needs independent semantic and small-size review before any new assignment.",
+      "event_ids": [
+        225668
+      ],
+      "evidence_by_event": {
+        "225668": [
+          "Hudson SPEAKS Coalition Meeting: Hudson SPEAKS Coalition Meetings are monthly gatherings that bring together community partners dedicated to preventing sexual violence and supporting survivors.",
+          "Tags: Community, Education, Support, Gathering, Civic Meeting, Adults, Survivor Support, Format, Coalition, Sexual Violence Prevention"
+        ]
+      },
+      "source_urls_by_event": {
+        "225668": [
+          "https://hobokenlibrary.libnet.info/event/16292494",
+          "https://hobokenlibrary.libnet.info/event/16292495"
+        ]
+      }
+    },
+    {
+      "concept": "format-public-art-tour",
+      "label": "Public art tour",
+      "category": "format",
+      "visual": "Outdoor sculpture marker beside a short walking route.",
+      "rationale": "Use only after artwork focus is established; generic sparse tour remains weak evidence.",
+      "existing_alternative": "Existing broad artwork or Unicode remains usable. This prospective distinction needs independent semantic and small-size review before any new assignment.",
+      "event_ids": [
+        225601
+      ],
+      "evidence_by_event": {
+        "225601": [
+          "Accent x Highline | Buddha Tour: A tour of Buddha-related sites on the High Line.",
+          "Tags: Community, Art Gallery, Art, Free, Tour, Film, Outdoor, Format, Outings"
+        ]
+      },
+      "source_urls_by_event": {
+        "225601": [
+          "https://luma.com/xqrqv7y8"
+        ]
+      }
+    },
+    {
+      "concept": "format-publisher-book-event",
+      "label": "Publisher book event",
+      "category": "format",
+      "visual": "Book beside a publisher table card.",
+      "rationale": "Book-centered event with unspecified reader/author format; art must not imply author attendance.",
+      "existing_alternative": "Existing broad artwork or Unicode remains usable. This prospective distinction needs independent semantic and small-size review before any new assignment.",
+      "event_ids": [
+        225608
+      ],
+      "evidence_by_event": {
+        "225608": [
+          "Galiot Press: I'll Look Myself in the Eyes by Rim Battal: A Galiot Press event for Rim Battal’s book *I'll Look Myself in the Eyes*.",
+          "Tags: Art Gallery, Art, Literature, Poetry, Film, Book Launch, Reading, Format, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "225608": [
+          "https://luma.com/accentisa-3azz"
+        ]
+      }
+    },
+    {
+      "concept": "format-screen-free-play",
+      "label": "Screen-free play",
+      "category": "format",
+      "visual": "Covered device beside simple play and craft shapes.",
+      "rationale": "Mixed activities intentionally replace screen use; no exact game promised.",
+      "existing_alternative": "Existing broad artwork or Unicode remains usable. This prospective distinction needs independent semantic and small-size review before any new assignment.",
+      "event_ids": [
+        225680
+      ],
+      "evidence_by_event": {
+        "225680": [
+          "Screen Free Friday: Designed for kids, tweens, and teens to take a break from their digital devices and immerse themselves in a world of creativity and fun!",
+          "Tags: Community, Kids, Workshop, Family, Creativity, Teen Events, Participatory, Screen Free, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "225680": [
+          "https://hobokenlibrary.libnet.info/event/17069459",
+          "https://hobokenlibrary.libnet.info/event/17069470",
+          "https://hobokenlibrary.libnet.info/event/17069582",
+          "https://hobokenlibrary.libnet.info/event/17069638"
+        ]
+      }
+    },
+    {
+      "concept": "format-solo-theater",
+      "label": "Solo theater",
+      "category": "format",
+      "visual": "Single spotlight over one neutral performance figure.",
+      "rationale": "Explicit solo show does not prove comedy or song; anatomy review required.",
+      "existing_alternative": "Use a suitable broad Unicode or accepted icon until a distinctive reviewed study is available.",
+      "event_ids": [
+        225562
+      ],
+      "evidence_by_event": {
+        "225562": [
+          "A Serious Actress: A live performance about an actress writing and rewriting her unpublished memoir in front of an audience while confronting the history and opportunities afforded to women who look like her.",
+          "Tags: Theater, Art, Performance Art, Storytelling / Theater, Format, Theater Show, Performance"
+        ]
+      },
+      "source_urls_by_event": {
+        "225562": [
+          "https://restlessnites.com/events/aseriousactress18sep2026"
+        ]
+      }
+    },
+    {
+      "concept": "format-taiwan-literature-talk",
+      "label": "Taiwan literature talk",
+      "category": "format",
+      "visual": "Open book beside a dialogue mark and branching reading path.",
+      "rationale": "Literary study of Taiwan needs no flag or assumed travel route.",
+      "existing_alternative": "Existing broad artwork or Unicode remains usable. This prospective distinction needs independent semantic and small-size review before any new assignment.",
+      "event_ids": [
+        225593
+      ],
+      "evidence_by_event": {
+        "225593": [
+          "阅读台湾的航线 I 李佳颖演讲: A talk by 李佳颖 about Taiwan’s routes.",
+          "Tags: Community, Event Space, Art Gallery, Art, Literature, Free, Film, Gathering, Talk, Cultural Venue, Format, Arts Venue"
+        ]
+      },
+      "source_urls_by_event": {
+        "225593": [
+          "https://luma.com/g100ctp6"
+        ]
+      }
+    },
+    {
+      "concept": "format-writing-critique",
+      "label": "Format writing critique",
+      "category": "format",
+      "visual": "Manuscript and two feedback bubbles",
+      "rationale": "Participant written-work feedback distinct from book clubs.",
+      "existing_alternative": "Existing broader icon or Unicode may suffice; preserve prospective study until semantic and visual validation.",
+      "event_ids": [
+        225720
+      ],
+      "evidence_by_event": {
+        "225720": [
+          "Writers Group: Get input and constructive feedback on your writing project! Meets once a month. We are meeting this month via Zoom.",
+          "Tags: Community, Literature, Virtual, Discussion Group, Gathering, Feedback, Writing, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "225720": [
+          "https://hobokenlibrary.libnet.info/event/17205657"
+        ]
+      }
+    },
+    {
+      "concept": "format-yoga-storytime",
+      "label": "Yoga storytime",
+      "category": "format",
+      "visual": "Open storybook beside a simple grounded movement silhouette.",
+      "rationale": "Combined narrative and movement; any figure requires 3D anatomy review.",
+      "existing_alternative": "Existing broad artwork or Unicode remains usable. This prospective distinction needs independent semantic and small-size review before any new assignment.",
+      "event_ids": [
+        225677
+      ],
+      "evidence_by_event": {
+        "225677": [
+          "Yoga Story Time: An active story time for your little yogi!",
+          "Tags: Kids, Wellness, Fitness, Family, Yoga, Storytime, Participatory, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "225677": [
+          "https://hobokenlibrary.libnet.info/event/16745645",
+          "https://hobokenlibrary.libnet.info/event/16745646",
+          "https://hobokenlibrary.libnet.info/event/17019125",
+          "https://hobokenlibrary.libnet.info/event/17019126"
+        ]
+      }
+    },
+    {
+      "concept": "game-american-mahjong",
+      "label": "American Mahjong",
+      "category": "activity",
+      "visual": "Three upright tiles beside a simplified horizontal scoring card",
+      "rationale": "Specific American form supported; compare added value against existing Mahjong tile before creating.",
+      "existing_alternative": "Retain the source Unicode until recognizable original artwork is reviewed.",
+      "event_ids": [
+        225692
+      ],
+      "evidence_by_event": {
+        "225692": [
+          "American Mahjong Club: Come join in the fun and play a game of American Mahjong! For adults ages 18 and up.",
+          "Tags: Community, Games, Mahjong, Seniors, Game, Participatory, Adults, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "225692": [
+          "https://hobokenlibrary.libnet.info/event/16955790",
+          "https://hobokenlibrary.libnet.info/event/17322234",
+          "https://hobokenlibrary.libnet.info/event/17322251"
+        ]
+      }
+    },
+    {
+      "concept": "game-i-spy",
+      "label": "I Spy game",
+      "category": "activity",
+      "visual": "Magnifier picking one object out of three bold shapes.",
+      "rationale": "Visual search/guessing game without assuming a physical scavenger route.",
+      "existing_alternative": "Existing broad artwork or Unicode remains usable. This prospective distinction needs independent semantic and small-size review before any new assignment.",
+      "event_ids": [
+        225716
+      ],
+      "evidence_by_event": {
+        "225716": [
+          "I Spy Live Gaming: Join us for an exhilarating live game play event inspired by the beloved \"I Spy\" book series, where keen eyes and quick reflexes can lead to exciting prizes!",
+          "Tags: Kids, Family, Games, Prizes, Game, Participatory, Format, I Spy"
+        ]
+      },
+      "source_urls_by_event": {
+        "225716": [
+          "https://hobokenlibrary.libnet.info/event/17056867"
+        ]
+      }
+    },
+    {
+      "concept": "game-silhouette-guessing",
+      "label": "Silhouette guessing game",
+      "category": "activity",
+      "visual": "Unidentified original animal silhouette with a question bubble.",
+      "rationale": "Guessing shape identity, not a licensed character reproduction or card battle.",
+      "existing_alternative": "Existing broad artwork or Unicode remains usable. This prospective distinction needs independent semantic and small-size review before any new assignment.",
+      "event_ids": [
+        225756
+      ],
+      "evidence_by_event": {
+        "225756": [
+          "Pokémon Guessing Game: Stop by the Pavonia Branch and guess the Pokémon’s silhouette to win a free card pack*! You get up to 3 guesses.",
+          "Tags: Free, Family, Games, Pokemon, Game, Participatory, Format, Guessing Game"
+        ]
+      },
+      "source_urls_by_event": {
+        "225756": [
+          "https://jclibrary.libcal.com/event/17156256",
+          "https://jclibrary.libcal.com/event/17156257",
+          "https://jclibrary.libcal.com/event/17156259"
+        ]
+      }
+    },
+    {
+      "concept": "genre-literary-horror-book-club",
+      "label": "Horror book discussion",
+      "category": "format",
+      "visual": "A book and discussion bubble with a restrained eerie cover mark.",
+      "rationale": "Book discussion, not a film screening or guaranteed author appearance.",
+      "existing_alternative": "Current Unicode or the individually reviewed accepted icon remains suitable until original candidate artwork is researched and passes native-size review.",
+      "event_ids": [
+        225722
+      ],
+      "evidence_by_event": {
+        "225722": [
+          "Horror/Thriller Book Club - Cujo: We’ll be discussing Cujo by Stephen King",
+          "Tags: Community, Literature, Film, Thriller, Horror, Discussion Group, Book Club, Gathering, Stephen King, Adults, Format"
+        ]
+      },
+      "source_urls_by_event": {
+        "225722": [
+          "https://hobokenlibrary.libnet.info/event/17108691"
+        ]
+      }
+    }
+  ],
+  "limitations": "Counts describe this cohort, not population reach. These are grounded prospective studies, not live assignments. Existing artwork may already suffice; exact equipment and genre recognition require further review."
+}
