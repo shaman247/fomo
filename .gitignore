@@ -283,3 +283,9 @@ mobile/android/**/lint-results*
 
 !scripts/audit_venue_memberships.py
 /pipeline/tests/test_event_icon_audit.py
+# Local similarity diagnostics and offline tag-icon editing (model build/health stay tracked).
+/pipeline/similarity_viewer.py
+/pipeline/similarity_probes.py
+/pipeline/tag_icon_assignments.py
+/pipeline/tests/test_similarity_viewer.py
+/pipeline/tests/test_tag_icon_assignments.py
