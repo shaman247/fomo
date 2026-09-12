@@ -94,6 +94,7 @@ dist/
 # sources and 3D model scenes carry raw event data (incl. ticketing URLs with tokens) and stay local.
 /config/event-icons/fomo-custom-icons/
 /config/event-icons/20*
+/config/event-icons/README.md
 /config/event-icons/prototypes/
 /config/event-icons/models/
 /config/event-icons/reviews/*
