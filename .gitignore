@@ -282,3 +282,4 @@ mobile/android/**/lint-results*
 !scripts/audit_geographic_hierarchy.py
 
 !scripts/audit_venue_memberships.py
+/pipeline/tests/test_event_icon_audit.py
