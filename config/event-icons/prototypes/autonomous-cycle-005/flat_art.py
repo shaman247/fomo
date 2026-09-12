@@ -1,5 +1,0 @@
-from pathlib import Path
-out=Path('.scratch/icon-cycles-20260909/cycle-005/art')
-# Planar framed-art and bidding-paddle emblems; no overlapping physical scene implied.
-svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128"><rect x="10" y="12" width="74" height="86" rx="5" fill="#BD9068"/><path d="M15 17h64v76H15z" fill="#F1E8D6"/><path d="M22 24h50v62H22z" fill="#A4C4C9"/><circle cx="57" cy="40" r="9" fill="#F6D483"/><path d="m22 68 16-19 15 20 9-10 10 13v14H22z" fill="#6C947F"/><path d="m43 86 17-16 12 6v10z" fill="#507D72"/><rect x="96" y="79" width="11" height="39" rx="4" fill="#C38C63"/><rect x="80" y="47" width="39" height="45" rx="15" fill="#5F8399"/><rect x="83" y="49" width="31" height="38" rx="12" fill="#82A5B7"/><path d="m95 60 5-3h6v21h-6V64l-5 3z" fill="#F7EFDB"/></svg>'
-(out/'art-auction.svg').write_text(svg+'\n')

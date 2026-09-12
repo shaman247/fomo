@@ -1,5 +1,0 @@
-from pathlib import Path
-out=Path('.scratch/icon-cycles-20260909/cycle-006/art')
-def save(name,body): (out/(name+'.svg')).write_text('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">'+body+'</svg>\n')
-save('poetry-reading','''<path d="M19 9h65l18 18v86a6 6 0 0 1-6 6H19a6 6 0 0 1-6-6V15a6 6 0 0 1 6-6z" fill="#D8C8AD"/><path d="M19 9h65v22h18v79H19z" fill="#F2E6CC"/><path d="m84 9 18 22H84z" fill="#BCAA8A"/><path d="M30 29h39M30 39h29M30 49h35M30 67h35M30 77h24M30 87h31" fill="none" stroke="#9F927B" stroke-width="4" stroke-linecap="round"/><path d="M77 62h29q12 0 12 12v23q0 12-12 12H92l-16 10 2-10h-1q-12 0-12-12V74q0-12 12-12" fill="#709EAB"/><path d="M79 78h10v11l-6 8h-6l5-8h-3zM98 78h10v11l-6 8h-6l5-8h-3z" fill="#F6EEDA"/>''')
-save('conversation-practice','''<path d="M18 17h42q10 0 10 10v33q0 10-10 10H35L19 82l2-12h-3q-10 0-10-10V27q0-10 10-10" fill="#639BAC"/><path d="M71 47h39q10 0 10 10v33q0 10-10 10h-3l3 13-19-13H71q-10 0-10-10V57q0-10 10-10" fill="#AD8AB5"/><path d="m25 57 10-29h9l10 29h-8l-2-7H35l-2 7zm12-14h5l-2.5-9zM76 88l10-29h9l10 29h-8l-2-7H86l-2 7zm12-14h5l-2.5-9z" fill="#FFF3D9" fill-rule="evenodd"/>''')
