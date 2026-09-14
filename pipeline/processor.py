@@ -4992,9 +4992,15 @@ def _extract_street_address_loose(s):
     # Strip apartment-letter glued to house number ("161a chrystie" → "161 chrystie",
     # "626b 10th" → "626 10th") so the regex's `\d+\s+` can match.
     s = re.sub(r'\b(\d+)[a-z](?=\s)', r'\1', s)
-    # Avenue A/B/C/D — the lettered suffix follows the type word, which the
-    # main regex can't express. Match these explicitly.
-    m_ave = re.search(r'\b(\d+)\s+ave\s+([a-d])\b', s)
+    # Lettered avenues — the letter follows the type word, which the main regex
+    # can't express. Manhattan has Avenue A-D; Brooklyn runs Avenue C through
+    # Avenue Z (Ave H, Ave J, Ave S, Ave U...), so the whole alphabet qualifies
+    # and every one of those rows returned None here before 2026-09-13 (loc 4508
+    # Marine Park Coffee, DB "3411 Ave S" vs sub "3411 Ave. S"). The optional
+    # period covers Google's own "Ave. S" spelling. A house number must sit
+    # immediately before "ave", so "100 Park Ave S" (Park Avenue South) and
+    # "5th Ave N" are untouched — their street name intervenes.
+    m_ave = re.search(r'\b(\d+)\s+ave\.?\s+([a-z])\b', s)
     if m_ave:
         return f"{m_ave.group(1)} ave {m_ave.group(2)}"
     m = _ADDR_PATTERN.search(s)

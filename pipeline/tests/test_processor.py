@@ -1402,6 +1402,54 @@ class TestBareStreetNames(unittest.TestCase):
             "9th St.", "200 4th Ave, Brooklyn, NY 11217, USA"))
 
 
+class TestLetteredAvenues(unittest.TestCase):
+    """Brooklyn's lettered avenues run C through Z, but the loose extractor's
+    explicit lettered-avenue case only covered Manhattan's Avenue A-D, so every
+    "<num> Ave <letter>" address past D parsed as None on BOTH sides and the
+    redundancy check reported a false mismatch.
+
+    Fixture is location 4508 (Marine Park Coffee): DB "3411 Ave S" vs the
+    listing's "3411 Ave. S, Brooklyn, NY 11234, USA" — the same address, and
+    Google's own canonical spelling carries the period."""
+
+    def test_letter_past_d_normalizes(self):
+        self.assertEqual(
+            _extract_street_address_loose("3411 Ave. S, Brooklyn, NY 11234, USA"),
+            "3411 ave s")
+        self.assertEqual(
+            _extract_street_address_loose("3411 Ave S, Brooklyn, NY 11234"),
+            "3411 ave s")
+        self.assertEqual(
+            _extract_street_address_loose("2900 Avenue H, Brooklyn, NY 11210, USA"),
+            "2900 ave h")
+
+    def test_redundant_across_period_spelling(self):
+        self.assertTrue(sublocation_redundant_with_address(
+            "3411 Ave. S, Brooklyn, NY 11234, USA", "3411 Ave S, Brooklyn, NY 11234"))
+        self.assertTrue(sublocation_redundant_with_address(
+            "3301 Avenue U", "3301 Ave U, Brooklyn, NY 11234, USA"))
+
+    def test_avenue_a_through_d_still_work(self):
+        self.assertEqual(
+            _extract_street_address_loose("85 Avenue A, New York, NY 10009, USA"),
+            "85 ave a")
+        self.assertTrue(sublocation_redundant_with_address(
+            "101 Avenue D", "101 Avenue D, New York, NY 10009, USA"))
+
+    def test_different_lettered_avenue_is_not_redundant(self):
+        self.assertFalse(sublocation_redundant_with_address(
+            "3411 Ave. T, Brooklyn, NY 11234", "3411 Ave S, Brooklyn, NY 11234"))
+
+    def test_named_avenue_with_trailing_directional_is_untouched(self):
+        # "Park Avenue South" / "5th Ave N" are street names, not lettered
+        # avenues: the house number never sits immediately before "ave".
+        self.assertEqual(
+            _extract_street_address_loose("100 Park Ave S, New York, NY 10017"),
+            "100 park ave")
+        self.assertFalse(sublocation_redundant_with_address(
+            "100 Park Ave S", "100 Ave S, Brooklyn, NY 11234"))
+
+
 class TestQueensHyphenatedHouseNumbers(unittest.TestCase):
     """Queens/Bronx block-lot addresses ("180-04 State Rd") lose their zero pad
     freely in source text. Before 2026-08-23 the key was built by deleting the

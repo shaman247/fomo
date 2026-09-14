@@ -208,6 +208,31 @@ SKIP_LOCATION_NAMES = {
     'ballfield 11', 'dinosaur playground to ellington in the park, new york',
     #   street the PuppetMobile performs on; the event is pinned to the neighborhood
     '5th avenue',
+    # 2026-09-13 unmapped sweep. Each string was researched against the live source page
+    # before being listed; the event is already pinned to the right venue and the string
+    # names no venue that can ever resolve.
+    #   festival / fundraiser / program names emitted as the venue by their own site
+    'bicycle film festival', 'brooklyn heights designer showhouse',
+    'independent 20th century', 'lit society', 'nightboat books',
+    'east hampton historical society', 'puppetmobile',
+    #   agency / civic-body labels that are not the meeting venue
+    'nyc department of records and information services (doris)',
+    'brooklyn community board 2',
+    #   contentless descriptors of the already-pinned venue
+    'areas surrounding the museum of natural history', 'private historic home',
+    'offsite location', 'the great lawn',
+    # 2026-09-14 unmapped sweep. Every one of these was verified against the live
+    # source page: the event's current pin is right and the extracted string is
+    # either a person's name or a DIFFERENT real venue, so aliasing it would build
+    # a catch-all onto the wrong place.
+    #   pools.events emits the SPEAKER/HOST name as location_name when the listing
+    #   has no venue field. Open-ended pattern — extend as new ones surface.
+    'eric athas', 'thomas woodward davis',
+    #   cross-entity contamination: each names a real venue that is NOT this event's
+    #   (Joe Holder's Seaport pop-up; The Local Eatery & Craft Beer in Forest Hills)
+    'the clubhouse by joe holder', 'the local eatery & craft beer',
+    #   neighborhood / transit landmark, not the venue
+    'prospect park south', 'ossining station',
 }
 
 # Websites whose feed emits the HOST/PARTNER ORG as `location_name` for every
