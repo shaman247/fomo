@@ -233,6 +233,23 @@ SKIP_LOCATION_NAMES = {
     'the clubhouse by joe holder', 'the local eatery & craft beer',
     #   neighborhood / transit landmark, not the venue
     'prospect park south', 'ossining station',
+    # 2026-09-15 unmapped sweep. Each string was researched against the live source page
+    # before being listed; the event is now pinned as well as it ever can be and the
+    # string names no venue that will ever resolve.
+    #   organizer withholds the venue until a newsletter / weekly IG post goes out
+    'off-site restaurant — announced in organizer newsletter',
+    'location varies — see @badassladygangnyc',
+    #   citywide route, not a venue (TCS NYC Marathon)
+    'locations citywide; see links for details',
+    #   sub-facility label inside the already-mapped park
+    'softball field',
+    #   mixed-use Bay Ridge building with no host venue — PEU sidewalk canvassing;
+    #   the Arab American Association is at 6803 5th Ave, NOT 7111 (verified 2026-09-15)
+    '7111 5th ave',
+    #   party series / private spaces whose address is RSVP-gated, so no venue exists:
+    #   'Hide and Seek' is a queer party series (Partiful's own venue field says "ETET"),
+    #   'Apt.11R' is a Groupmuse private residence, 'The Fairy Backyard' a private yard
+    'hide and seek', 'apt.11r', 'the fairy backyard',
 }
 
 # Websites whose feed emits the HOST/PARTNER ORG as `location_name` for every

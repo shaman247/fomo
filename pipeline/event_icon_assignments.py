@@ -9,6 +9,7 @@ from collections import Counter
 import json
 from pathlib import Path
 from event_icons import ROOT, ICON_IDS, RULE_VERSION, input_hash, propose
+from event_icon_policy import input_matches, context_matches, context_hash, metadata, review_baseline
 
 COLUMNS = ('event_id','icon_id','origin','rule_version','input_hash','review_required','reason','evidence_json')
 
@@ -59,11 +60,38 @@ def fetch_events(cursor, ids=None):
     return list(events.values())
 
 
+def hydrate_contexts(cursor, events):
+    """Load full context for an explicit population, including historical exports."""
+    lookup = {e['id']: e for e in events}
+    ids = list(lookup)
+    for offset in range(0, len(ids), 1000):
+        chunk = ids[offset:offset+1000]
+        slots = ','.join(['%s'] * len(chunk))
+        cursor.execute(f'''SELECT e.id,e.short_name,e.emoji,e.event_type,
+            e.location_name,e.sublocation,l.name,l.address,w.name
+            FROM events e LEFT JOIN locations l ON l.id=e.location_id
+            LEFT JOIN websites w ON w.id=e.website_id WHERE e.id IN ({slots})''', tuple(chunk))
+        for eid, short, emoji, typ, loc, sub, venue, address, source in cursor.fetchall():
+            lookup[eid].update(short_name=short, emoji=emoji, event_type=typ,
+                location_name=loc, sublocation=sub, venue=venue, address=address,
+                source=source, urls=[])
+        cursor.execute(f'SELECT event_id,url FROM event_urls WHERE event_id IN ({slots}) ORDER BY event_id,url',tuple(chunk))
+        for eid,url in cursor.fetchall():
+            lookup[eid]['urls'].append(url)
+    return events
+
+
+def export_contexts(cursor, rows):
+    ids = [eid for eid,row in rows.items() if row['icon_id'] and not row['review_required']
+           and metadata(row).get('tag_enrichment')]
+    return {e['id']: e for e in hydrate_contexts(cursor, fetch_events(cursor, ids))}
+
+
 def desired_assignment(event, existing=None):
     fingerprint=input_hash(event)
     if existing and existing['origin'] in ('manual','agent'):
         # Preserve the decision, but withhold it from export if content changed.
-        return dict(existing, review_required=int(bool(existing['review_required']) or existing['input_hash']!=fingerprint))
+        return dict(existing, review_required=int(bool(existing['review_required']) or not input_matches(event, existing)))
     result=propose(event)
     if result['decision']=='fallback':
         return None
@@ -78,7 +106,11 @@ def export_icon(event, assignment):
         return None
     if assignment['origin']=='rule' and assignment['rule_version']!=RULE_VERSION:
         return None
-    return assignment['icon_id'] if assignment['input_hash']==input_hash(event) else None
+    if not input_matches(event, assignment):
+        return None
+    if metadata(assignment).get('tag_enrichment') and not context_matches(event, assignment):
+        return None
+    return assignment['icon_id']
 
 
 def save(cursor, assignment):
@@ -92,7 +124,7 @@ def sync_assignments(cursor, events=None, apply=False):
     """
     if apply:
         require_lock(cursor)
-    events=fetch_events(cursor) if events is None else events
+    events=hydrate_contexts(cursor,fetch_events(cursor)) if events is None else events
     existing=load_assignments(cursor)
     stats=Counter(events=len(events))
     for event in events:
@@ -118,7 +150,7 @@ def sync_assignments(cursor, events=None, apply=False):
 def retained_assignment(event, existing=None):
     if not existing:
         return None
-    stale = existing['input_hash'] != input_hash(event)
+    stale = not input_matches(event, existing)
     unknown = existing['icon_id'] is not None and existing['icon_id'] not in ICON_IDS
     return dict(existing, review_required=int(bool(existing['review_required']) or stale or unknown))
 
@@ -129,7 +161,9 @@ def manual_assignment(event, icon_id, reason):
     if not reason.strip():
         raise ValueError('A manual decision needs a reason')
     return dict(event_id=event['id'],icon_id=icon_id,origin='manual',rule_version=None,
-                input_hash=input_hash(event),review_required=0,reason=reason,evidence_json='[]')
+                input_hash=input_hash(event),review_required=0,reason=reason,
+                evidence_json=json.dumps(dict(context_hash=context_hash(event),
+                    tag_enrichment=review_baseline(event)),ensure_ascii=False,sort_keys=True))
 
 
 def merge_manual_decisions(event, assignments):
@@ -209,7 +243,7 @@ def main():
                 args.backup.parent.mkdir(parents=True,exist_ok=True)
                 args.backup.write_text(json.dumps(load_assignments(cursor),ensure_ascii=False,indent=2))
             if args.manual is not None:
-                events=fetch_events(cursor,[args.manual])
+                events=hydrate_contexts(cursor,fetch_events(cursor,[args.manual]))
                 if not events:
                     raise ValueError('Event does not exist')
                 save(cursor,manual_assignment(events[0],None if args.icon=='fallback' else args.icon,args.reason))

@@ -502,6 +502,272 @@ class TestStatedWeekdayContradiction(unittest.TestCase):
         self.assertEqual(frs.stated_weekdays('a weekly class'), set())
 
 
+class TestSkipPhraseGuard(unittest.TestCase):
+    """Announced breaks must never be regenerated — on EITHER path.
+
+    Ground truth: the 2026-09-15 weekly sweep, where 6 of the 8 FIX_SPAN
+    candidates were classes whose own title states the weeks they do NOT meet,
+    and the envelope regenerator proposed exactly those dates. The COURSE_WEEKLY
+    detector already consulted `skipped_dates`; `classify` (the envelope path)
+    did not, which is where the damage landed. Each fixture below carries the
+    real phrasing and asserts the announced date is absent from the plan.
+
+    WINDOW_END is pinned so the fixtures do not decay as the crawl window slides.
+    """
+
+    def setUp(self):
+        self._window_end = frs.WINDOW_END
+        frs.WINDOW_END = dt.date(2027, 12, 31)
+
+    def tearDown(self):
+        frs.WINDOW_END = self._window_end
+
+    def _plan(self, name, occ, desc=''):
+        verdict, info = frs.classify(1, name, occ, desc)
+        self.assertNotEqual(verdict, 'skip', msg=info.get('reason'))
+        return verdict, frs.planned_dates(verdict, info)
+
+    # ---- ev240463: "(NO CLASS on November 11th)" ------------------------------
+    N_240463 = ('Little Designers: Fall Semester: 6-9 year-olds, Wednesdays, '
+                'September 16th - December 23rd, 3:30- 5:00PM (NO CLASS on November 11th)')
+    O_240463 = _points('2026-09-16', '2026-09-23', '2026-09-30') + [
+        _occ('2026-09-16', '2026-12-23')]
+
+    def test_no_class_on_named_date_is_not_regenerated(self):
+        verdict, dates = self._plan(self.N_240463, self.O_240463)
+        self.assertEqual(verdict, 'weekly')
+        self.assertNotIn(dt.date(2026, 11, 11), dates)
+        # the weeks either side of the break are still there
+        self.assertIn(dt.date(2026, 11, 4), dates)
+        self.assertIn(dt.date(2026, 11, 18), dates)
+        self.assertIn(dt.date(2026, 12, 23), dates)
+
+    def test_without_the_guard_the_date_would_be_generated(self):
+        """Pins WHY: the raw cadence really does propose 2026-11-11."""
+        _v, info = frs.classify(1, self.N_240463, self.O_240463)
+        self.assertIn(dt.date(2026, 11, 11), frs._generated_series_raw('weekly', info))
+        self.assertEqual(info['skips'], {dt.date(2026, 11, 11)})
+
+    # ---- ev240464: "(Skip Thanksgiving)" -------------------------------------
+    N_240464 = ('Little Designers: Fall Semester: 10-14 year-olds, Thursdays, '
+                'September 17th - December 17th, 3:30-5:30pm (Skip Thanksgiving)')
+    O_240464 = _points('2026-09-17', '2026-09-24', '2026-10-01') + [
+        _occ('2026-09-17', '2026-12-17')]
+
+    def test_named_holiday_resolves_to_a_date_and_is_dropped(self):
+        verdict, dates = self._plan(self.N_240464, self.O_240464)
+        self.assertEqual(verdict, 'weekly')
+        # Thanksgiving 2026 = 4th Thursday of November = Nov 26, and this is a
+        # Thursday class, so the naive series lands squarely on it.
+        self.assertNotIn(dt.date(2026, 11, 26), dates)
+        self.assertIn(dt.date(2026, 11, 19), dates)
+        self.assertIn(dt.date(2026, 12, 3), dates)
+
+    # ---- ev240486: "(SKIP 11/29 and 12/27)" ----------------------------------
+    N_240486 = ('Dressmaking Class: Weekly Class: Sundays, November 15th - '
+                'January 3rd, 2 - 4 PM (SKIP 11/29 and 12/27)')
+    O_240486 = _points('2026-11-15', '2026-11-22', '2026-12-06', '2026-12-13') + [
+        _occ('2026-11-15', '2027-01-03')]
+
+    def test_two_slash_dates_in_one_phrase_both_dropped(self):
+        verdict, dates = self._plan(self.N_240486, self.O_240486)
+        self.assertEqual(verdict, 'weekly')
+        # exactly the 6 Sundays the venue actually publishes
+        self.assertEqual(dates, [dt.date(2026, 11, 15), dt.date(2026, 11, 22),
+                                 dt.date(2026, 12, 6), dt.date(2026, 12, 13),
+                                 dt.date(2026, 12, 20), dt.date(2027, 1, 3)])
+
+    def test_bare_month_day_gets_its_year_from_the_span(self):
+        """11/29 and 12/27 carry no year; the span (Nov 2026 -> Jan 2027) supplies it."""
+        self.assertEqual(
+            frs.skipped_dates(self.N_240486, dt.date(2026, 11, 15), dt.date(2027, 1, 3)),
+            {dt.date(2026, 11, 29), dt.date(2026, 12, 27)})
+
+    # ---- ev240487: "(SKIP 11/25 for Thanksgiving)" ---------------------------
+    N_240487 = ('Sewing 101: Weekly Class: Wednesdays, November 18th - '
+                'December 16th, 6 - 9 PM (SKIP 11/25 for Thanksgiving)')
+    O_240487 = _points('2026-11-18', '2026-12-02', '2026-12-09', '2026-12-16') + [
+        _occ('2026-11-18', '2026-12-16')]
+
+    def test_explicit_date_plus_holiday_name_in_one_phrase(self):
+        verdict, dates = self._plan(self.N_240487, self.O_240487)
+        self.assertEqual(verdict, 'weekly')
+        # A WEDNESDAY class skipping Thanksgiving EVE: the explicit 11/25 is the
+        # session, 11/26 is the holiday itself. Resolving both is harmless
+        # (11/26 is not a Wednesday) and the explicit date is what matters.
+        self.assertNotIn(dt.date(2026, 11, 25), dates)
+        self.assertEqual(dates, [dt.date(2026, 11, 18), dt.date(2026, 12, 2),
+                                 dt.date(2026, 12, 9), dt.date(2026, 12, 16)])
+
+    # ---- ev241692: "(skipping 11/26 for Thanksgiving)" -----------------------
+    N_241692 = 'Riso II: Analog and Digital Workflows for Multipage Zines'
+    D_241692 = ('A four week workshop, Thursdays, November 19th - December 17th '
+                '(skipping 11/26 for Thanksgiving).')
+    O_241692 = _points('2026-11-19', '2026-12-03', '2026-12-10', '2026-12-17') + [
+        _occ('2026-11-19', '2026-12-17')]
+
+    def test_skip_phrase_in_the_description_counts_too(self):
+        verdict, dates = self._plan(self.N_241692, self.O_241692, self.D_241692)
+        self.assertEqual(verdict, 'weekly')
+        self.assertNotIn(dt.date(2026, 11, 26), dates)
+        self.assertEqual(len(dates), 4)
+
+    def test_same_phrase_still_guards_the_course_path(self):
+        """The original COURSE_WEEKLY case must not have regressed."""
+        occ = [_occ('2026-11-19', '2026-12-17', '18:00:00', '21:00:00')]
+        verdict, info = frs.classify_course(self.N_241692, occ, self.D_241692)
+        self.assertEqual(verdict, 'course_weekly', msg=info.get('reason'))
+        dates = frs.planned_dates(verdict, info)
+        self.assertNotIn(dt.date(2026, 11, 26), dates)
+        self.assertEqual(len(dates), 4)     # "four week", not five
+
+    # ---- ev251879: "NO SESSION NOV 9" ---------------------------------------
+    N_251879 = 'Practice Space: Fall 2026 Season'
+    D_251879 = ('Practice Space: Fall 2026 Season is presented by SUPR OMEN. '
+                'Mondays at 6:45pm through December 14th. NO SESSION NOV 9.')
+    O_251879 = _points('2026-09-21', '2026-09-28', '2026-10-05') + [
+        _occ('2026-09-21', '2026-12-14')]
+
+    def test_no_session_abbreviated_month_is_dropped(self):
+        verdict, dates = self._plan(self.N_251879, self.O_251879, self.D_251879)
+        self.assertEqual(verdict, 'weekly')
+        self.assertNotIn(dt.date(2026, 11, 9), dates)
+        self.assertIn(dt.date(2026, 11, 2), dates)
+        self.assertIn(dt.date(2026, 11, 16), dates)
+
+    # ---- the unresolvable arm ----------------------------------------------
+    UNRESOLVABLE = ('Open Studio: Weekly Drawing Salon, Mondays, September 21st - '
+                    'December 14th (no class on holidays)')
+    O_UNRES = _points('2026-09-21', '2026-09-28', '2026-10-05') + [
+        _occ('2026-09-21', '2026-12-14')]
+
+    def test_unresolvable_skip_phrase_vetoes_the_autofix(self):
+        verdict, info = frs.classify(1, self.UNRESOLVABLE, self.O_UNRES)
+        self.assertEqual(verdict, 'skip')
+        self.assertEqual(info['skip_veto'], 'unresolved')
+        self.assertIn('no resolvable date', info['reason'])
+        self.assertIn('no class on holidays', info['reason'])
+
+    def test_unresolvable_lands_in_the_new_review_bucket(self):
+        cat, note = frs.categorize_for_review(1, self.UNRESOLVABLE, self.O_UNRES)
+        self.assertEqual(cat, 'SKIP_PHRASE_UNRESOLVED')
+        self.assertIn('no resolvable date', note)
+
+    def test_resolvable_cases_stay_in_fix_span(self):
+        """The guard must not evict the six real events from the auto bucket —
+        it only removes the fabricated date."""
+        for name, occ, desc in (
+                (self.N_240463, self.O_240463, ''),
+                (self.N_240464, self.O_240464, ''),
+                (self.N_240486, self.O_240486, ''),
+                (self.N_240487, self.O_240487, ''),
+                (self.N_241692, self.O_241692, self.D_241692),
+                (self.N_251879, self.O_251879, self.D_251879)):
+            cat, _ = frs.categorize_for_review(1, name, occ, desc)
+            self.assertEqual(cat, 'FIX_SPAN', msg=name[:40])
+
+    def test_course_path_also_vetoes_an_unresolvable_phrase(self):
+        occ = [_occ('2026-08-11', '2026-12-15', '18:30:00', '20:30:00')]
+        verdict, info = frs.classify_course(
+            'Bhakti Sastri Course', occ,
+            'Weekly live sessions on Tuesdays, except holidays.')
+        self.assertEqual(verdict, 'skip')
+        self.assertEqual(info['skip_veto'], 'unresolved')
+        cat, _ = frs.categorize_for_review(1, 'Bhakti Sastri Course', occ,
+                                            'Weekly live sessions on Tuesdays, except holidays.')
+        self.assertEqual(cat, 'SKIP_PHRASE_UNRESOLVED')
+
+    def test_skip_date_that_is_also_an_occurrence_is_a_contradiction(self):
+        """Text says 11/11 is off but a row exists on 11/11 — regenerate nothing."""
+        occ = _points('2026-11-04', '2026-11-11', '2026-11-18') + [
+            _occ('2026-09-16', '2026-12-23')]
+        verdict, info = frs.classify(1, self.N_240463, occ)
+        self.assertEqual(verdict, 'skip')
+        self.assertEqual(info['skip_veto'], 'conflict')
+        self.assertIn('contradicted', info['reason'])
+
+    def test_clean_weekly_event_is_untouched(self):
+        """No skip phrase -> no skips, no veto, previous behaviour."""
+        occ = _points('2026-09-16', '2026-09-23', '2026-09-30') + [
+            _occ('2026-09-16', '2026-12-23')]
+        verdict, info = frs.classify(1, 'Wednesday Night Open Mic', occ)
+        self.assertEqual(verdict, 'weekly')
+        self.assertEqual(info['skips'], set())
+        self.assertIn(dt.date(2026, 11, 11), frs.planned_dates(verdict, info))
+
+
+class TestUnresolvedSkipPhrases(unittest.TestCase):
+    """The veto arm fires on announcements it cannot date, and only on those."""
+
+    def test_phrases_with_no_date(self):
+        for text in ('a weekly class, except holidays',
+                     'runs weekly, skipping some weeks for holidays',
+                     'no class during the winter break',
+                     'weekly, excluding the last two weeks of December',
+                     'no sessions on major holidays'):
+            self.assertTrue(frs.unresolved_skip_phrases(text), msg=text)
+
+    def test_week_of_anchor_is_unresolvable_not_a_date(self):
+        """"no class the week of 11/24" names a WEEK — the cancelled session is
+        some other day inside it, so dropping 11/24 would cancel the wrong one."""
+        text = 'Weekly on Thursdays; no class the week of 11/24.'
+        self.assertTrue(frs.unresolved_skip_phrases(text))
+        self.assertEqual(frs.skipped_dates(text, dt.date(2026, 11, 1),
+                                           dt.date(2026, 12, 31)), set())
+
+    def test_datable_phrases_do_not_veto(self):
+        for text in ('Thursdays (skipping 11/26 for Thanksgiving)',
+                     '(NO CLASS on November 11th)',
+                     '(SKIP 11/29 and 12/27)',
+                     'Skip Thanksgiving',
+                     'no session Nov 9',
+                     'no class Dec 24'):
+            self.assertEqual(frs.unresolved_skip_phrases(text), [], msg=text)
+
+    def test_ordinary_prose_does_not_veto(self):
+        for text in ('A dark comedy about a Brooklyn family',
+                     'Tickets 50% off for members',
+                     'Kick off the fall season with us',
+                     'Open to all except children under 12',
+                     "Skip's Jazz Trio plays every Tuesday",
+                     'The show is dark on the last night'):
+            self.assertEqual(frs.unresolved_skip_phrases(text), [], msg=text)
+
+
+class TestHolidayResolution(unittest.TestCase):
+    """A publisher writes the holiday NAME where a date belongs ("Skip
+    Thanksgiving"), so the guard is only useful if it can resolve them."""
+
+    def test_floating_holidays(self):
+        self.assertEqual(frs.holiday_date('Thanksgiving', 2026), dt.date(2026, 11, 26))
+        self.assertEqual(frs.holiday_date('Thanksgiving', 2027), dt.date(2027, 11, 25))
+        self.assertEqual(frs.holiday_date('Labor Day', 2026), dt.date(2026, 9, 7))
+        self.assertEqual(frs.holiday_date('Memorial Day', 2026), dt.date(2026, 5, 25))
+
+    def test_fixed_holidays(self):
+        self.assertEqual(frs.holiday_date('Christmas', 2026), dt.date(2026, 12, 25))
+        self.assertEqual(frs.holiday_date('Christmas Eve', 2026), dt.date(2026, 12, 24))
+        self.assertEqual(frs.holiday_date("New Year's Day", 2027), dt.date(2027, 1, 1))
+        self.assertEqual(frs.holiday_date("New Year's Eve", 2026), dt.date(2026, 12, 31))
+        self.assertEqual(frs.holiday_date('July 4th', 2026), dt.date(2026, 7, 4))
+        self.assertEqual(frs.holiday_date('Independence Day', 2026), dt.date(2026, 7, 4))
+        self.assertEqual(frs.holiday_date('Fourth of July', 2026), dt.date(2026, 7, 4))
+
+    def test_christmas_eve_is_not_read_as_christmas(self):
+        """Longest-first alternation: the 'eve' must win."""
+        m = frs.HOLIDAY_RE.search('no class Christmas Eve')
+        self.assertEqual(m.group(1).lower(), 'christmas eve')
+
+    def test_holiday_outside_the_span_is_not_dropped(self):
+        """A holiday named in prose but falling outside the course is irrelevant."""
+        self.assertEqual(
+            frs.skipped_dates('no class Thanksgiving', dt.date(2026, 1, 5),
+                              dt.date(2026, 3, 30)), set())
+
+    def test_unknown_holiday_is_unresolved_rather_than_guessed(self):
+        self.assertIsNone(frs.holiday_date('Arbor Day', 2026))
+
+
 class TestStatedWeekCount(unittest.TestCase):
     def test_word_and_digit_forms(self):
         self.assertEqual(frs.stated_week_count('a six-week after-school course'), 6)

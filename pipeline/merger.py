@@ -1861,6 +1861,193 @@ def _qualified_clock_bare_forms(start_time):
     return (str(hour), f'{hour}:00')
 
 
+# ── Single-occasion date guard ────────────────────────────────────────────────
+# A named single occasion — an exhibition's opening reception, a run's closing
+# night, a festival's "(Friday Ticket)" — happens on ONE day. The regression
+# this guard exists to stop is that it keeps re-acquiring the PARENT run's
+# schedule at merge time, three ways, all converging on the occurrence union:
+#
+#   (a) the extractor emits the parent's span on the reception's own
+#       crawl_event  (e199544: "…Chef Residency Series Finale with Adam
+#       Purcell" carried 7/29 → 8/2 on all three of its crawl_events);
+#   (b) the PARENT run's crawl_event name-matches the RECEPTION event and its
+#       span is unioned in. `_sibling_listing_veto` cannot stop this on the
+#       sites where it actually happens: on a listing-page-only gallery both
+#       of its corroborating witnesses are unavailable (no permalinks for U,
+#       no clean sibling in the pass for S — e204117 Putnam Arts Council), a
+#       run listing that already carries the reception's time shares a slot so
+#       conjunct T bails first (e234384 GHP), and two of the five regressions
+#       are not even a recognized name shape (e222964 "Camille Henrot Dog
+#       Sculptures", e234384's year-suffixed run title — neither is a
+#       `_subevent_kind_extension` nor an `_is_containment_match`);
+#   (c) the reverse — a sub-event's crawl_event teaching the parent a date.
+#
+# Because all three paths end at the same place, the guard lives at the
+# occurrence boundary rather than in the name matcher: the name matcher decides
+# *identity*, which is a genuinely hard call, while "a reception does not run
+# for 24 days" needs no identity judgment at all.
+#
+# The signal and the span threshold are deliberately the same ones
+# `scripts/fix_single_occasion_events.py` has been auto-applying weekly
+# (its DROP_SPAN and COLLAPSE_WEEKDAY buckets) — this is that sweep moved
+# upstream of the damage, so the rule's precision is already measured on the
+# live corpus. That script is untracked/local, so the patterns are restated
+# here rather than imported; keep the two in sync, and treat THIS as the
+# authority. Its deliberately-manual buckets are excluded on purpose:
+# "Day N"/"Night N" (which day is "the" day is unknowable) and the polysemous
+# premiere/preview (Adobe Premiere, Preview Club, "Premiere: <show>" runs).
+# Bare "talk"/"preview" are not signals either — they name the thing itself as
+# often as a satellite of it; those shapes reach clause C below through
+# `_subevent_kind_extension`, which requires the name pair to *state* the
+# parent/sub relation.
+
+# An occurrence longer than this many days is a multi-day "span" — the parent
+# run's shape, never a reception's. Matches the sweep's SPAN_THRESHOLD.
+SINGLE_OCCASION_SPAN_MAX_DAYS = 2
+
+# EARLIEST-day signals — a clearly single, first-of-run occasion.
+_SINGLE_OCCASION_EARLIEST_RE = re.compile(
+    r'\b(opening reception|opening night|opening party|opening celebration|'
+    r'opening gala|opening day|grand opening|vernissage)\b', re.I)
+# LATEST-day signals.
+_SINGLE_OCCASION_CLOSING_RE = re.compile(
+    r'\b(closing reception|closing night|closing party|closing celebration|'
+    r'closing gala|finale|final night|last night)\b', re.I)
+# A standalone reception with no opening/closing qualifier → treat as earliest.
+_SINGLE_OCCASION_RECEPTION_RE = re.compile(r'\breception\b', re.I)
+# "(Friday Ticket)" / "Saturday ticket" — the weekday is exact, not inferred.
+_SINGLE_OCCASION_WEEKDAY_TICKET_RE = re.compile(
+    r'\b(mon|tues?|wednes|wed|thurs?|thu|fri|satur|sat|sun)(?:day)?\s+ticket\b', re.I)
+_SINGLE_OCCASION_WEEKDAYS = {
+    'mon': 0, 'tue': 1, 'tues': 1, 'wed': 2, 'wednes': 2, 'thu': 3, 'thur': 3,
+    'thurs': 3, 'fri': 4, 'sat': 5, 'satur': 5, 'sun': 6,
+}
+
+
+def _single_occasion_edge(name):
+    """'earliest' | 'latest' | None — which end of a span the name pins."""
+    if not name:
+        return None
+    if _SINGLE_OCCASION_CLOSING_RE.search(name):
+        return 'latest'
+    if (_SINGLE_OCCASION_EARLIEST_RE.search(name)
+            or _SINGLE_OCCASION_RECEPTION_RE.search(name)):
+        return 'earliest'
+    return None
+
+
+def _single_occasion_weekday(name):
+    """The weekday a "(<weekday> Ticket)" name pins, or None."""
+    if not name:
+        return None
+    m = _SINGLE_OCCASION_WEEKDAY_TICKET_RE.search(name)
+    return _SINGLE_OCCASION_WEEKDAYS.get(m.group(1).lower()) if m else None
+
+
+def _is_multi_day_span(start_date, end_date):
+    """True for an occurrence covering more days than a single occasion can."""
+    if not start_date or not end_date:
+        return False
+    return (end_date - start_date).days > SINGLE_OCCASION_SPAN_MAX_DAYS
+
+
+def _is_iso_date(value):
+    try:
+        date_type.fromisoformat(value)
+    except (TypeError, ValueError):
+        return False
+    return True
+
+
+def filter_single_occasion_occurrences(event_name, incoming_name, occurrences,
+                                       existing_days=()):
+    """Drop the parent run's dates from occurrences headed for a single occasion.
+
+    `occurrences` are `(start_date, start_time, end_date, end_time, ...)` tuples
+    as the merge loop builds them; `existing_days` are the ISO start-date strings
+    the receiving event already holds (the merge loop's own `event_dates` index —
+    empty when the event is being created from this crawl_event).
+
+    Returns `(kept, report)`. `report` counts what was removed:
+    `spans_dropped`, `spans_collapsed`, `dates_dropped`.
+
+    Three clauses, in order of how much evidence each needs:
+
+    A  The RECEIVING event's name pins one occasion → every incoming multi-day
+       span is the parent's run, not this occasion, and is dropped. If that
+       would leave the event with no date at all, the span collapses to its
+       signalled edge day instead (earliest for an opening, latest for a
+       closing) — the sweep's span-only behaviour, and the invariant that a
+       dated crawl_event never yields a date-less event.
+    B  The receiving event's name pins one WEEKDAY ("(Friday Ticket)") → the
+       other days of the festival are dropped. Skipped entirely unless some day
+       on that weekday survives, so the guard never has to guess a day.
+    C  The two names literally state a parent/sub relation
+       (`_subevent_kind_extension`) and exactly one side carries a
+       single-occasion signal → neither may teach the other a NEW date. Only
+       dates the event does not already hold are refused; nothing stored is
+       removed, and a pair that is really one listing spelled two ways shares
+       its dates anyway.
+
+    Genuine multi-night shapes are untouched by construction: "Night One" /
+    "Day 2" siblings carry no signal, and an overnight pair (10/28 8pm +
+    10/29 12am) is two point occurrences, not a span.
+    """
+    occurrences = list(occurrences)
+    report = {'spans_dropped': 0, 'spans_collapsed': 0, 'dates_dropped': 0}
+    if not occurrences:
+        return occurrences, report
+
+    existing_days = set(existing_days or ())
+    edge = _single_occasion_edge(event_name)
+
+    # ── A — the parent run's span never belongs to a named single occasion.
+    if edge:
+        spans = [o for o in occurrences if _is_multi_day_span(o[0], o[2])]
+        if spans:
+            kept = [o for o in occurrences if not _is_multi_day_span(o[0], o[2])]
+            report['spans_dropped'] = len(spans)
+            if not kept and not existing_days:
+                # Span-only: collapse to the signalled edge rather than leave
+                # the event date-less (a date-less event is invisible on the
+                # map yet still absorbs sources and counts against archival).
+                # Times are deliberately left empty: they are the RUN's hours,
+                # not the occasion's, and the sweep synthesizes the same
+                # time-less point. A later detail crawl of the occasion's own
+                # page supplies the real time through the specificity ladder.
+                if edge == 'earliest':
+                    day = min(o[0] for o in spans)
+                else:
+                    day = max((o[2] or o[0]) for o in spans)
+                kept = [(day, '', None, '') + tuple(spans[0][4:])]
+                report['spans_collapsed'] = 1
+            occurrences = kept
+
+    # ── B — a "(<weekday> Ticket)" name is exact; the festival's other days are not it.
+    weekday = _single_occasion_weekday(event_name)
+    if weekday is not None and occurrences:
+        on_day = [o for o in occurrences if o[0].weekday() == weekday]
+        existing_on_day = any(
+            date_type.fromisoformat(d).weekday() == weekday
+            for d in existing_days if _is_iso_date(d)
+        )
+        if on_day or existing_on_day:
+            report['dates_dropped'] += len(occurrences) - len(on_day)
+            occurrences = on_day
+
+    # ── C — a stated parent/sub pair may not teach the other side a new date.
+    if (occurrences and existing_days and incoming_name and event_name
+            and normalize_name_for_dedup(incoming_name)
+            != normalize_name_for_dedup(event_name)
+            and (edge is None) != (_single_occasion_edge(incoming_name) is None)
+            and _subevent_kind_extension(event_name, incoming_name)):
+        kept = [o for o in occurrences if str(o[0]) in existing_days]
+        report['dates_dropped'] += len(occurrences) - len(kept)
+        occurrences = kept
+
+    return occurrences, report
+
+
 def _merge_occurrences_into_event(cursor, event_id, new_occurrences):
     """Insert new occurrences into event_occurrences, deduping by (sd, st, ed).
 
@@ -2541,9 +2728,14 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
     dedup_indexes = (existing_events_by_location_id, existing_events_by_coords,
                      existing_events_by_location, existing_events_by_website)
     event_ids_with_future = set()
+    # id -> name, so the single-occasion guard can read the RECEIVING event's
+    # name without a per-crawl_event round trip (kept current for events this
+    # merge creates, too).
+    event_names_by_id = {}
     for row in cursor.fetchall():
         event_id, name, location_id, lat, lng, location_name, website_id = row
         event_ids_with_future.add(event_id)
+        event_names_by_id[event_id] = name
         _index_existing_event(
             dedup_indexes, event_id, name, location_id, lat, lng, location_name, website_id)
 
@@ -2658,6 +2850,30 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
     new_events_count = 0
     merged_count = 0
     source_url_lookup_cache = {}  # website_id -> set of trimmed listing URLs
+    # Tally of what the single-occasion guard removed, for the run summary.
+    single_occasion_report = {'spans_dropped': 0, 'spans_collapsed': 0,
+                              'dates_dropped': 0, 'events': set()}
+
+    def _receiving_event_name(event_id):
+        """Name of the event a crawl_event is merging into (cached index first)."""
+        if event_id in event_names_by_id:
+            return event_names_by_id[event_id]
+        cursor.execute("SELECT name FROM events WHERE id = %s", (event_id,))
+        row = cursor.fetchone()
+        event_names_by_id[event_id] = row[0] if row else ''
+        return event_names_by_id[event_id]
+
+    def _apply_single_occasion_guard(event_name, incoming_name, occurrences,
+                                     existing_days, event_id=None):
+        """Run the guard and fold its counts into the run summary."""
+        kept, report = filter_single_occasion_occurrences(
+            event_name, incoming_name, occurrences, existing_days)
+        if any(report.values()):
+            for key, value in report.items():
+                single_occasion_report[key] += value
+            if event_id is not None:
+                single_occasion_report['events'].add(event_id)
+        return kept
 
     for ce_row in new_crawl_events:
         (ce_id, name, short_name, description, emoji, location_name, sublocation,
@@ -2958,8 +3174,17 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
             # populated with times — without this ladder, the merger ended up storing both
             # rows and the popup showed e.g. "2026-05-22 11am-4pm" and "2026-05-22" as
             # two separate occurrences.
+            #
+            # Single-occasion guard: a named reception/opening/closing/finale
+            # event must not re-acquire the parent run's span or dates on every
+            # re-crawl (see filter_single_occasion_occurrences).
+            merge_occurrences = _apply_single_occasion_guard(
+                _receiving_event_name(matched_event_id), name, valid_occurrences,
+                event_dates.get(matched_event_id, set()),
+                event_id=matched_event_id,
+            )
             _merge_occurrences_into_event(
-                cursor, matched_event_id, valid_occurrences,
+                cursor, matched_event_id, merge_occurrences,
             )
 
             # Add URL if not already present.
@@ -3183,9 +3408,17 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                 })
 
             # Add occurrences (times canonicalized by the write helper).
+            # The single-occasion guard runs here too: shape (a) of the
+            # regression is the extractor emitting the parent run's span on the
+            # occasion's OWN crawl_event, so the bad span would otherwise be
+            # baked in at creation and re-confirmed by every later crawl.
+            created_occurrences = _apply_single_occasion_guard(
+                name, name, valid_occurrences, (), event_id=new_event_id,
+            )
             db.insert_event_occurrences(
                 cursor, new_event_id,
-                [(occ[0], occ[1], occ[2], occ[3], i) for i, occ in enumerate(valid_occurrences)],
+                [(occ[0], occ[1], occ[2], occ[3], i)
+                 for i, occ in enumerate(created_occurrences)],
                 ignore=True)
 
             # Add URL
@@ -3204,10 +3437,17 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                 (new_event_id, ce_id)
             )
 
-            # Add to lookup indexes for future dedup within this batch
-            event_dates[new_event_id] = crawl_event_dates
-            event_date_ranges[new_event_id] = crawl_event_ranges
-            event_slots[new_event_id] = crawl_event_slots
+            # Add to lookup indexes for future dedup within this batch. These
+            # describe what was STORED, so they follow `created_occurrences`
+            # rather than the raw crawl set — otherwise a span the guard just
+            # dropped would still steer overlap matching for the rest of the batch.
+            event_dates[new_event_id] = {
+                str(occ[0]) for occ in created_occurrences if occ[0]}
+            event_date_ranges[new_event_id] = [
+                (occ[0], occ[2]) for occ in created_occurrences if occ[0] and occ[2]]
+            event_slots[new_event_id] = {
+                (str(occ[0]), occ[1] or '') for occ in created_occurrences if occ[0]}
+            event_names_by_id[new_event_id] = name
             _index_existing_event(
                 dedup_indexes, new_event_id, name, location_id, lat, lng, location_name, website_id)
 
@@ -3217,7 +3457,7 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                 # event arrive back to back, so without this the pair that the
                 # URL tier exists to fuse would still create two rows.
                 new_url_key = normalize_url_for_identity(url)
-                if new_url_key and crawl_event_slots:
+                if new_url_key and event_slots[new_event_id]:
                     index_key = (website_id, new_url_key)
                     names_at_key = url_key_names.setdefault(index_key, set())
                     names_at_key.add(norm_name)
@@ -3226,13 +3466,19 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                         'id': new_event_id,
                         'name': name,
                         'location_id': location_id,
-                        'slots': crawl_event_slots,
+                        'slots': event_slots[new_event_id],
                     })
 
             new_events_count += 1
 
     _retry_on_deadlock(connection.commit)
     print(f"  Added {new_events_count} new events, merged {merged_count} duplicates")
+    if single_occasion_report['events']:
+        print(f"  Single-occasion guard: dropped "
+              f"{single_occasion_report['spans_dropped']} parent span(s), "
+              f"{single_occasion_report['dates_dropped']} off-occasion date(s), "
+              f"collapsed {single_occasion_report['spans_collapsed']} span-only "
+              f"occasion(s) across {len(single_occasion_report['events'])} event(s)")
 
     # ── Post-merge dedup (safety net) ──
     # Post-merge dedup: catch any exact-name duplicates the matching logic missed.

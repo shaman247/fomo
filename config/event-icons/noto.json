@@ -9513,6 +9513,16 @@
       "sha256": "600ed231e020f50d14274a5a596898ab37364b727bf35ef1683ba2d6b728d531"
     },
     {
+      "id": "noto-1f61b",
+      "emoji": "😛",
+      "label": "FACE WITH STUCK-OUT TONGUE",
+      "source": "noto/emoji_u1f61b.svg",
+      "provider": "noto",
+      "upstream_path": "svg/emoji_u1f61b.svg",
+      "upstream_revision": "8998f5dd683424a73e2314a8c1f1e359c19e8742",
+      "sha256": "3732b3f7aa808c75b3209f156f49493862e9abf2c497691ea54203862a78c9bc"
+    },
+    {
       "id": "noto-1f61c",
       "emoji": "😜",
       "label": "FACE WITH STUCK-OUT TONGUE AND WINKING EYE",
@@ -13551,6 +13561,16 @@
       "upstream_path": "svg/emoji_u1f9d1_200d_1f680.svg",
       "upstream_revision": "8998f5dd683424a73e2314a8c1f1e359c19e8742",
       "sha256": "e0ff0117a7bff0e3763178d312a2aff7a27cbb8668d9ddb1f557ae4a774d58b3"
+    },
+    {
+      "id": "noto-1f9d1-200d-1f692",
+      "emoji": "🧑‍🚒",
+      "label": "ADULT FIRE ENGINE",
+      "source": "noto/emoji_u1f9d1_200d_1f692.svg",
+      "provider": "noto",
+      "upstream_path": "svg/emoji_u1f9d1_200d_1f692.svg",
+      "upstream_revision": "8998f5dd683424a73e2314a8c1f1e359c19e8742",
+      "sha256": "2a2c5f4cdb65b62ecb563a8a4c9d4c3f3ec0d37e08401debdc407e89687a7e1b"
     },
     {
       "id": "noto-1f9d1-200d-1f91d-200d-1f9d1",

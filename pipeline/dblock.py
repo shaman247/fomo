@@ -22,6 +22,8 @@ releases if the process dies or the connection drops, so a crashed session can't
 wedge everyone else. Use ONE long-lived connection for the locked section.
 
 `acquired_by()` reports which session/PID currently holds it, for diagnostics.
+Holder bookkeeping uses a separate connection and never commits or rolls back
+the caller's transaction. Callers must commit or roll back their work explicitly.
 """
 
 import contextlib
@@ -43,6 +45,8 @@ def write_lock(conn, timeout=DEFAULT_TIMEOUT, name=LOCK_NAME, label=None):
 
     Blocks up to `timeout` seconds. Raises TimeoutError if another session holds
     it longer than that (better to fail loudly than corrupt data by proceeding).
+    This context manages the lock, not the transaction: pending work remains
+    pending on both normal and exceptional exit until the caller decides its fate.
     """
     cur = conn.cursor()
     who = label or _holder_tag()
@@ -89,29 +93,49 @@ def is_locked(conn, name=LOCK_NAME):
 # report a useful name. The GET_LOCK itself is the source of truth for mutual
 # exclusion; this is purely for diagnostics.
 def _ensure_holder_table(conn):
-    cur = conn.cursor()
-    cur.execute(
-        "CREATE TABLE IF NOT EXISTS db_write_lock_holder ("
-        "  lock_name VARCHAR(64) PRIMARY KEY,"
-        "  holder VARCHAR(128),"
-        "  taken_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
-        ")"
-    )
-    conn.commit()
+    """Bootstrap diagnostics on a dedicated connection; DDL implicitly commits."""
+    with contextlib.closing(conn.cursor()) as cur:
+        cur.execute(
+            "CREATE TABLE IF NOT EXISTS db_write_lock_holder ("
+            "  lock_name VARCHAR(64) PRIMARY KEY,"
+            "  holder VARCHAR(128),"
+            "  taken_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
+            ")"
+        )
 
 
 def _set_holder(conn, name, who):
-    _ensure_holder_table(conn)
-    cur = conn.cursor()
-    if who is None:
-        cur.execute("DELETE FROM db_write_lock_holder WHERE lock_name=%s", (name,))
-    else:
-        cur.execute(
-            "INSERT INTO db_write_lock_holder (lock_name, holder) VALUES (%s, %s) "
-            "ON DUPLICATE KEY UPDATE holder=VALUES(holder)",
-            (name, who),
-        )
-    conn.commit()
+    """Publish diagnostics independently of the caller's mutation transaction.
+
+    Keep the connection argument for the manual acquisition path in main.py,
+    but never use it for metadata DML, DDL, or transaction control.
+    """
+    from db import create_connection
+
+    metadata = create_connection()
+    if metadata is None:
+        raise ConnectionError("Could not connect for lock holder bookkeeping")
+    with contextlib.closing(metadata):
+        with contextlib.closing(metadata.cursor()) as cur:
+            if who is None:
+                sql = "DELETE FROM db_write_lock_holder WHERE lock_name=%s"
+                params = (name,)
+            else:
+                sql = (
+                    "INSERT INTO db_write_lock_holder (lock_name, holder) VALUES (%s, %s) "
+                    "ON DUPLICATE KEY UPDATE holder=VALUES(holder)"
+                )
+                params = (name, who)
+            try:
+                cur.execute(sql, params)
+            except Exception as exc:
+                # Avoid taking DDL locks on every acquisition/release. The
+                # schema normally exists; only bootstrap a missing table.
+                if getattr(exc, "errno", None) != 1146:  # ER_NO_SUCH_TABLE
+                    raise
+                _ensure_holder_table(metadata)
+                cur.execute(sql, params)
+        metadata.commit()
 
 
 def acquired_by(conn, name=LOCK_NAME):

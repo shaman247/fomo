@@ -110,6 +110,122 @@ def find_first_emoji(text: str) -> str:
     return match.group(0) if match else ""
 
 
+# ---------------------------------------------------------------------------
+# Ingest normalization for the `emoji` field the extractor returns.
+#
+# Two failure classes recur, both found by the 2026-09-15 icon-artwork review
+# (every example below is a row it had to dismiss by hand from
+# `icon_review_queue`):
+#
+# (a) SKIN-TONE VARIANTS — `🚶🏿`, `🧑🏽‍🎨`, `🧘🏻‍♀️`, `🖐🏽`, `🫱🏾‍🫲🏾`, … The model
+#     picks a Fitzpatrick modifier essentially at random. `config/event-icons/
+#     noto.json` carries 1,712 aliases of which only **178** are toned, so an
+#     arbitrary tone misses the catalog and the frontend renders the fallback
+#     calendar icon — while the neutral base is present for all of them
+#     (verified: `🚶`, `🧑‍🎨`, `🧘‍♀️` all resolve; their toned forms do not).
+#
+#     The neutral base is also the form the house palette *wants*, which is the
+#     load-bearing half of this decision and comes from the code, not the doc:
+#     `scripts/standardize_emoji.propose()` replaces **only the neutral-yellow
+#     default** with the house tone (`HOUSE_TONES` / `HOUSE_TONE_OVERRIDES`) and
+#     deliberately leaves an already-toned value alone unless `--retone` is
+#     passed. So an extraction-supplied tone is a permanent fixed point that the
+#     house tone can never reach, whereas a neutral base is exactly the input
+#     that pass is built to convert (💃 → 💃🏻, ✍️ → ✍🏼, 🧑‍🍳 → 🧑🏼‍🍳). Stripping at
+#     ingest therefore *enables* the house policy rather than fighting it:
+#     `pipeline/icon_artwork.md`'s "skin tones are preserved" is a statement
+#     about the RENDERER (it never folds a tone away), not a licence for the
+#     extractor to invent one.
+#
+#     Deliberate tones (✊🏿 on a Juneteenth event) remain possible — they are a
+#     curator decision made on `events`/`locations` by the standardize pass, and
+#     this function only touches values arriving from extraction.
+#
+#     Tone-stripping a ZWJ sequence must leave it valid: `🏾‍♀️` (a lone modifier
+#     joined to a gender sign) degenerates to a bare ZWJ + sign and is rejected,
+#     and the toned handshake `🫱🏾‍🫲🏾` folds to `🫱‍🫲`, which is not an emoji at
+#     all — it is mapped to `🤝`, the neutral form whose house tone
+#     (`HOUSE_TONE_OVERRIDES['🤝'] = 🫱🏾‍🫲🏼`) is the site's two-tone handshake.
+#
+# (b) THE 5-HEX-DIGIT ARTIFACT — a codepoint above U+FFFF whose 5-digit hex was
+#     decoded as 4 digits, leaving the 5th as a literal character: `ὁE`
+#     (U+1F41 + "E" → U+1F41E 🐞), `Ὅ6` → 📖, `ᾘ0` → 🦀, `ἸF` → 🎏, `ᾑD` → 🐝,
+#     plus the un-decoded literal `὏9` → 📹. Fourteen such values were
+#     dismissed on 2026-09-15. The lead character always lands in the Greek
+#     Extended block (U+1D00–U+1FFF, i.e. the 4-digit prefix of an emoji
+#     codepoint), which is what makes the repair unambiguous: re-decode and keep
+#     the result ONLY if it is a pictographic emoji.
+#
+# Anything that is still not a valid emoji afterwards is rejected and the caller
+# falls through to its missing-emoji path (the venue's emoji, or nothing). That
+# reject is itself a fix: `process_crawl_result` only *overwrote* the field when
+# `find_first_emoji` found something, so a row whose emoji was junk AND whose
+# venue had none kept the junk — which is how `clarinet`, `Rex`, `fb7`, `袋` and
+# the bare modifier `🏾` (316 crawl_events rows) reached the database.
+#
+# Deliberately NOT gated on catalog membership: a valid-but-unknown emoji must
+# still reach `icon_review_queue` so artwork can be approved for it (that is how
+# 😛 and 🧑‍🚒 were resolved). Only malformed values are dropped.
+_SKIN_TONE_RE = re.compile('[\U0001F3FB-\U0001F3FF]')
+# A whole-string `\uXXXX` / `\uXXXXX` / `\u{XXXXX}` escape that was never decoded.
+_EMOJI_LITERAL_ESCAPE_RE = re.compile(
+    r'^\s*\\[uU]\+?\{?([0-9A-Fa-f]{4,8})\}?\s*$')   # \uXXXX, \u{XXXXX}, \U000XXXXX
+# Greek-Extended lead char + one stray hex digit = a 5-digit codepoint read as 4.
+_FIVE_HEX_ARTIFACT_RE = re.compile(r'[ᴀ-῿][0-9A-Fa-f]')
+# Tone-stripped two-hand handshake; not an emoji on its own, so fold to `🤝`.
+_TONELESS_HANDSHAKE_RE = re.compile('\U0001FAF1‍\U0001FAF2|\U0001FAF2‍\U0001FAF1')
+_PICTOGRAPHIC_RE = regex.compile(r'^\p{Extended_Pictographic}$')
+
+
+def _repair_five_hex_artifact(text: str) -> str:
+    """Re-decode `<Greek-Extended char><hex digit>` pairs as one codepoint."""
+    def repair(match):
+        pair = match.group(0)
+        try:
+            candidate = chr(int(f'{ord(pair[0]):X}{pair[1]}', 16))
+        except (ValueError, OverflowError):
+            return pair
+        return candidate if _PICTOGRAPHIC_RE.match(candidate) else pair
+    return _FIVE_HEX_ARTIFACT_RE.sub(repair, text)
+
+
+def normalize_extracted_emoji(value: str) -> str:
+    """Canonicalize an extractor-supplied emoji, or return '' if unusable.
+
+    Repairs the 5-hex-digit decode artifact, strips skin-tone modifiers back to
+    the base emoji (keeping ZWJ sequences valid), and rejects anything that is
+    not a renderable emoji or is in `BLOCKED_EMOJI`. See the comment block above
+    for why the neutral base — not the extractor's tone — is the canonical
+    ingest form.
+    """
+    if not value:
+        return ''
+    text = value
+    escape = _EMOJI_LITERAL_ESCAPE_RE.match(text)
+    if escape:
+        try:
+            candidate = chr(int(escape.group(1), 16))
+        except (ValueError, OverflowError):
+            candidate = ''
+        if candidate and _PICTOGRAPHIC_RE.match(candidate):
+            text = candidate
+    text = _repair_five_hex_artifact(text)
+    text = _SKIN_TONE_RE.sub('', text)
+    # Tone stripping can leave a ZWJ dangling or doubled (`🏾‍♀️`, `🫱🏾‍🫲🏾`).
+    text = _TONELESS_HANDSHAKE_RE.sub('\U0001F91D', text)
+    text = re.sub('‍{2,}', '‍', text)
+    if text.startswith('‍'):
+        # The sequence's BASE was the lone skin-tone modifier we just removed
+        # (`🏾‍♀️`), so all that survives is a gender/role tail. Nothing says what
+        # the extractor meant; reject rather than ship a bare `♀️`.
+        return ''
+    text = text.strip('‍')
+    first = find_first_emoji(text)
+    if not first or first in BLOCKED_EMOJI:
+        return ''
+    return first
+
+
 def strip_leading_emoji(text: str) -> str:
     """Strips leading emoji characters (and surrounding whitespace) from text."""
     if not text:
@@ -1868,6 +1984,75 @@ _RETAIL_PROMO_DESC_RE = re.compile(
     r'\bfree\s+\w+.{0,25}\b(?:with|when\s+you)\b|%\s*off|\$\d+\s+(?:off|reward)|'
     r'purchase\s+\w+.{0,20}\bget\b)', re.IGNORECASE)
 
+# Retail DISCOUNT WINDOWS: a shop's markdown period published as a dated row
+# ("Storewide Sale!", "30% off Used Books", "Member Shopping Days", "Winter
+# Member Shopping Week", "Valentino Sample Sale - Up to 80% Off"). Nothing is
+# programmed; the store's normal merchandise is cheaper for a while. Raised by
+# the 2026-09-15 pass, which found ~26 of these handled inconsistently — the
+# same MoMA "Member Shopping Days" row typed `Market` one month and `Party`
+# another, two rows left UNKNOWN, nine suppressed by hand and two still live.
+#
+# **A `\bsales?\b` gate was MEASURED AND REFUTED.** Over the 37,129 active
+# events a broad name regex (percent-off | sale | discount | shopping day/week |
+# markdown | clearance | black friday) returns 70 hits and the great majority
+# are REAL: library Friends book sales (14 of them), plant sales, bake sales,
+# yard/stoop/sidewalk sales, juried arts-&-crafts sales, holiday pottery
+# shows-and-sales, "Discount Philosophy (Live Comedy)", "Yard Sale Comedy Open
+# Mic", and two workshops about building a SALES FUNNEL. A rule keyed on the
+# word "sale" is unshippable at any description gate, so it is not shipped.
+#
+# What IS shippable splits in two, and both halves veto on
+# `_ATTENDABLE_OCCASION_NAME_RE` over the NAME plus a small programming veto
+# over both fields:
+#
+#   - SELF-DESCRIBING windows, name-only: "storewide sale/discount/savings",
+#     "member(s) shopping day(s)/week(end)/event", "discount day(s)/week(end)".
+#     The title IS the offer; no other reading exists. Name-only is required,
+#     not lazy — the live MoMA row's body is literally "No description
+#     available.", so a description gate would spare the one row most in need.
+#   - OFFER titles needing corroboration: an explicit "N% off" / "up to N%
+#     off" / "N percent off", or "sample sale", plus a body that reads as a
+#     markdown (a discount/percentage, half-price, clearance, overstock, "use
+#     code", "priced at $5", "$5 & up", "a fraction of the cost").
+#
+# The name veto is what keeps the near misses alive, and it earns its keep on
+# real rows: "Your Social Summer Starts Here 20% Off for NEW Bowlers!" (a 6-week
+# bowling league — `social`), "50% OFF OMNY (Metro) Cards with Fair Fares" (a
+# benefits ENROLLMENT event — `fair`), "Sample Sale Party with DJ". The
+# programming veto covers the rest: a sample sale with a `pop-up`, a `giveaway`,
+# `drink specials` or a `charm bar` is an occasion built around the markdown and
+# survives (e70851 "Spring Sample Sale" with food pop-ups, e224755 "Late Summer
+# Sample Sale" with drink specials and a giveaway, e158946 "Pop-Up Sample Sale").
+#
+# Measured over all 223,966 events: **27 hits, 27 retail discount windows, 0
+# false positives, 0 previously reviewed-and-KEPT rows** (2 live, 12
+# hand-suppressed, 13 archived-only), and none of them was already caught by
+# another junk rule. 27 matching crawl_events over the last 21 days. Accepted
+# fail-safe misses, all in the safe direction: a sample sale whose body names no
+# discount at all (e16543 Moose Knuckles, e142306, e216402 Tibi) and "Buy One
+# Tour Ticket, Get One 50% Off", vetoed by its own word `tour`. A bare
+# "<season> Sale" / "Black Friday Sale" deliberately does NOT match; that is the
+# exact shape the refutation above is about.
+_SALE_WINDOW_SELF_NAME_RE = re.compile(
+    r'\bstore[\s-]?wide\s+(?:sale|discount|savings)\b'
+    r'|\bmember(?:s|s\')?\s+shopping\s+(?:day|days|week|weekend|event)\b'
+    r'|\bdiscount\s+(?:day|days|week|weekend)\b', re.IGNORECASE)
+_SALE_WINDOW_OFFER_NAME_RE = re.compile(
+    r'\b(?:up\s+to\s+)?\d{1,3}\s*(?:%|percent)\s*off\b'
+    r'|\bsample\s+sale\b', re.IGNORECASE)
+_SALE_WINDOW_OFFER_DESC_RE = re.compile(
+    r'\b\d{1,3}\s*(?:%|percent)\s*(?:off|discount)\b|\bdiscount(?:s|ed)?\b'
+    r'|\bhalf[\s-]?(?:off|price(?:d)?)\b|\bmarked\s+down\b|\bclearance\b'
+    r'|\bsavings\b|\buse\s+code\b|\bpromo\s+code\b|\bwith\s+code\b'
+    r'|\bsale\s+price|\bfraction\s+of\s+the\s+cost\b|\boverstock\b'
+    r'|\bstarting\s+at\s+\$\d|\bpriced\s+at\s+\$\d|\$\d+\s*(?:&|and)\s*up\b',
+    re.IGNORECASE)
+# Programming built around the markdown means there IS something to attend.
+_SALE_WINDOW_VETO_RE = re.compile(
+    r'\bpop[\s-]?ups?\b|\bgiveaway\b|\btasting\b|\bcharm\s+bar\b'
+    r'|\bdrink\s+specials?\b|\blive\s+music\b|\bdj\b|\bkaraoke\b|\btrivia\b'
+    r'|\bfood\s+truck', re.IGNORECASE)
+
 # Venue reopening announcements: a "<venue> Reopening" status notice ("Museum
 # Reopening" — "reopens in Autumn 2026 following summer restoration") rather than
 # an attendable event. Two gates plus a veto: name ENDS in "reopening", the
@@ -2148,21 +2333,76 @@ _ACADEMIC_ATTENDABLE_VETO_RE = re.compile(
 # days: the widening fires on 14 NET-NEW events (1 live, e210845 "August Take &
 # Make - Paint by Number", a correct kill) and 4 net-new crawl_events. Every one
 # is a library kit pickup. ZERO false positives, ZERO reviewed-and-kept rows.
+#
+# 2026-09-15 WIDENING (raised by the same day's classification pass, which had
+# to suppress three by hand: e255947 "Take & Make: Snail Paper Holder", e256046
+# "Grab and Create - Take Home Craft: Bottle Top Castanets", e256047 "Kids Mini
+# Animal Building Blocks Grab & Go"). All three carried an unmistakable NAME
+# idiom and were lost to the AND between the two corroboration gates:
+#
+#   - e256046 cleared the signal gate on its own name ("… Take Home Craft: …")
+#     but its two-line body ("Grab & Create bottle top castanets. For children
+#     of all ages.") carries no pickup word, so the DESC gate failed.
+#   - e256047 cleared the DESC gate ("Projects are available for pick up
+#     starting at 10AM") but said "Projects"/"building blocks" rather than
+#     kit/craft, so the SIGNAL gate failed.
+#   - e255947 failed BOTH as written, yet its body says "Available first come,
+#     first serve" — a phrase already on `_TAKE_HOME_KIT_PICKUP_RE`, the
+#     project's own list of unambiguous distribution language, which the DESC
+#     gate simply did not consult.
+#
+# Three changes, all narrow:
+#   1. The two corroboration gates become an OR, not an AND. A body is still
+#      REQUIRED (`desc_mode='present'`): a bare idiomatic name with no text at
+#      all stays out, as it always has.
+#   2. The SIGNAL list gains `projects?|supplies|materials` — the same object
+#      under the libraries' other house words.
+#   3. The DESC gate accepts `_TAKE_HOME_KIT_PICKUP_RE` as well, so "first come,
+#      first serve" / "while supplies last" corroborate here too.
+#
+# With the gates OR'd, the loose `take[\s-]?home` idiom starts leaking: it also
+# matches a VERB PHRASE inside a longer real title. So it is now QUALIFIED —
+# "take home" must sit next to a kit/craft noun, which is how the product idiom
+# is always spelled ("Take Home Craft", "STEAM Take Home Kit", "… supplies to
+# take home"). The grab-and-go / take-&-make families need no qualifier; they
+# are never anything but this. That qualification is what spares e222900 /
+# e251249 "Build a happy little robot that draws (and take home)" (a real
+# paint-and-sip-style build class, LIVE) and e182315 "Gratis Grove Presents - a
+# Free Community Swap Where You Can Donate, Browse, and Take Home Clothing …" —
+# both of which the unqualified idiom killed. One veto is added for the same
+# reason: `drop in FOR` is an attendance invitation ("Drop in for a fun craft
+# with us here at Jamaica Bay", e195171), whereas "drop in AND pick up"
+# (e155311) is pickup language and must stay filtered.
+#
+# Measured over all 223,966 events: 141 → 211 fires, **70 net-new, 0 lost**.
+# Every net-new row is a library kit/giveaway pickup (10 live, 7 already
+# hand-suppressed, 53 archived); the single judgement call is e187773 "STEAM
+# Take Home Kit: A Message To The Future", whose NYPL boilerplate body describes
+# the topic rather than the pickup. Over 134,849 crawl_events from the last 21
+# days: 39 net-new rows / 19 distinct names, all the same shape. CONTROL: 40
+# live in-person craft classes (name LIKE '%craft%', mapped venue, real
+# start_time, real body — "Crafts for Grown-Ups: Pumpkin Signs", "Teen Drop-In
+# Craft: Safety Pin Bracelets", "Crafting with Maria", "Crafternoon", …) →
+# **0 fires**, same as before the change.
+_TAKE_HOME_KIT_NOUN = (
+    r'(?:kits?|crafts?|craft[\s-]?bags?|activit(?:y|ies)|projects?|art|bags?|'
+    r'packets?|supplies|materials|makes?|creations?|stem|steam|diy)')
 _TAKE_HOME_KIT_NAME_RE = re.compile(
     r'\b(?:'
     r'grab\s*[-–\s]*(?:&(?:amp;)?|and|\'?n\'?|’n’)\s*[-–\s]*go'
     r'|take\s*[-–\s]*(?:&(?:amp;)?|and|\'?n\'?|’n’)\s*[-–\s]*'
     r'(?:make|create|craft|bake|go)'
-    r'|take[\s-]?home'
+    r'|take[\s-]?home\s+' + _TAKE_HOME_KIT_NOUN +
+    r'|' + _TAKE_HOME_KIT_NOUN + r'\s+to\s+take[\s-]?home'
     r')\b', re.IGNORECASE)
 _TAKE_HOME_KIT_SIGNAL_RE = re.compile(
-    r'\b(?:kits?|crafts?)\b', re.IGNORECASE)
+    r'\b(?:kits?|crafts?|projects?|supplies|materials)\b', re.IGNORECASE)
 _TAKE_HOME_KIT_DESC_RE = re.compile(
     r'\b(?:kits?|pick\s*-?\s*up|supplies\s+last|take\s+home)\b', re.IGNORECASE)
 # HARD veto: words that assert an actual gathering. Never overridden.
 _TAKE_HOME_KIT_VETO_RE = re.compile(
     r'\b(?:workshop|class|session|together|in[\s-]?person|'
-    r'demonstration|instructor|learn\s+how)\b', re.IGNORECASE)
+    r'demonstration|instructor|learn\s+how|drop\s*-?\s*in\s+for)\b', re.IGNORECASE)
 # SOFT veto: boilerplate invitation language that says nothing about attending.
 _TAKE_HOME_KIT_SOFT_VETO_RE = re.compile(r'\bjoin\s+us\b', re.IGNORECASE)
 # Distribution phrases that are unambiguous enough to override the SOFT veto.
@@ -2970,20 +3210,24 @@ def _is_month_calendar_placeholder(name, description=None):
 def _is_take_home_kit(name, description=None):
     """True for a take-home / grab-and-go kit distribution, not a gathering.
 
-    Four gates: the pickup idiom in the NAME, a kit/craft word in either field,
-    pickup corroboration in the DESCRIPTION, and no veto. The veto is two-tier —
-    see the comment block above `_TAKE_HOME_KIT_NAME_RE` for why `join us` alone
-    is not allowed to save a row that also says "while supplies last".
+    Three gates: the pickup idiom in the NAME (qualified for the loose
+    `take home` form), a body that EITHER names the object (kit/craft/project/
+    supplies/materials, in the name or the body) OR corroborates the pickup, and
+    no veto. The veto is two-tier — see the comment block above
+    `_TAKE_HOME_KIT_NAME_RE` for why `join us` alone is not allowed to save a row
+    that also says "while supplies last", and for the 2026-09-15 measurement
+    behind the OR.
     """
     description = description or ''
     if not name or not description:
         return False
     if not _TAKE_HOME_KIT_NAME_RE.search(name):
         return False
-    if not (_TAKE_HOME_KIT_SIGNAL_RE.search(name)
-            or _TAKE_HOME_KIT_SIGNAL_RE.search(description)):
-        return False
-    if not _TAKE_HOME_KIT_DESC_RE.search(description):
+    signal = (_TAKE_HOME_KIT_SIGNAL_RE.search(name)
+              or _TAKE_HOME_KIT_SIGNAL_RE.search(description))
+    pickup = (_TAKE_HOME_KIT_DESC_RE.search(description)
+              or _TAKE_HOME_KIT_PICKUP_RE.search(description))
+    if not (signal or pickup):
         return False
     both = name + ' ' + description
     if _TAKE_HOME_KIT_VETO_RE.search(both):
@@ -3005,6 +3249,26 @@ def _is_ticket_product_package(name, description=None):
     if not _TICKET_PRODUCT_DESC_RE.search(description):
         return False
     return not _TICKET_PRODUCT_VETO_RE.search(name + ' ' + description)
+
+
+def _is_retail_sale_window(name, description=None):
+    """True for a shop's discount/markdown window published as a dated event.
+
+    See the comment block above `_SALE_WINDOW_SELF_NAME_RE`, including why a
+    bare `sale` gate was measured and refuted.
+    """
+    if not name:
+        return False
+    description = description or ''
+    if _ATTENDABLE_OCCASION_NAME_RE.search(name):
+        return False
+    if _SALE_WINDOW_VETO_RE.search(name + ' ' + description):
+        return False
+    if _SALE_WINDOW_SELF_NAME_RE.search(name):
+        return True
+    return bool(_SALE_WINDOW_OFFER_NAME_RE.search(name)
+                and description
+                and _SALE_WINDOW_OFFER_DESC_RE.search(description))
 
 
 def _is_food_holiday_promo(name, description=None):
@@ -3156,6 +3420,12 @@ _JUNK_RULES = (
     # veto — a bare marker with no body stays editorial, per the 2026-07-27
     # refutation. `_is_food_holiday_promo` requires a description of its own.
     _JunkRule('food_holiday_promo', pred=_pred(_is_food_holiday_promo)),
+    # A shop's discount/markdown window published as a dated row ("Storewide
+    # Sale!", "30% off Used Books", "Member Shopping Days", "Valentino Sample
+    # Sale - Up to 80% Off"). Sibling of the two promo arms around it; the
+    # self-describing half is name-only on purpose (the live MoMA row has no
+    # body at all). See `_SALE_WINDOW_SELF_NAME_RE` for the refuted `sale` gate.
+    _JunkRule('retail_sale_window', pred=_pred(_is_retail_sale_window)),
     # "<program> Ends!" deadline notice: the blank/echo-body half …
     _JunkRule('program_deadline_bare', _PROGRAM_DEADLINE_NAME_RE, desc_mode='adds_nothing',
               vetoes=((_PROGRAM_DEADLINE_VETO_RE, 'both'),)),
@@ -3282,8 +3552,9 @@ def is_obvious_non_event(name, description=None, location=None, sublocation=None
     HOLD placeholders, outside-organization
     bookings titled with the org's own name), holiday CLOSURE notices,
     private venue buyouts, month-calendar listing
-    placeholders, "National <food/drink> Day" restaurant promos, ticketing
-    upsell products (packages/bundles), serial "<place> #<n>" placeholders,
+    placeholders, "National <food/drink> Day" restaurant promos, retail
+    discount windows (storewide/member-shopping/percent-off/sample sales),
+    ticketing upsell products (packages/bundles), serial "<place> #<n>" placeholders,
     and bare generic placeholder names — the kinds of rows that
     should never reach the map. High precision by design; anything fuzzier
     belongs in scripts/find_review_candidates.py for human review.
@@ -7691,12 +7962,18 @@ def process_events(cursor, connection, crawl_result_id, website_name, run_date_s
             location_refs.setdefault(location_info.get('id'), [
                 location_info.get('name'), location_info.get('address')])
 
-        # Process emoji
-        first_emoji = find_first_emoji(processed_row.get('emoji', ''))
-        if first_emoji and first_emoji not in BLOCKED_EMOJI:
+        # Process emoji. `normalize_extracted_emoji` repairs the 5-hex decode
+        # artifact, folds an extraction-supplied skin tone to the base emoji and
+        # returns '' for anything unusable — so the final `else` is load-bearing:
+        # without it a row whose emoji was junk AND whose venue had none kept the
+        # junk (`clarinet`, `fb7`, the bare modifier `🏾`).
+        first_emoji = normalize_extracted_emoji(processed_row.get('emoji', ''))
+        if first_emoji:
             processed_row['emoji'] = first_emoji
         elif location_info and location_info.get('emoji'):
             processed_row['emoji'] = location_info['emoji']
+        else:
+            processed_row['emoji'] = ''
 
         processed_rows.append(processed_row)
 
@@ -7890,9 +8167,7 @@ def apply_crawled_details(cursor, connection, ce_id, data, tag_context,
     # listing extraction / venue fallback had already set, leaving the merged
     # event blank on the map.
     emoji = data.get('emoji', '')
-    first_emoji = find_first_emoji(emoji) if emoji else None
-    if first_emoji and first_emoji in BLOCKED_EMOJI:
-        first_emoji = None
+    first_emoji = normalize_extracted_emoji(emoji) or None
 
     # Update crawl_events row. The description is optional: extract_single_event
     # omits it when the page yielded only a placeholder, and the stored one

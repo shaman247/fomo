@@ -1,5 +1,7 @@
 """Tests for merger.py deduplication utilities."""
 
+import inspect
+import re
 import unittest
 import sys
 import os
@@ -1947,6 +1949,404 @@ class TestSubEventKindVeto(unittest.TestCase):
     def test_ordinary_subtitle_is_not_a_kind_extension(self):
         self.assertIsNone(merger._subevent_kind_extension(
             'Hamlet', 'Hamlet: A Tragedy in Five Acts'))
+
+
+class SingleOccasionSignalTests(unittest.TestCase):
+    """The name signal that says "this event is ONE occasion".
+
+    Same signal `scripts/fix_single_occasion_events.py` auto-applies weekly
+    (its DROP_SPAN / COLLAPSE_WEEKDAY buckets). Its deliberately-manual buckets
+    must stay unrecognized here, or the guard would auto-fix what that script
+    refuses to.
+    """
+
+    def test_real_regression_names_carry_the_signal(self):
+        for name, expected in [
+            ('Annual Juried Fine Arts Show Opening Reception', 'earliest'),
+            ('Opening Celebration for Camille Henrot: Dogs', 'earliest'),
+            ('GHP Artists Exhibition Opening Reception', 'earliest'),
+            ('Opening Reception: Gen’ichirō Inokuma’s NYC Salon', 'earliest'),
+            ('With Others Chef Residency Series Finale with Adam Purcell', 'latest'),
+        ]:
+            with self.subTest(name=name):
+                self.assertEqual(merger._single_occasion_edge(name), expected)
+
+    def test_closing_wins_over_a_co_occurring_opening_word(self):
+        self.assertEqual(
+            merger._single_occasion_edge('Closing Reception for the Opening Show'),
+            'latest')
+
+    def test_the_sweeps_manual_buckets_are_not_signals(self):
+        """Ambiguous or polysemous names must never reach an automatic fix."""
+        for name in ('Night One: Big Thief', 'Afropunk Day 2',
+                     'Premiere: The Hours', 'Member Preview Hours',
+                     'Adobe Premiere Workshop', 'Artist Talk with Ry Daddy',
+                     'Curator Tour of the Collection', 'Press Preview'):
+            with self.subTest(name=name):
+                self.assertIsNone(merger._single_occasion_edge(name))
+
+    def test_known_limitation_a_multi_day_grand_opening(self):
+        """Documented, inherited from the sweep: 'opening day'/'grand opening'
+        read as a single occasion, so a business's three-day grand-opening
+        weekend would be collapsed to its first day. Same verdict the weekly
+        sweep has been applying; recorded here so a change is deliberate."""
+        self.assertEqual(
+            merger._single_occasion_edge('Grand Opening Weekend'), 'earliest')
+
+    def test_weekday_ticket_signal_is_exact(self):
+        self.assertEqual(
+            merger._single_occasion_weekday('Brooklyn World Wide (Friday Ticket)'), 4)
+        self.assertEqual(
+            merger._single_occasion_weekday('Fest 2026 — Saturday Ticket'), 5)
+        self.assertIsNone(merger._single_occasion_weekday('General Admission Ticket'))
+
+    def test_span_threshold_matches_the_sweep(self):
+        d = date(2026, 10, 28)
+        self.assertFalse(merger._is_multi_day_span(d, None))
+        self.assertFalse(merger._is_multi_day_span(d, d))
+        self.assertFalse(merger._is_multi_day_span(d, date(2026, 10, 29)))
+        self.assertFalse(merger._is_multi_day_span(d, date(2026, 10, 30)))
+        self.assertTrue(merger._is_multi_day_span(d, date(2026, 10, 31)))
+
+
+class SingleOccasionGuardTests(unittest.TestCase):
+    """`filter_single_occasion_occurrences` — the merge-time date guard.
+
+    Datasets are the real `crawl_event_occurrences` rows behind the five events
+    that the weekly sweep fixed on 2026-09-08 and that were all back on
+    2026-09-15 (204117 Putnam, 222964 Public Art Fund, 234384 GHP,
+    237978 Japan Society, 199544 With Others).
+    """
+
+    def test_putnam_parent_run_span_is_refused(self):
+        """ce1188403 'Annual Juried Fine Arts Show' 10/17 → 11/8 into e204117."""
+        kept, report = merger.filter_single_occasion_occurrences(
+            'Annual Juried Fine Arts Show Opening Reception',
+            'Annual Juried Fine Arts Show',
+            [(date(2026, 10, 17), '', date(2026, 11, 8), '')],
+            {'2026-10-17'})
+        self.assertEqual(kept, [])
+        self.assertEqual(report['spans_dropped'], 1)
+        self.assertEqual(report['spans_collapsed'], 0)
+
+    def test_public_art_fund_354_day_span_is_refused(self):
+        """ce1371677 'Camille Henrot Dog Sculptures' 9/9 → 2027-08-29 into e222964.
+
+        Neither a `_subevent_kind_extension` nor an `_is_containment_match`, so
+        no name-shape veto can see it — the span's shape is the only signal.
+        """
+        self.assertIsNone(merger._subevent_kind_extension(
+            'Camille Henrot Dog Sculptures',
+            'Opening Celebration for Camille Henrot: Dogs'))
+        kept, report = merger.filter_single_occasion_occurrences(
+            'Opening Celebration for Camille Henrot: Dogs',
+            'Camille Henrot Dog Sculptures',
+            [(date(2026, 9, 9), '', date(2027, 8, 29), '')],
+            {'2026-09-09'})
+        self.assertEqual(kept, [])
+        self.assertEqual(report['spans_dropped'], 1)
+
+    def test_ghp_run_listing_keeps_the_reception_point_and_loses_the_span(self):
+        """ce1394499 carried BOTH the run span and the reception's own point."""
+        kept, report = merger.filter_single_occasion_occurrences(
+            'GHP Artists Exhibition Opening Reception',
+            'GHP Artists Exhibition 2026',
+            [(date(2026, 11, 19), '', date(2026, 12, 13), ''),
+             (date(2026, 11, 19), '5pm', None, '7pm')],
+            {'2026-11-19'})
+        self.assertEqual(kept, [(date(2026, 11, 19), '5pm', None, '7pm')])
+        self.assertEqual(report['spans_dropped'], 1)
+
+    def test_japan_society_cross_website_span_is_refused(self):
+        """ce1382012 from aaartsalliance.org, 10/6 → 2027-01-10, into e237978."""
+        kept, report = merger.filter_single_occasion_occurrences(
+            'Opening Reception: Gen’ichirō Inokuma’s NYC Salon',
+            "Gen'Ichiro Inokuma's Nyc Salon",
+            [(date(2026, 10, 6), '', date(2027, 1, 10), '')],
+            {'2026-10-06'})
+        self.assertEqual(kept, [])
+        self.assertEqual(report['spans_dropped'], 1)
+
+    def test_with_others_finale_span_collapses_to_its_last_day(self):
+        """Shape (a): the span arrived on the occasion's OWN crawl_event, and it
+        is the only occurrence — so it collapses to the signalled edge instead
+        of leaving a date-less event. 8/2 is what the sweep produced."""
+        kept, report = merger.filter_single_occasion_occurrences(
+            'With Others Chef Residency Series Finale with Adam Purcell',
+            'With Others Chef Residency Series Finale with Adam Purcell',
+            [(date(2026, 7, 29), '', date(2026, 8, 2), '')],
+            ())
+        self.assertEqual(kept, [(date(2026, 8, 2), '', None, '')])
+        self.assertEqual(report['spans_collapsed'], 1)
+
+    def test_span_only_opening_collapses_to_its_first_day(self):
+        kept, report = merger.filter_single_occasion_occurrences(
+            'Opening Reception: Beyond Dark Flow',
+            'Opening Reception: Beyond Dark Flow',
+            [(date(2026, 6, 4), '6:30pm', date(2026, 7, 10), '8:30pm')],
+            ())
+        self.assertEqual(kept, [(date(2026, 6, 4), '', None, '')])
+        self.assertEqual(report['spans_collapsed'], 1)
+
+    def test_a_dated_crawl_event_never_yields_a_dateless_event(self):
+        """Every span-only single occasion must still contribute one date."""
+        for name in ('X Opening Reception', 'X Closing Night', 'X Finale'):
+            with self.subTest(name=name):
+                kept, _ = merger.filter_single_occasion_occurrences(
+                    name, name, [(date(2026, 5, 1), '', date(2026, 6, 1), '')], ())
+                self.assertEqual(len(kept), 1)
+
+    def test_no_collapse_once_the_event_already_holds_a_date(self):
+        """The occasion's own dated row is the answer; don't invent an edge day."""
+        kept, report = merger.filter_single_occasion_occurrences(
+            'Show Opening Reception', 'Show',
+            [(date(2026, 10, 1), '', date(2026, 11, 8), '')],
+            {'2026-10-05'})
+        self.assertEqual(kept, [])
+        self.assertEqual(report['spans_collapsed'], 0)
+
+    # ── clause B — the weekday-ticket signal
+    def test_weekday_ticket_drops_the_festivals_other_days(self):
+        kept, report = merger.filter_single_occasion_occurrences(
+            'Brooklyn World Wide (Friday Ticket)',
+            'Brooklyn World Wide',
+            [(date(2026, 10, 2), '6pm', None, ''),   # Friday
+             (date(2026, 10, 3), '6pm', None, ''),   # Saturday
+             (date(2026, 10, 4), '6pm', None, '')],  # Sunday
+            set())
+        self.assertEqual(kept, [(date(2026, 10, 2), '6pm', None, '')])
+        self.assertEqual(report['dates_dropped'], 2)
+
+    def test_weekday_ticket_with_no_matching_day_is_left_alone(self):
+        """The sweep sends this to REVIEW; the guard must not guess a day."""
+        incoming = [(date(2026, 10, 3), '6pm', None, ''),
+                    (date(2026, 10, 4), '6pm', None, '')]
+        kept, report = merger.filter_single_occasion_occurrences(
+            'Brooklyn World Wide (Friday Ticket)', 'Brooklyn World Wide',
+            incoming, set())
+        self.assertEqual(kept, incoming)
+        self.assertEqual(report['dates_dropped'], 0)
+
+    def test_weekday_ticket_honours_a_matching_day_already_on_the_event(self):
+        kept, report = merger.filter_single_occasion_occurrences(
+            'Brooklyn World Wide (Friday Ticket)', 'Brooklyn World Wide',
+            [(date(2026, 10, 3), '6pm', None, '')],
+            {'2026-10-02'})
+        self.assertEqual(kept, [])
+        self.assertEqual(report['dates_dropped'], 1)
+
+    # ── clause C — a stated parent/sub pair may not teach the other a new date
+    def test_run_listing_may_not_teach_the_reception_a_new_date(self):
+        kept, report = merger.filter_single_occasion_occurrences(
+            'ReLensing Opening Reception', 'ReLensing',
+            [(date(2026, 8, 20), '6pm', None, ''),
+             (date(2026, 8, 27), '6pm', None, '')],
+            {'2026-08-20'})
+        self.assertEqual(kept, [(date(2026, 8, 20), '6pm', None, '')])
+        self.assertEqual(report['dates_dropped'], 1)
+
+    def test_reception_listing_may_not_teach_the_run_a_new_date(self):
+        """Symmetric: the guard runs whichever side is the receiving event."""
+        kept, report = merger.filter_single_occasion_occurrences(
+            'ReLensing', 'ReLensing Opening Reception',
+            [(date(2026, 8, 19), '6pm', None, '')],
+            {'2026-08-20'})
+        self.assertEqual(kept, [])
+        self.assertEqual(report['dates_dropped'], 1)
+
+    def test_clause_c_needs_the_signal_asymmetry(self):
+        """Two receptions of the same run are not a parent/sub pair."""
+        incoming = [(date(2026, 8, 27), '6pm', None, '')]
+        kept, report = merger.filter_single_occasion_occurrences(
+            'ReLensing Opening Reception', 'ReLensing Closing Reception',
+            incoming, {'2026-08-20'})
+        self.assertEqual(kept, incoming)
+        self.assertEqual(report['dates_dropped'], 0)
+
+    def test_clause_c_needs_a_stated_kind_phrase(self):
+        """An ordinary fuller title is not evidence of two happenings."""
+        incoming = [(date(2026, 8, 27), '6pm', None, '')]
+        kept, report = merger.filter_single_occasion_occurrences(
+            'Hamlet Opening Reception',
+            'Hamlet Opening Reception: A Tragedy in Five Acts',
+            incoming, {'2026-08-20'})
+        self.assertEqual(kept, incoming)
+        self.assertEqual(report['dates_dropped'], 0)
+
+    def test_clause_c_never_fires_on_a_brand_new_event(self):
+        """With no stored dates there is nothing to measure "new" against."""
+        incoming = [(date(2026, 8, 20), '6pm', None, ''),
+                    (date(2026, 8, 27), '6pm', None, '')]
+        kept, _ = merger.filter_single_occasion_occurrences(
+            'ReLensing Opening Reception', 'ReLensing', incoming, set())
+        self.assertEqual(kept, incoming)
+
+    # ── shapes that must be left completely alone
+    def test_an_overnight_pair_is_untouched(self):
+        """e207536: 10/28 8pm + 10/29 12am is ONE overnight, two point rows."""
+        incoming = [(date(2026, 10, 28), '8pm', None, ''),
+                    (date(2026, 10, 29), '12am', None, '')]
+        for name in ('Halloween Closing Party', 'Warehouse Rave'):
+            with self.subTest(name=name):
+                kept, report = merger.filter_single_occasion_occurrences(
+                    name, name, incoming, {'2026-10-28'})
+                self.assertEqual(kept, incoming)
+                self.assertEqual(report, {'spans_dropped': 0, 'spans_collapsed': 0,
+                                          'dates_dropped': 0})
+
+    def test_night_and_day_numbered_siblings_are_untouched(self):
+        incoming = [(date(2026, 7, 1), '8pm', None, ''),
+                    (date(2026, 7, 2), '8pm', None, '')]
+        for name in ('Big Thief: Night One', 'Afropunk Day 2'):
+            with self.subTest(name=name):
+                kept, _ = merger.filter_single_occasion_occurrences(
+                    name, name, incoming, {'2026-07-01'})
+                self.assertEqual(kept, incoming)
+
+    def test_an_exhibition_keeps_its_own_run_span(self):
+        """The inverse defect: never strip a span off a run. No signal, no guard."""
+        incoming = [(date(2026, 11, 19), '', date(2026, 12, 13), '')]
+        kept, report = merger.filter_single_occasion_occurrences(
+            'GHP Artists Exhibition 2026', 'GHP Artists Exhibition 2026',
+            incoming, {'2026-11-19'})
+        self.assertEqual(kept, incoming)
+        self.assertEqual(report['spans_dropped'], 0)
+
+    def test_a_short_multi_day_reception_is_untouched(self):
+        """Two-day is inside the sweep's threshold — not a run's shape."""
+        incoming = [(date(2026, 6, 4), '6pm', date(2026, 6, 6), '8pm')]
+        kept, report = merger.filter_single_occasion_occurrences(
+            'Opening Reception: Beyond Dark Flow',
+            'Opening Reception: Beyond Dark Flow', incoming, set())
+        self.assertEqual(kept, incoming)
+        self.assertEqual(report['spans_dropped'], 0)
+
+    def test_empty_input_is_a_no_op(self):
+        kept, report = merger.filter_single_occasion_occurrences(
+            'X Opening Reception', 'X', [], {'2026-01-01'})
+        self.assertEqual(kept, [])
+        self.assertEqual(report, {'spans_dropped': 0, 'spans_collapsed': 0,
+                                  'dates_dropped': 0})
+
+    def test_extra_tuple_fields_survive(self):
+        """The merge loop's occurrence tuples may carry a trailing sort_order."""
+        kept, _ = merger.filter_single_occasion_occurrences(
+            'X Opening Reception', 'X',
+            [(date(2026, 5, 1), '', date(2026, 6, 1), '', 7)], ())
+        self.assertEqual(kept, [(date(2026, 5, 1), '', None, '', 7)])
+
+
+class SingleOccasionMergePathTests(unittest.TestCase):
+    """Guard + `_merge_occurrences_into_event` over a real occurrence store.
+
+    Exercising the predicate alone would prove nothing about what lands in
+    `event_occurrences` — the write path has its own specificity ladder that
+    can drop or promote a row the guard let through. These replay the merge
+    loop's two steps in order against the same fake store the bare-clock tests
+    use, and assert the rows that would be STORED.
+    """
+
+    FakeCursor = BareClockTwinTests.FakeCursor
+
+    def _merge(self, event_name, incoming_name, existing, incoming):
+        cursor = self.FakeCursor(existing)
+        kept = merger.filter_single_occasion_occurrences(
+            event_name, incoming_name, incoming,
+            {str(row[0]) for row in existing})[0]
+        merger._merge_occurrences_into_event(cursor, 1, kept)
+        return sorted(cursor.rows, key=lambda r: (r[0], r[1]))
+
+    def test_putnam_reception_keeps_only_its_own_evening(self):
+        self.assertEqual(
+            self._merge('Annual Juried Fine Arts Show Opening Reception',
+                        'Annual Juried Fine Arts Show',
+                        [(date(2026, 10, 17), '2pm', None, '5pm')],
+                        [(date(2026, 10, 17), '', date(2026, 11, 8), '')]),
+            [(date(2026, 10, 17), '2pm', None, '5pm')])
+
+    def test_public_art_fund_reception_keeps_only_its_own_evening(self):
+        self.assertEqual(
+            self._merge('Opening Celebration for Camille Henrot: Dogs',
+                        'Camille Henrot Dog Sculptures',
+                        [(date(2026, 9, 9), '6pm', None, '7pm')],
+                        [(date(2026, 9, 9), '', date(2027, 8, 29), '')]),
+            [(date(2026, 9, 9), '6pm', None, '7pm')])
+
+    def test_ghp_reception_keeps_only_its_own_evening(self):
+        self.assertEqual(
+            self._merge('GHP Artists Exhibition Opening Reception',
+                        'GHP Artists Exhibition 2026',
+                        [(date(2026, 11, 19), '5pm', None, '7pm')],
+                        [(date(2026, 11, 19), '', date(2026, 12, 13), ''),
+                         (date(2026, 11, 19), '5pm', None, '7pm')]),
+            [(date(2026, 11, 19), '5pm', None, '7pm')])
+
+    def test_japan_society_reception_keeps_only_its_own_evening(self):
+        self.assertEqual(
+            self._merge('Opening Reception: Gen’ichirō Inokuma’s NYC Salon',
+                        "Gen'Ichiro Inokuma's Nyc Salon",
+                        [(date(2026, 10, 6), '6pm', None, '')],
+                        [(date(2026, 10, 6), '', date(2027, 1, 10), '')]),
+            [(date(2026, 10, 6), '6pm', None, '')])
+
+    def test_with_others_finale_stays_on_its_collapsed_day(self):
+        """Re-crawls of the span-carrying source must be idempotent, not additive."""
+        self.assertEqual(
+            self._merge('With Others Chef Residency Series Finale with Adam Purcell',
+                        'With Others Chef Residency Series Finale with Adam Purcell',
+                        [(date(2026, 8, 2), '', None, '')],
+                        [(date(2026, 7, 29), '', date(2026, 8, 2), '')]),
+            [(date(2026, 8, 2), '', None, '')])
+
+    def test_the_guard_is_idempotent_across_repeated_crawls(self):
+        rows = [(date(2026, 10, 17), '2pm', None, '5pm')]
+        for _ in range(3):
+            rows = self._merge('Annual Juried Fine Arts Show Opening Reception',
+                               'Annual Juried Fine Arts Show', rows,
+                               [(date(2026, 10, 17), '', date(2026, 11, 8), '')])
+        self.assertEqual(rows, [(date(2026, 10, 17), '2pm', None, '5pm')])
+
+    def test_overnight_pair_survives_the_whole_path(self):
+        self.assertEqual(
+            self._merge('Halloween Closing Party', 'Halloween Closing Party',
+                        [(date(2026, 10, 28), '8pm', None, '')],
+                        [(date(2026, 10, 28), '8pm', None, ''),
+                         (date(2026, 10, 29), '12am', None, '')]),
+            [(date(2026, 10, 28), '8pm', None, ''),
+             (date(2026, 10, 29), '12am', None, '')])
+
+    def test_an_exhibitions_span_still_reaches_the_store(self):
+        self.assertEqual(
+            self._merge('GHP Artists Exhibition 2026', 'GHP Artists Exhibition 2026',
+                        [(date(2026, 11, 19), '5pm', None, '7pm')],
+                        [(date(2026, 11, 19), '', date(2026, 12, 13), '')]),
+            [(date(2026, 11, 19), '', date(2026, 12, 13), ''),
+             (date(2026, 11, 19), '5pm', None, '7pm')])
+
+
+class SingleOccasionWiringTests(unittest.TestCase):
+    """The guard is worthless if `merge_crawl_events` stops calling it.
+
+    Both write paths must run it: the merge branch (the parent run's span
+    arriving on a re-crawl) and the create branch (the span arriving on the
+    occasion's own crawl_event, which would otherwise be baked in at creation).
+    """
+
+    def test_both_occurrence_write_paths_run_the_guard(self):
+        source = inspect.getsource(merger.merge_crawl_events)
+        self.assertIn('_apply_single_occasion_guard(', source)
+        merge_call = source.index('_merge_occurrences_into_event(')
+        create_call = source.index('db.insert_event_occurrences(')
+        guarded = [m.start() for m in re.finditer(
+            r'_apply_single_occasion_guard\(', source)]
+        self.assertTrue(any(g < merge_call for g in guarded),
+                        'merge branch writes occurrences without the guard')
+        self.assertTrue(any(merge_call < g < create_call for g in guarded),
+                        'create branch writes occurrences without the guard')
+
+    def test_the_guard_delegates_to_the_shared_filter(self):
+        self.assertIn('filter_single_occasion_occurrences(',
+                      inspect.getsource(merger.merge_crawl_events))
 
 
 if __name__ == "__main__":

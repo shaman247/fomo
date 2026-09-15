@@ -84,6 +84,37 @@ Agent choices have `origin='agent'`, retain the canonical input hash, and store 
 
 ## Finish the step
 
+### Tag additions after review
+
+The saved input and full-context hashes remain the original review fingerprints. A separate
+`tag_enrichment` baseline freezes the reviewed context and ancestors of its event-scoped tags.
+Adding one of those already implied ancestors preserves the decision. Later hierarchy edits
+cannot expand that permission. The browser still renders only explicit saved icon IDs.
+
+A reviewer can also approve specific redundant future tags in a decision:
+
+```json
+"harmless_tag_additions": [
+  {
+    "tag": "Beginners",
+    "reason": "The reviewed description explicitly identifies this as beginner instruction.",
+    "evidence": ["The course is for people who have never played bridge."]
+  }
+]
+```
+
+This optional field requires exact tag names, reasons and evidence. It does not add tags.
+There is no keyword inference or blanket exemption for Education, Community or Beginners.
+Unapproved additions, tag removals, and changes to title, description, venue, type or source
+context still require review. Deferred decisions and merge flags stay pending. Review-packet
+application still requires exact current input/context hashes, even for an otherwise permitted
+addition that happened after preparation. Opportunity reports use the same continuity rule.
+
+Maintenance can seed a baseline for an older review only when its original input **and** full
+context hashes exactly match and its review is current. It never clears pending flags or
+retroactively blesses changed tags. Both exporters load full context for policy-enabled custom
+assignments, including historical records, and withhold an icon if that context changed.
+
 Prepare a fresh queue after all batch writes. Process remaining new/changed records, and account for deliberate deferrals separately. Do not describe unresolved items as assigned or reviewed fallback. Summarize assigned/fallback/deferred counts, icon distribution, heuristic overrides, remaining pending count, and backup paths. A quiet second run with unchanged inputs should have no unreviewed records beyond declared deferrals.
 
 Generate the read-only opportunity backlog from saved, current reviews:
@@ -96,4 +127,4 @@ Generate the read-only opportunity backlog from saved, current reviews:
 
 Review the complete concept list across batches and consolidate semantic duplicates editorially; do not fuzzy-merge different instruments or subgenres. Frequency order is an inventory, not the final priority order. Produce a ranked shortlist using recognition gain, breadth of reuse, specificity, and small-size feasibility, keeping valuable rare ideas. Separate suggestions already covered by existing art from genuinely new designs. Include precise concepts, candidate visuals, coverage and representative event IDs, existing alternatives, and uncertainties. Save a compact curated decision record beside `config/event-icons/workflow.md`; selected implementation work belongs in the repository's normal backlog. Do not claim this is a population-wide result until the review coverage supports it.
 
-Leave exports/uploads to the parent run-pipeline Step 6, under the shared lock. Refresh review state immediately before export so late context changes fall back safely and are reported. Source name, venue, type, and URL changes are detected by review/maintenance; exporters independently check canonical name/description/tag hashes. No crawl, mass reassignment, or deployment is implied by editing this workflow.
+Leave exports/uploads to the parent run-pipeline Step 6, under the shared lock. Refresh review state immediately before export so late context changes fall back safely and are reported. Source name, venue, type, and URL changes are detected by review/maintenance; exporters independently check canonical input and policy-enabled full context. No crawl, mass reassignment, or deployment is implied by editing this workflow.

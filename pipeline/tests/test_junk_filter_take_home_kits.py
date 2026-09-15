@@ -66,18 +66,33 @@ class TestTakeHomeKitDistributions(unittest.TestCase):
             'this 4-session series on houseplant care. Take home a plant kit '
             'at the final session.'))
 
-    def test_needs_pickup_corroboration_in_description(self):
-        """A kit-named row whose body is just the activity blurb falls through."""
-        self.assertFalse(is_obvious_non_event(
+    def test_object_word_alone_now_corroborates(self):
+        """The two corroboration gates are an OR since 2026-09-15.
+
+        e90567 "Grab & Go: Blackout Poetry Kits" was the documented "known safe
+        miss" of the AND version — the name names the object, the body is just
+        the activity blurb. It is a genuine kit pickup and now fires.
+        """
+        self.assertTrue(is_obvious_non_event(
             'Grab & Go: Blackout Poetry Kits',
             'Celebrate National Poetry Month by composing a poem of your own!'))
 
-    def test_needs_a_kit_or_craft_word_somewhere(self):
-        """The pickup idiom alone is not enough (puzzles, lunches, ...)."""
-        self.assertFalse(is_obvious_non_event(
+    def test_pickup_language_alone_now_corroborates(self):
+        """The other half of the same OR: no kit/craft word, but a real pickup.
+
+        e44157 / e177718 "Crestwood Month Long Puzzle Grab & Go" — you collect a
+        jigsaw from the branch and take it home; nobody attends anything.
+        """
+        self.assertTrue(is_obvious_non_event(
             'Crestwood Month Long Puzzle Grab & Go',
             'Visit the Crestwood Library anytime during March to pick up a '
             'jigsaw or word puzzle.'))
+
+    def test_neither_gate_still_falls_through(self):
+        """An idiomatic name with a body that names neither object nor pickup."""
+        self.assertFalse(is_obvious_non_event(
+            'Grab & Go: Polar Bear Day',
+            'Celebrate International Polar Bear Day with us at the branch.'))
 
     def test_needs_a_description(self):
         self.assertFalse(is_obvious_non_event('Adult Take-Home Craft', ''))
@@ -156,6 +171,101 @@ class TestTakeHomeKitWidening20260817(unittest.TestCase):
         ):
             with self.subTest(name=name):
                 self.assertFalse(is_obvious_non_event(name, desc))
+
+
+class TestTakeHomeKitWidening20260915(unittest.TestCase):
+    """The 2026-09-15 classification pass had to suppress three kit rows by hand.
+
+    All three carried an unmistakable NAME idiom and were lost to the AND
+    between the two corroboration gates (see the comment block above
+    `_TAKE_HOME_KIT_NAME_RE` in processor.py). The gates are now an OR, the
+    object list gained `projects/supplies/materials`, and the DESCRIPTION gate
+    also accepts the unambiguous distribution phrases.
+
+    Because an OR lets the loose `take home` idiom leak into real titles, that
+    one form is now QUALIFIED — it must sit next to a kit/craft noun. Measured
+    over all 223,966 events: 141 -> 211 fires, 70 net-new, 0 lost, every net-new
+    row a library kit/giveaway pickup; 40 live in-person craft classes fire 0.
+    """
+
+    def test_take_and_make_snail_paper_holder(self):
+        # e255947 — fails the object gate, passes on "first come, first serve".
+        self.assertTrue(is_obvious_non_event(
+            'Take & Make: Snail Paper Holder',
+            'This cute snail can keep your papers in order. Just in time for '
+            'back to school! Available first come, first serve.'))
+
+    def test_grab_and_create_take_home_craft(self):
+        # e256046 — passes the object gate on its own name, body says nothing.
+        self.assertTrue(is_obvious_non_event(
+            'Grab and Create - Take Home Craft: Bottle Top Castanets',
+            'Grab & Create bottle top castanets. For children of all ages.'))
+
+    def test_building_blocks_grab_and_go(self):
+        # e256047 — "Projects"/"building blocks", not kit/craft.
+        self.assertTrue(is_obvious_non_event(
+            'Kids Mini Animal Building Blocks Grab & Go',
+            'Choose an animal to create out of building blocks (similar to '
+            'LEGO blocks). Projects are available for pick up starting at '
+            '10AM and the last day to pick up is October 4.'))
+
+    def test_widened_object_words(self):
+        for body in (
+            'Pick up your project at the desk.',
+            'All supplies will be provided at the branch desk.',
+            'Come grab some materials while they last.',
+        ):
+            with self.subTest(body=body):
+                self.assertTrue(is_obvious_non_event('Teens Grab & Go', body))
+
+    def test_unqualified_take_home_is_a_verb_phrase_not_the_idiom(self):
+        """The qualification is what spares these three LIVE/real rows.
+
+        e222900 + e251249 are a real in-person build class (a "paint and sip but
+        with robots"); e182315 is a real community swap. All three were killed
+        by the unqualified `take[\\s-]?home` idiom once the gates were OR'd.
+        """
+        self.assertFalse(is_obvious_non_event(
+            'Build a happy little robot that draws (and take home)',
+            "No robot or technical experience needed! It's a paint and sip but "
+            'with robots. You will be given all parts and motors and use '
+            'popsicle sticks, motors, tape, and good vibes to make a little '
+            'robot. At the end of the night you can take home your creation.'))
+        self.assertFalse(is_obvious_non_event(
+            'Build a Happy Little Robot That Draws (and Take Home)',
+            'Participants build a small drawing robot using popsicle sticks, '
+            'motors, tape, and other provided materials, then take it home.'))
+        self.assertFalse(is_obvious_non_event(
+            'Gratis Grove Presents - a Free Community Swap Where You Can '
+            'Donate, Browse, and Take Home Clothing, Household Good, and More.',
+            'A free community swap where you can donate, browse, and take home '
+            'clothing, household goods, and more. It is open to everyone.'))
+
+    def test_qualified_take_home_still_fires(self):
+        for name in ('May Take Home Craft',
+                     'STEAM Take Home Kit: A Message To The Future',
+                     'Take Home Craft: Earth Day Daisies',
+                     'Take and Make - Refrigerator Pickles'):
+            with self.subTest(name=name):
+                self.assertTrue(is_obvious_non_event(
+                    name, 'Pick up a bag of supplies at the desk while they '
+                          'last.'))
+
+    def test_drop_in_for_vetoes_but_drop_in_and_pick_up_does_not(self):
+        """"Drop in FOR" is an attendance invitation (e195171, spared)..."""
+        self.assertFalse(is_obvious_non_event(
+            'Teen DIY: Grab & Go Craft Bag',
+            'Calling all teens! Drop in for a fun craft with us here at '
+            'Jamaica Bay where we will be giving out grab and go craft bags '
+            "filled with all the supplies you'll need."))
+        # ...while "drop in AND pick up" is pickup language (e155311, filtered).
+        self.assertTrue(is_obvious_non_event(
+            'Teen DIY: Summer Reading Grab & Go Ceramic Magnet Kit',
+            'Calling all teens! Drop in and pick up a grab-and-go kit '
+            'containing a summer-themed ceramic magnet to paint at home.'))
+
+    def test_a_description_is_still_required(self):
+        self.assertFalse(is_obvious_non_event('Take Home Craft Kit', ''))
 
 
 class TestProgramDeadlineNotices(unittest.TestCase):

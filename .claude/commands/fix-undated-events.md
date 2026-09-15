@@ -31,14 +31,37 @@ This shows websites with undated events **from the current run**, ordered by cou
 Widen the interval only to cover the actual crawl window you are triaging.
 
 > **The run-window bound is REQUIRED, and it replaces the old
-> `ce.created_at >= cr.crawled_at` predicate.** That predicate assumed
-> `crawl_results` rows were **UPDATEd in place** on re-crawl, so comparing the
-> crawl_event's creation time against the row's `crawled_at` isolated the latest
-> extraction. **That premise no longer holds** — each crawl now INSERTs a *new*
-> `crawl_results` row (verified 2026-09-04: w3, w4 and w172 each carry 165 rows
-> with 165 distinct `crawled_at`). The predicate is now trivially true for every
-> historical row, so it isolates nothing and the query returns the entire
-> backlog of dead rows from past crawls.
+> `ce.created_at >= cr.crawled_at` predicate.** Be precise about why, because the
+> row lifecycle is per-DAY, not per-crawl:
+>
+> * `crawl_runs` is `UNIQUE (run_date)`, so there is exactly **one run row per
+>   calendar day**.
+> * `crawl_results` is `UNIQUE (crawl_run_id, filename)`, and
+>   `db.create_crawl_result` resolves by **`(crawl_run_id, website_id)` first** —
+>   if this website already has a row in today's run it **reuses** that row
+>   (resetting `status` to `'pending'`) and only falls through to
+>   `INSERT ... ON DUPLICATE KEY UPDATE` for a website with no row yet.
+> * So a website gets **one new `crawl_results` row per calendar day**, and a
+>   **same-day re-crawl UPDATEs that row in place**: `db.update_crawl_result`
+>   overwrites `crawled_at`, `crawled_content`, `content_hash` and `event_count`
+>   and nulls `merged_at`, while `id` and `created_at` stay put. Verified
+>   2026-09-15 on cr124494 (w407 Manhattan CB12, run 355): same id,
+>   `created_at` 02:34:16 unchanged, `crawled_at` 02:34 → 05:25, `event_count`
+>   15 → 9. Across days the rows really do accumulate one per run (w3 carries
+>   168 rows over 168 distinct runs) — which is what the 2026-09-04 note meant,
+>   and it is only true **between** runs, never within one.
+>
+> That is why the old predicate fails: within a day it does isolate the latest
+> extraction (its original purpose), but across days it is trivially true for
+> every historical row, so it bounds nothing and the query returns the entire
+> backlog of dead rows from past crawls. The date bound is what does the work.
+>
+> **Consequence for triage: a same-day re-crawl DESTROYS the row you are
+> triaging.** Re-running `main.py --ids` (Step 4) overwrites that crawl_result's
+> `crawled_at`, `crawled_content` and `event_count` in place — there is no prior
+> version to diff against. **Capture the `crawl_results.id`, `crawled_at` and
+> `event_count` (and the crawl_event ids/names) of every row you are working from
+> BEFORE you re-crawl**, or the before/after comparison in Step 4 has no "before".
 >
 > Measured 2026-09-04: **unbounded returns 26,398 rows across 1,242 sites; bounded
 > to the run returns 33 rows across 22 sites** — an 800× inflation that reads as a
@@ -46,8 +69,9 @@ Widen the interval only to cover the actual crawl window you are triaging.
 > old predicate as well is harmless but pointless; the date bound is what does the
 > work.
 >
-> (Historical note, for why the old predicate existed: on 2026-07-19, back when
-> rows really were updated in place, dropping it inflated the count by 35 rows
+> (Historical note, for why the old predicate existed: on 2026-07-19, when the
+> triage ran inside a single day — where the in-place update above is the only
+> thing happening — dropping it inflated the count by 35 rows
 > (184 → 149) and manufactured two phantom "problem" sites — w4867 Edgemere Farm
 > and w425 Brooklyn CB16 — that earlier js_code had already fixed.)
 

@@ -14,7 +14,7 @@ import db
 from event_types import EVENT_TYPES_BY_CATEGORY, EVENT_TYPES, separate_format_topics
 from tag_canonicalization import stored_tag_mapping
 from export_chunks import write_remainder_chunks
-from event_icon_assignments import load_assignments, export_icon
+from event_icon_assignments import load_assignments, export_icon, export_contexts
 from icon_catalog import resolve_icon
 from constants import get_active_date_window
 from processor import sublocation_redundant_with_address
@@ -374,6 +374,7 @@ def export_events(cursor):
 
     event_rows = cursor.fetchall()
     icon_assignments = load_assignments(cursor)
+    reviewed_icon_contexts = export_contexts(cursor, icon_assignments)
 
     # Prefetch the distinct source websites for every event (merged events can
     # carry several). Used to attribute multiple organizer chips per event. The
@@ -475,7 +476,8 @@ def export_events(cursor):
             'occurrences': occurrences,
             'urls': urls,
         }
-        icon_id = export_icon({'name': row[1], 'description': row[3], 'tags': tags + keywords},
+        icon_id = export_icon(reviewed_icon_contexts.get(event_id,
+            {'name': row[1], 'description': row[3], 'tags': tags + keywords}),
                               icon_assignments.get(event_id))
         event['icon_id'] = resolve_icon(event.get('emoji'), icon_id)
         if keywords:
@@ -997,6 +999,7 @@ def export_public_datasets(cursor, export_date=None, export_dir=PUBLIC_EXPORT_DI
     """)
     event_rows = cursor.fetchall()
     icon_assignments = load_assignments(cursor)
+    reviewed_icon_contexts = export_contexts(cursor, icon_assignments)
     event_ids = [r[0] for r in event_rows]
 
     # Bulk prefetches (chunked IN(...)): occurrences, tags, urls. Row order
@@ -1084,8 +1087,8 @@ def export_public_datasets(cursor, export_date=None, export_dir=PUBLIC_EXPORT_DI
             base['emoji'] = emoji
         if description:
             base['description'] = description
-        icon_id = export_icon({'name': name, 'description': description,
-                               'tags': tags_by_id.get(event_id, [])}, icon_assignments.get(event_id))
+        icon_id = export_icon(reviewed_icon_contexts.get(event_id, {'name': name, 'description': description,
+                               'tags': tags_by_id.get(event_id, [])}), icon_assignments.get(event_id))
         base['icon_id'] = resolve_icon(emoji, icon_id)
 
         organizer_ids = []

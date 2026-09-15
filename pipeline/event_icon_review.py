@@ -10,18 +10,38 @@ import argparse
 from collections import Counter
 from contextlib import nullcontext
 from datetime import date
-import hashlib
 import json
 from pathlib import Path
 import re
 
 from event_icons import ROOT, CATALOG, ICON_IDS, input_hash, propose
 from event_icon_assignments import (fetch_events, load_assignments, manual_assignment,
-                                    retained_assignment, require_lock, save)
+                                    retained_assignment, require_lock, save, hydrate_contexts)
+from event_icon_policy import (fingerprint, metadata, context_hash, input_matches,
+    context_matches, review_baseline, seed_review_baseline, IMPLIED_TAGS)
 
 OPPORTUNITY_REVIEW_VERSION = 1
 OPPORTUNITY_CATEGORIES = {'instrument', 'genre', 'dance-style', 'cuisine', 'craft',
                          'sport', 'activity', 'equipment', 'format', 'other'}
+
+
+def validate_tag_additions(value):
+    if not isinstance(value,list):
+        raise ValueError('harmless_tag_additions must be a list')
+    seen=set()
+    for addition in value:
+        if not isinstance(addition,dict):
+            raise ValueError('Each harmless tag addition needs tag, reason and evidence')
+        tag=addition.get('tag')
+        if not isinstance(tag,str) or not tag.strip() or tag != tag.strip() or tag in seen:
+            raise ValueError('Harmless tags must be unique nonempty exact tag names')
+        seen.add(tag)
+        if not isinstance(addition.get('reason'),str) or not addition['reason'].strip():
+            raise ValueError('Harmless tag addition needs a reason')
+        evidence=addition.get('evidence')
+        if not isinstance(evidence,list) or not evidence or any(not isinstance(e,str) or not e.strip() for e in evidence):
+            raise ValueError('Harmless tag addition needs nonempty text evidence')
+    return value
 
 
 def validate_opportunities(value):
@@ -48,11 +68,6 @@ def validate_opportunities(value):
     return value
 
 
-def fingerprint(value):
-    return hashlib.sha256(json.dumps(value, sort_keys=True, ensure_ascii=False,
-                                    separators=(',', ':'), default=str).encode()).hexdigest()
-
-
 def catalog_revision():
     # Artwork-only edits do not require reassignment. Meaning and new IDs do.
     return fingerprint(sorted([{key: icon.get(key) for key in
@@ -60,36 +75,22 @@ def catalog_revision():
         for icon in CATALOG['icons']], key=lambda i: i['id']))
 
 
-def metadata(row):
-    try:
-        data = json.loads(row['evidence_json']) if isinstance(row['evidence_json'], str) else row['evidence_json']
-        return data if isinstance(data, dict) else {}
-    except (ValueError, TypeError, KeyError):
-        return {}
-
-
-def context_hash(event):
-    # Stable across fetch order; the ID itself is not semantic context.
-    values = {k: v for k, v in event.items() if k != 'id'}
-    for key in ('tags', 'urls'):
-        values[key] = sorted(values.get(key, []))
-    return fingerprint(values)
-
-
 def review_reason(event, row, revision):
     if not row:
         return 'unreviewed'
-    if row['review_required'] or row['input_hash'] != input_hash(event):
+    if row['review_required'] or not input_matches(event, row):
         return 'changed-or-deferred'
     if row['icon_id'] is not None and row['icon_id'] not in ICON_IDS:
         return 'unknown-icon'
     info = metadata(row)
     if row['origin'] == 'manual':
+        if info.get('tag_enrichment') and not context_matches(event, row):
+            return 'changed-context'
         # Discovery can still inspect the event; validation protects its choice.
         return None if info.get('opportunity_review_version') == OPPORTUNITY_REVIEW_VERSION else 'icon-opportunities'
     if row['origin'] != 'agent':
         return 'legacy-rule'
-    if info.get('context_hash') != context_hash(event):
+    if not context_matches(event, row):
         return 'changed-context'
     if info.get('catalog_revision') != revision:
         return 'changed-catalog'
@@ -111,22 +112,14 @@ def fetch_review_events(cursor, event_date=None, created_since=None):
         cursor.execute('SELECT id FROM events WHERE created_at >= %s', (created_since,))
         new_ids = {r[0] for r in cursor.fetchall()}
         events = [e for e in events if e['id'] in new_ids]
-    lookup = {e['id']: e for e in events}
-    ids = list(lookup)
-    for offset in range(0, len(ids), 1000):
-        chunk = ids[offset:offset+1000]
-        slots = ','.join(['%s'] * len(chunk))
-        cursor.execute(f'''SELECT e.id,e.short_name,e.emoji,e.event_type,
-            e.location_name,e.sublocation,l.name,l.address,w.name
-            FROM events e LEFT JOIN locations l ON l.id=e.location_id
-            LEFT JOIN websites w ON w.id=e.website_id WHERE e.id IN ({slots})''', tuple(chunk))
-        for eid, short_name, emoji, event_type, location_name, sublocation, venue, address, source in cursor.fetchall():
-            lookup[eid].update(short_name=short_name, emoji=emoji, event_type=event_type,
-                location_name=location_name, sublocation=sublocation, venue=venue,
-                address=address, source=source, urls=[])
-        cursor.execute(f'SELECT event_id,url FROM event_urls WHERE event_id IN ({slots}) ORDER BY event_id,url', tuple(chunk))
-        for eid, url in cursor.fetchall():
-            lookup[eid]['urls'].append(url)
+    hydrate_contexts(cursor, events)
+    from db import build_tag_ancestor_map, normalize_tag_key
+    ancestors, _ = build_tag_ancestor_map(cursor)
+    for event in events:
+        implied = set().union(*(ancestors.get(normalize_tag_key(t), set())
+                                for t in event['tags']))
+        event[IMPLIED_TAGS] = sorted(implied - set(event['tags']))
+
     return events
 
 
@@ -143,10 +136,16 @@ def refresh_review_state(cursor, apply=False):
         reason = review_reason(event, old, revision)
         if reason:
             stats['pending'] += 1
-        if new and old['origin'] == 'agent' and reason == 'changed-context':
+        if new and old['origin'] in ('agent','manual') and reason == 'changed-context':
             new['review_required'] = 1
+        if new and not reason:
+            seeded = seed_review_baseline(event, new)
+            if seeded != new:
+                stats['baselines_added'] += 1
+                new = seeded
         if new != old:
-            stats['invalidated'] += 1
+            if new['review_required'] != old['review_required']:
+                stats['invalidated'] += 1
             if apply:
                 save(cursor, new)
     return dict(stats)
@@ -166,6 +165,11 @@ def make_packets(events, rows, batch_size=100):
         pending.append(dict(event=event, input_hash=input_hash(event), context_hash=context_hash(event),
             previous_assignment=old, review_reason=reason, heuristic_proposal=propose(event)))
     return [dict(schema_version=1, catalog_revision=revision, icons=CATALOG['icons'],
+                 tag_enrichment_review=dict(version=1, instruction=
+                     'Optionally approve future redundant tags using harmless_tag_additions: '
+                     '[{tag, reason, evidence}]. Use exact event tag names and specific evidence '
+                     'already in this reviewed context. Do not approve new activities or formats. '
+                     'Ancestors of the reviewed tags are frozen automatically.'),
                  opportunity_review=dict(version=OPPORTUNITY_REVIEW_VERSION,
                      instruction='For every event, also consider more specific future icons: instruments, genres, '
                      'styles, techniques, equipment and formats. Record grounded visual concepts even if the '
@@ -219,11 +223,13 @@ def validate_decisions(packet, decisions, current_events, current_rows):
         # Agent can revalidate the same stale human choice, but cannot replace it.
         if old and old['origin'] == 'manual' and icon != old['icon_id'] and action != 'defer':
             raise ValueError(f'{eid}: would replace a protected manual decision')
+        approved = validate_tag_additions(choice.get('harmless_tag_additions', []))
         row = manual_assignment(event, icon, reason)
         row.update(origin='agent', review_required=int(action == 'defer'), evidence_json=json.dumps(dict(
             reviewer='run-pipeline-agent', catalog_revision=revision, context_hash=context_hash(event),
             decision=action, evidence=evidence, opportunities=opportunities,
-            opportunity_review_version=OPPORTUNITY_REVIEW_VERSION), ensure_ascii=False, sort_keys=True))
+            opportunity_review_version=OPPORTUNITY_REVIEW_VERSION,
+            tag_enrichment=review_baseline(event, approved)), ensure_ascii=False, sort_keys=True))
         if old and old['origin'] == 'manual':
             row['origin'] = 'manual'
             if action == 'defer':
@@ -245,7 +251,7 @@ def collect_opportunities(events, rows):
         info = metadata(row)
         if info.get('opportunity_review_version') != OPPORTUNITY_REVIEW_VERSION:
             continue
-        if row['review_required'] or row['input_hash'] != input_hash(event) or info.get('context_hash') != context_hash(event):
+        if row['review_required'] or not input_matches(event, row) or not context_matches(event, row):
             stale += 1
             continue
         reviewed += 1

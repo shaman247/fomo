@@ -22,6 +22,12 @@ can still be non-weekly (quarterly PPV listings, daily summer programs), course
 fixes apply ONLY with explicit `--apply --ids <ids>` after a source check —
 a blanket `--apply` lists them and moves on.
 
+Both regenerating paths are gated by a SKIP-PHRASE GUARD: a class whose own
+name/description announces a break ("(NO CLASS on November 11th)", "Skip
+Thanksgiving", "(SKIP 11/29 and 12/27)") never has that date regenerated, and one
+whose break cannot be resolved to a date ("except holidays") is vetoed into the
+SKIP_PHRASE_UNRESOLVED bucket instead of being applied.
+
 Dry-run by default. Pass --apply to write changes.
 """
 import sys, argparse, statistics, re
@@ -118,21 +124,117 @@ def stated_weekdays(blob):
 # (skipping 11/26 for Thanksgiving)" and the expander emitted 5 Thursdays.
 #
 # The failure is SILENT — the event looks well-formed, just with one extra date —
-# so this is a guard, not a nicety. Two arms, both conservative:
-#   1. drop dates the text explicitly excludes;
-#   2. veto entirely when an explicit session count still disagrees afterwards.
+# so this is a guard, not a nicety. Three arms, all conservative:
+#   1. drop dates the text explicitly excludes (explicit dates AND named holidays);
+#   2. veto entirely when the skip phrase cannot be pinned to a date at all
+#      ("except holidays", "skipping some weeks", "no class the week of 11/24")
+#      -> SKIP_PHRASE_UNRESOLVED;
+#   3. veto entirely when an explicit session count still disagrees afterwards.
+#
+# Arms 1-2 apply to BOTH regenerating paths. Originally only the span-only
+# COURSE_WEEKLY detector consulted them, which left the envelope path (FIX_SPAN:
+# weekly / biweekly / four_weekly / monthly) unguarded — and that is where the
+# damage actually landed. Measured on the 2026-09-15 weekly sweep: 6 of the 8
+# FIX_SPAN candidates were classes whose own title announced the break, and the
+# regenerator proposed exactly the announced date:
+#   ev240463 "... Wednesdays, September 16th - December 23rd (NO CLASS on
+#            November 11th)"                                        -> +2026-11-11
+#   ev240464 "... Thursdays, September 17th - December 17th (Skip
+#            Thanksgiving)"                                         -> +2026-11-26
+#   ev240486 "... Sundays, November 15th - January 3rd (SKIP 11/29
+#            and 12/27)"                                            -> +2026-11-29
+#   ev240487 "... Wednesdays, November 18th - December 16th (SKIP
+#            11/25 for Thanksgiving)"                               -> +2026-11-25
+#   ev241692 "Riso II ... (skipping 11/26 for Thanksgiving)"        -> +2026-11-26
+#   ev251879 "Practice Space: Fall 2026 Season ... NO SESSION NOV 9" -> +2026-11-09
+# Each was vetoed by hand and the spans deleted; the guard is what makes that
+# automatic. Note ev240464 / "Skip Thanksgiving": the announced day is a NAME, not
+# a date, so resolving the common US holidays is load-bearing, not decoration.
 MONTH_NAMES = {'jan': 1, 'feb': 2, 'mar': 3, 'apr': 4, 'may': 5, 'jun': 6,
                'jul': 7, 'aug': 8, 'sep': 9, 'oct': 10, 'nov': 11, 'dec': 12}
 # The cue must be close to the date — a bare "except" three sentences away is not
 # evidence about this date. 40 chars covers "skipping 11/26 for Thanksgiving" and
-# "no class on Thursday, December 24th" without spanning clauses.
+# "no class on Thursday, December 24th" without spanning clauses. The SAME window
+# feeds both the date-dropping arm and the unresolved-veto arm: a wider veto
+# window would flag a phrase whose date the narrower drop window never removed,
+# and a narrower one would let an unreachable date through as "resolved".
+SKIP_WINDOW = 40
 SKIP_CUE_RE = re.compile(
     r'\b(?:skip(?:s|ping|ped)?|no\s+(?:class|session|meeting|workshop)e?s?|'
     r'except|excluding|dark|off)\b', re.I)
+# The veto arm uses a NARROWER cue set than the date-dropping arm. Dropping a date
+# only ever removes a session the text argues against (safe in the limit), but a
+# veto costs an auto-fix, so it may only fire on cues that unambiguously announce
+# a cancelled meeting. `dark` ("a dark comedy", "Dark Sky Night") and bare `off`
+# ("50% off", "kick off", "day off") are far too common in event prose to veto on.
+HARD_SKIP_CUE_RE = re.compile(
+    r'\b(?:skip(?:s|ping|ped)?|no\s+(?:class|session|meeting|workshop)e?s?)\b', re.I)
+# `except`/`excluding` only announce a break when what follows is break-shaped:
+# "except holidays", "excluding the last two weeks". "open to all except children"
+# is not about the calendar.
+SOFT_SKIP_CUE_RE = re.compile(r'\b(?:except(?:\s+for)?|excluding)\b', re.I)
+_BREAK_NOUN_RE = re.compile(
+    r'\b(?:holidays?|weeks?|dates?|days?|sessions?|classes|class|meetings?|'
+    r'thanksgiving|christmas|xmas|new\s+year|labor\s+day|memorial\s+day|'
+    r'july\s*4|independence\s+day)\b', re.I)
+# "the week of 11/24" anchors a WEEK, not the meeting day — the session actually
+# cancelled is some other day inside it. Treat any such phrase as unresolved
+# rather than dropping the anchor date (which would take the wrong session).
+_WEEK_OF_RE = re.compile(r'\bweeks?\s+of\b', re.I)
+# "Skip's Jazz Trio" is a name, not an announcement.
+_POSSESSIVE_RE = re.compile(r"^['’]s\b")
 _MD_SLASH_RE = re.compile(r'\b(\d{1,2})/(\d{1,2})(?:/(\d{2,4}))?\b')
 _MD_NAME_RE = re.compile(
     r'\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+(\d{1,2})(?:st|nd|rd|th)?\b',
     re.I)
+# Named holidays a publisher writes INSTEAD of a date ("Skip Thanksgiving"), each
+# resolvable to a calendar date once you know the year — which the span supplies.
+# Longest-first alternation so "christmas eve" never matches as "christmas".
+HOLIDAY_RE = re.compile(
+    r'\b(christmas\s+eve|christmas|xmas|thanksgiving|'
+    r"new\s+year['’]?s?\s+eve|new\s+year['’]?s?(?:\s+day)?|"
+    r'labor\s+day|memorial\s+day|'
+    r'july\s*4(?:th)?|(?:4th|fourth)\s+of\s+july|independence\s+day)\b', re.I)
+
+
+def _nth_weekday_of_month(year, month, weekday, ordinal):
+    d = date(year, month, 1)
+    return d + timedelta(days=(weekday - d.weekday()) % 7 + 7 * (ordinal - 1))
+
+
+def _last_weekday_of_month(year, month, weekday):
+    nxt = date(year + 1, 1, 1) if month == 12 else date(year, month + 1, 1)
+    d = nxt - timedelta(days=1)
+    return d - timedelta(days=(d.weekday() - weekday) % 7)
+
+
+def holiday_date(token, year):
+    """Resolve a named US holiday to its date in `year`, or None."""
+    t = re.sub(r'\s+', ' ', token.lower().replace('’', "'")).strip()
+    if t == 'thanksgiving':
+        return _nth_weekday_of_month(year, 11, 3, 4)      # 4th Thursday of Nov
+    if t == 'christmas eve':
+        return date(year, 12, 24)
+    if t in ('christmas', 'xmas'):
+        return date(year, 12, 25)
+    if t.startswith('new year'):
+        return date(year, 12, 31) if t.endswith('eve') else date(year, 1, 1)
+    if t == 'labor day':
+        return _nth_weekday_of_month(year, 9, 0, 1)       # 1st Monday of Sep
+    if t == 'memorial day':
+        return _last_weekday_of_month(year, 5, 0)         # last Monday of May
+    if t.startswith('july') or t.endswith('of july') or t == 'independence day':
+        return date(year, 7, 4)
+    return None
+
+
+def _skip_segments(blob, cue_re):
+    """(cue-match, following-text) pairs for every skip cue in `blob`."""
+    for cue in cue_re.finditer(blob):
+        seg = blob[cue.end():cue.end() + SKIP_WINDOW]
+        if _POSSESSIVE_RE.match(seg):
+            continue
+        yield cue, seg
 
 
 def skipped_dates(blob, span_start, span_end):
@@ -140,18 +242,21 @@ def skipped_dates(blob, span_start, span_end):
 
     Only dates appearing within SKIP_WINDOW chars AFTER a skip cue count, so an
     ordinary date mention ("starts November 19th") is never read as an exclusion.
-    Years are inferred from the span, which is what makes a bare "11/26" usable.
+    Years are inferred from the span, which is what makes a bare "11/26" usable —
+    and what lets a bare "Thanksgiving" resolve at all.
     """
-    SKIP_WINDOW = 40
     out = set()
-    years = {span_start.year, span_end.year}
-    for cue in SKIP_CUE_RE.finditer(blob):
-        seg = blob[cue.end():cue.end() + SKIP_WINDOW]
+    years = sorted({span_start.year, span_end.year})
+    for _cue, seg in _skip_segments(blob, SKIP_CUE_RE):
+        if _WEEK_OF_RE.search(seg):
+            # A week anchor, not a meeting date. Dropping the anchor would cancel
+            # the wrong session, so drop nothing — the veto arm handles it.
+            continue
         cands = [(int(m.group(1)), int(m.group(2)), m.group(3)) for m in _MD_SLASH_RE.finditer(seg)]
         cands += [(MONTH_NAMES[m.group(1).lower()[:3]], int(m.group(2)), None)
                   for m in _MD_NAME_RE.finditer(seg)]
         for mon, day, yr in cands:
-            for y in ([int(yr) + 2000 if int(yr) < 100 else int(yr)] if yr else sorted(years)):
+            for y in ([int(yr) + 2000 if int(yr) < 100 else int(yr)] if yr else years):
                 try:
                     d = date(y, mon, day)
                 except ValueError:
@@ -159,6 +264,35 @@ def skipped_dates(blob, span_start, span_end):
                 if span_start <= d <= span_end:
                     out.add(d)
                     break
+        for m in HOLIDAY_RE.finditer(seg):
+            for y in years:
+                d = holiday_date(m.group(1), y)
+                if d and span_start <= d <= span_end:
+                    out.add(d)
+                    break
+    return out
+
+
+def unresolved_skip_phrases(blob):
+    """Skip/no-class announcements that name no date this tool can pin down.
+
+    Returns the offending phrases (cue + following text, trimmed) so the veto
+    reason can quote the publisher back at the operator. An event with any of
+    these must NOT be auto-regenerated: the text says some meeting does not
+    happen, we cannot tell which, and a uniformly-filled series would assert
+    that every one of them does.
+    """
+    out = []
+    cues = list(_skip_segments(blob, HARD_SKIP_CUE_RE))
+    cues += [(c, s) for c, s in _skip_segments(blob, SOFT_SKIP_CUE_RE)
+             if _BREAK_NOUN_RE.search(s)]
+    for cue, seg in sorted(cues, key=lambda cs: cs[0].start()):
+        if not _WEEK_OF_RE.search(seg) and (
+                _MD_SLASH_RE.search(seg) or _MD_NAME_RE.search(seg)
+                or HOLIDAY_RE.search(seg)):
+            continue      # a date (or a resolvable holiday) — arm 1 handles it
+        phrase = ' '.join((cue.group(0) + seg).split())
+        out.append(phrase[:60])
     return out
 
 
@@ -220,8 +354,11 @@ def stated_week_count(blob):
 
 def classify(eid, name, occ, description=''):
     """Return (verdict, info-dict) for an event's occurrences.
-    verdict in {weekly, biweekly, monthly, skip}."""
-    blob = (name + ' ' + (description or '')).lower()
+    verdict in {weekly, biweekly, four_weekly, monthly, skip}. A 'skip' carrying
+    info['skip_veto'] was auto-fixable EXCEPT for an unusable skip phrase — see
+    SKIP_CUE_RE; the review scan buckets those as SKIP_PHRASE_UNRESOLVED."""
+    raw = name + ' ' + (description or '')
+    blob = raw.lower()
     if any(k in blob for k in EXHIBITION_KW):
         return 'skip', {'reason': 'exhibition/continuous keyword'}
     spans = [(o['start_date'], o['end_date'], o['start_time'], o['end_time'])
@@ -269,6 +406,26 @@ def classify(eid, name, occ, description=''):
     # exhibition with monthly markers, never a real meeting — dropped as unsafe.
     if verdict is None:
         return 'skip', {'reason': f'irregular cadence med={med} gaps={gaps} same_wd={same_weekday}'}
+
+    # SKIP-PHRASE GUARD (arms 1 and 2 — see SKIP_CUE_RE). The envelope path
+    # regenerates a uniform series, so a break the publisher announced in prose
+    # gets filled back in unless we look for it. Runs only once a cadence verdict
+    # exists, i.e. only where dates would actually be written.
+    unresolved = unresolved_skip_phrases(raw)
+    if unresolved:
+        return 'skip', {'reason': f'{verdict} regeneration vetoed: skip phrase names no '
+                                  f'resolvable date — {"; ".join(unresolved)}',
+                        'skip_veto': 'unresolved', 'skip_phrases': unresolved}
+    skips = skipped_dates(raw, span_start, span_end)
+    conflict = sorted(skips & set(disc))
+    if conflict:
+        # The text says a date is skipped and an occurrence exists on it. One of
+        # the two is wrong and we cannot tell which, so regenerate nothing.
+        return 'skip', {'reason': f'{verdict} regeneration vetoed: text skips '
+                                  f'{[str(d) for d in conflict]} but an occurrence exists '
+                                  f'on it — contradicted',
+                        'skip_veto': 'conflict', 'skip_phrases': [str(d) for d in conflict]}
+    info['skips'] = skips
 
     # EVIDENCE GUARD: a cadence model is only trustworthy if it explains every
     # date we actually observed. If the generator's own rhythm omits an observed
@@ -384,6 +541,11 @@ def classify_course(name, occ, description=''):
     # must not write it. Vetoing is right here — a fabricated session is worse
     # than leaving the span for a human, and this bucket already requires
     # per-id approval.
+    unresolved = unresolved_skip_phrases(blob)
+    if unresolved:
+        return 'skip', {'reason': 'course regeneration vetoed: skip phrase names no '
+                                  f'resolvable date — {"; ".join(unresolved)}',
+                        'skip_veto': 'unresolved', 'skip_phrases': unresolved}
     skips = skipped_dates(blob, o['start_date'], o['end_date'])
     info = {'disc': [], 'wd': wds[0], 'wds': wds,
             'span_start': o['start_date'], 'span_end': o['end_date'],
@@ -406,7 +568,17 @@ def classify_course(name, occ, description=''):
 def generated_series(verdict, info):
     """The dates the cadence model produces on its own, WITHOUT unioning in the
     observed discrete dates. This is what the evidence guard tests: unioning
-    first would hide a generator that disagrees with what the source published."""
+    first would hide a generator that disagrees with what the source published.
+
+    Dates the text explicitly cancels (`info['skips']`, see `skipped_dates`) are
+    removed here rather than in each branch, so EVERY regenerating path — the
+    envelope cadences as much as COURSE_WEEKLY — is covered by the one guard.
+    """
+    return sorted(set(_generated_series_raw(verdict, info)) - (info.get('skips') or set()))
+
+
+def _generated_series_raw(verdict, info):
+    """`generated_series` without the announced-break subtraction."""
     if verdict == 'course_weekly':
         # Expand the full published series (span_end is the course's real last
         # session — don't truncate to the crawl future-window). A course that
@@ -420,8 +592,7 @@ def generated_series(verdict, info):
             while d <= info['span_end']:
                 out.append(d)
                 d += timedelta(days=7)
-        # Never emit a session the source explicitly cancels (holiday break weeks).
-        return sorted(set(out) - (info.get('skips') or set()))
+        return sorted(set(out))
     disc = info['disc']
     first = disc[0]
     end = min(info['span_end'], WINDOW_END)
@@ -478,6 +649,11 @@ def categorize_for_review(eid, name, occ, description=''):
       INVERSE         — exhibition + a regular discrete grid: the span is correct but
                         the regular discrete dates are bogus. Delete the discrete rows,
                         keep the span. MANUAL.
+      SKIP_PHRASE_UNRESOLVED
+                      — the shape WAS auto-fixable, but the name/description announces a
+                        break ("except holidays", "no class the week of 11/24") that
+                        cannot be resolved to a date, so regeneration is vetoed rather
+                        than silently applied. MANUAL.
       LIKELY_OK       — continuous exhibition/run or irregular; leave alone.
     """
     blob = name + ' ' + (description or '')
@@ -489,9 +665,11 @@ def categorize_for_review(eid, name, occ, description=''):
                       if not o['end_date'] or (o['end_date'] - o['start_date']).days <= 2))
     longest = max((( o['end_date'] - o['start_date']).days for o in occ if o['end_date']), default=0)
 
-    verdict, _ = classify(eid, name, occ, description)
+    verdict, vinfo = classify(eid, name, occ, description)
     if verdict != 'skip':
         return 'FIX_SPAN', verdict
+    if vinfo.get('skip_veto'):
+        return 'SKIP_PHRASE_UNRESOLVED', vinfo['reason']
 
     cverdict, cinfo = classify_course(name, occ, description)
     if cverdict == 'course_weekly':
@@ -499,6 +677,8 @@ def categorize_for_review(eid, name, occ, description=''):
         st = cinfo['time'][0] or 'no time'
         return 'COURSE_WEEKLY', (f'same-weekday {longest}d span ({cinfo["signal"]}) '
                                  f'-> {n} weekly dates @ {st}')
+    if cinfo.get('skip_veto'):
+        return 'SKIP_PHRASE_UNRESOLVED', cinfo['reason']
 
     # regular discrete grid? (same weekday, 7/14/28-31 day gaps)
     regular = False
@@ -552,7 +732,8 @@ def review_scan(cur, recent_only=False, ids=None):
     )
     events = cur.fetchall()
     scope = " created/updated in the last day" if recent_only else ""
-    buckets = {'FIX_SPAN': [], 'COURSE_WEEKLY': [], 'RECURRING_RANGE': [], 'PROGRAM_RANGE': [], 'INVERSE': [], 'LIKELY_OK': []}
+    buckets = {'FIX_SPAN': [], 'COURSE_WEEKLY': [], 'SKIP_PHRASE_UNRESOLVED': [],
+               'RECURRING_RANGE': [], 'PROGRAM_RANGE': [], 'INVERSE': [], 'LIKELY_OK': []}
     for e in events:
         cur.execute('SELECT start_date,start_time,end_date,end_time FROM event_occurrences WHERE event_id=%s ORDER BY start_date', (e['id'],))
         occ = cur.fetchall()
@@ -563,11 +744,14 @@ def review_scan(cur, recent_only=False, ids=None):
     actions = {
         'FIX_SPAN': 'auto-fixable — run with --apply (review first as usual)',
         'COURSE_WEEKLY': 'same-weekday course span -> weekly dates; verify cadence via --show/source, then --apply --ids <ids>',
+        'SKIP_PHRASE_UNRESOLVED': 'MANUAL — auto-fix VETOED: the text announces a break we cannot date. '
+                                  'Read the source, write the real dates, then delete the span',
         'RECURRING_RANGE': 'MANUAL — build the real meeting dates from the source, then delete the span',
         'PROGRAM_RANGE': 'MANUAL — umbrella/program: split into sub-events, make discrete, or accept as ongoing',
         'INVERSE': 'MANUAL — delete the bogus regular discrete rows, KEEP the span',
     }
-    for cat in ('FIX_SPAN', 'COURSE_WEEKLY', 'RECURRING_RANGE', 'PROGRAM_RANGE', 'INVERSE'):
+    for cat in ('FIX_SPAN', 'COURSE_WEEKLY', 'SKIP_PHRASE_UNRESOLVED',
+                'RECURRING_RANGE', 'PROGRAM_RANGE', 'INVERSE'):
         rows = buckets[cat]
         print(f"### {cat} ({len(rows)}) — {actions[cat]}")
         for eid, name, note in rows:
@@ -719,7 +903,7 @@ def main():
     ap.add_argument('--exclude', help='comma-separated event ids to drop from the fix set (manual-review escape hatch)')
     ap.add_argument('--show', help='comma-separated event ids: print full occurrence+description detail and exit (review aid)')
     ap.add_argument('--skipped', action='store_true', help='also list candidates that were skipped, with the reason')
-    ap.add_argument('--review', action='store_true', help='broad scan: bucket ALL span-bearing events into review categories (FIX_SPAN / RECURRING_RANGE / INVERSE) and exit')
+    ap.add_argument('--review', action='store_true', help='broad scan: bucket ALL span-bearing events into review categories (FIX_SPAN / COURSE_WEEKLY / SKIP_PHRASE_UNRESOLVED / RECURRING_RANGE / PROGRAM_RANGE / INVERSE) and exit')
     ap.add_argument('--new', action='store_true', help='restrict to events created/updated in the last day (envelope spans just added by the current run). Scopes --review, the dry run AND --apply.')
     ap.add_argument('--short-spans', action='store_true',
                     help=f'scan for REDUNDANT {SHORT_SPAN_MIN_DAYS}-{SHORT_SPAN_MAX_DAYS} day '
@@ -777,7 +961,7 @@ def main():
         cur.execute('SELECT start_date,start_time,end_date,end_time FROM event_occurrences WHERE event_id=%s ORDER BY start_date', (e['id'],))
         occ = cur.fetchall()
         verdict, info = classify(e['id'], e['name'], occ, e.get('description'))
-        by_verdict[verdict] += 1
+        by_verdict['skip_phrase_unresolved' if info.get('skip_veto') else verdict] += 1
         if verdict == 'skip':
             skipped.append((e['id'], e['name'], info.get('reason', '')))
             continue
@@ -812,7 +996,8 @@ def main():
         cur.execute('SELECT start_date,start_time,end_date,end_time FROM event_occurrences WHERE event_id=%s ORDER BY start_date', (e['id'],))
         occ = cur.fetchall()
         verdict, info = classify_course(e['name'], occ, e.get('description'))
-        by_verdict[verdict if verdict != 'skip' else 'course_skip'] += 1
+        by_verdict['skip_phrase_unresolved' if info.get('skip_veto')
+                   else (verdict if verdict != 'skip' else 'course_skip')] += 1
         if verdict == 'skip':
             skipped.append((e['id'], e['name'], 'course-scan: ' + info.get('reason', '')))
             continue
