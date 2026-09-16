@@ -9,6 +9,7 @@ import os
 import sys
 import contextlib
 import unittest
+import tempfile
 from datetime import date
 from types import SimpleNamespace
 from unittest import mock
@@ -1343,38 +1344,37 @@ class ChunkedNameBudgetTests(unittest.TestCase):
             self.assertEqual(event['description'], 'D Show')
             self.assertEqual(event['emoji'], '🎵')
 
-    def test_distinct_names_over_budget_still_cap(self):
+    def test_distinct_names_over_legacy_budget_all_survive(self):
         # 40 distinct names against a 1-batch (30-name) budget.
         chunk = self._chunk(*[(f'Event {i}', '2026-08-01') for i in range(40)])
         result, batches, _calls = self._run([chunk], chunks=1, max_batches=1)
-        self.assertEqual(len(batches), 1)
+        self.assertEqual(len(batches), 2)
         self.assertEqual(len(batches[0]), 30)
         names = {e['name'] for e in result['events']}
-        self.assertEqual(len(names), 30)
+        self.assertEqual(len(names), 40)
 
     def test_capped_run_emits_no_unenriched_event(self):
         # Records whose name was cut must be dropped, not shipped with the
         # 'No description available.' placeholder the enrichment never saw.
         chunk = self._chunk(*[(f'Event {i}', '2026-08-01') for i in range(40)])
         result, batches, _calls = self._run([chunk], chunks=1, max_batches=1)
-        enriched = set(batches[0])
+        enriched = {name for batch in batches for name in batch}
         for event in result['events']:
             self.assertIn(event['name'], enriched)
 
-    def test_chunks_stop_once_distinct_names_reach_the_budget(self):
+    def test_chunks_continue_past_the_legacy_budget(self):
         # 30 fresh names per chunk against a 1-batch budget: chunk 1 fills it.
         chunks_out = [self._chunk(*[(f'C{c} Event {i}', '2026-08-01')
                                     for i in range(30)]) for c in range(4)]
         _result, _batches, calls = self._run(chunks_out, chunks=4, max_batches=1)
-        self.assertEqual(calls, 1)
+        self.assertEqual(calls, 4)
 
     def test_record_ceiling_stops_a_runaway(self):
         chunk = self._chunk(*[('Same Event', f'2026-08-{i % 28 + 1:02d}')
                               for i in range(60)])
         with mock.patch.object(extractor, 'CHUNK_RECORD_CEILING', 100):
-            result, _batches, calls = self._run([chunk], chunks=10)
-        self.assertLess(calls, 10, "ceiling should have stopped the run")
-        self.assertLessEqual(len(result['events']), 160)
+            with self.assertRaises(extractor.ChunkedExtractionFailure):
+                self._run([chunk], chunks=10)
 
     def test_auto_bump_is_driven_by_names_not_records(self):
         # 120 records, 4 distinct names, 3-batch cap. Records would demand 4
@@ -1428,9 +1428,9 @@ class TestVisionPromptCarriesTheFullPageText(unittest.TestCase):
         text = ('a' * 5000) + marker
         self.assertIn(marker, self._prompt(text))
 
-    def test_runaway_input_is_still_capped(self):
-        prompt = self._prompt('z' * (extractor.MAX_VISION_TEXT_CHARS * 3))
-        self.assertLess(len(prompt), extractor.MAX_VISION_TEXT_CHARS * 2)
+    def test_full_text_survives_past_the_legacy_vision_cap(self):
+        source = 'z' * (extractor.MAX_VISION_TEXT_CHARS * 3) + 'Final event September 30'
+        self.assertIn(source, self._prompt(source))
 
     def test_prompt_directs_gemini_at_both_sources(self):
         # Framing matters: the old prompt said "For EACH event flyer/image",
@@ -1449,6 +1449,13 @@ class TestVisionImageCapCoversAFullBundle(unittest.TestCase):
     """MAX_VISION_IMAGES=10 silently dropped the last 2 posts of every 12-post
     picnob bundle — a straight coverage loss on every vision-mode IG site."""
 
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        patcher = mock.patch.object(extractor.agent_extraction, '_work_dir', __import__('pathlib').Path(self.temp.name))
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
     def test_cap_covers_a_twelve_post_bundle(self):
         self.assertGreaterEqual(extractor.MAX_VISION_IMAGES, 12)
 
@@ -1465,12 +1472,10 @@ class TestVisionImageCapCoversAFullBundle(unittest.TestCase):
         self.assertEqual(count, 12)
         self.assertEqual(len(parts), 12)
 
-    def test_dropping_images_is_logged_not_silent(self):
-        with mock.patch('builtins.print') as p:
-            self._run(20, 14)
-        logged = ' '.join(str(c) for c in p.call_args_list)
-        self.assertIn('MAX_VISION_IMAGES', logged)
-        self.assertIn('6', logged)  # 20 - 14 dropped
+    def test_all_images_survive_the_legacy_cap(self):
+        parts, count = self._run(20, 14)
+        self.assertEqual(count, 20)
+        self.assertEqual(len(parts), 20)
 
     def test_no_warning_when_nothing_is_dropped(self):
         with mock.patch('builtins.print') as p:
@@ -1485,11 +1490,8 @@ class TestVisionImageCapCoversAFullBundle(unittest.TestCase):
         results = [('b64', 'image/jpeg'), (None, None), (None, None), ('b64', 'image/jpeg')]
         with mock.patch.object(extractor, 'download_and_encode_image',
                                new=mock.AsyncMock(side_effect=results)):
-            with mock.patch('builtins.print') as p:
-                parts, count = asyncio.run(
-                    extractor.prepare_vision_content(content, 'https://cdn.test/'))
-        self.assertEqual(count, 2)
-        self.assertIn('failed to download', ' '.join(str(c) for c in p.call_args_list))
+            with self.assertRaisesRegex(extractor.ExtractionCallFailure, 'failed to download'):
+                asyncio.run(extractor.prepare_vision_content(content, 'https://cdn.test/'))
 
 
 class TestVisionExtractionFailureIsNotAZero(unittest.TestCase):
@@ -1549,79 +1551,10 @@ class TestExtractEventsMarksTheCrawlFailed(unittest.TestCase):
         self.assertNotIn('extracted', recorded)
 
 
-class TestBatchPathChunkFailures(unittest.TestCase):
-    """The batch path had the same hole: a chunked crawl result whose chunk
-    responses all errored was stored as '{"events": []}'."""
-
-    def _prep(self, crid, extraction_type='chunked'):
-        prep = PreparedExtraction(crawl_result_id=crid, website_name=f'Site {crid}',
-                                  extraction_type=extraction_type)
-        prep.max_batches = 3
-        return prep
-
-    def _request(self, crid, chunk_index=0):
-        return SimpleNamespace(metadata={
-            'crawl_result_id': str(crid),
-            'type': 'chunk',
-            'chunk_index': str(chunk_index),
-            'website_name': f'Site {crid}',
-            'request_id': f'cr-{crid}-chunk-{chunk_index}',
-        })
-
-    def _error_response(self, message='503 Service Unavailable'):
-        return SimpleNamespace(error=SimpleNamespace(message=message), response=None)
-
-    def _ok_response(self, crid, chunk_index=0, events='[]'):
-        text = ('{"request_id": "cr-%d-chunk-%d", "events": %s}'
-                % (crid, chunk_index, events))
-        return SimpleNamespace(error=None, response=SimpleNamespace(text=text))
-
-    def test_all_chunk_responses_errored_is_reported_as_failed(self):
-        preparations = {5: self._prep(5)}
-        requests = [self._request(5, 0), self._request(5, 1)]
-        responses = [self._error_response(), self._error_response()]
-        single, chunked, failed = extractor.process_batch_responses(
-            requests, responses, preparations)
-        self.assertNotIn(5, single)
-        self.assertIn(5, failed)
-
-    def test_chunks_that_answered_empty_are_not_a_failure(self):
-        preparations = {5: self._prep(5)}
-        requests = [self._request(5, 0)]
-        responses = [self._ok_response(5, 0, events='[]')]
-        single, chunked, failed = extractor.process_batch_responses(
-            requests, responses, preparations)
-        self.assertEqual(failed, {})
-        self.assertEqual(chunked.get(5), [])
-
-    def test_failed_crids_are_written_as_failed_not_stored(self):
-        stored, failed_marks = [], []
-
-        class FakeDb:
-            @staticmethod
-            @contextlib.contextmanager
-            def cursor_scope(buffered=True):
-                yield SimpleNamespace(), SimpleNamespace()
-
-            @staticmethod
-            def update_crawl_result_extracted(cursor, conn, crid, text):
-                stored.append(crid)
-
-            @staticmethod
-            def update_crawl_result_failed(cursor, conn, crid, message):
-                failed_marks.append((crid, message))
-
-            @staticmethod
-            def clear_batch_job_name(cursor, conn, crids):
-                pass
-
-        with mock.patch.object(extractor, 'db', FakeDb):
-            results = extractor._store_batch_results(
-                {1: '{"events": []}'}, [1, 5], failed_crids={5: 'chunk failure'})
-
-        self.assertEqual(stored, [1])
-        self.assertEqual(failed_marks, [(5, 'chunk failure')])
-        self.assertIn((5, False), results)
+class TestRemoteBatchIsRemoved(unittest.TestCase):
+    def test_legacy_entry_point_fails_without_external_calls(self):
+        with self.assertRaisesRegex(RuntimeError, "removed"):
+            asyncio.run(extractor.run_batch_extraction([]))
 
 
 class TestPerProfileMaxContentChars(unittest.TestCase):
@@ -1708,7 +1641,7 @@ class TestPerWebsiteMaxContentChars(unittest.TestCase):
         finally:
             site_profiles.PROFILES.remove(prof)
 
-    def test_prepare_extraction_truncates_at_the_websites_column(self):
+    def test_prepare_extraction_retains_content_past_legacy_column(self):
         """End-to-end wiring: the column travels from `websites` to the cut."""
         content = ''.join(f'### [Event {i}](https://plain.test/e/{i})\nAugust {i % 28 + 1}, 2026 '
                           f'at Some Venue. {"filler " * 40}\n\n' for i in range(1200))
@@ -1742,7 +1675,7 @@ class TestPerWebsiteMaxContentChars(unittest.TestCase):
 
         self.assertIsNone(prep.error)
         self.assertEqual(prep.extraction_type, 'chunked')
-        self.assertEqual(len(prep.content), 400000)
+        self.assertEqual(prep.content, content)
 
 
 class TestPartialChunkFailureFailsClosed(unittest.TestCase):
@@ -2036,6 +1969,50 @@ class TestSingleEventPlaceholderDescriptionKeepsTheRest(unittest.TestCase):
         res = self._extract({'description': 'Women in Horror - a SocFem general meeting.', 'location': 'NYC-DSA Office',
                              'occurrences': None, 'hashtags': [], 'emoji': ''})
         self.assertEqual(res['description'], 'Women in Horror - a SocFem general meeting.')
+
+
+
+class HeadinglessRecordBoundaryTests(unittest.TestCase):
+    def test_detail_url_keeps_name_body_and_date_together(self):
+        records = [f'EVENT DETAIL URL: https://example.org/event/{i}\n'
+                   f'Event {i}\n' + 'body ' * 20 + f'\nSeptember {i + 1}, 2026\n'
+                   for i in range(20)]
+        chunks = chunk_content_by_size('Intro\n' + ''.join(records), 450)
+        for record in records:
+            self.assertTrue(any(record.strip() in chunk for chunk in chunks), record)
+        self.assertTrue(all(len(c) <= 450 for c in chunks))
+
+    def test_plain_dates_are_not_assumed_to_start_records(self):
+        text = 'Paragraph about a show\nSeptember 20, 2026\nits details'
+        self.assertEqual(extractor._split_trailing_record(text, 1000), (text, ''))
+
+    def test_nested_objects_and_delimiter_text_do_not_split_event(self):
+        records = [dict(name=f'Event {i}', description='literal },{ inside text ' * 5,
+                        tickets=[{'label': 'x' * 60}, {'label': 'y' * 60}],
+                        startDate=f'2026-09-{i + 1:02d}') for i in range(15)]
+        for envelope in (records, {'events': records}, {'upcoming': records, 'past': []}):
+            line = json.dumps(envelope, separators=(',', ':'))
+            chunks = extractor._split_long_line(line, 750)
+            self.assertEqual(''.join(chunks), line)
+            self.assertTrue(all(len(c) <= 750 for c in chunks))
+            for record in records:
+                encoded = json.dumps(record, separators=(',', ':'))
+                self.assertTrue(any(encoded in c for c in chunks), encoded)
+
+    def test_oversized_json_record_is_bounded_and_preserved(self):
+        line = json.dumps({'products': [{'name': 'Huge', 'description': 'x' * 2000},
+                                       {'name': 'Small', 'date': '2026-09-20'}]}, separators=(',', ':'))
+        chunks = extractor._split_long_line(line, 500)
+        self.assertEqual(''.join(chunks), line)
+        self.assertTrue(all(len(c) <= 500 for c in chunks))
+        self.assertTrue(any('"name":"Small","date":"2026-09-20"' in c for c in chunks))
+
+    def test_invalid_json_uses_bounded_fallback(self):
+        line = '{"events":[{"name":"unfinished' + 'x' * 2000
+        chunks = extractor._split_long_line(line, 500)
+        self.assertEqual(''.join(chunks), line)
+        self.assertTrue(all(len(c) <= 500 for c in chunks))
+
 
 if __name__ == '__main__':
     unittest.main()

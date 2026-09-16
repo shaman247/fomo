@@ -1,6 +1,7 @@
 """Tests for processor.py text utilities."""
 
 import unittest
+from unittest.mock import patch
 import sys
 import os
 from datetime import date
@@ -1632,6 +1633,8 @@ class _RecordingCursor:
         self.statements.append((sql, params))
 
     def fetchone(self):
+        if 'ce.location_name' in self.statements[-1][0]:
+            return (1, 464, None, None, None, 'Listing event')
         return (0,)
 
 
@@ -2228,9 +2231,10 @@ class TestParentheticalParentVenue(unittest.TestCase):
 class _DetailCursor:
     """Cursor stub for apply_crawled_details that answers its lookup queries."""
 
-    def __init__(self, website_id=464):
+    def __init__(self, website_id=464, location=None, sublocation=None, location_id=None):
         self.statements = []
         self._website_id = website_id
+        self._location = (location, sublocation, location_id, 'Listing event')
         self._next = None
 
     def execute(self, sql, params=None):
@@ -2238,6 +2242,8 @@ class _DetailCursor:
         s = ' '.join(sql.split()).lower()
         if 'cr.website_id' in s:
             self._next = (1, self._website_id)
+            if 'ce.location_name' in s:
+                self._next += self._location
         elif s.startswith('select count(*)'):
             self._next = (0,)
         else:
@@ -2278,7 +2284,7 @@ class TestApplyCrawledDetailsRelocation(unittest.TestCase):
         self.assertIn(1970, params)
 
     def test_unmatched_new_location_does_not_clobber_existing_id(self):
-        cursor = _DetailCursor()
+        cursor = _DetailCursor(location='Listing Venue', sublocation='Old room', location_id=99)
         locmap = _make_locations_map([('Somewhere Else', 1)])
         apply_crawled_details(
             cursor, _NoopConnection(), 1,
@@ -2288,6 +2294,50 @@ class TestApplyCrawledDetailsRelocation(unittest.TestCase):
         )
         sql, _ = self._update(cursor)
         self.assertNotIn("location_id = %s", sql)
+        self.assertNotIn("location_name = %s", sql)
+        self.assertNotIn("sublocation = %s", sql)
+        rejection = next(params for sql, params in cursor.statements
+                         if 'INSERT INTO extraction_rejections' in sql)
+        self.assertEqual(rejection[2], 'detail_location_unresolved')
+        self.assertIn('A Venue We Do Not Know', rejection[-1])
+        self.assertIn('Listing Venue', rejection[-1])
+
+    def test_sublocation_only_uses_stored_venue_for_resolution(self):
+        cursor = _DetailCursor(location='Known Venue', location_id=99)
+        with patch('processor.get_location_id', return_value={'id': 99}) as resolve:
+            apply_crawled_details(cursor, _NoopConnection(), 1,
+                {'hashtags': [], 'sublocation': 'New room'}, self._TAG_CONTEXT,
+                locations_map={'names': {}})
+        self.assertEqual(resolve.call_args.args[:2], ('Known Venue', 'New room'))
+        self.assertIn('New room', self._update(cursor)[1])
+
+    def test_new_venue_drops_old_venue_sublocation(self):
+        cursor = _DetailCursor(location='Old Venue', sublocation='Old address', location_id=99)
+        apply_crawled_details(cursor, _NoopConnection(), 1,
+            {'hashtags': [], 'location': 'New Venue'}, self._TAG_CONTEXT,
+            locations_map=_make_locations_map([('New Venue', 100)]))
+        sql, params = self._update(cursor)
+        self.assertIn('sublocation = %s', sql)
+        self.assertIn(None, params)
+        self.assertIn(100, params)
+        self.assertNotIn('Old address', params)
+
+    def test_unmapped_row_can_keep_unknown_detail_text(self):
+        cursor = _DetailCursor(location='Old unknown venue', sublocation='Old room')
+        warning = apply_crawled_details(cursor, _NoopConnection(), 1,
+            {'hashtags': [], 'location': 'Unknown Venue'}, self._TAG_CONTEXT,
+            locations_map=_make_locations_map([('Elsewhere', 1)]))
+        self.assertFalse(warning)
+        self.assertIn('Unknown Venue', self._update(cursor)[1])
+        self.assertIn('sublocation = %s', self._update(cursor)[0])
+        self.assertIn(None, self._update(cursor)[1])
+
+    def test_missing_map_preserves_known_tuple_and_logs_candidate(self):
+        cursor = _DetailCursor(location='Known Venue', location_id=99)
+        warning = apply_crawled_details(cursor, _NoopConnection(), 1,
+            {'hashtags': [], 'location': 'Unknown Venue'}, self._TAG_CONTEXT)
+        self.assertTrue(warning)
+        self.assertNotIn('location_name = %s', self._update(cursor)[0])
 
     def test_no_location_change_leaves_location_id_alone(self):
         cursor = _DetailCursor()

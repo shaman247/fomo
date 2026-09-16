@@ -1,361 +1,162 @@
-"""Tests for llm_providers.py — provider selection for the single-call
-extraction path, and the failure translation that keeps a bad provider call
-from being stored as a "this page has no events" zero."""
-
+"""The compatibility provider always uses durable local work, without SDKs."""
 import asyncio
+import json
 import os
+from pathlib import Path
 import sys
+import tempfile
 import unittest
-from types import SimpleNamespace
 from unittest import mock
 
-# Add parent directory to path for imports
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from pydantic import BaseModel, Field
+import agent_extraction as queue
 import llm_providers
-from llm_providers import (
-    GEMINI,
-    OPENAI,
-    ProviderCallFailure,
-    generate_structured,
-    single_call_provider,
-)
 
 
-def run(coro):
-    return asyncio.run(coro)
+class Result(BaseModel):
+    request_id: str = ''
+    events: list[str] = Field(default_factory=list)
 
 
-class SelectionTests(unittest.TestCase):
-    """EXTRACTION_PROVIDER_SINGLE picks the provider; unset/garbage means Gemini."""
-
-    def _with(self, value):
-        # Strip EVERY EXTRACTION_PROVIDER* key, not just the one under test.
-        # `.env` is loaded into os.environ, so once production set
-        # EXTRACTION_PROVIDER=openai these "unset means Gemini" cases were
-        # silently reading the real config and failing — the assertion never
-        # exercised the unset path at all.
-        env = {k: v for k, v in os.environ.items()
-               if not k.startswith("EXTRACTION_PROVIDER")}
-        if value is not None:
-            env["EXTRACTION_PROVIDER_SINGLE"] = value
-        return mock.patch.dict(os.environ, env, clear=True)
-
-    def test_default_is_gemini(self):
-        with self._with(None):
-            self.assertEqual(single_call_provider(), GEMINI)
-
-    def test_openai_selected(self):
-        with self._with("openai"):
-            self.assertEqual(single_call_provider(), OPENAI)
-
-    def test_case_and_whitespace_tolerated(self):
-        with self._with("  OpenAI \n"):
-            self.assertEqual(single_call_provider(), OPENAI)
-
-    def test_unknown_value_falls_back_to_gemini(self):
-        # A typo must not silently disable extraction — fall back to the
-        # provider the rest of the pipeline already depends on.
-        with self._with("gpt5"):
-            self.assertEqual(single_call_provider(), GEMINI)
-
-    def test_empty_value_falls_back_to_gemini(self):
-        with self._with(""):
-            self.assertEqual(single_call_provider(), GEMINI)
-
-
-class PinningTests(unittest.TestCase):
-    """vision regressed in measurement, so the blanket EXTRACTION_PROVIDER
-    switch must not reach it — but an explicit per-path override still must.
-
-    chunked is deliberately NOT pinned: its regression was a record-counted
-    max_batches budget, fixed at the source in _execute_chunked_sync.
-    """
-
-    def _env(self, **kw):
-        return mock.patch.dict(os.environ, kw, clear=True)
-
-    def test_global_switch_moves_every_unpinned_path(self):
-        with self._env(EXTRACTION_PROVIDER="openai"):
-            for path in ('single', 'enrichment', 'detail', 'chunked'):
-                self.assertEqual(llm_providers.provider_for(path), OPENAI, path)
-
-    def test_global_switch_does_not_reach_vision(self):
-        with self._env(EXTRACTION_PROVIDER="openai"):
-            self.assertEqual(llm_providers.provider_for('vision'), GEMINI)
-
-    def test_explicit_override_still_reaches_pinned_paths(self):
-        with self._env(EXTRACTION_PROVIDER="gemini",
-                       EXTRACTION_PROVIDER_VISION="openai"):
-            self.assertEqual(llm_providers.provider_for('vision'), OPENAI)
-            self.assertEqual(llm_providers.provider_for('single'), GEMINI)
-
-    def test_every_pinned_path_is_a_real_path(self):
-        for path in llm_providers.GEMINI_PINNED:
-            self.assertIn(path, llm_providers.PATHS)
-
-    def test_pinned_paths_document_why(self):
-        # The pin is a measurement result; an undocumented one would get
-        # removed by the next person who reads it as a stale default.
-        for path, reason in llm_providers.GEMINI_PINNED.items():
-            self.assertGreater(len(reason), 80, path)
-
-    def test_default_is_gemini_everywhere(self):
-        with self._env():
-            self.assertEqual(llm_providers.providers_in_use(), {GEMINI})
-
-
-class GeminiPathTests(unittest.TestCase):
-    def _client(self, result):
-        async def generate_content(**kwargs):
-            if isinstance(result, Exception):
-                raise result
-            return SimpleNamespace(text=result)
-        return SimpleNamespace(aio=SimpleNamespace(
-            models=SimpleNamespace(generate_content=generate_content)))
-
-    def test_returns_stripped_text(self):
-        out = run(generate_structured(
-            "p", object, 5, provider=GEMINI,
-            gemini_client=self._client('  {"events": []}  '), gemini_model="m"))
-        self.assertEqual(out, '{"events": []}')
-
-    def test_api_error_becomes_provider_failure(self):
-        # Use a NON-retryable error: 503 is now retried with backoff (see
-        # TransientRetryTests), so using it here would test the retry loop and
-        # spend ~7s of real sleep rather than testing the error mapping.
-        with self.assertRaises(ProviderCallFailure):
-            run(generate_structured(
-                "p", object, 5, provider=GEMINI,
-                gemini_client=self._client(RuntimeError("400 invalid argument")),
-                gemini_model="m"))
-
-    def test_empty_body_is_a_failure_not_an_empty_result(self):
-        # An empty body must never become `{"events": []}` — that reads
-        # downstream as "no events on this page" and feeds archival.
-        with self.assertRaises(ProviderCallFailure):
-            run(generate_structured(
-                "p", object, 5, provider=GEMINI,
-                gemini_client=self._client(""), gemini_model="m"))
-
-
-class OpenAIPathTests(unittest.TestCase):
-    def _patch_client(self, response=None, error=None):
-        async def parse(**kwargs):
-            if error is not None:
-                raise error
-            return response
-        return mock.patch.object(
-            llm_providers, "openai_client",
-            SimpleNamespace(responses=SimpleNamespace(parse=parse)))
-
-    @staticmethod
-    def _response(status="completed", parsed=None, refusal=None, reason=None):
-        content = [SimpleNamespace(refusal=refusal)] if refusal else []
-        return SimpleNamespace(
-            status=status,
-            incomplete_details=SimpleNamespace(reason=reason),
-            output=[SimpleNamespace(content=content)],
-            output_parsed=parsed,
-        )
-
-    def test_returns_serialized_parsed_output(self):
-        parsed = SimpleNamespace(model_dump_json=lambda: '{"events": [1]}')
-        with mock.patch.object(llm_providers, "OPENAI_MODEL", "gpt-5.6-luna"), \
-                self._patch_client(response=self._response(parsed=parsed)):
-            out = run(generate_structured("p", object, 5, provider=OPENAI))
-        self.assertEqual(out, '{"events": [1]}')
-
-    def test_unconfigured_raises_rather_than_returning_empty(self):
-        with mock.patch.object(llm_providers, "openai_client", None):
-            with self.assertRaises(ProviderCallFailure):
-                run(generate_structured("p", object, 5, provider=OPENAI))
-
-    def test_truncated_response_is_a_failure(self):
-        # A truncated response carries the events parsed so far. Accepting it
-        # would silently under-extract and could cascade into false archival.
-        parsed = SimpleNamespace(model_dump_json=lambda: '{"events": [1]}')
-        with mock.patch.object(llm_providers, "OPENAI_MODEL", "m"), \
-                self._patch_client(response=self._response(
-                    status="incomplete", parsed=parsed, reason="max_output_tokens")):
-            with self.assertRaises(ProviderCallFailure) as ctx:
-                run(generate_structured("p", object, 5, provider=OPENAI))
-        self.assertIn("max_output_tokens", str(ctx.exception))
-
-    def test_refusal_is_a_failure(self):
-        with mock.patch.object(llm_providers, "OPENAI_MODEL", "m"), \
-                self._patch_client(response=self._response(refusal="no")):
-            with self.assertRaises(ProviderCallFailure):
-                run(generate_structured("p", object, 5, provider=OPENAI))
-
-    def test_missing_parsed_output_is_a_failure(self):
-        with mock.patch.object(llm_providers, "OPENAI_MODEL", "m"), \
-                self._patch_client(response=self._response(parsed=None)):
-            with self.assertRaises(ProviderCallFailure):
-                run(generate_structured("p", object, 5, provider=OPENAI))
-
-    def test_api_error_becomes_provider_failure(self):
-        # Use a NON-retryable error: 429 is now retried with backoff (see
-        # TransientRetryTests), so using it here would test the retry loop and
-        # spend ~7s of real sleep rather than testing the error mapping.
-        with mock.patch.object(llm_providers, "OPENAI_MODEL", "m"), \
-                self._patch_client(error=RuntimeError("400 invalid schema")):
-            with self.assertRaises(ProviderCallFailure) as ctx:
-                run(generate_structured("p", object, 5, provider=OPENAI))
-        self.assertIn("400", str(ctx.exception))
-
-    def test_timeout_becomes_provider_failure(self):
-        async def parse(**kwargs):
-            await asyncio.sleep(0.2)
-        with mock.patch.object(llm_providers, "OPENAI_MODEL", "m"), \
-                mock.patch.object(llm_providers, "openai_client", SimpleNamespace(
-                    responses=SimpleNamespace(parse=parse))):
-            with self.assertRaises(ProviderCallFailure) as ctx:
-                run(generate_structured("p", object, 0.01, provider=OPENAI))
-        self.assertIn("timed out", str(ctx.exception))
-
-    def test_reasoning_effort_is_sent(self):
-        seen = {}
-
-        async def parse(**kwargs):
-            seen.update(kwargs)
-            return self._response(
-                parsed=SimpleNamespace(model_dump_json=lambda: '{}'))
-
-        with mock.patch.object(llm_providers, "OPENAI_MODEL", "m"), \
-                mock.patch.object(llm_providers, "OPENAI_REASONING_EFFORT", "low"), \
-                mock.patch.object(llm_providers, "openai_client", SimpleNamespace(
-                    responses=SimpleNamespace(parse=parse))):
-            run(generate_structured("p", object, 5, provider=OPENAI))
-        # 'none' collapsed a dense listing page from 19 events to 2, so the
-        # effort we send is load-bearing, not cosmetic.
-        self.assertEqual(seen["reasoning"], {"effort": "low"})
-
-
-class TransientRetryTests(unittest.TestCase):
-    """A rate limit is not a permanent failure.
-
-    The 2026-08-04 run took **372 HTTP 429s** against a 200,000 tokens-per-minute
-    org cap and discarded the work every time, because the provider call mapped
-    every exception straight to ProviderCallFailure. The API even states how long
-    to wait. A lost extraction is stored as a FAILED crawl, so each one costs the
-    site a full crawl cycle of freshness.
-    """
-
+class AgentQueueTests(unittest.TestCase):
     def setUp(self):
-        self.slept = []
+        temp = tempfile.TemporaryDirectory()
+        self.addCleanup(temp.cleanup)
+        patcher = mock.patch.object(queue, '_work_dir', Path(temp.name))
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        self.prompt = 'Set request_id to "cr-7" in your response. Source: Event A.'
 
-        async def _fake_sleep(secs):
-            self.slept.append(secs)
+    def pending(self, prompt=None, schema=Result, images=None):
+        with self.assertRaises(queue.AgentExtractionPending) as raised:
+            asyncio.run(llm_providers.generate_structured(prompt or self.prompt, schema,
+                        provider='gemini', gemini_client=mock.Mock(), images=images))
+        return raised.exception
 
-        self._patches = [
-            mock.patch.object(llm_providers, "_sleep", _fake_sleep),
-            mock.patch.object(llm_providers, "OPENAI_MODEL", "m"),
-        ]
-        for p in self._patches:
-            p.start()
+    def response(self, pending, **changes):
+        result = dict(request_id=pending.request_id, status='complete', coverage='complete',
+                      result={'request_id': 'cr-7', 'events': ['Event A']})
+        result.update(changes)
+        return result
 
-    def tearDown(self):
-        for p in self._patches:
-            p.stop()
+    def test_all_legacy_provider_overrides_are_ignored(self):
+        with mock.patch.dict(os.environ, {'EXTRACTION_PROVIDER':'openai', 'EXTRACTION_PROVIDER_VISION':'gemini'}):
+            self.assertEqual(llm_providers.providers_in_use(), {'agent'})
+            self.assertEqual(llm_providers.unconfigured_paths(), [])
+        pending = self.pending()
+        self.assertTrue(pending.request_path.exists())
+        self.assertEqual(queue.status()[0]['status'], 'pending')
 
-    def _client(self, outcomes):
-        calls = {"n": 0}
+    def test_valid_response_replays_without_new_work(self):
+        pending = self.pending()
+        response = queue.work_dir() / 'agent-result.json'
+        queue.atomic_json(response, self.response(pending))
+        queue.submit(pending.request_id, response)
+        parsed = json.loads(asyncio.run(llm_providers.generate_structured(self.prompt, Result)))
+        self.assertEqual(parsed['events'], ['Event A'])
+        self.assertEqual(len(queue.status()), 1)
+        self.assertEqual(queue.status()[0]['status'], 'complete')
 
-        async def parse(**kwargs):
-            i = min(calls["n"], len(outcomes) - 1)
-            calls["n"] += 1
-            out = outcomes[i]
-            if isinstance(out, Exception):
-                raise out
-            return out
-        return calls, mock.patch.object(
-            llm_providers, "openai_client",
-            SimpleNamespace(responses=SimpleNamespace(parse=parse)))
+    def test_hash_binds_prompt_schema_and_images(self):
+        first = self.pending()
+        second = self.pending(self.prompt + ' extra source')
+        class NewResult(Result):
+            description: str
+        third = self.pending(schema=NewResult)
+        fourth = self.pending(images=[{'inline_data': {'mime_type':'image/png', 'data':'dGVzdA=='}}])
+        self.assertEqual(len({p.request_id for p in [first, second, third, fourth]}), 4)
+        self.assertTrue((fourth.request_path.parent / 'image-1.png').exists())
 
-    @staticmethod
-    def _ok():
-        parsed = SimpleNamespace(model_dump_json=lambda: '{"events": []}')
-        return SimpleNamespace(status="completed", incomplete_details=None,
-                               output=[], output_parsed=parsed)
+    def test_invalid_stale_partial_and_empty_responses_never_succeed(self):
+        pending = self.pending()
+        invalid = [self.response(pending, request_id='stale'),
+                   self.response(pending, status='partial'),
+                   self.response(pending, coverage='partial'),
+                   self.response(pending, result={'request_id':'cr-7'}),
+                   self.response(pending, result={'request_id':'cr-8','events':['A']}),
+                   self.response(pending, result={'request_id':'cr-7','events':[]}),
+                   self.response(pending, result={'request_id':'cr-7','events':[123]}),
+                   self.response(pending, result={'request_id':'cr-7','events':['A'],'unknown':1})]
+        for response in invalid:
+            with self.subTest(response=response):
+                queue.atomic_json(pending.request_path.with_name('response.json'), response)
+                with self.assertRaises(queue.AgentExtractionInvalid):
+                    asyncio.run(llm_providers.generate_structured(self.prompt, Result))
+                self.assertEqual(queue.status()[0]['status'], 'invalid')
 
-    def test_rate_limit_is_retried_and_succeeds(self):
-        err = RuntimeError("Error code: 429 - rate_limit_exceeded. "
-                           "Please try again in 1.854s.")
-        calls, patch = self._client([err, self._ok()])
-        with patch:
-            out = run(generate_structured("p", object, 5, provider=OPENAI))
-        self.assertEqual(out, '{"events": []}')
-        self.assertEqual(calls["n"], 2, "should have retried exactly once")
+    def test_truncated_json_never_counts_as_empty(self):
+        pending = self.pending()
+        pending.request_path.with_name('response.json').write_text('{"result":')
+        with self.assertRaises(queue.AgentExtractionInvalid):
+            asyncio.run(llm_providers.generate_structured(self.prompt, Result))
 
-    def test_server_hint_drives_the_delay(self):
-        err = RuntimeError("Error code: 429 - Please try again in 1.854s.")
-        calls, patch = self._client([err, self._ok()])
-        with patch:
-            run(generate_structured("p", object, 5, provider=OPENAI))
-        self.assertEqual(len(self.slept), 1)
-        self.assertAlmostEqual(self.slept[0], 2.104, places=2)
+    def test_explicit_empty_is_accepted_with_reason(self):
+        pending = self.pending()
+        queue.atomic_json(pending.request_path.with_name('response.json'), self.response(
+            pending, result={'request_id':'cr-7', 'events':[]}, empty_reason='Source states no upcoming events.'))
+        self.assertEqual(json.loads(asyncio.run(llm_providers.generate_structured(self.prompt, Result)))['events'], [])
 
-    def test_millisecond_hint_is_parsed_as_ms(self):
-        self.assertLess(llm_providers._retry_delay(
-            RuntimeError("429 try again in 500ms"), 0), 1.0)
+    def test_mutated_request_packet_is_rejected(self):
+        pending = self.pending()
+        packet = json.loads(pending.request_path.read_text())
+        packet['prompt'] += ' changed'
+        queue.atomic_json(pending.request_path, packet)
+        with self.assertRaises(queue.AgentExtractionInvalid):
+            asyncio.run(llm_providers.generate_structured(self.prompt, Result))
 
-    def test_gives_up_after_max_attempts(self):
-        err = RuntimeError("Error code: 429 - rate_limit_exceeded")
-        calls, patch = self._client([err])
-        with patch, mock.patch.object(llm_providers, "PROVIDER_MAX_ATTEMPTS", 3):
-            with self.assertRaises(ProviderCallFailure):
-                run(generate_structured("p", object, 5, provider=OPENAI))
-        self.assertEqual(calls["n"], 3)
-
-    def test_non_transient_error_is_not_retried(self):
-        calls, patch = self._client([RuntimeError("400 invalid schema")])
-        with patch:
-            with self.assertRaises(ProviderCallFailure):
-                run(generate_structured("p", object, 5, provider=OPENAI))
-        self.assertEqual(calls["n"], 1)
-        self.assertEqual(self.slept, [])
-
-    def test_timeout_is_not_retried(self):
-        async def parse(**kwargs):
-            await asyncio.sleep(0.2)
-        with mock.patch.object(llm_providers, "openai_client", SimpleNamespace(
-                responses=SimpleNamespace(parse=parse))):
-            with self.assertRaises(ProviderCallFailure) as ctx:
-                run(generate_structured("p", object, 0.01, provider=OPENAI))
-        self.assertIn("timed out", str(ctx.exception))
-        self.assertEqual(self.slept, [])
-
-    def test_status_code_attribute_is_honoured(self):
-        err = RuntimeError("something opaque")
-        err.status_code = 503
-        self.assertTrue(llm_providers._is_retryable(err))
-
-    def test_retry_after_header_wins_over_message(self):
-        err = RuntimeError("429 try again in 30s")
-        err.response = SimpleNamespace(headers={"retry-after": "2"})
-        self.assertAlmostEqual(llm_providers._retry_delay(err, 0), 2.0)
-
-    def test_backoff_is_capped(self):
-        with mock.patch.object(llm_providers, "PROVIDER_BACKOFF_CAP_S", 5):
-            self.assertLessEqual(
-                llm_providers._retry_delay(RuntimeError("429 try again in 900s"), 0), 5)
-
-    def test_gemini_path_retries_too(self):
-        calls = {"n": 0}
-
-        async def generate_content(**kwargs):
-            calls["n"] += 1
-            if calls["n"] == 1:
-                raise RuntimeError("503 Service Unavailable")
-            return SimpleNamespace(text='{"events": []}')
-        client = SimpleNamespace(aio=SimpleNamespace(
-            models=SimpleNamespace(generate_content=generate_content)))
-        out = run(generate_structured("p", object, 5, provider=GEMINI,
-                                      gemini_client=client, gemini_model="m"))
-        self.assertEqual(out, '{"events": []}')
-        self.assertEqual(calls["n"], 2)
+    def test_reference_date_is_frozen(self):
+        queue.atomic_json(queue.work_dir() / 'run.json', {'reference_date':'2026-09-15'})
+        self.assertEqual(queue.reference_date(), '2026-09-15')
 
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class AgentExtractionIntegrationTests(AgentQueueTests):
+    def test_all_chunks_are_queued_before_pausing(self):
+        import extractor
+        prep = extractor.PreparedExtraction(crawl_result_id=7, website_name='Example',
+            extraction_type='chunked', max_batches=1,
+            chunk_prompts=['first source', 'second source', 'third source'])
+        with self.assertRaises(queue.AgentExtractionPending):
+            asyncio.run(extractor._execute_chunked_sync(prep))
+        self.assertEqual(len(queue.status()), 3)
+        self.assertTrue(all(item['status'] == 'pending' for item in queue.status()))
+
+    def test_pending_listing_does_not_mark_crawl_failed(self):
+        import extractor
+        prep = extractor.PreparedExtraction(crawl_result_id=7, website_name='Example',
+                                             extraction_type='single', prompt=self.prompt)
+        with mock.patch.object(extractor, 'prepare_extraction', mock.AsyncMock(return_value=prep)), \
+             mock.patch.object(extractor.db, 'update_crawl_result_failed') as failed:
+            with self.assertRaises(queue.AgentExtractionPending):
+                asyncio.run(extractor.extract_events(mock.Mock(), mock.Mock(), 7, 'Example'))
+        failed.assert_not_called()
+
+    def test_enrichment_requires_all_requested_names_at_submit(self):
+        import extractor
+        with self.assertRaises(queue.AgentExtractionPending) as raised:
+            asyncio.run(extractor.enrich_events_batch(['First', 'Second'], 'Venue'))
+        pending = raised.exception
+        response = self.response(pending, result={'request_id':'', 'enrichments':[
+            {'name':'First', 'description':'No description available.', 'hashtags':['Art'], 'emoji':'🎨'}]})
+        source = queue.work_dir() / 'answer.json'
+        queue.atomic_json(source, response)
+        with self.assertRaisesRegex(queue.AgentExtractionInvalid, 'each requested event name'):
+            queue.submit(pending.request_id, source)
+
+    def test_invalid_calendar_date_is_rejected_before_submit(self):
+        import extractor
+        pending = self.pending(schema=extractor.SimpleEventList)
+        source = queue.work_dir() / 'answer.json'
+        queue.atomic_json(source, self.response(pending, result={'request_id':'cr-7','events':[
+            {'name':'Event', 'location':'Venue', 'occurrences':[{'start_date':'2026-02-30'}]}]}))
+        with self.assertRaises(queue.AgentExtractionInvalid):
+            queue.submit(pending.request_id, source)
+
+    def test_detail_pending_is_not_silently_skipped(self):
+        import extractor
+        with self.assertRaises(queue.AgentExtractionPending):
+            asyncio.run(extractor.extract_single_event('Event', 'The event is on September 22, 2026.'))

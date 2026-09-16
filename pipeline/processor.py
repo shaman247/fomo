@@ -17,6 +17,10 @@ import functools
 import html
 import time
 import json
+import hashlib
+import os
+from pathlib import Path
+import tempfile
 from contextlib import asynccontextmanager
 import re
 import urllib.parse
@@ -8146,9 +8150,11 @@ def apply_crawled_details(cursor, connection, ce_id, data, tag_context,
         tag_context: tuple of (tag_rules, ancestor_map, root_tags, disambiguation_rules)
         locations_map: optional map from build_locations_map(). When the detail
             page supplies a NEW location/sublocation we must re-run location
-            matching on it — the listing-page string that produced the stored
-            location_id is being replaced, and leaving the id behind stranded
-            events at NULL even though the new name resolves cleanly.
+            matching on it. Unresolved replacements retain the existing ID
+            and its text together and log the detail candidate for review.
+
+    Returns True when an unresolved detail location change was retained for
+    review, so the caller can include its count in the run summary.
     """
     tag_rules, ancestor_map, root_tags, disambiguation_rules = tag_context
 
@@ -8184,37 +8190,61 @@ def apply_crawled_details(cursor, connection, ce_id, data, tag_context,
         update_fields.append("emoji = %s")
         update_values.append(first_emoji)
 
-    if data.get('location'):
-        update_fields.append("location_name = %s")
-        update_values.append(data['location'])
-    if data.get('sublocation'):
-        update_fields.append("sublocation = %s")
-        update_values.append(data['sublocation'])
-
-    # Re-resolve location_id whenever the detail page replaced the location text.
-    # Only write it when the new text actually matches something — a detail page
-    # naming an unknown venue must not blank out an id the listing crawl earned.
-    if locations_map and (data.get('location') or data.get('sublocation')):
+    location_warning = False
+    if data.get('location') or data.get('sublocation'):
         cursor.execute(
-            "SELECT ce.crawl_result_id, cr.website_id "
+            "SELECT ce.crawl_result_id, cr.website_id, ce.location_name, "
+            "ce.sublocation, ce.location_id, ce.name "
             "FROM crawl_events ce "
             "JOIN crawl_results cr ON cr.id = ce.crawl_result_id "
             "WHERE ce.id = %s",
             (ce_id,),
         )
         row = cursor.fetchone()
-        ce_website_id = row[1] if row else None
+        cr_id, ce_website_id, old_location, old_sub, old_id, old_name = (
+            row if row else (None, None, None, None, None, None))
+        new_location = (data.get('location') or old_location or '').strip()
+        # A replacement venue must not inherit the old venue's address/room.
+        new_sub = (data.get('sublocation') or
+                   (old_sub if not data.get('location') or new_location == old_location else '') or '').strip()
         location_info = get_location_id(
-            (data.get('location') or '').strip(),
-            (data.get('sublocation') or '').strip(),
-            '',
-            (data.get('name') or '').strip(),
-            locations_map,
-            website_id=ce_website_id,
-        )
-        if location_info and location_info.get('id'):
-            update_fields.append("location_id = %s")
-            update_values.append(location_info['id'])
+            new_location, new_sub, '',
+            (data.get('name') or old_name or '').strip(),
+            locations_map, website_id=ce_website_id,
+        ) if locations_map else None
+        new_id = location_info.get('id') if location_info else None
+        changed = (new_location, new_sub) != (old_location or '', old_sub or '')
+        if old_id and not new_id and changed:
+            # Keep the listing-derived tuple coherent, but retain the rejected
+            # detail candidate for investigation. Unknown text must neither
+            # erase a known pin nor silently impersonate its provenance.
+            location_warning = True
+            log_rejection(
+                cursor, cr_id, ce_website_id,
+                rejection_type='detail_location_unresolved', stage='detail_crawl',
+                event_name=data.get('name') or old_name, event_url=data.get('url'),
+                details=json.dumps({
+                    'crawl_event_id': ce_id, 'retained_location_id': old_id,
+                    'retained_location': old_location, 'retained_sublocation': old_sub,
+                    'detail_location': data.get('location'),
+                    'detail_sublocation': data.get('sublocation'),
+                    'reason': 'unmatched' if locations_map else 'no_locations_map',
+                }, ensure_ascii=False),
+            )
+            print(f"    - ⚠️ Detail location unresolved for crawl_event {ce_id}: "
+                  f"{new_location!r} / {new_sub!r}; retained location {old_id} "
+                  "and its original text (logged for review)")
+        else:
+            if data.get('location'):
+                update_fields.append("location_name = %s")
+                update_values.append(new_location)
+            if data.get('sublocation') or (data.get('location') and old_sub
+                    and new_location != old_location and (not new_id or new_id != old_id)):
+                update_fields.append("sublocation = %s")
+                update_values.append(new_sub or None)
+            if new_id:
+                update_fields.append("location_id = %s")
+                update_values.append(new_id)
 
     update_values.append(ce_id)
     cursor.execute(
@@ -8347,6 +8377,7 @@ def apply_crawled_details(cursor, connection, ce_id, data, tag_context,
         )
 
     connection.commit()
+    return location_warning
 
 
 def _kill_crawl_browsers():
@@ -8402,12 +8433,85 @@ async def managed_crawler(browser_config, startup_timeout=90, teardown_timeout=3
             _kill_crawl_browsers()
 
 
-async def crawl_event_details(cursor, connection, candidates, num_workers=10):
+def _detail_source_path(extraction_dir, candidate, settings):
+    """Key durable detail snapshots by the row and its extraction context."""
+    identity = json.dumps(
+        {'candidate': candidate, 'settings': settings},
+        sort_keys=True, ensure_ascii=False, default=str,
+    )
+    key = hashlib.sha256(identity.encode('utf-8')).hexdigest()
+    return Path(extraction_dir) / 'detail_sources' / f'{key}.json'
+
+
+def _detail_candidate_identities(cursor, candidates):
+    """Fingerprint live rows, source provenance, dates and tags before enrichment.
+
+    The saved candidate list can outlive its database rows while an agent works.
+    Include the full crawl_event and source revision so an unchanged ID cannot
+    silently accept a response intended for an older event or listing page.
+    """
+    if not candidates:
+        return {}
+    expected = {row[0]: tuple(row) for row in candidates}
+    ids = sorted(expected)
+    placeholders = ','.join(['%s'] * len(ids))
+    cursor.execute(f"""
+        SELECT ce.id, ce.name, ce.url, cr.website_id,
+               ce.created_at >= cr.crawled_at,
+               EXISTS(SELECT 1 FROM event_sources es WHERE es.crawl_event_id = ce.id),
+               ce.*, SHA2(COALESCE(cr.crawled_content, ''), 256),
+               SHA2(COALESCE(cr.extracted_content, ''), 256),
+               cr.crawled_at, cr.status, w.notes, w.skip_reenrichment, w.disabled
+        FROM crawl_events ce
+        JOIN crawl_results cr ON cr.id = ce.crawl_result_id
+        JOIN websites w ON w.id = cr.website_id
+        WHERE ce.id IN ({placeholders})
+        ORDER BY ce.id
+    """, ids)
+    rows = cursor.fetchall()
+    if {row[0] for row in rows} != set(expected):
+        raise ValueError('Saved detail event was removed; start a fresh run')
+    records = {}
+    for row in rows:
+        if tuple(row[:4]) != expected[row[0]] or not row[4] or row[5]:
+            raise ValueError(
+                f'Saved detail event {row[0]} changed, was superseded, or already merged; start a fresh run')
+        records[row[0]] = {'event': row, 'occurrences': [], 'tags': []}
+    for table, key in [('crawl_event_occurrences', 'occurrences'), ('crawl_event_tags', 'tags')]:
+        cursor.execute(
+            f'SELECT crawl_event_id, t.* FROM {table} t '
+            f'WHERE crawl_event_id IN ({placeholders}) ORDER BY crawl_event_id, id', ids)
+        for row in cursor.fetchall():
+            records[row[0]][key].append(row)
+    return {
+        ce_id: hashlib.sha256(json.dumps(
+            record, ensure_ascii=False, sort_keys=True, default=str).encode('utf-8')).hexdigest()
+        for ce_id, record in records.items()
+    }
+
+
+def _save_detail_source(path, content, identity):
+    """Publish a complete snapshot before requesting agent extraction."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile(
+            mode='w', encoding='utf-8', dir=path.parent, delete=False) as handle:
+        temp_path = Path(handle.name)
+        json.dump({'content': content, 'candidate_identity': identity}, handle, ensure_ascii=False)
+    try:
+        os.replace(temp_path, path)
+    finally:
+        temp_path.unlink(missing_ok=True)
+
+
+async def crawl_event_details(cursor, connection, candidates, num_workers=10,
+                              extraction_dir=None):
     """Crawl individual event pages to fill in missing details.
 
     For events whose listing pages lacked descriptions or locations, crawls
-    the individual event URL, extracts details via Gemini, and updates
-    crawl_events before the merger reads them.
+    the individual event URL, queues details for agent extraction, and updates
+    crawl_events before the merger reads them. Durable source snapshots let
+    the same run resume without fetching those pages again. Pending or invalid
+    agent responses stop this phase before any database writes.
 
     Args:
         cursor: DB cursor
@@ -8415,12 +8519,21 @@ async def crawl_event_details(cursor, connection, candidates, num_workers=10):
         candidates: list of (ce_id, name, url, website_id) from
             db.get_detail_crawl_candidates()
         num_workers: max concurrent crawl workers
+        extraction_dir: run workspace holding durable detail-page snapshots
 
     Returns number of events successfully updated.
     """
     import extractor  # Local import to avoid circular dependency with extractor→processor
+    import agent_extraction
+    from dblock import write_lock
+
+    if extraction_dir is None:
+        extraction_dir = agent_extraction.work_dir()
 
     print(f"\n  Crawling details for {len(candidates)} event(s) with missing descriptions...")
+
+    connection.commit()  # Refresh the read snapshot before capturing identities.
+    candidate_identities = _detail_candidate_identities(cursor, candidates)
 
     # Load per-website crawl + browser settings
     website_ids = {ws_id for _, _, _, ws_id in candidates}
@@ -8439,11 +8552,21 @@ async def crawl_event_details(cursor, connection, candidates, num_workers=10):
         for ws_id, ws in website_settings.items()
     }
 
-    # Group events by website
+    # Replay snapshots first; a fully cached resume never starts a browser.
+    cached_events = []
     events_by_website = {}
     for event_tuple in candidates:
         ws_id = event_tuple[3]
-        events_by_website.setdefault(ws_id, []).append(event_tuple)
+        source_path = _detail_source_path(
+            extraction_dir, event_tuple, website_settings.get(ws_id, {}))
+        if source_path.exists():
+            snapshot = json.loads(source_path.read_text(encoding='utf-8'))
+            if snapshot.get('candidate_identity') != candidate_identities[event_tuple[0]]:
+                raise ValueError(
+                    f'Saved detail event {event_tuple[0]} changed during agent extraction; start a fresh run')
+            cached_events.append((event_tuple, snapshot['content']))
+        else:
+            events_by_website.setdefault(ws_id, []).append(event_tuple)
 
     # Group websites by browser settings so each group shares a browser instance
     browser_batches = {}  # browser_key -> [ws_id, ...]
@@ -8454,8 +8577,10 @@ async def crawl_event_details(cursor, connection, candidates, num_workers=10):
     # Phase 1: Crawl + extract with per-website sequential, cross-website parallel
     semaphore = asyncio.Semaphore(num_workers)
     results = []  # list of (ce_id, name, data) for successful extractions
+    pending = []
+    errors = []
 
-    attempted_ids = []  # Track all attempted ce_ids for counter increment
+    attempted_ids = []  # Only finalized fetch/extraction attempts consume retries.
 
     # Stall detection: each completed crawl bumps the heartbeat. A watchdog
     # task aborts the step if no progress is made for STALL_TIMEOUT seconds,
@@ -8464,43 +8589,60 @@ async def crawl_event_details(cursor, connection, candidates, num_workers=10):
     # per-crawl timeout in crawler.crawl_event_url(); this is the safety net
     # for failures that escape it.
     STALL_TIMEOUT = 300  # 5 minutes with zero progress => kill browser & abort
-    EXTRACT_TIMEOUT = 120  # hard ceiling on a single Gemini extract call
+    EXTRACT_TIMEOUT = 120  # ceiling for reading/validating a local agent response
     heartbeat = {'last': time.monotonic(), 'done': 0}
     total_candidates = len(candidates)
+
+    async def extract_details(event_tuple, content):
+        ce_id, name, url, ws_id = event_tuple
+        if not content:
+            attempted_ids.append(ce_id)
+            return
+        site_notes = website_settings.get(ws_id, {}).get('notes', '') or ''
+        try:
+            data = await asyncio.wait_for(
+                extractor.extract_single_event(
+                    name, content, notes=site_notes, url=url),
+                timeout=EXTRACT_TIMEOUT,
+            )
+        except agent_extraction.AgentExtractionPending as exc:
+            pending.append(exc)
+            return
+        if data:
+            results.append((ce_id, name, data))
+        attempted_ids.append(ce_id)
+
+    cached_outcomes = await asyncio.gather(
+        *(extract_details(event_tuple, content)
+          for event_tuple, content in cached_events),
+        return_exceptions=True,
+    )
+    errors.extend(outcome for outcome in cached_outcomes
+                  if isinstance(outcome, BaseException))
 
     async def process_website(web_crawler, ws_id):
         """Process all events for one website sequentially.
 
-        Appends successful extractions to the shared ``results`` list as they
-        complete (rather than returning at the end) so a watchdog abort keeps
-        all work finished before the stall.
+        Saves every fetched source before extraction, so a paused or failed
+        batch can replay completed fetches on the next run.
         """
         crawl_config = crawl_configs.get(ws_id, crawler.build_event_crawl_config({}))
-        # The site's own extraction notes steer the detail prompt exactly as
-        # they steer the listing prompt. Skipping them here let a per-site
-        # directive win on the listing pass and then get undone by this one.
-        site_notes = website_settings.get(ws_id, {}).get('notes', '') or ''
-        for ce_id, name, url, _ in events_by_website[ws_id]:
+        for event_tuple in events_by_website[ws_id]:
+            ce_id, name, url, _ = event_tuple
             async with semaphore:
-                attempted_ids.append(ce_id)
                 content = await crawler.crawl_event_url(
                     web_crawler, url, crawl_config,
                     user_agent=website_settings.get(ws_id, {}).get('user_agent'))
                 heartbeat['last'] = time.monotonic()
                 heartbeat['done'] += 1
-                if not content:
-                    continue
+                _save_detail_source(_detail_source_path(
+                    extraction_dir, event_tuple, website_settings.get(ws_id, {})),
+                    content, candidate_identities[ce_id])
                 try:
-                    data = await asyncio.wait_for(
-                        extractor.extract_single_event(
-                            name, content, notes=site_notes, url=url),
-                        timeout=EXTRACT_TIMEOUT,
-                    )
-                except asyncio.TimeoutError:
-                    print(f"    Extract timed out after {EXTRACT_TIMEOUT}s for {name}")
-                    continue
-                if data:
-                    results.append((ce_id, name, data))
+                    await extract_details(event_tuple, content)
+                except Exception as exc:
+                    # Keep preparing other jobs, then fail the whole phase.
+                    errors.append(exc)
 
     async def watchdog(gather_task):
         """Abort the detail crawl if no progress is made for STALL_TIMEOUT.
@@ -8517,7 +8659,7 @@ async def crawl_event_details(cursor, connection, candidates, num_workers=10):
                 print(
                     f"  ⚠️ WATCHDOG: detail crawl stalled — no progress for "
                     f"{int(idle)}s ({heartbeat['done']}/{total_candidates} crawled). "
-                    f"Killing wedged browser and aborting Step 5 with partial results."
+                    f"Killing wedged browser and pausing Step 5 with saved sources."
                 )
                 gather_task.cancel()
                 _kill_crawl_browsers()
@@ -8541,11 +8683,13 @@ async def crawl_event_details(cursor, connection, candidates, num_workers=10):
                 gather_task = asyncio.gather(*tasks, return_exceptions=True)
                 watchdog_task = asyncio.create_task(watchdog(gather_task))
                 try:
-                    await gather_task
+                    outcomes = await gather_task
+                    errors.extend(outcome for outcome in outcomes
+                                  if isinstance(outcome, BaseException))
                 except asyncio.CancelledError:
-                    # Watchdog aborted a stalled batch; keep whatever finished
-                    # (workers append to `results` as they go).
-                    print("  Detail crawl batch aborted; continuing with partial results.")
+                    # Saved sources survive the watchdog; defer all DB writes.
+                    print("  Detail crawl batch aborted; fetched sources are saved for resume.")
+                    errors.append(RuntimeError('Detail crawl batch stalled; resume this run'))
                 finally:
                     watchdog_task.cancel()
         except Exception as e:
@@ -8553,25 +8697,40 @@ async def crawl_event_details(cursor, connection, candidates, num_workers=10):
             # browser); this catches a re-raised startup failure so remaining
             # batches still run.
             print(f"  Detail crawl batch error ({type(e).__name__}: {e}); continuing with remaining batches.")
+            errors.append(e)
 
-    # Increment attempt counter for all attempted events (success or failure)
-    if attempted_ids:
-        placeholders = ','.join(['%s'] * len(attempted_ids))
-        cursor.execute(
-            f"UPDATE crawl_events SET detail_crawl_attempts = detail_crawl_attempts + 1 "
-            f"WHERE id IN ({placeholders})",
-            attempted_ids,
-        )
-        connection.commit()
+    # Never classify waiting/invalid extraction as completed or consume its
+    # retry budget. All other source pages have still been saved and queued.
+    if errors:
+        raise errors[0]
+    if pending:
+        print(f"  Waiting for agent responses for {len(pending)} detail page(s).")
+        raise pending[0]
 
-    # Phase 2: Apply DB updates sequentially
+    # Phase 2: Apply DB updates sequentially under the shared writer lock.
     enriched = 0
-    for ce_id, name, data in results:
-        apply_crawled_details(cursor, connection, ce_id, data, tag_context,
-                              locations_map=locations_map)
-        enriched += 1
-        location_info = f" @ {data['location']}" if data.get('location') else ""
-        print(f"    + {name}{location_info}: {(data.get('description') or '(no description; kept existing)')[:80]}...")
+    location_warnings = 0
+    with write_lock(connection):
+        connection.commit()  # Discard the pre-lock read snapshot, not a pending write.
+        if _detail_candidate_identities(cursor, candidates) != candidate_identities:
+            raise ValueError('Detail events changed before applying agent responses; start a fresh run')
+        for ce_id, name, data in results:
+            location_warnings += bool(apply_crawled_details(
+                cursor, connection, ce_id, data, tag_context, locations_map=locations_map))
+            enriched += 1
+            location_info = f" @ {data['location']}" if data.get('location') else ""
+            print(f"    + {name}{location_info}: {(data.get('description') or '(no description; kept existing)')[:80]}...")
+        if attempted_ids:
+            placeholders = ','.join(['%s'] * len(attempted_ids))
+            cursor.execute(
+                f"UPDATE crawl_events SET detail_crawl_attempts = detail_crawl_attempts + 1 "
+                f"WHERE id IN ({placeholders})",
+                attempted_ids,
+            )
+            connection.commit()
 
     print(f"  Detail-crawled {enriched}/{len(candidates)} events")
+    if location_warnings:
+        print(f"  ⚠️ {location_warnings} unresolved detail location change(s); "
+              "retained original pins/text; see detail_location_unresolved rejections")
     return enriched

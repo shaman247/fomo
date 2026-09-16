@@ -227,6 +227,13 @@ SOFT_404_MARKERS = (
     # Meetup: group deleted/disbanded (canonical urlname becomes a UUID
     # tombstone) or switched to private. Both render this same body.
     "sorry, the group you're looking for doesn't exist",
+    # Building for the Arts / bfany.org (Theater Row, w195): the "On Stage" list
+    # is rendered by a ticketing widget whose relative join_waitlist.php /
+    # show_page.php links resolve against bfany.org, where those files do not
+    # exist. Every harvested detail URL therefore answers with this one site-wide
+    # error body (~890 chars rendered), which the enricher was reading as if it
+    # were the show page. Found on all 25 detail URLs, 2026-09-16.
+    "we are sorry, but you found a page that does not exist",
 )
 
 # Observed Meetup soft-404 bodies are 4.1-4.4 KB of markdown; the smallest real
@@ -877,13 +884,39 @@ def get_browser_key(settings):
     )
 
 
+# Site chrome stripped from DETAIL pages before the markdown is built (and so
+# before the 12K cap in crawl_event_url). A detail page is one event, and the
+# body we want sits between a site-wide menu and a site-wide footer; on a
+# nav-heavy theme that chrome can be most of the page. China Institute
+# (Jupiter X + Elementor) rendered a 7.6K mega-menu ahead of a 3.2K event body,
+# so every packet arrived nav-only under the cap. The detail path has no
+# js_code lever (this config deliberately drops it), which makes the scraper's
+# own excluded_selector the only place to do this.
+#
+# The selectors are ARIA landmark roles, not tag names, ON PURPOSE:
+#   - `banner` / `contentinfo` are defined as page-level landmarks. A <header>
+#     or <footer> nested in an <article>/<section> does not carry them, so an
+#     in-article <header class="entry-header"> holding the event title (the
+#     case the LISTING config's excluded_tags comment warns about) survives.
+#   - bare <header>/<footer> are deliberately NOT listed: they are page chrome
+#     on some themes and real content on others (librarycalendar.com puts the
+#     library's name, address and hours in the page <header>).
+# <nav> is safe by tag: navigation is never the event body.
+#
+# This is detail-only. The listing crawl still keeps everything, because a
+# listing's event rows genuinely do live inside <nav>-ish widgets on some sites.
+DETAIL_CHROME_SELECTOR = 'nav, [role="navigation"], [role="banner"], [role="contentinfo"]'
+
+
 def build_event_crawl_config(website_settings):
     """
     Build a CrawlerRunConfig for crawling an individual event URL.
 
     Uses the same per-website settings as the main crawl, but without
     js_code, deep crawling, or click-based pagination (those are for
-    listing pages, not individual event pages).
+    listing pages, not individual event pages). Site chrome
+    (DETAIL_CHROME_SELECTOR) is removed from the DOM before markdown
+    generation so the event body survives the 12K truncation.
 
     Args:
         website_settings: Dict with keys like delay_before_return_html,
@@ -902,6 +935,7 @@ def build_event_crawl_config(website_settings):
     return CrawlerRunConfig(
         word_count_threshold=5,
         excluded_tags=[],
+        excluded_selector=DETAIL_CHROME_SELECTOR,
         process_iframes=True,
         cache_mode=CacheMode.BYPASS,
         remove_overlay_elements=overlays,

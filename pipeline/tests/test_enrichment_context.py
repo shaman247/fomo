@@ -82,18 +82,14 @@ Next event prose.
                 ['Target'], 'Venue', content='## Other\nTarget is mentioned here.'))
         self.assertEqual(out['Target']['description'], 'No description available.')
 
-    def test_batch_enrichment_applies_the_same_context_guard(self):
-        request = SimpleNamespace(metadata={'request_id': 'cr-1-enrich-0',
-                                           'crawl_result_id': '1', 'website_name': 'Venue'})
-        response = SimpleNamespace(error=None, response=SimpleNamespace(text=json.dumps({
-            'request_id': 'cr-1-enrich-0',
-            'enrichments': [{'name': 'Target', 'description': 'Made up details.'},
-                            {'name': 'Known', 'description': 'Verified description.'}],
-        })))
-        prep = extractor.PreparedExtraction(1, 'Venue', 'chunked', content='## Known\nVerified description.')
-        events = [{'name': name, 'location': 'Venue'} for name in ['Target', 'Known']]
-        result = extractor.process_enrichment_responses([request], [response], {1: events}, {1: prep})
-        records = {e['name']: e for e in json.loads(result[1])['events']}
+    def test_multiple_agent_enrichments_apply_the_same_context_guard(self):
+        response = {'enrichments': [
+            {'name': 'Target', 'description': 'Made up details.'},
+            {'name': 'Known', 'description': 'Verified description.'}]}
+        with patch.object(extractor.llm_providers, 'generate_structured',
+                          AsyncMock(return_value=json.dumps(response))):
+            records = asyncio.run(extractor.enrich_events_batch(
+                ['Target', 'Known'], 'Venue', content='## Known\nVerified description.'))
         self.assertEqual(records['Target']['description'], 'No description available.')
         self.assertEqual(records['Known']['description'], 'Verified description.')
 

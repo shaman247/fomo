@@ -4,7 +4,7 @@ Event Processing Pipeline
 Orchestrates the complete event processing workflow:
 
 1. Crawl - Query websites table, crawl due sites, store in crawl_results
-2. Extract - Use Gemini AI to extract structured event data
+2. Extract - Queue source packets for the running agent; validate its structured results
 3. Process - Parse responses, enrich with location data, store in crawl_events
 4. Detail Crawl - Crawl individual event URLs for missing descriptions
 5. Merge - Deduplicate crawl_events into final events table
@@ -38,13 +38,17 @@ import db
 import crawler
 from crawler import get_browser_key
 import extractor
-import llm_providers
+import agent_extraction
+import agent_run
+from pathlib import Path
+import shlex
 import processor
 import merger
 import exporter
 import uploader
 import frequency_analyzer
 import dblock
+from preflight import run_disk_preflight
 
 # Number of concurrent workers for crawling, extraction, and detail crawling
 NUM_WORKERS = 10
@@ -110,6 +114,8 @@ def run_public_dataset_export(cursor, force=False):
 
 def run_export_dataset_only():
     """Standalone forced public dataset export (main.py --export-dataset)."""
+    if not run_disk_preflight():
+        return False
     connection = db.create_connection()
     if not connection:
         print("Failed to connect to database")
@@ -128,16 +134,78 @@ def _merge_only_hint(website_ids):
     return f"python pipeline/main.py --merge-only{ids_arg}"
 
 
-async def run_pipeline(website_ids=None, limit=None, use_batch=None):
+def resume_command(work_dir):
+    return f"./venv/bin/python pipeline/main.py --resume {shlex.quote(str(work_dir))}"
+
+
+def report_agent_pending(work_dir):
+    print("\nPIPELINE WAITING FOR AGENT EXTRACTION (exit 2)")
+    print(f"Review pending packets: ./venv/bin/python pipeline/agent_extraction.py status --work-dir {shlex.quote(str(work_dir))}")
+    print(f"After submitting complete responses, continue: {resume_command(work_dir)}")
+    print("Processing/publication will continue only after required responses validate.")
+    return None
+
+
+def retire_ineligible_retries(work_dir, state, results):
+    """Retire legacy failed fetches after verifying the saved source snapshot.
+
+    Keep their IDs/reasons for run reporting and leave DB content/status intact.
+    These are crawl failures, never accepted zero-event extractions.
+    """
+    rejected = [row for row in results if row.get('retry_exclusion_reason')]
+    if not rejected:
+        return results
+    kept = [row for row in results if not row.get('retry_exclusion_reason')]
+    retired = state.setdefault('retired_retries', [])
+    for row in rejected:
+        record = {key: row[key] for key in ('crawl_result_id', 'website_id', 'name',
+                                            'source_hash', 'retry_exclusion_reason')}
+        retired.append(record)
+        print(f"  Retiring failed retry cr{row['crawl_result_id']} ({row['name']}): "
+              f"{row['retry_exclusion_reason']}; original failure preserved")
+    state['crawl_result_ids'] = [row['crawl_result_id'] for row in kept]
+    state['source_hashes'] = {str(row['crawl_result_id']): row['source_hash'] for row in kept}
+    state['website_ids'] = sorted({row['website_id'] for row in kept})
+    agent_run.save(work_dir, state)
+    return kept
+
+
+async def run_pipeline(website_ids=None, limit=None, use_batch=None, *, work_dir=None, resume=False):
+    """Run one resumable phase. None means agent work is pending (CLI exit 2)."""
+    if not run_disk_preflight():
+        return False
+    if use_batch:
+        raise ValueError('Model API batch mode was removed; use agent extraction packets')
+    with agent_run.singleton():
+        return await _run_pipeline(website_ids, limit, work_dir=work_dir, resume=resume)
+
+
+async def _run_pipeline(website_ids=None, limit=None, *, work_dir=None, resume=False):
     """Execute the complete event processing pipeline.
 
     Args:
         website_ids: Optional list of website IDs to process. If None, processes
                      all websites due for crawling based on crawl_frequency.
         limit: Optional maximum number of websites to crawl.
-        use_batch: If True, use Gemini Batch API for extraction (50% cheaper).
-                   If None, defaults to False (sync API).
+        work_dir: Durable agent requests, responses, and run scope.
+        resume: Continue exact saved crawl IDs without crawling listing pages again.
     """
+    work_dir = Path(work_dir or agent_run.new_work_dir()).resolve()
+    if resume:
+        state = agent_run.load(work_dir)
+        website_ids = state['website_ids']
+        if state['phase'] == 'complete':
+            print(f'Agent pipeline already completed: {work_dir}')
+            return True
+    else:
+        if (work_dir / 'run.json').exists():
+            raise ValueError(f'Run already exists; use --resume {work_dir}')
+        state = {'version': 1, 'city': os.environ.get('FOMO_CITY', 'nyc'),
+                 'reference_date': datetime.now().date().isoformat(),
+                 'phase': 'crawling', 'website_ids': website_ids}
+        agent_run.save(work_dir, state)
+    agent_extraction.configure(work_dir)
+    print(f'Agent extraction workspace: {work_dir}')
     timer = logging_utils.StepTimer()
 
     def step(title):
@@ -169,7 +237,16 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
         # Check for incomplete crawl results first
         step("STEP 0: Checking for Incomplete Crawl Results")
 
-        incomplete_results = db.get_incomplete_crawl_results(cursor, website_ids=website_ids)
+        if resume:
+            saved_results = agent_run.read_results(cursor, state['crawl_result_ids'])
+            agent_run.verify_sources(state, saved_results)
+            saved_results = retire_ineligible_retries(work_dir, state, saved_results)
+            website_ids = state['website_ids']
+            incomplete_results = [r for r in saved_results if r['status'] in ('crawled', 'extracted')]
+            if any(r['status'] not in ('crawled', 'extracted', 'processed') for r in saved_results):
+                raise ValueError('Saved crawl results are not ready for extraction')
+        else:
+            incomplete_results = db.get_incomplete_crawl_results(cursor, website_ids=website_ids)
         incomplete_crawled = [r for r in incomplete_results if r['status'] == 'crawled']
         incomplete_extracted = [r for r in incomplete_results if r['status'] == 'extracted']
 
@@ -218,7 +295,13 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
         # STEP 1: Get websites due for crawling
         step("STEP 1: Finding Websites Due for Crawling")
 
-        websites = db.get_websites_due_for_crawling(cursor, website_ids)
+        websites = [] if resume else db.get_websites_due_for_crawling(cursor, website_ids)
+        # Automatic runs finish stored crawls first. Explicit --ids retains its
+        # force-recrawl contract (needed after a crawl/source fix); the new run
+        # supersedes that site's old incomplete rows in this extraction scope.
+        pending_website_ids = {r['website_id'] for r in incomplete_results}
+        if not website_ids:
+            websites = [w for w in websites if w['id'] not in pending_website_ids]
         if limit and len(websites) > limit:
             print(f"Found {len(websites)} website(s) due, limiting to {limit}")
             websites = websites[:limit]
@@ -226,22 +309,33 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
             print(f"Found {len(websites)} website(s) matching specified IDs")
         else:
             print(f"Found {len(websites)} website(s) due for crawling")
+        if website_ids and not resume:
+            recrawling = {w['id'] for w in websites}
+            incomplete_results = [r for r in incomplete_results if r['website_id'] not in recrawling]
+            incomplete_crawled = [r for r in incomplete_results if r['status'] == 'crawled']
+            incomplete_extracted = [r for r in incomplete_results if r['status'] == 'extracted']
 
         # Check if there's any work to do
-        has_work = len(websites) > 0 or len(incomplete_results) > 0
+        has_work = resume or len(websites) > 0 or len(incomplete_results) > 0
 
         if not has_work:
             print("\nNo websites need crawling and no incomplete results to process.")
             print("Pipeline completed (no work to do).")
+            state.update(phase='complete', crawl_result_ids=[], source_hashes={})
+            agent_run.save(work_dir, state)
             return True
 
         for w in websites:
             print(f"  - {w['name']} ({len(w['urls'])} URL(s))")
 
         # Create crawl run
-        run_date = datetime.now().date()
+        run_date = datetime.fromisoformat(state['reference_date']).date()
         run_date_str = run_date.strftime('%Y%m%d')
-        crawl_run_id = db.get_or_create_crawl_run(cursor, connection, run_date)
+        if resume:
+            crawl_run_id = state['crawl_run_id']
+        else:
+            with dblock.write_lock(connection, label='agent_pipeline_start'):
+                crawl_run_id = db.get_or_create_crawl_run(cursor, connection, run_date)
         print(f"\nCrawl run ID: {crawl_run_id} ({run_date_str})")
 
         # STEP 2: Crawl websites
@@ -345,137 +439,61 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
 
         print(f"\n✓ Crawled {len(crawl_results)} website(s)\n")
 
-        # STEP 3: Extract events using the configured AI providers
-        step("STEP 3: Extracting Events with AI")
-        # Each AI path is independently provider-selectable; print the mapping so
-        # a run's logs record which model actually produced its events. The
-        # `--batch` path is Gemini-only regardless (see llm_providers).
-        _summary = llm_providers.provider_summary()
-        if llm_providers.providers_in_use() != {llm_providers.GEMINI}:
-            print("  Extraction providers: "
-                  + ", ".join(f"{path}={model}" for path, _prov, model in _summary))
-        for _path, _prov in llm_providers.unconfigured_paths(extractor.genai_client):
-            print(f"  ⚠️  WARNING: {_path} path is set to {_prov} but it is not "
-                  f"configured — those extractions will fail.")
+        # Freeze exact crawl scope before any agent work. Resumes never query all
+        # incomplete results or recrawl a listing page.
+        if not resume:
+            result_ids = sorted({r['crawl_result_id'] for r in incomplete_results}
+                                | {crid for crid, _ in crawl_results})
+            connection.commit()  # Refresh the snapshot after crawler worker commits.
+            saved_results = agent_run.read_results(cursor, result_ids)
+            website_ids = sorted({r['website_id'] for r in saved_results})
+            state.update(crawl_run_id=crawl_run_id, crawl_result_ids=result_ids,
+                         website_ids=website_ids,
+                         source_hashes={str(r['crawl_result_id']): r['source_hash'] for r in saved_results},
+                         phase='listing')
+            agent_run.save(work_dir, state)
 
+        if not saved_results:
+            print('No successful crawl results to extract; publication skipped.')
+            state['phase'] = 'crawl_failed' if websites else 'complete'
+            agent_run.save(work_dir, state)
+            return not bool(websites)
+
+        step("STEP 3: Preparing / Applying Agent Extraction")
         extracted_results = []
-
-        # Build list of all items to extract
-        extraction_queue = []
-
-        # Add incomplete 'crawled' results from previous runs
-        for r in incomplete_crawled:
-            extraction_queue.append({
-                'crawl_result_id': r['crawl_result_id'],
-                'name': r['name'],
-                'notes': r.get('notes', ''),
-                'run_date': r.get('run_date'),
-                'source': 'incomplete'
-            })
-
-        # Add newly crawled results
-        for crawl_result_id, website in crawl_results:
-            extraction_queue.append({
-                'crawl_result_id': crawl_result_id,
-                'name': website['name'],
-                'notes': website.get('notes', ''),
-                'run_date': None,
-                'source': 'new',
-                'website': website,
-                'use_vision': website.get('process_images') == 1,
-                'base_url': website.get('base_url', ''),
-            })
-
-        # Resolve batch mode: default to sync (no-batch) — use --batch to opt in
-        effective_batch = bool(use_batch)
-
-        batch_processed_crids = set()  # Track items handled by batch to avoid duplicates
-
-        if extraction_queue and effective_batch:
-            # Batch extraction path (Gemini Batch API — 50% cheaper)
-            print(f"\n  Batch extracting events from {len(extraction_queue)} website(s)...")
-
+        pending = []
+        errors = []
+        # Extraction now does local file I/O and validation. Serialize DB mutation
+        # while independently reviewable requests accumulate across all websites.
+        for item in saved_results:
+            if item['status'] != 'crawled':
+                continue
             try:
-                batch_results = await extractor.run_batch_extraction(extraction_queue)
-
-                # Track all items processed by batch (success or fail)
-                batch_processed_crids = {crid for crid, _ in batch_results}
-
-                # Map successful results back to extraction_queue items
-                success_crids = {crid for crid, success in batch_results if success}
-                for item in extraction_queue:
-                    crid = item['crawl_result_id']
-                    if crid in success_crids:
-                        if item['source'] == 'incomplete':
-                            extracted_results.append((crid, {
-                                'name': item['name'],
-                                'notes': item['notes'],
-                                'run_date': item['run_date']
-                            }))
-                        else:
-                            extracted_results.append((crid, item['website']))
-
-            except Exception as e:
-                print(f"\n  Batch extraction failed: {e}")
-                print(f"  Falling back to individual API calls...")
-                effective_batch = False  # Fall through to sync path below
-
-        # Sync extraction path — either primary or fallback from batch failure
-        # Filter out items already processed by batch to avoid duplicates
-        sync_queue = [item for item in extraction_queue
-                       if item['crawl_result_id'] not in batch_processed_crids]
-
-        if sync_queue and not effective_batch:
-            # Sync extraction path (individual API calls)
-            print(f"\n  Extracting events from {len(sync_queue)} website(s) with {NUM_WORKERS} workers...")
-
-            extract_queue = asyncio.Queue()
-            for item in sync_queue:
-                await extract_queue.put(item)
-
-            async def extract_worker():
-                """Worker that continuously pulls from queue until empty."""
-                results = []
-                while True:
-                    try:
-                        item = extract_queue.get_nowait()
-                    except asyncio.QueueEmpty:
-                        break
-
-                    conn = db.create_connection()
-                    if not conn:
-                        extract_queue.task_done()
-                        continue
-                    cur = conn.cursor(buffered=True)
-                    try:
-                        success = await extractor.extract_events(
-                            cur, conn, item['crawl_result_id'],
-                            item['name'], item['notes'],
-                            use_vision=item.get('use_vision', False),
-                            base_url=item.get('base_url', ''),
-                        )
-                        if success:
-                            if item['source'] == 'incomplete':
-                                results.append((item['crawl_result_id'], {
-                                    'name': item['name'],
-                                    'notes': item['notes'],
-                                    'run_date': item['run_date']
-                                }))
-                            else:
-                                results.append((item['crawl_result_id'], item['website']))
-                    except Exception as e:
-                        print(f"    - Error extracting {item['name']}: {e}")
-                    finally:
-                        cur.close()
-                        conn.close()
-                        extract_queue.task_done()
-                return results
-
-            worker_results = await asyncio.gather(*[extract_worker() for _ in range(NUM_WORKERS)])
-
-            for results in worker_results:
-                extracted_results.extend(results)
-
+                with dblock.write_lock(connection, label='agent_extraction'):
+                    connection.commit()
+                    current = agent_run.read_results(cursor, [item['crawl_result_id']])
+                    if current[0]['source_hash'] != item['source_hash']:
+                        raise ValueError('Crawl source/context changed while preparing extraction')
+                    success = await extractor.extract_events(
+                        cursor, connection, item['crawl_result_id'], item['name'], item['notes'],
+                        use_vision=item.get('use_vision', False))
+                if success:
+                    extracted_results.append((item['crawl_result_id'], item))
+                else:
+                    errors.append(item['crawl_result_id'])
+            except agent_extraction.AgentExtractionPending as exc:
+                connection.rollback()
+                pending.append(exc)
+            except Exception as exc:
+                connection.rollback()
+                errors.append(item['crawl_result_id'])
+                print(f"  Extraction error for {item['name']}: {exc}")
+        if errors:
+            print(f"Extraction failed for crawl results {errors}; processing and publication stopped.")
+            print(f"Repair the responses/source, then resume: {resume_command(work_dir)}")
+            return False
+        if pending:
+            return report_agent_pending(work_dir)
         print(f"\n✓ Extracted events from {len(extracted_results)} website(s)\n")
 
         # STEP 4: Process responses
@@ -501,16 +519,34 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
             proc_websites_map = processor.build_websites_map(cursor)
             proc_tag_context = processor.load_tag_context(cursor)
 
-        # First, process incomplete 'extracted' results from previous runs
-        if incomplete_extracted:
-            print(f"\n  Processing {len(incomplete_extracted)} incomplete 'extracted' result(s)...")
-            for r in incomplete_extracted:
-                print(f"  Processing {r['name']} (from {r['run_date']})...")
-                # Use the run date from the original crawl
-                original_run_date_str = r['run_date'].strftime('%Y%m%d')
+        with dblock.write_lock(connection, label='agent_pipeline_process'):
+            connection.commit()
+            agent_run.verify_sources(state, agent_run.read_results(cursor, state['crawl_result_ids']))
+            # First, process incomplete 'extracted' results from previous runs
+            if incomplete_extracted:
+                print(f"\n  Processing {len(incomplete_extracted)} incomplete 'extracted' result(s)...")
+                for r in incomplete_extracted:
+                    print(f"  Processing {r['name']} (from {r['run_date']})...")
+                    # Use the run date from the original crawl
+                    original_run_date_str = r['run_date'].strftime('%Y%m%d')
+                    event_count = processor.process_events(
+                        cursor, connection, r['crawl_result_id'],
+                        r['name'], original_run_date_str,
+                        locations_map=proc_locations_map,
+                        websites_map=proc_websites_map,
+                        tag_context=proc_tag_context,
+                    )
+                    total_events += event_count
+                    print(f"    - {event_count} events processed")
+
+            # Then process newly extracted results
+            for crawl_result_id, website in extracted_results:
+                print(f"  Processing {website['name']}...")
+                website_run_date = website.get('run_date')
+                result_run_date_str = website_run_date.strftime('%Y%m%d') if website_run_date else run_date_str
                 event_count = processor.process_events(
-                    cursor, connection, r['crawl_result_id'],
-                    r['name'], original_run_date_str,
+                    cursor, connection, crawl_result_id,
+                    website['name'], result_run_date_str,
                     locations_map=proc_locations_map,
                     websites_map=proc_websites_map,
                     tag_context=proc_tag_context,
@@ -518,38 +554,33 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
                 total_events += event_count
                 print(f"    - {event_count} events processed")
 
-        # Then process newly extracted results
-        for crawl_result_id, website in extracted_results:
-            print(f"  Processing {website['name']}...")
-            website_run_date = website.get('run_date')
-            result_run_date_str = website_run_date.strftime('%Y%m%d') if website_run_date else run_date_str
-            event_count = processor.process_events(
-                cursor, connection, crawl_result_id,
-                website['name'], result_run_date_str,
-                locations_map=proc_locations_map,
-                websites_map=proc_websites_map,
-                tag_context=proc_tag_context,
-            )
-            total_events += event_count
-            print(f"    - {event_count} events processed")
+            processed_results = agent_run.read_results(cursor, state['crawl_result_ids'])
+            if any(r['status'] != 'processed' for r in processed_results):
+                raise ValueError('Processing did not finish every saved crawl result; publication stopped')
 
         print(f"\n✓ Processed {total_events} total events\n")
 
         # STEP 5: Detail-crawl individual event URLs for missing descriptions
         step("STEP 5: Crawling Event Details")
 
-        candidates = db.get_detail_crawl_candidates(cursor, website_ids=website_ids)
-        if candidates:
-            detail_crawled = await processor.crawl_event_details(
-                cursor, connection, candidates, NUM_WORKERS
-            )
+        if 'detail_candidates' not in state:
+            state['detail_candidates'] = (db.get_detail_crawl_candidates(cursor, website_ids=website_ids)
+                                          if website_ids else [])
+            state['phase'] = 'details'
+            agent_run.save(work_dir, state)
+        candidates = state['detail_candidates']
+        if candidates and not state.get('details_complete'):
+            try:
+                detail_crawled = await processor.crawl_event_details(
+                    cursor, connection, candidates, NUM_WORKERS, extraction_dir=work_dir)
+            except agent_extraction.AgentExtractionPending:
+                return report_agent_pending(work_dir)
         else:
-            print("  No events need detail crawling")
+            print("  No pending detail extraction")
             detail_crawled = 0
+        state['details_complete'] = True
+        agent_run.save(work_dir, state)
         print(f"\n✓ Detail-crawled {detail_crawled} events\n")
-
-        # Mark crawl run as completed
-        db.complete_crawl_run(cursor, connection, crawl_run_id)
 
         # Serialize the mutate-and-publish tail (merge → export → upload → freq) so a
         # concurrent session can't write events / publish at the same time. The lock is
@@ -560,8 +591,15 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
                   f"(~{PUBLISH_LOCK_ATTEMPTS * dblock.DEFAULT_TIMEOUT // 60} min). Another session "
                   f"is publishing — aborting before merge to avoid a write conflict.\n"
                   f"  Crawled+extracted data is saved. Finish the merge/export/upload later with:\n"
-                  f"    {_merge_only_hint(website_ids)}\n")
+                  f"    {resume_command(work_dir)}\n")
             return False
+
+        # Validate crawl identity again under the publishing lock; another session
+        # may have changed source rows while the agent reviewed its packets.
+        connection.commit()
+        agent_run.verify_sources(state, agent_run.read_results(cursor, state['crawl_result_ids']))
+        state['phase'] = 'publishing'
+        agent_run.save(work_dir, state)
 
         # STEPS 6-8: merge → classify → export → upload
         if not run_publish_tail(cursor, connection, website_ids,
@@ -577,6 +615,9 @@ async def run_pipeline(website_ids=None, limit=None, use_batch=None):
         else:
             print(f"\nNo frequency adjustments needed\n")
 
+        db.complete_crawl_run(cursor, connection, crawl_run_id)
+        state['phase'] = 'complete'
+        agent_run.save(work_dir, state)
         result = timer.stop()
         if result is not None:
             name, elapsed = result
@@ -702,6 +743,8 @@ def run_merge_only(website_ids=None):
 
     Returns True on success.
     """
+    if not run_disk_preflight():
+        return False
     print(f"{'='*60}")
     print("EVENT PROCESSING PIPELINE — MERGE-ONLY MODE")
     if website_ids:
@@ -762,9 +805,9 @@ def parse_args():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python main.py                     # Full run (uses sync API by default)
+  python main.py                     # Crawl and prepare agent extraction packets
   python main.py --ids 941           # Specific website
-  python main.py --batch             # Full run with Batch API (50% cheaper but slower)
+  python main.py --resume DIR        # Apply agent responses and continue the saved run
   python main.py --limit 5           # Only crawl first 5 websites due
   python main.py --merge-only        # Just merge pending events + export + upload (no crawling)
         """
@@ -791,17 +834,8 @@ Examples:
         help='Force the public NDJSON dataset export + upload to public_html/exports/ '
              '(normally runs weekly as part of the pipeline tail), then exit.'
     )
-    batch_group = parser.add_mutually_exclusive_group()
-    batch_group.add_argument(
-        '--batch',
-        action='store_true', default=None,
-        help='Use Gemini Batch API for extraction (50%% cheaper but can get stuck)'
-    )
-    batch_group.add_argument(
-        '--no-batch',
-        action='store_true', default=None,
-        help='Use individual API calls for extraction (this is the default)'
-    )
+    parser.add_argument('--work-dir', help='Directory for a new durable agent extraction run')
+    parser.add_argument('--resume', metavar='DIR', help='Resume saved agent extraction without recrawling listings')
     return parser.parse_args()
 
 
@@ -812,18 +846,22 @@ if __name__ == "__main__":
     if args.ids:
         website_ids = [int(id.strip()) for id in args.ids.split(',')]
 
-    # Resolve batch mode from CLI flags
-    if args.batch:
-        use_batch = True
-    elif args.no_batch:
-        use_batch = False
-    else:
-        use_batch = None  # No explicit flag: run_pipeline defaults to sync
-
-    if args.export_dataset:
-        success = run_export_dataset_only()
-    elif args.merge_only:
-        success = run_merge_only(website_ids)
-    else:
-        success = asyncio.run(run_pipeline(website_ids, args.limit, use_batch))
-    sys.exit(0 if success else 1)
+    if args.resume and (args.work_dir or args.ids or args.limit or args.merge_only or args.export_dataset):
+        raise SystemExit('--resume uses its saved scope; do not combine it with other run modes or filters')
+    if args.work_dir and (args.merge_only or args.export_dataset):
+        raise SystemExit('--work-dir is only for a new crawl/extraction run')
+    try:
+        if args.export_dataset:
+            with agent_run.singleton():
+                success = run_export_dataset_only()
+        elif args.merge_only:
+            with agent_run.singleton():
+                success = run_merge_only(website_ids)
+        else:
+            success = asyncio.run(run_pipeline(website_ids, args.limit,
+                                               work_dir=args.resume or args.work_dir,
+                                               resume=bool(args.resume)))
+    except (ValueError, RuntimeError, OSError) as exc:
+        print(f'Pipeline could not start: {exc}')
+        success = False
+    sys.exit(2 if success is None else (0 if success else 1))

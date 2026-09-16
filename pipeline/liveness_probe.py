@@ -495,6 +495,37 @@ def _run_coro(coro):
 
 # ── Orchestration ───────────────────────────────────────────────────────────
 
+def _read_probe_inputs(event_ids, limit):
+    """Materialize committed probe inputs, releasing source locks before I/O.
+
+    CREATE TEMPORARY TABLE ... SELECT takes source-table locks even when the
+    caller only wants a dry run. A dedicated connection owns those reads so
+    ending their transaction never commits or rolls back the caller's work.
+    Callers must commit event changes they want the probe to see first.
+    """
+    reader = db.create_connection()
+    if reader is None:
+        raise RuntimeError('Could not connect for liveness probe candidate reads')
+    try:
+        read_cursor = reader.cursor(buffered=True)
+        try:
+            candidates = get_candidates(read_cursor, event_ids=event_ids, limit=limit)
+            if not candidates:
+                return [], [], {}, {}
+            website_ids = sorted({c['website_id'] for c in candidates if not c['still_listed']})
+            settings = db.get_website_crawl_settings(read_cursor, website_ids)
+            candidate_urls = {u for c in candidates for u in c['urls']}
+            controls = get_control_urls(read_cursor, website_ids, candidate_urls)
+            return candidates, website_ids, settings, controls
+        finally:
+            read_cursor.close()
+    finally:
+        try:
+            reader.rollback()
+        finally:
+            reader.close()
+
+
 def run(cursor, connection, event_ids=None, limit=MAX_EVENTS_PER_RUN, dry_run=False, verbose=True,
         write_lock=None):
     """Probe grace-window events and archive the confirmed-dead ones.
@@ -512,17 +543,12 @@ def run(cursor, connection, event_ids=None, limit=MAX_EVENTS_PER_RUN, dry_run=Fa
     stats = {'candidates': 0, 'probed': 0, 'archived': 0, 'dead': 0, 'alive': 0,
              'unknown': 0, 'walled_websites': [], 'archived_events': []}
 
-    candidates = get_candidates(cursor, event_ids=event_ids, limit=limit)
+    candidates, website_ids, settings, controls = _read_probe_inputs(event_ids, limit)
     stats['candidates'] = len(candidates)
     if not candidates:
         if verbose:
             print("  No grace-window events to probe")
         return stats
-
-    website_ids = sorted({c['website_id'] for c in candidates if not c['still_listed']})
-    settings = db.get_website_crawl_settings(cursor, website_ids)
-    candidate_urls = {u for c in candidates for u in c['urls']}
-    controls = get_control_urls(cursor, website_ids, candidate_urls)
 
     plan = {}
     for c in candidates:

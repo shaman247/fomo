@@ -151,6 +151,29 @@ MEETUP_LIVE_GROUP_BODY = (
 )
 
 
+# --- bfany.org site-wide 404 ------------------------------------------------
+#
+# Verbatim shape of the body every dead bfany.org/theatre-row/*.php permalink
+# serves (fetched 2026-09-16; 890 chars of plain text). w195 Theater Row now
+# renders its On Stage list through a ticketing widget whose relative
+# join_waitlist.php / show_page.php links resolve against bfany.org, so every
+# harvested detail URL lands here. Trimmed (the real body carries the full
+# nav and footer), but every line is copied from it.
+BFANY_SOFT_404_BODY = (
+    "https://bfany.org/theatre-row/join_waitlist.php?showtime_id=336838\n"
+    "Page not found - Building for the Arts\n"
+    "Skip Navigation\nBuilding for the Arts\nMENU\n"
+    "What\nOur Programs\nTheatre Row\nMusic and the Brain\n"
+    "Why\nOur Mission\nWho\nOur Board\nConnect\nContact\nDonate\nLOGIN\n"
+    "404 Error\n"
+    "We are sorry, but you found a page that does not exist.\n"
+    "Building for the Arts Homepage\nTheatre Row Homepage\n"
+    "Music and the Brain Homepage\n"
+    "Mailing Address: 407 W 41st Street New York, NY 10036\n"
+    "\u00a9 Building for the Arts NY, Inc.\n"
+)
+
+
 class TestCloudflareErrorPageDetection(unittest.TestCase):
     """CF 5xx error pages must be treated like bot challenges."""
 
@@ -562,6 +585,23 @@ class TestMeetupSoft404Detection(unittest.TestCase):
         self.assertFalse(_is_soft_404(CF_JUST_A_MOMENT_BODY))
         self.assertFalse(_is_soft_404(CF_502_BODY))
 
+    def test_bfany_site_wide_404_body_is_detected(self):
+        """bfany.org answers every dead /theatre-row/*.php permalink with this.
+
+        Copied from the live body (2026-09-16, 890 chars rendered). Before the
+        marker, all 25 detail URLs harvested from w195 Theater Row were handed to
+        the enricher as if they were show pages.
+        """
+        self.assertTrue(_is_soft_404(BFANY_SOFT_404_BODY))
+        self.assertLess(len(BFANY_SOFT_404_BODY), SOFT_404_MAX_CHARS)
+
+    def test_bfany_marker_does_not_fire_on_a_real_listing(self):
+        self.assertFalse(_is_soft_404(MEETUP_LIVE_GROUP_BODY))
+        self.assertFalse(
+            _is_soft_404("Theatre Row — On Stage. We are sorry, but you found "
+                         "a seat that does not exist." )
+        )
+
 
 class TestDetailCrawlSoft404Guard(unittest.TestCase):
     """crawl_event_url() must discard a dead permalink without spending retries."""
@@ -935,6 +975,101 @@ class TestDetailFetchUrlRewrite(unittest.TestCase):
         self.assertFalse(_is_bot_challenge(AN_NOWRAPPER_BODY))
         self.assertFalse(_is_soft_404(AN_NOWRAPPER_BODY))
 
+
+
+# A Jupiter X / Elementor detail page in miniature: a page-level banner holding
+# a mega-menu, the event body inside <main>, and a page-level footer. The real
+# chinainstitute.org page rendered 7.6K of banner ahead of a 3.2K event body, so
+# `content[:12000]` in crawl_event_url returned menu only (w211, 2026-09-16).
+NAV_HEAVY_DETAIL_HTML = """
+<html><body>
+<div class="site">
+  <header class="site-header" role="banner">
+    <nav class="mega-menu">{menu}</nav>
+  </header>
+  <main id="main">
+    <article class="event">
+      <header class="entry-header">
+        <h1>2026 Mid-Autumn Festival</h1>
+        <div class="date">September 26, 2026 2:00 - 5:00 PM ET</div>
+      </header>
+      <div class="entry-content">
+        <p>Celebrate the Mid-Autumn Festival with performances, hands-on
+        workshops and cultural activities for all ages at 100 Washington
+        Street in Manhattan.</p>
+      </div>
+    </article>
+  </main>
+  <footer class="site-footer" role="contentinfo">
+    <nav class="footer-menu">{menu}</nav>
+    <p>China Institute in America. All rights reserved.</p>
+  </footer>
+</div>
+</body></html>
+""".format(menu="".join(
+    f'<ul><li><a href="/p{i}">Menu entry number {i} for the site wide drop down</a></li></ul>'
+    for i in range(300)
+))
+
+
+class TestDetailChromeStripping(unittest.TestCase):
+    """The detail config must drop page chrome BEFORE the 12K truncation.
+
+    `crawl_event_url` returns `content[:12000]`, so any chrome that survives
+    into the markdown is spent from the same budget as the event body. The fix
+    is landmark-scoped on purpose: an in-article <header> carrying the event
+    title must survive (the case the listing config's excluded_tags comment
+    warns about).
+    """
+
+    def _markdown(self, html, excluded_selector):
+        """Render markdown exactly the way crawl4ai does for a detail fetch."""
+        from crawl4ai.content_scraping_strategy import LXMLWebScrapingStrategy
+        from crawl4ai.markdown_generation_strategy import DefaultMarkdownGenerator
+        kwargs = dict(word_count_threshold=5, excluded_tags=[])
+        if excluded_selector:
+            kwargs['excluded_selector'] = excluded_selector
+        scraped = LXMLWebScrapingStrategy().scrap("https://example.org/event/x", html, **kwargs)
+        generator = DefaultMarkdownGenerator(options={"ignore_links": True})
+        return generator.generate_markdown(input_html=scraped.cleaned_html).raw_markdown
+
+    def test_config_carries_the_chrome_selector(self):
+        config = crawler.build_event_crawl_config({})
+        self.assertEqual(config.excluded_selector, crawler.DETAIL_CHROME_SELECTOR)
+        for landmark in ('nav', '[role="navigation"]', '[role="banner"]', '[role="contentinfo"]'):
+            self.assertIn(landmark, crawler.DETAIL_CHROME_SELECTOR)
+        # Bare header/footer would eat in-article titles and venue blocks.
+        self.assertNotIn('header,', crawler.DETAIL_CHROME_SELECTOR)
+        self.assertNotIn('footer,', crawler.DETAIL_CHROME_SELECTOR)
+        self.assertFalse(crawler.DETAIL_CHROME_SELECTOR.endswith('footer'))
+
+    def test_body_is_buried_past_the_cap_without_the_selector(self):
+        before = self._markdown(NAV_HEAVY_DETAIL_HTML, None)
+        self.assertGreater(len(before), 12000)
+        self.assertNotIn("Mid-Autumn Festival", before[:12000])
+
+    def test_selector_keeps_the_event_body_inside_the_cap(self):
+        after = self._markdown(NAV_HEAVY_DETAIL_HTML, crawler.DETAIL_CHROME_SELECTOR)
+        self.assertLess(len(after), 12000)
+        capped = after[:12000]
+        self.assertIn("2026 Mid-Autumn Festival", capped)       # in-article <header> survived
+        self.assertIn("September 26, 2026", capped)
+        self.assertIn("hands-on", capped)
+        self.assertIn("100 Washington", capped)
+        self.assertNotIn("Menu entry number", capped)           # banner + footer menus gone
+        self.assertNotIn("All rights reserved", capped)
+
+    def test_plain_detail_page_without_chrome_is_untouched(self):
+        plain = (
+            "<html><body><main><h1>Halloween Bingo</h1>"
+            "<p>Wednesday, October 29, 2026 at 6:30pm in the Community Room. "
+            "Registration required for this all ages program.</p>"
+            "</main></body></html>"
+        )
+        self.assertEqual(
+            self._markdown(plain, crawler.DETAIL_CHROME_SELECTOR),
+            self._markdown(plain, None),
+        )
 
 if __name__ == '__main__':
     unittest.main()

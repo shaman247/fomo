@@ -301,6 +301,25 @@ def collect_suppress_ids(pairs):
     return to_suppress
 
 
+def merge_exact_duplicates(cursor, pairs):
+    """Preserve each duplicate's collections before hiding it.
+
+    Pair IDs are ordered low to high. Merge higher IDs first so a chain like
+    3 -> 2 -> 1 carries all sources and dates through to its surviving row.
+    Multiple matches for one duplicate use its lowest matching keeper; only
+    IDs already selected for suppression are hidden.
+    """
+    keepers = {}
+    for pair in pairs:
+        keep, duplicate = pair['id1'], pair['id2']
+        if keep >= duplicate:
+            raise ValueError('Exact duplicate pairs must have id1 < id2')
+        keepers[duplicate] = min(keep, keepers.get(duplicate, keep))
+    for duplicate in sorted(keepers, reverse=True):
+        merge_pair(cursor, keepers[duplicate], duplicate)
+    return len(keepers)
+
+
 def apply_field_overrides(cursor, event_id, name=None, description=None,
                           emoji=None, short_name=None, sublocation=None):
     """Update scalar fields on event_id with provided non-None values.
@@ -425,7 +444,7 @@ def print_xloc_pairs(pairs, label):
 def main():
     parser = argparse.ArgumentParser(description='Find duplicate events')
     parser.add_argument('--suppress', action='store_true',
-                        help='Auto-suppress exact-name duplicates')
+                        help='Merge exact-name duplicates into their keepers, then suppress them')
     parser.add_argument('--review', action='store_true',
                         help='Also show similar-name pairs that need manual review')
     args = parser.parse_args()
@@ -491,16 +510,15 @@ def main():
         if args.suppress:
             # Serialize against other sessions' writes (see pipeline/dblock.py).
             from dblock import write_lock
-            placeholders = ','.join(['%s'] * len(to_suppress))
             with write_lock(conn, label="find_duplicate_events --suppress"):
-                # reviewed=1 too — see the note in merge_pair(); an exact-name auto-suppress is a
-                # decision, and leaving reviewed=0 makes it look like an unexplained hidden event.
-                cursor.execute(
-                    f'UPDATE events SET suppressed = 1, reviewed = 1 WHERE id IN ({placeholders})',
-                    tuple(to_suppress)
-                )
+                # Re-read after acquiring the lock: another session may have
+                # merged or changed these events while the report was printing.
+                conn.rollback()
+                fresh_pairs = find_duplicates(cursor)
+                fresh_exact, *_ = classify_pairs(fresh_pairs, set(), set())
+                merged = merge_exact_duplicates(cursor, fresh_exact)
                 conn.commit()
-            print(f"\nSuppressed {cursor.rowcount} events.")
+            print(f"\nMerged and suppressed {merged} events.")
         else:
             print("\nRun with --suppress to auto-suppress exact-name duplicates.")
     else:

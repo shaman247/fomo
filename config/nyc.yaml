@@ -3039,7 +3039,7 @@ venue_taxonomy:
       source: https://posh.vip/e/electrix-vintage-fillabag-sale-midtown
       reason: Repeated retail sale location; distinct from the Brooklyn Electrix store.
     - location_id: 6213
-      expected_name: 70 Scott Ave
+      expected_name: The Chocolate Factory
       add:
       - Nightclub
       remove: []
@@ -3797,6 +3797,49 @@ venue_taxonomy:
       - Skatepark
       remove: []
       reason: Existing outdoor skatepark membership reviewed; retain existing Park/Outdoor memberships.
+    - location_id: 10842
+      expected_name: The Lounge at Hudson View Gardens
+      add:
+      - Community Space
+      - Performance Space
+      remove: []
+      source: https://www.houseoftimemusic.org/26-27concertseason
+      reason: Residential community lounge with an established public chamber-music series.
+    - location_id: 10864
+      expected_name: Free Agency
+      add:
+      - Boutique
+      remove: []
+      source: https://freeagencynewyork.com/
+      reason: Independent designer clothing shop; occasional performances do not make it a rental hall.
+    - location_id: 10865
+      expected_name: Journal Squared Tower 3
+      add:
+      - Community Space
+      remove: []
+      source: https://www.journalsquared.com/amenities/
+      reason: Residential amenity lounges and workshop rooms host the building community's events.
+    - location_id: 10939
+      expected_name: Game Chamber Studios
+      add:
+      - Event Hall
+      remove: []
+      source: https://www.gamechamberstudios.com/
+      reason: Dedicated hourly rental venue for private parties and gatherings, with game-room amenities.
+    - location_id: 10945
+      expected_name: New York Wedding Loft
+      add:
+      - Event Hall
+      remove: []
+      source: https://perfectweddingnyc.squarespace.com/new-york-wedding-loft
+      reason: Dedicated loft rental venue for weddings, receptions and corporate events.
+    - location_id: 11016
+      expected_name: The Union League Club
+      add:
+      - Community Space
+      remove: []
+      source: https://www.unionleagueclub.org/
+      reason: Private member community clubhouse with cultural programming and meeting spaces; private bookings alone do not make the whole club an Event Hall.
     descriptions:
     - location_id: 2041
       expected_name: Cloud City

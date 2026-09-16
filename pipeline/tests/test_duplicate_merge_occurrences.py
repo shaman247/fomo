@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'pipeline'))
 sys.path.insert(0, str(ROOT / 'scripts'))
 from db import create_connection
-from find_duplicate_events import merge_pair
+from find_duplicate_events import merge_pair, merge_exact_duplicates
 
 
 @unittest.skipUnless(os.environ.get('FOMO_TEST_TEMP_DB') == '1',
@@ -88,6 +88,40 @@ class DuplicateMergeOccurrenceTests(unittest.TestCase):
         one = (self.D,'3pm',None,'5pm')
         two = (self.D,'3pm',date(2026,9,17),'6pm')
         self.assertEqual(self.merge([one,two], []), [one,two])
+
+    def test_automatic_merge_preserves_chained_collections(self):
+        self.cur.execute('INSERT INTO events(id) VALUES (3)')
+        self.cur.execute('INSERT INTO event_sources VALUES (3,303)')
+        self.cur.execute("INSERT INTO event_urls VALUES (2,'https://example.test/2'),"
+                         "(3,'https://example.test/3')")
+        self.cur.execute('INSERT INTO event_tags VALUES (2,12),(3,13)')
+        self.cur.execute("INSERT INTO event_occurrences(event_id,start_date,start_time) "
+                         "VALUES (2,'2026-09-16','3pm'),(3,'2026-09-17','4pm')")
+        pairs = [{'id1': 1, 'id2': 2}, {'id1': 2, 'id2': 3},
+                 {'id1': 2, 'id2': 3}]
+        with patch('event_icon_assignments.merge_assignments'):
+            self.assertEqual(merge_exact_duplicates(self.cur, pairs), 2)
+        self.cur.execute('SELECT crawl_event_id FROM event_sources WHERE event_id=1 ORDER BY 1')
+        self.assertEqual(self.cur.fetchall(), [(101,), (202,), (303,)])
+        self.cur.execute('SELECT url FROM event_urls WHERE event_id=1 ORDER BY 1')
+        self.assertEqual(self.cur.fetchall(), [('https://example.test/2',), ('https://example.test/3',)])
+        self.cur.execute('SELECT tag_id FROM event_tags WHERE event_id=1 ORDER BY 1')
+        self.assertEqual(self.cur.fetchall(), [(12,), (13,)])
+        self.cur.execute('SELECT start_date FROM event_occurrences WHERE event_id=1 ORDER BY 1')
+        self.assertEqual(self.cur.fetchall(), [(self.D,), (date(2026, 9, 17),)])
+        self.cur.execute('SELECT id,suppressed,reviewed FROM events ORDER BY id')
+        self.assertEqual(self.cur.fetchall(), [(1,0,0), (2,1,1), (3,1,1)])
+
+    def test_multiple_keepers_do_not_expand_suppression(self):
+        self.cur.execute('INSERT INTO events(id) VALUES (3)')
+        self.cur.execute('INSERT INTO event_sources VALUES (3,303)')
+        with patch('event_icon_assignments.merge_assignments'):
+            self.assertEqual(merge_exact_duplicates(self.cur,
+                [{'id1': 2, 'id2': 3}, {'id1': 1, 'id2': 3}]), 1)
+        self.cur.execute('SELECT id FROM events WHERE suppressed=0 ORDER BY id')
+        self.assertEqual(self.cur.fetchall(), [(1,), (2,)])
+        self.cur.execute('SELECT crawl_event_id FROM event_sources WHERE event_id=1 ORDER BY 1')
+        self.assertEqual(self.cur.fetchall(), [(101,), (303,)])
 
 
 if __name__ == '__main__':

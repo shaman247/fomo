@@ -1,5 +1,5 @@
 """
-Event extraction module using Gemini AI with Structured Outputs.
+Event extraction by the supervising agent using durable structured packets.
 
 Extracts structured event data from crawled website content using JSON schema.
 Uses a two-pass approach for large pages (>50 expected events):
@@ -15,7 +15,7 @@ import os
 import re
 import statistics
 import unicodedata
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import date, datetime
 from io import BytesIO
 from typing import Optional
@@ -30,6 +30,8 @@ import city_config
 import constants
 import db
 import llm_providers
+import agent_extraction
+from agent_extraction import AgentExtractionPending, AgentExtractionInvalid
 import site_profiles
 from occurrence_times import standardize_time as _standardize_time
 from processor import extract_url_from_content
@@ -79,23 +81,11 @@ def _clean_extracted_time(value):
 
 load_dotenv()
 
-try:
-    from google import genai
-    from google.genai.types import InlinedRequest, GenerateContentConfig
-    GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
-    GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.1-flash-lite")
-    GEMINI_TIMEOUT = int(os.environ.get("GEMINI_TIMEOUT", "120"))
-    if GEMINI_API_KEY:
-        genai_client = genai.Client(api_key=GEMINI_API_KEY)
-    else:
-        genai_client = None
-except ImportError:
-    print("Warning: google-genai not installed. Extraction will be skipped.")
-    genai = None
-    genai_client = None
-    GEMINI_API_KEY = None
-    GEMINI_MODEL = None
-    GEMINI_TIMEOUT = 120
+# Compatibility constants for existing call sites; no SDKs or clients are loaded.
+genai_client = None
+GEMINI_API_KEY = None
+GEMINI_MODEL = "supervising agent"
+GEMINI_TIMEOUT = 120
 
 
 # =============================================================================
@@ -386,15 +376,9 @@ MAX_VISION_TEXT_CHARS = 30000
 # Maximum image dimension (images will be resized if larger)
 MAX_IMAGE_DIMENSION = 1024
 
-# Batch API settings
-BATCH_POLL_INTERVAL = int(os.environ.get("BATCH_POLL_INTERVAL", "30"))  # seconds
-BATCH_TIMEOUT = int(os.environ.get("BATCH_TIMEOUT", "86400"))  # 24 hour default
-BATCH_TOKEN_LIMIT = int(os.environ.get("BATCH_TOKEN_LIMIT", "10000000"))  # Tier 1 limit for Flash models
-CHARS_PER_TOKEN = 3  # conservative estimate (Gemini tokenizer averages ~3 chars/token for mixed content)
-# Maximum estimated tokens per individual request. Typical prompts are 40K-55K tokens.
-# Gemini's context window is 1M tokens, but we cap at 100K to catch data bugs early
-# (the largest legitimate prompt is ~55K tokens, so 100K gives ~2x headroom for growth
-# while still catching runaway inputs well before they hit the API limit).
+# Safety limit for an individual unchunked work packet. Oversized packets fail
+# explicitly; ordinary large sources are split before reaching this path.
+CHARS_PER_TOKEN = 3
 MAX_REQUEST_TOKENS = int(os.environ.get("MAX_REQUEST_TOKENS", "100000"))
 
 
@@ -574,48 +558,30 @@ async def download_and_encode_image(url, max_dimension=MAX_IMAGE_DIMENSION):
 
 
 async def prepare_vision_content(content, base_url=None, max_images=MAX_VISION_IMAGES):
-    """
-    Prepare multimodal content with images for Gemini vision API.
-
-    Returns a list of content parts (text and images) for the API call.
-    """
-    # Extract image URLs
+    """Persist all source images once; failed downloads never become empty events."""
+    import hashlib
     image_urls = extract_image_urls(content, base_url)
-
     if not image_urls:
         return None, 0
-
-    # Limit number of images. Dropping images drops whole posts, so say so —
-    # this used to be silent and cost every 12-post picnob bundle its last 2.
-    if len(image_urls) > max_images:
-        print(f"    - ⚠️  {len(image_urls)} images found but only the first "
-              f"{max_images} are sent to vision — {len(image_urls) - max_images} "
-              f"dropped (MAX_VISION_IMAGES)")
-    image_urls = image_urls[:max_images]
-
-    # Download and encode images concurrently
-    tasks = [download_and_encode_image(url) for url in image_urls]
-    results = await asyncio.gather(*tasks)
-
-    # Build content parts
-    image_parts = []
-    for (b64_data, mime_type) in results:
-        if b64_data and mime_type:
-            image_parts.append({
-                'inline_data': {
-                    'mime_type': mime_type,
-                    'data': b64_data
-                }
-            })
-
-    # A download failure is invisible to Gemini — it just never sees the post.
-    # Expired IG CDN signatures fail this way in bulk (see the picnob memory),
-    # so surface the shortfall rather than letting it look like a thin page.
-    failed = len(image_urls) - len(image_parts)
-    if failed:
-        print(f"    - ⚠️  {failed} of {len(image_urls)} images failed to download "
-              f"for vision (expired CDN signatures?) — those posts are unread")
-
+    key = hashlib.sha256(json.dumps(image_urls, sort_keys=True).encode()).hexdigest()
+    cache = agent_extraction.work_dir() / 'vision_sources' / f'{key}.json'
+    if cache.exists():
+        saved = agent_extraction._read_json(cache)
+        if saved.get('urls') != image_urls or len(saved.get('images', [])) != len(image_urls):
+            raise AgentExtractionInvalid(f'Incomplete image snapshot: {cache}')
+        return saved['images'], len(saved['images'])
+    semaphore = asyncio.Semaphore(5)
+    async def download(url):
+        async with semaphore:
+            return await download_and_encode_image(url)
+    results = await asyncio.gather(*(download(url) for url in image_urls))
+    image_parts = [{'inline_data': {'mime_type': mime, 'data': data}}
+                   for data, mime in results if data and mime]
+    if len(image_parts) != len(image_urls):
+        raise ExtractionCallFailure(
+            f'{len(image_urls) - len(image_parts)} source images failed to download; '
+            'complete vision coverage is required')
+    agent_extraction.atomic_json(cache, {'urls': image_urls, 'images': image_parts})
     return image_parts, len(image_parts)
 
 
@@ -635,7 +601,7 @@ For EACH event you find in EITHER source, extract:
 - location: The venue name (default to "{name}" if not specified)
 - occurrences: Array of dates/times, read from the text or the image (e.g., "January 16, 2026" or "Jan 16 - Feb 14"). Each occurrence has:
   - start_date: Date in YYYY-MM-DD format
-  - start_time: Time if shown (e.g., "6:00 PM")
+  - start_time: Time if shown in canonical 12-hour format (e.g., "6pm", "6:30pm")
   - end_date: End date if this is a multi-day event/exhibition
   - end_time: End time if shown
 - description: Brief description based on the text and image. If neither gives detail beyond the event name, use "No description available." Do NOT fabricate.
@@ -654,14 +620,14 @@ Rules:
 Page text (authoritative for dates — the flyer images are often undated, and on
 social feeds the date/time is stated in the caption rather than on the image.
 Where the text and an image disagree, prefer the text):
-{text_content[:MAX_VISION_TEXT_CHARS] if text_content else "No additional text"}'''
+{text_content if text_content else "No additional text"}'''
 
 
 async def extract_with_vision(url, content, current_date_string, name, notes, base_url=None):
     """
-    Extract events using Gemini's vision capabilities.
+    Extract events from images using local agent responses.
 
-    Downloads images from the page and sends them to Gemini for analysis.
+    Downloads and snapshots images for the supervising agent to inspect.
     Returns JSON string with extracted events.
     """
     # Prepare image content
@@ -669,7 +635,7 @@ async def extract_with_vision(url, content, current_date_string, name, notes, ba
 
     if not image_parts:
         print("    - No valid images found for vision extraction")
-        return '{"events": []}'
+        raise ExtractionCallFailure("No usable images for vision extraction")
 
     print(f"    - Processing {image_count} images with vision...")
 
@@ -681,7 +647,6 @@ async def extract_with_vision(url, content, current_date_string, name, notes, ba
             prompt_text, EventList, GEMINI_TIMEOUT * 2,  # Double timeout for vision
             provider=llm_providers.provider_for('vision'),
             images=image_parts,
-            gemini_client=genai_client, gemini_model=GEMINI_MODEL,
         )
 
         # Validate JSON
@@ -689,14 +654,13 @@ async def extract_with_vision(url, content, current_date_string, name, notes, ba
             parsed = json.loads(response_text)
             event_count = len(parsed.get('events', []))
             print(f"    - Vision extracted {event_count} events from images")
-        except json.JSONDecodeError:
-            response_text = '{"events": []}'
+        except json.JSONDecodeError as exc:
+            raise ExtractionCallFailure("Invalid vision extraction JSON") from exc
 
         return response_text
 
     except llm_providers.ProviderCallFailure as e:
-        print(f"    - Vision extraction error: {e}")
-        return '{"events": []}'
+        raise ExtractionCallFailure(f"Vision extraction failed: {e}") from e
 
 
 # =============================================================================
@@ -763,6 +727,7 @@ def chunk_content_by_events(content, events_per_chunk=EVENTS_PER_CHUNK,
 # because this is used only to decide where NOT to cut, where a false positive
 # costs nothing.
 _HEADING_LINE_RE = re.compile(r'^[ \t]*(?:[\*\-]\s+|\d+\.\s+)?#{1,6}\s+\S')
+_DETAIL_RECORD_LINE_RE = re.compile(r'^\s*EVENT DETAIL URL:\s*https?://\S+\s*$')
 
 
 def _is_heading_line(line):
@@ -819,7 +784,8 @@ def _split_trailing_record(text, cap):
     w3253 "Where is the Friend's House?": heading + synopsis closed the chunk and
     `Showtimes: August 21, 2026 at 12:30pm` opened the next one).
 
-    Carries everything from the last heading — extended back over any run of
+    Carries everything from the last heading or explicit EVENT DETAIL URL line
+    (including heading-less feeds such as Viewcy). Headings extend back over a run of
     consecutive headings above it — into the next chunk, so every chunk after
     the first STARTS on a record boundary. Falls back to `_split_trailing_heading`
     when that tail is bigger than `cap` (a very long record would otherwise
@@ -828,7 +794,7 @@ def _split_trailing_record(text, cap):
     lines = text.split('\n')
     last = None
     for idx, line in enumerate(lines):
-        if _is_heading_line(line):
+        if _is_heading_line(line) or _DETAIL_RECORD_LINE_RE.match(line):
             last = idx
     if last is None:
         return text, ''
@@ -845,19 +811,69 @@ def _split_trailing_record(text, cap):
     return kept, carried
 
 
+def _json_record_spans(line):
+    """Exact spans of records in a JSON feed, excluding nested child objects.
+
+    Only accept an entire valid JSON line and explicit collection keys. A
+    literal `},{` can also occur inside descriptions or nested ticket/venue
+    arrays, so it is not evidence of an event boundary.
+    """
+    decoder = json.JSONDecoder()
+    try:
+        root = json.loads(line)
+        if not isinstance(root, (dict, list)):
+            return []
+        spans = []
+
+        def skip(pos):
+            while pos < len(line) and line[pos].isspace():
+                pos += 1
+            return pos
+
+        def array_spans(pos):
+            pos = skip(pos + 1)
+            while line[pos] != ']':
+                value, end = decoder.raw_decode(line, pos)
+                if isinstance(value, dict):
+                    spans.append((pos, end))
+                pos = skip(end)
+                if line[pos] == ',':
+                    pos = skip(pos + 1)
+
+        pos = skip(0)
+        if isinstance(root, list):
+            array_spans(pos)
+        else:
+            pos = skip(pos + 1)
+            while line[pos] != '}':
+                key, end = decoder.raw_decode(line, pos)
+                pos = skip(skip(end) + 1)  # colon
+                value, end = decoder.raw_decode(line, pos)
+                if key in {'events', 'items', 'products', 'upcoming', 'past'} and isinstance(value, list):
+                    array_spans(pos)
+                pos = skip(end)
+                if line[pos] == ',':
+                    pos = skip(pos + 1)
+        return spans
+    except (ValueError, IndexError):
+        return []
+
+
 def _split_long_line(line, max_chars):
     """Split a single line that is itself longer than `max_chars`.
 
     Without this, one gigantic line is appended whole and yields one gigantic
     chunk (measured: a 303,877-char single-line JSON dump from Skinny Dennis
-    w4832 that Gemini answered with 3 events). Prefers a record boundary
-    (`},{` in a minified JSON payload — the shape every one of these pages
-    has), then whitespace, and only hard-cuts when neither exists.
+    w4832 that Gemini answered with 3 events). Valid JSON feeds protect whole
+    top-level records that fit the cap. Other text and oversized records fall
+    back to `},{`, whitespace, then a hard cut.
     """
     if len(line) + 1 <= max_chars:
         return [line]
 
     pieces = []
+    record_spans = _json_record_spans(line)
+    offset = 0
     remaining = line
     floor = int(max_chars * 0.5)
     while len(remaining) + 1 > max_chars:
@@ -869,8 +885,18 @@ def _split_long_line(line, max_chars):
             cut = window.rfind(' ')
             if cut < floor:
                 cut = max_chars - 1
+        # Move a cut inside a known record back to its start. If the record
+        # itself exceeds the cap, retain the bounded fallback instead of
+        # producing an oversized chunk or looping forever.
+        for start, end in record_spans:
+            if start < offset + cut < end:
+                if start > offset:
+                    cut = start - offset
+                break
         pieces.append(remaining[:cut])
-        remaining = remaining[cut:].lstrip()
+        tail = remaining[cut:]
+        remaining = tail.lstrip()
+        offset += cut + len(tail) - len(remaining)
     if remaining:
         pieces.append(remaining)
     return pieces
@@ -885,8 +911,8 @@ def chunk_content_by_size(content, max_chars=MAX_CHUNK_CHARS):
 
     Two invariants this path is responsible for, both learned the hard way:
 
-    1. *A chunk never ends mid-record.* This path knows nothing about event
-       records, so a paragraph/line boundary can land right after an event's
+    1. *Prefer complete records when their boundaries are known.* A paragraph
+       or line boundary can land right after an event's
        heading and strand its date in the next chunk (Elsewhere w75 "Klingande":
        chunk 1 ended `  * ### [Klingande](…)`, chunk 2 began
        `**Fri, September 4, 2026 …**`, extraction returned the name with
@@ -1424,7 +1450,7 @@ Examples:
 Events to enrich:
 {events_section}
 {rid_section}
-Return a JSON object with "enrichments" key mapping each event name to its enrichment data.'''
+Return a JSON object with an "enrichments" array, containing exactly one object per requested event name.'''
 
 
 async def enrich_events_batch(event_names, venue_name, content=None):
@@ -1449,9 +1475,11 @@ async def enrich_events_batch(event_names, venue_name, content=None):
         response_text = await llm_providers.generate_structured(
             prompt, EnrichmentBatch, GEMINI_TIMEOUT,
             provider=llm_providers.provider_for('enrichment'),
-            gemini_client=genai_client, gemini_model=GEMINI_MODEL,
+            expected_names=event_names,
         )
         result = json.loads(response_text)
+    except (AgentExtractionPending, AgentExtractionInvalid):
+        raise
     except Exception as e:
         # The dominant failure here is an over-long batch overrunning the output
         # budget, which takes every event in the batch down with it. Split and
@@ -1467,8 +1495,11 @@ async def enrich_events_batch(event_names, venue_name, content=None):
         print(f"    - Enrichment batch error ({len(event_names)} events): {e}")
         return {}
 
+    items = result.get('enrichments', [])
+    if {item.get('name') for item in items} != set(event_names) or len(items) != len(set(event_names)):
+        raise AgentExtractionInvalid("Enrichment must cover each requested event name exactly once")
     out = {}
-    for item in result.get('enrichments', []):
+    for item in items:
         out[item.get('name', '')] = _grounded_enrichment(item, content_snippets)
     return out
 
@@ -1529,8 +1560,8 @@ async def extract_single_event(event_name, content, notes="", url=""):
     Extract event details from a single event page.
 
     Used by the detail crawl step for events that got "No description
-    available." or missing location/times from the listing page. Uses Gemini
-    structured output for reliable parsing.
+    available." or missing location/times from the listing page. Uses validated
+    local agent responses for reliable parsing.
 
     Args:
         event_name: name the listing gave this event
@@ -1556,7 +1587,7 @@ async def extract_single_event(event_name, content, notes="", url=""):
     note_section = f"IMPORTANT: {notes.strip()}\n\n" if notes and notes.strip() else ""
     url_section = f'This page\'s URL is {url}\n' if url else ""
 
-    current_date = datetime.now().strftime("%Y-%m-%d")
+    current_date = agent_extraction.reference_date()
     prompt = (
         f'Today\'s date is {current_date}. '
         f'Extract information about the event "{event_name}" from this web page. '
@@ -1617,7 +1648,6 @@ async def extract_single_event(event_name, content, notes="", url=""):
         response_text = await llm_providers.generate_structured(
             prompt, SingleEventExtraction, DETAIL_TIMEOUT,
             provider=llm_providers.provider_for('detail'),
-            gemini_client=genai_client, gemini_model=GEMINI_MODEL,
         )
         data = json.loads(response_text)
         desc = (data.get('description') or '').strip().strip('"')
@@ -1654,6 +1684,8 @@ async def extract_single_event(event_name, content, notes="", url=""):
         if not any(k in result for k in ('description', 'location', 'sublocation', 'occurrences')):
             return None  # nothing usable on the page - the pre-existing "skip enrichment" contract
         return result
+    except (AgentExtractionPending, AgentExtractionInvalid):
+        raise
     except Exception as e:
         print(f"    - AI error for {event_name}: {e}")
         return None
@@ -1889,7 +1921,7 @@ async def prepare_extraction(cursor, crawl_result_id, website_name, notes="",
     Prepare extraction request data without making API calls.
 
     Performs all validation, classification, and prompt building, returning
-    a PreparedExtraction that can be executed via sync API calls or batched.
+    a PreparedExtraction that queues local work and replays completed responses.
 
     Args:
         cursor: Database cursor
@@ -1987,7 +2019,7 @@ async def prepare_extraction(cursor, crawl_result_id, website_name, notes="",
     prep.website_id = website_id
     settings = resolve_extraction_settings(result, profile_urls or [base_url], max_batches)
 
-    current_date_string = datetime.now().strftime('%Y-%m-%d')
+    current_date_string = agent_extraction.reference_date()
 
     # Extract URL from first line if present
     url, content_to_process = extract_url_from_content(page_content)
@@ -2002,8 +2034,8 @@ async def prepare_extraction(cursor, crawl_result_id, website_name, notes="",
     # checking what actually sits past the cut.
     max_chars = settings.max_content_chars
     if len(content_to_process) > max_chars:
-        print(f"    - Content too large ({len(content_to_process)} chars), truncating to {max_chars}")
-        content_to_process = content_to_process[:max_chars]
+        print(f"    - Content exceeds legacy cap ({len(content_to_process)} chars); "
+              "retaining complete source for agent extraction")
 
     # Decide extraction approach and build prompts
     if use_vision:
@@ -2014,7 +2046,7 @@ async def prepare_extraction(cursor, crawl_result_id, website_name, notes="",
         image_parts, image_count = await prepare_vision_content(content_to_process, base_url or url)
         if not image_parts:
             print("    - No valid images found for vision extraction")
-            prep.resolved_result = '{"events": []}'
+            prep.error = "No usable images for vision extraction"
             return prep
 
         print(f"    - Prepared {image_count} images for vision extraction")
@@ -2142,9 +2174,9 @@ def _apply_fingerprint_marker_and_status(cursor, connection, prep, copied):
 
 async def execute_extraction_sync(cursor, connection, prep):
     """
-    Execute extraction using individual (non-batch) API calls.
+    Execute extraction using durable local agent work packets.
 
-    Takes a PreparedExtraction and makes the appropriate Gemini API call(s).
+    Takes a PreparedExtraction and consumes the appropriate local responses.
 
     Returns:
         True if successful, False otherwise
@@ -2182,11 +2214,17 @@ async def execute_extraction_sync(cursor, connection, prep):
         if retry_reason:
             print(f"    - ⚠️  VARIANCE GUARD: {retry_reason}; retrying extraction once...")
             try:
-                retry_text = await _generate_extraction_response(prep, cursor, connection)
+                review = ("\n\nCOVERAGE REVIEW: The initial extraction triggered a count "
+                          "variance guard. Independently inspect every source section and "
+                          "explicit occurrence again. Return a complete extraction; do not "
+                          "invent events to match historical counts.\n" + retry_reason)
+                review_prep = replace(prep, prompt=(prep.prompt or '') + review,
+                                      chunk_prompts=[prompt + review for prompt in prep.chunk_prompts])
+                retry_text = await _generate_extraction_response(review_prep, cursor, connection)
             except ExtractionCallFailure as e:
                 # The retry hit the API wall; the first attempt is still a real
                 # answer, so keep it rather than failing the whole crawl result.
-                print(f"    - Variance retry could not reach the API ({e}); keeping first attempt")
+                print(f"    - Coverage review failed ({e}); keeping first completed extraction")
                 retry_text = None
             retry_text, retry_count, retry_occ = _normalize_extraction_response(retry_text)
             if retry_count > event_count:
@@ -2201,24 +2239,21 @@ async def execute_extraction_sync(cursor, connection, prep):
 
 
 async def _generate_extraction_response(prep, cursor, connection):
-    """Make the Gemini API call(s) for one extraction attempt and return raw text.
+    """Request agent work for one extraction attempt and return validated JSON.
 
     Shared by the first attempt and the variance-guard retry in
     execute_extraction_sync. cursor/connection are only used by the chunked
     path's max_batches auto-bump.
     """
     if prep.extraction_type == 'vision':
-        # vision_contents is [prompt_text, *image_parts]; the provider layer
-        # takes the prompt and images separately so it can shape each provider's
-        # multimodal payload.
+        # Store prompt and images separately in the durable local packet.
         prompt_text, image_parts = prep.vision_contents[0], prep.vision_contents[1:]
         try:
             return await llm_providers.generate_structured(
                 prompt_text, EventList, GEMINI_TIMEOUT * 2,
                 provider=llm_providers.provider_for('vision'),
                 images=image_parts,
-                gemini_client=genai_client, gemini_model=GEMINI_MODEL,
-            )
+                )
         # A failed vision call is the same lie as a failed chunk: the images were
         # never read, so an empty result says nothing about the post. Fail the
         # crawl result instead of storing a zero (see ExtractionCallFailure).
@@ -2235,19 +2270,11 @@ async def _generate_extraction_response(prep, cursor, connection):
         error_msg = f"Prompt too large (~{estimated_tokens:,} est. tokens, limit {MAX_REQUEST_TOKENS:,})"
         print(f"    ⚠️  ERROR: {error_msg}, skipping extraction")
         raise RuntimeError(error_msg)
-    # The single-call path is provider-selectable (see llm_providers); chunked,
-    # vision, enrichment and detail-crawl calls remain Gemini-only.
-    #
-    # Wrapping the failure in ExtractionCallFailure is what lets the variance
-    # guard above keep a good first attempt when only the retry hits the API
-    # wall — a bare exception here would propagate out of
-    # execute_extraction_sync and fail a crawl result we already had an answer
-    # for.
+    # All extraction paths consume durable local agent responses.
     try:
         return await llm_providers.generate_structured(
             prep.prompt, EventList, GEMINI_TIMEOUT,
             provider=llm_providers.single_call_provider(),
-            gemini_client=genai_client, gemini_model=GEMINI_MODEL,
         )
     except llm_providers.ProviderCallFailure as e:
         print(f"    - Single-call extraction error: {e}")
@@ -2413,6 +2440,8 @@ def _fingerprint_copy_is_suspect(cursor, prior_id):
         if healthy_states < FINGERPRINT_HEALTHY_STATES:
             return False
         return not _floor_count_confirmed_by_reextraction(cursor, prior_id)
+    except (AgentExtractionPending, AgentExtractionInvalid):
+        raise
     except Exception as e:
         # The guard must never break extraction — fail open (accept the hit).
         print(f"    - Fingerprint variance check failed ({e}); accepting cache hit")
@@ -2463,6 +2492,8 @@ def _variance_retry_reason(cursor, crawl_result_id, new_count):
             return None
         return (f"extracted {new_count} events vs trailing median {median_count:.0f} "
                 f"on similar-size content ({current_size} vs ~{median_size:.0f} chars)")
+    except (AgentExtractionPending, AgentExtractionInvalid):
+        raise
     except Exception as e:
         # The guard must never break extraction — fail open (no retry).
         print(f"    - Variance guard check failed ({e}); skipping retry")
@@ -2547,56 +2578,34 @@ def _report_dropped_dates(chunk, events, label):
 
 
 async def _execute_chunked_sync(prep, cursor=None, connection=None):
-    """Execute chunked extraction synchronously (individual API calls).
+    """Queue all page chunks, then all enrichment batches, without coverage caps.
 
-    cursor/connection enable the max_batches auto-bump when the chunk yield
-    exceeds the website's cap; omit them (e.g. in tests) to disable the bump.
-
-    The max_batches budget is denominated in DISTINCT EVENT NAMES, not raw
-    extracted records, because that is what it actually pays for: enrichment is
-    name-keyed (see `_combine_chunked_results`), so N records sharing a name
-    cost one enrichment slot between them, not N.
-
-    Counting raw records instead made the cap sensitive to a model's grouping
-    style rather than to a page's size. A model that emits one record per date
-    (gpt-5.6-luna) rather than one record with many occurrences (gemini) tripped
-    the cap early and SKIPPED WHOLE CHUNKS: Prospect Park stopped after 5 of 7
-    chunks and lost a third of the page's events, while auto-bumping the site's
-    max_batches on what was never real growth — the same 168 records were only
-    51 distinct events. Deduplicating also cuts real enrichment calls on the
-    existing provider (that page: 98 records -> 51 names, 4 batches -> 2).
+    Each pass publishes every independent pending packet before pausing. Replay
+    reads completed responses and advances to enrichment when all chunks exist.
     """
-    max_events = prep.max_batches * ENRICHMENT_BATCH_SIZE
-
     # Extract events from each chunk
     all_simple_events = []
     seen_names = set()
-    skipped_chunks = 0
     attempted_chunks = 0
     failed_chunks = 0
     last_chunk_error = None
     date_dropping_records = 0
+    pending = []
     for i, chunk_prompt in enumerate(prep.chunk_prompts):
-        if len(seen_names) >= max_events:
-            skipped_chunks = len(prep.chunk_prompts) - i
-            break
         # Records per name are unbounded in principle (a daily-recurring event
         # can emit one per date), so keep an absolute ceiling as a runaway
         # guard. Sized far above anything observed (worst real case ~3.5
         # records per name) so it never binds in normal operation.
         if len(all_simple_events) >= CHUNK_RECORD_CEILING:
-            skipped_chunks = len(prep.chunk_prompts) - i
-            print(f"    - ⚠️  Record ceiling {CHUNK_RECORD_CEILING} reached "
-                  f"({len(seen_names)} distinct names); skipping remaining chunks")
-            break
+            raise ChunkedExtractionFailure(
+                f"Record ceiling {CHUNK_RECORD_CEILING} reached; complete extraction required")
         print(f"    - Processing chunk {i + 1}/{len(prep.chunk_prompts)}...")
         attempted_chunks += 1
         try:
             response_text = await llm_providers.generate_structured(
                 chunk_prompt, SimpleEventList, CHUNK_TIMEOUT,
                 provider=llm_providers.provider_for('chunked'),
-                gemini_client=genai_client, gemini_model=GEMINI_MODEL,
-            )
+                )
             result = json.loads(response_text)
             events = result.get('events', [])
             if events:
@@ -2608,10 +2617,17 @@ async def _execute_chunked_sync(prep, cursor=None, connection=None):
                         prep.chunks[i], events, f"chunk {i + 1}/{len(prep.chunk_prompts)}")
             else:
                 print(f"      No events extracted")
+        except AgentExtractionPending as exc:
+            pending.append(exc)
+        except AgentExtractionInvalid:
+            raise
         except Exception as e:
             failed_chunks += 1
             last_chunk_error = str(e) or type(e).__name__
             print(f"      Chunk error: {e}")
+
+    if pending:
+        raise pending[0]
 
     if not all_simple_events:
         # Nothing came back. Only call that an empty page when every chunk we
@@ -2650,9 +2666,6 @@ async def _execute_chunked_sync(prep, cursor=None, connection=None):
             f"{len(all_simple_events)} event(s) from the surviving chunks rather than "
             f"storing a truncated extraction (last error: {last_chunk_error})")
 
-    if skipped_chunks > 0:
-        print(f"    - Skipped {skipped_chunks} remaining chunk(s) (already have {len(all_simple_events)} events)")
-
     if date_dropping_records:
         print(f"    - ⚠️  {date_dropping_records} record(s) across this page came back "
               f"date-less despite listing dates; those events will be undated. If this "
@@ -2667,24 +2680,7 @@ async def _execute_chunked_sync(prep, cursor=None, connection=None):
     if len(event_names) != len(all_simple_events):
         print(f"    - {len(all_simple_events)} records -> {len(event_names)} distinct events")
 
-    # Cap events at max_batches to limit API cost — but first try to auto-raise
-    # the website's cap (triage previously did this by hand every run it fired).
-    total_batches_needed = -(-len(event_names) // ENRICHMENT_BATCH_SIZE)
-    if total_batches_needed > prep.max_batches and cursor is not None and connection is not None:
-        bumped = _maybe_auto_bump_max_batches(cursor, connection, prep, total_batches_needed)
-        if bumped:
-            prep.max_batches = bumped
-            max_events = bumped * ENRICHMENT_BATCH_SIZE
-    if total_batches_needed > prep.max_batches:
-        print(f"    - WARNING: [{prep.website_name}] {len(event_names)} events would need {total_batches_needed} batches, "
-              f"capping at {prep.max_batches} ({max_events} events). "
-              f"Set max_batches in websites table to override.")
-        event_names = event_names[:max_events]
-        # Drop the records belonging to the names we cut, so we never emit an
-        # event the enrichment pass was never asked about.
-        kept = set(event_names)
-        all_simple_events = [e for e in all_simple_events if e.get('name') in kept]
-
+    # Agent work has no API-cost cap: preserve all distinct names and chunks.
     # Enrich events with descriptions/hashtags/emoji in batches
     num_batches = -(-len(event_names) // ENRICHMENT_BATCH_SIZE)
     all_enrichments = {}
@@ -2692,9 +2688,14 @@ async def _execute_chunked_sync(prep, cursor=None, connection=None):
     for i in range(0, len(event_names), ENRICHMENT_BATCH_SIZE):
         batch = event_names[i:i + ENRICHMENT_BATCH_SIZE]
         print(f"    - Enriching batch {i // ENRICHMENT_BATCH_SIZE + 1}/{num_batches} ({len(batch)} events)...")
-        enrichments = await enrich_events_batch(batch, prep.website_name, content=prep.content)
-        all_enrichments.update(enrichments)
+        try:
+            enrichments = await enrich_events_batch(batch, prep.website_name, content=prep.content)
+            all_enrichments.update(enrichments)
+        except AgentExtractionPending as exc:
+            pending.append(exc)
 
+    if pending:
+        raise pending[0]
     return _combine_chunked_results(all_simple_events, all_enrichments)
 
 
@@ -2730,6 +2731,8 @@ def _maybe_auto_bump_max_batches(cursor, connection, prep, batches_needed):
             (new_cap, prep.website_id)
         )
         connection.commit()
+    except (AgentExtractionPending, AgentExtractionInvalid):
+        raise
     except Exception as e:
         print(f"    - max_batches auto-bump failed ({e}); keeping cap {current}")
         return None
@@ -2760,22 +2763,14 @@ def _combine_chunked_results(simple_events, enrichments):
 async def extract_events(cursor, connection, crawl_result_id, website_name, notes="",
                          use_vision=False, base_url="", max_batches=None):
     """
-    Extract events from crawled content using individual Gemini API calls.
+    Extract events from crawled content using validated local agent responses.
 
     This is the sync (non-batch) extraction path. Prepares the request data,
-    then executes via individual API calls.
+    then consumes local packets or pauses for the supervising agent.
 
     Returns:
         True if successful, False otherwise
     """
-    # Gemini is only required for paths still pointed at it, so a fully-migrated
-    # deployment can run without a Gemini key.
-    missing = llm_providers.unconfigured_paths(genai_client)
-    if missing:
-        detail = ", ".join(f"{path}->{prov}" for path, prov in missing)
-        print(f"    - Skipping extraction: provider not configured for {detail}")
-        return False
-
     prep = await prepare_extraction(cursor, crawl_result_id, website_name, notes,
                                      use_vision, base_url, max_batches)
 
@@ -2786,6 +2781,8 @@ async def extract_events(cursor, connection, crawl_result_id, website_name, note
 
     try:
         return await execute_extraction_sync(cursor, connection, prep)
+    except (AgentExtractionPending, AgentExtractionInvalid):
+        raise
     except Exception as e:
         error_msg = str(e) or type(e).__name__
         print(f"    - Extraction error: {error_msg}")
@@ -2796,931 +2793,15 @@ async def extract_events(cursor, connection, crawl_result_id, website_name, note
 
 
 def is_available():
-    """Check if Gemini API is available."""
-    return GEMINI_API_KEY is not None and genai_client is not None
+    """Local agent extraction is available without API credentials."""
+    return True
 
 
-# =============================================================================
-# Batch API Functions
-# =============================================================================
+# Legacy entry points fail explicitly instead of creating remote batch jobs.
+async def run_batch_extraction(*args, **kwargs):
+    raise RuntimeError("Remote batch extraction has been removed. Run pipeline/main.py "
+                       "with --work-dir, complete local agent packets, and --resume.")
 
-def _build_eventlist_request(prep, contents, req_type):
-    """Build an InlinedRequest for single-pass or vision EventList extraction."""
-    request_id = f"cr-{prep.crawl_result_id}"
-    return InlinedRequest(
-        contents=contents,
-        config=GenerateContentConfig(
-            response_mime_type="application/json",
-            response_schema=EventList,
-        ),
-        metadata={
-            "crawl_result_id": str(prep.crawl_result_id),
-            "type": req_type,
-            "website_name": prep.website_name,
-            "request_id": request_id,
-        }
-    )
 
-
-def _build_chunk_requests(prep):
-    """Build InlinedRequests for chunked extraction (one per chunk).
-
-    Caps the number of chunks based on max_batches to avoid over-extraction.
-    In batch mode we can't do early stopping, so we add +1 chunk headroom
-    since actual events-per-chunk varies. The max_events cap is applied after
-    results return (in process_batch_responses).
-    """
-    max_events = prep.max_batches * ENRICHMENT_BATCH_SIZE
-    max_chunks = max(1, -(-max_events // EVENTS_PER_CHUNK)) + 1  # ceiling division + headroom
-
-    # That formula assumes every chunk holds EVENTS_PER_CHUNK records. Once a
-    # page has been subdivided — by `max-records-per-chunk` or by the date-token
-    # budget — chunks hold far fewer, and a fixed chunk count would silently
-    # cover less of the page than the same budget covered before the split. Walk
-    # the real per-chunk record counts instead, so the cap stays denominated in
-    # records either way.
-    if prep.chunks and len(prep.chunks) == len(prep.chunk_prompts):
-        covered, needed = 0, 0
-        for chunk in prep.chunks:
-            if covered >= max_events:
-                break
-            covered += max(1, sum(1 for line in chunk.split('\n') if _is_heading_line(line)))
-            needed += 1
-        max_chunks = max(max_chunks, needed + 1)
-
-    requests = []
-    for i, chunk_prompt in enumerate(prep.chunk_prompts[:max_chunks]):
-        requests.append(InlinedRequest(
-            contents=chunk_prompt,
-            config=GenerateContentConfig(
-                response_mime_type="application/json",
-                response_schema=SimpleEventList,
-            ),
-            metadata={
-                "crawl_result_id": str(prep.crawl_result_id),
-                "type": "chunk",
-                "chunk_index": str(i),
-                "total_chunks": str(len(prep.chunk_prompts)),
-                "website_name": prep.website_name,
-                "request_id": f"cr-{prep.crawl_result_id}-chunk-{i}",
-            }
-        ))
-
-    if len(prep.chunk_prompts) > max_chunks:
-        print(f"    - {prep.website_name}: Submitting {max_chunks}/{len(prep.chunk_prompts)} chunks "
-              f"(capped by max_batches={prep.max_batches})")
-
-    return requests
-
-
-def _build_enrichment_request(crawl_result_id, batch_event_names, venue_name, batch_idx, website_name, content=None):
-    """Build an InlinedRequest for enrichment."""
-    request_id = f"cr-{crawl_result_id}-enrich-{batch_idx}"
-    content_snippets = extract_content_snippets(batch_event_names, content) if content else None
-    return InlinedRequest(
-        contents=get_enrichment_prompt(batch_event_names, venue_name, request_id=request_id, content_snippets=content_snippets),
-        config=GenerateContentConfig(
-            response_mime_type="application/json",
-            response_schema=EnrichmentBatch,
-        ),
-        metadata={
-            "crawl_result_id": str(crawl_result_id),
-            "type": "enrichment",
-            "batch_index": str(batch_idx),
-            "website_name": website_name,
-            "request_id": request_id,
-        }
-    )
-
-
-def _validate_request_size(request, source_label):
-    """Check if a request exceeds the per-request token limit.
-
-    Returns the request if within limits, or None if it exceeds the limit.
-    Logs a warning for rejected requests.
-    """
-    estimated_tokens = _estimate_request_tokens(request)
-    if estimated_tokens > MAX_REQUEST_TOKENS:
-        print(f"    - WARNING: Dropping request for {source_label}: "
-              f"~{estimated_tokens:,} tokens exceeds {MAX_REQUEST_TOKENS:,} limit")
-        return None
-    return request
-
-
-def build_batch_requests(preparations):
-    """Convert PreparedExtractions into Phase 1 InlinedRequests.
-
-    Args:
-        preparations: dict of {crawl_result_id: PreparedExtraction}
-
-    Returns:
-        tuple of (requests, dropped_crids) where:
-        - requests: list of InlinedRequest objects for all extraction types
-        - dropped_crids: dict of {crawl_result_id: error_message} for oversized requests
-    """
-    requests = []
-    dropped_crids = {}
-    for crid, prep in preparations.items():
-        label = f"{prep.website_name} (cr-{crid})"
-        if prep.extraction_type == 'single':
-            req = _validate_request_size(_build_eventlist_request(prep, prep.prompt, 'single'), label)
-            if req:
-                requests.append(req)
-            else:
-                dropped_crids[crid] = (f"Prompt too large (~{len(prep.prompt) // CHARS_PER_TOKEN:,} est. tokens, "
-                                       f"limit {MAX_REQUEST_TOKENS:,})")
-        elif prep.extraction_type == 'vision':
-            req = _validate_request_size(_build_eventlist_request(prep, prep.vision_contents, 'vision'), label)
-            if req:
-                requests.append(req)
-            else:
-                dropped_crids[crid] = "Vision request too large"
-        elif prep.extraction_type == 'chunked':
-            for req in _build_chunk_requests(prep):
-                validated = _validate_request_size(req, f"{label} chunk")
-                if validated:
-                    requests.append(validated)
-                # Note: individual chunk drops don't fail the whole extraction
-    return requests, dropped_crids
-
-
-def build_enrichment_requests(chunked_events, preparations):
-    """Build Phase 2 InlinedRequests for enrichment of chunked results.
-
-    Args:
-        chunked_events: dict of {crawl_result_id: [simple_event_dicts]}
-        preparations: dict of {crawl_result_id: PreparedExtraction}
-
-    Returns:
-        list of InlinedRequest objects for enrichment
-    """
-    requests = []
-    for crid, events in chunked_events.items():
-        prep = preparations[crid]
-        event_names = [e['name'] for e in events]
-
-        for i in range(0, len(event_names), ENRICHMENT_BATCH_SIZE):
-            batch = event_names[i:i + ENRICHMENT_BATCH_SIZE]
-            requests.append(_build_enrichment_request(
-                crid, batch, prep.website_name,
-                batch_idx=i // ENRICHMENT_BATCH_SIZE,
-                website_name=prep.website_name,
-                content=prep.content,
-            ))
-
-    return requests
-
-
-def _estimate_request_tokens(request):
-    """Estimate the token count for an InlinedRequest."""
-    contents = request.contents
-    if isinstance(contents, str):
-        return len(contents) // CHARS_PER_TOKEN
-    elif isinstance(contents, list):
-        # Vision requests: list of Parts (text + images)
-        total = 0
-        for part in contents:
-            if hasattr(part, 'text') and part.text:
-                total += len(part.text) // CHARS_PER_TOKEN
-            elif hasattr(part, 'inline_data'):
-                total += 258  # Gemini charges 258 tokens per image
-        return total
-    return 0
-
-
-def _split_into_batches(requests, token_limit=BATCH_TOKEN_LIMIT):
-    """Split requests into equal-sized batches that fit under the token limit.
-
-    Returns:
-        list of lists of InlinedRequests
-    """
-    if not requests:
-        return []
-
-    total_tokens = sum(_estimate_request_tokens(r) for r in requests)
-
-    if total_tokens <= token_limit:
-        return [requests]
-
-    num_batches = -(-total_tokens // token_limit)  # ceiling division
-    batch_size = -(-len(requests) // num_batches)  # equal-sized splits
-
-    batches = [requests[i:i + batch_size] for i in range(0, len(requests), batch_size)]
-    print(f"  Splitting {len(requests)} requests (~{total_tokens:,} tokens) into {len(batches)} batches "
-          f"(limit: {token_limit:,} tokens)")
-    return batches
-
-
-async def _poll_batch_until_done(batch_job, poll_interval, timeout):
-    """Poll a batch job until completion, timeout, or failure.
-
-    Args:
-        batch_job: The batch job object (from create or get)
-        poll_interval: Seconds between status checks
-        timeout: Maximum seconds to wait
-
-    Returns:
-        list of InlinedResponse
-
-    Raises:
-        RuntimeError: on timeout, job failure, or cancellation
-    """
-    elapsed = 0
-    while not batch_job.done:
-        await asyncio.sleep(poll_interval)
-        elapsed += poll_interval
-        try:
-            # Bound the status GET: the genai client sets no HTTP read timeout,
-            # so a hung poll would freeze `elapsed` here and the loop would never
-            # reach its own timeout check below. wait_for cancels a stuck HTTP
-            # await; on timeout we just poll again (elapsed keeps advancing).
-            batch_job = await asyncio.wait_for(
-                genai_client.aio.batches.get(name=batch_job.name), timeout=120
-            )
-        except Exception as e:
-            print(f"  Warning: Failed to poll batch status: {e}")
-            continue
-
-        state_name = batch_job.state.name if batch_job.state else "UNKNOWN"
-        print(f"  Batch status: {state_name} ({elapsed}s elapsed)")
-
-        if elapsed >= timeout:
-            try:
-                await asyncio.wait_for(
-                    genai_client.aio.batches.cancel(name=batch_job.name), timeout=60
-                )
-                print(f"  Cancelled timed-out batch job {batch_job.name}")
-            except Exception:
-                pass
-            raise RuntimeError(
-                f"Batch job {batch_job.name} timed out after {timeout}s "
-                f"(state: {state_name})"
-            )
-
-    state_name = batch_job.state.name if batch_job.state else "UNKNOWN"
-
-    if state_name == "JOB_STATE_FAILED":
-        error_detail = batch_job.error.message if batch_job.error else "unknown error"
-        raise RuntimeError(f"Batch job {batch_job.name} failed: {error_detail}")
-
-    if state_name == "JOB_STATE_CANCELLED":
-        raise RuntimeError(f"Batch job {batch_job.name} was cancelled")
-
-    responses = batch_job.dest.inlined_responses or []
-    succeeded = sum(1 for r in responses if r.response)
-    failed = sum(1 for r in responses if r.error)
-    print(f"  Batch completed: {succeeded} succeeded, {failed} failed out of {len(responses)} request(s)")
-
-    return responses
-
-
-async def _submit_and_poll_single_batch(requests, display_name="fomo-extraction",
-                                         poll_interval=None, timeout=None,
-                                         crawl_result_ids=None):
-    """Submit a single batch job and poll until completion.
-
-    Args:
-        requests: list of InlinedRequest objects
-        display_name: Name for the batch job
-        poll_interval: Seconds between status checks (default: BATCH_POLL_INTERVAL)
-        timeout: Maximum seconds to wait (default: BATCH_TIMEOUT)
-        crawl_result_ids: Optional list of crawl_result_ids to tag with the batch
-                          job name for crash recovery
-
-    Returns:
-        list of InlinedResponse in same order as requests
-
-    Raises:
-        RuntimeError: on timeout, job failure, or cancellation
-    """
-    if poll_interval is None:
-        poll_interval = BATCH_POLL_INTERVAL
-    if timeout is None:
-        timeout = BATCH_TIMEOUT
-
-    if not requests:
-        return []
-
-    print(f"  Submitting batch '{display_name}' with {len(requests)} request(s)...")
-
-    # Retry with backoff for transient 429 rate limits on batch creation
-    batch_job = None
-    for attempt in range(3):
-        try:
-            # Bound the submit: create uploads the request payload, so allow
-            # generous time (300s) but never hang forever on a stuck connection.
-            batch_job = await asyncio.wait_for(
-                genai_client.aio.batches.create(
-                    model=GEMINI_MODEL,
-                    src=requests,
-                    config={"display_name": display_name},
-                ),
-                timeout=300,
-            )
-            break
-        except Exception as e:
-            if attempt < 2 and "429" in str(e):
-                wait = 60 * (attempt + 1)
-                print(f"  Rate limited on batch creation, retrying in {wait}s... (attempt {attempt + 1}/3)")
-                await asyncio.sleep(wait)
-            else:
-                raise RuntimeError(f"Failed to create batch job: {e}") from e
-
-    print(f"  Batch job created: {batch_job.name} (state: {batch_job.state.name})")
-
-    # Tag crawl results with batch job name for crash recovery
-    if crawl_result_ids:
-        with db.cursor_scope() as (cursor, conn):
-            db.set_batch_job_name(cursor, conn, crawl_result_ids, batch_job.name)
-
-    return await _poll_batch_until_done(batch_job, poll_interval, timeout)
-
-
-async def submit_and_poll_batch(requests, display_name="fomo-extraction",
-                                 poll_interval=None, timeout=None,
-                                 crawl_result_ids=None):
-    """Submit batch requests, splitting into sub-batches if needed to stay under token limits.
-
-    Args:
-        requests: list of InlinedRequest objects
-        display_name: Name prefix for batch jobs
-        poll_interval: Seconds between status checks (default: BATCH_POLL_INTERVAL)
-        timeout: Maximum seconds to wait per sub-batch (default: BATCH_TIMEOUT)
-        crawl_result_ids: Optional list of crawl_result_ids to tag with batch job
-                          names for crash recovery
-
-    Returns:
-        list of InlinedResponse in same order as requests
-    """
-    batches = _split_into_batches(requests)
-    if not batches:
-        return []
-
-    all_responses = []
-    for i, batch in enumerate(batches):
-        suffix = f"-{i+1}of{len(batches)}" if len(batches) > 1 else ""
-        responses = await _submit_and_poll_single_batch(
-            batch,
-            display_name=f"{display_name}{suffix}",
-            poll_interval=poll_interval,
-            timeout=timeout,
-            crawl_result_ids=crawl_result_ids,
-        )
-        all_responses.extend(responses)
-
-    return all_responses
-
-
-def _parse_request_id(response_text):
-    """Extract request_id from a JSON response string.
-
-    Returns request_id string or None if not found/parseable.
-    """
-    try:
-        parsed = json.loads(response_text)
-        rid = parsed.get('request_id', '')
-        return rid if rid else None
-    except (json.JSONDecodeError, AttributeError):
-        return None
-
-
-def _build_request_id_index(requests):
-    """Build a lookup from request_id to request metadata."""
-    id_to_metadata = {}
-    for req in requests:
-        metadata = req.metadata or {}
-        rid = metadata.get("request_id", "")
-        if rid:
-            id_to_metadata[rid] = metadata
-    return id_to_metadata
-
-
-def _resolve_metadata(request_id, id_to_metadata):
-    """Look up request metadata from a response's request_id.
-
-    Returns the metadata dict, or None if no match is found.
-    """
-    if request_id:
-        return id_to_metadata.get(request_id)
-    return None
-
-
-def process_batch_responses(requests, responses, preparations):
-    """Map Phase 1 batch responses back to crawl results.
-
-    Uses request_id echoed in the response JSON to match responses to requests,
-    since the Gemini Batch API does NOT guarantee response ordering.
-
-    Args:
-        requests: list of InlinedRequest (for metadata)
-        responses: list of InlinedResponse (unordered)
-        preparations: dict of {crawl_result_id: PreparedExtraction}
-
-    Returns:
-        tuple of (single_results, chunked_events, failed_crids):
-        - single_results: {crawl_result_id: json_string} for single/vision
-        - chunked_events: {crawl_result_id: [simple_event_dicts]} for chunks
-        - failed_crids: {crawl_result_id: error_message} for chunked results
-          whose chunk responses ALL failed — to be stored as status='failed'
-          rather than as an empty extraction (see ChunkedExtractionFailure)
-    """
-    # Build lookup from request_id to request metadata
-    id_to_metadata = _build_request_id_index(requests)
-
-    single_results = {}  # crid -> json string
-    chunk_events_by_crid = {}  # crid -> list of simple event dicts
-    unmatched_count = 0
-
-    for i, resp in enumerate(responses):
-        # For error responses, we can't parse JSON to get request_id
-        if resp.error:
-            error_msg = resp.error.message if resp.error.message else str(resp.error)
-            print(f"    - WARNING: Batch request {i} failed (cannot identify source): {error_msg}")
-            continue
-
-        try:
-            response_text = resp.response.text.strip() if resp.response and resp.response.text else ""
-            if not response_text:
-                continue
-
-            # Match response to request via request_id in the JSON
-            request_id = _parse_request_id(response_text)
-            metadata = _resolve_metadata(request_id, id_to_metadata)
-
-            if metadata is None:
-                unmatched_count += 1
-                print(f"    - WARNING: Response {i} has unrecognized request_id: {request_id!r}")
-                continue
-
-            crid = int(metadata.get("crawl_result_id", 0))
-            req_type = metadata.get("type", "")
-            website_name = metadata.get("website_name", "")
-
-            if crid == 0:
-                print(f"    - WARNING: Invalid crawl_result_id in metadata for request_id {request_id}")
-                continue
-
-            if req_type in ("single", "vision"):
-                try:
-                    parsed = json.loads(response_text)
-                    event_count = len(parsed.get('events', []))
-                    print(f"    - {website_name}: {event_count} events extracted")
-                except json.JSONDecodeError:
-                    response_text = '{"events": []}'
-                single_results[crid] = response_text
-
-            elif req_type == "chunk":
-                parsed = json.loads(response_text)
-                events = parsed.get('events', [])
-                if crid not in chunk_events_by_crid:
-                    chunk_events_by_crid[crid] = []
-                chunk_events_by_crid[crid].extend(events)
-
-        except Exception as e:
-            print(f"    - WARNING: Error processing batch response {i}: {e}")
-
-    if unmatched_count:
-        print(f"    - WARNING: {unmatched_count} response(s) could not be matched to requests")
-
-    # Apply max_events cap to chunked results
-    for crid, events in chunk_events_by_crid.items():
-        prep = preparations[crid]
-        max_events = prep.max_batches * ENRICHMENT_BATCH_SIZE
-        if len(events) > max_events:
-            print(f"    - {prep.website_name}: Capping {len(events)} chunked events at {max_events}")
-            chunk_events_by_crid[crid] = events[:max_events]
-        else:
-            print(f"    - {prep.website_name}: {len(events)} events from chunks")
-
-    # Chunked crids that produced no chunk output AT ALL. A chunk that answered
-    # "no events" still registers its (empty) list above, so reaching this point
-    # means every chunk response for the crawl result errored, went unmatched or
-    # was unparseable — nothing was ever read of the page. That is a failed
-    # extraction, not an empty calendar: storing '{"events": []}' here made the
-    # dead crawl the website's newest successful result and fed archival with it.
-    failed_crids = {}
-    for crid, prep in preparations.items():
-        if prep.extraction_type == 'chunked' and crid not in chunk_events_by_crid and crid not in single_results:
-            failed_crids[crid] = (
-                f"Extraction failed: no chunk response could be processed for "
-                f"{prep.website_name} (batch extraction)")
-            print(f"    - ⚠️  {prep.website_name}: every chunk response failed; "
-                  f"marking crawl result {crid} failed (content preserved for re-extraction)")
-
-    return single_results, chunk_events_by_crid, failed_crids
-
-
-def process_enrichment_responses(requests, responses, chunked_events, preparations):
-    """Combine Phase 2 enrichment responses with chunked extraction results.
-
-    Uses request_id echoed in the response JSON to match responses to requests,
-    since the Gemini Batch API does NOT guarantee response ordering.
-
-    Args:
-        requests: list of enrichment InlinedRequests
-        responses: list of InlinedResponse (unordered)
-        chunked_events: dict of {crawl_result_id: [simple_event_dicts]}
-        preparations: dict of {crawl_result_id: PreparedExtraction}
-
-    Returns:
-        dict of {crawl_result_id: json_string} with fully enriched events
-    """
-    # Build lookup from request_id to request metadata
-    id_to_metadata = _build_request_id_index(requests)
-
-    # Collect enrichments per crawl_result_id
-    enrichments_by_crid = {}
-    contexts_by_crid = {}
-
-    for i, resp in enumerate(responses):
-        if resp.error:
-            error_msg = resp.error.message if resp.error.message else str(resp.error)
-            print(f"    - WARNING: Enrichment batch {i} failed (cannot identify source): {error_msg}")
-            continue
-
-        try:
-            response_text = resp.response.text.strip() if resp.response and resp.response.text else ""
-            if not response_text:
-                continue
-
-            # Match response to request via request_id
-            request_id = _parse_request_id(response_text)
-            metadata = _resolve_metadata(request_id, id_to_metadata)
-
-            if metadata is None:
-                print(f"    - WARNING: Enrichment response {i} has unrecognized request_id: {request_id!r}")
-                continue
-
-            crid = int(metadata.get("crawl_result_id", 0))
-            website_name = metadata.get("website_name", "")
-
-            if crid == 0:
-                continue
-
-            if crid not in enrichments_by_crid:
-                enrichments_by_crid[crid] = {}
-                prep = preparations[crid]
-                contexts_by_crid[crid] = extract_content_snippets(
-                    _distinct_names_in_order(chunked_events.get(crid, [])),
-                    prep.content,
-                )
-
-            result = json.loads(response_text)
-            for item in result.get('enrichments', []):
-                enrichments_by_crid[crid][item.get('name', '')] = _grounded_enrichment(
-                    item, contexts_by_crid[crid])
-        except Exception as e:
-            print(f"    - WARNING: Error processing enrichment response {i}: {e}")
-
-    # Combine chunked events with enrichments
-    results = {}
-    for crid, events in chunked_events.items():
-        enrichments = enrichments_by_crid.get(crid, {})
-        results[crid] = _combine_chunked_results(events, enrichments)
-        prep = preparations[crid]
-        enriched_count = sum(1 for e in events if e['name'] in enrichments)
-        print(f"    - {prep.website_name}: Combined {len(events)} events ({enriched_count} enriched)")
-
-    return results
-
-
-async def _run_enrichment_phase(enrichment_requests, chunked_events, preparations,
-                                display_name, poll_interval, timeout):
-    """Submit/poll/process the Phase-2 enrichment batch for chunked results.
-
-    When there are no enrichment requests, falls back to combining each crawl
-    result's chunked events with empty enrichments. The caller is responsible
-    for emitting its own (distinct) lead-in log line before calling this.
-
-    Returns:
-        dict of {crawl_result_id: json_string} with fully enriched events
-    """
-    enriched_results = {}
-    if enrichment_requests:
-        phase2_responses = await submit_and_poll_batch(
-            enrichment_requests,
-            display_name=display_name,
-            poll_interval=poll_interval,
-            timeout=timeout,
-        )
-        enriched_results = process_enrichment_responses(
-            enrichment_requests, phase2_responses, chunked_events, preparations
-        )
-    else:
-        for crid, events in chunked_events.items():
-            enriched_results[crid] = _combine_chunked_results(events, {})
-    return enriched_results
-
-
-def _store_batch_results(results_dict, crid_list, failed_crids=None):
-    """Store extracted batch results and clear their batch_job_name tags.
-
-    Opens and closes its own DB connection (matching the inline blocks it
-    replaces). Returns a list of (crawl_result_id, ok) tuples — True for stored
-    extractions, False for crawl results marked failed — in dict-iteration order.
-
-    `failed_crids` ({crid: error_message}) are written as status='failed' rather
-    than stored: their extraction never produced an answer, and 'failed' keeps
-    crawled_content around for `main.py --ids` re-extraction.
-    """
-    stored = []
-    with db.cursor_scope() as (cursor, conn):
-        for crid, result_text in results_dict.items():
-            db.update_crawl_result_extracted(cursor, conn, crid, result_text)
-            stored.append((crid, True))
-        for crid, error_msg in (failed_crids or {}).items():
-            db.update_crawl_result_failed(cursor, conn, crid, error_msg)
-            stored.append((crid, False))
-        db.clear_batch_job_name(cursor, conn, crid_list)
-    return stored
-
-
-async def _process_completed_batch(responses, crid_list, extraction_queue,
-                                    poll_interval=None, timeout=None):
-    """Process results from a completed batch job (resumed or new).
-
-    Builds preparations from queue items, processes responses, runs enrichment,
-    and stores results in the database.
-
-    Returns:
-        list of (crawl_result_id, success) tuples
-    """
-    results = []
-    queue_by_crid = {item['crawl_result_id']: item for item in extraction_queue}
-
-    # Build preparations for response processing
-    preparations = {}
-    with db.cursor_scope() as (cursor, conn):
-        for crid in crid_list:
-            item = queue_by_crid.get(crid)
-            if item:
-                prep = await prepare_extraction(
-                    cursor, crid, item['name'], item.get('notes', ''),
-                    item.get('use_vision', False), item.get('base_url', ''),
-                )
-                if not prep.error:
-                    preparations[crid] = prep
-
-    if not preparations:
-        return results
-
-    # Re-build requests just for metadata matching (not re-submitted)
-    batch_requests, _ = build_batch_requests(preparations)
-    timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
-    results.extend(await _enrich_and_store(
-        batch_requests, responses, preparations, crid_list,
-        f"fomo-enrich-{timestamp}", poll_interval, timeout,
-    ))
-    return results
-
-
-async def _enrich_and_store(batch_requests, responses, preparations, crid_list,
-                            enrich_display_name, poll_interval, timeout,
-                            log_prefix=''):
-    """Shared tail of both batch paths: process phase-1 responses, run the
-    enrichment phase for chunked results, and store everything.
-
-    Returns:
-        list of (crawl_result_id, success) tuples
-    """
-    single_results, chunked_events, failed_crids = process_batch_responses(
-        batch_requests, responses, preparations
-    )
-
-    enriched_results = {}
-    if chunked_events:
-        enrichment_requests = build_enrichment_requests(chunked_events, preparations)
-        if enrichment_requests:
-            print(f"\n  {log_prefix}Enriching {sum(len(e) for e in chunked_events.values())} "
-                  f"events in {len(enrichment_requests)} batch(es)...")
-        enriched_results = await _run_enrichment_phase(
-            enrichment_requests, chunked_events, preparations,
-            enrich_display_name, poll_interval, timeout,
-        )
-
-    # Store results and clear batch tracking
-    all_results = {**single_results, **enriched_results}
-    return _store_batch_results(all_results, crid_list, failed_crids)
-
-
-def _clear_batch_names(crid_list):
-    """Clear the batch_job_name tag for a set of crawl results.
-
-    Owns its own DB connection lifecycle (db.cursor_scope, which raises if
-    the database is unreachable).
-    """
-    with db.cursor_scope() as (cursor, conn):
-        db.clear_batch_job_name(cursor, conn, crid_list)
-
-
-async def _poll_and_process_resumed_batch(job_name, crid_list, extraction_queue,
-                                           poll_interval, timeout):
-    """Poll a resumed batch job until done, then process results.
-
-    Returns:
-        list of (crawl_result_id, success) tuples, or empty list on failure
-    """
-    print(f"\n  Resuming in-flight batch: {job_name} ({len(crid_list)} item(s))")
-
-    try:
-        batch_job = await asyncio.wait_for(
-            genai_client.aio.batches.get(name=job_name), timeout=120
-        )
-    except Exception as e:
-        print(f"  Warning: Could not retrieve batch job {job_name}: {e}")
-        _clear_batch_names(crid_list)
-        return []
-
-    state_name = batch_job.state.name if batch_job.state else "UNKNOWN"
-    print(f"  Resumed batch status: {state_name}")
-
-    if state_name in ("JOB_STATE_FAILED", "JOB_STATE_CANCELLED"):
-        print(f"  Batch {job_name} is {state_name} — will re-prepare these items")
-        _clear_batch_names(crid_list)
-        return []
-
-    try:
-        responses = await _poll_batch_until_done(batch_job, poll_interval, timeout)
-    except RuntimeError as e:
-        print(f"  Resumed batch failed: {e}")
-        _clear_batch_names(crid_list)
-        return []
-
-    return await _process_completed_batch(
-        responses, crid_list, extraction_queue, poll_interval, timeout
-    )
-
-
-async def _submit_poll_and_process_new_batch(extraction_queue, poll_interval, timeout):
-    """Prepare, submit, poll, and process a new extraction batch.
-
-    Handles the full lifecycle: prepare → submit → poll → process → store.
-
-    Returns:
-        list of (crawl_result_id, success) tuples
-    """
-    results = []
-    preparations = {}
-
-    print(f"\n  Preparing {len(extraction_queue)} new extraction request(s)...")
-
-    conn = db.create_connection()
-    if not conn:
-        print("  Failed to connect to database for batch preparation")
-        return [(item['crawl_result_id'], False) for item in extraction_queue]
-    cursor = conn.cursor(buffered=True)
-
-    resolved_results = {}
-
-    try:
-        for item in extraction_queue:
-            crid = item['crawl_result_id']
-            prep = await prepare_extraction(
-                cursor, crid, item['name'], item.get('notes', ''),
-                item.get('use_vision', False), item.get('base_url', ''),
-            )
-
-            if prep.error:
-                print(f"    - {item['name']}: {prep.error}")
-                db.update_crawl_result_failed(cursor, conn, crid, prep.error)
-                results.append((crid, False))
-            elif prep.copy_from_crawl_result_id is not None:
-                # Fingerprint match — copy events synchronously, no batch entry needed
-                copied = db.copy_crawl_events(
-                    cursor, conn, prep.copy_from_crawl_result_id, crid,
-                    resolve_location=_location_resolver_for(cursor, prep.website_id),
-                )
-                _apply_fingerprint_marker_and_status(cursor, conn, prep, copied)
-                results.append((crid, True))
-                print(f"    - {item['name']}: identical content to crawl {prep.copy_from_crawl_result_id} — copied {copied} events")
-            elif prep.resolved_result is not None:
-                resolved_results[crid] = prep.resolved_result
-                preparations[crid] = prep
-            else:
-                preparations[crid] = prep
-    finally:
-        cursor.close()
-        conn.close()
-
-    if not preparations and not resolved_results:
-        return results
-
-    # Store pre-resolved results immediately
-    if resolved_results:
-        with db.cursor_scope() as (cursor, conn):
-            for crid, result_text in resolved_results.items():
-                db.update_crawl_result_extracted(cursor, conn, crid, result_text)
-                results.append((crid, True))
-                print(f"    - {preparations[crid].website_name}: Stored pre-resolved result")
-        for crid in resolved_results:
-            del preparations[crid]
-
-    if not preparations:
-        return results
-
-    # Build and submit extraction batch
-    batch_requests, dropped_crids = build_batch_requests(preparations)
-
-    if dropped_crids:
-        with db.cursor_scope() as (cursor, conn):
-            for crid, error_msg in dropped_crids.items():
-                prep = preparations[crid]
-                print(f"    ⚠️  {prep.website_name}: extraction dropped — {error_msg}")
-                db.update_crawl_result_failed(cursor, conn, crid, error_msg)
-                results.append((crid, False))
-                del preparations[crid]
-
-    if not batch_requests:
-        return results
-
-    batch_crids = list(preparations.keys())
-
-    timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
-    phase1_responses = await submit_and_poll_batch(
-        batch_requests,
-        display_name=f"fomo-extract-{timestamp}",
-        poll_interval=poll_interval,
-        timeout=timeout,
-        crawl_result_ids=batch_crids,
-    )
-
-    results.extend(await _enrich_and_store(
-        batch_requests, phase1_responses, preparations, batch_crids,
-        f"fomo-enrich-{timestamp}", poll_interval, timeout, log_prefix='Phase 2: ',
-    ))
-    return results
-
-
-async def run_batch_extraction(extraction_queue, poll_interval=None, timeout=None):
-    """Run extraction for all queued items using the Gemini Batch API.
-
-    Resumed in-flight batches and new batches are polled concurrently so
-    a slow resumed batch doesn't block new submissions.
-
-    Args:
-        extraction_queue: list of dicts with crawl_result_id, name, notes, etc.
-        poll_interval: Seconds between batch status checks
-        timeout: Maximum seconds to wait per batch
-
-    Returns:
-        list of (crawl_result_id, success) tuples
-    """
-    if poll_interval is None:
-        poll_interval = BATCH_POLL_INTERVAL
-    if timeout is None:
-        timeout = BATCH_TIMEOUT
-
-    # Check for in-flight batches from a previous interrupted run
-    conn = db.create_connection()
-    if not conn:
-        return [(item['crawl_result_id'], False) for item in extraction_queue]
-    cursor = conn.cursor(buffered=True)
-    try:
-        pending_batches = db.get_pending_batch_jobs(cursor)
-    finally:
-        cursor.close()
-        conn.close()
-
-    # Identify which CRIDs are covered by in-flight batches
-    resumed_crids = set()
-    for crid_list in pending_batches.values():
-        resumed_crids.update(crid_list)
-
-    # Split queue: items with in-flight batches vs new items
-    new_queue = [item for item in extraction_queue
-                 if item['crawl_result_id'] not in resumed_crids]
-
-    # Build concurrent tasks
-    tasks = []
-
-    # Task for each resumed batch
-    for job_name, crid_list in pending_batches.items():
-        tasks.append(_poll_and_process_resumed_batch(
-            job_name, crid_list, extraction_queue, poll_interval, timeout
-        ))
-
-    # Task for new extractions (if any)
-    if new_queue:
-        tasks.append(_submit_poll_and_process_new_batch(
-            new_queue, poll_interval, timeout
-        ))
-
-    if not tasks:
-        return []
-
-    if len(tasks) > 1:
-        print(f"\n  Running {len(tasks)} batch tasks concurrently "
-              f"({len(pending_batches)} resumed, {'1 new' if new_queue else '0 new'})...")
-
-    # Run all tasks concurrently
-    task_results = await asyncio.gather(*tasks, return_exceptions=True)
-
-    # Collect results, handling any exceptions
-    results = []
-    for i, result in enumerate(task_results):
-        if isinstance(result, Exception):
-            print(f"  Batch task {i} failed: {result}")
-        else:
-            results.extend(result)
-
-    return results
+async def submit_and_poll_batch(*args, **kwargs):
+    return await run_batch_extraction(*args, **kwargs)

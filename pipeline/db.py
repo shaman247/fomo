@@ -270,6 +270,46 @@ def create_crawl_result(cursor, connection, crawl_run_id, website_id, filename):
     return cursor.fetchone()[0]
 
 
+def _write_content_chunks(cursor, connection, crawl_result_id, column, content):
+    """Stage large text atomically without SQL escaping exceeding the packet limit.
+
+    The caller commits the content and its successful status together. Server-side
+    string limits can also reject a concatenation; verify the complete value so
+    warnings or NULL results cannot silently become successful crawl snapshots.
+    """
+    cursor.execute("SELECT @@max_allowed_packet AS packet_limit")
+    packet_limit = int(_col(cursor.fetchone(), 'packet_limit', 0))
+    if packet_limit <= 512:
+        raise ValueError("max_allowed_packet is too small to store crawl content")
+    # Up to four UTF-8 bytes per character, doubled by SQL parameter escaping.
+    # Keep ample space for the UPDATE statement, row id, and protocol overhead.
+    chunk_chars = max(1, min(131072, (packet_limit - 512) // 2) // 4)
+    if not connection.in_transaction:
+        connection.start_transaction()
+    cursor.execute(
+        f"UPDATE crawl_results SET {column} = '' WHERE id = %s",
+        (crawl_result_id,),
+    )
+    for offset in range(0, len(content), chunk_chars):
+        cursor.execute(
+            f"UPDATE crawl_results SET {column} = CONCAT({column}, %s) WHERE id = %s",
+            (content[offset:offset + chunk_chars], crawl_result_id),
+        )
+    cursor.execute(
+        f"SELECT OCTET_LENGTH({column}) AS content_bytes, "
+        f"SHA2({column}, 256) AS content_hash FROM crawl_results WHERE id = %s",
+        (crawl_result_id,),
+    )
+    row = cursor.fetchone()
+    if (row is None
+            or _col(row, 'content_bytes', 0) != len(content.encode('utf-8'))
+            or _col(row, 'content_hash', 1) != compute_content_hash(content)):
+        raise ValueError(
+            "Crawl content storage verification failed; the server may reject "
+            "values larger than max_allowed_packet. No partial content was committed."
+        )
+
+
 def update_crawl_result(cursor, connection, crawl_result_id, status, **kwargs):
     """
     Generic update function for crawl results.
@@ -283,6 +323,11 @@ def update_crawl_result(cursor, connection, crawl_result_id, status, **kwargs):
     """
     updates = ["status = %s"]
     params = [status]
+    content = kwargs.get('content')
+    chunked_column = None
+    if (status in ('crawled', 'extracted') and isinstance(content, str)
+            and len(content.encode('utf-8')) >= 65536):
+        chunked_column = 'crawled_content' if status == 'crawled' else 'extracted_content'
 
     # Map status to timestamp field
     timestamp_map = {
@@ -300,13 +345,15 @@ def update_crawl_result(cursor, connection, crawl_result_id, status, **kwargs):
     # Handle optional fields
     if 'content' in kwargs:
         if status == 'crawled':
-            updates.append("crawled_content = %s")
+            if not chunked_column:
+                updates.append("crawled_content = %s")
+                params.append(kwargs['content'])
             updates.append("content_hash = %s")
-            params.append(kwargs['content'])
             params.append(compute_content_hash(kwargs['content']))
         elif status == 'extracted':
-            updates.append("extracted_content = %s")
-            params.append(kwargs['content'])
+            if not chunked_column:
+                updates.append("extracted_content = %s")
+                params.append(kwargs['content'])
 
     if 'event_count' in kwargs:
         updates.append("event_count = %s")
@@ -319,11 +366,18 @@ def update_crawl_result(cursor, connection, crawl_result_id, status, **kwargs):
 
     params.append(crawl_result_id)
 
-    cursor.execute(
-        f"UPDATE crawl_results SET {', '.join(updates)} WHERE id = %s",
-        tuple(params)
-    )
-    connection.commit()
+    try:
+        if chunked_column:
+            _write_content_chunks(cursor, connection, crawl_result_id, chunked_column, content)
+        cursor.execute(
+            f"UPDATE crawl_results SET {', '.join(updates)} WHERE id = %s",
+            tuple(params)
+        )
+        connection.commit()
+    except Exception:
+        if chunked_column:
+            connection.rollback()
+        raise
 
 
 def update_crawl_result_crawled(cursor, connection, crawl_result_id, content):
@@ -698,6 +752,38 @@ def complete_crawl_run(cursor, connection, crawl_run_id):
     connection.commit()
 
 
+# Keep this guard aligned with extractor.MIN_CONTENT_SIZE without importing the
+# extractor here (its imports depend on db). Ordinary crawled rows still reach
+# extraction's own diagnostics, even when tiny; only legacy failed retries skip.
+MIN_FAILED_RETRY_CONTENT_CHARS = 500
+
+# Shared by ordinary retry discovery and exact-ID agent-run resume inspection.
+# A website can have independent surfaces (including Picnob), so a later success
+# supersedes a failure only when its exact filename is the same.
+FAILED_CRAWL_SUPERSEDED_SQL = """EXISTS (
+    SELECT 1 FROM crawl_results newer
+    WHERE newer.website_id = cr.website_id
+      AND newer.filename = cr.filename
+      AND newer.status IN ('extracted', 'processed')
+      AND (
+          newer.crawled_at > cr.crawled_at
+          OR ((newer.crawled_at <=> cr.crawled_at OR cr.crawled_at IS NULL)
+              AND newer.id > cr.id)
+      )
+)"""
+
+
+def failed_crawl_retry_reason(original_status, content_chars, superseded_by_success):
+    """Return why a legacy failed crawl must not block a new crawl/resume."""
+    if original_status != 'failed':
+        return None
+    if content_chars < MIN_FAILED_RETRY_CONTENT_CHARS:
+        return 'content_too_small'
+    if superseded_by_success:
+        return 'superseded_by_success'
+    return None
+
+
 def get_incomplete_crawl_results(cursor, website_ids=None):
     """
     Get crawl results that need reprocessing.
@@ -705,14 +791,15 @@ def get_incomplete_crawl_results(cursor, website_ids=None):
     Returns results that are:
     - In 'crawled' status (need extraction)
     - In 'extracted' status (need processing)
-    - In 'failed' status but have crawled_content (extraction failed, can retry)
+    - In 'failed' status with at least 500 content characters and no newer
+      successful result for the same website and exact filename
 
     Args:
         cursor: DB cursor
         website_ids: Optional list of website IDs to restrict to.
                      If None, returns results from any crawl run.
     """
-    query = """
+    query = f"""
         SELECT cr.id, cr.status, cr.website_id, cr.crawl_run_id,
                w.name, w.notes, crun.run_date,
                CASE
@@ -721,7 +808,9 @@ def get_incomplete_crawl_results(cursor, website_ids=None):
                    WHEN cr.status = 'failed' AND cr.extracted_content IS NOT NULL THEN 'extracted'
                    ELSE cr.status
                END as effective_status,
-               cr.batch_job_name
+               cr.batch_job_name,
+               CHAR_LENGTH(COALESCE(cr.crawled_content, '')),
+               {FAILED_CRAWL_SUPERSEDED_SQL}
         FROM crawl_results cr
         JOIN websites w ON cr.website_id = w.id
         JOIN crawl_runs crun ON cr.crawl_run_id = crun.id
@@ -741,6 +830,8 @@ def get_incomplete_crawl_results(cursor, website_ids=None):
 
     results = []
     for row in cursor.fetchall():
+        if failed_crawl_retry_reason(row[1], row[9], bool(row[10])):
+            continue
         results.append({
             'crawl_result_id': row[0],
             'status': row[7],  # Use effective_status for processing
@@ -750,7 +841,9 @@ def get_incomplete_crawl_results(cursor, website_ids=None):
             'name': row[4],
             'notes': row[5],
             'run_date': row[6],
-            'batch_job_name': row[8]
+            'batch_job_name': row[8],
+            'content_chars': row[9],
+            'superseded_by_success': bool(row[10]),
         })
 
     return results
