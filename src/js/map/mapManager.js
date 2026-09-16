@@ -49,6 +49,10 @@ const MapManager = (() => {
         popupContentCallbacks: new Map()
     };
 
+    // The hover layer draws each icon's hover sprite variant (thicker white
+    // border), registered under the base image ID plus this suffix.
+    const HOVER_SUFFIX = '-hover';
+
     // ========================================
     // INITIALIZATION
     // ========================================
@@ -127,7 +131,8 @@ const MapManager = (() => {
             'text-size': _getLabelSize(),
             'text-anchor': 'left',
             'text-justify': 'left',
-            'text-offset': [1.4, 0],
+            // Clears the sprite's collision box (see IconManager MAP_SPRITE).
+            'text-offset': [1.8, 0],
             'text-max-width': 50,
             'text-letter-spacing': 0,
             'text-line-height': 1.15,
@@ -145,7 +150,7 @@ const MapManager = (() => {
             filter: ['==', ['get', 'labelType'], 'icon'],
             paint: {
                 'circle-radius': 3,
-                'circle-color': window.__CITY__?.map?.dot_color || '#808080',
+                'circle-color': FormatColors.dotExpression(),
                 'circle-opacity': 0.55,
                 'circle-stroke-width': 0
             }
@@ -178,32 +183,15 @@ const MapManager = (() => {
             }
         });
 
-        // Layer 2: Highlight circle (colored ring on hover/active, above all emojis)
-        map.addLayer({
-            id: 'marker-highlight',
-            type: 'circle',
-            source: 'markers',
-            filter: ['==', ['get', 'labelType'], 'icon'],
-            paint: {
-                'circle-radius': _getMarkerRadius(),
-                'circle-color': 'transparent',
-                'circle-stroke-width': [
-                    'case',
-                    ['boolean', ['feature-state', 'active'], false], 4,
-                    ['boolean', ['feature-state', 'hover'], false], 4,
-                    0
-                ],
-                'circle-stroke-color': ['coalesce', ['feature-state', 'accent'], ['get', 'color']]
-            }
-        });
-
-        // Layer 3: Hover — emoji + label, always visible, shown only for hovered feature
+        // Layer 2: Hover — the hover sprite variant (thicker white border) and
+        // label, always visible, shown only for hovered/active features.
         map.addLayer({
             id: 'marker-symbols-hover',
             type: 'symbol',
             source: 'markers',
             filter: ['==', ['get', 'locationKey'], ''], // hidden by default
             layout: symbolLayout({
+                'icon-image': _getHoverIconImageExpression(),
                 'icon-ignore-placement': true,
                 'text-allow-overlap': true,
                 'text-ignore-placement': true
@@ -231,9 +219,9 @@ const MapManager = (() => {
         if (!map?.getLayer('marker-dots')) return;
         const dark = Utils.getCurrentTheme() === 'dark';
         if (dark && !map.getLayer('marker-dot-density')) {
-            map.addLayer(DotDensityLayer.create(() => ({ places: state.rankedPlaces, promoted: state.promotedPlaces }),
-                window.__CITY__?.map?.dot_color || '#808080'), 'marker-symbols');
+            map.addLayer(DotDensityLayer.create(() => ({ places: state.rankedPlaces, promoted: state.promotedPlaces })), 'marker-symbols');
         } else if (!dark && map.getLayer('marker-dot-density')) map.removeLayer('marker-dot-density');
+        map.setPaintProperty('marker-dots', 'circle-color', FormatColors.dotExpression());
         map.setPaintProperty('marker-dots', 'circle-opacity', dark ? 0 : .55);
     }
 
@@ -283,6 +271,9 @@ const MapManager = (() => {
                     if (state.iconFadeFrame === null) state.iconFadeFrame = requestAnimationFrame(_animateIconFades);
                 }
                 _addIconImage(imageId);
+                // Decode the hover variant alongside, so hovering never
+                // shows a transparent slot while it rasterizes.
+                _addIconImage(imageId + HOVER_SUFFIX);
             }
         }
         // Pinning can change Set order without changing membership. Keep the
@@ -297,10 +288,6 @@ const MapManager = (() => {
             map.setFilter('marker-dots', ['all', ['==', ['get', 'labelType'], 'icon'],
                 ['!', ['in', ['get', 'locationKey'], ['literal', [...chosen]]]]]);
         }
-    }
-
-    function _getMarkerRadius() {
-        return Utils.isMobileLayout() ? 20 : 24;
     }
 
     function _getIconSize() {
@@ -407,11 +394,17 @@ const MapManager = (() => {
         return ['coalesce', ['get', 'iconImageId'], ''];
     }
 
+    function _getHoverIconImageExpression() {
+        return ['case', ['has', 'iconImageId'], ['concat', ['get', 'iconImageId'], HOVER_SUFFIX], ''];
+    }
+
     function _eventIcon(event) {
-        const descriptor = IconManager.resolve(event);
-        const iconImageId = `icon-${descriptor.id}-${descriptor.revision}`;
+        const formatCategory = FormatColors.categoryFor(event);
+        const descriptor = { ...IconManager.resolve(event), formatCategory };
+        const iconImageId = `icon-${descriptor.id}-${descriptor.revision}-format-${formatCategory.toLowerCase()}`;
         state.iconDescriptors.set(iconImageId, descriptor);
-        return { iconImageId, color: IconManager.getColor(event) };
+        state.iconDescriptors.set(iconImageId + HOVER_SUFFIX, descriptor);
+        return { iconImageId, color: IconManager.getColor(event), formatCategory };
     }
 
     function _addIconImage(imageId) {
@@ -420,13 +413,15 @@ const MapManager = (() => {
         if (!descriptor || state.loadedIcons.has(imageId) || state.pendingIcons.has(imageId)) return;
         const epoch = state.iconEpoch;
         const theme = Utils.getCurrentTheme();
+        const hover = imageId.endsWith(HOVER_SUFFIX);
         const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
-        const size = 64 * pixelRatio;
+        // Must match the sprite IconManager.prepare draws: updateImage rejects a size change.
+        const size = IconManager.mapSpriteSize(hover) * pixelRatio;
         // A fixed transparent slot prevents missing-image warnings during decode.
         if (!map.hasImage(imageId)) map.addImage(imageId,
             { width: size, height: size, data: new Uint8Array(size * size * 4) }, { pixelRatio });
         state.pendingIcons.add(imageId);
-        IconManager.prepare(descriptor, theme, true).then(result => {
+        IconManager.prepare(descriptor, theme, hover ? 'hover' : true, descriptor.formatCategory).then(result => {
             if (state.iconEpoch !== epoch || !map.hasImage(imageId)) return;
             _fadeInIconImage(imageId, result.pixels);
             state.pendingIcons.delete(imageId);
@@ -435,7 +430,9 @@ const MapManager = (() => {
                 const keep = new Set([state.hoverIconImageId]);
                 for (const key of state.promotedPlaces) {
                     const fid = state.locationKeyToFeatureId.get(key);
-                    keep.add(state.sourceDataCache?.features[fid]?.properties.iconImageId);
+                    const promotedId = state.sourceDataCache?.features[fid]?.properties.iconImageId;
+                    keep.add(promotedId);
+                    if (promotedId) keep.add(promotedId + HOVER_SUFFIX);
                 }
                 for (const oldId of state.loadedIcons) {
                     if (state.loadedIcons.size <= 128) break;
@@ -444,7 +441,7 @@ const MapManager = (() => {
                     state.loadedIcons.delete(oldId);
                 }
             }
-            if (state.sourceDataCache) {
+            if (state.sourceDataCache && !hover) {
                 const keys = new Set(state.sourceDataCache.features
                     .filter(f => f.properties.iconImageId === imageId).map(f => f.properties.locationKey));
                 state.sourceDataCache.features.forEach(f => {
@@ -603,9 +600,9 @@ const MapManager = (() => {
 
             const ranked = [...(matchingLocations[locationKey] || events)].sort((a, b) =>
                 DiscoveryRanking.score(b, locationInfo) - DiscoveryRanking.score(a, locationInfo) || Number(a.id) - Number(b.id));
-            const { iconImageId, color } = _eventIcon(ranked[0]);
+            const { iconImageId, color, formatCategory } = _eventIcon(ranked[0]);
             const { name: eventLabel, extra: eventLabelExtra } = _buildEventLabel(ranked);
-            state.rankedPlaces.push({ key: locationKey, coordinates: [lng, lat],
+            state.rankedPlaces.push({ key: locationKey, coordinates: [lng, lat], formatCategory,
                 score: ranked.length ? DiscoveryRanking.score(ranked[0], locationInfo) : 0 });
 
             // Icon feature — no text (the default text-field expression skips
@@ -617,6 +614,7 @@ const MapManager = (() => {
                     locationKey,
                     labelType: 'icon',
                     iconImageId,
+                    formatCategory,
                     color,
                     sortKey: -10000 - lat
                 }
@@ -780,16 +778,16 @@ const MapManager = (() => {
             _clearHoverLabelEvent();
             return;
         }
-        const { iconImageId } = _eventIcon(labelEvent);
-        state.hoverIconImageId = iconImageId;
-        _addIconImage(iconImageId);
-        const sig = `${locationKey}|${name}|${iconImageId}`;
+        const hoverImageId = _eventIcon(labelEvent).iconImageId + HOVER_SUFFIX;
+        state.hoverIconImageId = hoverImageId;
+        _addIconImage(hoverImageId);
+        const sig = `${locationKey}|${name}|${hoverImageId}`;
         if (sig === state.hoverLabelEventSig) return;
         state.hoverLabelEventSig = sig;
         map.setLayoutProperty('marker-symbols-hover', 'icon-image', ['case',
             ['all', ['==', ['get', 'locationKey'], locationKey], ['==', ['get', 'labelType'], 'icon']],
-            iconImageId,
-            _getIconImageExpression()
+            hoverImageId,
+            _getHoverIconImageExpression()
         ]);
         map.setLayoutProperty('marker-symbols-hover', 'text-field', ['case',
             ['==', ['get', 'locationKey'], locationKey],
@@ -809,7 +807,7 @@ const MapManager = (() => {
         state.hoverLabelEventSig = null;
         state.hoverIconImageId = null;
         map.setLayoutProperty('marker-symbols-hover', 'text-field', _getTextFieldExpression());
-        map.setLayoutProperty('marker-symbols-hover', 'icon-image', _getIconImageExpression());
+        map.setLayoutProperty('marker-symbols-hover', 'icon-image', _getHoverIconImageExpression());
     }
 
     /**
@@ -846,7 +844,7 @@ const MapManager = (() => {
     }
 
     /**
-     * Programmatically highlight a location's marker (ring + label) by its
+     * Programmatically highlight a location's marker (hover sprite + label) by its
      * locationKey, mirroring a mouse hover. Used by the desktop list view so
      * hovering a list row highlights the corresponding marker. Shares the same
      * `hoveredFeatureId` state as real mouse hover, so the two interleave
@@ -1088,7 +1086,7 @@ const MapManager = (() => {
             // Any per-event hover override embedded the old font/colors — reset
             state.hoverLabelEventSig = null;
             map.setLayoutProperty('marker-symbols-hover', 'text-field', _getTextFieldExpression());
-            map.setLayoutProperty('marker-symbols-hover', 'icon-image', _getIconImageExpression());
+            map.setLayoutProperty('marker-symbols-hover', 'icon-image', _getHoverIconImageExpression());
         }
 
         if (state.sourceDataCache) {

@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const path = require('node:path');
 function harness({ reducedMotion = true } = {}) {
-    const images = new Map(), layouts = new Map(), requests = [];
+    const images = new Map(), layouts = new Map(), requests = [], hoverRequests = [];
     const layers = new Map(), filters = new Map(), filterCalls = [], featureStates = new Map();
     const dataUpdates = [];
     const animationFrames = new Map();
@@ -37,18 +37,22 @@ function harness({ reducedMotion = true } = {}) {
         },
         ColorUtils: { oklchHueFromHex: () => 30, oklchToHex: () => '#123456' },
         IconManager: {
+            mapSpriteSize: () => 78,
             resolve: event => ({ id: event?.icon_id || event?.emoji || 'fallback', revision: '1' }),
             getColor: () => '#123456',
-            prepare: (descriptor, theme) => new Promise(done => requests.push({ descriptor, theme, done }))
+            prepare: (descriptor, theme, variant, formatCategory) => new Promise(done =>
+                (variant === 'hover' ? hoverRequests : requests).push({ descriptor, theme, variant, formatCategory, done }))
         },
         DiscoveryRanking: { score: event => event.score || 0,
             topPlaces: (candidates, limit, pinned = []) => new Set(
                 [...new Set([...pinned, ...candidates.map(c => c.key)])].slice(0, limit)) }
     });
+    vm.runInContext(fs.readFileSync(path.join(__dirname, '../core/formatColors.js'), 'utf8'), context);
+    vm.runInContext("FormatColors.configure({Performance:['Concert'], Participatory:['Workshop']})", context);
     vm.runInContext(fs.readFileSync(path.join(__dirname, '../map/mapManager.js'), 'utf8'), context);
     const manager = vm.runInContext('MapManager', context); manager.init(map);
     const key = '40.7,-74', locations = { [key]: { name: 'Venue', emoji: '🏛️' } };
-    return { manager, images, requests, layouts, layers, filters, filterCalls, featureStates, dataUpdates, key, locations, data: () => data,
+    return { manager, images, requests, hoverRequests, layouts, layers, filters, filterCalls, featureStates, dataUpdates, key, locations, data: () => data,
         setTheme: value => { theme = value; },
         animationFrames,
         advance: ms => {
@@ -63,11 +67,11 @@ test('icon and primary label follow the same ranked event and filter changes', (
     const h = harness();
     h.render([{ id: 1, name: 'Painting', icon_id: 'paint' }, { id: 2, name: 'Jazz night', icon_id: 'jazz', score: 10 }]);
     const [icon, label] = h.data().features.map(f => f.properties);
-    assert.equal(icon.iconImageId, 'icon-jazz-1');
+    assert.equal(icon.iconImageId, 'icon-jazz-1-format-other');
     assert.equal(label.eventLabel, 'Jazz night'); assert.equal(label.eventLabelExtra, ' +1');
     assert.equal(label.locationName, undefined);
     h.render([{ id: 1, name: 'Painting', icon_id: 'paint' }]);
-    assert.equal(h.data().features[0].properties.iconImageId, 'icon-paint-1');
+    assert.equal(h.data().features[0].properties.iconImageId, 'icon-paint-1-format-other');
     assert.equal(h.data().features[1].properties.eventLabelExtra, '');
 });
 test('hover keeps every promoted icon and label in collision placement without refiltering', () => {
@@ -94,6 +98,22 @@ test('hover keeps every promoted icon and label in collision placement without r
         assert.equal(h.layers.get('marker-symbols-hover').layout[`${kind}-ignore-placement`], true);
     }
 });
+test('promoted icons decode a hover sprite variant that the hover layer draws instead of a ring', async () => {
+    const h = harness(); h.render([{ id: 1, name: 'Painting', icon_id: 'paint' }]);
+    assert.equal(h.layers.get('marker-highlight'), undefined);
+    assert.ok(JSON.stringify(h.layers.get('marker-symbols-hover').layout['icon-image']).includes('-hover'));
+    assert.ok(!JSON.stringify(h.layers.get('marker-symbols').layout['icon-image']).includes('-hover'));
+    assert.equal(h.requests.length, 1); assert.equal(h.hoverRequests.length, 1);
+    assert.equal(h.hoverRequests[0].descriptor.id, 'paint');
+    assert.equal(h.images.get('icon-paint-1-format-other-hover').width, 78, 'the placeholder slot matches the hover sprite size');
+    h.hoverRequests[0].done({ pixels: 'hover pixels', accent: '#123456' });
+    await Promise.resolve();
+    assert.equal(h.images.get('icon-paint-1-format-other-hover'), 'hover pixels');
+    h.manager.highlightLocationByKey(h.key, { labelEvent: { name: 'Jazz night', icon_id: 'jazz' } });
+    assert.ok(JSON.stringify(h.layouts.get('icon-image')).includes('icon-jazz-1-format-other-hover'));
+    assert.equal(h.hoverRequests.at(-1).descriptor.id, 'jazz');
+    assert.equal(h.requests.length, 1, 'a list-row hover only needs the hover variant');
+});
 test('replacing marker data clears hover on the old sparse label IDs', () => {
     const h = harness(); h.render([{ name: 'Painting' }]);
     h.manager.highlightLocationByKey(h.key);
@@ -104,10 +124,10 @@ test('replacing marker data clears hover on the old sparse label IDs', () => {
 test('list hover switches artwork and name together and clears both overrides', () => {
     const h = harness(); h.render([{ id: 1, name: 'Painting', icon_id: 'paint' }]);
     h.manager.highlightLocationByKey(h.key, { labelEvent: { name: 'Jazz night', icon_id: 'jazz' } });
-    assert.ok(JSON.stringify(h.layouts.get('icon-image')).includes('icon-jazz-1'));
+    assert.ok(JSON.stringify(h.layouts.get('icon-image')).includes('icon-jazz-1-format-other'));
     assert.ok(JSON.stringify(h.layouts.get('text-field')).includes('Jazz night'));
     h.manager.clearHoverHighlight();
-    assert.ok(!JSON.stringify(h.layouts.get('icon-image')).includes('icon-jazz-1'));
+    assert.ok(!JSON.stringify(h.layouts.get('icon-image')).includes('icon-jazz-1-format-other'));
     assert.ok(!JSON.stringify(h.layouts.get('text-field')).includes('Jazz night'));
 });
 test('map and hover labels compose accents before layout and truncation', () => {
@@ -145,7 +165,8 @@ test('offscreen/unpromoted event icons are not eagerly decoded', () => {
     }
     h.manager.updateMarkerData(events, locations, new Map());
     assert.equal(h.requests.length, 20);
-    assert.equal(h.images.size, 20);
+    assert.equal(h.hoverRequests.length, 20, 'each promoted icon also decodes its hover variant');
+    assert.equal(h.images.size, 40);
 });
 
 test('late artwork updates pixels and accent without replacing data or re-placing labels', async () => {
@@ -154,7 +175,7 @@ test('late artwork updates pixels and accent without replacing data or re-placin
     const updates = h.dataUpdates.length, filters = h.filterCalls.length;
     h.requests[0].done({ pixels: 'paint pixels', accent: '#123456' });
     await Promise.resolve();
-    assert.equal(h.images.get('icon-paint-1'), 'paint pixels');
+    assert.equal(h.images.get('icon-paint-1-format-other'), 'paint pixels');
     assert.equal(h.featureStates.get(0).accent, '#123456');
     assert.equal(h.dataUpdates.length, updates);
     assert.equal(h.filterCalls.length, filters);
@@ -190,12 +211,12 @@ test('late artwork fades its pixels over 150ms without touching marker placement
     const updates = h.dataUpdates.length, filters = h.filterCalls.length;
     h.requests[0].done({ pixels, accent: '#123456' });
     await Promise.resolve();
-    assert.equal(h.images.get('icon-paint-1').data[3], 0);
+    assert.equal(h.images.get('icon-paint-1-format-other').data[3], 0);
     h.advance(75);
-    assert.deepEqual(Array.from(h.images.get('icon-paint-1').data.slice(0, 4)), [100, 150, 200, 128]);
+    assert.deepEqual(Array.from(h.images.get('icon-paint-1-format-other').data.slice(0, 4)), [100, 150, 200, 128]);
     assert.equal(pixels.data[3], 255, 'cached pixels must retain their original alpha');
     h.advance(75);
-    assert.equal(h.images.get('icon-paint-1'), pixels);
+    assert.equal(h.images.get('icon-paint-1-format-other'), pixels);
     assert.equal(h.animationFrames.size, 0);
     assert.equal(h.dataUpdates.length, updates);
     assert.equal(h.filterCalls.length, filters);
@@ -211,7 +232,7 @@ test('theme reload cancels an in-flight artwork fade', async () => {
     h.setTheme('dark');
     h.manager.reloadIconImages();
     h.advance(150);
-    assert.equal(h.images.get('icon-paint-1').data[3], 0);
+    assert.equal(h.images.get('icon-paint-1-format-other').data[3], 0);
     assert.equal(h.animationFrames.size, 0);
 });
 
@@ -230,8 +251,25 @@ test('a newly promoted marker fades even when another marker already uses its ca
     assert.equal(h.featureStates.get(1).iconOpacity, 0);
     h.advance(75);
     assert.equal(h.featureStates.get(1).iconOpacity, 0.5);
-    assert.equal(h.images.get('icon-paint-1'), pixels, 'the shared sprite must stay fully opaque');
+    assert.equal(h.images.get('icon-paint-1-format-other'), pixels, 'the shared sprite must stay fully opaque');
     h.advance(75);
     assert.equal(h.featureStates.get(1).iconOpacity, 1);
     assert.equal(h.requests.length, 1);
+});
+
+// A reused icon must not reuse another event format's background or hover sprite.
+test('ranked format follows filtering, rekeys shared artwork, and reaches hover rendering', () => {
+    const h = harness();
+    h.render([{ id: 1, name: 'Music lesson', icon_id: 'music', event_type: 'Workshop', tags: ['Concert'] },
+        { id: 2, name: 'Concert', icon_id: 'music', event_type: 'Concert', score: 10 }]);
+    assert.equal(h.data().features[0].properties.formatCategory, 'Performance');
+    assert.equal(h.data().features[0].properties.iconImageId, 'icon-music-1-format-performance');
+    assert.equal(h.requests.at(-1).formatCategory, 'Performance');
+    h.manager.highlightLocationByKey(h.key, { labelEvent: { id: 1, name: 'Music lesson', icon_id: 'music', event_type: 'Workshop' } });
+    assert.equal(h.hoverRequests.at(-1).formatCategory, 'Participatory');
+    h.render([{ id: 1, name: 'Music lesson', icon_id: 'music', event_type: 'Workshop', tags: ['Concert'] }]);
+    assert.equal(h.data().features[0].properties.formatCategory, 'Participatory');
+    assert.equal(h.data().features[0].properties.iconImageId, 'icon-music-1-format-participatory');
+    const dotPaint = JSON.stringify(h.layers.get('marker-dots').paint['circle-color']);
+    assert.ok(dotPaint.includes('formatCategory'));
 });

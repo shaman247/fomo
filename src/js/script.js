@@ -335,6 +335,7 @@ document.addEventListener('DOMContentLoaded', () => {
          * @private
          */
         _setupUIComponents(urlParams) {
+            FormatColors.configure(this.state.formats);
             FormatSelector.configure(this.state.formats);
             NeighborhoodSelector.configure(this.state.tagChildrenOf, this.state.neighborhoodTags);
             urlParams.tags = (urlParams.tags || []).map(t => this.state.tagRedirects[t] || t);
@@ -1070,6 +1071,7 @@ document.addEventListener('DOMContentLoaded', () => {
             s.formats = staging.formats;
             s.formatOnlyTags = staging.formatOnlyTags;
             s.tagRedirects = staging.tagRedirects;
+            FormatColors.configure(s.formats);
             FormatSelector.configure(s.formats);
             DiscoveryRanking.migrateTagAliases(s.tagRedirects);
 

@@ -7,6 +7,22 @@ const IconManager = (() => {
     const pendingPackChoices = new Map();
     let activePacks = 0;
     let tagIcons = {}, tagEmojis = {}, observing = false, visibilityObserver;
+    const FALLBACK_ACCENT = '#8899aa'; // achromatic artwork (⚽, line icons) and not-yet-loaded icons
+    // Map sprite geometry in CSS px (scaled by DPR when drawn). The artwork sits
+    // on a tinted disc; both are centered 8px right of the 78px sprite's center
+    // so the collision box stays left-biased (MapManager's icon-offset of -8
+    // recenters it on the point). The sprite's right edge lands ~22px right of
+    // the point at desktop icon-size, so MapManager's text-offset must start
+    // labels beyond that or the icon would collide with its own label.
+    // The 1.5-unit ring is ~1px at desktop icon-size, matching the 1px borders
+    // on the rest of the map UI (panels, popups, controls).
+    const MAP_SPRITE = Object.freeze({ size: 78, cx: 47, cy: 39, radius: 30, ring: 1.5, art: 38 });
+    // Hover/active variant: the same disc with a thicker white border.
+    // UI artwork (popups, chips) is rasterized on a plain 64px canvas.
+    const HOVER_SPRITE = Object.freeze({ ...MAP_SPRITE, ring: 3 });
+    const UI_SPRITE_SIZE = 64;
+    const mapSpriteSize = hover => (hover ? HOVER_SPRITE : MAP_SPRITE).size;
+    const discColors = (category, theme) => FormatColors.discColors(category, theme);
     const own = (object, key) => Object.prototype.hasOwnProperty.call(object, key);
     const canonical = value => (typeof value === 'string' ? value : '').trim().replace(/[\uFE0E\uFE0F]/g, '');
     function resolve(record = {}) {
@@ -22,7 +38,7 @@ const IconManager = (() => {
     const tagCacheKey = tag => cacheKey(tagRecord(tag));
     const accentKey = (record, theme) => `${resolve(record).id}|${theme}`;
     function getColor(record, theme = Utils.getCurrentTheme()) {
-        return accents.get(accentKey(record, theme)) || '#8899aa';
+        return accents.get(accentKey(record, theme)) || FALLBACK_ACCENT;
     }
     // Bound simultaneous downloads when a long list of icons enters view.
     const jobs = [];
@@ -118,20 +134,46 @@ const IconManager = (() => {
             pendingPackChoices.get(pack.url).push({ descriptor, done, fail });
         });
     }
-    function prepare(descriptor, theme = Utils.getCurrentTheme(), mapSprite = false) {
+    /**
+     * Rasterizes artwork. `mapSprite` is false for UI artwork, true for the
+     * resting map sprite (artwork on a tinted disc), or 'hover' for the
+     * hovered/active map sprite (thicker white border).
+     */
+    function prepare(descriptor, theme = Utils.getCurrentTheme(), mapSprite = false, formatCategory = 'Other') {
         const dpr = Math.min(window.devicePixelRatio || 1, 2);
-        const key = [descriptor.id, descriptor.revision, theme, dpr, mapSprite].join('|');
+        const key = [descriptor.id, descriptor.revision, theme, dpr, mapSprite, mapSprite ? formatCategory : ''].join('|');
         if (rendered.has(key)) return rendered.get(key);
+        const hover = mapSprite === 'hover';
+        const geometry = hover ? HOVER_SPRITE : MAP_SPRITE;
         const promise = loadArtwork(descriptor).catch(() => load(IconCatalog.fallbackUrl)).then(img => {
-            const size = 64 * dpr;
+            const size = (mapSprite ? geometry.size : UI_SPRITE_SIZE) * dpr;
             const canvas = document.createElement('canvas');
             canvas.width = canvas.height = size;
             const ctx = canvas.getContext('2d', { willReadFrequently: true });
-            // Map sprites reserve the same left-biased collision box as before.
-            if (mapSprite) ctx.drawImage(img, 17 * dpr, 9 * dpr, 46 * dpr, 46 * dpr);
-            else ctx.drawImage(img, 4 * dpr, 4 * dpr, 56 * dpr, 56 * dpr);
-            const pixels = ctx.getImageData(0, 0, size, size);
-            const accent = TagColorManager.extractColorFromPixels(pixels);
+            let accent, pixels;
+            if (mapSprite) {
+                const { cx, cy, radius, ring, art } = geometry;
+                const circle = r => { ctx.beginPath(); ctx.arc(cx * dpr, cy * dpr, r * dpr, 0, Math.PI * 2); };
+                ctx.drawImage(img, (cx - art / 2) * dpr, (cy - art / 2) * dpr, art * dpr, art * dpr);
+                // The accent comes from the artwork alone, so the disc is
+                // composited underneath after extraction (later draws go
+                // beneath earlier ones: border first, then the fill under it).
+                accent = TagColorManager.extractColorFromPixels(ctx.getImageData(0, 0, size, size));
+                const disc = discColors(formatCategory, theme);
+                ctx.globalCompositeOperation = 'destination-over';
+                circle(radius - ring / 2);
+                ctx.lineWidth = ring * dpr;
+                ctx.strokeStyle = hover ? '#ffffff' : disc.stroke;
+                ctx.stroke();
+                circle(radius);
+                ctx.fillStyle = disc.fill;
+                ctx.fill();
+                pixels = ctx.getImageData(0, 0, size, size);
+            } else {
+                ctx.drawImage(img, 4 * dpr, 4 * dpr, 56 * dpr, 56 * dpr);
+                pixels = ctx.getImageData(0, 0, size, size);
+                accent = TagColorManager.extractColorFromPixels(pixels);
+            }
             accents.set(`${descriptor.id}|${theme}`, accent);
             return { url: img.src, accent, pixels, pixelRatio: dpr };
         });
@@ -244,5 +286,5 @@ const IconManager = (() => {
         }).observe(document.body, { childList: true, characterData: true, subtree: true });
         new MutationObserver(refresh).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
     }
-    return { init, resolve, createElement, prepare, getColor, cacheKey, refresh, setTagIcons, tagCacheKey, createTagElement };
+    return { init, resolve, createElement, prepare, getColor, discColors, cacheKey, refresh, setTagIcons, tagCacheKey, createTagElement, mapSpriteSize };
 })();

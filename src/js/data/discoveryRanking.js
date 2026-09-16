@@ -156,10 +156,12 @@ const DiscoveryRanking = (() => {
 
     load();
     document.addEventListener?.('fomo:similarity-changed', () => {
-        // Model loads invalidate marker/list ordering without rewriting preferences.
+        // Model downloads and deferred scoring only prepare the next interaction.
+        // Publishing preferences-changed here makes each scoring batch redraw the
+        // map/list, which can queue more scoring and keep "Updating events" cycling.
+        // Invalidate cached scores without changing the currently displayed view.
         revision++;
         cache = new WeakMap();
-        document.dispatchEvent(new CustomEvent('fomo:preferences-changed'));
     });
     window.addEventListener('storage', e => {
         if (e.key === storageKey || e.key === null) {

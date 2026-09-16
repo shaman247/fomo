@@ -14,6 +14,7 @@ const core = () => ({ schemaVersion: 1, dimensions: 2, domain: 'test', blocks: {
 
 function setup(overrides = {}) {
     const requests = [];
+    const notifications = [];
     const handlers = new Map();
     const fixtures = {
         'manifest.json': { schemaVersion: 1, dimensions: 2, domain: 'test', generation, historyShards: [0], activeShards: [0] },
@@ -25,7 +26,10 @@ function setup(overrides = {}) {
         window: { __CITY__: { domain: 'test' }, addEventListener() {} }, location: { host: 'test' },
         document: {
             addEventListener(name, callback) { if (!handlers.has(name)) handlers.set(name, []); handlers.get(name).push(callback); },
-            dispatchEvent(event) { for (const fn of handlers.get(event.type) || []) fn(event); }
+            dispatchEvent(event) {
+                notifications.push(event.type);
+                for (const fn of handlers.get(event.type) || []) fn(event);
+            }
         },
         CustomEvent: class { constructor(type) { this.type = type; } },
         localStorage: { getItem() { return '[]'; }, setItem() {} },
@@ -35,7 +39,7 @@ function setup(overrides = {}) {
             return { ok: Boolean(data), status: data ? 200 : 404, json: async () => data }; }
     });
     vm.runInContext(source + '\n' + rankingSource + '\nthis.model=SimilarityModel; this.ranking=DiscoveryRanking;', context);
-    return { m: context.model, r: context.ranking, requests };
+    return { m: context.model, r: context.ranking, requests, notifications };
 }
 const settle = () => new Promise(resolve => setTimeout(resolve, 15));
 
@@ -205,6 +209,40 @@ test('model arrival invalidates previously cached exact-only scores', async () =
     await m.load(); await settle();
     assert.ok(r.revision() > revision);
     assert.ok(r.score(event, {}) > 19);
+});
+
+test('background model arrivals do not request a filter redraw or change preferences', async () => {
+    const { r, m, notifications } = setup(aggregateFixtures());
+    r.set('place', 'mixed center|1 main', 'Mixed center', 1);
+    notifications.length = 0;
+    const revision = r.revision();
+    await m.load(); await settle();
+    assert.ok(r.revision() > revision); // Fresh scores are ready for the next interaction.
+    assert.ok(notifications.includes('fomo:similarity-changed'));
+    assert.equal(notifications.includes('fomo:preferences-changed'), false);
+    notifications.length = 0;
+    r.remove('place', 'mixed center|1 main');
+    assert.deepEqual(notifications, ['fomo:preferences-changed']);
+});
+
+test('deferred broad-profile scoring settles without requesting another render', async () => {
+    const fixtures = aggregateFixtures();
+    fixtures[`${generation}/core.json`].blocks.tag = {
+        ...block(['wide'], Array.from({ length: 64 }, (_, i) => [127 - i, i]), [64]), offsets: [0, 64]
+    };
+    const { r, m, notifications } = setup(fixtures);
+    r.set('tag', 'wide', 'Wide interest', 1);
+    await m.load(); await settle();
+    notifications.length = 0;
+    const events = Array.from({ length: 100 }, () => ({ id: 2 }));
+    assert.ok(events.every(event => r.score(event, {}) === 0));
+    await settle();
+    assert.ok(notifications.includes('fomo:similarity-changed'));
+    assert.equal(notifications.includes('fomo:preferences-changed'), false);
+    assert.ok(events.every(event => r.score(event, {}) > 19));
+    notifications.length = 0;
+    await settle();
+    assert.deepEqual(notifications, []);
 });
 
 test('missing, incompatible and corrupt artifacts fall back to exact ranking', async () => {
