@@ -356,3 +356,25 @@ class TestWeekdayFoodSpecialsStayUnfiltered(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class TestGroupVisitBookingRows(unittest.TestCase):
+    """Whole-name "Group Visits" booking-page rows (added 2026-09-17).
+
+    Corpus check over all events on 2026-09-17: "Group Visits" x6, "Class Visit"
+    x3, "Private Tours" x1 -- every one archived or hand-suppressed, none live.
+    """
+
+    def test_bare_group_visit_rows_are_junk(self):
+        for name in ('Group Visits', 'Group Visit', 'Class Visit', 'School Visits',
+                     'Private Tours', 'Corporate Tours'):
+            with self.subTest(name=name):
+                self.assertTrue(is_obvious_non_event(name, 'No description available.'))
+
+    def test_titled_group_programs_survive(self):
+        for name in ('School Group Visits: Discovery Trail',
+                     "NYC-DSA Pedalers Union \u2014 Group Visit to Time's Up Bike Repair Class",
+                     'Group Tour of the Brooklyn Navy Yard',
+                     'Private Tours of the Vault: Behind the Scenes'):
+            with self.subTest(name=name):
+                self.assertFalse(is_obvious_non_event(name, 'No description available.'))

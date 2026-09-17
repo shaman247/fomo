@@ -36,6 +36,7 @@ logging_utils.install()  # Prefix every log line with a timestamp for profiling
 
 import db
 import crawler
+import site_profiles
 from crawler import get_browser_key
 import extractor
 import agent_extraction
@@ -310,7 +311,13 @@ async def _run_pipeline(website_ids=None, limit=None, *, work_dir=None, resume=F
         else:
             print(f"Found {len(websites)} website(s) due for crawling")
         if website_ids and not resume:
-            recrawling = {w['id'] for w in websites}
+            # A site whose URLs are ALL handled out-of-band (Instagram via
+            # /picnob-scrape) is never recrawled here, so its stored 'crawled'
+            # rows must stay in scope: `--ids <ig sites>` is exactly how those
+            # ingested rows get extracted. Dropping them left 20 of 22 picnob
+            # bundles stranded as 'crawled' on 2026-09-17.
+            recrawling = {w['id'] for w in websites
+                          if not site_profiles.all_skip([u['url'] if isinstance(u, dict) else u for u in w['urls']])}
             incomplete_results = [r for r in incomplete_results if r['website_id'] not in recrawling]
             incomplete_crawled = [r for r in incomplete_results if r['status'] == 'crawled']
             incomplete_extracted = [r for r in incomplete_results if r['status'] == 'extracted']

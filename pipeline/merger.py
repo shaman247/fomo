@@ -2541,15 +2541,21 @@ def compute_voted_tags(cursor, event_id, current_crawl_tags, curated_tag_set,
 
 
 def _index_existing_event(indexes, event_id, name, location_id, lat, lng,
-                          location_name, website_id):
+                          location_name, website_id, suppressed=False):
     """Register one event in the four dedup lookup indexes.
 
     `indexes` is `(by_location_id, by_coords, by_location_name, by_website)`.
     Used both for the initial load of existing events and for each event the
     merge creates, so a crawl_event later in the same batch can match it.
+
+    `suppressed` carries `events.suppressed` into every candidate entry so the
+    matcher can prefer a VISIBLE twin over a hidden one (a dedupe loser that is
+    still in the index). Events the merge creates are never suppressed, so that
+    call site keeps the default.
     """
     by_location_id, by_coords, by_location, by_website = indexes
-    event_entry = {'id': event_id, 'name': name, 'website_id': website_id}
+    event_entry = {'id': event_id, 'name': name, 'website_id': website_id,
+                   'suppressed': bool(suppressed)}
 
     # location_id is the primary matching method.
     if location_id is not None:
@@ -2714,7 +2720,8 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
     # Use 10-day buffer to catch recurring events that may not have next occurrence posted yet
     recent_cutoff = (datetime.now() - timedelta(days=10)).date()
     cursor.execute("""
-        SELECT DISTINCT e.id, e.name, e.location_id, l.lat, l.lng, e.location_name, e.website_id
+        SELECT DISTINCT e.id, e.name, e.location_id, l.lat, l.lng, e.location_name,
+               e.website_id, e.suppressed
         FROM events e
         JOIN event_occurrences eo ON e.id = eo.event_id
         LEFT JOIN locations l ON e.location_id = l.id
@@ -2733,11 +2740,12 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
     # merge creates, too).
     event_names_by_id = {}
     for row in cursor.fetchall():
-        event_id, name, location_id, lat, lng, location_name, website_id = row
+        event_id, name, location_id, lat, lng, location_name, website_id, suppressed = row
         event_ids_with_future.add(event_id)
         event_names_by_id[event_id] = name
         _index_existing_event(
-            dedup_indexes, event_id, name, location_id, lat, lng, location_name, website_id)
+            dedup_indexes, event_id, name, location_id, lat, lng, location_name, website_id,
+            suppressed=bool(suppressed))
 
     print(f"  Loaded {len(event_ids_with_future)} existing events with future occurrences")
 
@@ -2991,28 +2999,60 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
             tokens (e.g. several run clubs in Central Park) — from collapsing,
             while still allowing same-schedule co-listings to merge. Exact matches
             are unaffected.
+
+            A `suppressed` candidate (a hidden dedupe loser that is still in the
+            index) is never allowed to win over a visible one. Suppressed hits
+            are remembered and only returned when nothing visible qualified —
+            otherwise fresh crawl_events attach to the hidden twin, the visible
+            canonical starves for sources and gets archived, and the series
+            renders nowhere. A visible PARTIAL match deliberately outranks a
+            suppressed EXACT one ("Ballet Storytime" vs "Ballet Storytime with
+            West Jersey Youth Ballet", Hunterdon w5240).
             """
             best_id = None
             exact_no_overlap_id = None
+            suppressed_exact_id = None
+            suppressed_best_id = None
+            suppressed_exact_no_overlap_id = None
             for existing in candidates:
                 if require_location_id_match and location_id is not None:
                     existing_loc_id = existing.get('location_id')
                     if existing_loc_id is not None and existing_loc_id != location_id:
                         continue
+                is_suppressed = bool(existing.get('suppressed'))
                 if _dates_overlap(existing['id']):
                     if are_names_similar(name, existing['name']):
                         if normalize_name_for_dedup(existing['name']) == norm_name:
-                            return existing['id']  # Exact match — best possible
-                        elif best_id is None:
+                            if not is_suppressed:
+                                return existing['id']  # Exact match — best possible
+                            if suppressed_exact_id is None:
+                                suppressed_exact_id = existing['id']  # hidden — remember only
+                        elif (suppressed_best_id if is_suppressed else best_id) is None:
                             if strict_match and not (crawl_event_slots & event_slots.get(existing['id'], set())):
                                 continue  # partial name match unconfirmed by schedule — skip
                             if _sibling_veto(existing):
                                 continue  # umbrella vs sub-event — see _sibling_listing_veto
-                            best_id = existing['id']  # Partial match — keep looking
-                elif allow_no_date_overlap and exact_no_overlap_id is None:
-                    if normalize_name_for_dedup(existing['name']) == norm_name:
-                        exact_no_overlap_id = existing['id']
-            return best_id if best_id is not None else exact_no_overlap_id
+                            if is_suppressed:
+                                suppressed_best_id = existing['id']
+                            else:
+                                best_id = existing['id']  # Partial match — keep looking
+                elif allow_no_date_overlap:
+                    target = (suppressed_exact_no_overlap_id if is_suppressed
+                              else exact_no_overlap_id)
+                    if target is None and normalize_name_for_dedup(existing['name']) == norm_name:
+                        if is_suppressed:
+                            suppressed_exact_no_overlap_id = existing['id']
+                        else:
+                            exact_no_overlap_id = existing['id']
+            # Visible candidates first, in the historical order; the suppressed
+            # buckets are the same ladder, reached only when nothing visible
+            # qualified.
+            for candidate_id in (best_id, exact_no_overlap_id,
+                                 suppressed_exact_id, suppressed_best_id,
+                                 suppressed_exact_no_overlap_id):
+                if candidate_id is not None:
+                    return candidate_id
+            return None
 
         if dateless:
             # Exact name at this crawl_event's own venue, or nothing. No fuzzy
@@ -3086,6 +3126,11 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
             crawl_loc_is_generic = (not crawl_loc_norm) or (crawl_loc_norm in generic_locs)
 
             def _safe_website_match(candidates):
+                # Same suppression rule as find_best_match: a hidden dedupe
+                # loser never wins over a visible candidate, but it is still
+                # returned when it is the only thing that qualifies.
+                suppressed_exact_id = None
+                suppressed_best_id = None
                 for existing in candidates:
                     if not _dates_overlap(existing['id']):
                         continue
@@ -3104,7 +3149,16 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                     existing_loc_is_generic = (not existing_loc_norm) or (existing_loc_norm in generic_locs)
                     # Allow merge only if either side is generic, or location_names match
                     if crawl_loc_is_generic or existing_loc_is_generic or crawl_loc_norm == existing_loc_norm:
-                        return existing['id']
+                        if not existing.get('suppressed'):
+                            return existing['id']
+                        if normalize_name_for_dedup(existing['name']) == norm_name:
+                            if suppressed_exact_id is None:
+                                suppressed_exact_id = existing['id']
+                        elif suppressed_best_id is None:
+                            suppressed_best_id = existing['id']
+                for candidate_id in (suppressed_exact_id, suppressed_best_id):
+                    if candidate_id is not None:
+                        return candidate_id
                 return None
             matched_event_id = _safe_website_match(existing_events_by_website[website_id])
 

@@ -1032,6 +1032,14 @@ _NON_EVENT_NAME_PATTERNS = [
     r'(?:open|closed)\s+caption(?:ing|s)?(?:\s*\([^)]*\))?(?:\s+at\s+amc)?|'
     r'audio\s+description(?:\s+at\s+amc)?'
     r')\s*$',
+    # Whole-name "Group Visits" / "Class Visit" / "Private Tours" rows: a museum's
+    # booking-page link for organised groups, published in the calendar feed as
+    # if it were a dated program (e.g. the 6 "Group Visits" rows this caught at
+    # classification on 2026-09-17). Anchored to the whole name on purpose: a
+    # titled program such as "School Group Visits: Discovery Trail" (live,
+    # w-scoped, a real drop-in family activity) must keep passing. Corpus-checked
+    # over all events 2026-09-17: 10 matches, 10 archived-or-suppressed, 0 live.
+    r'^\s*(?:group|school|class|private|corporate)\s+(?:visits?|tours?)\s*$',
 ]
 
 _NON_EVENT_NAME_RE = re.compile('|'.join(_NON_EVENT_NAME_PATTERNS), re.IGNORECASE)

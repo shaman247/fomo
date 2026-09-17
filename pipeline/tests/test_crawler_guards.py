@@ -1035,7 +1035,8 @@ class TestDetailChromeStripping(unittest.TestCase):
 
     def test_config_carries_the_chrome_selector(self):
         config = crawler.build_event_crawl_config({})
-        self.assertEqual(config.excluded_selector, crawler.DETAIL_CHROME_SELECTOR)
+        self.assertEqual(config.excluded_selector, crawler.DETAIL_EXCLUDED_SELECTOR)
+        self.assertIn(crawler.DETAIL_CHROME_SELECTOR, crawler.DETAIL_EXCLUDED_SELECTOR)
         for landmark in ('nav', '[role="navigation"]', '[role="banner"]', '[role="contentinfo"]'):
             self.assertIn(landmark, crawler.DETAIL_CHROME_SELECTOR)
         # Bare header/footer would eat in-article titles and venue blocks.
@@ -1070,6 +1071,82 @@ class TestDetailChromeStripping(unittest.TestCase):
             self._markdown(plain, crawler.DETAIL_CHROME_SELECTOR),
             self._markdown(plain, None),
         )
+
+
+# lincolncenter.org in miniature. Every tab of the site lives in the DOM at
+# once and all but one carry an inline `display: none`; the visible one
+# (#show-wrapper) holds the event. The hidden #landing-page-container is the
+# whole series calendar, which is why the real page reached 161K chars with
+# the event body starting at ~153K and all ~66 detail fetches truncated to a
+# byte-identical shell (2026-09-17). Note `class="vs-tab"style=` with no space
+# before `style` — that is verbatim from the live page.
+TABBED_DETAIL_HTML = """
+<html><body>
+<div id="landing-page-container" class="vs-tab"style="display: none;">{calendar}</div>
+<div id="calendar-wrapper" class="vs-tab" style="display:none">{calendar}</div>
+<div id="show-wrapper" class="vs-tab">
+  <section id="show-content">
+    <div id="show-description">
+      <p>Polish composer and pianist Hania Rani performs with the 45-piece
+      Sinfonia Varsovia and guests in her David Geffen Hall debut.</p>
+    </div>
+    <div id="show-header">
+      <h1 class="heading-lg">Hania Rani Presents Non-Fiction</h1>
+      <div class="heading-sm-venue">Wu Tsai Theater, David Geffen Hall</div>
+      <div class="sp-runtime">Run Time: Approximately 1 hour 45 minutes</div>
+      <div class="show-date">Friday, October 23, 2026 at 7:30 pm</div>
+    </div>
+  </section>
+</div>
+</body></html>
+""".format(calendar="".join(
+    f'<div class="show-card"><h2>Calendar card number {i}</h2>'
+    f'<p>Another Lincoln Center Presents performance listed on the series page.</p></div>'
+    for i in range(300)
+))
+
+
+class TestDetailHiddenTabStripping(unittest.TestCase):
+    """Inline-hidden blocks must not spend the detail page's 12K budget.
+
+    crawl4ai serializes `display: none` text, so a tabbed theme hands the
+    detail path every other tab ahead of the visible one.
+    """
+
+    _markdown = TestDetailChromeStripping._markdown
+
+    def test_selector_covers_both_spellings(self):
+        self.assertIn('[style*="display:none"]', crawler.DETAIL_HIDDEN_SELECTOR)
+        self.assertIn('[style*="display: none"]', crawler.DETAIL_HIDDEN_SELECTOR)
+        self.assertIn(crawler.DETAIL_HIDDEN_SELECTOR, crawler.DETAIL_EXCLUDED_SELECTOR)
+
+    def test_event_is_buried_past_the_cap_without_the_selector(self):
+        before = self._markdown(TABBED_DETAIL_HTML, crawler.DETAIL_CHROME_SELECTOR)
+        self.assertGreater(len(before), 12000)
+        self.assertNotIn("Hania Rani Presents Non-Fiction", before[:12000])
+
+    def test_selector_keeps_the_event_body_inside_the_cap(self):
+        after = self._markdown(TABBED_DETAIL_HTML, crawler.DETAIL_EXCLUDED_SELECTOR)
+        self.assertLess(len(after), 12000)
+        capped = after[:12000]
+        self.assertIn("Hania Rani Presents Non-Fiction", capped)
+        self.assertIn("October 23, 2026", capped)
+        self.assertIn("Wu Tsai Theater", capped)
+        self.assertIn("1 hour 45 minutes", capped)
+        self.assertNotIn("Calendar card number", capped)
+
+    def test_visible_detail_page_is_untouched(self):
+        plain = (
+            "<html><body><main><h1>Halloween Bingo</h1>"
+            "<p>Wednesday, October 29, 2026 at 6:30pm in the Community Room. "
+            "Registration required for this all ages program.</p>"
+            "</main></body></html>"
+        )
+        self.assertEqual(
+            self._markdown(plain, crawler.DETAIL_EXCLUDED_SELECTOR),
+            self._markdown(plain, None),
+        )
+
 
 if __name__ == '__main__':
     unittest.main()

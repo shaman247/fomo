@@ -907,6 +907,33 @@ def get_browser_key(settings):
 # listing's event rows genuinely do live inside <nav>-ish widgets on some sites.
 DETAIL_CHROME_SELECTOR = 'nav, [role="navigation"], [role="banner"], [role="contentinfo"]'
 
+# Elements the page itself has switched OFF with an inline `display: none`,
+# stripped from DETAIL pages for the same reason as the chrome above.
+#
+# crawl4ai's markdown generator serializes hidden text (the same trap the
+# js_code rules warn about), so a tabbed theme that keeps every OTHER tab in
+# the DOM hands the detail path the whole site ahead of the one visible tab.
+# lincolncenter.org is the canonical case: /series/<series>/<event-slug> ships
+# `#landing-page-container` (the series' entire calendar), `#about-wrapper`,
+# `#calendar-wrapper` and five more `.vs-tab` divs — all `display: none` — in
+# front of the only visible tab, `#show-wrapper`, which holds the event. The
+# markdown came to 161K chars with the event body starting at ~153K, so all
+# ~66 detail fetches truncated to a byte-identical site shell (2026-09-17).
+# With these stripped the same page is 9.7K and leads with the event.
+#
+# Inline styles only, deliberately: this must not depend on stylesheet
+# cascade, and an element a stylesheet hides is far more often a
+# progressive-enhancement wrapper that a script un-hides than a whole
+# duplicate copy of the site. Both spellings are listed because `style` is
+# matched as a substring and authors write it either way.
+#
+# DETAIL-ONLY, like the chrome selector. The listing crawl must keep hidden
+# content: several sites' js_code injects into a hidden container, and a
+# month grid's off-screen weeks are legitimately `display: none`.
+DETAIL_HIDDEN_SELECTOR = '[style*="display:none"], [style*="display: none"]'
+
+DETAIL_EXCLUDED_SELECTOR = f'{DETAIL_CHROME_SELECTOR}, {DETAIL_HIDDEN_SELECTOR}'
+
 
 def build_event_crawl_config(website_settings):
     """
@@ -914,9 +941,10 @@ def build_event_crawl_config(website_settings):
 
     Uses the same per-website settings as the main crawl, but without
     js_code, deep crawling, or click-based pagination (those are for
-    listing pages, not individual event pages). Site chrome
-    (DETAIL_CHROME_SELECTOR) is removed from the DOM before markdown
-    generation so the event body survives the 12K truncation.
+    listing pages, not individual event pages). Site chrome and
+    inline-hidden elements (DETAIL_EXCLUDED_SELECTOR) are removed from the
+    DOM before markdown generation so the event body survives the 12K
+    truncation.
 
     Args:
         website_settings: Dict with keys like delay_before_return_html,
@@ -935,7 +963,7 @@ def build_event_crawl_config(website_settings):
     return CrawlerRunConfig(
         word_count_threshold=5,
         excluded_tags=[],
-        excluded_selector=DETAIL_CHROME_SELECTOR,
+        excluded_selector=DETAIL_EXCLUDED_SELECTOR,
         process_iframes=True,
         cache_mode=CacheMode.BYPASS,
         remove_overlay_elements=overlays,

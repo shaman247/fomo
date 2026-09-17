@@ -10,6 +10,7 @@ import sys
 import contextlib
 import unittest
 import tempfile
+from pathlib import Path
 from datetime import date
 from types import SimpleNamespace
 from unittest import mock
@@ -1487,11 +1488,31 @@ class TestVisionImageCapCoversAFullBundle(unittest.TestCase):
         # Expired IG CDN signatures fail this way in bulk and used to look
         # exactly like a thin page.
         content = '\n'.join(f'![Post {i}](https://cdn.test/{i}.jpg)' for i in range(4))
-        results = [('b64', 'image/jpeg'), (None, None), (None, None), ('b64', 'image/jpeg')]
-        with mock.patch.object(extractor, 'download_and_encode_image',
-                               new=mock.AsyncMock(side_effect=results)):
+        # Persistent failures: the two bad URLs fail on the first pass AND on
+        # both retry passes (2026-09-17 added retries so a transient miss no
+        # longer fails the whole extraction closed).
+        async def fake_download(url):
+            return ('b64', 'image/jpeg') if url.endswith(('/0.jpg', '/3.jpg')) else (None, None)
+        with mock.patch.object(extractor, 'download_and_encode_image', new=fake_download):
             with self.assertRaisesRegex(extractor.ExtractionCallFailure, 'failed to download'):
                 asyncio.run(extractor.prepare_vision_content(content, 'https://cdn.test/'))
+
+    def test_transient_download_failure_is_retried(self):
+        # One URL fails once, then succeeds: coverage is complete, no failure.
+        content = '\n'.join(f'![Post {i}](https://cdn.test/{i}.jpg)' for i in range(3))
+        calls = {'https://cdn.test/1.jpg': 0}
+        async def fake_download(url):
+            if url in calls:
+                calls[url] += 1
+                if calls[url] == 1:
+                    return (None, None)
+            return ('b64', 'image/jpeg')
+        with mock.patch.object(extractor, 'download_and_encode_image', new=fake_download), \
+             mock.patch.object(extractor.agent_extraction, 'atomic_json'), \
+             mock.patch.object(extractor.agent_extraction, 'work_dir', return_value=Path('/nonexistent-workdir')):
+            parts, n = asyncio.run(extractor.prepare_vision_content(content, 'https://cdn.test/'))
+        self.assertEqual(n, 3)
+        self.assertEqual(calls['https://cdn.test/1.jpg'], 2)
 
 
 class TestVisionExtractionFailureIsNotAZero(unittest.TestCase):
@@ -2016,3 +2037,72 @@ class HeadinglessRecordBoundaryTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class TrackingBeaconFilterTests(unittest.TestCase):
+    """extract_image_urls must drop ad-tech cookie-sync pixels (they made vision
+    extraction fail closed on The Cobra Club, 2026-09-17) but keep real flyers."""
+
+    BEACONS = [
+        'https://live.primis.tech/live/liveCS.php?source=external&gdpr=0&gdpr_consent=',
+        'https://pl.primis.tech/live/liveView.php?hash=ozcmPTEz',
+        'https://aa.agkn.com/adscores/g.pixel?sid=9212314908',
+        'https://su.semasio.net/sync/1/32184274?sExtCookieId=17c',
+        'https://openx-ums.acuityplatform.com/tum?tpid=22&uid=01b4',
+        'https://creativecdn.com/cm-notify?pi=openx&gdpr=0',
+        'https://ce.lijit.com/merge?pid=76&3pid=13ba',
+        'https://ssbsync.smartadserver.com/api/sync?callerId=81',
+        'https://ssc-cms.33across.com/ps/?ri=0015a&ru=https%3A%2F%2Fc',
+        'https://cs.admanmedia.com/77bb8e39d66271fda1db01d45766b9d9.gif?gdpr=0&r=x',
+        'https://eb2.3lift.com/getuid?cmp_cs=&redir=https%3A%2F%2Fcs',
+        'https://user-sync.fwmrm.net/ad/u?cr=https%3A%2F%2Fcs-server',
+        'https://match.sharethrough.com/universal/v1?supply_id=5926',
+        'https://cm.adform.net/cookie?redirect_url=https%3A%2F%2Fcs',
+        'https://secure.adnxs.com/getuid?https%3A%2F%2Fcs-server',
+        'https://csync.loopme.me/?gdpr=0&pubid=11362',
+    ]
+    FLYERS = [
+        'https://images.squarespace-cdn.com/content/v1/5f02/906f/weekly_9.20.26.jpg?format=1500w',
+        'https://scontent-lga3-2.cdninstagram.com/v/t51.2885-15/abc.jpg?stp=dst-jpg&oh=1&oe=2',
+        'https://static.wixstatic.com/media/abc~mv2.jpg/v1/fill/w_640,h_640/abc.jpg',
+        'https://example.com/wp-content/uploads/2026/09/flyer-1.jpg',
+        'https://gallery.example.org/image.php?id=12',
+        'https://example.com/photo?w=800&h=600',
+        'https://cdn.sanity.io/images/abc/production/def-1200x1600.png?w=1200',
+    ]
+
+    def test_beacons_are_detected(self):
+        for url in self.BEACONS:
+            self.assertTrue(extractor.is_tracking_beacon_url(url), url)
+
+    def test_flyers_are_not_flagged(self):
+        for url in self.FLYERS:
+            self.assertFalse(extractor.is_tracking_beacon_url(url), url)
+
+    def test_extract_image_urls_drops_beacons(self):
+        md = '\n'.join(f'![]({u})' for u in self.BEACONS + self.FLYERS)
+        self.assertEqual(extractor.extract_image_urls(md), self.FLYERS)
+
+
+class ChunkPromptRegionRuleTests(unittest.TestCase):
+    """The metro-geography rule must reach the CHUNKED prompt too.
+
+    Until 2026-09-17 only `get_prompt` (single-call mode) carried
+    `city_config.extraction_region_rule()`; a listing big enough to be chunked
+    had no geographic restriction at all, so national/touring feeds leaked
+    out-of-region dates exactly when they were largest.
+    """
+
+    def test_region_rule_is_in_chunk_prompt(self):
+        with mock.patch("extractor.city_config.extraction_region_rule",
+                   return_value='Only include events in the Test Metro area.'):
+            prompt = extractor.get_chunk_prompt('### Some listing', '2026-09-17',
+                                                notes='', request_id='cr-1-chunk-0')
+        self.assertIn('- Only include events in the Test Metro area.', prompt)
+
+    def test_empty_region_rule_adds_no_bullet(self):
+        with mock.patch("extractor.city_config.extraction_region_rule", return_value=""):
+            prompt = extractor.get_chunk_prompt('### Some listing', '2026-09-17',
+                                                notes='', request_id='cr-1-chunk-0')
+        self.assertNotIn('fabricated date.\n- \n', prompt)
+        self.assertNotIn('\n- \n', prompt)

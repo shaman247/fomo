@@ -19,7 +19,7 @@ from dataclasses import dataclass, field, replace
 from datetime import date, datetime
 from io import BytesIO
 from typing import Optional
-from urllib.parse import urljoin
+from urllib.parse import urlparse, urljoin
 
 import httpx
 from dotenv import load_dotenv
@@ -475,6 +475,14 @@ def extract_image_urls(content, base_url=None):
         # Skip tiny images (likely icons/buttons)
         if 'icon' in url.lower() or 'button' in url.lower() or 'logo' in url.lower():
             continue
+        # Skip ad-tech cookie-sync / tracking beacons. Third-party ad scripts
+        # (Songkick, Prebid publishers) render them as <img> tags, so they land
+        # in the markdown as images; they never carry event content and most
+        # 302 to an HTML endpoint, so they made prepare_vision_content fail
+        # closed ("27 source images failed to download") on The Cobra Club,
+        # 2026-09-17.
+        if is_tracking_beacon_url(url):
+            continue
         # Make absolute if relative
         if base_url and not url.startswith(('http://', 'https://')):
             url = urljoin(base_url, url)
@@ -482,6 +490,37 @@ def extract_image_urls(content, base_url=None):
             result.append(url)
 
     return result
+
+
+# Cookie-sync / ad-pixel URL shapes. A flyer is never served from a path like
+# /getuid or /user-sync, and never carries a gdpr= / redirect= query parameter;
+# the sync beacons in the wild always do (measured on the 27 failing Cobra Club
+# URLs: every one matched at least one of these, all 12 real flyers matched none).
+_BEACON_PATH_RE = re.compile(
+    r'/(?:user-?sync\w*|sync|getuid|cm-notify|merge|tum|cookie|match|prebid|[bp]bsync|bsync|pbsync)'
+    r'(?:/|$)|\.pixel$',
+    re.IGNORECASE)
+# A .php "image" is a beacon unless its filename says it serves media
+# (image.php, thumb.php, getfile.php are real on older gallery sites).
+_BEACON_PHP_RE = re.compile(r'/(?!\w*(?:image|img|photo|thumb|pic|media|file|download)\w*\.php$)\w+\.php$',
+                            re.IGNORECASE)
+_BEACON_QUERY_RE = re.compile(
+    r'[?&](?:gdpr|gdpr_consent|redir|redirect|redirect_url|redirectUri|rur|ru|cr)=',
+    re.IGNORECASE)
+_BEACON_HOST_TOKENS = {'sync', 'usersync', 'csync', 'ssbsync', 'match', 'cm', 'pixel', 'beacon'}
+
+
+def is_tracking_beacon_url(url):
+    """True for ad-tech cookie-sync / tracking-pixel URLs masquerading as images."""
+    if not url:
+        return False
+    path, _, query = url.partition('?')
+    if query and _BEACON_QUERY_RE.search('?' + query):
+        return True
+    host = urlparse(url).hostname or ''
+    if _BEACON_HOST_TOKENS & set(re.split(r'[.-]', host.lower())):
+        return True
+    return bool(_BEACON_PATH_RE.search(path) or _BEACON_PHP_RE.search(path))
 
 
 async def download_and_encode_image(url, max_dimension=MAX_IMAGE_DIMENSION):
@@ -574,13 +613,24 @@ async def prepare_vision_content(content, base_url=None, max_images=MAX_VISION_I
     async def download(url):
         async with semaphore:
             return await download_and_encode_image(url)
-    results = await asyncio.gather(*(download(url) for url in image_urls))
+    results = list(await asyncio.gather(*(download(url) for url in image_urls)))
+    # The coverage gate below fails the whole extraction closed, so a single
+    # transient miss (a 2.7 MB flyer timing out at 10s under 5-way concurrency
+    # -- The Cobra Club, 2026-09-17) must not be terminal. Retry the misses
+    # one at a time, twice, before giving up.
+    for _attempt in range(2):
+        missing = [i for i, (data, mime) in enumerate(results) if not (data and mime)]
+        if not missing:
+            break
+        for i in missing:
+            results[i] = await download_and_encode_image(image_urls[i])
     image_parts = [{'inline_data': {'mime_type': mime, 'data': data}}
                    for data, mime in results if data and mime]
     if len(image_parts) != len(image_urls):
+        failed = [image_urls[i] for i, (data, mime) in enumerate(results) if not (data and mime)]
         raise ExtractionCallFailure(
-            f'{len(image_urls) - len(image_parts)} source images failed to download; '
-            'complete vision coverage is required')
+            f'{len(image_urls) - len(image_parts)} source images failed to download '
+            f'after retries ({", ".join(failed[:3])}); complete vision coverage is required')
     agent_extraction.atomic_json(cache, {'urls': image_urls, 'images': image_parts})
     return image_parts, len(image_parts)
 
@@ -1694,6 +1744,11 @@ async def extract_single_event(event_name, content, notes="", url=""):
 def get_chunk_prompt(chunk_text, current_date_string, notes, request_id=""):
     """Generate prompt for a single chunk extraction."""
     note_section = f"\n\nIMPORTANT: {notes}" if notes else ""
+    # The metro-geography rule was only in get_prompt (single-call mode), so a
+    # large listing that fell into chunked mode had no geographic restriction at
+    # all and touring/national feeds leaked out-of-region dates (2026-09-17).
+    region_rule = city_config.extraction_region_rule()
+    region_section = f"\n- {region_rule}" if region_rule else ""
     rid_section = f"\n\nIMPORTANT: Set request_id to \"{request_id}\" in your response." if request_id else ""
     return f'''{city_config.extraction_chunk_intro().format(date=current_date_string)}
 
@@ -1712,7 +1767,7 @@ CRITICAL DATE RULES:
 - Do NOT default to today's date when no date is listed.
 - Do NOT extract dates from URLs or Google Calendar/iCal links — those often reference past instances. Only use dates visible in the page text adjacent to the event.
 - Past dates (before today) should also be set to null — those events have already happened. EXCEPTION — ANY event that is STILL IN PROGRESS: if a multi-day event has a stated END date of today or later, keep it even though it started in the past — use its original (past) start_date and its stated end_date, and do NOT null it. This is NOT limited to exhibitions: a conference, symposium, workshop series, festival, residency, class run or camp that opened before today but ends today or later is still happening and must be kept. Only null a multi-day event once its END date is also in the past.
-- An empty/null occurrences field is much better than a fabricated date.
+- An empty/null occurrences field is much better than a fabricated date.{region_section}
 {note_section}{rid_section}
 Website content:
 

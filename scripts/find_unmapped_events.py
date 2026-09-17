@@ -27,6 +27,7 @@ Usage:
 """
 
 import argparse
+import re
 import sys
 from collections import Counter, defaultdict
 
@@ -250,6 +251,14 @@ SKIP_LOCATION_NAMES = {
     #   'Hide and Seek' is a queer party series (Partiful's own venue field says "ETET"),
     #   'Apt.11R' is a Groupmuse private residence, 'The Fairy Backyard' a private yard
     'hide and seek', 'apt.11r', 'the fairy backyard',
+    # 2026-09-17 unmapped sweep. Researched against the live source page; each names
+    # something that can never resolve to a venue, and the event is already pinned as
+    # well as it ever can be.
+    #   broadcaster / tour-operator brands emitted as the venue
+    'radio garden state', 'central park guided tours | wander nyc',
+    #   contentless NYC Parks shelter label — Shorewalkers meet at a different park
+    #   pavilion every week, so even a website-scoped alias would mis-pin them
+    'nyc park pavilion',
 }
 
 # Websites whose feed emits the HOST/PARTNER ORG as `location_name` for every
@@ -336,6 +345,7 @@ def load_data(cursor, website_filter=None):
 
 # Normalized names of every generic_location=1 row; filled by load_data().
 _GENERIC_NAMES = set()
+_IN_VENUE_RE = re.compile(r'^.*?\(\s*(?:in|at|inside)\s+(.+?)\s*\)\s*$', re.IGNORECASE)
 
 
 def classify(event, alts_by_loc, generic_names=None):
@@ -349,16 +359,15 @@ def classify(event, alts_by_loc, generic_names=None):
     if event['location_id'] is None:
         return 'NO_LOCATION'
 
-    if event['venue_generic']:
-        return 'GENERIC'
-
     location_name = (event['location_name'] or '').strip()
     if len(location_name) < 3:
         return None
 
-    if (event['website_name'] or '') in SKIP_MISMATCH_WEBSITES:
-        return None
-
+    # The name-based skip filters apply to BOTH the GENERIC and the MISMATCHED
+    # queue. Until 2026-09-17 the GENERIC return sat above them, so nothing could
+    # be skip-listed out of that queue and ~1,750 of its ~1,950 rows were
+    # already-correct pins (a location_name that IS the pinned park's own name,
+    # a sub-facility label inside it, or a meeting point inside it).
     ln_lower = location_name.lower()
     if ln_lower in SKIP_LOCATION_NAMES:
         return None
@@ -377,10 +386,29 @@ def classify(event, alts_by_loc, generic_names=None):
         return None
 
     # Mapping is consistent if normalized location_name and venue name/address
-    # are substrings of each other (in either direction).
-    if n_loc in n_name or n_name in n_loc:
+    # are substrings of each other (in either direction). For a GENERIC pin only
+    # the forward direction counts: "Central Park" -> Central Park is fine, but
+    # "Central Park Zoo" pinned to the Central Park placeholder is exactly the
+    # venue-inside-a-park miss the GENERIC queue exists to surface.
+    if n_loc in n_name:
+        return None
+    if n_name in n_loc and not event['venue_generic']:
         return None
     if n_loc in n_addr:
+        return None
+
+    # "<sub-facility> (in <venue>)" is consistent when <venue> is the pinned row
+    # ("Great Lawn (in Central Park)", "Tennis Courts (in Prospect Park)").
+    m = _IN_VENUE_RE.match(location_name)
+    if m:
+        n_in = _normalize_location_name(m.group(1))
+        if n_in and (n_in in n_name or n_name in n_in or n_in in n_addr):
+            return None
+
+    if event['venue_generic']:
+        return 'GENERIC'
+
+    if (event['website_name'] or '') in SKIP_MISMATCH_WEBSITES:
         return None
 
     # Check alt names (global + website-scoped to this event)
