@@ -21,7 +21,7 @@ const FormatColors = (() => {
     // converter reduces chroma at the sRGB boundary without shifting hue.
     function discColors(category, theme = Utils.getCurrentTheme()) {
         return theme === 'dark'
-            ? { fill: color(category, .38, .10), stroke: color(category, .68, .18) }
+            ? { fill: '#222222', stroke: color(category, .68, .18) } // Matches dark --secondary-bg.
             : { fill: color(category, .90, .09), stroke: color(category, .72, .17) };
     }
     function dotColor(category, theme = Utils.getCurrentTheme()) {

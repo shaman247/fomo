@@ -134,6 +134,13 @@ in the dismissal text** — never a silent suppress. The recurring tripwire in
 `.claude/recurring-checks.md` counts suppressed rows that still own sources while an active
 same-website event shares their URL; that count must not grow.
 
+**2026-09-18:** `merge_pair` now MOVES `event_sources` onto the keeper (copy, then delete from the
+loser) instead of copying them, so a correctly merged pair no longer registers on that tripwire.
+Before the fix it did, and 193 of the 207 rows the 2026-09-18 tripwire pass flagged as a
+"regression" were in fact correct merges. When the count grows, check for a **merge receipt** — a
+`crawl_event_id` shared by the suppressed row and the active twin — before concluding that some
+pass suppressed without merging.
+
 Wrap the whole apply batch in the cross-session **write lock** (`pipeline/dblock.py`) so a concurrent session can't mutate the same tables at once — this exact workflow has collided with a parallel dedupe before. See CLAUDE.md → Concurrent Sessions.
 
 ```python

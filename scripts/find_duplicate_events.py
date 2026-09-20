@@ -350,6 +350,10 @@ def apply_field_overrides(cursor, event_id, name=None, description=None,
 def merge_pair(cursor, keep_id, delete_id):
     """Merge delete_id into keep_id: occurrences, URLs, tags, sources, then suppress.
 
+    Occurrences, URLs and tags are unioned onto keep_id; `event_sources` are MOVED
+    (copied, then deleted from delete_id) so the suppressed loser stops carrying
+    sources and stops starving the canonical.
+
     Does NOT touch scalar fields (name, description, emoji, etc.) on keep_id —
     update those separately via apply_field_overrides if needed.
 
@@ -381,10 +385,18 @@ def merge_pair(cursor, keep_id, delete_id):
             WHERE b.event_id = %s AND b.tag_id = et.tag_id
           )
     """, (keep_id, delete_id, keep_id))
+    # Sources MOVE, they do not copy. Leaving them on the loser is what produced the
+    # "suppressed row still owns sources while an active twin shares its URL" population
+    # (450 rows at the 2026-09-04 baseline, 543 by 2026-09-18) and, worse, the sole-carrier
+    # defect: the suppressed loser keeps matching fresh crawl_events, keeps accruing sources,
+    # and the canonical starves until archive_outdated_events archives it. The unique key is
+    # (event_id, crawl_event_id), so a crawl_event may sit on several events and the
+    # INSERT IGNORE below always lands before the DELETE removes the loser's copy.
     cursor.execute("""
         INSERT IGNORE INTO event_sources (event_id, crawl_event_id)
         SELECT %s, crawl_event_id FROM event_sources WHERE event_id = %s
     """, (keep_id, delete_id))
+    cursor.execute("DELETE FROM event_sources WHERE event_id = %s", (delete_id,))
     cursor.execute("""
         INSERT IGNORE INTO event_tag_blocks (event_id, tag_id, reason)
         SELECT %s, tag_id, reason FROM event_tag_blocks WHERE event_id = %s

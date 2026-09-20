@@ -259,6 +259,88 @@ SKIP_LOCATION_NAMES = {
     #   contentless NYC Parks shelter label — Shorewalkers meet at a different park
     #   pavilion every week, so even a website-scoped alias would mis-pin them
     'nyc park pavilion',
+    # 2026-09-19 unmapped/generic sweep (/fix-unmapped-events). Every string below was reviewed
+    # against the event it came from: the event is ALREADY pinned to the right row and the string
+    # names something with no independent identity of its own — a sub-facility, lawn, playground,
+    # terrace, entrance, plaza or picnic area inside the pinned park; a street/intersection meeting
+    # point for a tour or run club; a bare neighborhood/municipality label; the host org's or the
+    # event series' own name; or a festival stage on the pinned plaza. Named destinations that DO
+    # deserve their own row (carousels, piers, visitor centers, historic houses) were created or
+    # matched instead and are deliberately absent from this list.
+    #
+    # Second pass, same sweep: strings researched venue-by-venue against the live source page.
+    # Each is either a sub-space whose parent row is the right pin, a platform/placeholder
+    # pseudo-venue, an org name on a virtual event, a bare street/borough label, or an
+    # administrative label on an item that turned out not to be an event at all.
+    '1619 3rd ave parking', '50 haven ave., new york, ny 10032',
+     'arverne east nature preserve welcome center', 'bayshore waterfront park activity center',
+     'beacon institute dock', 'boe borough offices', 'brooklyn, brooklyn, ny, usa',
+     'clinton avenue', 'conference house visitors center', 'dust bowl field',
+     'freneau woods park visitor center', 'hartsdale', 'l train station',
+     'le carrousel in bryant park', 'liberty street', 'little hell gate salt marsh',
+     'main stage on borough hall plaza', 'mccarren park greenmarket', 'monolith studio',
+    # Correctly pinned, but the pinned row is a generic_location park/preserve, so the GENERIC
+    # branch fires before the alias check can clear them. Each already carries the matching
+    # alternate name on the right row; the string itself names no separately-mappable venue.
+    'the art gallery at rockefeller state park', 'bayswater city park', '67 mulberry st',
+    'popps memorial park',
+     'poll sites citywide', 'queens, ny', 'restaurant of the week', 'samaritans of new york',
+     'seaglass carousel',
+     'the amph, pier 55 at hudson river park, hudson river greenway, new york',
+     'the battery - seaglass carousel',
+     'the glade, pier55 in hudson river park west 13th street, new york', 'the hills',
+     'the play ground',
+    '1 plaza street', '1095 6th ave', '1408 saint nicholas avenue, new york, ny, 10033',
+     '200 nevada avenue', '207 water street, new york, ny, 10038', '34th street',
+     '72nd street and broadway', 'appalachian trail - harriman state park',
+     'astoria park track', 'beach 59th street playground, rockaway beach and boardwalk',
+     'bed-stuy', 'bella abzug park fountains', 'bethpage polo in the park',
+     'broadway and dongan place entrance, fort tryon park', 'broadway boulevard',
+     'broadway/arden entrance, new york city, new york, united states',
+     'brookville playground (in brookville park), queens', 'brower park lawn',
+     'bryant park (meet at nyc public library front steps by the lions)', 'carnegie hall area',
+     'cascade falls palisades', 'catbird playground', 'center stage (columbus park)',
+     'central park dene area', 'centre street & chambers street, new york, ny, 10013',
+     'cloisters lawn, fort tryon park', 'conservatory garden - italian garden',
+     'council district 45', 'creekside - under the k bridge',
+     'discovery playground, discovery playground', 'dongan lawn', 'dumbo-wide', 'dyckman',
+     'edison (exact location unspecified)', 'end of gerritsen avenue',
+     'entrance - center boulevard and borden avenue',
+     'entrance - continental place and grandview avenue',
+     'entrance - lafayette avenue and morrison avenue in soundview park',
+     'fort greene park, starting at the monument', 'fountain in city hall park',
+     'fountain of the planet', 'fountain terrace', 'gapstow bridge', 'garibaldi plaza',
+     'garibaldi plaza (in washington square park), manhattan', 'gowanus canal',
+     'grand army plaza, flatbush ave, brooklyn, ny, us',
+     'green space near the grand army plaza entrance, prospect park',
+     'grove street and sheridan square', 'hilltop picnic area, 11 wards meadow loop, new york',
+     'historic cottage, fort tryon park', 'jacob mould fountain',
+     'juniper valley park tennis courts',
+     'lawn near 79th street entrance (in shore park and parkway)',
+     'leif ericson park and square', 'little west street @2nd place',
+     'located at the intersection of canal street, east broadway, and essex street.',
+     'locomotive lawn', 'lower manhattan + midtown (exact location tba)',
+     'madison avenue and east 78th street, southwest corner', 'manhattan bridge / chinatown',
+     'mccarren park, new york, ny, us', 'met’s stadium/willet’s point subway stop, queens, ny',
+     'mulberry street & worth st, new york, ny, 10013', 'multipurpose room in betsy head park',
+     'myrtle avenue and park lane south in forest park', 'new york (irl)',
+     'north stage, cadman plaza east', 'overpeck county park-ridgefield park area',
+     'parkside + ocean avenue entrance', 'pelham bay park - picnic area, the bronx',
+     'pelham bay park and orchard beach: orchard beach boardwalk bronx',
+     'pier at w 125th & marginal streets', 'plainsboro (exact location unspecified)',
+     'ploutz road trailhead parking', 'prospect park yoga', 'riverbank (camel) playground',
+     'riverbank park entrance', 'riverside park traveling rings',
+     'riverside park: esplanade - 72nd st-83rd st-rsp manhattan',
+     'rockefeller park children’s garden', 'soldiers and sailors memorial arch',
+     'south of hudson river greenway', 'south williamsburg', "st. mary's annual 5k start",
+     'sunset park center lawn', 'the east river esplanade at 34th street', 'the ramble',
+     'thomas paine park (foley square): fountain plaza manhattan', 'ues', 'upper terrace',
+     'upper terrace in bryant park', 'upper west side (council district 6; see event flyer)',
+     'vcpa learning garden', 'w 125th & marginal streets', 'w 143rd street & riverside drive',
+     'w 145th street lawn', 'w 153rd st and riverside drive', 'w 68th street & riverside blvd',
+     'w 72nd street & riverside drive', 'w. 145th st. / riverside drive',
+     'wagner pavilion classroom', 'walkway over the hudson state historic park',
+     'warner leroy place', 'west 84th street & columbus avenue', 'west harlem',
 }
 
 # Websites whose feed emits the HOST/PARTNER ORG as `location_name` for every

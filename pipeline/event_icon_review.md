@@ -8,9 +8,11 @@ Run-pipeline Step 5 makes the final custom-icon decisions after cleanup, event-t
 ./venv/bin/python pipeline/event_icon_review.py prepare --output .scratch/pipeline-run/icon-review --batch-size 100
 ```
 
-For a scoped test, add `--date YYYY-MM-DD` to review publishable events occurring on that date, including ongoing spans. Use the same `--date` on the `opportunities` report so its coverage denominator matches. Omit it for the full active window. Batch application still validates every event against the current database.
+For a pipeline run, add `--created-since YYYY-MM-DD` (the run's crawl date) so the queue holds only that run's new events; the standing backlog is reviewed by the weekly recurring check instead. `prepare` also writes `catalog-index.jsonl` (id, label, fallback emoji) — scan it to shortlist candidates, then read those ids' full entries in `catalog.jsonl` before assigning. For a scoped test, add `--date YYYY-MM-DD` to review publishable events occurring on that date, including ongoing spans. Use the same `--date` on the `opportunities` report so its coverage denominator matches. Omit it for the full active window. Batch application still validates every event against the current database.
 
-Use a fresh task directory. The manifest reports the entire publishable population, pending counts/reasons, batch count, and semantic catalog revision. Each batch contains all custom icons with `use_for`/`avoid_for` guidance, and full event titles, descriptions, tags, event types, current emoji, venue/address, source name/URLs, previous assignments, and heuristic suggestions. No descriptions are truncated. Reduce batch size if a batch exceeds the reviewer's context; do not skim truncated tool output. Catalog artwork paths are relative to `config/event-icons/`. The current emoji is the existing fallback, including the site's Noto rendering; this step chooses custom IDs or retains that fallback, rather than changing emoji data or inventing artwork.
+Use a fresh task directory. The manifest reports the entire publishable population, pending counts/reasons, batch count, semantic catalog revision, and character sizes. Read **`catalog.jsonl` once per reviewer context**, then each assigned **`review-NNNN.jsonl`**. These compact views retain every catalog entry with `use_for`/`avoid_for` guidance and full event titles, descriptions, tags, event types, current emoji, venue/address, source name/URLs, previous choices/evidence/opportunities, and heuristic suggestions. Repeated saved baseline contexts and machine hashes stay in the authoritative `batch-NNNN.json` files used by `apply`; do not read those verbose files as well. Catalog artwork paths are relative to `config/event-icons/`.
+
+No descriptions are truncated. `--batch-size` bounds event count; `--max-review-chars` (default 120000) also bounds event review text, excluding the small header and shared catalog. This is a character budget, not a measured model-token limit. An individually oversized event is retained whole and flagged in `oversized_event_ids`; read it completely in smaller tool-output sections. Read the catalog in complete sections too if necessary; never skim truncated output. Give each reviewer several disjoint batches and reuse its catalog context. A fresh reviewer or compacted context must reload the catalog. The current emoji is the existing fallback, including the site's Noto rendering; this step chooses custom IDs or retains that fallback, rather than changing emoji data or inventing artwork.
 
 Every new, changed, deferred, or legacy rule-assigned event enters the queue. There is no title/keyword prefilter. Current agent-reviewed decisions, including explicit fallback, are skipped until relevant context or the semantic catalog changes. Current manual/editorial decisions are protected, but their events can enter the one-time opportunity review without replacing those choices. New artwork bytes alone do not reopen semantic decisions; new IDs or changed meanings do. The first run therefore reviews the full eligible population. Subsequent runs are incremental.
 
@@ -54,6 +56,14 @@ Write one decision for **every** event in a batch:
 ```
 
 Choices: `assign` with a known custom ID; `fallback` with `icon_id: null` to retain the emoji; `defer` with `icon_id: null` and an explanation of missing evidence. Every choice needs a reason and nonempty text evidence, including fallback decisions. Read/review all records; do not fill unseen records with bulk fallback to meet coverage.
+
+For compact responses, copy the review header's **`packet_hash`** into the top-level
+decision file alongside `catalog_revision`. Then omit per-event `input_hash`: the
+helper binds the entire response to that exact original packet and resolves those
+hashes mechanically. Explicit per-event hashes remain supported and are checked
+if supplied. All current DB context, catalog, manual-choice, complete-coverage,
+and concurrent-edit checks still run. Keep reasons/evidence concise and specific;
+return decision-file paths and counts to the parent, not another copy of all JSON.
 
 Each decision also requires `opportunities`, an array of zero or more objects with this shape:
 

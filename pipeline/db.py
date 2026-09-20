@@ -1799,9 +1799,22 @@ def get_detail_crawl_candidates(cursor, website_ids=None):
     # Query includes location_name so we can filter generic names in Python.
     # has_occurrences flag lets us detect events whose listing page provided
     # no date — those need a detail crawl too, not just events missing a description.
+    # known_complete: this URL already belongs to a live event that carries a real
+    # description AND a location. The merger keeps an existing real description
+    # when the incoming one is the placeholder (merger.py, "No description
+    # available." rule) and never replaces a resolved location with an
+    # unresolved one, so when the listing also supplied dates (has_occurrences)
+    # a detail fetch can only re-derive what the merge already inherits.
+    # Measured 2026-09-18: 924 BPL + 547 Local Wine Events detail fetches per
+    # run were exactly this shape -- the same pages every crawl.
     query = """
         SELECT ce.id, ce.name, ce.url, cr.website_id, ce.location_name, ce.description,
-               EXISTS(SELECT 1 FROM crawl_event_occurrences ceo WHERE ceo.crawl_event_id = ce.id) AS has_occurrences
+               EXISTS(SELECT 1 FROM crawl_event_occurrences ceo WHERE ceo.crawl_event_id = ce.id) AS has_occurrences,
+               EXISTS(SELECT 1 FROM event_urls eu JOIN events e ON e.id = eu.event_id
+                       WHERE eu.url = ce.url AND e.archived = 0
+                         AND e.location_id IS NOT NULL
+                         AND e.description IS NOT NULL AND e.description <> ''
+                         AND e.description <> 'No description available.') AS known_complete
         FROM crawl_events ce
         JOIN crawl_results cr ON ce.crawl_result_id = cr.id
         JOIN websites w ON cr.website_id = w.id
@@ -1822,9 +1835,13 @@ def get_detail_crawl_candidates(cursor, website_ids=None):
     rows = cursor.fetchall()
 
     # Filter to events that actually need detail crawling
-    def needs_detail_crawl(location_name, description, has_occurrences, website_id):
+    def needs_detail_crawl(location_name, description, has_occurrences, website_id, known_complete=False):
         if not has_occurrences:
             return True
+        if known_complete:
+            # Dated by the listing and merging into a row that already has the
+            # description and location a detail page could supply.
+            return False
         if description == 'No description available.':
             return True
         if not location_name or location_name == 'Not specified':
@@ -1848,11 +1865,16 @@ def get_detail_crawl_candidates(cursor, website_ids=None):
                 return True
         return False
 
-    candidates = [
-        (ce_id, name, url, website_id)
-        for ce_id, name, url, website_id, location_name, description, has_occurrences in rows
-        if needs_detail_crawl(location_name, description, has_occurrences, website_id)
-    ]
+    candidates = []
+    skipped_known = 0
+    for ce_id, name, url, website_id, location_name, description, has_occurrences, known_complete in rows:
+        if has_occurrences and known_complete:
+            skipped_known += 1
+            continue
+        if needs_detail_crawl(location_name, description, has_occurrences, website_id, known_complete):
+            candidates.append((ce_id, name, url, website_id))
+    if skipped_known:
+        print(f"  Skipped {skipped_known} dated events whose URL already has a described, located event")
 
     if not candidates:
         return []
@@ -1920,7 +1942,44 @@ def get_detail_crawl_candidates(cursor, website_ids=None):
     if skipped_dup_url:
         print(f"  Skipped {skipped_dup_url} duplicate same-URL events (one fetch per URL)")
 
+    # Per-site ceiling: one site's backlog must not monopolize the phase. Rows
+    # left out are untouched (detail_crawl_attempts stays 0), so they are the
+    # first candidates next run; candidates arrive in crawl_events.id order,
+    # which is listing order (soonest first on most calendars).
+    cap = detail_crawl_site_cap()
+    if cap:
+        per_site = {}
+        capped = []
+        dropped = {}
+        for item in events_to_enrich:
+            ws_id = item[3]
+            if per_site.get(ws_id, 0) >= cap:
+                dropped[ws_id] = dropped.get(ws_id, 0) + 1
+                continue
+            per_site[ws_id] = per_site.get(ws_id, 0) + 1
+            capped.append(item)
+        if dropped:
+            detail = ', '.join(f"w{ws} -{n}" for ws, n in sorted(dropped.items(), key=lambda kv: -kv[1]))
+            print(f"  Capped detail fetches at {cap} per site ({sum(dropped.values())} deferred to a later run: {detail})")
+        events_to_enrich = capped
+
     return events_to_enrich
+
+
+# Maximum detail-page fetches per website per run. Deferred rows keep
+# detail_crawl_attempts = 0 and lead the next run's candidate list. 0 disables.
+DETAIL_CRAWL_SITE_CAP_DEFAULT = 80
+
+
+def detail_crawl_site_cap():
+    import os
+    raw = os.environ.get('DETAIL_CRAWL_SITE_CAP')
+    if raw is None or raw == '':
+        return DETAIL_CRAWL_SITE_CAP_DEFAULT
+    try:
+        return max(0, int(raw))
+    except ValueError:
+        return DETAIL_CRAWL_SITE_CAP_DEFAULT
 
 
 def get_website_crawl_settings(cursor, website_ids):

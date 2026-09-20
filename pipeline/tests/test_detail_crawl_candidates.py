@@ -43,6 +43,9 @@ CREATE TABLE event_sources (id INTEGER PRIMARY KEY, event_id INTEGER, crawl_even
 CREATE TABLE website_urls (id INTEGER PRIMARY KEY, website_id INTEGER, url TEXT);
 CREATE TABLE location_alternate_names (
     id INTEGER PRIMARY KEY, location_id INTEGER, alternate_name TEXT, website_id INTEGER);
+CREATE TABLE events (
+    id INTEGER PRIMARY KEY, archived INTEGER DEFAULT 0, location_id INTEGER, description TEXT);
+CREATE TABLE event_urls (id INTEGER PRIMARY KEY, event_id INTEGER, url TEXT);
 """
 
 # The crawl_result was re-crawled at this moment; anything created before it is
@@ -241,3 +244,71 @@ class TestSuffixedGenericLocationNames(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class TestKnownCompleteSkipAndSiteCap(unittest.TestCase):
+    """Cost controls added 2026-09-19 after 924 BPL + 547 Local Wine Events detail
+    fetches per run re-read pages whose events already carried a description
+    and a location from a previous detail crawl."""
+
+    def setUp(self):
+        self.conn = sqlite3.connect(":memory:")
+        self.conn.executescript(SCHEMA)
+        self.conn.execute("INSERT INTO %s (id, name, skip_reenrichment) VALUES (4,'BPL',0)" % 'websites')
+        self.conn.execute("INSERT INTO crawl_results (id, website_id, crawled_at) VALUES (1, 4, ?)",
+                          (RECRAWL_AT,))
+        self.conn.commit()
+        self.cur = _ShimCursor(self.conn)
+        self._old_cap = os.environ.get('DETAIL_CRAWL_SITE_CAP')
+
+    def tearDown(self):
+        if self._old_cap is None:
+            os.environ.pop('DETAIL_CRAWL_SITE_CAP', None)
+        else:
+            os.environ['DETAIL_CRAWL_SITE_CAP'] = self._old_cap
+
+    def _add(self, ce_id, url, dated=True, description='No description available.'):
+        self.conn.execute(
+            "INSERT INTO crawl_events (id, crawl_result_id, name, url, location_name,"
+            " description, detail_crawl_attempts, created_at)"
+            " VALUES (?, 1, ?, ?, 'Macon Library', ?, 0, ?)",
+            (ce_id, f'Event {ce_id}', url, description, FRESH_AT))
+        if dated:
+            self.conn.execute("INSERT INTO crawl_event_occurrences (crawl_event_id) VALUES (?)", (ce_id,))
+        self.conn.commit()
+
+    def _known(self, event_id, url, description='Real prose about the event.', location_id=5, archived=0):
+        self.conn.execute("INSERT INTO events (id, archived, location_id, description) VALUES (?,?,?,?)",
+                          (event_id, archived, location_id, description))
+        self.conn.execute("INSERT INTO event_urls (event_id, url) VALUES (?,?)", (event_id, url))
+        self.conn.commit()
+
+    def _ids(self):
+        return {row[0] for row in pipeline_db.get_detail_crawl_candidates(self.cur)}
+
+    def test_dated_event_whose_url_is_already_complete_is_skipped(self):
+        self._add(1, 'https://bpl.org/node/1')
+        self._known(100, 'https://bpl.org/node/1')
+        self.assertEqual(self._ids(), set())
+
+    def test_undated_event_is_still_fetched_even_when_url_is_known(self):
+        self._add(2, 'https://bpl.org/node/2', dated=False)
+        self._known(101, 'https://bpl.org/node/2')
+        self.assertEqual(self._ids(), {2})
+
+    def test_known_event_missing_location_or_description_does_not_count(self):
+        self._add(3, 'https://bpl.org/node/3')
+        self._known(102, 'https://bpl.org/node/3', location_id=None)
+        self._add(4, 'https://bpl.org/node/4')
+        self._known(103, 'https://bpl.org/node/4', description='No description available.')
+        self._add(5, 'https://bpl.org/node/5')
+        self._known(104, 'https://bpl.org/node/5', archived=1)
+        self.assertEqual(self._ids(), {3, 4, 5})
+
+    def test_site_cap_defers_the_tail_and_can_be_disabled(self):
+        for i in range(10, 16):
+            self._add(i, f'https://bpl.org/node/{i}')
+        os.environ['DETAIL_CRAWL_SITE_CAP'] = '4'
+        self.assertEqual(len(self._ids()), 4)
+        os.environ['DETAIL_CRAWL_SITE_CAP'] = '0'
+        self.assertEqual(len(self._ids()), 6)

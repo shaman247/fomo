@@ -1206,7 +1206,8 @@ class _FakeProviderCall:
         self.calls = 0
 
     async def __call__(self, prompt, schema, timeout, provider, images=None,
-                       gemini_client=None, gemini_model=None):
+                       gemini_client=None, gemini_model=None, expected_names=None,
+                       instructions=None):
         outcome = self.outcomes[min(self.calls, len(self.outcomes) - 1)]
         self.calls += 1
         if isinstance(outcome, Exception):
@@ -1791,7 +1792,9 @@ class ChunkPromptStatedDateBeatsRecurrenceTests(unittest.TestCase):
     """
 
     def _prompt(self):
-        return extractor.get_chunk_prompt(
+        # The rules now travel in the packet's shared instructions; a reviewer
+        # sees instructions + prompt, so pin the clause into that combination.
+        return extractor.get_chunk_instructions('') + '\n\n' + extractor.get_chunk_prompt(
             '### [Wonderville Karaoke](https://example.com/k)\n'
             '**When**: Sun, Aug 9 at 8:00pm\n'
             'Come down on the second Sunday of every month.\n',
@@ -2096,13 +2099,70 @@ class ChunkPromptRegionRuleTests(unittest.TestCase):
     def test_region_rule_is_in_chunk_prompt(self):
         with mock.patch("extractor.city_config.extraction_region_rule",
                    return_value='Only include events in the Test Metro area.'):
-            prompt = extractor.get_chunk_prompt('### Some listing', '2026-09-17',
-                                                notes='', request_id='cr-1-chunk-0')
+            prompt = extractor.get_chunk_instructions('')
         self.assertIn('- Only include events in the Test Metro area.', prompt)
 
     def test_empty_region_rule_adds_no_bullet(self):
         with mock.patch("extractor.city_config.extraction_region_rule", return_value=""):
-            prompt = extractor.get_chunk_prompt('### Some listing', '2026-09-17',
-                                                notes='', request_id='cr-1-chunk-0')
+            prompt = extractor.get_chunk_instructions('')
         self.assertNotIn('fabricated date.\n- \n', prompt)
         self.assertNotIn('\n- \n', prompt)
+
+
+class ListingContentHygieneTests(unittest.TestCase):
+    """Cost controls measured on the 2026-09-18 run: 17 of 547 real listing packets
+    were pruned by these rules and every one of them had returned zero events."""
+
+    def test_repeated_long_paragraph_is_dropped_once(self):
+        card = '### [Show](https://x.org/s)\n**Sat, Oct 3, 2026** 8pm\n' + 'Lorem ipsum ' * 12
+        text = card + '\n\n' + 'Short line\n\n' + card + '\n\nShort line'
+        out, removed = extractor.dedupe_repeated_paragraphs(text)
+        self.assertEqual(out.count('### [Show]'), 1)
+        self.assertEqual(out.count('Short line'), 2)  # short repeats are never touched
+        self.assertEqual(removed, len(card))
+
+    def test_dedupe_is_a_no_op_without_repeats(self):
+        text = 'A' * 200 + '\n\n' + 'B' * 200
+        self.assertEqual(extractor.dedupe_repeated_paragraphs(text), (text, 0))
+
+    def test_chrome_only_chunk_has_no_date_time_link_or_marker(self):
+        self.assertTrue(extractor.chunk_is_chrome_only(
+            'Menu\nAbout Us\nDonate securely\nPayment method\nGift amount\n(c) 2026 GrowNYC'))
+        self.assertFalse(extractor.chunk_is_chrome_only('Farmers market every Sat 8am'))
+        self.assertFalse(extractor.chunk_is_chrome_only('[Tickets](https://x.org/t)'))
+        self.assertFalse(extractor.chunk_is_chrome_only('EVENT DETAIL URL: /e/1'))
+        self.assertFalse(extractor.chunk_is_chrome_only('Opening night Oct 3'))
+
+    def test_beyond_window_requires_full_dates_only(self):
+        today = date(2026, 9, 18)
+        far = '\n'.join(f'### [Show {i}](https://x.org/{i})\nMarch {i + 1}, 2027 7pm' for i in range(4))
+        self.assertTrue(extractor.chunk_is_beyond_window(far, today))
+        # A calendar printing "Sat, Sep 26" beside a stray 2027 mention is never pruned.
+        mixed = far + '\n### [Storytime](https://x.org/s)\nSat, Sep 26 10am'
+        self.assertFalse(extractor.chunk_is_beyond_window(mixed, today))
+        near = '\n'.join(f'### [Show {i}](https://x.org/{i})\nOctober {i + 1}, 2026 7pm' for i in range(4))
+        self.assertFalse(extractor.chunk_is_beyond_window(near, today))
+        two = '\n'.join(f'March {i + 1}, 2027' for i in range(2))
+        self.assertFalse(extractor.chunk_is_beyond_window(two, today))  # below FAR_FUTURE_MIN_DATES
+
+    def test_prune_reports_index_reason_and_size(self):
+        keep = '### [Show](https://x.org/s)\nOct 3, 2026'
+        chrome = 'Menu\nAbout\nDonate'
+        kept, pruned = extractor.prune_chunks([chrome, keep], date(2026, 9, 18))
+        self.assertEqual(kept, [keep])
+        self.assertEqual(pruned, [(0, 'chrome-only', len(chrome))])
+
+    def test_detail_rules_moved_to_shared_instructions(self):
+        instr = extractor.detail_instructions('Branch line belongs to the card above.')
+        self.assertIn('CRITICAL — DESCRIPTION', instr)
+        self.assertIn('RECEPTION vs EXHIBITION RUN', instr)
+        self.assertIn('IMPORTANT (site notes): Branch line belongs', instr)
+        self.assertNotIn('site notes', extractor.detail_instructions(''))
+
+    def test_chunk_prompt_is_only_the_per_chunk_part(self):
+        prompt = extractor.get_chunk_prompt('BODY', '2026-09-19', notes='n', request_id='cr-1-chunk-0')
+        self.assertIn('Set request_id to "cr-1-chunk-0"', prompt)
+        self.assertIn('Website content:\n\nBODY', prompt)
+        self.assertNotIn('CRITICAL DATE RULES', prompt)
+        self.assertIn('CRITICAL DATE RULES', extractor.get_chunk_instructions('n'))
+        self.assertIn('IMPORTANT: n', extractor.get_chunk_instructions('n'))

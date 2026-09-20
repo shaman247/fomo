@@ -42,10 +42,14 @@ def model_label(provider):
 
 
 async def generate_structured(prompt, schema, timeout=None, provider=AGENT, images=None,
-                              gemini_client=None, gemini_model=None, expected_names=None):
+                              gemini_client=None, gemini_model=None, expected_names=None,
+                              instructions=None):
     """Queue local work or return validated agent JSON, never invoke an API.
 
     Legacy arguments remain accepted so integration callers cannot accidentally
     fall back to a network provider. Pending/invalid responses propagate intact.
+    `instructions` carries static task rules shared by many packets (see
+    agent_extraction._instructions); `prompt` keeps only the per-packet part.
     """
-    return agent_extraction.request(prompt, schema, images, expected_names=expected_names)
+    return agent_extraction.request(prompt, schema, images, expected_names=expected_names,
+                                    instructions=instructions)

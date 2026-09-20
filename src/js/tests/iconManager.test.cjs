@@ -73,7 +73,7 @@ test('disc colors follow format hues, pin per-theme tint, and use neutral for un
     const light = manager.discColors('Social', 'light'), dark = manager.discColors('Social', 'dark');
     const [lr, lg, lb] = hexChannels(light.fill), [dr, dg, db] = hexChannels(dark.fill);
     assert.ok(lr > lg && lr > lb && lr > 220, `light fill is a pale red tint: ${light.fill}`);
-    assert.ok(dr > dg && dr > db && dr < 120, `dark fill is a deep red tint: ${dark.fill}`);
+    assert.deepEqual([dr, dg, db], [34, 34, 34], 'dark fill matches the neutral UI background');
     assert.notEqual(light.stroke, light.fill);
     assert.ok(hexChannels(light.stroke)[0] < lr, 'the border is darker than the fill in light mode');
     assert.ok(hexChannels(dark.stroke)[0] > dr, 'the border is lighter than the fill in dark mode');

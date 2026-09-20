@@ -52,8 +52,11 @@ class DuplicateMergeOccurrenceTests(unittest.TestCase):
             icons.assert_called_once_with(self.cur, 1, 2)
         self.cur.execute('SELECT suppressed,reviewed FROM events WHERE id=2')
         self.assertEqual(self.cur.fetchone(), (1,1))
+        # Sources MOVE onto the keeper. A loser left owning event_sources keeps matching
+        # fresh crawl_events and starves the canonical (the sole-carrier defect), and shows
+        # up in the `recurring-checks.md` suppressed-carrier tripwire.
         self.cur.execute('SELECT event_id,crawl_event_id FROM event_sources ORDER BY 1,2')
-        self.assertEqual(self.cur.fetchall(), [(1,101),(1,202),(2,202)])
+        self.assertEqual(self.cur.fetchall(), [(1,101),(1,202)])
         self.cur.execute('SELECT start_date,start_time,end_date,end_time '
                          'FROM event_occurrences WHERE event_id=2 ORDER BY id')
         self.assertEqual(self.cur.fetchall(), incoming)

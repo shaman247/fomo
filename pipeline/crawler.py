@@ -522,7 +522,10 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
         filter_threshold = website.get('content_filter_threshold')
         scan_full_page = website.get('scan_full_page', True)
         remove_overlays = website.get('remove_overlay_elements', False)
-        scroll_delay = website.get('scroll_delay') or 0.2
+        # MySQL DECIMAL arrives as decimal.Decimal; crawl4ai serializes the scan
+        # config to JSON for the page script, so a Decimal breaks scan_full_page
+        # ('Object of type Decimal is not JSON serializable', seen on w4/w386/w389).
+        scroll_delay = float(website.get('scroll_delay') or 0.2)
         crawl_timeout = website.get('crawl_timeout') or DEFAULT_CRAWL_TIMEOUT
         page_timeout_ms = max(60000, crawl_timeout * 1000)  # At least 60s, scale with crawl_timeout
 
@@ -932,7 +935,27 @@ DETAIL_CHROME_SELECTOR = 'nav, [role="navigation"], [role="banner"], [role="cont
 # month grid's off-screen weeks are legitimately `display: none`.
 DETAIL_HIDDEN_SELECTOR = '[style*="display:none"], [style*="display: none"]'
 
-DETAIL_EXCLUDED_SELECTOR = f'{DETAIL_CHROME_SELECTOR}, {DETAIL_HIDDEN_SELECTOR}'
+# Consent widgets, translate bars, skip links, newsletter forms and the page's
+# top-level footer. Measured on the 2026-09-18 run's 2,278 detail packets: 65%
+# carried newsletter sign-up copy, 63% a "Skip to content" link, 30% cookie
+# text and 35% a copyright footer — none of it event evidence, all of it read by
+# a reviewer. `body > footer` is the one bare-tag entry: a footer that is a
+# direct child of <body> is page chrome on every theme met so far, while the
+# in-article footers the DETAIL_CHROME_SELECTOR comment protects are nested.
+# Selectors are id/class prefixes of the common vendors (OneTrust, Osano,
+# Cookiebot, CookieYes, Google Translate) plus generic cookie/consent classes.
+DETAIL_WIDGET_SELECTOR = (
+    'body > footer, '
+    '#onetrust-consent-sdk, #onetrust-banner-sdk, .osano-cm-window, #CybotCookiebotDialog, '
+    '.cky-consent-container, #cookie-law-info-bar, .cc-window, .cookie-banner, .cookie-consent, '
+    '.cookie-notice, #cookie-notice, [class*="cookie-consent"], [id*="cookie-banner"], '
+    '#google_translate_element, .goog-te-banner-frame, .skiptranslate, '
+    '.skip-link, .skip-to-content, a[href="#main-content"], a[href="#main"], a[href="#content"], '
+    'form[class*="newsletter"], form[id*="newsletter"], [class*="newsletter-signup"], '
+    '[id*="newsletter-signup"], .mc4wp-form, form[action*="list-manage.com"]'
+)
+
+DETAIL_EXCLUDED_SELECTOR = f'{DETAIL_CHROME_SELECTOR}, {DETAIL_HIDDEN_SELECTOR}, {DETAIL_WIDGET_SELECTOR}'
 
 
 def build_event_crawl_config(website_settings):
@@ -956,7 +979,7 @@ def build_event_crawl_config(website_settings):
     filter_threshold = ws.get('content_filter_threshold')
     scan = False  # Don't scroll full page for individual event pages
     overlays = ws.get('remove_overlay_elements', False)
-    sd = ws.get('scroll_delay') or 0.2
+    sd = float(ws.get('scroll_delay') or 0.2)  # Decimal from MySQL is not JSON-serializable
 
     md_generator = _build_md_generator(filter_threshold, ignore_links=True)
 

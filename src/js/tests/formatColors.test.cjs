@@ -26,7 +26,11 @@ test('all six category colors preserve their hues across themes and unknown form
     const { palette, color } = setup();
     for (const [category, hue] of Object.entries({ Performance: 300, Social: 0, Participatory: 60, Outing: 120, Browsable: 180, Gathering: 240 })) {
         for (const theme of ['light', 'dark']) {
-            for (const hex of [...Object.values(palette.discColors(category, theme)), palette.dotColor(category, theme)]) {
+            const disc = palette.discColors(category, theme);
+            if (theme === 'dark') assert.equal(disc.fill, '#222222');
+            const colors = [disc.stroke, palette.dotColor(category, theme)];
+            if (theme === 'light') colors.push(disc.fill);
+            for (const hex of colors) {
                 const actual = color.oklchHueFromHex(hex);
                 const error = Math.abs((actual - hue + 540) % 360 - 180);
                 assert.ok(error < 4, `${category} ${theme}: ${hex} hue ${actual}`);

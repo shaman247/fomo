@@ -16,7 +16,7 @@ import re
 import statistics
 import unicodedata
 from dataclasses import dataclass, field, replace
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from io import BytesIO
 from typing import Optional
 from urllib.parse import urlparse, urljoin
@@ -430,6 +430,8 @@ class PreparedExtraction:
     # For 'chunked' type
     chunk_prompts: list = field(default_factory=list)
     chunks: list = field(default_factory=list)  # raw chunk text, parallel to chunk_prompts
+    chunk_instructions: str = ""  # static rules + site notes shared by every chunk packet
+    pruned_chunks: list = field(default_factory=list)  # (index, reason, chars) dropped before queuing
     max_batches: Optional[int] = None
     content: Optional[str] = None  # Original page content for enrichment context
 
@@ -462,15 +464,24 @@ def extract_image_urls(content, base_url=None):
     Looks for markdown image syntax: ![alt](url)
     Returns a list of absolute URLs.
     """
-    # Match markdown image syntax
-    pattern = r'!\[[^\]]*\]\(([^)]+)\)'
-    urls = re.findall(pattern, content)
+    # Match markdown image syntax. The URL may contain markdown-escaped
+    # parentheses (`file%20\(1\).jpg`): crawl4ai escapes literal parens in
+    # link targets, and the old `[^)]+` stopped at the first `\)` and yielded a
+    # truncated URL that 404'd and failed vision coverage closed (Basement NY,
+    # 2026-09-18). Accept escaped parens as part of the URL, then unescape.
+    pattern = r'!\[[^\]]*\]\(((?:\\.|[^)\\])+)\)'
+    urls = [re.sub(r'\\(.)', r'\1', u) for u in re.findall(pattern, content)]
 
     # Filter and normalize URLs
     result = []
     for url in urls:
         # Skip data URLs
         if url.startswith('data:'):
+            continue
+        # Skip bare site roots (`<img src="https://host/">`): a page, never a
+        # flyer. It downloads as text/html and would fail coverage closed.
+        parsed = urlparse(url)
+        if parsed.scheme in ('http', 'https') and parsed.path in ('', '/') and not parsed.query:
             continue
         # Skip tiny images (likely icons/buttons)
         if 'icon' in url.lower() or 'button' in url.lower() or 'logo' in url.lower():
@@ -523,6 +534,11 @@ def is_tracking_beacon_url(url):
     return bool(_BEACON_PATH_RE.search(path) or _BEACON_PHP_RE.search(path))
 
 
+# Sentinel mime value: the URL resolved (HTTP 200) to non-image content, so it
+# is not a source image at all rather than a failed download.
+NOT_AN_IMAGE = 'not-an-image'
+
+
 async def download_and_encode_image(url, max_dimension=MAX_IMAGE_DIMENSION):
     """
     Download an image and encode it as base64.
@@ -546,7 +562,10 @@ async def download_and_encode_image(url, max_dimension=MAX_IMAGE_DIMENSION):
 
             content_type = response.headers.get('content-type', '')
             if not content_type.startswith('image/'):
-                return None, None
+                # A 200 that is not an image (an HTML page behind an <img>) is
+                # definitively not a flyer -- distinguish it from a transient
+                # miss so prepare_vision_content can drop it from coverage.
+                return None, NOT_AN_IMAGE
 
             # Determine MIME type
             if 'jpeg' in content_type or 'jpg' in content_type:
@@ -606,7 +625,8 @@ async def prepare_vision_content(content, base_url=None, max_images=MAX_VISION_I
     cache = agent_extraction.work_dir() / 'vision_sources' / f'{key}.json'
     if cache.exists():
         saved = agent_extraction._read_json(cache)
-        if saved.get('urls') != image_urls or len(saved.get('images', [])) != len(image_urls):
+        expected = len(image_urls) - len(saved.get('not_images', []))
+        if saved.get('urls') != image_urls or len(saved.get('images', [])) != expected:
             raise AgentExtractionInvalid(f'Incomplete image snapshot: {cache}')
         return saved['images'], len(saved['images'])
     semaphore = asyncio.Semaphore(5)
@@ -618,20 +638,31 @@ async def prepare_vision_content(content, base_url=None, max_images=MAX_VISION_I
     # transient miss (a 2.7 MB flyer timing out at 10s under 5-way concurrency
     # -- The Cobra Club, 2026-09-17) must not be terminal. Retry the misses
     # one at a time, twice, before giving up.
+    def _missing():
+        return [i for i, (data, mime) in enumerate(results)
+                if not (data and mime) and mime != NOT_AN_IMAGE]
     for _attempt in range(2):
-        missing = [i for i, (data, mime) in enumerate(results) if not (data and mime)]
+        missing = _missing()
         if not missing:
             break
         for i in missing:
             results[i] = await download_and_encode_image(image_urls[i])
+    # URLs that resolved to non-image content are not source images; they
+    # neither count toward coverage nor fail it (Basement NY's <img> pointing
+    # at its own homepage, 2026-09-18).
+    not_images = [image_urls[i] for i, (data, mime) in enumerate(results) if mime == NOT_AN_IMAGE]
+    if not_images:
+        print(f"    - Skipping {len(not_images)} non-image <img> source(s): {', '.join(not_images[:3])}")
     image_parts = [{'inline_data': {'mime_type': mime, 'data': data}}
-                   for data, mime in results if data and mime]
-    if len(image_parts) != len(image_urls):
-        failed = [image_urls[i] for i, (data, mime) in enumerate(results) if not (data and mime)]
+                   for data, mime in results if data and mime and mime != NOT_AN_IMAGE]
+    if len(image_parts) != len(image_urls) - len(not_images):
+        failed = [image_urls[i] for i in _missing()]
         raise ExtractionCallFailure(
-            f'{len(image_urls) - len(image_parts)} source images failed to download '
+            f'{len(failed)} source images failed to download '
             f'after retries ({", ".join(failed[:3])}); complete vision coverage is required')
-    agent_extraction.atomic_json(cache, {'urls': image_urls, 'images': image_parts})
+    if not image_parts:
+        return None, 0
+    agent_extraction.atomic_json(cache, {'urls': image_urls, 'images': image_parts, 'not_images': not_images})
     return image_parts, len(image_parts)
 
 
@@ -1224,6 +1255,119 @@ def chunk_content(content, events_per_chunk=EVENTS_PER_CHUNK, max_chars=MAX_CHUN
 # Extraction Functions
 # =============================================================================
 
+# ---------------------------------------------------------------------------
+# Listing content hygiene (agent-extraction cost controls)
+# ---------------------------------------------------------------------------
+# Measured on the 2026-09-18 run (524 listing packets, 14.6M chars): identical
+# long paragraphs repeated within one page (a carousel plus the list it
+# duplicates on bardavon.org, National Sawdust's grid + list, two IFC pages
+# concatenated) were 2.5% of all listing text and up to 33% of a single site;
+# 34 of the 76 empty packets had no date token at all. Both are removed
+# mechanically here, BEFORE chunking, so no packet is ever built for them.
+# Far-future pruning drops a chunk only when every dated mention carries a
+# year and all of them sit past the publish window plus a buffer; pages that
+# print dates without years (most calendars) never qualify.
+
+DEDUPE_PARAGRAPH_MIN_CHARS = 120
+FAR_FUTURE_BUFFER_DAYS = 30
+FAR_FUTURE_MIN_DATES = 3
+_HTTP_LINK_RE = re.compile(r'\]\(https?://')
+_TIME_TOKEN_RE = re.compile(r'\b(?:[01]?\d|2[0-3])(?::[0-5]\d)?\s*(?:am|pm|a\.m\.|p\.m\.)\b', re.IGNORECASE)
+
+
+def dedupe_repeated_paragraphs(content, min_chars=DEDUPE_PARAGRAPH_MIN_CHARS):
+    """Drop later byte-identical copies of long paragraphs. Returns (text, removed_chars).
+
+    Only paragraphs of at least `min_chars` are candidates, so a repeated short
+    line ("Buy Tickets", a shared date header) is never touched; a repeated long
+    block is the same card rendered twice, and the merger would collapse the
+    duplicate anyway.
+    """
+    if not content:
+        return content, 0
+    paragraphs = re.split(r'(\n\n+)', content)
+    seen = set()
+    out = []
+    removed = 0
+    skip_next_sep = False
+    for piece in paragraphs:
+        if piece.startswith('\n'):
+            if skip_next_sep:
+                skip_next_sep = False
+                continue
+            out.append(piece)
+            continue
+        key = piece.strip()
+        if len(key) >= min_chars and key in seen:
+            removed += len(piece)
+            skip_next_sep = True
+            continue
+        seen.add(key)
+        out.append(piece)
+    text = ''.join(out)
+    return (text, removed) if removed else (content, 0)
+
+
+def chunk_is_chrome_only(chunk):
+    """True when a chunk carries no date, time, link or detail-URL marker at all."""
+    if not chunk or not chunk.strip():
+        return True
+    if _DETAIL_URL_MARKER_RE.search(chunk) or _HTTP_LINK_RE.search(chunk):
+        return False
+    if count_date_tokens(chunk) or _TIME_TOKEN_RE.search(chunk):
+        return False
+    return True
+
+
+def _full_dates(text):
+    dates = []
+    for m in _MONTH_DAY_YEAR_RE.finditer(text):
+        try:
+            dates.append(date(int(m.group(3)), _MONTH_ABBREVS[m.group(1).lower()[:3]], int(m.group(2))))
+        except (ValueError, KeyError):
+            continue
+    for rx, order in ((_ISO_DATE_RE, (1, 2, 3)), (_NUMERIC_DATE_RE, (3, 1, 2))):
+        for m in rx.finditer(text):
+            try:
+                dates.append(date(int(m.group(order[0])), int(m.group(order[1])), int(m.group(order[2]))))
+            except ValueError:
+                continue
+    return dates
+
+
+def chunk_is_beyond_window(chunk, today=None, window_days=None, buffer_days=FAR_FUTURE_BUFFER_DAYS):
+    """True when every dated mention in `chunk` carries a year and all sit past the
+    publish window (+buffer). Requires FAR_FUTURE_MIN_DATES fully-qualified dates
+    and no year-less date tokens, so a calendar that prints "Sat, Sep 26" next to
+    a stray "2027" is never pruned."""
+    if not chunk:
+        return False
+    today = today or datetime.now().date()
+    window_days = constants.FUTURE_WINDOW_DAYS if window_days is None else window_days
+    full = _full_dates(chunk)
+    if len(full) < FAR_FUTURE_MIN_DATES:
+        return False
+    # Every date token must be one of the fully-qualified mentions; month-day
+    # tokens without a year (or slash dates without a year) disqualify.
+    if count_date_tokens(chunk) > len(full):
+        return False
+    horizon = today + timedelta(days=window_days + buffer_days)
+    return min(full) > horizon
+
+
+def prune_chunks(chunks, today=None):
+    """Return (kept_chunks, pruned) where pruned is [(index, reason, chars)]."""
+    kept, pruned = [], []
+    for i, chunk in enumerate(chunks):
+        if chunk_is_chrome_only(chunk):
+            pruned.append((i, 'chrome-only', len(chunk)))
+        elif chunk_is_beyond_window(chunk, today):
+            pruned.append((i, 'beyond-window', len(chunk)))
+        else:
+            kept.append(chunk)
+    return kept, pruned
+
+
 def estimate_event_count(content):
     """
     Estimate the number of events on a page using pattern matching.
@@ -1605,6 +1749,29 @@ class SingleEventExtraction(BaseModel):
     emoji: str = Field(description="Single emoji representing the event")
 
 
+DETAIL_RULES = """CRITICAL — DESCRIPTION: The description MUST be derived from words and sentences actually present on the page. If the page only contains the event name, date/time, venue, and links (no descriptive prose), set description to exactly "No description available." Do NOT paraphrase the event name. Do NOT write generic filler like "is a local community event" or "visit the official website for more details". Do NOT use background knowledge about the artist, venue, or topic. If you would only be guessing, return "No description available." instead.
+
+NOT A DESCRIPTION — admission boilerplate and venue marketing. Ticketing sites and venue pages pad every event with the same house copy. It is about the TICKET or the VENUE, not about this event, so it must never become the description. Ignore: door/show times and "front bar opens" notes; age limits and ID/passport policy; RSVP, capacity or door-discretion policy; ticket-tier, seating or lounge perks (e.g. "Preferred Mezzanine includes access to..."); bottle service, table sales and VIP contact addresses; refund, exchange and resale terms; minimum-purchase, tax and gratuity rules; dress code; and the venue's code of conduct or safer-space / anti-discrimination statement. Also ignore boilerplate that describes the PLACE or the promoter rather than this event — a venue's own blurb about its history, capacity, view, atmosphere, menu or lineup of "legends who played here", and an organizer's "we are the world's largest community of..." pitch. If everything on the page is that kind of text, return exactly "No description available." — no description is better than a description of the wrong thing.
+
+CRITICAL: Only return occurrences for SPECIFIC calendar dates that are EXPLICITLY stated on the page. If the page describes a permanent exhibit, ongoing installation, recurring schedule (e.g. "Fridays 7pm"), or has no specific date listed, return occurrences=null. Do NOT fabricate dates, do NOT default to today, do NOT approximate from descriptive text like "spring 2026" or "ongoing". An approximate or invented date is worse than no date.
+
+OCCURRENCES = WHEN THE EVENT ITSELF HAPPENS. If the page lists a multi-day schedule that mixes the actual event with preparatory or ancillary days (e.g. expo, packet/bib pickup, registration, vendor setup, rehearsal, soundcheck, load-in, after-party, awards ceremony), return ONLY the day(s) the event itself takes place. Pickup/expo/setup days are logistics, not occurrences of the event. Example: a race page showing "Wed-Fri Expo / Sat Race" should return only Saturday.
+
+RECEPTION vs EXHIBITION RUN: If the named event is an opening/closing reception, opening night, preview, or launch tied to an exhibition, occurrences = ONLY that reception's own date and time (a single-day event). Do NOT add the exhibition's broader on-view run (e.g. "on view June 4 – July 10") as an additional occurrence — that run belongs to the exhibition itself, which is a separate event."""
+
+
+def detail_instructions(notes=""):
+    """Static detail-page rules plus the site's notes, shared by every detail packet.
+
+    Identical text for every event of a website, so it is hashed into the packet's
+    `instructions` and read once per website by the reviewer instead of once per
+    page (`agent_extraction.read --omit-instructions`).
+    """
+    notes = (notes or "").strip()
+    note_section = f"\n\nIMPORTANT (site notes): {notes}" if notes else ""
+    return DETAIL_RULES + note_section
+
+
 async def extract_single_event(event_name, content, notes="", url=""):
     """
     Extract event details from a single event page.
@@ -1634,62 +1801,19 @@ async def extract_single_event(event_name, content, notes="", url=""):
         return None
 
     notes = _strip_legacy_directives(notes, 'detail page')
-    note_section = f"IMPORTANT: {notes.strip()}\n\n" if notes and notes.strip() else ""
     url_section = f'This page\'s URL is {url}\n' if url else ""
 
     current_date = agent_extraction.reference_date()
+    # The static rules ride in the packet's shared `instructions` (read once per
+    # instructions hash by the reviewing agent); the prompt keeps only what is
+    # specific to this page. Site notes are per-website, so they share too.
+    instructions = detail_instructions(notes)
     prompt = (
         f'Today\'s date is {current_date}. '
         f'Extract information about the event "{event_name}" from this web page. '
         f'Include the venue name if it appears on the page.\n'
         f'{url_section}\n'
-        f'{note_section}'
-        f'CRITICAL — DESCRIPTION: The description MUST be derived from words '
-        f'and sentences actually present on the page. If the page only contains '
-        f'the event name, date/time, venue, and links (no descriptive prose), '
-        f'set description to exactly "No description available." Do NOT '
-        f'paraphrase the event name. Do NOT write generic filler like "is a '
-        f'local community event" or "visit the official website for more '
-        f'details". Do NOT use background knowledge about the artist, venue, '
-        f'or topic. If you would only be guessing, return "No description '
-        f'available." instead.\n\n'
-        f'NOT A DESCRIPTION — admission boilerplate and venue marketing. Ticketing '
-        f'sites and venue pages pad every event with the same house copy. It is '
-        f'about the TICKET or the VENUE, not about this event, so it must never '
-        f'become the description. Ignore: door/show times and "front bar opens" '
-        f'notes; age limits and ID/passport policy; RSVP, capacity or door-discretion '
-        f'policy; ticket-tier, seating or lounge perks (e.g. "Preferred Mezzanine '
-        f'includes access to..."); bottle service, table sales and VIP contact '
-        f'addresses; refund, exchange and resale terms; minimum-purchase, tax and '
-        f'gratuity rules; dress code; and the venue\'s code of conduct or '
-        f'safer-space / anti-discrimination statement. Also ignore boilerplate that '
-        f'describes the PLACE or the promoter rather than this event — a venue\'s '
-        f'own blurb about its history, capacity, view, atmosphere, menu or lineup '
-        f'of "legends who played here", and an organizer\'s "we are the world\'s '
-        f'largest community of..." pitch. If everything on the page is that kind of '
-        f'text, return exactly "No description available." — no description is '
-        f'better than a description of the wrong thing.\n\n'
-        f'CRITICAL: Only return occurrences for SPECIFIC calendar dates that are '
-        f'EXPLICITLY stated on the page. If the page describes a permanent '
-        f'exhibit, ongoing installation, recurring schedule (e.g. "Fridays 7pm"), '
-        f'or has no specific date listed, return occurrences=null. Do NOT '
-        f'fabricate dates, do NOT default to today, do NOT approximate from '
-        f'descriptive text like "spring 2026" or "ongoing". An approximate or '
-        f'invented date is worse than no date.\n\n'
-        f'OCCURRENCES = WHEN THE EVENT ITSELF HAPPENS. If the page lists a '
-        f'multi-day schedule that mixes the actual event with preparatory or '
-        f'ancillary days (e.g. expo, packet/bib pickup, registration, vendor '
-        f'setup, rehearsal, soundcheck, load-in, after-party, awards ceremony), '
-        f'return ONLY the day(s) the event itself takes place. Pickup/expo/setup '
-        f'days are logistics, not occurrences of the event. Example: a race page '
-        f'showing "Wed-Fri Expo / Sat Race" should return only Saturday.\n\n'
-        f'RECEPTION vs EXHIBITION RUN: If the named event is an opening/closing '
-        f'reception, opening night, preview, or launch tied to an exhibition, '
-        f'occurrences = ONLY that reception\'s own date and time (a single-day '
-        f'event). Do NOT add the exhibition\'s broader on-view run (e.g. "on view '
-        f'June 4 – July 10") as an additional occurrence — that run belongs to the '
-        f'exhibition itself, which is a separate event.\n\n'
-        f'{content}'
+        f'Page content:\n\n{content}'
     )
 
     try:
@@ -1698,6 +1822,7 @@ async def extract_single_event(event_name, content, notes="", url=""):
         response_text = await llm_providers.generate_structured(
             prompt, SingleEventExtraction, DETAIL_TIMEOUT,
             provider=llm_providers.provider_for('detail'),
+            instructions=instructions,
         )
         data = json.loads(response_text)
         desc = (data.get('description') or '').strip().strip('"')
@@ -1741,18 +1866,16 @@ async def extract_single_event(event_name, content, notes="", url=""):
         return None
 
 
-def get_chunk_prompt(chunk_text, current_date_string, notes, request_id=""):
-    """Generate prompt for a single chunk extraction."""
-    note_section = f"\n\nIMPORTANT: {notes}" if notes else ""
-    # The metro-geography rule was only in get_prompt (single-call mode), so a
-    # large listing that fell into chunked mode had no geographic restriction at
-    # all and touring/national feeds leaked out-of-region dates (2026-09-17).
-    region_rule = city_config.extraction_region_rule()
-    region_section = f"\n- {region_rule}" if region_rule else ""
-    rid_section = f"\n\nIMPORTANT: Set request_id to \"{request_id}\" in your response." if request_id else ""
-    return f'''{city_config.extraction_chunk_intro().format(date=current_date_string)}
+FULL_PASS_RULE = (
+    'Extract complete events in a single pass using the full result schema. '
+    'In addition to the fields listed below, include sublocation when stated, '
+    'a source-grounded description, hashtags, and emoji for every event. '
+    'Use "No description available." when the source has no descriptive details. '
+    'Do not infer prose from the title. Keep metadata tied to its own listing/URL, '
+    'even when two listings share a name. Preserve all dates and occurrences.')
 
-For each event provide: name, location (venue name), occurrences (array of start_date in YYYY-MM-DD, start_time, end_date, end_time), and url if available.
+
+CHUNK_RULES = """For each event provide: name, location (venue name), occurrences (array of start_date in YYYY-MM-DD, start_time, end_date, end_time), and url if available.
 
 CRITICAL DATE RULES:
 - Only return occurrences for SPECIFIC calendar dates EXPLICITLY shown on the page near the event (e.g. "May 7, 2026", "Sat Jun 14", "9/22").
@@ -1767,8 +1890,33 @@ CRITICAL DATE RULES:
 - Do NOT default to today's date when no date is listed.
 - Do NOT extract dates from URLs or Google Calendar/iCal links — those often reference past instances. Only use dates visible in the page text adjacent to the event.
 - Past dates (before today) should also be set to null — those events have already happened. EXCEPTION — ANY event that is STILL IN PROGRESS: if a multi-day event has a stated END date of today or later, keep it even though it started in the past — use its original (past) start_date and its stated end_date, and do NOT null it. This is NOT limited to exhibitions: a conference, symposium, workshop series, festival, residency, class run or camp that opened before today but ends today or later is still happening and must be kept. Only null a multi-day event once its END date is also in the past.
-- An empty/null occurrences field is much better than a fabricated date.{region_section}
-{note_section}{rid_section}
+- An empty/null occurrences field is much better than a fabricated date."""
+
+
+def get_chunk_instructions(notes=""):
+    """Static chunk rules + region rule + site notes: identical for every chunk of a site.
+
+    Shared through the packet's `instructions` (read once per site), not repeated
+    in every chunk prompt. Keep the wording here and the single-call rules in
+    get_prompt in step when either changes.
+    """
+    # The metro-geography rule was only in get_prompt (single-call mode), so a
+    # large listing that fell into chunked mode had no geographic restriction at
+    # all and touring/national feeds leaked out-of-region dates (2026-09-17).
+    region_rule = city_config.extraction_region_rule()
+    region_section = f"\n- {region_rule}" if region_rule else ""
+    notes = (notes or "").strip()
+    note_section = f"\n\nIMPORTANT: {notes}" if notes else ""
+    return CHUNK_RULES + region_section + note_section
+
+
+def get_chunk_prompt(chunk_text, current_date_string, notes=None, request_id=""):
+    """Per-chunk prompt: date line, request id and the source. Rules live in
+    get_chunk_instructions (shared packet instructions). `notes` is accepted for
+    call-site compatibility and intentionally unused here."""
+    rid_section = f"\n\nIMPORTANT: Set request_id to \"{request_id}\" in your response." if request_id else ""
+    return f'''{city_config.extraction_chunk_intro().format(date=current_date_string)}{rid_section}
+
 Website content:
 
 {chunk_text}'''
@@ -2081,6 +2229,12 @@ async def prepare_extraction(cursor, crawl_result_id, website_name, notes="",
     url = url or ""
     prep.url = url
 
+    # Identical long paragraphs are the same card rendered twice; drop the copies
+    # before anything is sized or chunked (see dedupe_repeated_paragraphs).
+    content_to_process, dup_removed = dedupe_repeated_paragraphs(content_to_process)
+    if dup_removed:
+        print(f"    - Removed {dup_removed} chars of repeated paragraphs before chunking")
+
     # Hard limit on content size to prevent runaway extraction. Structured API
     # sources raise it via their SiteProfile — truncating a payload we built
     # ourselves silently drops real events rather than trimming an archive.
@@ -2147,8 +2301,22 @@ async def prepare_extraction(cursor, crawl_result_id, website_name, notes="",
             chunks = dense
             print(f"    - Split into {len(chunks)} chunks using {chunk_method}-based chunking")
 
+            # Never queue a packet for a chunk that cannot hold an event.
+            chunks, pruned = prune_chunks(chunks)
+            prep.pruned_chunks = pruned
+            if pruned:
+                summary = ', '.join(f"#{i} {reason} {chars}ch" for i, reason, chars in pruned)
+                print(f"    - Pruned {len(pruned)} chunk(s) before queuing: {summary}")
+            if not chunks:
+                prep.resolved_result = '{"events": []}'
+                print("    - Every chunk was chrome-only or beyond the publish window; no packets queued")
+                return prep
+
             prep.chunks = chunks           # raw text, for the shortfall guard
             prep.content = content_to_process  # Store for enrichment context
+            prep.chunk_instructions = get_chunk_instructions(notes)
+            # Chunk indexes stay positional in the request id; they no longer
+            # match the pre-prune split when something was pruned.
             prep.chunk_prompts = [
                 get_chunk_prompt(chunk, current_date_string, notes,
                                  request_id=f"cr-{crawl_result_id}-chunk-{i}")
@@ -2633,10 +2801,10 @@ def _report_dropped_dates(chunk, events, label):
 
 
 async def _execute_chunked_sync(prep, cursor=None, connection=None):
-    """Queue all page chunks, then all enrichment batches, without coverage caps.
+    """Extract full events in one pass; resume legacy two-pass packets unchanged.
 
     Each pass publishes every independent pending packet before pausing. Replay
-    reads completed responses and advances to enrichment when all chunks exist.
+    reads completed responses. Only legacy simple records need enrichment.
     """
     # Extract events from each chunk
     all_simple_events = []
@@ -2657,9 +2825,16 @@ async def _execute_chunked_sync(prep, cursor=None, connection=None):
         print(f"    - Processing chunk {i + 1}/{len(prep.chunk_prompts)}...")
         attempted_chunks += 1
         try:
+            # Match the exact old packet before changing prompt/schema. Pending
+            # and accepted work from an interrupted run remains usable.
+            legacy = agent_extraction.has_request(chunk_prompt, SimpleEventList)
+            schema = SimpleEventList if legacy else EventList
+            instructions = None if legacy else (
+                FULL_PASS_RULE + '\n\n' + (prep.chunk_instructions or get_chunk_instructions(prep.notes)))
             response_text = await llm_providers.generate_structured(
-                chunk_prompt, SimpleEventList, CHUNK_TIMEOUT,
+                chunk_prompt, schema, CHUNK_TIMEOUT,
                 provider=llm_providers.provider_for('chunked'),
+                instructions=instructions,
                 )
             result = json.loads(response_text)
             events = result.get('events', [])
@@ -2731,7 +2906,11 @@ async def _execute_chunked_sync(prep, cursor=None, connection=None):
 
     # One enrichment slot per distinct name — duplicates would resolve to the
     # same enrichment entry anyway, so sending them again is pure waste.
-    event_names = _distinct_names_in_order(all_simple_events)
+    legacy_events = [event for event in all_simple_events
+                     if not all(key in event for key in ('description', 'hashtags', 'emoji'))]
+    if not legacy_events:
+        return json.dumps({'events': all_simple_events}, ensure_ascii=False)
+    event_names = _distinct_names_in_order(legacy_events)
     if len(event_names) != len(all_simple_events):
         print(f"    - {len(all_simple_events)} records -> {len(event_names)} distinct events")
 
@@ -2800,6 +2979,9 @@ def _combine_chunked_results(simple_events, enrichments):
     """Combine simple events with enrichment data into final JSON."""
     full_events = []
     for event in simple_events:
+        if all(key in event for key in ('description', 'hashtags', 'emoji')):
+            full_events.append(event)
+            continue
         enrichment = enrichments.get(event['name'], {})
         full_event = {
             'name': event['name'],
