@@ -7,6 +7,7 @@ Logs all changes to the edits table for sync tracking.
 """
 
 import functools
+import json
 import re
 import sys
 import time
@@ -14,11 +15,16 @@ import unicodedata
 from datetime import date as date_type, datetime, timedelta
 from math import ceil, cos, radians
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import mysql.connector
 
 import db
 import site_profiles
+from event_name_guards import conversation_subject_mismatch, game_program_variant_mismatch, library_program_variant_mismatch, named_sub_event_mismatch, participatory_program_variant_mismatch
+from session_details import refresh_source_session_details
+from source_metadata import refresh_source_metadata
+from schedule_envelopes import envelope, reconcile_envelopes
 from constants import get_active_date_window
 
 
@@ -989,6 +995,17 @@ def _times_with_minutes(norm):
     return frozenset(re.findall(r'\b(\d{1,2}\s*\d{2}\s*(?:am|pm))\b', norm, re.IGNORECASE)) or None
 
 
+def _meridiem_label(norm):
+    """Explicit AM/PM session labels, including normalized A.M./P.M.
+
+    A mixed AM/PM listing or an unlabeled title cannot establish a conflict.
+    This must veto before core-title and ratio matching: retaining the short
+    tokens alone still lets long otherwise-identical class names match.
+    """
+    labels = set(re.findall(r'\b([ap])\s*m\b', norm))
+    return next(iter(labels)) if len(labels) == 1 else None
+
+
 def _sequence_numbers(norm):
     """Standalone numbers between pipe/dash separators ("| 1 |" vs "| 2 |")."""
     return re.findall(r'(?:^|\|)\s*#?\s*(\d+)\s*(?:\||$)', norm) or None
@@ -1015,6 +1032,7 @@ _VALUE_DISCRIMINATORS = (
         re.search(r'vs\.?\s+(.+?)(?:\s*-|$)', n, re.IGNORECASE)), _opponents_differ),
     (_times_with_minutes, _ne),
     (_clock_times, _ne),
+    (_meridiem_label, _ne),
 )
 
 # Word boundaries so "documentary" does not match "men". The optional trailing
@@ -1067,9 +1085,53 @@ def _trailing_dates_differ(name1, name2, norm1, norm2):
     return bool(date1 and date2 and date1 != date2)
 
 
+_PARENT_EVENT_MEETUP_RE = re.compile(
+    r'\b(?:tour|concert|festival|convention)\s+meet\s*ups?\b'
+)
+_MEETUP_RE = re.compile(r'\bmeet\s*ups?\b')
+_QUOTED_TITLE_WITH_SUFFIX_RE = re.compile(
+    r'^\s*["“](.+?)["”]\s*(\([^()]+\))\s*$'
+)
+
+
+def _parent_event_meetup_differs(_name1, _name2, norm1, norm2):
+    """A named event's meetup is not the event it is organized around.
+
+    Keep this narrower than a general meetup/afterparty flag: "Crux Queer
+    Femme" and "Crux Queer Femme Meetup" describe the same gathering. Require
+    an explicit compound such as "Tour Meetup" on one side and no meetup
+    label on the other. Two descriptions of the meetup may still match.
+    """
+    return bool(
+        (_PARENT_EVENT_MEETUP_RE.search(norm1) and not _MEETUP_RE.search(norm2))
+        or (_PARENT_EVENT_MEETUP_RE.search(norm2) and not _MEETUP_RE.search(norm1))
+    )
+
+
+def _quoted_titles_differ(name1, name2, _norm1, _norm2):
+    """Identical parenthetical metadata must not outvote distinct quoted titles.
+
+    Painting-class feeds put duration/branch metadata after the quoted subject.
+    The metadata's colon can also fool core-title extraction. Only compare this
+    exact shared-suffix shape; unquoted names and different suffixes retain the
+    existing rules. A word-subset title is an abbreviation, not a disagreement.
+    """
+    left = _QUOTED_TITLE_WITH_SUFFIX_RE.fullmatch(name1)
+    right = _QUOTED_TITLE_WITH_SUFFIX_RE.fullmatch(name2)
+    if not left or not right:
+        return False
+    if normalize_name_for_dedup(left[2]) != normalize_name_for_dedup(right[2]):
+        return False
+    words1 = get_significant_words(left[1], stem=True)
+    words2 = get_significant_words(right[1], stem=True)
+    return bool(words1 - words2 and words2 - words1)
+
+
 _PAIR_DISCRIMINATORS = (
     _attendance_modes_differ,
     _trailing_dates_differ,
+    _parent_event_meetup_differs,
+    _quoted_titles_differ,
     # Bare/umbrella name vs a distinct "Head: Subtitle" sibling (both orderings,
     # since the bare name may be either argument).
     lambda n1, n2, _a, _b: (_bare_name_vs_distinct_subtitle(n1, n2)
@@ -1102,6 +1164,12 @@ def is_false_positive(name1, name2):
 
     The rules live in the three discriminator tables above.
     """
+    if (game_program_variant_mismatch(name1, name2)
+            or library_program_variant_mismatch(name1, name2)
+            or named_sub_event_mismatch(name1, name2)
+            or participatory_program_variant_mismatch(name1, name2)
+            or conversation_subject_mismatch(name1, name2)):
+        return True
     norm1 = normalize_name_for_dedup(name1)
     norm2 = normalize_name_for_dedup(name2)
 
@@ -1326,14 +1394,18 @@ def _match_dateless_crawl_event(name, location_id, lat, lng, location_name,
         return None
 
     def _exact(candidates, enforce_location_id=False):
+        suppressed_id = None
         for existing in candidates:
             if enforce_location_id and location_id is not None:
                 existing_loc_id = existing.get('location_id')
                 if existing_loc_id is not None and existing_loc_id != location_id:
                     continue
             if normalize_name_for_dedup(existing['name']) == norm_name:
-                return existing['id']
-        return None
+                if not existing.get('suppressed'):
+                    return existing['id']
+                if suppressed_id is None:
+                    suppressed_id = existing['id']
+        return suppressed_id
 
     if location_id is not None:
         matched = _exact(existing_by_location_id.get(location_id, []))
@@ -1398,7 +1470,8 @@ def _match_by_url_identity(name, url, website_id, location_id, crawl_event_slots
     - the two locations must be the same, unknown, or within
       URL_IDENTITY_MAX_KM of each other.
 
-    When several events qualify, one sitting at the crawl_event's OWN location
+    When several events qualify, a visible candidate wins over a suppressed
+    twin. Within each group, one sitting at the crawl_event's OWN location
     wins over a merely-nearby one (a cinema whose two branch rows both ended up
     holding one branch's URL must not have the wrong branch picked), and ties
     break to the lowest id so the choice is deterministic and prefers the oldest
@@ -1419,7 +1492,7 @@ def _match_by_url_identity(name, url, website_id, location_id, crawl_event_slots
     if not norm_name:
         return None
 
-    best = None  # (0 if same location_id else 1, event_id)
+    best = None  # (suppressed, 0 if same location_id else 1, event_id)
     for existing in existing_by_url.get(index_key, []):
         if normalize_name_for_dedup(existing['name']) != norm_name:
             continue
@@ -1428,11 +1501,12 @@ def _match_by_url_identity(name, url, website_id, location_id, crawl_event_slots
         existing_loc_id = existing.get('location_id')
         if not _locations_within(location_id, existing_loc_id, location_coords):
             continue
-        rank = (0 if (location_id is not None and existing_loc_id == location_id) else 1,
+        rank = (bool(existing.get('suppressed')),
+                0 if (location_id is not None and existing_loc_id == location_id) else 1,
                 existing['id'])
         if best is None or rank < best:
             best = rank
-    return best[1] if best else None
+    return best[2] if best else None
 
 
 # ── Sibling-listing veto ──────────────────────────────────────────────────────
@@ -1792,6 +1866,66 @@ def resolve_stale_location_name(stored_name, current_location_id, location_names
     return None
 
 
+def _grouped_event_urls(raw_data):
+    """Read processed series links without trusting malformed legacy raw data."""
+    if isinstance(raw_data, str):
+        try:
+            raw_data = json.loads(raw_data)
+        except (ValueError, TypeError):
+            return []
+    if not isinstance(raw_data, dict) or not isinstance(raw_data.get('urls'), list):
+        return []
+    urls = []
+    for value in raw_data['urls']:
+        if not isinstance(value, str):
+            continue
+        value = value.strip()
+        if not value or len(value) > 2000 or re.search(r'\s', value):
+            continue
+        try:
+            parsed = urlsplit(value)
+            if parsed.scheme not in ('http', 'https') or not parsed.hostname or parsed.username:
+                continue
+            parsed.port  # Reject malformed ports as well as malformed hosts.
+        except ValueError:
+            continue
+        value = site_profiles.canonicalize_url(value)
+        if value not in urls:
+            urls.append(value)
+    return urls
+
+
+def _merge_grouped_event_urls(cursor, event_id, raw_data, listing_urls):
+    """Retain secondary session links after identity matching has finished.
+
+    These links never enter the matching indexes. The processor appends the
+    source listing to raw_data.urls too; omit it when detail links exist.
+    Preserve current detail priority and append new links in source order.
+    """
+    listing_urls = {site_profiles.canonicalize_url(u).rstrip('/') for u in listing_urls}
+    incoming = [u for u in _grouped_event_urls(raw_data)
+                if u.rstrip('/') not in listing_urls]
+    if not incoming:
+        return
+    cursor.execute('SELECT id, url, sort_order FROM event_urls WHERE event_id = %s',
+                   (event_id,))
+    existing = cursor.fetchall()
+    detail_rows = [r for r in existing
+                   if site_profiles.canonicalize_url(r[1]).rstrip('/') not in listing_urls]
+    for row_id, url, _ in existing:
+        if site_profiles.canonicalize_url(url).rstrip('/') in listing_urls:
+            cursor.execute('DELETE FROM event_urls WHERE id = %s', (row_id,))
+    seen = {site_profiles.canonicalize_url(r[1]) for r in detail_rows}
+    order = max((r[2] or 0 for r in detail_rows), default=-1) + 1
+    for url in incoming:
+        if url in seen:
+            continue
+        cursor.execute('INSERT INTO event_urls (event_id, url, sort_order) VALUES (%s, %s, %s)',
+                       (event_id, url, order))
+        seen.add(url)
+        order += 1
+
+
 def _demote_other_primary_urls(cursor, event_id, keep_id=None):
     """Ensure at most one `event_urls` row for `event_id` keeps sort_order = 0.
 
@@ -2048,7 +2182,7 @@ def filter_single_occasion_occurrences(event_name, incoming_name, occurrences,
     return occurrences, report
 
 
-def _merge_occurrences_into_event(cursor, event_id, new_occurrences):
+def _merge_occurrences_into_event(cursor, event_id, new_occurrences, *, crawl_event_id=None):
     """Insert new occurrences into event_occurrences, deduping by (sd, st, ed).
 
     Within a (start_date, end_date) bucket, a row with non-empty start_time supersedes
@@ -2062,6 +2196,10 @@ def _merge_occurrences_into_event(cursor, event_id, new_occurrences):
     before the dedupe key is built, and again by the db write helpers, so the
     key compares strings in a single normalized form.
 
+    With source provenance, a separately published untimed date envelope may
+    yield to complete, nonconflicting daily sessions (schedule_envelopes).
+    Original crawl evidence is retained.
+
     new_occurrences is an iterable of (start_date, start_time, end_date, end_time, ...).
     """
     cursor.execute(
@@ -2071,6 +2209,12 @@ def _merge_occurrences_into_event(cursor, event_id, new_occurrences):
         (event_id,),
     )
     existing_rows = cursor.fetchall()
+    new_occurrences = list(new_occurrences)
+    if (crawl_event_id is not None
+            and any(envelope(r) for r in existing_rows + new_occurrences)
+            and any(r[1] and r[2] in (None, r[0]) for r in existing_rows + new_occurrences)):
+        existing_rows, new_occurrences = reconcile_envelopes(
+            cursor, event_id, crawl_event_id, existing_rows, new_occurrences)
     # (sd, start_time, ed) -> end_time. Legacy data may have multiple rows per key
     # (pre-tightening); we keep the first non-empty end_time we see so the new
     # merger doesn't clobber a real value with a stale empty one.
@@ -2086,6 +2230,7 @@ def _merge_occurrences_into_event(cursor, event_id, new_occurrences):
             existing_by_key[key] = et_s
         starts_by_date.setdefault((sd, ed), set()).add(st_s)
     next_sort = max((row[4] for row in existing_rows), default=-1) + 1
+    is_exhibition = None
 
     for occ in new_occurrences:
         sd = occ[0]
@@ -2095,6 +2240,35 @@ def _merge_occurrences_into_event(cursor, event_id, new_occurrences):
         # collapse to '5:38pm').
         new_st = _standardize_time(occ[1])
         new_et = _standardize_time(occ[3])
+
+        # A closing-date-only exhibition gets today's date during processing.
+        # Repeated crawls must not accumulate nested, untimed spans for the
+        # same closing date. Keep the earliest evidenced opening date. Do not
+        # reconcile conflicting closing dates or touch timed sessions here.
+        same_end_spans = []
+        if not new_st and not new_et and ed and sd and sd < ed:
+            same_end_spans = [
+                old_key for old_key, old_et in existing_by_key.items()
+                if old_key[2] == ed and old_key[0] and old_key[0] < ed
+                and old_key[0] != sd and not old_key[1] and not old_et
+            ]
+        if same_end_spans:
+            if is_exhibition is None:
+                cursor.execute('SELECT event_type FROM events WHERE id = %s', (event_id,))
+                event_row = cursor.fetchone()
+                is_exhibition = bool(event_row and event_row[0] == 'Exhibition')
+            if is_exhibition:
+                if any(old_sd < sd for old_sd, _st, _ed in same_end_spans):
+                    continue
+                for old_sd, old_st, old_ed in same_end_spans:
+                    cursor.execute(
+                        "DELETE FROM event_occurrences WHERE event_id = %s "
+                        "AND start_date = %s AND (start_time IS NULL OR start_time = '') "
+                        "AND end_date = %s AND (end_time IS NULL OR end_time = '')",
+                        (event_id, old_sd, old_ed),
+                    )
+                    existing_by_key.pop((old_sd, old_st, old_ed), None)
+                    starts_by_date[(old_sd, old_ed)].discard(old_st)
 
         date_key = (sd, ed)
         existing_starts = starts_by_date.get(date_key, set())
@@ -2165,7 +2339,8 @@ def _merge_occurrences_into_event(cursor, event_id, new_occurrences):
         starts_by_date[date_key] = existing_starts
 
 
-def _deduplicate_same_name_events(cursor, connection, current_date, edit_logger=None):
+def _deduplicate_same_name_events(cursor, connection, current_date, edit_logger=None,
+                                  *, website_ids=None):
     """Find and merge exact-name duplicate events within the same website.
 
     Catches duplicates that slip through the main matching logic when AI extraction
@@ -2189,6 +2364,9 @@ def _deduplicate_same_name_events(cursor, connection, current_date, edit_logger=
     moves its event_sources, so the next crawl merges into the survivor instead
     of resurrecting the stale copy.
 
+    A nonempty website_ids list restricts cleanup to those websites, matching
+    merge_crawl_events' input scope. Unfiltered runs retain global cleanup.
+
     Returns the number of duplicate events removed.
     """
     # Fetch candidate (name, website, date, time) tuples and group in Python so
@@ -2198,7 +2376,7 @@ def _deduplicate_same_name_events(cursor, connection, current_date, edit_logger=
     # Active-but-suppressed events stay excluded (a human hid them; the dedupe
     # workflow owns those), but archived rows are included regardless of
     # suppression so stale twins of re-listed events get absorbed.
-    cursor.execute("""
+    candidate_query = """
         SELECT LOWER(TRIM(e.name)) AS norm_name, e.website_id, e.id,
                eo.start_date, eo.start_time, e.location_id,
                e.archived, e.suppressed, e.location_name
@@ -2206,7 +2384,13 @@ def _deduplicate_same_name_events(cursor, connection, current_date, edit_logger=
         JOIN event_occurrences eo ON eo.event_id = e.id
         WHERE eo.start_date >= %s
           AND (e.archived = 1 OR e.suppressed = 0)
-    """, (current_date,))
+    """
+    candidate_params = [current_date]
+    if website_ids:
+        placeholders = ','.join(['%s'] * len(website_ids))
+        candidate_query += f" AND e.website_id IN ({placeholders})"
+        candidate_params.extend(website_ids)
+    cursor.execute(candidate_query, candidate_params)
 
     groups = {}
     event_location = {}  # event_id -> location_id (for the cross-location guard)
@@ -2277,13 +2461,45 @@ def _deduplicate_same_name_events(cursor, connection, current_date, edit_logger=
     # keeper always exists, regardless of dict iteration order.
     merged_into = {}
 
+    # Decisions are edges between event identities. Repoint those edges when
+    # an allowed merge changes an identity, both here and in the DB: checking
+    # only the original pair IDs loses the decision across chains or runs.
+    cursor.execute("SELECT event_id_a, event_id_b FROM dedupe_dismissed_pairs")
+    dismissed_neighbors = {}
+    for a, b in cursor.fetchall():
+        dismissed_neighbors.setdefault(a, set()).add(b)
+        dismissed_neighbors.setdefault(b, set()).add(a)
+
+    def _pair_is_dismissed(a, b):
+        return b in dismissed_neighbors.get(a, ())
+
     def resolve(event_id):
         while event_id in merged_into:
             event_id = merged_into[event_id]
         return event_id
 
     def _merge_pair_into(keep_id, remove_id):
-        """Fold remove_id into keep_id: move sources/occurrences, delete the dup."""
+        """Fold an allowed duplicate into its keeper; return whether it merged."""
+        if _pair_is_dismissed(keep_id, remove_id):
+            return False
+
+        neighbors = dismissed_neighbors.get(remove_id, set()).copy()
+        if neighbors:
+            # Keep the original decision for provenance, and preserve its
+            # reason/time on the surviving pair. An existing keeper decision
+            # takes precedence over inherited metadata (INSERT IGNORE).
+            cursor.execute("""
+                INSERT IGNORE INTO dedupe_dismissed_pairs
+                    (event_id_a, event_id_b, reason, dismissed_at)
+                SELECT LEAST(%s, IF(event_id_a = %s, event_id_b, event_id_a)),
+                       GREATEST(%s, IF(event_id_a = %s, event_id_b, event_id_a)),
+                       reason, dismissed_at
+                FROM dedupe_dismissed_pairs
+                WHERE (event_id_a = %s OR event_id_b = %s)
+                  AND event_id_a <> %s AND event_id_b <> %s
+            """, (keep_id, remove_id, keep_id, remove_id,
+                  remove_id, remove_id, keep_id, keep_id))
+
         # Transfer event_sources that don't already exist on the keeper
         cursor.execute("""
             UPDATE event_sources SET event_id = %s
@@ -2356,11 +2572,12 @@ def _deduplicate_same_name_events(cursor, connection, current_date, edit_logger=
         merge_assignments(cursor, keep_id, remove_id)
         cursor.execute("DELETE FROM events WHERE id = %s", (remove_id,))
         merged_into[remove_id] = keep_id
-
-    # Human "not a duplicate" decisions from the dedupe workflow are binding —
-    # never absorb across a dismissed pair.
-    cursor.execute("SELECT event_id_a, event_id_b FROM dedupe_dismissed_pairs")
-    dismissed_pairs = {frozenset(row) for row in cursor.fetchall()}
+        for neighbor in neighbors:
+            dismissed_neighbors.setdefault(keep_id, set()).add(neighbor)
+            dismissed_neighbors[neighbor].discard(remove_id)
+            dismissed_neighbors[neighbor].add(keep_id)
+        dismissed_neighbors.pop(remove_id, None)
+        return True
 
     removed = 0
     for _key, ids in dup_groups:
@@ -2389,7 +2606,8 @@ def _deduplicate_same_name_events(cursor, connection, current_date, edit_logger=
         for eid in active:  # active is id-ordered, so each cluster's first member is its keeper
             loc = event_location.get(eid)
             for cl in clusters:
-                if cl[1] is None or loc is None or cl[1] == loc:
+                if ((cl[1] is None or loc is None or cl[1] == loc)
+                        and not any(_pair_is_dismissed(eid, member) for member in cl[2])):
                     cl[2].append(eid)
                     if cl[1] is None and loc is not None:
                         cl[1] = loc  # pin the cluster to the first known location
@@ -2399,8 +2617,8 @@ def _deduplicate_same_name_events(cursor, connection, current_date, edit_logger=
 
         for keep_id, _cluster_loc, members in clusters:
             for remove_id in members[1:]:
-                _merge_pair_into(keep_id, remove_id)
-                removed += 1
+                if _merge_pair_into(keep_id, remove_id):
+                    removed += 1
 
         # Absorb stale archived twins into a location-compatible active keeper.
         # Location compatibility is looser here than for active-active merges:
@@ -2418,7 +2636,7 @@ def _deduplicate_same_name_events(cursor, connection, current_date, edit_logger=
             dead_urls = event_url_keys.get(dead_id, set())
             for cl in clusters:
                 keep_id = cl[0]
-                if frozenset((keep_id, dead_id)) in dismissed_pairs:
+                if _pair_is_dismissed(keep_id, dead_id):
                     continue
                 loc_compatible = cl[1] is None or dead_loc is None or cl[1] == dead_loc
                 name_compatible = bool(dead_loc_name) and dead_loc_name == event_loc_name.get(keep_id, '')
@@ -2432,9 +2650,9 @@ def _deduplicate_same_name_events(cursor, connection, current_date, edit_logger=
                 # archived twin almost always means "hidden as a duplicate copy"
                 # (find_duplicate_events --suppress), not "this event is
                 # uninteresting" — copying it would hide the live keeper.
-                _merge_pair_into(keep_id, dead_id)
-                removed += 1
-                break
+                if _merge_pair_into(keep_id, dead_id):
+                    removed += 1
+                    break
 
     _retry_on_deadlock(connection.commit)
     return removed
@@ -2788,12 +3006,12 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
     if event_ids_with_future:
         placeholders = ','.join(['%s'] * len(event_ids_with_future))
         cursor.execute(f"""
-            SELECT eu.event_id, eu.url, e.name, e.website_id, e.location_id
+            SELECT eu.event_id, eu.url, e.name, e.website_id, e.location_id, e.suppressed
             FROM event_urls eu
             JOIN events e ON e.id = eu.event_id
             WHERE eu.event_id IN ({placeholders})
         """, tuple(event_ids_with_future))
-        for event_id, event_url, event_name, event_website_id, event_location_id in cursor.fetchall():
+        for event_id, event_url, event_name, event_website_id, event_location_id, suppressed in cursor.fetchall():
             if event_website_id is None or not event_name:
                 continue
             url_key = normalize_url_for_identity(event_url)
@@ -2812,6 +3030,7 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                 'name': event_name,
                 'location_id': event_location_id,
                 'slots': slots,
+                'suppressed': bool(suppressed),
             })
     url_key_name_counts = {k: len(v) for k, v in url_key_names.items()}
 
@@ -2836,6 +3055,7 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
     pending_ce_ids = [row[0] for row in new_crawl_events]
     occurrences_by_ce = {}
     tags_by_ce = {}
+    raw_data_by_ce = {}
     for i in range(0, len(pending_ce_ids), 1000):
         chunk = pending_ce_ids[i:i + 1000]
         placeholders = ','.join(['%s'] * len(chunk))
@@ -2853,6 +3073,9 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
             tuple(chunk))
         for ce_id_, tag in cursor.fetchall():
             tags_by_ce.setdefault(ce_id_, []).append(tag)
+        cursor.execute(f'SELECT id, raw_data FROM crawl_events WHERE id IN ({placeholders})',
+                       tuple(chunk))
+        raw_data_by_ce.update(cursor.fetchall())
 
     # ── Match crawl events to existing events or create new ones ──
     new_events_count = 0
@@ -3238,7 +3461,7 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                 event_id=matched_event_id,
             )
             _merge_occurrences_into_event(
-                cursor, matched_event_id, merge_occurrences,
+                cursor, matched_event_id, merge_occurrences, crawl_event_id=ce_id,
             )
 
             # Add URL if not already present.
@@ -3298,6 +3521,10 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                             "INSERT INTO event_urls (event_id, url, sort_order) VALUES (%s, %s, 99)",
                             (matched_event_id, trimmed_url)
                         )
+
+            _merge_grouped_event_urls(
+                cursor, matched_event_id, raw_data_by_ce.get(ce_id),
+                source_url_listing_set(cursor, source_url_lookup_cache, website_id))
 
             # Update location_id if missing or if the new value is the website's
             # linked location (corrects stale fuzzy-match errors from earlier crawls)
@@ -3411,6 +3638,12 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                     backfill_values,
                 )
 
+            # Recover ordinary same-source room/text metadata independently of
+            # the location-label placeholder and grouped-session paths.
+            refresh_source_metadata(cursor, matched_event_id, ce_id,
+                                    today=current_date, edit_logger=edit_logger)
+            refresh_source_session_details(cursor, matched_event_id, ce_id,
+                                           raw_data_by_ce.get(ce_id))
             # Update tags using majority vote across crawl history
             if tags:
                 voted_tags = compute_voted_tags(
@@ -3482,6 +3715,10 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                     (new_event_id, url[:2000])
                 )
 
+            _merge_grouped_event_urls(
+                cursor, new_event_id, raw_data_by_ce.get(ce_id),
+                source_url_listing_set(cursor, source_url_lookup_cache, website_id))
+
             # Add tags
             db.upsert_event_tags(cursor, new_event_id, tags)
 
@@ -3539,7 +3776,9 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
     # This happens when AI extraction assigns different locations between crawls,
     # causing the merger to create a new event instead of matching the existing one.
     if new_events_count > 0:
-        deduped = _retry_on_deadlock(_deduplicate_same_name_events, cursor, connection, current_date, edit_logger)
+        deduped = _retry_on_deadlock(
+            _deduplicate_same_name_events, cursor, connection, current_date,
+            edit_logger, website_ids=website_ids)
         if deduped > 0:
             print(f"  Post-merge dedup: merged {deduped} duplicate(s)")
 
@@ -3596,7 +3835,11 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
             # Events whose every source website is now disabled are unreachable
             # from the per-website loop above (a disabled website is never
             # crawled, so no iteration ever runs for it). Sweep them once per
-            # merge. See db.archive_dead_source_events.
+            # merge, globally: even automatic runs freeze website_ids to the
+            # sites they crawled, excluding these disabled sources. The helper
+            # checks all contributing sources and the future-event grace;
+            # filtering by either crawl scope or events.website_id is unsafe.
+            # See db.archive_dead_source_events.
             dead_archived, dead_upcoming = _retry_on_deadlock(
                 db.archive_dead_source_events, cursor, connection, temps_built=True)
             if dead_archived > 0:

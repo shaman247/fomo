@@ -32,36 +32,21 @@ Widen the interval only to cover the actual crawl window you are triaging.
 
 > **The run-window bound is REQUIRED, and it replaces the old
 > `ce.created_at >= cr.crawled_at` predicate.** Be precise about why, because the
-> row lifecycle is per-DAY, not per-crawl:
+> row lifecycle distinguishes daily runs from individual attempts (updated 2026-09-20):
 >
-> * `crawl_runs` is `UNIQUE (run_date)`, so there is exactly **one run row per
->   calendar day**.
-> * `crawl_results` is `UNIQUE (crawl_run_id, filename)`, and
->   `db.create_crawl_result` resolves by **`(crawl_run_id, website_id)` first** —
->   if this website already has a row in today's run it **reuses** that row
->   (resetting `status` to `'pending'`) and only falls through to
->   `INSERT ... ON DUPLICATE KEY UPDATE` for a website with no row yet.
-> * So a website gets **one new `crawl_results` row per calendar day**, and a
->   **same-day re-crawl UPDATEs that row in place**: `db.update_crawl_result`
->   overwrites `crawled_at`, `crawled_content`, `content_hash` and `event_count`
->   and nulls `merged_at`, while `id` and `created_at` stay put. Verified
->   2026-09-15 on cr124494 (w407 Manhattan CB12, run 355): same id,
->   `created_at` 02:34:16 unchanged, `crawled_at` 02:34 → 05:25, `event_count`
->   15 → 9. Across days the rows really do accumulate one per run (w3 carries
->   168 rows over 168 distinct runs) — which is what the 2026-09-04 note meant,
->   and it is only true **between** runs, never within one.
+> * `crawl_runs` remains unique per calendar day.
+> * `create_crawl_result` reuses only a pending/failed attempt for the same website
+>   and logical source filename. A completed (`crawled`, `extracted`, `processed`)
+>   snapshot is preserved, and a same-day re-crawl gets a new id and generated
+>   filename. Independent imports such as Picnob remain separate surfaces.
+> * Newer successful crawls supersede failed retries of the same logical source,
+>   including generated filename suffixes. A failed navigation cannot reset the
+>   previous processed snapshot to pending.
 >
-> That is why the old predicate fails: within a day it does isolate the latest
-> extraction (its original purpose), but across days it is trivially true for
-> every historical row, so it bounds nothing and the query returns the entire
-> backlog of dead rows from past crawls. The date bound is what does the work.
->
-> **Consequence for triage: a same-day re-crawl DESTROYS the row you are
-> triaging.** Re-running `main.py --ids` (Step 4) overwrites that crawl_result's
-> `crawled_at`, `crawled_content` and `event_count` in place — there is no prior
-> version to diff against. **Capture the `crawl_results.id`, `crawled_at` and
-> `event_count` (and the crawl_event ids/names) of every row you are working from
-> BEFORE you re-crawl**, or the before/after comparison in Step 4 has no "before".
+> The old `ce.created_at >= cr.crawled_at` predicate still does not bound historical
+> rows; keep the explicit run-window date bound. Capture ids and timestamps before
+> re-crawling so comparisons identify the intended attempts, including retries of
+> failed rows that can still be reused.
 >
 > Measured 2026-09-04: **unbounded returns 26,398 rows across 1,242 sites; bounded
 > to the run returns 33 rows across 22 sites** — an 800× inflation that reads as a

@@ -183,6 +183,16 @@
       "sha256": "8a01ca784f7bc17776d76eb47fff1e8809b66061759ae9f0b0dec88a99dfaa5b"
     },
     {
+      "id": "noto-00a9",
+      "emoji": "©",
+      "label": "COPYRIGHT SIGN",
+      "source": "noto/emoji_u00a9.svg",
+      "provider": "noto",
+      "upstream_path": "svg/emoji_u00a9.svg",
+      "upstream_revision": "8998f5dd683424a73e2314a8c1f1e359c19e8742",
+      "sha256": "5a4a7b0c30a491873a772130dafe26f14acd0fe2de2ce0c6e0c4c6d5ce72c296"
+    },
+    {
       "id": "noto-1f004",
       "emoji": "🀄",
       "label": "MAHJONG TILE RED DRAGON",
@@ -1551,6 +1561,16 @@
       "upstream_path": "svg/emoji_u1f236.svg",
       "upstream_revision": "8998f5dd683424a73e2314a8c1f1e359c19e8742",
       "sha256": "a90eb689a5c4b502656a630287fef3d7635720c339eb6433329f9a3dc044db1f"
+    },
+    {
+      "id": "noto-1f238",
+      "emoji": "🈸",
+      "label": "SQUARED CJK UNIFIED IDEOGRAPH-7533",
+      "source": "noto/emoji_u1f238.svg",
+      "provider": "noto",
+      "upstream_path": "svg/emoji_u1f238.svg",
+      "upstream_revision": "8998f5dd683424a73e2314a8c1f1e359c19e8742",
+      "sha256": "6b089fa9323b4a965c9cdd26b4b819231a8017112fdb0561745f37a0f6d3cf94"
     },
     {
       "id": "noto-1f250",
@@ -5633,6 +5653,16 @@
       "sha256": "cc4eeca34336487dde6767d3d320c1e4c743bd7e52853f85ba5810acfa5d6b3d"
     },
     {
+      "id": "noto-1f468-200d-1f9b3",
+      "emoji": "👨‍🦳",
+      "label": "MAN EMOJI COMPONENT WHITE HAIR",
+      "source": "noto/emoji_u1f468_200d_1f9b3.svg",
+      "provider": "noto",
+      "upstream_path": "svg/emoji_u1f468_200d_1f9b3.svg",
+      "upstream_revision": "8998f5dd683424a73e2314a8c1f1e359c19e8742",
+      "sha256": "a2b7f742b00471c4ce40431d1409fd3bb2a727b60d9f3ccb7439c8b844f4cc6c"
+    },
+    {
       "id": "noto-1f468-200d-2695",
       "emoji": "👨‍⚕",
       "label": "MAN STAFF OF AESCULAPIUS",
@@ -7081,6 +7111,16 @@
       "upstream_path": "svg/emoji_u1f49e.svg",
       "upstream_revision": "8998f5dd683424a73e2314a8c1f1e359c19e8742",
       "sha256": "c5a43bc5d12bae090cda552502424786b0cc61e21b1a1019dc3a33ba36f3b635"
+    },
+    {
+      "id": "noto-1f49f",
+      "emoji": "💟",
+      "label": "HEART DECORATION",
+      "source": "noto/emoji_u1f49f.svg",
+      "provider": "noto",
+      "upstream_path": "svg/emoji_u1f49f.svg",
+      "upstream_revision": "8998f5dd683424a73e2314a8c1f1e359c19e8742",
+      "sha256": "96041001ff4db2c17cfb63ce4efe4a8fa0ae78e74f41b6013f3d6a377901e83c"
     },
     {
       "id": "noto-1f4a0",
@@ -8661,6 +8701,16 @@
       "upstream_path": "svg/emoji_u1f555.svg",
       "upstream_revision": "8998f5dd683424a73e2314a8c1f1e359c19e8742",
       "sha256": "abeebbc035be0203c87d03e581de578775946320abcb7e45bc689ac91c34d037"
+    },
+    {
+      "id": "noto-1f556",
+      "emoji": "🕖",
+      "label": "CLOCK FACE SEVEN OCLOCK",
+      "source": "noto/emoji_u1f556.svg",
+      "provider": "noto",
+      "upstream_path": "svg/emoji_u1f556.svg",
+      "upstream_revision": "8998f5dd683424a73e2314a8c1f1e359c19e8742",
+      "sha256": "c4e30a1a3c2b58f0d73d2ea2af9b382c9c448b16507f4c23ed72094d3b0f6c78"
     },
     {
       "id": "noto-1f557",

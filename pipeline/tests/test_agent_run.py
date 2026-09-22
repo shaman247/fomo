@@ -84,9 +84,102 @@ class AgentRunTests(unittest.TestCase):
         self.assertEqual(saved['crawl_result_ids'], [11])
         self.assertEqual(saved['website_ids'], [7])
         self.assertEqual(saved['source_hashes'], {'11': 'abc'})
+        self.assertEqual(saved['prompt_snapshot'],
+                         agent_extraction.snapshot_prompts(main.extractor.prompt_templates()))
         process.assert_not_called()
         publish.assert_not_called()
         complete.assert_not_called()
+
+    def start_with_surfaces(self, urls, stored, crawl_id=22, explicit=True):
+        """Exercise real crawl selection/snapshotting without network or writes."""
+        fresh_dir = self.root / 'mixed-source-run'
+        pending = agent_extraction.AgentExtractionPending('job', fresh_dir / 'request.json')
+        _, extract, process, due, incomplete, _, publish, _ = self.mocked_run(
+            extraction=AsyncMock(side_effect=pending))
+        due.return_value = [dict(id=7, name='Venue', urls=urls)]
+        incomplete.return_value = stored
+        records = {r['crawl_result_id']: r for r in stored}
+        if crawl_id:
+            records[crawl_id] = dict(self.result, crawl_result_id=crawl_id,
+                                     filename='venue.md', source_hash='fresh-web')
+        with patch.object(main.db, 'get_or_create_crawl_run', return_value=3), \
+             patch.object(main.site_profiles, 'all_skip', side_effect=lambda urls: all(
+                 u.startswith('https://www.instagram.com/') for u in urls)), \
+             patch.object(main.crawler, 'get_browser_config'), \
+             patch.object(main.processor, 'managed_crawler', side_effect=lambda _: nullcontext(Mock())), \
+             patch.object(main.crawler, 'crawl_website', new=AsyncMock(return_value=crawl_id)) as crawl, \
+             patch.object(agent_run, 'read_results', side_effect=lambda c, ids: [records[i] for i in ids]):
+            outcome = asyncio.run(main._run_pipeline(
+                work_dir=fresh_dir, website_ids=[7] if explicit else None))
+        self.assertIsNone(outcome)  # Agent review is pending, never publication.
+        process.assert_not_called()
+        publish.assert_not_called()
+        return agent_run.load(fresh_dir), extract, crawl
+
+    def test_targeted_mixed_source_keeps_import_and_replaces_old_web_capture(self):
+        imported = dict(self.result, filename='picnob_venue_123.md')
+        web = dict(self.result, crawl_result_id=12, filename='venue.md')
+        saved, extract, crawl = self.start_with_surfaces(
+            [{'url': 'https://www.instagram.com/venue/'}, {'url': 'https://example.org/events'}],
+            [imported, web])
+        self.assertEqual(saved['crawl_result_ids'], [11, 22])
+        self.assertEqual(saved['source_hashes'], {'11': 'abc', '22': 'fresh-web'})
+        self.assertEqual([c.args[2] for c in extract.await_args_list], [11, 22])
+        crawl.assert_awaited_once()
+
+    def test_targeted_mixed_source_keeps_import_when_web_crawl_fails(self):
+        imported = dict(self.result, filename='picnob_venue_123.md')
+        saved, extract, _ = self.start_with_surfaces(
+            ['https://www.instagram.com/venue/', 'https://example.org/events'],
+            [imported], crawl_id=None)
+        self.assertEqual(saved['crawl_result_ids'], [11])
+        self.assertEqual(extract.await_args.args[2], 11)
+
+    def test_targeted_mixed_source_keeps_extracted_import_without_reextracting(self):
+        imported = dict(self.result, status='extracted', filename='picnob_venue_123_w7_retry5.md')
+        saved, extract, _ = self.start_with_surfaces(
+            ['https://www.instagram.com/venue/', 'https://example.org/events'], [imported])
+        self.assertEqual(saved['crawl_result_ids'], [11, 22])
+        self.assertEqual([c.args[2] for c in extract.await_args_list], [22])
+
+    def test_targeted_web_only_still_replaces_old_web_capture(self):
+        saved, extract, _ = self.start_with_surfaces(
+            ['https://example.org/events'], [dict(self.result, filename='venue_picnob_notes.md')])
+        self.assertEqual(saved['crawl_result_ids'], [22])
+        self.assertEqual(extract.await_args.args[2], 22)
+
+    def test_automatic_mixed_source_finishes_import_without_recrawling(self):
+        saved, extract, crawl = self.start_with_surfaces(
+            ['https://www.instagram.com/venue/', 'https://example.org/events'],
+            [dict(self.result, filename='picnob_venue_123.md')], explicit=False)
+        self.assertEqual(saved['crawl_result_ids'], [11])
+        self.assertEqual(extract.await_args.args[2], 11)
+        crawl.assert_not_awaited()
+
+    def test_targeted_skip_only_source_keeps_legacy_stored_capture(self):
+        saved, extract, _ = self.start_with_surfaces(
+            ['https://www.instagram.com/venue/'],
+            [dict(self.result, filename=None)], crawl_id=None)
+        self.assertEqual(saved['crawl_result_ids'], [11])
+        self.assertEqual(extract.await_args.args[2], 11)
+
+    def test_mixed_source_resume_processes_both_exact_ids_without_recrawl(self):
+        records = {11: dict(self.result, status='extracted'),
+                   22: dict(self.result, crawl_result_id=22, source_hash='web')}
+        self.state.update(crawl_result_ids=[11, 22], source_hashes={'11': 'abc', '22': 'web'})
+        agent_run.save(self.root, self.state)
+        _, extract, process, due, incomplete, _, publish, _ = self.mocked_run()
+        def process_row(*args, **kwargs):
+            records[args[2]]['status'] = 'processed'
+            return 1
+        process.side_effect = process_row
+        with patch.object(agent_run, 'read_results', side_effect=lambda c, ids: [records[i] for i in ids]):
+            self.assertTrue(self.run_resume())
+        self.assertEqual(extract.await_args.args[2], 22)
+        self.assertEqual([c.args[2] for c in process.call_args_list], [11, 22])
+        due.assert_not_called()
+        incomplete.assert_not_called()
+        self.assertEqual(publish.call_args.args[2], [7])
 
     def test_empty_saved_scope_cannot_turn_into_global_publish(self):
         self.state.update(crawl_result_ids=[], source_hashes={}, website_ids=[])

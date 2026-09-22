@@ -14,9 +14,9 @@ import extractor
 
 
 class FailedRetryTests(unittest.TestCase):
-    def incomplete_row(self, crid, status, chars, superseded=False):
+    def incomplete_row(self, crid, status, chars, superseded=False, filename='venue.md'):
         return (crid, status, 7, 3, 'Venue', '', date(2026, 9, 16),
-                'crawled' if status == 'failed' else status, None, chars, int(superseded))
+                'crawled' if status == 'failed' else status, None, chars, int(superseded), filename)
 
     def saved_row(self, crid=11, status='failed', content='x' * 700, superseded=False):
         return (crid, status, 7, 3, 'Venue', '', date(2026, 9, 16),
@@ -47,6 +47,18 @@ class FailedRetryTests(unittest.TestCase):
         self.assertIn("newer.status IN ('extracted', 'processed')", query)
         self.assertIn('newer.crawled_at > cr.crawled_at', query)
         self.assertEqual(params, [7])
+
+    def test_import_filename_survives_incomplete_discovery_and_retry(self):
+        cursor = Mock()
+        cursor.fetchall.return_value = [
+            self.incomplete_row(11, 'crawled', 900, filename='picnob_venue_123.md'),
+            self.incomplete_row(12, 'failed', 900, filename='picnob_venue_456_w7_retry5.md'),
+            self.incomplete_row(13, 'extracted', 900, filename=None),
+        ]
+        results = db.get_incomplete_crawl_results(cursor)
+        self.assertEqual([r['filename'] for r in results],
+                         ['picnob_venue_123.md', 'picnob_venue_456_w7_retry5.md', None])
+        self.assertEqual(results[1]['status'], 'crawled')
 
     def test_saved_legacy_failures_remain_visible_for_verified_retirement(self):
         cursor = Mock()

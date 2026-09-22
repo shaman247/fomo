@@ -263,6 +263,54 @@ class TestArchiveDeadSourceEvents(ArchivalTestBase):
         archived, _ = db.archive_dead_source_events(self.cursor, self.connection)
         self.assertEqual(archived, 0)
 
+    def test_enabled_owner_is_not_a_substitute_for_an_enabled_source(self):
+        self.add_website(1)
+        self.add_website(2, disabled=True)
+        self.add_event(206, website_id=1)
+        self.add_crawl(20, website_id=2, days_ago=45, event_ids=[206])
+        archived, _ = db.archive_dead_source_events(self.cursor, self.connection)
+        self.assertEqual(archived, 1)
+        self.assertEqual(self.archived_ids(), [206])
+
+    def test_enabled_secondary_source_protects_disabled_owners_event(self):
+        self.add_website(1)
+        self.add_website(2, disabled=True)
+        self.add_event(207, website_id=2, future_days=20)
+        self.add_crawl(20, website_id=2, days_ago=60, event_ids=[207])
+        self.add_crawl(10, website_id=1, days_ago=45, event_ids=[207])
+        archived, _ = db.archive_dead_source_events(self.cursor, self.connection)
+        self.assertEqual(archived, 0)
+        self.assertEqual(self.archived_ids(), [])
+
+    def test_newest_disabled_source_preserves_grace_across_all_sources(self):
+        self.add_website(1, disabled=True)
+        self.add_website(2, disabled=True)
+        self.add_event(208, website_id=1, future_days=20)
+        self.add_crawl(10, website_id=1, days_ago=60, event_ids=[208])
+        self.add_crawl(20, website_id=2, days_ago=1, event_ids=[208])
+        archived, _ = db.archive_dead_source_events(self.cursor, self.connection)
+        self.assertEqual(archived, 0)
+        self.assertEqual(self.archived_ids(), [])
+
+    def test_all_disabled_sources_archive_after_newest_support_grace(self):
+        self.add_website(1, disabled=True)
+        self.add_website(2, disabled=True)
+        self.add_event(209, website_id=1, future_days=20)
+        self.add_crawl(10, website_id=1, days_ago=60, event_ids=[209])
+        self.add_crawl(20, website_id=2, days_ago=15, event_ids=[209])
+        archived, upcoming = db.archive_dead_source_events(self.cursor, self.connection)
+        self.assertEqual(archived, 1)
+        self.assertEqual(self.archived_ids(), [209])
+        self.assertEqual([row[0] for row in upcoming], [209])
+
+    def test_failed_source_history_alone_does_not_authorize_archival(self):
+        self.add_website(2, disabled=True)
+        self.add_event(210, website_id=2)
+        self.add_crawl(20, website_id=2, days_ago=45, event_ids=[210], status='failed')
+        archived, _ = db.archive_dead_source_events(self.cursor, self.connection)
+        self.assertEqual(archived, 0)
+        self.assertEqual(self.archived_ids(), [])
+
 
 class TestInstagramOnlySourcesKeepFutureEvents(ArchivalTestBase):
     """Absence from a picnob bundle is not evidence the event was delisted.

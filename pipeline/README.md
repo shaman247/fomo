@@ -113,6 +113,20 @@ Run from the repository root, using a unique directory for each crawl run:
 ```
 
 Exit **2** means extraction needs agent work; merge/export/upload have not run.
+
+`--ids` selects websites for crawling and candidate merging; post-merge duplicate
+cleanup also respects that selection. A forced web recrawl replaces older web
+captures in the new run's extraction scope, but preserves independently imported
+Instagram bundles (`picnob_` filenames), including on sites with both URL types.
+Those imports remain eligible even if the web crawl fails. Resume uses the exact
+saved capture IDs and does not re-crawl either source.
+
+It is not a transaction boundary for the
+whole publication step. The separate maintenance sweep for events whose every
+source website is disabled remains global, since disabled websites never enter
+a normal run's crawl list. It checks all contributing sources, requires prior
+successful crawl support, and retains the 14-day grace period for upcoming
+events. Export and upload still publish the complete event dataset.
 Use `agent_extraction.py status --state pending --work-dir <dir>` to list only
 unfinished packets (`--summary` gives counts). Read each with
 `agent_extraction.py read <request_id> --work-dir <dir>`. This validates the original
@@ -179,6 +193,15 @@ exact crawl-result IDs bound in `run.json`; it does not re-crawl. It can generat
 further chunk, enrichment, or detail requests. Repeat status → review → submit →
 resume until exit **0** confirms completion. Exit **1** is a failure to investigate,
 not a request to submit an empty extraction. Do not publish while requests remain.
+
+New runs snapshot extraction prompt templates, shared rules, protocol instructions,
+and city-specific prompt wording in `run.json` before crawling. Resuming uses that
+wording even if code is edited during review. Start a new run to adopt revised
+instructions. Source content, site notes, images, and schemas still participate in
+packet identity; a changed input cannot reuse an old answer. This freezes wording,
+not pipeline code or chunking behavior. Legacy runs without a prompt snapshot keep
+their previous behavior and warn on resume; existing answers are never silently
+relabeled as having followed new rules.
 
 Sub-agents write disjoint response files; the parent submits results and serializes
 resume, database mutations and publishing. Never run concurrent pipelines or

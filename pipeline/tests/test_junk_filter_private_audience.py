@@ -30,7 +30,9 @@ Deliberate boundaries, pinned below — do not loosen without re-measuring:
   advertise a members-only preview day inside the body of a fully public
   exhibition, and "become a member" upsell copy is everywhere.
 * Bare "Member" without only/exclusive ("New Member Lunch", "Member
-  Appreciation Night") stays editorial — too ambiguous for the auto-drop.
+  Appreciation Night") stays editorial without corroborating access evidence.
+  Member-titled previews before public admission have separate coverage in
+  test_member_preview_access.py.
 * Volunteer/docent orientations are PUBLIC (anyone may show up to become one)
   and must survive; the academic-milestone veto already spares "orientation"
   for the same reason.

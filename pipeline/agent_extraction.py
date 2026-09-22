@@ -56,6 +56,39 @@ def work_dir():
     return _work_dir
 
 
+def snapshot_prompts(templates):
+    """Freeze instruction text, not executable code or source data, for a run."""
+    templates = dict(templates, protocol=INSTRUCTIONS)
+    return {'templates': templates,
+            'sha256': hashlib.sha256(_canonical(templates).encode()).hexdigest()}
+
+
+def prompt_text(key, current):
+    """Use the run's rules while still hashing each packet's complete input.
+
+    Old workspaces without a snapshot retain their original behavior. Never
+    substitute a current template into a snapshotted run: a missing key or
+    corrupt snapshot requires an explicit new run.
+    """
+    manifest = work_dir() / 'run.json'
+    if not manifest.exists():
+        return current
+    state = _read_json(manifest)
+    if 'prompt_snapshot' not in state:
+        return current
+    snapshot = state['prompt_snapshot']
+    if not isinstance(snapshot, dict):
+        raise AgentExtractionInvalid('Invalid run prompt snapshot; start a new run')
+    templates = snapshot.get('templates')
+    if (not isinstance(templates, dict)
+            or not all(isinstance(k, str) and isinstance(v, str) for k, v in templates.items())
+            or hashlib.sha256(_canonical(templates).encode()).hexdigest() != snapshot.get('sha256')):
+        raise AgentExtractionInvalid('Run prompt snapshot checksum mismatch; start a new run')
+    if key not in templates:
+        raise AgentExtractionInvalid(f'Run prompt snapshot lacks {key}; start a new run')
+    return templates[key]
+
+
 def reference_date():
     """Keep prompt IDs stable across midnight during a resumed extraction run."""
     from datetime import date
@@ -168,9 +201,10 @@ def _instructions(task_instructions=None):
     once per packet. Measured on the 2026-09-18 run: 2,278 detail packets each
     repeated ~3K chars of identical rules around a ~3.9K-char page body.
     """
+    protocol = prompt_text('protocol', INSTRUCTIONS)
     if not task_instructions:
-        return INSTRUCTIONS
-    return INSTRUCTIONS + '\n\n' + task_instructions.strip()
+        return protocol
+    return protocol + '\n\n' + task_instructions.strip()
 
 
 def _payload(prompt, schema, images=None, expected_names=None, instructions=None):

@@ -5,6 +5,7 @@ Uses Crawl4AI to crawl event websites and store content in the database.
 """
 
 import asyncio
+import html as html_lib
 import inspect
 import json
 import re
@@ -49,6 +50,9 @@ BOT_CHALLENGE_MARKERS = (
     # markdown — well past MIN_CRAWL_CONTENT_SIZE, so it would otherwise land as a
     # healthy 0-event crawl and archive the site's live listings.
     'confirm that you are not a robot',
+    'this site is exceeding recaptcha enterprise free quota',
+    'select all images with',
+    'slide right to secure your access',
 )
 
 # Cloudflare's 5xx interstitials are the same class of problem: the origin (or
@@ -183,9 +187,15 @@ def reset_host_circuits():
 
 def _is_bot_challenge(content):
     """True if content is an interstitial (bot challenge or CF 5xx), not real content."""
-    if not content or len(content) > BOT_CHALLENGE_MAX_CHARS:
+    if not content:
         return False
-    lowered = content.lower()
+    # Image-grid challenges repeat long signed payload URLs for every tile.
+    # Measure the readable body, otherwise a challenge alone exceeds the size
+    # ceiling. Real listing text still counts in full and protects mixed pages.
+    readable = re.sub(r'!\[[^\]]*\]\((?:\\.|[^)\\])*\)', '', content)
+    if len(readable) > BOT_CHALLENGE_MAX_CHARS:
+        return False
+    lowered = readable.lower()
     if any(marker in lowered for marker in BOT_CHALLENGE_MARKERS):
         return True
     return _is_cloudflare_error_page(lowered)
@@ -287,6 +297,77 @@ def _is_json_api_payload(content):
         return bool(parsed)
     return isinstance(parsed, list)
 
+
+# crawl4ai runs its own "structural integrity" detector (antibot_detector.py,
+# tier 3) over every document under 50KB: a small page with no semantic HTML
+# element (<p>, <li>, <a>, <pre>, …) is reported as
+# `success=False, error_message="Blocked by anti-bot protection: Structural:
+# no_content_elements on small page (710 bytes, 571 chars visible)"`. A JSON API
+# answer has exactly that shape, and its *empty* answer — the smallest document
+# a feed ever returns — is the one most likely to trip it. crawl4ai skips the
+# check for a raw JSON body it recognises, but not for one a browser or an
+# in-page script has wrapped in HTML, and _is_blocked_error() then discards the
+# body and routes the URL through the challenge retries, which fail the same
+# way: w4615 Girls Gone Hiking (api.lu.ma calendar feed) was stored as a failed
+# crawl on 2026-09-21 with a perfectly healthy, empty feed in hand.
+#
+# A structural verdict over a JSON document is therefore a false positive: an
+# empty feed is a successful 0-event crawl, not a block. Deliberately narrow —
+# HTML keeps the structural check (challenge and CF error interstitials are
+# always HTML), and every other verdict (HTTP 403/429, a body marker) keeps its
+# meaning even when the body happens to parse as JSON.
+_STRUCTURAL_VERDICT_RE = re.compile(r'structural:', re.IGNORECASE)
+# The HTTP-status verdicts, which must never be waved through on body shape.
+_STATUS_VERDICT_MARKERS = ('http 403', 'http 429')
+_PRE_BLOCK_RE = re.compile(r'<pre\b[^>]*>([\s\S]*?)</pre>', re.IGNORECASE)
+
+
+def _response_content_type(result):
+    """The response's Content-Type header, if the crawler reported one."""
+    headers = getattr(result, 'response_headers', None)
+    if not isinstance(headers, dict):
+        return None
+    for key, value in headers.items():
+        if str(key).lower() == 'content-type':
+            return value
+    return None
+
+
+def _is_json_document(html, content_type=None):
+    """True if a fetched document is JSON: by content-type, or by its body.
+
+    Accepts the raw payload and the browser's rendering of it (Chrome wraps a
+    JSON response in ``<html><body><pre>{…}</pre>``), because the crawler sees
+    the post-render DOM, not the wire bytes.
+    """
+    if content_type and 'json' in str(content_type).lower():
+        return True
+    if not html:
+        return False
+    stripped = html.strip()
+    if not stripped:
+        return False
+    if stripped[0] in '{[':
+        return parse_json_body(stripped) is not None
+    match = _PRE_BLOCK_RE.search(stripped)
+    if not match:
+        return False
+    return parse_json_body(html_lib.unescape(match.group(1))) is not None
+
+
+def _is_structural_json_false_positive(error_message, html, content_type=None,
+                                       markdown=None):
+    """True if a block verdict is only the structural check over a JSON feed."""
+    if not _is_blocked_error(error_message):
+        return False
+    lowered = str(error_message).lower()
+    if not _STRUCTURAL_VERDICT_RE.search(lowered):
+        return False
+    if any(marker in lowered for marker in _STATUS_VERDICT_MARKERS):
+        return False
+    return _is_json_document(html, content_type) or _is_json_api_payload(markdown)
+
+
 try:
     from crawl4ai import AsyncWebCrawler, BrowserConfig, CrawlerRunConfig
     from crawl4ai.markdown_generation_strategy import DefaultMarkdownGenerator
@@ -368,7 +449,7 @@ def resolve_url_templates(url):
 
 
 async def _refetch_past_challenge(url, url_config, user_agent, attempts=2, backoff=15,
-                                  timeout=120):
+                                  timeout=120, *, headed=False, use_stealth=False):
     """Re-fetch a URL that returned a bot-challenge interstitial.
 
     Uses a fresh, full-featured browser: ``text_mode``/``light_mode`` strip the
@@ -388,7 +469,8 @@ async def _refetch_past_challenge(url, url_config, user_agent, attempts=2, backo
             javascript_enabled=True,
             text_mode=False,
             light_mode=False,
-            use_stealth=False,
+            use_stealth=use_stealth,
+            headed=headed,
             user_agent=user_agent,
         )
         try:
@@ -398,13 +480,14 @@ async def _refetch_past_challenge(url, url_config, user_agent, attempts=2, backo
                     retry_crawler.arun(url=url, config=url_config), timeout=timeout
                 )
                 for result in results:
-                    if result and result.markdown:
+                    if (result and result.success and not _http_error_status(result)
+                            and result.markdown):
                         chunk = result.markdown.fit_markdown
                         if not chunk or len(chunk) < 500:
                             chunk = result.markdown.raw_markdown
                         if chunk:
                             content += chunk + "\n\n"
-            if content and not _is_bot_challenge(content):
+            if content and not _is_bot_challenge(content) and not _is_soft_404(content):
                 print(f"      Challenge cleared on retry {attempt} ({len(content)} chars)")
                 return content
             print(f"      Retry {attempt}: still challenged")
@@ -498,7 +581,13 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
         js_code = website.get('js_code') or ""
         if not js_code:
             selector = website.get('selector')
-            num_clicks = website.get('num_clicks', 2)
+            # No fallback on purpose: `websites.num_clicks` has no column
+            # default, so NULL is the stored state of every site whose selector
+            # was configured without a click count (w729, w947 as of
+            # 2026-09-21), and those sites crawl on the no-click path today.
+            # Clicking a selector that isn't a control throws inside the page
+            # script, so the count stays explicit — set the column to opt in.
+            num_clicks = website.get('num_clicks')
             if selector and num_clicks:
                 js_code = f"for (let i = 0; i < {num_clicks}; i++) {{await new Promise(resolve => setTimeout(resolve, 1000)); document.querySelector('{selector}').click();}}"
 
@@ -520,7 +609,9 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
         # Get per-website crawl settings (with defaults)
         delay_seconds = website.get('delay_before_return_html') or 5
         filter_threshold = website.get('content_filter_threshold')
-        scan_full_page = website.get('scan_full_page', True)
+        scan_full_page = website.get('scan_full_page')
+        if scan_full_page is None:
+            scan_full_page = True
         remove_overlays = website.get('remove_overlay_elements', False)
         # MySQL DECIMAL arrives as decimal.Decimal; crawl4ai serializes the scan
         # config to JSON for the page script, so a Decimal breaks scan_full_page
@@ -611,6 +702,11 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
 
                 print(f"    - Processing {url}")
                 url_content = ""
+                # First page's raw document, kept only to tell a JSON API
+                # response apart from an HTML shell when crawl4ai's structural
+                # detector cries block (see _is_structural_json_false_positive).
+                url_html = ""
+                url_content_type = None
                 page_count = 0
                 # Did ANY page of this URL come back as a real fetch? A WAF block
                 # still yields a result object with a renderable body, so content
@@ -627,6 +723,9 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
                         url_error = result.error_message
                     # Debug: show what we received
                     html_len = len(result.html) if result and result.html else 0
+                    if html_len and not url_html:
+                        url_html = result.html
+                        url_content_type = _response_content_type(result)
                     has_error = bool(result.error_message) if result else False
                     print(f"      Page {page_count}: html={html_len}, success={result.success if result else False}, error={result.error_message if has_error else 'none'}")
 
@@ -650,6 +749,13 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
                         print(f"      Page {page_count}: fit={fit_len}, raw={raw_len}, using={len(content) if content else 0}")
 
                 print(f"    - Crawled {page_count} page(s), {len(url_content)} chars total")
+                if (not url_succeeded and _is_structural_json_false_positive(
+                        url_error, url_html, url_content_type, url_content)):
+                    # An empty (or otherwise element-free) JSON feed, not a WAF.
+                    print(f"    - JSON API response flagged structurally by crawl4ai "
+                          f"({len(url_html)} bytes) - accepting the fetch")
+                    url_succeeded = True
+                    url_error = None
                 if not url_succeeded and _is_blocked_error(url_error):
                     # Discard the block page's markdown: appending it is what let
                     # a fully-blocked crawl look healthy. Retry with backoff below
@@ -662,6 +768,8 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
                         recovered = await _refetch_past_challenge(
                             url, url_config, website.get('user_agent'),
                             attempts=PROBE_RETRY_ATTEMPTS, backoff=PROBE_RETRY_BACKOFF,
+                            headed=bool(website.get('headed')),
+                            use_stealth=bool(website.get('use_stealth')),
                         )
                         if recovered:
                             _record_host_success(url)
@@ -724,7 +832,9 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
                 continue
             print(f"    - Retrying challenged URL: {challenged_url}")
             recovered = await _refetch_past_challenge(
-                challenged_url, challenged_config, website.get('user_agent')
+                challenged_url, challenged_config, website.get('user_agent'),
+                headed=bool(website.get('headed')),
+                use_stealth=bool(website.get('use_stealth')),
             )
             if recovered:
                 combined_markdown += challenged_url + "\n" + recovered
@@ -888,7 +998,7 @@ def get_browser_key(settings):
 
 
 # Site chrome stripped from DETAIL pages before the markdown is built (and so
-# before the 12K cap in crawl_event_url). A detail page is one event, and the
+# before the complete source is saved for extraction). A detail page is one event, and the
 # body we want sits between a site-wide menu and a site-wide footer; on a
 # nav-heavy theme that chrome can be most of the page. China Institute
 # (Jupiter X + Elementor) rendered a 7.6K mega-menu ahead of a 3.2K event body,
@@ -924,7 +1034,7 @@ DETAIL_CHROME_SELECTOR = 'nav, [role="navigation"], [role="banner"], [role="cont
 # ~66 detail fetches truncated to a byte-identical site shell (2026-09-17).
 # With these stripped the same page is 9.7K and leads with the event.
 #
-# Inline styles only, deliberately: this must not depend on stylesheet
+# Inline styles, deliberately: this must not depend on arbitrary stylesheet
 # cascade, and an element a stylesheet hides is far more often a
 # progressive-enhancement wrapper that a script un-hides than a whole
 # duplicate copy of the site. Both spellings are listed because `style` is
@@ -933,7 +1043,9 @@ DETAIL_CHROME_SELECTOR = 'nav, [role="navigation"], [role="banner"], [role="cont
 # DETAIL-ONLY, like the chrome selector. The listing crawl must keep hidden
 # content: several sites' js_code injects into a hidden container, and a
 # month grid's off-screen weeks are legitimately `display: none`.
-DETAIL_HIDDEN_SELECTOR = '[style*="display:none"], [style*="display: none"]'
+# Webflow's explicit conditional-visibility marker is also authoritative:
+# its CMS emits inactive sold-out/cancelled branches with this class.
+DETAIL_HIDDEN_SELECTOR = '[style*="display:none"], [style*="display: none"], .w-condition-invisible'
 
 # Consent widgets, translate bars, skip links, newsletter forms and the page's
 # top-level footer. Measured on the 2026-09-18 run's 2,278 detail packets: 65%
@@ -966,8 +1078,8 @@ def build_event_crawl_config(website_settings):
     js_code, deep crawling, or click-based pagination (those are for
     listing pages, not individual event pages). Site chrome and
     inline-hidden elements (DETAIL_EXCLUDED_SELECTOR) are removed from the
-    DOM before markdown generation so the event body survives the 12K
-    truncation.
+    DOM before markdown generation so extraction receives the event body
+    without irrelevant navigation.
 
     Args:
         website_settings: Dict with keys like delay_before_return_html,
@@ -1025,7 +1137,8 @@ DETAIL_CHALLENGE_BACKOFF = 5
 DETAIL_CHALLENGE_TIMEOUT = 60
 
 
-async def crawl_event_url(web_crawler, url, crawl_config, timeout=120, user_agent=None):
+async def crawl_event_url(web_crawler, url, crawl_config, timeout=120, user_agent=None,
+                          *, headed=False, use_stealth=False):
     """
     Crawl a single event URL and return its markdown content.
 
@@ -1049,13 +1162,19 @@ async def crawl_event_url(web_crawler, url, crawl_config, timeout=120, user_agen
     the URL we log, and the URL stored in ``crawl_events`` / published in
     ``event_urls`` is never derived from anything this function fetched.
 
-    Returns the page content (truncated to 12K chars) or None on failure.
+    Returns the complete page content or None on failure. The extraction layer
+    rejects oversized work packets explicitly; never hand it a silent prefix.
     """
     fetch_url = site_profiles.detail_fetch_url(url)
     if fetch_url != url:
         print(f"    Fetching {fetch_url} (stored URL unchanged)")
-    content = await _fetch_event_page(web_crawler, fetch_url, crawl_config, timeout)
-    if not content:
+    blocked = False
+    try:
+        content = await _fetch_event_page(web_crawler, fetch_url, crawl_config, timeout)
+    except _DetailPageBlocked:
+        content = ''
+        blocked = True
+    if not content and not blocked:
         return None
 
     if _is_soft_404(content):
@@ -1064,8 +1183,8 @@ async def crawl_event_url(web_crawler, url, crawl_config, timeout=120, user_agen
         print(f"    Soft 404 ({len(content)} chars) for {url} - page no longer exists")
         return None
 
-    if not _is_bot_challenge(content):
-        return content[:12000]
+    if not blocked and not _is_bot_challenge(content):
+        return content
 
     # Spend the retry budget here rather than losing the whole attempt.
     print(f"    Challenge/error interstitial ({len(content)} chars) for {url} - retrying")
@@ -1074,11 +1193,24 @@ async def crawl_event_url(web_crawler, url, crawl_config, timeout=120, user_agen
         attempts=DETAIL_CHALLENGE_RETRIES,
         backoff=DETAIL_CHALLENGE_BACKOFF,
         timeout=DETAIL_CHALLENGE_TIMEOUT,
+        headed=headed,
+        use_stealth=use_stealth,
     )
-    if recovered and len(recovered) > MIN_EVENT_PAGE_SIZE:
-        return recovered[:12000]
+    if (recovered and len(recovered) > MIN_EVENT_PAGE_SIZE
+            and not _is_soft_404(recovered) and not _is_bot_challenge(recovered)):
+        return recovered
     print(f"    Still challenged after retries - discarding interstitial for {url}")
     return None
+
+
+def _http_error_status(result):
+    """Return a response's HTTP error code; absent/non-HTTP statuses are allowed."""
+    status = getattr(result, 'status_code', None)
+    return status if isinstance(status, int) and status >= 400 else None
+
+
+class _DetailPageBlocked(Exception):
+    """A detail fetch hit a retryable HTTP/WAF block, even without a body."""
 
 
 async def _fetch_event_page(web_crawler, url, crawl_config, timeout):
@@ -1088,13 +1220,21 @@ async def _fetch_event_page(web_crawler, url, crawl_config, timeout):
             web_crawler.arun(url=url, config=crawl_config),
             timeout=timeout,
         )
+        status = _http_error_status(result)
+        if status in (403, 429) or (not result.success and
+                _is_blocked_error(getattr(result, 'error_message', None))):
+            raise _DetailPageBlocked()
+        if status:
+            print(f"    HTTP {status} for {url} - discarding error page")
+            return None
         if result.success and result.markdown:
             content = result.markdown.fit_markdown or result.markdown.raw_markdown
             if content and len(content) > MIN_EVENT_PAGE_SIZE:
                 return content
+    except _DetailPageBlocked:
+        raise
     except asyncio.TimeoutError:
         print(f"    Crawl timed out after {timeout}s for {url}")
     except Exception as e:
         print(f"    Crawl error for {url}: {e}")
-    return None
     return None

@@ -433,6 +433,7 @@ class PreparedExtraction:
     chunk_instructions: str = ""  # static rules + site notes shared by every chunk packet
     pruned_chunks: list = field(default_factory=list)  # (index, reason, chars) dropped before queuing
     max_batches: Optional[int] = None
+    max_records_per_chunk: Optional[int] = None
     content: Optional[str] = None  # Original page content for enrichment context
 
     # Shared
@@ -666,12 +667,53 @@ async def prepare_vision_content(content, base_url=None, max_images=MAX_VISION_I
     return image_parts, len(image_parts)
 
 
-def get_vision_prompt(url, text_content, current_date_string, name, notes, request_id=""):
-    """Generate a prompt for vision-based event extraction."""
-    note_section = f"\n\nIMPORTANT: {notes}" if notes else ""
-    rid_section = f"\n\nIMPORTANT: Set request_id to \"{request_id}\" in your response." if request_id else ""
+SCHEDULE_EXCEPTIONS_RULE = (
+    'SCHEDULE EXCEPTIONS: Preserve the source\'s break/skip notices verbatim in '
+    'the description when one is returned, including the dates and phrases such '
+    'as "NO CLASS on November 11th", "Skip Thanksgiving", "NO SESSION NOV 9", '
+    'or "except December 27". Do not paraphrase these notices away. Exclude '
+    'the explicitly skipped sessions from occurrences; never refill them from '
+    'the surrounding recurrence rule.'
+)
 
-    return f'''Today's date is {current_date_string}. We are extracting events from {name} ({url}).
+
+EVENT_STATUS_RULE = (
+    'EVENT STATUS: Calendar reservations marked "HOLD:" (for example, '
+    '"HOLD: mri project"), private bookings, and availability blocks are not '
+    'confirmed public events; omit them from event lists. Never remove a '
+    'HOLD, cancellation, or postponement status marker to turn a listing into '
+    'an apparently confirmed event. Preserve explicit status notices verbatim '
+    'in any description returned for an existing event. A donation appeal '
+    '(for example, a Giving Tuesday campaign asking for support without an '
+    'attendable program) is not an event; actual benefit concerts, galas, '
+    'volunteer sessions and other announced gatherings remain eligible. '
+    'A lowercase title or missing description alone is not evidence of junk.'
+)
+
+
+def prompt_templates():
+    """All extraction wording captured before a new run starts crawling."""
+    names = ('VISION_PROMPT_TEMPLATE', 'ENRICHMENT_PROMPT_TEMPLATE',
+             'CHUNK_PROMPT_TEMPLATE', 'SINGLE_PROMPT_TEMPLATE',
+             'DETAIL_PROMPT_TEMPLATE', 'REFERENCE_PROMPT_TEMPLATE',
+             'SCHEDULE_EXCEPTIONS_RULE', 'EVENT_STATUS_RULE', 'DETAIL_RULES',
+             'CHUNK_RULES', 'FULL_PASS_RULE', 'COVERAGE_REVIEW_RULE')
+    return {**{name: globals()[name] for name in names},
+            'intro': city_config.extraction_intro(),
+            'chunk_intro': city_config.extraction_chunk_intro(),
+            'region_rule': city_config.extraction_region_rule(),
+            'tag_avoidance': city_config.extraction_tag_avoidance()}
+
+
+def _prompt_rule(name):
+    if name in globals():
+        current = globals()[name]
+    else:
+        current = getattr(city_config, 'extraction_' + name)()
+    return agent_extraction.prompt_text(name, current)
+
+
+VISION_PROMPT_TEMPLATE = '''Today's date is {current_date_string}. We are extracting events from {name} ({url}).
 
 You have TWO sources for this venue's events: the page text below, and the
 attached images (event flyers/posters). Use BOTH. Many events appear only in the
@@ -691,6 +733,8 @@ For EACH event you find in EITHER source, extract:
 - emoji: A single emoji representing the event
 {note_section}
 Rules:
+- {SCHEDULE_EXCEPTIONS_RULE}
+- {EVENT_STATUS_RULE}
 - Cover BOTH sources: every flyer image provided AND the full page text below
 - Do not list the same event twice because it appears in both — merge it
 - Only include events that appear to be upcoming (after {current_date_string})
@@ -701,7 +745,23 @@ Rules:
 Page text (authoritative for dates — the flyer images are often undated, and on
 social feeds the date/time is stated in the caption rather than on the image.
 Where the text and an image disagree, prefer the text):
-{text_content if text_content else "No additional text"}'''
+{text_content}'''
+
+
+def get_vision_prompt(url, text_content, current_date_string, name, notes, request_id=""):
+    """Generate a prompt for vision-based event extraction."""
+    note_section = f"\n\nIMPORTANT: {notes}" if notes else ""
+    rid_section = f"\n\nIMPORTANT: Set request_id to \"{request_id}\" in your response." if request_id else ""
+
+    return _prompt_rule("VISION_PROMPT_TEMPLATE").format(
+        current_date_string=current_date_string,
+        name=name,
+        url=url,
+        note_section=note_section,
+        SCHEDULE_EXCEPTIONS_RULE=_prompt_rule("SCHEDULE_EXCEPTIONS_RULE"),
+        EVENT_STATUS_RULE=_prompt_rule("EVENT_STATUS_RULE"),
+        rid_section=rid_section,
+        text_content=text_content or "No additional text")
 
 
 async def extract_with_vision(url, content, current_date_string, name, notes, base_url=None):
@@ -748,6 +808,13 @@ async def extract_with_vision(url, content, current_date_string, name, notes, ba
 # Content Chunking Functions
 # =============================================================================
 
+def _is_event_chunk_marker(line):
+    # Keep method selection stable: recognizing more heading shapes requires
+    # its own extraction-quality evaluation, not just a size-limit fix.
+    return bool(re.match(r'^\s*\d+\.\s*###\s*\[', line)
+                or line.strip().startswith('### ['))
+
+
 def chunk_content_by_events(content, events_per_chunk=EVENTS_PER_CHUNK,
                             max_chars=None):
     """
@@ -783,7 +850,7 @@ def chunk_content_by_events(content, events_per_chunk=EVENTS_PER_CHUNK,
 
     for line in lines:
         # Event marker pattern: numbered list item with ### header, or standalone ### header
-        if re.match(r'^\s*\d+\.\s*###\s*\[', line) or line.strip().startswith('### ['):
+        if _is_event_chunk_marker(line):
             oversized = max_chars is not None and current_size >= max_chars
             if current_chunk and (event_count >= events_per_chunk or oversized):
                 chunks.append('\n'.join(current_chunk))
@@ -1222,6 +1289,44 @@ def cap_occurrences_per_chunk(chunks, budget=OCCURRENCE_BUDGET_PER_CHUNK):
     return out
 
 
+def _bound_event_chunk(chunk, max_chars):
+    """Bound an oversized event chunk, keeping every record that fits intact.
+
+    The marker-only splitter deliberately permits an oversized record and its
+    size guard checks only after a record has been appended. Repack complete
+    records before falling back to the size splitter for an individually huge
+    record or preamble. Chunks already within the limit remain byte-identical.
+    """
+    if len(chunk) <= max_chars:
+        return [chunk]
+    records = []
+    current = []
+    for line in chunk.splitlines(keepends=True):
+        if current and _is_event_chunk_marker(line):
+            records.append(''.join(current))
+            current = []
+        current.append(line)
+    if current:
+        records.append(''.join(current))
+
+    chunks, pending = [], ''
+    for record in records:
+        if len(record) > max_chars:
+            if pending:
+                chunks.append(pending)
+                pending = ''
+            chunks.extend(piece for piece in chunk_content_by_size(record, max_chars)
+                          if piece.strip())
+        elif pending and len(pending) + len(record) > max_chars:
+            chunks.append(pending)
+            pending = record
+        else:
+            pending += record
+    if pending:
+        chunks.append(pending)
+    return chunks
+
+
 def chunk_content(content, events_per_chunk=EVENTS_PER_CHUNK, max_chars=MAX_CHUNK_CHARS):
     """
     Smart chunking that tries event markers first, then falls back to size-based chunking.
@@ -1234,12 +1339,13 @@ def chunk_content(content, events_per_chunk=EVENTS_PER_CHUNK, max_chars=MAX_CHUN
     # already going to be event-chunked.
     event_chunks = chunk_content_by_events(content, events_per_chunk)
 
-    # If we got multiple chunks, use them — but re-split with the size guard when
-    # any chunk is too big for Gemini to answer in one response. The common case
-    # (no oversized chunk) skips the second pass and is byte-for-byte unchanged.
+    # Bound only oversized chunks, preserving complete records that fit. Merely
+    # checking size at the next marker can still overshoot by an entire record.
+    # The common case (no oversized chunk) stays byte-for-byte unchanged.
     if len(event_chunks) > 1:
         if any(len(chunk) > max_chars for chunk in event_chunks):
-            event_chunks = chunk_content_by_events(content, events_per_chunk, max_chars)
+            event_chunks = [bounded for chunk in event_chunks
+                            for bounded in _bound_event_chunk(chunk, max_chars)]
         return event_chunks, 'events'
 
     # If single chunk is small enough, use it
@@ -1618,6 +1724,24 @@ def _looks_like_boilerplate_fabrication(desc):
     return any(p.search(desc) for p in _BOILERPLATE_DESC_PATTERNS)
 
 
+ENRICHMENT_PROMPT_TEMPLATE = '''For each event at {venue_name}, provide:
+- description: 1-3 sentence description built from words and sentences that actually appear in the event's own Context block. If there is no Context block, or it only has the name, date/time, venue, and links — with no descriptive prose — return EXACTLY "No description available." Do NOT paraphrase the event name. Do NOT write generic filler like "is a local community event" or "visit the official website for more details". Do NOT use background knowledge about the artist, venue, or topic. Each event's description must come from THAT event's Context block, not a neighbor's.
+- hashtags: 4-7 CamelCase tags. Always include at least one category (Music, Nightlife, Comedy, Art, Theater, Dance, Film, Literature, Community, Family, Wellness, Education, Outdoor, Sports, Games). Add Free if free, Virtual if online. Then granular tags.
+- emoji: Single emoji representing the event
+
+{SCHEDULE_EXCEPTIONS_RULE}
+{EVENT_STATUS_RULE}
+
+Examples:
+  Context only has name + date + venue → description="No description available."
+  Context has a sentence describing the event → use that sentence (lightly compressed if needed)
+
+Events to enrich:
+{events_section}
+{rid_section}
+Return a JSON object with an "enrichments" array, containing exactly one object per requested event name.'''
+
+
 def get_enrichment_prompt(event_names, venue_name, request_id="", content_snippets=None):
     """Generate prompt for enriching events with descriptions, hashtags, and emoji."""
     rid_section = f"\n\nIMPORTANT: Set request_id to \"{request_id}\" in your response." if request_id else ""
@@ -1632,19 +1756,12 @@ def get_enrichment_prompt(event_names, venue_name, request_id="", content_snippe
             events_section_parts.append(f"- {name}")
     events_section = "\n".join(events_section_parts)
 
-    return f'''For each event at {venue_name}, provide:
-- description: 1-3 sentence description built from words and sentences that actually appear in the event's own Context block. If there is no Context block, or it only has the name, date/time, venue, and links — with no descriptive prose — return EXACTLY "No description available." Do NOT paraphrase the event name. Do NOT write generic filler like "is a local community event" or "visit the official website for more details". Do NOT use background knowledge about the artist, venue, or topic. Each event's description must come from THAT event's Context block, not a neighbor's.
-- hashtags: 4-7 CamelCase tags. Always include at least one category (Music, Nightlife, Comedy, Art, Theater, Dance, Film, Literature, Community, Family, Wellness, Education, Outdoor, Sports, Games). Add Free if free, Virtual if online. Then granular tags.
-- emoji: Single emoji representing the event
-
-Examples:
-  Context only has name + date + venue → description="No description available."
-  Context has a sentence describing the event → use that sentence (lightly compressed if needed)
-
-Events to enrich:
-{events_section}
-{rid_section}
-Return a JSON object with an "enrichments" array, containing exactly one object per requested event name.'''
+    return _prompt_rule("ENRICHMENT_PROMPT_TEMPLATE").format(
+        venue_name=venue_name,
+        SCHEDULE_EXCEPTIONS_RULE=_prompt_rule("SCHEDULE_EXCEPTIONS_RULE"),
+        EVENT_STATUS_RULE=_prompt_rule("EVENT_STATUS_RULE"),
+        events_section=events_section,
+        rid_section=rid_section)
 
 
 async def enrich_events_batch(event_names, venue_name, content=None):
@@ -1769,7 +1886,18 @@ def detail_instructions(notes=""):
     """
     notes = (notes or "").strip()
     note_section = f"\n\nIMPORTANT (site notes): {notes}" if notes else ""
-    return DETAIL_RULES + note_section
+    return (_prompt_rule('DETAIL_RULES') + '\n\n'
+            + _prompt_rule('SCHEDULE_EXCEPTIONS_RULE') + '\n\n'
+            + _prompt_rule('EVENT_STATUS_RULE') + note_section)
+
+
+DETAIL_PROMPT_TEMPLATE = (
+    'Today\'s date is {current_date}. '
+    'Extract information about the event "{event_name}" from this web page. '
+    'Include the venue name if it appears on the page.\n'
+    '{url_section}\n'
+    'Page content:\n\n{content}'
+)
 
 
 async def extract_single_event(event_name, content, notes="", url=""):
@@ -1808,13 +1936,18 @@ async def extract_single_event(event_name, content, notes="", url=""):
     # instructions hash by the reviewing agent); the prompt keeps only what is
     # specific to this page. Site notes are per-website, so they share too.
     instructions = detail_instructions(notes)
-    prompt = (
-        f'Today\'s date is {current_date}. '
-        f'Extract information about the event "{event_name}" from this web page. '
-        f'Include the venue name if it appears on the page.\n'
-        f'{url_section}\n'
-        f'Page content:\n\n{content}'
-    )
+    prompt = _prompt_rule('DETAIL_PROMPT_TEMPLATE').format(
+        current_date=current_date, event_name=event_name,
+        url_section=url_section, content=content)
+
+    estimated_tokens = (len(prompt) + len(instructions)) // CHARS_PER_TOKEN
+    if estimated_tokens > MAX_REQUEST_TOKENS:
+        # The caller has saved the full source for review. Failing the phase
+        # retains it and does not consume a detail attempt; clipping the input
+        # would instead produce a seemingly complete answer from partial dates.
+        raise ExtractionCallFailure(
+            f'Detail page too large for one extraction packet '
+            f'(~{estimated_tokens:,} est. tokens, limit {MAX_REQUEST_TOKENS:,}): {url}')
 
     try:
         # Soft failure on purpose: returning None just skips enriching this one
@@ -1875,6 +2008,13 @@ FULL_PASS_RULE = (
     'even when two listings share a name. Preserve all dates and occurrences.')
 
 
+COVERAGE_REVIEW_RULE = (
+    "\n\nCOVERAGE REVIEW: The initial extraction triggered a count "
+    "variance guard. Independently inspect every source section and "
+    "explicit occurrence again. Return a complete extraction; do not "
+    "invent events to match historical counts.\n")
+
+
 CHUNK_RULES = """For each event provide: name, location (venue name), occurrences (array of start_date in YYYY-MM-DD, start_time, end_date, end_time), and url if available.
 
 CRITICAL DATE RULES:
@@ -1903,11 +2043,20 @@ def get_chunk_instructions(notes=""):
     # The metro-geography rule was only in get_prompt (single-call mode), so a
     # large listing that fell into chunked mode had no geographic restriction at
     # all and touring/national feeds leaked out-of-region dates (2026-09-17).
-    region_rule = city_config.extraction_region_rule()
+    region_rule = _prompt_rule('region_rule')
     region_section = f"\n- {region_rule}" if region_rule else ""
     notes = (notes or "").strip()
     note_section = f"\n\nIMPORTANT: {notes}" if notes else ""
-    return CHUNK_RULES + region_section + note_section
+    return (_prompt_rule('CHUNK_RULES') + '\n\n'
+            + _prompt_rule('SCHEDULE_EXCEPTIONS_RULE') + '\n\n'
+            + _prompt_rule('EVENT_STATUS_RULE') + region_section + note_section)
+
+
+CHUNK_PROMPT_TEMPLATE = '''{intro}{rid_section}
+
+Website content:
+
+{chunk_text}'''
 
 
 def get_chunk_prompt(chunk_text, current_date_string, notes=None, request_id=""):
@@ -1915,11 +2064,55 @@ def get_chunk_prompt(chunk_text, current_date_string, notes=None, request_id="")
     get_chunk_instructions (shared packet instructions). `notes` is accepted for
     call-site compatibility and intentionally unused here."""
     rid_section = f"\n\nIMPORTANT: Set request_id to \"{request_id}\" in your response." if request_id else ""
-    return f'''{city_config.extraction_chunk_intro().format(date=current_date_string)}{rid_section}
+    return _prompt_rule("CHUNK_PROMPT_TEMPLATE").format(
+        intro=_prompt_rule("chunk_intro").format(date=current_date_string),
+        rid_section=rid_section,
+        chunk_text=chunk_text)
+
+
+SINGLE_PROMPT_TEMPLATE = '''{intro}
+{existing_events_section}
+Based on the website content below, extract all upcoming events. For each event, provide:
+- name: The event name
+- location: The venue name ONLY (e.g. "Brooklyn Heights Library", "Le Petit Versailles"). Preserve the exact spelling — do not introduce typos. If the source lists "<Branch>, <Room>" (e.g. "Highlawn, Meeting Room"), the branch is the location and the room is the sublocation — do not concatenate them into one field.
+- sublocation: Optional location within the venue (rooftop, 5th floor, specific meeting room, etc.)
+- occurrences: An array of date/time objects. IMPORTANT: For recurring events (e.g., "every Wednesday" or "Jan 11, 18, 25"), list EACH specific date as a separate occurrence within the next 3 months. Each occurrence has:
+  - start_date: Date in YYYY-MM-DD format
+  - start_time: Time like "4:00 PM" (optional)
+  - end_date: End date if different from start (optional)
+  - end_time: End time (optional)
+  EXHIBITIONS: For an art exhibition, gallery show, or installation that runs over a date range (e.g. "March 1 – July 5", "On view through June 30"), create ONE occurrence spanning the run: start_date = opening date, end_date = closing date. Do NOT collapse the run to a single day, and do NOT stamp today's date as the exhibition date. An exhibition whose OPENING date has already passed is STILL on view as long as its closing date is today or later — keep it, using the original (past) opening date as start_date; do NOT null it or skip it because it already opened. If the page gives a CLOSING date but no opening date ("Through August 31, 2026", "Until Sept 4"), still return ONE occurrence: end_date = that closing date, start_date = null. An end-only occurrence is valid and expected — do NOT set occurrences=null just because the opening date is missing. Only if the page gives no opening AND no closing date at all (a permanent / date-less display), set occurrences=null instead of inventing a single date.
+  RECEPTION vs RUN: A timed opening/closing reception, opening night, or preview is a DISTINCT single-day event — NOT an occurrence of the exhibition it celebrates. When a page describes both a dated, timed reception AND a broader exhibition run (e.g. "Opening reception June 4, 6–8pm" for a show "on view June 4 – July 10"), emit TWO separate events: (1) the reception, with ONE single-day occurrence (its date + time), and (2) the exhibition, with ONE run occurrence (start_date = opening, end_date = closing). Never attach the exhibition's full run as a second occurrence of the reception event, and never put the reception's time on the exhibition run.
+- description: 1-3 sentence description based ONLY on what is stated in the source content. If the listing only has a name/date/time with no further details, use "No description available." Do NOT make up or infer descriptions.
+- url: Specific event URL if available
+- hashtags: 4-7 CamelCase tags (e.g., ["Comedy", "StandUp", "Free"]). Always include at least one category from: Music, Nightlife, Comedy, Art, Theater, Dance, Film, Literature, Community, Family, Wellness, Education, Outdoor, Sports, Games. Also include Free if the event is free, or Virtual if online. Then add granular descriptive tags. {tag_avoidance}
+- emoji: A single emoji representing the event
+
+{note_section}{rid_section}
+Rules:
+- {SCHEDULE_EXCEPTIONS_RULE}
+- {EVENT_STATUS_RULE}
+- Extract ALL events from the page - do not skip or summarize
+- Do NOT extract things that are not attendable public events. Skip: venue/program closures and holiday-closure notices ("Museum Closed", "Park Closes at 5pm", "Office Closed for Juneteenth"); calls for submissions, applications, or grants ("Open Call for Artists", "Submission Deadline", "Micro Grants Round 3"); casting calls and talent-recruitment notices ("Casting Call", "Models Wanted", "Dancers Needed"); civic date markers ("Election Day", "Primary Day", "Election Day 2026") — an attendable election-night watch party IS an event; venue marketing (space/room rentals, "Private Events", "Available for Booking", dining service like "Signature Breakfast"); season passes and ticketing placeholders ("Summer Pass 2026", "Showtimes"); fundraising campaigns and donation-match drives ("Match Campaign", "Giving Day") — an attendable benefit concert or gala IS an event; submit-your-work contests with an entry deadline ("Library Card Art Contest") — a contest held live in front of an audience (trivia, dance, pie-eating) IS an event; info-booth or vendor-table marketing listings inside a festival program ("Our Info Booths"); childcare offered as an amenity during another activity ("Nursery Care" during worship services, babysitting while parents attend) — a children's program or childcare-related class that is itself the event ("Toddler Storytime", "Babysitting 101 Training", "Preschool Open House") IS an event; members-only programming restricted to a venue's or club's own members ("Members-Only Tour", "Lunch | MEMBERS ONLY", "Fabrik Member Exclusive") — an event anyone can attend by buying a ticket IS an event; a school's orientations for its own enrolled students and their families ("New Student Orientation", "Parent/Family Orientation") — a volunteer orientation open to anyone who wants to volunteer IS an event; and content placeholders or unrelated spam. These are not events — leave them out entirely.
+- {region_rule}
+- Ignore unrelated event sections ("Hot Events", "Similar events", etc.)
+- ONE LISTING PER URL: two listings with DIFFERENT event URLs are DIFFERENT events — never fuse them into one, no matter how similar their titles are. Titles that differ only by a qualifier or suffix ("Early Access", "Fan Event", "Special Preview", "(Sensory)", "(Open Cap/Eng Sub)", "3D", "25th Anniversary", a screening-format or accessibility tag) are separate ticketed listings: emit EACH as its own event, using that listing's OWN url and ONLY the dates shown under that listing. Never move a date from one listing onto another, and never pair one listing's title with another listing's url. Only listings that share the SAME url may be combined into a single event.
+- For recurring events, expand ALL individual dates into the occurrences array
+- If no events are found, return an empty events list
+- IMPORTANT: Do NOT fabricate or guess dates. If a listing has no date information on the page, set occurrences to null.
 
 Website content:
 
-{chunk_text}'''
+{page_content}'''
+
+
+REFERENCE_PROMPT_TEMPLATE = """
+REFERENCE - Previously extracted events (for naming consistency only):
+{existing_events_json}
+
+NOTE: The above is ONLY for reference to maintain consistent naming. You MUST still extract ALL events from the page content below - do not limit your output to these events. Our deduplication system will handle any overlaps.
+
+"""
 
 
 def get_prompt(url, page_content, current_date_string, name, notes, existing_events=None, request_id=""):
@@ -1963,46 +2156,19 @@ def get_prompt(url, page_content, current_date_string, name, notes, existing_eve
             print(f"    - WARNING: Existing events JSON too large ({len(existing_events_json)} chars), omitting from prompt")
             existing_events_section = ""
         else:
-            existing_events_section = f"""
-REFERENCE - Previously extracted events (for naming consistency only):
-{existing_events_json}
+            existing_events_section = _prompt_rule('REFERENCE_PROMPT_TEMPLATE').format(
+                existing_events_json=existing_events_json)
 
-NOTE: The above is ONLY for reference to maintain consistent naming. You MUST still extract ALL events from the page content below - do not limit your output to these events. Our deduplication system will handle any overlaps.
-
-"""
-
-    return f'''{city_config.extraction_intro().format(date=current_date_string, name=name, url=url)}
-{existing_events_section}
-Based on the website content below, extract all upcoming events. For each event, provide:
-- name: The event name
-- location: The venue name ONLY (e.g. "Brooklyn Heights Library", "Le Petit Versailles"). Preserve the exact spelling — do not introduce typos. If the source lists "<Branch>, <Room>" (e.g. "Highlawn, Meeting Room"), the branch is the location and the room is the sublocation — do not concatenate them into one field.
-- sublocation: Optional location within the venue (rooftop, 5th floor, specific meeting room, etc.)
-- occurrences: An array of date/time objects. IMPORTANT: For recurring events (e.g., "every Wednesday" or "Jan 11, 18, 25"), list EACH specific date as a separate occurrence within the next 3 months. Each occurrence has:
-  - start_date: Date in YYYY-MM-DD format
-  - start_time: Time like "4:00 PM" (optional)
-  - end_date: End date if different from start (optional)
-  - end_time: End time (optional)
-  EXHIBITIONS: For an art exhibition, gallery show, or installation that runs over a date range (e.g. "March 1 – July 5", "On view through June 30"), create ONE occurrence spanning the run: start_date = opening date, end_date = closing date. Do NOT collapse the run to a single day, and do NOT stamp today's date as the exhibition date. An exhibition whose OPENING date has already passed is STILL on view as long as its closing date is today or later — keep it, using the original (past) opening date as start_date; do NOT null it or skip it because it already opened. If the page gives a CLOSING date but no opening date ("Through August 31, 2026", "Until Sept 4"), still return ONE occurrence: end_date = that closing date, start_date = null. An end-only occurrence is valid and expected — do NOT set occurrences=null just because the opening date is missing. Only if the page gives no opening AND no closing date at all (a permanent / date-less display), set occurrences=null instead of inventing a single date.
-  RECEPTION vs RUN: A timed opening/closing reception, opening night, or preview is a DISTINCT single-day event — NOT an occurrence of the exhibition it celebrates. When a page describes both a dated, timed reception AND a broader exhibition run (e.g. "Opening reception June 4, 6–8pm" for a show "on view June 4 – July 10"), emit TWO separate events: (1) the reception, with ONE single-day occurrence (its date + time), and (2) the exhibition, with ONE run occurrence (start_date = opening, end_date = closing). Never attach the exhibition's full run as a second occurrence of the reception event, and never put the reception's time on the exhibition run.
-- description: 1-3 sentence description based ONLY on what is stated in the source content. If the listing only has a name/date/time with no further details, use "No description available." Do NOT make up or infer descriptions.
-- url: Specific event URL if available
-- hashtags: 4-7 CamelCase tags (e.g., ["Comedy", "StandUp", "Free"]). Always include at least one category from: Music, Nightlife, Comedy, Art, Theater, Dance, Film, Literature, Community, Family, Wellness, Education, Outdoor, Sports, Games. Also include Free if the event is free, or Virtual if online. Then add granular descriptive tags. {city_config.extraction_tag_avoidance()}
-- emoji: A single emoji representing the event
-
-{note_section}{rid_section}
-Rules:
-- Extract ALL events from the page - do not skip or summarize
-- Do NOT extract things that are not attendable public events. Skip: venue/program closures and holiday-closure notices ("Museum Closed", "Park Closes at 5pm", "Office Closed for Juneteenth"); calls for submissions, applications, or grants ("Open Call for Artists", "Submission Deadline", "Micro Grants Round 3"); casting calls and talent-recruitment notices ("Casting Call", "Models Wanted", "Dancers Needed"); civic date markers ("Election Day", "Primary Day", "Election Day 2026") — an attendable election-night watch party IS an event; venue marketing (space/room rentals, "Private Events", "Available for Booking", dining service like "Signature Breakfast"); season passes and ticketing placeholders ("Summer Pass 2026", "Showtimes"); fundraising campaigns and donation-match drives ("Match Campaign", "Giving Day") — an attendable benefit concert or gala IS an event; submit-your-work contests with an entry deadline ("Library Card Art Contest") — a contest held live in front of an audience (trivia, dance, pie-eating) IS an event; info-booth or vendor-table marketing listings inside a festival program ("Our Info Booths"); childcare offered as an amenity during another activity ("Nursery Care" during worship services, babysitting while parents attend) — a children's program or childcare-related class that is itself the event ("Toddler Storytime", "Babysitting 101 Training", "Preschool Open House") IS an event; members-only programming restricted to a venue's or club's own members ("Members-Only Tour", "Lunch | MEMBERS ONLY", "Fabrik Member Exclusive") — an event anyone can attend by buying a ticket IS an event; a school's orientations for its own enrolled students and their families ("New Student Orientation", "Parent/Family Orientation") — a volunteer orientation open to anyone who wants to volunteer IS an event; and content placeholders or unrelated spam. These are not events — leave them out entirely.
-- {city_config.extraction_region_rule()}
-- Ignore unrelated event sections ("Hot Events", "Similar events", etc.)
-- ONE LISTING PER URL: two listings with DIFFERENT event URLs are DIFFERENT events — never fuse them into one, no matter how similar their titles are. Titles that differ only by a qualifier or suffix ("Early Access", "Fan Event", "Special Preview", "(Sensory)", "(Open Cap/Eng Sub)", "3D", "25th Anniversary", a screening-format or accessibility tag) are separate ticketed listings: emit EACH as its own event, using that listing's OWN url and ONLY the dates shown under that listing. Never move a date from one listing onto another, and never pair one listing's title with another listing's url. Only listings that share the SAME url may be combined into a single event.
-- For recurring events, expand ALL individual dates into the occurrences array
-- If no events are found, return an empty events list
-- IMPORTANT: Do NOT fabricate or guess dates. If a listing has no date information on the page, set occurrences to null.
-
-Website content:
-
-{page_content}'''
+    return _prompt_rule("SINGLE_PROMPT_TEMPLATE").format(
+        intro=_prompt_rule("intro").format(date=current_date_string, name=name, url=url),
+        existing_events_section=existing_events_section,
+        tag_avoidance=_prompt_rule("tag_avoidance"),
+        note_section=note_section,
+        rid_section=rid_section,
+        SCHEDULE_EXCEPTIONS_RULE=_prompt_rule("SCHEDULE_EXCEPTIONS_RULE"),
+        EVENT_STATUS_RULE=_prompt_rule("EVENT_STATUS_RULE"),
+        region_rule=_prompt_rule("region_rule"),
+        page_content=page_content)
 
 
 # =============================================================================
@@ -2221,6 +2387,8 @@ async def prepare_extraction(cursor, crawl_result_id, website_name, notes="",
     website_id = result[0] if result else None
     prep.website_id = website_id
     settings = resolve_extraction_settings(result, profile_urls or [base_url], max_batches)
+    prep.max_batches = settings.max_batches
+    prep.max_records_per_chunk = settings.max_records_per_chunk
 
     current_date_string = agent_extraction.reference_date()
 
@@ -2232,6 +2400,7 @@ async def prepare_extraction(cursor, crawl_result_id, website_name, notes="",
     # Identical long paragraphs are the same card rendered twice; drop the copies
     # before anything is sized or chunked (see dedupe_repeated_paragraphs).
     content_to_process, dup_removed = dedupe_repeated_paragraphs(content_to_process)
+    prep.content = content_to_process
     if dup_removed:
         print(f"    - Removed {dup_removed} chars of repeated paragraphs before chunking")
 
@@ -2437,12 +2606,8 @@ async def execute_extraction_sync(cursor, connection, prep):
         if retry_reason:
             print(f"    - ⚠️  VARIANCE GUARD: {retry_reason}; retrying extraction once...")
             try:
-                review = ("\n\nCOVERAGE REVIEW: The initial extraction triggered a count "
-                          "variance guard. Independently inspect every source section and "
-                          "explicit occurrence again. Return a complete extraction; do not "
-                          "invent events to match historical counts.\n" + retry_reason)
-                review_prep = replace(prep, prompt=(prep.prompt or '') + review,
-                                      chunk_prompts=[prompt + review for prompt in prep.chunk_prompts])
+                review = _prompt_rule('COVERAGE_REVIEW_RULE') + retry_reason
+                review_prep = _prepare_coverage_review(prep, review)
                 retry_text = await _generate_extraction_response(review_prep, cursor, connection)
             except ExtractionCallFailure as e:
                 # The retry hit the API wall; the first attempt is still a real
@@ -2459,6 +2624,27 @@ async def execute_extraction_sync(cursor, connection, prep):
     db.update_crawl_result_extracted(cursor, connection, crawl_result_id, response_text)
     print(f"    - Extracted {event_count} events with {occurrence_count} occurrences")
     return True
+
+
+def _prepare_coverage_review(prep, review):
+    """Retry a collapsed single-page extraction through the chunked path.
+
+    Keep the original preparation immutable so a resumed agent run reconstructs
+    identical first-pass and review packets. Small sources without separable
+    chunks still get an independent review, with the original source intact.
+    """
+    if prep.extraction_type == 'single' and prep.content:
+        chunks, _ = chunk_content(prep.content, EVENTS_PER_CHUNK, MAX_CHUNK_CHARS)
+        chunks = cap_records_per_chunk(chunks, prep.max_records_per_chunk)
+        chunks = cap_occurrences_per_chunk(chunks)
+        date_string = agent_extraction.reference_date()
+        prompts = [get_chunk_prompt(chunk, date_string,
+                   request_id=f'cr-{prep.crawl_result_id}-review-chunk-{i}') + review
+                   for i, chunk in enumerate(chunks)]
+        return replace(prep, extraction_type='chunked', chunks=chunks,
+                       chunk_prompts=prompts, chunk_instructions=get_chunk_instructions(prep.notes))
+    return replace(prep, prompt=(prep.prompt or '') + review,
+                   chunk_prompts=[prompt + review for prompt in prep.chunk_prompts])
 
 
 async def _generate_extraction_response(prep, cursor, connection):
@@ -2830,7 +3016,7 @@ async def _execute_chunked_sync(prep, cursor=None, connection=None):
             legacy = agent_extraction.has_request(chunk_prompt, SimpleEventList)
             schema = SimpleEventList if legacy else EventList
             instructions = None if legacy else (
-                FULL_PASS_RULE + '\n\n' + (prep.chunk_instructions or get_chunk_instructions(prep.notes)))
+                _prompt_rule('FULL_PASS_RULE') + '\n\n' + (prep.chunk_instructions or get_chunk_instructions(prep.notes)))
             response_text = await llm_providers.generate_structured(
                 chunk_prompt, schema, CHUNK_TIMEOUT,
                 provider=llm_providers.provider_for('chunked'),

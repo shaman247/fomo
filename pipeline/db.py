@@ -215,50 +215,66 @@ def get_or_create_crawl_run(cursor, connection, run_date):
     return cursor.lastrowid
 
 
+# A retry keeps the original surface filename, with this generated suffix before
+# the extension. Normalize ONLY that suffix; independently stamped imports (for
+# example picnob_<handle>_<timestamp>.md) remain independent source surfaces.
+_CRAWL_RETRY_SUFFIX_RE = r'_w[0-9]+(_retry[0-9]+)?(_[0-9]+)?(?=[.][^.]+$|$)'
+
+
 def create_crawl_result(cursor, connection, crawl_run_id, website_id, filename):
-    """Create (or reuse) this website's crawl_results row for the run.
+    """Create a crawl attempt, reusing only a pending or failed attempt.
 
     `filename` comes from `crawler.create_safe_filename(website['name'])`, and the
     table's only uniqueness is `unique_run_file (crawl_run_id, filename)`. Reusing a
-    row per (run, website) is deliberate — a same-day re-crawl overwrites in place
-    rather than piling on (see the `DELETE FROM crawl_events` note in
-    `processor.py`). But two DIFFERENT websites can share a NAME, and 28 such pairs
+    completed row would erase its status before a replacement fetch succeeds.
+    Preserve completed snapshots on same-day recrawls, including their source
+    links, and give the new attempt a unique filename. Two DIFFERENT websites
+    can also share a NAME, and 28 such pairs
     exist among enabled crawlable sites (w180/w3501 "Caveat", w116/w4474 "The DL",
     w818/w4483 "Cafe Erzulie", …). When both were due in the same run, the second
     one's `ON DUPLICATE KEY UPDATE` handed it the FIRST website's row: its crawl
     content overwrote the other site's, attributed to the wrong `website_id`, while
     the loser got a `last_crawled_at` stamp with no crawl_result of its own —
     suppressing its scheduling and starving its events of sources. So resolve by
-    (run, website) FIRST, and only disambiguate the filename when another website in
-    this run already owns it. Existing rows keep their filenames, so this is a no-op
-    for every site that is not in a name collision.
+    (run, website) FIRST, and disambiguate filenames whenever a preserved
+    snapshot or another website already owns the requested name.
     """
     cursor.execute(
-        "SELECT id FROM crawl_results WHERE crawl_run_id = %s AND website_id = %s"
+        "SELECT id, status FROM crawl_results WHERE crawl_run_id = %s AND website_id = %s"
+        f" AND (filename = %s OR REGEXP_REPLACE(filename, '{_CRAWL_RETRY_SUFFIX_RE}', '') = %s)"
         " ORDER BY id DESC LIMIT 1",
-        (crawl_run_id, website_id)
+        (crawl_run_id, website_id, filename, filename)
     )
     row = cursor.fetchone()
-    if row:
+    if row and row[1] in ('pending', 'failed'):
         cursor.execute(
             "UPDATE crawl_results SET status = 'pending' WHERE id = %s", (row[0],)
         )
         connection.commit()
         return row[0]
 
-    cursor.execute(
-        "SELECT website_id FROM crawl_results WHERE crawl_run_id = %s AND filename = %s",
-        (crawl_run_id, filename)
-    )
-    row = cursor.fetchone()
-    if row and row[0] != website_id:
-        base, dot, ext = filename.rpartition('.')
-        filename = f"{base}_w{website_id}{dot}{ext}" if dot else f"{filename}_w{website_id}"
+    previous_id = row[0] if row else None
+    base, dot, ext = filename.rpartition('.')
+    if not dot:
+        base, ext = filename, ''
+    suffix = f'_w{website_id}' + (f'_retry{previous_id}' if previous_id else '')
+    candidate = f'{base}{suffix}{dot}{ext}' if previous_id else filename
+    collision = 0
+    while True:
+        cursor.execute(
+            "SELECT website_id FROM crawl_results WHERE crawl_run_id = %s AND filename = %s",
+            (crawl_run_id, candidate)
+        )
+        if not cursor.fetchone():
+            filename = candidate
+            break
+        extra = f'_{collision}' if collision else ''
+        candidate = f'{base}{suffix}{extra}{dot}{ext}'
+        collision += 1
 
     cursor.execute(
         """INSERT INTO crawl_results (crawl_run_id, website_id, filename, status, created_at)
-           VALUES (%s, %s, %s, 'pending', NOW())
-           ON DUPLICATE KEY UPDATE status = 'pending'""",
+           VALUES (%s, %s, %s, 'pending', NOW())""",
         (crawl_run_id, website_id, filename)
     )
     connection.commit()
@@ -759,11 +775,15 @@ MIN_FAILED_RETRY_CONTENT_CHARS = 500
 
 # Shared by ordinary retry discovery and exact-ID agent-run resume inspection.
 # A website can have independent surfaces (including Picnob), so a later success
-# supersedes a failure only when its exact filename is the same.
-FAILED_CRAWL_SUPERSEDED_SQL = """EXISTS (
+# supersedes a failure only when its logical filename is the same. The generated
+# recrawl suffix is not a new surface, and must not strand a failed retry after
+# the next successful daily crawl.
+FAILED_CRAWL_SUPERSEDED_SQL = f"""EXISTS (
     SELECT 1 FROM crawl_results newer
     WHERE newer.website_id = cr.website_id
-      AND newer.filename = cr.filename
+      AND (newer.filename = cr.filename OR
+           REGEXP_REPLACE(newer.filename, '{_CRAWL_RETRY_SUFFIX_RE}', '') =
+           REGEXP_REPLACE(cr.filename, '{_CRAWL_RETRY_SUFFIX_RE}', ''))
       AND newer.status IN ('extracted', 'processed')
       AND (
           newer.crawled_at > cr.crawled_at
@@ -810,7 +830,7 @@ def get_incomplete_crawl_results(cursor, website_ids=None):
                END as effective_status,
                cr.batch_job_name,
                CHAR_LENGTH(COALESCE(cr.crawled_content, '')),
-               {FAILED_CRAWL_SUPERSEDED_SQL}
+               {FAILED_CRAWL_SUPERSEDED_SQL}, cr.filename
         FROM crawl_results cr
         JOIN websites w ON cr.website_id = w.id
         JOIN crawl_runs crun ON cr.crawl_run_id = crun.id
@@ -844,6 +864,7 @@ def get_incomplete_crawl_results(cursor, website_ids=None):
             'batch_job_name': row[8],
             'content_chars': row[9],
             'superseded_by_success': bool(row[10]),
+            'filename': row[11],
         })
 
     return results

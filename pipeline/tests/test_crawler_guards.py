@@ -503,9 +503,9 @@ class TestDetailCrawlChallengeGuard(unittest.TestCase):
 
         self.assertIsNone(self._run(Hang(), timeout=0.05))
 
-    def test_long_page_is_truncated_to_12k(self):
+    def test_long_page_keeps_its_complete_source(self):
         fake = _FakeCrawler("x" * 20000)
-        self.assertEqual(len(self._run(fake)), 12000)
+        self.assertEqual(len(self._run(fake)), 20000)
 
     def test_json_detail_payload_is_not_treated_as_a_challenge(self):
         # The tiny-JSON carve-out added for API feeds must keep working here:
@@ -773,6 +773,150 @@ class TestAllUrlsBlockedCrawl(unittest.TestCase):
         fake_db.update_crawl_result_crawled.assert_called_once()
 
 
+# =============================================================================
+# crawl4ai's structural verdict over a JSON API response (w4615, 2026-09-21)
+#
+# api.lu.ma's calendar feed answered normally with an empty list of entries.
+# crawl4ai's own tier-3 structural check saw a small document carrying no
+# semantic HTML element and reported it as a block, so the body was discarded,
+# the URL went through the challenge retries (which return the same document)
+# and a healthy 0-event crawl was stored as `failed`. An empty feed must be a
+# successful crawl; HTML keeps the structural check.
+# =============================================================================
+
+STRUCTURAL_ERROR = ("Blocked by anti-bot protection: Structural: no_content_elements "
+                    "on small page (710 bytes, 571 chars visible)")
+
+# What a browser hands the crawler for a JSON response: the payload inside a
+# <pre>, with no other semantic element on the page.
+EMPTY_FEED_HTML = (
+    '<html><head><meta name="color-scheme" content="light dark"></head>'
+    '<body><pre style="word-wrap: break-word; white-space: pre-wrap;">'
+    '{&quot;entries&quot;:[],&quot;has_more&quot;:false}</pre></body></html>'
+)
+
+# The same feed with the payload written straight into the document (an in-page
+# script that replaces the body, as the Luma calendar injector does).
+EMPTY_FEED_RAW = '{"entries":[],"has_more":false}'
+
+# An HTML shell with no content elements at all — the shape the structural
+# check exists for. It must still be treated as a block.
+HTML_SHELL = '<html><head><title>x</title></head><body><div>Please wait</div></body></html>'
+
+
+class TestStructuralJsonFalsePositive(unittest.TestCase):
+    """A structural verdict over a JSON document is not a block."""
+
+    def test_browser_wrapped_empty_feed_is_a_false_positive(self):
+        self.assertTrue(crawler._is_structural_json_false_positive(
+            STRUCTURAL_ERROR, EMPTY_FEED_HTML))
+
+    def test_raw_json_body_is_a_false_positive(self):
+        self.assertTrue(crawler._is_structural_json_false_positive(
+            STRUCTURAL_ERROR, EMPTY_FEED_RAW))
+
+    def test_json_content_type_is_enough(self):
+        self.assertTrue(crawler._is_structural_json_false_positive(
+            STRUCTURAL_ERROR, HTML_SHELL, 'application/json; charset=utf-8'))
+
+    def test_rendered_markdown_json_is_enough(self):
+        # Some fetches hand back markdown but no usable html document.
+        self.assertTrue(crawler._is_structural_json_false_positive(
+            STRUCTURAL_ERROR, '', None, EMPTY_JSON_FEED_BODY))
+
+    def test_html_shell_keeps_the_structural_check(self):
+        self.assertFalse(crawler._is_structural_json_false_positive(
+            STRUCTURAL_ERROR, HTML_SHELL))
+
+    def test_challenge_interstitial_keeps_the_structural_check(self):
+        self.assertFalse(crawler._is_structural_json_false_positive(
+            STRUCTURAL_ERROR, CF_JUST_A_MOMENT_BODY))
+
+    def test_http_status_verdicts_are_never_waved_through(self):
+        self.assertFalse(crawler._is_structural_json_false_positive(
+            BLOCK_ERROR, EMPTY_FEED_HTML))
+        self.assertFalse(crawler._is_structural_json_false_positive(
+            "Blocked by anti-bot protection: HTTP 429 Too Many Requests",
+            EMPTY_FEED_RAW))
+
+    def test_non_block_errors_are_not_touched(self):
+        self.assertFalse(crawler._is_structural_json_false_positive(
+            "net::ERR_CONNECTION_RESET", EMPTY_FEED_HTML))
+        self.assertFalse(crawler._is_structural_json_false_positive(
+            None, EMPTY_FEED_HTML))
+
+    def test_truncated_json_still_counts_as_blocked(self):
+        self.assertFalse(crawler._is_structural_json_false_positive(
+            STRUCTURAL_ERROR, '{"entries":[', None))
+
+
+class _HtmlListCrawler:
+    """crawl_website stand-in serving (markdown, html, success, error) per URL.
+
+    Unlike _ListCrawler it carries a document distinct from the markdown, which
+    is what the structural-verdict guard reads. No Content-Type header: these
+    cases must be decided on the document itself.
+    """
+
+    def __init__(self, pages):
+        self._pages = list(pages)
+        self.calls = 0
+
+    async def arun(self, url=None, config=None):
+        self.calls += 1
+        body, html, success, error = self._pages.pop(0)
+        result = _FakeResult(body, success=success, use_raw=True)
+        result.error_message = error
+        result.html = html
+        result.response_headers = {}
+        return [result]
+
+
+class TestEmptyJsonFeedIsStoredAsASuccessfulCrawl(unittest.TestCase):
+    """The w4615 shape, end to end: stored as crawled, never retried."""
+
+    def setUp(self):
+        crawler.reset_host_circuits()
+
+    def tearDown(self):
+        crawler.reset_host_circuits()
+
+    def _run(self, pages):
+        website = {
+            'id': 4615,
+            'name': 'Girls Gone Hiking',
+            'urls': ['https://api.lu.ma/url?url=girlsgonehiking'],
+            'crawl_timeout': 600,
+        }
+        fake_db = mock.MagicMock()
+        fake_db.create_crawl_result.return_value = 999
+        refetch = mock.AsyncMock(return_value=None)
+        with mock.patch.object(crawler, 'db', fake_db), \
+             mock.patch.object(crawler, '_refetch_past_challenge', new=refetch):
+            returned = asyncio.run(crawler.crawl_website(
+                _HtmlListCrawler(pages), website, mock.MagicMock(), mock.MagicMock(), 1))
+        return returned, fake_db, refetch
+
+    def test_structurally_flagged_empty_feed_is_stored_as_crawled(self):
+        returned, fake_db, refetch = self._run(
+            [(EMPTY_FEED_RAW, EMPTY_FEED_HTML, False, STRUCTURAL_ERROR)])
+
+        self.assertEqual(returned, 999)
+        fake_db.update_crawl_result_failed.assert_not_called()
+        fake_db.update_crawl_result_crawled.assert_called_once()
+        self.assertIn('"entries":[]', fake_db.update_crawl_result_crawled.call_args[0][3])
+        refetch.assert_not_awaited()
+
+    def test_an_html_shell_with_the_same_verdict_still_fails(self):
+        returned, fake_db, refetch = self._run(
+            [("Please wait\n", HTML_SHELL, False, STRUCTURAL_ERROR)])
+
+        self.assertIsNone(returned)
+        fake_db.update_crawl_result_crawled.assert_not_called()
+        fake_db.update_crawl_result_failed.assert_called_once()
+        refetch.assert_awaited()
+
+
 class TestHostBlockCircuitBreaker(unittest.TestCase):
     """The 2026-09-09 06:35 shape: a 403-hot host must not monopolise the batch.
 
@@ -1015,7 +1159,7 @@ NAV_HEAVY_DETAIL_HTML = """
 class TestDetailChromeStripping(unittest.TestCase):
     """The detail config must drop page chrome BEFORE the 12K truncation.
 
-    `crawl_event_url` returns `content[:12000]`, so any chrome that survives
+    `crawl_event_url` previously returned `content[:12000]`, so chrome surviving
     into the markdown is spent from the same budget as the event body. The fix
     is landmark-scoped on purpose: an in-article <header> carrying the event
     title must survive (the case the listing config's excluded_tags comment
@@ -1119,6 +1263,25 @@ class TestDetailHiddenTabStripping(unittest.TestCase):
         self.assertIn('[style*="display:none"]', crawler.DETAIL_HIDDEN_SELECTOR)
         self.assertIn('[style*="display: none"]', crawler.DETAIL_HIDDEN_SELECTOR)
         self.assertIn(crawler.DETAIL_HIDDEN_SELECTOR, crawler.DETAIL_EXCLUDED_SELECTOR)
+
+    def test_webflow_inactive_status_is_removed_but_visible_status_survives(self):
+        html = ('<html><body><main><h1>Cheese Class</h1>'
+                '<p>Learn to make mozzarella at the Bleecker Street classroom.</p>'
+                '<div class="w-condition-invisible"><p>This event has been cancelled. '
+                'Please view our cancellation and refund policy.</p></div>'
+                '<p>Sold out: join the waitlist for this cheese class.</p>'
+                '</main></body></html>')
+        after = self._markdown(html, crawler.DETAIL_EXCLUDED_SELECTOR)
+        self.assertNotIn('has been cancelled', after)
+        self.assertIn('Sold out: join the waitlist', after)
+        self.assertIn('Bleecker Street classroom', after)
+
+    def test_webflow_visible_cancellation_is_preserved(self):
+        html = ('<html><body><main><h1>Cheese Class</h1>'
+                '<div class="cancelled"><p>This event has been cancelled. '
+                'Please view our cancellation and refund policy.</p></div>'
+                '</main></body></html>')
+        self.assertIn('has been cancelled', self._markdown(html, crawler.DETAIL_EXCLUDED_SELECTOR))
 
     def test_event_is_buried_past_the_cap_without_the_selector(self):
         before = self._markdown(TABBED_DETAIL_HTML, crawler.DETAIL_CHROME_SELECTOR)

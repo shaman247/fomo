@@ -17,6 +17,7 @@ collisions exist among enabled crawlable websites.
 """
 
 import os
+import re
 import sys
 import unittest
 
@@ -35,10 +36,13 @@ class _FakeCursor:
 
     def execute(self, sql, params=()):
         head = ' '.join(sql.split())
-        if head.startswith('SELECT id FROM crawl_results WHERE crawl_run_id = %s AND website_id'):
-            run, wid = params
-            hits = [r for r in self.rows if r['crawl_run_id'] == run and r['website_id'] == wid]
-            self._result = [(max(r['id'] for r in hits),)] if hits else []
+        if head.startswith('SELECT id, status FROM crawl_results WHERE crawl_run_id = %s AND website_id'):
+            run, wid, filename, logical_filename = params
+            hits = [r for r in self.rows if r['crawl_run_id'] == run and r['website_id'] == wid
+                    and (r['filename'] == filename or
+                         re.sub(db._CRAWL_RETRY_SUFFIX_RE, '', r['filename']) == logical_filename)]
+            latest = max(hits, key=lambda r: r['id']) if hits else None
+            self._result = [(latest['id'], latest.get('status', 'pending'))] if latest else []
         elif head.startswith('SELECT website_id FROM crawl_results'):
             run, fn = params
             hits = [r for r in self.rows if r['crawl_run_id'] == run and r['filename'] == fn]
@@ -48,6 +52,9 @@ class _FakeCursor:
             hits = [r for r in self.rows if r['crawl_run_id'] == run and r['filename'] == fn]
             self._result = [(hits[0]['id'],)] if hits else []
         elif head.startswith('UPDATE crawl_results SET status'):
+            for row in self.rows:
+                if row['id'] == params[0]:
+                    row['status'] = 'pending'
             self._result = []
         elif head.startswith('INSERT INTO crawl_results'):
             run, wid, fn = params
@@ -55,7 +62,7 @@ class _FakeCursor:
                         if r['crawl_run_id'] == run and r['filename'] == fn]
             if not existing:  # ON DUPLICATE KEY UPDATE status — no new row
                 self.rows.append({'id': self._next_id, 'crawl_run_id': run,
-                                  'website_id': wid, 'filename': fn})
+                                  'website_id': wid, 'filename': fn, 'status': 'pending'})
                 self._next_id += 1
             self._result = []
         else:  # pragma: no cover - guards against a silently unhandled statement
@@ -82,6 +89,7 @@ class CrawlResultNameCollisionTest(unittest.TestCase):
         self.assertEqual(by_id[first]['website_id'], 3501)
         self.assertEqual(by_id[second]['website_id'], 180)
         self.assertEqual(by_id[second]['filename'], 'caveat_w180.md')
+        self.assertEqual(db.create_crawl_result(cur, conn, 326, 180, 'caveat.md'), second)
 
     def test_same_website_recrawled_in_run_reuses_its_row(self):
         cur, conn = _FakeCursor(), _FakeConn()
@@ -105,6 +113,44 @@ class CrawlResultNameCollisionTest(unittest.TestCase):
         db.create_crawl_result(cur, conn, 1, 10, 'animal')
         db.create_crawl_result(cur, conn, 1, 20, 'animal')
         self.assertEqual({r['filename'] for r in cur.rows}, {'animal', 'animal_w20'})
+
+    def test_completed_snapshots_survive_a_same_day_recrawl(self):
+        for status in ('crawled', 'extracted', 'processed'):
+            original = dict(id=7, crawl_run_id=326, website_id=3501,
+                            filename='caveat.md', status=status,
+                            crawled_content='original source', event_count=12)
+            cur = _FakeCursor([original.copy()])
+            new = db.create_crawl_result(cur, _FakeConn(), 326, 3501, 'caveat.md')
+            self.assertNotEqual(new, 7)
+            self.assertEqual(cur.rows[0], original)
+            self.assertEqual(cur.rows[1]['status'], 'pending')
+            cur.rows[1]['status'] = 'failed'
+            self.assertEqual(db.create_crawl_result(cur, _FakeConn(), 326, 3501, 'caveat.md'), new)
+            self.assertEqual(cur.rows[0], original)
+
+    def test_repeated_completed_attempts_have_distinct_filenames(self):
+        cur, conn = _FakeCursor(), _FakeConn()
+        for _ in range(3):
+            eid = db.create_crawl_result(cur, conn, 326, 3501, 'caveat.md')
+            next(r for r in cur.rows if r['id'] == eid)['status'] = 'processed'
+        self.assertEqual(len(cur.rows), 3)
+        self.assertEqual(len({r['filename'] for r in cur.rows}), 3)
+
+    def test_generated_filename_collision_cannot_reset_another_site(self):
+        cur = _FakeCursor([
+            dict(id=1, crawl_run_id=1, website_id=1, filename='caveat.md', status='processed'),
+            dict(id=2, crawl_run_id=1, website_id=2, filename='caveat_w1_retry1.md', status='processed'),
+        ])
+        new = db.create_crawl_result(cur, _FakeConn(), 1, 1, 'caveat.md')
+        self.assertEqual(new, 3)
+        self.assertEqual(cur.rows[1]['status'], 'processed')
+
+    def test_failed_import_is_not_reused_for_another_source_surface(self):
+        cur = _FakeCursor([dict(id=1, crawl_run_id=1, website_id=1,
+                               filename='picnob_venue_123.md', status='failed')])
+        new = db.create_crawl_result(cur, _FakeConn(), 1, 1, 'venue.md')
+        self.assertEqual(new, 2)
+        self.assertEqual(cur.rows[0]['status'], 'failed')
 
 
 if __name__ == '__main__':

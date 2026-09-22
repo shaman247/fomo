@@ -341,6 +341,93 @@ SKIP_LOCATION_NAMES = {
      'w 72nd street & riverside drive', 'w. 145th st. / riverside drive',
      'wagner pavilion classroom', 'walkway over the hudson state historic park',
      'warner leroy place', 'west 84th street & columbus avenue', 'west harlem',
+    # 2026-09-20 unmapped/generic sweep (/fix-unmapped-events). Each string below was researched
+    # against the live source page; the event is already pinned to the right row and the string
+    # names nothing separately mappable.
+    #   Brooklyn Book Festival Children's Day stages. Columbus Park (row 9425) IS the plaza in
+    #   front of Brooklyn Borough Hall — NYC Parks puts Columbus Park (B113C) at "Adam St., Court
+    #   St., Cadman Plaza West bet. Johnson St. and Fulton St." and the Borough Hall Greenmarket
+    #   is published as being "in Columbus Park". Each stage already carries a website-scoped alt
+    #   on 9425; only the generic_location=1 flag on that row keeps them in the queue. Indoor
+    #   Borough Hall rooms are correctly pinned to 136 instead.
+    'picture book stage, brooklyn borough hall plaza',
+    'makers and creators area, brooklyn borough plaza',
+    'young readers stage, brooklyn borough hall plaza',
+    #   Firm/employer name emitted as the venue by an Eventbrite listing. 300 Madison Ave is PwC's
+    #   New York office and the pin is right, but PwC also has Stamford / Florham Park / Melville
+    #   offices inside our coverage, so a global alias would be a catch-all onto the wrong one.
+    'pricewaterhousecoopers llp',
+    #   Named sub-place / meeting point inside the row it is already pinned to. Each row carries a
+    #   matching alternate name now; they stay in the queue only because the pinned row is
+    #   generic_location=1 (park / boardwalk / neighborhood), which fires before the alias check.
+    #     - Wagner Park Pavilion: the pavilion inside Wagner Park (5021)
+    #     - National Blvd Boardwalk Entrance: 8032 Long Beach Boardwalk is ALREADY pinned at this
+    #       entrance (identical coords to the Allegria Hotel at 80 W Broadway), so an entrance row
+    #       would have been an exact-duplicate-coordinate pin
+    #     - Grand Concourse & East 153rd Street: inside Franz Sigel Park's own address range (324)
+    #     - 111th St & Adam Clayton Powell Jr Blvd: African American Day Parade step-off, pinned to
+    #       Harlem (2698), which is how two other sources pin the same parade
+    'wagner park pavilion', 'national blvd boardwalk entrance',
+    'grand concourse & east 153rd street',
+    '111th street and adam clayton powell, jr. blvd',
+    # 2026-09-21 unmapped/generic sweep (/fix-unmapped-events). Verified against the live
+    # source page: the event is already pinned to the right row and the string names the
+    # umbrella INSTITUTION or the HOST ORG, not the building.
+    #   SVA is a multi-building Manhattan campus and sva.edu emits the school name as the
+    #   venue for every listing while the actual building lives in `sublocation`
+    #   ('Room 101C' -> 133/141 W 21st St = SVA Flatiron Gallery; '1st floor' -> 214 E 21st
+    #   St = SVA MFA Photography). Matching the bare school name would pull all three
+    #   buildings onto 209 E 23rd St, which is only the mailing address in the page footer.
+    'school of visual arts',
+    #   Speed-dating promoter that emits its own brand as the venue on listings with no
+    #   venue field; the event is pinned to the Manhattan generic, which is the best
+    #   mapping that will ever exist for an apply-to-attend event with a withheld address.
+    'plentyofparties',
+    #   The FESTIVAL's own name, emitted as location_name for all 86 screenings because the
+    #   Eventive `?_escaped_fragment_=` schedule renders title + time and no venue. The real
+    #   venue per screening comes from the Eventive JSON API (see websites.notes for w2450);
+    #   every event is now pinned to its own venue, so the string names nothing mappable.
+    'woodstock film festival',
+    #   Production company (A Bright Room Called Day runs in a private Crown Heights
+    #   townhouse whose address is emailed to ticket holders) — never gets a locations row.
+    '697 productions',
+    #   pools.events listing whose venue line is literally "RSVP for Addy"; the organizer
+    #   withholds the address, so the Manhattan generic is the best pin that will ever exist.
+    'moonlight palace',
+    #   Citi Bike dock used as the ride's meeting corner; pinned to the Harlem generic.
+    'citi bike dock, saint nicholas avenue & west 126th street',
+    # 2026-09-22 unmapped/generic sweep (/fix-unmapped-events). Every event below was researched
+    # against its own source page and is now pinned to the right row; the string itself names
+    # something that can never resolve to that row, so a "mismatch" against it is noise.
+    #   Brooklyn CB6 (w415) emits the HOST ORG as location_name and the real venue lives only in
+    #   the linked Eventbrite listing. GCC sets a DIFFERENT correct venue per stewardship series —
+    #   these five events land on four venues (Salt Lot, Dredgers boathouse, the GCC office at the
+    #   Old American Can Factory, Lowlands Nursery) — so the org name must never become an alias.
+    'gowanus canal conservancy',
+    #   The corridor is the WORK site; the Eventbrite meeting point is the Salt Lot two blocks
+    #   away, so aliasing the corridor onto the Salt Lot would be an alt-on-the-wrong-row hijack.
+    '6th street green corridor',
+    #   The forum is ABOUT the Brooklyn Marine Terminal; the CB6 page says "More details to come"
+    #   and names no venue, so the event is pinned to the Red Hook generic. A "Brooklyn Marine
+    #   Terminal" row would be a wrong pin for the forum and a large-industrial-site catch-all.
+    'brooklyn marine terminal',
+    #   A sitting Assemblymember's name, emitted as the venue for a pop-up clinic she co-hosts.
+    #   The RSVP form names the real venue (NYU Langone Health-Cobble Hill); her district office
+    #   is NOT it, and she holds pop-ups at many venues, so this must never become an alias.
+    'assemblymember jo anne simon',
+    #   A lawn inside Highland Park (385), which already carries the matching alternate name.
+    #   It stays in the queue only because 385 is generic_location=1 and the GENERIC branch fires
+    #   before the alias check.
+    'upper highland lawn',
+    #   NYC Parks' park-association metadata, not the meeting point. The page's own
+    #   "Meeting Location: E 17th Street and Albemarle Road", the title ("Prospect Park South")
+    #   and the funder (CM Rita Joseph, District 40) all place this in Prospect Park South /
+    #   Ditmas Park, ~1.5 mi from the real Mount Prospect Park at Eastern Pkwy/Underhill Ave.
+    'mount prospect park',
+    #   The FESTIVAL's own name. Cinema Tropical's page names no venue at all; the event is pinned
+    #   at the institution level to Film at Lincoln Center, which presents NYFF. A bare alias would
+    #   hijack every future NYFF screening from every source onto one theater.
+    'new york film festival',
 }
 
 # Websites whose feed emits the HOST/PARTNER ORG as `location_name` for every

@@ -203,9 +203,12 @@ async def _run_pipeline(website_ids=None, limit=None, *, work_dir=None, resume=F
             raise ValueError(f'Run already exists; use --resume {work_dir}')
         state = {'version': 1, 'city': os.environ.get('FOMO_CITY', 'nyc'),
                  'reference_date': datetime.now().date().isoformat(),
+                 'prompt_snapshot': agent_extraction.snapshot_prompts(extractor.prompt_templates()),
                  'phase': 'crawling', 'website_ids': website_ids}
         agent_run.save(work_dir, state)
     agent_extraction.configure(work_dir)
+    if resume and 'prompt_snapshot' not in state:
+        print('Legacy run has no prompt snapshot; instruction edits may invalidate packets.')
     print(f'Agent extraction workspace: {work_dir}')
     timer = logging_utils.StepTimer()
 
@@ -299,10 +302,23 @@ async def _run_pipeline(website_ids=None, limit=None, *, work_dir=None, resume=F
         websites = [] if resume else db.get_websites_due_for_crawling(cursor, website_ids)
         # Automatic runs finish stored crawls first. Explicit --ids retains its
         # force-recrawl contract (needed after a crawl/source fix); the new run
-        # supersedes that site's old incomplete rows in this extraction scope.
+        # supersedes that site's old web captures in this extraction scope.
+        # Separately ingested captures are independent of the web crawl.
         pending_website_ids = {r['website_id'] for r in incomplete_results}
         if not website_ids:
             websites = [w for w in websites if w['id'] not in pending_website_ids]
+        if limit and len(websites) > limit:
+            # Sites whose URLs are ALL handled out-of-band (Instagram via
+            # /picnob-scrape) are skipped by the crawler anyway, so they must
+            # not consume the bounded budget: on 2026-09-20 they took 136 of
+            # 180 slots (2,478 enabled IG-only sites sort oldest-first) and
+            # only 44 real sites were crawled. Explicit --ids is unaffected.
+            crawlable = [w for w in websites
+                         if not site_profiles.all_skip([u['url'] if isinstance(u, dict) else u for u in w['urls']])]
+            if len(crawlable) != len(websites):
+                print(f"Found {len(websites)} website(s) due; {len(websites) - len(crawlable)} are "
+                      f"out-of-band-only (Instagram) and excluded from the --limit budget")
+            websites = crawlable
         if limit and len(websites) > limit:
             print(f"Found {len(websites)} website(s) due, limiting to {limit}")
             websites = websites[:limit]
@@ -318,7 +334,12 @@ async def _run_pipeline(website_ids=None, limit=None, *, work_dir=None, resume=F
             # bundles stranded as 'crawled' on 2026-09-17.
             recrawling = {w['id'] for w in websites
                           if not site_profiles.all_skip([u['url'] if isinstance(u, dict) else u for u in w['urls']])}
-            incomplete_results = [r for r in incomplete_results if r['website_id'] not in recrawling]
+            # Mixed web/Instagram sites are recrawled too, but the crawler
+            # skips their Instagram URL. Keep imported Picnob bundles using
+            # the same filename partition as the coverage-drop report.
+            incomplete_results = [r for r in incomplete_results
+                                  if r['website_id'] not in recrawling
+                                  or (r.get('filename') or '').startswith('picnob_')]
             incomplete_crawled = [r for r in incomplete_results if r['status'] == 'crawled']
             incomplete_extracted = [r for r in incomplete_results if r['status'] == 'extracted']
 

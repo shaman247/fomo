@@ -97,7 +97,7 @@ def representatives(indices, vectors, limit):
 def read_snapshot():
     from db import create_connection
     from constants import get_active_date_window
-    from exporter import _PUBLISHABLE_WEBSITE_GATE
+    from publishability import PUBLISHABLE_WEBSITE_GATE as _PUBLISHABLE_WEBSITE_GATE
     conn = create_connection()
     if conn is None:
         raise RuntimeError('Database unavailable; no model was changed')

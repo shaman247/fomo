@@ -36,6 +36,7 @@ import db
 from tag_canonicalization import resolve_tag_name
 import crawler
 import site_profiles
+from event_name_guards import conversation_subject_mismatch, game_program_variant_mismatch, library_program_variant_mismatch, named_sub_event_mismatch, participatory_program_variant_mismatch
 # Occurrence-time canonicalization lives in `occurrence_times` (the single
 # owner, also used by db.py's write helpers and the merger). The underscore
 # aliases keep this module's historical names for callers and scripts.
@@ -628,6 +629,33 @@ def _is_open_ended_run(row_dict):
     return False
 
 
+def _is_explicit_exhibition_span(row_dict):
+    """A dated, untimed exhibition run can legitimately last over a year.
+
+    Require both supplied endpoints, before filter_by_date synthesizes either
+    one. Broad art/gallery tags also describe talks and classes, so only an
+    explicit exhibition tag qualifies. Timed sessions keep the duration guard.
+    """
+    if (not row_dict.get('start_date') or not row_dict.get('end_date')
+            or (row_dict.get('start_time') or '').strip()
+            or (row_dict.get('end_time') or '').strip()):
+        return False
+    for field in ('hashtags', 'tags'):
+        raw = row_dict.get(field) or []
+        values = raw.split(',') if isinstance(raw, str) else raw
+        if any(str(tag).strip().lower() in
+               {'exhibition', 'exhibitions', 'exhibit', 'exhibits'} for tag in values):
+            return True
+    return False
+
+
+def _is_source_listing_metadata(row_dict, effective_url, source_url):
+    """A dated calendar session remains an event without a detail URL or blurb."""
+    return (not (row_dict.get('start_date') or row_dict.get('end_date'))
+            and _description_is_blank(row_dict.get('description'))
+            and site_profiles.is_listing_url(effective_url, source_url))
+
+
 def filter_by_date(row_dict, current_date, future_limit_date):
     """Filters a row based on its start and end dates.
 
@@ -643,9 +671,14 @@ def filter_by_date(row_dict, current_date, future_limit_date):
     Open-ended runs ("Through Aug 22") arrive with an end_date and NO
     start_date; row_dict['start_date'] is backfilled with today so the row
     survives (see below).
+
+    Explicit, untimed exhibition spans may exceed 400 days. Missing endpoints
+    and timed/non-exhibition events retain the duration guard.
     """
     start_date_str = (row_dict.get('start_date') or '').strip()
     end_date_str = (row_dict.get('end_date') or '').strip()
+    explicit_exhibition_span = bool(start_date_str and end_date_str
+                                    and _is_explicit_exhibition_span(row_dict))
 
     # Open-ended run: an exhibition listed only by its closing date ("Through
     # Aug 22") comes back from Gemini as {"start_date": null, "end_date":
@@ -691,7 +724,7 @@ def filter_by_date(row_dict, current_date, future_limit_date):
                 row_dict['end_date'] = end_date_str
                 duration_days = (open_run_end - start_date).days
 
-        if duration_days > 400:
+        if duration_days > 400 and not explicit_exhibition_span:
             return False, 'duration_too_long'
     except (ValueError, TypeError):
         return False, 'invalid_date'
@@ -1143,6 +1176,21 @@ _BARE_GENERIC_NAME_RE = re.compile(
     r'private|closed|maintenance)',
     re.IGNORECASE)
 
+# The Giving Tuesday label can also name a real benefit. Require an appeal in
+# the body and refuse this rule when the body describes an attendable format.
+# Missing descriptions and "Save the Date" alone do not establish non-events.
+_GIVING_TUESDAY_NAME_RE = re.compile(
+    r'^\s*(?:save\s+the\s+date\s*[:\u2013\u2014-]\s*)?'
+    r'giving\s+tuesday(?:\s+\d{4})?\s*[!.]?\s*$', re.IGNORECASE)
+_GIVING_APPEAL_RE = re.compile(
+    r'\bdonat(?:e|es|ed|ing|ions?)\b|\byour\s+(?:support|gift)\b|'
+    r'\b(?:day\s+of\s+generosity|make\s+a\s+gift)\b', re.IGNORECASE)
+_GIVING_GATHERING_RE = re.compile(
+    r'\b(?:concerts?|galas?|part(?:y|ies)|receptions?|screenings?|performances?|'
+    r'workshops?|classes|volunteer(?:ing)?|dinners?|breakfasts?|luncheons?|'
+    r'brunch|auctions?|tours?|talks?|panels?|readings?|meetups?|rall(?:y|ies)|'
+    r'runs?|walks?|dancing|celebrations?|open\s+house|live\s+music)\b', re.IGNORECASE)
+
 # Placeholder screening rows: a cinema publishes an unannounced slot as
 # "Untitled Movie (Angelika SoHo)" — no title, no description, 20 occurrences —
 # and it comes back every run. The bare "Untitled" case is already covered by
@@ -1587,6 +1635,18 @@ _MEMBERS_ONLY_VENUE_VETO_RE = re.compile(
     r'[@]\s*members?[\s-]+only\b|\b(?:at|in)\s+members\s+only\b|'
     r'\bmembers?[\s-]+only\s+(?:lounge|club|bar|tavern|venue|band|nyc)\b',
     re.IGNORECASE)
+
+# A member-titled preview can state its restriction without saying "only":
+# members visit/view the venue before public admission. Require both signals;
+# ordinary public events can advertise the same benefit in their description.
+_MEMBER_PREVIEW_NAME_RE = re.compile(r'^\s*members?\b', re.IGNORECASE)
+_MEMBER_PREVIEW_ACCESS_RE = re.compile(
+    r'\bmembers?\b[^.!?\n]{0,100}\b(?:view|explore|visit|access|enter)\b'
+    r'[^.!?\n]{0,100}\bbefore\s+the\s+(?:general\s+)?public\b',
+    re.IGNORECASE)
+_MEMBER_PREVIEW_PUBLIC_VETO_RE = re.compile(
+    r'\b(?:open\s+to\s+(?:the\s+)?(?:general\s+)?public|public\s+welcome|'
+    r'non[ -]?members?\s+(?:are\s+)?welcome)\b', re.IGNORECASE)
 
 # Enrolled-student academic orientations ("New Student Orientation",
 # e207564 w536 Pratt, hand-suppressed on 2026-08-20 with its two siblings) —
@@ -2692,7 +2752,8 @@ def _is_seo_listicle_spam(name, description):
 # events: 80 net-new rows, **all** of them bookings, **zero** live, all from
 # those two websites. The existing "open to the public" veto still applies.
 _PRIVATE_BOOKING_NAME_RE = re.compile(
-    r'\bprivate\s+(?:meeting|event|session|function|use|hire|part(?:y|ies))s?\b',
+    r'\bprivate\s+(?:meeting|event|session|function|use|hire|'
+    r'(?:(?:opening|closing)\s+)?part(?:y|ies))s?\b',
     re.IGNORECASE)
 _PRIVATE_BOOKING_NAME_VETO_RE = re.compile(
     r'\bopen\s+to\s+the\s+(?:general\s+)?public\b|\bpublic\s+welcome\b',
@@ -3366,6 +3427,8 @@ _JUNK_RULES = (
     # rentals, season passes, cinema showtime placeholders, fundraising
     # campaigns, info-booth listings, … (see _NON_EVENT_NAME_PATTERNS).
     _JunkRule('non_event_name', _NON_EVENT_NAME_RE),
+    _JunkRule('giving_tuesday_appeal', _GIVING_TUESDAY_NAME_RE, how='fullmatch',
+              desc=_GIVING_APPEAL_RE, vetoes=((_GIVING_GATHERING_RE, 'desc'),)),
     # Holiday closure notice ("Memorial Day-Closed", "Labor Day Holiday").
     # Fires on the name alone: these carry no description worth reading, and the
     # required closure cue is what makes it safe. See the regex comment.
@@ -3465,6 +3528,9 @@ _JUNK_RULES = (
     # events AT a venue named "Members Only".
     _JunkRule('members_only', _MEMBERS_ONLY_NAME_RE,
               vetoes=((_MEMBERS_ONLY_VENUE_VETO_RE, 'name'),)),
+    _JunkRule('member_preview_access', _MEMBER_PREVIEW_NAME_RE,
+              desc=_MEMBER_PREVIEW_ACCESS_RE,
+              vetoes=((_MEMBER_PREVIEW_PUBLIC_VETO_RE, 'both'),)),
     # Enrolled-student academic orientation, literal-phrase arm ("New Student
     # Orientation") …
     _JunkRule('student_orientation', _STUDENT_ORIENTATION_NAME_RE),
@@ -3905,6 +3971,12 @@ def group_event_occurrences(rows, source_url=None, location_refs=None):
                 continue
 
             normalized_existing = normalized_group_keys[existing_key]
+            if (game_program_variant_mismatch(event_name, existing.get('name', ''))
+                    or library_program_variant_mismatch(event_name, existing.get('name', ''))
+                    or named_sub_event_mismatch(event_name, existing.get('name', ''))
+                    or participatory_program_variant_mismatch(event_name, existing.get('name', ''))
+                    or conversation_subject_mismatch(event_name, existing.get('name', ''))):
+                continue
             if event_name == existing_key or normalized_event == normalized_existing:
                 # A per-date event URL must not keep a ROOM of the resolved
                 # venue out of its own event: nyc.gov emits one
@@ -3939,6 +4011,7 @@ def group_event_occurrences(rows, source_url=None, location_refs=None):
         return event_name
 
     grouped_events = {}
+    grouped_rows = {}
     normalized_group_keys = {}
     # Event-specific URLs per group (source_url excluded) — the containment
     # branch consults these via urls_compatible.
@@ -3978,6 +4051,7 @@ def group_event_occurrences(rows, source_url=None, location_refs=None):
         group_key = find_matching_group_key(
             event_name, loc_key(row_dict), row_url, grouped_events,
             normalized_group_keys, group_event_urls, loc_name(row_dict))
+        grouped_rows.setdefault(group_key, []).append(row_dict)
         if row_url:
             group_event_urls.setdefault(group_key, set()).add(row_url)
 
@@ -4032,6 +4106,9 @@ def group_event_occurrences(rows, source_url=None, location_refs=None):
                     if len(occ) > 2:
                         occ[2] = ''
 
+    from session_details import preserve_session_details
+    for key, event in grouped_events.items():
+        preserve_session_details(event, grouped_rows[key])
     return list(grouped_events.values())
 
 
@@ -4976,6 +5053,23 @@ def _parse_city_state(address):
     if state not in _US_STATES:
         return (None, None)
     return (parts[-2].lower(), state)
+
+
+def _is_city_placemarker(info, city):
+    """Whether a candidate represents this municipality rather than a venue.
+
+    City pins have a city-only postal address, or our explicit unspecified-
+    location marker. A station/library whose address happens to be in the
+    city is not a city pin.
+    """
+    name = info.get('name') or ''
+    if _UNSPECIFIED_LOCATION_MARKER_RE.search(name):
+        return _normalize_location_name(
+            _UNSPECIFIED_LOCATION_MARKER_RE.sub('', name)) == city
+    address = info.get('address') or ''
+    address_city, state = _parse_city_state(address)
+    return bool(state and address_city == city
+                and address.split(',')[0].strip().lower() == city)
 
 
 # Sentinel class for the city's own names ("NYC", "New York", "New York City"),
@@ -6576,6 +6670,14 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
     # guard. Uses the raw strings, not the normalized keys, so the "City, ST" tail
     # and city tokens survive for _region_conflict.
     city_states = locations_map.get('city_states', {})
+    # A known municipality without a named sub-venue is not a partial venue
+    # name. Keep curated/exact and website-authority matches, but don't let
+    # prefix/fuzzy guessing turn Rochester into Chester Court or a bare town
+    # into its station. City placemarkers remain eligible.
+    city_only = normalized_loc in city_states and (
+        not normalized_subloc
+        or bool(_extract_street_address(sublocation_name_raw or '')
+                or _extract_street_address_loose(sublocation_name_raw or '')))
     area_classes = locations_map.get('area_classes', {})
     raw_geo = ' '.join(p for p in (location_name_raw, sublocation_name_raw) if p)
     # `_area_qualifier_conflict` reads the TRAILING qualifier of each `[,/]`
@@ -7101,6 +7203,8 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
                 if is_coverage and _venue_type_swap_names(normalized_loc, loc_key):
                     continue
                 for cand in (match if isinstance(match, list) else [match]):
+                    if city_only and not _is_city_placemarker(cand, normalized_loc):
+                        continue
                     if conflicts(cand):
                         continue
                     if is_paren:
@@ -7172,6 +7276,10 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
                 # named loc 2488 by its bare "dance room" key, so the fuzzy tier
                 # answering it is pure loss.
                 if _is_bare_room_phrase(locations_map, key, raw_loc_lower):
+                    continue
+
+                if (city_only and key != normalized_name
+                        and not _is_city_placemarker(get_first(tier[key]), normalized_loc)):
                     continue
 
                 is_match = (
@@ -7893,12 +8001,11 @@ def process_events(cursor, connection, crawl_result_id, website_name, run_date_s
         # `tags[]`/`name`, say). `group_event_occurrences` falls back to
         # `source_url` when a row has no URL of its own, so the effective URL is
         # computed the same way here and tested against the listing endpoint
-        # (`site_profiles.is_listing_url`). A blank body is the corroborating
-        # signal: e161574 (Accent Sisters) is a real screening whose only URL is
-        # its calendar page, and its description spares it.
+        # (`site_profiles.is_listing_url`). Require both a blank body and absent
+        # dates: real calendar sessions can have no blurb or detail URL.
         if source_url and _description_is_blank(row_dict.get('description')):
             effective_url = absolutize_url(event_url, source_url) or source_url
-            if site_profiles.is_listing_url(effective_url, source_url):
+            if _is_source_listing_metadata(row_dict, effective_url, source_url):
                 _reject('source_listing_metadata',
                         'Record has no event URL of its own — points at the '
                         'listing endpoint it was extracted from',
@@ -8444,7 +8551,7 @@ async def managed_crawler(browser_config, startup_timeout=90, teardown_timeout=3
 def _detail_source_path(extraction_dir, candidate, settings):
     """Key durable detail snapshots by the row and its extraction context."""
     identity = json.dumps(
-        {'candidate': candidate, 'settings': settings},
+        {'candidate': candidate, 'settings': settings, 'content_policy': 'complete-v1'},
         sort_keys=True, ensure_ascii=False, default=str,
     )
     key = hashlib.sha256(identity.encode('utf-8')).hexdigest()
@@ -8640,7 +8747,9 @@ async def crawl_event_details(cursor, connection, candidates, num_workers=10,
             async with semaphore:
                 content = await crawler.crawl_event_url(
                     web_crawler, url, crawl_config,
-                    user_agent=website_settings.get(ws_id, {}).get('user_agent'))
+                    user_agent=website_settings.get(ws_id, {}).get('user_agent'),
+                    headed=bool(website_settings.get(ws_id, {}).get('headed')),
+                    use_stealth=bool(website_settings.get(ws_id, {}).get('use_stealth')))
                 heartbeat['last'] = time.monotonic()
                 heartbeat['done'] += 1
                 _save_detail_source(_detail_source_path(
