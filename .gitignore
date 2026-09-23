@@ -40,6 +40,8 @@ pipeline/sources/*.json
 # subdirectory as a top-level package, so pipeline/tests/sources/ would shadow
 # the real `sources` package (pipeline/sources) that those very tests import.
 pipeline/tests/untracked/
+# Deployment-plugin regression tests live with their ignored subjects.
+pipeline/sources/_tests/
 
 # Environment variables
 .env
@@ -282,6 +284,8 @@ mobile/android/**/lint-results*
 !scripts/audit_geographic_hierarchy.py
 
 !scripts/audit_venue_memberships.py
+!scripts/audit_venue_mappings.py
+!scripts/audit_venue_addresses.py
 /pipeline/tests/test_event_icon_audit.py
 # Local similarity diagnostics and offline tag-icon editing (model build/health stay tracked).
 /pipeline/similarity_viewer.py

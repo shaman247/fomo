@@ -48,8 +48,8 @@ class EventChunkHardLimitTests(unittest.TestCase):
         self.assertEqual(chunks[-1], original[-1])
         self.assert_preserved(content, chunks, MAX_CHUNK_CHARS)
 
-    def test_method_selection_does_not_expand_to_bullets_or_small_marker_counts(self):
-        for content in ('\n'.join(card(i, 1000, '  * ### [') for i in range(60)),
+    def test_method_selection_does_not_expand_to_other_levels_or_small_marker_counts(self):
+        for content in ('\n'.join(card(i, 1000, '  * #### [') for i in range(60)),
                         '\n'.join(card(i, 10000) for i in range(4))):
             chunks, method = chunk_content(content)
             self.assertEqual(method, 'size')

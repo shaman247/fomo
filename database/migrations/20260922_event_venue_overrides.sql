@@ -1,0 +1,20 @@
+CREATE TABLE IF NOT EXISTS event_venue_overrides (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    website_id INT UNSIGNED NOT NULL,
+    event_name VARCHAR(500) NOT NULL,
+    source_url VARCHAR(2048) NOT NULL,
+    url_prefix TINYINT(1) NOT NULL DEFAULT 0,
+    valid_from DATE NOT NULL,
+    valid_until DATE NOT NULL,
+    location_id INT UNSIGNED NOT NULL,
+    location_name VARCHAR(255) NOT NULL,
+    sublocation VARCHAR(500) DEFAULT NULL,
+    evidence_url TEXT NOT NULL,
+    reason TEXT NOT NULL,
+    enabled TINYINT(1) NOT NULL DEFAULT 1,
+    verified_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CHECK (valid_until >= valid_from),
+    INDEX idx_website (website_id),
+    FOREIGN KEY (website_id) REFERENCES websites(id) ON DELETE CASCADE,
+    FOREIGN KEY (location_id) REFERENCES locations(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

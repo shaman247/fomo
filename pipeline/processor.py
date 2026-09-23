@@ -33,6 +33,7 @@ from datetime import datetime, timedelta
 import regex
 
 import db
+import venue_overrides
 from tag_canonicalization import resolve_tag_name
 import crawler
 import site_profiles
@@ -53,39 +54,7 @@ from crawler import create_safe_filename
 # Blocked emoji characters that render poorly
 BLOCKED_EMOJI = {'⬜', '□', '◻', '⬛', '■', '▪', '▫', '◼', '◾', '◽', '◿', '▢', '▣', '▤', '▥', '▦', '▧', '▨', '▩'}
 
-# Delivery-method detection from the raw source `location` string (stored as
-# `events.location_name`). Per `.claude/rules/tag-system.md` §Virtual, virtual
-# events are still pinned to their organizer's venue, so `location_name` — not
-# `locations.name` — is the only reliable signal, and the `Virtual` tag is what
-# lets users filter them. Ordered: first match wins for the leaf; the `Virtual`
-# root is always added on top of it.
-# Patterns are regexes matched against the lowercased location string.
-VIRTUAL_LOCATION_PATTERNS = [
-    (r'\bzoom\b(?!\s*room)', 'Zoom'),          # "Zoom", "Via Zoom Platform"; not the "Zoom Room" gyms
-    (r'\bwebinars?\b', 'Webinar'),
-    (r'live\s*stream|livestream|streaming', 'Live Stream'),
-    (r'\bvirtual\s+tour\b', 'Virtual Tour'),
-    (r'\bonline\b|microsoft\s+teams|\bms\s+teams\b|google\s+meet|\bwebex\b|google\s+hangouts?',
-     'Online'),
-    (r'\bvirtual\b|\bremote(?:ly)?\b', None),  # root only — no platform named
-]
-
-
-def virtual_tags_for_location(location_str):
-    """Returns the Virtual-family tags implied by a raw source location string.
-
-    Returns [] when the string names no online delivery, else ['Virtual'] plus
-    at most one platform/format leaf. Hybrids ("Online & In-Person") are
-    intentionally included: they *are* attendable online, and the `Virtual` tag
-    is a delivery filter, not an exclusivity claim.
-    """
-    loc = (location_str or '').lower()
-    if not loc:
-        return []
-    for pattern, leaf in VIRTUAL_LOCATION_PATTERNS:
-        if re.search(pattern, loc):
-            return ['Virtual', leaf] if leaf else ['Virtual']
-    return []
+from delivery import virtual_tags_for_location
 
 
 # =============================================================================
@@ -454,7 +423,11 @@ def process_tags(row_dict, tag_rules, extra_tags=None, ancestor_map=None, root_t
 
     # Handle both list (JSON) and string (markdown) formats
     if isinstance(hashtags_field, list):
-        raw_tags = [tag.strip() for tag in hashtags_field if tag.strip()]
+        # Extractors can retain the hashtag marker in JSON arrays too. Strip
+        # only a leading marker: a literal sharp in C# / F# is part of the name.
+        cleaned = (tag.strip().lstrip('#').strip().rstrip(',').strip()
+                   for tag in hashtags_field)
+        raw_tags = [tag for tag in cleaned if tag]
     else:
         raw_tags = [tag.strip().rstrip(',') for tag in hashtags_field.split('#') if tag.strip()]
 
@@ -3604,10 +3577,27 @@ _JUNK_RULES = (
 )
 
 
+def normalize_registration_status(name):
+    """Preserve closed enrollment as a suffix on a named program, not cancellation.
+
+    Require the explicit colon-delimited status used by calendar program cards.
+    Bare registration notices and opening/deadline announcements stay unchanged
+    and still go through the ordinary non-event filters.
+    """
+    match = re.match(r'^\s*registration\s+closed\s*:\s*(\S.*?)\s*$', name or '', re.I)
+    if not match:
+        return name
+    title = match.group(1)
+    if re.search(r'\(registration\s+closed\)\s*$', title, re.I):
+        return title
+    return f'{title} (Registration Closed)'
+
+
 def which_junk_rule(name, description=None, location=None, sublocation=None):
     """Label of the first `_JUNK_RULES` row that fires, or None."""
     if not name:
         return None
+    name = normalize_registration_status(name)
     description = description or ''
     for rule in _JUNK_RULES:
         if _junk_rule_fires(rule, name, description, location, sublocation):
@@ -6074,6 +6064,10 @@ def build_locations_map(cursor):
         # Ambiguity is marked the same way; two venues in one building decline.
         'addresses_loose': {},
         'website_scoped': {},
+        # Curated aliases that identify a branch only within their own source.
+        # Keep them usable there, but never export that knowledge to other sites.
+        'nonportable_scoped_keys': set(),
+        'ambiguous_bare_names': set(),
         # city (lowercase) -> set of states seen at that city in our data.
         # Learned from location addresses; powers the region-conflict guard.
         'city_states': {},
@@ -6128,6 +6122,8 @@ def build_locations_map(cursor):
             short_index_keys.add(key)
 
     for loc in locations_data:
+        locations_map['ambiguous_bare_names'].update(
+            name.strip().lower() for name in loc.get('ambiguous_bare_names', []) if name.strip())
         # Full info for location matching
         full_info = {
             'id': loc.get('id'),
@@ -6196,6 +6192,10 @@ def build_locations_map(cursor):
                 weak_keys.add(normalized_short)
 
         # Website-scoped alternate names
+        for scoped_id, aliases in loc.get('nonportable_scoped_names', {}).items():
+            for alias in aliases:
+                locations_map['nonportable_scoped_keys'].update(
+                    (scoped_id, key) for key in (alias.lower(), _normalize_location_name(alias)) if key)
         for website_id, scoped_names in loc.get('website_scoped_names', {}).items():
             if website_id not in locations_map['website_scoped']:
                 locations_map['website_scoped'][website_id] = {}
@@ -6248,6 +6248,8 @@ def build_locations_map(cursor):
     # arm of single-venue authority in Step 3.5; see `roving_candidates` for
     # why this is a curated flag and not a heuristic.
     locations_map['roving_websites'] = db.get_roving_organizer_websites(cursor)
+    # A None cursor is used only by in-memory map fixtures.
+    locations_map['venue_overrides'] = venue_overrides.load_rules(cursor) if cursor is not None else []
 
     _report_key_collisions(locations_map)
     return locations_map
@@ -6880,6 +6882,26 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
                     and (result := make_result(cand, 'website_alt_feature', guard='area'))):
                 return result
 
+    # A bare brand plus a unique branch address identifies that branch more
+    # precisely than the unqualified primary name of another branch. Restrict
+    # this to members of the same named family: a co-tenant at the address is
+    # not evidence that the explicitly named venue is wrong.
+    family = set(locations_map.get('brand_family', {}).get(normalized_loc, ()))
+    named_family = locations_map.get('names', {}).get(normalized_loc, [])
+    if isinstance(named_family, dict):
+        named_family = [named_family]
+    family.update(info['id'] for info in named_family)
+    if len(normalized_loc) >= 5 and len(family) >= 2 and sublocation_name_raw:
+        for tier_name, parser in (
+                ('addresses', _extract_street_address),
+                ('addresses_loose', _extract_street_address_loose)):
+            address_key = parser(sublocation_name_raw)
+            branch = locations_map.get(tier_name, {}).get(address_key)
+            if (branch is not None and branch is not _AMBIGUOUS_ADDRESS
+                    and branch.get('id') in family
+                    and (result := make_result(branch, 'branch_address'))):
+                return result
+
     # Step 2: Exact matches in global tiers (names, alternate_names, short_names).
     # The 'names' tier is the location's own primary name (high confidence — a
     # city token there is usually part of the name). The alternate_names and
@@ -7136,6 +7158,23 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
                     _other = _location_record_by_id(locations_map, next(iter(_extenders)))
                     if _other is not None and (result := make_result(_other, 'name_extends_unique')):
                         return result
+        if consistent and v_name and normalized_loc.startswith(v_name + ' '):
+            # A qualified child can be written parent-first even when its
+            # canonical name is child-first. Prefer a unique explicitly named
+            # child; otherwise retain the home venue, never introduce a NULL.
+            requested = set(re.findall(r'\w+', normalized_loc))
+            parent_tokens = set(re.findall(r'\w+', v_name))
+            children = {}
+            for candidate in locations_map.get('names', {}).values():
+                for child in candidate if isinstance(candidate, list) else [candidate]:
+                    if child.get('id') == home_venue.get('id') or not _child_of_parent(child, v_name):
+                        continue
+                    child_tokens = set(re.findall(r'\w+', _normalize_location_name(child.get('name') or '')))
+                    specific = child_tokens - parent_tokens - {'at', 'in', 'the', 'of'}
+                    if specific and specific <= requested and not conflicts(child):
+                        children[child['id']] = child
+            if len(children) == 1 and (result := make_result(next(iter(children.values())), 'single_venue_child')):
+                return result
         if consistent and (result := make_result(home_venue, 'single_venue_site')):
             return result
 
@@ -7170,7 +7209,8 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
         # un-pinned 51 Books Are Magic rows keyed on `short_name` "Montague",
         # plus BPL "Pacific", "Pratt Library" and "Queens College" — none of
         # them brand keys, all of them the only sensible answer.
-        if _is_brand_family_name(locations_map, key):
+        if (_is_brand_family_name(locations_map, key)
+                or raw_loc_lower in locations_map.get('ambiguous_bare_names', ())):
             continue
         for tier_name in ('names', 'alternate_names'):
             # A branch-suffixed key ("devocion (williamsburg)") is a deliberate
@@ -7325,19 +7365,14 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
                     if matched_variants:
                         is_match = True
 
-                # NOTE: the Step 2 brand-family refusal deliberately does NOT
-                # extend to this tier, which means a bare family name the exact
-                # tier declined can still be answered here (`full_loc` equals
-                # the tier key, so the prefix branch scores it 0.99). Measured
-                # 2026-08-17 over all 62,163 distinct crawl_event location
-                # triples: adding the guard here un-pinned 2,971 rows —
-                # "NYU" (352), "BASEMENT" (257), "Midtown" (213), "Devoción"
-                # (41) — because normalization is lossy on BOTH sides, so a
-                # source that spelled the branch out in full ("Green Room NYC",
-                # 206 rows) is indistinguishable from the bare brand by the
-                # time this tier sees it. The exact tier can tell them apart;
-                # this one cannot, so it must not try.
                 if is_match:
+                    # Only reviewed bare names are blocked here. Inferring this
+                    # from prefix families also rejects valid shorthand (clubs,
+                    # campuses, neighborhoods). Check RAW spelling: a qualified
+                    # name must survive lossy normalization. The owning site's
+                    # curated aliases remain available, as do address tiers.
+                    if priority >= 0 and raw_loc_lower in locations_map.get('ambiguous_bare_names', ()):
+                        continue
                     # Reject an area-conflicting candidate HERE rather than
                     # only at the end, so the runner-up still gets to win. The
                     # final check alone returned None whenever the top scorer
@@ -7466,6 +7501,12 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
                 if cand is not None:
                     hits.append(get_first(cand))
             if not hits:
+                continue
+            # Do not simply filter out a blocked alias: its presence is evidence
+            # that this shorthand is source-dependent, even if another source
+            # happens to have a portable alias with the same spelling.
+            if any((scoped_id, key) in locations_map.get('nonportable_scoped_keys', ())
+                   for scoped_id in scoped_all if scoped_id != website_id):
                 continue
             ids = {h.get('id') for h in hits}
             if len(ids) > 1:
@@ -7962,6 +8003,7 @@ def process_events(cursor, connection, crawl_result_id, website_name, run_date_s
         if 'name' in row_dict:
             row_dict['name'] = row_dict['name'].replace(' \\ |', ':').replace(' \\|', ':')
             row_dict['name'] = strip_leading_emoji(row_dict['name'])
+            row_dict['name'] = normalize_registration_status(row_dict['name'])
 
         # Non-event junk filter: closures, calls for submissions/grants, venue
         # rentals, season passes, showtime placeholders, SEO spam, fundraising
@@ -8033,6 +8075,11 @@ def process_events(cursor, connection, crawl_result_id, website_name, run_date_s
         processed_row = process_tags(row_dict, tag_rules, extra_tags=extra_tags_list,
                                      ancestor_map=ancestor_map, root_tags=root_tags,
                                      disambiguation_rules=disambiguation_rules)
+        reviewed_venue = venue_overrides.for_event(
+            locations_map.get('venue_overrides', ()), website_id, processed_row)
+        if reviewed_venue:
+            processed_row.update(location=reviewed_venue['location_name'],
+                                 sublocation=reviewed_venue['sublocation'] or '')
 
         # Check for virtual events (delivery method comes from the raw source
         # location string, never from the venue the event is pinned to).
@@ -8064,14 +8111,15 @@ def process_events(cursor, connection, crawl_result_id, website_name, run_date_s
             continue
 
         # Enrich with location ID
-        location_info = get_location_id(
+        location_info = (dict(id=reviewed_venue['location_id'], emoji=reviewed_venue['emoji'],
+                              step='reviewed_override') if reviewed_venue else get_location_id(
             processed_row.get('location', '').strip(),
             processed_row.get('sublocation', '').strip(),
             safe_filename.replace('_', ' ').lower(),
             processed_row.get('name', '').strip(),
             locations_map,
             website_id=website_id
-        )
+        ))
 
         if location_info:
             processed_row['location_id'] = location_info.get('id')
@@ -8306,7 +8354,8 @@ def apply_crawled_details(cursor, connection, ce_id, data, tag_context,
         update_values.append(first_emoji)
 
     location_warning = False
-    if data.get('location') or data.get('sublocation'):
+    if (data.get('location') or data.get('sublocation')
+            or data.get('occurrences') and (locations_map or {}).get('venue_overrides')):
         cursor.execute(
             "SELECT ce.crawl_result_id, cr.website_id, ce.location_name, "
             "ce.sublocation, ce.location_id, ce.name "
@@ -8322,11 +8371,43 @@ def apply_crawled_details(cursor, connection, ce_id, data, tag_context,
         # A replacement venue must not inherit the old venue's address/room.
         new_sub = (data.get('sublocation') or
                    (old_sub if not data.get('location') or new_location == old_location else '') or '').strip()
-        location_info = get_location_id(
+        reviewed_venue = venue_overrides.for_event(
+            (locations_map or {}).get('venue_overrides', ()), ce_website_id,
+            dict(data, name=data.get('name') or old_name))
+        if any(
+                rule['website_id'] == ce_website_id
+                and venue_overrides.name_key(rule['event_name']) == venue_overrides.name_key(old_name)
+                for rule in (locations_map or {}).get('venue_overrides', ())):
+            # A shared detail page can describe dates at several venues. Once
+            # the listing was separated using reviewed date-specific rules,
+            # that page must not reunite its dates or overwrite its venue.
+            cursor.execute('SELECT url FROM crawl_events WHERE id = %s', (ce_id,))
+            stored_url = cursor.fetchone()
+            cursor.execute(
+                'SELECT start_date, start_time, end_date, end_time '
+                'FROM crawl_event_occurrences WHERE crawl_event_id = %s', (ce_id,))
+            stored_occurrences = cursor.fetchall()
+            stored_venue = venue_overrides.find_rule(
+                (locations_map or {}).get('venue_overrides', ()), ce_website_id,
+                old_name, [stored_url[0]] if stored_url else [], stored_occurrences)
+            if stored_venue:
+                # Keep the already reviewed schedule when the incoming detail
+                # cannot be assigned wholly to this source's reviewed venue.
+                if not reviewed_venue or any(
+                        reviewed_venue[key] != stored_venue[key]
+                        for key in ('location_id', 'location_name', 'sublocation')):
+                    data = dict(data, occurrences=[])
+                reviewed_venue = stored_venue
+        if reviewed_venue:
+            new_location = reviewed_venue['location_name']
+            new_sub = reviewed_venue['sublocation'] or ''
+            data.update(location=new_location, sublocation=new_sub)
+        location_info = (dict(id=reviewed_venue['location_id'], emoji=reviewed_venue['emoji'],
+                              step='reviewed_override') if reviewed_venue else get_location_id(
             new_location, new_sub, '',
             (data.get('name') or old_name or '').strip(),
             locations_map, website_id=ce_website_id,
-        ) if locations_map else None
+        ) if locations_map else None)
         new_id = location_info.get('id') if location_info else None
         changed = (new_location, new_sub) != (old_location or '', old_sub or '')
         if old_id and not new_id and changed:

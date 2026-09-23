@@ -35,7 +35,8 @@ from collections import defaultdict
 from urllib.parse import urlparse
 
 from db import create_connection
-from merger import normalize_name_for_dedup, are_names_similar, _merge_occurrences_into_event
+from reviewed_event_identity import record_merge
+from merger import normalize_name_for_dedup, are_names_similar, is_false_positive, _merge_occurrences_into_event
 
 
 def find_duplicates(cursor):
@@ -261,14 +262,14 @@ def classify_pairs(pairs, shared_url_pair_ids, same_time_pair_ids,
 
     for row in pairs:
         id1, id2, name1, name2, loc_id, loc_name, ws1, ws2 = row
-        # Skip pairs reviewed and dismissed in a previous run. Exact-name pairs
-        # bypass dismissal because they're auto-suppressed without review.
+        # Normalization can erase explicit film versions; neither it nor an
+        # automatic exact-name tier may override reviewed separation decisions.
+        if tuple(sorted((id1, id2))) in dismissed_pairs:
+            continue
         norm1 = normalize_name_for_dedup(name1)
         norm2 = normalize_name_for_dedup(name2)
-        if norm1 != norm2:
-            pair_key = (min(id1, id2), max(id1, id2))
-            if pair_key in dismissed_pairs:
-                continue
+        if norm1 == norm2 and is_false_positive(name1, name2):
+            continue
 
         entry = {
             'id1': id1, 'id2': id2,
@@ -347,12 +348,16 @@ def apply_field_overrides(cursor, event_id, name=None, description=None,
     return [k for k, _ in updates]
 
 
-def merge_pair(cursor, keep_id, delete_id):
+def merge_pair(cursor, keep_id, delete_id, *, merge_tags=True):
     """Merge delete_id into keep_id: occurrences, URLs, tags, sources, then suppress.
 
     Occurrences, URLs and tags are unioned onto keep_id; `event_sources` are MOVED
     (copied, then deleted from delete_id) so the suppressed loser stops carrying
     sources and stops starving the canonical.
+
+    Set merge_tags=False only after review when repairing a source-only
+    recurrence onto an already curated survivor; stale loser tags then stay
+    on the loser. Reviewed tag blocks still transfer.
 
     Does NOT touch scalar fields (name, description, emoji, etc.) on keep_id —
     update those separately via apply_field_overrides if needed.
@@ -361,6 +366,7 @@ def merge_pair(cursor, keep_id, delete_id):
     distinct end dates and filling missing end times. Conflicting known end
     times retain the keeper's value and require source-verified review.
     """
+    record_merge(cursor, keep_id, delete_id)
     cursor.execute("""
         SELECT start_date, start_time, end_date, end_time, sort_order
         FROM event_occurrences WHERE event_id = %s
@@ -376,15 +382,16 @@ def merge_pair(cursor, keep_id, delete_id):
             WHERE eu_dst.event_id = %s AND eu_dst.url = eu_src.url
           )
     """, (keep_id, delete_id, keep_id))
-    cursor.execute("""
-        INSERT IGNORE INTO event_tags (event_id, tag_id)
-        SELECT %s, et.tag_id FROM event_tags et
-        WHERE et.event_id = %s
-          AND NOT EXISTS (
-            SELECT 1 FROM event_tag_blocks b
-            WHERE b.event_id = %s AND b.tag_id = et.tag_id
-          )
-    """, (keep_id, delete_id, keep_id))
+    if merge_tags:
+        cursor.execute("""
+            INSERT IGNORE INTO event_tags (event_id, tag_id)
+            SELECT %s, et.tag_id FROM event_tags et
+            WHERE et.event_id = %s
+              AND NOT EXISTS (
+                SELECT 1 FROM event_tag_blocks b
+                WHERE b.event_id = %s AND b.tag_id = et.tag_id
+              )
+        """, (keep_id, delete_id, keep_id))
     # Sources MOVE, they do not copy. Leaving them on the loser is what produced the
     # "suppressed row still owns sources while an active twin shares its URL" population
     # (450 rows at the 2026-09-04 baseline, 543 by 2026-09-18) and, worse, the sole-carrier
@@ -527,7 +534,8 @@ def main():
                 # merged or changed these events while the report was printing.
                 conn.rollback()
                 fresh_pairs = find_duplicates(cursor)
-                fresh_exact, *_ = classify_pairs(fresh_pairs, set(), set())
+                fresh_exact, *_ = classify_pairs(
+                    fresh_pairs, set(), set(), get_dismissed_pairs(cursor))
                 merged = merge_exact_duplicates(cursor, fresh_exact)
                 conn.commit()
             print(f"\nMerged and suppressed {merged} events.")

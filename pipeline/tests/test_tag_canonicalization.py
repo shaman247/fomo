@@ -74,8 +74,8 @@ class TagCanonicalizationTests(unittest.TestCase):
         cursor=MagicMock()
         cursor.fetchall.return_value=[]
         cursor.fetchone.return_value=(9,)
-        result=compute_voted_tags(cursor,1,['Outdoor','Outdoor','Outdoor'],{'Outdoor'},{},{'outdoor'})
-        self.assertNotIn('Outdoor',result)
+        result=compute_voted_tags(cursor,1,['Keyword','Keyword','Keyword'],set(),{},{'outdoor'})
+        self.assertNotIn('Keyword',result)
 
 
 if __name__ == '__main__':

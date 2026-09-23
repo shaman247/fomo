@@ -83,6 +83,7 @@ class PostMergeScopeDatabaseTests(unittest.TestCase):
             'event_occurrences': ('id INT AUTO_INCREMENT PRIMARY KEY, event_id INT, '
                                   'start_date DATE, start_time VARCHAR(20), end_date DATE, '
                                   'end_time VARCHAR(20), sort_order INT DEFAULT 0'),
+            'event_merge_redirects': 'duplicate_id INT PRIMARY KEY, survivor_id INT, survivor_name VARCHAR(500)',
             'event_sources': 'event_id INT, crawl_event_id INT, UNIQUE(event_id,crawl_event_id)',
             'event_urls': 'event_id INT, url VARCHAR(255), UNIQUE(event_id,url)',
             'event_tags': 'event_id INT, tag_id INT, UNIQUE(event_id,tag_id)',
@@ -292,6 +293,13 @@ class PostMergeScopeDatabaseTests(unittest.TestCase):
         second_owner = self.cur.fetchone()[0]
         self.assertNotEqual(first_owner, second_owner)
         self.assertEqual(self.cleanup([101]), 0)
+
+    def test_cleanup_rehomes_previously_reviewed_redirect_targets(self):
+        self.cur.execute("INSERT INTO events(id,name,website_id,location_id,suppressed) VALUES (5,'Old Alias',101,10,1)")
+        self.cur.execute("INSERT INTO event_merge_redirects VALUES (5,2,'Guided Walk')")
+        self.assertEqual(self.cleanup([101]),1)
+        self.cur.execute('SELECT survivor_id,survivor_name FROM event_merge_redirects WHERE duplicate_id=5')
+        self.assertEqual(self.cur.fetchone(),(1,'Guided Walk'))
 
 
 if __name__ == '__main__':

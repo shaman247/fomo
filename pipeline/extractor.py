@@ -809,10 +809,12 @@ async def extract_with_vision(url, content, current_date_string, name, notes, ba
 # =============================================================================
 
 def _is_event_chunk_marker(line):
-    # Keep method selection stable: recognizing more heading shapes requires
-    # its own extraction-quality evaluation, not just a size-limit fix.
+    # Crawl markdown can wrap the same linked h3 card in a list item. Keep
+    # other heading levels on the size path: e.g. Drom puts the date BEFORE
+    # its h5 title, so cutting at that title separates the event from its date.
     return bool(re.match(r'^\s*\d+\.\s*###\s*\[', line)
-                or line.strip().startswith('### ['))
+                or line.strip().startswith('### [')
+                or re.match(r'^[ \t]*[*-][ \t]+###[ \t]+\[', line))
 
 
 def chunk_content_by_events(content, events_per_chunk=EVENTS_PER_CHUNK,

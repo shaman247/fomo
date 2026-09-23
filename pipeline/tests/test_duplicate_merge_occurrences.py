@@ -27,11 +27,19 @@ class DuplicateMergeOccurrenceTests(unittest.TestCase):
         self.cur = self.conn.cursor()
         # Create every table touched by merge_pair before allowing test writes.
         schemas = {
-            'events': 'id INT PRIMARY KEY, suppressed INT DEFAULT 0, reviewed INT DEFAULT 0',
+            'events': ("id INT PRIMARY KEY, name VARCHAR(500) DEFAULT '', website_id INT, location_id INT, "
+                       'archived INT DEFAULT 0, suppressed INT DEFAULT 0, reviewed INT DEFAULT 0'),
             'event_occurrences': ('id INT AUTO_INCREMENT PRIMARY KEY, event_id INT, '
                                   'start_date DATE, start_time VARCHAR(20), end_date DATE, '
                                   'end_time VARCHAR(20), sort_order INT DEFAULT 0'),
-            'event_urls': 'event_id INT, url VARCHAR(255), UNIQUE(event_id,url)',
+            'event_urls': 'event_id INT, url VARCHAR(255), sort_order INT DEFAULT 0, UNIQUE(event_id,url)',
+            'event_merge_redirects': ('duplicate_id INT PRIMARY KEY, survivor_id INT, '
+                                      'survivor_name VARCHAR(500), source_identities JSON'),
+            'dedupe_dismissed_pairs': 'event_id_a INT, event_id_b INT',
+            'crawl_events': 'id INT, name VARCHAR(500), url VARCHAR(500), location_id INT, crawl_result_id INT',
+            'crawl_results': 'id INT, website_id INT',
+            'crawl_event_occurrences': 'crawl_event_id INT, start_date DATE, start_time VARCHAR(20), end_date DATE',
+            'website_urls': 'website_id INT, url VARCHAR(500)',
             'event_tags': 'event_id INT, tag_id INT, UNIQUE(event_id,tag_id)',
             'event_sources': 'event_id INT, crawl_event_id INT, UNIQUE(event_id,crawl_event_id)',
             'event_tag_blocks': 'event_id INT, tag_id INT, reason TEXT, UNIQUE(event_id,tag_id)',
@@ -95,7 +103,7 @@ class DuplicateMergeOccurrenceTests(unittest.TestCase):
     def test_automatic_merge_preserves_chained_collections(self):
         self.cur.execute('INSERT INTO events(id) VALUES (3)')
         self.cur.execute('INSERT INTO event_sources VALUES (3,303)')
-        self.cur.execute("INSERT INTO event_urls VALUES (2,'https://example.test/2'),"
+        self.cur.execute("INSERT INTO event_urls(event_id,url) VALUES (2,'https://example.test/2'),"
                          "(3,'https://example.test/3')")
         self.cur.execute('INSERT INTO event_tags VALUES (2,12),(3,13)')
         self.cur.execute("INSERT INTO event_occurrences(event_id,start_date,start_time) "

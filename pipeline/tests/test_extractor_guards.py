@@ -561,8 +561,8 @@ def _last_nonblank(text):
 class ChunkBySizeHeadingBoundaryTests(unittest.TestCase):
     """The SIZE path must never end a chunk on a markdown heading.
 
-    `chunk_content_by_events` only recognises `### [` markers, so almost every
-    real listing shape (bulleted `* ### [Title](url)`, `# [Title](url)`,
+    `chunk_content_by_events` recognises linked h3 markers (including list
+    wrappers), but other listing shapes (`# [Title](url)`,
     unlinked `### Title`) falls through to `chunk_content_by_size`, which knows
     nothing about event records. Measured over 3 days of crawls, 24 chunk
     boundaries landed on a bare heading line across 15 websites: the event's
@@ -1077,10 +1077,10 @@ class CapRecordsPerChunkTests(unittest.TestCase):
     def test_never_exceeds_max_chars_or_severs_after_chunk_content(self):
         """Composes with the size path: the cap only ever shrinks chunks, so the
         carry's guarantees survive it."""
-        # Bulleted headings: invisible to chunk_content_by_events' narrow marker,
-        # so this page really does take the size path (the Elsewhere w75 shape).
+        # Linked h4 headings still use the size path; linked h3 list items are
+        # now event markers and would no longer exercise this composition.
         content = '\n\n'.join(
-            f'  * ### [Show {i}](https://example.com/{i})\n'
+            f'  * #### [Show {i}](https://example.com/{i})\n'
             f'**Fri, September {(i % 28) + 1}, 2026 at 6:00 PM**\n'
             + ('Doors at five. ' * 20)
             for i in range(600))

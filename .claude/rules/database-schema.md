@@ -21,6 +21,7 @@ We use junction tables for fields with multiple values (e.g., event dates/times,
 - `location_instagram` - Links locations to Instagram accounts (location_id, instagram_id)
 - `events` - Events
 - `event_occurrences` - Dates and times for events
+- `event_merge_redirects` - Explicit duplicate decisions captured by `scripts/find_duplicate_events.merge_pair`; key `duplicate_id`, target `survivor_id`, expected survivor name, and JSON source identities bounded by publisher/name/URL/known venue/date-time-end-date slots. A suppressed row alone is never a redirect. Apply `database/migrations/20260923_event_merge_redirects.sql` before running the updated merger. Renamed, relocated, archived or suppressed targets, dismissed pairs, missing dates, and ambiguous targets fail closed. Existing future dates must still cover the incoming slots. Historical decisions are backfilled only after review.
 - `tags` - Tags (name, scope, emoji, type), unique by `(name, scope)`. `scope` is `event` or `venue`; names alone are not identities. `type` is either `'tag'` (curated, shown in filters) or `'keyword'` (search-only)
 - `tag_hierarchy` - DAG edges (parent_tag_id, child_tag_id). A tag can have multiple parents.
 - `event_tags` - Links events to tags. Stores **all ancestor tags explicitly** so filtering is a flat set intersection — no tree traversal at query time.

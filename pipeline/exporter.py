@@ -18,6 +18,7 @@ from export_chunks import write_remainder_chunks
 from event_icon_assignments import load_assignments, export_icon, export_contexts
 from icon_catalog import resolve_icon
 from constants import get_active_date_window
+from delivery import canonical_location_label
 from processor import sublocation_redundant_with_address
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -450,7 +451,7 @@ def export_events(cursor):
             'event_type': row[14] or 'Other',
             'place_id': row[12],
             'name': row[1],
-            'location': row[7] or row[5],  # matched_location_name or location_name
+            'location': canonical_location_label(row[5], row[7]),
             'emoji': row[4],
             'tags': tags,
             'lat': lat,
@@ -1045,7 +1046,7 @@ def export_public_datasets(cursor, export_date=None, export_dir=PUBLIC_EXPORT_DI
 
         location = {
             'location_id': loc_id,
-            'name': loc_name or location_name,
+            'name': canonical_location_label(location_name, loc_name),
             'lat': float(lat),
             'lng': float(lng),
         }

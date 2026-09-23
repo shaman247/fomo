@@ -3,6 +3,7 @@ import json
 from datetime import date, datetime
 
 from occurrence_times import standardize_time
+from delivery import virtual_tags_for_location
 
 
 def _label(value):
@@ -37,6 +38,15 @@ def _timestamp(value):
         return None
 
 
+def _delivery_candidate(event, incoming):
+    # Positive source evidence can restore a lost label. An omitted Virtual
+    # marker cannot establish an in-person transition, and an existing online
+    # or hybrid label may carry attendance details that must not be discarded.
+    return (not event.get('reviewed')
+            and not virtual_tags_for_location(event.get('location_name'))
+            and bool(virtual_tags_for_location(incoming.get('location_name'))))
+
+
 def _slots(occurrences, today):
     slots = set()
     for row in occurrences:
@@ -53,7 +63,9 @@ def plan_source_metadata_refresh(event, incoming, sources, occurrences,
     """Return independent field changes; never replace a specific room.
 
     A canonical description may refresh only if unreviewed and still an exact
-    copy of this publisher's older source. Require one publisher, the same
+    copy of this publisher's older source. A lost online/hybrid location label
+    may refresh under the same constraints; absence is not in-person evidence.
+    Require one publisher, the same
     known venue, a strictly newer crawl, and evidence covering every remaining
     session. A rolling subset must not describe the whole canonical series.
     Grouped date-specific descriptions retain their separate refresh policy.
@@ -77,6 +89,11 @@ def plan_source_metadata_refresh(event, incoming, sources, occurrences,
         return {}
 
     fields = {}
+    if (_delivery_candidate(event, incoming)
+            and any(_label(s.get('location_name')) == _label(event.get('location_name'))
+                    for s in prior)
+            and not any(_grouped(s.get('raw_data')) for s in prior)):
+        fields['location_name'] = incoming['location_name'].strip()[:255]
     room = (incoming.get('sublocation') or '').strip()
     if (_empty_room(event.get('sublocation'), event.get('location_name'))
             and not _empty_room(room, incoming.get('location_name'))
@@ -120,7 +137,8 @@ def refresh_source_metadata(cursor, event_id, crawl_event_id, today=None,
     description_candidate = (not event['reviewed'] and _description(incoming['description'])
                              and _description(event['description'])
                              and incoming['description'] != event['description'])
-    if (not (room_candidate or description_candidate) or event['suppressed']
+    delivery_candidate = _delivery_candidate(event, incoming)
+    if (not (room_candidate or description_candidate or delivery_candidate) or event['suppressed']
             or event['website_id'] != incoming['website_id']
             or not event['location_id'] or event['location_id'] != incoming['location_id']
             or _grouped(incoming['raw_data'])):

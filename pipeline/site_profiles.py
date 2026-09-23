@@ -50,6 +50,9 @@ class SiteProfile:
     # it - so a fetch-time URL rewrite is the only way to reach that rendering.
     # Must be idempotent and must preserve any existing query string.
     detail_fetch_url: Optional[Callable[[str], str]] = None
+    # A published URL may open a composite listing rather than the named event.
+    # Skip enrichment only; preserve listing extraction and the public link.
+    skip_detail_url: Optional[Callable[[str], bool]] = None
 
     # --- extraction behavior (extractor.py) ---
     extraction_notes: Optional[str] = None                   # prepended to the website notes
@@ -195,6 +198,21 @@ def is_skip_url(url) -> bool:
     """True if this URL is handled out-of-band and should not be crawled."""
     p = resolve_profile(url)
     return bool(p and p.crawl_mode is CrawlMode.SKIP)
+
+
+def skip_detail_url(url) -> bool:
+    """Whether a matching plugin identifies an unsuitable enrichment URL.
+
+    An absent or failing hook preserves the normal detail-crawl behavior.
+    """
+    for p in PROFILES:
+        if p.matches(url) and p.skip_detail_url:
+            try:
+                if p.skip_detail_url(url):
+                    return True
+            except Exception as e:
+                print(f'  ! site_profiles: {p.name}.skip_detail_url failed on {url}: {e}')
+    return False
 
 
 def all_skip(urls) -> Optional[str]:

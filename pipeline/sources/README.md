@@ -34,6 +34,7 @@ PROFILE = SiteProfile(
 - `skip_reason` — message logged when `SKIP`.
 - `fetcher` — a `() -> (markdown, n_events)` callable, required when `CUSTOM`. Define it in this module.
 - `inject_js` — extra in-page JS appended before scraping.
+- `skip_detail_url(url) -> bool` — host/path-scoped veto for links that cannot enrich an individual event (for example, a composite calendar). Applied before candidate fetch limits and again at direct detail fetch; listing extraction, event rows and public URLs remain unchanged. Missing/failing hooks retain ordinary detail behavior.
 - `extraction_notes` — text prepended to the website's extraction notes.
 - `max_content_chars`, `force_chunked`, `max_records_per_chunk` — per-platform defaults for the extraction knobs; the same-named `websites` columns win (see `extractor.resolve_extraction_settings`).
 - `image_fetch_headers` + `image_host_substrs` — extra HTTP headers when downloading images whose URL contains one of the substrings.

@@ -5,6 +5,7 @@ Surface events whose location mapping likely needs human review.
 Three issue classes:
 - NO_LOCATION: events.location_id IS NULL
 - GENERIC:    mapped to a neighborhood/borough placeholder (locations.generic_location=1)
+              without a matching name/address or applicable exact venue alias
 - MISMATCHED: mapped to a specific venue, but events.location_name does not match
               the venue's name/address/alternate-names. Subset of these are real
               mis-maps (AI extracted a specific venue but the matcher fell back to
@@ -279,11 +280,6 @@ SKIP_LOCATION_NAMES = {
      'freneau woods park visitor center', 'hartsdale', 'l train station',
      'le carrousel in bryant park', 'liberty street', 'little hell gate salt marsh',
      'main stage on borough hall plaza', 'mccarren park greenmarket', 'monolith studio',
-    # Correctly pinned, but the pinned row is a generic_location park/preserve, so the GENERIC
-    # branch fires before the alias check can clear them. Each already carries the matching
-    # alternate name on the right row; the string itself names no separately-mappable venue.
-    'the art gallery at rockefeller state park', 'bayswater city park', '67 mulberry st',
-    'popps memorial park',
      'poll sites citywide', 'queens, ny', 'restaurant of the week', 'samaritans of new york',
      'seaglass carousel',
      'the amph, pier 55 at hudson river park, hudson river greenway, new york',
@@ -344,32 +340,10 @@ SKIP_LOCATION_NAMES = {
     # 2026-09-20 unmapped/generic sweep (/fix-unmapped-events). Each string below was researched
     # against the live source page; the event is already pinned to the right row and the string
     # names nothing separately mappable.
-    #   Brooklyn Book Festival Children's Day stages. Columbus Park (row 9425) IS the plaza in
-    #   front of Brooklyn Borough Hall — NYC Parks puts Columbus Park (B113C) at "Adam St., Court
-    #   St., Cadman Plaza West bet. Johnson St. and Fulton St." and the Borough Hall Greenmarket
-    #   is published as being "in Columbus Park". Each stage already carries a website-scoped alt
-    #   on 9425; only the generic_location=1 flag on that row keeps them in the queue. Indoor
-    #   Borough Hall rooms are correctly pinned to 136 instead.
-    'picture book stage, brooklyn borough hall plaza',
-    'makers and creators area, brooklyn borough plaza',
-    'young readers stage, brooklyn borough hall plaza',
     #   Firm/employer name emitted as the venue by an Eventbrite listing. 300 Madison Ave is PwC's
     #   New York office and the pin is right, but PwC also has Stamford / Florham Park / Melville
     #   offices inside our coverage, so a global alias would be a catch-all onto the wrong one.
     'pricewaterhousecoopers llp',
-    #   Named sub-place / meeting point inside the row it is already pinned to. Each row carries a
-    #   matching alternate name now; they stay in the queue only because the pinned row is
-    #   generic_location=1 (park / boardwalk / neighborhood), which fires before the alias check.
-    #     - Wagner Park Pavilion: the pavilion inside Wagner Park (5021)
-    #     - National Blvd Boardwalk Entrance: 8032 Long Beach Boardwalk is ALREADY pinned at this
-    #       entrance (identical coords to the Allegria Hotel at 80 W Broadway), so an entrance row
-    #       would have been an exact-duplicate-coordinate pin
-    #     - Grand Concourse & East 153rd Street: inside Franz Sigel Park's own address range (324)
-    #     - 111th St & Adam Clayton Powell Jr Blvd: African American Day Parade step-off, pinned to
-    #       Harlem (2698), which is how two other sources pin the same parade
-    'wagner park pavilion', 'national blvd boardwalk entrance',
-    'grand concourse & east 153rd street',
-    '111th street and adam clayton powell, jr. blvd',
     # 2026-09-21 unmapped/generic sweep (/fix-unmapped-events). Verified against the live
     # source page: the event is already pinned to the right row and the string names the
     # umbrella INSTITUTION or the HOST ORG, not the building.
@@ -415,10 +389,6 @@ SKIP_LOCATION_NAMES = {
     #   The RSVP form names the real venue (NYU Langone Health-Cobble Hill); her district office
     #   is NOT it, and she holds pop-ups at many venues, so this must never become an alias.
     'assemblymember jo anne simon',
-    #   A lawn inside Highland Park (385), which already carries the matching alternate name.
-    #   It stays in the queue only because 385 is generic_location=1 and the GENERIC branch fires
-    #   before the alias check.
-    'upper highland lawn',
     #   NYC Parks' park-association metadata, not the meeting point. The page's own
     #   "Meeting Location: E 17th Street and Albemarle Road", the title ("Prospect Park South")
     #   and the funder (CM Rita Joseph, District 40) all place this in Prospect Park South /
@@ -574,13 +544,10 @@ def classify(event, alts_by_loc, generic_names=None):
         if n_in and (n_in in n_name or n_name in n_in or n_in in n_addr):
             return None
 
-    if event['venue_generic']:
-        return 'GENERIC'
-
-    if (event['website_name'] or '') in SKIP_MISMATCH_WEBSITES:
-        return None
-
-    # Check alt names (global + website-scoped to this event)
+    # Check aliases on the pinned row, including generic parks. Generic pins
+    # need an exact normalized alias: a broad "Central Park" alias must not
+    # clear "Central Park Zoo", which may need its own venue. Specific venues
+    # retain the existing substring rule for room/area descriptions.
     website_id = event['website_id']
     for alt_name, alt_wid in alts_by_loc.get(event['location_id'], ()):
         if alt_wid is not None and alt_wid != website_id:
@@ -588,8 +555,14 @@ def classify(event, alts_by_loc, generic_names=None):
         n_alt = _normalize_location_name(alt_name)
         if not n_alt:
             continue
-        if n_alt in n_loc or n_loc in n_alt:
+        if n_alt == n_loc or (not event['venue_generic'] and (n_alt in n_loc or n_loc in n_alt)):
             return None
+
+    if event['venue_generic']:
+        return 'GENERIC'
+
+    if (event['website_name'] or '') in SKIP_MISMATCH_WEBSITES:
+        return None
 
     return 'MISMATCHED'
 

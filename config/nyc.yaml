@@ -2535,11 +2535,6 @@ venue_taxonomy:
       - attraction
       source: https://www.onehansonevents.com/
       reason: Historic banking hall operated as a dedicated events venue.
-    - location_id: 2687
-      expected_name: The Breakfast Room at Fairfield Inn Times Square South
-      add:
-      - Hotel
-      remove: []
     - location_id: 2709
       expected_name: Grand Prospect Hall
       add:
@@ -3840,6 +3835,86 @@ venue_taxonomy:
       remove: []
       source: https://www.unionleagueclub.org/
       reason: Private member community clubhouse with cultural programming and meeting spaces; private bookings alone do not make the whole club an Event Hall.
+    - location_id: 11144
+      expected_name: The Legacy Castle
+      add:
+      - Ballroom
+      - Event Hall
+      remove: []
+      source: https://thelegacycastle.com/spaces/
+      reason: Dedicated banquet venue with the Grand Legacy, Windsor and Kingston ballrooms for weddings, galas and corporate events.
+    - location_id: 11151
+      expected_name: CoCREATE Stamford
+      add:
+      - Shop
+      - Studio
+      remove: []
+      source: https://www.stamfordcocreate.com/explore-cocreate/
+      reason: GE Appliances brand showroom and retail display plus the FirstBuild makerspace and CoCook demo kitchen used for classes and workshops.
+    - location_id: 11156
+      expected_name: Simply Gather SI
+      add:
+      - Event Hall
+      remove: []
+      source: https://www.atly.com/location/SimplyGatherSI
+      reason: Dedicated party-rental room for birthdays, showers and small gatherings; crafts are part of the hosted party package. Official simplygathersi.com did not resolve at review time.
+    - location_id: 11158
+      expected_name: Italian Charities of America
+      add:
+      - Cultural Center
+      remove: []
+      source: https://italiancharities.org/about-ica/
+      reason: Italian-American nonprofit cultural organization in its own 1951 building, running language classes, cultural programs and community dances.
+    - location_id: 11167
+      expected_name: The Addison Park
+      add:
+      - Ballroom
+      - Event Hall
+      remove: []
+      source: https://www.theaddisonpark.com/
+      reason: Full-service banquet venue with multiple ballrooms for weddings and celebrations of 75 to 800 guests.
+    - location_id: 11178
+      expected_name: The Ballroom of Huntington
+      add: []
+      remove:
+      - Ballroom
+      source: https://ballroomofhuntington.com/
+      reason: Ballroom-dance instruction studio, not a rental ballroom; Ballroom (under Event Hall) was a dance-style mistag. Dance Studio remains.
+    - location_id: 11182
+      expected_name: VFW Post 9257 (Putnam Lake)
+      add:
+      - Community Space
+      remove: []
+      source: https://www.facebook.com/VFW9257/
+      reason: Veterans post hall shared with AMVETS hosting post meetings, community dinners and fundraisers; matches other veterans-post halls.
+    - location_id: 11190
+      expected_name: J Loft
+      add:
+      - Event Hall
+      remove: []
+      source: https://www.jloftevents.com/
+      reason: Dedicated 5,000 sq ft rental loft for weddings, showers, birthdays and private parties.
+    - location_id: 11248
+      expected_name: Ascent Jersey City
+      add:
+      - Community Space
+      remove: []
+      source: https://www.ascentjc.com/
+      reason: Residential building whose resident lounge, game room, coworking and rooftop amenities host community and networking events.
+    - location_id: 11269
+      expected_name: 22 Little West 12th Street
+      add:
+      - Shop
+      remove: []
+      source: https://www.loopnet.com/Listing/22-Little-West-12th-St-New-York-NY/39903180/
+      reason: Ground-floor retail premises leased short-term for sample sales and brand pop-ups; no permanent tenant, so Shop per the retail pop-up policy.
+    - location_id: 11306
+      expected_name: The Malin Brooklyn Heights
+      add:
+      - Coworking
+      remove: []
+      source: https://themalin.co/location/brooklyn-heights/
+      reason: Membership coworking space with offices, desks and meeting rooms; matches The Malin Chelsea (Office).
     descriptions:
     - location_id: 2041
       expected_name: Cloud City

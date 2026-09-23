@@ -36,12 +36,20 @@ CREATE TABLE IF NOT EXISTS locations (
     INDEX idx_coords (lat, lng)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Reviewed name-matching policy; absence preserves normal matching.
+CREATE TABLE IF NOT EXISTS location_match_policies (
+    location_id INT UNSIGNED NOT NULL PRIMARY KEY,
+    ambiguous_bare_names JSON NOT NULL COMMENT 'Reviewed source spellings that must not prefix/fuzzy match a branch',
+    FOREIGN KEY (location_id) REFERENCES locations(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Location alternate names
 CREATE TABLE IF NOT EXISTS location_alternate_names (
     id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     location_id INT UNSIGNED NOT NULL,
     alternate_name VARCHAR(255) NOT NULL,
     website_id INT UNSIGNED DEFAULT NULL COMMENT 'Scope to specific website (NULL = global)',
+    portable TINYINT(1) NOT NULL DEFAULT 1 COMMENT 'Allow exact fallback from other websites; disable for branch-specific shorthand',
 
     INDEX idx_location (location_id),
     INDEX idx_alt_name (alternate_name),
@@ -211,6 +219,20 @@ CREATE TABLE IF NOT EXISTS events (
     INDEX idx_reviewed (reviewed),
     FOREIGN KEY (location_id) REFERENCES locations(id) ON DELETE SET NULL,
     FOREIGN KEY (website_id) REFERENCES websites(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Reviewed duplicate identities, bounded to source names/URLs/venues/slots.
+CREATE TABLE IF NOT EXISTS event_merge_redirects (
+    duplicate_id INT UNSIGNED NOT NULL PRIMARY KEY,
+    survivor_id INT UNSIGNED NOT NULL,
+    survivor_name VARCHAR(500) NOT NULL,
+    source_identities JSON NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CHECK (duplicate_id <> survivor_id),
+    INDEX idx_survivor (survivor_id),
+    FOREIGN KEY (duplicate_id) REFERENCES events(id) ON DELETE CASCADE,
+    FOREIGN KEY (survivor_id) REFERENCES events(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Primary event pictograms and preserved manual decisions. NULL manual icon means fallback.
@@ -724,3 +746,25 @@ CREATE TABLE IF NOT EXISTS icon_review_queue (
     review_note TEXT DEFAULT NULL,
     INDEX idx_icon_review_status (status,last_seen)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Source-verified venue corrections, bounded to one event identity and date window.
+CREATE TABLE IF NOT EXISTS event_venue_overrides (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    website_id INT UNSIGNED NOT NULL,
+    event_name VARCHAR(500) NOT NULL,
+    source_url VARCHAR(2048) NOT NULL,
+    url_prefix TINYINT(1) NOT NULL DEFAULT 0,
+    valid_from DATE NOT NULL,
+    valid_until DATE NOT NULL,
+    location_id INT UNSIGNED NOT NULL,
+    location_name VARCHAR(255) NOT NULL,
+    sublocation VARCHAR(500) DEFAULT NULL,
+    evidence_url TEXT NOT NULL,
+    reason TEXT NOT NULL,
+    enabled TINYINT(1) NOT NULL DEFAULT 1,
+    verified_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CHECK (valid_until >= valid_from),
+    INDEX idx_website (website_id),
+    FOREIGN KEY (website_id) REFERENCES websites(id) ON DELETE CASCADE,
+    FOREIGN KEY (location_id) REFERENCES locations(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

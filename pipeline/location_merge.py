@@ -130,11 +130,17 @@ def plan_merge(cursor, duplicate, keeper):
     for row in rows('SELECT * FROM location_alternate_names WHERE location_id=%s ORDER BY id', (duplicate,)):
         # Use the database collation and null-safe scope equality, including
         # duplicate aliases within the source location itself.
-        survivor = rows('''SELECT id FROM location_alternate_names
+        survivor = rows('''SELECT * FROM location_alternate_names
             WHERE location_id IN (%s,%s) AND alternate_name=%s AND website_id <=> %s
             ORDER BY (location_id=%s) DESC, id LIMIT 1''',
             (duplicate, keeper, row['alternate_name'], row['website_id'], keeper))[0]
         if survivor['id'] != row['id']:
+            if (not row.get('portable', 1) and survivor.get('portable', 1)
+                    and not any(op['table'] == 'location_alternate_names'
+                                and op['action'] == 'update'
+                                and op['before']['id'] == survivor['id']
+                                and op['values'].get('portable') == 0 for op in operations)):
+                update('location_alternate_names', survivor, dict(portable=0))
             delete('location_alternate_names', row)
         else:
             update('location_alternate_names', row, dict(location_id=keeper))
@@ -143,6 +149,20 @@ def plan_merge(cursor, duplicate, keeper):
             (duplicate, keeper, old_name)):
         operations.append(dict(action='insert', table='location_alternate_names',
                                values=dict(location_id=keeper, alternate_name=old_name, website_id=None)))
+    for row in rows('SELECT * FROM location_match_policies WHERE location_id=%s', (duplicate,)):
+        existing = rows('SELECT * FROM location_match_policies WHERE location_id=%s', (keeper,))
+        if existing:
+            names = sorted(set(json.loads(row['ambiguous_bare_names']))
+                           | set(json.loads(existing[0]['ambiguous_bare_names'])))
+            update('location_match_policies', existing[0], dict(ambiguous_bare_names=json.dumps(names)))
+            delete('location_match_policies', row)
+        else:
+            update('location_match_policies', row, dict(location_id=keeper))
+    for row in rows('SELECT * FROM event_venue_overrides WHERE location_id=%s', (duplicate,)):
+        changes = dict(location_id=keeper)
+        if row['location_name'] == old_name:
+            changes['location_name'] = new_name
+        update('event_venue_overrides', row, changes)
     delete('locations', places[duplicate])
     return operations
 
@@ -152,7 +172,8 @@ def apply_plan(cursor, connection, operations):
     for op in operations:
         table, action = op['table'], op['action']
         row, values = op.get('before', {}), op.get('values', {})
-        keys = ('location_id', 'instagram_id') if table == 'location_instagram' else ('id',)
+        keys = (('location_id', 'instagram_id') if table == 'location_instagram'
+                else ('location_id',) if table == 'location_match_policies' else ('id',))
         where = ' AND '.join(f'{key}=%s' for key in keys)
         identity = tuple(row.get(key) for key in keys)
         if action == 'insert':

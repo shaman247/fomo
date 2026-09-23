@@ -1616,9 +1616,10 @@ def get_all_locations(cursor):
     """
     # Get all locations
     cursor.execute("""
-        SELECT id, name, short_name, address, lat, lng, emoji
-        FROM locations
-        WHERE lat IS NOT NULL AND lng IS NOT NULL
+        SELECT l.id, l.name, l.short_name, l.address, l.lat, l.lng, l.emoji, p.ambiguous_bare_names
+        FROM locations l
+        LEFT JOIN location_match_policies p ON p.location_id = l.id
+        WHERE l.lat IS NOT NULL AND l.lng IS NOT NULL
     """)
 
     locations = {}
@@ -1632,22 +1633,26 @@ def get_all_locations(cursor):
             'lng': float(row[5]) if row[5] else None,
             'emoji': row[6],
             'alternate_names': [],
-            'website_scoped_names': {}
+            'website_scoped_names': {},
+            'nonportable_scoped_names': {},
+            'ambiguous_bare_names': json.loads(row[7]) if row[7] else []
         }
 
     # Get all alternate names (both global and website-scoped)
     cursor.execute("""
-        SELECT location_id, alternate_name, website_id
+        SELECT location_id, alternate_name, website_id, portable
         FROM location_alternate_names
     """)
 
     for row in cursor.fetchall():
-        location_id, alternate_name, website_id = row
+        location_id, alternate_name, website_id, portable = row
         if location_id in locations:
             if website_id is None:
                 locations[location_id]['alternate_names'].append(alternate_name)
             else:
                 locations[location_id]['website_scoped_names'].setdefault(website_id, []).append(alternate_name)
+                if not portable:
+                    locations[location_id]['nonportable_scoped_names'].setdefault(website_id, []).append(alternate_name)
 
     return list(locations.values())
 
@@ -1927,6 +1932,7 @@ def get_detail_crawl_candidates(cursor, website_ids=None):
     events_to_enrich = []
     skipped_shared = 0
     skipped_dup_url = 0
+    skipped_profile = 0
     # Crawl each distinct (website_id, url) at most once. After the listing-page
     # filter below, every remaining URL maps to a single event name, so any
     # duplicates here are the SAME recurring event captured across multiple crawl
@@ -1934,8 +1940,12 @@ def get_detail_crawl_candidates(cursor, website_ids=None):
     # URL once and letting the merger collapse the duplicates avoids re-crawling
     # the same page N times — the backlog that made `--ids` runs crawl for hours.
     seen_urls = set()
+    import site_profiles
     for ce_id, name, url, website_id in candidates:
         norm_url = url.rstrip('/')
+        if site_profiles.skip_detail_url(url):
+            skipped_profile += 1
+            continue
         # Skip URLs that have multiple distinct event names (real listing pages)
         if len(url_name_sets.get((website_id, norm_url), set())) > 1:
             skipped_shared += 1
@@ -1960,6 +1970,8 @@ def get_detail_crawl_candidates(cursor, website_ids=None):
 
     if skipped_shared:
         print(f"  Skipped {skipped_shared} events with shared/listing URLs")
+    if skipped_profile:
+        print(f"  Skipped {skipped_profile} detail URLs excluded by source profiles")
     if skipped_dup_url:
         print(f"  Skipped {skipped_dup_url} duplicate same-URL events (one fetch per URL)")
 

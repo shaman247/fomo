@@ -76,9 +76,11 @@ class LocationMergeDatabaseTests(unittest.TestCase):
             'crawl_events': 'id INT PRIMARY KEY, location_id INT, location_name VARCHAR(255), raw_data LONGTEXT',
             'crawl_results': 'id INT PRIMARY KEY, extracted_content LONGTEXT',
             'website_locations': 'id INT PRIMARY KEY, website_id INT, location_id INT, is_primary BOOL, url VARCHAR(500), UNIQUE(website_id,location_id)',
+            'event_venue_overrides': 'id INT PRIMARY KEY, location_id INT, location_name VARCHAR(255)',
+            'location_match_policies': 'location_id INT PRIMARY KEY, ambiguous_bare_names JSON',
             'location_tags': 'id INT PRIMARY KEY, location_id INT, tag_id INT, UNIQUE(location_id,tag_id)',
             'location_instagram': 'location_id INT, instagram_id INT, PRIMARY KEY(location_id,instagram_id)',
-            'location_alternate_names': 'id INT AUTO_INCREMENT PRIMARY KEY, location_id INT, alternate_name VARCHAR(255), website_id INT NULL',
+            'location_alternate_names': 'id INT AUTO_INCREMENT PRIMARY KEY, location_id INT, alternate_name VARCHAR(255), website_id INT NULL, portable BOOL DEFAULT 1',
             'edits': 'id INT AUTO_INCREMENT PRIMARY KEY, edit_uuid VARCHAR(36), table_name VARCHAR(64), record_id INT, field_name VARCHAR(64), action VARCHAR(10), old_value LONGTEXT, new_value LONGTEXT, source VARCHAR(20), user_id INT, editor_ip VARCHAR(50), editor_user_agent TEXT, editor_info TEXT, applied_at DATETIME',
         }
         for table, columns in schemas.items():
@@ -94,7 +96,7 @@ class LocationMergeDatabaseTests(unittest.TestCase):
         self.cursor.execute("INSERT INTO website_locations VALUES (1,5,12,1,'https://venue.test'),(2,5,34,0,NULL),(3,6,12,0,'https://other.test')")
         self.cursor.execute('INSERT INTO location_tags VALUES (1,12,7),(2,34,7),(3,12,8)')
         self.cursor.execute('INSERT INTO location_instagram VALUES (12,7),(34,7),(12,8)')
-        self.cursor.execute("INSERT INTO location_alternate_names VALUES (1,12,'Scoped',5),(2,34,'Scoped',NULL),(3,12,'Shared',5),(4,34,'shared',5),(5,12,'Scoped',6),(6,12,'Scoped',5)")
+        self.cursor.execute("INSERT INTO location_alternate_names (id,location_id,alternate_name,website_id) VALUES (1,12,'Scoped',5),(2,34,'Scoped',NULL),(3,12,'Shared',5),(4,34,'shared',5),(5,12,'Scoped',6),(6,12,'Scoped',5)")
         self.conn.commit()
         self.lock_name = 'location_merge_test_' + uuid.uuid4().hex
         real_lock = dblock.write_lock
@@ -111,6 +113,17 @@ class LocationMergeDatabaseTests(unittest.TestCase):
 
     def run_merge(self, **kwargs):
         return merge.merge_locations(self.conn, [(12, 34)], **kwargs)
+
+    def test_preserves_restrictive_alias_and_name_policies(self):
+        self.cursor.execute("UPDATE location_alternate_names SET portable=0 WHERE id=3")
+        self.cursor.execute('INSERT INTO location_match_policies VALUES (12,%s),(34,%s)',
+                            ('["Brand"]', '["Other brand"]'))
+        self.conn.commit()
+        self.run_merge()
+        self.cursor.execute('SELECT portable FROM location_alternate_names WHERE id=4')
+        self.assertEqual(self.cursor.fetchone()['portable'], 0)
+        self.assertEqual(self.rows('location_match_policies', 'location_id'),
+                         [dict(location_id=34, ambiguous_bare_names='["Brand", "Other brand"]')])
 
     def test_full_merge_preserves_scopes_metadata_and_caches(self):
         result = self.run_merge()

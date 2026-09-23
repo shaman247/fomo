@@ -33,8 +33,8 @@ class _StubCursor:
     """Feeds build_locations_map a fixed corpus instead of the live DB."""
 
     def __init__(self, locations, alternates, website_locations):
-        self._locations = locations
-        self._alternates = alternates
+        self._locations = [(*row, None) for row in locations]  # no ambiguous bare names
+        self._alternates = [(*row, 1) for row in alternates]  # portable aliases
         self._website_locations = website_locations
         self._rows = []
 
@@ -48,6 +48,8 @@ class _StubCursor:
         elif 'roving_organizer' in sql:   # hand-flagged organizers: none in this corpus
             self._rows = []
         elif 'FROM websites' in sql:       # organizer names for Step 7b: none needed here
+            self._rows = []
+        elif 'FROM event_venue_overrides' in sql:
             self._rows = []
         else:  # pragma: no cover - build_locations_map grew a new query
             raise AssertionError('unexpected query: %s' % sql)

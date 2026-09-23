@@ -185,6 +185,16 @@ class MetadataSQLTests(unittest.TestCase):
                              'INSERT INTO event_sources VALUES(1,22);')
         self.assertEqual(self.refresh(), {})
 
+    def test_sql_restores_delivery_label_even_without_room_or_text_change(self):
+        self.db.execute("UPDATE crawl_events SET location_name='Online (Zoom)',sublocation=NULL,"
+                        "description='Old source text' WHERE id=21")
+        logger = Mock()
+        self.assertEqual(self.refresh(logger), {'location_name': 'Online (Zoom)'})
+        self.assertEqual(self.db.execute('SELECT location_id,location_name FROM events').fetchone(),
+                         (5, 'Online (Zoom)'))
+        logger.log_update.assert_called_once_with('events', 1, 'location_name', 'School', 'Online (Zoom)')
+        self.assertEqual(self.refresh(), {})
+
 
 if __name__ == '__main__':
     unittest.main()

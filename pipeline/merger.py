@@ -20,10 +20,13 @@ from urllib.parse import urlsplit
 import mysql.connector
 
 import db
+import venue_overrides
+import reviewed_event_identity
 import site_profiles
 from event_name_guards import conversation_subject_mismatch, game_program_variant_mismatch, library_program_variant_mismatch, named_sub_event_mismatch, participatory_program_variant_mismatch
 from session_details import refresh_source_session_details
 from source_metadata import refresh_source_metadata
+from delivery import canonical_location_label
 from schedule_envelopes import envelope, reconcile_envelopes
 from constants import get_active_date_window
 
@@ -98,6 +101,31 @@ _FAN_SHOWING_RE = re.compile(
 )
 
 
+@functools.lru_cache(maxsize=131072)
+def _screening_language_modes(name):
+    """Read explicit film-version labels, never the word 'dub' in a title.
+
+    Only format-only parentheticals/brackets qualify. A mixed dub/sub label
+    describes both versions and cannot establish a conflicting single version.
+    """
+    modes = set()
+    allowed = _FORMAT_TAGS | {'english', 'japanese', 'version'}
+    for group in re.finditer(r'\(([^()]*)\)|\[([^\[\]]*)\]', name or ''):
+        tokens = set(re.findall(r'[a-z0-9]+', (group[1] or group[2]).lower()))
+        if not tokens or not tokens <= allowed:
+            continue
+        if tokens & {'dub', 'dubs', 'dubbed'}:
+            modes.add('dub')
+        if tokens & {'sub', 'subs', 'subbed', 'subtitle', 'subtitled', 'subtitles'}:
+            modes.add('sub')
+    return frozenset(modes)
+
+
+def _screening_versions_differ(name1, name2):
+    left, right = _screening_language_modes(name1), _screening_language_modes(name2)
+    return len(left) == len(right) == 1 and left != right
+
+
 def _strip_format_parentheticals(name):
     """Drop ()/[] groups whose alpha tokens are all screening-format tags."""
     def repl(match):
@@ -119,6 +147,17 @@ def merged_screening_display_name(existing_name, incoming_name):
     subtitles; only an unqualified version of the exact same title is evidence.
     """
     if not existing_name or not incoming_name:
+        return None
+    # A neutral title must not erase a dedicated language-version label and
+    # let a later opposite version bypass the identity guard. Existing combined
+    # accessibility labels (Open Cap/Eng Sub) retain their neutral-run policy.
+    if _screening_versions_differ(existing_name, incoming_name):
+        return None
+    if any(re.fullmatch(
+            r'(?:(?:eng(?:lish)?|japanese)\s+)?'
+            r'(?:dubs?|dubbed|subs?|subbed|subtitled|subtitles?)(?:\s+version)?',
+            (group[1] or group[2]).strip(), re.I)
+           for group in re.finditer(r'\(([^()]*)\)|\[([^\[\]]*)\]', existing_name)):
         return None
     clean = re.sub(r'\s+', ' ', _strip_format_parentheticals(existing_name)).strip()
     incoming_clean = re.sub(r'\s+', ' ', _strip_format_parentheticals(incoming_name)).strip()
@@ -1164,7 +1203,8 @@ def is_false_positive(name1, name2):
 
     The rules live in the three discriminator tables above.
     """
-    if (game_program_variant_mismatch(name1, name2)
+    if (_screening_versions_differ(name1, name2)
+            or game_program_variant_mismatch(name1, name2)
             or library_program_variant_mismatch(name1, name2)
             or named_sub_event_mismatch(name1, name2)
             or participatory_program_variant_mismatch(name1, name2)
@@ -1400,7 +1440,8 @@ def _match_dateless_crawl_event(name, location_id, lat, lng, location_name,
                 existing_loc_id = existing.get('location_id')
                 if existing_loc_id is not None and existing_loc_id != location_id:
                     continue
-            if normalize_name_for_dedup(existing['name']) == norm_name:
+            if (normalize_name_for_dedup(existing['name']) == norm_name
+                    and not _screening_versions_differ(name, existing['name'])):
                 if not existing.get('suppressed'):
                     return existing['id']
                 if suppressed_id is None:
@@ -1436,7 +1477,8 @@ def _match_dateless_crawl_event(name, location_id, lat, lng, location_name,
     # it is, and guessing would silently merge two venues' events.
     if not venue_known and website_id is not None and existing_by_website:
         hits = {existing['id'] for existing in existing_by_website.get(website_id, [])
-                if normalize_name_for_dedup(existing['name']) == norm_name}
+                if normalize_name_for_dedup(existing['name']) == norm_name
+                and not _screening_versions_differ(name, existing['name'])}
         if len(hits) == 1:
             return hits.pop()
 
@@ -1494,7 +1536,8 @@ def _match_by_url_identity(name, url, website_id, location_id, crawl_event_slots
 
     best = None  # (suppressed, 0 if same location_id else 1, event_id)
     for existing in existing_by_url.get(index_key, []):
-        if normalize_name_for_dedup(existing['name']) != norm_name:
+        if (normalize_name_for_dedup(existing['name']) != norm_name
+                or _screening_versions_differ(name, existing['name'])):
             continue
         if not (crawl_event_slots & existing['slots']):
             continue
@@ -2500,6 +2543,12 @@ def _deduplicate_same_name_events(cursor, connection, current_date, edit_logger=
             """, (keep_id, remove_id, keep_id, remove_id,
                   remove_id, remove_id, keep_id, keep_id))
 
+        # Preserve previously reviewed redirect targets before deleting a twin.
+        cursor.execute("""UPDATE event_merge_redirects SET survivor_id=%s,
+            survivor_name=(SELECT name FROM events WHERE id=%s)
+            WHERE survivor_id=%s AND duplicate_id<>%s""",
+            (keep_id, keep_id, remove_id, keep_id))
+
         # Transfer event_sources that don't already exist on the keeper
         cursor.execute("""
             UPDATE event_sources SET event_id = %s
@@ -2667,8 +2716,11 @@ def compute_voted_tags(cursor, event_id, current_crawl_tags, curated_tag_set,
     """Compute tags for an event using majority vote across crawl history.
 
     Tags that appear consistently across multiple crawl runs are kept;
-    one-off hallucinations are dropped. Curated hierarchy tags (type='tag')
-    are exempt from voting.
+    one-off keywords are dropped. Curated hierarchy tags (type='tag') present
+    in the current source are exempt from voting, so historical omissions do
+    not erase a newly supplied category such as Virtual. Historical-only tags
+    still need consensus; an old outlier must not gain a permanent exemption.
+    Explicit reviewed blocks remain enforced by db.upsert_event_tags.
 
     Args:
         cursor: Database cursor
@@ -2715,8 +2767,9 @@ def compute_voted_tags(cursor, event_id, current_crawl_tags, curated_tag_set,
     threshold = max(2, ceil(total_crawls * 0.3))
 
     surviving = []
+    current_curated = set(current_crawl_tags) & curated_tag_set
     for tag, count in tag_counts.items():
-        if count >= threshold:
+        if tag in current_curated or count >= threshold:
             surviving.append((tag, count))
 
     # Separate curated vs keyword tags
@@ -3034,6 +3087,8 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
             })
     url_key_name_counts = {k: len(v) for k, v in url_key_names.items()}
 
+    reviewed_identity_index = reviewed_event_identity.load_index(cursor)
+
     # ── Roster of every name each pending crawl_result emitted, plus each
     # event's own URL keys — both read by `_sibling_listing_veto`.
     pending_result_ids = {row[12] for row in new_crawl_events if row[12] is not None}
@@ -3081,6 +3136,7 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
     new_events_count = 0
     merged_count = 0
     source_url_lookup_cache = {}  # website_id -> set of trimmed listing URLs
+    reviewed_venue_rules = venue_overrides.load_rules(cursor)
     # Tally of what the single-occasion guard removed, for the run summary.
     single_occasion_report = {'spans_dropped': 0, 'spans_collapsed': 0,
                               'dates_dropped': 0, 'events': set()}
@@ -3122,6 +3178,16 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
             continue
 
         occurrences = occurrences_by_ce.get(ce_id, [])
+        reviewed_venue = venue_overrides.find_rule(
+            reviewed_venue_rules, website_id, name, [url], occurrences)
+        if reviewed_venue:
+            # Apply before every location-based matching tier. Otherwise a
+            # source's home pin can create a new twin before the later update
+            # guard has any opportunity to preserve the reviewed correction.
+            location_id = reviewed_venue['location_id']
+            location_name = reviewed_venue['location_name']
+            sublocation = reviewed_venue['sublocation']
+            lat, lng = reviewed_venue['lat'], reviewed_venue['lng']
 
         # Filter occurrences by date range
         valid_occurrences = []
@@ -3163,7 +3229,8 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
         tags = tags_by_ce.get(ce_id, [])
 
         # Check for duplicate in existing events (same location + overlapping dates + similar name)
-        matched_event_id = None
+        matched_event_id = reviewed_event_identity.match(
+            reviewed_identity_index, website_id, name, url, location_id, valid_occurrences)
         norm_name = normalize_name_for_dedup(name)
 
         def _dates_overlap(existing_id):
@@ -3662,7 +3729,7 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
         else:
             # Create new event
             canonical_loc_name = location_names_by_id.get(location_id) if location_id else None
-            effective_loc_name = canonical_loc_name or location_name
+            effective_loc_name = canonical_location_label(location_name, canonical_loc_name)
             # Never create an emoji-less event: AI emoji → venue emoji → 📅.
             effective_emoji = (emoji[:10] if emoji else None) or location_emoji_by_id.get(location_id) or '📅'
             cursor.execute("""

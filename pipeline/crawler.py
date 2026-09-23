@@ -208,8 +208,10 @@ def _is_bot_challenge(content):
 # reads "Group not found". It clears MIN_CRAWL_CONTENT_SIZE and matches no
 # BOT_CHALLENGE_MARKERS, so it is stored as a perfectly healthy crawl that simply
 # extracted 0 events — forever, with nothing downstream able to tell it apart
-# from a group that genuinely has nothing scheduled (Meetup renders *that* as
-# "Nothing planned yet"). Same silent-failure family as the Cloudflare
+# from a group that genuinely has nothing scheduled. Current empty group pages
+# omit the "Upcoming events" heading without a consistent empty-state sentence;
+# absence of that heading alone is not evidence of a deleted group.
+# Same silent-failure family as the Cloudflare
 # interstitials above; found on 6 Meetup sites on 2026-08-31.
 #
 # Two things make this class different from a bot challenge, and shape the
@@ -366,6 +368,36 @@ def _is_structural_json_false_positive(error_message, html, content_type=None,
     if any(marker in lowered for marker in _STATUS_VERDICT_MARKERS):
         return False
     return _is_json_document(html, content_type) or _is_json_api_payload(markdown)
+
+
+def _is_empty_origin_response(result):
+    """Recognize an explicit HTTP 200 / zero-byte origin response.
+
+    Only an empty browser shell plus Content-Length: 0 qualifies. Missing
+    content alone can be a rendering failure or a real block, and an in-page
+    script may have populated an initially empty document with useful data.
+    """
+    if getattr(result, 'status_code', None) != 200:
+        return False
+    headers = getattr(result, 'response_headers', None)
+    if not isinstance(headers, dict):
+        return False
+    headers = {str(k).lower(): str(v).strip() for k, v in headers.items()}
+    if headers.get('content-length') != '0' or headers.get('cf-mitigated'):
+        return False
+    error = getattr(result, 'error_message', None)
+    near_empty = re.fullmatch(
+        r'Blocked by anti-bot protection: Near-empty content \(\d+ bytes\) with HTTP 200',
+        str(error).strip(), flags=re.IGNORECASE)
+    if error and ((not _STRUCTURAL_VERDICT_RE.search(str(error)) and not near_empty) or
+                  any(m in str(error).lower() for m in _STATUS_VERDICT_MARKERS)):
+        return False
+    html = getattr(result, 'html', None) or ''
+    shell = re.sub(r'<!doctype\s+html\s*>|</?(?:html|head|body)\s*>', '', html,
+                   flags=re.IGNORECASE).strip()
+    markdown = getattr(result, 'markdown', None)
+    return not shell and not any((getattr(markdown, field, None) or '').strip()
+                                for field in ('fit_markdown', 'raw_markdown'))
 
 
 try:
@@ -540,6 +572,7 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
     # Some platforms short-circuit crawl4ai entirely and fetch via a custom Python path.
     # If every URL resolves to one such fetcher, run it instead of the browser crawl.
     custom_profile = site_profiles.custom_fetch_profile([_url_of(u) for u in urls])
+    has_custom_urls = any(site_profiles.custom_fetch_profile([_url_of(u)]) for u in urls)
     if custom_profile is not None:
         label = custom_profile.display_label
         crawl_result_id = db.create_crawl_result(
@@ -654,6 +687,7 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
         # URLs whose page is permanently gone (soft 404 served as HTTP 200).
         # Never retried — they are dropped and reported in the failure message.
         soft_404_urls = []
+        empty_origin_urls = []
         # How many URLs we actually tried, and how many came back as a real
         # fetch. A crawl where every URL failed must not be storable as healthy.
         attempted_urls = 0
@@ -675,6 +709,24 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
                 else:
                     url = resolve_url_templates(url_data)
                     url_js_code = None
+
+                # Mixed websites may combine an API calendar with ordinary
+                # browser pages. Honor the custom path per URL as well as the
+                # whole-website shortcut above. A custom fetch failure aborts
+                # the capture instead of publishing an incomplete inventory.
+                custom = site_profiles.custom_fetch_profile([url])
+                if custom is not None:
+                    attempted_urls += 1
+                    if 'urls' in inspect.signature(custom.fetcher).parameters:
+                        content, count = custom.fetcher(urls=[url])
+                    else:
+                        content, count = custom.fetcher()
+                    if not content:
+                        raise ValueError(f'{custom.display_label} returned no capture for {url}')
+                    combined_markdown += url + '\n' + content + '\n\n'
+                    succeeded_urls += 1
+                    print(f'    - {custom.display_label}: {count} records from {url}')
+                    continue
 
                 # Append platform-specific in-page js (e.g. Meetup listing URL
                 # disambiguation) to whatever js_code is already configured for this
@@ -708,6 +760,7 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
                 url_html = ""
                 url_content_type = None
                 page_count = 0
+                empty_origin_pages = 0
                 # Did ANY page of this URL come back as a real fetch? A WAF block
                 # still yields a result object with a renderable body, so content
                 # length alone cannot answer this (see _is_blocked_error).
@@ -717,6 +770,10 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
 
                 for result in await crawler.arun(url=url, config=url_config):
                     page_count += 1
+                    if _is_empty_origin_response(result):
+                        empty_origin_pages += 1
+                        print(f"      Page {page_count}: origin served an empty HTTP 200 response")
+                        continue
                     if result and result.success:
                         url_succeeded = True
                     elif result and result.error_message:
@@ -749,6 +806,11 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
                         print(f"      Page {page_count}: fit={fit_len}, raw={raw_len}, using={len(content) if content else 0}")
 
                 print(f"    - Crawled {page_count} page(s), {len(url_content)} chars total")
+                if page_count and empty_origin_pages == page_count:
+                    empty_origin_urls.append(url)
+                    if has_custom_urls:
+                        raise ValueError(f'Origin served empty page in mixed calendar: {url}')
+                    continue
                 if (not url_succeeded and _is_structural_json_false_positive(
                         url_error, url_html, url_content_type, url_content)):
                     # An empty (or otherwise element-free) JSON feed, not a WAF.
@@ -796,6 +858,8 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
                     print(f"    - Soft 404 ({len(url_content)} chars) - page no longer exists, discarding")
                     soft_404_urls.append(url)
                     continue
+                if has_custom_urls and not url_content.strip():
+                    raise ValueError(f'Empty browser capture in mixed calendar: {url}')
                 if url_succeeded:
                     succeeded_urls += 1
                 elif url_error:
@@ -810,7 +874,7 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
             error_msg = f"Crawl timed out after {crawl_timeout} seconds"
             print(f"    - {error_msg}")
             # If we got partial content, still save it
-            if combined_markdown.strip():
+            if combined_markdown.strip() and not has_custom_urls:
                 print(f"    - Saving partial content ({len(combined_markdown)} chars)")
                 db.update_crawl_result_crawled(cursor, connection, crawl_result_id, combined_markdown)
                 db.update_website_last_crawled(cursor, connection, website['id'])
@@ -853,6 +917,9 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
                     f"Soft 404 - page no longer exists ({len(soft_404_urls)} URL(s)): "
                     + ", ".join(soft_404_urls[:3])
                 )
+            elif empty_origin_urls:
+                error_msg = (f"Origin served empty page (HTTP 200, Content-Length: 0; "
+                             f"{len(empty_origin_urls)} URL(s)): " + ', '.join(empty_origin_urls[:3]))
             elif circuit_skipped_urls:
                 skipped_host = _host_of(circuit_skipped_urls[0])
                 error_msg = (
@@ -896,6 +963,12 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
             print(f"    - {error_msg}")
             db.update_crawl_result_failed(cursor, connection, crawl_result_id, error_msg)
             db.update_website_last_crawled(cursor, connection, website['id'])
+            return None
+
+        if has_custom_urls and succeeded_urls != len(urls):
+            db.update_crawl_result_failed(
+                cursor, connection, crawl_result_id,
+                f'Incomplete mixed calendar: fetched {succeeded_urls} of {len(urls)} URLs')
             return None
 
         # Check for minimum content size to catch failed crawls early
@@ -1165,6 +1238,9 @@ async def crawl_event_url(web_crawler, url, crawl_config, timeout=120, user_agen
     Returns the complete page content or None on failure. The extraction layer
     rejects oversized work packets explicitly; never hand it a silent prefix.
     """
+    if site_profiles.skip_detail_url(url):
+        print(f"    Skipping non-detail URL identified by source profile: {url}")
+        return None
     fetch_url = site_profiles.detail_fetch_url(url)
     if fetch_url != url:
         print(f"    Fetching {fetch_url} (stored URL unchanged)")
@@ -1221,6 +1297,9 @@ async def _fetch_event_page(web_crawler, url, crawl_config, timeout):
             timeout=timeout,
         )
         status = _http_error_status(result)
+        if _is_empty_origin_response(result):
+            print(f"    Origin served empty page (HTTP 200, Content-Length: 0) for {url}")
+            return None
         if status in (403, 429) or (not result.success and
                 _is_blocked_error(getattr(result, 'error_message', None))):
             raise _DetailPageBlocked()
