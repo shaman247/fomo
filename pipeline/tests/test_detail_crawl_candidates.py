@@ -44,7 +44,7 @@ CREATE TABLE website_urls (id INTEGER PRIMARY KEY, website_id INTEGER, url TEXT)
 CREATE TABLE location_alternate_names (
     id INTEGER PRIMARY KEY, location_id INTEGER, alternate_name TEXT, website_id INTEGER);
 CREATE TABLE events (
-    id INTEGER PRIMARY KEY, archived INTEGER DEFAULT 0, location_id INTEGER, description TEXT);
+    id INTEGER PRIMARY KEY, name TEXT, archived INTEGER DEFAULT 0, location_id INTEGER, description TEXT);
 CREATE TABLE event_urls (id INTEGER PRIMARY KEY, event_id INTEGER, url TEXT);
 """
 
@@ -267,19 +267,20 @@ class TestKnownCompleteSkipAndSiteCap(unittest.TestCase):
         else:
             os.environ['DETAIL_CRAWL_SITE_CAP'] = self._old_cap
 
-    def _add(self, ce_id, url, dated=True, description='No description available.'):
+    def _add(self, ce_id, url, dated=True, description='No description available.', name=None):
         self.conn.execute(
             "INSERT INTO crawl_events (id, crawl_result_id, name, url, location_name,"
             " description, detail_crawl_attempts, created_at)"
             " VALUES (?, 1, ?, ?, 'Macon Library', ?, 0, ?)",
-            (ce_id, f'Event {ce_id}', url, description, FRESH_AT))
+            (ce_id, name or f'Event {ce_id}', url, description, FRESH_AT))
         if dated:
             self.conn.execute("INSERT INTO crawl_event_occurrences (crawl_event_id) VALUES (?)", (ce_id,))
         self.conn.commit()
 
-    def _known(self, event_id, url, description='Real prose about the event.', location_id=5, archived=0):
-        self.conn.execute("INSERT INTO events (id, archived, location_id, description) VALUES (?,?,?,?)",
-                          (event_id, archived, location_id, description))
+    def _known(self, event_id, url, description='Real prose about the event.', location_id=5, archived=0,
+               name=None):
+        self.conn.execute("INSERT INTO events (id, name, archived, location_id, description) VALUES (?,?,?,?,?)",
+                          (event_id, name, archived, location_id, description))
         self.conn.execute("INSERT INTO event_urls (event_id, url) VALUES (?,?)", (event_id, url))
         self.conn.commit()
 
@@ -304,6 +305,23 @@ class TestKnownCompleteSkipAndSiteCap(unittest.TestCase):
         self._add(5, 'https://bpl.org/node/5')
         self._known(104, 'https://bpl.org/node/5', archived=1)
         self.assertEqual(self._ids(), {3, 4, 5})
+
+    def test_reused_slug_for_a_different_show_is_fetched(self):
+        # The Moth, 2026-09-25: /tickets/magic-18 was reused for "Teenage
+        # Nightmares" while a live "Magic" event still carried the URL.
+        self._add(6, 'https://themoth.org/tickets/magic-18', name='Teenage Nightmares')
+        self._known(105, 'https://themoth.org/tickets/magic-18', name='Magic')
+        self.assertEqual(self._ids(), {6})
+
+    def test_merger_naming_variant_keeps_the_skip(self):
+        self._add(7, 'https://symphonyspace.org/events/x', name='Eric Idle, Idle in Provence')
+        self._known(106, 'https://symphonyspace.org/events/x', name='Symphony Space Eric Idle, Idle in Provence')
+        self.assertEqual(self._ids(), set())
+
+    def test_name_without_significant_words_keeps_the_skip(self):
+        self._add(8, 'https://example.org/e/8', name='The Show')
+        self._known(107, 'https://example.org/e/8', name='Pulverize the Sound')
+        self.assertEqual(self._ids(), set())
 
     def test_site_cap_defers_the_tail_and_can_be_disabled(self):
         for i in range(10, 16):

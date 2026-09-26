@@ -1778,6 +1778,48 @@ def _load_generic_location_names():
     return names
 
 
+_NAME_MATCH_STOPWORDS = frozenset({
+    'the', 'and', 'with', 'for', 'at', 'of', 'in', 'on', 'a', 'an', 'to', 'from',
+    'presents', 'live', 'night', 'show', 'event', 'nyc', 'new', 'york',
+})
+
+
+def _significant_words(name):
+    return {w for w in re.findall(r'[a-z0-9]+', (name or '').lower())
+            if len(w) >= 3 and w not in _NAME_MATCH_STOPWORDS}
+
+
+def _name_shares_significant_word(name, other_names):
+    """True when `name` shares a significant word with any of `other_names`.
+
+    A name with no significant words (e.g. "Duo") cannot be judged, so it is
+    treated as matching rather than forcing a fetch.
+    """
+    words = _significant_words(name)
+    if not words:
+        return True
+    return any(words & _significant_words(other) for other in other_names)
+
+
+def _live_described_names_by_url(cursor, urls):
+    """Map url -> names of live, described, located events carrying that URL."""
+    names = {}
+    urls = list(set(urls))
+    for i in range(0, len(urls), 500):
+        chunk = urls[i:i + 500]
+        placeholders = ','.join(['%s'] * len(chunk))
+        cursor.execute(f"""
+            SELECT eu.url, e.name FROM event_urls eu JOIN events e ON e.id = eu.event_id
+            WHERE eu.url IN ({placeholders}) AND e.archived = 0
+              AND e.location_id IS NOT NULL
+              AND e.description IS NOT NULL AND e.description <> ''
+              AND e.description <> 'No description available.'
+        """, chunk)
+        for url, name in cursor.fetchall():
+            names.setdefault(url, []).append(name)
+    return names
+
+
 def get_detail_crawl_candidates(cursor, website_ids=None):
     """Find crawl_events needing a detail crawl, filtered to individual event URLs.
 
@@ -1891,9 +1933,21 @@ def get_detail_crawl_candidates(cursor, website_ids=None):
                 return True
         return False
 
+    # A known-complete URL only speaks for this row when the live event on it is
+    # plausibly the same show. Sites reuse ticket slugs for new programs (The Moth,
+    # 2026-09-25: /tickets/magic-18 now sells "Teenage Nightmares"), and the new
+    # row would otherwise inherit the old event's "described and located" status,
+    # never get its detail fetch, and land unmapped. Names sharing no significant
+    # word are treated as unknown; merger naming variants ("Symphony Space X" vs
+    # "X") still share words and keep the skip (measured: 75 of 8,048 flip).
+    known_urls = [r[2] for r in rows if r[6] and r[7]]
+    live_names = _live_described_names_by_url(cursor, known_urls)
+
     candidates = []
     skipped_known = 0
     for ce_id, name, url, website_id, location_name, description, has_occurrences, known_complete in rows:
+        if known_complete and not _name_shares_significant_word(name, live_names.get(url, ())):
+            known_complete = False
         if has_occurrences and known_complete:
             skipped_known += 1
             continue
