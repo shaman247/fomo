@@ -8632,7 +8632,9 @@ async def managed_crawler(browser_config, startup_timeout=90, teardown_timeout=3
 def _detail_source_path(extraction_dir, candidate, settings):
     """Key durable detail snapshots by the row and its extraction context."""
     identity = json.dumps(
-        {'candidate': candidate, 'settings': settings, 'content_policy': 'complete-v1'},
+        # Pre-guard snapshots did not verify the final dated URL and may carry
+        # another session's content. Refetch them before any resumed enrichment.
+        {'candidate': candidate, 'settings': settings, 'content_policy': 'complete-v2-session-identity'},
         sort_keys=True, ensure_ascii=False, default=str,
     )
     key = hashlib.sha256(identity.encode('utf-8')).hexdigest()

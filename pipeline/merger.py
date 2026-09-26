@@ -28,6 +28,9 @@ from session_details import refresh_source_session_details
 from source_metadata import refresh_source_metadata
 from delivery import canonical_location_label
 from schedule_envelopes import envelope, reconcile_envelopes
+from reschedules import has_reschedule_notice, reconcile_reschedules
+from festival_identity import numbered_member_pair, numbered_festival_span_mismatch
+from overnight_occurrences import coalesce_overnight_occurrences, reconcile_overnights
 from constants import get_active_date_window
 
 
@@ -912,6 +915,30 @@ def _level_variant_mismatch(norm1, norm2):
     return not (levels1 <= levels2 or levels2 <= levels1)
 
 
+@functools.lru_cache(maxsize=131072)
+def _explicit_numbered_level(name):
+    """One singular numeric level, without interpreting combined/range labels.
+
+    Parse before punctuation normalization so Level 1/2 cannot become Level 1.
+    Bare numbers, grades, floors, plural levels and open-ended levels are outside
+    this rule. A missing label never establishes a conflicting skill level.
+    """
+    matches = list(re.finditer(r'\blevel\s*(\d{1,2})(?!\w|\.\d)', name or '', re.I))
+    if len(matches) != 1 or re.search(r'\blevels\b', name or '', re.I):
+        return None
+    match = matches[0]
+    tail = name[match.end():]
+    if re.match(r'\s*[\[(]?\s*(?:\+|(?:[/&,–—-]|\b(?:and|or|to|through)\b)\s*'
+                r'(?:(?:level\s*)?(?:\d|[ivxlcdm]+\b)|up\b|above\b|higher\b))', tail, re.I):
+        return None
+    return int(match[1])
+
+
+def _numbered_levels_differ(name1, name2):
+    left, right = _explicit_numbered_level(name1), _explicit_numbered_level(name2)
+    return left is not None and right is not None and left != right
+
+
 def _series_enumeration_mismatch(norm1, norm2):
     """One normalized name carries an "N of M" series-member marker and the
     other does not.
@@ -1204,6 +1231,7 @@ def is_false_positive(name1, name2):
     The rules live in the three discriminator tables above.
     """
     if (_screening_versions_differ(name1, name2)
+            or _numbered_levels_differ(name1, name2)
             or game_program_variant_mismatch(name1, name2)
             or library_program_variant_mismatch(name1, name2)
             or named_sub_event_mismatch(name1, name2)
@@ -1441,7 +1469,8 @@ def _match_dateless_crawl_event(name, location_id, lat, lng, location_name,
                 if existing_loc_id is not None and existing_loc_id != location_id:
                     continue
             if (normalize_name_for_dedup(existing['name']) == norm_name
-                    and not _screening_versions_differ(name, existing['name'])):
+                    and not _screening_versions_differ(name, existing['name'])
+                    and not _numbered_levels_differ(name, existing['name'])):
                 if not existing.get('suppressed'):
                     return existing['id']
                 if suppressed_id is None:
@@ -1478,7 +1507,8 @@ def _match_dateless_crawl_event(name, location_id, lat, lng, location_name,
     if not venue_known and website_id is not None and existing_by_website:
         hits = {existing['id'] for existing in existing_by_website.get(website_id, [])
                 if normalize_name_for_dedup(existing['name']) == norm_name
-                and not _screening_versions_differ(name, existing['name'])}
+                and not _screening_versions_differ(name, existing['name'])
+                and not _numbered_levels_differ(name, existing['name'])}
         if len(hits) == 1:
             return hits.pop()
 
@@ -1537,7 +1567,8 @@ def _match_by_url_identity(name, url, website_id, location_id, crawl_event_slots
     best = None  # (suppressed, 0 if same location_id else 1, event_id)
     for existing in existing_by_url.get(index_key, []):
         if (normalize_name_for_dedup(existing['name']) != norm_name
-                or _screening_versions_differ(name, existing['name'])):
+                or _screening_versions_differ(name, existing['name'])
+                or _numbered_levels_differ(name, existing['name'])):
             continue
         if not (crawl_event_slots & existing['slots']):
             continue
@@ -2225,6 +2256,21 @@ def filter_single_occasion_occurrences(event_name, incoming_name, occurrences,
     return occurrences, report
 
 
+def _refresh_occurrence_indexes(event_id, rows, event_dates, event_date_ranges,
+                                event_slots, current_date, future_limit_date):
+    """Refresh matching indexes after a stored schedule representation changes."""
+    represented = [o for o in rows
+                   if (o[0] and current_date <= o[0] <= future_limit_date)
+                   or (o[2] and o[2] >= current_date)]
+    event_dates[event_id] = {str(o[0]) for o in represented if o[0]}
+    event_date_ranges[event_id] = [
+        (o[0], o[2]) for o in represented if o[0] and o[2]]
+    # URL candidates reference this set: retain its identity.
+    slots = event_slots.setdefault(event_id, set())
+    slots.clear()
+    slots.update((str(o[0]), o[1] or '') for o in represented if o[0])
+
+
 def _merge_occurrences_into_event(cursor, event_id, new_occurrences, *, crawl_event_id=None):
     """Insert new occurrences into event_occurrences, deduping by (sd, st, ed).
 
@@ -2244,6 +2290,8 @@ def _merge_occurrences_into_event(cursor, event_id, new_occurrences, *, crawl_ev
     Original crawl evidence is retained.
 
     new_occurrences is an iterable of (start_date, start_time, end_date, end_time, ...).
+    When overnight equivalence changes the represented schedule, return the
+    retained stored rows for the caller's date/range/slot indexes; otherwise None.
     """
     cursor.execute(
         "SELECT start_date, start_time, end_date, end_time, COALESCE(MAX(sort_order), -1) "
@@ -2253,6 +2301,10 @@ def _merge_occurrences_into_event(cursor, event_id, new_occurrences, *, crawl_ev
     )
     existing_rows = cursor.fetchall()
     new_occurrences = list(new_occurrences)
+    original_count = len(existing_rows) + len(new_occurrences)
+    existing_rows, new_occurrences = reconcile_overnights(
+        cursor, event_id, existing_rows, new_occurrences)
+    overnight_changed = len(existing_rows) + len(new_occurrences) != original_count
     if (crawl_event_id is not None
             and any(envelope(r) for r in existing_rows + new_occurrences)
             and any(r[1] and r[2] in (None, r[0]) for r in existing_rows + new_occurrences)):
@@ -2380,6 +2432,9 @@ def _merge_occurrences_into_event(cursor, event_id, new_occurrences, *, crawl_ev
         existing_by_key[key] = new_et
         existing_starts.add(new_st)
         starts_by_date[date_key] = existing_starts
+
+    if overnight_changed:
+        return [(sd, st, ed, et) for (sd, st, ed), et in existing_by_key.items()]
 
 
 def _deduplicate_same_name_events(cursor, connection, current_date, edit_logger=None,
@@ -3132,6 +3187,13 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                        tuple(chunk))
         raw_data_by_ce.update(cursor.fetchall())
 
+    # Retained source notices also protect against a later replay of the old
+    # crawl. Restrict the extra provenance queries to events with such evidence.
+    cursor.execute('''SELECT DISTINCT es.event_id FROM event_sources es
+        JOIN crawl_events ce ON ce.id=es.crawl_event_id
+        WHERE ce.description LIKE '%rescheduled%from%' ''')
+    rescheduled_event_ids = {row[0] for row in cursor.fetchall()}
+
     # ── Match crawl events to existing events or create new ones ──
     new_events_count = 0
     merged_count = 0
@@ -3219,6 +3281,15 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
         crawl_result_roster = crawl_result_rosters.get(crawl_result_id, ())
 
         def _sibling_veto(existing):
+            # A broad festival envelope and a numbered night can have different
+            # titles/publishers, so the ordinary suffix/permalink rule misses
+            # them. Read full dates only for this rare explicit title shape.
+            if numbered_member_pair(name, existing['name']):
+                cursor.execute('''SELECT start_date,start_time,end_date,end_time
+                    FROM event_occurrences WHERE event_id=%s''', (existing['id'],))
+                if numbered_festival_span_mismatch(
+                        name, valid_occurrences, existing['name'], cursor.fetchall()):
+                    return True
             return _sibling_listing_veto(
                 name, ce_url_key, website_id, crawl_event_slots, ce_id,
                 existing, event_slots.get(existing['id'], set()),
@@ -3230,7 +3301,10 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
 
         # Check for duplicate in existing events (same location + overlapping dates + similar name)
         matched_event_id = reviewed_event_identity.match(
-            reviewed_identity_index, website_id, name, url, location_id, valid_occurrences)
+            reviewed_identity_index, website_id, name, url, location_id, valid_occurrences,
+            full_source_occurrences=occurrences)
+        reviewed_unmapped_schedule = reviewed_event_identity.unmapped_schedule(
+            reviewed_identity_index, matched_event_id) if matched_event_id is not None else None
         norm_name = normalize_name_for_dedup(name)
 
         def _dates_overlap(existing_id):
@@ -3465,6 +3539,10 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
             current_loc_id = _m[0] if _m else None
             if _m and _m[0] is not None and _m[0] != location_id:
                 matched_event_id = None
+                # The reviewed decision no longer owns the eventual match.
+                # A subsequent URL fallback must follow its ordinary metadata
+                # and occurrence rules, even if it returns the same event ID.
+                reviewed_unmapped_schedule = None
 
         # URL-identity tier — the ONE tier exempt from the guard above, and the
         # last one to run, so it only ever rescues a crawl_event that would
@@ -3527,9 +3605,37 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                 event_dates.get(matched_event_id, set()),
                 event_id=matched_event_id,
             )
-            _merge_occurrences_into_event(
+            # A reviewed multi-venue umbrella's complete edition can arrive as
+            # a span or individual dates. Its approved canonical partition is
+            # already stored; source representation must not inflate it.
+            if reviewed_unmapped_schedule is not None:
+                merge_occurrences = []
+            if reviewed_unmapped_schedule is None and has_reschedule_notice(description):
+                rescheduled_event_ids.add(matched_event_id)
+            if reviewed_unmapped_schedule is None and matched_event_id in rescheduled_event_ids:
+                cursor.execute('''SELECT start_date,start_time,end_date,end_time,sort_order
+                    FROM event_occurrences WHERE event_id=%s''', (matched_event_id,))
+                retained, merge_occurrences = reconcile_reschedules(
+                    cursor, matched_event_id, ce_id, cursor.fetchall(), merge_occurrences)
+                # A removed date must not keep steering overlap matching for
+                # the remainder of this merge pass.
+                represented = [o for o in retained + list(merge_occurrences)
+                               if (o[0] and current_date <= o[0] <= future_limit_date)
+                               or (o[2] and o[2] >= current_date)]
+                event_dates[matched_event_id] = {str(o[0]) for o in represented if o[0]}
+                event_date_ranges[matched_event_id] = [
+                    (o[0], o[2]) for o in represented if o[0] and o[2]]
+                # URL candidates hold references to this same set.
+                slots = event_slots.setdefault(matched_event_id, set())
+                slots.clear()
+                slots.update((str(o[0]), o[1] or '') for o in represented if o[0])
+            overnight_rows = _merge_occurrences_into_event(
                 cursor, matched_event_id, merge_occurrences, crawl_event_id=ce_id,
             )
+            if overnight_rows is not None:
+                _refresh_occurrence_indexes(
+                    matched_event_id, overnight_rows, event_dates, event_date_ranges,
+                    event_slots, current_date, future_limit_date)
 
             # Add URL if not already present.
             # Promote event-specific URLs over website listing URLs: if the new URL
@@ -3596,7 +3702,7 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
             # Update location_id if missing or if the new value is the website's
             # linked location (corrects stale fuzzy-match errors from earlier crawls)
             effective_location_id = current_loc_id
-            if location_id:
+            if location_id and reviewed_unmapped_schedule is None:
                 current_location_id = current_loc_id
                 if not current_location_id or (
                     current_location_id != location_id and
@@ -3615,7 +3721,8 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
             current_loc = result[0] if result else None
             if result and result[1] is not None:
                 effective_location_id = result[1]
-            if location_name and location_name not in ('Not specified', ''):
+            if (reviewed_unmapped_schedule is None and location_name
+                    and location_name not in ('Not specified', '')):
                 if not current_loc or current_loc in ('Not specified', ''):
                     update_fields = ["location_name = %s"]
                     update_values = [location_name]
@@ -3707,10 +3814,11 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
 
             # Recover ordinary same-source room/text metadata independently of
             # the location-label placeholder and grouped-session paths.
-            refresh_source_metadata(cursor, matched_event_id, ce_id,
-                                    today=current_date, edit_logger=edit_logger)
-            refresh_source_session_details(cursor, matched_event_id, ce_id,
-                                           raw_data_by_ce.get(ce_id))
+            if reviewed_unmapped_schedule is None:
+                refresh_source_metadata(cursor, matched_event_id, ce_id,
+                                        today=current_date, edit_logger=edit_logger)
+                refresh_source_session_details(cursor, matched_event_id, ce_id,
+                                               raw_data_by_ce.get(ce_id))
             # Update tags using majority vote across crawl history
             if tags:
                 voted_tags = compute_voted_tags(
@@ -3769,6 +3877,8 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
             created_occurrences = _apply_single_occasion_guard(
                 name, name, valid_occurrences, (), event_id=new_event_id,
             )
+            _, created_occurrences, _ = coalesce_overnight_occurrences(
+                (), created_occurrences)
             db.insert_event_occurrences(
                 cursor, new_event_id,
                 [(occ[0], occ[1], occ[2], occ[3], i)
@@ -3806,6 +3916,8 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
             event_slots[new_event_id] = {
                 (str(occ[0]), occ[1] or '') for occ in created_occurrences if occ[0]}
             event_names_by_id[new_event_id] = name
+            if has_reschedule_notice(description):
+                rescheduled_event_ids.add(new_event_id)
             _index_existing_event(
                 dedup_indexes, new_event_id, name, location_id, lat, lng, location_name, website_id)
 

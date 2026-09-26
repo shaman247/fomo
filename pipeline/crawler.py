@@ -481,7 +481,8 @@ def resolve_url_templates(url):
 
 
 async def _refetch_past_challenge(url, url_config, user_agent, attempts=2, backoff=15,
-                                  timeout=120, *, headed=False, use_stealth=False):
+                                  timeout=120, *, headed=False, use_stealth=False,
+                                  detail_identity_url=None):
     """Re-fetch a URL that returned a bot-challenge interstitial.
 
     Uses a fresh, full-featured browser: ``text_mode``/``light_mode`` strip the
@@ -512,6 +513,11 @@ async def _refetch_past_challenge(url, url_config, user_agent, attempts=2, backo
                     retry_crawler.arun(url=url, config=url_config), timeout=timeout
                 )
                 for result in results:
+                    if (result and detail_identity_url and
+                            _detail_redirect_changes_session(
+                                detail_identity_url, getattr(result, 'redirected_url', None))):
+                        print(f"    Detail redirected to a different dated session: {detail_identity_url}")
+                        return None
                     if (result and result.success and not _http_error_status(result)
                             and result.markdown):
                         chunk = result.markdown.fit_markdown
@@ -1246,7 +1252,8 @@ async def crawl_event_url(web_crawler, url, crawl_config, timeout=120, user_agen
         print(f"    Fetching {fetch_url} (stored URL unchanged)")
     blocked = False
     try:
-        content = await _fetch_event_page(web_crawler, fetch_url, crawl_config, timeout)
+        content = await _fetch_event_page(
+            web_crawler, fetch_url, crawl_config, timeout, identity_url=url)
     except _DetailPageBlocked:
         content = ''
         blocked = True
@@ -1271,6 +1278,7 @@ async def crawl_event_url(web_crawler, url, crawl_config, timeout=120, user_agen
         timeout=DETAIL_CHALLENGE_TIMEOUT,
         headed=headed,
         use_stealth=use_stealth,
+        detail_identity_url=url,
     )
     if (recovered and len(recovered) > MIN_EVENT_PAGE_SIZE
             and not _is_soft_404(recovered) and not _is_bot_challenge(recovered)):
@@ -1289,13 +1297,61 @@ class _DetailPageBlocked(Exception):
     """A detail fetch hit a retryable HTTP/WAF block, even without a body."""
 
 
-async def _fetch_event_page(web_crawler, url, crawl_config, timeout):
+# Only unambiguous, year-first dates in the path are interpreted. Numeric
+# query parameters and undated slugs are not evidence of a session identity.
+_DETAIL_PATH_DATE = re.compile(
+    r'(?<![A-Za-z0-9])(?P<year>\d{4})[-/](?P<month>\d{1,2}|'
+    r'Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|'
+    r'Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)'
+    r'[-/](?P<day>\d{1,2})(?![A-Za-z0-9])', re.IGNORECASE)
+_DETAIL_MONTHS = {name: i for i, name in enumerate(
+    ('jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'), 1)}
+
+
+def _detail_redirect_changes_session(requested_url, final_url):
+    """Decline enrichment when the same dated path redirects to another day.
+
+    A changed date alone does not establish a reschedule. Keep the original
+    listing intact and let listing extraction capture the new session. This
+    deliberately does not classify unrelated redirects, missing final URLs,
+    multiple dates, query-only dates, or changes to undated URL identities.
+    """
+    def identity(url):
+        if not isinstance(url, str) or not url:
+            return None
+        try:
+            parsed = urllib.parse.urlsplit(url)
+            if parsed.scheme not in ('http', 'https') or not parsed.hostname:
+                return None
+            path = urllib.parse.unquote(parsed.path).rstrip('/')
+            matches = list(_DETAIL_PATH_DATE.finditer(path))
+            if len(matches) != 1:
+                return None
+            match = matches[0]
+            month = match['month']
+            month_number = int(month) if month.isdigit() else _DETAIL_MONTHS[month[:3].lower()]
+            day = datetime(int(match['year']), month_number, int(match['day'])).date()
+            shape = path[:match.start()] + '{date}' + path[match.end():]
+            return parsed.hostname.lower().removeprefix('www.'), shape, day
+        except (KeyError, ValueError):
+            return None
+
+    requested, final = identity(requested_url), identity(final_url)
+    return bool(requested and final and requested[:2] == final[:2]
+                and requested[2] != final[2])
+
+
+async def _fetch_event_page(web_crawler, url, crawl_config, timeout, *, identity_url=None):
     """One detail-page fetch. Returns raw content, or None if it failed/was empty."""
     try:
         result = await asyncio.wait_for(
             web_crawler.arun(url=url, config=crawl_config),
             timeout=timeout,
         )
+        if _detail_redirect_changes_session(
+                identity_url or url, getattr(result, 'redirected_url', None)):
+            print(f"    Detail redirected to a different dated session: {identity_url or url}")
+            return None
         status = _http_error_status(result)
         if _is_empty_origin_response(result):
             print(f"    Origin served empty page (HTTP 200, Content-Length: 0) for {url}")
