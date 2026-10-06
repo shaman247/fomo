@@ -44,6 +44,18 @@ TODAY = date.today()
 WINDOW_END = TODAY + timedelta(days=FUTURE_WINDOW_DAYS)
 SPAN_THRESHOLD = 14  # >14 days = "Ongoing"-triggering span (matches exporter)
 
+# `--new` scope: events created/updated in the last day OR re-sourced in it (an
+# `event_sources` row whose crawl_event was created in the last day). A merge
+# that only attaches fresh sources/occurrences to an EXISTING event does not
+# bump `events.updated_at`, so the timestamp-only scope missed re-sourced
+# events (Historic Richmond Town 253260/183039/247274/247275, 2026-10-06).
+RECENT_SQL = ("(e.created_at >= (NOW() - INTERVAL 1 DAY)"
+              " OR e.updated_at >= (NOW() - INTERVAL 1 DAY)"
+              " OR EXISTS (SELECT 1 FROM event_sources es"
+              " JOIN crawl_events ce ON ce.id = es.crawl_event_id"
+              " WHERE es.event_id = e.id"
+              " AND ce.created_at >= (NOW() - INTERVAL 1 DAY)))")
+
 
 def nth_weekday(d):
     """Return which ordinal (1-5) occurrence of its weekday `d` is within its month."""
@@ -90,6 +102,14 @@ RECUR_RE = re.compile(
     r'\b(weekly|bi-?weekly|monthly|every (?:other )?(?:week|month|mon|tues|wednes|thurs|fri|satur|sun)\w*|'
     r'each (?:week|month)|recurring|mondays|tuesdays|wednesdays|thursdays|fridays|saturdays|sundays)\b',
     re.I)
+
+# A monthly/ordinal weekday is not a weekly promise, even when the season's
+# endpoints happen to share a weekday. Without observed meetings there is no
+# cadence to regenerate; expose it to review instead.
+MONTHLY_RE = re.compile(
+    r'\b(?:monthly|each month|every (?:other )?month|'
+    r'(?:first|second|third|fourth|fifth|last|[1-5](?:st|nd|rd|th))\s+'
+    r'(?:mon|tues|wednes|thurs|fri|satur|sun)day)\b', re.I)
 
 # Weekday names STATED in the text, used to contradict a weekday inferred from a
 # span's endpoints.
@@ -481,6 +501,8 @@ def classify_course(name, occ, description=''):
     blob = name + ' ' + (description or '')
     if EXHIB_RE.search(blob) or CONTINUOUS_RE.search(blob):
         return 'skip', {'reason': 'exhibition/continuous keyword'}
+    if MONTHLY_RE.search(blob):
+        return 'skip', {'reason': 'monthly/ordinal weekday requires source dates, not weekly expansion'}
     if len(occ) != 1:
         return 'skip', {'reason': f'{len(occ)} occurrence rows (course shape = exactly 1 span)'}
     o = occ[0]
@@ -646,6 +668,8 @@ def categorize_for_review(eid, name, occ, description=''):
       PROGRAM_RANGE   — an umbrella/multi-session program captured as one range
                         (festival lineup, multi-week camp/intensive/series). Triage from
                         source: split into sub-events, make discrete, or accept. MANUAL.
+      REVIEW_CADENCE  — monthly/ordinal wording or an otherwise unexplained timed
+                        envelope. Inspect source dates; infer no cadence. MANUAL.
       INVERSE         — exhibition + a regular discrete grid: the span is correct but
                         the regular discrete dates are bogus. Delete the discrete rows,
                         keep the span. MANUAL.
@@ -671,8 +695,14 @@ def categorize_for_review(eid, name, occ, description=''):
     if vinfo.get('skip_veto'):
         return 'SKIP_PHRASE_UNRESOLVED', vinfo['reason']
 
+    if longest > SPAN_THRESHOLD and not (exhib_kw or continuous_kw) and MONTHLY_RE.search(blob):
+        return 'REVIEW_CADENCE', 'monthly/ordinal weekday envelope; verify explicit source dates, infer no cadence'
+
     cverdict, cinfo = classify_course(name, occ, description)
     if cverdict == 'course_weekly':
+        if not recur_kw and not stated_weekdays(blob) and stated_week_count(blob) is None:
+            return 'REVIEW_CADENCE', (f'timed {longest}d envelope without stated cadence; '
+                                      'verify source dates, infer no weekly/monthly meetings')
         n = len(planned_dates('course_weekly', cinfo))
         st = cinfo['time'][0] or 'no time'
         return 'COURSE_WEEKLY', (f'same-weekday {longest}d span ({cinfo["signal"]}) '
@@ -704,6 +734,11 @@ def categorize_for_review(eid, name, occ, description=''):
     # one range, ≤2 discrete dates) — those genuinely shouldn't span every day.
     if program_kw and not continuous_kw and len(disc) <= 2:
         return 'PROGRAM_RANGE', f'program keyword, {len(disc)} discrete, {span_note}'
+    timed_spans = [o for o in occ if o['end_date']
+                   and (o['end_date'] - o['start_date']).days > SPAN_THRESHOLD
+                   and o.get('start_time')]
+    if timed_spans and not continuous_kw:
+        return 'REVIEW_CADENCE', f'timed {span_note} without established cadence; verify source dates, infer no cadence'
     return 'LIKELY_OK', 'continuous/exhibition or irregular'
 
 
@@ -721,7 +756,7 @@ def review_scan(cur, recent_only=False, ids=None):
              "o.end_date >= CURDATE()"]
     params = [REVIEW_SPAN_MIN]
     if recent_only:
-        where.append("(e.created_at >= (NOW() - INTERVAL 1 DAY) OR e.updated_at >= (NOW() - INTERVAL 1 DAY))")
+        where.append(RECENT_SQL)
     if ids:
         where.append("e.id IN (%s)" % ",".join(["%s"] * len(ids)))
         params.extend(ids)
@@ -731,9 +766,9 @@ def review_scan(cur, recent_only=False, ids=None):
         tuple(params),
     )
     events = cur.fetchall()
-    scope = " created/updated in the last day" if recent_only else ""
+    scope = " created/updated/re-sourced in the last day" if recent_only else ""
     buckets = {'FIX_SPAN': [], 'COURSE_WEEKLY': [], 'SKIP_PHRASE_UNRESOLVED': [],
-               'RECURRING_RANGE': [], 'PROGRAM_RANGE': [], 'INVERSE': [], 'LIKELY_OK': []}
+               'RECURRING_RANGE': [], 'PROGRAM_RANGE': [], 'REVIEW_CADENCE': [], 'INVERSE': [], 'LIKELY_OK': []}
     for e in events:
         cur.execute('SELECT start_date,start_time,end_date,end_time FROM event_occurrences WHERE event_id=%s ORDER BY start_date', (e['id'],))
         occ = cur.fetchall()
@@ -748,10 +783,11 @@ def review_scan(cur, recent_only=False, ids=None):
                                   'Read the source, write the real dates, then delete the span',
         'RECURRING_RANGE': 'MANUAL — build the real meeting dates from the source, then delete the span',
         'PROGRAM_RANGE': 'MANUAL — umbrella/program: split into sub-events, make discrete, or accept as ongoing',
+        'REVIEW_CADENCE': 'MANUAL — inspect explicit source dates; do not infer weekly/monthly meetings from an envelope',
         'INVERSE': 'MANUAL — delete the bogus regular discrete rows, KEEP the span',
     }
     for cat in ('FIX_SPAN', 'COURSE_WEEKLY', 'SKIP_PHRASE_UNRESOLVED',
-                'RECURRING_RANGE', 'PROGRAM_RANGE', 'INVERSE'):
+                'RECURRING_RANGE', 'PROGRAM_RANGE', 'REVIEW_CADENCE', 'INVERSE'):
         rows = buckets[cat]
         print(f"### {cat} ({len(rows)}) — {actions[cat]}")
         for eid, name, note in rows:
@@ -810,8 +846,7 @@ def find_redundant_short_spans(cur, recent_only=False, ids=None):
     where = ["e.archived=0", "e.suppressed=0"]
     params = []
     if recent_only:
-        where.append("(e.created_at >= (NOW() - INTERVAL 1 DAY)"
-                     " OR e.updated_at >= (NOW() - INTERVAL 1 DAY))")
+        where.append(RECENT_SQL)
     if ids:
         where.append("e.id IN (%s)" % ",".join(["%s"] * len(ids)))
         params.extend(ids)
@@ -860,7 +895,7 @@ def short_span_scan(conn, cur, apply_changes=False, recent_only=False, ids=None,
     hits = find_redundant_short_spans(cur, recent_only=recent_only, ids=ids)
     if exclude:
         hits = [h for h in hits if h[0] not in exclude]
-    scope = " created/updated in the last day" if recent_only else ""
+    scope = " created/updated/re-sourced in the last day" if recent_only else ""
     print(f"\nRedundant short ({SHORT_SPAN_MIN_DAYS}-{SHORT_SPAN_MAX_DAYS}d) envelope "
           f"spans{scope}: {len(hits)} across {len({h[0] for h in hits})} events.\n")
     for eid, name, oid, sd, ed, st, _et, inherit in hits:
@@ -903,8 +938,8 @@ def main():
     ap.add_argument('--exclude', help='comma-separated event ids to drop from the fix set (manual-review escape hatch)')
     ap.add_argument('--show', help='comma-separated event ids: print full occurrence+description detail and exit (review aid)')
     ap.add_argument('--skipped', action='store_true', help='also list candidates that were skipped, with the reason')
-    ap.add_argument('--review', action='store_true', help='broad scan: bucket ALL span-bearing events into review categories (FIX_SPAN / COURSE_WEEKLY / SKIP_PHRASE_UNRESOLVED / RECURRING_RANGE / PROGRAM_RANGE / INVERSE) and exit')
-    ap.add_argument('--new', action='store_true', help='restrict to events created/updated in the last day (envelope spans just added by the current run). Scopes --review, the dry run AND --apply.')
+    ap.add_argument('--review', action='store_true', help='broad scan: bucket ALL span-bearing events into review categories (FIX_SPAN / COURSE_WEEKLY / SKIP_PHRASE_UNRESOLVED / RECURRING_RANGE / PROGRAM_RANGE / REVIEW_CADENCE / INVERSE) and exit')
+    ap.add_argument('--new', action='store_true', help='restrict to events created/updated in the last day, or re-sourced in it (an event_sources row whose crawl_event is from the last day) — envelope spans just added by the current run. Scopes --review, the dry run AND --apply.')
     ap.add_argument('--short-spans', action='store_true',
                     help=f'scan for REDUNDANT {SHORT_SPAN_MIN_DAYS}-{SHORT_SPAN_MAX_DAYS} day '
                          'envelope spans (below the main threshold, so the normal scan misses '
@@ -937,8 +972,7 @@ def main():
     # --new must scope the APPLY path too, not just --review. Without this an
     # `--apply --new` silently writes across the entire backlog (the flag reads
     # as "only this run's events" and is used that way by /run-pipeline).
-    recent_sql = (" AND (e.created_at >= (NOW() - INTERVAL 1 DAY)"
-                  " OR e.updated_at >= (NOW() - INTERVAL 1 DAY))") if args.new else ""
+    recent_sql = (" AND " + RECENT_SQL) if args.new else ""
 
     cur.execute('''
         SELECT e.id, e.name, e.description FROM events e

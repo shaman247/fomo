@@ -295,8 +295,8 @@ class TestKnownFalsePositivesStillRejected(unittest.TestCase):
 
     def test_quarterly_ppv_listing_gains_no_arc(self):
         """ev98631 "Ufc Ppvs": Sun 4/26 1pm -> Sun 7/26, a bar showing PPVs all
-        year. Same-weekday, so it stays in COURSE_WEEKLY needing per-id approval
-        (unchanged behaviour) — but it must stay a SINGLE weekday."""
+        year. The underlying per-id course helper stays single-weekday, but the
+        review output must not promise weekly dates without source evidence."""
         occ = [_occ('2026-04-26', '2026-07-26', '13:00:00', '14:00:00')]
         verdict, info = frs.classify_course(
             'Ufc Ppvs', occ, 'We show every UFC event here all year round. Free admission!')
@@ -305,7 +305,7 @@ class TestKnownFalsePositivesStillRejected(unittest.TestCase):
         self.assertEqual(len(frs.planned_dates(verdict, info)), 14)
         cat, _ = frs.categorize_for_review(98631, 'Ufc Ppvs', occ,
                                            'We show every UFC event here all year round.')
-        self.assertEqual(cat, 'COURSE_WEEKLY')   # never FIX_SPAN / auto-applied
+        self.assertEqual(cat, 'REVIEW_CADENCE')  # no cadence promised by a season
 
     def test_different_weekday_ppv_quarter_is_rejected(self):
         occ = [_occ('2026-04-26', '2026-07-25', '13:00:00', '14:00:00')]
@@ -787,3 +787,78 @@ class TestStatedWeekCount(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class TestUnprovenEnvelopeReview(unittest.TestCase):
+    def test_greenhouse_envelope_plus_endpoint_is_manual(self):
+        occ = [_occ('2026-05-05', '2026-10-06', '5pm', '8pm'),
+               _occ('2026-10-06', start_time='5pm', end_time='8pm')]
+        self.assertEqual(frs.categorize_for_review(183956, 'Greenhouse Gang', occ)[0],
+                         'REVIEW_CADENCE')
+        self.assertEqual(frs.classify(183956, 'Greenhouse Gang', occ)[0], 'skip')
+        self.assertEqual(frs.classify_course('Greenhouse Gang', occ)[0], 'skip')
+
+    def test_greenhouse_bare_span_does_not_claim_weekly_dates(self):
+        occ = [_occ('2026-05-05', '2026-10-06', '5pm', '8pm')]
+        self.assertEqual(frs.categorize_for_review(183956, 'Greenhouse Gang', occ)[0],
+                         'REVIEW_CADENCE')
+
+    def test_monthly_and_ordinal_text_never_licenses_weekly_expansion(self):
+        occ = [_occ('2026-05-05', '2026-10-06')]
+        for description in ('Meet monthly.', 'Every third Tuesday.',
+                            'The 1st Tuesday gathering.', 'Each month we meet.'):
+            with self.subTest(description=description):
+                self.assertEqual(frs.classify_course('Greenhouse Gang', occ, description)[0], 'skip')
+                self.assertEqual(frs.categorize_for_review(1, 'Greenhouse Gang', occ, description)[0],
+                                 'REVIEW_CADENCE')
+
+    def test_exhibition_and_continuous_run_stay_accepted(self):
+        occ = [_occ('2026-05-05', '2026-10-06'), _occ('2026-06-06')]
+        for name in ('Native Plants Exhibition', 'Summer Festival'):
+            with self.subTest(name=name):
+                self.assertEqual(frs.categorize_for_review(1, name, occ)[0], 'LIKELY_OK')
+
+    def test_untimed_irregular_span_stays_accepted(self):
+        occ = [_occ('2026-05-05', '2026-10-06', None, None), _occ('2026-06-06')]
+        self.assertEqual(frs.categorize_for_review(1, 'Open Season', occ)[0], 'LIKELY_OK')
+
+
+class TestNewScopeIncludesResourcedEvents(unittest.TestCase):
+    """`--new` also covers events re-sourced in the last day (2026-10-06).
+
+    A merge that only attaches fresh event_sources/occurrences to an existing
+    event does not bump events.updated_at, so Historic Richmond Town's
+    re-sourced range spans (253260/183039/247274/247275) were out of scope.
+    """
+
+    def _sql(self, fn):
+        seen = []
+
+        class FakeCur:
+            def execute(self_inner, sql, params=None):
+                seen.append(sql)
+
+            def fetchall(self_inner):
+                return []
+        from unittest import mock
+        with mock.patch('builtins.print'):
+            fn(FakeCur(), recent_only=True)
+        return seen[0]
+
+    def test_recent_sql_checks_crawl_event_age(self):
+        self.assertIn('event_sources', frs.RECENT_SQL)
+        self.assertIn('ce.created_at', frs.RECENT_SQL)
+        self.assertIn('e.updated_at', frs.RECENT_SQL)
+
+    def test_review_and_short_span_scans_use_it(self):
+        for fn in (frs.review_scan, frs.find_redundant_short_spans):
+            self.assertIn(frs.RECENT_SQL, self._sql(fn))
+
+    def test_single_occasion_scan_uses_it(self):
+        spec = importlib.util.spec_from_file_location(
+            'fix_single_occasion_events',
+            os.path.join(_ROOT, 'scripts', 'fix_single_occasion_events.py'))
+        fso = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(fso)
+        self.assertEqual(fso.RECENT_SQL, frs.RECENT_SQL)
+        self.assertIn(fso.RECENT_SQL, self._sql(fso.scan))
