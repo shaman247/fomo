@@ -34,6 +34,7 @@ import agent_extraction
 from agent_extraction import AgentExtractionPending, AgentExtractionInvalid
 import site_profiles
 from occurrence_times import standardize_time as _standardize_time
+from crawl_body import parse_json_body
 from processor import extract_url_from_content
 
 
@@ -426,6 +427,7 @@ class PreparedExtraction:
 
     # For 'vision' type
     vision_contents: Optional[list] = None  # [prompt_text, image_part1, ...]
+    vision_instructions: Optional[str] = None  # shared rules; None for saved inline prompts
 
     # For 'chunked' type
     chunk_prompts: list = field(default_factory=list)
@@ -510,7 +512,8 @@ def extract_image_urls(content, base_url=None):
 # URLs: every one matched at least one of these, all 12 real flyers matched none).
 _BEACON_PATH_RE = re.compile(
     r'/(?:user-?sync\w*|sync|getuid|cm-notify|merge|tum|cookie|match|prebid|[bp]bsync|bsync|pbsync)'
-    r'(?:/|$)|\.pixel$',
+    r'(?:/|$)|\.pixel$'
+    r'|/\w*cookie-?sync\w*(?:/|$)',  # e.g. rtb.adentifi.com/CookieSyncOpenX
     re.IGNORECASE)
 # A .php "image" is a beacon unless its filename says it serves media
 # (image.php, thumb.php, getfile.php are real on older gallery sites).
@@ -667,13 +670,50 @@ async def prepare_vision_content(content, base_url=None, max_images=MAX_VISION_I
     return image_parts, len(image_parts)
 
 
-SCHEDULE_EXCEPTIONS_RULE = (
+WEEKLY_SCHEDULE_RULE = (
+    'EXPLICIT WEEKLY SCHEDULES: When a current public program states a weekly '
+    'weekday schedule AND a start time (for example, "Tuesdays 7:30pm–8:30pm" '
+    'or "every Wednesday at 7pm"), and gives no specific calendar dates for '
+    'that program, expand each stated weekday into separate occurrences from '
+    f'the supplied current date through the next {constants.FUTURE_WINDOW_DAYS} days, inclusive. Restrict '
+    'expansion to any stated season/course bounds and omit explicit skips; '
+    'copy only the stated times. When explicit calendar bounds describe the run of a '
+    'recurring series (for example, \"Runs from October 2 to October 31 and happens '
+    'every Friday at 1pm and 3pm\"), expand only those named weekdays and clocks '
+    'inside those bounds and the current extraction window. These bounds are not '
+    'one continuous occurrence or just the first and last session. Preserve every '
+    'explicit daily clock; do not collapse departures into an opening-hours range. '
+    'A single calendar date or enumerated dates '
+    'take precedence: emit those dates only, without extrapolating the cadence. '
+    'COLLAPSED SCHEDULES: A count such as "+29 more", "23 other availabilities", '
+    'or "see more times" is not a recurrence rule and supplies no hidden dates '
+    'or times. Emit only the visible explicit slots unless the supplied source '
+    'also contains the expanded dated slots; preserve each expanded slot\'s own '
+    'date and clock, including different weekday/weekend hours. Never turn a '
+    'hidden-item count into weekly repeats or a continuous date span. '
+    'This exception requires an explicit schedule for the event itself. '
+    'A weekday in a title alone ("Sunday Live Music"), "weekly" without a '
+    'weekday/time, "select Saturdays", monthly or nth-weekday schedules, '
+    'opening hours, standing food/drink specials, old social posts, and '
+    'ended/cancelled/past-season listings do not qualify. Do not invent dates '
+    'for them; without other explicit dates return occurrences=null. Never '
+    'carry a named performer, lineup, or other edition-specific detail from '
+    'one dated edition onto hypothetical future editions.'
+)
+
+
+# Keep this within the existing snapshot key so resumes retain their old rules.
+SCHEDULE_EXCEPTIONS_RULE = WEEKLY_SCHEDULE_RULE + '\n\n' + (
     'SCHEDULE EXCEPTIONS: Preserve the source\'s break/skip notices verbatim in '
     'the description when one is returned, including the dates and phrases such '
     'as "NO CLASS on November 11th", "Skip Thanksgiving", "NO SESSION NOV 9", '
     'or "except December 27". Do not paraphrase these notices away. Exclude '
     'the explicitly skipped sessions from occurrences; never refill them from '
-    'the surrounding recurrence rule.'
+    'the surrounding recurrence rule. Preserve literal rescheduling notices, including '
+    'old and replacement dates, even when printed only in the title. For grouped '
+    'sessions retain the date-owned heading beside each notice. Preserve a publisher\'s '
+    'explicit complete revised schedule with its stated window and full date list; '
+    'never describe an ordinary rolling listing or omitted date as a complete replacement.'
 )
 
 
@@ -693,7 +733,7 @@ EVENT_STATUS_RULE = (
 
 def prompt_templates():
     """All extraction wording captured before a new run starts crawling."""
-    names = ('VISION_PROMPT_TEMPLATE', 'ENRICHMENT_PROMPT_TEMPLATE',
+    names = ('VISION_PROMPT_TEMPLATE', 'VISION_INSTRUCTIONS_TEMPLATE', 'ENRICHMENT_PROMPT_TEMPLATE',
              'CHUNK_PROMPT_TEMPLATE', 'SINGLE_PROMPT_TEMPLATE',
              'DETAIL_PROMPT_TEMPLATE', 'REFERENCE_PROMPT_TEMPLATE',
              'SCHEDULE_EXCEPTIONS_RULE', 'EVENT_STATUS_RULE', 'DETAIL_RULES',
@@ -714,14 +754,21 @@ def _prompt_rule(name):
 
 
 VISION_PROMPT_TEMPLATE = '''Today's date is {current_date_string}. We are extracting events from {name} ({url}).
+{note_section}
+{rid_section}
+Page text (authoritative for dates — the flyer images are often undated, and on
+social feeds the date/time is stated in the caption rather than on the image.
+Where the text and an image disagree, prefer the text):
+{text_content}'''
 
-You have TWO sources for this venue's events: the page text below, and the
+
+VISION_INSTRUCTIONS_TEMPLATE = '''You have TWO sources for this venue's events: the page text in the prompt, and the
 attached images (event flyers/posters). Use BOTH. Many events appear only in the
 text, many only on a flyer, and some in both — extract the union, once each.
 
 For EACH event you find in EITHER source, extract:
 - name: The event name
-- location: The venue name (default to "{name}" if not specified)
+- location: The venue name (default to the venue named in the prompt if not specified)
 - occurrences: Array of dates/times, read from the text or the image (e.g., "January 16, 2026" or "Jan 16 - Feb 14"). Each occurrence has:
   - start_date: Date in YYYY-MM-DD format
   - start_time: Time if shown in canonical 12-hour format (e.g., "6pm", "6:30pm")
@@ -731,25 +778,30 @@ For EACH event you find in EITHER source, extract:
 - url: The event's own link if the text gives one, else null
 - hashtags: 4-7 CamelCase tags. Always include at least one category (Music, Nightlife, Comedy, Art, Theater, Dance, Film, Literature, Community, Family, Wellness, Education, Outdoor, Sports, Games). Add Free if free, Virtual if online. Then granular tags.
 - emoji: A single emoji representing the event
-{note_section}
 Rules:
 - {SCHEDULE_EXCEPTIONS_RULE}
 - {EVENT_STATUS_RULE}
-- Cover BOTH sources: every flyer image provided AND the full page text below
+- Cover BOTH sources: every flyer image provided AND the full page text in the prompt
 - Do not list the same event twice because it appears in both — merge it
-- Only include events that appear to be upcoming (after {current_date_string})
+- Only include events that appear to be upcoming (after the current date supplied in the prompt)
 - For art exhibitions, the start_date is opening day and end_date is closing day
-- If you can't read a date clearly, skip that event
-- Gallery hours (like "Wed-Sat 1-6pm") are NOT start/end times - those are for visitors
-{rid_section}
-Page text (authoritative for dates — the flyer images are often undated, and on
-social feeds the date/time is stated in the caption rather than on the image.
-Where the text and an image disagree, prefer the text):
-{text_content}'''
+- If neither a readable date nor a qualifying explicit weekly schedule is present, skip that event
+- Gallery hours (like "Wed-Sat 1-6pm") are NOT start/end times - those are for visitors'''
+
+
+def get_vision_instructions():
+    """Share rules across new packets without changing saved inline packet IDs."""
+    # Pre-split snapshots contain their complete rules in this existing key.
+    # They must keep instructions=None, including when replaying accepted work.
+    if '{SCHEDULE_EXCEPTIONS_RULE}' in _prompt_rule('VISION_PROMPT_TEMPLATE'):
+        return None
+    return _prompt_rule('VISION_INSTRUCTIONS_TEMPLATE').format(
+        SCHEDULE_EXCEPTIONS_RULE=_prompt_rule('SCHEDULE_EXCEPTIONS_RULE'),
+        EVENT_STATUS_RULE=_prompt_rule('EVENT_STATUS_RULE'))
 
 
 def get_vision_prompt(url, text_content, current_date_string, name, notes, request_id=""):
-    """Generate a prompt for vision-based event extraction."""
+    """Per-packet vision evidence; pair with get_vision_instructions()."""
     note_section = f"\n\nIMPORTANT: {notes}" if notes else ""
     rid_section = f"\n\nIMPORTANT: Set request_id to \"{request_id}\" in your response." if request_id else ""
 
@@ -788,6 +840,7 @@ async def extract_with_vision(url, content, current_date_string, name, notes, ba
             prompt_text, EventList, GEMINI_TIMEOUT * 2,  # Double timeout for vision
             provider=llm_providers.provider_for('vision'),
             images=image_parts,
+            instructions=get_vision_instructions(),
         )
 
         # Validate JSON
@@ -1381,6 +1434,73 @@ FAR_FUTURE_BUFFER_DAYS = 30
 FAR_FUTURE_MIN_DATES = 3
 _HTTP_LINK_RE = re.compile(r'\]\(https?://')
 _TIME_TOKEN_RE = re.compile(r'\b(?:[01]?\d|2[0-3])(?::[0-5]\d)?\s*(?:am|pm|a\.m\.|p\.m\.)\b', re.IGNORECASE)
+# Machine dates in JSON feeds: a scheduling key ("startDate", "start", "endDate",
+# "date", "start_time", "starts_at", ...) holding an epoch (13-digit ms or
+# 10-digit s, optionally quoted) or an ISO-8601 datetime ("2026-10-01T18:30").
+# Neither form is a text date token — `\b\d{4}-\d{2}-\d{2}\b` has no word
+# boundary before the `T` — so a Squarespace `?format=json` chunk dated only by
+# `"startDate":1791295200627` looked chrome-only and was pruned (w4618 Hands Off
+# NYC, 2026-09-26 and 2026-10-06: ~10 of 11 upcoming events never queued).
+# Bookkeeping keys (addedOn, updatedOn, publishOn, created_at, ...) are excluded
+# by _JSON_BOOKKEEPING_KEY_RE so a product/blog feed's audit stamps stay chrome.
+_JSON_DATE_VALUE_RE = re.compile(
+    r'"([A-Za-z_]*(?:start|end|begin|date|time|when)[A-Za-z_]*)"\s*:\s*"?'
+    r'(?:(1\d{12}|1\d{9})(?![\d.])|((?:19|20)\d{2})-(\d{2})-(\d{2})T\d{2}:\d{2})',
+    re.IGNORECASE)
+_JSON_BOOKKEEPING_KEY_RE = re.compile(
+    r'creat|updat|modif|publish|added|expir|delet|zone|last|sync|fetch|cache|token',
+    re.IGNORECASE)
+
+
+def _json_dates(text):
+    """Dates carried by scheduling keys of an embedded JSON feed (see above).
+
+    Epochs are read as UTC calendar days; a day of skew is irrelevant to the
+    chrome-only / beyond-window decisions this feeds.
+    """
+    dates = []
+    for m in _JSON_DATE_VALUE_RE.finditer(text or ''):
+        if _JSON_BOOKKEEPING_KEY_RE.search(m.group(1)):
+            continue
+        try:
+            if m.group(2):
+                stamp = int(m.group(2))
+                seconds = stamp / 1000 if len(m.group(2)) == 13 else stamp
+                dates.append(date(1970, 1, 1) + timedelta(seconds=seconds))
+            else:
+                dates.append(date(int(m.group(3)), int(m.group(4)), int(m.group(5))))
+        except (ValueError, OverflowError, OSError):
+            continue
+    return dates
+
+
+# A record's title line: a markdown heading or a line that is wholly bold. A
+# line that is wholly one link does NOT count: "[ Skip to main content ](...?page=2)"
+# would make every repeated nav menu look like it sat under a new record.
+_DEDUPE_TITLE_LINE_RE = re.compile(r'^\s*(?:#{1,6}\s+\S|\*\*[^*\n]+\*\*\s*$)')
+# How many preceding kept paragraphs may separate a field block from its title.
+DEDUPE_TITLE_LOOKBACK = 3
+
+
+def _dedupe_record_title(piece, recent, min_chars=DEDUPE_PARAGRAPH_MIN_CHARS):
+    """The record title a title-less paragraph sits directly under, or None.
+
+    The title must be in the immediately preceding kept paragraph or reachable
+    across short ones only (an image line, a "Buy Tickets" link), at most
+    DEDUPE_TITLE_LOOKBACK back; a long title-less paragraph in between means the
+    paragraph is not that record's body. None also when the paragraph carries
+    its own title line: it is a whole card, so an identical copy is the same
+    card rendered twice.
+    """
+    if any(_DEDUPE_TITLE_LINE_RE.match(line) for line in piece.split('\n')):
+        return None
+    for prev in reversed(recent[-DEDUPE_TITLE_LOOKBACK:]):
+        titles = [line.strip() for line in prev.split('\n') if _DEDUPE_TITLE_LINE_RE.match(line)]
+        if titles:
+            return titles[-1]
+        if len(prev) >= min_chars:
+            return None
+    return None
 
 
 def dedupe_repeated_paragraphs(content, min_chars=DEDUPE_PARAGRAPH_MIN_CHARS):
@@ -1390,11 +1510,21 @@ def dedupe_repeated_paragraphs(content, min_chars=DEDUPE_PARAGRAPH_MIN_CHARS):
     line ("Buy Tickets", a shared date header) is never touched; a repeated long
     block is the same card rendered twice, and the merger would collapse the
     duplicate anyway.
+
+    One exception: a repeated paragraph that carries a date AND sits under a
+    record title it has not appeared under before is the field block of a
+    DIFFERENT record, not a second rendering of the same card, and is kept.
+    Resident Advisor's untitled Venue/Date/Start/Min Age/Tickets blocks are
+    byte-identical for distinct parties at one venue on one night; dropping the
+    later copies left 6 events undated on 2026-10-04. Date-less repeats (nav,
+    footers, newsletter and ID-policy boilerplate) are still dropped wherever
+    they appear, which is where the cost-control savings come from.
     """
     if not content:
         return content, 0
     paragraphs = re.split(r'(\n\n+)', content)
-    seen = set()
+    seen = {}      # paragraph text -> record titles it has been kept under
+    recent = []    # kept paragraphs, for finding the title above the next one
     out = []
     removed = 0
     skip_next_sep = False
@@ -1406,23 +1536,36 @@ def dedupe_repeated_paragraphs(content, min_chars=DEDUPE_PARAGRAPH_MIN_CHARS):
             out.append(piece)
             continue
         key = piece.strip()
+        title = _dedupe_record_title(key, recent, min_chars)
         if len(key) >= min_chars and key in seen:
-            removed += len(piece)
-            skip_next_sep = True
-            continue
-        seen.add(key)
+            titles = seen[key]
+            if title is None or title in titles or not count_date_tokens(key):
+                removed += len(piece)
+                skip_next_sep = True
+                continue
+            titles.add(title)
+        else:
+            seen.setdefault(key, set()).add(title)
         out.append(piece)
+        if key:
+            recent.append(key)
     text = ''.join(out)
     return (text, removed) if removed else (content, 0)
 
 
 def chunk_is_chrome_only(chunk):
-    """True when a chunk carries no date, time, link or detail-URL marker at all."""
+    """True when a chunk carries no date, time, link or detail-URL marker at all.
+
+    JSON-feed dates (epoch / ISO-datetime values on scheduling keys) count as
+    dates; see _JSON_DATE_VALUE_RE.
+    """
     if not chunk or not chunk.strip():
         return True
     if _DETAIL_URL_MARKER_RE.search(chunk) or _HTTP_LINK_RE.search(chunk):
         return False
     if count_date_tokens(chunk) or _TIME_TOKEN_RE.search(chunk):
+        return False
+    if _json_dates(chunk):
         return False
     return True
 
@@ -1447,17 +1590,24 @@ def chunk_is_beyond_window(chunk, today=None, window_days=None, buffer_days=FAR_
     """True when every dated mention in `chunk` carries a year and all sit past the
     publish window (+buffer). Requires FAR_FUTURE_MIN_DATES fully-qualified dates
     and no year-less date tokens, so a calendar that prints "Sat, Sep 26" next to
-    a stray "2027" is never pruned."""
+    a stray "2027" is never pruned.
+
+    JSON-feed dates (epochs / ISO datetimes on scheduling keys) are
+    fully-qualified too and join the minimum, so an in-window `startDate` epoch
+    keeps a chunk whose only TEXT dates are far-future (or an image filename
+    like `signal-2026-08-14-...jpg`, which reads as a past ISO date and can only
+    make a beyond-window verdict LESS likely)."""
     if not chunk:
         return False
     today = today or datetime.now().date()
     window_days = constants.FUTURE_WINDOW_DAYS if window_days is None else window_days
-    full = _full_dates(chunk)
-    if len(full) < FAR_FUTURE_MIN_DATES:
-        return False
+    text_full = _full_dates(chunk)
     # Every date token must be one of the fully-qualified mentions; month-day
     # tokens without a year (or slash dates without a year) disqualify.
-    if count_date_tokens(chunk) > len(full):
+    if count_date_tokens(chunk) > len(text_full):
+        return False
+    full = text_full + _json_dates(chunk)
+    if len(full) < FAR_FUTURE_MIN_DATES:
         return False
     horizon = today + timedelta(days=window_days + buffer_days)
     return min(full) > horizon
@@ -1627,6 +1777,79 @@ def has_event_evidence(page_content, today=None):
     if '"upcoming":[{' in page_content:
         return True
     return _future_dated_mentions(page_content, today) >= MIN_DATED_MENTIONS_FOR_EVIDENCE
+
+
+# An API document that explicitly lists nothing — Luma `{"entries":[],
+# "has_more":false}` (w6019, 152 bytes, 2026-10-06), Tribe REST `{"events":[],
+# "total":0,"total_pages":0,...}` (w4765) — is evidence of zero events, not a
+# failed crawl. The crawler already stores it (crawler._is_json_api_payload);
+# MIN_CONTENT_SIZE then rejected it here, which failed the crawl result and,
+# through main.py STEP 3, stopped publication for every other site in the run.
+# Recognition is deliberately narrow so it cannot become a new
+# "failure stored as success" path (cf. Cloudflare interstitials, extraction
+# outages): the whole body must parse as ONE JSON document (HTML, challenge
+# pages and truncated bodies never do); every list in it must be empty; it
+# must carry no error/message field, no `success:false`, no truthy has_more,
+# no non-zero total/count; and scalar strings must be short (a feed embedding
+# rendered HTML is not "explicitly empty"). Archival is unchanged by this:
+# a 0-event processed crawl is treated exactly like an emptied listing page
+# (future events still need the 14-day grace and >=2 fresh crawls).
+_API_ERROR_KEYS = frozenset({'error', 'errors', 'errormessage', 'message', 'msg',
+                             'detail', 'details', 'fault', 'exception', 'reason'})
+_API_MORE_KEYS = frozenset({'hasmore', 'hasnextpage', 'hasnext', 'more', 'next',
+                            'nextcursor', 'nextpage', 'nextpageurl', 'cursor'})
+_API_COUNT_KEYS = frozenset({'total', 'count', 'totalcount', 'totalpages', 'totalresults',
+                             'totalitems', 'totalentries', 'numresults', 'resultcount',
+                             'found', 'hits'})
+_API_SUCCESS_KEYS = frozenset({'success', 'ok'})
+_EMPTY_API_MAX_SCALAR_CHARS = 500
+_EMPTY_API_MAX_DEPTH = 4
+
+
+def _empty_api_lists(obj, depth=0):
+    """Count the empty record lists in an explicitly-empty API object, or None
+    when anything in it is content, an error, or a "more results" signal."""
+    if depth > _EMPTY_API_MAX_DEPTH or not isinstance(obj, dict):
+        return None
+    found = 0
+    for key, value in obj.items():
+        norm = re.sub(r'[^a-z]', '', str(key).lower())
+        if norm in _API_ERROR_KEYS:
+            if value in (None, '', [], {}):
+                continue
+            return None
+        if isinstance(value, list):
+            if value:
+                return None
+            found += 1
+        elif isinstance(value, dict):
+            sub = _empty_api_lists(value, depth + 1)
+            if sub is None:
+                return None
+            found += sub
+        elif norm in _API_SUCCESS_KEYS:
+            if value is False:
+                return None
+        elif norm in _API_MORE_KEYS:
+            if value not in (None, False, '', 0):
+                return None
+        elif norm in _API_COUNT_KEYS:
+            if isinstance(value, bool) or (isinstance(value, (int, float)) and value != 0):
+                return None
+        elif isinstance(value, str) and len(value) > _EMPTY_API_MAX_SCALAR_CHARS:
+            return None
+    return found
+
+
+def is_empty_api_payload(content):
+    """True when a crawl body is nothing but a well-formed, explicitly empty
+    JSON API response (see the comment block above)."""
+    parsed = parse_json_body(content)
+    if parsed is None:
+        return False
+    if isinstance(parsed, list):
+        return not parsed
+    return bool(_empty_api_lists(parsed))
 
 
 # Markdown markers that signal the start of a new event card on a listing page.
@@ -1851,12 +2074,13 @@ class SingleEventExtraction(BaseModel):
     occurrences: Optional[list[EventOccurrence]] = Field(
         default=None,
         description="List of date/time occurrences for this event. Set to null "
-                    "if no specific calendar dates are explicitly stated on the "
-                    "page. Do NOT fabricate dates, do NOT use today's date as a "
+                    "if neither specific calendar dates nor an explicit weekly "
+                    "weekday+start-time schedule is stated on the page. Follow "
+                    "the schedule rules in the packet instructions. Do NOT "
+                    "fabricate dates, do NOT use today's date as a "
                     "fallback, and do NOT approximate from descriptive text "
-                    "like 'spring' or 'ongoing'. For permanent exhibits, "
-                    "ongoing installations, or pages describing recurring "
-                    "weekly schedules without a specific calendar date, return null."
+                    "like 'spring' or 'ongoing'. For permanent exhibits "
+                    "or ongoing installations without date bounds, return null."
     )
     hashtags: list[str] = Field(
         description="4-7 CamelCase tags. Include at least one category "
@@ -1872,11 +2096,11 @@ DETAIL_RULES = """CRITICAL — DESCRIPTION: The description MUST be derived from
 
 NOT A DESCRIPTION — admission boilerplate and venue marketing. Ticketing sites and venue pages pad every event with the same house copy. It is about the TICKET or the VENUE, not about this event, so it must never become the description. Ignore: door/show times and "front bar opens" notes; age limits and ID/passport policy; RSVP, capacity or door-discretion policy; ticket-tier, seating or lounge perks (e.g. "Preferred Mezzanine includes access to..."); bottle service, table sales and VIP contact addresses; refund, exchange and resale terms; minimum-purchase, tax and gratuity rules; dress code; and the venue's code of conduct or safer-space / anti-discrimination statement. Also ignore boilerplate that describes the PLACE or the promoter rather than this event — a venue's own blurb about its history, capacity, view, atmosphere, menu or lineup of "legends who played here", and an organizer's "we are the world's largest community of..." pitch. If everything on the page is that kind of text, return exactly "No description available." — no description is better than a description of the wrong thing.
 
-CRITICAL: Only return occurrences for SPECIFIC calendar dates that are EXPLICITLY stated on the page. If the page describes a permanent exhibit, ongoing installation, recurring schedule (e.g. "Fridays 7pm"), or has no specific date listed, return occurrences=null. Do NOT fabricate dates, do NOT default to today, do NOT approximate from descriptive text like "spring 2026" or "ongoing". An approximate or invented date is worse than no date.
+CRITICAL: Return explicitly stated calendar dates or occurrences justified by the EXPLICIT WEEKLY SCHEDULES rule. Otherwise, if the page describes a permanent exhibit, ongoing installation, vague recurrence, or has no date information, return occurrences=null. Do NOT fabricate dates, do NOT default to today, do NOT approximate from descriptive text like "spring 2026" or "ongoing". An approximate or invented date is worse than no date.
 
 OCCURRENCES = WHEN THE EVENT ITSELF HAPPENS. If the page lists a multi-day schedule that mixes the actual event with preparatory or ancillary days (e.g. expo, packet/bib pickup, registration, vendor setup, rehearsal, soundcheck, load-in, after-party, awards ceremony), return ONLY the day(s) the event itself takes place. Pickup/expo/setup days are logistics, not occurrences of the event. Example: a race page showing "Wed-Fri Expo / Sat Race" should return only Saturday.
 
-RECEPTION vs EXHIBITION RUN: If the named event is an opening/closing reception, opening night, preview, or launch tied to an exhibition, occurrences = ONLY that reception's own date and time (a single-day event). Do NOT add the exhibition's broader on-view run (e.g. "on view June 4 – July 10") as an additional occurrence — that run belongs to the exhibition itself, which is a separate event."""
+RECEPTION vs EXHIBITION RUN: If the named event is an opening/closing reception, opening night, preview, or launch tied to an exhibition, occurrences = ONLY that reception's own date and time (a single-day event). Do NOT add the exhibition's broader on-view run (e.g. "on view June 4 – July 10") as an additional occurrence — that run belongs to the exhibition itself, which is a separate event. Apply the same ownership rule to gallery tours and curator/artist talks, including programs billed as "Coffee with a Curator": return only the named program's schedule, not other programs described on its page."""
 
 
 def detail_instructions(notes=""):
@@ -2020,13 +2244,13 @@ COVERAGE_REVIEW_RULE = (
 CHUNK_RULES = """For each event provide: name, location (venue name), occurrences (array of start_date in YYYY-MM-DD, start_time, end_date, end_time), and url if available.
 
 CRITICAL DATE RULES:
-- Only return occurrences for SPECIFIC calendar dates EXPLICITLY shown on the page near the event (e.g. "May 7, 2026", "Sat Jun 14", "9/22").
+- Return SPECIFIC calendar dates EXPLICITLY shown near the event (e.g. "May 7, 2026", "Sat Jun 14", "9/22"), or occurrences justified by the EXPLICIT WEEKLY SCHEDULES rule below.
 - EXHIBITIONS: for an art exhibition / gallery show / installation with a stated date range ("March 1 – July 5", "On view through June 30"), return ONE occurrence with start_date = opening date and end_date = closing date. Never collapse the run to a single day, and never stamp today's date as the exhibition date. An exhibition whose OPENING date has already passed is STILL on view as long as its closing date is today or later — keep it, using the original (past) opening date as start_date; do NOT null it or skip it because it already opened.
 - CLOSING DATE ONLY: if the page gives a closing date but NO opening date ("Through August 31, 2026", "Until Sept 4", "On view through June 30"), still return ONE occurrence — set end_date to that closing date and leave start_date null. An end-only occurrence is valid and expected here. Do NOT set occurrences=null just because the opening date is missing: the run is still on view, and nulling it drops the event entirely.
-- RECEPTION vs RUN: a timed opening/closing reception, opening night, or preview is a SEPARATE single-day event, NOT an occurrence of the exhibition. If a page lists both a dated+timed reception and a broader exhibition run, emit TWO events — the reception (one single-day occurrence: its date + time) and the exhibition (one start→end run occurrence) — never the full run as a second occurrence of the reception, and never the reception's time on the run.
+- RECEPTION vs RUN: a timed opening/closing reception, opening night, or preview is a SEPARATE single-day event, NOT an occurrence of the exhibition. If a page lists both a dated+timed reception and a broader exhibition run, emit TWO events — the reception (one single-day occurrence: its date + time) and the exhibition (one start→end run occurrence) — never the full run as a second occurrence of the reception, and never the reception's time on the run. Separately scheduled gallery tours and curator/artist talks (including Coffee with a Curator) are also separate events. Retain each program's published label in its name and use its own format tag (Tour or Talk); do not give it only the exhibition's title and Exhibition tag.
 - A STATED DATE ALWAYS WINS OVER A RECURRENCE RULE. If the listing shows a specific calendar date for the event (e.g. "**When**: Sun, Aug 9 at 8:00pm"), emit that date as an occurrence — even when the event's name or description ALSO states a cadence ("Monthly", "Second Mondays", "second Sunday of every month", "every Tuesday", "weekly"). The date printed on the page is ground truth; the cadence is only extra context, and dropping the date deletes the event entirely. Emit ONLY the date(s) actually shown — never extrapolate the cadence into further dates the page does not list.
-- If an event is described as "monthly", "weekly", "ongoing", "permanent", or "recurring" AND no specific calendar date appears anywhere in its listing, set occurrences=null. Same for a listing with no date at all. Do NOT invent a next-occurrence date.
-- A LIST of specific calendar dates is NOT "recurring" — when the page enumerates actual dates (e.g. "June 18, June 19, June 20, ...", a film's showtimes across many days, or "Jan 11, 18, 25"), emit EACH listed date as its own occurrence. The null-occurrences rule above applies ONLY when a cadence is described in words ("weekly", "every Thursday") WITHOUT the dates being listed, or when no dates appear at all. A missing start_time NEVER justifies dropping a date that IS shown — set start_time to null and keep the date.
+- If an event is described as "monthly", "weekly", "ongoing", "permanent", or "recurring" AND no specific calendar date appears anywhere in its listing, set occurrences=null UNLESS it satisfies the EXPLICIT WEEKLY SCHEDULES rule below. Same for a listing with no date or qualifying schedule at all. Do NOT invent a next-occurrence date.
+- A LIST of specific calendar dates is NOT "recurring" — when the page enumerates actual dates (e.g. "June 18, June 19, June 20, ...", a film's showtimes across many days, or "Jan 11, 18, 25"), emit EACH listed date as its own occurrence. A missing start_time NEVER justifies dropping a date that IS shown — set start_time to null and keep the date.
 - NEVER collapse an enumerated list of dates into one start_date/end_date range. end_date is ONLY for something that genuinely runs every day in between (an exhibition run, a multi-day festival). A film playing on 12 listed dates is TWELVE occurrences with end_date null — NOT one occurrence spanning first-to-last. Collapsing is wrong even when the dates look contiguous, and it silently invents dates whenever the list has gaps (a film showing Aug 10-13 and Aug 17-20 must never become Aug 10 -> Aug 20).
 - ONE LISTING PER URL: two listings with DIFFERENT event URLs are DIFFERENT events — never fuse them into one, no matter how similar their titles are. Titles that differ only by a qualifier or suffix ("Early Access", "Fan Event", "Special Preview", "(Sensory)", "(Open Cap/Eng Sub)", "3D", "25th Anniversary", a screening-format or accessibility tag) are separate ticketed listings: emit EACH as its own event, using that listing's OWN url and ONLY the dates shown under that listing. Never move a date from one listing onto another, and never pair one listing's title with another listing's url. Only listings that share the SAME url may be combined into a single event.
 - Do NOT default to today's date when no date is listed.
@@ -2078,13 +2302,13 @@ Based on the website content below, extract all upcoming events. For each event,
 - name: The event name
 - location: The venue name ONLY (e.g. "Brooklyn Heights Library", "Le Petit Versailles"). Preserve the exact spelling — do not introduce typos. If the source lists "<Branch>, <Room>" (e.g. "Highlawn, Meeting Room"), the branch is the location and the room is the sublocation — do not concatenate them into one field.
 - sublocation: Optional location within the venue (rooftop, 5th floor, specific meeting room, etc.)
-- occurrences: An array of date/time objects. IMPORTANT: For recurring events (e.g., "every Wednesday" or "Jan 11, 18, 25"), list EACH specific date as a separate occurrence within the next 3 months. Each occurrence has:
+- occurrences: An array of date/time objects. List EACH explicitly enumerated date (e.g., "Jan 11, 18, 25") or date justified by the EXPLICIT WEEKLY SCHEDULES rule as a separate occurrence within the future window. Each occurrence has:
   - start_date: Date in YYYY-MM-DD format
   - start_time: Time like "4:00 PM" (optional)
   - end_date: End date if different from start (optional)
   - end_time: End time (optional)
   EXHIBITIONS: For an art exhibition, gallery show, or installation that runs over a date range (e.g. "March 1 – July 5", "On view through June 30"), create ONE occurrence spanning the run: start_date = opening date, end_date = closing date. Do NOT collapse the run to a single day, and do NOT stamp today's date as the exhibition date. An exhibition whose OPENING date has already passed is STILL on view as long as its closing date is today or later — keep it, using the original (past) opening date as start_date; do NOT null it or skip it because it already opened. If the page gives a CLOSING date but no opening date ("Through August 31, 2026", "Until Sept 4"), still return ONE occurrence: end_date = that closing date, start_date = null. An end-only occurrence is valid and expected — do NOT set occurrences=null just because the opening date is missing. Only if the page gives no opening AND no closing date at all (a permanent / date-less display), set occurrences=null instead of inventing a single date.
-  RECEPTION vs RUN: A timed opening/closing reception, opening night, or preview is a DISTINCT single-day event — NOT an occurrence of the exhibition it celebrates. When a page describes both a dated, timed reception AND a broader exhibition run (e.g. "Opening reception June 4, 6–8pm" for a show "on view June 4 – July 10"), emit TWO separate events: (1) the reception, with ONE single-day occurrence (its date + time), and (2) the exhibition, with ONE run occurrence (start_date = opening, end_date = closing). Never attach the exhibition's full run as a second occurrence of the reception event, and never put the reception's time on the exhibition run.
+  RECEPTION vs RUN: A timed opening/closing reception, opening night, or preview is a DISTINCT single-day event — NOT an occurrence of the exhibition it celebrates. When a page describes both a dated, timed reception AND a broader exhibition run (e.g. "Opening reception June 4, 6–8pm" for a show "on view June 4 – July 10"), emit TWO separate events: (1) the reception, with ONE single-day occurrence (its date + time), and (2) the exhibition, with ONE run occurrence (start_date = opening, end_date = closing). Never attach the exhibition's full run as a second occurrence of the reception event, and never put the reception's time on the exhibition run. Separately scheduled gallery tours and curator/artist talks (including Coffee with a Curator) are also separate events. Retain each program's published label in its name and use its own format tag (Tour or Talk); do not give it only the exhibition's title and Exhibition tag.
 - description: 1-3 sentence description based ONLY on what is stated in the source content. If the listing only has a name/date/time with no further details, use "No description available." Do NOT make up or infer descriptions.
 - url: Specific event URL if available
 - hashtags: 4-7 CamelCase tags (e.g., ["Comedy", "StandUp", "Free"]). Always include at least one category from: Music, Nightlife, Comedy, Art, Theater, Dance, Film, Literature, Community, Family, Wellness, Education, Outdoor, Sports, Games. Also include Free if the event is free, or Virtual if online. Then add granular descriptive tags. {tag_avoidance}
@@ -2099,7 +2323,7 @@ Rules:
 - {region_rule}
 - Ignore unrelated event sections ("Hot Events", "Similar events", etc.)
 - ONE LISTING PER URL: two listings with DIFFERENT event URLs are DIFFERENT events — never fuse them into one, no matter how similar their titles are. Titles that differ only by a qualifier or suffix ("Early Access", "Fan Event", "Special Preview", "(Sensory)", "(Open Cap/Eng Sub)", "3D", "25th Anniversary", a screening-format or accessibility tag) are separate ticketed listings: emit EACH as its own event, using that listing's OWN url and ONLY the dates shown under that listing. Never move a date from one listing onto another, and never pair one listing's title with another listing's url. Only listings that share the SAME url may be combined into a single event.
-- For recurring events, expand ALL individual dates into the occurrences array
+- For recurring events, preserve all enumerated dates; expand undated schedules only under the EXPLICIT WEEKLY SCHEDULES rule.
 - If no events are found, return an empty events list
 - IMPORTANT: Do NOT fabricate or guess dates. If a listing has no date information on the page, set occurrences to null.
 
@@ -2323,6 +2547,15 @@ async def prepare_extraction(cursor, crawl_result_id, website_name, notes="",
         prep.error = "No crawled content found"
         return prep
 
+    # A well-formed API response that explicitly lists nothing is a successful
+    # 0-event crawl, not a failed one; resolve it before the size guard below
+    # (which exists for HTML pages that failed to render).
+    if is_empty_api_payload(page_content):
+        prep.resolved_result = '{"events": []}'
+        print(f"    - Explicitly empty JSON API response ({len(page_content)} bytes); "
+              f"recording 0 events without extraction")
+        return prep
+
     # Check for minimum content size to prevent hallucinations
     content_size = len(page_content)
     if content_size < MIN_CONTENT_SIZE:
@@ -2433,6 +2666,7 @@ async def prepare_extraction(cursor, crawl_result_id, website_name, notes="",
         prompt_text = get_vision_prompt(url, content_to_process, current_date_string, website_name, notes,
                                         request_id=f"cr-{crawl_result_id}")
         prep.vision_contents = [prompt_text] + image_parts
+        prep.vision_instructions = get_vision_instructions()
 
     else:
         estimated_events = estimate_event_count(content_to_process)
@@ -2664,6 +2898,7 @@ async def _generate_extraction_response(prep, cursor, connection):
                 prompt_text, EventList, GEMINI_TIMEOUT * 2,
                 provider=llm_providers.provider_for('vision'),
                 images=image_parts,
+                instructions=prep.vision_instructions,
                 )
         # A failed vision call is the same lie as a failed chunk: the images were
         # never read, so an empty result says nothing about the post. Fail the

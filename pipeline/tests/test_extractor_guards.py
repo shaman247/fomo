@@ -1437,7 +1437,7 @@ class TestVisionPromptCarriesTheFullPageText(unittest.TestCase):
     def test_prompt_directs_gemini_at_both_sources(self):
         # Framing matters: the old prompt said "For EACH event flyer/image",
         # which tells the model to enumerate images and ignore the captions.
-        prompt = self._prompt('some page text')
+        prompt = self._prompt('some page text') + (extractor.get_vision_instructions() or '')
         self.assertIn('BOTH', prompt)
         self.assertNotIn('For EACH event flyer/image', prompt)
 
@@ -2063,6 +2063,7 @@ class TrackingBeaconFilterTests(unittest.TestCase):
         'https://cm.adform.net/cookie?redirect_url=https%3A%2F%2Fcs',
         'https://secure.adnxs.com/getuid?https%3A%2F%2Fcs-server',
         'https://csync.loopme.me/?gdpr=0&pubid=11362',
+        'https://rtb.adentifi.com/CookieSyncOpenX',
     ]
     FLYERS = [
         'https://images.squarespace-cdn.com/content/v1/5f02/906f/weekly_9.20.26.jpg?format=1500w',
@@ -2166,3 +2167,139 @@ class ListingContentHygieneTests(unittest.TestCase):
         self.assertNotIn('CRITICAL DATE RULES', prompt)
         self.assertIn('CRITICAL DATE RULES', extractor.get_chunk_instructions('n'))
         self.assertIn('IMPORTANT: n', extractor.get_chunk_instructions('n'))
+
+
+class JsonFeedDatesKeepChunksTests(unittest.TestCase):
+    """2026-10-06: w4618 Hands Off NYC crawls Squarespace `calendar?format=json`.
+    Its `upcoming[]` entries are dated ONLY by epoch-ms `startDate`/`endDate`
+    values, so `prune_chunks` dropped 3 of 4 chunks (~10 of 11 upcoming events)
+    as chrome-only. The fixture is two real entries from crawl_results 129468,
+    bodies trimmed (note "October 15th": an ordinal is not a date token)."""
+
+    FIXTURE = Path(__file__).resolve().parent / 'fixtures' / 'squarespace_upcoming_epoch_chunk.txt'
+    TODAY = date(2026, 10, 6)
+
+    def setUp(self):
+        self.chunk = self.FIXTURE.read_text()
+
+    def test_fixture_has_no_text_date_time_or_link(self):
+        # The exact shape that used to be pruned.
+        self.assertEqual(extractor.count_date_tokens(self.chunk), 0)
+        self.assertIsNone(extractor._TIME_TOKEN_RE.search(self.chunk))
+        self.assertIsNone(extractor._HTTP_LINK_RE.search(self.chunk))
+
+    def test_squarespace_epoch_chunk_is_kept(self):
+        self.assertFalse(extractor.chunk_is_chrome_only(self.chunk))
+        self.assertFalse(extractor.chunk_is_beyond_window(self.chunk, self.TODAY))
+        kept, pruned = extractor.prune_chunks([self.chunk], self.TODAY)
+        self.assertEqual(kept, [self.chunk])
+        self.assertEqual(pruned, [])
+
+    def test_epoch_dates_decode_on_scheduling_keys_only(self):
+        dates = extractor._json_dates(self.chunk)
+        # startDate/endDate (top level + structuredContent) for two entries;
+        # addedOn/updatedOn/publishOn bookkeeping stamps are not dates.
+        self.assertEqual(len(dates), 8)
+        self.assertEqual(min(dates), date(2026, 10, 15))
+
+    def test_bookkeeping_stamps_alone_stay_chrome(self):
+        product = ('{"id":"1","addedOn":1791096847387,"updatedOn":1791096881952,'
+                   '"publishOn":1791096847387,"created_at":"2026-09-01T10:00:00-04:00",'
+                   '"contentModifiedOn":1790370599569,"title":"Gift Card"}')
+        self.assertTrue(extractor.chunk_is_chrome_only(product))
+
+    def test_iso_datetime_and_epoch_seconds_count(self):
+        # CocuSocial plugin shape: ISO datetimes with a 'T' are not text tokens.
+        self.assertFalse(extractor.chunk_is_chrome_only(
+            '{"title": "Handmade Dumplings", "start": "2026-10-01T18:30:00-04:00"}'))
+        self.assertFalse(extractor.chunk_is_chrome_only(
+            '{"name":"Trivia","start_time":"1791295200"}'))
+
+    def test_in_window_epoch_blocks_beyond_window_verdict(self):
+        far_text = ' '.join(f'Season preview March {i + 1}, 2027.' for i in range(3))
+        self.assertTrue(extractor.chunk_is_beyond_window(far_text, self.TODAY))
+        self.assertFalse(extractor.chunk_is_beyond_window(
+            far_text + ' {"startDate":1792105200117}', self.TODAY))
+
+    def test_far_future_epochs_can_still_be_beyond_window(self):
+        far = ','.join('{"startDate":%d}' % ms for ms in (1810000000000, 1811000000000, 1812000000000))
+        self.assertTrue(extractor.chunk_is_beyond_window(far, self.TODAY))
+
+    def test_past_image_filename_date_never_makes_beyond_verdict(self):
+        # `signal-2026-08-14-...jpg` reads as a past ISO date: it can only pull
+        # the minimum down, never push a chunk past the window.
+        chunk = ('"filename":"signal-2026-08-14-14-32-53-559_002.jpg",'
+                 + ','.join('{"startDate":%d}' % ms for ms in (1810000000000, 1811000000000, 1812000000000)))
+        self.assertFalse(extractor.chunk_is_beyond_window(chunk, self.TODAY))
+
+
+class EmptyApiPayloadTests(unittest.TestCase):
+    """2026-10-06: w6019's Luma feed answered `{"entries":[],"has_more":false}`
+    (crawl_results 129298, 152 bytes). The `< MIN_CONTENT_SIZE` guard failed the
+    crawl result as a "likely failed crawl", which stopped the whole `--ids` run.
+    An explicitly empty API document is a successful 0-event crawl."""
+
+    LUMA = ('https://api.lu.ma/calendar/get-items?calendar_api_id=cal-OG2J09fbB8KMMeG'
+            '&period=future&pagination_limit=100\n\n```\n{"entries":[],"has_more":false}\n```\n\n\n\n')
+    TRIBE = ('https://photodom.nyc/wp-json/tribe/events/v1/events?per_page=50\n\n```\n'
+             '{"events":[],"rest_url":"https:\\/\\/photodom.nyc\\/wp-json\\/tribe\\/events\\/v1\\/events\\/'
+             '?page=1&per_page=50&start_date=2026-09-06 00:00:00&end_date=2028-09-07 23:59:59'
+             '&status=publish","total":0,"total_pages":0}\n```\n\n\n\n')
+
+    def test_real_empty_feeds_are_recognized(self):
+        self.assertTrue(extractor.is_empty_api_payload(self.LUMA))
+        self.assertTrue(extractor.is_empty_api_payload(self.TRIBE))
+        self.assertTrue(extractor.is_empty_api_payload(
+            'https://x.test/api\n{"data":{"events":[],"has_next_page":false},"success":true}'))
+        self.assertTrue(extractor.is_empty_api_payload('https://x.test/api\n[]'))
+
+    def test_anything_else_is_not_empty(self):
+        for body in (
+            '{"entries":[],"has_more":true}',              # more pages exist
+            '{"entries":[{"event":{"name":"Run"}}]}',      # content
+            '{"error":"Unauthorized","data":[]}',          # an error, not an answer
+            '{"message":"rate limited","events":[]}',
+            '{"success":false,"data":[]}',
+            '{"total":5,"events":[]}',                     # count says otherwise
+            '{"events":[],"html":"' + 'x' * 600 + '"}',     # embedded rendered content
+            '{"status":"ok"}',                             # no record list at all
+            '{}',
+            '<html><title>Just a moment...</title></html>',
+            '{"entries":[],"has_more":fal',                # truncated body
+            '',
+        ):
+            with self.subTest(body=body[:40]):
+                self.assertFalse(extractor.is_empty_api_payload('https://x.test/api\n' + body))
+
+    def _prepare(self, content):
+        class FakeDb:
+            @staticmethod
+            def get_crawled_content(cursor, crid):
+                return content
+
+            @staticmethod
+            def find_prior_crawl_with_same_content(cursor, crid):
+                return None
+
+        class FakeCursor:
+            def execute(self, sql, params=None):
+                pass
+
+            def fetchone(self):
+                return (6019, None, None, 0, None)
+
+            def fetchall(self):
+                return []
+
+        with mock.patch.object(extractor, 'db', FakeDb):
+            return asyncio.run(extractor.prepare_extraction(FakeCursor(), 129298, 'No Booze Babes'))
+
+    def test_prepare_resolves_empty_feed_as_zero_events(self):
+        prep = self._prepare(self.LUMA)
+        self.assertIsNone(prep.error)
+        self.assertEqual(prep.resolved_result, '{"events": []}')
+
+    def test_small_non_api_content_still_fails_closed(self):
+        prep = self._prepare('https://venue.test/events\n\nLoading...\n')
+        self.assertIn('too small', prep.error)
+        self.assertIsNone(prep.resolved_result)

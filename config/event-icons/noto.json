@@ -1023,6 +1023,16 @@
       "sha256": "7177ff77a299cf07b62a1b9ea39fa802ada723be753b09691424b0b6e0fb2fa1"
     },
     {
+      "id": "noto-1f1f0-1f1ff",
+      "emoji": "🇰🇿",
+      "label": "REGIONAL INDICATOR SYMBOL LETTER K REGIONAL INDICATOR SYMBOL LETTER Z",
+      "source": "noto/emoji_u1f1f0_1f1ff.svg",
+      "provider": "noto",
+      "upstream_path": "third_party/region-flags/waved-svg/emoji_u1f1f0_1f1ff.svg",
+      "upstream_revision": "8998f5dd683424a73e2314a8c1f1e359c19e8742",
+      "sha256": "db95d36bb14633267e03c8bb4366044b9e3c6a86ba88f23fbea91bbc52bb1c8d"
+    },
+    {
       "id": "noto-1f1f1-1f1e6",
       "emoji": "🇱🇦",
       "label": "REGIONAL INDICATOR SYMBOL LETTER L REGIONAL INDICATOR SYMBOL LETTER A",
@@ -7331,6 +7341,16 @@
       "upstream_path": "svg/emoji_u1f4b1.svg",
       "upstream_revision": "8998f5dd683424a73e2314a8c1f1e359c19e8742",
       "sha256": "9324bb08625a3672bba8361f04cfab154e524582ffd3bc4e7e8dacb72731f3f0"
+    },
+    {
+      "id": "noto-1f4b2",
+      "emoji": "💲",
+      "label": "HEAVY DOLLAR SIGN",
+      "source": "noto/emoji_u1f4b2.svg",
+      "provider": "noto",
+      "upstream_path": "svg/emoji_u1f4b2.svg",
+      "upstream_revision": "8998f5dd683424a73e2314a8c1f1e359c19e8742",
+      "sha256": "c3a6d776cad4855c34d7687b32eebf4fc331ec8b4b780d08f6404f1b9fcdd176"
     },
     {
       "id": "noto-1f4b3",
@@ -13723,6 +13743,16 @@
       "sha256": "98aa236c2ab5d4c54bf5035d515d7990b1b19b729673092a9745a259ba570ae9"
     },
     {
+      "id": "noto-1f9d5",
+      "emoji": "🧕",
+      "label": "PERSON WITH HEADSCARF",
+      "source": "noto/emoji_u1f9d5.svg",
+      "provider": "noto",
+      "upstream_path": "svg/emoji_u1f9d5.svg",
+      "upstream_revision": "8998f5dd683424a73e2314a8c1f1e359c19e8742",
+      "sha256": "050fdfde81585e6516b468b9d6b9805b1c241f6691deeb7106b2f94c573cd31c"
+    },
+    {
       "id": "noto-1f9d6",
       "emoji": "🧖",
       "label": "PERSON IN STEAMY ROOM",
@@ -15553,6 +15583,16 @@
       "sha256": "a17e39f3d64bb3842a893ef1b5ebffc4078c676b18295d8035454e48852964cf"
     },
     {
+      "id": "noto-1fae9",
+      "emoji": "🫩",
+      "label": "U+1FAE9",
+      "source": "noto/emoji_u1fae9.svg",
+      "provider": "noto",
+      "upstream_path": "svg/emoji_u1fae9.svg",
+      "upstream_revision": "8998f5dd683424a73e2314a8c1f1e359c19e8742",
+      "sha256": "416443370d54d219964dbd275955b2aa75181ef5ddeb5a313963903a8b9bcfb3"
+    },
+    {
       "id": "noto-1faf0",
       "emoji": "🫰",
       "label": "HAND WITH INDEX FINGER AND THUMB CROSSED",
@@ -17001,6 +17041,16 @@
       "upstream_path": "svg/emoji_u2754.svg",
       "upstream_revision": "8998f5dd683424a73e2314a8c1f1e359c19e8742",
       "sha256": "098b49aaa7c973a96b524286d087aa46a5bd9ac3b35e3f33cb4a2bdb764ee4f2"
+    },
+    {
+      "id": "noto-2757",
+      "emoji": "❗",
+      "label": "HEAVY EXCLAMATION MARK SYMBOL",
+      "source": "noto/emoji_u2757.svg",
+      "provider": "noto",
+      "upstream_path": "svg/emoji_u2757.svg",
+      "upstream_revision": "8998f5dd683424a73e2314a8c1f1e359c19e8742",
+      "sha256": "556318965275e31a0c299bd74f4f2b9122e0e8418491bbf35c319307a8198ea7"
     },
     {
       "id": "noto-2763",

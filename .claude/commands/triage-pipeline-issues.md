@@ -106,7 +106,8 @@ with open('/tmp/pipeline_run.log') as f: log = f.read()
 TS = r'(?:\[\d\d:\d\d:\d\d\]\s*)?'
 pat = re.compile(
     r'Archived (\d+) outdated event\(s\) from (.+?)\n'
-    + TS + r'\s*⚠️\s+WARNING:\s+(\d+) upcoming event\(s\) archived[^\n]*\n'
+# NOTE (2026-09-29): merger now prints "N current/upcoming event(s) archived" — the optional group keeps both wordings matching.
+    + TS + r'\s*⚠️\s+WARNING:\s+(\d+) (?:current/)?upcoming event\(s\) archived[^\n]*\n'
     r'((?:' + TS + r'\s*- Event \d+:.*\n)+)', re.M)
 for m in pat.finditer(log):
     eids = re.findall(r'Event (\d+):', m.group(4))

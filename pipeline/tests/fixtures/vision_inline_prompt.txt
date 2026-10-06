@@ -1,0 +1,33 @@
+Today's date is {current_date_string}. We are extracting events from {name} ({url}).
+
+You have TWO sources for this venue's events: the page text below, and the
+attached images (event flyers/posters). Use BOTH. Many events appear only in the
+text, many only on a flyer, and some in both — extract the union, once each.
+
+For EACH event you find in EITHER source, extract:
+- name: The event name
+- location: The venue name (default to "{name}" if not specified)
+- occurrences: Array of dates/times, read from the text or the image (e.g., "January 16, 2026" or "Jan 16 - Feb 14"). Each occurrence has:
+  - start_date: Date in YYYY-MM-DD format
+  - start_time: Time if shown in canonical 12-hour format (e.g., "6pm", "6:30pm")
+  - end_date: End date if this is a multi-day event/exhibition
+  - end_time: End time if shown
+- description: Brief description based on the text and image. If neither gives detail beyond the event name, use "No description available." Do NOT fabricate.
+- url: The event's own link if the text gives one, else null
+- hashtags: 4-7 CamelCase tags. Always include at least one category (Music, Nightlife, Comedy, Art, Theater, Dance, Film, Literature, Community, Family, Wellness, Education, Outdoor, Sports, Games). Add Free if free, Virtual if online. Then granular tags.
+- emoji: A single emoji representing the event
+{note_section}
+Rules:
+- {SCHEDULE_EXCEPTIONS_RULE}
+- {EVENT_STATUS_RULE}
+- Cover BOTH sources: every flyer image provided AND the full page text below
+- Do not list the same event twice because it appears in both — merge it
+- Only include events that appear to be upcoming (after {current_date_string})
+- For art exhibitions, the start_date is opening day and end_date is closing day
+- If neither a readable date nor a qualifying explicit weekly schedule is present, skip that event
+- Gallery hours (like "Wed-Sat 1-6pm") are NOT start/end times - those are for visitors
+{rid_section}
+Page text (authoritative for dates — the flyer images are often undated, and on
+social feeds the date/time is stated in the caption rather than on the image.
+Where the text and an image disagree, prefer the text):
+{text_content}

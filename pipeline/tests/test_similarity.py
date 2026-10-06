@@ -10,7 +10,7 @@ import unittest
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from similarity import documents, fit, normalize, pack, place_key, write_model
+from similarity import documents, fit, normalize, pack, place_key, place_aliases, write_model
 
 
 def fixture():
@@ -60,6 +60,13 @@ class SimilarityTests(unittest.TestCase):
     def test_normalization_matches_frontend_contract(self):
         self.assertEqual(normalize('  ＪＡＺＺ—Café! '), 'jazz café')
         self.assertEqual(place_key({'name': 'A Hall', 'address': '10 Main St.'}), 'a hall|10 main st')
+        self.assertEqual(place_key({'id': 42, 'name': 'Renamed Hall'}), 'id:42')
+
+    def test_place_aliases_never_merge_ambiguous_venues(self):
+        places = [{'id': 1, 'name': 'Hall', 'address': '10 Main'},
+                  {'id': 2, 'name': 'Hall', 'address': '10 Main'},
+                  {'id': 3, 'name': 'Studio', 'address': '12 Main'}]
+        self.assertEqual(place_aliases(places), {'studio|12 main': 'id:3'})
 
     def test_signed_quantization_preserves_cosine(self):
         original = np.array([[.6, -.8], [-.8, -.6]], dtype=np.float32)
@@ -77,6 +84,8 @@ class SimilarityTests(unittest.TestCase):
             manifest = json.loads((output / 'manifest.json').read_text())
             generation = output / manifest['generation']
             core = json.loads((generation / 'core.json').read_text())
+            self.assertEqual(core['blocks']['place']['ids'], ['id:1', 'id:2'])
+            self.assertEqual(core['placeAliases']['music hall|1'], 'id:1')
             self.assertEqual(core['blocks']['event']['ids'], [])
             self.assertEqual(json.loads((generation / 'events-0.json').read_text())['ids'], ['1'])
             self.assertEqual(json.loads((generation / 'active-0.json').read_text())['ids'], ['2', '3', '4'])

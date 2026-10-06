@@ -49,12 +49,14 @@ For events at Instagram-only venues or one-offs that didn't come through a crawl
 Manually-inserted events have no `event_tags` and won't show in the filter UI without them.
 
 ```bash
-./venv/bin/python scripts/ai_tag_events.py --min-id <first_new_id>
+./venv/bin/python scripts/ai_tag_events.py prepare --ids <ids> --output .scratch/<task>/tags   # or --min-id N / --missing-tags [--since DATE]
+./venv/bin/python scripts/ai_tag_events.py apply --packet .scratch/<task>/tags/packet-0000.json --decisions <file>   # dry run; add --apply
 ```
 
-- Uses Gemini on `(title, description, location_name)` → hashtags + emoji, then runs through `process_tags()` so rewrites/aliases/ancestor propagation match what crawled events get
-- Additive: INSERT IGNORE on tag links, COALESCE on emoji
-- Supports `--ids`, `--limit`, `--min-id`, `--dry-run`, `--concurrency`
+- Agent review, no model call (rewritten 2026-10-04): the packet holds each event's context + content hash + `vocabulary.json`; the running agent writes 4–7 CamelCase hashtags (≥1 category, Free only if free, no geography) + one neutral emoji per event, or `skip` + reason
+- `apply` validates full coverage and hash freshness, then runs `process_tags()` (rewrites/aliases/disambiguation/ancestors, website default tags, Virtual-from-location) exactly as crawled events get, rejecting results that reach no category
+- `--apply` writes under `write_lock` in one transaction via `db.upsert_event_tags` (additive, honors `event_tag_blocks`); emoji only fills an empty field unless `--overwrite-emoji`; a receipt of prior state lands next to the decisions file
+- Legacy `--ids`/`--min-id` without a subcommand only run `prepare`
 
 ## After Adding
 

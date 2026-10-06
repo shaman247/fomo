@@ -11,15 +11,18 @@ spellings (`CREATE TEMPORARY TABLE t (cols) SELECT ...`, `NOW()`, `CURDATE()`,
 """
 
 import os
+import json
 import re
 import sqlite3
 import sys
 import unittest
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+from unittest.mock import patch
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import db
+from database.edit_logger import EditLogger
 
 
 # ── MySQL → SQLite dialect shim ──────────────────────────────────────────────
@@ -64,6 +67,10 @@ class _ShimCursor:
     def rowcount(self):
         return self._cursor.rowcount
 
+    @property
+    def lastrowid(self):
+        return self._cursor.lastrowid
+
 
 SCHEMA = """
 CREATE TABLE websites (
@@ -72,6 +79,8 @@ CREATE TABLE websites (
 CREATE TABLE crawl_results (
     id INTEGER PRIMARY KEY, website_id INTEGER, status TEXT, processed_at TEXT);
 CREATE TABLE crawl_events (id INTEGER PRIMARY KEY, crawl_result_id INTEGER, name TEXT);
+CREATE TABLE crawl_event_occurrences (
+    crawl_event_id INTEGER, start_date TEXT, end_date TEXT);
 CREATE TABLE events (id INTEGER PRIMARY KEY, name TEXT, website_id INTEGER, archived INTEGER DEFAULT 0);
 CREATE TABLE event_sources (event_id INTEGER, crawl_event_id INTEGER);
 CREATE TABLE event_occurrences (
@@ -85,11 +94,12 @@ CREATE TABLE website_urls (
 
 
 def _days_ago(n):
-    return (datetime.now() - timedelta(days=n)).strftime('%Y-%m-%d %H:%M:%S')
+    # SQLite's date('now') uses UTC; fixtures must use that same day boundary.
+    return (datetime.now(timezone.utc) - timedelta(days=n)).strftime('%Y-%m-%d %H:%M:%S')
 
 
 def _days_ahead(n):
-    return (datetime.now() + timedelta(days=n)).strftime('%Y-%m-%d')
+    return (datetime.now(timezone.utc) + timedelta(days=n)).strftime('%Y-%m-%d')
 
 
 class ArchivalTestBase(unittest.TestCase):
@@ -133,7 +143,7 @@ class ArchivalTestBase(unittest.TestCase):
         elif past:
             self.connection.execute(
                 "INSERT INTO event_occurrences (event_id, start_date, end_date) VALUES (?, ?, NULL)",
-                (event_id, (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d')))
+                (event_id, _days_ahead(-30)))
 
     def add_crawl(self, crawl_id, website_id, days_ago, event_ids=(), status='processed'):
         """A processed crawl of `website_id` that listed `event_ids`."""
@@ -600,6 +610,153 @@ class TestInstagramExemptionHorizon(ArchivalTestBase):
         self._dropped_from_latest_crawl(1, 503)
         archived, _ = db.archive_outdated_events(self.cursor, self.connection, 1)
         self.assertEqual(archived, 1)
+
+
+class TestCurrentOccurrenceWarnings(ArchivalTestBase):
+    """Warnings cover the same current/future dates as archival's grace guard."""
+
+    def _archive(self, *, disabled, end_days, support_days=45,
+                 extra_future=False):
+        self.add_website(1, disabled=disabled)
+        self.add_event(600, website_id=1, past=False)
+        start = _days_ahead(-30)
+        self.connection.execute(
+            "INSERT INTO event_occurrences (event_id, start_date, end_date) "
+            "VALUES (?, ?, ?)",
+            (600, start, None if end_days is None else _days_ahead(end_days)))
+        if extra_future:
+            self.connection.execute(
+                "INSERT INTO event_occurrences (event_id, start_date, end_date) "
+                "VALUES (?, ?, NULL)", (600, _days_ahead(20)))
+        self.add_crawl(10, website_id=1, days_ago=support_days, event_ids=[600])
+        self.add_crawl(11, website_id=1, days_ago=0.5)
+        self.add_crawl(12, website_id=1, days_ago=0)
+        archive = db.archive_dead_source_events if disabled else db.archive_outdated_events
+        args = () if disabled else (1,)
+        return archive(self.cursor, self.connection, *args), start
+
+    def test_ongoing_span_is_reported_with_its_original_start(self):
+        result, start = self._archive(disabled=False, end_days=10)
+        self.assertEqual(result, (1, [(600, 'Event 600', start)]))
+        self.assertEqual(self.archived_ids(), [600])
+
+    def test_disabled_source_ongoing_span_is_reported(self):
+        result, start = self._archive(disabled=True, end_days=10)
+        self.assertEqual(result, (1, [(600, 'Event 600', start)]))
+
+    def test_span_ending_today_is_still_reported(self):
+        result, start = self._archive(disabled=False, end_days=0)
+        self.assertEqual(result, (1, [(600, 'Event 600', start)]))
+
+    def test_disabled_source_span_ending_today_is_still_reported(self):
+        result, start = self._archive(disabled=True, end_days=0)
+        self.assertEqual(result, (1, [(600, 'Event 600', start)]))
+
+    def test_past_span_is_archived_without_current_warning(self):
+        result, _ = self._archive(disabled=False, end_days=-1)
+        self.assertEqual(result, (1, []))
+
+    def test_null_end_does_not_make_a_past_occurrence_ongoing(self):
+        result, _ = self._archive(disabled=True, end_days=None)
+        self.assertEqual(result, (1, []))
+
+    def test_ongoing_and_future_dates_produce_one_warning(self):
+        result, start = self._archive(disabled=False, end_days=10, extra_future=True)
+        self.assertEqual(result, (1, [(600, 'Event 600', start)]))
+
+    def test_recently_supported_ongoing_span_still_keeps_grace(self):
+        result, _ = self._archive(disabled=False, end_days=10, support_days=1)
+        self.assertEqual(result, (0, []))
+        self.assertEqual(self.archived_ids(), [])
+
+    def test_disabled_recently_supported_span_still_keeps_grace(self):
+        result, _ = self._archive(disabled=True, end_days=10, support_days=1)
+        self.assertEqual(result, (0, []))
+        self.assertEqual(self.archived_ids(), [])
+
+
+class TestArchivalAudit(ArchivalTestBase):
+    def setUp(self):
+        super().setUp()
+        self.connection.executescript("""
+            CREATE TABLE edits (
+                id INTEGER PRIMARY KEY, edit_uuid TEXT UNIQUE,
+                table_name TEXT, record_id INTEGER, field_name TEXT, action TEXT,
+                old_value TEXT, new_value TEXT, source TEXT, user_id INTEGER,
+                editor_ip TEXT, editor_user_agent TEXT, editor_info TEXT, applied_at TEXT
+            );
+        """)
+
+    def _prepare(self, disabled):
+        self.add_website(1, disabled=disabled)
+        self.add_website(2)
+        for event_id in (700, 701, 702, 703):
+            self.add_event(event_id, website_id=1, future_days=20)
+        self.add_crawl(10, 1, 45, event_ids=[700, 701, 702, 703])
+        self.add_crawl(11, 1, 2)
+        self.add_crawl(12, 1, 1)
+        # Enabled sibling support protects 702; 703 is already archived.
+        self.add_crawl(20, 2, 1, event_ids=[702])
+        self.connection.execute('UPDATE events SET archived=1 WHERE id=703')
+        self.connection.commit()
+        reason = 'all_sources_disabled' if disabled else 'missing_from_latest_sources'
+        context = {'merge_id': 'test-merge', 'archival_reason': reason}
+        if not disabled:
+            context['trigger_website_id'] = 1
+        logger = EditLogger(self.cursor, self.connection, source='crawl',
+                            editor_info=json.dumps(context))
+        archive = db.archive_dead_source_events if disabled else db.archive_outdated_events
+        args = () if disabled else (1,)
+        return lambda: archive(self.cursor, self.connection, *args, edit_logger=logger), logger, context
+
+    def _assert_logged_once(self, disabled):
+        archive, _, context = self._prepare(disabled)
+        count, warnings = archive()
+        self.assertEqual(count, 2)
+        self.assertEqual({row[0] for row in warnings}, {700, 701})
+        self.assertEqual(self.archived_ids(), [700, 701, 703])
+        rows = self.connection.execute(
+            'SELECT record_id, table_name, field_name, action, old_value, new_value, '
+            'source, editor_info, applied_at FROM edits ORDER BY record_id').fetchall()
+        self.assertEqual(len(rows), 2)
+        for event_id, row in zip((700, 701), rows):
+            self.assertEqual(row[:7], (event_id, 'events', 'archived', 'UPDATE', '0', '1', 'crawl'))
+            self.assertEqual(json.loads(row[7]), context)
+            self.assertIsNotNone(row[8])
+        self.assertEqual(archive(), (0, []))
+        self.assertEqual(self.connection.execute('SELECT COUNT(*) FROM edits').fetchone()[0], 2)
+
+    def test_missing_source_transitions_are_audited_once(self):
+        self._assert_logged_once(disabled=False)
+
+    def test_disabled_source_transitions_are_audited_once(self):
+        self._assert_logged_once(disabled=True)
+
+    def _assert_rollback_and_retry(self, disabled):
+        archive, logger, _ = self._prepare(disabled)
+        real_log = logger.log_update
+        calls = []
+
+        def fail_second(*args):
+            calls.append(args)
+            if len(calls) == 2:
+                raise RuntimeError('audit insert failed')
+            return real_log(*args)
+
+        with patch.object(logger, 'log_update', side_effect=fail_second):
+            with self.assertRaisesRegex(RuntimeError, 'audit insert failed'):
+                archive()
+        self.assertEqual(len(calls), 2)
+        self.assertEqual(self.archived_ids(), [703])
+        self.assertEqual(self.connection.execute('SELECT COUNT(*) FROM edits').fetchone()[0], 0)
+        self.assertEqual(archive()[0], 2)
+        self.assertEqual(self.connection.execute('SELECT COUNT(*) FROM edits').fetchone()[0], 2)
+
+    def test_missing_source_audit_failure_rolls_back_archive_and_prior_audit(self):
+        self._assert_rollback_and_retry(disabled=False)
+
+    def test_disabled_source_audit_failure_rolls_back_archive_and_prior_audit(self):
+        self._assert_rollback_and_retry(disabled=True)
 
 
 if __name__ == '__main__':

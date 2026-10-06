@@ -86,6 +86,38 @@ def acquire_publish_lock(connection, attempts=PUBLISH_LOCK_ATTEMPTS,
     return False
 
 
+def refresh_detail_skips(cursor, state, work_dir):
+    """Reopen only saved canonical-completeness skips whose evidence changed.
+
+    Completed detail responses are never reapplied, and a changed environment
+    cap cannot expand the original deferred tail. The same check runs again
+    under the publishing lock to close the last read/write race.
+    """
+    if 'detail_candidates' in state and 'detail_known_complete_skips' not in state:
+        raise ValueError(
+            'Saved detail plan predates canonical identity revalidation and has no skip '
+            'provenance; start a fresh run. Original candidates and extraction responses '
+            'are preserved; the old capped tail cannot safely reconstruct those skips.')
+    existing = {row[0] for row in state.get('detail_candidates', [])}
+    skipped = [ce_id for ce_id in state.get('detail_known_complete_skips', [])
+               if ce_id not in existing]
+    if not skipped:
+        return False
+    current = db.get_detail_crawl_candidates(
+        cursor, website_ids=state['website_ids'], crawl_event_ids=skipped)
+    additions = [row for row in current if row[0] not in existing]
+    if not additions:
+        return False
+    if state.get('details_complete'):
+        state['detail_completed_ids'] = sorted(existing)
+    state['detail_candidates'].extend(additions)
+    state['details_complete'] = False
+    state['phase'] = 'details'
+    agent_run.save(work_dir, state)
+    print(f"  Reopened {len(additions)} detail fetches after canonical identity changed")
+    return True
+
+
 def run_public_dataset_export(cursor, force=False):
     """Public NDJSON dataset export → upload to public_html/exports/.
 
@@ -171,6 +203,60 @@ def retire_ineligible_retries(work_dir, state, results):
     return kept
 
 
+def isolate_failed_extractions(cursor, work_dir, state, failed, saved_results):
+    """Drop websites with a FAILED extraction, and all their crawl results, from the run.
+
+    `extractor.extract_events` returning False has already stored the row as
+    status='failed' with its content intact (retried by a later run). Before
+    2026-10-06 one such row stopped processing and publication for every site
+    in the run (w6019's empty Luma feed blocked 21 other IG sites). Now only
+    that WEBSITE leaves this run's scope: none of its crawl results is
+    processed, merged, archived against or detail-crawled here, so the failure
+    stays fail-closed for it (a failed row never enters _ws_latest, and as the
+    newest attempt in `db.build_archival_temps`' _ws_crawl_state it holds the
+    site's future events in other runs' archival too). Its sibling rows from
+    this run (e.g. a Picnob bundle) keep their DB status and are picked up as
+    incomplete results by the next run that includes the site. Exceptions
+    (invalid agent responses, changed sources, DB errors) are NOT isolated —
+    they still stop the run.
+
+    Returns (remaining website_ids, ids of the websites removed).
+    """
+    failed_sites = {row['website_id'] for row in failed}
+    failed_ids = {row['crawl_result_id'] for row in saved_results
+                  if row['website_id'] in failed_sites}
+    failed_ids |= {row['crawl_result_id'] for row in failed}
+    records = state.setdefault('isolated_extraction_failures', [])
+    for row in failed:
+        cursor.execute("SELECT error_message FROM crawl_results WHERE id = %s",
+                       (row['crawl_result_id'],))
+        found = cursor.fetchone()
+        records.append({'crawl_result_id': row['crawl_result_id'],
+                        'website_id': row['website_id'], 'name': row['name'],
+                        'error': (found[0] if found else None) or 'extraction failed'})
+    state['crawl_result_ids'] = [i for i in state['crawl_result_ids'] if i not in failed_ids]
+    state['source_hashes'] = {k: v for k, v in state['source_hashes'].items()
+                              if int(k) not in failed_ids}
+    state['website_ids'] = [w for w in state['website_ids'] if w not in failed_sites]
+    agent_run.save(work_dir, state)
+    return state['website_ids'], failed_sites
+
+
+def report_isolated_failures(state):
+    """Print the extraction failures isolated from this run; True if any."""
+    isolated = state.get('isolated_extraction_failures') or []
+    if not isolated:
+        return False
+    print(f"\n✗ {len(isolated)} crawl result(s) FAILED extraction and were excluded from "
+          f"this run (their websites were not merged or archived):")
+    for row in isolated:
+        print(f"    cr{row['crawl_result_id']} w{row['website_id']} {row['name']}: {row['error']}")
+    ids = ','.join(str(i) for i in sorted({row['website_id'] for row in isolated}))
+    print(f"  Fix the cause, then rerun those sites: ./venv/bin/python pipeline/main.py "
+          f"--work-dir .scratch/<run>/extraction --ids {ids}")
+    return True
+
+
 async def run_pipeline(website_ids=None, limit=None, use_batch=None, *, work_dir=None, resume=False):
     """Run one resumable phase. None means agent work is pending (CLI exit 2)."""
     if not run_disk_preflight():
@@ -197,6 +283,7 @@ async def _run_pipeline(website_ids=None, limit=None, *, work_dir=None, resume=F
         website_ids = state['website_ids']
         if state['phase'] == 'complete':
             print(f'Agent pipeline already completed: {work_dir}')
+            report_isolated_failures(state)
             return True
     else:
         if (work_dir / 'run.json').exists():
@@ -394,7 +481,14 @@ async def _run_pipeline(website_ids=None, limit=None, *, work_dir=None, resume=F
             # instead of hanging the whole pipeline. Workers append to a shared
             # list as they finish, so an abort keeps already-completed crawls.
             STALL_TIMEOUT = 300  # 5 minutes with zero progress => kill browser & abort batch
-            heartbeat = {'last': time.monotonic()}
+            # Custom-fetch plugins run in threads (crawler.run_custom_fetcher)
+            # and never touch the browser, so a long one (queens_complete ~6
+            # min) with every other worker finished is not a wedge. While ONLY
+            # plugin fetches are in flight the watchdog waits longer before
+            # aborting — still bounded, since a hung plugin would otherwise
+            # hang the run.
+            PLUGIN_STALL_TIMEOUT = 1800
+            heartbeat = {'last': time.monotonic(), 'active': 0}
             batch_results = []
 
             try:
@@ -419,6 +513,7 @@ async def _run_pipeline(website_ids=None, limit=None, *, work_dir=None, resume=F
                                 queue.task_done()
                                 continue
                             cur = conn.cursor(buffered=True)
+                            heartbeat['active'] += 1
                             try:
                                 result_id = await crawler.crawl_website(
                                     web_crawler, website, cur, conn, crawl_run_id
@@ -428,6 +523,7 @@ async def _run_pipeline(website_ids=None, limit=None, *, work_dir=None, resume=F
                             except Exception as e:
                                 print(f"    - Error crawling {website['name']}: {e}")
                             finally:
+                                heartbeat['active'] -= 1
                                 heartbeat['last'] = time.monotonic()
                                 cur.close()
                                 conn.close()
@@ -438,7 +534,10 @@ async def _run_pipeline(website_ids=None, limit=None, *, work_dir=None, resume=F
                         while not gather_task.done():
                             await asyncio.sleep(30)
                             idle = time.monotonic() - heartbeat['last']
-                            if idle > STALL_TIMEOUT and not gather_task.done():
+                            plugin_only = (heartbeat['active'] > 0 and
+                                           crawler.custom_fetches_in_flight() >= heartbeat['active'])
+                            limit = PLUGIN_STALL_TIMEOUT if plugin_only else STALL_TIMEOUT
+                            if idle > limit and not gather_task.done():
                                 print(
                                     f"  ⚠️ WATCHDOG: crawl stalled — no progress for "
                                     f"{int(idle)}s ({len(batch_results)}/{len(batch_websites)} done). "
@@ -491,6 +590,7 @@ async def _run_pipeline(website_ids=None, limit=None, *, work_dir=None, resume=F
         extracted_results = []
         pending = []
         errors = []
+        failed_extractions = []  # extract_events returned False: isolated, not fatal
         # Extraction now does local file I/O and validation. Serialize DB mutation
         # while independently reviewable requests accumulate across all websites.
         for item in saved_results:
@@ -508,7 +608,7 @@ async def _run_pipeline(website_ids=None, limit=None, *, work_dir=None, resume=F
                 if success:
                     extracted_results.append((item['crawl_result_id'], item))
                 else:
-                    errors.append(item['crawl_result_id'])
+                    failed_extractions.append(item)
             except agent_extraction.AgentExtractionPending as exc:
                 connection.rollback()
                 pending.append(exc)
@@ -520,6 +620,19 @@ async def _run_pipeline(website_ids=None, limit=None, *, work_dir=None, resume=F
             print(f"Extraction failed for crawl results {errors}; processing and publication stopped.")
             print(f"Repair the responses/source, then resume: {resume_command(work_dir)}")
             return False
+        if failed_extractions:
+            website_ids, failed_sites = isolate_failed_extractions(
+                cursor, work_dir, state, failed_extractions, saved_results)
+            report_isolated_failures(state)
+            extracted_results = [(crid, item) for crid, item in extracted_results
+                                 if item['website_id'] not in failed_sites]
+            incomplete_extracted = [r for r in incomplete_extracted
+                                    if r['website_id'] not in failed_sites]
+            if not website_ids:
+                # Never fall through to an unscoped publish (an empty website_ids
+                # means "every website" to the merge).
+                print("No website in this run extracted cleanly; processing and publication skipped.")
+                return False
         if pending:
             return report_agent_pending(work_dir)
         print(f"\n✓ Extracted events from {len(extracted_results)} website(s)\n")
@@ -592,11 +705,17 @@ async def _run_pipeline(website_ids=None, limit=None, *, work_dir=None, resume=F
         step("STEP 5: Crawling Event Details")
 
         if 'detail_candidates' not in state:
-            state['detail_candidates'] = (db.get_detail_crawl_candidates(cursor, website_ids=website_ids)
+            state['detail_known_complete_skips'] = []
+            state['detail_candidates'] = (db.get_detail_crawl_candidates(
+                cursor, website_ids=website_ids,
+                known_complete_skips=state['detail_known_complete_skips'])
                                           if website_ids else [])
             state['phase'] = 'details'
             agent_run.save(work_dir, state)
-        candidates = state['detail_candidates']
+        connection.commit()  # See corrections committed while extraction was reviewed.
+        refresh_detail_skips(cursor, state, work_dir)
+        completed_details = set(state.get('detail_completed_ids', []))
+        candidates = [row for row in state['detail_candidates'] if row[0] not in completed_details]
         if candidates and not state.get('details_complete'):
             try:
                 detail_crawled = await processor.crawl_event_details(
@@ -607,6 +726,7 @@ async def _run_pipeline(website_ids=None, limit=None, *, work_dir=None, resume=F
             print("  No pending detail extraction")
             detail_crawled = 0
         state['details_complete'] = True
+        state['detail_completed_ids'] = sorted(row[0] for row in state['detail_candidates'])
         agent_run.save(work_dir, state)
         print(f"\n✓ Detail-crawled {detail_crawled} events\n")
 
@@ -626,12 +746,17 @@ async def _run_pipeline(website_ids=None, limit=None, *, work_dir=None, resume=F
         # may have changed source rows while the agent reviewed its packets.
         connection.commit()
         agent_run.verify_sources(state, agent_run.read_results(cursor, state['crawl_result_ids']))
+        if refresh_detail_skips(cursor, state, work_dir):
+            print('Canonical identity changed before publication; details must finish first.')
+            print(f'Resume: {resume_command(work_dir)}')
+            return None
         state['phase'] = 'publishing'
         agent_run.save(work_dir, state)
 
         # STEPS 6-8: merge → classify → export → upload
         if not run_publish_tail(cursor, connection, website_ids,
-                                banner=lambda i, title: step(f"STEP {6 + i}: {title}")):
+                                banner=lambda i, title: step(f"STEP {6 + i}: {title}"),
+                                crawl_run_id=crawl_run_id):
             return False
 
         # STEP 9: Adjust crawl frequencies based on historical data
@@ -684,7 +809,9 @@ async def _run_pipeline(website_ids=None, limit=None, *, work_dir=None, resume=F
         print(f"  {'-'*8}")
         print(f"  {logging_utils.format_duration(timer.total):>8}  TOTAL")
 
-        return True
+        # Isolated extraction failures still fail the run (exit 1) once the
+        # other sites are published; a later --resume reports them and exits 0.
+        return not report_isolated_failures(state)
 
     except KeyboardInterrupt:
         print("\n\nPipeline interrupted by user.")
@@ -699,7 +826,7 @@ async def _run_pipeline(website_ids=None, limit=None, *, work_dir=None, resume=F
         connection.close()
 
 
-def run_publish_tail(cursor, connection, website_ids, banner):
+def run_publish_tail(cursor, connection, website_ids, banner, crawl_run_id=None):
     """The publish tail shared by a full run and --merge-only:
     merge → classify sections → export JSON → upload.
 
@@ -710,7 +837,8 @@ def run_publish_tail(cursor, connection, website_ids, banner):
     Returns False when the upload failed (the run should stop), else True.
     """
     banner(0, "Merging Crawl Events and Archiving Outdated Events")
-    new_events, merged_events = merger.merge_crawl_events(cursor, connection, website_ids=website_ids)
+    new_events, merged_events = merger.merge_crawl_events(
+        cursor, connection, crawl_run_id=crawl_run_id, website_ids=website_ids)
     print(f"\n✓ Merged events ({new_events} new, {merged_events} merged)\n")
 
     # Fast-path archival for events the grace period is holding open whose own

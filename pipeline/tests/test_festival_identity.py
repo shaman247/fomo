@@ -1,9 +1,11 @@
 """A broad festival span cannot be donated to one explicitly numbered night."""
 import sys
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+import merger
 from festival_identity import numbered_festival_span_mismatch as mismatch, numbered_member_pair
 from test_merger_suppressed_match import _MatcherHarness, _rebuild
 
@@ -109,8 +111,10 @@ class FestivalMatcherTests(unittest.TestCase):
                   dict(id=220464, name=NIGHT.replace('1', '2'), location_id=410),
                   dict(id=226017, name=UMBRELLA, location_id=410, suppressed=True)]
         rows = {220462:SLOT, 220464:[('2026-10-24','9pm',None,'5am')], 226017:SPAN}
-        # This is the previous live reproduction, before the schedule veto.
-        self.assertEqual(_MatcherHarness(UMBRELLA, rows).find_best_match(events), 220462)
+        # Reproduce the old behavior with the later title-only protection off.
+        with patch.object(merger, 'explicit_festival_member_mismatch', return_value=False):
+            self.assertEqual(_MatcherHarness(UMBRELLA, rows).find_best_match(events), 220462)
+        self.assertEqual(_MatcherHarness(UMBRELLA, rows).find_best_match(events), 226017)
         for incoming in [SPAN, [('2026-10-23','9pm','2026-10-25','5am')]]:
             for order in [events, events[::-1]]:
                 harness, _ = self.harness(UMBRELLA, incoming, rows)

@@ -28,7 +28,8 @@ class PromptSnapshotTests(unittest.TestCase):
         common = ('https://example.test/events', source, queue.reference_date(), 'Venue', notes)
         return [
             (extractor.get_prompt(*common, request_id='cr-1'), None),
-            (extractor.get_vision_prompt(*common, request_id='cr-1'), None),
+            (extractor.get_vision_prompt(*common, request_id='cr-1'),
+             extractor.get_vision_instructions()),
             (extractor.get_chunk_prompt(source, queue.reference_date(), request_id='cr-1'),
              extractor._prompt_rule('FULL_PASS_RULE') + '\n\n' + extractor.get_chunk_instructions(notes)),
             (extractor.get_enrichment_prompt(['Event'], 'Venue', request_id='cr-1',
@@ -88,6 +89,27 @@ class PromptSnapshotTests(unittest.TestCase):
         self.assertIn('Website content:\n\n{EVENT_STATUS_RULE}', prompt)
         self.assertIn('IMPORTANT: {notes}', prompt)
         self.assertIn('"name": "{name}"', prompt)
+
+    def test_weekly_rule_reaches_all_date_extraction_paths(self):
+        # Checks packet wiring, not the accuracy of an agent's interpretation.
+        for position in (0, 1, 2, 4):
+            prompt, instructions = self.prompts()[position]
+            text = prompt + (instructions or '')
+            with self.subTest(path=position):
+                self.assertIn(extractor.WEEKLY_SCHEDULE_RULE, text)
+                self.assertNotIn('recurring schedule (e.g. "Fridays 7pm"),', text)
+                self.assertNotIn('For recurring events, expand ALL individual dates', text)
+
+    def test_pre_weekly_snapshot_does_not_require_a_new_key(self):
+        templates = self.manifest['prompt_snapshot']['templates'].copy()
+        templates['SCHEDULE_EXCEPTIONS_RULE'] = 'Historical schedule instructions.'
+        self.manifest['prompt_snapshot'] = queue.snapshot_prompts(templates)
+        queue.atomic_json(self.root / 'run.json', self.manifest)
+        for position in (0, 1, 2, 4):
+            prompt, instructions = self.prompts()[position]
+            text = prompt + (instructions or '')
+            self.assertIn('Historical schedule instructions.', text)
+            self.assertNotIn(extractor.WEEKLY_SCHEDULE_RULE, text)
 
     def test_new_runs_pick_up_current_rules(self):
         before = self.prompts()

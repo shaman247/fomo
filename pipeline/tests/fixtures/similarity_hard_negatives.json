@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "judgmentSource": "Assistant-authored regression judgments from full canonical descriptions and reviewed source provenance on 2026-09-29. Includes active failures and historical positive controls, not an independent human preference study. Correctly tagged mixed-topic examples remain relevant; incidental venue, language, background music, or a repeated series name alone does not establish relevance.",
+  "queries": [
+    {"id":"architecture-incidental-aspects","positive":["tag:33"],"judgments":{"event:250122":2,"event:249775":2,"event:240752":2,"event:139640":2,"event:203054":2,"event:214723":0,"event:265402":0,"event:238672":0,"event:267508":0}},
+    {"id":"jazz-versus-background-music","positive":["tag:293"],"judgments":{"event:214723":2,"event:249736":2,"event:22932":2,"event:267508":0,"event:222034":0,"event:265402":0,"event:270175":0}},
+    {"id":"history-versus-series-name","positive":["tag:4518"],"judgments":{"event:2149":2,"event:75523":2,"event:22932":2,"event:42226":2,"event:270175":0,"event:214723":0,"event:267508":0}},
+    {"id":"yoga-positive-control","positive":["tag:959"],"judgments":{"event:267508":2,"event:222034":2,"event:249846":2,"event:214723":0,"event:265402":0}},
+    {"id":"mixed-design-and-jazz-control","positive":["tag:33","tag:293"],"judgments":{"event:250122":2,"event:249775":2,"event:214723":2,"event:249736":2,"event:265402":0,"event:267508":0}},
+    {"id":"yoga-with-disliked-jazz-control","positive":["tag:959"],"negative":["tag:293"],"judgments":{"event:267508":2,"event:222034":2,"event:249846":2,"event:214723":0,"event:249736":0}}
+  ]
+}

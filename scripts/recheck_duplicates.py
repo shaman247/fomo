@@ -36,6 +36,11 @@ sys.path.insert(0, 'pipeline')
 from db import create_connection
 
 
+# Umbrella arm: a URL shared by more live events than this is treated as a
+# venue-level listing URL and ignored as evidence of a sub-event relationship.
+MAX_SHARED_URL_EVENTS = 25
+
+
 def _norm(s):
     return re.sub(r'[^a-z0-9 ]', '', (s or '').lower()).strip()
 
@@ -150,6 +155,13 @@ def audit_umbrellas(cur, limit):
     live = _live(cur)
     occ = _occ_map(cur)
     urls = _url_map(cur)
+
+    # A URL carried by many live events is a venue/listing page (e.g. every Queens
+    # Public Library row carries `queenslibrary.org/calendar`), not a sub-event's
+    # identity -- sharing it proves nothing. Drop such URLs before matching.
+    url_freq = Counter(u for us in urls.values() for u in us)
+    urls = {eid: {u for u in us if url_freq[u] <= MAX_SHARED_URL_EVENTS}
+            for eid, us in urls.items()}
 
     # group active events by (location_id, website_id)
     groups = defaultdict(list)

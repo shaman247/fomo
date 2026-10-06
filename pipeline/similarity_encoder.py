@@ -56,7 +56,7 @@ def encode(texts, workspace, model_cache):
     return old_vectors[[cached[key] for key in keys]]
 
 
-def content_vectors(data, rows, attached, excluded, dimensions, workspace, model_cache):
+def content_vectors(data, rows, attached, excluded, dimensions, workspace, model_cache, previous=None):
     from similarity import unit
     tags = {tag['id']: tag for tag in data['tags']}
     texts = []
@@ -70,14 +70,24 @@ def content_vectors(data, rows, attached, excluded, dimensions, workspace, model
     # Learn a shared low-dimensional projection from content, never relevance
     # labels. This compresses leaf vectors, not aggregates of distinct interests.
     training = encoded[:len(rows)]
-    eigenvalues, basis = np.linalg.eigh(training.T @ training)
+    covariance = training.T @ training
     rank = min(dimensions, encoded.shape[1], len(rows))
-    basis = basis[:, -rank:][:, ::-1].copy()
-    # Fix eigenvector sign ambiguity for reproducible generation bytes.
-    for column in range(rank):
-        if basis[np.argmax(np.abs(basis[:, column])), column] < 0:
-            basis[:, column] *= -1
+    if previous is not None:
+        with np.load(Path(previous) / 'projection.npz', allow_pickle=False) as saved:
+            if (str(saved.get('encoder')) != MODEL or str(saved.get('encoder_revision')) != REVISION):
+                raise ValueError('Previous projection uses a different encoder')
+            basis = saved['basis'].copy()
+        if (basis.shape != (384, dimensions) or not np.isfinite(basis).all()
+                or not np.allclose(basis.T @ basis, np.eye(dimensions), atol=1e-4)):
+            raise ValueError('Previous projection has invalid dimensions or basis')
+    else:
+        eigenvalues, basis = np.linalg.eigh(covariance)
+        basis = basis[:, -rank:][:, ::-1].copy()
+        # Fix eigenvector sign ambiguity for reproducible generation bytes.
+        for column in range(rank):
+            if basis[np.argmax(np.abs(basis[:, column])), column] < 0:
+                basis[:, column] *= -1
     projected = unit(encoded @ basis).astype(np.float32)
-    energy = float(eigenvalues[-rank:].sum() / eigenvalues.sum())
+    energy = float(np.trace(basis.T @ covariance @ basis) / np.trace(covariance))
     return projected[:len(rows)], projected[len(rows):], {'basis': basis,
         'encoder': np.array(MODEL), 'encoder_revision': np.array(REVISION)}, energy

@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "description": "Assistant-authored aspect-transfer probes created before evaluating the September 29 residual-fix variants. No text is a training document. These are engineering expectations, not independent user judgments.",
+  "probes": [
+    {"id":"design-spanish","text":"Recorrido en español por edificios históricos: una arquitecta explica las fachadas, los planos y la restauración de las estructuras."},
+    {"id":"spanish-class","text":"Practical Spanish for travelers. Practice ordering meals, asking directions and everyday conversation with an instructor."},
+    {"id":"preservation-award","text":"An awards evening honoring the careful conservation of a landmark railway station, including a presentation on restoring its stone facade and vaulted concourse."},
+    {"id":"preservation-food","text":"Preserve the summer harvest by learning to can tomatoes, pickle vegetables and make fruit jam in a hands-on kitchen class."},
+    {"id":"design-clinic","text":"A hospital designer explains how the layout, lighting, circulation and shared spaces of a new outpatient clinic support patients and staff."},
+    {"id":"clinic-health","text":"A nurse explains diabetes screening, blood sugar monitoring and practical ways to follow a treatment plan."},
+    {"id":"history-music","text":"February Heritage Sessions: a live saxophone ensemble celebrates Black History Month with stories of African American musicians and their role in civil rights movements."},
+    {"id":"generic-music","text":"Heritage Sessions: a live saxophone ensemble plays swing standards and improvised solos for an evening of jazz listening."},
+    {"id":"history-children","text":"Rhythm Sprouts celebrates Black History Month with songs and stories introducing children to African American inventors and community leaders."},
+    {"id":"generic-children","text":"Rhythm Sprouts invites toddlers and caregivers to sing nursery rhymes, clap, dance and explore simple percussion instruments."},
+    {"id":"history-art","text":"An art historian discusses Black artists who documented emancipation and the struggle for civil rights through portraiture, posters and public murals."},
+    {"id":"generic-art","text":"Join a family collage workshop using colored paper and recycled magazines to create portraits and decorate picture frames."},
+    {"id":"yoga-background","text":"A slow yoga and breathing class with quiet instrumental jazz on the speakers. An instructor guides stretches and a resting meditation."},
+    {"id":"yoga-live-music","text":"A joint program combines a guided yoga practice with a live jazz quartet concert. Musicians perform improvised sets before and after the movement session."},
+    {"id":"clay","text":"Shape a ceramic cup on the potter's wheel, trim its base and choose a glaze for firing in the studio kiln."},
+    {"id":"software-design","text":"A software architecture meetup covers microservice boundaries, message queues, database replication and cloud deployments."}
+  ],
+  "queries": [
+    {"id":"architecture-across-language-and-format","positive":["tag:Architecture"],"judgments":{"probe:design-spanish":2,"probe:preservation-award":2,"probe:design-clinic":2,"probe:spanish-class":0,"probe:preservation-food":0,"probe:clinic-health":0,"probe:software-design":0}},
+    {"id":"history-edition-not-series-name","positive":["tag:Black History Month"],"judgments":{"probe:history-music":2,"probe:history-children":2,"probe:history-art":2,"probe:generic-music":0,"probe:generic-children":0,"probe:generic-art":0}},
+    {"id":"performed-versus-background-jazz","positive":["tag:Jazz"],"judgments":{"probe:history-music":2,"probe:generic-music":2,"probe:yoga-live-music":2,"probe:yoga-background":0,"probe:generic-children":0,"probe:clay":0}},
+    {"id":"yoga-preserves-real-combinations","positive":["tag:Yoga"],"judgments":{"probe:yoga-background":2,"probe:yoga-live-music":2,"probe:generic-music":0,"probe:generic-children":0,"probe:clay":0}},
+    {"id":"mixed-design-and-clay","positive":["tag:Architecture","tag:Ceramics"],"judgments":{"probe:design-clinic":2,"probe:preservation-award":2,"probe:clay":2,"probe:spanish-class":0,"probe:preservation-food":0,"probe:software-design":0}},
+    {"id":"disliked-history-preserves-generic-jazz","positive":["tag:Jazz"],"negative":["tag:Black History Month"],"judgments":{"probe:generic-music":2,"probe:history-music":1,"probe:generic-children":0,"probe:generic-art":0,"probe:clay":0}}
+  ]
+}

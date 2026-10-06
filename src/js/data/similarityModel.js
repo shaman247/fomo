@@ -15,9 +15,26 @@ const SimilarityModel = (() => {
     let activeLoading = null;
     const completedActive = new Set();
     const aggregateShards = { place: new Map(), tag: new Map() };
+    const placeNames = new Map();
+    let placeAliases = {};
     const pendingAggregates = new Map(), completedAggregates = new Set();
     const normalize = value => String(value || '').normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
     const pause = () => new Promise(resolve => setTimeout(resolve, 0));
+    const placeKey = item => /^[1-9]\d*$/.test(String(item?.id || '')) ? `id:${item.id}`
+        : `${normalize(item?.name)}|${normalize(item?.address)}`;
+    const resolvePlace = id => vectors.place.has(id) ? id
+        : placeAliases[id] || (vectors.place.has(placeNames.get(id)) ? placeNames.get(id) : id);
+
+    function registerPlaces(items) {
+        for (const item of items) {
+            const id = placeKey(item);
+            if (id.startsWith('id:')) placeNames.set(id, `${normalize(item.name)}|${normalize(item.address)}`);
+        }
+        if (loaded) {
+            changed();
+            void loadAggregates('place', preferences.filter(e => e.type === 'place').map(e => e.id));
+        }
+    }
 
     function dot(a, b) {
         if (!a || !b) return 0;
@@ -80,7 +97,7 @@ const SimilarityModel = (() => {
         positiveCount = 0;
         negativeCount = 0;
         for (const entry of preferences) {
-            const vector = vectors[entry.type]?.get(entry.id);
+            const vector = vectors[entry.type]?.get(entry.type === 'place' ? resolvePlace(entry.id) : entry.id);
             if (!vector?.length) continue;
             const target = entry.stance === 1 ? positive : negative;
             if (entry.stance === 1) positiveCount++;
@@ -149,6 +166,7 @@ const SimilarityModel = (() => {
     async function loadAggregates(type, ids) {
         const shardMap = aggregateShards[type];
         if (!loaded || manifest.schemaVersion < 2) return;
+        if (type === 'place') ids = ids.map(resolvePlace);
         const shards = [...new Set(ids.map(id => shardMap.get(id)).filter(id => id !== undefined))];
         const key = id => `${type}:${id}`;
         const todo = shards.filter(id => !completedAggregates.has(key(id)) && !pendingAggregates.has(key(id)));
@@ -202,11 +220,15 @@ const SimilarityModel = (() => {
                 // Decode into temporary maps. An incomplete generation never installs.
                 const decoded = {};
                 for (const type of ['event', 'place', 'tag']) decoded[type] = await decode(core.blocks[type], next.dimensions);
+                const aliases = core.placeAliases ?? {};
+                if (typeof aliases !== 'object' || aliases === null || Array.isArray(aliases)
+                    || Object.values(aliases).some(id => typeof id !== 'string' || !decoded.place.has(id))) return false;
                 if (next.schemaVersion === 2 && (Math.ceil(core.blocks.place.ids.length / 128) !== next.placeShards.length
                     || (next.tagShards && (!Array.isArray(next.tagShards)
                         || next.tagShards.some((id, index) => id !== index)
                         || Math.ceil(core.blocks.tag.ids.length / 64) !== next.tagShards.length)))) return false;
                 dimensions = next.dimensions; manifest = next;
+                placeAliases = aliases;
                 thresholds = nextThresholds;
                 for (const type of ['event', 'place', 'tag']) {
                     vectors[type] = decoded[type];
@@ -334,26 +356,30 @@ const SimilarityModel = (() => {
 
     async function suggest(type, items, limit = 6) {
         if (!loaded || !vectors[type]) return [];
-        if (type === 'place') await loadAggregates(type, items.map(item => `${normalize(item.name)}|${normalize(item.address)}`));
+        if (type === 'place') {
+            for (const item of items) placeNames.set(placeKey(item), `${normalize(item.name)}|${normalize(item.address)}`);
+            await loadAggregates(type, items.map(placeKey));
+        }
         if (type === 'tag') await loadAggregates(type, items.map(normalize));
         const epoch = profileEpoch;
-        const selected = new Set(preferences.filter(e => e.type === type).map(e => e.id));
+        const selected = new Set(preferences.filter(e => e.type === type).map(e => type === 'place' ? resolvePlace(e.id) : e.id));
         const candidates = [];
         const seen = new Set();
         for (let index = 0; index < items.length; index++) {
             if (index && index % 20 === 0) await pause();
             const item = items[index];
             const id = type === 'tag' ? normalize(item) : type === 'place'
-                ? `${normalize(item.name)}|${normalize(item.address)}` : String(item.id);
-            if (selected.has(id) || seen.has(id)) continue;
-            seen.add(id);
-            if (type === 'place' && support.place.get(id) === 0) continue;
-            const vector = type === 'event' ? eventVector(item) : vectors[type].get(id);
+                ? placeKey(item) : String(item.id);
+            const modelId = type === 'place' ? resolvePlace(id) : id;
+            if (selected.has(modelId) || seen.has(modelId)) continue;
+            seen.add(modelId);
+            if (type === 'place' && support.place.get(modelId) === 0) continue;
+            const vector = type === 'event' ? eventVector(item) : vectors[type].get(modelId);
             if (!vector?.length) continue;
             const personal = await affinityAsync(vector);
             if (epoch !== profileEpoch) return [];
             if ((positiveCount && personal < .12) || (!positiveCount && personal < -.1)) continue;
-            const coverage = Math.log1p(support[type].get(id) || 1);
+            const coverage = Math.log1p(support[type].get(modelId) || 1);
             candidates.push({ id, label: type === 'tag' ? item : item.name,
                 context: type === 'place' ? item.address : type === 'event' ? item.location : '',
                 emoji: item.emoji, vector, score: positiveCount ? personal : coverage * .025 });
@@ -374,5 +400,5 @@ const SimilarityModel = (() => {
         return chosen.map(({ vector, ...item }) => item);
     }
 
-    return { load, setPreferences, score, suggest, ready: () => loaded, revision: () => version };
+    return { load, setPreferences, registerPlaces, score, suggest, ready: () => loaded, revision: () => version };
 })();

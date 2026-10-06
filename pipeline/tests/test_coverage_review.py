@@ -65,7 +65,8 @@ class CoverageReviewTests(unittest.TestCase):
     def test_schedule_notices_reach_every_description_path(self):
         prompts = [extractor.detail_instructions(), extractor.get_chunk_instructions(),
                    extractor.get_prompt('url', 'content', '2026-09-20', 'venue', ''),
-                   extractor.get_vision_prompt('url', 'content', '2026-09-20', 'venue', ''),
+                   extractor.get_vision_prompt('url', 'content', '2026-09-20', 'venue', '')
+                   + (extractor.get_vision_instructions() or ''),
                    extractor.get_enrichment_prompt(['event'], 'venue')]
         for prompt in prompts:
             self.assertIn(extractor.SCHEDULE_EXCEPTIONS_RULE, prompt)

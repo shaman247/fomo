@@ -38,6 +38,12 @@ from tag_canonicalization import resolve_tag_name
 import crawler
 import site_profiles
 from event_name_guards import conversation_subject_mismatch, game_program_variant_mismatch, library_program_variant_mismatch, named_sub_event_mismatch, participatory_program_variant_mismatch
+from event_name_guards import class_show_identity_mismatch
+from remaining_name_identity import remaining_name_identity_mismatch
+from festival_member_identity import (explicit_festival_member_mismatch,
+                                      festival_sibling_program_mismatch)
+from program_identity import program_profile, conflicting_program_profiles
+from companion_identity import companion_parent_side, exhibition_companion_mismatch
 # Occurrence-time canonicalization lives in `occurrence_times` (the single
 # owner, also used by db.py's write helpers and the merger). The underscore
 # aliases keep this module's historical names for callers and scripts.
@@ -572,6 +578,18 @@ PAST_START_GRACE_DAYS = 7
 # absence-from-crawl do the archiving when the show actually closes.
 OPEN_RUN_HORIZON_DAYS = 60
 
+# Explicit exhibition spans are exempt from the 400-day duration guard, but a
+# museum's PERMANENT galleries are often published with placeholder bounds
+# rather than real ones (MoMI "Behind the Screen" 1988-09-10 -> 2030-09-10,
+# "Reflected Forms" 2023 -> 2043). The Tribe API's old `start_date=${today}`
+# filter hid them; `ends_after` (2026-10-02) returns them, and an accepted span
+# would pin the show on the map every day for years. A span that opened more
+# than this many years ago, or closes more than this many years out, is treated
+# as a placeholder. Measured 2026-10-02: 0 active events exceed either bound,
+# while the 11 genuine >400-day exhibition runs all fall inside them.
+PLACEHOLDER_SPAN_PAST_YEARS = 10
+PLACEHOLDER_SPAN_FUTURE_YEARS = 5
+
 # Tags that mark a row as a RUN rather than a one-off occasion. Only these get
 # a past start_date with no end_date read as "still on view" instead of "over";
 # a concert from last month must keep being rejected. Gating on the row's own
@@ -633,7 +651,7 @@ def filter_by_date(row_dict, current_date, future_limit_date):
     """Filters a row based on its start and end dates.
 
     Returns (True, None) if the row passes, or (False, reason) if rejected.
-    Reason is one of: 'start_too_future', 'end_in_past', 'duration_too_long',
+    Reason is one of: 'start_too_future', 'end_in_past', 'duration_too_long', 'placeholder_span',
     'invalid_date'.
 
     When end_date is present, rejects as soon as end_date < today.
@@ -699,6 +717,10 @@ def filter_by_date(row_dict, current_date, future_limit_date):
 
         if duration_days > 400 and not explicit_exhibition_span:
             return False, 'duration_too_long'
+        if explicit_exhibition_span and (
+                start_date < current_date - timedelta(days=365 * PLACEHOLDER_SPAN_PAST_YEARS)
+                or end_date > current_date + timedelta(days=365 * PLACEHOLDER_SPAN_FUTURE_YEARS)):
+            return False, 'placeholder_span'
     except (ValueError, TypeError):
         return False, 'invalid_date'
     return True, None
@@ -3212,6 +3234,15 @@ def _is_no_prefix_cancellation(name, description=None):
     # part of the styling, not a marker. Too few letters to judge = same veto.
     if len(letters) < 3 or all(c.isupper() for c in letters):
         return False
+    # A subtitle can use normal capitalization after a shouted main title:
+    # "NO LIMBS, NO LIMITS: The NickV Story". Its case must not turn the
+    # otherwise exempt main title into a library cancellation convention.
+    # Keep mixed-case main titles ("NO Senior Movie: ...") eligible.
+    main_title, separator, subtitle = rest.partition(':')
+    main_letters = [c for c in main_title if c.isalpha()]
+    if (separator and subtitle.strip() and len(main_letters) >= 3
+            and all(c.isupper() for c in main_letters)):
+        return False
     return _description_adds_nothing(name, description)
 
 
@@ -3825,6 +3856,7 @@ def group_event_occurrences(rows, source_url=None, location_refs=None):
     name, address, aliases) so a MIXED id-vs-name pair can ask whether the bare
     string is a room of that venue or a rival venue (`_venue_shaped_mismatch`).
     """
+    rows = list(rows)
 
     def normalize_name_for_grouping(name):
         if not name:
@@ -3930,13 +3962,41 @@ def group_event_occurrences(rows, source_url=None, location_refs=None):
 
     def find_matching_group_key(event_name, row_loc, row_url, grouped_events,
                                 normalized_group_keys, group_event_urls,
-                                row_name_loc=''):
+                                row_name_loc='', row_profile=None):
         normalized_event = normalize_name_for_grouping(event_name)
         for existing_key, existing in grouped_events.items():
             existing_loc = loc_key(existing)
             if not locations_compatible(row_loc, existing_loc,
                                         row_name_loc, loc_name(existing)):
                 continue
+            normalized_existing = normalized_group_keys[existing_key]
+            name_eligible = (event_name == existing_key
+                             or normalized_event == normalized_existing
+                             or (min(len(normalized_event), len(normalized_existing)) >= 5
+                                 and (normalized_event in normalized_existing
+                                      or normalized_existing in normalized_event)))
+            if not name_eligible:
+                continue
+            # Preserve explicit format/schedule evidence before grouping can
+            # union a timed companion into its exhibition's span. The canonical
+            # merger cannot recover that distinction from an already mixed row.
+            if (row_profile is not None or companion_parent_side(
+                    event_name, existing.get('name', '')) is not None):
+                formats = {tag for grouped in grouped_rows[existing_key]
+                           for tag in grouped.get('tags', [])}
+                existing_profile = program_profile(formats, existing['occurrences'])
+                if conflicting_program_profiles(row_profile, existing_profile):
+                    continue
+                complete_formats, complete_occurrences = set(), []
+                for grouped in grouped_rows[existing_key]:
+                    evidence = input_evidence[(normalize_name_for_grouping(
+                        grouped['name']), loc_key(grouped))]
+                    complete_formats.update(evidence[0])
+                    complete_occurrences.extend(evidence[1])
+                if exhibition_companion_mismatch(
+                        event_name, *input_evidence[(normalized_event, row_loc)],
+                        existing['name'], complete_formats, complete_occurrences):
+                    continue
             # `locations_compatible` says True both when the locations agree
             # and when it simply could not compare them. Those are very
             # different verdicts, and treating the second as agreement is what
@@ -3955,16 +4015,28 @@ def group_event_occurrences(rows, source_url=None, location_refs=None):
             mixed = (row_loc is not None and existing_loc is not None
                      and row_loc[0] != existing_loc[0])
             if mixed:
+                unresolved = row_loc if row_loc[0] == 'name' else existing_loc
+                # An explicitly unannounced venue on another dated listing is
+                # not a room of the known venue. Keep same-URL enrichment and
+                # genuine room labels compatible.
+                if (re.fullmatch(r'(?:location not specified|venue not specified|'
+                                 r'unannounced venue|tba|tbd|to be announced|to be determined)', unresolved[1])
+                        and not urls_compatible(row_url, group_event_urls.get(existing_key))):
+                    continue
+            if mixed:
                 pass
             elif inconclusive and names_denote_different_places(
                     row_name_loc, loc_name(existing)):
                 continue
 
-            normalized_existing = normalized_group_keys[existing_key]
             if (game_program_variant_mismatch(event_name, existing.get('name', ''))
                     or library_program_variant_mismatch(event_name, existing.get('name', ''))
                     or named_sub_event_mismatch(event_name, existing.get('name', ''))
                     or participatory_program_variant_mismatch(event_name, existing.get('name', ''))
+                    or class_show_identity_mismatch(event_name, existing.get('name', ''))
+                    or remaining_name_identity_mismatch(event_name, existing.get('name', ''))
+                    or explicit_festival_member_mismatch(event_name, existing.get('name', ''))
+                    or festival_sibling_program_mismatch(event_name, existing.get('name', ''))
                     or conversation_subject_mismatch(event_name, existing.get('name', ''))):
                 continue
             if event_name == existing_key or normalized_event == normalized_existing:
@@ -4006,6 +4078,20 @@ def group_event_occurrences(rows, source_url=None, location_refs=None):
     # Event-specific URLs per group (source_url excluded) — the containment
     # branch consults these via urls_compatible.
     group_event_urls = {}
+    # A discrete exhibition run is broad only after several rows are seen.
+    # Inspect its complete same-title/venue evidence before the first date can
+    # be swallowed by an earlier reception card. Keep this separate from the
+    # per-row format guard: identical titles can still denote opposite formats.
+    input_evidence = {}
+    for row in rows:
+        key = (normalize_name_for_grouping(unescape_event_name(row.get('name') or '')),
+               loc_key(row))
+        formats, occurrences = input_evidence.setdefault(key, (set(), []))
+        formats.update(row.get('tags') or [])
+        occurrences.append((row.get('start_date'),
+                            _standardize_time(row.get('start_time', '')),
+                            row.get('end_date'),
+                            _standardize_time(row.get('end_time', ''))))
     for row_dict in rows:
         event_name = row_dict.get('name')
         if not event_name:
@@ -4040,7 +4126,8 @@ def group_event_occurrences(rows, source_url=None, location_refs=None):
         row_url = absolutize_url(row_dict.get('url'), source_url)
         group_key = find_matching_group_key(
             event_name, loc_key(row_dict), row_url, grouped_events,
-            normalized_group_keys, group_event_urls, loc_name(row_dict))
+            normalized_group_keys, group_event_urls, loc_name(row_dict),
+            program_profile(row_dict.get('tags', []), [occurrence]))
         grouped_rows.setdefault(group_key, []).append(row_dict)
         if row_url:
             group_event_urls.setdefault(group_key, set()).add(row_url)
@@ -7749,6 +7836,60 @@ def _parse_json_events(extracted_content):
     return rows
 
 
+def _redundant_extraction_stub_urls(rows, crawled_content):
+    """Identify a truncated duplicate immediately before its complete record.
+
+    A bad link alone is not enough: retain undated programs, unique metadata,
+    different venues and dated rows. Only the missing numeric-ID/zero-ID shape
+    is covered, and the complete successor's exact URL must occur in the source.
+    Return row indexes for auditable rejection before location/grouping fallback.
+    """
+    found = {}
+    structural = {'location', 'url', 'missing_date',
+                  'start_date', 'start_time', 'end_date', 'end_time'}
+
+    def source_has_link(url):
+        return bool(crawled_content and re.search(
+            re.escape(url) + r'''(?=$|[\s<>"'\)])''', crawled_content))
+
+    for index, row in enumerate(rows[:-1]):
+        if (not row.get('name')
+                or (row.get('location') or '').strip() not in ('', ':')
+                or row.get('sublocation')
+                or any(row.get(k) for k in ('start_date', 'start_time', 'end_date', 'end_time'))):
+            continue
+        following = rows[index + 1]
+        if (not (following.get('location') or '').strip().strip(':')
+                or {k: v for k, v in row.items() if k not in structural}
+                != {k: v for k, v in following.items() if k not in structural}):
+            continue
+        try:
+            datetime.strptime(following.get('start_date') or '', '%Y-%m-%d')
+            if following.get('end_date'):
+                datetime.strptime(following['end_date'], '%Y-%m-%d')
+            stub = urllib.parse.urlsplit(row.get('url') or '')
+            full_url = following.get('url') or ''
+            full = urllib.parse.urlsplit(full_url)
+            if (stub.scheme not in ('http', 'https') or full.scheme != stub.scheme
+                    or not stub.hostname or full.netloc.lower() != stub.netloc.lower()
+                    or stub.username or stub.password
+                    or stub.query or stub.fragment or full.query or full.fragment):
+                continue
+            # /node/ and /node/0 can precede /node/123. A domain root, a
+            # shortened positive ID, or a nonnumeric slug is not this defect.
+            trimmed = stub.path.rstrip('/')
+            parent = trimmed[:-1] if trimmed.endswith('/0') else stub.path
+            if not re.fullmatch(r'/(?:[^/]+/)+', parent) or not re.fullmatch(
+                    re.escape(parent) + r'[1-9][0-9]*/?', full.path):
+                continue
+        except (ValueError, TypeError):
+            continue
+        # Require a whole source link, not the prefix of a longer ID or query.
+        if source_has_link(full_url) and not source_has_link(row['url']):
+            found[index] = full_url
+    return found
+
+
 def _parse_markdown_table(extracted_content):
     """Parse legacy markdown table format into list of row dicts."""
     lines = extracted_content.strip().split('\n')
@@ -7968,6 +8109,8 @@ def process_events(cursor, connection, crawl_result_id, website_name, run_date_s
         db.update_crawl_result_processed(cursor, connection, crawl_result_id, 0)
         return 0
 
+    redundant_stub_urls = _redundant_extraction_stub_urls(parsed_rows, crawled_content)
+
     # Sanity-fix 12pm/12am misreads before downstream processing.
     for row in parsed_rows:
         if row.get('end_time'):
@@ -7995,7 +8138,7 @@ def process_events(cursor, connection, crawl_result_id, website_name, run_date_s
     location_refs = {}
     rejection_counts = {}
 
-    for row_dict in parsed_rows:
+    for row_index, row_dict in enumerate(parsed_rows):
         # Sanitize fields
         for field in ['name', 'description', 'location', 'sublocation']:
             if field in row_dict:
@@ -8022,6 +8165,12 @@ def process_events(cursor, connection, crawl_result_id, website_name, run_date_s
                 details=details,
             )
             rejection_counts[rejection_type] = rejection_counts.get(rejection_type, 0) + 1
+
+        if row_index in redundant_stub_urls:
+            _reject('redundant_extraction_stub',
+                    'Undated duplicate with a truncated numeric-record URL; '
+                    'complete adjacent record retained: ' + redundant_stub_urls[row_index])
+            continue
 
         junk_rule = which_junk_rule(row_dict.get('name', ''),
                                     row_dict.get('description', ''),
@@ -8063,7 +8212,8 @@ def process_events(cursor, connection, crawl_result_id, website_name, run_date_s
         if not row_dict.get('missing_date'):
             ok, reason = filter_by_date(row_dict, current_date, future_limit_date)
             if not ok:
-                if reason in ('end_in_past', 'start_too_future'):
+                if reason in ('end_in_past', 'start_too_future', 'duration_too_long',
+                              'placeholder_span'):
                     _reject(reason)
                 continue
 
@@ -8410,7 +8560,7 @@ def apply_crawled_details(cursor, connection, ce_id, data, tag_context,
         ) if locations_map else None)
         new_id = location_info.get('id') if location_info else None
         changed = (new_location, new_sub) != (old_location or '', old_sub or '')
-        if old_id and not new_id and changed:
+        if old_id and not new_id and changed and not reviewed_venue:
             # Keep the listing-derived tuple coherent, but retain the rejected
             # detail candidate for investigation. Unknown text must neither
             # erase a known pin nor silently impersonate its provenance.
@@ -8438,7 +8588,9 @@ def apply_crawled_details(cursor, connection, ce_id, data, tag_context,
                     and new_location != old_location and (not new_id or new_id != old_id)):
                 update_fields.append("sublocation = %s")
                 update_values.append(new_sub or None)
-            if new_id:
+            if new_id or reviewed_venue:
+                # A source/date-bounded review may explicitly establish that
+                # the venue is still unknown; ordinary failed matches cannot.
                 update_fields.append("location_id = %s")
                 update_values.append(new_id)
 
@@ -8634,7 +8786,7 @@ def _detail_source_path(extraction_dir, candidate, settings):
     identity = json.dumps(
         # Pre-guard snapshots did not verify the final dated URL and may carry
         # another session's content. Refetch them before any resumed enrichment.
-        {'candidate': candidate, 'settings': settings, 'content_policy': 'complete-v2-session-identity'},
+        {'candidate': candidate, 'settings': settings, 'content_policy': 'complete-v3-session-evidence'},
         sort_keys=True, ensure_ascii=False, default=str,
     )
     key = hashlib.sha256(identity.encode('utf-8')).hexdigest()
@@ -8688,6 +8840,20 @@ def _detail_candidate_identities(cursor, candidates):
     }
 
 
+def _detail_session_evidence(cursor, candidates):
+    """Keep listing dates attached to the detail fetch, including reused URLs."""
+    evidence = {row[0]: {'name': row[1], 'occurrences': []} for row in candidates}
+    if not evidence:
+        return evidence
+    placeholders = ','.join(['%s'] * len(evidence))
+    cursor.execute(f'''SELECT crawl_event_id, start_date, end_date
+        FROM crawl_event_occurrences WHERE crawl_event_id IN ({placeholders})
+        ORDER BY crawl_event_id, id''', list(evidence))
+    for ce_id, start_date, end_date in cursor.fetchall():
+        evidence[ce_id]['occurrences'].append({'start_date': start_date, 'end_date': end_date})
+    return evidence
+
+
 def _save_detail_source(path, content, identity):
     """Publish a complete snapshot before requesting agent extraction."""
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -8732,6 +8898,7 @@ async def crawl_event_details(cursor, connection, candidates, num_workers=10,
 
     connection.commit()  # Refresh the read snapshot before capturing identities.
     candidate_identities = _detail_candidate_identities(cursor, candidates)
+    session_evidence = _detail_session_evidence(cursor, candidates)
 
     # Load per-website crawl + browser settings
     website_ids = {ws_id for _, _, _, ws_id in candidates}
@@ -8832,7 +8999,8 @@ async def crawl_event_details(cursor, connection, candidates, num_workers=10,
                     web_crawler, url, crawl_config,
                     user_agent=website_settings.get(ws_id, {}).get('user_agent'),
                     headed=bool(website_settings.get(ws_id, {}).get('headed')),
-                    use_stealth=bool(website_settings.get(ws_id, {}).get('use_stealth')))
+                    use_stealth=bool(website_settings.get(ws_id, {}).get('use_stealth')),
+                    expected_session=session_evidence[ce_id])
                 heartbeat['last'] = time.monotonic()
                 heartbeat['done'] += 1
                 _save_detail_source(_detail_source_path(

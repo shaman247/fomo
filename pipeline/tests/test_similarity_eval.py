@@ -10,6 +10,11 @@ from similarity_eval import evaluate, check_gate
 
 
 class EvaluationTests(unittest.TestCase):
+    def test_nonfinite_metrics_cannot_bypass_the_gate(self):
+        for value in (float('nan'), float('inf')):
+            with self.assertRaises(ValueError):
+                check_gate({'summary': {'ndcgAt5': value, 'pairwiseAccuracy': 1., 'wrongTop1': 0.}})
+
     def test_gate_rejects_worse_ranking_and_more_wrong_first_results(self):
         baseline = {'summary': {'ndcgAt5': .8, 'pairwiseAccuracy': .9, 'wrongTop1': 0}}
         check_gate(baseline, baseline)

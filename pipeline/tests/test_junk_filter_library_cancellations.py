@@ -70,6 +70,26 @@ class TestNoPrefixCancellation(unittest.TestCase):
         """A shouted title makes the leading "NO" styling, not a marker."""
         self.assertFalse(_is_no_prefix_cancellation('NO PICNIC SCREENING', ''))
 
+    def test_all_caps_main_title_with_mixed_case_subtitle_survives(self):
+        # Actual AMC source 128353, film 84659. Sparse cinema cards have no
+        # synopsis, so the description gate alone cannot protect this title.
+        name = 'NO LIMBS, NO LIMITS: The NickV Story'
+        for description in ('', None, 'No description available.', name):
+            with self.subTest(description=description):
+                self.assertFalse(_is_no_prefix_cancellation(name, description))
+                self.assertFalse(is_obvious_non_event(name, description))
+        # The rule describes capitalization, not a reviewed-title allowlist.
+        self.assertFalse(_is_no_prefix_cancellation(
+            'NO PICNIC: A conversation with the filmmaker', ''))
+
+    def test_mixed_case_cancelled_program_with_subtitle_still_drops(self):
+        for name in ('NO Senior Movie: Staff training',
+                     'NO Music & Movement: Holiday closure',
+                     'NO Senior Movie:'):
+            with self.subTest(name=name):
+                self.assertTrue(_is_no_prefix_cancellation(name, ''))
+                self.assertTrue(is_obvious_non_event(name, ''))
+
     def test_nocturne_is_not_a_no_prefix(self):
         # "NO" must be a whole word; a word merely starting with those letters
         # must not match.

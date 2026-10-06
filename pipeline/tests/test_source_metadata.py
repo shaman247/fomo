@@ -117,6 +117,23 @@ class MetadataPlanTests(unittest.TestCase):
             self.incoming.update(description=description, sublocation='Not specified')
             self.assertEqual(self.plan(), {})
 
+    def test_price_only_extraction_cannot_replace_program_text_but_room_can_refresh(self):
+        for description in ['Price: Free.', ' FREE ', 'Cost: $15.', 'Admission: $10–$20', 'Tickets: $12.50']:
+            with self.subTest(description=description):
+                self.incoming['description'] = description
+                self.assertEqual(self.plan(), {'sublocation': '15th floor'})
+
+    def test_real_short_or_price_bearing_description_can_refresh(self):
+        for description in ['A printmaking survey.', 'Price: Free. An exhibition of mail art.',
+                            'Free admission to a printmaking workshop.']:
+            with self.subTest(description=description):
+                self.incoming['description'] = description
+                self.assertEqual(self.plan()['description'], description)
+
+    def test_prior_price_only_text_can_recover_from_substantive_source(self):
+        self.event['description'] = self.prior['description'] = 'Price: Free.'
+        self.assertEqual(self.plan()['description'], self.incoming['description'])
+
     def test_linked_incoming_does_not_forge_prior_provenance(self):
         self.sources = [self.incoming]
         self.assertEqual(self.plan(), {})
@@ -178,6 +195,13 @@ class MetadataSQLTests(unittest.TestCase):
         self.assertEqual(self.refresh(), {})
         self.assertEqual(self.db.execute('SELECT description,sublocation FROM events').fetchone(),
                          ('Old source text', 'Auditorium'))
+
+    def test_sql_price_only_refresh_preserves_text_and_audits_only_the_room(self):
+        self.db.execute("UPDATE crawl_events SET description='Price: Free.' WHERE id=21")
+        logger = Mock()
+        self.assertEqual(self.refresh(logger), {'sublocation': 'Room 101'})
+        self.assertEqual(self.db.execute('SELECT description FROM events').fetchone()[0], 'Old source text')
+        logger.log_update.assert_called_once_with('events', 1, 'sublocation', None, 'Room 101')
 
     def test_sql_reads_other_sources_before_mutating(self):
         self.db.executescript("INSERT INTO crawl_results VALUES(102,99,'2026-09-18 10:00:00');"

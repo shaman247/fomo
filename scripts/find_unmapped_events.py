@@ -398,6 +398,54 @@ SKIP_LOCATION_NAMES = {
     #   at the institution level to Film at Lincoln Center, which presents NYFF. A bare alias would
     #   hijack every future NYFF screening from every source onto one theater.
     'new york film festival',
+    # 2026-10-03 unmapped/generic sweep (/fix-unmapped-events). Each event below was researched
+    # against its source page and is pinned to the best row that will exist; the string itself
+    # names nothing separately mappable.
+    #   OHNY Weekend ticketed tours/sites: the address is withheld until ticketing, so the
+    #   extractor emits the TOUR TITLE (or a project name) and the neighborhood pin is the best.
+    'atlantic yards', 'changing change walking tour',
+    'fujikina nyc 2026: scavenger hunt photowalks', 'garry grant studio',
+    'greenwich village row houses walking tour', 'illuminating black history in brooklyn tour',
+    'interborough express (ibx) walking tour', 'look up! a nyc water tower tour',
+    "mama joy's abolitionist walking tour", 'meatpacking district walking tour',
+    'midnight leak detection with nyc dep', 'mta second avenue subway phase 2',
+    'nyc ddc brooklyn bridge-montgomery coastal resilience hard hat tour',
+    'nyc ddc east side coastal resiliency hard hat tour', 'nyc ddc: the city below tour',
+    'nyc ferry', 'nyc health: rat academy and rat walk', 'queenslink',
+    'ridgewood-glendale soundwalk', 'south shore historic homes and parks bus tour',
+    'better sheds ahead', 'joseph rodman drake / african burial ground walking tour',
+    'lower east side arts & culture open house', 'mta arts & design',
+    #   QueensWay: OHNY tour (Forest Hills generic) and NYC Bird Alliance walks that meet at the
+    #   Glendale Stop & Shop. The trail is not one point and meeting spots change per walk.
+    'queensway',
+    # 2026-10-05 unmapped/generic sweep. Each event was researched against its source page and is
+    # already pinned to the best row that will exist: an in-park trailhead lot (Harriman), a
+    # marathon cheering corner (Gowanus), a residential-basement show (Bushwick), The Field's own
+    # name on a Zoom workshop (Manhattan), a clinic open house in a rental tower (Jersey City), and
+    # an after-concert tea stop on a meetup whose primary venue is the concert hall.
+    'silvermine parking area', '4th ave & douglass st', '834 hart st', 'the field',
+    'overlook flats', 'prince tea house',
+    #   Early voting / Election Day: the polling place depends on the voter's address.
+    'assigned early voting polling place', 'assigned election polling place',
+    #   Gowanus Canal Conservancy tours with no meeting point published (Gowanus generic).
+    'gowanus (meeting point not specified)',
+    #   Withheld / rotating / unannounced venues pinned to the right generic or org row.
+    'location varies', 'unknown venue — new york city', 'rsvp for address',
+    'unannounced venue', 'lenox hill', 'new york edge', 'moss radio',
+    #   Typo'd flyer address (no such house number on E 143rd St in the Bronx); Mott Haven pin.
+    '35 e. 143rd street',
+    #   Meeting points / street references / sub-areas of the pinned park or neighborhood.
+    'bond street', 'model airplane field (flushing meadows corona park)',
+    'bedford avenue & lorimer street', 'bushwick community gardens', '242nd st. subway station',
+    'washington avenue and aqueduct lane, hastings-on-hudson', 'nyc subway',
+    'shore in front of 798 front street, staten island',
+    #   Private residence / private studio with no address; pinned to the hosting institution.
+    'boltwood house', 'eric dever studio',
+    #   Org/promoter names emitted as the venue; each event is on its verified real venue
+    #   (Niche Night is a roving promoter; Notch's "Creation Story" is at Teatro Círculo).
+    'niche night nyc', 'notch theatre company',
+    #   Online sessions already pinned to the hosting org's home venue (virtual-events policy).
+    'online & in person', 'online only - zoom', 'online webinar',
 }
 
 # Websites whose feed emits the HOST/PARTNER ORG as `location_name` for every

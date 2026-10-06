@@ -72,6 +72,7 @@ class _MatcherHarness:
         return {
             '_dates_overlap': lambda eid: eid in self.overlapping_ids,
             '_sibling_veto': lambda existing: existing['id'] in self.vetoed_ids,
+            '_program_veto': lambda existing: False,
             'crawl_event_slots': {('2026-09-20', '19:00')},
             'event_slots': self.event_slots,
             'location_id': self.location_id,

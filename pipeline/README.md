@@ -114,6 +114,25 @@ Run from the repository root, using a unique directory for each crawl run:
 
 Exit **2** means extraction needs agent work; merge/export/upload have not run.
 
+Detail plans save the exact rows skipped because a canonical already supplied
+the description and venue. Resume rechecks those decisions, including under the
+publication lock, and fetches newly invalidated skips before merging. Completed
+detail responses and the original capped tail are preserved. An unfinished
+pre-October-1 plan with `detail_candidates` but no `detail_known_complete_skips`
+must start a fresh run: it did not retain enough evidence to distinguish a stale
+identity skip from its deferred cap tail. Existing packets remain on disk.
+
+Reviewed source ownership and public-link replay guards require the
+`20261001_reviewed_source_identities.sql`, `20261001_event_url_exclusions.sql`
+and `20261001_unknown_venue_overrides.sql`
+migrations in `database/migrations/`. Ownership reviews bind publisher, title,
+registration URL, venue and complete source slots. Changed reviewed evidence
+leaves the source pending explicit review and holds that website's archival;
+it does not silently select another coarse match. Public URL exclusions leave
+historical source URLs intact and expire when the reviewed event state changes.
+An exact publisher/title/URL/date venue override can preserve an explicitly
+reviewed unknown venue without changing general venue fallback behavior.
+
 `--ids` selects websites for crawling and candidate merging; post-merge duplicate
 cleanup also respects that selection. A forced web recrawl replaces older web
 captures in the new run's extraction scope, but preserves independently imported
@@ -132,8 +151,8 @@ unfinished packets (`--summary` gives counts). Read each with
 `agent_extraction.py read <request_id> --work-dir <dir>`. This validates the original
 packet and displays its entire prompt/source, compact schema, and local image paths
 without sending base64 through the agent's text context. Inspect every image.
-Static task rules (the detail-page rules, a site's chunk rules and notes) are
-hashed into the packet's `instructions` and written once per hash under
+Static task rules (the detail-page rules, a site's chunk rules and notes, and
+the shared vision rules) are hashed into the packet's `instructions` and written once per hash under
 `<dir>/instructions/`; `status` lists each packet's `instructions_hash` and
 `prompt_chars` so a parent can group packets per reviewer. For later packets with
 the same schema hash and instructions hash **in the same reviewer context**, use
@@ -203,6 +222,12 @@ not pipeline code or chunking behavior. Legacy runs without a prompt snapshot ke
 their previous behavior and warn on resume; existing answers are never silently
 relabeled as having followed new rules.
 
+New vision packets keep the current date, venue, URL, site notes, request ID and
+complete page text in the prompt, with image bytes bound separately. The reusable
+vision rules live in shared instructions, so batch reads show them once even across
+different venues. Runs snapshotted before this split retain inline vision rules
+and their original packet identities; resume does not invalidate their reviews.
+
 Sub-agents write disjoint response files; the parent submits results and serializes
 resume, database mutations and publishing. Never run concurrent pipelines or
 uploads against the shared database. See the `/run-pipeline` workflow for the
@@ -263,6 +288,32 @@ Events are split into per-day chunks so the frontend can load just today's event
 - `manifest.json` - `{ "days": ["YYYY-MM-DD", …] }` mapping day index → calendar date.
 
 ## Troubleshooting
+
+### Archival audit
+
+Each merge prints a unique `Merge audit ID`. Its edit-log entries share that ID
+in JSON `edits.editor_info`; full pipeline runs also include `crawl_run_id`.
+Archival transitions record `archived` from `0` to `1`, with
+`archival_reason=missing_from_latest_sources` and `trigger_website_id`, or
+`archival_reason=all_sources_disabled` for the global disabled-source sweep.
+Updates and audit entries commit together. The existing candidate and grace
+rules still determine eligibility.
+
+For example, substitute the printed ID into this local query:
+
+```sql
+SELECT record_id, action, field_name, old_value, new_value, editor_info, created_at
+FROM edits
+WHERE source = 'crawl' AND editor_info LIKE '%<merge ID>%'
+ORDER BY id;
+```
+
+The shared ID also groups ordinary logged merge inserts/deletes with these
+archivals. It does not establish that two events are duplicates. Same-source,
+same-slot successor review is still required, and no complete source/schedule
+snapshot is stored here. This context is local: existing sync handlers replace
+`editor_info` when applying edits remotely. Liveness-probe archivals retain their
+separate probe history.
 
 ### Database Issues
 - Check MariaDB is running

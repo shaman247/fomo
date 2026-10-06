@@ -35,6 +35,14 @@ class HealthTests(unittest.TestCase):
         self.assertEqual(result['status'], 'healthy')
         self.assertEqual(result['activeVectorCoverage'], 1)
 
+    def test_place_alias_must_resolve_to_a_real_model_identity(self):
+        path = self.output / self.report['generation'] / 'core.json'
+        core = json.loads(path.read_text())
+        core['placeAliases']['music hall|1'] = 'id:99999'
+        path.write_text(json.dumps(core))
+        with self.assertRaisesRegex(ValueError, 'place aliases'):
+            inspect_artifacts(self.output, self.domain)
+
     def test_normalized_tag_collisions_combine_without_losing_support(self):
         self.data['tags'][0]['name'] = 'ＪＡＺＺ!'
         write_model(self.data, self.fitted, self.output, self.workspace)

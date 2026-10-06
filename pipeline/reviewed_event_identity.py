@@ -355,10 +355,15 @@ def match(index, website_id, name, url, location_id, occurrences, *, full_source
     incoming = {slot(o) for o in occurrences}
     key = (website_id,url,name_key(name),location_id)
     targets = index.get(key, {}) if location_id else {}
+    aliases = getattr(index, 'source_aliases', {}).get(key, {})
     unmapped = getattr(index, 'unmapped', {}).get(key, {})
     # Ambiguous identities decline even if only one target covers all dates.
-    if len(set(targets) | set(unmapped)) != 1:
+    if len(set(targets) | set(unmapped) | set(aliases)) != 1:
         return None
+    if aliases:
+        from reviewed_source_aliases import match as match_alias
+        source_rows = occurrences if full_source_occurrences is None else full_source_occurrences
+        return match_alias(index, key, source_rows)
     if unmapped:
         target, editions = next(iter(unmapped.items()))
         # The edition's first day may already be past. Validate the publisher's

@@ -36,7 +36,7 @@ CREATE TABLE crawl_results (
     id INTEGER PRIMARY KEY, website_id INTEGER, crawled_at TEXT);
 CREATE TABLE crawl_events (
     id INTEGER PRIMARY KEY, crawl_result_id INTEGER, name TEXT, url TEXT,
-    location_name TEXT, description TEXT, detail_crawl_attempts INTEGER DEFAULT 0,
+    location_name TEXT, location_id INTEGER, description TEXT, detail_crawl_attempts INTEGER DEFAULT 0,
     created_at TEXT);
 CREATE TABLE crawl_event_occurrences (id INTEGER PRIMARY KEY, crawl_event_id INTEGER);
 CREATE TABLE event_sources (id INTEGER PRIMARY KEY, event_id INTEGER, crawl_event_id INTEGER);
@@ -44,7 +44,8 @@ CREATE TABLE website_urls (id INTEGER PRIMARY KEY, website_id INTEGER, url TEXT)
 CREATE TABLE location_alternate_names (
     id INTEGER PRIMARY KEY, location_id INTEGER, alternate_name TEXT, website_id INTEGER);
 CREATE TABLE events (
-    id INTEGER PRIMARY KEY, name TEXT, archived INTEGER DEFAULT 0, location_id INTEGER, description TEXT);
+    id INTEGER PRIMARY KEY, name TEXT, archived INTEGER DEFAULT 0, suppressed INTEGER DEFAULT 0,
+    location_id INTEGER, description TEXT);
 CREATE TABLE event_urls (id INTEGER PRIMARY KEY, event_id INTEGER, url TEXT);
 """
 
@@ -289,13 +290,89 @@ class TestKnownCompleteSkipAndSiteCap(unittest.TestCase):
 
     def test_dated_event_whose_url_is_already_complete_is_skipped(self):
         self._add(1, 'https://bpl.org/node/1')
+        self.conn.execute('UPDATE crawl_events SET location_id=5 WHERE id=1')
         self._known(100, 'https://bpl.org/node/1')
         self.assertEqual(self._ids(), set())
+
+    def test_unresolved_venue_cannot_inherit_known_completeness(self):
+        # The live DSA replay created an unmapped twin when Bronx River was
+        # unresolved: the merger cannot inherit the known event's venue here.
+        url = 'https://actionnetwork.org/events/bronx-river-ride'
+        name = 'NYC-DSA Pedalers Union — Bronx River Ride'
+        self._add(1, url, name=name)
+        self.conn.execute("UPDATE crawl_events SET location_name='Bronx River' WHERE id=1")
+        self._known(242736, url, location_id=7974, name=name)
+        self.assertEqual(self._ids(), {1})
 
     def test_undated_event_is_still_fetched_even_when_url_is_known(self):
         self._add(2, 'https://bpl.org/node/2', dated=False)
         self._known(101, 'https://bpl.org/node/2')
         self.assertEqual(self._ids(), {2})
+
+    def test_dsa_placeholder_venue_does_not_inherit_offsite_completeness(self):
+        url = 'https://actionnetwork.org/events/trash-cleanup-in-greater-inwood'
+        name = 'Trash Cleanup in Greater Inwood'
+        self._add(1, url, name=name)
+        self.conn.execute("UPDATE crawl_events SET location_id=1940, location_name='NYC-DSA' WHERE id=1")
+        self._known(242737, url, location_id=415, name=name)
+        self.assertEqual(self._ids(), {1})
+        # A still-present hidden twin must not reinstate the unsafe skip.
+        self._known(268903, url, location_id=1940, name=name)
+        self.conn.execute('UPDATE events SET suppressed=1 WHERE id=268903')
+        self.assertEqual(self._ids(), {1})
+        # Enrichment resolves the venue, making the next skip safe.
+        self.conn.execute('UPDATE crawl_events SET location_id=415 WHERE id=1')
+        self.assertEqual(self._ids(), set())
+
+    def test_matching_venue_preserves_known_complete_cost_control(self):
+        self._add(1, 'https://bpl.org/node/1')
+        self.conn.execute('UPDATE crawl_events SET location_id=5 WHERE id=1')
+        self._known(100, 'https://bpl.org/node/1', location_id=5)
+        self.assertEqual(self._ids(), set())
+
+    def test_saved_known_skip_is_rechecked_without_admitting_cap_tail(self):
+        url = 'https://actionnetwork.org/events/coffee'
+        self._add(1, url, name='Coffee with Comrades')
+        self.conn.execute('UPDATE crawl_events SET location_id=5 WHERE id=1')
+        self._known(100, url, location_id=5, name='Coffee with Comrades')
+        self._add(2, 'https://example.org/deferred')
+        skipped = []
+        rows = pipeline_db.get_detail_crawl_candidates(self.cur, known_complete_skips=skipped)
+        self.assertEqual(skipped, [1])
+        self.assertEqual([row[0] for row in rows], [2])
+        self.conn.execute('UPDATE events SET location_id=6 WHERE id=100')
+        rows = pipeline_db.get_detail_crawl_candidates(self.cur, crawl_event_ids=skipped)
+        self.assertEqual([row[0] for row in rows], [1])
+        self.assertEqual(pipeline_db.get_detail_crawl_candidates(self.cur, crawl_event_ids=[]), [])
+
+    def test_conflicting_visible_venues_require_detail_evidence(self):
+        # A coarse, multi-edition Socialism 101 owner at the organizer office
+        # must not vouch for a URL also owned by the reviewed offsite event.
+        url = 'https://actionnetwork.org/events/socialism-101-77'
+        self._add(1, url, name='Socialism 101')
+        self.conn.execute('UPDATE crawl_events SET location_id=1940 WHERE id=1')
+        self._known(174069, url, location_id=1940, name='Socialism 101')
+        self._known(255389, url, location_id=11039, name='Socialism 101 — CBK Office')
+        self.assertEqual(self._ids(), {1})
+        # Historical hidden/archived alternatives do not add ambiguity.
+        self.conn.execute('UPDATE events SET suppressed=1 WHERE id=255389')
+        self.assertEqual(self._ids(), set())
+        self.conn.execute('UPDATE events SET suppressed=0, archived=1 WHERE id=255389')
+        self.assertEqual(self._ids(), set())
+
+    def test_hidden_only_event_cannot_supply_completeness(self):
+        self._add(1, 'https://bpl.org/node/1')
+        self._known(100, 'https://bpl.org/node/1')
+        self.conn.execute('UPDATE events SET suppressed=1 WHERE id=100')
+        self.assertEqual(self._ids(), {1})
+
+    def test_name_and_venue_must_belong_to_the_same_visible_canonical(self):
+        url = 'https://example.org/reused-event'
+        self._add(1, url, name='Pottery Workshop')
+        self.conn.execute('UPDATE crawl_events SET location_id=5 WHERE id=1')
+        self._known(100, url, location_id=5, name='Bird Watching')
+        self._known(101, url, location_id=6, name='Pottery Workshop')
+        self.assertEqual(self._ids(), {1})
 
     def test_known_event_missing_location_or_description_does_not_count(self):
         self._add(3, 'https://bpl.org/node/3')
@@ -315,11 +392,13 @@ class TestKnownCompleteSkipAndSiteCap(unittest.TestCase):
 
     def test_merger_naming_variant_keeps_the_skip(self):
         self._add(7, 'https://symphonyspace.org/events/x', name='Eric Idle, Idle in Provence')
+        self.conn.execute('UPDATE crawl_events SET location_id=5 WHERE id=7')
         self._known(106, 'https://symphonyspace.org/events/x', name='Symphony Space Eric Idle, Idle in Provence')
         self.assertEqual(self._ids(), set())
 
     def test_name_without_significant_words_keeps_the_skip(self):
         self._add(8, 'https://example.org/e/8', name='The Show')
+        self.conn.execute('UPDATE crawl_events SET location_id=5 WHERE id=8')
         self._known(107, 'https://example.org/e/8', name='Pulverize the Sound')
         self.assertEqual(self._ids(), set())
 

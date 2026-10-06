@@ -52,7 +52,7 @@ class MergeScopeForwardingTests(unittest.TestCase):
             # Their separate maintenance sweep must remain global, even when
             # candidate merging and duplicate cleanup are website-filtered.
             db.archive_dead_source_events.assert_called_once_with(
-                cursor, connection, temps_built=True)
+                cursor, connection, temps_built=True, edit_logger=None)
 
     def test_targeted_merge_forwards_all_requested_websites(self):
         self.run_merge([101, 202])

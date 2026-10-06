@@ -738,19 +738,17 @@ class TestAllUrlsBlockedCrawl(unittest.TestCase):
         for call in fake_db.update_crawl_result_crawled.call_args_list:
             self.assertNotIn('Access Denied', str(call))
 
-    def test_a_partial_block_still_stores_the_good_urls(self):
-        # Only the blocked half is discarded; a site that mostly worked is not
-        # thrown away. This is what keeps the guard from causing coverage loss.
+    def test_a_partial_block_cannot_certify_a_complete_calendar(self):
+        # Accepting the good half as a complete crawl archived still-live AMC
+        # programs. Keep the last good snapshot until every URL is recovered.
         good = "# Showtimes\n" + ("A real listing line.\n" * 60)
         pages = ([(good, True, None)] * 2) + ([(BLOCK_PAGE_MARKDOWN, False, BLOCK_ERROR)] * 2)
         returned, fake_db = _run_crawl_website(pages, n_urls=4)
 
-        self.assertEqual(returned, 999)
-        fake_db.update_crawl_result_failed.assert_not_called()
-        fake_db.update_crawl_result_crawled.assert_called_once()
-        stored = fake_db.update_crawl_result_crawled.call_args[0][3]
-        self.assertIn('A real listing line.', stored)
-        self.assertNotIn('Access Denied', stored)
+        self.assertIsNone(returned)
+        fake_db.update_crawl_result_crawled.assert_not_called()
+        fake_db.update_crawl_result_failed.assert_called_once()
+        self.assertIn('fetched 2 of 4', str(fake_db.update_crawl_result_failed.call_args))
 
     def test_all_urls_failing_without_a_block_verdict_also_fails(self):
         # The backstop arm: no recognisable block error, but nothing succeeded
@@ -1039,10 +1037,8 @@ class TestHostBlockCircuitBreaker(unittest.TestCase):
         returned, fake_db, fake_crawler, _ = self._run(pages, n_urls=5)
         self.assertEqual(fake_crawler.calls, 5, "no trip: the success reset the count")
         self.assertFalse(crawler._host_circuit_open('https://www.amctheatres.com/'))
-        self.assertEqual(returned, 999)
-        stored = fake_db.update_crawl_result_crawled.call_args[0][3]
-        self.assertIn('A real listing line.', stored)
-        self.assertNotIn('Access Denied', stored)
+        self.assertIsNone(returned, "an untripped circuit does not make failed URLs complete")
+        fake_db.update_crawl_result_crawled.assert_not_called()
 
     def test_other_hosts_are_unaffected(self):
         self._run([(BLOCK_PAGE_MARKDOWN, False, BLOCK_ERROR)] * 3, n_urls=3)

@@ -8,6 +8,7 @@ const DiscoveryRanking = (() => {
     let cache = new WeakMap();
     const baselineCache = new WeakMap();
     const normalizedTags = new Map();
+    let ambiguousPlaces = new Set();
     const appealGroups = [
         ['festival', 'street fair'],
         ['concert', 'live music', 'performance', 'theater', 'comedy', 'screening'],
@@ -18,9 +19,40 @@ const DiscoveryRanking = (() => {
     const indexes = { event: new Map(), place: new Map(), tag: new Map(), term: new Map() };
 
     function placeKey(place) {
-        // Exports currently omit database venue IDs. Use name + street address,
-        // never the display coordinates (which change for co-located venues).
+        if (/^[1-9]\d*$/.test(String(place?.id || ''))) return `id:${place.id}`;
         return `${normalize(place?.name)}|${normalize(place?.address)}`;
+    }
+
+    function migratePlaces(places) {
+        const aliases = new Map();
+        for (const place of places) {
+            const id = placeKey(place);
+            if (!id.startsWith('id:')) continue;
+            const legacy = `${normalize(place.name)}|${normalize(place.address)}`;
+            if (!aliases.has(legacy)) aliases.set(legacy, { id, label: place.name });
+            else if (aliases.get(legacy)?.id !== id) aliases.set(legacy, null);
+        }
+        if (typeof SimilarityModel !== 'undefined') SimilarityModel.registerPlaces(places);
+        const nextAmbiguous = new Set([...aliases].filter(([, target]) => !target).map(([key]) => key));
+        const ambiguityChanged = ambiguousPlaces.size !== nextAmbiguous.size
+            || [...ambiguousPlaces].some(key => !nextAmbiguous.has(key));
+        ambiguousPlaces = nextAmbiguous;
+        const canonical = new Set(entries.filter(e => e.type === 'place' && e.id.startsWith('id:')).map(e => e.id));
+        const unique = new Map();
+        let changed = false;
+        for (const entry of entries) {
+            const target = entry.type === 'place' && aliases.get(entry.id);
+            if (target) {
+                changed = true;
+                if (canonical.has(target.id)) continue;
+            }
+            const next = target ? clean({ ...entry, ...target }) : entry;
+            unique.set(`${next.type}:${next.id}`, next);
+        }
+        // Identity migration is background maintenance, not a profile edit that
+        // should replace the user's current map/list while more dates load.
+        if (changed) { entries = [...unique.values()]; publish(false); }
+        else if (ambiguityChanged) reindex();
     }
 
     function clean(entry) {
@@ -55,11 +87,11 @@ const DiscoveryRanking = (() => {
         reindex();
     }
 
-    function publish() {
+    function publish(notify = true) {
         reindex();
         try { localStorage.setItem(storageKey, JSON.stringify(entries)); storageAvailable = true; }
         catch (_) { storageAvailable = false; }
-        document.dispatchEvent(new CustomEvent('fomo:preferences-changed'));
+        if (notify) document.dispatchEvent(new CustomEvent('fomo:preferences-changed'));
     }
 
     function set(type, id, label, stance) {
@@ -125,7 +157,8 @@ const DiscoveryRanking = (() => {
         const matches = [];
         const add = entry => { if (entry) matches.push(entry); };
         add(indexes.event.get(String(event.id)));
-        add(indexes.place.get(pk));
+        const legacyPlace = `${normalize(place?.name)}|${normalize(place?.address)}`;
+        add(indexes.place.get(pk) || (!ambiguousPlaces.has(legacyPlace) && indexes.place.get(legacyPlace)));
         // Audience/topic tags come from the event. Do not inherit a venue's
         // audience (a library can host both children's and adult programming).
         if (indexes.tag.size) new Set([...(event.tags || []), ...(place?.tags || []).filter(tag => tag.startsWith('venue:'))].map(normalize)).forEach(tag => add(indexes.tag.get(tag)));
@@ -169,7 +202,7 @@ const DiscoveryRanking = (() => {
             document.dispatchEvent(new CustomEvent('fomo:preferences-changed'));
         }
     });
-    return { normalize, placeKey, set, migrateTagAliases, remove, renameTerm, details, score, baseline, topPlaces,
+    return { normalize, placeKey, set, migratePlaces, migrateTagAliases, remove, renameTerm, details, score, baseline, topPlaces,
         entries: () => entries.map(e => ({ ...e })), revision: () => revision,
         canPersist: () => storageAvailable,
         stance: (type, id) => indexes[type]?.get(['tag', 'term'].includes(type) ? normalize(id) : String(id))?.stance || 0 };

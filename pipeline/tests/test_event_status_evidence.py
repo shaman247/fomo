@@ -12,7 +12,8 @@ class EventStatusEvidenceTests(unittest.TestCase):
     def test_all_extraction_paths_receive_status_evidence_rules(self):
         prompts = [
             extractor.get_prompt('https://example.org/', 'HOLD: mri project', '2026-09-20', 'Example', ''),
-            extractor.get_vision_prompt('https://example.org/', 'HOLD: mri project', '2026-09-20', 'Example', ''),
+            extractor.get_vision_prompt('https://example.org/', 'HOLD: mri project', '2026-09-20', 'Example', '')
+            + (extractor.get_vision_instructions() or ''),
             extractor.get_chunk_instructions(),
             extractor.detail_instructions(),
             extractor.get_enrichment_prompt(['mri project'], 'Example', content_snippets={'mri project':'HOLD: mri project'}),

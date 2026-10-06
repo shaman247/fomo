@@ -14,6 +14,22 @@
     {"id":"folk-a","topic":"Indie Folk","text":"An independent singer-songwriter performs intimate acoustic songs inspired by landscapes and rural life, with fingerpicked guitar and close harmonies."},
     {"id":"folk-b","topic":"Indie Folk","text":"An evening of contemporary folk songwriting from an independent acoustic duo, with banjo, guitar and vocal harmonies."},
     {"id":"history-a","topic":"Black History Month","text":"A lecture on African American civil rights organizing, followed by discussion of Black historical figures and their continuing legacy."},
-    {"id":"history-b","topic":"Black History Month","text":"Explore the Harlem Renaissance through the poetry, art and political ideas of Black writers and artists."}
+    {"id":"history-b","topic":"Black History Month","text":"Explore the Harlem Renaissance through the poetry, art and political ideas of Black writers and artists."},
+    {"id":"architecture-c","topic":"Architecture","text":"A preservation engineer discusses adapting an old factory for housing, with drawings of the retained frame, stair cores and new floor layouts."},
+    {"id":"architecture-d","topic":"Architecture","text":"An urban designer compares courtyard housing blocks and street grids, explaining how building height and setbacks shape public space."},
+    {"id":"architecture-e","topic":"Architecture","text":"A hands-on building design workshop uses cardboard models to explore daylight, circulation and load-bearing structures."},
+    {"id":"architecture-incidental-gallery","text":"An opening reception for abstract paintings in a converted warehouse gallery. Meet the artists over drinks and view their colorful canvases."},
+    {"id":"architecture-incidental-concert","text":"A string quartet plays chamber music inside a historic Art Deco lobby. Tickets include a glass of wine during intermission."},
+    {"id":"architecture-software","text":"Software architects discuss distributed databases, service boundaries, caching and the design of reliable cloud systems."},
+    {"id":"architecture-incidental-party","text":"Dance to DJs at a rooftop party with skyline views and cocktails overlooking the city buildings."}
+  ],
+  "profiles": [
+    {"id":"mixed-arts","probes":["jazz-a","ceramics-a"]},
+    {"id":"design-and-birding","probes":["architecture-a","birding-a"]}
+  ],
+  "queries": [
+    {"id":"mixed-venue-jazz-and-clay","positive":["profile:mixed-arts"],"judgments":{"probe:jazz-b":2,"probe:ceramics-b":2,"probe:architecture-d":0,"probe:birding-b":0,"probe:yoga-b":0}},
+    {"id":"mixed-profile-design-and-nature","positive":["profile:design-and-birding"],"judgments":{"probe:architecture-b":2,"probe:architecture-c":2,"probe:birding-b":2,"probe:architecture-incidental-gallery":0,"probe:architecture-software":0,"probe:jazz-b":0}},
+    {"id":"mixed-positive-with-disliked-clay","positive":["profile:mixed-arts"],"negative":["probe:ceramics-a"],"judgments":{"probe:jazz-b":2,"probe:ceramics-b":0,"probe:architecture-d":0,"probe:birding-b":0,"probe:yoga-b":0}}
   ]
 }

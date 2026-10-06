@@ -99,7 +99,7 @@ python scripts/upload_public_html.py   # Upload dist/ to server
 
 - **🫱🏾‍🫲🏼 Stay in touch**
   - This website is in active development, so keep visiting for regular updates!
-  - You can reach out by email or join the [Discord server](https://discord.gg/Xn6wHegjVv)
+  - You can reach out by email
 
 ## Database
 

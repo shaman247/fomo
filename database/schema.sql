@@ -756,7 +756,7 @@ CREATE TABLE IF NOT EXISTS event_venue_overrides (
     url_prefix TINYINT(1) NOT NULL DEFAULT 0,
     valid_from DATE NOT NULL,
     valid_until DATE NOT NULL,
-    location_id INT UNSIGNED NOT NULL,
+    location_id INT UNSIGNED DEFAULT NULL COMMENT 'NULL explicitly preserves a reviewed unknown venue',
     location_name VARCHAR(255) NOT NULL,
     sublocation VARCHAR(500) DEFAULT NULL,
     evidence_url TEXT NOT NULL,
@@ -767,4 +767,30 @@ CREATE TABLE IF NOT EXISTS event_venue_overrides (
     INDEX idx_website (website_id),
     FOREIGN KEY (website_id) REFERENCES websites(id) ON DELETE CASCADE,
     FOREIGN KEY (location_id) REFERENCES locations(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- Explicit positive source ownership; not a duplicate merge or suppression.
+CREATE TABLE IF NOT EXISTS event_source_identities (
+    event_id INT UNSIGNED NOT NULL,
+    crawl_event_id INT UNSIGNED NOT NULL,
+    identity JSON NOT NULL,
+    review_reason TEXT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (event_id, crawl_event_id),
+    FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE,
+    FOREIGN KEY (crawl_event_id) REFERENCES crawl_events(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- Apply before running the BL03 canonical URL replay guard.
+-- Historical crawl_events/raw_data/cache URLs are deliberately preserved.
+CREATE TABLE IF NOT EXISTS event_url_exclusions (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    event_id INT UNSIGNED NOT NULL,
+    url_hash CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+    url VARCHAR(2000) NOT NULL,
+    replacement_url VARCHAR(2000) NOT NULL,
+    event_snapshot LONGTEXT NOT NULL COMMENT 'Exact reviewed name, venue and all sessions',
+    evidence TEXT NOT NULL,
+    reviewed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_event_url_exclusion (event_id,url_hash),
+    FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

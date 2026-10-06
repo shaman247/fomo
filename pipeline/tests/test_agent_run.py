@@ -243,6 +243,7 @@ class AgentRunTests(unittest.TestCase):
         self.assertEqual(agent_run.load(self.root)['phase'], 'complete')
         self.assertTrue(self.run_resume())
         publish.assert_called_once()
+        self.assertEqual(publish.call_args.kwargs['crawl_run_id'], 3)
 
     def test_pending_detail_does_not_publish_or_complete(self):
         processed = dict(self.result, status='processed')
@@ -258,7 +259,8 @@ class AgentRunTests(unittest.TestCase):
 
     def test_publish_retry_does_not_reapply_details(self):
         self.state.update(phase='publishing', details_complete=True,
-                          detail_candidates=[[80, 'Event', 'https://example.test/e', 7]])
+                          detail_candidates=[[80, 'Event', 'https://example.test/e', 7]],
+                          detail_known_complete_skips=[])
         agent_run.save(self.root, self.state)
         processed = dict(self.result, status='processed')
         _, _, process, _, _, detail, publish, _ = self.mocked_run(
@@ -268,12 +270,118 @@ class AgentRunTests(unittest.TestCase):
         process.assert_not_called()
         publish.assert_called_once()
 
+    def test_legacy_detail_plan_without_skip_provenance_cannot_publish(self):
+        self.state.update(phase='publishing', details_complete=True,
+                          detail_candidates=[[80, 'Event', 'https://example.test/e', 7]])
+        agent_run.save(self.root, self.state)
+        processed = dict(self.result, status='processed')
+        _, _, _, _, _, detail, publish, complete = self.mocked_run(rows=[[processed]] * 3)
+        self.assertFalse(self.run_resume())
+        detail.assert_not_called()
+        publish.assert_not_called()
+        complete.assert_not_called()
+        self.assertNotIn('detail_known_complete_skips', agent_run.load(self.root))
+
+    def test_venue_change_reopens_skipped_detail_without_reapplying_completed_rows(self):
+        self.state.update(phase='publishing', details_complete=True,
+                          detail_candidates=[[80, 'Event', 'https://example.test/e', 7]],
+                          detail_known_complete_skips=[81])
+        agent_run.save(self.root, self.state)
+        processed = dict(self.result, status='processed')
+        _, _, _, _, _, detail, publish, _ = self.mocked_run(rows=[[processed]] * 4)
+        added = (81, 'Offsite event', 'https://example.test/offsite', 7)
+        with patch.object(main.db, 'get_detail_crawl_candidates', return_value=[added]) as select:
+            self.assertTrue(self.run_resume())
+        self.assertEqual(detail.await_args.args[2], [added])
+        self.assertEqual(select.call_args.kwargs['crawl_event_ids'], [81])
+        publish.assert_called_once()
+        self.assertEqual(agent_run.load(self.root)['detail_completed_ids'], [80, 81])
+
+    def test_venue_change_at_publish_lock_stops_merge_until_new_detail_finishes(self):
+        self.state.update(phase='publishing', details_complete=True,
+                          detail_candidates=[[80, 'Event', 'https://example.test/e', 7]],
+                          detail_known_complete_skips=[81])
+        agent_run.save(self.root, self.state)
+        processed = dict(self.result, status='processed')
+        _, _, _, _, _, detail, publish, complete = self.mocked_run(rows=[[processed]] * 4)
+        added = (81, 'Offsite event', 'https://example.test/offsite', 7)
+        with patch.object(main.db, 'get_detail_crawl_candidates', side_effect=[[], [added]]):
+            self.assertIsNone(self.run_resume())
+        detail.assert_not_called()
+        publish.assert_not_called()
+        complete.assert_not_called()
+        saved = agent_run.load(self.root)
+        self.assertFalse(saved['details_complete'])
+        self.assertEqual(saved['detail_completed_ids'], [80])
+        self.assertEqual(saved['phase'], 'details')
+
     def test_processed_status_required_before_detail_or_publish(self):
         _, _, _, _, _, detail, publish, _ = self.mocked_run(
             rows=[[self.result], [self.result], [self.result], [self.result]])
         self.assertFalse(self.run_resume())
         detail.assert_not_called()
         publish.assert_not_called()
+
+    def mixed_scope(self):
+        """w7 crawled fine; w9's Luma row fails extraction and w9 also has a
+        Picnob bundle in the same run (the 2026-10-06 shape)."""
+        good = dict(self.result)
+        bad = dict(self.result, crawl_result_id=21, website_id=9, name='No Booze Babes',
+                   source_hash='luma')
+        sibling = dict(self.result, crawl_result_id=22, website_id=9, name='No Booze Babes',
+                       status='extracted', source_hash='picnob')
+        records = {r['crawl_result_id']: r for r in (good, bad, sibling)}
+        self.state.update(website_ids=[7, 9], crawl_result_ids=[11, 21, 22],
+                          source_hashes={'11': 'abc', '21': 'luma', '22': 'picnob'})
+        agent_run.save(self.root, self.state)
+        mocks = self.mocked_run(extraction=AsyncMock(side_effect=lambda cur, conn, crid, *a, **k: crid != 21))
+        conn, process = mocks[0], mocks[2]
+        conn.cursor.return_value.fetchone.return_value = (
+            'Crawled content too small (152 bytes < 500 minimum)',)
+
+        def processed(cursor, connection, crid, *args, **kwargs):
+            records[crid] = dict(records[crid], status='processed')
+            return 1
+        process.side_effect = processed
+        self.read_patch = patch.object(agent_run, 'read_results',
+                                       side_effect=lambda c, ids: [records[i] for i in ids])
+        self.read_patch.start()
+        self.addCleanup(self.read_patch.stop)
+        return mocks
+
+    def test_one_failed_extraction_is_isolated_and_the_rest_publish(self):
+        _, extract, process, _, _, detail, publish, complete = self.mixed_scope()
+        self.assertFalse(self.run_resume())  # still a loud failure (exit 1)
+        self.assertEqual(extract.await_count, 2)
+        # Only w7 is processed and published; w9's Picnob sibling waits unmerged.
+        self.assertEqual([c.args[2] for c in process.call_args_list], [11])
+        self.assertEqual(publish.call_args.args[2], [7])
+        complete.assert_called_once()
+        saved = agent_run.load(self.root)
+        self.assertEqual(saved['phase'], 'complete')
+        self.assertEqual(saved['crawl_result_ids'], [11])
+        self.assertEqual(saved['website_ids'], [7])
+        self.assertEqual(saved['source_hashes'], {'11': 'abc'})
+        failure = saved['isolated_extraction_failures'][0]
+        self.assertEqual((failure['crawl_result_id'], failure['website_id']), (21, 9))
+        self.assertIn('too small', failure['error'])
+        # Resuming a completed run reports the failure but does not redo work.
+        self.assertTrue(self.run_resume())
+        publish.assert_called_once()
+
+    def test_failed_extraction_of_the_only_site_never_publishes_globally(self):
+        _, _, process, _, _, detail, publish, complete = self.mocked_run(
+            extraction=AsyncMock(return_value=False))
+        main_conn = main.db.create_connection.return_value
+        main_conn.cursor.return_value.fetchone.return_value = ('Crawled content too small',)
+        self.assertFalse(self.run_resume())
+        process.assert_not_called()
+        detail.assert_not_called()
+        publish.assert_not_called()
+        complete.assert_not_called()
+        saved = agent_run.load(self.root)
+        self.assertEqual(saved['website_ids'], [])
+        self.assertEqual(saved['crawl_result_ids'], [])
 
     def test_city_and_interrupted_crawl_validation(self):
         with patch.dict(os.environ, {'FOMO_CITY': 'different-city'}):

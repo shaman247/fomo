@@ -63,6 +63,9 @@ SITE_URLS = {
     "fareharbor_eldridgestreet": [
         "https://fareharbor.com/embeds/book/eldridgestreet/",
     ],
+    "fareharbor_hrmm": [
+        "https://fareharbor.com/embeds/book/hrmm/",
+    ],
 }
 
 # URLs that must NEVER resolve to a FareHarbor profile: other FareHarbor companies

@@ -463,7 +463,7 @@ extraction:
   # Hunterdon were deliberately IN under `coverage:` (see the ZIP3 078/079/088
   # notes) but omitted here, which contradicted w4725 Morris County Park
   # Commission being a legitimate source across its whole footprint.
-  region_rule: "Only include events in the NYC metro area within the next 3 months. The NYC metro area includes: all five NYC boroughs; Long Island (Nassau, Suffolk, the Hamptons); Westchester and Rockland counties; the Hudson Valley (Dutchess, Orange, Ulster, Putnam); Northern and Central New Jersey (Bergen, Hudson, Essex, Passaic, Union, Morris, Middlesex, Somerset, Hunterdon, Monmouth, Ocean); and Southern Connecticut (Fairfield County). Skip events at venues outside this metro region (e.g. Philadelphia, Boston, Chicago, LA, Europe, etc.)."
+  region_rule: "Only include events in the NYC metro area within the next 3 months. The NYC metro area includes: all five NYC boroughs; Long Island (Nassau, Suffolk, the Hamptons); Westchester and Rockland counties; the Hudson Valley (Dutchess, Orange, Ulster, Putnam), Sullivan County, and the parts of Greene and Columbia counties near the Ulster/Dutchess line (e.g. Catskill, Hudson); Northern and Central New Jersey (Bergen, Hudson, Essex, Passaic, Union, Morris, Middlesex, Somerset, Hunterdon, Monmouth, Ocean); and Southern Connecticut (Fairfield County). Skip events at venues outside this metro region (e.g. Philadelphia, Boston, Chicago, LA, Europe, etc.)."
 
 # db.py _load_generic_location_names() — city-level names added on top of the geotags list below.
 generic_location_names:
@@ -935,9 +935,11 @@ coverage:
     # 078 is Morris (IN, as of 2026-08-05) + Warren + Sussex (both OUT). These
     # are its Morris ZIP5s; Hackettstown 07840 and Belvidere 07823 are WARREN
     # and stay out, as does all of Sussex (Newton 07860, Andover 07821, ...).
+    # 07830 Califon is HUNTERDON (in via 088) — added 2026-10-05.
     "NJ:078": ["07801", "07803", "07834", "07836", "07842", "07845", "07847",
                "07849", "07850", "07852", "07853", "07856", "07857", "07866",
-               "07869", "07876", "07878", "07885"]
+               "07869", "07876", "07878", "07885",
+               "07830"]                                            # Hunterdon: Califon
     # 079 is Union (in) + Morris (in, as of 2026-08-05) + Somerset (out).
     # Somerset's 079xx — Far Hills 07931, Gladstone 07934, Basking Ridge 07920,
     # Bernardsville 07924, Peapack 07977 — stays out; it reaches coverage
@@ -948,8 +950,11 @@ coverage:
                "07960", "07961", "07962", "07963", "07970", "07976",
                "07980", "07981", "07999"]                          # Morris: Morristown, Madison, Chatham, Whippany, ...
     # 085 is mostly Mercer (Princeton/Trenton — out); these are its
-    # Monmouth/Ocean ZIPs (Allentown, Millstone, Jackson, New Egypt).
-    "NJ:085": ["08501", "08510", "08514", "08526", "08527", "08533", "08535", "08555"]
+    # Monmouth/Ocean ZIPs (Allentown, Millstone, Jackson, New Egypt), plus
+    # (2026-10-05) southern Hunterdon, which the rest of the county reaches via
+    # 088. Rocky Hill 08553 (Somerset) stays out, matching the Somerset-079 call.
+    "NJ:085": ["08501", "08510", "08514", "08526", "08527", "08533", "08535", "08555",
+               "08530", "08551", "08559"]                          # Hunterdon: Lambertville, Ringoes, Stockton
   # KNOWN GAPS (found 2026-07-30) — two ZIP3s above are MIXED but have no
   # zip5_only carve-out, so they currently admit counties the coverage spec does
   # not name. Left as-is deliberately: the blast radius is 2 dormant locations,
@@ -3915,6 +3920,56 @@ venue_taxonomy:
       remove: []
       source: https://themalin.co/location/brooklyn-heights/
       reason: Membership coworking space with offices, desks and meeting rooms; matches The Malin Chelsea (Office).
+    - location_id: 11328
+      expected_name: Spotlight Ballroom
+      add:
+      - Event Hall
+      remove: []
+      source: https://spotlightdancenyc.com/
+      reason: Official site is "Dance Studio & Event Venue" — Latin/ballroom/hip-hop classes and weekly socials (Dance Studio kept) plus a 3,500 sq ft, 200-guest private-event rental with bar and parking.
+    - location_id: 11331
+      expected_name: 4Willow
+      add:
+      - Music Venue
+      remove: []
+      source: https://www.4willowsi.com/
+      reason: Official site titles itself "4 Willow - Live Music Venue" (jazz/funk nights, DJs) in Rosebank; site offline at review time (DNS), confirmed via its search listing and @4willow_nyc. Private rentals not established well enough for Event Hall.
+    - location_id: 11354
+      expected_name: 213 Bowery
+      add:
+      - Shop
+      - Art Gallery
+      remove: []
+      source: https://thevendry.com/venue/926/213-bowery
+      reason: 900 sq ft storefront rented short-term for pop-up stores, showrooms and art exhibitions (current event is a 3-day artist exhibition); no permanent tenant, so Shop per the retail pop-up policy plus Art Gallery for its exhibition use.
+    - location_id: 11365
+      expected_name: Lofte 23
+      add:
+      - Event Hall
+      remove: []
+      source: https://www.lofte23.com/
+      reason: Dedicated 2,500 sq ft Art Deco rental loft (up to 150 guests) for private celebrations, corporate gatherings, exhibitions and weddings, rented hourly.
+    - location_id: 11368
+      expected_name: Griffis Faculty Club (Weill Cornell Medicine)
+      add:
+      - Event Hall
+      remove: []
+      source: https://eventservices.weill.cornell.edu/spaces/griffis-faculty-club
+      reason: Weill Cornell Event Services space (dining room, private dining room, lounge, bar; 15-325 guests) booked for dinners, receptions, conferences and meetings with required food service; not a public restaurant.
+    - location_id: 11379
+      expected_name: The Léman Ballroom
+      add:
+      - Ballroom
+      remove: []
+      source: https://www.lemanballroom.com/
+      reason: Historic 1928 bank hall rented as a ballroom for galas, weddings, conferences, screenings and fashion shows; Ballroom inherits Event Hall.
+    - location_id: 11471
+      expected_name: The Convent
+      add:
+      - Cultural Center
+      remove: []
+      source: https://luma.com/wjc0dy6j
+      reason: Former convent school run by its hosts as "The Old School", a place for open inquiry with multi-disciplinary programming (talks, research, demo nights); no official venue site found, so organizer listing is the source.
     descriptions:
     - location_id: 2041
       expected_name: Cloud City

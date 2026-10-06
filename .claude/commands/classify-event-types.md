@@ -76,7 +76,7 @@ tags** (e.g. no `Dance` type — a dance show is `Theater Show` + `Dance` tag).
 - **Service** — **religious** ritual requiring liturgy/ritual/clergy/consecrated space. Worship, Mass, vespers, sermon, zazen with a teacher, secular humanist Sunday platform.
 - **Ceremony** — **secular/civic** *formal/ritual* observance: flag raising, civic memorial, dedication, naming, swearing-in, awards ceremony without performance program. The defining mark is a ritual/formal moment, not festivity. A festive public occasion (anniversary party, "X Day" celebration, holiday family day) is `Community Celebration`, not Ceremony. Different from `Service` (religious), `Festival` (multi-act).
 - **Civic Meeting** — community board hearing, town hall, advocacy group meeting, governance session
-- **Discussion Group** — book club, support group, study circle, peer-led topical discussion. Repeating convening around shared interest, no liturgy and no governance agenda.
+- **Discussion Group** — discussion-based book club, support group, study circle, peer-led topical discussion. Repeating convening around shared interest, no liturgy and no governance agenda.
 
 ### Outing — bounded group experience anchored to a place
 - **Tour** — docent-led or self-guided exploration of place: walking tour, garden tour, birding, factory tour
@@ -128,6 +128,17 @@ tags** (e.g. no `Dance` type — a dance show is `Theater Show` + `Dance` tag).
     - Governmental/advocacy agenda → `Civic Meeting`
     - Peer-led topical convening (book club, support group) → `Discussion Group`
     - Single billed speaker/panel → `Talk`
+
+    - **Silent reading / Silent Book Club boundary:** a scheduled gathering whose
+      main activity is quietly reading your own book is `Open Practice`, including
+      sessions with brief introductions, optional recommendations or chat afterward.
+      No assigned book does not, by itself, settle the type: a facilitated discussion
+      of a shared topic remains `Discussion Group` (for example, a mortality-themed
+      reading session followed by guided reflection). Classify the described activity,
+      not the club name or the source calendar's broad "Book Discussion" category.
+      A "reading party" is not `Party` without a celebratory program, and reading
+      your own book is not a performed `Reading`. If the listing gives only a name,
+      inspect the organizer's program description before changing an existing type.
 11. **Theater Show is the umbrella for any billed stage performance.** Drama,
     dance, ballet, opera, drag, burlesque, magic, musical theater all live here.
     Genre lives in content tags (e.g. `Drag Show`, `Ballet`, `Musical`).

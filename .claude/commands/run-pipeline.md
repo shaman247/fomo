@@ -65,12 +65,17 @@ mkdir -p .scratch/<run>/responses
 ./venv/bin/python pipeline/main.py --work-dir .scratch/<run>/extraction > .scratch/<run>/pipeline_run.log 2>&1
 ```
 
-Add `--ids <ids>` or `--limit N` when appropriate. **Cost control (2026-09-19):
-cap a routine run at `--limit 180` websites.** Sites left out stay due and lead
-the next run (they are ordered by `last_crawled_at`), so nothing is lost — the
-2026-09-18 run crawled 264 sites at once, produced 4,299 events and 2,278
-detail pages, and spent ~36M sub-agent tokens; a bounded run keeps each day's
-extraction predictable. The process exits **2** when
+Add `--ids <ids>` or `--limit N` when appropriate. **Cost control: cap a
+routine run at `--limit 300` websites** (raised from 180 on 2026-10-06 by user
+decision). Sites left out stay due and lead the next run (they are ordered by
+`last_crawled_at`), so nothing is lost — but the 180 cap let the due queue grow
+to 821 overdue sites (~4 days behind schedule, ~260 crawls/day), so 300 is meant
+to drain that backlog in about a week. The cap was introduced 2026-09-19 after the
+2026-09-18 run crawled 264 sites at once, produced 4,299 events and 2,278 detail
+pages, and spent ~36M sub-agent tokens; a bounded run keeps each day's
+extraction predictable. Once `get_websites_due_for_crawling` stays near a single
+day's inflow, a lower cap can be revisited (see the crawl-frequency check in
+`.claude/recurring-checks.md`). The process exits **2** when
 agent extraction is pending, **0** only when the pipeline has completed, and
 **1** on failure. Run in the background if needed, then inspect its actual exit
 code and log. An exit notification alone does not mean the pipeline completed.

@@ -109,13 +109,20 @@ def cursor_scope(buffered=True):
 
 
 def _parse_url_data(url_string):
-    """Parse URL data from concatenated format 'url:::js_code|||url:::js_code|||...'"""
+    """Read priority:::url:::js entries, accepting older url:::js snapshots."""
     urls = []
     for item in url_string.split('|||'):
         parts = item.split(':::', 1)
+        priority = None
+        if len(parts) == 2 and re.fullmatch(r'-?\d+', parts[0]):
+            priority = int(parts[0])
+            parts = parts[1].split(':::', 1)
         url = parts[0]
         js_code = parts[1] if len(parts) > 1 and parts[1] else None
-        urls.append({'url': url, 'js_code': js_code})
+        entry = {'url': url, 'js_code': js_code}
+        if priority is not None:
+            entry['sort_order'] = priority
+        urls.append(entry)
     return urls
 
 
@@ -125,7 +132,7 @@ _WEBSITES_DUE_SELECT = """
            w.delay_before_return_html, w.content_filter_threshold, w.scan_full_page,
            w.remove_overlay_elements, w.javascript_enabled, w.text_mode, w.light_mode,
            w.use_stealth, w.headed, w.user_agent, w.scroll_delay, w.crawl_timeout, w.process_images, w.base_url,
-           GROUP_CONCAT(CONCAT(wu.url, ':::', IFNULL(wu.js_code, '')) ORDER BY wu.sort_order SEPARATOR '|||') as urls
+           GROUP_CONCAT(CONCAT(COALESCE(wu.sort_order, 0), ':::', wu.url, ':::', IFNULL(wu.js_code, '')) ORDER BY wu.sort_order, wu.id SEPARATOR '|||') as urls
     FROM websites w
     LEFT JOIN website_urls wu ON w.id = wu.website_id
 """
@@ -1124,8 +1131,122 @@ def get_existing_upcoming_events(cursor, website_id):
     return events
 
 
+# Source-horizon outlier trimming (see source_horizon / build_archival_temps).
+# A crawl's horizon is the last date it genuinely COVERS, not the furthest date
+# any extracted occurrence happens to name. BCCLS Libraries (w3530) fetches a
+# 14-day LibCal window, but reviewers correctly kept a handful of Nov/Dec dates
+# spelled out in listing prose; MAX(start_date) then put the horizon at +71d and
+# 32 monthly programs whose next date fell just past the real window were
+# archived as "absent" on 2026-10-04 (23 verified live). The trim fires only on
+# a CLIFF: a small tail of occurrences (<= TAIL_MAX_FRAC of everything on/after
+# the crawl date) that is far sparser than the week leading up to the cut.
+# Calibrated on every enabled site's latest crawl (2026-10-05): far-listing
+# sites with a natural taper or steady density (BAM, Carnegie Hall, City
+# Winery, Lincoln Center Theater/Presents, Jazz at LC, RA) keep their MAX
+# horizon; window-plus-outliers shapes (BCCLS, Yonkers/Great Neck/Monmouth
+# libraries, NY Cares, Film at LC) are cut back to the window's edge.
+# Trimming only ever shrinks the horizon, i.e. it can delay an archival, never
+# cause one.
+HORIZON_TRIM_MIN_OCCURRENCES = 20
+HORIZON_TRIM_TAIL_MAX_FRAC = 0.05
+HORIZON_TRIM_DENSITY_RATIO = 0.1
+HORIZON_TRIM_LOCAL_WINDOW_DAYS = 7
+
+
+def _as_date(value):
+    """datetime/date/'YYYY-MM-DD...' string -> date (None passes through)."""
+    from datetime import date as _date
+    if value is None or type(value) is _date:
+        return value
+    if isinstance(value, _date):  # datetime is a date subclass
+        return value.date()
+    return _date.fromisoformat(str(value)[:10])
+
+
+def source_horizon(crawl_date, date_counts):
+    """Return the last start date a crawl genuinely covers, or None if it has none.
+
+    `date_counts` is an iterable of (start_date, count) — count = distinct crawl
+    events with an occurrence starting that day. Without a crawl date or with too
+    few occurrences on/after it to judge density, this is the plain MAX(start).
+    Otherwise it is the EARLIEST cut date d such that the occurrences after d are
+    both a small share of the total (<= HORIZON_TRIM_TAIL_MAX_FRAC) and spread
+    at <= HORIZON_TRIM_DENSITY_RATIO of the per-day density over the
+    HORIZON_TRIM_LOCAL_WINDOW_DAYS ending at d. If no cut qualifies, MAX(start).
+    """
+    items = sorted((_as_date(d), c) for d, c in date_counts
+                   if d is not None and c and c > 0)
+    if not items:
+        return None
+    raw_max = items[-1][0]
+    crawl_date = _as_date(crawl_date)
+    if crawl_date is None:
+        return raw_max
+    future = [(d, c) for d, c in items if d >= crawl_date]
+    total = sum(c for _, c in future)
+    if total < HORIZON_TRIM_MIN_OCCURRENCES:
+        return raw_max
+    last = future[-1][0]
+    window = HORIZON_TRIM_LOCAL_WINDOW_DAYS
+    cum = 0
+    for i, (d, c) in enumerate(future[:-1]):
+        cum += c
+        tail = total - cum
+        if tail > HORIZON_TRIM_TAIL_MAX_FRAC * total:
+            continue
+        local = sum(cc for dd, cc in future[:i + 1] if (d - dd).days < window)
+        local_density = local / min(window, (d - crawl_date).days + 1)
+        tail_density = tail / (last - d).days
+        if tail_density <= HORIZON_TRIM_DENSITY_RATIO * local_density:
+            return d
+    return raw_max
+
+
+def _trim_source_horizons(cursor):
+    """Replace _ws_crawl_state.last_start with source_horizon() of the same crawl.
+
+    The CREATE above seeds last_start with MAX(start_date); this narrows it for
+    crawls whose far dates are a sparse outlier tail. Only ever lowers it.
+    The crawl date is DATE(processed_at): the same timestamp the rest of the
+    archival snapshot keys on, and always set for the finished crawls whose
+    horizon matters (an unfinished latest attempt blocks archival on its own).
+    """
+    cursor.execute("""
+        SELECT cr.website_id,
+               DATE(cr.processed_at) AS crawl_date,
+               co.start_date, COUNT(DISTINCT ce.id)
+        FROM crawl_results cr
+        JOIN (SELECT website_id, MAX(id) AS id FROM crawl_results
+              WHERE website_id IS NOT NULL GROUP BY website_id) latest
+          ON latest.id = cr.id
+        JOIN _ws_crawl_state cs ON cs.website_id = cr.website_id
+        JOIN crawl_events ce ON ce.crawl_result_id = cr.id
+        JOIN crawl_event_occurrences co ON co.crawl_event_id = ce.id
+        WHERE cs.last_start IS NOT NULL
+        GROUP BY cr.website_id, crawl_date, co.start_date
+    """)
+    by_site = {}
+    for row in cursor.fetchall():
+        if isinstance(row, dict):
+            row = tuple(row.values())
+        website_id, crawl_date, start_date, count = row
+        site = by_site.setdefault(website_id, [crawl_date, []])
+        site[1].append((start_date, count))
+    updates = []
+    for website_id, (crawl_date, date_counts) in by_site.items():
+        horizon = source_horizon(crawl_date, date_counts)
+        starts = [_as_date(d) for d, _ in date_counts if d is not None]
+        if horizon is not None and starts and horizon < max(starts):
+            updates.append((horizon, website_id))
+    for horizon, website_id in updates:
+        cursor.execute(
+            "UPDATE _ws_crawl_state SET last_start = %s WHERE website_id = %s",
+            (horizon.isoformat(), website_id))
+    return updates
+
+
 def build_archival_temps(cursor):
-    """Precompute the two heavy shared sets the archival query needs, ONCE per run.
+    """Precompute shared crawl state and occurrence sets, ONCE per run.
 
     `archive_outdated_events` is called once per crawled website (hundreds per run).
     Two of its subqueries are identical across every website and, evaluated inline,
@@ -1134,6 +1255,9 @@ def build_archival_temps(cursor):
     occurrence" check (a full scan of event_occurrences). Materializing both into
     small indexed TEMPORARY tables once turns each per-website query from a ~35s
     scan into a ~1s indexed lookup (measured: 47min → ~5min for a full run).
+
+    Also snapshot each enabled website's latest attempt and source date horizon,
+    plus the sources whose rotating listings cannot establish disappearance.
 
     Correctness: these are exact equivalents of the inline subqueries they replace,
     and they are stable for the duration of Step 6 — the merge tail holds the
@@ -1177,6 +1301,33 @@ def build_archival_temps(cursor):
         WHERE start_date >= CURDATE()
            OR (end_date IS NOT NULL AND end_date >= CURDATE())
     """)
+    # Negative evidence must come from a finished latest attempt, not an older
+    # successful crawl hidden behind a new failed/pending/partial attempt.
+    # Bound it by source occurrence STARTS, not canonical dates (which can
+    # contain stale unions) or long exhibition ends. NULL last_start preserves
+    # the existing complete-empty-calendar behavior; a known short horizon
+    # cannot speak for an event whose next occurrence is beyond that horizon.
+    cursor.execute("DROP TEMPORARY TABLE IF EXISTS _ws_crawl_state")
+    cursor.execute("""
+        CREATE TEMPORARY TABLE _ws_crawl_state (
+            website_id INT UNSIGNED PRIMARY KEY, status VARCHAR(16),
+            processed_at DATETIME(6), last_start DATE)
+        SELECT cr.website_id, cr.status, cr.processed_at,
+               MAX(co.start_date) AS last_start
+        FROM crawl_results cr
+        JOIN (SELECT website_id, MAX(id) AS id FROM crawl_results
+              WHERE website_id IS NOT NULL GROUP BY website_id) latest
+          ON latest.id = cr.id
+        JOIN websites w ON w.id = cr.website_id
+        LEFT JOIN crawl_events ce ON ce.crawl_result_id = cr.id
+        LEFT JOIN crawl_event_occurrences co ON co.crawl_event_id = ce.id
+        WHERE w.disabled = FALSE OR w.disabled IS NULL
+        GROUP BY cr.website_id, cr.status, cr.processed_at
+    """)
+    # MAX(start_date) lets a few far-dated outliers (dates spelled out in listing
+    # prose) stretch a 14-day fetch window to months; cut those sparse tails so
+    # the horizon is what the crawl actually covered. See source_horizon.
+    _trim_source_horizons(cursor)
     # Websites whose absence-from-a-crawl carries NO evidence that an event ended.
     #
     # Two populations qualify. First, websites whose ONLY crawl source is
@@ -1230,13 +1381,16 @@ def drop_archival_temps(cursor):
     """Drop the archival helper temp tables built by build_archival_temps."""
     cursor.execute("DROP TEMPORARY TABLE IF EXISTS _ws_latest")
     cursor.execute("DROP TEMPORARY TABLE IF EXISTS _evt_future")
+    cursor.execute("DROP TEMPORARY TABLE IF EXISTS _ws_crawl_state")
     cursor.execute("DROP TEMPORARY TABLE IF EXISTS _ws_no_absence_evidence")
 
 
-def _archive_event_ids(cursor, ids):
+def _archive_event_ids(cursor, ids, edit_logger=None):
     """Flip archived=TRUE for the given event ids; returns the rows changed.
 
     Chunks the IN-list to stay under max_allowed_packet on large candidate sets.
+    IDs must be the active candidates selected under the caller's write lock.
+    Audit entries share the update transaction; the caller commits both together.
     """
     archived_count = 0
     for start in range(0, len(ids), 1000):
@@ -1247,10 +1401,15 @@ def _archive_event_ids(cursor, ids):
             chunk
         )
         archived_count += cursor.rowcount
+        if edit_logger is not None:
+            for event_id in chunk:
+                # Numeric values serialize to SQL-compatible '0'/'1' for sync.
+                edit_logger.log_update('events', event_id, 'archived', 0, 1)
     return archived_count
 
 
-def archive_outdated_events(cursor, connection, website_id, temps_built=False):
+def archive_outdated_events(cursor, connection, website_id, temps_built=False,
+                            edit_logger=None):
     """
     Archive events that are no longer found in recent crawls from ANY of their source websites.
 
@@ -1258,7 +1417,11 @@ def archive_outdated_events(cursor, connection, website_id, temps_built=False):
     - For EVERY website that has ever referenced this event (via event_sources),
       the most recent crawl from that website does NOT include this event
     - At least one of those websites has been successfully crawled
-    - For events with future occurrences, THREE guards must all pass:
+    - For events with current/future occurrences, every enabled contributing
+      website's latest attempt must be finished, and its known source horizon
+      must reach at least one remaining occurrence's start. A complete empty
+      calendar has no horizon and retains normal disappearance semantics.
+    - Then these three guards must all pass:
       1. 14-day grace period — the event's most recent supporting crawl is older
          than 14 days. Prevents premature archiving on rotating calendars that
          don't always list events far in advance.
@@ -1278,19 +1441,22 @@ def archive_outdated_events(cursor, connection, website_id, temps_built=False):
     This ensures events referenced by multiple websites are only archived when
     ALL sources stop listing them, not just one.
 
-    Logs a warning when upcoming events are archived (rare occurrence that may indicate
-    crawl failures or legitimate event changes).
+    Returns current/upcoming events for the caller's archival warnings (which may
+    indicate crawl failures or legitimate event changes).
 
     Args:
         cursor: Database cursor
         connection: Database connection
         website_id: ID of the website that was just crawled (used to find related events)
+        edit_logger: Optional audit logger with the merge and archival-reason context
 
     Returns:
-        Number of events archived
+        (archived_count, upcoming_events), where each warning is
+        (event_id, name, occurrence_start). The start is the earliest current or
+        future occurrence's actual start; it can be in the past for an ongoing span.
 
     Note:
-        Reads the _ws_latest / _evt_future temp tables. When called standalone
+        Reads the shared archival temp tables. When called standalone
         (temps_built=False, the default) it builds and drops them itself. In the
         per-website archival loop the caller builds them once via
         build_archival_temps() and passes temps_built=True so the hundreds of
@@ -1304,8 +1470,9 @@ def archive_outdated_events(cursor, connection, website_id, temps_built=False):
     # 1. It has a source from the website we just crawled
     # 2. No source website's latest crawl still references it
     # 3. At least one source website has been successfully crawled
-    # 4. Either has no future dates, or all three future-event guards pass
-    #    (14-day grace, >=2 fresh crawls since last seen, no too-future rejection)
+    # 4. Either has no future dates, or source completeness/coverage and the
+    #    future-event guards pass (14-day grace, >=2 fresh crawls since last
+    #    seen, no too-future rejection, meaningful listing absence)
     # Takes the website_id parameter THREE times (in order).
     archive_where = """
         e.archived = FALSE
@@ -1361,6 +1528,25 @@ def archive_outdated_events(cursor, connection, website_id, temps_built=False):
                   NOT EXISTS (
                       SELECT 1
                       FROM event_sources es
+                      JOIN crawl_events ce ON ce.id = es.crawl_event_id
+                      JOIN crawl_results cr ON cr.id = ce.crawl_result_id
+                      JOIN _ws_crawl_state cs ON cs.website_id = cr.website_id
+                      WHERE es.event_id = e.id
+                        AND (
+                            cs.status NOT IN ('processed', 'extracted')
+                            OR cs.processed_at IS NULL
+                            OR (cs.last_start IS NOT NULL AND NOT EXISTS (
+                                SELECT 1 FROM event_occurrences eo
+                                WHERE eo.event_id = e.id
+                                  AND (eo.start_date >= CURDATE() OR eo.end_date >= CURDATE())
+                                  AND eo.start_date <= cs.last_start
+                            ))
+                        )
+                  )
+                  AND
+                  NOT EXISTS (
+                      SELECT 1
+                      FROM event_sources es
                       JOIN crawl_events ce ON es.crawl_event_id = ce.id
                       JOIN crawl_results cr ON ce.crawl_result_id = cr.id
                       WHERE es.event_id = e.id
@@ -1398,7 +1584,7 @@ def archive_outdated_events(cursor, connection, website_id, temps_built=False):
                   -- ... AND the event is not sourced EXCLUSIVELY from feeds whose
                   -- absence carries no evidence (Instagram, plus any website flagged
                   -- `rotating_listing`; see _ws_no_absence_evidence).
-                  -- All three guards above share one premise: that absence
+                  -- The guards above share one premise: that absence
                   -- from a source's latest crawl means the source stopped listing
                   -- the event. That premise does not hold for Instagram. A picnob
                   -- bundle is the FIRST PAGE of a handle's grid (12 posts), so an
@@ -1474,13 +1660,15 @@ def archive_outdated_events(cursor, connection, website_id, temps_built=False):
     """
     archive_params = (website_id, website_id, website_id)
 
-    # First, identify events that will be archived to check for upcoming ones
+    # Include ongoing spans in warnings, using the same start/end eligibility as
+    # _evt_future. Keep their real start rather than inventing an occurrence today.
     cursor.execute(f"""
         SELECT e.id, e.name,
                (SELECT MIN(eo.start_date)
                 FROM event_occurrences eo
                 WHERE eo.event_id = e.id
-                  AND eo.start_date >= CURDATE()) as next_occurrence
+                  AND (eo.start_date >= CURDATE()
+                       OR eo.end_date >= CURDATE())) as next_occurrence
         FROM events e
         WHERE {archive_where}
     """, archive_params)
@@ -1496,9 +1684,13 @@ def archive_outdated_events(cursor, connection, website_id, temps_built=False):
     # advisory write_lock during archival (CLAUDE.md forbids concurrent
     # pipelines), so no concurrent writer can flip an event into or out of the
     # archive-qualifying set underneath us.
-    archived_count = _archive_event_ids(cursor, [r[0] for r in events_to_archive])
-
-    connection.commit()
+    try:
+        archived_count = _archive_event_ids(
+            cursor, [r[0] for r in events_to_archive], edit_logger=edit_logger)
+        connection.commit()
+    except Exception:
+        connection.rollback()
+        raise
 
     if not temps_built:
         drop_archival_temps(cursor)
@@ -1506,7 +1698,7 @@ def archive_outdated_events(cursor, connection, website_id, temps_built=False):
     return archived_count, upcoming_events
 
 
-def archive_dead_source_events(cursor, connection, temps_built=False):
+def archive_dead_source_events(cursor, connection, temps_built=False, edit_logger=None):
     """Archive events whose every source website is disabled ("no live source").
 
     `archive_outdated_events` is driven by the website that was just crawled: its
@@ -1536,6 +1728,7 @@ def archive_dead_source_events(cursor, connection, temps_built=False):
       being extracted. Neither can ever occur for a dead source.
 
     Returns (archived_count, upcoming_events) like archive_outdated_events.
+    An optional edit_logger records transitions in the same transaction.
     """
     if not temps_built:
         build_archival_temps(cursor)
@@ -1570,7 +1763,8 @@ def archive_dead_source_events(cursor, connection, temps_built=False):
                (SELECT MIN(eo.start_date)
                 FROM event_occurrences eo
                 WHERE eo.event_id = e.id
-                  AND eo.start_date >= CURDATE()) AS next_occurrence
+                  AND (eo.start_date >= CURDATE()
+                       OR eo.end_date >= CURDATE())) AS next_occurrence
         FROM events e
         JOIN _evt_src_state s ON s.event_id = e.id
         WHERE e.archived = FALSE
@@ -1585,9 +1779,13 @@ def archive_dead_source_events(cursor, connection, temps_built=False):
     upcoming_events = [(event_id, name, next_occ)
                        for event_id, name, next_occ in events_to_archive if next_occ]
 
-    archived_count = _archive_event_ids(cursor, [row[0] for row in events_to_archive])
-
-    connection.commit()
+    try:
+        archived_count = _archive_event_ids(
+            cursor, [row[0] for row in events_to_archive], edit_logger=edit_logger)
+        connection.commit()
+    except Exception:
+        connection.rollback()
+        raise
 
     cursor.execute("DROP TEMPORARY TABLE IF EXISTS _evt_src_state")
     if not temps_built:
@@ -1802,25 +2000,30 @@ def _name_shares_significant_word(name, other_names):
 
 
 def _live_described_names_by_url(cursor, urls):
-    """Map url -> names of live, described, located events carrying that URL."""
+    """Map (url, venue) -> names of visible, described events at that venue.
+
+    Keep name and venue evidence on the same canonical event.
+    """
     names = {}
     urls = list(set(urls))
     for i in range(0, len(urls), 500):
         chunk = urls[i:i + 500]
         placeholders = ','.join(['%s'] * len(chunk))
         cursor.execute(f"""
-            SELECT eu.url, e.name FROM event_urls eu JOIN events e ON e.id = eu.event_id
+            SELECT eu.url, e.name, e.location_id FROM event_urls eu JOIN events e ON e.id = eu.event_id
             WHERE eu.url IN ({placeholders}) AND e.archived = 0
+              AND e.suppressed = 0
               AND e.location_id IS NOT NULL
               AND e.description IS NOT NULL AND e.description <> ''
               AND e.description <> 'No description available.'
         """, chunk)
-        for url, name in cursor.fetchall():
-            names.setdefault(url, []).append(name)
+        for url, name, location_id in cursor.fetchall():
+            names.setdefault((url, location_id), []).append(name)
     return names
 
 
-def get_detail_crawl_candidates(cursor, website_ids=None):
+def get_detail_crawl_candidates(cursor, website_ids=None, *, known_complete_skips=None,
+                               crawl_event_ids=None):
     """Find crawl_events needing a detail crawl, filtered to individual event URLs.
 
     Finds unmerged crawl_events with missing descriptions, locations, or only
@@ -1847,7 +2050,15 @@ def get_detail_crawl_candidates(cursor, website_ids=None):
 
     Returns list of (ce_id, name, url, website_id) tuples, deduped so each
     distinct (website_id, url) is crawled at most once per run.
+
+    ``known_complete_skips`` optionally collects the IDs skipped solely on
+    current canonical evidence. Saved runs revalidate these before publishing;
+    a venue correction during agent review must not freeze an obsolete skip.
+    ``crawl_event_ids`` bounds that revalidation without admitting a deferred
+    site-cap tail or another run's newly processed rows.
     """
+    if crawl_event_ids is not None and not crawl_event_ids:
+        return []
     generic_locations = _load_generic_location_names()
 
     # Alternate names that already resolve a suffixed generic string, so the
@@ -1868,7 +2079,12 @@ def get_detail_crawl_candidates(cursor, website_ids=None):
     # has_occurrences flag lets us detect events whose listing page provided
     # no date — those need a detail crawl too, not just events missing a description.
     # known_complete: this URL already belongs to a live event that carries a real
-    # description AND a location. The merger keeps an existing real description
+    # description AND the same resolved location, and is not suppressed. A hidden
+    # twin at the listing's placeholder venue cannot vouch for completeness;
+    # nor can a correctly located canonical at a different venue (NYC DSA).
+    # An unresolved incoming venue must still fetch: the merge does not inherit
+    # another row's pin merely because its URL is shared.
+    # The merger keeps an existing real description
     # when the incoming one is the placeholder (merger.py, "No description
     # available." rule) and never replaces a resolved location with an
     # unresolved one, so when the listing also supplied dates (has_occurrences)
@@ -1879,10 +2095,12 @@ def get_detail_crawl_candidates(cursor, website_ids=None):
         SELECT ce.id, ce.name, ce.url, cr.website_id, ce.location_name, ce.description,
                EXISTS(SELECT 1 FROM crawl_event_occurrences ceo WHERE ceo.crawl_event_id = ce.id) AS has_occurrences,
                EXISTS(SELECT 1 FROM event_urls eu JOIN events e ON e.id = eu.event_id
-                       WHERE eu.url = ce.url AND e.archived = 0
+                       WHERE eu.url = ce.url AND e.archived = 0 AND e.suppressed = 0
                          AND e.location_id IS NOT NULL
+                         AND e.location_id = ce.location_id
                          AND e.description IS NOT NULL AND e.description <> ''
-                         AND e.description <> 'No description available.') AS known_complete
+                         AND e.description <> 'No description available.') AS known_complete,
+               ce.location_id
         FROM crawl_events ce
         JOIN crawl_results cr ON ce.crawl_result_id = cr.id
         JOIN websites w ON cr.website_id = w.id
@@ -1899,6 +2117,11 @@ def get_detail_crawl_candidates(cursor, website_ids=None):
         placeholders = ','.join(['%s'] * len(website_ids))
         query += f" AND cr.website_id IN ({placeholders})"
         params = list(website_ids)
+    if crawl_event_ids is not None:
+        placeholders = ','.join(['%s'] * len(crawl_event_ids))
+        query += f" AND ce.id IN ({placeholders})"
+        params.extend(crawl_event_ids)
+    query += ' ORDER BY ce.id'
     cursor.execute(query, params)
     rows = cursor.fetchall()
 
@@ -1942,14 +2165,24 @@ def get_detail_crawl_candidates(cursor, website_ids=None):
     # "X") still share words and keep the skip (measured: 75 of 8,048 flip).
     known_urls = [r[2] for r in rows if r[6] and r[7]]
     live_names = _live_described_names_by_url(cursor, known_urls)
+    live_venues = {}
+    for url, venue in live_names:
+        live_venues.setdefault(url, set()).add(venue)
 
     candidates = []
     skipped_known = 0
-    for ce_id, name, url, website_id, location_name, description, has_occurrences, known_complete in rows:
-        if known_complete and not _name_shares_significant_word(name, live_names.get(url, ())):
+    for ce_id, name, url, website_id, location_name, description, has_occurrences, known_complete, location_id in rows:
+        # Conflicting visible owners make a URL's venue ambiguous (e.g. an
+        # old organizer-office aggregate plus a reviewed offsite edition).
+        # Reuse the batched lookup rather than adding a correlated URL scan.
+        if known_complete and live_venues.get(url) != {location_id}:
+            known_complete = False
+        if known_complete and not _name_shares_significant_word(name, live_names.get((url, location_id), ())):
             known_complete = False
         if has_occurrences and known_complete:
             skipped_known += 1
+            if known_complete_skips is not None:
+                known_complete_skips.append(ce_id)
             continue
         if needs_detail_crawl(location_name, description, has_occurrences, website_id, known_complete):
             candidates.append((ce_id, name, url, website_id))

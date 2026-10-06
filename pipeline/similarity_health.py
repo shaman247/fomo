@@ -58,6 +58,10 @@ def inspect_artifacts(output, domain):
                        for k in ('positive', 'negative'))):
             raise ValueError('Invalid affinity thresholds')
     core_blocks = {kind: block(core['blocks'][kind]) for kind in ('event', 'place', 'tag')}
+    aliases = core.get('placeAliases', {})
+    if not isinstance(aliases, dict) or any(not isinstance(target, str) or target not in core_blocks['place']
+                                            for target in aliases.values()):
+        raise ValueError('Invalid place aliases')
     if manifest['schemaVersion'] == 2:
         for kind, chunk_size, field, prefix in [('place', 128, 'placeShards', 'places'), ('tag', 64, 'tagShards', 'tags')]:
             if kind == 'tag' and field not in manifest:

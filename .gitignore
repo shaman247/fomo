@@ -25,6 +25,7 @@
 # Source plugins — auto-discovered; commit loader + examples, ignore real plugins
 pipeline/sources/*.py
 pipeline/sources/*.json
+pipeline/sources/*.js
 !pipeline/sources/__init__.py
 !pipeline/sources/_http.py
 !pipeline/sources/*.example.py
@@ -133,6 +134,7 @@ scripts/*
 !scripts/find_unmapped_events.py
 !scripts/fix_recurring_spans.py
 !scripts/audit_event_types.py
+!scripts/audit_event_tags.py
 !scripts/sync_format_tags.py
 !scripts/reconcile_tag_aliases.py
 # Git hooks (canonical source; symlinked into .git/hooks/pre-commit)
@@ -289,7 +291,6 @@ mobile/android/**/lint-results*
 /pipeline/tests/test_event_icon_audit.py
 # Local similarity diagnostics and offline tag-icon editing (model build/health stay tracked).
 /pipeline/similarity_viewer.py
-/pipeline/similarity_probes.py
 /pipeline/tag_icon_assignments.py
 /pipeline/tests/test_similarity_viewer.py
 /pipeline/tests/test_tag_icon_assignments.py

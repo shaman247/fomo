@@ -43,6 +43,41 @@ function setup(overrides = {}) {
 }
 const settle = () => new Promise(resolve => setTimeout(resolve, 15));
 
+test('stable place IDs still resolve legacy models and exclude a selected venue from suggestions', async () => {
+    const { r, m } = setup();
+    const place = { id: 73, name: 'Jazz Club', address: '1 Main' };
+    r.migratePlaces([place]);
+    r.set('place', r.placeKey(place), place.name, 1);
+    await m.load(); await settle();
+    assert.ok(m.score({ id: 2 }) > .99);
+    assert.equal((await m.suggest('place', [place])).length, 0);
+});
+
+test('new models accept old place keys while distinct IDs keep their own constituents', async () => {
+    const next = core();
+    next.blocks.place = block(['id:73', 'id:74'], [[127, 0], [0, 127]], [10, 10]);
+    next.placeAliases = { 'jazz club|1 main': 'id:73' };
+    const { r, m } = setup({ [`${generation}/core.json`]: next });
+    r.set('place', 'jazz club|1 main', 'Old name', 1);
+    await m.load(); await settle();
+    assert.ok(m.score({ id: 2 }) > .99);
+    assert.equal(m.score({ id: 3 }), 0);
+    r.remove('place', 'jazz club|1 main');
+    r.set('place', 'id:74', 'Other tenant', 1);
+    assert.ok(m.score({ id: 3 }) > .99);
+});
+
+test('automatic place migration preserves the current display without requesting a redraw', async () => {
+    const { r, m, notifications } = setup();
+    r.set('place', 'jazz club|1 main', 'Jazz Club', 1);
+    await m.load(); await settle();
+    notifications.length = 0;
+    r.migratePlaces([{ id: 73, name: 'Jazz Club', address: '1 Main' }]);
+    assert.equal(r.entries()[0].id, 'id:73');
+    assert.equal(notifications.includes('fomo:preferences-changed'), false);
+    assert.ok(m.score({ id: 2 }) > .99);
+});
+
 function aggregateFixtures() {
     const multi = (ids, parts, support) => ({ ...block(ids, parts.flat(), support),
         offsets: parts.reduce((offsets, group) => [...offsets, offsets.at(-1) + group.length], [0]) });

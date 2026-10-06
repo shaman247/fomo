@@ -23,6 +23,9 @@ class SQLCursor:
     def fetchall(self):
         return self.cursor.fetchall()
 
+    def fetchone(self):
+        return self.cursor.fetchone()
+
 
 class GroupedEventURLTests(unittest.TestCase):
     LISTING = 'https://example.org/events'
@@ -35,6 +38,8 @@ class GroupedEventURLTests(unittest.TestCase):
         self.cur = SQLCursor(self.conn)
         self.cur.execute('CREATE TABLE event_urls (id INTEGER PRIMARY KEY, '
                          'event_id INTEGER, url TEXT, sort_order INTEGER, UNIQUE(event_id,url))')
+        self.cur.execute('CREATE TABLE event_url_exclusions (event_id INTEGER, '
+                         'url_hash TEXT, url TEXT, replacement_url TEXT, event_snapshot TEXT)')
 
     def seed(self, url, order=0, eid=1):
         self.cur.execute('INSERT INTO event_urls(event_id,url,sort_order) VALUES(%s,%s,%s)',
@@ -132,7 +137,7 @@ class GroupedURLMergePathTests(unittest.TestCase):
             retain = stack.enter_context(patch.object(merger, '_merge_grouped_event_urls'))
             self.assertEqual(merger.merge_crawl_events(cursor, MagicMock(), website_ids=[101]),
                              (0, 1) if existing_id else (1, 0))
-            retain.assert_called_once_with(cursor, existing_id or 1000, raw, set())
+            retain.assert_called_once_with(cursor, existing_id or 1000, raw, set(), url_exclusions={})
             self.assertEqual(identity.call_args.args[1], 'https://example.org/class-1')
 
     def test_new_event_receives_all_processed_links(self):

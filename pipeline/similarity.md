@@ -14,7 +14,8 @@ It does not install packages in the shared pipeline venv:
 ./venv/bin/python scripts/build_similarity.py --setup
 ./venv/bin/python scripts/build_similarity.py \
   --cases .claude/notes/similarity-relevance.json \
-  --baseline .scratch/similarity-constituents/baseline
+  --baseline .scratch/similarity-previous \
+  --previous-model .scratch/similarity-previous
 ./venv/bin/python pipeline/similarity_health.py --report .scratch/similarity/health.json
 ```
 
@@ -39,6 +40,23 @@ file lock prevents simultaneous builds from changing the same private artifacts.
 A reused snapshot retains its capture timestamp; a new build timestamp does not
 make old data fresh.
 
+For routine refreshes, `--previous-model` reuses the saved MiniLM projection and
+starts aggregate selection from its valid examples. Use a separate saved workspace
+containing `report.json`, `vectors.npz`, `projection.npz` and `snapshot.json.gz`.
+The command above assumes the accepted previous workspace was saved to
+`.scratch/similarity-previous`; never copy a failed candidate as that baseline.
+Encoder identity/revision, basis dimensions and orthonormality are checked. New and
+edited text is encoded from the current snapshot, and every aggregate is rebuilt
+against current membership; deleted/suppressed/detached examples cannot survive
+just because they were previously selected. The report records the previous
+generation and projection mode. `--baseline` remains an independent evaluation
+comparison; it does not silently select the refresh mode.
+
+Omit `--previous-model` for an explicitly evaluated projection refit. A saved
+projection can become less representative as the corpus changes: inspect retained
+energy and held-out retrieval before deciding to refit. Neither refresh mode
+weakens the relevance gate or uses evaluation labels to select examples.
+
 ## Leaf representations
 
 - Read all canonical events, places, tags, relationships and hierarchy in a
@@ -54,7 +72,7 @@ make old data fresh.
   vectors; it does not average distinct interests or programs. Save the projection
   for repeatable inference. Model quality is evaluated after this compression.
 - Cache encoder outputs by text plus pinned encoder revision. Subsequent refreshes
-  encode only new or changed text, then rebuild the shared projection and aggregates.
+  encode only new or changed text, reuse or refit the shared projection, and rebuild aggregates.
   Never mix vectors from independently fitted projections.
 
 The lexical challenger retains weighted TF-IDF and randomized SVD for comparison.
@@ -76,6 +94,39 @@ active and then more recent records. Deterministic farthest-first selection keep
 actual examples of distinct programming, rather than generating averaged cluster
 centers. Near-identical examples can stop selection early. All supported descendant
 tag anchors remain; normalized public aliases union constituents and sum support.
+
+Each tag constituent is conditioned on that tag before export:
+`unit(example + 0.5 * tag_anchor)`. This applies separately to its event examples
+and descendant anchors; it does not average different examples or user interests.
+A Spanish-language architecture tour can illustrate Architecture without passing
+along its entire language similarity unchanged. Event and venue vectors remain
+unconditioned. Exact preferences still rank separately, and source memberships and
+indices remain available for stable refreshes and overlap diagnostics.
+
+Before anchor conditioning, event examples receive a contextual view for the
+selected tag. Co-tags outside its ancestor/descendant hierarchy whose anchor cosine
+is below 0.15 identify incidental aspects. Their directions are projected off the
+selected anchor, deduplicated with SVD, then removed at half strength. Related
+aspects remain. This reduces series/format transfer while preserving genuine
+mixed-topic examples. No event IDs or topic names are special-cased. Raw event and
+venue vectors, source memberships and refresh indices remain unchanged. Sparse
+contextual overrides are stored in the private archive; reports with
+`aspectSuppression` require those overrides when loaded.
+
+Conditioning happens before signed-int8 quantization in both the exporter and
+evaluator. The public schema stays version 2 because its packed vectors already
+contain the transformation; the browser still uses the same closest-pair rule.
+Private reports declare `tagAnchorWeight`; old reports without it use zero.
+The local explorer applies the same transformation before displaying scores.
+
+Stable refreshes identify an old example by its venue ID and normalized event
+name, resolve it to the current preferred record of that series, then fill any
+vacant slots with farthest-first selection. A full set swaps an example only if
+the worst-covered current program's nearest-example cosine improves by more than
+0.02. This limits churn from recency changes while allowing new programming to
+replace redundant coverage. The compact limit remains 12; no benchmark-specific
+events receive protection. Topic aliases union constituents; venues retain their
+distinct database identities even when their names and addresses coincide.
 
 This is an approximation to matching every historical event: a small set can miss
 niche programs. `--max-constituents 0` keeps all distinct series for offline comparison
@@ -120,7 +171,13 @@ and the tag fallback remain the production contract.
 
 ## Artifact and loading contract
 
-Schema 2 stores signed int8 unit vectors scaled by 127, packed row-major as base64.
+Schema 2 stores signed int8 vectors packed row-major as base64. New reports declare
+`quantization: max-abs-int8`: divide each vector by its largest absolute component
+before rounding times 127. Decoding renormalizes to unit length, so no per-vector
+scale or browser change is needed. Older reports default to `unit-int8` (unit
+vectors times 127). Evaluators and the local explorer follow each report's mode.
+The byte count stays fixed; using more byte values increases gzip payload size
+slightly in exchange for better directional precision.
 Aggregate blocks have unique string `ids`, `offsets` of length `ids.length + 1`,
 packed constituent vectors, and support counts. Empty ranges represent unavailable
 vectors. The browser renormalizes decoded vectors and interns identical constituents.
@@ -137,9 +194,14 @@ semantic preference or interest lookup needs it. Concrete examples load lazily:
 
 Aggregate downloads use two workers per request group. Missing shards keep exact
 ranking available and retry on later edits/lookups. Profile and suggestion scoring
-use the same constituent rule. The place key remains normalized name + address;
-renamed venues need their saved preference reselected until stable exported place
-IDs and preference migration are implemented.
+use the same constituent rule. Place keys are `id:<location_id>`, using the IDs
+already exported with locations. After loading the complete location dataset,
+the browser migrates unambiguous legacy name/address preferences and preserves
+any explicit ID-based stance on a collision. Ambiguous or unavailable legacy
+venues remain unresolved. Renames and address changes after migration preserve
+the preference. The core carries unambiguous legacy aliases, and the browser also
+resolves stable preferences against older models while they remain deployed.
+A rename predating migration cannot be inferred from current metadata alone.
 
 Generations are immutable content-digest directories. Build in a private staging
 directory, validate the relevance gate, install complete files, and replace the
@@ -174,14 +236,52 @@ improvement is not proof that every topic improved. Empty or invalid evaluations
 Passing `--cases` to the builder evaluates before replacing the public manifest;
 failed candidates remain inspectable in their private workspace.
 
+The builder gates both full precision and the int8 browser representation.
+Evaluation reports list candidate/profile constituent overlap so perfect
+self-matches remain visible as training overlap. Non-finite scores or metrics
+fail closed. The expanded authored probe set has 21 unseen descriptions and 163
+judgments across seven topics and three mixed-profile cases, including architecture
+distractors and a mixed like/dislike profile. It remains assistant-authored evidence,
+not independent user validation.
+
 Unseen authored text probes are committed separately and use the saved projection
 without refitting. They test cold-start semantics, not human preference satisfaction:
 
 ```sh
 .scratch/similarity-runtime/bin/python pipeline/similarity_probes.py \
   --workspace .scratch/similarity --snapshot .scratch/similarity/snapshot.json.gz \
-  --model-cache .scratch/similarity/encoder-cache --report .scratch/similarity/probes.json
+  --model-cache .scratch/similarity/encoder-cache --report .scratch/similarity/probes.json \
+  --baseline .scratch/similarity-previous --gate
 ```
+
+Repeat with `--browser` to check int8 precision. Use each workspace's own saved
+projection; the probe runner never refits it. Without a baseline, `--gate` applies
+the absolute quality threshold.
+
+Also gate the independently reported hard-negative regression set at both
+precisions, rather than pooling its metrics with the older cases:
+
+```sh
+./venv/bin/python pipeline/similarity_eval.py \
+  --workspace .scratch/similarity \
+  --cases pipeline/tests/fixtures/similarity_hard_negatives.json \
+  --baseline .scratch/similarity-previous \
+  --report .scratch/similarity/hard-negatives.json --gate
+```
+
+Repeat with `--browser` and a separate report path. Its 39 judgments cover
+incidental language, background music, repeated series names, genuine mixed-topic
+programs, and positive/negative preference controls. These cases and the authored
+text probes were used during model development, so neither is an independent
+held-out evaluation of the final scoring choice. Retain independent user review
+as a separate release-quality requirement.
+
+Also run `similarity_probes.py --cases
+pipeline/tests/fixtures/similarity_aspect_probes.json` with the same workspace,
+snapshot, baseline and gate, at both precisions. Its 16 additional texts and 35
+judgments cover language versus subject, repeated series names, background music,
+legitimate mixed topics and negative preferences. These authored cases were used
+for development; they do not replace independent user judgments.
 
 The weekly **Similarity model: freshness, coverage and retrieval review** entry in
 `.claude/recurring-checks.md` is read by `scripts/due_tasks.py` in pipeline Step 0.
@@ -190,7 +290,7 @@ after substantial text/tag changes. Coverage matches IDs and does not detect edi
 text for existing IDs; explicit refreshes after large edits address that limitation.
 
 1. Save the previous model and run a candidate build with the relevance gate.
-2. Run `similarity_health.py`, the tests below and the new-text probes. Health exit
+2. Run `similarity_health.py`, the tests below, new-text probes and hard-negative gates. Health exit
    codes are 0 healthy, 1 refresh/review, 2 failed audit. Inspect retrieval samples,
    per-query results, zero vectors, payload sizes and browser scoring time.
 3. Build and audit `dist/data/similarity`, then publish through the authorized

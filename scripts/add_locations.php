@@ -102,6 +102,8 @@ Example location entry:
                                           //   (flags don't render on Windows — see schema.sql)
       'generic_location' => 1,            // Optional, default 0. 1 = a neighborhood /
                                           //   borough / park fallback pin, not a venue.
+      'distinct_from_location_ids' => [], // Reviewed separate businesses at the same address.
+                                          // Name/alias duplicate checks still apply.
       'tags' => ['Jazz', 'Live Music', 'Manhattan', 'Greenwich Village'],  // Optional
       'alternate_names' => [              // Optional: extra names the matcher resolves to this location
           'Blue Note Jazz Club',                          // global alternate (website_id = NULL)
@@ -229,9 +231,14 @@ function check_exists_pdo($pdo, $loc) {
 
     // 3. Identical address.
     if (!empty($loc['address'])) {
-        $stmt = $pdo->prepare("SELECT id, name FROM locations WHERE address = ? LIMIT 1");
+        $stmt = $pdo->prepare("SELECT id, name FROM locations WHERE address = ?");
         $stmt->execute([$loc['address']]);
-        if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $distinct_ids = $loc['distinct_from_location_ids'] ?? [];
+        if (!is_array($distinct_ids)) {
+            throw new InvalidArgumentException('distinct_from_location_ids must be an array of reviewed location IDs');
+        }
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            if (in_array((int)$row['id'], $distinct_ids, true)) continue;
             return ['id' => $row['id'], 'reason' => "address matches existing location \"{$row['name']}\" (ID {$row['id']})"];
         }
     }

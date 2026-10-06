@@ -1239,6 +1239,90 @@ class TestNormalizeUrlForIdentity(unittest.TestCase):
             with self.subTest(url=url):
                 self.assertNotIn("luma.com", merger.normalize_url_for_identity(url))
 
+    def test_showing_fragment_is_kept(self):
+        # Regression 2026-10-06: Anthology links every program to one monthly
+        # calendar page plus `#showing-N`; dropping it gave "Pgm 1" and
+        # "Pgm 2" one URL key.
+        base = ("https://www.anthologyfilmarchives.org/film_screenings/calendar"
+                "?view=list&month=10&year=2026")
+        k1 = merger.normalize_url_for_identity(base + "#showing-62071")
+        k2 = merger.normalize_url_for_identity(base + "#showing-62073")
+        self.assertNotEqual(k1, k2)
+        self.assertTrue(k1.endswith("#showing-62071"))
+        self.assertNotEqual(k1, merger.normalize_url_for_identity(base))
+        self.assertEqual(k1, merger.normalize_url_for_identity(
+            base.replace("https://www.", "http://") + "#Showing-62071"))
+
+    def test_other_fragments_still_fold(self):
+        for frag in ("#tickets", "#top", "#showing", "#showing-abc", "#62071"):
+            with self.subTest(frag=frag):
+                self.assertEqual(
+                    merger.normalize_url_for_identity("https://x.com/e/foo" + frag),
+                    "x.com/e/foo")
+
+
+class TestOrdinalSiblings(unittest.TestCase):
+    """Names that differ only by the ordinal on a series label are siblings.
+
+    Regression 2026-10-06: the 0.75 asymmetric-containment tier fused equal-
+    length names differing by one ordinal token.
+    """
+
+    SIBLINGS = [
+        ("Vika Kirchenbauer Pgm 1", "Vika Kirchenbauer Pgm 2"),
+        ("Pelechian Project Program 1", "Pelechian Project Program 2"),
+        ("Family Program: Apple Pie (Session I: Grades Pre-K - 5)",
+         "Family Program: Apple Pie (Session II: Grades Pre-K - 5)"),
+        ("Diy Wooden Ornament (Session I: Grades K - 2)",
+         "Diy Wooden Ornament (Session II: Grades K - 2)"),
+        ("Open House New York Weekend: The Climate Imaginarium (Day 1)",
+         "Open House New York Weekend: The Climate Imaginarium (Day 2)"),
+        ("Kids Coding Camp Week 3", "Kids Coding Camp Week 4"),
+        ("Story Time Session One", "Story Time Session Two"),
+        ("First Session: Story Time", "Second Session: Story Time"),
+        ("Hanukkah Concert 2nd Night", "Hanukkah Concert 3rd Night"),
+        ("Hamlet Part II", "Hamlet Part III"),
+        ("Lecture Series Chapter IV", "Lecture Series Chapter V"),
+        ("Trivia Championship Round 1", "Trivia Championship Round 2"),
+        ("Mixtape Vol. XII", "Mixtape Vol. XIII"),
+        ("Podcast Taping Episode 9", "Podcast Taping Ep 10"),
+    ]
+
+    SAME = [
+        ("Vika Kirchenbauer Pgm 2", "Vika Kirchenbauer Program 2"),
+        ("Story Time Session 1", "Story Time Session One"),
+        ("Story Time Session I", "Story Time Session 1"),
+        ("Vika Kirchenbauer Pgm 1", "Vika Kirchenbauer Pgm 1 (35mm)"),
+    ]
+
+    def test_ordinal_siblings_never_match(self):
+        for a, b in self.SIBLINGS:
+            with self.subTest(a=a, b=b):
+                self.assertTrue(is_false_positive(a, b))
+                self.assertFalse(are_names_similar(a, b))
+                self.assertFalse(are_names_similar(b, a))
+
+    def test_same_ordinal_spelling_variants_still_match(self):
+        for a, b in self.SAME:
+            with self.subTest(a=a, b=b):
+                self.assertTrue(are_names_similar(a, b))
+
+    def test_years_ranges_and_clock_times_are_not_ordinals(self):
+        norm = normalize_name_for_dedup
+        self.assertIsNone(merger._ordinal_labels(norm("Fashion Week 2026 Party")))
+        self.assertIsNone(merger._ordinal_labels(norm("Field Day 10 am")))
+        self.assertIsNone(merger._ordinal_labels(norm("Field Day 10:00 am")))
+        self.assertIsNone(merger._ordinal_labels(norm("Festival Days 1-3")))
+        self.assertTrue(are_names_similar("Fashion Week 2026 Party",
+                                          "Fashion Week 2026 Party!"))
+
+    def test_shared_number_on_either_side_is_not_a_conflict(self):
+        # "Rounds 1 & 2" reads as a range, never a disagreement with "Round 1".
+        self.assertFalse(merger._ordinal_labels_differ(
+            {"day": {"1", "2"}}, {"day": {"2"}}))
+        self.assertFalse(merger._ordinal_labels_differ(
+            {"day": {"1"}}, {"week": {"2"}}))
+
 
 class TestLocationsWithin(unittest.TestCase):
     COORDS = {

@@ -10,6 +10,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import crawler
+from detail_identity import detail_rejection_reason
 
 OLD = 'https://classes.test/event/Handmade-Pasta_2026-Sep-18'
 NEW = 'https://classes.test/event/Handmade-Pasta_2026-Oct-3'
@@ -29,22 +30,22 @@ class DetailSessionIdentityTests(unittest.TestCase):
             ('http://www.venue.test/event/pasta-2026-09-18',
              'https://venue.test/event/pasta-2026-10-03/?tracking=1'),
             (OLD, NEW.replace('Oct', 'October')),
+            (OLD, NEW.replace('classes.test', 'different.test')),
+            (OLD, NEW.replace('Handmade-Pasta', 'Cooking')),
+            ('https://venue.test/e/12?date=2026-09-18', 'https://venue.test/e/12?date=2026-10-03'),
         ]:
             with self.subTest(old=old, new=new):
-                self.assertTrue(crawler._detail_redirect_changes_session(old, new))
+                self.assertTrue(detail_rejection_reason(old, result(new)))
 
     def test_same_day_formatting_and_canonical_redirects_survive(self):
         for final in [OLD, OLD + '/', OLD + '?nowrapper=true',
                       OLD.replace('https:', 'http:'), OLD.replace('Sep-18', '09-18'),
                       OLD.replace('classes.test', 'www.classes.test')]:
-            self.assertFalse(crawler._detail_redirect_changes_session(OLD, final))
+            self.assertFalse(detail_rejection_reason(OLD, result(final)))
 
     def test_ambiguous_or_different_identity_is_not_inferred(self):
         for old, new in [
             (OLD, None), (OLD, ''), (OLD, MagicMock()),
-            (OLD, NEW.replace('classes.test', 'different.test')),
-            (OLD, NEW.replace('Handmade-Pasta', 'Cooking')),
-            ('https://venue.test/e/12?date=2026-09-18', 'https://venue.test/e/12?date=2026-10-03'),
             ('https://venue.test/e/12', 'https://venue.test/e/13'),
             (OLD + '/2026-01-01', NEW + '/2026-01-01'),
             (OLD.replace('Sep-18', 'Feb-30'), NEW),
@@ -54,7 +55,7 @@ class DetailSessionIdentityTests(unittest.TestCase):
             (OLD, 'https://[broken'),
         ]:
             with self.subTest(old=old, new=new):
-                self.assertFalse(crawler._detail_redirect_changes_session(old, new))
+                self.assertFalse(detail_rejection_reason(old, result(new)))
 
     def test_cross_session_detail_never_reaches_enrichment_or_retry(self):
         client = SimpleNamespace(arun=AsyncMock(return_value=result()))

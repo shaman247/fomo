@@ -2,9 +2,34 @@
 import json
 
 
+def _placeholder_description(description):
+    normalized = ' '.join((description or '').split()).casefold()
+    return normalized in ('', 'no description available.')
+
+
+def _description_session_key(row):
+    """Require the same identified, timed session before discarding a stub."""
+    fields = tuple((row.get(k) or '').strip() for k in
+                   ('url', 'start_date', 'start_time', 'end_date', 'end_time',
+                    'sublocation', 'location'))
+    if not all(fields[:3]):
+        return None
+    return fields + (row.get('location_id'),)
+
+
 def preserve_session_details(event, rows):
+    substantive_sessions = {
+        key for row in rows
+        if not _placeholder_description(row.get('description'))
+        if (key := _description_session_key(row)) is not None
+    }
+    description_rows = [
+        row for row in rows
+        if not (_placeholder_description(row.get('description'))
+                and _description_session_key(row) in substantive_sessions)
+    ]
     variants = {}
-    for row in rows:
+    for row in description_rows:
         description = (row.get('description') or '').strip()
         room = (row.get('sublocation') or '').strip()
         key = (description, room)
@@ -15,6 +40,9 @@ def preserve_session_details(event, rows):
         if session not in variant['sessions']:
             variant['sessions'].append(session)
     if len(variants) < 2:
+        if variants and len(description_rows) < len(rows):
+            # The first row may have seeded the group's placeholder text.
+            event['description'] = next(iter(variants.values()))['description']
         return
     details = list(variants.values())
     sections = []

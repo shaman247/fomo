@@ -3,6 +3,62 @@ import re
 import unicodedata
 
 
+_COMEDY_LEVEL = re.compile(
+    r'\b(?:musical\s+improv|improv|sketch|stand[ -]?up|clown)\s*:?\s*level\s+\d+\b', re.I)
+_CLASS_SHOW = re.compile(r'\bclass\s+show\b', re.I)
+
+
+def class_show_identity_mismatch(left, right):
+    """Keep an explicitly billed class show apart from its course/other teacher.
+
+    Restrict the course side to a numbered comedy curriculum with an explicit
+    instructor credit. Bare show titles and missing teacher names are unknown.
+    Shared teacher-name tokens allow spelling/short-name variants to survive.
+    """
+    shows = [bool(_CLASS_SHOW.search(n)) for n in (left, right)]
+    if shows[0] != shows[1]:
+        course, show = (right, left) if shows[0] else (left, right)
+        if (_COMEDY_LEVEL.search(course) and _COMEDY_LEVEL.search(show)
+                and re.search(r'\b(?:w/|with\s+)\s*\w', course, re.I)):
+            return True
+        # An unnumbered named course can still explicitly identify its public
+        # show: "Program w/ Teacher Name" vs "Teacher Name's Program Class Show".
+        # Require the complete title AND credit, not a generic shared topic.
+        def words(value):
+            value = re.sub(r"['’]s\b", '', value.casefold())
+            value = re.sub(r'\([^)]*\)|\[[^]]*\]', '', value)
+            return re.findall(r'[^\W\d_]+', value)
+        credit = re.split(r'\b(?:w/|with\s+)\s*', course, maxsplit=1, flags=re.I)
+        if len(credit) != 2:
+            return False
+        title, teacher = map(words, credit)
+        show_words = words(_CLASS_SHOW.sub('', show))
+        return (len(title) >= 3 and 2 <= len(teacher) <= 4
+                and sorted(title + teacher) == sorted(show_words))
+    if not all(shows):
+        return False
+
+    def teacher(name):
+        suffix = name[_CLASS_SHOW.search(name).end():].strip()
+        name = re.sub(r'^\s*class\s+show\s*:\s*', '', name, flags=re.I)
+        course = _COMEDY_LEVEL.search(name)
+        if not course:
+            return set()
+        prefix = name[:course.start()].strip()
+        credit = prefix or re.sub(r'^(?:w/|with)\s*', '', suffix, flags=re.I)
+        credit = re.sub(r"['’]s?$", '', credit.strip())
+        credit = re.split(r'[,()]', credit.lstrip('('), maxsplit=1)[0].strip()
+        words = re.findall(r'[^\W\d_]+', credit.casefold())
+        if not 2 <= len(words) <= 4 or any(w in {
+                'class', 'section', 'show', 'monday', 'tuesday', 'wednesday',
+                'thursday', 'friday', 'saturday', 'sunday'} for w in words):
+            return set()
+        return set(words)
+
+    a, b = teacher(left), teacher(right)
+    return bool(a and b and a.isdisjoint(b))
+
+
 def conversation_subject_mismatch(left, right):
     """A generic conversation label cannot merge unrelated named speakers.
 

@@ -5,17 +5,21 @@ Uses Crawl4AI to crawl event websites and store content in the database.
 """
 
 import asyncio
+import functools
 import html as html_lib
 import inspect
 import json
 import re
 import urllib.parse
+import weakref
 from datetime import datetime, timedelta
 from crawl4ai import CacheMode
 import db
 import site_profiles
+import detail_identity
 from crawl_body import parse_json_body
 from constants import MAX_PAGES_DEFAULT, get_user_agent
+from iframe_content import install_safe_iframe_processing
 
 # Default timeout for crawl operations (in seconds)
 DEFAULT_CRAWL_TIMEOUT = 180
@@ -436,6 +440,34 @@ _DATE_OFFSET_RE = re.compile(r'\{\{date([+-]\d+)?\}\}')
 _MDY_OFFSET_RE = re.compile(r'\{\{mdy([+-]\d+)?\}\}')
 
 
+def _order_crawl_urls(urls):
+    """Order each date-template family numerically, retaining other URL positions.
+
+    Database order for equal sort_order values is not a calendar order. Keep
+    explicit priority groups and unrelated navigation/JS sequences intact.
+    """
+    ordered = list(urls)
+    families = {}
+    for index, item in enumerate(urls):
+        url = item['url'] if isinstance(item, dict) else item
+        offsets = [int(m.group(1) or 0) for regex in (_DATE_OFFSET_RE, _MDY_OFFSET_RE)
+                   for m in regex.finditer(url)]
+        if not offsets:
+            continue
+        shape = _MDY_OFFSET_RE.sub('{{mdy}}', _DATE_OFFSET_RE.sub('{{date}}', url))
+        priority = item.get('sort_order') if isinstance(item, dict) else None
+        families.setdefault((priority, shape), []).append((index, min(offsets), item))
+    for entries in families.values():
+        for slot, (_, _, item) in zip(entries, sorted(entries, key=lambda entry: entry[1])):
+            ordered[slot[0]] = item
+    return ordered
+
+
+def _fresh_run_config(config):
+    """crawl4ai mutates config.url; never share that state across detail workers."""
+    return config.clone() if isinstance(config, CrawlerRunConfig) else config
+
+
 def resolve_url_templates(url):
     """Resolve date template placeholders in URLs.
 
@@ -482,7 +514,7 @@ def resolve_url_templates(url):
 
 async def _refetch_past_challenge(url, url_config, user_agent, attempts=2, backoff=15,
                                   timeout=120, *, headed=False, use_stealth=False,
-                                  detail_identity_url=None):
+                                  detail_identity_url=None, expected_session=None):
     """Re-fetch a URL that returned a bot-challenge interstitial.
 
     Uses a fresh, full-featured browser: ``text_mode``/``light_mode`` strip the
@@ -508,23 +540,29 @@ async def _refetch_past_challenge(url, url_config, user_agent, attempts=2, backo
         )
         try:
             async with AsyncWebCrawler(config=browser_config) as retry_crawler:
+                install_safe_iframe_processing(retry_crawler)
                 content = ""
                 results = await asyncio.wait_for(
-                    retry_crawler.arun(url=url, config=url_config), timeout=timeout
+                    retry_crawler.arun(url=url, config=_fresh_run_config(url_config)), timeout=timeout
                 )
                 for result in results:
-                    if (result and detail_identity_url and
-                            _detail_redirect_changes_session(
-                                detail_identity_url, getattr(result, 'redirected_url', None))):
-                        print(f"    Detail redirected to a different dated session: {detail_identity_url}")
-                        return None
-                    if (result and result.success and not _http_error_status(result)
-                            and result.markdown):
-                        chunk = result.markdown.fit_markdown
-                        if not chunk or len(chunk) < 500:
-                            chunk = result.markdown.raw_markdown
-                        if chunk:
-                            content += chunk + "\n\n"
+                    if result and detail_identity_url:
+                        identity_error = detail_identity.detail_rejection_reason(
+                            detail_identity_url, result, expected_session)
+                        if identity_error:
+                            print(f"    Rejected detail ({identity_error}): {detail_identity_url}")
+                            return None
+                    if (not result or not result.success or _http_error_status(result)
+                            or not result.markdown):
+                        content = ""
+                        break
+                    chunk = result.markdown.fit_markdown
+                    if not chunk or len(chunk) < 500:
+                        chunk = result.markdown.raw_markdown
+                    if not chunk or _is_bot_challenge(chunk) or _is_soft_404(chunk):
+                        content = ""
+                        break
+                    content += chunk + "\n\n"
             if content and not _is_bot_challenge(content) and not _is_soft_404(content):
                 print(f"      Challenge cleared on retry {attempt} ({len(content)} chars)")
                 return content
@@ -532,6 +570,73 @@ async def _refetch_past_challenge(url, url_config, user_agent, attempts=2, backo
         except Exception as exc:
             print(f"      Retry {attempt} errored: {exc}")
     return None
+
+
+# Custom-fetch source plugins (site_profiles CrawlMode.CUSTOM) are synchronous:
+# urllib/requests calls, time.sleep backoffs, and a few that spin a private
+# event loop or sync Playwright in a pool thread and block on .result(). Called
+# directly from crawl_website they ran ON the event loop and froze every other
+# crawl worker: on 2026-10-02 a chain of plugins (tenement → williams → pw →
+# brownstone → queens_complete → fuub, 09:53:35–10:03:38) held the loop for ten
+# minutes, so eight unrelated browser crawls whose pages had already loaded
+# could not process them, and all eight per-site wait_for deadlines fired the
+# instant the loop came back ("Crawl timed out after 180/240 seconds" ×8 at
+# 10:03:38; crawl4ai timed one 2-second fetch at 642s). A worker that drew
+# consecutive custom sites never yielded at all — get_nowait, sync DB calls and
+# the fetcher contain no await.
+#
+# run_custom_fetcher runs the fetcher in a thread instead. At most one fetch
+# per plugin MODULE runs at a time (an asyncio.Lock, so waiting never blocks
+# the loop): before this fix plugins were implicitly serialized by the frozen
+# loop, and many websites share one platform plugin (Eventbrite, LibCal, Luma),
+# so unbounded concurrency would turn a serial API walk into a burst. Distinct
+# plugins and browser crawls now proceed in parallel. Plugins that touch the DB
+# open their own connection (fareharbor/pools/resy), so no connection crosses
+# threads; crawl_website's own cursor stays on the loop thread.
+_plugin_locks = weakref.WeakKeyDictionary()  # event loop -> {plugin key: asyncio.Lock}
+_custom_fetches_in_flight = 0
+
+
+def custom_fetches_in_flight():
+    """Number of crawl workers currently waiting on a custom-fetch plugin.
+
+    main.py's crawl watchdog uses it to tell a wedged browser (no progress
+    while browser crawls are in flight) from a long plugin fetch running in
+    its thread (queens_complete takes ~6 minutes and never touches the browser).
+    """
+    return _custom_fetches_in_flight
+
+
+def _plugin_key(fetcher):
+    func = fetcher
+    while isinstance(func, functools.partial):
+        func = func.func
+    return getattr(func, '__module__', None) or id(func)
+
+
+async def run_custom_fetcher(profile, urls):
+    """Call a custom-fetch profile's fetcher off the event loop.
+
+    Returns the fetcher's ``(markdown, n_events)``. A fetcher opts into the
+    website's URL list by naming a ``urls`` parameter; zero-arg fetchers are
+    called as before. Exceptions propagate unchanged. Cancelling the await
+    (a crawl_timeout on a mixed site) abandons the thread's result; the thread
+    itself runs to completion, as a blocking call always did.
+    """
+    fetcher = profile.fetcher
+    if 'urls' in inspect.signature(fetcher).parameters:
+        call = functools.partial(fetcher, urls=urls)
+    else:
+        call = fetcher
+    locks = _plugin_locks.setdefault(asyncio.get_running_loop(), {})
+    lock = locks.setdefault(_plugin_key(fetcher), asyncio.Lock())
+    global _custom_fetches_in_flight
+    _custom_fetches_in_flight += 1
+    try:
+        async with lock:
+            return await asyncio.to_thread(call)
+    finally:
+        _custom_fetches_in_flight -= 1
 
 
 def create_safe_filename(name, extension=None):
@@ -557,6 +662,7 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
     Returns:
         crawl_result_id if successful, None otherwise
     """
+    install_safe_iframe_processing(crawler)
     name = website['name']
     urls = website['urls']
 
@@ -573,7 +679,7 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
         reason = site_profiles.all_skip([_url_of(u) for u in urls]) or "all URLs skipped"
         print(f"  Skipping {name}: {reason}")
         return None
-    urls = crawlable
+    urls = _order_crawl_urls(crawlable)
 
     # Some platforms short-circuit crawl4ai entirely and fetch via a custom Python path.
     # If every URL resolves to one such fetcher, run it instead of the browser crawl.
@@ -588,11 +694,9 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
             # A fetcher may opt into receiving the website's URL list by naming
             # a `urls` parameter — generic multi-host plugins (libcal/libnet)
             # need to know which instance to fetch. Zero-arg fetchers (pools,
-            # resy, ...) are called as before.
-            if "urls" in inspect.signature(custom_profile.fetcher).parameters:
-                md, n_events = custom_profile.fetcher(urls=[_url_of(u) for u in urls])
-            else:
-                md, n_events = custom_profile.fetcher()
+            # resy, ...) are called as before. Runs in a thread: see
+            # run_custom_fetcher for why it must not block the event loop.
+            md, n_events = await run_custom_fetcher(custom_profile, [_url_of(u) for u in urls])
         except Exception as exc:
             print(f"  ! {name}: {label} fetch failed: {exc}")
             db.update_crawl_result_failed(cursor, connection, crawl_result_id, f"{label}: {exc}")
@@ -683,8 +787,6 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
                 markdown_generator=md_generator,
             )
 
-        crawler_config = _make_config(js_code)
-
         print(f"  Crawling {name} (timeout: {crawl_timeout}s)...")
         combined_markdown = ""
         # URLs that came back as a bot-challenge interstitial, retried after the
@@ -723,10 +825,7 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
                 custom = site_profiles.custom_fetch_profile([url])
                 if custom is not None:
                     attempted_urls += 1
-                    if 'urls' in inspect.signature(custom.fetcher).parameters:
-                        content, count = custom.fetcher(urls=[url])
-                    else:
-                        content, count = custom.fetcher()
+                    content, count = await run_custom_fetcher(custom, [url])
                     if not content:
                         raise ValueError(f'{custom.display_label} returned no capture for {url}')
                     combined_markdown += url + '\n' + content + '\n\n'
@@ -740,19 +839,14 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
                 host_js = site_profiles.inject_js_for(url)
                 effective_js = _combine_js(url_js_code or js_code, host_js)
 
-                # Use a per-URL config when this URL needs js_code different from the
-                # shared website-level config (custom per-URL js or a host-specific add-on).
-                if effective_js != js_code:
-                    url_config = _make_config(effective_js)
-                else:
-                    url_config = crawler_config
+                # One config per request: crawl4ai mutates it during navigation.
+                url_config = _make_config(effective_js)
 
                 host = _host_of(url)
                 if _host_circuit_open(url):
                     if host in probed_hosts:
                         print(f"    - Skipping {url}: {host} circuit open "
                               f"({_host_block_strikes.get(host, 0)} consecutive blocks this run)")
-                        attempted_urls += 1
                         circuit_skipped_urls.append(url)
                         continue
                     print(f"    - {host} circuit open - probing with one fetch")
@@ -771,6 +865,8 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
                 # still yields a result object with a renderable body, so content
                 # length alone cannot answer this (see _is_blocked_error).
                 url_succeeded = False
+                failed_pages = 0
+                http_failed = False
                 url_error = None
                 attempted_urls += 1
 
@@ -778,12 +874,17 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
                     page_count += 1
                     if _is_empty_origin_response(result):
                         empty_origin_pages += 1
+                        failed_pages += 1
                         print(f"      Page {page_count}: origin served an empty HTTP 200 response")
                         continue
-                    if result and result.success:
+                    status = _http_error_status(result)
+                    http_failed = http_failed or bool(status)
+                    if result and result.success and not status:
                         url_succeeded = True
-                    elif result and result.error_message:
-                        url_error = result.error_message
+                    else:
+                        failed_pages += 1
+                        url_error = (getattr(result, 'error_message', None)
+                                     or (f'HTTP {status}' if status else 'No successful result'))
                     # Debug: show what we received
                     html_len = len(result.html) if result and result.html else 0
                     if html_len and not url_html:
@@ -809,7 +910,11 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
                             content = result.markdown.raw_markdown
                         if content:
                             url_content += content + "\n\n"
+                        if not content or _is_bot_challenge(content) or _is_soft_404(content):
+                            failed_pages += 1
                         print(f"      Page {page_count}: fit={fit_len}, raw={raw_len}, using={len(content) if content else 0}")
+                    else:
+                        failed_pages += 1
 
                 print(f"    - Crawled {page_count} page(s), {len(url_content)} chars total")
                 if page_count and empty_origin_pages == page_count:
@@ -817,13 +922,17 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
                     if has_custom_urls:
                         raise ValueError(f'Origin served empty page in mixed calendar: {url}')
                     continue
-                if (not url_succeeded and _is_structural_json_false_positive(
+                if (not url_succeeded and not http_failed and page_count == 1
+                        and _is_structural_json_false_positive(
                         url_error, url_html, url_content_type, url_content)):
                     # An empty (or otherwise element-free) JSON feed, not a WAF.
                     print(f"    - JSON API response flagged structurally by crawl4ai "
                           f"({len(url_html)} bytes) - accepting the fetch")
                     url_succeeded = True
+                    failed_pages = 0
                     url_error = None
+                if failed_pages:
+                    url_succeeded = False
                 if not url_succeeded and _is_blocked_error(url_error):
                     # Discard the block page's markdown: appending it is what let
                     # a fully-blocked crawl look healthy. Retry with backoff below
@@ -870,7 +979,7 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
                     succeeded_urls += 1
                 elif url_error:
                     last_url_error = url_error
-                if url_content:
+                if url_succeeded and url_content:
                     combined_markdown += url + "\n" + url_content
 
         # Execute crawl with timeout
@@ -879,13 +988,9 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
         except asyncio.TimeoutError:
             error_msg = f"Crawl timed out after {crawl_timeout} seconds"
             print(f"    - {error_msg}")
-            # If we got partial content, still save it
-            if combined_markdown.strip() and not has_custom_urls:
-                print(f"    - Saving partial content ({len(combined_markdown)} chars)")
-                db.update_crawl_result_crawled(cursor, connection, crawl_result_id, combined_markdown)
-                db.update_website_last_crawled(cursor, connection, website['id'])
-                return crawl_result_id
-            # No content at all
+            # A fragment is not a complete inventory, even when it is large.
+            error_msg += (f'; incomplete crawl: fetched {succeeded_urls} of {len(urls)} URLs'
+                          f' ({attempted_urls} attempted, {len(circuit_skipped_urls)} circuit-skipped)')
             db.update_crawl_result_failed(cursor, connection, crawl_result_id, error_msg)
             db.update_website_last_crawled(cursor, connection, website['id'])
             return None
@@ -971,10 +1076,14 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
             db.update_website_last_crawled(cursor, connection, website['id'])
             return None
 
-        if has_custom_urls and succeeded_urls != len(urls):
+        if succeeded_urls != len(urls):
             db.update_crawl_result_failed(
                 cursor, connection, crawl_result_id,
-                f'Incomplete mixed calendar: fetched {succeeded_urls} of {len(urls)} URLs')
+                f'Incomplete crawl: fetched {succeeded_urls} of {len(urls)} URLs; '
+                f'{len(urls) - succeeded_urls} failed or skipped '
+                f'({len(circuit_skipped_urls)} circuit-skipped, '
+                f'{unresolved_challenges} unresolved challenges)')
+            db.update_website_last_crawled(cursor, connection, website['id'])
             return None
 
         # Check for minimum content size to catch failed crawls early
@@ -1035,13 +1144,18 @@ def get_browser_config(javascript_enabled=True, text_mode=True, light_mode=True,
     DEFAULT_USER_AGENT = get_user_agent()
 
     if use_stealth:
-        # Stealth requires a real (headed) browser instance.
+        # Keep stealth and headed rendering, but use a dedicated Playwright
+        # browser. ManagedBrowser starts by killing whatever owns port 9222:
+        # a challenge retry could kill the live batch, then reuse its pages.
+        # Dedicated browsers also create a fresh page for every arun instead
+        # of the managed default-context page-reuse path.
         return BrowserConfig(
             headless=False,
             java_script_enabled=javascript_enabled,
             text_mode=text_mode,
             light_mode=light_mode,
-            use_managed_browser=True,
+            browser_mode='dedicated',
+            use_managed_browser=False,
             enable_stealth=True,
             user_agent=user_agent or DEFAULT_USER_AGENT,
             extra_args=['--disable-blink-features=AutomationControlled']
@@ -1217,7 +1331,7 @@ DETAIL_CHALLENGE_TIMEOUT = 60
 
 
 async def crawl_event_url(web_crawler, url, crawl_config, timeout=120, user_agent=None,
-                          *, headed=False, use_stealth=False):
+                          *, headed=False, use_stealth=False, expected_session=None):
     """
     Crawl a single event URL and return its markdown content.
 
@@ -1244,6 +1358,7 @@ async def crawl_event_url(web_crawler, url, crawl_config, timeout=120, user_agen
     Returns the complete page content or None on failure. The extraction layer
     rejects oversized work packets explicitly; never hand it a silent prefix.
     """
+    install_safe_iframe_processing(web_crawler)
     if site_profiles.skip_detail_url(url):
         print(f"    Skipping non-detail URL identified by source profile: {url}")
         return None
@@ -1253,7 +1368,8 @@ async def crawl_event_url(web_crawler, url, crawl_config, timeout=120, user_agen
     blocked = False
     try:
         content = await _fetch_event_page(
-            web_crawler, fetch_url, crawl_config, timeout, identity_url=url)
+            web_crawler, fetch_url, crawl_config, timeout, identity_url=url,
+            expected_session=expected_session)
     except _DetailPageBlocked:
         content = ''
         blocked = True
@@ -1279,6 +1395,7 @@ async def crawl_event_url(web_crawler, url, crawl_config, timeout=120, user_agen
         headed=headed,
         use_stealth=use_stealth,
         detail_identity_url=url,
+        expected_session=expected_session,
     )
     if (recovered and len(recovered) > MIN_EVENT_PAGE_SIZE
             and not _is_soft_404(recovered) and not _is_bot_challenge(recovered)):
@@ -1297,60 +1414,18 @@ class _DetailPageBlocked(Exception):
     """A detail fetch hit a retryable HTTP/WAF block, even without a body."""
 
 
-# Only unambiguous, year-first dates in the path are interpreted. Numeric
-# query parameters and undated slugs are not evidence of a session identity.
-_DETAIL_PATH_DATE = re.compile(
-    r'(?<![A-Za-z0-9])(?P<year>\d{4})[-/](?P<month>\d{1,2}|'
-    r'Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|'
-    r'Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)'
-    r'[-/](?P<day>\d{1,2})(?![A-Za-z0-9])', re.IGNORECASE)
-_DETAIL_MONTHS = {name: i for i, name in enumerate(
-    ('jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'), 1)}
-
-
-def _detail_redirect_changes_session(requested_url, final_url):
-    """Decline enrichment when the same dated path redirects to another day.
-
-    A changed date alone does not establish a reschedule. Keep the original
-    listing intact and let listing extraction capture the new session. This
-    deliberately does not classify unrelated redirects, missing final URLs,
-    multiple dates, query-only dates, or changes to undated URL identities.
-    """
-    def identity(url):
-        if not isinstance(url, str) or not url:
-            return None
-        try:
-            parsed = urllib.parse.urlsplit(url)
-            if parsed.scheme not in ('http', 'https') or not parsed.hostname:
-                return None
-            path = urllib.parse.unquote(parsed.path).rstrip('/')
-            matches = list(_DETAIL_PATH_DATE.finditer(path))
-            if len(matches) != 1:
-                return None
-            match = matches[0]
-            month = match['month']
-            month_number = int(month) if month.isdigit() else _DETAIL_MONTHS[month[:3].lower()]
-            day = datetime(int(match['year']), month_number, int(match['day'])).date()
-            shape = path[:match.start()] + '{date}' + path[match.end():]
-            return parsed.hostname.lower().removeprefix('www.'), shape, day
-        except (KeyError, ValueError):
-            return None
-
-    requested, final = identity(requested_url), identity(final_url)
-    return bool(requested and final and requested[:2] == final[:2]
-                and requested[2] != final[2])
-
-
-async def _fetch_event_page(web_crawler, url, crawl_config, timeout, *, identity_url=None):
+async def _fetch_event_page(web_crawler, url, crawl_config, timeout, *, identity_url=None,
+                            expected_session=None):
     """One detail-page fetch. Returns raw content, or None if it failed/was empty."""
     try:
         result = await asyncio.wait_for(
-            web_crawler.arun(url=url, config=crawl_config),
+            web_crawler.arun(url=url, config=_fresh_run_config(crawl_config)),
             timeout=timeout,
         )
-        if _detail_redirect_changes_session(
-                identity_url or url, getattr(result, 'redirected_url', None)):
-            print(f"    Detail redirected to a different dated session: {identity_url or url}")
+        identity_error = detail_identity.detail_rejection_reason(
+            identity_url or url, result, expected_session)
+        if identity_error:
+            print(f"    Rejected detail ({identity_error}): {identity_url or url}")
             return None
         status = _http_error_status(result)
         if _is_empty_origin_response(result):

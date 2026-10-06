@@ -11,6 +11,7 @@ function harness() {
         document: { addEventListener: (_, fn) => fn(), getElementById: () => null },
         URLParams: { formatDate: date => date.toISOString().slice(0, 10) },
         FomoQueries: { invalidate() {} },
+        DiscoveryRanking: { migratePlaces() {} },
         FilterPanelUI: { refreshAvailableTags() { panelRefreshes++; }, selectTags() {} },
         DataManager: {
             async processFullDataAsync() {}, calculateTagFrequencies() {}, processTagHierarchy() {},
@@ -76,4 +77,3 @@ test('the next search consumes pending data using the latest input', () => {
     assert.equal(app.state.searchTerm, 'jazz');
     assert.equal(stats().renders, 1);
 });
-

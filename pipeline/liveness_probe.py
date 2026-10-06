@@ -171,13 +171,15 @@ def get_candidates(cursor, event_ids=None, limit=MAX_EVENTS_PER_RUN, per_website
     """Events the archival grace period is holding open, with their URLs.
 
     Returns a list of dicts: {event_id, name, website_id, next_occ, last_seen,
-    dropper_latest, urls: [str, ...], still_listed: bool}. `website_id` is the
-    enabled source whose latest merged crawl most recently missed the event;
+    dropper_latest, urls: [str, ...], still_listed: bool, listed_urls: [str, ...]}.
+    `website_id` is the enabled source whose latest merged crawl most recently
+    missed the event;
     its browser settings are used for the probe and its latest crawl supplies
     the control URL. `still_listed` is True when that crawl DID list one of
     the event's URLs (under some other event row — a split series, a re-slug
-    twin): the site has not dropped the page, so no fetch is needed and the
-    verdict is `alive`.
+    twin): the event remains listed, so no fetch is needed. Only the exact
+    URLs in `listed_urls` receive an individual `alive` verdict; this does
+    not prove that every older URL on the event is still usable.
 
     Builds and drops its temp tables itself (connection-scoped TEMPORARY
     tables; the merge tail has already dropped its own copy by the time this
@@ -215,7 +217,8 @@ def get_candidates(cursor, event_ids=None, limit=MAX_EVENTS_PER_RUN, per_website
                    nxt.next_occ,
                    EXISTS (
                        SELECT 1 FROM event_urls eu
-                       JOIN _lp_listed ll ON ll.website_id = d.website_id AND ll.url = eu.url
+                       JOIN _lp_listed ll ON ll.website_id = d.website_id
+                           AND ll.url = eu.url AND BINARY ll.url = BINARY eu.url
                        WHERE eu.event_id = e.id
                    ) AS still_listed
             FROM events e
@@ -253,6 +256,30 @@ def get_candidates(cursor, event_ids=None, limit=MAX_EVENTS_PER_RUN, per_website
             ORDER BY nxt.next_occ IS NULL, nxt.next_occ, e.id
         """, reprobe_params + params)
         rows = cursor.fetchall()
+        # Capture exact URL evidence before dropping the listing snapshot.
+        # The event-level EXISTS above may refer to a fourth link outside the
+        # probe budget, or to only one of several re-slugged/dated URLs.
+        listed_urls = {}
+        listed_sites = {r[0]: r[3] for r in rows if r[6]}
+        ids_by_site = {}
+        for eid, ws_id in listed_sites.items():
+            ids_by_site.setdefault(ws_id, []).append(eid)
+        for ws_id, listed_ids in ids_by_site.items():
+            for start in range(0, len(listed_ids), 1000):
+                chunk = listed_ids[start:start + 1000]
+                ph = ','.join(['%s'] * len(chunk))
+                # Keep the (website_id, url) index usable, then enforce exact
+                # path case rather than relying on the DB's text collation.
+                cursor.execute(f"""
+                    SELECT DISTINCT eu.event_id, ll.website_id, eu.url
+                    FROM event_urls eu
+                    JOIN _lp_listed ll ON ll.website_id = %s AND ll.url = eu.url
+                        AND BINARY ll.url = BINARY eu.url
+                    WHERE eu.event_id IN ({ph})
+                """, [ws_id] + chunk)
+                for eid, source_id, url in cursor.fetchall():
+                    if listed_sites[eid] == source_id:
+                        listed_urls.setdefault(eid, []).append(url)
     finally:
         _drop_latest_merged_temps(cursor)
         db.drop_archival_temps(cursor)
@@ -266,6 +293,7 @@ def get_candidates(cursor, event_ids=None, limit=MAX_EVENTS_PER_RUN, per_website
             'event_id': eid, 'name': name, 'website_id': ws_id,
             'last_seen': last_seen, 'dropper_latest': latest,
             'next_occ': next_occ, 'urls': [], 'still_listed': bool(still_listed),
+            'listed_urls': listed_urls.get(eid, []),
         }
     for start in range(0, len(by_id), 1000):
         chunk = list(by_id.keys())[start:start + 1000]
@@ -612,15 +640,22 @@ def _apply_verdicts(cursor, connection, candidates, fetched, verdicts, walled, s
     for c in candidates:
         ws_id = c['website_id']
         if c['still_listed']:
-            per_url = [(u, 'alive', 'still listed in latest crawl') for u in c['urls']]
+            listed = set(c.get('listed_urls', ()))
+            per_url = [(u, 'alive', 'still listed in latest crawl') if u in listed
+                       else (u, 'unknown', 'event still listed; this URL not verified')
+                       for u in c['urls']]
         else:
             per_url = [(u, *verdicts.get(u, ('unknown', 'not fetched'))) for u in c['urls']]
-        all_dead = all(v == 'dead' for _, v, _ in per_url)
+        # Gate each negative verdict, including mixed dead/alive and
+        # dead/unknown events. Storage is evidence for later URL maintenance,
+        # so an event-level archival guard alone is insufficient.
+        if ws_id in walled:
+            per_url = [(u, 'unknown', f'walled site; was: {r}') if v == 'dead'
+                       else (u, v, r) for u, v, r in per_url]
+        all_dead = bool(per_url) and all(v == 'dead' for _, v, _ in per_url)
         any_alive = any(v == 'alive' for _, v, _ in per_url)
-        event_verdict = 'dead' if all_dead else ('alive' if any_alive else 'unknown')
-        if event_verdict == 'dead' and ws_id in walled:
-            event_verdict = 'unknown'
-            per_url = [(u, 'unknown', f'walled site; was: {r}') for u, v, r in per_url]
+        event_verdict = ('alive' if c['still_listed'] or any_alive
+                         else ('dead' if all_dead else 'unknown'))
         stats[event_verdict] += 1
 
         if verbose:

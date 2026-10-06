@@ -10,6 +10,7 @@ or script usage is unaffected.
 """
 
 import builtins
+import threading
 import time
 from datetime import datetime
 
@@ -17,9 +18,11 @@ _real_print = builtins.print
 
 # Whether the next write begins a fresh line. Tracked so that a print(..., end=' ')
 # followed by another print (e.g. uploader's "Uploading x... " then "✓") does not
-# stamp a second timestamp mid-line. Safe under asyncio: print is synchronous and
-# never yields, so concurrent workers can't interleave a single call.
+# stamp a second timestamp mid-line. Asyncio workers can't interleave a single
+# call (print never yields), but custom-fetch plugins now print from worker
+# threads (crawler.run_custom_fetcher), so the state update and write are locked.
 _at_line_start = True
+_print_lock = threading.RLock()  # re-entrant: a signal handler may print mid-print
 
 
 def timestamp():
@@ -28,11 +31,16 @@ def timestamp():
 
 
 def _timestamped_print(*args, sep=' ', end='\n', **kwargs):
-    global _at_line_start
     text = sep.join(str(a) for a in args) + end
     if not text:
         return
 
+    with _print_lock:
+        _write_stamped(text, kwargs)
+
+
+def _write_stamped(text, kwargs):
+    global _at_line_start
     ts = timestamp()
     segments = text.split('\n')
     out = []

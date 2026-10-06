@@ -23,6 +23,30 @@ const place = { name: 'A Library', address: '10 Main Street', lat: 40, lng: -74,
 const event = { id: 1, name: 'An evening of jazz', description: 'Live jazz quartet',
     tags: ['Jazz', 'Concert'], location: 'A Library', urls: ['https://example.org/event'] };
 
+test('legacy place preferences migrate to IDs and survive a venue rename or move', () => {
+    const { r, storage } = setup();
+    r.set('place', 'a library|10 main street', 'A Library', 1);
+    r.migratePlaces([{ ...place, id: 73 }]);
+    assert.equal(r.entries()[0].id, 'id:73');
+    const renamed = { ...place, id: 73, name: 'New Library', address: '20 Main Street' };
+    assert.equal(r.details(event, renamed).personal, 1);
+    const restored = setup(storage.get('fomo.interests.v1:test')).r;
+    assert.equal(restored.details(event, renamed).personal, 1);
+});
+
+test('place migration leaves ambiguity unresolved and keeps an explicit ID stance', () => {
+    const { r } = setup();
+    r.set('place', 'a library|10 main street', 'A Library', 1);
+    assert.equal(r.details(event, { ...place, id: 1 }).personal, 1);
+    r.migratePlaces([{ ...place, id: 1 }, { ...place, id: 2 }]);
+    assert.equal(r.entries()[0].id, 'a library|10 main street');
+    assert.equal(r.details(event, { ...place, id: 1 }).personal, 0);
+    r.set('place', 'id:1', 'A Library', -1);
+    r.migratePlaces([{ ...place, id: 1 }]);
+    assert.equal(r.entries().length, 1);
+    assert.equal(r.details(event, { ...place, id: 1 }).personal, -1);
+});
+
 test('all four exact signal types count once, and negatives subtract', () => {
     const { r } = setup();
     r.set('event', '1', event.name, 1);

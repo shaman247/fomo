@@ -3,6 +3,7 @@ import re
 from datetime import date, datetime
 
 from occurrence_times import standardize_time
+from schedule_change_evidence import changes as explicit_schedule_changes, identity_name
 
 # A standalone statement keeps a sibling's or historical anecdote's reschedule
 # out of scope. Deliberately do not infer cancellations from omitted dates.
@@ -15,11 +16,11 @@ _NOTICE = re.compile(r'(?:this (?:event|program|session) (?:was|is|has been) )?'
 
 
 def has_reschedule_notice(text):
-    return bool(re.search(r'\brescheduled\s+from\b', text or '', re.I))
+    return bool(re.search(r'\b(?:rescheduled(?:\s+date)?|moved)\s+from\b|\bcomplete\s+revised\s+schedule\b', text or '', re.I))
 
 
 def _name(value):
-    return ' '.join((value or '').split()).casefold()
+    return identity_name(value)
 
 
 def _day(value):
@@ -87,6 +88,26 @@ def explicit_reschedule(source):
     return statements[0] if len(statements) == 1 else None
 
 
+def _notice_superseded_by_complete_window(source, previous, notice, change, fresh):
+    """A newer complete declaration can retire its publisher's older notice.
+
+    A different replacement remains a conflict unless the newer declaration
+    explicitly covers every previous replacement date. Ordinary from/to
+    notices do not claim that broader authority. Independent publishers,
+    unknown/equal chronology and different program/venue identities stay vetoes.
+    """
+    window = change.get('window')
+    timestamp = _timestamp(source.get('crawled_at'))
+    if (not window or not timestamp or timestamp >= fresh
+            or source.get('website_id') != notice.get('website_id')
+            or source.get('location_id') != notice.get('location_id')
+            or _name(source.get('name')) != _name(notice.get('name'))):
+        return False
+    start, end = window
+    return bool(previous['replacement']) and all(
+        start <= slot[0] <= slot[2] <= end for slot in previous['replacement'])
+
+
 def superseded_slots(event, rows, sources):
     """Return exact old slots whose own publisher explicitly replaces them.
 
@@ -101,54 +122,58 @@ def superseded_slots(event, rows, sources):
     rows = {_slot(r) for r in rows}
     sources = [dict(s, slots={_slot(r) for r in s.get('occurrences', [])}) for s in sources]
     result = set()
+    old_days = {r[0] for r in rows}
+    for source in sources:
+        old_days.update(r[0] for r in source['slots'])
+    for source in sources:
+        source['changes'] = explicit_schedule_changes(source, old_days=old_days)
     for notice in sources:
-        change = explicit_reschedule(notice)
-        if not change:
-            continue
-        old_day, replacement = change
         if (not notice.get('website_id') or notice.get('location_id') != event['location_id']
-                or _name(notice.get('name')) != _name(event.get('name'))
-                or replacement not in rows):
-            continue
-        old = {r for r in rows if r[0] == old_day}
-        if len(old) != 1 or any(r[2] != old_day for r in old):
-            continue
-        old_slot = next(iter(old))
-        owners = [s for s in sources if old_slot in s['slots']]
-        if not owners:
+                or _name(notice.get('name')) != _name(event.get('name'))):
             continue
         fresh = _timestamp(notice.get('crawled_at'))
         if not fresh:
             continue
-        relevant = [s for s in sources if any(
-            r[0] and r[0] <= old_day <= r[2] for r in s['slots'])]
-        conflict = False
-        for s in relevant:
-            timestamp = _timestamp(s.get('crawled_at'))
-            # All evidence that touches the old date must be the same old slot,
-            # from this exact event/publisher/venue, strictly before the notice.
-            if (s.get('website_id') != notice['website_id']
-                    or s.get('location_id') != event['location_id']
-                    or _name(s.get('name')) != _name(event.get('name'))
-                    or not timestamp or timestamp >= fresh
-                    or any(r != old_slot for r in s['slots']
-                           if r[0] and r[0] <= old_day <= r[2])):
-                conflict = True
-                break
-        # A later/independent notice moving the same date somewhere else is an
-        # explicit disagreement even if neither source still emits the old day.
-        for s in sources:
-            other = explicit_reschedule(s)
-            if other and other[0] == old_day and other[1] != replacement:
-                conflict = True
-            if any(r != replacement for r in s['slots']
-                   if r[0] and r[0] <= replacement[0] <= r[2]):
-                conflict = True
-        if any(r != replacement for r in rows
-               if r[0] and r[0] <= replacement[0] <= r[2]):
-            conflict = True
-        if not conflict:
-            result.add(old_slot)
+        for change in notice['changes']:
+            replacement = change['replacement']
+            if not replacement <= rows:
+                continue
+            for old_day in change['old_days']:
+                old = {r for r in rows if r[0] == old_day}
+                if len(old) != 1 or any(r[2] != old_day for r in old):
+                    continue
+                old_slot = next(iter(old))
+                owners = [s for s in sources if old_slot in s['slots']]
+                if not owners:
+                    continue
+                relevant = [s for s in sources if any(
+                    r[0] and r[0] <= old_day <= r[2] for r in s['slots'])]
+                conflict = False
+                for source in relevant:
+                    timestamp = _timestamp(source.get('crawled_at'))
+                    if (source.get('website_id') != notice['website_id']
+                            or source.get('location_id') != event['location_id']
+                            or _name(source.get('name')) != _name(event.get('name'))
+                            or not timestamp or timestamp >= fresh
+                            or any(r != old_slot for r in source['slots']
+                                   if r[0] and r[0] <= old_day <= r[2])):
+                        conflict = True
+                        break
+                replacement_days = {r[0] for r in replacement}
+                for source in sources:
+                    if any(old_day in other['old_days'] and other['replacement'] != replacement
+                           and not _notice_superseded_by_complete_window(
+                               source, other, notice, change, fresh)
+                           for other in source['changes']):
+                        conflict = True
+                    if any(r not in replacement for r in source['slots']
+                           if any(r[0] and r[0] <= day <= r[2] for day in replacement_days)):
+                        conflict = True
+                if any(r not in replacement for r in rows
+                       if any(r[0] and r[0] <= day <= r[2] for day in replacement_days)):
+                    conflict = True
+                if not conflict:
+                    result.add(old_slot)
     return result
 
 

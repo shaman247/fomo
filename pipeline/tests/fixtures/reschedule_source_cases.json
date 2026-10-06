@@ -1,0 +1,310 @@
+[
+  {
+    "event": {
+      "id": 194391,
+      "name": "@Jenna",
+      "location_id": 2520,
+      "suppressed": 0,
+      "archived": 1
+    },
+    "canonical": [
+      [
+        "2026-07-22",
+        "7pm",
+        null,
+        "8:15pm"
+      ],
+      [
+        "2026-07-29",
+        "8:30pm",
+        null,
+        "10pm"
+      ]
+    ],
+    "sources": [
+      {
+        "id": 1057890,
+        "name": "@Jenna",
+        "description": "A one-woman show about how Pam from The Office was Winnie Stack's gay awakening at age 11. Catch this show before it heads to the Edinburgh Fringe Festival 2026!",
+        "location_id": 2520,
+        "website_id": 957,
+        "crawled_at": "2026-07-20 08:06:07",
+        "occurrences": [
+          [
+            "2026-07-22",
+            "7pm",
+            null,
+            "8:15pm"
+          ]
+        ]
+      },
+      {
+        "id": 1103859,
+        "name": "@Jenna",
+        "description": "Rescheduled from 7/22! A one-woman show about how Pam from The Office was Winnie Stack's gay awakening at age 11. Catch this show before it heads to the Edinburgh Fringe Festival 2026!",
+        "location_id": 2520,
+        "website_id": 957,
+        "crawled_at": "2026-07-29 05:33:28",
+        "occurrences": [
+          [
+            "2026-07-29",
+            "8:30pm",
+            null,
+            "10pm"
+          ]
+        ]
+      }
+    ],
+    "expected_removed": [
+      [
+        "2026-07-22",
+        "7pm",
+        "2026-07-22",
+        "8:15pm"
+      ]
+    ]
+  },
+  {
+    "event": {
+      "id": 251891,
+      "name": "Pigeon Palooza",
+      "location_id": 485,
+      "suppressed": 0,
+      "archived": 0
+    },
+    "canonical": [
+      [
+        "2026-09-20",
+        "1pm",
+        null,
+        "6pm"
+      ],
+      [
+        "2026-09-27",
+        "1pm",
+        null,
+        "6pm"
+      ]
+    ],
+    "sources": [
+      {
+        "id": 1411330,
+        "name": "Pigeon Palooza",
+        "description": "An afternoon celebrating New York’s favorite bird, featuring pigeon-themed art, a puppet show, children’s book readings, a pigeon-themed band, and other pigeon-inspired performances. Free to enter; donations for performers are appreciated.",
+        "location_id": 485,
+        "website_id": 308,
+        "crawled_at": "2026-09-11 07:20:23",
+        "occurrences": [
+          [
+            "2026-09-20",
+            "1pm",
+            null,
+            "6pm"
+          ]
+        ]
+      },
+      {
+        "id": 1432052,
+        "name": "Pigeon Palooza",
+        "description": "An afternoon celebrating New York’s favorite bird, featuring pigeon-themed art, a puppet show, children’s book readings, a pigeon-themed band, and other programming. Free to enter; donations for performers are appreciated.",
+        "location_id": 485,
+        "website_id": 308,
+        "crawled_at": "2026-09-15 02:38:59",
+        "occurrences": [
+          [
+            "2026-09-20",
+            "1pm",
+            null,
+            "6pm"
+          ]
+        ]
+      },
+      {
+        "id": 1476519,
+        "name": "Pigeon Palooza",
+        "description": "An afternoon devoted to New York's favorite bird, hosted with NYC artists Mother Pigeon and Caryn Cast, with pigeon themed art, a pigeon puppet show, pigeon children's book readings, a pigeon themed band and more. Free to enter; donations for performers appreciated.",
+        "location_id": 485,
+        "website_id": 308,
+        "crawled_at": "2026-09-24 09:31:47",
+        "occurrences": [
+          [
+            "2026-09-27",
+            "1pm",
+            null,
+            "6pm"
+          ]
+        ]
+      },
+      {
+        "id": 1480451,
+        "name": "Pigeon Palooza",
+        "description": "An afternoon \"dove-oted\" to New York's favorite bird, hosted with artists Mother Pigeon and Caryn Cast, with pigeon-themed art, a pigeon puppet show, pigeon children's book readings and a pigeon-themed band. Moved from September 20 to Sunday, September 27; free to enter, donations for performers appreciated.",
+        "location_id": 485,
+        "website_id": 308,
+        "crawled_at": "2026-09-24 11:41:22",
+        "occurrences": [
+          [
+            "2026-09-27",
+            "1pm",
+            null,
+            "6pm"
+          ]
+        ]
+      }
+    ],
+    "expected_removed": [
+      [
+        "2026-09-20",
+        "1pm",
+        "2026-09-20",
+        "6pm"
+      ]
+    ]
+  },
+  {
+    "event": {
+      "id": 252865,
+      "name": "Mother Goose Storytime (18 - 36 months)",
+      "location_id": 4942,
+      "suppressed": 0,
+      "archived": 0
+    },
+    "canonical": [
+      [
+        "2026-10-13",
+        "10am",
+        null,
+        "11am"
+      ],
+      [
+        "2026-10-06",
+        "10am",
+        null,
+        "11am"
+      ]
+    ],
+    "sources": [
+      {
+        "id": 1417702,
+        "name": "Mother Goose Storytime (18 - 36 months)",
+        "description": "Join Ms. Jen for some storytime fun and a craft!",
+        "location_id": 4942,
+        "website_id": 5247,
+        "crawled_at": "2026-09-12 00:39:05",
+        "occurrences": [
+          [
+            "2026-10-13",
+            "10am",
+            null,
+            "11am"
+          ]
+        ]
+      },
+      {
+        "id": 1465439,
+        "name": "Mother Goose Storytime (18 - 36 months)",
+        "description": "This program was rescheduled from Tuesday, October 13th. Registration is now closed for this program. If additional seats become available, registration will be re-opened. Join Ms. Jen for some storytime fun and a craft! A caregiver must attend this program with each child.",
+        "location_id": 4942,
+        "website_id": 5247,
+        "crawled_at": "2026-09-22 09:19:32",
+        "occurrences": [
+          [
+            "2026-10-06",
+            "10am",
+            null,
+            "11am"
+          ]
+        ]
+      },
+      {
+        "id": 1465464,
+        "name": "*Rescheduled* Mother Goose Storytime (18 - 36 months)",
+        "description": "This program has been rescheduled and will now be held on Tuesday, October 6th at 11:30am. If you have registered for this program and are not able to attend the new date, please let us know by emailing jprogram@oceansidelibrary.com. Join Ms. Jen for some storytime fun and a craft!",
+        "location_id": 4942,
+        "website_id": 5247,
+        "crawled_at": "2026-09-22 09:19:32",
+        "occurrences": [
+          [
+            "2026-10-13",
+            "10am",
+            null,
+            "11am"
+          ]
+        ]
+      }
+    ],
+    "expected_removed": []
+  },
+  {
+    "event": {
+      "id": 261666,
+      "name": "Cinnamon Swirl Cake - Dix Hills **Rescheduled from 9/8**",
+      "location_id": 5829,
+      "suppressed": 0,
+      "archived": 1
+    },
+    "canonical": [
+      [
+        "2026-09-24",
+        "7pm",
+        null,
+        "8pm"
+      ]
+    ],
+    "sources": [
+      {
+        "id": 1462360,
+        "name": "Cinnamon Swirl Cake - Dix Hills **Rescheduled from 9/8**",
+        "description": "Presented by A Mano Baking Company, LLC. Class Rescheduled from 9/8. Cost: $5 (nonrefundable). Registration is closed because the event is full.",
+        "location_id": 5829,
+        "website_id": 3880,
+        "crawled_at": "2026-09-21 09:51:27",
+        "occurrences": [
+          [
+            "2026-09-24",
+            "7pm",
+            null,
+            "8pm"
+          ]
+        ]
+      }
+    ],
+    "expected_removed": []
+  },
+  {
+    "event": {
+      "id": 263097,
+      "name": "Academics with AI: Pros and Cons - Rescheduled from Sept 17",
+      "location_id": 4942,
+      "suppressed": 0,
+      "archived": 0
+    },
+    "canonical": [
+      [
+        "2026-10-08",
+        "7pm",
+        null,
+        "8pm"
+      ]
+    ],
+    "sources": [
+      {
+        "id": 1465453,
+        "name": "Academics with AI: Pros and Cons - Rescheduled from Sept 17",
+        "description": "Explore how students can use artificial intelligence to personalize their studying, speed up research, and boost academic productivity. At the same time, understand the crucial downsides of the technology, including data privacy concerns and algorithmic bias.",
+        "location_id": 4942,
+        "website_id": 5247,
+        "crawled_at": "2026-09-22 09:19:32",
+        "occurrences": [
+          [
+            "2026-10-08",
+            "7pm",
+            null,
+            "8pm"
+          ]
+        ]
+      }
+    ],
+    "expected_removed": []
+  }
+]

@@ -1,5 +1,6 @@
 """Reviewed venue corrections bounded by source, event identity and dates.
 
+A NULL location_id is an explicit reviewed unknown venue, not a missing rule.
 Rules are deployment data. A correction never applies to another title, another
 publisher or a later season merely because it shares a listing URL.
 """
@@ -37,7 +38,7 @@ def load_rules(cursor):
     cursor.execute('''SELECT r.id, r.website_id, r.event_name, r.source_url,
         r.url_prefix, r.valid_from, r.valid_until, r.location_id,
         r.location_name, r.sublocation, l.lat, l.lng, l.emoji
-        FROM event_venue_overrides r JOIN locations l ON l.id=r.location_id
+        FROM event_venue_overrides r LEFT JOIN locations l ON l.id=r.location_id
         WHERE r.enabled=1''')
     fields=('id','website_id','event_name','source_url','url_prefix','valid_from',
             'valid_until','location_id','location_name','sublocation','lat','lng','emoji')

@@ -11,7 +11,7 @@ from pathlib import Path
 
 import numpy as np
 
-from similarity import unit
+from similarity import unit, topic_constituents, contextual_vectors, load_topic_context, browser_vectors
 
 
 class EvaluationModel:
@@ -20,6 +20,9 @@ class EvaluationModel:
         self.report = json.loads((workspace / 'report.json').read_text())
         self.thresholds = self.report.get('affinityThresholds', {'positive': 0, 'negative': 0})
         with np.load(workspace / 'vectors.npz', allow_pickle=False) as saved:
+            if self.report.get('aspectSuppression') and 'context_vectors' not in saved:
+                raise ValueError('Missing topic context vectors')
+            self.topic_context = load_topic_context(saved, saved['vectors'].shape[1])
             self.matrix = unit(np.concatenate([saved['vectors'], saved['tag_vectors']]))
             keys = list(saved['entity_ids']) + ['tag:' + value for value in saved['tag_ids']]
             self.positions = {str(key): i for i, key in enumerate(keys)}
@@ -31,20 +34,29 @@ class EvaluationModel:
                 self.parts = [[i] for i in range(len(keys))]
 
     def score(self, positive, negative, candidates, browser=False):
-        matrix = unit(np.rint(self.matrix * 127) / 127) if browser else self.matrix
+        def members(key):
+            position = self.positions[key]
+            vectors = contextual_vectors(self.matrix, self.parts[position],
+                                         getattr(self, 'topic_context', {}).get(key))
+            if key.startswith('tag:'):
+                vectors = topic_constituents(vectors, self.matrix[position], self.report.get('tagAnchorWeight', 0))
+            # Export conditions each tag before quantization. Quantizing the
+            # raw examples first would measure a different browser model.
+            return browser_vectors(vectors, self.report.get('quantization', 'unit-int8')) if browser else vectors
         def profile(keys):
-            indices = [i for key in keys for i in self.parts[self.positions[key]]]
-            if not indices:
-                return matrix[:0]
+            vectors = [members(key) for key in dict.fromkeys(keys)]
+            if not vectors:
+                return self.matrix[:0]
+            vectors = np.concatenate(vectors)
             if self.constituents:
-                return matrix[sorted(set(indices))]
-            return unit(matrix[indices].sum(axis=0, keepdims=True))
+                return vectors
+            return unit(vectors.sum(axis=0, keepdims=True))
         liked, disliked = profile(positive), profile(negative)
         scores = []
         for key in candidates:
-            members = matrix[self.parts[self.positions[key]]]
+            candidate = members(key)
             def closest(query):
-                return max(0., float((members @ query.T).max())) if len(query) and len(members) else 0.
+                return max(0., float((candidate @ query.T).max())) if len(query) and len(candidate) else 0.
             def strength(value, stance):
                 threshold = self.thresholds.get(stance, 0)
                 return max(0., (value - threshold) / (1 - threshold))
@@ -52,7 +64,7 @@ class EvaluationModel:
         return np.array(scores)
 
 
-def evaluate(model, cases):
+def evaluate(model, cases, *, browser=False):
     if not cases.get('queries') or len({q['id'] for q in cases['queries']}) != len(cases['queries']):
         raise ValueError('Evaluation requires nonempty, uniquely identified queries')
     results = []
@@ -61,7 +73,10 @@ def evaluate(model, cases):
         if any(type(value) is not int or value not in (0, 1, 2) for value in judgments.values()):
             raise ValueError('Relevance grades must be 0, 1, or 2')
         candidates = list(judgments)
-        scores = model.score(case.get('positive', []), case.get('negative', []), candidates)
+        score_args = (case.get('positive', []), case.get('negative', []), candidates)
+        scores = model.score(*score_args, browser=True) if browser else model.score(*score_args)
+        if not np.isfinite(scores).all():
+            raise ValueError('Evaluation returned non-finite scores')
         grades = np.array([judgments[key] for key in candidates])
         if not np.any(grades > 0) or not np.any(grades == 0):
             raise ValueError(f'Case {case["id"]} needs both relevant and irrelevant candidates')
@@ -80,15 +95,26 @@ def evaluate(model, cases):
                         'meanIrrelevantScore': float(scores[grades == 0].mean()),
                         'top5': [{'key': candidates[i], 'score': round(float(scores[i]), 4),
                                   'grade': int(grades[i])} for i in top]})
+        if hasattr(model, 'parts'):
+            positive = {i for key in case.get('positive', []) for i in model.parts[model.positions[key]]}
+            negative = {i for key in case.get('negative', []) for i in model.parts[model.positions[key]]}
+            results[-1]['constituentOverlap'] = {
+                stance: [key for key in candidates if members.intersection(model.parts[model.positions[key]])]
+                for stance, members in [('positive', positive), ('negative', negative)]}
     summary = {'queries': len(results), 'judgments': sum(r['judgments'] for r in results)}
     for key in ('ndcgAt5', 'pairwiseAccuracy', 'wrongTop1'):
         summary[key] = float(np.mean([r[key] for r in results]))
-    return {'generation': model.report.get('generation'), 'summary': summary, 'queries': results}
+    return {'generation': model.report.get('generation'), 'precision': 'browser' if browser else 'full',
+            'summary': summary, 'queries': results}
 
 
 def check_gate(candidate, baseline=None):
     """Reject measured regressions; this is not a claim of universal relevance."""
     current = candidate['summary']
+    for result in [candidate] + ([baseline] if baseline else []):
+        if any(not np.isfinite(result['summary'][key]) or not 0 <= result['summary'][key] <= 1
+               for key in ('ndcgAt5', 'pairwiseAccuracy', 'wrongTop1')):
+            raise ValueError('Relevance gate requires finite metrics in [0, 1]')
     if baseline:
         previous = baseline['summary']
         failed = (current['ndcgAt5'] + .005 < previous['ndcgAt5']
@@ -107,11 +133,12 @@ def main():
     parser.add_argument('--baseline', type=Path)
     parser.add_argument('--report', type=Path)
     parser.add_argument('--gate', action='store_true')
+    parser.add_argument('--browser', action='store_true', help='Evaluate int8 browser precision')
     args = parser.parse_args()
     cases = json.loads(args.cases.read_text())
-    result = {'candidate': evaluate(EvaluationModel(args.workspace), cases)}
+    result = {'candidate': evaluate(EvaluationModel(args.workspace), cases, browser=args.browser)}
     if args.baseline:
-        result['baseline'] = evaluate(EvaluationModel(args.baseline), cases)
+        result['baseline'] = evaluate(EvaluationModel(args.baseline), cases, browser=args.browser)
         result['delta'] = {key: result['candidate']['summary'][key] - result['baseline']['summary'][key]
                            for key in ('ndcgAt5', 'pairwiseAccuracy', 'wrongTop1')}
     encoded = json.dumps(result, indent=2) + '\n'

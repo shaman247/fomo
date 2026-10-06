@@ -32,7 +32,16 @@ def normalize(value):
 
 
 def place_key(place):
+    if place.get('id') is not None:
+        return f'id:{place["id"]}'
     return normalize(place['name']) + '|' + normalize(place.get('address'))
+
+
+def place_aliases(places):
+    aliases = defaultdict(set)
+    for place in places:
+        aliases[normalize(place['name']) + '|' + normalize(place.get('address'))].add(place_key(place))
+    return {key: next(iter(ids)) for key, ids in aliases.items() if len(ids) == 1}
 
 
 def unit(matrix):
@@ -74,7 +83,7 @@ def closest_constituents(matrix, parts, query):
     return np.array([max(best[group], default=0.) for group in parts], dtype=np.float32)
 
 
-def representatives(indices, vectors, limit):
+def representatives(indices, vectors, limit, previous=()):
     """Deterministic farthest-first actual examples, with no synthetic centroids.
 
     limit=0 retains every constituent. Near-identical examples need one vote.
@@ -82,16 +91,66 @@ def representatives(indices, vectors, limit):
     if not indices or not limit or len(indices) <= limit:
         return list(indices)
     pool = vectors[indices]
-    selected = [0]
-    nearest = pool @ pool[0]
-    for _ in range(limit - 1):
+    positions = {index: i for i, index in enumerate(indices)}
+    selected = list(dict.fromkeys(positions[i] for i in previous if i in positions))[:limit] or [0]
+    nearest = (pool @ pool[selected].T).max(axis=1)
+    for _ in range(limit - len(selected)):
         next_index = int(np.argmin(nearest))
         if nearest[next_index] >= .985:
             break
         selected.append(next_index)
         nearest = np.maximum(nearest, pool @ pool[next_index])
         nearest[selected] = 1
+    # Warm starts keep the previous modes unless a swap improves worst-case
+    # coverage by a meaningful cosine margin. Merely changing active dates or
+    # adding another similar event must not restart the farthest-first chain.
+    if previous and len(selected) == limit:
+        for _ in range(limit):
+            similarities = pool @ pool[selected].T
+            nearest = similarities.max(axis=1)
+            candidate = int(np.argmin(nearest))
+            added = pool @ pool[candidate]
+            best, replacement = float(nearest.min()) + .02, None
+            for slot in range(len(selected)):
+                others = np.delete(similarities, slot, axis=1)
+                covered = np.maximum(others.max(axis=1), added) if others.shape[1] else added
+                quality = float(covered.min())
+                if quality > best:
+                    best, replacement = quality, slot
+            if replacement is None:
+                break
+            selected[replacement] = candidate
     return [indices[i] for i in selected]
+
+
+def previous_constituents(workspace, data):
+    """Read identities only; every retained example is revalidated against new membership."""
+    if workspace is None:
+        return {}, None
+    workspace = Path(workspace)
+    report = json.loads((workspace / 'report.json').read_text())
+    old_events = {e['id']: e for e in data['events']}
+    snapshot = workspace / 'snapshot.json.gz'
+    if snapshot.exists():
+        with gzip.open(snapshot, 'rt', encoding='utf-8') as stream:
+            old_events.update({e['id']: e for e in json.load(stream)['events']})
+    with np.load(workspace / 'vectors.npz', allow_pickle=False) as saved:
+        if 'part_offsets' not in saved:
+            raise ValueError('Refresh requires a constituent model')
+        keys = list(saved['entity_ids']) + ['tag:' + str(tid) for tid in saved['tag_ids']]
+        offsets, indices = saved['part_offsets'], saved['part_indices']
+        result = {}
+        for key, a, b in zip(keys, offsets, offsets[1:]):
+            if not str(key).startswith(('place:', 'tag:')):
+                continue
+            series = []
+            for index in indices[a:b]:
+                part = str(keys[index])
+                event = old_events.get(int(part[6:])) if part.startswith('event:') else None
+                if event:
+                    series.append((event['location_id'], normalize(event['name'])))
+            result[str(key)] = series
+    return result, report.get('generation')
 
 
 def read_snapshot():
@@ -190,7 +249,10 @@ def documents(data, geotags):
 
 
 def fit(data, geotags=(), dimensions=96, min_df=5, seed=17, max_constituents=12,
-        encoder='lexical', workspace=None, model_cache=None):
+        encoder='lexical', workspace=None, model_cache=None, previous=None):
+    if previous is not None and encoder != 'minilm':
+        raise ValueError('Stable refresh requires the semantic encoder')
+    prior, previous_generation = previous_constituents(previous, data)
     rows, attached, features, excluded = documents(data, set(map(normalize, geotags)))
     if not rows:
         raise ValueError('No training entities')
@@ -227,7 +289,8 @@ def fit(data, geotags=(), dimensions=96, min_df=5, seed=17, max_constituents=12,
         from similarity_encoder import content_vectors
         vectors, semantic_tags, semantic_projection, semantic_energy = content_vectors(
             data, rows, attached, excluded, dimensions,
-            workspace or ROOT / '.scratch/similarity', model_cache or ROOT / '.scratch/similarity/encoder-cache')
+            workspace or ROOT / '.scratch/similarity', model_cache or ROOT / '.scratch/similarity/encoder-cache',
+            previous=previous)
         rank = vectors.shape[1]
     positions = {(kind, item['id']): i for i, (kind, item) in enumerate(rows)}
 
@@ -239,16 +302,18 @@ def fit(data, geotags=(), dimensions=96, min_df=5, seed=17, max_constituents=12,
         if kind == 'event' and item['location_id']:
             key = normalize(item['name'])
             programs = programming[item['location_id']]
-            previous = programs.get(key)
-            if previous is None or (item['id'] in active, item['id']) > (
-                    rows[previous][1]['id'] in active, rows[previous][1]['id']):
+            previous_index = programs.get(key)
+            if previous_index is None or (item['id'] in active, item['id']) > (
+                    rows[previous_index][1]['id'] in active, rows[previous_index][1]['id']):
                 programs[key] = i
     entity_parts = [[i] for i in range(len(rows))]
     for pid, programs in programming.items():
         pos = positions.get(('place', pid))
         if pos is not None:
             indices = sorted(programs.values(), key=lambda i: (rows[i][1]['id'] not in active, -rows[i][1]['id']))
-            entity_parts[pos] = representatives(indices, vectors, max_constituents)
+            retained = [programs[name] for location, name in prior.get(f'place:{pid}', [])
+                        if location == pid and name in programs]
+            entity_parts[pos] = representatives(indices, vectors, max_constituents, retained)
 
     # Tag anchors describe the tag itself in the fitted space. Associated event
     # centroids used to erase the defining meaning of heterogeneous interests.
@@ -265,9 +330,9 @@ def fit(data, geotags=(), dimensions=96, min_df=5, seed=17, max_constituents=12,
                 support[ti] += 1
                 if kind == 'event':
                     key = (item['location_id'], normalize(item['name']))
-                    previous = tag_members[ti].get(key)
-                    if previous is None or (item['id'] in active, item['id']) > (
-                            rows[previous][1]['id'] in active, rows[previous][1]['id']):
+                    previous_index = tag_members[ti].get(key)
+                    if previous_index is None or (item['id'] in active, item['id']) > (
+                            rows[previous_index][1]['id'] in active, rows[previous_index][1]['id']):
                         tag_members[ti][key] = i
     def anchor(tag):
         if tag['id'] in excluded or not support[tag_positions[tag['id']]]:
@@ -288,7 +353,8 @@ def fit(data, geotags=(), dimensions=96, min_df=5, seed=17, max_constituents=12,
         # An anchored topic and its actual member examples are separate ways to
         # match it. Mixed programming is never collapsed into one tag centroid.
         indices = sorted(members.values(), key=lambda i: (rows[i][1]['id'] not in active, -rows[i][1]['id']))
-        tag_parts[ti].extend(representatives(indices, vectors, max_constituents))
+        retained = [members[key] for key in prior.get(f'tag:{data["tags"][ti]["id"]}', []) if key in members]
+        tag_parts[ti].extend(representatives(indices, vectors, max_constituents, retained))
     for tid, parents in ancestors.items():
         ti = tag_positions.get(tid)
         if ti is None or not tag_parts[ti]:
@@ -308,24 +374,44 @@ def fit(data, geotags=(), dimensions=96, min_df=5, seed=17, max_constituents=12,
                            float(np.sum(singular[:rank] ** 2) / matrix.multiply(matrix).sum())),
         'zeroEntityVectors': int(np.sum(np.linalg.norm(vectors, axis=1) < .01)),
         'zeroTagVectors': int(np.sum(np.linalg.norm(tag_vectors, axis=1) < .01)),
-        'representation': 'closest-constituent-v2', 'maxVenueConstituents': max_constituents,
+        'representation': 'topic-conditioned-constituent-v4', 'maxVenueConstituents': max_constituents,
+        'tagAnchorWeight': .5,
+        'quantization': 'max-abs-int8',
+        'aspectSuppression': {'maxTopicCosine': .15, 'strength': .5},
         'encoder': encoder,
+        'previousGeneration': previous_generation,
+        'projectionMode': 'reused' if previous is not None else 'fitted',
         'affinityThresholds': {'positive': .35, 'negative': .55},
         'venueConstituents': sum(len(entity_parts[i]) for i, (k, _) in enumerate(rows) if k == 'place'),
         'tagConstituents': sum(map(len, tag_parts)),
     }
     result = FittedModel((rows, vectors, tag_vectors, support, report))
     result.parts = entity_parts + tag_parts
+    result.topic_context = topic_context(data, rows, vectors, tag_vectors, tag_parts,
+                                         attached, excluded, ancestors)
     result.projection = semantic_projection or {'vocabulary': np.array(vocabulary), 'idf': idf, 'basis': basis}
     return result
 
 
-def pack(ids, vectors):
-    quantized = np.rint(np.clip(vectors, -1, 1) * 127).astype(np.int8)
+def quantize(vectors, mode='unit-int8'):
+    """Use the full signed byte range; browser normalization cancels the scale."""
+    if mode == 'max-abs-int8':
+        vectors = vectors / np.maximum(np.max(np.abs(vectors), axis=-1, keepdims=True), 1e-12)
+    elif mode != 'unit-int8':
+        raise ValueError('Unknown similarity quantization mode')
+    return np.rint(np.clip(vectors, -1, 1) * 127).astype(np.int8)
+
+
+def browser_vectors(vectors, mode='unit-int8'):
+    return unit(quantize(vectors, mode).astype(np.float32) / 127)
+
+
+def pack(ids, vectors, mode='unit-int8'):
+    quantized = quantize(vectors, mode)
     return {'ids': ids, 'vectors': base64.b64encode(quantized.tobytes()).decode('ascii')}
 
 
-def pack_constituents(ids, parts, matrix, counts):
+def pack_constituents(ids, parts, matrix, counts, mode='unit-int8'):
     """Coalescing browser aliases unions their constituents, never averages them."""
     groups, support = {}, Counter()
     for key, members, count in zip(ids, parts, counts):
@@ -335,8 +421,95 @@ def pack_constituents(ids, parts, matrix, counts):
     for members in groups.values():
         flat.extend(sorted(members))
         offsets.append(len(flat))
-    return {**pack(list(groups), matrix[flat]), 'offsets': offsets,
+    return {**pack(list(groups), matrix[flat], mode), 'offsets': offsets,
             'support': [support[key] for key in groups]}
+
+
+def topic_constituents(vectors, anchor, weight):
+    """Keep each example distinct while conditioning it on the selected topic.
+
+    The same event may illustrate several interests. Its representation under
+    one tag must not transfer every incidental aspect to that tag's profile.
+    Event and venue preferences continue to use their unconditioned examples.
+    """
+    if not np.isfinite(weight) or weight < 0:
+        raise ValueError('Invalid tag anchor weight')
+    return unit(vectors + weight * anchor) if weight else vectors
+
+
+def suppress_incidental_aspects(vector, anchor, other_topics, strength=.5, max_topic_cosine=.15):
+    """Reduce only topic-orthogonal components of weakly related co-topics.
+
+    SVD handles redundant labels without subtracting the same direction twice.
+    The selected topic's component is preserved, and suppression is partial.
+    """
+    other_topics = np.asarray(other_topics).reshape(-1, len(anchor))
+    other_topics = other_topics[other_topics @ anchor < max_topic_cosine]
+    if not len(other_topics):
+        return vector
+    residual = other_topics - (other_topics @ anchor)[:, None] * anchor
+    _, singular, basis = np.linalg.svd(residual, full_matrices=False)
+    basis = basis[singular > 1e-5]
+    return unit(vector - strength * ((vector @ basis.T) @ basis))
+
+
+def topic_context(data, rows, vectors, tag_vectors, tag_parts, attached, excluded, ancestors):
+    """Sparse tag-specific overrides; never change an event/venue preference."""
+    positions = {tag['id']: i for i, tag in enumerate(data['tags'])}
+    result = {}
+    for ti, tag in enumerate(data['tags']):
+        if tag['type'] != 'tag':
+            continue
+        tid, anchor = tag['id'], tag_vectors[ti]
+        for part in tag_parts[ti]:
+            if part >= len(rows) or rows[part][0] != 'event':
+                continue
+            other = attached['event'][rows[part][1]['id']] - excluded
+            other = sorted(t for t in other if t in positions and t != tid
+                           and t not in ancestors.get(tid, set()) and tid not in ancestors.get(t, set()))
+            changed = suppress_incidental_aspects(vectors[part], anchor,
+                                                  tag_vectors[[positions[t] for t in other]])
+            if not np.array_equal(changed, vectors[part]):
+                result.setdefault(ti, {})[part] = changed
+    return result
+
+
+def contextual_vectors(matrix, members, context=None):
+    vectors = matrix[members].copy()
+    for row, part in enumerate(members):
+        if context and part in context:
+            vectors[row] = context[part]
+    return vectors
+
+
+def load_topic_context(saved, dimensions):
+    """Read sparse overrides with strict shape/identity validation."""
+    if 'context_vectors' not in saved:
+        return {}
+    values, tags, parts = saved['context_vectors'], saved['context_tag_ids'], saved['context_part_indices']
+    if (values.shape != (len(tags), dimensions) or parts.shape != tags.shape
+            or not np.isfinite(values).all() or not np.issubdtype(parts.dtype, np.integer)
+            or np.any(parts < 0) or np.any(parts >= len(saved['entity_ids']))):
+        raise ValueError('Invalid topic context vectors')
+    known = set(saved['tag_ids'].astype(str))
+    result = {}
+    for tag, part, vector in zip(tags.astype(str), parts, values):
+        if tag not in known or part in result.setdefault('tag:' + tag, {}):
+            raise ValueError('Invalid topic context identity')
+        result['tag:' + tag][int(part)] = vector
+    return result
+
+
+def pack_topic_constituents(ids, parts, matrix, counts, anchors, weight, contexts=None, mode='unit-int8'):
+    # Distinct tags can share source examples but need different conditioned
+    # vectors. Keep source indices unchanged in the private refresh workspace.
+    vectors, groups, offset = [], [], 0
+    for members, anchor, context in zip(parts, anchors, contexts or [{}] * len(parts)):
+        vectors.append(topic_constituents(contextual_vectors(matrix, members, context), anchor, weight))
+        groups.append(list(range(offset, offset + len(members))))
+        offset += len(members)
+    flattened = np.concatenate(vectors) if vectors else matrix[:0]
+    return pack_constituents(ids, groups, flattened, counts, mode)
 
 
 def split_block(block, dimensions, chunk_size):
@@ -373,18 +546,23 @@ def write_model(data, fitted, output, workspace, validate=None):
     for i, (kind, item) in enumerate(rows):
         if kind == 'place' or item['id'] in active:
             positions[kind].append(i)
+    mode = report.get('quantization', 'unit-int8')
     blocks = {}
     for kind, subset in positions.items():
         ids = [place_key(rows[i][1]) if kind == 'place' else str(rows[i][1]['id']) for i in subset]
         if kind == 'place':
             counts = Counter(e['location_id'] for e in data['events'] if e['id'] in active)
             blocks[kind] = pack_constituents(ids, [parts[i] for i in subset], matrix,
-                                              [counts[rows[i][1]['id']] for i in subset])
+                                              [counts[rows[i][1]['id']] for i in subset], mode)
         else:
-            blocks[kind] = pack([], vectors[:0])
+            blocks[kind] = pack([], vectors[:0], mode)
     tag_indices = [i for i, tag in enumerate(data['tags']) if tag['type'] == 'tag' and support[i] > 0]
-    blocks['tag'] = pack_constituents([normalize(public_tag_key(data['tags'][i]['name'], data['tags'][i].get('scope','event'))) for i in tag_indices],
-                                     [parts[len(rows) + i] for i in tag_indices], matrix, support[tag_indices])
+    topic_weight = report.get('tagAnchorWeight', 0)
+    contexts = getattr(fitted, 'topic_context', {})
+    tag_keys = [normalize(public_tag_key(data['tags'][i]['name'], data['tags'][i].get('scope','event'))) for i in tag_indices]
+    blocks['tag'] = pack_topic_constituents(tag_keys,
+        [parts[len(rows) + i] for i in tag_indices], matrix, support[tag_indices],
+        tag_vectors[tag_indices], topic_weight, [contexts.get(i, {}) for i in tag_indices], mode)
     # Venue programming is larger than the tag core. Load only the venue batches
     # used by preferences/suggestions, rather than downloading every program.
     place_block = blocks['place']
@@ -393,12 +571,14 @@ def write_model(data, fitted, output, workspace, validate=None):
     tag_payloads = split_block(blocks['tag'], vectors.shape[1], 64)
     # Topic anchors and every branch are immediately usable. Concrete event
     # examples are fetched only for preferences or requested suggestion tags.
-    blocks['tag'] = pack_constituents([normalize(public_tag_key(data['tags'][i]['name'], data['tags'][i].get('scope','event'))) for i in tag_indices],
+    blocks['tag'] = pack_topic_constituents(tag_keys,
         [[part for part in parts[len(rows) + i] if part >= len(rows)] for i in tag_indices],
-        matrix, support[tag_indices])
-    body = {'schemaVersion': 2, 'dimensions': vectors.shape[1],
+        matrix, support[tag_indices], tag_vectors[tag_indices], topic_weight,
+        [contexts.get(i, {}) for i in tag_indices], mode)
+    body = {'schemaVersion': 2, 'dimensions': vectors.shape[1], 'quantization': mode,
             'affinityThresholds': report.get('affinityThresholds', {'positive': .35, 'negative': .55}),
-            'domain': get_config().get('frontend', {}).get('domain'), 'blocks': blocks}
+            'domain': get_config().get('frontend', {}).get('domain'), 'blocks': blocks,
+            'placeAliases': place_aliases(data['places'])}
     payload = json.dumps(body, ensure_ascii=False, separators=(',', ':')).encode()
     # Generation digest covers historical vectors too: no mixed-version shards.
     identity = json.dumps({'entities': [(k, item['id']) for k, item in rows],
@@ -418,7 +598,7 @@ def write_model(data, fitted, output, workspace, validate=None):
         for index, i in enumerate(positions['event']):
             active_shards[index // 2048].append(i)
         for shard, subset in active_shards.items():
-            block = pack([str(rows[i][1]['id']) for i in subset], vectors[subset])
+            block = pack([str(rows[i][1]['id']) for i in subset], vectors[subset], mode)
             encoded = json.dumps(block, separators=(',', ':')).encode()
             (generation / f'active-{shard}.json').write_bytes(encoded)
             active_bytes += len(encoded)
@@ -428,7 +608,7 @@ def write_model(data, fitted, output, workspace, validate=None):
             if kind == 'event' and item['id'] not in active:
                 shards[item['id'] // 2048].append(i)
         for shard, subset in shards.items():
-            block = pack([str(rows[i][1]['id']) for i in subset], vectors[subset])
+            block = pack([str(rows[i][1]['id']) for i in subset], vectors[subset], mode)
             (generation / f'events-{shard}.json').write_text(json.dumps(block, separators=(',', ':')), encoding='utf-8')
         report.update({'activeEventVectors': len(positions['event']), 'publicTagVectors': len(blocks['tag']['ids']),
                        'coreBytes': len(payload), 'coreGzipBytes': len(gzip.compress(payload)),
@@ -439,17 +619,23 @@ def write_model(data, fitted, output, workspace, validate=None):
                        'activeBytes': active_bytes, 'activeGzipBytes': active_gzip, 'generation': digest})
         # All entity/tag vectors and identifiers stay available for offline analysis.
         offsets = np.cumsum([0] + list(map(len, parts)), dtype=np.int32)
+        overrides = [(str(data['tags'][ti]['id']), part, vector)
+                     for ti, group in sorted(contexts.items()) for part, vector in sorted(group.items())]
         np.savez_compressed(workspace / 'vectors.npz', vectors=vectors, tag_vectors=tag_vectors,
                             part_offsets=offsets, part_indices=np.array([i for group in parts for i in group], dtype=np.int32),
                             entity_ids=np.array([f'{k}:{v["id"]}' for k, v in rows]),
-                            tag_ids=np.array([str(t['id']) for t in data['tags']]))
+                            tag_ids=np.array([str(t['id']) for t in data['tags']]),
+                            context_tag_ids=np.array([t for t, _, _ in overrides], dtype='U20'),
+                            context_part_indices=np.array([p for _, p, _ in overrides], dtype=np.int32),
+                            context_vectors=np.array([v for _, _, v in overrides], dtype=np.float32).reshape(-1, vectors.shape[1]))
         if hasattr(fitted, 'projection'):
             np.savez_compressed(workspace / 'projection.npz', **fitted.projection)
-        report['samples'] = sample_neighbors(data, rows, vectors, tag_vectors, support, parts)
+        report['samples'] = sample_neighbors(data, rows, vectors, tag_vectors, support, parts, topic_weight, contexts)
         (workspace / 'report.json').write_text(json.dumps(report, indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
         if validate is not None:
             validate(workspace)
         manifest = {'schemaVersion': 2, 'generation': digest, 'dimensions': vectors.shape[1],
+                    'quantization': mode,
                     'affinityThresholds': body['affinityThresholds'],
                     'generatedAt': datetime.now(timezone.utc).isoformat(), 'domain': body['domain'],
                     'snapshotCapturedAt': data.get('capturedAt'),
@@ -474,7 +660,7 @@ def write_model(data, fitted, output, workspace, validate=None):
     return report
 
 
-def sample_neighbors(data, rows, vectors, tag_vectors, support, parts=None):
+def sample_neighbors(data, rows, vectors, tag_vectors, support, parts=None, topic_weight=0, contexts=None):
     # Deterministic support-stratified diagnostics, not a relevance benchmark.
     tags = data['tags']
     eligible = [i for i, t in enumerate(tags) if t['type'] == 'tag' and support[i] >= 20]
@@ -485,7 +671,9 @@ def sample_neighbors(data, rows, vectors, tag_vectors, support, parts=None):
     result = []
     matrix = np.concatenate([vectors, tag_vectors])
     for ti in sample:
-        query = matrix[parts[len(rows) + ti]] if parts is not None else tag_vectors[ti:ti + 1]
+        query = (contextual_vectors(matrix, parts[len(rows) + ti], (contexts or {}).get(ti))
+                 if parts is not None else tag_vectors[ti:ti + 1])
+        query = topic_constituents(query, tag_vectors[ti], topic_weight)
         similarities = closest_constituents(vectors[event_indices], [[i] for i in range(len(event_indices))], query)
         nearest = np.argsort(-similarities, kind='stable')[:5]
         result.append({'tag': tags[ti]['name'], 'events': [
@@ -506,6 +694,8 @@ def main():
     parser.add_argument('--model-cache', type=Path, default=ROOT / '.scratch/similarity/encoder-cache')
     parser.add_argument('--cases', type=Path, help='Reviewed relevance cases; fail before publication if the gate regresses')
     parser.add_argument('--baseline', type=Path, help='Previous, separate workspace for the relevance gate')
+    parser.add_argument('--previous-model', type=Path,
+                        help='Reuse this semantic projection and stabilize its valid constituent examples')
     args = parser.parse_args()
     if not 2 <= args.dimensions <= 256:
         parser.error('--dimensions must be between 2 and 256')
@@ -513,6 +703,8 @@ def main():
         parser.error('--max-constituents must be nonnegative')
     if args.baseline and (not args.cases or args.baseline.resolve() == args.workspace.resolve()):
         parser.error('--baseline requires --cases and a separate workspace')
+    if args.previous_model and (args.encoder != 'minilm' or args.previous_model.resolve() == args.workspace.resolve()):
+        parser.error('--previous-model requires minilm and a separate workspace')
     from city_config import geotags
     start = time.monotonic()
     args.workspace.mkdir(parents=True, exist_ok=True)
@@ -526,6 +718,8 @@ def main():
             data = json.load(f)
     else:
         data = read_snapshot()
+    # Every candidate is reproducible, including one built from an input snapshot.
+    if not args.snapshot or args.snapshot.resolve() != (args.workspace / 'snapshot.json.gz').resolve():
         with gzip.open(args.workspace / 'snapshot.json.gz', 'wt', encoding='utf-8') as f:
             json.dump(data, f, default=str, ensure_ascii=False, separators=(',', ':'))
     def validate(workspace):
@@ -535,11 +729,16 @@ def main():
         cases = json.loads(args.cases.read_text())
         candidate = evaluate(EvaluationModel(workspace), cases)
         baseline = evaluate(EvaluationModel(args.baseline), cases) if args.baseline else None
-        result = {'candidate': candidate, 'baseline': baseline}
+        browser_candidate = evaluate(EvaluationModel(workspace), cases, browser=True)
+        browser_baseline = evaluate(EvaluationModel(args.baseline), cases, browser=True) if args.baseline else None
+        result = {'candidate': candidate, 'baseline': baseline,
+                  'browserCandidate': browser_candidate, 'browserBaseline': browser_baseline}
         (workspace / 'evaluation.json').write_text(json.dumps(result, indent=2) + '\n')
         check_gate(candidate, baseline)
+        check_gate(browser_candidate, browser_baseline)
     report = write_model(data, fit(data, geotags(), args.dimensions, max_constituents=args.max_constituents,
-                                  encoder=args.encoder, workspace=args.workspace, model_cache=args.model_cache),
+                                  encoder=args.encoder, workspace=args.workspace, model_cache=args.model_cache,
+                                  previous=args.previous_model),
                          args.output, args.workspace, validate=validate)
     print(json.dumps({k: v for k, v in report.items() if k != 'samples'}, indent=2), flush=True)
     print(f'Completed in {time.monotonic() - start:.1f}s; diagnostics: {args.workspace / "report.json"}')

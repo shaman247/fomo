@@ -28,6 +28,10 @@ class TestAgentDetailResume(unittest.TestCase):
             (12, 'Second event', 'https://example.com/events/second', 7),
         ]
         self.identities = {11: 'identity-first', 12: 'identity-second'}
+        self.sessions = {row[0]: {'name': row[1], 'occurrences': [
+            {'start_date': '2026-10-17', 'end_date': None}]} for row in self.candidates}
+        self.stack.enter_context(patch.object(
+            processor, '_detail_session_evidence', return_value=self.sessions))
         self.read_identities = self.stack.enter_context(patch.object(
             processor, '_detail_candidate_identities',
             side_effect=lambda *_: dict(self.identities)))
@@ -88,6 +92,8 @@ class TestAgentDetailResume(unittest.TestCase):
             self.run_details()
 
         self.assertEqual(self.fetch.await_count, 2)
+        self.assertEqual([call.kwargs['expected_session'] for call in self.fetch.await_args_list],
+                         [self.sessions[11], self.sessions[12]])
         self.assertEqual(self.extract.await_count, 2)
         self.assertEqual(self.lock_calls, 0)
         self.cursor.execute.assert_not_called()

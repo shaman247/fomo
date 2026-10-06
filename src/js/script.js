@@ -286,6 +286,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             DataManager.processInitialData([], initLocationData, this.state, this.config);
             await DataManager.processFullDataAsync(initEventData, [], this.state, this.config);
+            SimilarityModel.registerPlaces(this.state.rawLocations);
             DataManager.calculateTagFrequencies(this.state);
             DataManager.processTagHierarchy(this.state, this.config);
             DataManager.buildTagIndex(this.state);
@@ -586,6 +587,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
 
                 } // Each group becomes usable before loading the next one.
+
+                DiscoveryRanking.migratePlaces(this.state.rawLocations);
 
                 if (indicator) {
                     indicator.classList.remove('visible');
@@ -1110,6 +1113,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Viewport aggregates were computed against the old dataset.
             this._viewportCache = null;
+            DiscoveryRanking.migratePlaces(staging.rawLocations);
         },
 
         /**

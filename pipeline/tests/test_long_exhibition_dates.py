@@ -84,5 +84,20 @@ class LongExhibitionDatesTests(unittest.TestCase):
                          [['2025-03-07', '', '2026-10-12', '']])
 
 
+    def test_placeholder_permanent_spans_are_rejected(self):
+        # MoMI publishes permanent galleries with invented bounds.
+        for start, end in (('1988-09-10', '2030-09-10'),   # opened decades ago
+                           ('2023-11-24', '2043-11-24'),   # closes decades out
+                           ('2016-09-01', '2027-01-01')):  # just past the 10-year bound
+            with self.subTest(start=start, end=end):
+                self.check(self.row(start_date=start, end_date=end),
+                           (False, 'placeholder_span'))
+
+    def test_real_multiyear_exhibitions_stay_inside_placeholder_bounds(self):
+        for start, end in (('2017-07-22', '2027-07-22'),
+                           ('2024-05-01', '2031-09-01')):
+            with self.subTest(start=start, end=end):
+                self.check(self.row(start_date=start, end_date=end))
+
 if __name__ == '__main__':
     unittest.main()

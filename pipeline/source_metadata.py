@@ -1,5 +1,6 @@
 """Refresh ordinary matched-event metadata only with attributable source evidence."""
 import json
+import re
 from datetime import date, datetime
 
 from occurrence_times import standardize_time
@@ -19,6 +20,18 @@ def _empty_room(value, location_name=None):
 def _description(value):
     label = _label(value)
     return bool(label and label != 'no description available.')
+
+
+def _substantive_description(value):
+    """A price-only extraction cannot replace an existing program description.
+
+    Match complete metadata statements, not length: a short corrected summary
+    can be useful, and a real description may legitimately contain a price.
+    """
+    label = _label(value)
+    price = r'(?:free(?: admission)?|\$\s*\d+(?:\.\d{1,2})?(?:\s*[-–/]\s*\$?\s*\d+(?:\.\d{1,2})?)?)'
+    metadata = rf'(?:(?:price|cost|admission|tickets?)\s*:\s*)?{price}[.!]?'
+    return _description(value) and re.fullmatch(metadata, label) is None
 
 
 def _grouped(raw):
@@ -105,7 +118,7 @@ def plan_source_metadata_refresh(event, incoming, sources, occurrences,
         fields['sublocation'] = room[:255]
 
     old, new = event.get('description'), incoming.get('description')
-    if (not event.get('reviewed') and _description(old) and _description(new)
+    if (not event.get('reviewed') and _description(old) and _substantive_description(new)
             and old != new and any(s.get('description') == old for s in prior)
             and not any(_grouped(s.get('raw_data')) for s in prior)):
         fields['description'] = new
@@ -134,7 +147,7 @@ def refresh_source_metadata(cursor, event_id, crawl_event_id, today=None,
     # Most matches bring no usable change; avoid history/occurrence queries.
     room_candidate = (_empty_room(event['sublocation'], event['location_name'])
                       and not _empty_room(incoming['sublocation'], incoming['location_name']))
-    description_candidate = (not event['reviewed'] and _description(incoming['description'])
+    description_candidate = (not event['reviewed'] and _substantive_description(incoming['description'])
                              and _description(event['description'])
                              and incoming['description'] != event['description'])
     delivery_candidate = _delivery_candidate(event, incoming)
