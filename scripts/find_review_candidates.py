@@ -220,6 +220,7 @@ PATTERNS = [
               AND (
                 e.name REGEXP '(Bible Study|Prayer Group|Sunday School|Worship Service|Torah Study|Shabbat Service)'
                 OR e.name REGEXP '^(Sunday|Weekly|Morning|Evening) (Service|Worship|Prayer|Mass)$'
+                OR e.name REGEXP '[[:<:]](Pooja|Puja|Abhishekam|Archana|Parayanam|Homam|Pradosham|Harati|Aarti|Arati|Sahasranama|Suprabhatam)[[:>:]]'
               )
         """,
     },
