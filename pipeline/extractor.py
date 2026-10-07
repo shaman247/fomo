@@ -10,11 +10,13 @@ Uses a two-pass approach for large pages (>50 expected events):
 import asyncio
 import base64
 import html
+import itertools
 import json
 import os
 import re
 import statistics
 import unicodedata
+from collections import Counter
 from dataclasses import dataclass, field, replace
 from datetime import date, datetime, timedelta
 from io import BytesIO
@@ -978,7 +980,7 @@ def _split_trailing_heading(text):
     return '\n'.join(lines[:start]), '\n'.join(lines[start:])
 
 
-def _split_trailing_record(text, cap):
+def _split_trailing_record(text, cap, card=None):
     """Peel the trailing PARTIAL RECORD off `text`.
 
     A chunk that ends a few lines after an event's heading strands the rest of
@@ -993,11 +995,21 @@ def _split_trailing_record(text, cap):
     the first STARTS on a record boundary. Falls back to `_split_trailing_heading`
     when that tail is bigger than `cap` (a very long record would otherwise
     ping-pong whole chunks forward).
+
+    `card` is the page's learned card-title shape (see _leadin_card_signature),
+    given only for pages that print dates ABOVE their titles. The record then
+    starts at the last card TITLE rather than the last heading — a Lincoln
+    Center card also has series and `##### ![pin][Venue]` headings, and cutting
+    after the venue carried the venue alone — and extends back over the lead-in
+    date / time / image lines above the title, so they travel with it.
     """
     lines = text.split('\n')
     last = None
     for idx, line in enumerate(lines):
-        if _is_heading_line(line) or _DETAIL_RECORD_LINE_RE.match(line):
+        if card is not None:
+            if _record_signature(line) == card or _DETAIL_RECORD_LINE_RE.match(line):
+                last = idx
+        elif _is_heading_line(line) or _DETAIL_RECORD_LINE_RE.match(line):
             last = idx
     if last is None:
         return text, ''
@@ -1005,6 +1017,12 @@ def _split_trailing_record(text, cap):
     # Extend back over consecutive headings so a section banner travels with the
     # record it introduces (`## Wednesday` + `### [Show](url)`).
     start = _extend_back_over_headings(lines, last)
+    if card is not None:
+        while start > 0 and (_is_heading_line(lines[start - 1])
+                             or _is_leadin_line(lines[start - 1])):
+            start -= 1
+        while start < last and not lines[start].strip():
+            start += 1
     if start == 0:
         return text, ''
     carried = '\n'.join(lines[start:])
@@ -1105,7 +1123,7 @@ def _split_long_line(line, max_chars):
     return pieces
 
 
-def chunk_content_by_size(content, max_chars=MAX_CHUNK_CHARS):
+def chunk_content_by_size(content, max_chars=MAX_CHUNK_CHARS, card=None):
     """
     Split content into chunks by character count, breaking at paragraph boundaries.
 
@@ -1139,7 +1157,7 @@ def chunk_content_by_size(content, max_chars=MAX_CHUNK_CHARS):
 
     def emit(text):
         """Close a chunk, holding back its trailing partial record."""
-        kept, carried = _split_trailing_record(text, carry_cap)
+        kept, carried = _split_trailing_record(text, carry_cap, card)
         if carried and kept.strip():
             chunks.append(kept)
             carry[0] = carried
@@ -1344,6 +1362,359 @@ def cap_occurrences_per_chunk(chunks, budget=OCCURRENCE_BUDGET_PER_CHUNK):
     return out
 
 
+# ---------------------------------------------------------------------------
+# Boundary context: lead-in lines and governing date headers
+# ---------------------------------------------------------------------------
+# Many listings print a card's date ABOVE its title: a day heading governing
+# every card under it (`## Monday, October 19, 2026`, Grolier's
+# `| | [**Wednesday, November 25, 2026**](…) |` row, Roxy's `### Saturday,
+# October 03`), or a per-card badge / date heading / showtime directly above the
+# title (NJ Tribe `17  Oct`, Lincoln Center `#### Wednesday, October 21, 2026 at
+# 7:30 pm` + image, Roxy `8:30PM [Buy](…)`). Every chunker cuts at the title —
+# that is where a record visibly starts — so those lines end the PREVIOUS chunk,
+# and the next chunk opens on cards with no date (Roxy's October 3 Misconceived
+# came back as an undated duplicate in two captures; agents recovered the rest
+# from weekdays and URL slugs).
+#
+# `carry_boundary_context` repairs this after all splitting is done by COPYING
+# (never moving) at most two kinds of source lines to the head of the next chunk:
+#
+#   1. the lead-in tail: the run of date / time / image / empty-cell lines that
+#      ends the previous chunk when the next chunk opens on a record start;
+#   2. the governing date header: when the next chunk's opening records have no
+#      date before its own first date line, the nearest preceding date line —
+#      only if that line is itself a lead-in (followed by a card title, not by
+#      body text, so a card's own `### [Title]` + `Fri, Sep 4` date is never
+#      carried) and sits within BOUNDARY_DATE_MAX_GAP chars of the cut.
+#
+# "Card title" is learned per page (_leadin_card_signature): the heading shape
+# (level, linked or not) or linked table row that the page's own date lines
+# lead into. A date directly under a title is that card's own date and does not
+# vote, and the page's first dated card must have its date ABOVE it — locally a
+# trailing-date page (Regal: film, synopsis, its own date list, next film) reads
+# exactly like a lead-in page, and only the page's first card tells them apart.
+# Footer and section headings (`## Supported By`, `#### The Grolier Club`) have
+# other shapes and attract nothing; a page without a learned card is chunked
+# exactly as before. The previous chunk stays byte-identical and a copied line
+# is never a title, so no card can be extracted twice.
+#
+# On a learned page chunk_for_extraction also (a) chunks PREAMBLE_CARRY_MAX_CHARS
+# short of the cap so the copy fits under it, and (b) has the size chunker carry
+# a cut record from its card TITLE back over its lead-in lines, rather than
+# from its last heading (_split_trailing_record).
+#
+# Measured 2026-10-07 on 1,462 saved pages (the 586-page corpus plus 14 days of
+# >30K crawls; 920 take the chunked path): 75 pages on 46 sites change, no
+# source line is lost, no title is duplicated, no chunk exceeds the cap. Over
+# their 8,495 card records, a title separated from its date fell 818 -> 383
+# (450 fixed, 15 newly cut at a moved boundary) and from its body 18 -> 7.
+# .claude/notes/backlog-bl11-card-boundaries-20261007.md has the cases.
+BOUNDARY_DATE_MAX_GAP = 6000
+BOUNDARY_MIN_LEADIN_DATES = 2
+BOUNDARY_OWN_DATE_LINES = 3
+
+_BC_WEEKDAY = r'(?:mon|tue|tues|wed|thu|thur|thurs|fri|sat|sun)[a-z]*\.?'
+_BC_MONTH = (r'(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|june?|july?|'
+             r'aug(?:ust)?|sept?(?:ember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\.?')
+_BC_DAY = r'\d{1,2}(?:st|nd|rd|th)?'
+_BC_TIME = r'\d{1,2}(?::\d{2})?\s*(?:am|pm|a\.m\.|p\.m\.)'
+_BC_TIME_RANGE = rf'{_BC_TIME}(?:\s*[-–—]\s*{_BC_TIME})?'
+_BOUNDARY_DATE_RE = re.compile(
+    rf'(?:{_BC_WEEKDAY}[,\s]+)?'
+    rf'(?:{_BC_MONTH}\s*{_BC_DAY}(?:,?\s*\d{{4}})?'
+    rf'|{_BC_DAY}\s+{_BC_MONTH}(?:,?\s*\d{{4}})?'
+    rf'|{_BC_MONTH}\s+\d{{4}}'
+    rf'|\d{{1,2}}/\d{{1,2}}(?:/\d{{2,4}})?)'
+    rf'(?:\s*(?:at|@|,|-|–|—|·)?\s*(?:{_BC_TIME_RANGE}|multiple times|all day))?',
+    re.IGNORECASE)
+_BOUNDARY_TIME_RE = re.compile(
+    rf'{_BC_TIME_RANGE}(?:\s+(?:buy|tickets?|rsvp|register|book(?: now)?))*', re.IGNORECASE)
+
+
+def _boundary_text(line):
+    """A line's visible text: images dropped, links reduced to labels, markup gone."""
+    s = re.sub(r'!\[[^\]]*\]\([^)]*\)', ' ', line)
+    s = re.sub(r'\[([^\]]*)\]\([^)]*\)', r'\1', s)
+    s = re.sub(r'^[ \t]*(?:[*+\-]|\d+\.)[ \t]+', '', s)
+    s = re.sub(r'[|*_#>`]', ' ', s)
+    return ' '.join(s.split())
+
+
+def _is_boundary_date_line(line):
+    text = _boundary_text(line)
+    return bool(text) and bool(_BOUNDARY_DATE_RE.fullmatch(text))
+
+
+# A date range printed across lines (Powerhouse `Oct 14` / `-` / `Nov 4`).
+_RANGE_CONNECTOR_RE = re.compile(r'[-–—]|to|through|thru|until', re.IGNORECASE)
+
+
+def _is_leadin_line(line):
+    """Blank / image-only / empty table row / date-only / time-only line, or a
+    range connector between two of those."""
+    text = _boundary_text(line)
+    return (not text or bool(_BOUNDARY_DATE_RE.fullmatch(text))
+            or bool(_BOUNDARY_TIME_RE.fullmatch(text))
+            or bool(_RANGE_CONNECTOR_RE.fullmatch(text)))
+
+
+def _is_link_only(line):
+    """A line of nothing but links: `[View Event Details](…)`, `[Buy](…)`."""
+    if '](' not in line:
+        return False
+    s = re.sub(r'!\[[^\]]*\]\([^)]*\)', '', line)
+    s = re.sub(r'\[[^\]]*\]\([^)]*\)', '', s)
+    return not re.sub(r'[\s|*_#>`\-]', '', s)
+
+
+_HEADING_LEVEL_RE = re.compile(r'^[ \t]*(?:[\*\-]\s+|\d+\.\s+)?(#{1,6})\s')
+# A link with a visible text label; `[ ![](arrow.gif) ](…)` image links don't count.
+_TEXT_LINK_RE = re.compile(r'(?<!!)\[(?!\s*!\[)\s*[^\]\s][^\]]*\]\(https?://')
+
+
+def _record_signature(line):
+    """Shape of a possible card title: ('h', level, linked) or ('t',) for a
+    linked calendar table row; None for anything else (date headings included)."""
+    if _is_heading_line(line):
+        if _is_boundary_date_line(line):
+            return None
+        level = len(_HEADING_LEVEL_RE.match(line).group(1)) if _HEADING_LEVEL_RE.match(line) else 0
+        return ('h', level, bool(_TEXT_LINK_RE.search(line)))
+    stripped = line.strip()
+    if stripped.startswith('|') and _boundary_text(line) and _TEXT_LINK_RE.search(stripped):
+        return ('t',)
+    return None
+
+
+def _opening_signatures(lines, start=0):
+    """Signatures of the record that `lines` opens on, skipping lead-in lines.
+
+    A run of consecutive headings counts as one opening (a category banner such
+    as Lincoln Center's `##### [Kids, Teens, and Families](…)` above its
+    `## [DIRT](…)` title), matching `_extend_back_over_headings`.
+    """
+    sigs = set()
+    source = lines if not start else (lines[i] for i in range(start, len(lines)))
+    for line in source:
+        if not sigs and _is_leadin_line(line):
+            continue
+        if sigs and not line.strip():
+            continue
+        sig = _record_signature(line)
+        if sig is None:
+            break
+        sigs.add(sig)
+        if sig[0] == 't' or not _is_heading_line(line):
+            break
+    return sigs
+
+
+def _leadin_card_signature(lines):
+    """The card-title shape this page's date lines lead into, or None.
+
+    Votes the opening signatures that follow each date line that is not a
+    card's own date (see _is_own_date); the winner must lead at least
+    BOUNDARY_MIN_LEADIN_DATES of them and a majority of the date lines that
+    lead any heading, and the page's first dated card must be led by its date
+    (_first_dated_card_is_led). A page whose dates sit inside card bodies
+    (`### [Title]` then `Fri, Sep 4`) casts no votes and gets no boundary
+    context.
+    """
+    votes = Counter()
+    voters = 0
+    for i, line in enumerate(lines):
+        if _is_boundary_date_line(line) and not _is_own_date(lines, i):
+            opening = _opening_signatures(lines, i + 1)
+            voters += bool(opening)
+            votes.update(opening)
+    if not votes:
+        return None
+    sig, count = votes.most_common(1)[0]
+    if count < BOUNDARY_MIN_LEADIN_DATES or count * 2 <= voters:
+        return None
+    return sig if _first_dated_card_is_led(lines, sig) else None
+
+
+def _is_own_date(lines, idx):
+    """True when date line `lines[idx]` sits directly under a title heading —
+    that card's own date (Levittown `## [Bus Trip]` / `Wednesday, December 9,
+    2026 at 10:30am` / `#### Age Group:`), not a lead-in to what follows.
+    Link-only lines between them don't count: Regal prints `### [Film](…)` /
+    `[View Event Details](…)` / its own `* October 16, 2026` list, which would
+    otherwise read as dates leading the NEXT film's title."""
+    for j in range(idx - 1, -1, -1):
+        if _is_heading_line(lines[j]):
+            return _record_signature(lines[j]) is not None
+        if _is_leadin_line(lines[j]) or _is_link_only(lines[j]):
+            continue
+        return False
+    return False
+
+
+def _first_dated_card_is_led(lines, card):
+    """Page-level orientation check for a learned `card` shape.
+
+    Locally, `title / body / date / next title` reads the same whether the date
+    closes its own card (Regal: `### [Film]`, synopsis, `* October 16, 2026`)
+    or opens the next one (NJ: `17  Oct`, `#### [Tour]`). Only the page's ends
+    differ: on a lead-in page the FIRST dated card has its date above it; on a
+    trailing-date page its dates follow it. Cards with no date on either side
+    (navigation headings of the same shape) are skipped.
+    """
+    titles = [i for i, line in enumerate(lines) if _record_signature(line) == card]
+    for n, t in enumerate(titles):
+        j = t - 1
+        while j >= 0 and (_is_leadin_line(lines[j]) or _is_link_only(lines[j])
+                          or (_is_heading_line(lines[j])
+                              and _record_signature(lines[j]) != card)):
+            if _is_boundary_date_line(lines[j]):
+                return True
+            j -= 1
+        # Own dates sit in the card's first lines (Regal: one link-only line
+        # and a synopsis). A same-shape navigation heading is far from any date.
+        end = titles[n + 1] if n + 1 < len(titles) else len(lines)
+        content = 0
+        for k in range(t + 1, end):
+            if _is_boundary_date_line(lines[k]):
+                return False
+            if not (_is_leadin_line(lines[k]) or _is_link_only(lines[k])):
+                content += 1
+                if content > BOUNDARY_OWN_DATE_LINES:
+                    break
+    return False
+
+
+def _boundary_tail(lines):
+    """Index where the trailing lead-in run of `lines` begins, or None.
+
+    The run must hold a date or time line; an image alone dates nothing.
+    """
+    i = len(lines)
+    while i > 0 and _is_leadin_line(lines[i - 1]):
+        i -= 1
+    if not any(_boundary_text(l) for l in lines[i:]):
+        return None
+    return i
+
+
+def _opens_on_undated_record(lines, card):
+    """True when a `card`-shaped title comes before the chunk's first date line
+    and before any other heading (a new section such as `## Resident
+    Organizations` ends what the previous date could govern). A banner heading
+    directly above the title (`##### [Kids, Teens, and Families]`) is part of it.
+    """
+    for i, line in enumerate(lines):
+        if _is_boundary_date_line(line):
+            return False
+        if _record_signature(line) == card:
+            return True
+        if _is_heading_line(line):
+            return card in _opening_signatures(lines, i)
+    return False
+
+
+def _governing_date_line(split, k, card):
+    """Nearest date line before chunk `k` that heads `card` records, or None.
+
+    Walks back across earlier chunks; gives up at the first date line that
+    does not lead a card (a card's own date) or past BOUNDARY_DATE_MAX_GAP.
+    """
+    gap = 0
+    for j in range(k - 1, -1, -1):
+        lines = split[j]
+        for i in range(len(lines) - 1, -1, -1):
+            if _is_boundary_date_line(lines[i]):
+                if _is_own_date(lines, i):
+                    return None
+                # What follows the date line may start in the next chunk.
+                following = itertools.chain(lines[i + 1:], split[j + 1])
+                return lines[i] if card in _opening_signatures(following) else None
+            gap += len(lines[i]) + 1
+            if gap > BOUNDARY_DATE_MAX_GAP:
+                return None
+    return None
+
+
+def carry_boundary_context(chunks, max_chars=MAX_CHUNK_CHARS,
+                           max_carry=PREAMBLE_CARRY_MAX_CHARS):
+    """Copy lead-in / governing date lines across each chunk boundary.
+
+    See the block comment above. Returns a new list; chunk 0 and every chunk
+    that needs no context are returned unchanged.
+    """
+    if len(chunks) < 2:
+        return chunks
+    split = [chunk.split('\n') for chunk in chunks]
+    card = _leadin_card_signature([line for lines in split for line in lines])
+    if card is None:
+        return chunks
+
+    out = [chunks[0]]
+    for k in range(1, len(chunks)):
+        prev, nxt = split[k - 1], split[k]
+        carried = []
+
+        # A next chunk that opens on its own date line has its own lead-in.
+        first = next((l for l in nxt if _boundary_text(l)), '')
+        start = _boundary_tail(prev)
+        if (start is not None and not _is_boundary_date_line(first)
+                and card in _opening_signatures(nxt)):
+            carried = [l for l in prev[start:] if l.strip()]
+
+        if (not any(_is_boundary_date_line(l) for l in carried)
+                and _opens_on_undated_record(nxt, card)):
+            header = _governing_date_line(split, k, card)
+            if header is not None:
+                carried = [header] + carried
+
+        text = '\n'.join(carried)
+        if carried and len(text) <= max_carry and len(text) + 1 + len(chunks[k]) <= max_chars:
+            out.append(text + '\n' + chunks[k])
+        else:
+            out.append(chunks[k])
+    return out
+
+
+def chunk_for_extraction(content, max_records_per_chunk=None, log=None,
+                         events_per_chunk=EVENTS_PER_CHUNK, max_chars=MAX_CHUNK_CHARS):
+    """The chunked path's complete split: chunk, apply both caps, carry context.
+
+    `max_records_per_chunk` subdivides first; the occurrence budget (an OUTPUT
+    cap) runs after it so it sees the final piece boundaries; boundary context
+    is copied last, across the final cuts. A page that shows lead-in dates is
+    chunked PREAMBLE_CARRY_MAX_CHARS short of the limit so the copied context
+    still fits under `max_chars`; every other page is split exactly as before.
+    `log` receives one line per step that changed anything. Returns
+    (chunks, method).
+    """
+    log = log or (lambda message: None)
+    card = (_leadin_card_signature(content.split('\n'))
+            if len(content) > max_chars else None)
+    reserve = PREAMBLE_CARRY_MAX_CHARS if card is not None else 0
+    chunks, method = chunk_content(content, events_per_chunk, max_chars - reserve, card)
+
+    capped = cap_records_per_chunk(chunks, max_records_per_chunk)
+    if len(capped) != len(chunks):
+        log(f"max_records_per_chunk={max_records_per_chunk} "
+            f"subdivided {len(chunks)} chunks into {len(capped)}")
+    chunks = capped
+
+    dense = cap_occurrences_per_chunk(chunks)
+    if len(dense) != len(chunks):
+        worst = max(count_date_tokens(c) for c in chunks)
+        log(f"Date-dense page ({worst} dates in one chunk, budget "
+            f"{OCCURRENCE_BUDGET_PER_CHUNK}); subdivided {len(chunks)} "
+            f"chunks into {len(dense)}")
+    chunks = dense
+
+    carried = carry_boundary_context(chunks, max_chars)
+    changed = sum(1 for before, after in zip(chunks, carried) if before != after)
+    if changed:
+        log(f"Copied lead-in date context across {changed} chunk boundar"
+            f"{'y' if changed == 1 else 'ies'}")
+    return carried, method
+
+
 def _bound_event_chunk(chunk, max_chars):
     """Bound an oversized event chunk, keeping every record that fits intact.
 
@@ -1382,9 +1753,13 @@ def _bound_event_chunk(chunk, max_chars):
     return chunks
 
 
-def chunk_content(content, events_per_chunk=EVENTS_PER_CHUNK, max_chars=MAX_CHUNK_CHARS):
+def chunk_content(content, events_per_chunk=EVENTS_PER_CHUNK, max_chars=MAX_CHUNK_CHARS,
+                  card=None):
     """
     Smart chunking that tries event markers first, then falls back to size-based chunking.
+
+    `card` (a learned card-title shape) is passed to the size chunker's
+    trailing-record carry; see _split_trailing_record.
 
     Returns a tuple of (chunks, method) where method is 'events' or 'size'.
     """
@@ -1408,7 +1783,7 @@ def chunk_content(content, events_per_chunk=EVENTS_PER_CHUNK, max_chars=MAX_CHUN
         return [content], 'single'
 
     # Fall back to size-based chunking
-    size_chunks = chunk_content_by_size(content, max_chars)
+    size_chunks = chunk_content_by_size(content, max_chars, card)
     return size_chunks, 'size'
 
 
@@ -2686,24 +3061,11 @@ async def prepare_extraction(cursor, crawl_result_id, website_name, notes="",
                 print(f"    - Large page detected (~{estimated_events} events, {len(content_to_process)} chars), preparing chunked extraction...")
 
             # Split content into chunks and build prompts
-            chunks, chunk_method = chunk_content(content_to_process, EVENTS_PER_CHUNK, MAX_CHUNK_CHARS)
-            records_cap = settings.max_records_per_chunk
-            if records_cap:
-                capped = cap_records_per_chunk(chunks, records_cap)
-                if len(capped) != len(chunks):
-                    print(f"    - max_records_per_chunk={records_cap} "
-                          f"subdivided {len(chunks)} chunks into {len(capped)}")
-                chunks = capped
-
-            # Output budget, applied last so it sees the final piece boundaries.
-            # Inert on ordinary listings; only date-list pages are subdivided.
-            dense = cap_occurrences_per_chunk(chunks)
-            if len(dense) != len(chunks):
-                worst = max(count_date_tokens(c) for c in chunks)
-                print(f"    - Date-dense page ({worst} dates in one chunk, budget "
-                      f"{OCCURRENCE_BUDGET_PER_CHUNK}); subdivided {len(chunks)} "
-                      f"chunks into {len(dense)}")
-            chunks = dense
+            # Chunk, apply both per-chunk caps, then copy lead-in dates across
+            # the cuts. See chunk_for_extraction.
+            chunks, chunk_method = chunk_for_extraction(
+                content_to_process, settings.max_records_per_chunk,
+                log=lambda message: print(f"    - {message}"))
             print(f"    - Split into {len(chunks)} chunks using {chunk_method}-based chunking")
 
             # Never queue a packet for a chunk that cannot hold an event.
@@ -2870,9 +3232,7 @@ def _prepare_coverage_review(prep, review):
     chunks still get an independent review, with the original source intact.
     """
     if prep.extraction_type == 'single' and prep.content:
-        chunks, _ = chunk_content(prep.content, EVENTS_PER_CHUNK, MAX_CHUNK_CHARS)
-        chunks = cap_records_per_chunk(chunks, prep.max_records_per_chunk)
-        chunks = cap_occurrences_per_chunk(chunks)
+        chunks, _ = chunk_for_extraction(prep.content, prep.max_records_per_chunk)
         date_string = agent_extraction.reference_date()
         prompts = [get_chunk_prompt(chunk, date_string,
                    request_id=f'cr-{prep.crawl_result_id}-review-chunk-{i}') + review

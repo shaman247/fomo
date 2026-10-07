@@ -5099,6 +5099,110 @@ def _extract_street_address(full_address):
     return _normalize_street_address(street_part)
 
 
+# How close a name-prefixed location and a bare-address sibling must sit to be
+# the same building when their address cities are spelled differently
+# ("Brooklyn Heights" vs "Brooklyn" at 334 Furman St, 0.2 km apart). The
+# same-key pairs that are NOT one place are towns apart: 1 Museum Dr is
+# Greenwich CT and Roslyn NY (23 km), 1 Ocean Pkwy is Massapequa and Wantagh
+# (7 km). Same-place pairs measured 2026-10-07 sit within 0.55 km.
+_PREFIXED_ADDRESS_SAME_PLACE_M = 1000
+
+# A co-tenant counts as NAMED only on a name at least this long, so a stub row
+# name cannot claim an address from a passing word.
+_MIN_COTENANT_NAME_LEN = 6
+
+
+def _name_prefixed_address_keys(address):
+    """Strict-tier keys of an address that LEADS with a venue name, else empty.
+
+    `_extract_street_address` refuses "Madison Square Park, 11 Madison Ave, …"
+    (no leading house number), so such a row never enters the strict tier, and a
+    bare-address sibling owns the key alone. These keys never own a key either.
+    They only register the row as a CO-TENANT of that building (see
+    `_address_tier_match`).
+
+    Returns the strict parse of the first comma part that reads as a street
+    address ("l, 6409, 338 Moffat St" skips the bare "6409"), plus the loose key
+    for spellings the strict parser keeps apart.
+    """
+    if not address or _extract_street_address(address):
+        return set()
+    keys = set()
+    parts = address.split(',')
+    for i, part in enumerate(parts):
+        if re.match(r'\s*\d', part) and _extract_street_address_loose(part):
+            key = _extract_street_address(','.join(parts[i:]))
+            if key:
+                keys.add(key)
+                break
+    loose = _extract_street_address_loose(address)
+    if loose:
+        keys.add(loose)
+    return keys
+
+
+def _plain_words(text):
+    """Lowercase `text` to space-separated alphanumeric words, padded for
+    word-boundary containment tests."""
+    return ' ' + ' '.join(re.findall(r'[a-z0-9]+', (text or '').lower())) + ' '
+
+
+def _names_location(info, venue_words):
+    """Whether `venue_words` (from `_plain_words`) names location `info`."""
+    for name in {info.get('name') or '', _normalize_location_name(info.get('name') or '') or ''}:
+        words = _plain_words(name)
+        if len(words.strip()) >= _MIN_COTENANT_NAME_LEN and words in venue_words:
+            return True
+    return False
+
+
+def _address_tier_match(locations_map, key, venue_text):
+    """The strict address tier's answer for `key`, given the source's venue text.
+
+    The bare-address owner answers, unless the source NAMES exactly one
+    name-prefixed co-tenant of the same building and does not name the owner:
+    Turnstile's "10 South Street" + "Battery Maritime Building lobby" is the
+    Battery Maritime Building, not Cipriani South Street, which owns the bare
+    key.
+
+    Co-tenants deliberately do not make the key AMBIGUOUS. Measured 2026-10-07
+    over every crawl_event at the 27 contested keys, that blanket rule unpinned
+    45 wrong matches (Pier 57 events on City Winery) and 51 right ones
+    (Hidden Jewel Box inside Port Authority, Bronx River Art Center inside West
+    Farms Rapids Park's borrowed address). It also undid a curated choice:
+    Last Frontier 4010 is name-prefixed precisely so that bare 520 Kingsland Ave
+    means Kingsland Wildflowers 1511. A name-prefixed address says the row does
+    not claim the bare building address; which tenant a bare address means is
+    data, fixed per building.
+    """
+    match = locations_map.get('addresses', {}).get(key) if key else None
+    if match is None or match is _AMBIGUOUS_ADDRESS:
+        return match
+    cotenants = locations_map.get('address_cotenants', {}).get(key)
+    if not cotenants:
+        return match
+    venue_words = _plain_words(venue_text)
+    if _names_location(match, venue_words):
+        return match
+    named = [c for c in cotenants if _names_location(c, venue_words)]
+    return named[0] if len(named) == 1 else match
+
+
+def _same_address_place(a, b):
+    """Whether two locations that share a street key are plausibly one building.
+
+    A different state is never the same place. The same address city is. Anything
+    else must sit within `_PREFIXED_ADDRESS_SAME_PLACE_M`.
+    """
+    city_a, state_a = _parse_city_state(a.get('address'))
+    city_b, state_b = _parse_city_state(b.get('address'))
+    if state_a and state_b and state_a != state_b:
+        return False
+    if city_a and city_a == city_b:
+        return True
+    return _within_metres(a, b, _PREFIXED_ADDRESS_SAME_PLACE_M)
+
+
 # US state abbreviations, used to parse the "City, ST" tail of an address.
 _US_STATES = {
     'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA', 'HI', 'ID',
@@ -6150,6 +6254,10 @@ def build_locations_map(cursor):
         # Ave, 4th flr" still meets a row stored as "412 8th Ave 4th Floor".
         # Ambiguity is marked the same way; two venues in one building decline.
         'addresses_loose': {},
+        # strict address key -> name-prefixed locations in the same building as
+        # the key's owner ("Madison Square Park, 11 Madison Ave, ..."). They never
+        # own the key; see `_address_tier_match`.
+        'address_cotenants': {},
         'website_scoped': {},
         # Curated aliases that identify a branch only within their own source.
         # Keep them usable there, but never export that knowledge to other sites.
@@ -6202,6 +6310,7 @@ def build_locations_map(cursor):
     weak_keys = locations_map['weak_keys']
     strong_keys = set()
     short_index_keys = locations_map['short_index_keys']
+    prefixed_addresses = []
 
     def note_if_short(key):
         """Record a key too short to have been indexed before the widening."""
@@ -6318,6 +6427,20 @@ def build_locations_map(cursor):
                 locations_map['addresses_loose'][loose_address] = full_info
             elif existing is not _AMBIGUOUS_ADDRESS and existing.get('id') != loc.get('id'):
                 locations_map['addresses_loose'][loose_address] = _AMBIGUOUS_ADDRESS
+        prefixed_addresses.extend(
+            (key, full_info) for key in _name_prefixed_address_keys(address))
+
+    # A name-prefixed row shares its building's strict key without being in the
+    # strict tier. Record it as a co-tenant of the owner's key, gated to the
+    # same place: "1 museum dr" is Greenwich CT and Roslyn NY.
+    for key, info in prefixed_addresses:
+        owner = locations_map['addresses'].get(key)
+        if (owner is not None and owner is not _AMBIGUOUS_ADDRESS
+                and owner.get('id') != info.get('id')
+                and _same_address_place(owner, info)):
+            cotenants = locations_map['address_cotenants'].setdefault(key, [])
+            if all(c.get('id') != info.get('id') for c in cotenants):
+                cotenants.append(info)
 
     # A key that some location owns outright is never "weak" — an explicit
     # curated name or alias states the mapping, and the brand-family guard must
@@ -7097,10 +7220,10 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
                         return result
 
     # Step 3: Address matching (e.g., "347 Davis Ave" matches location at that address)
-    addresses_tier = locations_map.get('addresses', {})
+    venue_text = f"{location_name_raw or ''} {sublocation_name_raw or ''}"
     for key in search_keys:
         street_addr = _extract_street_address(key)
-        match = addresses_tier.get(street_addr) if street_addr else None
+        match = _address_tier_match(locations_map, street_addr, venue_text)
         if (match is not None and match is not _AMBIGUOUS_ADDRESS
                 and (result := make_result(match, 'address'))):
             return result
@@ -7535,7 +7658,7 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
     # venue at the same address like 651 ARTS).
     if normalized_subloc and len(normalized_subloc) > 3:
         street_addr = _extract_street_address(normalized_subloc)
-        match = addresses_tier.get(street_addr) if street_addr else None
+        match = _address_tier_match(locations_map, street_addr, venue_text)
         if (match is not None and match is not _AMBIGUOUS_ADDRESS
                 and (result := make_result(match, 'sublocation_address'))):
             return result

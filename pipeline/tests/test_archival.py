@@ -77,7 +77,8 @@ CREATE TABLE websites (
     id INTEGER PRIMARY KEY, name TEXT, base_url TEXT, disabled INTEGER DEFAULT 0,
     rotating_listing INTEGER DEFAULT 0);
 CREATE TABLE crawl_results (
-    id INTEGER PRIMARY KEY, website_id INTEGER, status TEXT, processed_at TEXT);
+    id INTEGER PRIMARY KEY, website_id INTEGER, status TEXT, processed_at TEXT,
+    filename TEXT);
 CREATE TABLE crawl_events (id INTEGER PRIMARY KEY, crawl_result_id INTEGER, name TEXT);
 CREATE TABLE crawl_event_occurrences (
     crawl_event_id INTEGER, start_date TEXT, end_date TEXT);
@@ -448,7 +449,9 @@ class TestInstagramOnlySourcesKeepFutureEvents(ArchivalTestBase):
 
     def test_mixed_url_website_is_not_exempt(self):
         """A site that also carries a real calendar URL yields a genuine
-        delisting signal, so it keeps the normal rules (3 of 316 are mixed)."""
+        delisting signal, so its SITE-CRAWL sources keep the normal rules (3 of
+        316 are mixed). Its picnob_ sources are judged per surface instead; see
+        test_archival_mixed_surfaces."""
         self.add_website(1)
         self.add_website_url(1, "https://www.instagram.com/venue1/")
         self.add_website_url(1, "https://venue1.com/events")

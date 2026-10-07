@@ -228,6 +228,20 @@ def get_or_create_crawl_run(cursor, connection, run_date):
 _CRAWL_RETRY_SUFFIX_RE = r'_w[0-9]+(_retry[0-9]+)?(_[0-9]+)?(?=[.][^.]+$|$)'
 
 
+def _picnob_surface_sql(alias):
+    """SQL truth value: is crawl_results row `alias` an Instagram-mirror ingest?
+
+    A website can be crawled by two surfaces: the ordinary site crawl (filename =
+    safe website name, plus any retry suffix) and the out-of-band Picnob ingest,
+    whose rows are always `picnob_<handle>_<ts>.md` (scripts/picnob_to_pipeline.py).
+    instagram.com URLs are CrawlMode.SKIP, so neither surface ever sees the
+    other's content. `crawl_results` has no source column, so this filename
+    prefix is the only partition key. Shared by get_coverage_drop_report and the
+    archival snapshot so both draw the line in the same place.
+    """
+    return f"(SUBSTR(COALESCE({alias}.filename, ''), 1, 7) = 'picnob_')"
+
+
 def create_crawl_result(cursor, connection, crawl_run_id, website_id, filename):
     """Create a crawl attempt, reusing only a pending or failed attempt.
 
@@ -1020,8 +1034,7 @@ def get_coverage_drop_report(cursor, crawl_run_id=None, since_days=1,
              WHERE p2.website_id = cr.website_id
                AND p2.id < cr.id
                AND p2.status = 'processed'
-               AND (SUBSTR(COALESCE(p2.filename, ''), 1, 7) = 'picnob_')
-                 = (SUBSTR(COALESCE(cr.filename, ''), 1, 7) = 'picnob_')
+               AND {_picnob_surface_sql('p2')} = {_picnob_surface_sql('cr')}
          )
         WHERE cr.status = 'processed'
           AND {scope}
@@ -1205,6 +1218,9 @@ def source_horizon(crawl_date, date_counts):
 def _trim_source_horizons(cursor):
     """Replace _ws_crawl_state.last_start with source_horizon() of the same crawl.
 
+    One row per (website, surface): each surface's latest attempt is trimmed on
+    its own occurrences, never on the other surface's.
+
     The CREATE above seeds last_start with MAX(start_date); this narrows it for
     crawls whose far dates are a sparse outlier tail. Only ever lowers it.
     The crawl date is DATE(processed_at): the same timestamp the rest of the
@@ -1212,36 +1228,34 @@ def _trim_source_horizons(cursor):
     horizon matters (an unfinished latest attempt blocks archival on its own).
     """
     cursor.execute("""
-        SELECT cr.website_id,
+        SELECT cr.website_id, cs.picnob,
                DATE(cr.processed_at) AS crawl_date,
                co.start_date, COUNT(DISTINCT ce.id)
         FROM crawl_results cr
-        JOIN (SELECT website_id, MAX(id) AS id FROM crawl_results
-              WHERE website_id IS NOT NULL GROUP BY website_id) latest
-          ON latest.id = cr.id
-        JOIN _ws_crawl_state cs ON cs.website_id = cr.website_id
+        JOIN _ws_crawl_state cs ON cs.crawl_result_id = cr.id
         JOIN crawl_events ce ON ce.crawl_result_id = cr.id
         JOIN crawl_event_occurrences co ON co.crawl_event_id = ce.id
         WHERE cs.last_start IS NOT NULL
-        GROUP BY cr.website_id, crawl_date, co.start_date
+        GROUP BY cr.website_id, cs.picnob, crawl_date, co.start_date
     """)
-    by_site = {}
+    by_surface = {}
     for row in cursor.fetchall():
         if isinstance(row, dict):
             row = tuple(row.values())
-        website_id, crawl_date, start_date, count = row
-        site = by_site.setdefault(website_id, [crawl_date, []])
-        site[1].append((start_date, count))
+        website_id, picnob, crawl_date, start_date, count = row
+        surface = by_surface.setdefault((website_id, picnob), [crawl_date, []])
+        surface[1].append((start_date, count))
     updates = []
-    for website_id, (crawl_date, date_counts) in by_site.items():
+    for (website_id, picnob), (crawl_date, date_counts) in by_surface.items():
         horizon = source_horizon(crawl_date, date_counts)
         starts = [_as_date(d) for d, _ in date_counts if d is not None]
         if horizon is not None and starts and horizon < max(starts):
-            updates.append((horizon, website_id))
-    for horizon, website_id in updates:
+            updates.append((horizon, website_id, picnob))
+    for horizon, website_id, picnob in updates:
         cursor.execute(
-            "UPDATE _ws_crawl_state SET last_start = %s WHERE website_id = %s",
-            (horizon.isoformat(), website_id))
+            "UPDATE _ws_crawl_state SET last_start = %s "
+            "WHERE website_id = %s AND picnob = %s",
+            (horizon.isoformat(), website_id, picnob))
     return updates
 
 
@@ -1280,18 +1294,33 @@ def build_archival_temps(cursor):
 
     Events left with NO enabled source website at all are not reachable from this
     per-website pass (see archive_dead_source_events).
+
+    SURFACE PARTITION. _ws_latest and _ws_crawl_state are keyed by (website,
+    surface), where surface = _picnob_surface_sql: a Picnob Instagram ingest or
+    the ordinary site crawl. A mixed website (w6019 No Booze Babes: IG base_url
+    plus a Luma API row; w4545 Textile Arts Center: IG plus a class calendar) is
+    crawled by both, and neither surface can see the other's content. Keyed per
+    website, whichever surface finished last decided "still listed", the finished
+    state and the source horizon for events only the OTHER surface ever carried,
+    so a Luma crawl that never lists IG posts could archive an IG-sourced event,
+    and a fresh Picnob bundle could pin or release a calendar event. archive_where
+    joins each source crawl to the state of ITS OWN surface. A website crawled by
+    one surface has one row, identical to the old per-website row.
     """
     cursor.execute("DROP TEMPORARY TABLE IF EXISTS _ws_latest")
-    cursor.execute("""
-        CREATE TEMPORARY TABLE _ws_latest (website_id INT UNSIGNED PRIMARY KEY, latest DATETIME(6))
-        SELECT cr.website_id, MAX(cr.processed_at) AS latest
+    cursor.execute(f"""
+        CREATE TEMPORARY TABLE _ws_latest (
+            website_id INT UNSIGNED, picnob TINYINT, latest DATETIME(6),
+            PRIMARY KEY (website_id, picnob))
+        SELECT cr.website_id, {_picnob_surface_sql('cr')} AS picnob,
+               MAX(cr.processed_at) AS latest
         FROM crawl_results cr
         JOIN websites w ON w.id = cr.website_id
         WHERE cr.status IN ('processed', 'extracted')
           AND cr.processed_at IS NOT NULL
           AND cr.website_id IS NOT NULL
           AND (w.disabled = FALSE OR w.disabled IS NULL)
-        GROUP BY cr.website_id
+        GROUP BY cr.website_id, picnob
     """)
     cursor.execute("DROP TEMPORARY TABLE IF EXISTS _evt_future")
     cursor.execute("""
@@ -1308,21 +1337,26 @@ def build_archival_temps(cursor):
     # the existing complete-empty-calendar behavior; a known short horizon
     # cannot speak for an event whose next occurrence is beyond that horizon.
     cursor.execute("DROP TEMPORARY TABLE IF EXISTS _ws_crawl_state")
-    cursor.execute("""
+    cursor.execute(f"""
         CREATE TEMPORARY TABLE _ws_crawl_state (
-            website_id INT UNSIGNED PRIMARY KEY, status VARCHAR(16),
-            processed_at DATETIME(6), last_start DATE)
-        SELECT cr.website_id, cr.status, cr.processed_at,
+            website_id INT UNSIGNED, picnob TINYINT, crawl_result_id INT UNSIGNED,
+            status VARCHAR(16), processed_at DATETIME(6), last_start DATE,
+            PRIMARY KEY (website_id, picnob))
+        SELECT cr.website_id, latest.picnob, cr.id AS crawl_result_id,
+               cr.status, cr.processed_at,
                MAX(co.start_date) AS last_start
         FROM crawl_results cr
-        JOIN (SELECT website_id, MAX(id) AS id FROM crawl_results
-              WHERE website_id IS NOT NULL GROUP BY website_id) latest
+        JOIN (SELECT website_id, {_picnob_surface_sql('crl')} AS picnob,
+                     MAX(id) AS id
+              FROM crawl_results crl
+              WHERE website_id IS NOT NULL
+              GROUP BY website_id, picnob) latest
           ON latest.id = cr.id
         JOIN websites w ON w.id = cr.website_id
         LEFT JOIN crawl_events ce ON ce.crawl_result_id = cr.id
         LEFT JOIN crawl_event_occurrences co ON co.crawl_event_id = ce.id
         WHERE w.disabled = FALSE OR w.disabled IS NULL
-        GROUP BY cr.website_id, cr.status, cr.processed_at
+        GROUP BY cr.website_id, latest.picnob, cr.id, cr.status, cr.processed_at
     """)
     # MAX(start_date) lets a few far-dated outliers (dates spelled out in listing
     # prose) stretch a 14-day fetch window to months; cut those sparse tails so
@@ -1333,8 +1367,10 @@ def build_archival_temps(cursor):
     # Two populations qualify. First, websites whose ONLY crawl source is
     # Instagram — the picnob-sourced venues.
     # A website that also carries a real calendar URL is deliberately excluded:
-    # that URL yields a genuine "no longer listed" signal, so normal archival
-    # applies (3 of 316 IG-carrying sites are mixed like this).
+    # that URL yields a genuine "no longer listed" signal for what IT lists, so
+    # normal archival applies to its site-crawl sources. Its Picnob sources carry
+    # no such signal; archive_where treats any picnob_ source as no-evidence by
+    # surface, independently of this website-level table (BL24).
     #
     # The crawl source is `website_urls` when the site has any rows there, and
     # `websites.base_url` when it has none. The base_url fallback is NOT cosmetic:
@@ -1473,8 +1509,8 @@ def archive_outdated_events(cursor, connection, website_id, temps_built=False,
     # 4. Either has no future dates, or source completeness/coverage and the
     #    future-event guards pass (14-day grace, >=2 fresh crawls since last
     #    seen, no too-future rejection, meaningful listing absence)
-    # Takes the website_id parameter THREE times (in order).
-    archive_where = """
+    # Takes the website_id parameter FOUR times (in order).
+    archive_where = f"""
         e.archived = FALSE
           AND EXISTS (
               SELECT 1
@@ -1493,7 +1529,10 @@ def archive_outdated_events(cursor, connection, website_id, temps_built=False,
               FROM event_sources es
               JOIN crawl_events ce ON es.crawl_event_id = ce.id
               JOIN crawl_results cr ON ce.crawl_result_id = cr.id
+              -- Keyed per surface (see build_archival_temps): a source crawl
+              -- is compared only with the latest crawl of its own surface.
               JOIN _ws_latest wl ON wl.website_id = cr.website_id
+                                AND wl.picnob = {_picnob_surface_sql('cr')}
               WHERE es.event_id = e.id
                 AND cr.processed_at = wl.latest
           )
@@ -1531,6 +1570,7 @@ def archive_outdated_events(cursor, connection, website_id, temps_built=False,
                       JOIN crawl_events ce ON ce.id = es.crawl_event_id
                       JOIN crawl_results cr ON cr.id = ce.crawl_result_id
                       JOIN _ws_crawl_state cs ON cs.website_id = cr.website_id
+                                             AND cs.picnob = {_picnob_surface_sql('cr')}
                       WHERE es.event_id = e.id
                         AND (
                             cs.status NOT IN ('processed', 'extracted')
@@ -1554,22 +1594,38 @@ def archive_outdated_events(cursor, connection, website_id, temps_built=False,
                   )
                   -- ... AND this website has had >= 2 successful crawls since the
                   -- event was last seen (a wall-clock grace alone is zero-tolerance
-                  -- on monthly-cadence sites: one missed extraction would archive)
-                  AND (
-                      SELECT COUNT(*)
-                      FROM crawl_results crn
-                      WHERE crn.website_id = %s
-                        AND crn.status IN ('processed', 'extracted')
-                        AND crn.processed_at IS NOT NULL
-                        AND crn.processed_at > COALESCE((
-                            SELECT MAX(cr3.processed_at)
-                            FROM event_sources es3
-                            JOIN crawl_events ce3 ON es3.crawl_event_id = ce3.id
-                            JOIN crawl_results cr3 ON ce3.crawl_result_id = cr3.id
-                            WHERE es3.event_id = e.id
-                              AND cr3.processed_at IS NOT NULL
-                        ), '1970-01-01')
-                  ) >= 2
+                  -- on monthly-cadence sites: one missed extraction would archive),
+                  -- counted on EACH surface of this website that sourced the event:
+                  -- two site crawls say nothing about an IG post, nor vice versa.
+                  AND NOT EXISTS (
+                      SELECT 1
+                      FROM (SELECT 0 AS picnob UNION ALL SELECT 1) sf
+                      WHERE EXISTS (
+                          SELECT 1
+                          FROM event_sources es4
+                          JOIN crawl_events ce4 ON es4.crawl_event_id = ce4.id
+                          JOIN crawl_results cr4 ON ce4.crawl_result_id = cr4.id
+                          WHERE es4.event_id = e.id
+                            AND cr4.website_id = %s
+                            AND {_picnob_surface_sql('cr4')} = sf.picnob
+                      )
+                      AND (
+                          SELECT COUNT(*)
+                          FROM crawl_results crn
+                          WHERE crn.website_id = %s
+                            AND {_picnob_surface_sql('crn')} = sf.picnob
+                            AND crn.status IN ('processed', 'extracted')
+                            AND crn.processed_at IS NOT NULL
+                            AND crn.processed_at > COALESCE((
+                                SELECT MAX(cr3.processed_at)
+                                FROM event_sources es3
+                                JOIN crawl_events ce3 ON es3.crawl_event_id = ce3.id
+                                JOIN crawl_results cr3 ON ce3.crawl_result_id = cr3.id
+                                WHERE es3.event_id = e.id
+                                  AND cr3.processed_at IS NOT NULL
+                            ), '1970-01-01')
+                      ) < 2
+                  )
                   -- ... AND the extractor didn't recently reject this event as
                   -- start_too_future (beyond FUTURE_WINDOW_DAYS = still on the page,
                   -- just too far out to re-link; treat as present, don't archive)
@@ -1583,7 +1639,9 @@ def archive_outdated_events(cursor, connection, website_id, temps_built=False,
                   )
                   -- ... AND the event is not sourced EXCLUSIVELY from feeds whose
                   -- absence carries no evidence (Instagram, plus any website flagged
-                  -- `rotating_listing`; see _ws_no_absence_evidence).
+                  -- `rotating_listing`; see _ws_no_absence_evidence). Instagram is
+                  -- judged per source crawl as well as per website: a picnob_ crawl
+                  -- of a MIXED website is the same 12-post grid as an IG-only one.
                   -- The guards above share one premise: that absence
                   -- from a source's latest crawl means the source stopped listing
                   -- the event. That premise does not hold for Instagram. A picnob
@@ -1645,6 +1703,7 @@ def archive_outdated_events(cursor, connection, website_id, temps_built=False,
                             AND cr.website_id NOT IN (
                                 SELECT website_id FROM _ws_no_absence_evidence
                             )
+                            AND NOT {_picnob_surface_sql('cr')}
                       )
                       OR NOT EXISTS (
                           SELECT 1
@@ -1658,7 +1717,7 @@ def archive_outdated_events(cursor, connection, website_id, temps_built=False,
               )
           )
     """
-    archive_params = (website_id, website_id, website_id)
+    archive_params = (website_id, website_id, website_id, website_id)
 
     # Include ongoing spans in warnings, using the same start/end eligibility as
     # _evt_future. Keep their real start rather than inventing an occurrence today.
