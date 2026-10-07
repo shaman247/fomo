@@ -1,4 +1,4 @@
-"""Conservative cross-publisher reconciliation of date envelopes and daily sessions."""
+"""Conservative reconciliation of untimed date envelopes and daily sessions."""
 from datetime import date, timedelta
 from occurrence_times import standardize_time
 
@@ -87,6 +87,65 @@ def redundant_envelopes(event, rows, sources):
     return redundant
 
 
+def _page(url):
+    return (url or '').strip().rstrip('/')
+
+
+def refined_envelopes(event, rows, sources):
+    """Return {range: session days} for untimed ranges their own page itemized.
+
+    A listing often summarizes a run ("Oct 14–18") that the event's own page
+    lists as timed performances (Park Avenue Armory 196536: Wed–Sat 7pm, Sun
+    3pm). The detail crawl replaces the listing range on that crawl event, but
+    the publisher's earlier extractions still carry it, so without this the
+    canonical event keeps the range beside its sessions.
+
+    Unlike redundant_envelopes this is the same publisher, so it asks for the
+    same page rather than independence: every source carrying the range shares
+    one (website, URL), and another extraction of that page, without the range,
+    holds timed single-day sessions at the event's venue whose first and last
+    days are the range's edges. A page that prints both shapes keeps both. The
+    page's own schedule is authoritative for which days inside it are dark, so
+    end clocks and full day coverage are not required. Any other multi-day row
+    over these days (another publisher's run, a timed span) vetoes.
+    """
+    if event.get('event_type') not in SESSION_TYPES or not event.get('location_id'):
+        return {}
+    rows = [occurrence(r) for r in rows]
+    sources = [dict(s, occurrences=[occurrence(r) for r in s['occurrences']]) for s in sources]
+    refined = {}
+    for span in set(r for r in rows if envelope(r)):
+        sd, _, ed, _ = span
+        owners = [s for s in sources if span in s['occurrences']]
+        pages = {(s.get('website_id'), _page(s.get('url'))) for s in owners}
+        if len(pages) != 1:
+            continue  # No provenance, or several publishers/pages claim it.
+        website, page = next(iter(pages))
+        if not website or not page:
+            continue
+        relevant = [s for s in sources if any(r[0] and r[0] <= ed and (r[2] or r[0]) >= sd
+                                             for r in s['occurrences'])]
+        if any(s.get('location_id') != event['location_id'] for s in relevant):
+            continue
+        evidence = rows + [r for s in relevant for r in s['occurrences']]
+        if any(r != span and r[0] and r[2] and r[2] != r[0] and r[0] <= ed and r[2] >= sd
+               for r in evidence):
+            continue
+        for source in relevant:
+            if (source.get('website_id'), _page(source.get('url'))) != (website, page):
+                continue
+            if span in source['occurrences']:
+                continue
+            schedule = [r for r in source['occurrences'] if r[0] and sd <= r[0] <= ed]
+            if any(r[2] not in (None, r[0]) or _clock(r[1]) is None for r in schedule):
+                continue
+            days = {r[0] for r in schedule}
+            if days and min(days) == sd and max(days) == ed:
+                refined[span] = days
+                break
+    return refined
+
+
 def reconcile_envelopes(cursor, event_id, crawl_event_id, existing, incoming):
     """Apply only canonical removals inside the caller's transaction/write lock.
 
@@ -98,7 +157,7 @@ def reconcile_envelopes(cursor, event_id, crawl_event_id, existing, incoming):
     if not row or row[0] not in SESSION_TYPES or not row[1]:
         return existing, incoming
     event = dict(event_type=row[0], location_id=row[1])
-    cursor.execute('''SELECT ce.id,cr.website_id,w.source_type,ce.location_id,
+    cursor.execute('''SELECT ce.id,cr.website_id,w.source_type,ce.location_id,ce.url,
         co.start_date,co.start_time,co.end_date,co.end_time
         FROM crawl_events ce JOIN crawl_results cr ON cr.id=ce.crawl_result_id
         JOIN websites w ON w.id=cr.website_id
@@ -107,19 +166,21 @@ def reconcile_envelopes(cursor, event_id, crawl_event_id, existing, incoming):
             (SELECT crawl_event_id FROM event_sources WHERE event_id=%s)''',
                    (crawl_event_id, event_id))
     sources = {}
-    for ce, website, source_type, location, *occ in cursor.fetchall():
+    for ce, website, source_type, location, url, *occ in cursor.fetchall():
         source = sources.setdefault(ce, dict(id=ce, website_id=website,
-            source_type=source_type, location_id=location, occurrences=[]))
+            source_type=source_type, location_id=location, url=url, occurrences=[]))
         source['occurrences'].append(occ)
-    redundant = redundant_envelopes(event, list(existing) + list(incoming), list(sources.values()))
+    merged = list(existing) + list(incoming)
+    redundant = redundant_envelopes(event, merged, list(sources.values()))
+    refined = refined_envelopes(event, merged, list(sources.values()))
     # A source schedule must also be represented by this merge's actual rows;
     # a stale source link alone cannot remove the only publishable date range.
+    timed_days = {r[0] for r in map(occurrence, merged) if r[0] and r[1] and r[2] in (None, r[0])}
     for span in list(redundant):
         sd, _, ed, _ = span
-        timed_days = {r[0] for r in map(occurrence, list(existing) + list(incoming))
-                      if r[0] and sd <= r[0] <= ed and r[1] and r[2] in (None, r[0])}
-        if len(timed_days) != (ed - sd).days + 1:
+        if len({d for d in timed_days if sd <= d <= ed}) != (ed - sd).days + 1:
             redundant.remove(span)
+    redundant |= {span for span, days in refined.items() if days <= timed_days}
     for span in redundant:
         if any(occurrence(r) == span for r in existing):
             cursor.execute('''DELETE FROM event_occurrences WHERE event_id=%s

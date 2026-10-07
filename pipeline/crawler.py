@@ -1238,7 +1238,12 @@ DETAIL_CHROME_SELECTOR = 'nav, [role="navigation"], [role="banner"], [role="cont
 # month grid's off-screen weeks are legitimately `display: none`.
 # Webflow's explicit conditional-visibility marker is also authoritative:
 # its CMS emits inactive sold-out/cancelled branches with this class.
-DETAIL_HIDDEN_SELECTOR = '[style*="display:none"], [style*="display: none"], .w-condition-invisible'
+# Inline off-screen positioning (`left: -9999px`) is the injected-SEO-spam
+# shape: New Plaza Cinema (w2255, 2026-10-07) carries a site-wide
+# `<div class="ranksat" style="position:absolute;left:-9999px">` of slot /
+# togel gambling links before </body> on every page, detail pages included.
+DETAIL_HIDDEN_SELECTOR = ('[style*="display:none"], [style*="display: none"], .w-condition-invisible, '
+                          '[style*="left:-9999px"], [style*="left: -9999px"]')
 
 # Consent widgets, translate bars, skip links, newsletter forms and the page's
 # top-level footer. Measured on the 2026-09-18 run's 2,278 detail packets: 65%

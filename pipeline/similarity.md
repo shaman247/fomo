@@ -123,8 +123,17 @@ Stable refreshes identify an old example by its venue ID and normalized event
 name, resolve it to the current preferred record of that series, then fill any
 vacant slots with farthest-first selection. A full set swaps an example only if
 the worst-covered current program's nearest-example cosine improves by more than
-0.02. This limits churn from recency changes while allowing new programming to
-replace redundant coverage. The compact limit remains 12; no benchmark-specific
+0.02 **and** by more than the largest coverage loss the eviction causes to any
+program (usually the evicted series itself). Max-min alone let an outlying
+newcomer evict a distinct mode for a marginal floor gain: on the 2026-10-07
+snapshot 91% of its 1,444 swaps cost some program more coverage than the floor
+gained (median gain 0.049 vs loss 0.417), including Architecture's only
+healthcare-design talk. With the bound, 131 swaps remain, all replacing redundant
+coverage (median loss 0.075). A summed net-coverage rule was measured and rejected
+(it still allowed that eviction because many similar tour programs gained), as was
+a description-length floor (swap newcomers were not systematically thinner than
+the examples they evicted). This limits churn from recency changes while allowing
+new programming to replace redundant coverage. The compact limit remains 12; no benchmark-specific
 events receive protection. Topic aliases union constituents; venues retain their
 distinct database identities even when their names and addresses coincide.
 
@@ -178,6 +187,24 @@ scale or browser change is needed. Older reports default to `unit-int8` (unit
 vectors times 127). Evaluators and the local explorer follow each report's mode.
 The byte count stays fixed; using more byte values increases gzip payload size
 slightly in exchange for better directional precision.
+
+Reports since generation `6c74e411bd76358a` declare `quantization: dct-int8`. Every
+exported vector (events, venue/tag constituents, anchors) is first multiplied by
+the same orthonormal DCT-II matrix (`similarity.dct_rotation`, closed form, nothing
+stored), then each vector keeps whichever of 31 byte scales (0.70–1.00 of max-abs)
+rounds closest to its direction. The uncentered projection puts the shared mean
+direction on axis 0 (median max-abs component 0.47; 0.27 after rotation), so one
+per-vector scale wasted precision on the other 95 axes. Cosines are rotation
+invariant and the browser compares only exported vectors of one generation, so the
+decoder, scorer and byte count are unchanged and old generations still decode.
+Measured on the 2026-10-07 snapshot: mean direction error 1−cos 5.7e-5 → 1.9e-5,
+pairwise cosine error std 0.0014 → 0.0009; gzip +1.6–2.4% per payload class (core
+1.166 → 1.185 MB, places 4.32 → 4.41 MB, tag examples 2.91 → 2.97 MB, active 3.19 →
+3.27 MB); real-module parity over 219 scores max error 1.9e-7 with unchanged CPU
+time. It cleared an int8-only near-tie flip (ISLAA 238672 vs SNFL tour 249775) that
+failed the browser source and hard-negative gates. Private vectors stay unrotated;
+`browser_vectors(..., 'dct-int8')` returns rotated vectors, so only compare them with
+other browser vectors of the same mode.
 Aggregate blocks have unique string `ids`, `offsets` of length `ids.length + 1`,
 packed constituent vectors, and support counts. Empty ranges represent unavailable
 vectors. The browser renormalizes decoded vectors and interns identical constituents.

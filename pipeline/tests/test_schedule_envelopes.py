@@ -56,7 +56,7 @@ class EnvelopeWriteTests(unittest.TestCase):
         self.conn=create_connection();self.assertIsNotNone(self.conn);self.addCleanup(self.conn.close);self.q=self.conn.cursor()
         schemas={'events':'id INT,event_type VARCHAR(40),location_id INT',
           'event_occurrences':'id INT AUTO_INCREMENT PRIMARY KEY,event_id INT,start_date DATE,start_time VARCHAR(20),end_date DATE,end_time VARCHAR(20),sort_order INT DEFAULT 0',
-          'crawl_events':'id INT,crawl_result_id INT,location_id INT',
+          'crawl_events':'id INT,crawl_result_id INT,location_id INT,url VARCHAR(255)',
           'crawl_results':'id INT,website_id INT','event_sources':'event_id INT,crawl_event_id INT',
           'crawl_event_occurrences':'crawl_event_id INT,start_date DATE,start_time VARCHAR(20),end_date DATE,end_time VARCHAR(20)'}
         for name,schema in schemas.items():self.q.execute(f'CREATE TEMPORARY TABLE {name} ({schema})')
@@ -65,7 +65,7 @@ class EnvelopeWriteTests(unittest.TestCase):
         self.q.execute("CREATE TEMPORARY TABLE websites AS SELECT 4766 AS id, 'primary' AS source_type UNION ALL SELECT 1507, 'primary'")
         self.q.execute("INSERT INTO events VALUES(1,'Talk',10715)")
         self.q.execute('INSERT INTO crawl_results VALUES(1,4766),(2,1507)')
-        self.q.execute('INSERT INTO crawl_events VALUES(1,1,10715),(2,2,10715)')
+        self.q.execute('INSERT INTO crawl_events(id,crawl_result_id,location_id) VALUES(1,1,10715),(2,2,10715)')
         self.q.execute('INSERT INTO event_sources VALUES(1,1),(1,2)')
         for id,rows in [(1,[SPAN]),(2,SESSIONS)]:
             for o in rows:self.q.execute('INSERT INTO crawl_event_occurrences VALUES(%s,%s,%s,%s,%s)',(id,*o))

@@ -313,3 +313,34 @@ test('a missing active chunk retains core suggestions and the new-event fallback
     assert.ok(m.score({ id: 2, tags: ['Jazz'] }) > .99);
     assert.equal((await m.suggest('tag', ['Jazz', 'Trumpet']))[0].id, 'trumpet');
 });
+
+test('a rotated dct-int8 generation decodes with the same scorer and keeps every score', async () => {
+    // Exporters may rotate the whole vector space before byte rounding
+    // (quantization "dct-int8"). Cosines are rotation invariant, so the browser
+    // keeps one decoder for old and new generations and ignores the label.
+    const rotate = values => values.map(([x, y]) => [-y, x]);
+    const rotatedBlock = (ids, values, support) => block(ids, rotate(values), support);
+    const scores = [];
+    for (const rotated of [false, true]) {
+        const make = rotated ? rotatedBlock : block;
+        const next = core();
+        next.schemaVersion = 2;
+        next.quantization = rotated ? 'dct-int8' : 'max-abs-int8';
+        next.blocks.place = make(['jazz club|1 main', 'clay studio|2 main'], [[127, 0], [0, 127]], [10, 10]);
+        next.blocks.tag = make(['jazz', 'trumpet', 'pottery', 'ceramics'], [[127, 0], [126, 1], [0, 127], [1, 126]], [100, 30, 90, 30]);
+        const { r, m } = setup({
+            'manifest.json': { schemaVersion: 2, dimensions: 2, domain: 'test', generation, quantization: next.quantization,
+                historyShards: [0], activeShards: [0], placeShards: [0] },
+            [`${generation}/core.json`]: next,
+            [`${generation}/events-0.json`]: make(['1'], [[127, 0]]),
+            [`${generation}/active-0.json`]: make(['2', '3', '4'], [[127, 0], [0, 127], [90, 90]])
+        });
+        r.set('tag', 'Jazz', 'Jazz', 1);
+        r.set('tag', 'Pottery', 'Pottery', -1);
+        await m.load(); await settle();
+        assert.equal(m.ready(), true);
+        scores.push([2, 3, 4].map(id => m.score({ id })));
+    }
+    assert.ok(scores[0].some(value => value !== 0));
+    scores[1].forEach((value, i) => assert.ok(Math.abs(value - scores[0][i]) < 1e-6, `${value} != ${scores[0][i]}`));
+});

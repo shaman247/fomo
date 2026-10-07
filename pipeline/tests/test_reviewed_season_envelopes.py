@@ -54,6 +54,87 @@ class ReviewedSeasonEnvelopesTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             plugin.render_kingsland(self.listing(), plugin.KINGSLAND + '/events-1')
 
+    # Off-season shape observed live 2026-10-07: /events-1 302s to /events, the
+    # collection renders only its past list, and ?format=json has upcoming: [].
+    OFFSEASON_HTML = ('<div class="sqs-events-collection-list"><!-- Upcoming Events -->'
+                      '<!-- Past Events --><div class="eventlist eventlist--past">'
+                      '<hr class="eventlist-past-upcoming-divider">'
+                      '<article class="eventlist-event eventlist-event--past">'
+                      '<a href="/events/2026/9/5/open-hours">Open Hours</a></article></div></div>')
+
+    def feed(self, upcoming=(), **collection):
+        coll = dict(typeName='events', type=1, fullUrl='/events')
+        coll.update(collection)
+        return json.dumps({'collection': coll, 'upcoming': list(upcoming),
+                           'past': [{'title': 'Open Hours', 'startDate': 1788631200329}],
+                           'pagination': {'nextPage': True}})
+
+    def test_offseason_empty_upcoming_is_zero_event_success(self):
+        import extractor
+        page = plugin.KINGSLAND + '/events'
+        self.assertTrue(plugin.kingsland_upcoming_empty(self.OFFSEASON_HTML, self.feed(), page))
+        body, count = plugin.render_kingsland(self.OFFSEASON_HTML, plugin.KINGSLAND + '/events-1',
+                                              upcoming_empty=True)
+        self.assertEqual(count, 0)
+        self.assertNotIn('Open Hours', body)
+        self.assertTrue(extractor.is_empty_api_payload(body))
+
+    def test_unconfirmed_missing_upcoming_still_fails_closed(self):
+        page = plugin.KINGSLAND + '/events'
+        challenge = '<html><title>Just a moment...</title><div id="challenge-form"></div></html>'
+        cases = {
+            'challenge page': (challenge, self.feed()),
+            'garbled feed': (self.OFFSEASON_HTML, self.feed()[:120]),
+            'html feed': (self.OFFSEASON_HTML, challenge),
+            'json scalar': (self.OFFSEASON_HTML, 'null'),
+            'feed still lists events': (self.OFFSEASON_HTML, self.feed(upcoming=[{'title': 'X'}])),
+            'upcoming key missing': (self.OFFSEASON_HTML,
+                                     json.dumps({'collection': {'typeName': 'events', 'fullUrl': '/events'},
+                                                 'past': []})),
+            'other collection type': (self.OFFSEASON_HTML, self.feed(typeName='blog')),
+            'other collection path': (self.OFFSEASON_HTML, self.feed(fullUrl='/press')),
+        }
+        for label, (html, feed) in cases.items():
+            with self.subTest(label):
+                self.assertFalse(plugin.kingsland_upcoming_empty(html, feed, page))
+        with self.assertRaisesRegex(ValueError, 'upcoming calendar missing'):
+            plugin.render_kingsland(challenge, plugin.KINGSLAND + '/events-1')
+
+    def fetch_with(self, responses):
+        from unittest import mock
+        calls = []
+
+        def fake_get(url, timeout=None):
+            calls.append(url)
+            final_url, text = responses[url]
+            resp = mock.Mock(url=final_url, text=text)
+            resp.raise_for_status = mock.Mock()
+            return resp
+        with mock.patch.object(plugin.requests, 'get', side_effect=fake_get):
+            result = plugin.fetch_kingsland([plugin.KINGSLAND + '/events-1'])
+        return result, calls
+
+    def test_fetch_confirms_empty_season_against_feed(self):
+        listing = plugin.KINGSLAND + '/events-1'
+        feed_url = plugin.KINGSLAND + '/events?format=json'
+        (body, count), calls = self.fetch_with({
+            listing: (plugin.KINGSLAND + '/events', self.OFFSEASON_HTML),
+            feed_url: (feed_url, self.feed())})
+        self.assertEqual((count, calls), (0, [listing, feed_url]))
+        with self.assertRaisesRegex(ValueError, 'upcoming calendar missing'):
+            self.fetch_with({listing: (plugin.KINGSLAND + '/events', self.OFFSEASON_HTML),
+                             feed_url: (feed_url, '<html>Just a moment...</html>')})
+
+    def test_fetch_populated_listing_unchanged_and_skips_feed(self):
+        listing = plugin.KINGSLAND + '/events-1'
+        (body, count), calls = self.fetch_with({
+            listing: (plugin.KINGSLAND + '/events', self.listing()),
+            plugin.TICKETS: (plugin.TICKETS, self.ticket())})
+        self.assertEqual(count, 2)
+        self.assertEqual(calls, [listing, plugin.TICKETS])
+        self.assertEqual(body, plugin.render_kingsland(self.listing(), listing, self.ticket())[0])
+        self.assertIn('"start_time": "17:00"', body)
+
     def test_whitney_only_exact_season_details_skipped(self):
         for floor in (5, 6):
             self.assertTrue(plugin.whitney_season_detail(f'https://whitney.org/events/tour-whitney-biennial-2026-floor{floor}'))

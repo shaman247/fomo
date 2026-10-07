@@ -1272,6 +1272,20 @@ class TestDetailHiddenTabStripping(unittest.TestCase):
         self.assertIn('Sold out: join the waitlist', after)
         self.assertIn('Bleecker Street classroom', after)
 
+    def test_offscreen_injected_seo_spam_is_removed(self):
+        # New Plaza Cinema (w2255), 2026-10-07: a compromised theme appends an
+        # off-screen block of gambling links before </body> on every page.
+        html = ('<html><body><main><h1>Make Me Famous</h1>'
+                '<p>Screening Friday, October 9, 2026 at 7:00pm.</p></main>'
+                '<div class="ranksat" style="position: absolute; left: -9999px; top: -9999px; '
+                'width: 1px; height: 1px; overflow: hidden;">'
+                '<a href="https://example.com/a">slot gacor gampang menang</a>'
+                '<a href="https://example.com/b">toto togel</a></div></body></html>')
+        after = self._markdown(html, crawler.DETAIL_EXCLUDED_SELECTOR)
+        self.assertNotIn('gacor', after)
+        self.assertNotIn('togel', after)
+        self.assertIn('October 9, 2026', after)
+
     def test_webflow_visible_cancellation_is_preserved(self):
         html = ('<html><body><main><h1>Cheese Class</h1>'
                 '<div class="cancelled"><p>This event has been cancelled. '

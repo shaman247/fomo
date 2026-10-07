@@ -3970,6 +3970,50 @@ venue_taxonomy:
       remove: []
       source: https://luma.com/wjc0dy6j
       reason: Former convent school run by its hosts as "The Old School", a place for open inquiry with multi-disciplinary programming (talks, research, demo nights); no official venue site found, so organizer listing is the source.
+    - location_id: 11557
+      expected_name: 1219 Quentin Rd, Midwood
+      add:
+      - Dance Studio
+      - Event Hall
+      remove: []
+      source: https://tagvenue.com/us/venues/brooklyn/48183/irina-s-dance-academy
+      reason: The address's event tenant is Irina's Dance Academy, a dance studio rented (up to 150 guests) for parties, performances, recitals and receptions; the current 70-guest music night matches that use. No official site, so the venue listing is the source; matches the Spotlight Ballroom precedent (Dance Studio + Event Hall).
+    - location_id: 11559
+      expected_name: Shackamaxon Country Club
+      add:
+      - Event Hall
+      remove: []
+      source: https://www.shackamaxoncc.com/events-weddings
+      reason: Private golf club whose 325-guest ballroom and grounds are rented to non-members for weddings, galas, corporate events and fundraisers (one wedding per day); the members-only course gets no public venue type.
+    - location_id: 11560
+      expected_name: American Australian Association
+      add:
+      - Cultural Center
+      remove: []
+      source: https://americanaustralian.org/inside-the-american-australian-association-murdoch-center/
+      reason: The association's Murdoch Center headquarters is a front-of-house gathering place for the Australian community, hosting panels, speaker series, performances, art showcases and receptions; matches other national cultural institutions (Japan Society, Scandinavia House).
+    - location_id: 11633
+      expected_name: Galloping Hill Caterers
+      add:
+      - Ballroom
+      - Event Hall
+      remove: []
+      source: https://www.gallopinghillcaterers.com/
+      reason: Dedicated 45-year banquet venue with the Corinthian, Crystal, Regency and James rooms for weddings, galas, fundraisers and dinners; distinct from Galloping Hill Golf Course.
+    - location_id: 11667
+      expected_name: SIR Stage37
+      add:
+      - Event Hall
+      remove: []
+      source: https://directory.bizbash.com/venue/sir-stage37/
+      reason: Dedicated 7,500 sq ft rental event venue (up to 499 guests) run by SIR Entertainment Services for concerts, corporate parties, launches and fashion shows; official site offline (DNS) at review time, so the venue directory listing is the source.
+    - location_id: 11784
+      expected_name: Oz Farm
+      add:
+      - Event Hall
+      remove: []
+      source: https://m.weddingwire.com/biz/oz-farm-saugerties/7520b49553abe5b2
+      reason: 82-acre working horse farm whose barn and lawns are rented as an all-inclusive wedding and event venue (in-house catering and bar, up to 1,000 guests); Farm kept for the working estate, Event Hall added for the dedicated rental use.
     descriptions:
     - location_id: 2041
       expected_name: Cloud City
@@ -4125,7 +4169,9 @@ venue_taxonomy:
       - location_id: 3482
         expected_name: 167 E Broadway
         reason: Reviewed stored events and available sources; the specific tenant or ongoing venue use is not established
-          well enough for a narrower category.
+          well enough for a narrower category. Rechecked 2026-10-07 for active event 273511 — the New York Philosophy
+          Club Luma listings name the venue only as "Reign" with no floor, and no business of that name at this
+          address could be verified, so the building fallback is retained.
       - location_id: 8353
         expected_name: 224 Buffalo Ave
         reason: Reviewed stored events and available sources; the specific tenant or ongoing venue use is not established
@@ -4165,7 +4211,9 @@ venue_taxonomy:
       - location_id: 5726
         expected_name: 873 Broadway
         reason: Reviewed stored events and available sources; the specific tenant or ongoing venue use is not established
-          well enough for a narrower category.
+          well enough for a narrower category. Rechecked 2026-10-07 for active events 272926 and 272945 — the
+          localwineevents listings name only a "Private Event Loft" with no floor, and the building holds several
+          separate rental lofts (e.g. Sixth Floor Loft, Home Studios), so the tenant is still unknown.
       - location_id: 2709
         expected_name: Grand Prospect Hall
         reason: Demolished historical venue with no active events; do not label it as an operating rental hall.

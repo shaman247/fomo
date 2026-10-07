@@ -26,6 +26,7 @@ import reviewed_event_identity
 import reviewed_source_aliases
 import canonical_url_identity
 import site_profiles
+from location_containment import LocationContainment
 from event_name_guards import class_show_identity_mismatch
 from remaining_name_identity import remaining_name_identity_mismatch
 from festival_member_identity import (explicit_festival_member_mismatch,
@@ -654,6 +655,29 @@ def normalize_url_for_identity(url):
     if _URL_OCCURRENCE_FRAGMENT_RE.fullmatch(fragment):
         cleaned += '#' + fragment.lower()
     return cleaned
+
+
+def same_place(loc_a, loc_b, containment):
+    """True when two location_ids are one venue, or a campus and a venue inside it."""
+    return (loc_a == loc_b or containment.contains(loc_a, loc_b)
+            or containment.contains(loc_b, loc_a))
+
+
+def should_repin_location(current_loc_id, incoming_loc_id, linked_location_ids, containment):
+    """Whether a merged source's location replaces the event's current pin.
+
+    Refine a campus/park/complex to a venue inside it. Otherwise the website's
+    linked location wins (corrects stale fuzzy matches from earlier crawls)
+    unless it is an umbrella containing the current, more specific venue.
+    """
+    if not incoming_loc_id or incoming_loc_id == current_loc_id:
+        return False
+    if not current_loc_id:
+        return True
+    if containment.contains(current_loc_id, incoming_loc_id):
+        return True
+    return (incoming_loc_id in linked_location_ids
+            and not containment.contains(incoming_loc_id, current_loc_id))
 
 
 def _locations_within(loc_a, loc_b, coords, max_km=URL_IDENTITY_MAX_KM):
@@ -3441,6 +3465,9 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
     website_location_ids = {}
     for row in cursor.fetchall():
         website_location_ids.setdefault(row[0], set()).add(row[1])
+    # Campus/park/complex -> venue containment, so a linked umbrella never
+    # overwrites the specific hall an event is already pinned to.
+    location_containment = LocationContainment.load(cursor)
 
     # Build location_id -> canonical name so events.location_name stays in sync
     # with locations.name when a venue is resolved (otherwise the AI's raw
@@ -4016,6 +4043,26 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                 allow_no_date_overlap=True,
             )
 
+        # Same tier one grain up or down: events on a venue inside this
+        # crawl_event's campus, or on the campus containing its venue. Once
+        # Hania Rani 220582 sits on David Geffen Hall 248, w4833's calendar row
+        # that only says "Lincoln Center" (493) finds no event AT 493 and would
+        # otherwise create a campus-level duplicate. Dates must overlap. Like
+        # find_best_match's ladder, a visible event here outranks a hidden
+        # dedupe loser that was the only candidate at the exact location.
+        if location_id is not None and (matched_event_id is None
+                                        or matched_event_id in suppressed_event_ids):
+            related_candidates = [
+                existing
+                for related_id in sorted(location_containment.related(location_id))
+                for existing in existing_events_by_location_id.get(related_id, ())
+            ]
+            if related_candidates:
+                related_match = _undismissed(find_best_match, related_candidates)
+                if related_match is not None and (matched_event_id is None
+                                                  or related_match not in suppressed_event_ids):
+                    matched_event_id = related_match
+
         # Fallback: match by coordinates if no location_id match found
         if matched_event_id is None and lat is not None and lng is not None:
             key = _coord_key(lat, lng)
@@ -4112,12 +4159,18 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
         # parks) are the dominant over-merge cause — the per-path guards missed
         # cases routed through the coordinate/website fallbacks or via NULL-location
         # "bridge" crawl_events. This is the authoritative backstop.
+        #
+        # A campus and a venue inside it are the same place at two grains, not
+        # distinct venues: once Hania Rani 220582 sits on David Geffen Hall 248,
+        # the w4833 calendar row that only says "Lincoln Center" (493) must
+        # still reach it, or it spawns a campus-level duplicate.
         current_loc_id = None
         if matched_event_id is not None and location_id is not None:
             cursor.execute("SELECT location_id FROM events WHERE id = %s", (matched_event_id,))
             _m = cursor.fetchone()
             current_loc_id = _m[0] if _m else None
-            if _m and _m[0] is not None and _m[0] != location_id:
+            if (_m and _m[0] is not None
+                    and not same_place(_m[0], location_id, location_containment)):
                 matched_event_id = None
                 # The reviewed decision no longer owns the eventual match.
                 # A subsequent URL fallback must follow its ordinary metadata
@@ -4339,16 +4392,26 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                 source_url_listing_set(cursor, source_url_lookup_cache, website_id),
                 url_exclusions=url_exclusions)
 
-            # Update location_id if missing or if the new value is the website's
-            # linked location (corrects stale fuzzy-match errors from earlier crawls)
+            # Update location_id if missing, if the new value is the website's
+            # linked location (corrects stale fuzzy-match errors from earlier
+            # crawls), or if it is a venue inside the event's current umbrella.
+            #
+            # Containment beats the linked-location rule in both directions
+            # (2026-10-07): Lincoln Center Presents w4833 is linked to the
+            # campus 493, so any source row that only said "Lincoln Center"
+            # re-pinned Hania Rani 220582 off David Geffen Hall 248 and the
+            # last source processed won; and the OSL w1771 Koch Theater 249
+            # rows never left 493 because 249 is not linked to w1771. A source
+            # naming the hall is more specific than one naming the campus, so
+            # the hall is kept and the campus is refined to it.
             effective_location_id = current_loc_id
             if location_id and reviewed_unmapped_schedule is None:
                 current_location_id = current_loc_id
                 if not current_location_id or (
                     not suppressed_handoff and not dismissed_home_handoff and
-                    current_location_id != location_id and
-                    website_id in website_location_ids and
-                    location_id in website_location_ids[website_id]
+                    should_repin_location(current_location_id, location_id,
+                                          website_location_ids.get(website_id, ()),
+                                          location_containment)
                 ):
                     cursor.execute("UPDATE events SET location_id = %s WHERE id = %s", (location_id, matched_event_id))
                     effective_location_id = location_id

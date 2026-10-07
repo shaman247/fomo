@@ -104,18 +104,24 @@ def representatives(indices, vectors, limit, previous=()):
     # Warm starts keep the previous modes unless a swap improves worst-case
     # coverage by a meaningful cosine margin. Merely changing active dates or
     # adding another similar event must not restart the farthest-first chain.
+    # The gain must also exceed the largest coverage loss the eviction causes
+    # to any program (usually the evicted series itself): a swap replaces
+    # redundant coverage, never a distinct mode traded for a marginally better
+    # floor. Max-min alone lets an outlier newcomer evict a unique example.
     if previous and len(selected) == limit:
         for _ in range(limit):
             similarities = pool @ pool[selected].T
             nearest = similarities.max(axis=1)
             candidate = int(np.argmin(nearest))
             added = pool @ pool[candidate]
-            best, replacement = float(nearest.min()) + .02, None
+            floor = float(nearest.min())
+            best, replacement = floor + .02, None
             for slot in range(len(selected)):
                 others = np.delete(similarities, slot, axis=1)
                 covered = np.maximum(others.max(axis=1), added) if others.shape[1] else added
                 quality = float(covered.min())
-                if quality > best:
+                largest_loss = float(np.max(nearest - covered))
+                if quality > best and quality - floor > largest_loss:
                     best, replacement = quality, slot
             if replacement is None:
                 break
@@ -376,7 +382,7 @@ def fit(data, geotags=(), dimensions=96, min_df=5, seed=17, max_constituents=12,
         'zeroTagVectors': int(np.sum(np.linalg.norm(tag_vectors, axis=1) < .01)),
         'representation': 'topic-conditioned-constituent-v4', 'maxVenueConstituents': max_constituents,
         'tagAnchorWeight': .5,
-        'quantization': 'max-abs-int8',
+        'quantization': 'dct-int8',
         'aspectSuppression': {'maxTopicCosine': .15, 'strength': .5},
         'encoder': encoder,
         'previousGeneration': previous_generation,
@@ -393,8 +399,47 @@ def fit(data, geotags=(), dimensions=96, min_df=5, seed=17, max_constituents=12,
     return result
 
 
+def dct_rotation(dimensions):
+    """Orthonormal DCT-II basis: a fixed, closed-form rotation of the vector space."""
+    k = np.arange(dimensions)
+    basis = np.sqrt(2 / dimensions) * np.cos(np.pi * (k[:, None] + .5) * k[None, :] / dimensions)
+    basis[:, 0] /= np.sqrt(2)
+    return basis
+
+
+# Byte scales tried per vector by dct-int8 (fractions of the max-abs scale).
+DCT_INT8_SCALES = np.linspace(.7, 1., 31)
+
+
 def quantize(vectors, mode='unit-int8'):
-    """Use the full signed byte range; browser normalization cancels the scale."""
+    """Use the full signed byte range; browser normalization cancels the scale.
+
+    dct-int8 first rotates every vector by the same orthonormal DCT basis. The
+    uncentered projection puts the shared mean direction in its first axis (median
+    max-abs component 0.47 versus 0.27 after rotation), so one per-vector byte
+    scale wasted precision on every other axis. Cosines are rotation invariant,
+    so the browser decodes and scores these bytes unchanged. Each vector then
+    keeps whichever candidate byte scale rounds closest to its direction.
+    """
+    vectors = np.asarray(vectors)
+    if mode == 'dct-int8':
+        shape = vectors.shape
+        flat = vectors.reshape(-1, shape[-1]).astype(np.float64) @ dct_rotation(shape[-1])
+        result = np.zeros(flat.shape, dtype=np.int8)
+        # Bounded row chunks keep the scale search small for large tag blocks.
+        for start in range(0, len(flat), 16384):
+            chunk = flat[start:start + 16384]
+            top = np.max(np.abs(chunk), axis=1, keepdims=True) if chunk.size else chunk[:, :1]
+            scaled = chunk * (127 / np.maximum(top, 1e-12))
+            best, best_cosine = np.zeros_like(chunk), np.full(len(chunk), -np.inf)
+            for fraction in DCT_INT8_SCALES:
+                rounded = np.rint(scaled * fraction)
+                norms = np.linalg.norm(rounded, axis=1)
+                cosine = np.where(norms > 0, (rounded * chunk).sum(axis=1) / np.maximum(norms, 1e-12), -np.inf)
+                better = cosine > best_cosine
+                best[better], best_cosine[better] = rounded[better], cosine[better]
+            result[start:start + len(chunk)] = np.clip(best, -127, 127)
+        return result.reshape(shape)
     if mode == 'max-abs-int8':
         vectors = vectors / np.maximum(np.max(np.abs(vectors), axis=-1, keepdims=True), 1e-12)
     elif mode != 'unit-int8':

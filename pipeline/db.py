@@ -2022,6 +2022,131 @@ def _live_described_names_by_url(cursor, urls):
     return names
 
 
+# Widest untimed listing run (in calendar days) that still reads as a handful of
+# performances a detail page can itemize. Longer runs are exhibitions, seasons
+# and open runs; their detail pages describe hours, not sessions.
+UNTIMED_SPAN_MAX_DAYS = 14
+
+
+def _untimed_short_spans(rows):
+    """Return {span} when the schedule is one untimed 2–14-day range, else empty.
+
+    Only a single-row schedule qualifies: processor.apply_crawled_details
+    replaces listing occurrences with the detail page's only when the row holds
+    at most one, so fetching a multi-row schedule could not add its clocks.
+    """
+    from schedule_envelopes import occurrence
+    if len(rows) != 1:
+        return set()
+    span = occurrence(rows[0])
+    sd, st, ed, et = span
+    if st or et or not sd or not ed or not 2 <= (ed - sd).days + 1 <= UNTIMED_SPAN_MAX_DAYS:
+        return set()
+    return {span}
+
+
+def _untimed_session_span_ids(cursor, rows):
+    """Crawl_event IDs whose untimed short run needs its own page's sessions.
+
+    A listing that summarizes a run as "Oct 14–18" carries the dates but not
+    the per-performance clocks (Park Avenue Armory 196536: the page lists
+    Wed–Sat 7pm and Sun 3pm). Such a row has dates, a description and a venue,
+    so neither needs_detail_crawl nor the known-complete skip ever fetched it.
+
+    `rows` are (ce_id, url) pairs. A row qualifies when its whole schedule is an
+    untimed 2–14-day run and every visible event already on its URL has a
+    session format (schedule_envelopes.SESSION_TYPES: not exhibitions,
+    festivals or unclassified rows). A crawl_event with no canonical event yet
+    has no type and waits one run.
+
+    Rows whose canonical event already holds this page's sessions in place of
+    the run (both edge days timed, the untimed range absent) are left out:
+    the merger drops the repeated listing range against that same-page
+    evidence (schedule_envelopes.refined_envelopes), so fetching again would
+    only re-derive it. So are rows whose page an earlier crawl event already
+    fetched for the same range without getting sessions back.
+    """
+    from schedule_envelopes import SESSION_TYPES, occurrence
+    spans = {}
+    ids = [ce_id for ce_id, _url in rows]
+    for i in range(0, len(ids), 500):
+        chunk = ids[i:i + 500]
+        placeholders = ','.join(['%s'] * len(chunk))
+        cursor.execute(f"""
+            SELECT crawl_event_id, start_date, start_time, end_date, end_time
+            FROM crawl_event_occurrences WHERE crawl_event_id IN ({placeholders})
+        """, chunk)
+        for ce_id, *occ in cursor.fetchall():
+            spans.setdefault(ce_id, []).append(occ)
+    spans = {ce_id: s for ce_id, s in
+             ((ce_id, _untimed_short_spans(occ)) for ce_id, occ in spans.items()) if s}
+    urls = {url for ce_id, url in rows if ce_id in spans}
+    if not urls:
+        return set()
+
+    # An earlier extraction of the page already fetched that still holds the
+    # same untimed range: the page does not itemize it (or the fetch was
+    # walled), and every weekly listing crawl would fetch it again.
+    exhausted = {}
+    urls = list(urls)
+    for i in range(0, len(urls), 500):
+        chunk = urls[i:i + 500]
+        placeholders = ','.join(['%s'] * len(chunk))
+        cursor.execute(f"""
+            SELECT ce.id, ce.url, ceo.start_date, ceo.start_time, ceo.end_date, ceo.end_time
+            FROM crawl_events ce JOIN crawl_event_occurrences ceo ON ceo.crawl_event_id = ce.id
+            WHERE ce.url IN ({placeholders}) AND ce.detail_crawl_attempts > 0
+        """, chunk)
+        tried = {}
+        for ce_id, url, *occ in cursor.fetchall():
+            tried.setdefault((ce_id, url), []).append(occ)
+        for (ce_id, url), occ in tried.items():
+            for span in _untimed_short_spans(occ):
+                exhausted.setdefault((url, span), set()).add(ce_id)
+
+    events_by_url = {}
+    for i in range(0, len(urls), 500):
+        chunk = urls[i:i + 500]
+        placeholders = ','.join(['%s'] * len(chunk))
+        cursor.execute(f"""
+            SELECT eu.url, e.id, e.event_type FROM event_urls eu JOIN events e ON e.id = eu.event_id
+            WHERE eu.url IN ({placeholders}) AND e.archived = 0 AND e.suppressed = 0
+        """, chunk)
+        for url, event_id, event_type in cursor.fetchall():
+            events_by_url.setdefault(url, {})[event_id] = event_type
+
+    canonical = {}
+    event_ids = sorted({e for events in events_by_url.values() for e in events})
+    for i in range(0, len(event_ids), 500):
+        chunk = event_ids[i:i + 500]
+        placeholders = ','.join(['%s'] * len(chunk))
+        cursor.execute(f"""
+            SELECT event_id, start_date, start_time, end_date, end_time
+            FROM event_occurrences WHERE event_id IN ({placeholders})
+        """, chunk)
+        for event_id, *occ in cursor.fetchall():
+            canonical.setdefault(event_id, set()).add(occurrence(occ))
+
+    def refined(event_id, span):
+        held = canonical.get(event_id, set())
+        timed_days = {sd for sd, st, ed, _et in held if st and ed in (None, sd)}
+        return span not in held and span[0] in timed_days and span[2] in timed_days
+
+    selected = set()
+    for ce_id, url in rows:
+        events = events_by_url.get(url)
+        if ce_id not in spans or not events:
+            continue
+        if any(event_type not in SESSION_TYPES for event_type in events.values()):
+            continue
+        if any(exhausted.get((url, span), set()) - {ce_id} for span in spans[ce_id]):
+            continue
+        if all(refined(event_id, span) for event_id in events for span in spans[ce_id]):
+            continue
+        selected.add(ce_id)
+    return selected
+
+
 def get_detail_crawl_candidates(cursor, website_ids=None, *, known_complete_skips=None,
                                crawl_event_ids=None):
     """Find crawl_events needing a detail crawl, filtered to individual event URLs.
@@ -2169,8 +2294,7 @@ def get_detail_crawl_candidates(cursor, website_ids=None, *, known_complete_skip
     for url, venue in live_names:
         live_venues.setdefault(url, set()).add(venue)
 
-    candidates = []
-    skipped_known = 0
+    screened = []
     for ce_id, name, url, website_id, location_name, description, has_occurrences, known_complete, location_id in rows:
         # Conflicting visible owners make a URL's venue ambiguous (e.g. an
         # old organizer-office aggregate plus a reviewed offsite edition).
@@ -2179,6 +2303,26 @@ def get_detail_crawl_candidates(cursor, website_ids=None, *, known_complete_skip
             known_complete = False
         if known_complete and not _name_shares_significant_word(name, live_names.get((url, location_id), ())):
             known_complete = False
+        screened.append((ce_id, name, url, website_id, location_name, description,
+                         has_occurrences, known_complete))
+
+    # A dated row the arms above would skip still needs its page when the
+    # listing gave only an untimed short run of a session format. This
+    # overrides the known-complete skip: completeness there covers prose and
+    # venue, never clocks.
+    untimed_spans = _untimed_session_span_ids(cursor, [
+        (ce_id, url)
+        for ce_id, _name, url, website_id, location_name, description, has_occurrences, known_complete in screened
+        if has_occurrences and (known_complete or not needs_detail_crawl(
+            location_name, description, has_occurrences, website_id))
+    ])
+
+    candidates = []
+    skipped_known = 0
+    for ce_id, name, url, website_id, location_name, description, has_occurrences, known_complete in screened:
+        if ce_id in untimed_spans:
+            candidates.append((ce_id, name, url, website_id))
+            continue
         if has_occurrences and known_complete:
             skipped_known += 1
             if known_complete_skips is not None:

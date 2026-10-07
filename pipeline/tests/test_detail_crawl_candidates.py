@@ -38,15 +38,20 @@ CREATE TABLE crawl_events (
     id INTEGER PRIMARY KEY, crawl_result_id INTEGER, name TEXT, url TEXT,
     location_name TEXT, location_id INTEGER, description TEXT, detail_crawl_attempts INTEGER DEFAULT 0,
     created_at TEXT);
-CREATE TABLE crawl_event_occurrences (id INTEGER PRIMARY KEY, crawl_event_id INTEGER);
+CREATE TABLE crawl_event_occurrences (
+    id INTEGER PRIMARY KEY, crawl_event_id INTEGER, start_date TEXT, start_time TEXT,
+    end_date TEXT, end_time TEXT);
 CREATE TABLE event_sources (id INTEGER PRIMARY KEY, event_id INTEGER, crawl_event_id INTEGER);
 CREATE TABLE website_urls (id INTEGER PRIMARY KEY, website_id INTEGER, url TEXT);
 CREATE TABLE location_alternate_names (
     id INTEGER PRIMARY KEY, location_id INTEGER, alternate_name TEXT, website_id INTEGER);
 CREATE TABLE events (
     id INTEGER PRIMARY KEY, name TEXT, archived INTEGER DEFAULT 0, suppressed INTEGER DEFAULT 0,
-    location_id INTEGER, description TEXT);
+    location_id INTEGER, description TEXT, event_type TEXT);
 CREATE TABLE event_urls (id INTEGER PRIMARY KEY, event_id INTEGER, url TEXT);
+CREATE TABLE event_occurrences (
+    id INTEGER PRIMARY KEY, event_id INTEGER, start_date TEXT, start_time TEXT,
+    end_date TEXT, end_time TEXT);
 """
 
 # The crawl_result was re-crawled at this moment; anything created before it is
