@@ -134,6 +134,33 @@ class MetadataPlanTests(unittest.TestCase):
         self.event['description'] = self.prior['description'] = 'Price: Free.'
         self.assertEqual(self.plan()['description'], self.incoming['description'])
 
+    def test_listing_stub_cannot_abridge_detail_page_text(self):
+        detail = ('Learn the basics of Tunisian crochet in three hours, including yarn and hook '
+                  'information, how to begin a project, and the difference between regular and '
+                  'Tunisian crochet. Students begin making a chunky headband; basic crochet skills required.')
+        self.event['description'] = self.prior['description'] = detail
+        for stub in ['Craft class at Brooklyn Craft Company. Price: $45.00.',
+                     'A three-hour Tunisian crochet class for students with basic crochet skills.']:
+            with self.subTest(stub=stub):
+                self.incoming['description'] = stub
+                self.assertEqual(self.plan(), {'sublocation': '15th floor'})
+
+    def test_comparable_or_longer_rewrite_of_detail_text_still_refreshes(self):
+        detail = 'A' * 120 + ' detail-page description of the class and its materials.'
+        self.event['description'] = self.prior['description'] = detail
+        for new in [detail[:-20] + ' updated.', detail + ' Registration now required.']:
+            with self.subTest(new=new):
+                self.incoming['description'] = new
+                self.assertEqual(self.plan()['description'], new)
+
+    def test_short_or_session_list_text_keeps_existing_refresh_policy(self):
+        for old in ['An artist talk with a long-time member of the school.',
+                    '2026-10-01 6pm\nNo description available.\n\n2026-10-01 6pm\n' + 'Doors 6pm. ' * 30]:
+            with self.subTest(old=old[:20]):
+                self.event['description'] = self.prior['description'] = old
+                self.incoming['description'] = 'An artist talk; RSVP required.'
+                self.assertEqual(self.plan()['description'], 'An artist talk; RSVP required.')
+
     def test_linked_incoming_does_not_forge_prior_provenance(self):
         self.sources = [self.incoming]
         self.assertEqual(self.plan(), {})
@@ -201,6 +228,16 @@ class MetadataSQLTests(unittest.TestCase):
         logger = Mock()
         self.assertEqual(self.refresh(logger), {'sublocation': 'Room 101'})
         self.assertEqual(self.db.execute('SELECT description FROM events').fetchone()[0], 'Old source text')
+        logger.log_update.assert_called_once_with('events', 1, 'sublocation', None, 'Room 101')
+
+    def test_sql_stub_refresh_keeps_detail_text_and_audits_only_the_room(self):
+        detail = 'Detail-page program text. ' * 10
+        self.db.execute('UPDATE events SET description=?', (detail,))
+        self.db.execute('UPDATE crawl_events SET description=? WHERE id=20', (detail,))
+        self.db.execute("UPDATE crawl_events SET description='Class at School. Price: $45.' WHERE id=21")
+        logger = Mock()
+        self.assertEqual(self.refresh(logger), {'sublocation': 'Room 101'})
+        self.assertEqual(self.db.execute('SELECT description FROM events').fetchone()[0], detail)
         logger.log_update.assert_called_once_with('events', 1, 'sublocation', None, 'Room 101')
 
     def test_sql_reads_other_sources_before_mutating(self):

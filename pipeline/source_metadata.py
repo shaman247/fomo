@@ -34,6 +34,21 @@ def _substantive_description(value):
     return _description(value) and re.fullmatch(metadata, label) is None
 
 
+def _abridges(old, new):
+    """A shorter same-source refresh must not discard substantive program text.
+
+    Listing re-crawls often carry a one-line stub ("Brooklyn Brainery class",
+    "Workshop at ... Price: $45.00") for an event whose detail page supplied the
+    stored description. Measured 2026-10-07 over 1,576 such merge refreshes: a
+    30-row sample had 20 clear losses, 10 neutral condensations and no
+    corrections. Rendered session lists are not program text and stay
+    replaceable; short descriptions keep the existing refresh policy.
+    """
+    before, after = _label(old), _label(new)
+    return (len(before) >= 200 and 2 * len(after) <= len(before)
+            and re.match(r'20\d\d-\d\d-\d\d\b', before) is None)
+
+
 def _grouped(raw):
     try:
         data = json.loads(raw) if isinstance(raw, str) else raw
@@ -82,6 +97,7 @@ def plan_source_metadata_refresh(event, incoming, sources, occurrences,
     known venue, a strictly newer crawl, and evidence covering every remaining
     session. A rolling subset must not describe the whole canonical series.
     Grouped date-specific descriptions retain their separate refresh policy.
+    A substantially shorter text never replaces substantive program prose.
     """
     today = today or date.today()
     if (event.get('suppressed') or not incoming.get('website_id')
@@ -119,7 +135,8 @@ def plan_source_metadata_refresh(event, incoming, sources, occurrences,
 
     old, new = event.get('description'), incoming.get('description')
     if (not event.get('reviewed') and _description(old) and _substantive_description(new)
-            and old != new and any(s.get('description') == old for s in prior)
+            and old != new and not _abridges(old, new)
+            and any(s.get('description') == old for s in prior)
             and not any(_grouped(s.get('raw_data')) for s in prior)):
         fields['description'] = new
     return fields
