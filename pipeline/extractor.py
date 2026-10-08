@@ -2247,6 +2247,26 @@ _NUMERIC_DATE_RE = re.compile(r'\b(\d{1,2})/(\d{1,2})/(20\d{2})\b')
 # events all read "July 25, 2026").
 MIN_DATED_MENTIONS_FOR_EVIDENCE = 2
 
+# An explicit weekly schedule — "EVERY friday" with a clock time shortly after.
+# Recurring programs carry no calendar date at all, so signal 3 never sees
+# them: w5235 Slope Comics (crawls 129998/130206, 2026-10-08) lists three weekly
+# game nights under an empty "In store Signings TBA / No upcoming events."
+# widget, and the veto stored both crawls as 0 events. "every" + weekday is
+# required: plural weekdays ("Open Fridays 10am-6pm") are opening hours.
+# Measured over 90 days of vetoed crawls (350): only w5235 matches, with a
+# 120- or 250-char window alike.
+_WEEKDAY_WORD = r'(?:mon|tues?|wed(?:nes)?|thu(?:rs?)?|fri|sat(?:ur)?|sun)(?:day)?'
+_EVERY_WEEKDAY_RE = re.compile(
+    r'\bevery\s+(?:other\s+)?' + _WEEKDAY_WORD + r'\b(.{0,120})', re.IGNORECASE | re.DOTALL)
+_CLOCK_TIME_RE = re.compile(
+    r'\b(?:1[0-2]|0?[1-9])(?::[0-5]\d)?\s*[ap]\.?m\b|\bnoon\b', re.IGNORECASE)
+
+
+def _weekly_schedule_mentions(content):
+    """Count "every <weekday>" mentions followed closely by a clock time."""
+    return sum(1 for m in _EVERY_WEEKDAY_RE.finditer(content)
+               if _CLOCK_TIME_RE.search(m.group(1)))
+
 
 def _future_dated_mentions(content, today=None):
     """Count fully-qualified date mentions that are today or later."""
@@ -2276,7 +2296,7 @@ def has_event_evidence(page_content, today=None):
     """True when the page shows positive evidence that real events are listed.
 
     Used to veto the veto: `prepare_extraction`'s "no events" short-circuit must
-    not fire on a page that is visibly full of events. Three signals, any one of
+    not fire on a page that is visibly full of events. Four signals, any one of
     which is enough:
 
       1. `EVENT DETAIL URL:` markers — emitted once per card by our own js_code
@@ -2287,6 +2307,9 @@ def has_event_evidence(page_content, today=None):
       3. At least MIN_DATED_MENTIONS_FOR_EVIDENCE fully-qualified dates (day +
          year) that are today or later. Past-only dates don't count — a
          genuinely empty calendar with a past-events archive still gets vetoed.
+      4. An explicit weekly schedule: "every <weekday>" with a clock time within
+         120 chars (see _EVERY_WEEKDAY_RE). Undated recurring programs never
+         trip signal 3.
     """
     if not page_content:
         return False
@@ -2294,7 +2317,9 @@ def has_event_evidence(page_content, today=None):
         return True
     if '"upcoming":[{' in page_content:
         return True
-    return _future_dated_mentions(page_content, today) >= MIN_DATED_MENTIONS_FOR_EVIDENCE
+    if _future_dated_mentions(page_content, today) >= MIN_DATED_MENTIONS_FOR_EVIDENCE:
+        return True
+    return _weekly_schedule_mentions(page_content) > 0
 
 
 # An API document that explicitly lists nothing — Luma `{"entries":[],

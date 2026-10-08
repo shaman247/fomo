@@ -1181,6 +1181,64 @@ class TestNoEventsVetoEvidenceGuard(unittest.TestCase):
         self.assertFalse(self._evidence(''))
         self.assertFalse(self._evidence(None))
 
+    # w5235 Slope Comics, crawl 130206 (2026-10-08): an empty signings widget
+    # above three undated weekly game nights.
+    SLOPE_COMICS = (
+        "# In store Signings TBA\n#### No upcoming events.\n"
+        "## October In store Events\n### EVERY friday\n"
+        "#### Magic the Gathering Play Afternoon\n#### 3pm\n####  - \n#### 5:30pm\n"
+        "151 7th Avenue\nEvent Details\n"
+        "### EVERY SATURDAY\n#### Pokémon Meet, Trade, Battle FOR KIDS\n#### 3pm\n"
+    )
+
+    def test_weekly_weekday_schedule_counts(self):
+        self.assertTrue(self._evidence(self.SLOPE_COMICS))
+        self.assertTrue(self._evidence("No upcoming events\nEVERY friday 6pm MTG night\n"))
+        self.assertTrue(self._evidence("No events scheduled\nEvery other Tues. at 7:30 p.m.\n"))
+
+    def test_weekday_without_time_or_every_is_not_evidence(self):
+        # Opening hours and bare recurrence words must keep the veto.
+        self.assertFalse(self._evidence(
+            "No upcoming events\nHours: Open Fridays 10am-6pm, Saturdays 11am-5pm\n"))
+        self.assertFalse(self._evidence("No upcoming events\nWe meet every Friday!\n"))
+        self.assertFalse(self._evidence("No upcoming events\nOpen every day 10am-6pm\n"))
+
+    def test_weekly_schedule_lifts_the_shortcut_in_prepare_extraction(self):
+        # End to end: the page must reach the extraction path, not resolve to
+        # a bare zero.
+        content = self.SLOPE_COMICS + "\nCopyright Slope Comics.\n" * 40
+
+        class FakeDb:
+            @staticmethod
+            def get_crawled_content(cursor, crid):
+                return content
+
+            @staticmethod
+            def find_prior_crawl_with_same_content(cursor, crid):
+                return None
+
+            @staticmethod
+            def get_existing_upcoming_events(cursor, website_id):
+                return []
+
+        class FakeCursor:
+            def execute(self, sql, params=None):
+                pass
+
+            def fetchone(self):
+                return (5235, None, None, 0, None)
+
+            def fetchall(self):
+                return []
+
+        with mock.patch.object(extractor, 'db', FakeDb):
+            prep = asyncio.run(extractor.prepare_extraction(
+                FakeCursor(), 130206, 'Slope Comics',
+                base_url='https://slopecomics.com/events'))
+        self.assertIsNone(prep.error)
+        self.assertIsNone(prep.resolved_result)
+        self.assertIn('EVERY friday', prep.content)
+
 
 # ---------------------------------------------------------------------------
 # "All chunks failed" must not be stored as a healthy zero

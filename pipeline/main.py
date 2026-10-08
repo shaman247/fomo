@@ -60,6 +60,49 @@ NUM_WORKERS = 10
 PUBLISH_LOCK_ATTEMPTS = 3
 
 
+def crawl_idle_seconds(last_site_finished, now=None):
+    """Seconds since the Step 2 crawl last made progress.
+
+    Progress is a site finishing OR any browser fetch returning
+    (crawler.last_crawl_progress): a slow many-URL site is not a wedge, while a
+    wedged browser stops both clocks.
+    """
+    now = time.monotonic() if now is None else now
+    return now - max(last_site_finished, crawler.last_crawl_progress())
+
+
+def reconcile_stale_pending_crawls(cursor, connection, exclude_ids=(),
+                                   hours=db.STALE_PENDING_CRAWL_HOURS):
+    """Step 0: fail crawl_results a dead process left 'pending'; return the count.
+
+    A watchdog cancel is recorded by crawler._mark_crawl_cancelled, but a
+    SIGKILLed or crashed run runs no exception path, and get_incomplete_crawl_results
+    never retries 'pending', so such rows sat in limbo forever. Safe against a
+    live run: this executes inside agent_run.singleton(), so no other local
+    crawl/resume is in flight, and the age gate (re-checked by the UPDATE) leaves
+    any attempt younger than `hours` alone. A paused agent run never binds a
+    'pending' row (its run.json lists only crawled/extracted/processed ids), and
+    on --resume the run's own ids are excluded outright. Housekeeping only: a
+    lock timeout or DB error is reported and the run continues.
+    """
+    try:
+        stale = db.find_stale_pending_crawl_results(cursor, hours, exclude_ids)
+        if not stale:
+            return 0
+        with dblock.write_lock(connection, label='stale_pending_crawls'):
+            changed = db.fail_stale_pending_crawl_results(
+                cursor, connection, [row[0] for row in stale], hours)
+    except Exception as exc:
+        print(f"  ! Could not reconcile stale pending crawl results ({type(exc).__name__}: {exc})")
+        return 0
+    sites = sorted({row[1] for row in stale if row[1] is not None})
+    print(f"  - Marked {changed} abandoned crawl result(s) failed (pending > {hours}h): "
+          f"cr {', '.join(str(row[0]) for row in stale[:10])}"
+          f"{' ...' if len(stale) > 10 else ''} (websites {', '.join(map(str, sites[:10]))}"
+          f"{' ...' if len(sites) > 10 else ''})")
+    return changed
+
+
 def acquire_publish_lock(connection, attempts=PUBLISH_LOCK_ATTEMPTS,
                          timeout=dblock.DEFAULT_TIMEOUT):
     """Acquire the advisory write lock for the merge→export→upload tail.
@@ -328,6 +371,10 @@ async def _run_pipeline(website_ids=None, limit=None, *, work_dir=None, resume=F
         # Check for incomplete crawl results first
         step("STEP 0: Checking for Incomplete Crawl Results")
 
+        reconcile_stale_pending_crawls(
+            cursor, connection,
+            exclude_ids=(state.get('crawl_result_ids') or ()) if resume else ())
+
         if resume:
             saved_results = agent_run.read_results(cursor, state['crawl_result_ids'])
             agent_run.verify_sources(state, saved_results)
@@ -530,10 +577,10 @@ async def _run_pipeline(website_ids=None, limit=None, *, work_dir=None, resume=F
                                 queue.task_done()
 
                     async def crawl_watchdog(gather_task):
-                        """Kill the wedged browser if no crawl completes for STALL_TIMEOUT."""
+                        """Kill the wedged browser if no fetch returns for STALL_TIMEOUT."""
                         while not gather_task.done():
                             await asyncio.sleep(30)
-                            idle = time.monotonic() - heartbeat['last']
+                            idle = crawl_idle_seconds(heartbeat['last'])
                             plugin_only = (heartbeat['active'] > 0 and
                                            crawler.custom_fetches_in_flight() >= heartbeat['active'])
                             limit = PLUGIN_STALL_TIMEOUT if plugin_only else STALL_TIMEOUT

@@ -198,5 +198,23 @@ class DetectPeriodicityTest(unittest.TestCase):
         self.assertIsNone(result, "Should not return a past crawl_after")
 
 
+
+class FrequencyLockTest(unittest.TestCase):
+    """crawl_frequency_locked is the per-site cadence override: the analyzer
+    must neither back the frequency off nor set a periodicity crawl_after.
+    African Film Festival w1547 (posts 0-20 days ahead) is locked at 7d after a
+    22d+ cadence missed its Aug 1 / Aug 29 / Sep 12 2026 events."""
+
+    def test_locked_site_is_never_adjusted(self):
+        from unittest.mock import Mock
+        import frequency_analyzer
+        cursor, conn = Mock(), Mock()
+        cursor.fetchall.return_value = [(1547, 'African Film Festival NYC', 7, 1, None, 40)]
+        results = frequency_analyzer.analyze_frequencies(cursor, conn, website_ids=[1547])
+        self.assertEqual((results['skipped'], results['analyzed'], results['adjusted']), (1, 0, 0))
+        statements = [c.args[0] for c in cursor.execute.call_args_list]
+        self.assertFalse(any('UPDATE websites' in q for q in statements))
+        conn.commit.assert_not_called()
+
 if __name__ == '__main__':
     unittest.main()

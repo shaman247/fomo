@@ -505,6 +505,12 @@ geotags:
   - "West Park"
   - "Westwood"
   - "Whippany"
+  - "Cedarhurst"
+  - "Centereach"
+  - "East Orange"
+  - "Lake Ronkonkoma"
+  - "Lincroft"
+  - "Williston Park"
   - "Allerton"
   - "Alley Pond Park"
   - "Annadale"
@@ -522,6 +528,7 @@ geotags:
   - "Bayonne"
   - "Bayside"
   - "Bayswater"
+  - "Bayville, NY"
   - "Bear Mountain"
   - "Bed-Stuy"
   - "Bellerose"
@@ -749,10 +756,12 @@ geotags:
   - "Park Slope"
   - "Parkchester"
   - "Passaic County"
+  - "Patterson, NY"
   - "Pelham"
   - "Pelham Bay"
   - "Pelham Bay Park"
   - "Pelham Gardens"
+  - "Plumsted"
   - "Port Morris"
   - "Port Richmond"
   - "Poughkeepsie"
@@ -1351,6 +1360,7 @@ geographic_hierarchy:
     - Glen Ridge
     - West Caldwell
     - Belleville
+    - East Orange
     Morris County:
     - Boonton
     - Denville
@@ -1408,9 +1418,11 @@ geographic_hierarchy:
     - Red Bank
     - Tinton Falls
     - Holmdel
+    - Lincroft
     Ocean County:
     - Toms River
     - Point Pleasant
+    - Plumsted
     Sussex County:
     - Vernon
     Nassau County:
@@ -1451,6 +1463,9 @@ geographic_hierarchy:
     - Mineola
     - Point Lookout
     - Plainview
+    - Williston Park
+    - Cedarhurst
+    - Bayville, NY
     Suffolk County:
     - Brookhaven
     - Babylon
@@ -1488,6 +1503,8 @@ geographic_hierarchy:
     - Wheatley Heights
     - Nesconset
     - Amityville
+    - Centereach
+    - Lake Ronkonkoma
     Dutchess County:
     - Beacon
     - Hyde Park
@@ -1503,6 +1520,7 @@ geographic_hierarchy:
     - Cold Spring
     - Garrison
     - Mahopac
+    - Patterson, NY
     Orange County:
     - Fort Montgomery
     - Greenwood Lake
@@ -1586,11 +1604,52 @@ geographic_hierarchy:
   promote:
   - Fort Lee
   - Upper Manhattan
+  # 2026-10-08: Census-verified municipalities (Plumsted township; Bayville village;
+  # Patterson town). Qualified names avoid Bayville NJ / Paterson NJ homonyms.
+  - Bayville, NY
+  - Patterson, NY
+  - Plumsted
   - Mercer County
   location_tags:
   - location_id: 1211
     expected_name: Weeksville Heritage Center
     tag: Weeksville
+  # 2026-10-08 audit: explicit county fills missing on address-backed rows.
+  - location_id: 11033
+    expected_name: Monmouth County Library Eastern Branch
+    tag: Monmouth County
+  - location_id: 11649
+    expected_name: The Cheese Store Cafe
+    tag: Nassau County
+  - location_id: 11213
+    expected_name: Hunterdon Hills Playhouse
+    tag: New Jersey
+  - location_id: 11213
+    expected_name: Hunterdon Hills Playhouse
+    tag: Hunterdon County
+  - location_id: 9997
+    expected_name: Berkeley Branch Library
+    tag: Ocean County
+  # 2026-10-08: town nodes; each venue's municipality verified by Census geocoder
+  # (not postal name). New Egypt stays a keyword: both venues lie outside its CDP.
+  - location_id: 10001
+    expected_name: Plumsted Branch Library
+    tag: Plumsted
+  - location_id: 11694
+    expected_name: Laurita Winery
+    tag: Plumsted
+  - location_id: 11147
+    expected_name: The Crescent Beach Club
+    tag: Bayville, NY
+  - location_id: 11153
+    expected_name: Patterson Recreation Center
+    tag: Patterson, NY
+  - location_id: 11182
+    expected_name: VFW Post 9257 (Putnam Lake)
+    tag: Patterson, NY
+  - location_id: 9462
+    expected_name: Michael Ciaiola Conservation Area
+    tag: Patterson, NY
 
 # Reviewed venue taxonomy repair policy; scripts/audit_venue_taxonomy.py previews/applies it.
 # A name can be curated independently for events and venues. These existing

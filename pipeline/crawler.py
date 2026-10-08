@@ -10,6 +10,7 @@ import html as html_lib
 import inspect
 import json
 import re
+import time
 import urllib.parse
 import weakref
 from datetime import datetime, timedelta
@@ -607,6 +608,24 @@ def custom_fetches_in_flight():
     return _custom_fetches_in_flight
 
 
+# Monotonic time the shared browser last returned a fetch in crawl_website.
+# main.py's Step 2 watchdog counts it as progress alongside finished sites: a
+# site with many URLs (AMC: 24 URLs x 6-15s) can run past STALL_TIMEOUT while
+# every fetch returns promptly, and was aborted at "0/7 done" on 2026-10-08.
+# A wedged browser returns nothing, so this clock stops with it.
+_last_crawl_progress = 0.0
+
+
+def note_crawl_progress():
+    global _last_crawl_progress
+    _last_crawl_progress = time.monotonic()
+
+
+def last_crawl_progress():
+    """time.monotonic() of the last browser fetch that returned (0.0 = none)."""
+    return _last_crawl_progress
+
+
 def _plugin_key(fetcher):
     func = fetcher
     while isinstance(func, functools.partial):
@@ -637,6 +656,28 @@ async def run_custom_fetcher(profile, urls):
             return await asyncio.to_thread(call)
     finally:
         _custom_fetches_in_flight -= 1
+
+
+CRAWL_CANCELLED_MESSAGE = (
+    'Crawl cancelled before completion (batch aborted by the stall watchdog or '
+    'run shutdown); partial capture discarded')
+
+
+def _mark_crawl_cancelled(cursor, connection, crawl_result_id, name):
+    """Fail a crawl_result whose crawl was cancelled mid-flight.
+
+    CancelledError is a BaseException, so crawl_website's `except Exception`
+    never saw it: a watchdog abort left the row 'pending' forever, and
+    get_incomplete_crawl_results never retries 'pending' (AMC w4112-4118,
+    2026-10-08). The caller re-raises, so cancellation still propagates. A
+    failure to record must not replace the cancellation either.
+    """
+    print(f"    - {name}: crawl cancelled; marking crawl result {crawl_result_id} failed")
+    try:
+        db.update_crawl_result_failed(cursor, connection, crawl_result_id,
+                                      CRAWL_CANCELLED_MESSAGE)
+    except Exception as exc:
+        print(f"    - Could not mark cancelled crawl result {crawl_result_id} failed: {exc}")
 
 
 def create_safe_filename(name, extension=None):
@@ -697,6 +738,9 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
             # resy, ...) are called as before. Runs in a thread: see
             # run_custom_fetcher for why it must not block the event loop.
             md, n_events = await run_custom_fetcher(custom_profile, [_url_of(u) for u in urls])
+        except asyncio.CancelledError:
+            _mark_crawl_cancelled(cursor, connection, crawl_result_id, name)
+            raise
         except Exception as exc:
             print(f"  ! {name}: {label} fetch failed: {exc}")
             db.update_crawl_result_failed(cursor, connection, crawl_result_id, f"{label}: {exc}")
@@ -870,7 +914,9 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
                 url_error = None
                 attempted_urls += 1
 
-                for result in await crawler.arun(url=url, config=url_config):
+                url_results = await crawler.arun(url=url, config=url_config)
+                note_crawl_progress()
+                for result in url_results:
                     page_count += 1
                     if _is_empty_origin_response(result):
                         empty_origin_pages += 1
@@ -1111,6 +1157,9 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
         print(f"    - Stored {len(combined_markdown)} characters of content")
         return crawl_result_id
 
+    except asyncio.CancelledError:
+        _mark_crawl_cancelled(cursor, connection, crawl_result_id, name)
+        raise
     except Exception as e:
         error_msg = str(e)
         print(f"    - Error crawling {name}: {error_msg}")

@@ -37,6 +37,7 @@ class AgentRunTests(unittest.TestCase):
         conn = Mock()
         stack.enter_context(patch.object(main.db, 'create_connection', return_value=conn))
         stack.enter_context(patch.object(main.db, 'get_stranded_merge_summary', return_value=[]))
+        stack.enter_context(patch.object(main.db, 'find_stale_pending_crawl_results', return_value=[]))
         read = stack.enter_context(patch.object(agent_run, 'read_results', side_effect=rows))
         if rows is None:
             read.side_effect = None

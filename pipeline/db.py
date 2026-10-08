@@ -268,8 +268,12 @@ def create_crawl_result(cursor, connection, crawl_run_id, website_id, filename):
     )
     row = cursor.fetchone()
     if row and row[1] in ('pending', 'failed'):
+        # created_at restarts with the attempt: fail_stale_pending_crawl_results
+        # ages 'pending' rows by it, and a same-day retry of a row first created
+        # hours earlier must not look abandoned while its fetch is in flight.
         cursor.execute(
-            "UPDATE crawl_results SET status = 'pending' WHERE id = %s", (row[0],)
+            "UPDATE crawl_results SET status = 'pending', created_at = NOW() WHERE id = %s",
+            (row[0],)
         )
         connection.commit()
         return row[0]
@@ -435,6 +439,54 @@ def update_crawl_result_processed(cursor, connection, crawl_result_id, event_cou
 def update_crawl_result_failed(cursor, connection, crawl_result_id, error_message):
     """Update crawl result as failed."""
     update_crawl_result(cursor, connection, crawl_result_id, 'failed', error_message=error_message)
+
+
+# A 'pending' crawl_result is an attempt whose fetch is in flight. Every writer
+# resolves it within one site crawl (minutes; the Step 2 watchdog aborts a wedged
+# batch after STALL_TIMEOUT) or an ingest script's next statement, so a row still
+# 'pending' after this long belongs to a process that died without running any
+# exception path (SIGKILL, crash, laptop sleep + kill).
+STALE_PENDING_CRAWL_HOURS = 6
+STALE_PENDING_CRAWL_MESSAGE = (
+    'Crawl abandoned: still pending after {hours}h (the crawling process exited '
+    'without recording an outcome, e.g. SIGKILL or crash); marked failed by Step 0')
+
+
+def find_stale_pending_crawl_results(cursor, hours=STALE_PENDING_CRAWL_HOURS, exclude_ids=()):
+    """Return [(id, website_id, created_at)] of 'pending' rows older than `hours`.
+
+    Age is measured DB-side against created_at, which create_crawl_result
+    restarts whenever it reuses a row for a new attempt.
+    """
+    query = ("SELECT id, website_id, created_at FROM crawl_results "
+             "WHERE status = 'pending' AND created_at < NOW() - INTERVAL %s HOUR")
+    params = [int(hours)]
+    exclude_ids = sorted(set(exclude_ids or ()))
+    if exclude_ids:
+        query += f" AND id NOT IN ({','.join(['%s'] * len(exclude_ids))})"
+        params.extend(exclude_ids)
+    cursor.execute(query + " ORDER BY id", params)
+    return [tuple(row) for row in cursor.fetchall()]
+
+
+def fail_stale_pending_crawl_results(cursor, connection, ids, hours=STALE_PENDING_CRAWL_HOURS):
+    """Mark the given stale 'pending' rows failed; return the number changed.
+
+    The UPDATE re-checks status and age, so a row that finished (or was reused
+    for a new attempt) between the read and the write is left alone. The caller
+    holds the write lock; this commits.
+    """
+    ids = sorted(set(ids or ()))
+    if not ids:
+        return 0
+    cursor.execute(
+        "UPDATE crawl_results SET status = 'failed', error_message = %s "
+        f"WHERE id IN ({','.join(['%s'] * len(ids))}) AND status = 'pending' "
+        "AND created_at < NOW() - INTERVAL %s HOUR",
+        [STALE_PENDING_CRAWL_MESSAGE.format(hours=int(hours)), *ids, int(hours)])
+    changed = cursor.rowcount
+    connection.commit()
+    return changed
 
 
 def find_prior_crawl_with_same_content(cursor, crawl_result_id):
