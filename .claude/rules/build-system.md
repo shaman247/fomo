@@ -45,7 +45,7 @@ npm run build                          # Build to dist/
 python scripts/upload_public_html.py   # Upload dist/ to server via FTP
 ```
 
-The upload script tracks file content hashes (MD5) in `scripts/upload_state.json` and only uploads changed files. Use `--force` to upload everything.
+The upload script tracks file content hashes (MD5) in `scripts/upload_state.json` and only uploads changed files. Use `--force` to upload everything. It never uploads `dist/data/similarity/`: a similarity model generation goes live only through the gated `pipeline/similarity_publish.py` (procedure in `pipeline/similarity.md`).
 
 ## Service worker emission
 

@@ -29,8 +29,9 @@ missing weights require a download. NumPy/SciPy-only experiments remain availabl
 regressed in the initial evaluation and is not the recommended release model.
 
 The build exports `src/data/similarity/`; the normal frontend build copies it to
-`dist/data/similarity/`. Publishing uses the existing full-site upload. Building
-does not deploy. A checkout without artifacts still supports exact preferences.
+`dist/data/similarity/`. Building does not deploy, and neither does the full-site
+upload: `scripts/upload_public_html.py` skips `data/similarity/`. Only the gated
+`pipeline/similarity_publish.py` changes the served model (see the release procedure). A checkout without artifacts still supports exact preferences.
 The active deployment comes from `FOMO_CITY` and `pipeline/city_config.py`.
 
 `--snapshot`, `--output`, and `--workspace` support reproducible candidates. Save
@@ -233,8 +234,9 @@ A rename predating migration cannot be inferred from current metadata alone.
 Generations are immutable content-digest directories. Build in a private staging
 directory, validate the relevance gate, install complete files, and replace the
 manifest last. Repeated builds verify existing bytes instead of rewriting them.
-The full-site uploader transfers nested assets before parent manifests and stops
-on failure; uploaded files are atomically renamed. Keep workspace and output on
+The publisher uploads a generation's files before its manifest, verifies every
+served file by SHA-256 before switching the pointer, and atomically renames each
+upload; the full-site uploader excludes the model tree. Keep workspace and output on
 the same filesystem for atomic directory rename. Retain old generations for cached
 clients and rollback; never prune them during a refresh.
 
@@ -320,12 +322,32 @@ text for existing IDs; explicit refreshes after large edits address that limitat
 2. Run `similarity_health.py`, the tests below, new-text probes and hard-negative gates. Health exit
    codes are 0 healthy, 1 refresh/review, 2 failed audit. Inspect retrieval samples,
    per-query results, zero vectors, payload sizes and browser scoring time.
-3. Build and audit `dist/data/similarity`, then publish through the authorized
-   full-site release process. Verify the served manifest and referenced shards;
-   a local build is not evidence that production refreshed.
+3. Build and audit `dist/data/similarity`, collect the recorded gate files in one
+   evidence directory, and publish with the gated publisher (dry run first):
+
+   ```sh
+   ./venv/bin/python pipeline/similarity_publish.py publish --evidence <dir> --dry-run
+   ./venv/bin/python pipeline/similarity_publish.py publish --evidence <dir>
+   ```
+
+   It refuses unless the evidence holds, for this exact generation: `health-src.json`
+   and `health-dist.json` with status `healthy`; `builder-evaluation.json`, `source`,
+   `hard-negatives`, `probes` and `aspect-probes` reports at full and `-browser`
+   precision, each passing `check_gate` against a baseline that is the currently
+   served generation; and passing `python-tests.log` / `js-tests.log`. It then
+   validates the local generation (as `similarity_health.inspect_artifacts`),
+   uploads only the generation files not already served identically, with `core.json`
+   last, re-downloads and SHA-256 compares all of them, and only then uploads
+   `manifest.json`. Finally it verifies the served manifest and checks that the
+   previous generation is still served. The previous manifest is recorded in
+   `scripts/similarity_publications.json`. A publish after a failure resumes
+   safely, because already-verified shards are skipped and the pointer never
+   moved. A local build is not evidence that production refreshed.
 4. Save review notes and advance the queue by seven days only after the check is
-   complete. Leave failures pending. Roll back by atomically restoring the saved
-   prior manifest and republishing it while retaining all referenced generations.
+   complete. Leave failures pending. Roll back with
+   `similarity_publish.py rollback [--manifest <saved manifest>] [--dry-run]`. It
+   restores the recorded (or given) prior manifest after re-verifying, and if
+   needed re-uploading, that generation's files. Generations are never deleted.
 
 Expand the benchmark with independent user judgments before treating the measured
 regression-set gains as general recommendation-quality gains.

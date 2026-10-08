@@ -34,6 +34,7 @@ import regex
 
 import db
 import venue_overrides
+import occurrence_provenance
 from tag_canonicalization import resolve_tag_name
 import crawler
 import site_profiles
@@ -576,7 +577,11 @@ PAST_START_GRACE_DAYS = 7
 # this one a real start and no end. A run has no natural end date, so cap it at
 # a horizon that comfortably outlives the crawl cadence and let
 # absence-from-crawl do the archiving when the show actually closes.
-OPEN_RUN_HORIZON_DAYS = 60
+OPEN_RUN_HORIZON_DAYS = occurrence_provenance.OPEN_RUN_HORIZON_DAYS  # 60
+# Row key naming an endpoint filter_by_date synthesized (never a source date).
+# Carried per occurrence by group_event_occurrences and stored in the raw_data
+# sidecar, so the merger can tell a sliding horizon from a published closing.
+SYNTHESIZED_ENDPOINT_KEY = '_synthesized_endpoint'
 
 # Explicit exhibition spans are exempt from the 400-day duration guard, but a
 # museum's PERMANENT galleries are often published with placeholder bounds
@@ -688,6 +693,8 @@ def filter_by_date(row_dict, current_date, future_limit_date):
             return False, 'end_in_past'
         start_date_str = current_date.strftime('%Y-%m-%d')
         row_dict['start_date'] = start_date_str
+        # An as-of date, not a published opening (occurrence_provenance).
+        row_dict[SYNTHESIZED_ENDPOINT_KEY] = occurrence_provenance.START_AS_OF_CRAWL
 
     try:
         start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
@@ -713,6 +720,7 @@ def filter_by_date(row_dict, current_date, future_limit_date):
                 open_run_end = current_date + timedelta(days=OPEN_RUN_HORIZON_DAYS)
                 end_date_str = open_run_end.strftime('%Y-%m-%d')
                 row_dict['end_date'] = end_date_str
+                row_dict[SYNTHESIZED_ENDPOINT_KEY] = occurrence_provenance.END_OPEN_RUN_HORIZON
                 duration_days = (open_run_end - start_date).days
 
         if duration_days > 400 and not explicit_exhibition_span:
@@ -4134,7 +4142,8 @@ def group_event_occurrences(rows, source_url=None, location_refs=None):
 
         if group_key not in grouped_events:
             base_event = {k: v for k, v in row_dict.items()
-                         if k not in ['start_date', 'start_time', 'end_date', 'end_time', 'sublocation', 'url']}
+                         if k not in ['start_date', 'start_time', 'end_date', 'end_time', 'sublocation', 'url',
+                                      SYNTHESIZED_ENDPOINT_KEY]}
             base_event['occurrences'] = []
 
             sublocation = (row_dict.get('sublocation') or '').strip()
@@ -4166,6 +4175,11 @@ def group_event_occurrences(rows, source_url=None, location_refs=None):
 
         if occurrence not in grouped_events[group_key]['occurrences']:
             grouped_events[group_key]['occurrences'].append(occurrence)
+        if row_dict.get(SYNTHESIZED_ENDPOINT_KEY):
+            # Copy: run-end cleanup below may rewrite the occurrence in place,
+            # and a rewritten slot must not keep the marker.
+            grouped_events[group_key].setdefault(SYNTHESIZED_ENDPOINT_KEY, []).append(
+                (list(occurrence), row_dict[SYNTHESIZED_ENDPOINT_KEY]))
 
     # Post-process: detect and clear "run end dates"
     # If multiple occurrences have the same end_date but different start_dates,
@@ -8175,6 +8189,34 @@ def strip_contradicting_locative(description, location_name):
     return ' '.join(kept).strip() or None
 
 
+def _annotate_occurrence_provenance(cursor, crawl_result_id, crawled_content, events):
+    """Attach occurrence provenance to grouped events (in place).
+
+    Records endpoints filter_by_date synthesized, then binds publisher all-day
+    flags for content carrying the explicit-occurrence grammar (a no-op for
+    every other source). Returns the number of events with bound flags.
+    """
+    for event in events:
+        marks = event.pop(SYNTHESIZED_ENDPOINT_KEY, None)
+        if marks:
+            occurrence_provenance.record_synthesized_endpoints(event, marks)
+    index = occurrence_provenance.index_records(
+        occurrence_provenance.parse_explicit_records(crawled_content))
+    if not index:
+        return 0
+    cursor.execute("SELECT crawled_at FROM crawl_results WHERE id = %s", (crawl_result_id,))
+    row = cursor.fetchone()
+    observed = row and (row[0] if not isinstance(row, dict) else row.get('crawled_at'))
+    capture = dict(crawl_result_id=crawl_result_id,
+                   observed_at=observed.isoformat(sep=' ') if hasattr(observed, 'isoformat')
+                   else (str(observed) if observed else None))
+    bound = 0
+    for event in events:
+        if occurrence_provenance.bind_event(event, index, capture):
+            bound += 1
+    return bound
+
+
 def process_events(cursor, connection, crawl_result_id, website_name, run_date_str,
                    locations_map=None, websites_map=None, tag_context=None):
     """
@@ -8455,6 +8497,12 @@ def process_events(cursor, connection, crawl_result_id, website_name, run_date_s
             for event in events:
                 if not event.get('urls'):
                     event['urls'] = [fallback_url]
+
+    # Publisher all-day flags in the explicit-occurrence grammar bind to the
+    # exact grouped slot they describe (occurrence_provenance). Runs after
+    # grouping and run-end cleanup so a rewritten end date can never carry a
+    # claim made for a different span.
+    _annotate_occurrence_provenance(cursor, crawl_result_id, crawled_content, events)
 
     for event in events:
         if 'name' in event:
@@ -8756,7 +8804,9 @@ def apply_crawled_details(cursor, connection, ce_id, data, tag_context,
             # undated events came from this. Each dropped occurrence is still
             # logged as an `end_in_past` rejection either way.
             surviving = []
+            synthesized = []
             for occ in data['occurrences']:
+                synthesized_kind = None
                 start_date = occ.get('start_date')
                 end_date = occ.get('end_date')
                 parsed_end = None
@@ -8787,6 +8837,7 @@ def apply_crawled_details(cursor, connection, ce_id, data, tag_context,
                         continue
                     parsed_start = today
                     start_date = today.strftime('%Y-%m-%d')
+                    synthesized_kind = occurrence_provenance.START_AS_OF_CRAWL
                 else:
                     try:
                         parsed_start = datetime.strptime(str(start_date), '%Y-%m-%d').date()
@@ -8807,6 +8858,7 @@ def apply_crawled_details(cursor, connection, ce_id, data, tag_context,
                         past = False
                         parsed_end = today + timedelta(days=OPEN_RUN_HORIZON_DAYS)
                         end_date = parsed_end.strftime('%Y-%m-%d')
+                        synthesized_kind = occurrence_provenance.END_OPEN_RUN_HORIZON
                 if past:
                     log_rejection(
                         cursor, cr_id, ws_id,
@@ -8826,10 +8878,21 @@ def apply_crawled_details(cursor, connection, ce_id, data, tag_context,
 
                 surviving.append((start_date, occ.get('start_time'),
                                   end_date, occ.get('end_time')))
+                if synthesized_kind:
+                    synthesized.append((surviving[-1], synthesized_kind))
 
             # Only replace when the detail crawl actually produced usable dates.
             # If nothing survived, keep whatever the listing page gave us.
             if surviving:
+                # Bound all-day evidence follows only the exact slots that
+                # survive; a changed date or newer clock ends its authority.
+                cursor.execute("SELECT raw_data FROM crawl_events WHERE id = %s", (ce_id,))
+                raw_row = cursor.fetchone()
+                new_raw, surviving = occurrence_provenance.resync_after_detail(
+                    raw_row[0] if raw_row else None, surviving, synthesized)
+                if new_raw is not None:
+                    cursor.execute("UPDATE crawl_events SET raw_data = %s WHERE id = %s",
+                                   (new_raw, ce_id))
                 cursor.execute(
                     "DELETE FROM crawl_event_occurrences WHERE crawl_event_id = %s",
                     (ce_id,),

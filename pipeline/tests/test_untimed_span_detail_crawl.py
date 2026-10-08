@@ -261,7 +261,7 @@ class TestRefinedEnvelopeMerge(unittest.TestCase):
             'events': 'id INT,event_type VARCHAR(40),location_id INT',
             'event_occurrences': 'id INT AUTO_INCREMENT PRIMARY KEY,event_id INT,start_date DATE,'
                                  'start_time VARCHAR(20),end_date DATE,end_time VARCHAR(20),sort_order INT DEFAULT 0',
-            'crawl_events': 'id INT,crawl_result_id INT,location_id INT,url VARCHAR(255)',
+            'crawl_events': 'id INT,crawl_result_id INT,location_id INT,url VARCHAR(255),raw_data TEXT',
             'crawl_results': 'id INT,website_id INT', 'event_sources': 'event_id INT,crawl_event_id INT',
             'crawl_event_occurrences': 'crawl_event_id INT,start_date DATE,start_time VARCHAR(20),'
                                        'end_date DATE,end_time VARCHAR(20)'}
@@ -272,7 +272,7 @@ class TestRefinedEnvelopeMerge(unittest.TestCase):
         self.q.execute("INSERT INTO events VALUES(1,'Concert',645)")
         self.q.execute('INSERT INTO crawl_results VALUES(1,224)')
         # 1: an earlier listing extraction; 2: this run's row after its detail fetch.
-        self.q.execute('INSERT INTO crawl_events VALUES(1,1,645,%s),(2,1,645,%s)', (URL, URL))
+        self.q.execute('INSERT INTO crawl_events(id,crawl_result_id,location_id,url) VALUES(1,1,645,%s),(2,1,645,%s)', (URL, URL))
         self.q.execute('INSERT INTO event_sources VALUES(1,1)')
         for ce, rows in [(1, [PSPAN]), (2, PSESSIONS)]:
             for o in rows:
@@ -299,7 +299,7 @@ class TestRefinedEnvelopeMerge(unittest.TestCase):
     def test_repeated_listing_range_is_ignored_once_refined(self):
         from merger import _merge_occurrences_into_event
         self.q.execute('INSERT INTO event_sources VALUES(1,2)')
-        self.q.execute('INSERT INTO crawl_events VALUES(3,1,645,%s)', (URL,))
+        self.q.execute('INSERT INTO crawl_events(id,crawl_result_id,location_id,url) VALUES(3,1,645,%s)', (URL,))
         self.q.execute('INSERT INTO crawl_event_occurrences VALUES(3,%s,%s,%s,%s)', PSPAN)
         self.seed(PSESSIONS)
         _merge_occurrences_into_event(self.q, 1, [PSPAN], crawl_event_id=3)

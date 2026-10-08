@@ -10,6 +10,9 @@ Smart Upload:
 - Use --force to upload all files regardless of state
 - Use --skip-build to skip the build step
 
+The similarity model (dist/data/similarity/) is never uploaded here: a new
+generation goes live only through the gated `pipeline/similarity_publish.py`.
+
 Configuration:
 - FTP credentials should be set in .env file:
   FTP_HOST, PUBLIC_HTML_FTP_USER, FTP_PASSWORD, FTP_REMOTE_DIR (optional)
@@ -34,6 +37,8 @@ from dotenv import load_dotenv
 # Get the directory where this script is located
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 STATE_FILE = os.path.join(SCRIPT_DIR, 'upload_state.json')
+# Published only by pipeline/similarity_publish.py, after its release gates pass.
+GATED_DIRS = ('data/similarity',)
 
 
 def get_file_hash(file_path):
@@ -88,7 +93,7 @@ def ensure_remote_directory(ftp, remote_path):
 
 
 def upload_directory(ftp, local_dir, remote_dir, is_root=True,
-                     previous_state=None, new_state=None, force=False):
+                     previous_state=None, new_state=None, force=False, exclude=()):
     """
     Recursively upload directory contents to FTP server.
     Skips symlinks (dev mode artifacts).
@@ -101,6 +106,7 @@ def upload_directory(ftp, local_dir, remote_dir, is_root=True,
         previous_state: Dict of file paths to previous content hashes
         new_state: Dict to populate with current content hashes
         force: If True, upload all files regardless of content
+        exclude: Local directories to leave untouched (their saved state is kept)
 
     Returns:
         tuple: (uploaded_count, skipped_count, total_count)
@@ -128,10 +134,17 @@ def upload_directory(ftp, local_dir, remote_dir, is_root=True,
     files = [item for item in items if item.is_file()]
     directories = [item for item in items if item.is_dir() and not item.is_symlink()]
 
+    excluded = {Path(path).resolve() for path in exclude}
+
     # Upload nested assets before pointers in this directory.
     for item in directories:
         subdir_name = item.name
         new_remote_dir = f"{remote_dir}/{subdir_name}" if remote_dir else subdir_name
+
+        if item.resolve() in excluded:
+            print(f"  Skipping gated directory: {subdir_name}/")
+            new_state.update({k: v for k, v in previous_state.items() if k.startswith(f"{new_remote_dir}/")})
+            continue
 
         print(f"  Processing directory: {subdir_name}/")
 
@@ -148,7 +161,8 @@ def upload_directory(ftp, local_dir, remote_dir, is_root=True,
         # Upload subdirectory contents
         sub_uploaded, sub_skipped, sub_total = upload_directory(
             ftp, item, new_remote_dir,
-            is_root=False, previous_state=previous_state, new_state=new_state, force=force
+            is_root=False, previous_state=previous_state, new_state=new_state, force=force,
+            exclude=exclude
         )
         uploaded_count += sub_uploaded
         skipped_count += sub_skipped
@@ -299,10 +313,12 @@ def main(remote_dir=None, use_tls=False, force=False, skip_build=False):
             is_root=True,
             previous_state=previous_state,
             new_state=new_state,
-            force=force
+            force=force,
+            exclude=[local_path / gated for gated in GATED_DIRS]
         )
 
         print(f"\nUploaded {uploaded_count} files, skipped {skipped_count} unchanged files ({total_count} total)")
+        print("Similarity model not uploaded; publish it with pipeline/similarity_publish.py")
 
         # Save the new state
         with open(STATE_FILE, 'w') as f:

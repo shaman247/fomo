@@ -285,6 +285,8 @@ test('missing, incompatible and corrupt artifacts fall back to exact ranking', a
         { 'manifest.json': null },
         { 'manifest.json': { schemaVersion: 10 } },
         { 'manifest.json': { schemaVersion: 1, generation, dimensions: 2, activeShards: ['../core'], historyShards: [] } },
+        // A manifest that reaches the server before its generation's core.
+        { [`${generation}/core.json`]: null },
         { [`${generation}/core.json`]: { ...core(), domain: 'another-city' } },
         { [`${generation}/core.json`]: { ...core(), blocks: { ...core().blocks, tag: block(['jazz', 'jazz'], [[127, 0], [0, 127]]) } } },
         { [`${generation}/core.json`]: { ...core(), blocks: { ...core().blocks, tag: block(['jazz'], [[127, 0]], [-1]) } } },

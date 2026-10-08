@@ -14,7 +14,7 @@ function harness() {
         DiscoveryRanking: { migratePlaces() {} },
         FilterPanelUI: { refreshAvailableTags() { panelRefreshes++; }, selectTags() {} },
         DataManager: {
-            async processFullDataAsync() {}, calculateTagFrequencies() {}, processTagHierarchy() {},
+            async processFullDataAsync() {}, async calculateTagStatsAsync() {},
             async buildSearchIndexAsync() {}
         }
     });

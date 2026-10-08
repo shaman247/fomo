@@ -56,7 +56,7 @@ class EnvelopeWriteTests(unittest.TestCase):
         self.conn=create_connection();self.assertIsNotNone(self.conn);self.addCleanup(self.conn.close);self.q=self.conn.cursor()
         schemas={'events':'id INT,event_type VARCHAR(40),location_id INT',
           'event_occurrences':'id INT AUTO_INCREMENT PRIMARY KEY,event_id INT,start_date DATE,start_time VARCHAR(20),end_date DATE,end_time VARCHAR(20),sort_order INT DEFAULT 0',
-          'crawl_events':'id INT,crawl_result_id INT,location_id INT,url VARCHAR(255)',
+          'crawl_events':'id INT,crawl_result_id INT,location_id INT,url VARCHAR(255),raw_data TEXT',
           'crawl_results':'id INT,website_id INT','event_sources':'event_id INT,crawl_event_id INT',
           'crawl_event_occurrences':'crawl_event_id INT,start_date DATE,start_time VARCHAR(20),end_date DATE,end_time VARCHAR(20)'}
         for name,schema in schemas.items():self.q.execute(f'CREATE TEMPORARY TABLE {name} ({schema})')

@@ -36,6 +36,7 @@ from session_details import refresh_source_session_details
 from source_metadata import refresh_source_metadata
 from delivery import canonical_location_label
 from schedule_envelopes import envelope, reconcile_envelopes
+import occurrence_provenance
 from reschedules import has_reschedule_notice, reconcile_reschedules
 from festival_identity import numbered_member_pair, numbered_festival_span_mismatch
 from program_identity import program_profile, conflicting_program_profiles, volunteer_program_mismatch
@@ -2715,6 +2716,113 @@ def _refresh_occurrence_indexes(event_id, rows, event_dates, event_date_ranges,
     slots.update((str(o[0]), o[1] or '') for o in represented if o[0])
 
 
+def _source_explicit_false_dates(cursor, crawl_event_id, cache):
+    """{(start_date, end_date|None)} the source's bound sidecar marks all_day=false."""
+    if crawl_event_id is None:
+        return set()
+    if crawl_event_id not in cache:
+        cursor.execute('SELECT raw_data FROM crawl_events WHERE id = %s', (crawl_event_id,))
+        row = cursor.fetchone()
+        cache[crawl_event_id] = occurrence_provenance.entry_slots(
+            occurrence_provenance.sidecar_from_raw(row[0] if row else None), False)
+    return cache[crawl_event_id]
+
+
+def _retire_full_day_placeholders(cursor, event_id, crawl_event_id=None):
+    """Blank canonical 12am–11:59pm rows their own publisher page has since
+    reported without clocks (occurrence_provenance.plan_placeholder_retirement).
+
+    Considers every linked source plus ``crawl_event_id`` (whose event_sources
+    link may not exist yet). Source rows and raw captures are never touched.
+    Returns True when a canonical row changed.
+    """
+    cursor.execute(
+        "SELECT start_date, start_time, end_date, end_time FROM event_occurrences "
+        "WHERE event_id = %s", (event_id,))
+    rows = cursor.fetchall()
+    if not any(occurrence_provenance.is_full_day_placeholder(r[1], r[3]) for r in rows):
+        return False
+    cursor.execute('SELECT suppressed FROM events WHERE id = %s', (event_id,))
+    flag = cursor.fetchone()
+    if flag and flag[0]:
+        return False  # an editorial decision owns this schedule
+    cursor.execute(
+        '''SELECT ce.id, cr.website_id, ce.url, cr.crawled_at, ce.raw_data,
+                  co.start_date, co.start_time, co.end_date, co.end_time
+           FROM crawl_events ce
+           JOIN crawl_results cr ON cr.id = ce.crawl_result_id
+           LEFT JOIN crawl_event_occurrences co ON co.crawl_event_id = ce.id
+           WHERE ce.id = %s OR ce.id IN
+               (SELECT crawl_event_id FROM event_sources WHERE event_id = %s)''',
+        (crawl_event_id if crawl_event_id is not None else -1, event_id))
+    sources = {}
+    for ce, website, url, observed, raw, *occ in cursor.fetchall():
+        source = sources.setdefault(ce, dict(
+            website_id=website, url=url, observed_at=observed, occurrences=[],
+            sidecar=occurrence_provenance.sidecar_from_raw(raw)))
+        if occ[0]:
+            source['occurrences'].append(tuple(occ))
+    plan, _vetoes = occurrence_provenance.plan_placeholder_retirement(
+        rows, list(sources.values()), normalize_url_for_identity)
+    for (sd, ed), action in plan.items():
+        params = (event_id, sd, ed, ed, occurrence_provenance.PLACEHOLDER_START,
+                  occurrence_provenance.PLACEHOLDER_END)
+        where = ("WHERE event_id = %s AND start_date = %s "
+                 "AND (end_date <=> %s OR (%s IS NULL AND end_date = start_date)) "
+                 "AND start_time = %s AND end_time = %s")
+        if action == 'drop':
+            cursor.execute("DELETE FROM event_occurrences " + where, params)
+        else:
+            cursor.execute(
+                "UPDATE event_occurrences SET start_time = '', end_time = '' " + where, params)
+            # Collapse twins the update produced so one blank row remains.
+            cursor.execute(
+                "SELECT id FROM event_occurrences WHERE event_id = %s AND start_date = %s "
+                "AND (end_date <=> %s OR (%s IS NULL AND end_date = start_date)) "
+                "AND COALESCE(start_time, '') = '' "
+                "AND COALESCE(end_time, '') = '' ORDER BY sort_order, id",
+                (event_id, sd, ed, ed))
+            extra = [r[0] for r in cursor.fetchall()][1:]
+            if extra:
+                cursor.execute(
+                    "DELETE FROM event_occurrences WHERE id IN (%s)" % ','.join(['%s'] * len(extra)),
+                    tuple(extra))
+    return bool(plan)
+
+
+def _span_horizon_sources(cursor, event_id, crawl_event_id, sd, ed):
+    """Sources carrying untimed span (sd, ed) -> whether each synthesized ``ed``.
+
+    ``event_id`` None restricts to ``crawl_event_id`` alone. A source counts as
+    a horizon owner when its sidecar marks the slot END_OPEN_RUN_HORIZON, or --
+    for crawl_events written before the marker existed -- when ``ed`` is
+    exactly OPEN_RUN_HORIZON_DAYS after its crawl or processing date.
+    """
+    cursor.execute(
+        "SELECT ce.raw_data, DATE(cr.crawled_at), DATE(cr.processed_at) "
+        "FROM crawl_events ce "
+        "JOIN crawl_results cr ON cr.id = ce.crawl_result_id "
+        "JOIN crawl_event_occurrences co ON co.crawl_event_id = ce.id "
+        "WHERE (ce.id = %s OR ce.id IN "
+        "       (SELECT crawl_event_id FROM event_sources WHERE event_id = %s)) "
+        "  AND co.start_date = %s AND co.end_date = %s "
+        "  AND COALESCE(co.start_time, '') = '' AND COALESCE(co.end_time, '') = ''",
+        (crawl_event_id if crawl_event_id is not None else -1,
+         event_id if event_id is not None else -1, sd, ed))
+    owners = []
+    key = (str(sd), str(ed))
+    end = ed if isinstance(ed, date_type) else date_type.fromisoformat(str(ed))
+    for raw, crawled, processed in cursor.fetchall():
+        sidecar = occurrence_provenance.sidecar_from_raw(raw)
+        if key in occurrence_provenance.endpoint_slots(
+                sidecar, occurrence_provenance.END_OPEN_RUN_HORIZON):
+            owners.append(True)
+            continue
+        owners.append(any(d and (end - d).days == occurrence_provenance.OPEN_RUN_HORIZON_DAYS
+                          for d in (crawled, processed)))
+    return owners
+
+
 def _merge_occurrences_into_event(cursor, event_id, new_occurrences, *, crawl_event_id=None):
     """Insert new occurrences into event_occurrences, deduping by (sd, st, ed).
 
@@ -2770,6 +2878,7 @@ def _merge_occurrences_into_event(cursor, event_id, new_occurrences, *, crawl_ev
         starts_by_date.setdefault((sd, ed), set()).add(st_s)
     next_sort = max((row[4] for row in existing_rows), default=-1) + 1
     is_exhibition = None
+    false_cache = {}
 
     for occ in new_occurrences:
         sd = occ[0]
@@ -2784,6 +2893,30 @@ def _merge_occurrences_into_event(cursor, event_id, new_occurrences, *, crawl_ev
         # Repeated crawls must not accumulate nested, untimed spans for the
         # same closing date. Keep the earliest evidenced opening date. Do not
         # reconcile conflicting closing dates or touch timed sessions here.
+        # An open run's synthesized horizon end slides forward with every
+        # crawl. A newer horizon supersedes older horizon-only ends for the
+        # same opening; a span already reaching past it makes it redundant.
+        # Published closing dates are never removed here.
+        same_start = []
+        if crawl_event_id is not None and not new_st and not new_et and ed and sd and sd < ed:
+            same_start = [k for k, old_et in existing_by_key.items()
+                          if k[0] == sd and k[2] and k[2] != ed and not k[1] and not old_et]
+        if same_start and all(
+                _span_horizon_sources(cursor, None, crawl_event_id, sd, ed) or [False]):
+            for old_key in same_start:
+                owners = (_span_horizon_sources(cursor, event_id, None, sd, old_key[2])
+                          if old_key[2] < ed else [])
+                if owners and all(owners):
+                    cursor.execute(
+                        "DELETE FROM event_occurrences WHERE event_id = %s AND start_date = %s "
+                        "AND end_date = %s AND COALESCE(start_time, '') = '' "
+                        "AND COALESCE(end_time, '') = ''", (event_id, sd, old_key[2]))
+                    existing_by_key.pop(old_key, None)
+                    starts_by_date.get((sd, old_key[2]), set()).discard('')
+            if any(k[0] == sd and k[2] and k[2] > ed and not k[1] and not old_et
+                   for k, old_et in existing_by_key.items()):
+                continue
+
         same_end_spans = []
         if not new_st and not new_et and ed and sd and sd < ed:
             same_end_spans = [
@@ -2814,6 +2947,15 @@ def _merge_occurrences_into_event(cursor, event_id, new_occurrences, *, crawl_ev
 
         # Dateless incoming loses to any timed existing row at this (sd, ed).
         if not new_st and any(s for s in existing_starts):
+            continue
+
+        # The full-day placeholder (12am–11:59pm) carries no attendance clock,
+        # so it never demotes a blank row for the same dates -- unless this
+        # source's publisher explicitly said all_day=false for that slot.
+        if ('' in existing_starts
+                and occurrence_provenance.is_full_day_placeholder(new_st, new_et)
+                and (str(sd), str(ed) if ed and ed != sd else None) not in
+                _source_explicit_false_dates(cursor, crawl_event_id, false_cache)):
             continue
 
         # A bare, meridiem-less clock face loses to its own am/pm twin.
@@ -2877,6 +3019,14 @@ def _merge_occurrences_into_event(cursor, event_id, new_occurrences, *, crawl_ev
         existing_starts.add(new_st)
         starts_by_date[date_key] = existing_starts
 
+    if crawl_event_id is not None and any(
+            occurrence_provenance.is_full_day_placeholder(st, et)
+            for (_sd, st, _ed), et in existing_by_key.items()) and _retire_full_day_placeholders(
+            cursor, event_id, crawl_event_id):
+        cursor.execute(
+            "SELECT start_date, start_time, end_date, end_time FROM event_occurrences "
+            "WHERE event_id = %s", (event_id,))
+        return [tuple(r) for r in cursor.fetchall()]
     if overnight_changed:
         return [(sd, st, ed, et) for (sd, st, ed), et in existing_by_key.items()]
 
@@ -3099,6 +3249,9 @@ def _deduplicate_same_name_events(cursor, connection, current_date, edit_logger=
 
         # Clean up the duplicate
         cursor.execute("DELETE FROM event_occurrences WHERE event_id = %s", (remove_id,))
+        # The copy above can put a twin's stale 12am–11:59pm row beside the
+        # keeper's blank one; resolve it with the combined source history.
+        _retire_full_day_placeholders(cursor, keep_id)
         cursor.execute("DELETE FROM event_urls WHERE event_id = %s", (remove_id,))
         cursor.execute("DELETE FROM event_tags WHERE event_id = %s", (remove_id,))
 

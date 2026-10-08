@@ -1,6 +1,7 @@
 """Conservative reconciliation of untimed date envelopes and daily sessions."""
 from datetime import date, timedelta
 from occurrence_times import standardize_time
+from occurrence_provenance import entry_slots, sidecar_from_raw
 
 # These formats describe scheduled attendance. Browsable runs, festivals,
 # camps and unknown types can contain sessions without replacing their span.
@@ -157,7 +158,7 @@ def reconcile_envelopes(cursor, event_id, crawl_event_id, existing, incoming):
     if not row or row[0] not in SESSION_TYPES or not row[1]:
         return existing, incoming
     event = dict(event_type=row[0], location_id=row[1])
-    cursor.execute('''SELECT ce.id,cr.website_id,w.source_type,ce.location_id,ce.url,
+    cursor.execute('''SELECT ce.id,cr.website_id,w.source_type,ce.location_id,ce.url,ce.raw_data,
         co.start_date,co.start_time,co.end_date,co.end_time
         FROM crawl_events ce JOIN crawl_results cr ON cr.id=ce.crawl_result_id
         JOIN websites w ON w.id=cr.website_id
@@ -166,7 +167,10 @@ def reconcile_envelopes(cursor, event_id, crawl_event_id, existing, incoming):
             (SELECT crawl_event_id FROM event_sources WHERE event_id=%s)''',
                    (crawl_event_id, event_id))
     sources = {}
-    for ce, website, source_type, location, url, *occ in cursor.fetchall():
+    all_day_spans = set()
+    for ce, website, source_type, location, url, raw, *occ in cursor.fetchall():
+        if ce not in sources:
+            all_day_spans |= entry_slots(sidecar_from_raw(raw), True)
         source = sources.setdefault(ce, dict(id=ce, website_id=website,
             source_type=source_type, location_id=location, url=url, occurrences=[]))
         source['occurrences'].append(occ)
@@ -181,6 +185,11 @@ def reconcile_envelopes(cursor, event_id, crawl_event_id, existing, incoming):
         if len({d for d in timed_days if sd <= d <= ed}) != (ed - sd).days + 1:
             redundant.remove(span)
     redundant |= {span for span, days in refined.items() if days <= timed_days}
+    # A publisher's bound all_day=true span is the event's own shape, not a
+    # generic missing-time envelope (occurrence_provenance).
+    redundant = {span for span in redundant
+                 if (str(span[0]), str(span[2]) if span[2] and span[2] != span[0] else None)
+                 not in all_day_spans}
     for span in redundant:
         if any(occurrence(r) == span for r in existing):
             cursor.execute('''DELETE FROM event_occurrences WHERE event_id=%s

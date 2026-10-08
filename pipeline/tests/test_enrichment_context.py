@@ -94,5 +94,31 @@ Next event prose.
         self.assertEqual(records['Known']['description'], 'Verified description.')
 
 
+class SnippetCutTests(unittest.TestCase):
+    """Long Beach Public Library cr120805: the enrichment copied snippets cut
+    mid-word (`...where Bear hides his end`) into event descriptions."""
+    FIXTURE = json.loads((Path(__file__).parent / 'fixtures' / 'bl11_long_beach_snippets.json')
+                         .read_text(encoding='utf-8'))
+
+    def test_cut_snippets_end_on_a_word_and_say_so(self):
+        for card in self.FIXTURE['cards']:
+            name = card.split('\n')[0].strip('# ').strip()
+            full = extract_content_snippets([name], card)[name]
+            for limit in range(120, len(full), 7):
+                with self.subTest(name=name, limit=limit):
+                    cut = extract_content_snippets([name], card, limit)[name]
+                    self.assertLessEqual(len(cut), limit)
+                    self.assertTrue(cut.endswith('…'), cut[-30:])
+                    kept = cut[:-1]
+                    self.assertTrue(full.startswith(kept))
+                    self.assertIn(full[len(kept)], ' \n')
+
+    def test_snippets_within_the_limit_are_untouched(self):
+        card = self.FIXTURE['cards'][0]
+        name = card.split('\n')[0].strip('# ').strip()
+        self.assertIn(self.FIXTURE['expect'][name] + ' enduring love for her.',
+                      extract_content_snippets([name], card)[name])
+
+
 if __name__ == '__main__':
     unittest.main()

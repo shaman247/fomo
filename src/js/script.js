@@ -537,16 +537,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Merge descriptions before the search index is (re)built below.
                     this._applyChunkDescriptions(descriptions, false);
                     remainingChunks.forEach(c => this.state.loadedChunks.add(c));
-
-                    DataManager.calculateTagFrequencies(this.state);
-                    DataManager.processTagHierarchy(this.state, this.config);
                     if (profile) {
-                        FP.mark('fp:p2:tagHier');
-                        FP.measure('fp:p2:tagFreq+hierarchy', 'fp:p2:processFullData', 'fp:p2:tagHier');
+                        FP.mark('fp:p2:sync:descriptions');
+                        FP.measure('fp:p2:sync:descriptions', 'fp:p2:processFullData', 'fp:p2:sync:descriptions');
                     }
 
-                    // Yield once before the next big block so any pending input fires.
-                    await new Promise(r => setTimeout(r, 0));
+                    // Staged and yielding; publishes frequencies and available tags together.
+                    await DataManager.calculateTagStatsAsync(this.state, this.config);
+                    if (profile) {
+                        FP.mark('fp:p2:tagHier');
+                        FP.measure('fp:p2:tagFreq+hierarchy', 'fp:p2:sync:descriptions', 'fp:p2:tagHier');
+                    }
 
                     await DataManager.buildSearchIndexAsync(this.state);
                     if (profile) {
@@ -1039,8 +1040,7 @@ document.addEventListener('DOMContentLoaded', () => {
             for (const c of fresh.chunks) {
                 DataManager.applyDescriptions(get(`${cfg.DATA_DIR}events.${c}.desc.json`), staging, false);
             }
-            DataManager.calculateTagFrequencies(staging);
-            DataManager.processTagHierarchy(staging, cfg);
+            await DataManager.calculateTagStatsAsync(staging, cfg);
             await DataManager.buildSearchIndexAsync(staging);
 
             this._swapRefreshedState(staging, fresh);

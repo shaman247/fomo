@@ -16,7 +16,7 @@ import os
 import re
 import statistics
 import unicodedata
-from collections import Counter
+from collections import Counter, defaultdict
 from dataclasses import dataclass, field, replace
 from datetime import date, datetime, timedelta
 from io import BytesIO
@@ -980,6 +980,42 @@ def _split_trailing_heading(text):
     return '\n'.join(lines[:start]), '\n'.join(lines[start:])
 
 
+# Plain text a card prints between its date and its title (Brooklyn Society for
+# Ethical Culture w216: `03 November` / `7:00 pm - 8:30 pm` / `Brooklyn
+# Ethical` / image / `#### [Title](…)`). The lead-in walk crosses at most
+# LEADIN_BRIDGE_MAX_LINES such lines, each at most LEADIN_BRIDGE_MAX_CHARS and
+# without a link, and only when a date or time line lies directly beyond them;
+# a previous card's body ends on its own link (`[View Detail](…)`, `[Learn
+# More](…)`) or on longer prose, and stops the walk as before.
+LEADIN_BRIDGE_MAX_LINES = 2
+LEADIN_BRIDGE_MAX_CHARS = 60
+
+
+def _is_bridge_line(line):
+    text = line.strip()
+    return (bool(text) and len(text) <= LEADIN_BRIDGE_MAX_CHARS and '](' not in text
+            and not _is_heading_line(line) and not _is_leadin_line(line))
+
+
+def _leadin_walk_start(lines, start):
+    """Walk `start` back over the headings and lead-in lines above a card title,
+    crossing a short venue/label line only when a date or time lies above it."""
+    while True:
+        while start > 0 and (_is_heading_line(lines[start - 1])
+                             or _is_leadin_line(lines[start - 1])):
+            start -= 1
+        j = start
+        while (j > 0 and start - j < LEADIN_BRIDGE_MAX_LINES
+               and _is_bridge_line(lines[j - 1])):
+            j -= 1
+        if j == start or j == 0:
+            return start
+        above = lines[j - 1]
+        if not (_is_leadin_line(above) and _boundary_text(above)):
+            return start
+        start = j
+
+
 def _split_trailing_record(text, cap, card=None):
     """Peel the trailing PARTIAL RECORD off `text`.
 
@@ -1018,9 +1054,7 @@ def _split_trailing_record(text, cap, card=None):
     # record it introduces (`## Wednesday` + `### [Show](url)`).
     start = _extend_back_over_headings(lines, last)
     if card is not None:
-        while start > 0 and (_is_heading_line(lines[start - 1])
-                             or _is_leadin_line(lines[start - 1])):
-            start -= 1
+        start = _leadin_walk_start(lines, start)
         while start < last and not lines[start].strip():
             start += 1
     if start == 0:
@@ -1300,6 +1334,21 @@ def count_date_tokens(text):
     return len(_DATE_TOKEN_RE.findall(text or ''))
 
 
+def _is_card_detail_heading(lines, idx):
+    """True when heading `lines[idx]` continues a card instead of starting one:
+    a time-only heading, or a date heading directly under its card's title.
+    Mount Vernon Public Library (w6008) prints `##  [Crochet Group](…)` /
+    `####  Thursday, October 15, 2026` / `#### 1:00 pm - 3:00 pm` / body, and the
+    occurrence cap cut at those `####` lines, leaving title, date and time in
+    different pieces (cr127259, cr129606). A day heading that governs several
+    cards (Roxy `### Saturday, October 03`) follows a previous card's body, so
+    it stays a split point."""
+    text = _boundary_text(lines[idx])
+    if text and _BOUNDARY_TIME_RE.fullmatch(text):
+        return True
+    return _is_boundary_date_line(lines[idx]) and _is_own_date(lines, idx)
+
+
 def cap_occurrences_per_chunk(chunks, budget=OCCURRENCE_BUDGET_PER_CHUNK):
     """Subdivide any chunk whose text enumerates more than `budget` dates.
 
@@ -1320,6 +1369,13 @@ def cap_occurrences_per_chunk(chunks, budget=OCCURRENCE_BUDGET_PER_CHUNK):
     line carrying the venue name and street address, and pieces that lost it
     came back with `location: "game bar or backyard"` — the card's *Space:*
     line — instead of "The Tiny Cupboard". `max_chars` is still respected.
+
+    A preamble of nothing but lead-in lines (dates, times, images) is the first
+    card's own lead-in, not page context, and is never repeated: since chunks
+    open on a card's lead-in (_split_trailing_record), Brooklyn Children's
+    Museum (cr127245) had its first card's `Friday, November 27` + image stamped
+    onto the piece that opens on the December 18 card, whose own date stayed at
+    the previous piece's tail. carry_boundary_context copies the right lead-in.
     """
     if not budget:
         return chunks
@@ -1331,13 +1387,15 @@ def cap_occurrences_per_chunk(chunks, budget=OCCURRENCE_BUDGET_PER_CHUNK):
             continue
 
         lines = chunk.split('\n')
-        starts = [i for i, line in enumerate(lines) if _is_heading_line(line)]
+        starts = [i for i, line in enumerate(lines)
+                  if _is_heading_line(line) and not _is_card_detail_heading(lines, i)]
         if len(starts) < 2:
             out.append(chunk)          # nothing to split at
             continue
 
         preamble = '\n'.join(lines[:starts[0]]).strip()
-        if len(preamble) > PREAMBLE_CARRY_MAX_CHARS:
+        if (len(preamble) > PREAMBLE_CARRY_MAX_CHARS
+                or all(_is_leadin_line(line) for line in lines[:starts[0]])):
             preamble = ''
 
         # Record i spans [starts[i], starts[i+1]); the preamble rides along with
@@ -1410,6 +1468,7 @@ def cap_occurrences_per_chunk(chunks, budget=OCCURRENCE_BUDGET_PER_CHUNK):
 # (450 fixed, 15 newly cut at a moved boundary) and from its body 18 -> 7.
 # .claude/notes/backlog-bl11-card-boundaries-20261007.md has the cases.
 BOUNDARY_DATE_MAX_GAP = 6000
+BOUNDARY_NAV_LINK_LINES = 3
 BOUNDARY_MIN_LEADIN_DATES = 2
 BOUNDARY_OWN_DATE_LINES = 3
 
@@ -1487,13 +1546,14 @@ def _record_signature(line):
 
 
 def _opening_signatures(lines, start=0):
-    """Signatures of the record that `lines` opens on, skipping lead-in lines.
+    """Signatures of the record that `lines` opens on, skipping lead-in lines,
+    in source order (the first is where the record starts).
 
     A run of consecutive headings counts as one opening (a category banner such
     as Lincoln Center's `##### [Kids, Teens, and Families](…)` above its
     `## [DIRT](…)` title), matching `_extend_back_over_headings`.
     """
-    sigs = set()
+    sigs = {}
     source = lines if not start else (lines[i] for i in range(start, len(lines)))
     for line in source:
         if not sigs and _is_leadin_line(line):
@@ -1503,10 +1563,10 @@ def _opening_signatures(lines, start=0):
         sig = _record_signature(line)
         if sig is None:
             break
-        sigs.add(sig)
+        sigs.setdefault(sig)
         if sig[0] == 't' or not _is_heading_line(line):
             break
-    return sigs
+    return list(sigs)
 
 
 def _leadin_card_signature(lines):
@@ -1521,15 +1581,24 @@ def _leadin_card_signature(lines):
     context.
     """
     votes = Counter()
+    firsts = Counter()
     voters = 0
     for i, line in enumerate(lines):
         if _is_boundary_date_line(line) and not _is_own_date(lines, i):
             opening = _opening_signatures(lines, i + 1)
             voters += bool(opening)
             votes.update(opening)
+            if opening:
+                firsts[opening[0]] += 1
     if not votes:
         return None
-    sig, count = votes.most_common(1)[0]
+    # A title and the subtitle heading under it share every vote (NYC Parks
+    # `### [Kids In Motion: …](…)` / `#### at <Playground>`, 52 each on
+    # cr127583); the record starts at the first. Ties used to fall to set
+    # order, i.e. to PYTHONHASHSEED, so the same page chunked differently
+    # between runs.
+    count = max(votes.values())
+    sig = max((s for s in votes if votes[s] == count), key=lambda s: firsts[s])
     if count < BOUNDARY_MIN_LEADIN_DATES or count * 2 <= voters:
         return None
     return sig if _first_dated_card_is_led(lines, sig) else None
@@ -1607,9 +1676,27 @@ def _opens_on_undated_record(lines, card):
         if _is_boundary_date_line(line):
             return False
         if _record_signature(line) == card:
-            return True
+            return not _has_own_date_below(lines, i, card)
         if _is_heading_line(line):
-            return card in _opening_signatures(lines, i)
+            return card in _opening_signatures(lines, i) and not _has_own_date_below(lines, i, card)
+    return False
+
+
+def _has_own_date_below(lines, idx, card):
+    """True when the heading card opening at `lines[idx]` prints its own date
+    under it: Ballet Hispánico's `## EN FAMILIA / FAMILY MATINEE` / `###
+    Saturday, April 10, 2027 | 2:00PM` was handed the previous section's
+    `Sunday, April 11, 2 PM` (cr122551, cr127964). Headings of the opening run
+    and link-only lines are skipped, as in _is_own_date. A date that leads
+    another card is the next card's (Grolier's next-day row under a table row)."""
+    if not _is_heading_line(lines[idx]):
+        return False
+    for j in range(idx + 1, len(lines)):
+        line = lines[j]
+        if _is_boundary_date_line(line):
+            return card not in _opening_signatures(lines, j + 1)
+        if not (_is_heading_line(line) or _is_leadin_line(line) or _is_link_only(line)):
+            return False
     return False
 
 
@@ -1620,9 +1707,20 @@ def _governing_date_line(split, k, card):
     does not lead a card (a card's own date) or past BOUNDARY_DATE_MAX_GAP.
     """
     gap = 0
+    links = 0
     for j in range(k - 1, -1, -1):
         lines = split[j]
         for i in range(len(lines) - 1, -1, -1):
+            # A run of link-only lines is site navigation (Powerhouse's
+            # `[Donate]` / `[Become a Patron]` footer, NPS's `* [FAQ]` menu):
+            # the listing ended there, and no date above it governs the next
+            # chunk (`Nov 4` was copied onto `## stay connected`, cr128804).
+            if _is_link_only(lines[i]) and _TEXT_LINK_RE.search(lines[i]):
+                links += 1
+            elif _boundary_text(lines[i]):
+                links = 0          # blank, image-only and empty-cell lines are neutral
+            if links >= BOUNDARY_NAV_LINK_LINES:
+                return None
             if _is_boundary_date_line(lines[i]):
                 if _is_own_date(lines, i):
                     return None
@@ -1961,11 +2059,53 @@ def _full_dates(text):
     return dates
 
 
+# A full date that also names its weekday can be checked against itself. When
+# the weekday fits the month and day only in an ADJACENT year, the printed year
+# is the wrong part: Lincoln Center Presents (w4833) printed every card of its
+# second, day-grouped calendar rendering one year late on 2026-09-07..28
+# (`## Monday September 28, 2026` over `#### Monday, September 28, 2027 ...`;
+# 221-235 such lines per capture), and the live markup has since dropped
+# per-card years. Window pruning reads such a date in the year its weekday
+# names. A weekday that fits neither adjacent year is a typo in the weekday or
+# day (SOPAC w1156 printed `SUN, MAR 6, 2027`), so that date stands as printed.
+_WEEKDAY_FULL_DATE_RE = re.compile(
+    r'\b(mon(?:day)?|tue(?:s|sday)?|wed(?:nesday)?|thu(?:rs?|rsday)?|fri(?:day)?|'
+    r'sat(?:urday)?|sun(?:day)?)\.?,?\s+'
+    r'(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+'
+    r'(\d{1,2})(?:st|nd|rd|th)?,?\s+(20\d{2})\b', re.IGNORECASE)
+_WEEKDAY_INDEX = {'mon': 0, 'tue': 1, 'wed': 2, 'thu': 3, 'fri': 4, 'sat': 5, 'sun': 6}
+
+
+def _weekday_year_corrections(text):
+    """[(printed_date, weekday_consistent_date)] for each `Weekday, Month D, YYYY`
+    in `text` whose weekday fits that month/day only one year earlier or later."""
+    fixes = []
+    for m in _WEEKDAY_FULL_DATE_RE.finditer(text):
+        month, day, year = _MONTH_ABBREVS[m.group(2).lower()[:3]], int(m.group(3)), int(m.group(4))
+        weekday = _WEEKDAY_INDEX[m.group(1).lower()[:3]]
+        try:
+            printed = date(year, month, day)
+        except ValueError:
+            continue
+        if printed.weekday() == weekday:
+            continue
+        for y in (year - 1, year + 1):
+            try:
+                alt = date(y, month, day)
+            except ValueError:
+                continue
+            if alt.weekday() == weekday:
+                fixes.append((printed, alt))
+                break
+    return fixes
+
+
 def chunk_is_beyond_window(chunk, today=None, window_days=None, buffer_days=FAR_FUTURE_BUFFER_DAYS):
     """True when every dated mention in `chunk` carries a year and all sit past the
     publish window (+buffer). Requires FAR_FUTURE_MIN_DATES fully-qualified dates
     and no year-less date tokens, so a calendar that prints "Sat, Sep 26" next to
-    a stray "2027" is never pruned.
+    a stray "2027" is never pruned. A date whose printed weekday fits only an
+    adjacent year is read in that year (_weekday_year_corrections).
 
     JSON-feed dates (epochs / ISO datetimes on scheduling keys) are
     fully-qualified too and join the minimum, so an in-window `startDate` epoch
@@ -1981,6 +2121,9 @@ def chunk_is_beyond_window(chunk, today=None, window_days=None, buffer_days=FAR_
     # tokens without a year (or slash dates without a year) disqualify.
     if count_date_tokens(chunk) > len(text_full):
         return False
+    for printed, corrected in _weekday_year_corrections(chunk):
+        if printed in text_full:
+            text_full[text_full.index(printed)] = corrected
     full = text_full + _json_dates(chunk)
     if len(full) < FAR_FUTURE_MIN_DATES:
         return False
@@ -2298,8 +2441,25 @@ def extract_content_snippets(event_names, content, snippet_chars=500):
         if len(identities) != 1:
             continue
         # Repeated copies with the same explicit URL describe the same card.
-        snippets[name] = matches[0][1][:snippet_chars].strip()
+        snippets[name] = _cut_snippet(matches[0][1].strip(), snippet_chars)
     return snippets
+
+
+def _cut_snippet(text, limit):
+    """`text` within `limit` chars, cut at a word and marked with an ellipsis.
+
+    A bare slice ended Long Beach Public Library's cards mid-word: four lines of
+    branch / room / age / type metadata left ~90 characters for the film
+    synopsis, and the enrichment copied `…where Bear hides his end` and
+    `_Celebrate the beginning of Hi` into the descriptions (cr120805)."""
+    if len(text) <= limit:
+        return text
+    cut = text[:limit - 1]
+    space = max(cut.rfind(' '), cut.rfind('\n'))
+    if space > limit // 2:
+        cut = cut[:space]
+    return cut.rstrip() + '…'
+
 
 
 _BOILERPLATE_DESC_PATTERNS = [
@@ -3193,6 +3353,8 @@ async def execute_extraction_sync(cursor, connection, prep):
         response_text = await _generate_extraction_response(prep, cursor, connection)
 
     response_text, event_count, occurrence_count = _normalize_extraction_response(response_text)
+    if prep.resolved_result is None and prep.content:
+        response_text = repair_url_label_slips(prep.content, response_text)
 
     # Variance guard: Gemini's per-run yield on near-identical content can swing
     # wildly (observed 4 -> 24 events run-to-run on stable pages). A collapsed
@@ -3285,6 +3447,93 @@ async def _generate_extraction_response(prep, cursor, connection):
     except llm_providers.ProviderCallFailure as e:
         print(f"    - Single-call extraction error: {e}")
         raise ExtractionCallFailure(str(e))
+
+
+# An extracted record's URL is checked against the source's own link labels.
+# A slip gives a card its NEIGHBOUR's link: the URL's label in the source is
+# another extracted record's name, while the record's own name labels a
+# different link. Measured on every crawl since 2026-09-01 (186,226 records):
+# Brooklyn Public Library cr123180 shifted a run of consecutive cards one link
+# down (`Maternal Health Workshop` → the next card's node/843367), w2757 gave
+# nine cards one artist's link, JCFPL swapped Legos / Fall Craft. Not slips,
+# and left alone: a label that contains the name or is contained by it (`Comic
+# Con` / `New York Comic Con`, a reception linking to its exhibition), image
+# and file links, and any repair onto a link another record keeps — UCB's
+# 09-20 BYOT card carried its own dated URL under a mis-copied name, which
+# would otherwise have been moved onto the 09-06 show's link. One own link is
+# restored; several (a recurring program's per-date nodes) or one that a
+# correctly labelled record keeps only warn. A record whose name labels no link
+# at all shares its link by design and is left silently.
+_LABELLED_LINK_RE = re.compile(r'(?<!!)\[([^\]]+)\]\((https?://[^)\s]+)\)')
+_ASSET_URL_RE = re.compile(r'\.(?:jpe?g|png|gif|webp|avif|svg|pdf)(?:[?#]|$)', re.IGNORECASE)
+
+
+def _link_label_key(text):
+    return ' '.join(re.findall(r'\w+', (text or '').lower()))
+
+
+def _url_key(url):
+    return url.strip().rstrip('/').lower()
+
+
+def repair_url_label_slips(content, response_text):
+    """Return `response_text` with neighbour-link slips restored (see above)."""
+    try:
+        parsed = json.loads(response_text)
+    except (TypeError, json.JSONDecodeError):
+        return response_text
+    events = parsed.get('events') if isinstance(parsed, dict) else None
+    if not events:
+        return response_text
+    labels, urls_by_label = defaultdict(set), defaultdict(dict)
+    for m in _LABELLED_LINK_RE.finditer(content):
+        url, key = m.group(2), _link_label_key(m.group(1))
+        if key and not _ASSET_URL_RE.search(url):
+            labels[_url_key(url)].add(key)
+            urls_by_label[key].setdefault(_url_key(url), url)
+    records = [e for e in events if isinstance(e, dict) and isinstance(e.get('url'), str)]
+    names = {_link_label_key(e.get('name')) for e in events if isinstance(e, dict)}
+
+    def own_label(key, here):
+        return any(label == key or (len(label) > 3 and (label in key or key in label))
+                   for label in here)
+
+    slipped, owning, moves = set(), set(), {}
+    for i, event in enumerate(records):
+        key, url = _link_label_key(event.get('name')), _url_key(event['url'])
+        here = labels.get(url)
+        if not key or not here or own_label(key, here) or not (here & names) - {key}:
+            continue
+        slipped.add(i)
+        own = {k: u for k, u in urls_by_label.get(key, {}).items() if k != url}
+        if own:
+            owning.add(i)
+        if len(own) == 1:
+            moves[i] = next(iter(own.items()))
+    # A link stays with any record whose name it carries; a slipped record
+    # holds its link by mistake and does not keep it from its owner.
+    kept = {_url_key(e['url']) for i, e in enumerate(records) if i not in slipped}
+    repaired = []
+    for i, (target_key, target) in moves.items():
+        if target_key in kept:
+            continue
+        repaired.append((records[i].get('name'), records[i]['url']))
+        records[i]['url'] = target
+    restored = {name for name, _ in repaired}
+    ambiguous = [records[i].get('name') for i in sorted(owning)
+                 if records[i].get('name') not in restored]
+    if repaired:
+        examples = '; '.join(f"{name!r} (was {old})" for name, old in repaired[:3])
+        print(f"    - URL SLIP: restored {len(repaired)} record(s) to the link their own "
+              f"name labels in the source — {examples}"
+              + (f"; +{len(repaired) - 3} more" if len(repaired) > 3 else ""))
+    if ambiguous:
+        print(f"    - ⚠️  URL SLIP: {len(ambiguous)} record(s) carry another record's link "
+              f"while their own name labels other links; left as extracted — "
+              + '; '.join(repr(n) for n in ambiguous[:3]))
+    if not repaired:
+        return response_text
+    return json.dumps(parsed, ensure_ascii=False)
 
 
 def _normalize_extraction_response(response_text):

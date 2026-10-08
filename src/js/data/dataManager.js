@@ -158,6 +158,17 @@ const DataManager = (() => {
     // read as "binary" and silently invisible to grep -I (which once hid a stale call).
     const VENUE_SEP = '\x1f';
 
+    // Profiler span ending at `name`, starting at the previous span mark.
+    // No-op unless a FilterProfiler session is active (see filterPanelUI.js).
+    let _fpLast = null;
+    function _fpSpan(name) {
+        const FP = (typeof window !== 'undefined' && window.FilterProfiler) || null;
+        if (!FP || !FP._active) return;
+        FP.mark(name);
+        if (_fpLast && !name.endsWith(':start')) FP.measure(name, _fpLast, name);
+        _fpLast = name;
+    }
+
     function venueIdentity(id, name) {
         return id != null ? `id:${id}` : `name:${name || ''}`;
     }
@@ -166,25 +177,63 @@ const DataManager = (() => {
         return `${lat},${lng}${VENUE_SEP}${identity}`;
     }
 
+    /** Grouping key of an event's venue at its export coordinate. */
+    function eventVenueKey(event) {
+        return event.venueKey ?? venueOffsetKey(event.origLat, event.origLng,
+            venueIdentity(event.place_id, event.location));
+    }
+
+    /**
+     * Groups events by venue (export coordinate + identity), in first-event
+     * order. The final Phase-2 rebuild then formats coordinates and resolves
+     * metadata once per venue (~5k) instead of several times per event (~35k);
+     * that per-event string work dominated the blocking end-of-load task.
+     */
+    function collectVenues(events) {
+        const venues = new Map();
+        for (const event of events) addVenue(venues, event);
+        return venues;
+    }
+
+    function addVenue(venues, event) {
+        const key = eventVenueKey(event);
+        if (venues.has(key)) return;
+        venues.set(key, { key, origLat: event.origLat, origLng: event.origLng,
+            identity: venueIdentity(event.place_id, event.location),
+            placeId: event.place_id, name: event.location,
+            lat: event.origLat, lng: event.origLng, locationKey: null });
+    }
+
+    /** Sets each venue's display point from the offsets (one shared key string per venue). */
+    function placeVenues(venues, offsets) {
+        for (const venue of venues.values()) {
+            const off = offsets.get(venue.key);
+            venue.lat = off ? off.lat : venue.origLat;
+            venue.lng = off ? off.lng : venue.origLng;
+            venue.locationKey = `${venue.lat},${venue.lng}`;
+        }
+        return venues;
+    }
+
     /**
      * Recomputes per-venue coordinate offsets from the current event set.
      * A coordinate is perturbed only when 2+ distinct venues have events there.
      * Stores venueOffsetKey(origLat, origLng, identity) -> { lat, lng }.
      */
-    function computeCoordOffsets(state) {
-        const identitiesByCoord = new Map(); // "lat,lng" -> Set(venue identity)
-        for (const event of state.allEvents) {
-            const identity = venueIdentity(event.place_id, event.location);
-            const coordKey = `${event.origLat},${event.origLng}`;
-            let identities = identitiesByCoord.get(coordKey);
-            if (!identities) { identities = new Set(); identitiesByCoord.set(coordKey, identities); }
-            identities.add(identity);
+    function computeCoordOffsets(state, venues = collectVenues(state.allEvents || [])) {
+        const identitiesByCoord = new Map(); // "lat,lng" -> [venue identity]
+        for (const venue of venues.values()) {
+            const coordKey = `${venue.origLat},${venue.origLng}`;
+            const identities = identitiesByCoord.get(coordKey);
+            // Venue keys are unique per (coordinate, identity): no duplicates here.
+            if (identities) identities.push(venue.identity);
+            else identitiesByCoord.set(coordKey, [venue.identity]);
         }
 
         const offsets = new Map();
-        for (const [coordKey, identitySet] of identitiesByCoord) {
-            if (identitySet.size < 2) continue; // no collision — leave it alone
-            const identities = [...identitySet].sort(); // order-independent layout
+        for (const [coordKey, identityList] of identitiesByCoord) {
+            if (identityList.length < 2) continue; // no collision — leave it alone
+            const identities = identityList.sort(); // order-independent layout
             const commaIdx = coordKey.indexOf(',');
             const baseLat = Number(coordKey.slice(0, commaIdx));
             const baseLng = Number(coordKey.slice(commaIdx + 1));
@@ -209,12 +258,16 @@ const DataManager = (() => {
      * Coordinate-only joins confuse tenants in the same building. Legacy
      * events without place_id may use an unambiguous coord+name match; an
      * unknown ID never falls back to some other tenant's metadata.
+     * @param {Map} [venues] - placed venues from collectVenues/placeVenues;
+     *   derived from state.allEvents and the current offsets when omitted
      */
-    function buildLocationsIndex(state) {
+    function buildLocationsIndex(state, venues) {
+        if (!venues) {
+            venues = placeVenues(collectVenues(state.allEvents || []), state.coordOffsetByVenue || new Map());
+        }
         const byKey = {};
         const byId = new Map();
         const legacyByKey = new Map();
-        const offsets = state.coordOffsetByVenue || new Map();
         for (const location of (state.rawLocations || [])) {
             if (location.id != null) byId.set(String(location.id), location);
             if (location.lat == null || location.lng == null || !location.name) continue;
@@ -222,17 +275,15 @@ const DataManager = (() => {
             // Preserve ambiguity: an address/name cannot distinguish these rows.
             legacyByKey.set(key, legacyByKey.has(key) ? null : location);
         }
-        for (const event of (state.allEvents || [])) {
-            const location = event.place_id != null
-                ? byId.get(String(event.place_id))
-                : legacyByKey.get(venueOffsetKey(event.origLat, event.origLng, event.location));
+        // Venues iterate in first-event order, so the first event's venue
+        // still wins a shared display point.
+        for (const venue of venues.values()) {
+            const location = venue.placeId != null
+                ? byId.get(String(venue.placeId))
+                : legacyByKey.get(venueOffsetKey(venue.origLat, venue.origLng, venue.name));
             if (!location) continue;
-            const off = offsets.get(venueOffsetKey(event.origLat, event.origLng,
-                venueIdentity(event.place_id, event.location)));
-            const lat = off ? off.lat : event.origLat;
-            const lng = off ? off.lng : event.origLng;
-            const key = `${lat},${lng}`;
-            if (!byKey[key]) byKey[key] = { ...location, lat, lng };
+            const key = venue.locationKey;
+            if (!byKey[key]) byKey[key] = { ...location, lat: venue.lat, lng: venue.lng };
         }
         state.locationsByLatLng = byKey;
     }
@@ -267,18 +318,11 @@ const DataManager = (() => {
      * @param {Object} state - Application state
      */
     function applyCoordPerturbation(state) {
-        computeCoordOffsets(state);
-        buildLocationsIndex(state);
-        const offsets = state.coordOffsetByVenue;
-        for (const event of state.allEvents) {
-            const off = offsets.get(venueOffsetKey(event.origLat, event.origLng,
-                venueIdentity(event.place_id, event.location)));
-            const lat = off ? off.lat : event.origLat;
-            const lng = off ? off.lng : event.origLng;
-            event.latitude = lat;
-            event.longitude = lng;
-            event.locationKey = `${lat},${lng}`;
-        }
+        const venues = collectVenues(state.allEvents);
+        computeCoordOffsets(state, venues);
+        placeVenues(venues, state.coordOffsetByVenue);
+        buildLocationsIndex(state, venues);
+        for (const event of state.allEvents) placeEvent(event, venues.get(eventVenueKey(event)));
         rebuildEventLookups(state);
     }
 
@@ -395,6 +439,9 @@ const DataManager = (() => {
             // when this venue collides with another at the same coordinate.
             origLat: lat,
             origLng: lng,
+            // Immutable venue grouping key, built here in the yielding transform
+            // loop so the blocking re-key pass does not format it per event.
+            venueKey: venueOffsetKey(lat, lng, venueIdentity(restOfEvent.place_id, restOfEvent.location)),
             latitude: lat,
             longitude: lng,
             locationKey,
@@ -428,14 +475,67 @@ const DataManager = (() => {
      */
     async function processFullDataAsync(fullEventData, fullLocationData, state, config, onProgress) {
         addRawLocations(fullLocationData, state);
-        await appendEventDataChunked(fullEventData, state, config, onProgress);
+        const newEvents = await transformNewEventsChunked(fullEventData, state, config, onProgress);
         // One re-key pass after the full merge so cross-chunk venue collisions
         // (a venue whose siblings only appear in a later chunk) are caught.
-        // INVARIANT: appendEventDataChunked leaves the event lookups stale
-        // (this rebuild owns them), and only a microtask boundary separates
-        // the two — user input can't interleave. Never insert a real yield
-        // (await _yieldToMain/setTimeout) between these calls.
-        applyCoordPerturbation(state);
+        await stageAndPublishEvents(state, newEvents);
+    }
+
+    /**
+     * Merges new events as a staged replacement. Venue grouping, offsets, the
+     * locations index, the new events' placement and a complete eventsById
+     * are built across yields without touching live state (new events are not
+     * reachable from it yet). One synchronous publish then appends them,
+     * re-keys the few existing events whose venue moved and swaps every lookup.
+     * INVARIANT: never await inside the publish block — input must never
+     * observe state.allEvents ahead of eventsById/locationsByLatLng/keys.
+     * @param {Object} state - Application state
+     * @param {Array} newEvents - transformed events absent from state.allEvents
+     */
+    async function stageAndPublishEvents(state, newEvents) {
+        const oldEvents = state.allEvents;
+        const venues = new Map();
+        await _forEachYielding(oldEvents, event => addVenue(venues, event));
+        await _forEachYielding(newEvents, event => addVenue(venues, event));
+
+        const staged = { rawLocations: state.rawLocations };
+        _fpSpan('fp:p2:stage:start');
+        computeCoordOffsets(staged, venues);
+        placeVenues(venues, staged.coordOffsetByVenue);
+        _fpSpan('fp:p2:stage:offsets');
+        await _yieldToMain();
+        _fpSpan('fp:p2:stage:start');
+        buildLocationsIndex(staged, venues);
+        _fpSpan('fp:p2:stage:locationsIndex');
+        await _yieldToMain();
+
+        const eventsById = {};
+        await _forEachYielding(oldEvents, event => { eventsById[event.id] = event; });
+        await _forEachYielding(newEvents, event => {
+            placeEvent(event, venues.get(eventVenueKey(event)));
+            eventsById[event.id] = event;
+        });
+
+        // ---- Publish: synchronous from here to the end of the function. ----
+        // Phase-2 groups and background refreshes run sequentially, so
+        // state.allEvents is still oldEvents here.
+        _fpSpan('fp:p2:sync:start');
+        for (const event of oldEvents) {
+            const venue = venues.get(eventVenueKey(event));
+            if (event.locationKey !== venue.locationKey) placeEvent(event, venue);
+        }
+        state.allEvents.push(...newEvents);
+        state.coordOffsetByVenue = staged.coordOffsetByVenue;
+        state.locationsByLatLng = staged.locationsByLatLng;
+        state.eventsById = eventsById;
+        _fpSpan('fp:p2:sync:publish');
+    }
+
+    /** Moves an event to its venue's display point. */
+    function placeEvent(event, venue) {
+        event.latitude = venue.lat;
+        event.longitude = venue.lng;
+        event.locationKey = venue.locationKey;
     }
 
     /**
@@ -509,9 +609,21 @@ const DataManager = (() => {
         return new Promise(r => setTimeout(r, 0));
     }
 
+    /** Calls fn on each item, yielding to the main thread after ~8ms slices. */
+    async function _forEachYielding(items, fn) {
+        let sliceStart = performance.now();
+        for (let i = 0; i < items.length; i++) {
+            fn(items[i]);
+            if ((i & 127) === 127 && performance.now() - sliceStart >= 8) {
+                await _yieldToMain();
+                sliceStart = performance.now();
+            }
+        }
+    }
+
     // Check elapsed time every small batch; fixed large batches stalled slower CPUs.
     const EVENT_PROCESS_CHUNK_SIZE = 200;
-    async function appendEventDataChunked(newEventData, state, config, onProgress) {
+    async function transformNewEventsChunked(newEventData, state, config, onProgress) {
         const total = newEventData.length;
         const newEvents = [];
         // Track ids seen across chunks (Phase 1's eventsById + this batch).
@@ -537,10 +649,9 @@ const DataManager = (() => {
             }
         }
 
-        state.allEvents.push(...newEvents);
-        // No lookup update here: processFullDataAsync (the only caller)
-        // immediately rebuilds eventsById inside applyCoordPerturbation —
-        // appending first was a wasted O(n) pass on the blocking Phase-2 tail.
+        // Not appended here: stageAndPublishEvents publishes them together
+        // with the lookups that cover them.
+        return newEvents;
     }
 
     // ========================================
@@ -557,10 +668,9 @@ const DataManager = (() => {
     }
 
     /**
-     * Append-only keying of events into eventsById.
-     * The live load paths (processInitialData / processFullDataAsync) don't
-     * call this directly — each defers to the single rebuildEventLookups pass
-     * inside applyCoordPerturbation.
+     * Append-only keying of events into eventsById. Phase 1 builds lookups via
+     * rebuildEventLookups in applyCoordPerturbation; Phase 2 stages a complete
+     * eventsById in stageAndPublishEvents instead.
      */
     function appendToEventLookups(state, eventsToAdd) {
         if (!state.eventsById) state.eventsById = {};
@@ -595,7 +705,15 @@ const DataManager = (() => {
                 sliceStart = performance.now();
             }
         }
-        _indexLocationsTagsOrganizers(staging);
+        const locationKeys = Object.keys(staging.locationsByLatLng);
+        for (const key of locationKeys) {
+            _indexLocation(staging, key, staging.locationsByLatLng[key]);
+            if (performance.now() - sliceStart >= 8) {
+                await _yieldToMain();
+                sliceStart = performance.now();
+            }
+        }
+        _indexTagsOrganizers(staging);
         state.searchIndex = staging.searchIndex;
     }
 
@@ -633,12 +751,13 @@ const DataManager = (() => {
         state.searchIndex.eventDisplayNames.set(event.id, formatted);
     }
 
-    function _indexLocationsTagsOrganizers(state) {
-        Object.entries(state.locationsByLatLng).forEach(([key, location]) => {
-            const searchableFields = [location.name, location.short_name, ...(location.aliases || []), ...(location.tags || []).map(Utils.getTagDisplayName), ...(location.keywords || [])].filter(Boolean);
-            const normalizedText = searchableFields.map(field => Utils.normalizeForSearch(field)).join(' ');
-            state.searchIndex.locations.set(key, normalizedText);
-        });
+    function _indexLocation(state, key, location) {
+        const searchableFields = [location.name, location.short_name, ...(location.aliases || []), ...(location.tags || []).map(Utils.getTagDisplayName), ...(location.keywords || [])].filter(Boolean);
+        const normalizedText = searchableFields.map(field => Utils.normalizeForSearch(field)).join(' ');
+        state.searchIndex.locations.set(key, normalizedText);
+    }
+
+    function _indexTagsOrganizers(state) {
         state.allAvailableTags.forEach(tag => {
             state.searchIndex.tags.set(tag, Utils.normalizeForSearch(tag));
         });
@@ -652,7 +771,8 @@ const DataManager = (() => {
     function buildSearchIndex(state) {
         _initSearchIndexShell(state);
         for (const event of state.allEvents) _indexEvent(state, event);
-        _indexLocationsTagsOrganizers(state);
+        for (const key of Object.keys(state.locationsByLatLng)) _indexLocation(state, key, state.locationsByLatLng[key]);
+        _indexTagsOrganizers(state);
     }
 
     /**
@@ -735,6 +855,49 @@ const DataManager = (() => {
     }
 
     /**
+     * Staged, yielding equivalent of calculateTagFrequencies followed by
+     * processTagHierarchy. The event scan accumulates into locals across
+     * yields; tagFrequencies and the available-tag lists are then published
+     * together in one synchronous step. Callers must not mutate allEvents or
+     * locationsByLatLng meanwhile (Phase-2 groups and refreshes are sequential).
+     * @param {Object} state - Application state
+     * @param {Object} config - Application configuration
+     */
+    async function calculateTagStatsAsync(state, config) {
+        const tagLocationSets = new Map(); // tag -> Set(locationKey)
+        const unlocatedTags = new Set();   // available-tag candidates without a location
+        await _yieldToMain();
+        await _forEachYielding(state.allEvents, ({ tags, locationKey }) => {
+            if (!tags || !Array.isArray(tags)) return;
+            for (const tag of tags) {
+                if (!locationKey) { unlocatedTags.add(tag); continue; }
+                const set = tagLocationSets.get(tag);
+                if (set) set.add(locationKey);
+                else tagLocationSets.set(tag, new Set([locationKey]));
+            }
+        });
+
+        // ---- Publish: synchronous from here. ----
+        _fpSpan('fp:p2:tags:start');
+        for (const locationKey in state.locationsByLatLng) {
+            const tags = state.locationsByLatLng[locationKey].tags;
+            if (!tags || !Array.isArray(tags)) continue;
+            for (const tag of tags) {
+                const set = tagLocationSets.get(tag);
+                if (set) set.add(locationKey);
+                else tagLocationSets.set(tag, new Set([locationKey]));
+            }
+        }
+        const frequencies = {};
+        for (const [tag, set] of tagLocationSets) frequencies[tag] = set.size;
+        state.tagFrequencies = frequencies;
+        const uniqueTags = new Set(tagLocationSets.keys());
+        for (const tag of unlocatedTags) uniqueTags.add(tag);
+        processTagHierarchy(state, config, uniqueTags);
+        _fpSpan('fp:p2:tags:publish');
+    }
+
+    /**
      * Builds hierarchy lookup maps from the exported tag_hierarchy.json data.
      * @param {Object} data - { tags: [...], keywords: [...] }
      * @returns {Object} { childrenOf, parentsOf, descendantsOf, hierarchyTagsSet, tagEmojiMap }
@@ -796,21 +959,25 @@ const DataManager = (() => {
      * Processes tag hierarchy and available tags
      * @param {Object} state - Application state
      * @param {Object} config - Application configuration
+     * @param {Iterable<string>} [uniqueTags] - every event/location tag, when
+     *   the caller already collected them (calculateTagStatsAsync)
      */
-    function processTagHierarchy(state, config) {
+    function processTagHierarchy(state, config, uniqueTags) {
         state.tagColors = state.tagConfig.colors || {};
-        const allUniqueTagsSet = new Set();
-        state.allEvents.forEach(event => {
-            if (event.tags && Array.isArray(event.tags)) {
-                event.tags.forEach(tag => allUniqueTagsSet.add(tag));
-            }
-        });
+        const allUniqueTagsSet = new Set(uniqueTags);
+        if (!uniqueTags) {
+            state.allEvents.forEach(event => {
+                if (event.tags && Array.isArray(event.tags)) {
+                    event.tags.forEach(tag => allUniqueTagsSet.add(tag));
+                }
+            });
 
-        Object.values(state.locationsByLatLng).forEach(location => {
-            if (location.tags && Array.isArray(location.tags)) {
-                location.tags.forEach(tag => allUniqueTagsSet.add(tag));
-            }
-        });
+            Object.values(state.locationsByLatLng).forEach(location => {
+                if (location.tags && Array.isArray(location.tags)) {
+                    location.tags.forEach(tag => allUniqueTagsSet.add(tag));
+                }
+            });
+        }
 
         // Format-only nodes belong to the independent selector, not topic chips.
         // Retain the legacy structural-node fallback for older example payloads.
@@ -870,6 +1037,7 @@ const DataManager = (() => {
         buildSearchIndexAsync,
         buildTagIndex,
         calculateTagFrequencies,
+        calculateTagStatsAsync,
         buildTagHierarchyMaps,
         processTagHierarchy,
         groupEventsByLatLngInDateRange

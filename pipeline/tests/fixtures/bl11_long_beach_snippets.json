@@ -1,0 +1,11 @@
+{
+ "source": "Long Beach Public Library w4162, cr120805 (2026-09-05), longbeachpl.librarycalendar.com/events/upcoming",
+ "cards": [
+  "###  Film Friday: Obsession \n1:00pm–3:00pm \nRemaining seats\nRemaining waitlist seats\n**Library Branch:** Main Library \n**Room:** Auditorium \n**Age Group:** Adults\n**Program Type:** Movies\n**Event Details:**\nChildhood friends Bear and Nikki are now co-workers at a music store where Bear hides his enduring love for her.\nThis event is in the \"Adults\" group \nThis event is in the \"Seniors\" group \nSep  18  2026  Fri \n###  [ Historical Fiction Book Club: The Other Einstein ](https://longbeachpl.librarycalendar.com/event/copy-historical-fiction-book-club-122259 \"View more about this event\")",
+  "###  Monday Matinee: La Bamba \n2:00pm–4:00pm \nRemaining seats\nRemaining waitlist seats\n**Library Branch:** Main Library \n**Room:** Auditorium \n**Age Group:** Adults, Seniors\n**Program Type:** Movies\n**Event Details:**\n_Celebrate the beginning of Hispanic Heritage Month with the story of this Latino legend._\nThis event is in the \"Elementary School\" group \nSep  14  2026  Mon \n###  [ Pokémon Club ](https://longbeachpl.librarycalendar.com/event/pokemon-club-131634 \"View more about this event\")"
+ ],
+ "expect": {
+  "Film Friday: Obsession": "hides his",
+  "Monday Matinee: La Bamba": "Celebrate the beginning of"
+ }
+}
